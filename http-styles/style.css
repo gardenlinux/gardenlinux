@@ -19,7 +19,7 @@ button,hr,input{overflow:visible}audio,canvas,progress,video{display:inline-bloc
 
 html {
   min-height: 100%;
-  color: #61666c;
+  color: #38393b;
   background-color: #fff;
   font-weight: 400;
   font-size: 1em;
@@ -122,7 +122,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   font-size: .875em;
-  color: rgb(143, 143, 143);
+  color: #38393b;
 }
 @media (prefers-color-scheme: dark) {
   table {
