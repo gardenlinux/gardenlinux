@@ -31,3 +31,4 @@ jobs:
       run: |
         ls -la
         cp hello.txt /var/www/repo.linux.onmetal.de/public/
+        cp docs/footer.html /var/www/repo.linux.onmetal.de/public/.hidden/
