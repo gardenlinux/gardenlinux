@@ -1,0 +1,219 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+source "$thisDir/.constants.sh" \
+	--flags 'debian,debian-eol,debian-ports,non-debian' \
+	--flags 'debootstrap:' \
+	--flags 'debootstrap-script:' \
+	--flags 'keyring:,arch:,include:,exclude:' \
+	--flags 'merged-usr,no-merged-usr' \
+	--flags 'check-gpg,no-check-gpg' \
+	-- \
+	'<target-dir> <suite> <timestamp>' \
+	'rootfs stretch 2017-05-08T00:00:00Z
+--debian-eol rootfs squeeze 2016-03-14T00:00:00Z' \
+	\
+	'--non-debian [--debootstrap-script=xyz] <target-dir> <suite> <mirror>' \
+	'--non-debian rootfs xenial http://archive.ubuntu.com/ubuntu'
+
+eval "$dgetopt"
+nonDebian=
+debianEol=
+debianPorts=
+debootstrap=
+script=
+keyring=
+arch=
+include=
+exclude=
+noMergedUsr=
+noCheckGpg=
+while true; do
+	flag="$1"; shift
+	dgetopt-case "$flag"
+	case "$flag" in
+		--debian)       nonDebian= ;;
+		--debian-eol)   nonDebian= ; debianEol=1 ;;
+		--debian-ports) nonDebian= ; debianPorts=1 ;;
+		--non-debian)   nonDebian=1 ;;
+		--debootstrap) debootstrap="$1"; shift ;;
+		--debootstrap-script) script="$1"; shift ;;
+		--keyring) keyring="$1"; shift ;;
+		--arch) arch="$1"; shift ;;
+		--include) include="${include:+$include,}$1"; shift ;;
+		--exclude) exclude="${exclude:+$exclude,}$1"; shift ;;
+		--merged-usr)    noMergedUsr=  ;;
+		--no-merged-usr) noMergedUsr=1 ;;
+		--check-gpg)    noCheckGpg=  ;;
+		--no-check-gpg) noCheckGpg=1 ;;
+		--) break ;;
+		*) eusage "unknown flag '$flag'" ;;
+	esac
+done
+
+[ -s $thisDir/.init-excludes ] && exclude="$exclude,$(cat $thisDir/.init-excludes | paste -sd, -)"
+[ -s $thisDir/.init-includes ] && include="$exclude,$(cat $thisDir/.init-includes | paste -sd, -)"
+
+targetDir="${1:-}"; shift || eusage 'missing target-dir'
+[ -n "$targetDir" ] || eusage 'target-dir required' # must be non-empty
+if [ -e "$targetDir" ] && [ -z "$(find "$targetDir" -maxdepth 0 -empty)" ]; then
+	echo >&2 "error: '$targetDir' already exists (and isn't empty)!"
+	exit 1
+fi
+
+suite="${1:-}"; shift || eusage 'missing suite'
+
+timestamp=
+mirror=
+if [ -z "$nonDebian" ]; then
+	timestamp="${1:-}"; shift || eusage 'missing timestamp'
+else
+	mirror="${1:-}"; shift || eusage 'missing mirror'
+
+	timestamp="$(
+		{
+			wget -qO- "$mirror/dists/$suite/InRelease" 2>/dev/null \
+				|| wget -qO- "$mirror/dists/$suite/Release"
+		} |tac|tac| awk -F ': ' '$1 == "Date" { print $2; exit }'
+	)"
+	# TODO re-calculate "timestamp" during debuerreotype-tar/fixup (possibly scraping from /var/lib/apt/lists/*Release* instead?)
+fi
+
+epoch="$(date --date "$timestamp" '+%s')"
+export SOURCE_DATE_EPOCH="$epoch"
+
+if [ -z "$nonDebian" ]; then
+	if [ -z "$debianEol" ]; then
+		if [ -z "$debianPorts" ]; then
+			mirror="$("$thisDir/.snapshot-url.sh" "@$epoch")"
+		else
+			mirror="$("$thisDir/.snapshot-url.sh" "@$epoch" 'debian-ports')"
+		fi
+	else
+		mirrorbase="$("$thisDir/.snapshot-url.sh" "@$epoch" 'debian-archive')"
+		mirror="$mirrorbase/debian"
+	fi
+fi
+
+debootstrapArgs=()
+
+if [ -z "$noCheckGpg" ]; then
+	debootstrapArgs+=( --force-check-gpg )
+else
+	debootstrapArgs+=( --no-check-gpg )
+fi
+
+minbaseSupported="$(
+	scriptFile="$(
+		if [ -n "$script" ]; then
+			readlink -f "$script"
+		else
+			cd /usr/share/debootstrap/scripts
+			readlink -f "$suite"
+		fi
+	)"
+	if grep -q 'minbase' "$scriptFile"; then
+		echo 1
+	fi
+)"
+if [ -n "$minbaseSupported" ]; then
+	# --debian-eol sarge and older do not support minbase
+	debootstrapArgs+=( --variant=minbase )
+fi
+
+[ -n "$noMergedUsr" ] && debootstrapArgs+=( --no-merged-usr ) || debootstrapArgs+=( --merged-usr )
+[ -z "$keyring" ] || debootstrapArgs+=( --keyring="$keyring" )
+[ -z "$arch" ] || debootstrapArgs+=( --arch="$arch" )
+[ -z "$include" ] || debootstrapArgs+=( --include="$include" )
+[ -z "$exclude" ] || debootstrapArgs+=( --exclude="$exclude" )
+
+debootstrapArgs+=(
+	"$suite" "$targetDir" "$mirror"
+)
+[ -z "$script" ] || debootstrapArgs+=( "$script" )
+
+: "${debootstrap:=debootstrap}"
+if ! "$debootstrap" "${debootstrapArgs[@]}"; then
+	if [ -f "$targetDir/debootstrap/debootstrap.log" ]; then
+		echo >&2
+		echo >&2 "error: '$debootstrap' failed!"
+		echo >&2
+		echo >&2 '  Full command:'
+		echo >&2
+		echo >&2 "   $(printf ' %q' "$debootstrap" "${debootstrapArgs[@]}")"
+		echo >&2
+		echo >&2 '  Logs:'
+		echo >&2
+		cat >&2 "$targetDir/debootstrap/debootstrap.log"
+		echo >&2
+	fi
+	exit 1
+fi
+echo "$epoch" > "$targetDir/debuerreotype-epoch"
+
+if [ -z "$nonDebian" ]; then
+	"$thisDir/debuerreotype-debian-sources-list" --snapshot \
+		$([ -z "$debianEol" ] || echo '--eol') \
+		$([ -z "$debianPorts" ] || echo '--ports') \
+		"$targetDir" "$suite"
+	"$thisDir/debuerreotype-apt-get" "$targetDir" update -qq
+fi
+
+# since we're minbase, we know everything included is either essential, or a dependency of essential, so let's get clean "apt-mark showmanual" output
+"$thisDir/debuerreotype-chroot" "$targetDir" bash -c '
+	# --debian-eol squeeze and below do not have python in minbase, thus "apt-mark" fails to run
+	# bash: /usr/bin/apt-mark: /usr/bin/python: bad interpreter: No such file or directory
+	# (also, squeeze APT does not treat essential packages as special, and will offer to purge them if they get marked as auto-installed)
+	if apt-mark --help &> /dev/null; then
+		apt-mark auto ".*" > /dev/null
+		if [ -n "$1" ]; then
+			# if the user asked for anything to be included extra (like "xyz-archive-keyring"), mark those packages as manually installed
+			IFS=","; includePackages=( $1 ); unset IFS
+			apt-mark manual "${includePackages[@]}"
+		fi
+	fi
+' -- "$include"
+
+echo 'debuerreotype' > "$targetDir/etc/hostname"
+echo "$epoch" \
+	| md5sum \
+	| cut -f1 -d' ' \
+	> "$targetDir/etc/machine-id" # TODO should we only do this if "/etc/machine-id" already exists?
+{
+	echo '# https://1.1.1.1 (privacy-focused, highly-available DNS service)'
+	echo 'nameserver 1.1.1.1'
+	echo 'nameserver 1.0.0.1'
+} > "$targetDir/etc/resolv.conf"
+chmod 0644 \
+	"$targetDir/etc/hostname" \
+	"$targetDir/etc/machine-id" \
+	"$targetDir/etc/resolv.conf"
+
+# fix ownership/permissions on / (otherwise "debootstrap" leaves them as-is which causes reproducibility issues)
+chown 0:0 "$targetDir"
+chmod 0755 "$targetDir"
+
+# https://bugs.debian.org/857803
+# adjust field 3 in /etc/shadow and /etc/shadow- to $(( epoch / 60 / 60 / 24 )), if it's larger
+sp_lstchg="$(( epoch / 60 / 60 / 24 ))"
+for shadowFile in etc/shadow etc/shadow-; do
+	# --debian-eol etch and older do not include /etc/shadow-
+	[ -e "$targetDir/$shadowFile" ] || continue
+
+	newShadowFile="$shadowFile.debuerreotype"
+	awk -F ':' \
+		-v OFS=':' \
+		-v sp_lstchg="$sp_lstchg" \
+		'{
+			if ($3 > sp_lstchg) {
+				$3 = sp_lstchg
+			}
+			print
+		}' "$targetDir/$shadowFile" > "$targetDir/$newShadowFile"
+	if [ "$(< "$targetDir/$shadowFile")" != "$(< "$targetDir/$newShadowFile")" ]; then
+		# use "cat" instead of "mv" so permissions don't change
+		cat "$targetDir/$newShadowFile" > "$targetDir/$shadowFile"
+	fi
+	rm -f "$targetDir/$newShadowFile"
+done
