@@ -37,7 +37,7 @@ while true; do
 done
 
 [ "$features" = "full" ] && features=$(ls features | paste -sd, -)
-pkglist="$(echo "none,$features" | tr ',' ' ' | sort -u)"
+features="$(echo "none,$features" | tr ',' ' ' | sort -u)"
 outputDir="${1:-}"; shift || eusage 'missing output-dir'
 suite="${1:-}"; shift || eusage 'missing suite'
 timestamp="${1:-}"; shift || eusage 'missing timestamp'
@@ -85,6 +85,7 @@ docker run \
 	-e codenameCopy="$codenameCopy" \
 	-e eol="$eol" -e ports="$ports" -e arch="$arch" -e qemu="$qemu" \
 	-e TZ='UTC' -e LC_ALL='C' \
+	-e features="$features" \
 	--hostname debuerreotype \
 	"$dockerImage" \
 	bash -Eeuo pipefail -c '
@@ -105,6 +106,7 @@ docker run \
 		}
 
 		debuerreotypeScriptsDir="$(dirname "$(readlink -f "$(which debuerreotype-init)")")"
+		featuresDir="$debuerreotypeScriptsDir/../features"
 
 		for archive in "" security; do
 			snapshotUrlFile="$exportDir/$serial/$dpkgArch/snapshot-url${archive:+-${archive}}"
@@ -180,6 +182,18 @@ docker run \
 				)
 			fi
 			initArgs+=( --keyring "$keyring" )
+
+			includepkgs=
+			excludepkgs=
+			dd="$(ls $featuresDir )"
+			for i in $features; do
+				[ -e $featuresDir/$i/include ] && includepkgs+="$(cat $featuresDir/$i/include) "
+				[ -e $featuresDir/$i/exclude ] && excludepkgs+="$(cat $featuresDir/$i/exclude) "
+			done
+			includepkgs="$(echo "$includepkgs" | sed -e "s/#.*\$//" -e "/^$/d" | sort -u | paste -sd, -)"
+			excludepkgs="$(echo "$excludepkgs" | sed -e "s/#.*\$//" -e "/^$/d" | sort -u | paste -sd, -)"
+			[ -n "$includepkgs" ] && initArgs+=( --include $includepkgs )
+			[ -n "$excludepkgs" ] && initArgs+=( --exclude $excludepkgs )
 
 			# disable merged-usr (for now?) due to the following compelling arguments:
 			#  - https://bugs.debian.org/src:usrmerge ("dpkg-query" breaks, etc)
