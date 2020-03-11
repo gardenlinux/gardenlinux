@@ -1,0 +1,6 @@
+ethtool
+haveged
+ipmitool
+irqbalance
+pciutils
+usbutils

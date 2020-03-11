@@ -1,0 +1,6 @@
+apparmor
+containerd
+containernetworking-plugins
+ethtool
+ipvsadm
+socat

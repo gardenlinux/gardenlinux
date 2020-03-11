@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+source "$thisDir/.constants.sh" \
+	'' \
+	''
+
+eval "$dgetopt"
+while true; do
+	flag="$1"; shift
+	dgetopt-case "$flag"
+	case "$flag" in
+		--) break ;;
+		*) eusage "unknown flag '$flag'" ;;
+	esac
+done
+
+_version
