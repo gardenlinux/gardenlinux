@@ -2,11 +2,12 @@
 set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+featureDir="$thisDir/../features"
 source "$thisDir/.constants.sh" \
 	--flags 'debian,debian-eol,debian-ports,non-debian' \
 	--flags 'debootstrap:' \
 	--flags 'debootstrap-script:' \
-	--flags 'keyring:,arch:,include:,exclude:' \
+	--flags 'keyring:,arch:,include:,exclude:,features:' \
 	--flags 'merged-usr,no-merged-usr' \
 	--flags 'check-gpg,no-check-gpg' \
 	-- \
@@ -27,6 +28,7 @@ keyring=
 arch=
 include=
 exclude=
+features=
 noMergedUsr=
 noCheckGpg=
 while true; do
@@ -43,6 +45,7 @@ while true; do
 		--arch) arch="$1"; shift ;;
 		--include) include="${include:+$include,}$1"; shift ;;
 		--exclude) exclude="${exclude:+$exclude,}$1"; shift ;;
+		--features) features="${features:+$features,}$1"; shift ;;
 		--merged-usr)    noMergedUsr=  ;;
 		--no-merged-usr) noMergedUsr=1 ;;
 		--check-gpg)    noCheckGpg=  ;;
@@ -52,8 +55,15 @@ while true; do
 	esac
 done
 
-[ -s $thisDir/.init-excludes ] && exclude="$exclude,$(cat $thisDir/.init-excludes | paste -sd, -)"
-[ -s $thisDir/.init-includes ] && include="$exclude,$(cat $thisDir/.init-includes | paste -sd, -)"
+[ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
+
+[ -s $thisDir/.init-includes ] && include="$(echo -e "$include\n$(cat $thisDir/.init-includes)" | sed -e "s/#.*\$//" -e "/^$/d" | paste -sd, -)"
+[ -s $thisDir/.init-excludes ] && exclude="$(echo -e "$exclude\n$(cat $thisDir/.init-excludes)" | sed -e "s/#.*\$//" -e "/^$/d" | paste -sd, -)"
+
+for i in $(echo "none,$features" | tr ',' ' ' | sort -u); do
+	[ -s $featureDir/$i/include ] && include="$(echo -e "$include\n$(cat $featureDir/$i/include)" | sed -e "s/#.*\$//" -e "/^$/d" | paste -sd, -)"
+	[ -s $featureDir/$i/exclude ] && exclude="$(echo -e "$exclude\n$(cat $featureDir/$i/exclude)" | sed -e "s/#.*\$//" -e "/^$/d" | paste -sd, -)"
+done
 
 targetDir="${1:-}"; shift || eusage 'missing target-dir'
 [ -n "$targetDir" ] || eusage 'target-dir required' # must be non-empty
