@@ -1,0 +1,10 @@
+/etc/group-
+/etc/gshadow-
+/etc/passwd-
+/etc/shadow-
+/etc/subgid-
+/etc/subuid-
+/var/cache/apt/pkgcache.bin
+/var/cache/apt/srcpkgcache.bin
+/var/cache/apt/archives/*.deb 
+/var/cache/apt/archives/partial/*.deb

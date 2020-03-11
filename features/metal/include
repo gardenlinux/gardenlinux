@@ -4,3 +4,4 @@ ipmitool
 irqbalance
 pciutils
 usbutils
+numactl
