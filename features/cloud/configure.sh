@@ -13,3 +13,12 @@ update-alternatives --set ebtables /usr/sbin/ebtables-legacy
 #
 systemctl mask nftables.service
 
+cat >>/etc/modules.d/blacklist.conf << EOF
+blacklist nf_conntrack_netlink
+blacklist nf_nat_ipv4
+blacklist nf_tables
+blacklist nf_nat
+blacklist nf_conntrack
+blacklist nf_defrag_ipv6
+blacklist nf_defrag_ipv4
+EOF
