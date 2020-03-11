@@ -235,6 +235,8 @@ docker run \
 				if [ -n "$qemu" ]; then
 					tarArgs+=( --exclude="./usr/bin/qemu-*-static" )
 				fi
+				
+				tarArgs+=( --include-dev )
 
 				if [ "$variant" != "sbuild" ]; then
 					debuerreotype-debian-sources-list "${sourcesListArgs[@]}" "$rootfs" "$suite"
@@ -244,7 +246,6 @@ docker run \
 
 					# schroot is picky about "/dev" (which is excluded by default in "debuerreotype-tar")
 					# see https://github.com/debuerreotype/debuerreotype/pull/8#issuecomment-305855521
-					tarArgs+=( --include-dev )
 				fi
 
 				case "$suite" in
