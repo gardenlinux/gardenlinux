@@ -43,6 +43,8 @@ The provided `Dockerfile` also includes comments with hints for bootstrapping th
 
 Full example: (see [`build.sh`](build.sh) for this in practice)
 
+example with features: ./build.sh --features=server <target> <suite> <time>
+
 ```console
 $ debuerreotype-init rootfs stretch 2017-01-01T00:00:00Z
 I: Retrieving InRelease
