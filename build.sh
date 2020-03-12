@@ -198,7 +198,9 @@ docker run \
 				debuerreotype-gpgv-ignore-expiration-config rootfs
 			fi
 
-			debuerreotype-minimizing-config rootfs
+			[ -n "$features" ] && configArgs+=( --features "$features" )
+
+			debuerreotype-minimizing-config "${configArgs[@]}" rootfs
 			debuerreotype-apt-get rootfs update -qq
 			debuerreotype-apt-get rootfs dist-upgrade -yqq
 
