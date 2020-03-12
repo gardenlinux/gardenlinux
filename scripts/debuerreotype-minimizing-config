@@ -36,11 +36,12 @@ for i in $(echo "none,$features" | tr ',' ' ' | sort -u); do
 	if [ -f $featureDir/$i/delete.list ]; then
 		echo "deleting from $i: $(cat $featureDir/$i/delete.list | paste -sd' '  -)"
 		for j in $(cat $featureDir/$i/delete.list); do
-			rm -f $targetDir$j
+			rm -f $targetDir$j || true
 		done
 	fi
 	
 	if [ -f $featureDir/$i/configure.sh ]; then
+		echo "executing from $i: configure.sh"
 		$thisDir/debuerreotype-chroot "$targetDir" bash -c "$(cat $featureDir/$i/configure.sh)"
 	fi
 done

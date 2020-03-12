@@ -5,3 +5,4 @@ irqbalance
 pciutils
 usbutils
 numactl
+systemd
