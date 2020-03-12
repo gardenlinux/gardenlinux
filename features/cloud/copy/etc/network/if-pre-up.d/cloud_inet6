@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+run() {
+  if [ "${VERBOSITY}" = 1 ]; then
+    echo "$@" >&2
+  fi
+  command "$@"
+}
+
+[ "${ADDRFAM}" = inet6 ] || exit 0
+[ "${IF_TRY_DHCP}" = 1 ] || exit 0
+
+run /bin/ip link set dev $IFACE up
+run /lib/ifupdown/wait-for-ll6.sh
+run /sbin/dhclient -6 -v -pf /run/dhclient6.$IFACE.pid -lf /var/lib/dhcp/dhclient6.$IFACE.leases -I -df /var/lib/dhcp/dhclient.$IFACE.leases -nw $IFACE

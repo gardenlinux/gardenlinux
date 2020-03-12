@@ -1,0 +1,2 @@
+# Handle allow-hotplug interfaces
+SUBSYSTEM=="net", ACTION=="add", ENV{INTERFACE}=="eth*|en*", RUN+="/etc/network/cloud-ifupdown-helper"
