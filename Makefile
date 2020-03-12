@@ -1,2 +1,2 @@
 all:
-	echo "Hello Linux!" > hello.txt
+	./build.sh --features server,kvm kvm bullseye now
