@@ -5,6 +5,8 @@
 #./dev/**
 ./proc/**
 ./sys/**
+./run/**
+./tmp/**
 
 # targeted exclusions to get rid of everything except "/var/cache/apt/archives/partial" and "/var/lib/apt/lists/partial"
 # (https://salsa.debian.org/apt-team/apt/commit/1cd1c398d18b78f4aa9d882a5de5385f4538e0be)
