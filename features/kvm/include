@@ -1,0 +1,6 @@
+
+dosfstools
+#bootctl
+gdisk
+linux-image-cloud-amd64
+rng-tools
