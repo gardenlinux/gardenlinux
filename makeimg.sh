@@ -4,7 +4,7 @@ docker build -f Dockerfile.guestfs . -t guestfs
 
 dd if=/dev/zero of=$1.raw seek=2048 bs=1 count=0 seek=2G
 
-docker run --rm -it -v $1.raw:/$1.raw guestfs guestfish -i -a /$1.raw
+docker run --rm -it --privileged -v $1.raw:/$1.raw guestfs guestfish -i -a /$1.raw
 
 exit 1
 

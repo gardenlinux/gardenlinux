@@ -6,3 +6,5 @@ pciutils
 usbutils
 numactl
 systemd
+linux-image-amd64
+mdadm
