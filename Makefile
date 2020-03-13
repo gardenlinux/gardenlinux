@@ -23,3 +23,4 @@ cloud:
 	
 kvm:
 	./build.sh --features server,kvm ../kvm bullseye now
+	./makef.sh ../kvm-server ../kvm/20200313/amd64/bullseye/rootfs.tar.xz
