@@ -1,4 +1,5 @@
 waagent
 python
+python3-oauthlib
 cloud-init
 
