@@ -1,5 +1,9 @@
-#!/bin/sh
+#!/bin/sh -x
 
+
+# note: the debian-cloud-image build has 30G for Azrue and 2 
+# for all others, we need to maek that configurable... No idea
+# why that is
 dd if=/dev/zero of=$1.raw seek=2048 bs=1 count=0 seek=2G
 loopback=$(losetup -f --show $1.raw)
 
@@ -26,12 +30,12 @@ mount --bind /dev  $1/dev
 chroot $1 grub-install --target=i386-pc /dev/loop0
 chroot $1 grub-install --target=x86_64-efi /dev/loop0 --no-nvram
 chroot $1 update-grub
-
-umount $1/dev
-umount $1/sys
-umount $1/proc
-umount $1/boot/efi
-umount $1 --lazy
-
-losetup -d loopback
-
+sleep 5
+umount -l $1/dev
+umount -l $1/sys
+umount -l $1/proc
+umount -l $1/boot/efi
+sleep 5
+umount -l $1
+sleep 5
+losetup -d $loopback
