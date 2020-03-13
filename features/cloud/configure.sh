@@ -23,3 +23,6 @@ blacklist nf_conntrack
 blacklist nf_defrag_ipv6
 blacklist nf_defrag_ipv4
 EOF
+
+# TODO part of debian-cloud-images, why?
+touch /etc/grub.d/enable_cloud
