@@ -2,4 +2,4 @@ dosfstools
 grub-cloud-amd64
 linux-image-cloud-amd64
 rng-tools
-cloud-guest-utils
+cloud-initramfs-growroot

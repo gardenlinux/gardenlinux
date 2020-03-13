@@ -1,9 +1,7 @@
 linux-image-cloud-amd64
 apparmor
 grub-cloud-amd64
-openssh-server
 cloud-initramfs-growroot
-sudo
 libpam-systemd
 chrony
 apt-utils
@@ -26,7 +24,6 @@ tcpdump
 ca-certificates
 curl
 ethtool
-curl
 docker.io
 iptables
 arptables
