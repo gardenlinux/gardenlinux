@@ -12,3 +12,8 @@
 /etc/init.d/sudo
 /etc/init.d/sysstat
 /etc/init.d/udev
+/etc/init.d/kexec
+/etc/init.d/kexec-load
+/etc/init.d/ssh
+/etc/sv
+/etc/runit
