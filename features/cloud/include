@@ -26,7 +26,6 @@ tcpdump
 ca-certificates
 curl
 ethtool
-apt-transport-https 
 curl
 docker.io
 iptables
