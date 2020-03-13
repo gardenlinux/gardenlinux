@@ -15,6 +15,8 @@ partprobe $loopback
 
 mkfs.vfat ${loopback}p2 -n EFI
 mkfs.ext4 ${loopback}p3 -L ROOT
+# part of debian-cloud-images, I am sure we want that :-)
+tune2fs -c 0 -i 0 ${loopback}p3
 
 mkdir -p $1
 mount ${loopback}p3 $1
