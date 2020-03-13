@@ -22,5 +22,5 @@ cloud:
 	./build.sh --features server,cloud ../cloud bullseye now
 	
 kvm:
-	./build.sh --features server,kvm ../kvm bullseye now
+	./build.sh --features server,kvm,dev ../kvm bullseye now
 	./makef.sh ../kvm-server ../kvm/20200313/amd64/bullseye/rootfs.tar.xz
