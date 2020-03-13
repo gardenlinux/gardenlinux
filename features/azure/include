@@ -1,5 +1,6 @@
 waagent
 python
-python3-oauthlib
+# debootstrap does not pull python3-cffi-backend
+python3-cffi-backend
+#
 cloud-init
-
