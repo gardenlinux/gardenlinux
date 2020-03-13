@@ -27,8 +27,8 @@ mount -t proc proc $1/proc
 mount -t sysfs sys $1/sys
 mount --bind /dev  $1/dev
 
-chroot $1 grub-install --target=i386-pc /dev/loop0
-chroot $1 grub-install --target=x86_64-efi /dev/loop0 --no-nvram
+chroot $1 grub-install --target=i386-pc $loopback
+chroot $1 grub-install --target=x86_64-efi $loopback --no-nvram
 chroot $1 update-grub
 sleep 5
 umount -l $1/dev
