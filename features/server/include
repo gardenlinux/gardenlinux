@@ -2,7 +2,6 @@ auditd
 busybox
 ca-certificates
 dnsutils
-e2fsprogs
 fail2ban
 ferm
 iputils-ping

@@ -31,7 +31,7 @@ umount $1/dev
 umount $1/sys
 umount $1/proc
 umount $1/boot/efi
-umount $1
+umount $1 --lazy
 
 losetup -d loopback
 
