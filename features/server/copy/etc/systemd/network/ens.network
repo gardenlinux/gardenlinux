@@ -1,0 +1,7 @@
+[Match]
+Name=ens*
+
+[Network]
+DHCP=yes
+LLDP=true
+EmitLLDP=true
