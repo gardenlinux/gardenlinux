@@ -1,8 +1,6 @@
 SNAPSHOT_DATE=`date -d 'yesterday' '+%Y%m%d'`
 
-all:
-	echo "Building Garden Linux 11-$(SNAPSHOT_DATE).0"
-	./build.sh --features full ../full bullseye $(SNAPSHOT_DATE)
+all: aws gcp azure openstack vmware kvm
 
 aws:
 #	./build.sh --features server,cloud,aws,dev ../aws bullseye now
@@ -27,3 +25,7 @@ cloud:
 kvm:
 	./build.sh --features server,kvm,dev ../kvm bullseye $(SNAPSHOT_DATE)
 	./makef.sh ../kvm-server ../kvm/20200314/amd64/bullseye/rootfs.tar.xz
+
+onmetal:
+	echo "TODO: implement"
+	exit 1
