@@ -1,0 +1,10 @@
+#!/bin/sh
+
+cpu="$(cat /proc/cpuinfo | grep processor -c)"
+loadavg="$(cat /proc/loadavg)"
+iostat="$(iostat -c -o JSON)"
+
+echo "Load:  \
+$(echo "${loadavg}" | awk '{printf("%s%s\033[0m, %s%s\033[0m, %s%s\033[0m", ($1>'${cpu}')?"\033[31m":($1>('${cpu}'/10))?"\033[33m":"\033[32m",$1, ($2>'${cpu}')?"\033[31m":($2>('${cpu}'/10))?"\033[33m":"\033[32m" ,$2, ($3>'${cpu}')?"\033[31m":($3>('${cpu}'/10))?"\033[33m":"\033[32m" ,$3)}') of ${cpu}CPUs  \
+$(echo "${iostat}" | grep -o -e "\"iowait\": [[:digit:]]*\.[[:digit:]]*" | awk '{printf("%s%s iowait\033[0m", ($2<1)?"\033[32m":($2<10)?"\033[33m":"\033[31m", ($2<1)?"no":$2 "%")}')  \
+$(echo "${iostat}" | grep -o -e "\"steal\": [[:digit:]]*\.[[:digit:]]*"  | awk '{printf("%s%s steal time\033[0m", ($2<1)?"\033[32m":($2<10)?"\033[33m":"\033[31m", ($2<1)?"no":$2 "%")}')"
