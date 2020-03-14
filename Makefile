@@ -3,8 +3,8 @@ SNAPSHOT_DATE=`date -d 'yesterday' '+%Y%m%d'`
 all: aws gcp azure openstack vmware kvm
 
 aws:
-	./build.sh --features server,cloud,aws,dev ../aws bullseye 20200313
-	./makef.sh --grub-target bios --fs-check-off ../aws/aws ../aws/20200313/amd64/bullseye/rootfs.tar.xz
+	./build.sh --features server,cloud,aws,dev ../aws bullseye $(SNAPSHOT_DATE)
+	./makef.sh --grub-target bios --fs-check-off ../aws/aws ../aws/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
 
 gcp:
 	./build.sh --features server,cloud,gcp ../gcp bullseye $(SNAPSHOT_DATE)
@@ -24,7 +24,7 @@ cloud:
 	
 kvm:
 	./build.sh --features server,kvm,dev ../kvm bullseye $(SNAPSHOT_DATE)
-	./makef.sh ../kvm-server ../kvm/20200314/amd64/bullseye/rootfs.tar.xz
+	./makef.sh ../kvm-server ../kvm/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
 
 onmetal:
 	echo "TODO: implement"
