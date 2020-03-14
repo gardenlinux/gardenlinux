@@ -8,3 +8,7 @@ systemctl enable ferm
 for i in $(ls /boot | grep vmlinuz | sed "s/vmlinuz-//"); do
 	systemctl enable kexec-load@$i
 done
+
+echo "Garden Linux (based on Debian GNU/Linux 10)" >/tmp/newmotd
+cat /etc/motd >>/tmp/newmotd
+cp /tmp/newmotd /etc/motd

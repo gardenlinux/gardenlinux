@@ -1,11 +1,54 @@
-#!/bin/sh -x
+#!/bin/bash 
+#---help---
+# usage: makef [options] <raw image file> <rootfs>
+# 
+# Arguments:
+#  <raw image file> Image file that will be created (without extension=
+#  <rootfs>         Archive that contains the root file system
+# Options:
+#  --gub-target     Comma separeted list of targets: bios, uefi
+#  --fs-check-off   Disable possible file system
+#  --image-type     Comma separated list of types: raw, vmdk TODO
+#---help---
 
+help() {
+	sed -En '/^#---help---/,/^#---help---/p' "$0" | sed -E 's/^# ?//; 1d;$d;'
+	exit 1
+}
+
+target="bios,uefi"
+fs_check=1
+
+while true; do 
+    flag=$1;
+    case "$flag" in 
+        --grub-target) shift; target=$1; shift;;
+        --fs-check-off) shift; fs_check=0;;
+        *) break
+    esac
+done
+
+IFS="," read -r -a grub_target <<< "$target"
+
+raw_image=${1}.raw
+dir_name=$1
+rootfs=$2
+
+if [[ -e ${raw_image} ]]; then
+    echo "Raw image ${raw_image} exists."
+    exit 1
+fi
+
+if [[ ! -f ${rootfs} ]] ; then
+    echo "Root file system archive ${rootfs} does not exist."
+    exit 1
+fi
 
 # note: the debian-cloud-image build has 30G for Azrue and 2 
 # for all others, we need to maek that configurable... No idea
 # why that is
-dd if=/dev/zero of=$1.raw seek=2048 bs=1 count=0 seek=2G
-loopback=$(losetup -f --show $1.raw)
+dd if=/dev/zero of=${raw_image} seek=2048 bs=1 count=0 seek=2G
+loopback=$(losetup -f --show ${raw_image})
 
 echo 'label: gpt
 type=21686148-6449-6E6F-744E-656564454649, name="BIOS", size=1MiB
@@ -15,29 +58,41 @@ partprobe $loopback
 
 mkfs.vfat ${loopback}p2 -n EFI
 mkfs.ext4 ${loopback}p3 -L ROOT
-# part of debian-cloud-images, I am sure we want that :-)
-tune2fs -c 0 -i 0 ${loopback}p3
 
-mkdir -p $1
-mount ${loopback}p3 $1
-mkdir -p $1/boot/efi
-mount ${loopback}p2 $1/boot/efi
+if [[ $fs_check == 0 ]]; then
+    # part of debian-cloud-images, I am sure we want that :-)
+    tune2fs -c 0 -i 0 ${loopback}p3
+fi
 
-tar xf $2 -C $1
+mkdir -p ${dir_name}
+mount ${loopback}p3 ${dir_name}
+mkdir -p ${dir_name}/boot/efi
+mount ${loopback}p2 ${dir_name}/boot/efi
 
-mount -t proc proc $1/proc
-mount -t sysfs sys $1/sys
-mount --bind /dev  $1/dev
+tar xf ${rootfs} -C ${dir_name}
 
-chroot $1 grub-install --target=i386-pc $loopback
-chroot $1 grub-install --target=x86_64-efi $loopback --no-nvram
-chroot $1 update-grub
-sleep 5
-umount -l $1/dev
-umount -l $1/sys
-umount -l $1/proc
-umount -l $1/boot/efi
-sleep 5
-umount -l $1
-sleep 5
+mount -t proc proc ${dir_name}/proc
+mount -t sysfs sys ${dir_name}/sys
+mount --bind /dev  ${dir_name}/dev
+
+for t in "${grub_target[@]}"
+do
+    case "$t" in
+        bios) chroot ${dir_name} grub-install --target=i386-pc $loopback;;
+        uefi) chroot ${dir_name} grub-install --target=x86_64-efi $loopback --no-nvram;;
+        *) echo "Unknown target ${t}";;
+    esac
+done
+
+chroot ${dir_name} update-grub
+sleep 2
+umount -l ${dir_name}/dev
+umount -l ${dir_name}/sys
+umount -l ${dir_name}/proc
+umount -l ${dir_name}/boot/efi
+sleep 2
+umount -l ${dir_name}
+sleep 2
 losetup -d $loopback
+
+rmdir ${dir_name}
