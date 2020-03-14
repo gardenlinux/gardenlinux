@@ -1,6 +1,8 @@
-all:
-	./build.sh --features full ../full bullseye now
+SNAPSHOT_DATE=`date -d 'yesterday' '+%Y%m%d'`
 
+all:
+	echo "Building Garden Linux 11-$(SNAPSHOT_DATE).0"
+	./build.sh --features full ../full bullseye $(SNAPSHOT_DATE)
 
 aws:
 #	./build.sh --features server,cloud,aws,dev ../aws bullseye now
