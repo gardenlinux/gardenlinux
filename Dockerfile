@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	&& rm -rf /var/lib/apt/lists/*
 
 # see ".dockerignore"
-COPY . /opt/debuerreotype
+COPY build.sh build-all.sh makef.sh makeimg.sh raspbian.sh steamos.sh ubuntu.sh VERSION scripts features /opt/debuerreotype
 RUN set -ex; \
 	cd /opt/debuerreotype/scripts; \
 	for f in debuerreotype-*; do \
