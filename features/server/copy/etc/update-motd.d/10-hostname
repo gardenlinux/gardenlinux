@@ -1,0 +1,2 @@
+#!/bin/sh
+echo "Welcome to \e[0;32m$(hostname -f)\e[0m  $(date)"
