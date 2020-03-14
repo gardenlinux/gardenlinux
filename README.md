@@ -4,18 +4,18 @@
 
 Install required packages using apt:
 
-    apt install git build-essential dosfstools docker suod
+    apt install git build-essential dosfstools docker sudo
 
 Build all images:
 
-    make all
+    sudo make all
 
 Build specific images:
 
-    make aws
-    make gcp
-    make azure
-    make vmware
-    make openstack
-    make kvm
+    sudo make aws
+    sudo make gcp
+    sudo make azure
+    sudo make vmware
+    sudo make openstack
+    sudo make kvm
 
