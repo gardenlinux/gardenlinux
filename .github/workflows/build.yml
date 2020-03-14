@@ -30,4 +30,4 @@ jobs:
     - name: Deploy
       run: |
         ls -la
-        rsync -av --delete http-styles/ /var/www/repo.gardenlinux.io/public/.http-styles
+        #rsync -av --delete http-styles/ /var/www/repo.gardenlinux.io/public/.http-styles
