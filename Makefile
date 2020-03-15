@@ -7,7 +7,7 @@ aws:
 	./scripts/makef.sh --grub-target bios --fs-check-off .build/aws/aws .build/aws/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
 
 gcp:
-	./build.sh --features server,cloud,ghost,gcp ../gcp bullseye $(SNAPSHOT_DATE)
+	./build.sh --features server,cloud,ghost,gcp .build/gcp bullseye $(SNAPSHOT_DATE)
 	./scripts/makef.sh --grub-target bios --fs-check-off .build/gcp/gcp .build/gcp/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
 
 azure:
