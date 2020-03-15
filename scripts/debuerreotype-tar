@@ -65,6 +65,6 @@ tarArgs+=(
 	.
 )
 
-tar "${tarArgs[@]}"
+XZ_OPT="-T0" tar "${tarArgs[@]}"
 
 touch --no-dereference --date="@$epoch" "$targetTar"
