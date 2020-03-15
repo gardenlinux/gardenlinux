@@ -77,6 +77,7 @@ docker run \
 	--rm \
 	"${securityArgs[@]}" \
 	--tmpfs /tmp:dev,exec,suid,noatime \
+	--add-host snapshot.debian.org:172.17.0.1 \
 	-w /tmp \
 	-e suite="$suite" \
 	-e timestamp="$timestamp" \
