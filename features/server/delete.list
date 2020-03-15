@@ -1,5 +1,4 @@
 /var/log/fail2ban.log
-/var/log/journal
 /etc/init.d/sysstat
 /etc/ufw
 /etc/init.d/auditd
@@ -15,3 +14,5 @@
 /etc/init.d/ssh
 /etc/sv
 /etc/runit
+/var/log/runit
+/var/log/private
