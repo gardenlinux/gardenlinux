@@ -23,8 +23,9 @@ cloud:
 	./build.sh --features server,cloud .build/cloud bullseye $(SNAPSHOT_DATE)
 	
 kvm:
+	rm -f .build/kvm/kvm.raw 
 	./build.sh --features server,kvm,dev .build/kvm bullseye $(SNAPSHOT_DATE)
-	./makef.sh ../kvm-server .build/kvm/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
+	./makef.sh .build/kvm/kvm .build/kvm/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
 
 onmetal:
 	echo "TODO: implement"
