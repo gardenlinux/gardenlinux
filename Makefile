@@ -3,11 +3,11 @@ SNAPSHOT_DATE=`date -d 'today' '+%Y%m%d'`
 all: aws gcp azure openstack vmware kvm
 
 aws:
-	./build.sh --features server,cloud,aws,dev .build/aws bullseye $(SNAPSHOT_DATE)
+	./build.sh --features server,cloud,ghost,aws,dev .build/aws bullseye $(SNAPSHOT_DATE)
 	./scripts/makef.sh --grub-target bios --fs-check-off .build/aws/aws .build/aws/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
 
 gcp:
-	./build.sh --features server,cloud,gcp ../gcp bullseye $(SNAPSHOT_DATE)
+	./build.sh --features server,cloud,ghost,gcp ../gcp bullseye $(SNAPSHOT_DATE)
 	./scripts/makef.sh --grub-target bios --fs-check-off ../gcp/gcp ../gcp/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
 
 azure:
