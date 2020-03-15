@@ -31,3 +31,6 @@ kvm:
 onmetal:
 	echo "TODO: implement"
 	exit 1
+
+clean:
+	rm -rf .build

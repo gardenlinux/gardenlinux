@@ -31,3 +31,7 @@ jobs:
       run: |
         ls -la
         #rsync -av --delete http-styles/ /var/www/repo.gardenlinux.io/public/.http-styles
+
+    - name: cleanup
+      if: always()
+      run: sudo make clean
