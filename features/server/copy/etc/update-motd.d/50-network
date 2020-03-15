@@ -18,16 +18,20 @@ mac2ipv6ll ()
 for i in $(networkctl | grep routable | awk '{ print $2; }') ipmi; do
 	if [ "$i" = "ipmi" ]; then
 		ip="$(ipmitool lan print 2>/dev/null)"
-		ipv4="$(printf "%15s/%s" $(echo "$ip" | grep "IP Address  " | cut -d: -f2) $(mask2cdr $(echo "$ip" | grep "Subnet Mask  " | cut -d: -f2)))"
-		ipv6="$(ipmitool lan6 print 1 "static_addr" 2>/dev/null)\n$(ipmitool lan6 print 1 "dynamic_addr" 2>/dev/null)"
-		ipv6="$(echo "$ipv6" | grep "    Address:" | sort -u | cut -d: -f2- | tr -d ' ' | grep -v ^::/0)"
-		ipv6ll="$(mac2ipv6ll $(echo "$ip" | grep "MAC Address  " | cut -d: -f2- ))"
+		if [ -n "$ip" ]; then
+			ipv4="$(printf "%15s/%s" $(echo "$ip" | grep "IP Address  " | cut -d: -f2) $(mask2cdr $(echo "$ip" | grep "Subnet Mask  " | cut -d: -f2)))"
+			ipv6="$(ipmitool lan6 print 1 "static_addr" 2>/dev/null)\n$(ipmitool lan6 print 1 "dynamic_addr" 2>/dev/null)"
+			ipv6="$(echo "$ipv6" | grep "    Address:" | sort -u | cut -d: -f2- | tr -d ' ' | grep -v ^::/0)"
+			ipv6ll="$(mac2ipv6ll $(echo "$ip" | grep "MAC Address  " | cut -d: -f2- ))"
+		fi
 	else
 		ip="$(ip addr show dev $i)"
-		ipv4="$(echo "$ip" | grep "inet "  | awk '{ split($2,a,"/"); printf "%15s/%s\n",a[1],a[2]; }')"
-		ipv6="$(echo "$ip" | grep "inet6 " | awk '{ split($2,a,"/"); printf "%s/%s\n",a[1],a[2]; }')"
-		ipv6ll="$(echo "$ipv6" | grep -e "^fe80" -e "^::1")"
-		ipv6="$(echo "$ipv6" | grep -v "^fe80" | grep -v "^::1")"
+		if [ -n "$ip" ]; then
+			ipv4="$(echo "$ip" | grep "inet "  | awk '{ split($2,a,"/"); printf "%15s/%s\n",a[1],a[2]; }')"
+			ipv6="$(echo "$ip" | grep "inet6 " | awk '{ split($2,a,"/"); printf "%s/%s\n",a[1],a[2]; }')"
+			ipv6ll="$(echo "$ipv6" | grep -e "^fe80" -e "^::1")"
+			ipv6="$(echo "$ipv6" | grep -v "^fe80" | grep -v "^::1")"
+		fi
 	fi
 
 	while [ ! -z "$ipv4" -o ! -z "$ipv6" -o ! -z "$ipv6ll" ]; do
