@@ -35,7 +35,7 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: Deploy all images
       if: success()
-      run: rsync -avz --exclude "*.raw" -e ssh .build/* builder@repo.gardenlinux.io:/var/www/repo.gardenlinux.io/public/
+      run: rsync -av --exclude "*.raw" -e ssh .build/* builder@repo.gardenlinux.io:/var/www/repo.gardenlinux.io/public/images/
 
     - name: make clean
       if: always()
