@@ -79,7 +79,7 @@ for t in "${grub_target[@]}"
 do
     case "$t" in
         bios) chroot ${dir_name} grub-install --target=i386-pc $loopback;;
-        uefi) chroot ${dir_name} grub-install --target=x86_64-efi $loopback --no-nvram;;
+        uefi) chroot ${dir_name} grub-install --target=x86_64-efi --no-nvram  $loopback ;;
         *) echo "Unknown target ${t}";;
     esac
 done
@@ -92,6 +92,8 @@ umount -l ${dir_name}/proc
 umount -l ${dir_name}/boot/efi
 sleep 2
 umount -l ${dir_name}
+fsck.vfat -a ${loopback}p2
+fsck.ext4 -a ${loopback}p3
 sleep 2
 losetup -d $loopback
 
