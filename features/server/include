@@ -4,8 +4,9 @@ ca-certificates
 dnsutils
 fail2ban
 ferm
-iputils-ping
 iproute2
+iptables
+iputils-ping
 kexec-tools
 libnss-resolve
 libnss-systemd
