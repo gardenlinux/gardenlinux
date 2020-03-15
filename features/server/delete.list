@@ -1,4 +1,3 @@
-/etc/machine-id
 /var/log/fail2ban.log
 /var/log/journal
 /etc/init.d/sysstat
@@ -7,7 +6,6 @@
 /etc/init.d/dbus
 /etc/init.d/fail2ban
 /etc/monit
-/etc/init.d/ferm
 /etc/init.d/ssh
 /etc/init.d/sudo
 /etc/init.d/sysstat

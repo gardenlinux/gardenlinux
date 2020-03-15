@@ -5,6 +5,7 @@ dnsutils
 fail2ban
 ferm
 iputils-ping
+iproute2
 kexec-tools
 libnss-resolve
 libnss-systemd
