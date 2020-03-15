@@ -20,11 +20,11 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
 
-    - name: AWS
-      run: sudo make aws
-
     - name: KVM
       run: sudo make kvm
+
+    - name: AWS
+      run: sudo make aws
 
     # Runs a set of commands using the runners shell
     - name: Deploy
