@@ -1,4 +1,5 @@
-SNAPSHOT_DATE=`date -d 'yesterday' '+%Y%m%d'`
+SNAPSHOT_DATE_fix=`date -d 'yesterday' '+%Y%m%d'`
+SNAPSHOT_DATE=now
 
 all: aws gcp azure openstack vmware kvm
 
