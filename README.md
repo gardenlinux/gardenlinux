@@ -19,3 +19,6 @@ Build specific images:
     sudo make openstack
     sudo make kvm
 
+## License
+
+Copyright 2020 by SAP SE
