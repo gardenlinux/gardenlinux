@@ -20,25 +20,25 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
 
-    - name: KVM
+    - name: Build KVM image
       run: sudo make kvm
       if: always()
 
-    - name: AWS
+    - name: Build AWS image
       run: sudo make aws
       if: always()
 
-    - name: GCP
+    - name: Build GCP image
       run: sudo make gcp
       if: always()
 
     # Runs a set of commands using the runners shell
-    - name: Deploy
+    - name: Deploy all images
       if: success()
       run: |
         ls -la
         #rsync -av --delete http-styles/ /var/www/repo.gardenlinux.io/public/.http-styles
 
-    - name: cleanup
+    - name: make clean
       if: always()
       run: sudo make clean
