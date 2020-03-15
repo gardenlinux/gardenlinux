@@ -1,0 +1,13 @@
+apparmor
+chrony
+#apt-utils
+#ifupdown
+#isc-dhcp-client
+socat
+ca-certificates
+curl
+ethtool
+docker.io
+arptables
+ebtables
+jq
