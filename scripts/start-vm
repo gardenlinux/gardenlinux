@@ -2,6 +2,7 @@
 
 sudo qemu-system-x86_64 -enable-kvm -nographic -m 2048 \
            -netdev user,id=eth0,hostfwd=tcp::2223-:22,hostname=debianplus \
+	   -object rng-random,id=id,filename=/dev/random \
            -device virtio-net-pci,netdev=eth0 \
            -drive format=raw,file=$1
 #sudo qemu-system-x86_64 -nographic -m 2048 -netdev user,id=mynet0,net=192.168.77.0/24,dhcpstart=192.168.77.4 -drive format=raw,file=$1
