@@ -5,6 +5,6 @@
 # that works even if disks are added and removed. See fstab(5).
 #
 # <file system>	<mount point>	<type>	<options>		<dump>	<pass>
-LABEL=ROOT	/		ext4	errors=remount-ro	0	1
+LABEL=ROOT	/		ext4	errors=remount-ro,x-systemd.growfs 0	1
 LABEL=EFI	/boot/efi	vfat	umask=0077		0 	2
 /dev/sr0	/media/cdrom0	udf,iso9660 user,noauto		0	0
