@@ -9,6 +9,16 @@ for i in $(ls /boot | grep vmlinuz | sed "s/vmlinuz-//"); do
 	systemctl enable kexec-load@$i
 done
 
-echo "Garden Linux (based on Debian GNU/Linux 10)" >/tmp/newmotd
+
+cat << 'EOF' > /tmp/newmotd
+  _____               _              _      _
+ / ____|             | |            | |    (_)
+| |  __  __ _ _ __ __| | ___ _ __   | |     _ _ __  _   ___  __
+| | |_ |/ _` | '__/ _` |/ _ \ '_ \  | |    | | '_ \| | | \ \/ /
+| |__| | (_| | | | (_| |  __/ | | | | |____| | | | | |_| |>  <
+ \_____|\__,_|_|  \__,_|\___|_| |_| |______|_|_| |_|\__,_/_/\_\
+
+Garden Linux 11 (based on Debian GNU/Linux 11)
+EOF
 cat /etc/motd >>/tmp/newmotd
 cp /tmp/newmotd /etc/motd
