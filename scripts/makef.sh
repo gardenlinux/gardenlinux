@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/usr/bin/env bash
 #---help---
 # usage: makef [options] <raw image file> <rootfs>
 # 
