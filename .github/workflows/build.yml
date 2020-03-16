@@ -32,7 +32,6 @@ jobs:
       run: sudo make gcp
       if: always()
 
-     Runs a set of commands using the runners shell
     - name: Deploy all images
       if: success()
       run: rsync -av -e ssh .build/* builder@repo.gardenlinux.io:/var/www/repo.gardenlinux.io/public/images/
