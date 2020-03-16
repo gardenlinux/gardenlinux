@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #---help---
 # usage: makef [options] <raw image file> <rootfs>
-# 
+#
 # Arguments:
 #  <raw image file> Image file that will be created (without extension=
 #  <rootfs>         Archive that contains the root file system
@@ -24,9 +24,9 @@ help() {
 target="bios,uefi"
 fs_check=1
 
-while true; do 
+while true; do
     flag=$1;
-    case "$flag" in 
+    case "$flag" in
         --grub-target) shift; target=$1; shift;;
         --fs-check-off) shift; fs_check=0;;
         *) break
@@ -49,7 +49,7 @@ if [[ ! -f ${rootfs} ]] ; then
     exit 1
 fi
 
-# note: the debian-cloud-image build has 30G for Azrue and 2 
+# note: the debian-cloud-image build has 30G for Azrue and 2
 # for all others, we need to maek that configurable... No idea
 # why that is
 dd if=/dev/zero of=${raw_image} seek=2048 bs=1 count=0 seek=2G
