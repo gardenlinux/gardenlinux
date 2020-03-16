@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+set -Eeuo pipefail
+
 #---help---
 # usage: makef [options] <raw image file> <rootfs>
 #
