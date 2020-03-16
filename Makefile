@@ -5,13 +5,16 @@ all: aws gcp azure openstack vmware kvm
 aws:
 	./build.sh --features server,cloud,ghost,aws,dev .build/aws bullseye $(SNAPSHOT_DATE)
 	./scripts/makef.sh --grub-target bios --fs-check-off .build/aws/aws .build/aws/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
+	# mv .build/aws/aws.rar .build/aws/image-gardenlinux-ec2-amd64.raw
+	#./scripts/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 .build/aws/image-gardenlinux-ec2-amd64.raw
 
 gcp:
 	./build.sh --features server,cloud,ghost,gcp .build/gcp bullseye $(SNAPSHOT_DATE)
 	./scripts/makef.sh --grub-target bios --fs-check-off .build/gcp/gcp .build/gcp/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
 
-azure:
-	./build.sh --features server,cloud,azure .build/azure bullseye $(SNAPSHOT_DATE)
+azure-dev:
+	./build.sh --features server,cloud,ghost,azure,dev .build/azure bullseye $(SNAPSHOT_DATE)
+	./scripts/makef.sh --grub-target bios --fs-check-off .build/azure/azure-dev .build/azure/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
 
 openstack:
 	./build.sh --features server,cloud,openstack .build/openstack bullseye $(SNAPSHOT_DATE)
