@@ -17,15 +17,15 @@ class Ec2ImageBuild:
         self.raw_image = os.path.basename(self.raw_image_path)
 
     def run(self):
-        # self.upload_image(self.raw_image_path, self.bucket)
+        self.upload_image(self.region, self.raw_image_path, self.bucket)
         snapshot_id = self.import_snapshot(self.bucket, self.raw_image, self.region)
         self.register_image(self.region, snapshot_id)
 
-    def upload_image(self, image_raw, bucket):
+    def upload_image(self, region, image_raw, bucket):
         result = subprocess.run(["aws", "--region", region, "s3", "cp", "--no-progress", image_raw, "s3://" + bucket], capture_output=True)
 
         if result.returncode != 0:
-            sys.exit("Unable to upload image " + image_raw)
+            sys.exit("Unable to upload image " + image_raw + ": " + str(result.stdout) + " " + str(result.stderr))
 
         print(result.stdout)
 
@@ -57,10 +57,12 @@ class Ec2ImageBuild:
         return snapshot_id
 
     def register_image(self, region, snapshot_id):
-
+        
+        print("Registering image for snapshot " + snapshot_id)
         result = subprocess.run(["aws", "--region", region, "ec2", "register-image", 
             "--name", "garden-linux-bullseye-ec2", 
-            "--description", "Garden Linux Testing", 
+            "--description", "Garden Linux Testing",
+            "--architecture", "x86_64",
             "--root-device-name", "/dev/xvda",
             "--virtualization-type", "hvm",
             "--ena-support",
@@ -68,6 +70,16 @@ class Ec2ImageBuild:
             "--block-device-mapping", "DeviceName=/dev/xvda,Ebs={DeleteOnTermination=True,SnapshotId=%s,VolumeType=gp2}" % snapshot_id],
             capture_output=True)
         print(result)
+        print(result.stdout)
+
+    def make_ami_public(self, ami_id):
+        print("Making ami %s public." % ami_id)
+        result = subprocess.run(["aws", "--region", region, "ec2", "modify-image-attributes", 
+            "--image-id", ami_id,
+            "--launch-permission", "Add=[{Group=all}]"],
+            capture_output=True)
+        print(result)
+        print(result.stdout)
 
     @classmethod
     def _argparse_register(cls, parser):
