@@ -11,6 +11,11 @@
 #  --image-type     Comma separated list of types: raw, vmdk TODO
 #---help---
 
+if [ ! ${EUID} -eq 0 ]; then
+  echo 'must be run as root'
+  exit 1
+fi
+
 help() {
 	sed -En '/^#---help---/,/^#---help---/p' "$0" | sed -E 's/^# ?//; 1d;$d;'
 	exit 1
