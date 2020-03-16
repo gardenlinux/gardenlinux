@@ -1,5 +1,4 @@
 apparmor
-chrony
 #apt-utils
 #ifupdown
 #isc-dhcp-client
