@@ -12,6 +12,11 @@ gcp:
 	./build.sh --features server,cloud,ghost,gcp .build/gcp bullseye $(SNAPSHOT_DATE)
 	./scripts/makef.sh --grub-target bios --fs-check-off .build/gcp/gcp .build/gcp/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
 
+gcp-dev:
+	#./build.sh --features server,cloud,ghost,gcp,dev .build/gcp bullseye $(SNAPSHOT_DATE)
+	./scripts/makef.sh --grub-target bios --fs-check-off .build/gcp/disk .build/gcp/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
+	(cd .build/gcp ; tar --format=oldgnu -Sczf compressed-image.tar.gz disk.raw)
+
 azure-dev:
 	./build.sh --features server,cloud,ghost,azure,dev .build/azure bullseye $(SNAPSHOT_DATE)
 	./scripts/makef.sh --grub-target bios --fs-check-off .build/azure/azure-dev .build/azure/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
