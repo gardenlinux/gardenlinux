@@ -12,8 +12,6 @@ update-alternatives --set ebtables /usr/sbin/ebtables-legacy
 # just to make sure there are no traces left
 #
 systemctl mask nftables.service
-
-# TODO part of debian-cloud-images, why?
-touch /etc/grub.d/enable_cloud
-
 systemctl enable docker
+
+ln -s /usr/bin/ip /bin/ip
