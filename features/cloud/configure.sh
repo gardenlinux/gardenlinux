@@ -13,5 +13,3 @@ update-alternatives --set ebtables /usr/sbin/ebtables-legacy
 #
 systemctl mask nftables.service
 systemctl enable docker
-
-ln -s /usr/bin/ip /bin/ip
