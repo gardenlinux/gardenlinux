@@ -1,4 +1,3 @@
-awscli
 python3-cffi-backend
 python3-boto
 cloud-init
