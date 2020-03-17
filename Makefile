@@ -19,7 +19,7 @@ gcp:
 
 gcp-dev:
 	./build.sh --features server,cloud,ghost,gcp,dev .build/gcp-dev bullseye $(SNAPSHOT_DATE)
-	./scripts/makef.sh --grub-target bios --fs-check-off .build/gcp-dev/disk .build/gcp-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
+	./scripts/makef.sh --grub-target bios --force --fs-check-off .build/gcp-dev/disk .build/gcp-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
 	(cd .build/gcp ; tar --format=oldgnu -Sczf compressed-image.tar.gz disk.raw)
 
 azure-dev:
