@@ -16,7 +16,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 		debootstrap \
 		wget ca-certificates \
 		xz-utils \
-		vim \
 		\
 		gnupg dirmngr \
 	&& rm -rf /var/lib/apt/lists/*
