@@ -1,8 +1,10 @@
 #!/bin/sh
 
+if [ -x /usr/sbin/needrestart ]; then
 svc="$(/usr/sbin/needrestart -b | /usr/bin/grep NEEDRESTART-SVC | /usr/bin/cut -d: -f2)"
 
 if [ "$svc" != "" ]; then
 	echo "Services running outdated binaries:\e[0;31m"$svc"\e[0m"
 	echo
+fi
 fi
