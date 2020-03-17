@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import sys
+import subprocess
+import json
+import time
+
+class GcpImageBuild:
+
+    def __init__(self, bucket, raw_image_path, image_name):
+        self.bucket = bucket
+        self.raw_image_path = raw_image_path
+        self.image_name = image_name
+
+    def upload_image(self, bucket_image, raw_image_path):
+
+        result = subprocess.run(["gsutil", " -q", "stat", bucket_image], capture_output=True)
+        if result.returncode == 0:
+            sys.exit("Image " + bucket_image + " already exists.")
+
+        print ("Uploading %s to %s" % (raw_image_path, bucket_image))
+        result = subprocess.run(["gsutil", "cp", raw_image_path, bucket_image], capture_output=True)
+        if result.returncode != 0:
+            sys.exit("Unable to upload image " + image + ": " + str(result.stdout) + " " + str(result.stderr))
+
+        print(result.stdout)
+
+    def create_image(self, bucket_image, image_name):
+        result = subprocess.run(["gcloud", " compute", "images", "describe", image_name], capture_output=True)
+        if result.returncode == 0:
+            sys.exit("Image " + image + " does already exist.")
+        result = subprocess.run(["gcloud", "compute", "images", "create", image_name,
+            "--source-uri", bucket_image ],
+            capture_output=True)
+        print(result)
+# CompletedProcess(args=['gcloud', 'compute', 'images', 'create', 'garden-linux-gcp-1', '--source-uri', 'gs://garden-linux-test/compressed-image-2.tar.gz'], returncode=0, stdout=b'NAME                PROJECT                 FAMILY  DEPRECATED  STATUS\ngarden-linux-gcp-1  sap-se-gcp-scp-k8s-dev                      READY\n', stderr=b'Created [https://www.googleapis.com/compute/v1/projects/sap-se-gcp-scp-k8s-dev/global/images/garden-linux-gcp-1].\n')
+
+
+    def run(self):
+        self.raw_image_name = os.path.basename(self.raw_image_path)
+        self.bucket_image = "gs://" + self.bucket + "/" + self.raw_image_name
+#        self.upload_image(self.bucket_image, self.raw_image_path)
+        self.create_image(self.bucket_image, self.image_name)
+
+    @classmethod
+    def _argparse_register(cls, parser):
+
+        parser.add_argument(
+            '--bucket',
+            type=str,
+            dest='bucket',
+            help='Upload bucket',
+            required=True
+        )
+        parser.add_argument(
+            '--raw-image-path',
+            type=str,
+            help="RAW image file tar.gz file"
+        )
+        parser.add_argument(
+            '--image-name',
+            type=str,
+            help="Image name on GCP"
+        )
+
+    @classmethod
+    def _main(cls):
+        parser = argparse.ArgumentParser()
+        cls._argparse_register(parser)
+        args = parser.parse_args()
+        print(args)
+
+        gcp_img_build = cls(bucket=args.bucket, raw_image_path=args.raw_image_path, image_name=args.image_name)
+        gcp_img_build.run()
+ 
+if __name__ == '__main__':
+    GcpImageBuild._main()

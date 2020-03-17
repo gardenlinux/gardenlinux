@@ -1,8 +1,0 @@
-auto $INTERFACE
-allow-hotplug $INTERFACE
-
-iface $INTERFACE inet dhcp
-
-iface $INTERFACE inet6 manual
-  try_dhcp 1
-
