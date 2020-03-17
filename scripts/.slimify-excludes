@@ -19,3 +19,5 @@
 # see also .slimify-includes
 /var/cache/debconf/templates.dat-old
 /var/cache/debconf/config.dat-old
+
+/root/.cache/*/*
