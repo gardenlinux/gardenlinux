@@ -11,3 +11,4 @@ for i in $(ls /boot | grep vmlinuz | sed "s/vmlinuz-//"); do
 done
 
 update-ca-certificates
+addgroup --system wheel
