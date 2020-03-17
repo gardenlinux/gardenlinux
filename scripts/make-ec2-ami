@@ -77,7 +77,7 @@ class Ec2ImageBuild:
             sys.exit("Unable to register image for snapshot " + snapshot_id + ": " + str(result.stdout) + " " + str(result.stderr))
         doc = json.loads(result.stdout)
         return doc["ImageId"]
-spie    def make_ami_public(self, region, ami_id):
+    def make_ami_public(self, region, ami_id):
         print("Making ami %s public." % ami_id)
         result = subprocess.run(["aws", "--region", region, "ec2", "modify-image-attributes", 
             "--image-id", ami_id,

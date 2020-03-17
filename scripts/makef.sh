@@ -26,12 +26,14 @@ help() {
 
 target="bios,uefi"
 fs_check=1
+force=0
 
 while true; do
     flag=$1;
     case "$flag" in
         --grub-target) shift; target=$1; shift;;
         --fs-check-off) shift; fs_check=0;;
+        --force) shift; force=1;;
         *) break
     esac
 done
@@ -42,7 +44,7 @@ raw_image=${1}.raw
 dir_name=$1
 rootfs=$2
 
-if [[ -e ${raw_image} ]]; then
+if [[ -e ${raw_image} && ${force} == 0 ]]; then
     echo "Raw image ${raw_image} exists."
     exit 1
 fi
