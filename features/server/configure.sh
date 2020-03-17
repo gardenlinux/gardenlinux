@@ -12,3 +12,7 @@ done
 
 update-ca-certificates
 addgroup --system wheel
+
+ln -sf /sbin/ip /bin/ip
+ln -sf /sbin/ip /usr/bin/ip
+
