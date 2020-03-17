@@ -60,7 +60,7 @@ done
 [ -s $thisDir/.init-includes ] && include="$(echo -e "$include\n$(cat $thisDir/.init-includes)" | sed -e "s/#.*\$//" -e "/^$/d" | paste -sd, -)"
 [ -s $thisDir/.init-excludes ] && exclude="$(echo -e "$exclude\n$(cat $thisDir/.init-excludes)" | sed -e "s/#.*\$//" -e "/^$/d" | paste -sd, -)"
 
-for i in $(echo "none,$features" | tr ',' ' ' | sort -u); do
+for i in $(echo "base,$features" | tr ',' ' ' | sort -u); do
 	[ -s $featureDir/$i/include ] && include="$(echo -e "$include\n$(cat $featureDir/$i/include)" | sed -e "s/#.*\$//" -e "/^$/d" | paste -sd, -)"
 	[ -s $featureDir/$i/exclude ] && exclude="$(echo -e "$exclude\n$(cat $featureDir/$i/exclude)" | sed -e "s/#.*\$//" -e "/^$/d" | paste -sd, -)"
 done

@@ -27,7 +27,7 @@ targetDir="${1:-}"; shift || eusage 'missing target-dir'
 aptVersion="$("$thisDir/.apt-version.sh" "$targetDir")"
 
 [ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
-for i in $(echo "none,$features" | tr ',' ' ' | sort -u); do
+for i in $(echo "base,$features" | tr ',' ' ' | sort -u); do
 	if [ -d $featureDir/$i/copy ]; then
 		out=$(tar -cC $featureDir/$i/copy . | tar -xvC $targetDir 2>&1 | grep -v "^./$" | paste -sd' '  -)
 		echo "copying from $i: $out"
