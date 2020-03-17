@@ -16,3 +16,6 @@
 /etc/runit
 /var/log/runit
 /var/log/private
+/etc/ssh/ssh_host_*
+/etc/ssh/moduli
+/etc/update-motd.d/10-uname

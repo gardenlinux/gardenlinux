@@ -3,7 +3,10 @@
 ramfree="$(free)"
 diskfree="$(df)"
 
-echo "Free:  \
-RAM $(echo "${ramfree}" | grep Mem  | awk '{printf("%s%.2f%%\033[0m", (($4/$2)<0.1)?"\033[31m":(($4/$2)<0.3)?"\033[33m":"\033[32m", $4/$2 * 100.0)}')  \
-Swap $(echo "${ramfree}" | grep Swap | awk '{printf("%s%.2f%%\033[0m", (($4/$2)<0.1)?"\033[31m":(($4/$2)<0.9)?"\033[33m":"\033[32m", $4/$2 * 100.0)}')  \
-Disk $(echo "${diskfree}" | grep '^/dev'| awk '{printf("%s %s%.2f%%\033[0m ", $6, (($4/$2)<0.1)?"\033[31m":(($4/$2)<0.3)?"\033[33m":"\033[32m", $4/$2 * 100.0)}')"
+RAM="RAM $(echo "${ramfree}" | grep Mem  | awk '{printf("%s%.2f%%\033[0m", (($4/$2)<0.1)?"\033[31m":(($4/$2)<0.3)?"\033[33m":"\033[32m", $4/$2 * 100.0)}')"
+if [ $(echo "${ramfree}" | grep Swap | awk '{printf $2; }') -gt 0 ]; then
+	SWAP="  Swap $(echo "${ramfree}" | grep Swap | awk '{printf("%s%.2f%%\033[0m", (($4/$2)<0.1)?"\033[31m":(($4/$2)<0.9)?"\033[33m":"\033[32m", $4/$2 * 100.0)}')"
+fi
+DISK="Disk $(echo "${diskfree}" | grep '^/dev'| awk '{printf("%s %s%.2f%%\033[0m ", $6, (($4/$2)<0.1)?"\033[31m":(($4/$2)<0.3)?"\033[33m":"\033[32m", $4/$2 * 100.0)}')"
+
+echo "Free:  $RAM$SWAP  $DISK"
