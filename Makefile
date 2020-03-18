@@ -22,7 +22,7 @@ gcp:
 	./build.sh --features server,cloud,ghost,gcp .build/gcp bullseye $(SNAPSHOT_DATE)
 	./scripts/makef.sh --grub-target bios --fs-check-off .build/gcp/gcp .build/gcp/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
 
-GCP_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-dev-aws-$(VERSION)
+GCP_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-dev-gcp-$(VERSION)
 gcp-dev:
 	./build.sh --features server,cloud,ghost,gcp,dev .build/gcp-dev bullseye $(SNAPSHOT_DATE)
 	./scripts/makef.sh --grub-target bios --force --fs-check-off .build/gcp-dev/disk .build/gcp-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
