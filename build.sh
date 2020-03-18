@@ -14,7 +14,6 @@ source "$thisDir/scripts/.constants.sh" \
 
 eval "$dgetopt"
 build=1
-codenameCopy=
 eol=
 ports=
 arch=
@@ -25,7 +24,6 @@ while true; do
 	dgetopt-case "$flag"
 	case "$flag" in
 		--no-build) build= ;; # for skipping "docker build"
-		--codename-copy) codenameCopy=1 ;; # for copying a "stable.tar.xz" to "stretch.tar.xz" with updated sources.list (saves a lot of extra building work)
 		--eol) eol=1 ;; # for using "archive.debian.org"
 		--ports) ports=1 ;; # for using "debian-ports"
 		--arch) arch="$1"; shift ;; # for adding "--arch" to debuerreotype-init
@@ -80,10 +78,8 @@ docker run \
 	-w /tmp \
 	-e suite="$suite" \
 	-e timestamp="$timestamp" \
-	-e codenameCopy="$codenameCopy" \
-	-e eol="$eol" -e ports="$ports" -e arch="$arch" -e qemu="$qemu" \
+	-e eol="$eol" -e ports="$ports" -e arch="$arch" -e qemu="$qemu" -e features="$features" \
 	-e TZ='UTC' -e LC_ALL='C' \
-	-e features="$features" \
 	--hostname debuerreotype \
 	"$dockerImage" \
 	bash -Eeuo pipefail -c '
@@ -156,14 +152,6 @@ docker run \
 		fi
 
 		codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Release")"
-		if [ -n "$codenameCopy" ] && [ "$codename" = "$suite" ]; then
-			# if codename already is the same as suite, then making a copy does not make any sense
-			codenameCopy=
-		fi
-		if [ -n "$codenameCopy" ] && [ -z "$codename" ]; then
-			echo >&2 "error: --codename-copy specified but we failed to get a Codename for $suite"
-			exit 1
-		fi
 
 		{
 			initArgs=( --arch="$dpkgArch" )
@@ -314,7 +302,7 @@ docker run \
 				create_artifacts "$targetBase" "$rootfs" "$suite" "$variant"
 			done
 
-			if [ -n "$codenameCopy" ]; then
+			if [ "$codename" != "$suite" ]; then
 				codenameDir="$exportDir/$serial/$dpkgArch/$codename"
 				mkdir -p "$codenameDir"
 				tar -cC "$outputDir" --exclude="**/rootfs.*" . | tar -xC "$codenameDir"
