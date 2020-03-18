@@ -16,8 +16,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 		debootstrap \
 		wget ca-certificates \
 		xz-utils \
+		curl \
 		\
-		gnupg dirmngr \
+		gnupg dirmngr 
+		parted udev dosfstools xz-utils \
 	&& rm -rf /var/lib/apt/lists/*
 
 # see ".dockerignore"
@@ -33,14 +35,3 @@ RUN set -ex; \
 
 WORKDIR /tmp
 
-# a few example md5sum values for amd64:
-
-# debuerreotype-init test-stretch stretch 2017-05-08T00:00:00Z
-# debuerreotype-tar test-stretch test-stretch.tar
-# md5sum test-stretch.tar
-#   14206d5b9b2991e98f5214c3d310e4fa
-
-# debuerreotype-init test-jessie jessie 2017-05-08T00:00:00Z
-# debuerreotype-tar test-jessie test-jessie.tar
-# md5sum test-jessie.tar
-#   57f98d3636000630080e5ba208508e10
