@@ -14,8 +14,8 @@ class GcpImageBuild:
         self.raw_image_path = raw_image_path
         self.image_name = image_name
 
-    def upload_image(self, bucket_image, raw_image_path):
-
+    def upload_image(self, bucket, raw_image_path, image_name):
+        bucket_image = "gs://" + bucket + "/" + image_name + ".tar.gz"
         result = subprocess.run(["gsutil", " -q", "stat", bucket_image], capture_output=True)
         if result.returncode == 0:
             sys.exit("Image " + bucket_image + " already exists.")
@@ -23,26 +23,22 @@ class GcpImageBuild:
         print ("Uploading %s to %s" % (raw_image_path, bucket_image))
         result = subprocess.run(["gsutil", "cp", raw_image_path, bucket_image], capture_output=True)
         if result.returncode != 0:
+            print(result.stdout)
             sys.exit("Unable to upload image " + image + ": " + str(result.stdout) + " " + str(result.stderr))
 
-        print(result.stdout)
-
-    def create_image(self, bucket_image, image_name):
+    def create_image(self, bucket, image_name):
         result = subprocess.run(["gcloud", " compute", "images", "describe", image_name], capture_output=True)
         if result.returncode == 0:
             sys.exit("Image " + image + " does already exist.")
+        bucket_image = "gs://" + bucket + "/" + image_name + ".tar.gz"
         result = subprocess.run(["gcloud", "compute", "images", "create", image_name,
             "--source-uri", bucket_image ],
             capture_output=True)
         print(result)
-# CompletedProcess(args=['gcloud', 'compute', 'images', 'create', 'garden-linux-gcp-1', '--source-uri', 'gs://garden-linux-test/compressed-image-2.tar.gz'], returncode=0, stdout=b'NAME                PROJECT                 FAMILY  DEPRECATED  STATUS\ngarden-linux-gcp-1  sap-se-gcp-scp-k8s-dev                      READY\n', stderr=b'Created [https://www.googleapis.com/compute/v1/projects/sap-se-gcp-scp-k8s-dev/global/images/garden-linux-gcp-1].\n')
-
 
     def run(self):
-        self.raw_image_name = os.path.basename(self.raw_image_path)
-        self.bucket_image = "gs://" + self.bucket + "/" + self.raw_image_name
-#        self.upload_image(self.bucket_image, self.raw_image_path)
-        self.create_image(self.bucket_image, self.image_name)
+        self.upload_image(self.bucket, self.raw_image_path, self.image_name)
+        self.create_image(self.bucket, self.image_name)
 
     @classmethod
     def _argparse_register(cls, parser):
