@@ -1,0 +1,1 @@
+#stuff executed after debootstrap but before files are copied (not in chroot)
