@@ -31,9 +31,11 @@ gcp-dev:
 gcp-dev-upload:
 	./scripts/make-gcp-ami --bucket garden-linux-test --image-name $(GCP_DEV_IMAGE_NAME) --raw-image-path .build/gcp-dev/$(GCP_DEV_IMAGE_NAME).tar.gz
 
+AZURE_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-dev-az-$(VERSION)
 azure-dev:
 	./build.sh --features server,cloud,ghost,azure,dev .build/azure-dev bullseye $(SNAPSHOT_DATE)
-	./scripts/makef.sh --grub-target bios --fs-check-off .build/azure/azure-dev .build/azure-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
+	./scripts/makef.sh --grub-target bios --force --fs-check-off .build/azure-dev/azure-dev .build/azure-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
+	./scripts/make-vhd .build/azure-dev/azure-dev.raw .build/azure-dev/$(AZURE_DEV_IMAGE_NAME).vhd
 
 openstack:
 	./build.sh --features server,cloud,openstack .build/openstack bullseye $(SNAPSHOT_DATE)
