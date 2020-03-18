@@ -6,6 +6,7 @@ socat
 ca-certificates
 curl
 ethtool
+logrotate
 docker.io
 arptables
 ebtables
