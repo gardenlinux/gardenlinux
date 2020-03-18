@@ -38,7 +38,7 @@ cloud:
 	
 kvm:
 	rm -f .build/kvm/kvm.raw 
-	./build.sh --features server,kvm,chost,dev .build/kvm bullseye $(SNAPSHOT_DATE)
+	./build.sh --features server,kvm,dev .build/kvm bullseye $(SNAPSHOT_DATE)
 	./scripts/makef.sh .build/kvm/kvm .build/kvm/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
 
 onmetal:
