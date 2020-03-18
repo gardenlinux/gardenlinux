@@ -9,29 +9,21 @@ import time
 
 class Ec2ImageBuild:
 
-    def __init__(self, bucket, region, raw_image, permission=False):
+    def __init__(self, bucket, region, raw_image, image_name, permission=False):
         self.bucket = bucket
         self.region = region
         self.permission = permission
-        self.raw_image_path = raw_image
-        self.raw_image = os.path.basename(self.raw_image_path)
+        self.raw_image = raw_image
+        self.image_name = image_name
 
-    def run(self):
-        self.upload_image(self.region, self.raw_image_path, self.bucket)
-        snapshot_id = self.import_snapshot(self.bucket, self.raw_image, self.region)
-        ami_id = self.register_image(self.region, snapshot_id)
-        print("Got ami_id")
-        self.make_ami_public(self, region, ami_id)
-
-    def upload_image(self, region, image_raw, bucket):
-        result = subprocess.run(["aws", "--region", region, "s3", "cp", "--no-progress", image_raw, "s3://" + bucket], capture_output=True)
+    def upload_image(self, region, bucket, image_raw, image_name):
+        result = subprocess.run(["aws", "--region", region, "s3", "cp", "--no-progress", image_raw, "s3://" + bucket + "/" + image_name], capture_output=True)
 
         if result.returncode != 0:
             sys.exit("Unable to upload image " + image_raw + ": " + str(result.stdout) + " " + str(result.stderr))
-
         print(result.stdout)
 
-    def import_snapshot(self, bucket, image_name, region):
+    def import_snapshot(self, region, bucket, image_name):
 
         container_string = ("Description=garden-linux,Format=raw,UserBucket={S3Bucket=%s,S3Key=%s}" % (bucket, image_name))
         result = subprocess.run(["aws", "--region", region, "ec2", "import-snapshot", "--disk-container", container_string], capture_output= True)
@@ -58,11 +50,11 @@ class Ec2ImageBuild:
         print("Snapshot id %s" % snapshot_id)
         return snapshot_id
 
-    def register_image(self, region, snapshot_id):
+    def register_image(self, region, snapshot_idm, image_name):
         
         print("Registering image for snapshot " + snapshot_id)
         result = subprocess.run(["aws", "--region", region, "ec2", "register-image", 
-            "--name", "garden-linux-bullseye-ec2", 
+            "--name", image_name, 
             "--description", "Garden Linux Testing",
             "--architecture", "x86_64",
             "--root-device-name", "/dev/xvda",
@@ -77,6 +69,7 @@ class Ec2ImageBuild:
             sys.exit("Unable to register image for snapshot " + snapshot_id + ": " + str(result.stdout) + " " + str(result.stderr))
         doc = json.loads(result.stdout)
         return doc["ImageId"]
+
     def make_ami_public(self, region, ami_id):
         print("Making ami %s public." % ami_id)
         result = subprocess.run(["aws", "--region", region, "ec2", "modify-image-attributes", 
@@ -86,6 +79,13 @@ class Ec2ImageBuild:
         print(result)
         print(result.stdout)
         return result.stdout
+
+    def run(self):
+        self.upload_image(self.region, self.bucket, self.raw_image, self.image_name)
+        snapshot_id = self.import_snapshot(self.region, self.bucket, self.image_name)
+        ami_id = self.register_image(self.region, snapshot_id, image_name)
+        print("Got ami_id")
+        self.make_ami_public(self, self.region, ami_id)
 
     @classmethod
     def _argparse_register(cls, parser):
@@ -109,6 +109,13 @@ class Ec2ImageBuild:
             required=True
         )
         parser.add_argument(
+            '--image-name',
+            type=str,
+            dest='image_name',
+            help='Name of image in bucket and snapshot',
+            required=True
+        )
+        parser.add_argument(
             'raw_image',
             type=str,
             help="RAW image file"
@@ -120,7 +127,7 @@ class Ec2ImageBuild:
         cls._argparse_register(parser)
         args = parser.parse_args()
 
-        ec2_img_build = cls(bucket=args.bucket, raw_image=args.raw_image, region=args.region, permission=args.permission_public)
+        ec2_img_build = cls(region=args.region, bucket=args.bucket, raw_image=args.raw_image, image_name=args.image_name, permission=args.permission_public)
         ec2_img_build.run()
  
 if __name__ == '__main__':
