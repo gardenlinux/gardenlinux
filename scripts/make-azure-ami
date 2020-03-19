@@ -1,0 +1,116 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import sys
+import subprocess
+import json
+import time
+
+class AzureImageBuild:
+
+    def __init__(self, resource_group, storage_account_name, image_name, image_path):
+        self.resource_group=resource_group
+        self.storage_account_name=storage_account_name
+        self.image_name=image_name
+        self.image_path=image_path
+
+    def get_account_key(self, resource_group, storage_account_name):
+        result = subprocess.run(["az", "storage", "account", "keys", "list", "--resource-group", resource_group, "--account-name", storage_account_name], capture_output=True)
+        if result.returncode != 0:
+            sys.exit("Unable to get account key for storage account " + storage_account_name + ": " + str(result.stdout) + " " + str(result.stderr))
+
+        print(result)
+        doc = json.loads(result.stdout)
+        return doc[0]["value"]
+
+    def upload_disk(self, storage_account_name, image_path, image_name, key):
+        print("Uploading disk " + image_path)
+        result = subprocess.run(["bin/azure-vhd-utils",
+            "upload",
+            "--localvhdpath", image_path,
+            "--stgaccountname", storage_account_name,
+            "--blobname", image_name,
+            "--stgaccountkey", key], 
+            capture_output=True)
+        if result.returncode != 0:
+            sys.exit("Upload of image failed:" + str(result.stdout) + " " + str(result.stderr))
+        print(result)
+
+    def disk_create(self, resource_group, storage_account_name, image_name):
+        print("Creating disk for image " + image_name)
+        source = "https://" + storage_account_name + ".blob.core.windows.net/vhds/" + image_name + ".vhd"
+        result = subprocess.run(["az", "disk", "create", 
+            "-g", resource_group, 
+            "--name", image_name,
+            "--source", source],
+            capture_output=True)
+        print(result)
+        if result.returncode != 0:
+            sys.exit("Disk create failed:" + str(result.stdout) + " " + str(result.stderr))
+        doc = json.loads(result.stdout)
+        # disk id
+        return doc["id"]
+
+    def image_create(self, resource_group, image_name, disk_id):
+        print ("Creating Azure image for disk id " + disk_id)
+        result = subprocess.run(["az", "image", "create", 
+            "-g", resource_group,
+            "--name", image_name,
+            "--source", disk_id,
+            "--os-type", "linux"],
+            capture_output=True)
+        print(result)
+
+
+    def run(self):
+        a_key = self.get_account_key(self.resource_group, self.storage_account_name)
+        self.upload_disk(self.storage_account_name, self.image_path, self.image_name, a_key)
+        disk_id = self.disk_create(self.resource_group, self.storage_account_name, self.image_name)
+        self.image_create(self.resource_group, self.image_name, disk_id)
+
+
+    @classmethod
+    def _argparse_register(cls, parser):
+
+        parser.add_argument(
+            '--resource-group',
+            type=str,
+            dest='resource_group',
+            help='resource group',
+            required=True
+        )
+        parser.add_argument(
+            '--storage-account-name',
+            type=str,
+            dest='storage_account_name',
+            help='storage accont name',
+            required=True
+        )
+        parser.add_argument(
+            '--image-name',
+            type=str,
+            dest='image_name',
+            help='image name',
+            required=True
+        )
+        parser.add_argument(
+            '--image-path',
+            type=str,
+            dest='image_path',
+            help='image_path',
+            required=True
+        )
+
+    @classmethod
+    def _main(cls):
+        parser = argparse.ArgumentParser()
+        cls._argparse_register(parser)
+        args = parser.parse_args()
+        print(args)
+
+        azure_img_build = cls(resource_group=args.resource_group, storage_account_name=args.storage_account_name, image_name=args.image_name, image_path=args.image_path)
+        azure_img_build.run()
+ 
+if __name__ == '__main__':
+    AzureImageBuild._main()
