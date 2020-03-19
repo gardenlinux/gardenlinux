@@ -1,6 +1,6 @@
 SNAPSHOT_DATE=`date -d 'today' '+%Y%m%d'`
 IMAGE_BASENAME=garden-linux
-VERSION=5
+VERSION=8
 
 all: aws gcp azure openstack vmware kvm
 
@@ -36,6 +36,10 @@ azure-dev:
 	./build.sh --features server,cloud,ghost,azure,dev .build/azure-dev bullseye $(SNAPSHOT_DATE)
 	./scripts/makef.sh --grub-target bios --force --fs-check-off .build/azure-dev/azure-dev .build/azure-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
 	./scripts/make-vhd .build/azure-dev/azure-dev.raw .build/azure-dev/$(AZURE_DEV_IMAGE_NAME).vhd
+
+azure-dev-upload:
+	./scripts/make-azure-ami --resource-group garden-linux --storage-account-name gardenlinux --image-path=.build/azure-dev/$(AZURE_DEV_IMAGE_NAME).vhd --image-name=$(AZURE_DEV_IMAGE_NAME)
+
 
 openstack:
 	./build.sh --features server,cloud,openstack .build/openstack bullseye $(SNAPSHOT_DATE)
