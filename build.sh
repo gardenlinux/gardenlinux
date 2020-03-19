@@ -58,6 +58,8 @@ if [ "$suite" = 'potato' ]; then
 		--security-opt seccomp=unconfined
 	)
 fi
+#for image creation
+securityArgs+=( --privileged )
 
 ver="$("$thisDir/scripts/debuerreotype-version")"
 ver="${ver%% *}"
@@ -70,6 +72,8 @@ if [ -n "$qemu" ]; then
 	EODF
 	dockerImage="$dockerImage-qemu"
 fi
+
+set -x
 
 docker run \
 	--rm \

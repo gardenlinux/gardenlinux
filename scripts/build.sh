@@ -99,6 +99,9 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 
 	debuerreotype-init "${initArgs[@]}" rootfs "$suite" "@$epoch"
 
+	# nasty problem that proc vanished if executed with --privileged in container
+	[ "$(ls /proc/)" = "" ] && mount -t proc proc /proc
+
 	if [ -n "$eol" ]; then
 		debuerreotype-gpgv-ignore-expiration-config rootfs
 	fi
@@ -201,6 +204,14 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 				touch_epoch "$targetFile"
 			fi
 		done
+
+		featureDir=/opt/debuerreotype/features
+		[ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
+		for i in $(echo "base,$features" | tr ',' ' ' | sort -u); do
+			[ -s $featureDir/$i/image ] && bash -c "$featureDir/$i/image /tmp/$targetBase $targetBase.tar.xz"
+		done
+
+		echo "Errorlevel: $?"
 	}
 
 	for rootfs in rootfs*/; do
@@ -241,4 +252,4 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 	fi
 } >&2
 
-tar -cC "$exportDir" .
+tar --sparse -cC "$exportDir" .
