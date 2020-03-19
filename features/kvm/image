@@ -1,0 +1,1 @@
+/opt/debuerreotype/scripts/makef.sh --grub-target bios --force --fs-check-off $1 $2
