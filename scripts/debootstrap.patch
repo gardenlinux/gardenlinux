@@ -1,0 +1,13 @@
+--- /usr/share/debootstrap/functions	2020-03-19 23:52:15.932784227 +0000
++++ /usr/share/debootstrap/functions	2020-03-19 23:53:56.137329010 +0000
+@@ -1176,7 +1176,9 @@
+ 		umount_on_exit /dev/shm
+ 		umount_on_exit /proc
+ 		umount_on_exit /proc/bus/usb
+-		umount "$TARGET/proc" 2>/dev/null || true
++		if [ "$CONTAINER" != "docker" ]; then
++			umount "$TARGET/proc" 2>/dev/null || true
++		fi
+
+ 		# some container environment are used at second-stage, it already treats /proc and so on
+ 		if [ -z "$(ls -A "$TARGET/proc")" ]; then

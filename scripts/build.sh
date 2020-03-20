@@ -99,9 +99,6 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 
 	debuerreotype-init "${initArgs[@]}" rootfs "$suite" "@$epoch"
 
-	# nasty problem that proc vanished if executed with --privileged in container
-	[ "$(ls /proc/)" = "" ] && mount -t proc proc /proc
-
 	if [ -n "$eol" ]; then
 		debuerreotype-gpgv-ignore-expiration-config rootfs
 	fi
