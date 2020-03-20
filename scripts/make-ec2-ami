@@ -84,7 +84,7 @@ class Ec2ImageBuild:
         self.upload_image(self.region, self.bucket, self.raw_image, self.image_name)
         snapshot_id = self.import_snapshot(self.region, self.bucket, self.image_name)
         ami_id = self.register_image(self.region, snapshot_id, image_name)
-        print("Got ami_id")
+        print("Got ami_id: " + ami_id)
         self.make_ami_public(self, self.region, ami_id)
 
     @classmethod
