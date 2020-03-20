@@ -50,7 +50,7 @@ class Ec2ImageBuild:
         print("Snapshot id %s" % snapshot_id)
         return snapshot_id
 
-    def register_image(self, region, snapshot_idm, image_name):
+    def register_image(self, region, snapshot_id, image_name):
         
         print("Registering image for snapshot " + snapshot_id)
         result = subprocess.run(["aws", "--region", region, "ec2", "register-image", 
@@ -83,9 +83,9 @@ class Ec2ImageBuild:
     def run(self):
         self.upload_image(self.region, self.bucket, self.raw_image, self.image_name)
         snapshot_id = self.import_snapshot(self.region, self.bucket, self.image_name)
-        ami_id = self.register_image(self.region, snapshot_id, image_name)
+        ami_id = self.register_image(self.region, snapshot_id, self.image_name)
         print("Got ami_id: " + ami_id)
-        self.make_ami_public(self, self.region, ami_id)
+        self.make_ami_public(self.region, ami_id)
 
     @classmethod
     def _argparse_register(cls, parser):

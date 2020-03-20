@@ -24,7 +24,7 @@ class GcpImageBuild:
         result = subprocess.run(["gsutil", "cp", raw_image_path, bucket_image], capture_output=True)
         if result.returncode != 0:
             print(result.stdout)
-            sys.exit("Unable to upload image " + image + ": " + str(result.stdout) + " " + str(result.stderr))
+            sys.exit("Unable to upload image " + raw_image_path + ": " + str(result.stdout) + " " + str(result.stderr))
 
     def create_image(self, bucket, image_name):
         result = subprocess.run(["gcloud", " compute", "images", "describe", image_name], capture_output=True)
