@@ -17,6 +17,7 @@ touch_epoch() {
 }
 
 debuerreotypeScriptsDir="$(dirname "$(readlink -f "$(which debuerreotype-init)")")"
+featureDir="$debuerreotypeScriptsDir/../features"
 
 for archive in "" security; do
 	snapshotUrlFile="$exportDir/$serial/$dpkgArch/snapshot-url${archive:+-${archive}}"
@@ -202,10 +203,9 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 			fi
 		done
 
-		featureDir=/opt/debuerreotype/features
 		[ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
 		for i in $(echo "base,$features" | tr ',' ' ' | sort -u); do
-			[ -s $featureDir/$i/image ] && bash -c "$featureDir/$i/image /tmp/$targetBase $targetBase.tar.xz"
+			[ -s $featureDir/$i/image ] && bash -c "$featureDir/$i/image $targetBase $targetBase.tar.xz"
 		done
 
 		echo "Errorlevel: $?"
