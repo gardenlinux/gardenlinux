@@ -1,0 +1,16 @@
+aws:
+    # region and access keys, read from ~/.aws/config and ~/.aws/credentials if not set here
+    region:
+    access_key_id:
+    secret_access_key:
+    # which AMI to use for creating an ec2 instance
+    ami_id: ami-0dd9c806f56e62101
+    # user and ssh key used to connect to the ec2 instance
+    user: admin
+    ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
+    passphrase:
+    # name of public ssh key imported to AWS
+    key_name: gardenlinux-test
+    remote_path: /
+azure:
+gcp:
