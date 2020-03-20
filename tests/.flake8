@@ -1,0 +1,11 @@
+[flake8]
+max-line-length=120
+ignore=
+    # E203 whitespace before ':'
+    E203,
+    # E231 missing whitespace after ','
+    E231,
+    # W503: Line break before binary operator
+    W503,
+    # W504: Line break after binary operator
+    W504
