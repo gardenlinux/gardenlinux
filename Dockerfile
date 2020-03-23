@@ -2,13 +2,13 @@ FROM 	debian:testing-slim
 
 RUN	apt-get update && apt-get install -y --no-install-recommends \
 		debian-ports-archive-keyring \
-		debootstrap \
+		debootstrap patch \
 		wget ca-certificates \
 		xz-utils \
-		curl patch \
 		\
 		gnupg dirmngr \
 		parted udev dosfstools xz-utils \
+		squashfs-tools \
 	&& rm -rf /var/lib/apt/lists/*
 
 # see ".dockerignore"
