@@ -10,7 +10,7 @@ source "$thisDir/scripts/.constants.sh" \
 	'output stretch 2017-05-08T00:00:00Z
 --codename-copy output stable 2017-05-08T00:00:00Z
 --eol output squeeze 2016-03-14T00:00:00Z
---eol --arch i386 output sarge 2016-03-14T00:00:00Z' \
+--eol --arch i386 output sarge 2016-03-14T00:00:00Z' 
 
 eval "$dgetopt"
 build=1
@@ -34,9 +34,9 @@ while true; do
 	esac
 done
 
-outputDir="${1:-}"; shift || eusage 'missing output-dir'
-suite="${1:-}"; shift || eusage 'missing suite'
-timestamp="${1:-}"; shift || eusage 'missing timestamp'
+outputDir="${1:-}";	shift || eusage 'missing output-dir'
+suite="${1:-}";		shift || eusage 'missing suite'
+timestamp="${1:-}";	shift || eusage 'missing timestamp'
 
 mkdir -p "$outputDir"
 outputDir="$(readlink -f "$outputDir")"
@@ -44,22 +44,17 @@ outputDir="$(readlink -f "$outputDir")"
 securityArgs=(
 	--cap-add SYS_ADMIN
 	--cap-drop SETFCAP
+	--privileged
 )
 if docker info | grep -q apparmor; then
 	# AppArmor blocks mount :)
-	securityArgs+=(
-		--security-opt apparmor=unconfined
-	)
+	securityArgs+=( --security-opt apparmor=unconfined )
 fi
 
 if [ "$suite" = 'potato' ]; then
 	# --debian-eol potato wants to run "chroot ... mount ... /proc" which gets blocked (i386, ancient binaries, blah blah blah)
-	securityArgs+=(
-		--security-opt seccomp=unconfined
-	)
+	securityArgs+=( --security-opt seccomp=unconfined )
 fi
-#for image creation
-securityArgs+=( --privileged )
 
 ver="$("$thisDir/scripts/debuerreotype-version")"
 ver="${ver%% *}"
