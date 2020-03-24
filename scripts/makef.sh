@@ -54,8 +54,8 @@ if [[ ! -f ${rootfs} ]] ; then
     exit 1
 fi
 
-# note: the debian-cloud-image build has 30G for Azrue and 2
-# for all others, we need to maek that configurable... No idea
+# note: the debian-cloud-image build has 30G for Azure and 2
+# for all others, we need to make that configurable... No idea
 # why that is
 dd if=/dev/zero of=${raw_image} seek=2048 bs=1 count=0 seek=2G
 loopback=$(losetup -f --show ${raw_image})
@@ -63,11 +63,13 @@ loopback=$(losetup -f --show ${raw_image})
 echo 'label: gpt
 type=21686148-6449-6E6F-744E-656564454649, name="BIOS", size=1MiB
 type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, name="EFI", size=127MiB
+type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, name="USR", size=1GiB
 type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, name="ROOT"' | sfdisk $loopback
 partprobe $loopback
 
-mkfs.vfat ${loopback}p2 -n EFI
-mkfs.ext4 ${loopback}p3 -L ROOT
+mkfs.vfat -n EFI ${loopback}p2
+mkfs.ext4 -L USR -E lazy_itable_init=0,lazy_journal_init=0 ${loopback}p3 
+mkfs.ext4 -L ROOT -E lazy_itable_init=0,lazy_journal_init=0 ${loopback}p4 
 
 if [[ $fs_check == 0 ]]; then
     # part of debian-cloud-images, I am sure we want that :-)
@@ -75,9 +77,11 @@ if [[ $fs_check == 0 ]]; then
 fi
 
 mkdir -p ${dir_name}
-mount ${loopback}p3 ${dir_name}
+mount ${loopback}p4 ${dir_name}
 mkdir -p ${dir_name}/boot/efi
 mount ${loopback}p2 ${dir_name}/boot/efi
+mkdir -p ${dir_name}/usr
+mount ${loopback}p3 ${dir_name}/usr
 
 tar xf ${rootfs} -C ${dir_name}
 
@@ -89,6 +93,7 @@ cat << EOF >> ${dir_name}/etc/fstab
 # <file system>	<mount point>	<type>	<options>		<dump>	<pass>
 LABEL=ROOT	/		ext4	errors=remount-ro,x-systemd.growfs 0	1
 LABEL=EFI	/boot/efi	vfat	umask=0077		0 	2
+LABEL=USR	/usr		ext4	defaults,ro		0 	2
 /dev/sr0	/media/cdrom0	udf,iso9660 user,noauto		0	0
 EOF
 
@@ -107,10 +112,12 @@ umount -l ${dir_name}/dev
 umount -l ${dir_name}/sys
 umount -l ${dir_name}/proc
 umount -l ${dir_name}/boot/efi
+umount -l ${dir_name}/usr
 sleep 2
 umount -l ${dir_name}
-fsck.vfat -a ${loopback}p2
-fsck.ext4 -a ${loopback}p3
+fsck.vfat -f -a ${loopback}p2
+fsck.ext4 -f -a ${loopback}p3
+fsck.ext4 -f -a ${loopback}p4
 sleep 2
 losetup -d $loopback
 
