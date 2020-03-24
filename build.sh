@@ -64,21 +64,20 @@ securityArgs+=( --privileged )
 ver="$("$thisDir/scripts/debuerreotype-version")"
 ver="${ver%% *}"
 if [ ! -z "${BUILD_IMAGE:-}" ]; then
-  buildImage="${BUILD_IMAGE}"
+	buildImage="${BUILD_IMAGE}"
 else
-  buildImage="debuerreotype/debuerreotype:$ver"
-  [ -z "$build" ] || docker build -t "$buildImage" "$thisDir"
-  if [ -n "$qemu" ]; then
-    [ -z "$build" ] || docker build -t "${buildImage}-qemu" - <<-EODF
-      FROM ${buildImage}
-      RUN apt-get update && apt-get install -y --no-install-recommends qemu-user-static && rm -rf /var/lib/apt/lists/*
-EODF
-    buildImage="${buildImage}-qemu"
-  fi
+	buildImage="debuerreotype/debuerreotype:$ver"
+	[ -z "$build" ] || docker build -t "$buildImage" "$thisDir"
+	if [ -n "$qemu" ]; then
+		[ -z "$build" ] || docker build -t "${buildImage}-qemu" - <<-EODF
+			FROM ${buildImage}
+			RUN apt-get update && apt-get install -y --no-install-recommends qemu-user-static && rm -rf /var/lib/apt/lists/*
+		EODF
+		buildImage="${buildImage}-qemu"
+	fi
 fi
 
 set -x
-
 docker run \
 	--rm \
 	"${securityArgs[@]}" \
@@ -89,6 +88,6 @@ docker run \
 	-e timestamp="$timestamp" \
 	-e eol="$eol" -e ports="$ports" -e arch="$arch" -e qemu="$qemu" -e features="$features" \
 	-e TZ='UTC' -e LC_ALL='C' \
-	--hostname debuerreotype \
+	--hostname garden-build \
 	"${buildImage}" \
 	/opt/debuerreotype/scripts/build.sh | tar -xvC "$outputDir"
