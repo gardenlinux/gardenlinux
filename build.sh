@@ -63,14 +63,18 @@ securityArgs+=( --privileged )
 
 ver="$("$thisDir/scripts/debuerreotype-version")"
 ver="${ver%% *}"
-dockerImage="debuerreotype/debuerreotype:$ver"
-[ -z "$build" ] || docker build -t "$dockerImage" "$thisDir"
-if [ -n "$qemu" ]; then
-	[ -z "$build" ] || docker build -t "$dockerImage-qemu" - <<-EODF
-		FROM $dockerImage
-		RUN apt-get update && apt-get install -y --no-install-recommends qemu-user-static && rm -rf /var/lib/apt/lists/*
-	EODF
-	dockerImage="$dockerImage-qemu"
+if [ ! -z "${BUILD_IMAGE:-}" ]; then
+  buildImage="${BUILD_IMAGE}"
+else
+  buildImage="debuerreotype/debuerreotype:$ver"
+  [ -z "$build" ] || docker build -t "$buildImage" "$thisDir"
+  if [ -n "$qemu" ]; then
+    [ -z "$build" ] || docker build -t "${buildImage}-qemu" - <<-EODF
+      FROM ${buildImage}
+      RUN apt-get update && apt-get install -y --no-install-recommends qemu-user-static && rm -rf /var/lib/apt/lists/*
+EODF
+    buildImage="${buildImage}-qemu"
+  fi
 fi
 
 set -x
@@ -86,5 +90,5 @@ docker run \
 	-e eol="$eol" -e ports="$ports" -e arch="$arch" -e qemu="$qemu" -e features="$features" \
 	-e TZ='UTC' -e LC_ALL='C' \
 	--hostname debuerreotype \
-	"$dockerImage" \
+	"${buildImage}" \
 	/opt/debuerreotype/scripts/build.sh | tar -xvC "$outputDir"
