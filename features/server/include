@@ -2,8 +2,6 @@ auditd
 busybox
 ca-certificates
 dnsutils
-fail2ban
-ferm
 iproute2
 iptables
 iputils-ping

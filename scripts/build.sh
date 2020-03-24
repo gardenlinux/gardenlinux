@@ -205,10 +205,12 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 
 		[ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
 		for i in $(echo "base,$features" | tr ',' ' ' | sort -u); do
-			[ -s $featureDir/$i/image ] && bash -c "$featureDir/$i/image $targetBase $targetBase.tar.xz"
+			if [ -s $featureDir/$i/image ]; then
+				bash -c "$featureDir/$i/image $rootfs $targetBase"
+			else 
+				true
+			fi
 		done
-
-		echo "Errorlevel: $?"
 	}
 
 	for rootfs in rootfs*/; do
