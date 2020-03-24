@@ -14,7 +14,7 @@ RUN	apt-get update && apt-get install -y --no-install-recommends \
 # see ".dockerignore"
 COPY . /opt/debuerreotype
 
-RUN patch -p1 < /opt/debuerreotype/scripts/debootstrap.patch 
+RUN patch -p1 < /opt/debuerreotype/scripts/debootstrap.patch
 
 RUN set -ex; \
 	cd /opt/debuerreotype/scripts; \
