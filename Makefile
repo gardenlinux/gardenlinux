@@ -41,8 +41,11 @@ azure-dev-upload:
 	./scripts/make-azure-ami --resource-group garden-linux --storage-account-name gardenlinux --image-path=.build/azure-dev/$(AZURE_DEV_IMAGE_NAME).vhd --image-name=$(AZURE_DEV_IMAGE_NAME)
 
 
-openstack:
-	./build.sh --features server,cloud,openstack .build/openstack bullseye $(SNAPSHOT_DATE)
+OPENSTACK_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-openstack-dev-$(VERSION)
+openstack-dev:
+	./build.sh --features server,cloud,ghost,openstack,dev .build/openstack-dev bullseye $(SNAPSHOT_DATE)
+	./scripts/makef.sh --grub-target bios --force --fs-check-off .build/openstack-dev/openstack-dev .build/openstack-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
+	./scripts/make-vmdk-openstack .build/openstack-dev/openstack-dev.raw .build/openstack-dev/$(OPENSTACK_DEV_IMAGE_NAME).vmdk
 
 # Needs conversion to vmdk as the last step!
 vmware:
