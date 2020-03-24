@@ -85,6 +85,13 @@ mount -t proc proc ${dir_name}/proc
 mount -t sysfs sys ${dir_name}/sys
 mount --bind /dev  ${dir_name}/dev
 
+cat << EOF >> ${dir_name}/etc/fstab
+# <file system>	<mount point>	<type>	<options>		<dump>	<pass>
+LABEL=ROOT	/		ext4	errors=remount-ro,x-systemd.growfs 0	1
+LABEL=EFI	/boot/efi	vfat	umask=0077		0 	2
+/dev/sr0	/media/cdrom0	udf,iso9660 user,noauto		0	0
+EOF
+
 for t in "${grub_target[@]}"
 do
     case "$t" in
