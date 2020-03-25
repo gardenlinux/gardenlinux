@@ -93,7 +93,7 @@ cat << EOF >> ${dir_name}/etc/fstab
 # <file system>	<mount point>	<type>	<options>		<dump>	<pass>
 LABEL=ROOT	/		ext4	errors=remount-ro,x-systemd.growfs 0	1
 LABEL=EFI	/boot/efi	vfat	umask=0077		0 	2
-LABEL=USR	/usr		ext4	defaults,ro		0 	2
+LABEL=USR	/usr		ext4	defaults,rw		0 	2
 /dev/sr0	/media/cdrom0	udf,iso9660 user,noauto		0	0
 EOF
 
@@ -106,7 +106,9 @@ do
     esac
 done
 
+mv ${dir_name}/etc/grub.d/30_uefi-firmware ${dir_name}/etc/grub.d/30_uefi-firmware~
 chroot ${dir_name} update-grub
+mv ${dir_name}/etc/grub.d/30_uefi-firmware~ ${dir_name}/etc/grub.d/30_uefi-firmware
 sleep 2
 umount -l ${dir_name}/dev
 umount -l ${dir_name}/sys
