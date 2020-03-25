@@ -2,6 +2,10 @@
 
 extension=${1##*.}
 
+if [[ $extension == "vhd" ]] ; then
+    extension='vpc'
+fi
+
 sudo qemu-system-x86_64 -enable-kvm -nographic -cpu host -smp 2 -m 2048 \
            -netdev user,id=eth0,hostfwd=tcp::2223-:22,hostname=debianplus \
 	   -object rng-random,id=rng0,filename=/dev/random \

@@ -1,6 +1,6 @@
 SNAPSHOT_DATE=`date -d 'today' '+%Y%m%d'`
 IMAGE_BASENAME=garden-linux
-VERSION=12
+VERSION=13
 
 all: aws gcp azure openstack vmware kvm
 
