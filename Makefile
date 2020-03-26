@@ -1,26 +1,33 @@
 SNAPSHOT_DATE=`date -d 'today' '+%Y%m%d'`
 IMAGE_BASENAME=garden-linux
-VERSION=13
+VERSION=14
 
 all: aws gcp azure openstack vmware kvm
 
+AWS_IMAGE_NAME=$(IMAGE_BASENAME)-aws-$(VERSION)
 aws:
-	./build.sh --features server,cloud,ghost,aws,dev .build/aws bullseye $(SNAPSHOT_DATE)
+	./build.sh --features server,cloud,ghost,aws .build/aws bullseye $(SNAPSHOT_DATE)
 	./scripts/makef.sh --grub-target bios --force --fs-check-off .build/aws/aws .build/aws/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
-	 mv .build/aws/aws.raw .build/aws/image-gardenlinux-ec2-amd64.raw
-	./scripts/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 .build/aws/image-gardenlinux-ec2-amd64.raw
 
+aws-upload:
+	./scripts/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 --image-name=$(AWS_IMAGE_NAME) .build/aws/aws.raw
+
+AWS_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-dev-aws-$(VERSION)
 aws-dev:
 	./build.sh --features server,cloud,ghost,aws,dev .build/aws-dev bullseye $(SNAPSHOT_DATE)
 	./scripts/makef.sh --grub-target bios --force --fs-check-off .build/aws-dev/aws-dev .build/aws-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
 
-AWS_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-dev-aws-$(VERSION)
 aws-dev-upload:
 	./scripts/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 --image-name=$(AWS_DEV_IMAGE_NAME) .build/aws-dev/aws-dev.raw
 
+GCP_IMAGE_NAME=$(IMAGE_BASENAME)-gcp-$(VERSION)
 gcp:
 	./build.sh --features server,cloud,ghost,gcp .build/gcp bullseye $(SNAPSHOT_DATE)
-	./scripts/makef.sh --grub-target bios --fs-check-off .build/gcp/gcp .build/gcp/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
+	./scripts/makef.sh --grub-target bios --force --fs-check-off .build/gcp/gcp .build/gcp/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
+	(cd .build/gcp ; tar --format=oldgnu -Sczf $(GCP_IMAGE_NAME).tar.gz disk.raw)
+
+gcp-upload:
+	./scripts/make-gcp-ami --bucket garden-linux-test --image-name $(GCP_IMAGE_NAME) --raw-image-path .build/gcp/$(GCP_IMAGE_NAME).tar.gz
 
 GCP_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-dev-gcp-$(VERSION)
 gcp-dev:
@@ -31,6 +38,15 @@ gcp-dev:
 gcp-dev-upload:
 	./scripts/make-gcp-ami --bucket garden-linux-test --image-name $(GCP_DEV_IMAGE_NAME) --raw-image-path .build/gcp-dev/$(GCP_DEV_IMAGE_NAME).tar.gz
 
+AZURE_IMAGE_NAME=$(IMAGE_BASENAME)-az-$(VERSION)
+azure:
+	./build.sh --features server,cloud,ghost,azure .build/azure-dev bullseye $(SNAPSHOT_DATE)
+	./scripts/makef.sh --grub-target bios --force --fs-check-off .build/azure-dev/azure .build/azure/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
+	./scripts/make-vhd .build/azure/azure.raw .build/azure/$(AZURE_IMAGE_NAME).vhd
+
+azure-upload:
+	./scripts/make-azure-ami --resource-group garden-linux --storage-account-name gardenlinux --image-path=.build/azure/$(AZURE_IMAGE_NAME).vhd --image-name=$(AZURE_IMAGE_NAME)
+
 AZURE_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-dev-az-$(VERSION)
 azure-dev:
 	./build.sh --features server,cloud,ghost,azure,dev .build/azure-dev bullseye $(SNAPSHOT_DATE)
@@ -40,6 +56,12 @@ azure-dev:
 azure-dev-upload:
 	./scripts/make-azure-ami --resource-group garden-linux --storage-account-name gardenlinux --image-path=.build/azure-dev/$(AZURE_DEV_IMAGE_NAME).vhd --image-name=$(AZURE_DEV_IMAGE_NAME)
 
+
+OPENSTACK_IMAGE_NAME=$(IMAGE_BASENAME)-openstack-$(VERSION)
+openstack:
+	./build.sh --features server,cloud,ghost,openstack .build/openstack-dev bullseye $(SNAPSHOT_DATE)
+	./scripts/makef.sh --grub-target bios --force --fs-check-off .build/openstack/openstack .build/openstack/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
+	./scripts/make-vmdk-openstack .build/openstack/openstack.raw .build/openstack/$(OPENSTACK_DEV_IMAGE_NAME).vmdk
 
 OPENSTACK_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-openstack-dev-$(VERSION)
 openstack-dev:
