@@ -79,7 +79,7 @@ mount ${loopback}p3 ${dir_name}
 mkdir -p ${dir_name}/boot/efi
 mount ${loopback}p2 ${dir_name}/boot/efi
 
-tar xf ${rootfs} -C ${dir_name}
+tar xf ${rootfs} --xattrs-include='*.*' -C ${dir_name}
 
 mount -t proc proc ${dir_name}/proc
 mount -t sysfs sys ${dir_name}/sys

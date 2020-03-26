@@ -50,6 +50,7 @@ tarArgs=(
 	--file "$targetTar"
 	--auto-compress
 	--directory "$targetDir"
+	--xattrs
 	--exclude-from "$thisDir/.tar-exclude"
 )
 if [ -z "$includeDev" ]; then
