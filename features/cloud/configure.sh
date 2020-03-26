@@ -12,4 +12,3 @@ update-alternatives --set ebtables /usr/sbin/ebtables-legacy
 # just to make sure there are no traces left
 #
 systemctl mask nftables.service
-systemctl enable docker
