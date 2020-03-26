@@ -26,7 +26,7 @@ aws-chost-dev:
 	./scripts/makef.sh --grub-target bios --force --fs-check-off .build/aws-chost-dev/aws-chost-dev .build/aws-chost-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
 
 aws-chost-dev-upload:
-	./scripts/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 --image-name=$(AWS_DEV_IMAGE_NAME) .build/aws-dev/aws-dev.raw
+	./scripts/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 --image-name=$(AWS_CHOST_DEV_IMAGE_NAME) .build/aws-chost-dev/aws-chost-dev.raw
 
 
 GCP_IMAGE_NAME=$(IMAGE_BASENAME)-gcp-$(VERSION)
