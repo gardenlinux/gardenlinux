@@ -1,6 +1,6 @@
 SNAPSHOT_DATE=`date -d 'today' '+%Y%m%d'`
 IMAGE_BASENAME=garden-linux
-VERSION=14
+VERSION=15
 
 all: aws gcp azure openstack vmware kvm
 
@@ -19,6 +19,15 @@ aws-dev:
 
 aws-dev-upload:
 	./scripts/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 --image-name=$(AWS_DEV_IMAGE_NAME) .build/aws-dev/aws-dev.raw
+
+AWS_CHOST_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-chost-dev-aws-$(VERSION)
+aws-chost-dev:
+	./build.sh --features server,cloud,chost,aws,dev .build/aws-chost-dev bullseye $(SNAPSHOT_DATE)
+	./scripts/makef.sh --grub-target bios --force --fs-check-off .build/aws-chost-dev/aws-chost-dev .build/aws-chost-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
+
+aws-chost-dev-upload:
+	./scripts/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 --image-name=$(AWS_DEV_IMAGE_NAME) .build/aws-dev/aws-dev.raw
+
 
 GCP_IMAGE_NAME=$(IMAGE_BASENAME)-gcp-$(VERSION)
 gcp:
@@ -68,6 +77,9 @@ openstack-dev:
 	./build.sh --features server,cloud,ghost,openstack,dev .build/openstack-dev bullseye $(SNAPSHOT_DATE)
 	./scripts/makef.sh --grub-target bios --force --fs-check-off .build/openstack-dev/openstack-dev .build/openstack-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
 	./scripts/make-vmdk-openstack .build/openstack-dev/openstack-dev.raw .build/openstack-dev/$(OPENSTACK_DEV_IMAGE_NAME).vmdk
+
+openstack-dev-upload:
+	./scripts/upload-openstack .build/openstack-dev/$(OPENSTACK_DEV_IMAGE_NAME).vmdk $(OPENSTACK_DEV_IMAGE_NAME)
 
 # Needs conversion to vmdk as the last step!
 vmware:

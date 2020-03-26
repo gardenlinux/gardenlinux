@@ -2,13 +2,11 @@
 
 # Create OpenStack Image for CC EE
 
-Create scsi geometry image (default would be openstack)
-```
-qemu-img convert -f raw -O vmdk -o adapter_type=buslogic $1 $2
-```
+#Create scsi geometry image (default would be openstack)
+#qemu-img convert -f raw -O vmdk -o adapter_type=buslogic $1 $2
 
-Upload image
-```
+#Upload image
+
 openstack image create \
      --container-format bare \
      --disk-format vmdk \
@@ -17,11 +15,10 @@ openstack image create \
      --property vmware_disktype="streamOptimized" \
      --property vmware_adaptertype="paraVirtual" \
      --property vmware_ostype="debian10_64Guest" \
-     --property architecture="x86_64"
+     --property architecture="x86_64" \
      --property hw_vif_model="VirtualVmxnet3" \
      --property hw_disk_bus="scsi" \
      --property hw_video_ram="16" \
      --property hypervisor_type="vmware" \
-     --property os-version "11" \
      --file=$1 \
      $2
