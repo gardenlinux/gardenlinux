@@ -33,7 +33,7 @@ GCP_IMAGE_NAME=$(IMAGE_BASENAME)-gcp-$(VERSION)
 gcp:
 	./build.sh --features server,cloud,ghost,gcp .build/gcp bullseye $(SNAPSHOT_DATE)
 	./scripts/makef.sh --grub-target bios --force --fs-check-off .build/gcp/gcp .build/gcp/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
-	(cd .build/gcp ; tar --format=oldgnu -Sczf $(GCP_IMAGE_NAME).tar.gz disk.raw)
+	tar --format=oldgnu -C .build/gcp -Sczf $(GCP_IMAGE_NAME).tar.gz gcp.raw
 
 gcp-upload:
 	./scripts/make-gcp-ami --bucket garden-linux-test --image-name $(GCP_IMAGE_NAME) --raw-image-path .build/gcp/$(GCP_IMAGE_NAME).tar.gz
