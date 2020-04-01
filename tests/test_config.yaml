@@ -12,5 +12,15 @@ aws:
     # name of public ssh key imported to AWS
     key_name: gardenlinux-test
     remote_path: /
-azure:
 gcp:
+    project: sap-se-gcp-scp-k8s-dev
+    zone: europe-west1-d
+    service_account_json:
+    service_account_json_path: ~/.config/gcloud/sap-se-gcp-scp-k8s-dev-133a7fdc3563.json
+    image_name: garden-linux-dev-gcp-12
+    # user and ssh key used to connect to the vm
+    user: admin
+    ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
+    passphrase:
+    remote_path: /
+azure:

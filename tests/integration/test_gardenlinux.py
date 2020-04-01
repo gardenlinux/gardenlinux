@@ -8,6 +8,7 @@ import pytest
 import yaml
 
 from .aws import AWS
+from .gcp import GCP
 from .sshclient import RemoteClient
 
 logger = logging.getLogger(__name__)
@@ -26,10 +27,12 @@ def config():
     yield options
 
 
-@pytest.fixture(scope="module", params=["aws"])
+@pytest.fixture(scope="module", params=["gcp"])
 def client(request, config: dict) -> Iterator[RemoteClient]:
     if request.param == "aws":
         yield from AWS.fixture(config["aws"])
+    if request.param == "gcp":
+        yield from GCP.fixture(config["gcp"])
 
 
 def test_clock(client):
