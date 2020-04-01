@@ -8,6 +8,8 @@ boto3 = "*"
 paramiko = "*"
 pyyaml = "*"
 scp = "*"
+google-api-python-client = "*"
+oauth2client = "*"
 
 [dev-packages]
 flake8 = "*"
