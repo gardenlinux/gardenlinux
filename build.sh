@@ -87,15 +87,12 @@ dockerArgs="--rm
 	--mount type=bind,source=/dev,target=/dev
 	--hostname garden-build"
 
+set -x
 if [ $debug ]; then
-	echo "debug $debug"
-	set -x
 	docker run $dockerArgs -ti \
 		"${buildImage}" \
 		bash
 else
-	echo "nondebug"
-	set -x
 	docker run $dockerArgs \
 		"${buildImage}" \
 		/opt/debuerreotype/scripts/build.sh | tar -xvC "$outputDir"
