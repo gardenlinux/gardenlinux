@@ -3,17 +3,17 @@ set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/scripts/.constants.sh" \
-	--flags 'no-build,codename-copy' \
+	--flags 'no-build,debug' \
 	--flags 'eol,ports,arch:,qemu,features:' \
 	-- \
-	'[--no-build] [--codename-copy] [--eol] [--ports] [--arch=<arch>] [--qemu] <output-dir> <suite> <timestamp>' \
+	'[--no-build] [--debug] [--eol] [--ports] [--arch=<arch>] [--qemu] <output-dir> <suite> <timestamp>' \
 	'output stretch 2017-05-08T00:00:00Z
---codename-copy output stable 2017-05-08T00:00:00Z
 --eol output squeeze 2016-03-14T00:00:00Z
 --eol --arch i386 output sarge 2016-03-14T00:00:00Z' 
 
 eval "$dgetopt"
 build=1
+debug=
 eol=
 ports=
 arch=
@@ -23,11 +23,12 @@ while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
 	case "$flag" in
-		--no-build) build= ;; # for skipping "docker build"
-		--eol) eol=1 ;; # for using "archive.debian.org"
-		--ports) ports=1 ;; # for using "debian-ports"
+		--no-build) build= ;;	# for skipping "docker build"
+		--debug) debug=1 ;;	# for jumping in the prepared image"
+		--eol) eol=1 ;;		# for using "archive.debian.org"
+		--ports) ports=1 ;;	# for using "debian-ports"
 		--arch) arch="$1"; shift ;; # for adding "--arch" to debuerreotype-init
-		--qemu) qemu=1 ;; # for using "qemu-debootstrap"
+		--qemu) qemu=1 ;;	# for using "qemu-debootstrap"
 		--features) features="$1"; shift ;; # adding features
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
@@ -41,11 +42,24 @@ timestamp="${1:-}";	shift || eusage 'missing timestamp'
 mkdir -p "$outputDir"
 outputDir="$(readlink -f "$outputDir")"
 
-securityArgs=(
-	--cap-add SYS_ADMIN
-	--cap-drop SETFCAP
-	--privileged
+envArgs=(
+	TZ="UTC"
+	LC_ALL="C"
+	suite="$suite"
+	qemu="$qemu"
+	eol="$eol" 
+	ports="$ports"
+	arch="$arch" 
+	features="$features"
+	timestamp="$timestamp"
 )
+
+securityArgs=( 
+	--cap-add SYS_ADMIN	# needed for mounts in image
+	--cap-drop SETFCAP
+	--privileged		# needed for creating bootable images with losetup and a mounted /dev
+)
+
 if docker info | grep -q apparmor; then
 	# AppArmor blocks mount :)
 	securityArgs+=( --security-opt apparmor=unconfined )
@@ -58,31 +72,31 @@ fi
 
 ver="$("$thisDir/scripts/debuerreotype-version")"
 ver="${ver%% *}"
-if [ ! -z "${BUILD_IMAGE:-}" ]; then
-	buildImage="${BUILD_IMAGE}"
-else
-	buildImage="debuerreotype/debuerreotype:$ver"
-	[ -z "$build" ] || docker build -t "$buildImage" "$thisDir"
-	if [ -n "$qemu" ]; then
-		[ -z "$build" ] || docker build -t "${buildImage}-qemu" - <<-EODF
-			FROM ${buildImage}
-			RUN apt-get update && apt-get install -y --no-install-recommends qemu-user-static && rm -rf /var/lib/apt/lists/*
-		EODF
-		buildImage="${buildImage}-qemu"
-	fi
-fi
 
-set -x
-docker run \
-	--rm \
-	"${securityArgs[@]}" \
-	--tmpfs /tmp:dev,exec,suid,noatime \
-	--mount type=bind,source=/dev,target=/dev \
-	-w /tmp \
-	-e suite="$suite" \
-	-e timestamp="$timestamp" \
-	-e eol="$eol" -e ports="$ports" -e arch="$arch" -e qemu="$qemu" -e features="$features" \
-	-e TZ='UTC' -e LC_ALL='C' \
-	--hostname garden-build \
-	"${buildImage}" \
-	/opt/debuerreotype/scripts/build.sh | tar -xvC "$outputDir"
+# external variable BUILD_IMAGE forces a different buildimage name
+buildImage=${BUILD_IMAGE:-"debuerreotype/debuerreotype:$ver"}
+[ -z "$build" ] || docker build -t "$buildImage" "$thisDir"
+
+# using the buildimage in a temporary container with
+# build directory mounted in memory (--tmpfs ...) and
+# dev mounted via bind so loopback device changes are reflected into the container
+dockerArgs="--rm 
+	${securityArgs[@]}
+	${envArgs[*]/#/-e }
+	--tmpfs /tmp:dev,exec,suid,noatime
+	--mount type=bind,source=/dev,target=/dev
+	--hostname garden-build"
+
+if [ $debug ]; then
+	echo "debug $debug"
+	set -x
+	docker run $dockerArgs -ti \
+		"${buildImage}" \
+		bash
+else
+	echo "nondebug"
+	set -x
+	docker run $dockerArgs \
+		"${buildImage}" \
+		/opt/debuerreotype/scripts/build.sh | tar -xvC "$outputDir"
+fi
