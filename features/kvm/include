@@ -4,4 +4,5 @@ linux-image-cloud-amd64
 rng-tools
 cloud-initramfs-growroot
 qemu-guest-agent
-smartmontools
+#fail2ban
+#ferm
