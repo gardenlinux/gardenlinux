@@ -185,7 +185,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 		touch_epoch "$targetBase.tar.xz.sha256"
 
 		debuerreotype-chroot "$rootfs" bash -c '
-			if ! dpkg-query -f='\''\${binary:Package} \${Version}\n'\'' -W 2> /dev/null; then
+			if ! dpkg-query -f='\''${binary:Package} ${Version}\n'\'' -W 2> /dev/null; then
 				# --debian-eol woody has no dpkg-query
 				dpkg -l
 			fi
@@ -203,6 +203,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 			fi
 		done
 
+		echo "#### features"
 		[ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
 		for i in $(echo "base,$features" | tr ',' ' ' | sort -u); do
 			if [ -s $featureDir/$i/image ]; then

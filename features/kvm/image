@@ -1,1 +1,1 @@
-/opt/debuerreotype/scripts/makef.sh --grub-target bios --force --fs-check-off $2 $2.tar.xz
+/opt/debuerreotype/scripts/makef.sh --grub-target bios,uefi --force --fs-check-off $2 $2.tar.xz

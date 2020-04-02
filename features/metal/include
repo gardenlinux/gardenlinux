@@ -8,3 +8,4 @@ numactl
 systemd
 linux-image-amd64
 mdadm
+smartmontools
