@@ -71,7 +71,7 @@ type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, name="ROOT"' | sfdisk $loopback --no-
 losetup -d $loopback
 sync
 while [ -n "$(losetup -l | grep $loopback)" ]; do sleep 1; echo -n "."; done; echo
-loopback=$(losetup -f --show ${raw_image})
+loopback=$(losetup -f --partscan --show ${raw_image})
 echo "### reconnected loopback to ${loopback}"
 #partprobe $loopback
 
