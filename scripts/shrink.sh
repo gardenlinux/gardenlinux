@@ -42,4 +42,4 @@ truncate rootfs.raw -s $finalsize
 sync
 
 loopback=$(losetup -f --partscan --show rootfs.raw)
-echo -e "w\ny" | gdisk /dev/loop0
+echo -e "w\ny" | gdisk $loopback

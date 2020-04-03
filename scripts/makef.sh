@@ -73,7 +73,6 @@ sync
 while [ -n "$(losetup -l | grep $loopback)" ]; do sleep 1; echo -n "."; done; echo
 loopback=$(losetup -f --partscan --show ${raw_image})
 echo "### reconnected loopback to ${loopback}"
-#partprobe $loopback
 
 echo "### creating filesystems"
 mkfs.vfat -n EFI ${loopback}p2
