@@ -8,9 +8,10 @@ RUN	apt-get update \
 		xz-utils \
 		\
 		gnupg dirmngr \
-		parted udev dosfstools xz-utils \
+		udev dosfstools xz-utils \
 		squashfs-tools fdupes \ 
-		qemu-user-static \
+		qemu-user-static gdisk \
+		e2fsprogs fdisk mount \
      && rm -rf /var/lib/apt/lists/*
 
 # see ".dockerignore"
