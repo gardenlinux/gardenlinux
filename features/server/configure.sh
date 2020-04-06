@@ -1,8 +1,6 @@
 systemctl enable systemd-networkd
 systemctl enable systemd-timesyncd
 systemctl enable systemd-resolved
-systemctl enable fail2ban
-systemctl enable ferm
 systemctl enable ssh-keygen
 #systemctl enable ssh-moduli
 
@@ -13,6 +11,5 @@ done
 update-ca-certificates
 addgroup --system wheel
 
-ln -sf /sbin/ip /bin/ip
-ln -sf /sbin/ip /usr/bin/ip
+ln -sf /bin/ip /usr/bin/ip
 

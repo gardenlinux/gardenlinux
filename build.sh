@@ -46,6 +46,7 @@ envArgs=(
 	TZ="UTC"
 	LC_ALL="C"
 	suite="$suite"
+	debug="$debug"
 	qemu="$qemu"
 	eol="$eol" 
 	ports="$ports"
@@ -86,12 +87,17 @@ dockerArgs="--hostname garden-build
 	--tmpfs /tmp:dev,exec,suid,noatime
 	--mount type=bind,source=/dev,target=/dev"
 
-set -x
 if [ $debug ]; then
+	echo
+	echo "### running in debug mode"
+	echo "please run -> /opt/debuerreotype/scripts/build.sh <-"
+	echo
+	set -x
 	docker run $dockerArgs -ti \
 		"${buildImage}" \
-		/usr/bin/bash
+		/bin/bash
 else
+	set -x
 	docker run $dockerArgs --rm \
 		"${buildImage}" \
 		/opt/debuerreotype/scripts/build.sh | tar -xvC "$outputDir"
