@@ -1,5 +1,11 @@
 # Garden Linux Build Scripts
 
+## build system reocmmendations
+
+    min 2 Cores
+    min. RAM 16 GB (image is built in RAM)
+    min. 5 GB free disk space  
+
 ## Documentation
 
 Install required packages using apt:
