@@ -33,7 +33,6 @@ while true; do
     flag=$1;
     case "$flag" in
         --grub-target) shift; target=$1; shift;;
-        --fs-check-off) shift; fs_check=0;;
         --force) shift; force=1;;
         *) break
     esac
@@ -77,10 +76,8 @@ echo "### reconnected loopback to ${loopback}"
 echo "### creating filesystems"
 mkfs.vfat -n EFI ${loopback}p2
 mkfs.ext4 -L ROOT -E lazy_itable_init=0,lazy_journal_init=0 ${loopback}p3
-if [[ $fs_check == 0 ]]; then
-    # part of debian-cloud-images, I am sure we want that :-)
-    tune2fs -c 0 -i 0 ${loopback}p3
-fi
+# part of debian-cloud-images, I am sure we want that :-) -> it is default
+#tune2fs -c 0 -i 0 ${loopback}p3
 
 echo "### mounting filesystems"
 mkdir -p ${dir_name}		&& mount ${loopback}p3 ${dir_name}
