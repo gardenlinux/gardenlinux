@@ -9,3 +9,4 @@ systemd
 linux-image-amd64
 mdadm
 smartmontools
+tpm2-tools

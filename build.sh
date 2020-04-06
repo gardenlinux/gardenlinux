@@ -80,20 +80,19 @@ buildImage=${BUILD_IMAGE:-"debuerreotype/debuerreotype:$ver"}
 # using the buildimage in a temporary container with
 # build directory mounted in memory (--tmpfs ...) and
 # dev mounted via bind so loopback device changes are reflected into the container
-dockerArgs="--rm 
+dockerArgs="--hostname garden-build
 	${securityArgs[@]}
 	${envArgs[*]/#/-e }
 	--tmpfs /tmp:dev,exec,suid,noatime
-	--mount type=bind,source=/dev,target=/dev
-	--hostname garden-build"
+	--mount type=bind,source=/dev,target=/dev"
 
 set -x
 if [ $debug ]; then
 	docker run $dockerArgs -ti \
 		"${buildImage}" \
-		bash
+		/usr/bin/bash
 else
-	docker run $dockerArgs \
+	docker run $dockerArgs --rm \
 		"${buildImage}" \
 		/opt/debuerreotype/scripts/build.sh | tar -xvC "$outputDir"
 fi

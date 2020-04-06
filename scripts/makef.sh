@@ -120,7 +120,7 @@ sync
 
 echo "### final fsck, just to be sure"
 fsck.vfat -f -a ${loopback}p2
-fsck.ext4 -f -a ${loopback}p3
+fsck.ext4 -f -a -E discard,inode_count_fullmap -D ${loopback}p3
 sync
 
 losetup -d $loopback
