@@ -81,6 +81,16 @@ openstack-dev:
 openstack-dev-upload:
 	./scripts/upload-openstack .build/openstack-dev/$(OPENSTACK_DEV_IMAGE_NAME).vmdk $(OPENSTACK_DEV_IMAGE_NAME)
 
+VMWARE_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-vmware-dev-$(VERSION)
+vmware-dev:
+	./build.sh --features server,cloud,ghost,vmware,dev .build/vmware-dev bullseye $(SNAPSHOT_DATE)
+	./scripts/makef.sh --grub-target bios --force --fs-check-off .build/vmware-dev/vmware-dev .build/vmware-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
+	./scripts/make-vmdk-vmware .build/vmware-dev/vmware-dev.raw .build/vmware-dev/$(VMWARE_DEV_IMAGE_NAME).vmdk
+
+vmware-dev-ova:
+	./scripts/make-vmdk-vmware .build/vmware-dev/vmware-dev.raw .build/vmware-dev/$(VMWARE_DEV_IMAGE_NAME).vmdk
+	./scripts/make-vmware-ova --vmdk .build/vmware-dev/$(VMWARE_DEV_IMAGE_NAME).vmdk --template templates/gardenlinux.ovf.template 
+
 # Needs conversion to vmdk as the last step!
 vmware:
 	./build.sh --features server,cloud,vmware .build/vmware bullseye $(SNAPSHOT_DATE)
