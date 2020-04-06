@@ -4,7 +4,7 @@
 
 Install required packages using apt:
 
-    apt install git build-essential dosfstools docker sudo
+    apt install git build-essential dosfstools docker.io docker sudo
 
 Build all images:
 
