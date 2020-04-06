@@ -1,0 +1,2 @@
+systemctl enable fail2ban
+systemctl enable ferm

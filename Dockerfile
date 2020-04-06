@@ -1,3 +1,6 @@
+FROM gcr.io/kaniko-project/executor:latest as kaniko
+
+
 FROM 	debian:testing-slim
 
 RUN	apt-get update \
@@ -14,8 +17,10 @@ RUN	apt-get update \
      && rm -rf /var/lib/apt/lists/*
 
 # see ".dockerignore"
+COPY	--from=kaniko /kaniko/executor /kaniko/executor
 COPY	. /opt/debuerreotype
-RUN	patch -p1 < /opt/debuerreotype/scripts/debootstrap.patch
+RUN	patch -p1 < /opt/debuerreotype/scripts/debootstrap.patch \
+     && echo "progress=bar:force:noscroll" >> /etc/wgetrc
 
 WORKDIR /opt/debuerreotype/scripts
 RUN	for f in debuerreotype-*; do \
