@@ -5,7 +5,6 @@ RUN	apt-get update \
 		debian-ports-archive-keyring \
 		debootstrap patch \
 		wget ca-certificates \
-		xz-utils \
 		\
 		gnupg dirmngr \
 		qemu-user-static \
