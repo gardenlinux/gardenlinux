@@ -1,8 +1,14 @@
-SNAPSHOT_DATE=`date -d 'today' '+%Y%m%d'`
-IMAGE_BASENAME=garden-linux
-VERSION=15
+#SNAPSHOT_DATE=`date -d 'today' '+%Y%m%d'`
 
-all: aws gcp azure openstack vmware kvm
+SNAPSHOT_DATE=20200205
+IMAGE_BASENAME=garden-linux
+VERSION=16
+
+all: all_dev all_prod
+
+all_prod: aws gcp azure openstack vmware kvm
+
+all_dev: aws-dev gcp-dev azure-dev openstack-dev vmware-dev
 
 AWS_IMAGE_NAME=$(IMAGE_BASENAME)-aws-$(VERSION)
 aws:
@@ -76,7 +82,7 @@ OPENSTACK_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-openstack-dev-$(VERSION)
 openstack-dev:
 	./build.sh --features server,cloud,ghost,openstack,dev .build/openstack-dev bullseye $(SNAPSHOT_DATE)
 	./scripts/makef.sh --grub-target bios --force .build/openstack-dev/openstack-dev .build/openstack-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
-	./scripts/make-vmdk-openstack .build/openstack-dev/openstack-dev.raw .build/openstack-dev/$(OPENSTACK_DEV_IMAGE_NAME).vmdk
+	qemu-img convert -o subformat=streamOptimized -f raw -O vmdk .build/openstack-dev/openstack-dev.raw .build/openstack-dev/$(OPENSTACK_DEV_IMAGE_NAME).vmdk
 
 openstack-dev-upload:
 	./scripts/upload-openstack .build/openstack-dev/$(OPENSTACK_DEV_IMAGE_NAME).vmdk $(OPENSTACK_DEV_IMAGE_NAME)
@@ -85,11 +91,8 @@ VMWARE_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-vmware-dev-$(VERSION)
 vmware-dev:
 	./build.sh --features server,cloud,ghost,vmware,dev .build/vmware-dev bullseye $(SNAPSHOT_DATE)
 	./scripts/makef.sh --grub-target bios --force --fs-check-off .build/vmware-dev/vmware-dev .build/vmware-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.tar.xz
-	./scripts/make-vmdk-vmware .build/vmware-dev/vmware-dev.raw .build/vmware-dev/$(VMWARE_DEV_IMAGE_NAME).vmdk
-
-vmware-dev-ova:
-	./scripts/make-vmdk-vmware .build/vmware-dev/vmware-dev.raw .build/vmware-dev/$(VMWARE_DEV_IMAGE_NAME).vmdk
-	./scripts/make-vmware-ova --vmdk .build/vmware-dev/$(VMWARE_DEV_IMAGE_NAME).vmdk --template templates/gardenlinux.ovf.template 
+	qemu-img convert -o subformat=streamOptimized -o adapter_type=lsilogic -f raw -O vmdk .build/vmware-dev/vmware-dev.raw .build/vmware-dev/$(VMWARE_DEV_IMAGE_NAME).vmdk
+	./scripts/make-ova --vmdk .build/vmware-dev/$(VMWARE_DEV_IMAGE_NAME).vmdk --template templates/gardenlinux.ovf.template 
 
 # Needs conversion to vmdk as the last step!
 vmware:
