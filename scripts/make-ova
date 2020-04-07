@@ -1,0 +1,133 @@
+#!/usr/bin/python3
+
+
+# https://wiki.abiquo.com/display/ABI26/Guest+Operating+System+Definition+for+VMWare
+# debian64 OS identifier always seems to be 96
+
+import argparse
+import os
+import sys
+import subprocess
+import json
+import hashlib
+import tempfile
+import tarfile
+
+from mako.template import Template
+
+"""
+properties = {
+    "vmdkFilename": "",
+    "vmdkFileSize": "",
+    "vmdkFileCapacity": "",
+    "virtualSystemId": "",
+    "osType": "debian10_64Guest",
+    "osDefinition": "96"
+}
+"""
+properties = {
+    "vmdkFilename": "",
+    "vmdkFileSize": "",
+    "vmdkFileCapacity": "",
+    "virtualSystemId": "",
+    "osType": "debian10_64Guest",
+    "osDefinition": "96"
+}
+
+class OVAImageBuild:
+
+    def getInfo(sefl, filename):
+        result = subprocess.run(["qemu-img", "info", "--output", "json", filename], capture_output= True)
+        if result.returncode != 0:
+            sys.exit("Error getting image info for " + filename + ": " + result.stdout)
+
+        doc = json.loads(result.stdout)
+        fileSize = doc["actual-size"]
+        virtualSize = doc["format-specific"]["data"]["extents"][0]["virtual-size"]
+        return (fileSize, virtualSize)
+
+    def makeAttributes(self, properties):
+        class P:
+            pass        
+        p = P()
+        for k in properties:
+            setattr(p, k, properties[k])
+        return p
+
+    def sha256(self, filename):
+        blocksize = 65536
+        sha = hashlib.sha256()
+        with open(filename, 'rb') as file:
+            fileBuffer = file.read(blocksize)
+            while len(fileBuffer) > 0:
+                sha.update(fileBuffer)
+                fileBuffer = file.read(blocksize)
+        
+        return sha.hexdigest()
+
+    def run(self, template):
+        vmdkFullFilename = properties["vmdkFullFilename"]
+        vmdkPath = os.path.dirname(vmdkFullFilename)
+        vmdkFilename = os.path.basename(properties["vmdkFilename"])
+        ovaFilename = os.path.splitext(vmdkFilename)[0] + ".ova"
+        ovaFullFilename = os.path.join(vmdkPath, ovaFilename)
+        ovfFilename = os.path.splitext(vmdkFilename)[0] + ".ovf"
+        print(ovaFullFilename)
+        fileSize, virtualSize = self.getInfo(properties["vmdkFullFilename"])
+        properties["vmdkFileSize"] = fileSize
+        properties["vmdkFileCapacity"] = virtualSize
+        p = self.makeAttributes(properties)
+        tmpl = Template(filename=template)
+        ovf = tmpl.render(p=p)
+        vmdkSha256 = self.sha256(vmdkFullFilename)
+        with tempfile.TemporaryDirectory() as tmpDir:
+
+            ovfFullFilename = os.path.join(tmpDir, ovfFilename)
+            with open(ovfFullFilename, "w") as file:
+               file.write(ovf)
+            ovfSha256 = self.sha256(ovfFullFilename)
+
+            mfFilename = os.path.splitext(vmdkFilename)[0] + ".mf"
+            mfFullFilename = os.path.join(tmpDir, mfFilename)
+
+            mf = "SHA256(" + vmdkFilename + ")= " + vmdkSha256 + "\n" + "SHA256(" + ovfFilename + ")= " + ovfSha256 + "\n"
+
+            with open(mfFullFilename, "w") as file:
+                file.write(mf)
+
+            with tarfile.open(ovaFullFilename, "w") as tar:
+                tar.add(ovfFullFilename, arcname=ovfFilename)
+                tar.add(vmdkFullFilename, arcname=vmdkFilename)
+                tar.add(mfFullFilename, arcname=mfFilename)
+
+    @classmethod
+    def _argparse_register(cls, parser):
+
+        parser.add_argument(
+            '--vmdk',
+            type=str,
+            dest='vmdk',
+            help='vmdk filename',
+            required=True
+        )
+        parser.add_argument(
+            "--template",
+            type=str,
+            dest='template',
+            required=True
+        )
+
+    @classmethod
+    def _main(cls):
+        parser = argparse.ArgumentParser()
+        cls._argparse_register(parser)
+        args = parser.parse_args()
+
+        properties["vmdkFullFilename"] = args.vmdk
+        properties["vmdkFilename"] = os.path.basename(args.vmdk)
+        properties["virtualSystemId"] = os.path.splitext(os.path.basename(args.vmdk))[0]
+        oVAImageBuild = cls()
+        oVAImageBuild.run(template=args.template)
+ 
+if __name__ == '__main__':
+    OVAImageBuild._main()
