@@ -88,7 +88,7 @@ mkdir -p ${dir_name}/dev	&& mount --bind /dev  ${dir_name}/dev
 mount | grep $dir_name
 
 echo "### copying $rootfs"
-tar xf ${rootfs} --xattrs-include='*.*' -C ${dir_name} --exclude proc --exclude sys --exclude dev
+tar xf ${rootfs} --xattrs-include='*.*' -C ${dir_name}
 
 echo "### generating fstab"
 cat << EOF >> ${dir_name}/etc/fstab
