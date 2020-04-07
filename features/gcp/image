@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -x
+
+/opt/debuerreotype/scripts/makef.sh --grub-target bios --force $2 $2.tar.xz
+
+DIR=$(dirname $2)
+GCP_TAR=$2-gcpimage.tar
+tar --format=oldgnu -C ${DIR} -Sczf ${GCP_TAR} $(basename $2).raw

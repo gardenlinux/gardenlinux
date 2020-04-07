@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+set -x
+
+/opt/debuerreotype/scripts/makef.sh --grub-target bios --force $2 $2.tar.xz
+qemu-img convert -o subformat=streamOptimized -f raw -O vmdk $2.raw $2.vmdk

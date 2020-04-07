@@ -14,6 +14,9 @@ RUN	apt-get update \
 		dosfstools squashfs-tools e2fsprogs \
 		fdisk mount \
 		xz-utils \
+		qemu-utils \
+		python3 \
+		python3-mako \
      && rm -rf /var/lib/apt/lists/*
 
 # see ".dockerignore"

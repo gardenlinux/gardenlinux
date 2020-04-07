@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+/opt/debuerreotype/scripts/makef.sh --grub-target bios --force $2 $2.tar.xz

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -x
+
+/opt/debuerreotype/scripts/makef.sh --grub-target bios --force $2 $2.tar.xz
+/opt/debuerreotype/scripts/make-vhd $2.raw $2.vhd
+
