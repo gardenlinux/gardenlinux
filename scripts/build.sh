@@ -21,7 +21,7 @@ featureDir="$debuerreotypeScriptsDir/../features"
 
 for archive in "" security; do
 	snapshotUrlFile="$exportDir/$serial/$dpkgArch/snapshot-url${archive:+-${archive}}"
-	if [ -n "$ports" ] && [ -z "$archive" ]; then
+	if [ -n "${ports:-}" ] && [ -z "${archive:-}" ]; then
 		archive="ports"
 	fi
 	if [ -z "$eol" ]; then
