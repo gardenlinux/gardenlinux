@@ -27,7 +27,7 @@ def config():
     yield options
 
 
-@pytest.fixture(scope="module", params=["gcp"])
+@pytest.fixture(scope="module", params=["aws", "gcp"])
 def client(request, config: dict) -> Iterator[RemoteClient]:
     if request.param == "aws":
         yield from AWS.fixture(config["aws"])
