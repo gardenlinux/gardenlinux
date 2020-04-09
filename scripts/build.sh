@@ -94,13 +94,13 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 	#  - https://github.com/debuerreotype/docker-debian-artifacts/issues/60#issuecomment-461426406
 	initArgs+=( --no-merged-usr )
 
-	if [ -n "$qemu" ]; then
+	if [ -n "${qemu:-}" ]; then
 		initArgs+=( --debootstrap="qemu-debootstrap" )
 	fi
 
 	debuerreotype-init "${initArgs[@]}" rootfs "$suite" "@$epoch"
 
-	if [ -n "$eol" ]; then
+	if [ -n "${eol-}" ]; then
 		debuerreotype-gpgv-ignore-expiration-config rootfs
 	fi
 
@@ -111,7 +111,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 	debuerreotype-apt-get rootfs dist-upgrade -yqq
 
 	aptVersion="$("$debuerreotypeScriptsDir/.apt-version.sh" rootfs)"
-	if [ -n "$eol" ] && dpkg --compare-versions "$aptVersion" ">=" "0.7.26~"; then
+	if [ -n "${eol:-}" ] && dpkg --compare-versions "$aptVersion" ">=" "0.7.26~"; then
 		# https://salsa.debian.org/apt-team/apt/commit/1ddb859611d2e0f3d9ea12085001810f689e8c99
 		echo "Acquire::Check-Valid-Until \"false\";" > rootfs/etc/apt/apt.conf.d/check-valid-until.conf
 		# TODO make this a real script so it can have a nice comment explaining why we do it for EOL releases?
@@ -126,8 +126,8 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 	debuerreotype-slimify rootfs
 
 	sourcesListArgs=()
-	[ -z "$eol" ] || sourcesListArgs+=( --eol )
-	[ -z "$ports" ] || sourcesListArgs+=( --ports )
+	[ -z "${eol:-}" ] || sourcesListArgs+=( --eol )
+	[ -z "${ports:-}" ] || sourcesListArgs+=( --ports )
 
 	create_artifacts() {
 		local targetBase="$1"; shift
