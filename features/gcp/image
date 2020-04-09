@@ -4,6 +4,10 @@ set -x
 
 /opt/debuerreotype/scripts/makef.sh --grub-target bios --force $2 $2.tar.xz
 
+DISK_NAME=$(dirname $2)/disk.raw
+cp $2.raw ${DISK_NAME}
+cp $2
 DIR=$(dirname $2)
-GCP_TAR=$2-gcpimage.tar
-tar --format=oldgnu -C ${DIR} -Sczf ${GCP_TAR} $(basename $2).raw
+GCP_TAR=$2-gcpimage.tar.gz
+tar --format=oldgnu -C ${DIR} -Sczf ${GCP_TAR} $(basename ${DISK_NAME})
+rm ${DISK_NAME}
