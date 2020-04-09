@@ -24,7 +24,7 @@ for archive in "" security; do
 	if [ -n "${ports:-}" ] && [ -z "${archive:-}" ]; then
 		archive="ports"
 	fi
-	if [ -z "$eol" ]; then
+	if [ -z "${eol:-}" ]; then
 		snapshotUrl="$("$debuerreotypeScriptsDir/.snapshot-url.sh" "@$epoch" "${archive:+debian-${archive}}")"
 	else
 		snapshotUrl="$("$debuerreotypeScriptsDir/.snapshot-url.sh" "@$epoch" "debian-archive")/debian${archive:+-${archive}}"
@@ -47,7 +47,7 @@ else
 		/usr/share/keyrings/debian-archive-keyring.gpg \
 		/usr/share/keyrings/debian-archive-removed-keys.gpg
 
-	if [ -n "$ports" ]; then
+	if [ -n "${ports:-}" ]; then
 		gpg --batch --no-default-keyring --keyring "$keyring" --import \
 			/usr/share/keyrings/debian-ports-archive-keyring.gpg
 	fi
@@ -78,7 +78,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 	else
 		initArgs+=( --debian-eol )
 	fi
-	if [ -n "$ports" ]; then
+	if [ -n "${ports-}" ]; then
 		initArgs+=(
 			--debian-ports
 			--include=debian-ports-archive-keyring
