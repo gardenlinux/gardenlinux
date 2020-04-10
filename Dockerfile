@@ -22,7 +22,7 @@ RUN	apt-get update \
 # see ".dockerignore"
 COPY	--from=kaniko /kaniko/executor /kaniko/executor
 COPY	. /opt/debuerreotype
-RUN	patch -p1 < /opt/debuerreotype/scripts/debootstrap.patch \
+RUN	patch -p1 < /opt/debuerreotype/hack/debootstrap.patch \
      && echo "progress=bar:force:noscroll" >> /etc/wgetrc
 
 WORKDIR /opt/debuerreotype/scripts
