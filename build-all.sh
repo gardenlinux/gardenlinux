@@ -13,7 +13,7 @@ suites=(
 )
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
-source "$thisDir/scripts/.constants.sh" \
+source "$thisDir/bin/.constants.sh" \
 	--flags 'no-build' \
 	-- \
 	'[--no-build] <output-dir> <timestamp>' \
@@ -37,13 +37,13 @@ timestamp="${1:-}"; shift || eusage 'missing timestamp'
 mkdir -p "$outputDir"
 outputDir="$(readlink -f "$outputDir")"
 
-ver="$("$thisDir/scripts/debuerreotype-version")"
+ver="$("$thisDir/bin/debuerreotype-version")"
 ver="${ver%% *}"
 dockerImage="debuerreotype/debuerreotype:$ver"
 [ -z "$build" ] || docker build -t "$dockerImage" "$thisDir"
 
-mirror="$("$thisDir/scripts/.snapshot-url.sh" "$timestamp")"
-secmirror="$("$thisDir/scripts/.snapshot-url.sh" "$timestamp" 'debian-security')"
+mirror="$("$thisDir/bin/.snapshot-url.sh" "$timestamp")"
+secmirror="$("$thisDir/bin/.snapshot-url.sh" "$timestamp" 'debian-security')"
 
 dpkgArch="$(docker run --rm "$dockerImage" dpkg --print-architecture | awk -F- '{ print $NF }')"
 echo

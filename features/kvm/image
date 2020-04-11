@@ -1,1 +1,1 @@
-/opt/debuerreotype/scripts/makef.sh --grub-target bios,uefi --force $2 $2.tar.xz
+/opt/debuerreotype/bin/makef.sh --grub-target bios,uefi --force $2 $2.tar.xz

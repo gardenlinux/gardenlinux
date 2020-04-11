@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
-source "$thisDir/scripts/.constants.sh" \
+source "$thisDir/bin/.constants.sh" \
 	--flags 'no-build,debug' \
 	--flags 'eol,ports,arch:,qemu,features:' \
 	-- \
@@ -71,7 +71,7 @@ if [ "$suite" = 'potato' ]; then
 	securityArgs+=( --security-opt seccomp=unconfined )
 fi
 
-ver="$("$thisDir/scripts/debuerreotype-version")"
+ver="$("$thisDir/bin/debuerreotype-version")"
 ver="${ver%% *}"
 
 # external variable BUILD_IMAGE forces a different buildimage name
@@ -90,7 +90,7 @@ dockerArgs="--hostname garden-build
 if [ $debug ]; then
 	echo
 	echo "### running in debug mode"
-	echo "please run -> /opt/debuerreotype/scripts/build.sh <-"
+	echo "please run -> /opt/debuerreotype/bin/build.sh <-"
 	echo
 	set -x
 	docker run $dockerArgs -ti \
@@ -100,5 +100,5 @@ else
 	set -x
 	docker run $dockerArgs --rm \
 		"${buildImage}" \
-		/opt/debuerreotype/scripts/build.sh | tar -xvC "$outputDir"
+		/opt/debuerreotype/bin/build.sh | tar -xvC "$outputDir"
 fi

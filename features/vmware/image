@@ -2,6 +2,6 @@
 
 set -x
 
-/opt/debuerreotype/scripts/makef.sh --grub-target bios --force $2 $2.tar.xz
+/opt/debuerreotype/bin/makef.sh --grub-target bios --force $2 $2.tar.xz
 qemu-img convert -o subformat=streamOptimized -o adapter_type=lsilogic -f raw -O vmdk $2.raw $2.vmdk
-/opt/debuerreotype/scripts/make-ova --vmdk $2.vmdk --template /opt/debuerreotype/templates/gardenlinux.ovf.template
+/opt/debuerreotype/bin/make-ova --vmdk $2.vmdk --template /opt/debuerreotype/templates/gardenlinux.ovf.template

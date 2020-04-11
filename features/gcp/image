@@ -2,7 +2,7 @@
 
 set -x
 
-/opt/debuerreotype/scripts/makef.sh --grub-target bios --force $2 $2.tar.xz
+/opt/debuerreotype/bin/makef.sh --grub-target bios --force $2 $2.tar.xz
 
 DISK_NAME=$(dirname $2)/disk.raw
 cp $2.raw ${DISK_NAME}
