@@ -106,7 +106,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 
 	[ -n "$features" ] && configArgs+=( --features "$features" )
 
-	debuerreotype-minimizing-config "${configArgs[@]}" rootfs
+	debuerreotype-config "${configArgs[@]}" rootfs
 	debuerreotype-apt-get rootfs update -qq
 	debuerreotype-apt-get rootfs dist-upgrade -yqq
 
