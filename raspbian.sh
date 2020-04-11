@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
-source "$thisDir/scripts/.constants.sh" \
+source "$thisDir/bin/.constants.sh" \
 	--flags 'no-build' \
 	-- \
 	'[--no-build] <output-dir> <suite>' \
@@ -37,7 +37,7 @@ if docker info | grep -q apparmor; then
 	)
 fi
 
-ver="$("$thisDir/scripts/debuerreotype-version")"
+ver="$("$thisDir/bin/debuerreotype-version")"
 ver="${ver%% *}"
 dockerImage="debuerreotype/debuerreotype:$ver"
 [ -z "$build" ] || docker build -t "$dockerImage" "$thisDir"

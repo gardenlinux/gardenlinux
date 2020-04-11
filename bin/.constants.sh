@@ -3,8 +3,34 @@
 # constants of the universe
 export TZ='UTC' LC_ALL='C'
 umask 0002
+#thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 scriptsDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 self="$(basename "$0")"
+
+#getFeatures() {
+#	featureDir="$thisDir/../features"
+#	features="$(echo $1 | tr "," "\n")"
+#
+#	if [ "$1" = "full" ]; then
+#		features=($(ls $featureDir | grep -v '^_' | grep -v '.dpkg-'))
+#	else
+#		IFS=', ' read -r -a features <<< "$1"
+#
+#	i=0
+#	processed=
+#	exclude=
+#	while [ i -lt ${#feature[@]} ];  do
+#		i=$(echo "$features" | head -n1)
+#
+#		[[ " ${array[@]} " =~ " $i " ]] && continue
+#		processsed+=( $i )
+#
+#		[ ! -d $featureDir/$i] && continue
+#
+#		[ -s $featureDir/$i/feature.include ] && for i in $(cat $featureDir/$i/include); do include+=( $i ); done
+#		[ -s $featureDir/$i/feature.exclude ] && for i in $(cat $featureDir/$i/exclude); do include+=( $i ); done
+#	done
+#}
 
 options="$(getopt -n "$BASH_SOURCE" -o '+' --long 'flags:,flags-short:' -- "$@")"
 dFlags='help,version'

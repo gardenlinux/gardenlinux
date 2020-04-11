@@ -55,6 +55,7 @@ while true; do
 	esac
 done
 
+#featurelist=$(getFeatures $features)
 [ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
 
 [ -s $thisDir/.init-includes ] && include="$(echo -e "$include\n$(cat $thisDir/.init-includes)" | sed -e "s/#.*\$//" -e "/^$/d" | paste -sd, -)"

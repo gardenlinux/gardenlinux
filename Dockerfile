@@ -25,7 +25,7 @@ COPY	. /opt/debuerreotype
 RUN	patch -p1 < /opt/debuerreotype/hack/debootstrap.patch \
      && echo "progress=bar:force:noscroll" >> /etc/wgetrc
 
-WORKDIR /opt/debuerreotype/scripts
+WORKDIR /opt/debuerreotype/bin
 RUN	for f in debuerreotype-*; do \
 		ln -svL "$PWD/$f" "/usr/local/bin/$f"; \
 	done; \
