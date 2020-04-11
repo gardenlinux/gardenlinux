@@ -28,21 +28,25 @@ aptVersion="$("$thisDir/.apt-version.sh" "$targetDir")"
 
 [ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
 for i in $(echo "base,$features" | tr ',' ' ' | sort -u); do
-	if [ -d $featureDir/$i/copy ]; then
-		out=$(tar -cC $featureDir/$i/copy . | tar -xvC $targetDir 2>&1 | grep -v "^./$" | paste -sd' '  -)
+	if [ -d "$featureDir/$i/file.include" ]; then
+		out=$(tar -cC $featureDir/$i/file.include . | tar -xvC $targetDir 2>&1 | grep -v "^./$" | paste -sd' '  -)
 		echo "copying from $i: $out"
 	fi
+done
 
-	if [ -f $featureDir/$i/delete.list ]; then
-		echo "deleting from $i: $(cat $featureDir/$i/delete.list | paste -sd' '  -)"
-		for j in $(cat $featureDir/$i/delete.list); do
+for i in $(echo "base,$features" | tr ',' ' ' | sort -u); do
+	if [ -f $featureDir/$i/exec.config ]; then
+		echo "executing from $i: exec.config"
+		$thisDir/debuerreotype-chroot "$targetDir" bash -c "$(cat $featureDir/$i/exec.config)"
+	fi
+done
+
+for i in $(echo "base,$features" | tr ',' ' ' | sort -u); do
+	if [ -f "$featureDir/$i/file.exclude" ]; then
+		echo "deleting from $i: $(cat $featureDir/$i/file.exclude | paste -sd' '  -)"
+		for j in $(cat $featureDir/$i/file.exclude); do
 			rm -f $targetDir$j || true
 		done
-	fi
-	
-	if [ -f $featureDir/$i/configure.sh ]; then
-		echo "executing from $i: configure.sh"
-		$thisDir/debuerreotype-chroot "$targetDir" bash -c "$(cat $featureDir/$i/configure.sh)"
 	fi
 done
 
