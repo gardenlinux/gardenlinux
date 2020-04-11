@@ -100,7 +100,7 @@ docker run \
 				done
 			}
 
-			debuerreotype-minimizing-config rootfs
+			debuerreotype-config rootfs
 			debuerreotype-apt-get rootfs update -qq
 			debuerreotype-apt-get rootfs dist-upgrade -yqq
 
