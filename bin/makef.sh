@@ -82,13 +82,14 @@ mkfs.ext4 -L ROOT -E lazy_itable_init=0,lazy_journal_init=0 ${loopback}p3
 echo "### mounting filesystems"
 mkdir -p ${dir_name}		&& mount ${loopback}p3 ${dir_name}
 mkdir -p ${dir_name}/boot/efi	&& mount ${loopback}p2 ${dir_name}/boot/efi
+
+echo "### copying $rootfs"
+tar xf ${rootfs} --xattrs-include='*.*' -C ${dir_name}
+
 mkdir -p ${dir_name}/proc	&& mount -t proc proc ${dir_name}/proc
 mkdir -p ${dir_name}/sys	&& mount -t sysfs sys ${dir_name}/sys
 mkdir -p ${dir_name}/dev	&& mount --bind /dev  ${dir_name}/dev
 mount | grep $dir_name
-
-echo "### copying $rootfs"
-tar xf ${rootfs} --xattrs-include='*.*' -C ${dir_name}
 
 echo "### generating fstab"
 cat << EOF >> ${dir_name}/etc/fstab
