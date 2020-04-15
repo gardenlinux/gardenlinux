@@ -276,4 +276,11 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 	fi
 } >&2
 
-tar --sparse -cC "$exportDir" .
+if [ ! -z "${OUT_FILE:-}" ]; then
+  tar_extra_args=(
+    "-f"
+    "${OUT_FILE}"
+  )
+fi
+
+tar --sparse -cC "$exportDir" . ${tar_extra_args[*]:-}
