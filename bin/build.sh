@@ -212,6 +212,30 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 				true
 			fi
 		done
+		echo "#### tests"
+		[ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
+		testcounter=0
+		failcounter=0
+		for i in $(echo "base,$features" | tr ',' ' ' | sort -u); do
+			if [ -d $featureDir/$i/test ]; then
+				for j in $(ls $featureDir/$i/test); do
+					if [ -x $featureDir/$i/test/$j ]; then
+					        let "testcounter=testcounter+1"
+						if $featureDir/$i/test/$j $rootfs $targetBase; then
+						       	echo "\e[32mpassed\e[39m" 
+						else
+							echo "\e[31mfailed\e[39m"
+							let "failcounter=failcounter+1"
+						fi
+					fi
+				done
+			elif [ -x $featureDir/$i/test ]; then
+				$featureDir/$i/test $rootfs $targetBase
+			else
+				true
+			fi
+		done
+		echo "Tests $testcounter done. $failcounter failed"
 	}
 
 	for rootfs in rootfs*/; do

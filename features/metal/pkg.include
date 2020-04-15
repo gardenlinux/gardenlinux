@@ -1,6 +1,7 @@
 ethtool
 haveged
 ipmitool
+kexec-tools
 irqbalance
 pciutils
 usbutils

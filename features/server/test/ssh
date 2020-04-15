@@ -1,0 +1,15 @@
+#!/bin/bash
+
+rc=0
+
+echo "- checking for server keys"
+if find /etc/ssh -name "ssh_host_*key"; then
+	echo "  keys found!"
+	rc=1
+fi
+
+echo "- checking minimum settings"
+
+
+echo "- scanning user accounts"
+
