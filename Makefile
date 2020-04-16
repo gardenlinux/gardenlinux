@@ -81,7 +81,7 @@ cloud:
 	./build.sh --features server,cloud .build/cloud bullseye $(SNAPSHOT_DATE)
 
 kvm:
-	./build.sh --features server,kvm,dev .build/kvm bullseye $(SNAPSHOT_DATE)
+	./build.sh --features server,cloud,kvm,dev .build/kvm bullseye $(SNAPSHOT_DATE)
 
 onmetal:
 	echo "TODO: implement"

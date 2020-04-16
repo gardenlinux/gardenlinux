@@ -1,0 +1,8 @@
+Description=""
+features.include=server
+features.exclude=dev
+rootfs.type=ext4
+image.boot=uefi
+image.type=raw
+image.label=gpt
+

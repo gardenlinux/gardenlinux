@@ -1,8 +1,6 @@
 dosfstools
-grub-cloud-amd64
-linux-image-cloud-amd64
 rng-tools-debian
-cloud-initramfs-growroot
 qemu-guest-agent
 #fail2ban
 #ferm
+#python3-systemd

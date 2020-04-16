@@ -1,3 +1,4 @@
-google-compute-engine
-# GCP kvm supports this
+#google-compute-engine
+google-compute-engine-oslogin
+#python3-google-compute-engine
 rng-tools-debian
