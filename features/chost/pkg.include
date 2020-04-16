@@ -4,7 +4,6 @@ containernetworking-plugins
 ethtool
 ipvsadm
 socat
-ca-certificates
 curl
 logrotate
 arptables

@@ -6,7 +6,6 @@ set -x
 
 DISK_NAME=$(dirname $2)/disk.raw
 cp $2.raw ${DISK_NAME}
-cp $2
 DIR=$(dirname $2)
 GCP_TAR=$2-gcpimage.tar.gz
 tar --format=oldgnu -C ${DIR} -Sczf ${GCP_TAR} $(basename ${DISK_NAME})
