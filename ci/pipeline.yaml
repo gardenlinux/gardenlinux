@@ -1,0 +1,51 @@
+apiVersion: 'tekton.dev/v1beta1'
+kind: 'Pipeline'
+metadata:
+  name: 'build-gardenlinux-pipeline'
+  namespace: 'gardenlinux-tkn'
+spec:
+  tasks:
+    - name: 'build-kvm'
+      taskRef:
+        name: 'build-gardenlinux-task'
+      params:
+        - name: 'features'
+          value: 'server,cloud,kvm'
+        - name: 'uploadprefix'
+          value: 'kvm'
+
+    - name: 'build-aws'
+      taskRef:
+        name: 'build-gardenlinux-task'
+      params:
+        - name: 'features'
+          value: 'server,cloud,ghost,aws'
+        - name: 'uploadprefix'
+          value: 'aws'
+
+    - name: 'build-gcp'
+      taskRef:
+        name: 'build-gardenlinux-task'
+      params:
+        - name: 'features'
+          value: 'server,cloud,ghost,gcp'
+        - name: 'uploadprefix'
+          value: 'gcp'
+
+    - name: 'build-azure'
+      taskRef:
+        name: 'build-gardenlinux-task'
+      params:
+        - name: 'features'
+          value: 'server,cloud,ghost,azure'
+        - name: 'uploadprefix'
+          value: 'azure'
+
+    - name: 'build-openstack'
+      taskRef:
+        name: 'build-gardenlinux-task'
+      params:
+        - name: 'features'
+          value: 'server,cloud,ghost,openstack'
+        - name: 'uploadprefix'
+          value: 'openstack'

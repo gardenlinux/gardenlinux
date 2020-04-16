@@ -1,0 +1,100 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-gardenlinux-task
+  namespace: gardenlinux-tkn
+spec:
+  params:
+    - name: 'suite'
+      type: 'string'
+      default: 'bullseye'
+      description: 'Debian release (buster, bullseye, ..)'
+    - name: 'features'
+      type: 'string'
+      description: 'the build features'
+    - name: 'uploadprefix'
+      type: 'string'
+      description: 'upload directory prefix (aws, gcp, ..)'
+  steps:
+    - name: 'build-image'
+      securityContext:
+        privileged: true
+        allowPrivilegeEscalation: true
+        capabilities:
+          add:
+            - 'SYS_ADMIN'
+      image: eu.gcr.io/gardener-project/gardenlinux/imagebuild_image:0.9.6-SAP
+      script: |
+        #!/usr/bin/env sh
+        set -u
+        set -x
+        export TZ=UTC
+        export LC_ALL=C
+        export suite="$(params.suite)"
+        export timestamp="$(date -d 'today' '+%Y%m%d')"
+        export features="$(params.features)"
+        #export debug=''
+        export qemu=''
+        export eol=''
+        export ports=''
+        echo "features: $(params.features)"
+        export OUT_DIR="${PWD}/build"
+        mkdir "${OUT_DIR}"
+        export OUT_FILE="${PWD}/gardenlinux.out"
+
+        echo "running build.."
+        /opt/debuerreotype/bin/build.sh
+        ls -la "${OUT_FILE}"
+        tar tf "${OUT_FILE}"
+        if [ -f "${OUT_FILE}" ]; then
+          echo "seems, like we might have succeeded?"
+        else
+          echo "no archive was created - see build log above for errors"
+          exit 1
+        fi
+      volumeMounts:
+      - mountPath: '/dev'
+        name: 'dev'
+
+    - name: 'upload-results'
+      image: 'eu.gcr.io/gardener-project/cc/job-image:1.606.0'
+      script: |
+        #!/usr/bin/env python3
+        # requires github.com/gardener/cc-utils
+        import os
+        build_result_fname = 'gardenlinux.out'
+        if not os.path.isfile(build_result_fname):
+          print('ERROR: no build result - see previous step for errs')
+          import sys
+          sys.exit(1)
+
+        os.environ['SECRETS_SERVER_ENDPOINT'] = 'http://secrets-server.concourse.svc.cluster.local'
+        os.environ['SECRETS_SERVER_CONCOURSE_CFG_NAME'] = 'concourse-secrets/concourse_cfg'
+        import ccc.aws
+        import tarfile
+        s3_cfg_name = 'gardenlinux-dev'
+        s3_bucket_name = 'gardenlinux-test'
+        session = ccc.aws.session(s3_cfg_name)
+        s3_client = session.client('s3')
+        print(f'uploading to s3 {s3_cfg_name=} {s3_bucket_name=}')
+        prefix = '$(params.uploadprefix)'
+        with tarfile.open('gardenlinux.out') as tf:
+          for tarinfo in tf:
+            if not tarinfo.isfile():
+              continue
+            target_name = os.path.normpath(os.path.join(prefix, tarinfo.name))
+            print(f'uploading: {target_name=}')
+            fobj = tf.extractfile(tarinfo)
+            s3_client.upload_fileobj(
+              Fileobj=fobj,
+              Bucket=s3_bucket_name,
+              Key=target_name,
+            )
+            print(f'upload succeeded: {target_name}')
+
+
+  volumes:
+    - name: dev
+      hostPath:
+        path: '/dev'
+        type: 'Directory'
