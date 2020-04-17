@@ -1,0 +1,87 @@
+
+amd64
+
+release triggern: aenderungen am git ... updates am security debrepo (security, patch)
+
+repo: default debian
+      security debian
+      debug debian
+
+snapshot 30st. <5tage
+--------
+metal-ghost_pxe-amd64-16-7a3fb
+aws-chost-amd64-16-33af2
+metal-ghost_pxe-amd64-16-a11ef
+
+16 = 1.april 2020 + 16 = 20200416
+
+fuer jeden HEAD-update ein snapshot(uni) -> 
+wird entfernt wenn integrity/unit not green dann einzelnes target weg 
+(mit benachrichtung per email und github und buildlog)
+(liste mit relevant targets to build und to be green)
+
+build.yaml
+release:
+  - platforms: [ metal ]
+    extensions: [ [ ghost ] , [ chost ] , [ vhost ] ]
+    modifiers: [ [ _prod ] ]
+    fails: [ unit, integration ]      default fails [ unit, integration ]
+  - platforms: [ base ]
+  - platforms: [ base ]
+    extensions: [ _build ]
+  - platforms: [ metal ]
+  - plaforms: [ aws, azure, gcp, ali, openstack, vmware, kvm ]
+    extensions: [ [ ghost ] , [ chost ] ]
+    modifiers: [ [ _prod ] ]
+  - plaforms: [ aws, azure, gcp, ali, openstack, vmware, kvm ] 
+  - plaforms: [ gcp ] 
+    extensions: [ [ chost ] ]
+    modifiers: [ [ _prod ] ]
+    fails: [ unit ]       -> please do not delete when integration test fails
+
+
+when komplette build yaml erfuellt oder um 23:59 bei release trigger ausgeloest  
+kann man pipline 16-7a3fb zum release ueberreden
+
+
+daily (all tests are green) max 20st. oder <30tage  werden git-tagt
+-------
+metal-ghost_pxe-amd64-16.0 -> 16-allef
+metal-ghost_pxe-amd64-16.1 -> 
+metal-ghost_pxe-amd64-16.2
+metal-ghost_pxe-amd64-17.0
+metal-ghost_pxe-amd64-19.0
+metal-ghost_pxe-amd64-21.0
+metal-ghost_pxe-amd64-latest -> 21.0
+
+sobald aenderungen an xx.y -> branch wiederum release via 
+pipeline 16-7a3fb verkuenden
+(die pipeline zaehlt die tags - die selbst gesetzt hat - weiter 
+um von 16.7 auf 16.8 zu kommen)
+
+
+pipeline "mach daily"
+pipeline "mach stable,beta" -> nach cloud publizieren (ami ids hinzufuegen)
+
+release (manual) 52*500M * 3 75G wird ein git-branch
+-------
+metal-ghost_prod_pxe-amd64-stable -> 16.0
+metal-ghost_prod_pxe-amd64-beta -> 19.0
+
+
+verzeichnis:
+arch / major version / release|daily|snapshot /
+
+
+base
+base_build
+2+
+(metal) x (chost,ghost,vhost mit _prod, ohne _prod) x (pxe, )
+8+
+(aws,azure,gcp,ali,openstack,vmware,kvm)x(chost,ghost mit _prod, ohne _prod)x(pxe, )
+42+
+
+
+
+dev on demand
+
