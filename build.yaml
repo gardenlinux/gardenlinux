@@ -1,0 +1,18 @@
+--- 
+release: 
+  - platforms: [ metal ]
+    extensions: [ [ ghost ] , [ chost ] , [ vhost ] ]
+    modifiers: [ [ prod ] ]
+    fails: [ unit, integration ]
+  - platforms: [ base ]
+  - platforms: [ base ]
+    extensions: [ _build ]
+  - platforms: [ metal ]
+  - plaforms: [ aws, azure, gcp, ali, openstack, vmware, kvm ]
+    extensions: [ [ ghost ] , [ chost ] ]
+    modifiers: [ [ _prod ] ]
+  - plaforms: [ aws, azure, gcp, ali, openstack, vmware, kvm ] 
+  - plaforms: [ gcp ] 
+    extensions: [ [ chost ] ]
+    modifiers: [ [ _prod ] ]
+    fails: [ unit ]
