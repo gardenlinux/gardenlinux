@@ -7,10 +7,10 @@ name=$2
 
 
 
-dst_regions='ap-northeast-1 ap-northeast-2 ap-south-1 ap-southeast-1 ap-southeast-2 ca-central-1 eu-central-1 eu-north-1 eu-west-2 eu-west-3 us-east-1 us-east-2 us-west-1 us-west-2'
-src_region=eu-west-1
+dst_regions='ap-northeast-1 ap-northeast-2 ap-south-1 ap-southeast-1 ap-southeast-2 ca-central-1 eu-central-1 eu-north-1 eu-west-1 eu-west-2 eu-west-3 us-east-1 us-east-2 us-west-1 us-west-2'
+src_region=eu-central-1
 
 for dst in $dst_regions; do 
     echo "Copying $2 to $dst"
-    aws ec2 copy-image --source-image-id $ami_id --source-region eu-central-1 --region $dst --name "$2"
+    aws ec2 copy-image --source-image-id $ami_id --source-region $src_region --region $dst --name "$2"
 done
