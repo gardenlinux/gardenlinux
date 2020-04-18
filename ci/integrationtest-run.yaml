@@ -1,0 +1,13 @@
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  generateName: it-test-
+spec:
+  serviceAccountName: build-bot
+  taskRef:
+    name: integrationtest-gardenlinux-task
+  resources:
+    inputs:
+    - name: repo
+      resourceRef:
+        name: gardenlinux-repo

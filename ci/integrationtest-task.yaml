@@ -1,0 +1,90 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: integrationtest-gardenlinux-task
+spec:
+  resources:
+    inputs:
+    - name: repo
+      type: git
+  steps:
+    - name: 'integration-test'
+      image: 'eu.gcr.io/gardener-project/cc/job-image:1.606.0'
+      script: |
+        #!/usr/bin/env bash
+        set -e
+
+        export SECRETS_SERVER_ENDPOINT="http://secrets-server.concourse.svc.cluster.local"
+        export SECRETS_SERVER_CONCOURSE_CFG_NAME="concourse-secrets/concourse_cfg"
+
+
+
+        echo "> Fetching secrets"
+        cli.py config attribute --cfg-type testmachinery --cfg-name testmachinery-test-operators --key config.gardenlinux-ssh.key > /tmp/id_rsa
+        cli.py config attribute --cfg-type testmachinery --cfg-name testmachinery-test-operators --key config.gardenlinux-ssh.pub > /tmp/id_rsa.pub
+
+        awsAccessKeyID=$(cli.py config attribute --cfg-type testmachinery --cfg-name testmachinery-test-operators --key config.aws.accessKeyID)
+        awsSecretAccessKey=$(cli.py config attribute --cfg-type testmachinery --cfg-name testmachinery-test-operators --key config.aws.secretAccessKey)
+        cli.py config attribute --cfg-type testmachinery --cfg-name testmachinery-test-operators --key config.gcp --json  | jq -r '.["serviceaccount.json"]' > /tmp/serviceaccount.json
+
+
+        echo "> Generating test config for AWS and GCP"
+        printf "
+        aws:
+          # region and access keys, read from ~/.aws/config and ~/.aws/credentials if not set here
+          region: eu-west-1
+          access_key_id: %s
+          secret_access_key: %s
+          # which AMI to use for creating an ec2 instance
+          ami_id: ami-0e7e5773a975f0aea
+          ssh_key_filepath: /tmp/id_rsa
+          # user and ssh key used to connect to the ec2 instance
+          user: admin
+          passphrase:
+          # name of public ssh key imported to AWS
+          key_name: gardenlinux-test
+          remote_path: /
+        gcp:
+          project: sap-gcp-k8s-canary-custom
+          zone: europe-west1-d
+          service_account_json:
+          service_account_json_path: /tmp/serviceaccount.json
+          machine_type: n1-standard-1
+          image_name: garden-linux-dev-gcp-38
+          # user and ssh key used to connect to the vm
+          user: admin
+          ssh_key_filepath: /tmp/id_rsa
+          passphrase:
+          remote_path: /
+        " $awsAccessKeyID $awsSecretAccessKey > $(resources.inputs.repo.path)/tests/test_config.yaml
+
+        echo "> Installing dependencies"
+        apk update && apk add make
+        pip install pipenv
+
+        cd $(resources.inputs.repo.path)/tests
+        pipenv install -dev
+
+        echo "> Run tests"
+        pipenv run python __main__.py
+
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: gardenlinux-repo
+spec:
+  type: git
+  params:
+    - name: revision
+      value: master
+    - name: url
+      value: https://github.com/gardenlinux/gardenlinux.git
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: build-bot
+secrets:
+  - name: github-com-user
