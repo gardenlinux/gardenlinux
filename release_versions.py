@@ -58,6 +58,17 @@ class GardenlinuxFlavour:
     modifiers: typing.Sequence[Modifier]
     fails: typing.Sequence[str]
 
+    def release_files(self, version: str):
+        suffices = ('rootf.tar.xz', 'manifest')
+
+        a = self.architecture.value
+        e = '_'.join([e.value for e in self.extensions])
+        p = self.platform.value
+        m = '_'.join([m.value for m in self.modifiers])
+
+        for s in suffices:
+            yield f'{a}/{p}-{e}-{m}-{version}-{s}'
+
 
 @dataclasses.dataclass
 class GardenlinuxFlavourCombination:
@@ -119,33 +130,10 @@ def enumerate_build_flavours(build_yaml: str='build.yaml'):
             )
 
 
-def print_build_flavours(build_yaml: str='build.yaml'):
+def print_build_flavours(version:str, build_yaml:str='build.yaml'):
     for flavour in enumerate_build_flavours(build_yaml=build_yaml):
-        print(flavour)
-
-
-def effective_version():
-    return '0.9.0-SAP'
-
-
-def image_name(
-    arch: Architecture,
-    iaas: Platform,
-    flavour: str,
-    ext: str,
-    prefix='gardenlinux'
-):
-    return f'{prefix}-{arch.value}-{iaas.value}-{flavour}{ext}'
-
-
-def _enumerate_image_names():
-    for arch, iaas_type, flavour, ext in itertools.product(
-        Arch,
-        Platform,
-        ('prod', 'dev'),
-        ('.raw', '.tar.gz'),
-    ):
-        yield image_name(arch=arch, iaas=iaas_type, flavour=flavour, ext=ext)
+        for fn in flavour.release_files(version=version):
+            print(fn)
 
 
 def version_path(version: str):
@@ -153,13 +141,10 @@ def version_path(version: str):
 
 
 def main():
-    image_names = enumerate_image_names()
+    version = '18.0-deadbeef'
 
-    version = '12.3'
-    ver_path = version_path(version)
+    print_build_flavours(version=version)
 
-    for image_name in image_names:
-        print(os.path.join(ver_path, image_name))
 
 if __name__ == '__main__':
     main()

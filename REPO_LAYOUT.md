@@ -15,12 +15,13 @@ Note: this is a _draft_ / _proposal_
 - first version built on any day: `<days-since-gl-epoch>.0`
 - subsequent versions get incremented patch-levels
   - both for builds on same day, and patch-releases done later
+- append hash digest of source-repository commit used for building (for snapshots)
 
 ### Examples
 
-First build on 2020-04-10: `10.0`
-Second build on 2020-04-10: `10.1`
-Patch-Release based on `10.x` (anytime later): `10.2`
+First build on 2020-04-11: `10.0`
+Second build on 2020-04-11: `10.1`
+Patch-Release based on `11.x` (anytime later): `10.2`
 
 
 # Release Version Semantics
@@ -36,100 +37,66 @@ gardenlinux will emit a stream of release versions. Release Channels are used to
 versions adhering to a certain semantics and qualities. Release Channels are semantically similar
 to symbolic links; they always point to an existing gardenlinux release version.
 
-Proposed Channels:
+Proposed Channels: TBD
 
-- greatest - self-explanatory
-- stable   - follow Debian's stable (details TBD)
-
-*Proposal for initial setup*
-
-Start with `greatest`, only.
 
 # Repository Layout
 
 Semantically, the release repository is structured equivalent to a directory tree in a file system
 featuring symbolic links.
 
-```
-version/<version>/      # release artifacts reside here in a flat list
-channel/<channel_name>  # channels point to release versions
-```
+- use architecture (e.g. amd64, ppc64, ..) as topmost directory
+  - follow Debian's architecture names
+- place build artifacts in a flat list, grouped by naming convention
 
-## Example (omitting file-names)
+*Naming convention*
 
-```
-version/20.0/...
-version/21.0/...
-version/21.1/...
-version/22.0/...
+`<arch>/<platform>-<extensions>-<modifiers>-<version>-<artifactname>`
 
-channel/greatest       # symlink to versions/22.0/
-channel/stable         # symlink to versuins/21.1/
-```
-
-## Artifact / File Names
-
-- group all corresponding files as a flat list within version directory
-- apply a naming convention to make names constructrable
-
-`gardenlinux-<arch>-<iaas>-<flavour><ext>`
-
-- gardenlinux: hardcoded, common prefix (smurf naming..)
-- arch: computer architecture (x86_64, arm64, ppc64, hpia64, ..)
-- iaas: hyperscaler typw (aws, gcp, ..)
-- flavour: gardenlinux flavour(s) (dev, prod, ..)
-- ext: technical packaging format (.raw, .tar, ..)
+- arch: architecture as defined by Debian
+- platform: target platform (e.g. `aws`, `gcp`, `azure`, ..)
+- extensions: list of extensions (e.g. `ghost`, `chost`, ..)
+- modifiers: list of modifiers (e.g. `prod`)
+- version: epoch + patch-level + commit-hash
 
 
-## Example (including file names)
+## Example
 
 ```
-version/12.3/gardenlinux-x86_64-aws-prod.raw
-version/12.3/gardenlinux-x86_64-aws-prod.tar.gz
-version/12.3/gardenlinux-x86_64-aws-dev.raw
-version/12.3/gardenlinux-x86_64-aws-dev.tar.gz
-version/12.3/gardenlinux-x86_64-azure-prod.raw
-version/12.3/gardenlinux-x86_64-azure-prod.tar.gz
-version/12.3/gardenlinux-x86_64-azure-dev.raw
-version/12.3/gardenlinux-x86_64-azure-dev.tar.gz
-version/12.3/gardenlinux-x86_64-gcp-prod.raw
-version/12.3/gardenlinux-x86_64-gcp-prod.tar.gz
-version/12.3/gardenlinux-x86_64-gcp-dev.raw
-version/12.3/gardenlinux-x86_64-gcp-dev.tar.gz
-version/12.3/gardenlinux-x86_64-kvm-prod.raw
-version/12.3/gardenlinux-x86_64-kvm-prod.tar.gz
-version/12.3/gardenlinux-x86_64-kvm-dev.raw
-version/12.3/gardenlinux-x86_64-kvm-dev.tar.gz
-version/12.3/gardenlinux-x86_64-openstack-prod.raw
-version/12.3/gardenlinux-x86_64-openstack-prod.tar.gz
-version/12.3/gardenlinux-x86_64-openstack-dev.raw
-version/12.3/gardenlinux-x86_64-openstack-dev.tar.gz
-version/12.3/gardenlinux-x86_64-vmware-prod.raw
-version/12.3/gardenlinux-x86_64-vmware-prod.tar.gz
-version/12.3/gardenlinux-x86_64-vmware-dev.raw
-version/12.3/gardenlinux-x86_64-vmware-dev.tar.gz
-version/12.3/gardenlinux-arm64-aws-prod.raw
-version/12.3/gardenlinux-arm64-aws-prod.tar.gz
-version/12.3/gardenlinux-arm64-aws-dev.raw
-version/12.3/gardenlinux-arm64-aws-dev.tar.gz
-version/12.3/gardenlinux-arm64-azure-prod.raw
-version/12.3/gardenlinux-arm64-azure-prod.tar.gz
-version/12.3/gardenlinux-arm64-azure-dev.raw
-version/12.3/gardenlinux-arm64-azure-dev.tar.gz
-version/12.3/gardenlinux-arm64-gcp-prod.raw
-version/12.3/gardenlinux-arm64-gcp-prod.tar.gz
-version/12.3/gardenlinux-arm64-gcp-dev.raw
-version/12.3/gardenlinux-arm64-gcp-dev.tar.gz
-version/12.3/gardenlinux-arm64-kvm-prod.raw
-version/12.3/gardenlinux-arm64-kvm-prod.tar.gz
-version/12.3/gardenlinux-arm64-kvm-dev.raw
-version/12.3/gardenlinux-arm64-kvm-dev.tar.gz
-version/12.3/gardenlinux-arm64-openstack-prod.raw
-version/12.3/gardenlinux-arm64-openstack-prod.tar.gz
-version/12.3/gardenlinux-arm64-openstack-dev.raw
-version/12.3/gardenlinux-arm64-openstack-dev.tar.gz
-version/12.3/gardenlinux-arm64-vmware-prod.raw
-version/12.3/gardenlinux-arm64-vmware-prod.tar.gz
-version/12.3/gardenlinux-arm64-vmware-dev.raw
-version/12.3/gardenlinux-arm64-vmware-dev.tar.gz
+amd64/metal-ghost-prod-18.0-deadbeef-rootf.tar.xz
+amd64/metal-ghost-prod-18.0-deadbeef-manifest
+amd64/metal-chost-prod-18.0-deadbeef-rootf.tar.xz
+amd64/metal-chost-prod-18.0-deadbeef-manifest
+amd64/metal-vhost-prod-18.0-deadbeef-rootf.tar.xz
+amd64/metal-vhost-prod-18.0-deadbeef-manifest
+amd64/aws-ghost-prod-18.0-deadbeef-rootf.tar.xz
+amd64/aws-ghost-prod-18.0-deadbeef-manifest
+amd64/aws-chost-prod-18.0-deadbeef-rootf.tar.xz
+amd64/aws-chost-prod-18.0-deadbeef-manifest
+amd64/azure-ghost-prod-18.0-deadbeef-rootf.tar.xz
+amd64/azure-ghost-prod-18.0-deadbeef-manifest
+amd64/azure-chost-prod-18.0-deadbeef-rootf.tar.xz
+amd64/azure-chost-prod-18.0-deadbeef-manifest
+amd64/gcp-ghost-prod-18.0-deadbeef-rootf.tar.xz
+amd64/gcp-ghost-prod-18.0-deadbeef-manifest
+amd64/gcp-chost-prod-18.0-deadbeef-rootf.tar.xz
+amd64/gcp-chost-prod-18.0-deadbeef-manifest
+amd64/ali-ghost-prod-18.0-deadbeef-rootf.tar.xz
+amd64/ali-ghost-prod-18.0-deadbeef-manifest
+amd64/ali-chost-prod-18.0-deadbeef-rootf.tar.xz
+amd64/ali-chost-prod-18.0-deadbeef-manifest
+amd64/openstack-ghost-prod-18.0-deadbeef-rootf.tar.xz
+amd64/openstack-ghost-prod-18.0-deadbeef-manifest
+amd64/openstack-chost-prod-18.0-deadbeef-rootf.tar.xz
+amd64/openstack-chost-prod-18.0-deadbeef-manifest
+amd64/vmware-ghost-prod-18.0-deadbeef-rootf.tar.xz
+amd64/vmware-ghost-prod-18.0-deadbeef-manifest
+amd64/vmware-chost-prod-18.0-deadbeef-rootf.tar.xz
+amd64/vmware-chost-prod-18.0-deadbeef-manifest
+amd64/kvm-ghost-prod-18.0-deadbeef-rootf.tar.xz
+amd64/kvm-ghost-prod-18.0-deadbeef-manifest
+amd64/kvm-chost-prod-18.0-deadbeef-rootf.tar.xz
+amd64/kvm-chost-prod-18.0-deadbeef-manifest
+amd64/gcp-chost-prod-18.0-deadbeef-rootf.tar.xz
+amd64/gcp-chost-prod-18.0-deadbeef-manifest
 ```
