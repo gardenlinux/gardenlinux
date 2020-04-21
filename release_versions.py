@@ -59,7 +59,13 @@ class GardenlinuxFlavour:
     fails: typing.Sequence[str]
 
     def release_files(self, version: str):
-        suffices = ('rootf.tar.xz', 'manifest')
+        suffices = (
+            'InRelease',
+            'Release',
+            'rootf.tar.xz',
+            'rootfs.raw',
+            'manifest',
+        )
 
         a = self.architecture.value
         e = '_'.join([e.value for e in self.extensions])
