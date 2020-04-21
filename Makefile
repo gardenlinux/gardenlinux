@@ -27,7 +27,7 @@ aws-chost-dev:
 	./build.sh --features server,cloud,chost,aws,dev .build/aws-chost-dev bullseye $(SNAPSHOT_DATE)
 
 aws-chost-dev-upload:
-	./bin/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 --image-name=$(AWS_CHOST_DEV_IMAGE_NAME) .build/aws-chost-dev$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.raw
+	./bin/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 --image-name=$(AWS_CHOST_DEV_IMAGE_NAME) .build/aws-chost-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.raw
 
 
 GCP_IMAGE_NAME=$(IMAGE_BASENAME)-gcp-$(VERSION)
