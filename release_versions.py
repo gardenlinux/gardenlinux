@@ -68,9 +68,9 @@ class GardenlinuxFlavour:
         )
 
         a = self.architecture.value
-        e = '_'.join([e.value for e in self.extensions])
+        e = '_'.join([e.value for e in sorted(self.extensions)])
         p = self.platform.value
-        m = '_'.join([m.value for m in self.modifiers])
+        m = '_'.join([m.value for m in sorted(self.modifiers)])
 
         for s in suffices:
             yield f'{a}/{p}-{e}-{m}-{version}-{s}'
