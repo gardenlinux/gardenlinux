@@ -41,7 +41,8 @@ class Modifier(enum.Enum):
     modifiers that can be applied to gardenlinux images (more than one may be chosen)
     '''
     PROD = 'prod'
-    _BUILD = '_build'
+    SERVER = 'server'
+    BUILD = '_build'
 
 
 @dataclasses.dataclass(frozen=True)
