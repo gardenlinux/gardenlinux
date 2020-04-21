@@ -44,13 +44,21 @@ class Modifier(enum.Enum):
     PROD = 'prod'
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class GardenlinuxFlavour:
     architecture: Architecture
-    extensions: typing.Sequence[Extension]
+    extensions: typing.Tuple[Extension]
     platform: Platform
-    modifiers: typing.Sequence[Modifier]
-    fails: typing.Sequence[str]
+    modifiers: typing.Tuple[Modifier]
+    fails: typing.Tuple[str]
+
+    def canonical_name_prefix(self):
+        a = self.architecture.value
+        e = '_'.join([e.value for e in sorted(self.extensions)])
+        p = self.platform.value
+        m = '_'.join([m.value for m in sorted(self.modifiers)])
+
+        return f'{a}/{p}-{e}-{m}'
 
     def release_files(self, version: str):
         suffices = (
@@ -61,22 +69,19 @@ class GardenlinuxFlavour:
             'manifest',
         )
 
-        a = self.architecture.value
-        e = '_'.join([e.value for e in sorted(self.extensions)])
-        p = self.platform.value
-        m = '_'.join([m.value for m in sorted(self.modifiers)])
+        prefix = self.canonical_name_prefix()
 
         for s in suffices:
-            yield f'{a}/{p}-{e}-{m}-{version}-{s}'
+            yield f'{prefix}-{version}-{s}'
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class GardenlinuxFlavourCombination:
-    architectures: typing.List[Architecture]
-    platforms: typing.List[Platform]
-    extensions: typing.List[typing.List[Extension]]
-    modifiers: typing.List[typing.List[Modifier]]
-    fails: typing.List[str]
+    architectures: typing.Tuple[Architecture]
+    platforms: typing.Tuple[Platform]
+    extensions: typing.Tuple[typing.Tuple[Extension]]
+    modifiers: typing.Tuple[typing.Tuple[Modifier]]
+    fails: typing.Tuple[str]
 
 
 def gardenlinux_epoch(date:typing.Union[str, datetime.datetime]=None):
