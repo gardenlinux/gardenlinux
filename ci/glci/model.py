@@ -55,9 +55,9 @@ class GardenlinuxFlavour:
 
     def canonical_name_prefix(self):
         a = self.architecture.value
-        e = '_'.join([e.value for e in sorted(self.extensions)])
+        e = '_'.join(sorted([e.value for e in self.extensions]))
         p = self.platform.value
-        m = '_'.join([m.value for m in sorted(self.modifiers)])
+        m = '_'.join(sorted([m.value for m in self.modifiers]))
 
         return f'{a}/{p}-{e}-{m}'
 
