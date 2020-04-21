@@ -147,7 +147,7 @@ def version_path(version: str):
 
 
 def main():
-    version = '18.0-deadbeef'
+    version = '18-deadbeef'
 
     print_build_flavours(version=version)
 
