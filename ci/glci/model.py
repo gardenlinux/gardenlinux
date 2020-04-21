@@ -50,7 +50,7 @@ class GardenlinuxFlavour:
     extensions: typing.Tuple[Extension]
     platform: Platform
     modifiers: typing.Tuple[Modifier]
-    fails: typing.Tuple[str]
+    # fails: typing.Tuple[str]
 
     def canonical_name_prefix(self):
         a = self.architecture.value
@@ -81,7 +81,7 @@ class GardenlinuxFlavourCombination:
     platforms: typing.Tuple[Platform]
     extensions: typing.Tuple[typing.Tuple[Extension]]
     modifiers: typing.Tuple[typing.Tuple[Modifier]]
-    fails: typing.Tuple[str]
+    # fails: typing.Tuple[str]
 
 
 def gardenlinux_epoch(date:typing.Union[str, datetime.datetime]=None):
