@@ -1,8 +1,8 @@
 apiVersion: 'tekton.dev/v1beta1'
 kind: 'PipelineRun'
 metadata:
-  name: 'build-gardenlinux-run'
+  name: 'build-gardenlinux-snapshot-pipeline-run'
   namespace: 'gardenlinux-tkn'
 spec:
   pipelineRef:
-    name: 'build-gardenlinux-pipeline'
+    name: 'build-gardenlinux-snapshot-pipeline'
