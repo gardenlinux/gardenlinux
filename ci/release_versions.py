@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import typing
+
 import dacite
 import itertools
 import os
@@ -8,7 +10,7 @@ import yaml
 import glci.model
 
 
-def enumerate_build_flavours(build_yaml: str='build.yaml'):
+def enumerate_build_flavours(build_yaml: str='../build.yaml'):
     with open(build_yaml) as f:
         parsed = yaml.safe_load(f)
 
@@ -24,7 +26,7 @@ def enumerate_build_flavours(build_yaml: str='build.yaml'):
             data_class=GardenlinuxFlavourCombination,
             data=flavour_def,
             config=dacite.Config(
-                cast=[Architecture, Platform, Extension, Modifier],
+                cast=[Architecture, Platform, Extension, Modifier, typing.Tuple],
             )
         ) for flavour_def in parsed['flavours']
     ]
@@ -40,7 +42,7 @@ def enumerate_build_flavours(build_yaml: str='build.yaml'):
                 platform=platf,
                 extensions=exts,
                 modifiers=mods,
-                fails=comb.fails, # not part of variant
+                # fails=comb.fails, # not part of variant
             )
 
 
