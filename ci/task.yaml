@@ -15,7 +15,41 @@ spec:
     - name: 'uploadprefix'
       type: 'string'
       description: 'upload directory prefix (aws, gcp, ..)'
+    - name: 'giturl'
+      type: 'string'
+      default: 'ssh://git@github.com/gardenlinux/gardenlinux'
+      description: 'git repository url'
+    - name: 'committish'
+      type: 'string'
+      description: 'the committish to build'
+      default: 'master'
   steps:
+    - name: 'retrieve-repository'
+      image: 'eu.gcr.io/gardener-project/cc/job-image:1.612.0'
+      script: |
+        #!/usr/bin/env python3
+        import os
+        import urllib.parse
+        import shutil
+
+        import ccc.github
+        import gitutil
+
+        repo_dir = os.path.abspath('gardenlinux-git') # used in next step(s)
+        os.mkdir(repo_dir)
+        repo_url = urllib.parse.urlparse('$(params.giturl)')
+        github_cfg = ccc.github.github_cfg_for_hostname(
+          repo_url.hostname,
+        )
+        git_helper = gitutil.GitHelper.clone_into(
+          target_directory=repo_dir,
+          github_cfg=github_cfg,
+          github_repo_path=repo_url.path,
+        )
+        git_helper.repo.git.checkout('$(params.committish)')
+
+        print(f'cloned into {repo_dir}')
+
     - name: 'build-image'
       securityContext:
         privileged: true
@@ -43,7 +77,8 @@ spec:
         export OUT_FILE="${PWD}/gardenlinux.out"
 
         echo "running build.."
-        /opt/debuerreotype/bin/build.sh
+        #/opt/debuerreotype/bin/build.sh
+        gardenlinux-git/bin/build.sh
         ls -la "${OUT_FILE}"
         tar tf "${OUT_FILE}"
         if [ -f "${OUT_FILE}" ]; then
@@ -57,7 +92,7 @@ spec:
         name: 'dev'
 
     - name: 'upload-results'
-      image: 'eu.gcr.io/gardener-project/cc/job-image:1.606.0'
+      image: 'eu.gcr.io/gardener-project/cc/job-image:1.612.0'
       script: |
         #!/usr/bin/env python3
         # requires github.com/gardener/cc-utils
