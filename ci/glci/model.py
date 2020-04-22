@@ -34,7 +34,6 @@ class Extension(enum.Enum):
     CHOST = 'chost'
     GHOST = 'ghost'
     VHOST = 'vhost'
-    _BUILD = '_build'
 
 
 class Modifier(enum.Enum):
@@ -42,6 +41,7 @@ class Modifier(enum.Enum):
     modifiers that can be applied to gardenlinux images (more than one may be chosen)
     '''
     PROD = 'prod'
+    _BUILD = '_build'
 
 
 @dataclasses.dataclass(frozen=True)
