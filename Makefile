@@ -1,6 +1,6 @@
 SNAPSHOT_DATE=`date -d 'today' '+%Y%m%d'`
 IMAGE_BASENAME=garden-linux
-VERSION=37
+VERSION=40
 
 all: all_dev all_prod
 
@@ -27,7 +27,7 @@ aws-chost-dev:
 	./build.sh --features server,cloud,chost,aws,dev .build/aws-chost-dev bullseye $(SNAPSHOT_DATE)
 
 aws-chost-dev-upload:
-	./bin/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 --image-name=$(AWS_CHOST_DEV_IMAGE_NAME) .build/aws-chost-dev$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.raw
+	./bin/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 --image-name=$(AWS_CHOST_DEV_IMAGE_NAME) .build/aws-chost-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.raw
 
 
 GCP_IMAGE_NAME=$(IMAGE_BASENAME)-gcp-$(VERSION)
@@ -42,7 +42,7 @@ gcp-dev:
 	./build.sh --features server,cloud,ghost,gcp,dev .build/gcp-dev bullseye $(SNAPSHOT_DATE)
 
 gcp-dev-upload:
-	./bin/make-gcp-ami --bucket garden-linux-test --image-name $(GCP_DEV_IMAGE_NAME) --raw-image-path .build/gcp-dev/$(GCP_DEV_IMAGE_NAME).tar.gz
+	./bin/make-gcp-ami --bucket garden-linux-test --image-name $(GCP_DEV_IMAGE_NAME) --raw-image-path .build/gcp-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs-gcpimage.tar.gz
 
 AZURE_IMAGE_NAME=$(IMAGE_BASENAME)-az-$(VERSION)
 azure:

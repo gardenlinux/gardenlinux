@@ -1,7 +1,4 @@
 apparmor
-#apt-utils
-#ifupdown
-#isc-dhcp-client
 socat
 ca-certificates
 curl
@@ -11,3 +8,4 @@ docker.io
 arptables
 ebtables
 jq
+ipvsadm
