@@ -51,6 +51,7 @@ tarArgs=(
 	--auto-compress
 	--directory "$targetDir"
 	--xattrs
+	--pax-option exthdr.name=%d/PaxHeaders/%f,atime:=0,ctime:=0
 	--exclude-from "$thisDir/.tar-exclude"
 )
 if [ -z "$includeDev" ]; then
