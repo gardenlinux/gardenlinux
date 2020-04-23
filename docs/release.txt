@@ -1,5 +1,3 @@
-
-amd64
 debian release
 
 release triggern: aenderungen am git ... updates am security debrepo (security, patch)
@@ -82,12 +80,59 @@ pipeline "mach stable,beta - 16.3" -> symlinken und nach cloud publizieren (ami 
 
 release (manual) 52*500M * 3 75G wird ein git-branch
 -------
-metal-ghost_prod_pxe-amd64-stable -> 16.0
-metal-ghost_prod_pxe-amd64-beta -> 19.0
+metal-ghost_prod_pxe-stable -> 16.0
+metal-ghost_prod_pxe-beta -> 19.0
 
 
 verzeichnis:
+arch / snaphot / release|daily /
 arch / major version / release|daily|snapshot /
+
+current: .build/base/20200420/amd64/bullseye/
+
+
+target:
+$prefix = .build -> local
+$prefix = .build/snapshot/$arch -> pipeline
+$suffix = <heute>-a11ef
+
+--features=metal,ghost,horst,franz,pxe
+Note:
+  erkenne nur ein PLATFORM! -> steht vorn
+  erkenne extensions -> sort alphanum after platform divider -
+  erkenne modifiers -> sort alpha after extension divider -
+
+
+$prefix/ $platform-$extension-$modifier-$suffix.*
+
+eg
+.build/snapshot/ metal-ghost-horst-franz-pxe-$suffix
+
+
+.build/snapshot/amd64/ metal-ghost_pxe-amd64-<heute>-a11ef.tar.xz
+.build/snapshot/amd64/ metal-ghost_pxe-amd64-<heute>-a11ef.tar.xz.sha256
+.build/snapshot/amd64/ metal-ghost_pxe-amd64-<heute>-a11ef.manifest -> alle files mit version
+.build/snapshot/amd64/ metal-ghost_pxe-amd64-<heute>-a11ef.os-release -> os stamp
+.build/snapshot/amd64/ metal-ghost_pxe-amd64-<heute>-a11ef.license.tar.gz -> alle lizenzen used sorted by license
+.build/snapshot/amd64/ metal-ghost_pxe-amd64-<heute>-a11ef
+.build/snapshot/amd64/ metal-ghost_pxe-amd64-<heute>-a11ef
+.build/snapshot/amd64/ metal-ghost_pxe-amd64-<branch>-a11ef
+
+symlinks:
+.build/daily   /amd64/ 16.0 / 52mal
+.build/daily   /amd64/ 16.1 / 52mal
+$prefix/daily   /amd64/ 16.5 / 52mal
+$prefix/daily   /amd64/ 17.0 / 52mal
+$prefix/daily   /amd64/ 18.0 / 52mal
+$prefix/daily   /amd64/ 20.0 / 52mal
+$prefix/daily   /amd64/ 21.0 / 52mal
+$prefix/beta    /amd64/ 52mal  -> daily/amd64/20.0
+$prefix/stable  /amd64/ 52mal  -> daily/amd64/16.1
+
+
+
+
+
 
 
 base
