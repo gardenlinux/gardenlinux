@@ -27,7 +27,7 @@ def mk_pipeline_task(
         )
     )
     return PipelineTask(
-        name=gardenlinux_flavour.canonical_name_prefix().replace('/', '-'),
+        name=gardenlinux_flavour.canonical_name_prefix().replace('/', '-').replace('_', '-'),
         taskRef=TaskRef(name='build-gardenlinux-task'), # hardcode name for now
         params=[
             NamedParam(name='features', value=feature_names),
