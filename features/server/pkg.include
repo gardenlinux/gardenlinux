@@ -11,6 +11,7 @@ libpam-systemd
 lsb-release
 net-tools
 netbase
+nfs-common
 openssh-server
 policykit-1
 procps
