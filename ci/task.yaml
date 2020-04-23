@@ -66,7 +66,7 @@ spec:
         export LC_ALL=C
         export suite="$(params.suite)"
         export timestamp="$(date -d 'today' '+%Y%m%d')"
-        export features="$(params.features)"
+        export features="$(params.features),server"
         #export debug=''
         export qemu=''
         export eol=''
