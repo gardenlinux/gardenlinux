@@ -11,7 +11,7 @@ set -Eeuo pipefail
 # Options:
 #  --gub-target     Comma separeted list of targets: bios, uefi
 #  --fs-check-off   Disable possible file system
-#  --image-type     Comma separated list of types: raw, vmdk TODO
+#  --image-size     Image size in GB
 #---help---
 
 if [ ! ${EUID} -eq 0 ]; then
@@ -34,6 +34,7 @@ while true; do
     case "$flag" in
         --grub-target) shift; target=$1; shift;;
         --force) shift; force=1;;
+        --image-size) shift; imagesz=$1; shift;;
         *) break
     esac
 done
