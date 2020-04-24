@@ -14,6 +14,12 @@ class GcpImageBuild:
         self.raw_image_path = raw_image_path
         self.image_name = image_name
 
+    def logged_on_bucket_available(self, bucket):
+        bucket_name = "gs://" + bucket
+        result = subprocess.run(["gsutil", "ls", " -L", "-b", bucket_name])
+        if result.returncode != 0:
+            sys.exit("Bucket " + bucket + " does not exist or not logged on.")
+
     def upload_image(self, bucket, raw_image_path, image_name):
         bucket_image = "gs://" + bucket + "/" + image_name + ".tar.gz"
         result = subprocess.run(["gsutil", " -q", "stat", bucket_image], capture_output=True)
@@ -37,6 +43,7 @@ class GcpImageBuild:
         print(result)
 
     def run(self):
+        self.logged_on_bucket_available(self.bucket)
         self.upload_image(self.bucket, self.raw_image_path, self.image_name)
         self.create_image(self.bucket, self.image_name)
 
