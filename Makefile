@@ -1,6 +1,8 @@
 SNAPSHOT_DATE=`date -d 'today' '+%Y%m%d'`
 IMAGE_BASENAME=garden-linux
 VERSION=40-2
+PUBLIC=
+AWS_DISTRIBUTE=
 
 all: all_dev all_prod
 
@@ -13,14 +15,14 @@ aws:
 	./build.sh --features server,cloud,gardener,aws .build/aws bullseye $(SNAPSHOT_DATE)
 
 aws-upload:
-	./bin/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 --image-name=$(AWS_IMAGE_NAME) .build/aws/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.raw
+	./bin/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 --image-name=$(AWS_IMAGE_NAME) .build/aws/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.raw --permission-public "$(PUBLIC)" --distribute "$(AWS_DISTRIBUTE)"
 
 AWS_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-dev-aws-$(VERSION)
 aws-dev:
 	./build.sh --features server,cloud,gardener,aws,dev .build/aws-dev bullseye $(SNAPSHOT_DATE)
 
 aws-dev-upload:
-	./bin/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 --image-name=$(AWS_DEV_IMAGE_NAME) .build/aws-dev/aws-dev.raw
+	./bin/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 --image-name=$(AWS_DEV_IMAGE_NAME) .build/aws-dev/aws-dev.raw --permission-public "$(PUBLIC)" --distribute "$(AWS_DISTRIBUTE)"
 
 GCP_IMAGE_NAME=$(IMAGE_BASENAME)-gcp-$(VERSION)
 gcp:
