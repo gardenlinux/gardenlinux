@@ -1,0 +1,13 @@
+apparmor
+containerd
+containernetworking-plugins
+docker.io
+ethtool
+ipvsadm
+socat
+curl
+logrotate
+arptables
+ebtables
+jq
+ipvsadm
