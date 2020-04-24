@@ -4,9 +4,3 @@ containernetworking-plugins
 ethtool
 ipvsadm
 socat
-curl
-logrotate
-arptables
-ebtables
-jq
-ipvsadm
