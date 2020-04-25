@@ -84,6 +84,7 @@ buildImage=${BUILD_IMAGE:-"debuerreotype/debuerreotype:$ver"}
 dockerArgs="--hostname garden-build
 	${securityArgs[@]}
 	${envArgs[*]/#/-e }
+  -v "${thisDir}":/opt/debuerreotype
 	--tmpfs /tmp:dev,exec,suid,noatime
 	--mount type=bind,source=/dev,target=/dev"
 
