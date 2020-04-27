@@ -22,7 +22,11 @@ NamedParam = tkn.model.NamedParam
 
 def mk_pipeline_task(
     gardenlinux_flavour: GardenlinuxFlavour,
+    pipeline_flavour: glci.model.PipelineFlavour,
 ):
+    if not pipeline_flavour is glci.model.PipelineFlavour.SNAPSHOT:
+        raise NotImplementedError(pipeline_flavour)
+
     feature_names = ','.join(
         e.value for e in (
             gardenlinux_flavour.platform,
@@ -30,18 +34,23 @@ def mk_pipeline_task(
             *gardenlinux_flavour.modifiers,
         )
     )
+
+    upload_prefix = f'snapshot/{gardenlinux_flavour.architecture.value}/'
+
     return PipelineTask(
         name=gardenlinux_flavour.canonical_name_prefix().replace('/', '-').replace('_', '-'),
         taskRef=TaskRef(name='build-gardenlinux-task'), # hardcode name for now
         params=[
             NamedParam(name='features', value=feature_names),
-            NamedParam(name='uploadprefix', value=gardenlinux_flavour.canonical_name_prefix()),
+            NamedParam(name='uploadprefix', value=upload_prefix),
         ],
     )
 
 
-
-def mk_pipeline(gardenlinux_flavours: typing.Sequence[GardenlinuxFlavour]):
+def mk_pipeline(
+    gardenlinux_flavours: typing.Sequence[GardenlinuxFlavour]
+    pipeline_flavour: glci.model.PipelineFlavour=glci.model.PipelineFlavour.SNAPSHOT,
+):
     gardenlinux_flavours = set(gardenlinux_flavours) # mk unique
     pipeline = Pipeline(
         metadata=PipelineMetadata(
@@ -50,7 +59,10 @@ def mk_pipeline(gardenlinux_flavours: typing.Sequence[GardenlinuxFlavour]):
         ),
         spec=PipelineSpec(
             tasks=[
-            mk_pipeline_task(gardenlinux_flavour=glf)
+            mk_pipeline_task(
+                gardenlinux_flavour=glf,
+                pipeline_flavour=pipeline_flavour,
+            ),
             for glf in gardenlinux_flavours
             ],
         ),
