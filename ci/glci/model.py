@@ -82,6 +82,11 @@ class GardenlinuxFlavourCombination:
     modifiers: typing.Tuple[typing.Tuple[Modifier]]
 
 
+class PipelineFlavour(enum.Enum):
+    SNAPSHOT = 'snapshot'
+    RELEASE = 'release'
+
+
 def gardenlinux_epoch(date:typing.Union[str, datetime.datetime]=None):
     '''
     calculate the gardenlinux epoch for the given date (the amount of days since 2020-04-01)
