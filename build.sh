@@ -90,7 +90,7 @@ dockerArgs="--hostname garden-build
 if [ $debug ]; then
 	echo
 	echo "### running in debug mode"
-	echo "please run -> /opt/debuerreotype/bin/build.sh <-"
+	echo "please run -> /opt/debuerreotype/bin/garden-build.sh <-"
 	echo
 	set -x
 	docker run $dockerArgs -ti \
@@ -100,5 +100,5 @@ else
 	set -x
 	docker run $dockerArgs --rm \
 		"${buildImage}" \
-		/opt/debuerreotype/bin/build.sh | tar -xvC "$outputDir"
+		/opt/debuerreotype/bin/garden-build.sh | tar -xvC "$outputDir"
 fi
