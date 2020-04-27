@@ -1,4 +1,8 @@
+#!/usr/bin/env python3
+
+import dacite
 import dataclasses
+import itertools
 import typing
 
 import yaml
@@ -55,14 +59,63 @@ def mk_pipeline(gardenlinux_flavours: typing.Sequence[GardenlinuxFlavour]):
     return pipeline
 
 
-def render_pipeline(
+def render_pipeline_dict(
     gardenlinux_flavours: typing.Sequence[GardenlinuxFlavour],
-    outfile: str,
 ):
     gardenlinux_flavours = set(gardenlinux_flavours) # mk unique
-    pipeline = mk_pipeline(gardenlinux_flavours=gardenlinux_flavours)
+    pipeline:dict = mk_pipeline(gardenlinux_flavours=gardenlinux_flavours)
+
+    return pipeline
+
+
+def enumerate_build_flavours(build_yaml: str='../build.yaml'):
+    with open(build_yaml) as f:
+        parsed = yaml.safe_load(f)
+
+    GardenlinuxFlavour = glci.model.GardenlinuxFlavour
+    GardenlinuxFlavourCombination = glci.model.GardenlinuxFlavourCombination
+    Architecture = glci.model.Architecture
+    Platform = glci.model.Platform
+    Extension = glci.model.Extension
+    Modifier = glci.model.Modifier
+
+    flavour_combinations = [
+        dacite.from_dict(
+            data_class=GardenlinuxFlavourCombination,
+            data=flavour_def,
+            config=dacite.Config(
+                cast=[Architecture, Platform, Extension, Modifier, typing.Tuple],
+            )
+        ) for flavour_def in parsed['flavours']
+    ]
+    for comb in flavour_combinations:
+        for arch, platf, exts, mods in itertools.product(
+            comb.architectures,
+            comb.platforms,
+            comb.extensions,
+            comb.modifiers,
+        ):
+            yield GardenlinuxFlavour(
+                architecture=arch,
+                platform=platf,
+                extensions=exts,
+                modifiers=mods,
+                # fails=comb.fails, # not part of variant
+            )
+
+
+def main():
+    gardenlinux_flavours = list(enumerate_build_flavours())
+    outfile = 'pipeline.yaml'
+
+    pipeline:dict = render_pipeline_dict(
+        gardenlinux_flavours=gardenlinux_flavours,
+    )
 
     with open(outfile, 'w') as f:
         yaml.safe_dump(dataclasses.asdict(pipeline), f)
 
     print(f'dumped pipeline with {len(gardenlinux_flavours)} task(s) to {outfile}')
+
+if __name__ == '__main__':
+    main()
