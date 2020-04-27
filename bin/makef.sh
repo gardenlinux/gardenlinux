@@ -88,7 +88,7 @@ mkfs.ext4 -L ROOT -E lazy_itable_init=0,lazy_journal_init=0 ${loopback}p4
 echo "### mounting filesystems"
 mkdir -p ${dir_name}          && mount ${loopback}p4 ${dir_name}
 mkdir -p ${dir_name}/boot/efi && mount ${loopback}p2 ${dir_name}/boot/efi
-mkdir -p ${dir_name}/usr      && mount ${loopback}p4 ${dir_name}/usr
+mkdir -p ${dir_name}/usr      && mount ${loopback}p3 ${dir_name}/usr
 
 echo "### copying $rootfs"
 tar xf ${rootfs} --xattrs-include='*.*' -C ${dir_name}
@@ -109,7 +109,7 @@ cat << EOF >> ${dir_name}/etc/fstab
 # <file system>	<mount point>	<type>	<options>		<dump>	<pass>
 LABEL=ROOT	/		ext4	errors=remount-ro,x-systemd.growfs 0	1
 LABEL=EFI	/boot/efi	vfat	umask=0077		0 	2
-$usr
+$fstab_usr
 /dev/sr0	/media/cdrom0	udf,iso9660 user,noauto		0	0
 EOF
 
