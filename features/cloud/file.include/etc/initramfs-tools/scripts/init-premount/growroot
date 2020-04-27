@@ -1,32 +1,26 @@
 #!/bin/sh
 set -e
 
+###
+### Grow root partion before anything is mounted. As nothing is mounted the
+### script cannot record what it has done so it will attempt this again on 
+### the next boot.
+###
+
 PREREQS=""
 case $1 in
     prereqs) echo "${PREREQS}"; exit 0;;
 esac
 
 . /scripts/functions
+. /scripts/local
 
 msg() { echo "GROWROOT:" "$@" ; }
 fail() { [ $# -eq 0 ] || msg "$@"; exit 1; }
 
-###
-### This runs right before exec of /sbin/init. The real root is
-### already mounted at rootmnt
-###
-TEMP_D=""
-RESTORE_FROM=""
 
-# if a file indicates we should do nothing, then just exit
-for f in /var/lib/cloud/instance/root-grown /etc/growroot-disabled \
-    /etc/growroot-grown; do
-    [ -f "${rootmnt}$f" ] && exit 0
-done
-
-# figure out what disk ROOT is on
-{ [ ! -L "${ROOT}" ] && rootdev=${ROOT} || rootdev=$(readlink -f "${ROOT}") ; } ||
-    fail "failed to get target of link for ${ROOT}"
+local_device_setup ${ROOT} 'root file system'
+rootdev="${DEV}"
 
 case "${rootdev}" in
     *[0-9]) : ;;
@@ -53,6 +47,8 @@ fi
 # (xen xvda1 is an example of such a funny named block device)
 [ -e "/sys/block/${rootdev##*/}" ] && exit 0
 
+msg "Trying to grow partition ${rootdisk}"
+
 # if growpart fails, exit.
 # we capture stderr because on success of dry-run, it writes
 # to stderr what it would do.
@@ -60,16 +56,14 @@ out=$(growpart --dry-run "${rootdisk}" "${partnum}" 2>&1) ||
     { msg "${out}"; exit 1; }
 
 # if growpart would change something, --dry-run will write something like
-#  CHANGE: partition=1 start=2048 old: size=1024000 end=1026048 new: size=2089192,end=2091240
+#  CHANGE: partition=1 start=2048 old: size=1024000 end=1026ma048 new: size=2089192,end=2091240
 # anything else, exit
 case "${out}" in
     CHANGE:*) :;;
     *) exit 0;;
 esac
 
-# There was something to do, unmount and resize
-umount "${rootmnt}" ||
-    fail "failed to umount ${rootmnt}";
+# There was something to do, resize
 
 # Wait for any of the initial udev events to finish
 # This is to avoid any other processes using the block device that the
@@ -91,20 +85,5 @@ fi
 # Wait for the partition re-read events to complete 
 # so that the root partition is available when we try and mount it.
 udevadm settle --timeout ${ROOTDELAY:-30}
-
-# this is taken from 'mountroot' function
-#   see /usr/share/initramfs-tools/scripts/local
-if [ -z "${ROOTFSTYPE}" ]; then
-    FSTYPE=$(get_fstype "${ROOT}")
-else
-    FSTYPE=${ROOTFSTYPE}
-fi
-roflag="-r"
-[ "${readonly}" = "y" ] || roflag="-w"
-mount ${roflag} ${FSTYPE:+-t ${FSTYPE} }${ROOTFLAGS} ${ROOT} ${rootmnt} ||
-    fail "failed to re-mount ${ROOT}. this is bad!"
-
-# write to /etc/grownroot-grown. most likely this wont work (readonly)
-{ date --utc > "${rootmnt}/etc/growroot-grown" ; } >/dev/null 2>&1 || :
 
 # vi: ts=4 noexpandtab
