@@ -1,3 +1,4 @@
 linux-image-cloud-amd64
 grub-cloud-amd64
-cloud-initramfs-growroot
+cloud-guest-utils
+initramfs-tools
