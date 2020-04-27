@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+check_rootdir() {
+	local d=$1
+	if [[ -z "$d" ]]; then
+		echo "FATAL: variable is not defined, exiting!"
+		return 1
+	fi
+	if [[ ! -d "$d" ]]; then
+		echo "FATAL: the directory doesn't exist, exiting!"
+		return 1
+	fi
+	if [[ $(shopt -s nullglob dotglob; f=("${d}"/*); echo ${#f[@]}) -eq 0 ]]; then
+		echo "FATAL: the directory is empty, exiting!"
+		return 1
+	fi 
+}
+
+cleanup_chroot() {
+	local rootfsDir=$1
+	local script=$2
+	local deps=${@:3}
+	umount ${rootfsDir}/proc
+	umount ${rootfsDir}/dev
+	umount ${rootfsDir}/sys
+	$(cd /tmp; rm -f ${@:2})
+}
+
+run_in_chroot() {
+	local rootfsDir=$1
+	local script=$2
+	local deps=${@:3}
+
+	if [[ -z "${script}" || ! -f "${script}" ]]; then
+		echo "FATAL: ${script} script to execute doesn't exist or wasn't provided!"
+		return 1
+	fi
+
+	trap "cleanup_chroot ${rootfsDir} ${script} ${deps}" RETURN 
+
+	# prepare the mounts 
+	mount -t proc proc ${rootfsDir}/proc
+	mount -t sysfs sysfs ${rootfsDir}/sys
+	mount --bind /dev ${rootfsDir}/dev
+
+	# copy script an dependencies 
+	cp "${@:2}" ${rootfsDir}/tmp/	
+
+	# run the script inside the chrooted environment
+	if chroot ${rootfsDir} /bin/bash ${rootfs}/tmp/$script; then
+		rc=0
+	else
+		rc=1
+	fi
+	return $rc
+}
