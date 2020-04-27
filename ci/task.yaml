@@ -57,7 +57,7 @@ spec:
         capabilities:
           add:
             - 'SYS_ADMIN'
-      image: eu.gcr.io/gardener-project/gardenlinux/imagebuild_image:0.9.6-SAP
+      image: eu.gcr.io/gardener-project/gardenlinux/imagebuild_image:0.10.0-SAP
       script: |
         #!/usr/bin/env sh
         set -u
