@@ -19,19 +19,12 @@ RUN	apt-get update \
 		python3-mako \
      && rm -rf /var/lib/apt/lists/*
 
-# see ".dockerignore"
+# repo-root requires to be mounted at /debuerreotype
+ENV PATH=${PATH}:/opt/debuerreotype/bin
 COPY	--from=kaniko /kaniko/executor /kaniko/executor
-COPY	. /opt/debuerreotype
-RUN	patch -p1 < /opt/debuerreotype/hack/debootstrap.patch \
-     && echo "progress=bar:force:noscroll" >> /etc/wgetrc
-
-WORKDIR /opt/debuerreotype/bin
-RUN	for f in debuerreotype-*; do \
-		ln -svL "$PWD/$f" "/usr/local/bin/$f"; \
-	done; \
-	version="$(debuerreotype-version)"; \
-	[ "$version" != 'unknown' ]; \
-	echo "debuerreotype version $version"
+COPY hack/debootstrap.patch /tmp/debootstrap.patch
+RUN	patch -p1 < /tmp/debootstrap.patch \
+     && echo "progress=bar:force:noscroll" >> /etc/wgetrc \
+     && rm /tmp/debootstrap.patch
 
 WORKDIR /tmp
-

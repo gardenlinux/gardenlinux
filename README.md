@@ -1,6 +1,6 @@
 # Garden Linux Build Scripts
 
-## build system reocmmendations
+## build system recommendations
 
     min 2 Cores
     min. RAM 16 GB (image is built in RAM)
