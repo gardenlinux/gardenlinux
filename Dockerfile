@@ -1,4 +1,4 @@
-FROM gcr.io/kaniko-project/executor:latest as kaniko
+FROM 	gcr.io/kaniko-project/executor:latest as kaniko
 
 
 FROM 	debian:testing-slim
@@ -20,11 +20,11 @@ RUN	apt-get update \
      && rm -rf /var/lib/apt/lists/*
 
 # repo-root requires to be mounted at /debuerreotype
-ENV PATH=${PATH}:/opt/debuerreotype/bin
+ENV 	PATH=${PATH}:/opt/debuerreotype/bin
 COPY	--from=kaniko /kaniko/executor /kaniko/executor
-COPY hack/debootstrap.patch /tmp/debootstrap.patch
+COPY 	hack/debootstrap.patch /tmp/debootstrap.patch
 RUN	patch -p1 < /tmp/debootstrap.patch \
      && echo "progress=bar:force:noscroll" >> /etc/wgetrc \
      && rm /tmp/debootstrap.patch
 
-WORKDIR /tmp
+WORKDIR	/tmp

@@ -1,0 +1,7 @@
+description: "host for virtual workloads (kvm, libvirt)"
+features:
+  include: 
+    - server
+
+
+

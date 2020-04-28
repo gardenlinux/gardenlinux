@@ -1,0 +1,6 @@
+description: "server layer with complete init system (systemd)"
+features:
+  include: 
+    - base
+tar:
+  include-dev: true

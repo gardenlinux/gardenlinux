@@ -1,0 +1,14 @@
+description: "cloud functionality (cloud kernel, cloud boot)"
+features:
+  include: 
+    - server
+fs:
+  - dest: /
+    type: ext4
+disk:
+  label: gpt
+  boot: 
+    - mbr
+convert:
+  format: 
+    - type: raw

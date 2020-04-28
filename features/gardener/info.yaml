@@ -1,0 +1,5 @@
+description: "gardener.cloud requirements (e.g. docker, containerd)"
+features:
+  include: 
+    - server
+

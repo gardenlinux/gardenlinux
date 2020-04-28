@@ -1,0 +1,13 @@
+description: "kvm and qemu platform"
+type: platform
+features:
+  include: 
+    - cloud
+disk:
+  boot: 
+    - efi
+    - mbr
+convert:
+  format: 
+    - type: raw
+    - type: qcow2
