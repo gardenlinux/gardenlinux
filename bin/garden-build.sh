@@ -43,7 +43,7 @@ touch_epoch() {
 	done
 }
 
-debuerreotypeScriptsDir="$(dirname "$(readlink -f "$(which debuerreotype-init)")")"
+debuerreotypeScriptsDir="${thisDir}"
 featureDir="$debuerreotypeScriptsDir/../features"
 
 for archive in "" security; do
