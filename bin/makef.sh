@@ -12,6 +12,7 @@ set -Eeuo pipefail
 #  --gub-target     Comma separeted list of targets: bios, uefi
 #  --fs-check-off   Disable possible file system
 #  --image-size     Image size in GB
+#  --read-only-usr  Make usr partition read only
 #---help---
 
 if [ ! ${EUID} -eq 0 ]; then
@@ -28,6 +29,7 @@ target="bios,uefi"
 fs_check=1
 force=0
 imagesz=2G
+read_only_usr=0
 
 while true; do
     flag=$1;
@@ -35,6 +37,7 @@ while true; do
         --grub-target) shift; target=$1; shift;;
         --force) shift; force=1;;
         --image-size) shift; imagesz=$1; shift;;
+        --read-only-usr) shift; read_only_usr=1;;
         *) break
     esac
 done
@@ -66,7 +69,8 @@ loopback=$(losetup -f --show ${raw_image})
 echo "### using ${loopback}"
 echo 'label: gpt
 type=21686148-6449-6E6F-744E-656564454649, name="BIOS", size=1MiB
-type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, name="EFI",  size=16MiB
+type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, name="EFI", size=16MiB
+type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, name="USR", size=1GiB
 type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, name="ROOT"' | sfdisk $loopback --no-reread --no-tell-kernel
 losetup -d $loopback
 sync
@@ -76,13 +80,15 @@ echo "### reconnected loopback to ${loopback}"
 
 echo "### creating filesystems"
 mkfs.vfat -n EFI ${loopback}p2
-mkfs.ext4 -L ROOT -E lazy_itable_init=0,lazy_journal_init=0 ${loopback}p3
+mkfs.ext4 -L USR -E lazy_itable_init=0,lazy_journal_init=0 ${loopback}p3
+mkfs.ext4 -L ROOT -E lazy_itable_init=0,lazy_journal_init=0 ${loopback}p4
 # part of debian-cloud-images, I am sure we want that :-) -> it is default
 #tune2fs -c 0 -i 0 ${loopback}p3
 
 echo "### mounting filesystems"
-mkdir -p ${dir_name}		&& mount ${loopback}p3 ${dir_name}
-mkdir -p ${dir_name}/boot/efi	&& mount ${loopback}p2 ${dir_name}/boot/efi
+mkdir -p ${dir_name}          && mount ${loopback}p4 ${dir_name}
+mkdir -p ${dir_name}/boot/efi && mount ${loopback}p2 ${dir_name}/boot/efi
+mkdir -p ${dir_name}/usr      && mount ${loopback}p3 ${dir_name}/usr
 
 echo "### copying $rootfs"
 tar xf ${rootfs} --xattrs-include='*.*' -C ${dir_name}
@@ -92,11 +98,18 @@ mkdir -p ${dir_name}/sys	&& mount -t sysfs sys ${dir_name}/sys
 mkdir -p ${dir_name}/dev	&& mount --bind /dev  ${dir_name}/dev
 mount | grep $dir_name
 
+if [ ${read_only_usr} == 1 ]; then
+    fstab_usr="LABEL=USR   /usr        ext4    defaults,ro     0   2"
+else
+    fstab_usr="LABEL=USR   /usr        ext4    defaults,rw     0   2"
+fi
+
 echo "### generating fstab"
 cat << EOF >> ${dir_name}/etc/fstab
 # <file system>	<mount point>	<type>	<options>		<dump>	<pass>
 LABEL=ROOT	/		ext4	errors=remount-ro,x-systemd.growfs 0	1
 LABEL=EFI	/boot/efi	vfat	umask=0077		0 	2
+$fstab_usr
 /dev/sr0	/media/cdrom0	udf,iso9660 user,noauto		0	0
 EOF
 
@@ -120,6 +133,7 @@ sync
 echo "### final fsck, just to be sure"
 fsck.vfat -f -a ${loopback}p2
 fsck.ext4 -f -a -E discard,inode_count_fullmap -D ${loopback}p3
+fsck.ext4 -f -a -E discard,inode_count_fullmap -D ${loopback}p4
 sync
 
 losetup -d $loopback
