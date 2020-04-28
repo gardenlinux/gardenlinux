@@ -7,6 +7,8 @@ source "$thisDir/.constants.sh" \
 	--flags 'eol,ports,arch:,qemu,features:' \
 	--
 
+export PATH="${thisDir}:${PATH}"
+
 eval "$dgetopt"
 while true; do
 	flag="$1"; shift
