@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 
+import argparse
 import dacite
 import dataclasses
 import itertools
+import os
 import typing
 
 import yaml
 
 import glci.model
 import tkn.model
+
+own_dir = os.path.abspath(os.path.dirname(__file__))
 
 GardenlinuxFlavour = glci.model.GardenlinuxFlavour
 
@@ -84,7 +88,7 @@ def render_pipeline_dict(
     return pipeline
 
 
-def enumerate_build_flavours(build_yaml: str='../build.yaml'):
+def enumerate_build_flavours(build_yaml: str):
     with open(build_yaml) as f:
         parsed = yaml.safe_load(f)
 
@@ -121,8 +125,21 @@ def enumerate_build_flavours(build_yaml: str='../build.yaml'):
 
 
 def main():
-    gardenlinux_flavours = list(enumerate_build_flavours())
-    outfile = 'pipeline.yaml'
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--pipeline_cfg',
+        default=os.path.join(own_dir, os.pardir, 'build.yaml'),
+    )
+    parser.add_argument(
+        '--outfile',
+        default='pipeline.yaml',
+    )
+    parsed = parser.parse_args()
+
+    build_yaml = parsed.pipeline_cfg
+
+    gardenlinux_flavours = list(enumerate_build_flavours(build_yaml=build_yaml))
+    outfile = parsed.outfile
 
     pipeline:dict = render_pipeline_dict(
         gardenlinux_flavours=gardenlinux_flavours,
