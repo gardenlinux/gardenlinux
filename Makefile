@@ -3,8 +3,8 @@
 # This is the snapshot date candidate for the first Garden Linux release
 SNAPSHOT_DATE=20200427
 IMAGE_BASENAME=garden-linux
-VERSION=28-0
-PUBLIC=
+VERSION=28-3
+PUBLIC=true
 AWS_DISTRIBUTE=
 
 all: all_dev all_prod
@@ -25,7 +25,7 @@ aws-dev:
 	./build.sh --features server,cloud,gardener,aws,_dev .build/aws-dev bullseye $(SNAPSHOT_DATE)
 
 aws-dev-upload:
-	./bin/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 --image-name=$(AWS_DEV_IMAGE_NAME) .build/aws-dev/aws-dev.raw --permission-public "$(PUBLIC)" --distribute "$(AWS_DISTRIBUTE)"
+	./bin/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 --image-name=$(AWS_DEV_IMAGE_NAME) .build/aws-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.raw --permission-public "$(PUBLIC)" --distribute "$(AWS_DISTRIBUTE)"
 
 GCP_IMAGE_NAME=$(IMAGE_BASENAME)-gcp-$(VERSION)
 gcp:

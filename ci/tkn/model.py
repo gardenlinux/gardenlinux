@@ -5,7 +5,7 @@ import typing
 @dataclasses.dataclass
 class NamedParam:
     name: str
-    value: str
+    value: str=None
 
 
 @dataclasses.dataclass
@@ -29,6 +29,7 @@ class PipelineTask:
 @dataclasses.dataclass
 class PipelineSpec:
     tasks: typing.List[PipelineTask]
+    params: typing.List[NamedParam] = dataclasses.field(default_factory=list)
 
 
 @dataclasses.dataclass
@@ -37,3 +38,28 @@ class Pipeline:
     spec: PipelineSpec
     apiVersion: str='tekton.dev/v1beta1'
     kind: str='Pipeline'
+
+
+@dataclasses.dataclass
+class PipelineRunMetadata:
+    name: str
+    namespace: str
+
+
+@dataclasses.dataclass
+class PipelineRef:
+    name: str
+
+
+@dataclasses.dataclass
+class PipelineRunSpec:
+    params: typing.List[NamedParam]
+    pipelineRef: PipelineRef
+
+
+@dataclasses.dataclass
+class PipelineRun:
+    spec: PipelineRunSpec
+    metadata: PipelineRunMetadata
+    apiVersion: str='tekton.dev/v1beta1'
+    kind: str='PipelineRun'

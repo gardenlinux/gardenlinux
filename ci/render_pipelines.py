@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 
+import argparse
 import dacite
 import dataclasses
 import itertools
+import os
 import typing
 
 import yaml
 
 import glci.model
 import tkn.model
+
+own_dir = os.path.abspath(os.path.dirname(__file__))
 
 GardenlinuxFlavour = glci.model.GardenlinuxFlavour
 
@@ -43,12 +47,13 @@ def mk_pipeline_task(
         params=[
             NamedParam(name='features', value=feature_names),
             NamedParam(name='uploadprefix', value=upload_prefix),
+            NamedParam(name='committish', value='$(params.committish)'),
         ],
     )
 
 
 def mk_pipeline(
-    gardenlinux_flavours: typing.Sequence[GardenlinuxFlavour]
+    gardenlinux_flavours: typing.Sequence[GardenlinuxFlavour],
     pipeline_flavour: glci.model.PipelineFlavour=glci.model.PipelineFlavour.SNAPSHOT,
 ):
     gardenlinux_flavours = set(gardenlinux_flavours) # mk unique
@@ -58,12 +63,15 @@ def mk_pipeline(
             namespace='gardenlinux-tkn',
         ),
         spec=PipelineSpec(
+            params=[
+                NamedParam(name='committish'),
+            ],
             tasks=[
-            mk_pipeline_task(
-                gardenlinux_flavour=glf,
-                pipeline_flavour=pipeline_flavour,
-            ),
-            for glf in gardenlinux_flavours
+                mk_pipeline_task(
+                    gardenlinux_flavour=glf,
+                    pipeline_flavour=pipeline_flavour,
+                )
+                for glf in gardenlinux_flavours
             ],
         ),
     )
@@ -80,7 +88,7 @@ def render_pipeline_dict(
     return pipeline
 
 
-def enumerate_build_flavours(build_yaml: str='../build.yaml'):
+def enumerate_build_flavours(build_yaml: str):
     with open(build_yaml) as f:
         parsed = yaml.safe_load(f)
 
@@ -117,8 +125,21 @@ def enumerate_build_flavours(build_yaml: str='../build.yaml'):
 
 
 def main():
-    gardenlinux_flavours = list(enumerate_build_flavours())
-    outfile = 'pipeline.yaml'
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--pipeline_cfg',
+        default=os.path.join(own_dir, os.pardir, 'build.yaml'),
+    )
+    parser.add_argument(
+        '--outfile',
+        default='pipeline.yaml',
+    )
+    parsed = parser.parse_args()
+
+    build_yaml = parsed.pipeline_cfg
+
+    gardenlinux_flavours = list(enumerate_build_flavours(build_yaml=build_yaml))
+    outfile = parsed.outfile
 
     pipeline:dict = render_pipeline_dict(
         gardenlinux_flavours=gardenlinux_flavours,
