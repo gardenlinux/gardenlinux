@@ -25,7 +25,7 @@ while true; do
 	esac
 done
 
-if [ $debug ]; then
+if [ ${debug:-} ]; then
 	set -x
 fi
 
