@@ -26,7 +26,7 @@ class AzureImageBuild:
 
     def upload_disk(self, storage_account_name, image_path, image_name, key):
         print("Uploading disk " + image_path)
-        result = subprocess.run(["bin/azure-vhd-utils",
+        result = subprocess.run(["azure-vhd-utils",
             "upload",
             "--localvhdpath", image_path,
             "--stgaccountname", storage_account_name,
