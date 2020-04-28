@@ -27,7 +27,7 @@ def mk_pipeline_run(
     namespace: str,
     committish: str,
 ):
-    run_name = f'{pipeline_name}-{committish}'
+    run_name = f'{pipeline_name}-{committish}'[:60] # k8s length restriction
 
     plrun = PipelineRun(
         metadata=PipelineRunMetadata(
