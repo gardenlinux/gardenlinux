@@ -38,3 +38,27 @@ class Pipeline:
     spec: PipelineSpec
     apiVersion: str='tekton.dev/v1beta1'
     kind: str='Pipeline'
+
+
+@dataclasses.dataclass
+class PipelineRunMetadata:
+    name: str
+    namespace: str
+
+
+@dataclasses.dataclass
+class PipelineRef:
+    name: str
+
+
+@dataclasses.dataclass
+class PipelineRunSpec:
+    params: typing.List[NamedParam]
+    pipelineRef: PipelineRef
+
+
+@dataclasses.dataclass
+class PipelineRun:
+    metadata: PipelineRunMetadata
+    apiVersion: str='tekton.dev/v1beta1'
+    kind: str='PipelineRun'
