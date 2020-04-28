@@ -4,5 +4,8 @@ metadata:
   name: 'build-gardenlinux-snapshot-pipeline-run'
   namespace: 'gardenlinux-tkn'
 spec:
+  params:
+    - name: committish
+      value: 'master'
   pipelineRef:
     name: 'build-gardenlinux-snapshot-pipeline'

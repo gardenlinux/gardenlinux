@@ -7,6 +7,8 @@ source "$thisDir/.constants.sh" \
 	--flags 'eol,ports,arch:,qemu,features:' \
 	--
 
+export PATH="${thisDir}:${PATH}"
+
 eval "$dgetopt"
 while true; do
 	flag="$1"; shift
@@ -25,7 +27,7 @@ while true; do
 	esac
 done
 
-if [ $debug ]; then
+if [ ${debug:-} ]; then
 	set -x
 fi
 
@@ -43,7 +45,7 @@ touch_epoch() {
 	done
 }
 
-debuerreotypeScriptsDir="$(dirname "$(readlink -f "$(which debuerreotype-init)")")"
+debuerreotypeScriptsDir="${thisDir}"
 featureDir="$debuerreotypeScriptsDir/../features"
 
 for archive in "" security; do
