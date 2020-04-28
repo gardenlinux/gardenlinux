@@ -1,0 +1,8 @@
+description: "only pxe build is done (with squashfs)"
+type: modifier
+features:
+  include: [ _ignite ]
+fs:
+  - dest: /
+    type: squashfs
+

@@ -1,0 +1,12 @@
+description: "OpenStack platform (cloud-init, open-vm-tools)"
+type: platform
+features:
+  include: 
+    - cloud
+convert:
+  format: 
+    - type: vmdk
+upload:
+  target:
+    - type: openstack
+      image-name: $(OPENSTACK_IMAGE_NAME)

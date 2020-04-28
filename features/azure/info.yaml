@@ -1,0 +1,16 @@
+description: "azure platform (waagent)"
+type: platform
+features:
+  include: 
+    - cloud
+disk:
+  size: 4G
+convert:
+  format: 
+    - type: vhd
+upload:
+  target:
+    - type: azure
+      resource-group: garden-linux 
+      storage-account-name: gardenlinux 
+      image-name: $(AZURE_IMAGE_NAME)

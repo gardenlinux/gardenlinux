@@ -1,0 +1,9 @@
+description: "/usr directory will be readonly"
+type: modifier
+features:
+  include: [ server ]
+fs:
+  - dest: /usr
+    type: ext4
+    options: ro
+

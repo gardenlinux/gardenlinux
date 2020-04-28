@@ -1,0 +1,19 @@
+description: "The base layer for all other features. It pulls no extra packets only debootstap minbase"
+type: platform
+features:
+  include: 
+    - _slim
+tar:
+  compression: xz
+  include-dev: false
+fs:
+  - dest: /
+    type: ext4
+  - dest: /usr
+    type: ext4
+    options: ro
+disk:
+  label: gpt
+  boot: 
+    - efi
+    - mbr

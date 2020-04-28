@@ -1,0 +1,5 @@
+type: modifier
+features:
+  include:
+    - _nopkg
+    - _readonly

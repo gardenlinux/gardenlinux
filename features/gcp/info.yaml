@@ -1,0 +1,14 @@
+description: "Google Compute Engine platform (gce guest environment)"
+type: platform
+features:
+  include: 
+    - cloud
+convert:
+  format: 
+    - type: gcpimage
+upload:
+  target:
+    - type: gcp
+      bucket: garden-linux-test 
+      image-name: $(GCP_IMAGE_NAME)
+      publici: $(PUBLIC)

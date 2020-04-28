@@ -1,0 +1,6 @@
+description: "host for container and kubernetes workloads (containerd)"
+features:
+  include: 
+    - server
+
+
