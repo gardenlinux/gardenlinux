@@ -5,7 +5,7 @@ import typing
 @dataclasses.dataclass
 class NamedParam:
     name: str
-    value: str
+    value: str=None
 
 
 @dataclasses.dataclass
@@ -29,6 +29,7 @@ class PipelineTask:
 @dataclasses.dataclass
 class PipelineSpec:
     tasks: typing.List[PipelineTask]
+    params: typing.List[NamedParam] = dataclasses.field(default_factory=list)
 
 
 @dataclasses.dataclass

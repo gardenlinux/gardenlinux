@@ -43,12 +43,13 @@ def mk_pipeline_task(
         params=[
             NamedParam(name='features', value=feature_names),
             NamedParam(name='uploadprefix', value=upload_prefix),
+            NamedParam(name='committish', value='$(params.committish)'),
         ],
     )
 
 
 def mk_pipeline(
-    gardenlinux_flavours: typing.Sequence[GardenlinuxFlavour]
+    gardenlinux_flavours: typing.Sequence[GardenlinuxFlavour],
     pipeline_flavour: glci.model.PipelineFlavour=glci.model.PipelineFlavour.SNAPSHOT,
 ):
     gardenlinux_flavours = set(gardenlinux_flavours) # mk unique
@@ -58,12 +59,15 @@ def mk_pipeline(
             namespace='gardenlinux-tkn',
         ),
         spec=PipelineSpec(
+            params=[
+                NamedParam(name='committish'),
+            ],
             tasks=[
-            mk_pipeline_task(
-                gardenlinux_flavour=glf,
-                pipeline_flavour=pipeline_flavour,
-            ),
-            for glf in gardenlinux_flavours
+                mk_pipeline_task(
+                    gardenlinux_flavour=glf,
+                    pipeline_flavour=pipeline_flavour,
+                )
+                for glf in gardenlinux_flavours
             ],
         ),
     )
