@@ -9,10 +9,11 @@ import time
 
 class GcpImageBuild:
 
-    def __init__(self, bucket, raw_image_path, image_name):
+    def __init__(self, bucket, raw_image_path, image_name, permission):
         self.bucket = bucket
         self.raw_image_path = raw_image_path
         self.image_name = image_name
+        self.permission = permission
 
     def logged_on_bucket_available(self, bucket):
         bucket_name = "gs://" + bucket + "/"
@@ -40,7 +41,14 @@ class GcpImageBuild:
         result = subprocess.run(["gcloud", "compute", "images", "create", image_name,
             "--source-uri", bucket_image ],
             capture_output=True)
-        print(result)
+        if result.returncode != 0:
+            print(result.stdout)
+            sys.exit("Unable to create image " + image_name+ ": " + str(result.stdout) + " " + str(result.stderr))
+        if self.permission == True:
+            result = subprocess.run(["gcloud", "compute", "images", "add-iam-policy-binding", image_name,
+                "--member", "allAuthenticatedUsers", "--role", "roles/compute.imageUser" ],
+                capture_output=True)
+            print(result)
 
     def run(self):
         self.logged_on_bucket_available(self.bucket)
@@ -67,6 +75,12 @@ class GcpImageBuild:
             type=str,
             help="Image name on GCP"
         )
+        parser.add_argument(
+            '--permission-public',
+            type=bool,
+            default=False,
+            help='Make snapshot and image public',
+        )
 
     @classmethod
     def _main(cls):
@@ -75,8 +89,8 @@ class GcpImageBuild:
         args = parser.parse_args()
         print(args)
 
-        gcp_img_build = cls(bucket=args.bucket, raw_image_path=args.raw_image_path, image_name=args.image_name)
+        gcp_img_build = cls(bucket=args.bucket, raw_image_path=args.raw_image_path, image_name=args.image_name, permission=args.permission_public)
         gcp_img_build.run()
- 
+
 if __name__ == '__main__':
     GcpImageBuild._main()
