@@ -30,14 +30,14 @@ gcp:
 	./build.sh --features server,cloud,gardener,gcp .build/gcp bullseye $(SNAPSHOT_DATE)
 
 gcp-upload:
-	./bin/make-gcp-ami --bucket garden-linux-test --image-name $(GCP_IMAGE_NAME) --raw-image-path .build/gcp/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs-gcpimage.tar.gz
+	./bin/make-gcp-ami --bucket garden-linux-test --image-name $(GCP_IMAGE_NAME) --raw-image-path .build/gcp/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs-gcpimage.tar.gz --permission-public "$(PUBLIC)"
 
 GCP_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-dev-gcp-$(VERSION)
 gcp-dev:
 	./build.sh --features server,cloud,gardener,gcp,dev .build/gcp-dev bullseye $(SNAPSHOT_DATE)
 
 gcp-dev-upload:
-	./bin/make-gcp-ami --bucket garden-linux-test --image-name $(GCP_DEV_IMAGE_NAME) --raw-image-path .build/gcp-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs-gcpimage.tar.gz
+	./bin/make-gcp-ami --bucket garden-linux-test --image-name $(GCP_DEV_IMAGE_NAME) --raw-image-path .build/gcp-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs-gcpimage.tar.gz --permission-public "$(PUBLIC)"
 
 AZURE_IMAGE_NAME=$(IMAGE_BASENAME)-az-$(VERSION)
 azure:
