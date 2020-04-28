@@ -23,13 +23,13 @@ while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
 	case "$flag" in
-		--no-build) build= ;;	# for skipping "docker build"
-		--debug) debug=1 ;;	# for jumping in the prepared image"
-		--eol) eol=1 ;;		# for using "archive.debian.org"
-		--ports) ports=1 ;;	# for using "debian-ports"
-		--arch) arch="$1"; shift ;; # for adding "--arch" to debuerreotype-init
-		--qemu) qemu=1 ;;	# for using "qemu-debootstrap"
-		--features) features="$1"; shift ;; # adding features
+		--no-build)	build= ;;	# for skipping "docker build"
+		--debug)	debug=1 ;;	# for jumping in the prepared image"
+		--eol)		eol=1 ;;	# for using "archive.debian.org"
+		--ports)	ports=1 ;;	# for using "debian-ports"
+		--arch)		arch="$1"; shift ;; # for adding "--arch" to debuerreotype-init
+		--qemu) 	qemu=1 ;;	# for using "qemu-debootstrap"
+		--features) 	features="$1"; shift ;; # adding features
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
@@ -84,7 +84,7 @@ buildImage=${BUILD_IMAGE:-"debuerreotype/debuerreotype:$ver"}
 dockerArgs="--hostname garden-build
 	${securityArgs[@]}
 	${envArgs[*]/#/-e }
-  -v "${thisDir}":/opt/debuerreotype
+	--volume ${thisDir}:/opt/debuerreotype
 	--tmpfs /tmp:dev,exec,suid,noatime
 	--mount type=bind,source=/dev,target=/dev"
 
