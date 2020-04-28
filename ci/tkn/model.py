@@ -59,6 +59,7 @@ class PipelineRunSpec:
 
 @dataclasses.dataclass
 class PipelineRun:
+    spec: PipelineRunSpec
     metadata: PipelineRunMetadata
     apiVersion: str='tekton.dev/v1beta1'
     kind: str='PipelineRun'
