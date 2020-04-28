@@ -1,6 +1,9 @@
-SNAPSHOT_DATE=`date -d 'today' '+%Y%m%d'`
+#SNAPSHOT_DATE=`date -d 'today' '+%Y%m%d'`
+
+# This is the snapshot date candidate for the first Garden Linux release
+SNAPSHOT_DATE=20200427
 IMAGE_BASENAME=garden-linux
-VERSION=40-2
+VERSION=28.0
 
 all: all_dev all_prod
 
