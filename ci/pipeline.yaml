@@ -1,51 +1,151 @@
-apiVersion: 'tekton.dev/v1beta1'
-kind: 'Pipeline'
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
 metadata:
-  name: 'build-gardenlinux-pipeline'
-  namespace: 'gardenlinux-tkn'
+  name: build-gardenlinux-snapshot-pipeline
+  namespace: gardenlinux-tkn
 spec:
   tasks:
-    - name: 'build-kvm'
-      taskRef:
-        name: 'build-gardenlinux-task'
-      params:
-        - name: 'features'
-          value: 'server,cloud,kvm'
-        - name: 'uploadprefix'
-          value: 'kvm'
-
-    - name: 'build-aws'
-      taskRef:
-        name: 'build-gardenlinux-task'
-      params:
-        - name: 'features'
-          value: 'server,cloud,ghost,aws'
-        - name: 'uploadprefix'
-          value: 'aws'
-
-    - name: 'build-gcp'
-      taskRef:
-        name: 'build-gardenlinux-task'
-      params:
-        - name: 'features'
-          value: 'server,cloud,ghost,gcp'
-        - name: 'uploadprefix'
-          value: 'gcp'
-
-    - name: 'build-azure'
-      taskRef:
-        name: 'build-gardenlinux-task'
-      params:
-        - name: 'features'
-          value: 'server,cloud,ghost,azure'
-        - name: 'uploadprefix'
-          value: 'azure'
-
-    - name: 'build-openstack'
-      taskRef:
-        name: 'build-gardenlinux-task'
-      params:
-        - name: 'features'
-          value: 'server,cloud,ghost,openstack'
-        - name: 'uploadprefix'
-          value: 'openstack'
+  - name: amd64-metal-ghost-prod
+    params:
+    - name: features
+      value: metal,ghost,prod
+    - name: uploadprefix
+      value: amd64/metal-ghost-prod
+    taskRef:
+      name: build-gardenlinux-task
+  - name: amd64-aws-ghost-prod
+    params:
+    - name: features
+      value: aws,ghost,prod
+    - name: uploadprefix
+      value: amd64/aws-ghost-prod
+    taskRef:
+      name: build-gardenlinux-task
+  - name: amd64-kvm-ghost-prod
+    params:
+    - name: features
+      value: kvm,ghost,prod
+    - name: uploadprefix
+      value: amd64/kvm-ghost-prod
+    taskRef:
+      name: build-gardenlinux-task
+  - name: amd64-openstack-ghost-prod
+    params:
+    - name: features
+      value: openstack,ghost,prod
+    - name: uploadprefix
+      value: amd64/openstack-ghost-prod
+    taskRef:
+      name: build-gardenlinux-task
+  - name: amd64-gcp-chost-prod
+    params:
+    - name: features
+      value: gcp,chost,prod
+    - name: uploadprefix
+      value: amd64/gcp-chost-prod
+    taskRef:
+      name: build-gardenlinux-task
+  - name: amd64-aws-chost-prod
+    params:
+    - name: features
+      value: aws,chost,prod
+    - name: uploadprefix
+      value: amd64/aws-chost-prod
+    taskRef:
+      name: build-gardenlinux-task
+  - name: amd64-vmware-ghost-prod
+    params:
+    - name: features
+      value: vmware,ghost,prod
+    - name: uploadprefix
+      value: amd64/vmware-ghost-prod
+    taskRef:
+      name: build-gardenlinux-task
+  - name: amd64-ali-ghost-prod
+    params:
+    - name: features
+      value: ali,ghost,prod
+    - name: uploadprefix
+      value: amd64/ali-ghost-prod
+    taskRef:
+      name: build-gardenlinux-task
+  - name: amd64-azure-chost-prod
+    params:
+    - name: features
+      value: azure,chost,prod
+    - name: uploadprefix
+      value: amd64/azure-chost-prod
+    taskRef:
+      name: build-gardenlinux-task
+  - name: amd64-ali-chost-prod
+    params:
+    - name: features
+      value: ali,chost,prod
+    - name: uploadprefix
+      value: amd64/ali-chost-prod
+    taskRef:
+      name: build-gardenlinux-task
+  - name: amd64-metal-chost-prod
+    params:
+    - name: features
+      value: metal,chost,prod
+    - name: uploadprefix
+      value: amd64/metal-chost-prod
+    taskRef:
+      name: build-gardenlinux-task
+  - name: amd64-gcp-ghost-prod
+    params:
+    - name: features
+      value: gcp,ghost,prod
+    - name: uploadprefix
+      value: amd64/gcp-ghost-prod
+    taskRef:
+      name: build-gardenlinux-task
+  - name: amd64-base---build
+    params:
+    - name: features
+      value: base,_build
+    - name: uploadprefix
+      value: amd64/base--_build
+    taskRef:
+      name: build-gardenlinux-task
+  - name: amd64-openstack-chost-prod
+    params:
+    - name: features
+      value: openstack,chost,prod
+    - name: uploadprefix
+      value: amd64/openstack-chost-prod
+    taskRef:
+      name: build-gardenlinux-task
+  - name: amd64-kvm-chost-prod
+    params:
+    - name: features
+      value: kvm,chost,prod
+    - name: uploadprefix
+      value: amd64/kvm-chost-prod
+    taskRef:
+      name: build-gardenlinux-task
+  - name: amd64-metal-vhost-prod
+    params:
+    - name: features
+      value: metal,vhost,prod
+    - name: uploadprefix
+      value: amd64/metal-vhost-prod
+    taskRef:
+      name: build-gardenlinux-task
+  - name: amd64-azure-ghost-prod
+    params:
+    - name: features
+      value: azure,ghost,prod
+    - name: uploadprefix
+      value: amd64/azure-ghost-prod
+    taskRef:
+      name: build-gardenlinux-task
+  - name: amd64-vmware-chost-prod
+    params:
+    - name: features
+      value: vmware,chost,prod
+    - name: uploadprefix
+      value: amd64/vmware-chost-prod
+    taskRef:
+      name: build-gardenlinux-task

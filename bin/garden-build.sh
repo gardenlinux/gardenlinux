@@ -1,6 +1,33 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
-set -x
+
+thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+source "$thisDir/.constants.sh" \
+	--flags 'no-build,debug,suite:,timestamp:' \
+	--flags 'eol,ports,arch:,qemu,features:' \
+	--
+
+eval "$dgetopt"
+while true; do
+	flag="$1"; shift
+	dgetopt-case "$flag"
+	case "$flag" in
+		--debug) debug=1 ;;	# for jumping in the prepared image"
+		--eol) eol=1 ;;		# for using "archive.debian.org"
+		--ports) ports=1 ;;	# for using "debian-ports"
+		--arch) arch="$1"; shift ;; # for adding "--arch" to debuerreotype-init
+		--qemu) qemu=1 ;;	# for using "qemu-debootstrap"
+		--features) features="$1"; shift ;; # adding features
+		--suite) suite="$1"; shift ;; # suite is a parameter this time
+		--timestamp) timestamp="$1"; shift ;; # timestamp is a parameter this time
+		--) break ;;
+		*) eusage "unknown flag '$flag'" ;;
+	esac
+done
+
+if [ $debug ]; then
+	set -x
+fi
 
 epoch="$(date --date "$timestamp" +%s)"
 serial="$(date --date "@$epoch" +%Y%m%d)"
