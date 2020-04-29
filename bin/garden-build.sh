@@ -9,6 +9,7 @@ source "$thisDir/.constants.sh" \
 	--
 
 export PATH="${thisDir}:${PATH}"
+export REPO_ROOT="$(readlink -f "${thisDir}/..")"
 
 eval "$dgetopt"
 while true; do
