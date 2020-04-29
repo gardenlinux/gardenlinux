@@ -2,6 +2,5 @@
 
 set -x
 
-/opt/debuerreotype/bin/makef.sh --read-only-usr --image-size 4G --grub-target bios --force $2 $2.tar.xz
-/opt/debuerreotype/bin/make-vhd $2.raw $2.vhd
-
+makef.sh --read-only-usr --image-size 4G --grub-target bios --force $2 $2.tar.xz
+make-vhd $2.raw $2.vhd
