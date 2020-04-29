@@ -4,7 +4,7 @@ aws:
     access_key_id:
     secret_access_key:
     # which AMI to use for creating an ec2 instance
-    ami_id: ami-0dd9c806f56e62101
+    ami_id: ami-06e4f77831e4e1a02
     # user and ssh key used to connect to the ec2 instance
     user: admin
     ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
@@ -17,7 +17,7 @@ gcp:
     zone: europe-west1-d
     service_account_json:
     service_account_json_path: ~/.config/gcloud/sap-se-gcp-scp-k8s-dev-133a7fdc3563.json
-    image_name: garden-linux-dev-gcp-38
+    image_name: garden-linux-dev-gcp-41
     machine_type: n1-standard-1
     # user and ssh key used to connect to the vm
     user: gardenlinux
