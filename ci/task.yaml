@@ -52,6 +52,11 @@ spec:
         print(git_helper.repo.git.show())
 
     - name: 'build-image'
+      resources:
+        requests:
+          memory: 1Gi
+        limits:
+          memory: 1.5Gi
       securityContext:
         privileged: true
         allowPrivilegeEscalation: true
