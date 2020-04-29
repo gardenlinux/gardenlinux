@@ -5,6 +5,7 @@ thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
 	--flags 'no-build,debug,suite:,timestamp:' \
 	--flags 'eol,ports,arch:,qemu,features:' \
+	--flags 'suffix:,prefix:' \
 	--
 
 export PATH="${thisDir}:${PATH}"
@@ -22,6 +23,8 @@ while true; do
 		--features) features="$1"; shift ;; # adding features
 		--suite) suite="$1"; shift ;; # suite is a parameter this time
 		--timestamp) timestamp="$1"; shift ;; # timestamp is a parameter this time
+		--suffix) suffix="$1"; shift ;; # target name prefix
+		--prefix) prefix="$1"; shift ;; # target name suffix
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
@@ -35,8 +38,9 @@ epoch="$(date --date "$timestamp" +%s)"
 serial="$(date --date "@$epoch" +%Y%m%d)"
 dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
 
+prefix=${prefix:-"/$serial/$dpkgArch/$suite"}
 exportDir="output"
-outputDir="$exportDir/$serial/$dpkgArch/$suite"
+outputDir="$exportDir$prefix"
 
 touch_epoch() {
 	while [ "$#" -gt 0 ]; do
@@ -45,11 +49,11 @@ touch_epoch() {
 	done
 }
 
-debuerreotypeScriptsDir="${thisDir}"
+debuerreotypeScriptsDir="$(dirname "$(readlink -f "$(which debuerreotype-init)")")"
 featureDir="$debuerreotypeScriptsDir/../features"
 
 for archive in "" security; do
-	snapshotUrlFile="$exportDir/$serial/$dpkgArch/snapshot-url${archive:+-${archive}}"
+	snapshotUrlFile="$outputDir/snapshot-url${archive:+-${archive}}"
 	if [ -n "${ports:-}" ] && [ -z "${archive:-}" ]; then
 		archive="ports"
 	fi
@@ -82,7 +86,7 @@ else
 	fi
 fi
 
-snapshotUrl="$(< "$exportDir/$serial/$dpkgArch/snapshot-url")"
+snapshotUrl="$(< "$outputDir/snapshot-url")"
 mkdir -p "$outputDir"
 if wget -O "$outputDir/InRelease" "$snapshotUrl/dists/$suite/InRelease"; then
 	gpgv \
