@@ -26,10 +26,10 @@ class Ec2ImageBuild:
 
     def import_snapshot(self, region, bucket, image_name):
 
-        container_string = ("Description=garden-linux,Format=raw,UserBucket={S3Bucket=%s,S3Key=%s}" % (bucket, image_name))
+        container_string = ("Description=gardenlinux,Format=raw,UserBucket={S3Bucket=%s,S3Key=%s}" % (bucket, image_name))
         result = subprocess.run(["aws", "--region", region, "ec2", "import-snapshot", "--disk-container", container_string], capture_output= True)
         if result.returncode != 0:
-            sys.exit("Unable to create snapshot for " + image_name)
+            sys.exit("Unable to create snapshot for " + image_name + ": " + str(result.stderr))
 
         doc = json.loads(result.stdout)
         task_id = doc["ImportTaskId"]
@@ -55,7 +55,7 @@ class Ec2ImageBuild:
         print("Registering image for snapshot " + snapshot_id)
         result = subprocess.run(["aws", "--region", region, "ec2", "register-image",
             "--name", image_name,
-            "--description", "Garden Linux Testing",
+            "--description", "Garden Linux",
             "--architecture", "x86_64",
             "--root-device-name", "/dev/xvda",
             "--virtualization-type", "hvm",

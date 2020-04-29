@@ -3,7 +3,7 @@
 # This is the snapshot date candidate for the first Garden Linux release
 SNAPSHOT_DATE=20200427
 IMAGE_BASENAME=garden-linux
-VERSION=29-0
+VERSION=29-1
 PUBLIC=true
 AWS_DISTRIBUTE=
 
@@ -18,7 +18,7 @@ aws:
 	./build.sh --features server,cloud,gardener,aws .build/aws bullseye $(SNAPSHOT_DATE)
 
 aws-upload:
-	./bin/make-ec2-ami --bucket ami-debian-image-test --region eu-central-1 --image-name=$(AWS_IMAGE_NAME) .build/aws/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.raw --permission-public "$(PUBLIC)" --distribute "$(AWS_DISTRIBUTE)"
+	./bin/make-ec2-ami --bucket gardenlinux --region eu-central-1 --image-name=$(AWS_IMAGE_NAME) .build/aws/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.raw --permission-public "$(PUBLIC)" --distribute "$(AWS_DISTRIBUTE)"
 
 AWS_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-dev-aws-$(VERSION)
 aws-dev:
@@ -32,7 +32,7 @@ gcp:
 	./build.sh --features server,cloud,gardener,gcp .build/gcp bullseye $(SNAPSHOT_DATE)
 
 gcp-upload:
-	./bin/make-gcp-ami --bucket garden-linux-test --image-name $(GCP_IMAGE_NAME) --raw-image-path .build/gcp/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs-gcpimage.tar.gz --permission-public "$(PUBLIC)"
+	./bin/make-gcp-ami --bucket gardenlinux-images --image-name $(GCP_IMAGE_NAME) --raw-image-path .build/gcp/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs-gcpimage.tar.gz --permission-public "$(PUBLIC)"
 
 GCP_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-dev-gcp-$(VERSION)
 gcp-dev:
