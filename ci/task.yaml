@@ -128,7 +128,7 @@ spec:
         s3_client = session.client('s3')
         print(f'uploading to s3 {s3_cfg_name=} {s3_bucket_name=}')
         prefix = '$(params.uploadprefix)'
-        with tarfile.open('gardenlinux.out') as tf:
+        with tarfile.open(build_result_fname) as tf:
           for tarinfo in tf:
             if not tarinfo.isfile():
               continue
