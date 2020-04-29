@@ -88,6 +88,7 @@ spec:
         #/opt/debuerreotype/bin/build.sh
         gardenlinux-git/bin/garden-build.sh \
           --arch amd64 \
+          --suffix "" \
           --suite $(params.suite) \
           --timestamp ${timestamp} \
           --features "$(params.features),server)"
