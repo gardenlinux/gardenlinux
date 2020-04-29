@@ -40,7 +40,7 @@ class Modifier(enum.Enum):
     '''
     modifiers that can be applied to gardenlinux images (more than one may be chosen)
     '''
-    PROD = 'prod'
+    PROD = '_prod'
     BUILD = '_build'
 
 
