@@ -79,14 +79,9 @@ spec:
         export eol=''
         export ports=''
         echo "features: $(params.features)"
-        export OUT_DIR="${PWD}/build"
-        mkdir "${OUT_DIR}"
-        export OUT_FILE="${PWD}/gardenlinux.out"
-
-        cd gardenlinux-git
-        git rev-parse @
-        git status
-        cd ..
+        export OUT_DIR="/build"
+        ls -la /build
+        export OUT_FILE="/build/gardenlinux.out"
 
         pwd
         echo "running build.."
@@ -109,7 +104,7 @@ spec:
       - mountPath: '/dev'
         name: 'dev'
       - mountPath: '/build'
-        name: build
+        name: 'build'
 
     - name: 'upload-results'
       image: 'eu.gcr.io/gardener-project/cc/job-image:1.612.0'
@@ -117,7 +112,7 @@ spec:
         #!/usr/bin/env python3
         # requires github.com/gardener/cc-utils
         import os
-        build_result_fname = 'gardenlinux.out'
+        build_result_fname = '/build/gardenlinux.out'
         if not os.path.isfile(build_result_fname):
           print('ERROR: no build result - see previous step for errs')
           import sys
@@ -146,6 +141,9 @@ spec:
               Key=target_name,
             )
             print(f'upload succeeded: {target_name}')
+      volumeMounts:
+      - mountPath: '/build'
+        name: 'build'
 
 
   volumes:
