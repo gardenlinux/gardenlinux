@@ -126,6 +126,9 @@ class RemoteClient:
         except SSHException as error:
             logger.exception("SSH exception")
             raise error
+        except Exception as error:
+            logging.exception("unexpected error")
+            raise error
         finally:
             return self.client
 

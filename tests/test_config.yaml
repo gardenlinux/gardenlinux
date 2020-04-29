@@ -17,10 +17,11 @@ gcp:
     zone: europe-west1-d
     service_account_json:
     service_account_json_path: ~/.config/gcloud/sap-se-gcp-scp-k8s-dev-133a7fdc3563.json
-    image_name: garden-linux-dev-gcp-12
+    image_name: garden-linux-dev-gcp-38
+    machine_type: n1-standard-1
     # user and ssh key used to connect to the vm
-    user: admin
-    ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
+    user: gardenlinux
+    ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux
     passphrase:
     remote_path: /
 azure:
