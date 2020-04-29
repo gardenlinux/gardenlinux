@@ -103,6 +103,8 @@ spec:
       volumeMounts:
       - mountPath: '/dev'
         name: 'dev'
+      - mountPath: '/build'
+        name: build
 
     - name: 'upload-results'
       image: 'eu.gcr.io/gardener-project/cc/job-image:1.612.0'
@@ -146,3 +148,6 @@ spec:
       hostPath:
         path: '/dev'
         type: 'Directory'
+    - name: build
+      emptyDir:
+        medium: "Memory"
