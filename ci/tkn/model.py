@@ -52,9 +52,15 @@ class PipelineRef:
 
 
 @dataclasses.dataclass
+class PodTemplate:
+    nodeSelector: dict
+
+
+@dataclasses.dataclass
 class PipelineRunSpec:
     params: typing.List[NamedParam]
     pipelineRef: PipelineRef
+    podTemplate: PodTemplate
 
 
 @dataclasses.dataclass

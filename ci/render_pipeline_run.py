@@ -17,6 +17,7 @@ PipelineRun = tkn.model.PipelineRun
 PipelineRunSpec = tkn.model.PipelineRunSpec
 PipelineRunMetadata = tkn.model.PipelineRunMetadata
 PipelineMetadata = tkn.model.PipelineMetadata
+PodTemplate = tkn.model.PodTemplate
 TaskRef = tkn.model.TaskRef
 PipelineTask = tkn.model.PipelineTask
 NamedParam = tkn.model.NamedParam
@@ -41,9 +42,14 @@ def mk_pipeline_run(
                     value=committish,
                 )
             ],
-            pipelineRef= PipelineRef(
+            pipelineRef=PipelineRef(
                 name=pipeline_name,
             ),
+            podTemplate=PodTemplate(
+                nodeSelector={
+                    "worker.garden.sapcloud.io/group": "gl-build"
+                }
+            )
         ),
     )
     return plrun
