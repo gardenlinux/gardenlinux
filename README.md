@@ -14,16 +14,17 @@ Install required packages using apt:
 
 Build all images:
 
-    sudo make all
+    make all
 
 Build specific images:
 
-    sudo make aws
-    sudo make gcp
-    sudo make azure
-    sudo make vmware
-    sudo make openstack
-    sudo make kvm
+    make aws
+    make gcp
+    make azure
+    make vmware
+    make openstack
+    make vmware
+    make kvm
 
 ## License
 
