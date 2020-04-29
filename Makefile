@@ -3,7 +3,7 @@
 # This is the snapshot date candidate for the first Garden Linux release
 SNAPSHOT_DATE=20200427
 IMAGE_BASENAME=garden-linux
-VERSION=28-3
+VERSION=29-0
 PUBLIC=true
 AWS_DISTRIBUTE=
 
@@ -46,26 +46,29 @@ azure:
 	./build.sh --features server,cloud,gardener,azure .build/azure bullseye $(SNAPSHOT_DATE)
 
 azure-upload:
-	./bin/make-azure-ami --resource-group garden-linux --storage-account-name gardenlinux --image-path=.build/azure/$(AZURE_IMAGE_NAME).vhd --image-name=$(AZURE_IMAGE_NAME)
+	./bin/make-azure-ami --resource-group garden-linux --storage-account-name gardenlinux --image-path=.build/azure/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.vhd --image-name=$(AZURE_IMAGE_NAME)
 
 AZURE_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-dev-az-$(VERSION)
 azure-dev:
 	./build.sh --features server,cloud,gardener,azure,_dev .build/azure-dev bullseye $(SNAPSHOT_DATE)
 
 azure-dev-upload:
-	./bin/make-azure-ami --resource-group garden-linux --storage-account-name gardenlinux --image-path=.build/azure-dev/$(AZURE_DEV_IMAGE_NAME).vhd --image-name=$(AZURE_DEV_IMAGE_NAME)
+	./bin/make-azure-ami --resource-group garden-linux --storage-account-name gardenlinux --image-path=.build/azure-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.vhd --image-name=$(AZURE_DEV_IMAGE_NAME)
 
 
 OPENSTACK_IMAGE_NAME=$(IMAGE_BASENAME)-openstack-$(VERSION)
 openstack:
 	./build.sh --features server,cloud,gardener,openstack .build/openstack bullseye $(SNAPSHOT_DATE)
 
+openstack-dev-upload:
+	./bin/upload-openstack .build/openstack/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.vmdk $(OPENSTACK_IMAGE_NAME)
+
 OPENSTACK_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-openstack-dev-$(VERSION)
 openstack-dev:
 	./build.sh --features server,cloud,gardener,openstack,_dev .build/openstack-dev bullseye $(SNAPSHOT_DATE)
 
 openstack-dev-upload:
-	./bin/upload-openstack .build/openstack-dev/$(OPENSTACK_DEV_IMAGE_NAME).vmdk $(OPENSTACK_DEV_IMAGE_NAME)
+	./bin/upload-openstack .build/openstack-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.vmdk $(OPENSTACK_DEV_IMAGE_NAME)
 
 VMWARE_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-vmware-dev-$(VERSION)
 vmware-dev:
