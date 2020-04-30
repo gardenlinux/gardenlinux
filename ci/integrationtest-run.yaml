@@ -1,11 +1,14 @@
 apiVersion: tekton.dev/v1beta1
 kind: TaskRun
 metadata:
-  generateName: it-test-
+  generateName: it-test-aws-
 spec:
   serviceAccountName: build-bot
   taskRef:
     name: integrationtest-gardenlinux-task
+  params:
+  - name: iaas
+    value: aws # or gcp
   resources:
     inputs:
     - name: repo
