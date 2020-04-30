@@ -2,16 +2,16 @@
 
 rootfsDir=$1
 
-relPath=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
-if [ -z ${relPath} ]; then
+absPath=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
+if [ -z ${absPath} ]; then
 	echo "FATAL - can't determine working directory"
 	exit 1
 fi
 
-source ${relPath}/helpers
+source ${absPath}/helpers
 
 if ! check_rootdir "${rootfsDir}"; then
 	exit 1
 fi
 
-run_in_chroot ${rootfsDir} chroot_word_writable_paths.sh
+run_in_chroot ${rootfsDir} chroot_world_writable_paths.sh

@@ -11,6 +11,7 @@ rootfsDir=$1
 targetBaseDir=$2
 
 absPath=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
+rootfsDir=$(readlink -f "$rootfsDir")
 if [[ -z ${absPath} ]]; then
 	echo "FATAL - can't determine working directory"
 	exit 1
@@ -23,13 +24,13 @@ if ! check_rootdir "${rootfsDir}"; then
 fi
 
 echo "testing /dev contents"
-nr_files=$(wc -l dev_files | cut -d " " -f 1)
+nr_files=$(wc -l ${absPath}/dev_files | cut -d " " -f 1)
 nr_dev=$(shopt -s nullglob dotglob; f=(${rootfsDir}/dev/*); echo ${#f[@]})
 
 # check if the number of files in /dev is the same as in dev_files
 if [[ "$nr_files" -ne "$nr_dev" ]]; then
 	echo "FAIL -  number of dev files do not match!"
-	echo "        expects: $(awk -F, '{ printf "%s ",$1}' dev_files)"
+	echo "        expects: $(awk -F, '{ printf "%s ",$1}' ${absPath}/dev_files)"
 	echo "        got:     $(echo ${rootfsDir}/dev/* | tr ' ' '\n' | xargs -L 1 basename | tr '\n' ' ')"  
 	rc=1
 	exit 1
@@ -49,7 +50,7 @@ while read -r line; do
 		echo "       expects: ${line}"
 		echo "       got:     ${to_test}"
 	fi
-done < dev_files
+done < ${absPath}/dev_files
 
 if [[ "$rc" -eq 0 ]]; then
 	echo "OK - all /dev devices match"

@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 
 rootfsDir=$1
-cap_files="cap_files"
 
 echo "testing for needed capabilities"
+absPath=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
+rootfsDir=$(readlink -f "$rootfsDir")
 
-source helpers
+source "${absPath}/"helpers
 if ! check_rootdir "${rootfsDir}"; then
 	exit 1
 fi
 
+cap_files="${absPath}/cap_files"
 capFiles=$(find ${rootfsDir} -type f -exec getcap {} \; 2> /dev/null | awk -v p=${rootfsDir%/} '{ gsub(p, "", $1); print;}' | sort) 
 capFilesDefined=$(sort ${cap_files})
 

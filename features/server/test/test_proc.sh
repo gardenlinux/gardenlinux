@@ -7,6 +7,7 @@ rc=0
 
 echo "checking for an empty /proc"
 absPath=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
+rootfsDir=$(readlink -f "$rootfsDir")
 source ${absPath}/helpers
 
 if ! check_rootdir "${rootfsDir}"; then
