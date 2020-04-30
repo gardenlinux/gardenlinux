@@ -140,7 +140,7 @@ class RemoteClient:
             self.scp.close()
         self.client = None
         self.scp = None
-        logger.info("disconnected from {self.host=}")
+        logger.info(f"disconnected from {self.host=}")
 
     def bulk_upload(self, files):
         """

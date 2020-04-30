@@ -142,10 +142,7 @@ class GCP:
                 {
                     "boot": True,
                     "autoDelete": True,
-                    "initializeParams": {
-                        "diskSizeGb": 3,
-                        "sourceImage": image,
-                    },
+                    "initializeParams": {"diskSizeGb": 3, "sourceImage": image,},
                 }
             ],
             "networkInterfaces": [

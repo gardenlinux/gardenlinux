@@ -27,12 +27,14 @@ def config():
     yield options
 
 
-@pytest.fixture(scope="module", params=["aws", "gcp"])
-def client(request, config: dict) -> Iterator[RemoteClient]:
-    if request.param == "aws":
+@pytest.fixture(scope="module")
+def client(request, config: dict, iaas) -> Iterator[RemoteClient]:
+    if iaas == "aws":
         yield from AWS.fixture(config["aws"])
-    if request.param == "gcp":
+    elif iaas == "gcp":
         yield from GCP.fixture(config["gcp"])
+    else:
+        raise ValueError(f"invalid {iaas=}")
 
 
 def test_clock(client):
