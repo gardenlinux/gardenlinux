@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+rootfsDir=$1
+rc=0
+
+# check memory protection
+echo "check memory protection"
+sysctlBin="${rootfsDir}/sbin/sysctl"
+expectedKeySoftlinks="^fs.protected_symlinks"
+expectedValueSoftlinks="1"
+expectedKeyHardlinks="^fs.protected_hardlinks"
+expectedValueHardlinks="1"
+
+outputSoftlinks=$("${sysctlBin}" -a | grep "${expectedKeySoftlinks} = ${expectedValueSoftlinks}")
+outputHardlinks=$("${sysctlBin}" -a | grep "${expectedKeyHardlinks} = ${expectedValueHardlinks}")
+
+if [ -z "${outputSoftlinks}" ]
+then
+      echo "softlinks are not configured correctly"
+      rc=1
+elif [ -z "${outputHardlinks}" ]
+then
+      echo "hardlinks are not configured correctly"
+      rc=1
+else
+      echo "configurations are correct"
+fi
+
+exit $rc
+
