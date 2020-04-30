@@ -23,10 +23,24 @@ in order to auto format the source code run
 pipenv run black .
 ```
 
-## Run tests
+## run static checks
 
 ```
-pipenv run python __main__.py
+pipenv run flake8 .
+```
+
+## Run tests
+
+on GCP:
+
+```
+pipenv run pytest --iaas gcp integration/
+```
+
+on AWS:
+
+```
+pipenv run pytest --iaas aws integration/
 ```
 
 The test configuration is read from `test_config.yaml`
