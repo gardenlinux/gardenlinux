@@ -1,0 +1,26 @@
+# Disable root login.
+PermitRootLogin no
+# Enable privilege separation. This will only let a small
+# part of the daemon run with root privileges.
+UsePrivilegeSeparation sandbox
+# sandbox is the new default, if problems occur set to yes instead. 
+# Only use the more secure SSHv2 protocol.
+Protocol 2
+# No TCP forwarding and no X11 forwarding.
+AllowTcpForwarding no
+X11Forwarding no
+# Check permissions of configuration files related to SSH on login.
+# If this fails, the user won't be able to login.
+StrictModes yes
+# Disable host-based authentications.
+IgnoreRhosts yes
+HostbasedAuthentication no
+RhostsRSAAuthentication no 
+# Not available in newer RedHat releases 
+# Set log level to be verbose.
+LogLevel INFO
+# Ensure usage of PAM
+UsePAM yes
+# Use secure Ciphers
+Ciphers aes128-ctr,aes192-ctr,aes256-ctr
+MACs hmac-sha2-256,hmac-sha2-512

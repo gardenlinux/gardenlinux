@@ -6,7 +6,6 @@ export LC_ALL="C"
 apt-get update > /dev/null
 apt-get install -y --no-install-recommends debsums > /dev/null
 
-echo "testing the integrity of the files from installed packages"
 if out=$(debsums -l); then
 	echo "OK - verifying if all installed packages provide md5sums"
 else
