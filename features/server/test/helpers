@@ -18,12 +18,90 @@ check_rootdir() {
 
 cleanup_chroot() {
 	local rootfsDir=$1
-	local script=$2
-	local deps=${@:3}
 	umount ${rootfsDir}/proc
 	umount ${rootfsDir}/dev
 	umount ${rootfsDir}/sys
-	$(cd /tmp; rm -f ${@:2})
+}
+
+run_in_chroot2() {
+	local rootfsDir=$1
+	local script=$2
+	local deps=${@:3}
+
+	thisDir=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
+
+	if [[ -z "${script}" || ! -f "${thisDir}/${script}" ]]; then
+		echo "FATAL: ${script} script to execute doesn't exist or wasn't provided!"
+		return 1
+	fi
+
+	trap "cleanup_chroot ${rootfsDir}" RETURN 
+
+	# prepare the mounts 
+	mount -t proc proc ${rootfsDir}/proc
+	mount -t sysfs sysfs ${rootfsDir}/sys
+	mount --bind /dev ${rootfsDir}/dev
+
+	# copy script and dependencies 
+	for dep in $(echo "${@:2}"); do
+		cp "${thisDir}"/$dep "$rootfsDir/tmp/"
+	done
+
+	# run the script inside the chrooted environment
+	if chroot ${rootfsDir} /bin/bash ${rootfs}/tmp/$script; then
+		rc=0
+		for dep in $(echo "${@:2}"); do
+			rm -f "$rootfsDir/tmp/$dep"
+		done
+	else
+		rc=1
+		for dep in $(echo "${@:2}"); do
+			rm -f "$rootfsDir/tmp/$dep"
+		done
+	fi
+	return $rc
+}
+
+run_in_chroot2() {
+	local rootfsDir=$1
+	local script=$2
+	local deps=${@:3}
+
+	thisDir=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
+
+	if [[ -z "${script}" || ! -f "${thisDir}/${script}" ]]; then
+		echo "FATAL: ${script} script to execute doesn't exist or wasn't provided!"
+		return 1
+	fi
+
+	# copy script and dependencies 
+	for dep in $(echo "${@:2}"); do
+		cp "${thisDir}"/$dep "$rootfsDir/tmp/"
+	done
+
+	export rootfsDir script
+	unshare --mount bash -Eeuo pipefail -c '
+	for dir in dev proc sys; do
+		if [ -e "$rootfsDir/$dir" ]; then
+			# --debian-eol woody and below have no /sys
+			mount --rbind "/$dir" "$rootfsDir/$dir"
+		fi
+	done
+	mount --rbind --read-only /etc/resolv.conf "$rootfsDir/etc/resolv.conf"
+	exec chroot "$rootfsDir" /usr/bin/env -i PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" bash /tmp/${script}'
+	# run the script inside the chrooted environment
+	if $?; then
+		rc=0
+		for dep in $(echo "${@:2}"); do
+			rm -f "$rootfsDir/tmp/$dep"
+		done
+	else
+		rc=1
+		for dep in $(echo "${@:2}"); do
+			rm -f "$rootfsDir/tmp/$dep"
+		done
+	fi
+	return $rc
 }
 
 run_in_chroot() {
@@ -31,26 +109,36 @@ run_in_chroot() {
 	local script=$2
 	local deps=${@:3}
 
-	if [[ -z "${script}" || ! -f "${script}" ]]; then
+	thisDir=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
+
+	if [[ -z "${script}" || ! -f "${thisDir}/${script}" ]]; then
 		echo "FATAL: ${script} script to execute doesn't exist or wasn't provided!"
 		return 1
 	fi
 
-	trap "cleanup_chroot ${rootfsDir} ${script} ${deps}" RETURN 
+	# copy script and dependencies
+	for dep in $(echo "$script $deps"); do
+		cp "${thisDir}"/$dep "$rootfsDir/tmp/"
+	done
 
-	# prepare the mounts 
-	mount -t proc proc ${rootfsDir}/proc
-	mount -t sysfs sysfs ${rootfsDir}/sys
-	mount --bind /dev ${rootfsDir}/dev
-
-	# copy script an dependencies 
-	cp "${@:2}" ${rootfsDir}/tmp/	
-
-	# run the script inside the chrooted environment
-	if chroot ${rootfsDir} /bin/bash ${rootfs}/tmp/$script; then
+	export rootfsDir script
+	if $(unshare --mount bash -Eeuo pipefail -c '
+		for dir in dev proc sys; do
+			if [ -e "$rootfsDir/$dir" ]; then
+				mount --rbind "/$dir" "$rootfsDir/$dir"
+			fi
+		done
+		exec chroot "$rootfsDir" bash /tmp/${script}'); then
+	#if [[ $? -eq 0 ]]; then
 		rc=0
+		for dep in $(echo "$script $deps"); do
+			rm -f "$rootfsDir/tmp/$dep"
+		done
 	else
 		rc=1
+		for dep in $(echo "$script $deps"); do
+			rm -f "$rootfsDir/tmp/$dep"
+		done
 	fi
 	return $rc
 }
