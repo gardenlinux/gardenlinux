@@ -1,10 +1,10 @@
 # Garden Linux Build Scripts
 
-## build system recommendations
+## build system recommendations (per concurrent build)
 
-    min 2 Cores
-    min. RAM 16 GB (image is built in RAM)
-    min. 5 GB free disk space  
+- 2+ CPU Cores
+- 2+ GiB (use RAM-disk; use fs with sparese-file support)
+- 10+ GiB free disk space
 
 ## Documentation
 
