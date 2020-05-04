@@ -39,7 +39,9 @@ epoch="$(date --date "$timestamp" +%s)"
 serial="$(date --date "@$epoch" +%Y%m%d)"
 dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
 
-prefix=${prefix:-"/$serial/$dpkgArch/$suite"}
+if [ -z "${prefix+x}" ]; then
+  prefix="/$serial/$dpkgArch/$suite"
+fi
 exportDir="output"
 outputDir="$exportDir$prefix"
 
