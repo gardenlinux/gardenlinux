@@ -1,3 +1,4 @@
+# Demo TaskRun showing how to invoke the integration-test Task "standalone" for aws, without a pipeline
 apiVersion: tekton.dev/v1beta1
 kind: TaskRun
 metadata:
@@ -8,7 +9,9 @@ spec:
     name: integrationtest-gardenlinux-task
   params:
   - name: iaas
-    value: aws # or gcp
+    value: aws
+  - name: ami_id
+    value: ami-0e7e5773a975f0aea
   resources:
     inputs:
     - name: repo

@@ -1,0 +1,18 @@
+# Demo PiplineRun showing the invocation of the integration tests pipeline
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: integrationtests-all-
+spec:
+  pipelineRef:
+    name: integrationtests-all
+  params:
+  # TODO: replace with values from some "component descriptor"-style thing
+  - name: ami_id
+    value: ami-06458801dbaec803b # eu-west-1
+  - name: gcp_image_name
+    value: garden-linux-gcp-29-2
+  resources:
+    - name: source-repo
+      resourceRef:
+        name: gardenlinux-repo
