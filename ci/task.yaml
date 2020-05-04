@@ -130,13 +130,14 @@ spec:
         session = ccc.aws.session(s3_cfg_name)
         s3_client = session.client('s3')
         print(f'uploading to s3 {s3_cfg_name=} {s3_bucket_name=}')
+        version_str = '$(params.committish)'[:6]
         prefix = '$(params.uploadprefix)'
         fname_prefix = '$(params.fnameprefix)'
         with tarfile.open(build_result_fname) as tf:
           for tarinfo in tf:
             if not tarinfo.isfile():
               continue
-            fname = fname_prefix + tarinfo.name
+            fname = f'{fname_prefix}-{version_str}-{tarinfo.name}'
             target_name = os.path.normpath(os.path.join(prefix, fname))
             print(f'uploading: {target_name=}')
             fobj = tf.extractfile(tarinfo)
