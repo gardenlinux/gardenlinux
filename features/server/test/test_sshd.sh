@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -e 
-echo "testing ssh config"
+echo "executing ssh config tests"
 rootfsDir=$1
 
 relPath=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))

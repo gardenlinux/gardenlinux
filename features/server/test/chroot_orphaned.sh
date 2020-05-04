@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 rc=0
-apt-get update > /dev/null
-apt-get install -y --no-install-recommends deborphan > /dev/null
-apt-mark showmanual > /var/lib/deborphan/keep
+DEBIAN_FRONTEND=noninteractive apt-get update > /dev/null
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends deborphan > /dev/null
+DEBIAN_FRONTEND=noninteractive apt-mark showmanual > /var/lib/deborphan/keep
 unneeded=$(deborphan -an)
 
 if [[ -z "${unneeded}" ]]; then

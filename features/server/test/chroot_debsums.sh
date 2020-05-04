@@ -3,8 +3,8 @@
 export TZ="UTC"
 export LC_ALL="C"
 
-apt-get update > /dev/null
-apt-get install -y --no-install-recommends debsums > /dev/null
+DEBIAN_FRONTEND=noninteractive apt-get update > /dev/null
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends debsums > /dev/null
 
 if out=$(debsums -l); then
 	echo "OK - verifying if all installed packages provide md5sums"

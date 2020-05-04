@@ -2,6 +2,7 @@
 
 rootfsDir=$1
 
+echo "executing tiger tests"
 thisDir=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
 if [ -z ${thisDir} ]; then
 	echo "FATAL - can't determine working directory"

@@ -9,7 +9,7 @@ if [[ ! -f "${thisDir}/tigerrc" ]]; then
 	exit 1
 fi
 
-apt-get install -y --no-install-recommends -qq tiger 2> /dev/null
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -qq tiger > /dev/null
 
 # fake it when running inside a chroot environment
 if [[ "done" == $(tail -1 /usr/lib/tiger/systems/Linux/default/gen_mounts) ]]; then
@@ -24,6 +24,7 @@ if err=$(grep -hw FAIL "${thisDir}"/security.report.*); then
 	rm -f "${thisDir}"/security.report.*
 	exit 1
 else
+	echo "OK - tiger didn't detect any issues"
 	rm -f "${thisDir}"/security.report.*
 	exit 1
 fi
