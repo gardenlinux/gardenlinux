@@ -5,6 +5,25 @@ import enum
 import typing
 
 
+class FeatureType(enum.Enum):
+    PLATFORM = 'platform'
+
+
+@dataclasses.dataclass(frozen=True)
+class FeaturesCfg:
+    include: typing.Tuple[str]
+
+
+@dataclasses.dataclass(frozen=True)
+class PlatformDescriptor:
+    '''
+    A gardenlinux feature descriptor (parsed from $repo_root/features/*/info.yaml)
+    '''
+    description: str
+    type: FeatureType
+    features: FeaturesCfg
+
+
 class Architecture(enum.Enum):
     '''
     gardenlinux' target architectures, following Debian's naming
@@ -53,11 +72,16 @@ class GardenlinuxFlavour:
 
     def canonical_name_prefix(self):
         a = self.architecture.value
+        fname_prefix = self.filename_prefix()
+
+        return f'{a}/{fname_prefix}'
+
+    def filename_prefix(self):
         e = '_'.join(sorted([e.value for e in self.extensions]))
         p = self.platform.value
         m = '_'.join(sorted([m.value for m in self.modifiers]))
 
-        return f'{a}/{p}-{e}-{m}'
+        return f'{e}-{p}-{m}'
 
     def release_files(self, version: str):
         suffices = (

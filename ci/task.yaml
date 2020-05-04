@@ -15,6 +15,9 @@ spec:
     - name: 'uploadprefix'
       type: 'string'
       description: 'upload directory prefix (aws, gcp, ..)'
+    - name: 'fnameprefix'
+      type: 'string'
+      description: 'upload filename prefix (workaround until garden-build.sh supports this'
     - name: 'giturl'
       type: 'string'
       default: 'ssh://git@github.com/gardenlinux/gardenlinux'
@@ -128,11 +131,13 @@ spec:
         s3_client = session.client('s3')
         print(f'uploading to s3 {s3_cfg_name=} {s3_bucket_name=}')
         prefix = '$(params.uploadprefix)'
+        fname_prefix = '$(params.fnameprefix)'
         with tarfile.open(build_result_fname) as tf:
           for tarinfo in tf:
             if not tarinfo.isfile():
               continue
-            target_name = os.path.normpath(os.path.join(prefix, tarinfo.name))
+            fname = fname_prefix + tarinfo.name
+            target_name = os.path.normpath(os.path.join(prefix, fname))
             print(f'uploading: {target_name=}')
             fobj = tf.extractfile(tarinfo)
             s3_client.upload_fileobj(

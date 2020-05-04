@@ -47,6 +47,7 @@ def mk_pipeline_task(
         params=[
             NamedParam(name='features', value=feature_names),
             NamedParam(name='uploadprefix', value=upload_prefix),
+            NamedParam(name='fnameprefix', value=gardenlinux_flavour.filename_prefix(),
             NamedParam(name='committish', value='$(params.committish)'),
         ],
     )
