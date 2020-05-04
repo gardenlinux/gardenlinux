@@ -21,6 +21,7 @@ RUN	apt-get update \
 		qemu-utils \
 		python3 \
 		python3-mako \
+		libcap2-bin \
      && rm -rf /var/lib/apt/lists/*
 
 # repo-root requires to be mounted at /debuerreotype
