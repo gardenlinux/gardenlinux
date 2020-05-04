@@ -138,7 +138,7 @@ spec:
             if not tarinfo.isfile():
               continue
             tar_fname = tarinfo.name.lstrip('./')
-            fname = f'{fname_prefix}-{version_str}-{tarinfo.name}'
+            fname = f'{fname_prefix}-{version_str}-{tar_fname}'
             target_name = os.path.normpath(os.path.join(prefix, fname))
             print(f'uploading: {target_name=}')
             fobj = tf.extractfile(tarinfo)
