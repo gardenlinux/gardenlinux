@@ -4,6 +4,9 @@ kind: Task
 metadata:
   name: integrationtest-gardenlinux-task
 spec:
+  params:
+  - name: iaas
+    type: string
   resources:
     inputs:
     - name: repo
@@ -67,7 +70,7 @@ spec:
         pipenv install -dev
 
         echo "> Run tests"
-        pipenv run python __main__.py
+        pipenv run pytest --iaas=$(params.iaas) integration/
 
 ---
 apiVersion: tekton.dev/v1alpha1
