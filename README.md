@@ -9,7 +9,7 @@
 
 Install required packages using apt:
 
-    apt install docker.io make 
+    apt install docker.io make
 
 Install recommended packages for better build performance and tests in a virtualizer
 
