@@ -180,13 +180,9 @@ spec:
         manifest = glci.model.ReleaseManifest(
           build_committish='$(params.committish)',
           gardenlinux_epoch=glci.model.gardenlinux_epoch(),
-          architecture=glci.model.Architecture('$(params.architecture)'),
+          architecture=glci.model.Architecture('$(params.architecture)').value,
           rel_paths=uploaded_relpaths,
         )
-        def repr_enum(dumper, data):
-          return dumper.represent_str(data.value)
-
-        yaml.add_representer(glci.model.Architecture, repr_enum)
 
         manifest_bytes = yaml.safe_dump(dataclasses.asdict(manifest)).encode('utf-8')
         manifest_fobj = io.BytesIO(initial_bytes=manifest_bytes)
