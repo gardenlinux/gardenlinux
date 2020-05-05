@@ -22,3 +22,5 @@ systemd-coredump
 systemd-cron
 traceroute
 wget
+tcpdump
+vim-tiny
