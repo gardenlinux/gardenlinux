@@ -177,7 +177,7 @@ spec:
                 Bucket=s3_bucket_name,
                 Key=upload_key,
               )
-              print(f'upload succeeded: {target_name}')
+              print(f'upload succeeded: {upload_key}')
               yield glci.model.ReleaseFile(
                 rel_path=upload_key,
                 name=fname,
