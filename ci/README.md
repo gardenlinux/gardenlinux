@@ -13,10 +13,8 @@ There are, of course, still open issues:
 - resources should be templatified
   - hardcoded cfg should be injected
 - build image should also be built using tkn
-- react on head-updates / offer release job semantics
-- apply different repository layout
+- offer release job semantics
 - error handling / notification (e.g. mark PRs/commits as good or broken)
-- offer some UI
 
 
 ### Integration tests
