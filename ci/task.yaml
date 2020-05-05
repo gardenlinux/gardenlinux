@@ -197,7 +197,7 @@ spec:
         manifest_bytes = yaml.safe_dump(dataclasses.asdict(manifest)).encode('utf-8')
         manifest_fobj = io.BytesIO(initial_bytes=manifest_bytes)
         manifest_path = \
-          f'{glci.model.ReleaseManifest.manifest_file_name}-{fname_prefix}-{version_str}'
+          f'{glci.model.ReleaseManifest.manifest_key_prefix}-{fname_prefix}-{version_str}'
 
         s3_client.upload_fileobj(
           Fileobj=manifest_fobj,
