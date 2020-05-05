@@ -126,7 +126,7 @@ class ReleaseManifest:
     # TODO: add features/extensions (once conctact was finalised)
 
     # treat as "static final"
-    manifest_file_name = 'gardenlinux.manifest'
+    manifest_key_prefix = 'gardenlinux.manifest' # S3 only allows to filter for _prefix_ m(
 
 
 class PipelineFlavour(enum.Enum):
