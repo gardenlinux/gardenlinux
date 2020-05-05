@@ -26,6 +26,10 @@ spec:
       type: 'string'
       description: 'the committish to build'
       default: 'master'
+    - name: 'architecture'
+      type: 'string'
+      description: 'the build architecture (currently, only amd64 is supported)'
+      default: 'amd64'
   steps:
     - name: 'retrieve-repository'
       image: 'eu.gcr.io/gardener-project/cc/job-image:1.612.0'
@@ -38,7 +42,7 @@ spec:
         import ccc.github
         import gitutil
 
-        repo_dir = os.path.abspath('gardenlinux-git') # used in next step(s)
+        repo_dir = os.path.abspath('gardenlinux_git') # used in next step(s)
         os.mkdir(repo_dir)
         repo_url = urllib.parse.urlparse('$(params.giturl)')
         github_cfg = ccc.github.github_cfg_for_hostname(
@@ -89,8 +93,8 @@ spec:
         pwd
         echo "running build.."
         #/opt/debuerreotype/bin/build.sh
-        gardenlinux-git/bin/garden-build.sh \
-          --arch amd64 \
+        gardenlinux_git/bin/garden-build.sh \
+          --arch $(params.architecture) \
           --prefix "" \
           --suite $(params.suite) \
           --timestamp ${timestamp} \
@@ -115,6 +119,14 @@ spec:
         #!/usr/bin/env python3
         # requires github.com/gardener/cc-utils
         import os
+        import sys
+        # XXX add code from `ci/` to PYTHONPATH
+        sys.path.extend(1, os.path.abspath(os.path.join('gardenlinux_git/ci')))
+        import io
+        import yaml
+
+        import glci.model
+
         build_result_fname = '/build/gardenlinux.out'
         if not os.path.isfile(build_result_fname):
           print('ERROR: no build result - see previous step for errs')
@@ -133,25 +145,54 @@ spec:
         version_str = '$(params.committish)'[:6]
         prefix = '$(params.uploadprefix)'
         fname_prefix = '$(params.fnameprefix)'
-        with tarfile.open(build_result_fname) as tf:
-          for tarinfo in tf:
-            if not tarinfo.isfile():
-              continue
-            tar_fname = tarinfo.name.lstrip('./')
-            fname = f'{fname_prefix}-{version_str}-{tar_fname}'
-            target_name = os.path.normpath(os.path.join(prefix, fname))
-            print(f'uploading: {target_name=}')
-            fobj = tf.extractfile(tarinfo)
-            s3_client.upload_fileobj(
-              Fileobj=fobj,
-              Bucket=s3_bucket_name,
-              Key=target_name,
-            )
-            print(f'upload succeeded: {target_name}')
+
+        def upload_fname(suffix: str):
+          return f'{fname_prefix}-{version_str}-{suffix}'
+
+        def upload_files():
+          with tarfile.open(build_result_fname) as tf:
+            for tarinfo in tf:
+              if not tarinfo.isfile():
+                continue
+              tar_fname = tarinfo.name.lstrip('./')
+              fname = upload_fname(suffix=tar_fname)
+              target_name = os.path.normpath(os.path.join(prefix, fname))
+              print(f'uploading: {target_name=}')
+              fobj = tf.extractfile(tarinfo)
+              # XXX todo: add content-type
+              s3_client.upload_fileobj(
+                Fileobj=fobj,
+                Bucket=s3_bucket_name,
+                Key=target_name,
+              )
+              print(f'upload succeeded: {target_name}')
+              yield target_name
+
+        uploaded_relpaths = tuple(upload_files())
+
+        # add manifest (to be able to identify all relevant artifacts later)
+        manifest = glci.model.ReleaseManifest(
+          build_committish='$(params.committish)',
+          gardenlinux_epoch=glci.model.gardenlinux_epoch(),
+          architecture=glci.model.Architecture('$(params.architecture)'),
+          rel_paths=uploaded_relpaths,
+        )
+        manifest_bytes = yaml.safe_dump(dataclasses.asdict(manifest)).encode('utf-8')
+        manifest_fobj = io.BytesIO(initial_bytes=manifest_bytes)
+        manifest_path = upload_fname(suffix='gardenlinux.manifest')
+
+        s3_client.upload_fileobj(
+          Fileobj=manifest_fobj,
+          Bucket=s3_bucket_name,
+          Key=manifest_path,
+          ExtraArgs={
+            'ContentType': 'text/yaml',
+            'ContentEncoding': 'utf-8',
+          },
+        )
       volumeMounts:
       - mountPath: '/build'
         name: 'build'
-
 
   volumes:
     - name: dev

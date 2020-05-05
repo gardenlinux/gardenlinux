@@ -33,7 +33,7 @@ class Architecture(enum.Enum):
 
 class Platform(enum.Enum):
     '''
-    gardenlinux' target platforms
+    gardenlinux' target platforms (exactly one must be chosen)
     '''
     ALI = 'ali'
     AWS = 'aws'
@@ -104,6 +104,19 @@ class GardenlinuxFlavourCombination:
     platforms: typing.Tuple[Platform]
     extensions: typing.Tuple[typing.Tuple[Extension]]
     modifiers: typing.Tuple[typing.Tuple[Modifier]]
+
+
+@dataclasses.dataclass(frozen=True)
+class ReleaseManifest:
+    '''
+    metadata for a gardenlinux release variant that has been published to a persistency
+    store, such as an S3 bucket.
+    '''
+    build_committish: str
+    gardenlinux_epoch: int
+    architecture: Architecture
+    rel_paths: typing.Tuple[str]
+    # TODO: add features/extensions (once conctact was finalised)
 
 
 class PipelineFlavour(enum.Enum):
