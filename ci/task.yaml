@@ -121,7 +121,7 @@ spec:
         import os
         import sys
         # XXX add code from `ci/` to PYTHONPATH
-        sys.path.extend(1, os.path.abspath(os.path.join('gardenlinux_git/ci')))
+        sys.path.insert(1, os.path.abspath(os.path.join('gardenlinux_git/ci')))
         import io
         import yaml
 
