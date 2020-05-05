@@ -167,6 +167,11 @@ spec:
                 Key=target_name,
               )
               print(f'upload succeeded: {target_name}')
+              yield glci.model.ReleaseFile(
+                rel_path=target_name,
+                name=fname,
+                suffix=tar_fname,
+              )
               yield target_name
 
         uploaded_relpaths = tuple(upload_files())
@@ -196,6 +201,7 @@ spec:
             'ContentEncoding': 'utf-8',
           },
         )
+        print(f'uploaded manifest: {manifest_path}')
       volumeMounts:
       - mountPath: '/build'
         name: 'build'

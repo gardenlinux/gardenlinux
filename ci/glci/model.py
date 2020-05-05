@@ -107,6 +107,13 @@ class GardenlinuxFlavourCombination:
 
 
 @dataclasses.dataclass(frozen=True)
+class ReleaseFile:
+    rel_path: str
+    name: str
+    suffix: str
+
+
+@dataclasses.dataclass(frozen=True)
 class ReleaseManifest:
     '''
     metadata for a gardenlinux release variant that has been published to a persistency
@@ -115,7 +122,7 @@ class ReleaseManifest:
     build_committish: str
     gardenlinux_epoch: int
     architecture: Architecture
-    rel_paths: typing.Tuple[str]
+    rel_paths: typing.Tuple[ReleaseFile]
     # TODO: add features/extensions (once conctact was finalised)
 
 
