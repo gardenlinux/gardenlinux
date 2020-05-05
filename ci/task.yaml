@@ -169,7 +169,7 @@ spec:
                 sha1.update(chunk)
               fobj.seek(0)
               sha1_digest = sha1.hexdigest()
-              upload_key = f'{prefix}/objects/{sha1_digest}'
+              upload_key = os.path.join(prefix, 'objects', sha1_digest)
 
               # XXX todo: add content-type
               s3_client.upload_fileobj(
