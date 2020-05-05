@@ -172,7 +172,6 @@ spec:
                 name=fname,
                 suffix=tar_fname,
               )
-              yield target_name
 
         uploaded_relpaths = tuple(upload_files())
 
