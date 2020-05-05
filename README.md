@@ -2,15 +2,18 @@
 
 ## build system recommendations (per concurrent build)
 
-- 2+ CPU Cores
-- 2+ GiB (use RAM-disk; use fs with sparese-file support)
+- 2+ GiB (use RAM-disk; use fs with sparse-file support)
 - 10+ GiB free disk space
 
 ## Documentation
 
 Install required packages using apt:
 
-    apt install git build-essential dosfstools docker.io docker sudo
+    apt install docker.io make 
+
+Install recommended packages for better build performance and tests in a virtualizer
+
+    apt install docker-compose qemu-system-x86
 
 Build all images:
 
