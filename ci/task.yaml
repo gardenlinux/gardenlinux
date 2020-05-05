@@ -124,6 +124,8 @@ spec:
         # XXX add code from `ci/` to PYTHONPATH
         sys.path.insert(1, os.path.abspath(os.path.join('gardenlinux_git/ci')))
         import io
+
+        import hashlib
         import yaml
 
         import glci.model
@@ -160,15 +162,24 @@ spec:
               target_name = os.path.normpath(os.path.join(prefix, fname))
               print(f'uploading: {target_name=}')
               fobj = tf.extractfile(tarinfo)
+
+              # calculate filehash (use as fname)
+              sha1 = hashlib.sha1()
+              while (chunk := fobj.read(2048)):
+                sha1.update(chunk)
+              fobj.seek(0)
+              sha1_digest = sha1.hexdigest()
+              upload_key = f'{prefix}/objects/{sha1_digest}'
+
               # XXX todo: add content-type
               s3_client.upload_fileobj(
                 Fileobj=fobj,
                 Bucket=s3_bucket_name,
-                Key=target_name,
+                Key=upload_key,
               )
               print(f'upload succeeded: {target_name}')
               yield glci.model.ReleaseFile(
-                rel_path=target_name,
+                rel_path=upload_key,
                 name=fname,
                 suffix=tar_fname,
               )
