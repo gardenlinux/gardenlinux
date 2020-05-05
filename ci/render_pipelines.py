@@ -39,7 +39,7 @@ def mk_pipeline_task(
         )
     )
 
-    upload_prefix = f'snapshot/{gardenlinux_flavour.architecture.value}/'
+    upload_prefix = f'{gardenlinux_flavour.architecture.value}/'
 
     return PipelineTask(
         name=gardenlinux_flavour.canonical_name_prefix().replace('/', '-').replace('_', '-'),
