@@ -118,6 +118,7 @@ spec:
       script: |
         #!/usr/bin/env python3
         # requires github.com/gardener/cc-utils
+        import dataclasses
         import os
         import sys
         # XXX add code from `ci/` to PYTHONPATH
