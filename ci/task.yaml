@@ -185,7 +185,7 @@ spec:
 
         manifest_bytes = yaml.safe_dump(dataclasses.asdict(manifest)).encode('utf-8')
         manifest_fobj = io.BytesIO(initial_bytes=manifest_bytes)
-        manifest_path = upload_fname(suffix='gardenlinux.manifest')
+        manifest_path = upload_fname(suffix=glci.model.ReleaseManifest.manifest_file_name)
 
         s3_client.upload_fileobj(
           Fileobj=manifest_fobj,

@@ -125,6 +125,9 @@ class ReleaseManifest:
     rel_paths: typing.Tuple[ReleaseFile]
     # TODO: add features/extensions (once conctact was finalised)
 
+    # treat as "static final"
+    manifest_file_name = 'gardenlinux.manifest'
+
 
 class PipelineFlavour(enum.Enum):
     SNAPSHOT = 'snapshot'
