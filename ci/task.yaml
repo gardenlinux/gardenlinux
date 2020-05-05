@@ -175,7 +175,7 @@ spec:
         manifest = glci.model.ReleaseManifest(
           build_committish='$(params.committish)',
           gardenlinux_epoch=glci.model.gardenlinux_epoch(),
-          architecture=glci.model.Architecture('$(params.architecture)'),
+          architecture=glci.model.Architecture('$(params.architecture)').value,
           rel_paths=uploaded_relpaths,
         )
         manifest_bytes = yaml.safe_dump(dataclasses.asdict(manifest)).encode('utf-8')
