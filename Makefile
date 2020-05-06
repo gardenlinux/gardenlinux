@@ -60,7 +60,7 @@ OPENSTACK_IMAGE_NAME=$(IMAGE_BASENAME)-openstack-$(VERSION)
 openstack:
 	./build.sh --features server,cloud,gardener,openstack .build/openstack bullseye $(SNAPSHOT_DATE)
 
-openstack-dev-upload:
+openstack-upload:
 	./bin/upload-openstack .build/openstack/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.vmdk $(OPENSTACK_IMAGE_NAME)
 
 OPENSTACK_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-openstack-dev-$(VERSION)
