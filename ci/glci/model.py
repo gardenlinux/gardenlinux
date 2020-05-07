@@ -122,7 +122,7 @@ class ReleaseManifest:
     build_committish: str
     gardenlinux_epoch: int
     architecture: Architecture
-    rel_paths: typing.Tuple[ReleaseFile]
+    paths: typing.Tuple[ReleaseFile]
     # TODO: add features/extensions (once conctact was finalised)
 
     # treat as "static final"
