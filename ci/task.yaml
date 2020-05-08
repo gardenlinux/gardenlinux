@@ -145,7 +145,7 @@ spec:
 
         import glci.model
 
-        build_result_fname = '/build/gardenlinux.out'
+        build_result_fname = '/tmp/gardenlinux.out'
         if not os.path.isfile(build_result_fname):
           print('ERROR: no build result - see previous step for errs')
           import sys
