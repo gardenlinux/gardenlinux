@@ -68,7 +68,7 @@ def mk_pipeline_run(
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--committish', default='master')
-    parser.add_argument('--aws-cfg', default='gardener-dev')
+    parser.add_argument('--aws-cfg', default='gardenlinux-dev')
     parser.add_argument('--s3-bucket', default='gardenlinux-test')
     parser.add_argument('--outfile', default='pipeline_run.yaml')
 
