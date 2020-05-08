@@ -113,8 +113,9 @@ class ReleaseManifest:
     build_committish: str
     gardenlinux_epoch: int
     architecture: Architecture
+    platform: Platform
+    modifiers: typing.Tuple[Modifier]
     paths: typing.Tuple[ReleaseFile]
-    # TODO: add features/extensions (once conctact was finalised)
 
     # treat as "static final"
     manifest_key_prefix = 'gardenlinux.manifest' # S3 only allows to filter for _prefix_ m(
