@@ -16,9 +16,9 @@ spec:
     - name: 'platform'
       type: 'string'
       description: 'the target platform (aws, gcp, metal, kvm, ..)'
-    - name: 'features'
+    - name: 'modifiers'
       type: 'string'
-      description: 'the build features'
+      description: 'the build modifiers'
     - name: 'uploadprefix'
       type: 'string'
       description: 'upload directory prefix (aws, gcp, ..)'
@@ -94,7 +94,7 @@ spec:
         export LC_ALL=C
         export suite="$(params.suite)"
         export timestamp="$(date -d 'today' '+%Y%m%d')"
-        export features="$(params.platform),$(params.features),server"
+        export features="$(params.platform),$(params.modifiers),server"
         #export debug=''
         export qemu=''
         export eol=''
@@ -202,7 +202,7 @@ spec:
 
         modifiers = (
           glci.model.Modifier(modifier_str).value for modifier_str
-          in '$(params.features)'.split(',')
+          in '$(params.modifiers)'.split(',')
         )
 
         # add manifest (to be able to identify all relevant artifacts later)
