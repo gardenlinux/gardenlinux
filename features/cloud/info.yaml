@@ -1,14 +1,15 @@
 description: "cloud functionality (cloud kernel, cloud boot)"
+type: 'modifier'
 features:
-  include: 
+  include:
     - server
 fs:
   - dest: /
     type: ext4
 disk:
   label: gpt
-  boot: 
+  boot:
     - mbr
 convert:
-  format: 
+  format:
     - type: raw

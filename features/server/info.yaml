@@ -1,6 +1,7 @@
-description: "server layer with complete init system (systemd)"
+description: 'server layer with complete init system (systemd)'
+type: 'modifier'
 features:
-  include: 
+  include:
     - base
 tar:
   include-dev: true

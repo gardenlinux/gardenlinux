@@ -1,6 +1,5 @@
-description: "host for container and kubernetes workloads (containerd)"
+description: 'host for container and kubernetes workloads (containerd)'
+type: 'modifier'
 features:
-  include: 
+  include:
     - server
-
-

@@ -1,7 +1,5 @@
-description: "host for virtual workloads (kvm, libvirt)"
+description: 'host for virtual workloads (kvm, libvirt)'
+type: 'modifier'
 features:
-  include: 
+  include:
     - server
-
-
-
