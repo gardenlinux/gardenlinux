@@ -30,6 +30,9 @@ spec:
       type: 'string'
       description: 'the build architecture (currently, only amd64 is supported)'
       default: 'amd64'
+    - name: 'repodir'
+      description: 'path to gardenlinux repository worktree'
+      default: '/workspace/gardenlinux_git'
   steps:
     - name: 'retrieve-repository'
       image: 'eu.gcr.io/gardener-project/cc/job-image:1.612.0'
@@ -42,7 +45,7 @@ spec:
         import ccc.github
         import gitutil
 
-        repo_dir = os.path.abspath('gardenlinux_git') # used in next step(s)
+        repo_dir = os.path.abspath('$(params.repodir)')
         os.mkdir(repo_dir)
         repo_url = urllib.parse.urlparse('$(params.giturl)')
         github_cfg = ccc.github.github_cfg_for_hostname(
@@ -93,7 +96,7 @@ spec:
         pwd
         echo "running build.."
         #/opt/debuerreotype/bin/build.sh
-        gardenlinux_git/bin/garden-build.sh \
+        $(params.repodir)/bin/garden-build.sh \
           --arch $(params.architecture) \
           --prefix "" \
           --suite $(params.suite) \
@@ -122,7 +125,7 @@ spec:
         import os
         import sys
         # XXX add code from `ci/` to PYTHONPATH
-        sys.path.insert(1, os.path.abspath(os.path.join('gardenlinux_git/ci')))
+        sys.path.insert(1, os.path.abspath(os.path.join('$(params.repodir)', 'ci')))
         import io
 
         import hashlib
