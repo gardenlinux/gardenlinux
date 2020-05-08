@@ -44,6 +44,10 @@ spec:
       description: 'the s3 bucket to use as build results storage'
       type: 'string'
       default: 'gardenlinux-test'
+    - name: 'outfile'
+      description: 'build result file (parameter is used to pass between steps)'
+      type: 'string'
+      default: '/workspace/gardenlinux.out'
   steps:
     - name: 'retrieve-repository'
       image: 'eu.gcr.io/gardener-project/cc/job-image:1.612.0'
@@ -103,7 +107,7 @@ spec:
         echo "features: ${features}"
         export OUT_DIR="/build"
         ls -la /build
-        export OUT_FILE="/tmp/gardenlinux.out"
+        export OUT_FILE="$(params.outfile)"
 
         pwd
         echo "running build.."
@@ -145,7 +149,7 @@ spec:
 
         import glci.model
 
-        build_result_fname = '/tmp/gardenlinux.out'
+        build_result_fname = '$(params.outfile)'
         if not os.path.isfile(build_result_fname):
           print('ERROR: no build result - see previous step for errs')
           import sys
