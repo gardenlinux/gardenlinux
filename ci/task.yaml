@@ -33,6 +33,14 @@ spec:
     - name: 'repodir'
       description: 'path to gardenlinux repository worktree'
       default: '/workspace/gardenlinux_git'
+    - name: 'aws_cfg_name'
+      description: 'the configuration name (to retrieve AWS credentials)'
+      type: 'string'
+      default: 'gardenlinux-dev'
+    - name: 's3_bucket_name'
+      description: 'the s3 bucket to use as build results storage'
+      type: 'string'
+      default: 'gardenlinux-test'
   steps:
     - name: 'retrieve-repository'
       image: 'eu.gcr.io/gardener-project/cc/job-image:1.612.0'
@@ -143,11 +151,11 @@ spec:
         os.environ['SECRETS_SERVER_CONCOURSE_CFG_NAME'] = 'concourse-secrets/concourse_cfg'
         import ccc.aws
         import tarfile
-        s3_cfg_name = 'gardenlinux-dev'
-        s3_bucket_name = 'gardenlinux-test'
-        session = ccc.aws.session(s3_cfg_name)
+        aws_cfg_name = '$(params.aws_cfg_name)'
+        s3_bucket_name = '$(params.s3_bucket_name)'
+        session = ccc.aws.session(aws_cfg_name)
         s3_client = session.client('s3')
-        print(f'uploading to s3 {s3_cfg_name=} {s3_bucket_name=}')
+        print(f'uploading to s3 {aws_cfg_name=} {s3_bucket_name=}')
         version_str = '$(params.committish)'[:6]
         prefix = '$(params.uploadprefix)'
         fname_prefix = '$(params.fnameprefix)'
