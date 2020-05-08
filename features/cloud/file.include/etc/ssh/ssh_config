@@ -4,7 +4,11 @@ ForwardAgent no
 ForwardX11 no
 HostbasedAuthentication no
 StrictHostKeyChecking no
-Ciphers aes128-ctr,aes192-ctr,aes256-ctr,arcfour256,arcfour128,aes128-cbc,3des-cbc
+
+# Use secure ciphers
+Ciphers aes128-ctr,aes192-ctr,aes256-ctr
+MACs hmac-sha2-256,hmac-sha2-512
+
 Tunnel no
 
 # Compute Engine times out connections after 10 minutes of inactivity.
