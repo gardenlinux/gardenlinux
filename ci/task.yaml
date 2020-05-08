@@ -201,10 +201,10 @@ spec:
 
         uploaded_relpaths = tuple(upload_files())
 
-        modifiers = (
+        modifiers = [
           modifier_str for modifier_str
           in '$(params.modifiers)'.split(',')
-        )
+        ]
 
         # add manifest (to be able to identify all relevant artifacts later)
         manifest = glci.model.ReleaseManifest(
