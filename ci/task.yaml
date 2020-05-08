@@ -103,7 +103,7 @@ spec:
         echo "features: ${features}"
         export OUT_DIR="/build"
         ls -la /build
-        export OUT_FILE="/build/gardenlinux.out"
+        export OUT_FILE="/tmp/gardenlinux.out"
 
         pwd
         echo "running build.."
