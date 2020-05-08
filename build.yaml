@@ -2,7 +2,7 @@
 flavours:
   - architectures: [ 'amd64' ]
     platforms: [ metal ]
-    modifiers: [ [ ghost, _prod ] , [ chost, _prod ] , [ vhost, _prod ] ]
+    modifiers: [ [ gardener, _prod ] , [ chost, _prod ] , [ vhost, _prod ] ]
     fails: [ unit, integration ]
   - architectures: [ 'amd64' ]
     modifiers: [ [] ]
@@ -18,7 +18,7 @@ flavours:
     fails: [ unit, integration ]
   - architectures: [ 'amd64' ]
     platforms: [ aws, azure, gcp, ali, openstack, vmware, kvm ]
-    modifiers: [ [ ghost, _prod ] , [ chost, _prod ] ]
+    modifiers: [ [ gardener, _prod ] , [ chost, _prod ] ]
     fails: [ unit, integration ]
   - architectures: [ 'amd64' ]
     platforms: [ aws, azure, gcp, ali, openstack, vmware, kvm ]

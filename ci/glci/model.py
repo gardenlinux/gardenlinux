@@ -2,26 +2,30 @@ import dataclasses
 import datetime
 import dateutil.parser
 import enum
+import functools
+import os
 import typing
+
+import dacite
+import yaml
+
+own_dir = os.path.abspath(os.path.dirname(__file__))
+repo_root = os.path.abspath(os.path.join(own_dir, os.path.pardir, os.path.pardir))
 
 
 class FeatureType(enum.Enum):
     PLATFORM = 'platform'
+    MODIFIER = 'modifier'
 
 
 @dataclasses.dataclass(frozen=True)
-class FeaturesCfg:
-    include: typing.Tuple[str]
-
-
-@dataclasses.dataclass(frozen=True)
-class PlatformDescriptor:
+class FeatureDescriptor:
     '''
     A gardenlinux feature descriptor (parsed from $repo_root/features/*/info.yaml)
     '''
-    description: str
     type: FeatureType
-    features: FeaturesCfg
+    name: str
+    description: str = 'no description available'
 
 
 class Architecture(enum.Enum):
@@ -31,36 +35,14 @@ class Architecture(enum.Enum):
     AMD64 = 'amd64'
 
 
-class Platform(enum.Enum):
-    '''
-    gardenlinux' target platforms (exactly one must be chosen)
-    '''
-    ALI = 'ali'
-    AWS = 'aws'
-    AZURE = 'azure'
-    BASE = 'base'
-    GCP = 'gcp'
-    KVM = 'kvm'
-    METAL = 'metal'
-    OPEN_STACK = 'openstack'
-    VMWARE = 'vmware'
-
-
-class Modifier(enum.Enum):
-    '''
-    modifiers that can be applied to gardenlinux images (more than one may be chosen)
-    '''
-    PROD = '_prod'
-    BUILD = '_build'
-    CHOST = 'chost'
-    GHOST = 'ghost'
-    VHOST = 'vhost'
+Platform = str # see `features/*/info.yaml` / platforms() for allowed values
+Modifier = str # see `features/*/info.yaml` / modifiers() for allowed values
 
 
 @dataclasses.dataclass(frozen=True)
 class GardenlinuxFlavour:
     architecture: Architecture
-    platform: Platform
+    platform: str
     modifiers: typing.Tuple[Modifier]
 
     def canonical_name_prefix(self):
@@ -88,6 +70,21 @@ class GardenlinuxFlavour:
 
         for s in suffices:
             yield f'{prefix}-{version}-{s}'
+
+    def __post_init__(self):
+        # validate platform and modifiers
+        platform_names = {platform.name for platform in platforms()}
+        if not self.platform in platform_names:
+            raise ValueError(
+                f'unknown platform: {self.platform}. known: {platform_names}'
+            )
+
+        modifier_names = {modifier.name for modifier in modifiers()}
+        unknown_mods = set(self.modifiers) - modifier_names
+        if unknown_mods:
+            raise ValueError(
+                f'unknown modifiers: {unknown_mods}. known: {modifier_names}'
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -146,3 +143,48 @@ def gardenlinux_epoch(date:typing.Union[str, datetime.datetime]=None):
     if gardenlinux_epoch < 0:
         raise ValueError() # must not be older than gardenlinux' inception
     return gardenlinux_epoch
+
+
+def _enumerate_feature_files(features_dir=os.path.join(repo_root, 'features')):
+    for root, _, files in os.walk(features_dir):
+        for name in files:
+            if not name == 'info.yaml':
+                continue
+            yield os.path.join(root, name)
+
+
+def _deserialise_feature(feature_file):
+    with open(feature_file) as f:
+        parsed = yaml.safe_load(f)
+    # hack: inject name from pardir
+    pardir = os.path.basename(os.path.dirname(feature_file))
+    parsed['name'] = pardir
+
+    return dacite.from_dict(
+        data_class=FeatureDescriptor,
+        data=parsed,
+        config=dacite.Config(
+            cast=[
+                FeatureType,
+            ],
+        ),
+    )
+
+
+@functools.lru_cache
+def features():
+    return {
+        _deserialise_feature(feature_file)
+        for feature_file in _enumerate_feature_files()
+    }
+
+
+def platforms():
+    return {
+        feature for feature in features() if feature.type is FeatureType.PLATFORM
+    }
+
+def modifiers():
+    return {
+        feature for feature in features() if feature.type is FeatureType.MODIFIER
+    }

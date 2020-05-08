@@ -101,15 +101,13 @@ def enumerate_build_flavours(build_yaml: str):
     GardenlinuxFlavour = glci.model.GardenlinuxFlavour
     GardenlinuxFlavourCombination = glci.model.GardenlinuxFlavourCombination
     Architecture = glci.model.Architecture
-    Platform = glci.model.Platform
-    Modifier = glci.model.Modifier
 
     flavour_combinations = [
         dacite.from_dict(
             data_class=GardenlinuxFlavourCombination,
             data=flavour_def,
             config=dacite.Config(
-                cast=[Architecture, Platform, Modifier, typing.Tuple],
+                cast=[Architecture, typing.Tuple],
             )
         ) for flavour_def in parsed['flavours']
     ]
