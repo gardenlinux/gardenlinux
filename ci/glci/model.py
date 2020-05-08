@@ -114,6 +114,13 @@ class ReleaseManifest:
     modifiers: typing.Tuple[Modifier]
     paths: typing.Tuple[ReleaseFile]
 
+    def path_by_suffix(self, suffix: str):
+        for path in self.paths:
+            if path.suffix == suffix:
+                return path
+        else:
+            raise ValueError(f'no path with {suffix=}')
+
     # treat as "static final"
     manifest_key_prefix = 'gardenlinux.manifest' # S3 only allows to filter for _prefix_ m(
 
