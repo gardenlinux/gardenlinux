@@ -210,7 +210,7 @@ spec:
           build_committish='$(params.committish)',
           gardenlinux_epoch=glci.model.gardenlinux_epoch(),
           architecture=glci.model.Architecture('$(params.architecture)').value,
-          platform=glci.model.Platfram('$(params.platform)').value,
+          platform=glci.model.Platform('$(params.platform)').value,
           modifiers=modifiers,
           paths=uploaded_relpaths,
         )
