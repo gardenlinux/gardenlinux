@@ -46,27 +46,20 @@ class Platform(enum.Enum):
     VMWARE = 'vmware'
 
 
-class Extension(enum.Enum):
-    '''
-    extensions that can be added to gardenlinux images (more than one may be chosen)
-    '''
-    CHOST = 'chost'
-    GHOST = 'ghost'
-    VHOST = 'vhost'
-
-
 class Modifier(enum.Enum):
     '''
     modifiers that can be applied to gardenlinux images (more than one may be chosen)
     '''
     PROD = '_prod'
     BUILD = '_build'
+    CHOST = 'chost'
+    GHOST = 'ghost'
+    VHOST = 'vhost'
 
 
 @dataclasses.dataclass(frozen=True)
 class GardenlinuxFlavour:
     architecture: Architecture
-    extensions: typing.Tuple[Extension]
     platform: Platform
     modifiers: typing.Tuple[Modifier]
 
@@ -77,11 +70,10 @@ class GardenlinuxFlavour:
         return f'{a}/{fname_prefix}'
 
     def filename_prefix(self):
-        e = '_'.join(sorted([e.value for e in self.extensions]))
         p = self.platform.value
         m = '_'.join(sorted([m.value for m in self.modifiers]))
 
-        return f'{e}-{p}-{m}'
+        return f'{p}-{m}'
 
     def release_files(self, version: str):
         suffices = (
@@ -102,7 +94,6 @@ class GardenlinuxFlavour:
 class GardenlinuxFlavourCombination:
     architectures: typing.Tuple[Architecture]
     platforms: typing.Tuple[Platform]
-    extensions: typing.Tuple[typing.Tuple[Extension]]
     modifiers: typing.Tuple[typing.Tuple[Modifier]]
 
 

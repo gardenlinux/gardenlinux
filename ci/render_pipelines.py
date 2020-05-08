@@ -34,7 +34,6 @@ def mk_pipeline_task(
     feature_names = ','.join(
         e.value for e in (
             gardenlinux_flavour.platform,
-            *gardenlinux_flavour.extensions,
             *gardenlinux_flavour.modifiers,
         )
     )
@@ -101,7 +100,6 @@ def enumerate_build_flavours(build_yaml: str):
     GardenlinuxFlavourCombination = glci.model.GardenlinuxFlavourCombination
     Architecture = glci.model.Architecture
     Platform = glci.model.Platform
-    Extension = glci.model.Extension
     Modifier = glci.model.Modifier
 
     flavour_combinations = [
@@ -109,21 +107,19 @@ def enumerate_build_flavours(build_yaml: str):
             data_class=GardenlinuxFlavourCombination,
             data=flavour_def,
             config=dacite.Config(
-                cast=[Architecture, Platform, Extension, Modifier, typing.Tuple],
+                cast=[Architecture, Platform, Modifier, typing.Tuple],
             )
         ) for flavour_def in parsed['flavours']
     ]
     for comb in flavour_combinations:
-        for arch, platf, exts, mods in itertools.product(
+        for arch, platf, mods in itertools.product(
             comb.architectures,
             comb.platforms,
-            comb.extensions,
             comb.modifiers,
         ):
             yield GardenlinuxFlavour(
                 architecture=arch,
                 platform=platf,
-                extensions=exts,
                 modifiers=mods,
                 # fails=comb.fails, # not part of variant
             )
