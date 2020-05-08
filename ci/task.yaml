@@ -200,11 +200,18 @@ spec:
 
         uploaded_relpaths = tuple(upload_files())
 
+        modifiers = (
+          glci.model.Modifier(modifier_str).value for modifier_str
+          in '$(params.features)'.split(',')
+        )
+
         # add manifest (to be able to identify all relevant artifacts later)
         manifest = glci.model.ReleaseManifest(
           build_committish='$(params.committish)',
           gardenlinux_epoch=glci.model.gardenlinux_epoch(),
           architecture=glci.model.Architecture('$(params.architecture)').value,
+          platform=glci.model.Platfram('$(params.platform)').value,
+          modifiers=modifiers,
           paths=uploaded_relpaths,
         )
 
