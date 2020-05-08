@@ -31,25 +31,27 @@ def mk_pipeline_task(
     if not pipeline_flavour is glci.model.PipelineFlavour.SNAPSHOT:
         raise NotImplementedError(pipeline_flavour)
 
-    feature_names = ','.join(
-        e.value for e in (
-            gardenlinux_flavour.platform,
-            *gardenlinux_flavour.modifiers,
-        )
-    )
+    feature_names = ','.join(e.value for e in gardenlinux_flavour.modifiers)
 
     upload_prefix = f'{gardenlinux_flavour.architecture.value}/'
+
+    def pass_param(name: str):
+        '''
+        create a named-param that will propagate the parent's param value
+        '''
+        return NamedParam(name=name, value=f'$(params.{name})')
 
     return PipelineTask(
         name=gardenlinux_flavour.canonical_name_prefix().replace('/', '-').replace('_', '-'),
         taskRef=TaskRef(name='build-gardenlinux-task'), # hardcode name for now
         params=[
+            NamedParam(name='platform', value=gardenlinux_flavour.platform.value),
             NamedParam(name='features', value=feature_names),
             NamedParam(name='uploadprefix', value=upload_prefix),
             NamedParam(name='fnameprefix', value=gardenlinux_flavour.filename_prefix()),
-            NamedParam(name='committish', value='$(params.committish)'),
-            NamedParam(name='aws_cfg_name', value='$(params.aws_cfg_name)'),
-            NamedParam(name='s3_bucket_name', value='$(params.s3_bucket_name)'),
+            pass_param(name='committish'),
+            pass_param(name='aws_cfg_name'),
+            pass_param(name='s3_bucket_name'),
         ],
     )
 

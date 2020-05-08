@@ -9,6 +9,13 @@ spec:
       type: 'string'
       default: 'bullseye'
       description: 'Debian release (buster, bullseye, ..)'
+    - name: 'architecture'
+      type: 'string'
+      description: 'the build architecture (currently, only amd64 is supported)'
+      default: 'amd64'
+    - name: 'platform'
+      type: 'string'
+      description: 'the target platform (aws, gcp, metal, kvm, ..)'
     - name: 'features'
       type: 'string'
       description: 'the build features'
@@ -26,10 +33,6 @@ spec:
       type: 'string'
       description: 'the committish to build'
       default: 'master'
-    - name: 'architecture'
-      type: 'string'
-      description: 'the build architecture (currently, only amd64 is supported)'
-      default: 'amd64'
     - name: 'repodir'
       description: 'path to gardenlinux repository worktree'
       default: '/workspace/gardenlinux_git'
@@ -91,12 +94,12 @@ spec:
         export LC_ALL=C
         export suite="$(params.suite)"
         export timestamp="$(date -d 'today' '+%Y%m%d')"
-        export features="$(params.features),server"
+        export features="$(params.platform),$(params.features),server"
         #export debug=''
         export qemu=''
         export eol=''
         export ports=''
-        echo "features: $(params.features)"
+        echo "features: ${features}"
         export OUT_DIR="/build"
         ls -la /build
         export OUT_FILE="/build/gardenlinux.out"
@@ -109,7 +112,7 @@ spec:
           --prefix "" \
           --suite $(params.suite) \
           --timestamp ${timestamp} \
-          --features "$(params.features),server,cloud"
+          --features "${features}"
         ls -la "${OUT_FILE}"
         tar tf "${OUT_FILE}"
         if [ -f "${OUT_FILE}" ]; then
