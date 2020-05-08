@@ -49,6 +49,8 @@ def mk_pipeline_task(
             NamedParam(name='uploadprefix', value=upload_prefix),
             NamedParam(name='fnameprefix', value=gardenlinux_flavour.filename_prefix()),
             NamedParam(name='committish', value='$(params.committish)'),
+            NamedParam(name='aws_cfg_name', value='$(params.aws_cfg_name)'),
+            NamedParam(name='s3_bucket_name', value='$(params.s3_bucket_name)'),
         ],
     )
 
@@ -66,6 +68,8 @@ def mk_pipeline(
         spec=PipelineSpec(
             params=[
                 NamedParam(name='committish'),
+                NamedParam(name='aws_cfg_name'),
+                NamedParam(name='s3_bucket_name'),
             ],
             tasks=[
                 mk_pipeline_task(
