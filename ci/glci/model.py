@@ -52,8 +52,8 @@ class GardenlinuxFlavour:
         return f'{a}/{fname_prefix}'
 
     def filename_prefix(self):
-        p = self.platform.value
-        m = '_'.join(sorted([m.value for m in self.modifiers]))
+        p = self.platform
+        m = '_'.join(sorted([m for m in self.modifiers]))
 
         return f'{p}-{m}'
 

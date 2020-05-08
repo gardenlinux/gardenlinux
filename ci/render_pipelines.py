@@ -31,7 +31,7 @@ def mk_pipeline_task(
     if not pipeline_flavour is glci.model.PipelineFlavour.SNAPSHOT:
         raise NotImplementedError(pipeline_flavour)
 
-    modifier_names = ','.join(e.value for e in gardenlinux_flavour.modifiers)
+    modifier_names = ','.join(gardenlinux_flavour.modifiers)
 
     upload_prefix = f'{gardenlinux_flavour.architecture.value}/'
 
@@ -45,7 +45,7 @@ def mk_pipeline_task(
         name=gardenlinux_flavour.canonical_name_prefix().replace('/', '-').replace('_', '-'),
         taskRef=TaskRef(name='build-gardenlinux-task'), # hardcode name for now
         params=[
-            NamedParam(name='platform', value=gardenlinux_flavour.platform.value),
+            NamedParam(name='platform', value=gardenlinux_flavour.platform),
             NamedParam(name='modifiers', value=modifier_names),
             NamedParam(name='uploadprefix', value=upload_prefix),
             NamedParam(name='fnameprefix', value=gardenlinux_flavour.filename_prefix()),
