@@ -93,7 +93,6 @@ spec:
         #!/usr/bin/env sh
         set -u
         set -x
-        apt update && apt install -y git
         export TZ=UTC
         export LC_ALL=C
         export suite="$(params.suite)"
