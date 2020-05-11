@@ -13,15 +13,15 @@ RUN	apt-get update \
 		debootstrap patch \
 		wget ca-certificates \
 		\
-		gnupg dirmngr \
-		qemu-user-static \
 		dosfstools squashfs-tools e2fsprogs \
 		fdisk mount \
-		xz-utils \
-		qemu-utils \
+		gnupg dirmngr \
+		libcap2-bin \
 		python3 \
 		python3-mako \
-		libcap2-bin \
+		qemu-user-static \
+		qemu-utils \
+		xz-utils \
      && rm -rf /var/lib/apt/lists/*
 
 # repo-root requires to be mounted at /debuerreotype
