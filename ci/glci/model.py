@@ -114,6 +114,7 @@ class ReleaseManifest:
     store, such as an S3 bucket.
     '''
     build_committish: str
+    build_timestamp: str
     gardenlinux_epoch: int
     architecture: Architecture
     platform: Platform

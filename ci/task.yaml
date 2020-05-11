@@ -138,6 +138,7 @@ spec:
         #!/usr/bin/env python3
         # requires github.com/gardener/cc-utils
         import dataclasses
+        import datetime
         import os
         import sys
         # XXX add code from `ci/` to PYTHONPATH
@@ -213,6 +214,7 @@ spec:
         # add manifest (to be able to identify all relevant artifacts later)
         manifest = glci.model.ReleaseManifest(
           build_committish='$(params.committish)',
+          build_timestamp=datetime.datetime.now().isoformat(),
           gardenlinux_epoch=glci.model.gardenlinux_epoch(),
           architecture=glci.model.Architecture('$(params.architecture)').value,
           platform='$(params.platform)',
