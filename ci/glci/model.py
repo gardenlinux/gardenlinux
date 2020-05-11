@@ -3,6 +3,7 @@ import datetime
 import dateutil.parser
 import enum
 import functools
+import itertools
 import os
 import typing
 
@@ -98,6 +99,19 @@ class GardenlinuxFlavourCombination:
 class GardenlinuxFlavourSet:
     name: str
     flavour_combinations: typing.Tuple[GardenlinuxFlavourCombination]
+
+    def flavours(self):
+        for comb in self.flavour_combinations:
+            for arch, platf, mods in itertools.product(
+                comb.architectures,
+                comb.platforms,
+                comb.modifiers,
+            ):
+                yield GardenlinuxFlavour(
+                    architecture=arch,
+                    platform=platf,
+                    modifiers=mods,
+                )
 
 
 @dataclasses.dataclass(frozen=True)

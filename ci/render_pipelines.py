@@ -3,7 +3,6 @@
 import argparse
 import dacite
 import dataclasses
-import itertools
 import typing
 
 import yaml
@@ -114,23 +113,10 @@ def enumerate_build_flavours(build_yaml: str, flavour_set: str):
 
     for fs in flavour_sets:
         if fs.name == flavour_set:
-            flavour_combinations = fs.flavours
-            break
+            yield from fs.flavours()
+            return
     else:
         raise RuntimeError(f'not found: {flavour_set=}')
-
-    for comb in flavour_combinations:
-        for arch, platf, mods in itertools.product(
-            comb.architectures,
-            comb.platforms,
-            comb.modifiers,
-        ):
-            yield GardenlinuxFlavour(
-                architecture=arch,
-                platform=platf,
-                modifiers=mods,
-                # fails=comb.fails, # not part of variant
-            )
 
 
 def main():
