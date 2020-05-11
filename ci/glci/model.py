@@ -97,7 +97,7 @@ class GardenlinuxFlavourCombination:
 @dataclasses.dataclass(frozen=True)
 class GardenlinuxFlavourSet:
     name: str
-    flavours: typing.Tuple[GardenlinuxFlavourCombination]
+    flavour_combinations: typing.Tuple[GardenlinuxFlavourCombination]
 
 
 @dataclasses.dataclass(frozen=True)

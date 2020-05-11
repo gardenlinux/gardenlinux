@@ -1,7 +1,7 @@
 ---
 flavour_sets:
   - name: 'all'
-    flavours:
+    flavour_combinations:
       - architectures: [ 'amd64' ]
         platforms: [ metal ]
         modifiers: [ [ gardener, _prod ] , [ chost, _prod ] , [ vhost, _prod ] ]
@@ -32,7 +32,7 @@ flavour_sets:
         fails: [ unit ]
 
   - name: 'testing'
-    flavours:
+    flavour_combinations:
       - architectures: [ 'amd64' ]
         platforms: [ aws, azure, gcp, openstack, vmware, kvm ]
         modifiers: [ [ _prod, gardener ] ]
