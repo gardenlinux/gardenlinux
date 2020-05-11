@@ -122,7 +122,7 @@ class ReleaseManifest:
             raise ValueError(f'no path with {suffix=}')
 
     # treat as "static final"
-    manifest_key_prefix = 'gardenlinux.manifest' # S3 only allows to filter for _prefix_ m(
+    manifest_key_prefix = 'meta'
 
 
 class PipelineFlavour(enum.Enum):

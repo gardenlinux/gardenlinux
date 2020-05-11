@@ -188,7 +188,7 @@ spec:
                 sha1.update(chunk)
               fobj.seek(0)
               sha1_digest = sha1.hexdigest()
-              upload_key = os.path.join(prefix, 'objects', sha1_digest)
+              upload_key = os.path.join('objects', sha1_digest)
 
               # XXX todo: add content-type
               s3_client.upload_fileobj(
@@ -223,7 +223,7 @@ spec:
         manifest_bytes = yaml.safe_dump(dataclasses.asdict(manifest)).encode('utf-8')
         manifest_fobj = io.BytesIO(initial_bytes=manifest_bytes)
         manifest_path = \
-          f'{glci.model.ReleaseManifest.manifest_key_prefix}-{fname_prefix}-{version_str}'
+          f'{glci.model.ReleaseManifest.manifest_key_prefix}/snapshots/{fname_prefix}-{version_str}'
 
         s3_client.upload_fileobj(
           Fileobj=manifest_fobj,
