@@ -60,6 +60,7 @@ spec:
           service_account_json:
           service_account_json_path: /tmp/serviceaccount.json
           machine_type: n1-standard-1
+          image_project: sap-se-gcp-gardenlinux
           image_name: $(params.gcp_image_name)
           # user and ssh key used to connect to the vm
           user: admin
