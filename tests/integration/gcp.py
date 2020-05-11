@@ -54,6 +54,7 @@ class GCP:
         self.project = config["project"]
         self.zone = config["zone"]
         self.image_name = self.config["image_name"]
+        self.image_project = self.config["image_project"]
         self.machine_type = self.config["machine_type"]
         self.ssh_key_filepath = path.expanduser(self.config["ssh_key_filepath"])
         self.user = self.config["user"]
@@ -130,7 +131,7 @@ class GCP:
 
         :returns: instance to enable cleanup
         """
-        image = self._get_image(self.project, self.image_name)
+        image = self._get_image(self.image_project, self.image_name)
 
         machine_type = f"zones/{self.zone}/machineTypes/{self.machine_type}"
         time = datetime.now().strftime("%Y-%m-%dt%H-%M-%S")
