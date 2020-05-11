@@ -95,6 +95,12 @@ class GardenlinuxFlavourCombination:
 
 
 @dataclasses.dataclass(frozen=True)
+class GardenlinuxFlavourSet:
+    name: str
+    flavours: typing.Tuple[GardenlinuxFlavourCombination]
+
+
+@dataclasses.dataclass(frozen=True)
 class ReleaseFile:
     rel_path: str
     name: str

@@ -94,23 +94,32 @@ def render_pipeline_dict(
     return pipeline
 
 
-def enumerate_build_flavours(build_yaml: str):
+def enumerate_build_flavours(build_yaml: str, flavour_set: str):
     with open(build_yaml) as f:
         parsed = yaml.safe_load(f)
 
+    GardenlinuxFlavourSet = glci.model.GardenlinuxFlavourSet
     GardenlinuxFlavour = glci.model.GardenlinuxFlavour
     GardenlinuxFlavourCombination = glci.model.GardenlinuxFlavourCombination
     Architecture = glci.model.Architecture
 
-    flavour_combinations = [
+    flavour_sets = [
         dacite.from_dict(
-            data_class=GardenlinuxFlavourCombination,
-            data=flavour_def,
+            data_class=GardenlinuxFlavourSet,
+            data=flavour_set,
             config=dacite.Config(
-                cast=[Architecture, typing.Tuple],
+                cast=[Architecture, typing.Tuple]
             )
-        ) for flavour_def in parsed['flavours']
+        ) for flavour_set in parsed['flavour_sets']
     ]
+
+    for fs in flavour_sets:
+        if fs.name == flavour_set:
+            flavour_combinations = fs.flavours
+            break
+    else:
+        raise RuntimeError(f'not found: {flavour_set=}')
+
     for comb in flavour_combinations:
         for arch, platf, mods in itertools.product(
             comb.architectures,
@@ -132,6 +141,10 @@ def main():
         default=os.path.join(own_dir, os.pardir, 'build.yaml'),
     )
     parser.add_argument(
+        '--flavour-set',
+        default='all',
+    )
+    parser.add_argument(
         '--outfile',
         default='pipeline.yaml',
     )
@@ -139,7 +152,10 @@ def main():
 
     build_yaml = parsed.pipeline_cfg
 
-    gardenlinux_flavours = list(enumerate_build_flavours(build_yaml=build_yaml))
+    gardenlinux_flavours = list(enumerate_build_flavours(
+        build_yaml=build_yaml,
+        flavour_set=parsed.flavour_set,
+    ))
     outfile = parsed.outfile
 
     pipeline:dict = render_pipeline_dict(
