@@ -4,15 +4,14 @@ import argparse
 import dacite
 import dataclasses
 import itertools
-import os
 import typing
 
 import yaml
 
+import paths
 import glci.model
 import tkn.model
 
-own_dir = os.path.abspath(os.path.dirname(__file__))
 
 GardenlinuxFlavour = glci.model.GardenlinuxFlavour
 
@@ -138,7 +137,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--pipeline_cfg',
-        default=os.path.join(own_dir, os.pardir, 'build.yaml'),
+        default=paths.flavour_cfg_path,
     )
     parser.add_argument(
         '--flavour-set',

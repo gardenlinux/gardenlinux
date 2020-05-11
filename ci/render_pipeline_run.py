@@ -2,7 +2,6 @@
 
 import argparse
 import dataclasses
-import os
 import yaml
 
 import glci.model
