@@ -8,8 +8,6 @@ import yaml
 import glci.model
 import tkn.model
 
-own_dir = os.path.abspath(os.path.dirname(__file__))
-
 GardenlinuxFlavour = glci.model.GardenlinuxFlavour
 
 PipelineRef = tkn.model.PipelineRef
