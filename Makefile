@@ -13,6 +13,21 @@ all_prod: aws gcp azure openstack vmware kvm
 
 all_dev: aws-dev gcp-dev azure-dev openstack-dev vmware-dev
 
+ALI_IMAGE_NAME=$(IMAGE_BASENAME)-ali-$(VERSION)
+ali:
+	./build.sh --features server,cloud,gardener,ali .build/ali bullseye $(SNAPSHOT_DATE)
+
+ali-upload:
+	aliyun oss cp .build/ali/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.qcow2  oss://gardenlinux-development/gardenlinux/$(ALI_IMAGE_NAME).qcow2
+
+ALI_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-dev-ali-$(VERSION)
+ali-dev:
+	./build.sh --features server,cloud,gardener,ali,_dev .build/ali-dev bullseye $(SNAPSHOT_DATE)
+
+ali-dev-upload:
+	aliyun oss cp .build/ali-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.qcow2  oss://gardenlinux-development/gardenlinux/$(ALI_DEV_IMAGE_NAME).qcow2
+
+
 AWS_IMAGE_NAME=$(IMAGE_BASENAME)-aws-$(VERSION)
 aws:
 	./build.sh --features server,cloud,gardener,aws .build/aws bullseye $(SNAPSHOT_DATE)

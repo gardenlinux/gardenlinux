@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+set -x
+
+/opt/debuerreotype/bin/makef.sh --grub-target bios --force $2 $2.tar.xz
+qemu-img convert -f raw -O qcow2 $2.raw $2.qcow2
