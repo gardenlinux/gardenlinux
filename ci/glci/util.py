@@ -1,4 +1,5 @@
 import io
+import functools
 import typing
 
 import botocore.client
@@ -147,3 +148,17 @@ def find_releases(
             continue
 
         yield release
+
+
+@functools.lru_cache
+def preconfigured(func: callable, cicd_cfg: glci.model.CicdCfg):
+    # depends on `gardener-cicd-base`
+    import ccc.aws
+    s3_session = ccc.aws.session(cicd_cfg.build.aws_cfg_name)
+    s3_client = s3_session.client('s3')
+
+    return functools.partial(
+        func,
+        s3_client=s3_client,
+        bucket_name=cicd_cfg.build.s3_bucket_name,
+    )
