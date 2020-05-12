@@ -148,7 +148,7 @@ class ReleaseFile:
 @dataclasses.dataclass(frozen=True)
 class ReleaseManifest:
     '''
-    metadata for a gardenlinux release variant that has been published to a persistency
+    metadata for a gardenlinux release variant that can be (or was) published to a persistency
     store, such as an S3 bucket.
     '''
     build_committish: str
@@ -173,8 +173,19 @@ class ReleaseManifest:
             modifiers=self.modifiers,
         )
 
+    # attrs below are _transient_ (no typehint) and thus exempted from x-serialisation
     # treat as "static final"
     manifest_key_prefix = 'meta'
+
+
+@dataclasses.dataclass(frozen=True)
+class OnlineReleaseManifest(ReleaseManifest):
+    '''
+    a `ReleaseManifest` that was uploaded to a S3 bucket
+    '''
+    # injected iff retrieved from s3 bucket
+    s3_key: str
+    s3_bucket: str
 
 
 class PipelineFlavour(enum.Enum):

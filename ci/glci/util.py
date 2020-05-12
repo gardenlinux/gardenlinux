@@ -68,7 +68,7 @@ def release_manifest(
     s3_client: 'botocore.client.S3',
     bucket_name: str,
     key: str,
-):
+) -> glci.model.OnlineReleaseManifest:
     '''
     retrieves and deserialises a gardenlinux release manifest from the specified s3 object
     (expects a YAML or JSON document)
@@ -82,8 +82,12 @@ def release_manifest(
     buf.seek(0)
     parsed = yaml.safe_load(buf)
 
+    # patch-in transient attrs
+    parsed['s3_key'] = key
+    parsed['s3_bucket'] = bucket_name
+
     manifest = dacite.from_dict(
-        data_class=glci.model.ReleaseManifest,
+        data_class=glci.model.OnlineReleaseManifest,
         data=parsed,
         config=dacite.Config(
             cast=[
