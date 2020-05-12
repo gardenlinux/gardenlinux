@@ -1,3 +1,5 @@
+import dataclasses
+import enum
 import io
 import functools
 import typing
@@ -107,6 +109,13 @@ def upload_release_manifest(
     key: str,
     manifest: glci.model.ReleaseManifest,
 ):
+    # workaround: need to convert enums to str
+    patch_args = {
+        attr: val.value for attr, val in manifest.__dict__.items()
+        if isinstance(val, enum.Enum)
+    }
+    manifest = dataclasses.replace(manifest, **patch_args)
+
     manifest_bytes = yaml.safe_dump(dataclasses.asdict(manifest)).encode('utf-8')
     manifest_fobj = io.BytesIO(initial_bytes=manifest_bytes)
 
