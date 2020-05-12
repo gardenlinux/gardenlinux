@@ -5,3 +5,7 @@ Name=eth*
 DHCP=yes
 LLDP=true
 EmitLLDP=true
+
+[DHCP]
+UseDomains=true
+
