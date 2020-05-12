@@ -36,14 +36,9 @@ spec:
     - name: 'repodir'
       description: 'path to gardenlinux repository worktree'
       default: '/workspace/gardenlinux_git'
-    - name: 'aws_cfg_name'
-      description: 'the configuration name (to retrieve AWS credentials)'
-      type: 'string'
-      default: 'gardenlinux-dev'
-    - name: 's3_bucket_name'
-      description: 'the s3 bucket to use as build results storage'
-      type: 'string'
-      default: 'gardenlinux-test'
+    - name: 'cicd_cfg_name'
+      description: 'the cicd cfg to use (see cicd.yaml)'
+      default: 'default'
     - name: 'outfile'
       description: 'build result file (parameter is used to pass between steps)'
       type: 'string'
@@ -148,6 +143,7 @@ spec:
         import yaml
 
         import glci.model
+        import glci.util
 
         build_result_fname = '$(params.outfile)'
         if not os.path.isfile(build_result_fname):
@@ -159,8 +155,9 @@ spec:
         os.environ['SECRETS_SERVER_CONCOURSE_CFG_NAME'] = 'concourse-secrets/concourse_cfg'
         import ccc.aws
         import tarfile
-        aws_cfg_name = '$(params.aws_cfg_name)'
-        s3_bucket_name = '$(params.s3_bucket_name)'
+        cicd_cfg = glci.util.cicd_cfg(cfg_name='$(params.cicd_cfg_name)')
+        aws_cfg_name = cicd_cfg.build.aws_cfg_name
+        s3_bucket_name = cicd_cfg.build.s3_bucket_name
         session = ccc.aws.session(aws_cfg_name)
         s3_client = session.client('s3')
         print(f'uploading to s3 {aws_cfg_name=} {s3_bucket_name=}')

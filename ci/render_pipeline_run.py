@@ -24,8 +24,7 @@ def mk_pipeline_run(
     pipeline_name: str,
     namespace: str,
     committish: str,
-    aws_cfg: str,
-    s3_bucket: str,
+    cicd_cfg: str,
 ):
     run_name = f'{pipeline_name}-{committish}'[:60] # k8s length restriction
 
@@ -41,12 +40,8 @@ def mk_pipeline_run(
                     value=committish,
                 ),
                 NamedParam(
-                    name='aws_cfg_name',
-                    value=aws_cfg,
-                ),
-                NamedParam(
-                    name='s3_bucket_name',
-                    value=s3_bucket,
+                    name='cicd_cfg_name',
+                    value=cicd_cfg,
                 ),
             ],
             pipelineRef=PipelineRef(
@@ -65,8 +60,7 @@ def mk_pipeline_run(
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--committish', default='master')
-    parser.add_argument('--aws-cfg', default='gardenlinux-dev')
-    parser.add_argument('--s3-bucket', default='gardenlinux-test')
+    parser.add_argument('--cicd-cfg', default='default')
     parser.add_argument('--outfile', default='pipeline_run.yaml')
 
     parsed = parser.parse_args()
@@ -76,8 +70,7 @@ def main():
         pipeline_name='build-gardenlinux-snapshot-pipeline',
         namespace='gardenlinux-tkn',
         committish=parsed.committish,
-        aws_cfg=parsed.aws_cfg,
-        s3_bucket=parsed.s3_bucket,
+        cicd_cfg=parsed.cicd_cfg,
     )
 
     pipeline_run_dict = dataclasses.asdict(pipeline_run)
