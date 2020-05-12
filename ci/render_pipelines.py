@@ -56,6 +56,7 @@ def mk_pipeline_task(
 
 def mk_pipeline(
     gardenlinux_flavours: typing.Sequence[GardenlinuxFlavour],
+    cicd_cfg_name: str,
     pipeline_flavour: glci.model.PipelineFlavour=glci.model.PipelineFlavour.SNAPSHOT,
 ):
     gardenlinux_flavours = set(gardenlinux_flavours) # mk unique
@@ -67,8 +68,7 @@ def mk_pipeline(
         spec=PipelineSpec(
             params=[
                 NamedParam(name='committish'),
-                NamedParam(name='aws_cfg_name'),
-                NamedParam(name='s3_bucket_name'),
+                NamedParam(name='cicd_cfg_name'),
             ],
             tasks=[
                 mk_pipeline_task(
@@ -85,9 +85,13 @@ def mk_pipeline(
 
 def render_pipeline_dict(
     gardenlinux_flavours: typing.Sequence[GardenlinuxFlavour],
+    cicd_cfg_name: str,
 ):
     gardenlinux_flavours = set(gardenlinux_flavours) # mk unique
-    pipeline:dict = mk_pipeline(gardenlinux_flavours=gardenlinux_flavours)
+    pipeline:dict = mk_pipeline(
+        gardenlinux_flavours=gardenlinux_flavours,
+        cicd_cfg_name=cicd_cfg_name,
+    )
 
     return pipeline
 
@@ -101,6 +105,10 @@ def main():
     parser.add_argument(
         '--flavour-set',
         default='all',
+    )
+    parser.add_argument(
+        '--cicd-cfg',
+        default='default',
     )
     parser.add_argument(
         '--outfile',
@@ -120,6 +128,7 @@ def main():
 
     pipeline:dict = render_pipeline_dict(
         gardenlinux_flavours=gardenlinux_flavours,
+        cicd_cfg_name=parsed.cicd_cfg,
     )
 
     with open(outfile, 'w') as f:
