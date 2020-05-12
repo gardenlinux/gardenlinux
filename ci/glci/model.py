@@ -187,6 +187,13 @@ class OnlineReleaseManifest(ReleaseManifest):
     s3_key: str
     s3_bucket: str
 
+    def stripped_manifest(self):
+        raw = dataclasses.asdict(self)
+        del raw['s3_key']
+        del raw['s3_bucket']
+
+        return ReleaseManifest(**raw)
+
 
 class PipelineFlavour(enum.Enum):
     SNAPSHOT = 'snapshot'
