@@ -218,19 +218,14 @@ spec:
           paths=uploaded_relpaths,
         )
 
-        manifest_bytes = yaml.safe_dump(dataclasses.asdict(manifest)).encode('utf-8')
-        manifest_fobj = io.BytesIO(initial_bytes=manifest_bytes)
         manifest_path = \
           f'{glci.model.ReleaseManifest.manifest_key_prefix}/snapshots/{fname_prefix}-{version_str}'
 
-        s3_client.upload_fileobj(
-          Fileobj=manifest_fobj,
-          Bucket=s3_bucket_name,
-          Key=manifest_path,
-          ExtraArgs={
-            'ContentType': 'text/yaml',
-            'ContentEncoding': 'utf-8',
-          },
+        glci.util.upload_release_manifest(
+          s3_client=s3_client,
+          bucket_name=bucket_name,
+          key=manifest_path,
+          manifest=manifest,
         )
         print(f'uploaded manifest: {manifest_path}')
       volumeMounts:

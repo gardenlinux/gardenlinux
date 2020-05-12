@@ -101,6 +101,26 @@ def release_manifest(
     return manifest
 
 
+def upload_release_manifest(
+    s3_client: 'botocore.client.S3',
+    bucket_name: str,
+    key: str,
+    manifest: glci.model.ReleaseManifest,
+):
+    manifest_bytes = yaml.safe_dump(dataclasses.asdict(manifest)).encode('utf-8')
+    manifest_fobj = io.BytesIO(initial_bytes=manifest_bytes)
+
+    return s3_client.upload_fileobj(
+        Fileobj=manifest_fobj,
+        Bucket=bucket_name,
+        Key=key,
+        ExtraArgs={
+            'ContentType': 'text/yaml',
+            'ContentEncoding': 'utf-8',
+        },
+    )
+
+
 def enumerate_releases(
     s3_client: 'botocore.client.S3',
     bucket_name: str,
