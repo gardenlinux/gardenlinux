@@ -49,8 +49,7 @@ def mk_pipeline_task(
             NamedParam(name='uploadprefix', value=upload_prefix),
             NamedParam(name='fnameprefix', value=gardenlinux_flavour.filename_prefix()),
             pass_param(name='committish'),
-            pass_param(name='aws_cfg_name'),
-            pass_param(name='s3_bucket_name'),
+            pass_param(name='cicd_cfg_name'),
         ],
     )
 
