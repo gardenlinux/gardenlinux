@@ -6,6 +6,42 @@ import dacite
 import yaml
 
 import glci.model
+import paths
+
+GardenlinuxFlavourSet = glci.model.GardenlinuxFlavourSet
+GardenlinuxFlavour = glci.model.GardenlinuxFlavour
+GardenlinuxFlavourCombination = glci.model.GardenlinuxFlavourCombination
+Architecture = glci.model.Architecture
+
+
+def flavour_sets(
+    build_yaml: str=paths.flavour_cfg_path,
+) -> typing.List[GardenlinuxFlavourSet]:
+    with open(build_yaml) as f:
+        parsed = yaml.safe_load(f)
+
+    flavour_sets = [
+        dacite.from_dict(
+            data_class=GardenlinuxFlavourSet,
+            data=flavour_set,
+            config=dacite.Config(
+                cast=[Architecture, typing.Tuple]
+            )
+        ) for flavour_set in parsed['flavour_sets']
+    ]
+
+    return flavour_sets
+
+
+def flavour_set(
+    flavour_set_name: str,
+    build_yaml: str=paths.flavour_cfg_path,
+):
+    for fs in flavour_sets(build_yaml=build_yaml):
+        if fs.name == flavour_set_name:
+            return fs
+    else:
+        raise RuntimeError(f'not found: {flavour_set=}')
 
 
 def release_manifest(
@@ -43,10 +79,11 @@ def release_manifest(
 def enumerate_releases(
     s3_client: 'botocore.client.S3',
     bucket_name: str,
+    prefix: str=glci.model.ReleaseManifest.manifest_key_prefix,
 ):
     res = s3_client.list_objects_v2(
         Bucket=bucket_name,
-        Prefix=glci.model.ReleaseManifest.manifest_key_prefix,
+        Prefix=prefix,
     )
     if (key_count := res['KeyCount']) == 0:
         return
@@ -59,3 +96,30 @@ def enumerate_releases(
             bucket_name=bucket_name,
             key=key,
         )
+
+
+def find_releases(
+    s3_client: 'botocore.client.S3',
+    bucket_name: str,
+    flavour_set: glci.model.GardenlinuxFlavourSet,
+    build_committish: str,
+    gardenlinux_epoch: int,
+    prefix: str=glci.model.ReleaseManifest.manifest_key_prefix,
+):
+    flavours = set(flavour_set.flavours())
+
+    for release in enumerate_releases(
+        s3_client=s3_client,
+        bucket_name=bucket_name,
+        prefix=prefix,
+    ):
+        if not release.flavour() in flavours:
+            continue
+
+        if not release.build_committish == build_committish:
+            continue
+
+        if not release.gardenlinux_epoch == gardenlinux_epoch:
+            continue
+
+        yield release

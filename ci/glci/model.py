@@ -142,6 +142,13 @@ class ReleaseManifest:
         else:
             raise ValueError(f'no path with {suffix=}')
 
+    def flavour(self) -> GardenlinuxFlavour:
+        return GardenlinuxFlavour(
+            architecture=self.architecture,
+            platform=self.platform,
+            modifiers=self.modifiers,
+        )
+
     # treat as "static final"
     manifest_key_prefix = 'meta'
 
