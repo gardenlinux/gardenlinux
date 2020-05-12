@@ -182,6 +182,22 @@ class PipelineFlavour(enum.Enum):
     RELEASE = 'release'
 
 
+@dataclasses.dataclass(frozen=True)
+class BuildCfg:
+    s3_cfg_name: str
+    s3_bucket_name: str
+    manifest_key_root_prefix: str='meta'
+
+    def manifest_key_prefix(self, name: str):
+        return os.path.join(self.manifest_key_root_prefix, name)
+
+
+@dataclasses.dataclass(frozen=True)
+class CicdCfg:
+    name: str
+    build: BuildCfg
+
+
 def gardenlinux_epoch(date:typing.Union[str, datetime.datetime]=None):
     '''
     calculate the gardenlinux epoch for the given date (the amount of days since 2020-04-01)

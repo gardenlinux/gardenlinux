@@ -1,0 +1,5 @@
+cicd_cfgs:
+  - name: 'default'
+    build:
+      s3_cfg_name: 'gardenlinux-dev'
+      s3_bucket_name: 'gardenlinux-test'

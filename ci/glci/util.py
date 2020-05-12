@@ -13,6 +13,26 @@ GardenlinuxFlavour = glci.model.GardenlinuxFlavour
 GardenlinuxFlavourCombination = glci.model.GardenlinuxFlavourCombination
 Architecture = glci.model.Architecture
 
+CicdCfg = glci.model.CicdCfg
+
+
+def cicd_cfg(
+    cfg_name: str='default',
+    cfg_file=paths.cicd_cfg_path,
+) -> CicdCfg:
+    with open(cfg_file) as f:
+        parsed = yaml.safe_load(f)
+
+    for raw in parsed['cicd_cfgs']:
+        cfg = dacite.from_dict(
+            data_class=CicdCfg,
+            data=raw,
+        )
+        if cfg.name == cfg_name:
+            return cfg
+    else:
+        raise ValueError(f'not found: {cfg_name=}')
+
 
 def flavour_sets(
     build_yaml: str=paths.flavour_cfg_path,
