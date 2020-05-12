@@ -1,28 +1,30 @@
 tekton pipelines for gardenlinux
 ================================
 
-This directory contains [Tekton](https://github.com/tektoncd/pipeline) resource definitions that
-exhibit a similar behaviour as previously implemented using GitHub Actions.
+This directory contains [Tekton](https://github.com/tektoncd/pipeline) resource definitions for
+CICD Build and Test Pipelines for gardenlinux.
 
-Configuration is somewhat redundant to the one in `Makefile`. The build pipeline currently
-assumes that there is a prebuilt container image. It also assumes to be run in a k8s cluster
-with a (Gardener-CICD-proprietary) "SecretsServer".
+The build pipeline assumes to be run in a k8s cluster with a
+(Gardener-CICD-proprietary) "SecretsServer".
 
 There are, of course, still open issues:
 
 - resources should be templatified
   - hardcoded cfg should be injected
 - build image should also be built using tkn
-- offer release job semantics
+- release job semantics
 - error handling / notification (e.g. mark PRs/commits as good or broken)
 
 
-### Integration tests
+## Integration tests
 
-The integration test are implemented as their own tekton task which can be found [here](./integrationtest-task.yaml).
-The test automatically clones the github repo specified in the tekton resource and executes the integration test with the specified version (branch or commit).
+The integration test are implemented as their own tekton task which can be
+found [here](./integrationtest-task.yaml).  The test automatically clones the
+github repo specified in the tekton resource and executes the integration test
+with the specified version (branch or commit).
 
-The task assumes that there is a secret in the cluster with the following structure:
+The task assumes that there is a secret in the cluster with the following
+structure:
 ```yaml
 ---
 apiVersion: v1
