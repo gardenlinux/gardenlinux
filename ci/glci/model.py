@@ -184,7 +184,7 @@ class PipelineFlavour(enum.Enum):
 
 @dataclasses.dataclass(frozen=True)
 class BuildCfg:
-    s3_cfg_name: str
+    aws_cfg_name: str
     s3_bucket_name: str
     manifest_key_root_prefix: str='meta'
 
