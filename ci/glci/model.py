@@ -15,6 +15,12 @@ repo_root = os.path.abspath(os.path.join(own_dir, os.path.pardir, os.path.pardir
 
 
 class FeatureType(enum.Enum):
+    '''
+    gardenlinux feature types as used in `features/*/info.yaml`
+
+    Each gardenlinux flavour MUST specify exactly one platform and MAY
+    specify an arbitrary amount of modifiers.
+    '''
     PLATFORM = 'platform'
     MODIFIER = 'modifier'
 
@@ -42,6 +48,9 @@ Modifier = str # see `features/*/info.yaml` / modifiers() for allowed values
 
 @dataclasses.dataclass(frozen=True)
 class GardenlinuxFlavour:
+    '''
+    A specific flavour of gardenlinux.
+    '''
     architecture: Architecture
     platform: str
     modifiers: typing.Tuple[Modifier]
@@ -90,6 +99,14 @@ class GardenlinuxFlavour:
 
 @dataclasses.dataclass(frozen=True)
 class GardenlinuxFlavourCombination:
+    '''
+    A declaration of a set of gardenlinux flavours. Deserialised from `build.yaml`.
+
+    We intend to build a two-digit number of gardenlinux flavours (combinations
+    of different architectures, platforms, and modifiers). To avoid tedious and redundant
+    manual configuration, flavourset combinations are declared. Subsequently, the
+    cross product of said combinations are generated.
+    '''
     architectures: typing.Tuple[Architecture]
     platforms: typing.Tuple[Platform]
     modifiers: typing.Tuple[typing.Tuple[Modifier]]
@@ -97,6 +114,9 @@ class GardenlinuxFlavourCombination:
 
 @dataclasses.dataclass(frozen=True)
 class GardenlinuxFlavourSet:
+    '''
+    A set of gardenlinux flavours
+    '''
     name: str
     flavour_combinations: typing.Tuple[GardenlinuxFlavourCombination]
 
@@ -116,6 +136,10 @@ class GardenlinuxFlavourSet:
 
 @dataclasses.dataclass(frozen=True)
 class ReleaseFile:
+    '''
+    A single build result file that was (or will be) uploaded to build result persistency store
+    (S3).
+    '''
     rel_path: str
     name: str
     suffix: str
