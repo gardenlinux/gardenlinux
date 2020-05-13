@@ -223,7 +223,7 @@ spec:
 
         glci.util.upload_release_manifest(
           s3_client=s3_client,
-          bucket_name=bucket_name,
+          bucket_name=s3_bucket_name,
           key=manifest_path,
           manifest=manifest,
         )
