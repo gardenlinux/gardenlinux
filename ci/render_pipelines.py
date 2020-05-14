@@ -40,8 +40,11 @@ def mk_pipeline_task(
         '''
         return NamedParam(name=name, value=f'$(params.{name})')
 
+    task_name = gardenlinux_flavour.canonical_name_prefix().replace('/', '-')\
+            .replace('_', '-').strip('-')
+
     return PipelineTask(
-        name=gardenlinux_flavour.canonical_name_prefix().replace('/', '-').replace('_', '-'),
+        name=task_name,
         taskRef=TaskRef(name='build-gardenlinux-task'), # hardcode name for now
         params=[
             NamedParam(name='platform', value=gardenlinux_flavour.platform),
