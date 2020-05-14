@@ -49,6 +49,8 @@ def mk_pipeline_task(
             NamedParam(name='uploadprefix', value=upload_prefix),
             NamedParam(name='fnameprefix', value=gardenlinux_flavour.filename_prefix()),
             pass_param(name='committish'),
+            pass_param(name='gardenlinux_epoch'),
+            pass_param(name='snapshot_timestamp'),
             pass_param(name='cicd_cfg_name'),
         ],
     )
@@ -68,6 +70,8 @@ def mk_pipeline(
         spec=PipelineSpec(
             params=[
                 NamedParam(name='committish'),
+                NamedParam(name='gardenlinux_epoch'),
+                NamedParam(name='snapshot_timestamp'),
                 NamedParam(name='cicd_cfg_name'),
             ],
             tasks=[

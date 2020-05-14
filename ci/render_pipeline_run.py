@@ -24,9 +24,12 @@ def mk_pipeline_run(
     pipeline_name: str,
     namespace: str,
     committish: str,
+    gardenlinux_epoch: int,
     cicd_cfg: str,
 ):
     run_name = f'{pipeline_name}-{committish}'[:60] # k8s length restriction
+
+    snapshot_timestamp = glci.model.snapshot_date(gardenlinux_epoch=gardenlinux_epoch)
 
     plrun = PipelineRun(
         metadata=PipelineRunMetadata(
@@ -38,6 +41,14 @@ def mk_pipeline_run(
                 NamedParam(
                     name='committish',
                     value=committish,
+                ),
+                NamedParam(
+                    name='gardenlinux_epoch',
+                    value=str(gardenlinux_epoch), # tekton only knows str
+                ),
+                NamedParam(
+                    name='snapshot_timestamp',
+                    value=snapshot_timestamp,
                 ),
                 NamedParam(
                     name='cicd_cfg_name',
@@ -60,6 +71,7 @@ def mk_pipeline_run(
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--committish', default='master')
+    parser.add_argument('--gardenlinux-epoch', default=glci.model.gardenlinux_epoch())
     parser.add_argument('--cicd-cfg', default='default')
     parser.add_argument('--outfile', default='pipeline_run.yaml')
 
@@ -70,6 +82,7 @@ def main():
         pipeline_name='build-gardenlinux-snapshot-pipeline',
         namespace='gardenlinux-tkn',
         committish=parsed.committish,
+        gardenlinux_epoch=parsed.gardenlinux_epoch,
         cicd_cfg=parsed.cicd_cfg,
     )
 

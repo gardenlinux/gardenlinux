@@ -33,6 +33,12 @@ spec:
       type: 'string'
       description: 'the committish to build'
       default: 'master'
+    - name: 'gardenlinux_epoch'
+      type: 'string'
+      description: 'the gardenlinux epoch to use for as snapshot repo timestamp'
+    - name: 'snapshot_timestamp'
+      type: 'string'
+      description: 'the snapshot timestamp (calculated from gardenlinux_epoch)'
     - name: 'repodir'
       description: 'path to gardenlinux repository worktree'
       default: '/workspace/gardenlinux_git'
@@ -91,7 +97,8 @@ spec:
         export TZ=UTC
         export LC_ALL=C
         export suite="$(params.suite)"
-        export timestamp="$(date -d 'today' '+%Y%m%d')"
+        export gardenlinux_epoch='$(params.gardenlinux_epoch)'
+        export timestamp='$(params.snapshot_timestamp)'
         # XXX hardcode `server,cloud` until dependencies handling is implemented
         export features="$(params.platform),$(params.modifiers),server,cloud"
         #export debug=''
