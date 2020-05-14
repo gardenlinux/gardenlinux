@@ -216,9 +216,12 @@ class CicdCfg:
     build: BuildCfg
 
 
+epoch_date = datetime.datetime.fromisoformat('2020-04-01')
+
+
 def gardenlinux_epoch(date:typing.Union[str, datetime.datetime]=None):
     '''
-    calculate the gardenlinux epoch for the given date (the amount of days since 2020-04-01)
+    calculates the gardenlinux epoch for the given date (the amount of days since 2020-04-01)
     @param date: date (defaults to today); if str, must be compliant to iso-8601
     '''
     if date is None:
@@ -229,13 +232,32 @@ def gardenlinux_epoch(date:typing.Union[str, datetime.datetime]=None):
     if not isinstance(date, datetime.datetime):
         raise ValueError(date)
 
-    epoch_date = datetime.datetime.fromisoformat('2020-04-01')
-
     gardenlinux_epoch = (date - epoch_date).days
 
     if gardenlinux_epoch < 0:
         raise ValueError() # must not be older than gardenlinux' inception
     return gardenlinux_epoch
+
+
+_gl_epoch = gardenlinux_epoch # alias for usage in snapshot_date
+
+
+def snapshot_date(gardenlinux_epoch: int=None):
+    '''
+    calculates the debian snapshot repository timestamp from the given gardenlinux epoch in the
+    format that is expected for said snapshot repository.
+    @param gardenlinux_epoch: int, the gardenlinux epoch
+    '''
+    if gardenlinux_epoch is None:
+        gardenlinux_epoch = _gl_epoch()
+    gardenlinux_epoch = int(gardenlinux_epoch)
+    if gardenlinux_epoch < 0:
+        raise ValueError(gardenlinux_epoch)
+
+    time_d = datetime.timedelta(days=gardenlinux_epoch)
+
+    date_str = (epoch_date + time_d).strftime('%Y%m%d')
+    return date_str
 
 
 def _enumerate_feature_files(features_dir=os.path.join(repo_root, 'features')):
