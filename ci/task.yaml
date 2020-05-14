@@ -169,7 +169,8 @@ spec:
         s3_client = session.client('s3')
         print(f'uploading to s3 {aws_cfg_name=} {s3_bucket_name=}')
         gardenlinux_epoch = '$(params.gardenlinux_epoch)'
-        version_str = '{gardenlinux_epoch}-$(params.committish)'[:6]
+        short_committish = '$(params.committish)'[:6]
+        version_str = '{gardenlinux_epoch}-{short_committish}'
         prefix = '$(params.uploadprefix)'
         fname_prefix = '$(params.fnameprefix)'
 
