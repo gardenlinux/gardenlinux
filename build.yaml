@@ -19,17 +19,13 @@ flavour_sets:
         modifiers: [ [] ]
         fails: [ unit, integration ]
       - architectures: [ 'amd64' ]
-        platforms: [ aws, azure, gcp, openstack, vmware, kvm ]
-        modifiers: [ [ gardener, _prod ] , [ chost, _prod ] ]
+        platforms: [ aws, azure, gcp, openstack, vmware ]
+        modifiers: [ [ gardener, _prod ] ]
         fails: [ unit, integration ]
       - architectures: [ 'amd64' ]
-        platforms: [ aws, azure, gcp, openstack, vmware, kvm ]
-        modifiers: [ [] ]
+        platforms: [ kvm ]
+        modifiers: [ [], ['_prod', 'chost'], ['_prod', 'gardener'] ]
         fails: [ unit, integration ]
-      - architectures: [ 'amd64' ]
-        platforms: [ gcp ]
-        modifiers: [ [ chost, _prod ] ]
-        fails: [ unit ]
 
   - name: 'testing'
     flavour_combinations:
