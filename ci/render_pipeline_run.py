@@ -5,7 +5,9 @@ import dataclasses
 import yaml
 
 import glci.model
+import glci.util
 import tkn.model
+import paths
 
 GardenlinuxFlavour = glci.model.GardenlinuxFlavour
 
@@ -31,10 +33,28 @@ def mk_pipeline_run(
     committish: str,
     gardenlinux_epoch: int,
     cicd_cfg: str,
+    flavour_set: glci.model.GardenlinuxFlavourSet,
 ):
     run_name = f'{pipeline_name}-{committish}'[:60] # k8s length restriction
 
     snapshot_timestamp = glci.model.snapshot_date(gardenlinux_epoch=gardenlinux_epoch)
+
+    def mk_workspace(idx: int):
+        # XXX hard-coded naming convention
+        workspace = PipelineRunWorkspace(
+                name=f'ws-{idx}',
+                volumeClaimTemplate=VolumeClaimTemplate(
+                    spec=VolumeClaimTemplateSpec(
+                        accessModes=['ReadWriteOnce'],
+                        resources=ResourcesClaim(
+                            requests=ResourcesClaimRequests(
+                                storage='128Mi',
+                            ),
+                        ),
+                    ),
+                ),
+        )
+        return workspace
 
     plrun = PipelineRun(
         metadata=PipelineRunMetadata(
@@ -69,19 +89,7 @@ def mk_pipeline_run(
                 }
             ),
             workspaces=[
-                PipelineRunWorkspace(
-                    name='ws',
-                    volumeClaimTemplate=VolumeClaimTemplate(
-                        spec=VolumeClaimTemplateSpec(
-                            accessModes=['ReadWriteMany'],
-                            resources=ResourcesClaim(
-                                requests=ResourcesClaimRequests(
-                                    storage='128Mi',
-                                ),
-                            ),
-                        ),
-                    ),
-                ),
+                mk_workspace(idx) for idx, _ in enumerate(flavour_set.flavours())
             ]
         ),
     )
@@ -93,9 +101,17 @@ def main():
     parser.add_argument('--committish', default='master')
     parser.add_argument('--gardenlinux-epoch', default=glci.model.gardenlinux_epoch())
     parser.add_argument('--cicd-cfg', default='default')
+    parser.add_argument('--pipeline-cfg', default=paths.flavour_cfg_path)
     parser.add_argument('--outfile', default='pipeline_run.yaml')
+    parser.add_argument('--flavour-set', default='all')
 
     parsed = parser.parse_args()
+
+    flavour_set = glci.util.flavour_set(
+        flavour_set_name=parsed.flavour_set,
+        build_yaml=parsed.pipeline_cfg,
+    )
+
 
     # XXX hardcode pipeline names and flavour for now
     pipeline_run = mk_pipeline_run(
@@ -104,6 +120,7 @@ def main():
         committish=parsed.committish,
         gardenlinux_epoch=parsed.gardenlinux_epoch,
         cicd_cfg=parsed.cicd_cfg,
+        flavour_set=flavour_set,
     )
 
     pipeline_run_dict = dataclasses.asdict(pipeline_run)

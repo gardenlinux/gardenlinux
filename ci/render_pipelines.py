@@ -31,10 +31,13 @@ def pass_param(name: str):
 
 
 def mk_clone_task(
+    gardenlinux_flavour: GardenlinuxFlavour,
     workspace: Workspace,
 ):
+    task_name = gardenlinux_flavour.canonical_name_prefix().replace('/', '-')\
+            .replace('_', '-').strip('-')
     return PipelineTask(
-        name='clone-repo-task',
+        name=f'clone-repo-{task_name}',
         taskRef=TaskRef(name='clone-repo-task'), # hardcode name for now
         workspaces=[workspace],
         params=[
@@ -87,21 +90,28 @@ def mk_pipeline(
 ):
     gardenlinux_flavours = set(gardenlinux_flavours) # mk unique
 
-    workspace = Workspace(
-        name='ws',
-        workspace='ws',
-    )
 
-    clone_task = mk_clone_task(workspace=workspace)
-    build_tasks=[
-        mk_pipeline_task(
+    tasks = []
+    workspaces = []
+
+    for idx,glf in enumerate(gardenlinux_flavours):
+        workspace = Workspace(
+            name='ws',
+            workspace=f'ws-{idx}',
+        )
+        workspaces.append(workspace)
+
+        clone_task = mk_clone_task(
+            gardenlinux_flavour=glf,
+            workspace=workspace
+        )
+        build_task = mk_pipeline_task(
             gardenlinux_flavour=glf,
             pipeline_flavour=pipeline_flavour,
             workspace=workspace,
             run_after=[clone_task.name]
         )
-        for glf in gardenlinux_flavours
-    ]
+        tasks.extend((clone_task, build_task))
 
     pipeline = Pipeline(
         metadata=PipelineMetadata(
@@ -115,8 +125,10 @@ def mk_pipeline(
                 NamedParam(name='snapshot_timestamp'),
                 NamedParam(name='cicd_cfg_name'),
             ],
-            workspaces=[NamedParam(name=workspace.name)],
-            tasks=[clone_task] + build_tasks,
+            workspaces=[
+                NamedParam(name=workspace.workspace) for workspace in workspaces
+            ],
+            tasks=tasks,
         ),
     )
 
