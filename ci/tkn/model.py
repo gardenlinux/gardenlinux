@@ -3,9 +3,19 @@ import typing
 
 
 @dataclasses.dataclass
-class NamedParam:
+class _NamedParamBase:
     name: str
-    value: str=None
+
+
+@dataclasses.dataclass
+class _NamedParamWithValue(_NamedParamBase):
+    value: typing.Optional[str]=None
+
+
+def NamedParam(name: str, value: str=None):
+    if value is None:
+        return _NamedParamBase(name=name)
+    return _NamedParamWithValue(name=name, value=value)
 
 
 @dataclasses.dataclass
