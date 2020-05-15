@@ -56,6 +56,10 @@ def mk_pipeline_run(
         )
         return workspace
 
+    flavour_count = len(list(flavour_set.flavours()))
+    if flavour_count == 0:
+        flavour_count = 1 # at least one workspace must be created
+
     plrun = PipelineRun(
         metadata=PipelineRunMetadata(
             name=run_name,
@@ -89,7 +93,7 @@ def mk_pipeline_run(
                 }
             ),
             workspaces=[
-                mk_workspace(idx) for idx, _ in enumerate(flavour_set.flavours())
+                mk_workspace(idx) for idx in range(flavour_count)
             ]
         ),
     )
