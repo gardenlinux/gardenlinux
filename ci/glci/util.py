@@ -182,7 +182,11 @@ def find_releases(
 @functools.lru_cache
 def preconfigured(func: callable, cicd_cfg: glci.model.CicdCfg):
     # depends on `gardener-cicd-base`
-    import ccc.aws
+    try:
+        import ccc.aws
+    except ModuleNotFoundError:
+        raise RuntimeError('missing dependency: install gardener-cicd-base')
+
     s3_session = ccc.aws.session(cicd_cfg.build.aws_cfg_name)
     s3_client = s3_session.client('s3')
 
