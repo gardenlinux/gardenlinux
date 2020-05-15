@@ -73,7 +73,7 @@ def mk_pipeline_run(
                     name='ws',
                     volumeClaimTemplate=VolumeClaimTemplate(
                         spec=VolumeClaimTemplateSpec(
-                            accessModes=['ReadWriteOnce'],
+                            accessModes=['ReadWriteMany'],
                             resources=ResourcesClaim(
                                 requests=ResourcesClaimRequests(
                                     storage='128Mi',
