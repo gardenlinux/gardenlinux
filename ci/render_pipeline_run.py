@@ -9,15 +9,20 @@ import tkn.model
 
 GardenlinuxFlavour = glci.model.GardenlinuxFlavour
 
+NamedParam = tkn.model.NamedParam
+PipelineMetadata = tkn.model.PipelineMetadata
 PipelineRef = tkn.model.PipelineRef
 PipelineRun = tkn.model.PipelineRun
-PipelineRunSpec = tkn.model.PipelineRunSpec
 PipelineRunMetadata = tkn.model.PipelineRunMetadata
-PipelineMetadata = tkn.model.PipelineMetadata
-PodTemplate = tkn.model.PodTemplate
-TaskRef = tkn.model.TaskRef
+PipelineRunSpec = tkn.model.PipelineRunSpec
+PipelineRunWorkspace = tkn.model.PipelineRunWorkspace
 PipelineTask = tkn.model.PipelineTask
-NamedParam = tkn.model.NamedParam
+PodTemplate = tkn.model.PodTemplate
+ResourcesClaim = tkn.model.ResourcesClaim
+ResourcesClaimRequests = tkn.model.ResourcesClaimRequests
+TaskRef = tkn.model.TaskRef
+VolumeClaimTemplate = tkn.model.VolumeClaimTemplate
+VolumeClaimTemplateSpec = tkn.model.VolumeClaimTemplateSpec
 
 
 def mk_pipeline_run(
@@ -62,7 +67,22 @@ def mk_pipeline_run(
                 nodeSelector={
                     "worker.garden.sapcloud.io/group": "gl-build"
                 }
-            )
+            ),
+            workspaces=[
+                PipelineRunWorkspace(
+                    name='ws',
+                    volumeClaimTemplate=VolumeClaimTemplate(
+                        spec=VolumeClaimTemplateSpec(
+                            accessModes=['ReadWriteOnce'],
+                            resources=ResourcesClaim(
+                                requests=ResourcesClaimRequests(
+                                    storage='128Mi',
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ]
         ),
     )
     return plrun

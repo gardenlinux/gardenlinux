@@ -4,6 +4,8 @@ metadata:
   name: build-gardenlinux-task
   namespace: gardenlinux-tkn
 spec:
+  workspaces:
+    - name: gardenlinux-repo
   params:
     - name: 'suite'
       type: 'string'
@@ -39,9 +41,6 @@ spec:
     - name: 'snapshot_timestamp'
       type: 'string'
       description: 'the snapshot timestamp (calculated from gardenlinux_epoch)'
-    - name: 'repodir'
-      description: 'path to gardenlinux repository worktree'
-      default: '/workspace/gardenlinux_git'
     - name: 'cicd_cfg_name'
       description: 'the cicd cfg to use (see cicd.yaml)'
       default: 'default'
@@ -50,33 +49,6 @@ spec:
       type: 'string'
       default: '/workspace/gardenlinux.out'
   steps:
-    - name: 'retrieve-repository'
-      image: 'eu.gcr.io/gardener-project/cc/job-image:1.612.0'
-      script: |
-        #!/usr/bin/env python3
-        import os
-        import urllib.parse
-        import shutil
-
-        import ccc.github
-        import gitutil
-
-        repo_dir = os.path.abspath('$(params.repodir)')
-        os.mkdir(repo_dir)
-        repo_url = urllib.parse.urlparse('$(params.giturl)')
-        github_cfg = ccc.github.github_cfg_for_hostname(
-          repo_url.hostname,
-        )
-        git_helper = gitutil.GitHelper.clone_into(
-          target_directory=repo_dir,
-          github_cfg=github_cfg,
-          github_repo_path=repo_url.path,
-        )
-        git_helper.repo.git.checkout('$(params.committish)')
-
-        print(f'cloned into {repo_dir} - checked out: $(params.committish)')
-        print(git_helper.repo.git.show())
-
     - name: 'build-image'
       resources:
         requests:
@@ -110,10 +82,14 @@ spec:
         ls -la /build
         export OUT_FILE="$(params.outfile)"
 
+        repo_path='$(workspaces.gardenlinux-repo.path)/repo'
+        echo "rp: ${repo_path}"
+        ls -la
+
         pwd
         echo "running build.."
         #/opt/debuerreotype/bin/build.sh
-        $(params.repodir)/bin/garden-build.sh \
+        "${repo_path}/bin/garden-build.sh" \
           --arch $(params.architecture) \
           --prefix "" \
           --suite $(params.suite) \
@@ -143,7 +119,8 @@ spec:
         import os
         import sys
         # XXX add code from `ci/` to PYTHONPATH
-        sys.path.insert(1, os.path.abspath(os.path.join('$(params.repodir)', 'ci')))
+        repo_dir = os.path.join('$(workspaces.gardenlinux-repo.path)', 'repo')
+        sys.path.insert(1, os.path.abspath(os.path.join(repo_dir, 'ci')))
         import io
 
         import hashlib

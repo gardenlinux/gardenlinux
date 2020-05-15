@@ -19,6 +19,12 @@ def NamedParam(name: str, value: str=None):
 
 
 @dataclasses.dataclass
+class Workspace:
+    name: str
+    workspace: str
+    subPath: str = None
+
+@dataclasses.dataclass
 class PipelineMetadata:
     name: str
     namespace: str
@@ -34,12 +40,15 @@ class PipelineTask:
     name: str
     taskRef: TaskRef
     params: typing.List[NamedParam]
+    workspaces: typing.List[Workspace] = dataclasses.field(default_factory=list)
+    runAfter: typing.List[str] = dataclasses.field(default_factory=list)
 
 
 @dataclasses.dataclass
 class PipelineSpec:
     tasks: typing.List[PipelineTask]
     params: typing.List[NamedParam] = dataclasses.field(default_factory=list)
+    workspaces: typing.List[NamedParam] = dataclasses.field(default_factory=list)
 
 
 @dataclasses.dataclass
@@ -67,10 +76,37 @@ class PodTemplate:
 
 
 @dataclasses.dataclass
+class ResourcesClaimRequests:
+    storage: str
+
+
+@dataclasses.dataclass
+class ResourcesClaim:
+    requests: ResourcesClaimRequests
+
+
+@dataclasses.dataclass
+class VolumeClaimTemplateSpec:
+    accessModes: typing.List[str]
+    resources: ResourcesClaim
+
+@dataclasses.dataclass
+class VolumeClaimTemplate:
+    spec: VolumeClaimTemplateSpec
+
+
+@dataclasses.dataclass
+class PipelineRunWorkspace:
+    name: str
+    volumeClaimTemplate: VolumeClaimTemplate
+
+
+@dataclasses.dataclass
 class PipelineRunSpec:
     params: typing.List[NamedParam]
     pipelineRef: PipelineRef
     podTemplate: PodTemplate
+    workspaces: typing.List[PipelineRunWorkspace]
 
 
 @dataclasses.dataclass

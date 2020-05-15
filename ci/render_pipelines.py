@@ -20,12 +20,34 @@ PipelineSpec = tkn.model.PipelineSpec
 PipelineMetadata = tkn.model.PipelineMetadata
 TaskRef = tkn.model.TaskRef
 PipelineTask = tkn.model.PipelineTask
+Workspace = tkn.model.Workspace
 NamedParam = tkn.model.NamedParam
+
+def pass_param(name: str):
+    '''
+    create a named-param that will propagate the parent's param value
+    '''
+    return NamedParam(name=name, value=f'$(params.{name})')
+
+
+def mk_clone_task(
+    workspace: Workspace,
+):
+    return PipelineTask(
+        name='clone-repo-task',
+        taskRef=TaskRef(name='clone-repo-task'), # hardcode name for now
+        workspaces=[workspace],
+        params=[
+            pass_param(name='committish'),
+        ],
+    )
 
 
 def mk_pipeline_task(
     gardenlinux_flavour: GardenlinuxFlavour,
     pipeline_flavour: glci.model.PipelineFlavour,
+    workspace: Workspace,
+    run_after: typing.List[str],
 ):
     if not pipeline_flavour is glci.model.PipelineFlavour.SNAPSHOT:
         raise NotImplementedError(pipeline_flavour)
@@ -34,11 +56,8 @@ def mk_pipeline_task(
 
     upload_prefix = f'{gardenlinux_flavour.architecture.value}/'
 
-    def pass_param(name: str):
-        '''
-        create a named-param that will propagate the parent's param value
-        '''
-        return NamedParam(name=name, value=f'$(params.{name})')
+    workspace = dataclasses.replace(workspace, name='gardenlinux-repo')
+
 
     task_name = gardenlinux_flavour.canonical_name_prefix().replace('/', '-')\
             .replace('_', '-').strip('-')
@@ -46,6 +65,7 @@ def mk_pipeline_task(
     return PipelineTask(
         name=task_name,
         taskRef=TaskRef(name='build-gardenlinux-task'), # hardcode name for now
+        workspaces=[workspace],
         params=[
             NamedParam(name='platform', value=gardenlinux_flavour.platform),
             NamedParam(name='modifiers', value=modifier_names),
@@ -56,6 +76,7 @@ def mk_pipeline_task(
             pass_param(name='snapshot_timestamp'),
             pass_param(name='cicd_cfg_name'),
         ],
+        runAfter=run_after,
     )
 
 
@@ -65,6 +86,23 @@ def mk_pipeline(
     pipeline_flavour: glci.model.PipelineFlavour=glci.model.PipelineFlavour.SNAPSHOT,
 ):
     gardenlinux_flavours = set(gardenlinux_flavours) # mk unique
+
+    workspace = Workspace(
+        name='ws',
+        workspace='ws',
+    )
+
+    clone_task = mk_clone_task(workspace=workspace)
+    build_tasks=[
+        mk_pipeline_task(
+            gardenlinux_flavour=glf,
+            pipeline_flavour=pipeline_flavour,
+            workspace=workspace,
+            run_after=[clone_task.name]
+        )
+        for glf in gardenlinux_flavours
+    ]
+
     pipeline = Pipeline(
         metadata=PipelineMetadata(
             name='build-gardenlinux-snapshot-pipeline',
@@ -77,13 +115,8 @@ def mk_pipeline(
                 NamedParam(name='snapshot_timestamp'),
                 NamedParam(name='cicd_cfg_name'),
             ],
-            tasks=[
-                mk_pipeline_task(
-                    gardenlinux_flavour=glf,
-                    pipeline_flavour=pipeline_flavour,
-                )
-                for glf in gardenlinux_flavours
-            ],
+            workspaces=[NamedParam(name=workspace.name)],
+            tasks=[clone_task] + build_tasks,
         ),
     )
 
