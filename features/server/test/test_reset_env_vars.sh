@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+rootfsDir=$1
+rc=0
+
+# Environment variables MUST be reset 
+echo "environment variables must be rest"
+sudoersFile="/etc/sudoers"
+property="^Defaults.env_reset"
+
+output=$(grep "${property}" "${rootfsDir}${sudoersFile}")
+
+if [ -z "${output}" ]
+then
+      echo "the environment variables are not reset"
+      rc=1
+else
+      echo "the environment variables are reset"
+fi
+
+exit $rc
+

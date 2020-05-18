@@ -1,0 +1,14 @@
+console,0,0,character special file,5,1,console
+fd,0,0,symbolic link,0,0,/proc/self/fd
+full,0,0,character special file,1,7,full
+null,0,0,character special file,1,3,null
+ptmx,0,0,character special file,5,2,ptmx
+pts,0,0,directory,0,0,pts
+random,0,0,character special file,1,8,random
+shm,0,0,directory,0,0,shm
+stderr,0,0,symbolic link,0,0,/proc/self/fd/2
+stdin,0,0,symbolic link,0,0,/proc/self/fd/0
+stdout,0,0,symbolic link,0,0,/proc/self/fd/1
+tty,0,0,character special file,5,0,tty
+urandom,0,0,character special file,1,9,urandom
+zero,0,0,character special file,1,5,zero
