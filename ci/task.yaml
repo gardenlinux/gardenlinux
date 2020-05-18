@@ -205,7 +205,7 @@ spec:
         )
 
         manifest_path = \
-          f'{glci.model.ReleaseManifest.manifest_key_prefix}/snapshots/{fname_prefix}-{version_str}'
+          f'{glci.model.ReleaseManifest.manifest_key_prefix}/snapshots/{version_str}-{fname_prefix}'
 
         glci.util.upload_release_manifest(
           s3_client=s3_client,
