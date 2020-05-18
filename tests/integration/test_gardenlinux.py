@@ -88,18 +88,25 @@ def test_metadata_connection(client):
     assert "200 OK" in error
 
 
-@pytest.fixture(params=["4", "6"])
-def ip_version(request):
+@pytest.fixture(params=["8.8.8.8", "dns.google", "heise.de"])
+def ping4_host(request):
     return request.param
 
 
-@pytest.fixture(params=["8.8.8.8", "heise.de"])
-def ping_host(request):
+def test_ping4(client, ping4_host):
+    command = f"ping -c 5 -W 5 {ping4_host}"
+    (exit_code, output, error) = client.execute_command(command)
+    assert exit_code == 0, f'no {error=} expected when executing "{command}"'
+    assert "5 packets transmitted, 5 received, 0% packet loss" in output
+
+
+@pytest.fixture(params=["2001:4860:4860::8888", "dns.google", "heise.de"])
+def ping6_host(request):
     return request.param
 
 
-def test_ping(client, ip_version, ping_host):
-    command = f"ping -{ip_version} -c 5 -W 5 {ping_host}"
+def test_ping6(client, ping6_host):
+    command = f"ping6 -c 5 -W 5 {ping6_host}"
     (exit_code, output, error) = client.execute_command(command)
     assert exit_code == 0, f'no {error=} expected when executing "{command}"'
     assert "5 packets transmitted, 5 received, 0% packet loss" in output
