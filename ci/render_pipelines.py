@@ -10,6 +10,7 @@ import yaml
 import paths
 import glci.model
 import glci.util
+import tasks
 import tkn.model
 
 
@@ -17,10 +18,9 @@ GardenlinuxFlavour = glci.model.GardenlinuxFlavour
 
 Pipeline = tkn.model.Pipeline
 PipelineSpec = tkn.model.PipelineSpec
-PipelineMetadata = tkn.model.PipelineMetadata
+Metadata = tkn.model.Metadata
 TaskRef = tkn.model.TaskRef
 PipelineTask = tkn.model.PipelineTask
-Workspace = tkn.model.Workspace
 NamedParam = tkn.model.NamedParam
 
 def pass_param(name: str):
@@ -30,26 +30,9 @@ def pass_param(name: str):
     return NamedParam(name=name, value=f'$(params.{name})')
 
 
-def mk_clone_task(
-    gardenlinux_flavour: GardenlinuxFlavour,
-    workspace: Workspace,
-):
-    task_name = gardenlinux_flavour.canonical_name_prefix().replace('/', '-')\
-            .replace('_', '-').strip('-')
-    return PipelineTask(
-        name=f'clone-repo-{task_name}',
-        taskRef=TaskRef(name='clone-repo-task'), # hardcode name for now
-        workspaces=[workspace],
-        params=[
-            pass_param(name='committish'),
-        ],
-    )
-
-
 def mk_pipeline_task(
     gardenlinux_flavour: GardenlinuxFlavour,
     pipeline_flavour: glci.model.PipelineFlavour,
-    workspace: Workspace,
     run_after: typing.List[str],
 ):
     if not pipeline_flavour is glci.model.PipelineFlavour.SNAPSHOT:
@@ -59,16 +42,12 @@ def mk_pipeline_task(
 
     upload_prefix = f'{gardenlinux_flavour.architecture.value}/'
 
-    workspace = dataclasses.replace(workspace, name='gardenlinux-repo')
-
-
     task_name = gardenlinux_flavour.canonical_name_prefix().replace('/', '-')\
             .replace('_', '-').strip('-')
 
     return PipelineTask(
         name=task_name,
         taskRef=TaskRef(name='build-gardenlinux-task'), # hardcode name for now
-        workspaces=[workspace],
         params=[
             NamedParam(name='platform', value=gardenlinux_flavour.platform),
             NamedParam(name='modifiers', value=modifier_names),
@@ -92,29 +71,17 @@ def mk_pipeline(
 
 
     tasks = []
-    workspaces = []
 
     for idx,glf in enumerate(gardenlinux_flavours):
-        workspace = Workspace(
-            name='ws',
-            workspace=f'ws-{idx}',
-        )
-        workspaces.append(workspace)
-
-        clone_task = mk_clone_task(
-            gardenlinux_flavour=glf,
-            workspace=workspace
-        )
         build_task = mk_pipeline_task(
             gardenlinux_flavour=glf,
             pipeline_flavour=pipeline_flavour,
-            workspace=workspace,
-            run_after=[clone_task.name]
+            run_after=[]
         )
-        tasks.extend((clone_task, build_task))
+        tasks.append(build_task)
 
     pipeline = Pipeline(
-        metadata=PipelineMetadata(
+        metadata=Metadata(
             name='build-gardenlinux-snapshot-pipeline',
             namespace='gardenlinux-tkn',
         ),
@@ -124,9 +91,6 @@ def mk_pipeline(
                 NamedParam(name='gardenlinux_epoch'),
                 NamedParam(name='snapshot_timestamp'),
                 NamedParam(name='cicd_cfg_name'),
-            ],
-            workspaces=[
-                NamedParam(name=workspace.workspace) for workspace in workspaces
             ],
             tasks=tasks,
         ),
@@ -183,8 +147,10 @@ def main():
         cicd_cfg_name=parsed.cicd_cfg,
     )
 
+
     with open(outfile, 'w') as f:
-        yaml.safe_dump(dataclasses.asdict(pipeline), f)
+        pipeline_raw = dataclasses.asdict(pipeline)
+        yaml.safe_dump_all((pipeline_raw,), stream=f)
 
     print(f'dumped pipeline with {len(gardenlinux_flavours)} task(s) to {outfile}')
 

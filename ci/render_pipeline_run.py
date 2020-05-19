@@ -12,12 +12,10 @@ import paths
 GardenlinuxFlavour = glci.model.GardenlinuxFlavour
 
 NamedParam = tkn.model.NamedParam
-PipelineMetadata = tkn.model.PipelineMetadata
 PipelineRef = tkn.model.PipelineRef
 PipelineRun = tkn.model.PipelineRun
 PipelineRunMetadata = tkn.model.PipelineRunMetadata
 PipelineRunSpec = tkn.model.PipelineRunSpec
-PipelineRunWorkspace = tkn.model.PipelineRunWorkspace
 PipelineTask = tkn.model.PipelineTask
 PodTemplate = tkn.model.PodTemplate
 ResourcesClaim = tkn.model.ResourcesClaim
@@ -38,23 +36,6 @@ def mk_pipeline_run(
     run_name = f'{pipeline_name}-{committish}'[:60] # k8s length restriction
 
     snapshot_timestamp = glci.model.snapshot_date(gardenlinux_epoch=gardenlinux_epoch)
-
-    def mk_workspace(idx: int):
-        # XXX hard-coded naming convention
-        workspace = PipelineRunWorkspace(
-                name=f'ws-{idx}',
-                volumeClaimTemplate=VolumeClaimTemplate(
-                    spec=VolumeClaimTemplateSpec(
-                        accessModes=['ReadWriteOnce'],
-                        resources=ResourcesClaim(
-                            requests=ResourcesClaimRequests(
-                                storage='128Mi',
-                            ),
-                        ),
-                    ),
-                ),
-        )
-        return workspace
 
     flavour_count = len(list(flavour_set.flavours()))
     if flavour_count == 0:
@@ -92,9 +73,7 @@ def mk_pipeline_run(
                     "worker.garden.sapcloud.io/group": "gl-build"
                 }
             ),
-            workspaces=[
-                mk_workspace(idx) for idx in range(flavour_count)
-            ]
+            workspaces=[],
         ),
     )
     return plrun
