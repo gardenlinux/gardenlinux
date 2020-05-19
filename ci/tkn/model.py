@@ -12,9 +12,17 @@ class _NamedParamWithValue(_NamedParamBase):
     value: typing.Optional[str]=None
 
 
-def NamedParam(name: str, value: str=None):
-    if value is None:
+@dataclasses.dataclass
+class _NamedParamWithDefault(_NamedParamBase):
+    default: str=None
+    description: str=None
+
+
+def NamedParam(name: str, value: str=None, default: str=None, description: str=None):
+    if value is None and default is None:
         return _NamedParamBase(name=name)
+    elif value is None and default:
+        return _NamedParamWithDefault(name=name, default=default)
     return _NamedParamWithValue(name=name, value=value)
 
 
@@ -24,10 +32,35 @@ class Workspace:
     workspace: str
     subPath: str = None
 
+
 @dataclasses.dataclass
-class PipelineMetadata:
+class Metadata:
     name: str
     namespace: str
+
+
+@dataclasses.dataclass
+class TaskStep:
+    name: str
+    image: str
+    script: str
+
+
+@dataclasses.dataclass
+class TaskSpec:
+    params: typing.List[_NamedParamWithValue]
+    workspaces: typing.List[_NamedParamBase]
+    steps: typing.List[TaskStep]
+
+
+@dataclasses.dataclass
+class Task:
+    metadata: Metadata
+    spec: TaskSpec
+    apiVersion: str='tekton.dev/v1beta1'
+    kind: str='Task'
+
+
 
 
 @dataclasses.dataclass
@@ -53,7 +86,7 @@ class PipelineSpec:
 
 @dataclasses.dataclass
 class Pipeline:
-    metadata: PipelineMetadata
+    metadata: Metadata
     spec: PipelineSpec
     apiVersion: str='tekton.dev/v1beta1'
     kind: str='Pipeline'
