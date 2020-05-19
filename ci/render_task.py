@@ -20,7 +20,7 @@ def main():
     parsed = parser.parse_args()
 
     task_yaml_path = os.path.join(paths.own_dir, 'task.yaml')
-    with open('task.yaml') as f:
+    with open(task_yaml_path) as f:
         raw_task = yaml.safe_load(f)
 
     clone_step = steps.clone_step(
