@@ -49,8 +49,8 @@ class TaskStep:
 @dataclasses.dataclass
 class TaskSpec:
     params: typing.List[_NamedParamWithValue]
-    workspaces: typing.List[_NamedParamBase]
     steps: typing.List[TaskStep]
+    workspaces: typing.List[_NamedParamBase]=dataclasses.field(default_factory=list)
 
 
 @dataclasses.dataclass
