@@ -41,6 +41,3 @@ spec:
           github_repo_path=repo_url.path,
         )
         git_helper.repo.git.checkout('$(params.committish)')
-
-        print(f'cloned into {repo_dir} - checked out: $(params.committish)')
-        print(git_helper.repo.git.show())
