@@ -31,6 +31,7 @@ def mk_pipeline_run(
     committish: str,
     gardenlinux_epoch: int,
     cicd_cfg: str,
+    version: str,
     flavour_set: glci.model.GardenlinuxFlavourSet,
 ):
     run_name = f'{pipeline_name}-{committish}'[:60] # k8s length restriction
@@ -64,6 +65,10 @@ def mk_pipeline_run(
                     name='cicd_cfg_name',
                     value=cicd_cfg,
                 ),
+                NamedParam(
+                    name='version',
+                    value=version,
+                ),
             ],
             pipelineRef=PipelineRef(
                 name=pipeline_name,
@@ -87,6 +92,7 @@ def main():
     parser.add_argument('--pipeline-cfg', default=paths.flavour_cfg_path)
     parser.add_argument('--outfile', default='pipeline_run.yaml')
     parser.add_argument('--flavour-set', default='all')
+    parser.add_argument('--version', default=None)
 
     parsed = parser.parse_args()
 
@@ -94,6 +100,9 @@ def main():
         flavour_set_name=parsed.flavour_set,
         build_yaml=parsed.pipeline_cfg,
     )
+
+    if (version:=parsed.version) is None:
+        version = f'{parsed.gardenlinux_epoch}-{parsed.committish[:6]}'
 
 
     # XXX hardcode pipeline names and flavour for now
@@ -104,6 +113,7 @@ def main():
         gardenlinux_epoch=parsed.gardenlinux_epoch,
         cicd_cfg=parsed.cicd_cfg,
         flavour_set=flavour_set,
+        version=version,
     )
 
     pipeline_run_dict = dataclasses.asdict(pipeline_run)

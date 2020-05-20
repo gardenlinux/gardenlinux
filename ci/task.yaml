@@ -49,6 +49,9 @@ spec:
       description: 'build result file (parameter is used to pass between steps)'
       type: 'string'
       default: '/workspace/gardenlinux.out'
+    - name: 'version'
+      description: 'the target version to build / release'
+      type: 'string'
   steps:
     - name: 'retrieve-repository'
       image: 'eu.gcr.io/gardener-project/cc/job-image:1.612.0'
@@ -170,7 +173,7 @@ spec:
         print(f'uploading to s3 {aws_cfg_name=} {s3_bucket_name=}')
         gardenlinux_epoch = '$(params.gardenlinux_epoch)'
         short_committish = '$(params.committish)'[:6]
-        version_str = f'{gardenlinux_epoch}-{short_committish}'
+        version_str = '$(params.version)'
         prefix = '$(params.uploadprefix)'
         fname_prefix = '$(params.fnameprefix)'
 

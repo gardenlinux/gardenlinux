@@ -57,6 +57,7 @@ def mk_pipeline_task(
             pass_param(name='gardenlinux_epoch'),
             pass_param(name='snapshot_timestamp'),
             pass_param(name='cicd_cfg_name'),
+            pass_param(name='version'),
         ],
         runAfter=run_after,
     )
@@ -91,6 +92,7 @@ def mk_pipeline(
                 NamedParam(name='gardenlinux_epoch'),
                 NamedParam(name='snapshot_timestamp'),
                 NamedParam(name='cicd_cfg_name'),
+                NamedParam(name='version'),
             ],
             tasks=tasks,
         ),
