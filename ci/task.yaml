@@ -171,7 +171,7 @@ spec:
         session = ccc.aws.session(aws_cfg_name)
         s3_client = session.client('s3')
         print(f'uploading to s3 {aws_cfg_name=} {s3_bucket_name=}')
-        gardenlinux_epoch = '$(params.gardenlinux_epoch)'
+        gardenlinux_epoch = int('$(params.gardenlinux_epoch)')
         short_committish = '$(params.committish)'[:6]
         version_str = '$(params.version)'
         prefix = '$(params.uploadprefix)'
@@ -223,7 +223,7 @@ spec:
         manifest = glci.model.ReleaseManifest(
           build_committish='$(params.committish)',
           build_timestamp=datetime.datetime.now().isoformat(),
-          gardenlinux_epoch=glci.model.gardenlinux_epoch(),
+          gardenlinux_epoch=gardenlinux_epoch,
           architecture=glci.model.Architecture('$(params.architecture)').value,
           platform='$(params.platform)',
           modifiers=modifiers,
