@@ -1,6 +1,6 @@
 version: "3"
 services:
-  stefan-test:
+  snapshot:
     image: "nginx:latest"
     ports:
       - "80:80"
