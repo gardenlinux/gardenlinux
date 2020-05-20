@@ -195,6 +195,12 @@ class OnlineReleaseManifest(ReleaseManifest):
         return ReleaseManifest(**raw)
 
 
+@dataclasses.dataclass(frozen=True)
+class ReleaseManifestSet:
+    manifests: typing.Tuple[OnlineReleaseManifest]
+    flavour_set_name: str
+
+
 class PipelineFlavour(enum.Enum):
     SNAPSHOT = 'snapshot'
     RELEASE = 'release'

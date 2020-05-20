@@ -46,6 +46,11 @@ class BuildType(enum.Enum):
     RELEASE = 'release'
 
 
+class ManifestType(enum.Enum):
+    SINGLE = 'single'
+    SET = 'set'
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--flavourset', default='testing')
@@ -55,6 +60,12 @@ def parse_args():
     parser.add_argument('--target', type=BuildType, default=BuildType.DAILY)
     parser.add_argument('--cicd-cfg', default='default')
     parser.add_argument('--allow-partial', default=False, action='store_true')
+    parser.add_argument(
+        '--manifest-type',
+        dest='manifest_types',
+        default=[ManifestType.SET],
+        action='append'
+    )
 
     return parser.parse_args()
 
@@ -64,26 +75,51 @@ def promote(
     target_prefix: str,
     version_str: str,
     cicd_cfg: glci.model.CicdCfg,
+    flavour_set: glci.model.GardenlinuxFlavourSet,
+    manifest_types: typing.List[ManifestType],
 ):
     upload_release_manifest = glci.util.preconfigured(
         func=glci.util.upload_release_manifest,
         cicd_cfg=cicd_cfg,
     )
+    upload_release_manifest_set = glci.util.preconfigured(
+        func=glci.util.upload_release_manifest_set,
+        cicd_cfg=cicd_cfg,
+    )
 
-    for release in releases:
-        manifest = release.stripped_manifest()
-        flavour = manifest.flavour()
+    if ManifestType.SET in manifest_types:
+        manifest_set = glci.model.ReleaseManifestSet(
+            manifests=releases,
+            flavour_set_name=flavour_set.name,
+        )
 
         manifest_path = os.path.join(
             target_prefix,
-            f'{flavour.filename_prefix()}-{version_str}',
+            f'{version_str}-{flavour_set.name}'
         )
 
-        upload_release_manifest(
+        upload_release_manifest_set(
             key=manifest_path,
-            manifest=manifest,
+            manifest_set=manifest_set,
         )
-        logger.info(f'promoted {manifest_path=}')
+
+        print(f'uploaded manifest-set: {manifest_path=}')
+
+    if ManifestType.SINGLE in manifest_types:
+        for release in releases:
+            manifest = release.stripped_manifest()
+            flavour = manifest.flavour()
+
+            manifest_path = os.path.join(
+                target_prefix,
+                f'{version_str}-{flavour.filename_prefix()}',
+            )
+
+            upload_release_manifest(
+                key=manifest_path,
+                manifest=manifest,
+            )
+            logger.info(f'promoted {manifest_path=}')
 
 
 def main():
@@ -108,6 +144,8 @@ def main():
     )
 
     is_complete = len(releases) == len(flavours)
+    logger.info(f'{flavour_set.name=} contains {len(flavours)} flavours')
+    logger.info(f'found {len(releases)} matching release(s) {is_complete=}')
 
     if not is_complete:
         logger.warning('Release is not complete')
@@ -115,7 +153,6 @@ def main():
             logger.error(f'{parsed.allow_partial=} -> aborting')
             sys.exit(1)
 
-    logger.info(f'found {len(releases)} matching release(s) {is_complete=}')
     promote(
         releases=releases,
         target_prefix=os.path.join(
@@ -124,6 +161,8 @@ def main():
         ),
         version_str=str(parsed.gardenlinux_epoch),
         cicd_cfg=cicd_cfg,
+        flavour_set=flavour_set,
+        manifest_types=parsed.manifest_types,
     )
 
 if __name__ == '__main__':

@@ -103,24 +103,52 @@ def release_manifest(
     return manifest
 
 
-def upload_release_manifest(
-    s3_client: 'botocore.client.S3',
-    bucket_name: str,
-    key: str,
-    manifest: glci.model.ReleaseManifest,
-):
+def _json_serialisable_manifest(manifest: glci.model.ReleaseManifest):
     # workaround: need to convert enums to str
     patch_args = {
         attr: val.value for attr, val in manifest.__dict__.items()
         if isinstance(val, enum.Enum)
     }
     manifest = dataclasses.replace(manifest, **patch_args)
+    return manifest
+
+
+def upload_release_manifest(
+    s3_client: 'botocore.client.S3',
+    bucket_name: str,
+    key: str,
+    manifest: glci.model.ReleaseManifest,
+):
+    manifest = _json_serialisable_manifest(manifest=manifest)
 
     manifest_bytes = yaml.safe_dump(dataclasses.asdict(manifest)).encode('utf-8')
     manifest_fobj = io.BytesIO(initial_bytes=manifest_bytes)
 
     return s3_client.upload_fileobj(
         Fileobj=manifest_fobj,
+        Bucket=bucket_name,
+        Key=key,
+        ExtraArgs={
+            'ContentType': 'text/yaml',
+            'ContentEncoding': 'utf-8',
+        },
+    )
+
+
+def upload_release_manifest_set(
+    s3_client: 'botocore.client.S3',
+    bucket_name: str,
+    key: str,
+    manifest_set: glci.model.ReleaseManifestSet,
+):
+    manifests = [_json_serialisable_manifest(m) for m in manifest_set.manifests]
+    manifest_set = dataclasses.replace(manifest_set, manifests=manifests)
+
+    manifest_set_bytes = yaml.safe_dump(dataclasses.asdict(manifest_set)).encode('utf-8')
+    manifest_set_fobj = io.BytesIO(initial_bytes=manifest_set_bytes)
+
+    return s3_client.upload_fileobj(
+        Fileobj=manifest_set_fobj,
         Bucket=bucket_name,
         Key=key,
         ExtraArgs={
