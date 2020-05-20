@@ -52,9 +52,13 @@ spec:
     - name: 'version'
       description: 'the target version to build / release'
       type: 'string'
+    - name: 'flavourset'
+      description: 'the flavourset name this task is a part of'
+      type: 'string'
+      default: 'all'
   steps:
     - name: 'retrieve-repository'
-      image: 'eu.gcr.io/gardener-project/cc/job-image:1.612.0'
+      image: 'eu.gcr.io/gardener-project/cc/job-image:1.640.0'
       script: |
         #!/usr/bin/env python3
         import os
@@ -137,7 +141,7 @@ spec:
         name: 'build'
 
     - name: 'upload-results'
-      image: 'eu.gcr.io/gardener-project/cc/job-image:1.612.0'
+      image: 'eu.gcr.io/gardener-project/cc/job-image:1.640.0'
       script: |
         #!/usr/bin/env python3
         # requires github.com/gardener/cc-utils
@@ -240,9 +244,72 @@ spec:
           manifest=manifest,
         )
         print(f'uploaded manifest: {manifest_path}')
+
       volumeMounts:
       - mountPath: '/build'
         name: 'build'
+
+    - name: 'promote-results'
+      image: 'eu.gcr.io/gardener-project/cc/job-image:1.640.0'
+      script: |
+        #!/usr/bin/env python3
+        # requires github.com/gardener/cc-utils
+        import dataclasses
+        import datetime
+        import os
+        import sys
+        # XXX add code from `ci/` to PYTHONPATH
+        sys.path.insert(1, os.path.abspath(os.path.join('$(params.repodir)', 'ci')))
+        import io
+
+        import hashlib
+        import yaml
+
+        import glci.model
+        import glci.util
+        import promote
+
+        cicd_cfg = glci.util.cicd_cfg(cfg_name='$(params.cicd_cfg_name)')
+
+        flavour_set = glci.util.flavour_set('$(params.flavourset)')
+        flavours = tuple(flavour_set.flavours())
+
+        find_releases = glci.util.preconfigured(
+          func=glci.util.find_releases,
+          cicd_cfg=cicd_cfg,
+        )
+
+        release_target = 'daily' # xxx unhardcode
+        release_source = 'snapshots' # xxx unhardcode
+
+        releases = tuple(
+          find_releases(
+            flavour_set=flavour_set,
+            build_committish='$(params.committish)',
+            gardenlinux_epoch=int('$(params.gardenlinux_epoch)'),
+            prefix=build_cfg.manifest_key_prefix(name=release_source),
+          )
+        )
+
+        # many tasks run in parallel - only the last one should promote
+        is_complete = len(releases) == len(flavours)
+        if not is_complete:
+          print('release was not complete (yet) - will not promote')
+          sys.exit(0) # do not signal an error
+
+
+        # if this line is reached, the release has been complete
+        promote.promote(
+          releases=releases,
+          target_prefix=os.path.join(
+            'meta',
+            release_target,
+          ),
+          cicd_cfg=cicd_cfg,
+          flavour_set=flavour_set,
+        )
+
+        # next step: image-upload to hyperscalers
 
   volumes:
     - name: dev
