@@ -6,4 +6,5 @@ services:
       - "80:80"
     volumes:
       - "./nginx.conf:/etc/nginx/conf.d/default.conf"
+      - "./reprepro/repository:/repository/debian"
     restart: always
