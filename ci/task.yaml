@@ -284,8 +284,8 @@ spec:
           cicd_cfg=cicd_cfg,
         )
 
-        release_target = 'daily' # xxx unhardcode
-        release_source = '$(params.promote_target)'
+        release_target = '$(params.promote_target)'
+        release_source = 'snapshots' # unhardcode
 
         releases = tuple(
           find_releases(
