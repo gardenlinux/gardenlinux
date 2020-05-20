@@ -59,6 +59,7 @@ def mk_pipeline_task(
             pass_param(name='cicd_cfg_name'),
             pass_param(name='version'),
             pass_param(name='promote_target'),
+            pass_param(name='flavourset'),
         ],
         runAfter=run_after,
     )
@@ -95,6 +96,7 @@ def mk_pipeline(
                 NamedParam(name='cicd_cfg_name'),
                 NamedParam(name='version'),
                 NamedParam(name='promote_target'),
+                NamedParam(name='flavourset'),
             ],
             tasks=tasks,
         ),

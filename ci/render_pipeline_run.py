@@ -72,6 +72,10 @@ def mk_pipeline_run(
                     value=version,
                 ),
                 NamedParam(
+                    name='flavourset',
+                    value=flavour_set.name,
+                ),
+                NamedParam(
                     name='promote_target',
                     value=promote_target.value,
                 ),
