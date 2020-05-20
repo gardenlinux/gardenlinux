@@ -1,0 +1,8 @@
+Origin: gardenlinux.io 
+Label: gardenlinux.io 
+Codename: bullseye 
+Suite: testing
+Architectures: amd64 source
+Components: main security source
+Description: gardenlinux 
+Log: gardenlinux.log
