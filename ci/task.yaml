@@ -312,6 +312,7 @@ spec:
           ),
           cicd_cfg=cicd_cfg,
           flavour_set=flavour_set,
+          version_str='$(params.version)',
         )
 
         # next step: image-upload to hyperscalers
