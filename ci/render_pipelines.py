@@ -58,6 +58,7 @@ def mk_pipeline_task(
             pass_param(name='snapshot_timestamp'),
             pass_param(name='cicd_cfg_name'),
             pass_param(name='version'),
+            pass_param(name='promote_target'),
         ],
         runAfter=run_after,
     )
@@ -93,6 +94,7 @@ def mk_pipeline(
                 NamedParam(name='snapshot_timestamp'),
                 NamedParam(name='cicd_cfg_name'),
                 NamedParam(name='version'),
+                NamedParam(name='promote_target'),
             ],
             tasks=tasks,
         ),

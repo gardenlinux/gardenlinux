@@ -8,6 +8,7 @@ import glci.model
 import glci.util
 import tkn.model
 import paths
+import promote
 
 GardenlinuxFlavour = glci.model.GardenlinuxFlavour
 
@@ -33,6 +34,7 @@ def mk_pipeline_run(
     cicd_cfg: str,
     version: str,
     flavour_set: glci.model.GardenlinuxFlavourSet,
+    promote_target: promote.BuildType,
 ):
     run_name = f'{pipeline_name}-{committish}'[:60] # k8s length restriction
 
@@ -69,6 +71,10 @@ def mk_pipeline_run(
                     name='version',
                     value=version,
                 ),
+                NamedParam(
+                    name='promote_target',
+                    value=promote_target.value,
+                ),
             ],
             pipelineRef=PipelineRef(
                 name=pipeline_name,
@@ -93,6 +99,11 @@ def main():
     parser.add_argument('--outfile', default='pipeline_run.yaml')
     parser.add_argument('--flavour-set', default='all')
     parser.add_argument('--version', default=None)
+    parser.add_argument(
+        '--promote-target',
+        type=promote.BuildType,
+        default=promote.BuildType.SNAPSHOT,
+    )
 
     parsed = parser.parse_args()
 
@@ -114,6 +125,7 @@ def main():
         cicd_cfg=parsed.cicd_cfg,
         flavour_set=flavour_set,
         version=version,
+        promote_target=parsed.promote_target,
     )
 
     pipeline_run_dict = dataclasses.asdict(pipeline_run)
