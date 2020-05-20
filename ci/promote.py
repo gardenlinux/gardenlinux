@@ -76,7 +76,7 @@ def promote(
     version_str: str,
     cicd_cfg: glci.model.CicdCfg,
     flavour_set: glci.model.GardenlinuxFlavourSet,
-    manifest_types: typing.List[ManifestType],
+    manifest_types: typing.List[ManifestType]=tuple((ManifestType.SET,)),
 ):
     upload_release_manifest = glci.util.preconfigured(
         func=glci.util.upload_release_manifest,
