@@ -56,6 +56,10 @@ spec:
       description: 'the flavourset name this task is a part of'
       type: 'string'
       default: 'all'
+    - name: 'promote_target'
+      description: 'the promotion target (snapshots|daily|release)'
+      type: 'string'
+      default: 'snapshots'
   steps:
     - name: 'retrieve-repository'
       image: 'eu.gcr.io/gardener-project/cc/job-image:1.640.0'
@@ -280,7 +284,7 @@ spec:
         )
 
         release_target = 'daily' # xxx unhardcode
-        release_source = 'snapshots' # xxx unhardcode
+        release_source = '$(params.promote_target)'
 
         releases = tuple(
           find_releases(
