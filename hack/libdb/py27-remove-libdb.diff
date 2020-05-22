@@ -1,0 +1,20 @@
++++ python2.7-2.7.18/debian/control
+@@ -14,7 +14,7 @@
+   libsqlite3-dev, libffi-dev (>= 3.0.5) [!or1k !avr32],
+   libgpm2 [linux-any],
+   mime-support, netbase, net-tools, bzip2, time,
+-  libdb-dev (<< 1:6.0), libgdbm-dev, help2man,
++  libgdbm-dev, help2man,
+   xvfb <!nocheck>, xauth <!nocheck>
+ Build-Depends-Indep: python3-sphinx
+ Build-Conflicts: tcl8.4-dev, tk8.4-dev,
++++ python2.7-2.7.18/debian/rules
+@@ -324,7 +324,7 @@
+ 		--prefix=/usr \
+ 		--enable-ipv6 \
+ 		--enable-unicode=ucs4 \
+-		--with-dbmliborder=bdb:gdbm \
++		--with-dbmliborder=gdbm \
+ 		--with-system-expat \
+ 		--with-computed-gotos
+ 
