@@ -15,7 +15,7 @@ docker run \
         bash -c "
 		set -euo pipefail
 		sudo apt-get update
-                sudo apt-get build-dep -y --no-install-recommends libpam-modules
+		sudo apt-get build-dep -y --no-install-recommends libpam-modules
 		sudo apt-get install -y --no-install-recommends devscripts # required for debuild
 		apt-get source libpam-modules 
 		cd pam-*

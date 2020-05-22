@@ -15,7 +15,7 @@ docker run --rm \
         bash -c "
 		set -euo pipefail
 		sudo apt-get update
-                sudo apt-get build-dep -y --no-install-recommends python3.7
+		sudo apt-get build-dep -y --no-install-recommends python3.7
 		sudo apt-get install -y --no-install-recommends devscripts # required for debuild
 		apt-get source python3.7
 		cd python3.7-*
