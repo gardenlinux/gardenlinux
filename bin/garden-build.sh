@@ -176,7 +176,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 		touch_epoch "$targetBase.sources-list-snapshot"
 
 		local tarArgs=()
-		if [ -n "$qemu" ]; then
+		if [ -n "${qemu:-}" ]; then
 			tarArgs+=( --exclude="./usr/bin/qemu-*-static" )
 		fi
 			
