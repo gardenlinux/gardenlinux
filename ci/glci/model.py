@@ -146,17 +146,32 @@ class ReleaseFile:
 
 
 @dataclasses.dataclass(frozen=True)
-class ReleaseManifest:
+class ReleaseIdentifier:
     '''
-    metadata for a gardenlinux release variant that can be (or was) published to a persistency
-    store, such as an S3 bucket.
+    a partial ReleaseManifest with all attributes required to unambiguosly identify a
+    release.
     '''
     build_committish: str
-    build_timestamp: str
     gardenlinux_epoch: int
     architecture: Architecture
     platform: Platform
     modifiers: typing.Tuple[Modifier]
+
+    def flavour(self) -> GardenlinuxFlavour:
+        return GardenlinuxFlavour(
+            architecture=self.architecture,
+            platform=self.platform,
+            modifiers=self.modifiers,
+        )
+
+
+@dataclasses.dataclass(frozen=True)
+class ReleaseManifest(ReleaseIdentifier):
+    '''
+    metadata for a gardenlinux release variant that can be (or was) published to a persistency
+    store, such as an S3 bucket.
+    '''
+    build_timestamp: str
     paths: typing.Tuple[ReleaseFile]
 
     def path_by_suffix(self, suffix: str):
@@ -166,8 +181,10 @@ class ReleaseManifest:
         else:
             raise ValueError(f'no path with {suffix=}')
 
-    def flavour(self) -> GardenlinuxFlavour:
-        return GardenlinuxFlavour(
+    def release_identifier(self) -> ReleaseIdentifier:
+        return ReleaseIdentifier(
+            build_committish=self.build_committish,
+            gardenlinux_epoch=self.gardenlinux_epoch,
             architecture=self.architecture,
             platform=self.platform,
             modifiers=self.modifiers,
