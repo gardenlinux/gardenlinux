@@ -23,5 +23,5 @@ docker run --rm \
 		dch -i 'remove libdb'
 		sudo apt-get remove -y --purge libdb5.3-dev
 		debuild -b -uc -us
-		mv ../*.deb /packages
+		sudo mv ../*.deb /packages
 	"
