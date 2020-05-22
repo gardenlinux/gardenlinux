@@ -69,3 +69,15 @@ def clone_step(
     )
 
     return step
+
+
+def build_image_step(
+    suite: tkn.model.NamedParam,
+    gardenlinux_epoch: tkn.model.NamedParam,
+    snapshot_timestamp: tkn.model.NamedParam,
+    platform: tkn.model.NamedParam,
+    modifiers: tkn.model.NamedParam,
+    outfile: tkn.model.NamedParam,
+    repodir: tkn.model.NamedParam,
+):
+    pass
