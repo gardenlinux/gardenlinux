@@ -59,6 +59,50 @@ spec:
       default: 'snapshots'
   steps:
     - name: 'retrieve-repository' # patched-in through render_task.py
+    - name: 'pre-build'           # patched-in through render_task.py
+      image: 'eu.gcr.io/gardener-project/cc/job-image:1.640.0'
+      script: |
+        #!/usr/bin/env python3
+        # requires github.com/gardener/cc-utils
+        import dataclasses
+        import datetime
+        import os
+        import sys
+        # XXX add code from `ci/` to PYTHONPATH
+        sys.path.insert(1, os.path.abspath(os.path.join('$(params.repodir)', 'ci')))
+
+        import ccc.aws
+
+        import glci.model
+        import glci.util
+
+        cicd_cfg = glci.util.cicd_cfg(cfg_name='$(params.cicd_cfg_name)')
+        aws_cfg_name = cicd_cfg.build.aws_cfg_name
+        s3_bucket_name = cicd_cfg.build.s3_bucket_name
+        session = ccc.aws.session(aws_cfg_name)
+        s3_client = session.client('s3')
+
+        modifiers = [m for m in '$(params.modifiers)'.split(',') if m]
+
+        release_identifier = glci.model.ReleaseIdentifier(
+          build_committish='$(params.committish)',
+          gardenlinux_epoch=$(params.gardenlinux_epoch),
+          architecture=glci.model.Architecture('$(params.architecture)'),
+          platform='$(params.platform)',
+          modifiers=modifiers,
+        )
+
+        if glci.util.find_release(
+          s3_client=s3_client,
+          bucket_name=s3_bucket_name,
+          release_identifier=release_identifier,
+          prefix='meta/snapshots',
+        ):
+          with open('/workspace/skip_build', 'w') as f:
+            f.write('skip build (already done)')
+          print('build already done - telling next step to skip (/workspace/skip_build touched)')
+        else:
+          print('no matching build results found - will perform build')
 
     - name: 'build-image'
       resources:
@@ -77,6 +121,10 @@ spec:
         #!/usr/bin/env sh
         set -u
         set -x
+        if [ -f '/workspace/skip_build' ]; then
+          echo 'found /workspace/skip_build - skipping build'
+          exit 0
+        fi
         suite="$(params.suite)"
         gardenlinux_epoch='$(params.gardenlinux_epoch)'
         timestamp='$(params.snapshot_timestamp)'
@@ -127,6 +175,10 @@ spec:
 
         import glci.model
         import glci.util
+
+        if os.path.isfile('/workspace/skip_build'):
+          print('/workspace/skip_build found - skipping upload')
+          sys.exit(0)
 
         build_result_fname = '$(params.outfile)'
         if not os.path.isfile(build_result_fname):
