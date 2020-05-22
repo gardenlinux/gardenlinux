@@ -147,7 +147,6 @@ spec:
         gardenlinux_epoch = int('$(params.gardenlinux_epoch)')
         short_committish = '$(params.committish)'[:6]
         version_str = '$(params.version)'
-        prefix = '$(params.uploadprefix)'
         fname_prefix = '$(params.fnameprefix)'
 
         def upload_fname(suffix: str):
