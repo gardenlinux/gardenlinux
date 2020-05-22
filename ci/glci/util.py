@@ -180,6 +180,23 @@ def enumerate_releases(
         )
 
 
+def find_release(
+    s3_client: 'botocore.client.S3',
+    bucket_name: str,
+    release_identifier: glci.model.ReleaseIdentifier,
+    prefix: str=glci.model.ReleaseManifest.manifest_key_prefix,
+):
+    for release in enumerate_releases(
+        s3_client=s3_client,
+        bucket_name=bucket_name,
+        prefix=prefix,
+    ):
+        if release.release_identifier() == release_identifier:
+            return release
+    else:
+        return None
+
+
 def find_releases(
     s3_client: 'botocore.client.S3',
     bucket_name: str,
