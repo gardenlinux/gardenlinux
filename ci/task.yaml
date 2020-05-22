@@ -19,9 +19,6 @@ spec:
     - name: 'modifiers'
       type: 'string'
       description: 'the build modifiers'
-    - name: 'uploadprefix'
-      type: 'string'
-      description: 'upload directory prefix (aws, gcp, ..)'
     - name: 'fnameprefix'
       type: 'string'
       description: 'upload filename prefix (workaround until garden-build.sh supports this'
@@ -61,32 +58,7 @@ spec:
       type: 'string'
       default: 'snapshots'
   steps:
-    - name: 'retrieve-repository'
-      image: 'eu.gcr.io/gardener-project/cc/job-image:1.640.0'
-      script: |
-        #!/usr/bin/env python3
-        import os
-        import urllib.parse
-        import shutil
-
-        import ccc.github
-        import gitutil
-
-        repo_dir = os.path.abspath('$(params.repodir)')
-        os.mkdir(repo_dir)
-        repo_url = urllib.parse.urlparse('$(params.giturl)')
-        github_cfg = ccc.github.github_cfg_for_hostname(
-          repo_url.hostname,
-        )
-        git_helper = gitutil.GitHelper.clone_into(
-          target_directory=repo_dir,
-          github_cfg=github_cfg,
-          github_repo_path=repo_url.path,
-        )
-        git_helper.repo.git.checkout('$(params.committish)')
-
-        print(f'cloned into {repo_dir} - checked out: $(params.committish)')
-        print(git_helper.repo.git.show())
+    - name: 'retrieve-repository' # patched-in through render_task.py
 
     - name: 'build-image'
       resources:
@@ -188,8 +160,6 @@ spec:
                 continue
               tar_fname = tarinfo.name.lstrip('./')
               fname = upload_fname(suffix=tar_fname)
-              target_name = os.path.normpath(os.path.join(prefix, fname))
-              print(f'uploading: {target_name=}')
               fobj = tf.extractfile(tarinfo)
 
               # calculate filehash (use as fname)
