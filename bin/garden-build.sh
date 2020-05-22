@@ -109,7 +109,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 
 {
 	initArgs=( --arch="$dpkgArch" )
-	if [ -z "$eol" ]; then
+	if [ -z "${eol-}" ]; then
 		initArgs+=( --debian )
 	else
 		initArgs+=( --debian-eol )
