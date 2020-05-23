@@ -82,7 +82,7 @@ spec:
         session = ccc.aws.session(aws_cfg_name)
         s3_client = session.client('s3')
 
-        modifiers = [m for m in '$(params.modifiers)'.split(',') if m]
+        modifiers = tuple([m for m in '$(params.modifiers)'.split(',') if m])
 
         release_identifier = glci.model.ReleaseIdentifier(
           build_committish='$(params.committish)',
