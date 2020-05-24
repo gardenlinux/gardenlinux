@@ -1,19 +1,101 @@
 #!/usr/bin/env bash
+set -Eeuo pipefail
 
-extension=${1##*.}
+# TODO: add -runas
 
-if [[ $extension == "vhd" ]] ; then
-    extension='vpc'
+thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+source "$thisDir/.constants.sh" \
+	--flags 'cpu:,mem:,disk:,bridge:' \
+	--flags 'daemonize' \
+	-- \
+	'[--cpu:3] [--mem:16384] [--disk:3G] [--daemonize] <image file>' \
+	'example'
+
+eval "$dgetopt"
+cpu=2
+memory=2048
+disk=-1
+bridge=
+daemonize=
+while true; do
+	flag="$1"; shift
+	dgetopt-case "$flag"
+	case "$flag" in
+		--cpu)		cpu="$1"; 	shift ;;
+		--mem)		memory="$1"; 	shift ;;
+		--disk)		disk="$(numfmt --from=auto --suffix="B" --format "%f" $1 | head -c-2)"; 
+						shift ;;
+		--daemonize) 	daemonize=1; 	;;
+		--bridge ) 	bridge="$1";  	shift ;;
+		--) break ;;
+		*) eusage "unknown flag '$flag'" ;;
+	esac
+done
+imagefile="${1:-}";     shift || eusage 'missing image file to start'
+[ ! -s $imagefile ] && ( echo "file does not exist"; exit 1; )
+
+virtOpts=(
+	-smp $cpu
+	-m $memory
+	)
+# add a watchdog to maintain auto reboot 
+virtOpts+=( -watchdog i6300esb )
+
+# make sure memory grows on demand
+virtOpts+=( -device virtio-balloon )
+
+# adding the random number generator of the host
+virtOpts+=(
+	-device virtio-rng-pci,rng=rng0
+	-object rng-random,id=rng0,filename=/dev/random
+	)
+
+# daemonize
+if [ $daemonize ]; then
+	virtOpts+=(
+		-display none
+		-daemonize
+		)
+else
+	virtOpts+=(
+		-nographic
+		)
 fi
 
-sudo qemu-system-x86_64 -enable-kvm -nographic -cpu host -smp 2 -m 2048 \
-           -netdev user,id=eth0,hostfwd=tcp::2223-:22,hostname=debianplus \
-	   -object rng-random,id=rng0,filename=/dev/random \
-	   -device virtio-rng-pci,rng=rng0 \
-           -device virtio-net-pci,netdev=eth0 \
-	   -device virtio-scsi-pci,id=scsi0 \
-	   -device scsi-hd,drive=someid,bus=scsi0.0 \
-           -drive format=$extension,if=none,discard=unmap,aio=native,cache=none,id=someid,file=$1
-#sudo qemu-system-x86_64 -nographic -m 2048 -netdev user,id=mynet0,net=192.168.77.0/24,dhcpstart=192.168.77.4 -drive format=raw,file=$1
-#sudo qemu-system-x86_64 -nographic -m 2048 -serial stdio -netdev user,id=mynet0,net=192.168.77.0/24,dhcpstart=192.168.77.4 -drive format=raw,file=$1
-#sudo qemu-system-x86_64 -m 2048 -serial stdio -drive format=raw,file=$1
+# disk
+if [ $(stat --printf="%s" $imagefile) -lt $disk ]; then
+	# disk grows if requested size then is bigger then image size 
+	dd if=/dev/zero of=$imagefile count=0 bs=1 seek=$disk
+fi
+imageext=${imagefile##*.}
+case $imageext in
+	vhd | vpc ) imageext="vpc" ;;
+esac
+virtOpts+=(
+	-device virtio-scsi-pci,id=scsi0
+	-device scsi-hd,drive=drive0,bus=scsi0.0
+        -drive format=$imageext,if=none,discard=unmap,aio=native,cache.direct=on,id=drive0,file=$imagefile
+	)
+
+# network
+macaddr="$(printf '02:%02X:%02X:%02X:%02X:%02X' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)))"
+if [ $bridge ]; then
+	echo "allow $bridge" >> /etc/qemu/bridge.conf
+	cat /etc/qemu/bridge.conf | sort -u > /etc/qemu/bridge.conf
+	virtOpts+=( -netdev bridge,id=net0,br=mgmt )
+else
+	virtOpts+=( -netdev user,id=net0,hostfwd=tcp::2223-:22,hostname=garden )
+fi
+virtOpts+=( -device virtio-net-pci,netdev=net0,mac=$macaddr )
+
+# virtualization tech
+cpuinfo="$(grep "^flags" /proc/cpuinfo | uniq)"
+if [ "$(echo $cpuinfo | grep vmx)" != "" -o "$(echo $cpuinfo | grep svm)" != "" ]; then
+	virtOpts+=(
+		-enable-kvm
+		-cpu host
+		)
+fi
+
+qemu-system-x86_64 ${virtOpts[@]}
+
