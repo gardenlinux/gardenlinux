@@ -8,6 +8,26 @@
    xvfb <!nocheck>, xauth <!nocheck>
  Build-Depends-Indep: python3-sphinx
  Build-Conflicts: tcl8.4-dev, tk8.4-dev,
++++ python2.7-2.7.18/setup.py
+@@ -1309,7 +1309,7 @@
+             if dbm_args:
+                 dbm_order = [arg.split('=')[-1] for arg in dbm_args][-1].split(":")
+             else:
+-                dbm_order = "ndbm:gdbm:bdb".split(":")
++                dbm_order = "ndbm:gdbm".split(":")
+             dbmext = None
+             for cand in dbm_order:
+                 if cand == "ndbm":
++++ python2.7-2.7.18/debian/control.in
+@@ -14,7 +14,7 @@
+   libsqlite3-dev, libffi-dev (>= 3.0.5) [!or1k !avr32],
+   libgpm2 [linux-any],
+   mime-support, netbase, net-tools, bzip2, time,
+-  libdb-dev (<< 1:6.0), libgdbm-dev, help2man,
++  libgdbm-dev, help2man,
+   xvfb <!nocheck>, xauth <!nocheck>
+ Build-Depends-Indep: python3-sphinx
+ Build-Conflicts: tcl8.4-dev, tk8.4-dev,
 +++ python2.7-2.7.18/debian/rules
 @@ -324,7 +324,7 @@
  		--prefix=/usr \
@@ -18,3 +38,12 @@
  		--with-system-expat \
  		--with-computed-gotos
  
+@@ -804,7 +804,7 @@
+ 	-find $(d)/usr/lib/python$(VER) -name '*_failed*.so'
+ 	find $(d)/usr/lib/python$(VER) -name '*_failed*.so' | xargs -r rm -f
+ 
+-	test -f $(d)/usr/lib/python$(VER)/lib-dynload/_bsddb.so
++	#test -f $(d)/usr/lib/python$(VER)/lib-dynload/_bsddb.so
+ 
+ 	for i in $(d)/$(scriptdir)/lib-dynload/*.so; do \
+ 	  b=$$(basename $$i .so); \
