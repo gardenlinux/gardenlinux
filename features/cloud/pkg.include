@@ -1,4 +1,5 @@
-#linux-image-cloud-amd64
+fdisk
+linux-image-cloud-amd64
 grub-cloud-amd64
 cloud-guest-utils
 initramfs-tools
