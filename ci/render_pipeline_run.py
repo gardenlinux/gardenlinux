@@ -36,7 +36,7 @@ def mk_pipeline_run(
     flavour_set: glci.model.GardenlinuxFlavourSet,
     promote_target: promote.BuildType,
 ):
-    run_name = f'{pipeline_name}-{committish}'[:60] # k8s length restriction
+    run_name = f'{pipeline_name}-{version}'[:60] # k8s length restriction
 
     snapshot_timestamp = glci.model.snapshot_date(gardenlinux_epoch=gardenlinux_epoch)
 
@@ -122,7 +122,7 @@ def main():
 
     # XXX hardcode pipeline names and flavour for now
     pipeline_run = mk_pipeline_run(
-        pipeline_name=f'gardenlinux-{version}',
+        pipeline_name=f'gardenlinux-build',
         namespace='gardenlinux-tkn',
         committish=parsed.committish,
         gardenlinux_epoch=parsed.gardenlinux_epoch,
