@@ -255,9 +255,9 @@ def gardenlinux_epoch(date:typing.Union[str, datetime.datetime]=None):
     if not isinstance(date, datetime.datetime):
         raise ValueError(date)
 
-    gardenlinux_epoch = (date - epoch_date).days
+    gardenlinux_epoch = (date - epoch_date).days + 1
 
-    if gardenlinux_epoch < 0:
+    if gardenlinux_epoch < 1:
         raise ValueError() # must not be older than gardenlinux' inception
     return gardenlinux_epoch
 
@@ -274,10 +274,10 @@ def snapshot_date(gardenlinux_epoch: int=None):
     if gardenlinux_epoch is None:
         gardenlinux_epoch = _gl_epoch()
     gardenlinux_epoch = int(gardenlinux_epoch)
-    if gardenlinux_epoch < 0:
+    if gardenlinux_epoch < 1:
         raise ValueError(gardenlinux_epoch)
 
-    time_d = datetime.timedelta(days=gardenlinux_epoch)
+    time_d = datetime.timedelta(days=gardenlinux_epoch - 1)
 
     date_str = (epoch_date + time_d).strftime('%Y%m%d')
     return date_str
