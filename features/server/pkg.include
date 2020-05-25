@@ -5,6 +5,7 @@ dnsutils
 iproute2
 iptables
 iputils-ping
+libgdbm6
 libnss-resolve
 libnss-systemd
 libpam-systemd
