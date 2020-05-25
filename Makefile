@@ -3,7 +3,7 @@
 # This is the snapshot date candidate for the first Garden Linux release
 SNAPSHOT_DATE=20200427
 IMAGE_BASENAME=garden-linux
-VERSION=29-3
+VERSION=27-3
 PUBLIC=true
 AWS_DISTRIBUTE=
 
