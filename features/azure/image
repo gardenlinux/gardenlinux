@@ -3,4 +3,4 @@
 set -x
 
 makef.sh --read-only-usr --image-size 4G --grub-target bios --force $2 $2.tar.xz
-make-vhd $2.raw $2.vhd
+make-vhd -o subformat=fixed $2.raw $2.vhd
