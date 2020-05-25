@@ -139,6 +139,7 @@ spec:
         #/opt/debuerreotype/bin/build.sh
         $(params.repodir)/bin/garden-build.sh \
           --arch $(params.architecture) \
+          --buildid '$(params.version)' \
           --prefix "" \
           --suite $(params.suite) \
           --timestamp ${timestamp} \
