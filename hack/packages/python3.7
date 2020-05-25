@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+source $thisDir/defaults
+package=$(basename $0)
+
+docker run --rm \
+	--volume $BUILDTARGET:/packages \
+	--volume $(readlink -f $package.patch):/$package.patch \
+	-e DEBFULLNAME="$BUILDNAME" \
+	-e DEBEMAIL="$BUILDEMAIL" \
+	-ti $BUILDIMAGE \
+        bash -x -c "
+		set -euo pipefail
+		sudo apt-get update
+		sudo apt-get build-dep -y --no-install-recommends $package
+		apt-get source $package
+		cd $package-*
+		patch -p1 < /$package.patch
+		dch -i 'remove libdb'
+		sudo apt-get remove -y --purge libdb5.3-dev
+		dpkg-buildpackage -k$BUILDKEY
+		sudo mv ../*.deb /packages
+	"

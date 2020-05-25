@@ -1,0 +1,9 @@
+BUILDNAME="GardenLinux Maintainers"
+BUILDEMAIL="contact@gardenlinux.io"
+BUILDKEY="contact@gardenlinux.io"
+BUILDIMAGE="gardenlinux:build"
+BUILDTARGET="$(readlink -f ../../.packages)"
+
+if [[ "$(docker images -q $BUILDIMAGE 2> /dev/null)" == "" ]]; then
+	docker build -t $BUILDIMAGE .
+fi
