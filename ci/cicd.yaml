@@ -1,5 +1,5 @@
 cicd_cfgs:
   - name: 'default'
     build:
-      aws_cfg_name: 'gardenlinux-dev'
-      s3_bucket_name: 'gardenlinux-test'
+      aws_cfg_name: 'gardenlinux'
+      s3_bucket_name: 'gardenlinux'
