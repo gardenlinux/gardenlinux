@@ -36,7 +36,7 @@ def mk_pipeline_run(
     flavour_set: glci.model.GardenlinuxFlavourSet,
     promote_target: promote.BuildType,
 ):
-    run_name = f'{pipeline_name}-{version}'[:60] # k8s length restriction
+    run_name = f'{pipeline_name}-{version.replace(".", "-")}'[:60] # k8s length restriction
 
     snapshot_timestamp = glci.model.snapshot_date(gardenlinux_epoch=gardenlinux_epoch)
 
