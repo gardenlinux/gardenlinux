@@ -10,7 +10,6 @@ docker run --rm \
 	--volume $(readlink -f $package.patch):/$package.patch \
 	-e DEBFULLNAME="$BUILDNAME" \
 	-e DEBEMAIL="$BUILDEMAIL" \
-        --cap-add SYS_PTRACE --security-opt seccomp:unconfined \
 	-ti $BUILDIMAGE \
         bash -x -c "
 		set -euo pipefail
