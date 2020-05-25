@@ -9,13 +9,19 @@ import tkn.model
 NamedParam = tkn.model.NamedParam
 
 
+def version_task(
+    namespace: str='gardenlinux-tkn',
+):
+    giturl = NamedParam(name='giturl', default='ssh://git@github.com/gardenlinux/gardenlinux')
+    committish = NamedParam(name='committish', default='master')
+
+
 def build_task(
     namespace: str='gardenlinux-tkn',
 ):
     suite = NamedParam(name='suite', default='bullseye')
     arch = NamedParam(name='architecture', default='amd64')
     mods = NamedParam(name='modifiers')
-    uploadp = NamedParam(name='uploadprefix')
     fnamep = NamedParam(name='fnameprefix')
     giturl = NamedParam(name='giturl', default='ssh://git@github.com/gardenlinux/gardenlinux')
     committish = NamedParam(name='committish', default='master')
@@ -29,7 +35,6 @@ def build_task(
         suite,
         arch,
         mods,
-        uploadp,
         fnamep,
         giturl,
         committish,
