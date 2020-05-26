@@ -2,4 +2,5 @@ cicd_cfgs:
   - name: 'default'
     build:
       aws_cfg_name: 'gardenlinux'
+      aws_region: 'eu-central-1'
       s3_bucket_name: 'gardenlinux'
