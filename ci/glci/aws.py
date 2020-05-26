@@ -325,3 +325,9 @@ def upload_and_register_gardenlinux_image(
         mk_session=mk_session,
         region_img_map=image_map,
     )
+
+    # finally, also make the initial image public
+    set_images_public(
+        mk_session=mk_session,
+        region_img_map={build_cfg.aws_region: initial_ami_id),
+    )
