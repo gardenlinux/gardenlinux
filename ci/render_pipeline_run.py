@@ -122,7 +122,7 @@ def main():
 
     # XXX hardcode pipeline names and flavour for now
     pipeline_run = mk_pipeline_run(
-        pipeline_name=f'gardenlinux-build',
+        pipeline_name='gardenlinux-build',
         namespace='gardenlinux-tkn',
         committish=parsed.committish,
         gardenlinux_epoch=parsed.gardenlinux_epoch,

@@ -2,7 +2,6 @@ import enum
 import os
 import typing
 
-import glci.model
 import tkn.model
 
 DEFAULT_IMAGE = 'eu.gcr.io/gardener-project/cc/job-image:1.640.0'

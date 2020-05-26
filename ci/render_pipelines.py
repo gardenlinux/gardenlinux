@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-import dacite
 import dataclasses
 import typing
 
@@ -10,7 +9,6 @@ import yaml
 import paths
 import glci.model
 import glci.util
-import tasks
 import tkn.model
 
 
@@ -39,8 +37,6 @@ def mk_pipeline_task(
         raise NotImplementedError(pipeline_flavour)
 
     modifier_names = ','.join(gardenlinux_flavour.modifiers)
-
-    upload_prefix = f'{gardenlinux_flavour.architecture.value}/'
 
     task_name = gardenlinux_flavour.canonical_name_prefix().replace('/', '-')\
             .replace('_', '-').strip('-')

@@ -1,19 +1,8 @@
-import os
-
-import glci.model
-import paths
 import steps
 import tkn.model
 
 
 NamedParam = tkn.model.NamedParam
-
-
-def version_task(
-    namespace: str='gardenlinux-tkn',
-):
-    giturl = NamedParam(name='giturl', default='ssh://git@github.com/gardenlinux/gardenlinux')
-    committish = NamedParam(name='committish', default='master')
 
 
 def build_task(
