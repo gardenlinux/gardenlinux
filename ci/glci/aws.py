@@ -104,18 +104,20 @@ def register_image(
             }
         ],
         Description='gardenlinux',
+        EnaSupport=True,
         Name=image_name,
         RootDeviceName=root_device_name,
         VirtualizationType='hvm', # | paravirtual
     )
 
+    # XXX need to wait until image is available (before publishing)
     return result['ImageId']
 
 
 def enumerate_region_names(
     ec2_client: 'botocore.client.EC2',
 ):
-    for region in ec2_client.describe_regions():
+    for region in ec2_client.describe_regions()['Regions']:
         yield region['RegionName']
 
 
@@ -163,7 +165,9 @@ def copy_image(
             SourceRegion=src_region_name,
             Name=image_name,
         )
+        # XXX: return (new) image-AMI
         response_ok(res)
+        yield target_region, res['ImageId']
 
 
 def import_image(
