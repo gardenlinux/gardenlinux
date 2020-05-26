@@ -152,6 +152,7 @@ class ReleaseIdentifier:
     release.
     '''
     build_committish: str
+    version: str
     gardenlinux_epoch: int
     architecture: Architecture
     platform: Platform
