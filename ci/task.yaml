@@ -308,6 +308,7 @@ spec:
           find_releases(
             flavour_set=flavour_set,
             build_committish='$(params.committish)',
+            version='$(params.version)',
             gardenlinux_epoch=int('$(params.gardenlinux_epoch)'),
             prefix=build_cfg.manifest_key_prefix(name=release_source),
           )
