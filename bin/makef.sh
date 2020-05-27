@@ -25,6 +25,24 @@ help() {
 	exit 1
 }
 
+
+# Run fsck 3 times on an ext4 image. Sometimes once is just not enough, but give up 
+# if it takes more than 3 times.
+fsckExt4() {
+
+  local device=$1 ; shift
+  local retries=0
+
+  while ! fsck.ext4 -f -a -E discard,inode_count_fullmap -D ${device} ; do
+    echo Errors detected, retrying the fsck.
+    retries=$(($retries + 1))
+    if [ $retries -gt 3 ]; then
+      return 1
+    fi
+  done
+
+}
+
 target="bios,uefi"
 fs_check=1
 force=0
@@ -81,12 +99,12 @@ echo "### reconnected loopback to ${loopback}"
 echo "### creating filesystems"
 mkfs.vfat -n EFI ${loopback}p2
 mkfs.ext4 -L USR -E lazy_itable_init=0,lazy_journal_init=0 ${loopback}p3
-mkfs.ext4 -L ROOT -E lazy_itable_init=0,lazy_journal_init=0 ${loopback}p4
+mkfs.ext4 -L ROOT -O quota -E lazy_itable_init=0,lazy_journal_init=0,quotatype=usrquota:grpquota:prjquota  ${loopback}p4
 # part of debian-cloud-images, I am sure we want that :-) -> it is default
 #tune2fs -c 0 -i 0 ${loopback}p3
 
 echo "### mounting filesystems"
-mkdir -p ${dir_name}          && mount ${loopback}p4 ${dir_name}
+mkdir -p ${dir_name}          && mount ${loopback}p4 -o prjquota ${dir_name}
 mkdir -p ${dir_name}/boot/efi && mount ${loopback}p2 ${dir_name}/boot/efi
 mkdir -p ${dir_name}/usr      && mount ${loopback}p3 ${dir_name}/usr
 
@@ -107,7 +125,7 @@ fi
 echo "### generating fstab"
 cat << EOF >> ${dir_name}/etc/fstab
 # <file system>	<mount point>	<type>	<options>		<dump>	<pass>
-LABEL=ROOT	/		ext4	errors=remount-ro,x-systemd.growfs 0	1
+LABEL=ROOT	/		ext4	errors=remount-ro,x-systemd.growfs,prjquota 0	1
 LABEL=EFI	/boot/efi	vfat	umask=0077		0 	2
 $fstab_usr
 /dev/sr0	/media/cdrom0	udf,iso9660 user,noauto		0	0
@@ -132,8 +150,8 @@ sync
 
 echo "### final fsck, just to be sure"
 fsck.vfat -f -a ${loopback}p2
-fsck.ext4 -f -a -E discard,inode_count_fullmap -D ${loopback}p3
-fsck.ext4 -f -a -E discard,inode_count_fullmap -D ${loopback}p4
+fsckExt4  ${loopback}p3
+fsckExt4  ${loopback}p4
 sync
 
 losetup -d $loopback
