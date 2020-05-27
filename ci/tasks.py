@@ -4,6 +4,52 @@ import tkn.model
 
 NamedParam = tkn.model.NamedParam
 
+_giturl = NamedParam(name='giturl', default='ssh://git@github.com/gardenlinux/gardenlinux')
+_repodir = NamedParam(name='repodir', default='/workspace/gardenlinux_git')
+
+
+def promote_task(
+    committish: NamedParam,
+    gardenlinux_epoch: NamedParam,
+    snapshot_timestamp: NamedParam,
+    cicd_cfg_name: NamedParam,
+    version: NamedParam,
+    flavourset: NamedParam,
+    promote_target: NamedParam,
+    repodir: NamedParam=_repodir,
+    giturl: NamedParam=_giturl,
+    name='promote-gardenlinux-task',
+    namespace='gardenlinux-tkn',
+):
+    clone_step = steps.clone_step(
+        committish=committish,
+        repo_dir=repodir,
+        git_url=giturl,
+    )
+
+    params = [
+        giturl,
+        committish,
+        gardenlinux_epoch,
+        snapshot_timestamp,
+        cicd_cfg_name,
+        version,
+        flavourset,
+        promote_target,
+        repodir,
+    ]
+
+    task = tkn.model.Task(
+        metadata=tkn.model.Metadata(name=name, namespace=namespace),
+        spec=tkn.model.TaskSpec(
+            params=params,
+            steps=[
+                clone_step,
+            ],
+        ),
+    )
+    return task
+
 
 def build_task(
     namespace: str='gardenlinux-tkn',
