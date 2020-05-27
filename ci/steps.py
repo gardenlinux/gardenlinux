@@ -10,6 +10,11 @@ own_dir = os.path.abspath(os.path.dirname(__file__))
 scripts_dir = os.path.join(own_dir)
 
 
+def extend_python_path_snippet(param_name: str):
+    sd_name = os.path.basename(scripts_dir)
+    return f'sys.path.insert(1,os.path.abspath(os.path.join("$(params.{param_name})","{sd_name}")))'
+
+
 class ScriptType(enum.Enum):
     BOURNE_SHELL = 'sh'
     PYTHON3 = 'python3'
@@ -20,6 +25,7 @@ def task_step_script(
     script_type: ScriptType,
     callable: str,
     params: typing.List[tkn.model.NamedParam],
+    repo_path_param: typing.Optional[tkn.model.NamedParam]=None,
 ):
     '''
     renders an inline-step-script, prepending a shebang, and appending an invocation
@@ -30,18 +36,24 @@ def task_step_script(
 
     if script_type is ScriptType.PYTHON3:
         shebang = '#!/usr/bin/env python3'
+        if repo_path_param:
+            preamble = 'import sys,os;' + extend_python_path_snippet(repo_path_param.name)
+        else:
+            preamble = ''
         args = ','.join((
             f"{param.name.replace('-', '_')}='$(params.{param.name})'" for param in params
         ))
         callable_str = f'{callable}({args})'
     elif script_type is ScriptType.BOURNE_SHELL:
         shebang = '#!/usr/bin/env sh'
+        preamble = ''
         args = ' '.join(param.name for param in params)
         callable_str = 'f{callable} {args}'
 
 
     return '\n'.join((
         shebang,
+        preamble,
         script,
         callable_str,
     ))
@@ -64,6 +76,7 @@ def clone_step(
                 repo_dir,
                 git_url,
             ],
+            repo_path_param=repo_dir,
         ),
     )
 
