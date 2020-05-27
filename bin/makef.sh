@@ -104,7 +104,7 @@ mkfs.ext4 -L ROOT -O quota -E lazy_itable_init=0,lazy_journal_init=0,quotatype=u
 #tune2fs -c 0 -i 0 ${loopback}p3
 
 echo "### mounting filesystems"
-mkdir -p ${dir_name}          && mount ${loopback}p4 -o prjquota ${dir_name}
+mkdir -p ${dir_name}          && mount ${loopback}p4 ${dir_name}
 mkdir -p ${dir_name}/boot/efi && mount ${loopback}p2 ${dir_name}/boot/efi
 mkdir -p ${dir_name}/usr      && mount ${loopback}p3 ${dir_name}/usr
 
