@@ -17,7 +17,7 @@ def main():
 
     parsed = parser.parse_args()
 
-    task_yaml_path = os.path.join(paths.own_dir, 'task.yaml')
+    task_yaml_path = os.path.join(paths.own_dir, 'build-task.yaml.template')
     with open(task_yaml_path) as f:
         raw_task = yaml.safe_load(f)
 
