@@ -4,3 +4,7 @@ cicd_cfgs:
       aws_cfg_name: 'gardenlinux'
       aws_region: 'eu-central-1'
       s3_bucket_name: 'gardenlinux'
+      storage_account_config_name: 'test'
+      service_principal_name: 'shoot-operator-dev'
+      plan_config_name: 'gardenlinux-greatest'
+      notification_recipients: ['dirk.marwinski@sap.com', 'christian.cwienk@sap.com']
