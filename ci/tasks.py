@@ -27,6 +27,16 @@ def promote_task(
         git_url=giturl,
     )
 
+    promote_step = steps.promote_step(
+        cicd_cfg_name=cicd_cfg_name,
+        flavourset=flavourset,
+        promote_target=promote_target,
+        gardenlinux_epoch=gardenlinux_epoch,
+        committish=committish,
+        version=version,
+        repo_dir=repodir,
+    )
+
     params = [
         giturl,
         committish,
@@ -45,6 +55,7 @@ def promote_task(
             params=params,
             steps=[
                 clone_step,
+                promote_step,
             ],
         ),
     )

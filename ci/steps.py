@@ -66,7 +66,7 @@ def clone_step(
 ):
     step = tkn.model.TaskStep(
         name='clone-repo-step',
-        image='eu.gcr.io/gardener-project/cc/job-image:1.640.0',
+        image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(scripts_dir, 'clone_repo_step.py'),
             script_type=ScriptType.PYTHON3,
@@ -81,6 +81,35 @@ def clone_step(
     )
 
     return step
+
+
+def promote_step(
+    cicd_cfg_name: tkn.model.NamedParam,
+    flavourset: tkn.model.NamedParam,
+    promote_target: tkn.model.NamedParam,
+    gardenlinux_epoch: tkn.model.NamedParam,
+    committish: tkn.model.NamedParam,
+    version: tkn.model.NamedParam,
+    repo_dir: tkn.model.NamedParam,
+):
+    return tkn.model.TaskStep(
+        name='promote-step',
+        image=DEFAULT_IMAGE,
+        script=task_step_script(
+            path=os.path.join(scripts_dir, 'promote_step.py'),
+            script_type=ScriptType.PYTHON3,
+            callable='promote_step',
+            params=[
+                cicd_cfg_name,
+                flavourset,
+                promote_target,
+                gardenlinux_epoch,
+                committish,
+                version,
+            ],
+            repo_path_param=repo_dir,
+        )
+    )
 
 
 def build_image_step(
