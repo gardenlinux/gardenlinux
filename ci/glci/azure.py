@@ -126,11 +126,15 @@ class AzureMarketplaceClient:
 
     def update_offer(self, publisher_id: str, offer_id: str, spec: dict):
         """Update an offer with a give spec."""
+        headers = self.req_headers.copy()
+        headers.update({
+            "If-Match": "*",
+        })
         response = requests.put(
             f"https://cloudpartner.azure.com/api/publishers/{publisher_id}/offers/{offer_id}",
-            headers=self.req_headers,
+            headers=headers,
             params=self.req_params,
-            data=spec
+            json=spec,
         )
         if not response.ok:
             raise RuntimeError(
@@ -142,15 +146,15 @@ class AzureMarketplaceClient:
     def publish_offer(self, publisher_id: str, offer_id: str, notification_mails):
         """Trigger (re-)publishing of an offer."""
         data = {
-            "metadata": json.dumps({
+            "metadata": {
                 "notification-emails": ",".join(notification_mails)
-            })
+            }
         }
         response = requests.post(
             f"https://cloudpartner.azure.com/api/publishers/{publisher_id}/offers/{offer_id}/publish",
             headers=self.req_headers,
             params=self.req_params,
-            data=data
+            json=data,
         )
         if not response.ok:
             raise RuntimeError(
