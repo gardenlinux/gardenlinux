@@ -4,8 +4,7 @@ PermitRootLogin no
 # Only use the more secure SSHv2 protocol.
 Protocol 2
 
-# No TCP forwarding and no X11 forwarding.
-AllowTcpForwarding no
+# No X11 forwarding.
 X11Forwarding no
 
 # Check permissions of configuration files related to SSH on login.
