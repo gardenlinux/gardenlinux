@@ -137,7 +137,6 @@ spec:
 
         pwd
         echo "running build.."
-        #/opt/debuerreotype/bin/build.sh
         $(params.repodir)/bin/garden-build.sh \
           --arch $(params.architecture) \
           --buildid '$(params.version)' \
