@@ -308,5 +308,5 @@ def copy_image_and_publish_offer(
         plan_config=plan_config,
         image_version=release.version,
         image_url=image_url,
-        notification_recipients=build_cfg.notification_recipients,
+        notification_recipients=(), # TODO: configure email recipients
     )

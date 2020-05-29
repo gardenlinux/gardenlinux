@@ -7,4 +7,3 @@ cicd_cfgs:
       storage_account_config_name: 'test'
       service_principal_name: 'shoot-operator-dev'
       plan_config_name: 'gardenlinux-greatest'
-      notification_recipients: ['dirk.marwinski@sap.com', 'christian.cwienk@sap.com']
