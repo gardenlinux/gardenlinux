@@ -1,11 +1,5 @@
-import dataclasses
-import datetime
-import io
 import os
 import sys
-
-import hashlib
-import yaml
 
 import glci.model
 import glci.util
@@ -18,6 +12,7 @@ def promote_step(
     cicd_cfg_name: str,
     flavourset: str,
     promote_target: str,
+    promote_mode: str, # manifests_only, manifests_and_publish
     gardenlinux_epoch: parsable_to_int,
     committish: str,
     version: str,
@@ -26,6 +21,7 @@ def promote_step(
     build_cfg = cicd_cfg.build
     flavour_set = glci.util.flavour_set(flavourset)
     flavours = tuple(flavour_set.flavours())
+    promote_mode = promote.PromoteMode(promote_mode)
 
     find_releases = glci.util.preconfigured(
       func=glci.util.find_releases,
@@ -51,7 +47,16 @@ def promote_step(
       print('release was not complete - will not promote (this indicates a bug!)')
       sys.exit(1) # do not signal an error
 
+    print(promote_mode)
+
     # if this line is reached, the release has been complete
+    if promote_mode is promote.PromoteMode.MANIFESTS_AND_PUBLISH:
+        pass
+    elif promote_mode is promote.PromoteMode.MANIFESTS_ONLY:
+        pass
+    else:
+        raise NotImplementedError(promote_mode)
+
     promote.promote(
       releases=releases,
       target_prefix=os.path.join(

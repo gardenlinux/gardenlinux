@@ -46,6 +46,11 @@ class BuildType(enum.Enum):
     RELEASE = 'release'
 
 
+class PromoteMode(enum.Enum):
+    MANIFESTS_ONLY = 'manifests_only'
+    MANIFESTS_AND_PUBLISH = 'manifests_and_publish'
+
+
 class ManifestType(enum.Enum):
     SINGLE = 'single'
     SET = 'set'

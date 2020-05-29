@@ -35,6 +35,7 @@ def mk_pipeline_run(
     version: str,
     flavour_set: glci.model.GardenlinuxFlavourSet,
     promote_target: promote.BuildType,
+    promote_mode: promote.PromoteMode,
 ):
     run_name = f'{pipeline_name}-{version.replace(".", "-")}'[:60] # k8s length restriction
 
@@ -79,6 +80,10 @@ def mk_pipeline_run(
                     name='promote_target',
                     value=promote_target.value,
                 ),
+                NamedParam(
+                    name='promote_mode',
+                    value=promote_mode.value,
+                ),
             ],
             pipelineRef=PipelineRef(
                 name=pipeline_name,
@@ -108,6 +113,11 @@ def main():
         type=promote.BuildType,
         default=promote.BuildType.SNAPSHOT,
     )
+    parser.add_argument(
+        '--promote-mode',
+        type=promote.BuildType,
+        default=promote.PromoteMode.MANIFESTS_ONLY,
+    )
 
     parsed = parser.parse_args()
 
@@ -130,6 +140,7 @@ def main():
         flavour_set=flavour_set,
         version=version,
         promote_target=parsed.promote_target,
+        promote_mode=parsed.promote_mode,
     )
 
     pipeline_run_dict = dataclasses.asdict(pipeline_run)
