@@ -1,3 +1,4 @@
+import dataclasses
 import enum
 import logging
 import pprint
@@ -177,7 +178,7 @@ def wait_for_images(
         logger.info(f'waiting for {image_id=}')
         # as we want to wait for _all_ images, it should be OK not to parallelise polling
         image_state = wait_for_image_state(
-            ec2_client=mk_session(region_name=region_name),
+            ec2_client=mk_session(region_name=region_name).client('ec2'),
             image_id=image_id,
             target_state=target_state,
         )
@@ -234,6 +235,40 @@ def copy_image(
         yield target_region, res['ImageId']
 
 
+def image_ids_by_name(
+    mk_session: callable,
+    image_name: str,
+    region_names: typing.Sequence[str],
+):
+    for region_name in region_names:
+        session = mk_session(region_name=region_name)
+        ec2 = session.client('ec2')
+        images = ec2.describe_images(Filters=[{'Name': 'name', 'Values': [image_name]}])
+        # there must either be one or none
+        images = images['Images']
+        if len(images) < 1:
+            print(f'did not find {image_name=} in {region_name=}')
+        if len(images) > 1:
+            raise ValueError('found more than one image (this is a bug)')
+
+        yield region_name, images[0]['ImageId']
+
+
+def unregister_images_by_name(
+    mk_session: callable,
+    image_name: str,
+    region_names: typing.Sequence[str],
+):
+    for region_name, image_id in image_ids_by_name(
+        mk_session=mk_session,
+        image_name=image_name,
+        region_names=region_names,
+    ):
+        ec2 = mk_session(region_name=region_name).client('ec2')
+        ec2.deregister_image(ImageId=image_id)
+        print(f'unregistered {image_id=}')
+
+
 def import_image(
     ec2_client: 'botocore.client.EC2',
     s3_bucket_name: str,
@@ -268,7 +303,7 @@ def upload_and_register_gardenlinux_image(
     mk_session: callable,
     build_cfg: glci.model.BuildCfg,
     release: glci.model.OnlineReleaseManifest,
-):
+) -> glci.model.OnlineReleaseManifest:
     session = mk_session(region_name=build_cfg.aws_region)
     s3_client = session.client('s3')
     ec2_client = session.client('ec2')
@@ -283,7 +318,7 @@ def upload_and_register_gardenlinux_image(
     snapshot_task_id = import_snapshot(
         ec2_client=ec2_client,
         s3_bucket_name=release.s3_bucket,
-        image_key=
+        image_key=raw_image_key,
     )
     logger.info(f'started import {snapshot_task_id=}')
 
@@ -313,6 +348,18 @@ def upload_and_register_gardenlinux_image(
     )
     # dict{<region_name>: <ami_id>}
 
+    # add origin image
+    image_map[build_cfg.aws_region] = initial_ami_id
+
+    published_images = tuple((
+        glci.model.AwsPublishedImage(
+            ami_id=ami_id,
+            aws_region_id=region_name,
+            image_name=target_image_name,
+        ) for region_name, ami_id in image_map.items()
+    ))
+    published_image_set = glci.model.AwsPublishedImageSet(published_aws_images=published_images)
+
     image_map_pretty = pprint.pformat(image_map)
     logger.info(f'copied images: {image_map_pretty}')
 
@@ -320,14 +367,12 @@ def upload_and_register_gardenlinux_image(
         mk_session=mk_session,
         region_img_map=image_map,
     )
+    logger.info(f'all {len(image_map)} images became "ready"')
 
     set_images_public(
         mk_session=mk_session,
         region_img_map=image_map,
     )
+    logger.info('all {len(image_map)} images were set to "public"')
 
-    # finally, also make the initial image public
-    set_images_public(
-        mk_session=mk_session,
-        region_img_map={build_cfg.aws_region: initial_ami_id),
-    )
+    return dataclasses.replace(release, published_image_metadata=published_image_set)

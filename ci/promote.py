@@ -8,6 +8,7 @@ An example being the promotion of a build snapshot to a daily build.
 
 import argparse
 import enum
+import functools
 import logging
 import logging.config
 import os
@@ -61,7 +62,9 @@ def parse_args():
     parser.add_argument('--flavourset', default='testing')
     parser.add_argument('--committish')
     parser.add_argument('--gardenlinux-epoch', type=int)
-    parser.add_argument('--source', type=BuildType, default=BuildType.SNAPSHOT)
+    parser.add_argument('--promote-mode', type=PromoteMode)
+    parser.add_argument('--version')
+    parser.add_argument('--source', default='snapshots')
     parser.add_argument('--target', type=BuildType, default=BuildType.DAILY)
     parser.add_argument('--cicd-cfg', default='default')
     parser.add_argument('--allow-partial', default=False, action='store_true')
@@ -75,10 +78,31 @@ def parse_args():
     return parser.parse_args()
 
 
+def publish_image(
+    release: glci.model.OnlineReleaseManifest,
+    cicd_cfg: glci.model.CicdCfg,
+) -> glci.model.OnlineReleaseManifest:
+    if not release.platform == 'aws':
+        print(f'do now know how to publish {release.platform=}, yet')
+        return release
+
+    import glci.aws
+    import ccc.aws
+
+    mk_session = functools.partial(ccc.aws.session, aws_cfg=cicd_cfg.build.aws_cfg_name)
+
+    return glci.aws.upload_and_register_gardenlinux_image(
+        mk_session=mk_session,
+        build_cfg=cicd_cfg.build,
+        release=release,
+    )
+
+
 def promote(
     releases: typing.Sequence[glci.model.OnlineReleaseManifest],
     target_prefix: str,
     version_str: str,
+    promote_mode: PromoteMode,
     cicd_cfg: glci.model.CicdCfg,
     flavour_set: glci.model.GardenlinuxFlavourSet,
     manifest_types: typing.List[ManifestType]=tuple((ManifestType.SET,)),
@@ -91,6 +115,16 @@ def promote(
         func=glci.util.upload_release_manifest_set,
         cicd_cfg=cicd_cfg,
     )
+
+    if promote_mode is PromoteMode.MANIFESTS_AND_PUBLISH:
+        releases = [
+            publish_image(
+                release=release,
+                cicd_cfg=cicd_cfg,
+            ) for release in releases
+        ]
+        for release in releases:
+            print(release.published_image_metadata)
 
     if ManifestType.SET in manifest_types:
         manifest_set = glci.model.ReleaseManifestSet(
@@ -134,6 +168,9 @@ def main():
     build_cfg = cicd_cfg.build
     flavour_set = glci.util.flavour_set(flavour_set_name=parsed.flavourset)
     flavours = tuple(flavour_set.flavours())
+    committish = parsed.committish
+    gardenlinux_epoch = parsed.gardenlinux_epoch
+    version = parsed.version or f'{gardenlinux_epoch}-{committish[0:6]}'
 
     find_releases = glci.util.preconfigured(
         func=glci.util.find_releases,
@@ -142,9 +179,10 @@ def main():
 
     releases = tuple(find_releases(
             flavour_set=flavour_set,
-            build_committish=parsed.committish,
-            gardenlinux_epoch=parsed.gardenlinux_epoch,
-            prefix=build_cfg.manifest_key_prefix(name=parsed.source.value),
+            version=version,
+            build_committish=committish,
+            gardenlinux_epoch=gardenlinux_epoch,
+            prefix=build_cfg.manifest_key_prefix(name=parsed.source),
         )
     )
 
@@ -164,7 +202,8 @@ def main():
             'meta',
             parsed.target.value,
         ),
-        version_str=str(parsed.gardenlinux_epoch),
+        version_str=version,
+        promote_mode=parsed.promote_mode,
         cicd_cfg=cicd_cfg,
         flavour_set=flavour_set,
         manifest_types=parsed.manifest_types,

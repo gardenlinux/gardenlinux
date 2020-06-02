@@ -166,6 +166,23 @@ class ReleaseIdentifier:
         )
 
 
+class PublishedImageBase:
+    pass
+
+
+@dataclasses.dataclass(frozen=True)
+class AwsPublishedImage:
+    ami_id: str
+    aws_region_id: str
+    image_name: str
+
+
+@dataclasses.dataclass(frozen=True)
+class AwsPublishedImageSet(PublishedImageBase):
+    published_aws_images: typing.Tuple[AwsPublishedImage]
+    # release_identifier: typing.Optional[ReleaseIdentifier]
+
+
 @dataclasses.dataclass(frozen=True)
 class ReleaseManifest(ReleaseIdentifier):
     '''
@@ -174,6 +191,7 @@ class ReleaseManifest(ReleaseIdentifier):
     '''
     build_timestamp: str
     paths: typing.Tuple[ReleaseFile]
+    published_image_metadata: typing.Union[AwsPublishedImageSet, None]
 
     def path_by_suffix(self, suffix: str):
         for path in self.paths:

@@ -63,6 +63,7 @@ def promote_step(
         'meta',
         release_target,
       ),
+      promote_mode=promote_mode,
       cicd_cfg=cicd_cfg,
       flavour_set=flavour_set,
       version_str=version,
