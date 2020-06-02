@@ -42,6 +42,8 @@ timestamp="${1:-}";	shift || eusage 'missing timestamp'
 mkdir -p "$outputDir"
 outputDir="$(readlink -f "$outputDir")"
 
+docker info > /dev/null || { echo "docker not working, check permissions or work with bin/garden-build.sh"; exit 1; }
+
 envArgs=(
 	TZ="UTC"
 	LC_ALL="C"
