@@ -252,6 +252,7 @@ spec:
           platform='$(params.platform)',
           modifiers=modifiers,
           paths=uploaded_relpaths,
+          published_image_metadata=None,
         )
 
         manifest_path = \
