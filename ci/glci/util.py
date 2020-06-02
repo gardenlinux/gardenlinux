@@ -202,6 +202,7 @@ def find_releases(
     bucket_name: str,
     flavour_set: glci.model.GardenlinuxFlavourSet,
     build_committish: str,
+    version: str,
     gardenlinux_epoch: int,
     prefix: str=glci.model.ReleaseManifest.manifest_key_prefix,
 ):
@@ -213,6 +214,9 @@ def find_releases(
         prefix=prefix,
     ):
         if not release.flavour() in flavours:
+            continue
+
+        if not release.version == version:
             continue
 
         if not release.build_committish == build_committish:

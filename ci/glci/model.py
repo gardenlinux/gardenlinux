@@ -152,6 +152,7 @@ class ReleaseIdentifier:
     release.
     '''
     build_committish: str
+    version: str
     gardenlinux_epoch: int
     architecture: Architecture
     platform: Platform
@@ -184,6 +185,7 @@ class ReleaseManifest(ReleaseIdentifier):
     def release_identifier(self) -> ReleaseIdentifier:
         return ReleaseIdentifier(
             build_committish=self.build_committish,
+            version=self.version,
             gardenlinux_epoch=self.gardenlinux_epoch,
             architecture=self.architecture,
             platform=self.platform,
@@ -226,7 +228,11 @@ class PipelineFlavour(enum.Enum):
 @dataclasses.dataclass(frozen=True)
 class BuildCfg:
     aws_cfg_name: str
+    aws_region: str
     s3_bucket_name: str
+    storage_account_config_name: str
+    service_principal_name: str
+    plan_config_name: str
     manifest_key_root_prefix: str='meta'
 
     def manifest_key_prefix(self, name: str):

@@ -6,6 +6,7 @@ strs_separated_by_comma = str
 
 def release_identifier(
     build_committish: str,
+    version: str,
     gardenlinux_epoch: str_parsable_to_int,
     architecture: str_parsable_to_architecture,
     platform: glci.model.Platform,
@@ -15,6 +16,7 @@ def release_identifier(
 
     return glci.model.ReleaseIdentifier(
         build_committish=build_committish,
+        version=version,
         gardenlinux_epoch=int(gardenlinux_epoch),
         architecture=glci.model.Architecture(architecture),
         platform=platform,

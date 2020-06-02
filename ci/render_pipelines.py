@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-import dacite
 import dataclasses
 import typing
 
@@ -10,7 +9,6 @@ import yaml
 import paths
 import glci.model
 import glci.util
-import tasks
 import tkn.model
 
 
@@ -30,7 +28,7 @@ def pass_param(name: str):
     return NamedParam(name=name, value=f'$(params.{name})')
 
 
-def mk_pipeline_task(
+def mk_pipeline_build_task(
     gardenlinux_flavour: GardenlinuxFlavour,
     pipeline_flavour: glci.model.PipelineFlavour,
     run_after: typing.List[str],
@@ -39,8 +37,6 @@ def mk_pipeline_task(
         raise NotImplementedError(pipeline_flavour)
 
     modifier_names = ','.join(gardenlinux_flavour.modifiers)
-
-    upload_prefix = f'{gardenlinux_flavour.architecture.value}/'
 
     task_name = gardenlinux_flavour.canonical_name_prefix().replace('/', '-')\
             .replace('_', '-').strip('-')
@@ -64,6 +60,26 @@ def mk_pipeline_task(
     )
 
 
+def mk_pipeline_promote_task(
+    run_after: typing.List[str],
+):
+    return PipelineTask(
+        name='promote-gardenlinux-task',
+        taskRef=TaskRef(name='promote-gardenlinux-task'), # XXX unhardcode
+        params=[
+            pass_param(name='committish'),
+            pass_param(name='gardenlinux_epoch'),
+            pass_param(name='snapshot_timestamp'),
+            pass_param(name='cicd_cfg_name'),
+            pass_param(name='version'),
+            pass_param(name='promote_target'),
+            pass_param(name='promote_mode'),
+            pass_param(name='flavourset'),
+        ],
+        runAfter=run_after,
+    )
+
+
 def mk_pipeline(
     gardenlinux_flavours: typing.Sequence[GardenlinuxFlavour],
     cicd_cfg_name: str,
@@ -75,12 +91,17 @@ def mk_pipeline(
     tasks = []
 
     for idx,glf in enumerate(gardenlinux_flavours):
-        build_task = mk_pipeline_task(
+        build_task = mk_pipeline_build_task(
             gardenlinux_flavour=glf,
             pipeline_flavour=pipeline_flavour,
             run_after=[]
         )
         tasks.append(build_task)
+
+    promote_task = mk_pipeline_promote_task(
+        run_after=[plt.name for plt in tasks],
+    )
+    tasks.append(promote_task)
 
     pipeline = Pipeline(
         metadata=Metadata(
@@ -95,6 +116,7 @@ def mk_pipeline(
                 NamedParam(name='cicd_cfg_name'),
                 NamedParam(name='version'),
                 NamedParam(name='promote_target'),
+                NamedParam(name='promote_mode'),
                 NamedParam(name='flavourset'),
             ],
             tasks=tasks,

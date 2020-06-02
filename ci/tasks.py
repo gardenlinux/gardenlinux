@@ -1,19 +1,68 @@
-import os
-
-import glci.model
-import paths
 import steps
 import tkn.model
 
 
 NamedParam = tkn.model.NamedParam
 
+_giturl = NamedParam(name='giturl', default='ssh://git@github.com/gardenlinux/gardenlinux')
+_repodir = NamedParam(name='repodir', default='/workspace/gardenlinux_git')
 
-def version_task(
-    namespace: str='gardenlinux-tkn',
+
+def promote_task(
+    committish: NamedParam,
+    gardenlinux_epoch: NamedParam,
+    snapshot_timestamp: NamedParam,
+    cicd_cfg_name: NamedParam,
+    version: NamedParam,
+    flavourset: NamedParam,
+    promote_target: NamedParam,
+    promote_mode: NamedParam,
+    repodir: NamedParam=_repodir,
+    giturl: NamedParam=_giturl,
+    name='promote-gardenlinux-task',
+    namespace='gardenlinux-tkn',
 ):
-    giturl = NamedParam(name='giturl', default='ssh://git@github.com/gardenlinux/gardenlinux')
-    committish = NamedParam(name='committish', default='master')
+    clone_step = steps.clone_step(
+        committish=committish,
+        repo_dir=repodir,
+        git_url=giturl,
+    )
+
+    promote_step = steps.promote_step(
+        cicd_cfg_name=cicd_cfg_name,
+        flavourset=flavourset,
+        promote_target=promote_target,
+        promote_mode=promote_mode,
+        gardenlinux_epoch=gardenlinux_epoch,
+        committish=committish,
+        version=version,
+        repo_dir=repodir,
+    )
+
+    params = [
+        giturl,
+        committish,
+        gardenlinux_epoch,
+        snapshot_timestamp,
+        cicd_cfg_name,
+        version,
+        flavourset,
+        promote_target,
+        promote_mode,
+        repodir,
+    ]
+
+    task = tkn.model.Task(
+        metadata=tkn.model.Metadata(name=name, namespace=namespace),
+        spec=tkn.model.TaskSpec(
+            params=params,
+            steps=[
+                clone_step,
+                promote_step,
+            ],
+        ),
+    )
+    return task
 
 
 def build_task(

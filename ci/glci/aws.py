@@ -1,8 +1,15 @@
 import enum
+import logging
+import pprint
 import time
 import typing
 
 import botocore.client
+
+import glci.model
+
+
+logger = logging.getLogger(__name__)
 
 
 def response_ok(response: dict):
@@ -17,6 +24,26 @@ class TaskStatus(enum.Enum):
     ACTIVE = 'active'
     COMPLETED = 'completed'
     DELETED = 'deleted' # indicates an error (image was rejected)
+
+
+class ImageState(enum.Enum):
+    PENDING = 'pending'
+    AVAILABLE = 'available'
+    INVALID = 'invalid'
+    DEREGISTERED = 'deregistered'
+    TRANSIENT = 'transient'
+    FAILED = 'failed'
+    ERROR = 'error'
+
+    def is_erroneous(self):
+        if self in (
+            ImageState.INVALID,
+            ImageState.FAILED,
+            ImageState.ERROR,
+        ):
+            return True
+        else:
+            return False
 
 
 def import_snapshot(
@@ -104,22 +131,61 @@ def register_image(
             }
         ],
         Description='gardenlinux',
+        EnaSupport=True,
         Name=image_name,
         RootDeviceName=root_device_name,
         VirtualizationType='hvm', # | paravirtual
     )
 
+    # XXX need to wait until image is available (before publishing)
     return result['ImageId']
 
 
 def enumerate_region_names(
     ec2_client: 'botocore.client.EC2',
 ):
-    for region in ec2_client.describe_regions():
+    for region in ec2_client.describe_regions()['Regions']:
         yield region['RegionName']
 
 
-def set_image_public(
+def wait_for_image_state(
+    ec2_client: 'botocore.client.EC2',
+    image_id: str,
+    target_state=ImageState.AVAILABLE,
+    polling_interval_seconds: int=15,
+):
+    def current_image_state():
+        image_details = ec2_client.describe_images(ImageIds=[image_id])['Images'][0]
+        image_state = ImageState(image_details['State'])
+        return image_state
+
+    while not (image_state := current_image_state()) is target_state:
+        if image_state.is_erroneous():
+            raise RuntimeError(f'{image_id=}: {image_state=}')
+        time.sleep(polling_interval_seconds)
+
+    return image_state
+
+
+def wait_for_images(
+    mk_session: callable,
+    region_img_map: typing.Dict[str, str], # {region_name: ami_id}
+    target_state=ImageState.AVAILABLE,
+):
+    logger.info(f'will wait for {len(region_img_map)} image(s) to reach {target_state=}')
+    for region_name, image_id in region_img_map.items():
+        logger.info(f'waiting for {image_id=}')
+        # as we want to wait for _all_ images, it should be OK not to parallelise polling
+        image_state = wait_for_image_state(
+            ec2_client=mk_session(region_name=region_name),
+            image_id=image_id,
+            target_state=target_state,
+        )
+        logger.info(f'{image_id=} reached state {image_state=}')
+    logger.info('all images reached target-state')
+
+
+def set_images_public(
     mk_session: callable,
     region_img_map: typing.Dict[str, str], # {region_name: ami_id}
 ):
@@ -163,7 +229,9 @@ def copy_image(
             SourceRegion=src_region_name,
             Name=image_name,
         )
+        # XXX: return (new) image-AMI
         response_ok(res)
+        yield target_region, res['ImageId']
 
 
 def import_image(
@@ -194,3 +262,72 @@ def import_image(
 
     import_task_id = res['ImportTaskId']
     return import_task_id
+
+
+def upload_and_register_gardenlinux_image(
+    mk_session: callable,
+    build_cfg: glci.model.BuildCfg,
+    release: glci.model.OnlineReleaseManifest,
+):
+    session = mk_session(region_name=build_cfg.aws_region)
+    s3_client = session.client('s3')
+    ec2_client = session.client('ec2')
+
+    # TODO: add `version` to release-manifest
+    gardenlinux_version = release.version
+    target_image_name = f'gardenlinux-{gardenlinux_version}'
+
+    # TODO: rename rel_path attr (e.g. to key?); also: add bucket-name
+    raw_image_key = release.path_by_suffix('rootfs.raw').rel_path
+
+    snapshot_task_id = import_snapshot(
+        ec2_client=ec2_client,
+        s3_bucket_name=release.s3_bucket,
+        image_key=
+    )
+    logger.info(f'started import {snapshot_task_id=}')
+
+    snapshot_id = wait_for_snapshot_import(
+        ec2_client=ec2_client,
+        snapshot_task_id=snapshot_task_id,
+    )
+    logger.info(f'import task finished {snapshot_id=}')
+
+    initial_ami_id = register_image(
+        ec2_client=ec2_client,
+        snapshot_id=snapshot_id,
+        image_name=target_image_name,
+    )
+    logger.info(f'registered {initial_ami_id=}')
+
+    region_names = tuple(enumerate_region_names(ec2_client=ec2_client))
+
+    image_map = dict(
+        copy_image(
+            mk_session=mk_session,
+            ami_image_id=initial_ami_id,
+            image_name=target_image_name,
+            src_region_name=build_cfg.aws_region,
+            target_regions=region_names,
+        )
+    )
+    # dict{<region_name>: <ami_id>}
+
+    image_map_pretty = pprint.pformat(image_map)
+    logger.info(f'copied images: {image_map_pretty}')
+
+    wait_for_images(
+        mk_session=mk_session,
+        region_img_map=image_map,
+    )
+
+    set_images_public(
+        mk_session=mk_session,
+        region_img_map=image_map,
+    )
+
+    # finally, also make the initial image public
+    set_images_public(
+        mk_session=mk_session,
+        region_img_map={build_cfg.aws_region: initial_ami_id),
+    )
