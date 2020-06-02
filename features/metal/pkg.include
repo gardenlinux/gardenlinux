@@ -1,4 +1,5 @@
 ethtool
+busybox
 haveged
 ipmitool
 kexec-tools

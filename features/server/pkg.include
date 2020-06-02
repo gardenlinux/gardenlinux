@@ -1,5 +1,4 @@
 auditd
-busybox
 ca-certificates
 dnsutils
 iproute2
@@ -23,6 +22,7 @@ systemd-coredump
 systemd-cron
 traceroute
 wget
+less
 tcpdump
 vim-tiny
 quota
