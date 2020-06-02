@@ -191,7 +191,7 @@ class ReleaseManifest(ReleaseIdentifier):
     '''
     build_timestamp: str
     paths: typing.Tuple[ReleaseFile]
-    published_image_metadata: typing.Union[AwsPublishedImageSet, None]
+    published_image_metadata: typing.Union[AwsPublishedImageSet, None] = None
 
     def path_by_suffix(self, suffix: str):
         for path in self.paths:
