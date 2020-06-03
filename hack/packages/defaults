@@ -1,9 +1,26 @@
 BUILDNAME="GardenLinux Maintainers"
 BUILDEMAIL="contact@gardenlinux.io"
 BUILDKEY="contact@gardenlinux.io"
+BUILDKEYPUB=$(gpg --armor --export "${BUILDKEY}") 
 BUILDIMAGE="gardenlinux:build"
 BUILDTARGET="$(readlink -f ../../.packages)"
 
 if [[ "$(docker images -q $BUILDIMAGE 2> /dev/null)" == "" ]]; then
 	docker build -t $BUILDIMAGE .
 fi
+
+docker_run () {
+	docker run --rm \
+	--volume $BUILDTARGET:/packages \
+	--volume "$(gpgconf --list-dir agent-socket)":/home/dev/.gnupg/S.gpg-agent \
+	--volume $(readlink -f $1):/$1 \
+	-e GPG_KEY="${BUILDKEYPUB}" \
+	-e DEBFULLNAME="$BUILDNAME" \
+	-e DEBEMAIL="$BUILDEMAIL" \
+	-ti $BUILDIMAGE \
+        bash -x -c "
+		set -euo pipefail
+		echo \"\${GPG_KEY}\" | gpg --import -
+		$2"
+}
+

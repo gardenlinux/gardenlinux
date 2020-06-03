@@ -6,7 +6,10 @@ RUN     echo "deb-src http://deb.debian.org/debian testing main" >> /etc/apt/sou
      && addgroup --system wheel \
      && adduser dev --disabled-password --gecos dev \
      && adduser dev wheel \
-     && echo "%wheel  ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/wheel
+     && echo "%wheel  ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/wheel \
+     && mkdir /home/dev/.gnupg \
+     && chown dev:dev /home/dev/.gnupg \
+     && chmod 700 /home/dev/.gnupg 
 
 USER	dev
 WORKDIR	/home/dev
