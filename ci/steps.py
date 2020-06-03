@@ -4,7 +4,7 @@ import typing
 
 import tkn.model
 
-DEFAULT_IMAGE = 'eu.gcr.io/gardener-project/cc/job-image:1.640.0'
+DEFAULT_IMAGE = 'eu.gcr.io/gardener-project/cc/job-image:1.656.0'
 
 own_dir = os.path.abspath(os.path.dirname(__file__))
 scripts_dir = os.path.join(own_dir)
