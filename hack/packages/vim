@@ -7,12 +7,11 @@ source $thisDir/defaults
 
 docker_run $package.patch "
 	sudo apt-get build-dep -y --no-install-recommends $package
-	sudo apt-get install -y libgdbm-compat-dev
-	sudo apt-get remove -y --purge libdb5.3-dev
+	#sudo apt-get remove -y --purge libcanberra-dev
 	apt-get source $package
 	cd $package-*
 	patch -p1 < /$package.patch
-	dch -i 'remove libdb'
+	dch -i 'remove sound libraries'
 	dch -r ''
 	debuild
 	sudo cp ../*\$(dpkg-parsechangelog --show-field Version)* ../$package*.orig.tar.* /packages"

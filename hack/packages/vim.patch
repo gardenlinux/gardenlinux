@@ -1,0 +1,10 @@
+--- vim-8.2.0716.org/debian/rules	2020-05-31 20:34:36.041213284 +0000
++++ vim-8.2.0716/debianrules	2020-05-31 20:35:19.761371310 +0000
+@@ -40,7 +40,6 @@
+
+ OPTFLAGS = --enable-cscope
+ ifeq ($(DEB_HOST_ARCH_OS),linux)
+-    OPTFLAGS += --enable-canberra
+     OPTFLAGS += --enable-gpm
+     OPTFLAGS += --enable-selinux --disable-smack
+     TINYFLAGS += --enable-selinux --disable-smack

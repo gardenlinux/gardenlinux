@@ -1,25 +1,16 @@
 #!/usr/bin/env bash
-
 set -euo pipefail
 
+package=$(basename $0)
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source $thisDir/defaults
-package=$(basename $0)
 
-docker run --rm \
-	--volume $BUILDTARGET:/packages \
-	--volume $(readlink -f $package.patch):/$package.patch \
-	-e DEBFULLNAME="$BUILDNAME" \
-	-e DEBEMAIL="$BUILDEMAIL" \
-	-ti $BUILDIMAGE \
-        bash -c "
-		set -euo pipefail
-		sudo apt-get update
-		sudo apt-get build-dep -y --no-install-recommends $package 
-		apt-get source $package 
-		cd $package-* 
-		patch -p1 < /$package.patch
-		dch -i 'remove ftparchive/libdb'
-		dpkg-buildpackage -k$BUILDKEY
-		sudo mv ../*.deb /packages
-	"
+docker_run $package.patch "		
+	sudo apt-get build-dep -y --no-install-recommends $package 
+	apt-get source $package 
+	cd $package-* 
+	patch -p1 < /$package.patch
+	dch -i 'remove ftparchive/libdb'
+	dch -r ''
+	debuild
+	sudo cp ../*\$(dpkg-parsechangelog --show-field Version)* /packages"
