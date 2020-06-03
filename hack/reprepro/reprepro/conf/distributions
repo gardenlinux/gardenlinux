@@ -6,3 +6,14 @@ Architectures: amd64 source
 Components: main security source
 Description: gardenlinux 
 Log: gardenlinux.log
+SignWith: contact@gardenlinux.io
+
+Origin: gardenlinux.io 
+Label: gardenlinux.io 
+Codename: bullseye-debug 
+Suite: testing-debug
+Architectures: amd64
+Components: main
+Description: gardenlinux 
+Log: gardenlinux.log
+SignWith: contact@gardenlinux.io

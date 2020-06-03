@@ -16,15 +16,16 @@ gpg-connect-agent /bye
 # pinentry permission issues
 
 thisDir=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
-if GPG_KEY=$(grep ^SignWith "${thisDir}"/reprepro/reprepro/conf/distributions | awk '{ print $2 }'); then
+if GPG_KEY=$(grep ^SignWith "${thisDir}"/reprepro/reprepro/conf/distributions | awk '{ print $2 }' | head -1); then
 	pubKey=$(gpg --armor --export "${GPG_KEY}") 
 else	
 	pubKey=""
 fi
-
 docker run --rm \
 	--volume "$(gpgconf --list-dir agent-socket)":/root/.gnupg/S.gpg-agent \
 	--volume "$(readlink -f reprepro)":/opt/reprepro \
+	--volume "/home/admin/gardenlinux/.repository":"/opt/reprepro/repository" \
+	--volume "/home/admin/gardenlinux/.packages":"/opt/reprepro/packages_gardenlinux" \
 	-e GPG_TTY=/dev/console \
 	-e GPG_KEY="${pubKey}" \
 	-e ARGS="${*}" \

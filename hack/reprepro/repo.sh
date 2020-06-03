@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
-
+shopt -s extglob
 fail=0
 PUBLISH="false"
 REFRESH="false"
@@ -74,6 +74,23 @@ publish() {
 			fi
 		done
 	done	
+
+	# sap packages
+
+	if [[ $(shopt -s nullglob dotglob; f=("${thisDir}/packages_gardenlinux"/*.deb); echo ${#f[@]}) -ne 0 ]]; then
+		reprepro -s -C "main" -b "${thisDir}/reprepro" includedeb "${CODENAME}" "${thisDir}/packages_gardenlinux"/!(*@(-dbg_|-dbgsym_)*).deb 
+		reprepro -s -C "main" -b "${thisDir}/reprepro" includedeb "${CODENAME}-debug" "${thisDir}/packages_gardenlinux"/*@(-dbg_|-dbgsym_)*.deb 
+	else
+		echo "no specific gardenlinux packags found, skipping"
+ 	fi 
+	if [[ $(shopt -s nullglob dotglob; f=("${thisDir}/packages_gardenlinux"/*.dsc); echo ${#f[@]}) -ne 0 ]]; then
+		for dsc in "${thisDir}/packages_gardenlinux"/*.dsc; do
+			reprepro -s -b "${thisDir}/reprepro" includedsc "${CODENAME}" "${dsc}"
+		done
+	else
+		echo "no specific gardenlinux source packages found, skipping"
+	fi
+
 	reprepro -s -b "${thisDir}/reprepro" createsymlinks
 }
 
