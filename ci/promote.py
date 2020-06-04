@@ -37,6 +37,11 @@ cfg = {
         'level': logging.DEBUG,
         'handlers': ['console',],
     },
+    'loggers': {
+        'googleapiclient.discovery_cache': {
+            'level': logging.ERROR,
+        },
+    },
 }
 logging.config.dictConfig(cfg)
 logger = logging.getLogger(__name__)
@@ -110,7 +115,7 @@ def publish_image(
         s3_client = ccc.aws.session(cicd_cfg.build.aws_cfg_name).client('s3')
         compute_client = ccc.gcp.authenticated_build_func(gcp_cfg)('compute', 'v1')
 
-        return glci.upload_and_publish_image(
+        return glci.gcp.upload_and_publish_image(
             storage_client=storage_client,
             s3_client=s3_client,
             compute_client=compute_client,
