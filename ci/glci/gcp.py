@@ -28,10 +28,16 @@ def upload_image_to_gcp_store(
             Fileobj=tfh,
         )
         logger().info(f'downloaded image from {build_cfg.s3_bucket_name=}')
+
         tfh.seek(0)
+
+        logger().info(f're-uploading image to gcp {build_cfg.gcp_bucket_name=} {image_blob_name=}')
         gcp_bucket = storage_client.get_bucket(build_cfg.gcp_bucket_name)
         image_blob = gcp_bucket.blob(image_blob_name)
-        image_blob.upload_from_file(tfh)
+        image_blob.upload_from_file(
+            tfh,
+            content_type='application/x-tar',
+        )
         logger().info(f'uploaded image {raw_image_key=} to {image_blob_name=}')
         return image_blob
 
