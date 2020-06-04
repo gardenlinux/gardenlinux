@@ -102,7 +102,7 @@ def publish_image(
         import ccc.aws
         import ccc.gcp
         import ci.util
-        gcp_cfg = ci.util.cfg_factory().gcp(cicd_cfg.build.gcp_cfg)
+        gcp_cfg = ci.util.ctx().cfg_factory().gcp(cicd_cfg.build.gcp_cfg)
 
         storage_client = ccc.gcp.cloud_storage_client(cicd_cfg.build.gcp_cfg)
         s3_client = ccc.aws.session(cicd_cfg.build.aws_cfg).client('s3')
