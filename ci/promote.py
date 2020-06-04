@@ -84,8 +84,9 @@ def publish_image(
     cicd_cfg: glci.model.CicdCfg,
 ) -> glci.model.OnlineReleaseManifest:
     if not release.platform in ('aws', 'gcp'):
-        print(f'do now know how to publish {release.platform=}, yet')
+        print(f'do not know how to publish {release.platform=}, yet')
         return release
+    print(f'running release for {release.platform=}')
 
     if release.platform == 'aws':
         import glci.aws
@@ -106,7 +107,7 @@ def publish_image(
         gcp_cfg = ci.util.ctx().cfg_factory().gcp(cicd_cfg.build.gcp_cfg_name)
 
         storage_client = ccc.gcp.cloud_storage_client(gcp_cfg)
-        s3_client = ccc.aws.session(cicd_cfg.build.aws_cfg).client('s3')
+        s3_client = ccc.aws.session(cicd_cfg.build.aws_cfg_name).client('s3')
         compute_client = ccc.gcp.authenticated_build_func(gcp_cfg)('compute', 'v1')
 
         return glci.upload_and_publish_image(

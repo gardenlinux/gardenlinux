@@ -7,7 +7,7 @@ import google.cloud.storage.client
 import glci.model
 
 
-logger = logging.getLogger(__name__)
+logger = lambda: logging.getLogger(__name__)
 
 
 def upload_image_to_gcp_store(
@@ -21,18 +21,18 @@ def upload_image_to_gcp_store(
 
     # XXX: rather do streaming
     with tempfile.TemporaryFile() as tfh:
-        logger.info(f'downloading image from {build_cfg.s3_bucket_name=}')
+        logger().info(f'downloading image from {build_cfg.s3_bucket_name=}')
         s3_client.download_fileobj(
             Bucket=build_cfg.s3_bucket_name,
             Key=raw_image_key,
             Fileobj=tfh,
         )
-        logger.info(f'downloaded image from {build_cfg.s3_bucket_name=}')
+        logger().info(f'downloaded image from {build_cfg.s3_bucket_name=}')
         tfh.seek(0)
         gcp_bucket = storage_client.get_bucket(build_cfg.gcp_bucket_name)
         image_blob = gcp_bucket.blob(image_blob_name)
         image_blob.upload_from_file(tfh)
-        logger.info(f'uploaded image {raw_image_key=} to {image_blob_name=}')
+        logger().info(f'uploaded image {raw_image_key=} to {image_blob_name=}')
         return image_blob
 
 
