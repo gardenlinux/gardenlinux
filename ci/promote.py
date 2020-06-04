@@ -7,6 +7,7 @@ An example being the promotion of a build snapshot to a daily build.
 '''
 
 import argparse
+import concurrent.futures
 import enum
 import functools
 import logging
@@ -102,7 +103,7 @@ def publish_image(
         import ccc.aws
         import ccc.gcp
         import ci.util
-        gcp_cfg = ci.util.ctx().cfg_factory().gcp(cicd_cfg.build.gcp_cfg)
+        gcp_cfg = ci.util.ctx().cfg_factory().gcp(cicd_cfg.build.gcp_cfg_name)
 
         storage_client = ccc.gcp.cloud_storage_client(cicd_cfg.build.gcp_cfg)
         s3_client = ccc.aws.session(cicd_cfg.build.aws_cfg).client('s3')
@@ -137,12 +138,12 @@ def promote(
     )
 
     if promote_mode is PromoteMode.MANIFESTS_AND_PUBLISH:
-        releases = [
-            publish_image(
-                release=release,
-                cicd_cfg=cicd_cfg,
-            ) for release in releases
-        ]
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=len(releases))
+        _publish_img = functools.partial(publish_image, cicd_cfg=cicd_cfg)
+
+        print(f'running {len(releases)} publishing jobs in parallel')
+        releases = executor.map(_publish_img, releases)
+
         for release in releases:
             print(release.published_image_metadata)
 
