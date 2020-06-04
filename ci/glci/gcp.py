@@ -16,7 +16,7 @@ def upload_image_to_gcp_store(
     release: glci.model.OnlineReleaseManifest,
     build_cfg: glci.model.BuildCfg,
 ) -> google.cloud.storage.blob.Blob:
-    image_blob_name = f'gardenlinux-{release.version}'
+    image_blob_name = f'gardenlinux-{release.version}.tar.gz'
     raw_image_key = release.path_by_suffix('rootfs.tar.xz').rel_path
 
     # XXX: rather do streaming
