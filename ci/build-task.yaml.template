@@ -60,7 +60,7 @@ spec:
   steps:
     - name: 'retrieve-repository' # patched-in through render_task.py
     - name: 'pre-build'           # patched-in through render_task.py
-      image: 'eu.gcr.io/gardener-project/cc/job-image:1.657.0'
+      image: 'eu.gcr.io/gardener-project/cc/job-image:1.658.0'
       script: |
         #!/usr/bin/env python3
         # requires github.com/gardener/cc-utils
@@ -159,7 +159,7 @@ spec:
         name: 'build'
 
     - name: 'upload-results'
-      image: 'eu.gcr.io/gardener-project/cc/job-image:1.657.0'
+      image: 'eu.gcr.io/gardener-project/cc/job-image:1.658.0'
       script: |
         #!/usr/bin/env python3
         # requires github.com/gardener/cc-utils
