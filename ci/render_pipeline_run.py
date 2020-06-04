@@ -115,7 +115,7 @@ def main():
     )
     parser.add_argument(
         '--promote-mode',
-        type=promote.BuildType,
+        type=promote.PromoteMode,
         default=promote.PromoteMode.MANIFESTS_ONLY,
     )
 
