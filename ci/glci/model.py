@@ -248,6 +248,8 @@ class BuildCfg:
     aws_cfg_name: str
     aws_region: str
     s3_bucket_name: str
+    gcp_bucket_name: str
+    gcp_cfg_name: str
     storage_account_config_name: str
     service_principal_name: str
     plan_config_name: str

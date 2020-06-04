@@ -82,20 +82,40 @@ def publish_image(
     release: glci.model.OnlineReleaseManifest,
     cicd_cfg: glci.model.CicdCfg,
 ) -> glci.model.OnlineReleaseManifest:
-    if not release.platform == 'aws':
+    if not release.platform in ('aws', 'gcp'):
         print(f'do now know how to publish {release.platform=}, yet')
         return release
 
-    import glci.aws
-    import ccc.aws
+    if release.platform == 'aws':
+        import glci.aws
+        import ccc.aws
 
-    mk_session = functools.partial(ccc.aws.session, aws_cfg=cicd_cfg.build.aws_cfg_name)
+        mk_session = functools.partial(ccc.aws.session, aws_cfg=cicd_cfg.build.aws_cfg_name)
 
-    return glci.aws.upload_and_register_gardenlinux_image(
-        mk_session=mk_session,
-        build_cfg=cicd_cfg.build,
-        release=release,
-    )
+        return glci.aws.upload_and_register_gardenlinux_image(
+            mk_session=mk_session,
+            build_cfg=cicd_cfg.build,
+            release=release,
+        )
+    elif release.platform == 'gcp':
+        import glci.gcp
+        import ccc.aws
+        import ccc.gcp
+        import ci.util
+        gcp_cfg = ci.util.cfg_factory().gcp(cicd_cfg.build.gcp_cfg)
+
+        storage_client = ccc.gcp.cloud_storage_client(cicd_cfg.build.gcp_cfg)
+        s3_client = ccc.aws.session(cicd_cfg.build.aws_cfg).client('s3')
+        compute_client = ccc.gcp.authenticated_build_func(gcp_cfg)('compute', 'v1')
+
+        return glci.upload_and_publish_image(
+            storage_client=storage_client,
+            s3_client=s3_client,
+            compute_client=compute_client,
+            gcp_project_name=gcp_cfg.project(),
+            release=release,
+            build_cfg=cicd_cfg.build,
+        )
 
 
 def promote(
