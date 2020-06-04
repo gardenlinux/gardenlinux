@@ -305,7 +305,6 @@ def upload_and_register_gardenlinux_image(
     release: glci.model.OnlineReleaseManifest,
 ) -> glci.model.OnlineReleaseManifest:
     session = mk_session(region_name=build_cfg.aws_region)
-    s3_client = session.client('s3')
     ec2_client = session.client('ec2')
 
     # TODO: add `version` to release-manifest
