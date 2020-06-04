@@ -142,7 +142,7 @@ def promote(
         _publish_img = functools.partial(publish_image, cicd_cfg=cicd_cfg)
 
         print(f'running {len(releases)} publishing jobs in parallel')
-        releases = executor.map(_publish_img, releases)
+        releases = tuple(executor.map(_publish_img, releases))
 
         for release in releases:
             print(release.published_image_metadata)
