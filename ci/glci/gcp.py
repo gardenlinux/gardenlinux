@@ -58,7 +58,7 @@ def upload_image_from_gcp_store(
         },
     )
 
-    resp = insertion_rq.execut()
+    resp = insertion_rq.execute()
 
     print(resp)
 
