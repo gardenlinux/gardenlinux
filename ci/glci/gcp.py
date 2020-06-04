@@ -2,7 +2,7 @@ import tempfile
 import time
 
 import google.cloud.storage.blob
-import google.cloud.storage.client.Client
+import google.cloud.storage.client
 import glci.model
 
 
