@@ -3,3 +3,4 @@ fdisk
 grub-cloud-amd64
 cloud-guest-utils
 initramfs-tools
+libpam-cracklib
