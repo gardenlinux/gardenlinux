@@ -271,8 +271,10 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 					        let "testcounter=testcounter+1"
 						if $featureDir/$i/test/$j $rootfs $targetBase; then
 							echo -e "\e[32mpassed\e[39m"
+							echo
 						else
 							echo -e "\e[31mfailed\e[39m"
+							echo
 							let "failcounter=failcounter+1"
 						fi
 					fi
