@@ -16,6 +16,7 @@ clean_ssh () {
 if awk 'BEGIN {chr=0}; $2 == "/" {chr=1}; END {exit chr}' /proc/mounts 2> /dev/null; then
 	ssh-keygen -A > /dev/null
 	mkdir -p /run/sshd
+	chmod 700 /run/sshd
 	trap "clean_ssh" EXIT   
 fi
 

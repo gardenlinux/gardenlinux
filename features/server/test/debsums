@@ -20,5 +20,5 @@ if [[ "$UID" -ne 0 ]]; then
 	echo "FATAL - must be run as root"
 	exit 1
 else
-	run_in_chroot ${rootfsDir} chroot_debsums.sh debsums_exclude  
+	run_in_chroot ${rootfsDir} debsums.chroot debsums_exclude.list 
 fi

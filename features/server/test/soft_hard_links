@@ -14,4 +14,4 @@ if ! check_rootdir "${rootfsDir}"; then
 	exit 1
 fi
 
-run_in_chroot ${rootfsDir} chroot_secure_creations_soft_hard_links.sh 
+run_in_chroot ${rootfsDir} soft_hard_links.chroot

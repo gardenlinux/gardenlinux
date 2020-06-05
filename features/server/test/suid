@@ -15,7 +15,7 @@ fi
 
 # get all files with setuid bit set
 suidList=$(find ${rootfsDir} -type f -perm -4000 -exec stat -c "%n,%u,%g" {} \; 2> /dev/null | awk -v p=${rootfsDir%/} '{ gsub(p, "", $1); print;}' || true) 
-suidFile="${absPath}/suid_files"
+suidFile="${absPath}/suid.list"
 
 
 echo "testing for suid files"

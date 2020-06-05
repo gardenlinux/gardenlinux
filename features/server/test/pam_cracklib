@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+echo "testing pam cracklib settings"
+
+rootfsDir=$1
+thisDir=$(readlink -e "$(dirname "${BASH_SOURCE[0]}")")
+rootfsDir=$(readlink -e "$rootfsDir")
+
+source "${thisDir}/helpers"
+
+check_rootdir "${rootfsDir}" || exit 1
+
+rc=0
+
+if ! grep -qP '^password[ \t]+required[ \t]+pam_cracklib\.so[ \t]+dcredit=-1[ \t]+ucredit=-1[ \t]+lcredit=-1[ \t]+minlen=8[ \t]+retry=5[ \t]+reject_username[ \t]?$' "${rootfsDir}/etc/pam.d/common-password"; then
+	rc=1
+fi
+if ! grep -qP '^password[ \t]+required[ \t]+pam_pwhistory\.so[ \t]+use_authtok[ \t]+remember=5[ \t]+retry=5[ \t]?$' "${rootfsDir}/etc/pam.d/common-password"; then
+	rc=1
+fi
+#if ! grep -qP '^password[ \t]+required[ \t]+pam_unix\.so[ \t]+use_authtok[ \t]?$' "${rootfsDir}/etc/pam.d/common-password"; then
+#	rc=1	
+#fi
+
+if [[ "${rc}" -eq 0 ]]; then
+	echo "OK - pam cracklib settings are correct"
+	exit 0
+else
+	echo "FAIL - pam cracklib settings are not correct"
+	exit 1
+fi

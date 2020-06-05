@@ -14,4 +14,4 @@ if ! check_rootdir "${rootfsDir}"; then
 	exit 1
 fi
 
-run_in_chroot ${rootfsDir} chroot_world_writable_paths.sh
+run_in_chroot ${rootfsDir} writable_paths.chroot

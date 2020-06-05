@@ -5,7 +5,7 @@ rc=0
 
 # There should not be blacklisted packeges on the filesystem
 echo "checking for blacklisted packeges"
-blacklistedPackagesFile="/tmp/blacklisted_packages.txt"
+blacklistedPackagesFile="/tmp/blacklisted_packages.list"
 dpkgBin="${rootfsDir}/usr/bin/dpkg"
 
 output=$("${dpkgBin}" -l | grep -wf "${blacklistedPackagesFile}")

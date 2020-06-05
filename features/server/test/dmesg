@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+echo "testing dmesg access for non-root users (SAP Security 2.90.03)"
+
+rootfsDir=$1
+thisDir=$(readlink -e "$(dirname "${BASH_SOURCE[0]}")")
+rootfsDir=$(readlink -e "$rootfsDir")
+
+source "${thisDir}/helpers"
+
+check_rootdir "${rootfsDir}" || exit 1
+
+message="OK - dmesg restricted"
+rc=1
+
+if grep -q 'CONFIG_SECURITY_DMESG_RESTRICT=y' "${rootfsDir}"/boot/config-*; then
+	message="${message} | kernel config parameter"
+	rc=0
+fi
+
+if grep -qr 'kernel.dmesg_restrict = 1' "${rootfsDir}"/etc/sysctl*; then 
+	message="${message} | sysctl parameter"
+	rc=0
+fi
+
+if [[ "$rc" -eq 0 ]]; then 
+	echo "${message}"
+	exit "$rc"
+else
+	echo "FAIL - dmesg access for non-root users is not resitrcted"
+	exit $rc
+fi

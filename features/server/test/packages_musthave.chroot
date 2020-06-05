@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+thisDir=$(readlink -e $(dirname "${BASH_SOURCE[0]}"))
+
+echo "checking for musthave packages"
+
+if ! packages=$(grep -vf <(dpkg -l | awk '$1~/ii/ { print $2; next}') "${thisDir}/packages_musthave.list"); then
+	echo "OK - all packages that must be installed are installed"
+	exit 0
+else
+	echo "FAIL - the following packages are not installed: ${packages}"
+	exit 1
+fi
