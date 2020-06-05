@@ -1,3 +1,4 @@
+import dataclasses
 import tempfile
 import time
 import logging
@@ -48,7 +49,7 @@ def upload_image_from_gcp_store(
     gcp_project_name: str,
     release: glci.model.OnlineReleaseManifest,
     build_cfg: glci.model.BuildCfg,
-):
+) -> glci.model.OnlineReleaseManifest:
     image_name = f'gardenlinux-{release.version}'
 
     images = compute_client.images()
@@ -65,8 +66,26 @@ def upload_image_from_gcp_store(
     )
 
     resp = insertion_rq.execute()
+    op_name = resp['name']
 
-    print(resp)
+    logger().info(f'waiting for {op_name=}')
+
+    operation = compute_client.globalOperations()
+    operation.wait(
+        project=gcp_project_name,
+        operation=op_name,
+    )
+
+    logger().info(f'import done - removing temporary object from bucket {image_blob.name=}')
+
+    image_blob.delete().execute()
+
+    published_image = glci.model.GcpPublishedImage(
+        gcp_image_name=image_name,
+        gcp_project_name=gcp_project_name,
+    )
+
+    return dataclasses.replace(release, published_image_metadata=published_image)
 
 
 def upload_and_publish_image(

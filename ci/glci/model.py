@@ -184,6 +184,12 @@ class AwsPublishedImageSet(PublishedImageBase):
 
 
 @dataclasses.dataclass(frozen=True)
+class GcpPublishedImage(PublishedImageBase):
+    gcp_image_name: str
+    gcp_account_name: str
+
+
+@dataclasses.dataclass(frozen=True)
 class ReleaseManifest(ReleaseIdentifier):
     '''
     metadata for a gardenlinux release variant that can be (or was) published to a persistency
@@ -191,7 +197,7 @@ class ReleaseManifest(ReleaseIdentifier):
     '''
     build_timestamp: str
     paths: typing.Tuple[ReleaseFile]
-    published_image_metadata: typing.Union[AwsPublishedImageSet, None]
+    published_image_metadata: typing.Union[AwsPublishedImageSet, GcpPublishedImage, None]
 
     def path_by_suffix(self, suffix: str):
         for path in self.paths:
