@@ -10,7 +10,7 @@ if [[ ! -f "${thisDir}/rkhunter.conf" ]]; then
 	exit 1
 fi
 
-DEBIAN_FRONTEND=noninteractive apt-get install -y -qq rkhunter > /dev/null
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq rkhunter apt-utils > /dev/null
 
 # run propupd just to avoid extra warnings in the log
 rkhunter --configfile "${thisDir}/rkhunter.conf" --propupd -q 

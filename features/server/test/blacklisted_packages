@@ -14,4 +14,4 @@ if ! check_rootdir "${rootfsDir}"; then
 	exit 1
 fi
 
-run_in_chroot ${rootfsDir} chroot_blacklisted_packages.sh blacklisted_packages.txt  
+run_in_chroot ${rootfsDir} blacklisted_packages.chroot blacklisted_packages.list  

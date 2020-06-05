@@ -14,4 +14,4 @@ if ! check_rootdir "${rootfsDir}"; then
 	exit 1
 fi
 
-run_in_chroot ${rootfsDir} chroot_memory_requirement.sh  
+run_in_chroot ${rootfsDir} memory_requirement.chroot

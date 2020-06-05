@@ -2,7 +2,8 @@
 
 rootfsDir=$1
 
-echo "executing tiger tests"
+echo "executing rkhunter tests"
+
 thisDir=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
 if [ -z ${thisDir} ]; then
 	echo "FATAL - can't determine working directory"
@@ -15,4 +16,4 @@ if ! check_rootdir "${rootfsDir}"; then
 	exit 1
 fi
 
-run_in_chroot ${rootfsDir} tiger.sh tigerrc  
+run_in_chroot ${rootfsDir} rkhunter.chroot rkhunter.conf 

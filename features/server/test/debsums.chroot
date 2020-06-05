@@ -4,7 +4,7 @@ export TZ="UTC"
 export LC_ALL="C"
 
 DEBIAN_FRONTEND=noninteractive apt-get update > /dev/null
-DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends debsums > /dev/null
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends debsums apt-utils > /dev/null
 
 if out=$(debsums -l); then
 	echo "OK - verifying if all installed packages provide md5sums"
@@ -13,7 +13,7 @@ else
 	echo "$out"
 	rc=1	
 fi
-out=$(debsums -sc | grep -vf /tmp/debsums_exclude)
+out=$(debsums -sc | grep -vf /tmp/debsums_exclude.list)
 if [ -z "$out" ]; then
 	echo "OK - verifying if there are any changed files"
 else
