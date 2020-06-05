@@ -1,3 +1,4 @@
+import concurrent.futures
 import dataclasses
 import enum
 import io
@@ -171,13 +172,20 @@ def enumerate_releases(
         return
     print(f'found {key_count} release manifests')
 
-    for obj_dict in res['Contents']:
-        key = obj_dict['Key']
-        yield release_manifest(
-            s3_client=s3_client,
-            bucket_name=bucket_name,
-            key=key,
-        )
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=32)
+
+    _release_manifest = functools.partial(
+        release_manifest,
+        s3_client=s3_client,
+        bucket_name=bucket_name,
+    )
+
+    def wrap_release_manifest(key):
+        return _release_manifest(key=key)
+
+    keys = [obj_dict['Key'] for obj_dict in res['Contents']]
+
+    yield from executor.map(wrap_release_manifest, keys)
 
 
 def find_release(
