@@ -16,8 +16,8 @@ def upload_image_to_gcp_store(
     release: glci.model.OnlineReleaseManifest,
     build_cfg: glci.model.BuildCfg,
 ) -> google.cloud.storage.blob.Blob:
-    image_blob_name = f'gardenlinux-{release.version}.tar.gz'
-    raw_image_key = release.path_by_suffix('rootfs.tar.xz').rel_path
+    image_blob_name = f'gardenlinux-{release.version}.gz'
+    raw_image_key = release.path_by_suffix('rootfs-gcpimage.tar.gz').rel_path
 
     # XXX: rather do streaming
     with tempfile.TemporaryFile() as tfh:
@@ -36,7 +36,7 @@ def upload_image_to_gcp_store(
         image_blob = gcp_bucket.blob(image_blob_name)
         image_blob.upload_from_file(
             tfh,
-            content_type='application/x-tar',
+            content_type='application/x-xz',
         )
         logger().info(f'uploaded image {raw_image_key=} to {image_blob_name=}')
         return image_blob
