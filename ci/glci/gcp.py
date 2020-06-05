@@ -78,7 +78,7 @@ def upload_image_from_gcp_store(
 
     logger().info(f'import done - removing temporary object from bucket {image_blob.name=}')
 
-    image_blob.delete().execute()
+    image_blob.delete()
 
     published_image = glci.model.GcpPublishedImage(
         gcp_image_name=image_name,
