@@ -1,0 +1,7 @@
+boto3
+dacite==1.4.0 # bug in 1.5.0
+pyyaml
+gardener-cicd-base
+google-api-python-client
+google-auth
+google-cloud-storage
