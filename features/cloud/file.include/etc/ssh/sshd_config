@@ -16,7 +16,7 @@ IgnoreRhosts yes
 HostbasedAuthentication no
 
 # Set log level to be verbose.
-LogLevel VERBOSE 
+LogLevel INFO 
 
 # Ensure usage of PAM
 UsePAM yes
