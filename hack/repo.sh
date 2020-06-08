@@ -25,7 +25,7 @@ docker run --rm \
 	--volume "$(gpgconf --list-dir agent-socket)":/root/.gnupg/S.gpg-agent \
 	--volume "$(readlink -f reprepro)":/opt/reprepro \
 	--volume "/home/admin/gardenlinux/.repository":"/opt/reprepro/repository" \
-	--volume "/home/admin/gardenlinux/.packages":"/opt/reprepro/packages_gardenlinux" \
+	--volume "/home/admin/gardenlinux/packages":"/opt/reprepro/packages_gardenlinux" \
 	-e GPG_TTY=/dev/console \
 	-e GPG_KEY="${pubKey}" \
 	-e ARGS="${*}" \

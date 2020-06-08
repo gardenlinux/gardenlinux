@@ -3,7 +3,7 @@ BUILDEMAIL="contact@gardenlinux.io"
 BUILDKEY="contact@gardenlinux.io"
 BUILDKEYPUB=$(gpg --armor --export "${BUILDKEY}") 
 BUILDIMAGE="gardenlinux:build"
-BUILDTARGET="$(readlink -f ../../.packages)"
+BUILDTARGET="$(readlink -f ../../packages)"
 
 if [[ "$(docker images -q $BUILDIMAGE 2> /dev/null)" == "" ]]; then
 	docker build -t $BUILDIMAGE .
@@ -14,6 +14,7 @@ docker_run () {
 	--volume $BUILDTARGET:/packages \
 	--volume "$(gpgconf --list-dir agent-socket)":/home/dev/.gnupg/S.gpg-agent \
 	--volume $(readlink -f $1):/$1 \
+	--volume $(readlink -f quiltrc):/home/dev/.quiltrc \
 	-e GPG_KEY="${BUILDKEYPUB}" \
 	-e DEBFULLNAME="$BUILDNAME" \
 	-e DEBEMAIL="$BUILDEMAIL" \
