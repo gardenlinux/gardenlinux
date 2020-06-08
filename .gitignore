@@ -1,6 +1,5 @@
-/.*
-build
-packages
-repository
-features/_dev/id_dev
+/build
+/packages
+/repository
+/features/_dev/id_dev
 __pycache__
