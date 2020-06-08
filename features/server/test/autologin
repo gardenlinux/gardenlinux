@@ -1,22 +1,31 @@
 #!/usr/bin/env bash
+set -euo pipefail
+
+echo "testing for autologin setting for systemd"
 
 rootfsDir=$1
-rc=0
+thisDir=$(readlink -e "$(dirname "${BASH_SOURCE[0]}")")
+rootfsDir=$(readlink -e "$rootfsDir")
 
-# there should not be autologin.conf files under the /etc/systemd/ directory
-echo "checking for autologin.conf files"
-autologinFileName="autologin.conf"
-systemdDir="${rootfsDir}/etc/systemd"
-output=$(find "${systemdDir}" -name "${autologinFileName}")
-numOfAutologinFiles=$(echo "${output}" | wc -l)
+source "${thisDir}/helpers"
+
+check_rootdir "${rootfsDir}" || exit 1
+
+if $(grep GARDENLINUX_FEATURES "${rootfsDir}/etc/os-release" | grep -q _dev); then
+	echo "SKIP - not running when _dev feature is enabled"
+	exit 0
+fi
+
+output=$(grep -rE '.*/sbin/agetty.*--autologin.*' "${rootfsDir}/etc/systemd")
 
 if [ -z "${output}" ]
 then
-      echo "There are no ${autologinFileName} files under ${systemdDir} directory"
+	echo "OK - no autologin settings"
+	exit 0
 else
-      echo "${numOfAutologinFiles} ${autologinFileName} exist under ${systemdDir} directory:"
-      echo "${output}"
-      rc=1
+	echo "FAIL - following files contain autologin settings"
+	while read -r f; do
+		echo ${f#"$rootfsDir"}
+	done <<< "$output"
+	exit 1
 fi
-
-exit $rc

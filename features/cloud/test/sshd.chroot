@@ -24,7 +24,7 @@ absPath=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
 ssh_exp="${absPath}/ssh_expected"
 ssh_nexp="${absPath}/ssh_not_expected"
 
-if ! sshd_config=$(sshd -T); then 
+if ! sshd_config=$(sshd -T | awk '{print tolower($0)}'); then 
 	echo "FATAL - can't get the ssh config!"
 	exit 1
 fi
