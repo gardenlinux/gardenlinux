@@ -249,7 +249,7 @@ def normalised_modifiers(platform: Platform, modifiers):
     platform = feature_by_name(platform)
     modifiers = {feature_by_name(f) for f in modifiers}
 
-    all_modifiers = set()
+    all_modifiers = set((m.name for m in modifiers))
     for m in modifiers:
         all_modifiers |= set((m.name for m in m.included_features()))
 

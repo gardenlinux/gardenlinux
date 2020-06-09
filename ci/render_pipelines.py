@@ -170,7 +170,7 @@ def main():
         build_yaml=build_yaml,
     )
 
-    gardenlinux_flavours = tuple(flavour_set.flavours())
+    gardenlinux_flavours = set(flavour_set.flavours())
     outfile = parsed.outfile
 
     pipeline:dict = render_pipeline_dict(
