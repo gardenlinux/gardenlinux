@@ -246,6 +246,11 @@ class ReleaseManifest(ReleaseIdentifier):
 
 
 def normalised_modifiers(platform: Platform, modifiers):
+    '''
+    determines the transitive closure of all features from the given platform and modifiers,
+    and returns the (ASCII-upper-case-sorted) result as a `tuple` of str of all modifiers,
+    except for the platform
+    '''
     platform = feature_by_name(platform)
     modifiers = {feature_by_name(f) for f in modifiers}
 
@@ -256,20 +261,44 @@ def normalised_modifiers(platform: Platform, modifiers):
     for f in platform.included_features():
         all_modifiers.add(f.name)
 
-    normalised_features = tuple(sorted(all_modifiers))
+    normalised_features = tuple(sorted(all_modifiers, key=str.upper))
 
     return normalised_features
 
 
 
 def normalised_release_identifier(release_identifier: ReleaseIdentifier):
-    platform = feature_by_name(release_identifier.platform)
     modifiers = normalised_modifiers(
         platform=release_identifier.platform,
         modifiers=release_identifier.modifiers,
     )
 
     return dataclasses.replace(release_identifier, modifiers=modifiers)
+
+
+def canonicalised_features(platform: Platform, modifiers):
+    '''
+    calculates the "canonical" (/minimal) tuple of features required to unambiguosly identify
+    a gardenlinux flavour. The result is returned as a (ASCII-upper-case-sorted) tuple of
+    `FeatureDescriptor`, including the platform (which is always the first element).
+
+    The minimal featureset is determined by removing all transitive dependencies (which are thus
+    implied by the retained features).
+    '''
+    platform = feature_by_name(platform)
+    minimal_modifiers = set((feature_by_name(m) for m in modifiers))
+
+    # rm all transitive dependencies from platform
+    minimal_modifiers -= set((platform.included_features(), *modifiers))
+
+    # rm all transitive dependencies from modifiers
+    for modifier in (feature_by_name(m) for m in modifiers):
+        minimal_modifiers -= set(modifier.included_features())
+
+    # canonical name: <platform>-<ordered-features> (UPPER-cased-sort, so _ is after alpha)
+    minimal_modifiers = sorted(minimal_modifiers, key=lambda m: m.name.upper())
+
+    return tuple((platform, *minimal_modifiers))
 
 
 @dataclasses.dataclass(frozen=True)
