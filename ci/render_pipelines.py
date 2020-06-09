@@ -43,7 +43,12 @@ def mk_pipeline_build_task(
     )
 
     task_name = gardenlinux_flavour.canonical_name_prefix().replace('/', '-')\
-            .replace('_', '-').strip('-')
+            .replace('_', '').strip('-')\
+            .replace('readonly', 'ro') # hardcoded shortening (length-restriction)
+
+    if len(task_name) > 64:
+        print(f'WARNING: {task_name=} too long - will shorten')
+        task_name = task_name[:64]
 
     return PipelineTask(
         name=task_name,
