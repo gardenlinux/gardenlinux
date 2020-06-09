@@ -55,13 +55,16 @@ class FeatureDescriptor:
             return ()
         return self.features.include
 
-    def included_features(self) -> typing.Tuple['FeatureDescriptor']:
+    def included_features(self, transitive=True)->typing.Generator['FeatureDescriptor', None, None]:
         '''
-        returns the tuple of features immediately depended-on by this feature
+        returns the tuple of features (transtively) included by this feature
         '''
-        return tuple((
-            feature_by_name(name) for name in self.included_feature_names()
-        ))
+        included_features = (feature_by_name(name) for name in self.included_feature_names())
+
+        for included_feature in included_features:
+            if transitive:
+                yield from included_feature.included_features()
+            yield included_feature
 
 
 class Architecture(enum.Enum):
@@ -79,6 +82,10 @@ class GardenlinuxFlavour:
     architecture: Architecture
     platform: str
     modifiers: typing.Tuple[Modifier]
+
+    def calculate_modifiers(self):
+        platform = feature_by_name(self.platform)
+        yield from platform.included_features()
 
     def canonical_name_prefix(self):
         a = self.architecture.value
