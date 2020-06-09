@@ -194,7 +194,7 @@ def main():
     cicd_cfg = glci.util.cicd_cfg(cfg_name=parsed.cicd_cfg)
     build_cfg = cicd_cfg.build
     flavour_set = glci.util.flavour_set(flavour_set_name=parsed.flavourset)
-    flavours = tuple(flavour_set.flavours())
+    flavours = set(flavour_set.flavours())
     committish = parsed.committish
     gardenlinux_epoch = parsed.gardenlinux_epoch
     version = parsed.version or f'{gardenlinux_epoch}-{committish[0:6]}'

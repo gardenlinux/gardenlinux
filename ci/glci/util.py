@@ -194,12 +194,14 @@ def find_release(
     release_identifier: glci.model.ReleaseIdentifier,
     prefix: str=glci.model.ReleaseManifest.manifest_key_prefix,
 ):
+    normalised = glci.util.normalised_release_identifier
+
     for release in enumerate_releases(
         s3_client=s3_client,
         bucket_name=bucket_name,
         prefix=prefix,
     ):
-        if release.release_identifier() == release_identifier:
+        if normalised(release.release_identifier()) == normalised(release_identifier):
             return release
     else:
         return None

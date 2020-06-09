@@ -86,6 +86,10 @@ class GardenlinuxFlavour:
     def calculate_modifiers(self):
         platform = feature_by_name(self.platform)
         yield from platform.included_features()
+        yield from (
+            feature_by_name(f) for f
+            in normalised_modifiers(platform=self.platform, modifiers=self.modifiers)
+        )
 
     def canonical_name_prefix(self):
         a = self.architecture.value
@@ -148,7 +152,7 @@ class GardenlinuxFlavourSet:
                 yield GardenlinuxFlavour(
                     architecture=arch,
                     platform=platf,
-                    modifiers=mods,
+                    modifiers=normalised_modifiers(platform=platf, modifiers=mods),
                 )
 
 
@@ -176,11 +180,13 @@ class ReleaseIdentifier:
     platform: Platform
     modifiers: typing.Tuple[Modifier]
 
-    def flavour(self) -> GardenlinuxFlavour:
+    def flavour(self, normalise=True) -> GardenlinuxFlavour:
+        mods = normalised_modifiers(platform=self.platform, modifiers=self.modifiers)
+
         return GardenlinuxFlavour(
             architecture=self.architecture,
             platform=self.platform,
-            modifiers=self.modifiers,
+            modifiers=mods,
         )
 
 
@@ -237,6 +243,33 @@ class ReleaseManifest(ReleaseIdentifier):
     # attrs below are _transient_ (no typehint) and thus exempted from x-serialisation
     # treat as "static final"
     manifest_key_prefix = 'meta'
+
+
+def normalised_modifiers(platform: Platform, modifiers):
+    platform = feature_by_name(platform)
+    modifiers = {feature_by_name(f) for f in modifiers}
+
+    all_modifiers = set()
+    for m in modifiers:
+        all_modifiers |= set((m.name for m in m.included_features()))
+
+    for f in platform.included_features():
+        all_modifiers.add(f.name)
+
+    normalised_features = tuple(sorted(all_modifiers))
+
+    return normalised_features
+
+
+
+def normalised_release_identifier(release_identifier: ReleaseIdentifier):
+    platform = feature_by_name(release_identifier.platform)
+    modifiers = normalised_modifiers(
+        platform=release_identifier.platform,
+        modifiers=release_identifier.modifiers,
+    )
+
+    return dataclasses.replace(release_identifier, modifiers=modifiers)
 
 
 @dataclasses.dataclass(frozen=True)
