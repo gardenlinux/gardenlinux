@@ -36,7 +36,11 @@ def mk_pipeline_build_task(
     if not pipeline_flavour is glci.model.PipelineFlavour.SNAPSHOT:
         raise NotImplementedError(pipeline_flavour)
 
-    modifier_names = ','.join(gardenlinux_flavour.modifiers)
+    modifier_names = ','.join(
+        sorted(
+            (m.name for m in gardenlinux_flavour.calculate_modifiers())
+        )
+    )
 
     task_name = gardenlinux_flavour.canonical_name_prefix().replace('/', '-')\
             .replace('_', '-').strip('-')

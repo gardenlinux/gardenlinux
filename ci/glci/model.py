@@ -25,6 +25,18 @@ class FeatureType(enum.Enum):
     MODIFIER = 'modifier'
 
 
+Platform = str # see `features/*/info.yaml` / platforms() for allowed values
+Modifier = str # see `features/*/info.yaml` / modifiers() for allowed values
+
+
+@dataclasses.dataclass(frozen=True)
+class Features:
+    '''
+    a FeatureDescriptor's feature cfg (currently, references to other features, only)
+    '''
+    include: typing.Tuple[Modifier] = tuple()
+
+
 @dataclasses.dataclass(frozen=True)
 class FeatureDescriptor:
     '''
@@ -33,6 +45,26 @@ class FeatureDescriptor:
     type: FeatureType
     name: str
     description: str = 'no description available'
+    features: Features = None
+
+    def included_feature_names(self) -> typing.Tuple[Modifier]:
+        '''
+        returns the tuple of feature names immediately depended-on by this feature
+        '''
+        if not self.features:
+            return ()
+        return self.features.include
+
+    def included_features(self, transitive=True)->typing.Generator['FeatureDescriptor', None, None]:
+        '''
+        returns the tuple of features (transtively) included by this feature
+        '''
+        included_features = (feature_by_name(name) for name in self.included_feature_names())
+
+        for included_feature in included_features:
+            if transitive:
+                yield from included_feature.included_features()
+            yield included_feature
 
 
 class Architecture(enum.Enum):
@@ -40,10 +72,6 @@ class Architecture(enum.Enum):
     gardenlinux' target architectures, following Debian's naming
     '''
     AMD64 = 'amd64'
-
-
-Platform = str # see `features/*/info.yaml` / platforms() for allowed values
-Modifier = str # see `features/*/info.yaml` / modifiers() for allowed values
 
 
 @dataclasses.dataclass(frozen=True)
@@ -54,6 +82,10 @@ class GardenlinuxFlavour:
     architecture: Architecture
     platform: str
     modifiers: typing.Tuple[Modifier]
+
+    def calculate_modifiers(self):
+        platform = feature_by_name(self.platform)
+        yield from platform.included_features()
 
     def canonical_name_prefix(self):
         a = self.architecture.value
@@ -66,20 +98,6 @@ class GardenlinuxFlavour:
         m = '_'.join(sorted([m for m in self.modifiers]))
 
         return f'{p}-{m}'
-
-    def release_files(self, version: str):
-        suffices = (
-            'InRelease',
-            'Release',
-            'rootf.tar.xz',
-            'rootfs.raw',
-            'manifest',
-        )
-
-        prefix = self.canonical_name_prefix()
-
-        for s in suffices:
-            yield f'{prefix}-{version}-{s}'
 
     def __post_init__(self):
         # validate platform and modifiers
@@ -336,6 +354,7 @@ def _deserialise_feature(feature_file):
         config=dacite.Config(
             cast=[
                 FeatureType,
+                tuple,
             ],
         ),
     )
@@ -358,3 +377,10 @@ def modifiers():
     return {
         feature for feature in features() if feature.type is FeatureType.MODIFIER
     }
+
+
+def feature_by_name(feature_name: str):
+    for feature in features():
+        if feature.name == feature_name:
+            return feature
+    raise ValueError(feature_name)

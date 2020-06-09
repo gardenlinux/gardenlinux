@@ -129,7 +129,7 @@ spec:
         suite="$(params.suite)"
         gardenlinux_epoch='$(params.gardenlinux_epoch)'
         timestamp='$(params.snapshot_timestamp)'
-        features="$(params.platform),$(params.modifiers),server,cloud"
+        features="$(params.platform),$(params.modifiers)"
         echo "features: ${features}"
         export OUT_DIR="/build"
         ls -la /build
