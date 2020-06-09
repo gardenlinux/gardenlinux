@@ -194,7 +194,7 @@ def find_release(
     release_identifier: glci.model.ReleaseIdentifier,
     prefix: str=glci.model.ReleaseManifest.manifest_key_prefix,
 ):
-    normalised = glci.util.normalised_release_identifier
+    normalised = glci.model.normalised_release_identifier
 
     for release in enumerate_releases(
         s3_client=s3_client,
