@@ -16,7 +16,8 @@ IgnoreRhosts yes
 HostbasedAuthentication no
 
 # Set log level to be verbose.
-LogLevel INFO 
+# we need to log the fingerprint
+LogLevel VERBOSE 
 
 # Ensure usage of PAM
 UsePAM yes
