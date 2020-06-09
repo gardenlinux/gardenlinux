@@ -25,6 +25,18 @@ class FeatureType(enum.Enum):
     MODIFIER = 'modifier'
 
 
+Platform = str # see `features/*/info.yaml` / platforms() for allowed values
+Modifier = str # see `features/*/info.yaml` / modifiers() for allowed values
+
+
+@dataclasses.dataclass(frozen=True)
+class Features:
+    '''
+    a FeatureDescriptor's feature cfg (currently, references to other features, only)
+    '''
+    include: typing.Tuple[Modifier] = tuple()
+
+
 @dataclasses.dataclass(frozen=True)
 class FeatureDescriptor:
     '''
@@ -33,6 +45,23 @@ class FeatureDescriptor:
     type: FeatureType
     name: str
     description: str = 'no description available'
+    features: Features = None
+
+    def included_feature_names(self) -> typing.Tuple[Modifier]:
+        '''
+        returns the tuple of feature names immediately depended-on by this feature
+        '''
+        if not self.features:
+            return ()
+        return self.features.include
+
+    def included_features(self) -> typing.Tuple['FeatureDescriptor']:
+        '''
+        returns the tuple of features immediately depended-on by this feature
+        '''
+        return tuple((
+            feature_by_name(name) for name in self.included_feature_names()
+        ))
 
 
 class Architecture(enum.Enum):
@@ -40,10 +69,6 @@ class Architecture(enum.Enum):
     gardenlinux' target architectures, following Debian's naming
     '''
     AMD64 = 'amd64'
-
-
-Platform = str # see `features/*/info.yaml` / platforms() for allowed values
-Modifier = str # see `features/*/info.yaml` / modifiers() for allowed values
 
 
 @dataclasses.dataclass(frozen=True)
@@ -336,6 +361,7 @@ def _deserialise_feature(feature_file):
         config=dacite.Config(
             cast=[
                 FeatureType,
+                tuple,
             ],
         ),
     )
@@ -358,3 +384,10 @@ def modifiers():
     return {
         feature for feature in features() if feature.type is FeatureType.MODIFIER
     }
+
+
+def feature_by_name(feature_name: str):
+    for feature in features():
+        if feature.name == feature_name:
+            return feature
+    raise ValueError(feature_name)
