@@ -1,0 +1,10 @@
+description: "creates a Open Container Image"
+type: platform
+features:
+  include: [ base ]
+tar:
+  compression: xz
+  include-dev: false
+fs:
+  - dest: /
+    type: oci

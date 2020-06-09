@@ -1,10 +1,6 @@
 description: "base layer (debootstap --variant minbase, see docker:debian:xx-slim)"
-type: platform
+type: 'modifier'
 features:
   include: [ _slim ]
 tar:
-  compression: xz
   include-dev: false
-fs:
-  - dest: /
-    type: docker

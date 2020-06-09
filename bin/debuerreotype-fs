@@ -22,7 +22,7 @@ while true; do
 		--boot)  IFS=',' read -ra boot <<< "$1"; shift ;;
 		--image) IFS=',' read -ra image <<< "$1"; shift ;;
 		--disklabel)   disklabel=$1; shift ;;
-		--rootfs)   roottype=$1; shift ;;
+		--type)   roottype=$1; shift ;;
 		--rootsize) rootsize=$1; shift ;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
@@ -84,7 +84,7 @@ case "$roottype" in
 	squashfs | sqfs)
 		xzcat rootfs.tar.xz | tar2sqfs -c xz rootfs.part
 		;;
-	docker) 
+	oci) 
 		cat > Dockerfile <<-EOF
 			FROM scratch
 			ADD rootfs.tar /
