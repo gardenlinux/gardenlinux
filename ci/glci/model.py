@@ -92,20 +92,6 @@ class GardenlinuxFlavour:
 
         return f'{p}-{m}'
 
-    def release_files(self, version: str):
-        suffices = (
-            'InRelease',
-            'Release',
-            'rootf.tar.xz',
-            'rootfs.raw',
-            'manifest',
-        )
-
-        prefix = self.canonical_name_prefix()
-
-        for s in suffices:
-            yield f'{prefix}-{version}-{s}'
-
     def __post_init__(self):
         # validate platform and modifiers
         platform_names = {platform.name for platform in platforms()}
