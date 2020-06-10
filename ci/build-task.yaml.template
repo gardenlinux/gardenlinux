@@ -256,8 +256,9 @@ spec:
           published_image_metadata=None,
         )
 
+        manifest_path_suffix = manifest.canonical_release_manifest_key_suffix()
         manifest_path = \
-          f'{glci.model.ReleaseManifest.manifest_key_prefix}/{version_str}-{fname_prefix}'
+          f'{glci.model.ReleaseManifest.manifest_key_prefix}/{manifest_path_suffix}
 
         glci.util.upload_release_manifest(
           s3_client=s3_client,

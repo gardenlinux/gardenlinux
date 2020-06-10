@@ -6,6 +6,7 @@ import functools
 import typing
 
 import botocore.client
+import botocore.exceptions
 import dacite
 import yaml
 
@@ -72,17 +73,24 @@ def release_manifest(
     s3_client: 'botocore.client.S3',
     bucket_name: str,
     key: str,
+    absent_ok: bool=False,
 ) -> glci.model.OnlineReleaseManifest:
     '''
     retrieves and deserialises a gardenlinux release manifest from the specified s3 object
     (expects a YAML or JSON document)
     '''
     buf = io.BytesIO()
-    s3_client.download_fileobj(
-        Bucket=bucket_name,
-        Key=key,
-        Fileobj=buf,
-    )
+    try:
+        s3_client.download_fileobj(
+            Bucket=bucket_name,
+            Key=key,
+            Fileobj=buf,
+        )
+    except botocore.exceptions.ClientError as e:
+        if absent_ok and str(e['Error']['Code']) == '404':
+            return None
+        raise e
+
     buf.seek(0)
     parsed = yaml.safe_load(buf)
 
@@ -195,15 +203,23 @@ def find_release(
     prefix: str=glci.model.ReleaseManifest.manifest_key_prefix,
 ):
     normalised = glci.model.normalised_release_identifier
+    release_manifest_key = release_identifier.canonical_release_manifest_key()
 
-    for release in enumerate_releases(
+    manifest = release_manifest(
         s3_client=s3_client,
         bucket_name=bucket_name,
-        prefix=prefix,
-    ):
-        if normalised(release.release_identifier()) == normalised(release_identifier):
-            return release
+        key=release_manifest_key,
+        absent_ok=True,
+    )
+
+    if not manifest:
+        return None
+
+    if normalised(manifest.release_identifier()) == normalised(release_identifier):
+        return manifest
     else:
+        # warn about not matching expected contents from canonical name
+        print(f'WARNING: {release_manifest_key=} contained unexpected contents')
         return None
 
 
@@ -218,24 +234,25 @@ def find_releases(
 ):
     flavours = set(flavour_set.flavours())
 
-    for release in enumerate_releases(
-        s3_client=s3_client,
-        bucket_name=bucket_name,
-        prefix=prefix,
-    ):
-        if not release.build_committish == build_committish:
-            continue
+    for flavour in flavours:
+        release_identifier = glci.model.ReleaseIdentifier(
+            build_committish=build_committish,
+            version=version,
+            gardenlinux_epoch=gardenlinux_epoch,
+            architecture=flavour.architecture,
+            platform=flavour.platform,
+            modifiers=flavour.modifiers,
+        )
 
-        if not release.gardenlinux_epoch == gardenlinux_epoch:
-            continue
+        existing_release = find_release(
+            s3_client=s3_client,
+            bucket_name=bucket_name,
+            release_identifier=release_identifier,
+            prefix=prefix,
+        )
 
-        if not release.version == version:
-            continue
-
-        if not release.flavour() in flavours:
-            continue
-
-        yield release
+        if existing_release:
+            yield existing_release
 
 
 @functools.lru_cache

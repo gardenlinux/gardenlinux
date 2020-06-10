@@ -197,6 +197,37 @@ class ReleaseIdentifier:
             modifiers=mods,
         )
 
+    def canonical_release_manifest_key_suffix(self):
+        '''
+        returns the canonical release manifest key. This key is used as a means to
+        unambiguously identify it, and to thus be able to calculate its name if checking
+        whether or not the given gardenlinux flavour has already been built and published.
+
+        the key consists of:
+
+        <canonical flavour name>-<version>
+
+        where <canonical flavour name> is calculated from canonicalised_features()
+        and <version> is either <gardenlinux-epoch>-<commit-hash[:6]>, or the release
+        version (for releases).
+
+        note that the full key should be prefixed (e.g. with manifest_key_prefix)
+        '''
+        flavour_name = '-'.join((
+            f.name for f in normalised_modifiers(
+                platform=self.platform,
+                modifiers=self.modifiers,
+            )
+        ))
+        return f'{flavour_name}-{self.version}'
+
+    def canonical_release_manifest_key(self):
+        return f'{self.manifest_key_prefix}/{self.canonical_release_manifest_key_suffix()}'
+
+    # attrs below are _transient_ (no typehint) and thus exempted from x-serialisation
+    # treat as "static final"
+    manifest_key_prefix = 'meta/singles'
+
 
 class PublishedImageBase:
     pass
@@ -247,34 +278,6 @@ class ReleaseManifest(ReleaseIdentifier):
             platform=self.platform,
             modifiers=self.modifiers,
         )
-
-    def canonical_release_manifest_key_suffix(self):
-        '''
-        returns the canonical release manifest key. This key is used as a means to
-        unambiguously identify it, and to thus be able to calculate its name if checking
-        whether or not the given gardenlinux flavour has already been built and published.
-
-        the key consists of:
-
-        <canonical flavour name>-<version>
-
-        where <canonical flavour name> is calculated from canonicalised_features()
-        and <version> is either <gardenlinux-epoch>-<commit-hash[:6]>, or the release
-        version (for releases).
-
-        note that the full key should be prefixed (e.g. with manifest_key_prefix)
-        '''
-        flavour_name = '-'.join((
-            f.name for f in normalised_modifiers(
-                platform=self.platform,
-                modifiers=self.modifiers,
-            )
-        ))
-        return f'{flavour_name}-{self.version}'
-
-    # attrs below are _transient_ (no typehint) and thus exempted from x-serialisation
-    # treat as "static final"
-    manifest_key_prefix = 'meta/singles'
 
 
 def normalised_modifiers(platform: Platform, modifiers):
