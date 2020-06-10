@@ -97,7 +97,7 @@ spec:
           s3_client=s3_client,
           bucket_name=s3_bucket_name,
           release_identifier=release_identifier,
-          prefix='meta/snapshots',
+          prefix=glci.model.ReleaseManifest.manifest_key_prefix,
         ):
           with open('/workspace/skip_build', 'w') as f:
             f.write('skip build (already done)')
