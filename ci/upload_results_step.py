@@ -23,15 +23,13 @@ def upload_files(
     s3_client,
     s3_bucket_name,
 ):
-  def upload_fname(fname_prefix, version_str, suffix: str):
-    return f'{fname_prefix}-{version_str}-{suffix}'
   with tarfile.open(build_result_fname) as tf:
     for tarinfo in tf:
       if not tarinfo.isfile():
         continue
       tar_fname = tarinfo.name.lstrip('./')
-      fname = upload_fname(suffix=tar_fname)
       fobj = tf.extractfile(tarinfo)
+      fname = f'{fname_prefix}-{version_str}-{tar_fname}'
 
       # calculate filehash (use as fname)
       sha1 = hashlib.sha1()
