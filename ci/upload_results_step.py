@@ -1,12 +1,8 @@
-import dataclasses
 import datetime
 import hashlib
-import io
 import os
 import sys
 import tarfile
-
-import yaml
 
 import ccc.aws # dependency towards github.com/gardener/cc-utils
 
@@ -20,15 +16,15 @@ this script is rendered into build-task from step.py/render_task.py
 parsable_to_int = str
 
 
-def upload_fname(suffix: str):
-  return f'{fname_prefix}-{version_str}-{suffix}'
-
-
 def upload_files(
     build_result_fname,
+    fname_prefix,
+    version_str,
     s3_client,
     s3_bucket_name,
 ):
+  def upload_fname(fname_prefix, version_str, suffix: str):
+    return f'{fname_prefix}-{version_str}-{suffix}'
   with tarfile.open(build_result_fname) as tf:
     for tarinfo in tf:
       if not tarinfo.isfile():
@@ -75,11 +71,11 @@ def upload_results_step(
       print('/workspace/skip_build found - skipping upload')
       sys.exit(0)
 
+    build_result_fname = outfile
     if not os.path.isfile(build_result_fname):
       print('ERROR: no build result - see previous step for errs')
       sys.exit(1)
 
-    build_result_fname = outfile
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
     aws_cfg_name = cicd_cfg.build.aws_cfg_name
     s3_bucket_name = cicd_cfg.build.s3_bucket_name
@@ -87,12 +83,11 @@ def upload_results_step(
     s3_client = session.client('s3')
     print(f'uploading to s3 {aws_cfg_name=} {s3_bucket_name=}')
     gardenlinux_epoch = int(gardenlinux_epoch)
-    short_committish = committish[:6]
-    version_str = version
-    fname_prefix = fnameprefix
 
     uploaded_relpaths = tuple(upload_files(
         build_result_fname=build_result_fname,
+        fname_prefix=fnameprefix,
+        version_str=version,
         s3_client=s3_client,
         s3_bucket_name=s3_bucket_name,
     ))

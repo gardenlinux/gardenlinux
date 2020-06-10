@@ -122,10 +122,6 @@ def promote(
     cicd_cfg: glci.model.CicdCfg,
     flavour_set: glci.model.GardenlinuxFlavourSet,
 ):
-    upload_release_manifest = glci.util.preconfigured(
-        func=glci.util.upload_release_manifest,
-        cicd_cfg=cicd_cfg,
-    )
     upload_release_manifest_set = glci.util.preconfigured(
         func=glci.util.upload_release_manifest_set,
         cicd_cfg=cicd_cfg,
