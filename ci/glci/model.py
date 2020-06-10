@@ -214,7 +214,7 @@ class ReleaseIdentifier:
         note that the full key should be prefixed (e.g. with manifest_key_prefix)
         '''
         flavour_name = '-'.join((
-            f.name for f in normalised_modifiers(
+            f for f in normalised_modifiers(
                 platform=self.platform,
                 modifiers=self.modifiers,
             )
@@ -280,7 +280,7 @@ class ReleaseManifest(ReleaseIdentifier):
         )
 
 
-def normalised_modifiers(platform: Platform, modifiers):
+def normalised_modifiers(platform: Platform, modifiers) -> typing.Tuple[str]:
     '''
     determines the transitive closure of all features from the given platform and modifiers,
     and returns the (ASCII-upper-case-sorted) result as a `tuple` of str of all modifiers,
