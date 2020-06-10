@@ -192,7 +192,6 @@ def main():
     parsed = parse_args()
 
     cicd_cfg = glci.util.cicd_cfg(cfg_name=parsed.cicd_cfg)
-    build_cfg = cicd_cfg.build
     flavour_set = glci.util.flavour_set(flavour_set_name=parsed.flavourset)
     flavours = set(flavour_set.flavours())
     committish = parsed.committish
@@ -209,7 +208,7 @@ def main():
             version=version,
             build_committish=committish,
             gardenlinux_epoch=gardenlinux_epoch,
-            prefix=build_cfg.manifest_key_prefix(name=parsed.source),
+            prefix=glci.model.ReleaseManifest.manifest_key_prefix,
         )
     )
 

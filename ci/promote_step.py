@@ -18,7 +18,6 @@ def promote_step(
     version: str,
 ):
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
-    build_cfg = cicd_cfg.build
     flavour_set = glci.util.flavour_set(flavourset)
     flavours = tuple(flavour_set.flavours())
     promote_mode = promote.PromoteMode(promote_mode)
@@ -29,7 +28,6 @@ def promote_step(
     )
 
     release_target = promote_target
-    release_source = 'snapshots' # unhardcode
 
     releases = tuple(
       find_releases(
@@ -37,7 +35,7 @@ def promote_step(
         build_committish=committish,
         version=version,
         gardenlinux_epoch=int(gardenlinux_epoch),
-        prefix=build_cfg.manifest_key_prefix(name=release_source),
+        prefix=glci.model.ReleaseManifest.manifest_key_prefix,
       )
     )
 

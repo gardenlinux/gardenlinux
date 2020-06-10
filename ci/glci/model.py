@@ -242,7 +242,7 @@ class ReleaseManifest(ReleaseIdentifier):
 
     # attrs below are _transient_ (no typehint) and thus exempted from x-serialisation
     # treat as "static final"
-    manifest_key_prefix = 'meta'
+    manifest_key_prefix = 'meta/singles'
 
 
 def normalised_modifiers(platform: Platform, modifiers):
@@ -323,6 +323,9 @@ class ReleaseManifestSet:
     manifests: typing.Tuple[OnlineReleaseManifest]
     flavour_set_name: str
 
+    # treat as static final
+    release_manifest_set_prefix = 'meta/sets'
+
 
 class PipelineFlavour(enum.Enum):
     SNAPSHOT = 'snapshot'
@@ -339,10 +342,6 @@ class BuildCfg:
     storage_account_config_name: str
     service_principal_name: str
     plan_config_name: str
-    manifest_key_root_prefix: str='meta'
-
-    def manifest_key_prefix(self, name: str):
-        return os.path.join(self.manifest_key_root_prefix, name)
 
 
 @dataclasses.dataclass(frozen=True)
