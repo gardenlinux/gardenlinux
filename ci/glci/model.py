@@ -216,7 +216,7 @@ class ReleaseIdentifier:
         flavour_name = '-'.join((
             self.platform,
             *(
-                f for f in normalised_modifiers(
+                f.name for f in canonicalised_features(
                     platform=self.platform,
                     modifiers=self.modifiers,
                 )
@@ -314,7 +314,7 @@ def normalised_release_identifier(release_identifier: ReleaseIdentifier):
     return dataclasses.replace(release_identifier, modifiers=modifiers)
 
 
-def canonicalised_features(platform: Platform, modifiers):
+def canonicalised_features(platform: Platform, modifiers) -> typing.Tuple[FeatureDescriptor]:
     '''
     calculates the "canonical" (/minimal) tuple of features required to unambiguosly identify
     a gardenlinux flavour. The result is returned as a (ASCII-upper-case-sorted) tuple of
