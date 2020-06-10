@@ -307,16 +307,16 @@ def upload_and_register_gardenlinux_image(
     session = mk_session(region_name=build_cfg.aws_region)
     ec2_client = session.client('ec2')
 
-    # TODO: add `version` to release-manifest
     gardenlinux_version = release.version
     target_image_name = f'gardenlinux-{gardenlinux_version}'
 
-    # TODO: rename rel_path attr (e.g. to key?); also: add bucket-name
-    raw_image_key = release.path_by_suffix('rootfs.raw').rel_path
+    # TODO: check path is actually S3_ReleaseFile
+    raw_image_key = release.path_by_suffix('rootfs.raw').s3_key
+    bucket_name = release.path_by_suffix('rootfs.raw').s3_bucket_name
 
     snapshot_task_id = import_snapshot(
         ec2_client=ec2_client,
-        s3_bucket_name=release.s3_bucket,
+        s3_bucket_name=bucket_name,
         image_key=raw_image_key,
     )
     logger.info(f'started import {snapshot_task_id=}')

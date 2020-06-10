@@ -18,13 +18,14 @@ def upload_image_to_gcp_store(
     build_cfg: glci.model.BuildCfg,
 ) -> google.cloud.storage.blob.Blob:
     image_blob_name = f'gardenlinux-{release.version}.tar.gz'
-    raw_image_key = release.path_by_suffix('rootfs-gcpimage.tar.gz').rel_path
+    raw_image_key = release.path_by_suffix('rootfs-gcpimage.tar.gz').s3_key
+    s3_bucket_name = release.path_by_suffix('rootfs-gcpimage.tar.gz').s3_bucket_name
 
     # XXX: rather do streaming
     with tempfile.TemporaryFile() as tfh:
         logger().info(f'downloading image from {build_cfg.s3_bucket_name=}')
         s3_client.download_fileobj(
-            Bucket=build_cfg.s3_bucket_name,
+            Bucket=s3_bucket_name,
             Key=raw_image_key,
             Fileobj=tfh,
         )

@@ -301,8 +301,8 @@ def copy_image_and_publish_offer(
     image_url = copy_image(
         storage_account_config=storage_account_config,
         s3_client=s3_client,
-        bucket_name=release.s3_bucket,
-        object_key=release.path_by_suffix('rootfs.raw').rel_path,
+        bucket_name=release.path_by_suffix('rootfs.raw').s3_bucket_name,
+        object_key=release.path_by_suffix('rootfs.raw').s3_key,
         target_blob_name=target_blob_name,
     )
 

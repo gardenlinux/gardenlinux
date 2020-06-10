@@ -159,12 +159,20 @@ class GardenlinuxFlavourSet:
 @dataclasses.dataclass(frozen=True)
 class ReleaseFile:
     '''
+    base class for release-files
+    '''
+    name: str
+    suffix: str
+
+
+@dataclasses.dataclass(frozen=True)
+class S3_ReleaseFile(ReleaseFile):
+    '''
     A single build result file that was (or will be) uploaded to build result persistency store
     (S3).
     '''
-    rel_path: str
-    name: str
-    suffix: str
+    s3_key: str
+    s3_bucket_name: str
 
 
 @dataclasses.dataclass(frozen=True)
@@ -220,7 +228,7 @@ class ReleaseManifest(ReleaseIdentifier):
     store, such as an S3 bucket.
     '''
     build_timestamp: str
-    paths: typing.Tuple[ReleaseFile]
+    paths: typing.Tuple[typing.Union[S3_ReleaseFile]]
     published_image_metadata: typing.Union[AwsPublishedImageSet, GcpPublishedImage, None]
 
     def path_by_suffix(self, suffix: str):
