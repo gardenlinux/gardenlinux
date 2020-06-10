@@ -214,9 +214,12 @@ class ReleaseIdentifier:
         note that the full key should be prefixed (e.g. with manifest_key_prefix)
         '''
         flavour_name = '-'.join((
-            f for f in normalised_modifiers(
-                platform=self.platform,
-                modifiers=self.modifiers,
+            self.platform,
+            *(
+                f for f in normalised_modifiers(
+                    platform=self.platform,
+                    modifiers=self.modifiers,
+                )
             )
         ))
         return f'{flavour_name}-{self.version}'
