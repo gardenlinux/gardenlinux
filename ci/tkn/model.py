@@ -56,7 +56,7 @@ class TaskSpec:
     params: typing.List[_NamedParamWithValue]
     steps: typing.List[TaskStep]
     workspaces: typing.List[_NamedParamBase]=dataclasses.field(default_factory=list)
-    volumeMounts: typing.List[VolumeMount]=dataclasses.field(default_factory=list)
+    #volumeMounts: typing.List[VolumeMount]=dataclasses.field(default_factory=list)
 
 
 @dataclasses.dataclass

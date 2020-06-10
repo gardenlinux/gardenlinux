@@ -83,6 +83,41 @@ def clone_step(
     return step
 
 
+def upload_results_step(
+    cicd_cfg_name: tkn.model.NamedParam,
+    committish: tkn.model.NamedParam,
+    architecture: tkn.model.NamedParam,
+    platform: tkn.model.NamedParam,
+    gardenlinux_epoch: tkn.model.NamedParam,
+    fnameprefix: tkn.model.NamedParam,
+    modifiers: tkn.model.NamedParam,
+    version: tkn.model.NamedParam,
+    outfile: tkn.model.NamedParam,
+    repo_dir: tkn.model.NamedParam,
+):
+    return tkn.model.TaskStep(
+        name='upload-results',
+        image=DEFAULT_IMAGE,
+        script=task_step_script(
+            path=os.path.join(scripts_dir, 'upload_results_step.py'),
+            script_type=ScriptType.PYTHON3,
+            callable='upload_results_step',
+            params=[
+                cicd_cfg_name,
+                committish,
+                architecture,
+                platform,
+                gardenlinux_epoch,
+                fnameprefix,
+                modifiers,
+                version,
+                outfile,
+            ],
+            repo_path_param=repo_dir,
+        )
+    )
+
+
 def promote_step(
     cicd_cfg_name: tkn.model.NamedParam,
     flavourset: tkn.model.NamedParam,

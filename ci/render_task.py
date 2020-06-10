@@ -47,8 +47,24 @@ def main():
 
     clone_step_dict = dataclasses.asdict(clone_step)
 
+    upload_step = steps.upload_results_step(
+        cicd_cfg_name=NamedParam(name='cicd_cfg_name'),
+        committish=NamedParam(name='committish'),
+        architecture=NamedParam(name='architecture'),
+        platform=NamedParam(name='platform'),
+        gardenlinux_epoch=NamedParam(name='gardenlinux_epoch'),
+        fnameprefix=NamedParam(name='fnameprefix'),
+        modifiers=NamedParam(name='modifiers'),
+        version=NamedParam(name='version'),
+        outfile=NamedParam(name='outfile'),
+        repo_dir=tkn.model.NamedParam(name='repodir'),
+    )
+
+    upload_step_dict = dataclasses.asdict(upload_step)
+
     # hack: patch-in clone-step (avoid redundancy with other tasks)
     raw_build_task['spec']['steps'][0] = clone_step_dict
+    raw_build_task['spec']['steps'][-1] = upload_step_dict
 
     with open(parsed.outfile, 'w') as f:
         yaml.safe_dump_all((raw_build_task, raw_promote_task), f)
