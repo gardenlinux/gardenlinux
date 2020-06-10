@@ -159,9 +159,6 @@ spec:
         name: 'build'
 
     - name: 'upload-results' # patched-in through render_task.py
-      volumeMounts:
-      - mountPath: '/build'
-        name: 'build'
 
   volumes:
     - name: dev
