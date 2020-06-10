@@ -58,28 +58,17 @@ class PromoteMode(enum.Enum):
     MANIFESTS_AND_PUBLISH = 'manifests_and_publish'
 
 
-class ManifestType(enum.Enum):
-    SINGLE = 'single'
-    SET = 'set'
-
-
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--flavourset', default='testing')
     parser.add_argument('--committish')
     parser.add_argument('--gardenlinux-epoch', type=int)
     parser.add_argument('--promote-mode', type=PromoteMode)
-    parser.add_argument('--version')
+    parser.add_argument('--version', required=True)
     parser.add_argument('--source', default='snapshots')
     parser.add_argument('--target', type=BuildType, default=BuildType.DAILY)
     parser.add_argument('--cicd-cfg', default='default')
     parser.add_argument('--allow-partial', default=False, action='store_true')
-    parser.add_argument(
-        '--manifest-type',
-        dest='manifest_types',
-        default=[ManifestType.SET],
-        action='append'
-    )
 
     return parser.parse_args()
 
@@ -132,7 +121,6 @@ def promote(
     promote_mode: PromoteMode,
     cicd_cfg: glci.model.CicdCfg,
     flavour_set: glci.model.GardenlinuxFlavourSet,
-    manifest_types: typing.List[ManifestType]=tuple((ManifestType.SET,)),
 ):
     upload_release_manifest = glci.util.preconfigured(
         func=glci.util.upload_release_manifest,
@@ -153,39 +141,22 @@ def promote(
         for release in releases:
             print(release.published_image_metadata)
 
-    if ManifestType.SET in manifest_types:
-        manifest_set = glci.model.ReleaseManifestSet(
-            manifests=releases,
-            flavour_set_name=flavour_set.name,
-        )
+    manifest_set = glci.model.ReleaseManifestSet(
+        manifests=releases,
+        flavour_set_name=flavour_set.name,
+    )
 
-        manifest_path = os.path.join(
-            target_prefix,
-            f'{version_str}-{flavour_set.name}'
-        )
+    manifest_path = os.path.join(
+        target_prefix,
+        f'{version_str}-{flavour_set.name}'
+    )
 
-        upload_release_manifest_set(
-            key=manifest_path,
-            manifest_set=manifest_set,
-        )
+    upload_release_manifest_set(
+        key=manifest_path,
+        manifest_set=manifest_set,
+    )
 
-        print(f'uploaded manifest-set: {manifest_path=}')
-
-    if ManifestType.SINGLE in manifest_types:
-        for release in releases:
-            manifest = release.stripped_manifest()
-            flavour = manifest.flavour()
-
-            manifest_path = os.path.join(
-                target_prefix,
-                f'{version_str}-{flavour.filename_prefix()}',
-            )
-
-            upload_release_manifest(
-                key=manifest_path,
-                manifest=manifest,
-            )
-            logger.info(f'promoted {manifest_path=}')
+    print(f'uploaded manifest-set: {manifest_path=}')
 
 
 def main():
@@ -225,7 +196,7 @@ def main():
     promote(
         releases=releases,
         target_prefix=os.path.join(
-            'meta',
+            glci.model.ReleaseManifestSet.release_manifest_set_prefix,
             parsed.target.value,
         ),
         version_str=version,
