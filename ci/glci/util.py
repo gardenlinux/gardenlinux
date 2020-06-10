@@ -223,16 +223,16 @@ def find_releases(
         bucket_name=bucket_name,
         prefix=prefix,
     ):
-        if not release.flavour() in flavours:
+        if not release.build_committish == build_committish:
+            continue
+
+        if not release.gardenlinux_epoch == gardenlinux_epoch:
             continue
 
         if not release.version == version:
             continue
 
-        if not release.build_committish == build_committish:
-            continue
-
-        if not release.gardenlinux_epoch == gardenlinux_epoch:
+        if not release.flavour() in flavours:
             continue
 
         yield release
