@@ -87,7 +87,7 @@ def release_manifest(
             Fileobj=buf,
         )
     except botocore.exceptions.ClientError as e:
-        if absent_ok and str(e['Error']['Code']) == '404':
+        if absent_ok and str(e.response['Error']['Code']) == '404':
             return None
         raise e
 
