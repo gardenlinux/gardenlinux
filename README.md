@@ -1,6 +1,18 @@
-# Garden Linux Build Scripts
+<p align="center">
+ <a href="https://www.gardenlinux.io/"><img src="https://raw.githubusercontent.com/gardenlinux/gardenlinux/master/docs/assets/gardenlinux-logo-title.png" width="400"></a>
+ <br />
+ <span style="text-align:center; font-size:2em;">Garden Linux</span>
+</p>
 
-## build system recommendations (per concurrent build)
+<hr />
+<p align="center">
+    <a href="#build-system-recommendations">Build System Recommendations</a> • 
+    <a href="#documentation">Documentation</a> •
+    <a href="#license">License</a>
+</p>
+<hr />
+
+## Build System Recommendations
 
 - 2+ GiB (use RAM-disk; use fs with sparse-file support)
 - 10+ GiB free disk space
