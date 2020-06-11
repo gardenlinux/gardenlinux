@@ -1,5 +1,5 @@
 <p align="center">
- <a href="https://www.gardenlinux.io/"><img src="https://raw.githubusercontent.com/gardenlinux/gardenlinux/master/docs/assets/gardenlinux-logo-title.png" width="300" height="345"></a>
+ <a href="https://www.gardenlinux.io/"><img src="https://raw.githubusercontent.com/gardenlinux/gardenlinux/master/logo/gardenlinux-logo-black-text.svg" width="300"></a>
 </p>
 
 <hr />
