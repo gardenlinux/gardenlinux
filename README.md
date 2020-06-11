@@ -1,7 +1,5 @@
 <p align="center">
- <a href="https://www.gardenlinux.io/"><img src="https://raw.githubusercontent.com/gardenlinux/gardenlinux/master/docs/assets/gardenlinux-logo-title.png" width="400"></a>
- <br />
- <span style="text-align:center; font-size:2em;">Garden Linux</span>
+ <a href="https://www.gardenlinux.io/"><img src="https://raw.githubusercontent.com/gardenlinux/gardenlinux/master/docs/assets/gardenlinux-logo-title.png" width="300" height="345"></a>
 </p>
 
 <hr />
