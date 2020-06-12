@@ -596,3 +596,13 @@ def feature_by_name(feature_name: str):
         if feature.name == feature_name:
             return feature
     raise ValueError(feature_name)
+
+
+@dataclasses.dataclass(frozen=True)
+class OpenRC:
+    auth_url: str
+    domain: str
+    region: str
+    project_name: str
+    username: str
+    password: str
