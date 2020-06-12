@@ -9,5 +9,6 @@ google-auth
 google-cloud-storage
 msal==1.2.0
 oss2==2.12.1
+openstacksdk==0.46.0
 pyyaml
 requests
