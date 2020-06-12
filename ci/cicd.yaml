@@ -14,3 +14,5 @@ cicd_cfgs:
         offer_id: 'gardenlinux'
         publisher_id: 'sap'
         plan_id: 'greatest'
+        service_principal_cfg_name: 'shoot-operator-dev'
+        storage_account_cfg_name: 'gardelinux-dev'
