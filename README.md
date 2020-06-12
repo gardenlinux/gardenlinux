@@ -1,11 +1,16 @@
 <p align="center">
- <a href="https://www.gardenlinux.io/"><img src="https://raw.githubusercontent.com/gardenlinux/gardenlinux/master/logo/gardenlinux-logo-black-text.svg" width="380"></a>
+ <a href="https://www.gardenlinux.io/">
+  <img
+     src="https://raw.githubusercontent.com/gardenlinux/gardenlinux/master/logo/gardenlinux-logo-black-text.svg"
+     width="380"
+  />
+ </a>
 </p>
 
 <hr />
 <p align="center">
-    <a href="#build-system-recommendations">Build System Recommendations</a> • 
-    <a href="#documentation">Documentation</a> •
+    <a href="#build-system-recommendations">Build System Recommendations</a>
+    <a href="#documentation">Documentation</a>
     <a href="#license">License</a>
 </p>
 <hr />
