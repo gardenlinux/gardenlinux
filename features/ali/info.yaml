@@ -1,0 +1,5 @@
+description: "Alibaba Cloud"
+type: platform
+features:
+  include: 
+    - cloud
