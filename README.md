@@ -9,8 +9,8 @@
 
 <hr />
 <p align="center">
-    <a href="#build-system-recommendations">Build System Recommendations</a>
-    <a href="#documentation">Documentation</a>
+    <a href="#build-system-recommendations">Build System Recommendations</a> &bull;
+    <a href="#documentation">Documentation</a> &bull;
     <a href="#license">License</a>
 </p>
 <hr />
