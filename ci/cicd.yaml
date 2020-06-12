@@ -9,3 +9,8 @@ cicd_cfgs:
       storage_account_config_name: 'gardenlinux-dev'
       service_principal_name: 'shoot-operator-dev'
       plan_config_name: 'gardenlinux-greatest'
+    publish:
+      azure:
+        offer_id: 'gardenlinux'
+        publisher_id: 'sap'
+        plan_id: 'greatest'

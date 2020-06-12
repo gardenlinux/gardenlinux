@@ -163,7 +163,12 @@ class AzureMarketplaceClient:
         response.close()
 
 
-def add_image_version_to_plan(spec: dict, plan_id: str, image_version: str, image_url: str):
+def add_image_version_to_plan(
+    spec: dict,
+    plan_id: str,
+    image_version: str,
+    image_url: str
+):
     """Add a new image version to a given plan and return a modified offer spec."""
 
     plan_spec = {}
@@ -244,7 +249,7 @@ def copy_image(
 
 def update_offer(
     service_principal_config,
-    plan_config,
+    azure_publish_cfg: glci.model.AzurePublishCfg,
     image_version,
     image_url,
     notification_recipients,
@@ -256,28 +261,41 @@ def update_offer(
         service_principal_config.client_secret(),
     )
 
-    publisher_id = plan_config.publisher_id()
-    offer_id = plan_config.offer_id()
-    plan_id = plan_config.plan_id()
+    publisher_id = azure_publish_cfg.publisher_id
+    offer_id = azure_publish_cfg.offer_id
+    plan_id = azure_publish_cfg.plan_id
 
-    offer_spec = marketplace_client.fetch_offer(publisher_id, offer_id)
+    offer_spec = marketplace_client.fetch_offer(
+        publisher_id=publisher_id,
+        offer_id=offer_id,
+    )
 
     # Add new image version to plan in the offer spec.
-    modified_offer_spec = add_image_version_to_plan(offer_spec, plan_id, image_version, image_url)
+    modified_offer_spec = add_image_version_to_plan(
+        spec=offer_spec,
+        plan_id=plan_id,
+        image_version=image_version,
+        image_url=image_url,
+    )
 
     # Update the marketplace offer.
-    marketplace_client.update_offer(publisher_id, offer_id, modified_offer_spec)
+    marketplace_client.update_offer(
+        publisher_id=publisher_id,
+        offer_id=offer_id,
+        spec=modified_offer_spec,
+    )
 
     marketplace_client.publish_offer(
-        plan_config.publisher_id(),
-        plan_config.offer_id(),
-        notification_recipients,
+        publisher_id=publisher_id,
+        offer_id=offer_id,
+        notification_mails=notification_recipients,
     )
 
 
 def copy_image_and_publish_offer(
     mk_session: callable,
-    build_cfg: glci.model.BuildCfg,
+    build_cfg: glci.model.CicdConfig,
+    azure_publish_cfg: glci.AzurePublishCfg,
     release: glci.model.OnlineReleaseManifest,
 ):
     '''Copies an object from S3 to an Azure Storage Account and adds it as machine image to the
@@ -290,7 +308,6 @@ def copy_image_and_publish_offer(
     storage_account_config = cfg_factory.azure_storage_account(
         build_cfg.storage_account_config_name
     )
-    plan_config = cfg_factory.azure_plan(build_cfg.plan_config_name)
 
     session = mk_session(region_name=build_cfg.aws_region)
     config = botocore.client.Config(signature_version=botocore.UNSIGNED)
@@ -308,7 +325,7 @@ def copy_image_and_publish_offer(
 
     update_offer(
         service_principal_config=service_principal_config,
-        plan_config=plan_config,
+        azure_publish_cfg=azure_publish_cfg,
         image_version=release.version,
         image_url=image_url,
         notification_recipients=(), # TODO: configure email recipients

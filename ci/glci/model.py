@@ -380,9 +380,24 @@ class BuildCfg:
 
 
 @dataclasses.dataclass(frozen=True)
+class AzurePublishCfg:
+    offer_id: str
+    publisher_id: str
+    plan_id: str
+    service_principal_cfg_name: str # references secret in cicd cluster
+    storage_account_cfg_name: str
+
+
+@dataclasses.dataclass(frozen=True)
+class PublishCfg:
+    azure: AzurePublishCfg
+
+
+@dataclasses.dataclass(frozen=True)
 class CicdCfg:
     name: str
     build: BuildCfg
+    publish: PublishCfg
 
 
 epoch_date = datetime.datetime.fromisoformat('2020-04-01')
