@@ -10,8 +10,6 @@ gardenlinux:
           vars:
             PROMOTE_TARGET: "'snapshot'"
             PROMOTE_MODE: "'manifests_only'"
-            VERSION: >
-              "'27.0'"
 
     manual-release:
       repo:
