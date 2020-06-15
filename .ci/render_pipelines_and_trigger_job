@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+set -e
+set -x
+
+# XXX install kubectl (should rather be installed into container-image)
+curl -Lo /bin/kubectl \
+  https://storage.googleapis.com/kubernetes-release/release/v1.18.2/bin/linux/amd64/kubectl
+chmod +x /bin/kubectl
+
+# XXX hardcode for now
+GARDENLINUX_EPOCH=27
+FLAVOUR_SET='all'
+
+echo "render pipelines"
+gardenlinux_dir="${CC_ROOT_DIR}/${GARDENLINUX_PATH}"
+cd "${gardenlinux_dir}"
+
+pipeline_cfg="${gardenlinux_dir}/build.yaml"
+outfile='rendered_pipeline.yaml'
+
+# injected from pipeline_definitions
+PROMOTE_TARGET="${PROMOTE_TARGET:-snapshots}"
+PROMOTE_MODE="${PROMOTE_MODE:-manifests_only}"
+
+if [ ! -z "${VERSION:-}" ]; then
+  EXTRA_ARGS="--version=${VERSION}"
+fi
+
+# retrieve kubeconfig
+gardener-ci config model_element \
+  --cfg-type kubernetes \
+  --cfg-name shoot_live_garden_ci_2 \
+  --key kubeconfig \
+> kubeconfig
+export KUBECONFIG="$PWD/kubeconfig"
+ls -la "${KUBECONFIG}"
+
+head_commit="$(git rev-parse @)"
+echo "head-commit: ${head_commit}"
+
+pipeline_run="$PWD/pipeline_run.yaml"
+rendered_task="$PWD/rendered_task.yaml"
+
+# create pipeline-run for current commit
+ci/render_pipeline_run.py $EXTRA_ARGS \
+  --committish "${head_commit}" \
+  --cicd-cfg 'default' \
+  --gardenlinux-epoch "${GARDENLINUX_EPOCH}" \
+  --flavour-set "${FLAVOUR_SET}" \
+  --promote-target "${PROMOTE_TARGET}" \
+  --promote-mode "${PROMOTE_MODE}" \
+  --outfile "${pipeline_run}"
+
+ci/render_pipelines.py \
+  --pipeline_cfg "${pipeline_cfg}" \
+  --flavour-set "${FLAVOUR_SET}" \
+  --cicd-cfg 'default' \
+  --outfile "${outfile}"
+
+ci/render_task.py \
+  --outfile "${rendered_task}"
+
+# XXX hardcode other resources for now
+
+for manifest in \
+  "${rendered_task}" \
+  "${outfile}" \
+  "${pipeline_run}"
+do
+  /bin/kubectl apply -f "${manifest}"
+done
+
+echo 'done: refreshed pipeline(s) and created a new pipeline-run for current commit'

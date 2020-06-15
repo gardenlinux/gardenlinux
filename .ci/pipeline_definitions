@@ -1,0 +1,25 @@
+gardenlinux:
+  base_definition:
+    repo:
+      name: 'GARDENLINUX'
+
+  jobs:
+    on-head-update:
+      steps:
+        render_pipelines_and_trigger_job:
+          vars:
+            PROMOTE_TARGET: "'snapshot'"
+            PROMOTE_MODE: "'manifests_only'"
+            VERSION: >
+              "'27.0'"
+
+    manual-release:
+      repo:
+        trigger: false
+      steps:
+        render_pipelines_and_trigger_job:
+          vars:
+            PROMOTE_TARGET: "'release'"
+            PROMOTE_MODE: "'manifests_and_publish'"
+            VERSION: >
+              "'27.0'"
