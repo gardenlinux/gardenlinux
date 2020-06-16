@@ -307,7 +307,6 @@ def upload_and_register_gardenlinux_image(
     session = mk_session(region_name=build_cfg.aws_region)
     ec2_client = session.client('ec2')
 
-    gardenlinux_version = release.version
     target_image_name = f'gardenlinux-{release.canonical_release_manifest_key_suffix()}'
 
     # TODO: check path is actually S3_ReleaseFile
