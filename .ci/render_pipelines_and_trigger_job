@@ -16,7 +16,7 @@ echo "render pipelines"
 gardenlinux_dir="${CC_ROOT_DIR}/${GARDENLINUX_PATH}"
 cd "${gardenlinux_dir}"
 
-pipeline_cfg="${gardenlinux_dir}/build.yaml"
+pipeline_cfg="${gardenlinux_dir}/flavours.yaml"
 outfile='rendered_pipeline.yaml'
 
 # injected from pipeline_definitions
