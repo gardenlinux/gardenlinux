@@ -1,0 +1,9 @@
+#!ipxe
+
+set pxeserver IPADDRESSGOESHERE 
+set pxepath PATHGOESHERE 
+
+kernel http://${pxeserver}/${pxepath}/rootfs.vmlinuz initrd=rootfs.initrd console=ttyS0 boot=live bootfrom=/
+initrd http://${pxeserver}/${pxepath}/rootfs.initrd
+boot
+

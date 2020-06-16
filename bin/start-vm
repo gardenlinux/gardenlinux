@@ -7,8 +7,10 @@ thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
 	--flags 'cpu:,mem:,disk:,bridge:' \
 	--flags 'daemonize' \
+	--flags 'pxelocal:' \
+	--flags 'pxe:' \
 	-- \
-	'[--cpu:3] [--mem:16384] [--disk:3G] [--daemonize] <image file>' \
+	'[--cpu:3] [--mem:16384] [--disk:3G] [--daemonize] [--pxe:dir] [--pxelocal] <image file>' \
 	'example'
 
 eval "$dgetopt"
@@ -17,6 +19,9 @@ memory=2048
 disk=-1
 bridge=
 daemonize=
+pxe=
+pxeConfig=
+pxeLocal=
 while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
@@ -27,10 +32,13 @@ while true; do
 						shift ;;
 		--daemonize) 	daemonize=1; 	;;
 		--bridge ) 	bridge="$1";  	shift ;;
+		--pxe )         pxe="$1";       shift ;;
+		--pxelocal)     pxeLocal="$1";  shift ;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
 done
+
 imagefile="${1:-}";     shift || eusage 'missing image file to start'
 [ ! -s $imagefile ] && ( echo "file does not exist"; exit 1; )
 
@@ -77,14 +85,45 @@ virtOpts+=(
         -drive format=$imageext,if=none,discard=unmap,aio=native,cache.direct=on,id=drive0,file=$imagefile
 	)
 
+# pxe
+# TODO : a disk image is not needed when booting via pxe
+
+if [ "$pxe" -o "$pxeLocal" ]; then
+	tempDir=$(mktemp -d)
+	rand=$(uuidgen)
+	mkdir -p "$thisDir/../hack/pxe/$rand"
+	trap 'echo "Cleaning up ..."; rm -rf "$tempDir"; rm -rf "$thisDir/../hack/pxe/$rand"' EXIT
+
+	if [ "$pxeLocal" ]; then
+		# copy the kernel image and initramfs to be able to be booted from PXE
+		cp "$pxeLocal/"{rootfs.initrd,rootfs.vmlinuz} "$tempDir/"
+		cp "$thisDir/.boot.pxe" "$tempDir/boot.pxe"
+		
+		# modify the boot.pxe to load the proper kernel and initramfs
+		sed -i "s/PATHGOESHERE//" "${tempDir}/boot.pxe" 
+		sed -i "s/IPADDRESSGOESHERE/10.0.2.2/" "${tempDir}/boot.pxe" 
+		sed -i "s/http/tftp/" "${tempDir}/boot.pxe" 
+	else
+		# copy the kernel image and initramfs to be able to be booted from PXE
+		cp "$pxe/{rootfs.initrd,rootfs.vmlinuz}" "$thisDir/../hack/pxe/$rand/"
+		cp "$thisDir/.boot.pxe" "$tempDir/boot.pxe"
+
+		# modify the boot.pxe to load the proper kernel and initramfs
+		# TODO : get ip as parameter or load from config or something else
+		sed -i "s/PATHGOESHERE/pxe\/${rand}/" "${tempDir}/boot.pxe" 
+		sed -i "s/IPADDRESSGOESHERE/172.31.31.177/" "${tempDir}/boot.pxe" 
+	fi
+	pxeConfig=",tftp=$tempDir,bootfile=/boot.pxe"
+
+fi
 # network
 macaddr="$(printf '02:%02X:%02X:%02X:%02X:%02X' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)))"
 if [ $bridge ]; then
 	echo "allow $bridge" >> /etc/qemu/bridge.conf
 	cat /etc/qemu/bridge.conf | sort -u > /etc/qemu/bridge.conf
-	virtOpts+=( -netdev bridge,id=net0,br=mgmt )
+	virtOpts+=( -netdev bridge,id=net0,br=mgmt"$pxeConfig" )
 else
-	virtOpts+=( -netdev user,id=net0,hostfwd=tcp::2223-:22,hostname=garden )
+	virtOpts+=( -netdev user,id=net0,hostfwd=tcp::2223-:22,hostname=garden"$pxeConfig" )
 fi
 virtOpts+=( -device virtio-net-pci,netdev=net0,mac=$macaddr )
 

@@ -22,6 +22,7 @@ RUN	apt-get update \
 		qemu-user-static \
 		qemu-utils \
 		xz-utils \
+		cpio \
      && rm -rf /var/lib/apt/lists/*
 
 # repo-root requires to be mounted at /debuerreotype

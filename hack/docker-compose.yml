@@ -8,4 +8,5 @@ services:
       - "./nginx.conf:/etc/nginx/conf.d/default.conf"
       - "./reprepro/repository:/repository/debian"
       - "../packages:/packages/packages"
+      - "./pxe:/pxe/pxe"
     restart: always
