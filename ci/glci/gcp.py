@@ -51,7 +51,11 @@ def upload_image_from_gcp_store(
     release: glci.model.OnlineReleaseManifest,
     build_cfg: glci.model.BuildCfg,
 ) -> glci.model.OnlineReleaseManifest:
-    image_name = f'gardenlinux-{release.version}'
+    image_name = f'gardenlinux-{release.canonical_release_manifest_key_suffix()}'.replace(
+        '.', '-'
+    ).replace(
+        '_', '-'
+    ).strip('-')
 
     images = compute_client.images()
 
@@ -104,13 +108,10 @@ def upload_and_publish_image(
         build_cfg=build_cfg,
     )
 
-    upload_image_from_gcp_store(
+    return upload_image_from_gcp_store(
         compute_client=compute_client,
         image_blob=image_blob,
         gcp_project_name=gcp_project_name,
         release=release,
         build_cfg=build_cfg,
     )
-
-    # XXX todo: patch upload metadata into returned `release`
-    return release

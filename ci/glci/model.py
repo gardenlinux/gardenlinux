@@ -267,7 +267,7 @@ class AlicloudPublishedImageSet(PublishedImageBase):
 @dataclasses.dataclass(frozen=True)
 class GcpPublishedImage(PublishedImageBase):
     gcp_image_name: str
-    gcp_account_name: str
+    gcp_project_name: str
 
 
 @dataclasses.dataclass(frozen=True)
