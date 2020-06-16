@@ -1,6 +1,6 @@
 debian release
 
-release triggern: aenderungen am git ... updates am security debrepo (security, patch)
+release triggern: aenderungen an VERSION file ... updates am security debrepo (security, patch)
 
 repo: default debian
       security debian
@@ -23,7 +23,7 @@ wird entfernt wenn integrity/unit not green dann einzelnes target weg
 (mit benachrichtung per email und github und buildlog)
 (liste mit relevant targets to build und to be green)
 
-build.yaml
+flavours.yaml
 release:
   - platforms: [ metal ]
     extensions: [ [ ghost ] , [ chost ] , [ vhost ] ]
@@ -43,7 +43,7 @@ release:
     fails: [ unit ]       -> please do not delete when integration test fails
 
 
-when komplette build yaml erfuellt oder um 23:59 bei release trigger ausgeloest  
+when komplette flavours.yaml erfuellt oder um 23:59 bei release trigger ausgeloest  
 kann man pipline 16-7a3fb zum release ueberreden (um 23:59 gibts nen gelease)
 
 

@@ -126,7 +126,7 @@ class GardenlinuxFlavour:
 @dataclasses.dataclass(frozen=True)
 class GardenlinuxFlavourCombination:
     '''
-    A declaration of a set of gardenlinux flavours. Deserialised from `build.yaml`.
+    A declaration of a set of gardenlinux flavours. Deserialised from `flavours.yaml`.
 
     We intend to build a two-digit number of gardenlinux flavours (combinations
     of different architectures, platforms, and modifiers). To avoid tedious and redundant
