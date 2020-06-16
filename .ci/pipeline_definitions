@@ -20,4 +20,4 @@ gardenlinux:
             PROMOTE_TARGET: "'release'"
             PROMOTE_MODE: "'manifests_and_publish'"
             VERSION: >
-              "'27.0'"
+              "'27.1.0'"
