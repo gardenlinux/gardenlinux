@@ -308,7 +308,7 @@ def upload_and_register_gardenlinux_image(
     ec2_client = session.client('ec2')
 
     gardenlinux_version = release.version
-    target_image_name = f'gardenlinux-{gardenlinux_version}'
+    target_image_name = f'gardenlinux-{release.canonical_release_manifest_key_suffix()}'
 
     # TODO: check path is actually S3_ReleaseFile
     raw_image_key = release.path_by_suffix('rootfs.raw').s3_key
