@@ -51,7 +51,11 @@ def upload_image_from_gcp_store(
     release: glci.model.OnlineReleaseManifest,
     build_cfg: glci.model.BuildCfg,
 ) -> glci.model.OnlineReleaseManifest:
-    image_name = f'gardenlinux-{release.canonical_release_manifest_key_suffix()}'
+    image_name = f'gardenlinux-{release.canonical_release_manifest_key_suffix()}'.replace(
+        '.', '-'
+    ).replace(
+        '_', '-'
+    )
 
     images = compute_client.images()
 
