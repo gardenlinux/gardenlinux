@@ -9,6 +9,9 @@ cicd_cfgs:
       storage_account_config_name: 'gardenlinux-dev'
       service_principal_name: 'shoot-operator-dev'
       plan_config_name: 'gardenlinux-greatest'
+      oss_bucket_name: 'gardenlinux' #alicloud
+      alicloud_region: 'eu-central-1'
+      alicloud_cfg_name: gardenlinux
     publish:
       azure:
         offer_id: 'gardenlinux'
@@ -16,3 +19,4 @@ cicd_cfgs:
         plan_id: 'greatest'
         service_principal_cfg_name: 'shoot-operator-dev'
         storage_account_cfg_name: 'gardelinux-dev'
+

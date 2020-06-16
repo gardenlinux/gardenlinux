@@ -9,16 +9,16 @@ class _NamedParamBase:
 
 @dataclasses.dataclass
 class _NamedParamWithValue(_NamedParamBase):
-    value: typing.Optional[str]=None
+    value: typing.Optional[str] = None
 
 
 @dataclasses.dataclass
 class _NamedParamWithDefault(_NamedParamBase):
-    default: str=None
-    description: str=None
+    default: str = None
+    description: str = None
 
 
-def NamedParam(name: str, value: str=None, default: str=None, description: str=None):
+def NamedParam(name: str, value: str = None, default: str = None, description: str = None):
     if value is None and default is None:
         return _NamedParamBase(name=name)
     elif value is None and default:
@@ -38,6 +38,7 @@ class Metadata:
     name: str
     namespace: str
 
+
 @dataclasses.dataclass
 class VolumeMount:
     mountPath: str
@@ -55,7 +56,7 @@ class TaskStep:
 class TaskSpec:
     params: typing.List[_NamedParamWithValue]
     steps: typing.List[TaskStep]
-    workspaces: typing.List[_NamedParamBase]=dataclasses.field(default_factory=list)
+    workspaces: typing.List[_NamedParamBase] = dataclasses.field(default_factory=list)
     #volumeMounts: typing.List[VolumeMount]=dataclasses.field(default_factory=list)
 
 
@@ -63,10 +64,8 @@ class TaskSpec:
 class Task:
     metadata: Metadata
     spec: TaskSpec
-    apiVersion: str='tekton.dev/v1beta1'
-    kind: str='Task'
-
-
+    apiVersion: str = 'tekton.dev/v1beta1'
+    kind: str = 'Task'
 
 
 @dataclasses.dataclass
@@ -94,8 +93,8 @@ class PipelineSpec:
 class Pipeline:
     metadata: Metadata
     spec: PipelineSpec
-    apiVersion: str='tekton.dev/v1beta1'
-    kind: str='Pipeline'
+    apiVersion: str = 'tekton.dev/v1beta1'
+    kind: str = 'Pipeline'
 
 
 @dataclasses.dataclass
@@ -129,6 +128,7 @@ class VolumeClaimTemplateSpec:
     accessModes: typing.List[str]
     resources: ResourcesClaim
 
+
 @dataclasses.dataclass
 class VolumeClaimTemplate:
     spec: VolumeClaimTemplateSpec
@@ -152,5 +152,5 @@ class PipelineRunSpec:
 class PipelineRun:
     spec: PipelineRunSpec
     metadata: PipelineRunMetadata
-    apiVersion: str='tekton.dev/v1beta1'
-    kind: str='PipelineRun'
+    apiVersion: str = 'tekton.dev/v1beta1'
+    kind: str = 'PipelineRun'

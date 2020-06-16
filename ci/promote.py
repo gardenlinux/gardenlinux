@@ -77,41 +77,73 @@ def publish_image(
     release: glci.model.OnlineReleaseManifest,
     cicd_cfg: glci.model.CicdCfg,
 ) -> glci.model.OnlineReleaseManifest:
-    if not release.platform in ('aws', 'gcp'):
-        print(f'do not know how to publish {release.platform=}, yet')
-        return release
     print(f'running release for {release.platform=}')
+    publis_image_func_map = {
+        'ali': _publish_alicloud_image,
+        'aws': _publish_aws_image,
+        'gcp': _publish_gcp_image,
+    }
+    f = publis_image_func_map.get(release.platform, _no_supportted_provider)
+    return f(release, cicd_cfg)
 
-    if release.platform == 'aws':
-        import glci.aws
-        import ccc.aws
 
-        mk_session = functools.partial(ccc.aws.session, aws_cfg=cicd_cfg.build.aws_cfg_name)
+def _publish_alicloud_image(release: glci.model.OnlineReleaseManifest,
+                            cicd_cfg: glci.model.CicdCfg,
+                            ) -> glci.model.OnlineReleaseManifest:
+    import ccc.alicloud
+    import glci.model
+    import glci.alicloud
+    oss_auth = ccc.alicloud.oss_auth('gardenlinux')
+    acs_client = ccc.alicloud.acs_client('gardenlinux')
+    maker = glci.alicloud.AlicloudImageMaker(
+        oss_auth, acs_client, release, cicd_cfg.build)
 
-        return glci.aws.upload_and_register_gardenlinux_image(
-            mk_session=mk_session,
-            build_cfg=cicd_cfg.build,
-            release=release,
-        )
-    elif release.platform == 'gcp':
-        import glci.gcp
-        import ccc.aws
-        import ccc.gcp
-        import ci.util
-        gcp_cfg = ci.util.ctx().cfg_factory().gcp(cicd_cfg.build.gcp_cfg_name)
+    import ccc.aws
+    s3_client = ccc.aws.session(cicd_cfg.build.aws_cfg_name).client('s3')
+    maker.cp_image_from_s3(s3_client)
+    return maker.make_image()
 
-        storage_client = ccc.gcp.cloud_storage_client(gcp_cfg)
-        s3_client = ccc.aws.session(cicd_cfg.build.aws_cfg_name).client('s3')
-        compute_client = ccc.gcp.authenticated_build_func(gcp_cfg)('compute', 'v1')
 
-        return glci.gcp.upload_and_publish_image(
-            storage_client=storage_client,
-            s3_client=s3_client,
-            compute_client=compute_client,
-            gcp_project_name=gcp_cfg.project(),
-            release=release,
-            build_cfg=cicd_cfg.build,
-        )
+def _publish_aws_image(release: glci.model.OnlineReleaseManifest,
+                       cicd_cfg: glci.model.CicdCfg,
+                       ) -> glci.model.OnlineReleaseManifest:
+    import glci.aws
+    import ccc.aws
+    mk_session = functools.partial(
+        ccc.aws.session, aws_cfg=cicd_cfg.build.aws_cfg_name)
+    return glci.aws.upload_and_register_gardenlinux_image(
+        mk_session=mk_session,
+        build_cfg=cicd_cfg.build,
+        release=release,
+    )
+
+
+def _publish_gcp_image(release: glci.model.OnlineReleaseManifest,
+                       cicd_cfg: glci.model.CicdCfg,
+                       ) -> glci.model.OnlineReleaseManifest:
+    import glci.gcp
+    import ccc.aws
+    import ccc.gcp
+    import ci.util
+    gcp_cfg = ci.util.ctx().cfg_factory().gcp(cicd_cfg.build.gcp_cfg_name)
+    storage_client = ccc.gcp.cloud_storage_client(gcp_cfg)
+    s3_client = ccc.aws.session(cicd_cfg.build.aws_cfg_name).client('s3')
+    compute_client = ccc.gcp.authenticated_build_func(gcp_cfg)('compute', 'v1')
+    return glci.gcp.upload_and_publish_image(
+        storage_client=storage_client,
+        s3_client=s3_client,
+        compute_client=compute_client,
+        gcp_project_name=gcp_cfg.project(),
+        release=release,
+        build_cfg=cicd_cfg.build,
+    )
+
+
+def _no_supportted_provider(release: glci.model.OnlineReleaseManifest,
+                            cicd_cfg: glci.model.CicdCfg,
+                            ) -> glci.model.OnlineReleaseManifest:
+    print(f'do not know how to publish {release.platform=} yet')
+    return release
 
 
 def promote(
@@ -128,7 +160,8 @@ def promote(
     )
 
     if promote_mode is PromoteMode.MANIFESTS_AND_PUBLISH:
-        executor = concurrent.futures.ThreadPoolExecutor(max_workers=len(releases))
+        executor = concurrent.futures.ThreadPoolExecutor(
+            max_workers=len(releases))
         _publish_img = functools.partial(publish_image, cicd_cfg=cicd_cfg)
 
         print(f'running {len(releases)} publishing jobs in parallel')
@@ -171,12 +204,12 @@ def main():
     )
 
     releases = tuple(find_releases(
-            flavour_set=flavour_set,
-            version=version,
-            build_committish=committish,
-            gardenlinux_epoch=gardenlinux_epoch,
-            prefix=glci.model.ReleaseManifest.manifest_key_prefix,
-        )
+        flavour_set=flavour_set,
+        version=version,
+        build_committish=committish,
+        gardenlinux_epoch=gardenlinux_epoch,
+        prefix=glci.model.ReleaseManifest.manifest_key_prefix,
+    )
     )
 
     is_complete = len(releases) == len(flavours)
@@ -201,6 +234,7 @@ def main():
         flavour_set=flavour_set,
         manifest_types=parsed.manifest_types,
     )
+
 
 if __name__ == '__main__':
     main()

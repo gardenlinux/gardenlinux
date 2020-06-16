@@ -11,7 +11,8 @@ import dacite
 import yaml
 
 own_dir = os.path.abspath(os.path.dirname(__file__))
-repo_root = os.path.abspath(os.path.join(own_dir, os.path.pardir, os.path.pardir))
+repo_root = os.path.abspath(os.path.join(
+    own_dir, os.path.pardir, os.path.pardir))
 
 
 class FeatureType(enum.Enum):
@@ -55,11 +56,14 @@ class FeatureDescriptor:
             return ()
         return self.features.include
 
-    def included_features(self, transitive=True)->typing.Generator['FeatureDescriptor', None, None]:
+    def included_features(self,
+                          transitive=True
+                          ) -> typing.Generator['FeatureDescriptor', None, None]:
         '''
         returns the tuple of features (transtively) included by this feature
         '''
-        included_features = (feature_by_name(name) for name in self.included_feature_names())
+        included_features = (feature_by_name(name)
+                             for name in self.included_feature_names())
 
         for included_feature in included_features:
             if transitive:
@@ -152,7 +156,8 @@ class GardenlinuxFlavourSet:
                 yield GardenlinuxFlavour(
                     architecture=arch,
                     platform=platf,
-                    modifiers=normalised_modifiers(platform=platf, modifiers=mods),
+                    modifiers=normalised_modifiers(
+                        platform=platf, modifiers=mods),
                 )
 
 
@@ -189,7 +194,8 @@ class ReleaseIdentifier:
     modifiers: typing.Tuple[Modifier]
 
     def flavour(self, normalise=True) -> GardenlinuxFlavour:
-        mods = normalised_modifiers(platform=self.platform, modifiers=self.modifiers)
+        mods = normalised_modifiers(
+            platform=self.platform, modifiers=self.modifiers)
 
         return GardenlinuxFlavour(
             architecture=self.architecture,
@@ -247,6 +253,18 @@ class AwsPublishedImageSet(PublishedImageBase):
 
 
 @dataclasses.dataclass(frozen=True)
+class AlicloudPublishedImage:
+    image_id: str
+    region_id: str
+    image_name: str
+
+
+@dataclasses.dataclass(frozen=True)
+class AlicloudPublishedImageSet(PublishedImageBase):
+    published_alicloud_images: typing.Tuple[AlicloudPublishedImage]
+
+
+@dataclasses.dataclass(frozen=True)
 class GcpPublishedImage(PublishedImageBase):
     gcp_image_name: str
     gcp_account_name: str
@@ -260,7 +278,8 @@ class ReleaseManifest(ReleaseIdentifier):
     '''
     build_timestamp: str
     paths: typing.Tuple[typing.Union[S3_ReleaseFile]]
-    published_image_metadata: typing.Union[AwsPublishedImageSet, GcpPublishedImage, None]
+    published_image_metadata: typing.Union[AlicloudPublishedImageSet,
+                                           AwsPublishedImageSet, GcpPublishedImage, None]
 
     def path_by_suffix(self, suffix: str):
         for path in self.paths:
@@ -299,7 +318,6 @@ def normalised_modifiers(platform: Platform, modifiers) -> typing.Tuple[str]:
     normalised_features = tuple(sorted(all_modifiers, key=str.upper))
 
     return normalised_features
-
 
 
 def normalised_release_identifier(release_identifier: ReleaseIdentifier):
@@ -377,6 +395,9 @@ class BuildCfg:
     storage_account_config_name: str
     service_principal_name: str
     plan_config_name: str
+    oss_bucket_name: str
+    alicloud_region: str
+    alicloud_cfg_name: str
 
 
 @dataclasses.dataclass(frozen=True)
@@ -384,7 +405,7 @@ class AzurePublishCfg:
     offer_id: str
     publisher_id: str
     plan_id: str
-    service_principal_cfg_name: str # references secret in cicd cluster
+    service_principal_cfg_name: str  # references secret in cicd cluster
     storage_account_cfg_name: str
 
 
@@ -403,7 +424,7 @@ class CicdCfg:
 epoch_date = datetime.datetime.fromisoformat('2020-04-01')
 
 
-def gardenlinux_epoch(date:typing.Union[str, datetime.datetime]=None):
+def gardenlinux_epoch(date: typing.Union[str, datetime.datetime] = None):
     '''
     calculates the gardenlinux epoch for the given date (the amount of days since 2020-04-01)
     @param date: date (defaults to today); if str, must be compliant to iso-8601
@@ -419,14 +440,14 @@ def gardenlinux_epoch(date:typing.Union[str, datetime.datetime]=None):
     gardenlinux_epoch = (date - epoch_date).days + 1
 
     if gardenlinux_epoch < 1:
-        raise ValueError() # must not be older than gardenlinux' inception
+        raise ValueError()  # must not be older than gardenlinux' inception
     return gardenlinux_epoch
 
 
-_gl_epoch = gardenlinux_epoch # alias for usage in snapshot_date
+_gl_epoch = gardenlinux_epoch  # alias for usage in snapshot_date
 
 
-def snapshot_date(gardenlinux_epoch: int=None):
+def snapshot_date(gardenlinux_epoch: int = None):
     '''
     calculates the debian snapshot repository timestamp from the given gardenlinux epoch in the
     format that is expected for said snapshot repository.
@@ -483,6 +504,7 @@ def platforms():
     return {
         feature for feature in features() if feature.type is FeatureType.PLATFORM
     }
+
 
 def modifiers():
     return {

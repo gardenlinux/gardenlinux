@@ -1,3 +1,5 @@
+aliyun-python-sdk-core==2.13.16
+aliyun-python-sdk-ecs==4.19.7
 azure-identity
 azure-storage-blob
 boto3
@@ -7,3 +9,4 @@ gardener-cicd-base
 google-api-python-client
 google-auth
 google-cloud-storage
+oss2==2.12.1

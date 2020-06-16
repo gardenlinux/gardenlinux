@@ -9,9 +9,9 @@ AWS_DISTRIBUTE=
 
 all: all_dev all_prod
 
-all_prod: aws gcp azure openstack vmware kvm
+all_prod: ali aws gcp azure openstack vmware kvm
 
-all_dev: aws-dev gcp-dev azure-dev openstack-dev vmware-dev
+all_dev: ali-dev aws-dev gcp-dev azure-dev openstack-dev vmware-dev
 
 ALI_IMAGE_NAME=$(IMAGE_BASENAME)-ali-$(VERSION)
 ali:
