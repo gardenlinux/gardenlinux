@@ -55,7 +55,7 @@ class AlicloudImageMaker:
         self.image_oss_key = f"gardenlinux-{self.release.version}.qcow2"
         self.region = build_cfg.alicloud_region
         self.bucket_name = build_cfg.oss_bucket_name
-        self.image_name = f"gardenlinux-{self.release.version}"
+        self.image_name = f"gardenlinux-{self.release.canonical_release_manifest_key_suffix()}"
 
     # copy image from S3 to OSS
     def cp_image_from_s3(self, s3_client):
