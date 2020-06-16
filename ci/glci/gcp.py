@@ -55,7 +55,7 @@ def upload_image_from_gcp_store(
         '.', '-'
     ).replace(
         '_', '-'
-    )
+    ).strip('-')
 
     images = compute_client.images()
 
