@@ -187,8 +187,6 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 		cp "$rootfs/etc/apt/sources.list" "$targetBase.sources-list-snapshot"
 		touch_epoch "$targetBase.sources-list-snapshot"
 
-    apt list > "${targetBase}.apt-packages"
-
 		local tarArgs=()
 		if [ -n "${qemu:-}" ]; then
 			tarArgs+=( --exclude="./usr/bin/qemu-*-static" )
