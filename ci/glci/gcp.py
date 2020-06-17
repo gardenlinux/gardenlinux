@@ -79,7 +79,7 @@ def upload_image_from_gcp_store(
     operation.wait(
         project=gcp_project_name,
         operation=op_name,
-    )
+    ).execute()
 
     logger().info(f'import done - removing temporary object from bucket {image_blob.name=}')
 

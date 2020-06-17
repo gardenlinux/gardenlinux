@@ -102,7 +102,11 @@ def mk_pipeline_run(
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--committish', default='master')
-    parser.add_argument('--gardenlinux-epoch', default=glci.model.gardenlinux_epoch())
+    parser.add_argument(
+        '--gardenlinux-epoch',
+        default=glci.model.gardenlinux_epoch_from_workingtree(),
+        help='the gardenlinux epoch defining the snapshot timestamp to build against',
+    )
     parser.add_argument('--cicd-cfg', default='default')
     parser.add_argument('--pipeline-cfg', default=paths.flavour_cfg_path)
     parser.add_argument('--outfile', default='pipeline_run.yaml')

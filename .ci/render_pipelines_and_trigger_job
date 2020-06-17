@@ -9,7 +9,6 @@ curl -Lo /bin/kubectl \
 chmod +x /bin/kubectl
 
 # XXX hardcode for now
-GARDENLINUX_EPOCH=27
 FLAVOUR_SET='all'
 
 echo "render pipelines"
@@ -46,7 +45,6 @@ rendered_task="$PWD/rendered_task.yaml"
 ci/render_pipeline_run.py $EXTRA_ARGS \
   --committish "${head_commit}" \
   --cicd-cfg 'default' \
-  --gardenlinux-epoch "${GARDENLINUX_EPOCH}" \
   --flavour-set "${FLAVOUR_SET}" \
   --promote-target "${PROMOTE_TARGET}" \
   --promote-mode "${PROMOTE_MODE}" \
