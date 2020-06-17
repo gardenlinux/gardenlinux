@@ -31,13 +31,7 @@ class AlicloudImageStatus(enum.Enum):
 
     @staticmethod
     def to_availbel_str_array() -> []:
-        return {
-            str(AlicloudImageStatus.CREATING),
-            str(AlicloudImageStatus.WAITING),
-            str(AlicloudImageStatus.AVAILABLE),
-            str(AlicloudImageStatus.UNAVAILABLE),
-            str(AlicloudImageStatus.CREATEFAILED),
-        }
+        return [v.value for v in AlicloudImageStatus]
 
 
 class AlicloudImageMaker:
@@ -161,7 +155,7 @@ class AlicloudImageMaker:
     def _check_image_existance(self, region, image_name) -> (bool, str):
         req = DescribeImagesRequest.DescribeImagesRequest()
         req.set_ImageName(image_name)
-        req.set_Status(",".join([AlicloudImageStatus.to_availbel_str_array()]))
+        req.set_Status(",".join(AlicloudImageStatus.to_availbel_str_array()))
 
         self.acs_client.set_region_id(region)
         response = parse_response(
