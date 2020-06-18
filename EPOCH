@@ -1,1 +1,3 @@
-27
+# gardenlinux epoch (days since 2020-04-01) - defines dependency snapshot date
+# use `today` to build against latest
+today
