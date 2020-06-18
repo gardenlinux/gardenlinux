@@ -5,4 +5,4 @@ repo_root = os.path.abspath(os.path.join(own_dir, os.pardir))
 
 cicd_cfg_path = os.path.join(own_dir, 'cicd.yaml')
 flavour_cfg_path = os.path.join(repo_root, 'flavours.yaml')
-epoch_path = os.path.join(repo_root, 'VERSION')
+version_path = os.path.join(repo_root, 'VERSION')

@@ -467,11 +467,11 @@ def snapshot_date(gardenlinux_epoch: int = None):
     return date_str
 
 
-def gardenlinux_epoch_from_workingtree(epoch_file_path: str=paths.epoch_path):
+def gardenlinux_epoch_from_workingtree(version_file_path: str=paths.version_path):
     '''
     determines the configured gardenlinux epoch from the current working tree.
 
-    In particular, the contents of `EPOCH` (a regular text file) are parsed, with the following
+    In particular, the contents of `VERSION` (a regular text file) are parsed, with the following
     semantics:
 
     - lines are stripped
@@ -479,33 +479,34 @@ def gardenlinux_epoch_from_workingtree(epoch_file_path: str=paths.epoch_path):
     - the first non-empty line (after stripping and comment-stripping) is considered
     - from it, trailing comments are removed (with another subsequent strip)
     - the result is then expected to be one of:
-      - an integer number (parsable to int)
-        - this number is the gardenlinux epoch
+      - a semver-ish version (<major>.<minor>)
+        - only <major> is considered (and must be parsable to an integer
+        - the parsing result is the gardenlinux epoch
       - the string literal `today`
         - in this case, the returned epoch is today's gardenlinux epoch (days since 2020-04-01)
     '''
-    with open(epoch_file_path) as f:
+    with open(version_file_path) as f:
         for line in f.readlines():
             if not (line := line.strip()) or line.startswith('#'): continue
-            epoch_str = line
+            version_str = line
             if '#' in line:
                 # ignore comments
                 line = line.split('#', 1)[0].strip()
             break
         else:
-            raise ValueError(f'did not find uncommented, non-empty line in {epoch_file_path}')
+            raise ValueError(f'did not find uncommented, non-empty line in {version_file_path}')
 
-    # epoch_str may either be a semver-ish (gardenlinux only uses two components (x.y))
+    # version_str may either be a semver-ish (gardenlinux only uses two components (x.y))
     try:
-        epoch = int(epoch_str)
+        epoch = int(version_str.split('.')[0])
         return epoch
     except ValueError:
         pass
 
-    if epoch_str == 'today':
+    if version_str == 'today':
         return gardenlinux_epoch()
 
-    raise ValueError(f'{epoch_str=} was not understood - either semver or "today" are supported')
+    raise ValueError(f'{version_str=} was not understood - either semver or "today" are supported')
 
 
 def _enumerate_feature_files(features_dir=os.path.join(repo_root, 'features')):
