@@ -11,7 +11,6 @@
 <p align="center">
     <a href="#build-system-recommendations">Build System Recommendations</a> &bull;
     <a href="#documentation">Documentation</a> &bull;
-    <a href="#license">License</a>
 </p>
 <hr />
 
@@ -62,7 +61,3 @@ Build specific images:
     make openstack
     make vmware
     make kvm
-
-## License
-
-Copyright 2020 by SAP SE
