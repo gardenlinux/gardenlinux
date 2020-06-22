@@ -20,7 +20,8 @@ Garden Linux is a [Debian](https://debian.org) derivat that aims to provide a sm
 ### Features:
 - easy to use build System
 - small footprint (currently based on minbase of Debian to be even further removed [#99](https://github.com/gardenlinux/gardenlinux/issues/99))
-- subscribes for testing so we never have huge (problematic) version jump but
+- subscribes for debian/testing so no huge (problematic) version jumps needed
+- whole setup only systemd based (network, fstab etc.) [#101](https://github.com/gardenlinux/gardenlinux/issues/101) [#102](https://github.com/gardenlinux/gardenlinux/issues/102)
 - regular provided updates (since the whole build process is completly automated) and
 - thoroughfull automated testing
 -- unit tests against the local build and
