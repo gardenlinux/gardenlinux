@@ -85,6 +85,25 @@ def upload_image_from_gcp_store(
 
     image_blob.delete()
 
+    # make image public
+    iam_policies = images.getIamPolicy(
+        project=gcp_project_name, resource=image_name
+    ).execute()
+    if not 'bindings' in iam_policies:
+        iam_policies = []
+    iam_policies.append({
+        'members': ['allAuthenticatedUsers'],
+        'role': 'roles/compute.imageUser',
+    })
+
+    images.setIamPolicy(
+        project=gcp_project_name,
+        resource=image_name,
+        body={
+            'bindings': iam_policies,
+        }
+    ).execute()
+
     published_image = glci.model.GcpPublishedImage(
         gcp_image_name=image_name,
         gcp_project_name=gcp_project_name,
