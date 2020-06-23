@@ -80,7 +80,7 @@ def publish_image(
     print(f'running release for {release.platform=}')
     publis_image_func_map = {
         'ali': _flavour_not_supported,
-        'aws': _publish_aws_image,
+        'aws': _flavour_not_supported,
         'gcp': _publish_gcp_image,
     }
     f = publis_image_func_map.get(release.platform, _flavour_not_supported)
@@ -232,7 +232,6 @@ def main():
         promote_mode=parsed.promote_mode,
         cicd_cfg=cicd_cfg,
         flavour_set=flavour_set,
-        manifest_types=parsed.manifest_types,
     )
 
 
