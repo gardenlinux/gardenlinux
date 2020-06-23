@@ -78,13 +78,18 @@ def publish_image(
     cicd_cfg: glci.model.CicdCfg,
 ) -> glci.model.OnlineReleaseManifest:
     print(f'running release for {release.platform=}')
-    publis_image_func_map = {
-        'ali': _flavour_not_supported,
-        'aws': _flavour_not_supported,
-        'gcp': _publish_gcp_image,
-    }
-    f = publis_image_func_map.get(release.platform, _flavour_not_supported)
-    return f(release, cicd_cfg)
+
+    if release.platform == 'ali':
+        publish_function = _publish_alicloud_image
+    elif release.platform == 'aws':
+        publish_function = _publish_aws_image
+    elif release.platform == 'gcp':
+        publish_function = _publish_gcp_image
+    else:
+        print(f'do not know how to publish {release.platform=} yet')
+        return release
+
+    return publish_function(release, cicd_cfg)
 
 
 def _publish_alicloud_image(release: glci.model.OnlineReleaseManifest,
@@ -137,13 +142,6 @@ def _publish_gcp_image(release: glci.model.OnlineReleaseManifest,
         release=release,
         build_cfg=cicd_cfg.build,
     )
-
-
-def _flavour_not_supported(release: glci.model.OnlineReleaseManifest,
-                            cicd_cfg: glci.model.CicdCfg,
-                            ) -> glci.model.OnlineReleaseManifest:
-    print(f'do not know how to publish {release.platform=} yet')
-    return release
 
 
 def promote(
