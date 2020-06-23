@@ -425,6 +425,9 @@ class CicdCfg:
 
 epoch_date = datetime.datetime.fromisoformat('2020-04-01')
 
+# special version value - use "today" as gardenlinux epoch (depend on build-time)
+version_today = 'today'
+
 
 def gardenlinux_epoch(date: typing.Union[str, datetime.datetime] = None):
     '''
@@ -467,9 +470,9 @@ def snapshot_date(gardenlinux_epoch: int = None):
     return date_str
 
 
-def gardenlinux_epoch_from_workingtree(version_file_path: str=paths.version_path):
+def _parse_version_from_workingtree(version_file_path: str=paths.version_path) -> str:
     '''
-    determines the configured gardenlinux epoch from the current working tree.
+    parses the raw version as configured (defaulting to the contents of `VERSION` file)
 
     In particular, the contents of `VERSION` (a regular text file) are parsed, with the following
     semantics:
@@ -477,24 +480,56 @@ def gardenlinux_epoch_from_workingtree(version_file_path: str=paths.version_path
     - lines are stripped
     - after stripping, lines starting with `#` are ignored
     - the first non-empty line (after stripping and comment-stripping) is considered
-    - from it, trailing comments are removed (with another subsequent strip)
+    - extra lines are ignored
+    - from this line, trailing comments are removed (with another subsequent strip)
     - the result is then expected to be one of:
+      - a semver-ish version (<major>.<minor>)
+      - the string literal `today`
+    - the afforementioned assumptions about the version are, however, not validated by this function
+    '''
+    with open(version_file_path) as f:
+        for line in f.readlines():
+            if not (line := line.strip()) or line.startswith('#'): continue
+            version_str = line
+            if '#' in version_str:
+                # ignore comments
+                version_str = version_str.split('#', 1)[0].strip()
+            return version_str
+        else:
+            raise ValueError(f'did not find uncommented, non-empty line in {version_file_path}')
+
+
+def next_release_version_from_workingtree(version_file_path: str=paths.version_path):
+    version_str = _parse_version_from_workingtree(version_file_path=version_file_path)
+
+    if version_str == version_today:
+        # the first release-candidate is always <gardenlinux-epoch>.0
+        return f'{gardenlinux_epoch_from_workingtree()}.0'
+
+    # if version is not `today`, we expect to period-separated integers (<epoch>.<patchlevel>)
+    epoch, patchlevel = version_str.split('.')
+
+    # ensure the components are both parsable to int
+    int(epoch)
+    int(patchlevel)
+
+    return version_str
+
+
+def gardenlinux_epoch_from_workingtree(version_file_path: str=paths.version_path):
+    '''
+    determines the configured gardenlinux epoch from the current working tree.
+
+    see `_parse_version_from_workingtree` for details about pre-parsing / comment-stripping
+
+    - the version_str is expected to be one of:
       - a semver-ish version (<major>.<minor>)
         - only <major> is considered (and must be parsable to an integer
         - the parsing result is the gardenlinux epoch
       - the string literal `today`
         - in this case, the returned epoch is today's gardenlinux epoch (days since 2020-04-01)
     '''
-    with open(version_file_path) as f:
-        for line in f.readlines():
-            if not (line := line.strip()) or line.startswith('#'): continue
-            version_str = line
-            if '#' in line:
-                # ignore comments
-                line = line.split('#', 1)[0].strip()
-            break
-        else:
-            raise ValueError(f'did not find uncommented, non-empty line in {version_file_path}')
+    version_str = _parse_version_from_workingtree(version_file_path=version_file_path)
 
     # version_str may either be a semver-ish (gardenlinux only uses two components (x.y))
     try:
@@ -503,7 +538,7 @@ def gardenlinux_epoch_from_workingtree(version_file_path: str=paths.version_path
     except ValueError:
         pass
 
-    if version_str == 'today':
+    if version_str == version_today:
         return gardenlinux_epoch()
 
     raise ValueError(f'{version_str=} was not understood - either semver or "today" are supported')

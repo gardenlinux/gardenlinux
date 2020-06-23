@@ -37,7 +37,8 @@ def mk_pipeline_run(
     promote_target: promote.BuildType,
     promote_mode: promote.PromoteMode,
 ):
-    run_name = f'{pipeline_name}-{version.replace(".", "-")}'[:60] # k8s length restriction
+    # k8s only allows dns names / leng restriction applies
+    run_name = f'{pipeline_name}-{version.replace(".", "-")}-{committish[:6]}'[60:]
 
     snapshot_timestamp = glci.model.snapshot_date(gardenlinux_epoch=gardenlinux_epoch)
 
@@ -131,7 +132,8 @@ def main():
     )
 
     if (version:=parsed.version) is None:
-        version = f'{parsed.gardenlinux_epoch}-{parsed.committish[:6]}'
+        # if version is not specify, derive from worktree (i.e. VERSION file)
+        version = glci.model.next_release_version_from_workingtree()
 
 
     # XXX hardcode pipeline names and flavour for now
