@@ -38,7 +38,7 @@ def mk_pipeline_run(
     promote_mode: promote.PromoteMode,
 ):
     # k8s only allows dns names / leng restriction applies
-    run_name = f'{pipeline_name}-{version.replace(".", "-")}-{committish[:6]}'[60:]
+    run_name = f'{pipeline_name}-{version.replace(".", "-")}-{committish[:6]}'[:60]
 
     snapshot_timestamp = glci.model.snapshot_date(gardenlinux_epoch=gardenlinux_epoch)
 
