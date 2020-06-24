@@ -1,5 +1,6 @@
 auditd
 ca-certificates
+cifs-utils
 dnsutils
 iproute2
 iptables
