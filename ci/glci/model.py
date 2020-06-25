@@ -91,7 +91,6 @@ class GardenlinuxFlavour:
 
     def calculate_modifiers(self):
         platform = feature_by_name(self.platform)
-        yield from platform.included_features()
         yield from (
             feature_by_name(f) for f
             in normalised_modifiers(platform=self.platform, modifiers=self.modifiers)
