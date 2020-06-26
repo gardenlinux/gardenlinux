@@ -4,14 +4,14 @@ set -Eeuo pipefail
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
 	--flags 'no-build,debug,suite:,timestamp:' \
-	--flags 'eol,ports,arch:,qemu,features:,buildid:' \
+	--flags 'eol,ports,arch:,qemu,features:,commitid:' \
 	--flags 'suffix:,prefix:' \
 	--
 
 export PATH="${thisDir}:${PATH}"
 export REPO_ROOT="$(readlink -f "${thisDir}/..")"
 
-buildid="local"
+commitid="local"
 eval "$dgetopt"
 while true; do
 	flag="$1"; shift
@@ -27,7 +27,7 @@ while true; do
 		--timestamp) timestamp="$1"; shift ;; # timestamp is a parameter this time
 		--suffix) suffix="$1"; shift ;; # target name prefix
 		--prefix) prefix="$1"; shift ;; # target name suffix
-		--buildid) buildid="$1"; shift ;; # build commit hash
+		--commitid) commitid="$1"; shift ;; # build commit hash
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
@@ -173,8 +173,8 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 	sed -i "s/^SUPPORT_URL=.*$/SUPPORT_URL=\"https:\/\/github.com\/gardenlinux\/gardenlinux\"/g" rootfs/etc/os-release
 	sed -i "s/^BUG_REPORT_URL=.*$/BUG_REPORT_URL=\"https:\/\/github.com\/gardenlinux\/gardenlinux\/issues\"/g" rootfs/etc/os-release
 	echo "GARDENLINUX_FEATURES=base,$features" >> rootfs/etc/os-release
-	echo "GARDENLINUX_VERSION_ID=$timestamp" >> rootfs/etc/os-release 
-	echo "GARDENLINUX_BUILD_ID=$buildid" >> rootfs/etc/os-release
+	echo "GARDENLINUX_VERSION=$timestamp" >> rootfs/etc/os-release
+	echo "GARDENLINUX_COMMIT_ID=$commitid" >> rootfs/etc/os-release
 	echo "VERSION_CODENAME=$suite" >> rootfs/etc/os-release
 
 	create_artifacts() {

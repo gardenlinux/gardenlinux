@@ -71,7 +71,7 @@ __cgetopt
 _version() {
 	local v
 	if [ -r "$scriptsDir/../VERSION" ]; then
-		v="$(< "$scriptsDir/../VERSION")"
+		v="$(sed -e "s/#.*\$//" -e "/^$/d" "$scriptsDir/../VERSION")"  
 	else
 		v='unknown'
 	fi
