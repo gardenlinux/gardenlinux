@@ -139,7 +139,7 @@ spec:
         echo "running build.."
         $(params.repodir)/bin/garden-build.sh \
           --arch $(params.architecture) \
-          --buildid '$(params.version)' \
+          --commitid '$(params.committish)' \
           --prefix "" \
           --suite $(params.suite) \
           --timestamp ${timestamp} \
