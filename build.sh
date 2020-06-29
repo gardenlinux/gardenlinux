@@ -45,8 +45,6 @@ version="$(bin/garden-version --major ${1:-})";	shift || /bin/true
 mkdir -p "$outputDir"
 outputDir="$(readlink -f "$outputDir")"
 
-docker info > /dev/null || { echo "docker not working, check permissions or work with bin/garden-build.sh"; exit 1; }
-
 envArgs=(
 	TZ="UTC"
 	LC_ALL="C"
@@ -66,14 +64,12 @@ securityArgs=(
 	--privileged		# needed for creating bootable images with losetup and a mounted /dev
 )
 
-if docker info | grep -q apparmor; then
-	# AppArmor blocks mount :)
-	securityArgs+=( --security-opt apparmor=unconfined )
-fi
+dockerinfo="$(docker info)"       || eusage "docker not working, check permissions or work with bin/garden-build.sh"
+grep -q apparmor <<< $dockerinfo  && securityArgs+=( --security-opt apparmor=unconfined )
 
 # external variable BUILD_IMAGE forces a different buildimage name
 buildImage=${BUILD_IMAGE:-"gardenlinux/build-image:$version"}
-[ -z "$build" ] || docker build -t "$buildImage" "$thisDir"
+[ $build ] && docker build -t "$buildImage" "$thisDir"
 
 # using the buildimage in a temporary container with
 # build directory mounted in memory (--tmpfs ...) and
@@ -84,15 +80,11 @@ dockerArgs="--hostname garden-build
 	--volume ${thisDir}:/opt/debuerreotype
 	--mount type=bind,source=/dev,target=/dev"
 
-if [ $lessram ]; then
-       	dockerArgs="$dockerArgs --tmpfs /tmp:dev,exec,suid,noatime"
-fi
+[ $lessram ] || dockerArgs+=" --tmpfs /tmp:dev,exec,suid,noatime"
 
 if [ $manual ]; then
-	echo
-	echo "### running in debug mode"
-	echo "please run -> /opt/debuerreotype/bin/garden-build.sh (all configs are set)<-"
-	echo
+	echo -e "\n### running in debug mode"
+	echo -e "please run -> /opt/debuerreotype/bin/garden-build.sh (all configs are set)<-\n"
 	set -x
 	docker run $dockerArgs -ti \
 		"${buildImage}" \

@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
-	--flags 'no-build,debug,suite:,version:' \
+	--flags 'no-build,debug,suite:,version:,timestamp:' \
 	--flags 'eol,ports,arch:,qemu,features:,commitid:' \
 	--flags 'suffix:,prefix:' \
 	--
@@ -24,7 +24,7 @@ while true; do
 		--qemu) qemu=1 ;;	# for using "qemu-debootstrap"
 		--features) features="$1"; shift ;; # adding features
 		--suite) suite="$1"; shift ;; # suite is a parameter this time
-		--version) version="$1"; shift ;; # timestamp is a parameter this time
+		--version|--timestamp) version="$1"; shift ;; # timestamp is a parameter this time
 		--suffix) suffix="$1"; shift ;; # target name prefix
 		--prefix) prefix="$1"; shift ;; # target name suffix
 		--commitid) commitid="$1"; shift ;; # build commit hash
