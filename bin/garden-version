@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+thisDir="$(dirname "$(readlink -f "${BASH_SOURCE}")")"
+source "${thisDir}/.constants.sh" \
+	--flags 'major,minor,date,datefull,epoch,git'
+
+eval "${dgetopt}"
+typeout="default"
+versionfile="$(readlink -f "${thisDir}/../VERSION")"
+startdate="Mar 31 23:59:59 UTC 2020"
+while true; do
+	flag="$1"; shift
+	dgetopt-case "${flag}"
+	case "${flag}" in
+		--major|--minor|--date|--datefull|--epoch|--git)		
+			typeout="${flag}"   ;;
+		--)	break ;;
+		*) 	eusage "unknown flag '${flag}'" ;;
+	esac
+done
+
+input="${1:-}";  shift || /bin/true
+
+if [ -z ${input} ]; then
+	# no version / timestamp on commandline
+	input="$(sed -e "s/#.*\$//" -e "/^$/d" "${versionfile}")"
+fi
+if [ -z ${input} ]; then
+	# no version / timestamp on versionfile
+	input="today"
+fi
+input=$(sed "s/^[[:space:]]*//;s/[[:space:]]*\$//" <<< ${input})
+
+minor=0
+if [[ ${input} =~ ^[0-9\.]*$ && $(cut -d. -f1 <<< ${input}) -lt 10000000 ]]; 
+then	[ $(cut -d. -sf3 <<< ${input}) ] && eusage "invalid version format ${input}. should be <major>[.<minor>]"
+
+	major="$(cut -d. -f1 <<< ${input})"
+	if [ $(cut -d. -sf2 <<< ${input}) ]; then 
+		minor="$(cut -d. -f2 <<< ${input})"
+	fi
+else	indate=$(date --date "${input}" +%s 2>/dev/null) || eusage "invalid date ${input}"
+	major="$(( (${indate} - $(date --date "${startdate}" +%s)) / (60*60*24) ))"
+fi
+
+case "${typeout}" in
+	--major)	echo ${major} ;;
+	--minor)	echo ${minor} ;;
+	--date)		date --date "${startdate} + ${major} days" +%Y%m%d ;;
+	--datefull)	date --date "${startdate} + ${major} days" +%Y%m%dT%H%M%SZ ;;
+	--epoch)	date --date "${startdate} + ${major} days" +%s ;;
+        --git)		echo "${major}.${minor}-$(git -C "${scriptsDir}" rev-parse --short 'HEAD^{commit}')" ;;
+        *)		echo "${major}.${minor}" ;;
+esac	

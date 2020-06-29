@@ -41,7 +41,7 @@ if docker info | grep -q apparmor; then
 	)
 fi
 
-ver="$("$thisDir/bin/debuerreotype-version")"
+ver="$("$thisDir/bin/garden-version")"
 ver="${ver%% *}"
 dockerImage="debuerreotype/debuerreotype:$ver"
 [ -z "$build" ] || docker build -t "$dockerImage" "$thisDir"

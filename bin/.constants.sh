@@ -52,55 +52,48 @@ __cgetopt() {
 
 	while [ "$#" -gt 0 ]; do
 		local IFS=$'\n'
-		local usagePrefix='usage:' usageLine=
+		local usagePrefix='usage:' usageLine= linebreak=
 		for usageLine in $1; do
 			usageStr+="$usagePrefix $self${usageLine:+ $usageLine}"$'\n'
 			usagePrefix='      '
+			linebreak=1
 		done
 		usagePrefix='   ie:'
 		for usageLine in $2; do
 			usageStr+="$usagePrefix $self${usageLine:+ $usageLine}"$'\n'
 			usagePrefix='      '
+			linebreak=1
 		done
-		usageStr+=$'\n'
+		[ $linebreak ] && usageStr+=$'\n'
 		shift 2
 	done
 }
 __cgetopt
 
-_version() {
-	local v
-	if [ -r "$scriptsDir/../VERSION" ]; then
-		v="$(sed -e "s/#.*\$//" -e "/^$/d" "$scriptsDir/../VERSION")"  
-	else
-		v='unknown'
-	fi
-	if [ -d "$scriptsDir/../.git" ] && command -v git > /dev/null; then
-		local commit="$(git -C "$scriptsDir" rev-parse --short 'HEAD^{commit}')"
-		v="$v commit $commit"
-	fi
-	echo "$v"
-}
 
 usage() {
 	echo -n "$usageStr"
 
-	local v="$(_version)"
-	echo "debuerreotype version $v"
+	local v="$($scriptsDir/garden-version)"
+	echo "$self: gardenlinux build version $v"
 }
 eusage() {
 	if [ "$#" -gt 0 ]; then
-		echo >&2 "error: $*"$'\n'
+		if [ "$1" == "-n" ]; then
+			echo >&2 ""
+		else
+			echo >&2 "error: $*"$'\n'
+		fi
 	fi
 	usage >&2
 	exit 1
 }
 _dgetopt() {
-	getopt -n "$self" \
+	getopt -n "error" \
 		-o "+$dFlagsShort" \
 		--long "$dFlags" \
 		-- "$@" \
-		|| eusage 'getopt failed'
+		|| eusage -n
 }
 dgetopt='options="$(_dgetopt "$@")"; eval "set -- $options"; unset options'
 dgetopt-case() {
@@ -108,6 +101,6 @@ dgetopt-case() {
 
 	case "$flag" in
 		-h|'-?'|--help) usage; exit 0 ;;
-		--version) _version; exit 0 ;;
+		--version) echo "version: $($scriptsDir/garden-version)"; exit 0 ;;
 	esac
 }

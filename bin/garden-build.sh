@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
-	--flags 'no-build,debug,suite:,timestamp:' \
+	--flags 'no-build,debug,suite:,version:' \
 	--flags 'eol,ports,arch:,qemu,features:,commitid:' \
 	--flags 'suffix:,prefix:' \
 	--
@@ -24,7 +24,7 @@ while true; do
 		--qemu) qemu=1 ;;	# for using "qemu-debootstrap"
 		--features) features="$1"; shift ;; # adding features
 		--suite) suite="$1"; shift ;; # suite is a parameter this time
-		--timestamp) timestamp="$1"; shift ;; # timestamp is a parameter this time
+		--version) version="$1"; shift ;; # timestamp is a parameter this time
 		--suffix) suffix="$1"; shift ;; # target name prefix
 		--prefix) prefix="$1"; shift ;; # target name suffix
 		--commitid) commitid="$1"; shift ;; # build commit hash
@@ -37,8 +37,8 @@ if [ ${debug:-} ]; then
 	set -x
 fi
 
-epoch="$(date --date "$timestamp" +%s)"
-serial="$(date --date "@$epoch" +%Y%m%d)"
+epoch="$(garden-version --epoch "$version")"
+serial="$(garden-version --date "$version")"
 dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
 
 if [ -z "${prefix+x}" ]; then
@@ -173,7 +173,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 	sed -i "s/^SUPPORT_URL=.*$/SUPPORT_URL=\"https:\/\/github.com\/gardenlinux\/gardenlinux\"/g" rootfs/etc/os-release
 	sed -i "s/^BUG_REPORT_URL=.*$/BUG_REPORT_URL=\"https:\/\/github.com\/gardenlinux\/gardenlinux\/issues\"/g" rootfs/etc/os-release
 	echo "GARDENLINUX_FEATURES=base,$features" >> rootfs/etc/os-release
-	echo "GARDENLINUX_VERSION=$timestamp" >> rootfs/etc/os-release
+	echo "GARDENLINUX_VERSION=$($debuerreotypeScriptsDir/garden-version)" >> rootfs/etc/os-release
 	echo "GARDENLINUX_COMMIT_ID=$commitid" >> rootfs/etc/os-release
 	echo "VERSION_CODENAME=$suite" >> rootfs/etc/os-release
 
@@ -239,8 +239,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 			fi
 		' > "$targetBase.manifest"
 		echo "$epoch" > "$targetBase.debuerreotype-epoch"
-		debuerreotype-version > "$targetBase.debuerreotype-version"
-		touch_epoch "$targetBase.manifest" "$targetBase.debuerreotype-epoch" "$targetBase.debuerreotype-version"
+		touch_epoch "$targetBase.manifest" "$targetBase.debuerreotype-epoch"
 
 		for f in debian_version os-release apt/sources.list; do
 			targetFile="$targetBase.$(basename "$f" | sed -r "s/[^a-zA-Z0-9_-]+/-/g")"
@@ -304,26 +303,26 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 		create_artifacts "$targetBase" "$rootfs" "$suite" "$variant"
 	done
 
-	if [ "$codename" != "$suite" ]; then
-		codenameDir="$exportDir/$serial/$dpkgArch/$codename"
-		mkdir -p "$codenameDir"
-		tar -cC "$outputDir" --exclude="**/rootfs.*" . | tar -xC "$codenameDir"
-
-		for rootfs in rootfs*/; do
-			rootfs="${rootfs%/}" # "rootfs", "rootfs-slim", ...
-
-			variant="${rootfs#rootfs}" # "", "-slim", ...
-			variant="${variant#-}" # "", "slim", ...
-
-			variantDir="$codenameDir/$variant"
-			targetBase="$variantDir/rootfs"
-
-			# point sources.list back at snapshot.debian.org temporarily (but this time pointing at $codename instead of $suite)
-			debuerreotype-debian-sources-list --snapshot "${sourcesListArgs[@]}" "$rootfs" "$codename"
-
-			create_artifacts "$targetBase" "$rootfs" "$codename" "$variant"
-		done
-	fi
+#	if [ "$codename" != "$suite" ]; then
+#		codenameDir="$exportDir/$serial/$dpkgArch/$codename"
+#		mkdir -p "$codenameDir"
+#		tar -cC "$outputDir" --exclude="**/rootfs.*" . | tar -xC "$codenameDir"
+#
+#		for rootfs in rootfs*/; do
+#			rootfs="${rootfs%/}" # "rootfs", "rootfs-slim", ...
+#
+#			variant="${rootfs#rootfs}" # "", "-slim", ...
+#			variant="${variant#-}" # "", "slim", ...
+#
+#			variantDir="$codenameDir/$variant"
+#			targetBase="$variantDir/rootfs"
+#
+#			# point sources.list back at snapshot.debian.org temporarily (but this time pointing at $codename instead of $suite)
+#			debuerreotype-debian-sources-list --snapshot "${sourcesListArgs[@]}" "$rootfs" "$codename"
+#
+#			create_artifacts "$targetBase" "$rootfs" "$codename" "$variant"
+#		done
+#	fi
 } >&2
 
 if [ ! -z "${OUT_FILE:-}" ]; then
