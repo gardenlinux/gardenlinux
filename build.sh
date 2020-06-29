@@ -93,5 +93,5 @@ else
 	set -x
 	docker run $dockerArgs --rm \
 		"${buildImage}" \
-		/opt/debuerreotype/bin/garden-build.shx	| tar -xvC "$outputDir"
+		/opt/debuerreotype/bin/garden-build.sh | tar -xvC "$outputDir"
 fi
