@@ -3,7 +3,6 @@
 # constants of the universe
 export TZ='UTC' LC_ALL='C'
 umask 0002
-#thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 scriptsDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 self="$(basename "$0")"
 
@@ -32,51 +31,57 @@ self="$(basename "$0")"
 #	done
 #}
 
-options="$(getopt -n "$BASH_SOURCE" -o '+' --long 'flags:,flags-short:' -- "$@")"
+options="$(getopt -n "$BASH_SOURCE" -o '+' --long 'flags:,flags-short:,help:,usage:,sample:' -- "$@")"
 dFlags='help,version'
 dFlagsShort='h?'
-usageStr=
+dHelp=
+dUsage=
 __cgetopt() {
 	eval "set -- $options" # in a function since otherwise "set" will overwrite the parent script's positional args too
 	unset options
+	local usagePrefix='usage:'
+	local samplePrefix='  eg.:'
 
 	while true; do
 		local flag="$1"; shift
 		case "$flag" in
-			--flags) dFlags="${dFlags:+$dFlags,}$1"; shift ;;
-			--flags-short) dFlagsShort="${dFlagsShort}$1"; shift ;;
+			--flags) 	dFlags="${dFlags:+$dFlags,}$1"; shift ;;
+			--flags-short)	dFlagsShort="${dFlagsShort}$1"; shift ;;
+			--help)		dHelp+="$1"$'\n'; shift ;;
+			--usage)
+					dUsage+="$usagePrefix $self${1:+ $1}"$'\n'
+					usagePrefix='      '
+					samplePrefix='  eg.:'
+					shift
+					;;
+			--sample)	
+					dUsage+="$samplePrefix $self${1:+ $1}"$'\n'
+					samplePrefix='      '
+					usagePrefix=$'\n''usage:'
+					shift
+				;;
 			--) break ;;
 			*) echo >&2 "error: unexpected $BASH_SOURCE flag '$flag'"; exit 1 ;;
 		esac
 	done
+	local dup=$(sort <<< ${dFlags//,/$'\n'} | uniq -d)
+	[ -n "$dup" ] && { echo "error: duplicate flags definition \"${dup//$'\n'/\" \"}\""; exit 1; }
 
-	while [ "$#" -gt 0 ]; do
-		local IFS=$'\n'
-		local usagePrefix='usage:' usageLine= linebreak=
-		for usageLine in $1; do
-			usageStr+="$usagePrefix $self${usageLine:+ $usageLine}"$'\n'
-			usagePrefix='      '
-			linebreak=1
-		done
-		usagePrefix='   ie:'
-		for usageLine in $2; do
-			usageStr+="$usagePrefix $self${usageLine:+ $usageLine}"$'\n'
-			usagePrefix='      '
-			linebreak=1
-		done
-		[ $linebreak ] && usageStr+=$'\n'
-		shift 2
-	done
+	return 0 
 }
 __cgetopt
 
-
 usage() {
-	echo -n "$usageStr"
-
-	local v="$($scriptsDir/garden-version)"
-	echo "$self: gardenlinux build version $v"
+	echo -n "${dUsage:+$dUsage$'\n'}"
+	echo "$self: gardenlinux build version $($scriptsDir/garden-version)"
 }
+
+xusage() {
+	echo "$self: gardenlinux build version $($scriptsDir/garden-version)"$'\n'
+	echo -n "${dUsage:+$dUsage$'\n'}"
+	echo "$dHelp"
+}
+
 eusage() {
 	if [ "$#" -gt 0 ]; then
 		if [ "$1" == "-n" ]; then
@@ -88,6 +93,7 @@ eusage() {
 	usage >&2
 	exit 1
 }
+
 _dgetopt() {
 	getopt -n "error" \
 		-o "+$dFlagsShort" \
@@ -100,7 +106,7 @@ dgetopt-case() {
 	local flag="$1"; shift
 
 	case "$flag" in
-		-h|'-?'|--help) usage; exit 0 ;;
-		--version) echo "version: $($scriptsDir/garden-version)"; exit 0 ;;
+		-h|'-?'|--help)	xusage; exit 0 ;;
+		--version)	echo "version: $($scriptsDir/garden-version)"; exit 0 ;;
 	esac
 }

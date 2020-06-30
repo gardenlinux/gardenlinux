@@ -2,13 +2,28 @@
 set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "${BASH_SOURCE}")")"
+versionfile="$(readlink -f "${thisDir}/../VERSION")"
+startdate="Mar 31 23:59:59 UTC 2020"
+
 source "${thisDir}/.constants.sh" \
-	--flags 'major,minor,date,datefull,epoch,git'
+	--flags 'major,minor,date,datefull,epoch,git' \
+	--usage '[ --major | --minor | --date | --datefull | --epoch | --git ] [<garden-version>|<timestamp>]' \
+	--sample '20200427' \
+	--sample '--date 27.1' \
+	--help   "Generates version dependent values according to the file $versionfile or to the parameter handed over. Versions can be converted adequately
+
+--major 	prints only the major version
+--minor		prints only the minor version
+--date 		prints the date according to the version e.g. 20200427 if garden-version=27
+--datefull	prints a full date deteministically usable by debootstrap
+--epoch		prints the seconds sinc 19700101 till garden-version
+--git		prints the version plus the last git-hash
+
+If no parameter is specified the full version <major>.<minor> e.g. 27.5 is printed. The version is taken from $versionfile. On HEAD this should always evaluate to 'today', on branch versions this always should resolve to the next version that will be build e.g. 27.1. This implies there is no branch with a .0 in the $versionfile file.
+The version calculated expresses the days since $startdate"
 
 eval "${dgetopt}"
 typeout="default"
-versionfile="$(readlink -f "${thisDir}/../VERSION")"
-startdate="Mar 31 23:59:59 UTC 2020"
 while true; do
 	flag="$1"; shift
 	dgetopt-case "${flag}"
@@ -19,7 +34,6 @@ while true; do
 		*) 	eusage "unknown flag '${flag}'" ;;
 	esac
 done
-
 input="${1:-}";  shift || /bin/true
 
 if [ -z ${input} ]; then
