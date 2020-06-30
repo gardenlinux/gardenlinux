@@ -98,12 +98,13 @@ def wait_for_pipelinerun_status(
     name: str,
     namespace: str='gardenlinux-tkn',
     target_status: StatusReason=StatusReason.SUCCEEDED,
-    timeout_seconds: int=60*30, # 30 minutes
+    timeout_seconds: int=60*45, # 45 minutes
     polling_interval_seconds: int=15,
 ):
     start_time = time.time()
 
     while (status := pipelinerun_status(name=name, namespace=namespace)) is not target_status:
+        print(f'{status=}')
         if status is StatusReason.FAILED:
             print(f'{status=} - aborting')
             raise RuntimeError(status)
