@@ -16,6 +16,7 @@ def _tkn_executable():
 
 
 class StatusReason(enum.Enum):
+    PENDING = 'Pending' # fake status used until actual status becomes available
     RUNNING = 'Running'
     FAILED = 'Failed'
     SUCCEEDED = 'Succeeded'
@@ -67,6 +68,11 @@ def _pipelinerun(name: str, namespace: str='gardenlinux-tkn'):
 
 def pipelinerun_status(name: str, namespace: str='gardenlinux-tkn'):
     pipelinerun_dict = _pipelinerun(name=name, namespace=namespace)
+
+    if not 'status' in pipelinerun_dict:
+        # XXX if we are too early, there is not status, yet
+        return StatusReason.PENDING
+
     status = pipelinerun_dict['status']
     conditions = [
         dacite.from_dict(
@@ -85,7 +91,7 @@ def pipelinerun_status(name: str, namespace: str='gardenlinux-tkn'):
         key=lambda c: dateutil.parser.isoparse(c.lastTransitionTime)
     )[-1]
 
-    return latest_condition
+    return latest_condition.reason
 
 
 def wait_for_pipelinerun_status(
@@ -97,7 +103,7 @@ def wait_for_pipelinerun_status(
 ):
     start_time = time.time()
 
-    while (status := pipelinerun_status(name=name, namespace=namespace).reason) is not target_status:
+    while (status := pipelinerun_status(name=name, namespace=namespace)) is not target_status:
         if status is StatusReason.FAILED:
             print(f'{status=} - aborting')
             raise RuntimeError(status)
