@@ -142,7 +142,8 @@ spec:
           --commitid '$(params.committish)' \
           --prefix "" \
           --suite $(params.suite) \
-          --version "${version}" \
+          --version "${params.version}" \
+          --timestamp "${timestamp}" \
           --features "${features}"
         ls -la "${OUT_FILE}"
         tar tf "${OUT_FILE}"
