@@ -29,7 +29,7 @@ def main():
             pipelinerun_name = metadata['name']
             namespace = metadata['namespace']
 
-    print(f'waiting for {parsed.pipelinerun_name=} to finish')
+    print(f'waiting for {pipelinerun_name=} to finish')
 
     try:
         tkn.util.wait_for_pipelinerun_status(
