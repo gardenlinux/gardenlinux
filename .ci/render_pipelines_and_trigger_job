@@ -90,4 +90,4 @@ done
 echo 'done: refreshed pipeline(s) and created a new pipeline-run for current commit'
 
 echo 'will wait for new pipelinerun'
-ci/wait_for_pipelinerun.py --pipelinerun-file pipelinerun.yaml
+ci/wait_for_pipelinerun.py --pipelinerun-file "${pipeline_run}"
