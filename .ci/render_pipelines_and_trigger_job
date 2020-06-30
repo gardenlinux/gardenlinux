@@ -19,6 +19,7 @@ function cleanup_pipelineruns {
     --namespace "${GARDENLINUX_TKN_WS}" \
     pipelineruns \
     delete \
+    --force \
     --all \
     --keep 20
 }
