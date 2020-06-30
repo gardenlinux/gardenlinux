@@ -140,7 +140,7 @@ spec:
           --arch $(params.architecture) \
           --commitid '$(params.committish)' \
           --suite $(params.suite) \
-          --version "$(params.version)" \
+          --gardenversion "$(params.version)" \
           --features "${features}"
         ls -la "${OUT_FILE}"
         tar tf "${OUT_FILE}"

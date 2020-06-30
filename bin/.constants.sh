@@ -101,6 +101,6 @@ dgetopt-case() {
 
 	case "$flag" in
 		-h|'-?'|--help) usage; exit 0 ;;
-		--version) echo "version: $($scriptsDir/garden-version)" ;;
+		--version) echo "version: $($scriptsDir/garden-version)"; exit 0 ;;
 	esac
 }
