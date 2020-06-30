@@ -48,14 +48,12 @@ __cgetopt() {
 			--flags) 	dFlags="${dFlags:+$dFlags,}$1"; shift ;;
 			--flags-short)	dFlagsShort="${dFlagsShort}$1"; shift ;;
 			--help)		dHelp+="$1"$'\n'; shift ;;
-			--usage)
-					dUsage+="$usagePrefix $self${1:+ $1}"$'\n'
+			--usage)	dUsage+="$usagePrefix $self${1:+ $1}"$'\n'
 					usagePrefix='      '
 					samplePrefix='  eg.:'
 					shift
 					;;
-			--sample)	
-					dUsage+="$samplePrefix $self${1:+ $1}"$'\n'
+			--sample)	dUsage+="$samplePrefix $self${1:+ $1}"$'\n'
 					samplePrefix='      '
 					usagePrefix=$'\n''usage:'
 					shift
@@ -65,7 +63,9 @@ __cgetopt() {
 		esac
 	done
 	local dup=$(sort <<< ${dFlags//,/$'\n'} | uniq -d)
-	[ -n "$dup" ] && { echo "error: duplicate flags definition \"${dup//$'\n'/\" \"}\""; exit 1; }
+	[ -n "$dup" ] && { echo "error: duplicate in flags definition \"${dup//$'\n'/\" \"}\""; exit 1; }
+	dup=$(grep -o . <<< ${dFlagsShort} | sort | uniq -d)
+	[ -n "$dup" ] && { echo "error: duplicate in flags-short definition \"${dup//$'\n'/\" \"}\""; exit 1; }
 
 	return 0 
 }
@@ -84,12 +84,9 @@ xusage() {
 
 eusage() {
 	if [ "$#" -gt 0 ]; then
-		if [ "$1" == "-n" ]; then
-			echo >&2 ""
-		else
-			echo >&2 "error: $*"$'\n'
-		fi
+		echo >&2 "error: $*"
 	fi
+	echo >&2
 	usage >&2
 	exit 1
 }
@@ -99,7 +96,7 @@ _dgetopt() {
 		-o "+$dFlagsShort" \
 		--long "$dFlags" \
 		-- "$@" \
-		|| eusage -n
+		|| eusage 
 }
 dgetopt='options="$(_dgetopt "$@")"; eval "set -- $options"; unset options'
 dgetopt-case() {
