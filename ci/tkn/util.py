@@ -107,7 +107,7 @@ def wait_for_pipelinerun_status(
         if status is StatusReason.FAILED:
             print(f'{status=} - aborting')
             raise RuntimeError(status)
-        elif status is StatusReason.RUNNING:
+        elif status in (StatusReason.RUNNING, StatusReason.PENDING):
             passed_seconds = time.time() - start_time
             if passed_seconds > timeout_seconds:
                 raise RuntimeError(f'timeout exceeded: {timeout_seconds=}')
