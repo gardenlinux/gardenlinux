@@ -131,7 +131,6 @@ spec:
         timestamp='$(params.snapshot_timestamp)'
         features="$(params.platform),$(params.modifiers)"
         echo "features: ${features}"
-        export OUT_DIR="/build"
         ls -la /build
         export OUT_FILE="$(params.outfile)"
 
@@ -140,7 +139,6 @@ spec:
         $(params.repodir)/bin/garden-build.sh \
           --arch $(params.architecture) \
           --commitid '$(params.committish)' \
-          --prefix "" \
           --suite $(params.suite) \
           --version "$(params.version)" \
           --timestamp "${timestamp}" \
