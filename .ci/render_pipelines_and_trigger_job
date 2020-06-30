@@ -7,6 +7,21 @@ set -x
 curl -Lo /bin/kubectl \
   https://storage.googleapis.com/kubernetes-release/release/v1.18.2/bin/linux/amd64/kubectl
 chmod +x /bin/kubectl
+curl -L \
+  https://github.com/tektoncd/cli/releases/download/v0.10.0/tkn_0.10.0_Linux_x86_64.tar.gz \
+  | tar xz -C /bin
+
+GARDENLINUX_TKN_WS='gardenlinux-tkn'
+
+function cleanup_pipelineruns {
+  echo "purging old pipelineruns"
+  tkn \
+    --namespace "${GARDENLINUX_TKN_WS}" \
+    pipelineruns \
+    delete \
+    --all \
+    --keep 20
+}
 
 # XXX hardcode for now
 FLAVOUR_SET='all'
@@ -34,6 +49,8 @@ gardener-ci config model_element \
 > kubeconfig
 export KUBECONFIG="$PWD/kubeconfig"
 ls -la "${KUBECONFIG}"
+
+cleanup_pipelineruns
 
 head_commit="$(git rev-parse @)"
 echo "head-commit: ${head_commit}"
