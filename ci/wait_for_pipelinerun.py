@@ -2,6 +2,7 @@
 
 import argparse
 
+import git
 import yaml
 
 import ci.util
@@ -10,6 +11,7 @@ import glci.notify
 import glci.util
 import glci.model
 import tkn.util
+import paths
 
 
 def _email_cfg(cicd_cfg: glci.model.CicdCfg):
@@ -46,9 +48,17 @@ def notify(
 
     recipients = glci.notify.determine_email_notification_recipients()
 
+    repo = git.Repo(paths.repo_root)
+    head_commit = repo.head.commit
+    committish = head_commit.hexsha
+    commit_msg = head_commit.message
 
     mail_html = f'''
         <em>This is to inform you about a build error</em>
+        <ul>
+            <li>committish: {committish}</li>
+            <li>commit-msg: {commit_msg}</li>
+        </ul>
         The following pipeline tasks failed:
         <ul>
             {failed_tname_html}
