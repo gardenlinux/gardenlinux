@@ -1,18 +1,13 @@
 import requests
+import dataclasses
 
-import botocore.client
-
-import glci.model
-
+from enum import Enum
 from datetime import (
     datetime,
     timedelta,
 )
 
-from enum import Enum
-
 from msal import ConfidentialClientApplication
-
 from azure.storage.blob import (
     BlobClient,
     BlobType,
@@ -20,7 +15,7 @@ from azure.storage.blob import (
     generate_container_sas,
 )
 
-import ci.util
+import glci.model
 
 
 class AzureImageStore:
@@ -60,8 +55,14 @@ class AzureImageStore:
             blob_type=BlobType.PageBlob,
         )
 
-        file_size = _get_s3_object_file_size(s3_client, s3_bucket_name, s3_object_key)
-        url = _get_public_s3_url(s3_client, s3_bucket_name, s3_object_key)
+        file_size_response = s3_client.head_object(Bucket=s3_bucket_name, Key=s3_object_key)
+        file_size = file_size_response['ContentLength']
+
+        url = s3_client.generate_presigned_url(
+            'get_object',
+            ExpiresIn=0,
+            Params={'Bucket': s3_bucket_name, 'Key': s3_object_key},
+        )
 
         image_blob.create_page_blob(file_size)
         # max size we can copy in one go is 4 mebibytes. Split the upload in steps with max size of
@@ -269,23 +270,14 @@ def remove_image_version_from_plan(spec: dict, plan_id: str, image_version: str,
     return spec
 
 
-def _get_public_s3_url(s3_client, bucket_name, key):
-    return s3_client.generate_presigned_url(
-        'get_object',
-        ExpiresIn=0,
-        Params={'Bucket': bucket_name, 'Key': key},
-    )
+def generate_urn(marketplace_cfg: glci.model.AzureMarketplaceCfg, image_version: str):
+    return f"{marketplace_cfg.publisher_id}:{marketplace_cfg.offer_id}:{marketplace_cfg.plan_id}:{image_version}"
 
 
-def _get_s3_object_file_size(s3_client, bucket_name, key):
-    response = s3_client.head_object(Bucket=bucket_name, Key=key)
-    return response['ContentLength']
-
-
-def copy_image(
-    storage_account_config,
-    bucket_name,
-    object_key,
+def copy_image_from_s3_to_az_storage_account(
+    storage_account_cfg: glci.model.AzureStorageAccountCfg,
+    s3_bucket_name: str,
+    s3_object_key,
     target_blob_name,
     s3_client,
 ):
@@ -299,38 +291,38 @@ def copy_image(
         )
 
     store = AzureImageStore(
-        storage_account_config.storage_account_name(),
-        storage_account_config.access_key(),
-        storage_account_config.container_name(),
+        storage_account_cfg.name,
+        storage_account_cfg.access_key,
+        storage_account_cfg.container_name,
     )
 
     store.copy_from_s3(
         s3_client=s3_client,
-        s3_bucket_name=bucket_name,
-        s3_object_key=object_key,
+        s3_bucket_name=s3_bucket_name,
+        s3_object_key=s3_object_key,
         target_blob_name=target_blob_name,
     )
 
     return store.get_image_url(target_blob_name)
 
 
-def update_offer(
-    service_principal_config,
-    azure_publish_cfg: glci.model.AzurePublishCfg,
+def update_and_publish_marketplace_offer(
+    service_principal_cfg: glci.model.AzureServicePrincipalCfg,
+    marketplace_cfg: glci.model.AzureMarketplaceCfg,
     image_version,
     image_url,
     notification_recipients,
 ):
 
     marketplace_client = AzureMarketplaceClient(
-        service_principal_config.tenant_id(),
-        service_principal_config.client_id(),
-        service_principal_config.client_secret(),
+        service_principal_cfg.tenant_id,
+        service_principal_cfg.client_id,
+        service_principal_cfg.client_secret,
     )
 
-    publisher_id = azure_publish_cfg.publisher_id
-    offer_id = azure_publish_cfg.offer_id
-    plan_id = azure_publish_cfg.plan_id
+    publisher_id = marketplace_cfg.publisher_id
+    offer_id = marketplace_cfg.offer_id
+    plan_id = marketplace_cfg.plan_id
 
     offer_spec = marketplace_client.fetch_offer(
         publisher_id=publisher_id,
@@ -358,104 +350,115 @@ def update_offer(
         notification_mails=notification_recipients,
     )
 
-    # TODO Persist the publish_operation_id to start polling the transport operation status to staging.
     publish_operation_id = marketplace_client.fetch_ongoing_operation_id(
         publisher_id,
         offer_id,
         AzmpTransportDest.STAGING,
     )
+    return publish_operation_id
+
 
 def check_offer_transport_state(
-    service_principal_config,
-    plan_config,
-    transport_dest: AzmpTransportDest,
-    operation_id: str
-):
+    cicd_cfg: glci.model.CicdCfg,
+    release: glci.model.OnlineReleaseManifest,
+) -> glci.model.OnlineReleaseManifest:
     """Checks the state of the gardenlinux Azure Marketplace offer transport
 
-    If the an transport operation has been failed some clean up action can be triggered.
     In case the transport to staging enviroment has been succeeded then the transport
-    to production (go live) will be automatically triggered. If the transport has
-    been completed then some follow up action can be triggered.
+    to production (go live) will be automatically triggered.
     """
 
+    transport_state = release.published_image_metadata.transport_state
+    if transport_state == "released":
+        return release
+
     marketplace_client = AzureMarketplaceClient(
-        service_principal_config.tenant_id(),
-        service_principal_config.client_id(),
-        service_principal_config.client_secret(),
-    )
-    publisher_id = plan_config.publisher_id()
-    offer_id = plan_config.offer_id()
-    operation_status = marketplace_client.fetch_operation_state(
-        publisher_id,
-        offer_id,
-        operation_id,
+        spn_tenant_id=cicd_cfg.publish.azure.service_principal.tenant_id,
+        spn_client_id=cicd_cfg.publish.azure.service_principal.client_id,
+        spn_client_secret=cicd_cfg.publish.azure.service_principal.client_secret,
     )
 
-    # Check first if the process has been failed...
+    publisher_id = cicd_cfg.publish.azure.marketplace.publisher_id
+    offer_id = cicd_cfg.publish.azure.marketplace.offer_id
+
+    operation_status = marketplace_client.fetch_operation_state(
+        publisher_id=publisher_id,
+        offer_id=offer_id,
+        operation_id=release.published_image_metadata.publish_operation_id,
+    )
+
+    # Check first if the process has been failed.
     if operation_status == AzmpOperationState.FAILED:
-        # TODO Trigger clean up of artifacts. Abort polling.
-        return
+        published_image = glci.model.AzurePublishedImage(
+            transport_state="failed",
+            publish_operation_id=release.published_image_metadata.publish_operation_id,
+        )
+        if release.published_image_metadata.transport_state == "going_live":
+            published_image.golive_operation_id = release.published_image_metadata.golive_operation_id
+        return dataclasses.replace(release, published_image_metadata=published_image)
 
     # Publish completed. Trigger go live to transport the offer changes to production.
-    if operation_status == AzmpOperationState.SUCCEEDED and transport_dest == AzmpTransportDest.STAGING:
+    if transport_state == "publishing" and operation_status == AzmpOperationState.SUCCEEDED:
         print("Publishing of gardenlinux offer to staging has been successfully completed. Trigger go live...")
-        marketplace_client.go_live(
-            publisher_id,
-            offer_id,
-        )
-        # TODO Persist golive_operation_id and poll next time for transport operations to production.
+        marketplace_client.go_live(publisher_id=publisher_id, offer_id=offer_id)
         golive_operation_id = marketplace_client.fetch_ongoing_operation_id(
             publisher_id,
             offer_id,
             AzmpTransportDest.PROD,
         )
-        return
+        published_image = glci.model.AzurePublishedImage(
+            transport_state="going_live",
+            publish_operation_id=release.published_image_metadata.publish_operation_id,
+            golive_operation_id=golive_operation_id,
+        )
+        return dataclasses.replace(release, published_image_metadata=published_image)
 
-    # Go Live completed. Done! Trigger follow up actions.
-    if operation_status == AzmpOperationState.SUCCEEDED and transport_dest == AzmpTransportDest.PROD:
+    # Go Live completed. Done!
+    if transport_state == "going_live" and operation_status == AzmpOperationState.SUCCEEDED:
         print("Tranport to production of gardenlinux offer succeeded.")
-        # TODO Trigger some follow up actions e.g. clean up of build artifacts.
-        return
+        published_image = glci.model.AzurePublishedImage(
+            transport_state="released",
+            publish_operation_id=release.published_image_metadata.publish_operation_id,
+            golive_operation_id=release.published_image_metadata.golive_operation_id,
+            urn=generate_urn(cicd_cfg.publish.azure.marketplace, release.version),
+        )
+        return dataclasses.replace(release, published_image_metadata=published_image)
 
-    print(f"Publishing of gardenlinux Azure Marketplace offer to {transport_dest.value} enviroment is still ongoing...")
+    print(f"Gardenlinux Azure Marketplace release operation {transport_state} is still ongoing...")
+    return release
 
 
-def copy_image_and_publish_offer(
-    mk_session: callable,
-    build_cfg: glci.model.CicdConfig,
-    azure_publish_cfg: glci.AzurePublishCfg,
+def upload_and_publish_image(
+    s3_client,
+    cicd_cfg: glci.model.CicdCfg,
     release: glci.model.OnlineReleaseManifest,
-):
-    '''Copies an object from S3 to an Azure Storage Account and adds it as machine image to the
-    given Plan.
-    '''
-    cfg_factory = ci.util.ctx().cfg_factory()
-    service_principal_config = cfg_factory.service_principal(
-        build_cfg.service_principal_name
-    )
-    storage_account_config = cfg_factory.azure_storage_account(
-        build_cfg.storage_account_config_name
-    )
+) -> glci.model.OnlineReleaseManifest:
+    """Copies an image from S3 to an Azure Storage Account, updates the corresponding
+    Azure Marketplace offering and publish the offering.
+    """
 
-    session = mk_session(region_name=build_cfg.aws_region)
-    config = botocore.client.Config(signature_version=botocore.UNSIGNED)
-    s3_client = session.client('s3', config=config)
-
+    # Copy image from s3 to Azure Storage Account
     target_blob_name = f"gardenlinux-az-{release.version}.vhd"
-
-    image_url = copy_image(
-        storage_account_config=storage_account_config,
+    image_url = copy_image_from_s3_to_az_storage_account(
+        storage_account_cfg=cicd_cfg.publish.azure.storate_account,
         s3_client=s3_client,
-        bucket_name=release.path_by_suffix('rootfs.raw').s3_bucket_name,
-        object_key=release.path_by_suffix('rootfs.raw').s3_key,
+        s3_bucket_name=release.path_by_suffix('rootfs.raw').s3_bucket_name,
+        s3_object_key=release.path_by_suffix('rootfs.raw').s3_key,
         target_blob_name=target_blob_name,
     )
 
-    update_offer(
-        service_principal_config=service_principal_config,
-        azure_publish_cfg=azure_publish_cfg,
+    # Update Marketplace offer and start publishing.
+    publish_operation_id = update_and_publish_marketplace_offer(
+        service_principal_cfg=cicd_cfg.publish.azure.service_principal,
+        marketplace_cfg=cicd_cfg.publish.azure.marketplace,
         image_version=release.version,
         image_url=image_url,
         notification_recipients=(), # TODO: configure email recipients
     )
+
+    published_image = glci.model.AzurePublishedImage(
+        transport_state="publishing",
+        publish_operation_id=publish_operation_id,
+    )
+
+    return dataclasses.replace(release, published_image_metadata=published_image)

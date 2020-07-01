@@ -276,6 +276,14 @@ class GcpPublishedImage(PublishedImageBase):
 
 
 @dataclasses.dataclass(frozen=True)
+class AzurePublishedImage:
+    transport_state: str
+    urn: str
+    publish_operation_id: str
+    golive_operation_id: str
+
+
+@dataclasses.dataclass(frozen=True)
 class ReleaseManifest(ReleaseIdentifier):
     '''
     metadata for a gardenlinux release variant that can be (or was) published to a persistency
@@ -284,7 +292,7 @@ class ReleaseManifest(ReleaseIdentifier):
     build_timestamp: str
     paths: typing.Tuple[typing.Union[S3_ReleaseFile]]
     published_image_metadata: typing.Union[AlicloudPublishedImageSet,
-                                           AwsPublishedImageSet, GcpPublishedImage, None]
+                                           AwsPublishedImageSet, GcpPublishedImage, AzurePublishedImage, None]
 
     def path_by_suffix(self, suffix: str):
         for path in self.paths:
@@ -404,14 +412,32 @@ class BuildCfg:
     alicloud_region: str
     alicloud_cfg_name: str
 
-
 @dataclasses.dataclass(frozen=True)
-class AzurePublishCfg:
+class AzureMarketplaceCfg:
     offer_id: str
     publisher_id: str
     plan_id: str
-    service_principal_cfg_name: str  # references secret in cicd cluster
-    storage_account_cfg_name: str
+
+
+@dataclasses.dataclass(frozen=True)
+class AzureServicePrincipalCfg:
+    tenant_id: str
+    client_id: str
+    client_secret: str
+
+
+@dataclasses.dataclass(frozen=True)
+class AzureStorageAccountCfg:
+    name: str
+    container_name: str
+    access_key: str
+
+
+@dataclasses.dataclass(frozen=True)
+class AzurePublishCfg:
+    marketplace: AzureMarketplaceCfg
+    service_principal: AzureServicePrincipalCfg
+    storate_account: AzureStorageAccountCfg
 
 
 @dataclasses.dataclass(frozen=True)
