@@ -149,6 +149,33 @@ def promote_step(
     )
 
 
+def pre_build_step(
+    cicd_cfg_name: tkn.model.NamedParam,
+    committish: tkn.model.NamedParam,
+    gardenlinux_epoch: tkn.model.NamedParam,
+    architecture: tkn.model.NamedParam,
+    platform: tkn.model.NamedParam,
+    repo_dir: tkn.model.NamedParam,
+):
+    return tkn.model.TaskStep(
+        name='prebuild-step',
+        image=DEFAULT_IMAGE,
+        script=task_step_script(
+            path=os.path.join(scripts_dir, 'pre_build_step.py'),
+            script_type=ScriptType.PYTHON3,
+            callable='pre_build_step',
+            params=[
+                cicd_cfg_name,
+                committish,
+                gardenlinux_epoch,
+                architecture,
+                platform,
+            ],
+            repo_path_param=repo_dir,
+        )
+    )
+
+
 def build_image_step(
     suite: tkn.model.NamedParam,
     gardenlinux_epoch: tkn.model.NamedParam,
