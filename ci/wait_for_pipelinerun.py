@@ -7,6 +7,15 @@ import yaml
 import tkn.util
 
 
+def notify(pipelinerun_name: str, namespace: str):
+    task_status = tkn.util.pipeline_taskrun_status(name=pipelinerun_name, namespace=namespace)
+
+    failed = len(task_status.failed_details) > 0
+
+    for failed_info in task_status.failed_details:
+        print(f'{failed_info["name"]=} failed with {failed_info["message"]}')
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--pipelinerun-name')
@@ -41,6 +50,7 @@ def main():
     except RuntimeError as rte:
         print(rte)
         print('pipeline run failed')
+        notify(pipelinerun_name=pipelinerun_name, namespace=namespace)
 
 
 if __name__ == '__main__':

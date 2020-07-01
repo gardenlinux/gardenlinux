@@ -1,3 +1,4 @@
+import collections
 import dataclasses
 import enum
 import json
@@ -16,7 +17,6 @@ def _tkn_executable():
 
 
 class StatusReason(enum.Enum):
-    PENDING = 'Pending' # fake status used until actual status becomes available
     RUNNING = 'Running'
     FAILED = 'Failed'
     SUCCEEDED = 'Succeeded'
@@ -27,7 +27,7 @@ class TknCondition:
     lastTransitionTime: str
     message: str
     reason: StatusReason
-    status: str
+    status: str # either True|False, or Unknown
     type: str
 
 
@@ -66,14 +66,21 @@ def _pipelinerun(name: str, namespace: str='gardenlinux-tkn'):
     return res_dict
 
 
-def pipelinerun_status(name: str, namespace: str='gardenlinux-tkn'):
-    pipelinerun_dict = _pipelinerun(name=name, namespace=namespace)
+def _run_status(dict_with_status: dict):
+    '''
+    determines the current status of a given tekton entity bearing a `status`.
+    Examples of such entities are:
+    - pipelineruns
+    - taskruns
 
-    if not 'status' in pipelinerun_dict:
-        # XXX if we are too early, there is not status, yet
-        return StatusReason.PENDING
+    the passed `dict` is expected to bear an attribute `status`, with a sub-attr `conditions`, which
+    in turn is parsable into a list of `TknCondition`
+    '''
+    if not 'status' in dict_with_status:
+        # XXX if we are too early, there is no status, yet
+        return None
 
-    status = pipelinerun_dict['status']
+    status = dict_with_status['status']
     conditions = [
         dacite.from_dict(
             data=condition,
@@ -91,7 +98,13 @@ def pipelinerun_status(name: str, namespace: str='gardenlinux-tkn'):
         key=lambda c: dateutil.parser.isoparse(c.lastTransitionTime)
     )[-1]
 
-    return latest_condition.reason
+    return latest_condition
+
+
+def pipelinerun_status(name: str, namespace: str='gardenlinux-tkn'):
+    pipelinerun_dict = _pipelinerun(name=name, namespace=namespace)
+
+    return _run_status(dict_with_status=pipelinerun_dict)
 
 
 def wait_for_pipelinerun_status(
@@ -104,16 +117,60 @@ def wait_for_pipelinerun_status(
     start_time = time.time()
 
     while (status := pipelinerun_status(name=name, namespace=namespace)) is not target_status:
-        print(f'{status=}')
-        if status is StatusReason.FAILED:
-            print(f'{status=} - aborting')
-            raise RuntimeError(status)
-        elif status in (StatusReason.RUNNING, StatusReason.PENDING):
+        if not status is None:
+            reason = status.reason
+        else:
+            reason = None
+
+        print(f'{reason=}')
+        if reason is StatusReason.FAILED:
+            print(f'{reason=} - aborting')
+            raise RuntimeError(reason)
+        elif reason in (StatusReason.RUNNING, None):
             passed_seconds = time.time() - start_time
             if passed_seconds > timeout_seconds:
                 raise RuntimeError(f'timeout exceeded: {timeout_seconds=}')
             time.sleep(polling_interval_seconds)
         else:
-            raise NotImplementedError(status)
+            raise NotImplementedError(reason)
 
     print(f'pipelinerun {name=} reached {target_status=}')
+
+
+def pipeline_taskrun_status(name: str, namespace: str='gardenlinux-tkn'):
+    pipelinerun_dict = _pipelinerun(name=name, namespace=namespace)
+    status = pipelinerun_dict['status']
+    taskruns = status['taskRuns'] # {<taskrun-id>: <taskrun-status>}
+
+    succeeded_taskrun_names = []
+    pending_taskrun_names = []
+    failed_taskruns = []
+
+    for tr_id, tr_dict in taskruns.items():
+        status = _run_status(dict_with_status=tr_dict)
+        tr_name = tr_dict['pipelineTaskName']
+
+        if status.status.lower() == 'true':
+            succeeded_taskrun_names.append(tr_name)
+        elif status.status.lower() == 'unknown':
+            pending_taskrun_names.append(tr_name)
+        else:
+            failed_taskruns.append({
+                'name': tr_name,
+                'message': status.message,
+            })
+
+    all_count = len(taskruns)
+
+    print(f'{len(failed_taskruns)} task(s) out of {all_count} failed')
+
+    TaskStatusSummary = collections.namedtuple(
+        'TaskStatusSummary',
+        ['succeeded_names', 'pending_names', 'failed_details']
+    )
+
+    return TaskStatusSummary(
+        succeeded_names=succeeded_taskrun_names,
+        pending_names=pending_taskrun_names,
+        failed_details=failed_taskruns,
+    )
