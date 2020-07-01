@@ -84,9 +84,13 @@ spec:
 
         modifiers = tuple([m for m in '$(params.modifiers)'.split(',') if m])
 
+        committish = '$(params.committish)'
+
+        build_version = f'(params.gardenlinux_epoch)-{committish[:6]}'
+
         release_identifier = glci.model.ReleaseIdentifier(
           build_committish='$(params.committish)',
-          version='$(params.version)',
+          version=build_version,
           gardenlinux_epoch=$(params.gardenlinux_epoch),
           architecture=glci.model.Architecture('$(params.architecture)'),
           platform='$(params.platform)',
