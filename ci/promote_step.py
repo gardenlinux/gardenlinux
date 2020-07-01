@@ -29,11 +29,14 @@ def promote_step(
 
     release_target = promote_target
 
+    # XXX deduplicate this
+    build_version = f'{gardenlinux_epoch}-{committish[:6]}'
+
     releases = tuple(
       find_releases(
         flavour_set=flavour_set,
         build_committish=committish,
-        version=version,
+        version=build_version,
         gardenlinux_epoch=int(gardenlinux_epoch),
         prefix=glci.model.ReleaseManifest.manifest_key_prefix,
       )
