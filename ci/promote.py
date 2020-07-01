@@ -62,6 +62,8 @@ def publish_image(
         publish_function = _publish_aws_image
     elif release.platform == 'gcp':
         publish_function = _publish_gcp_image
+    elif release.platform == 'azure':
+        publish_function = _publish_azure_image
     else:
         print(f'do not know how to publish {release.platform=} yet')
         return release
@@ -100,6 +102,21 @@ def _publish_aws_image(release: glci.model.OnlineReleaseManifest,
     return glci.aws.upload_and_register_gardenlinux_image(
         mk_session=mk_session,
         build_cfg=cicd_cfg.build,
+        release=release,
+    )
+
+
+def _publish_azure_image(release: glci.model.OnlineReleaseManifest,
+                       cicd_cfg: glci.model.CicdCfg,
+                       ) -> glci.model.OnlineReleaseManifest:
+    import glci.az
+    import ccc.aws
+    import ci.util
+
+    s3_client = ccc.aws.session(cicd_cfg.build.aws_cfg_name).client('s3')
+    return glci.az.upload_and_publish_image(
+        s3_client,
+        cicd_cfg=cicd_cfg,
         release=release,
     )
 
