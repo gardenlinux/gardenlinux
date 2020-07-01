@@ -51,6 +51,7 @@ def main():
         cicd_cfg_name=NamedParam(name='cicd_cfg_name'),
         committish=tkn.model.NamedParam(name='committish'),
         gardenlinux_epoch=NamedParam(name='gardenlinux_epoch'),
+        modifiers=NamedParam(name='modifiers'),
         architecture=NamedParam(name='architecture'),
         platform=NamedParam(name='platform'),
         repo_dir=tkn.model.NamedParam(name='repodir'),
