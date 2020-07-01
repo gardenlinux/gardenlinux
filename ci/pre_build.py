@@ -14,9 +14,14 @@ def release_identifier(
 ):
     modifiers = tuple((m for m in modifiers.split(',') if m))
 
+    # always use <epoch>-<commit-hash> as version
+    # -> version denotes the intended, future release version, which is only relevant for marking
+    #    a flavourset as actually being released
+    upload_version = f'{gardenlinux_epoch}-{committish[:6]}'
+
     return glci.model.ReleaseIdentifier(
         build_committish=build_committish,
-        version=version,
+        version=upload_version,
         gardenlinux_epoch=int(gardenlinux_epoch),
         architecture=glci.model.Architecture(architecture),
         platform=platform,
