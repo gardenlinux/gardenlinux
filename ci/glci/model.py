@@ -416,10 +416,16 @@ class PublishCfg:
 
 
 @dataclasses.dataclass(frozen=True)
+class NotificationCfg:
+    email_cfg_name: str
+
+
+@dataclasses.dataclass(frozen=True)
 class CicdCfg:
     name: str
     build: BuildCfg
     publish: PublishCfg
+    notify: NotificationCfg
 
 
 epoch_date = datetime.datetime.fromisoformat('2020-04-01')
