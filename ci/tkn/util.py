@@ -162,8 +162,6 @@ def pipeline_taskrun_status(name: str, namespace: str='gardenlinux-tkn'):
 
     all_count = len(taskruns)
 
-    print(f'{len(failed_taskruns)} task(s) out of {all_count} failed')
-
     TaskStatusSummary = collections.namedtuple(
         'TaskStatusSummary',
         ['succeeded_names', 'pending_names', 'failed_details']
