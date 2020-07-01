@@ -20,6 +20,12 @@ def clone_and_copy(
       github_cfg=github_cfg,
       github_repo_path=repo_url.path,
     )
-    git_helper.repo.git.checkout(committish)
+    repo = git_helper.repo
+    repo.git.checkout(committish)
 
-    print(f'cloned to {repo_dir=}')
+    commit_msg = repo.head.commit.message
+    commit_hash = repo.head.commit.hexsha
+
+    print(f'cloned to {repo_dir=} {commit_hash=}')
+    print('Commit Message:')
+    print(commit_msg)
