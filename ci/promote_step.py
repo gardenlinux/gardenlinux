@@ -36,7 +36,7 @@ def promote_step(
       find_releases(
         flavour_set=flavour_set,
         build_committish=committish,
-        version=build_version,
+        version=version,
         gardenlinux_epoch=int(gardenlinux_epoch),
         prefix=glci.model.ReleaseManifest.manifest_key_prefix,
       )
