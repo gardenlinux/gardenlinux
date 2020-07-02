@@ -103,7 +103,7 @@ def upload_results_step(
     # add manifest (to be able to identify all relevant artifacts later)
     manifest = glci.model.ReleaseManifest(
       build_committish=committish,
-      version=upload_version,
+      version=version,
       build_timestamp=datetime.datetime.now().isoformat(),
       gardenlinux_epoch=gardenlinux_epoch,
       architecture=glci.model.Architecture(architecture).value,
@@ -122,4 +122,5 @@ def upload_results_step(
       key=manifest_path,
       manifest=manifest,
     )
-    print(f'uploaded manifest: {manifest_path=}')
+    print(f'uploaded manifest: {manifest_path=}\n')
+    print(manifest)
