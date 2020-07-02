@@ -8,6 +8,7 @@ def pre_build_step(
     cicd_cfg_name: str,
     modifiers: str,
     committish: str,
+    version: str,
     gardenlinux_epoch: str,
     architecture: str,
     platform: str,

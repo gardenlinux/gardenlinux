@@ -152,6 +152,7 @@ def promote_step(
 def pre_build_step(
     cicd_cfg_name: tkn.model.NamedParam,
     committish: tkn.model.NamedParam,
+    version: tkn.model.NamedParam,
     gardenlinux_epoch: tkn.model.NamedParam,
     modifiers: tkn.model.NamedParam,
     architecture: tkn.model.NamedParam,
@@ -168,6 +169,7 @@ def pre_build_step(
             params=[
                 cicd_cfg_name,
                 committish,
+                version,
                 gardenlinux_epoch,
                 modifiers,
                 architecture,

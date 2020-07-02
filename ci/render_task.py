@@ -50,6 +50,7 @@ def main():
     pre_build_step = steps.pre_build_step(
         cicd_cfg_name=NamedParam(name='cicd_cfg_name'),
         committish=tkn.model.NamedParam(name='committish'),
+        version=NamedParam(name='version'),
         gardenlinux_epoch=NamedParam(name='gardenlinux_epoch'),
         modifiers=NamedParam(name='modifiers'),
         architecture=NamedParam(name='architecture'),
