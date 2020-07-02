@@ -20,11 +20,9 @@ def pre_build_step(
 
     modifiers = tuple([m for m in modifiers.split(',') if m])
 
-    build_version = f'{gardenlinux_epoch}-{committish[:6]}'
-
     release_identifier = glci.model.ReleaseIdentifier(
       build_committish=committish,
-      version=build_version,
+      version=version,
       gardenlinux_epoch=gardenlinux_epoch,
       architecture=glci.model.Architecture(architecture),
       platform=platform,
