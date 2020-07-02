@@ -292,7 +292,7 @@ class ReleaseManifest(ReleaseIdentifier):
         return ReleaseIdentifier(
             build_committish=self.build_committish,
             version=self.version,
-            gardenlinux_epoch=self.gardenlinux_epoch,
+            gardenlinux_epoch=int(self.gardenlinux_epoch),
             architecture=self.architecture,
             platform=self.platform,
             modifiers=self.modifiers,

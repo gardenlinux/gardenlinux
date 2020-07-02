@@ -24,7 +24,7 @@ def pre_build_step(
     release_identifier = glci.model.ReleaseIdentifier(
       build_committish=committish,
       version=version,
-      gardenlinux_epoch=gardenlinux_epoch,
+      gardenlinux_epoch=int(gardenlinux_epoch),
       architecture=glci.model.Architecture(architecture),
       platform=platform,
       modifiers=modifiers,
