@@ -1,6 +1,8 @@
+import dataclasses
 import datetime
 import hashlib
 import os
+import pprint
 import sys
 import tarfile
 
@@ -123,4 +125,4 @@ def upload_results_step(
       manifest=manifest,
     )
     print(f'uploaded manifest: {manifest_path=}\n')
-    print(manifest)
+    pprint.pprint(dataclasses.asdict(manifest))
