@@ -1,2 +1,0 @@
-# work around #869939
-SUBSYSTEMS=="vmbus" ATTR{device_id}=="{2dd1ce17-079e-403c-b352-a1921ee207ee}" RUN+="/bin/sh -c 'echo $kernel > $sys/bus/vmbus/drivers/hv_util/unbind'"
