@@ -1,6 +1,8 @@
+import dataclasses
 import datetime
 import hashlib
 import os
+import pprint
 import sys
 import tarfile
 
@@ -82,10 +84,15 @@ def upload_results_step(
     print(f'uploading to s3 {aws_cfg_name=} {s3_bucket_name=}')
     gardenlinux_epoch = int(gardenlinux_epoch)
 
+    # always use <epoch>-<commit-hash> as version
+    # -> version denotes the intended, future release version, which is only relevant for marking
+    #    a flavourset as actually being released
+    upload_version = f'{gardenlinux_epoch}-{committish[:6]}'
+
     uploaded_relpaths = tuple(upload_files(
         build_result_fname=build_result_fname,
         fname_prefix=fnameprefix,
-        version_str=version,
+        version_str=upload_version,
         s3_client=s3_client,
         s3_bucket_name=s3_bucket_name,
     ))
@@ -117,4 +124,5 @@ def upload_results_step(
       key=manifest_path,
       manifest=manifest,
     )
-    print(f'uploaded manifest: {manifest_path=}')
+    print(f'uploaded manifest: {manifest_path=}\n')
+    pprint.pprint(dataclasses.asdict(manifest))

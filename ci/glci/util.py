@@ -1,8 +1,9 @@
 import concurrent.futures
 import dataclasses
 import enum
-import io
 import functools
+import io
+import pprint
 import typing
 
 import botocore.client
@@ -215,11 +216,17 @@ def find_release(
     if not manifest:
         return None
 
-    if normalised(manifest.release_identifier()) == normalised(release_identifier):
+    if (found_ri := normalised(manifest.release_identifier())) \
+        == (searched_ri := normalised(release_identifier)):
         return manifest
     else:
         # warn about not matching expected contents from canonical name
-        print(f'WARNING: {release_manifest_key=} contained unexpected contents')
+        print(f'WARNING: {release_manifest_key=} contained unexpected contents:')
+        print('this is the release-identifier we searched for:')
+        pprint.pprint(dataclasses.asdict(searched_ri))
+        print('this is the release-identifier we found:')
+        pprint.pprint(dataclasses.asdict(found_ri))
+
         return None
 
 

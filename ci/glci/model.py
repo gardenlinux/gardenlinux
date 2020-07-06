@@ -212,11 +212,10 @@ class ReleaseIdentifier:
 
         the key consists of:
 
-        <canonical flavour name>-<version>
+        <canonical flavour name>-<version>-<commit-hash[:6]>
 
         where <canonical flavour name> is calculated from canonicalised_features()
-        and <version> is either <gardenlinux-epoch>-<commit-hash[:6]>, or the release
-        version (for releases).
+        and <version> is the intended target release version.
 
         note that the full key should be prefixed (e.g. with manifest_key_prefix)
         '''
@@ -226,7 +225,7 @@ class ReleaseIdentifier:
                 modifiers=self.modifiers,
             )
         ))
-        return f'{flavour_name}-{self.version}'
+        return f'{flavour_name}-{self.version}-{self.build_committish[:6]}'
 
     def canonical_release_manifest_key(self):
         return f'{self.manifest_key_prefix}/{self.canonical_release_manifest_key_suffix()}'
@@ -293,7 +292,7 @@ class ReleaseManifest(ReleaseIdentifier):
         return ReleaseIdentifier(
             build_committish=self.build_committish,
             version=self.version,
-            gardenlinux_epoch=self.gardenlinux_epoch,
+            gardenlinux_epoch=int(self.gardenlinux_epoch),
             architecture=self.architecture,
             platform=self.platform,
             modifiers=self.modifiers,
@@ -416,10 +415,16 @@ class PublishCfg:
 
 
 @dataclasses.dataclass(frozen=True)
+class NotificationCfg:
+    email_cfg_name: str
+
+
+@dataclasses.dataclass(frozen=True)
 class CicdCfg:
     name: str
     build: BuildCfg
     publish: PublishCfg
+    notify: NotificationCfg
 
 
 epoch_date = datetime.datetime.fromisoformat('2020-04-01')

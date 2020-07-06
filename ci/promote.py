@@ -201,9 +201,12 @@ def main():
         cicd_cfg=cicd_cfg,
     )
 
+    # XXX hard-code version naming convention
+    build_version = f'{gardenlinux_epoch}-{committish[:6]}'
+
     releases = tuple(find_releases(
         flavour_set=flavour_set,
-        version=version,
+        version=build_version,
         build_committish=committish,
         gardenlinux_epoch=gardenlinux_epoch,
         prefix=glci.model.ReleaseManifest.manifest_key_prefix,
