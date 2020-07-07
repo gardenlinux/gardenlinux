@@ -121,6 +121,10 @@ def parse_args():
     return parsed
 
 
+def release_branch_name(gardenlinux_epoch):
+    return f'rel-{gardenlinux_epoch}'
+
+
 def main():
     parsed = parse_args()
 
@@ -130,7 +134,7 @@ def main():
     git_helper = _git_helper(giturl=parsed.giturl)
 
     source_branch = parsed.branch
-    release_branch = f'rel-{gardenlinux_epoch}'
+    release_branch = release_branch_name(gardenlinux_epoch=gardenlinux_epoch)
 
     print(f'next release version: {release_version=}')
 
