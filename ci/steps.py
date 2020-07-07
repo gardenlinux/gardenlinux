@@ -198,6 +198,7 @@ def release_step(
                 giturl,
                 branch,
                 gardenlinux_epoch,
+                promote_mode,
             ],
             repo_path_param=repo_dir,
         )
