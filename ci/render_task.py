@@ -26,6 +26,7 @@ def main():
         raw_build_task = yaml.safe_load(f)
 
     promote_task = tasks.promote_task(
+        branch=NamedParam(name='branch'),
         committish=NamedParam(name='committish'),
         gardenlinux_epoch=NamedParam(name='gardenlinux_epoch'),
         snapshot_timestamp=NamedParam(name='snapshot_timestamp'),

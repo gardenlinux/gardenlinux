@@ -29,6 +29,7 @@ VolumeClaimTemplateSpec = tkn.model.VolumeClaimTemplateSpec
 def mk_pipeline_run(
     pipeline_name: str,
     namespace: str,
+    branch: str,
     committish: str,
     gardenlinux_epoch: int,
     cicd_cfg: str,
@@ -53,6 +54,10 @@ def mk_pipeline_run(
         ),
         spec=PipelineRunSpec(
             params=[
+                NamedParam(
+                    name='branch',
+                    value=branch,
+                ),
                 NamedParam(
                     name='committish',
                     value=committish,
@@ -102,7 +107,8 @@ def mk_pipeline_run(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--committish', default='master')
+    parser.add_argument('--committish', default='main')
+    parser.add_argument('--branch', default='main')
     parser.add_argument(
         '--gardenlinux-epoch',
         default=glci.model.gardenlinux_epoch_from_workingtree(),
@@ -140,6 +146,7 @@ def main():
     pipeline_run = mk_pipeline_run(
         pipeline_name='gardenlinux-build',
         namespace='gardenlinux-tkn',
+        branch=parsed.branch,
         committish=parsed.committish,
         gardenlinux_epoch=parsed.gardenlinux_epoch,
         cicd_cfg=parsed.cicd_cfg,

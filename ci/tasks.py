@@ -9,6 +9,7 @@ _repodir = NamedParam(name='repodir', default='/workspace/gardenlinux_git')
 
 
 def promote_task(
+    branch: NamedParam,
     committish: NamedParam,
     gardenlinux_epoch: NamedParam,
     snapshot_timestamp: NamedParam,
@@ -39,6 +40,14 @@ def promote_task(
         repo_dir=repodir,
     )
 
+    release_step = steps.release_step(
+        giturl=giturl,
+        branch=branch,
+        gardenlinux_epoch=gardenlinux_epoch,
+        promote_mode=promote_mode,
+        repo_dir=repodir,
+    )
+
     params = [
         giturl,
         committish,
@@ -59,6 +68,7 @@ def promote_task(
             steps=[
                 clone_step,
                 promote_step,
+                release_step,
             ],
         ),
     )

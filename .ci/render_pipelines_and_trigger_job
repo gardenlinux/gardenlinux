@@ -13,6 +13,8 @@ curl -L \
 
 GARDENLINUX_TKN_WS='gardenlinux-tkn'
 
+BRANCH_NAME="$(git branch --show-current)"
+
 function cleanup_pipelineruns {
   echo "purging old pipelineruns"
   tkn \
@@ -61,6 +63,7 @@ rendered_task="$PWD/rendered_task.yaml"
 
 # create pipeline-run for current commit
 ci/render_pipeline_run.py $EXTRA_ARGS \
+  --branch "${BRANCH_NAME}" \
   --committish "${head_commit}" \
   --cicd-cfg 'default' \
   --flavour-set "${FLAVOUR_SET}" \

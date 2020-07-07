@@ -180,6 +180,30 @@ def pre_build_step(
     )
 
 
+def release_step(
+    giturl: tkn.model.NamedParam,
+    branch: tkn.model.NamedParam,
+    gardenlinux_epoch: tkn.model.NamedParam,
+    promote_mode: tkn.model.NamedParam,
+    repo_dir: tkn.model.NamedParam,
+):
+    return tkn.model.TaskStep(
+        name='release-step',
+        image=DEFAULT_IMAGE,
+        script=task_step_script(
+            path=os.path.join(scripts_dir, 'release_step.py'),
+            script_type=ScriptType.PYTHON3,
+            callable='release_step',
+            params=[
+                giturl,
+                branch,
+                gardenlinux_epoch,
+            ],
+            repo_path_param=repo_dir,
+        )
+    )
+
+
 def build_image_step(
     suite: tkn.model.NamedParam,
     gardenlinux_epoch: tkn.model.NamedParam,

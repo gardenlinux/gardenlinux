@@ -76,6 +76,7 @@ def mk_pipeline_promote_task(
         name='promote-gardenlinux-task',
         taskRef=TaskRef(name='promote-gardenlinux-task'), # XXX unhardcode
         params=[
+            pass_param(name='branch'),
             pass_param(name='committish'),
             pass_param(name='gardenlinux_epoch'),
             pass_param(name='snapshot_timestamp'),
