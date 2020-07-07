@@ -48,7 +48,7 @@ def promote_step(
     print(promote_mode)
 
     # if this line is reached, the release has been complete
-    if promote_mode is promote.PromoteMode.MANIFESTS_AND_PUBLISH:
+    if promote_mode in (promote.PromoteMode.MANIFESTS_AND_PUBLISH, promote.PromoteMode.RELEASE):
         pass
     elif promote_mode is promote.PromoteMode.MANIFESTS_ONLY:
         pass
