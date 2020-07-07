@@ -285,7 +285,7 @@ class ReleaseManifest(ReleaseIdentifier):
             if path.suffix == suffix:
                 return path
         else:
-            raise ValueError(f'no path with {suffix=}')
+            raise ValueError(f'no path with {suffix=} in {self=}')
 
     def release_identifier(self) -> ReleaseIdentifier:
         return ReleaseIdentifier(
