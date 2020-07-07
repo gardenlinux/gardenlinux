@@ -116,7 +116,7 @@ def wait_for_pipelinerun_status(
 ):
     start_time = time.time()
 
-    while True or (status := pipelinerun_status(name=name, namespace=namespace)):
+    while (status := pipelinerun_status(name=name, namespace=namespace)) or True:
         if not status is None:
             reason = status.reason
             if reason is target_status:
