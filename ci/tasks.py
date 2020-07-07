@@ -50,6 +50,7 @@ def promote_task(
 
     params = [
         giturl,
+        branch,
         committish,
         gardenlinux_epoch,
         snapshot_timestamp,
