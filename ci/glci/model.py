@@ -90,7 +90,6 @@ class GardenlinuxFlavour:
     modifiers: typing.Tuple[Modifier]
 
     def calculate_modifiers(self):
-        platform = feature_by_name(self.platform)
         yield from (
             feature_by_name(f) for f
             in normalised_modifiers(platform=self.platform, modifiers=self.modifiers)

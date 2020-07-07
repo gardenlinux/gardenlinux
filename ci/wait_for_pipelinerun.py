@@ -38,8 +38,6 @@ def notify(
     email_cfg = _email_cfg(cicd_cfg=cicd_cfg)
     task_status = tkn.util.pipeline_taskrun_status(name=pipelinerun_name, namespace=namespace)
 
-    failed = len(task_status.failed_details) > 0
-
     for failed_info in task_status.failed_details:
         print(f'{failed_info["name"]=} failed with {failed_info["message"]}')
 

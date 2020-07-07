@@ -4,8 +4,6 @@ import argparse
 import urllib.parse
 import sys
 
-import git
-
 import ccc.github
 import gitutil
 
@@ -126,13 +124,11 @@ def parse_args():
 def main():
     parsed = parse_args()
 
-    cicd_cfg = glci.util.cicd_cfg(cfg_name=parsed.cicd_cfg)
     release_version = parsed.release_version
     gardenlinux_epoch = int(release_version.split('.')[0])
 
     git_helper = _git_helper(giturl=parsed.giturl)
 
-    repo = git_helper.repo
     source_branch = parsed.branch
     release_branch = f'rel-{gardenlinux_epoch}'
 
