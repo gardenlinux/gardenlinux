@@ -18,32 +18,8 @@ import typing
 
 import glci.util
 
-cfg = {
-    'version': 1,
-    'formatters': {
-        'default': {
-            'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-        },
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'default',
-            'level': logging.INFO,
-            'stream': 'ext://sys.stdout',
-        },
-    },
-    'root': {
-        'level': logging.DEBUG,
-        'handlers': ['console',],
-    },
-    'loggers': {
-        'googleapiclient.discovery_cache': {
-            'level': logging.ERROR,
-        },
-    },
-}
-logging.config.dictConfig(cfg)
+glci.util.configure_logging()
+
 logger = logging.getLogger(__name__)
 
 
