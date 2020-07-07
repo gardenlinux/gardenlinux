@@ -32,6 +32,7 @@ class BuildType(enum.Enum):
 class PromoteMode(enum.Enum):
     MANIFESTS_ONLY = 'manifests_only'
     MANIFESTS_AND_PUBLISH = 'manifests_and_publish'
+    RELEASE = 'release'
 
 
 def parse_args():
@@ -133,7 +134,7 @@ def promote(
         cicd_cfg=cicd_cfg,
     )
 
-    if promote_mode is PromoteMode.MANIFESTS_AND_PUBLISH:
+    if promote_mode in (PromoteMode.MANIFESTS_AND_PUBLISH, PromoteMode.RELEASE):
         executor = concurrent.futures.ThreadPoolExecutor(
             max_workers=len(releases))
         _publish_img = functools.partial(publish_image, cicd_cfg=cicd_cfg)
