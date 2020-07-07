@@ -120,6 +120,7 @@ def mk_pipeline(
         ),
         spec=PipelineSpec(
             params=[
+                NamedParam(name='branch'),
                 NamedParam(name='committish'),
                 NamedParam(name='gardenlinux_epoch'),
                 NamedParam(name='snapshot_timestamp'),
