@@ -121,6 +121,7 @@ def main():
             namespace=namespace,
             cicd_cfg=cicd_cfg,
         )
+        raise rte
 
 
 if __name__ == '__main__':
