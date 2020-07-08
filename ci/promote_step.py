@@ -12,7 +12,7 @@ def promote_step(
     cicd_cfg_name: str,
     flavourset: str,
     promote_target: str,
-    promote_mode: str, # manifests_only, manifests_and_publish
+    publishing_actions: str,
     gardenlinux_epoch: parsable_to_int,
     committish: str,
     version: str,
@@ -20,7 +20,9 @@ def promote_step(
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
     flavour_set = glci.util.flavour_set(flavourset)
     flavours = tuple(flavour_set.flavours())
-    promote_mode = promote.PromoteMode(promote_mode)
+    publishing_actions = [
+        glci.model.PublishAction(action.strip()) for action in publishing_actions.split(',')
+    ]
 
     find_releases = glci.util.preconfigured(
       func=glci.util.find_releases,
@@ -45,15 +47,9 @@ def promote_step(
       print('release was not complete - will not promote (this indicates a bug!)')
       sys.exit(1) # do not signal an error
 
-    print(promote_mode)
+    print(publishing_actions)
 
     # if this line is reached, the release has been complete
-    if promote_mode in (promote.PromoteMode.MANIFESTS_AND_PUBLISH, promote.PromoteMode.RELEASE):
-        pass
-    elif promote_mode is promote.PromoteMode.MANIFESTS_ONLY:
-        pass
-    else:
-        raise NotImplementedError(promote_mode)
 
     promote.promote(
       releases=releases,
@@ -61,7 +57,7 @@ def promote_step(
         'meta',
         release_target,
       ),
-      promote_mode=promote_mode,
+      publishing_actions=publishing_actions,
       cicd_cfg=cicd_cfg,
       flavour_set=flavour_set,
       version_str=version,

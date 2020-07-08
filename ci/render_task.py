@@ -33,7 +33,7 @@ def main():
         cicd_cfg_name=NamedParam(name='cicd_cfg_name'),
         version=NamedParam(name='version'),
         promote_target=NamedParam(name='promote_target'),
-        promote_mode=NamedParam(name='promote_mode'),
+        publishing_actions=NamedParam(name='publishing_actions'),
         flavourset=NamedParam(name='flavourset'),
     )
 

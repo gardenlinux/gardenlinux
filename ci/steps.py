@@ -120,7 +120,7 @@ def promote_step(
     cicd_cfg_name: tkn.model.NamedParam,
     flavourset: tkn.model.NamedParam,
     promote_target: tkn.model.NamedParam,
-    promote_mode: tkn.model.NamedParam,
+    publishing_actions: tkn.model.NamedParam,
     gardenlinux_epoch: tkn.model.NamedParam,
     committish: tkn.model.NamedParam,
     version: tkn.model.NamedParam,
@@ -137,7 +137,7 @@ def promote_step(
                 cicd_cfg_name,
                 flavourset,
                 promote_target,
-                promote_mode,
+                publishing_actions,
                 gardenlinux_epoch,
                 committish,
                 version,
@@ -182,7 +182,7 @@ def release_step(
     giturl: tkn.model.NamedParam,
     branch: tkn.model.NamedParam,
     gardenlinux_epoch: tkn.model.NamedParam,
-    promote_mode: tkn.model.NamedParam,
+    publishing_actions: tkn.model.NamedParam,
     repo_dir: tkn.model.NamedParam,
 ):
     return tkn.model.TaskStep(
@@ -196,7 +196,7 @@ def release_step(
                 giturl,
                 branch,
                 gardenlinux_epoch,
-                promote_mode,
+                publishing_actions,
             ],
             repo_path_param=repo_dir,
         )

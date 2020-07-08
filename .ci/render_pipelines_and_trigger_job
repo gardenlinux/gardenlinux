@@ -38,7 +38,7 @@ outfile='rendered_pipeline.yaml'
 
 # injected from pipeline_definitions
 PROMOTE_TARGET="${PROMOTE_TARGET:-snapshots}"
-PROMOTE_MODE="${PROMOTE_MODE:-manifests_only}"
+PUBLISHING_ACTIONS="${PUBLISHING_ACTIONS:-manifests}"
 
 if [ ! -z "${VERSION:-}" ]; then
   EXTRA_ARGS="--version=${VERSION}"
@@ -68,7 +68,7 @@ ci/render_pipeline_run.py $EXTRA_ARGS \
   --cicd-cfg 'default' \
   --flavour-set "${FLAVOUR_SET}" \
   --promote-target "${PROMOTE_TARGET}" \
-  --promote-mode "${PROMOTE_MODE}" \
+  --publishing-action "${PUBLISHING_ACTIONS}" \
   --outfile "${pipeline_run}"
 
 ci/render_pipelines.py \

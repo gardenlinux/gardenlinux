@@ -17,6 +17,12 @@ repo_root = os.path.abspath(os.path.join(
     own_dir, os.path.pardir, os.path.pardir))
 
 
+class PublishingAction(enum.Enum):
+    MANIFESTS = 'manifests'
+    IMAGES = 'images'
+    RELEASE = 'release'
+
+
 class FeatureType(enum.Enum):
     '''
     gardenlinux feature types as used in `features/*/info.yaml`

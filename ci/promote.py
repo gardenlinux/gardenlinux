@@ -17,6 +17,7 @@ import sys
 import typing
 
 import glci.util
+import glci.model
 
 glci.util.configure_logging()
 
@@ -29,18 +30,17 @@ class BuildType(enum.Enum):
     RELEASE = 'release'
 
 
-class PromoteMode(enum.Enum):
-    MANIFESTS_ONLY = 'manifests_only'
-    MANIFESTS_AND_PUBLISH = 'manifests_and_publish'
-    RELEASE = 'release'
-
-
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--flavourset', default='testing')
     parser.add_argument('--committish')
     parser.add_argument('--gardenlinux-epoch', type=int)
-    parser.add_argument('--promote-mode', type=PromoteMode)
+    parser.add_argument(
+      '--publishing-action',
+      action='append',
+      type=glci.model.PublishingAction,
+      dest='publishing_actions',
+    )
     parser.add_argument('--version', required=True)
     parser.add_argument('--source', default='snapshots')
     parser.add_argument('--target', type=BuildType, default=BuildType.DAILY)
@@ -129,7 +129,7 @@ def promote(
     releases: typing.Sequence[glci.model.OnlineReleaseManifest],
     target_prefix: str,
     version_str: str,
-    promote_mode: PromoteMode,
+    publishing_actions: typing.Sequence[glci.model.PublishingAction],
     cicd_cfg: glci.model.CicdCfg,
     flavour_set: glci.model.GardenlinuxFlavourSet,
 ):
@@ -138,7 +138,7 @@ def promote(
         cicd_cfg=cicd_cfg,
     )
 
-    if promote_mode in (PromoteMode.MANIFESTS_AND_PUBLISH, PromoteMode.RELEASE):
+    if glci.model.PublishingAction.IMAGES in publishing_actions:
         executor = concurrent.futures.ThreadPoolExecutor(
             max_workers=len(releases))
         _publish_img = functools.partial(publish_image, cicd_cfg=cicd_cfg)
@@ -211,7 +211,7 @@ def main():
             parsed.target.value,
         ),
         version_str=version,
-        promote_mode=parsed.promote_mode,
+        publishing_actions=parsed.publishing_actions,
         cicd_cfg=cicd_cfg,
         flavour_set=flavour_set,
     )

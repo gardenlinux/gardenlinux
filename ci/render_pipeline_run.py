@@ -2,6 +2,7 @@
 
 import argparse
 import dataclasses
+import typing
 import yaml
 
 import glci.model
@@ -36,10 +37,10 @@ def mk_pipeline_run(
     version: str,
     flavour_set: glci.model.GardenlinuxFlavourSet,
     promote_target: promote.BuildType,
-    promote_mode: promote.PromoteMode,
+    publishing_actions: typing.Sequence[glci.model.PublishingAction],
 ):
     # k8s only allows dns names / leng restriction applies
-    mode_short = promote_mode.value.replace('_', '-')[:8]
+    mode_short = ''.join((a.value.strip() for a in publishing_actions)).replace('_', '-')[:8]
     run_name = \
         f'{pipeline_name}-{mode_short}-{version.replace(".", "-")}-{committish[:6]}'[:60]
 
@@ -89,8 +90,8 @@ def mk_pipeline_run(
                     value=promote_target.value,
                 ),
                 NamedParam(
-                    name='promote_mode',
-                    value=promote_mode.value,
+                    name='publishing_actions',
+                    value=','.join((a.value for a in publishing_actions))
                 ),
             ],
             pipelineRef=PipelineRef(
@@ -127,12 +128,15 @@ def main():
         default=promote.BuildType.SNAPSHOT,
     )
     parser.add_argument(
-        '--promote-mode',
-        type=promote.PromoteMode,
-        default=promote.PromoteMode.MANIFESTS_ONLY,
+        '--publishing-action',
+        type=lambda x: (glci.model.PublishingAction(v) for v in x.split(',')),
+        action='extend',
+        dest='publishing_actions',
+        default=[glci.model.PublishingAction.MANIFESTS],
     )
 
     parsed = parser.parse_args()
+    parsed.publishing_actions = set(parsed.publishing_actions)
 
     flavour_set = glci.util.flavour_set(
         flavour_set_name=parsed.flavour_set,
@@ -155,7 +159,7 @@ def main():
         flavour_set=flavour_set,
         version=version,
         promote_target=parsed.promote_target,
-        promote_mode=parsed.promote_mode,
+        publishing_actions=parsed.publishing_actions,
     )
 
     pipeline_run_dict = dataclasses.asdict(pipeline_run)

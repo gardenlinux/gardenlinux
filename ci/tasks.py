@@ -17,7 +17,7 @@ def promote_task(
     version: NamedParam,
     flavourset: NamedParam,
     promote_target: NamedParam,
-    promote_mode: NamedParam,
+    publishing_actions: NamedParam,
     repodir: NamedParam=_repodir,
     giturl: NamedParam=_giturl,
     name='promote-gardenlinux-task',
@@ -33,7 +33,7 @@ def promote_task(
         cicd_cfg_name=cicd_cfg_name,
         flavourset=flavourset,
         promote_target=promote_target,
-        promote_mode=promote_mode,
+        publishing_actions=publishing_actions,
         gardenlinux_epoch=gardenlinux_epoch,
         committish=committish,
         version=version,
@@ -44,7 +44,7 @@ def promote_task(
         giturl=giturl,
         branch=branch,
         gardenlinux_epoch=gardenlinux_epoch,
-        promote_mode=promote_mode,
+        publishing_actions=publishing_actions,
         repo_dir=repodir,
     )
 
@@ -58,7 +58,7 @@ def promote_task(
         version,
         flavourset,
         promote_target,
-        promote_mode,
+        publishing_actions,
         repodir,
     ]
 

@@ -1,3 +1,4 @@
+import glci.model
 import promote
 import release
 
@@ -7,12 +8,14 @@ def release_step(
     giturl: str,
     branch: str,
     gardenlinux_epoch: parsable_to_int,
-    promote_mode: str,
+    publishing_actions: str,
 ):
-    promote_mode = promote.PromoteMode(promote_mode)
+    publishing_actions = [
+        glci.model.PublishAction(action.strip()) for action in publishing_actions.split(',')
+    ]
 
-    if not promote_mode is promote.PromoteMode.RELEASE:
-      print(f'{promote_mode=} - will not perform release')
+    if not glci.model.PublishingAction.RELEASE in publishing_actions:
+      print(f'{publishing_actions=} - will not perform release')
       return
 
     release.ensure_target_branch_exists(
