@@ -459,10 +459,11 @@ class AzureStorageAccountCfg:
 
 @dataclasses.dataclass(frozen=True)
 class AzurePublishCfg:
-    marketplace: AzureMarketplaceCfg
-    service_principal: AzureServicePrincipalCfg
-    storage_account: AzureStorageAccountCfg
-    notification_recipients: ()
+    offer_id: str
+    publisher_id: str
+    plan_id: str
+    service_principal_cfg_name: str
+    storage_account_cfg_name: str
 
 
 @dataclasses.dataclass(frozen=True)
