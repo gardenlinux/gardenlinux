@@ -82,7 +82,6 @@ def build_task(
     suite = NamedParam(name='suite', default='bullseye')
     arch = NamedParam(name='architecture', default='amd64')
     mods = NamedParam(name='modifiers')
-    fnamep = NamedParam(name='fnameprefix')
     giturl = NamedParam(name='giturl', default='ssh://git@github.com/gardenlinux/gardenlinux')
     committish = NamedParam(name='committish', default='master')
     glepoch = NamedParam(name='gardenlinux_epoch')
@@ -95,7 +94,6 @@ def build_task(
         suite,
         arch,
         mods,
-        fnamep,
         giturl,
         committish,
         glepoch,

@@ -56,7 +56,6 @@ def mk_pipeline_build_task(
         params=[
             NamedParam(name='platform', value=gardenlinux_flavour.platform),
             NamedParam(name='modifiers', value=modifier_names),
-            NamedParam(name='fnameprefix', value=gardenlinux_flavour.filename_prefix()),
             pass_param(name='committish'),
             pass_param(name='gardenlinux_epoch'),
             pass_param(name='snapshot_timestamp'),

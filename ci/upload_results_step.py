@@ -20,7 +20,6 @@ parsable_to_int = str
 
 def upload_files(
     build_result_fname,
-    fname_prefix,
     version_str,
     s3_client,
     s3_bucket_name,
@@ -31,7 +30,7 @@ def upload_files(
         continue
       tar_fname = tarinfo.name.lstrip('./')
       fobj = tf.extractfile(tarinfo)
-      fname = f'{fname_prefix}-{version_str}-{tar_fname}'
+      fname = f'{version_str}-{tar_fname}'
 
       # calculate filehash (use as fname)
       sha1 = hashlib.sha1()
@@ -62,7 +61,6 @@ def upload_results_step(
     architecture: str,
     platform: str,
     gardenlinux_epoch: parsable_to_int,
-    fnameprefix: str,
     modifiers: str,
     version: str,
     outfile: str,
@@ -91,7 +89,6 @@ def upload_results_step(
 
     uploaded_relpaths = tuple(upload_files(
         build_result_fname=build_result_fname,
-        fname_prefix=fnameprefix,
         version_str=upload_version,
         s3_client=s3_client,
         s3_bucket_name=s3_bucket_name,

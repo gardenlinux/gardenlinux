@@ -67,7 +67,6 @@ def main():
         architecture=NamedParam(name='architecture'),
         platform=NamedParam(name='platform'),
         gardenlinux_epoch=NamedParam(name='gardenlinux_epoch'),
-        fnameprefix=NamedParam(name='fnameprefix'),
         modifiers=NamedParam(name='modifiers'),
         version=NamedParam(name='version'),
         outfile=NamedParam(name='outfile'),
