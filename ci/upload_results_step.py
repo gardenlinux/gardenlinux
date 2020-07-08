@@ -49,7 +49,7 @@ def upload_files(
       print(f'upload succeeded: {upload_key}')
       yield glci.model.S3_ReleaseFile(
         name=fname,
-        suffix=tar_fname,
+        suffix=os.path.basename(tar_fname),
         s3_key=upload_key,
         s3_bucket_name=s3_bucket_name,
       )
