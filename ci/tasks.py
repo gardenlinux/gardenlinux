@@ -42,7 +42,7 @@ def promote_task(
 
     release_step = steps.release_step(
         giturl=giturl,
-        branch=branch,
+        committish=committish,
         gardenlinux_epoch=gardenlinux_epoch,
         publishing_actions=publishing_actions,
         repo_dir=repodir,
