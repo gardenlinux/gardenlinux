@@ -11,7 +11,7 @@ cicd_cfgs:
       plan_config_name: 'gardenlinux-greatest'
       oss_bucket_name: 'gardenlinux' #alicloud
       alicloud_region: 'eu-central-1'
-      alicloud_cfg_name: gardenlinux
+      alicloud_cfg_name: 'gardenlinux'
     publish:
       azure:
         offer_id: 'gardenlinux'

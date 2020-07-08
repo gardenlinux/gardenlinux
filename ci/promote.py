@@ -75,8 +75,12 @@ def _publish_alicloud_image(release: glci.model.OnlineReleaseManifest,
     import ccc.alicloud
     import glci.model
     import glci.alicloud
-    oss_auth = ccc.alicloud.oss_auth('gardenlinux')
-    acs_client = ccc.alicloud.acs_client('gardenlinux')
+    build_cfg = cicd_cfg.build
+    alicloud_cfg_name = build_cfg.alicloud_cfg_name
+
+    oss_auth = ccc.alicloud.oss_auth(alicloud_cfg=alicloud_cfg_name)
+    acs_client = ccc.alicloud.acs_client(alicloud_cfg=alicloud_cfg_name)
+
     maker = glci.alicloud.AlicloudImageMaker(
         oss_auth, acs_client, release, cicd_cfg.build)
 
