@@ -40,9 +40,13 @@ def mk_pipeline_run(
     publishing_actions: typing.Sequence[glci.model.PublishingAction],
 ):
     # k8s only allows dns names / leng restriction applies
-    mode_short = ''.join((a.value.strip() for a in publishing_actions)).replace('_', '-')[:8]
-    run_name = \
-        f'{pipeline_name}-{mode_short}-{version.replace(".", "-")}-{committish[:6]}'[:60]
+    def mk_pipeline_name():
+        yield pipeline_name[:len('gardenlinux')]
+        yield '-'.join((a.value[:6] for a in publishing_actions))
+        yield version.replace('.', '-')
+        yield committish[:6]
+
+    run_name = '-'.join(mk_pipeline_name())[:60]
 
     snapshot_timestamp = glci.model.snapshot_date(gardenlinux_epoch=gardenlinux_epoch)
 
