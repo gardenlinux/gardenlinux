@@ -180,6 +180,7 @@ def pre_build_step(
 
 def release_step(
     giturl: tkn.model.NamedParam,
+    committish: tkn.model.NamedParam,
     branch: tkn.model.NamedParam,
     gardenlinux_epoch: tkn.model.NamedParam,
     publishing_actions: tkn.model.NamedParam,
@@ -194,6 +195,7 @@ def release_step(
             callable='release_step',
             params=[
                 giturl,
+                committish,
                 branch,
                 gardenlinux_epoch,
                 publishing_actions,

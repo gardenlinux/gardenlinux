@@ -53,6 +53,7 @@ def _github_repo(
 def ensure_target_branch_exists(
     source_branch: str,
     release_branch: str,
+    release_committish: str,
     release_version: str,
     git_helper,
     giturl: str,
@@ -64,7 +65,8 @@ def ensure_target_branch_exists(
     gh_repo = _github_repo(giturl=giturl)
     repo = git_helper.repo
 
-    release_branch_exists = release_branch in set(gh_repo.branches())
+    release_branch_exists = release_branch in {b.name for b in gh_repo.branches()}
+    print(f'{release_branch_exists=}')
 
     if is_first_release:
         # release_branch MUST not exist, yet
@@ -73,12 +75,14 @@ def ensure_target_branch_exists(
             sys.exit(1)
 
         repo = git_helper.repo
-        head_commit = repo.rev_parse(source_branch).hexsha
+        release_commit = repo.rev_parse(release_committish)
+        print(f'{release_commit=}')
 
         gh_repo.create_branch_ref(
             name=release_branch,
-            sha=head_commit,
+            sha=release_commit.hexsha,
         )
+        print(f'created new branch {release_branch=} pointing to {release_commit=}')
     else:
         # release_branch MUST exist
         if not release_branch_exists:
@@ -93,6 +97,7 @@ def ensure_target_branch_exists(
 
     bump_commit = git_helper.index_to_commit(
         message=f'prepare release of gardenlinux-{next_release_version}',
+        parent_commits=(release_commit,)
     )
 
     git_helper.push(
@@ -111,6 +116,10 @@ def parse_args():
     parser.add_argument(
         '--release-version',
         default=glci.model.next_release_version_from_workingtree(),
+    )
+    parser.add_argument(
+        '--release-committish',
+        required=True,
     )
     parser.add_argument(
         '--branch',
@@ -135,11 +144,13 @@ def main():
 
     source_branch = parsed.branch
     release_branch = release_branch_name(gardenlinux_epoch=gardenlinux_epoch)
+    release_committish = parsed.release_committish
 
     print(f'next release version: {release_version=}')
 
     ensure_target_branch_exists(
         source_branch=source_branch,
+        release_committish=release_committish,
         release_branch=release_branch,
         release_version=release_version,
         git_helper=git_helper,
