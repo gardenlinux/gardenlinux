@@ -26,7 +26,7 @@ spec:
     - name: 'committish'
       type: 'string'
       description: 'the committish to build'
-      default: 'master'
+      default: 'main'
     - name: 'gardenlinux_epoch'
       type: 'string'
       description: 'the gardenlinux epoch to use for as snapshot repo timestamp'
