@@ -6,7 +6,6 @@ parsable_to_int = str
 
 def release_step(
     giturl: str,
-    branch: str,
     committish: str,
     gardenlinux_epoch: parsable_to_int,
     publishing_actions: str,
@@ -20,7 +19,6 @@ def release_step(
       return
 
     release.ensure_target_branch_exists(
-        source_branch=branch,
         release_branch=release.release_branch_name(gardenlinux_epoch=gardenlinux_epoch),
         release_committish=committish,
         release_version=glci.model.next_release_version_from_workingtree(),

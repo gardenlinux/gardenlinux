@@ -51,7 +51,6 @@ def _github_repo(
 
 
 def ensure_target_branch_exists(
-    source_branch: str,
     release_branch: str,
     release_committish: str,
     release_version: str,
@@ -121,10 +120,6 @@ def parse_args():
         '--release-committish',
         required=True,
     )
-    parser.add_argument(
-        '--branch',
-        default='main',
-    )
     parsed = parser.parse_args()
 
     return parsed
@@ -142,14 +137,12 @@ def main():
 
     git_helper = _git_helper(giturl=parsed.giturl)
 
-    source_branch = parsed.branch
     release_branch = release_branch_name(gardenlinux_epoch=gardenlinux_epoch)
     release_committish = parsed.release_committish
 
     print(f'next release version: {release_version=}')
 
     ensure_target_branch_exists(
-        source_branch=source_branch,
         release_committish=release_committish,
         release_branch=release_branch,
         release_version=release_version,
