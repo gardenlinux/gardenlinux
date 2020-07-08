@@ -21,7 +21,7 @@ def promote_step(
     flavour_set = glci.util.flavour_set(flavourset)
     flavours = tuple(flavour_set.flavours())
     publishing_actions = [
-        glci.model.PublishAction(action.strip()) for action in publishing_actions.split(',')
+        glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
     ]
 
     find_releases = glci.util.preconfigured(

@@ -11,7 +11,7 @@ def release_step(
     publishing_actions: str,
 ):
     publishing_actions = [
-        glci.model.PublishAction(action.strip()) for action in publishing_actions.split(',')
+        glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
     ]
 
     if not glci.model.PublishingAction.RELEASE in publishing_actions:
