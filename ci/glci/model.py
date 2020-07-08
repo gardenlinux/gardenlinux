@@ -275,9 +275,33 @@ class GcpPublishedImage(PublishedImageBase):
     gcp_project_name: str
 
 
+class AzureTransportState(enum.Enum):
+    PUBLISH = 'publishing'
+    GO_LIVE = 'going_live'
+    RELEASED = 'released'
+    FAILED = 'failed'
+
+
 @dataclasses.dataclass(frozen=True)
 class AzurePublishedImage:
-    transport_state: str
+    '''
+    AzurePublishedImage hold information about the publishing process of an image
+    to the Azure Marketplace.
+
+    transport_state reflect the current stage of the image in the publishing process.
+
+    urn is the image identfier used to spawn virtual machines with the image.
+
+    publish_operation_id is the id of the publish operation of the image to the
+    Azure Marketplace. At the end of this process step the image is validated and
+    can be used for user their subscription get whitelisted.
+
+    golive_operation_id is the id of the go live/release operation of the image
+    to the Azure Marketplace. At the end of this process step the image is available
+    in all Azure regions for general usage.
+    '''
+
+    transport_state: AzureTransportState
     urn: str
     publish_operation_id: str
     golive_operation_id: str
@@ -437,7 +461,8 @@ class AzureStorageAccountCfg:
 class AzurePublishCfg:
     marketplace: AzureMarketplaceCfg
     service_principal: AzureServicePrincipalCfg
-    storate_account: AzureStorageAccountCfg
+    storage_account: AzureStorageAccountCfg
+    notification_recipients: ()
 
 
 @dataclasses.dataclass(frozen=True)
