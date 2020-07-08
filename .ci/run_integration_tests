@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+echo "should not run integration tests (this is a dummy, for now)"
