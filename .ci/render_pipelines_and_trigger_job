@@ -1,19 +1,18 @@
 #!/usr/bin/env bash
-
-set -e
+set -eu
 set -x
 
-# XXX install kubectl (should rather be installed into container-image)
-curl -Lo /bin/kubectl \
-  https://storage.googleapis.com/kubernetes-release/release/v1.18.2/bin/linux/amd64/kubectl
-chmod +x /bin/kubectl
-curl -L \
-  https://github.com/tektoncd/cli/releases/download/v0.10.0/tkn_0.10.0_Linux_x86_64.tar.gz \
-  | tar xz -C /bin
+own_dir="$(readlink -f "$(dirname "${0}")")"
 
-GARDENLINUX_TKN_WS='gardenlinux-tkn'
+source "${own_dir}/lib.sh"
 
-BRANCH_NAME="${GARDENLINUX_BRANCH}"
+install_kubectl
+install_tkn
+
+# retrieve and configure kubeconfig (sets KUBECONFIG env var)
+kubecfg
+
+export_env
 
 function cleanup_pipelineruns {
   echo "purging old pipelineruns"
@@ -26,8 +25,6 @@ function cleanup_pipelineruns {
     --keep 20
 }
 
-# XXX hardcode for now
-FLAVOUR_SET='all'
 
 echo "render pipelines"
 gardenlinux_dir="${CC_ROOT_DIR}/${GARDENLINUX_PATH}"
@@ -43,15 +40,6 @@ PUBLISHING_ACTIONS="${PUBLISHING_ACTIONS:-manifests}"
 if [ ! -z "${VERSION:-}" ]; then
   EXTRA_ARGS="--version=${VERSION}"
 fi
-
-# retrieve kubeconfig
-gardener-ci config model_element \
-  --cfg-type kubernetes \
-  --cfg-name shoot_live_garden_ci_2 \
-  --key kubeconfig \
-> kubeconfig
-export KUBECONFIG="$PWD/kubeconfig"
-ls -la "${KUBECONFIG}"
 
 cleanup_pipelineruns
 
