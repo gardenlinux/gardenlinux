@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eu
+set -e
 set -x
 
 own_dir="$(readlink -f "$(dirname "${0}")")"
