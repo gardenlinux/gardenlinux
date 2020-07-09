@@ -1,3 +1,15 @@
 #!/usr/bin/env bash
 
-echo "should not run integration tests (this is a dummy, for now)"
+own_dir="$(readlink -f "$(dirname "${0}")")"
+
+source "${own_dir}/lib.sh"
+
+install_kubectl
+install_tkn
+
+# retrieve and configure kubeconfig (sets KUBECONFIG env var)
+kubecfg
+
+export_env
+
+echo "should now run integration tests (this is a dummy, for now)"
