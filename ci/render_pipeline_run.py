@@ -36,7 +36,7 @@ def mk_pipeline_run(
     cicd_cfg: str,
     version: str,
     flavour_set: glci.model.GardenlinuxFlavourSet,
-    promote_target: promote.BuildType,
+    promote_target: glci.model.BuildType,
     publishing_actions: typing.Sequence[glci.model.PublishingAction],
 ):
     # k8s only allows dns names / leng restriction applies
@@ -128,8 +128,8 @@ def main():
     parser.add_argument('--version', default=None)
     parser.add_argument(
         '--promote-target',
-        type=promote.BuildType,
-        default=promote.BuildType.SNAPSHOT,
+        type=glci.model.BuildType,
+        default=glci.model.BuildType.SNAPSHOT,
     )
     parser.add_argument(
         '--publishing-action',
