@@ -173,6 +173,9 @@ def promote(
         glci.util.release_set_manifest_name(
             build_committish=build_committish,
             gardenlinux_epoch=gardenlinux_epoch,
+            version=version_str,
+            flavourset_name=flavour_set.name,
+            build_type=build_type,
         ),
         f'{version_str}-{flavour_set.name}'
     )
