@@ -24,12 +24,6 @@ glci.util.configure_logging()
 logger = logging.getLogger(__name__)
 
 
-class BuildType(enum.Enum):
-    SNAPSHOT = 'snapshot'
-    DAILY = 'daily'
-    RELEASE = 'release'
-
-
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--flavourset', default='testing')
@@ -43,7 +37,7 @@ def parse_args():
     )
     parser.add_argument('--version', required=True)
     parser.add_argument('--source', default='snapshots')
-    parser.add_argument('--target', type=BuildType, default=BuildType.DAILY)
+    parser.add_argument('--target', type=BuildType, default=glci.model.BuildType.SNAPSHOT)
     parser.add_argument('--cicd-cfg', default='default')
     parser.add_argument('--allow-partial', default=False, action='store_true')
 
@@ -145,10 +139,13 @@ def _publish_gcp_image(release: glci.model.OnlineReleaseManifest,
 def promote(
     releases: typing.Sequence[glci.model.OnlineReleaseManifest],
     target_prefix: str,
+    build_committish: str,
+    gardenlinux_epoch: int,
     version_str: str,
     publishing_actions: typing.Sequence[glci.model.PublishingAction],
     cicd_cfg: glci.model.CicdCfg,
     flavour_set: glci.model.GardenlinuxFlavourSet,
+    build_type: glci.model.BuildType,
 ):
     upload_release_manifest_set = glci.util.preconfigured(
         func=glci.util.upload_release_manifest_set,
@@ -173,12 +170,19 @@ def promote(
 
     manifest_path = os.path.join(
         target_prefix,
+        glci.util.release_set_manifest_name(
+            build_committish=build_committish,
+            gardenlinux_epoch=gardenlinux_epoch,
+        )
         f'{version_str}-{flavour_set.name}'
     )
 
     upload_release_manifest_set(
         key=manifest_path,
         manifest_set=manifest_set,
+        version=version_str,
+        flavourset_name=flavourset.name,
+        build_type=build_type,
     )
 
     print(f'uploaded manifest-set: {manifest_path=}')
@@ -208,7 +212,7 @@ def main():
         build_committish=committish,
         gardenlinux_epoch=gardenlinux_epoch,
         prefix=glci.model.ReleaseManifest.manifest_key_prefix,
-    )
+        )
     )
 
     is_complete = len(releases) == len(flavours)
@@ -223,6 +227,8 @@ def main():
 
     promote(
         releases=releases,
+        build_committish=committish,
+        gardenlinux_epoch=gardenlinux_epoch,
         target_prefix=os.path.join(
             glci.model.ReleaseManifestSet.release_manifest_set_prefix,
             parsed.target.value,
@@ -231,6 +237,7 @@ def main():
         publishing_actions=parsed.publishing_actions,
         cicd_cfg=cicd_cfg,
         flavour_set=flavour_set,
+        build_type=parsed.target,
     )
 
 

@@ -4,6 +4,7 @@ import enum
 import functools
 import io
 import logging
+import os
 import pprint
 import typing
 
@@ -290,6 +291,76 @@ def find_releases(
 
         if existing_release:
             yield existing_release
+
+
+def release_set_manifest_name(
+    build_committish: str,
+    gardenlinux_epoch: int,
+    version: str,
+    flavourset_name: str,
+    build_type: glci.model.BuildType,
+):
+    BT = glci.model.BuildType
+
+    if build_type in (BT.SNAPSHOT, BT.DAILY):
+        return f'{gardenlinux_epoch}-{build_committish[:6]}-{flavourset_name}'
+    elif build_type is BT.RELEASE:
+        return f'{version}-{flavourset_name}'
+
+
+def find_release_set(
+    s3_client: 'botocore.client.S3',
+    bucket_name: str,
+    flavourset_name: str,
+    build_committish: str,
+    version: str,
+    gardenlinux_epoch: int,
+    build_type: glci.model.BuildType,
+    prefix: str=glci.model.ReleaseManifestSet.release_manifest_set_prefix,
+    absent_ok=False,
+) -> glci.model.ReleaseManifestSet:
+
+    manifest_key = os.path.join(
+        prefix,
+        build_type.value,
+        release_set_manifest_name(
+            build_committish=build_committish,
+            gardenlinux_epoch=gardenlinux_epoch,
+            version=version,
+            flavourset_name=flavourset_name,
+            build_type=build_type,
+        ),
+    )
+
+    print(manifest_key)
+
+    buf = io.BytesIO()
+    try:
+        s3_client.download_fileobj(
+            Bucket=bucket_name,
+            Key=manifest_key,
+            Fileobj=buf,
+        )
+    except botocore.exceptions.ClientError as e:
+        if absent_ok and str(e.response['Error']['Code']) == '404':
+            return None
+        raise e
+
+    buf.seek(0)
+    parsed = yaml.safe_load(buf)
+
+    manifest = dacite.from_dict(
+        data_class=glci.model.ReleaseManifestSet,
+        data=parsed,
+        config=dacite.Config(
+            cast=[
+                glci.model.Architecture,
+                typing.Tuple
+            ],
+        ),
+    )
+
+    return manifest
 
 
 @functools.lru_cache

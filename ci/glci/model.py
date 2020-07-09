@@ -422,6 +422,12 @@ class PipelineFlavour(enum.Enum):
     RELEASE = 'release'
 
 
+class BuildType(enum.Enum):
+    SNAPSHOT = 'snapshot'
+    DAILY = 'daily'
+    RELEASE = 'release'
+
+
 @dataclasses.dataclass(frozen=True)
 class BuildCfg:
     aws_cfg_name: str

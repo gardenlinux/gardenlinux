@@ -52,6 +52,8 @@ def promote_step(
     # if this line is reached, the release has been complete
 
     promote.promote(
+      gardenlinux_epoch=gardenlinux_epoch,
+      build_committish=committish,
       releases=releases,
       target_prefix=os.path.join(
         'meta',
@@ -61,4 +63,5 @@ def promote_step(
       cicd_cfg=cicd_cfg,
       flavour_set=flavour_set,
       version_str=version,
+      build_type=glci.model.BuildType(promote_target),
     )
