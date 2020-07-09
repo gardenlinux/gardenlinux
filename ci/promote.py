@@ -110,13 +110,30 @@ def _publish_azure_image(release: glci.model.OnlineReleaseManifest,
                        cicd_cfg: glci.model.CicdCfg,
                        ) -> glci.model.OnlineReleaseManifest:
     import glci.az
+    import glci.model
     import ccc.aws
     import ci.util
 
     s3_client = ccc.aws.session(cicd_cfg.build.aws_cfg_name).client('s3')
+    cfg_factory = ci.util.ctx().cfg_factory()
+
+    service_principal_cfg = cfg_factory.azure_service_principal(cicd_cfg.publish.azure.service_principal_cfg_name)
+    service_principal_cfg_serialized = glci.model.AzureServicePrincipalCfg(**service_principal_cfg.raw)
+
+    storage_account_cfg = cfg_factory.azure_storage_account(cicd_cfg.publish.azure.storage_account_cfg_name)
+    storage_account_cfg_serialized = glci.model.AzureStorageAccountCfg(**storage_account_cfg.raw)
+
+    azure_marketplace_cfg = glci.model.AzureMarketplaceCfg(
+        publisher_id=cicd_cfg.publish.azure.publisher_id,
+        offer_id=cicd_cfg.publish.azure.offer_id,
+        plan_id=cicd_cfg.publish.azure.plan_id,
+    )
+
     return glci.az.upload_and_publish_image(
         s3_client,
-        cicd_cfg=cicd_cfg,
+        service_principal_cfg=service_principal_cfg_serialized,
+        storage_account_cfg=storage_account_cfg_serialized,
+        marketplace_cfg=azure_marketplace_cfg,
         release=release,
     )
 
