@@ -310,9 +310,9 @@ def copy_image_from_s3_to_az_storage_account(
         )
 
     store = AzureImageStore(
-        storage_account_cfg.name,
-        storage_account_cfg.access_key,
-        storage_account_cfg.container_name,
+        storage_account_name=storage_account_cfg.storage_account_name,
+        storage_account_key=storage_account_cfg.access_key,
+        container_name=storage_account_cfg.container_name,
     )
 
     store.copy_from_s3(
@@ -378,7 +378,8 @@ def update_and_publish_marketplace_offer(
 
 
 def check_offer_transport_state(
-    cicd_cfg: glci.model.CicdCfg,
+    service_principal_cfg: glci.model.AzureServicePrincipalCfg,
+    marketplace_cfg: glci.model.AzureMarketplaceCfg,
     release: glci.model.OnlineReleaseManifest,
 ) -> glci.model.OnlineReleaseManifest:
     '''Checks the state of the gardenlinux Azure Marketplace offer transport
@@ -392,13 +393,13 @@ def check_offer_transport_state(
         return release
 
     marketplace_client = AzureMarketplaceClient(
-        spn_tenant_id=cicd_cfg.publish.azure.service_principal.tenant_id,
-        spn_client_id=cicd_cfg.publish.azure.service_principal.client_id,
-        spn_client_secret=cicd_cfg.publish.azure.service_principal.client_secret,
+        spn_tenant_id=service_principal_cfg.tenant_id,
+        spn_client_id=service_principal_cfg.client_id,
+        spn_client_secret=service_principal_cfg.client_secret,
     )
 
-    publisher_id = cicd_cfg.publish.azure.marketplace.publisher_id
-    offer_id = cicd_cfg.publish.azure.marketplace.offer_id
+    publisher_id = marketplace_cfg.publisher_id
+    offer_id = marketplace_cfg.offer_id
 
     operation_status = marketplace_client.fetch_operation_state(
         publisher_id=publisher_id,
@@ -442,7 +443,7 @@ def check_offer_transport_state(
             transport_state=glci.model.AzureTransportState.RELEASED,
             publish_operation_id=release.published_image_metadata.publish_operation_id,
             golive_operation_id=release.published_image_metadata.golive_operation_id,
-            urn=generate_urn(cicd_cfg.publish.azure.marketplace, release.version),
+            urn=generate_urn(marketplace_cfg, release.version),
         )
         return dataclasses.replace(release, published_image_metadata=published_image)
 
@@ -452,7 +453,9 @@ def check_offer_transport_state(
 
 def upload_and_publish_image(
     s3_client,
-    cicd_cfg: glci.model.CicdCfg,
+    service_principal_cfg: glci.model.AzureServicePrincipalCfg,
+    storage_account_cfg: glci.model.AzureStorageAccountCfg,
+    marketplace_cfg: glci.model.AzureMarketplaceCfg,
     release: glci.model.OnlineReleaseManifest,
 ) -> glci.model.OnlineReleaseManifest:
     '''Copies an image from S3 to an Azure Storage Account, updates the corresponding
@@ -462,7 +465,7 @@ def upload_and_publish_image(
     # Copy image from s3 to Azure Storage Account
     target_blob_name = f"gardenlinux-az-{release.version}.vhd"
     image_url = copy_image_from_s3_to_az_storage_account(
-        storage_account_cfg=cicd_cfg.publish.azure.storage_account,
+        storage_account_cfg=storage_account_cfg,
         s3_client=s3_client,
         s3_bucket_name=release.path_by_suffix('rootfs.raw').s3_bucket_name,
         s3_object_key=release.path_by_suffix('rootfs.raw').s3_key,
@@ -471,11 +474,11 @@ def upload_and_publish_image(
 
     # Update Marketplace offer and start publishing.
     publish_operation_id = update_and_publish_marketplace_offer(
-        service_principal_cfg=cicd_cfg.publish.azure.service_principal,
-        marketplace_cfg=cicd_cfg.publish.azure.marketplace,
+        service_principal_cfg=service_principal_cfg,
+        marketplace_cfg=marketplace_cfg,
         image_version=release.version,
         image_url=image_url,
-        notification_recipients=cicd_cfg.publish.azure.notification_recipients,
+        notification_recipients=(), # TODO Mail receipants
     )
 
     published_image = glci.model.AzurePublishedImage(

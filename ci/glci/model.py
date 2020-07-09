@@ -442,6 +442,7 @@ class BuildCfg:
     alicloud_region: str
     alicloud_cfg_name: str
 
+
 @dataclasses.dataclass(frozen=True)
 class AzureMarketplaceCfg:
     offer_id: str
@@ -458,7 +459,7 @@ class AzureServicePrincipalCfg:
 
 @dataclasses.dataclass(frozen=True)
 class AzureStorageAccountCfg:
-    name: str
+    storage_account_name: str
     container_name: str
     access_key: str
 
