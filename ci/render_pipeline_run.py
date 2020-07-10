@@ -9,7 +9,6 @@ import glci.model
 import glci.util
 import tkn.model
 import paths
-import promote
 
 GardenlinuxFlavour = glci.model.GardenlinuxFlavour
 

@@ -8,7 +8,6 @@ An example being the promotion of a build snapshot to a daily build.
 
 import argparse
 import concurrent.futures
-import enum
 import functools
 import logging
 import logging.config
@@ -37,7 +36,11 @@ def parse_args():
     )
     parser.add_argument('--version', required=True)
     parser.add_argument('--source', default='snapshots')
-    parser.add_argument('--target', type=BuildType, default=glci.model.BuildType.SNAPSHOT)
+    parser.add_argument(
+        '--target',
+        type=glci.model.BuildType,
+        default=glci.model.BuildType.SNAPSHOT
+    )
     parser.add_argument('--cicd-cfg', default='default')
     parser.add_argument('--allow-partial', default=False, action='store_true')
 
@@ -105,7 +108,6 @@ def _publish_azure_image(release: glci.model.OnlineReleaseManifest,
                        ) -> glci.model.OnlineReleaseManifest:
     import glci.az
     import ccc.aws
-    import ci.util
 
     s3_client = ccc.aws.session(cicd_cfg.build.aws_cfg_name).client('s3')
     return glci.az.upload_and_publish_image(
@@ -184,7 +186,7 @@ def promote(
         key=manifest_path,
         manifest_set=manifest_set,
         version=version_str,
-        flavourset_name=flavourset.name,
+        flavourset_name=flavour_set.name,
         build_type=build_type,
     )
 

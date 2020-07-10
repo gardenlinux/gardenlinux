@@ -1,5 +1,4 @@
 import glci.model
-import promote
 import release
 
 parsable_to_int = str
