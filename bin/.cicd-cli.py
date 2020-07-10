@@ -28,15 +28,26 @@ def gardenlinux_timestamp():
     print(glci.model.snapshot_date(gardenlinux_epoch=epoch))
 
 
-def _head_sha():
+def _gitrepo():
     import git
     repo = git.Repo(paths.repo_root)
+    return repo
+
+
+def _head_sha():
+    repo = _gitrepo()
     return repo.head.commit.hexsha
 
 
 def retrieve_release_set():
+    repo = _gitrepo()
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('--committish', default=_head_sha())
+    parser.add_argument(
+        '--committish', '-c',
+        default=_head_sha(),
+        type=lambda c: repo.git.rev_parse(c),
+    )
     parser.add_argument('--cicd-cfg', default='default')
     parser.add_argument('--flavourset-name', default='all')
     parser.add_argument(
