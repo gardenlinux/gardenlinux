@@ -12,4 +12,6 @@ kubecfg
 
 export_env
 
-echo "should now run integration tests (this is a dummy, for now)"
+echo 'retrieving release-manifests for current head'
+
+retrieve-release-set

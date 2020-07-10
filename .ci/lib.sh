@@ -1,3 +1,7 @@
+own_dir="$(readlink -f "$(dirname "${0}")")"
+repo_root="$(readlink -f "${own_dir}/..")"
+bin_dir="${repo_root}/bin"
+
 function install_kubectl() {
   if which kubectl &>/dev/null; then
     exit 0
@@ -34,4 +38,5 @@ function export_env() {
   export BRANCH_NAME="${GARDENLINUX_BRANCH}"
   # XXX hardcode for now
   export FLAVOUR_SET='all'
+  export PATH="${PATH}:${bin_dir}"
 }
