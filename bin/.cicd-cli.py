@@ -13,9 +13,29 @@ ci_dir = os.path.join(repo_root, 'ci')
 
 sys.path.insert(1, ci_dir)
 
+import clean
 import glci.util
 import glci.model
 import paths
+
+
+def clean_build_result_repository():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--cicd-cfg', default='default')
+    parser.add_argument('--snapshot-max-age-days', default=14, type=int)
+
+    parsed = parser.parse_args()
+
+    cicd_cfg = glci.util.cicd_cfg(parsed.cicd_cfg)
+
+    print('purging outdated build snapshot manifests')
+    clean.clean_single_release_manifests(
+        max_age_days=parsed.snapshot_max_age_days,
+        cicd_cfg=cicd_cfg,
+    )
+
+    print('purging loose objects')
+    clean.clean_orphaned_objects(cicd_cfg=cicd_cfg)
 
 
 def gardenlinux_epoch():

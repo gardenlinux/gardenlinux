@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+own_dir="$(readlink -f "$(dirname "${0}")")"
+
+source "${own_dir}/lib.sh"
+
+export_env
+
+# from <repo-root>/bin
+clean-build-result-repository
