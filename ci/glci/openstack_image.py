@@ -1,5 +1,6 @@
 import dataclasses
 import functools
+import typing
 from datetime import datetime
 from time import sleep
 
@@ -10,8 +11,8 @@ import glci
 class OpenstackImageUploader:
     '''OpenstackImageUploader is a client to upload images to Openstack Glance.'''
 
-    def __init__(self, openrc: glci.model.OpenstackEnviroment):
-        self.openstack_env = openrc
+    def __init__(self, environment: glci.model.OpenstackEnvironment):
+        self.openstack_env = environment
 
     @functools.lru_cache
     def _get_connection(self):
@@ -74,7 +75,8 @@ class OpenstackImageUploader:
 
 def upload_and_publish_image(
     s3_client,
-    cicd_cfg: glci.model.CicdCfg,
+    openstack_environments_cfgs :typing.Tuple[glci.model.OpenstackEnvironment],
+    image_properties: dict,
     release: glci.model.OnlineReleaseManifest,
 ) -> glci.model.OnlineReleaseManifest:
     """Import an image from S3 into OpenStack Glance."""
@@ -82,21 +84,29 @@ def upload_and_publish_image(
     image_name = f"gardenlinux-{release.version}"
     image_meta = {
         'architecture': release.architecture.name,
-        'properties': cicd_cfg.publish.openstack.properties,
+        'properties': image_properties,
     }
 
     s3_image_url = s3_client.generate_presigned_url(
         'get_object',
-        Params={'Bucket': release.s3_bucket, 'Key': release.s3_key},
+        ExpiresIn=1200*len(openstack_environments_cfgs), # 20min validity for each openstack enviroment/region
+        Params={
+            'Bucket': release.path_by_suffix('rootfs.vmdk').s3_bucket_name,
+            'Key': release.path_by_suffix('rootfs.vmdk').s3_key,
+        },
     )
 
-    uploader = OpenstackImageUploader(cicd_cfg.publish.openstack.openrc)
-    image_id = uploader.upload_image_from_url(image_name, s3_image_url, image_meta)
-    uploader.wait_image_ready(image_id)
+    published_images = []
+    for env_cfg in openstack_environments_cfgs:
+        uploader = OpenstackImageUploader(env_cfg)
+        image_id = uploader.upload_image_from_url(image_name, s3_image_url, image_meta)
+        uploader.wait_image_ready(image_id)
 
-    published_image = glci.model.OpenstackPublishedImage(
-        region_name=cicd_cfg.publish.openstack.openrc.region,
-        image_id=image_id,
-        image_name=image_name,
-    )
-    return dataclasses.replace(release, published_image_metadata=published_image)
+        published_images.append(glci.model.OpenstackPublishedImage(
+            region_name=env_cfg.region,
+            image_id=image_id,
+            image_name=image_name,
+        ))
+
+    published_image_set = glci.model.OpenstackPublishedImageSet(published_openstack_images=tuple(published_images))
+    return dataclasses.replace(release, published_image_metadata=published_image_set)
