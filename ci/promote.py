@@ -179,7 +179,6 @@ def promote(
             flavourset_name=flavour_set.name,
             build_type=build_type,
         ),
-        f'{version_str}-{flavour_set.name}'
     )
 
     upload_release_manifest_set(
