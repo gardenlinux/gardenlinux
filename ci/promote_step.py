@@ -56,8 +56,8 @@ def promote_step(
       build_committish=committish,
       releases=releases,
       target_prefix=os.path.join(
-        'meta',
-        release_target,
+          glci.model.ReleaseManifestSet.release_manifest_set_prefix,
+          release_target,
       ),
       publishing_actions=publishing_actions,
       cicd_cfg=cicd_cfg,
