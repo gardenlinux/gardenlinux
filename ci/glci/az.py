@@ -13,7 +13,6 @@ from azure.storage.blob import (
     ContainerSasPermissions,
     generate_container_sas,
 )
-from msal import ConfidentialClientApplication
 
 import glci.model
 
@@ -219,7 +218,9 @@ class AzureMarketplaceClient:
         for operation in operations:
             if AzmpTransportDest(operation["slot"]) == transport_dest and AzmpOperationState(operation["submissionState"]) == AzmpOperationState.RUNNING:
                 return operation["id"]
-        raise RuntimeError(f"Did not find an ongoing transport operation to ship gardenliunx offer on the Azure Marketplace.")
+        raise RuntimeError(
+            'Did not find an ongoing transport operation to ship gardenliunx offer on the Azure Marketplace.'
+        )
 
     def fetch_operation_state(self, publisher_id: str, offer_id: str, operation_id: str):
         '''Fetches the state of a given Azure Marketplace transport operation.'''
@@ -252,7 +253,7 @@ def _find_plan_spec(offer_spec :dict, plan_id: str):
             plan_spec = plan
             break
     else:
-        raise RuntimeError(f"Plan {plan_id} not found in offer {spec['id']}.")
+        raise RuntimeError(f"Plan {plan_id} not found in offer {plan_spec['id']}.")
     return plan_spec
 
 def add_image_version_to_plan(
