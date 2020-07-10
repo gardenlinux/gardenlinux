@@ -19,5 +19,8 @@ cicd_cfgs:
         plan_id: 'greatest'
         service_principal_cfg_name: 'shoot-operator-dev'
         storage_account_cfg_name: 'gardenlinux-dev'
+      openstack:
+        environment_cfg_name: 'gardenlinux'
+        image_properties_cfg_name: 'gardenlinux'
     notify:
       email_cfg_name: 'ses_gardener_cloud_sap'

@@ -165,9 +165,32 @@ def _publish_openstack_image(release: glci.model.OnlineReleaseManifest,
     import ci.util
 
     s3_client = ccc.aws.session(cicd_cfg.build.aws_cfg_name).client('s3')
+    cfg_factory = ci.util.ctx().cfg_factory()
+    openstack_environments_cfg = cfg_factory.ccee(cicd_cfg.publish.openstack.environment_cfg_name)
+
+    username = openstack_environments_cfg.credentials().username()
+    password = openstack_environments_cfg.credentials().passwd()
+
+    image_properties = cfg_factory._cfg_element(
+        cfg_type_name='openstack_os_image',
+        cfg_name=cicd_cfg.publish.openstack.image_properties_cfg_name,
+    ).raw['properties']
+
+    openstack_env_cfgs = tuple((
+        glci.model.OpenstackEnvironment(
+            project_name=project.name(),
+            domain=project.domain(),
+            region=project.region(),
+            auth_url=project.auth_url(),
+            username=username,
+            password=password,
+        ) for project in openstack_environments_cfg.projects()
+    ))
+
     return glci.openstack_image.upload_and_publish_image(
         s3_client,
-        cicd_cfg=cicd_cfg,
+        openstack_environments_cfgs=openstack_env_cfgs,
+        image_properties=image_properties,
         release=release,
     )
 

@@ -315,6 +315,11 @@ class OpenstackPublishedImage:
 
 
 @dataclasses.dataclass(frozen=True)
+class OpenstackPublishedImageSet(PublishedImageBase):
+    published_openstack_images: typing.Tuple[OpenstackPublishedImage]
+
+
+@dataclasses.dataclass(frozen=True)
 class ReleaseManifest(ReleaseIdentifier):
     '''
     metadata for a gardenlinux release variant that can be (or was) published to a persistency
@@ -323,12 +328,12 @@ class ReleaseManifest(ReleaseIdentifier):
     build_timestamp: str
     paths: typing.Tuple[typing.Union[S3_ReleaseFile]]
     published_image_metadata: typing.Union[
-       AlicloudPublishedImageSet,
-       AwsPublishedImageSet,
-       AzurePublishedImage,
-       GcpPublishedImage,
-       OpenstackPublishedImage,
-       None,
+        AlicloudPublishedImageSet,
+        AwsPublishedImageSet,
+        AzurePublishedImage,
+        GcpPublishedImage,
+        OpenstackPublishedImageSet,
+        None,
     ]
 
     def path_by_suffix(self, suffix: str):
@@ -490,7 +495,7 @@ class AzurePublishCfg:
 
 
 @dataclasses.dataclass(frozen=True)
-class OpenstackEnviroment:
+class OpenstackEnvironment:
     auth_url: str
     domain: str
     region: str
@@ -501,8 +506,8 @@ class OpenstackEnviroment:
 
 @dataclasses.dataclass(frozen=True)
 class OpenstackPublishCfg:
-    openrc: OpenstackEnviroment
-    properties: dict
+    environment_cfg_name: str
+    image_properties_cfg_name: str
 
 
 @dataclasses.dataclass(frozen=True)
