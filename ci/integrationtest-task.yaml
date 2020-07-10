@@ -13,7 +13,7 @@ spec:
       type: git
   steps:
     - name: 'integration-test'
-      image: 'eu.gcr.io/gardener-project/cc/job-image:1.606.0'
+      image: 'eu.gcr.io/gardener-project/cc/job-image:1.679.0'
       script: |
         #!/usr/bin/env bash
         set -e
