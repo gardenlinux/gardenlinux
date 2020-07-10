@@ -185,9 +185,6 @@ def promote(
     upload_release_manifest_set(
         key=manifest_path,
         manifest_set=manifest_set,
-        version=version_str,
-        flavourset_name=flavour_set.name,
-        build_type=build_type,
     )
 
     print(f'uploaded manifest-set: {manifest_path=}')
