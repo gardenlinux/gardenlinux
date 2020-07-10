@@ -379,3 +379,13 @@ def preconfigured(func: callable, cicd_cfg: glci.model.CicdCfg):
         s3_client=s3_client,
         bucket_name=cicd_cfg.build.s3_bucket_name,
     )
+
+
+class EnumValueYamlDumper(yaml.SafeDumper):
+    '''
+    a yaml.SafeDumper that will dump enum objects using their values
+    '''
+    def represent_data(self, data):
+        if isinstance(data, enum.Enum):
+            return self.represent_data(data.value)
+        return super().represent_data(data)

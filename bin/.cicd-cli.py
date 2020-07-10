@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 
+import argparse
+import dataclasses
+import enum
 import os
 import sys
+import yaml
 
 own_dir = os.path.abspath(os.path.dirname(__file__))
 repo_root = os.path.abspath(os.path.join(own_dir, os.pardir))
@@ -9,17 +13,77 @@ ci_dir = os.path.join(repo_root, 'ci')
 
 sys.path.insert(1, ci_dir)
 
+import glci.util
+import glci.model
+import paths
+
 
 def gardenlinux_epoch():
-    import glci.model
     print(glci.model.gardenlinux_epoch_from_workingtree())
 
 
 def gardenlinux_timestamp():
-    import glci.model
     epoch = glci.model.gardenlinux_epoch_from_workingtree()
 
     print(glci.model.snapshot_date(gardenlinux_epoch=epoch))
+
+
+def _head_sha():
+    import git
+    repo = git.Repo(paths.repo_root)
+    return repo.head.commit.hexsha
+
+
+def retrieve_release_set():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--committish', default=_head_sha())
+    parser.add_argument('--cicd-cfg', default='default')
+    parser.add_argument('--flavourset-name', default='all')
+    parser.add_argument(
+        '--version',
+        default=glci.model._parse_version_from_workingtree(),
+    )
+    parser.add_argument(
+        '--gardenlinux-epoch',
+        default=glci.model.gardenlinux_epoch_from_workingtree(),
+    )
+    parser.add_argument(
+        '--build-type',
+        type=glci.model.BuildType,
+        default=glci.model.BuildType.SNAPSHOT,
+    )
+    parser.add_argument(
+        '--outfile', '-o',
+        type=lambda f: open(f, 'w'),
+        default=sys.stdout,
+    )
+
+    parsed = parser.parse_args()
+
+    find_release_set = glci.util.preconfigured(
+        func=glci.util.find_release_set,
+        cicd_cfg=glci.util.cicd_cfg(parsed.cicd_cfg),
+    )
+
+    release_set = find_release_set(
+        flavourset_name=parsed.flavourset_name,
+        build_committish=parsed.committish,
+        version=parsed.version,
+        gardenlinux_epoch=parsed.gardenlinux_epoch,
+        build_type=parsed.build_type,
+        absent_ok=True,
+    )
+
+    if release_set is None:
+        print('Did not find specified release-set')
+        sys.exit(1)
+
+    with parsed.outfile as f:
+        yaml.dump(
+            data=dataclasses.asdict(release_set),
+            stream=f,
+            Dumper=glci.util.EnumValueYamlDumper,
+        )
 
 
 def main():
