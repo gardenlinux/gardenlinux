@@ -315,8 +315,13 @@ class ReleaseManifest(ReleaseIdentifier):
     '''
     build_timestamp: str
     paths: typing.Tuple[typing.Union[S3_ReleaseFile]]
-    published_image_metadata: typing.Union[AlicloudPublishedImageSet,
-                                           AwsPublishedImageSet, AzurePublishedImage, GcpPublishedImage, None]
+    published_image_metadata: typing.Union[
+       AlicloudPublishedImageSet,
+       AwsPublishedImageSet,
+       AzurePublishedImage,
+       GcpPublishedImage,
+       None,
+    ]
 
     def path_by_suffix(self, suffix: str):
         for path in self.paths:
@@ -334,6 +339,9 @@ class ReleaseManifest(ReleaseIdentifier):
             platform=self.platform,
             modifiers=self.modifiers,
         )
+
+    def build_ts_as_date(self) -> datetime.datetime:
+        return dateutil.parser.isoparse(self.build_timestamp)
 
 
 def normalised_modifiers(platform: Platform, modifiers) -> typing.Tuple[str]:

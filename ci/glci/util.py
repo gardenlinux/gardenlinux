@@ -144,6 +144,41 @@ def release_manifest(
     return manifest
 
 
+def release_manifest_set(
+    s3_client: 'botocore.client.S3',
+    bucket_name: str,
+    manifest_key: str,
+    absent_ok: bool=False,
+) -> glci.model.OnlineReleaseManifest:
+    buf = io.BytesIO()
+    try:
+        s3_client.download_fileobj(
+            Bucket=bucket_name,
+            Key=manifest_key,
+            Fileobj=buf,
+        )
+    except botocore.exceptions.ClientError as e:
+        if absent_ok and str(e.response['Error']['Code']) == '404':
+            return None
+        raise e
+
+    buf.seek(0)
+    parsed = yaml.safe_load(buf)
+
+    print(manifest_key)
+    manifest = dacite.from_dict(
+        data_class=glci.model.ReleaseManifestSet,
+        data=parsed,
+        config=dacite.Config(
+            cast=[
+                glci.model.Architecture,
+                typing.Tuple
+            ],
+        ),
+    )
+    return manifest
+
+
 def _json_serialisable_manifest(manifest: glci.model.ReleaseManifest):
     # workaround: need to convert enums to str
     patch_args = {
@@ -203,29 +238,41 @@ def enumerate_releases(
     s3_client: 'botocore.client.S3',
     bucket_name: str,
     prefix: str=glci.model.ReleaseManifest.manifest_key_prefix,
-):
-    res = s3_client.list_objects_v2(
-        Bucket=bucket_name,
-        Prefix=prefix,
-    )
-    if (key_count := res['KeyCount']) == 0:
-        return
-    print(f'found {key_count} release manifests')
-
-    executor = concurrent.futures.ThreadPoolExecutor(max_workers=32)
-
+) -> typing.Generator[glci.model.ReleaseManifest, None, None]:
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=64)
     _release_manifest = functools.partial(
         release_manifest,
         s3_client=s3_client,
         bucket_name=bucket_name,
     )
 
-    def wrap_release_manifest(key):
-        return _release_manifest(key=key)
+    continuation_token = None
+    while True:
+        ctoken_args = {'ContinuationToken': continuation_token} \
+                if continuation_token \
+                else {}
 
-    keys = [obj_dict['Key'] for obj_dict in res['Contents']]
+        res = s3_client.list_objects_v2(
+            Bucket=bucket_name,
+            Prefix=prefix,
+            **ctoken_args,
+        )
+        if (key_count := res['KeyCount']) == 0:
+            return
+        is_truncated = bool(res['IsTruncated'])
+        continuation_token = res.get('NextContinuationToken')
 
-    yield from executor.map(wrap_release_manifest, keys)
+        print(f'found {key_count} release manifests')
+
+        def wrap_release_manifest(key):
+            return _release_manifest(key=key)
+
+        keys = [obj_dict['Key'] for obj_dict in res['Contents']]
+
+        yield from executor.map(wrap_release_manifest, keys)
+
+        if not is_truncated:
+            return
 
 
 def find_release(
@@ -308,6 +355,54 @@ def release_set_manifest_name(
         return f'{version}-{flavourset_name}'
 
 
+def enumerate_release_sets(
+    s3_client: 'botocore.client.S3',
+    bucket_name: str,
+    prefix: str=glci.model.ReleaseManifestSet.release_manifest_set_prefix,
+) -> typing.Generator[glci.model.ReleaseManifest, None, None]:
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=64)
+    _release_manifest_set = functools.partial(
+        release_manifest_set,
+        s3_client=s3_client,
+        bucket_name=bucket_name,
+    )
+
+    continuation_token = None
+    while True:
+        ctoken_args = {'ContinuationToken': continuation_token} \
+                if continuation_token \
+                else {}
+
+        res = s3_client.list_objects_v2(
+            Bucket=bucket_name,
+            Prefix=prefix,
+            **ctoken_args,
+        )
+        if (key_count := res['KeyCount']) == 0:
+            return
+        is_truncated = bool(res['IsTruncated'])
+        continuation_token = res.get('NextContinuationToken')
+
+        print(f'found {key_count} release manifests')
+
+        keys = [
+            key for obj_dict in res['Contents']
+            # filter out directories
+            if s3_client.head_object(
+              Bucket=bucket_name,
+              Key=(key := obj_dict['Key']),
+            )['ContentType'] != 'application/x-directory'
+        ]
+
+        def wrap_release_manifest_set(key):
+          return _release_manifest_set(manifest_key=key)
+
+        yield from executor.map(wrap_release_manifest_set, keys)
+
+        if not is_truncated:
+            return
+
+
 def find_release_set(
     s3_client: 'botocore.client.S3',
     bucket_name: str,
@@ -334,37 +429,21 @@ def find_release_set(
 
     print(manifest_key)
 
-    buf = io.BytesIO()
-    try:
-        s3_client.download_fileobj(
-            Bucket=bucket_name,
-            Key=manifest_key,
-            Fileobj=buf,
-        )
-    except botocore.exceptions.ClientError as e:
-        if absent_ok and str(e.response['Error']['Code']) == '404':
-            return None
-        raise e
-
-    buf.seek(0)
-    parsed = yaml.safe_load(buf)
-
-    manifest = dacite.from_dict(
-        data_class=glci.model.ReleaseManifestSet,
-        data=parsed,
-        config=dacite.Config(
-            cast=[
-                glci.model.Architecture,
-                typing.Tuple
-            ],
-        ),
+    manifest = release_manifest_set(
+        s3_client=s3_client,
+        bucket_name=bucket_name,
+        manifest_key=manifest_key,
+        absent_ok=absent_ok,
     )
 
     return manifest
 
 
 @functools.lru_cache
-def preconfigured(func: callable, cicd_cfg: glci.model.CicdCfg):
+def preconfigured(
+    func: callable,
+    cicd_cfg: glci.model.CicdCfg=cicd_cfg(),
+):
     # depends on `gardener-cicd-base`
     try:
         import ccc.aws
