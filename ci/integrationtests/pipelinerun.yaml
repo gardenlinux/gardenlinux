@@ -9,9 +9,9 @@ spec:
   params:
   # TODO: replace with values from some "component descriptor"-style thing
   - name: ami_id
-    value: ami-06458801dbaec803b # eu-west-1
+    value: ami-04191efdc08e5aef6 # eu-central-1
   - name: gcp_image_name
-    value: garden-linux-gcp-29-2
+    value: gardenlinux-gcp-cloud-gardener--prod-27-1-0
   resources:
     - name: source-repo
       resourceRef:

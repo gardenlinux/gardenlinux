@@ -6,6 +6,6 @@ spec:
   type: git
   params:
     - name: revision
-      value: refactor-it-tekton
+      value: refactor-integrationtests-pipeline
     - name: url
       value: https://github.com/gardenlinux/gardenlinux.git
