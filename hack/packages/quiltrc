@@ -1,0 +1,16 @@
+QUILT_PATCHES=debian/patches
+QUILT_NO_DIFF_INDEX=1
+QUILT_NO_DIFF_TIMESTAMPS=1
+QUILT_REFRESH_ARGS="-p ab"
+QUILT_DIFF_ARGS="--color=auto" # If you want some color when using `quilt diff`.
+QUILT_PATCH_OPTS="--reject-format=unified"
+QUILT_SERIES_ARGS="--color=auto"
+QUILT_PUSH_ARGS="-a --color=auto"
+
+d=. ; while [ ! -d $d/debian -a `readlink -e $d` != / ]; do d=$d/..; done
+if [ -d $d/debian ] && [ -z $QUILT_PATCHES ]; then
+        # if in Debian packaging tree with unset $QUILT_PATCHES
+        QUILT_PATCHES="debian/patches"
+
+        if ! [ -d $d/debian/patches ]; then mkdir $d/debian/patches; fi
+fi

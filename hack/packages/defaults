@@ -5,23 +5,28 @@ BUILDKEYPUB=$(gpg --armor --export "${BUILDKEY}")
 BUILDIMAGE="gardenlinux:build"
 BUILDTARGET="$(readlink -f ../../packages)"
 
-if [[ "$(docker images -q $BUILDIMAGE 2> /dev/null)" == "" ]]; then
-	docker build -t $BUILDIMAGE .
-fi
+docker build -t $BUILDIMAGE .
 
 docker_run () {
+	patchfile=$1
+	bashcommand=$2
+
 	docker run --rm \
 	--volume $BUILDTARGET:/packages \
 	--volume "$(gpgconf --list-dir agent-socket)":/home/dev/.gnupg/S.gpg-agent \
-	--volume $(readlink -f $1):/$1 \
+	--volume $(readlink -f $patchfile):/$patchfile \
 	--volume $(readlink -f quiltrc):/home/dev/.quiltrc \
 	-e GPG_KEY="${BUILDKEYPUB}" \
 	-e DEBFULLNAME="$BUILDNAME" \
 	-e DEBEMAIL="$BUILDEMAIL" \
 	-ti $BUILDIMAGE \
-        bash -x -c "
+        bash -c "
 		set -euo pipefail
-		echo \"\${GPG_KEY}\" | gpg --import -
-		$2"
+		sudo chmod 700 /home/dev/.gnupg
+                sudo chown dev:dev -R /home/dev/.gnupg 
+		echo \"\${GPG_KEY}\" | gpg --import - > /dev/null
+		
+		set -x
+		$bashcommand"
 }
 
