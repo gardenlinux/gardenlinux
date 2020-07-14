@@ -19,7 +19,7 @@ spec:
       type: git
   steps:
     - name: 'integration-test'
-      image: 'eu.gcr.io/gardener-project/cc/job-image:1.679.0'
+      image: 'eu.gcr.io/gardener-project/cc/job-image:1.682.0'
       script: |
         #!/usr/bin/env bash
         set -e
@@ -71,10 +71,9 @@ spec:
 
         echo "> Installing dependencies"
         apk update && apk add make
-        pip install pipenv
+        pip install scp
 
         cd $(resources.inputs.repo.path)/tests
-        pipenv install -dev
 
         echo "> Run tests"
-        pipenv run pytest --iaas=$(params.iaas) integration/
+        pytest --iaas=$(params.iaas) integration/
