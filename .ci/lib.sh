@@ -2,6 +2,14 @@ own_dir="$(readlink -f "$(dirname "${0}")")"
 repo_root="$(readlink -f "${own_dir}/..")"
 bin_dir="${repo_root}/bin"
 
+cfgset_name="${CONCOURSE_CURRENT_CFG}"
+shootcluster_cfg_name="$(gardener-ci \
+  config attribute \
+   --cfg-type cfg_set \
+   --cfg-name "${cfgset_name}" \
+   --key kubernetes.default \
+)"
+
 function install_kubectl() {
   if which kubectl &>/dev/null; then
     exit 0
@@ -26,7 +34,7 @@ function kubecfg()  {
   # retrieve kubeconfig
   gardener-ci config model_element \
     --cfg-type kubernetes \
-    --cfg-name shoot_live_garden_ci_2 \
+    --cfg-name "${shootcluster_cfg_name}" \
     --key kubeconfig \
   > kubeconfig
   export KUBECONFIG="$PWD/kubeconfig"
