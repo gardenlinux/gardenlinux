@@ -12,6 +12,7 @@ from aliyunsdkecs.request.v20140526 import ImportImageRequest
 from aliyunsdkecs.request.v20140526 import DescribeImagesRequest
 from aliyunsdkecs.request.v20140526 import DescribeRegionsRequest
 from aliyunsdkecs.request.v20140526 import CopyImageRequest
+from aliyunsdkecs.request.v20140526 import ModifyImageSharePermissionRequest
 from aliyunsdkcore.client import AcsClient
 
 logger = logging.getLogger(__name__)
@@ -86,7 +87,6 @@ class AlicloudImageMaker:
             logger.info(f"temp file {tmp_file} is removed")
 
     # Import image from OSS and then copy it to other regions
-
     def make_image(self) -> glci.model.OnlineReleaseManifest:
         image_id = self.import_image()
         other_regions = self._list_regions()
@@ -101,6 +101,8 @@ class AlicloudImageMaker:
 
         region_image_map[self.region] = image_id
 
+        self._share_image(region_image_map)
+
         # make release manifest
         published_images = tuple((glci.model.AlicloudPublishedImage(
             image_id=image_id,
@@ -112,6 +114,22 @@ class AlicloudImageMaker:
 
         return dataclasses.replace(
             self.release, published_image_metadata=published_image_set)
+
+    # Share image in a hidden way. The account should apply for whitelist
+    def _share_image(self, region_image_map: {}):
+        for region, image_id in region_image_map.items():
+            self.acs_client.set_region_id(region)
+            logger.info(
+                f"share image ({region}/{image_id}) as a hidden image"
+            )
+            req = ModifyImageSharePermissionRequest.ModifyImageSharePermissionRequest()
+            req.set_ImageId(image_id)
+            # HIDDEN --> share
+            # PRIVATE --> un-share
+            req.set_LaunchPermission('HIDDEN')
+            self.acs_client.do_action_with_exception(req)
+
+        self.acs_client.set_region_id(self.region)
 
     # Import image from oss. Returns image id
     def import_image(self) -> str:

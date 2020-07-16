@@ -1,5 +1,5 @@
 aliyun-python-sdk-core==2.13.16
-aliyun-python-sdk-ecs==4.19.7
+aliyun-python-sdk-ecs==4.19.9
 azure-storage-blob==12.3.0
 boto3
 dacite==1.4.0 # bug in 1.5.0
