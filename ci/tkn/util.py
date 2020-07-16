@@ -31,7 +31,7 @@ class TknCondition:
     type: str
 
 
-def run_tkn(*args, namespace: str='gardenlinux-tkn'):
+def run_tkn(*args, namespace: str='gardenlinux'):
     tkn = _tkn_executable()
     print(args)
 
@@ -49,7 +49,7 @@ def run_tkn(*args, namespace: str='gardenlinux-tkn'):
     return result
 
 
-def _pipelinerun(name: str, namespace: str='gardenlinux-tkn'):
+def _pipelinerun(name: str, namespace: str='gardenlinux'):
     res = run_tkn(
         'pipelinerun',
         'describe',
@@ -101,7 +101,7 @@ def _run_status(dict_with_status: dict):
     return latest_condition
 
 
-def pipelinerun_status(name: str, namespace: str='gardenlinux-tkn'):
+def pipelinerun_status(name: str, namespace: str='gardenlinux'):
     pipelinerun_dict = _pipelinerun(name=name, namespace=namespace)
 
     return _run_status(dict_with_status=pipelinerun_dict)
@@ -109,7 +109,7 @@ def pipelinerun_status(name: str, namespace: str='gardenlinux-tkn'):
 
 def wait_for_pipelinerun_status(
     name: str,
-    namespace: str='gardenlinux-tkn',
+    namespace: str='gardenlinux',
     target_status: StatusReason=StatusReason.SUCCEEDED,
     timeout_seconds: int=60*45, # 45 minutes
     polling_interval_seconds: int=15,
@@ -140,7 +140,7 @@ def wait_for_pipelinerun_status(
     print(f'pipelinerun {name=} reached {target_status=}')
 
 
-def pipeline_taskrun_status(name: str, namespace: str='gardenlinux-tkn'):
+def pipeline_taskrun_status(name: str, namespace: str='gardenlinux'):
     pipelinerun_dict = _pipelinerun(name=name, namespace=namespace)
     status = pipelinerun_dict['status']
     taskruns = status['taskRuns'] # {<taskrun-id>: <taskrun-status>}

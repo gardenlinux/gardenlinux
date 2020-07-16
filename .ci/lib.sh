@@ -42,7 +42,7 @@ function kubecfg()  {
 }
 
 function export_env() {
-  export GARDENLINUX_TKN_WS='gardenlinux-tkn'
+  export GARDENLINUX_TKN_WS='gardenlinux'
   export BRANCH_NAME="${GARDENLINUX_BRANCH}"
   # XXX hardcode for now
   export FLAVOUR_SET='all'

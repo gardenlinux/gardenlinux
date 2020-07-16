@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: build-gardenlinux-task
-  namespace: gardenlinux-tkn
+  namespace: gardenlinux
 spec:
   params:
     - name: 'suite'

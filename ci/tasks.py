@@ -21,7 +21,7 @@ def promote_task(
     repodir: NamedParam=_repodir,
     giturl: NamedParam=_giturl,
     name='promote-gardenlinux-task',
-    namespace='gardenlinux-tkn',
+    namespace='gardenlinux',
 ):
     clone_step = steps.clone_step(
         committish=committish,
@@ -77,7 +77,7 @@ def promote_task(
 
 
 def build_task(
-    namespace: str='gardenlinux-tkn',
+    namespace: str='gardenlinux',
 ):
     suite = NamedParam(name='suite', default='bullseye')
     arch = NamedParam(name='architecture', default='amd64')

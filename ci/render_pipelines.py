@@ -115,7 +115,7 @@ def mk_pipeline(
     pipeline = Pipeline(
         metadata=Metadata(
             name='gardenlinux-build',
-            namespace='gardenlinux-tkn',
+            namespace='gardenlinux',
         ),
         spec=PipelineSpec(
             params=[
