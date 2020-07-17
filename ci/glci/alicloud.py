@@ -10,6 +10,7 @@ import dataclasses
 import glci.model
 from aliyunsdkecs.request.v20140526 import ImportImageRequest
 from aliyunsdkecs.request.v20140526 import DescribeImagesRequest
+from aliyunsdkecs.request.v20140526 import DeleteImageRequest
 from aliyunsdkecs.request.v20140526 import DescribeRegionsRequest
 from aliyunsdkecs.request.v20140526 import CopyImageRequest
 from aliyunsdkecs.request.v20140526 import ModifyImageSharePermissionRequest
@@ -34,6 +35,11 @@ class AlicloudImageStatus(enum.Enum):
     def to_availbel_str_array() -> []:
         return [v.value for v in AlicloudImageStatus]
 
+class ImageShareOption(enum.Enum):
+    SHARE = "HIDDEN"
+    UNSHARE = "PRIVATE"
+    def __str__(self):
+        return self.value
 
 class AlicloudImageMaker:
     def __init__(
@@ -101,7 +107,7 @@ class AlicloudImageMaker:
 
         region_image_map[self.region] = image_id
 
-        self._share_image(region_image_map)
+        self._share_images(region_image_map)
 
         # make release manifest
         published_images = tuple((glci.model.AlicloudPublishedImage(
@@ -116,7 +122,7 @@ class AlicloudImageMaker:
             self.release, published_image_metadata=published_image_set)
 
     # Share image in a hidden way. The account should apply for whitelist
-    def _share_image(self, region_image_map: {}):
+    def _share_images(self, region_image_map: dict):
         for region, image_id in region_image_map.items():
             self.acs_client.set_region_id(region)
             logger.info(
@@ -124,9 +130,25 @@ class AlicloudImageMaker:
             )
             req = ModifyImageSharePermissionRequest.ModifyImageSharePermissionRequest()
             req.set_ImageId(image_id)
-            # HIDDEN --> share
-            # PRIVATE --> un-share
-            req.set_LaunchPermission('HIDDEN')
+            req.set_LaunchPermission(str(ImageShareOption.SHARE))
+            self.acs_client.do_action_with_exception(req)
+
+        self.acs_client.set_region_id(self.region)
+
+    # delete images
+    def delete_images(self, region_image_map: dict):
+        for region, image_id in region_image_map.items():
+            self.acs_client.set_region_id(region)
+            logger.info(
+                f"delete image ({region}/{image_id})"
+            )
+            req = ModifyImageSharePermissionRequest.ModifyImageSharePermissionRequest()
+            req.set_ImageId(image_id)
+            req.set_LaunchPermission(str(ImageShareOption.UNSHARE))
+            self.acs_client.do_action_with_exception(req)
+
+            req = DeleteImageRequest.DeleteImageRequest()
+            req.set_ImageId(image_id)
             self.acs_client.do_action_with_exception(req)
 
         self.acs_client.set_region_id(self.region)
