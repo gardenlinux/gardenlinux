@@ -63,8 +63,10 @@ def publish_image(
         publish_function = _publish_azure_image
     elif release.platform == 'openstack':
         publish_function = _publish_openstack_image
+    elif release.platform == 'oci':
+        publish_function = _publish_oci_image
     else:
-        print(f'do not know how to publish {release.platform=} yet')
+        print(f'do not know how to publish {release.platform=}, yet')
         return release
 
     return publish_function(release, cicd_cfg)
@@ -155,6 +157,23 @@ def _publish_gcp_image(release: glci.model.OnlineReleaseManifest,
         gcp_project_name=gcp_cfg.project(),
         release=release,
         build_cfg=cicd_cfg.build,
+    )
+
+
+def _publish_oci_image(
+    release: glci.model.OnlineReleaseManifest,
+    cicd_cfg: glci.model.CicdCfg,
+) -> glci.model.OnlineReleaseManifest:
+    import ccc.aws
+    import glci.oci
+    import container.registry
+    s3_client = ccc.aws.session(cicd_cfg.build.aws_cfg_name).client('s3')
+
+    return glci.oci.publish_image(
+        release=release,
+        publish_cfg=cicd_cfg.publish.oci,
+        s3_client=s3_client,
+        publish_oci_image_func=container.registry.publish_container_image,
     )
 
 

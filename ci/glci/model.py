@@ -320,6 +320,11 @@ class OpenstackPublishedImageSet(PublishedImageBase):
 
 
 @dataclasses.dataclass(frozen=True)
+class OciPublishedImage:
+    image_reference: str
+
+
+@dataclasses.dataclass(frozen=True)
 class ReleaseManifest(ReleaseIdentifier):
     '''
     metadata for a gardenlinux release variant that can be (or was) published to a persistency
@@ -332,6 +337,7 @@ class ReleaseManifest(ReleaseIdentifier):
         AwsPublishedImageSet,
         AzurePublishedImage,
         GcpPublishedImage,
+        OciPublishedImage,
         OpenstackPublishedImageSet,
         None,
     ]
@@ -511,9 +517,15 @@ class OpenstackPublishCfg:
 
 
 @dataclasses.dataclass(frozen=True)
+class OciPublishCfg:
+    image_prefix: str
+
+
+@dataclasses.dataclass(frozen=True)
 class PublishCfg:
     azure: AzurePublishCfg
     openstack: OpenstackPublishCfg
+    oci: OciPublishCfg
 
 
 @dataclasses.dataclass(frozen=True)

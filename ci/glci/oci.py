@@ -4,10 +4,13 @@ import hashlib
 import io
 import json
 import lzma
+import os
 import random
 import tarfile
 import tempfile
 import typing
+
+import glci.model
 
 dc = dataclasses.dataclass
 
@@ -207,3 +210,45 @@ def image_from_rootfs(
 
     print(image_tar.name)
     return image_tar.name
+
+
+def publish_image(
+    release: glci.model.OnlineReleaseManifest,
+    publish_cfg: glci.model.OciPublishCfg,
+    s3_client,
+    publish_oci_image_func: callable,
+):
+    image_name = f'{publish_cfg.image_prefix}:{release.version}'
+
+    rootfs_key = release.path_by_suffix('rootfs.tar.gz').s3_key
+    rootfs_bucket_name = release.path_by_suffix('rootfs.tar.gz').s3_bucket_name
+
+    with tempfile.TemporaryFile() as tfh:
+        s3_client.download_fileobj(
+            Bucket=rootfs_bucket_name,
+            Key=rootfs_key,
+            Fileobj=tfh,
+        )
+        tfh.seek(0)
+
+        oci_image_file = image_from_rootfs(
+            rootfs_tar_xz=tfh,
+            image_reference=image_name,
+        )
+
+    try:
+      oci_image_fileobj = open(oci_image_file)
+
+      publish_oci_image_func(
+          image_reference=image_name,
+          image_file_obj=oci_image_fileobj,
+      )
+    finally:
+      oci_image_fileobj.close()
+      os.unlink(oci_image_file)
+
+    published_image_reference = glci.model.OciPublishedImage(
+        image_reference=image_name,
+    )
+
+    return dataclasses.replace(release, published_image_metadata=published_image_reference)
