@@ -89,6 +89,6 @@ if you want to manually build choose:
 
     e.g. build.sh server,cloud,chost,vmware build/
 
-builds an Server image, cloud-like, with a container host for the Platform VMware. The build result can be founf in `build/`
+builds an Server image, cloud-like, with a container host for the Platform VMware. The build result can be found in `build/`
 
 also look into our [Version scheme](VERSION.md) since adding a date or a Version targets the whole build for a specific date
