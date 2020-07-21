@@ -409,11 +409,11 @@ def find_release_set(
     flavourset_name: str,
     build_committish: str,
     version: str,
-    gardenlinux_epoch: int,
     build_type: glci.model.BuildType,
     prefix: str=glci.model.ReleaseManifestSet.release_manifest_set_prefix,
     absent_ok=False,
 ) -> glci.model.ReleaseManifestSet:
+    build_type = glci.model.BuildType(build_type)
 
     manifest_key = os.path.join(
         prefix,
