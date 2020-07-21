@@ -111,6 +111,7 @@ def _publish_azure_image(release: glci.model.OnlineReleaseManifest,
     import glci.az
     import glci.model
     import ccc.aws
+    import ci.util
 
     s3_client = ccc.aws.session(cicd_cfg.build.aws_cfg_name).client('s3')
     cfg_factory = ci.util.ctx().cfg_factory()
