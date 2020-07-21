@@ -220,8 +220,8 @@ def publish_image(
 ):
     image_name = f'{publish_cfg.image_prefix}:{release.version}'
 
-    rootfs_key = release.path_by_suffix('rootfs.tar.gz').s3_key
-    rootfs_bucket_name = release.path_by_suffix('rootfs.tar.gz').s3_bucket_name
+    rootfs_key = release.path_by_suffix('rootfs.tar.xz').s3_key
+    rootfs_bucket_name = release.path_by_suffix('rootfs.tar.xz').s3_bucket_name
 
     with tempfile.TemporaryFile() as tfh:
         s3_client.download_fileobj(
