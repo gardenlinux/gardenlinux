@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--flavourset', default='testing')
+    parser.add_argument('--flavourset', default='all')
     parser.add_argument('--committish')
     parser.add_argument('--gardenlinux-epoch', type=int)
     parser.add_argument(
@@ -118,11 +118,18 @@ def _publish_azure_image(release: glci.model.OnlineReleaseManifest,
     s3_client = ccc.aws.session(cicd_cfg.build.aws_cfg_name).client('s3')
     cfg_factory = ci.util.ctx().cfg_factory()
 
-    service_principal_cfg = cfg_factory.azure_service_principal(cicd_cfg.publish.azure.service_principal_cfg_name)
-    service_principal_cfg_serialized = glci.model.AzureServicePrincipalCfg(**service_principal_cfg.raw)
-
-    storage_account_cfg = cfg_factory.azure_storage_account(cicd_cfg.publish.azure.storage_account_cfg_name)
-    storage_account_cfg_serialized = glci.model.AzureStorageAccountCfg(**storage_account_cfg.raw)
+    service_principal_cfg = cfg_factory.azure_service_principal(
+        cicd_cfg.publish.azure.service_principal_cfg_name
+    )
+    service_principal_cfg_serialized = glci.model.AzureServicePrincipalCfg(
+        **service_principal_cfg.raw
+    )
+    storage_account_cfg = cfg_factory.azure_storage_account(
+        cicd_cfg.publish.azure.storage_account_cfg_name
+    )
+    storage_account_cfg_serialized = glci.model.AzureStorageAccountCfg(
+        **storage_account_cfg.raw
+    )
 
     azure_marketplace_cfg = glci.model.AzureMarketplaceCfg(
         publisher_id=cicd_cfg.publish.azure.publisher_id,
