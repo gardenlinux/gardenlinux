@@ -408,6 +408,7 @@ def find_release_set(
     bucket_name: str,
     flavourset_name: str,
     build_committish: str,
+    gardenlinux_epoch: int,
     version: str,
     build_type: glci.model.BuildType,
     prefix: str=glci.model.ReleaseManifestSet.release_manifest_set_prefix,
