@@ -16,7 +16,7 @@
 </p>
 <hr />
 
-Garden Linux is a [Debian](https://debian.org) derivat that aims to provide a small, autitable linux image for most Cloud Providers and Bare Metal.
+Garden Linux is a [Debian](https://debian.org) deriviate that aims to provide a small, auditable linux image for most Cloud Providers and Bare Metal.
 
 ## Features:
 - easy to use build System for images
@@ -26,11 +26,11 @@ Garden Linux is a [Debian](https://debian.org) derivat that aims to provide a sm
 - whole setup is purely systemd based (network, fstab etc.) [#101](https://github.com/gardenlinux/gardenlinux/issues/101) [#102](https://github.com/gardenlinux/gardenlinux/issues/102)
 - initramfs is dracut generated [#105](https://github.com/gardenlinux/gardenlinux/issues/105)
 - optional complete immutability [#104](https://github.com/gardenlinux/gardenlinux/issues/105)
-- regular updates (since the whole build process is completly automated via a Tekton CI) and
-- thoroughfull automated testing
+- regular updates (since the whole build process is completely automated via a Tekton CI) and
+- thorough automated testing
   - unit tests against the local build and
   - integration tests against the various cloud Providers (only rc builds)
-- aiming always to integrate the lates LTS kernel [#100](https://github.com/gardenlinux/gardenlinux/issues/100) (currently 5.4)
+- aiming to always to integrate the lates LTS kernel [#100](https://github.com/gardenlinux/gardenlinux/issues/100) (currently 5.4)
 - running scans against against common issues like
   - License voilations (we try to be completely open! [#1](https://github.com/gardenlinux/gardenlinux/issues/1))
   - Scans for outdated software versions
@@ -42,7 +42,7 @@ Garden Linux is a [Debian](https://debian.org) derivat that aims to provide a sm
 
 ## Build Requirements
 
-All the build runs in a docker conainter (well a privileged on with extended capabilities - since we need loop back support)
+The entire build runs in a docker container (well a privileged one with extended capabilities - since we need loop back support)
 We can run on any system supporting Docker and having loopback support and has
 
 - 2+ GiB (use RAM-disk; use fs with sparse-file support)
@@ -51,7 +51,7 @@ We can run on any system supporting Docker and having loopback support and has
 required packages are (on Debian/Ubuntu):
     apt install docker.io make
 
-Recommended packages for to run recommended supporting services (like a build cache) and extended test (virtualize image runs)
+Recommended packages to run recommended supporting services (like a build cache) and extended tests (virtualized image runs)
 
     apt install docker-compose qemu-system-x86
 
@@ -61,7 +61,7 @@ Build all images:
 
     make all
 
-Build specific platform specic images:
+Building specific platform images:
 
     make aws
     make gcp
@@ -76,7 +76,7 @@ See in `build/` folder for the outcome
 
 ## Customize builds
 
-Our build ist based on a [feature system](features/README.md).
+Our build is based on a [feature system](features/README.md).
 
 The feature sytem distinguishes between
 - Platforms (aws, azure, google ...)
@@ -89,6 +89,6 @@ if you want to manually build choose:
 
     e.g. build.sh server,cloud,chost,vmware build/
 
-builds an Server image, cloud-like, with a container host for the Platform VMware. The build result can be found in `build/`
+builds a Server image, cloud-like, with a container host for the Platform VMware. The build result can be found in `build/`
 
 also look into our [Version scheme](VERSION.md) since adding a date or a Version targets the whole build for a specific date
