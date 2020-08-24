@@ -95,9 +95,12 @@ cloud:
 kvm:
 	./build.sh --features server,cloud,kvm,_dev build/kvm $(SNAPSHOT_DATE)
 
-onmetal:
-	echo "TODO: implement"
-	exit 1
+onmetal: metal
+metal:
+	./build.sh --features sever,metal build/metal $(SNAPSHOT_DATE)
+
+metal-dev:
+	./build.sh --features sever,metal,_dev build/metal $(SNAPSHOT_DATE)
 
 clean:
 	rm -rf build
