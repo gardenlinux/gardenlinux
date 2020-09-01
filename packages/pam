@@ -8,7 +8,10 @@ source $thisDir/defaults
 docker_run $package.patch "
 	sudo apt-get build-dep -y --no-install-recommends $package
 	sudo apt-get remove -y --purge libdb5.3-dev
+	sudo apt-get install -y --no-install-recommends wget
 	apt-get source $package
+	wget -P /tmp https://snapshot.debian.org/archive/debian/20200412T202743Z/pool/main/libs/libselinux/{libselinux1,libselinux1-dev}_3.0-1%2Bb3_amd64.deb 
+	sudo dpkg -i /tmp/{libselinux1,libselinux1-dev}_3.0-1+b3_amd64.deb
 	cd $package-*
 	patch -p1 < /$package.patch
 	dch -i 'remove libdb'

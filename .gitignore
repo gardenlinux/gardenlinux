@@ -1,5 +1,7 @@
-/build
-/packages
-/repository
+/.build
+/.packages
+/.repository
+/repository/reprepro/db
+/repository/reprepro/logs
 /features/_dev/id_dev
 __pycache__

@@ -3,7 +3,7 @@ BUILDEMAIL="contact@gardenlinux.io"
 BUILDKEY="contact@gardenlinux.io"
 BUILDKEYPUB=$(gpg --armor --export "${BUILDKEY}") 
 BUILDIMAGE="gardenlinux:build"
-BUILDTARGET="$(readlink -f ../../packages)"
+BUILDTARGET="$(readlink -f ../../.packages)"
 
 docker build -t $BUILDIMAGE .
 
