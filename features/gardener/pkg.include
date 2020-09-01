@@ -9,5 +9,6 @@ curl
 logrotate
 arptables
 ebtables
+xfsprogs
 jq
 ipvsadm
