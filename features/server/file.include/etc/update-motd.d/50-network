@@ -43,4 +43,4 @@ for i in $(networkctl | grep routable | awk '{ print $2; }') ipmi; do
 	done
 done
 
-echo "$out" | column -nt -s,
+echo "$out" | column -t -s,
