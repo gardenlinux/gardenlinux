@@ -55,7 +55,7 @@ then	[ $(cut -d. -sf3 <<< ${input}) ] && eusage "invalid version format ${input}
 		minor="$(cut -d. -f2 <<< ${input})"
 	fi
 else	indate=$(date --date "${input}" +%s 2>/dev/null) || eusage "invalid date ${input}"
-	major="$(( (${indate} - $(date --date "${startdate}" +%s)) / (60*60*24) ))"
+	major="$(( (${indate} - $(date --date "${startdate} - 1 day" +%s)) / (60*60*24) ))"
 fi
 
 case "${typeout}" in
