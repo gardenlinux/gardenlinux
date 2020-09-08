@@ -1,5 +1,3 @@
-/bin/mount,0,0
-/bin/umount,0,0
 /bin/su,0,0
 /usr/bin/passwd,0,0
 /usr/bin/chfn,0,0
@@ -11,4 +9,4 @@
 /usr/lib/openssh/ssh-keysign,0,0
 /usr/lib/policykit-1/polkit-agent-helper-1,0,0
 /usr/lib/dbus-1.0/dbus-daemon-launch-helper,0,105
-/sbin/mount.nfs,0,0
+/usr/libexec/polkit-agent-helper-1,0,0
