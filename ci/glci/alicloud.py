@@ -18,7 +18,7 @@ from aliyunsdkcore.client import AcsClient
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-TIME_OUT = 30 * 60  # in seconds, 30 Minutes
+TIME_OUT = 45 * 60  # in seconds, 30 Minutes
 
 
 class AlicloudImageStatus(enum.Enum):
