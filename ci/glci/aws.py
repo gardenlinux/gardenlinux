@@ -375,6 +375,6 @@ def upload_and_register_gardenlinux_image(
         mk_session=mk_session,
         region_img_map=image_map,
     )
-    logger.info('all {len(image_map)} images were set to "public"')
+    logger.info(f'all {len(image_map)} images were set to "public"')
 
     return dataclasses.replace(release, published_image_metadata=published_image_set)
