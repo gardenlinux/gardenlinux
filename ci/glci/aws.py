@@ -257,8 +257,12 @@ def image_ids_by_name(
 def unregister_images_by_name(
     mk_session: callable,
     image_name: str,
-    region_names: typing.Sequence[str],
+    region_names: typing.Sequence[str]=None,
 ):
+    if not region_names:
+        ec2_client = mk_session().client('ec2')
+        region_names = tuple(enumerate_region_names(ec2_client=ec2_client))
+
     for region_name, image_id in image_ids_by_name(
         mk_session=mk_session,
         image_name=image_name,
