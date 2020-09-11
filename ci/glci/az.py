@@ -4,6 +4,7 @@ from datetime import (
     timedelta,
 )
 from enum import Enum
+import logging
 
 import requests
 from msal import ConfidentialClientApplication
@@ -15,6 +16,8 @@ from azure.storage.blob import (
 )
 
 import glci.model
+
+logger = logging.getLogger(__name__)
 
 
 '''
@@ -305,7 +308,7 @@ def copy_image_from_s3_to_az_storage_account(
     for the blob
     '''
     if not target_blob_name.endswith('.vhd'):
-        print(
+        logger.warning(
             f"Destination image name '{target_blob_name}' does not end with '.vhd'! Resulting blob will "
             "not be suitable to create a marketplace offer from it!"
         )
@@ -422,7 +425,7 @@ def check_offer_transport_state(
 
     # Publish completed. Trigger go live to transport the offer changes to production.
     if transport_state == glci.model.AzureTransportState.PUBLISH and operation_status == AzmpOperationState.SUCCEEDED:
-        print("Publishing of gardenlinux offer to staging has been successfully completed. Trigger go live...")
+        logger.info('Publishing of gardenlinux offer to staging succeeded. Trigger go live...')
         marketplace_client.go_live(publisher_id=publisher_id, offer_id=offer_id)
         golive_operation_id = marketplace_client.fetch_ongoing_operation_id(
             publisher_id,
@@ -439,7 +442,7 @@ def check_offer_transport_state(
 
     # Go Live completed. Done!
     if transport_state == glci.model.AzureTransportState.GO_LIVE and operation_status == AzmpOperationState.SUCCEEDED:
-        print("Tranport to production of gardenlinux offer succeeded.")
+        logger.info('Tranport to production of gardenlinux offer succeeded.')
         published_image = glci.model.AzurePublishedImage(
             transport_state=glci.model.AzureTransportState.RELEASED,
             publish_operation_id=release.published_image_metadata.publish_operation_id,
@@ -448,7 +451,7 @@ def check_offer_transport_state(
         )
         return dataclasses.replace(release, published_image_metadata=published_image)
 
-    print(f"Gardenlinux Azure Marketplace release operation {transport_state} is still ongoing...")
+    logger.info(f"Gardenlinux Azure Marketplace release op {transport_state} is still ongoing...")
     return release
 
 
