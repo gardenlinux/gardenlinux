@@ -96,14 +96,14 @@ class AlicloudImageMaker:
     def make_image(self) -> glci.model.OnlineReleaseManifest:
         image_id = self.import_image()
         other_regions = self._list_regions()
-        logger.info(f"begin to copy image to regsions {other_regions}")
+        logger.info(f"begin to copy image to {other_regions=}")
         region_image_map = {}
         for region in other_regions:
             region_image_map[region] = self.copy_image(image_id, region)
 
-        for k, v in region_image_map.items():
-            self._wait_for_image(k, v)
-            logger.info(f"finished copying image {v} to region {k}")
+        for image, region in region_image_map.items():
+            self._wait_for_image(image, region)
+            logger.info(f"finished copying {image=} to {region=}")
 
         region_image_map[self.region] = image_id
 
@@ -226,10 +226,11 @@ class AlicloudImageMaker:
                     AlicloudImageStatus.AVAILABLE):
                 break
 
+            sleep_seconds = 30
             logger.info(
-                f"Image {image_id} ({region}) is not ready, will check it 10 senconds later"
+                f"Image {image_id=} ({region=}) is not ready, will check it {sleep_seconds=} later"
             )
-            time.sleep(10)
+            time.sleep(sleep_seconds)
 
         self.acs_client.set_region_id(self.region)
 
@@ -253,7 +254,7 @@ class AlicloudImageMaker:
                                                       self.image_name)
         if exist:
             logger.warn(
-                f"found image {self.image_name} already exists in region {dest_region}, id is {image_id} skip copying"
+                f"found {self.image_name=} already exists in {dest_region=}, {image_id=} skip copying"
             )
         else:
             req = CopyImageRequest.CopyImageRequest()
@@ -262,12 +263,12 @@ class AlicloudImageMaker:
             req.set_ImageId(src_image_id)
             req.set_DestinationRegionId(dest_region)
             logger.info(
-                f"start to copy image {src_image_id} to region {dest_region}")
+                f"start to copy {src_image_id=} to {dest_region=}")
             response = parse_response(
                 self.acs_client.do_action_with_exception(req))
             image_id = response.get("ImageId")
             logger.info(
-                f"copying image {self.image_name} in region {dest_region} is in process, waiting for success"
+                f"copying {self.image_name=} in {dest_region=} is in process, waiting for success"
             )
         return image_id
 
