@@ -1,6 +1,7 @@
 import concurrent.futures
 import dataclasses
 import enum
+import faulthandler
 import functools
 import io
 import logging
@@ -25,6 +26,7 @@ CicdCfg = glci.model.CicdCfg
 
 
 def configure_logging():
+    faulthandler.enable()
     cfg = {
         'version': 1,
         'formatters': {
