@@ -19,7 +19,7 @@ import glci.model
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-TIME_OUT = 45 * 60  # in seconds, 30 Minutes
+TIME_OUT = 120 * 60  # in seconds, 2h
 
 
 class AlicloudImageStatus(enum.Enum):
