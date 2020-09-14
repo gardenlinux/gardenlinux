@@ -1,20 +1,22 @@
-import oss2
-import os
-import datetime
-import tempfile
-import json
-import time
-import enum
-import logging
 import dataclasses
-import glci.model
-from aliyunsdkecs.request.v20140526 import ImportImageRequest
-from aliyunsdkecs.request.v20140526 import DescribeImagesRequest
-from aliyunsdkecs.request.v20140526 import DeleteImageRequest
-from aliyunsdkecs.request.v20140526 import DescribeRegionsRequest
-from aliyunsdkecs.request.v20140526 import CopyImageRequest
-from aliyunsdkecs.request.v20140526 import ModifyImageSharePermissionRequest
+import datetime
+import enum
+import json
+import logging
+import os
+import tempfile
+import time
+
 from aliyunsdkcore.client import AcsClient
+from aliyunsdkecs.request.v20140526 import CopyImageRequest
+from aliyunsdkecs.request.v20140526 import DeleteImageRequest
+from aliyunsdkecs.request.v20140526 import DescribeImagesRequest
+from aliyunsdkecs.request.v20140526 import DescribeRegionsRequest
+from aliyunsdkecs.request.v20140526 import ImportImageRequest
+from aliyunsdkecs.request.v20140526 import ModifyImageSharePermissionRequest
+import oss2
+
+import glci.model
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
