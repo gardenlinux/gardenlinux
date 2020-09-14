@@ -7,6 +7,7 @@ from enum import Enum
 import logging
 
 import requests
+import version
 from msal import ConfidentialClientApplication
 from azure.storage.blob import (
     BlobClient,
@@ -479,11 +480,14 @@ def upload_and_publish_image(
         target_blob_name=target_blob_name,
     )
 
+    # version _must_ (of course..) be strict semver for azure
+    azure_version = str(version.parse_to_semver(release.version))
+
     # Update Marketplace offer and start publishing.
     publish_operation_id = update_and_publish_marketplace_offer(
         service_principal_cfg=service_principal_cfg,
         marketplace_cfg=marketplace_cfg,
-        image_version=release.version,
+        image_version=azure_version,
         image_url=image_url,
         notification_recipients=(), # TODO Mail receipants
     )
