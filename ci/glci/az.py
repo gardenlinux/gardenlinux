@@ -19,6 +19,9 @@ import glci.model
 
 logger = logging.getLogger(__name__)
 
+# disable verbose http-logging from azure-sdk
+logging.getLogger('azure.core.pipeline.policies.http_logging_policy').setLevel(logging.WARNING)
+
 
 '''
 The publishing process for an image to the Azure Marketplace consist of
