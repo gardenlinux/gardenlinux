@@ -62,10 +62,10 @@ def publish_image(
     elif release.platform == 'gcp':
         publish_function = _publish_gcp_image
         cleanup_function = None
-    elif release.platform == 'azure':
+    elif release.platform == 'azure': # disable azure for now
         publish_function = _publish_azure_image
         cleanup_function = None
-    elif release.platform == 'openstack':
+    elif False and release.platform == 'openstack': # disable openstack for now
         publish_function = _publish_openstack_image
         cleanup_function = None
     elif release.platform == 'oci':
@@ -78,6 +78,8 @@ def publish_image(
     try:
         return publish_function(release, cicd_cfg)
     except:
+        import traceback
+        traceback.print_exc()
         if not cleanup_function is None:
             cleanup_function(release, cicd_cfg)
         else:
