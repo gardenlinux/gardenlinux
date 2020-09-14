@@ -3,6 +3,7 @@ import datetime
 import hashlib
 import io
 import json
+import logging
 import lzma
 import os
 import random
@@ -11,6 +12,8 @@ import tempfile
 import typing
 
 import glci.model
+
+logger = logging.getLogger(__name__)
 
 dc = dataclasses.dataclass
 
@@ -92,11 +95,12 @@ def image_from_rootfs(
     image_reference: str,
 ):
     '''
-    creates an OCI-compliant container image, based on the legacy V1 spec used by docker with exactly one layer, containing
-    the filesystem contained in `rootfs_tar_xz`, which is expected to be an xzip-compressed tarfile.
+    creates an OCI-compliant container image, based on the legacy V1 spec used
+    by docker with exactly one layer, containing the filesystem contained in
+    `rootfs_tar_xz`, which is expected to be an xzip-compressed tarfile.
 
-    the resulting file is created as a (named) temporary file, and returned to the caller. The caller is responsible for
-    unlinking the file.
+    the resulting file is created as a (named) temporary file, and returned to
+    the caller. The caller is responsible for unlinking the file.
     '''
     # extract and calculate sha256 digest
     rootfs_tar = tempfile.NamedTemporaryFile()
@@ -110,7 +114,8 @@ def image_from_rootfs(
 
     now_ts = datetime.datetime.now().isoformat() + 'Z'
     container_id = hashlib.sha256(f'{random.randint(0, 2 ** 32)}'.encode('utf-8')).hexdigest()
-    print(f'{container_id=}')
+
+    logger.info(f'{container_id=}')
 
     # create manifest entry (name it as the hash)
     manifest_entry = OCIManifestEntry(
@@ -231,11 +236,13 @@ def publish_image(
             Fileobj=tfh,
         )
         tfh.seek(0)
+        logger.info(f'retrieved raw image fs from {rootfs_bucket_name=}')
 
         oci_image_file = image_from_rootfs(
             rootfs_tar_xz=tfh,
             image_reference=image_name,
         )
+        logger.info(f'created serialised {oci_image_file=}')
 
     try:
       oci_image_fileobj = open(oci_image_file)
@@ -244,6 +251,7 @@ def publish_image(
           image_reference=image_name,
           image_file_obj=oci_image_fileobj,
       )
+      logger.info('publishing succeeded')
     finally:
       oci_image_fileobj.close()
       os.unlink(oci_image_file)
