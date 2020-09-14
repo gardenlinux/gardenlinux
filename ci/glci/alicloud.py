@@ -65,34 +65,31 @@ class AlicloudImageMaker:
         s3_bucket_key = self.release.path_by_suffix("rootfs.qcow2").s3_key
         s3_bucket_name = self.release.path_by_suffix(
             "rootfs.qcow2").s3_bucket_name
-        try:
-            tmp_file = tempfile.mktemp()
-            logger.info(
-                f"downloading image from s3 {s3_bucket_name}/{s3_bucket_key} to temp file {tmp_file}"
-            )
-            s3_client.download_file(
+
+        with tempfile.TemporaryFile() as tfh:
+            # TODO: use streaming
+            s3_client.download_fileobj(
                 Bucket=s3_bucket_name,
                 Key=s3_bucket_key,
-                Filename=tmp_file,
+                Fileobj=tfh,
             )
+            tfh.seek(0)
             logger.info(
-                f"downloaded image from s3 {s3_bucket_name}/{s3_bucket_key}")
+                f"downloaded image from s3 {s3_bucket_name}/{s3_bucket_key}"
+            )
 
             logger.info(
-                f"uploading image to oss {self.bucket_name} {self.image_oss_key} in region {self.region}"
+                f"uploading to oss {self.bucket_name} {self.image_oss_key} in region {self.region}"
             )
             bucket = oss2.Bucket(
                 self.oss2_auth,
                 f"http://oss-{self.region}.aliyuncs.com",
                 self.bucket_name,
             )
-            bucket.put_object_from_file(self.image_oss_key, tmp_file)
+            bucket.put_object(self.image_oss_key, tfh)
             logger.info(
                 f"uploaded image to oss {self.bucket_name} {self.image_oss_key=}"
             )
-        finally:
-            os.unlink(tmp_file)
-            logger.info(f"temp file {tmp_file} is removed")
 
     # Import image from OSS and then copy it to other regions
     def make_image(self) -> glci.model.OnlineReleaseManifest:
