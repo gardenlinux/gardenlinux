@@ -55,26 +55,39 @@ def publish_image(
 
     if release.platform == 'ali':
         publish_function = _publish_alicloud_image
+        cleanup_function = None
     elif release.platform == 'aws':
         publish_function = _publish_aws_image
+        cleanup_function = _cleanup_aws
     elif release.platform == 'gcp':
         publish_function = _publish_gcp_image
+        cleanup_function = None
     elif release.platform == 'azure':
         publish_function = _publish_azure_image
+        cleanup_function = None
     elif release.platform == 'openstack':
         publish_function = _publish_openstack_image
+        cleanup_function = None
     elif release.platform == 'oci':
         publish_function = _publish_oci_image
+        cleanup_function = None
     else:
         print(f'do not know how to publish {release.platform=}, yet')
         return release
 
-    return publish_function(release, cicd_cfg)
+    try:
+        return publish_function(release, cicd_cfg)
+    except:
+        if not cleanup_function is None:
+            cleanup_function(release, cicd_cfg)
+        else:
+            print(f'warning: do not know how to cleanup {release.platform=}')
+        raise
 
 
 def _publish_alicloud_image(release: glci.model.OnlineReleaseManifest,
                             cicd_cfg: glci.model.CicdCfg,
-                            ) -> glci.model.OnlineReleaseManifest:
+) -> glci.model.OnlineReleaseManifest:
     import ccc.alicloud
     import glci.model
     import glci.alicloud
@@ -95,7 +108,7 @@ def _publish_alicloud_image(release: glci.model.OnlineReleaseManifest,
 
 def _publish_aws_image(release: glci.model.OnlineReleaseManifest,
                        cicd_cfg: glci.model.CicdCfg,
-                       ) -> glci.model.OnlineReleaseManifest:
+) -> glci.model.OnlineReleaseManifest:
     import glci.aws
     import ccc.aws
     mk_session = functools.partial(
@@ -104,6 +117,20 @@ def _publish_aws_image(release: glci.model.OnlineReleaseManifest,
         mk_session=mk_session,
         build_cfg=cicd_cfg.build,
         release=release,
+    )
+
+def _cleanup_aws(release: glci.model.OnlineReleaseManifest,
+                       cicd_cfg: glci.model.CicdCfg,
+) -> glci.model.OnlineReleaseManifest:
+    import glci.aws
+    import ccc.aws
+    target_image_name = glci.aws.target_image_name_for_release(release=release)
+    mk_session = functools.partial(
+        ccc.aws.session, aws_cfg=cicd_cfg.build.aws_cfg_name
+    )
+    return glci.aws.unregister_images_by_name(
+        mk_session=mk_session,
+        image_name=target_image_name,
     )
 
 

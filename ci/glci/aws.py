@@ -303,6 +303,11 @@ def import_image(
     return import_task_id
 
 
+def target_image_name_for_release(release: glci.model.OnlineReleaseManifest):
+    target_image_name = f'gardenlinux-{release.canonical_release_manifest_key_suffix()}'
+    return target_image_name
+
+
 def upload_and_register_gardenlinux_image(
     mk_session: callable,
     build_cfg: glci.model.BuildCfg,
@@ -311,7 +316,7 @@ def upload_and_register_gardenlinux_image(
     session = mk_session(region_name=build_cfg.aws_region)
     ec2_client = session.client('ec2')
 
-    target_image_name = f'gardenlinux-{release.canonical_release_manifest_key_suffix()}'
+    target_image_name = target_image_name_for_release(release=release)
 
     # TODO: check path is actually S3_ReleaseFile
     raw_image_key = release.path_by_suffix('rootfs.raw').s3_key
@@ -339,15 +344,25 @@ def upload_and_register_gardenlinux_image(
 
     region_names = tuple(enumerate_region_names(ec2_client=ec2_client))
 
-    image_map = dict(
-        copy_image(
-            mk_session=mk_session,
-            ami_image_id=initial_ami_id,
-            image_name=target_image_name,
-            src_region_name=build_cfg.aws_region,
-            target_regions=region_names,
+    try:
+        image_map = dict(
+            copy_image(
+                mk_session=mk_session,
+                ami_image_id=initial_ami_id,
+                image_name=target_image_name,
+                src_region_name=build_cfg.aws_region,
+                target_regions=region_names,
+            )
         )
-    )
+    except:
+        logger.warning('an error occurred whilst copying images - will remove them')
+        unregister_images_by_name(
+            mk_session=mk_session,
+            image_name=target_image_name,
+            region_names=region_names,
+        )
+        raise
+
     # dict{<region_name>: <ami_id>}
 
     # add origin image
