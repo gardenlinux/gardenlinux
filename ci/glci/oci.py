@@ -223,7 +223,8 @@ def publish_image(
     s3_client,
     publish_oci_image_func: callable,
 ):
-    image_tag = f'{release.version}-{release.canonical_manifest_key_suffix()}'.replace('_', '-')
+    image_tag = f'{release.version}-{release.canonical_release_manifest_key_suffix()}'. \
+      replace('_', '-')
     image_name = f'{publish_cfg.image_prefix}:{image_tag}'
 
     rootfs_key = release.path_by_suffix('rootfs.tar.xz').s3_key
