@@ -55,7 +55,7 @@ def publish_image(
 
     if release.platform == 'ali':
         publish_function = _publish_alicloud_image
-        cleanup_function = None
+        cleanup_function = _clean_alicloud_image
     elif release.platform == 'aws':
         publish_function = _publish_aws_image
         cleanup_function = _cleanup_aws
@@ -107,6 +107,22 @@ def _publish_alicloud_image(release: glci.model.OnlineReleaseManifest,
     maker.cp_image_from_s3(s3_client)
     return maker.make_image()
 
+def _clean_alicloud_image(release: glci.model.OnlineReleaseManifest,
+                            cicd_cfg: glci.model.CicdCfg,
+) -> glci.model.OnlineReleaseManifest:
+    import ccc.alicloud
+    import glci.model
+    import glci.alicloud
+    build_cfg = cicd_cfg.build
+    alicloud_cfg_name = build_cfg.alicloud_cfg_name
+
+    oss_auth = ccc.alicloud.oss_auth(alicloud_cfg=alicloud_cfg_name)
+    acs_client = ccc.alicloud.acs_client(alicloud_cfg=alicloud_cfg_name)
+
+    maker = glci.alicloud.AlicloudImageMaker(
+        oss_auth, acs_client, release, cicd_cfg.build)
+
+    return maker.delete_images()
 
 def _publish_aws_image(release: glci.model.OnlineReleaseManifest,
                        cicd_cfg: glci.model.CicdCfg,

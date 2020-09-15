@@ -4,4 +4,5 @@
 /repository/reprepro/db
 /repository/reprepro/logs
 /features/_dev/id_dev
+.idea
 __pycache__
