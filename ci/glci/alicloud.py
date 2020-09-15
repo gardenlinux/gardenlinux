@@ -54,12 +54,10 @@ class AlicloudImageMaker:
         self.acs_client = acs_client
         self.release = release
         self.build_cfg = build_cfg
-        if build_cfg is not None:
-            self.bucket_name = build_cfg.oss_bucket_name
-            self.region = build_cfg.alicloud_region
-        if release is not None:
-            self.image_oss_key = f"gardenlinux-{self.release.version}.qcow2"
-            self.image_name = f"gardenlinux-{self.release.canonical_release_manifest_key_suffix()}"
+        self.bucket_name = build_cfg.oss_bucket_name
+        self.region = build_cfg.alicloud_region
+        self.image_oss_key = f"gardenlinux-{self.release.version}.qcow2"
+        self.image_name = f"gardenlinux-{self.release.canonical_release_manifest_key_suffix()}"
 
     # copy image from S3 to OSS
     def cp_image_from_s3(self, s3_client):
@@ -135,31 +133,35 @@ class AlicloudImageMaker:
 
         self.acs_client.set_region_id(self.region)
 
-    # delete images
-    def delete_images(self):
+    def _del_image(self, region, image_id):
+        logger.warning(f"Delete image {self.image_name}/{image_id} in region {region}")
+        self.acs_client.set_region_id(region)
+        req = ModifyImageSharePermissionRequest.ModifyImageSharePermissionRequest()
+        req.set_ImageId(image_id)
+        req.set_LaunchPermission(str(ImageShareOption.UNSHARE))
+        self.acs_client.do_action_with_exception(req)
+        req = DeleteImageRequest.DeleteImageRequest()
+        req.set_ImageId(image_id)
+        self.acs_client.do_action_with_exception(req)
 
+    # delete images
+    def delete_images(self, keep_going=True):
+        did_raise = False
         regions = self._list_regions()
         regions.append(self.region)
         for region in regions:
-            exist, image_id = self._check_image_existance(region,
-                                                      self.image_name)
-            if not exist:
-                continue
-
-            logger.warning(f"Delete image {self.image_name}/{image_id} in region {region}")
-            try:
-                self.acs_client.set_region_id(region)
-                req = ModifyImageSharePermissionRequest.ModifyImageSharePermissionRequest()
-                req.set_ImageId(image_id)
-                req.set_LaunchPermission(str(ImageShareOption.UNSHARE))
-                self.acs_client.do_action_with_exception(req)
-                req = DeleteImageRequest.DeleteImageRequest()
-                req.set_ImageId(image_id)
-                self.acs_client.do_action_with_exception(req)
-            except:
-                logger.warning(f"Fail to delete image {self.image_name}/{image_id} in region {region}")
-            finally:
-                self.acs_client.set_region_id(self.region)
+            exist, image_id = self._check_image_existance(region, self.image_name)
+            if exist:
+                try:
+                    self._del_image(region, image_id)
+                except:
+                    if keep_going:
+                        did_raise = True
+                        continue
+                    raise
+        
+        if did_raise:
+            raise
 
     # Import image from oss. Returns image id
     def import_image(self) -> str:
@@ -283,24 +285,3 @@ class AlicloudImageMaker:
 
 def parse_response(response):
     return json.loads(response)
-
-def main():
-    from aliyunsdkcore.client import AcsClient
-    import os
-    acs_client = AcsClient(
-        ak=os.environ["ACCESS_KEY_ID"],
-        secret=os.environ["ACCESS_KEY_SECRET"],
-        region_id=os.environ["REGION"]
-    )
-    maker = AlicloudImageMaker(
-        oss2_auth=None,
-        acs_client=acs_client,
-        release=None,
-        build_cfg=None,        
-    )
-    maker.region = os.environ["REGION"]
-    maker.image_name = 'gardenlinux-ali-cloud-gardener-_prod-167.0-a6680e'
-    maker.delete_images()
-
-if __name__ == "__main__":
-    main()
