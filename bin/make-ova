@@ -1,8 +1,6 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
-
-# https://wiki.abiquo.com/display/ABI26/Guest+Operating+System+Definition+for+VMWare
-# debian64 OS identifier always seems to be 96
+# See docs/vmware-ova.md for info
 
 import argparse
 import os
@@ -13,31 +11,39 @@ import hashlib
 import tempfile
 import tarfile
 
-from mako.template import Template
+try:
+    from mako.template import Template
+except ImportError:
+    sys.exit("Mako Templates module not found")
 
-"""
-properties = {
+MIN_PYTHON = (3, 7)
+GUEST_OS = {
+    "debian10_64Guest": {
+        "definition": "96",
+        "description": "Garden Linux 64 (Debian 11)",
+        "hostname": "gardenlinux"
+    },
+    "sles15_64Guest": {
+        "definition": "85",
+        "description": "SUSE Linux Enterprise Server 15 SP2 (CHOST)",
+        "hostname": "sles15chost"
+    }
+}
+PROPERTIES = {
     "vmdkFilename": "",
     "vmdkFileSize": "",
     "vmdkFileCapacity": "",
     "virtualSystemId": "",
-    "osType": "debian10_64Guest",
-    "osDefinition": "96"
+    "osType": "",
+    "osDefinition": "",
+    "osDescription": "",
+    "applianceHostname": ""
 }
-"""
-properties = {
-    "vmdkFilename": "",
-    "vmdkFileSize": "",
-    "vmdkFileCapacity": "",
-    "virtualSystemId": "",
-    "osType": "debian10_64Guest",
-    "osDefinition": "96"
-}
+
 
 class OVAImageBuild:
-
-    def getInfo(sefl, filename):
-        result = subprocess.run(["qemu-img", "info", "--output", "json", filename], capture_output= True)
+    def getInfo(self, filename):
+        result = subprocess.run(["qemu-img", "info", "--output", "json", filename], capture_output=True)
         if result.returncode != 0:
             sys.exit("Error getting image info for " + filename + ": " + result.stdout)
 
@@ -46,12 +52,12 @@ class OVAImageBuild:
         virtualSize = doc["format-specific"]["data"]["extents"][0]["virtual-size"]
         return (fileSize, virtualSize)
 
-    def makeAttributes(self, properties):
+    def makeAttributes(self, PROPERTIES):
         class P:
-            pass        
+            pass
         p = P()
-        for k in properties:
-            setattr(p, k, properties[k])
+        for k in PROPERTIES:
+            setattr(p, k, PROPERTIES[k])
         return p
 
     def sha256(self, filename):
@@ -62,21 +68,21 @@ class OVAImageBuild:
             while len(fileBuffer) > 0:
                 sha.update(fileBuffer)
                 fileBuffer = file.read(blocksize)
-        
+
         return sha.hexdigest()
 
     def run(self, template):
-        vmdkFullFilename = properties["vmdkFullFilename"]
+        vmdkFullFilename = PROPERTIES["vmdkFullFilename"]
         vmdkPath = os.path.dirname(vmdkFullFilename)
-        vmdkFilename = os.path.basename(properties["vmdkFilename"])
+        vmdkFilename = os.path.basename(PROPERTIES["vmdkFilename"])
         ovaFilename = os.path.splitext(vmdkFilename)[0] + ".ova"
         ovaFullFilename = os.path.join(vmdkPath, ovaFilename)
         ovfFilename = os.path.splitext(vmdkFilename)[0] + ".ovf"
         print(ovaFullFilename)
-        fileSize, virtualSize = self.getInfo(properties["vmdkFullFilename"])
-        properties["vmdkFileSize"] = fileSize
-        properties["vmdkFileCapacity"] = virtualSize
-        p = self.makeAttributes(properties)
+        fileSize, virtualSize = self.getInfo(PROPERTIES["vmdkFullFilename"])
+        PROPERTIES["vmdkFileSize"] = fileSize
+        PROPERTIES["vmdkFileCapacity"] = virtualSize
+        p = self.makeAttributes(PROPERTIES)
         tmpl = Template(filename=template)
         ovf = tmpl.render(p=p)
         vmdkSha256 = self.sha256(vmdkFullFilename)
@@ -84,7 +90,7 @@ class OVAImageBuild:
 
             ovfFullFilename = os.path.join(tmpDir, ovfFilename)
             with open(ovfFullFilename, "w") as file:
-               file.write(ovf)
+                file.write(ovf)
             ovfSha256 = self.sha256(ovfFullFilename)
 
             mfFilename = os.path.splitext(vmdkFilename)[0] + ".mf"
@@ -102,7 +108,6 @@ class OVAImageBuild:
 
     @classmethod
     def _argparse_register(cls, parser):
-
         parser.add_argument(
             '--vmdk',
             type=str,
@@ -111,9 +116,18 @@ class OVAImageBuild:
             required=True
         )
         parser.add_argument(
+            "--guest-id",
+            type=str,
+            dest='guest_id',
+            help='Guest operating system identifier',
+            choices=list(GUEST_OS.keys()),
+            required=True
+        )
+        parser.add_argument(
             "--template",
             type=str,
             dest='template',
+            help='OVF template file path (see ../templates for examples)',
             required=True
         )
 
@@ -123,11 +137,19 @@ class OVAImageBuild:
         cls._argparse_register(parser)
         args = parser.parse_args()
 
-        properties["vmdkFullFilename"] = args.vmdk
-        properties["vmdkFilename"] = os.path.basename(args.vmdk)
-        properties["virtualSystemId"] = os.path.splitext(os.path.basename(args.vmdk))[0]
+        if sys.version_info < MIN_PYTHON:
+            sys.exit("Python %s.%s or newer is required." % MIN_PYTHON)
+
+        PROPERTIES["vmdkFullFilename"] = args.vmdk
+        PROPERTIES["vmdkFilename"] = os.path.basename(args.vmdk)
+        PROPERTIES["virtualSystemId"] = os.path.splitext(os.path.basename(args.vmdk))[0]
+        PROPERTIES["osType"] = args.guest_id
+        PROPERTIES["osDefinition"] = GUEST_OS[args.guest_id]["definition"]
+        PROPERTIES["osDescription"] = GUEST_OS[args.guest_id]["description"]
+        PROPERTIES["applianceHostname"] = GUEST_OS[args.guest_id]["hostname"]
         oVAImageBuild = cls()
         oVAImageBuild.run(template=args.template)
- 
+
+
 if __name__ == '__main__':
     OVAImageBuild._main()

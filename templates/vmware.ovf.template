@@ -18,17 +18,17 @@
     <Name>${p.virtualSystemId}</Name>
     <OperatingSystemSection ovf:id="${p.osDefinition}" vmw:osType="${p.osType}">
       <Info>The kind of installed guest operating system</Info>
-      <Description>Garden Linux 64-bit (Debian 11)</Description>
+      <Description>"${p.osDescription}"</Description>
     </OperatingSystemSection>
 
     <ProductSection ovf:required="false">
       <Info>Cloud-Init customization</Info>
-      <Product>Garden Linux 64 (Debian 11)</Product>
+      <Product>"${p.osDescription}"</Product>
       <Property ovf:key="instance-id" ovf:type="string" ovf:userConfigurable="true" ovf:value="id-ovf">
           <Label>A Unique Instance ID for this instance</Label>
           <Description>Specifies the instance id.  This is required and used to determine if the machine should take "first boot" actions</Description>
       </Property>
-      <Property ovf:key="hostname" ovf:type="string" ovf:userConfigurable="true" ovf:value="gardenlinux">
+      <Property ovf:key="hostname" ovf:type="string" ovf:userConfigurable="true" ovf:value="${p.applianceHostname}">
           <Description>Specifies the hostname for the appliance</Description>
       </Property>
       <Property ovf:key="seedfrom" ovf:type="string" ovf:userConfigurable="true">
