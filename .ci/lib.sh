@@ -2,11 +2,10 @@ own_dir="$(readlink -f "$(dirname "${0}")")"
 repo_root="$(readlink -f "${own_dir}/..")"
 bin_dir="${repo_root}/bin"
 
-cfgset_name="${CONCOURSE_CURRENT_CFG}"
 shootcluster_cfg_name="$(gardener-ci \
   config attribute \
    --cfg-type cfg_set \
-   --cfg-name "${cfgset_name}" \
+   --cfg-name gardenlinux \
    --key kubernetes.default \
 )"
 
