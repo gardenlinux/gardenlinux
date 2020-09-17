@@ -12,7 +12,7 @@ shootcluster_cfg_name="$(gardener-ci \
 
 function install_kubectl() {
   if which kubectl &>/dev/null; then
-    exit 0
+    return 0
   fi
 
   # XXX install kubectl (should rather be installed into container-image)
@@ -23,7 +23,7 @@ function install_kubectl() {
 
 function install_tkn() {
   if which tkn &>/dev/null; then
-    exit 0
+    return 0
   fi
   curl -L \
     https://github.com/tektoncd/cli/releases/download/v0.10.0/tkn_0.10.0_Linux_x86_64.tar.gz \
