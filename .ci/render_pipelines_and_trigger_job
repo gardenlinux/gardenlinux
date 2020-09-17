@@ -34,7 +34,7 @@ pipeline_cfg="${gardenlinux_dir}/flavours.yaml"
 outfile='rendered_pipeline.yaml'
 
 # injected from pipeline_definitions
-PROMOTE_TARGET="${PROMOTE_TARGET:-snapshots}"
+PROMOTE_TARGET="${PROMOTE_TARGET:-snapshot}"
 PUBLISHING_ACTIONS="${PUBLISHING_ACTIONS:-manifests}"
 
 if [ ! -z "${VERSION:-}" ]; then
