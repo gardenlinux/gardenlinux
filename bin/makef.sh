@@ -117,19 +117,98 @@ mkdir -p ${dir_name}/dev	&& mount --bind /dev  ${dir_name}/dev
 mount | grep $dir_name
 
 if [ ${read_only_usr} == 1 ]; then
-    fstab_usr="LABEL=USR   /usr        ext4    defaults,ro     0   2"
+    opts_usr="defaults,ro"
 else
-    fstab_usr="LABEL=USR   /usr        ext4    defaults,rw     0   2"
+    opts_usr="defaults,rw"
 fi
 
-echo "### generating fstab"
-cat << EOF >> ${dir_name}/etc/fstab
-# <file system>	<mount point>	<type>	<options>		<dump>	<pass>
-LABEL=ROOT	/		ext4	errors=remount-ro,x-systemd.growfs,prjquota 0	1
-LABEL=EFI	/boot/efi	vfat	umask=0077		0 	2
-$fstab_usr
-/dev/sr0	/media/cdrom0	udf,iso9660 user,noauto		0	0
+#echo "### generating fstab"
+#cat << EOF >> ${dir_name}/etc/fstab
+## <file system>	<mount point>	<type>	<options>		<dump>	<pass>
+#LABEL=ROOT	/		ext4	errors=remount-ro,x-systemd.growfs,prjquota 0	1
+#LABEL=EFI	/boot/efi	vfat	umask=0077		0 	2
+#$fstab_usr
+#/dev/sr0	/media/cdrom0	udf,iso9660 user,noauto		0	0
+#EOF
+
+echo "### generating mount units - using blank fstab"
+# Systemd mount units - not using fstab anymore
+# rootfs
+# old fstab entry : LABEL=ROOT	/		ext4	errors=remount-ro,x-systemd.growfs,prjquota 0	1
+cat << EOF >> ${dir_name}/etc/systemd/system/remount-root.service
+# This is used to mount the rootfs with proper mount options
+[Unit]
+Description=Remount rootfs when no fstab is in
+DefaultDependencies=no
+Conflicts=shutdown.target
+Before=local-fs-pre.target local-fs.target shutdown.target
+Wants=local-fs-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/mount -o remount,rw,errors=remount-ro,prjquota /
+
+[Install]
+WantedBy=local-fs.target
 EOF
+
+# handle x-systemd.growfs
+# resized in the ramdisk
+#cat << EOF >> ${dir_name}/etc/systemd/system/grow-root.service
+#[Unit]
+#Description=Grow root filesystem
+#DefaultDependencies=no
+#Conflicts=shutdown.target
+#Before=shutdown.target local-fs.target
+#After=remount-root.service
+
+#[Service]
+#Type=oneshot
+#RemainAfterExit=yes
+#ExecStart=/lib/systemd/systemd-growfs /
+#TimeoutSec=0
+
+#[Install]
+#WantedBy=local-fs.target
+#EOF
+
+# usr
+# old fstab entry : LABEL=USR   /usr        ext4    defaults,rw     0   2
+cat << EOF >> ${dir_name}/etc/systemd/system/usr.mount
+[Unit]
+Wants=systemd-fsck@dev-disk-by\x2dlabel-USR.service
+After=systemd-fsck@dev-disk-by\x2dlabel-USR.service
+After=blockdev@dev-disk-by\x2dlabel-USR.target
+
+[Mount]
+Where=/usr
+What=/dev/disk/by-label/USR
+Type=ext4
+Options=$opts_usr
+
+[Install]
+WantedBy=local-fs.target
+EOF
+
+# boot efi
+# old fstab entry : LABEL=EFI	/boot/efi	vfat	umask=0077		0 	2
+cat << EOF >> ${dir_name}/etc/systemd/system/boot-efi.mount
+[Unit]
+After=blockdev@dev-disk-by\x2dlabel-EFI.target
+
+[Mount]
+Where=/boot/efi
+What=/dev/disk/by-label/EFI
+Type=vfat
+Options=umask=0077
+
+[Install]
+WantedBy=local-fs.target
+EOF
+
+# enable the systemd units
+chroot ${dir_name} systemctl enable boot-efi.mount usr.mount remount-root.service 
 
 echo "### installing grub"
 for t in "${grub_target[@]}"
