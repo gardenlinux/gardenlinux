@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "${BASH_SOURCE}")")"
 versionfile="$(readlink -f "${thisDir}/../VERSION")"
-startdate="Mar 31 23:59:59 UTC 2020"
+startdate="Mar 31 00:00:00 UTC 2020"
 
 source "${thisDir}/.constants.sh" \
 	--flags 'major,minor,date,datefull,epoch,git' \
@@ -20,7 +20,7 @@ source "${thisDir}/.constants.sh" \
 --git		prints the version plus the last git-hash
 
 If no parameter is specified the full version <major>.<minor> e.g. 27.5 is printed. The version is taken from $versionfile. On HEAD this should always evaluate to 'today', on branch versions this always should resolve to the next version that will be build e.g. 27.1. This implies there is no branch with a .0 in the $versionfile file.
-The version calculated expresses the days since $startdate"
+The version calculated expresses the days since $startdate. Calculation is always UTC based."
 
 eval "${dgetopt}"
 typeout="default"
@@ -34,17 +34,11 @@ while true; do
 		*) 	eusage "unknown flag '${flag}'" ;;
 	esac
 done
-input="${1:-}";  shift || /bin/true
-
-if [ -z ${input} ]; then
-	# no version / timestamp on commandline
-	input="$(sed -e "s/#.*\$//" -e "/^$/d" "${versionfile}")"
-fi
-if [ -z ${input} ]; then
-	# no version / timestamp on versionfile
-	input="today"
-fi
+input="${1:-$(sed -e "s/#.*\$//" -e "/^$/d" "${versionfile}")}";  shift || /bin/true
 input=$(sed "s/^[[:space:]]*//;s/[[:space:]]*\$//" <<< ${input})
+
+# no version / timestamp on versionfile
+[ -z ${input} ] && input="today"
 
 minor=0
 if [[ ${input} =~ ^[0-9\.]*$ && $(cut -d. -f1 <<< ${input}) -lt 10000000 ]]; 
@@ -55,7 +49,7 @@ then	[ $(cut -d. -sf3 <<< ${input}) ] && eusage "invalid version format ${input}
 		minor="$(cut -d. -f2 <<< ${input})"
 	fi
 else	indate=$(date --date "${input}" +%s 2>/dev/null) || eusage "invalid date ${input}"
-	major="$(( (${indate} - $(date --date "${startdate} - 1 day" +%s)) / (60*60*24) ))"
+	major="$(( (${indate} - $(date --date "${startdate}" +%s)) / (60*60*24) ))"
 fi
 
 case "${typeout}" in
@@ -64,6 +58,7 @@ case "${typeout}" in
 	--date)		date --date "${startdate} + ${major} days" +%Y%m%d ;;
 	--datefull)	date --date "${startdate} + ${major} days" +%Y%m%dT%H%M%SZ ;;
 	--epoch)	date --date "${startdate} + ${major} days" +%s ;;
-        --git)		echo "${major}.${minor}-$(git -C "${scriptsDir}" rev-parse --short 'HEAD^{commit}')" ;;
+	--git)		echo "${major}.${minor}-$(git -C "${scriptsDir}" rev-parse --short 'HEAD^{commit}')" ;;
         *)		echo "${major}.${minor}" ;;
-esac	
+esac
+
