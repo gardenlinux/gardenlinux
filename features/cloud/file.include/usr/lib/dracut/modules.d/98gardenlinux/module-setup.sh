@@ -10,7 +10,7 @@ depends() {
 }
 
 install() {
-    inst_multiple grep sfdisk growpart udevadm awk mawk sed rm readlink resize2fs
+    inst_multiple grep sfdisk growpart udevadm awk mawk sed rm readlink
     inst_hook pre-pivot 50 "$moddir/mount-usr.sh"
-    inst_hook pre-pivot 00 "$moddir/grow-root.sh"
+    inst_hook pre-mount 00 "$moddir/growroot.sh"
 }
