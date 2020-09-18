@@ -3,6 +3,6 @@ fdisk
 #grub-cloud-amd64
 grub2
 cloud-guest-utils
-initramfs-tools
+#initramfs-tools
 libpam-cracklib
 open-iscsi
