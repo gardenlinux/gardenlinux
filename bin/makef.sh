@@ -154,24 +154,23 @@ WantedBy=local-fs.target
 EOF
 
 # handle x-systemd.growfs
-# resized in the ramdisk
-#cat << EOF >> ${dir_name}/etc/systemd/system/grow-root.service
-#[Unit]
-#Description=Grow root filesystem
-#DefaultDependencies=no
-#Conflicts=shutdown.target
-#Before=shutdown.target local-fs.target
-#After=remount-root.service
+cat << EOF >> ${dir_name}/etc/systemd/system/grow-root.service
+[Unit]
+Description=Grow root filesystem
+DefaultDependencies=no
+Conflicts=shutdown.target
+Before=shutdown.target local-fs.target
+After=remount-root.service
 
-#[Service]
-#Type=oneshot
-#RemainAfterExit=yes
-#ExecStart=/lib/systemd/systemd-growfs /
-#TimeoutSec=0
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/lib/systemd/systemd-growfs /
+TimeoutSec=0
 
-#[Install]
-#WantedBy=local-fs.target
-#EOF
+[Install]
+WantedBy=local-fs.target
+EOF
 
 # usr
 # old fstab entry : LABEL=USR   /usr        ext4    defaults,rw     0   2
@@ -208,7 +207,7 @@ WantedBy=local-fs.target
 EOF
 
 # enable the systemd units
-chroot ${dir_name} systemctl enable boot-efi.mount usr.mount remount-root.service 
+chroot ${dir_name} systemctl enable boot-efi.mount usr.mount remount-root.service grow-root.service
 
 echo "### installing grub"
 for t in "${grub_target[@]}"
