@@ -62,7 +62,7 @@ def publish_image(
     elif release.platform == 'gcp':
         publish_function = _publish_gcp_image
         cleanup_function = None
-    elif False and release.platform == 'azure': # disable azure for now
+    elif release.platform == 'azure': # disable azure for now
         publish_function = _publish_azure_image
         cleanup_function = None
     elif False and release.platform == 'openstack': # disable openstack for now
