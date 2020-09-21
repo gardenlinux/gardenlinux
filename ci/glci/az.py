@@ -477,8 +477,8 @@ def upload_and_publish_image(
     image_url = copy_image_from_s3_to_az_storage_account(
         storage_account_cfg=storage_account_cfg,
         s3_client=s3_client,
-        s3_bucket_name=release.path_by_suffix('rootfs.raw').s3_bucket_name,
-        s3_object_key=release.path_by_suffix('rootfs.raw').s3_key,
+        s3_bucket_name=release.path_by_suffix('rootfs.vhd').s3_bucket_name,
+        s3_object_key=release.path_by_suffix('rootfs.vhd').s3_key,
         target_blob_name=target_blob_name,
     )
 
