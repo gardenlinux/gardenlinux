@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+package=$(basename $0)
+thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+source $thisDir/defaults
+
+docker_run $package.patch "
+	sudo apt-get build-dep -y --no-install-recommends $package
+	apt-get source $package
+	cd $package-*
+	patch -p1 < /$package.patch
+	quilt push -a
+	dch -i 'fixing syslogd'
+	dch -i 'moving pkg-config from Depends to Recommends'
+	dch -r ''
+	debuild
+	sudo cp ../*\$(dpkg-parsechangelog --show-field Version)* ../$package*.orig.tar.* /packages"
