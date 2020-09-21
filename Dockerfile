@@ -12,21 +12,18 @@ RUN	apt-get update \
 		debian-ports-archive-keyring \
 		debootstrap patch \
 		wget ca-certificates \
-		\
 		dosfstools squashfs-tools e2fsprogs \
-		fdisk mount \
-		gnupg dirmngr \
+		fdisk mount gnupg xz-utils \
+		\
 		libcap2-bin \
 		python3 \
 		python3-mako \
 		qemu-user-static \
 		qemu-utils \
-		xz-utils \
 		cpio \
      && rm -rf /var/lib/apt/lists/*
 
-# repo-root requires to be mounted at /debuerreotype
-ENV 	PATH=${PATH}:/opt/debuerreotype/bin
+ENV 	PATH=${PATH}:/opt/gardenlinux/bin
 COPY	--from=kaniko /kaniko/executor /usr/local/bin/executor
 COPY	--from=azure  /go/azure-vhd-utils/azure-vhd-utils /usr/local/bin/azure-vhd-utils
 COPY 	hack/debootstrap.patch /tmp/debootstrap.patch

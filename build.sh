@@ -77,14 +77,14 @@ buildImage=${BUILD_IMAGE:-"gardenlinux/build-image:$version"}
 dockerArgs="--hostname garden-build
 	${securityArgs[*]}
 	${envArgs[*]/#/-e }
-	--volume ${thisDir}:/opt/debuerreotype
+	--volume ${thisDir}:/opt/gardenlinux
 	--mount type=bind,source=/dev,target=/dev"
 
 [ $lessram ] || dockerArgs+=" --tmpfs /tmp:dev,exec,suid,noatime"
 
 if [ $manual ]; then
 	echo -e "\n### running in debug mode"
-	echo -e "please run -> /opt/debuerreotype/bin/garden-build.sh (all configs are set)<-\n"
+	echo -e "please run -> /opt/gardenlinux/bin/garden-build.sh <- (all configs are set)\n"
 	set -x
 	docker run $dockerArgs -ti \
 		"${buildImage}" \
@@ -93,5 +93,5 @@ else
 	set -x
 	docker run $dockerArgs --rm \
 		"${buildImage}" \
-		/opt/debuerreotype/bin/garden-build.sh | tar -xvC "$outputDir"
+		/opt/gardenlinux/bin/garden-build.sh | tar -xvC "$outputDir"
 fi
