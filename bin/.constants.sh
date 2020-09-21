@@ -98,6 +98,7 @@ _dgetopt() {
 		-- "$@" \
 		|| eusage 
 }
+
 dgetopt='options="$(_dgetopt "$@")"; eval "set -- $options"; unset options'
 dgetopt-case() {
 	local flag="$1"; shift
