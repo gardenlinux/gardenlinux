@@ -95,13 +95,15 @@ class AzureImageStore:
         offset = 0
         while offset < file_size:
             remaining = file_size - offset
+            actual_cp_bytes = min(copy_step_length, remaining)
+
             image_blob.upload_pages_from_url(
                 source_url=url,
                 offset=offset,
-                length=min(copy_step_length, remaining),
+                length=actual_cp_bytes,
                 source_offset=offset,
             )
-            offset += copy_step_length
+            offset += actual_cp_bytes
 
     def get_image_url(self, image_name: str):
         '''Generate an url including sas token to access image in the store.'''
