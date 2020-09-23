@@ -1,0 +1,16 @@
+[Unit]
+Description=Service to handle /usr mount - generate .mount unit
+DefaultDependencies=no
+Before=initrd-fs.target
+After=sysroot.mount
+ConditionDirectoryNotEmpty=/sysroot
+ConditionPathExists=/usr/lib/initrd-release
+ConditionKernelCommandLine=!mount.usr
+ConditionKernelCommandLine=!mount.usrfstype
+ConditionKernelCommandLine=!mount.usrflags
+
+[Service]
+Type=oneshot
+ExecStart=/bin/usr-mount.sh
+KillMode=process
+RemainAfterExit=yes
