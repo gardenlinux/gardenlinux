@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+histfile=$(su - root -c "env | grep HISTFILE")
+histfile_ro=$(su - root -c "unset HISTFILE 2> /dev/null; echo \$?")
+
+if [[ "$histfile" == "HISTFILE=/dev/null" ]] && [[ "$histfile_ro" == "1" ]]; then
+	echo "OK - history is disabled and variable is read-only"	
+	exit 0
+else
+	echo "FAIL - the history is not properly disabled - check /etc/profile.d"
+	exit 1
+fi
