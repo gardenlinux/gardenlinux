@@ -3,6 +3,8 @@
 export TZ="UTC"
 export LC_ALL="C"
 
+exec 2> /dev/null
+
 DEBIAN_FRONTEND=noninteractive apt-get update > /dev/null
 DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends debsums apt-utils > /dev/null
 
