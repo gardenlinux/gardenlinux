@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+tmout=$(su - root -c "env | grep TMOUT")
+tmout_ro=$(su - root -c "unset TMOUT 2> /dev/null; echo \$?")
+
+if [[ "$tmout" == "TMOUT=600" ]] && [[ "$tmout_ro" == "1" ]]; then
+	echo "OK - auto-logout is properly configured"	
+	exit 0
+else
+	echo "FAIL - auto-logout is not properly configured - check /etc/profile.d"
+	exit 1
+fi
