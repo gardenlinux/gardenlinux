@@ -4,6 +4,8 @@ type getarg >/dev/null 2>&1 || . /lib/dracut-lib.sh
 type info >/dev/null 2>&1 || . /lib/dracut-lib.sh
 type warn >/dev/null 2>&1 || . /lib/dracut-lib.sh
 
+# rootdev detection based on 98dracut-systemd/rootfs-generator
+
 root=$(getarg root=)
 
 case "$root" in
@@ -32,7 +34,7 @@ case "$root" in
 esac
 
 if [ "$rootok" != 1 ]; then
-	info "Can't determine the root device"
+	info "GROWROOT: Can't determine the root device"
 	exit 1
 fi
 
@@ -68,7 +70,7 @@ fi
 # (xen xvda1 is an example of such a funny named block device)
 [ -e "/sys/block/${rootdev##*/}" ] && exit 0
 
-info "Trying to grow partition ${rootdisk}"
+info "GROWROOT: trying to grow partition ${rootdisk}"
 
 # if growpart fails, exit.
 # we capture stderr because on success of dry-run, it writes
@@ -90,17 +92,17 @@ esac
 # This is to avoid any other processes using the block device that the
 # root partition is on, which would cause the sfdisk 'BLKRRPART' to fail.
 udevadm settle --timeout ${ROOTDELAY:-30} ||
-    { "GROWROOT: WARNING: udevadm settle prior to growpart failed"; exit 1; }
+    { warn "GROWROOT: udevadm settle prior to growpart failed"; exit 1; }
 
 if out=$(growpart "${rootdisk}" "${partnum}" 2>&1); then
     case "$out" in
         CHANGED:*) info "GROWROOT: $out";;
         NOCHANGE:*)
-            warn "GROWROOT: WARNING: expected to grow partition, but did not";;
+            warn "GROWROOT: expected to grow partition, but did not";;
         *) warn "GROWROOT: unexpected output: ${out}"
     esac
 else
-    info "GROWROOT: WARNING: resize failed: $out"
+    warn "GROWROOT: resize failed: $out"
 fi
 
 # Wait for the partition re-read events to complete 

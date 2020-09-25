@@ -207,7 +207,7 @@ WantedBy=local-fs.target
 EOF
 
 # enable the systemd units
-chroot ${dir_name} systemctl enable boot-efi.mount usr.mount remount-root.service grow-root.service
+chroot ${dir_name} systemctl enable boot-efi.mount remount-root.service grow-root.service
 
 echo "### installing grub"
 for t in "${grub_target[@]}"
