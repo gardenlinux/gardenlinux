@@ -13,7 +13,7 @@
  Description: dracut is an event driven initramfs infrastructure (core tools)
 --- a/debian/patches/systemd-journal	1970-01-01 00:00:00.000000000 +0000
 +++ b/debian/patches/systemd-journal	2020-09-21 09:05:53.030923814 +0000
-@@ -0,0 +1,83 @@
+@@ -0,0 +1,105 @@
 +--- a/modules.d/98dracut-systemd/dracut-cmdline.service
 ++++ b/modules.d/98dracut-systemd/dracut-cmdline.service
 +@@ -23,8 +23,7 @@ Environment=NEWROOT=/sysroot
@@ -97,6 +97,28 @@
 ++StandardOutput=journal+console
 ++StandardError=journal+console
 + ExecStart=/squash/clear-squash.sh
++--- a/modules.d/98dracut-systemd/dracut-mount.service
+++++ b/modules.d/98dracut-systemd/dracut-mount.service
++@@ -19,8 +19,7 @@ Environment=NEWROOT=/sysroot
++ Type=oneshot
++ ExecStart=-/bin/dracut-mount
++ StandardInput=null
++-StandardOutput=syslog
++-StandardError=syslog+console
+++StandardError=journal+console
++ KillMode=process
++ RemainAfterExit=yes
++
++--- a/modules.d/99memstrack/memstrack.service
+++++ b/modules.d/99memstrack/memstrack.service
++@@ -9,5 +9,5 @@ Type=simple
++ ExecStart=/bin/memstrack-start
++ PIDFile=/run/memstrack.pid
++ StandardInput=null
++-StandardOutput=syslog+console
++-StandardError=syslog+console
+++StandardOutput=journal+console
+++StandardError=journal+console
 --- a/debian/patches/initramfs-name	1970-01-01 00:00:00.000000000 +0000
 +++ b/debian/patches/initramfs-name	2020-09-21 10:20:25.317865805 +0000
 @@ -0,0 +1,22 @@
