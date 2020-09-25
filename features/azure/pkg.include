@@ -1,7 +1,5 @@
 # Azure images require waagent 
 waagent
-# Some waagent extensions still need python2.7, and break when it is not present
-python
 # debootstrap does not pull python3-cffi-backend
 #python3-cffi-backend
 #
