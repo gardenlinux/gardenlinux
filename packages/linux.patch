@@ -1,96 +1,52 @@
---- org/debian/config/defines	2020-07-06 15:07:16.851002212 +0000
-+++ new/debian/config/defines	2020-07-06 15:07:08.059251147 +0000
+--- org/debian/config/defines	2020-08-10 07:56:45.942642560 +0000
++++ new/debian/config/defines	2020-08-10 09:55:04.355656830 +0000
 @@ -1,5 +1,5 @@
  [abi]
--abiname: 4
+-abiname: trunk
 +abiname: 5
  ignore-changes:
   __cpuhp_*
   bpf_analyzer
-@@ -131,7 +131,7 @@
-  sparc
-  sparc64
-  x32
--compiler: gcc-9
-+compiler: gcc-10
- featuresets:
-  none
-  rt
-@@ -154,7 +154,7 @@
+--- org/debian/rules.d/scripts/kconfig/Makefile	2020-08-11 14:51:35.530153452 +0000
++++ new/debian/rules.d/scripts/kconfig/Makefile	2020-08-11 14:51:52.622146051 +0000
+@@ -2,7 +2,7 @@
 
- [relations]
- # compilers
--gcc-9: gcc-9 <!stage1 !cross !pkg.linux.nokernel>, gcc-9-@gnu-type-package@ <!stage1 cross !pkg.linux.nokernel>
-+gcc-10: gcc-10 <!stage1 !cross !pkg.linux.nokernel>, gcc-10-@gnu-type-package@ <!stage1 cross !pkg.linux.nokernel>
+ include \\\$(top_rulesdir)/Makefile.inc
 
- # initramfs-generators
- initramfs-fallback: linux-initramfs-tool
---- org/debian/compat	2020-07-06 15:06:23.704508299 +0000
-+++ new/debian/compat	2020-07-06 15:06:14.872758878 +0000
-@@ -1 +1 @@
--9
-+10
---- org/debian/patches/bugfix/all/docmissing.patch	1970-01-01 00:00:00.000000000 +0000
-+++ new/debian/patches/bugfix/all/docmissing.patch	2020-07-07 08:15:55.930230815 +0000
-@@ -0,0 +1,39 @@
-+--- a/Documentation/driver-api/dma-buf.rst
-++++ b/Documentation/driver-api/dma-buf.rst
-+@@ -115,18 +115,6 @@
-+ .. kernel-doc:: include/linux/dma-buf.h
-+    :internal:
-+
-+-Reservation Objects
-+--------------------
-+-
-+-.. kernel-doc:: drivers/dma-buf/reservation.c
-+-   :doc: Reservation Object Overview
-+-
-+-.. kernel-doc:: drivers/dma-buf/reservation.c
-+-   :export:
-+-
-+-.. kernel-doc:: include/linux/reservation.h
-+-   :internal:
-+-
-+ DMA Fences
-+ ----------
-+
-+--- a/Documentation/gpu/i915.rst
-++++ b/Documentation/gpu/i915.rst
-+@@ -358,15 +358,6 @@
-+ .. kernel-doc:: drivers/gpu/drm/i915/i915_cmd_parser.c
-+    :internal:
-+
-+-Batchbuffer Pools
-+------------------
-+-
-+-.. kernel-doc:: drivers/gpu/drm/i915/i915_gem_batch_pool.c
-+-   :doc: batch pool
-+-
-+-.. kernel-doc:: drivers/gpu/drm/i915/i915_gem_batch_pool.c
-+-   :internal:
-+-
-+ User Batchbuffer Execution
-+ --------------------------
-+
---- org/debian/patches/bugfix/x86/forceorder.patch	1970-01-01 00:00:00.000000000 +0000
-+++ new/debian/patches/bugfix/x86/forceorder.patch	2020-07-07 09:55:10.863312980 +0000
-@@ -0,0 +1,11 @@
-+--- a/arch/x86/boot/compressed/kaslr_64.c
-++++ b/arch/x86/boot/compressed/kaslr_64.c
-+@@ -30,7 +30,7 @@
-+ #include "../../mm/ident_map.c"
-+
-+ /* Used by pgtable.h asm code to force instruction serialization. */
-+-unsigned long __force_order;
-++extern unsigned long __force_order;
-+
-+ /* Used to track our page table allocation area. */
-+ struct alloc_pgt_data {
---- org/debian/patches/series	2020-07-07 08:19:25.132386396 +0000
-+++ new/debian/patches/series	2020-07-07 08:19:16.348631783 +0000
-@@ -139,3 +139,5 @@
+-conf: conf.o confdata.o expr.o lexer.lex.o parser.tab.o preprocess.o symbol.o util.o
++conf: conf.o confdata.o expr.o lexer.lex.o parser.tab.o preprocess.o symbol.o
 
- # ABI maintenance
- debian/Revert-cpupower-Revert-library-ABI-changes-from-comm.patch
-+bugfix/all/docmissing.patch
-+bugfix/x86/forceorder.patch
+ lexer.lex.o: parser.tab.h
+
+--- a/debian/patches/series	2020-09-23 22:34:51.920508255 +0000
++++ b/debian/patches/series	2020-09-23 20:47:42.089678686 +0000
+@@ -71,7 +71,6 @@
+ bugfix/powerpc/powerpc-boot-fix-missing-crc32poly.h-when-building-with-kernel_xz.patch
+ bugfix/arm64/arm64-acpi-Add-fixup-for-HPE-m400-quirks.patch
+ bugfix/x86/x86-32-disable-3dnow-in-generic-config.patch
+-bugfix/ppc64el/libbpf-fix-readelf-output-parsing-on-powerpc-with-re.patch
+
+ # Arch features
+ features/mips/MIPS-Loongson-3-Add-Loongson-LS3A-RS780E-1-way-machi.patch
+@@ -98,11 +97,7 @@
+ features/all/lockdown/lockdown-refer-to-debian-wiki-until-manual-page-exists.patch
+
+ # Improve integrity platform keyring for kernel modules verification
+-features/all/db-mok-keyring/0006-Make-get_cert_list-not-complain-about-cert-lists-tha.patch
+-features/all/db-mok-keyring/0001-MODSIGN-do-not-load-mok-when-secure-boot-disabled.patch
+-features/all/db-mok-keyring/0002-MODSIGN-load-blacklist-from-MOKx.patch
+ features/all/db-mok-keyring/0003-MODSIGN-checking-the-blacklisted-hash-before-loading-a-kernel-module.patch
+-features/all/db-mok-keyring/0004-MODSIGN-check-the-attributes-of-db-and-mok.patch
+ features/all/db-mok-keyring/modsign-make-shash-allocation-failure-fatal.patch
+ features/all/db-mok-keyring/KEYS-Make-use-of-platform-keyring-for-module-signature.patch
+
+@@ -123,9 +118,7 @@
+ bugfix/all/cpupower-bump-soname-version.patch
+ bugfix/all/libcpupower-hide-private-function.patch
+ bugfix/all/cpupower-fix-checks-for-cpu-existence.patch
+-bugfix/all/tools-lib-api-fs-fs.c-fix-misuse-of-strncpy.patch
+ bugfix/all/usbip-fix-misuse-of-strncpy.patch
+-bugfix/all/usbip-network-fix-unaligned-member-access.patch
+ bugfix/all/tools-perf-pmu-events-fix-reproducibility.patch
+ bugfix/all/0001-libtraceevent-Fix-header-installation.patch
+ bugfix/all/0004-libtraceevent-allow-custom-libdir-path.patch

@@ -6,85 +6,77 @@ thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source $thisDir/defaults
 
 KERNEL_ORG=5.4.19
-KERNEL_VERSION=5.4.57
-KERNEL_RT_VERSION=5.4.54-rt32
+KERNEL_VERSION=5.4.67
+KERNEL_RT_VERSION=5.4.66-rt38
 
 docker_run $package.patch "
-	sudo apt-get install --no-install-recommends -y wget quilt vim less 
+	# helpers for manual fixing
+	sudo apt-get install --no-install-recommends -y wget quilt vim less
+        # minimal create requirements	
 	sudo apt-get install --no-install-recommends -y equivs kernel-wedge python3-debian rsync libdistro-info-perl git
 	wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.xz
 	wget https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/5.4/patches-$KERNEL_RT_VERSION.tar.{sign,xz}
-	git clone https://salsa.debian.org/kernel-team/linux.git
-        git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+	#TODO check signatures
 
+	git clone https://salsa.debian.org/kernel-team/linux.git
 	# preparing the old kernel, but keeping the newest codebase but copying the config / patch files
 	cp -R linux linux-$KERNEL_ORG
 	cd linux-$KERNEL_ORG
 	git checkout debian/$KERNEL_ORG-1
+	cd ..
 
-	cd ../linux
+        git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+	git clone https://github.com/sfjro/aufs5-standalone.git
+	# checking out aufs for 5.4 kernel
+	cd aufs5-standalone
+	git checkout aufs5.4
+	cd ..
+
+	# old sphinx runs faster and does not bail out on errors
+	wget -P /tmp https://snapshot.debian.org/archive/debian-ports/20200409T204941Z/pool/main/s/sphinx/{libjs-sphinxdoc_1.8.5-9_all.deb,python3-sphinx_1.8.5-9_all.deb,sphinx-common_1.8.5-9_all.deb}
+	sudo dpkg -i /tmp/libjs-sphinxdoc_1.8.5-9_all.deb
+	sudo dpkg -i /tmp/sphinx-common_1.8.5-9_all.deb
+	sudo dpkg -i /tmp/python3-sphinx_1.8.5-9_all.deb
+
+	# build of current kernel
+	cd linux
+	# keeping the upstream defines e.g. for gcc-10
 	mv debian/config/defines ..
 	rm -rf debian/config debian/patches debian/patches-rt/*
 	cp -R ../linux-$KERNEL_ORG/debian/patches ../linux-$KERNEL_ORG/debian/config debian/
 	mv ../defines debian/config/
- 	debian/bin/genpatch-rt ../patches-5.4.54-rt32.tar.xz
+ 	debian/bin/genpatch-rt ../patches-$KERNEL_RT_VERSION.tar.xz
+	debian/bin/genpatch-aufs ../aufs5-standalone
+	patch -p1 < /$package.patch
 
-	cat - <<EOF | patch -p1
---- org/debian/config/defines	2020-08-10 07:56:45.942642560 +0000
-+++ new/debian/config/defines	2020-08-10 09:55:04.355656830 +0000
-@@ -1,5 +1,5 @@
- [abi]
--abiname: trunk
-+abiname: 5
- ignore-changes:
-  __cpuhp_*
-  bpf_analyzer
-@@ -142,7 +142,7 @@
- signed-code: false
-
- [featureset-rt_base]
--enabled: false
-+enabled: true
-
- [description]
- part-long-up: This kernel is not suitable for SMP (multi-processor,
---- org/debian/rules.d/scripts/kconfig/Makefile	2020-08-11 14:51:35.530153452 +0000
-+++ new/debian/rules.d/scripts/kconfig/Makefile	2020-08-11 14:51:52.622146051 +0000
-@@ -2,7 +2,7 @@
-
- include \\\$(top_rulesdir)/Makefile.inc
-
--conf: conf.o confdata.o expr.o lexer.lex.o parser.tab.o preprocess.o symbol.o util.o
-+conf: conf.o confdata.o expr.o lexer.lex.o parser.tab.o preprocess.o symbol.o
-
- lexer.lex.o: parser.tab.h
-
-EOF
+	# changelog magic
 	mv debian/changelog debian/changelog.tmp
 	cat - > debian/changelog <<EOF
 linux ($KERNEL_ORG-1) UNRELEASED; urgency=medium
 
   [ GardenLinux Maintainers ]
   * Compile with gcc-10 on all architectures.
-  * [rt] Update to 5.4.54-rt32 and re-enable.
+  * [rt] Update to $KERNEL_RT_VERSION and re-enable.
   * Bump ABI to 5.
 
- -- GardenLinux Maintainers <contact@gardenlinux.io>  Mon, 10 Aug 2020 05:28:49 +0000
+ -- GardenLinux Maintainers <contact@gardenlinux.io>  $(date -R)
 
 EOF
 	debian/bin/stable-update ../linux-stable $KERNEL_VERSION
 	cat debian/changelog debian/changelog.tmp > debian/changelog.new
 	mv debian/changelog.new debian/changelog
 	rm debian/changelog.tmp
+
+	(
 	debian/bin/genorig.py ../linux-*.tar.xz
-
-
-#	make -f debian/rules orig
-#	debian/bin/gencontrol.py
-#	mk-build-deps debian/control
-#	mv linux-build-deps_* ..
-#	sudo apt-get install -y --no-install-recommends -f ../linux-build-deps_*_amd64.deb
-#	debuild || /bin/true
-#	debuild
-
-	bash"
+	make -f debian/rules orig
+	debian/bin/gencontrol.py
+	mk-build-deps debian/control
+	mv linux-build-deps_* ..
+	sudo apt-get install -y --no-install-recommends -f ../linux-build-deps_*_amd64.deb
+	make -f debian/rules debian/control-real || /bin/true
+	debuild 
+	) || bash
+	
+	sudo cp ../*\$(dpkg-parsechangelog --show-field Version)* ../$package*.orig.tar.* /packages"
+"
