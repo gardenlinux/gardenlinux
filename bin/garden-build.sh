@@ -168,7 +168,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 	[ -z "${ports:-}" ] || sourcesListArgs+=( --ports )
 
 	#Brand it
-	sed -i "s/^PRETTY_NAME=.*$/PRETTY_NAME=\"Garden Linux\"/g" rootfs/etc/os-release
+	sed -i "s/^PRETTY_NAME=.*$/PRETTY_NAME=\"Garden Linux $(garden-version)\"/g" rootfs/etc/os-release
 	sed -i "s/^HOME_URL=.*$/HOME_URL=\"https:\/\/gardenlinux.io\/\"/g" rootfs/etc/os-release
 	sed -i "s/^SUPPORT_URL=.*$/SUPPORT_URL=\"https:\/\/github.com\/gardenlinux\/gardenlinux\"/g" rootfs/etc/os-release
 	sed -i "s/^BUG_REPORT_URL=.*$/BUG_REPORT_URL=\"https:\/\/github.com\/gardenlinux\/gardenlinux\/issues\"/g" rootfs/etc/os-release
@@ -191,7 +191,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 		if [ -n "${qemu:-}" ]; then
 			tarArgs+=( --exclude="./usr/bin/qemu-*-static" )
 		fi
-			
+
 		tarArgs+=( --include-dev )
 
 		if [ "$variant" != "sbuild" ]; then
@@ -255,7 +255,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 		for i in $(echo "base,$features" | tr ',' ' ' | sort -u); do
 			if [ -s $featureDir/$i/image ]; then
 				bash -c "$featureDir/$i/image $rootfs $targetBase"
-			else 
+			else
 				true
 			fi
 		done
