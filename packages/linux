@@ -6,37 +6,44 @@ thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source $thisDir/defaults
 
 KERNEL_ORG=5.4.19
-KERNEL_VERSION=5.4.67
+KERNEL_VERSION=5.4.68
 KERNEL_RT_VERSION=5.4.66-rt38
 
 docker_run $package.patch "
+	gpg --locate-keys torvalds@kernel.org gregkh@kernel.org
+	gpg --tofu-policy good 647F28654894E3BD457199BE38DBBDC86092693E
+	# Steven Rostedt <rostedt@goodmis.org>
+	gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys 514B0EDE3C387F944FB3799329E574109AEBFAAA
+	gpg --tofu-policy good 514B0EDE3C387F944FB3799329E574109AEBFAAA
+	
 	# helpers for manual fixing
 	sudo apt-get install --no-install-recommends -y wget quilt vim less
         # minimal create requirements	
 	sudo apt-get install --no-install-recommends -y equivs kernel-wedge python3-debian rsync libdistro-info-perl git
-	wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.xz
+	wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.{sign,xz}
 	wget https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/5.4/patches-$KERNEL_RT_VERSION.tar.{sign,xz}
-	#TODO check signatures
+	xz -dc linux-$KERNEL_VERSION.tar.xz      | gpg --verify linux-$KERNEL_VERSION.tar.sign -
+	xz -dc patches-$KERNEL_RT_VERSION.tar.xz | gpg --verify patches-$KERNEL_RT_VERSION.tar.sign -
 
 	git clone https://salsa.debian.org/kernel-team/linux.git
 	# preparing the old kernel, but keeping the newest codebase but copying the config / patch files
 	cp -R linux linux-$KERNEL_ORG
 	cd linux-$KERNEL_ORG
-	git checkout debian/$KERNEL_ORG-1
+	git -c advice.detachedHead=false checkout debian/$KERNEL_ORG-1
 	cd ..
 
         git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 	git clone https://github.com/sfjro/aufs5-standalone.git
 	# checking out aufs for 5.4 kernel
 	cd aufs5-standalone
-	git checkout aufs5.4
+	git -c advice.detachedHead=false checkout aufs5.4
 	cd ..
 
 	# old sphinx runs faster and does not bail out on errors
 	wget -P /tmp https://snapshot.debian.org/archive/debian-ports/20200409T204941Z/pool/main/s/sphinx/{libjs-sphinxdoc_1.8.5-9_all.deb,python3-sphinx_1.8.5-9_all.deb,sphinx-common_1.8.5-9_all.deb}
-	sudo dpkg -i /tmp/libjs-sphinxdoc_1.8.5-9_all.deb
-	sudo dpkg -i /tmp/sphinx-common_1.8.5-9_all.deb
-	sudo dpkg -i /tmp/python3-sphinx_1.8.5-9_all.deb
+	sudo apt-get install -f -y /tmp/libjs-sphinxdoc_1.8.5-9_all.deb
+	sudo apt-get install -f -y /tmp/sphinx-common_1.8.5-9_all.deb
+	sudo apt-get install -f -y /tmp/python3-sphinx_1.8.5-9_all.deb
 
 	# build of current kernel
 	cd linux
@@ -58,6 +65,9 @@ linux ($KERNEL_ORG-1) UNRELEASED; urgency=medium
   * Compile with gcc-10 on all architectures.
   * [rt] Update to $KERNEL_RT_VERSION and re-enable.
   * Bump ABI to 5.
+  * re-apply relax-relocations since we have a newer linker then 2.26
+  * fix traceid_list linker problem on gcc-10
+  * fix udev_context linker problem on gcc-10
 
  -- GardenLinux Maintainers <contact@gardenlinux.io>  $(date -R)
 
