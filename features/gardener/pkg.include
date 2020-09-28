@@ -1,7 +1,7 @@
 apparmor
 containerd
 containernetworking-plugins
-docker.io
+#docker.io # Manually installed with a specific version to mitigate https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=970525
 ethtool
 ipvsadm
 socat
