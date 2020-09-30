@@ -104,10 +104,10 @@ kvm: sign.pub
 
 onmetal: metal
 metal: sign.pub
-	./build.sh --features sever,metal $(BUILDDIR)/metal $(SNAPSHOT_DATE)
+	./build.sh --features server,metal $(BUILDDIR)/metal $(SNAPSHOT_DATE)
 
 metal-dev: sign.pub
-	./build.sh --features sever,metal,_dev $(BUILDDIR)/metal $(SNAPSHOT_DATE)
+	./build.sh --features server,metal,_dev $(BUILDDIR)/metal $(SNAPSHOT_DATE)
 
 clean:
 	rm -rf $(BUILDDIR
