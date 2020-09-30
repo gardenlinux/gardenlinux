@@ -1,5 +1,5 @@
 ethtool
-busybox
+#busybox
 haveged
 ipmitool
 kexec-tools
@@ -7,7 +7,6 @@ irqbalance
 pciutils
 usbutils
 numactl
-systemd
 linux-image-amd64
 mdadm
 smartmontools
