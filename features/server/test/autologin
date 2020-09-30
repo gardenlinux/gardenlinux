@@ -16,10 +16,7 @@ if $(grep GARDENLINUX_FEATURES "${rootfsDir}/etc/os-release" | grep -q _dev); th
 	exit 0
 fi
 
-output=$(grep -rE '.*/sbin/agetty.*--autologin.*' "${rootfsDir}/etc/systemd")
-
-if [ -z "${output}" ]
-then
+if ! output=$(grep -rE '.*/sbin/agetty.*--autologin.*' "${rootfsDir}/etc/systemd"); then
 	echo "OK - no autologin settings"
 	exit 0
 else

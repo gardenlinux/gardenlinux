@@ -8,8 +8,13 @@ thisDir=$(readlink -e "$(dirname "${BASH_SOURCE[0]}")")
 rc=0
 failMessage=""
 
+skipdev=""
+if $(grep GARDENLINUX_FEATURES /etc/os-release | grep -q _dev); then
+	skipdev="dev"
+fi
+
 for grp in $(getent group | grep -f <( awk -F: '{print $1}' "${thisDir}/user_groups.list")); do
-	users=$(echo "$grp" | awk -F: '{print $4}' | tr "," "\n" | sort | paste -s -d " ")
+	users=$(echo "$grp" | awk -F: '{print $4}' | tr "," "\n" | grep -vx "$skipdev" || true | sort | paste -s -d " ")
 	group=$(echo "$grp" | awk -F: '{print $1}')
 	expectedUsers=$(grep "$group" "${thisDir}/user_groups.list" | awk -F: '{ print $2 }' | tr "," "\n" | sort | paste -s -d " ")
 	if [[ "$users" != "$expectedUsers" ]]; then
@@ -20,7 +25,7 @@ for grp in $(getent group | grep -f <( awk -F: '{print $1}' "${thisDir}/user_gro
 done	
 
 sudoers=""
-for user in $(getent passwd | awk -F: '{ print $1}' | grep -vw ^root); do
+for user in $(getent passwd | awk -F: '{ print $1}' | grep -vx root | grep -vx "$skipdev"); do
        if sudo -l -U "$user" 2> /dev/null | grep -q "may run the following"; then
 	       true
 	       if ! grep -q "$user" <(grep 'sudo\|wheel' "${thisDir}/user_groups.list" | awk -F: '{ print $2 }'); then
