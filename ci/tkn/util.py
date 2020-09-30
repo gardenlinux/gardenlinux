@@ -20,6 +20,7 @@ class StatusReason(enum.Enum):
     RUNNING = 'Running'
     FAILED = 'Failed'
     SUCCEEDED = 'Succeeded'
+    PIPELINE_RUN_STOPPING = 'PipelineRunStopping'
 
 
 @dataclasses.dataclass
@@ -129,7 +130,7 @@ def wait_for_pipelinerun_status(
         if reason is StatusReason.FAILED:
             print(f'{reason=} - aborting')
             raise RuntimeError(reason)
-        elif reason in (StatusReason.RUNNING, None):
+        elif reason in (StatusReason.RUNNING, StatusReason.PIPELINE_RUN_STOPPING, None):
             passed_seconds = time.time() - start_time
             if passed_seconds > timeout_seconds:
                 raise RuntimeError(f'timeout exceeded: {timeout_seconds=}')
