@@ -21,3 +21,4 @@
 /etc/update-motd.d/10-uname
 /etc/cron.d/e2scrub_all
 /var/lib/dbus/machine-id
+/usr/games

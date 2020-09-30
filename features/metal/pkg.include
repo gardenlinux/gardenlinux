@@ -7,7 +7,6 @@ irqbalance
 pciutils
 usbutils
 numactl
-linux-image-amd64
 mdadm
 smartmontools
 tpm2-tools
