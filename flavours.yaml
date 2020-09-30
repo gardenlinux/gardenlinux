@@ -2,10 +2,10 @@
 flavour_sets:
   - name: 'all'
     flavour_combinations:
-      #- architectures: [ 'amd64' ]
-      #  platforms: [ metal ]
-      #  modifiers: [ [ gardener, _prod ] , [ chost, _prod ] , [ vhost, _prod ], [] ]
-      #  fails: [ unit, integration ]
+      - architectures: [ 'amd64' ]
+        platforms: [ metal ]
+        modifiers: [ [ gardener, _prod ] , [ chost, _prod ] , [ vhost, _prod ], [] ]
+        fails: [ unit, integration ]
       - architectures: [ 'amd64' ]
         modifiers: [ [], [ '_build' ] ]
         platforms: [ oci ]
