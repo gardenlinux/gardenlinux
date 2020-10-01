@@ -53,7 +53,7 @@ def publish_image(
 ) -> glci.model.OnlineReleaseManifest:
     print(f'running release for {release.platform=}')
 
-    if release.platform == 'ali': # disable ali for now
+    if False and release.platform == 'ali': # disable ali for now
         publish_function = _publish_alicloud_image
         cleanup_function = _clean_alicloud_image
     elif release.platform == 'aws':
