@@ -59,17 +59,14 @@ def _head_sha():
     return repo.head.commit.hexsha
 
 
-def retrieve_release_set():
+def _retrieve_argparse(parser):
     repo = _gitrepo()
-
-    parser = argparse.ArgumentParser()
     parser.add_argument(
         '--committish', '-c',
         default=_head_sha(),
         type=lambda c: repo.git.rev_parse(c),
     )
     parser.add_argument('--cicd-cfg', default='default')
-    parser.add_argument('--flavourset-name', default='all')
     parser.add_argument(
         '--version',
         default=glci.model._parse_version_from_workingtree(),
@@ -77,6 +74,7 @@ def retrieve_release_set():
     parser.add_argument(
         '--gardenlinux-epoch',
         default=glci.model.gardenlinux_epoch_from_workingtree(),
+        type=int,
     )
     parser.add_argument(
         '--build-type',
@@ -88,6 +86,80 @@ def retrieve_release_set():
         type=lambda f: open(f, 'w'),
         default=sys.stdout,
     )
+
+    return parser
+
+
+def retrieve_single_manifest():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--architecture',
+        default=glci.model.Architecture.AMD64,
+        type=glci.model.Architecture,
+    )
+    parser.add_argument(
+        '--platform',
+        choices=[p.name for p in glci.model.platforms()],
+    )
+
+    class AddModifierAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string):
+            choices = [c.name for c in glci.model.modifiers()]
+
+            raw_modifiers = []
+            for v in values.split(','):
+                if not (v := v.strip()) in choices:
+                    raise ValueError(f'{v} not in {choices}')
+                raw_modifiers.append(v)
+
+            normalised_modifiers = glci.model.normalised_modifiers(
+                platform=namespace.platform,
+                modifiers=raw_modifiers,
+            )
+
+            setattr(namespace, self.dest, normalised_modifiers)
+
+    parser.add_argument(
+        '--modifier',
+        action=AddModifierAction,
+        dest='modifiers',
+        default=[],
+    )
+    _retrieve_argparse(parser=parser)
+
+    parsed = parser.parse_args()
+
+    find_release = glci.util.preconfigured(
+        func=glci.util.find_release,
+        cicd_cfg=glci.util.cicd_cfg(parsed.cicd_cfg)
+    )
+
+    release = find_release(
+        release_identifier=glci.model.ReleaseIdentifier(
+            build_committish=parsed.committish,
+            version=parsed.version,
+            gardenlinux_epoch=parsed.gardenlinux_epoch,
+            architecture=parsed.architecture,
+            platform=parsed.platform,
+            modifiers=parsed.modifiers,
+        )
+    )
+
+    if not release:
+        print('ERROR: no such release found')
+        sys.exit(1)
+
+    with parsed.outfile as f:
+        yaml.dump(
+            data=dataclasses.asdict(release),
+            stream=f,
+            Dumper=glci.util.EnumValueYamlDumper,
+        )
+
+def retrieve_release_set():
+    parser = argparse.ArgumentParser()
+    _retrieve_argparse(parser=parser)
+    parser.add_argument('--flavourset-name', default='all')
 
     parsed = parser.parse_args()
 
