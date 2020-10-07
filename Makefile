@@ -110,4 +110,4 @@ metal-dev: sign.pub
 	./build.sh --features server,metal,_dev $(BUILDDIR)/metal $(SNAPSHOT_DATE)
 
 clean:
-	rm -rf $(BUILDDIR
+	rm -rf $(BUILDDIR)
