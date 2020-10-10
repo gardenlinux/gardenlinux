@@ -62,6 +62,7 @@ def mk_pipeline_build_task(
             pass_param(name='cicd_cfg_name'),
             pass_param(name='version'),
             pass_param(name='promote_target'),
+            pass_param(name='publishing_actions'),
             pass_param(name='flavourset'),
         ],
         runAfter=run_after,

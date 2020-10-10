@@ -88,7 +88,7 @@ def main():
         repo_dir=tkn.model.NamedParam(name='repodir'),
     )
 
-    promote_step_dict = dataclasses.asdict(upload_step)
+    promote_step_dict = dataclasses.asdict(promote_step)
 
     # hack: patch-in clone-step (avoid redundancy with other tasks)
     raw_build_task['spec']['steps'][0] = clone_step_dict
