@@ -21,6 +21,7 @@ class StatusReason(enum.Enum):
     FAILED = 'Failed'
     SUCCEEDED = 'Succeeded'
     PIPELINE_RUN_STOPPING = 'PipelineRunStopping'
+    PIPELINE_RUN_CANCELLED = 'PipelineRunCancelled'
 
 
 @dataclasses.dataclass
@@ -127,7 +128,7 @@ def wait_for_pipelinerun_status(
             reason = None
 
         print(f'{reason=}')
-        if reason is StatusReason.FAILED:
+        if reason in (StatusReason.FAILED, StatusReason.PIPELINE_RUN_CANCELLED):
             print(f'{reason=} - aborting')
             raise RuntimeError(reason)
         elif reason in (StatusReason.RUNNING, StatusReason.PIPELINE_RUN_STOPPING, None):
