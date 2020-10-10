@@ -37,7 +37,7 @@ def promote_single_step(
     if not platform in glci.model.platform_names():
         raise ValueError(f'invalid value {platform=}')
 
-    modifiers = glci.util.normalised_modifiers(
+    modifiers = glci.model.normalised_modifiers(
         platform=platform,
         modifiers=modifiers.split(','),
     )
