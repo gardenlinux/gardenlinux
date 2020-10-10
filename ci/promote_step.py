@@ -8,6 +8,73 @@ import promote
 parsable_to_int = str
 
 
+def promote_single_step(
+    cicd_cfg_name: str,
+    committish: str,
+    architecture: str,
+    platform: str,
+    gardenlinux_epoch: parsable_to_int,
+    modifiers: str,
+    version: str,
+    promote_target: str,
+    publishing_actions: str,
+):
+    cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
+    publishing_actions = [
+        glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
+    ]
+    if not glci.model.PublishingAction.RELEASE in publishing_actions:
+        print(
+            f'publishing action {glci.model.PublishingAction.RELEASE=} not specified - exiting now'
+        )
+        sys.exit(0)
+
+    find_release = glci.util.preconfigured(
+        func=glci.util.find_release,
+        cicd_cfg=cicd_cfg,
+    )
+
+    if not platform in glci.model.platforms():
+        raise ValueError(f'invalid value {platform=}')
+
+    modifiers = glci.util.normalised_modifiers(
+        platform=platform,
+        modifiers=modifiers.split(','),
+    )
+
+    release_manifest = find_release(
+        release_identifier=glci.model.ReleaseIdentifier(
+            build_committish=committish,
+            version=version,
+            gardenlinux_epoch=int(gardenlinux_epoch),
+            architecture=glci.model.Architecture(architecture),
+            platform=platform,
+            modifiers=tuple(modifiers),
+        ),
+    )
+
+    if not release_manifest:
+        raise ValueError(f'no release-manifest found')
+
+    new_manifest = promote(
+        release=release_manifest,
+        cicd_cfg=cicd_cfg,
+    )
+
+    # the (modified) release manifest contains the publishing resource URLs - re-upload to persist
+    upload_release_manifest = glci.util.preconfigured(
+        func=glci.util.upload_release_manifest,
+        cicd_cfg=cicd_cfg,
+    )
+
+    manifest_key = new_manifest.canonical_release_manifest_key()
+
+    upload_release_manifest(
+        key=manifest_key,
+        manifest=new_manifest,
+    )
+
+
 def promote_step(
     cicd_cfg_name: str,
     flavourset: str,
@@ -50,18 +117,5 @@ def promote_step(
     print(publishing_actions)
 
     # if this line is reached, the release has been complete
-
-    promote.promote(
-      gardenlinux_epoch=gardenlinux_epoch,
-      build_committish=committish,
-      releases=releases,
-      target_prefix=os.path.join(
-          glci.model.ReleaseManifestSet.release_manifest_set_prefix,
-          release_target,
-      ),
-      publishing_actions=publishing_actions,
-      cicd_cfg=cicd_cfg,
-      flavour_set=flavour_set,
-      version_str=version,
-      build_type=glci.model.BuildType(promote_target),
-    )
+    # XXX now create and publish manifest-set
+    print('XXX should not publish manifest-set (not implemented, yet)')

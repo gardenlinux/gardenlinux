@@ -116,6 +116,41 @@ def upload_results_step(
     )
 
 
+def promote_single_step(
+    cicd_cfg_name: tkn.model.NamedParam,
+    committish: tkn.model.NamedParam,
+    architecture: tkn.model.NamedParam,
+    platform: tkn.model.NamedParam,
+    gardenlinux_epoch: tkn.model.NamedParam,
+    modifiers: tkn.model.NamedParam,
+    version: tkn.model.NamedParam,
+    promote_target: tkn.model.NamedParam,
+    publishing_actions: tkn.model.NamedParam,
+    repo_dir: tkn.model.NamedParam,
+):
+    return tkn.model.TaskStep(
+        name='promote-step',
+        image=DEFAULT_IMAGE,
+        script=task_step_script(
+            path=os.path.join(scripts_dir, 'promote_step.py'),
+            script_type=ScriptType.PYTHON3,
+            callable='promote_single_step',
+            params=[
+                cicd_cfg_name,
+                committish,
+                architecture,
+                platform,
+                gardenlinux_epoch,
+                modifiers,
+                version,
+                promote_target,
+                publishing_actions,
+            ],
+            repo_path_param=repo_dir,
+        )
+    )
+
+
 def promote_step(
     cicd_cfg_name: tkn.model.NamedParam,
     flavourset: tkn.model.NamedParam,
@@ -127,7 +162,7 @@ def promote_step(
     repo_dir: tkn.model.NamedParam,
 ):
     return tkn.model.TaskStep(
-        name='promote-step',
+        name='finalise-promotion-step',
         image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(scripts_dir, 'promote_step.py'),
