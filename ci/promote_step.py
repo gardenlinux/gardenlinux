@@ -62,7 +62,7 @@ def promote_single_step(
         print('artifacts were already published - exiting now')
         sys.exit(0)
 
-    new_manifest = promote(
+    new_manifest = promote.publish_image(
         release=release_manifest,
         cicd_cfg=cicd_cfg,
     )
