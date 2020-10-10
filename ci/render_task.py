@@ -94,7 +94,7 @@ def main():
     raw_build_task['spec']['steps'][0] = clone_step_dict
     raw_build_task['spec']['steps'][1] = pre_build_step_dict
     raw_build_task['spec']['steps'][-1] = upload_step_dict
-    raw_build_task['spec']['steps'][-1] = promote_step_dict
+    raw_build_task['spec']['steps'].append(promote_step_dict)
 
     with open(parsed.outfile, 'w') as f:
         yaml.safe_dump_all((raw_build_task, raw_promote_task), f)
