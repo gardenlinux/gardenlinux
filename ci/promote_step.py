@@ -56,6 +56,12 @@ def promote_single_step(
     if not release_manifest:
         raise ValueError(f'no release-manifest found')
 
+    if not release_manifest.published_image_metadata is None:
+        # XXX should actually check for completeness - assume for now there is
+        # transactional semantics in place
+        print('artifacts were already published - exiting now')
+        sys.exit(0)
+
     new_manifest = promote(
         release=release_manifest,
         cicd_cfg=cicd_cfg,
