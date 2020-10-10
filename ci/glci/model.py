@@ -703,6 +703,10 @@ def platforms():
     }
 
 
+def platform_names():
+    return {p.name for p in platforms()}
+
+
 def modifiers():
     return {
         feature for feature in features() if feature.type is FeatureType.MODIFIER

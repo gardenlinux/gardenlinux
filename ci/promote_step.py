@@ -34,7 +34,7 @@ def promote_single_step(
         cicd_cfg=cicd_cfg,
     )
 
-    if not platform in tuple(glci.model.platforms()):
+    if not platform in glci.model.platform_names():
         raise ValueError(f'invalid value {platform=}')
 
     modifiers = glci.util.normalised_modifiers(
