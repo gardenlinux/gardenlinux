@@ -1,3 +1,4 @@
+import concurrent.futures
 import dataclasses
 import enum
 import logging
@@ -248,6 +249,7 @@ def image_ids_by_name(
         images = images['Images']
         if len(images) < 1:
             print(f'did not find {image_name=} in {region_name=}')
+            continue
         if len(images) > 1:
             raise ValueError('found more than one image (this is a bug)')
 
@@ -262,15 +264,24 @@ def unregister_images_by_name(
     if not region_names:
         ec2_client = mk_session().client('ec2')
         region_names = tuple(enumerate_region_names(ec2_client=ec2_client))
+    else:
+        region_names = tuple(region_names)
 
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=len(region_names))
+
+    results = []
     for region_name, image_id in image_ids_by_name(
         mk_session=mk_session,
         image_name=image_name,
         region_names=region_names,
     ):
-        ec2 = mk_session(region_name=region_name).client('ec2')
-        ec2.deregister_image(ImageId=image_id)
-        print(f'unregistered {image_id=}')
+        def unregister_image():
+            ec2 = mk_session(region_name=region_name).client('ec2')
+            ec2.deregister_image(ImageId=image_id)
+            print(f'unregistered {image_id=}')
+        results.append(executor.submit(unregister_image))
+
+    concurrent.futures.wait(results)
 
 
 def import_image(
