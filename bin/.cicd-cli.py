@@ -34,6 +34,12 @@ def clean_build_result_repository():
         cicd_cfg=cicd_cfg,
     )
 
+    print('purging outdated build result snapshot sets (release-candidates)')
+    clean.clean_release_manifest_sets(
+        max_age_days=parsed.snapshot_max_age_days,
+        cicd_cfg=cicd_cfg,
+    )
+
     print('purging loose objects')
     clean.clean_orphaned_objects(cicd_cfg=cicd_cfg)
 

@@ -1,6 +1,7 @@
 import concurrent.futures
 import datetime
 import itertools
+import os
 import typing
 
 import glci.model
@@ -17,6 +18,55 @@ def _s3_client(cicd_cfg: glci.model.CicdCfg):
     s3_session = ccc.aws.session(cicd_cfg.build.aws_cfg_name)
     s3_client = s3_session.client('s3')
     return s3_client
+
+
+def clean_release_manifest_sets(
+    max_age_days: int=14,
+    cicd_cfg: glci.model.CicdCfg=glci.util.cicd_cfg(),
+    prefix: str=os.path.join(
+      glci.model.ReleaseManifestSet.release_manifest_set_prefix,
+      glci.model.PipelineFlavour.SNAPSHOT.value,
+    ),
+):
+    enumerate_release_sets = glci.util.preconfigured(
+        glci.util.enumerate_release_sets,
+        cicd_cfg=cicd_cfg,
+    )
+
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=64)
+
+    now = datetime.datetime.now()
+    oldest_allowed_date = now - datetime.timedelta(days=max_age_days)
+    print(f'{oldest_allowed_date=}')
+
+    s3_client = _s3_client(cicd_cfg=cicd_cfg)
+
+    def purge_if_outdated(release_manifest_set: glci.model.ReleaseManifestSet):
+      if len(release_manifest_set.manifests) < 1:
+          print(f'WARNING: {release-manifest-set.s3_key=} did not contain any manifests')
+          return (False, release_manifest_set)
+
+      first_manifest = release_manifest_set.manifests[0]
+      # all timestamps should usually be pretty close to each other
+
+      if first_manifest.build_ts_as_date() > oldest_allowed_date:
+          return (False, release_manifest_set)
+
+      # XXX also purge published images (if any)!
+      s3_client.delete_object(
+          Bucket=release_manifest_set.s3_bucket,
+          Key=release_manifest_set.s3_key,
+      )
+
+      print(f'purged {release_manifest_set.s3_key=}')
+      return (True, release_manifest_set)
+
+
+    for purged, manifest in executor.map(
+        purge_if_outdated,
+        enumerate_release_sets(prefix=prefix)
+      ):
+        pass
 
 
 def clean_single_release_manifests(

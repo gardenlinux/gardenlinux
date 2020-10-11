@@ -444,6 +444,13 @@ class ReleaseManifestSet:
     release_manifest_set_prefix = 'meta/sets'
 
 
+@dataclasses.dataclass(frozen=True)
+class OnlineReleaseManifestSet(ReleaseManifestSet):
+    # injected iff retrieved from s3 bucket
+    s3_key: str
+    s3_bucket: str
+
+
 class PipelineFlavour(enum.Enum):
     SNAPSHOT = 'snapshot'
     RELEASE = 'release'

@@ -167,9 +167,12 @@ def release_manifest_set(
     buf.seek(0)
     parsed = yaml.safe_load(buf)
 
+    parsed['s3_bucket'] = bucket_name
+    parsed['s3_key'] = manifest_key
+
     print(manifest_key)
     manifest = dacite.from_dict(
-        data_class=glci.model.ReleaseManifestSet,
+        data_class=glci.model.OnlineReleaseManifestSet,
         data=parsed,
         config=dacite.Config(
             cast=[
