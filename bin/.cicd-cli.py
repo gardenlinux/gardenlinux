@@ -22,7 +22,7 @@ import paths
 def clean_build_result_repository():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cicd-cfg', default='default')
-    parser.add_argument('--snapshot-max-age-days', default=14, type=int)
+    parser.add_argument('--snapshot-max-age-days', default=30, type=int)
 
     parsed = parser.parse_args()
 
