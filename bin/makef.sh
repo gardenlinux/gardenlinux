@@ -98,8 +98,8 @@ echo "### reconnected loopback to ${loopback}"
 
 echo "### creating filesystems"
 mkfs.vfat -n EFI ${loopback}p2
-mkfs.ext4 -L USR -E lazy_itable_init=0,lazy_journal_init=0 ${loopback}p3
-mkfs.ext4 -L ROOT -O quota -E lazy_itable_init=0,lazy_journal_init=0,quotatype=usrquota:grpquota:prjquota  ${loopback}p4
+mkfs.ext4 -L USR  -E lazy_itable_init=0,lazy_journal_init=0 ${loopback}p3
+mkfs.ext4 -L ROOT -E lazy_itable_init=0,lazy_journal_init=0 -I 256 ${loopback}p4
 # part of debian-cloud-images, I am sure we want that :-) -> it is default
 #tune2fs -c 0 -i 0 ${loopback}p3
 
@@ -224,6 +224,7 @@ mv ${dir_name}/etc/grub.d/30_uefi-firmware~ ${dir_name}/etc/grub.d/30_uefi-firmw
 
 echo "### unmouting"
 umount -R ${dir_name}
+tune2fs -Q usrquota,grpquota,prjquota ${loopback}p4
 sync
 
 echo "### final fsck, just to be sure"
