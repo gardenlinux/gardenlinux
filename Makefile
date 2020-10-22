@@ -7,6 +7,7 @@ BUILDDIR=.build
 BUILDKEY="contact@gardenlinux.io"
 
 sign.pub:
+	@mkdir -p .build
 	@gpg --list-secret-keys $(BUILDKEY) > /dev/null || echo "No secret key for $(BUILDKEY) exists, signing disabled" 
 	@gpg --export --armor $(BUILDKEY) > $(BUILDDIR)/sign.pub
 	@diff $(BUILDDIR)/sign.pub gardenlinux.pub || echo "Not using the official key"
