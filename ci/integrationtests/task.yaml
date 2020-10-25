@@ -7,13 +7,19 @@ spec:
   params:
   - name: iaas
     type: string
+  - name: ami_id
+    type: string
+    default: replaceme_aws
+  - name: gcp_image_name
+    type: string
+    default: replaceme_gcp
   resources:
     inputs:
     - name: repo
       type: git
   steps:
     - name: 'integration-test'
-      image: 'eu.gcr.io/gardener-project/cc/job-image:1.679.0'
+      image: 'eu.gcr.io/gardener-project/cc/job-image:1.682.0'
       script: |
         #!/usr/bin/env bash
         set -e
@@ -40,7 +46,7 @@ spec:
           access_key_id: %s
           secret_access_key: %s
           # which AMI to use for creating an ec2 instance
-          ami_id: ami-0e7e5773a975f0aea
+          ami_id: $(params.ami_id)
           ssh_key_filepath: /tmp/id_rsa
           # user and ssh key used to connect to the ec2 instance
           user: admin
@@ -54,7 +60,8 @@ spec:
           service_account_json:
           service_account_json_path: /tmp/serviceaccount.json
           machine_type: n1-standard-1
-          image_name: garden-linux-dev-gcp-38
+          image_project: sap-se-gcp-gardenlinux
+          image_name: $(params.gcp_image_name)
           # user and ssh key used to connect to the vm
           user: admin
           ssh_key_filepath: /tmp/id_rsa
@@ -64,30 +71,9 @@ spec:
 
         echo "> Installing dependencies"
         apk update && apk add make
-        pip install pipenv
+        pip install scp
 
         cd $(resources.inputs.repo.path)/tests
-        pipenv install -dev
 
         echo "> Run tests"
-        pipenv run pytest --iaas=$(params.iaas) integration/
-
----
-apiVersion: tekton.dev/v1alpha1
-kind: PipelineResource
-metadata:
-  name: gardenlinux-repo
-spec:
-  type: git
-  params:
-    - name: revision
-      value: master
-    - name: url
-      value: https://github.com/gardenlinux/gardenlinux.git
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: build-bot
-secrets:
-  - name: github-com-user
+        pytest --iaas=$(params.iaas) integration/
