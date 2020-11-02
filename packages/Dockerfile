@@ -1,5 +1,7 @@
 FROM	debian:testing-slim
 
+ENV     DEBIAN_FRONTEND noninteractive
+
 RUN	mkdir /etc/sudoers.d \
      &&	echo "%wheel ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/wheel \
      && echo "deb-src http://deb.debian.org/debian testing main" >> /etc/apt/sources.list \

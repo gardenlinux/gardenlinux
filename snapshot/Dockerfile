@@ -1,5 +1,7 @@
 FROM	debian:stable-slim
 
+ENV     DEBIAN_FRONTEND noninteractive
+
 RUN	apt-get update \
      &&	apt-get install debian-archive-keyring \
      &&	echo "deb http://archive.debian.org/debian/ sarge main [trusted=yes]" >> /etc/apt/sources.list.d/damnold.list \
