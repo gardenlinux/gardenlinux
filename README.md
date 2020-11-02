@@ -61,6 +61,7 @@ We can run on any system supporting Docker and having loopback support and has
 - AWS: [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
 - Azure: [Azure CLI](https://docs.microsoft.com/de-de/cli/azure/install-azure-cli-apt)
 - GCP: [Cloud SDK](https://cloud.google.com/sdk/docs/quickstart?utm_source=youtube&utm_medium=Unpaidsocial&utm_campaign=car-20200311-Quickstart-Mac#linux), [gsutil](https://cloud.google.com/storage/docs/gsutil_install?hl=de#install)
+- OpenStack: [OpenStackCLI](https://github.com/openstack/python-openstackclient)
 
 ### Required kernel modules
 
