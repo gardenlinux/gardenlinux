@@ -62,7 +62,7 @@ docker_run $package.patch "
 	cat - > debian/changelog <<EOF
 linux ($KERNEL_ORG-1) UNRELEASED; urgency=medium
 
-  [ GardenLinux Maintainers ]
+  [ Garden Linux Maintainers ]
   * Compile with gcc-10 on all architectures.
   * [rt] Update to $KERNEL_RT_VERSION and re-enable.
   * Bump ABI to 5.
@@ -70,7 +70,7 @@ linux ($KERNEL_ORG-1) UNRELEASED; urgency=medium
   * fix traceid_list linker problem on gcc-10
   * fix udev_context linker problem on gcc-10
 
- -- GardenLinux Maintainers <contact@gardenlinux.io>  $(date -R)
+ -- Garden Linux Maintainers <contact@gardenlinux.io>  $(date -R)
 
 EOF
 	debian/bin/stable-update ../linux-stable $KERNEL_VERSION

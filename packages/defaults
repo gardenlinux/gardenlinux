@@ -1,4 +1,4 @@
-BUILDNAME="GardenLinux Maintainers"
+BUILDNAME="Garden Linux Maintainers"
 BUILDEMAIL="contact@gardenlinux.io"
 BUILDKEY="contact@gardenlinux.io"
 BUILDKEYPUB=$(gpg --armor --export "${BUILDKEY}") 
