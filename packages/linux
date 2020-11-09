@@ -6,8 +6,8 @@ thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source $thisDir/defaults
 
 KERNEL_ORG=5.4.19
-KERNEL_VERSION=5.4.74
-KERNEL_RT_VERSION=5.4.70-rt40
+KERNEL_VERSION=5.4.75
+KERNEL_RT_VERSION=5.4.74-rt41
 
 docker_run $package.patch "
 	gpg --locate-keys torvalds@kernel.org gregkh@kernel.org
