@@ -69,7 +69,7 @@ docker run \
 		exportDir="output"
 		outputDir="$exportDir/steamos/$dpkgArch/$suite"
 
-		debuerreotypeScriptsDir="$(dirname "$(readlink -f "$(which debuerreotype-init)")")"
+		debuerreotypeScriptsDir="$(dirname "$(readlink -f "$(which garden-init)")")"
 
 		keyring="/usr/share/keyrings/valve-archive-keyring.gpg"
 
@@ -89,7 +89,7 @@ docker run \
 		fi
 
 		{
-			debuerreotype-init --non-debian \
+			garden-init --non-debian \
 				--debootstrap-script /usr/share/debootstrap/scripts/jessie \
 				--keyring "$keyring" \
 				--include valve-archive-keyring \
@@ -98,7 +98,7 @@ docker run \
 				rootfs "$suite" "$mirror"
 			echo "deb $mirror $suite main contrib non-free" | tee rootfs/etc/apt/sources.list
 
-			epoch="$(< rootfs/debuerreotype-epoch)"
+			epoch="$(< rootfs/garden-epoch)"
 			touch_epoch() {
 				while [ "$#" -gt 0 ]; do
 					local f="$1"; shift
@@ -106,9 +106,9 @@ docker run \
 				done
 			}
 
-			debuerreotype-config rootfs
-			debuerreotype-apt-get rootfs update -qq
-			debuerreotype-apt-get rootfs dist-upgrade -yqq
+			garden-config rootfs
+			garden-apt-get rootfs update -qq
+			garden-apt-get rootfs dist-upgrade -yqq
 
 			# make a couple copies of rootfs so we can create other variants
 			for variant in slim sbuild; do
@@ -118,13 +118,13 @@ docker run \
 
 			# prefer iproute2 if it exists
 			iproute=iproute2
-			if ! debuerreotype-chroot rootfs apt-get install -qq -s iproute2 &> /dev/null; then
+			if ! garden-chroot rootfs apt-get install -qq -s iproute2 &> /dev/null; then
 				# poor wheezy
 				iproute=iproute
 			fi
-			debuerreotype-apt-get rootfs install -y iputils-ping $iproute
+			garden-apt-get rootfs install -y iputils-ping $iproute
 
-			debuerreotype-slimify rootfs-slim
+			garden-slimify rootfs-slim
 
 			# this should match the list added to the "buildd" variant in debootstrap and the list installed by sbuild
 			# https://salsa.debian.org/installer-team/debootstrap/blob/da5f17904de373cd7a9224ad7cd69c80b3e7e234/scripts/debian-common#L20
@@ -134,7 +134,7 @@ docker run \
 				# poor alchemist
 				fakeroot=
 			fi
-			debuerreotype-apt-get rootfs-sbuild install -y build-essential $fakeroot
+			garden-apt-get rootfs-sbuild install -y build-essential $fakeroot
 
 			create_artifacts() {
 				local targetBase="$1"; shift
@@ -143,10 +143,10 @@ docker run \
 				local variant="$1"; shift
 
 				if [ "$variant" != "sbuild" ]; then
-					debuerreotype-tar "$rootfs" "$targetBase.tar.xz"
+					garden-tar "$rootfs" "$targetBase.tar.xz"
 				else
 					# sbuild needs "deb-src" entries
-					debuerreotype-chroot "$rootfs" sed -ri -e "/^deb / p; s//deb-src /" /etc/apt/sources.list
+					garden-chroot "$rootfs" sed -ri -e "/^deb / p; s//deb-src /" /etc/apt/sources.list
 
 					# APT has odd issues with "Acquire::GzipIndexes=false" + "file://..." sources sometimes
 					# (which are used in sbuild for "--extra-package")
@@ -156,18 +156,18 @@ docker run \
 					rm -f "$rootfs/etc/apt/apt.conf.d/docker-gzip-indexes"
 					# TODO figure out the bug and fix it in APT instead /o\
 
-					# schroot is picky about "/dev" (which is excluded by default in "debuerreotype-tar")
+					# schroot is picky about "/dev" (which is excluded by default in "garden-tar")
 					# see https://github.com/debuerreotype/debuerreotype/pull/8#issuecomment-305855521
-					debuerreotype-tar --include-dev "$rootfs" "$targetBase.tar.xz"
+					garden-tar --include-dev "$rootfs" "$targetBase.tar.xz"
 				fi
 				du -hsx "$targetBase.tar.xz"
 
 				sha256sum "$targetBase.tar.xz" | cut -d" " -f1 > "$targetBase.tar.xz.sha256"
 				touch_epoch "$targetBase.tar.xz.sha256"
 
-				debuerreotype-chroot "$rootfs" dpkg-query -W > "$targetBase.manifest"
-				echo "$epoch" > "$targetBase.debuerreotype-epoch"
-				touch_epoch "$targetBase.manifest" "$targetBase.debuerreotype-epoch"
+				garden-chroot "$rootfs" dpkg-query -W > "$targetBase.manifest"
+				echo "$epoch" > "$targetBase.garden-epoch"
+				touch_epoch "$targetBase.manifest" "$targetBase.garden-epoch"
 
 				for f in debian_version os-release apt/sources.list; do
 					targetFile="$targetBase.$(basename "$f" | sed -r "s/[^a-zA-Z0-9_-]+/-/g")"

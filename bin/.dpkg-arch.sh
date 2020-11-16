@@ -19,7 +19,7 @@ done
 targetDir="${1:-}"; shift || eusage 'missing target-dir'
 [ -n "$targetDir" ]
 
-arch="$("$thisDir/debuerreotype-chroot" "$targetDir" dpkg --print-architecture)"
+arch="$("$thisDir/garden-chroot" "$targetDir" dpkg --print-architecture)"
 
 # --debian-eol woody likes to give us "i386-none"
 arch="${arch%-none}"

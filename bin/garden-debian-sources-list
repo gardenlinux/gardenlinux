@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+# Contains sources from https://github.com/debuerreotype/debuerreotype
+
 set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
@@ -32,7 +35,7 @@ targetDir="${1:-}"; shift || eusage 'missing target-dir'
 suite="${1:-}"; shift || eusage 'missing suite'
 [ -n "$targetDir" ]
 
-epoch="$(< "$targetDir/debuerreotype-epoch")"
+epoch="$(< "$targetDir/garden-epoch")"
 
 if [ -z "$ports" ]; then
 	standardMirror='http://deb.debian.org/debian'

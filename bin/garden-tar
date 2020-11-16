@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+# Contains sources from https://github.com/debuerreotype/debuerreotype
+
 set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
@@ -28,7 +31,7 @@ targetDir="${1:-}"; shift || eusage 'missing target-dir'
 targetTar="${1:-}"; shift || eusage 'missing target-tar'
 [ -n "$targetTar" ]
 
-epoch="$(< "$targetDir/debuerreotype-epoch")"
+epoch="$(< "$targetDir/garden-epoch")"
 [ -n "$epoch" ]
 
 aptVersion="$("$thisDir/.apt-version.sh" "$targetDir")"
@@ -43,7 +46,7 @@ if dpkg --compare-versions "$aptVersion" '>=' '0.8~'; then
 	# (see also the targeted exclusions in ".tar-exclude" that these are overriding)
 fi
 
-"$thisDir/debuerreotype-fixup" "$targetDir"
+"$thisDir/garden-fixup" "$targetDir"
 
 tarArgs=(
 	--create

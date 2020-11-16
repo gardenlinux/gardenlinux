@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+# Contains sources from https://github.com/debuerreotype/debuerreotype
+
 set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "${BASH_SOURCE}")")"

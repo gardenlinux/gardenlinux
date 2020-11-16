@@ -1,7 +1,7 @@
 # the file we store the "epoch" of a given rootfs in
-./debuerreotype-epoch
+./garden-epoch
 
-# "/dev" is a special case in "debuerreotype-tar"
+# "/dev" is a special case in "garden-tar"
 #./dev/**
 ./proc/**
 ./sys/**

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+# Contains sources from https://github.com/debuerreotype/debuerreotype
+
 set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
@@ -19,7 +22,7 @@ done
 targetDir="${1:-}"; shift || eusage 'missing target-dir'
 cmd="${1:-}"; shift || eusage 'missing command'
 [ -n "$targetDir" ]
-epoch="$(< "$targetDir/debuerreotype-epoch")"
+epoch="$(< "$targetDir/garden-epoch")"
 [ -n "$epoch" ]
 
 export targetDir epoch
