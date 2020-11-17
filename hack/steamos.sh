@@ -21,7 +21,7 @@ while true; do
 done
 
 outputDir="${1:-}"; shift || eusage 'missing output-dir'
-suite="${1:-brewmaster}" # http://repo.steampowered.com/steamos/dists/
+suite="${1:-brewmaster}" # https://repo.steampowered.com/steamos/dists/
 
 mkdir -p "$outputDir"
 outputDir="$(readlink -f "$outputDir")"
@@ -45,8 +45,8 @@ dockerImage="debuerreotype/debuerreotype:$ver"
 steamDockerImage="$dockerImage-steamos"
 [ -z "$build" ] || docker build -t "$steamDockerImage" - <<-EODF
 	FROM $dockerImage
-	# http://repo.steampowered.com/steamos/pool/main/v/valve-archive-keyring/?C=M;O=D
-	RUN wget -O valve.deb 'http://repo.steampowered.com/steamos/pool/main/v/valve-archive-keyring/valve-archive-keyring_0.5+bsos3_all.deb' \\
+	# https://repo.steampowered.com/steamos/pool/main/v/valve-archive-keyring/?C=M;O=D
+	RUN wget -O valve.deb 'https://repo.steampowered.com/steamos/pool/main/v/valve-archive-keyring/valve-archive-keyring_0.5+bsos3_all.deb' \\
 		&& apt install -y ./valve.deb \\
 		&& rm valve.deb
 EODF
@@ -62,7 +62,7 @@ docker run \
 	bash -Eeuo pipefail -c '
 		set -x
 
-		mirror="http://repo.steampowered.com/steamos"
+		mirror="https://repo.steampowered.com/steamos"
 
 		dpkgArch="$(dpkg --print-architecture | awk -F- "{ print \$NF }")"
 

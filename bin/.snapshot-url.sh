@@ -26,8 +26,8 @@ if wget -t1 -qO/dev/null http://localhost/archive/debian/; then
 	echo "http://localhost/archive/$archive/$t"
 elif wget -t1 -qO/dev/null http://172.17.0.1/archive/debian/; then	
 	echo "http://172.17.0.1/archive/$archive/$t"
-elif wget -t1 -qO/dev/null http://snapshot-cache.ci.gardener.cloud/archive/debian/; then
-	echo "http://snapshot-cache.ci.gardener.cloud/archive/$archive/$t"
+elif wget -t1 -qO/dev/null https://snapshot-cache.ci.gardener.cloud/archive/debian/; then
+	echo "https://snapshot-cache.ci.gardener.cloud/archive/$archive/$t"
 else
-	echo "http://snapshot.debian.org/archive/$archive/$t"
+	echo "https://snapshot.debian.org/archive/$archive/$t"
 fi

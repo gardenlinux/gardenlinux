@@ -2,4 +2,4 @@
 
 PACKAGES_DEBIAN="packages_debian"
 CODENAME="bullseye"
-REPOSITORY="deb http://ftp.de.debian.org/debian bullseye main"
+REPOSITORY="deb https://ftp.de.debian.org/debian bullseye main"
