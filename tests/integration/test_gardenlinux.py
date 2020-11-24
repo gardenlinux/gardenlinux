@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import time
@@ -110,3 +111,8 @@ def test_ping6(client, ping6_host):
     (exit_code, output, error) = client.execute_command(command)
     assert exit_code == 0, f'no {error=} expected when executing "{command}"'
     assert "5 packets transmitted, 5 received, 0% packet loss" in output
+
+def test_systemctl_no_failed_units(client):
+    (exit_code, output, error) = client.execute_command("systemctl list-units --output=json --state=failed")
+    assert exit_code == 0, f"no {error=} expected"
+    assert len(json.loads(output)) == 0
