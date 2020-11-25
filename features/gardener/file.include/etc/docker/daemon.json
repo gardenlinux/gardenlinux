@@ -1,4 +1,5 @@
-{ "storage-driver": "overlay2",
+{ "live-restore": true,
+  "storage-driver": "overlay2",
   "default-ulimits": {
       "memlock": {
           "name": "memlock",
