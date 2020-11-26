@@ -82,7 +82,7 @@ class AlicloudImageMaker:
             )
             bucket = oss2.Bucket(
                 self.oss2_auth,
-                f"http://oss-{self.region}.aliyuncs.com",
+                f"https://oss-{self.region}.aliyuncs.com",
                 self.bucket_name,
             )
             bucket.put_object(self.image_oss_key, tfh)
