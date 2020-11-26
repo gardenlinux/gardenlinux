@@ -1,12 +1,3 @@
---- org/debian/config/defines	2020-08-10 07:56:45.942642560 +0000
-+++ new/debian/config/defines	2020-08-10 09:55:04.355656830 +0000
-@@ -1,5 +1,5 @@
- [abi]
--abiname: 1
-+abiname: 5
- ignore-changes:
-  __cpuhp_*
-  bpf_analyzer
 --- org/debian/rules.d/scripts/kconfig/Makefile	2020-08-11 14:51:35.530153452 +0000
 +++ new/debian/rules.d/scripts/kconfig/Makefile	2020-08-11 14:51:52.622146051 +0000
 @@ -2,7 +2,7 @@
