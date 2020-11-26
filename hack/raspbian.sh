@@ -61,7 +61,7 @@ docker run \
 	bash -Eeuo pipefail -c '
 		set -x
 
-		mirror="http://archive.raspbian.org/raspbian"
+		mirror="https://archive.raspbian.org/raspbian"
 
 		dpkgArch="armhf"
 

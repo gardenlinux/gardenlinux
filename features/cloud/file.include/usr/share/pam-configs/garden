@@ -1,4 +1,4 @@
-Name: GardenLinux pam policies  
+Name: Garden Linux pam policies
 Default: yes
 Priority: 1024 
 Conflicts: cracklib 

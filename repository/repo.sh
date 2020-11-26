@@ -15,7 +15,7 @@ usage() {
         echo -e "usage: $0
         --packages-list          Specify the Debian packages list file
 	--codename               Specify the codename for the repository (defaults to testing)
-	--repository             Specify the repository (defaults to 'deb http://ftp.de.debian.org/debian testing main')
+	--repository             Specify the repository (defaults to 'deb https://ftp.de.debian.org/debian testing main')
         --download               Download the packages from the debian repository
         --publish                Publish the changes to the repository 
         --refresh                Refresh the repository if files have been added to the pool

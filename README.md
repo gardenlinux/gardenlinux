@@ -47,13 +47,31 @@ We can run on any system supporting Docker and having loopback support and has
 
 - 2+ GiB (use RAM-disk; use fs with sparse-file support)
 - 10+ GiB free disk space
+- Internet connection to access snapshot.debian.org and repo.gardenlinux.io
 
-required packages are (on Debian/Ubuntu):
-    apt install docker.io make
+### Required packages for a convenient build (on Debian/Ubuntu):
 
-Recommended packages to run recommended supporting services (like a build cache) and extended tests (virtualized image runs)
+`apt install bash docker.io docker-compose make coreutils gnupg git qemu-system-x86`
 
-    apt install docker-compose qemu-system-x86
+### Required packages for deployment on cloud services:
+
+`apt install python3`
+
+- Alicloud: [Aliyun CLI](https://github.com/aliyun/aliyun-cli)
+- AWS: [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+- Azure: [Azure CLI](https://docs.microsoft.com/de-de/cli/azure/install-azure-cli-apt)
+- GCP: [Cloud SDK](https://cloud.google.com/sdk/docs/quickstart?utm_source=youtube&utm_medium=Unpaidsocial&utm_campaign=car-20200311-Quickstart-Mac#linux), [gsutil](https://cloud.google.com/storage/docs/gsutil_install?hl=de#install)
+- OpenStack: [OpenStackCLI](https://github.com/openstack/python-openstackclient)
+
+### Required kernel modules
+
+ext4, loop, squashfs, vfat, vsock (for VM image builds and extended virtualized tests)
+
+### Required packages to configure the CI pipeline
+
+`apt install bash git python`
+
+`pip install tekton`
 
 ## Quick start
 

@@ -40,7 +40,7 @@ while true; do
 done
 
 outputDir="${1:-}";	shift || eusage 'missing output-dir'
-version="$(bin/garden-version --major ${1:-})";	shift || /bin/true
+version="$(bin/garden-version ${1:-})";	shift || /bin/true
 
 mkdir -p "$outputDir"
 outputDir="$(readlink -f "$outputDir")"
