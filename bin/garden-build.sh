@@ -20,7 +20,7 @@ while true; do
 		--debug) debug=1 ;;	# for jumping in the prepared image"
 		--eol) eol=1 ;;		# for using "archive.debian.org"
 		--ports) ports=1 ;;	# for using "debian-ports"
-		--arch) arch="$1"; shift ;; # for adding "--arch" to debuerreotype-init
+		--arch) arch="$1"; shift ;; # for adding "--arch" to garden-init
 		--qemu) qemu=1 ;;	# for using "qemu-debootstrap"
 		--features) features="$1"; shift ;; # adding features
 		--suite) suite="$1"; shift ;; # suite is a parameter this time
@@ -54,7 +54,7 @@ touch_epoch() {
 	done
 }
 
-debuerreotypeScriptsDir="$(dirname "$(readlink -f "$(which debuerreotype-init)")")"
+debuerreotypeScriptsDir="$(dirname "$(readlink -f "$(which garden-init)")")"
 featureDir="$debuerreotypeScriptsDir/../features"
 
 for archive in "" security; do
@@ -136,17 +136,17 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 		initArgs+=( --debootstrap="qemu-debootstrap" )
 	fi
 
-	debuerreotype-init "${initArgs[@]}" rootfs "$suite" "@$epoch"
+	garden-init "${initArgs[@]}" rootfs "$suite" "@$epoch"
 
 	if [ -n "${eol-}" ]; then
-		debuerreotype-gpgv-ignore-expiration-config rootfs
+		garden-gpgv-ignore-expiration-config rootfs
 	fi
 
 	[ -n "$features" ] && configArgs+=( --features "$features" )
 
-	debuerreotype-config "${configArgs[@]}" rootfs
-	debuerreotype-apt-get rootfs update -qq
-	debuerreotype-apt-get rootfs dist-upgrade -yqq
+	garden-config "${configArgs[@]}" rootfs
+	garden-apt-get rootfs update -qq
+	garden-apt-get rootfs dist-upgrade -yqq
 
 	aptVersion="$("$debuerreotypeScriptsDir/.apt-version.sh" rootfs)"
 	if [ -n "${eol:-}" ] && dpkg --compare-versions "$aptVersion" ">=" "0.7.26~"; then
@@ -161,7 +161,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 	#	tar -cC rootfs . | tar -xC "rootfs-$variant"
 	#done
 
-	debuerreotype-slimify rootfs
+	garden-slimify rootfs
 
 	sourcesListArgs=()
 	[ -z "${eol:-}" ] || sourcesListArgs+=( --eol )
@@ -195,12 +195,12 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 		tarArgs+=( --include-dev )
 
 		if [ "$variant" != "sbuild" ]; then
-			debuerreotype-debian-sources-list "${sourcesListArgs[@]}" "$rootfs" "$suite"
+			garden-debian-sources-list "${sourcesListArgs[@]}" "$rootfs" "$suite"
 		else
 			# sbuild needs "deb-src" entries
-			debuerreotype-debian-sources-list --deb-src "${sourcesListArgs[@]}" "$rootfs" "$suite"
+			garden-debian-sources-list --deb-src "${sourcesListArgs[@]}" "$rootfs" "$suite"
 
-			# schroot is picky about "/dev" (which is excluded by default in "debuerreotype-tar")
+			# schroot is picky about "/dev" (which is excluded by default in "garden-tar")
 			# see https://github.com/debuerreotype/debuerreotype/pull/8#issuecomment-305855521
 		fi
 
@@ -226,20 +226,20 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 				;;
 		esac
 
-		debuerreotype-tar "${tarArgs[@]}" "$rootfs" "$targetBase.tar.xz"
+		garden-tar "${tarArgs[@]}" "$rootfs" "$targetBase.tar.xz"
 		du -hsx "$targetBase.tar.xz"
 
 		sha256sum "$targetBase.tar.xz" | cut -d" " -f1 > "$targetBase.tar.xz.sha256"
 		touch_epoch "$targetBase.tar.xz.sha256"
 
-		debuerreotype-chroot "$rootfs" bash -c '
+		garden-chroot "$rootfs" bash -c '
 			if ! dpkg-query -f='\''${binary:Package} ${Version}\n'\'' -W 2> /dev/null; then
 				# --debian-eol woody has no dpkg-query
 				dpkg -l
 			fi
 		' > "$targetBase.manifest"
-		echo "$epoch" > "$targetBase.debuerreotype-epoch"
-		touch_epoch "$targetBase.manifest" "$targetBase.debuerreotype-epoch"
+		echo "$epoch" > "$targetBase.garden-epoch"
+		touch_epoch "$targetBase.manifest" "$targetBase.garden-epoch"
 
 		for f in debian_version os-release apt/sources.list; do
 			targetFile="$targetBase.$(basename "$f" | sed -r "s/[^a-zA-Z0-9_-]+/-/g")"
@@ -318,7 +318,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 #			targetBase="$variantDir/rootfs"
 #
 #			# point sources.list back at snapshot.debian.org temporarily (but this time pointing at $codename instead of $suite)
-#			debuerreotype-debian-sources-list --snapshot "${sourcesListArgs[@]}" "$rootfs" "$codename"
+#			garden-debian-sources-list --snapshot "${sourcesListArgs[@]}" "$rootfs" "$codename"
 #
 #			create_artifacts "$targetBase" "$rootfs" "$codename" "$variant"
 #		done

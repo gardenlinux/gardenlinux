@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+# Contains sources from https://github.com/debuerreotype/debuerreotype
+
 set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
@@ -28,7 +31,7 @@ if dpkg --compare-versions "$aptVersion" '<<' '0.7.20~'; then
 fi
 
 sourceFile="$thisDir/.gpgv-ignore-expiration.sh"
-targetPath='/usr/local/bin/.debuerreotype-gpgv-ignore-expiration'
+targetPath='/usr/local/bin/.garden-gpgv-ignore-expiration'
 targetFile="$targetDir$targetPath"
 cp -T "$sourceFile" "$targetFile"
 chmod 0755 "$targetFile"
@@ -40,7 +43,7 @@ case "$aptVersion" in
 	0.* | 1.0*) aptConfigKey='Dir::Bin::gpg' ;;
 esac
 
-cat > "$targetDir/etc/apt/apt.conf.d/debuerreotype-gpgv-ignore-expiration" <<-EOF
+cat > "$targetDir/etc/apt/apt.conf.d/garden-gpgv-ignore-expiration" <<-EOF
 	# For the sake of EOL releases (whose archive keys have often expired), we need
 	# a fake "gpgv" substitute that will essentially ignore *just* key expiration.
 	# (So we get *some* signature validation instead of using something like
@@ -49,5 +52,5 @@ cat > "$targetDir/etc/apt/apt.conf.d/debuerreotype-gpgv-ignore-expiration" <<-EO
 
 	$aptConfigKey "$targetPath";
 EOF
-chmod 0644 "$targetDir/etc/apt/apt.conf.d/debuerreotype-gpgv-ignore-expiration"
-"$thisDir/.fix-apt-comments.sh" "$aptVersion" "$targetDir/etc/apt/apt.conf.d/debuerreotype-gpgv-ignore-expiration"
+chmod 0644 "$targetDir/etc/apt/apt.conf.d/garden-gpgv-ignore-expiration"
+"$thisDir/.fix-apt-comments.sh" "$aptVersion" "$targetDir/etc/apt/apt.conf.d/garden-gpgv-ignore-expiration"
