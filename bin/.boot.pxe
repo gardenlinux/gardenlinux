@@ -3,7 +3,6 @@
 set pxeserver IPADDRESSGOESHERE 
 set pxepath PATHGOESHERE 
 
-kernel http://${pxeserver}/${pxepath}/rootfs.vmlinuz initrd=rootfs.initrd console=ttyS0 boot=live bootfrom=/
+kernel http://${pxeserver}/${pxepath}/rootfs.vmlinuz gl.url=http://${pxeserver}/root.squashfs gl.live=1 ip=dhcp console=ttyS0
 initrd http://${pxeserver}/${pxepath}/rootfs.initrd
 boot
-
