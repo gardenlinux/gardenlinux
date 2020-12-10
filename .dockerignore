@@ -1,4 +1,2 @@
-/.git
-/.build
-/.packages
-/.repository
+/.*
+
