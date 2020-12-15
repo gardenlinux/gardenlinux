@@ -106,6 +106,10 @@ cloud: docker signature
 kvm: docker signature
 	./build.sh --no-build --features server,cloud,kvm,_dev $(BUILDDIR)/kvm $(SNAPSHOT_DATE)
 
+
+anvil: docker signature
+	./build.sh --no-build --features server,cloud-anvil,kvm,_dev $(BUILDDIR)/anvil $(SNAPSHOT_DATE)
+
 onmetal: metal
 metal: docker signature
 	./build.sh --no-build --features server,metal $(BUILDDIR)/metal $(SNAPSHOT_DATE)
