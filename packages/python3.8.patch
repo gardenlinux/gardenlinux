@@ -1,4 +1,41 @@
-+++ python3.8-3.8.3/debian/rules
++++ python3.8/debian/control.in
+@@ -7,7 +7,7 @@
+   lsb-release, sharutils,
+   libreadline-dev, libncursesw5-dev (>= 5.3), @bd_gcc@
+   zlib1g-dev, libbz2-dev, liblzma-dev,
+-  libgdbm-dev, libdb-dev,
++  libgdbm-dev,
+   tk-dev, blt-dev (>= 2.4z), libssl-dev,
+   libexpat1-dev,
+ #  libmpdec-dev (>= 2.4),
+@@ -15,7 +15,7 @@
+   locales-all,
+   libsqlite3-dev, libffi-dev (>= 3.0.5) [!or1k !avr32],
+   libgpm2 [linux-any],
+-  mime-support, netbase, bzip2, time, python3@bd_qual@, @PVER@@bd_qual@ <cross>,
++  media-types, netbase, bzip2, time, python3@bd_qual@, @PVER@@bd_qual@ <cross>,
+   net-tools, xvfb <!nocheck>, xauth <!nocheck>,
+   systemtap-sdt-dev
+ Build-Depends-Indep: python3-sphinx, python3-docs-theme, texinfo
+@@ -30,7 +30,7 @@
+ Priority: @PRIO@
+ Depends: @PVER@-minimal (= ${binary:Version}),
+  lib@PVER@-stdlib (= ${binary:Version}),
+- mime-support,
++ media-types,
+  ${shlibs:Depends}, ${misc:Depends}
+ Suggests: @PVER@-venv, @PVER@-doc, binutils
+ Breaks: python3-all (<< 3.6.5~rc1-1),
+@@ -62,7 +62,7 @@
+ Pre-Depends: ${misc:Pre-Depends}
+ Breaks: libpython3.8-testsuite (<< 3.8.0-4)
+ Replaces: libpython3.8-testsuite (<< 3.8.0-4)
+-Depends: lib@PVER@-minimal (= ${binary:Version}), mime-support, ${shlibs:Depends}, ${misc:Depends}
++Depends: lib@PVER@-minimal (= ${binary:Version}), media-types, ${shlibs:Depends}, ${misc:Depends}
+ Description: Interactive high-level object-oriented language (standard library, version @VER@)
+  Python is a high-level, interactive, object-oriented language. Its @VER@ version
+  includes an extensive class library with lots of goodies for
++++ python3.8/debian/rules
 @@ -369,7 +369,7 @@
  		--prefix=/usr \
  		--enable-ipv6 \
@@ -8,13 +45,40 @@
  		--with-computed-gotos \
  		--without-ensurepip \
  		--with-system-expat \
-+++ python3.8-3.8.3/debian/control	
-@@ -7,7 +7,7 @@
-   lsb-release, sharutils,
-   libreadline-dev, libncursesw5-dev (>= 5.3), 
-   zlib1g-dev, libbz2-dev, liblzma-dev,
--  libgdbm-dev, libdb-dev,
-+  libgdbm-dev,
-   tk-dev, blt-dev (>= 2.4z), libssl-dev,
-   libexpat1-dev, libmpdec-dev (>= 2.4),
-   libbluetooth-dev [linux-any] <!pkg.python3.8.nobluetooth>,
++++ python3.8/debian/tests/control
+@@ -2,7 +2,7 @@
+ Depends: build-essential,
+   locales-all,
+   python3.8-dev,
+-  libpython3.8-testsuite:native,
++  libpython3.8-testsuite,
+   python3-gdbm,
+   python3-distutils,
+   python3-tk,
+@@ -15,7 +15,7 @@
+ Depends: build-essential,
+   locales-all, python3.8-dev,
+   python3.8-dbg,
+-  libpython3.8-testsuite:native,
++  libpython3.8-testsuite,
+   python3-gdbm-dbg,
+   gdb,
+   python3-distutils,
+@@ -29,7 +29,7 @@
+ Depends: build-essential,
+   locales-all,
+   python3.8-dev,
+-  libpython3.8-testsuite:native,
++  libpython3.8-testsuite,
+   python3-gdbm,
+   python3-distutils,
+ # need to turn off apport
+@@ -40,7 +40,7 @@
+   locales-all,
+   python3.8-dev,
+   python3.8-dbg,
+-  libpython3.8-testsuite:native,
++  libpython3.8-testsuite,
+   python3-gdbm-dbg,
+   gdb,
+   python3-distutils,

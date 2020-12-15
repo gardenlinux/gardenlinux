@@ -6,7 +6,7 @@ thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source $thisDir/defaults
 
 KERNEL_ORG=5.4.19
-KERNEL_VERSION=5.4.80
+KERNEL_VERSION=5.4.82
 KERNEL_RT_VERSION=5.4.78-rt44
 KERNEL_ABI=6
 
