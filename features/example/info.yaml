@@ -1,15 +1,19 @@
 description: "The base layer for all other features. It pulls no extra packets only debootstap minbase"
-type: platform
+type: something
 features:
   include: 
     - _slim
+  exclude:
+    - chost
 tar:
   compression: xz
   include-dev: false
 fs:
   - dest: /
+    name: root
     type: ext4
   - dest: /usr
+    name: usr
     type: ext4
     options: ro
 disk:
@@ -17,3 +21,15 @@ disk:
   boot: 
     - efi
     - mbr
+
+
+#garden-feat parameters tar --features=AWS,chost,_dev,_prod
+
+#tar=( tar_compression, tar_include-dev )
+#tar_compression=xz
+#tar_include-dev=false
+
+#fs=( fs_root, fs_usr )
+#fs_root= (fs_root_dest, fs_root_type)
+#fs_root_dest=/
+#fs_root_type=ext4
