@@ -10,14 +10,12 @@ targetBaseDir=$(dirname "$targetBase")
 cp "$rootfs/boot/"vmlinuz* "$targetBase.vmlinuz"
 cp "$rootfs/boot/"initrd* "$targetBase.initrd"
 
-mkdir "$targetBaseDir/live"
-
 # create the squashfs to include the fully generate image, excluding /boot of course as it's not needed
-mksquashfs "$rootfs" "$targetBaseDir/live/root.squashfs" -e boot
+mksquashfs "$rootfs" "$targetBaseDir/root.squashfs" -e boot
 
 # create a cpio archive from the squashfs and append to the initramfs
-(cd "$targetBaseDir"; echo -e ".\n./live\n./live/root.squashfs" | cpio -H newc -o | gzip -9 >> rootfs.initrd)
+# (cd "$targetBaseDir"; echo -e ".\n./live\n./live/root.squashfs" | cpio -H newc -o | gzip -9 >> rootfs.initrd)
 
 # clean-up
-rm -rf "$targetBaseDir/live"
-rm -rf "$targetBaseDir/root.squashfs"
+# rm -rf "$targetBaseDir/live"
+# rm -rf "$targetBaseDir/root.squashfs"

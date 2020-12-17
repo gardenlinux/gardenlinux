@@ -97,8 +97,9 @@ if [ "$pxe" -o "$pxeLocal" ]; then
 	if [ "$pxeLocal" ]; then
 		# copy the kernel image and initramfs to be able to be booted from PXE
 		cp "$pxeLocal/"{rootfs.initrd,rootfs.vmlinuz} "$tempDir/"
+		cp "$pxeLocal/root.squashfs" "$tempDir/"
 		cp "$thisDir/.boot.pxe" "$tempDir/boot.pxe"
-		
+		cp "$thisDir/*.ign" "$tempDir/"
 		# modify the boot.pxe to load the proper kernel and initramfs
 		sed -i "s/PATHGOESHERE//" "${tempDir}/boot.pxe" 
 		sed -i "s/IPADDRESSGOESHERE/10.0.2.2/" "${tempDir}/boot.pxe" 
@@ -114,6 +115,7 @@ if [ "$pxe" -o "$pxeLocal" ]; then
 		sed -i "s/IPADDRESSGOESHERE/172.31.31.177/" "${tempDir}/boot.pxe" 
 	fi
 	pxeConfig=",tftp=$tempDir,bootfile=/boot.pxe"
+	virtOpts+=( -boot order=nc )
 
 fi
 # network

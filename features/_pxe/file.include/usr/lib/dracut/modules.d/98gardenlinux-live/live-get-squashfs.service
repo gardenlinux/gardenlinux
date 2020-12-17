@@ -1,0 +1,18 @@
+[Unit]
+Description=Download squashfs image
+#DefaultDependencies=false
+
+After=basic.target network-online.target
+Wants=network-online.target
+#After=systemd-networkd-wait-online.service network-online.target
+#After=dracut-initqueue.service
+
+OnFailure=emergency.target
+OnFailureJobMode=isolate
+
+[Service]
+Type=oneshot
+TimeoutStartSec=600
+OOMScoreAdjust=-1000
+RemainAfterExit=yes
+ExecStart=/sbin/live-get-squashfs
