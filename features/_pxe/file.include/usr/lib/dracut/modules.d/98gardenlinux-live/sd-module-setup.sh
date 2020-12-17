@@ -34,6 +34,10 @@ install() {
         $systemdsystemunitdir/systemd-network-generator.service \
         $systemdsystemunitdir/systemd-resolved.service \
         $systemdsystemunitdir/systemd-networkd.socket \
+        $systemdsystemunitdir/network-online.target \
+        $systemdsystemunitdir/network-pre.target \
+        $systemdsystemunitdir/network.target \
+        $systemdsystemunitdir/systemd-resolved.service.d/resolvconf.conf \
         $systemdutildir/network/99-default.link \
         networkctl ip
 
@@ -55,8 +59,12 @@ install() {
 
     grep '^systemd-network:' $dracutsysrootdir/etc/passwd 2>/dev/null >> "$initdir/etc/passwd"
     grep '^systemd-network:' $dracutsysrootdir/etc/group >> "$initdir/etc/group"
+    grep '^systemd-resolve:' $dracutsysrootdir/etc/passwd 2>/dev/null >> "$initdir/etc/passwd"
+    grep '^systemd-resolve:' $dracutsysrootdir/etc/group >> "$initdir/etc/group"
     # grep '^systemd-timesync:' $dracutsysrootdir/etc/passwd 2>/dev/null >> "$initdir/etc/passwd"
     # grep '^systemd-timesync:' $dracutsysrootdir/etc/group >> "$initdir/etc/group"
+
+    ln -s /run/systemd/resolve/resolv.conf "$initdir/etc/resolv.conf" 
 
     _arch=${DRACUT_ARCH:-$(uname -m)}
     inst_libdir_file {"tls/$_arch/",tls/,"$_arch/",}"libnss_dns.so.*" \
@@ -69,9 +77,11 @@ install() {
         systemd-networkd.service \
         systemd-network-generator.service \
         systemd-resolved.service \
-        systemd-networkd.socket
 #       systemd-timesyncd.service
     do
         systemctl -q --root "$initdir" enable "$i"
     done
+
+    # resolved - name resolution in dracut
+    systemctl -q --root "$initdir" add-wants network-online.target systemd-resolved.service
 }
