@@ -99,11 +99,10 @@ if [ "$pxe" -o "$pxeLocal" ]; then
 		cp "$pxeLocal/"{rootfs.initrd,rootfs.vmlinuz} "$tempDir/"
 		cp "$pxeLocal/root.squashfs" "$tempDir/"
 		cp "$thisDir/.boot.pxe" "$tempDir/boot.pxe"
-		cp "$thisDir/*.ign" "$tempDir/"
+		cp "$thisDir/*.ign" "$tempDir/" || true
 		# modify the boot.pxe to load the proper kernel and initramfs
 		sed -i "s/PATHGOESHERE//" "${tempDir}/boot.pxe" 
 		sed -i "s/IPADDRESSGOESHERE/10.0.2.2/" "${tempDir}/boot.pxe" 
-		sed -i "s/http/tftp/" "${tempDir}/boot.pxe" 
 	else
 		# copy the kernel image and initramfs to be able to be booted from PXE
 		cp "$pxe/{rootfs.initrd,rootfs.vmlinuz}" "$thisDir/../hack/pxe/$rand/"
