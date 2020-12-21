@@ -11,7 +11,7 @@ depends() {
 
 install() {
     #inst_multiple grep sfdisk growpart udevadm awk mawk sed rm readlink
-    inst_multiple curl grep sfdisk awk mawk file
+    inst_multiple curl grep sfdisk awk mawk file sha256sum
    
     inst_simple "$moddir/live-get-squashfs.service" ${systemdsystemunitdir}/live-get-squashfs.service
     inst_script "$moddir/live-get-squashfs.sh" /sbin/live-get-squashfs
