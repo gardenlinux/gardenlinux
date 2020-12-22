@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
 func usage() {
@@ -25,6 +26,7 @@ func main() {
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 
 	featDirOpt := flag.String("feat-dir", "../features", "Directory of GardenLinux features")
+	ignoreOpt := flag.String("ignore", "", "List of feaures to ignore (comma-separated)")
 	helpOpt := flag.BoolP("help", "h", false, "Show this help message")
 
 	err := flag.CommandLine.Parse(os.Args[1:])
@@ -43,15 +45,16 @@ func main() {
 		_, _ = fmt.Fprintf(os.Stderr, "%s: %s\n", progName, err)
 		os.Exit(1)
 	}
+	ignoredFeatures := commaSepToSet(*ignoreOpt)
 
 	cmd := flag.Arg(0)
 	switch cmd {
 
 	case "expand":
-		err = expandCmd(allFeatures, flag.Args()[1:])
+		err = expandCmd(allFeatures, ignoredFeatures, flag.Args()[1:])
 
 	case "reduce":
-		err = reduceCmd(allFeatures, flag.Args()[1:])
+		err = reduceCmd(allFeatures, ignoredFeatures, flag.Args()[1:])
 
 	default:
 		flag.Usage()
@@ -85,6 +88,14 @@ func buildInclusionGraph(allFeatures featureSet) graph {
 	}
 
 	return incGraph
+}
+
+func commaSepToSet(commaSep string) set {
+	ignoredFeatures := make(set)
+	for _, f := range strings.Split(commaSep, ",") {
+		ignoredFeatures[f] = struct{}{}
+	}
+	return ignoredFeatures
 }
 
 func printStrings(strings []string) {
@@ -158,7 +169,7 @@ func sortFeatures(allFeatures featureSet, unsorted []string, strict bool) ([]str
 	return sorted, nil
 }
 
-func postorderDFS(g graph, seen set, origin string, processVertex func(string)) error {
+func postorderDFS(g graph, seen set, origin string, allowVertex func(string) bool, processVertex func(string)) error {
 	if _, ok := g[origin]; !ok {
 		return fmt.Errorf("%v is not part of the graph", origin)
 	}
@@ -178,11 +189,16 @@ func postorderDFS(g graph, seen set, origin string, processVertex func(string)) 
 	stack.Push(origin)
 
 	for stack.Size() > 0 {
-		vertex := stack.Top().(string)
-		hot[vertex] = struct{}{}
+		v := stack.Top().(string)
 
+		if allowVertex != nil && !allowVertex(v) {
+			stack.Pop()
+			continue
+		}
+
+		hot[v] = struct{}{}
 		done := true
-		edges := g[vertex]
+		edges := g[v]
 		for i := len(edges) - 1; i >= 0; i-- {
 			if _, ok := hot[edges[i]]; ok {
 				return fmt.Errorf("%v is part of a loop", edges[i])
@@ -196,10 +212,10 @@ func postorderDFS(g graph, seen set, origin string, processVertex func(string)) 
 		}
 		if done {
 			stack.Pop()
-			delete(hot, vertex)
+			delete(hot, v)
 
 			if processVertex != nil {
-				processVertex(vertex)
+				processVertex(v)
 			}
 		}
 	}
@@ -207,7 +223,7 @@ func postorderDFS(g graph, seen set, origin string, processVertex func(string)) 
 	return nil
 }
 
-func expandCmd(allFeatures featureSet, features []string) error {
+func expandCmd(allFeatures featureSet, ignoredFeatures set, features []string) error {
 	features, err := sortFeatures(allFeatures, features, false)
 	if err != nil {
 		return fmt.Errorf("expand: %w", err)
@@ -219,7 +235,13 @@ func expandCmd(allFeatures featureSet, features []string) error {
 
 	seen := make(set, len(gInc))
 	for _, f := range features {
-		err = postorderDFS(gInc, seen, f, func(v string) {
+		err = postorderDFS(gInc, seen, f, func(v string) bool {
+			_, ok := ignoredFeatures[v]
+			if ok {
+				_, _ = fmt.Fprintf(os.Stderr, "WARNING: expand: %v is being ignored by request\n", v)
+			}
+			return !ok
+		}, func(v string) {
 			expanded = append(expanded, v)
 
 			for _, e := range allFeatures[v].Features.Exclude {
@@ -242,7 +264,7 @@ func expandCmd(allFeatures featureSet, features []string) error {
 	return nil
 }
 
-func reduceCmd(allFeatures featureSet, features []string) error {
+func reduceCmd(allFeatures featureSet, ignoredFeatures set, features []string) error {
 	features, err := sortFeatures(allFeatures, features, true)
 	if err != nil {
 		return fmt.Errorf("reduce: %w", err)
@@ -264,7 +286,13 @@ func reduceCmd(allFeatures featureSet, features []string) error {
 		i++
 		minimal[f] = struct{}{}
 
-		err = postorderDFS(gInc, nil, f, func(v string) {
+		err = postorderDFS(gInc, nil, f, func(v string) bool {
+			_, ok := ignoredFeatures[v]
+			if ok {
+				_, _ = fmt.Fprintf(os.Stderr, "WARNING: expand: %v is being ignored by request\n", v)
+			}
+			return !ok
+		}, func(v string) {
 			if v == f {
 				return
 			}
