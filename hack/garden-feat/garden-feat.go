@@ -9,62 +9,122 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 )
 
 func usage() {
-	_, _ = fmt.Fprintf(os.Stderr, "Usage: %s [--option]... <command> ...\n", filepath.Base(os.Args[0]))
+	_, _ = fmt.Fprintf(os.Stderr, "Usage: %s <command> [--option]...\n", filepath.Base(os.Args[0]))
 	_, _ = fmt.Fprintf(os.Stderr, "Commands: expand, reduce\n")
-	_, _ = fmt.Fprintf(os.Stderr, "Option:\n")
+	_, _ = fmt.Fprintf(os.Stderr, "Options:\n")
 	flag.PrintDefaults()
 }
 
-func main() {
-	progName := filepath.Base(os.Args[0])
+func parseCmdLine(args []string) (progName string, cmd string, featDir string, features []string, ignore []string) {
+	progName = filepath.Base(args[0])
 	flag.Usage = usage
 	flag.ErrHelp = nil
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
+	flag.CommandLine = flag.NewFlagSet(args[0], flag.ContinueOnError)
 
-	featDirOpt := flag.String("feat-dir", "../features", "Directory of GardenLinux features")
-	ignoreOpt := flag.String("ignore", "", "List of feaures to ignore (comma-separated)")
-	helpOpt := flag.BoolP("help", "h", false, "Show this help message")
+	flag.StringVar(&featDir, "feat-dir", "../features", "Directory of GardenLinux features")
+	flag.StringSliceVarP(&ignore, "ignore", "i", nil, "List of feaures to ignore (comma-separated)")
+	flag.StringSliceVarP(&features, "features", "f", nil, "List of feaures (comma-separated)")
 
-	err := flag.CommandLine.Parse(os.Args[1:])
+	var help bool
+	flag.BoolVarP(&help, "help", "h", false, "Show this help message")
+
+	err := flag.CommandLine.Parse(args[1:])
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%s: %s\n", progName, err)
 		flag.Usage()
 		os.Exit(2)
 	}
-	if *helpOpt == true {
+	if help {
 		flag.Usage()
 		os.Exit(2)
 	}
 
-	allFeatures, err := readFeatures(*featDirOpt)
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "%s: %s\n", progName, err)
-		os.Exit(1)
-	}
-	ignoredFeatures := commaSepToSet(*ignoreOpt)
-
-	cmd := flag.Arg(0)
+	cmd = flag.Arg(0)
 	switch cmd {
-
 	case "expand":
-		err = expandCmd(allFeatures, ignoredFeatures, flag.Args()[1:])
-
 	case "reduce":
-		err = reduceCmd(allFeatures, ignoredFeatures, flag.Args()[1:])
-
 	default:
 		flag.Usage()
 		os.Exit(2)
 	}
 
+	return
+}
+
+func main() {
+	progName, cmd, featDir, features, ignore := parseCmdLine(os.Args)
+
+	allFeatures, err := readFeatures(featDir)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%s: %s\n", progName, err)
 		os.Exit(1)
 	}
+
+	switch cmd {
+
+	case "expand":
+		err = expandCmd(allFeatures, features, ignore)
+
+	case "reduce":
+		err = reduceCmd(allFeatures, features, ignore)
+
+	}
+
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "%s: %s\n", progName, err)
+		os.Exit(1)
+	}
+}
+
+func expandCmd(allFeatures featureSet, features []string, ignore []string) error {
+	features, err := sortFeatures(allFeatures, features, false, false)
+	if err != nil {
+		return fmt.Errorf("expand: %w", err)
+	}
+
+	features, err = expand(allFeatures, features, makeSet(ignore))
+	if err != nil {
+		return fmt.Errorf("expand: %w", err)
+	}
+
+	_, err = sortFeatures(allFeatures, features, false, true)
+	if err != nil {
+		return fmt.Errorf("expand: %w", err)
+	}
+
+	printStrings(features)
+
+	return nil
+}
+
+func reduceCmd(allFeatures featureSet, features []string, ignore []string) error {
+	ignored := makeSet(ignore)
+
+	expanded, err := expand(allFeatures, features, ignored)
+	if err != nil {
+		return fmt.Errorf("reduce: %w", err)
+	}
+
+	_, err = sortFeatures(allFeatures, expanded, false, true)
+	if err != nil {
+		return fmt.Errorf("reduce: %w", err)
+	}
+
+	features, err = reduce(allFeatures, features, ignored)
+	if err != nil {
+		return fmt.Errorf("reduce: %w", err)
+	}
+
+	features, err = sortFeatures(allFeatures, features, true, false)
+	if err != nil {
+		return fmt.Errorf("reduce: %w", err)
+	}
+
+	printStrings(features)
+	return nil
 }
 
 type feature struct {
@@ -90,12 +150,12 @@ func buildInclusionGraph(allFeatures featureSet) graph {
 	return incGraph
 }
 
-func commaSepToSet(commaSep string) set {
-	ignoredFeatures := make(set)
-	for _, f := range strings.Split(commaSep, ",") {
-		ignoredFeatures[f] = struct{}{}
+func makeSet(items []string) set {
+	s := make(set)
+	for _, i := range items {
+		s[i] = struct{}{}
 	}
-	return ignoredFeatures
+	return s
 }
 
 func printStrings(strings []string) {
@@ -137,23 +197,27 @@ func readFeatures(featDir string) (featureSet, error) {
 	return allFeatures, nil
 }
 
-func sortFeatures(allFeatures featureSet, unsorted []string, strict bool) ([]string, error) {
-	var platform string
+func sortFeatures(allFeatures featureSet, unsorted []string, strict, validatePlatform bool) ([]string, error) {
+	var platforms []string
 	var others, modifiers []string
 	for _, f := range unsorted {
-		feat := allFeatures[f]
+		feat, ok := allFeatures[f]
+		if !ok {
+			return nil, fmt.Errorf("feature %v does not exist", f)
+		}
+
 		if feat.Type == "platform" {
-			if platform != "" {
-				return nil, fmt.Errorf("cannot have multiple platforms")
+			if validatePlatform && len(platforms) > 0 {
+				return nil, fmt.Errorf("cannot have multiple platforms: %v and %v", platforms[0], f)
 			}
-			platform = f
+			platforms = append(platforms, f)
 		} else if feat.Type == "modifier" {
 			modifiers = append(modifiers, f)
 		} else {
 			others = append(others, f)
 		}
 	}
-	if platform == "" {
+	if validatePlatform && len(platforms) == 0 {
 		return nil, fmt.Errorf("must have a platform")
 	}
 
@@ -163,9 +227,10 @@ func sortFeatures(allFeatures featureSet, unsorted []string, strict bool) ([]str
 	}
 
 	sorted := make([]string, len(unsorted))
-	sorted[0] = platform
-	n := copy(sorted[1:], others)
-	copy(sorted[n+1:], modifiers)
+	n := copy(sorted, platforms)
+	n += copy(sorted[n:], others)
+	copy(sorted[n:], modifiers)
+
 	return sorted, nil
 }
 
@@ -223,22 +288,17 @@ func postorderDFS(g graph, seen set, origin string, allowVertex func(string) boo
 	return nil
 }
 
-func expandCmd(allFeatures featureSet, ignoredFeatures set, features []string) error {
-	features, err := sortFeatures(allFeatures, features, false)
-	if err != nil {
-		return fmt.Errorf("expand: %w", err)
-	}
-
+func expand(allFeatures featureSet, features []string, ignored set) ([]string, error) {
 	gInc := buildInclusionGraph(allFeatures)
 	collectedExcl := make(set)
 	var expanded []string
 
 	seen := make(set, len(gInc))
 	for _, f := range features {
-		err = postorderDFS(gInc, seen, f, func(v string) bool {
-			_, ok := ignoredFeatures[v]
+		err := postorderDFS(gInc, seen, f, func(v string) bool {
+			_, ok := ignored[v]
 			if ok {
-				_, _ = fmt.Fprintf(os.Stderr, "WARNING: expand: %v is being ignored by request\n", v)
+				_, _ = fmt.Fprintf(os.Stderr, "WARNING: %v is being ignored\n", v)
 			}
 			return !ok
 		}, func(v string) {
@@ -249,27 +309,20 @@ func expandCmd(allFeatures featureSet, ignoredFeatures set, features []string) e
 			}
 		})
 		if err != nil {
-			return fmt.Errorf("expand: %w", err)
+			return nil, err
 		}
 	}
 
 	for _, f := range expanded {
 		if _, ok := collectedExcl[f]; ok {
-			return fmt.Errorf("expand: %v has been excluded by another feature", f)
+			return nil, fmt.Errorf("%v has been excluded by another feature", f)
 		}
 	}
 
-	printStrings(expanded)
-
-	return nil
+	return expanded, nil
 }
 
-func reduceCmd(allFeatures featureSet, ignoredFeatures set, features []string) error {
-	features, err := sortFeatures(allFeatures, features, true)
-	if err != nil {
-		return fmt.Errorf("reduce: %w", err)
-	}
-
+func reduce(allFeatures featureSet, features []string, ignored set) ([]string, error) {
 	gInc := buildInclusionGraph(allFeatures)
 	collectedExcl := make(set)
 	visited := make(set)
@@ -284,13 +337,16 @@ func reduceCmd(allFeatures featureSet, ignoredFeatures set, features []string) e
 
 		f := features[i]
 		i++
+
+		_, ok := ignored[f]
+		if ok {
+			continue
+		}
+
 		minimal[f] = struct{}{}
 
-		err = postorderDFS(gInc, nil, f, func(v string) bool {
-			_, ok := ignoredFeatures[v]
-			if ok {
-				_, _ = fmt.Fprintf(os.Stderr, "WARNING: expand: %v is being ignored by request\n", v)
-			}
+		err := postorderDFS(gInc, nil, f, func(v string) bool {
+			_, ok := ignored[v]
 			return !ok
 		}, func(v string) {
 			if v == f {
@@ -312,13 +368,13 @@ func reduceCmd(allFeatures featureSet, ignoredFeatures set, features []string) e
 			}
 		})
 		if err != nil {
-			return fmt.Errorf("reduce: %w", err)
+			return nil, err
 		}
 	}
 
 	for f := range visited {
 		if _, ok := collectedExcl[f]; ok {
-			return fmt.Errorf("reduce: %v has been excluded by another feature", f)
+			return nil, fmt.Errorf("%v has been excluded by another feature", f)
 		}
 	}
 
@@ -326,12 +382,6 @@ func reduceCmd(allFeatures featureSet, ignoredFeatures set, features []string) e
 	for f := range minimal {
 		reduced = append(reduced, f)
 	}
-	reduced, err = sortFeatures(allFeatures, reduced, true)
-	if err != nil {
-		return fmt.Errorf("reduce: %w", err)
-	}
 
-	printStrings(reduced)
-
-	return nil
+	return reduced, nil
 }
