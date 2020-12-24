@@ -13,7 +13,7 @@ import (
 
 func usage() {
 	_, _ = fmt.Fprintf(os.Stderr, "Usage: %s <command> [--option]...\n", filepath.Base(os.Args[0]))
-	_, _ = fmt.Fprintf(os.Stderr, "Commands: expand, reduce\n")
+	_, _ = fmt.Fprintf(os.Stderr, "Commands: expand, platform, reduce\n")
 	_, _ = fmt.Fprintf(os.Stderr, "Options:\n")
 	flag.PrintDefaults()
 }
@@ -45,6 +45,7 @@ func parseCmdLine(args []string) (progName string, cmd string, featDir string, f
 	cmd = flag.Arg(0)
 	switch cmd {
 	case "expand":
+	case "platform":
 	case "reduce":
 	default:
 		flag.Usage()
@@ -67,6 +68,9 @@ func main() {
 
 	case "expand":
 		err = expandCmd(allFeatures, features, ignore)
+
+	case "platform":
+		err = platformCmd(allFeatures, features, ignore)
 
 	case "reduce":
 		err = reduceCmd(allFeatures, features, ignore)
@@ -97,6 +101,21 @@ func expandCmd(allFeatures featureSet, features []string, ignore []string) error
 
 	printStrings(features)
 
+	return nil
+}
+
+func platformCmd(allFeatures featureSet, features []string, ignore []string) error {
+	features, err := expand(allFeatures, features, makeSet(ignore))
+	if err != nil {
+		return fmt.Errorf("expand: %w", err)
+	}
+
+	features, err = sortFeatures(allFeatures, features, false, true)
+	if err != nil {
+		return fmt.Errorf("expand: %w", err)
+	}
+
+	fmt.Println(features[0])
 	return nil
 }
 
