@@ -13,7 +13,7 @@ import (
 
 func usage() {
 	_, _ = fmt.Fprintf(os.Stderr, "Usage: %s <command> [--option]...\n", filepath.Base(os.Args[0]))
-	_, _ = fmt.Fprintf(os.Stderr, "Commands: cname, expand, platform\n")
+	_, _ = fmt.Fprintf(os.Stderr, "Commands: cname, expand, ignore, platform\n")
 	_, _ = fmt.Fprintf(os.Stderr, "Options:\n")
 	flag.PrintDefaults()
 }
@@ -46,6 +46,7 @@ func parseCmdLine(args []string) (progName string, cmd string, featDir string, f
 	switch cmd {
 	case "cname":
 	case "expand":
+	case "ignore":
 	case "platform":
 	default:
 		flag.Usage()
@@ -72,6 +73,9 @@ func main() {
 	case "expand":
 		err = expandCmd(allFeatures, features, ignore)
 
+	case "ignore":
+		err = ignoreCmd(allFeatures, features, ignore)
+
 	case "platform":
 		err = platformCmd(allFeatures, features, ignore)
 
@@ -89,7 +93,7 @@ func expandCmd(allFeatures featureSet, features []string, ignore []string) error
 		return fmt.Errorf("expand: %w", err)
 	}
 
-	features, err = expand(allFeatures, features, makeSet(ignore))
+	features, _, err = expandFeatures(allFeatures, features, makeSet(ignore))
 	if err != nil {
 		return fmt.Errorf("expand: %w", err)
 	}
@@ -107,7 +111,7 @@ func expandCmd(allFeatures featureSet, features []string, ignore []string) error
 func cnameCmd(allFeatures featureSet, features []string, ignore []string) error {
 	ignored := makeSet(ignore)
 
-	expanded, err := expand(allFeatures, features, ignored)
+	expanded, _, err := expandFeatures(allFeatures, features, ignored)
 	if err != nil {
 		return fmt.Errorf("cname: %w", err)
 	}
@@ -117,7 +121,7 @@ func cnameCmd(allFeatures featureSet, features []string, ignore []string) error 
 		return fmt.Errorf("cname: %w", err)
 	}
 
-	features, err = reduce(allFeatures, features, ignored)
+	features, err = reduceFeatures(allFeatures, features, ignored)
 	if err != nil {
 		return fmt.Errorf("cname: %w", err)
 	}
@@ -135,8 +139,29 @@ func cnameCmd(allFeatures featureSet, features []string, ignore []string) error 
 	return nil
 }
 
+func ignoreCmd(allFeatures featureSet, features []string, ignore []string) error {
+	_, ignoredSet, err := expandFeatures(allFeatures, features, makeSet(ignore))
+	if err != nil {
+		return fmt.Errorf("expand: %w", err)
+	}
+
+	features, err = sortFeatures(allFeatures, features, false, true)
+	if err != nil {
+		return fmt.Errorf("expand: %w", err)
+	}
+
+	ignored := make([]string, 0, len(ignoredSet))
+	for f := range ignoredSet {
+		ignored = append(ignored, f)
+	}
+	sort.Strings(ignored)
+
+	printStrings(ignored)
+	return nil
+}
+
 func platformCmd(allFeatures featureSet, features []string, ignore []string) error {
-	features, err := expand(allFeatures, features, makeSet(ignore))
+	features, _, err := expandFeatures(allFeatures, features, makeSet(ignore))
 	if err != nil {
 		return fmt.Errorf("expand: %w", err)
 	}
@@ -327,8 +352,9 @@ func postorderDFS(g graph, seen set, origin string, allowVertex func(string) boo
 	return nil
 }
 
-func expand(allFeatures featureSet, features []string, ignored set) ([]string, error) {
+func expandFeatures(allFeatures featureSet, features []string, ignored set) ([]string, set, error) {
 	gInc := buildInclusionGraph(allFeatures)
+	collectedIgn := make(set)
 	collectedExcl := make(set)
 	var expanded []string
 
@@ -337,6 +363,7 @@ func expand(allFeatures featureSet, features []string, ignored set) ([]string, e
 		err := postorderDFS(gInc, seen, f, func(v string) bool {
 			_, ok := ignored[v]
 			if ok {
+				collectedIgn[v] = struct{}{}
 				_, _ = fmt.Fprintf(os.Stderr, "WARNING: %v is being ignored\n", v)
 			}
 			return !ok
@@ -348,20 +375,20 @@ func expand(allFeatures featureSet, features []string, ignored set) ([]string, e
 			}
 		})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
 	for _, f := range expanded {
 		if _, ok := collectedExcl[f]; ok {
-			return nil, fmt.Errorf("%v has been excluded by another feature", f)
+			return nil, nil, fmt.Errorf("%v has been excluded by another feature", f)
 		}
 	}
 
-	return expanded, nil
+	return expanded, collectedIgn, nil
 }
 
-func reduce(allFeatures featureSet, features []string, ignored set) ([]string, error) {
+func reduceFeatures(allFeatures featureSet, features []string, ignored set) ([]string, error) {
 	gInc := buildInclusionGraph(allFeatures)
 	collectedExcl := make(set)
 	visited := make(set)
