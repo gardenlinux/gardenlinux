@@ -13,7 +13,7 @@ import (
 
 func usage() {
 	_, _ = fmt.Fprintf(os.Stderr, "Usage: %s <command> [--option]...\n", filepath.Base(os.Args[0]))
-	_, _ = fmt.Fprintf(os.Stderr, "Commands: expand, platform, reduce\n")
+	_, _ = fmt.Fprintf(os.Stderr, "Commands: cname, expand, platform\n")
 	_, _ = fmt.Fprintf(os.Stderr, "Options:\n")
 	flag.PrintDefaults()
 }
@@ -44,9 +44,9 @@ func parseCmdLine(args []string) (progName string, cmd string, featDir string, f
 
 	cmd = flag.Arg(0)
 	switch cmd {
+	case "cname":
 	case "expand":
 	case "platform":
-	case "reduce":
 	default:
 		flag.Usage()
 		os.Exit(2)
@@ -66,14 +66,14 @@ func main() {
 
 	switch cmd {
 
+	case "cname":
+		err = cnameCmd(allFeatures, features, ignore)
+
 	case "expand":
 		err = expandCmd(allFeatures, features, ignore)
 
 	case "platform":
 		err = platformCmd(allFeatures, features, ignore)
-
-	case "reduce":
-		err = reduceCmd(allFeatures, features, ignore)
 
 	}
 
@@ -104,6 +104,37 @@ func expandCmd(allFeatures featureSet, features []string, ignore []string) error
 	return nil
 }
 
+func cnameCmd(allFeatures featureSet, features []string, ignore []string) error {
+	ignored := makeSet(ignore)
+
+	expanded, err := expand(allFeatures, features, ignored)
+	if err != nil {
+		return fmt.Errorf("cname: %w", err)
+	}
+
+	_, err = sortFeatures(allFeatures, expanded, false, true)
+	if err != nil {
+		return fmt.Errorf("cname: %w", err)
+	}
+
+	features, err = reduce(allFeatures, features, ignored)
+	if err != nil {
+		return fmt.Errorf("cname: %w", err)
+	}
+
+	features, err = sortFeatures(allFeatures, features, true, false)
+	if err != nil {
+		return fmt.Errorf("cname: %w", err)
+	}
+
+	err = printCname(allFeatures, features)
+	if err != nil {
+		return fmt.Errorf("cname: %w", err)
+	}
+
+	return nil
+}
+
 func platformCmd(allFeatures featureSet, features []string, ignore []string) error {
 	features, err := expand(allFeatures, features, makeSet(ignore))
 	if err != nil {
@@ -116,33 +147,6 @@ func platformCmd(allFeatures featureSet, features []string, ignore []string) err
 	}
 
 	fmt.Println(features[0])
-	return nil
-}
-
-func reduceCmd(allFeatures featureSet, features []string, ignore []string) error {
-	ignored := makeSet(ignore)
-
-	expanded, err := expand(allFeatures, features, ignored)
-	if err != nil {
-		return fmt.Errorf("reduce: %w", err)
-	}
-
-	_, err = sortFeatures(allFeatures, expanded, false, true)
-	if err != nil {
-		return fmt.Errorf("reduce: %w", err)
-	}
-
-	features, err = reduce(allFeatures, features, ignored)
-	if err != nil {
-		return fmt.Errorf("reduce: %w", err)
-	}
-
-	features, err = sortFeatures(allFeatures, features, true, false)
-	if err != nil {
-		return fmt.Errorf("reduce: %w", err)
-	}
-
-	printStrings(features)
 	return nil
 }
 
@@ -217,8 +221,7 @@ func readFeatures(featDir string) (featureSet, error) {
 }
 
 func sortFeatures(allFeatures featureSet, unsorted []string, strict, validatePlatform bool) ([]string, error) {
-	var platforms []string
-	var others, modifiers []string
+	var platforms, others, modifiers []string
 	for _, f := range unsorted {
 		feat, ok := allFeatures[f]
 		if !ok {
@@ -241,6 +244,7 @@ func sortFeatures(allFeatures featureSet, unsorted []string, strict, validatePla
 	}
 
 	if strict {
+		sort.Strings(platforms)
 		sort.Strings(others)
 		sort.Strings(modifiers)
 	}
@@ -251,6 +255,22 @@ func sortFeatures(allFeatures featureSet, unsorted []string, strict, validatePla
 	copy(sorted[n:], modifiers)
 
 	return sorted, nil
+}
+
+func printCname(allFeatures featureSet, features []string) error {
+	for i, f := range features {
+		feat, ok := allFeatures[f]
+		if !ok {
+			return fmt.Errorf("feature %v does not exist", f)
+		}
+
+		if feat.Type != "modifier" && i > 0 {
+			fmt.Print("-")
+		}
+		fmt.Printf("%v", f)
+	}
+	fmt.Println()
+	return nil
 }
 
 func postorderDFS(g graph, seen set, origin string, allowVertex func(string) bool, processVertex func(string)) error {
