@@ -117,9 +117,9 @@ mkdir -p ${dir_name}/dev	&& mount --bind /dev  ${dir_name}/dev
 mount | grep $dir_name
 
 if [ ${read_only_usr} == 1 ]; then
-    opts_usr="defaults,ro"
+    opts_usr="defaults,discard,ro"
 else
-    opts_usr="defaults,rw"
+    opts_usr="defaults,discard,rw"
 fi
 
 #echo "### generating fstab"
@@ -147,7 +147,7 @@ Wants=local-fs-pre.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/bin/mount -o remount,rw,errors=remount-ro,prjquota /
+ExecStart=/bin/mount -o remount,rw,errors=remount-ro,prjquota,discard /
 
 [Install]
 WantedBy=local-fs.target
