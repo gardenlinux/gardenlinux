@@ -146,8 +146,8 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 	[ -n "$features" ] && configArgs+=( --features "$features" )
 
 	garden-config "${configArgs[@]}" rootfs
-	garden-apt-get rootfs update -qq
-	garden-apt-get rootfs dist-upgrade -yqq
+	#garden-apt-get rootfs update -qq
+	#garden-apt-get rootfs dist-upgrade -yqq
 
 	aptVersion="$("$debuerreotypeScriptsDir/.apt-version.sh" rootfs)"
 	if [ -n "${eol:-}" ] && dpkg --compare-versions "$aptVersion" ">=" "0.7.26~"; then
