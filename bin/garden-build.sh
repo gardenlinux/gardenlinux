@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
-	--flags 'no-build,debug,suite:,gardenversion:,timestamp:' \
+	--flags 'no-build,debug,skip-tests,suite:,gardenversion:,timestamp:' \
 	--flags 'eol,ports,arch:,qemu,features:,commitid:' \
 	--flags 'suffix:,prefix:' \
 	--
@@ -28,6 +28,7 @@ while true; do
 		--suffix) suffix="$1"; shift ;; # target name prefix
 		--prefix) prefix="$1"; shift ;; # target name suffix
 		--commitid) commitid="$1"; shift ;; # build commit hash
+		--skip-tests) notests=1 shift ;; # skip tests
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
@@ -264,7 +265,10 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 		testcounter=0
 		failcounter=0
 		for i in $(echo "base,$features" | tr ',' ' ' | sort -u); do
-			if [ -d $featureDir/$i/test ]; then
+			if [ "$notests" = 1 ]; then
+				echo "skipping tests for $i feature"
+				continue
+			elif [ -d $featureDir/$i/test ]; then
 				for j in $(ls $featureDir/$i/test); do
 					if [ -x $featureDir/$i/test/$j ]; then
 					        let "testcounter=testcounter+1"

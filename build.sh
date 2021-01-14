@@ -3,10 +3,10 @@ set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/bin/.constants.sh" \
-	--flags 'no-build,debug,lessram,manual' \
+	--flags 'no-build,debug,lessram,manual,skip-tests' \
 	--flags 'arch:,qemu,features:,suite:,ports' \
 	-- \
-	'[--no-build] [--lessram] [--debug] [--manual] [--arch=<arch>] [--qemu] <output-dir> <version/timestamp>' \
+	'[--no-build] [--lessram] [--debug] [--manual] [--arch=<arch>] [--qemu] [--skip-tests] <output-dir> <version/timestamp>' \
 	'output stretch 2017-05-08T00:00:00Z
 --eol output squeeze 2016-03-14T00:00:00Z
 --eol --arch i386 output sarge 2016-03-14T00:00:00Z' 
@@ -21,6 +21,7 @@ qemu=
 features=
 suite="bullseye"
 suiteports=
+notests=0
 while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
@@ -33,7 +34,8 @@ while true; do
 		--qemu) 	qemu=1 ;;	# for using "qemu-debootstrap" and "start-vm"
 		--features) 	features="$1"; shift ;; # adding featurelist
 		--suite) 	suite="$1"; shift ;; # adding suite
-		--ports)        suiteports=1 ;;      # enables "debian-ports" support for suite
+		--ports)        suiteports=1 ; shift ;;      # enables "debian-ports" support for suite
+		--skip-tests)   notests=1 ;;    # skip running tests 
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
@@ -56,6 +58,7 @@ envArgs=(
 	arch="$arch" 
 	features="$features"
 	version="$version"
+	notests="$notests"
 )
 
 securityArgs=( 
