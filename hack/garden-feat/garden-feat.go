@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/geofffranks/simpleyaml"
+	"github.com/geofffranks/spruce"
 	flag "github.com/spf13/pflag"
 	"gopkg.in/alediaferia/stackgo.v1"
 	"gopkg.in/yaml.v2"
@@ -9,20 +11,21 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 )
 
 func usage() {
-	_, _ = fmt.Fprintf(os.Stderr, "Usage: %s <command> [--option]...\n", filepath.Base(os.Args[0]))
-	_, _ = fmt.Fprintf(os.Stderr, "Commands: cname, expand, ignore, platform\n")
+	_, _ = fmt.Fprintf(os.Stderr, "Usage: %s <command> [--option]... arg...\n", filepath.Base(os.Args[0]))
+	_, _ = fmt.Fprintf(os.Stderr, "Commands: cname, elements, features, flags, ignore, params, platform\n")
 	_, _ = fmt.Fprintf(os.Stderr, "Options:\n")
 	flag.PrintDefaults()
 }
 
-func parseCmdLine(args []string) (progName string, cmd string, featDir string, features []string, ignore []string) {
-	progName = filepath.Base(args[0])
+func parseCmdLine(argv []string) (progName string, cmd string, featDir string, features []string, ignore []string, args []string) {
+	progName = filepath.Base(argv[0])
 	flag.Usage = usage
 	flag.ErrHelp = nil
-	flag.CommandLine = flag.NewFlagSet(args[0], flag.ContinueOnError)
+	flag.CommandLine = flag.NewFlagSet(argv[0], flag.ContinueOnError)
 
 	flag.StringVar(&featDir, "feat-dir", "../features", "Directory of GardenLinux features")
 	flag.StringSliceVarP(&ignore, "ignore", "i", nil, "List of feaures to ignore (comma-separated)")
@@ -31,7 +34,7 @@ func parseCmdLine(args []string) (progName string, cmd string, featDir string, f
 	var help bool
 	flag.BoolVarP(&help, "help", "h", false, "Show this help message")
 
-	err := flag.CommandLine.Parse(args[1:])
+	err := flag.CommandLine.Parse(argv[1:])
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%s: %s\n", progName, err)
 		flag.Usage()
@@ -45,21 +48,25 @@ func parseCmdLine(args []string) (progName string, cmd string, featDir string, f
 	cmd = flag.Arg(0)
 	switch cmd {
 	case "cname":
-	case "expand":
+	case "elements":
+	case "features":
+	case "flags":
 	case "ignore":
+	case "params":
 	case "platform":
 	default:
 		flag.Usage()
 		os.Exit(2)
 	}
+	args = flag.Args()[1:]
 
 	return
 }
 
 func main() {
-	progName, cmd, featDir, features, ignore := parseCmdLine(os.Args)
+	progName, cmd, featDir, features, ignore, args := parseCmdLine(os.Args)
 
-	allFeatures, err := readFeatures(featDir)
+	allFeatures, err := readFeatures(featDir, "platform", "element", "flag")
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%s: %s\n", progName, err)
 		os.Exit(1)
@@ -68,17 +75,25 @@ func main() {
 	switch cmd {
 
 	case "cname":
-		err = cnameCmd(allFeatures, features, ignore)
+		err = cnameCmd(allFeatures, features, ignore, args)
 
-	case "expand":
-		err = expandCmd(allFeatures, features, ignore)
+	case "elements":
+		err = elementsCmd(allFeatures, features, ignore, args)
+
+	case "features":
+		err = featuresCmd(allFeatures, features, ignore, args)
+
+	case "flags":
+		err = flagsCmd(allFeatures, features, ignore, args)
 
 	case "ignore":
-		err = ignoreCmd(allFeatures, features, ignore)
+		err = ignoreCmd(allFeatures, features, ignore, args)
+
+	case "params":
+		err = paramsCmd(allFeatures, features, ignore, args)
 
 	case "platform":
-		err = platformCmd(allFeatures, features, ignore)
-
+		err = platformCmd(allFeatures, features, ignore, args)
 	}
 
 	if err != nil {
@@ -87,28 +102,7 @@ func main() {
 	}
 }
 
-func expandCmd(allFeatures featureSet, features []string, ignore []string) error {
-	features, err := sortFeatures(allFeatures, features, false, false)
-	if err != nil {
-		return fmt.Errorf("expand: %w", err)
-	}
-
-	features, _, err = expandFeatures(allFeatures, features, makeSet(ignore))
-	if err != nil {
-		return fmt.Errorf("expand: %w", err)
-	}
-
-	_, err = sortFeatures(allFeatures, features, false, true)
-	if err != nil {
-		return fmt.Errorf("expand: %w", err)
-	}
-
-	printStrings(features)
-
-	return nil
-}
-
-func cnameCmd(allFeatures featureSet, features []string, ignore []string) error {
+func cnameCmd(allFeatures featureSet, features []string, ignore []string, _ []string) error {
 	ignored := makeSet(ignore)
 
 	expanded, _, err := expandFeatures(allFeatures, features, ignored)
@@ -139,15 +133,97 @@ func cnameCmd(allFeatures featureSet, features []string, ignore []string) error 
 	return nil
 }
 
-func ignoreCmd(allFeatures featureSet, features []string, ignore []string) error {
-	_, ignoredSet, err := expandFeatures(allFeatures, features, makeSet(ignore))
+func elementsCmd(allFeatures featureSet, features []string, ignore []string, _ []string) error {
+	features, err := sortFeatures(allFeatures, features, false, false)
 	if err != nil {
-		return fmt.Errorf("expand: %w", err)
+		return fmt.Errorf("elements: %w", err)
 	}
 
-	features, err = sortFeatures(allFeatures, features, false, true)
+	features, _, err = expandFeatures(allFeatures, features, makeSet(ignore))
 	if err != nil {
-		return fmt.Errorf("expand: %w", err)
+		return fmt.Errorf("elements: %w", err)
+	}
+
+	_, err = sortFeatures(allFeatures, features, false, true)
+	if err != nil {
+		return fmt.Errorf("elements: %w", err)
+	}
+
+	elements, err := filterByType(allFeatures, features, "platform", "element")
+	if err != nil {
+		return fmt.Errorf("elements: %w", err)
+	}
+
+	err = printStrings(elements...)
+	if err != nil {
+		return fmt.Errorf("elements: %w", err)
+	}
+
+	return nil
+}
+
+func featuresCmd(allFeatures featureSet, features []string, ignore []string, _ []string) error {
+	features, err := sortFeatures(allFeatures, features, false, false)
+	if err != nil {
+		return fmt.Errorf("features: %w", err)
+	}
+
+	features, _, err = expandFeatures(allFeatures, features, makeSet(ignore))
+	if err != nil {
+		return fmt.Errorf("features: %w", err)
+	}
+
+	_, err = sortFeatures(allFeatures, features, false, true)
+	if err != nil {
+		return fmt.Errorf("features: %w", err)
+	}
+
+	err = printStrings(features...)
+	if err != nil {
+		return fmt.Errorf("features: %w", err)
+	}
+
+	return nil
+}
+
+func flagsCmd(allFeatures featureSet, features []string, ignore []string, _ []string) error {
+	features, err := sortFeatures(allFeatures, features, false, false)
+	if err != nil {
+		return fmt.Errorf("flags: %w", err)
+	}
+
+	features, _, err = expandFeatures(allFeatures, features, makeSet(ignore))
+	if err != nil {
+		return fmt.Errorf("flags: %w", err)
+	}
+
+	_, err = sortFeatures(allFeatures, features, false, true)
+	if err != nil {
+		return fmt.Errorf("flags: %w", err)
+	}
+
+	flags, err := filterByType(allFeatures, features, "flag")
+	if err != nil {
+		return fmt.Errorf("flags: %w", err)
+	}
+
+	err = printStrings(flags...)
+	if err != nil {
+		return fmt.Errorf("elements: %w", err)
+	}
+
+	return nil
+}
+
+func ignoreCmd(allFeatures featureSet, features []string, ignore []string, _ []string) error {
+	features, ignoredSet, err := expandFeatures(allFeatures, features, makeSet(ignore))
+	if err != nil {
+		return fmt.Errorf("ignore: %w", err)
+	}
+
+	_, err = sortFeatures(allFeatures, features, false, true)
+	if err != nil {
+		return fmt.Errorf("ignore: %w", err)
 	}
 
 	ignored := make([]string, 0, len(ignoredSet))
@@ -156,22 +232,71 @@ func ignoreCmd(allFeatures featureSet, features []string, ignore []string) error
 	}
 	sort.Strings(ignored)
 
-	printStrings(ignored)
+	err = printStrings(ignored...)
+	if err != nil {
+		return fmt.Errorf("ignore: %w", err)
+	}
+
 	return nil
 }
 
-func platformCmd(allFeatures featureSet, features []string, ignore []string) error {
+func paramsCmd(allFeatures featureSet, features []string, ignore []string, args []string) error {
+	features, err := sortFeatures(allFeatures, features, false, false)
+	if err != nil {
+		return fmt.Errorf("params: %w", err)
+	}
+
+	features, _, err = expandFeatures(allFeatures, features, makeSet(ignore))
+	if err != nil {
+		return fmt.Errorf("params: %w", err)
+	}
+
+	_, err = sortFeatures(allFeatures, features, false, true)
+	if err != nil {
+		return fmt.Errorf("params: %w", err)
+	}
+
+	yamls := make([]map[interface{}]interface{}, 0, len(features))
+	for _, f := range features {
+		yamls = append(yamls, allFeatures[f].yaml)
+	}
+
+	mergedYAML, err := spruce.Merge(yamls...)
+	if err != nil {
+		return fmt.Errorf("params: %w", err)
+	}
+
+	e := &spruce.Evaluator{Tree: mergedYAML}
+	err = e.Run([]string{"description", "type", "include", "exclude"}, args)
+	if err != nil {
+		return fmt.Errorf("params: %w", err)
+	}
+	mergedYAML = e.Tree
+
+	err = printShellVars(mergedYAML)
+	if err != nil {
+		return fmt.Errorf("params: %w", err)
+	}
+
+	return nil
+}
+
+func platformCmd(allFeatures featureSet, features []string, ignore []string, _ []string) error {
 	features, _, err := expandFeatures(allFeatures, features, makeSet(ignore))
 	if err != nil {
-		return fmt.Errorf("expand: %w", err)
+		return fmt.Errorf("platform: %w", err)
 	}
 
 	features, err = sortFeatures(allFeatures, features, false, true)
 	if err != nil {
-		return fmt.Errorf("expand: %w", err)
+		return fmt.Errorf("platform: %w", err)
 	}
 
-	fmt.Println(features[0])
+	err = printStrings(features[0])
+	if err != nil {
+		return fmt.Errorf("platform: %w", err)
+	}
+
 	return nil
 }
 
@@ -182,6 +307,7 @@ type feature struct {
 		Include []string `yaml:"include,omitempty"`
 		Exclude []string `yaml:"exclude,omitempty"`
 	} `yaml:"features,omitempty"`
+	yaml map[interface{}]interface{}
 }
 type featureSet map[string]feature
 
@@ -206,17 +332,7 @@ func makeSet(items []string) set {
 	return s
 }
 
-func printStrings(strings []string) {
-	for i, s := range strings {
-		if i > 0 {
-			fmt.Print(" ")
-		}
-		fmt.Printf("%s", s)
-	}
-	fmt.Println()
-}
-
-func readFeatures(featDir string) (featureSet, error) {
+func readFeatures(featDir string, types ...string) (featureSet, error) {
 	entries, err := ioutil.ReadDir(featDir)
 	if err != nil {
 		return nil, err
@@ -224,11 +340,21 @@ func readFeatures(featDir string) (featureSet, error) {
 
 	allFeatures := make(featureSet)
 	for _, e := range entries {
-		if !e.IsDir() {
+		var featFile, featName string
+		if e.IsDir() {
+			featName = e.Name()
+			featFile = filepath.Join(featDir, featName, "info.yaml")
+			if _, err = os.Stat(featFile); os.IsNotExist(err) {
+				continue
+			}
+		} else if filepath.Ext(e.Name()) == ".yaml" {
+			featName = e.Name()[:len(e.Name())-5]
+			featFile = e.Name()
+		} else {
 			continue
 		}
 
-		featData, err := ioutil.ReadFile(filepath.Join(featDir, e.Name(), "info.yaml"))
+		featData, err := ioutil.ReadFile(featFile)
 		if err != nil {
 			return nil, err
 		}
@@ -239,27 +365,46 @@ func readFeatures(featDir string) (featureSet, error) {
 			return nil, err
 		}
 
-		allFeatures[e.Name()] = f
+		accept := false
+		for _, t := range types {
+			if f.Type == t {
+				accept = true
+			}
+		}
+		if !accept {
+			return nil, fmt.Errorf("feature %s has unsupported type %s", featName, f.Type)
+		}
+
+		y, err := simpleyaml.NewYaml(featData)
+		if err != nil {
+			return nil, err
+		}
+		f.yaml, err = y.Map()
+		if err != nil {
+			return nil, err
+		}
+
+		allFeatures[featName] = f
 	}
 
 	return allFeatures, nil
 }
 
 func sortFeatures(allFeatures featureSet, unsorted []string, strict, validatePlatform bool) ([]string, error) {
-	var platforms, others, modifiers []string
+	var platforms, others, flags []string
 	for _, f := range unsorted {
 		feat, ok := allFeatures[f]
 		if !ok {
-			return nil, fmt.Errorf("feature %v does not exist", f)
+			return nil, fmt.Errorf("feature %s does not exist", f)
 		}
 
 		if feat.Type == "platform" {
 			if validatePlatform && len(platforms) > 0 {
-				return nil, fmt.Errorf("cannot have multiple platforms: %v and %v", platforms[0], f)
+				return nil, fmt.Errorf("cannot have multiple platforms: %s and %s", platforms[0], f)
 			}
 			platforms = append(platforms, f)
-		} else if feat.Type == "modifier" {
-			modifiers = append(modifiers, f)
+		} else if feat.Type == "flag" {
+			flags = append(flags, f)
 		} else {
 			others = append(others, f)
 		}
@@ -271,36 +416,205 @@ func sortFeatures(allFeatures featureSet, unsorted []string, strict, validatePla
 	if strict {
 		sort.Strings(platforms)
 		sort.Strings(others)
-		sort.Strings(modifiers)
+		sort.Strings(flags)
 	}
 
 	sorted := make([]string, len(unsorted))
 	n := copy(sorted, platforms)
 	n += copy(sorted[n:], others)
-	copy(sorted[n:], modifiers)
+	copy(sorted[n:], flags)
 
 	return sorted, nil
+}
+
+func filterByType(allFeatures featureSet, features []string, types ...string) ([]string, error) {
+	var matching []string
+
+	for _, f := range features {
+		feat, ok := allFeatures[f]
+		if !ok {
+			return nil, fmt.Errorf("feature %s does not exist", f)
+		}
+
+		for _, t := range types {
+			if feat.Type == t {
+				matching = append(matching, f)
+			}
+		}
+	}
+
+	return matching, nil
+}
+
+func printStrings(strings ...string) error {
+	for i, s := range strings {
+		if i > 0 {
+			_, err := fmt.Print(" ")
+			if err != nil {
+				return err
+			}
+		}
+		_, err := fmt.Printf("%s", s)
+		if err != nil {
+			return err
+		}
+	}
+	_, err := fmt.Println()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func printCname(allFeatures featureSet, features []string) error {
 	for i, f := range features {
 		feat, ok := allFeatures[f]
 		if !ok {
-			return fmt.Errorf("feature %v does not exist", f)
+			return fmt.Errorf("feature %s does not exist", f)
 		}
 
-		if feat.Type != "modifier" && i > 0 {
-			fmt.Print("-")
+		if feat.Type != "flag" && i > 0 {
+			_, err := fmt.Print("-")
+			if err != nil {
+				return err
+			}
 		}
-		fmt.Printf("%v", f)
+		_, err := fmt.Printf("%s", f)
+		if err != nil {
+			return err
+		}
 	}
-	fmt.Println()
+	_, err := fmt.Println()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func printShellVars(root map[interface{}]interface{}) error {
+	type prefixNode struct {
+		prefix string
+		node   interface{}
+	}
+
+	stack := stackgo.NewStack()
+
+	stack.Push(prefixNode{"", root})
+
+	for stack.Size() > 0 {
+		pn := stack.Pop().(prefixNode)
+
+		switch pn.node.(type) {
+
+		case bool, int, string:
+			_, err := fmt.Printf("%s='%v'\n", pn.prefix, pn.node)
+			if err != nil {
+				return err
+			}
+
+		case []interface{}:
+			a := pn.node.([]interface{})
+
+			onlyScalars := true
+			for _, val := range a {
+				switch val.(type) {
+				case bool, int, string:
+				default:
+					onlyScalars = false
+				}
+			}
+			if onlyScalars {
+				_, err := fmt.Printf("%s=(", pn.prefix)
+				if err != nil {
+					return err
+				}
+				for _, val := range a {
+					_, err = fmt.Printf(" '%v'", val)
+					if err != nil {
+						return err
+					}
+				}
+				_, err = fmt.Println(" )")
+				if err != nil {
+					return err
+				}
+				continue
+			}
+
+			_, err := fmt.Printf("%s=(", pn.prefix)
+			if err != nil {
+				return err
+			}
+			prefixNodes := make([]prefixNode, 0, len(a))
+			for i, val := range a {
+				prefix := strconv.Itoa(i)
+				if m, ok := val.(map[interface{}]interface{}); ok {
+					if nameVal, k := m["name"]; k {
+						switch nameVal.(type) {
+						case bool, int, string:
+							prefix = fmt.Sprintf("%v", nameVal)
+						}
+					}
+				}
+				if pn.prefix != "" {
+					prefix = pn.prefix + "_" + prefix
+				}
+				_, err = fmt.Printf(" '%s'", prefix)
+				if err != nil {
+					return err
+				}
+				prefixNodes = append(prefixNodes, prefixNode{prefix, val})
+			}
+			_, err = fmt.Println(" )")
+			if err != nil {
+				return err
+			}
+
+			for i := len(prefixNodes) - 1; i >= 0; i-- {
+				stack.Push(prefixNodes[i])
+			}
+
+		case map[interface{}]interface{}:
+			m := pn.node.(map[interface{}]interface{})
+
+			headerPrefix := pn.prefix
+			if pn.prefix == "" {
+				headerPrefix = "_"
+			}
+			_, err := fmt.Printf("%s=(", headerPrefix)
+			if err != nil {
+				return err
+			}
+			prefixNodes := make([]prefixNode, 0, len(m))
+			for key, val := range m {
+				prefix := key.(string)
+				if pn.prefix != "" {
+					prefix = pn.prefix + "_" + prefix
+				}
+				_, err = fmt.Printf(" '%s'", prefix)
+				if err != nil {
+					return err
+				}
+				prefixNodes = append(prefixNodes, prefixNode{prefix, val})
+			}
+			_, err = fmt.Println(" )")
+			if err != nil {
+				return err
+			}
+
+			for i := len(prefixNodes) - 1; i >= 0; i-- {
+				stack.Push(prefixNodes[i])
+			}
+
+		}
+	}
+
 	return nil
 }
 
 func postorderDFS(g graph, seen set, origin string, allowVertex func(string) bool, processVertex func(string)) error {
 	if _, ok := g[origin]; !ok {
-		return fmt.Errorf("%v is not part of the graph", origin)
+		return fmt.Errorf("%s is not part of the graph", origin)
 	}
 
 	n := len(g)
@@ -330,7 +644,7 @@ func postorderDFS(g graph, seen set, origin string, allowVertex func(string) boo
 		edges := g[v]
 		for i := len(edges) - 1; i >= 0; i-- {
 			if _, ok := hot[edges[i]]; ok {
-				return fmt.Errorf("%v is part of a loop", edges[i])
+				return fmt.Errorf("%s is part of a loop", edges[i])
 			}
 
 			if _, ok := seen[edges[i]]; !ok {
@@ -364,7 +678,7 @@ func expandFeatures(allFeatures featureSet, features []string, ignored set) ([]s
 			_, ok := ignored[v]
 			if ok {
 				collectedIgn[v] = struct{}{}
-				_, _ = fmt.Fprintf(os.Stderr, "WARNING: %v is being ignored\n", v)
+				_, _ = fmt.Fprintf(os.Stderr, "WARNING: %s is being ignored\n", v)
 			}
 			return !ok
 		}, func(v string) {
@@ -381,7 +695,7 @@ func expandFeatures(allFeatures featureSet, features []string, ignored set) ([]s
 
 	for _, f := range expanded {
 		if _, ok := collectedExcl[f]; ok {
-			return nil, nil, fmt.Errorf("%v has been excluded by another feature", f)
+			return nil, nil, fmt.Errorf("%s has been excluded by another feature", f)
 		}
 	}
 
@@ -440,7 +754,7 @@ func reduceFeatures(allFeatures featureSet, features []string, ignored set) ([]s
 
 	for f := range visited {
 		if _, ok := collectedExcl[f]; ok {
-			return nil, fmt.Errorf("%v has been excluded by another feature", f)
+			return nil, fmt.Errorf("%s has been excluded by another feature", f)
 		}
 	}
 
