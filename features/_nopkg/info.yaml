@@ -1,3 +1,3 @@
 description: "all package system related tools are removed (e.g. dpkg, apt)"
-type: modifier
+type: flag
 

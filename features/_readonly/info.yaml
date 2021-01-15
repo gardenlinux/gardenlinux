@@ -1,5 +1,5 @@
 description: "/usr directory will be readonly"
-type: modifier
+type: flag
 features:
   include: [ server ]
 fs:

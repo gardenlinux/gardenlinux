@@ -1,5 +1,5 @@
 description: "cloud functionality (cloud kernel, cloud boot)"
-type: something
+type: element
 features:
   include:
     - server

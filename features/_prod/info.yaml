@@ -1,4 +1,4 @@
-type: modifier
+type: flag
 features:
   include:
     - _nopkg
