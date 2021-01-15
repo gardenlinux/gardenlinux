@@ -267,7 +267,7 @@ func paramsCmd(allFeatures featureSet, features []string, ignore []string, args 
 	}
 
 	e := &spruce.Evaluator{Tree: mergedYAML}
-	err = e.Run([]string{"description", "type", "include", "exclude"}, args)
+	err = e.Run([]string{"description", "type", "features"}, args)
 	if err != nil {
 		return fmt.Errorf("params: %w", err)
 	}
