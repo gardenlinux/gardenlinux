@@ -1,5 +1,5 @@
 description: "only pxe build is done (with squashfs)"
-type: modifier
+type: flag
 features:
   include: [ _ignite ]
 fs:

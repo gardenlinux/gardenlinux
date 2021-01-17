@@ -1,5 +1,5 @@
 description: 'server layer with complete init system (systemd)'
-type: 'modifier'
+type: element
 features:
   include:
     - base

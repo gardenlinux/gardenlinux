@@ -1,5 +1,5 @@
 description: 'host for container and kubernetes workloads (containerd)'
-type: 'modifier'
+type: element
 features:
   include:
     - server

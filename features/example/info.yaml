@@ -1,7 +1,7 @@
 description: "The base layer for all other features. It pulls no extra packets only debootstap minbase"
-type: something
+type: element
 features:
-  include: 
+  include:
     - _slim
   exclude:
     - chost
@@ -18,7 +18,7 @@ fs:
     options: ro
 disk:
   label: gpt
-  boot: 
+  boot:
     - efi
     - mbr
 

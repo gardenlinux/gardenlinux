@@ -1,5 +1,5 @@
 description: 'gardener.cloud requirements (e.g. docker, containerd)'
-type: 'modifier'
+type: element
 features:
   include:
     - server

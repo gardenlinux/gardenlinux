@@ -1,2 +1,2 @@
 description: "whole setup is slimed (e.g. no man pages)"
-type: modifier
+type: flag
