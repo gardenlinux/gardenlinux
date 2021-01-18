@@ -1,4 +1,4 @@
-FROM	debian:testing-slim
+FROM	gardenlinux/slim
 
 ENV     DEBIAN_FRONTEND noninteractive
 
@@ -18,11 +18,11 @@ ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/cpp_10.2.0-1_amd64.de
 ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/gcc-multilib_10.2.0-1_amd64.deb /
 
 RUN	apt-get update \
-     &&	apt-get install -y --no-install-recommends -f /*.deb \
+     &&	apt-get install -y -f /*.deb \
      &&	apt-mark auto gcc g++ cpp gcc-multilib \
      &&	rm -f /*.deb \
      &&	dpkg -P gcc-9-base \
-     &&	apt-get install -y --no-install-recommends build-essential fakeroot sudo devscripts \
+     &&	apt-get install -y build-essential fakeroot sudo \
      &&	addgroup --system wheel \
      &&	adduser dev --disabled-password --gecos dev \
      &&	adduser dev wheel

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+package=$(basename $0)
+thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+source $thisDir/defaults
+
+docker_run $package.patch "
+	bash"

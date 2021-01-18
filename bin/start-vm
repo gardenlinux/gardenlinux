@@ -175,4 +175,9 @@ if [ "$(echo $cpuinfo | grep vmx)" != "" -o "$(echo $cpuinfo | grep svm)" != "" 
 fi
 
 echo "qemu-system-x86_64 ${virtOpts[@]}"
+echo
+echo "Press Enter to boot"
+read a
+qemu-system-x86_64 ${virtOpts[@]}
+
 

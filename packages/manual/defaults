@@ -1,11 +1,11 @@
-BUILDNAME="Garden Linux Maintainers"
+BUILDNAME="GardenLinux Maintainers"
 BUILDEMAIL="contact@gardenlinux.io"
 BUILDKEY="contact@gardenlinux.io"
 BUILDKEYPUB=$(gpg --armor --export "${BUILDKEY}") 
-BUILDIMAGE="gardenlinux/build-deb"
+BUILDIMAGE="gardenlinux:build"
 BUILDTARGET="$(readlink -f ../.packages)"
 
-make -C ../docker build-deb
+docker build -t $BUILDIMAGE .
 
 docker_run () {
 	patchfile=$1
@@ -15,7 +15,6 @@ docker_run () {
 	--volume $BUILDTARGET:/packages \
 	--volume "$(gpgconf --list-dir agent-socket)":/home/dev/.gnupg/S.gpg-agent \
 	--volume $(readlink -f $patchfile):/$patchfile \
-	--volume $(readlink -f kernel.p12):/kernel.p12 \
 	-e GPG_KEY="${BUILDKEYPUB}" \
 	-e DEBFULLNAME="$BUILDNAME" \
 	-e DEBEMAIL="$BUILDEMAIL" \

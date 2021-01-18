@@ -1,0 +1,18 @@
+{
+  "CN": "Garden Linux Intermediate1 CA",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C":  "DE",
+      "L":  "Walldorf",
+      "O":  "SAP SE",
+      "OU": "Garden Linux"
+    }
+  ],
+  "ca": {
+    "expiry": "42720h"
+  }
+}

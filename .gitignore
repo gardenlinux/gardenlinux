@@ -4,5 +4,8 @@
 /repository/reprepro/db
 /repository/reprepro/logs
 /features/_dev/id_dev
+/cert/*.crt
+/cert/*.key
+/cert/*.p12
 .idea
 __pycache__

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+package=$(basename $0)
+thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+source $thisDir/defaults
+
+docker_run $package.patch "
+	sudo apt-get build-dep -y --no-install-recommends $package
+	sudo apt-get install -y libgmp3-dev
+	echo 'deb http://deb.debian.org/debian unstable main
+deb-src http://deb.debian.org/debian unstable main' > sources.list
+	sudo mv sources.list /etc/apt/sources.list
+	sudo apt-get update
+	apt-get source $package
+	cd $package-*
+	#patch -p1 < /$package.patch
+	dch -i ''
+	dch -r ''
+	debuild
+	sudo cp ../*\$(dpkg-parsechangelog --show-field Version)* ../$package*.orig.tar.* /packages"

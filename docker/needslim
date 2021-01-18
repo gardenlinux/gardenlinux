@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+VERSION="$(../bin/garden-version)"
+
+if [ "$(docker image ls gardenlinux/slim --format \"{{.Repository}}:{{.Tag}}\")" == "" ]; then
+	echo "WARNING: There is no gardenlinux/slim on this box. Since this is the builder script, it will pull no binary docker images from public repos."
+	echo
+	echo "Since gardenlinux/slim is needed for almost all images we pull debian/testing-slim and rename it to gardenlinux/slim so we avoid the Chicken-and-Egg problem temporarily"
+	echo
+	echo "Please run 'make slim' afterwards"
+	echo
+	docker pull debian:testing-slim
+	docker tag  debian:testing-slim gardenlinux/slim
+	docker tag  debian:testing-slim gardenlinux/slim:$VERSION
+else
+	if [ "$(docker image ls gardenlinux/slim:latest --format \"{{.ID}}\")" == \
+	     "$(docker image ls debian:testing-slim --format \"{{.ID}}\")" ]; then
+		echo "WARNING: You are still using a debian:testing-slim as a temporary replacement of gardenlinux/slim:latest!"
+		echo
+		echo "Please run 'make slim' to fix"
+	elif [ "$(docker image ls gardenlinux/slim:$VERSION --format \"{{.ID}}\")" == \
+	       "$(docker image ls debian:testing-slim --format \"{{.ID}}\")" ]; then
+		echo "WARNING: You are still using a debian:testing-slim as a temporary replacement of gardenlinux/slim:$VERSION!"
+		echo
+		echo "Please run 'make slim' to fix"
+	fi
+fi
+
