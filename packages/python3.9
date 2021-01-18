@@ -7,11 +7,14 @@ source $thisDir/defaults
 
 docker_run $package.patch "
 	sudo apt-get build-dep -y --no-install-recommends $package
+	sudo apt-get remove -y --purge libdb5.3-dev
 	apt-get source $package
 	cd $package-*
 	patch -p1 < /$package.patch
-	dch -i 'moving pkg-config from Depends to Recommends'
+	dch -i 'remove libdb'
+	dch -a 'replace mime-support by media-types'
+	dch -a 'parse error on test for libpython3.9-testsuite fixed'
 	dch -r ''
-	bash
+	debian/rules control-file
 	debuild
 	sudo cp ../*\$(dpkg-parsechangelog --show-field Version)* ../$package*.orig.tar.* /packages"

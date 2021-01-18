@@ -1,0 +1,42 @@
++++ new/sign_helper	2021-01-13 18:02:48.943963704 +0000
+@@ -0,0 +1,40 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++#KERNEL="linux-image-5.4.0-6-amd64-unsigned linux-image-5.4.0-6-cloud-amd64-unsigned linux-image-5.4.0-6-rt-amd64-unsigned"
++
++CERT_DIR="certdir"
++CERT_NAME="Garden Linux Kernel Signature - SAP SE"
++LINUX_SIGNFILE=/usr/lib/linux-kbuild-5.4/scripts/sign-file
++
++out_dir=linux-signed-amd64/debian/signatures
++
++for kernel in $@; do
++	mkdir -p $out_dir/$kernel
++	echo $kernel
++
++	while read filename; do
++		[ -f "/$filename" ] || continue
++
++		mkdir -p "$out_dir/$kernel/${filename%/*}"
++		case "${filename##*/}" in
++		    *.efi | vmlinuz-*)
++			pesign -i "/${filename}" --export-signature "${out_dir}/$kernel/${filename}.sig" --sign -d sha256 -n "${CERT_DIR}" -c "${CERT_NAME}"
++			;;
++		    *.ko)
++			sudo "$LINUX_SIGNFILE" -dp sha256 "${CERT_DIR}/kernel.key" "${CERT_DIR}/kernel.crt" "/$filename"
++			cp "/$filename.p7s" "$out_dir/$kernel/$filename.sig"
++			;;
++		    *)
++			echo >&2 "W: Not signing unrecognised file: $filename"
++			continue
++			;;
++		esac
++		if [ "${#filename}" -gt 60 ]; then
++			filename_trunc="...${filename:$((${#filename} - 57)):57}"
++		else
++			filename_trunc="$filename"
++		fi
++		printf 'I: Signed %-60s\n' "$filename_trunc"
++	done < <(dpkg -L $kernel | grep -e vmlinuz -e /lib/modules | cut -c2-)
++done

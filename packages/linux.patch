@@ -1,3 +1,14 @@
+--- org/debian/rules.real	2020-12-16 23:58:08.425373379 +0000
++++ new/debian/rules.real	2020-12-16 23:57:59.409372570 +0000
+@@ -346,8 +346,6 @@
+ 		cp -a $(SOURCE_DIR)/arch/$(KERNEL_ARCH)/lib/crtsavres.o $(DIR)/arch/$(KERNEL_ARCH)/lib; \
+ 	fi
+
+-	cp -a $(SOURCE_DIR)/scripts/module.lds $(DIR)/arch/$(KERNEL_ARCH)
+-
+ 	@echo 'include $(BASE_DIR_COMMON)/Makefile' >> $(DIR)/Makefile
+
+ 	dh_link /usr/lib/$(PACKAGE_NAME_KBUILD)/scripts $(BASE_DIR)/scripts
 --- org/debian/rules.d/scripts/kconfig/Makefile	2020-08-11 14:51:35.530153452 +0000
 +++ new/debian/rules.d/scripts/kconfig/Makefile	2020-08-11 14:51:52.622146051 +0000
 @@ -2,7 +2,7 @@
