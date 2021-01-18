@@ -5,10 +5,13 @@ set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
-	--flags 'cpu:,mem:,disk:,bridge:' \
+	--flags 'cpu:,mem:,disk:,bridge:,port:' \
 	--flags 'daemonize' \
 	--flags 'pxelocal:' \
 	--flags 'pxe:' \
+	--flags 'uefi' \
+	--flags 'ueficode:' \
+	--flags 'uefivars:' \
 	-- \
 	'[--cpu:3] [--mem:16384] [--disk:3G] [--daemonize] [--pxe:dir] [--pxelocal] <image file>' \
 	'example'
@@ -22,6 +25,10 @@ daemonize=
 pxe=
 pxeConfig=
 pxeLocal=
+port=2223
+uefi=
+uefiCode=/usr/share/OVMF/OVMF_CODE.fd
+uefiVars=/usr/share/OVMF/OVMF_VARS.fd
 while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
@@ -34,13 +41,24 @@ while true; do
 		--bridge ) 	bridge="$1";  	shift ;;
 		--pxe )         pxe="$1";       shift ;;
 		--pxelocal)     pxeLocal="$1";  shift ;;
+		--port)         port="$1";  shift ;;
+		--uefi) 	uefi=1; 	;;
+		--ueficode)     uefiCode="$1";  shift ;;
+		--uefivars)     uefiVars="$1";  shift ;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
 done
 
-imagefile="${1:-}";     shift || eusage 'missing image file to start'
-[ ! -s $imagefile ] && ( echo "file does not exist"; exit 1; )
+hasImage=1
+if [ "$pxe" -o "$pxeLocal" ]; then
+	hasImage=
+fi
+
+if [ $hasImage ]; then
+	imagefile="${1:-}";     shift || eusage 'missing image file to start'
+	[ ! -s $imagefile ] && ( echo "file does not exist"; exit 1; )
+fi
 
 virtOpts=(
 	-smp $cpu
@@ -70,20 +88,39 @@ else
 		)
 fi
 
-# disk
-if [ $(stat --printf="%s" $imagefile) -lt $disk ]; then
-	# disk grows if requested size then is bigger then image size 
-	dd if=/dev/zero of=$imagefile count=0 bs=1 seek=$disk
-fi
-imageext=${imagefile##*.}
-case $imageext in
-	vhd | vpc ) imageext="vpc" ;;
-esac
-virtOpts+=(
-	-device virtio-scsi-pci,id=scsi0
-	-device scsi-hd,drive=drive0,bus=scsi0.0
-        -drive format=$imageext,if=none,discard=unmap,aio=native,cache.direct=on,id=drive0,file=$imagefile
+# uefi
+if [ $uefi ]; then
+	if [ ! -f $uefiCode ]; then
+		eusage "Missing ueficode at $ueficode.\n Run: apt-get install ovmf"
+	fi
+	if [ ! -f $uefiVars ]; then
+		eusage "Missing uefivars at $uefiVars.\n Run: apt-get install ovmf"
+	fi
+
+	virtOpts+=(
+		-machine q35,smm=on
+		-global driver=cfi.pflash01,property=secure,value=on
+		-drive if=pflash,format=raw,unit=0,file=${uefiCode},readonly=on
+		-drive if=pflash,format=raw,unit=1,file=${uefiVars}
 	)
+fi
+
+# disk
+if [ $hasImage ]; then
+	if [ $(stat --printf="%s" $imagefile) -lt $disk ]; then
+		# disk grows if requested size then is bigger then image size 
+		dd if=/dev/zero of=$imagefile count=0 bs=1 seek=$disk
+	fi
+	imageext=${imagefile##*.}
+	case $imageext in
+		vhd | vpc ) imageext="vpc" ;;
+	esac
+	virtOpts+=(
+		-device virtio-scsi-pci,id=scsi0
+		-device scsi-hd,drive=drive0,bus=scsi0.0
+			-drive format=$imageext,if=none,discard=unmap,aio=native,cache.direct=on,id=drive0,file=$imagefile
+		)
+fi
 
 # pxe
 # TODO : a disk image is not needed when booting via pxe
@@ -124,7 +161,7 @@ if [ $bridge ]; then
 	echo "$tmp" > /etc/qemu/bridge.conf
 	virtOpts+=( -netdev bridge,id=net0,br=mgmt"$pxeConfig" )
 else
-	virtOpts+=( -netdev user,id=net0,hostfwd=tcp::2223-:22,hostname=garden"$pxeConfig" )
+	virtOpts+=( -netdev user,id=net0,hostfwd=tcp::$port-:22,hostname=garden"$pxeConfig" )
 fi
 virtOpts+=( -device virtio-net-pci,netdev=net0,mac=$macaddr )
 
@@ -137,5 +174,5 @@ if [ "$(echo $cpuinfo | grep vmx)" != "" -o "$(echo $cpuinfo | grep svm)" != "" 
 		)
 fi
 
-qemu-system-x86_64 ${virtOpts[@]}
+echo "qemu-system-x86_64 ${virtOpts[@]}"
 
