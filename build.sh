@@ -94,7 +94,17 @@ if [ $manual ]; then
 		/bin/bash
 else
 	set -x
-	docker run $dockerArgs --rm \
+	function stop(){
+		echo "trapped ctrl-c"
+		docker stop -t 0 $1
+		wait
+		echo "everything stopped..."
+		exit 1
+	}
+	containerName=$(cat /proc/sys/kernel/random/uuid)
+	trap 'stop $containerName' INT
+	docker run --name $containerName $dockerArgs --rm \
 		"${buildImage}" \
-		/opt/gardenlinux/bin/garden-build.sh | tar -xvC "$outputDir"
+		/opt/gardenlinux/bin/garden-build.sh | tar -xvC "$outputDir" &
+	wait
 fi
