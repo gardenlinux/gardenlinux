@@ -27,7 +27,7 @@ RUN	apt-get update \
 ENV 	PATH=${PATH}:/opt/gardenlinux/bin
 COPY	--from=kaniko /kaniko/executor /usr/local/bin/executor
 COPY	--from=azure  /go/azure-vhd-utils/azure-vhd-utils /usr/local/bin/azure-vhd-utils
-COPY 	hack/debootstrap.patch /tmp/debootstrap.patch
+COPY	docker/build-image/debootstrap.patch /tmp/debootstrap.patch
 RUN	patch -p1 < /tmp/debootstrap.patch \
      && rm -f /tmp/debootstrap.patch \
      && echo "progress=bar:force:noscroll" >> /etc/wgetrc
