@@ -1,0 +1,5 @@
+description: 'host for kubernetes workloads (vanilla)'
+type: element
+features:
+  include:
+    - chost

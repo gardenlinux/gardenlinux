@@ -7,5 +7,6 @@
 /cert/*.crt
 /cert/*.key
 /cert/*.p12
+/cert/*.pub
 .idea
 __pycache__

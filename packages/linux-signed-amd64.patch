@@ -1,5 +1,5 @@
 +++ new/sign_helper	2021-01-13 18:02:48.943963704 +0000
-@@ -0,0 +1,40 @@
+@@ -0,0 +1,41 @@
 +#!/usr/bin/env bash
 +set -euo pipefail
 +
@@ -25,7 +25,8 @@
 +			;;
 +		    *.ko)
 +			sudo "$LINUX_SIGNFILE" -dp sha256 "${CERT_DIR}/kernel.key" "${CERT_DIR}/kernel.crt" "/$filename"
-+			cp "/$filename.p7s" "$out_dir/$kernel/$filename.sig"
++			sudo mv "/$filename.p7s" "$out_dir/$kernel/$filename.sig"
++			sudo chown dev "$out_dir/$kernel/$filename.sig"
 +			;;
 +		    *)
 +			echo >&2 "W: Not signing unrecognised file: $filename"
@@ -37,6 +38,6 @@
 +		else
 +			filename_trunc="$filename"
 +		fi
-+		printf 'I: Signed %-60s\n' "$filename_trunc"
++		printf 'I: Signed %s\n' "$filename_trunc"
 +	done < <(dpkg -L $kernel | grep -e vmlinuz -e /lib/modules | cut -c2-)
 +done

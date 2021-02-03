@@ -12,10 +12,10 @@ RUN	mkdir /etc/sudoers.d \
      &&	echo "progress=bar:force:noscroll" >> /etc/wgetrc \
      &&	echo "force-confold\nforce-confdef" > /etc/dpkg/dpkg.cfg.d/forceold 
 
-ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/gcc_10.2.0-1_amd64.deb /
-ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/g++_10.2.0-1_amd64.deb /
-ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/cpp_10.2.0-1_amd64.deb /
-ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/gcc-multilib_10.2.0-1_amd64.deb /
+ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/gcc_10.2.1-1_amd64.deb /
+ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/g++_10.2.1-1_amd64.deb /
+ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/cpp_10.2.1-1_amd64.deb /
+ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/gcc-multilib_10.2.1-1_amd64.deb /
 
 RUN	apt-get update \
      &&	apt-get install -y -f /*.deb \

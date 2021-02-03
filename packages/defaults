@@ -15,7 +15,7 @@ docker_run () {
 	--volume $BUILDTARGET:/packages \
 	--volume "$(gpgconf --list-dir agent-socket)":/home/dev/.gnupg/S.gpg-agent \
 	--volume $(readlink -f $patchfile):/$patchfile \
-	--volume $(readlink -f kernel.p12):/kernel.p12 \
+	--volume $(readlink -f ../cert/kernel.p12):/kernel.p12 \
 	-e GPG_KEY="${BUILDKEYPUB}" \
 	-e DEBFULLNAME="$BUILDNAME" \
 	-e DEBEMAIL="$BUILDEMAIL" \

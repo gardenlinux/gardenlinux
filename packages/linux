@@ -6,8 +6,8 @@ thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source $thisDir/defaults
 
 KERNEL_ORG=5.4.19
-KERNEL_VERSION=5.4.87
-KERNEL_RT_VERSION=5.4.87-rt48
+KERNEL_VERSION=5.4.93
+KERNEL_RT_VERSION=5.4.93-rt51
 KERNEL_ABI=6
 
 docker_run $package.patch "
@@ -59,11 +59,6 @@ docker_run $package.patch "
 	sed -i 's/abiname:.*/abiname:$KERNEL_ABI/' debian/config/defines
 	patch -p1 < /$package.patch
 
-	# certificates
-	rm debian/certs/debian-uefi-certs.pem
-	openssl pkcs12 -in /kernel.p12 -out - -nodes -nokeys -passin pass:"" | tail -n+7 > debian/certs/gardenlinux-cert.pem
-	sed -i 's/debian-uefi-certs.pem/gardenlinux-cert.pem/g' debian/config/config debian/config/featureset-rt/config
-
 	# changelog magic
 	mv debian/changelog debian/changelog.tmp
 	cat - > debian/changelog <<EOF
@@ -92,8 +87,8 @@ EOF
 	TMPDIR=.. mk-build-deps debian/control
 	sudo apt-get install -y --no-install-recommends -f ../linux-build-deps_*_amd64.deb
 	make -f debian/rules debian/control-real || /bin/true
-	bash
 	debuild
 	) || bash
 	
-	sudo cp ../*\$(dpkg-parsechangelog --show-field Version)* ../$package*.orig.tar.* /packages"
+	rm -f ../*build-deps*
+	sudo cp ../*\$(dpkg-parsechangelog --show-field Version)* ../*\$(dpkg-parsechangelog --show-field Version | tr "+" "-")* ../$package*.orig.tar.* /packages"
