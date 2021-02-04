@@ -91,4 +91,4 @@ EOF
 	) || bash
 	
 	rm -f ../*build-deps*
-	sudo cp ../*\$(dpkg-parsechangelog --show-field Version)* ../*\$(dpkg-parsechangelog --show-field Version | tr "+" "-")* ../$package*.orig.tar.* /packages"
+	sudo cp ../*\$(dpkg-parsechangelog --show-field Version)* ../$package*.orig.tar.* /packages"

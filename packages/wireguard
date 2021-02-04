@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+package=$(basename $0)
+thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+source $thisDir/defaults
+
+KERNEL_VERSION=5.4.93-1
+KERNEL_BASE=5.4.0-6
+KERNELS="linux-image-${KERNEL_BASE}-amd64-unsigned linux-image-${KERNEL_BASE}-cloud-amd64-unsigned linux-image-${KERNEL_BASE}-rt-amd64-unsigned"
+WIREGUARD_VERSION=1.0.20210124
+
+docker_run $package.patch "
+	sudo apt-get install -y --no-install-recommends vim less pesign debhelper
+	sudo apt-get install -y wireguard-dkms=${WIREGUARD_VERSION}*
+	mkdir certdir
+	pk12util -i /kernel.p12 -d certdir -W \"\" -K \"\"
+	openssl pkcs12 -in /kernel.p12 -out certdir/kernel.key -nodes -nocerts -passin pass:\"\"
+	openssl pkcs12 -in /kernel.p12 -out certdir/kernel.crt -nodes -nokeys  -passin pass:\"\"
+
+        sudo apt-get install -y --no-install-recommends -f  /packages/linux-kbuild-5.4_${KERNEL_VERSION}_amd64.deb /packages/linux-headers-${KERNEL_BASE}-amd64_${KERNEL_VERSION}_amd64.deb /packages/linux-headers-${KERNEL_BASE}-common_${KERNEL_VERSION}_all.deb
+	sudo dkms build wireguard/${WIREGUARD_VERSION} -k ${KERNEL_BASE}-amd64
+	sudo dkms mkbmdeb wireguard/${WIREGUARD_VERSION} -k ${KERNEL_BASE}-amd64
+        sudo mv /var/lib/dkms/wireguard/${WIREGUARD_VERSION}/bmdeb/wireguard-modules-${KERNEL_BASE}-amd64_${WIREGUARD_VERSION}_amd64.deb .
+	
+	bash
+	rm -f ../*build-deps*
+	sudo cp wireguard-modules-${KERNEL_BASE}-amd64_${WIREGUARD_VERSION}_amd64.deb /packages"
