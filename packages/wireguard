@@ -13,15 +13,27 @@ WIREGUARD_VERSION=1.0.20210124
 docker_run $package.patch "
 	sudo apt-get install -y --no-install-recommends vim less pesign debhelper
 	sudo apt-get install -y wireguard-dkms=${WIREGUARD_VERSION}*
+        sudo apt-get install -y --no-install-recommends -f  /packages/linux-kbuild-5.4_${KERNEL_VERSION}_amd64.deb /packages/linux-headers-${KERNEL_BASE}-amd64_${KERNEL_VERSION}_amd64.deb /packages/linux-headers-${KERNEL_BASE}-common_${KERNEL_VERSION}_all.deb
 	mkdir certdir
 	pk12util -i /kernel.p12 -d certdir -W \"\" -K \"\"
 	openssl pkcs12 -in /kernel.p12 -out certdir/kernel.key -nodes -nocerts -passin pass:\"\"
 	openssl pkcs12 -in /kernel.p12 -out certdir/kernel.crt -nodes -nokeys  -passin pass:\"\"
 
-        sudo apt-get install -y --no-install-recommends -f  /packages/linux-kbuild-5.4_${KERNEL_VERSION}_amd64.deb /packages/linux-headers-${KERNEL_BASE}-amd64_${KERNEL_VERSION}_amd64.deb /packages/linux-headers-${KERNEL_BASE}-common_${KERNEL_VERSION}_all.deb
-	sudo dkms build wireguard/${WIREGUARD_VERSION} -k ${KERNEL_BASE}-amd64
-	sudo dkms mkbmdeb wireguard/${WIREGUARD_VERSION} -k ${KERNEL_BASE}-amd64
-        sudo mv /var/lib/dkms/wireguard/${WIREGUARD_VERSION}/bmdeb/wireguard-modules-${KERNEL_BASE}-amd64_${WIREGUARD_VERSION}_amd64.deb .
+	cat - > sign_helper.sh <<EOF
+#!/bin/sh
+/lib/modules/\\\$1/build/scripts/sign-file sha512 /home/dev/certdir/kernel.key /home/dev/certdir/kernel.crt \\\$2
+EOF
+	chmod +x sign_helper.sh
+	cat - > framework.conf <<EOF
+kernelver=${KERNEL_BASE}-amd64
+dkms_tree=/home/dev/dkms
+sign_tool=/home/dev/sign_helper.sh
+EOF
+
+	mkdir dkms
+	dkms build wireguard/${WIREGUARD_VERSION} --dkmsframework /home/dev/framework.conf
+	dkms mkbmdeb wireguard/${WIREGUARD_VERSION} --dkmsframework /home/dev/framework.conf
+	mv dkms/wireguard/${WIREGUARD_VERSION}/bmdeb/wireguard-modules-${KERNEL_BASE}-amd64_${WIREGUARD_VERSION}_amd64.deb .
 	
 	bash
 	rm -f ../*build-deps*
