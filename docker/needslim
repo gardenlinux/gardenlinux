@@ -13,6 +13,7 @@ if [ "$(docker image ls gardenlinux/slim --format \"{{.Repository}}:{{.Tag}}\")"
 	docker pull debian:testing-slim
 	docker tag  debian:testing-slim gardenlinux/slim
 	docker tag  debian:testing-slim gardenlinux/slim:$VERSION
+	docker tag  debian:testing-slim gardenlinux/slim:latest
 else
 	if [ "$(docker image ls gardenlinux/slim:latest --format \"{{.ID}}\")" == \
 	     "$(docker image ls debian:testing-slim --format \"{{.ID}}\")" ]; then

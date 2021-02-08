@@ -29,3 +29,5 @@ RUN	apt-get update \
 
 USER	dev
 WORKDIR	/home/dev
+
+RUN 	mkdir .gnupg
