@@ -12,8 +12,9 @@ signature:
 	@gpg --export --armor $(BUILDKEY) > $(BUILDDIR)/sign.pub
 	@diff $(BUILDDIR)/sign.pub gardenlinux.pub || echo "Not using the official key"
 
+.PHONY: docker
 docker:
-	@docker build -t gardenlinux/build-image:$(VERSION) .
+	make -C docker build-image
 
 all: all_dev all_prod
 
