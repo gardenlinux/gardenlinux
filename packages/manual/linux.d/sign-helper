@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CERT_DIR="/home/dev/certdir"
+CERT_NAME="Garden Linux Kernel Signature - SAP SE"
+LINUX_SIGNFILE=/usr/lib/linux-kbuild-5.4/scripts/sign-file
+
+kernel=$1
+out_dir=$2
+
+mkdir -p $out_dir/$kernel
+echo $kernel
+
+while read filename; do
+	[ -f "/$filename" ] || continue
+
+	mkdir -p "$out_dir/$kernel/${filename%/*}"
+	case "${filename##*/}" in
+	    *.efi | vmlinuz-*)
+		pesign -i "/${filename}" --export-signature "${out_dir}/$kernel/${filename}.sig" --sign -d sha256 -n "${CERT_DIR}" -c "${CERT_NAME}"
+		;;
+	    *.ko)
+		sudo "$LINUX_SIGNFILE" -dp sha256 "${CERT_DIR}/kernel.key" "${CERT_DIR}/kernel.crt" "/$filename"
+		sudo mv "/$filename.p7s" "$out_dir/$kernel/$filename.sig"
+		sudo chown dev "$out_dir/$kernel/$filename.sig"
+		;;
+	    *)
+		echo >&2 "W: Not signing unrecognised file: $filename"
+		continue
+		;;
+	esac
+	printf 'I: Signed %s\n' "$filename"
+done < <(dpkg -L $kernel | grep -e vmlinuz -e /lib/modules | cut -c2-)
