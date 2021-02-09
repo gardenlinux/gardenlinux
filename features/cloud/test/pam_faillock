@@ -13,10 +13,12 @@ source "${thisDir}/helpers"
 check_rootdir "${rootfsDir}" || exit 1
 rc=0
 
-if ! grep -qP '^required[ \t]+pam_faillock.so[ \t]+preauth[ \t]+silent[ \t]+audit[ \t]+deny=5[ \t]+unlock_time=900[ \t]?$' "${rootfsDir}/etc/pam.d/common-auth"; then
+if ! grep -qP '^auth[ \t]+required[ \t]+pam_faillock.so[ \t]+preauth[ \t]+silent[ \t]+audit[ \t]+deny=5[ \t]+unlock_time=900[ \t]?$' "${rootfsDir}/etc/pam.d/common-auth"; then
 	rc=1
 fi
-required pam_faillock.so preauth silent audit deny=5 unlock_time=900
+if ! grep -qP '^auth[ \t]+\[default=die\][ \t]+pam_faillock.so[ \t]+authfail[ \t]+silent[ \t]+audit[ \t]+deny=5[ \t]+unlock_time=900[ \t]?$' "${rootfsDir}/etc/pam.d/common-auth"; then
+	rc=1
+fi
 if ! grep -qP '^account[ \t]+required[ \t]+pam_faillock\.so[ \t]?$' "${rootfsDir}/etc/pam.d/common-account"; then
 	rc=1	
 fi
