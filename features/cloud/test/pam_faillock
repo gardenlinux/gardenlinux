@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+echo "testing pam faillock settings"
+
+rootfsDir=$1
+thisDir=$(readlink -e "$(dirname "${BASH_SOURCE[0]}")")
+rootfsDir=$(readlink -e "$rootfsDir")
+
+source "${thisDir}/helpers"
+
+check_rootdir "${rootfsDir}" || exit 1
+rc=0
+
+if ! grep -qP '^required[ \t]+pam_faillock.so[ \t]+preauth[ \t]+silent[ \t]+audit[ \t]+deny=5[ \t]+unlock_time=900[ \t]?$' "${rootfsDir}/etc/pam.d/common-auth"; then
+	rc=1
+fi
+required pam_faillock.so preauth silent audit deny=5 unlock_time=900
+if ! grep -qP '^account[ \t]+required[ \t]+pam_faillock\.so[ \t]?$' "${rootfsDir}/etc/pam.d/common-account"; then
+	rc=1	
+fi
+
+if [[ "${rc}" -eq 1 ]]; then
+	echo "FAIL - pam faillock settings are not correct"
+	exit 1
+else
+	echo "OK - pam faillock settings are correct"
+	exit 0
+fi
