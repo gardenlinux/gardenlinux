@@ -1,8 +1,0 @@
-fdisk
-#linux-image-cloud-amd64
-#grub-cloud-amd64
-grub2
-cloud-guest-utils
-#initramfs-tools
-libpam-cracklib
-open-iscsi

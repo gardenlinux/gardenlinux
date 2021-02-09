@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+. $(dirname $0)/.helper
+
+# no manpage cleaning 
+sudo rm -f /etc/dpkg/dpkg.cfg.d/docker
+
+sudo apt-get build-dep -y --no-install-recommends $src
+sudo apt-get install -y libgdbm-dev
+
+wget -P /tmp https://snapshot.debian.org/archive/debian-ports/20200409T204941Z/pool/main/s/sphinx/{libjs-sphinxdoc_1.8.5-9_all.deb,python3-sphinx_1.8.5-9_all.deb,sphinx-common_1.8.5-9_all.deb} 
+sudo dpkg -i /tmp/libjs-sphinxdoc_1.8.5-9_all.deb
+sudo dpkg -i /tmp/sphinx-common_1.8.5-9_all.deb
+sudo dpkg -i /tmp/python3-sphinx_1.8.5-9_all.deb
+
+apt-get source $src
+	
+sudo apt-get remove -y --purge libdb5.3-dev
+cd $src-*/
+patch -p1 < $srcDir/libdb.patch
+dch -i 'remove libdb'
+dch -r ''
+	
+donotmove="$(ls ..)"
+debuild
+move_package .. $donotmove
