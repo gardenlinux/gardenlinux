@@ -1,0 +1,9 @@
+Name: Garden Linux pam policies faillock
+Default: yes
+Priority: 128
+Depends: garden
+Auth-Type: Primary
+Auth:
+	[default=die] pam_faillock.so authfail silent audit deny=5 unlock_time=900
+Auth-Initial:
+	[default=die] pam_faillock.so authfail silent audit deny=5 unlock_time=900
