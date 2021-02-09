@@ -30,4 +30,4 @@ RUN	apt-get update \
 USER	dev
 WORKDIR	/home/dev
 
-RUN 	mkdir .gnupg
+RUN 	mkdir .gnupg && chmod 700 .gnupg

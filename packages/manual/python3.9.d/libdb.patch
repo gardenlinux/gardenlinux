@@ -1,15 +1,15 @@
-+++ python3.7-3.7.7/debian/control
-@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 9), dpkg-de
++++ python3.8/debian/control.in
+@@ -7,7 +7,7 @@
    lsb-release, sharutils,
-   libreadline-dev, libncursesw5-dev (>= 5.3), 
+   libreadline-dev, libncursesw5-dev (>= 5.3), @bd_gcc@
    zlib1g-dev, libbz2-dev, liblzma-dev,
 -  libgdbm-dev, libdb-dev,
 +  libgdbm-dev,
    tk-dev, blt-dev (>= 2.4z), libssl-dev,
    libexpat1-dev, libmpdec-dev (>= 2.4),
-   libbluetooth-dev [linux-any] <!pkg.python3.7.nobluetooth>,
-+++ python3.7-3.7.7/debian/rules
-@@ -354,7 +354,7 @@ common_configure_args = \
+   libbluetooth-dev [linux-any] <!pkg.@PVER@.nobluetooth>,
++++ python3.8/debian/rules
+@@ -373,7 +373,7 @@
  		--prefix=/usr \
  		--enable-ipv6 \
  		--enable-loadable-sqlite-extensions \

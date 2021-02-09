@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-package=$(basename $0)
-thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
-source $thisDir/defaults
+. $(dirname $0)/.helper
 
-docker_run $package.patch "
-	sudo apt-get build-dep -y --no-install-recommends $package
-	sudo apt-get remove -y --purge libcanberra-dev
-	apt-get source $package
-	cd $package-*
-	patch -p1 < /$package.patch
-	dch -i 'remove sound libraries'
-	dch -r ''
-	DEB_BUILD_OPTIONS=nocheck debuild
-	sudo cp ../*\$(dpkg-parsechangelog --show-field Version | cut -d: -f2)* ../$package*.orig.tar.* /packages"
+sudo apt-get build-dep -y --no-install-recommends $src
+apt-get source $src
+
+sudo apt-get remove -y --purge libcanberra-dev
+cd $src-*/
+patch -p1 < $srcDir/canberra.patch
+dch -i 'remove sound libraries'
+dch -r ''
+
+donotmove="$(ls ..)"
+DEB_BUILD_OPTIONS=nocheck debuild
+move_package .. $donotmove
