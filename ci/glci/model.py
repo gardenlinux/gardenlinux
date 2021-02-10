@@ -31,13 +31,11 @@ class FeatureType(enum.Enum):
     specify an arbitrary amount of modifiers.
     '''
     PLATFORM = 'platform'
-    ELEMENT = 'element'
-    FLAG = 'flag'
+    MODIFIER = 'modifier'
 
 
 Platform = str # see `features/*/info.yaml` / platforms() for allowed values
-Element = str # see `features/*/info.yaml` / elements() for allowed values
-Flag = str # see `reatures/*/info.yaml` / flags() for allowed values
+Modifier = str # see `features/*/info.yaml` / modifiers() for allowed values
 
 
 @dataclasses.dataclass(frozen=True)
@@ -45,7 +43,7 @@ class Features:
     '''
     a FeatureDescriptor's feature cfg (currently, references to other features, only)
     '''
-    include: typing.Tuple[Element] = tuple()
+    include: typing.Tuple[Modifier] = tuple()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -58,7 +56,7 @@ class FeatureDescriptor:
     description: str = 'no description available'
     features: Features = None
 
-    def included_feature_names(self) -> typing.Tuple[Element]:
+    def included_feature_names(self) -> typing.Tuple[Modifier]:
         '''
         returns the tuple of feature names immediately depended-on by this feature
         '''
@@ -95,13 +93,12 @@ class GardenlinuxFlavour:
     '''
     architecture: Architecture
     platform: str
-    elements: typing.Tuple[Element]
-    flags: typing.Tuple[Flag]
+    modifiers: typing.Tuple[Modifier]
 
     def calculate_modifiers(self):
         yield from (
             feature_by_name(f) for f
-            in normalised_modifiers(platform=self.platform, modifiers=self.elements)
+            in normalised_modifiers(platform=self.platform, modifiers=self.modifiers)
         )
 
     def canonical_name_prefix(self):
@@ -112,7 +109,7 @@ class GardenlinuxFlavour:
 
     def filename_prefix(self):
         p = self.platform
-        m = '_'.join(sorted([m for m in self.elements]))
+        m = '_'.join(sorted([m for m in self.modifiers]))
 
         return f'{p}-{m}'
 
@@ -124,11 +121,11 @@ class GardenlinuxFlavour:
                 f'unknown platform: {self.platform}. known: {platform_names}'
             )
 
-        element_names = {element.name for element in modifiers()}
-        unknown_elems = set(self.elements) - element_names
-        if unknown_elems:
+        modifier_names = {modifier.name for modifier in modifiers()}
+        unknown_mods = set(self.modifiers) - modifier_names
+        if unknown_mods:
             raise ValueError(
-                f'unknown modifiers: {unknown_elems}. known: {element_names}'
+                f'unknown modifiers: {unknown_mods}. known: {modifier_names}'
             )
 
 
@@ -144,8 +141,7 @@ class GardenlinuxFlavourCombination:
     '''
     architectures: typing.Tuple[Architecture]
     platforms: typing.Tuple[Platform]
-    elements: typing.Tuple[typing.Tuple[Element]]
-    flags: typing.Tuple[typing.Tuple[Flag]]
+    modifiers: typing.Tuple[typing.Tuple[Modifier]]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -158,18 +154,16 @@ class GardenlinuxFlavourSet:
 
     def flavours(self):
         for comb in self.flavour_combinations:
-            for arch, platf, mods, flags in itertools.product(
+            for arch, platf, mods in itertools.product(
                 comb.architectures,
                 comb.platforms,
-                comb.elements,
-                comb.flags,
+                comb.modifiers,
             ):
                 yield GardenlinuxFlavour(
                     architecture=arch,
                     platform=platf,
-                    elements=normalised_modifiers(
+                    modifiers=normalised_modifiers(
                         platform=platf, modifiers=mods),
-                    flags=flags,
                 )
 
 
@@ -203,7 +197,7 @@ class ReleaseIdentifier:
     gardenlinux_epoch: int
     architecture: Architecture
     platform: Platform
-    modifiers: typing.Tuple[Element]
+    modifiers: typing.Tuple[Modifier]
 
     def flavour(self, normalise=True) -> GardenlinuxFlavour:
         mods = normalised_modifiers(
@@ -369,7 +363,7 @@ class ReleaseManifest(ReleaseIdentifier):
         return dateutil.parser.isoparse(self.build_timestamp)
 
 
-def normalised_modifiers(platform: Platform, modifiers, _flags=()) -> typing.Tuple[str]:
+def normalised_modifiers(platform: Platform, modifiers) -> typing.Tuple[str]:
     '''
     determines the transitive closure of all features from the given platform and modifiers,
     and returns the (ASCII-upper-case-sorted) result as a `tuple` of str of all modifiers,
@@ -377,18 +371,12 @@ def normalised_modifiers(platform: Platform, modifiers, _flags=()) -> typing.Tup
     '''
     platform = feature_by_name(platform)
     modifiers = {feature_by_name(f) for f in modifiers}
-    # flags = {feature_by_name(f) for f in flags}
-
-    flag_names = [f.name for f in flags()]
 
     all_modifiers = set((m.name for m in modifiers))
     for m in modifiers:
-        all_modifiers |= set((m.name for m in m.included_features() if m.name not in flag_names))
-        # TODO: also add flags
+        all_modifiers |= set((m.name for m in m.included_features()))
 
     for f in platform.included_features():
-        if f.name in flag_names:
-            continue # todo: handle flags
         all_modifiers.add(f.name)
 
     normalised_features = tuple(sorted(all_modifiers, key=str.upper))
@@ -728,13 +716,7 @@ def platform_names():
 
 def modifiers():
     return {
-        feature for feature in features() if feature.type is FeatureType.ELEMENT
-    }
-
-
-def flags():
-    return {
-        feature for feature in features() if feature.type is FeatureType.FLAG
+        feature for feature in features() if feature.type is FeatureType.MODIFIER
     }
 
 
