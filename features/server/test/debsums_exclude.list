@@ -1,1 +1,2 @@
 /lib/systemd/system/dbus.socket
+/usr/share/pam-configs/cracklib
