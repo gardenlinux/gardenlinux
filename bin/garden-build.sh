@@ -265,7 +265,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 		testcounter=0
 		failcounter=0
 		for i in $(echo "base,$features" | tr ',' ' ' | sort -u); do
-			if [ "$notests" = 1 ]; then
+			if [ "${notests:-}" = 1 ]; then
 				echo "skipping tests for $i feature"
 				continue
 			elif [ -d $featureDir/$i/test ]; then
