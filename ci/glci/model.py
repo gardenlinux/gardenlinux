@@ -684,6 +684,10 @@ def _deserialise_feature(feature_file):
     pardir = os.path.basename(os.path.dirname(feature_file))
     parsed['name'] = pardir
 
+    # HACK HACK HACK: patch flags and features back to just `modifiers`
+    if parsed['type'] in ('element', 'flag'):
+        parsed['type'] = 'modifier'
+
     return dacite.from_dict(
         data_class=FeatureDescriptor,
         data=parsed,
