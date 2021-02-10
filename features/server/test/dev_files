@@ -1,8 +1,8 @@
 console,0,0,character special file,5,1,console
 fd,0,0,symbolic link,0,0,/proc/self/fd
 full,0,0,character special file,1,7,full
-mapper,0,0,directory,0,0,mapper
 null,0,0,character special file,1,3,null
+#mapper,0,0,directory,0,0,mapper
 ptmx,0,0,character special file,5,2,ptmx
 pts,0,0,directory,0,0,pts
 random,0,0,character special file,1,8,random
