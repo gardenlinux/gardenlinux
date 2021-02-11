@@ -1,5 +1,4 @@
 [Unit]
-Before=initrd-root-fs.target
 After=sysroot.mount
 After=usr-mount.service
 Before=initrd-fs.target

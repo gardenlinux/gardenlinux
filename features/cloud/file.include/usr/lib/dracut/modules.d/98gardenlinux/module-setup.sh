@@ -24,8 +24,8 @@ install() {
         inst_simple "$moddir/sysroot-usr-fsck.service" ${systemdsystemunitdir}/sysroot-usr-fsck.service
         inst_simple "$moddir/sysroot-usr.mount" ${systemdsystemunitdir}/sysroot-usr.mount
         inst_script "$moddir/usr-mount.sh" /bin/usr-mount.sh
-        systemctl -q --root "$initdir" add-wants initrd-root-fs.target usr-mount.service
-        systemctl -q --root "$initdir" add-wants initrd-root-fs.target sysroot-usr-fsck.service 
-        systemctl -q --root "$initdir" add-wants initrd-root-fs.target sysroot-usr.mount 
+        systemctl -q --root "$initdir" add-wants initrd-fs.target usr-mount.service
+        systemctl -q --root "$initdir" add-wants initrd-fs.target sysroot-usr-fsck.service 
+        systemctl -q --root "$initdir" add-wants initrd-fs.target sysroot-usr.mount 
     fi
 }
