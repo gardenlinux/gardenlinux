@@ -11,7 +11,7 @@ depends() {
 }
 
 install() {
-    inst_multiple grep sfdisk growpart udevadm awk mawk sed rm readlink
+    inst_multiple grep sfdisk growpart udevadm awk mawk sed rm readlink systemd-detect-virt systemd-cat
    
     # grow root
     if [ -f "$moddir/growroot.sh" ]; then
@@ -27,5 +27,8 @@ install() {
         systemctl -q --root "$initdir" add-wants initrd-fs.target usr-mount.service
         systemctl -q --root "$initdir" add-wants initrd-fs.target sysroot-usr-fsck.service 
         systemctl -q --root "$initdir" add-wants initrd-fs.target sysroot-usr.mount 
+    fi
+    if [ -f "$moddir/clocksource-setup.sh" ]; then
+        inst_hook pre-pivot 00 "$moddir/clocksource-setup.sh"
     fi
 }
