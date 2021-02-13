@@ -110,6 +110,11 @@ cloud: docker signature
 kvm: docker signature
 	./build.sh --no-build --features server,cloud,kvm,_dev $(BUILDDIR)/kvm $(SNAPSHOT_DATE)
 
+pxe: docker signature
+	./build.sh --no-build --features server,cloud,_pxe $(BUILDDIR)/pxe $(SNAPSHOT_DATE)
+
+pxe-dev: docker signature
+	./build.sh --no-build --features server,cloud,_dev,_pxe $(BUILDDIR)/pxe $(SNAPSHOT_DATE)
 
 anvil: docker signature
 	./build.sh --no-build --features server,cloud-anvil,kvm,_dev $(BUILDDIR)/anvil $(SNAPSHOT_DATE)
