@@ -224,13 +224,14 @@ mv ${dir_name}/etc/grub.d/30_uefi-firmware~ ${dir_name}/etc/grub.d/30_uefi-firmw
 
 echo "### unmouting"
 umount -R ${dir_name}
-tune2fs -Q usrquota,grpquota,prjquota ${loopback}p4
-sync
 
 echo "### final fsck, just to be sure"
 fsck.vfat -f -a ${loopback}p2
 fsckExt4  ${loopback}p3
 fsckExt4  ${loopback}p4
+sync
+
+tune2fs -Q usrquota,grpquota,prjquota ${loopback}p4
 sync
 
 losetup -d $loopback
