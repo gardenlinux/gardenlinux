@@ -1,5 +1,6 @@
 { "live-restore": true,
   "storage-driver": "overlay2",
+  "exec-opts": ["native.cgroupdriver=cgroupfs"],
   "default-ulimits": {
       "memlock": {
           "name": "memlock",
