@@ -1,7 +1,10 @@
 ethtool
 #busybox
+fdisk
 haveged
 ipmitool
+grub-cloud-amd64
+cloud-guest-utils
 kexec-tools
 irqbalance
 pciutils
