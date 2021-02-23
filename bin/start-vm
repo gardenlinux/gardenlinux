@@ -127,7 +127,7 @@ fi
 
 if [ "$pxe" -o "$pxeLocal" ]; then
 	tempDir=$(mktemp -d)
-	rand=$(uuidgen)
+	rand=$(cat /proc/sys/kernel/random/uuid)
 	mkdir -p "$thisDir/../hack/pxe/$rand"
 	trap 'echo "Cleaning up ..."; rm -rf "$tempDir"; rm -rf "$thisDir/../hack/pxe/$rand"' EXIT
 

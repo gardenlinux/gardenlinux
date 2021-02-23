@@ -8,9 +8,14 @@ apt-get source $src
 
 cd $src-*/
 patch -p1 < $srcDir/noperl.patch
+quilt new "preffer-systemd-networkd" 
+quilt add modules.d/40network/module-setup.sh modules.d/02systemd-networkd/module-setup.sh
+patch -p1 < $srcDir/net-module-setup.patch
+patch -p1 < $srcDir/sd-module-setup.patch
+quilt refresh --strip-trailing-whitespace
 dch -i 'moving pkg-config from Depends to Recommends'
 dch -r ''
-	
+
 donotmove="$(ls ..)"
 debuild
 move_package .. $donotmove
