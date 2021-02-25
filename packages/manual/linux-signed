@@ -12,23 +12,23 @@ openssl pkcs12 -in /kernel.p12 -out certdir/kernel.key -nodes -nocerts -passin p
 openssl pkcs12 -in /kernel.p12 -out certdir/kernel.crt -nodes -nokeys  -passin pass:""
 
 sudo apt-get install -y --no-install-recommends -f \
-	$BUILDTARGET/main/l/linux/linux-kbuild-5.4_${KERNEL_VERSION}-1_amd64.deb \
+	$BUILDTARGET/main/l/linux/linux-kbuild-5.4_${KERNEL_VERSION}-1_${KERNEL_ARCH}.deb \
 	$BUILDTARGET/main/l/linux/linux-support-${KERNEL_BASEABI}_${KERNEL_VERSION}-1_all.deb \
-	$BUILDTARGET/main/l/linux/linux-image-amd64-signed-template_${KERNEL_VERSION}-1_amd64.deb
+	$BUILDTARGET/main/l/linux/linux-image-${KERNEL_ARCH}-signed-template_${KERNEL_VERSION}-1_${KERNEL_ARCH}.deb
 	
 for i in $KERNEL_FLAVOURS; do
 	sudo apt-get install -y --no-install-recommends \
-		$BUILDTARGET/main/l/linux/linux-image-${i}-${KERNEL_ARCH}-unsigned_${KERNEL_VERSION}-1_amd64.deb
+		$BUILDTARGET/main/l/linux/linux-image-${i}-${KERNEL_ARCH}-unsigned_${KERNEL_VERSION}-1_${KERNEL_ARCH}.deb
 done
 
-cp -R /usr/share/code-signing/linux-image-amd64-signed-template/source-template linux-signed-amd64
+cp -R /usr/share/code-signing/linux-image-${KERNEL_ARCH}-signed-template/source-template linux-signed-${KERNEL_ARCH}
 
-cd linux-signed-amd64
+cd linux-signed-${KERNEL_ARCH}
 for i in $KERNEL_FLAVOURS; do
 	../$(dirname $0)/linux.d/sign-helper linux-image-${i}-${KERNEL_ARCH}-unsigned debian/signatures
 done
 TMPDIR=.. mk-build-deps debian/control
-sudo apt-get install -y --no-install-recommends -f ../linux-signed-amd64-build-deps*.deb
+sudo apt-get install -y --no-install-recommends -f ../linux-signed-${KERNEL_ARCH}-build-deps*.deb
         
 donotmove="$(ls ..)"
 debuild	
