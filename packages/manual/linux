@@ -55,6 +55,7 @@ patch -p1 < $srcDir/fuzz.patch
 
 patch -p1 < $srcDir/relax.patch
 patch -p1 < $srcDir/udev.patch
+patch -p1 < $srcDir/analogix.patch
 patch -p1 < $srcDir/series.patch
 
 # changelog magic
@@ -81,10 +82,13 @@ mv debian/changelog.new debian/changelog
 rm debian/changelog.tmp
 	
 debian/bin/genorig.py ../linux-*.tar.xz
+exit
 make -f debian/rules orig
 debian/bin/gencontrol.py
 TMPDIR=.. mk-build-deps debian/control
 sudo apt-get install -y --no-install-recommends -f ../linux-build-deps_*_${KERNEL_ARCH}.deb
+# missing in dependencies on arm64
+[ "${KERNEL_ARCH}"  == "arm64" ] && sudo apt install -y --no-install-recommends gcc-arm-linux-gnueabihf 
 make -f debian/rules debian/control-real || /bin/true
 
 donotmove="$(ls ..)"
