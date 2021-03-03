@@ -12,7 +12,7 @@ build-image: needslim
 
 .PHONY: build
 build: needslim
-	@docker build -t gardenlinux/build build
+	@docker build --build-arg arch="$$(dpkg --print-architecture | awk -F- "{ print \$$NF }")" -t gardenlinux/build build
 
 .PHONY: build-deb
 build-deb: build
