@@ -4,9 +4,13 @@
 /repository/reprepro/db
 /repository/reprepro/logs
 /features/_dev/id_dev
-/cert/*.crt
+/cert/cfssl
 /cert/*.key
-/cert/*.p12
+/cert/*.crt
 /cert/*.pub
+/cert/*.p12
+/cert/*.csr
+!/cert/gardenlinux.kernel.sign.crt
+!/cert/gardenlinux.pub
 .idea
 __pycache__
