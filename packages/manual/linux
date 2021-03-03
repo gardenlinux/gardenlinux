@@ -82,7 +82,6 @@ mv debian/changelog.new debian/changelog
 rm debian/changelog.tmp
 	
 debian/bin/genorig.py ../linux-*.tar.xz
-exit
 make -f debian/rules orig
 debian/bin/gencontrol.py
 TMPDIR=.. mk-build-deps debian/control
