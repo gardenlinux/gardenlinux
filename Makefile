@@ -113,7 +113,7 @@ pxe: docker cert/sign.pub
 	./build.sh --no-build --features server,cloud,_pxe $(BUILDDIR)/pxe $(SNAPSHOT_DATE)
 
 pxe-dev: docker cert/sign.pub
-	./build.sh --no-build --features server,cloud,_dev,_pxe $(BUILDDIR)/pxe $(SNAPSHOT_DATE)
+	./build.sh --no-build --features server,metal,_dev,_pxe $(BUILDDIR)/pxe $(SNAPSHOT_DATE)
 
 anvil: docker cert/sign.pub
 	./build.sh --no-build --features server,cloud-anvil,kvm,_dev $(BUILDDIR)/anvil $(SNAPSHOT_DATE)

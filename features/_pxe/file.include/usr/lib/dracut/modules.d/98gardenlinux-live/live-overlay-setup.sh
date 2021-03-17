@@ -12,7 +12,7 @@ if [ -z "$ovlconf" ]; then
 	echo "/etc tmpfs" >> /tmp/overlay.conf
 	info "Generated overlay.conf - /etc and /var will be overlayed using tmpfs"
 else
-	echo $ovl | awk -F, 'BEGIN {OFS="\n"}; {$1=$1; gsub(/:/, " "); print}' > /tmp/overlay.conf
+	echo $ovlconf | awk -F, 'BEGIN {OFS="\n"}; {$1=$1; gsub(/:/, " "); print}' > /tmp/overlay.conf
 fi
 
 
