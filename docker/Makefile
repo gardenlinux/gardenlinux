@@ -1,4 +1,7 @@
 VERSION=`../bin/garden-version`
+ALTNAME=
+
+ALTNAME_INTERNAL=$(shell [ -n "$(ALTNAME)" ] && printf "%s %s" "-t" "$(ALTNAME)" ) 
 
 all: build-image
 
@@ -7,16 +10,16 @@ needslim:
 	@./needslim
 
 .PHONY: build-image
-build-image: needslim 
-	@docker build -t gardenlinux/build-image:$(VERSION) build-image
+build-image: needslim
+	@docker build -t gardenlinux/build-image:$(VERSION) $(ALTNAME_INTERNAL) build-image
 
 .PHONY: build
 build: needslim
-	@docker build --build-arg arch="$$(dpkg --print-architecture | awk -F- "{ print \$$NF }")" -t gardenlinux/build build
+	@docker build --build-arg BUILDARCH="$$(dpkg --print-architecture | awk -F- "{ print \$$NF }")" -t gardenlinux/build $(ALTNAME_INTERNAL) build
 
 .PHONY: build-deb
 build-deb: build
-	@docker build -t gardenlinux/build-deb build-deb
+	@docker build -t gardenlinux/build-deb $(ALTNAME_INTERNAL) build-deb
 
 .PHONY: clean
 clean:

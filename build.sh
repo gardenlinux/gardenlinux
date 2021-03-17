@@ -72,7 +72,7 @@ grep -q apparmor <<< $dockerinfo  && securityArgs+=( --security-opt apparmor=unc
 
 # external variable BUILD_IMAGE forces a different buildimage name
 buildImage=${BUILD_IMAGE:-"gardenlinux/build-image:$version"}
-[ $build ] && docker build -t "$buildImage" "$thisDir"
+[ $build ] && make --directory=docker ALTNAME=$buildImage build-image
 
 # using the buildimage in a temporary container with
 # build directory mounted in memory (--tmpfs ...) and

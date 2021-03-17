@@ -9,11 +9,11 @@ BUILDKERNEL="gardenlinux/build-kernel"
 
 .PHONY: docker
 docker:
-	make -C ../docker $$(basename $(BUILDIMAGE))
+	make --directory=../docker $$(basename $(BUILDIMAGE))
 
 .PHONY: docker-kernel
 docker-kernel:
-	make -C ../docker $$(basename $(BUILDKERNEL))
+	make --directory=../docker $$(basename $(BUILDKERNEL))
 
 .PHONY: manual
 manual: docker

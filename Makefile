@@ -7,13 +7,13 @@ BUILDDIR=.build
 MAINTAINER_EMAIL="contact@gardenlinux.io"
 
 cert/sign.pub:
-	make MAINTAINER_EMAIL=$(MAINTAINER_EMAIL) -C cert 
+	make --directory=cert MAINTAINER_EMAIL=$(MAINTAINER_EMAIL)
 	@gpg --list-secret-keys $(MAINTAINER_EMAIL) > /dev/null || echo "No secret key for $(MAINTAINER_EMAIL) exists, signing disabled" 
 	@diff cert/sign.pub gardenlinux.pub || echo "Not using the official key"
 
 .PHONY: docker
 docker:
-	make -C docker build-image
+	make --directory=docker build-image
 
 all: all_dev all_prod
 
