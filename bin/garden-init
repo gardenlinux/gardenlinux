@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
+set -Eeuo pipefail
 
 # Contains sources from https://github.com/debuerreotype/debuerreotype
-
-set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 featureDir="$thisDir/../features"
@@ -38,35 +37,24 @@ while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
 	case "$flag" in
-		--debian)       nonDebian= ;;
-		--debian-eol)   nonDebian= ; debianEol=1 ;;
-		--debian-ports) nonDebian= ; debianPorts=1 ;;
-		--non-debian)   nonDebian=1 ;;
-		--debootstrap) debootstrap="$1"; shift ;;
+		--debian)	nonDebian= ;;
+		--debian-eol)	nonDebian= ; debianEol=1 ;;
+		--debian-ports)	nonDebian= ; debianPorts=1 ;;
+		--non-debian)	nonDebian=1 ;;
+		--debootstrap)	debootstrap="$1"; shift ;;
 		--debootstrap-script) script="$1"; shift ;;
-		--keyring) keyring="$1"; shift ;;
-		--arch) arch="$1"; shift ;;
-		--include) include="${include:+$include,}$1"; shift ;;
-		--exclude) exclude="${exclude:+$exclude,}$1"; shift ;;
-		--features) features="${features:+$features,}$1"; shift ;;
-		--merged-usr)    noMergedUsr=  ;;
+		--keyring)	keyring="$1"; shift ;;
+		--arch)		arch="$1"; shift ;;
+		--include)	include="${include:+$include,}$1"; shift ;;
+		--exclude)	exclude="${exclude:+$exclude,}$1"; shift ;;
+		--features)	features="${features:+$features,}$1"; shift ;;
+		--merged-usr)	noMergedUsr=  ;;
 		--no-merged-usr) noMergedUsr=1 ;;
-		--check-gpg)    noCheckGpg=  ;;
-		--no-check-gpg) noCheckGpg=1 ;;
+		--check-gpg)	noCheckGpg=  ;;
+		--no-check-gpg)	noCheckGpg=1 ;;
 		--) break ;;
-		*) eusage "unknown flag '$flag'" ;;
+		*)		eusage "unknown flag '$flag'" ;;
 	esac
-done
-
-#featurelist=$(getFeatures $features)
-[ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
-
-[ -s $thisDir/.init-includes ] && include="$(echo -e "$include\n$(cat $thisDir/.init-includes)" | sed -e "s/#.*\$//" -e "/^$/d" | paste -sd, -)"
-[ -s $thisDir/.init-excludes ] && exclude="$(echo -e "$exclude\n$(cat $thisDir/.init-excludes)" | sed -e "s/#.*\$//" -e "/^$/d" | paste -sd, -)"
-
-for i in $(echo "base,$features" | tr ',' ' ' | sort -u); do
-	[ -s $featureDir/$i/pkg.include ] && include="$(echo -e "$include\n$(cat $featureDir/$i/pkg.include)" | sed -e "s/#.*\$//" -e "/^$/d" | paste -sd, -)"
-	[ -s $featureDir/$i/pkg.exclude ] && exclude="$(echo -e "$exclude\n$(cat $featureDir/$i/pkg.exclude)" | sed -e "s/#.*\$//" -e "/^$/d" | paste -sd, -)"
 done
 
 targetDir="${1:-}"; shift || eusage 'missing target-dir'
@@ -110,6 +98,41 @@ if [ -z "$nonDebian" ]; then
 	fi
 fi
 
+mirror_host="$(sed "s/^\(.*\/\/[^\/]*\)\/.*/\1/" <<< $mirror)"
+mirror_pool="${mirror_host}/gardenlinux/pool/"
+
+#featurelist=$(getFeatures $features)
+[ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
+
+include="$(tr "," "\n" <<< $include)"$'\n'
+exclude="$(tr "," "\n" <<< $include)"$'\n'
+
+[ -s $thisDir/.init-includes ] && include+="$(cat $thisDir/.init-includes)"$'\n'
+[ -s $thisDir/.init-excludes ] && exclude+="$(cat $thisDir/.init-excludes)"$'\n'
+
+for i in $(echo "base,$features" | tr ',' ' ' | sort -u); do
+	[ -s $featureDir/$i/pkg.include ] && include+="$(cat $featureDir/$i/pkg.include)"$'\n'
+	[ -s $featureDir/$i/pkg.exclude ] && exclude+="$(cat $featureDir/$i/pkg.exclude)"$'\n'
+done
+
+include_aptversion=
+include_aptfile=
+include_wget=
+include_bootstrap=
+for i in $(filter_comment <<< $include | filter_variables | filter_if); do
+    if [[ $i = *.deb ]]; then
+	if [[ $i = *://* ]]; then	include_wget+="$i "
+	elif [[ $i = /* ]]; then	include_wget+="${mirror_host}$i "
+	else				include_wget+="${mirror_pool}$i "
+	fi
+	include_aptfile+="./$(basename $i) "
+    elif [[ $i = *"="* ]]; then	include_aptversion+="$i "
+    else 			include_bootstrap+="$i,"
+    fi
+done
+include_bootstrap=${include_bootstrap%,}
+exclude="$(filter_comment <<< $exclude | filter_variables | filter_if | paste -sd, -)"
+
 debootstrapArgs=()
 
 if [ -z "$noCheckGpg" ]; then
@@ -139,7 +162,7 @@ fi
 [ -n "$noMergedUsr" ] && debootstrapArgs+=( --no-merged-usr ) || debootstrapArgs+=( --merged-usr )
 [ -z "$keyring" ] || debootstrapArgs+=( --keyring="$keyring" )
 [ -z "$arch" ] || debootstrapArgs+=( --arch="$arch" )
-[ -z "$include" ] || debootstrapArgs+=( --include="$include" )
+[ -z "${include_bootstrap}" ] || debootstrapArgs+=( --include="${include_bootstrap}" )
 [ -z "$exclude" ] || debootstrapArgs+=( --exclude="$exclude" )
 
 debootstrapArgs+=(
@@ -188,7 +211,25 @@ fi
 			apt-mark manual "${includePackages[@]}"
 		fi
 	fi
-' -- "$include"
+' -- "$include_bootstrap"
+
+if [ "${include_wget}" != "" ]; then
+	tmp=$(mktemp -d -p $targetDir)
+	wget -P$tmp $include_wget
+fi
+set -x
+
+[ "${include_aptfile}" != "" ] && 
+"$thisDir/garden-chroot" "$targetDir" bash -c '
+	cd '${tmp#$targetDir}'
+	apt-get install -y --allow-downgrades -f $1
+' -- "$include_aptfile"
+rm -rf $tmp
+
+[ "${include_aptversion}" != "" ] && 
+"$thisDir/garden-chroot" "$targetDir" bash -c '
+	apt-get install -y --allow-downgrades -f $1
+' -- "$include_aptversion"
 
 # fix ownership/permissions on / (otherwise "debootstrap" leaves them as-is which causes reproducibility issues)
 chown 0:0 "$targetDir"

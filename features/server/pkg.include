@@ -27,3 +27,17 @@ less
 tcpdump
 vim-tiny
 quota
+main/i/iproute2/iproute2_5.10.0-3.1_${arch}.deb
+main/p/pam/libpam-runtime_1.4.0-4.1_all.deb
+main/p/pam/libpam-modules-bin_1.4.0-4.1_${arch}.deb
+main/p/pam/libpam-modules_1.4.0-4.1_${arch}.deb
+main/p/pam/libpam-cracklib_1.4.0-4.1_${arch}.deb
+main/p/pam/libpam0g_1.4.0-4.1_${arch}.deb
+main/c/cyrus-sasl2/libsasl2-2_2.1.27+dfsg-2.1_${arch}.deb
+main/c/cyrus-sasl2/libsasl2-modules-db_2.1.27+dfsg-2.1_${arch}.deb
+main/p/python3.9/python3.9_3.9.1-4.1_${arch}.deb
+main/p/python3.9/python3.9-minimal_3.9.1-4.1_${arch}.deb
+main/p/python3.9/libpython3.9-minimal_3.9.1-4.1_${arch}.deb
+main/p/python3.9/libpython3.9-stdlib_3.9.1-4.1_${arch}.deb
+main/d/dracut/dracut_051-1.1_all.deb
+main/d/dracut/dracut-core_051-1.1_${arch}.deb 

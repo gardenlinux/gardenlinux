@@ -1,7 +1,9 @@
 fdisk
-#linux-image-cloud-amd64
-#grub-cloud-amd64
-grub2
+[${arch}=amd64] grub-cloud-amd64
+[${arch}=arm64] grub-cloud-arm64
 cloud-guest-utils
-#initramfs-tools
 libpam-cracklib
+
+main/l/linux-signed-amd64/linux-image-cloud-${arch}_5.4.93-1_${arch}.deb
+main/l/linux-signed-amd64/linux-image-5.4.0-6-cloud-${arch}_5.4.93-1_${arch}.deb
+main/w/wireguard/wireguard-modules-5.4.0-6-cloud-${arch}_1.0.20210124_${arch}.deb
