@@ -7,6 +7,10 @@ DEBEMAIL="contact@gardenlinux.io"
 BUILDIMAGE="gardenlinux/build-deb"
 BUILDKERNEL="gardenlinux/build-kernel"
 
+.PHONY sign
+sign:
+	make --directory=../cert 
+
 .PHONY: docker
 docker:
 	make --directory=../docker $$(basename $(BUILDIMAGE))
@@ -15,14 +19,14 @@ docker:
 docker-kernel:
 	make --directory=../docker $$(basename $(BUILDKERNEL))
 
-.PHONY: manual
+.PHONY: manual sign
 manual: docker
 	docker run --rm -ti \
 		--volume $(POOLDIR):/pool \
 		--volume $(MANUALDIR):/home/dev/manual \
 		--volume "$$(gpgconf --list-dir agent-socket)":/home/dev/.gnupg/S.gpg-agent \
 		--volume $(CERTDIR)/sign.pub:/sign.pub \
-		--volume $(CERTDIR)/kernel.p12:/kernel.p12 \
+		--volume $(CERTDIR)/kernel.sign.p12:/kernel.p12 \
 	       	--env BUILDTARGET="/pool" \
 		--env BUILDIMAGE=$(BUILDIMAGE) \
 		--env DEBFULLNAME=$(DEBFULLNAME) \
