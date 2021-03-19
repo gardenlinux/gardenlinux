@@ -7,9 +7,9 @@ sudo apt-get install -y golang libblkid-dev --no-install-recommends
 
 VERSION="2.9.0"
 
-wget https://github.com/coreos/ignition/archive/v${version}.tar.gz	
-tar zxf "v${version}.tar.gz" -C .
-cd "ignition-${version}"
+wget https://github.com/coreos/ignition/archive/v${VERSION}.tar.gz	
+tar zxf "v${VERSION}.tar.gz" -C .
+cd "ignition-${VERSION}"
 patch -p1 < "${srcDir}/build.patch"
 mkdir -p "${thisDir}/package"
 sudo make VERSION="v${VERSION}" DESTDIR="${thisDir}/package" install 
