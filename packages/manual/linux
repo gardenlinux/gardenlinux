@@ -26,6 +26,8 @@ cd linux-$KERNEL_DEBIAN
 git -c advice.detachedHead=false checkout debian/$KERNEL_DEBIAN-1
 cd ..
 
+# checking out linux stable to have the whole changelog from the kernel readable for debian/bin/stable-update 
+git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 # debian kernel has external dependencies to aufs5 (we do not take the latest from debian but from upstream)
 git clone https://github.com/sfjro/aufs5-standalone.git
 # checking out aufs for 5.4 kernel
@@ -74,7 +76,6 @@ linux ($KERNEL_DEBIAN-1) UNRELEASED; urgency=medium
 
 EOF
 
-git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 debian/bin/stable-update ../linux-stable $KERNEL_VERSION
 cat debian/changelog debian/changelog.tmp > debian/changelog.new
 mv debian/changelog.new debian/changelog
