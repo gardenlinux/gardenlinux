@@ -4,6 +4,7 @@ set -euo pipefail
 . $(dirname $0)/.helper
 . $(dirname $0)/linux.d/VERSION
 
+# getting the keys of the maintainers
 gpg --locate-keys torvalds@kernel.org gregkh@kernel.org
 gpg --tofu-policy good 647F28654894E3BD457199BE38DBBDC86092693E
 # Steven Rostedt <rostedt@goodmis.org>
@@ -17,6 +18,7 @@ wget https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/5.4/patches-$K
 xz -dc linux-$KERNEL_VERSION.tar.xz      | gpg --verify linux-$KERNEL_VERSION.tar.sign -
 xz -dc patches-$KERNEL_RT_VERSION.tar.xz | gpg --verify patches-$KERNEL_RT_VERSION.tar.sign -
 
+# cloning the latest debian release environment (yes the kernel they usually build is newer!)
 git clone https://salsa.debian.org/kernel-team/$src.git
 # preparing the old kernel, but keeping the newest codebase but copying the config / patch files
 cp -R $src linux-$KERNEL_DEBIAN
@@ -24,18 +26,12 @@ cd linux-$KERNEL_DEBIAN
 git -c advice.detachedHead=false checkout debian/$KERNEL_DEBIAN-1
 cd ..
 
-git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+# debian kernel has external dependencies to aufs5 (we do not take the latest from debian but from upstream)
 git clone https://github.com/sfjro/aufs5-standalone.git
 # checking out aufs for 5.4 kernel
 cd aufs5-standalone
 git -c advice.detachedHead=false checkout aufs5.4
 cd ..
-
-# old sphinx runs faster and does not bail out on errors
-wget -P /tmp https://snapshot.debian.org/archive/debian-ports/20200409T204941Z/pool/main/s/sphinx/{libjs-sphinxdoc_1.8.5-9_all.deb,python3-sphinx_1.8.5-9_all.deb,sphinx-common_1.8.5-9_all.deb}
-sudo apt-get install -f -y /tmp/libjs-sphinxdoc_1.8.5-9_all.deb
-sudo apt-get install -f -y /tmp/sphinx-common_1.8.5-9_all.deb
-sudo apt-get install -f -y /tmp/python3-sphinx_1.8.5-9_all.deb
 
 # build of current kernel
 cd $src
@@ -58,6 +54,8 @@ patch -p1 < $srcDir/udev.patch
 patch -p1 < $srcDir/analogix.patch
 patch -p1 < $srcDir/series.patch
 
+patch -p1 < $srcDir/python3-dev.patch
+
 # changelog magic
 mv debian/changelog debian/changelog.tmp
 cat - > debian/changelog <<EOF
@@ -76,6 +74,7 @@ linux ($KERNEL_DEBIAN-1) UNRELEASED; urgency=medium
 
 EOF
 
+git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 debian/bin/stable-update ../linux-stable $KERNEL_VERSION
 cat debian/changelog debian/changelog.tmp > debian/changelog.new
 mv debian/changelog.new debian/changelog
@@ -86,6 +85,11 @@ make -f debian/rules orig
 debian/bin/gencontrol.py
 TMPDIR=.. mk-build-deps debian/control
 sudo apt-get install -y --no-install-recommends -f ../linux-build-deps_*_${KERNEL_ARCH}.deb
+
+# old sphinx runs faster and does not bail out on errors for kernel 5.4
+wget -P /tmp https://snapshot.debian.org/archive/debian-ports/20200409T204941Z/pool/main/s/sphinx/{libjs-sphinxdoc_1.8.5-9_all.deb,python3-sphinx_1.8.5-9_all.deb,sphinx-common_1.8.5-9_all.deb}
+sudo apt-get install -y --allow-downgrades -f /tmp/{libjs-sphinxdoc_1.8.5-9_all.deb,python3-sphinx_1.8.5-9_all.deb,sphinx-common_1.8.5-9_all.deb}
+
 # missing in dependencies on arm64
 [ "${KERNEL_ARCH}"  == "arm64" ] && sudo apt install -y --no-install-recommends gcc-arm-linux-gnueabihf 
 make -f debian/rules debian/control-real || /bin/true
