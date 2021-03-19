@@ -7,7 +7,7 @@ DEBEMAIL="contact@gardenlinux.io"
 BUILDIMAGE="gardenlinux/build-deb"
 BUILDKERNEL="gardenlinux/build-kernel"
 
-.PHONY sign
+.PHONY: sign
 sign:
 	make --directory=../cert 
 
