@@ -30,9 +30,8 @@
  bugfix/all/tools-perf-pmu-events-fix-reproducibility.patch
  bugfix/all/0001-libtraceevent-Fix-header-installation.patch
  bugfix/all/0004-libtraceevent-allow-custom-libdir-path.patch
-@@ -139,3 +132,5 @@
+@@ -139,3 +132,4 @@
  
  # ABI maintenance
  debian/Revert-cpupower-Revert-library-ABI-changes-from-comm.patch
-+bugfix/all/udev_context.patch
 +bugfix/all/reactivate_relaxation.patch

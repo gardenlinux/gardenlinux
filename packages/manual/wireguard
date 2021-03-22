@@ -11,8 +11,8 @@ sudo apt-get install -y --no-install-recommends -f  \
 	$BUILDTARGET/main/l/linux/linux-headers-${KERNEL_BASEABI}-common_${KERNEL_VERSION}-1_all.deb
 
 for i in $KERNEL_FLAVOURS; do
-	sudo apt-get install -y --no-install-recommends \
-		$BUILDTARGET/main/l/linux/linux-headers-${i}-${KERNEL_ARCH}_${KERNEL_VERSION}-1_${KERNEL_ARCH}.deb \
+	sudo apt-get install -y --no-install-recommends -f \
+		$BUILDTARGET/main/l/linux/linux-headers-${i}-${KERNEL_ARCH}_${KERNEL_VERSION}-1_${KERNEL_ARCH}.deb
 done
 
 mkdir -p certdir
@@ -21,12 +21,11 @@ openssl pkcs12 -in /kernel.p12 -out certdir/kernel.crt -nodes -nokeys  -passin p
 
 mkdir -p dkms
 for i in ${KERNEL_FLAVOURS}; do
-	dkms build wireguard/${WIREGUARD_VERSION} --dkmsframework /home/dev/manual/wireguard.d/framework.conf -k $i
+	dkms build wireguard/${WIREGUARD_VERSION} --dkmsframework /home/dev/manual/wireguard.d/framework.conf -k $i --kernelsourcedir=/usr/src/linux-headers-$i-${KERNEL_ARCH}/ 
 	dkms mkbmdeb wireguard/${WIREGUARD_VERSION} --dkmsframework /home/dev/manual/wireguard.d/framework.conf -k $i
 done
 
 targetpath="$(apt-cache showsrc $src | grep "^Directory" | cut -d: -f2- | cut -d'/' -f2- | head -n1)"
 echo "moving to $BUILDTARGET/$targetpath"
 sudo mkdir --parent $BUILDTARGET/$targetpath
-sudo mv -v dkms/wireguard/${WIREGUARD_VERSION}/bmdeb/* $BUILDTARGET/$targetpath;
-
+sudo mv -v dkms/wireguard/${WIREGUARD_VERSION}/bmdeb/* $BUILDTARGET/$targetpath

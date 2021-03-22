@@ -71,7 +71,7 @@ mv bin/* /build
 endef
 export BASH_BUILD
 
-all: kernel.sign.p12 sign.pub 
+all: Kernel.sign.p12 sign.pub 
 test:
 	echo "$(INTERNAL_HOSTNAME)"
 

@@ -13,6 +13,9 @@ numactl
 mdadm
 smartmontools
 tpm2-tools
-main/l/linux-signed-amd64/linux-image-amd64_5.4.93-1_${arch}.deb
-main/l/linux-image-5.4.0-6-amd64_5.4.93-1_${arch}.deb
-main/w/wireguard/wireguard-modules-5.4.0-6-amd64_1.0.20210124_${arch}.deb
+frr
+frr-pythontools
+#firmware-qlogic
+main/l/linux-signed-amd64/linux-image-amd64_5.4.106-1_${arch}.deb
+main/l/linux-signed-amd64/linux-image-5.4.0-6-amd64_5.4.106-1_${arch}.deb
+#main/w/wireguard/wireguard-modules-5.4.0-6_1.0.20210219_${arch}.deb
