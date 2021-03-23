@@ -222,13 +222,13 @@ set -x
 [ "${include_aptfile}" != "" ] && 
 "$thisDir/garden-chroot" "$targetDir" bash -c '
 	cd '${tmp#$targetDir}'
-	apt-get install -y --allow-downgrades -f $1
+	apt-get install -y --allow-downgrades --no-install-recommends -f $1
 ' -- "$include_aptfile"
 rm -rf $tmp
 
 [ "${include_aptversion}" != "" ] && 
 "$thisDir/garden-chroot" "$targetDir" bash -c '
-	apt-get install -y --allow-downgrades -f $1
+	apt-get install -y --allow-downgrades --no-install-recommends -f $1
 ' -- "$include_aptversion"
 
 # fix ownership/permissions on / (otherwise "debootstrap" leaves them as-is which causes reproducibility issues)
