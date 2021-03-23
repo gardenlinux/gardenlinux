@@ -1,6 +1,6 @@
 FROM	debian:stable-slim
 
-ENV     DEBIAN_FRONTEND noninteractive
+ARG	DEBIAN_FRONTEND=noninteractive
 
 RUN	apt-get update \
      &&	apt-get install debian-archive-keyring \
