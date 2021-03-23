@@ -2,7 +2,7 @@
 set -euo pipefail
 
 . $(dirname $0)/.helper
-. $(dirname $0)/linux.d/VERSION
+. $srcDir/VERSION
 
 echo "### getting the keys of the maintainers"
 gpg --locate-keys torvalds@kernel.org gregkh@kernel.org
@@ -15,16 +15,16 @@ echo "### installing minimal create requirements"
 sudo apt-get install --no-install-recommends -y equivs kernel-wedge python3-debian rsync libdistro-info-perl git
 echo "### pulling kernel and rt-patches" 
 wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.{sign,xz}
-wget https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/5.4/patches-$KERNEL_RT_VERSION.tar.{sign,xz}
+wget https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/5.4/older/patches-$KERNEL_RT_VERSION.tar.{sign,xz}
 xz -dc linux-$KERNEL_VERSION.tar.xz      | gpg --verify linux-$KERNEL_VERSION.tar.sign -
 xz -dc patches-$KERNEL_RT_VERSION.tar.xz | gpg --verify patches-$KERNEL_RT_VERSION.tar.sign -
 
 echo "### cloning the latest and greatest debian release environment to linux"
-git clone https://salsa.debian.org/kernel-team/linux.git
+git clone https://salsa.debian.org/kernel-team/linux.git $src
 echo "### checkingout the old kernel to linux-$KERNEL_DEBIAN"
-cp -R linux linux-$KERNEL_DEBIAN
+cp -R $src linux-$KERNEL_DEBIAN
 cd linux-$KERNEL_DEBIAN
-git -c advice.detachedHead=false checkout debian/$KERNEL_DEBIAN-1
+git -c advice.detachedHead=false checkout debian/$KERNEL_DEBIAN
 cd ..
 
 echo "### pulling aufs5 from upstream not from debian" 
@@ -35,7 +35,7 @@ git -c advice.detachedHead=false checkout aufs5.4
 cd ..
 
 echo "### bootstrapping the kernel build"
-cd linux
+cd $src
 # keeping the upstream defines e.g. for gcc-10
 mv debian/config/defines ..
 rm -rf debian/config debian/patches debian/patches-rt/*
@@ -65,7 +65,7 @@ patch -p1 < $srcDir/python3-dev.patch
 echo "### populating the changelog"
 mv debian/changelog debian/changelog.tmp
 cat - > debian/changelog <<EOF
-linux ($KERNEL_DEBIAN-1) UNRELEASED; urgency=medium
+linux ($KERNEL_DEBIAN) UNRELEASED; urgency=medium
 
   [ Garden Linux Maintainers ]
   * Compile with gcc-10 on all architectures.
@@ -83,7 +83,7 @@ EOF
 cd ..
 # checking out linux stable to have the whole changelog from the kernel readable for debian/bin/stable-update 
 git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-cd linux
+cd $src
 
 debian/bin/stable-update ../linux-stable $KERNEL_VERSION
 cat debian/changelog debian/changelog.tmp > debian/changelog.new
