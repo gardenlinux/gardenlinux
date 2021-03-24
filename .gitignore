@@ -11,6 +11,6 @@
 /cert/*.p12
 /cert/*.csr
 !/cert/gardenlinux.kernel.sign.crt
-!/cert/gardenlinux.pub
+!/cert/gardenlinux.sign.pub
 .idea
 __pycache__

@@ -5,13 +5,13 @@ prefix="$2"
 contents="$(cat)"
 
 tmp="$(printf '%s' "$contents" | awk '/-----BEGIN CERTIFICATE REQUEST-----/' RS= )"
-[ -z "$tmp" ] || printf '%s' "$tmp" > ${name}.csr;
+[ -z "$tmp" ] || printf "%s\n" "$tmp" > ${name}.csr;
 tmp="$(printf '%s' "$contents" | awk '/-----BEGIN RSA PRIVATE KEY-----/' RS= )"
-[ -z "$tmp" ] || printf '%s' "$tmp" > ${name}.key;
+[ -z "$tmp" ] || printf "%s\n" "$tmp" > ${name}.key;
 
 tmp="$(printf '%s' "$contents" | awk '/-----BEGIN CERTIFICATE-----/' RS= )"
 if [ -n "$tmp" ]; then
-    printf '%s' "$tmp" > ${name}.crt;
+    printf "%s\n" "$tmp" > ${name}.crt;
 
     serial=$(openssl x509 -noout -serial -in $1.crt | cut -d'=' -f2)
     if [ -n "$prefix" ] && [ -n "$serial" ]; then
