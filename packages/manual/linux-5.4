@@ -96,8 +96,6 @@ rm debian/changelog.tmp
 
 echo "### generating a debian conform orig file and install"
 PYTHONHASHSEED=0 debian/bin/genorig.py ../linux-*.tar.xz
-mv ../orig/linux_*.tar.xz ..
-rm -rf ../orig
 make -f debian/rules orig
 echo "### generate custom control files"
 PYTHONHASHSEED=0 debian/bin/gencontrol.py
@@ -118,4 +116,7 @@ make -f debian/rules debian/control-real || /bin/true
 donotmove="$(ls ..)"
 echo "### build"
 debuild
+mv ../orig/linux_*.tar.xz ..
+rm -rf ../orig
+src=linux
 move_package .. $donotmove

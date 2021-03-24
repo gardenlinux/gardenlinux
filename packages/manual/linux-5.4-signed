@@ -2,7 +2,7 @@
 set -euo pipefail
 
 . $(dirname $0)/.helper
-. $(dirname $0)/linux.d/VERSION
+. $(dirname $0)/linux-5.4.d/VERSION
 
 sudo apt-get install -y --no-install-recommends vim less equivs pesign
 
@@ -31,4 +31,5 @@ sudo apt-get install -y --no-install-recommends -f ../linux-signed-${KERNEL_ARCH
         
 donotmove="$(ls ..)"
 debuild	
+srv=linux-signed
 move_package .. $donotmove
