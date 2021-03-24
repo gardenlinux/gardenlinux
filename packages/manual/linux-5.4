@@ -2,7 +2,7 @@
 set -euo pipefail
 
 . $(dirname $0)/.helper
-. $srcDir/VERSION
+. ${srcDir}/VERSION
 
 echo "### getting the keys of the maintainers"
 gpg --locate-keys torvalds@kernel.org gregkh@kernel.org
@@ -47,8 +47,12 @@ debian/bin/genpatch-rt ../patches-$KERNEL_RT_VERSION.tar.xz
 echo "### integrating aufs5-patches"
 debian/bin/genpatch-aufs ../aufs5-standalone
 
-echo "### setting new abi, patching Garden Linux enhancements"
+echo "### setting Garden Linux abi, certificate, patching enhancements"
 sed -i "s/abiname:.*/abiname:$KERNEL_ABI/" debian/config/defines
+# to make sure we do not take this accidently
+rm -f debian/certs/debian-uefi-certs.pem
+cp /kernel.crt debian/certs/gardenlinux-kernel-certs.pem
+sed -i "s/debian-uefi-certs.pem/gardenlinux-kernel-certs.pem/" debian/config/config debian/config/featureset*/config
 
 patch -p1 < $srcDir/builderror.patch
 patch -p1 < $srcDir/missinglds.patch
@@ -91,10 +95,12 @@ mv debian/changelog.new debian/changelog
 rm debian/changelog.tmp
 
 echo "### generating a debian conform orig file and install"
-debian/bin/genorig.py ../linux-*.tar.xz
+PYTHONHASHSEED=0 debian/bin/genorig.py ../linux-*.tar.xz
+mv ../orig/linux_*.tar.xz ..
+rm -rf ../orig
 make -f debian/rules orig
 echo "### generate custom control files"
-debian/bin/gencontrol.py
+PYTHONHASHSEED=0 debian/bin/gencontrol.py
 echo "### deviate needed packages and install"
 TMPDIR=.. mk-build-deps debian/control
 sudo apt-get install -y --no-install-recommends -f ../linux-build-deps_*_${KERNEL_ARCH}.deb

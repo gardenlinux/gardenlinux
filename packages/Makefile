@@ -26,7 +26,8 @@ manual: docker
 		--volume $(MANUALDIR):/home/dev/manual \
 		--volume "$$(gpgconf --list-dir agent-socket)":/home/dev/.gnupg/S.gpg-agent \
 		--volume $(CERTDIR)/sign.pub:/sign.pub \
-		--volume $(CERTDIR)/Kernel.sign.p12:/kernel.p12 \
+		--volume $(CERTDIR)/Kernel.sign.crt:/kernel.crt \
+		--volume $(CERTDIR)/Kernel.sign.key:/kernel.key \
 	       	--env BUILDTARGET="/pool" \
 		--env BUILDIMAGE=$(BUILDIMAGE) \
 		--env DEBFULLNAME=$(DEBFULLNAME) \

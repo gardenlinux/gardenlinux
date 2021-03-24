@@ -15,10 +15,6 @@ for i in $KERNEL_FLAVOURS; do
 		$BUILDTARGET/main/l/linux/linux-headers-${i}-${KERNEL_ARCH}_${KERNEL_VERSION}-1_${KERNEL_ARCH}.deb
 done
 
-mkdir -p certdir
-openssl pkcs12 -in /kernel.p12 -out certdir/kernel.key -nodes -nocerts -passin pass:""
-openssl pkcs12 -in /kernel.p12 -out certdir/kernel.crt -nodes -nokeys  -passin pass:""
-
 mkdir -p dkms
 for i in ${KERNEL_FLAVOURS}; do
 	dkms build wireguard/${WIREGUARD_VERSION} --dkmsframework /home/dev/manual/wireguard.d/framework.conf -k $i --kernelsourcedir=/usr/src/linux-headers-$i-${KERNEL_ARCH}/ 
