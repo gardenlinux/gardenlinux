@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+. $(dirname $0)/.helper
+
+sudo apt-get install -y golang libblkid-dev --no-install-recommends
+
+VERSION="2.9.0"
+
+wget https://github.com/coreos/ignition/archive/v${version}.tar.gz	
+tar zxf "v${version}.tar.gz" -C .
+cd "ignition-${version}"
+patch -p1 < "${srcDir}/build.patch"
+mkdir -p "${thisDir}/package"
+sudo make VERSION="v${VERSION}" DESTDIR="${thisDir}/package" install 
+cd "${thisDir}"
+sudo tar -C package/ -czf "ignition-${VERSION}.tar.gz" usr 
+
+sudo mv "ignition-${VERSION}.tar.gz" /pool/

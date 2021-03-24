@@ -205,14 +205,14 @@ class AzureMarketplaceClient:
                 "notification-emails": ",".join(notification_mails)
             }
         }
-        response = self._request(
+        res = self._request(
             method='POST',
-            url=self._api_url(publisher_id, "offers", offer_id, "publish"),
+            url=self._api_url(publisher_id, 'offers', offer_id, 'publish'),
             json=data,
         )
         self._raise_for_status(
-            response=response,
-            message="Can't publish updated Azure marketplace offer for gardenlinux",
+            response=res,
+            message=f'{res=} {res.status_code=} {res.reason=} {res.content=}'
         )
 
     def fetch_ongoing_operation_id(self, publisher_id: str, offer_id: str, transport_dest: AzmpTransportDest):

@@ -84,7 +84,7 @@ debian/bin/genorig.py ../linux-*.tar.xz
 make -f debian/rules orig
 debian/bin/gencontrol.py
 TMPDIR=.. mk-build-deps debian/control
-sudo apt-get install -y --no-install-recommends -f ../linux-build-deps_*_amd64.deb
+sudo apt-get install -y --no-install-recommends -f ../linux-build-deps_*_${KERNEL_ARCH}.deb
 make -f debian/rules debian/control-real || /bin/true
 
 donotmove="$(ls ..)"

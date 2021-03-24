@@ -127,7 +127,7 @@ fi
 
 if [ "$pxe" -o "$pxeLocal" ]; then
 	tempDir=$(mktemp -d)
-	rand=$(uuidgen)
+	rand=$(cat /proc/sys/kernel/random/uuid)
 	mkdir -p "$thisDir/../hack/pxe/$rand"
 	trap 'echo "Cleaning up ..."; rm -rf "$tempDir"; rm -rf "$thisDir/../hack/pxe/$rand"' EXIT
 
@@ -157,9 +157,9 @@ fi
 # network
 macaddr="$(printf '02:%02X:%02X:%02X:%02X:%02X' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)))"
 if [ $bridge ]; then
-	tmp="$(echo -e "$(cat /etc/qemu/bridge.conf)\nallow mgmt" | sort -u | sed '/^$/d')"
+	tmp="$(echo -e "$(cat /etc/qemu/bridge.conf)\nallow $bridge" | sort -u | sed '/^$/d')"
 	echo "$tmp" > /etc/qemu/bridge.conf
-	virtOpts+=( -netdev bridge,id=net0,br=mgmt"$pxeConfig" )
+	virtOpts+=( -netdev bridge,id=net0,br=$bridge"$pxeConfig" )
 else
 	virtOpts+=( -netdev user,id=net0,hostfwd=tcp::$port-:22,hostname=garden"$pxeConfig" )
 fi
@@ -173,6 +173,12 @@ if [ "$(echo $cpuinfo | grep vmx)" != "" -o "$(echo $cpuinfo | grep svm)" != "" 
 		-cpu host
 		)
 fi
+
+virtOpts+=(
+      -device ipmi-bmc-sim,id=bmc0 
+      -device isa-ipmi-kcs,bmc=bmc0,ioport=0xca2
+)
+
 
 echo "qemu-system-x86_64 ${virtOpts[@]}"
 echo

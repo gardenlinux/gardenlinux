@@ -3,8 +3,8 @@
 rootfsDir=$1
 rc=0
 
-# There should not be blacklisted packeges on the filesystem
-echo "checking for blacklisted packeges"
+# There should not be blacklisted packages on the filesystem
+echo "checking for blacklisted packages"
 blacklistedPackagesFile="/tmp/blacklisted_packages.list"
 dpkgBin="${rootfsDir}/usr/bin/dpkg"
 
