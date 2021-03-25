@@ -200,9 +200,8 @@ sign.key:
 #### cleaning
 PHONY: clean
 clean:
-	find . -name '*.crt' -a -not -name 'gardenlinux.*' -exec rm -f {} \;
-	find . -name '*.pub' -a -not -name 'gardenlinux.*' -exec rm -f {} \;
-	rm -f *.key *.csr *.p12
+	@echo "removing *.full  *.chain *.crt *.key *.csr *.p12 but nothing with gardenlinux.*"
+	@find . \( -name '*.full' -o -name '*.crt' -o -name '*.pub' -o -name '*.key' -o -name '*.csr' -o -name '*.p12' -o -name '*.chain' \) -a -not -name 'gardenlinux.*' -exec rm -f {} \;
 
 PHONY: superclean
 superclean: clean

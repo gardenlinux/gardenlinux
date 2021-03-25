@@ -10,6 +10,8 @@
 /cert/*.pub
 /cert/*.p12
 /cert/*.csr
+/cert/*.full
+/cert/*.chain
 !/cert/gardenlinux.kernel.sign.crt
 !/cert/gardenlinux.sign.pub
 .idea
