@@ -8,20 +8,15 @@ ovlconf=$(getarg gl.ovl=)
 ovlconf=${ovlconf#gl.ovl=}
 
 if [ -z "$ovlconf" ]; then
-	# TODO : keep these as defaults?
-	#echo "/var tmpfs" >> /tmp/overlay.conf
-	#echo "/etc tmpfs" >> /tmp/overlay.conf
-	#info "Generated overlay.conf - /etc and /var will be overlayed using tmpfs"
-	exit 0
-else
-	echo $ovlconf | awk -F, 'BEGIN {OFS="\n"}; {$1=$1; gsub(/:/, " "); print}' > /tmp/overlay.conf
+    exit 0
 fi
 
+echo $ovlconf | awk -F, 'BEGIN {OFS="\n"}; {$1=$1; gsub(/:/, " "); print}' > /tmp/overlay.conf
 
 # add a test for /tmp/overlay.conf
-if ! test -f /tmp/overlay.conf; then
-	echo "there is no /tmp/overlay.conf - exiting"
-	exit 1
+if [ ! -f /tmp/overlay.conf ]; then
+    echo "there is no /tmp/overlay.conf - exiting"
+    exit 1
 fi
 
 mkdir -p /run/overlay

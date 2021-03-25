@@ -42,7 +42,4 @@ fi
 # move image to proper place
 mv "${squashFile}" /run/root.squashfs
 
-# load kernel modules
-modprobe loop
-
 exit 0
