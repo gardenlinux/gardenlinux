@@ -51,7 +51,7 @@ echo "### setting Garden Linux abi, certificate, patching enhancements"
 sed -i "s/abiname:.*/abiname:$KERNEL_ABI/" debian/config/defines
 # to make sure we do not take this accidently
 rm -f debian/certs/debian-uefi-certs.pem
-cp /kernel.crt debian/certs/gardenlinux-kernel-certs.pem
+cp /kernel.full debian/certs/gardenlinux-kernel-certs.pem
 sed -i "s/debian-uefi-certs.pem/gardenlinux-kernel-certs.pem/" debian/config/config debian/config/featureset*/config
 
 patch -p1 < $srcDir/builderror.patch

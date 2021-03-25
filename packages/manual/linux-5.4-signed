@@ -24,12 +24,12 @@ cp -R /usr/share/code-signing/linux-image-${KERNEL_ARCH}-signed-template/source-
 
 cd linux-signed-${KERNEL_ARCH}
 for i in $KERNEL_FLAVOURS; do
-	../$(dirname $0)/linux.d/sign-helper linux-image-${i}-${KERNEL_ARCH}-unsigned debian/signatures
+	../$(dirname $0)/linux-5.4.d/sign-helper linux-image-${i}-${KERNEL_ARCH}-unsigned debian/signatures
 done
 TMPDIR=.. mk-build-deps debian/control
 sudo apt-get install -y --no-install-recommends -f ../linux-signed-${KERNEL_ARCH}-build-deps*.deb
         
 donotmove="$(ls ..)"
 debuild	
-srv=linux-signed
+src=linux-signed-${KERNEL_ARCH}
 move_package .. $donotmove

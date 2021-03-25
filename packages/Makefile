@@ -28,7 +28,8 @@ manual: docker
 		--volume $(MANUALDIR)/../quiltrc:/home/dev/.quiltrc \
 		--volume "$$(gpgconf --list-dir agent-socket)":/home/dev/.gnupg/S.gpg-agent \
 		--volume $(CERTDIR)/sign.pub:/sign.pub \
-		--volume $(CERTDIR)/Kernel.sign.full:/kernel.crt \
+		--volume $(CERTDIR)/Kernel.sign.full:/kernel.full \
+		--volume $(CERTDIR)/Kernel.sign.crt:/kernel.crt \
 		--volume $(CERTDIR)/Kernel.sign.key:/kernel.key \
 	       	--env BUILDTARGET="/pool" \
 		--env BUILDIMAGE=$(BUILDIMAGE) \
