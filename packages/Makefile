@@ -19,9 +19,9 @@ docker:
 docker-kernel:
 	make --directory=../docker $$(basename $(BUILDKERNEL))
 
-#--volume $(MANUALDIR)/../quiltrc:/home/dev/.quiltrc \
-.PHONY: manual sign
-manual: docker
+#--volume $(MANUALDIR)/../quiltrc:/home/dev/.quiltrc 
+.PHONY: manual 
+manual: docker sign
 	docker run --rm -ti \
 		--volume $(POOLDIR):/pool \
 		--volume $(MANUALDIR):/home/dev/manual \
