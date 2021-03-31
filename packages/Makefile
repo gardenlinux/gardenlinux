@@ -1,7 +1,7 @@
-POOLDIR=$(realpath -e ../.packages)
-MANUALDIR=$(realpath -e manual)
-KERNELDIR=$(realpath -e kernel)
-CERTDIR=$(realpath -e ../cert)
+POOLDIR=$(realpath ../.packages)
+MANUALDIR=$(realpath manual)
+KERNELDIR=$(realpath kernel)
+CERTDIR=$(realpath ../cert)
 DEBFULLNAME="Garden Linux Maintainers"
 DEBEMAIL="contact@gardenlinux.io"
 BUILDIMAGE="gardenlinux/build-deb"
