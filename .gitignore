@@ -14,5 +14,6 @@
 /cert/*.chain
 !/cert/gardenlinux.kernel.sign.crt
 !/cert/gardenlinux.sign.pub
+/features/metal/file.include/lib/firmware/
 .idea
 __pycache__

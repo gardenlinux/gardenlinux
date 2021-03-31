@@ -6,6 +6,6 @@ DHCP=yes
 LLDP=true
 EmitLLDP=true
 
-[DHCP]
+[DHCPv4]
 UseDomains=true
-
+UseMTU=true

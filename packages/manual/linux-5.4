@@ -15,7 +15,7 @@ echo "### installing minimal create requirements"
 sudo apt-get install --no-install-recommends -y equivs kernel-wedge python3-debian rsync libdistro-info-perl git
 echo "### pulling kernel and rt-patches" 
 wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.{sign,xz}
-wget https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/5.4/older/patches-$KERNEL_RT_VERSION.tar.{sign,xz}
+wget https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/$(cut -d. -f-2 <<< ${KERNEL_BASE})/older/patches-$KERNEL_RT_VERSION.tar.{sign,xz}
 xz -dc linux-$KERNEL_VERSION.tar.xz      | gpg --verify linux-$KERNEL_VERSION.tar.sign -
 xz -dc patches-$KERNEL_RT_VERSION.tar.xz | gpg --verify patches-$KERNEL_RT_VERSION.tar.sign -
 
@@ -29,9 +29,8 @@ cd ..
 
 echo "### pulling aufs5 from upstream not from debian" 
 git clone https://github.com/sfjro/aufs5-standalone.git
-# checking out aufs for 5.4 kernel
 cd aufs5-standalone
-git -c advice.detachedHead=false checkout aufs5.4
+git -c advice.detachedHead=false checkout aufs$(cut -d. -f-2 <<< ${KERNEL_BASE})
 cd ..
 
 echo "### bootstrapping the kernel build"

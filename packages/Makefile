@@ -19,13 +19,13 @@ docker:
 docker-kernel:
 	make --directory=../docker $$(basename $(BUILDKERNEL))
 
+#--volume $(MANUALDIR)/../quiltrc:/home/dev/.quiltrc \
 .PHONY: manual sign
 manual: docker
 	docker run --rm -ti \
 		--volume $(POOLDIR):/pool \
 		--volume $(MANUALDIR):/home/dev/manual \
 		--volume $(MANUALDIR)/../Makefile.inside:/home/dev/Makefile \
-		--volume $(MANUALDIR)/../quiltrc:/home/dev/.quiltrc \
 		--volume "$$(gpgconf --list-dir agent-socket)":/home/dev/.gnupg/S.gpg-agent \
 		--volume $(CERTDIR)/sign.pub:/sign.pub \
 		--volume $(CERTDIR)/Kernel.sign.full:/kernel.full \
