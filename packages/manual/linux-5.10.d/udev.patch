@@ -1,0 +1,14 @@
+--- a/debian/patches/bugfix/all/udev_context.patch	1970-01-01 00:00:00.000000000 +0000
++++ b/debian/patches/bugfix/all/udev_context.patch	2020-09-24 22:28:21.000000000 +0000
+@@ -0,0 +1,11 @@
++--- a/tools/usb/usbip/libsrc/usbip_host_common.c
+++++ b/tools/usb/usbip/libsrc/usbip_host_common.c
++@@ -23,7 +23,7 @@
++ #include "list.h"
++ #include "sysfs_utils.h"
++ 
++-struct udev *udev_context;
+++extern struct udev *udev_context;
++ 
++ static int32_t read_attr_usbip_status(struct usbip_usb_device *udev)
++ {

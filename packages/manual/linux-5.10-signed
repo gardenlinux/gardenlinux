@@ -2,7 +2,7 @@
 set -euo pipefail
 
 . $(dirname $0)/.helper
-. $(dirname $0)/linux-5.4.d/VERSION
+. $(dirname $0)/linux-5.10.d/VERSION
 
 sudo apt-get install -y --no-install-recommends vim less equivs pesign
 
