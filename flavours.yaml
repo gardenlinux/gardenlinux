@@ -3,8 +3,20 @@ flavour_sets:
   - name: 'all'
     flavour_combinations:
       - architectures: [ 'amd64' ]
-        platforms: [ ali, aws, azure, gcp, openstack ]
+        platforms: [ metal ]
+        modifiers: [ [ gardener, _prod ] , [ chost, _prod ] , [ vhost, _prod ], [] ]
+        fails: [ unit, integration ]
+      - architectures: [ 'amd64' ]
+        modifiers: [ [], [ '_build' ] ]
+        platforms: [ oci ]
+        fails: [ unit, integration ]
+      - architectures: [ 'amd64' ]
+        platforms: [ ali, aws, azure, gcp, openstack, vmware ]
         modifiers: [ [ gardener, _prod ] ]
+        fails: [ unit, integration ]
+      - architectures: [ 'amd64' ]
+        platforms: [ kvm ]
+        modifiers: [ [], ['_prod', 'chost'], ['_prod', 'gardener'] ]
         fails: [ unit, integration ]
   - name: 'testing'
     flavour_combinations:
