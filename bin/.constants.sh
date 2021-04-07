@@ -108,3 +108,32 @@ dgetopt-case() {
 		--version)	echo "version: $($scriptsDir/garden-version)"; exit 0 ;;
 	esac
 }
+
+filter_comment () {
+    sed "s/#.*$//;/^$/d;s/^[[:space:]]*//;s/[[:space:]]*$//"
+}
+filter_variables () {
+    arch=$arch /usr/bin/envsubst
+}
+filter_if() {
+    awk -F ']' '
+      {
+        for(i=1;i<=NF-1;i++)  {
+          a=$i
+          gsub(/ /,"",a)
+          gsub(/[\[\]]/,"",a)
+          split(a,arn,"!=")
+          if (length(arn) > 1)  {
+	    if (arn[1] == arn[2]) {next}
+	  }
+          else {
+            split(a,are,"=")
+            if (length(are) > 1) { 
+	      if (are[1] != are[2]) {next}
+	    }
+          }
+        }
+        gsub(/ /,"",$NF)
+        print $NF
+      }'
+}

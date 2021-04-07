@@ -12,12 +12,15 @@ RUN	mkdir /etc/sudoers.d \
      &&	echo "progress=bar:force:noscroll" >> /etc/wgetrc \
      &&	echo "force-confold\nforce-confdef" > /etc/dpkg/dpkg.cfg.d/forceold 
 
-ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/gcc_10.2.1-1_amd64.deb /
-ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/g++_10.2.1-1_amd64.deb /
-ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/cpp_10.2.1-1_amd64.deb /
-ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/gcc-multilib_10.2.1-1_amd64.deb /
+ARG	BUILDARCH=amd64
+
+ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/gcc_10.2.1-1_${BUILDARCH}.deb /
+ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/g++_10.2.1-1_${BUILDARCH}.deb /
+ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/cpp_10.2.1-1_${BUILDARCH}.deb /
 
 RUN	apt-get update \
+     && apt-get install -y wget ca-certificates \
+     &&	if [ "${BUILDARCH}" = "amd64" ] ; then wget https://deb.debian.org/debian/pool/main/g/gcc-defaults/gcc-multilib_10.2.1-1_${BUILDARCH}.deb; fi \
      &&	apt-get install -y -f /*.deb \
      &&	apt-mark auto gcc g++ cpp gcc-multilib \
      &&	rm -f /*.deb \

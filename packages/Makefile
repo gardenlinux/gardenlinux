@@ -1,28 +1,36 @@
-POOLDIR=$(realpath -e ../.packages)
-MANUALDIR=$(realpath -e manual)
-KERNELDIR=$(realpath -e kernel)
-CERTDIR=$(realpath -e ../cert)
+POOLDIR=$(realpath ../.packages)
+MANUALDIR=$(realpath manual)
+KERNELDIR=$(realpath kernel)
+CERTDIR=$(realpath ../cert)
 DEBFULLNAME="Garden Linux Maintainers"
 DEBEMAIL="contact@gardenlinux.io"
 BUILDIMAGE="gardenlinux/build-deb"
 BUILDKERNEL="gardenlinux/build-kernel"
 
+.PHONY: sign
+sign:
+	make --directory=../cert 
+
 .PHONY: docker
 docker:
-	make -C ../docker $$(basename $(BUILDIMAGE))
+	make --directory=../docker $$(basename $(BUILDIMAGE))
 
 .PHONY: docker-kernel
 docker-kernel:
-	make -C ../docker $$(basename $(BUILDKERNEL))
+	make --directory=../docker $$(basename $(BUILDKERNEL))
 
-.PHONY: manual
-manual: docker
+#--volume $(MANUALDIR)/../quiltrc:/home/dev/.quiltrc 
+.PHONY: manual 
+manual: docker sign
 	docker run --rm -ti \
 		--volume $(POOLDIR):/pool \
 		--volume $(MANUALDIR):/home/dev/manual \
+		--volume $(MANUALDIR)/../Makefile.inside:/home/dev/Makefile \
 		--volume "$$(gpgconf --list-dir agent-socket)":/home/dev/.gnupg/S.gpg-agent \
 		--volume $(CERTDIR)/sign.pub:/sign.pub \
-		--volume $(CERTDIR)/kernel.p12:/kernel.p12 \
+		--volume $(CERTDIR)/Kernel.sign.full:/kernel.full \
+		--volume $(CERTDIR)/Kernel.sign.crt:/kernel.crt \
+		--volume $(CERTDIR)/Kernel.sign.key:/kernel.key \
 	       	--env BUILDTARGET="/pool" \
 		--env BUILDIMAGE=$(BUILDIMAGE) \
 		--env DEBFULLNAME=$(DEBFULLNAME) \

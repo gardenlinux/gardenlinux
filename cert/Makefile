@@ -1,167 +1,209 @@
-# If necessary manually override: HOSTNAME, FQDN, and PREFIX.
-HOSTNAME=$(shell hostname)
-FQDN=$(shell hostname -f)
-PREFIX=$(shell hostname -d | sed -e 's/\./-/g')
+SIGN_CA=root.ca
+SIGN_CERT=intermediate.ca
+MAINTAINER=Garden Linux Maintainers
+MAINTAINER_EMAIL=contact@gardenlinux.io
+KEYTYPE=RSA
+KEYLENGTH=4096
+HOSTNAME=
 
-LOCAL_FOLDER=$(HOME)/.keys
-SYSTEM_CERT_FOLDER=/usr/share/ca-certificates/$(FQDN)
-SYSTEM_KEY_FOLDER=/etc/ssl/private
+#internal
+INTERNAL_HOSTNAME=$(shell [ -n "$(HOSTNAME)" ] && printf "%s=%s" "-hostname" "$(HOSTNAME)" )
 
-HOST_JSON=$(HOSTNAME).json
+define cert
+{
+  "CN": "%%CN%%",
+  "key": { "algo": "$(shell echo $(KEYTYPE) | tr '[:upper:]' '[:lower:]')", "size": $(KEYLENGTH) },
+  "names": [
+  	{ "C": "DE", "L": "Walldorf", "O": "SAP SE", "OU": "Garden Linux", "E": "$(MAINTAINER_EMAIL)" }
+  ]
+}
+endef
+export cert
 
-CA=$(PREFIX)-ca
-CA_PEM=$(CA).pem
-CA_CRT=$(CA).crt
-CA_CSR=$(CA).csr
-CA_KEY_PEM=$(CA)-key.pem
-CA_KEY=$(CA).key
+define profile
+{"signing":
+    {"default":
+	{"expiry":"8760h"},
+	"profiles":{
+	    "ca":{
+		"usages":["signing","digital signature","key encipherment","cert sign","crl sign","server auth","client auth"],
+		"ca_constraint":{"is_ca":true,"max_path_len":0,"max_path_len_zero":true},
+		"expiry":"43800h"
+	    },
+	    "peer":{
+		"usages":["signing","digital signature","key encipherment","client auth","server auth"],
+		"expiry":"8760h"
+	    },
+	    "server":{
+		"usages":["signing","digital signing","key encipherment","server auth"],
+		"expiry":"8760h"
+	    },
+	    "client":{
+		"usages":["signing","digital signature","key encipherment","client auth"],
+		"expiry":"8760h"
+	    },
+	    "sign":{
+		"usages":["signing","digital signature","key encipherment"],
+		"expiry":"8760h"
+	    }
+	}
+    }
+}
+endef
+export profile
 
-INTERMEDIATE_CA=$(PREFIX)-intermediate-ca
-INTERMEDIATE_CA_PEM=$(INTERMEDIATE_CA).pem
-INTERMEDIATE_CA_CRT=$(INTERMEDIATE_CA).crt
-INTERMEDIATE_CA_CSR=$(INTERMEDIATE_CA).csr
-INTERMEDIATE_CA_KEY_PEM=$(INTERMEDIATE_CA)-key.pem
-INTERMEDIATE_CA_KEY=$(INTERMEDIATE_CA).key
+define sign_gpg
+%no-protection
+Key-Type: $(shell echo $(KEYTYPE) | tr '[:lower:]' '[:upper:]')
+Key-Length: $(KEYLENGTH)
+Key-Usage: sign
+Name-Real: $(MAINTAINER)
+Name-Email: $(MAINTAINER_EMAIL)
+Expire-Date: 0
+endef
+export sign_gpg
 
-HOST_SERVER=$(PREFIX)-$(HOSTNAME)-server
-HOST_SERVER_PEM=$(HOST_SERVER).pem
-HOST_SERVER_CRT=$(HOST_SERVER).crt
-HOST_SERVER_CSR=$(HOST_SERVER).csr
-HOST_SERVER_KEY_PEM=$(HOST_SERVER)-key.pem
-HOST_SERVER_KEY=$(HOST_SERVER).key
+define BASH_BUILD
+git clone https://github.com/cloudflare/cfssl.git
+cd cfssl
+make
+mv bin/* /build 
+endef
+export BASH_BUILD
 
-HOST_PEER=$(PREFIX)-$(HOSTNAME)-peer
-HOST_PEER_PEM=$(HOST_PEER).pem
-HOST_PEER_CRT=$(HOST_PEER).crt
-HOST_PEER_CSR=$(HOST_PEER).csr
-HOST_PEER_KEY_PEM=$(HOST_PEER)-key.pem
-HOST_PEER_KEY=$(HOST_PEER).key
+all: Kernel.sign.crt sign.pub 
+test:
+	echo "$(INTERNAL_HOSTNAME)"
 
-HOST_CLIENT=$(PREFIX)-$(HOSTNAME)-client
-HOST_CLIENT_PEM=$(HOST_CLIENT).pem
-HOST_CLIENT_CRT=$(HOST_CLIENT).crt
-HOST_CLIENT_CSR=$(HOST_CLIENT).csr
-HOST_CLIENT_KEY_PEM=$(HOST_CLIENT)-key.pem
-HOST_CLIENT_KEY=$(HOST_CLIENT).key
+#### cfssl
+cfssl/cfssl cfssl/cfssljson:
+	@echo "Building cfssl / cfssljson"
+	@mkdir -p cfssl
+	@docker run --volume "$$(realpath cfssl):/build" --rm -ti golang:latest bash -c "$$BASH_BUILD"
 
-HOST_HAPROXY_PEM=$(PREFIX)-$(HOSTNAME)-haproxy.pem
+#### CA
+.PHONY: %.ca
+%.ca: cfssl/cfssl cfssl/cfssljson
+	@echo "Recreating CN=Garden Linux $(@:.ca=) CA"
+	@rm -f $@*.crt
+	@echo "$$cert" | sed "s/%%CN%%/Garden Linux $(@:.ca=) CA/" | cfssl/cfssl gencert -initca - | cfssl/cfssljson -bare -stdout | ./rename $@
 
-.PHONY: all
+.PRECIOUS: %.ca.key
+%.ca.csr: %.ca ;
+%.ca.key: %.ca ;
 
-all: check ca intermediate-ca $(HOSTNAME)
-	echo done
+.PRECIOUS: $(SIGN_CA).crt $(SIGN_CA).key
+$(SIGN_CA).crt: $(SIGN_CA).key
+	@rm -f $(SIGN_CA).csr
 
-.PHONY: check
+.PRECIOUS: %.ca.crt
+%.ca.crt: %.ca.key $(SIGN_CA).crt
+	@echo "Signing CA $(@:.ca.crt=) by $(SIGN_CA)" 
+	$(eval tmpfile := $(shell mktemp))
+	@echo "$$profile" > $(tmpfile)
+	@cfssl/cfssl sign -ca $(SIGN_CA).crt -ca-key $(SIGN_CA).key -config $(tmpfile) -profile ca $(<:.key=.csr) | cfssl/cfssljson -bare -stdout | ./rename $(@:.crt=) $(SIGN_CA)
+	@rm -f $(tmpfile) $(<:.key=.csr)
 
-check:
-	test -n "$(FQDN)"
+#### signature
+.PHONY: %.sign
+%.sign: cfssl/cfssl cfssl/cfssljson
+	@echo "Recreating CN=Garden Linux $(@:.sign=) Signature"
+	@echo "$$cert" | sed "s/%%CN%%/Garden Linux $(@:.sign=) Signature/" | cfssl/cfssl genkey - | cfssl/cfssljson -bare -stdout | ./rename $@
 
-.PHONY: ca intermediate-ca $(HOSTNAME)
+.PRECIOUS: %.sign.key
+%.sign.csr: %.sign ;
+%.sign.key: %.sign ;
 
-ca: $(CA_PEM)
-intermediate-ca: $(INTERMEDIATE_CA_PEM) $(INTERMEDIATE_CA_KEY_PEM)
-$(HOSTNAME): $(HOST_SERVER_PEM) $(HOST_PEER_PEM) $(HOST_CLIENT_PEM) $(HOST_HAPROXY_PEM)
+.PRECIOUS: %.sign.crt
+%.sign.crt: %.sign.key $(SIGN_CERT).crt
+	@echo "Signing Signature Certificate $(@:.sign.crt=) by $(SIGN_CERT)" 
+	$(eval tmpfile := $(shell mktemp))
+	@echo "$$profile" > $(tmpfile)
+	@cfssl/cfssl sign -ca $(SIGN_CERT).crt -ca-key $(SIGN_CERT).key -config $(tmpfile) -profile=sign $(<:.key=.csr) | cfssl/cfssljson -bare -stdout | ./rename $(@:.crt=) $(SIGN_CERT)
+	@rm -f $(tmpfile) $(<:.key=.csr)
 
-$(CA_PEM): ca.json
-	cfssl gencert -initca ca.json | cfssljson -bare $(CA)
+#### client
+.PHONY: %.client
+%.client: cfssl/cfssl cfssl/cfssljson
+	@echo "Recreating CN=Garden Linux $(@:.client=) Client"
+	@echo "$$cert" | sed "s/%%CN%%/Garden Linux $(@:.client=) Signature/" | cfssl/cfssl genkey - | cfssl/cfssljson -bare -stdout | ./rename $@
 
-$(INTERMEDIATE_CA_PEM): intermediate-ca.json
-	cfssl gencert -initca intermediate-ca.json | cfssljson -bare $(INTERMEDIATE_CA)
+.PRECIOUS: %.client.key
+%.client.csr: %.client ;
+%.client.key: %.client ;
 
-$(INTERMEDIATE_CA_KEY_PEM): $(INTERMEDIATE_CA_PEM) $(CA_PEM) cfssl.json $(INTERMEDIATE_CA_CSR)
-	cfssl sign -ca $(CA_PEM) -ca-key $(CA_KEY_PEM) -config cfssl.json -profile intermediate-ca $(INTERMEDIATE_CA_CSR) | cfssljson -bare $(INTERMEDIATE_CA)
+.PRECIOUS: %.client.crt
+%.client.crt: %.client.key $(SIGN_CERT).crt
+	@echo "Signing Signature Certificate $(@:.client.crt=) by $(SIGN_CERT)" 
+	$(eval tmpfile := $(shell mktemp))
+	@echo "$$profile" > $(tmpfile)
+	@cfssl/cfssl sign -ca $(SIGN_CERT).crt -ca-key $(SIGN_CERT).key -config $(tmpfile) -profile=client $(<:.key=.csr) | cfssl/cfssljson -bare -stdout | ./rename $(@:.crt=) $(SIGN_CERT)
+	@rm -f $(tmpfile) $(<:.key=.csr)
 
-$(HOST_JSON): host.json.template
-	sed -e "s/FQDN/$(FQDN)/g" < host.json.template > $(HOST_JSON)
+#### server
+.PHONY: %.server
+%.server: cfssl/cfssl cfssl/cfssljson
+	@echo "Recreating CN=Garden Linux $(@:.server=) Server"
+	@echo "$$cert" | sed "s/%%CN%%/Garden Linux $(@:.server=) Server/" | cfssl/cfssl genkey - | cfssl/cfssljson -bare -stdout | ./rename $@
 
-$(HOST_SERVER_PEM): $(INTERMEDIATE_CA_PEM) $(INTERMEDIATE_CA_KEY_PEM) cfssl.json $(HOST_JSON)
-	cfssl gencert -ca $(INTERMEDIATE_CA_PEM) -ca-key $(INTERMEDIATE_CA_KEY_PEM) -config cfssl.json -profile=server $(HOST_JSON) | cfssljson -bare $(HOST_SERVER)
+.PRECIOUS: %.server.key
+%.server.csr: %.server ;
+%.server.key: %.server ;
 
-$(HOST_PEER_PEM): $(INTERMEDIATE_CA_PEM) $(INTERMEDIATE_CA_KEY_PEM) cfssl.json $(HOST_JSON)
-	cfssl gencert -ca $(INTERMEDIATE_CA_PEM) -ca-key $(INTERMEDIATE_CA_KEY_PEM) -config cfssl.json -profile=peer $(HOST_JSON) | cfssljson -bare $(HOST_PEER)
+.PRECIOUS: %.server.crt
+%.server.crt: %.server.key $(SIGN_CERT).crt
+	@echo "Signing Server Certificate $(@:.server.crt=) by $(SIGN_CERT)"
+	@find . -lname $@ -exec rm -f {} \;	
+	$(eval tmpfile := $(shell mktemp))
+	@echo "$$profile" > $(tmpfile)
+	@cfssl/cfssl sign -ca $(SIGN_CERT).crt -ca-key $(SIGN_CERT).key -config $(tmpfile) -profile=server $(INTERNAL_HOSTNAME)  $(<:.key=.csr) | cfssl/cfssljson -bare -stdout | ./rename $(@:.crt=) $(SIGN_CERT)
+	@rm -f $(tmpfile) $(<:.key=.csr)
 
-$(HOST_CLIENT_PEM): $(INTERMEDIATE_CA_PEM) $(INTERMEDIATE_CA_KEY_PEM) cfssl.json $(HOST_JSON)
-	cfssl gencert -ca $(INTERMEDIATE_CA_PEM) -ca-key $(INTERMEDIATE_CA_KEY_PEM) -config cfssl.json -profile=client $(HOST_JSON) | cfssljson -bare $(HOST_CLIENT)
+#### peer
+.PHONY: %.peer
+%.peer: cfssl/cfssl cfssl/cfssljson
+	@echo "Recreating CN=Garden Linux $(@:.peer=) Peer"
+	@echo "$$cert" | sed "s/%%CN%%/Garden Linux $(@:.peer=) Server/" | cfssl/cfssl genkey - | cfssl/cfssljson -bare -stdout | ./rename $@
 
-$(HOST_HAPROXY_PEM): $(CA_PEM) $(INTERMEDIATE_CA_PEM) $(HOST_SERVER_PEM) $(HOST_SERVER_KEY_PEM)
-	cat $(HOST_SERVER_PEM) $(HOST_SERVER_KEY_PEM) $(INTERMEDIATE_CA_PEM) $(CA_PEM) > $(HOST_HAPROXY_PEM)
+.PRECIOUS: %.peer.key
+%.peer.csr: %.peer ;
+%.peer.key: %.peer ;
 
-.PHONY: install install-ca install-intermediate-ca install-host
+.PRECIOUS: %.peer.crt
+%.peer.crt: %.peer.key $(SIGN_CERT).crt
+	@echo "Signing Server Certificate $(@:.peer.crt=) by $(SIGN_CERT)"
+	@find . -lname $@ -exec rm -f {} \;	
+	$(eval tmpfile := $(shell mktemp))
+	@echo "$$profile" > $(tmpfile)
+	@cfssl/cfssl sign -ca $(SIGN_CERT).crt -ca-key $(SIGN_CERT).key -config $(tmpfile) -profile=peer $(INTERNAL_HOSTNAME)  $(<:.key=.csr) | cfssl/cfssljson -bare -stdout | ./rename $(@:.crt=) $(SIGN_CERT)
+	@rm -f $(tmpfile) $(<:.key=.csr)
 
-install: install-ca install-intermediate-ca install-host
+#### format change
+.PRECIOUS: %.p12
+%.p12: %.crt %.key
+	openssl pkcs12 -export -out $@ -inkey $(@:.p12=).key -in $(@:.p12=).crt -passout pass:""
 
-install-ca: $(CA_PEM) $(CA_KEY_PEM)
-	mkdir -p $(SYSTEM_CERT_FOLDER)
-	install -o root -m 644 $(CA_PEM) $(SYSTEM_CERT_FOLDER)/$(CA_CRT)
-	install -o root -g ssl-cert -m 640 $(CA_CSR) $(SYSTEM_KEY_FOLDER)/$(CA_CSR)
-	install -o root -g ssl-cert -m 640 $(CA_KEY_PEM) $(SYSTEM_KEY_FOLDER)/$(CA_KEY)
 
-install-intermediate-ca: $(INTERMEDIATE_CA_PEM) $(INTERMEDIATE_CA_KEY_PEM)
-	install -o root -m 644 $(INTERMEDIATE_CA_PEM) $(SYSTEM_CERT_FOLDER)/$(INTERMEDIATE_CA_CRT)
-	install -o root -g ssl-cert -m 640 $(INTERMEDIATE_CA_CSR) $(SYSTEM_KEY_FOLDER)/$(INTERMEDIATE_CA_CSR)
-	install -o root -g ssl-cert -m 640 $(INTERMEDIATE_CA_KEY_PEM) $(SYSTEM_KEY_FOLDER)/$(INTERMEDIATE_CA_KEY)
+#### GPG signature
+sign.pub:
+ifeq ($(shell gpg --list-keys $(MAINTAINER_EMAIL) 2> /dev/null), )
+	@echo "GPG: creating a new key $(MAINTAINER_EMAIL)"
+	echo "$$sign_gpg" | gpg --generate-key --batch -;
+endif
+	@echo "GPG: exporting public key $(MAINTAINER_EMAIL)"
+	gpg --export --armor $(MAINTAINER_EMAIL) > sign.pub
 
-install-host: install-host-server install-host-peer install-host-client install-host-haproxy
+sign.key:
+	@echo "GPG: exporting private key $(MAINTAINER_EMAIL)"
+	gpg --export-secret-key --armor $(MAINTAINER_EMAIL) > sign.key
 
-.PHONY: install-host-server install-host-peer install-host-client install-host-haproxy
-
-install-host-server: $(HOST_SERVER_PEM) $(HOST_SERVER_KEY_PEM)
-	install -o root -m 644 $(HOST_SERVER_PEM) $(SYSTEM_CERT_FOLDER)/$(HOST_SERVER_CRT)
-	install -o root -g ssl-cert -m 640 $(HOST_SERVER_KEY_PEM) $(SYSTEM_KEY_FOLDER)/$(HOST_SERVER_KEY)
-
-install-host-peer: $(HOST_PEER_PEM) $(HOST_PEER_KEY_PEM)
-	install -o root -m 644 $(HOST_PEER_PEM) $(SYSTEM_CERT_FOLDER)/$(HOST_PEER_CRT)
-	install -o root -g ssl-cert -m 640 $(HOST_PEER_KEY_PEM) $(SYSTEM_KEY_FOLDER)/$(HOST_PEER_KEY)
-
-install-host-client: $(HOST_CLIENT_PEM) $(HOST_CLIENT_KEY_PEM)
-	install -o root -m 644 $(HOST_CLIENT_PEM) $(SYSTEM_CERT_FOLDER)/$(HOST_CLIENT_CRT)
-	install -o root -g ssl-cert -m 640 $(HOST_CLIENT_KEY_PEM) $(SYSTEM_KEY_FOLDER)/$(HOST_CLIENT_KEY)
-
-install-host-haproxy: $(HOST_HAPROXY_PEM)
-	install -o root -m 640 $(HOST_HAPROXY_PEM) $(SYSTEM_KEY_FOLDER)/$(HOST_HAPROXY_PEM)
-
-.PHONY: uninstall uninstall-ca uninstall-intermediate-ca uninstall-beast
-
-uninstall: uninstall-ca uninstall-intermediate-ca uninstall-beast
-
-uninstall-ca:
-	rm $(SYSTEM_CERT_FOLDER)/$(CA_PEM)
-	rm $(SYSTEM_KEY_FOLDER)/$(CA_KEY_PEM)
-
-uninstall-intermediate-ca:
-	rm $(SYSTEM_CERT_FOLDER)/$(INTERMEDIATE_CA_PEM)
-	rm $(SYSTEM_KEY_FOLDER)/$(INTERMEDIATE_CA_KEY_PEM)
-
-uninstall-beast:
-	rm $(SYSTEM_CERT_FOLDER)/$(HOST_SERVER_PEM)
-	rm $(SYSTEM_KEY_FOLDER)/$(HOST_SERVER_KEY_PEM)
-	rm $(SYSTEM_CERT_FOLDER)/$(HOST_PEER_PEM)
-	rm $(SYSTEM_KEY_FOLDER)/$(HOST_PEER_KEY_PEM)
-	rm $(SYSTEM_CERT_FOLDER)/$(HOST_CLIENT_PEM)
-	rm $(SYSTEM_KEY_FOLDER)/$(HOST_CLIENT_KEY_PEM)
-
-install-local:
-	mkdir -p $(LOCAL_FOLDER)
-	cp $(HOST_SERVER_PEM) $(LOCAL_FOLDER)/server.crt
-	cp $(HOST_SERVER_KEY_PEM) $(LOCAL_FOLDER)/server.key
-
-.PHONY: clean
-
+#### cleaning
+PHONY: clean
 clean:
-	rm -f $(CA_PEM)
-	rm -f $(CA_KEY_PEM)
-	rm -f $(CA_CSR)
-	rm -f $(INTERMEDIATE_CA_PEM)
-	rm -f $(INTERMEDIATE_CA_KEY_PEM)
-	rm -f $(INTERMEDIATE_CA_CSR)
-	rm -f $(HOST_SERVER_PEM)
-	rm -f $(HOST_SERVER_KEY_PEM)
-	rm -f $(HOST_SERVER_CSR)
-	rm -f $(HOST_PEER_PEM)
-	rm -f $(HOST_PEER_KEY_PEM)
-	rm -f $(HOST_PEER_CSR)
-	rm -f $(HOST_CLIENT_PEM)
-	rm -f $(HOST_CLIENT_KEY_PEM)
-	rm -f $(HOST_CLIENT_CSR)
-	rm -f $(HOST_HAPROXY_PEM)
-	rm -f $(HOST_JSON)
+	@echo "removing *.full  *.chain *.crt *.key *.csr *.p12 but nothing with gardenlinux.*"
+	@find . \( -name '*.full' -o -name '*.crt' -o -name '*.pub' -o -name '*.key' -o -name '*.csr' -o -name '*.p12' -o -name '*.chain' \) -a -not -name 'gardenlinux.*' -exec rm -f {} \;
+
+PHONY: superclean
+superclean: clean
+	rm -rf cfssl
+

@@ -2,6 +2,7 @@ gardenlinux:
   base_definition:
     repo:
       name: 'GARDENLINUX'
+      cfg_name: 'github_com'
 
   jobs:
     on-head-update:

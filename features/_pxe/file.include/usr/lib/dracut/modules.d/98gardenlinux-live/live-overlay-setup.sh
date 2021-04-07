@@ -8,21 +8,78 @@ ovlconf=$(getarg gl.ovl=)
 ovlconf=${ovlconf#gl.ovl=}
 
 if [ -z "$ovlconf" ]; then
-	echo "/var tmpfs" >> /tmp/overlay.conf
-	echo "/etc tmpfs" >> /tmp/overlay.conf
-	info "Generated overlay.conf - /etc and /var will be overlayed using tmpfs"
-else
-	echo $ovl | awk -F, 'BEGIN {OFS="\n"}; {$1=$1; gsub(/:/, " "); print}' > /tmp/overlay.conf
+    exit 0
 fi
 
+echo $ovlconf | awk -F, 'BEGIN {OFS="\n"}; {$1=$1; gsub(/:/, " "); print}' > /tmp/overlay.conf
 
 # add a test for /tmp/overlay.conf
-if ! test -f /tmp/overlay.conf; then
-	echo "there is no /tmp/overlay.conf - exiting"
-	exit 1
+if [ ! -f /tmp/overlay.conf ]; then
+    echo "there is no /tmp/overlay.conf - exiting"
+    exit 1
 fi
 
-mkdir /run/overlay
+mkdir -p /run/overlay
+
+# check if overlay for root is wanted
+if echo "$ovlconf" | grep -q '^/:\|,/:'; then
+	# we have overlay for root defined, ignore everything else
+	dev=$(grep '^/ ' /tmp/overlay.conf | awk '{print $2}')
+	devescape=$(systemd-escape -p --suffix=service "$dev")
+	mkdir -p "/run/sysroot.ovl"
+
+	if [[ "$dev" != tmpfs ]]; then	
+		echo "[Unit]
+		Before=sysroot.mount
+		After=ignition-disks.service
+		DefaultDependencies=false
+		Requires=systemd-fsck@${devescape}
+		After=systemd-fsck@${devescape}
+
+		[Mount]
+		What=$dev
+		Where=/run/sysroot.ovl" | awk '{$1=$1}1' > "${GENERATOR_DIR}/run-sysroot.ovl.mount"
+
+		mkdir ${GENERATOR_DIR}/systemd-fsck@${devescape}.d
+
+            	echo "[Unit]
+            	After=ignition-disks.service" > ${GENERATOR_DIR}/systemd-fsck@${devescape}.d/after-ignition-disks.conf
+	fi
+	
+	echo "[Unit]
+	After=run-sysroot.ovl.mount
+	After=ignition-disks.service
+	Before=sysroot.mount
+	DefaultDependencies=false
+
+	[Service]
+	Type=oneshot
+	User=root
+	Group=root
+	ExecStart=/bin/mkdir -p /run/sysroot.ovl/upper /run/sysroot.ovl/work" | awk '{$1=$1}1' > "${GENERATOR_DIR}/create-mountpoints.service"
+	
+	echo "[Unit]
+	Before=initrd-root-fs.target
+	After=run-rootfs.mount
+	After=ignition-disks.service
+	After=create-mountpoints.service
+	DefaultDependencies=false
+	Description=sysroot.mount
+	[Mount]
+	What=ovl_sysroot
+	Where=/sysroot
+	Type=overlay
+	Options=lowerdir=/run/rootfs,upperdir=/run/sysroot.ovl/upper,workdir=/run/sysroot.ovl/work" | awk '{$1=$1}1' > "${GENERATOR_DIR}/sysroot.mount"
+
+	mkdir -p "$GENERATOR_DIR"/initrd-root-fs.target.requires
+	ln -s ../sysroot.mount "$GENERATOR_DIR"/initrd-root-fs.target.requires/sysroot.mount
+	if [[ "$dev" != tmpfs ]]; then	
+		ln -s ../run-sysroot.ovl.mount "$GENERATOR_DIR"/initrd-root-fs.target.requires/run-sysroot.ovl.mount
+	fi
+	ln -s ../create-mountpoints.service "$GENERATOR_DIR"/initrd-root-fs.target.requires/create-mountpoints.service
+
+	exit 0
+fi
 
 while read -r line; do
 	what=$(echo "$line" | awk '{ print $1}')
@@ -58,6 +115,6 @@ while read -r line; do
 
 	mkdir -p "$GENERATOR_DIR"/initrd-root-fs.target.requires
 	ln -s ../$unit $GENERATOR_DIR/initrd-root-fs.target.requires/$unit
-	done < /tmp/overlay.conf
+done < /tmp/overlay.conf
 
 exit 0

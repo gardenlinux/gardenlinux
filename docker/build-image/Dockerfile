@@ -12,7 +12,7 @@ RUN	apt-get update \
      &&	apt-get install -y --no-install-recommends \
 		debian-ports-archive-keyring \
 		debootstrap patch \
-		wget ca-certificates \
+		wget ca-certificates gettext-base \
 		dosfstools squashfs-tools e2fsprogs \
 		fdisk mount gnupg xz-utils \
 		\

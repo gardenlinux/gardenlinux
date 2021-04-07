@@ -6,12 +6,10 @@ set -euo pipefail
 sudo apt-get build-dep -y --no-install-recommends $src
 apt-get source $src
 
-sudo apt-get remove -y --purge libcanberra-dev
 cd $src-*/
-patch -p1 < $srcDir/canberra.patch
-dch -i 'remove sound libraries'
+dch -i 'new upstream version'
 dch -r ''
 
 donotmove="$(ls ..)"
-DEB_BUILD_OPTIONS=nocheck debuild
+debuild
 move_package .. $donotmove

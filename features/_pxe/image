@@ -9,9 +9,10 @@ targetBaseDir=$(dirname "$targetBase")
 # extract kernel image and initramfs
 cp "$rootfs/boot/"vmlinuz* "$targetBase.vmlinuz"
 cp "$rootfs/boot/"initrd* "$targetBase.initrd"
+chmod 644 $targetBase.initrd
 
 # create the squashfs to include the fully generate image, excluding /boot of course as it's not needed
-mksquashfs "$rootfs" "$targetBaseDir/root.squashfs" -e boot -comp xz
+mksquashfs "$rootfs" "$targetBaseDir/root.squashfs" -comp lzo
 
 (cd "$targetBaseDir"; sha256sum root.squashfs | awk '{ print $1 }' > root.squashfs.sha256sum)
 

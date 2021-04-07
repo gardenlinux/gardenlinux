@@ -22,13 +22,13 @@ archive="${1:-debian}"
 t="$(date --date "$timestamp" '+%Y%m%dT%H%M%SZ')"
 
 # use caching proxy to avoid throttling, if available
-if wget -t1 -qO/dev/null http://localhost/archive/debian/; then
+if wget -t1 -qO/dev/null http://localhost/archive/$archive/; then
 	echo "http://localhost/archive/$archive/$t"
-elif wget -t1 -qO/dev/null http://172.17.0.1/archive/debian/; then	
+elif wget -t1 -qO/dev/null http://172.17.0.1/archive/$archive/; then
 	echo "http://172.17.0.1/archive/$archive/$t"
-elif wget -t1 -qO/dev/null http://45.86.152.1/gardenlinux/archive/debian/; then
-	echo "http://45.86.152.1/gardenlinux/archive/$archive/$t"
-elif wget -t1 -qO/dev/null https://snapshot-cache.ci.gardener.cloud/archive/debian/; then
+elif wget -t1 -qO/dev/null http://192.168.10.1/gardenlinux/archive/$archive/; then
+	echo "http://192.168.10.1/gardenlinux/archive/$archive/$t"
+elif wget -t1 -qO/dev/null https://snapshot-cache.ci.gardener.cloud/archive/$archive/; then
 	echo "https://snapshot-cache.ci.gardener.cloud/archive/$archive/$t"
 else
 	echo "https://snapshot.debian.org/archive/$archive/$t"

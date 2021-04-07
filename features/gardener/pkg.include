@@ -10,5 +10,6 @@ logrotate
 arptables
 ebtables
 xfsprogs
+btrfs-progs
 jq
 ipvsadm
