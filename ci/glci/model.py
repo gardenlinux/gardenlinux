@@ -505,6 +505,7 @@ class AzurePublishCfg:
     plan_id: str
     service_principal_cfg_name: str
     storage_account_cfg_name: str
+    notification_emails: typing.List[str]
 
 
 @dataclasses.dataclass(frozen=True)

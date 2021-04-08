@@ -188,6 +188,7 @@ def _publish_azure_image(release: glci.model.OnlineReleaseManifest,
         storage_account_cfg=storage_account_cfg_serialized,
         marketplace_cfg=azure_marketplace_cfg,
         release=release,
+        notification_emails=cicd_cfg.publish.azure.notification_emails,
     )
 
 
