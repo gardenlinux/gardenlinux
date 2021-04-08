@@ -33,9 +33,15 @@ run_in_chroot() {
 		cp "${thisDir}"/$dep "$rootfsDir/tmp/"
 	done
 
-	export rootfsDir script
+	mnts="dev proc sys"
+	set +u
+	if [ ! -z "$SKIPDEV" ]; then
+		mnts="proc sys"	
+	fi
+	set -u
+	export rootfsDir script mnts
 	if out=$(unshare --mount bash -Eeuo pipefail -c '
-	for dir in dev proc sys; do
+	for dir in $mnts; do
 		if [ -e "$rootfsDir/$dir" ]; then
 			# --debian-eol woody and below have no /sys
 			mount --rbind "/$dir" "$rootfsDir/$dir"
