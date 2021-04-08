@@ -1,5 +1,5 @@
 # Azure images require waagent
-waagent
+#waagent
 # debootstrap does not pull python3-cffi-backend
 #python3-cffi-backend
 #

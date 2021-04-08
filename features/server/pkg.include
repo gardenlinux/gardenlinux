@@ -27,6 +27,7 @@ less
 tcpdump
 vim-tiny
 quota
+netcat
 main/i/iproute2/iproute2_5.10.0-4.1_${arch}.deb
 main/p/pam/libpam-runtime_1.4.0-6.1_all.deb
 main/p/pam/libpam-modules-bin_1.4.0-6.1_${arch}.deb
