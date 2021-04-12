@@ -65,7 +65,7 @@ def publish_image(
     elif release.platform == 'azure':
         publish_function = _publish_azure_image
         cleanup_function = None
-    elif False and release.platform == 'openstack': # disable openstack for now
+    elif release.platform == 'openstack':
         publish_function = _publish_openstack_image
         cleanup_function = None
     elif release.platform == 'oci':
