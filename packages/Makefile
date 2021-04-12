@@ -13,7 +13,7 @@ all: pipeline
 
 .PHONY: sign
 sign:
-	make --directory=../cert 
+	make --directory=../cert
 
 .PHONY: docker
 docker:
@@ -23,8 +23,8 @@ docker:
 docker-kernel:
 	make --directory=../docker $$(basename $(BUILDKERNEL))
 
-#--volume $(MANUALDIR)/../quiltrc:/home/dev/.quiltrc 
-.PHONY: manual 
+#--volume $(MANUALDIR)/../quiltrc:/home/dev/.quiltrc
+.PHONY: manual
 manual: docker sign
 	docker run --rm -ti \
 		--volume $(POOLDIR):/pool \
