@@ -28,6 +28,10 @@ elif wget -t1 -qO/dev/null http://172.17.0.1/archive/$archive/; then
 	echo "http://172.17.0.1/archive/$archive/$t"
 elif wget -t1 -qO/dev/null http://192.168.10.1/gardenlinux/archive/$archive/; then
 	echo "http://192.168.10.1/gardenlinux/archive/$archive/$t"
+#elif wget -t1 -qO/dev/null http://repo.gardenlinux.io/gardenlinux/archive/$archive/; then
+#	echo "http://repo.gardenlinux.io/gardenlinux/archive/$archive/$t"
+elif wget -t1 -qO/dev/null http://45.86.152.1/gardenlinux/archive/$archive/; then
+	echo "http://45.86.152.1/gardenlinux/archive/$archive/$t"
 elif wget -t1 -qO/dev/null https://snapshot-cache.ci.gardener.cloud/archive/$archive/; then
 	echo "https://snapshot-cache.ci.gardener.cloud/archive/$archive/$t"
 else
