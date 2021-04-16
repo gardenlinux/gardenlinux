@@ -213,8 +213,8 @@ fi
 	fi
 ' -- "$include_bootstrap"
 
+tmp=$(mktemp -d -p $targetDir)
 if [ "${include_wget}" != "" ]; then
-	tmp=$(mktemp -d -p $targetDir)
 	wget -P$tmp $include_wget
 fi
 set -x
