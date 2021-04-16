@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -x
+
+makef.sh --read-only-usr --grub-target bios --force $2 $2.tar.xz
+qemu-img convert -o subformat=streamOptimized -o adapter_type=lsilogic -f raw -O vmdk $2.raw $2.vmdk
+make-ova --vmoperator --vmdk $2.vmdk --guest-id debian10_64Guest --template "${REPO_ROOT}/templates/vmware.ovf.template"

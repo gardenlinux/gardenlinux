@@ -130,6 +130,13 @@ class OVAImageBuild:
             help='OVF template file path (see ../templates for examples)',
             required=True
         )
+        parser.add_argument(
+            "--vmoperator",
+            default=False,
+            action='store_true',
+            dest='vmoperator',
+            help='workaround for vmoperator',
+        )
 
     @classmethod
     def _main(cls):
@@ -147,6 +154,11 @@ class OVAImageBuild:
         PROPERTIES["osDefinition"] = GUEST_OS[args.guest_id]["definition"]
         PROPERTIES["osDescription"] = GUEST_OS[args.guest_id]["description"]
         PROPERTIES["applianceHostname"] = GUEST_OS[args.guest_id]["hostname"]
+        if args.vmoperator:
+            PROPERTIES["extraConfig"] = '<vmw:ExtraConfig ovf:required="false" vmw:key="guestinfo.vmservice.defer-cloud-init" vmw:value="ready"/>'
+        else:
+            PROPERTIES["extraConfig"] = ''
+
         oVAImageBuild = cls()
         oVAImageBuild.run(template=args.template)
 

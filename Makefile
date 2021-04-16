@@ -100,6 +100,10 @@ VMWARE_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-vmware-dev-$(VERSION)
 vmware-dev: docker cert/sign.pub
 	./build.sh --no-build --features server,cloud,gardener,vmware,_dev $(BUILDDIR)/vmware-dev $(VERSION)
 
+VMWARE_VMOPERATOR_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-vmware-vmoperator-dev-$(VERSION)
+vmware-vmoperator-dev: docker cert/sign.pub
+	./build.sh --no-build --features server,cloud,gardener,vmware-vmoperator,_dev $(BUILDDIR)/vmware-vmoperator-dev $(VERSION)
+
 vmware: docker cert/sign.pub
 	./build.sh --no-build --features server,cloud,gardener,vmware $(BUILDDIR)/vmware $(VERSION)
 

@@ -1,0 +1,20 @@
+#!/bin/sh
+set -e
+
+# Arguments from systemd
+SYSTEMD_NORMAL_D=$1
+SYSTEMD_EARLY_D=$2
+SYSTEMD_LATE_D=$3
+GUESTINFO_KEY="guestinfo.vmservice.defer-cloud-init"
+ENABLED_VAL="enabled"
+DONE_VAL="done"
+
+# Ensure vmware-rpctool
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin:$PATH
+command -v vmware-rpctool >/dev/null 2>&1 || return 1
+GUESTINFO_VAL=$(vmware-rpctool "info-get $GUESTINFO_KEY" 2>&1)
+
+if [ "$GUESTINFO_VAL" = "$ENABLED_VAL" ]; then
+    # Set flag to done, so we don't run again
+    vmware-rpctool "info-set $GUESTINFO_KEY $DONE_VAL"
+fi

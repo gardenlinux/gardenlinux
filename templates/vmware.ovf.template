@@ -173,6 +173,7 @@
       <vmw:Config ovf:required="false" vmw:key="tools.beforeGuestStandby" vmw:value="true"/>
       <vmw:Config ovf:required="false" vmw:key="tools.syncTimeWithHost" vmw:value="false"/>
       <vmw:Config ovf:required="false" vmw:key="tools.toolsUpgradePolicy" vmw:value="manual"/>
+      ${p.extraConfig}
     </VirtualHardwareSection>
   </VirtualSystem>
 </Envelope>
