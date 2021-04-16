@@ -6,6 +6,8 @@ AWS_DISTRIBUTE=
 BUILDDIR=.build
 MAINTAINER_EMAIL="contact@gardenlinux.io"
 
+all: all_dev all_prod
+
 cert/sign.pub:
 	make --directory=cert MAINTAINER_EMAIL=$(MAINTAINER_EMAIL)
 	@gpg --list-secret-keys $(MAINTAINER_EMAIL) > /dev/null || echo "No secret key for $(MAINTAINER_EMAIL) exists, signing disabled" 
@@ -14,8 +16,6 @@ cert/sign.pub:
 .PHONY: docker
 docker:
 	make --directory=docker build-image
-
-all: all_dev all_prod
 
 all_prod: ali aws gcp azure openstack vmware kvm
 
