@@ -54,7 +54,7 @@ pipeline: docker sign
 		--env BUILDIMAGE=$(BUILDIMAGE) \
 		--env DEBFULLNAME=$(DEBFULLNAME) \
 		--env DEBEMAIL=$(DEBEMAIL) \
-		$(BUILDIMAGE) make
+		$(BUILDIMAGE) bash -c "gpg --import /sign.pub; make"
 manual-kernel: docker-kernel
 	docker run --rm -ti --volume "$(POOLDIR)":/pool --volume "$(KERNELDIR)":/home/dev/manual \
 	       	--env BUILDTARGET="$(POOLDIR)" \
