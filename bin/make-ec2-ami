@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import re
 import sys
 import subprocess
 import json
@@ -18,6 +19,32 @@ class Ec2ImageBuild:
         self.image_name = image_name
 
     def upload_image(self, region, bucket, image_raw, image_name):
+        print("Checking whether s3 bucket exists")
+        cmd = ["aws", "s3api", "list-buckets", "--output=json" , "--query=Buckets[].Name"]
+        result = subprocess.run(cmd, capture_output=True)
+        if result.returncode != 0:
+            sys.exit("Unable to query s3 buckets: " + str(result.stdout) + " " + str(result.stderr))
+        doc = json.loads(result.stdout)
+        found = False
+        for i in doc:
+          if i == bucket:
+              found = True
+        if found == False:
+            sys.exit("Bucket " + bucket + " does not exist.")
+        print("Bucket " + bucket + " exists.")
+
+        print("Checking bucket location")
+        cmd = ["aws", "s3api", "get-bucket-location", "--bucket=" + bucket, "--output=json"]
+        result = subprocess.run(cmd, capture_output=True)
+        if result.returncode != 0:
+            sys.exit("Unable to query bucket location for bucket " + bucket + ": " + str(result.stdout) + " " + str(result.stderr))
+        doc = json.loads(result.stdout)
+        if doc["LocationConstraint"] != region:
+            sys.exit("Bucket " + bucket + " is location in region " +doc["LocationConstraint"] + " but image shall be imported in region " + region)
+        else:
+            print("Bucket is in chosen region " + region)
+  
+        print("Uploading to " + "s3://" + bucket + "/" + image_name)
         result = subprocess.run(["aws", "--region", region, "s3", "cp", "--no-progress", image_raw, "s3://" + bucket + "/" + image_name], capture_output=True)
 
         if result.returncode != 0:
@@ -35,12 +62,12 @@ class Ec2ImageBuild:
         task_id = doc["ImportTaskId"]
         status = doc["SnapshotTaskDetail"]["Status"]
         print("Creating Snapshot for %s, id: %s, status: %s" % (image_name, task_id, status))
-        time.sleep(60)
+        time.sleep(20)
 
         i = 0
         while i < 80 and status == "active":
             i += 1
-            time.sleep(10)
+            time.sleep(5)
             result = subprocess.run(["aws", "--region", region, "ec2", "describe-import-snapshot-tasks", "--import-task-ids", task_id], capture_output=True)
             if result.returncode != 0:
                 sys.exit("Unable to create snapshot for %s: %s %s" % image_name, result.stdout, result.stderr)
@@ -52,6 +79,31 @@ class Ec2ImageBuild:
         return snapshot_id
 
     def register_image(self, region, snapshot_id, image_name):
+        def max(old, new):
+            if new > old:
+                return new
+            else:
+                return old
+        print("Check whether image with name " + image_name + " does exist.")
+        cmd = ["aws", "--region=" + region, "ec2", "describe-images", "--owner=self", "--output=json"]
+        result = subprocess.run(cmd, capture_output=True)
+        if result.returncode != 0:
+            sys.exit("Unable to read images for for region: %s %s" % (result.stdout, result.stderr))
+        doc = json.loads(result.stdout)
+        idx = 0
+        for val in doc["Images"]:
+            name = val["Name"]
+            if name.startswith(image_name):
+                if name == image_name:
+                    idx = max(idx, 1)
+                else:
+                    m = re.search(r'-(\d+)$',name)
+                    if m:
+                        idx = max(int(m.group(1))+1, idx)
+
+        if idx != 0:
+            image_name = image_name + "-" + str(idx)
+
         print("Registering image for snapshot " + snapshot_id)
         result = subprocess.run(["aws", "--region", region, "ec2", "register-image",
             "--name", image_name,
