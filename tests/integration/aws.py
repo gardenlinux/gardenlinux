@@ -143,7 +143,7 @@ class AWS:
                         "IpProtocol": "tcp",
                         "FromPort": 22,
                         "ToPort": 22,
-                        "IpRanges": [{"CidrIp": "0.0.0.0/0"}],
+                        "IpRanges": [{"CidrIp": "0.0.0.0/1"}, {"CidrIp": "128.0.0.0/1"}],
                     }
                 ],
             )
