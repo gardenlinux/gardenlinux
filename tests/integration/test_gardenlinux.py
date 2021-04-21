@@ -106,7 +106,7 @@ def test_ping4(client, ping4_host):
 def ping6_host(request):
     return request.param
 
-
+@pytest.mark.skip(reason="ipv6 not available in all vpcs")
 def test_ping6(client, ping6_host):
     command = f"ping6 -c 5 -W 5 {ping6_host}"
     (exit_code, output, error) = client.execute_command(command)
