@@ -21,6 +21,9 @@ build: needslim
 build-deb: build
 	@docker build -t gardenlinux/build-deb $(ALTNAME_INTERNAL) build-deb
 
+.PHONY: cloud-upload
+cloud-upload:
+	@docker build -t gardenlinux/cloud-upload cloud-upload
 .PHONY: clean
 clean:
 	-@[ -n "$$(docker image ls gardenlinux/build-image --format "{{.ID}}")" ] && docker image rm --force $$(docker image ls gardenlinux/build-image --format "{{.Repository}}:{{.Tag}}"); true

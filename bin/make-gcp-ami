@@ -23,9 +23,9 @@ class GcpImageBuild:
 
     def upload_image(self, bucket, raw_image_path, image_name):
         bucket_image = "gs://" + bucket + "/" + image_name + ".tar.gz"
-        result = subprocess.run(["gsutil", "-q", "stat", bucket_image], capture_output=True)
-        if result.returncode == 0:
-            sys.exit("Image " + bucket_image + " already exists.")
+        #result = subprocess.run(["gsutil", "-q", "stat", bucket_image], capture_output=True)
+        #if result.returncode == 0:
+        #    sys.exit("Image " + bucket_image + " already exists.")
 
         print ("Uploading %s to %s" % (raw_image_path, bucket_image))
         result = subprocess.run(["gsutil", "cp", raw_image_path, bucket_image], capture_output=True)
@@ -34,11 +34,13 @@ class GcpImageBuild:
             sys.exit("Unable to upload image " + raw_image_path + ": " + str(result.stdout) + " " + str(result.stderr))
 
     def create_image(self, bucket, image_name):
-        result = subprocess.run(["gcloud", " compute", "images", "describe", image_name], capture_output=True)
+        # sanitze image name, names must match '(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)'
+        gcp_image_name = image_name.replace(".", "-")
+        result = subprocess.run(["gcloud", " compute", "images", "describe", gcp_image_name], capture_output=True)
         if result.returncode == 0:
             sys.exit("Image " + image + " does already exist.")
         bucket_image = "gs://" + bucket + "/" + image_name + ".tar.gz"
-        result = subprocess.run(["gcloud", "compute", "images", "create", image_name,
+        result = subprocess.run(["gcloud", "compute", "images", "create", gcp_image_name,
             "--source-uri", bucket_image ],
             capture_output=True)
         if result.returncode != 0:
