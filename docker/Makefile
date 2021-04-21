@@ -21,8 +21,8 @@ build: needslim
 build-deb: build
 	@docker build -t gardenlinux/build-deb $(ALTNAME_INTERNAL) build-deb
 
-.PHONY: integration-test
-integration-test:
+.PHONY: build-integration-test
+build-integration-test:
 	@docker build -t gardenlinux/integration-test:$(VERSION) integration-test
 
 .PHONY: clean

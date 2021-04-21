@@ -7,20 +7,28 @@ import sys
 import subprocess
 import json
 import time
+import logging
 
 class Ec2ImageBuild:
-
-    def __init__(self, bucket, region, raw_image, image_name, permission=False, distribute=False):
+    def __init__(self, bucket, region, raw_image, image_name, permission=False, distribute=False, debug=False):
         self.bucket = bucket
         self.region = region
         self.permission = permission
         self.distribute = distribute
         self.raw_image = raw_image
         self.image_name = image_name
+        self.debug = debug
+        if debug:
+            logging.basicConfig(level=logging.DEBUG)
+        else:
+            logging.basicConfig(level=logging.INFO)
+
+    def aws_command_prefix(self):
+        return ["aws", "--region", self.region, "--output", "json"]
 
     def upload_image(self, region, bucket, image_raw, image_name):
         print("Checking whether s3 bucket exists")
-        cmd = ["aws", "s3api", "list-buckets", "--output=json" , "--query=Buckets[].Name"]
+        cmd = self.aws_command_prefix() + [ "s3api", "list-buckets", "--query=Buckets[].Name"]
         result = subprocess.run(cmd, capture_output=True)
         if result.returncode != 0:
             sys.exit("Unable to query s3 buckets: " + str(result.stdout) + " " + str(result.stderr))
@@ -52,29 +60,41 @@ class Ec2ImageBuild:
         print(result.stdout)
 
     def import_snapshot(self, region, bucket, image_name):
+        """A role is required for the import_snapshot operation to succeed, see
+           https://docs.aws.amazon.com/snowball/latest/developer-guide/ec2-ami-import-cli.html"""
 
         container_string = ("Description=gardenlinux,Format=raw,UserBucket={S3Bucket=%s,S3Key=%s}" % (bucket, image_name))
         result = subprocess.run(["aws", "--region", region, "ec2", "import-snapshot", "--disk-container", container_string], capture_output= True)
         if result.returncode != 0:
             sys.exit("Unable to create snapshot for " + image_name + ": " + str(result.stderr))
-
+        if self.debug:
+            logging.debug("Result of import-snapshot operation: %s" % result.stdout)
         doc = json.loads(result.stdout)
-        task_id = doc["ImportTaskId"]
+        import_task_id = doc["ImportTaskId"]
         status = doc["SnapshotTaskDetail"]["Status"]
-        print("Creating Snapshot for %s, id: %s, status: %s" % (image_name, task_id, status))
-        time.sleep(20)
+        logging.info("Creating Snapshot for %s, import_task_id: %s, status: %s" % (image_name, import_task_id, status))
+        snapshot_id = ""
 
         i = 0
         while i < 80 and status == "active":
             i += 1
-            time.sleep(5)
-            result = subprocess.run(["aws", "--region", region, "ec2", "describe-import-snapshot-tasks", "--import-task-ids", task_id], capture_output=True)
+            result = subprocess.run(self.aws_command_prefix() + ["ec2", "describe-import-snapshot-tasks", "--import-task-ids", import_task_id], capture_output=True)
             if result.returncode != 0:
-                sys.exit("Unable to create snapshot for %s: %s %s" % image_name, result.stdout, result.stderr)
+                sys.exit("Unable to describe snapshot task %s for image %s: %s, %s" % (import_task_id, image_name, result.stdout, result.stderr))
             doc = json.loads(result.stdout)
+            if self.debug:
+                logging.debug("Result of describe-import-snapshot-tasks: %s" % result.stdout)
             status = doc["ImportSnapshotTasks"][0]["SnapshotTaskDetail"]["Status"]
+            if status=="deleted":
+                if "StatusMessage" in doc["ImportSnapshotTasks"][0]["SnapshotTaskDetail"]:
+                    sys.exit("Snapshot creation failed with %s" % doc["ImportSnapshotTasks"][0]["SnapshotTaskDetail"]["StatusMessage"])
+                else:
+                    sys.exit("Snapshot creation failed with no message")
             if "SnapshotId" in doc["ImportSnapshotTasks"][0]["SnapshotTaskDetail"]:
                 snapshot_id = doc["ImportSnapshotTasks"][0]["SnapshotTaskDetail"]["SnapshotId"]
+            time.sleep(5)
+        if snapshot_id == "":
+            sys.exit("No snapshot_id which means most likely that no snapshot has been created")
         print("Snapshot id %s" % snapshot_id)
         return snapshot_id
 
@@ -203,6 +223,11 @@ class Ec2ImageBuild:
             type=str,
             help="RAW image file"
         )
+        parser.add_argument(
+            '--debug',
+            action='store_true',
+            help="debug"
+        )
 
     @classmethod
     def _main(cls):
@@ -210,7 +235,7 @@ class Ec2ImageBuild:
         cls._argparse_register(parser)
         args = parser.parse_args()
 
-        ec2_img_build = cls(region=args.region, bucket=args.bucket, raw_image=args.raw_image, image_name=args.image_name, permission=args.permission_public, distribute=args.distribute)
+        ec2_img_build = cls(region=args.region, bucket=args.bucket, raw_image=args.raw_image, image_name=args.image_name, permission=args.permission_public, distribute=args.distribute, debug=args.debug)
         ec2_img_build.run()
 
 if __name__ == '__main__':

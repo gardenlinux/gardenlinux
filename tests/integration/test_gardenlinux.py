@@ -16,10 +16,11 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="module")
-def config():
+def config(configFile):
     try:
         root = Path(os.path.dirname(os.path.abspath(__file__))).parent
-        path = root.joinpath("test_config.yaml")
+        logger.error(configFile)
+        path = root.joinpath(configFile)
         with open(path) as f:
             options = yaml.load(f, Loader=yaml.FullLoader)
     except OSError as e:
