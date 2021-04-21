@@ -1,14 +1,12 @@
-#FROM 	gcr.io/kaniko-project/executor:latest as kaniko
-
+ARG build_base_image=gardenlinux/slim
 FROM	golang:latest as golang
 RUN	go get -u golang.org/x/lint/golint \
      &&	git clone https://github.com/microsoft/azure-vhd-utils.git \
      &&	cd azure-vhd-utils \
      &&	make
 
-FROM 	gardenlinux/slim
-ARG	DEBIAN_FRONTEND=noninteractive
-ARG	VERSION
+FROM 	$build_base_image
+ENV	DEBIAN_FRONTEND noninteractive
 RUN	apt-get update \
      &&	apt-get install -y --no-install-recommends \
 		debian-ports-archive-keyring \
@@ -26,7 +24,7 @@ RUN	apt-get update \
      &&	rm -rf /var/lib/apt/lists/*
 
 ENV	PATH=${PATH}:/opt/gardenlinux/bin
-#COPY	--from=kaniko /kaniko/executor /usr/local/bin/executor
+COPY	--from=gcr.io/kaniko-project/executor:latest /kaniko/executor /usr/local/bin/executor
 COPY	--from=golang /go/azure-vhd-utils/azure-vhd-utils /usr/local/bin/azure-vhd-utils
 COPY	debootstrap.patch /tmp/debootstrap.patch
 RUN	patch -p1 < /tmp/debootstrap.patch \
