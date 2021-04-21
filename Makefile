@@ -55,21 +55,21 @@ gcp: docker cert/sign.pub
 	./build.sh --no-build --features server,cloud,gardener,gcp $(BUILDDIR)/gcp $(VERSION)
 
 gcp-upload:
-	./bin/make-gcp-ami --bucket gardenlinux-images --image-name $(GCP_IMAGE_NAME) --raw-image-path $(BUILDDIR)/gcp/$(SNAPSHOT_DATE)/rootfs-gcpimage.tar.gz --permission-public "$(PUBLIC)"
+	./bin/make-gcp-ami --bucket garden-linux-test --image-name $(GCP_IMAGE_NAME) --raw-image-path $(BUILDDIR)/gcp/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs-gcpimage.tar.gz --permission-public "$(PUBLIC)"
 
 GCP_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-dev-gcp-$(VERSION)
 gcp-dev: docker cert/sign.pub
 	./build.sh --no-build --features server,cloud,gardener,gcp,_dev $(BUILDDIR)/gcp-dev $(VERSION)
 
 gcp-dev-upload:
-	./bin/make-gcp-ami --bucket garden-linux-test --image-name $(GCP_DEV_IMAGE_NAME) --raw-image-path $(BUILDDIR)/gcp-dev/$(SNAPSHOT_DATE)/rootfs-gcpimage.tar.gz --permission-public "$(PUBLIC)"
+	./bin/make-gcp-ami --bucket garden-linux-test --image-name $(GCP_DEV_IMAGE_NAME) --raw-image-path $(BUILDDIR)/gcp-dev/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs-gcpimage.tar.gz --permission-public "$(PUBLIC)"
 
 AZURE_IMAGE_NAME=$(IMAGE_BASENAME)-az-$(VERSION)
 azure: docker cert/sign.pub
 	./build.sh --no-build --features server,cloud,gardener,azure $(BUILDDIR)/azure $(VERSION)
 
 azure-upload:
-	./bin/make-azure-ami --resource-group garden-linux --storage-account-name gardenlinux --image-path=$(BUILDDIR)/azure/$(SNAPSHOT_DATE)/rootfs.vhd --image-name=$(AZURE_IMAGE_NAME)
+	./bin/make-azure-ami --resource-group garden-linux --storage-account-name gardenlinux --image-path=$(BUILDDIR)/azure/$(SNAPSHOT_DATE)/amd64/bullseye/rootfs.vhd --image-name=$(AZURE_IMAGE_NAME)
 
 AZURE_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-dev-az-$(VERSION)
 azure-dev: docker cert/sign.pub
