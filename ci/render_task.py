@@ -136,14 +136,14 @@ def main():
             }
         })
 
-    # Set a custom string representer so that script tags are rendered as 
-    # | block style 
+    # Set a custom string representer so that script tags are rendered as
+    # | block style
     # This should do the trick but add_representer has noeffect on safe dumper
     # yaml.add_representer(str, multiline_str_presenter)
     yaml.representer.SafeRepresenter.add_representer(str, multiline_str_presenter)
 
     with open(parsed.outfile, 'w') as f:
-        yaml.safe_dump_all((raw_build_task, raw_promote_task), f)
+        yaml.safe_dump_all(raw_build_task, raw_promote_task, f)
 
     print(f'dumped tasks to {parsed.outfile}')
 
