@@ -169,12 +169,12 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 	[ -z "${ports:-}" ] || sourcesListArgs+=( --ports )
 
 	#Brand it
-	sed -i "s/^PRETTY_NAME=.*$/PRETTY_NAME=\"Garden Linux $(garden-version)\"/g" rootfs/etc/os-release
+	sed -i "s/^PRETTY_NAME=.*$/PRETTY_NAME=\"Garden Linux 318.4\"/g" rootfs/etc/os-release
 	sed -i "s/^HOME_URL=.*$/HOME_URL=\"https:\/\/gardenlinux.io\/\"/g" rootfs/etc/os-release
 	sed -i "s/^SUPPORT_URL=.*$/SUPPORT_URL=\"https:\/\/github.com\/gardenlinux\/gardenlinux\"/g" rootfs/etc/os-release
 	sed -i "s/^BUG_REPORT_URL=.*$/BUG_REPORT_URL=\"https:\/\/github.com\/gardenlinux\/gardenlinux\/issues\"/g" rootfs/etc/os-release
 	echo "GARDENLINUX_FEATURES=base,$features" >> rootfs/etc/os-release
-	echo "GARDENLINUX_VERSION=$($debuerreotypeScriptsDir/garden-version)" >> rootfs/etc/os-release
+	echo "GARDENLINUX_VERSION=318.4" >> rootfs/etc/os-release
 	echo "GARDENLINUX_COMMIT_ID=$commitid" >> rootfs/etc/os-release
 	echo "VERSION_CODENAME=$suite" >> rootfs/etc/os-release
 
