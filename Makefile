@@ -69,7 +69,7 @@ azure: docker cert/sign.pub
 	./build.sh --no-build --features server,cloud,gardener,azure $(BUILDDIR)/azure $(VERSION)
 
 azure-upload:
-	./bin/make-azure-ami --resource-group garden-linux --storage-account-name gardenlinux --image-path=$(BUILDDIR)/azure/$(SNAPSHOT_DATE)/rootfs.vhd --image-name=$(AZURE_IMAGE_NAME)
+	./bin/make-azure-ami --resource-group garden-linux --storage-account-name gardenlinuxdev --image-path=$(BUILDDIR)/azure/$(SNAPSHOT_DATE)/rootfs.vhd --image-name=$(AZURE_IMAGE_NAME)
 
 AZURE_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-dev-az-$(VERSION)
 azure-dev: docker cert/sign.pub
