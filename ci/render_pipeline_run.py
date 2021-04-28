@@ -2,6 +2,8 @@
 
 import argparse
 import dataclasses
+import os
+import subprocess
 import typing
 import yaml
 
@@ -32,9 +34,11 @@ def mk_pipeline_run(
     committish: str,
     flavour_set: glci.model.GardenlinuxFlavourSet,
     gardenlinux_epoch: int,
+    git_url: str,
     pipeline_name: str,
     promote_target: glci.model.BuildType,
     publishing_actions: typing.Sequence[glci.model.PublishingAction],
+    oci_path: str,
     version: str,
     node_selector: dict = {},
 ):
@@ -46,6 +50,9 @@ def mk_pipeline_run(
         yield committish[:6]
 
     run_name = '-'.join(mk_pipeline_name())[:60]
+
+    version_label = f'{gardenlinux_epoch}-{committish}'
+    build_image = f'{oci_path}/gardenlinux-build-image:{version_label}'
 
     snapshot_timestamp = glci.model.snapshot_date(gardenlinux_epoch=gardenlinux_epoch)
 
@@ -95,6 +102,22 @@ def mk_pipeline_run(
                     name='publishing_actions',
                     value=','.join((a.value for a in publishing_actions))
                 ),
+                NamedParam(
+                    name='giturl',
+                    value=git_url,
+                ),
+                NamedParam(
+                    name='ocipath',
+                    value=oci_path,
+                ),
+                NamedParam(
+                    name='version_label',
+                    value=version_label,
+                ),
+                NamedParam(
+                    name='build_image',
+                    value=build_image,
+                ),
             ],
             pipelineRef=PipelineRef(
                 name=pipeline_name,
@@ -118,6 +141,8 @@ def main():
     parser.add_argument('--cicd-cfg', default='default')
     parser.add_argument('--pipeline-cfg', default=paths.flavour_cfg_path)
     parser.add_argument('--outfile', default='pipeline_run.yaml')
+    parser.add_argument('--oci-path', default='eu.gcr.io/gardener-project/test/gardenlinux-test')
+    parser.add_argument('--git-url', default='https://github.com/gardenlinux/gardenlinux.git')
     parser.add_argument('--flavour-set', default='all')
     parser.add_argument('--version', default=None)
     parser.add_argument(
@@ -152,6 +177,8 @@ def main():
         committish=parsed.committish,
         flavour_set=flavour_set,
         gardenlinux_epoch=parsed.gardenlinux_epoch,
+        git_url=parsed.git_url,
+        oci_path=parsed.oci_path,
         pipeline_name='gardenlinux-build',
         promote_target=parsed.promote_target,
         publishing_actions=parsed.publishing_actions,
