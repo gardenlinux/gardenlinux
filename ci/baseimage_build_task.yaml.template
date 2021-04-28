@@ -1,0 +1,61 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: task-build-baseimage
+  namespace: gardenlinux
+spec:
+  params:
+  - name: repodir
+    description: Working dir with git repo
+    default: /workspace/gardenlinux_git
+    type: string
+  - name: giturl
+    description: URL to Git repository with gardenlinux
+    default: https://github.com/gardenlinux/gardenlinux.git
+    type: string
+  - name: committish
+    description: commit/branch to clone
+    default: main
+    type: string
+  - name: ocipath
+    description: path in OCI-registry where to store output
+    default: eu.gcr.io/gardener-project/test/gardenlinux-test
+    type: string
+  - name: version_label
+    description: version label uses as tag for upload
+    default: latest
+    type: string
+
+  steps:
+  - name: 'retrieve-repository' # patched-in through render_task.py
+  - name: basebuild
+    image: eu.gcr.io/gardener-project/cc/job-image-kaniko
+    script: |
+      #!/usr/bin/env python3
+
+      import os
+      import subprocess
+      import sys
+
+      sys.path.insert(1,os.path.abspath(os.path.join("$(params.repodir)","ci")))
+      import build_kaniko as builder
+      import oci
+
+      home_dir = os.getcwd()
+      repo_dir = "$(params.repodir)"
+      context_dir = os.path.join(repo_dir, "docker", "build-image")
+      dockerfile_relpath = os.path.join(repo_dir, "docker", "build-image", "Dockerfile")
+      print(f'repo_dir is: {repo_dir}')
+
+      docker_dirs = ['build', 'build-deb', 'build-image']
+      for docker_dir in docker_dirs:
+          dockerfile_relpath = os.path.join(repo_dir, "docker", docker_dir, "Dockerfile")
+          print(f'---Building now {dockerfile_relpath}')
+          builder.build_and_push_kaniko(
+            dockerfile_path = dockerfile_relpath,
+            context_dir = context_dir,
+            image_push_path = f'$(params.ocipath)/gardenlinux-{docker_dir}',
+            image_tag = '$(params.version_label)',
+            additional_tags = ['latest'],
+            build_args = ['build_base_image=debian:testing-slim']
+          )

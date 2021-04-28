@@ -138,5 +138,36 @@ def build_task(
             ],
         ),
     )
+    return task
 
+def base_build_task(
+    namespace: str='gardenlinux',
+):
+    giturl = NamedParam(name='giturl', default='ssh://git@github.com/gardenlinux/gardenlinux')
+    committish = NamedParam(name='committish', default='master')
+    glepoch = NamedParam(name='gardenlinux_epoch')
+    snapshot_ts = NamedParam(name='snapshot_timestamp')
+    repodir = NamedParam(name='repodir', default='/workspace/gardenlinux_git')
+    params = [
+        giturl,
+        committish,
+        glepoch,
+        snapshot_ts,
+        repodir,
+    ]
+
+    clone_step = steps.clone_step(
+        committish=committish,
+        repo_dir=repodir,
+        git_url=giturl,
+    )
+    task = tkn.model.Task(
+        metadata=tkn.model.Metadata(name='base_build-gardenlinux-task', namespace=namespace),
+        spec=tkn.model.TaskSpec(
+            params=params,
+            steps=[
+                clone_step,
+            ],
+        ),
+    )
     return task

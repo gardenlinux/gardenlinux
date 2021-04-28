@@ -57,6 +57,10 @@ spec:
       description: 'the promotion target (snapshots|daily|release)'
       type: 'string'
       default: 'snapshots'
+    - name: 'build_image'
+      description: 'the container image for gardenlinux build (dynamically created)'
+      type: 'string'
+      default: 'xxx_eu.gcr.io/gardener-project/gardenlinux/gardenlinux-build-image:377.0.0'
   steps:
     - name: 'retrieve-repository' # patched-in through render_task.py
     - name: 'pre-build'           # patched-in through render_task.py
@@ -72,7 +76,7 @@ spec:
         capabilities:
           add:
             - 'SYS_ADMIN'
-      image: eu.gcr.io/gardener-project/gardenlinux/gardenlinux-build-image:377.0.0
+      image: $(params.build_image)
       script: |
         #!/usr/bin/env sh
         set -u

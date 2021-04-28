@@ -28,6 +28,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--use-secrets-server', action='store_true')
     parser.add_argument('--outfile', default='tasks.yaml')
+    parser.add_argument('--giturl', default='https://github.com/gardenlinux/gardenlinux')
+    parser.add_argument('--minimal', action='store_true',  help='omit prebuild and promote steps')
 
     parsed = parser.parse_args()
 
@@ -44,6 +46,10 @@ def main():
         env_vars = []
         volume_mounts = []
 
+    base_build_task_yaml_path = os.path.join(paths.own_dir, 'baseimage_build_task.yaml.template')
+    with open(base_build_task_yaml_path) as f:
+        raw_base_build_task = yaml.safe_load(f)
+    
     build_task_yaml_path = os.path.join(paths.own_dir, 'build-task.yaml.template')
     with open(build_task_yaml_path) as f:
         raw_build_task = yaml.safe_load(f)
@@ -126,6 +132,7 @@ def main():
     raw_build_task['spec']['steps'][0] = clone_step_dict
     raw_build_task['spec']['steps'][1] = pre_build_step_dict
     raw_build_task['spec']['steps'][-1] = upload_step_dict
+
     raw_build_task['spec']['steps'].append(promote_step_dict)
     if not parsed.use_secrets_server:
         print(raw_build_task['spec']['volumes'])
@@ -136,8 +143,21 @@ def main():
             }
         })
 
-    # Set a custom string representer so that script tags are rendered as
-    # | block style
+    raw_tasks = [raw_base_build_task, raw_build_task]
+
+    # Take the template and dynamically set steps for build-base-image
+    raw_base_build_task['spec']['steps'][0] = clone_step_dict
+    if not parsed.use_secrets_server:
+        print(raw_base_build_task['spec']['volumes'])
+        raw_base_build_task['spec']['volumes'].append({
+            'name': 'secrets',
+            'secret': {
+                'secretname': 'secrets',
+            }
+        })
+
+    # Set a custom string representer so that script tags are rendered as 
+    # | block style 
     # This should do the trick but add_representer has noeffect on safe dumper
     # yaml.add_representer(str, multiline_str_presenter)
     yaml.representer.SafeRepresenter.add_representer(str, multiline_str_presenter)
