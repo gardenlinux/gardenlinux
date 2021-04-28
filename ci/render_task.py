@@ -14,6 +14,15 @@ import paths
 
 NamedParam = tkn.model.NamedParam
 
+def multiline_str_presenter(dumper, data):
+    try:
+        dlen = len(data.splitlines())
+        if (dlen > 1):
+            return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+    except TypeError as ex:
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+    return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -126,6 +135,12 @@ def main():
                 'secretname': 'secrets',
             }
         })
+
+    # Set a custom string representer so that script tags are rendered as 
+    # | block style 
+    # This should do the trick but add_representer has noeffect on safe dumper
+    # yaml.add_representer(str, multiline_str_presenter)
+    yaml.representer.SafeRepresenter.add_representer(str, multiline_str_presenter)
 
     with open(parsed.outfile, 'w') as f:
         yaml.safe_dump_all((raw_build_task, raw_promote_task), f)
