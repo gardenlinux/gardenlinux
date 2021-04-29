@@ -18,9 +18,9 @@ GENERATOR_DIR="$1"
 
 cat >"${GENERATOR_DIR}/sysroot.mount" <<EOF
 [Unit]
-DefaultDependencies=false
 After=live-get-squashfs.service
 Before=initrd-root-fs.target
+DefaultDependencies=no
 
 [Mount]
 What=/run/root.squashfs
