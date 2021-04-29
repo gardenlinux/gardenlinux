@@ -10,9 +10,9 @@ mkdir -p /run/rootfs
 
 cat >"${GENERATOR_DIR}/run-rootfs.mount" <<EOF
 [Unit]
-DefaultDependencies=false
 After=live-get-squashfs.service
 Before=initrd-root-fs.target
+DefaultDependencies=no
 
 [Mount]
 What=/run/root.squashfs

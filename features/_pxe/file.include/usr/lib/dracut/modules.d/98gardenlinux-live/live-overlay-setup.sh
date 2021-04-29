@@ -32,7 +32,7 @@ if echo "$ovlconf" | grep -q '^/:\|,/:'; then
 		echo "[Unit]
 		Before=sysroot.mount
 		After=ignition-disks.service
-		DefaultDependencies=false
+		DefaultDependencies=no
 		Requires=systemd-fsck@${devescape}
 		After=systemd-fsck@${devescape}
 
@@ -50,7 +50,7 @@ if echo "$ovlconf" | grep -q '^/:\|,/:'; then
 	After=run-sysroot.ovl.mount
 	After=ignition-disks.service
 	Before=sysroot.mount
-	DefaultDependencies=false
+	DefaultDependencies=no
 
 	[Service]
 	Type=oneshot
@@ -63,7 +63,7 @@ if echo "$ovlconf" | grep -q '^/:\|,/:'; then
 	After=run-rootfs.mount
 	After=ignition-disks.service
 	After=create-mountpoints.service
-	DefaultDependencies=false
+	DefaultDependencies=no
 	Description=sysroot.mount
 	[Mount]
 	What=ovl_sysroot

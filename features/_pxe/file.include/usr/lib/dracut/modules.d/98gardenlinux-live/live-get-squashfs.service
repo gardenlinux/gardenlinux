@@ -1,11 +1,12 @@
 [Unit]
 Description=Download squashfs image
 
-After=basic.target network-online.target systemd-resolved.service
+After=network-online.target 
 Wants=network-online.target
 
 OnFailure=emergency.target
 OnFailureJobMode=isolate
+DefaultDependencies=no
 
 [Service]
 Type=oneshot
