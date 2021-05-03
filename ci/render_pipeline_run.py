@@ -36,6 +36,7 @@ def mk_pipeline_run(
     flavour_set: glci.model.GardenlinuxFlavourSet,
     promote_target: glci.model.BuildType,
     publishing_actions: typing.Sequence[glci.model.PublishingAction],
+    node_selector: dict = {},
 ):
     # k8s only allows dns names / leng restriction applies
     def mk_pipeline_name():
@@ -98,11 +99,7 @@ def mk_pipeline_run(
             pipelineRef=PipelineRef(
                 name=pipeline_name,
             ),
-            podTemplate=PodTemplate(
-                nodeSelector={
-                    "worker.garden.sapcloud.io/group": "gl-build"
-                }
-            ),
+            podTemplate=PodTemplate(nodeSelector=node_selector),
             workspaces=[],
         ),
     )
