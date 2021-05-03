@@ -60,10 +60,10 @@ def task_step_script(
 
 def clone_step(
     committish: tkn.model.NamedParam,
-    repo_dir: tkn.model.NamedParam,
     git_url: tkn.model.NamedParam,
-    volume_mounts: typing.List[typing.Dict] = [],
+    repo_dir: tkn.model.NamedParam,
     env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
 ):
     step = tkn.model.TaskStep(
         name='clone-repo-step',
@@ -74,8 +74,8 @@ def clone_step(
             callable='clone_and_copy',
             params=[
                 committish,
-                repo_dir,
                 git_url,
+                repo_dir,
             ],
             repo_path_param=repo_dir,
         ),
@@ -97,8 +97,8 @@ def upload_results_step(
     publishing_actions: tkn.model.NamedParam,
     repo_dir: tkn.model.NamedParam,
     version: tkn.model.NamedParam,
-    volume_mounts: typing.List[typing.Dict] = [],
     env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
 ):
     return tkn.model.TaskStep(
         name='upload-results',
@@ -126,17 +126,17 @@ def upload_results_step(
 
 
 def promote_single_step(
+    architecture: tkn.model.NamedParam,
     cicd_cfg_name: tkn.model.NamedParam,
     committish: tkn.model.NamedParam,
-    architecture: tkn.model.NamedParam,
-    platform: tkn.model.NamedParam,
     gardenlinux_epoch: tkn.model.NamedParam,
     modifiers: tkn.model.NamedParam,
-    version: tkn.model.NamedParam,
+    platform: tkn.model.NamedParam,
     publishing_actions: tkn.model.NamedParam,
     repo_dir: tkn.model.NamedParam,
-    volume_mounts: typing.List[typing.Dict] = [],
+    version: tkn.model.NamedParam,
     env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
 ):
     return tkn.model.TaskStep(
         name='promote-step',
@@ -146,14 +146,14 @@ def promote_single_step(
             script_type=ScriptType.PYTHON3,
             callable='promote_single_step',
             params=[
+                architecture,
                 cicd_cfg_name,
                 committish,
-                architecture,
-                platform,
                 gardenlinux_epoch,
                 modifiers,
-                version,
+                platform,
                 publishing_actions,
+                version,
             ],
             repo_path_param=repo_dir,
         ),
@@ -164,14 +164,14 @@ def promote_single_step(
 
 def promote_step(
     cicd_cfg_name: tkn.model.NamedParam,
-    flavourset: tkn.model.NamedParam,
-    publishing_actions: tkn.model.NamedParam,
-    gardenlinux_epoch: tkn.model.NamedParam,
     committish: tkn.model.NamedParam,
-    version: tkn.model.NamedParam,
+    flavourset: tkn.model.NamedParam,
+    gardenlinux_epoch: tkn.model.NamedParam,
+    publishing_actions: tkn.model.NamedParam,
     repo_dir: tkn.model.NamedParam,
-    volume_mounts: typing.List[typing.Dict] = [],
+    version: tkn.model.NamedParam,
     env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
 ):
     return tkn.model.TaskStep(
         name='finalise-promotion-step',
@@ -182,10 +182,10 @@ def promote_step(
             callable='promote_step',
             params=[
                 cicd_cfg_name,
+                committish,
                 flavourset,
                 gardenlinux_epoch,
                 publishing_actions,
-                committish,
                 version,
             ],
             repo_path_param=repo_dir,
@@ -196,17 +196,17 @@ def promote_step(
 
 
 def pre_build_step(
+    architecture: tkn.model.NamedParam,
     cicd_cfg_name: tkn.model.NamedParam,
     committish: tkn.model.NamedParam,
-    version: tkn.model.NamedParam,
     gardenlinux_epoch: tkn.model.NamedParam,
     modifiers: tkn.model.NamedParam,
-    publishing_actions: tkn.model.NamedParam,
-    architecture: tkn.model.NamedParam,
     platform: tkn.model.NamedParam,
+    publishing_actions: tkn.model.NamedParam,
     repo_dir: tkn.model.NamedParam,
-    volume_mounts: typing.List[typing.Dict] = [],
+    version: tkn.model.NamedParam,
     env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
 ):
     return tkn.model.TaskStep(
         name='prebuild-step',
@@ -216,14 +216,14 @@ def pre_build_step(
             script_type=ScriptType.PYTHON3,
             callable='pre_build_step',
             params=[
+                architecture,
                 cicd_cfg_name,
                 committish,
-                version,
                 gardenlinux_epoch,
                 modifiers,
-                architecture,
                 platform,
                 publishing_actions,
+                version,
             ],
             repo_path_param=repo_dir,
         ),
@@ -233,13 +233,13 @@ def pre_build_step(
 
 
 def release_step(
-    giturl: tkn.model.NamedParam,
     committish: tkn.model.NamedParam,
     gardenlinux_epoch: tkn.model.NamedParam,
+    giturl: tkn.model.NamedParam,
     publishing_actions: tkn.model.NamedParam,
     repo_dir: tkn.model.NamedParam,
-    volume_mounts: typing.List[typing.Dict] = [],
     env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
 ):
     return tkn.model.TaskStep(
         name='release-step',
@@ -249,9 +249,9 @@ def release_step(
             script_type=ScriptType.PYTHON3,
             callable='release_step',
             params=[
-                giturl,
                 committish,
                 gardenlinux_epoch,
+                giturl,
                 publishing_actions,
             ],
             repo_path_param=repo_dir,
@@ -262,14 +262,14 @@ def release_step(
 
 
 def build_image_step(
-    suite: tkn.model.NamedParam,
     gardenlinux_epoch: tkn.model.NamedParam,
-    snapshot_timestamp: tkn.model.NamedParam,
-    platform: tkn.model.NamedParam,
     modifiers: tkn.model.NamedParam,
     outfile: tkn.model.NamedParam,
+    platform: tkn.model.NamedParam,
     repodir: tkn.model.NamedParam,
-    volume_mounts: typing.List[typing.Dict] = [],
+    snapshot_timestamp: tkn.model.NamedParam,
+    suite: tkn.model.NamedParam,
     env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
 ):
     pass

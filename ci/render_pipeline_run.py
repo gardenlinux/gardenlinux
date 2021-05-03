@@ -27,15 +27,15 @@ VolumeClaimTemplateSpec = tkn.model.VolumeClaimTemplateSpec
 
 
 def mk_pipeline_run(
-    pipeline_name: str,
     branch: str,
-    committish: str,
-    gardenlinux_epoch: int,
     cicd_cfg: str,
-    version: str,
+    committish: str,
     flavour_set: glci.model.GardenlinuxFlavourSet,
+    gardenlinux_epoch: int,
+    pipeline_name: str,
     promote_target: glci.model.BuildType,
     publishing_actions: typing.Sequence[glci.model.PublishingAction],
+    version: str,
     node_selector: dict = {},
 ):
     # k8s only allows dns names / leng restriction applies
@@ -147,15 +147,15 @@ def main():
 
     # XXX hardcode pipeline names and flavour for now
     pipeline_run = mk_pipeline_run(
-        pipeline_name='gardenlinux-build',
         branch=parsed.branch,
-        committish=parsed.committish,
-        gardenlinux_epoch=parsed.gardenlinux_epoch,
         cicd_cfg=parsed.cicd_cfg,
+        committish=parsed.committish,
         flavour_set=flavour_set,
-        version=version,
+        gardenlinux_epoch=parsed.gardenlinux_epoch,
+        pipeline_name='gardenlinux-build',
         promote_target=parsed.promote_target,
         publishing_actions=parsed.publishing_actions,
+        version=version,
     )
 
     pipeline_run_dict = dataclasses.asdict(pipeline_run)
