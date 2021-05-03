@@ -21,6 +21,7 @@ class PublishingAction(enum.Enum):
     MANIFESTS = 'manifests'
     IMAGES = 'images'
     RELEASE = 'release'
+    BUILD_ONLY = 'build_only'
 
 
 class FeatureType(enum.Enum):

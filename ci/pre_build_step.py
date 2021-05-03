@@ -1,3 +1,5 @@
+import sys
+
 import ccc.aws
 
 import glci.model
@@ -12,7 +14,17 @@ def pre_build_step(
     gardenlinux_epoch: str,
     architecture: str,
     platform: str,
+    publishing_actions: str,
 ):
+    publishing_actions = [
+        glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
+    ]
+    if glci.model.PublishingAction.BUILD_ONLY in publishing_actions:
+        print(
+            f'publishing action {glci.model.PublishingAction.BUILD_ONLY=} specified - exiting now'
+        )
+        sys.exit(0)
+
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
     aws_cfg_name = cicd_cfg.build.aws_cfg_name
     s3_bucket_name = cicd_cfg.build.s3_bucket_name

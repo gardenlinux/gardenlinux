@@ -64,7 +64,17 @@ def upload_results_step(
     modifiers: str,
     version: str,
     outfile: str,
+    publishing_actions: str,
 ):
+    publishing_actions = [
+        glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
+    ]
+    if glci.model.PublishingAction.BUILD_ONLY in publishing_actions:
+        print(
+            f'publishing action {glci.model.PublishingAction.BUILD_ONLY=} specified - exiting now'
+        )
+        sys.exit(0)
+
     if os.path.isfile('/workspace/skip_build'):
         print('/workspace/skip_build found - skipping upload')
         sys.exit(0)

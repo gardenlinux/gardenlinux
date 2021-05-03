@@ -43,6 +43,7 @@ def main():
         branch=NamedParam(name='branch'),
         committish=NamedParam(name='committish'),
         gardenlinux_epoch=NamedParam(name='gardenlinux_epoch'),
+        publishing_actions=NamedParam(name='publishing_actions'),
         snapshot_timestamp=NamedParam(name='snapshot_timestamp'),
         cicd_cfg_name=NamedParam(name='cicd_cfg_name'),
         version=NamedParam(name='version'),
@@ -73,6 +74,7 @@ def main():
         modifiers=NamedParam(name='modifiers'),
         architecture=NamedParam(name='architecture'),
         platform=NamedParam(name='platform'),
+        publishing_actions=NamedParam(name='publishing_actions'),
         repo_dir=tkn.model.NamedParam(name='repodir'),
         env_vars=env_vars,
         volume_mounts=volume_mounts,
@@ -90,6 +92,7 @@ def main():
         version=NamedParam(name='version'),
         outfile=NamedParam(name='outfile'),
         repo_dir=tkn.model.NamedParam(name='repodir'),
+        publishing_actions=NamedParam(name='publishing_actions'),
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )

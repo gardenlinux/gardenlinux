@@ -96,6 +96,12 @@ def promote_step(
         glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
     ]
 
+    if glci.model.PublishingAction.BUILD_LOCAL in publishing_actions:
+        print(
+            f'publishing action {glci.model.PublishingAction.BUILD_LOCAL=} specified - exiting now'
+        )
+        sys.exit(0)
+
     find_releases = glci.util.preconfigured(
       func=glci.util.find_releases,
       cicd_cfg=cicd_cfg,

@@ -46,5 +46,6 @@ function export_env() {
   # XXX hardcode for now
   export FLAVOUR_SET='all'
   export GARDENLINUX_TKN_WS="${GARDENLINUX_TKN_WS:-gardenlinux}"
+  export PUBLISHING_ACTIONS="${PUBLISHING_ACTIONS:-build_only}"
   export PATH="${PATH}:${bin_dir}"
 }

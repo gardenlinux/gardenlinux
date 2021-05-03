@@ -40,7 +40,7 @@ def mk_pipeline_run(
     # k8s only allows dns names / leng restriction applies
     def mk_pipeline_name():
         yield pipeline_name[:len('gardenlinux')]
-        yield '-'.join((a.value[:6] for a in publishing_actions))
+        yield '-'.join((a.value[:6].replace('_', '-') for a in publishing_actions))
         yield version.replace('.', '-')
         yield committish[:6]
 

@@ -48,8 +48,6 @@ outfile='rendered_pipeline.yaml'
 
 # injected from pipeline_definitions
 PROMOTE_TARGET="${PROMOTE_TARGET:-snapshot}"
-PUBLISHING_ACTIONS="${PUBLISHING_ACTIONS:-manifests}"
-
 if [ ! -z "${VERSION:-}" ]; then
   EXTRA_ARGS="--version=${VERSION}"
 fi
