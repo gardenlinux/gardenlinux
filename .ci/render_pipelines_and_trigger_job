@@ -78,6 +78,9 @@ ci/render_pipelines.py \
 
 if [ ! -z $SECRETS_SERVER_ENDPOINT ]; then
   RENDER_TASK_EXTRA_ARGS="--use-secrets-server"
+else
+  # secrets-server won't be available; create config from local files and put it as
+  # k8s secret into cluster.
   create_credentials
 fi
 
