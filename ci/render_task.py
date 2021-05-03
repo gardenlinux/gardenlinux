@@ -17,9 +17,23 @@ NamedParam = tkn.model.NamedParam
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--use-secrets-server', action='store_true')
     parser.add_argument('--outfile', default='tasks.yaml')
 
     parsed = parser.parse_args()
+
+    if not parsed.use_secrets_server:
+        env_vars = [{
+            'name': 'SECRETS_SERVER_CACHE',
+            'value': '/secrets/config.json',
+        }]
+        volume_mounts = [{
+            'name': 'secrets',
+            'mountPath': '/secrets',
+        }]
+    else:
+        env_vars = []
+        volume_mounts = []
 
     build_task_yaml_path = os.path.join(paths.own_dir, 'build-task.yaml.template')
     with open(build_task_yaml_path) as f:
@@ -32,6 +46,8 @@ def main():
         snapshot_timestamp=NamedParam(name='snapshot_timestamp'),
         cicd_cfg_name=NamedParam(name='cicd_cfg_name'),
         version=NamedParam(name='version'),
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
         promote_target=NamedParam(name='promote_target'),
         publishing_actions=NamedParam(name='publishing_actions'),
         flavourset=NamedParam(name='flavourset'),
@@ -43,6 +59,8 @@ def main():
         committish=tkn.model.NamedParam(name='committish'),
         repo_dir=tkn.model.NamedParam(name='repodir'),
         git_url=tkn.model.NamedParam(name='giturl'),
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
     )
 
     clone_step_dict = dataclasses.asdict(clone_step)
@@ -56,6 +74,8 @@ def main():
         architecture=NamedParam(name='architecture'),
         platform=NamedParam(name='platform'),
         repo_dir=tkn.model.NamedParam(name='repodir'),
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
     )
 
     pre_build_step_dict = dataclasses.asdict(pre_build_step)
@@ -70,6 +90,8 @@ def main():
         version=NamedParam(name='version'),
         outfile=NamedParam(name='outfile'),
         repo_dir=tkn.model.NamedParam(name='repodir'),
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
     )
 
     upload_step_dict = dataclasses.asdict(upload_step)
@@ -85,6 +107,8 @@ def main():
         promote_target=NamedParam(name='promote_target'),
         publishing_actions=NamedParam(name='publishing_actions'),
         repo_dir=tkn.model.NamedParam(name='repodir'),
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
     )
 
     promote_step_dict = dataclasses.asdict(promote_step)
@@ -94,6 +118,14 @@ def main():
     raw_build_task['spec']['steps'][1] = pre_build_step_dict
     raw_build_task['spec']['steps'][-1] = upload_step_dict
     raw_build_task['spec']['steps'].append(promote_step_dict)
+    if not parsed.use_secrets_server:
+        print(raw_build_task['spec']['volumes'])
+        raw_build_task['spec']['volumes'].append({
+            'name': 'secrets',
+            'secret': {
+                'secretname': 'secrets',
+            }
+        })
 
     with open(parsed.outfile, 'w') as f:
         yaml.safe_dump_all((raw_build_task, raw_promote_task), f)

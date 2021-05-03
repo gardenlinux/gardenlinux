@@ -25,6 +25,19 @@ function cleanup_pipelineruns {
     --keep 20
 }
 
+function create_credentials {
+  ci/render_credentials.py \
+    --outfile "${credentials_outfile}"
+
+  if kubectl get secret -n "${GARDENLINUX_TKN_WS}" secrets &> /dev/null; then
+    kubectl delete secret -n "${GARDENLINUX_TKN_WS}" secrets
+  fi
+
+  $(which kubectl) create secret generic secrets \
+    -n "${GARDENLINUX_TKN_WS}" \
+    --from-file=config.json="${credentials_outfile}"
+}
+
 
 echo "render pipelines"
 gardenlinux_dir="${CC_ROOT_DIR}/${GARDENLINUX_PATH}"
@@ -48,6 +61,7 @@ echo "head-commit: ${head_commit}"
 
 pipeline_run="$PWD/pipeline_run.yaml"
 rendered_task="$PWD/rendered_task.yaml"
+credentials_outfile="$PWD/credentials.json"
 
 # create pipeline-run for current commit
 ci/render_pipeline_run.py $EXTRA_ARGS \
@@ -65,8 +79,14 @@ ci/render_pipelines.py \
   --cicd-cfg 'default' \
   --outfile "${outfile}"
 
+if [ ! -z $SECRETS_SERVER_ENDPOINT ]; then
+  RENDER_TASK_EXTRA_ARGS="--use-secrets-server"
+  create_credentials
+fi
+
 ci/render_task.py \
-  --outfile "${rendered_task}"
+  --outfile "${rendered_task}" \
+  ${RENDER_TASK_EXTRA_ARGS}
 
 # XXX hardcode other resources for now
 

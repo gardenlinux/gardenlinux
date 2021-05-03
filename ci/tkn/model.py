@@ -44,11 +44,16 @@ class VolumeMount:
     name: str
 
 
+EnvVar = _NamedParamWithValue
+
+
 @dataclasses.dataclass
 class TaskStep:
     name: str
     image: str
     script: str
+    volumeMounts: typing.List[VolumeMount] = dataclasses.field(default_factory=list)
+    env: typing.List[EnvVar] = dataclasses.field(default_factory=list)
 
 
 @dataclasses.dataclass

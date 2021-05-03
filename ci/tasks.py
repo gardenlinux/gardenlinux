@@ -18,6 +18,8 @@ def promote_task(
     flavourset: NamedParam,
     promote_target: NamedParam,
     publishing_actions: NamedParam,
+    env_vars=[],
+    volume_mounts=[],
     repodir: NamedParam = _repodir,
     giturl: NamedParam = _giturl,
     name='promote-gardenlinux-task',
@@ -27,6 +29,8 @@ def promote_task(
         committish=committish,
         repo_dir=repodir,
         git_url=giturl,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
     )
 
     promote_step = steps.promote_step(
@@ -38,6 +42,8 @@ def promote_task(
         committish=committish,
         version=version,
         repo_dir=repodir,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
     )
 
     release_step = steps.release_step(
@@ -46,6 +52,8 @@ def promote_task(
         gardenlinux_epoch=gardenlinux_epoch,
         publishing_actions=publishing_actions,
         repo_dir=repodir,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
     )
 
     params = [
@@ -77,6 +85,7 @@ def promote_task(
 
 
 def build_task(
+    use_secrets_server: bool,
 ):
     suite = NamedParam(name='suite', default='bullseye')
     arch = NamedParam(name='architecture', default='amd64')
@@ -102,10 +111,25 @@ def build_task(
         outfile,
     ]
 
+    if use_secrets_server:
+        env_vars = [{
+            'name': 'SECRETS_SERVER_CACHE',
+            'value': '/secrets/config.json',
+        }]
+        volume_mounts = [{
+            'name': 'secrets',
+            'mountPath': '/secrets',
+        }]
+    else:
+        env_vars = []
+        volume_mounts = []
+
     clone_step = steps.clone_step(
         committish=committish,
         repo_dir=repodir,
         git_url=giturl,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
     )
 
     task = tkn.model.Task(
