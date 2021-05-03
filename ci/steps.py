@@ -133,7 +133,6 @@ def promote_single_step(
     gardenlinux_epoch: tkn.model.NamedParam,
     modifiers: tkn.model.NamedParam,
     version: tkn.model.NamedParam,
-    promote_target: tkn.model.NamedParam,
     publishing_actions: tkn.model.NamedParam,
     repo_dir: tkn.model.NamedParam,
     volume_mounts: typing.List[typing.Dict] = [],
@@ -154,7 +153,6 @@ def promote_single_step(
                 gardenlinux_epoch,
                 modifiers,
                 version,
-                promote_target,
                 publishing_actions,
             ],
             repo_path_param=repo_dir,
@@ -167,7 +165,6 @@ def promote_single_step(
 def promote_step(
     cicd_cfg_name: tkn.model.NamedParam,
     flavourset: tkn.model.NamedParam,
-    promote_target: tkn.model.NamedParam,
     publishing_actions: tkn.model.NamedParam,
     gardenlinux_epoch: tkn.model.NamedParam,
     committish: tkn.model.NamedParam,
@@ -186,8 +183,6 @@ def promote_step(
             params=[
                 cicd_cfg_name,
                 flavourset,
-                promote_target,
-                publishing_actions,
                 gardenlinux_epoch,
                 publishing_actions,
                 committish,

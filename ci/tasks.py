@@ -16,7 +16,6 @@ def promote_task(
     cicd_cfg_name: NamedParam,
     version: NamedParam,
     flavourset: NamedParam,
-    promote_target: NamedParam,
     publishing_actions: NamedParam,
     env_vars=[],
     volume_mounts=[],
@@ -36,7 +35,6 @@ def promote_task(
     promote_step = steps.promote_step(
         cicd_cfg_name=cicd_cfg_name,
         flavourset=flavourset,
-        promote_target=promote_target,
         publishing_actions=publishing_actions,
         gardenlinux_epoch=gardenlinux_epoch,
         committish=committish,
@@ -65,7 +63,6 @@ def promote_task(
         cicd_cfg_name,
         version,
         flavourset,
-        promote_target,
         publishing_actions,
         repodir,
     ]

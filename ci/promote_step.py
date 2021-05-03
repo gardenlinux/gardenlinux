@@ -15,7 +15,6 @@ def promote_single_step(
     gardenlinux_epoch: parsable_to_int,
     modifiers: str,
     version: str,
-    promote_target: str,
     publishing_actions: str,
 ):
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
@@ -83,7 +82,6 @@ def promote_single_step(
 def promote_step(
     cicd_cfg_name: str,
     flavourset: str,
-    promote_target: str,
     publishing_actions: str,
     gardenlinux_epoch: parsable_to_int,
     committish: str,
@@ -106,8 +104,6 @@ def promote_step(
       func=glci.util.find_releases,
       cicd_cfg=cicd_cfg,
     )
-
-    release_target = promote_target
 
     releases = tuple(
       find_releases(

@@ -83,7 +83,6 @@ def mk_pipeline_promote_task(
             pass_param(name='snapshot_timestamp'),
             pass_param(name='cicd_cfg_name'),
             pass_param(name='version'),
-            pass_param(name='promote_target'),
             pass_param(name='publishing_actions'),
             pass_param(name='flavourset'),
         ],
@@ -93,7 +92,6 @@ def mk_pipeline_promote_task(
 
 def mk_pipeline(
     gardenlinux_flavours: typing.Sequence[GardenlinuxFlavour],
-    cicd_cfg_name: str,
     pipeline_flavour: glci.model.PipelineFlavour = glci.model.PipelineFlavour.SNAPSHOT,
 ):
     gardenlinux_flavours = set(gardenlinux_flavours)  # mk unique
@@ -138,12 +136,10 @@ def mk_pipeline(
 
 def render_pipeline_dict(
     gardenlinux_flavours: typing.Sequence[GardenlinuxFlavour],
-    cicd_cfg_name: str,
 ):
     gardenlinux_flavours = set(gardenlinux_flavours)  # mk unique
     pipeline: dict = mk_pipeline(
         gardenlinux_flavours=gardenlinux_flavours,
-        cicd_cfg_name=cicd_cfg_name,
     )
 
     return pipeline
@@ -158,10 +154,6 @@ def main():
     parser.add_argument(
         '--flavour-set',
         default='all',
-    )
-    parser.add_argument(
-        '--cicd-cfg',
-        default='default',
     )
     parser.add_argument(
         '--outfile',
@@ -181,7 +173,6 @@ def main():
 
     pipeline: dict = render_pipeline_dict(
         gardenlinux_flavours=gardenlinux_flavours,
-        cicd_cfg_name=parsed.cicd_cfg,
     )
 
     with open(outfile, 'w') as f:

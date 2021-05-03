@@ -49,8 +49,6 @@ def main():
         version=NamedParam(name='version'),
         env_vars=env_vars,
         volume_mounts=volume_mounts,
-        promote_target=NamedParam(name='promote_target'),
-        publishing_actions=NamedParam(name='publishing_actions'),
         flavourset=NamedParam(name='flavourset'),
     )
 
@@ -107,7 +105,6 @@ def main():
         gardenlinux_epoch=NamedParam(name='gardenlinux_epoch'),
         modifiers=NamedParam(name='modifiers'),
         version=NamedParam(name='version'),
-        promote_target=NamedParam(name='promote_target'),
         publishing_actions=NamedParam(name='publishing_actions'),
         repo_dir=tkn.model.NamedParam(name='repodir'),
         env_vars=env_vars,

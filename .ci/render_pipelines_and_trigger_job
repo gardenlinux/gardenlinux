@@ -74,7 +74,6 @@ ci/render_pipeline_run.py $EXTRA_ARGS \
 ci/render_pipelines.py \
   --pipeline_cfg "${pipeline_cfg}" \
   --flavour-set "${FLAVOUR_SET}" \
-  --cicd-cfg 'default' \
   --outfile "${outfile}"
 
 if [ ! -z $SECRETS_SERVER_ENDPOINT ]; then
