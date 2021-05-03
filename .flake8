@@ -1,0 +1,5 @@
+[flake8]
+max-line-length = 101
+select = E101,E117,E201,E202,E203,E225,E251,E3,E4,E5,E703,E9,W1,W2,W3,W6,F
+count = True
+format = pylint
