@@ -45,5 +45,6 @@ function export_env() {
   export BRANCH_NAME="${GARDENLINUX_BRANCH}"
   # XXX hardcode for now
   export FLAVOUR_SET='all'
+  export GARDENLINUX_TKN_WS="${GARDENLINUX_TKN_WS:-gardenlinux}"
   export PATH="${PATH}:${bin_dir}"
 }

@@ -36,7 +36,6 @@ class Workspace:
 @dataclasses.dataclass
 class Metadata:
     name: str
-    namespace: str
 
 
 @dataclasses.dataclass

@@ -28,7 +28,6 @@ VolumeClaimTemplateSpec = tkn.model.VolumeClaimTemplateSpec
 
 def mk_pipeline_run(
     pipeline_name: str,
-    namespace: str,
     branch: str,
     committish: str,
     gardenlinux_epoch: int,
@@ -152,7 +151,6 @@ def main():
     # XXX hardcode pipeline names and flavour for now
     pipeline_run = mk_pipeline_run(
         pipeline_name='gardenlinux-build',
-        namespace='gardenlinux',
         branch=parsed.branch,
         committish=parsed.committish,
         gardenlinux_epoch=parsed.gardenlinux_epoch,
