@@ -14,6 +14,7 @@ install_tkn
 # retrieve and configure kubeconfig (sets KUBECONFIG env var)
 kubecfg
 
+# also handles default-values for env-vars
 export_env
 
 function cleanup_pipelineruns {
@@ -47,8 +48,6 @@ cd "${repo_root}"
 pipeline_cfg="${repo_root}/flavours.yaml"
 outfile='rendered_pipeline.yaml'
 
-# injected from pipeline_definitions
-PROMOTE_TARGET="${PROMOTE_TARGET:-snapshot}"
 if [ ! -z "${VERSION:-}" ]; then
   EXTRA_ARGS="--version=${VERSION}"
 fi

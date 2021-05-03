@@ -41,11 +41,10 @@ function kubecfg()  {
 }
 
 function export_env() {
-  export GARDENLINUX_TKN_WS='gardenlinux'
-  export BRANCH_NAME="${GARDENLINUX_BRANCH}"
-  # XXX hardcode for now
-  export FLAVOUR_SET='all'
+  export BRANCH_NAME="${BRANCH_NAME:-main}"
+  export FLAVOUR_SET="${FLAVOUR_SET:-all}"
   export GARDENLINUX_TKN_WS="${GARDENLINUX_TKN_WS:-gardenlinux}"
+  export PROMOTE_TARGET="${PROMOTE_TARGET:-snapshot}"
   export PUBLISHING_ACTIONS="${PUBLISHING_ACTIONS:-build_only}"
   export PATH="${PATH}:${bin_dir}"
 }
