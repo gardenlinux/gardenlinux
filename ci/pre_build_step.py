@@ -37,7 +37,7 @@ def pre_build_step(
       prefix=glci.model.ReleaseManifest.manifest_key_prefix,
     ):
       with open('/workspace/skip_build', 'w') as f:
-        f.write('skip build (already done)')
+          f.write('skip build (already done)')
       print('build already done - telling next step to skip (/workspace/skip_build touched)')
     else:
       print('no matching build results found - will perform build')

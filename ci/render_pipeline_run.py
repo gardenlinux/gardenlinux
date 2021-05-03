@@ -51,12 +51,11 @@ def mk_pipeline_run(
 
     flavour_count = len(list(flavour_set.flavours()))
     if flavour_count == 0:
-        flavour_count = 1 # at least one workspace must be created
+        flavour_count = 1  # at least one workspace must be created
 
     plrun = PipelineRun(
-        metadata=PipelineRunMetadata(
+        metadata=tkn.model.Metadata(
             name=run_name,
-            namespace=namespace,
         ),
         spec=PipelineRunSpec(
             params=[
@@ -70,7 +69,7 @@ def mk_pipeline_run(
                 ),
                 NamedParam(
                     name='gardenlinux_epoch',
-                    value=str(gardenlinux_epoch), # tekton only knows str
+                    value=str(gardenlinux_epoch),  # tekton only knows str
                 ),
                 NamedParam(
                     name='snapshot_timestamp',
@@ -146,10 +145,9 @@ def main():
         build_yaml=parsed.pipeline_cfg,
     )
 
-    if (version:=parsed.version) is None:
+    if (version := parsed.version) is None:
         # if version is not specify, derive from worktree (i.e. VERSION file)
         version = glci.model.next_release_version_from_workingtree()
-
 
     # XXX hardcode pipeline names and flavour for now
     pipeline_run = mk_pipeline_run(

@@ -39,7 +39,6 @@ def main():
 
     raw_promote_task = dataclasses.asdict(promote_task)
 
-
     clone_step = steps.clone_step(
         committish=tkn.model.NamedParam(name='committish'),
         repo_dir=tkn.model.NamedParam(name='repodir'),

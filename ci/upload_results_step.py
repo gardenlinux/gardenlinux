@@ -66,13 +66,13 @@ def upload_results_step(
     outfile: str,
 ):
     if os.path.isfile('/workspace/skip_build'):
-      print('/workspace/skip_build found - skipping upload')
-      sys.exit(0)
+        print('/workspace/skip_build found - skipping upload')
+        sys.exit(0)
 
     build_result_fname = outfile
     if not os.path.isfile(build_result_fname):
-      print('ERROR: no build result - see previous step for errs')
-      sys.exit(1)
+        print('ERROR: no build result - see previous step for errs')
+        sys.exit(1)
 
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
     aws_cfg_name = cicd_cfg.build.aws_cfg_name

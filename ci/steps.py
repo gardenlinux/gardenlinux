@@ -50,7 +50,6 @@ def task_step_script(
         args = ' '.join(param.name for param in params)
         callable_str = 'f{callable} {args}'
 
-
     return '\n'.join((
         shebang,
         preamble,

@@ -34,8 +34,8 @@ class FeatureType(enum.Enum):
     MODIFIER = 'modifier'
 
 
-Platform = str # see `features/*/info.yaml` / platforms() for allowed values
-Modifier = str # see `features/*/info.yaml` / modifiers() for allowed values
+Platform = str  # see `features/*/info.yaml` / platforms() for allowed values
+Modifier = str  # see `features/*/info.yaml` / modifiers() for allowed values
 
 
 @dataclasses.dataclass(frozen=True)

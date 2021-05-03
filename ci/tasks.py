@@ -18,11 +18,12 @@ def promote_task(
     flavourset: NamedParam,
     promote_target: NamedParam,
     publishing_actions: NamedParam,
-    repodir: NamedParam=_repodir,
-    giturl: NamedParam=_giturl,
+    repodir: NamedParam = _repodir,
+    giturl: NamedParam = _giturl,
     name='promote-gardenlinux-task',
     namespace='gardenlinux',
 ):
+
     clone_step = steps.clone_step(
         committish=committish,
         repo_dir=repodir,

@@ -27,5 +27,4 @@ def clone_and_copy(
     commit_hash = repo.head.commit.hexsha
 
     print(f'cloned to {repo_dir=} {commit_hash=}')
-    print('Commit Message:')
-    print(commit_msg)
+    print(f'Commit Message: {commit_msg}')

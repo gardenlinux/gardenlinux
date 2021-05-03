@@ -31,7 +31,7 @@ class AzureImageBuild:
             "--localvhdpath", image_path,
             "--stgaccountname", storage_account_name,
             "--blobname", image_name,
-            "--stgaccountkey", key], 
+            "--stgaccountkey", key],
             capture_output=True)
         if result.returncode != 0:
             sys.exit("Upload of image failed:" + str(result.stdout) + " " + str(result.stderr))
@@ -40,8 +40,8 @@ class AzureImageBuild:
     def disk_create(self, resource_group, storage_account_name, image_name):
         print("Creating disk for image " + image_name)
         source = "https://" + storage_account_name + ".blob.core.windows.net/vhds/" + image_name + ".vhd"
-        result = subprocess.run(["az", "disk", "create", 
-            "-g", resource_group, 
+        result = subprocess.run(["az", "disk", "create",
+            "-g", resource_group,
             "--name", image_name,
             "--source", source],
             capture_output=True)
@@ -54,7 +54,7 @@ class AzureImageBuild:
 
     def image_create(self, resource_group, image_name, disk_id):
         print ("Creating Azure image for disk id " + disk_id)
-        result = subprocess.run(["az", "image", "create", 
+        result = subprocess.run(["az", "image", "create",
             "-g", resource_group,
             "--name", image_name,
             "--source", disk_id,
@@ -109,8 +109,14 @@ class AzureImageBuild:
         args = parser.parse_args()
         print(args)
 
-        azure_img_build = cls(resource_group=args.resource_group, storage_account_name=args.storage_account_name, image_name=args.image_name, image_path=args.image_path)
+        azure_img_build = cls(
+            resource_group=args.resource_group,
+            storage_account_name=args.storage_account_name,
+            image_name=args.image_name,
+            image_path=args.image_path
+        )
         azure_img_build.run()
- 
+
+
 if __name__ == '__main__':
     AzureImageBuild._main()
