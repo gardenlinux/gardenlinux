@@ -43,7 +43,7 @@ def clean_release_manifest_sets(
 
     def purge_if_outdated(release_manifest_set: glci.model.ReleaseManifestSet):
       if len(release_manifest_set.manifests) < 1:
-          print(f'WARNING: {release-manifest-set.s3_key=} did not contain any manifests')
+          print(f'WARNING: {release_manifest_set.s3_key=} did not contain any manifests')
           return (False, release_manifest_set)
 
       first_manifest = release_manifest_set.manifests[0]
