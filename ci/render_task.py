@@ -55,9 +55,9 @@ def main():
     raw_promote_task = dataclasses.asdict(promote_task)
 
     clone_step = steps.clone_step(
-        committish=tkn.model.NamedParam(name='committish'),
-        repo_dir=tkn.model.NamedParam(name='repodir'),
-        git_url=tkn.model.NamedParam(name='giturl'),
+        committish=NamedParam(name='committish'),
+        git_url=NamedParam(name='giturl'),
+        repo_dir=NamedParam(name='repodir'),
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
@@ -66,14 +66,14 @@ def main():
 
     pre_build_step = steps.pre_build_step(
         cicd_cfg_name=NamedParam(name='cicd_cfg_name'),
-        committish=tkn.model.NamedParam(name='committish'),
+        committish=NamedParam(name='committish'),
         version=NamedParam(name='version'),
         gardenlinux_epoch=NamedParam(name='gardenlinux_epoch'),
         modifiers=NamedParam(name='modifiers'),
         architecture=NamedParam(name='architecture'),
         platform=NamedParam(name='platform'),
         publishing_actions=NamedParam(name='publishing_actions'),
-        repo_dir=tkn.model.NamedParam(name='repodir'),
+        repo_dir=NamedParam(name='repodir'),
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
@@ -89,7 +89,7 @@ def main():
         modifiers=NamedParam(name='modifiers'),
         version=NamedParam(name='version'),
         outfile=NamedParam(name='outfile'),
-        repo_dir=tkn.model.NamedParam(name='repodir'),
+        repo_dir=NamedParam(name='repodir'),
         publishing_actions=NamedParam(name='publishing_actions'),
         env_vars=env_vars,
         volume_mounts=volume_mounts,
@@ -106,7 +106,7 @@ def main():
         modifiers=NamedParam(name='modifiers'),
         version=NamedParam(name='version'),
         publishing_actions=NamedParam(name='publishing_actions'),
-        repo_dir=tkn.model.NamedParam(name='repodir'),
+        repo_dir=NamedParam(name='repodir'),
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
