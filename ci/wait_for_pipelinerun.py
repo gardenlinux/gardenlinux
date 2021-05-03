@@ -82,7 +82,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--pipelinerun-name')
     parser.add_argument('--pipelinerun-file')
-    parser.add_argument('--namespace', default='gardenlinux')
+    parser.add_argument('--namespace')
     parser.add_argument('--cicd-cfg', default='default')
 
     parsed = parser.parse_args()
@@ -100,7 +100,6 @@ def main():
             parsed_pipelinerun = yaml.safe_load(f)
             metadata = parsed_pipelinerun['metadata']
             pipelinerun_name = metadata['name']
-            namespace = metadata['namespace']
 
     print(f'waiting for {pipelinerun_name=} to finish')
 

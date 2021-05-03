@@ -1,4 +1,3 @@
-import os
 import sys
 
 import glci.model
@@ -16,14 +15,13 @@ def promote_single_step(
     gardenlinux_epoch: parsable_to_int,
     modifiers: str,
     version: str,
-    promote_target: str,
     publishing_actions: str,
 ):
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
     publishing_actions = [
         glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
     ]
-    if not glci.model.PublishingAction.RELEASE in publishing_actions:
+    if glci.model.PublishingAction.RELEASE not in publishing_actions:
         print(
             f'publishing action {glci.model.PublishingAction.RELEASE=} not specified - exiting now'
         )
@@ -34,7 +32,7 @@ def promote_single_step(
         cicd_cfg=cicd_cfg,
     )
 
-    if not platform in glci.model.platform_names():
+    if platform not in glci.model.platform_names():
         raise ValueError(f'invalid value {platform=}')
 
     modifiers = glci.model.normalised_modifiers(
@@ -54,9 +52,9 @@ def promote_single_step(
     )
 
     if not release_manifest:
-        raise ValueError(f'no release-manifest found')
+        raise ValueError('no release-manifest found')
 
-    if not release_manifest.published_image_metadata is None:
+    if release_manifest.published_image_metadata is not None:
         # XXX should actually check for completeness - assume for now there is
         # transactional semantics in place
         print('artifacts were already published - exiting now')
@@ -84,7 +82,6 @@ def promote_single_step(
 def promote_step(
     cicd_cfg_name: str,
     flavourset: str,
-    promote_target: str,
     publishing_actions: str,
     gardenlinux_epoch: parsable_to_int,
     committish: str,
@@ -97,12 +94,16 @@ def promote_step(
         glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
     ]
 
+    if glci.model.PublishingAction.BUILD_LOCAL in publishing_actions:
+        print(
+            f'publishing action {glci.model.PublishingAction.BUILD_LOCAL=} specified - exiting now'
+        )
+        sys.exit(0)
+
     find_releases = glci.util.preconfigured(
       func=glci.util.find_releases,
       cicd_cfg=cicd_cfg,
     )
-
-    release_target = promote_target
 
     releases = tuple(
       find_releases(
@@ -117,8 +118,8 @@ def promote_step(
     # ensure all previous tasks really were successful
     is_complete = len(releases) == len(flavours)
     if not is_complete:
-      print('release was not complete - will not promote (this indicates a bug!)')
-      sys.exit(1) # do not signal an error
+        print('release was not complete - will not promote (this indicates a bug!)')
+        sys.exit(1)  # do not signal an error
 
     print(publishing_actions)
 

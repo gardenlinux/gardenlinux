@@ -3,6 +3,8 @@ set -e
 set -x
 
 own_dir="$(readlink -f "$(dirname "${0}")")"
+repo_root="${own_dir}/.."
+ci_dir="${repo_root}/bin"
 
 source "${own_dir}/lib.sh"
 
@@ -12,6 +14,7 @@ install_tkn
 # retrieve and configure kubeconfig (sets KUBECONFIG env var)
 kubecfg
 
+# also handles default-values for env-vars
 export_env
 
 function cleanup_pipelineruns {
@@ -25,17 +28,25 @@ function cleanup_pipelineruns {
     --keep 20
 }
 
+function create_credentials {
+  ci/render_credentials.py \
+    --outfile "${credentials_outfile}"
+
+  if kubectl get secret -n "${GARDENLINUX_TKN_WS}" secrets &> /dev/null; then
+    kubectl delete secret -n "${GARDENLINUX_TKN_WS}" secrets
+  fi
+
+  $(which kubectl) create secret generic secrets \
+    -n "${GARDENLINUX_TKN_WS}" \
+    --from-file=config.json="${credentials_outfile}"
+}
+
 
 echo "render pipelines"
-gardenlinux_dir="${CC_ROOT_DIR}/${GARDENLINUX_PATH}"
-cd "${gardenlinux_dir}"
+cd "${repo_root}"
 
-pipeline_cfg="${gardenlinux_dir}/flavours.yaml"
+pipeline_cfg="${repo_root}/flavours.yaml"
 outfile='rendered_pipeline.yaml'
-
-# injected from pipeline_definitions
-PROMOTE_TARGET="${PROMOTE_TARGET:-snapshot}"
-PUBLISHING_ACTIONS="${PUBLISHING_ACTIONS:-manifests}"
 
 if [ ! -z "${VERSION:-}" ]; then
   EXTRA_ARGS="--version=${VERSION}"
@@ -48,6 +59,7 @@ echo "head-commit: ${head_commit}"
 
 pipeline_run="$PWD/pipeline_run.yaml"
 rendered_task="$PWD/rendered_task.yaml"
+credentials_outfile="$PWD/credentials.json"
 
 # create pipeline-run for current commit
 ci/render_pipeline_run.py $EXTRA_ARGS \
@@ -62,11 +74,16 @@ ci/render_pipeline_run.py $EXTRA_ARGS \
 ci/render_pipelines.py \
   --pipeline_cfg "${pipeline_cfg}" \
   --flavour-set "${FLAVOUR_SET}" \
-  --cicd-cfg 'default' \
   --outfile "${outfile}"
 
+if [ ! -z $SECRETS_SERVER_ENDPOINT ]; then
+  RENDER_TASK_EXTRA_ARGS="--use-secrets-server"
+  create_credentials
+fi
+
 ci/render_task.py \
-  --outfile "${rendered_task}"
+  --outfile "${rendered_task}" \
+  ${RENDER_TASK_EXTRA_ARGS}
 
 # XXX hardcode other resources for now
 
@@ -75,10 +92,10 @@ for manifest in \
   "${outfile}" \
   "${pipeline_run}"
 do
-  /bin/kubectl apply -f "${manifest}"
+  $(which kubectl) apply -n "${GARDENLINUX_TKN_WS}" -f "${manifest}"
 done
 
 echo 'done: refreshed pipeline(s) and created a new pipeline-run for current commit'
 
 echo 'will wait for new pipelinerun'
-ci/wait_for_pipelinerun.py --pipelinerun-file "${pipeline_run}"
+ci/wait_for_pipelinerun.py --pipelinerun-file "${pipeline_run}" --namespace "${GARDENLINUX_TKN_WS}"

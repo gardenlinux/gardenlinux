@@ -50,7 +50,6 @@ def task_step_script(
         args = ' '.join(param.name for param in params)
         callable_str = 'f{callable} {args}'
 
-
     return '\n'.join((
         shebang,
         preamble,
@@ -61,8 +60,10 @@ def task_step_script(
 
 def clone_step(
     committish: tkn.model.NamedParam,
-    repo_dir: tkn.model.NamedParam,
     git_url: tkn.model.NamedParam,
+    repo_dir: tkn.model.NamedParam,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
 ):
     step = tkn.model.TaskStep(
         name='clone-repo-step',
@@ -73,26 +74,31 @@ def clone_step(
             callable='clone_and_copy',
             params=[
                 committish,
-                repo_dir,
                 git_url,
+                repo_dir,
             ],
             repo_path_param=repo_dir,
         ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
     )
 
     return step
 
 
 def upload_results_step(
+    architecture: tkn.model.NamedParam,
     cicd_cfg_name: tkn.model.NamedParam,
     committish: tkn.model.NamedParam,
-    architecture: tkn.model.NamedParam,
-    platform: tkn.model.NamedParam,
     gardenlinux_epoch: tkn.model.NamedParam,
     modifiers: tkn.model.NamedParam,
-    version: tkn.model.NamedParam,
     outfile: tkn.model.NamedParam,
+    platform: tkn.model.NamedParam,
+    publishing_actions: tkn.model.NamedParam,
     repo_dir: tkn.model.NamedParam,
+    version: tkn.model.NamedParam,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
 ):
     return tkn.model.TaskStep(
         name='upload-results',
@@ -102,31 +108,35 @@ def upload_results_step(
             script_type=ScriptType.PYTHON3,
             callable='upload_results_step',
             params=[
+                architecture,
                 cicd_cfg_name,
                 committish,
-                architecture,
-                platform,
                 gardenlinux_epoch,
                 modifiers,
-                version,
                 outfile,
+                platform,
+                publishing_actions,
+                version,
             ],
             repo_path_param=repo_dir,
-        )
+        ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
     )
 
 
 def promote_single_step(
+    architecture: tkn.model.NamedParam,
     cicd_cfg_name: tkn.model.NamedParam,
     committish: tkn.model.NamedParam,
-    architecture: tkn.model.NamedParam,
-    platform: tkn.model.NamedParam,
     gardenlinux_epoch: tkn.model.NamedParam,
     modifiers: tkn.model.NamedParam,
-    version: tkn.model.NamedParam,
-    promote_target: tkn.model.NamedParam,
+    platform: tkn.model.NamedParam,
     publishing_actions: tkn.model.NamedParam,
     repo_dir: tkn.model.NamedParam,
+    version: tkn.model.NamedParam,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
 ):
     return tkn.model.TaskStep(
         name='promote-step',
@@ -136,30 +146,32 @@ def promote_single_step(
             script_type=ScriptType.PYTHON3,
             callable='promote_single_step',
             params=[
+                architecture,
                 cicd_cfg_name,
                 committish,
-                architecture,
-                platform,
                 gardenlinux_epoch,
                 modifiers,
-                version,
-                promote_target,
+                platform,
                 publishing_actions,
+                version,
             ],
             repo_path_param=repo_dir,
-        )
+        ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
     )
 
 
 def promote_step(
     cicd_cfg_name: tkn.model.NamedParam,
-    flavourset: tkn.model.NamedParam,
-    promote_target: tkn.model.NamedParam,
-    publishing_actions: tkn.model.NamedParam,
-    gardenlinux_epoch: tkn.model.NamedParam,
     committish: tkn.model.NamedParam,
-    version: tkn.model.NamedParam,
+    flavourset: tkn.model.NamedParam,
+    gardenlinux_epoch: tkn.model.NamedParam,
+    publishing_actions: tkn.model.NamedParam,
     repo_dir: tkn.model.NamedParam,
+    version: tkn.model.NamedParam,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
 ):
     return tkn.model.TaskStep(
         name='finalise-promotion-step',
@@ -170,27 +182,31 @@ def promote_step(
             callable='promote_step',
             params=[
                 cicd_cfg_name,
-                flavourset,
-                promote_target,
-                publishing_actions,
-                gardenlinux_epoch,
                 committish,
+                flavourset,
+                gardenlinux_epoch,
+                publishing_actions,
                 version,
             ],
             repo_path_param=repo_dir,
-        )
+        ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
     )
 
 
 def pre_build_step(
+    architecture: tkn.model.NamedParam,
     cicd_cfg_name: tkn.model.NamedParam,
     committish: tkn.model.NamedParam,
-    version: tkn.model.NamedParam,
     gardenlinux_epoch: tkn.model.NamedParam,
     modifiers: tkn.model.NamedParam,
-    architecture: tkn.model.NamedParam,
     platform: tkn.model.NamedParam,
+    publishing_actions: tkn.model.NamedParam,
     repo_dir: tkn.model.NamedParam,
+    version: tkn.model.NamedParam,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
 ):
     return tkn.model.TaskStep(
         name='prebuild-step',
@@ -200,25 +216,30 @@ def pre_build_step(
             script_type=ScriptType.PYTHON3,
             callable='pre_build_step',
             params=[
+                architecture,
                 cicd_cfg_name,
                 committish,
-                version,
                 gardenlinux_epoch,
                 modifiers,
-                architecture,
                 platform,
+                publishing_actions,
+                version,
             ],
             repo_path_param=repo_dir,
-        )
+        ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
     )
 
 
 def release_step(
-    giturl: tkn.model.NamedParam,
     committish: tkn.model.NamedParam,
     gardenlinux_epoch: tkn.model.NamedParam,
+    giturl: tkn.model.NamedParam,
     publishing_actions: tkn.model.NamedParam,
     repo_dir: tkn.model.NamedParam,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
 ):
     return tkn.model.TaskStep(
         name='release-step',
@@ -228,23 +249,27 @@ def release_step(
             script_type=ScriptType.PYTHON3,
             callable='release_step',
             params=[
-                giturl,
                 committish,
                 gardenlinux_epoch,
+                giturl,
                 publishing_actions,
             ],
             repo_path_param=repo_dir,
-        )
+        ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
     )
 
 
 def build_image_step(
-    suite: tkn.model.NamedParam,
     gardenlinux_epoch: tkn.model.NamedParam,
-    snapshot_timestamp: tkn.model.NamedParam,
-    platform: tkn.model.NamedParam,
     modifiers: tkn.model.NamedParam,
     outfile: tkn.model.NamedParam,
+    platform: tkn.model.NamedParam,
     repodir: tkn.model.NamedParam,
+    snapshot_timestamp: tkn.model.NamedParam,
+    suite: tkn.model.NamedParam,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
 ):
     pass

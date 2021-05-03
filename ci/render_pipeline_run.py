@@ -27,21 +27,21 @@ VolumeClaimTemplateSpec = tkn.model.VolumeClaimTemplateSpec
 
 
 def mk_pipeline_run(
-    pipeline_name: str,
-    namespace: str,
     branch: str,
-    committish: str,
-    gardenlinux_epoch: int,
     cicd_cfg: str,
-    version: str,
+    committish: str,
     flavour_set: glci.model.GardenlinuxFlavourSet,
+    gardenlinux_epoch: int,
+    pipeline_name: str,
     promote_target: glci.model.BuildType,
     publishing_actions: typing.Sequence[glci.model.PublishingAction],
+    version: str,
+    node_selector: dict = {},
 ):
     # k8s only allows dns names / leng restriction applies
     def mk_pipeline_name():
         yield pipeline_name[:len('gardenlinux')]
-        yield '-'.join((a.value[:6] for a in publishing_actions))
+        yield '-'.join((a.value[:6].replace('_', '-') for a in publishing_actions))
         yield version.replace('.', '-')
         yield committish[:6]
 
@@ -51,12 +51,11 @@ def mk_pipeline_run(
 
     flavour_count = len(list(flavour_set.flavours()))
     if flavour_count == 0:
-        flavour_count = 1 # at least one workspace must be created
+        flavour_count = 1  # at least one workspace must be created
 
     plrun = PipelineRun(
-        metadata=PipelineRunMetadata(
+        metadata=tkn.model.Metadata(
             name=run_name,
-            namespace=namespace,
         ),
         spec=PipelineRunSpec(
             params=[
@@ -70,7 +69,7 @@ def mk_pipeline_run(
                 ),
                 NamedParam(
                     name='gardenlinux_epoch',
-                    value=str(gardenlinux_epoch), # tekton only knows str
+                    value=str(gardenlinux_epoch),  # tekton only knows str
                 ),
                 NamedParam(
                     name='snapshot_timestamp',
@@ -100,11 +99,7 @@ def mk_pipeline_run(
             pipelineRef=PipelineRef(
                 name=pipeline_name,
             ),
-            podTemplate=PodTemplate(
-                nodeSelector={
-                    "worker.garden.sapcloud.io/group": "gl-build"
-                }
-            ),
+            podTemplate=PodTemplate(nodeSelector=node_selector),
             workspaces=[],
         ),
     )
@@ -146,23 +141,21 @@ def main():
         build_yaml=parsed.pipeline_cfg,
     )
 
-    if (version:=parsed.version) is None:
+    if (version := parsed.version) is None:
         # if version is not specify, derive from worktree (i.e. VERSION file)
         version = glci.model.next_release_version_from_workingtree()
 
-
     # XXX hardcode pipeline names and flavour for now
     pipeline_run = mk_pipeline_run(
-        pipeline_name='gardenlinux-build',
-        namespace='gardenlinux',
         branch=parsed.branch,
-        committish=parsed.committish,
-        gardenlinux_epoch=parsed.gardenlinux_epoch,
         cicd_cfg=parsed.cicd_cfg,
+        committish=parsed.committish,
         flavour_set=flavour_set,
-        version=version,
+        gardenlinux_epoch=parsed.gardenlinux_epoch,
+        pipeline_name='gardenlinux-build',
         promote_target=parsed.promote_target,
         publishing_actions=parsed.publishing_actions,
+        version=version,
     )
 
     pipeline_run_dict = dataclasses.asdict(pipeline_run)

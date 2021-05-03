@@ -64,15 +64,25 @@ def upload_results_step(
     modifiers: str,
     version: str,
     outfile: str,
+    publishing_actions: str,
 ):
+    publishing_actions = [
+        glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
+    ]
+    if glci.model.PublishingAction.BUILD_ONLY in publishing_actions:
+        print(
+            f'publishing action {glci.model.PublishingAction.BUILD_ONLY=} specified - exiting now'
+        )
+        sys.exit(0)
+
     if os.path.isfile('/workspace/skip_build'):
-      print('/workspace/skip_build found - skipping upload')
-      sys.exit(0)
+        print('/workspace/skip_build found - skipping upload')
+        sys.exit(0)
 
     build_result_fname = outfile
     if not os.path.isfile(build_result_fname):
-      print('ERROR: no build result - see previous step for errs')
-      sys.exit(1)
+        print('ERROR: no build result - see previous step for errs')
+        sys.exit(1)
 
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
     aws_cfg_name = cicd_cfg.build.aws_cfg_name

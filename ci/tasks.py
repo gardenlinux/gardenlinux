@@ -10,60 +10,65 @@ _repodir = NamedParam(name='repodir', default='/workspace/gardenlinux_git')
 
 def promote_task(
     branch: NamedParam,
-    committish: NamedParam,
-    gardenlinux_epoch: NamedParam,
-    snapshot_timestamp: NamedParam,
     cicd_cfg_name: NamedParam,
-    version: NamedParam,
+    committish: NamedParam,
     flavourset: NamedParam,
-    promote_target: NamedParam,
+    gardenlinux_epoch: NamedParam,
     publishing_actions: NamedParam,
-    repodir: NamedParam=_repodir,
-    giturl: NamedParam=_giturl,
+    snapshot_timestamp: NamedParam,
+    version: NamedParam,
+    env_vars=[],
+    giturl: NamedParam = _giturl,
     name='promote-gardenlinux-task',
-    namespace='gardenlinux',
+    repodir: NamedParam = _repodir,
+    volume_mounts=[],
 ):
+
     clone_step = steps.clone_step(
         committish=committish,
-        repo_dir=repodir,
+        env_vars=env_vars,
         git_url=giturl,
+        repo_dir=repodir,
+        volume_mounts=volume_mounts,
     )
 
     promote_step = steps.promote_step(
         cicd_cfg_name=cicd_cfg_name,
-        flavourset=flavourset,
-        promote_target=promote_target,
-        publishing_actions=publishing_actions,
-        gardenlinux_epoch=gardenlinux_epoch,
         committish=committish,
-        version=version,
+        env_vars=env_vars,
+        flavourset=flavourset,
+        gardenlinux_epoch=gardenlinux_epoch,
+        publishing_actions=publishing_actions,
         repo_dir=repodir,
+        version=version,
+        volume_mounts=volume_mounts,
     )
 
     release_step = steps.release_step(
-        giturl=giturl,
         committish=committish,
+        env_vars=env_vars,
         gardenlinux_epoch=gardenlinux_epoch,
+        giturl=giturl,
         publishing_actions=publishing_actions,
         repo_dir=repodir,
+        volume_mounts=volume_mounts,
     )
 
     params = [
-        giturl,
         branch,
-        committish,
-        gardenlinux_epoch,
-        snapshot_timestamp,
         cicd_cfg_name,
-        version,
+        committish,
         flavourset,
-        promote_target,
+        gardenlinux_epoch,
+        giturl,
         publishing_actions,
         repodir,
+        snapshot_timestamp,
+        version,
     ]
 
     task = tkn.model.Task(
-        metadata=tkn.model.Metadata(name=name, namespace=namespace),
+        metadata=tkn.model.Metadata(name=name),
         spec=tkn.model.TaskSpec(
             params=params,
             steps=[
@@ -77,40 +82,55 @@ def promote_task(
 
 
 def build_task(
-    namespace: str='gardenlinux',
+    use_secrets_server: bool,
 ):
-    suite = NamedParam(name='suite', default='bullseye')
     arch = NamedParam(name='architecture', default='amd64')
-    mods = NamedParam(name='modifiers')
-    giturl = NamedParam(name='giturl', default='ssh://git@github.com/gardenlinux/gardenlinux')
-    committish = NamedParam(name='committish', default='master')
-    glepoch = NamedParam(name='gardenlinux_epoch')
-    snapshot_ts = NamedParam(name='snapshot_timestamp')
-    repodir = NamedParam(name='repodir', default='/workspace/gardenlinux_git')
     cicd_cfg_name = NamedParam(name='cicd_cfg_name', default='default')
+    committish = NamedParam(name='committish', default='master')
+    giturl = NamedParam(name='giturl', default='ssh://git@github.com/gardenlinux/gardenlinux')
+    glepoch = NamedParam(name='gardenlinux_epoch')
+    mods = NamedParam(name='modifiers')
     outfile = NamedParam(name='outfile', default='/workspace/gardenlinux.out')
+    repodir = NamedParam(name='repodir', default='/workspace/gardenlinux_git')
+    snapshot_ts = NamedParam(name='snapshot_timestamp')
+    suite = NamedParam(name='suite', default='bullseye')
 
     params = [
-        suite,
         arch,
-        mods,
-        giturl,
-        committish,
-        glepoch,
-        snapshot_ts,
-        repodir,
         cicd_cfg_name,
+        committish,
+        giturl,
+        glepoch,
+        mods,
         outfile,
+        repodir,
+        snapshot_ts,
+        suite,
     ]
+
+    if use_secrets_server:
+        env_vars = [{
+            'name': 'SECRETS_SERVER_CACHE',
+            'value': '/secrets/config.json',
+        }]
+        volume_mounts = [{
+            'name': 'secrets',
+            'mountPath': '/secrets',
+        }]
+    else:
+        env_vars = []
+        volume_mounts = []
 
     clone_step = steps.clone_step(
         committish=committish,
-        repo_dir=repodir,
+        env_vars=env_vars,
         git_url=giturl,
+        repo_dir=repodir,
+        volume_mounts=volume_mounts,
     )
 
     task = tkn.model.Task(
-        metadata=tkn.model.Metadata(name='build-gardenlinux-task', namespace=namespace),
+        metadata=tkn.model.Metadata(name='build-gardenlinux-task'),
         spec=tkn.model.TaskSpec(
             params=params,
             steps=[

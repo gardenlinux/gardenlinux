@@ -21,6 +21,7 @@ TaskRef = tkn.model.TaskRef
 PipelineTask = tkn.model.PipelineTask
 NamedParam = tkn.model.NamedParam
 
+
 def pass_param(name: str):
     '''
     create a named-param that will propagate the parent's param value
@@ -33,7 +34,7 @@ def mk_pipeline_build_task(
     pipeline_flavour: glci.model.PipelineFlavour,
     run_after: typing.List[str],
 ):
-    if not pipeline_flavour is glci.model.PipelineFlavour.SNAPSHOT:
+    if pipeline_flavour is not glci.model.PipelineFlavour.SNAPSHOT:
         raise NotImplementedError(pipeline_flavour)
 
     modifier_names = ','.join(
@@ -43,8 +44,8 @@ def mk_pipeline_build_task(
     )
 
     task_name = gardenlinux_flavour.canonical_name_prefix().replace('/', '-')\
-            .replace('_', '').strip('-')\
-            .replace('readonly', 'ro') # hardcoded shortening (length-restriction)
+        .replace('_', '').strip('-')\
+        .replace('readonly', 'ro')  # hardcoded shortening (length-restriction)
 
     if len(task_name) > 64:
         print(f'WARNING: {task_name=} too long - will shorten')
@@ -52,18 +53,18 @@ def mk_pipeline_build_task(
 
     return PipelineTask(
         name=task_name,
-        taskRef=TaskRef(name='build-gardenlinux-task'), # hardcode name for now
+        taskRef=TaskRef(name='build-gardenlinux-task'),  # hardcode name for now
         params=[
-            NamedParam(name='platform', value=gardenlinux_flavour.platform),
             NamedParam(name='modifiers', value=modifier_names),
-            pass_param(name='committish'),
-            pass_param(name='gardenlinux_epoch'),
-            pass_param(name='snapshot_timestamp'),
+            NamedParam(name='platform', value=gardenlinux_flavour.platform),
             pass_param(name='cicd_cfg_name'),
-            pass_param(name='version'),
+            pass_param(name='committish'),
+            pass_param(name='flavourset'),
+            pass_param(name='gardenlinux_epoch'),
             pass_param(name='promote_target'),
             pass_param(name='publishing_actions'),
-            pass_param(name='flavourset'),
+            pass_param(name='snapshot_timestamp'),
+            pass_param(name='version'),
         ],
         runAfter=run_after,
     )
@@ -74,17 +75,16 @@ def mk_pipeline_promote_task(
 ):
     return PipelineTask(
         name='promote-gardenlinux-task',
-        taskRef=TaskRef(name='promote-gardenlinux-task'), # XXX unhardcode
+        taskRef=TaskRef(name='promote-gardenlinux-task'),  # XXX unhardcode
         params=[
             pass_param(name='branch'),
-            pass_param(name='committish'),
-            pass_param(name='gardenlinux_epoch'),
-            pass_param(name='snapshot_timestamp'),
             pass_param(name='cicd_cfg_name'),
-            pass_param(name='version'),
-            pass_param(name='promote_target'),
-            pass_param(name='publishing_actions'),
+            pass_param(name='committish'),
             pass_param(name='flavourset'),
+            pass_param(name='gardenlinux_epoch'),
+            pass_param(name='publishing_actions'),
+            pass_param(name='snapshot_timestamp'),
+            pass_param(name='version'),
         ],
         runAfter=run_after,
     )
@@ -92,15 +92,13 @@ def mk_pipeline_promote_task(
 
 def mk_pipeline(
     gardenlinux_flavours: typing.Sequence[GardenlinuxFlavour],
-    cicd_cfg_name: str,
-    pipeline_flavour: glci.model.PipelineFlavour=glci.model.PipelineFlavour.SNAPSHOT,
+    pipeline_flavour: glci.model.PipelineFlavour = glci.model.PipelineFlavour.SNAPSHOT,
 ):
-    gardenlinux_flavours = set(gardenlinux_flavours) # mk unique
-
+    gardenlinux_flavours = set(gardenlinux_flavours)  # mk unique
 
     tasks = []
 
-    for idx,glf in enumerate(gardenlinux_flavours):
+    for glf in gardenlinux_flavours:
         build_task = mk_pipeline_build_task(
             gardenlinux_flavour=glf,
             pipeline_flavour=pipeline_flavour,
@@ -116,19 +114,18 @@ def mk_pipeline(
     pipeline = Pipeline(
         metadata=Metadata(
             name='gardenlinux-build',
-            namespace='gardenlinux',
         ),
         spec=PipelineSpec(
             params=[
                 NamedParam(name='branch'),
-                NamedParam(name='committish'),
-                NamedParam(name='gardenlinux_epoch'),
-                NamedParam(name='snapshot_timestamp'),
                 NamedParam(name='cicd_cfg_name'),
-                NamedParam(name='version'),
+                NamedParam(name='committish'),
+                NamedParam(name='flavourset'),
+                NamedParam(name='gardenlinux_epoch'),
                 NamedParam(name='promote_target'),
                 NamedParam(name='publishing_actions'),
-                NamedParam(name='flavourset'),
+                NamedParam(name='snapshot_timestamp'),
+                NamedParam(name='version'),
             ],
             tasks=tasks,
         ),
@@ -139,12 +136,10 @@ def mk_pipeline(
 
 def render_pipeline_dict(
     gardenlinux_flavours: typing.Sequence[GardenlinuxFlavour],
-    cicd_cfg_name: str,
 ):
-    gardenlinux_flavours = set(gardenlinux_flavours) # mk unique
-    pipeline:dict = mk_pipeline(
+    gardenlinux_flavours = set(gardenlinux_flavours)  # mk unique
+    pipeline: dict = mk_pipeline(
         gardenlinux_flavours=gardenlinux_flavours,
-        cicd_cfg_name=cicd_cfg_name,
     )
 
     return pipeline
@@ -159,10 +154,6 @@ def main():
     parser.add_argument(
         '--flavour-set',
         default='all',
-    )
-    parser.add_argument(
-        '--cicd-cfg',
-        default='default',
     )
     parser.add_argument(
         '--outfile',
@@ -180,17 +171,16 @@ def main():
     gardenlinux_flavours = set(flavour_set.flavours())
     outfile = parsed.outfile
 
-    pipeline:dict = render_pipeline_dict(
+    pipeline: dict = render_pipeline_dict(
         gardenlinux_flavours=gardenlinux_flavours,
-        cicd_cfg_name=parsed.cicd_cfg,
     )
-
 
     with open(outfile, 'w') as f:
         pipeline_raw = dataclasses.asdict(pipeline)
         yaml.safe_dump_all((pipeline_raw,), stream=f)
 
     print(f'dumped pipeline with {len(gardenlinux_flavours)} task(s) to {outfile}')
+
 
 if __name__ == '__main__':
     main()

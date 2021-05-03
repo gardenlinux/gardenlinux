@@ -1,0 +1,7 @@
+aws:
+  src:
+  - file: aws.yaml
+  model:
+    factory_method: aws
+    cfg_type_name: aws
+    type: AwsProfile
