@@ -2,6 +2,7 @@ import dataclasses
 from genericpath import exists
 import os
 import subprocess
+import sys
 
 import ccc.oci
 import oci
@@ -31,15 +32,14 @@ def _prepare_for_kaniko_purgefs() -> _Kaniko_save_fs_state:
     # XXX another hack: save truststores from being purged by kaniko's multistage-build
     import certifi
     certifi_bak = os.path.join('/', 'kaniko', 'cacert.pem')
+    certifi_certs_path = certifi.where()
     if not os.path.exists(certifi_bak):
-      os.link((certifi_certs_path := certifi.where()), certifi_bak)
+      os.link(certifi_certs_path, certifi_bak)
     
-    ca_certs_bak = os.path.join('/', 'kaniko', 'ca-certificates.crt')    
+    ca_certs_bak = os.path.join('/', 'kaniko', 'ca-certificates.crt')
+    ca_certs_path = os.path.join('/', 'etc', 'ssl', 'certs', 'ca-certificates.crt')
     if not os.path.exists(ca_certs_bak):
-      os.link(
-        (ca_certs_path := os.path.join('/', 'etc', 'ssl', 'certs', 'ca-certificates.crt')),
-        ca_certs_bak,
-      )
+      os.link(ca_certs_path, ca_certs_bak)
 
     # XXX final hack (I hope): cp entire python-dir
     import sys
@@ -57,7 +57,7 @@ def _prepare_for_kaniko_purgefs() -> _Kaniko_save_fs_state:
     bin_dir = '/bin'
     bin_bak_dir = os.path.join('/', 'kaniko', 'bin.bak')
     if not os.path.exists(bin_bak_dir):
-        os.link(bin_dir, bin_bak_dir)
+       shutil.copytree(bin_dir, bin_bak_dir)
 
     # HACK remove '/usr/lib' and '/cc/utils' to avoid pip from failing in the first stage of builds
     shutil.rmtree(path=os.path.join('/', 'usr', 'lib'), ignore_errors=True)
@@ -134,13 +134,14 @@ def build_and_push_kaniko(
         '--context', f'{context_dir}',
         '--tarPath', image_outfile,
         '--destination', image_ref,
-        '--build-arg', 'build_base_image=debian:testing-slim',
    ]
     for arg in build_args:
         kaniko_argv.append('--build-arg')
         kaniko_argv.append(arg)
 
     print(f'running kaniko-build {kaniko_argv=}')
+    # avoid that kaniko logs appear before our prints
+    sys.stdout.flush()
     res = subprocess.run(
         kaniko_argv,
         env=subproc_env,

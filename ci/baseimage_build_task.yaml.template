@@ -2,7 +2,6 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: task-build-baseimage
-  namespace: gardenlinux
 spec:
   params:
   - name: repodir
