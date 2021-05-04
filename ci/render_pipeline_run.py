@@ -51,7 +51,7 @@ def mk_pipeline_run(
 
     run_name = '-'.join(mk_pipeline_name())[:60]
 
-    version_label = f'{gardenlinux_epoch}-{committish}'
+    version_label = f'{version}-{committish}'
     build_image = f'{oci_path}/gardenlinux-build-image:{version_label}'
 
     snapshot_timestamp = glci.model.snapshot_date(gardenlinux_epoch=gardenlinux_epoch)

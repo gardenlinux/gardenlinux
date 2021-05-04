@@ -67,7 +67,9 @@ ci/render_pipeline_run.py $EXTRA_ARGS \
   --committish "${head_commit}" \
   --cicd-cfg 'default' \
   --flavour-set "${FLAVOUR_SET}" \
+  --git-url "${git_url}" \
   --promote-target "${PROMOTE_TARGET}" \
+  --oci-path "${oci_path}" \
   --publishing-action "${PUBLISHING_ACTIONS}" \
   --outfile "${pipeline_run}"
 
