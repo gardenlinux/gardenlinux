@@ -89,6 +89,14 @@ def _restore_after_kaniko_purgefs(state: _Kaniko_save_fs_state):
 
     shutil.copytree(state.bin_bak_dir, state.bin_dir, dirs_exist_ok=True)
 
+def _is_image_available(
+    oci_client,
+    image_ref,
+    ) -> bool:
+
+    manifest = oci_client.manifest_raw(image_ref, absent_ok=True)
+    return manifest != None
+
 def build_and_push_kaniko(
     dockerfile_path: str,
     context_dir: str,
@@ -97,6 +105,7 @@ def build_and_push_kaniko(
     additional_tags = None,
     build_args = None,
     home_dir = os.getenv('HOME', default=os.getcwd()),
+    force: bool = False,
 ):
 
     print("--- Writing kaniko config files ---")
@@ -121,6 +130,11 @@ def build_and_push_kaniko(
 
     image_outfile = os.path.basename(image_push_path) + '.tar'
     image_ref = f'{image_push_path}:{image_tag}'
+
+    # check if this image already exists and skip upload:
+    if not force and _is_image_available(oci_client, image_ref):
+        print(f'skipping build of image, reference {image_ref=} - already exists')
+        return
 
     if os.path.exists('/kaniko/executor'):
         kaniko_executor = '/kaniko/executor'
