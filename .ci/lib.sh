@@ -44,6 +44,8 @@ function export_env() {
   export BRANCH_NAME="${BRANCH_NAME:-main}"
   export FLAVOUR_SET="${FLAVOUR_SET:-all}"
   export GARDENLINUX_TKN_WS="${GARDENLINUX_TKN_WS:-gardenlinux}"
+  export GIT_URL="${GIT_URL:-https://github.com/gardenlinux/gardenlinux}"
+  export OCI_PATH="${OCI_PATH:-eu.gcr.io/gardener-project/gardenlinux}"
   export PROMOTE_TARGET="${PROMOTE_TARGET:-snapshot}"
   export PUBLISHING_ACTIONS="${PUBLISHING_ACTIONS:-build_only}"
   export PATH="${PATH}:${bin_dir}"
