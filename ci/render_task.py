@@ -143,8 +143,6 @@ def main():
             }
         })
 
-    raw_tasks = [raw_base_build_task, raw_build_task]
-
     # Take the template and dynamically set steps for build-base-image
     raw_base_build_task['spec']['steps'][0] = clone_step_dict
     if not parsed.use_secrets_server:
@@ -163,7 +161,7 @@ def main():
     yaml.representer.SafeRepresenter.add_representer(str, multiline_str_presenter)
 
     with open(parsed.outfile, 'w') as f:
-        yaml.safe_dump_all(raw_build_task, raw_promote_task, f)
+        yaml.safe_dump_all((raw_base_build_task, raw_build_task, raw_promote_task), f)
 
     print(f'dumped tasks to {parsed.outfile}')
 
