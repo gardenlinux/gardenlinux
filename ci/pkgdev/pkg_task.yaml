@@ -1,0 +1,139 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: task-build-packages
+spec:
+  params:
+  - default: /workspace/gardenlinux
+    description: Working dir with git repo
+    name: repodir
+    type: string
+  - default: https://github.com/gardenlinux/gardenlinux.git
+    description: URL to Git repository with gardenlinux
+    name: giturl
+    type: string
+  - default: main
+    description: commit/branch to clone
+    name: committish
+    type: string
+  - default: eu.gcr.io/gardener-project/test/gardenlinux-test
+    description: path in OCI-registry where to store output
+    name: ocipath
+    type: string
+  - default: latest
+    description: version label uses as tag for upload
+    name: version_label
+    type: string
+  - default: none
+    description: name of package to build
+    name: pkg_name
+    type: string
+  - name: cfssl_dir
+    description: git wokring dir to clone and build cfssl
+    default: /workspace/cfssl
+    type: string
+  steps:
+  - image: eu.gcr.io/gardener-project/cc/job-image:1.788.0
+    name: clone-repo-step
+    script: |-
+      #!/usr/bin/env python3
+      import sys,os;sys.path.insert(1,os.path.abspath(os.path.join("$(params.repodir)","ci")))
+      import os
+      import urllib.parse
+
+      import ccc.github
+      import gitutil
+
+
+      def clone_and_copy(
+          giturl: str,
+          committish: str,
+          repodir: str,
+      ):
+          repo_dir = os.path.abspath(repodir)
+          repo_url = urllib.parse.urlparse(giturl)
+          github_cfg = ccc.github.github_cfg_for_hostname(
+            repo_url.hostname,
+          )
+          git_helper = gitutil.GitHelper.clone_into(
+            target_directory=repo_dir,
+            github_cfg=github_cfg,
+            github_repo_path=repo_url.path,
+          )
+          repo = git_helper.repo
+          repo.git.checkout(committish)
+
+          commit_msg = repo.head.commit.message
+          commit_hash = repo.head.commit.hexsha
+
+          print(f'cloned to {repo_dir=} {commit_hash=}')
+          print('Commit Message:')
+          print(commit_msg)
+
+      clone_and_copy(committish='$(params.committish)',repodir='$(params.repodir)',giturl='$(params.giturl)')
+      clone_and_copy(committish='master',repodir='$(params.cfssl_dir)',giturl='https://github.com/cloudflare/cfssl.git')
+  - image: golang:latest
+    name: cfssl-build
+    script: |
+      cd $(params.cfssl_dir)
+      make
+      mkdir -p /workspace/bin
+      mv bin/* /workspace/bin
+      # cleanup workspace to safe some valuable space
+      cd /
+      rm -rf $(params.cfssl_dir)
+  - image: eu.gcr.io/gardener-project/gardenlinux/gardenlinux-build-deb:398.0.0
+    name: package-build
+    script: |
+      #!/usr/bin/env bash
+      set -e
+      set -x
+      
+      repodir='$(params.repodir)'
+      pkg_name="$(params.pkg_name)"
+
+      if [ -z "$SOURCE_PATH" ]; then
+        SOURCE_PATH="$(readlink -f ${repodir})"
+      fi
+
+      if [ -z "${pkg_name}" ]; then
+        echo "ERROR: no package name given"
+        exit 1
+      fi
+
+      # do pre-build tasks to setup proper environment for build script
+      ls /workspace/bin
+      PATH=/workspace/bin:$PATH
+      export PATH
+      
+      POOLDIR=$(realpath ../.packages)
+      MANUALDIR=$(realpath manual)
+      KERNELDIR=$(realpath kernel)
+      CERTDIR=$(realpath ../cert)
+      DEBFULLNAME="Garden Linux Maintainers"
+      DEBEMAIL="contact@gardenlinux.io"
+      BUILDIMAGE="gardenlinux/build-deb"
+      BUILDKERNEL="gardenlinux/build-kernel"
+      echo "POOLDIR: ${POOLDIR}"
+      echo "MANUALDIR: ${MANUALDIR}"
+      echo "KERNELDIR: ${KERNELDIR}"
+      echo "CERTDIR: ${CERTDIR}"
+
+      pkg_build_script_path="$SOURCE_PATH/packages/manual/${pkg_name}"
+      echo "pkg_build_script_path: ${pkg_build_script_path}"
+
+      if [ ! -f "${pkg_build_script_path}" ]; then
+        echo "ERROR: Don't know how to build ${pkg_name}"
+        exit 1
+      fi
+
+      pkg_build_script_path="$(readlink -f ${pkg_build_script_path})"
+
+      export BUILDTARGET="${OUT_PATH:-/workspace/pool}"
+      if [ ! -f "$BUILDTARGET" ]; then
+        mkdir "$BUILDTARGET"
+      fi
+
+      cd "${BUILDTARGET}"
+
+      ${pkg_build_script_path} --no-sign
