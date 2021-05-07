@@ -16,18 +16,14 @@ spec:
     description: commit/branch to clone
     name: committish
     type: string
-  - default: eu.gcr.io/gardener-project/test/gardenlinux-test
-    description: path in OCI-registry where to store output
-    name: ocipath
-    type: string
   - default: latest
     description: version label uses as tag for upload
     name: version_label
     type: string
-  - default: none
+  - name: pkg_name
     description: name of package to build
-    name: pkg_name
     type: string
+    default: none
   - name: cfssl_dir
     description: git wokring dir to clone and build cfssl
     default: /workspace/cfssl
@@ -36,7 +32,10 @@ spec:
     description: bypass cfssl build and copy binaries from github (set to true/false)
     default: "false"
     type: string
-    
+  - name: gardenlinux_build_deb_image
+    description: image from base-build steps to use for package build
+    type: string
+    default: eu.gcr.io/gardener-project/gardenlinux/gardenlinux-build-deb:398.0.0   
   steps:
   - image: eu.gcr.io/gardener-project/cc/job-image:1.788.0
     name: clone-repo-step
@@ -119,7 +118,7 @@ spec:
       # cleanup workspace to safe some valuable space
       cd /
       rm -rf $(params.cfssl_dir)
-  - image: eu.gcr.io/gardener-project/gardenlinux/gardenlinux-build-deb:398.0.0
+  - image: $(params.gardenlinux_build_deb_image)
     name: make-certs
     script: |
       #!/usr/bin/env bash
@@ -130,7 +129,7 @@ spec:
       # it will skip this step as it already present, this is a bit fragile
       make
       ls -l
-  - image: eu.gcr.io/gardener-project/gardenlinux/gardenlinux-build-deb:398.0.0
+  - image: $(params.gardenlinux_build_deb_image)
     name: package-build
     script: |
       #!/usr/bin/env bash
@@ -149,28 +148,26 @@ spec:
         exit 1
       fi
 
-      # do pre-build tasks to setup proper environment for build script
-      # ls /workspace/bin
-      # PATH=/workspace/bin:$PATH
-      # export PATH
-      
-      POOLDIR=$(realpath ../.packages)
-      MANUALDIR=$(realpath manual)
-      KERNELDIR=$(realpath kernel)
-      CERTDIR=$(realpath ../cert)
+      echo $(pwd)
+
+      MANUALDIR=$(realpath $repodir/packages/manual)
+      KERNELDIR=$(realpath $repodir/packages/kernel)
+      CERTDIR=$(realpath $repodir/cert)
+
       export DEBFULLNAME="Garden Linux Maintainers"
       export DEBEMAIL="contact@gardenlinux.io"
       export BUILDIMAGE="gardenlinux/build-deb"
       export BUILDKERNEL="gardenlinux/build-kernel"
-      echo "POOLDIR: ${POOLDIR}"
       echo "MANUALDIR: ${MANUALDIR}"
       echo "KERNELDIR: ${KERNELDIR}"
       echo "CERTDIR: ${CERTDIR}"
+      ls -l ${CERTDIR}
 
       # original makefile uses mounts, replace this by linking required dirs
       # to the expexted locations:
       # original: mount <gardenlinuxdir>/.packages but this does not exist so just create
       mkdir /pool
+      ls -l ${CERTDIR}
       ln -s ${MANUALDIR} /workspace/manual
       ln -s /../Makefile.inside /workspace/Makefile
       echo "$(gpgconf --list-dir agent-socket)"
@@ -180,6 +177,7 @@ spec:
       ln -s ${CERTDIR}/Kernel.sign.full /kernel.full
       ln -s ${CERTDIR}/Kernel.sign.crt /kernel.crt
       ln -s ${CERTDIR}/Kernel.sign.key /kernel.key
+      ls -l /kernel.full
 
       pkg_build_script_path="$SOURCE_PATH/packages/manual/${pkg_name}"
       echo "pkg_build_script_path: ${pkg_build_script_path}"

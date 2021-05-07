@@ -32,8 +32,8 @@ def pass_param(name: str):
 def mk_pipeline_base_build_task(
 ):
     return PipelineTask(
-        name="task-build-baseimage",
-        taskRef=TaskRef(name='task-build-baseimage'), # hardcode name for now
+        name="build-baseimage",
+        taskRef=TaskRef(name='build-baseimage'),
         params=[
             pass_param(name='giturl'),
             pass_param(name='committish'),
@@ -41,6 +41,24 @@ def mk_pipeline_base_build_task(
             pass_param(name='version_label'),
         ],
         runAfter=None,
+    )
+
+def mk_pipeline_package_build_task(
+    package_name: str,
+    run_after: typing.List[str],
+):
+    return PipelineTask(
+        name=f'build-packages-{package_name.replace("_", "-").replace(".", "-")}',
+        taskRef=TaskRef(name='build-packages'),
+        params=[
+            pass_param(name='giturl'),
+            pass_param(name='committish'),
+            pass_param(name='version_label'),
+            NamedParam(name='pkg_name', value=package_name),
+            pass_param(name='gardenlinux_build_deb_image'),
+            ],
+        runAfter=run_after,
+        timeout="6h"
     )
 
 def mk_pipeline_build_task(
@@ -106,6 +124,61 @@ def mk_pipeline_promote_task(
     )
 
 
+def mk_pipeline_packages():
+    tasks = []
+
+    # pre-build base images serving as container imager for further build steps:
+    base_build_task = mk_pipeline_base_build_task()
+    tasks.append(base_build_task)
+
+    # build packages:
+    package_tasks = []
+    for package in [
+        'apt', 
+        'cyrus-sasl2', 
+        'dracut', 
+        'ignition', 
+        'iproute2', 
+        'isc-kea',
+        'linux-5.10',
+        'pam',
+        'perl',
+        'python3.7',
+        'python3.8',
+        'python3.9',
+        'wireguard'
+        ]:
+        package_task = mk_pipeline_package_build_task(package, [base_build_task.name])
+        package_tasks.append(package_task)
+    
+    run_after=[pkg.name for pkg in package_tasks]
+    tasks += package_tasks
+
+    pipeline = Pipeline(
+        metadata=Metadata(
+            name='gardenlinux-packages-build',
+        ),
+        spec=PipelineSpec(
+            params=[
+                NamedParam(name='branch'),
+                NamedParam(name='gardenlinux_build_deb_image'),
+                NamedParam(name='cicd_cfg_name'),
+                NamedParam(name='committish'),
+                NamedParam(name='gardenlinux_epoch'),
+                NamedParam(name='giturl'),
+                NamedParam(name='ocipath'),
+                NamedParam(name='publishing_actions'),
+                NamedParam(name='snapshot_timestamp'),
+                NamedParam(name='version'),
+                NamedParam(name='version_label'),
+            ],
+            tasks=tasks,
+        ),
+    )
+
+    return pipeline
+
+    
 def mk_pipeline(
     gardenlinux_flavours: typing.Sequence[GardenlinuxFlavour],
     pipeline_flavour: glci.model.PipelineFlavour = glci.model.PipelineFlavour.SNAPSHOT,
@@ -118,16 +191,20 @@ def mk_pipeline(
     base_build_task = mk_pipeline_base_build_task()
     tasks.append(base_build_task)
 
+    build_tasks = []
+    # build gardenlinux in all flavours
     for glf in gardenlinux_flavours:
         build_task = mk_pipeline_build_task(
             gardenlinux_flavour=glf,
             pipeline_flavour=pipeline_flavour,
-            run_after=[base_build_task.name]
+            run_after= [ base_build_task.name ],
         )
-        tasks.append(build_task)
+        build_tasks.append(build_task)
+
+    tasks += build_tasks
 
     promote_task = mk_pipeline_promote_task(
-        run_after=[plt.name for plt in tasks],
+        run_after=[plt.name for plt in build_tasks],
     )
     tasks.append(promote_task)
 
@@ -139,6 +216,7 @@ def mk_pipeline(
             params=[
                 NamedParam(name='branch'),
                 NamedParam(name='build_image'),
+                NamedParam(name='gardenlinux_build_deb_image'),
                 NamedParam(name='cicd_cfg_name'),
                 NamedParam(name='committish'),
                 NamedParam(name='flavourset'),
@@ -183,6 +261,10 @@ def main():
         '--outfile',
         default='pipeline.yaml',
     )
+    parser.add_argument(
+        '--outfile-packages',
+        default='pipeline-packages.yaml',
+    )
     parsed = parser.parse_args()
 
     build_yaml = parsed.pipeline_cfg
@@ -192,13 +274,24 @@ def main():
         build_yaml=build_yaml,
     )
 
+
+    # generate pipeline for packages:
+    pipeline: dict = mk_pipeline_packages()
+ 
+    with open(parsed.outfile_packages, 'w') as f:
+        pipeline_raw = dataclasses.asdict(pipeline)
+        yaml.safe_dump_all((pipeline_raw,), stream=f)
+
+    print(f'dumped pipeline for packages to {parsed.outfile_packages}')
+
+    # generate pipeline for gardenlinux build
     gardenlinux_flavours = set(flavour_set.flavours())
     outfile = parsed.outfile
 
     pipeline: dict = render_pipeline_dict(
         gardenlinux_flavours=gardenlinux_flavours,
     )
-
+ 
     with open(outfile, 'w') as f:
         pipeline_raw = dataclasses.asdict(pipeline)
         yaml.safe_dump_all((pipeline_raw,), stream=f)
