@@ -141,7 +141,6 @@ def build_task(
     return task
 
 def base_build_task(
-    namespace: str='gardenlinux',
 ):
     giturl = NamedParam(name='giturl', default='ssh://git@github.com/gardenlinux/gardenlinux')
     committish = NamedParam(name='committish', default='master')
@@ -162,7 +161,7 @@ def base_build_task(
         git_url=giturl,
     )
     task = tkn.model.Task(
-        metadata=tkn.model.Metadata(name='base_build-gardenlinux-task', namespace=namespace),
+        metadata=tkn.model.Metadata(name='base_build-gardenlinux-task'),
         spec=tkn.model.TaskSpec(
             params=params,
             steps=[
@@ -171,3 +170,57 @@ def base_build_task(
         ),
     )
     return task
+
+def package_task():
+    repodir = NamedParam(name='repodir', default='/workspace/gardenlinux_git', description='Gardenlinux working dir')
+    giturl = NamedParam(name='giturl', default='https://github.com/gardenlinux/gardenlinux.git', description='Gardenlinux Git repo')
+    committish = NamedParam(name='committish', default='master', description='commit to build')
+    pkg_name = NamedParam(name='pkg_name', description='name of package to build')
+    version_label = NamedParam(name='version_label', description = 'version label uses as tag for upload')
+    gardenlinux_build_deb_image = NamedParam(name='gardenlinux_build_deb_image', description = 'image to use for package build')
+    cfssl_dir = NamedParam(name='cfssl_dir', default = '/workspace/cfssl', description = 'git wokring dir to clone and build cfssl')
+    cfssl_fastpath = NamedParam(name='cfssl_fastpath',  default = 'false', description = 'bypass cfssl build and copy binaries from github (set to true/false)')
+    params = [
+        repodir,
+        giturl,
+        committish,
+        pkg_name,
+        version_label,
+        gardenlinux_build_deb_image,
+        cfssl_dir,
+        cfssl_fastpath,
+    ]
+
+    clone_step_gl =  steps.clone_step(
+        committish=committish,
+        repo_dir=repodir,
+        git_url=giturl,
+    )
+
+    clone_step_cfssl = steps.clone_step_no_params(
+        name='clone-step-cfssl',
+        committish='master',
+        repo_dir=f'$(params.{cfssl_dir.name})',
+        gardenlinux_repo_path_param=repodir,
+        git_url='https://github.com/cloudflare/cfssl.git',
+    )
+
+    cfssl_build_step = steps.build_cfssl_step()
+    make_certs_step = steps.build_make_cert_step()
+    package_build_step = steps.build_package_step()
+
+    task = tkn.model.Task(
+        metadata=tkn.model.Metadata(name='build-packages'),
+        spec=tkn.model.TaskSpec(
+            params=params,
+            steps=[
+                clone_step_gl,
+                clone_step_cfssl,
+                cfssl_build_step,
+                make_certs_step,
+                package_build_step,
+            ],
+        ),
+    )
+    return task
+
