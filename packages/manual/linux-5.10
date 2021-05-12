@@ -14,7 +14,7 @@ gpg --tofu-policy good 514B0EDE3C387F944FB3799329E574109AEBFAAA
 echo "### updating package repsitory"
 sudo apt-get update
 echo "### installing minimal create requirements"
-sudo apt-get install --no-install-recommends -y equivs kernel-wedge python3-debian rsync libdistro-info-perl git
+sudo apt-get install --no-install-recommends -y equivs kernel-wedge python3-debian rsync libdistro-info-perl git quilt
 echo "### pulling kernel and rt-patches" 
 wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.{sign,xz}
 wget https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/$(cut -d. -f-2 <<< ${KERNEL_BASE})/older/patches-$KERNEL_RT_VERSION.tar.{sign,xz}
