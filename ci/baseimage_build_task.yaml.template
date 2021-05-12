@@ -50,11 +50,15 @@ spec:
       for docker_dir in docker_dirs:
           dockerfile_relpath = os.path.join(repo_dir, "docker", docker_dir, "Dockerfile")
           print(f'---Building now {dockerfile_relpath}')
+          if docker_dir == 'build-deb':
+              build_base_image = '$(params.ocipath)/gardenlinux-build:$(params.version_label)'
+          else:
+              build_base_image = 'debian:testing-slim'
           builder.build_and_push_kaniko(
             dockerfile_path = dockerfile_relpath,
             context_dir = context_dir,
             image_push_path = f'$(params.ocipath)/gardenlinux-{docker_dir}',
             image_tag = '$(params.version_label)',
             additional_tags = ['latest'],
-            build_args = ['build_base_image=debian:testing-slim']
+            build_args = [f'build_base_image={build_base_image}']
           )
