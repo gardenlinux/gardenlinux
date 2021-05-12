@@ -152,7 +152,7 @@ def mk_pipeline_packages():
 
     pipeline = Pipeline(
         metadata=Metadata(
-            name='gardenlinux-packages-build',
+            name='gl-packages-build',
         ),
         spec=PipelineSpec(
             params=[
