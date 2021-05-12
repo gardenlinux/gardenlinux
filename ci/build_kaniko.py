@@ -132,7 +132,7 @@ def build_and_push_kaniko(
     image_ref = f'{image_push_path}:{image_tag}'
 
     # check if this image already exists and skip upload:
-    if not force and _is_image_available(oci_client, image_ref):
+    if not force and _is_image_available(oci_client, image_ref) and image_ref != 'latest':
         print(f'skipping build of image, reference {image_ref=} - already exists')
         return
 
