@@ -22,12 +22,9 @@ xz -dc linux-$KERNEL_VERSION.tar.xz      | gpg --verify linux-$KERNEL_VERSION.ta
 xz -dc patches-$KERNEL_RT_VERSION.tar.xz | gpg --verify patches-$KERNEL_RT_VERSION.tar.sign -
 
 echo "### cloning the latest and greatest debian release environment to linux"
-git clone https://salsa.debian.org/kernel-team/linux.git $src
-echo "### checkingout the old kernel to linux-$KERNEL_DEBIAN"
-cp -R $src linux-$KERNEL_DEBIAN
-cd linux-$KERNEL_DEBIAN
-git -c advice.detachedHead=false checkout debian/$KERNEL_DEBIAN
-cd ..
+git clone --depth 1 https://salsa.debian.org/kernel-team/linux.git $src
+echo "### cloning the old kernel to linux-$KERNEL_DEBIAN"
+git clone --depth 1 --single --branch debian/$KERNEL_DEBIAN https://salsa.debian.org/kernel-team/linux.git linux-$KERNEL_DEBIAN
 
 echo "### pulling aufs5 from upstream not from debian" 
 git clone https://github.com/sfjro/aufs5-standalone.git
