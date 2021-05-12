@@ -481,3 +481,36 @@ ${pkg_build_script_path}
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+
+def build_upload_packages_step(
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
+):
+    return tkn.model.TaskStep(
+        name='upload-packages-s3',
+        image='$(params.gardenlinux_build_deb_image)',
+        script=task_step_script(
+            inline_script='''
+#!/usr/bin/env bash
+set -x
+
+apt-get install -y awscli
+export AWS_ACCESS_KEY_ID="..."
+export AWS_SECRET_ACCESS_KEY="..."
+export AWS_DEFAULT_REGION="eu-central-1"
+export BUILDTARGET="${OUT_PATH:-/workspace/pool}"
+aws s3 cp ${BUILDTARGET} s3://gardenlinux-pkgs/packages --recursive --exclude "*" --include "*.deb"
+result=$?
+if [ ${result} -ne 0 ] && [ ${result} -ne 2  ]; then
+    echo "S3 upload failed with exit code ${result}"
+    exit 1
+fi
+echo "Done upload."
+''',
+            script_type=ScriptType.BOURNE_SHELL,
+            callable='',
+            params=[],
+        ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
+    )
