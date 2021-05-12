@@ -84,10 +84,10 @@ EOF
 
 cd ..
 # checking out linux stable to have the whole changelog from the kernel readable for debian/bin/stable-update 
-git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+git clone --single --branch linux-$(echo $KERNEL_BASE | sed s/0$/y/) --bare https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 cd $src
 
-debian/bin/stable-update ../linux-stable $KERNEL_VERSION
+debian/bin/stable-update ../linux-stable.git $KERNEL_VERSION
 cat debian/changelog debian/changelog.tmp > debian/changelog.new
 mv debian/changelog.new debian/changelog
 rm debian/changelog.tmp
