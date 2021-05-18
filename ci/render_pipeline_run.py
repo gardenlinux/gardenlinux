@@ -68,9 +68,9 @@ def get_deb_build_image(
     oci_path: str,
     version_label: str,
 ):
-    # return f'{oci_path}/gardenlinux-build-deb:{version_label}'
-    # for now use fixed path
-    return 'eu.gcr.io/gardener-project/gardenlinux/gardenlinux-build-deb:398.0.0'
+    return f'{oci_path}/gardenlinux-build-deb:{version_label}'
+    # for fixed path from concourse buildimage pipeline
+    # return 'eu.gcr.io/gardener-project/gardenlinux/gardenlinux-build-deb:413.0.0'
 
 def mk_pipeline_packages_run(
     branch: str,
@@ -83,6 +83,7 @@ def mk_pipeline_packages_run(
     oci_path: str,
     version: str,
     node_selector: dict = {},
+    security_context: dict = {},
 ):
     run_name = mk_pipeline_name(
         pipeline_name = pipeline_name,
@@ -148,7 +149,7 @@ def mk_pipeline_packages_run(
             pipelineRef=PipelineRef(
                 name=pipeline_name,
             ),
-            podTemplate=PodTemplate(nodeSelector=node_selector),
+            podTemplate=PodTemplate(nodeSelector=node_selector, securityContext=security_context),
             workspaces=[],
         ),
     )
@@ -168,6 +169,7 @@ def mk_pipeline_run(
     oci_path: str,
     version: str,
     node_selector: dict = {},
+    security_context: dict = {},
 ):
 
     run_name = mk_pipeline_name(
@@ -253,7 +255,7 @@ def mk_pipeline_run(
             pipelineRef=PipelineRef(
                 name=pipeline_name,
             ),
-            podTemplate=PodTemplate(nodeSelector=node_selector),
+            podTemplate=PodTemplate(nodeSelector=node_selector, securityContext=security_context),
             workspaces=[],
         ),
     )
@@ -313,6 +315,7 @@ def main():
         pipeline_name='gl-packages-build',
         publishing_actions=parsed.publishing_actions,
         version=version,
+        security_context={'runAsUser': 0}
     )
 
     pipeline_run_dict = dataclasses.asdict(pipeline_run)
