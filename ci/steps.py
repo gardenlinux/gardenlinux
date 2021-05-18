@@ -495,8 +495,8 @@ def build_upload_packages_step(
 set -x
 
 apt-get install -y awscli
-export AWS_ACCESS_KEY_ID="..."
-export AWS_SECRET_ACCESS_KEY="..."
+export AWS_ACCESS_KEY_ID="$(params.aws_key_id)"
+export AWS_SECRET_ACCESS_KEY="$(params.aws_secret_key)"
 export AWS_DEFAULT_REGION="eu-central-1"
 export BUILDTARGET="${OUT_PATH:-/workspace/pool}"
 aws s3 cp ${BUILDTARGET} s3://gardenlinux-pkgs/packages --recursive --exclude "*" --include "*.deb"

@@ -180,6 +180,8 @@ def package_task():
     gardenlinux_build_deb_image = NamedParam(name='gardenlinux_build_deb_image', description = 'image to use for package build')
     cfssl_dir = NamedParam(name='cfssl_dir', default = '/workspace/cfssl', description = 'git wokring dir to clone and build cfssl')
     cfssl_fastpath = NamedParam(name='cfssl_fastpath',  default = 'false', description = 'bypass cfssl build and copy binaries from github (set to true/false)')
+    aws_key_id = NamedParam(name='aws_key_id',  default = 'TODO set aws key id', description = 'AWS S3 key id used for uplaoding packages')
+    aws_secret_key = NamedParam(name='aws_secret_key',  default = 'TODO set aws secret key', description = 'AWS S3 secret key used for uplaoding packages')
     params = [
         repodir,
         giturl,
@@ -189,6 +191,8 @@ def package_task():
         gardenlinux_build_deb_image,
         cfssl_dir,
         cfssl_fastpath,
+        aws_key_id,
+        aws_secret_key        
     ]
 
     clone_step_gl =  steps.clone_step(
@@ -209,7 +213,7 @@ def package_task():
     make_certs_step = steps.build_make_cert_step()
     package_build_step = steps.build_package_step()
     s3_upload_packages_step = steps.build_upload_packages_step()
-    
+
     task = tkn.model.Task(
         metadata=tkn.model.Metadata(name='build-packages'),
         spec=tkn.model.TaskSpec(

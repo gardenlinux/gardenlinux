@@ -82,6 +82,8 @@ def mk_pipeline_packages_run(
     publishing_actions: typing.Sequence[glci.model.PublishingAction],
     oci_path: str,
     version: str,
+    aws_key_id: str,
+    aws_secret_key: str,
     node_selector: dict = {},
     security_context: dict = {},
 ):
@@ -143,6 +145,14 @@ def mk_pipeline_packages_run(
                 NamedParam(
                     name='gardenlinux_build_deb_image',
                     value=build_deb_image,
+                ),
+                NamedParam(
+                    name='aws_key_id',
+                    value=aws_key_id,
+                ),
+                NamedParam(
+                    name='aws_secret_key',
+                    value=aws_secret_key,
                 ),
                 
             ],
@@ -291,6 +301,8 @@ def main():
         dest='publishing_actions',
         default=[glci.model.PublishingAction.MANIFESTS],
     )
+    parser.add_argument('--aws-key-id', default='TODO set AWS key id', help='AWS key id for uploading packages')
+    parser.add_argument('--aws-secret-key', default='TODO: set AWS secret key', help='AWS secret key uploading packages')
 
     parsed = parser.parse_args()
     parsed.publishing_actions = set(parsed.publishing_actions)
@@ -315,6 +327,8 @@ def main():
         pipeline_name='gl-packages-build',
         publishing_actions=parsed.publishing_actions,
         version=version,
+        aws_key_id= parsed.aws_key_id,
+        aws_secret_key= parsed.aws_secret_key,
         security_context={'runAsUser': 0}
     )
 
