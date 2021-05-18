@@ -116,6 +116,7 @@ class PipelineRef:
 @dataclasses.dataclass
 class PodTemplate:
     nodeSelector: dict
+    securityContext: dict
 
 
 @dataclasses.dataclass
