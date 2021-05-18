@@ -139,12 +139,8 @@ def mk_pipeline_packages():
         'dracut', 
         'ignition', 
         'iproute2', 
-        'isc-kea',
         'linux-5.10',
         'pam',
-        'perl',
-        'python3.7',
-        'python3.8',
         'python3.9',
         'wireguard'
         ]:
