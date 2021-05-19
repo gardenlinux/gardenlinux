@@ -13,7 +13,7 @@ git checkout v${VERSION}
 patch -p1 < "${srcDir}/build.patch"
 
 mkdir .build
-make VERSION="v${VERSION}" DESTDIR=".build" install 
-tar --owner=root --group=root -C .build/ -czf "ignition-${VERSION}.tar.gz" usr 
+make VERSION="v${VERSION}" DESTDIR=".build" install
+tar --owner=root --group=root -C .build/ -czf "ignition-${VERSION}.tar.gz" usr
 
-sudo mv "ignition-${VERSION}.tar.gz" /pool/
+sudo mv "ignition-${VERSION}.tar.gz" ${BUILDTARGET}
