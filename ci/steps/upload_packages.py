@@ -11,7 +11,7 @@ def main():
     session = ccc.aws.session(aws_cfg=AWS_CONFIG_NAME)
     s3_resource = session.resource('s3')
 
-    dir_to_upload = os.path.join(os.getenv('BUILDTARGET', '/workspace/pool'), 'main')
+    dir_to_upload = os.getenv('BUILDTARGET', '/workspace/pool')
 
     glci.s3.upload_dir(
         s3_resource=s3_resource,
