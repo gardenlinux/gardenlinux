@@ -212,7 +212,9 @@ def package_task():
     cfssl_build_step = steps.build_cfssl_step()
     make_certs_step = steps.build_make_cert_step()
     package_build_step = steps.build_package_step()
-    s3_upload_packages_step = steps.build_upload_packages_step()
+    s3_upload_packages_step = steps.build_upload_packages_step(
+        repo_dir=repodir,
+    )
 
     task = tkn.model.Task(
         metadata=tkn.model.Metadata(name='build-packages'),
