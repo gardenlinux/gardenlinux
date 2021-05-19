@@ -8,6 +8,7 @@ DEFAULT_IMAGE = 'eu.gcr.io/gardener-project/cc/job-image:1.788.0'
 
 own_dir = os.path.abspath(os.path.dirname(__file__))
 scripts_dir = os.path.join(own_dir)
+steps_dir = os.path.join(own_dir, 'steps')
 
 
 def extend_python_path_snippet(param_name: str):
@@ -396,6 +397,7 @@ make
         env=env_vars,
     )
 
+
 def build_package_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
@@ -482,7 +484,9 @@ ${pkg_build_script_path}
         env=env_vars,
     )
 
+
 def build_upload_packages_step(
+    repo_dir: tkn.model.NamedParam,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -490,26 +494,30 @@ def build_upload_packages_step(
         name='upload-packages-s3',
         image='$(params.gardenlinux_build_deb_image)',
         script=task_step_script(
-            inline_script='''
-#!/usr/bin/env bash
-set -x
-
-apt-get install -y awscli
-export AWS_ACCESS_KEY_ID="$(params.aws_key_id)"
-export AWS_SECRET_ACCESS_KEY="$(params.aws_secret_key)"
-export AWS_DEFAULT_REGION="eu-central-1"
-export BUILDTARGET="${OUT_PATH:-/workspace/pool}"
-aws s3 cp ${BUILDTARGET} s3://gardenlinux-pkgs/packages --recursive --exclude "*" --include "*.deb"
-result=$?
-if [ ${result} -ne 0 ] && [ ${result} -ne 2  ]; then
-    echo "S3 upload failed with exit code ${result}"
-    exit 1
-fi
-echo "Done upload."
-''',
-            script_type=ScriptType.BOURNE_SHELL,
-            callable='',
+            path=os.path.join(steps_dir, 'upload_packages.py'),
+            script_type=ScriptType.PYTHON3,
+            callable='main',
+            repo_path_param=repo_dir,
             params=[],
+        ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
+    )
+
+
+def build_publish_packages_repository_step(
+    repo_dir: tkn.model.NamedParam,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
+):
+    return tkn.model.TaskStep(
+        name='publish-package-repository-s3',
+        image='$(params.gardenlinux_build_deb_image)',
+        script=task_step_script(
+            path=os.path.join(steps_dir, 'publish_package_repository.py'),
+            script_type=ScriptType.PYTHON3,
+            callable='main',
+            repo_path_param=repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
