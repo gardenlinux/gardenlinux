@@ -50,9 +50,11 @@ def main():
     with open(base_build_task_yaml_path) as f:
         raw_base_build_task = yaml.safe_load(f)
     
-    package_task = tasks.package_task()
-
+    package_task = tasks.nokernel_package_task()
     raw_package_task = dataclasses.asdict(package_task)
+
+    kernel_package_task = tasks.kernel_package_task()
+    raw_kernel_package_task = dataclasses.asdict(kernel_package_task)
 
     build_task_yaml_path = os.path.join(paths.own_dir, 'build-task.yaml.template')
     with open(build_task_yaml_path) as f:
@@ -166,7 +168,7 @@ def main():
     yaml.representer.SafeRepresenter.add_representer(str, multiline_str_presenter)
 
     with open(parsed.outfile, 'w') as f:
-        yaml.safe_dump_all((raw_base_build_task, raw_package_task, raw_build_task, raw_promote_task), f)
+        yaml.safe_dump_all((raw_base_build_task, raw_package_task, raw_kernel_package_task, raw_build_task, raw_promote_task), f)
 
     print(f'dumped tasks to {parsed.outfile}')
 

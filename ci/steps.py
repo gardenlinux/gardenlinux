@@ -468,10 +468,6 @@ if [ ! -f "$BUILDTARGET" ]; then
   mkdir "$BUILDTARGET"
 fi
 
-if [[ ${pkg_name} == linux* ]]; then
-  sudo apt-get install --no-install-recommends -y wget quilt vim less
-fi
-
 cd "${BUILDTARGET}"
 
 ${pkg_build_script_path}
@@ -484,6 +480,96 @@ ${pkg_build_script_path}
         env=env_vars,
     )
 
+def build_kernel_package_step(
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
+):
+    return tkn.model.TaskStep(
+        name='build-package',
+        image='$(params.gardenlinux_build_deb_image)',
+        script=task_step_script(
+            inline_script='''
+set -ex
+
+# split string into an array
+echo "Input: $(params.pkg_names)"
+IFS=', ' read -r -a packages <<< "$(params.pkg_names)"
+echo "Building kernel dependent packages: ${packages[@]}"
+
+repodir='$(params.repodir)'
+
+if [ -z "$SOURCE_PATH" ]; then
+  SOURCE_PATH="$(readlink -f ${repodir})"
+fi
+
+if [ -z "${packages}" ]; then
+  echo "ERROR: no package name given"
+  exit 1
+fi
+
+echo $(pwd)
+
+MANUALDIR=$(realpath $repodir/packages/manual)
+KERNELDIR=$(realpath $repodir/packages/kernel)
+CERTDIR=$(realpath $repodir/cert)
+
+export DEBFULLNAME="Garden Linux Maintainers"
+export DEBEMAIL="contact@gardenlinux.io"
+export BUILDIMAGE="gardenlinux/build-deb"
+export BUILDKERNEL="gardenlinux/build-kernel"
+echo "MANUALDIR: ${MANUALDIR}"
+echo "KERNELDIR: ${KERNELDIR}"
+echo "CERTDIR: ${CERTDIR}"
+ls -l ${CERTDIR}
+
+# original makefile uses mounts, replace this by linking required dirs
+# to the expexted locations:
+# original: mount <gardenlinuxdir>/.packages but this does not exist so just create
+mkdir /pool
+ls -l ${CERTDIR}
+ln -s ${MANUALDIR} /workspace/manual
+ln -s /../Makefile.inside /workspace/Makefile
+echo "$(gpgconf --list-dir agent-socket)"
+mkdir -p /workspace/.gnupg
+ln -s $(gpgconf --list-dir agent-socket) /workspace/.gnupg/S.gpg-agent
+ln -s ${CERTDIR}/sign.pub /sign.pub
+ln -s ${CERTDIR}/Kernel.sign.full /kernel.full
+ln -s ${CERTDIR}/Kernel.sign.crt /kernel.crt
+ln -s ${CERTDIR}/Kernel.sign.key /kernel.key
+ls -l /kernel.full
+
+sudo apt-get install --no-install-recommends -y wget quilt vim less
+
+export BUILDTARGET="${OUT_PATH:-/workspace/pool}"
+if [ ! -f "$BUILDTARGET" ]; then
+mkdir "$BUILDTARGET"
+fi
+
+for package in "${packages[@]}"
+do
+  echo "Building now ${package}"
+  pkg_build_script_path="$SOURCE_PATH/packages/manual/${package}"
+  echo "pkg_build_script_path: ${pkg_build_script_path}"
+
+  if [ ! -f "${pkg_build_script_path}" ]; then
+    echo "ERROR: Don't know how to build ${package}"
+    exit 1
+  fi
+
+  pkg_build_script_path="$(readlink -f ${pkg_build_script_path})"
+
+  pushd "${BUILDTARGET}"
+  ${pkg_build_script_path}
+  popd
+done
+''',
+            script_type=ScriptType.BOURNE_SHELL,
+            callable='',
+            params=[],
+        ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
+    )
 
 def build_upload_packages_step(
     repo_dir: tkn.model.NamedParam,
