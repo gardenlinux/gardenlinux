@@ -48,13 +48,33 @@ def mk_pipeline_package_build_task(
     run_after: typing.List[str],
 ):
     return PipelineTask(
-        name=f'build-packages-{package_name.replace("_", "-").replace(".", "-")}',
+        name=f'build-package-{package_name.replace("_", "-").replace(".", "-")}',
         taskRef=TaskRef(name='build-packages'),
         params=[
             pass_param(name='giturl'),
             pass_param(name='committish'),
             pass_param(name='version_label'),
             NamedParam(name='pkg_name', value=package_name),
+            pass_param(name='gardenlinux_build_deb_image'),
+            pass_param(name='aws_key_id'),
+            pass_param(name='aws_secret_key'),
+            ],
+        runAfter=run_after,
+        timeout="6h"
+    )
+
+def mk_pipeline_kernel_package_build_task(
+    package_names: str,
+    run_after: typing.List[str],
+):
+    return PipelineTask(
+        name=f'build-kernel-packages',
+        taskRef=TaskRef(name='build-kernel-packages'),
+        params=[
+            pass_param(name='giturl'),
+            pass_param(name='committish'),
+            pass_param(name='version_label'),
+            NamedParam(name='pkg_names', value=package_names),
             pass_param(name='gardenlinux_build_deb_image'),
             pass_param(name='aws_key_id'),
             pass_param(name='aws_secret_key'),
@@ -141,16 +161,22 @@ def mk_pipeline_packages():
         'dracut', 
         'ignition', 
         'iproute2', 
-        'linux-5.10',
         'pam',
         'python3.9',
-        'wireguard'
         ]:
         package_task = mk_pipeline_package_build_task(package, [base_build_task.name])
         package_tasks.append(package_task)
     
     run_after=[pkg.name for pkg in package_tasks]
     tasks += package_tasks
+
+    # build packages depending on the Liniux kernel (need to be build in sequence to share file system):
+    pkg_kernel_names = "linux-5.4, linux-5.4-signed, wireguard"
+    
+    package_kernel_task = mk_pipeline_kernel_package_build_task(pkg_kernel_names, [base_build_task.name])
+
+    run_after += package_kernel_task.name
+    tasks.append(package_kernel_task)
 
     pipeline = Pipeline(
         metadata=Metadata(

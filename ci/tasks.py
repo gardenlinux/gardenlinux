@@ -171,11 +171,18 @@ def base_build_task(
     )
     return task
 
-def package_task():
+def _package_task(
+    task_name: str,
+    package_build_step: tkn.model.TaskStep,
+    is_kernel_task: bool,
+):
     repodir = NamedParam(name='repodir', default='/workspace/gardenlinux_git', description='Gardenlinux working dir')
     giturl = NamedParam(name='giturl', default='https://github.com/gardenlinux/gardenlinux.git', description='Gardenlinux Git repo')
     committish = NamedParam(name='committish', default='master', description='commit to build')
-    pkg_name = NamedParam(name='pkg_name', description='name of package to build')
+    if is_kernel_task:
+        pkg_name = NamedParam(name='pkg_names', description='list of kernel-package to build (comma separated string)')
+    else:
+        pkg_name = NamedParam(name='pkg_name', description='name of package to build')
     version_label = NamedParam(name='version_label', description = 'version label uses as tag for upload')
     gardenlinux_build_deb_image = NamedParam(name='gardenlinux_build_deb_image', description = 'image to use for package build')
     cfssl_dir = NamedParam(name='cfssl_dir', default = '/workspace/cfssl', description = 'git wokring dir to clone and build cfssl')
@@ -211,13 +218,12 @@ def package_task():
 
     cfssl_build_step = steps.build_cfssl_step()
     make_certs_step = steps.build_make_cert_step()
-    package_build_step = steps.build_package_step()
     s3_upload_packages_step = steps.build_upload_packages_step(
         repo_dir=repodir,
     )
 
     task = tkn.model.Task(
-        metadata=tkn.model.Metadata(name='build-packages'),
+        metadata=tkn.model.Metadata(name=task_name),
         spec=tkn.model.TaskSpec(
             params=params,
             steps=[
@@ -232,3 +238,16 @@ def package_task():
     )
     return task
 
+def nokernel_package_task():
+    return _package_task(
+        task_name='build-packages',
+        package_build_step = steps.build_package_step(),
+        is_kernel_task = False,
+    )
+
+def kernel_package_task():
+    return _package_task(
+        task_name='build-kernel-packages',
+        package_build_step = steps.build_kernel_package_step(),
+        is_kernel_task = True,
+    )
