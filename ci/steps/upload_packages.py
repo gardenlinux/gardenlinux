@@ -3,23 +3,21 @@ import os
 import ccc.aws
 import glci.s3
 
-AWS_CONFIG_NAME = 'gardenlinux'
-GARDENLINUX_PKGS_BUCKET_NAME = 'gardenlinux-pkgs'
 
-
-def main():
-    session = ccc.aws.session(aws_cfg=AWS_CONFIG_NAME)
+def upload_packages(
+    cicd_cfg_name: str,
+    package_path_s3_prefix: str,
+    src_dir_path: str = os.getenv('BUILDTARGET', '/workspace/pool'),
+):
+    cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
+    aws_cfg_name = cicd_cfg.build.aws_cfg_name
+    session = ccc.aws.session(aws_cfg=aws_cfg_name)
     s3_resource = session.resource('s3')
-
-    dir_to_upload = os.getenv('BUILDTARGET', '/workspace/pool')
+    s3_bucket_name = cicd_cfg.build.s3_bucket_name
 
     glci.s3.upload_dir(
         s3_resource=s3_resource,
-        bucket_name=GARDENLINUX_PKGS_BUCKET_NAME,
-        src_dir_path=dir_to_upload,
-        dest_dir_path='packages'
+        bucket_name=s3_bucket_name,
+        src_dir_path=src_dir_path,
+        dest_dir_path=package_path_s3_prefix,
     )
-
-
-if __name__ == '__main__':
-    main()

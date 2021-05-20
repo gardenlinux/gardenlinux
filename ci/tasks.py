@@ -187,6 +187,10 @@ def _package_task(
          default='false',
         description='bypass cfssl build and copy binaries from github (set to true/false)',
     )
+    cicd_cfg_name = NamedParam(
+        name='cicd_cfg_name',
+        default='default',
+    )
     committish = NamedParam(
         name='committish',
         default='master',
@@ -218,6 +222,11 @@ def _package_task(
         default='/workspace/gardenlinux_git',
         description='Gardenlinux working dir',
     )
+    s3_package_path = NamedParam(
+        name='package_path_s3_prefix',
+         default='packages',
+        description='path relative to the root of the s3 bucket to upload the built packages to',
+    )
     version_label = NamedParam(
         name='version_label',
         description='version label uses as tag for upload',
@@ -225,11 +234,13 @@ def _package_task(
     params = [
         cfssl_dir,
         cfssl_fastpath,
+        cicd_cfg_name,
         committish,
         gardenlinux_build_deb_image,
         giturl,
         pkg_name,
         repodir,
+        s3_package_path,
         version_label,
     ]
 
@@ -250,7 +261,9 @@ def _package_task(
     cfssl_build_step = steps.build_cfssl_step()
     make_certs_step = steps.build_make_cert_step()
     s3_upload_packages_step = steps.build_upload_packages_step(
+        cicd_cfg_name=cicd_cfg_name,
         repo_dir=repodir,
+        s3_package_path=s3_package_path,
     )
 
     task = tkn.model.Task(

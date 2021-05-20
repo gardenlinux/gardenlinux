@@ -573,6 +573,8 @@ done
 
 def build_upload_packages_step(
     repo_dir: tkn.model.NamedParam,
+    cicd_cfg_name: tkn.model.NamedParam,
+    s3_package_path: tkn.model.NamedParam,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -582,9 +584,12 @@ def build_upload_packages_step(
         script=task_step_script(
             path=os.path.join(steps_dir, 'upload_packages.py'),
             script_type=ScriptType.PYTHON3,
-            callable='main',
+            callable='upload_packages',
             repo_path_param=repo_dir,
-            params=[],
+            params=[
+                cicd_cfg_name,
+                s3_package_path,
+            ],
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
