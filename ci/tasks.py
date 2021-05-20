@@ -140,8 +140,8 @@ def build_task(
     )
     return task
 
-def base_build_task(
-):
+
+def base_build_task():
     giturl = NamedParam(name='giturl', default='ssh://git@github.com/gardenlinux/gardenlinux')
     committish = NamedParam(name='committish', default='master')
     glepoch = NamedParam(name='gardenlinux_epoch')
@@ -171,35 +171,66 @@ def base_build_task(
     )
     return task
 
+
 def _package_task(
     task_name: str,
     package_build_step: tkn.model.TaskStep,
     is_kernel_task: bool,
 ):
-    repodir = NamedParam(name='repodir', default='/workspace/gardenlinux_git', description='Gardenlinux working dir')
-    giturl = NamedParam(name='giturl', default='https://github.com/gardenlinux/gardenlinux.git', description='Gardenlinux Git repo')
-    committish = NamedParam(name='committish', default='master', description='commit to build')
+    cfssl_dir = NamedParam(
+        name='cfssl_dir',
+        default='/workspace/cfssl',
+        description='git wokring dir to clone and build cfssl',
+    )
+    cfssl_fastpath = NamedParam(
+        name='cfssl_fastpath',
+         default='false',
+        description='bypass cfssl build and copy binaries from github (set to true/false)',
+    )
+    committish = NamedParam(
+        name='committish',
+        default='master',
+        description='commit to build',
+    )
+    gardenlinux_build_deb_image = NamedParam(
+        name='gardenlinux_build_deb_image',
+        description='image to use for package build',
+    )
+    giturl = NamedParam(
+        name='giturl',
+        default='https://github.com/gardenlinux/gardenlinux.git',
+        description='Gardenlinux Git repo',
+    )
+
     if is_kernel_task:
-        pkg_name = NamedParam(name='pkg_names', description='list of kernel-package to build (comma separated string)')
+        pkg_name = NamedParam(
+            name='pkg_names',
+            description='list of kernel-package to build (comma separated string)',
+        )
     else:
-        pkg_name = NamedParam(name='pkg_name', description='name of package to build')
-    version_label = NamedParam(name='version_label', description = 'version label uses as tag for upload')
-    gardenlinux_build_deb_image = NamedParam(name='gardenlinux_build_deb_image', description = 'image to use for package build')
-    cfssl_dir = NamedParam(name='cfssl_dir', default = '/workspace/cfssl', description = 'git wokring dir to clone and build cfssl')
-    cfssl_fastpath = NamedParam(name='cfssl_fastpath',  default = 'false', description = 'bypass cfssl build and copy binaries from github (set to true/false)')
-    aws_key_id = NamedParam(name='aws_key_id',  default = 'TODO set aws key id', description = 'AWS S3 key id used for uplaoding packages')
-    aws_secret_key = NamedParam(name='aws_secret_key',  default = 'TODO set aws secret key', description = 'AWS S3 secret key used for uplaoding packages')
+        pkg_name = NamedParam(
+            name='pkg_name',
+            description='name of package to build',
+        )
+
+    repodir = NamedParam(
+        name='repodir',
+        default='/workspace/gardenlinux_git',
+        description='Gardenlinux working dir',
+    )
+    version_label = NamedParam(
+        name='version_label',
+        description='version label uses as tag for upload',
+    )
     params = [
-        repodir,
-        giturl,
-        committish,
-        pkg_name,
-        version_label,
-        gardenlinux_build_deb_image,
         cfssl_dir,
         cfssl_fastpath,
-        aws_key_id,
-        aws_secret_key        
+        committish,
+        gardenlinux_build_deb_image,
+        giturl,
+        pkg_name,
+        repodir,
+        version_label,
     ]
 
     clone_step_gl =  steps.clone_step(
@@ -238,16 +269,18 @@ def _package_task(
     )
     return task
 
+
 def nokernel_package_task():
     return _package_task(
         task_name='build-packages',
-        package_build_step = steps.build_package_step(),
-        is_kernel_task = False,
+        package_build_step=steps.build_package_step(),
+        is_kernel_task=False,
     )
+
 
 def kernel_package_task():
     return _package_task(
         task_name='build-kernel-packages',
-        package_build_step = steps.build_kernel_package_step(),
-        is_kernel_task = True,
+        package_build_step=steps.build_kernel_package_step(),
+        is_kernel_task=True,
     )
