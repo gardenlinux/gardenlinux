@@ -598,6 +598,7 @@ def build_upload_packages_step(
 
 def build_publish_packages_repository_step(
     cicd_cfg_name: tkn.model.NamedParam,
+    s3_package_path: tkn.model.NamedParam,
     repo_dir: tkn.model.NamedParam,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
@@ -612,6 +613,7 @@ def build_publish_packages_repository_step(
             repo_path_param=repo_dir,
             params=[
                 cicd_cfg_name,
+                s3_package_path,
             ],
         ),
         volumeMounts=volume_mounts,
