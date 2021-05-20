@@ -48,6 +48,7 @@ def setup(reprepro_base_dir: str):
 
 def build_package_repository(
     cicd_cfg_name: str,
+    package_path_s3_prefix: str,
 ):
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
     aws_cfg_name = cicd_cfg.build.aws_cfg_name
@@ -71,7 +72,7 @@ def build_package_repository(
             glci.s3.download_dir_from_s3(
                 s3_resource=s3_resource,
                 bucket_name=s3_bucket_name,
-                s3_dir='packages/',
+                s3_dir=package_path_s3_prefix,
                 local_dir=tmp_dir,
             )
             # add all debian-packages to reprepo-repository
