@@ -88,7 +88,7 @@ def clone_step(
         name='clone-repo-step',
         image=DEFAULT_IMAGE,
         script=task_step_script(
-            path=os.path.join(scripts_dir, 'clone_repo_step.py'),
+            path=os.path.join(steps_dir, 'clone_repo_step.py'),
             script_type=ScriptType.PYTHON3,
             callable='clone_and_copy',
             params=[
@@ -150,7 +150,7 @@ def upload_results_step(
         name='upload-results',
         image=DEFAULT_IMAGE,
         script=task_step_script(
-            path=os.path.join(scripts_dir, 'upload_results_step.py'),
+            path=os.path.join(steps_dir, 'upload_results_step.py'),
             script_type=ScriptType.PYTHON3,
             callable='upload_results_step',
             params=[
@@ -188,7 +188,7 @@ def promote_single_step(
         name='promote-step',
         image=DEFAULT_IMAGE,
         script=task_step_script(
-            path=os.path.join(scripts_dir, 'promote_step.py'),
+            path=os.path.join(steps_dir, 'promote_step.py'),
             script_type=ScriptType.PYTHON3,
             callable='promote_single_step',
             params=[
@@ -223,7 +223,7 @@ def promote_step(
         name='finalise-promotion-step',
         image=DEFAULT_IMAGE,
         script=task_step_script(
-            path=os.path.join(scripts_dir, 'promote_step.py'),
+            path=os.path.join(steps_dir, 'promote_step.py'),
             script_type=ScriptType.PYTHON3,
             callable='promote_step',
             params=[
@@ -258,7 +258,7 @@ def pre_build_step(
         name='prebuild-step',
         image=DEFAULT_IMAGE,
         script=task_step_script(
-            path=os.path.join(scripts_dir, 'pre_build_step.py'),
+            path=os.path.join(steps_dir, 'pre_build_step.py'),
             script_type=ScriptType.PYTHON3,
             callable='pre_build_step',
             params=[
@@ -291,7 +291,7 @@ def release_step(
         name='release-step',
         image=DEFAULT_IMAGE,
         script=task_step_script(
-            path=os.path.join(scripts_dir, 'release_step.py'),
+            path=os.path.join(steps_dir, 'release_step.py'),
             script_type=ScriptType.PYTHON3,
             callable='release_step',
             params=[

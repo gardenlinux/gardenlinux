@@ -3,6 +3,7 @@ import release
 
 parsable_to_int = str
 
+
 def release_step(
     giturl: str,
     committish: str,

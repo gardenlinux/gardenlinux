@@ -1,9 +1,8 @@
 import sys
 
-import ccc.aws
-
 import glci.model
 import glci.util
+import glci.s3
 
 
 def pre_build_step(
@@ -26,10 +25,8 @@ def pre_build_step(
         sys.exit(0)
 
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
-    aws_cfg_name = cicd_cfg.build.aws_cfg_name
+    s3_client = glci.s3.s3_client(cicd_cfg)
     s3_bucket_name = cicd_cfg.build.s3_bucket_name
-    session = ccc.aws.session(aws_cfg_name)
-    s3_client = session.client('s3')
 
     modifiers = tuple([m for m in modifiers.split(',') if m])
 

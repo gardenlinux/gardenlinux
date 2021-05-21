@@ -3,7 +3,6 @@ import os
 import subprocess
 import tempfile
 
-import ccc.aws
 import glci.s3
 
 GARDENLINUX_DISTRIBUTION = 'bullseye'
@@ -51,9 +50,7 @@ def build_package_repository(
     package_path_s3_prefix: str,
 ):
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
-    aws_cfg_name = cicd_cfg.build.aws_cfg_name
-    session = ccc.aws.session(aws_cfg=aws_cfg_name)
-    s3_resource = session.resource('s3')
+    s3_resource = glci.s3.s3_resource(cicd_cfg)
     s3_bucket_name = cicd_cfg.build.s3_bucket_name
 
     def _files_with_extension(dir, extension):

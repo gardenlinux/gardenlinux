@@ -6,10 +6,9 @@ import pprint
 import sys
 import tarfile
 
-import ccc.aws # dependency towards github.com/gardener/cc-utils
-
 import glci.model
 import glci.util
+import glci.s3
 
 '''
 this script is rendered into build-task from step.py/render_task.py
@@ -85,10 +84,9 @@ def upload_results_step(
         sys.exit(1)
 
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
+    s3_client = glci.s3.s3_client(cicd_cfg)
     aws_cfg_name = cicd_cfg.build.aws_cfg_name
     s3_bucket_name = cicd_cfg.build.s3_bucket_name
-    session = ccc.aws.session(aws_cfg_name)
-    s3_client = session.client('s3')
     print(f'uploading to s3 {aws_cfg_name=} {s3_bucket_name=}')
     gardenlinux_epoch = int(gardenlinux_epoch)
 

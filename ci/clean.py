@@ -5,19 +5,8 @@ import os
 import typing
 
 import glci.model
+import glci.s3
 import glci.util
-
-
-def _s3_client(cicd_cfg: glci.model.CicdCfg):
-    # depends on `gardener-cicd-base`
-    try:
-        import ccc.aws
-    except ModuleNotFoundError:
-        raise RuntimeError('missing dependency: install gardener-cicd-base')
-
-    s3_session = ccc.aws.session(cicd_cfg.build.aws_cfg_name)
-    s3_client = s3_session.client('s3')
-    return s3_client
 
 
 def clean_release_manifest_sets(
@@ -39,7 +28,7 @@ def clean_release_manifest_sets(
     oldest_allowed_date = now - datetime.timedelta(days=max_age_days)
     print(f'{oldest_allowed_date=}')
 
-    s3_client = _s3_client(cicd_cfg=cicd_cfg)
+    s3_client = glci.s3.s3_client(cicd_cfg=cicd_cfg)
 
     def purge_if_outdated(release_manifest_set: glci.model.ReleaseManifestSet):
       if len(release_manifest_set.manifests) < 1:
@@ -60,7 +49,6 @@ def clean_release_manifest_sets(
 
       print(f'purged {release_manifest_set.s3_key=}')
       return (True, release_manifest_set)
-
 
     for purged, manifest in executor.map(
         purge_if_outdated,
@@ -85,7 +73,7 @@ def clean_single_release_manifests(
     oldest_allowed_date = now - datetime.timedelta(days=max_age_days)
     print(f'{oldest_allowed_date=}')
 
-    s3_client = _s3_client(cicd_cfg=cicd_cfg)
+    s3_client = glci.s3.s3_client(cicd_cfg=cicd_cfg)
 
     def purge_if_outdated(release_manifest: glci.model.ReleaseManifest):
       if release_manifest.build_ts_as_date() < oldest_allowed_date:
@@ -97,7 +85,6 @@ def clean_single_release_manifests(
           print(f'purged {release_manifest.s3_key=}')
           return (True, release_manifest)
       return (False, release_manifest)
-
 
     for purged, manifest in executor.map(purge_if_outdated, enumerate_releases()):
         pass
@@ -154,7 +141,7 @@ def clean_orphaned_objects(
     print(f'{len(all_objects)=}')
     print(f'{len(all_object_keys)=}')
 
-    s3_client = _s3_client(cicd_cfg=cicd_cfg)
+    s3_client = glci.s3.s3_client(cicd_cfg=cicd_cfg)
 
     continuation_token = None
     while True:
