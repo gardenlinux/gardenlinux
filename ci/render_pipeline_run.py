@@ -2,8 +2,6 @@
 
 import argparse
 import dataclasses
-import os
-import subprocess
 import typing
 import yaml
 
@@ -52,17 +50,20 @@ def mk_pipeline_name(
 
     return '-'.join(name_parts)[:60]
 
+
 def get_version_label(
     version: str,
     committish: str,
 ):
     return f'{version}-{committish}'
 
+
 def get_build_image(
     oci_path: str,
     version_label: str,
 ):
     return f'{oci_path}/gardenlinux-build-image:{version_label}'
+
 
 def get_deb_build_image(
     oci_path: str,
@@ -71,6 +72,7 @@ def get_deb_build_image(
     return f'{oci_path}/gardenlinux-build-deb:{version_label}'
     # for fixed path from concourse buildimage pipeline
     # return 'eu.gcr.io/gardener-project/gardenlinux/gardenlinux-build-deb:413.0.0'
+
 
 def mk_pipeline_packages_run(
     branch: str,
@@ -82,16 +84,14 @@ def mk_pipeline_packages_run(
     publishing_actions: typing.Sequence[glci.model.PublishingAction],
     oci_path: str,
     version: str,
-    aws_key_id: str,
-    aws_secret_key: str,
     node_selector: dict = {},
     security_context: dict = {},
 ):
     run_name = mk_pipeline_name(
-        pipeline_name = pipeline_name,
-        publishing_actions = publishing_actions,
-        version = version,
-        committish = committish,
+        pipeline_name=pipeline_name,
+        publishing_actions=publishing_actions,
+        version=version,
+        committish=committish,
     )
     version_label = get_version_label(version, committish)
     build_deb_image = get_deb_build_image(oci_path, version_label)
@@ -145,7 +145,7 @@ def mk_pipeline_packages_run(
                 NamedParam(
                     name='gardenlinux_build_deb_image',
                     value=build_deb_image,
-                ),                
+                ),
             ],
             pipelineRef=PipelineRef(
                 name=pipeline_name,
@@ -174,10 +174,10 @@ def mk_pipeline_run(
 ):
 
     run_name = mk_pipeline_name(
-        pipeline_name = pipeline_name,
-        publishing_actions = publishing_actions,
-        version = version,
-        committish = committish,
+        pipeline_name=pipeline_name,
+        publishing_actions=publishing_actions,
+        version=version,
+        committish=committish,
     )
 
     version_label = get_version_label(version, committish)
@@ -251,7 +251,6 @@ def mk_pipeline_run(
                     name='gardenlinux_build_deb_image',
                     value=build_deb_image,
                 ),
-                
             ],
             pipelineRef=PipelineRef(
                 name=pipeline_name,
@@ -292,8 +291,6 @@ def main():
         dest='publishing_actions',
         default=[glci.model.PublishingAction.MANIFESTS],
     )
-    parser.add_argument('--aws-key-id', default='TODO set AWS key id', help='AWS key id for uploading packages')
-    parser.add_argument('--aws-secret-key', default='TODO: set AWS secret key', help='AWS secret key uploading packages')
 
     parsed = parser.parse_args()
     parsed.publishing_actions = set(parsed.publishing_actions)
@@ -318,8 +315,6 @@ def main():
         pipeline_name='gl-packages-build',
         publishing_actions=parsed.publishing_actions,
         version=version,
-        aws_key_id= parsed.aws_key_id,
-        aws_secret_key= parsed.aws_secret_key,
         security_context={'runAsUser': 0}
     )
 
