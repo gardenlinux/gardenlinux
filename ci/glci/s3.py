@@ -1,4 +1,35 @@
 import os
+import model
+import util
+
+
+def _s3_session(aws_cfg_name: str):
+    try:
+        import ccc.aws
+    except ModuleNotFoundError:
+        raise RuntimeError('missing dependency: install gardener-cicd-base')
+
+    return ccc.aws.session(aws_cfg_name)
+
+
+def s3_client_for_cfg_name(cicd_cfg_name: str):
+    cicd_cfg = util.cicd_cfg(cfg_name=cicd_cfg_name)
+    aws_cfg_name = cicd_cfg.build.aws_cfg_name
+    return _s3_session(aws_cfg_name).client('s3')
+
+
+def s3_resource_for_cfg_name(cicd_cfg_name: str):
+    cicd_cfg = util.cicd_cfg(cfg_name=cicd_cfg_name)
+    aws_cfg_name = cicd_cfg.build.aws_cfg_name
+    return _s3_session(aws_cfg_name).resource('s3')
+
+
+def s3_client(cicd_cfg: model.CicdCfg):
+    return _s3_session(cicd_cfg.build.aws_cfg_name).client('s3')
+
+
+def s3_resource(cicd_cfg: model.CicdCfg):
+    return _s3_session(cicd_cfg.build.aws_cfg_name).resource('s3')
 
 
 def upload_dir(
