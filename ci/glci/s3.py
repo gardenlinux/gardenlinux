@@ -1,5 +1,6 @@
 import os
 
+
 def upload_dir(
     s3_resource,
     bucket_name: str,
@@ -13,10 +14,11 @@ def upload_dir(
             src_path_relative = os.path.relpath(src_file_path, start=src_dir_path)
             dst_file_path = os.path.join(dest_dir_path, src_path_relative)
 
-            bucket.upload_file(
-                Filename=src_file_path,
-                Key=dst_file_path,
-            )
+            if os.path.exists(src_file_path) and os.path.isfile(src_file_path):
+                bucket.upload_file(
+                    Filename=src_file_path,
+                    Key=dst_file_path,
+                )
 
 
 def download_dir(
