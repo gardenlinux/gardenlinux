@@ -56,8 +56,6 @@ def mk_pipeline_package_build_task(
             pass_param(name='version_label'),
             NamedParam(name='pkg_name', value=package_name),
             pass_param(name='gardenlinux_build_deb_image'),
-            pass_param(name='aws_key_id'),
-            pass_param(name='aws_secret_key'),
             ],
         runAfter=run_after,
         timeout="6h"
@@ -76,8 +74,6 @@ def mk_pipeline_kernel_package_build_task(
             pass_param(name='version_label'),
             NamedParam(name='pkg_names', value=package_names),
             pass_param(name='gardenlinux_build_deb_image'),
-            pass_param(name='aws_key_id'),
-            pass_param(name='aws_secret_key'),
             ],
         runAfter=run_after,
         timeout="6h"
@@ -195,8 +191,6 @@ def mk_pipeline_packages():
                 NamedParam(name='snapshot_timestamp'),
                 NamedParam(name='version'),
                 NamedParam(name='version_label'),
-                NamedParam(name='aws_key_id'),
-                NamedParam(name='aws_secret_key'),
             ],
             tasks=tasks,
         ),

@@ -145,16 +145,7 @@ def mk_pipeline_packages_run(
                 NamedParam(
                     name='gardenlinux_build_deb_image',
                     value=build_deb_image,
-                ),
-                NamedParam(
-                    name='aws_key_id',
-                    value=aws_key_id,
-                ),
-                NamedParam(
-                    name='aws_secret_key',
-                    value=aws_secret_key,
-                ),
-                
+                ),                
             ],
             pipelineRef=PipelineRef(
                 name=pipeline_name,
