@@ -3,6 +3,7 @@ set -euo pipefail
 
 . $(dirname $0)/.helper
 . $(dirname $0)/linux-5.10.d/VERSION
+own_dir="$(readlink -f "$(dirname "${0}")")"
 
 sudo apt-get install -y --no-install-recommends vim less equivs pesign
 
@@ -10,16 +11,16 @@ mkdir -p certdir
 openssl pkcs12 -export -out kernel.p12 -inkey /kernel.key -in /kernel.crt -passout pass:""
 pk12util -i kernel.p12 -d certdir -W "" -K ""
 
-if $(dpkg --compare-versions $KERNEL_DEBIAN lt $KERNEL_VERSION); then 
+if $(dpkg --compare-versions $KERNEL_DEBIAN lt $KERNEL_VERSION); then
 	KERNEL_VERSION="$KERNEL_VERSION-1"
 else
 	KERNEL_VERSION="$KERNEL_DEBIAN"
 fi
 sudo apt-get install -y --no-install-recommends -f \
-	$BUILDTARGET/main/l/linux/linux-kbuild-$(cut -d. -f-2 <<< ${KERNEL_BASE})_${KERNEL_VERSION}_${KERNEL_ARCH}.deb \
-	$BUILDTARGET/main/l/linux/linux-support-${KERNEL_BASEABI}_${KERNEL_VERSION}_all.deb \
-	$BUILDTARGET/main/l/linux/linux-image-${KERNEL_ARCH}-signed-template_${KERNEL_VERSION}_${KERNEL_ARCH}.deb
-	
+	$BUILDTARGET/main/l/linux/linux-kbuild-$(cut -d. -f-2 <<< ${KERNEL_BASE})_${KERNEL_VERSION}-1_${KERNEL_ARCH}.deb \
+	$BUILDTARGET/main/l/linux/linux-support-${KERNEL_BASEABI}_${KERNEL_VERSION}-1_all.deb \
+	$BUILDTARGET/main/l/linux/linux-image-${KERNEL_ARCH}-signed-template_${KERNEL_VERSION}-1_${KERNEL_ARCH}.deb
+
 for i in $KERNEL_FLAVOURS; do
 	sudo apt-get install -y --no-install-recommends \
 		$BUILDTARGET/main/l/linux/linux-image-${i}-${KERNEL_ARCH}-unsigned_${KERNEL_VERSION}_${KERNEL_ARCH}.deb
@@ -29,12 +30,12 @@ cp -R /usr/share/code-signing/linux-image-${KERNEL_ARCH}-signed-template/source-
 
 cd linux-signed-${KERNEL_ARCH}
 for i in $KERNEL_FLAVOURS; do
-	../$(dirname $0)/linux-$(cut -d. -f-2 <<< ${KERNEL_BASE}).d/sign-helper linux-image-${i}-${KERNEL_ARCH}-unsigned debian/signatures
+	"${own_dir}/linux-$(cut -d. -f-2 <<< ${KERNEL_BASE}).d/sign-helper linux-image-${i}-${KERNEL_ARCH}-unsigned" debian/signatures
 done
 TMPDIR=.. mk-build-deps debian/control
 sudo apt-get install -y --no-install-recommends -f ../linux-signed-${KERNEL_ARCH}-build-deps*.deb
-        
+
 donotmove="$(ls ..)"
-debuild	
+debuild
 src=linux-signed-${KERNEL_ARCH}
 move_package .. $donotmove
