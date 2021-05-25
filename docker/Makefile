@@ -11,7 +11,7 @@ needslim:
 
 .PHONY: build-image
 build-image: needslim
-	@docker build -t gardenlinux/build-image:$(VERSION) $(ALTNAME_INTERNAL) build-image
+	@docker build --build-arg VERSION=$(VERSION) -t gardenlinux/build-image:$(VERSION) $(ALTNAME_INTERNAL) build-image
 
 .PHONY: build
 build: needslim
