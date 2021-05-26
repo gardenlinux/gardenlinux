@@ -479,6 +479,12 @@ class BuildCfg:
 
 
 @dataclasses.dataclass(frozen=True)
+class PackageBuildCfg:
+    aws_cfg_name: str
+    s3_bucket_name: str
+
+
+@dataclasses.dataclass(frozen=True)
 class AzureMarketplaceCfg:
     offer_id: str
     publisher_id: str
@@ -548,6 +554,7 @@ class CicdCfg:
     build: BuildCfg
     publish: PublishCfg
     notify: NotificationCfg
+    package_build: typing.Optional[PackageBuildCfg]
 
 
 epoch_date = datetime.datetime.fromisoformat('2020-04-01')
