@@ -104,6 +104,7 @@ def clone_step(
 
     return step
 
+
 def clone_step_no_params(
     name: str,
     committish: str,
@@ -117,10 +118,10 @@ def clone_step_no_params(
         name=name,
         image=DEFAULT_IMAGE,
         script=task_step_script(
-            inline_script = f'''
-import clone_repo_step
+            inline_script=f'''
+import steps.clone_repo_step
 
-clone_repo_step.clone_and_copy('{git_url}', '{committish}', '{repo_dir}')
+steps.clone_repo_step.clone_and_copy('{git_url}', '{committish}', '{repo_dir}')
 ''',
             script_type=ScriptType.PYTHON3,
             callable=None,
@@ -132,6 +133,8 @@ clone_repo_step.clone_and_copy('{git_url}', '{committish}', '{repo_dir}')
     )
 
     return step
+
+
 def upload_results_step(
     architecture: tkn.model.NamedParam,
     cicd_cfg_name: tkn.model.NamedParam,
@@ -320,6 +323,7 @@ def build_image_step(
 ):
     pass
 
+
 def build_cfssl_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
@@ -372,6 +376,7 @@ rm -rf $(params.cfssl_dir)
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+
 
 def build_make_cert_step(
     env_vars: typing.List[typing.Dict] = [],
@@ -480,6 +485,7 @@ ${pkg_build_script_path}
         env=env_vars,
     )
 
+
 def build_kernel_package_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
@@ -570,6 +576,7 @@ done
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+
 
 def build_upload_packages_step(
     repo_dir: tkn.model.NamedParam,
