@@ -72,3 +72,12 @@ def clone_and_copy(
 
     print(f'cloned to {repo_dir=} {commit_hash=}')
     print(f'Commit Message: {commit_msg}')
+
+
+def cfssl_clone(
+    cfssl_git_url: str,
+    cfssl_committish: str,
+    cfssl_dir: str,
+):
+
+    clone_and_copy(cfssl_git_url, cfssl_committish, cfssl_dir)

@@ -231,7 +231,20 @@ def _package_task(
         name='version_label',
         description='version label uses as tag for upload',
     )
+    cfssl_committish = NamedParam(
+        name='cfssl_committish',
+        description='cfssl branch to clone',
+        default='master'
+    )
+    cfss_git_url = NamedParam(
+        name='cfssl_git_url',
+        description='cfssl git url to clone',
+        default='https://github.com/cloudflare/cfssl.git'
+    )
+
     params = [
+        cfssl_committish,
+        cfss_git_url,
         cfssl_dir,
         cfssl_fastpath,
         cicd_cfg_name,
@@ -250,12 +263,12 @@ def _package_task(
         git_url=giturl,
     )
 
-    clone_step_cfssl = steps.clone_step_no_params(
+    clone_step_cfssl = steps.cfssl_clone_step(
         name='clone-step-cfssl',
-        committish='master',
-        repo_dir=f'$(params.{cfssl_dir.name})',
+        cfssl_committish=cfssl_committish,
+        cfssl_dir=cfssl_dir,
         gardenlinux_repo_path_param=repodir,
-        git_url='https://github.com/cloudflare/cfssl.git',
+        cfssl_git_url=cfss_git_url
     )
 
     cfssl_build_step = steps.build_cfssl_step()
