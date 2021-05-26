@@ -16,7 +16,7 @@ def upload_packages(
         raise RuntimeError(f"No package-build config found in cicd-config {cicd_cfg_name}")
 
     s3_bucket_name = package_build_cfg.s3_bucket_name
-    s3_resource = glci.s3.s3_resource_for_cfg_name(package_build_cfg.aws_cfg_name)
+    s3_resource = glci.s3.s3_resource_for_aws_cfg_name(package_build_cfg.aws_cfg_name)
 
     # manipulate paths so that only the 'main' dir is uploaded
     src_dir_path = os.path.join(src_dir_path, PACKAGE_BUILD_DIR)
