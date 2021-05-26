@@ -4,7 +4,7 @@ import typing
 
 import tkn.model
 
-DEFAULT_IMAGE = 'eu.gcr.io/gardener-project/cc/job-image:1.788.0'
+DEFAULT_IMAGE = 'gardenerci/cc-job-image:1.1302.0'
 
 own_dir = os.path.abspath(os.path.dirname(__file__))
 scripts_dir = os.path.join(own_dir)
@@ -105,11 +105,11 @@ def clone_step(
     return step
 
 
-def clone_step_no_params(
+def cfssl_clone_step(
     name: str,
-    committish: str,
-    git_url: str,
-    repo_dir: str,
+    cfssl_committish: tkn.model.NamedParam,
+    cfssl_git_url: tkn.model.NamedParam,
+    cfssl_dir: tkn.model.NamedParam,
     gardenlinux_repo_path_param: tkn.model.NamedParam,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
@@ -118,14 +118,14 @@ def clone_step_no_params(
         name=name,
         image=DEFAULT_IMAGE,
         script=task_step_script(
-            inline_script=f'''
-import steps.clone_repo_step
-
-steps.clone_repo_step.clone_and_copy('{git_url}', '{committish}', '{repo_dir}')
-''',
             script_type=ScriptType.PYTHON3,
-            callable=None,
-            params=[],
+            path=os.path.join(steps_dir, 'clone_repo_step.py'),
+            callable='cfssl_clone',
+            params=[
+                cfssl_committish,
+                cfssl_git_url,
+                cfssl_dir,
+            ],
             repo_path_param=gardenlinux_repo_path_param,
         ),
         volumeMounts=volume_mounts,
@@ -587,7 +587,7 @@ def build_upload_packages_step(
 ):
     return tkn.model.TaskStep(
         name='upload-packages-s3',
-        image='$(params.gardenlinux_build_deb_image)',
+        image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'upload_packages.py'),
             script_type=ScriptType.PYTHON3,
