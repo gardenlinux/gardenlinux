@@ -5,4 +5,4 @@ cloud-guest-utils
 libpam-cracklib
 
 main/l/linux-signed-amd64/linux-image-cloud-${arch}_5.10.38-1_${arch}.deb
-main/l/linux-signed-amd64/linux-image-5.10.0-7-cloud-${arch}_5.10.38-1_${arch}.deb
+main/l/linux-signed-amd64/linux-image-5.10.0-8-cloud-${arch}_5.10.38-1_${arch}.deb

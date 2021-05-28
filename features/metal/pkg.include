@@ -15,4 +15,4 @@ smartmontools
 bird2
 
 main/l/linux-signed-amd64/linux-image-${arch}_5.10.38-1_${arch}.deb
-main/l/linux-signed-amd64/linux-image-5.10.0-7-${arch}_5.10.38-1_${arch}.deb
+main/l/linux-signed-amd64/linux-image-5.10.0-8-${arch}_5.10.38-1_${arch}.deb
