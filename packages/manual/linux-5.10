@@ -37,7 +37,12 @@ cd linux-$KERNEL_DEBIAN
 git -c advice.detachedHead=false checkout debian/$KERNEL_DEBIAN
 cd ..
 
+cd $src
+mv debian/changelog debian/changelog.org
+cd ..
+
 if $(dpkg --compare-versions $KERNEL_DEBIAN lt $KERNEL_VERSION); then 
+	KERNEL_VERSION="$KERNEL_VERSION-1"
 	echo "### pulling aufs5 from upstream not from debian" 
 	git clone https://github.com/sfjro/aufs5-standalone.git
 	cd aufs5-standalone
@@ -56,40 +61,42 @@ if $(dpkg --compare-versions $KERNEL_DEBIAN lt $KERNEL_VERSION); then
 
 	echo "### integrating aufs5-patches"
 	debian/bin/genpatch-aufs ../aufs5-standalone
-
-	echo "### setting Garden Linux abi"
-	sed -i "s/abiname:.*/abiname:$KERNEL_ABI/" debian/config/defines
-
-	echo "### patching Garden Linux enhancements"
-	#patch -p1 < $srcDir/version.patch
-
-	echo "### populating the changelog"
-	mv debian/changelog debian/changelog.tmp
-	cat - > debian/changelog <<-EOF
-	linux ($KERNEL_DEBIAN) UNRELEASED; urgency=medium
-
-	  [ Garden Linux Maintainers ]
-	  * [rt] Update to $KERNEL_RT_VERSION and re-enable.
-	  * Bump ABI to $KERNEL_ABI.
-          * Patching certs to Garden Linux
-	($cat $srcDir/changelog)
-	 -- Garden Linux Maintainers <contact@gardenlinux.io>  $(date -R)
-
-	EOF
-
 	cd ..
+
 	# checking out linux stable to have the whole changelog from the kernel readable for debian/bin/stable-update 
 	git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-	cd $src
 
+	cd $src
 	debian/bin/stable-update ../linux-stable $KERNEL_VERSION
-	cat debian/changelog debian/changelog.tmp > debian/changelog.new
-	mv debian/changelog.new debian/changelog
-	rm debian/changelog.tmp
+	mv debian/changelog debian/changelog.newkernel
 	cd ..
+else
+	KERNEL_VERSION=$KERNEL_DEBIAN
 fi
+
 cd $src
+echo "### setting Garden Linux abi"
+sed -i "s/abiname:.*/abiname:$KERNEL_ABI/" debian/config/defines
+
+echo "### patching Garden Linux enhancements"
 patch -p1 < $srcDir/rt-0038.patch
+
+echo "### populating the changelog"
+cat - > debian/changelog.new <<EOF
+linux ($KERNEL_VERSION) UNRELEASED; urgency=medium
+
+  [ Garden Linux Maintainers ]
+  * [rt] Update to $KERNEL_RT_VERSION and re-enable.
+  * Bump ABI to $KERNEL_ABI.
+  * Patching certs to Garden Linux
+$(cat $srcDir/changelog)
+ -- Garden Linux Maintainers <contact@gardenlinux.io>  $(date -R)
+
+EOF
+
+touch debian/changelog.newkernel
+cat debian/changelog.new debian/changelog.newkernel debian/changelog.org > debian/changelog
+rm -f debian/changelog.new debian/changelog.newkernel debian/changelog.org
 
 echo "### setting certificate"
 # to make sure we do not take this accidently
