@@ -1,7 +1,7 @@
 apparmor
-containerd
+#containerd
 containernetworking-plugins
-docker.io
+#docker.io
 ethtool
 ipvsadm
 socat
