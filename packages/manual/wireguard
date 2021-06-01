@@ -17,8 +17,8 @@ done
 
 mkdir -p dkms
 for i in ${KERNEL_FLAVOURS}; do
-	dkms build wireguard/${WIREGUARD_VERSION} --dkmsframework /home/dev/manual/wireguard.d/framework.conf -k $i-${KERNEL_ARCH}
-	dkms mkbmdeb wireguard/${WIREGUARD_VERSION} --dkmsframework /home/dev/manual/wireguard.d/framework.conf -k $i-${KERNEL_ARCH}
+	dkms build wireguard/${WIREGUARD_VERSION} --dkmsframework ${WORKDIR}/manual/wireguard.d/framework.conf -k $i-${KERNEL_ARCH}
+	dkms mkbmdeb wireguard/${WIREGUARD_VERSION} --dkmsframework ${WORKDIR}/manual/wireguard.d/framework.conf -k $i-${KERNEL_ARCH}
 done
 
 targetpath="$(apt-cache showsrc $src | grep "^Directory" | cut -d: -f2- | cut -d'/' -f2- | head -n1)"
