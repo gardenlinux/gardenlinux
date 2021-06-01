@@ -458,7 +458,7 @@ ln -s ${CERTDIR}/Kernel.sign.crt /kernel.crt
 ln -s ${CERTDIR}/Kernel.sign.key /kernel.key
 ls -l /kernel.full
 
-pkg_build_script_path="$SOURCE_PATH/packages/manual/${pkg_name}"
+pkg_build_script_path="manual/${pkg_name}"
 echo "pkg_build_script_path: ${pkg_build_script_path}"
 
 if [ ! -f "${pkg_build_script_path}" ]; then
@@ -466,15 +466,12 @@ if [ ! -f "${pkg_build_script_path}" ]; then
   exit 1
 fi
 
-pkg_build_script_path="$(readlink -f ${pkg_build_script_path})"
-
-export BUILDTARGET="${OUT_PATH:-/workspace/pool}"
+export BUILDTARGET="${OUT_PATH:-/pool}"
 if [ ! -f "$BUILDTARGET" ]; then
   mkdir "$BUILDTARGET"
 fi
 
-cd "${BUILDTARGET}"
-
+echo "Calling package-build script ${pkg_build_script_path}"
 ${pkg_build_script_path}
 ''',
             script_type=ScriptType.BOURNE_SHELL,
@@ -523,16 +520,16 @@ export DEBFULLNAME="Garden Linux Maintainers"
 export DEBEMAIL="contact@gardenlinux.io"
 export BUILDIMAGE="gardenlinux/build-deb"
 export BUILDKERNEL="gardenlinux/build-kernel"
+export WORKDIR="/workspace"
 echo "MANUALDIR: ${MANUALDIR}"
 echo "KERNELDIR: ${KERNELDIR}"
 echo "CERTDIR: ${CERTDIR}"
+echo "WORKDIR: ${WORKDIR}"
 ls -l ${CERTDIR}
 
 # original makefile uses mounts, replace this by linking required dirs
 # to the expexted locations:
 # original: mount <gardenlinuxdir>/.packages but this does not exist so just create
-mkdir /pool
-ls -l ${CERTDIR}
 ln -s ${MANUALDIR} /workspace/manual
 ln -s /../Makefile.inside /workspace/Makefile
 echo "$(gpgconf --list-dir agent-socket)"
@@ -544,9 +541,11 @@ ln -s ${CERTDIR}/Kernel.sign.crt /kernel.crt
 ln -s ${CERTDIR}/Kernel.sign.key /kernel.key
 ls -l /kernel.full
 
+echo "Checking disk begin end of kernel-packages build:"
+df -h
 sudo apt-get install --no-install-recommends -y wget quilt vim less
 
-export BUILDTARGET="${OUT_PATH:-/workspace/pool}"
+export BUILDTARGET="${OUT_PATH:-/pool}"
 if [ ! -f "$BUILDTARGET" ]; then
 mkdir "$BUILDTARGET"
 fi
@@ -554,7 +553,7 @@ fi
 for package in "${packages[@]}"
 do
   echo "Building now ${package}"
-  pkg_build_script_path="$SOURCE_PATH/packages/manual/${package}"
+  pkg_build_script_path="manual/${package}"
   echo "pkg_build_script_path: ${pkg_build_script_path}"
 
   if [ ! -f "${pkg_build_script_path}" ]; then
@@ -562,12 +561,12 @@ do
     exit 1
   fi
 
-  pkg_build_script_path="$(readlink -f ${pkg_build_script_path})"
-
-  pushd "${BUILDTARGET}"
+  pushd "/workspace"
   ${pkg_build_script_path}
   popd
 done
+echo "Checking disk usage end of kernel-packages build:"
+df -h
 ''',
             script_type=ScriptType.BOURNE_SHELL,
             callable='',
