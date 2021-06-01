@@ -28,7 +28,7 @@ cd linux-signed-${KERNEL_ARCH}
 pwd
 ls -la
 for i in $KERNEL_FLAVOURS; do
-	${own_dir}/linux-$(cut -d. -f-2 <<< ${KERNEL_BASE}).d/sign-helper linux-image-${i}-${KERNEL_ARCH}-unsigned debian/signatures
+	../$(dirname $0)/linux-$(cut -d. -f-2 <<< ${KERNEL_BASE}).d/sign-helper linux-image-${i}-${KERNEL_ARCH}-unsigned debian/signatures
 done
 TMPDIR=.. mk-build-deps debian/control
 sudo apt-get install -y --no-install-recommends -f ../linux-signed-${KERNEL_ARCH}-build-deps*.deb
