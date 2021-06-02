@@ -440,12 +440,10 @@ export BUILDKERNEL="gardenlinux/build-kernel"
 echo "MANUALDIR: ${MANUALDIR}"
 echo "KERNELDIR: ${KERNELDIR}"
 echo "CERTDIR: ${CERTDIR}"
-ls -l ${CERTDIR}
 
 # original makefile uses mounts, replace this by linking required dirs
 # to the expexted locations:
 # original: mount <gardenlinuxdir>/.packages but this does not exist so just create
-mkdir /pool
 ls -l ${CERTDIR}
 ln -s ${MANUALDIR} /workspace/manual
 ln -s /../Makefile.inside /workspace/Makefile
@@ -456,7 +454,6 @@ ln -s ${CERTDIR}/sign.pub /sign.pub
 ln -s ${CERTDIR}/Kernel.sign.full /kernel.full
 ln -s ${CERTDIR}/Kernel.sign.crt /kernel.crt
 ln -s ${CERTDIR}/Kernel.sign.key /kernel.key
-ls -l /kernel.full
 
 pkg_build_script_path="manual/${pkg_name}"
 echo "pkg_build_script_path: ${pkg_build_script_path}"
@@ -466,7 +463,7 @@ if [ ! -f "${pkg_build_script_path}" ]; then
   exit 1
 fi
 
-export BUILDTARGET="${OUT_PATH:-/pool}"
+export BUILDTARGET="${OUT_PATH:-/workspace/pool}"
 if [ ! -f "$BUILDTARGET" ]; then
   mkdir "$BUILDTARGET"
 fi
@@ -539,13 +536,12 @@ ln -s ${CERTDIR}/sign.pub /sign.pub
 ln -s ${CERTDIR}/Kernel.sign.full /kernel.full
 ln -s ${CERTDIR}/Kernel.sign.crt /kernel.crt
 ln -s ${CERTDIR}/Kernel.sign.key /kernel.key
-ls -l /kernel.full
 
 echo "Checking disk begin end of kernel-packages build:"
 df -h
 sudo apt-get install --no-install-recommends -y wget quilt vim less
 
-export BUILDTARGET="${OUT_PATH:-/pool}"
+export BUILDTARGET="${OUT_PATH:-/workspace/pool}"
 if [ ! -f "$BUILDTARGET" ]; then
 mkdir "$BUILDTARGET"
 fi
