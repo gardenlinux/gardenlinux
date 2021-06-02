@@ -1,3 +1,5 @@
 python3-cffi-backend
 python3-boto
 dmidecode
+# Workaround for https://bugs.launchpad.net/cloud-init/+bug/1917875 in 20.4.1
+http://snapshot.debian.org/archive/debian/20200520T032945Z/pool/main/c/cloud-init/cloud-init_20.2-2_all.deb
