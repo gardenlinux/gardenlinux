@@ -152,6 +152,7 @@ def mk_pipeline_packages_run(
             ),
             podTemplate=PodTemplate(nodeSelector=node_selector, securityContext=security_context),
             workspaces=[],
+            timeout='12h',
         ),
     )
     return plrun

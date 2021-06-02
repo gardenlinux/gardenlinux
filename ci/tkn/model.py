@@ -152,7 +152,7 @@ class PipelineRunSpec:
     pipelineRef: PipelineRef
     podTemplate: PodTemplate
     workspaces: typing.List[PipelineRunWorkspace]
-
+    timeout: str = '1h'
 
 @dataclasses.dataclass
 class PipelineRun:
