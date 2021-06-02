@@ -468,7 +468,7 @@ def upload_and_publish_image(
     storage_account_cfg: glci.model.AzureStorageAccountCfg,
     marketplace_cfg: glci.model.AzureMarketplaceCfg,
     release: glci.model.OnlineReleaseManifest,
-    notification_emails: typing.List[str]
+    notification_emails: typing.Tuple[str],
 ) -> glci.model.OnlineReleaseManifest:
     '''Copies an image from S3 to an Azure Storage Account, updates the corresponding
     Azure Marketplace offering and publish the offering.
