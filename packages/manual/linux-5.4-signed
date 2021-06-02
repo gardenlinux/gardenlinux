@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-#  set -euox pipefail
-set -uox
+set -euo pipefail
 
 . $(dirname $0)/.helper
 . $(dirname $0)/linux-5.4.d/VERSION
