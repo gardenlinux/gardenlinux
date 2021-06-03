@@ -98,8 +98,16 @@ if [ -z "$nonDebian" ]; then
 	fi
 fi
 
+# setup mirror_pool, i.e. the archive where the gardenlinux-local packages are kept
 mirror_host="$(sed "s/^\(.*\/\/[^\/]*\)\/.*/\1/" <<< $mirror)"
 mirror_pool="${mirror_host}/gardenlinux/pool/"
+
+if ! wget -t1 -qO/dev/null ${mirror_pool}; then
+	# there are gardenlinux-local packages on the main snapshot mirror, try
+	# snapshot-url.sh again for a gardenlinux-specific one
+	mirror_host=$("$thisDir/.snapshot-url.sh" "@$epoch" "gardenlinux" "gardenlinux" | sed "s/^\(.*\/\/[^\/]*\)\/.*/\1/")
+	mirror_pool="${mirror_host}/gardenlinux/pool/"
+fi
 
 #featurelist=$(getFeatures $features)
 [ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
