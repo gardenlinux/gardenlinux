@@ -11,8 +11,10 @@ gpg --tofu-policy good 647F28654894E3BD457199BE38DBBDC86092693E
 gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys 514B0EDE3C387F944FB3799329E574109AEBFAAA
 gpg --tofu-policy good 514B0EDE3C387F944FB3799329E574109AEBFAAA
 	
+echo "### updating package repsitory"
+sudo apt-get update
 echo "### installing minimal create requirements"
-sudo apt-get install --no-install-recommends -y equivs kernel-wedge python3-debian rsync libdistro-info-perl git
+sudo apt-get install --no-install-recommends -y equivs kernel-wedge python3-debian rsync libdistro-info-perl git quilt
 echo "### pulling kernel and rt-patches" 
 wget -nc https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.sign
 wget -nc https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/$(cut -d. -f-2 <<< ${KERNEL_BASE})/older/patches-$KERNEL_RT_VERSION.tar.sign
@@ -29,13 +31,10 @@ echo "### cloning the latest and greatest debian release environment to linux"
 if [ -d $src ]; then
 	cd $src; git pull; cd ..
 else 
-	git clone https://salsa.debian.org/kernel-team/linux.git $src
+        git clone --depth 1 https://salsa.debian.org/kernel-team/linux.git $src
 fi
-echo "### checkingout the old kernel to linux-$KERNEL_DEBIAN"
-cp -R $src linux-$KERNEL_DEBIAN
-cd linux-$KERNEL_DEBIAN
-git -c advice.detachedHead=false checkout debian/$KERNEL_DEBIAN
-cd ..
+echo "### cloning the old kernel to linux-$KERNEL_DEBIAN"
+git clone --depth 1 --single --branch debian/$KERNEL_DEBIAN https://salsa.debian.org/kernel-team/linux.git linux-$KERNEL_DEBIAN
 
 cd $src
 mv debian/changelog debian/changelog.org
@@ -93,6 +92,11 @@ $(cat $srcDir/changelog)
  -- Garden Linux Maintainers <contact@gardenlinux.io>  $(date -R)
 
 EOF
+
+cd ..
+# checking out linux stable to have the whole changelog from the kernel readable for debian/bin/stable-update 
+git clone --single --branch linux-$(echo $KERNEL_BASE | sed s/0$/y/) --bare https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+cd $src
 
 touch debian/changelog.newkernel
 cat debian/changelog.new debian/changelog.newkernel debian/changelog.org > debian/changelog
