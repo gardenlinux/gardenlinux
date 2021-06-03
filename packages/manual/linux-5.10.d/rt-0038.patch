@@ -1,0 +1,13 @@
+--- a/debian/patches-rt/0038-powerpc-mm-highmem-Switch-to-generic-kmap-atomic.patch
++++ b/debian/patches-rt/0038-powerpc-mm-highmem-Switch-to-generic-kmap-atomic.patch
+@@ -44,8 +48,8 @@ Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+ +#include <asm/kmap_size.h>
+  #endif
+  
+- #ifdef CONFIG_PPC64
+-@@ -61,7 +61,7 @@
++ #ifdef CONFIG_KASAN
++@@ -55,7 +55,7 @@
+  	FIX_EARLY_DEBUG_BASE = FIX_EARLY_DEBUG_TOP+(ALIGN(SZ_128K, PAGE_SIZE)/PAGE_SIZE)-1,
+  #ifdef CONFIG_HIGHMEM
+  	FIX_KMAP_BEGIN,	/* reserved pte's for temporary kernel mappings */

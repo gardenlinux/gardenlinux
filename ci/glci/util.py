@@ -66,6 +66,7 @@ def cicd_cfg(
         cfg = dacite.from_dict(
             data_class=CicdCfg,
             data=raw,
+            config=dacite.Config(cast=[typing.Tuple]),
         )
         if cfg.name == cfg_name:
             return cfg

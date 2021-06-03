@@ -5,7 +5,7 @@ set -euo pipefail
 
 sudo apt-get install --no-install-recommends -y git golang libblkid-dev
 
-VERSION="2.9.0"
+VERSION="2.10.1"
 
 git clone https://github.com/coreos/ignition.git
 cd ignition

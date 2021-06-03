@@ -1,4 +1,4 @@
-all: apt cyrus-sasl2 dracut ignition iproute2 linux-5.4 linux-5.4-signed pam python3.9 wireguard 
+all: apt cyrus-sasl2 dracut ignition iproute2 pam python3.9 linux-5.10 linux-5.10-signed
 
 %:
 	manual/$@
