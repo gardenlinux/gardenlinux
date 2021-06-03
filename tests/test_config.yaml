@@ -1,10 +1,10 @@
 aws:
     # region and access keys, read from ~/.aws/config and ~/.aws/credentials if not set here
-    region:
+    region: eu-north-1
     access_key_id:
     secret_access_key:
     # which AMI to use for creating an ec2 instance
-    ami_id: ami-06e4f77831e4e1a02
+    ami_id: ami-00ac64b86f033c68a
     # user and ssh key used to connect to the ec2 instance
     user: admin
     ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
@@ -12,6 +12,8 @@ aws:
     # name of public ssh key imported to AWS
     key_name: gardenlinux-test
     remote_path: /
+    # not all machines are available in all regions
+    instance_type: t3.micro
 gcp:
     project: sap-se-gcp-scp-k8s-dev
     zone: europe-west1-d
