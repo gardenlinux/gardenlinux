@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+set -u
+
+rc=0
+
+echo "checking for wireguard packages"
+count=$(dpkg -l | grep wireguard | wc -l)
+
+if [[ ${count} -ne 2 ]] ; then
+    rc=1
+    echo "Not all wireguard packages installed, expected wireguard-modules and wireguard-tools but got"
+    out=$(dpkg -l | grep wireguard)
+    if [ "g${out}" == "g" ] ; then
+       echo "-- empty output --"
+    else 
+       echo ${out}
+    fi
+fi
+
+if [[ ${rc} -eq 0 ]]; then
+    echo "OK - all required packages installed"
+    exit 0
+else
+    echo "FAIL - not all required packages installed"
+    exit 1
+fi
