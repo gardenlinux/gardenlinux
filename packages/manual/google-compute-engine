@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+. $(dirname $0)/.helper
+
+sudo apt-get install -y --no-install-recommends debhelper git
+git clone https://github.com/GoogleCloudPlatform/guest-configs.git $src
+
+mv $src/packaging/debian $src
+rm -rf $src/packaging
+tar cJf google-compute-engine_20200113.00.orig.tar.xz google-compute-engine
+
+cd $src
+dch -i 'rebuild since no offical package anymore'
+dch -r ''
+
+donotmove="$(ls ..)"
+debuild
+sourcepath=main/g/google-compute-image-packages/
+move_package .. $donotmove
+
