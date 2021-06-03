@@ -17,6 +17,10 @@ cert/sign.pub:
 docker:
 	make --directory=docker build-image
 
+.PHONY: docker-integration-test
+docker-integration-test:
+	make --directory=docker integration-test
+
 all_prod: ali aws gcp azure openstack vmware kvm
 
 all_dev: ali-dev aws-dev gcp-dev azure-dev openstack-dev vmware-dev
