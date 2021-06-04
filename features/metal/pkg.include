@@ -2,6 +2,8 @@ ethtool
 #busybox
 fdisk
 lvm2
+dosfstools
+kexec-tools
 haveged
 ipmitool
 grub-cloud-amd64
