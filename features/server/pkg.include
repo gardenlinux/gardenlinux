@@ -27,11 +27,11 @@ vim-tiny
 quota
 netcat
 main/i/iproute2/iproute2_5.10.0-4.1_${arch}.deb
-main/p/pam/libpam-runtime_1.4.0-6.1_all.deb
-main/p/pam/libpam-modules-bin_1.4.0-6.1_${arch}.deb
-main/p/pam/libpam-modules_1.4.0-6.1_${arch}.deb
-main/p/pam/libpam-cracklib_1.4.0-6.1_${arch}.deb
-main/p/pam/libpam0g_1.4.0-6.1_${arch}.deb
+main/p/pam/libpam-runtime_1.4.0-7.1_all.deb
+main/p/pam/libpam-modules-bin_1.4.0-7.1_${arch}.deb
+main/p/pam/libpam-modules_1.4.0-7.1_${arch}.deb
+main/p/pam/libpam-cracklib_1.4.0-7.1_${arch}.deb
+main/p/pam/libpam0g_1.4.0-7.1_${arch}.deb
 main/c/cyrus-sasl2/libsasl2-2_2.1.27+dfsg-2.2_${arch}.deb
 main/c/cyrus-sasl2/libsasl2-modules-db_2.1.27+dfsg-2.2_${arch}.deb
 main/p/python3.9/python3.9_3.9.2-1.1_${arch}.deb
