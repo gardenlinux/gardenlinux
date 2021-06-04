@@ -4,24 +4,10 @@ set -u
 
 rc=0
 
-echo "checking for wireguard packages"
-count=$(dpkg -l | grep wireguard | wc -l)
-
-if [[ ${count} -ne 2 ]] ; then
-    rc=1
-    echo "Not all wireguard packages installed, expected wireguard-modules and wireguard-tools but got"
-    out=$(dpkg -l | grep wireguard)
-    if [ "g${out}" == "g" ] ; then
-       echo "-- empty output --"
-    else 
-       echo ${out}
-    fi
-fi
-
-if [[ ${rc} -eq 0 ]]; then
-    echo "OK - all required packages installed"
-    exit 0
+echo "checking for wireguard capabilities"
+if find /lib/modules/*/kernel/drivers/net/wireguard/wireguard.ko > /dev/null; then 
+    echo "OK - capable for wireguarding"
 else
-    echo "FAIL - not all required packages installed"
+    echo "FAIL - wireguard not available"
     exit 1
 fi
