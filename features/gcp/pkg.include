@@ -1,2 +1,4 @@
 rng-tools-debian
+main/g/google-compute-image-packages/google-guest-agent_1:20210223.01-g1_amd64.deb
+main/g/google-compute-image-packages/google-compute-engine-oslogin_20191018.00-g1.1_amd64.deb
 main/g/google-compute-image-packages/google-compute-engine_20200113.00-g1.1_all.deb

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+. $(dirname $0)/.helper
+
+sudo apt-get install -y --no-install-recommends git equivs
+git clone https://github.com/GoogleCloudPlatform/guest-agent.git $src
+
+cd $src
+#mv packaging/debian .
+#rm -rf packaging
+#version=$(dpkg-parsechangelog --show-field Version | sed "s/[0-9]*:\?\([^\-]*\)-\?.*/\1/")
+#dch -i 'rebuild since no offical package anymore'
+#dch -r ''
+#TMPDIR=.. mk-build-deps debian/control
+#sudo apt-get install -y --no-install-recommends -f ../$src-build-deps_*_all.deb
+
+donotmove="$(ls ..)"
+wget --content-disposition https://packages.cloud.google.com/apt/pool/google-guest-agent_1:20210223.01-g1_amd64_8d1c89d2931feb823c0b7171fcee1ecb17dcd423589459c021776d3a907da2a3.deb
+mv google-guest-agent_1:20210223.01-g1_amd64_8d1c89d2931feb823c0b7171fcee1ecb17dcd423589459c021776d3a907da2a3.deb ../google-guest-agent_1:20210223.01-g1_amd64.deb
+#tar cJf ../${src}_${version}.orig.tar.xz -C .. ${src}
+#debuild
+sourcepath=main/g/google-compute-image-packages/
+move_package .. $donotmove
+

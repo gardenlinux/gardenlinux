@@ -4,7 +4,7 @@ set -euo pipefail
 . $(dirname $0)/.helper
 
 sudo apt-get install -y --no-install-recommends git equivs
-git clone https://github.com/GoogleCloudPlatform/guest-configs.git $src
+git clone https://github.com/GoogleCloudPlatform/guest-oslogin.git $src
 
 cd $src
 mv packaging/debian .
