@@ -107,9 +107,9 @@ def clone_step(
 
 def cfssl_clone_step(
     name: str,
-    cfssl_committish: tkn.model.NamedParam,
-    cfssl_git_url: tkn.model.NamedParam,
-    cfssl_dir: tkn.model.NamedParam,
+    committish: tkn.model.NamedParam,
+    git_url: tkn.model.NamedParam,
+    working_dir: tkn.model.NamedParam,
     gardenlinux_repo_path_param: tkn.model.NamedParam,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
@@ -119,13 +119,10 @@ def cfssl_clone_step(
         image=DEFAULT_IMAGE,
         script=task_step_script(
             script_type=ScriptType.PYTHON3,
-            path=os.path.join(steps_dir, 'clone_repo_step.py'),
-            callable='cfssl_clone',
-            params=[
-                cfssl_committish,
-                cfssl_git_url,
-                cfssl_dir,
-            ],
+            path=os.path.join(steps_dir, 'clone_simple_step.py'),
+            callable="git_clone('$(params.cfssl_git_url)', '$(params.cfssl_committish)', "
+                     "'$(params.cfssl_dir)'); dummy",
+            params=[],
             repo_path_param=gardenlinux_repo_path_param,
         ),
         volumeMounts=volume_mounts,
