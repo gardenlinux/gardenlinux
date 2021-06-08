@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CERT_DIR="/home/dev/certdir"
+CERT_DIR="${WORKDIR}/certdir"
 CERT_NAME="Garden Linux Kernel Signature - SAP SE"
 LINUX_SIGNFILE=/usr/lib/linux-kbuild-5.10/scripts/sign-file
 

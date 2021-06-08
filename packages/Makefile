@@ -38,6 +38,7 @@ manual: docker sign
 		--env BUILDIMAGE=$(BUILDIMAGE) \
 		--env DEBFULLNAME=$(DEBFULLNAME) \
 		--env DEBEMAIL=$(DEBEMAIL) \
+		--env WORKDIR="/home/dev" \
 		$(BUILDIMAGE) bash -c "manual/.docker; bash"
 .PHONY: pipeline 
 pipeline: docker sign
@@ -54,6 +55,7 @@ pipeline: docker sign
 		--env BUILDIMAGE=$(BUILDIMAGE) \
 		--env DEBFULLNAME=$(DEBFULLNAME) \
 		--env DEBEMAIL=$(DEBEMAIL) \
+		--env WORKDIR="/home/dev" \
 		$(BUILDIMAGE) bash -c "gpg --import /sign.pub; make"
 manual-kernel: docker-kernel
 	docker run --rm -ti --volume "$(POOLDIR)":/pool --volume "$(KERNELDIR)":/home/dev/manual \
@@ -61,6 +63,7 @@ manual-kernel: docker-kernel
 		--env BUILDIMAGE="$(BUILDKERNEL)" \
 		--env DEBFULLNAME="$(DEBFULLNAME)" \
 		--env DEBEMAIL="$(DEBEMAIL)" \
+		--env WORKDIR="/home/dev" \
 		$(BUILDKERNEL) bash -c " \
 		set -euo pipefail \
 		sudo apt-get install --no-install-recommends -y wget quilt vim less \
