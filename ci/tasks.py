@@ -224,7 +224,7 @@ def _package_task(
     )
     s3_package_path = NamedParam(
         name='package_path_s3_prefix',
-         default='packages',
+         default='packages/pool',
         description='path relative to the root of the s3 bucket to upload the built packages to',
     )
     version_label = NamedParam(
