@@ -265,10 +265,10 @@ def _package_task(
 
     clone_step_cfssl = steps.cfssl_clone_step(
         name='clone-step-cfssl',
-        cfssl_committish=cfssl_committish,
-        cfssl_dir=cfssl_dir,
+        committish=cfssl_committish,
+        working_dir=cfssl_dir,
         gardenlinux_repo_path_param=repodir,
-        cfssl_git_url=cfss_git_url
+        git_url=cfss_git_url,
     )
 
     cfssl_build_step = steps.build_cfssl_step()
