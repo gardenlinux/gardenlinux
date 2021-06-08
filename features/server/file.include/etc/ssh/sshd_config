@@ -30,7 +30,7 @@ KexAlgorithms curve25519-sha256@libssh.org,ecdh-sha2-nistp521,ecdh-sha2-nistp384
 PrintMotd no
 
 # Allow client to pass locale environment variables
-AcceptEnv LANG LC_*
+AcceptEnv LANG
 
 # override default of no subsystems
 Subsystem sftp  /usr/lib/ssh/sftp-server -f AUTHPRIV -l INFO
