@@ -167,7 +167,8 @@ def mk_pipeline_packages():
     tasks += package_tasks
 
     # build packages depending on the Liniux kernel (need to be build in sequence to share file system):
-    pkg_kernel_names = "linux-5.4, linux-5.4-signed, wireguard"
+    # pkg_kernel_names = "linux-5.4, linux-5.4-signed, wireguard"
+    pkg_kernel_names = "linux-5.10 linux-5.10-signed"
     
     package_kernel_task = mk_pipeline_kernel_package_build_task(pkg_kernel_names, [base_build_task.name])
 
