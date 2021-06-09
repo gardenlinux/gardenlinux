@@ -3,6 +3,7 @@ ethtool
 fdisk
 lvm2
 dosfstools
+efibootmgr
 kexec-tools
 haveged
 ipmitool
