@@ -4,9 +4,8 @@ set -x
 
 own_dir="$(readlink -f "$(dirname "${0}")")"
 repo_root="${own_dir}/.."
-ci_dir="${repo_root}/bin"
 
-source "${own_dir}/lib.sh"
+source "${repo_root}/.ci/lib.sh"
 
 install_kubectl
 install_tkn
