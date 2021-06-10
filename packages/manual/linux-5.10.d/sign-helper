@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -xeuo pipefail
 
 CERT_DIR="${WORKDIR}/certdir"
 CERT_NAME="Garden Linux Kernel Signature - SAP SE"

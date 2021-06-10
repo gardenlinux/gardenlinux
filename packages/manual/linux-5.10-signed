@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -xeuo pipefail
 
 . $(dirname $0)/.helper
 . $(dirname $0)/linux-5.10.d/VERSION
