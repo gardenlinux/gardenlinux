@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -xeuo pipefail
 
 thisDir="$(readlink -f "$(pwd)")"
 scriptDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
