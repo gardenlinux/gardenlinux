@@ -38,8 +38,16 @@ def upload_dir(
     for dirpath, _, filenames in os.walk(src_dir_path):
         for filename in filenames:
             src_file_path = os.path.join(dirpath, filename)
-            src_path_relative = os.path.relpath(src_file_path, start=src_dir_path)
-            dst_file_path = os.path.join(dest_dir_path, src_path_relative)
+
+            # clean-up filename
+            processed_filename = filename.replace('+', '')
+
+            relative_file_path = os.path.relpath(
+                os.path.join(dirpath, processed_filename),
+                start=src_dir_path,
+            )
+
+            dst_file_path = os.path.join(dest_dir_path, relative_file_path)
 
             if os.path.exists(src_file_path) and os.path.isfile(src_file_path):
                 bucket.upload_file(
