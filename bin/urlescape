@@ -1,0 +1,21 @@
+#!/usr/bin/env python3
+
+import urllib.parse
+import sys
+
+GARDENLINUX_SNAPSHOT_CACHE_URL = 'snapshot-cache.ci.gardener.cloud'
+
+if len(sys.argv) == 1 or len(sys.argv) > 2:
+    sys.exit(1)
+
+parsed = urllib.parse.urlparse(sys.argv[1])
+
+# only modify URLs directed at our snapshot cache
+if parsed.netloc != GARDENLINUX_SNAPSHOT_CACHE_URL:
+    print(urllib.parse.urlunparse(parsed))
+    sys.exit(0)
+
+parsed = parsed._replace(path=urllib.parse.quote(parsed.path.replace('+', '')))
+
+print(urllib.parse.urlunparse(parsed))
+sys.exit(0)

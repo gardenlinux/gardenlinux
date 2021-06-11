@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+
+import urllib.parse
+import sys
+
+if len(sys.argv) == 1 or len(sys.argv) > 2:
+    sys.exit(1)
+
+parsed = urllib.parse.urlparse(sys.argv[1])
+print(parsed.path.split('/')[-1])
