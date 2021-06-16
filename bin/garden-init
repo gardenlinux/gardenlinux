@@ -223,7 +223,7 @@ fi
 
 tmp=$(mktemp -d -p $targetDir)
 if [ "${include_wget}" != "" ]; then
-	wget -P$tmp $include_wget
+	wget --show-progress --progress=bar:force -P$tmp $include_wget
 fi
 set -x
 
