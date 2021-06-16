@@ -223,20 +223,21 @@ fi
 
 tmp=$(mktemp -d -p $targetDir)
 if [ "${include_wget}" != "" ]; then
-	wget -P$tmp $include_wget
+	wget --show-progress --progress=bar:force -P$tmp $include_wget
 fi
 set -x
 
+# INITRD="No" - really hackish solution to skip ramdisk generation
 [ "${include_aptfile}" != "" ] && 
 "$thisDir/garden-chroot" "$targetDir" bash -c '
 	cd '${tmp#$targetDir}'
-	apt-get install -y --allow-downgrades --no-install-recommends -f $1
+	INITRD="No" apt-get install -y --allow-downgrades --no-install-recommends -f $1
 ' -- "$include_aptfile"
 rm -rf $tmp
 
 [ "${include_aptversion}" != "" ] && 
 "$thisDir/garden-chroot" "$targetDir" bash -c '
-	apt-get install -y --allow-downgrades --no-install-recommends -f $1
+	INITRD="No" apt-get install -y --allow-downgrades --no-install-recommends -f $1
 ' -- "$include_aptversion"
 
 # fix ownership/permissions on / (otherwise "debootstrap" leaves them as-is which causes reproducibility issues)
