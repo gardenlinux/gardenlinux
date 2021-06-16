@@ -225,7 +225,7 @@ set -x
 tmp=$(mktemp -d -p $targetDir)
 if [ "${include_wget}" != "" ]; then
 	for pkg in $include_wget; do
-		wget --show-progress --progress=bar:force -P$tmp -O "$(${thisDir}/get_filename ${pkg})" $(${thisDir}/urlescape $pkg)
+		wget -O "${tmp}/$(${thisDir}/get_filename ${pkg})" "$(${thisDir}/urlescape ${pkg})"
 	done
 fi
 
