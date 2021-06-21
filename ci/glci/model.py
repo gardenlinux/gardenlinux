@@ -44,7 +44,7 @@ class Features:
     '''
     a FeatureDescriptor's feature cfg (currently, references to other features, only)
     '''
-    include: typing.Tuple[Modifier] = tuple()
+    include: typing.Tuple[Modifier, ...] = tuple()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -57,7 +57,7 @@ class FeatureDescriptor:
     description: str = 'no description available'
     features: Features = None
 
-    def included_feature_names(self) -> typing.Tuple[Modifier]:
+    def included_feature_names(self) -> typing.Tuple[Modifier, ...]:
         '''
         returns the tuple of feature names immediately depended-on by this feature
         '''
@@ -94,7 +94,7 @@ class GardenlinuxFlavour:
     '''
     architecture: Architecture
     platform: str
-    modifiers: typing.Tuple[Modifier]
+    modifiers: typing.Tuple[Modifier, ...]
 
     def calculate_modifiers(self):
         yield from (
@@ -140,9 +140,9 @@ class GardenlinuxFlavourCombination:
     manual configuration, flavourset combinations are declared. Subsequently, the
     cross product of said combinations are generated.
     '''
-    architectures: typing.Tuple[Architecture]
-    platforms: typing.Tuple[Platform]
-    modifiers: typing.Tuple[typing.Tuple[Modifier]]
+    architectures: typing.Tuple[Architecture, ...]
+    platforms: typing.Tuple[Platform, ...]
+    modifiers: typing.Tuple[typing.Tuple[Modifier, ...], ...]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -151,7 +151,7 @@ class GardenlinuxFlavourSet:
     A set of gardenlinux flavours
     '''
     name: str
-    flavour_combinations: typing.Tuple[GardenlinuxFlavourCombination]
+    flavour_combinations: typing.Tuple[GardenlinuxFlavourCombination, ...]
 
     def flavours(self):
         for comb in self.flavour_combinations:
@@ -506,7 +506,7 @@ class AzurePublishCfg:
     plan_id: str
     service_principal_cfg_name: str
     storage_account_cfg_name: str
-    notification_emails: typing.Tuple[str]
+    notification_emails: typing.Tuple[str, ...]
 
 
 @dataclasses.dataclass(frozen=True)
