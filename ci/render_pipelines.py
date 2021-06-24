@@ -152,24 +152,24 @@ def mk_pipeline_packages():
     # build packages:
     package_tasks = []
     for package in [
-        'apt', 
-        'cyrus-sasl2', 
-        'dracut', 
-        'ignition', 
-        'iproute2', 
+        'apt',
+        'cyrus-sasl2',
+        'dracut',
+        'ignition',
+        'iproute2',
         'pam',
         'python3.9',
         ]:
         package_task = mk_pipeline_package_build_task(package, [base_build_task.name])
         package_tasks.append(package_task)
-    
+
     run_after=[pkg.name for pkg in package_tasks]
     tasks += package_tasks
 
     # build packages depending on the Liniux kernel (need to be build in sequence to share file system):
     # pkg_kernel_names = "linux-5.4, linux-5.4-signed, wireguard"
     pkg_kernel_names = "linux-5.10 linux-5.10-signed"
-    
+
     package_kernel_task = mk_pipeline_kernel_package_build_task(pkg_kernel_names, [base_build_task.name])
 
     run_after += package_kernel_task.name
@@ -199,7 +199,7 @@ def mk_pipeline_packages():
 
     return pipeline
 
-    
+
 def mk_pipeline(
     gardenlinux_flavours: typing.Sequence[GardenlinuxFlavour],
     pipeline_flavour: glci.model.PipelineFlavour = glci.model.PipelineFlavour.SNAPSHOT,
@@ -298,7 +298,7 @@ def main():
 
     # generate pipeline for packages:
     pipeline: dict = mk_pipeline_packages()
- 
+
     with open(parsed.outfile_packages, 'w') as f:
         pipeline_raw = dataclasses.asdict(pipeline)
         yaml.safe_dump_all((pipeline_raw,), stream=f)
@@ -312,7 +312,7 @@ def main():
     pipeline: dict = render_pipeline_dict(
         gardenlinux_flavours=gardenlinux_flavours,
     )
- 
+
     with open(outfile, 'w') as f:
         pipeline_raw = dataclasses.asdict(pipeline)
         yaml.safe_dump_all((pipeline_raw,), stream=f)
