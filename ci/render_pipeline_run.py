@@ -2,6 +2,7 @@
 
 import argparse
 import dataclasses
+import time
 import typing
 import yaml
 
@@ -33,19 +34,33 @@ def mk_pipeline_name(
     version: str,
     committish: str,
 ):
+    def _publishing_action_shorthand(publishing_action):
+        if publishing_action is glci.model.PublishingAction.RELEASE:
+            return 'rel'
+        elif publishing_action is glci.model.PublishingAction.BUILD_ONLY:
+            return 'bo'
+        elif publishing_action is glci.model.PublishingAction.IMAGES:
+            return 'imgs'
+        elif publishing_action is glci.model.PublishingAction.MANIFESTS:
+            return 'man'
 
+    # add last 4 seconds of time since epoch (to avoid issues with identical pipeline names for
+    # repeated builds of the same commit)
+    build_ts = str(int(time.time()))[-4:]
     if publishing_actions:
         name_parts = (
-            pipeline_name[:len('gardenlinux')],
-            '-'.join((a.value[:6].replace('_', '-') for a in publishing_actions)),
+            pipeline_name[:11],
+            '-'.join([_publishing_action_shorthand(a) for a in publishing_actions]),
             version.replace('.', '-'),
             committish[:6],
+            build_ts,
         )
     else:
         name_parts = (
             pipeline_name[:11],
             version.replace('.', '-'),
             committish[:6],
+            build_ts,
         )
 
     return '-'.join(name_parts)[:60]
