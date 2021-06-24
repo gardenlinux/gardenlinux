@@ -1,6 +1,7 @@
 dosfstools
 rng-tools-debian
 qemu-guest-agent
+kexec-tools
 grub-cloud-amd64
 #fail2ban
 #ferm
