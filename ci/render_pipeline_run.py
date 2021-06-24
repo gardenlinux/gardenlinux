@@ -150,7 +150,7 @@ def mk_pipeline_packages_run(
                     value=git_url,
                 ),
                 NamedParam(
-                    name='ocipath',
+                    name='oci_path',
                     value=oci_path,
                 ),
                 NamedParam(
@@ -252,7 +252,7 @@ def mk_pipeline_run(
                     value=git_url,
                 ),
                 NamedParam(
-                    name='ocipath',
+                    name='oci_path',
                     value=oci_path,
                 ),
                 NamedParam(

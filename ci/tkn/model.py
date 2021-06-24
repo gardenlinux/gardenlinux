@@ -39,9 +39,32 @@ class Metadata:
 
 
 @dataclasses.dataclass
+class HostPath:
+    path: str
+    type: str
+
+
+@dataclasses.dataclass
+class Volume:
+    name: str
+
+
+@dataclasses.dataclass
+class HostPathVolume(Volume):
+    hostPath: HostPath
+
+
+@dataclasses.dataclass
+class EmptyDirVolume(Volume):
+    medium: str
+
+
+@dataclasses.dataclass
 class VolumeMount:
     mountPath: str
     name: str
+
+
 
 
 EnvVar = _NamedParamWithValue
@@ -54,6 +77,8 @@ class TaskStep:
     script: str
     volumeMounts: typing.List[VolumeMount] = dataclasses.field(default_factory=list)
     env: typing.List[EnvVar] = dataclasses.field(default_factory=list)
+    resources: typing.Dict = dataclasses.field(default_factory=dict)
+    securityContext: typing.Dict = dataclasses.field(default_factory=dict)
 
 
 @dataclasses.dataclass
@@ -61,6 +86,7 @@ class TaskSpec:
     params: typing.List[_NamedParamWithValue]
     steps: typing.List[TaskStep]
     workspaces: typing.List[_NamedParamBase] = dataclasses.field(default_factory=list)
+    volumes: typing.List[Volume] = dataclasses.field(default_factory=list)
     #volumeMounts: typing.List[VolumeMount]=dataclasses.field(default_factory=list)
 
 

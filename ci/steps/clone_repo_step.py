@@ -45,9 +45,9 @@ def clone_and_checkout_anonymously(
 def clone_and_copy(
     giturl: str,
     committish: str,
-    repodir: str,
+    repo_dir: str,
 ):
-    repo_dir = os.path.abspath(repodir)
+    repo_dir = os.path.abspath(repo_dir)
     repo_url = urllib.parse.urlparse(giturl)
 
     try:
