@@ -41,7 +41,7 @@ spec:
     name: clone-repo-step
     script: |-
       #!/usr/bin/env python3
-      import sys,os;sys.path.insert(1,os.path.abspath(os.path.join("$(params.repodir)","ci")))
+      import sys,os;sys.path.insert(1,os.path.abspath(os.path.join("$(params.repo_dir)","ci")))
       import os
       import urllib.parse
 
@@ -74,7 +74,7 @@ spec:
           print('Commit Message:')
           print(commit_msg)
 
-      clone_and_copy(committish='$(params.committish)',repodir='$(params.repodir)',giturl='$(params.giturl)')
+      clone_and_copy(committish='$(params.committish)',repodir='$(params.repo_dir)',giturl='$(params.giturl)')
       if '$(params.cfssl_fastpath)' != 'true':
           clone_and_copy(committish='master',repodir='$(params.cfssl_dir)',giturl='https://github.com/cloudflare/cfssl.git')
       else:
@@ -86,15 +86,15 @@ spec:
       set -e
       set -x
 
-      mkdir -p $(params.repodir)/cert/cfssl
+      mkdir -p $(params.repo_dir)/cert/cfssl
       if [ "$(params.cfssl_fastpath)" != "true" ]; then
         # slow-path build CFSSL from github:
         cd $(params.cfssl_dir)
         make
-        mv bin/* $(params.repodir)/cert/cfssl
+        mv bin/* $(params.repo_dir)/cert/cfssl
       else
-        mkdir -p $(params.repodir)/bin
-        cd $(params.repodir)/bin
+        mkdir -p $(params.repo_dir)/bin
+        cd $(params.repo_dir)/bin
         # fast-path copy binaries from CFSSL github release:
         cfssl_files=( cfssl-bundle_1.5.0_linux_amd64 \
           cfssl-certinfo_1.5.0_linux_amd64 \
@@ -113,7 +113,7 @@ spec:
           wget --no-verbose -O $outname https://github.com/cloudflare/cfssl/releases/download/v1.5.0/${file}
           chmod +x $outname
         done
-        mv * $(params.repodir)/cert/cfssl
+        mv * $(params.repo_dir)/cert/cfssl
       fi
       # cleanup workspace to safe some valuable space
       cd /
@@ -124,7 +124,7 @@ spec:
       #!/usr/bin/env bash
       set -e
       set -x
-      cd $(params.repodir)/cert
+      cd $(params.repo_dir)/cert
       # Note: that make will also build cfssl which was here done in the previous step
       # it will skip this step as it already present, this is a bit fragile
       make
@@ -135,8 +135,8 @@ spec:
       #!/usr/bin/env bash
       set -e
       set -x
-      
-      repodir='$(params.repodir)'
+
+      repodir='$(params.repo_dir)'
       pkg_name="$(params.pkg_name)"
 
       if [ -z "$SOURCE_PATH" ]; then

@@ -307,20 +307,6 @@ def release_step(
     )
 
 
-def build_image_step(
-    gardenlinux_epoch: tkn.model.NamedParam,
-    modifiers: tkn.model.NamedParam,
-    outfile: tkn.model.NamedParam,
-    platform: tkn.model.NamedParam,
-    repodir: tkn.model.NamedParam,
-    snapshot_timestamp: tkn.model.NamedParam,
-    suite: tkn.model.NamedParam,
-    env_vars: typing.List[typing.Dict] = [],
-    volume_mounts: typing.List[typing.Dict] = [],
-):
-    pass
-
-
 def build_cfssl_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
@@ -333,15 +319,15 @@ def build_cfssl_step(
 set -e
 set -x
 
-mkdir -p $(params.repodir)/cert/cfssl
+mkdir -p $(params.repo_dir)/cert/cfssl
 if [ "$(params.cfssl_fastpath)" != "true" ]; then
   # slow-path build CFSSL from github:
   pushd $(params.cfssl_dir)
   make
-  mv bin/* $(params.repodir)/cert/cfssl
+  mv bin/* $(params.repo_dir)/cert/cfssl
 else
-  mkdir -p $(params.repodir)/bin
-  pushd $(params.repodir)/bin
+  mkdir -p $(params.repo_dir)/bin
+  pushd $(params.repo_dir)/bin
   # fast-path copy binaries from CFSSL github release:
   cfssl_files=( cfssl-bundle_1.5.0_linux_amd64 \\
     cfssl-certinfo_1.5.0_linux_amd64 \\
@@ -360,7 +346,7 @@ else
     wget --no-verbose -O $outname https://github.com/cloudflare/cfssl/releases/download/v1.5.0/${file}
     chmod +x $outname
   done
-  mv * $(params.repodir)/cert/cfssl
+  mv * $(params.repo_dir)/cert/cfssl
 fi
 # cleanup workspace to safe some valuable space
 popd
@@ -376,6 +362,7 @@ rm -rf $(params.cfssl_dir)
 
 
 def build_make_cert_step(
+    repo_dir: tkn.model.NamedParam,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -386,14 +373,16 @@ def build_make_cert_step(
             inline_script='''
 set -e
 set -x
-cd $(params.repodir)/cert
+cd $(params.repo_dir)/cert
 # Note: that make will also build cfssl which was here done in the previous step
 # it will skip this step as it already present, this is a bit fragile
 make
 ''',
             script_type=ScriptType.BOURNE_SHELL,
             callable='',
-            params=[],
+            params=[
+                repo_dir,
+            ],
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
@@ -412,7 +401,7 @@ def build_package_step(
 set -e
 set -x
 
-repodir='$(params.repodir)'
+repodir='$(params.repo_dir)'
 pkg_name="$(params.pkg_name)"
 
 if [ -z "$SOURCE_PATH" ]; then
@@ -493,7 +482,7 @@ echo "Input: $(params.pkg_names)"
 IFS=', ' read -r -a packages <<< "$(params.pkg_names)"
 echo "Building kernel dependent packages: ${packages[@]}"
 
-repodir='$(params.repodir)'
+repodir='$(params.repo_dir)'
 
 if [ -z "$SOURCE_PATH" ]; then
   SOURCE_PATH="$(readlink -f ${repodir})"
@@ -613,6 +602,96 @@ def build_publish_packages_repository_step(
             params=[
                 cicd_cfg_name,
                 s3_package_path,
+            ],
+        ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
+    )
+
+
+def build_image_step(
+    repo_dir: tkn.model.NamedParam,
+    suite: tkn.model.NamedParam,
+    gardenlinux_epoch: tkn.model.NamedParam,
+    timestamp: tkn.model.NamedParam,
+    platform: tkn.model.NamedParam,
+    modifiers: tkn.model.NamedParam,
+    arch: tkn.model.NamedParam,
+    committish: tkn.model.NamedParam,
+    gardenversion: tkn.model.NamedParam,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
+):
+    build_image_step_volume_mounts = [vm for vm in volume_mounts]
+    build_image_step_volume_mounts.extend([{
+        'mountPath': '/dev',
+        'name': 'dev',
+    }, {
+        'mountPath': '/build',
+        'name': 'build',
+    }])
+
+    build_image_step_resource_config = {
+        'requests': {
+            'memory': '1Gi',
+        },
+        'limits': {
+            'memory': '1.5Gi',
+        },
+    }
+    build_image_step_security_context = {
+        'privileged': True,
+        'allowPrivilegeEscalation': True,
+        'capabilities': {
+          'add': ['SYS_ADMIN'],
+        },
+    }
+    return tkn.model.TaskStep(
+        name='build-image',
+        image='$(params.build_image)',
+        script=task_step_script(
+            path=os.path.join(steps_dir, 'build_image.sh'),
+            script_type=ScriptType.BOURNE_SHELL,
+            callable='build_image',
+            repo_path_param=repo_dir,
+            params=[
+                # !DO NOT CHANGE ORDER!
+                suite,
+                gardenlinux_epoch,
+                timestamp,
+                platform,
+                modifiers,
+                arch,
+                committish,
+                gardenversion
+            ],
+        ),
+        volumeMounts=build_image_step_volume_mounts,
+        env=env_vars,
+        resources=build_image_step_resource_config,
+        securityContext=build_image_step_security_context,
+    )
+
+
+def build_base_image_step(
+    repo_dir: tkn.model.NamedParam,
+    oci_path: tkn.model.NamedParam,
+    version_label: tkn.model.NamedParam,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
+):
+    return tkn.model.TaskStep(
+        name='basebuild',
+        image='eu.gcr.io/gardener-project/cc/job-image-kaniko',
+        script=task_step_script(
+            path=os.path.join(steps_dir, 'build_base_image.py'),
+            script_type=ScriptType.PYTHON3,
+            callable='build_base_image',
+            repo_path_param=repo_dir,
+            params=[
+                oci_path,
+                repo_dir,
+                version_label,
             ],
         ),
         volumeMounts=volume_mounts,
