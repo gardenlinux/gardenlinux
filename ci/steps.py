@@ -59,8 +59,8 @@ def task_step_script(
     elif script_type is ScriptType.BOURNE_SHELL:
         shebang = '#!/usr/bin/env bash'
         preamble = ''
-        args = ' '.join(param.name for param in params)
-        callable_str = 'f{callable} {args}'
+        args = ' '.join([f'"$(params.{param.name})"' for param in params])
+        callable_str = f'{callable} {args}'
 
     if callable:
         return '\n'.join((
