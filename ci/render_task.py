@@ -12,12 +12,13 @@ import tkn.model
 
 NamedParam = tkn.model.NamedParam
 
+
 def multiline_str_presenter(dumper, data):
     try:
         dlen = len(data.splitlines())
         if (dlen > 1):
             return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
-    except TypeError as ex:
+    except TypeError:
         return dumper.represent_scalar('tag:yaml.org,2002:str', data)
     return dumper.represent_scalar('tag:yaml.org,2002:str', data)
 
