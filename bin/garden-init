@@ -221,23 +221,23 @@ fi
 	fi
 ' -- "$include_bootstrap"
 
+set -x
 tmp=$(mktemp -d -p $targetDir)
 if [ "${include_wget}" != "" ]; then
 	for pkg in $include_wget; do
 		wget --show-progress --progress=bar:force -P$tmp -O "$(${thisDir}/get_filename ${pkg})" $(${thisDir}/urlescape $pkg)
 	done
 fi
-set -x
 
 # INITRD="No" - really hackish solution to skip ramdisk generation
-[ "${include_aptfile}" != "" ] && 
+[ "${include_aptfile}" != "" ] &&
 "$thisDir/garden-chroot" "$targetDir" bash -c '
 	cd '${tmp#$targetDir}'
 	INITRD="No" apt-get install -y --allow-downgrades --no-install-recommends -f $1
 ' -- "$include_aptfile"
 rm -rf $tmp
 
-[ "${include_aptversion}" != "" ] && 
+[ "${include_aptversion}" != "" ] &&
 "$thisDir/garden-chroot" "$targetDir" bash -c '
 	INITRD="No" apt-get install -y --allow-downgrades --no-install-recommends -f $1
 ' -- "$include_aptversion"
