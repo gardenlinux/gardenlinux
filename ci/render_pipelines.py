@@ -155,6 +155,9 @@ def mk_pipeline_packages():
         'apt',
         'cyrus-sasl2',
         'dracut',
+        'google-compute-engine',
+        'google-compute-engine-oslogin',
+        'google-guest-agent',
         'ignition',
         'iproute2',
         'pam',
@@ -163,7 +166,7 @@ def mk_pipeline_packages():
         package_task = mk_pipeline_package_build_task(package, [base_build_task.name])
         package_tasks.append(package_task)
 
-    run_after=[pkg.name for pkg in package_tasks]
+    run_after = [pkg.name for pkg in package_tasks]
     tasks += package_tasks
 
     # build packages depending on the Liniux kernel (need to be build in sequence to share file system):
