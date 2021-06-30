@@ -1,5 +1,6 @@
 import ccc.github
 import ci.util
+import distutils.util
 import glci.notify
 import glci.util
 import json
@@ -34,6 +35,10 @@ def send_notification(
     pipeline_name = '$(context.pipeline.name)'
     pipeline_run = '$(context.pipelineRun.name)'
     repo_dir = '$(params.repo_dir)'
+
+    if distutils.util.strtobool('$(params.disable_notification)'):
+        print('Notificcation is disabled, bot sending email')
+        return
 
     status_dict = json.loads(status_dict_str)
     must_send = True in [True for status in status_dict.values() if status != 'Succeeded']
@@ -96,6 +101,10 @@ def send_notification(
     # eliminate duplicates by converting it to a set:
     recipients = {r for r in codeowners}
     recipients |= set(additional_recipients)
+    if len(recipients) == 0:
+        print('Mail not sent, could not find any recipient.')
+        return
+
     print(f'Send notification to following recipients: {recipients}')
 
     mail_msg = glci.notify.mk_html_mail_body(

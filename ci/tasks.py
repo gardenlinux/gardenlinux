@@ -512,6 +512,11 @@ def notify_task(
         default='main',
         description='commit to build',
     )
+    disable_notification = NamedParam(
+        name='disable_notification',
+        default='false',
+        description='if true no notification emails are sent',
+    )
     status = tkn.model.NamedParam(
         name='status_dict_str',
         default='~',
@@ -521,6 +526,7 @@ def notify_task(
     params = [
         cicd_cfg_name,
         committish,
+        disable_notification,
         _giturl,
         _repodir,
         status,

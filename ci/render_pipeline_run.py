@@ -93,6 +93,7 @@ def mk_pipeline_packages_run(
     branch: str,
     cicd_cfg: str,
     committish: str,
+    disable_notification: str,
     gardenlinux_epoch: int,
     git_url: str,
     pipeline_name: str,
@@ -124,6 +125,10 @@ def mk_pipeline_packages_run(
                 NamedParam(
                     name='committish',
                     value=committish,
+                ),
+                NamedParam(
+                    name='disable_notification',
+                    value=disable_notification,
                 ),
                 NamedParam(
                     name='gardenlinux_epoch',
@@ -177,6 +182,7 @@ def mk_pipeline_run(
     branch: str,
     cicd_cfg: str,
     committish: str,
+    disable_notification: str,
     flavour_set: glci.model.GardenlinuxFlavourSet,
     gardenlinux_epoch: int,
     git_url: str,
@@ -218,6 +224,10 @@ def mk_pipeline_run(
                 NamedParam(
                     name='committish',
                     value=committish,
+                ),
+                NamedParam(
+                    name='disable_notification',
+                    value=disable_notification,
                 ),
                 NamedParam(
                     name='gardenlinux_epoch',
@@ -295,6 +305,7 @@ def main():
     parser.add_argument('--git-url', default='https://github.com/gardenlinux/gardenlinux.git')
     parser.add_argument('--flavour-set', default='all')
     parser.add_argument('--version', default=None)
+    parser.add_argument('--disable-notification', default=False)
     parser.add_argument(
         '--promote-target',
         type=glci.model.BuildType,
@@ -320,11 +331,14 @@ def main():
         # if version is not specify, derive from worktree (i.e. VERSION file)
         version = glci.model.next_release_version_from_workingtree()
 
+    disable_notification = parsed.disable_notification
+
     # XXX hardcode pipeline names and flavour for now
     pipeline_run = mk_pipeline_packages_run(
         branch=parsed.branch,
         cicd_cfg=parsed.cicd_cfg,
         committish=parsed.committish,
+        disable_notification=str(disable_notification),
         gardenlinux_epoch=parsed.gardenlinux_epoch,
         git_url=parsed.git_url,
         oci_path=parsed.oci_path,
@@ -346,6 +360,7 @@ def main():
         branch=parsed.branch,
         cicd_cfg=parsed.cicd_cfg,
         committish=parsed.committish,
+        disable_notification=str(disable_notification),
         flavour_set=flavour_set,
         gardenlinux_epoch=parsed.gardenlinux_epoch,
         git_url=parsed.git_url,
