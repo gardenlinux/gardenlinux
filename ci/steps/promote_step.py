@@ -94,9 +94,9 @@ def promote_step(
         glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
     ]
 
-    if glci.model.PublishingAction.BUILD_LOCAL in publishing_actions:
+    if glci.model.PublishingAction.BUILD_ONLY in publishing_actions:
         print(
-            f'publishing action {glci.model.PublishingAction.BUILD_LOCAL=} specified - exiting now'
+            f'publishing action {glci.model.PublishingAction.BUILD_ONLY=} specified - exiting now'
         )
         sys.exit(0)
 
