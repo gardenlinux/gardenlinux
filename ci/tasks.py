@@ -223,7 +223,6 @@ def _package_task(
         volume_mounts=volume_mounts,
     )
     make_certs_step = steps.build_make_cert_step(
-        repo_dir=repodir,
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )

@@ -147,7 +147,6 @@ def mk_pipeline_notify_task(previous_tasks: typing.List[str],):
     status_dict = {}
     for task in previous_tasks:
         status_dict['status_' + task.name] = f'$(tasks.{task.name}.status)'
-    print(status_dict)
     status_str = json.dumps(status_dict)
 
     status_param = NamedParam(
