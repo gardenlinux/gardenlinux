@@ -29,18 +29,24 @@ done
 
 echo "### cloning the latest and greatest debian release environment to linux"
 if [ -d $src ]; then
-	cd $src; git pull; cd ..
+	cd $src; git checkout master; git pull --tags; cd ..
 else 
-        git clone --depth 1 https://salsa.debian.org/kernel-team/linux.git $src
+	# find better way of doing this
+	git clone https://salsa.debian.org/kernel-team/linux.git $src
 fi
-echo "### cloning the old kernel to linux-$KERNEL_DEBIAN"
-git clone --depth 1 --single --branch debian/$KERNEL_DEBIAN https://salsa.debian.org/kernel-team/linux.git linux-$KERNEL_DEBIAN
+
+# if there are newer debian kernel versions, stick to what we have defined
+if dpkg --compare-versions $(cd $src; git describe --abbrev=0 | cut -d/ -f 2) gt $KERNEL_DEBIAN; then
+	cd $src; git -c advice.detachedHead=false checkout debian/$KERNEL_DEBIAN; cd ..
+fi
 
 cd $src
 mv debian/changelog debian/changelog.org
 cd ..
 
 if $(dpkg --compare-versions $KERNEL_DEBIAN lt $KERNEL_VERSION); then 
+	echo "### cloning the old kernel to linux-$KERNEL_DEBIAN"
+	git clone --depth 1 --single --branch debian/$KERNEL_DEBIAN https://salsa.debian.org/kernel-team/linux.git linux-$KERNEL_DEBIAN
 	KERNEL_VERSION="$KERNEL_VERSION-1"
 	echo "### pulling aufs5 from upstream not from debian" 
 	git clone https://github.com/sfjro/aufs5-standalone.git
@@ -111,6 +117,7 @@ sed -i "s/debian-uefi-certs.pem/gardenlinux-kernel-certs.pem/" debian/config/con
 echo "### generating a debian conform orig file and install"
 [ -e ../orig/linux_*.tar.xz ] || PYTHONHASHSEED=0 debian/bin/genorig.py ../linux-*.tar.xz
 make -f debian/rules orig
+
 echo "### generate custom control files"
 PYTHONHASHSEED=0 debian/bin/gencontrol.py
 echo "### deviate needed packages and install"
