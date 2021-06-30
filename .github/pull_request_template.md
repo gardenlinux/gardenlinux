@@ -7,15 +7,12 @@ If multiple identifiers make sense you can also state the commands multiple time
   /area auto-scaling
   ...
 
-"/area" identifiers:     audit-logging|auto-scaling|backup|certification|control-plane-migration|control-plane|cost|delivery|dev-productivity|disaster-recovery|documentation|high-availability|logging|metering|monitoring|networking|open-source|ops-productivity|os|performance|quality|robustness|scalability|security|storage|testing|usability|user-management
 "/kind" identifiers:     api-change|bug|cleanup|discussion|enhancement|epic|impediment|poc|post-mortem|question|regression|task|technical-debt|test
-"/priority" identifiers: normal|critical|blocker
 
 -->
 /kind TODO
 /area os
 /os garden-linux
-/priority normal
 
 **What this PR does / why we need it**:
 
@@ -25,8 +22,7 @@ Fixes #
 **Special notes for your reviewer**:
 
 **Release note**:
-<!--
-Write your release note:
+<!--  Write your release note:
 1. Enter your release note in the below block.
 2. If no release note is required, just write "NONE" within the block.
 
@@ -35,6 +31,6 @@ Possible values:
 - category:       breaking|feature|bugfix|doc|other
 - target_group:   user|operator|developer|dependency
 -->
-```other operator
+```feature user
 
 ```
