@@ -697,3 +697,30 @@ def build_base_image_step(
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+
+
+def notify_step(
+    cicd_cfg_name: tkn.model.NamedParam,
+    repo_dir: tkn.model.NamedParam,
+    git_url: tkn.model.NamedParam,
+    status_dict_str: tkn.model.NamedParam,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
+):
+    return tkn.model.TaskStep(
+        name='notify-status',
+        image=DEFAULT_IMAGE,
+        script=task_step_script(
+            path=os.path.join(steps_dir, 'notify.py'),
+            script_type=ScriptType.PYTHON3,
+            callable='send_notification',
+            repo_path_param=repo_dir,
+            params=[
+                cicd_cfg_name,
+                git_url,
+                status_dict_str,
+            ],
+        ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
+    )

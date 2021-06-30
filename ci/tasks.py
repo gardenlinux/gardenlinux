@@ -498,3 +498,57 @@ def base_image_build_task(env_vars, volume_mounts):
             ],
         ),
     )
+
+
+def notify_task(
+    env_vars,
+    volume_mounts,
+):
+    cicd_cfg_name = NamedParam(
+        name='cicd_cfg_name',
+        default='default',
+    )
+    committish = NamedParam(
+        name='committish',
+        default='main',
+        description='commit to build',
+    )
+    status = tkn.model.NamedParam(
+        name='status_dict_str',
+        default='~',
+        description='JSON string with status for all tasks',
+    )
+
+    params = [
+        cicd_cfg_name,
+        committish,
+        _giturl,
+        _repodir,
+        status,
+    ]
+    clone_step =  steps.clone_step(
+        committish=committish,
+        repo_dir=_repodir,
+        git_url=_giturl,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+    notify_step = steps.notify_step(
+        repo_dir=_repodir,
+        git_url=_giturl,
+        cicd_cfg_name=cicd_cfg_name,
+        status_dict_str=status,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+    task = tkn.model.Task(
+        metadata=tkn.model.Metadata(name='notify-task'),
+        spec=tkn.model.TaskSpec(
+            params=params,
+            steps=[
+                clone_step,
+                notify_step,
+            ],
+        ),
+    )
+    return task

@@ -2,6 +2,7 @@
 
 import argparse
 import dataclasses
+import json
 import typing
 
 import yaml
@@ -142,6 +143,29 @@ def mk_pipeline_promote_task(
     )
 
 
+def mk_pipeline_notify_task(previous_tasks: typing.List[str],):
+    status_dict = {}
+    for task in previous_tasks:
+        status_dict['status_' + task.name] = f'$(tasks.{task.name}.status)'
+    print(status_dict)
+    status_str = json.dumps(status_dict)
+
+    status_param = NamedParam(
+            name='status_dict_str',
+            value=status_str
+        )
+
+    return PipelineTask(
+        name='notify-task',
+        taskRef=TaskRef(name='notify-task'),
+        params=[
+            pass_param(name='cicd_cfg_name'),
+            pass_param(name='giturl'),
+            status_param,
+        ],
+    )
+
+
 def mk_pipeline_packages():
     tasks = []
 
@@ -178,6 +202,8 @@ def mk_pipeline_packages():
     run_after += package_kernel_task.name
     tasks.append(package_kernel_task)
 
+    notify_task = mk_pipeline_notify_task(tasks)
+
     pipeline = Pipeline(
         metadata=Metadata(
             name='gl-packages-build',
@@ -197,6 +223,7 @@ def mk_pipeline_packages():
                 NamedParam(name='version_label'),
             ],
             tasks=tasks,
+            _finally=[notify_task, ],
         ),
     )
 
@@ -221,7 +248,7 @@ def mk_pipeline(
         build_task = mk_pipeline_build_task(
             gardenlinux_flavour=glf,
             pipeline_flavour=pipeline_flavour,
-            run_after= [ base_build_task.name ],
+            run_after=[base_build_task.name],
         )
         build_tasks.append(build_task)
 
@@ -231,6 +258,8 @@ def mk_pipeline(
         run_after=[plt.name for plt in build_tasks],
     )
     tasks.append(promote_task)
+
+    notify_task = mk_pipeline_notify_task(tasks)
 
     pipeline = Pipeline(
         metadata=Metadata(
@@ -254,6 +283,7 @@ def mk_pipeline(
                 NamedParam(name='version_label'),
             ],
             tasks=tasks,
+            _finally=[notify_task, ],
         ),
     )
 
