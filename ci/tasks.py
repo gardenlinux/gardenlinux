@@ -522,6 +522,18 @@ def notify_task(
         default='~',
         description='JSON string with status for all tasks',
     )
+    namespace = NamedParam(
+            name='namespace',
+            description='Namespace of current pipeline run',
+        )
+    pipeline_name = NamedParam(
+            name='pipeline_name',
+            description='Namespace of current pipeline',
+        )
+    pipeline_run_name = NamedParam(
+            name='pipeline_run_name',
+            description='Name of current pipeline run',
+        )
 
     params = [
         cicd_cfg_name,
@@ -530,6 +542,9 @@ def notify_task(
         _giturl,
         _repodir,
         status,
+        namespace,
+        pipeline_name,
+        pipeline_run_name,
     ]
     clone_step =  steps.clone_step(
         committish=committish,

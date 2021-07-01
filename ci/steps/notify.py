@@ -31,9 +31,10 @@ def send_notification(
     status_dict_str: str,
     additional_recipients: typing.Sequence[str] = [],
 ):
-    namespace = '$(context.pipelineRun.namespace)'
-    pipeline_name = '$(context.pipeline.name)'
-    pipeline_run = '$(context.pipelineRun.name)'
+    namespace = '$(params.namespace)'
+    pipeline_name = '$(params.pipeline_name)'
+    pipeline_run = '$(params.pipeline_run_name)'
+
     repo_dir = '$(params.repo_dir)'
 
     if distutils.util.strtobool('$(params.disable_notification)'):
@@ -58,7 +59,7 @@ def send_notification(
 
         result_table += f'<tr><td class="align_left">{task}</td><td>{status_symbol}</td></tr>'
 
-    subject = f'Tekton Pipeline Gardenlinux build failure in {pipeline_name}'
+    subject = f'Tekton Pipeline Garden Linux build failure in {pipeline_name}'
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
     email_cfg = _email_cfg(cicd_cfg=cicd_cfg)
 
@@ -106,7 +107,6 @@ def send_notification(
         return
 
     print(f'Send notification to following recipients: {recipients}')
-
     mail_msg = glci.notify.mk_html_mail_body(
         text=mail_body,
         recipients=recipients,

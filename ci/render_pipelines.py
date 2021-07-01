@@ -153,6 +153,18 @@ def mk_pipeline_notify_task(previous_tasks: typing.List[str],):
             name='status_dict_str',
             value=status_str
         )
+    namespace_param = NamedParam(
+            name='namespace',
+            value='$(context.pipelineRun.namespace)'
+        )
+    pipeline_name_param = NamedParam(
+            name='pipeline_name',
+            value='$(context.pipeline.name)'
+        )
+    pipeline_run_name_param = NamedParam(
+            name='pipeline_run_name',
+            value='$(context.pipelineRun.name)'
+        )
 
     return PipelineTask(
         name='notify-task',
@@ -163,6 +175,9 @@ def mk_pipeline_notify_task(previous_tasks: typing.List[str],):
             pass_param('disable_notification'),
             pass_param(name='giturl'),
             status_param,
+            namespace_param,
+            pipeline_name_param,
+            pipeline_run_name_param,
         ],
     )
 
