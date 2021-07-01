@@ -101,7 +101,7 @@ def flavour_set(
         if fs.name == flavour_set_name:
             return fs
     else:
-        raise RuntimeError(f'not found: {flavour_set=}')
+        raise RuntimeError(f'not found: {flavour_set_name=}')
 
 
 def release_manifest(
