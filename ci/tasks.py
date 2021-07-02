@@ -553,6 +553,13 @@ def notify_task(
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
+    log_step = steps.getlog_step(
+        repo_dir=_repodir,
+        pipeline_run=pipeline_run_name,
+        namespace=namespace,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
     notify_step = steps.notify_step(
         repo_dir=_repodir,
         git_url=_giturl,
@@ -567,6 +574,7 @@ def notify_task(
             params=params,
             steps=[
                 clone_step,
+                log_step,
                 notify_step,
             ],
         ),

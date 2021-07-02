@@ -724,3 +724,30 @@ def notify_step(
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+
+
+def getlog_step(
+    repo_dir: tkn.model.NamedParam,
+    pipeline_run: tkn.model.NamedParam,
+    namespace: tkn.model.NamedParam,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
+):
+    return tkn.model.TaskStep(
+        name='get-logs',
+        image=DEFAULT_IMAGE,
+        script=task_step_script(
+            path=os.path.join(steps_dir, 'getlogs.py'),
+            script_type=ScriptType.PYTHON3,
+            # callable='getlogs',
+            callable='print("This step is currently disabled")',
+            repo_path_param=repo_dir,
+            params=[
+                repo_dir,
+                pipeline_run,
+                namespace,
+            ],
+        ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
+    )
