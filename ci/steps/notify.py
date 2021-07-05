@@ -1,6 +1,8 @@
 import ccc.github
 import ci.util
 import distutils.util
+from email import encoders
+from email.mime.base import MIMEBase
 import glci.notify
 import glci.util
 import json
@@ -38,7 +40,7 @@ def send_notification(
     repo_dir = '$(params.repo_dir)'
 
     if distutils.util.strtobool('$(params.disable_notification)'):
-        print('Notificcation is disabled, bot sending email')
+        print('Notification is disabled, bot sending email')
         return
 
     status_dict = json.loads(status_dict_str)
@@ -113,6 +115,18 @@ def send_notification(
         subject=subject,
         sender=email_cfg.sender_name(),
     )
+
+    # check if there is a log file to attach
+    log_zip_name = 'build_log.zip'
+    log_zip = os.path.join(repo_dir, log_zip_name)
+    if os.path.exists(log_zip):
+        with open(log_zip, 'rb') as att_file:
+            zip_data = att_file.read()
+        part = MIMEBase('application', "zip")
+        part.set_payload(zip_data)
+        encoders.encode_base64(part)
+        part.add_header('Content-Disposition', f'attachment; filename="{log_zip_name}"')
+        mail_msg.attach(part)
 
     # for debugging generate a local file
     # with open('email_out.html', 'w') as file:

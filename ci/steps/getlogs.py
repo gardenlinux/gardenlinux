@@ -59,7 +59,7 @@ def getlogs(repo_dir: str, namespace: str, pipeline_run_name: str):
             pod_name = run_info.pod_name
             counter = 0
             for step, container_name in run_info.steps.items():
-                zip_comp = f'{counter:02}_{run_info.name}/{step}.log'
+                zip_comp = f'{run_info.name}/{counter:02}_{step}.log'
                 print(f'Getting logs for pod {pod_name}, step {step} in container {container_name}')
                 # Note the flag preload_content decides about streaming or full content in response,
                 # k8s client uses internally urllib3, see

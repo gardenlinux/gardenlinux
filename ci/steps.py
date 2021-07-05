@@ -682,7 +682,7 @@ def build_base_image_step(
 ):
     return tkn.model.TaskStep(
         name='basebuild',
-        image='eu.gcr.io/gardener-project/cc/job-image-kaniko',
+        image='eu.gcr.io/gardener-project/cc/job-image-kaniko:1.1363.0',
         script=task_step_script(
             path=os.path.join(steps_dir, 'build_base_image.py'),
             script_type=ScriptType.PYTHON3,
@@ -739,8 +739,7 @@ def getlog_step(
         script=task_step_script(
             path=os.path.join(steps_dir, 'getlogs.py'),
             script_type=ScriptType.PYTHON3,
-            # callable='getlogs',
-            callable='print("This step is currently disabled")',
+            callable='getlogs',
             repo_path_param=repo_dir,
             params=[
                 repo_dir,
