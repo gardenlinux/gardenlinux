@@ -198,7 +198,7 @@ class ReleaseIdentifier:
     gardenlinux_epoch: int
     architecture: Architecture
     platform: Platform
-    modifiers: typing.Tuple[Modifier]
+    modifiers: typing.Tuple[Modifier, ...]
 
     def flavour(self, normalise=True) -> GardenlinuxFlavour:
         mods = normalised_modifiers(
