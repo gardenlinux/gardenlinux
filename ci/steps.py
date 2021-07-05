@@ -336,28 +336,46 @@ def build_cfssl_step(
     )
 
 
-def build_make_cert_step(
+def write_key_step(
+    repo_dir: tkn.model.NamedParam,
+    key_config_name: tkn.model.NamedParam,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
+):
+    return tkn.model.TaskStep(
+        name='write-key',
+        image=DEFAULT_IMAGE,
+        script=task_step_script(
+            path=os.path.join(steps_dir, 'write_key.py'),
+            script_type=ScriptType.PYTHON3,
+            callable='write_key',
+            params=[
+                repo_dir,
+                key_config_name,
+            ],
+            repo_path_param=repo_dir,
+        ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
+    )
+
+
+def build_cert_step(
     repo_dir: tkn.model.NamedParam,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
     return tkn.model.TaskStep(
-        name='make-cert',
-        image='$(params.gardenlinux_build_deb_image)',
+        name='build-cert',
+        image='golang:latest',
         script=task_step_script(
-            inline_script='''
-set -e
-set -x
-cd $(params.repo_dir)/cert
-# Note: that make will also build cfssl which was here done in the previous step
-# it will skip this step as it already present, this is a bit fragile
-make
-''',
+            path=os.path.join(steps_dir, 'build_cert.sh'),
             script_type=ScriptType.BOURNE_SHELL,
-            callable='',
+            callable='build_cert',
             params=[
                 repo_dir,
             ],
+            repo_path_param=repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,

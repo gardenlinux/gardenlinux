@@ -98,6 +98,7 @@ def mk_pipeline_packages_run(
     gardenlinux_epoch: int,
     git_url: str,
     pipeline_name: str,
+    key_config_name: str,
     publishing_actions: typing.Sequence[glci.model.PublishingAction],
     oci_path: str,
     version: str,
@@ -177,6 +178,10 @@ def mk_pipeline_packages_run(
                     name='gardenlinux_build_deb_image',
                     value=build_deb_image,
                 ),
+                NamedParam(
+                    name='key_config_name',
+                    value=key_config_name,
+                )
             ],
             pipelineRef=PipelineRef(
                 name=pipeline_name,
@@ -367,6 +372,7 @@ def main():
         git_url=parsed.git_url,
         oci_path=parsed.oci_path,
         pipeline_name='gl-packages-build',
+        key_config_name='gardenlinux',
         publishing_actions=parsed.publishing_actions,
         version=version,
         additional_recipients=parsed.additional_recipients,

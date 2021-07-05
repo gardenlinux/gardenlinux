@@ -1,3 +1,4 @@
+from os import name
 import steps
 import tkn.model
 
@@ -184,16 +185,22 @@ def _package_task(
         description='cfssl git url to clone',
         default='https://github.com/cloudflare/cfssl.git'
     )
+    key_config_name = NamedParam(
+        name='key_config_name',
+        description='config name of the key to use for signing the packages',
+        default='gardenlinux',
+    )
 
     params = [
-        cfssl_committish,
         cfss_git_url,
+        cfssl_committish,
         cfssl_dir,
         cfssl_fastpath,
         cicd_cfg_name,
         committish,
         gardenlinux_build_deb_image,
         giturl,
+        key_config_name,
         pkg_name,
         repodir,
         s3_package_path,
@@ -218,6 +225,13 @@ def _package_task(
         volume_mounts=volume_mounts,
     )
 
+    write_key_step = steps.write_key_step(
+        key_config_name=key_config_name,
+        repo_dir=repodir,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+
     cfssl_build_step = steps.build_cfssl_step(
         repo_dir=repodir,
         cfssl_fastpath=cfssl_fastpath,
@@ -225,7 +239,7 @@ def _package_task(
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
-    make_certs_step = steps.build_make_cert_step(
+    build_certs_step = steps.build_cert_step(
         repo_dir=repodir,
         env_vars=env_vars,
         volume_mounts=volume_mounts,
@@ -245,8 +259,9 @@ def _package_task(
             steps=[
                 clone_step_gl,
                 clone_step_cfssl,
+                write_key_step,
                 cfssl_build_step,
-                make_certs_step,
+                build_certs_step,
                 package_build_step,
                 s3_upload_packages_step,
             ],
