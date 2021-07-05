@@ -219,6 +219,9 @@ def _package_task(
     )
 
     cfssl_build_step = steps.build_cfssl_step(
+        repo_dir=repodir,
+        cfssl_fastpath=cfssl_fastpath,
+        cfssl_dir=cfssl_dir,
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
@@ -253,12 +256,17 @@ def _package_task(
 
 
 def nokernel_package_task(
+    package_name,
+    repo_dir,
     env_vars,
     volume_mounts,
 ):
     return _package_task(
         task_name='build-packages',
-        package_build_step=steps.build_package_step(),
+        package_build_step=steps.build_package_step(
+            repo_dir=repo_dir,
+            package_name=package_name,
+        ),
         is_kernel_task=False,
         env_vars=env_vars,
         volume_mounts=volume_mounts,
@@ -266,12 +274,17 @@ def nokernel_package_task(
 
 
 def kernel_package_task(
+    repo_dir,
+    package_names,
     env_vars,
     volume_mounts,
 ):
     return _package_task(
         task_name='build-kernel-packages',
-        package_build_step=steps.build_kernel_package_step(),
+        package_build_step=steps.build_kernel_package_step(
+            repo_dir=repo_dir,
+            package_names=package_names,
+        ),
         is_kernel_task=True,
         env_vars=env_vars,
         volume_mounts=volume_mounts,

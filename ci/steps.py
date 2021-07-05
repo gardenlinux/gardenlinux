@@ -310,6 +310,9 @@ def release_step(
 
 
 def build_cfssl_step(
+    repo_dir: tkn.model.NamedParam,
+    cfssl_fastpath: tkn.model.NamedParam,
+    cfssl_dir: tkn.model.NamedParam,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -317,46 +320,16 @@ def build_cfssl_step(
         name='build-cfssl-step',
         image='golang:latest',
         script=task_step_script(
-            inline_script='''
-set -e
-set -x
-
-mkdir -p $(params.repo_dir)/cert/cfssl
-if [ "$(params.cfssl_fastpath)" != "true" ]; then
-  # slow-path build CFSSL from github:
-  pushd $(params.cfssl_dir)
-  make
-  mv bin/* $(params.repo_dir)/cert/cfssl
-else
-  mkdir -p $(params.repo_dir)/bin
-  pushd $(params.repo_dir)/bin
-  # fast-path copy binaries from CFSSL github release:
-  cfssl_files=( cfssl-bundle_1.5.0_linux_amd64 \\
-    cfssl-certinfo_1.5.0_linux_amd64 \\
-    cfssl-newkey_1.5.0_linux_amd64 \\
-    cfssl-scan_1.5.0_linux_amd64 \\
-    cfssljson_1.5.0_linux_amd64 \\
-    cfssl_1.5.0_linux_amd64 \\
-    mkbundle_1.5.0_linux_amd64 \\
-    multirootca_1.5.0_linux_amd64 \\
-  )
-
-  len2=`expr length _1.5.0_linux_amd64`
-  for file in "${cfssl_files[@]}"; do
-    len=`expr length $file`
-    outname=${file:0:`expr $len - $len2`}
-    wget --no-verbose -O $outname https://github.com/cloudflare/cfssl/releases/download/v1.5.0/${file}
-    chmod +x $outname
-  done
-  mv * $(params.repo_dir)/cert/cfssl
-fi
-# cleanup workspace to safe some valuable space
-popd
-rm -rf $(params.cfssl_dir)
-''',
+            path=os.path.join(steps_dir, 'build_cfssl.sh'),
             script_type=ScriptType.BOURNE_SHELL,
-            callable='',
-            params=[],
+            callable='build_cfssl',
+            repo_path_param=repo_dir,
+            params=[
+                # !DO NOT CHANGE ORDER!
+                repo_dir,
+                cfssl_fastpath,
+                cfssl_dir,
+            ],
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
@@ -392,6 +365,8 @@ make
 
 
 def build_package_step(
+    repo_dir: tkn.model.NamedParam,
+    package_name: tkn.model.NamedParam,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -399,69 +374,13 @@ def build_package_step(
         name='build-package',
         image='$(params.gardenlinux_build_deb_image)',
         script=task_step_script(
-            inline_script='''
-set -e
-set -x
-
-repodir='$(params.repo_dir)'
-pkg_name="$(params.pkg_name)"
-
-if [ -z "$SOURCE_PATH" ]; then
-  SOURCE_PATH="$(readlink -f ${repodir})"
-fi
-
-if [ -z "${pkg_name}" ]; then
-  echo "ERROR: no package name given"
-  exit 1
-fi
-
-echo $(pwd)
-
-MANUALDIR=$(realpath $repodir/packages/manual)
-KERNELDIR=$(realpath $repodir/packages/kernel)
-CERTDIR=$(realpath $repodir/cert)
-
-export DEBFULLNAME="Garden Linux Maintainers"
-export DEBEMAIL="contact@gardenlinux.io"
-export BUILDIMAGE="gardenlinux/build-deb"
-export BUILDKERNEL="gardenlinux/build-kernel"
-echo "MANUALDIR: ${MANUALDIR}"
-echo "KERNELDIR: ${KERNELDIR}"
-echo "CERTDIR: ${CERTDIR}"
-
-# original makefile uses mounts, replace this by linking required dirs
-# to the expexted locations:
-# original: mount <gardenlinuxdir>/.packages but this does not exist so just create
-ls -l ${CERTDIR}
-ln -s ${MANUALDIR} /workspace/manual
-ln -s /../Makefile.inside /workspace/Makefile
-echo "$(gpgconf --list-dir agent-socket)"
-mkdir -p /workspace/.gnupg
-ln -s $(gpgconf --list-dir agent-socket) /workspace/.gnupg/S.gpg-agent
-ln -s ${CERTDIR}/sign.pub /sign.pub
-ln -s ${CERTDIR}/Kernel.sign.full /kernel.full
-ln -s ${CERTDIR}/Kernel.sign.crt /kernel.crt
-ln -s ${CERTDIR}/Kernel.sign.key /kernel.key
-
-pkg_build_script_path="manual/${pkg_name}"
-echo "pkg_build_script_path: ${pkg_build_script_path}"
-
-if [ ! -f "${pkg_build_script_path}" ]; then
-  echo "ERROR: Don't know how to build ${pkg_name}"
-  exit 1
-fi
-
-export BUILDTARGET="${OUT_PATH:-/workspace/pool}"
-if [ ! -f "$BUILDTARGET" ]; then
-  mkdir "$BUILDTARGET"
-fi
-
-echo "Calling package-build script ${pkg_build_script_path}"
-${pkg_build_script_path}
-''',
+            path=os.path.join(steps_dir, 'build_package.sh'),
             script_type=ScriptType.BOURNE_SHELL,
-            callable='',
-            params=[],
+            callable='build_package',
+            params=[
+                repo_dir,
+                package_name,
+            ],
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
@@ -469,6 +388,8 @@ ${pkg_build_script_path}
 
 
 def build_kernel_package_step(
+    repo_dir: tkn.model.NamedParam,
+    package_names: tkn.model.NamedParam,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -476,85 +397,13 @@ def build_kernel_package_step(
         name='build-package',
         image='$(params.gardenlinux_build_deb_image)',
         script=task_step_script(
-            inline_script='''
-set -ex
-
-# split string into an array
-echo "Input: $(params.pkg_names)"
-IFS=', ' read -r -a packages <<< "$(params.pkg_names)"
-echo "Building kernel dependent packages: ${packages[@]}"
-
-repodir='$(params.repo_dir)'
-
-if [ -z "$SOURCE_PATH" ]; then
-  SOURCE_PATH="$(readlink -f ${repodir})"
-fi
-
-if [ -z "${packages}" ]; then
-  echo "ERROR: no package name given"
-  exit 1
-fi
-
-echo $(pwd)
-
-MANUALDIR=$(realpath $repodir/packages/manual)
-KERNELDIR=$(realpath $repodir/packages/kernel)
-CERTDIR=$(realpath $repodir/cert)
-
-export DEBFULLNAME="Garden Linux Maintainers"
-export DEBEMAIL="contact@gardenlinux.io"
-export BUILDIMAGE="gardenlinux/build-deb"
-export BUILDKERNEL="gardenlinux/build-kernel"
-export WORKDIR="/workspace"
-echo "MANUALDIR: ${MANUALDIR}"
-echo "KERNELDIR: ${KERNELDIR}"
-echo "CERTDIR: ${CERTDIR}"
-echo "WORKDIR: ${WORKDIR}"
-ls -l ${CERTDIR}
-
-# original makefile uses mounts, replace this by linking required dirs
-# to the expexted locations:
-# original: mount <gardenlinuxdir>/.packages but this does not exist so just create
-ln -s ${MANUALDIR} /workspace/manual
-ln -s /../Makefile.inside /workspace/Makefile
-echo "$(gpgconf --list-dir agent-socket)"
-mkdir -p /workspace/.gnupg
-ln -s $(gpgconf --list-dir agent-socket) /workspace/.gnupg/S.gpg-agent
-ln -s ${CERTDIR}/sign.pub /sign.pub
-ln -s ${CERTDIR}/Kernel.sign.full /kernel.full
-ln -s ${CERTDIR}/Kernel.sign.crt /kernel.crt
-ln -s ${CERTDIR}/Kernel.sign.key /kernel.key
-
-echo "Checking disk begin end of kernel-packages build:"
-df -h
-sudo apt-get install --no-install-recommends -y wget quilt vim less
-
-export BUILDTARGET="${OUT_PATH:-/workspace/pool}"
-if [ ! -f "$BUILDTARGET" ]; then
-mkdir "$BUILDTARGET"
-fi
-
-for package in "${packages[@]}"
-do
-  echo "Building now ${package}"
-  pkg_build_script_path="manual/${package}"
-  echo "pkg_build_script_path: ${pkg_build_script_path}"
-
-  if [ ! -f "${pkg_build_script_path}" ]; then
-    echo "ERROR: Don't know how to build ${package}"
-    exit 1
-  fi
-
-  pushd "/workspace"
-  ${pkg_build_script_path}
-  popd
-done
-echo "Checking disk usage end of kernel-packages build:"
-df -h
-''',
+            path=os.path.join(steps_dir, 'build_kernel_package.sh'),
             script_type=ScriptType.BOURNE_SHELL,
-            callable='',
-            params=[],
+            callable='build_kernel_package',
+            params=[
+                repo_dir,
+                package_names,
+            ],
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
