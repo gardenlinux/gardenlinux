@@ -20,7 +20,7 @@ git_url='https://github.com/gardenlinux/gardenlinux.git'
 # git_url=`git config --get remote.origin.url`
 oci_path='eu.gcr.io/gardener-project/test/gardenlinux-test'
 tekton_namespace='jens'
-disable_notification='true'
+disable_notifications='true'
 
 export PATH="${PATH}:${bin_dir}"
 
@@ -68,18 +68,31 @@ pipeline_run="$PWD/pipeline_run.yaml"
 rendered_task="$PWD/rendered_task.yaml"
 
 # create pipeline-run for current commit
-ci/render_pipeline_run.py $EXTRA_ARGS \
-  --branch "${branch_name}" \
-  --committish "${head_commit}" \
-  --cicd-cfg 'default' \
-  --flavour-set "${flavour_set}" \
-  --promote-target "${promote_target}" \
-  --publishing-action "${publishing_actions}" \
-  --git-url "${git_url}" \
-  --oci-path "${oci_path}" \
-  --outfile "${pipeline_run}" \
-  --disable-notification $disable_notification
-
+if  [[ ${disable_notifications} == 'true' ]]; then
+  ci/render_pipeline_run.py $EXTRA_ARGS \
+    --branch "${branch_name}" \
+    --committish "${head_commit}" \
+    --cicd-cfg 'default' \
+    --flavour-set "${flavour_set}" \
+    --promote-target "${promote_target}" \
+    --publishing-action "${publishing_actions}" \
+    --git-url "${git_url}" \
+    --oci-path "${oci_path}" \
+    --outfile "${pipeline_run}" \
+    --disable-notifications
+else
+  ci/render_pipeline_run.py $EXTRA_ARGS \
+    --branch "${branch_name}" \
+    --committish "${head_commit}" \
+    --cicd-cfg 'default' \
+    --flavour-set "${flavour_set}" \
+    --promote-target "${promote_target}" \
+    --publishing-action "${publishing_actions}" \
+    --git-url "${git_url}" \
+    --oci-path "${oci_path}" \
+    --outfile "${pipeline_run}"
+fi
+ 
 ci/render_pipelines.py \
   --pipeline_cfg "${pipeline_cfg}" \
   --flavour-set "${flavour_set}" \

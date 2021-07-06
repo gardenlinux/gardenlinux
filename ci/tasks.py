@@ -556,15 +556,19 @@ def notify_task(
     )
     log_step = steps.get_logs_step(
         repo_dir=_repodir,
-        pipeline_run=pipeline_run_name,
+        pipeline_run_name=pipeline_run_name,
         namespace=namespace,
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
     notify_step = steps.notify_step(
-        repo_dir=_repodir,
-        git_url=_giturl,
         cicd_cfg_name=cicd_cfg_name,
+        disable_notifications=disable_notifications,
+        git_url=_giturl,
+        namespace=namespace,
+        pipeline_name=pipeline_name,
+        pipeline_run_name=pipeline_run_name,
+        repo_dir=_repodir,
         status_dict_str=status,
         env_vars=env_vars,
         volume_mounts=volume_mounts,

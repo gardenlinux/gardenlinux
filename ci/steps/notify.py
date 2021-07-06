@@ -29,18 +29,17 @@ def _smtp_client(email_cfg):
 
 def send_notification(
     cicd_cfg_name: str,
+    disable_notifications: str,
+    namespace: str,
     giturl: str,
+    pipeline_name: str,
+    pipeline_run_name: str,
+    repo_dir: str,
     status_dict_str: str,
     additional_recipients: typing.Sequence[str] = [],
 ):
-    namespace = '$(params.namespace)'
-    pipeline_name = '$(params.pipeline_name)'
-    pipeline_run = '$(params.pipeline_run_name)'
-
-    repo_dir = '$(params.repo_dir)'
-
-    if distutils.util.strtobool('$(params.disable_notifications)'):
-        print('Notification is disabled, bot sending email')
+    if distutils.util.strtobool(disable_notifications):
+        print('Notification is disabled, not sending email')
         return
 
     status_dict = json.loads(status_dict_str)
@@ -84,7 +83,7 @@ def send_notification(
     values = {
         'pipeline': pipeline_name,
         'status_table': result_table,
-        'pipeline_run': pipeline_run,
+        'pipeline_run': pipeline_run_name,
         'namespace': namespace,
         'logo_src': logo_svg,
     }
