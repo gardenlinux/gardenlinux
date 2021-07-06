@@ -39,7 +39,7 @@ def send_notification(
 
     repo_dir = '$(params.repo_dir)'
 
-    if distutils.util.strtobool('$(params.disable_notification)'):
+    if distutils.util.strtobool('$(params.disable_notifications)'):
         print('Notification is disabled, bot sending email')
         return
 

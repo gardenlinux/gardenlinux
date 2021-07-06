@@ -223,6 +223,7 @@ def _package_task(
         volume_mounts=volume_mounts,
     )
     make_certs_step = steps.build_make_cert_step(
+        repo_dir=repodir,
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
@@ -512,8 +513,8 @@ def notify_task(
         default='main',
         description='commit to build',
     )
-    disable_notification = NamedParam(
-        name='disable_notification',
+    disable_notifications = NamedParam(
+        name='disable_notifications',
         default='false',
         description='if true no notification emails are sent',
     )
@@ -538,7 +539,7 @@ def notify_task(
     params = [
         cicd_cfg_name,
         committish,
-        disable_notification,
+        disable_notifications,
         _giturl,
         _repodir,
         status,
@@ -553,7 +554,7 @@ def notify_task(
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
-    log_step = steps.getlog_step(
+    log_step = steps.get_logs_step(
         repo_dir=_repodir,
         pipeline_run=pipeline_run_name,
         namespace=namespace,

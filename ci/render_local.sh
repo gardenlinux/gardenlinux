@@ -13,11 +13,14 @@ gardenlinux_dir=$repo_root
 branch_name="ci-dev"
 # branch_name="main"
 flavour_set='jens' # 'all'     # -> $gardenlinux_dir/flavours.yaml
+# flavour_set='all'
+
 git_url='https://github.com/gardenlinux/gardenlinux.git'
 # git_url='https://github.com/jensh007/gardenlinux.git'
 # git_url=`git config --get remote.origin.url`
 oci_path='eu.gcr.io/gardener-project/test/gardenlinux-test'
 tekton_namespace='jens'
+disable_notification='true'
 
 export PATH="${PATH}:${bin_dir}"
 
@@ -74,7 +77,8 @@ ci/render_pipeline_run.py $EXTRA_ARGS \
   --publishing-action "${publishing_actions}" \
   --git-url "${git_url}" \
   --oci-path "${oci_path}" \
-  --outfile "${pipeline_run}"
+  --outfile "${pipeline_run}" \
+  --disable-notification $disable_notification
 
 ci/render_pipelines.py \
   --pipeline_cfg "${pipeline_cfg}" \
@@ -92,8 +96,8 @@ for manifest in \
   "${outfile}" \
   "${pipeline_run}"
 do
-  kubectl apply -n "${tekton_namespace}" -f "${manifest}"
-  # echo "Skip applying generated yamls"
+  #kubectl apply -n "${tekton_namespace}" -f "${manifest}"
+  echo "Skip applying generated yamls"
 done
 
 echo 'done: rendering yamls for current commit'

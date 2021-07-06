@@ -48,7 +48,7 @@ def getlogs(repo_dir: str, namespace: str, pipeline_run_name: str):
             TaskRunInfo(
                 name=tr['pipelineTaskName'],
                 pod_name=tr['status']['podName'],
-                steps=task_steps
+                steps=task_steps,
             )
         )
 

@@ -726,7 +726,7 @@ def notify_step(
     )
 
 
-def getlog_step(
+def get_logs_step(
     repo_dir: tkn.model.NamedParam,
     pipeline_run: tkn.model.NamedParam,
     namespace: tkn.model.NamedParam,
@@ -737,7 +737,7 @@ def getlog_step(
         name='get-logs',
         image=DEFAULT_IMAGE,
         script=task_step_script(
-            path=os.path.join(steps_dir, 'getlogs.py'),
+            path=os.path.join(steps_dir, 'get_logs.py'),
             script_type=ScriptType.PYTHON3,
             callable='getlogs',
             repo_path_param=repo_dir,
