@@ -9,7 +9,6 @@ import json
 import mailutil
 import os
 from string import Template
-import typing
 import urllib
 
 
@@ -36,11 +35,17 @@ def send_notification(
     pipeline_run_name: str,
     repo_dir: str,
     status_dict_str: str,
-    additional_recipients: typing.Sequence[str] = [],
+    additional_recipients: str = None,
+    only_recipients: str = None,
 ):
     if distutils.util.strtobool(disable_notifications):
         print('Notification is disabled, not sending email')
         return
+
+    additional_recipients_set = set(additional_recipients.split(';'))
+    only_recipients_set = set(only_recipients.split(';'))
+    print(f'sending to additional recipients: {additional_recipients_set}')
+    print(f'sending only to recipients: {only_recipients_set}')
 
     status_dict = json.loads(status_dict_str)
     must_send = True in [True for status in status_dict.values() if status != 'Succeeded']
@@ -91,18 +96,23 @@ def send_notification(
     # generate mail body
     mail_body = html_template.safe_substitute(values)
 
-    # get recipients from CODEOWNERS:
-    parsed_url = urllib.parse.urlparse(giturl)
-    github_cfg = ccc.github.github_cfg_for_hostname(parsed_url.hostname)
-    github_api = ccc.github.github_api(github_cfg)
-    codeowners = mailutil.determine_local_repository_codeowners_recipients(
-        github_api=github_api,
-        src_dirs=(repo_dir,),
-    )
+    # if only_recipients are set do not get defaults from codeowners
+    if only_recipients_set:
+        recipients = only_recipients_set
+    else:
+        # get recipients from CODEOWNERS:
+        parsed_url = urllib.parse.urlparse(giturl)
+        github_cfg = ccc.github.github_cfg_for_hostname(parsed_url.hostname)
+        github_api = ccc.github.github_api(github_cfg)
+        codeowners = mailutil.determine_local_repository_codeowners_recipients(
+            github_api=github_api,
+            src_dirs=(repo_dir,),
+        )
+        # eliminate duplicates by converting it to a set:
+        recipients = {r for r in codeowners}
 
-    # eliminate duplicates by converting it to a set:
-    recipients = {r for r in codeowners}
-    recipients |= set(additional_recipients)
+    # add given additional recipients
+    recipients |= additional_recipients_set
     if len(recipients) == 0:
         print('Mail not sent, could not find any recipient.')
         return

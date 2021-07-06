@@ -21,6 +21,8 @@ git_url='https://github.com/gardenlinux/gardenlinux.git'
 oci_path='eu.gcr.io/gardener-project/test/gardenlinux-test'
 tekton_namespace='jens'
 disable_notifications='true'
+additional_recipients='abc@acme.com'
+only_recipients='j.huebel@sap.com;andreas.burger@sap.com' # don't use whitespace
 
 export PATH="${PATH}:${bin_dir}"
 
@@ -57,9 +59,21 @@ outfile='rendered_pipeline.yaml'
 promote_target="${promote_target:-snapshot}"
 publishing_actions="${publishing_actions:-manifests}"
 
+EXTRA_ARGS=""
 if [ ! -z "${VERSION:-}" ]; then
-  EXTRA_ARGS="--version=${VERSION}"
+  EXTRA_ARGS+="--version=${VERSION}"
 fi
+if  [ ${disable_notifications} == 'true' ]; then
+  EXTRA_ARGS+=" --disable-notifications"
+fi
+if  [ ${additional_recipients} ]; then
+  EXTRA_ARGS+=" --additional-recipients ${additional_recipients}"
+fi
+if  [ "${only_recipients}" ]; then
+  EXTRA_ARGS+=" --only-recipients ${only_recipients}"
+fi
+
+echo "Extra args for pipleine_run $EXTRA_ARGS"
 
 echo "Skip cleanup step"
 # cleanup_pipelineruns
@@ -68,19 +82,6 @@ pipeline_run="$PWD/pipeline_run.yaml"
 rendered_task="$PWD/rendered_task.yaml"
 
 # create pipeline-run for current commit
-if  [[ ${disable_notifications} == 'true' ]]; then
-  ci/render_pipeline_run.py $EXTRA_ARGS \
-    --branch "${branch_name}" \
-    --committish "${head_commit}" \
-    --cicd-cfg 'default' \
-    --flavour-set "${flavour_set}" \
-    --promote-target "${promote_target}" \
-    --publishing-action "${publishing_actions}" \
-    --git-url "${git_url}" \
-    --oci-path "${oci_path}" \
-    --outfile "${pipeline_run}" \
-    --disable-notifications
-else
   ci/render_pipeline_run.py $EXTRA_ARGS \
     --branch "${branch_name}" \
     --committish "${head_commit}" \
@@ -91,7 +92,6 @@ else
     --git-url "${git_url}" \
     --oci-path "${oci_path}" \
     --outfile "${pipeline_run}"
-fi
  
 ci/render_pipelines.py \
   --pipeline_cfg "${pipeline_cfg}" \

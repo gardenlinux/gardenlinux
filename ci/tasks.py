@@ -504,6 +504,12 @@ def notify_task(
     env_vars,
     volume_mounts,
 ):
+    additional_recipients = NamedParam(
+        name='additional_recipients',
+    )
+    only_recipients = NamedParam(
+        name='only_recipients',
+    )
     cicd_cfg_name = NamedParam(
         name='cicd_cfg_name',
         default='default',
@@ -537,10 +543,12 @@ def notify_task(
         )
 
     params = [
+        additional_recipients,
         cicd_cfg_name,
         committish,
         disable_notifications,
         _giturl,
+        only_recipients,
         _repodir,
         status,
         namespace,
@@ -570,6 +578,8 @@ def notify_task(
         pipeline_run_name=pipeline_run_name,
         repo_dir=_repodir,
         status_dict_str=status,
+        additional_recipients=additional_recipients,
+        only_recipients=only_recipients,
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )

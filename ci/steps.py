@@ -702,10 +702,12 @@ def build_base_image_step(
 
 
 def notify_step(
+    additional_recipients: tkn.model.NamedParam,
     cicd_cfg_name: tkn.model.NamedParam,
     disable_notifications: tkn.model.NamedParam,
     git_url: tkn.model.NamedParam,
     namespace: tkn.model.NamedParam,
+    only_recipients: tkn.model.NamedParam,
     pipeline_name: tkn.model.NamedParam,
     pipeline_run_name: tkn.model.NamedParam,    
     repo_dir: tkn.model.NamedParam,
@@ -722,10 +724,12 @@ def notify_step(
             callable='send_notification',
             repo_path_param=repo_dir,
             params=[
+                additional_recipients,
                 cicd_cfg_name,
                 disable_notifications,
                 git_url,
                 namespace,
+                only_recipients,
                 pipeline_name,
                 pipeline_run_name,
                 repo_dir,
