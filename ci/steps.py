@@ -4,7 +4,9 @@ import typing
 
 import tkn.model
 
-DEFAULT_IMAGE = 'eu.gcr.io/gardener-project/cc/job-image:1.1363.0'
+IMAGE_VERSION = '1.1381.0'
+DEFAULT_IMAGE = f'eu.gcr.io/gardener-project/cc/job-image:{IMAGE_VERSION}'
+KANIKO_IMAGE = f'eu.gcr.io/gardener-project/cc/job-image-kaniko:{IMAGE_VERSION}'
 
 own_dir = os.path.abspath(os.path.dirname(__file__))
 scripts_dir = os.path.join(own_dir)
@@ -682,7 +684,7 @@ def build_base_image_step(
 ):
     return tkn.model.TaskStep(
         name='basebuild',
-        image='eu.gcr.io/gardener-project/cc/job-image-kaniko:1.1363.0',
+        image=KANIKO_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'build_base_image.py'),
             script_type=ScriptType.PYTHON3,
