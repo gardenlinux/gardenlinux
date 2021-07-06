@@ -18,12 +18,12 @@ build_package() {
 
     MANUALDIR=$(realpath $repodir/packages/manual)
     KERNELDIR=$(realpath $repodir/packages/kernel)
-    CERTDIR=$(realpath $repodir/cert)
 
     export DEBFULLNAME="Garden Linux Maintainers"
     export DEBEMAIL="contact@gardenlinux.io"
     export BUILDIMAGE="gardenlinux/build-deb"
     export BUILDKERNEL="gardenlinux/build-kernel"
+    export CERTDIR=$(realpath $repodir/cert)
     echo "MANUALDIR: ${MANUALDIR}"
     echo "KERNELDIR: ${KERNELDIR}"
     echo "CERTDIR: ${CERTDIR}"

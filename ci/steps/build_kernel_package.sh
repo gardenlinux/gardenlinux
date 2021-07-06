@@ -22,18 +22,17 @@ build_kernel_package(){
 
     MANUALDIR=$(realpath $repo_dir/packages/manual)
     KERNELDIR=$(realpath $repo_dir/packages/kernel)
-    CERTDIR=$(realpath $repo_dir/cert)
 
     export DEBFULLNAME="Garden Linux Maintainers"
     export DEBEMAIL="contact@gardenlinux.io"
     export BUILDIMAGE="gardenlinux/build-deb"
     export BUILDKERNEL="gardenlinux/build-kernel"
     export WORKDIR="/workspace"
+    export CERTDIR=$(realpath $repo_dir/cert)
     echo "MANUALDIR: ${MANUALDIR}"
     echo "KERNELDIR: ${KERNELDIR}"
     echo "CERTDIR: ${CERTDIR}"
     echo "WORKDIR: ${WORKDIR}"
-    ls -l ${CERTDIR}
 
     # original makefile uses mounts, replace this by linking required dirs
     # to the expexted locations:
