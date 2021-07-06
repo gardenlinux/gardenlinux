@@ -254,7 +254,7 @@ class AwsPublishedImage:
 
 @dataclasses.dataclass(frozen=True)
 class AwsPublishedImageSet(PublishedImageBase):
-    published_aws_images: typing.Tuple[AwsPublishedImage]
+    published_aws_images: typing.Tuple[AwsPublishedImage, ...]
     # release_identifier: typing.Optional[ReleaseIdentifier]
 
 
@@ -267,7 +267,7 @@ class AlicloudPublishedImage:
 
 @dataclasses.dataclass(frozen=True)
 class AlicloudPublishedImageSet(PublishedImageBase):
-    published_alicloud_images: typing.Tuple[AlicloudPublishedImage]
+    published_alicloud_images: typing.Tuple[AlicloudPublishedImage, ...]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -317,7 +317,7 @@ class OpenstackPublishedImage:
 
 @dataclasses.dataclass(frozen=True)
 class OpenstackPublishedImageSet(PublishedImageBase):
-    published_openstack_images: typing.Tuple[OpenstackPublishedImage]
+    published_openstack_images: typing.Tuple[OpenstackPublishedImage, ...]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -332,7 +332,7 @@ class ReleaseManifest(ReleaseIdentifier):
     store, such as an S3 bucket.
     '''
     build_timestamp: str
-    paths: typing.Tuple[typing.Union[S3_ReleaseFile]]
+    paths: typing.Tuple[S3_ReleaseFile, ...]
     published_image_metadata: typing.Union[
         AlicloudPublishedImageSet,
         AwsPublishedImageSet,
@@ -364,7 +364,7 @@ class ReleaseManifest(ReleaseIdentifier):
         return dateutil.parser.isoparse(self.build_timestamp)
 
 
-def normalised_modifiers(platform: Platform, modifiers) -> typing.Tuple[str]:
+def normalised_modifiers(platform: Platform, modifiers) -> typing.Tuple[str, ...]:
     '''
     determines the transitive closure of all features from the given platform and modifiers,
     and returns the (ASCII-upper-case-sorted) result as a `tuple` of str of all modifiers,
@@ -438,7 +438,7 @@ class OnlineReleaseManifest(ReleaseManifest):
 
 @dataclasses.dataclass(frozen=True)
 class ReleaseManifestSet:
-    manifests: typing.Tuple[OnlineReleaseManifest]
+    manifests: typing.Tuple[OnlineReleaseManifest, ...]
     flavour_set_name: str
 
     # treat as static final
