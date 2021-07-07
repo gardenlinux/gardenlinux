@@ -42,8 +42,11 @@ def send_notification(
         print('Notification is disabled, not sending email')
         return
 
-    additional_recipients_set = set(additional_recipients.split(';'))
-    only_recipients_set = set(only_recipients.split(';'))
+    additional_recipients_set = set(additional_recipients.strip().split(';'))
+    only_recipients_set = set(only_recipients.strip().split(';'))
+    # remove empty elements because split of an empty string gives a list with an empty elem
+    additional_recipients_set = {elem for elem in additional_recipients_set if elem}
+    only_recipients_set = {elem for elem in only_recipients_set if elem}
     print(f'sending to additional recipients: {additional_recipients_set}')
     print(f'sending only to recipients: {only_recipients_set}')
 
@@ -100,7 +103,7 @@ def send_notification(
     if only_recipients_set:
         recipients = only_recipients_set
     else:
-        # get recipients from CODEOWNERS:
+        print("getting recipients from CODEOWNERS")
         parsed_url = urllib.parse.urlparse(giturl)
         github_cfg = ccc.github.github_cfg_for_hostname(parsed_url.hostname)
         github_api = ccc.github.github_api(github_cfg)
