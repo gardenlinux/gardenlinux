@@ -10,6 +10,7 @@ import glci.model
 import glci.util
 import tkn.model
 import paths
+import sys
 
 GardenlinuxFlavour = glci.model.GardenlinuxFlavour
 
@@ -93,12 +94,15 @@ def mk_pipeline_packages_run(
     branch: str,
     cicd_cfg: str,
     committish: str,
+    disable_notifications: str,
     gardenlinux_epoch: int,
     git_url: str,
     pipeline_name: str,
     publishing_actions: typing.Sequence[glci.model.PublishingAction],
     oci_path: str,
     version: str,
+    additional_recipients: str = [],
+    only_recipients: str = [],
     node_selector: dict = {},
     security_context: dict = {},
 ):
@@ -124,6 +128,18 @@ def mk_pipeline_packages_run(
                 NamedParam(
                     name='committish',
                     value=committish,
+                ),
+                NamedParam(
+                    name='additional_recipients',
+                    value=additional_recipients,
+                ),
+                NamedParam(
+                    name='only_recipients',
+                    value=only_recipients,
+                ),
+                NamedParam(
+                    name='disable_notifications',
+                    value=disable_notifications,
                 ),
                 NamedParam(
                     name='gardenlinux_epoch',
@@ -177,6 +193,7 @@ def mk_pipeline_run(
     branch: str,
     cicd_cfg: str,
     committish: str,
+    disable_notifications: str,
     flavour_set: glci.model.GardenlinuxFlavourSet,
     gardenlinux_epoch: int,
     git_url: str,
@@ -185,6 +202,8 @@ def mk_pipeline_run(
     publishing_actions: typing.Sequence[glci.model.PublishingAction],
     oci_path: str,
     version: str,
+    additional_recipients: str = [],
+    only_recipients: str = [],
     node_selector: dict = {},
     security_context: dict = {},
 ):
@@ -202,6 +221,7 @@ def mk_pipeline_run(
     snapshot_timestamp = glci.model.snapshot_date(gardenlinux_epoch=gardenlinux_epoch)
 
     flavour_count = len(list(flavour_set.flavours()))
+    
     if flavour_count == 0:
         flavour_count = 1  # at least one workspace must be created
 
@@ -218,6 +238,10 @@ def mk_pipeline_run(
                 NamedParam(
                     name='committish',
                     value=committish,
+                ),
+                NamedParam(
+                    name='disable_notifications',
+                    value=disable_notifications,
                 ),
                 NamedParam(
                     name='gardenlinux_epoch',
@@ -267,6 +291,14 @@ def mk_pipeline_run(
                     name='gardenlinux_build_deb_image',
                     value=build_deb_image,
                 ),
+                NamedParam(
+                    name='additional_recipients',
+                    value=additional_recipients,
+                ),
+                NamedParam(
+                    name='only_recipients',
+                    value=only_recipients,
+                ),
             ],
             pipelineRef=PipelineRef(
                 name=pipeline_name,
@@ -295,6 +327,9 @@ def main():
     parser.add_argument('--git-url', default='https://github.com/gardenlinux/gardenlinux.git')
     parser.add_argument('--flavour-set', default='all')
     parser.add_argument('--version', default=None)
+    parser.add_argument('--disable-notifications', action='store_const', const=True, default=False)
+    parser.add_argument('--additional-recipients', default=None)
+    parser.add_argument('--only-recipients', default=None)
     parser.add_argument(
         '--promote-target',
         type=glci.model.BuildType,
@@ -320,18 +355,23 @@ def main():
         # if version is not specify, derive from worktree (i.e. VERSION file)
         version = glci.model.next_release_version_from_workingtree()
 
+    disable_notifications = parsed.disable_notifications
+
     # XXX hardcode pipeline names and flavour for now
     pipeline_run = mk_pipeline_packages_run(
         branch=parsed.branch,
         cicd_cfg=parsed.cicd_cfg,
         committish=parsed.committish,
+        disable_notifications=str(disable_notifications),
         gardenlinux_epoch=parsed.gardenlinux_epoch,
         git_url=parsed.git_url,
         oci_path=parsed.oci_path,
         pipeline_name='gl-packages-build',
         publishing_actions=parsed.publishing_actions,
         version=version,
-        security_context={'runAsUser': 0}
+        additional_recipients=parsed.additional_recipients,
+        only_recipients=parsed.only_recipients,
+        security_context={'runAsUser': 0},
     )
 
     pipeline_run_dict = dataclasses.asdict(pipeline_run)
@@ -346,6 +386,7 @@ def main():
         branch=parsed.branch,
         cicd_cfg=parsed.cicd_cfg,
         committish=parsed.committish,
+        disable_notifications=str(disable_notifications),
         flavour_set=flavour_set,
         gardenlinux_epoch=parsed.gardenlinux_epoch,
         git_url=parsed.git_url,
@@ -354,6 +395,8 @@ def main():
         promote_target=parsed.promote_target,
         publishing_actions=parsed.publishing_actions,
         version=version,
+        additional_recipients=parsed.additional_recipients,
+        only_recipients=parsed.only_recipients,
     )
 
     pipeline_run_dict = dataclasses.asdict(pipeline_run)

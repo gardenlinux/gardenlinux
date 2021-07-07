@@ -105,6 +105,12 @@ def main():
 
     raw_promote_task = dataclasses.asdict(promote_task)
 
+    notify_task = tasks.notify_task(
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+    raw_notify_task = dataclasses.asdict(notify_task)
+
     # Set a custom string representer so that script tags are rendered as
     # | block style
     # This should do the trick but add_representer has noeffect on safe dumper
@@ -119,6 +125,7 @@ def main():
                 raw_kernel_package_task,
                 raw_package_task,
                 raw_promote_task,
+                raw_notify_task,
             ),
             f,
         )

@@ -498,3 +498,100 @@ def base_image_build_task(env_vars, volume_mounts):
             ],
         ),
     )
+
+
+def notify_task(
+    env_vars,
+    volume_mounts,
+):
+    additional_recipients = NamedParam(
+        name='additional_recipients',
+    )
+    only_recipients = NamedParam(
+        name='only_recipients',
+    )
+    cicd_cfg_name = NamedParam(
+        name='cicd_cfg_name',
+        default='default',
+    )
+    committish = NamedParam(
+        name='committish',
+        default='main',
+        description='commit to build',
+    )
+    disable_notifications = NamedParam(
+        name='disable_notifications',
+        default='false',
+        description='if true no notification emails are sent',
+    )
+    status = tkn.model.NamedParam(
+        name='status_dict_str',
+        default='~',
+        description='JSON string with status for all tasks',
+    )
+    namespace = NamedParam(
+            name='namespace',
+            description='Namespace of current pipeline run',
+        )
+    pipeline_name = NamedParam(
+            name='pipeline_name',
+            description='Namespace of current pipeline',
+        )
+    pipeline_run_name = NamedParam(
+            name='pipeline_run_name',
+            description='Name of current pipeline run',
+        )
+
+    params = [
+        additional_recipients,
+        cicd_cfg_name,
+        committish,
+        disable_notifications,
+        _giturl,
+        only_recipients,
+        _repodir,
+        status,
+        namespace,
+        pipeline_name,
+        pipeline_run_name,
+    ]
+    clone_step =  steps.clone_step(
+        committish=committish,
+        repo_dir=_repodir,
+        git_url=_giturl,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+    log_step = steps.get_logs_step(
+        repo_dir=_repodir,
+        pipeline_run_name=pipeline_run_name,
+        namespace=namespace,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+    notify_step = steps.notify_step(
+        cicd_cfg_name=cicd_cfg_name,
+        disable_notifications=disable_notifications,
+        git_url=_giturl,
+        namespace=namespace,
+        pipeline_name=pipeline_name,
+        pipeline_run_name=pipeline_run_name,
+        repo_dir=_repodir,
+        status_dict_str=status,
+        additional_recipients=additional_recipients,
+        only_recipients=only_recipients,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+    task = tkn.model.Task(
+        metadata=tkn.model.Metadata(name='notify-task'),
+        spec=tkn.model.TaskSpec(
+            params=params,
+            steps=[
+                clone_step,
+                log_step,
+                notify_step,
+            ],
+        ),
+    )
+    return task

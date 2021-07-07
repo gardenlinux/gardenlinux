@@ -2,6 +2,7 @@
 
 import argparse
 import dataclasses
+import json
 import typing
 
 import yaml
@@ -142,6 +143,47 @@ def mk_pipeline_promote_task(
     )
 
 
+def mk_pipeline_notify_task(previous_tasks: typing.List[str],):
+    status_dict = {}
+    for task in previous_tasks:
+        status_dict['status_' + task.name] = f'$(tasks.{task.name}.status)'
+    status_str = json.dumps(status_dict)
+
+    status_param = NamedParam(
+            name='status_dict_str',
+            value=status_str
+        )
+    namespace_param = NamedParam(
+            name='namespace',
+            value='$(context.pipelineRun.namespace)'
+        )
+    pipeline_name_param = NamedParam(
+            name='pipeline_name',
+            value='$(context.pipeline.name)'
+        )
+    pipeline_run_name_param = NamedParam(
+            name='pipeline_run_name',
+            value='$(context.pipelineRun.name)'
+        )
+
+    return PipelineTask(
+        name='notify-task',
+        taskRef=TaskRef(name='notify-task'),
+        params=[
+            pass_param(name='cicd_cfg_name'),
+            pass_param(name='committish'),
+            pass_param('disable_notifications'),
+            pass_param(name='giturl'),
+            pass_param(name='additional_recipients'),
+            pass_param(name='only_recipients'),
+            status_param,
+            namespace_param,
+            pipeline_name_param,
+            pipeline_run_name_param,
+        ],
+    )
+
+
 def mk_pipeline_packages():
     tasks = []
 
@@ -178,6 +220,8 @@ def mk_pipeline_packages():
     run_after += package_kernel_task.name
     tasks.append(package_kernel_task)
 
+    notify_task = mk_pipeline_notify_task(tasks)
+
     pipeline = Pipeline(
         metadata=Metadata(
             name='gl-packages-build',
@@ -195,8 +239,12 @@ def mk_pipeline_packages():
                 NamedParam(name='snapshot_timestamp'),
                 NamedParam(name='version'),
                 NamedParam(name='version_label'),
+                NamedParam(name='disable_notifications'),
+                NamedParam(name='additional_recipients'),
+                NamedParam(name='only_recipients'),
             ],
             tasks=tasks,
+            _finally=[notify_task, ],
         ),
     )
 
@@ -221,7 +269,7 @@ def mk_pipeline(
         build_task = mk_pipeline_build_task(
             gardenlinux_flavour=glf,
             pipeline_flavour=pipeline_flavour,
-            run_after= [ base_build_task.name ],
+            run_after=[base_build_task.name],
         )
         build_tasks.append(build_task)
 
@@ -231,6 +279,8 @@ def mk_pipeline(
         run_after=[plt.name for plt in build_tasks],
     )
     tasks.append(promote_task)
+
+    notify_task = mk_pipeline_notify_task(tasks)
 
     pipeline = Pipeline(
         metadata=Metadata(
@@ -252,8 +302,12 @@ def mk_pipeline(
                 NamedParam(name='snapshot_timestamp'),
                 NamedParam(name='version'),
                 NamedParam(name='version_label'),
+                NamedParam(name='disable_notifications'),
+                NamedParam(name='additional_recipients'),
+                NamedParam(name='only_recipients'),
             ],
             tasks=tasks,
+            _finally=[notify_task, ],
         ),
     )
 

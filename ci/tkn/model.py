@@ -115,10 +115,25 @@ class PipelineTask:
 
 @dataclasses.dataclass
 class PipelineSpec:
+    _finally: str
     tasks: typing.List[PipelineTask]
     params: typing.List[NamedParam] = dataclasses.field(default_factory=list)
     workspaces: typing.List[NamedParam] = dataclasses.field(default_factory=list)
 
+    # special methods for handling finally which is a Python keyword
+    def __post_init__(self):
+        finally_attr = self.__dataclass_fields__.get('_finally')
+        finally_attr.name = 'finally'
+
+    def __getattribute__(self, name):
+        if name == 'finally':
+            name = '_finally'
+        return super().__getattribute__(name)
+
+    def __setattribute__(self, name, value):
+        if name == 'finally':
+            name = '_finally'
+        super().__setattribute__(name, value)
 
 @dataclasses.dataclass
 class Pipeline:
