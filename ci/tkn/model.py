@@ -60,6 +60,15 @@ class EmptyDirVolume(Volume):
 
 
 @dataclasses.dataclass
+class SecretName():
+    secretName: str
+
+
+@dataclasses.dataclass
+class SecretVolume(Volume):
+    secret: SecretName
+
+@dataclasses.dataclass
 class VolumeMount:
     mountPath: str
     name: str

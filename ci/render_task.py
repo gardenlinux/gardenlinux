@@ -11,6 +11,8 @@ import tkn.model
 
 
 NamedParam = tkn.model.NamedParam
+SecretName = tkn.model.SecretName
+SecretVolume = tkn.model.SecretVolume
 
 
 def multiline_str_presenter(dumper, data):
@@ -41,9 +43,11 @@ def main():
             'name': 'secrets',
             'mountPath': '/secrets',
         }]
+        volumes = [SecretVolume(name='secrets', secret=SecretName(secretName='secrets')), ]
     else:
         env_vars = []
         volume_mounts = []
+        volumes = []
 
     if secret_key := os.getenv('SECRET_KEY'):
         env_vars.append({
@@ -67,6 +71,7 @@ def main():
         })
 
     base_build_task = tasks.base_image_build_task(
+        volumes=volumes,
         volume_mounts=volume_mounts,
         env_vars=env_vars,
     )
@@ -74,18 +79,21 @@ def main():
 
     package_task = tasks.nokernel_package_task(
         env_vars=env_vars,
+        volumes=volumes,
         volume_mounts=volume_mounts,
     )
     raw_package_task = dataclasses.asdict(package_task)
 
     kernel_package_task = tasks.kernel_package_task(
         env_vars=env_vars,
+        volumes=volumes,
         volume_mounts=volume_mounts,
     )
     raw_kernel_package_task = dataclasses.asdict(kernel_package_task)
 
     build_task = tasks.build_task(
         env_vars=env_vars,
+        volumes=volumes,
         volume_mounts=volume_mounts,
     )
     raw_build_task = dataclasses.asdict(build_task)
@@ -100,6 +108,7 @@ def main():
         snapshot_timestamp=NamedParam(name='snapshot_timestamp'),
         version=NamedParam(name='version'),
         env_vars=env_vars,
+        volumes=volumes,
         volume_mounts=volume_mounts,
     )
 
@@ -107,6 +116,7 @@ def main():
 
     notify_task = tasks.notify_task(
         env_vars=env_vars,
+        volumes=volumes,
         volume_mounts=volume_mounts,
     )
     raw_notify_task = dataclasses.asdict(notify_task)
