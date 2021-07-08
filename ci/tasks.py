@@ -26,6 +26,7 @@ def promote_task(
     giturl: NamedParam = _giturl,
     name='promote-gardenlinux-task',
     repodir: NamedParam = _repodir,
+    volumes=[],
     volume_mounts=[],
 ):
 
@@ -81,37 +82,7 @@ def promote_task(
                 promote_step,
                 release_step,
             ],
-        ),
-    )
-    return task
-
-
-def base_build_task():
-    giturl = NamedParam(name='giturl', default='ssh://git@github.com/gardenlinux/gardenlinux')
-    committish = NamedParam(name='committish', default='master')
-    glepoch = NamedParam(name='gardenlinux_epoch')
-    snapshot_ts = NamedParam(name='snapshot_timestamp')
-    repodir = _repodir
-    params = [
-        giturl,
-        committish,
-        glepoch,
-        snapshot_ts,
-        repodir,
-    ]
-
-    clone_step = steps.clone_step(
-        committish=committish,
-        repo_dir=repodir,
-        git_url=giturl,
-    )
-    task = tkn.model.Task(
-        metadata=tkn.model.Metadata(name='base_build-gardenlinux-task'),
-        spec=tkn.model.TaskSpec(
-            params=params,
-            steps=[
-                clone_step,
-            ],
+            volumes=volumes,
         ),
     )
     return task
@@ -122,6 +93,7 @@ def _package_task(
     package_build_step: tkn.model.TaskStep,
     is_kernel_task: bool,
     env_vars,
+    volumes,
     volume_mounts,
 ):
     cfssl_dir = NamedParam(
@@ -265,6 +237,7 @@ def _package_task(
                 package_build_step,
                 s3_upload_packages_step,
             ],
+            volumes=volumes,
         ),
     )
     return task
@@ -274,6 +247,7 @@ def nokernel_package_task(
     package_name,
     repo_dir,
     env_vars,
+    volumes,
     volume_mounts,
 ):
     return _package_task(
@@ -284,6 +258,7 @@ def nokernel_package_task(
         ),
         is_kernel_task=False,
         env_vars=env_vars,
+        volumes=volumes,
         volume_mounts=volume_mounts,
     )
 
@@ -292,6 +267,7 @@ def kernel_package_task(
     repo_dir,
     package_names,
     env_vars,
+    volumes,
     volume_mounts,
 ):
     return _package_task(
@@ -302,6 +278,7 @@ def kernel_package_task(
         ),
         is_kernel_task=True,
         env_vars=env_vars,
+        volumes=volumes,
         volume_mounts=volume_mounts,
     )
 
@@ -470,7 +447,7 @@ def build_task(
     )
 
 
-def base_image_build_task(env_vars, volume_mounts):
+def base_image_build_task(env_vars, volumes, volume_mounts):
 
     repodir = _repodir
     oci_path = NamedParam(
@@ -524,12 +501,14 @@ def base_image_build_task(env_vars, volume_mounts):
                 clone_repo_step,
                 build_base_image_step,
             ],
+            volumes=volumes,
         ),
     )
 
 
 def notify_task(
     env_vars,
+    volumes,
     volume_mounts,
 ):
     additional_recipients = NamedParam(
@@ -620,6 +599,7 @@ def notify_task(
                 log_step,
                 notify_step,
             ],
+            volumes=volumes,
         ),
     )
     return task
