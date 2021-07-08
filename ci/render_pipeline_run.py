@@ -328,8 +328,8 @@ def main():
     parser.add_argument('--flavour-set', default='all')
     parser.add_argument('--version', default=None)
     parser.add_argument('--disable-notifications', action='store_const', const=True, default=False)
-    parser.add_argument('--additional-recipients', default=None)
-    parser.add_argument('--only-recipients', default=None)
+    parser.add_argument('--additional-recipients', default=' ')
+    parser.add_argument('--only-recipients', default=' ')
     parser.add_argument(
         '--promote-target',
         type=glci.model.BuildType,

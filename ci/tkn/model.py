@@ -22,7 +22,7 @@ def NamedParam(name: str, value: str = None, default: str = None, description: s
     if value is None and default is None:
         return _NamedParamBase(name=name)
     elif value is None and default:
-        return _NamedParamWithDefault(name=name, default=default)
+        return _NamedParamWithDefault(name=name, default=default, description=description)
     return _NamedParamWithValue(name=name, value=value)
 
 
