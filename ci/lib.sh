@@ -2,13 +2,6 @@ own_dir="$(readlink -f "$(dirname "${0}")")"
 repo_root="$(readlink -f "${own_dir}/..")"
 bin_dir="${repo_root}/bin"
 
-shootcluster_cfg_name="$(gardener-ci \
-  config attribute \
-   --cfg-type cfg_set \
-   --cfg-name gardenlinux \
-   --key kubernetes.default \
-)"
-
 function install_kubectl() {
   if which kubectl &>/dev/null; then
     return 0
@@ -30,6 +23,13 @@ function install_tkn() {
 }
 
 function kubecfg()  {
+  shootcluster_cfg_name="$(gardener-ci \
+    config attribute \
+     --cfg-type cfg_set \
+     --cfg-name gardenlinux \
+     --key kubernetes.default \
+  )"
+
   # retrieve kubeconfig
   gardener-ci config model_element \
     --cfg-type kubernetes \
