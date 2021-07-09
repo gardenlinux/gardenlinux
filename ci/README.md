@@ -1,22 +1,175 @@
-tekton pipelines for gardenlinux
-================================
+# Introduction
+The following section describes how Garden Linux can be built using a pipeline. 
+The open source project [Tekton](https://github.com/tektoncd/pipeline) is used as environment to run the build. The build pipeline is fully containerized and requires a Kubernetes cluster.
 
-This directory contains [Tekton](https://github.com/tektoncd/pipeline) resource definitions for
-CICD Build and Test Pipelines for gardenlinux.
+## Overview About The Build
+The Garden Linux build is done in several phases and runs fully containerized. In the first phase some images are created that are used as base images for the subsequent build steps. The second phase builds several packages and the Linux kernel. The third phase build the VM images using the packages from step 2 and standard Debian packages. The final VM images are uploaded to an (S3-like) object store and can optionally be uploaded to hyperscalers (Alicloud, AWS, Azure or Google).
 
-The build pipeline assumes to be run in a k8s cluster with a
-(Gardener-CICD-proprietary) "SecretsServer".
+## Installation
+You have to install Tekton pipelines and the Tekton dashboard (recommended)
 
-There are, of course, still open issues:
+Tekton pipelines:
+[https://github.com/tektoncd/pipeline/releases](https://github.com/tektoncd/pipeline/releases)
 
-- resources should be templatified
-  - hardcoded cfg should be injected
-- build image should also be built using tkn
-- release job semantics
-- error handling / notification (e.g. mark PRs/commits as good or broken)
+`kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.25.0/release.yaml`
+
+Install Tekton dashboard (check compatibility with Tekton pipelines release):
+[https://github.com/tektoncd/dashboard/releases](https://github.com/tektoncd/dashboard/releases)
+
+`kubectl apply --filename https://github.com/tektoncd/dashboard/releases/download/v0.18.0/tekton-dashboard-release.yaml`
+
+`http://localhost:9097`
+
+Install Python (>= 3.8) and pip
+Install Python libraries
+`pip install -r ci/requirements.txt`
+
+Install
+
+```
+gardener-ci (TODO:from where?)
+kubectl (installed automatically from script)
+tekton-cli (installed automatically from script)
+```
+
+### Set Limits
+The build machine requires a certain amount of resources usually not available by default. Apply the 
+following limits:
+
+```
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: gardenlinux
+spec:
+  limits:
+  - type: Container
+    max:
+      ephemeral-storage: 128Gi
+    min:
+      ephemeral-storage: 16Gi
+    default:
+      ephemeral-storage: 128Gi
+      memory: 24G
+      cpu: 16.0
+    defaultRequest:
+      ephemeral-storage: 20Gi
+      memory: 4G
+      cpu: 1.0
+    
+```
+
+### Grant API Permissions To Script User
+All tekton related scripts are executed by a service user "default" in the corresponding namespace. This user must be granted the permission to get (read) access to Tekton and pod resources:
+
+```
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: incluster-tektonaccess
+rules:
+- apiGroups: ["tekton.dev"]
+  resources: ["*"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods", "pods/log"]
+  verbs: ["get", "list", "watch"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: incluster-tektonaccess-gardenlinux
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: gardenlinux
+roleRef:
+  kind: ClusterRole
+  name: incluster-tektonaccess
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: incluster-tektonaccess-jens
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: jens
+roleRef:
+  kind: ClusterRole
+  name: incluster-tektonaccess
+  apiGroup: rbac.authorization.k8s.io
+```
+
+### Namespace:
+
+The namespace can be set according to your preferences. In this document and in the provided scripts the namespace "gardenlinux" is used. The namespace is set in an environment variable "GARDENLINUX_TKN_WS". If not set it defaults to "gardenlinux"
+
+### Overview About The Build
+
+The Garden Linux build is done in several phases and runs fully containerized. In the first phase some images are created that are used as base images for the subsequent build steps. The second phase builds several packages and the Linux kernel. The third phase build the VM images using the packages from step 2 and standard Debian packages. The final VM images are uploaded to an (S3-like) object store and can optionally be uploaded to hyperscalers (Alicloud, AWS, Azure or Google).
+
+The build uses two pipelines: One to build the packages and one to build the VM images. Package builds are time consuming and resource intensive. A package build needs at least 70GB of disk space and takes >4h to build on a typical build machine.
+
+Build variants:
+The build can handle various variants of build artifacts. These are configured by a flavour set. The flavours are defined in the file flavours.yaml in the root directory of th Git repository. By default there is one set in this file named "all". You can add more sets according to your needs.
+
+Publishing action:
+There are options how the build artifacts are handled after build. This is set in the environment variable PUBLISHING_ACTIONS (see also class PublishingAction in ci/glci/model.py). Currently there are four variants supported:
+
+ - `manifests`
+ - `images`
+ - `release`
+ - `build_only`
+
+If the variable is not set it defaults to "`build-only`" 
+
+The flavour set build by the pipeline is contained in the environment variable FLAVOUR_SET and defaults to "all" if not set.
+
+**Example:**
+Here is example to build nly the AWS image. Append the following snippet to `flavours.yaml`:
+
+```
+  - name: 'aws'
+    flavour_combinations:
+      - architectures: [ 'amd64' ]
+        platforms: [ aws ]
+        modifiers: [ [ _prod, gardener ] ]
+        fails: [ unit, integration ]
+
+```
+
+### Creating and running the pipelines
+
+Run the script to generate and apply the pipelines:
+
+`ci/render_pipelines_and_trigger_job`
+
+This script creates several yaml files containing the Tekton definitions for the gardenlinux build. They are applied automatically to the target cluster described by your `KUBECONFIG` environment variable.
+
+This script has the following parameters:
+
+* `--image-build`: Build Garden Linux
+* `--package-build`: Build the packages
+* `--wait`: The script terminates when pipeline run is finished
+
+Example:
+
+`ci/render_pipelines_and_trigger_job --image-build`
 
 
-## Integration tests
+### Credential Handling
+
+The build pipeline can be used with a central server managing configuration and secrets. As an alternative all credentials can be read from a Kubernetes secret named "secrets" in the corresponding namespace. This secret can will be automatically generated from configuration files. The switch between central server and a Kubernetes secret is done by an environment variable named `SECRET_SERVER_ENDPOINT`. If it is not set the secrets will be generated. At minimum there need to be two secrets: One for uploading the artifacts to an S3-like Object store and one to upload container images to an OCI registry. Example files are provided in the 
+folder `ci/cfg`. 
+
+Edit the files cfg/cfg_types.yaml and for each created entry a credential file 
+There is an example provided named 'aws'. This file contains the credentials for uploading
+the built artifacts to an S3 bucket.
+
+
+## Integration Tests (under construction)
 
 The integration test are implemented as their own tekton task which can be
 found [here](./integrationtest-task.yaml).  The test automatically clones the
@@ -25,6 +178,7 @@ with the specified version (branch or commit).
 
 The task assumes that there is a secret in the cluster with the following
 structure:
+
 ```yaml
 ---
 apiVersion: v1
@@ -40,6 +194,7 @@ stringData:
 ```
 
 The test can be executed within a cluster that has tekton installed by running:
+
 ```
 # create test defintions and resrouces
 kubectl apply -f ./ci/integrationtest-task.yaml
@@ -47,8 +202,4 @@ kubectl apply -f ./ci/integrationtest-task.yaml
 # run the actual test as taskrun
 kubectl create -f ./ci/it-run.yaml
 ```
-
-Although the AWS tests are working, there are still some open points.
-- GCP tests do not work correctly, due to issues regarding ssh into the machines.
-- GCP and AWS images are currently hardcoded. For the future pipline, we need to upload the images in a previous step and use the newly upladed dev images.
--
+Running the integration tests is work-in-progress. 
