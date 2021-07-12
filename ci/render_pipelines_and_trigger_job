@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 set -x
 
 own_dir="$(readlink -f "$(dirname "${0}")")"
 repo_root="${own_dir}/.."
 
-source "${repo_root}/.ci/lib.sh"
+source "${own_dir}/lib.sh"
 
 install_kubectl
 install_tkn
 
 # retrieve and configure kubeconfig (sets KUBECONFIG env var)
-kubecfg
+if [ ! -z ${SECRETS_SERVER_ENDPOINT:-} ]; then
+  kubecfg
+fi
 
 # also handles default-values for env-vars
 export_env
@@ -35,6 +37,7 @@ function create_credentials {
     kubectl delete secret -n "${GARDENLINUX_TKN_WS}" secrets
   fi
 
+  echo "Creating secret"
   $(which kubectl) create secret generic secrets \
     -n "${GARDENLINUX_TKN_WS}" \
     --from-file=config.json="${credentials_outfile}"
@@ -48,6 +51,7 @@ pipeline_cfg="${repo_root}/flavours.yaml"
 outfile='rendered_pipeline.yaml'
 outfile_packages='rendered_pipeline_packages.yaml'
 
+EXTRA_ARGS=
 if [ ! -z "${VERSION:-}" ]; then
   EXTRA_ARGS="--version=${VERSION}"
 fi
@@ -81,11 +85,13 @@ ci/render_pipelines.py \
   --outfile "${outfile}" \
   --outfile-packages "${outfile_packages}"
 
-if [ ! -z $SECRETS_SERVER_ENDPOINT ]; then
+RENDER_TASK_EXTRA_ARGS=
+if [ ! -z ${SECRETS_SERVER_ENDPOINT:-} ]; then
   RENDER_TASK_EXTRA_ARGS="--use-secrets-server"
 else
   # secrets-server won't be available; create config from local files and put it as
   # k8s secret into cluster.
+  echo "create credentials"
   create_credentials
 fi
 
@@ -98,14 +104,47 @@ ci/render_task.py \
 for manifest in \
   "${rendered_task}" \
   "${outfile}" \
-  "${outfile_packages}" \
-  "${pipeline_package_run}" \
-  "${pipeline_run}"
+  "${outfile_packages}"
 do
+  echo "Skip apply of ${manifest}"
   $(which kubectl) apply -n "${GARDENLINUX_TKN_WS}" -f "${manifest}"
 done
 
-echo 'done: refreshed pipeline(s) and created a new pipeline-run for current commit'
+image_build=false
+package_build=false
+wait=false
+for arg in "$@" 
+do
+    echo "Found arg $arg";
+    if [ $arg ==  "--image-build" ]; then
+      image_build=true
+    fi
+    if [ $arg ==  "--package-build" ]; then
+      package_build=true
+    fi
+    if [ $arg ==  "--wait" ]; then
+      wait=true
+    fi
+done
 
-echo 'will wait for new pipelinerun'
-ci/wait_for_pipelinerun.py --pipelinerun-file "${pipeline_run}" --namespace "${GARDENLINUX_TKN_WS}"
+# --image-build calls triggering the pipeline run for image build
+if [ ${image_build} = true ] ; then
+  echo "Build images"
+  kubectl apply -n "${GARDENLINUX_TKN_WS}" -f "${pipeline_run}"
+  if [ ${wait} = true ] ; then
+    echo "waiting for new pipelinerun ${pipeline_run}"
+    ci/wait_for_pipelinerun.py --pipelinerun-file "${pipeline_run}" --namespace "${GARDENLINUX_TKN_WS}"
+  fi
+fi
+
+# --package-build calls triggering the pipeline run for image build
+if [ ${package_build} = true ]; then
+  echo "Build packages"
+  kubectl apply -n "${GARDENLINUX_TKN_WS}" -f "${pipeline_package_run}"
+  if [ ${wait} = true ]; then
+    echo "waiting for new pipelinerun ${pipeline_package_run}"
+    ci/wait_for_pipelinerun.py --pipelinerun-file "${pipeline_package_run}" --namespace "${GARDENLINUX_TKN_WS}"
+  fi
+fi
+
+echo 'done: refreshed pipeline(s) for current commit'

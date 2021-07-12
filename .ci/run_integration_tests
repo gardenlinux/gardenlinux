@@ -2,7 +2,7 @@
 
 own_dir="$(readlink -f "$(dirname "${0}")")"
 
-source "${own_dir}/lib.sh"
+source "${own_dir}/../ci/lib.sh"
 
 install_kubectl
 install_tkn
