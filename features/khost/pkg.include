@@ -1,5 +1,4 @@
 apparmor
-containerd
 containernetworking-plugins
 conntrack
 ethtool
