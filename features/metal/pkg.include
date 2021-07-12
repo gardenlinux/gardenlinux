@@ -15,6 +15,7 @@ pciutils
 usbutils
 numactl
 mdadm
+hdparm
 smartmontools
 bird2
 
