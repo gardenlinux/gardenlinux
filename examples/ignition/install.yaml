@@ -13,15 +13,15 @@ storage:
         inline: |
           #!/usr/bin/env bash
           
-          echo "removing other bootloaders ...
-          for i in $(cat bb | grep "Linux Boot Manager" | sed "s/Boot\([0-9]*\)\*\? .*/\1/"); do 
+          echo "removing other bootloaders ..."
+          for i in $(efibootmgr | grep "Linux Boot Manager" | sed "s/Boot\([0-9]*\)\*\? .*/\1/"); do 
              efibootmgr -B -b $i
           done
           echo "restarting"
           reboot
     - path: /opt/onmetal-install/efi.mount
       overwrite: yes
-      mode: 0755
+      mode: 0644
       contents:
         inline: |
           [Unit]
@@ -37,7 +37,7 @@ storage:
           WantedBy=local-fs.target
     - path: /opt/onmetal-install/remount-root.service
       overwrite: yes
-      mode: 0755
+      mode: 0644
       contents:
         inline: |
           # This is used to mount the rootfs with proper mount options
