@@ -48,8 +48,7 @@ class FullTest:
         return FullTest(args)
 
 
-    def upload_ssh_key(self):
-
+    def aws_upload_ssh_key(self):
         response = self.ec2.describe_key_pairs(KeyNames=[self.aws_config["key_name"]])
         if 'KeyPairs' in response and len(response['KeyPairs']) == 1:
             logger.debug("public key '%s' already uploaded" % self.aws_config["key_name"])
@@ -61,7 +60,8 @@ class FullTest:
 
         self.ec2.delete_delete_key_pair(KeyName=self.config.aws.key_name)
 
-    def upload_image(self, image_url):
+
+    def aws_upload_image(self, image_url):
         logger.debug("Uploading image %s" % image_url)
         o = urlparse(image_url)
         if o.scheme != 'file':
@@ -83,7 +83,7 @@ class FullTest:
         return json.loads(result.stdout)
 
 
-    def run_integration_test(self, configfile):
+    def aws_run_integration_test(self, configfile):
         logger.info("Starting integration tests")
         cmd = ["pipenv", "run", "pytest", "--iaas", "aws", "--configfile", configfile, "integration/"]
         result = subprocess.run(cmd, capture_output=True, cwd='/gardenlinux/tests')
@@ -110,42 +110,54 @@ class FullTest:
     def delete_ssh_key(self):
         pass
 
-    def run(self):
 
-        self.upload_ssh_key()
+    def run_aws_integration_test(self):
+
+        self.aws_upload_ssh_key()
         ami_id = self.aws_config['ami_id'] if 'ami_id' in self.aws_config else None
         upload_result = None
 
         if 'image' in self.aws_config:
             # upload an image and test that
-            upload_result = self.upload_image(self.aws_config['image'])
+            logger.info("Uploading new image %s to AWS for test" % self.aws_config['image'])
+            upload_result = self.aws_upload_image(self.aws_config['image'])
             ami_id = upload_result['ami-id']
 
         if ami_id == None:
-            sys.exit("No image or ami_id specified.")
+            logger.error("No imge or ami_id specifified")
+            os.exit(1)
 
-
-        self.new_config_file = None
+        self.new_config_file = "/tmp/test_config_amended.yaml"
         if upload_result is not None:
-            self.new_config_file = "/tmp/test_config_amended.yaml"
             self.aws_config['ami_id'] = upload_result['ami-id']
-            # need to provide an updated config
-            yaml.dump(self.config)
-            with open("/tmp/test_config_amended.yaml", "w") as f:
-                f.write(yaml.dump(self.config))
+        with open("/tmp/test_config_amended.yaml", "w") as f:
+                f.write(yaml.dump(yaml.dump(self.config)))
 
-        if self.new_config_file is not None:
-            self.run_integration_test(self.new_config_file)
-        else:
-            self.run_integration_test(self.config_file)
+        self.aws_run_integration_test(self.new_config_file)
+
         this.delete_image()
         this.delete_ssh_key()
 
 
+    def run(self):
+
+        if self.iaas == "aws":
+            run_aws_integration_test()
+        elif self.iaas == "gcp":
+            logger.error("Test for GCP no yet implemented.")
+            os.exit(1)
+        elif self.iaas == "azure":
+            logger.error("Test for Azure not yet implemented.")
+            os.exit(1)
+        else:
+            logger.error("Unknown cloud provider.")
+            os.exit(1)
+    
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--provider',
+        '--iaas',
         type=str,
         help="cloud provider"
     )

@@ -18,10 +18,12 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(scope="module")
 def config(configFile):
     try:
-        root = Path(os.path.dirname(os.path.abspath(__file__))).parent
-        logger.error(configFile)
-        path = root.joinpath(configFile)
-        with open(path) as f:
+        if os.path.exists(configFile):
+            realName = configFile
+        else:
+            root = Path(os.path.dirname(os.path.abspath(__file__))).parent
+            realName = root.joinpath(configFile)
+        with open(realName) as f:
             options = yaml.load(f, Loader=yaml.FullLoader)
     except OSError as e:
         logger.exception(e)

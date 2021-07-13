@@ -11,7 +11,7 @@ def pytest_addoption(parser: Parser):
     parser.addoption(
         "--configfile",
         action="store",
-        default="./../test_config.yaml",
+        default="test_config.yaml",
         help="Test configuration file"
     )
 
@@ -21,5 +21,5 @@ def pytest_generate_tests(metafunc):
     if "iaas" in metafunc.fixturenames:
         metafunc.parametrize("iaas", [option], scope="module")
     configfile = metafunc.config.getoption("configfile")
-    if "configfile" in metafunc.fixturenames:
-        metafunc.parametrize("configfile", [configfile], scope="module")
+    if "configFile" in metafunc.fixturenames:
+        metafunc.parametrize("configFile", [configfile], scope="module")
