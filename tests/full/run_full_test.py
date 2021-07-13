@@ -38,23 +38,14 @@ class FullTest:
         
         self.repo_root = pathlib.Path(__file__).parent.parent.parent
         self.debug = args.debug
-        self.aws_config = config['aws']
+        self.aws_config = self.config['aws']
         self.ec2 = boto3.client('ec2')
         self.s3 = boto3.client('s3')
 
 
     @classmethod
-    def init(cls, path, debug):
+    def init(cls, args):
         return FullTest(args)
-        try:
-            with open(path) as f:
-                options = yaml.load(f, Loader=yaml.FullLoader)
-        except OSError as e:
-            logger.exception(e)
-            exit(1)
-        
-        repo_root = pathlib.Path(__file__).parent.parent.parent
-        return FullTest(options, repo_root, debug)
 
 
     def upload_ssh_key(self):
@@ -92,8 +83,9 @@ class FullTest:
         return json.loads(result.stdout)
 
 
-    def run_integration_test(self):
-        cmd = ["pipenv", "run", "pytest", "--iaas", "aws", "integration/"]
+    def run_integration_test(self, configfile):
+        logger.info("Starting integration tests")
+        cmd = ["pipenv", "run", "pytest", "--iaas", "aws", "--configfile", configfile, "integration/"]
         result = subprocess.run(cmd, capture_output=True, cwd='/gardenlinux/tests')
         print(result)
         if result.returncode == 0:
@@ -114,6 +106,9 @@ class FullTest:
         if config['image-uploaded'] == True:
             self.s3.delete_object(Bucket='%s',Key='%s' % (self.aws_config['bucket'], self.aws_config['image_name']))
 
+
+    def delete_ssh_key(self):
+        pass
 
     def run(self):
 
@@ -136,15 +131,15 @@ class FullTest:
             self.aws_config['ami_id'] = upload_result['ami-id']
             # need to provide an updated config
             yaml.dump(self.config)
-            with open("/tmp/test_config_amended.yaml", "wb") as f:
+            with open("/tmp/test_config_amended.yaml", "w") as f:
                 f.write(yaml.dump(self.config))
 
-        if self.new_config_file in not None:
+        if self.new_config_file is not None:
             self.run_integration_test(self.new_config_file)
         else:
             self.run_integration_test(self.config_file)
-        delete_image()
-        delete_ssh_key()
+        this.delete_image()
+        this.delete_ssh_key()
 
 
 def main():
