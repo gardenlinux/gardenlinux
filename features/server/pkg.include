@@ -29,6 +29,7 @@ netcat
 nvme-cli
 selinux-basics
 selinux-policy-default
+sosreport
 main/i/iproute2/iproute2_5.10.0-4.1_${arch}.deb
 main/p/pam/libpam-runtime_1.4.0-7.1_all.deb
 main/p/pam/libpam-modules-bin_1.4.0-7.1_${arch}.deb
