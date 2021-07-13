@@ -131,10 +131,10 @@ metal: docker cert/sign.pub
 	./build.sh --no-build --features server,metal $(BUILDDIR)/metal $(VERSION)
 
 metal-dev: docker cert/sign.pub
-	./build.sh --no-build --features server,metal,_dev $(BUILDDIR)/metal $(VERSION)
+	./build.sh --no-build --features server,metal,_dev $(BUILDDIR)/metal-dev $(VERSION)
 
 metalk: docker cert/sign.pub
-	./build.sh --no-build --features server,metal,chost,khost,_pxe $(BUILDDIR)/metal $(SNAPSHOT_DATE)
+	./build.sh --no-build --features server,metal,chost,khost,_pxe $(BUILDDIR)/metalk $(SNAPSHOT_DATE)
 
 clean:
 	@echo "emptying $(BUILDDIR)"
