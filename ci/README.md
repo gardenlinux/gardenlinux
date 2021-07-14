@@ -27,7 +27,6 @@ Install Python libraries
 Install
 
 ```
-gardener-ci (TODO:from where?)
 kubectl (installed automatically from script)
 tekton-cli (installed automatically from script)
 ```
@@ -140,6 +139,26 @@ Here is example to build nly the AWS image. Append the following snippet to `fla
 
 ```
 
+### Environment Variables
+The script to generate the pipeline definitions reads various environment variables. These variables can be set to control the configuration. See also file [ci/lib.sh](lib.sh). Here is an example:
+
+```
+# Namespace where pipelines are deployed defaults to "gardenlinux":
+export GARDENLINUX_TKN_WS=gardenlinux
+# type of artifacts to be built:
+export PUBLISHING_ACTIONS=manifests
+# build variant: defaults to "all"
+export FLAVOUR_SET=all
+# Git branch to build, defaults to "main"
+export BRANCH_NAME=main
+# path to upload base images in container registry
+export OCI_PATH=eu.gcr.io/gardener-project/test/gardenlinux-test
+# Repository in Git:
+export GIT_URL=https://github.com/gardenlinux/gardenlinux
+# secret encryption, set algorithm to "PLAINTEXT"
+export SECRET_CIPHER_ALGORITHM=PLAINTEXT
+```
+
 ### Creating and running the pipelines
 
 Run the script to generate and apply the pipelines:
@@ -161,12 +180,12 @@ Example:
 
 ### Credential Handling
 
-The build pipeline can be used with a central server managing configuration and secrets. As an alternative all credentials can be read from a Kubernetes secret named "secrets" in the corresponding namespace. This secret can will be automatically generated from configuration files. The switch between central server and a Kubernetes secret is done by an environment variable named `SECRET_SERVER_ENDPOINT`. If it is not set the secrets will be generated. At minimum there need to be two secrets: One for uploading the artifacts to an S3-like Object store and one to upload container images to an OCI registry. Example files are provided in the 
-folder `ci/cfg`. 
+The build pipeline can be used with a central server managing configuration and secrets. As an alternative all credentials can be read from a Kubernetes secret named "secrets" in the corresponding namespace. This secret will be automatically generated from configuration files. The switch between central server and a Kubernetes secret is done by an environment variable named `SECRET_SERVER_ENDPOINT`. If it is not set the secret will be generated and applied. At minimum there need to be two secrets: One for uploading the artifacts to an S3-like Object store and one to upload container images to an OCI registry. Example files are provided in the folder `ci/cfg`. 
 
-Edit the files cfg/cfg_types.yaml and for each created entry a credential file 
-There is an example provided named 'aws'. This file contains the credentials for uploading
-the built artifacts to an S3 bucket.
+Edit the files cfg/cfg_types.yaml. Each top-level entry refers to another file
+containing the credentials. Examples with templates are provided. A second entry is for uploading the base-image and to an OCI registry. Additional configuration information is found in [cicd.yaml](cicd.yaml)
+
+For sending notifications by default recipients are read from the CODEOWNERS files. Resolving this to email requires access to the Github API which is not possible for external users. The behavior can be overriden by setting the variable `only_recipients` in the pipelineRun file. If this variable contains a semicolon separated list of email addresses emails are sent only to these recipients. CODEWONWERS access is not needed then. For configuring an SMTP server a sample file is provided.
 
 
 ## Integration Tests (under construction)
