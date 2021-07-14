@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CERT_DIR="${WORKDIR}/certdir"
+CERT_DIR=${CERTDIR:-${WORKDIR}/certdir}
 CERT_NAME="Garden Linux Kernel Signature - SAP SE"
 LINUX_SIGNFILE=/usr/lib/linux-kbuild-5.10/scripts/sign-file
 
@@ -20,7 +20,7 @@ while read filename; do
 		pesign -i "/${filename}" --export-signature "${out_dir}/$kernel/${filename}.sig" --sign -d sha256 -n "${CERT_DIR}" -c "${CERT_NAME}"
 		;;
 	    *.ko)
-		sudo "$LINUX_SIGNFILE" -dp sha256 "/kernel.key" "/kernel.crt" "/$filename"
+		sudo "$LINUX_SIGNFILE" -dp sha256 "${CERT_DIR}/kernel.key" "${CERT_DIR}/kernel.crt" "/$filename"
 		sudo mv "/$filename.p7s" "$out_dir/$kernel/$filename.sig"
 		sudo chown dev "$out_dir/$kernel/$filename.sig"
 		;;

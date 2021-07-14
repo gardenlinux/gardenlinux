@@ -4,11 +4,13 @@ set -euo pipefail
 . $(dirname $0)/.helper
 . $(dirname $0)/linux-5.10.d/VERSION
 
+CERT_DIR="${CERTDIR:-}"
+
 sudo apt-get install -y --no-install-recommends vim less equivs pesign
 
-mkdir -p certdir
-openssl pkcs12 -export -out kernel.p12 -inkey /kernel.key -in /kernel.crt -passout pass:""
-pk12util -i kernel.p12 -d certdir -W "" -K ""
+mkdir -p "${CERT_DIR}"
+openssl pkcs12 -export -out kernel.p12 -inkey "${CERT_DIR}/kernel.key" -in "${CERT_DIR}/kernel.crt" -passout pass:""
+pk12util -i "${CERT_DIR}/kernel.p12" -d "${CERT_DIR}" -W "" -K ""
 
 if $(dpkg --compare-versions $KERNEL_DEBIAN lt $KERNEL_VERSION); then
 	KERNEL_VERSION="$KERNEL_VERSION-1"

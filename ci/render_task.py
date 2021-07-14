@@ -73,12 +73,16 @@ def main():
     raw_base_build_task = dataclasses.asdict(base_build_task)
 
     package_task = tasks.nokernel_package_task(
+        package_name=NamedParam(name='pkg_name'),
+        repo_dir=NamedParam('repo_dir'),
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
     raw_package_task = dataclasses.asdict(package_task)
 
     kernel_package_task = tasks.kernel_package_task(
+        repo_dir=NamedParam('repo_dir'),
+        package_names=NamedParam('pkg_names'),
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
