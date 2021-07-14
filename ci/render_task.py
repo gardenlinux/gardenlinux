@@ -69,6 +69,12 @@ def main():
             'name': 'SECRET_CIPHER_ALGORITHM',
             'value': secret_cipher_algorithm,
         })
+        if secret_cipher_algorithm == 'PLAINTEXT':
+            env_vars.append({
+                'name': 'PYTHONPATH',
+                'value': '/cc/utils',
+            })
+
 
     base_build_task = tasks.base_image_build_task(
         volumes=volumes,
