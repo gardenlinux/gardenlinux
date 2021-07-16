@@ -3,7 +3,7 @@ ALTNAME=
 
 ALTNAME_INTERNAL=$(shell [ -n "$(ALTNAME)" ] && printf "%s %s" "-t" "$(ALTNAME)" ) 
 
-all: build-image
+all: build-image build-integration-test
 
 .PHONY: needslim
 needslim:

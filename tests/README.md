@@ -1,5 +1,65 @@
 # Tests
 
+## Full Integration Test Including Image Upload
+
+1. Write a configuration file
+
+Notes AWS:
+- credentials must be in ~/.aws/config and ~/.aws/credentials
+
+```
+aws:
+    region: eu-central-1
+    # If specified this AMI will be used (no image upload)
+    #ami_id: ami-xxx
+    # user and ssh key used to connect to the ec2 instance
+    user: admin
+    # path to the ssh key file
+    ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
+    # ssh key passphrase if configured
+    passphrase:
+    # name of public ssh key imported to AWS
+    key_name: gardenlinux-test-2
+    remote_path: /
+    # not all machines are available in all regions
+    instance_type: t3.micro
+    # bucket where the image will be uploded to
+    bucket: import-to-ec2-gardenlinux-validation
+    # image file
+    image: file:/build/aws/20210714/amd64/bullseye/rootfs.raw
+    # image name in s3
+    image_name: integration_test_image
+
+2. Build the integration test container with all necessary dependencies
+
+```
+make docker
+```
+
+3. Start docker container with dependencies:
+- mount Garden Linux repository to /gardenlinux
+- mount AWS credentials to /root/.aws
+- mount SSH keys to /root/.ssh
+- mount build result directory to /build (if not part of the Garden Linux file tree)
+
+```
+docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.aws:/root/.aws -v $HOME/.ssh:/root/.ssh  gardenlinux/integration-test:`bin/garden-version` bash
+```
+
+3. Set up dependencies
+
+```
+pipenv install --dev
+pipenv shell
+```
+
+4. Run tests
+
+```
+./run_full_test.py --debug --iaas aws --config /tmp/tmp_test_config.yaml
+
+```
+
 ## Prerequisites
 
 Python 3.8
@@ -44,17 +104,5 @@ pipenv run pytest --iaas aws integration/
 ```
 
 The test configuration is read from `test_config.yaml`
-
-# Run Full tests including image upload (AWS)
-
-1. Start docker container
-
-```
-docker run -it --rm  -v $HOME/src/gardenlinux:/gardenlinux -v $HOME/.aws:/root/.aws -v $HOME/.ssh:/root/.ssh gardenlinux/integration-test:463.0 bash
-cd /gardenlinux/tests
-pipenv install --dev
-pipenv shell
-
-```
 
 

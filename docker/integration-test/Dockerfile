@@ -23,4 +23,4 @@ RUN	apt-get update \
      && curl -sL https://aka.ms/InstallAzureCLIDeb | bash \
      &&	rm -rf /var/lib/apt/lists/*
 
-WORKDIR	/tmp
+WORKDIR	/gardenlinux/tests

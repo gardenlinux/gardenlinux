@@ -48,9 +48,9 @@ class Ec2ImageBuild:
         if result.returncode != 0:
             sys.exit(
                 "Unable to query s3 buckets: "
-                + str(result.stdout)
+                + result.stdout.decode("utf-8")
                 + " "
-                + str(result.stderr)
+                + result.stderr.decode("utf-8")
             )
         doc = json.loads(result.stdout)
         found = False
@@ -73,9 +73,9 @@ class Ec2ImageBuild:
                 "Unable to query bucket location for bucket "
                 + self.bucket
                 + ": "
-                + str(result.stdout)
+                + result.stdout.decode("utf-8")
                 + " "
-                + str(result.stderr)
+                + result.stderr.decode("utf-8")
             )
         doc = json.loads(result.stdout)
         if doc["LocationConstraint"] != self.region:
@@ -97,15 +97,6 @@ class Ec2ImageBuild:
             self.bucket + "/" + self.image_name,
         ]
         result = subprocess.run(cmd, capture_output=True)
-        if result.returncode != 0:
-            sys.exit(
-                "Unable to list bucket contents for bucket "
-                + self.bucket
-                + ": "
-                + str(result.stdout)
-                + " "
-                + str(result.stderr)
-            )
         if len(result.stdout) > 0:
             image_available = True
         else:
@@ -130,9 +121,9 @@ class Ec2ImageBuild:
                     "Unable to upload image "
                     + self.raw_image
                     + ": "
-                    + str(result.stdout)
+                    + result.stdout.decode("utf-8")
                     + " "
-                    + str(result.stderr)
+                    + result.stderr.decode("utf-8")
                 )
             logger.debug(result.stdout)
             return True
@@ -196,10 +187,18 @@ class Ec2ImageBuild:
             if result.returncode != 0:
                 sys.exit(
                     "Unable to describe snapshot task %s for image %s: %s, %s"
-                    % (import_task_id, image_name, result.stdout, result.stderr)
+                    % (
+                        import_task_id,
+                        image_name,
+                        result.stdout.decode("utf-8"),
+                        result.stderr.decode("utf-8"),
+                    )
                 )
             doc = json.loads(result.stdout)
-            logger.debug("Result of describe-import-snapshot-tasks: %s" % result.stdout)
+            logger.debug(
+                "Result of describe-import-snapshot-tasks: %s"
+                % result.stdout.decode("utf-8")
+            )
             status = doc["ImportSnapshotTasks"][0]["SnapshotTaskDetail"]["Status"]
             if status == "deleted":
                 if (
@@ -247,7 +246,7 @@ class Ec2ImageBuild:
         if result.returncode != 0:
             logger.error(
                 "Unable to tag snapshot. Continuing. Errors: %s %s"
-                % (str(result.stdout), str(result.stderr))
+                % (result.stdout.decode("utf-8"), result.stderr.decode("utf-8"))
             )
         else:
             logger.debug(
@@ -275,7 +274,7 @@ class Ec2ImageBuild:
         if result.returncode != 0:
             sys.exit(
                 "Unable to read images for for region: %s %s"
-                % (str(result.stdout), str(result.stderr))
+                % (result.stdout.decode("utf-8"), result.stderr.decode("utf-8"))
             )
         doc = json.loads(result.stdout)
         idx = 0
@@ -322,9 +321,9 @@ class Ec2ImageBuild:
                 "Unable to register image for snapshot "
                 + snapshot_id
                 + ": "
-                + str(result.stdout)
-                + " "
-                + str(result.stderr)
+                + result.stdout.decode("utf-8")
+                + ": "
+                + result.stderr.decode("utf-8")
             )
         doc = json.loads(result.stdout)
         logger.debug("Result of register-image: %s" % doc)
@@ -336,6 +335,9 @@ class Ec2ImageBuild:
 
         tag_specifications = "Key='purpose',Value='%s'" % self.purpose
         self.tag_snapshot(ami_id, tag_specifications)
+
+        tag_specifications = "Key='ami-id',Value='%s'" % ami_id
+        self.tag_snapshot(snapshot_id, tag_specifications)
 
         return ami_id
 
@@ -367,9 +369,9 @@ class Ec2ImageBuild:
                     + " in region: "
                     + region
                     + ". "
-                    + str(result.stdout)
+                    + result.stdout.decode("utf-8")
                     + " "
-                    + str(result.stderr)
+                    + result.stdout.decode("utf-8")
                 )
 
     def distribute_ami(self, src_ami):
@@ -410,9 +412,9 @@ class Ec2ImageBuild:
                         + " to region: "
                         + dst_region
                         + ": "
-                        + str(result.stdout)
+                        + result.stdout.decode("utf-8")
                         + " "
-                        + str(result.stderr)
+                        + result.stderr.decode("utf-8")
                     )
                 dst_ami = json.loads(result.stdout)["ImageId"]
                 amis[dst_region] = dst_ami
@@ -460,7 +462,6 @@ class Ec2ImageBuild:
             required=True,
         )
         parser.add_argument("raw_image", type=str, help="RAW image file")
-        parser.add_argument("--debug", action="store_true", help="debug")
         parser.add_argument(
             "--image-overwrite",
             type=str,
@@ -474,11 +475,7 @@ class Ec2ImageBuild:
             default="test",
             help="purpose of this upload (defaults to test so it can be removed without affecting production",
         )
-        parser.add_argument(
-            '--debug',
-            action='store_true',
-            help="debug"
-        )
+        parser.add_argument("--debug", action="store_true", help="debug")
 
     @classmethod
     def _main(cls):
