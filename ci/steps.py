@@ -4,7 +4,7 @@ import typing
 
 import tkn.model
 
-IMAGE_VERSION = '1.1381.0'
+IMAGE_VERSION = '1.1388.0'
 DEFAULT_IMAGE = f'eu.gcr.io/gardener-project/cc/job-image:{IMAGE_VERSION}'
 KANIKO_IMAGE = f'eu.gcr.io/gardener-project/cc/job-image-kaniko:{IMAGE_VERSION}'
 
