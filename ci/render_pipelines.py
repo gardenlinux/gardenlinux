@@ -30,6 +30,26 @@ def pass_param(name: str):
     return NamedParam(name=name, value=f'$(params.{name})')
 
 
+def _get_modifier_names(gardenlinux_flavour):
+    modifier_names = ','.join(
+        sorted(
+            (m.name for m in gardenlinux_flavour.calculate_modifiers())
+        )
+    )
+    return modifier_names
+
+def _generate_task_name(prefix: str, gardenlinux_flavour: GardenlinuxFlavour):
+    task_name = prefix + gardenlinux_flavour.canonical_name_prefix().replace('/', '-')\
+        .replace('_', '').strip('-')\
+        .replace('readonly', 'ro')  # hardcoded shortening (length-restriction)
+
+    if len(task_name) > 64:
+        print(f'WARNING: {task_name=} too long - will shorten')
+        task_name = task_name[:64]
+    return task_name
+
+
+
 def mk_pipeline_base_build_task(
 ):
     return PipelineTask(
@@ -88,19 +108,8 @@ def mk_pipeline_build_task(
     if pipeline_flavour is not glci.model.PipelineFlavour.SNAPSHOT:
         raise NotImplementedError(pipeline_flavour)
 
-    modifier_names = ','.join(
-        sorted(
-            (m.name for m in gardenlinux_flavour.calculate_modifiers())
-        )
-    )
-
-    task_name = gardenlinux_flavour.canonical_name_prefix().replace('/', '-')\
-        .replace('_', '').strip('-')\
-        .replace('readonly', 'ro')  # hardcoded shortening (length-restriction)
-
-    if len(task_name) > 64:
-        print(f'WARNING: {task_name=} too long - will shorten')
-        task_name = task_name[:64]
+    modifier_names = _get_modifier_names(gardenlinux_flavour)
+    task_name = _generate_task_name(prefix='', gardenlinux_flavour=gardenlinux_flavour)
 
     return PipelineTask(
         name=task_name,
@@ -115,6 +124,35 @@ def mk_pipeline_build_task(
             NamedParam(name='modifiers', value=modifier_names),
             NamedParam(name='platform', value=gardenlinux_flavour.platform),
             pass_param(name='promote_target'),
+            pass_param(name='publishing_actions'),
+            pass_param(name='snapshot_timestamp'),
+            pass_param(name='version'),
+        ],
+        runAfter=run_after,
+    )
+
+
+def mk_pipeline_test_task(
+    gardenlinux_flavour: GardenlinuxFlavour,
+    pipeline_flavour: glci.model.PipelineFlavour,
+    run_after: typing.List[str],
+):
+
+    modifier_names = _get_modifier_names(gardenlinux_flavour)
+    task_name = _generate_task_name(prefix="tst", gardenlinux_flavour=gardenlinux_flavour)
+
+    return PipelineTask(
+        name=task_name,
+        taskRef=TaskRef(name='integration-test-task'),
+        params=[
+            pass_param(name='build_image'),
+            pass_param(name='cicd_cfg_name'),
+            pass_param(name='committish'),
+            pass_param(name='flavourset'),
+            pass_param(name='gardenlinux_epoch'),
+            pass_param(name='giturl'),
+            NamedParam(name='modifiers', value=modifier_names),
+            NamedParam(name='platform', value=gardenlinux_flavour.platform),
             pass_param(name='publishing_actions'),
             pass_param(name='snapshot_timestamp'),
             pass_param(name='version'),
@@ -280,6 +318,12 @@ def mk_pipeline(
             run_after=[base_build_task.name],
         )
         build_tasks.append(build_task)
+        test_task = mk_pipeline_test_task(
+            gardenlinux_flavour=glf,
+            pipeline_flavour=pipeline_flavour,
+            run_after=[build_task.name],
+        )
+        build_tasks.append(test_task)
 
     tasks += build_tasks
 

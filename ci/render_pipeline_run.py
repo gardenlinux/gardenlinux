@@ -46,6 +46,8 @@ def mk_pipeline_name(
             return 'man'
         elif publishing_action is glci.model.PublishingAction.COMPONENT_DESCRIPTOR:
             return 'cd'
+        elif publishing_action is glci.model.PublishingAction.RUN_TESTS:
+            return 'tst'
 
     # add last 4 seconds of time since epoch (to avoid issues with identical pipeline names for
     # repeated builds of the same commit)

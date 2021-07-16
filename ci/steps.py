@@ -669,3 +669,45 @@ def get_logs_step(
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+
+
+def test_step(
+    architecture: tkn.model.NamedParam,
+    cicd_cfg_name: tkn.model.NamedParam,
+    committish: tkn.model.NamedParam,
+    gardenlinux_epoch: tkn.model.NamedParam,
+    modifiers: tkn.model.NamedParam,
+    platform: tkn.model.NamedParam,
+    publishing_actions: tkn.model.NamedParam,
+    repo_dir: tkn.model.NamedParam,
+    suite: tkn.model.NamedParam,
+    snapshot_timestamp: tkn.model.NamedParam,
+    version: tkn.model.NamedParam,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
+):
+    return tkn.model.TaskStep(
+        name='run-tests',
+        image=DEFAULT_IMAGE,
+        script=task_step_script(
+            path=os.path.join(steps_dir, 'run_tests.py'),
+            script_type=ScriptType.PYTHON3,
+            callable='run_tests',
+            repo_path_param=repo_dir,
+            params=[
+                architecture,
+                cicd_cfg_name,
+                committish,
+                gardenlinux_epoch,
+                modifiers,
+                platform,
+                publishing_actions,
+                repo_dir,
+                snapshot_timestamp,
+                suite,
+                version,
+            ],
+        ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
+    )
