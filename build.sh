@@ -8,8 +8,7 @@ source "$thisDir/bin/.constants.sh" \
 	-- \
 	'[--no-build] [--lessram] [--debug] [--manual] [--arch=<arch>] [--qemu] [--skip-tests] <output-dir> <version/timestamp>' \
 	'output stretch 2017-05-08T00:00:00Z
---eol output squeeze 2016-03-14T00:00:00Z
---eol --arch i386 output sarge 2016-03-14T00:00:00Z' 
+--arch i386 output bullseye 2016-03-14T00:00:00Z' 
 
 eval "$dgetopt"
 build=1

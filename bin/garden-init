@@ -6,7 +6,7 @@ set -Eeuo pipefail
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 featureDir="$thisDir/../features"
 source "$thisDir/.constants.sh" \
-	--flags 'debian,debian-eol,debian-ports,non-debian' \
+	--flags 'debian,debian-ports,non-debian' \
 	--flags 'debootstrap:' \
 	--flags 'debootstrap-script:' \
 	--flags 'keyring:,arch:,include:,exclude:,features:' \
@@ -14,15 +14,13 @@ source "$thisDir/.constants.sh" \
 	--flags 'check-gpg,no-check-gpg' \
 	-- \
 	'<target-dir> <suite> <timestamp>' \
-	'rootfs stretch 2017-05-08T00:00:00Z
---debian-eol rootfs squeeze 2016-03-14T00:00:00Z' \
+	'rootfs stretch 2017-05-08T00:00:00Z' \
 	\
 	'--non-debian [--debootstrap-script=xyz] <target-dir> <suite> <mirror>' \
 	'--non-debian rootfs xenial http://archive.ubuntu.com/ubuntu'
 
 eval "$dgetopt"
 nonDebian=
-debianEol=
 debianPorts=
 debootstrap=
 script=
@@ -38,7 +36,6 @@ while true; do
 	dgetopt-case "$flag"
 	case "$flag" in
 		--debian)	nonDebian= ;;
-		--debian-eol)	nonDebian= ; debianEol=1 ;;
 		--debian-ports)	nonDebian= ; debianPorts=1 ;;
 		--non-debian)	nonDebian=1 ;;
 		--debootstrap)	debootstrap="$1"; shift ;;
@@ -86,16 +83,11 @@ epoch="$(date --date "$timestamp" '+%s')"
 export SOURCE_DATE_EPOCH="$epoch"
 
 if [ -z "$nonDebian" ]; then
-	if [ -z "$debianEol" ]; then
 		if [ -z "$debianPorts" ]; then
 			mirror="$("$thisDir/.snapshot-url.sh" "@$epoch")"
 		else
 			mirror="$("$thisDir/.snapshot-url.sh" "@$epoch" 'debian-ports')"
 		fi
-	else
-		mirrorbase="$("$thisDir/.snapshot-url.sh" "@$epoch" 'debian-archive')"
-		mirror="$mirrorbase/debian"
-	fi
 fi
 
 # setup mirror_pool, i.e. the archive where the gardenlinux-local packages are kept
@@ -163,7 +155,6 @@ minbaseSupported="$(
 	fi
 )"
 if [ -n "$minbaseSupported" ]; then
-	# --debian-eol sarge and older do not support minbase
 	debootstrapArgs+=( --variant=minbase )
 fi
 
@@ -200,7 +191,6 @@ echo "$epoch" > "$targetDir/garden-epoch"
 
 if [ -z "$nonDebian" ]; then
 	"$thisDir/garden-debian-sources-list" --snapshot \
-		$([ -z "$debianEol" ] || echo '--eol') \
 		$([ -z "$debianPorts" ] || echo '--ports') \
 		"$targetDir" "$suite"
 	"$thisDir/garden-apt-get" "$targetDir" update -qq
@@ -208,9 +198,6 @@ fi
 
 # since we're minbase, we know everything included is either essential, or a dependency of essential, so let's get clean "apt-mark showmanual" output
 "$thisDir/garden-chroot" "$targetDir" bash -c '
-	# --debian-eol squeeze and below do not have python in minbase, thus "apt-mark" fails to run
-	# bash: /usr/bin/apt-mark: /usr/bin/python: bad interpreter: No such file or directory
-	# (also, squeeze APT does not treat essential packages as special, and will offer to purge them if they get marked as auto-installed)
 	if apt-mark --help &> /dev/null; then
 		apt-mark auto ".*" > /dev/null
 		if [ -n "$1" ]; then
@@ -250,7 +237,6 @@ chmod 0755 "$targetDir"
 # adjust field 3 in /etc/shadow and /etc/shadow- to $(( epoch / 60 / 60 / 24 )), if it's larger
 sp_lstchg="$(( epoch / 60 / 60 / 24 ))"
 for shadowFile in etc/shadow etc/shadow-; do
-	# --debian-eol etch and older do not include /etc/shadow-
 	[ -e "$targetDir/$shadowFile" ] || continue
 
 	newShadowFile="$shadowFile.debuerreotype"

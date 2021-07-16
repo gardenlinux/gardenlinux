@@ -4,7 +4,7 @@ set -Eeuo pipefail
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
 	--flags 'no-build,debug,skip-tests,suite:,gardenversion:,timestamp:' \
-	--flags 'eol,ports,arch:,qemu,features:,commitid:' \
+	--flags 'ports,arch:,qemu,features:,commitid:' \
 	--flags 'suffix:,prefix:' \
 	--
 
@@ -18,7 +18,6 @@ while true; do
 	dgetopt-case "$flag"
 	case "$flag" in
 		--debug) debug=1 ;;	# for jumping in the prepared image"
-		--eol) eol=1 ;;		# for using "archive.debian.org"
 		--ports) ports=1 ;;	# for using "debian-ports"
 		--arch) arch="$1"; shift ;; # for adding "--arch" to garden-init
 		--qemu) qemu=1 ;;	# for using "qemu-debootstrap"
@@ -63,11 +62,7 @@ for archive in "" security; do
 	if [ -n "${ports:-}" ] && [ -z "${archive:-}" ]; then
 		archive="ports"
 	fi
-	if [ -z "${eol:-}" ]; then
-		snapshotUrl="$("$debuerreotypeScriptsDir/.snapshot-url.sh" "@$epoch" "${archive:+debian-${archive}}")"
-	else
-		snapshotUrl="$("$debuerreotypeScriptsDir/.snapshot-url.sh" "@$epoch" "debian-archive")/debian${archive:+-${archive}}"
-	fi
+	snapshotUrl="$("$debuerreotypeScriptsDir/.snapshot-url.sh" "@$epoch" "${archive:+debian-${archive}}")"
 	mkdir -p "$(dirname "$snapshotUrlFile")"
 	echo "$snapshotUrl" > "$snapshotUrlFile"
 	touch_epoch "$snapshotUrlFile"
@@ -112,11 +107,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 
 {
 	initArgs=( --arch="$dpkgArch" )
-	if [ -z "${eol-}" ]; then
-		initArgs+=( --debian )
-	else
-		initArgs+=( --debian-eol )
-	fi
+	initArgs+=( --debian )
 	if [ -n "${ports-}" ]; then
 		initArgs+=(
 			--debian-ports
@@ -139,10 +130,6 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 
 	garden-init "${initArgs[@]}" rootfs "$suite" "@$epoch"
 
-	if [ -n "${eol-}" ]; then
-		garden-gpgv-ignore-expiration-config rootfs
-	fi
-
 	[ -n "$features" ] && configArgs+=( --features "$features" )
 
 	garden-config "${configArgs[@]}" rootfs
@@ -150,11 +137,6 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 	#garden-apt-get rootfs dist-upgrade -yqq
 
 	aptVersion="$("$debuerreotypeScriptsDir/.apt-version.sh" rootfs)"
-	if [ -n "${eol:-}" ] && dpkg --compare-versions "$aptVersion" ">=" "0.7.26~"; then
-		# https://salsa.debian.org/apt-team/apt/commit/1ddb859611d2e0f3d9ea12085001810f689e8c99
-		echo "Acquire::Check-Valid-Until \"false\";" > rootfs/etc/apt/apt.conf.d/check-valid-until.conf
-		# TODO make this a real script so it can have a nice comment explaining why we do it for EOL releases?
-	fi
 
 	# make a couple copies of rootfs so we can create other variants
 	#for variant in slim sbuild; do
@@ -165,7 +147,6 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 	garden-slimify rootfs
 
 	sourcesListArgs=()
-	[ -z "${eol:-}" ] || sourcesListArgs+=( --eol )
 	[ -z "${ports:-}" ] || sourcesListArgs+=( --ports )
 
 	#Brand it
@@ -235,7 +216,6 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 
 		garden-chroot "$rootfs" bash -c '
 			if ! dpkg-query -f='\''${binary:Package} ${Version}\n'\'' -W 2> /dev/null; then
-				# --debian-eol woody has no dpkg-query
 				dpkg -l
 			fi
 		' > "$targetBase.manifest"
@@ -245,7 +225,6 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 		for f in debian_version os-release apt/sources.list; do
 			targetFile="$targetBase.$(basename "$f" | sed -r "s/[^a-zA-Z0-9_-]+/-/g")"
 			if [ -e "$rootfs/etc/$f" ]; then
-				# /etc/os-release does not exist in --debian-eol squeeze, for example (hence the existence check)
 				cp "$rootfs/etc/$f" "$targetFile"
 				touch_epoch "$targetFile"
 			fi
