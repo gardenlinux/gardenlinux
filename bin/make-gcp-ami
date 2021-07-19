@@ -9,17 +9,31 @@ import time
 
 class GcpImageBuild:
 
-    def __init__(self, bucket, raw_image_path, image_name, permission):
-        self.bucket = bucket
-        self.raw_image_path = raw_image_path
-        self.image_name = image_name
-        self.permission = permission
+    def __init__(self, args):
+        self.raw_image_path = args.raw_image_path
+        self.image_name = args.image_name
+        self.permission = args.permission_public
+        self.project = args.project
+        self.bucket = args.bucket
+        self.region = args.region
+        self.gcloud_configure()
+
+    def gcloud_configure(self):
+        result = subprocess.run(["gcloud", "config", "set", "project", self.project], capture_output=True)
+        if result.returncode != 0:
+            sys.exit("Unable to configure project %s: %s" % (self.project, result.stderr.decode("utf-8")))
+
+        result = subprocess.run(["gcloud", "config", "set", "compute/region", self.region], capture_output=True)
+        if result.returncode != 0:
+            sys.exit("Unable to configure region %s: %s" % (self.region, result.stderr.decode("utf-8")))
+
 
     def logged_on_bucket_available(self, bucket):
         bucket_name = "gs://" + bucket + "/"
         result = subprocess.run(["gsutil", "ls", "-L", "-b", bucket_name], capture_output=True)
         if result.returncode != 0:
-            sys.exit("Bucket " + bucket + " does not exist or not logged on: " + str(result.stderr))
+            sys.exit("Bucket " + bucket + " does not exist or not logged on: " + result.stderr.decode("utf-8"))
+
 
     def upload_image(self, bucket, raw_image_path, image_name):
         bucket_image = "gs://" + bucket + "/" + image_name + ".tar.gz"
@@ -31,26 +45,29 @@ class GcpImageBuild:
         result = subprocess.run(["gsutil", "cp", raw_image_path, bucket_image], capture_output=True)
         if result.returncode != 0:
             print(result.stdout)
-            sys.exit("Unable to upload image " + raw_image_path + ": " + str(result.stdout) + " " + str(result.stderr))
+            sys.exit("Unable to upload image " + raw_image_path + ": " + result.stdout.decode("utf-8") + " " + result.stderr.decode("utf-8"))
+
 
     def create_image(self, bucket, image_name):
         # sanitze image name, names must match '(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)'
         gcp_image_name = image_name.replace(".", "-")
-        result = subprocess.run(["gcloud", " compute", "images", "describe", gcp_image_name], capture_output=True)
+        result = subprocess.run(["gcloud", " compute", "images", "describe", gcp_image_name, self.project], capture_output=True)
         if result.returncode == 0:
             sys.exit("Image " + image + " does already exist.")
         bucket_image = "gs://" + bucket + "/" + image_name + ".tar.gz"
         result = subprocess.run(["gcloud", "compute", "images", "create", gcp_image_name,
-            "--source-uri", bucket_image ],
+            "--source-uri", bucket_image],
             capture_output=True)
+        print(result)
         if result.returncode != 0:
-            print(result.stdout)
+            print(result.stdout.decode('utf-8'))
             sys.exit("Unable to create image " + image_name+ ": " + str(result.stdout) + " " + str(result.stderr))
         if self.permission == True:
             result = subprocess.run(["gcloud", "compute", "images", "add-iam-policy-binding", image_name,
                 "--member", "allAuthenticatedUsers", "--role", "roles/compute.imageUser" ],
                 capture_output=True)
             print(result)
+
 
     def run(self):
         self.logged_on_bucket_available(self.bucket)
@@ -60,6 +77,13 @@ class GcpImageBuild:
     @classmethod
     def _argparse_register(cls, parser):
 
+        parser.add_argument(
+            '--region',
+            type=str,
+            dest='region',
+            help='Region',
+            required=True
+        )
         parser.add_argument(
             '--bucket',
             type=str,
@@ -83,15 +107,19 @@ class GcpImageBuild:
             default=False,
             help='Make snapshot and image public',
         )
+        parser.add_argument(
+            '--project',
+            type=str,
+            help="Project name",
+        )
 
     @classmethod
     def _main(cls):
         parser = argparse.ArgumentParser()
         cls._argparse_register(parser)
         args = parser.parse_args()
-        print(args)
 
-        gcp_img_build = cls(bucket=args.bucket, raw_image_path=args.raw_image_path, image_name=args.image_name, permission=args.permission_public)
+        gcp_img_build = cls(args=args)
         gcp_img_build.run()
 
 if __name__ == '__main__':
