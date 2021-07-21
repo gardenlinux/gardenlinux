@@ -29,6 +29,7 @@ aws:
     image: file:/build/aws/20210714/amd64/bullseye/rootfs.raw
     # image name in s3
     image_name: integration_test_image
+```
 
 2. Build the integration test container with all necessary dependencies
 
