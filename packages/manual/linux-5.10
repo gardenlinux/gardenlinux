@@ -84,9 +84,13 @@ fi
 cd $src
 echo "### setting Garden Linux abi"
 sed -i "s/abiname:.*/abiname:$KERNEL_ABI/" debian/config/defines
+sed -i "s/enabled: true/enabled: false/" debian/config/defines
 
 echo "### patching Garden Linux enhancements"
 patch -p1 < $srcDir/rt-0038.patch
+patch -p1 < $srcDir/fpga-ofs.patch
+patch -p1 < $srcDir/fpga-config.patch
+patch -p1 < $srcDir/series.patch
 
 echo "### populating the changelog"
 cat - > debian/changelog.new <<EOF
