@@ -1,7 +1,7 @@
 ARG build_base_image=gardenlinux/slim
 FROM	$build_base_image
 
-ENV     DEBIAN_FRONTEND noninteractive
+ARG	DEBIAN_FRONTEND=noninteractive
 
 RUN	mkdir /etc/sudoers.d \
      &&	echo "%wheel ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/wheel \

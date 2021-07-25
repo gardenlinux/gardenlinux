@@ -6,7 +6,8 @@ RUN	go get -u golang.org/x/lint/golint \
      &&	make
 
 FROM 	$build_base_image
-ENV	DEBIAN_FRONTEND noninteractive
+ARG	DEBIAN_FRONTEND=noninteractive
+
 RUN	apt-get update \
      &&	apt-get install -y --no-install-recommends \
 		debian-ports-archive-keyring \
