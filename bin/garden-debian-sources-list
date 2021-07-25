@@ -6,15 +6,13 @@ set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
-	--flags 'eol,ports,snapshot' \
+	--flags 'ports,snapshot' \
 	--flags 'deb-src' \
 	-- \
-	'[--deb-src] [--eol] [--ports] [--snapshot] <target-dir> <suite>' \
-	'--snapshot rootfs stretch
---eol rootfs wheezy'
+	'[--deb-src] [--ports] [--snapshot] <target-dir> <suite>' \
+	'--snapshot rootfs stretch'
 
 eval "$dgetopt"
-eol=
 ports=
 snapshot=
 debSrc=
@@ -22,7 +20,6 @@ while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
 	case "$flag" in
-		--eol) eol=1 ;;
 		--ports) ports=1 ;;
 		--snapshot) snapshot=1 ;;
 		--deb-src) debSrc=1 ;;
@@ -47,16 +44,6 @@ fi
 
 securityMirror='http://security.debian.org/debian-security'
 snapshotSecurityMirrors=( "$("$thisDir/.snapshot-url.sh" "@$epoch" 'debian-security')" )
-
-if [ -n "$eol" ]; then
-	archiveSnapshotMirror="$("$thisDir/.snapshot-url.sh" "@$epoch" 'debian-archive')"
-
-	standardMirror='http://archive.debian.org/debian'
-	snapshotStandardMirrors=( "$archiveSnapshotMirror/debian" "${snapshotStandardMirrors[@]}" )
-
-	securityMirror='http://archive.debian.org/debian-security'
-	snapshotSecurityMirrors=( "$archiveSnapshotMirror/debian-security" "${snapshotSecurityMirrors[@]}" )
-fi
 
 comp='main'
 arch="$("$thisDir/.dpkg-arch.sh" "$targetDir")"

@@ -213,14 +213,24 @@ echo "### installing grub"
 for t in "${grub_target[@]}"
 do
     case "$t" in
-        bios) chroot ${dir_name} grub-install --recheck --target=i386-pc $loopback;;
-        uefi) chroot ${dir_name} grub-install --recheck --target=x86_64-efi --no-nvram  $loopback ;;
+        bios) if [ -e ${dir_name}/usr/sbin/grub-install ]; then
+		chroot ${dir_name} grub-install --recheck --target=i386-pc $loopback
+	      else
+		echo "no legacy support"
+	      fi ;;
+        uefi) if [ -e ${dir_name}/usr/sbin/grub-install ]; then
+	        chroot ${dir_name} grub-install --recheck --target=x86_64-efi --no-nvram  $loopback
+	      else
+		chroot ${dir_name} bootctl --no-variables install 
+	      fi ;;
         *) echo "Unknown target ${t}";;
     esac
 done
-mv ${dir_name}/etc/grub.d/30_uefi-firmware ${dir_name}/etc/grub.d/30_uefi-firmware~
-chroot ${dir_name} update-grub
-mv ${dir_name}/etc/grub.d/30_uefi-firmware~ ${dir_name}/etc/grub.d/30_uefi-firmware
+if [ -e ${dir_name}/usr/sbin/grub-install ]; then
+  mv ${dir_name}/etc/grub.d/30_uefi-firmware ${dir_name}/etc/grub.d/30_uefi-firmware~
+  chroot ${dir_name} update-grub
+  mv ${dir_name}/etc/grub.d/30_uefi-firmware~ ${dir_name}/etc/grub.d/30_uefi-firmware
+fi
 
 echo "### unmouting"
 umount -R ${dir_name}

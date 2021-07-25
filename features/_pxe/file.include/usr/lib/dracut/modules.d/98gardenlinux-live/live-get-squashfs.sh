@@ -40,9 +40,6 @@ if ! echo "$(grep . ${shaFile}) ${squashFile}" | sha256sum --status --check; the
 fi
 
 # move image to proper place
-mv "${squashFile}" /run/rootfs
-
-# load kernel modules
-modprobe loop squashfs
+mv "${squashFile}" /run/root.squashfs
 
 exit 0

@@ -21,6 +21,7 @@ class PublishingAction(enum.Enum):
     MANIFESTS = 'manifests'
     IMAGES = 'images'
     RELEASE = 'release'
+    BUILD_ONLY = 'build_only'
 
 
 class FeatureType(enum.Enum):
@@ -34,8 +35,8 @@ class FeatureType(enum.Enum):
     MODIFIER = 'modifier'
 
 
-Platform = str # see `features/*/info.yaml` / platforms() for allowed values
-Modifier = str # see `features/*/info.yaml` / modifiers() for allowed values
+Platform = str  # see `features/*/info.yaml` / platforms() for allowed values
+Modifier = str  # see `features/*/info.yaml` / modifiers() for allowed values
 
 
 @dataclasses.dataclass(frozen=True)
@@ -43,7 +44,7 @@ class Features:
     '''
     a FeatureDescriptor's feature cfg (currently, references to other features, only)
     '''
-    include: typing.Tuple[Modifier] = tuple()
+    include: typing.Tuple[Modifier, ...] = tuple()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -56,7 +57,7 @@ class FeatureDescriptor:
     description: str = 'no description available'
     features: Features = None
 
-    def included_feature_names(self) -> typing.Tuple[Modifier]:
+    def included_feature_names(self) -> typing.Tuple[Modifier, ...]:
         '''
         returns the tuple of feature names immediately depended-on by this feature
         '''
@@ -93,7 +94,7 @@ class GardenlinuxFlavour:
     '''
     architecture: Architecture
     platform: str
-    modifiers: typing.Tuple[Modifier]
+    modifiers: typing.Tuple[Modifier, ...]
 
     def calculate_modifiers(self):
         yield from (
@@ -139,9 +140,9 @@ class GardenlinuxFlavourCombination:
     manual configuration, flavourset combinations are declared. Subsequently, the
     cross product of said combinations are generated.
     '''
-    architectures: typing.Tuple[Architecture]
-    platforms: typing.Tuple[Platform]
-    modifiers: typing.Tuple[typing.Tuple[Modifier]]
+    architectures: typing.Tuple[Architecture, ...]
+    platforms: typing.Tuple[Platform, ...]
+    modifiers: typing.Tuple[typing.Tuple[Modifier, ...], ...]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -150,7 +151,7 @@ class GardenlinuxFlavourSet:
     A set of gardenlinux flavours
     '''
     name: str
-    flavour_combinations: typing.Tuple[GardenlinuxFlavourCombination]
+    flavour_combinations: typing.Tuple[GardenlinuxFlavourCombination, ...]
 
     def flavours(self):
         for comb in self.flavour_combinations:
@@ -197,7 +198,7 @@ class ReleaseIdentifier:
     gardenlinux_epoch: int
     architecture: Architecture
     platform: Platform
-    modifiers: typing.Tuple[Modifier]
+    modifiers: typing.Tuple[Modifier, ...]
 
     def flavour(self, normalise=True) -> GardenlinuxFlavour:
         mods = normalised_modifiers(
@@ -253,7 +254,7 @@ class AwsPublishedImage:
 
 @dataclasses.dataclass(frozen=True)
 class AwsPublishedImageSet(PublishedImageBase):
-    published_aws_images: typing.Tuple[AwsPublishedImage]
+    published_aws_images: typing.Tuple[AwsPublishedImage, ...]
     # release_identifier: typing.Optional[ReleaseIdentifier]
 
 
@@ -266,7 +267,7 @@ class AlicloudPublishedImage:
 
 @dataclasses.dataclass(frozen=True)
 class AlicloudPublishedImageSet(PublishedImageBase):
-    published_alicloud_images: typing.Tuple[AlicloudPublishedImage]
+    published_alicloud_images: typing.Tuple[AlicloudPublishedImage, ...]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -316,7 +317,7 @@ class OpenstackPublishedImage:
 
 @dataclasses.dataclass(frozen=True)
 class OpenstackPublishedImageSet(PublishedImageBase):
-    published_openstack_images: typing.Tuple[OpenstackPublishedImage]
+    published_openstack_images: typing.Tuple[OpenstackPublishedImage, ...]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -331,7 +332,7 @@ class ReleaseManifest(ReleaseIdentifier):
     store, such as an S3 bucket.
     '''
     build_timestamp: str
-    paths: typing.Tuple[typing.Union[S3_ReleaseFile]]
+    paths: typing.Tuple[S3_ReleaseFile, ...]
     published_image_metadata: typing.Union[
         AlicloudPublishedImageSet,
         AwsPublishedImageSet,
@@ -363,7 +364,7 @@ class ReleaseManifest(ReleaseIdentifier):
         return dateutil.parser.isoparse(self.build_timestamp)
 
 
-def normalised_modifiers(platform: Platform, modifiers) -> typing.Tuple[str]:
+def normalised_modifiers(platform: Platform, modifiers) -> typing.Tuple[str, ...]:
     '''
     determines the transitive closure of all features from the given platform and modifiers,
     and returns the (ASCII-upper-case-sorted) result as a `tuple` of str of all modifiers,
@@ -437,7 +438,7 @@ class OnlineReleaseManifest(ReleaseManifest):
 
 @dataclasses.dataclass(frozen=True)
 class ReleaseManifestSet:
-    manifests: typing.Tuple[OnlineReleaseManifest]
+    manifests: typing.Tuple[OnlineReleaseManifest, ...]
     flavour_set_name: str
 
     # treat as static final
@@ -478,6 +479,12 @@ class BuildCfg:
 
 
 @dataclasses.dataclass(frozen=True)
+class PackageBuildCfg:
+    aws_cfg_name: str
+    s3_bucket_name: str
+
+
+@dataclasses.dataclass(frozen=True)
 class AzureMarketplaceCfg:
     offer_id: str
     publisher_id: str
@@ -505,6 +512,7 @@ class AzurePublishCfg:
     plan_id: str
     service_principal_cfg_name: str
     storage_account_cfg_name: str
+    notification_emails: typing.Tuple[str, ...]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -546,6 +554,7 @@ class CicdCfg:
     build: BuildCfg
     publish: PublishCfg
     notify: NotificationCfg
+    package_build: typing.Optional[PackageBuildCfg]
 
 
 epoch_date = datetime.datetime.fromisoformat('2020-04-01')

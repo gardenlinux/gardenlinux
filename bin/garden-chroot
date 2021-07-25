@@ -30,7 +30,6 @@ unshare --mount bash -Eeuo pipefail -c '
 	[ -n "$targetDir" ] # just to be safe
 	for dir in dev proc sys; do
 		if [ -e "$targetDir/$dir" ]; then
-			# --debian-eol woody and below have no /sys
 			mount --rbind "/$dir" "$targetDir/$dir"
 		fi
 	done

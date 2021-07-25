@@ -110,3 +110,6 @@ if you want to manually build choose:
 builds a server image, cloud-like, with a container host for the VMware platform. The build result can be found in `build/`
 
 also look into our [Version scheme](VERSION.md) since adding a date or a Version targets the whole build for a specific date
+
+## Pipeline Integration
+Garden Linux can build in an automated way for continous integration. See [ci/README.md](ci/README.md) for details.

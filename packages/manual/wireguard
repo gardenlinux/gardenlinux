@@ -2,7 +2,7 @@
 set -euo pipefail
 
 . $(dirname $0)/.helper
-. $(dirname $0)/linux.d/VERSION
+. $(dirname $0)/linux-5.4.d/VERSION
 
 sudo apt-get install -y --no-install-recommends debhelper wireguard-dkms=${WIREGUARD_VERSION}*
 sudo apt-get install -y --no-install-recommends -f  \
@@ -15,14 +15,10 @@ for i in $KERNEL_FLAVOURS; do
 		$BUILDTARGET/main/l/linux/linux-headers-${i}-${KERNEL_ARCH}_${KERNEL_VERSION}-1_${KERNEL_ARCH}.deb
 done
 
-mkdir -p certdir
-openssl pkcs12 -in /kernel.p12 -out certdir/kernel.key -nodes -nocerts -passin pass:""
-openssl pkcs12 -in /kernel.p12 -out certdir/kernel.crt -nodes -nokeys  -passin pass:""
-
 mkdir -p dkms
 for i in ${KERNEL_FLAVOURS}; do
-	dkms build wireguard/${WIREGUARD_VERSION} --dkmsframework /home/dev/manual/wireguard.d/framework.conf -k $i --kernelsourcedir=/usr/src/linux-headers-$i-${KERNEL_ARCH}/ 
-	dkms mkbmdeb wireguard/${WIREGUARD_VERSION} --dkmsframework /home/dev/manual/wireguard.d/framework.conf -k $i
+	dkms build wireguard/${WIREGUARD_VERSION} --dkmsframework ${WORKDIR}/manual/wireguard.d/framework.conf -k $i-${KERNEL_ARCH}
+	dkms mkbmdeb wireguard/${WIREGUARD_VERSION} --dkmsframework ${WORKDIR}/manual/wireguard.d/framework.conf -k $i-${KERNEL_ARCH}
 done
 
 targetpath="$(apt-cache showsrc $src | grep "^Directory" | cut -d: -f2- | cut -d'/' -f2- | head -n1)"

@@ -22,3 +22,7 @@
 /etc/cron.d/e2scrub_all
 /var/lib/dbus/machine-id
 /usr/games
+/initrd.img
+/initrd.img.old
+/vmlinuz
+/vmlinuz.old

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+. $(dirname $0)/.helper
+
+sudo apt-get install -y --no-install-recommends git equivs
+git clone https://github.com/GoogleCloudPlatform/guest-oslogin.git $src
+
+cd $src
+mv packaging/debian .
+rm -rf packaging
+version=$(dpkg-parsechangelog --show-field Version | sed "s/[0-9]*:\?\([^\-]*\)-\?.*/\1/")
+dch -i 'rebuild since no offical package anymore'
+dch -r ''
+TMPDIR=.. mk-build-deps debian/control
+sudo apt-get install -y --no-install-recommends -f ../$src-build-deps_*_all.deb
+
+donotmove="$(ls ..)"
+tar cJf ../${src}_${version}.orig.tar.xz -C .. ${src}
+debuild
+sourcepath=main/g/google-compute-image-packages/
+move_package .. $donotmove
+

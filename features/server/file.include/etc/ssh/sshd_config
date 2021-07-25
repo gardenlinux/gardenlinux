@@ -1,0 +1,47 @@
+# Disable root login.
+PermitRootLogin no
+
+# Only use the more secure SSHv2 protocol.
+Protocol 2
+
+# No X11 forwarding.
+X11Forwarding no
+
+# Check permissions of configuration files related to SSH on login.
+# If this fails, the user won’t be able to login.
+StrictModes yes
+
+# Disable host-based authentications.
+IgnoreRhosts yes
+HostbasedAuthentication no
+
+# Set log level to be verbose.
+# we need to log the fingerprint
+LogLevel VERBOSE 
+
+# Ensure usage of PAM
+UsePAM yes
+
+# Use secure Ciphers
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
+MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com
+KexAlgorithms curve25519-sha256@libssh.org,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256,diffie-hellman-group-exchange-sha256
+
+PrintMotd no
+
+# Allow client to pass locale environment variables
+AcceptEnv LANG
+
+# override default of no subsystems
+Subsystem sftp  /usr/lib/ssh/sftp-server -f AUTHPRIV -l INFO
+
+# autologout inactive users after 10 minutes
+ClientAliveInterval 600
+ClientAliveCountMax 0
+
+# Password based logins are disabled - only public key based logins are allowed.
+AuthenticationMethods publickey
+
+# Supported HostKey algorithms by order of preference.
+HostKey /etc/ssh/ssh_host_ed25519_key
+HostKey /etc/ssh/ssh_host_rsa_key

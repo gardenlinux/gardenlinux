@@ -71,7 +71,7 @@ mv bin/* /build
 endef
 export BASH_BUILD
 
-all: Kernel.sign.p12 sign.pub 
+all: Kernel.sign.crt sign.pub 
 test:
 	echo "$(INTERNAL_HOSTNAME)"
 
@@ -198,7 +198,12 @@ sign.key:
 	gpg --export-secret-key --armor $(MAINTAINER_EMAIL) > sign.key
 
 #### cleaning
+PHONY: clean
 clean:
-	rm -f *.crt *.key *.pub *.csr *.p12
+	@echo "removing *.full  *.chain *.crt *.key *.csr *.p12 but nothing with gardenlinux.*"
+	@find . \( -name '*.full' -o -name '*.crt' -o -name '*.pub' -o -name '*.key' -o -name '*.csr' -o -name '*.p12' -o -name '*.chain' \) -a -not -name 'gardenlinux.*' -exec rm -f {} \;
+
+PHONY: superclean
+superclean: clean
 	rm -rf cfssl
 

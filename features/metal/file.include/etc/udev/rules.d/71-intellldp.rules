@@ -1,0 +1,1 @@
+SUBSYSTEM=="net", ACTION=="add|change", DRIVERS=="i40e", PROGRAM="/sbin/ethtool --set-priv-flags %k disable-fw-lldp on"

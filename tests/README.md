@@ -12,7 +12,7 @@ apt-get update && apt install python3 -t bullseye
 install pipenv and install dependencies:
 ```
 apt-get update && apt-get install pipenv
-pipenv install -dev
+pipenv install --dev
 ```
 
 ## auto-format using black

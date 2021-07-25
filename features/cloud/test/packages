@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+rootfsDir=$1
+thisDir=$(readlink -e "$(dirname "${BASH_SOURCE[0]}")")
+rootfsDir=$(readlink -e "$rootfsDir")
+
+source "${thisDir}/helpers"
+
+run_in_chroot ${rootfsDir} packages.validate

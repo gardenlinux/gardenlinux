@@ -21,7 +21,4 @@ targetDir="${1:-}"; shift || eusage 'missing target-dir'
 
 arch="$("$thisDir/garden-chroot" "$targetDir" dpkg --print-architecture)"
 
-# --debian-eol woody likes to give us "i386-none"
-arch="${arch%-none}"
-
 echo "$arch" | awk -F- '{ print $NF }'

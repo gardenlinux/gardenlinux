@@ -1,5 +1,8 @@
 gdisk
 curl
+dosfstools
+btrfs-progs
+xfsprogs
 main/d/dracut/dracut-core_051-1.1_${arch}.deb
 main/d/dracut/dracut_051-1.1_all.deb
 main/d/dracut/dracut-network_051-1.1_all.deb

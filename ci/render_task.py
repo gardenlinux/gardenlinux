@@ -6,98 +6,149 @@ import os
 
 import yaml
 
-import steps
 import tasks
 import tkn.model
-import paths
 
 
 NamedParam = tkn.model.NamedParam
+SecretName = tkn.model.SecretName
+SecretVolume = tkn.model.SecretVolume
+
+
+def multiline_str_presenter(dumper, data):
+    try:
+        dlen = len(data.splitlines())
+        if (dlen > 1):
+            return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+    except TypeError:
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+    return dumper.represent_scalar('tag:yaml.org,2002:str', data)
 
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--use-secrets-server', action='store_true')
     parser.add_argument('--outfile', default='tasks.yaml')
+    parser.add_argument('--giturl', default='https://github.com/gardenlinux/gardenlinux')
+    parser.add_argument('--minimal', action='store_true',  help='omit prebuild and promote steps')
 
     parsed = parser.parse_args()
 
-    build_task_yaml_path = os.path.join(paths.own_dir, 'build-task.yaml.template')
-    with open(build_task_yaml_path) as f:
-        raw_build_task = yaml.safe_load(f)
+    if not parsed.use_secrets_server:
+        env_vars = [{
+            'name': 'SECRETS_SERVER_CACHE',
+            'value': '/secrets/config.json',
+        }]
+        volume_mounts = [{
+            'name': 'secrets',
+            'mountPath': '/secrets',
+        }]
+        volumes = [SecretVolume(name='secrets', secret=SecretName(secretName='secrets')), ]
+    else:
+        env_vars = []
+        volume_mounts = []
+        volumes = []
+
+    if secret_key := os.getenv('SECRET_KEY'):
+        env_vars.append({
+            'name': 'SECRET_KEY',
+            'value': secret_key,
+        })
+    if concourse_current_team := os.getenv('CONCOURSE_CURRENT_TEAM'):
+        env_vars.append({
+            'name': 'CONCOURSE_CURRENT_TEAM',
+            'value': concourse_current_team,
+        })
+    if secret_server_concourse_cfg_name := os.getenv('SECRETS_SERVER_CONCOURSE_CFG_NAME'):
+        env_vars.append({
+            'name': 'SECRETS_SERVER_CONCOURSE_CFG_NAME',
+            'value': secret_server_concourse_cfg_name,
+        })
+    if secret_cipher_algorithm := os.getenv('SECRET_CIPHER_ALGORITHM'):
+        env_vars.append({
+            'name': 'SECRET_CIPHER_ALGORITHM',
+            'value': secret_cipher_algorithm,
+        })
+        if secret_cipher_algorithm == 'PLAINTEXT':
+            env_vars.append({
+                'name': 'PYTHONPATH',
+                'value': '/cc/utils',
+            })
+
+
+    base_build_task = tasks.base_image_build_task(
+        volumes=volumes,
+        volume_mounts=volume_mounts,
+        env_vars=env_vars,
+    )
+    raw_base_build_task = dataclasses.asdict(base_build_task)
+
+    package_task = tasks.nokernel_package_task(
+        package_name=NamedParam(name='pkg_name'),
+        repo_dir=NamedParam('repo_dir'),
+        env_vars=env_vars,
+        volumes=volumes,
+        volume_mounts=volume_mounts,
+    )
+    raw_package_task = dataclasses.asdict(package_task)
+
+    kernel_package_task = tasks.kernel_package_task(
+        repo_dir=NamedParam('repo_dir'),
+        package_names=NamedParam('pkg_names'),
+        env_vars=env_vars,
+        volumes=volumes,
+        volume_mounts=volume_mounts,
+    )
+    raw_kernel_package_task = dataclasses.asdict(kernel_package_task)
+
+    build_task = tasks.build_task(
+        env_vars=env_vars,
+        volumes=volumes,
+        volume_mounts=volume_mounts,
+    )
+    raw_build_task = dataclasses.asdict(build_task)
 
     promote_task = tasks.promote_task(
         branch=NamedParam(name='branch'),
-        committish=NamedParam(name='committish'),
-        gardenlinux_epoch=NamedParam(name='gardenlinux_epoch'),
-        snapshot_timestamp=NamedParam(name='snapshot_timestamp'),
         cicd_cfg_name=NamedParam(name='cicd_cfg_name'),
-        version=NamedParam(name='version'),
-        promote_target=NamedParam(name='promote_target'),
-        publishing_actions=NamedParam(name='publishing_actions'),
+        committish=NamedParam(name='committish'),
         flavourset=NamedParam(name='flavourset'),
+        gardenlinux_epoch=NamedParam(name='gardenlinux_epoch'),
+        publishing_actions=NamedParam(name='publishing_actions'),
+        snapshot_timestamp=NamedParam(name='snapshot_timestamp'),
+        version=NamedParam(name='version'),
+        env_vars=env_vars,
+        volumes=volumes,
+        volume_mounts=volume_mounts,
     )
 
     raw_promote_task = dataclasses.asdict(promote_task)
 
-
-    clone_step = steps.clone_step(
-        committish=tkn.model.NamedParam(name='committish'),
-        repo_dir=tkn.model.NamedParam(name='repodir'),
-        git_url=tkn.model.NamedParam(name='giturl'),
+    notify_task = tasks.notify_task(
+        env_vars=env_vars,
+        volumes=volumes,
+        volume_mounts=volume_mounts,
     )
+    raw_notify_task = dataclasses.asdict(notify_task)
 
-    clone_step_dict = dataclasses.asdict(clone_step)
-
-    pre_build_step = steps.pre_build_step(
-        cicd_cfg_name=NamedParam(name='cicd_cfg_name'),
-        committish=tkn.model.NamedParam(name='committish'),
-        version=NamedParam(name='version'),
-        gardenlinux_epoch=NamedParam(name='gardenlinux_epoch'),
-        modifiers=NamedParam(name='modifiers'),
-        architecture=NamedParam(name='architecture'),
-        platform=NamedParam(name='platform'),
-        repo_dir=tkn.model.NamedParam(name='repodir'),
-    )
-
-    pre_build_step_dict = dataclasses.asdict(pre_build_step)
-
-    upload_step = steps.upload_results_step(
-        cicd_cfg_name=NamedParam(name='cicd_cfg_name'),
-        committish=NamedParam(name='committish'),
-        architecture=NamedParam(name='architecture'),
-        platform=NamedParam(name='platform'),
-        gardenlinux_epoch=NamedParam(name='gardenlinux_epoch'),
-        modifiers=NamedParam(name='modifiers'),
-        version=NamedParam(name='version'),
-        outfile=NamedParam(name='outfile'),
-        repo_dir=tkn.model.NamedParam(name='repodir'),
-    )
-
-    upload_step_dict = dataclasses.asdict(upload_step)
-
-    promote_step = steps.promote_single_step(
-        cicd_cfg_name=NamedParam(name='cicd_cfg_name'),
-        committish=NamedParam(name='committish'),
-        architecture=NamedParam(name='architecture'),
-        platform=NamedParam(name='platform'),
-        gardenlinux_epoch=NamedParam(name='gardenlinux_epoch'),
-        modifiers=NamedParam(name='modifiers'),
-        version=NamedParam(name='version'),
-        promote_target=NamedParam(name='promote_target'),
-        publishing_actions=NamedParam(name='publishing_actions'),
-        repo_dir=tkn.model.NamedParam(name='repodir'),
-    )
-
-    promote_step_dict = dataclasses.asdict(promote_step)
-
-    # hack: patch-in clone-step (avoid redundancy with other tasks)
-    raw_build_task['spec']['steps'][0] = clone_step_dict
-    raw_build_task['spec']['steps'][1] = pre_build_step_dict
-    raw_build_task['spec']['steps'][-1] = upload_step_dict
-    raw_build_task['spec']['steps'].append(promote_step_dict)
+    # Set a custom string representer so that script tags are rendered as
+    # | block style
+    # This should do the trick but add_representer has noeffect on safe dumper
+    # yaml.add_representer(str, multiline_str_presenter)
+    yaml.representer.SafeRepresenter.add_representer(str, multiline_str_presenter)
 
     with open(parsed.outfile, 'w') as f:
-        yaml.safe_dump_all((raw_build_task, raw_promote_task), f)
+        yaml.safe_dump_all(
+            (
+                raw_base_build_task,
+                raw_build_task,
+                raw_kernel_package_task,
+                raw_package_task,
+                raw_promote_task,
+                raw_notify_task,
+            ),
+            f,
+        )
 
     print(f'dumped tasks to {parsed.outfile}')
 

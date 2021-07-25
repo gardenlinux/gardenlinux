@@ -5,6 +5,7 @@ from datetime import (
 )
 from enum import Enum
 import logging
+import typing
 
 import requests
 import version
@@ -467,6 +468,7 @@ def upload_and_publish_image(
     storage_account_cfg: glci.model.AzureStorageAccountCfg,
     marketplace_cfg: glci.model.AzureMarketplaceCfg,
     release: glci.model.OnlineReleaseManifest,
+    notification_emails: typing.Tuple[str, ...],
 ) -> glci.model.OnlineReleaseManifest:
     '''Copies an image from S3 to an Azure Storage Account, updates the corresponding
     Azure Marketplace offering and publish the offering.
@@ -491,7 +493,7 @@ def upload_and_publish_image(
         marketplace_cfg=marketplace_cfg,
         image_version=azure_version,
         image_url=image_url,
-        notification_recipients=(), # TODO Mail receipants
+        notification_recipients=notification_emails,
     )
 
     published_image = glci.model.AzurePublishedImage(

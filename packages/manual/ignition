@@ -3,17 +3,17 @@ set -euo pipefail
 
 . $(dirname $0)/.helper
 
-sudo apt-get install -y golang libblkid-dev --no-install-recommends
+sudo apt-get install --no-install-recommends -y git golang libblkid-dev
 
-VERSION="2.9.0"
+VERSION="2.10.1"
 
-wget https://github.com/coreos/ignition/archive/v${VERSION}.tar.gz	
-tar zxf "v${VERSION}.tar.gz" -C .
-cd "ignition-${VERSION}"
+git clone https://github.com/coreos/ignition.git
+cd ignition
+git checkout v${VERSION}
 patch -p1 < "${srcDir}/build.patch"
-mkdir -p "${thisDir}/package"
-sudo make VERSION="v${VERSION}" DESTDIR="${thisDir}/package" install 
-cd "${thisDir}"
-sudo tar -C package/ -czf "ignition-${VERSION}.tar.gz" usr 
 
-sudo mv "ignition-${VERSION}.tar.gz" /pool/
+mkdir .build
+make VERSION="v${VERSION}" DESTDIR=".build" install
+tar --owner=root --group=root -C .build/ -czf "ignition-${VERSION}.tar.gz" usr
+
+sudo mv "ignition-${VERSION}.tar.gz" ${BUILDTARGET}

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -u
+
+rc=0
+
+echo "checking for wireguard capabilities"
+if find /lib/modules/*/kernel/drivers/net/wireguard/wireguard.ko > /dev/null; then 
+    echo "OK - capable for wireguarding"
+else
+    echo "FAIL - wireguard not available"
+    exit 1
+fi

@@ -13,3 +13,5 @@ xfsprogs
 btrfs-progs
 jq
 ipvsadm
+cifs-utils
+nfs-common

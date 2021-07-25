@@ -37,7 +37,6 @@ run_in_chroot() {
 	if out=$(unshare --mount bash -Eeuo pipefail -c '
 	for dir in dev proc sys; do
 		if [ -e "$rootfsDir/$dir" ]; then
-			# --debian-eol woody and below have no /sys
 			mount --rbind "/$dir" "$rootfsDir/$dir"
 		fi
 	done

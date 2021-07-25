@@ -1,0 +1,1 @@
+ACTION=="add|change", SUBSYSTEM=="block", ATTRS{queue/rotational}=="1", RUN+="/usr/bin/hdparm -B 254 -S 0 /dev/%k"
