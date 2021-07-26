@@ -8,7 +8,6 @@ RUN	mkdir /etc/sudoers.d \
      && echo "deb-src https://deb.debian.org/debian testing main" >> /etc/apt/sources.list \
      &&	echo "#deb https://deb.debian.org/debian unstable main" >> /etc/apt/sources.list \
      && echo "#deb-src https://deb.debian.org/debian unstable main" >> /etc/apt/sources.list \
-     &&	echo "debconf debconf/frontend select Noninteractive" | debconf-set-selections \
      && echo "APT::Install-Recommends false;\nAPT::Install-Suggests false;\nApt::AutoRemove::SuggestsImportant false;\n" > /etc/apt/apt.conf.d/no-recommends \
      &&	echo "progress=bar:force:noscroll" >> /etc/wgetrc \
      &&	echo "force-confold\nforce-confdef" > /etc/dpkg/dpkg.cfg.d/forceold 

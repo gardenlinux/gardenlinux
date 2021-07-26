@@ -1,14 +1,14 @@
-FROM gardenlinux/slim
-ENV	DEBIAN_FRONTEND noninteractive
+FROM	gardenlinux/slim
+ARG	DEBIAN_FRONTEND noninteractive
 RUN	apt-get update \
      &&	apt-get install -y --no-install-recommends \
 		curl \
 		unzip \
-        ca-certificates \
-        less \
-        apt-transport-https gnupg \
-        pipenv \
-        vim-tiny \
+        	ca-certificates \
+        	less \
+        	apt-transport-https gnupg \
+        	pipenv \
+        	vim-tiny \
      && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
      && unzip awscliv2.zip \
      && ./aws/install \
