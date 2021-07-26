@@ -10,6 +10,9 @@ gpg --tofu-policy good 647F28654894E3BD457199BE38DBBDC86092693E
 # Steven Rostedt <rostedt@goodmis.org>
 gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys 514B0EDE3C387F944FB3799329E574109AEBFAAA
 gpg --tofu-policy good 514B0EDE3C387F944FB3799329E574109AEBFAAA
+# Tom Zanussi <tom.zanussi@linux.intel.com>
+gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys ACF85F9816A8D5F096AE1FD20129F38552C38DF1
+gpg --tofu-policy good ACF85F9816A8D5F096AE1FD20129F38552C38DF1
 	
 echo "### updating package repsitory"
 sudo apt-get update
@@ -58,11 +61,12 @@ patch -p1 < $srcDir/fuzz.patch
 
 patch -p1 < $srcDir/relax.patch
 #patch -p1 < $srcDir/udev.patch
-patch -p1 < $srcDir/version.patch
 patch -p1 < $srcDir/analogix.patch
 patch -p1 < $srcDir/series.patch
 
 patch -p1 < $srcDir/python3-dev.patch
+patch -p1 < $srcDir/version.patch
+patch -p1 < $srcDir/0003-MODSIGN.patch
 
 echo "### populating the changelog"
 mv debian/changelog debian/changelog.tmp
