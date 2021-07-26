@@ -85,6 +85,10 @@ cd $src
 echo "### setting Garden Linux abi"
 sed -i "s/abiname:.*/abiname:$KERNEL_ABI/" debian/config/defines
 sed -i "s/enabled: true/enabled: false/" debian/config/defines
+sed -i "/^ cloud-amd64i$/d" debian/config/amd64/none/defines
+
+export DEB_BUILD_OPTIONS="nodoc tersee"
+export DEB_BUILD_PROFILES="nodoc nopython pkg.linux.nosource pkg.linux.notools"
 
 echo "### patching Garden Linux enhancements"
 patch -p1 < $srcDir/rt-0038.patch
