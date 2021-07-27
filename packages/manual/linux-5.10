@@ -71,7 +71,7 @@ if $(dpkg --compare-versions $KERNEL_DEBIAN lt $KERNEL_VERSION); then
 	cd ..
 
 	# checking out linux stable to have the whole changelog from the kernel readable for debian/bin/stable-update
-	git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+        git clone --single --branch linux-$(echo $KERNEL_BASE | sed s/0$/y/) --bare https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 
 	cd $src
 	debian/bin/stable-update ../linux-stable $KERNEL_VERSION
@@ -85,14 +85,14 @@ cd $src
 echo "### setting Garden Linux abi"
 sed -i "s/abiname:.*/abiname:$KERNEL_ABI/" debian/config/defines
 sed -i "s/enabled: true/enabled: false/" debian/config/defines
-sed -i "/^ cloud-amd64i$/d" debian/config/amd64/none/defines
+#sed -i "/^ cloud-amd64$/d" debian/config/amd64/none/defines
 
 export DEB_BUILD_OPTIONS="nodoc tersee"
 export DEB_BUILD_PROFILES="nodoc nopython pkg.linux.nosource pkg.linux.notools"
 
 echo "### patching Garden Linux enhancements"
 patch -p1 < $srcDir/rt-0038.patch
-patch -p1 < $srcDir/fpga-ofs.patch
+cp $srcDir/fpga-ofs.patch debian/patches
 patch -p1 < $srcDir/fpga-config.patch
 patch -p1 < $srcDir/series.patch
 
@@ -108,11 +108,6 @@ $(cat $srcDir/changelog)
  -- Garden Linux Maintainers <contact@gardenlinux.io>  $(date -R)
 
 EOF
-
-cd ..
-# checking out linux stable to have the whole changelog from the kernel readable for debian/bin/stable-update
-git clone --single --branch linux-$(echo $KERNEL_BASE | sed s/0$/y/) --bare https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-cd $src
 
 touch debian/changelog.newkernel
 cat debian/changelog.new debian/changelog.newkernel debian/changelog.org > debian/changelog
