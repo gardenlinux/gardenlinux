@@ -44,8 +44,23 @@ dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
 if [ -z "${prefix+x}" ]; then
   prefix="/$serial/$dpkgArch/$suite"
 fi
+
 exportDir="output"
 outputDir="$exportDir$prefix"
+volumeDir="/output$prefix"
+buildLog="${volumeDir}/build.log"
+
+mkdir -p "${volumeDir}"
+touch "${buildLog}"
+chown -R "$userID":"$userID" "${volumeDir}"
+
+volDirOwn="$volumeDir"
+while [ $(dirname "${volDirOwn}") != "/" ]; do
+	volDirOwn=$(dirname "${volDirOwn}")
+	chown "${userID}":"${userGID}" "${volDirOwn}"
+done
+
+exec > >(tee -a "${buildLog}") 2> >(tee -a "${buildLog}" >&2)
 
 touch_epoch() {
 	while [ "$#" -gt 0 ]; do
@@ -286,33 +301,6 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 		create_artifacts "$targetBase" "$rootfs" "$suite" "$variant"
 	done
 
-#	if [ "$codename" != "$suite" ]; then
-#		codenameDir="$exportDir/$serial/$dpkgArch/$codename"
-#		mkdir -p "$codenameDir"
-#		tar -cC "$outputDir" --exclude="**/rootfs.*" . | tar -xC "$codenameDir"
-#
-#		for rootfs in rootfs*/; do
-#			rootfs="${rootfs%/}" # "rootfs", "rootfs-slim", ...
-#
-#			variant="${rootfs#rootfs}" # "", "-slim", ...
-#			variant="${variant#-}" # "", "slim", ...
-#
-#			variantDir="$codenameDir/$variant"
-#			targetBase="$variantDir/rootfs"
-#
-#			# point sources.list back at snapshot.debian.org temporarily (but this time pointing at $codename instead of $suite)
-#			garden-debian-sources-list --snapshot "${sourcesListArgs[@]}" "$rootfs" "$codename"
-#
-#			create_artifacts "$targetBase" "$rootfs" "$codename" "$variant"
-#		done
-#	fi
 } >&2
 
-if [ ! -z "${OUT_FILE:-}" ]; then
-  tar_extra_args=(
-    "-f"
-    "${OUT_FILE}"
-  )
-fi
-
-tar --sparse -cC "$exportDir" . ${tar_extra_args[*]:-}
+find "${outputDir}" -type f -exec install -m 0644 -p -o "${userID}" -g "${userGID}" {} "${volumeDir}" \;
