@@ -34,7 +34,7 @@ manual: docker sign
 		--volume $(CERTDIR)/Kernel.sign.full:/kernel.full \
 		--volume $(CERTDIR)/Kernel.sign.crt:/kernel.crt \
 		--volume $(CERTDIR)/Kernel.sign.key:/kernel.key \
-		 --tmpfs /tmp:dev,exec,suid,noatime \
+		 --tmpfs /tmp:exec,noatime \
 	       	--env BUILDTARGET="/pool" \
 		--env BUILDIMAGE=$(BUILDIMAGE) \
 		--env DEBFULLNAME=$(DEBFULLNAME) \
