@@ -68,6 +68,8 @@ patch -p1 < $srcDir/python3-dev.patch
 patch -p1 < $srcDir/version.patch
 patch -p1 < $srcDir/0003-MODSIGN.patch
 patch -p1 < $srcDir/cpupower.patch
+patch -p1 < $srcDir/fs-add.patch
+patch -p1 < $srcDir/rt0133.patch
 
 echo "### populating the changelog"
 mv debian/changelog debian/changelog.tmp
