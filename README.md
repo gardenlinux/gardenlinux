@@ -18,6 +18,7 @@
 
 Garden Linux is a [Debian](https://debian.org) derivate that aims to provide a small, auditable linux image for most Cloud Providers and Bare Metal.
 
+
 ## Features:
 - easy to use build system for OS images
 - builds are repeatable and auditable
