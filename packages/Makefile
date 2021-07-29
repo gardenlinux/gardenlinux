@@ -6,7 +6,8 @@ DEBFULLNAME="Garden Linux Maintainers"
 DEBEMAIL="contact@gardenlinux.io"
 BUILDIMAGE="gardenlinux/build-deb"
 BUILDKERNEL="gardenlinux/build-kernel"
-
+BUILDVERSION=$$(../bin/garden-version)
+BUILDEPOCH=$$(../bin/garden-version --epoch)
 .PHONY: all
 all: pipeline
 
@@ -36,6 +37,8 @@ manual: docker sign
 		--volume $(CERTDIR)/Kernel.sign.key:/kernel.key \
 	       	--env BUILDTARGET="/pool" \
 		--env BUILDIMAGE=$(BUILDIMAGE) \
+		--env BUILDVERSION=$(BUILDVERSION) \
+		--env BUILDEPOCH=$(BUILDEPOCH) \
 		--env DEBFULLNAME=$(DEBFULLNAME) \
 		--env DEBEMAIL=$(DEBEMAIL) \
 		--env WORKDIR="/home/dev" \
@@ -53,6 +56,8 @@ pipeline: docker sign
 		--volume $(CERTDIR)/Kernel.sign.key:/kernel.key \
 	       	--env BUILDTARGET="/pool" \
 		--env BUILDIMAGE=$(BUILDIMAGE) \
+		--env BUILDVERSION=$(BUILDVERSION) \
+		--env BUILDEPOCH=$(BUILDEPOCH) \
 		--env DEBFULLNAME=$(DEBFULLNAME) \
 		--env DEBEMAIL=$(DEBEMAIL) \
 		--env WORKDIR="/home/dev" \
@@ -61,6 +66,8 @@ manual-kernel: docker-kernel
 	docker run --rm -ti --volume "$(POOLDIR)":/pool --volume "$(KERNELDIR)":/home/dev/manual \
 	       	--env BUILDTARGET="$(POOLDIR)" \
 		--env BUILDIMAGE="$(BUILDKERNEL)" \
+		--env BUILDVERSION=$(BUILDVERSION) \
+		--env BUILDEPOCH=$(BUILDEPOCH) \
 		--env DEBFULLNAME="$(DEBFULLNAME)" \
 		--env DEBEMAIL="$(DEBEMAIL)" \
 		--env WORKDIR="/home/dev" \
