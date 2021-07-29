@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+set -e
+set -o pipefail
+
+rc=0
+rootfsDir=$1
+
+absPath=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
+
+#if ! check_rootdir "${rootfsDir}"; then
+#	exit 1
+#fi
+
+# get all files with setuid bit set
+suidList=$(find ${rootfsDir} -type f -perm -4000 -exec stat -c "%n,%u,%g" {} \; 2> /dev/null | awk -v p=${rootfsDir%/} '{ gsub(p, "", $1); print;}' || true) 
+suidFile="${absPath}/suid.d/suid.list"
+
+echo "testing for suid files"
+
+# detect the suid files that are not whitelisted
+blacklist=$(echo "$suidList" | awk -F, '{ print $1 }' | grep -vxf <(awk -F, '{ print $1 }' ${suidFile}) || true) 
+if [[ ! -z "${blacklist}" ]]; then
+	rc=1
+	echo "FAIL - suid files are present that are not whitelisted!"
+	echo "       suid files: $(echo ${blacklist})"
+fi
+
+changed_err=""
+
+# iterate over suid files that don't match the whitelist (wrong uid/gid)
+while read -r changed; do
+	[[ -z "$changed" ]] && continue	
+	changed_err="${changed_err}"$(echo "       expected: "$(grep -w ${changed%%,*} ${suidFile}))"\n"
+	changed_err="${changed_err}"$(echo "       got     : "$(stat -c "%n,%u,%g" ${changed%%,*}))
+done <<< $(echo "$suidList" | grep -vxf "${suidFile}" | grep -vwf <(echo "${blacklist}")) 
+
+if [[ ! -z "$changed_err" ]]; then
+	rc=1
+	echo "FAIL - following files do not match - file,owner,group"
+	echo -e "$changed_err"
+fi
+
+if [[ "$rc" -eq 0 ]]; then 
+	echo "OK - all good"
+fi
+exit $rc

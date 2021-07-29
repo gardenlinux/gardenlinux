@@ -10,13 +10,13 @@ rc=0
 enabled=$(systemctl list-unit-files | awk '$2~/static/ { print $1; next} $2~/enabled/ { print $1; next; }')
 disabled=$(systemctl list-unit-files | awk '$2~/disabled/ { print $1; next}')
 
-if ! expectedEnabled=$(grep -vf <(echo "${enabled}") "${thisDir}/systemctl_enabled.list"); then 
+if ! expectedEnabled=$(grep -vf <(echo "${enabled}") "${thisDir}/systemctl.d/systemctl_enabled.list"); then 
 	echo "OK - all services that should be enabled are enabled"
 else
 	echo "FAIL - the following services should be enabled: ${expectedEnabled}"
 	rc=1
 fi
-if ! expectedDisabled=$(grep -vf <(echo "${disabled}") "${thisDir}/systemctl_disabled.list"); then
+if ! expectedDisabled=$(grep -vf <(echo "${disabled}") "${thisDir}/systemctl.d/systemctl_disabled.list"); then
 	echo "OK - all services that should be disabled are disabled"
 else
 	echo "FAIL - the following services should be disabled : ${expectedDisabled}"
