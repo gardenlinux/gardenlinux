@@ -21,6 +21,8 @@ def promote_task(
     publishing_actions: NamedParam,
     snapshot_timestamp: NamedParam,
     version: NamedParam,
+    ctx_repository_config_name: NamedParam,
+    snapshot_ctx_repository_config_name: NamedParam,
     env_vars=[],
     giturl: NamedParam = _giturl,
     name='promote-gardenlinux-task',
@@ -59,9 +61,25 @@ def promote_task(
         volume_mounts=volume_mounts,
     )
 
+    build_cd_step = steps.create_component_descriptor_step(
+        branch=branch,
+        repo_dir=_repodir,
+        committish=committish,
+        version=version,
+        gardenlinux_epoch=gardenlinux_epoch,
+        ctx_repository_config_name=ctx_repository_config_name,
+        snapshot_ctx_repository_config_name=snapshot_ctx_repository_config_name,
+        env_vars=env_vars,
+        publishing_actions=publishing_actions,
+        volume_mounts=volume_mounts,
+        cicd_cfg_name=cicd_cfg_name,
+    )
+
     params = [
         branch,
         cicd_cfg_name,
+        ctx_repository_config_name,
+        snapshot_ctx_repository_config_name,
         committish,
         flavourset,
         gardenlinux_epoch,
@@ -78,6 +96,7 @@ def promote_task(
             params=params,
             steps=[
                 clone_step,
+                build_cd_step,
                 promote_step,
                 release_step,
             ],

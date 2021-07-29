@@ -568,6 +568,43 @@ def build_base_image_step(
     )
 
 
+def create_component_descriptor_step(
+    repo_dir: tkn.model.NamedParam,
+    branch: tkn.model.NamedParam,
+    version: tkn.model.NamedParam,
+    committish: tkn.model.NamedParam,
+    cicd_cfg_name: tkn.model.NamedParam,
+    gardenlinux_epoch: tkn.model.NamedParam,
+    ctx_repository_config_name: tkn.model.NamedParam,
+    snapshot_ctx_repository_config_name: tkn.model.NamedParam,
+    publishing_actions: tkn.model.NamedParam,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
+):
+    return tkn.model.TaskStep(
+        name='component-descriptor',
+        image=DEFAULT_IMAGE,
+        script=task_step_script(
+            path=os.path.join(steps_dir, 'component_descriptor.py'),
+            script_type=ScriptType.PYTHON3,
+            callable='build_component_descriptor',
+            repo_path_param=repo_dir,
+            params=[
+                branch,
+                cicd_cfg_name,
+                committish,
+                ctx_repository_config_name,
+                gardenlinux_epoch,
+                publishing_actions,
+                snapshot_ctx_repository_config_name,
+                version,
+            ],
+        ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
+    )
+
+
 def notify_step(
     additional_recipients: tkn.model.NamedParam,
     cicd_cfg_name: tkn.model.NamedParam,

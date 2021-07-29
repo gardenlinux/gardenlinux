@@ -18,10 +18,11 @@ repo_root = os.path.abspath(os.path.join(
 
 
 class PublishingAction(enum.Enum):
-    MANIFESTS = 'manifests'
-    IMAGES = 'images'
-    RELEASE = 'release'
     BUILD_ONLY = 'build_only'
+    COMPONENT_DESCRIPTOR = 'component_descriptor'
+    IMAGES = 'images'
+    MANIFESTS = 'manifests'
+    RELEASE = 'release'
 
 
 class FeatureType(enum.Enum):
