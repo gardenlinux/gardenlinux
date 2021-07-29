@@ -1,4 +1,3 @@
-from os import name
 import steps
 import tkn.model
 

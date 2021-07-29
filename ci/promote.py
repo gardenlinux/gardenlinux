@@ -107,6 +107,7 @@ def _publish_alicloud_image(release: glci.model.OnlineReleaseManifest,
     maker.cp_image_from_s3(s3_client)
     return maker.make_image()
 
+
 def _clean_alicloud_image(release: glci.model.OnlineReleaseManifest,
                             cicd_cfg: glci.model.CicdCfg,
 ) -> glci.model.OnlineReleaseManifest:
@@ -123,6 +124,7 @@ def _clean_alicloud_image(release: glci.model.OnlineReleaseManifest,
         oss_auth, acs_client, release, cicd_cfg.build)
 
     return maker.delete_images()
+
 
 def _publish_aws_image(release: glci.model.OnlineReleaseManifest,
                        cicd_cfg: glci.model.CicdCfg,

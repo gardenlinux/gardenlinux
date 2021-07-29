@@ -226,7 +226,7 @@ def mk_pipeline_run(
     snapshot_timestamp = glci.model.snapshot_date(gardenlinux_epoch=gardenlinux_epoch)
 
     flavour_count = len(list(flavour_set.flavours()))
-    
+
     if flavour_count == 0:
         flavour_count = 1  # at least one workspace must be created
 

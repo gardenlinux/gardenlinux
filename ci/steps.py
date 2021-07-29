@@ -576,7 +576,7 @@ def notify_step(
     namespace: tkn.model.NamedParam,
     only_recipients: tkn.model.NamedParam,
     pipeline_name: tkn.model.NamedParam,
-    pipeline_run_name: tkn.model.NamedParam,    
+    pipeline_run_name: tkn.model.NamedParam,
     repo_dir: tkn.model.NamedParam,
     status_dict_str: tkn.model.NamedParam,
     env_vars: typing.List[typing.Dict] = [],
