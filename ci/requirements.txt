@@ -1,6 +1,9 @@
 aliyun-python-sdk-core==2.13.16
 aliyun-python-sdk-ecs==4.19.9
-azure-storage-blob==12.3.0
+azure-identity==1.6.0
+azure-mgmt-compute~=22.1.0
+azure-mgmt-storage~=18.0.0
+azure-storage-blob~=12.3.0
 boto3
 dacite==1.4.0 # bug in 1.5.0
 gardener-cicd-base
@@ -8,6 +11,7 @@ google-api-python-client
 google-auth
 google-cloud-storage
 msal==1.2.0
+msrestazure~=0.6.4
 oss2==2.12.1
 openstacksdk==0.50.0
 pyyaml
