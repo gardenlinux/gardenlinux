@@ -11,3 +11,11 @@
  
  # Lockdown missing pieces
  features/all/lockdown/efi-add-an-efi_secure_boot-flag-to-indicate-secure-b.patch
+@@ -106,7 +106,5 @@
+ 
+ # Improve integrity platform keyring for kernel modules verification
+ features/all/db-mok-keyring/0001-MODSIGN-do-not-load-mok-when-secure-boot-disabled.patch
+-features/all/db-mok-keyring/0002-MODSIGN-load-blacklist-from-MOKx.patch
+ features/all/db-mok-keyring/0003-MODSIGN-checking-the-blacklisted-hash-before-loading-a-kernel-module.patch
+-features/all/db-mok-keyring/0004-MODSIGN-check-the-attributes-of-db-and-mok.patch
+ features/all/db-mok-keyring/modsign-make-shash-allocation-failure-fatal.patch
