@@ -35,12 +35,6 @@ def azure_cfg():
         plan_id=cicd_cfg.publish.azure.plan_id,
     )
 
-    marketplace_client = glci.az.AzureMarketplaceClient(
-        spn_tenant_id=service_principal_cfg.tenant_id,
-        spn_client_id=service_principal_cfg.client_id,
-        spn_client_secret=service_principal_cfg.client_secret,
-    )
-
     return AzureCfg(
         client_id=service_principal_cfg.client_id,
         client_secret=service_principal_cfg.client_secret,
