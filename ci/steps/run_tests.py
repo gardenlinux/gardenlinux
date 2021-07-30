@@ -64,6 +64,7 @@ def run_tests(
     snapshot_timestamp: str,
     version: str,
     committish: str,
+    pytest_args: str = None,
 ):
     print(f'run_test with: {architecture=}, {cicd_cfg_name=}, {gardenlinux_epoch=}')
     print(f'   : {modifiers=}, {platform=}, {publishing_actions=}, {repo_dir=}')
@@ -93,13 +94,15 @@ def run_tests(
     )
 
     params_plugin = PyTestParamsPlugin(params)
-
-    test_dir = os.path.join(repo_dir, "integration_tests")
-    if not os.path.exists(test_dir):
-        print(f'Path for running tests: {test_dir} does not exist. Stopping')
-        return 1
-
+    if not pytest_args:
+        test_dir = os.path.join(repo_dir, "integration_tests")
+        if not os.path.exists(test_dir):
+            print(f'Path for running tests: {test_dir} does not exist. Stopping')
+            return 1
+        pytest_arg_list = [test_dir]
+    else:
+        pytest_arg_list = pytest_args
     print("Running integration tests")
-    result = pytest.main([test_dir], plugins=[params_plugin])
+    result = pytest.main(pytest_arg_list, plugins=[params_plugin])
     print(f'Integration tests finished with result {result=}')
     return result
