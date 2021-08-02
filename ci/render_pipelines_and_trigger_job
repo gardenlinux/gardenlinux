@@ -61,6 +61,9 @@ fi
 if [ ! -z "${ONLY_RECIPIENTS:-}" ]; then
   EXTRA_ARGS="${EXTRA_ARGS} --only-recipients=${ONLY_RECIPIENTS}"
 fi
+if [ ! -z "${PYTEST_CFG:-}" ]; then
+  EXTRA_ARGS="${PYTEST_CFG} --pytest-cfg={PYTEST_CFG}"
+fi
 
 cleanup_pipelineruns
 

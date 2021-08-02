@@ -38,6 +38,7 @@ def _get_modifier_names(gardenlinux_flavour):
     )
     return modifier_names
 
+
 def _generate_task_name(prefix: str, gardenlinux_flavour: GardenlinuxFlavour):
     task_name = prefix + gardenlinux_flavour.canonical_name_prefix().replace('/', '-')\
         .replace('_', '').strip('-')\
@@ -47,7 +48,6 @@ def _generate_task_name(prefix: str, gardenlinux_flavour: GardenlinuxFlavour):
         print(f'WARNING: {task_name=} too long - will shorten')
         task_name = task_name[:64]
     return task_name
-
 
 
 def mk_pipeline_base_build_task(
@@ -63,6 +63,7 @@ def mk_pipeline_base_build_task(
         ],
         runAfter=None,
     )
+
 
 def mk_pipeline_package_build_task(
     package_name: str,
@@ -82,12 +83,13 @@ def mk_pipeline_package_build_task(
         timeout="6h"
     )
 
+
 def mk_pipeline_kernel_package_build_task(
     package_names: str,
     run_after: typing.List[str],
 ):
     return PipelineTask(
-        name=f'build-kernel-packages',
+        name='build-kernel-packages',
         taskRef=TaskRef(name='build-kernel-packages'),
         params=[
             pass_param(name='giturl'),
@@ -99,6 +101,7 @@ def mk_pipeline_kernel_package_build_task(
         runAfter=run_after,
         timeout="6h"
     )
+
 
 def mk_pipeline_build_task(
     gardenlinux_flavour: GardenlinuxFlavour,
@@ -154,6 +157,7 @@ def mk_pipeline_test_task(
             NamedParam(name='modifiers', value=modifier_names),
             NamedParam(name='platform', value=gardenlinux_flavour.platform),
             pass_param(name='publishing_actions'),
+            pass_param(name='pytest_cfg'),
             pass_param(name='snapshot_timestamp'),
             pass_param(name='version'),
         ],
@@ -249,11 +253,15 @@ def mk_pipeline_packages():
     run_after = [pkg.name for pkg in package_tasks]
     tasks += package_tasks
 
-    # build packages depending on the Liniux kernel (need to be build in sequence to share file system):
+    # build packages depending on the Liniux kernel (need to be build in sequence to share file
+    # system):
     # pkg_kernel_names = "linux-5.4, linux-5.4-signed, wireguard"
     pkg_kernel_names = "linux-5.10 linux-5.10-signed"
 
-    package_kernel_task = mk_pipeline_kernel_package_build_task(pkg_kernel_names, [base_build_task.name])
+    package_kernel_task = mk_pipeline_kernel_package_build_task(
+        pkg_kernel_names,
+        [base_build_task.name],
+    )
 
     run_after += package_kernel_task.name
     tasks.append(package_kernel_task)
@@ -355,6 +363,7 @@ def mk_pipeline(
                 NamedParam(name='version'),
                 NamedParam(name='version_label'),
                 NamedParam(name='disable_notifications'),
+                NamedParam(name='pytest_cfg'),
                 NamedParam(
                     name='additional_recipients',
                     description='see notify-task',
@@ -411,7 +420,6 @@ def main():
         flavour_set_name=parsed.flavour_set,
         build_yaml=build_yaml,
     )
-
 
     # generate pipeline for packages:
     pipeline: dict = mk_pipeline_packages()

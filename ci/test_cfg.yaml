@@ -1,0 +1,18 @@
+test_cfgs:
+    default:
+      architecture:
+        amd64:
+          platform:
+            ali: integration_tests/${platform}
+            aws: integration_tests/aws
+            azure: integration_tests/${platform}
+            gcp: integration_tests/${platform}
+            openstack: integration_tests/${platform}
+        arm64:
+          platform:
+            aws: integration_tests/aws_for_${architecture}
+    test_only_aws:
+      architecture:
+        amd64:
+          platform:
+            aws: integration_tests/aws

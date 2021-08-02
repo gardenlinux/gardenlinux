@@ -10,6 +10,7 @@ import glci.model
 from util import ctx
 import glci.util
 
+
 @dataclass
 class AzureCfg:
     client_id: str
@@ -55,7 +56,7 @@ def _get_credentials(azure_cfg: AzureCfg):
 @pytest.fixture(scope="session")
 def marketplace_client(azure_cfg) -> glci.az.AzureMarketplaceClient:
     '''
-    get an Azure marketplace client instance to further interact with marketplace 
+    get an Azure marketplace client instance to further interact with marketplace
     '''
     return glci.az.AzureMarketplaceClient(
         spn_tenant_id=azure_cfg.tenant_id,
@@ -67,7 +68,7 @@ def marketplace_client(azure_cfg) -> glci.az.AzureMarketplaceClient:
 @pytest.fixture(scope="session")
 def compute_client(azure_cfg):
     '''
-    get a Azure client instance to further interact with Azure compute instances 
+    get a Azure client instance to further interact with Azure compute instances
     '''
     credential = _get_credentials(azure_cfg)
 
@@ -77,7 +78,7 @@ def compute_client(azure_cfg):
 @pytest.fixture(scope="session")
 def storage_client(azure_cfg):
     '''
-    get a Azure client instance to further interact with Azure storage instances 
+    get a Azure client instance to further interact with Azure storage instances
     '''
     credential = _get_credentials(azure_cfg)
     return StorageManagementClient(credential, azure_cfg.subscription_id)

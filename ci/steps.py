@@ -683,6 +683,7 @@ def test_step(
     suite: tkn.model.NamedParam,
     snapshot_timestamp: tkn.model.NamedParam,
     version: tkn.model.NamedParam,
+    pytest_cfg: tkn.model.NamedParam,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -706,6 +707,7 @@ def test_step(
                 snapshot_timestamp,
                 suite,
                 version,
+                pytest_cfg,
             ],
         ),
         volumeMounts=volume_mounts,

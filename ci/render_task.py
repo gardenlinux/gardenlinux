@@ -118,7 +118,6 @@ def main():
         description='Name of the snapshot component-descriptor repository-context config to use',
     )
     test_task = tasks.test_task(
-        publishing_actions=NamedParam(name='publishing_actions'),
         env_vars=env_vars,
         volumes=volumes,
         volume_mounts=volume_mounts,

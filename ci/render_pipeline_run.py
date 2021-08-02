@@ -10,7 +10,6 @@ import glci.model
 import glci.util
 import tkn.model
 import paths
-import sys
 
 GardenlinuxFlavour = glci.model.GardenlinuxFlavour
 
@@ -212,6 +211,7 @@ def mk_pipeline_run(
     oci_path: str,
     version: str,
     additional_recipients: str = [],
+    pytest_cfg: str = '',
     only_recipients: str = [],
     node_selector: dict = {},
     security_context: dict = {},
@@ -308,6 +308,10 @@ def mk_pipeline_run(
                     name='only_recipients',
                     value=only_recipients,
                 ),
+                NamedParam(
+                    name='pytest_cfg',
+                    value=pytest_cfg,
+                ),
             ],
             pipelineRef=PipelineRef(
                 name=pipeline_name,
@@ -339,6 +343,7 @@ def main():
     parser.add_argument('--disable-notifications', action='store_const', const=True, default=False)
     parser.add_argument('--additional-recipients', default=' ')
     parser.add_argument('--only-recipients', default=' ')
+    parser.add_argument('--pytest-cfg', default='default')
     parser.add_argument(
         '--promote-target',
         type=glci.model.BuildType,
@@ -407,6 +412,7 @@ def main():
         version=version,
         additional_recipients=parsed.additional_recipients,
         only_recipients=parsed.only_recipients,
+        pytest_cfg=parsed.pytest_cfg,
     )
 
     pipeline_run_dict = dataclasses.asdict(pipeline_run)
