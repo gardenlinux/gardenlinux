@@ -1,12 +1,16 @@
-import logging 
+import logging
 import os
 import sys
 import yaml
 
 import glci.aws
+import pytest
+
 
 logger = logging.getLogger(__name__)
 
+
+@pytest.mark.skip(reason="Legacy test acts as example, currently disabled")
 def test_legacy(aws_cfg, ec2_client, s3_bucket, test_params):
     snapshot_task_id = glci.aws.import_snapshot(
         ec2_client=ec2_client,
