@@ -167,7 +167,9 @@ def _publish_azure_image(release: glci.model.OnlineReleaseManifest,
         cicd_cfg.publish.azure.service_principal_cfg_name
     )
     service_principal_cfg_serialized = glci.model.AzureServicePrincipalCfg(
-        **service_principal_cfg.raw
+        tenant_id=service_principal_cfg.tenant_id(),
+        client_id=service_principal_cfg.client_id(),
+        client_secret=service_principal_cfg.client_secret(),
     )
     storage_account_cfg = cfg_factory.azure_storage_account(
         cicd_cfg.publish.azure.storage_account_cfg_name
