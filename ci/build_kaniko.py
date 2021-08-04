@@ -35,7 +35,7 @@ def _prepare_for_kaniko_purgefs() -> _Kaniko_save_fs_state:
     certifi_certs_path = certifi.where()
     if not os.path.exists(certifi_bak):
       os.link(certifi_certs_path, certifi_bak)
-    
+
     ca_certs_bak = os.path.join('/', 'kaniko', 'ca-certificates.crt')
     ca_certs_path = os.path.join('/', 'etc', 'ssl', 'certs', 'ca-certificates.crt')
     if not os.path.exists(ca_certs_bak):
@@ -72,7 +72,7 @@ def _prepare_for_kaniko_purgefs() -> _Kaniko_save_fs_state:
         python_bak_dir = python_bak_dir,
         bin_dir = bin_dir,
         bin_bak_dir = bin_bak_dir,
-    ) 
+    )
 
 def _restore_after_kaniko_purgefs(state: _Kaniko_save_fs_state):
     import shutil
@@ -104,7 +104,7 @@ def build_and_push_kaniko(
     image_tag: str,
     additional_tags = None,
     build_args = None,
-    home_dir = os.getenv('HOME', default=os.getcwd()),
+    home_dir = '/kaniko',
     force: bool = False,
 ):
 
@@ -117,7 +117,7 @@ def build_and_push_kaniko(
       dockerfile_path=dockerfile_path,
       docker_cfg_path=docker_cfg_path,
     )
-    
+
     purge_state = _prepare_for_kaniko_purgefs()
 
     print("--- Doing kaniko build ---")
