@@ -404,6 +404,20 @@ def build_task(
         volume_mounts=volume_mounts,
     )
 
+    promote_single_step = steps.promote_single_step(
+        architecture=arch,
+        cicd_cfg_name=cicd_cfg_name,
+        committish=committish,
+        gardenlinux_epoch=glepoch,
+        modifiers=modifiers,
+        platform=platform,
+        publishing_actions=publishing_actions,
+        repo_dir=_repodir,
+        version=version,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+
     task_volumes = [v for v in volumes]
     task_volumes.extend(
         [{
@@ -441,6 +455,7 @@ def build_task(
                 pre_build_step,
                 build_image_step,
                 upload_step,
+                promote_single_step,
             ],
             volumes=task_volumes,
         ),
