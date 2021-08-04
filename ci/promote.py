@@ -65,7 +65,7 @@ def publish_image(
     elif release.platform == 'azure':
         publish_function = _publish_azure_image
         cleanup_function = None
-    elif False and release.platform == 'openstack': # disable openstack for now
+    elif release.platform == 'openstack':
         publish_function = _publish_openstack_image
         cleanup_function = None
     elif release.platform == 'oci':
@@ -279,10 +279,6 @@ def promote(
     flavour_set: glci.model.GardenlinuxFlavourSet,
     build_type: glci.model.BuildType,
 ):
-    upload_release_manifest_set = glci.util.preconfigured(
-        func=glci.util.upload_release_manifest_set,
-        cicd_cfg=cicd_cfg,
-    )
 
     if glci.model.PublishingAction.IMAGES in publishing_actions:
         executor = concurrent.futures.ThreadPoolExecutor(
@@ -295,28 +291,34 @@ def promote(
         for release in releases:
             print(release.published_image_metadata)
 
-    manifest_set = glci.model.ReleaseManifestSet(
-        manifests=releases,
-        flavour_set_name=flavour_set.name,
-    )
+        if glci.model.PublishingAction.MANIFESTS in publishing_actions:
+            upload_release_manifest_set = glci.util.preconfigured(
+                func=glci.util.upload_release_manifest_set,
+                cicd_cfg=cicd_cfg,
+            )
 
-    manifest_path = os.path.join(
-        target_prefix,
-        glci.util.release_set_manifest_name(
-            build_committish=build_committish,
-            gardenlinux_epoch=gardenlinux_epoch,
-            version=version_str,
-            flavourset_name=flavour_set.name,
-            build_type=build_type,
-        ),
-    )
+            manifest_set = glci.model.ReleaseManifestSet(
+                manifests=releases,
+                flavour_set_name=flavour_set.name,
+            )
 
-    upload_release_manifest_set(
-        key=manifest_path,
-        manifest_set=manifest_set,
-    )
+            manifest_path = os.path.join(
+                target_prefix,
+                glci.util.release_set_manifest_name(
+                    build_committish=build_committish,
+                    gardenlinux_epoch=gardenlinux_epoch,
+                    version=version_str,
+                    flavourset_name=flavour_set.name,
+                    build_type=build_type,
+                ),
+            )
 
-    print(f'uploaded manifest-set: {manifest_path=}')
+            upload_release_manifest_set(
+                key=manifest_path,
+                manifest_set=manifest_set,
+            )
+
+            print(f'uploaded manifest-set: {manifest_path=}')
 
 
 def main():

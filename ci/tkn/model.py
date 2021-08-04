@@ -22,7 +22,7 @@ def NamedParam(name: str, value: str = None, default: str = None, description: s
     if value is None and default is None:
         return _NamedParamBase(name=name)
     elif value is None and default:
-        return _NamedParamWithDefault(name=name, default=default)
+        return _NamedParamWithDefault(name=name, default=default, description=description)
     return _NamedParamWithValue(name=name, value=value)
 
 
@@ -36,8 +36,37 @@ class Workspace:
 @dataclasses.dataclass
 class Metadata:
     name: str
-    namespace: str
 
+
+@dataclasses.dataclass
+class HostPath:
+    path: str
+    type: str
+
+
+@dataclasses.dataclass
+class Volume:
+    name: str
+
+
+@dataclasses.dataclass
+class HostPathVolume(Volume):
+    hostPath: HostPath
+
+
+@dataclasses.dataclass
+class EmptyDirVolume(Volume):
+    medium: str
+
+
+@dataclasses.dataclass
+class SecretName():
+    secretName: str
+
+
+@dataclasses.dataclass
+class SecretVolume(Volume):
+    secret: SecretName
 
 @dataclasses.dataclass
 class VolumeMount:
@@ -45,11 +74,20 @@ class VolumeMount:
     name: str
 
 
+
+
+EnvVar = _NamedParamWithValue
+
+
 @dataclasses.dataclass
 class TaskStep:
     name: str
     image: str
     script: str
+    volumeMounts: typing.List[VolumeMount] = dataclasses.field(default_factory=list)
+    env: typing.List[EnvVar] = dataclasses.field(default_factory=list)
+    resources: typing.Dict = dataclasses.field(default_factory=dict)
+    securityContext: typing.Dict = dataclasses.field(default_factory=dict)
 
 
 @dataclasses.dataclass
@@ -57,6 +95,7 @@ class TaskSpec:
     params: typing.List[_NamedParamWithValue]
     steps: typing.List[TaskStep]
     workspaces: typing.List[_NamedParamBase] = dataclasses.field(default_factory=list)
+    volumes: typing.List[Volume] = dataclasses.field(default_factory=list)
     #volumeMounts: typing.List[VolumeMount]=dataclasses.field(default_factory=list)
 
 
@@ -80,14 +119,30 @@ class PipelineTask:
     params: typing.List[NamedParam]
     workspaces: typing.List[Workspace] = dataclasses.field(default_factory=list)
     runAfter: typing.List[str] = dataclasses.field(default_factory=list)
+    timeout: str = "1h"
 
 
 @dataclasses.dataclass
 class PipelineSpec:
+    _finally: str
     tasks: typing.List[PipelineTask]
     params: typing.List[NamedParam] = dataclasses.field(default_factory=list)
     workspaces: typing.List[NamedParam] = dataclasses.field(default_factory=list)
 
+    # special methods for handling finally which is a Python keyword
+    def __post_init__(self):
+        finally_attr = self.__dataclass_fields__.get('_finally')
+        finally_attr.name = 'finally'
+
+    def __getattribute__(self, name):
+        if name == 'finally':
+            name = '_finally'
+        return super().__getattribute__(name)
+
+    def __setattribute__(self, name, value):
+        if name == 'finally':
+            name = '_finally'
+        super().__setattribute__(name, value)
 
 @dataclasses.dataclass
 class Pipeline:
@@ -111,6 +166,7 @@ class PipelineRef:
 @dataclasses.dataclass
 class PodTemplate:
     nodeSelector: dict
+    securityContext: dict
 
 
 @dataclasses.dataclass
@@ -146,7 +202,7 @@ class PipelineRunSpec:
     pipelineRef: PipelineRef
     podTemplate: PodTemplate
     workspaces: typing.List[PipelineRunWorkspace]
-
+    timeout: str = '1h'
 
 @dataclasses.dataclass
 class PipelineRun:

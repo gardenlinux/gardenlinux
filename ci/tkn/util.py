@@ -22,6 +22,8 @@ class StatusReason(enum.Enum):
     SUCCEEDED = 'Succeeded'
     PIPELINE_RUN_STOPPING = 'PipelineRunStopping'
     PIPELINE_RUN_CANCELLED = 'PipelineRunCancelled'
+    TASK_RUN_CANCELLED = 'TaskRunCancelled'
+    EXCEEDED_NODE_RESOURCES = 'ExceededNodeResources'
 
 
 @dataclasses.dataclass
