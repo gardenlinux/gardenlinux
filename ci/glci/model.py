@@ -35,6 +35,7 @@ class FeatureType(enum.Enum):
     MODIFIER = 'modifier'
 
 
+# TODO: Check feasibility of using proper enum(s)
 Platform = str  # see `features/*/info.yaml` / platforms() for allowed values
 Modifier = str  # see `features/*/info.yaml` / modifiers() for allowed values
 

@@ -75,7 +75,7 @@ class OpenstackImageUploader:
 
 def upload_and_publish_image(
     s3_client,
-    openstack_environments_cfgs :typing.Tuple[glci.model.OpenstackEnvironment],
+    openstack_environments_cfgs: typing.Tuple[glci.model.OpenstackEnvironment],
     image_properties: dict,
     release: glci.model.OnlineReleaseManifest,
 ) -> glci.model.OnlineReleaseManifest:
@@ -87,12 +87,15 @@ def upload_and_publish_image(
         'properties': image_properties,
     }
 
+    openstack_release_artifact = glci.util.virtual_image_artifact_for_platform('openstack')
+    openstack_release_artifact_path = release.path_by_suffix(openstack_release_artifact)
+
     s3_image_url = s3_client.generate_presigned_url(
         'get_object',
         ExpiresIn=1200*len(openstack_environments_cfgs), # 20min validity for each openstack enviroment/region
         Params={
-            'Bucket': release.path_by_suffix('rootfs.vmdk').s3_bucket_name,
-            'Key': release.path_by_suffix('rootfs.vmdk').s3_key,
+            'Bucket': openstack_release_artifact_path.s3_bucket_name,
+            'Key': openstack_release_artifact_path.s3_key,
         },
     )
 
