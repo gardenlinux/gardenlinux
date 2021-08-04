@@ -53,7 +53,7 @@ sed -i "s/abiname:.*/abiname:$KERNEL_ABI/" debian/config/defines
 # to make sure we do not take this accidently
 rm -f debian/certs/debian-uefi-certs.pem
 cp /kernel.full debian/certs/gardenlinux-kernel-certs.pem
-sed -i "s/debian-uefi-certs.pem/gardenlinux-kernel-certs.pem/" debian/config/config debian/config/featureset*/config
+sed -i "s/debian-uefi-certs.pem/gardenlinux-kernel-certs.pem/" debian/config/config debian/config/featureset*/config debian/config/defines
 
 patch -p1 < $srcDir/builderror.patch
 patch -p1 < $srcDir/missinglds.patch
