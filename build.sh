@@ -46,6 +46,8 @@ version="$(bin/garden-version ${1:-})";	shift || /bin/true
 mkdir -p "$outputDir"
 outputDir="$(readlink -f "$outputDir")"
 
+userID=$(id -u)
+userGID=$(id -g)
 envArgs=(
 	TZ="UTC"
 	LC_ALL="C"
@@ -58,6 +60,8 @@ envArgs=(
 	features="$features"
 	version="$version"
 	notests="$notests"
+	userID="$userID"
+	userGID="$userGID"
 )
 
 securityArgs=( 
@@ -80,6 +84,7 @@ dockerArgs="--hostname garden-build
 	${securityArgs[*]}
 	${envArgs[*]/#/-e }
 	--volume ${thisDir}:/opt/gardenlinux
+	--volume ${outputDir}:/output
 	--mount type=bind,source=/dev,target=/dev"
 
 [ $lessram ] || dockerArgs+=" --tmpfs /tmp:dev,exec,suid,noatime"
@@ -104,6 +109,6 @@ else
 	trap 'stop $containerName' INT
 	docker run --name $containerName $dockerArgs --rm \
 		"${buildImage}" \
-		/opt/gardenlinux/bin/garden-build.sh | tar -xvC "$outputDir" &
+		/opt/gardenlinux/bin/garden-build.sh &
 	wait
 fi
