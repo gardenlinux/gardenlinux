@@ -17,3 +17,4 @@
 /features/metal/file.include/lib/firmware/
 .idea
 __pycache__
+/dev
