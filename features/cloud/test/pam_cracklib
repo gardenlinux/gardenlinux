@@ -8,9 +8,7 @@ rootfsDir=$1
 thisDir=$(readlink -e "$(dirname "${BASH_SOURCE[0]}")")
 rootfsDir=$(readlink -e "$rootfsDir")
 
-source "${thisDir}/helpers"
-
-check_rootdir "${rootfsDir}" || exit 1
+#check_rootdir "${rootfsDir}" || exit 1
 
 rc=0
 

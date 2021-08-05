@@ -241,33 +241,99 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 		done
 		echo "#### tests"
 		[ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
+		disabledBy=""
+		enabledBy=""
 		testcounter=0
 		failcounter=0
-		for i in $(echo "base,$features" | tr ',' ' ' | sort -u); do
+		skipcounter=0
+
+		# build the list of tests first
+		for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basename {} \; | grep -v .disable | sort | uniq); do
+			let "testcounter=testcounter+1"
+			test=$(basename $t | cut -d. -f 1)
 			if [ "${notests:-}" = 1 ]; then
-				echo "skipping tests for $i feature"
+				echo "test ${test} is being skipped, --skip-tests has been used"
+				let "skipcounter=skipcounter+1"
 				continue
-			elif [ -d $featureDir/$i/test ]; then
-				for j in $(ls $featureDir/$i/test); do
-					if [ -x $featureDir/$i/test/$j ]; then
-					        let "testcounter=testcounter+1"
-						if $featureDir/$i/test/$j $rootfs $targetBase; then
-							echo -e "\e[32mpassed\e[39m"
-							echo
-						else
-							echo -e "\e[31mfailed\e[39m"
-							echo
-							let "failcounter=failcounter+1"
-						fi
+			fi
+			# go over features and build the enabled/disabled lists
+			# a test with .disabled in a specific feature disables the test globally 
+			# a test that is not executable is not enabled for the specific feature
+			for f in $(echo "base,$features" | tr ',' ' ' | sort -u); do
+				featureTest="${featureDir}/${f}/test/${test}"
+				if [ -f "${featureTest}.disable" ]; then
+					disabledBy=$(echo "${f} ${disabledBy}")
+					continue
+				fi
+				if [ -f "${featureTest}.chroot" ]; then
+					if [ ! -x "${featureTest}.chroot" ]; then
+						continue
+					fi
+					enabledBy=$(echo "${f} ${enabledBy}")
+					continue
+				fi
+				if [ -f "${featureTest}" ]; then
+					if [ ! -x "${featureTest}" ]; then
+						continue
+					fi
+					enabledBy=$(echo "${f} ${enabledBy}")
+				fi
+			done
+			if [ "$disabledBy" != "" ]; then
+				echo "test ${test} is disabled by the following features: ${disabledBy}"
+				# remove disabled tests that might be enabled in another feature
+				enabledBy=$(echo $enabledBy |  tr " " "\n" | grep -vf <(echo $disabledBy | tr " " "\n"))
+			elif [ "$enabledBy" != "" ]; then
+				echo "test ${test} is enabled by the following features: ${enabledBy}"
+				# prepare all other dependencies from the test
+				for fd in $(echo "${enabledBy}"); do
+					if [ -d "${featureDir}/${fd}/test/${test}.d" ]; then
+						mkdir -p "${rootfs}/tmp/${test}.d"
+						for fdep in "${featureDir}/${fd}/test/${test}.d"/*; do
+							[ -e "$fdep" ] || continue
+							fdepshort=$(basename $fdep)
+							if [[ "$fdepshort" == "pkg.include" || "$fdepshort" == "pkg.exclude" ]]; then
+								cat $fdep | filter_variables | filter_if >> "${rootfs}/tmp/${test}.d/${fdepshort}.list"
+							else
+								cat $fdep >> "${rootfs}/tmp/${test}.d/${fdepshort}"
+							fi
+						done
 					fi
 				done
-			elif [ -x $featureDir/$i/test ]; then
-				$featureDir/$i/test $rootfs $targetBase
-			else
-				true
+				
+				# move the actual tests from one of the features that enables it	
+				actualTest="${featureDir}/$(echo ${enabledBy} | awk '{ print $1 }')/test/${t}"
+				cp -L ${actualTest} "${rootfs}/tmp/${test}" 
+				if [ ${t##*.} == "chroot" ]; then
+					if garden-chroot "${rootfs}" ./tmp/${test}; then
+						echo -e "\e[32mpassed\e[39m"
+						echo
+					else
+						echo -e "\e[31mfailed\e[39m"
+						echo
+						let "failcounter=failcounter+1"
+					fi
+				else
+					if "${rootfs}/tmp/${test}" ${rootfs} ${targetBase}; then
+						echo -e "\e[32mpassed\e[39m"
+						echo
+					else
+						echo -e "\e[31mfailed\e[39m"
+						echo
+						let "failcounter=failcounter+1"
+					fi
+				fi
+				rm -rf "${rootfs}/tmp/${test}.d"
+				rm -f "${rootfs}/tmp/$test"
+			elif [ "$enabledBy" == "" ]; then
+				echo "test ${test} is not enabled in any feature, skipping"
+				let "skipcounter=skipcounter+1"
+				echo
 			fi
+			disabledBy=""
+			enabledBy=""
 		done
-		echo "Tests $testcounter done. $failcounter failed"
+		echo "Tests done. ${failcounter}/${testcounter} failed. ${skipcounter}/${testcounter} skipped."
 	}
 
 	for rootfs in rootfs*/; do

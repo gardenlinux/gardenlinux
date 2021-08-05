@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+rootfsDir=$1
+rc=0
+
+# There should be only one user with UID 0 in /etc/passwd
+echo "checking minimum number of users with UID 0"
+usersFile="etc/passwd"
+output=$(awk -F: '($3 == "0") {print}' "${rootfsDir}/${usersFile}")
+numOfUsers=$(echo "${output}" | wc -l)
+
+if [ "${numOfUsers}" == "1" ]
+then
+      echo "OK - there is only one user with UID 0"
+else
+      echo "FAIL - there are more than one user with UID 0"
+      echo "${output}"
+      rc=1
+fi
+
+exit $rc
+

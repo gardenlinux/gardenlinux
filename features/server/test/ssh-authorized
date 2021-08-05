@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+echo "testing for ssh authorized_keys"
+
+rootfsDir=$1
+thisDir=$(readlink -e "$(dirname "${BASH_SOURCE[0]}")")
+rootfsDir=$(readlink -e "$rootfsDir")
+
+#check_rootdir "${rootfsDir}" || exit 1
+
+# TODO - also check paths that might be defined in sshd_config
+
+authorizedKeys=""
+for userInfo in $(getent passwd | grep -v '/usr/sbin/nologin' | grep -v '/bin/sync'); do
+	homeDir=$(echo "$userInfo" | awk -F: '{ print $6 }')
+	user=$(echo "$userInfo" | awk -F: '{ print $1 }')
+	if [[ -e "${rootfsDir}${homeDir}/.ssh/authorized_keys" || -e "${rootfsDir}${homeDir}/.ssh/authorized_keys2" ]]; then
+		authorizedKeys="${authorizedKeys}${user} "
+	fi
+done
+
+if [[ -z "${authorizedKeys}" ]]; then
+	echo "OK - no users have any authorized_keys defined" 
+	exit 0
+else
+	echo "FAIL - following users have authorized_keys defined : ${authorizedKeys}"
+	exit 1
+fi

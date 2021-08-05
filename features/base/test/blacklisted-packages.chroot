@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+rc=0
+
+thisDir=$(readlink -e $(dirname "${BASH_SOURCE[0]}"))
+
+
+cat "${thisDir}/blacklisted-packages.d/"*.list  | awk -F _ '!/^ *#/ && NF {print $1}' | xargs -n 1 basename > "${thisDir}/blacklisted-packages.d/final.list"
+
+# There should not be blacklisted packages on the filesystem
+echo "checking for blacklisted packages"
+blacklistedPackagesFile="${thisDir}/blacklisted-packages.d/final.list"
+
+output=$(dpkg -l | awk '{ print $2}' | grep -wf "${blacklistedPackagesFile}" || :)
+
+if [ -z "${output}" ]
+then
+      echo "OK - there are no blacklisted packages on the filesystem"
+else
+      echo "FAIL - the following blacklisted packages were found on the filesystem:"
+      output=$(echo "$output" | paste -sd' ')
+      echo "       ${output}"
+      rc=1
+fi
+
+exit $rc

@@ -16,14 +16,14 @@ outputHardlinks=$("${sysctlBin}" -a | grep "${expectedKeyHardlinks} = ${expected
 
 if [ -z "${outputSoftlinks}" ]
 then
-      echo "softlinks are not configured correctly"
+      echo "FAIL - softlinks are not configured correctly"
       rc=1
 elif [ -z "${outputHardlinks}" ]
 then
-      echo "hardlinks are not configured correctly"
+      echo "FAIL - hardlinks are not configured correctly"
       rc=1
 else
-      echo "configurations are correct"
+      echo "OK - configurations are correct"
 fi
 
 exit $rc

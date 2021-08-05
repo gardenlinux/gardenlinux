@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+rootfsDir=$1
+rc=0
+
+# the rood directory should be with permissions 0700
+echo "checking root permissions"
+findCommand="usr/bin/find"
+rootDir="root"
+correctPermissions="0700"
+
+output=$("${rootfsDir}/${findCommand}" "${rootfsDir}" -name "${rootDir}" -perm "${correctPermissions}")
+
+if [ -z "${output}" ]
+then
+      echo "FAIL - wrong root permissions"
+      rc=1
+else
+      echo "OK - correct root permissions"
+fi
+
+exit $rc

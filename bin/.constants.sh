@@ -112,8 +112,32 @@ dgetopt-case() {
 filter_comment () {
     sed "s/#.*$//;/^$/d;s/^[[:space:]]*//;s/[[:space:]]*$//"
 }
+#filter_variables () {
+#    arch=$arch /usr/bin/envsubst
+#}
 filter_variables () {
-    arch=$arch /usr/bin/envsubst
+    if [ "${1+defined}" ]; then
+	if [ "$1" == "" ]; then
+		echo "can't filter the variables, empty arch provided via arg!" 1>&2
+		exit 1
+	fi
+    	arch=$1 /usr/bin/envsubst
+    elif [ "${dpkgArch+defined}" ]; then
+    	arch=$dpkgArch /usr/bin/envsubst
+	if [ "$dpkgArch" == "" ]; then
+		echo "can't filter the variables, empty dpkgArch!" 1>&2
+		exit 1
+	fi
+    elif [ "${arch+defined}" ]; then
+    	arch=$arch /usr/bin/envsubst
+	if [ "$arch" == "" ]; then
+		echo "can't filter the variables, empty arch!" 1>&2
+		exit 1
+	fi
+    else
+        echo "can't filter the variables, nothing defined!" 1>&2
+	exit 1
+    fi
 }
 filter_if() {
     awk -F ']' '

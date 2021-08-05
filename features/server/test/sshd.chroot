@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+set -e
+
+# testing the ssh config against settings that are expected AND against settings that MUST NOT be set
+
+rc=0
+
+# clean stuff required to check ssh config
+clean_ssh () {
+	rm -f /etc/ssh/ssh_host_*
+	rmdir /run/sshd
+}
+
+# check if inside a chroot environment
+if awk 'BEGIN {chr=0}; $2 == "/" {chr=1}; END {exit chr}' /proc/mounts 2> /dev/null; then
+	ssh-keygen -A > /dev/null
+	mkdir -p /run/sshd
+	chmod 700 /run/sshd
+	trap "clean_ssh" EXIT   
+fi
+
+absPath=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
+ssh_exp="${absPath}/sshd.d/ssh_expected"
+ssh_nexp="${absPath}/sshd.d/ssh_not_expected"
+
+if ! sshd_config=$(sshd -T | awk '{print tolower($0)}'); then 
+	echo "FATAL - can't get the ssh config!"
+	exit 1
+fi
+
+# check the ssh config against what is expected
+while read -r line; do
+	[[ -z "$line" ]] && continue
+	if ! echo "$sshd_config" | grep -qi "$line"; then
+		echo "FAIL - expected: ${line,,}"
+		echo "            got: $(grep -i ^${line%% *} <(echo "$sshd_config") || echo "missing")"
+		rc=1
+	fi
+done <<< $(grep -v '^#' ${ssh_exp}) 
+
+# check the config against settings that MUST NOT be set
+while read -r line; do
+	[[ -z "$line" ]] && continue
+	if echo "$sshd_config" | grep -qi "$line"; then
+		echo "FAIL - expected: MISSING OR #${line,,}"
+		echo "            got: $(grep -i ^${line%% *} <(echo "$sshd_config"))"
+		rc=1
+	fi
+done <<< $(grep -v '^#' ${ssh_nexp}) 
+
+if [[ "$rc" -eq 0 ]]; then
+	echo "OK - all good with the SSH config"
+	exit 0
+else
+	exit 1
+fi
