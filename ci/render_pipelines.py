@@ -408,6 +408,40 @@ def render_pipeline_dict(
     return pipeline
 
 
+def render_pipelines(
+    build_yaml: str,
+    flavour_set: str,
+    outfile_pipeline_main: str,
+    outfile_pipeline_packages: str,
+):
+    flavour_set = glci.util.flavour_set(
+        flavour_set_name=flavour_set,
+        build_yaml=build_yaml,
+    )
+
+    # generate pipeline for packages:
+    pipeline: dict = mk_pipeline_packages()
+
+    with open(outfile_pipeline_packages, 'w') as f:
+        pipeline_raw = dataclasses.asdict(pipeline)
+        yaml.safe_dump_all((pipeline_raw,), stream=f)
+
+    print(f'dumped pipeline for packages to {outfile_pipeline_packages}')
+
+    # generate pipeline for gardenlinux build
+    gardenlinux_flavours = set(flavour_set.flavours())
+
+    pipeline: dict = render_pipeline_dict(
+        gardenlinux_flavours=gardenlinux_flavours,
+    )
+
+    with open(outfile_pipeline_main, 'w') as f:
+        pipeline_raw = dataclasses.asdict(pipeline)
+        yaml.safe_dump_all((pipeline_raw,), stream=f)
+
+    print(f'dumped pipeline with {len(gardenlinux_flavours)} task(s) to {outfile_pipeline_main}')
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -419,44 +453,22 @@ def main():
         default='all',
     )
     parser.add_argument(
-        '--outfile',
+        '--outfile-pipeline-main',
         default='pipeline.yaml',
     )
     parser.add_argument(
-        '--outfile-packages',
+        '--outfile-pipeline-packages',
         default='pipeline-packages.yaml',
     )
     parsed = parser.parse_args()
 
-    build_yaml = parsed.pipeline_cfg
-
-    flavour_set = glci.util.flavour_set(
-        flavour_set_name=parsed.flavour_set,
-        build_yaml=build_yaml,
+    #  Render pipelines:
+    render_pipelines(
+        build_yaml=parsed.pipeline_cfg,
+        flavour_set=parsed.flavour_set,
+        outfile_main=parsed.outfile_pipeline_main,
+        outfile_packages=parsed.outfile_pipeline_packages,
     )
-
-    # generate pipeline for packages:
-    pipeline: dict = mk_pipeline_packages()
-
-    with open(parsed.outfile_packages, 'w') as f:
-        pipeline_raw = dataclasses.asdict(pipeline)
-        yaml.safe_dump_all((pipeline_raw,), stream=f)
-
-    print(f'dumped pipeline for packages to {parsed.outfile_packages}')
-
-    # generate pipeline for gardenlinux build
-    gardenlinux_flavours = set(flavour_set.flavours())
-    outfile = parsed.outfile
-
-    pipeline: dict = render_pipeline_dict(
-        gardenlinux_flavours=gardenlinux_flavours,
-    )
-
-    with open(outfile, 'w') as f:
-        pipeline_raw = dataclasses.asdict(pipeline)
-        yaml.safe_dump_all((pipeline_raw,), stream=f)
-
-    print(f'dumped pipeline with {len(gardenlinux_flavours)} task(s) to {outfile}')
 
 
 if __name__ == '__main__':

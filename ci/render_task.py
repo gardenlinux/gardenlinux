@@ -25,16 +25,11 @@ def multiline_str_presenter(dumper, data):
     return dumper.represent_scalar('tag:yaml.org,2002:str', data)
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--use-secrets-server', action='store_true')
-    parser.add_argument('--outfile', default='tasks.yaml')
-    parser.add_argument('--giturl', default='https://github.com/gardenlinux/gardenlinux')
-    parser.add_argument('--minimal', action='store_true',  help='omit prebuild and promote steps')
-
-    parsed = parser.parse_args()
-
-    if not parsed.use_secrets_server:
+def render_task(
+    use_secrets_server: bool,
+    outfile_tasks: str,
+):
+    if not use_secrets_server:
         env_vars = [{
             'name': 'SECRETS_SERVER_CACHE',
             'value': '/secrets/config.json',
@@ -155,7 +150,7 @@ def main():
     # yaml.add_representer(str, multiline_str_presenter)
     yaml.representer.SafeRepresenter.add_representer(str, multiline_str_presenter)
 
-    with open(parsed.outfile, 'w') as f:
+    with open(outfile_tasks, 'w') as f:
         yaml.safe_dump_all(
             (
                 raw_base_build_task,
@@ -169,7 +164,21 @@ def main():
             f,
         )
 
-    print(f'dumped tasks to {parsed.outfile}')
+    print(f'dumped tasks to {outfile_tasks}')
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--use-secrets-server', action='store_true')
+    parser.add_argument('--outfile-tasks', default='tasks.yaml')
+    # parser.add_argument('--giturl', default='https://github.com/gardenlinux/gardenlinux')
+    # parser.add_argument('--minimal', action='store_true',  help='omit prebuild and promote steps')
+
+    parsed = parser.parse_args()
+    render_task(
+        use_secrets_server=parsed.use_secrets_server,
+        outfile_tasks=parsed.outfile_tasks,
+    )
 
 
 if __name__ == '__main__':
