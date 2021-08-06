@@ -113,7 +113,7 @@ done
 image_build=false
 package_build=false
 wait=false
-for arg in "$@" 
+for arg in "$@"
 do
     echo "Found arg $arg";
     if [ $arg ==  "--image-build" ]; then

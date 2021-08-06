@@ -9,6 +9,7 @@ import typing
 import botocore.client
 
 import glci.model
+import glci.util
 
 
 logger = logging.getLogger(__name__)
@@ -329,9 +330,12 @@ def upload_and_register_gardenlinux_image(
 
     target_image_name = target_image_name_for_release(release=release)
 
+    aws_release_artifact = glci.util.virtual_image_artifact_for_platform('aws')
+    aws_release_artifact_path = release.path_by_suffix(aws_release_artifact)
+
     # TODO: check path is actually S3_ReleaseFile
-    raw_image_key = release.path_by_suffix('rootfs.raw').s3_key
-    bucket_name = release.path_by_suffix('rootfs.raw').s3_bucket_name
+    raw_image_key = aws_release_artifact_path.s3_key
+    bucket_name = aws_release_artifact_path.s3_bucket_name
 
     snapshot_task_id = import_snapshot(
         ec2_client=ec2_client,

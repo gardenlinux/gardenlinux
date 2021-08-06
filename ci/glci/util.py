@@ -475,3 +475,26 @@ class EnumValueYamlDumper(yaml.SafeDumper):
         if isinstance(data, enum.Enum):
             return self.represent_data(data.value)
         return super().represent_data(data)
+
+
+def virtual_image_artifact_for_platform(platform: glci.model.Platform) -> str:
+    # map each platform to the suffix/object that is of interest.
+
+    platform_to_artifact_mapping = {
+        'ali': 'rootfs.qcow2',
+        'aws': 'rootfs.raw',
+        'azure': 'rootfs.vhd',
+        'gcp': 'rootfs-gcpimage.tar.gz',
+        'kvm': 'rootfs.raw',
+        'metal': 'rootfs.tar.xz',
+        'oci': 'rootfs.tar.xz',
+        'openstack': 'rootfs.vmdk',
+        'vmware': 'rootfs.ova',
+    }
+
+    if not platform in platform_to_artifact_mapping:
+        raise NotImplementedError(
+            f"No information about release artifacts available for platform '{platform}'"
+        )
+
+    return platform_to_artifact_mapping[platform]

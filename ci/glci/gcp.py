@@ -6,6 +6,7 @@ import logging
 import google.cloud.storage.blob
 import google.cloud.storage.client
 import glci.model
+import glci.util
 
 
 logger = lambda: logging.getLogger(__name__)
@@ -17,9 +18,13 @@ def upload_image_to_gcp_store(
     release: glci.model.OnlineReleaseManifest,
     build_cfg: glci.model.BuildCfg,
 ) -> google.cloud.storage.blob.Blob:
+
+    gcp_release_artifact = glci.util.virtual_image_artifact_for_platform('gcp')
+    gcp_release_artifact_path = release.path_by_suffix(gcp_release_artifact)
+    raw_image_key = gcp_release_artifact_path.s3_key
+    s3_bucket_name = gcp_release_artifact_path.s3_bucket_name
+
     image_blob_name = f'gardenlinux-{release.version}.tar.gz'
-    raw_image_key = release.path_by_suffix('rootfs-gcpimage.tar.gz').s3_key
-    s3_bucket_name = release.path_by_suffix('rootfs-gcpimage.tar.gz').s3_bucket_name
 
     # XXX: rather do streaming
     with tempfile.TemporaryFile() as tfh:

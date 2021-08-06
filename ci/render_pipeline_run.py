@@ -44,6 +44,8 @@ def mk_pipeline_name(
             return 'imgs'
         elif publishing_action is glci.model.PublishingAction.MANIFESTS:
             return 'man'
+        elif publishing_action is glci.model.PublishingAction.COMPONENT_DESCRIPTOR:
+            return 'cd'
 
     # add last 4 seconds of time since epoch (to avoid issues with identical pipeline names for
     # repeated builds of the same commit)
@@ -226,7 +228,7 @@ def mk_pipeline_run(
     snapshot_timestamp = glci.model.snapshot_date(gardenlinux_epoch=gardenlinux_epoch)
 
     flavour_count = len(list(flavour_set.flavours()))
-    
+
     if flavour_count == 0:
         flavour_count = 1  # at least one workspace must be created
 

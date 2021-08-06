@@ -8,6 +8,7 @@ import logging
 import typing
 
 import requests
+from glci import util
 import version
 from msal import ConfidentialClientApplication
 from azure.storage.blob import (
@@ -474,13 +475,16 @@ def upload_and_publish_image(
     Azure Marketplace offering and publish the offering.
     '''
 
+    azure_release_artifact = util.virtual_image_artifact_for_platform('azure')
+    azure_release_artifact_path = release.path_by_suffix(azure_release_artifact)
+
     # Copy image from s3 to Azure Storage Account
     target_blob_name = f"gardenlinux-az-{release.version}.vhd"
     image_url = copy_image_from_s3_to_az_storage_account(
         storage_account_cfg=storage_account_cfg,
         s3_client=s3_client,
-        s3_bucket_name=release.path_by_suffix('rootfs.vhd').s3_bucket_name,
-        s3_object_key=release.path_by_suffix('rootfs.vhd').s3_key,
+        s3_bucket_name=azure_release_artifact_path.s3_bucket_name,
+        s3_object_key=azure_release_artifact_path.s3_key,
         target_blob_name=target_blob_name,
     )
 

@@ -61,9 +61,12 @@ class AlicloudImageMaker:
 
     # copy image from S3 to OSS
     def cp_image_from_s3(self, s3_client):
-        s3_bucket_key = self.release.path_by_suffix("rootfs.qcow2").s3_key
-        s3_bucket_name = self.release.path_by_suffix(
-            "rootfs.qcow2").s3_bucket_name
+
+        ali_release_artifact = glci.util.virtual_image_artifact_for_platform('ali')
+        ali_release_artifact_path = self.release.path_by_suffix(ali_release_artifact)
+
+        s3_bucket_key = ali_release_artifact_path.s3_key
+        s3_bucket_name = ali_release_artifact_path.s3_bucket_name
 
         with tempfile.TemporaryFile() as tfh:
             # TODO: use streaming
@@ -159,7 +162,7 @@ class AlicloudImageMaker:
                         did_raise = True
                         continue
                     raise
-        
+
         if did_raise:
             raise
 

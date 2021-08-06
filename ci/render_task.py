@@ -108,6 +108,17 @@ def main():
     )
     raw_build_task = dataclasses.asdict(build_task)
 
+    ctx_repository_config_name = NamedParam(
+        name='ctx_repository_config_name',
+        default='gardener-dev',
+        description='Name of the component-descriptor repository-context config to use',
+    )
+    snapshot_ctx_repository_config_name = NamedParam(
+        name='snapshot_ctx_repository_config_name',
+        default='gardener-dev',
+        description='Name of the snapshot component-descriptor repository-context config to use',
+    )
+
     promote_task = tasks.promote_task(
         branch=NamedParam(name='branch'),
         cicd_cfg_name=NamedParam(name='cicd_cfg_name'),
@@ -117,6 +128,8 @@ def main():
         publishing_actions=NamedParam(name='publishing_actions'),
         snapshot_timestamp=NamedParam(name='snapshot_timestamp'),
         version=NamedParam(name='version'),
+        ctx_repository_config_name=ctx_repository_config_name,
+        snapshot_ctx_repository_config_name=snapshot_ctx_repository_config_name,
         env_vars=env_vars,
         volumes=volumes,
         volume_mounts=volume_mounts,

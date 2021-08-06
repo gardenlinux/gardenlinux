@@ -18,10 +18,11 @@ repo_root = os.path.abspath(os.path.join(
 
 
 class PublishingAction(enum.Enum):
-    MANIFESTS = 'manifests'
-    IMAGES = 'images'
-    RELEASE = 'release'
     BUILD_ONLY = 'build_only'
+    COMPONENT_DESCRIPTOR = 'component_descriptor'
+    IMAGES = 'images'
+    MANIFESTS = 'manifests'
+    RELEASE = 'release'
 
 
 class FeatureType(enum.Enum):
@@ -35,6 +36,7 @@ class FeatureType(enum.Enum):
     MODIFIER = 'modifier'
 
 
+# TODO: Check feasibility of using proper enum(s)
 Platform = str  # see `features/*/info.yaml` / platforms() for allowed values
 Modifier = str  # see `features/*/info.yaml` / modifiers() for allowed values
 
