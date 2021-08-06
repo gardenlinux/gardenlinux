@@ -1,3 +1,7 @@
+Debian Bug: #991920
+pkg-config is not essential to dracut operation, at least on a regular Debian
+system. However, demoting pkg-config to Recommends will allow minimal systems
+that try to avoid shipping perl to do so.
 --- a/debian/control	2020-09-21 09:09:54.594879264 +0000
 +++ b/debian/control	2020-09-21 09:10:08.762876309 +0000
 @@ -23,8 +23,8 @@
