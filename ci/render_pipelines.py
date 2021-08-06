@@ -413,6 +413,7 @@ def render_pipelines(
     flavour_set: str,
     outfile_pipeline_main: str,
     outfile_pipeline_packages: str,
+    tasks: typing.Sequence[tkn.model.Task]
 ):
     flavour_set = glci.util.flavour_set(
         flavour_set_name=flavour_set,

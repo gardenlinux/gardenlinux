@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-set -x
+# set -x
 
 own_dir="$(readlink -f "$(dirname "${0}")")"
 repo_root="${own_dir}/.."

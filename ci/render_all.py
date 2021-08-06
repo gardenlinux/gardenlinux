@@ -30,7 +30,7 @@ def main():
     parsed = parser.parse_args()
 
     # Render tasks:
-    render_task.render_task(
+    all_tasks = render_task.render_task(
         use_secrets_server=parsed.use_secrets_server,
         outfile_tasks=parsed.outfile_tasks,
     )
@@ -41,8 +41,8 @@ def main():
         flavour_set=parsed.flavour_set,
         outfile_pipeline_main=parsed.outfile_pipeline_main,
         outfile_pipeline_packages=parsed.outfile_pipeline_packages,
+        tasks=all_tasks,
     )
-
 
 
 if __name__ == '__main__':

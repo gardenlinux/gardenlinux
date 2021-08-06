@@ -149,6 +149,15 @@ def render_task(
     # This should do the trick but add_representer has noeffect on safe dumper
     # yaml.add_representer(str, multiline_str_presenter)
     yaml.representer.SafeRepresenter.add_representer(str, multiline_str_presenter)
+    all_tasks = (
+                base_build_task,
+                build_task,
+                kernel_package_task,
+                package_task,
+                test_task,
+                promote_task,
+                notify_task,
+            )
 
     with open(outfile_tasks, 'w') as f:
         yaml.safe_dump_all(
@@ -165,6 +174,12 @@ def render_task(
         )
 
     print(f'dumped tasks to {outfile_tasks}')
+    for task in all_tasks:
+        print(f"task {task.metadata.name} has parameters:")
+        for param in task.spec.params:
+            print(f'   name: {param.name} of type {type(param)}')
+
+    return all_tasks
 
 
 def main():
