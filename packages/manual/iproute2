@@ -9,7 +9,7 @@ apt-get source $src
 sudo apt-get remove -y --purge libdb5.3-dev
 cd $src-*/
 patch -p1 < $srcDir/libdb.patch
-dch -i 'remove arpd/libdb'
+dch -lgardenlinux 'remove arpd/libdb'
 dch -r ''
 
 donotmove="$(ls ..)"

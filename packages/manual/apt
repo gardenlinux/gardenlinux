@@ -9,7 +9,7 @@ apt-get source $src
 #sudo apt-get remove -y --purge libdb5.3-dev
 cd $src-*/ 
 patch -p1 < /$srcDir/libdb.patch
-dch -i 'remove ftparchive/libdb'
+dch -lgardenlinux 'remove ftparchive/libdb'
 dch -r ''
 
 donotmove="$(ls ..)"

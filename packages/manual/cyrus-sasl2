@@ -19,7 +19,7 @@ apt-get source $src
 sudo apt-get remove -y --purge libdb5.3-dev
 cd $src-*/
 patch -p1 < $srcDir/libdb.patch
-dch -i 'remove libdb'
+dch -lgardenlinux 'remove libdb'
 dch -r ''
 	
 donotmove="$(ls ..)"
