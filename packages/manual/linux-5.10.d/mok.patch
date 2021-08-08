@@ -1,0 +1,79 @@
+--- a/debian/patches/features/all/db-mok-keyring/0001-MODSIGN-do-not-load-mok-when-secure-boot-disabled.patch	2021-07-28 23:49:59.471023098 +0000
++++ b/debian/patches/features/all/db-mok-keyring/0001-MODSIGN-do-not-load-mok-when-secure-boot-disabled.patch	2021-07-28 23:51:12.887024692 +0000
+@@ -24,10 +24,12 @@
+  security/integrity/platform_certs/load_uefi.c | 26 +++++++++++++++-----------
+  1 file changed, 15 insertions(+), 11 deletions(-)
+ 
+---- a/security/integrity/platform_certs/load_uefi.c
+-+++ b/security/integrity/platform_certs/load_uefi.c
+-@@ -175,6 +175,10 @@ static int __init load_uefi_certs(void)
+- 		kfree(dbx);
++Index: linux-5.10/security/integrity/platform_certs/load_uefi.c
++===================================================================
++--- linux-5.10.orig/security/integrity/platform_certs/load_uefi.c	2021-07-28 23:49:38.611022644 +0000
+++++ linux-5.10/security/integrity/platform_certs/load_uefi.c	2021-07-28 23:51:00.103024415 +0000
++@@ -191,6 +191,10 @@
++ 		kfree(mokx);
+  	}
+  
+ +	/* the MOK can not be trusted when secure boot is disabled */
+--- a/debian/patches/features/all/db-mok-keyring/0004-MODSIGN-check-the-attributes-of-db-and-mok.patch	2021-07-28 23:53:16.627027381 +0000
++++ b/debian/patches/features/all/db-mok-keyring/0004-MODSIGN-check-the-attributes-of-db-and-mok.patch	2021-07-28 23:57:29.383032872 +0000
+@@ -30,9 +30,11 @@
+  security/integrity/platform_certs/load_uefi.c | 27 ++++++++++++++-----
+  1 file changed, 21 insertions(+), 6 deletions(-)
+ 
+---- a/security/integrity/platform_certs/load_uefi.c
+-+++ b/security/integrity/platform_certs/load_uefi.c
+-@@ -35,11 +35,13 @@ static __init bool uefi_check_ignore_db(
++Index: linux-5.10/security/integrity/platform_certs/load_uefi.c
++===================================================================
++--- linux-5.10.orig/security/integrity/platform_certs/load_uefi.c	2021-07-28 23:53:27.999027628 +0000
+++++ linux-5.10/security/integrity/platform_certs/load_uefi.c	2021-07-28 23:55:42.607030552 +0000
++@@ -35,11 +35,13 @@
+   * Get a certificate list blob from the named EFI variable.
+   */
+  static __init void *get_cert_list(efi_char16_t *name, efi_guid_t *guid,
+@@ -47,7 +49,7 @@
+  
+  	*status = efi.get_variable(name, guid, NULL, &lsize, &tmpdb);
+  	if (*status == EFI_NOT_FOUND)
+-@@ -54,13 +56,22 @@ static __init void *get_cert_list(efi_ch
++@@ -54,13 +56,22 @@
+  	if (!db)
+  		return NULL;
+  
+@@ -71,17 +73,17 @@
+  	*size = lsize;
+  	return db;
+  }
+-@@ -115,7 +126,8 @@ load_moklist_certs(const char *list_name
+- 	/* Get MokList(X)RT. It might not exist, so it isn't an error
++@@ -106,7 +117,8 @@
++ 	/* Get MokListRT. It might not exist, so it isn't an error
+  	 * if we can't get it.
+  	 */
+--	mok = get_cert_list(list_name_w, &mok_var, &moksize, &status);
+-+	mok = get_cert_list(list_name_w, &mok_var, &moksize, &status,
++-	mok = get_cert_list(L"MokListRT", &mok_var, &moksize, &status);
+++	mok = get_cert_list(L"MokListRT", &mok_var, &moksize, &status,
+ +				0, EFI_VARIABLE_NON_VOLATILE);
+  	if (mok) {
+- 		rc = parse_efi_signature_list(efivar_list_desc,
+- 					      mok, moksize, get_handler);
+-@@ -154,7 +166,8 @@ static int __init load_uefi_certs(void)
++ 		rc = parse_efi_signature_list("UEFI:MokListRT",
++ 					      mok, moksize, get_handler_for_db);
++@@ -145,7 +157,8 @@
+  	 * if we can't get them.
+  	 */
+  	if (!uefi_check_ignore_db()) {
+@@ -91,7 +93,7 @@
+  		if (!db) {
+  			if (status == EFI_NOT_FOUND)
+  				pr_debug("MODSIGN: db variable wasn't found\n");
+-@@ -170,7 +183,8 @@ static int __init load_uefi_certs(void)
++@@ -161,7 +174,8 @@
+  		}
+  	}
+  

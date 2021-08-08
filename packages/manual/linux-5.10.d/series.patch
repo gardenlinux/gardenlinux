@@ -1,0 +1,21 @@
+--- org/debian/patches/series	2021-07-20 06:52:01.208048015 +0000
++++ new/debian/patches/series	2021-07-20 06:53:31.031768019 +0000
+@@ -94,9 +94,9 @@
+ bugfix/all/partially-revert-usb-kconfig-using-select-for-usb_co.patch
+ debian/makefile-do-not-check-for-libelf-when-building-oot-module.patch
+ bugfix/all/partially-revert-net-socket-implement-64-bit-timestamps.patch
+-bugfix/all/Revert-PCI-PM-Do-not-read-power-state-in-pci_enable_.patch
+ 
+ # Miscellaneous features
++fpga-ofs.patch
+ 
+ # Lockdown missing pieces
+ features/all/lockdown/efi-add-an-efi_secure_boot-flag-to-indicate-secure-b.patch
+@@ -106,7 +106,5 @@
+ 
+ # Improve integrity platform keyring for kernel modules verification
+ features/all/db-mok-keyring/0001-MODSIGN-do-not-load-mok-when-secure-boot-disabled.patch
+-features/all/db-mok-keyring/0002-MODSIGN-load-blacklist-from-MOKx.patch
+ features/all/db-mok-keyring/0003-MODSIGN-checking-the-blacklisted-hash-before-loading-a-kernel-module.patch
+-features/all/db-mok-keyring/0004-MODSIGN-check-the-attributes-of-db-and-mok.patch
+ features/all/db-mok-keyring/modsign-make-shash-allocation-failure-fatal.patch

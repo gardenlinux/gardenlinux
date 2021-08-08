@@ -4,117 +4,135 @@ set -euox pipefail
 . $(dirname $0)/.helper
 . ${srcDir}/VERSION
 
-CERT_DIR="${CERTDIR:-}"
+CERT_DIR="${CERTDIR:-/}"
+CHANGELOG=""
 
 echo "### getting the keys of the maintainers"
-gpg --locate-keys torvalds@kernel.org gregkh@kernel.org
-gpg --tofu-policy good 647F28654894E3BD457199BE38DBBDC86092693E
-# Steven Rostedt <rostedt@goodmis.org>
-gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys 514B0EDE3C387F944FB3799329E574109AEBFAAA
-gpg --tofu-policy good 514B0EDE3C387F944FB3799329E574109AEBFAAA
+for i in $(cat ${srcDir}/gpgkeys); do
+	if [[ $i == *"@"* ]]; then	gpg --keyserver hkps://keyserver.ubuntu.com --locate-keys $i
+	else				gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys $i
+	fi
+done
+gpg --tofu-policy good $(gpg --list-keys $(cat ${srcDir}/gpgkeys) | grep "^      ")
 
 echo "### updating package repsitory"
 sudo apt-get update
 echo "### installing minimal create requirements"
 sudo apt-get install --no-install-recommends -y equivs kernel-wedge python3-debian rsync libdistro-info-perl git quilt
 echo "### pulling kernel and rt-patches"
-wget -nc https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.sign
-wget -nc https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/$(cut -d. -f-2 <<< ${KERNEL_BASE})/older/patches-$KERNEL_RT_VERSION.tar.sign
-while ! $(xz -dc linux-$KERNEL_VERSION.tar.xz | gpg --verify linux-$KERNEL_VERSION.tar.sign -); do
-	rm -f linux-$KERNEL_VERSION.tar.xz
-	wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.xz
+wget -O linux-$KERNEL_VERSION.tar.sign \
+	https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.sign
+wget -O patches-$KERNEL_RT_VERSION.tar.sign \
+	https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/$(cut -d. -f-2 <<< ${KERNEL_BASE})/older/patches-$KERNEL_RT_VERSION.tar.sign
+while [ ! -e linux-$KERNEL_VERSION.tar.xz ] || ! $(xz -dc linux-$KERNEL_VERSION.tar.xz | gpg --verify linux-$KERNEL_VERSION.tar.sign -); do
+	wget -O linux-$KERNEL_VERSION.tar.xz \
+		https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-$KERNEL_VERSION.tar.xz
 done
-while ! $(xz -dc patches-$KERNEL_RT_VERSION.tar.xz | gpg --verify patches-$KERNEL_RT_VERSION.tar.sign -); do
-	rm -f patches-$KERNEL_RT_VERSION.tar.xz
-	wget https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/$(cut -d. -f-2 <<< ${KERNEL_BASE})/older/patches-$KERNEL_RT_VERSION.tar.xz
+while [ ! -e patches-$KERNEL_RT_VERSION.tar.xz ] || ! $(xz -dc patches-$KERNEL_RT_VERSION.tar.xz | gpg --verify patches-$KERNEL_RT_VERSION.tar.sign -); do
+	wget -O patches-$KERNEL_RT_VERSION.tar.xz \
+		https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/$(cut -d. -f-2 <<< ${KERNEL_BASE})/older/patches-$KERNEL_RT_VERSION.tar.xz
 done
 
-echo "### cloning the latest and greatest debian release environment to linux"
-if [ -d $src ]; then
-	cd $src; git checkout master; git pull --tags; cd ..
-else
-	# find better way of doing this
-	git clone https://salsa.debian.org/kernel-team/linux.git $src
+echo "### cloning the latest and greatest debian release environment to for the kernel"
+if [ -d $src ]; then	cd $src; git reset --hard; git checkout HEAD; git pull --ff-only -q; cd ..
+else			git clone --single  https://salsa.debian.org/kernel-team/linux.git $src
 fi
-
-# if there are newer debian kernel versions, stick to what we have defined
-if dpkg --compare-versions $(cd $src; git describe --abbrev=0 | cut -d/ -f 2) gt $KERNEL_DEBIAN; then
-	cd $src; git -c advice.detachedHead=false checkout debian/$KERNEL_DEBIAN; cd ..
-fi
-
 cd $src
-mv debian/changelog debian/changelog.org
+## binding build env tho the version when gardenlinux was build
+#BUILDENV=$(git log --before "@${BUILDEPOCH}" -n1 --oneline --no-abbrev-commit | cut -f1 -d' ')
+#git -c advice.detachedHead=false checkout $BUILDENV
+#CHANGELOG+="  * using Build Environment of $BUILDENV\n"
+# binding build to the originial build env
+git -c advice.detachedHead=false checkout debian/$KERNEL_DEBIAN
 cd ..
 
-if $(dpkg --compare-versions $KERNEL_DEBIAN lt $KERNEL_VERSION); then
-	echo "### cloning the old kernel to linux-$KERNEL_DEBIAN"
-	git clone --depth 1 --single --branch debian/$KERNEL_DEBIAN https://salsa.debian.org/kernel-team/linux.git linux-$KERNEL_DEBIAN
-	KERNEL_VERSION="$KERNEL_VERSION-1"
-	echo "### pulling aufs5 from upstream not from debian"
-	git clone https://github.com/sfjro/aufs5-standalone.git
-	cd aufs5-standalone
-	git -c advice.detachedHead=false checkout aufs$(cut -d. -f-2 <<< ${KERNEL_BASE})
-	cd ..
+echo "### cloning the old kernel to linux-$KERNEL_DEBIAN"
+if [ ! -d linux-$KERNEL_DEBIAN ]; then
+	git -c advice.detachedHead=false clone --depth 1 --single \
+		--branch debian/$KERNEL_DEBIAN \
+		https://salsa.debian.org/kernel-team/linux.git linux-$KERNEL_DEBIAN
+fi
+echo "### pulling aufs5 from upstream not from debian"
+if [ ! -d  aufs5-standalone ]; then
+	git -c advice.detachedHead=false clone --single \
+		--branch aufs$(cut -d. -f-2 <<< ${KERNEL_BASE}) \
+		https://github.com/sfjro/aufs5-standalone.git aufs5-standalone
+fi
+cd aufs5-standalone
+aufscommit=$(git log -n1 --oneline --no-abbrev-commit | cut -f1 -d' ')
+cd ..
 
-	echo "### bootstrapping the kernel build"
-	cd $src
-	# keeping the upstream defines
-	mv debian/config/defines ..
-	rm -rf debian/config debian/patches debian/patches-rt/*
-	cp -R ../linux-$KERNEL_DEBIAN/debian/patches ../linux-$KERNEL_DEBIAN/debian/patches-rt ../linux-$KERNEL_DEBIAN/debian/config debian/
-	mv ../defines debian/config/
+echo "### pulling linux-stable for comments"
+# checking out linux stable to have the whole changelog from the kernel readable for debian/bin/stable-update
+if [ ! -d linux-stable ]; then
+        git clone --single --branch linux-$(echo $KERNEL_BASE | sed s/0$/y/) --bare \
+		https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git linux-stable
+fi
+
+echo "### bootstrapping the kernel build"
+cd $src
+# keeping the upstream defines
+mv debian/config/defines debian/config.defines
+rm -rf debian/config debian/patches debian/patches-rt/*
+cp -R ../linux-$KERNEL_DEBIAN/debian/patches ../linux-$KERNEL_DEBIAN/debian/config debian/
+mv debian/config.defines debian/config/defines
+
+# if debian is older then our patchset 
+if $(dpkg --compare-versions $KERNEL_DEBIAN lt $KERNEL_VERSION); then
 	echo "### integrating rt-patches"
 	debian/bin/genpatch-rt ../patches-$KERNEL_RT_VERSION.tar.xz
-
-	echo "### integrating aufs5-patches"
-	debian/bin/genpatch-aufs ../aufs5-standalone
-	cd ..
-
-	# checking out linux stable to have the whole changelog from the kernel readable for debian/bin/stable-update
-	git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-
-	cd $src
-	debian/bin/stable-update ../linux-stable $KERNEL_VERSION
-	mv debian/changelog debian/changelog.newkernel
-	cd ..
+	CHANGELOG+="  * [rt] Update to $KERNEL_RT_VERSION and re-enable\n"
 else
-	KERNEL_VERSION=$KERNEL_DEBIAN
+	cp -R ../linux-$KERNEL_DEBIAN/debian/patches-rt debian/
 fi
 
-cd $src
+echo "### integrating aufs5-patches"
+debian/bin/genpatch-aufs ../aufs5-standalone
+CHANGELOG+="  * [aufs5] Update to $aufscommit\n"
+
 echo "### setting Garden Linux abi"
 sed -i "s/abiname:.*/abiname:$KERNEL_ABI/" debian/config/defines
+CHANGELOG+="  * Bump ABI to $KERNEL_ABI.\n"
+# no rt branch
+sed -i "s/enabled: true/enabled: false/" debian/config/defines
+CHANGELOG+="  * Disabled RT featureset\n"
+# no cloud branch
+#sed -i "/^ cloud-amd64$/d" debian/config/amd64/none/defines
+#CHANGELOG+="  * Disabled cloud featureset\n"
+
+#export DEB_BUILD_OPTIONS="nodoc tersee"
+#export DEB_BUILD_PROFILES="nodoc nopython pkg.linux.nosource pkg.linux.notools"
 
 echo "### patching Garden Linux enhancements"
-patch -p1 < $srcDir/rt-0038.patch
-
-echo "### populating the changelog"
-cat - > debian/changelog.new <<EOF
-linux ($KERNEL_VERSION) UNRELEASED; urgency=medium
-
-  [ Garden Linux Maintainers ]
-  * [rt] Update to $KERNEL_RT_VERSION and re-enable.
-  * Bump ABI to $KERNEL_ABI.
-  * Patching certs to Garden Linux
-$(cat $srcDir/changelog)
- -- Garden Linux Maintainers <contact@gardenlinux.io>  $(date -R)
-
-EOF
-
-cd ..
-# checking out linux stable to have the whole changelog from the kernel readable for debian/bin/stable-update
-git clone --single --branch linux-$(echo $KERNEL_BASE | sed s/0$/y/) --bare https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-cd $src
-
-touch debian/changelog.newkernel
-cat debian/changelog.new debian/changelog.newkernel debian/changelog.org > debian/changelog
-rm -f debian/changelog.new debian/changelog.newkernel debian/changelog.org
+#patch -p1 < $srcDir/rt-0038.patch
+cp $srcDir/fpga-ofs.patch debian/patches
+CHANGELOG+="  * Added Intel FPGA OFS\n"
+patch -p1 < $srcDir/fpga-config.patch
+patch -p1 < $srcDir/mok.patch
+patch -p1 < $srcDir/series.patch
 
 echo "### setting certificate"
 # to make sure we do not take this accidently
 rm -f debian/certs/debian-uefi-certs.pem
-cp "${CERT_DIR}/kernel.full" debian/certs/gardenlinux-kernel-certs.pem
+cp "${CERT_DIR}kernel.full" debian/certs/gardenlinux-kernel-certs.pem
 sed -i "s/debian-uefi-certs.pem/gardenlinux-kernel-certs.pem/" debian/config/config debian/config/featureset*/config
+CHANGELOG+="  * Replaced Debian signing certs with GardenLinux certs\n"
+
+echo "### populating the changelog"
+mv debian/changelog debian/changelog.org
+cat - > debian/changelog <<EOF
+linux (${KERNEL_VERSION}-1) UNRELEASED; urgency=medium
+
+  [ Garden Linux Maintainers ]
+  * new upstream Version ${KERNEL_VERSION}
+$(echo -e "$CHANGELOG")
+ -- Garden Linux Maintainers <contact@gardenlinux.io>  $(date -R)
+
+EOF
+debian/bin/stable-update ../linux-stable ${KERNEL_VERSION}
+mv debian/changelog debian/changelog.newkernel
+cat debian/changelog.newkernel debian/changelog.org > debian/changelog
+rm -f debian/changelog.new debian/changelog.newkernel debian/changelog.org
 
 echo "### generating a debian conform orig file and install"
 [ -e ../orig/linux_*.tar.xz ] || PYTHONHASHSEED=0 debian/bin/genorig.py ../linux-*.tar.xz
