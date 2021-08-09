@@ -100,9 +100,10 @@ def build_component_descriptor(
         for release_manifest in releases
     ])
 
-    product.v2.upload_component_descriptor_v2_to_oci_registry(
-      component_descriptor_v2=component_descriptor,
-    )
+    if glci.model.PublishingAction.RELEASE in publishing_actions:
+        product.v2.upload_component_descriptor_v2_to_oci_registry(
+            component_descriptor_v2=component_descriptor,
+        )
 
     if snapshot_repo_base_url:
         if base_url != snapshot_repo_base_url:
