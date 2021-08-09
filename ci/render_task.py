@@ -115,7 +115,7 @@ def main():
     )
     snapshot_ctx_repository_config_name = NamedParam(
         name='snapshot_ctx_repository_config_name',
-        default='gardener-dev',
+        default='gardener-public',
         description='Name of the snapshot component-descriptor repository-context config to use',
     )
 
