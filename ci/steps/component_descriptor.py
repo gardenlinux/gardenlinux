@@ -85,6 +85,8 @@ def build_component_descriptor(
     base_url = _resolve_ctx_repository_config(ctx_repository_config_name)
     if snapshot_ctx_repository_config_name:
         snapshot_repo_base_url = _resolve_ctx_repository_config(snapshot_ctx_repository_config_name)
+    else:
+        snapshot_repo_base_url = None
 
     component_descriptor = _base_component_descriptor(
         version=version,
