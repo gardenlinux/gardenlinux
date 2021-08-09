@@ -139,7 +139,8 @@ def release_manifest(
         config=dacite.Config(
             cast=[
                 glci.model.Architecture,
-                typing.Tuple
+                typing.Tuple,
+                glci.model.TestResultCode,
             ],
         ),
     )

@@ -548,6 +548,19 @@ def test_task(
         volume_mounts=volume_mounts,
     )
 
+    upload_test_results_step = steps.upload_test_results_step(
+        architecture=params.arch,
+        cicd_cfg_name=params.cicd_cfg_name,
+        committish=params.committish,
+        gardenlinux_epoch=params.glepoch,
+        modifiers=params.modifiers,
+        platform=params.platform,
+        repo_dir=_repodir,
+        version=params.version,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+
     task_volumes = [v for v in volumes]
     task_volumes.extend(
         [{
@@ -584,6 +597,7 @@ def test_task(
             steps=[
                 clone_step,
                 test_step,
+                upload_test_results_step,
             ],
             volumes=task_volumes,
         ),
