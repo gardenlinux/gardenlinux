@@ -4,7 +4,7 @@ set -Eeuo pipefail
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
 	--flags 'no-build,debug,skip-tests,suite:,gardenversion:,timestamp:' \
-	--flags 'ports,arch:,qemu,features:,commitid:' \
+	--flags 'ports,arch:,qemu,features:,commitid:,userid:,usergid:' \
 	--flags 'suffix:,prefix:' \
 	--
 
@@ -28,6 +28,8 @@ while true; do
 		--prefix) prefix="$1"; shift ;; # target name suffix
 		--commitid) commitid="$1"; shift ;; # build commit hash
 		--skip-tests) notests=1 shift ;; # skip tests
+		--userid) userID="$1" shift ;;
+		--usergid) userGID="$1" shift ;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
@@ -37,6 +39,8 @@ if [ ${debug:-} ]; then
 	set -x
 fi
 
+userID="${userID:-$(id -u)}";
+userGID="${userGID:-$(id -g)}";
 epoch="$(garden-version --epoch "$version")"
 serial="$(garden-version --date "$version")"
 dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
