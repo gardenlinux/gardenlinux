@@ -7,7 +7,7 @@ exec 2> /dev/null
 
 thisDir=$(readlink -e "$(dirname "${BASH_SOURCE[0]}")")
 
-DEBIAN_FRONTEND=noninteractive apt-get update &> /dev/null
+#DEBIAN_FRONTEND=noninteractive apt-get update &> /dev/null
 DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends debsums apt-utils &> /dev/null
 
 if out=$(debsums -l); then
