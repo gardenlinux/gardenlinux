@@ -10,7 +10,7 @@ Tiger_Check_NETRC=Y		# Time varies on # of users
 Tiger_Check_ALIASES=Y		# Fast
 Tiger_Check_CRON=Y		# Fast
 Tiger_Check_EXPORTS=Y		# Fast
-Tiger_Check_SERVICES=Y		# Could be faster, not bad though
+Tiger_Check_SERVICES=N		# Could be faster, not bad though
 Tiger_Check_KNOWN=Y		# Fast
 Tiger_Check_PERMS=Y		# Could be faster, not bad though
 Tiger_Check_SIGNATURES=N	# Several minutes
@@ -34,7 +34,7 @@ Tiger_Check_ROOTKIT=Y		# Slow if chkrootkit is available
 
 Tiger_Check_INETD=N		# Fast for inetd, Varies on xinetd
 Tiger_Check_APACHE=N		# Fast
-Tiger_Check_SSH=Y		# Fast
+Tiger_Check_SSH=N		# Fast
 Tiger_Check_SENDMAIL=N		# Fast
 Tiger_Check_PRINTCAP=N		# Fast, possibly not needed in systems that use CUPS
 Tiger_Check_ANONFTP=N		# Fast

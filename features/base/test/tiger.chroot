@@ -16,7 +16,7 @@ if [[ "done" == $(tail -1 /usr/lib/tiger/systems/Linux/default/gen_mounts) ]]; t
 	echo 'echo "/ ext4 /dev/fake1"' >> /usr/lib/tiger/systems/Linux/default/gen_mounts 
 fi
 
-tiger -c "${thisDir}/tiger.d/tigerrc" -l ${thisDir} -q > /dev/null
+tiger -c "${thisDir}/tiger.d/tigerrc" -l ${thisDir} -q &> /dev/null
 
 if err=$(grep -hw FAIL "${thisDir}"/security.report.*); then
 	echo "tiger detected the following errors"

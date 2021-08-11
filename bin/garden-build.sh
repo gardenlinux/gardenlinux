@@ -173,7 +173,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 	sed -i "s/^HOME_URL=.*$/HOME_URL=\"https:\/\/gardenlinux.io\/\"/g" rootfs/etc/os-release
 	sed -i "s/^SUPPORT_URL=.*$/SUPPORT_URL=\"https:\/\/github.com\/gardenlinux\/gardenlinux\"/g" rootfs/etc/os-release
 	sed -i "s/^BUG_REPORT_URL=.*$/BUG_REPORT_URL=\"https:\/\/github.com\/gardenlinux\/gardenlinux\/issues\"/g" rootfs/etc/os-release
-	echo "GARDENLINUX_FEATURES=base,$features" >> rootfs/etc/os-release
+	echo "GARDENLINUX_FEATURES=$(echo base,$features | tr "," "\n" | sort -u | paste -d"," -s)" >> rootfs/etc/os-release
 	echo "GARDENLINUX_VERSION=$($debuerreotypeScriptsDir/garden-version)" >> rootfs/etc/os-release
 	echo "GARDENLINUX_COMMIT_ID=$commitid" >> rootfs/etc/os-release
 	echo "VERSION_CODENAME=$suite" >> rootfs/etc/os-release
@@ -251,7 +251,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 
 		echo "#### features"
 		[ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
-		for i in $(echo "base,$features" | tr ',' ' ' | sort -u); do
+		for i in $(echo "base,$features" | tr ',' '\n' | sort -u); do
 			if [ -s $featureDir/$i/image ]; then
 				bash -c "$featureDir/$i/image $rootfs $targetBase"
 			else
@@ -267,6 +267,10 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 		skipcounter=0
 
 		# build the list of tests first
+		echo "preparing apt lists in case we need to install packages for the tests"
+		mkdir -p rootfs/etc/ssl
+		mount --bind /etc/ssl rootfs/etc/ssl
+		garden-apt-get rootfs update 
 		for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basename {} \; | grep -v .disable | sort | uniq); do
 			let "testcounter=testcounter+1"
 			test=$(basename $t | cut -d. -f 1)
@@ -278,7 +282,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 			# go over features and build the enabled/disabled lists
 			# a test with .disabled in a specific feature disables the test globally 
 			# a test that is not executable is not enabled for the specific feature
-			for f in $(echo "base,$features" | tr ',' ' ' | sort -u); do
+			for f in $(echo "base,$features" | tr ',' '\n' | sort -u); do
 				featureTest="${featureDir}/${f}/test/${test}"
 				if [ -f "${featureTest}.disable" ]; then
 					disabledBy=$(echo "${f} ${disabledBy}")
@@ -352,6 +356,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 			disabledBy=""
 			enabledBy=""
 		done
+		umount rootfs/etc/ssl
 		echo "Tests done. ${failcounter}/${testcounter} failed. ${skipcounter}/${testcounter} skipped."
 	}
 
@@ -373,4 +378,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 
 } >&2
 
-find "${outputDir}" -type f -exec install -m 0644 -p -o "${userID}" -g "${userGID}" {} "${volumeDir}" \;
+echo
+find "${outputDir}" -type f -exec install -v -m 0644 -p -o "${userID}" -g "${userGID}" {} "${volumeDir}" \;
+echo
+echo "Done"
