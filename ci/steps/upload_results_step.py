@@ -23,35 +23,34 @@ def upload_files(
     s3_client,
     s3_bucket_name,
 ):
-  with tarfile.open(build_result_fname) as tf:
-    for tarinfo in tf:
-      if not tarinfo.isfile():
-        continue
-      tar_fname = tarinfo.name.lstrip('./')
-      fobj = tf.extractfile(tarinfo)
-      fname = f'{version_str}-{tar_fname}'
+    for dirpath, dirs, files in os.walk(build_result_fname):
+        for file in files:
+            full_path = os.path.join(dirpath, file)
+            fname = f'{version_str}-{file}'
 
-      # calculate filehash (use as fname)
-      sha1 = hashlib.sha1()
-      while (chunk := fobj.read(2048)):
-        sha1.update(chunk)
-      fobj.seek(0)
-      sha1_digest = sha1.hexdigest()
-      upload_key = os.path.join('objects', sha1_digest)
+            with open(full_path, "rb") as fobj:
+                # calculate filehash (use as fname)
+                sha1 = hashlib.sha1()
+                while (chunk := fobj.read(2048)):
+                    sha1.update(chunk)
+                fobj.seek(0)
+                sha1_digest = sha1.hexdigest()
+                upload_key = os.path.join('objects', sha1_digest)
 
-      # XXX todo: add content-type
-      s3_client.upload_fileobj(
-        Fileobj=fobj,
-        Bucket=s3_bucket_name,
-        Key=upload_key,
-      )
-      print(f'upload succeeded: {upload_key}')
-      yield glci.model.S3_ReleaseFile(
-        name=fname,
-        suffix=os.path.basename(tar_fname),
-        s3_key=upload_key,
-        s3_bucket_name=s3_bucket_name,
-      )
+                # XXX todo: add content-type
+                s3_client.upload_fileobj(
+                  Fileobj=fobj,
+                  Bucket=s3_bucket_name,
+                  Key=upload_key,
+                )
+
+            print(f'upload succeeded: {upload_key}')
+            yield glci.model.S3_ReleaseFile(
+                name=fname,
+                suffix=os.path.basename(full_path),
+                s3_key=upload_key,
+                s3_bucket_name=s3_bucket_name,
+            )
 
 
 def upload_results_step(
@@ -79,7 +78,7 @@ def upload_results_step(
         sys.exit(0)
 
     build_result_fname = outfile
-    if not os.path.isfile(build_result_fname):
+    if not os.path.isdir(build_result_fname):
         print('ERROR: no build result - see previous step for errs')
         sys.exit(1)
 

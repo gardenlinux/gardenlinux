@@ -270,7 +270,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 		echo "preparing apt lists in case we need to install packages for the tests"
 		mkdir -p rootfs/etc/ssl
 		mount --bind /etc/ssl rootfs/etc/ssl
-		garden-apt-get rootfs update 
+		garden-apt-get rootfs update
 		for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basename {} \; | grep -v .disable | sort | uniq); do
 			let "testcounter=testcounter+1"
 			test=$(basename $t | cut -d. -f 1)
@@ -280,7 +280,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 				continue
 			fi
 			# go over features and build the enabled/disabled lists
-			# a test with .disabled in a specific feature disables the test globally 
+			# a test with .disabled in a specific feature disables the test globally
 			# a test that is not executable is not enabled for the specific feature
 			for f in $(echo "base,$features" | tr ',' '\n' | sort -u); do
 				featureTest="${featureDir}/${f}/test/${test}"
@@ -323,10 +323,10 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 						done
 					fi
 				done
-				
-				# move the actual tests from one of the features that enables it	
+
+				# move the actual tests from one of the features that enables it
 				actualTest="${featureDir}/$(echo ${enabledBy} | awk '{ print $1 }')/test/${t}"
-				cp -L ${actualTest} "${rootfs}/tmp/${test}" 
+				cp -L ${actualTest} "${rootfs}/tmp/${test}"
 				if [ ${t##*.} == "chroot" ]; then
 					if garden-chroot "${rootfs}" ./tmp/${test}; then
 						echo -e "\e[32mpassed\e[39m"
@@ -380,5 +380,6 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 
 echo
 find "${outputDir}" -type f -exec install -v -m 0644 -p -o "${userID}" -g "${userGID}" {} "${volumeDir}" \;
-echo
+
+echo ${outputDir}
 echo "Done"

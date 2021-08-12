@@ -24,9 +24,10 @@ build_image() {
         --suite $suite \
         --gardenversion $gardenversion \
         --features "${features}"
-    ls -la "${OUT_FILE}"
-    tar tf "${OUT_FILE}"
-    if [ -f "${OUT_FILE}" ]; then
+
+    mv /output ${OUT_FILE}
+    ls ${OUT_FILE}
+    if [ -d "${OUT_FILE}" ]; then
         echo "seems, like we might have succeeded?"
     else
         echo "no archive was created - see build log above for errors"
