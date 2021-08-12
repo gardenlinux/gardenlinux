@@ -1,3 +1,6 @@
+import dataclasses
+import logging
+import pprint
 import sys
 
 import glci
@@ -10,6 +13,8 @@ import version as version_util
 import product.v2
 
 import ctx
+
+logger = logging.getLogger(__name__)
 
 
 def _resolve_ctx_repository_config(cfg_name):
@@ -95,6 +100,11 @@ def build_component_descriptor(
         virtual_machine_image_resource(release_manifest, cicd_cfg)
         for release_manifest in releases
     ])
+
+    logger.info(
+        'Generated Component-Descriptor:\n'
+        f'{pprint.pformat(dataclasses.asdict(component_descriptor))}'
+    )
 
     if glci.model.PublishingAction.RELEASE in publishing_actions:
         product.v2.upload_component_descriptor_v2_to_oci_registry(
