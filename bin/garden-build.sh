@@ -379,11 +379,6 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 } >&2
 
 echo
-if [ ! -z "${OUT_FILE:-}" ]; then
-	echo "saving tar file to ${OUT_FILE}"
-	tar --sparse -cC "$exportDir" . -f "${OUT_FILE}"	
-else
-	find "${outputDir}" -type f -exec install -v -m 0644 -p -o "${userID}" -g "${userGID}" {} "${volumeDir}" \;
-fi
+find "${outputDir}" -type f -exec install -v -m 0644 -p -o "${userID}" -g "${userGID}" {} "${volumeDir}" \;
 echo
 echo "Done"
