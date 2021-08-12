@@ -1,4 +1,5 @@
 build_image() {
+    set -Eeuo pipefail
     if [ -f '/workspace/skip_build' ]; then
         echo 'found /workspace/skip_build - skipping build'
         exit 0
@@ -15,6 +16,7 @@ build_image() {
     echo "features: ${features}"
     ls -la /build
     export OUT_FILE="$(params.outfile)"
+    export OUTPUT_DIR="${OUT_FILE}"
 
     pwd
     echo "running build.."
@@ -25,12 +27,5 @@ build_image() {
         --gardenversion $gardenversion \
         --features "${features}"
 
-    mv /output ${OUT_FILE}
-    ls ${OUT_FILE}
-    if [ -d "${OUT_FILE}" ]; then
-        echo "seems, like we might have succeeded?"
-    else
-        echo "no archive was created - see build log above for errors"
-        exit 1
-    fi
+    ls ${OUTPUT_DIR}
 }

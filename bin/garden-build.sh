@@ -51,18 +51,26 @@ fi
 
 exportDir="output"
 outputDir="$exportDir$prefix"
-volumeDir="/output$prefix"
-buildLog="${volumeDir}/build.log"
 
-mkdir -p "${volumeDir}"
-touch "${buildLog}"
-chown -R "$userID":"$userID" "${volumeDir}"
+#TODO: clean this up and use volumeDir as outputDir when lessram is used
+if [ "${OUTPUT_DIR+defined}" ]; then
+	outputDir="${OUTPUT_DIR}${prefix}"
+	buildLog="${outputDir}/build.log"
+	mkdir -p "${outputDir}"
+	touch "${buildLog}"
+else
+	volumeDir="/output$prefix"
+	buildLog="${volumeDir}/build.log"
+	mkdir -p "${volumeDir}"
 
-volDirOwn="$volumeDir"
-while [ $(dirname "${volDirOwn}") != "/" ]; do
-	volDirOwn=$(dirname "${volDirOwn}")
-	chown "${userID}":"${userGID}" "${volDirOwn}"
-done
+	volDirOwn="$volumeDir"
+	while [ $(dirname "${volDirOwn}") != "/" ]; do
+		chown "${userID}":"${userGID}" "${volDirOwn}"
+		volDirOwn=$(dirname "${volDirOwn}")
+	done
+	touch "${buildLog}"
+	chown "${userID}":"${userGID}" "${buildLog}"
+fi
 
 exec > >(tee -a "${buildLog}") 2> >(tee -a "${buildLog}" >&2)
 
@@ -378,8 +386,11 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 
 } >&2
 
+if [ "${OUTPUT_DIR+defined}" ]; then
+	echo
+	echo ${outputDir}
+else
+	find "${outputDir}" -type f -exec install -v -m 0644 -p -o "${userID}" -g "${userGID}" {} "${volumeDir}" \;
+fi
 echo
-find "${outputDir}" -type f -exec install -v -m 0644 -p -o "${userID}" -g "${userGID}" {} "${volumeDir}" \;
-
-echo ${outputDir}
 echo "Done"
