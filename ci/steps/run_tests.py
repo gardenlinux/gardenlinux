@@ -107,6 +107,10 @@ def run_tests(
         print('publishing action "run_tests" not specified - skipping tests')
         return True
 
+    if os.path.exists('/workspace/skip_tests'):
+        print('Tests already uploaded in previous run, skipping test step')
+        sys.exit(0)
+
     modifiers = tuple(modifiers.split(','))
 
     params = TestRunParameters(

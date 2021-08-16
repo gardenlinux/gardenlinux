@@ -49,6 +49,10 @@ def upload_test_results(
     repo_dir: str,
     version: str,
 ):
+    if os.path.exists('/workspace/skip_tests'):
+        print('Tests already uploaded in previous run, skipping upload step')
+        sys.exit(0)
+
     manifest = glci.model.ReleaseManifest(
       build_committish=committish,
       version=version,

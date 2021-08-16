@@ -23,7 +23,6 @@ class PublishingAction(enum.Enum):
     IMAGES = 'images'
     MANIFESTS = 'manifests'
     RELEASE = 'release'
-    BUILD_ONLY = 'build_only'
     RUN_TESTS = 'run_tests'
 
 
