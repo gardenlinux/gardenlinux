@@ -17,6 +17,8 @@ import botocore
 import yaml
 import json
 
+import glci.aws
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -42,8 +44,15 @@ class FullTest:
         self.repo_root = pathlib.Path(__file__).parent.parent
         self.debug = args.debug
         self.aws_config = self.config["aws"]
-        self.ec2 = boto3.client("ec2")
-        self.s3 = boto3.client("s3")
+        botoargs={}
+        if "access_key_id" in self.aws_config:
+            botoargs["aws_access_key_id"] = self.aws_config["access_key_id"]
+        if "secret_access_key" in self.aws_config:
+            botoargs["aws_secret_access_key"] = self.aws_config["secret_access_key"]
+        if "region" in self.aws_config:
+            botoargs["region_name"] = self.aws_config["region"]
+        self.ec2 = boto3.client('ec2', **botoargs)
+        self.s3 = boto3.client('s3', **botoargs)
 
         # dir_path = os.path.dirname(os.path.realpath(__file__))
         # self.gardenlinux_bin = os.path.join(dir_path, os.pardir, "bin")
@@ -79,13 +88,29 @@ class FullTest:
         )
 
     def delete_ssh_key(self):
-
         self.ec2.delete_delete_key_pair(KeyName=self.config.aws.key_name)
 
     def aws_upload_image(self, image_url):
         o = urlparse(image_url)
+        if o.scheme == "s3":
+            snapshot_task_id = glci.aws.import_snapshot(
+                ec2_client=self.ec2,
+                s3_bucket_name=o.netloc,
+                image_key=o.path.lstrip("/"),
+            )
+            snapshot_id = glci.aws.wait_for_snapshot_import(
+                ec2_client=self.ec2,
+                snapshot_task_id=snapshot_task_id,
+            )
+            initial_ami_id = glci.aws.register_image(
+               ec2_client=self.ec2,
+               snapshot_id=snapshot_id,
+               image_name="gl-integration-test-image-" + o.path.split("/objects/",1)[1],
+            )
+            logger.debug("Imported image %s as AMI %s", image_url, initial_ami_id)
+            return {"ami-id": initial_ami_id}
         if o.scheme != "" and o.scheme != "file":
-            raise NotImplementedError("Only local image file uploads implemented.")
+            raise NotImplementedError("Only local image file uploads and S3 buckets are implemented.")
         logger.debug("Uploading image %s" % image_url)
         image_file = o.path
         cmd = [
