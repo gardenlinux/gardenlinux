@@ -181,7 +181,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 	sed -i "s/^HOME_URL=.*$/HOME_URL=\"https:\/\/gardenlinux.io\/\"/g" rootfs/etc/os-release
 	sed -i "s/^SUPPORT_URL=.*$/SUPPORT_URL=\"https:\/\/github.com\/gardenlinux\/gardenlinux\"/g" rootfs/etc/os-release
 	sed -i "s/^BUG_REPORT_URL=.*$/BUG_REPORT_URL=\"https:\/\/github.com\/gardenlinux\/gardenlinux\/issues\"/g" rootfs/etc/os-release
-	echo "GARDENLINUX_FEATURES=$(echo base,$features | tr "," "\n" | sort -u | paste -d"," -s)" >> rootfs/etc/os-release
+	echo "GARDENLINUX_FEATURES=$(echo base,$features | tr "," "\n" | norm_features | paste -d"," -s)" >> rootfs/etc/os-release
 	echo "GARDENLINUX_VERSION=$($debuerreotypeScriptsDir/garden-version)" >> rootfs/etc/os-release
 	echo "GARDENLINUX_COMMIT_ID=$commitid" >> rootfs/etc/os-release
 	echo "VERSION_CODENAME=$suite" >> rootfs/etc/os-release
@@ -259,7 +259,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 
 		echo "#### features"
 		[ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
-		for i in $(echo "base,$features" | tr ',' '\n' | sort -u); do
+		for i in $(echo "base,$features" | tr ',' '\n' | norm_features); do
 			if [ -s $featureDir/$i/image ]; then
 				bash -c "$featureDir/$i/image $rootfs $targetBase"
 			else
@@ -290,7 +290,7 @@ codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Re
 			# go over features and build the enabled/disabled lists
 			# a test with .disabled in a specific feature disables the test globally
 			# a test that is not executable is not enabled for the specific feature
-			for f in $(echo "base,$features" | tr ',' '\n' | sort -u); do
+			for f in $(echo "base,$features" | tr ',' '\n' | norm_features); do
 				featureTest="${featureDir}/${f}/test/${test}"
 				if [ -f "${featureTest}.disable" ]; then
 					disabledBy=$(echo "${f} ${disabledBy}")

@@ -161,3 +161,7 @@ filter_if() {
         print $NF
       }'
 }
+norm_features() {
+    # remove duplicates without sorting, last entry "wins"
+    tac | awk '!seen[$0]++' | tac
+}
