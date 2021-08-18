@@ -1,0 +1,13 @@
+[Unit]
+Description=Filesystem check for the device used for /usr
+DefaultDependencies=no
+After=usr-mount.service  
+Before=sysroot-usr.mount
+Requisite=usr-mount.service
+
+[Service]
+EnvironmentFile=/run/systemd/sysroot-usr.env
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/lib/systemd/systemd-fsck ${DEVICE} 
+TimeoutSec=0
