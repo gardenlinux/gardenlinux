@@ -1,7 +1,3 @@
-
-import pytest
-
-
 def test_gcp_instances(gcp_cfg, compute_client):
     zones = compute_client.zones().list(project=gcp_cfg.project_id).execute()
     print('Getting all zones for this project:')

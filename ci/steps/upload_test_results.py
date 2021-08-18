@@ -1,42 +1,11 @@
-import dataclasses
 import json
 import os
 import sys
-from botocore.utils import merge_dicts
 
 import dacite
 import glci.model
 import glci.util
 import glci.s3
-
-
-def do_find(
-    architecture: str,
-    cicd_cfg_name: str,
-    committish: str,
-    gardenlinux_epoch: str,
-    modifiers: str,
-    platform: str,
-    repo_dir: str,
-    version: str,
-):
-    cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
-    find_release = glci.util.preconfigured(
-        func=glci.util.find_release,
-        cicd_cfg=cicd_cfg,
-    )
-    modifiers = tuple(modifiers.split(','))
-    release = find_release(
-        release_identifier=glci.model.ReleaseIdentifier(
-            build_committish=committish,
-            version=version,
-            gardenlinux_epoch=int(gardenlinux_epoch),
-            architecture=glci.model.Architecture(architecture),
-            platform=platform,
-            modifiers=modifiers,
-        ),
-    )
-    return release
 
 
 def upload_test_results(
@@ -112,7 +81,7 @@ def upload_test_results(
     )
 
     if not manifest:
-        print("Could not find release-manifest, uploading test results failed.")
+        print('Could not find release-manifest, uploading test results failed.')
         sys.exit(1)
 
     print(f'downloaded manifest: {type(manifest)=}')

@@ -33,7 +33,6 @@ BuildParams = namedtuple("BuildParams", [
 
 
 def promote_task(
-
     branch: NamedParam,
     cicd_cfg_name: NamedParam,
     committish: NamedParam,
