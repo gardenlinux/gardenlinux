@@ -1,6 +1,10 @@
 # Azure images require waagent
-#waagent
+waagent
 # debootstrap does not pull python3-cffi-backend
-#python3-cffi-backend
-#
-#cloud-init
+python3-cffi-backend
+python3-cryptography
+python3-oauthlib
+cloud-init
+cloud-guest-utils
+hyperv-daemons
+isc-dhcp-client
