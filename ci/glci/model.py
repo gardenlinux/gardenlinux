@@ -23,6 +23,7 @@ class PublishingAction(enum.Enum):
     IMAGES = 'images'
     MANIFESTS = 'manifests'
     RELEASE = 'release'
+    RUN_TESTS = 'run_tests'
 
 
 class FeatureType(enum.Enum):
@@ -327,6 +328,18 @@ class OciPublishedImage:
     image_reference: str
 
 
+class TestResultCode(enum.Enum):
+    OK = 'sucess'
+    FAILED = 'failure'
+
+
+@dataclasses.dataclass(frozen=True)
+class ReleaseTestResult:
+    test_suite_cfg_name: str
+    test_result: TestResultCode
+    test_timestamp: str
+
+
 @dataclasses.dataclass(frozen=True)
 class ReleaseManifest(ReleaseIdentifier):
     '''
@@ -429,6 +442,7 @@ class OnlineReleaseManifest(ReleaseManifest):
     # injected iff retrieved from s3 bucket
     s3_key: str
     s3_bucket: str
+    test_result: typing.Optional[ReleaseTestResult]
 
     def stripped_manifest(self):
         raw = dataclasses.asdict(self)
@@ -436,6 +450,18 @@ class OnlineReleaseManifest(ReleaseManifest):
         del raw['s3_bucket']
 
         return ReleaseManifest(**raw)
+
+    @classmethod
+    def from_release_manifest(cls, release_manifest: ReleaseManifest, test_result: ReleaseTestResult):
+        return OnlineReleaseManifest(
+            **release_manifest.__dict__,
+            test_result=test_result
+        )
+
+    def with_test_result(self,  test_result: ReleaseTestResult):
+        new_dict = self.__dict__
+        new_dict['test_result'] = test_result
+        return OnlineReleaseManifest(**new_dict)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -498,7 +524,7 @@ class AzureServicePrincipalCfg:
     tenant_id: str
     client_id: str
     client_secret: str
-
+    subscription_id: str
 
 @dataclasses.dataclass(frozen=True)
 class AzureStorageAccountCfg:

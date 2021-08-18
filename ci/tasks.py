@@ -1,3 +1,5 @@
+
+from collections import namedtuple
 import steps
 import tkn.model
 
@@ -10,6 +12,24 @@ _repodir = NamedParam(
     default='/workspace/gardenlinux_git',
     description='Gardenlinux working dir',
 )
+
+BuildParams = namedtuple("BuildParams", [
+    "arch",
+    "build_image",
+    "cicd_cfg_name",
+    "committish",
+    "flavourset",
+    "giturl",
+    "glepoch",
+    "modifiers",
+    "outfile",
+    "platform",
+    "publishing_actions",
+    "promote_target",
+    "snapshot_ts",
+    "suite",
+    "version",
+])
 
 
 def promote_task(
@@ -301,59 +321,47 @@ def kernel_package_task(
     )
 
 
-def build_task(
-    env_vars,
-    volume_mounts,
-    volumes=[],
-):
+def  _get_build_and_test_parameters():
     arch = NamedParam(
         name='architecture',
         default='amd64',
         description='the build architecture (currently, only amd64 is supported)',
     )
+    build_image = NamedParam(
+        name='build_image',
+        description='the container image for gardenlinux build (dynamically created)',
+    )
+
     cicd_cfg_name = NamedParam(
         name='cicd_cfg_name',
         default='default',
         description='the cicd cfg to use (see cicd.yaml)'
     )
     committish = NamedParam(name='committish', default='master')
+    flavourset = NamedParam(
+        name='flavourset',
+        default='all',
+        description='the flavourset name this task is a part of',
+    )
     giturl = NamedParam(name='giturl', default='ssh://git@github.com/gardenlinux/gardenlinux')
     glepoch = NamedParam(
         name='gardenlinux_epoch',
         description='the gardenlinux epoch to use for as snapshot repo timestamp'
-    )
-    outfile = NamedParam(
-        name='outfile',
-        default='/workspace/gardenlinux.out',
-        description='build result file (parameter is used to pass between steps)'
-    )
-    snapshot_ts = NamedParam(
-        name='snapshot_timestamp',
-        description='the snapshot timestamp (calculated from gardenlinux_epoch)'
-    )
-    suite = NamedParam(
-        name='suite',
-        default='bullseye',
-        description='Debian release (buster, bullseye, ..)',
-    )
-    platform = NamedParam(
-        name='platform',
-        default='bullseye',
-        description='the target platform (aws, gcp, metal, kvm, ..)',
     )
     modifiers = NamedParam(
         name='modifiers',
         default='bullseye',
         description='the build modifiers',
     )
-    version = NamedParam(
-        name='version',
-        description='the target version to build / release',
+    outfile = NamedParam(
+        name='outfile',
+        default='/workspace/gardenlinux.out',
+        description='build result file (parameter is used to pass between steps)'
     )
-    flavourset = NamedParam(
-        name='flavourset',
-        default='all',
-        description='the flavourset name this task is a part of',
+    platform = NamedParam(
+        name='platform',
+        default='bullseye',
+        description='the target platform (aws, gcp, metal, kvm, ..)',
     )
     publishing_actions = NamedParam(
         name='publishing_actions',
@@ -365,59 +373,93 @@ def build_task(
         default='snapshots',
         description='the promotion target (snapshots|daily|release)',
     )
-    build_image = NamedParam(
-        name='build_image',
-        default='xxx_eu.gcr.io/gardener-project/gardenlinux/gardenlinux-build-image:377.0.0',
-        description='the container image for gardenlinux build (dynamically created)',
+    snapshot_ts = NamedParam(
+        name='snapshot_timestamp',
+        description='the snapshot timestamp (calculated from gardenlinux_epoch)'
+    )
+    suite = NamedParam(
+        name='suite',
+        default='bullseye',
+        description='Debian release (buster, bullseye, ..)',
+    )
+    version = NamedParam(
+        name='version',
+        description='the target version to build / release',
     )
 
+    return BuildParams(
+        arch,
+        build_image,
+        cicd_cfg_name,
+        committish,
+        flavourset,
+        giturl,
+        glepoch,
+        modifiers,
+        outfile,
+        platform,
+        publishing_actions,
+        promote_target,
+        snapshot_ts,
+        suite,
+        version,
+        )
+
+
+def build_task(
+    env_vars,
+    volume_mounts,
+    volumes=[],
+):
+    params = _get_build_and_test_parameters()
+
     clone_step = steps.clone_step(
-        committish=committish,
-        git_url=giturl,
+        committish=params.committish,
+        git_url=params.giturl,
         repo_dir=_repodir,
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
 
     pre_build_step = steps.pre_build_step(
-        architecture=arch,
-        cicd_cfg_name=cicd_cfg_name,
-        committish=committish,
-        gardenlinux_epoch=glepoch,
-        modifiers=modifiers,
-        platform=platform,
-        publishing_actions=publishing_actions,
+        architecture=params.arch,
+        cicd_cfg_name=params.cicd_cfg_name,
+        committish=params.committish,
+        gardenlinux_epoch=params.glepoch,
+        modifiers=params.modifiers,
+        platform=params.platform,
+        publishing_actions=params.publishing_actions,
         repo_dir=_repodir,
-        version=version,
+        version=params.version,
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
 
     build_image_step = steps.build_image_step(
-        arch=arch,
-        suite=suite,
-        gardenlinux_epoch=glepoch,
-        timestamp=snapshot_ts,
-        platform=platform,
-        modifiers=modifiers,
-        committish=committish,
-        gardenversion=version,
+        arch=params.arch,
+        suite=params.suite,
+        gardenlinux_epoch=params.glepoch,
+        timestamp=params.snapshot_ts,
+        platform=params.platform,
+        modifiers=params.modifiers,
+        committish=params.committish,
+        gardenversion=params.version,
         env_vars=env_vars,
         volume_mounts=volume_mounts,
         repo_dir=_repodir,
     )
 
     upload_step = steps.upload_results_step(
-        architecture=arch,
-        cicd_cfg_name=cicd_cfg_name,
-        committish=committish,
-        gardenlinux_epoch=glepoch,
-        modifiers=modifiers,
-        outfile=outfile,
-        platform=platform,
-        publishing_actions=publishing_actions,
+        architecture=params.arch,
+        cicd_cfg_name=params.cicd_cfg_name,
+        committish=params.committish,
+        gardenlinux_epoch=params.glepoch,
+        modifiers=params.modifiers,
+        outfile=params.outfile,
+        platform=params.platform,
+        publishing_actions=params.publishing_actions,
         repo_dir=_repodir,
-        version=version,
+        version=params.version,
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
@@ -437,28 +479,139 @@ def build_task(
         metadata=tkn.model.Metadata(name='build-gardenlinux-task'),
         spec=tkn.model.TaskSpec(
             params=[
-                arch,
-                build_image,
-                cicd_cfg_name,
-                committish,
-                flavourset,
-                giturl,
-                glepoch,
-                modifiers,
-                outfile,
-                platform,
-                promote_target,
-                publishing_actions,
+                params.arch,
+                params.build_image,
+                params.cicd_cfg_name,
+                params.committish,
+                params.flavourset,
+                params.giturl,
+                params.glepoch,
+                params.modifiers,
+                params.outfile,
+                params.platform,
+                params.promote_target,
+                params.publishing_actions,
                 _repodir,
-                snapshot_ts,
-                suite,
-                version,
+                params.snapshot_ts,
+                params.suite,
+                params.version,
             ],
             steps=[
                 clone_step,
                 pre_build_step,
                 build_image_step,
                 upload_step,
+            ],
+            volumes=task_volumes,
+        ),
+    )
+
+
+def test_task(
+    env_vars,
+    volume_mounts,
+    volumes=[],
+):
+    params = _get_build_and_test_parameters()
+
+    clone_step = steps.clone_step(
+        committish=params.committish,
+        git_url=params.giturl,
+        repo_dir=_repodir,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+
+    publishing_actions = NamedParam(name='publishing_actions')
+
+    pytest_cfg = NamedParam(
+        name='pytest_cfg',
+        description='configuration name of testsuite in file test_cfg.yaml',
+        default='default',
+    )
+
+    pre_check_tests_step = steps.pre_check_tests_step(
+        architecture=params.arch,
+        committish=params.committish,
+        cicd_cfg_name=params.cicd_cfg_name,
+        gardenlinux_epoch=params.glepoch,
+        modifiers=params.modifiers,
+        platform=params.platform,
+        publishing_actions=publishing_actions,
+        repo_dir=_repodir,
+        version=params.version,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+
+    test_step = steps.test_step(
+        architecture=params.arch,
+        committish=params.committish,
+        cicd_cfg_name=params.cicd_cfg_name,
+        gardenlinux_epoch=params.glepoch,
+        modifiers=params.modifiers,
+        platform=params.platform,
+        publishing_actions=publishing_actions,
+        repo_dir=_repodir,
+        suite=params.suite,
+        snapshot_timestamp=params.snapshot_ts,
+        version=params.version,
+        pytest_cfg=pytest_cfg,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+
+    upload_test_results_step = steps.upload_test_results_step(
+        architecture=params.arch,
+        cicd_cfg_name=params.cicd_cfg_name,
+        committish=params.committish,
+        gardenlinux_epoch=params.glepoch,
+        modifiers=params.modifiers,
+        platform=params.platform,
+        repo_dir=_repodir,
+        version=params.version,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+
+    task_volumes = [v for v in volumes]
+    task_volumes.extend(
+        [{
+            'name': 'dev',
+            'hostPath': {'path': '/dev', 'type': 'Directory'},
+        }, {
+            'name': 'build',
+            'emptyDir': {'medium': 'Memory'},
+        }]
+    )
+
+    return tkn.model.Task(
+        metadata=tkn.model.Metadata(name='integration-test-task'),
+        spec=tkn.model.TaskSpec(
+            params=[
+                params.arch,
+                params.build_image,
+                params.cicd_cfg_name,
+                params.committish,
+                params.flavourset,
+                params.giturl,
+                params.glepoch,
+                params.modifiers,
+                params.outfile,
+                params.platform,
+                params.promote_target,
+                params.publishing_actions,
+                _repodir,
+                params.snapshot_ts,
+                params.suite,
+                params.version,
+                pytest_cfg,
+            ],
+            steps=[
+                clone_step,
+                pre_check_tests_step,
+                test_step,
+                upload_test_results_step,
             ],
             volumes=task_volumes,
         ),

@@ -1,11 +1,9 @@
-import sys
-
 import glci.model
 import glci.util
 import glci.s3
 
 
-def pre_build_step(
+def pre_check_tests(
     cicd_cfg_name: str,
     modifiers: str,
     committish: str,
@@ -39,15 +37,20 @@ def pre_build_step(
       modifiers=modifiers,
     )
 
-    if glci.util.find_release(
+    release = glci.util.find_release(
       s3_client=s3_client,
       bucket_name=s3_bucket_name,
       release_identifier=release_identifier,
       prefix=glci.model.ReleaseManifest.manifest_key_prefix,
-    ):
-      with open('/workspace/skip_build', 'w') as f:
-          f.write('skip build (already done)')
-      print('build already done - telling next step to skip (/workspace/skip_build touched)')
+    )
+    if release:
       # check if tests have been run and create a marker file
+      test_result = release.test_result
+      if test_result and test_result.test_result == glci.model.TestResultCode.OK:
+          print('Tests have been run successfully previously, will be skipped')
+          with open('/workspace/skip_tests', 'w') as f:
+              f.write('skip tests (already done)')
+      else:
+          print('Tests have not been run or failed - running tests')
     else:
-      print('no matching build results found - will perform build')
+      print('no release manifest found - running tests')

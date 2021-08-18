@@ -30,6 +30,26 @@ def pass_param(name: str):
     return NamedParam(name=name, value=f'$(params.{name})')
 
 
+def _get_modifier_names(gardenlinux_flavour):
+    modifier_names = ','.join(
+        sorted(
+            (m.name for m in gardenlinux_flavour.calculate_modifiers())
+        )
+    )
+    return modifier_names
+
+
+def _generate_task_name(prefix: str, gardenlinux_flavour: GardenlinuxFlavour):
+    task_name = prefix + gardenlinux_flavour.canonical_name_prefix().replace('/', '-')\
+        .replace('_', '').strip('-')\
+        .replace('readonly', 'ro')  # hardcoded shortening (length-restriction)
+
+    if len(task_name) > 64:
+        print(f'WARNING: {task_name=} too long - will shorten')
+        task_name = task_name[:64]
+    return task_name
+
+
 def mk_pipeline_base_build_task(
 ):
     return PipelineTask(
@@ -43,6 +63,7 @@ def mk_pipeline_base_build_task(
         ],
         runAfter=None,
     )
+
 
 def mk_pipeline_package_build_task(
     package_name: str,
@@ -62,12 +83,13 @@ def mk_pipeline_package_build_task(
         timeout="6h"
     )
 
+
 def mk_pipeline_kernel_package_build_task(
     package_names: str,
     run_after: typing.List[str],
 ):
     return PipelineTask(
-        name=f'build-kernel-packages',
+        name='build-kernel-packages',
         taskRef=TaskRef(name='build-kernel-packages'),
         params=[
             pass_param(name='giturl'),
@@ -80,6 +102,7 @@ def mk_pipeline_kernel_package_build_task(
         timeout="6h"
     )
 
+
 def mk_pipeline_build_task(
     gardenlinux_flavour: GardenlinuxFlavour,
     pipeline_flavour: glci.model.PipelineFlavour,
@@ -88,19 +111,8 @@ def mk_pipeline_build_task(
     if pipeline_flavour is not glci.model.PipelineFlavour.SNAPSHOT:
         raise NotImplementedError(pipeline_flavour)
 
-    modifier_names = ','.join(
-        sorted(
-            (m.name for m in gardenlinux_flavour.calculate_modifiers())
-        )
-    )
-
-    task_name = gardenlinux_flavour.canonical_name_prefix().replace('/', '-')\
-        .replace('_', '').strip('-')\
-        .replace('readonly', 'ro')  # hardcoded shortening (length-restriction)
-
-    if len(task_name) > 64:
-        print(f'WARNING: {task_name=} too long - will shorten')
-        task_name = task_name[:64]
+    modifier_names = _get_modifier_names(gardenlinux_flavour)
+    task_name = _generate_task_name(prefix='', gardenlinux_flavour=gardenlinux_flavour)
 
     return PipelineTask(
         name=task_name,
@@ -116,6 +128,36 @@ def mk_pipeline_build_task(
             NamedParam(name='platform', value=gardenlinux_flavour.platform),
             pass_param(name='promote_target'),
             pass_param(name='publishing_actions'),
+            pass_param(name='snapshot_timestamp'),
+            pass_param(name='version'),
+        ],
+        runAfter=run_after,
+    )
+
+
+def mk_pipeline_test_task(
+    gardenlinux_flavour: GardenlinuxFlavour,
+    pipeline_flavour: glci.model.PipelineFlavour,
+    run_after: typing.List[str],
+):
+
+    modifier_names = _get_modifier_names(gardenlinux_flavour)
+    task_name = _generate_task_name(prefix="tst", gardenlinux_flavour=gardenlinux_flavour)
+
+    return PipelineTask(
+        name=task_name,
+        taskRef=TaskRef(name='integration-test-task'),
+        params=[
+            pass_param(name='build_image'),
+            pass_param(name='cicd_cfg_name'),
+            pass_param(name='committish'),
+            pass_param(name='flavourset'),
+            pass_param(name='gardenlinux_epoch'),
+            pass_param(name='giturl'),
+            NamedParam(name='modifiers', value=modifier_names),
+            NamedParam(name='platform', value=gardenlinux_flavour.platform),
+            pass_param(name='publishing_actions'),
+            pass_param(name='pytest_cfg'),
             pass_param(name='snapshot_timestamp'),
             pass_param(name='version'),
         ],
@@ -211,11 +253,15 @@ def mk_pipeline_packages():
     run_after = [pkg.name for pkg in package_tasks]
     tasks += package_tasks
 
-    # build packages depending on the Liniux kernel (need to be build in sequence to share file system):
+    # build packages depending on the Liniux kernel (need to be build in sequence to share file
+    # system):
     # pkg_kernel_names = "linux-5.4, linux-5.4-signed, wireguard"
     pkg_kernel_names = "linux-5.10 linux-5.10-signed"
 
-    package_kernel_task = mk_pipeline_kernel_package_build_task(pkg_kernel_names, [base_build_task.name])
+    package_kernel_task = mk_pipeline_kernel_package_build_task(
+        pkg_kernel_names,
+        [base_build_task.name],
+    )
 
     run_after += package_kernel_task.name
     tasks.append(package_kernel_task)
@@ -280,6 +326,12 @@ def mk_pipeline(
             run_after=[base_build_task.name],
         )
         build_tasks.append(build_task)
+        test_task = mk_pipeline_test_task(
+            gardenlinux_flavour=glf,
+            pipeline_flavour=pipeline_flavour,
+            run_after=[build_task.name],
+        )
+        build_tasks.append(test_task)
 
     tasks += build_tasks
 
@@ -311,6 +363,7 @@ def mk_pipeline(
                 NamedParam(name='version'),
                 NamedParam(name='version_label'),
                 NamedParam(name='disable_notifications'),
+                NamedParam(name='pytest_cfg'),
                 NamedParam(
                     name='additional_recipients',
                     description='see notify-task',
@@ -367,7 +420,6 @@ def main():
         flavour_set_name=parsed.flavour_set,
         build_yaml=build_yaml,
     )
-
 
     # generate pipeline for packages:
     pipeline: dict = mk_pipeline_packages()

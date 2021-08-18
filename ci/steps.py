@@ -669,3 +669,120 @@ def get_logs_step(
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+
+
+def pre_check_tests_step(
+    architecture: tkn.model.NamedParam,
+    cicd_cfg_name: tkn.model.NamedParam,
+    committish: tkn.model.NamedParam,
+    gardenlinux_epoch: tkn.model.NamedParam,
+    modifiers: tkn.model.NamedParam,
+    platform: tkn.model.NamedParam,
+    publishing_actions: tkn.model.NamedParam,
+    repo_dir: tkn.model.NamedParam,
+    version: tkn.model.NamedParam,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
+):
+    return tkn.model.TaskStep(
+        name='pre-check-tests',
+        image=DEFAULT_IMAGE,
+        script=task_step_script(
+            path=os.path.join(steps_dir, 'pre_check_tests.py'),
+            script_type=ScriptType.PYTHON3,
+            callable='pre_check_tests',
+            repo_path_param=repo_dir,
+            params=[
+                architecture,
+                cicd_cfg_name,
+                committish,
+                gardenlinux_epoch,
+                modifiers,
+                platform,
+                publishing_actions,
+                version,
+            ],
+        ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
+    )
+
+
+def test_step(
+    architecture: tkn.model.NamedParam,
+    cicd_cfg_name: tkn.model.NamedParam,
+    committish: tkn.model.NamedParam,
+    gardenlinux_epoch: tkn.model.NamedParam,
+    modifiers: tkn.model.NamedParam,
+    platform: tkn.model.NamedParam,
+    publishing_actions: tkn.model.NamedParam,
+    repo_dir: tkn.model.NamedParam,
+    suite: tkn.model.NamedParam,
+    snapshot_timestamp: tkn.model.NamedParam,
+    version: tkn.model.NamedParam,
+    pytest_cfg: tkn.model.NamedParam,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
+):
+    return tkn.model.TaskStep(
+        name='run-tests',
+        image=DEFAULT_IMAGE,
+        script=task_step_script(
+            path=os.path.join(steps_dir, 'run_tests.py'),
+            script_type=ScriptType.PYTHON3,
+            callable='run_tests',
+            repo_path_param=repo_dir,
+            params=[
+                architecture,
+                cicd_cfg_name,
+                committish,
+                gardenlinux_epoch,
+                modifiers,
+                platform,
+                publishing_actions,
+                repo_dir,
+                snapshot_timestamp,
+                suite,
+                version,
+                pytest_cfg,
+            ],
+        ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
+    )
+
+
+def upload_test_results_step(
+    architecture: tkn.model.NamedParam,
+    cicd_cfg_name: tkn.model.NamedParam,
+    committish: tkn.model.NamedParam,
+    gardenlinux_epoch: tkn.model.NamedParam,
+    modifiers: tkn.model.NamedParam,
+    platform: tkn.model.NamedParam,
+    repo_dir: tkn.model.NamedParam,
+    version: tkn.model.NamedParam,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
+):
+    return tkn.model.TaskStep(
+        name='upload-test-results',
+        image=DEFAULT_IMAGE,
+        script=task_step_script(
+            path=os.path.join(steps_dir, 'upload_test_results.py'),
+            script_type=ScriptType.PYTHON3,
+            callable='upload_test_results',
+            repo_path_param=repo_dir,
+            params=[
+                architecture,
+                cicd_cfg_name,
+                committish,
+                gardenlinux_epoch,
+                modifiers,
+                platform,
+                repo_dir,
+                version,
+            ],
+        ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
+    )
