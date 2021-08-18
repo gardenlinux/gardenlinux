@@ -10,6 +10,7 @@ pyyaml = "*"
 scp = "*"
 google-api-python-client = "*"
 oauth2client = "*"
+dacite = "*"
 
 [dev-packages]
 flake8 = "*"

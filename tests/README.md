@@ -1,15 +1,21 @@
 # Tests
 
+
 ## Full Integration Test Including Image Upload
 
 1. Write a configuration file
 
-Notes AWS:
-- credentials must be in ~/.aws/config and ~/.aws/credentials
+Notes for AWS credentials:
+- credentials must be supplied either in the test configuration file itself (keys `access_key_id`, `secret_access_key` and `region`)
+- or credentials can be supplied in ~/.aws/config and ~/.aws/credentials
 
 ```
 aws:
     region: eu-central-1
+    # the AWS access key
+    #access_key_id: xxx
+    # the AWS secret access key
+    #secret_access_key: xxx
     # If specified this AMI will be used (no image upload)
     #ami_id: ami-xxx
     # user and ssh key used to connect to the ec2 instance
@@ -18,17 +24,17 @@ aws:
     ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
     # ssh key passphrase if configured
     passphrase:
-    # name of public ssh key imported to AWS
+    # name of the public ssh key object as it gets imported into AWS
     key_name: gardenlinux-test-2
     remote_path: /
     # not all machines are available in all regions
     instance_type: t3.micro
     # bucket where the image will be uploded to
     bucket: import-to-ec2-gardenlinux-validation
-    # image file
+    # image file (if provided locally)
     image: file:/build/aws/20210714/amd64/bullseye/rootfs.raw
-    # image name in s3
-    image_name: integration_test_image
+    # image file (if provided from S3)
+    #image: s3://gardenlinux/objects/078f440a76024ccd1679481708ebfc32f5431569
 ```
 
 2. Build the integration test container with all necessary dependencies
@@ -46,6 +52,8 @@ make docker
 ```
 docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.aws:/root/.aws -v $HOME/.ssh:/root/.ssh  gardenlinux/integration-test:`bin/garden-version` bash
 ```
+
+**NOTE**: You need to extend the PYTHONPATH in your container to include the directory `ci` of the gardenlinux repository, i.e. `/gardenlinux/ci` in the above example.
 
 3. Set up dependencies
 

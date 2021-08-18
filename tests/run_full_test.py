@@ -4,6 +4,7 @@ import tempfile
 import logging
 import argparse
 import os
+import os.path
 import pathlib
 import sys
 from urllib.parse import urlparse
@@ -72,7 +73,12 @@ class FullTest:
                     return
 
         logger.debug("Uploading public key '%s' " % self.aws_config["key_name"])
-        k = paramiko.RSAKey.from_private_key_file("/root/.ssh/id_rsa_gardenlinux_test")
+        if "ssh_key_filepath" in self.aws_config:
+            ssh_key_file_path=self.aws_config["ssh_key_filepath"]
+        else:
+            sys.exit("SSH keyfile not given in test configuration")
+            # TODO: generate a key on the fly
+        k = paramiko.RSAKey.from_private_key_file(os.path.abspath(ssh_key_file_path))
         pub = k.get_name() + " " + k.get_base64()
         self.ec2.import_key_pair(
             KeyName=self.aws_config["key_name"],
@@ -93,6 +99,16 @@ class FullTest:
     def aws_upload_image(self, image_url):
         o = urlparse(image_url)
         if o.scheme == "s3":
+            image_name="gl-integration-test-image-" + o.path.split("/objects/", 1)[1]
+            images = self.ec2.describe_images(Filters=[{
+                "Name": "name",
+                "Values": [image_name]
+            }])
+            if len(images['Images']) > 0:
+                ami_id = images['Images'][0]['ImageId']
+                logger.debug("Image with AMI id %s already exists", ami_id)
+                return {"ami-id": ami_id}
+
             snapshot_task_id = glci.aws.import_snapshot(
                 ec2_client=self.ec2,
                 s3_bucket_name=o.netloc,
