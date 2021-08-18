@@ -1,0 +1,12 @@
+[Unit]
+After=sysroot.mount
+After=usr-mount.service
+Before=initrd-fs.target
+Requisite=usr-mount.service
+
+[Mount]
+EnvironmentFile=/run/systemd/sysroot-usr.env
+Where=/sysroot/usr
+What=${DEVICE}
+Options=${OPTIONS}
+Type=${FSTYPE}
