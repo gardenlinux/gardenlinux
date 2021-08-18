@@ -3,23 +3,20 @@ set -euo pipefail
 
 . $(dirname $0)/.helper
 
-sudo apt-get install -y --no-install-recommends git equivs
-git clone https://github.com/GoogleCloudPlatform/guest-agent.git $src
+VERSION=20210629.00-0ubuntu1
 
+sudo apt-get install -y --no-install-recommends devscripts dpkg-dev dh-golang golang-any
+
+mkdir $src
 cd $src
-#mv packaging/debian .
-#rm -rf packaging
-#version=$(dpkg-parsechangelog --show-field Version | sed "s/[0-9]*:\?\([^\-]*\)-\?.*/\1/")
-#dch -i 'rebuild since no offical package anymore'
-#dch -r ''
-#TMPDIR=.. mk-build-deps debian/control
-#sudo apt-get install -y --no-install-recommends -f ../$src-build-deps_*_all.deb
 
-donotmove="$(ls ..)"
-wget --content-disposition https://packages.cloud.google.com/apt/pool/google-guest-agent_1:20210223.01-g1_amd64_8d1c89d2931feb823c0b7171fcee1ecb17dcd423589459c021776d3a907da2a3.deb
-mv google-guest-agent_1:20210223.01-g1_amd64_8d1c89d2931feb823c0b7171fcee1ecb17dcd423589459c021776d3a907da2a3.deb ../google-guest-agent_1:20210223.01-g1_amd64.deb
-#tar cJf ../${src}_${version}.orig.tar.xz -C .. ${src}
-#debuild
+dget -x https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/google-guest-agent/${VERSION}/google-guest-agent_${VERSION}.dsc
+
+donotmove=*
+
+cd google-guest-agent-${VERSION%%-*}
+dch -l+gardenlinux --distribution bullseye "Rebuild for Gardenlinux"
+dpkg-buildpackage
+
 sourcepath=main/g/google-compute-image-packages/
 move_package .. $donotmove
-
