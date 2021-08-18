@@ -11,7 +11,8 @@ depends() {
 }
 
 install() {
-    inst_multiple grep sfdisk growpart udevadm awk mawk sed rm readlink systemd-detect-virt systemd-cat
+    # FIXME: remove tr, base should include it
+    inst_multiple tr grep sfdisk growpart udevadm awk mawk sed rm readlink systemd-detect-virt systemd-cat
    
     # grow root
     if [ -f "$moddir/growroot.sh" ]; then
