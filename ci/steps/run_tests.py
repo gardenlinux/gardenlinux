@@ -141,7 +141,7 @@ def run_tests(
         with open(test_cfg_path) as file:
             test_cfgs = yaml.safe_load(file)
 
-        if  not (cfgs:= test_cfgs.get('test_cfgs')) or not cfg_name in cfgs:
+        if  not (cfgs := test_cfgs.get('test_cfgs')) or not cfg_name in cfgs:
             print(f'Profile: {cfg_name} not found in file {test_cfg_path}. Stopping')
             sys.exit(1)
 
