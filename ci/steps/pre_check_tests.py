@@ -16,11 +16,9 @@ def pre_check_tests(
     publishing_actions = [
         glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
     ]
-    if glci.model.PublishingAction.BUILD_ONLY in publishing_actions:
-        print(
-            f'publishing action {glci.model.PublishingAction.BUILD_ONLY=} specified - exiting now'
-        )
-        sys.exit(0)
+    if not glci.model.PublishingAction.RUN_TESTS in publishing_actions:
+        print('publishing action "run_tests" not specified - skipping tests')
+        return True
 
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
     s3_client = glci.s3.s3_client(cicd_cfg)

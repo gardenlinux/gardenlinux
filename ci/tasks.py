@@ -568,6 +568,7 @@ def test_task(
         gardenlinux_epoch=params.glepoch,
         modifiers=params.modifiers,
         platform=params.platform,
+        publishing_actions=publishing_actions,
         repo_dir=_repodir,
         version=params.version,
         env_vars=env_vars,
