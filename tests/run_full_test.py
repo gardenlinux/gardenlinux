@@ -13,12 +13,13 @@ import selectors
 import time
 import paramiko
 
-import boto3
-import botocore
 import yaml
 import json
 
+import boto3
+import botocore
 import glci.aws
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -30,21 +31,51 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-class FullTest:
-    def __init__(self, args):
 
-        self.config_file = args.config
-        self.iaas = args.iaas
-        try:
-            with open(args.config) as f:
-                self.config = yaml.load(f, Loader=yaml.FullLoader)
-        except OSError as e:
-            logger.exception(e)
-            exit(1)
+class GCPFullTest:
+    import google.cloud
 
-        self.repo_root = pathlib.Path(__file__).parent.parent
-        self.debug = args.debug
-        self.aws_config = self.config["aws"]
+    def __init__(self, config):
+        self.gcp_config = config
+        if "service_account_json_path" in self.gcp_config:
+            svc_file = pathlib.Path(self.gcp_config["service_account_json_path"])
+            if not svc_file.is_file:
+                logger.error("Service account json %s does not exist", str(svc_file))
+
+        self.gcs_client = google.cloud.storage.Client.from_service_account_json(str(svc_file))
+        self.gce_client = google.cloud.client.Client.from_service_account_json(str(svc_file))
+        return
+    def upload_ssh_key(self):
+        return
+    def delete_ssh_key(self):
+        return
+    def upload_image(self, image_url):
+        o = urlparse(image_url)
+
+# not tested, unlikely to work... but we will not get here anyway as GCP is still raising a "not implemented error"
+        if o.scheme != "" and o.scheme != "file":
+            raise NotImplementedError("Only local image file uploads and S3 buckets are implemented.")
+        logger.debug("Uploading image %s" % image_url)
+        image_file = o.path
+        image_blob_name = "gardenlinux-integration-test-image.tar.gz"
+        
+        gcp_bucket = self.gcs_client.get_bucket(self.gcp_config["bucket"])
+        image_blob = gcp_bucket.blob(image_blob_name)
+        image_blob.upload_from_filename(image_file)
+
+        return
+    def run_integration_test(self, configfile):
+        return
+    def delete_image(self):
+        return
+    def run(self):
+        return
+
+
+class AWSFullTest:
+
+    def __init__(self, config):
+        self.aws_config = config
         botoargs={}
         if "access_key_id" in self.aws_config:
             botoargs["aws_access_key_id"] = self.aws_config["access_key_id"]
@@ -58,11 +89,7 @@ class FullTest:
         # dir_path = os.path.dirname(os.path.realpath(__file__))
         # self.gardenlinux_bin = os.path.join(dir_path, os.pardir, "bin")
 
-    @classmethod
-    def init(cls, args):
-        return FullTest(args)
-
-    def aws_upload_ssh_key(self):
+    def upload_ssh_key(self):
         response = self.ec2.describe_key_pairs()
         if "KeyPairs" in response:
             for kp in response["KeyPairs"]:
@@ -96,7 +123,7 @@ class FullTest:
     def delete_ssh_key(self):
         self.ec2.delete_delete_key_pair(KeyName=self.config.aws.key_name)
 
-    def aws_upload_image(self, image_url):
+    def upload_image(self, image_url):
         o = urlparse(image_url)
         if o.scheme == "s3":
             image_name="gl-integration-test-image-" + o.path.split("/objects/", 1)[1]
@@ -152,7 +179,7 @@ class FullTest:
         logger.debug("Result of upload_image %s" % (result.stdout.decode("utf-8")))
         return json.loads(result.stdout)
 
-    def aws_run_integration_test(self, configfile):
+    def run_integration_test(self, configfile):
         logger.info("Starting integration tests")
         cmd = ["pytest", "--iaas=aws", "--configfile=" + configfile, "integration/"]
         logger.debug("Running command: " + " ".join([v for v in cmd]))
@@ -183,9 +210,8 @@ class FullTest:
     def delete_ssh_key(self):
         self.ec2.delete_key_pair(KeyName=self.aws_config["key_name"])
 
-    def run_aws_integration_test(self):
-
-        self.aws_upload_ssh_key()
+    def run(self):
+        self.upload_ssh_key()
         ami_id = self.aws_config["ami_id"] if "ami_id" in self.aws_config else None
         upload_result = None
 
@@ -194,7 +220,7 @@ class FullTest:
             logger.info(
                 "Uploading new image %s to AWS for test" % self.aws_config["image"]
             )
-            upload_result = self.aws_upload_image(self.aws_config["image"])
+            upload_result = self.upload_image(self.aws_config["image"])
             ami_id = upload_result["ami-id"]
 
         if ami_id == None:
@@ -205,9 +231,9 @@ class FullTest:
         if upload_result is not None:
             self.aws_config["ami_id"] = upload_result["ami-id"]
         with open("/tmp/test_config_amended.yaml", "w") as f:
-            yaml.dump(self.config, f)
+            yaml.dump(self.aws_config, f)
 
-        test_result = self.aws_run_integration_test(self.new_config_file)
+        test_result = self.run_integration_test(self.new_config_file)
         if test_result == True:
             logger.info("Tests successful, deleting image")
             self.delete_image()
@@ -215,34 +241,51 @@ class FullTest:
         else:
             logger.info("Tests not successful, instance still running")
 
-    def run(self):
 
+class FullTest:
+    def __init__(self, args):
+        self.config_file = args.config
+        self.iaas = args.iaas
+        try:
+            with open(args.config) as f:
+                self.config = yaml.load(f, Loader=yaml.FullLoader)
+        except OSError as e:
+            logger.exception(e)
+            exit(1)
+
+        self.repo_root = pathlib.Path(__file__).parent.parent
+        self.debug = args.debug
+
+    @classmethod
+    def init(cls, config):
+        return FullTest(config)
+
+    def GetTest(self):
         if self.iaas == "aws":
-            self.run_aws_integration_test()
+            return AWSFullTest(self.config["aws"])
         elif self.iaas == "gcp":
-            logger.error("Test for GCP no yet implemented.")
-            os.exit(1)
+            sys.exit("Test for GCP not yet implemented.")
+            #return GCPFullTest(self.config["gcp"])
         elif self.iaas == "azure":
-            logger.error("Test for Azure not yet implemented.")
-            os.exit(1)
+            sys.exit("Test for Azure not yet implemented.")
         else:
-            logger.error("Unknown cloud provider.")
-            os.exit(1)
+            sys.exit("Unknown cloud provider.")
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--iaas", type=str, help="cloud provider")
     parser.add_argument("--config", type=str, help="test configuration")
-
     parser.add_argument("--debug", action="store_true", help="debug")
+
     args = parser.parse_args()
     if args.debug:
         logger.setLevel(logging.DEBUG)
         handler.setLevel(logging.DEBUG)
 
     full = FullTest.init(args)
-    full.run()
+    test = full.GetTest()
+    test.run()
 
 
 if __name__ == "__main__":
