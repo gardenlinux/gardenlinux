@@ -84,10 +84,10 @@ dd if=/dev/zero of=${raw_image} bs=1 count=0 seek=${imagesz}
 loopback=$(losetup -f --show ${raw_image})
 #trap "[ -n $loopback ] && losetup -d $loopback" EXIT
 
+#type=21686148-6449-6E6F-744E-656564454649, name="BIOS", size=1MiB
 echo "### using ${loopback}"
 echo 'label: gpt
-type=21686148-6449-6E6F-744E-656564454649, name="BIOS", size=1MiB
-type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, name="EFI", size=16MiB
+type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, name="EFI", size=100MiB
 type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, name="USR", size=1GiB
 type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, name="ROOT"' | sfdisk $loopback --no-reread --no-tell-kernel
 losetup -d $loopback
@@ -96,17 +96,21 @@ while [ -n "$(losetup -l | grep $loopback)" ]; do sleep 1; echo -n "."; done; ec
 loopback=$(losetup -f --partscan --show ${raw_image})
 echo "### reconnected loopback to ${loopback}"
 
+echo "### setting boot flag on EFI partition"
+#sfdisk --part-attrs ${loopback} -N 1 2
+sgdisk ${loopback} --attributes=1:set:2
+
 echo "### creating filesystems"
-mkfs.vfat -n EFI ${loopback}p2
-mkfs.ext4 -L USR  -E lazy_itable_init=0,lazy_journal_init=0 ${loopback}p3
-mkfs.ext4 -L ROOT -E lazy_itable_init=0,lazy_journal_init=0 -I 256 ${loopback}p4
+mkfs.vfat -n EFI ${loopback}p1
+mkfs.ext4 -L USR  -E lazy_itable_init=0,lazy_journal_init=0 ${loopback}p2
+mkfs.ext4 -L ROOT -E lazy_itable_init=0,lazy_journal_init=0 -I 256 ${loopback}p3
 # part of debian-cloud-images, I am sure we want that :-) -> it is default
 #tune2fs -c 0 -i 0 ${loopback}p3
 
 echo "### mounting filesystems"
-mkdir -p ${dir_name}          && mount ${loopback}p4 ${dir_name}
-mkdir -p ${dir_name}/boot/efi && mount ${loopback}p2 ${dir_name}/boot/efi
-mkdir -p ${dir_name}/usr      && mount ${loopback}p3 ${dir_name}/usr
+mkdir -p ${dir_name}          && mount ${loopback}p3 ${dir_name}
+mkdir -p ${dir_name}/boot/efi && mount ${loopback}p1 ${dir_name}/boot/efi
+mkdir -p ${dir_name}/usr      && mount ${loopback}p2 ${dir_name}/usr
 
 echo "### copying $rootfs"
 tar xf ${rootfs} --xattrs-include='*.*' -C ${dir_name}
@@ -214,9 +218,12 @@ for t in "${grub_target[@]}"
 do
     case "$t" in
         bios) if [ -e ${dir_name}/usr/sbin/grub-install ]; then
+		# TODO fully remove the grub part, the disk is wrong anyway
 		chroot ${dir_name} grub-install --recheck --target=i386-pc $loopback
 	      else
-		echo "no legacy support"
+		echo "syslinux"
+		chroot ${dir_name} dd bs=440 count=1 conv=notrunc if=/usr/lib/SYSLINUX/gptmbr.bin of=${loopback}
+		chroot ${dir_name} syslinux -d syslinux -i "$loopback"p1
 	      fi ;;
         uefi) if [ -e ${dir_name}/usr/sbin/grub-install ]; then
 	        chroot ${dir_name} grub-install --recheck --target=x86_64-efi --no-nvram  $loopback
@@ -236,12 +243,12 @@ echo "### unmouting"
 umount -R ${dir_name}
 
 echo "### final fsck, just to be sure"
-fsck.vfat -f -a ${loopback}p2
+fsck.vfat -f -a ${loopback}p1
+fsckExt4  ${loopback}p2
 fsckExt4  ${loopback}p3
-fsckExt4  ${loopback}p4
 sync
 
-tune2fs -Q usrquota,grpquota,prjquota ${loopback}p4
+tune2fs -Q usrquota,grpquota,prjquota ${loopback}p3
 sync
 
 losetup -d $loopback
