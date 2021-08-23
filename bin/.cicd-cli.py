@@ -4,6 +4,7 @@ import argparse
 import dataclasses
 import enum
 import os
+import re
 import sys
 import yaml
 
@@ -13,16 +14,57 @@ ci_dir = os.path.join(repo_root, 'ci')
 
 sys.path.insert(1, ci_dir)
 
-import clean
-import glci.util
-import glci.model
-import paths
+import clean      # noqa: E402
+import glci.util  # noqa: E402
+import glci.model # noqa: E402
+import paths      # noqa: E402
+
+
+# see also:
+# https://stackoverflow.com/questions/43968006/support-for-enum-arguments-in-argparse/55500795
+class EnumAction(argparse.Action):
+    """
+    Argparse action for handling Enums
+    """
+    def __init__(self, **kwargs):
+        # Pop off the type value
+        enum_type = kwargs.pop("type", None)
+
+        # Ensure an Enum subclass is provided
+        if enum_type is None:
+            raise ValueError("type must be assigned an Enum when using EnumAction")
+        if not issubclass(enum_type, enum.Enum):
+            raise TypeError("type must be an Enum when using EnumAction")
+
+        # Generate choices from the Enum
+        kwargs.setdefault("choices", tuple(e.value for e in enum_type))
+
+        super(EnumAction, self).__init__(**kwargs)
+
+        self._enum = enum_type
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        # Convert value back into an Enum
+        value = self._enum(values)
+        setattr(namespace, self.dest, value)
 
 
 def clean_build_result_repository():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--cicd-cfg', default='default')
-    parser.add_argument('--snapshot-max-age-days', default=30, type=int)
+    parser = argparse.ArgumentParser(
+        description='Cleanup in manifests repository (S3)',
+        epilog='Warning: dangerous, use only if you know what you are doing!',
+    )
+    parser.add_argument(
+        '--cicd-cfg',
+        default='default',
+        help='configuration key for ci, default: \'%(default)s\'',
+        )
+    parser.add_argument(
+        '--snapshot-max-age-days',
+        default=30,
+        help='delete manifests older than (number of days), default: %(default)s',
+        type=int,
+    )
 
     parsed = parser.parse_args()
 
@@ -65,47 +107,92 @@ def _head_sha():
     return repo.head.commit.hexsha
 
 
+def  _fix_version(parsed_version: str, parsed_epoch: int):
+    """
+    Check if parsed version is a semver version number and issue a warning if not
+    if argument default is used and it is semver it is likely 'today'. Use
+    current day in this case.
+    """
+    pattern = re.compile(r'^[\d\.]+$')
+    is_proper_version = pattern.match(parsed_version)
+    # check if default is used from argparser
+    if parsed_version != glci.model._parse_version_from_workingtree():
+        if not is_proper_version:
+            print(f'>>> WARNING: {parsed_version} is not a semver version! <<<')
+        result = parsed_version
+    else:
+        if is_proper_version:
+            result = parsed_version
+        else:
+            result = f'{parsed_epoch}.0'
+
+    if parsed_epoch != int(result.split('.')[0]):
+        print(f'>>> WARNING: version {result} does not match epoch {parsed_epoch}! <<<')
+    return result
+
+
+def _print_used_args(parsed_args: dict):
+    print('finding release(set)s with following properties:')
+    for arg_key, arg_value in parsed_args.items():
+        if isinstance(arg_value, enum.Enum):
+            arg_value = arg_value.value
+        print(f'{arg_key} : {arg_value}')
+    print('--------')
+
+
 def _retrieve_argparse(parser):
     repo = _gitrepo()
     parser.add_argument(
         '--committish', '-c',
         default=_head_sha(),
         type=lambda c: repo.git.rev_parse(c),
+        help='commit of this artifact (min. first 6 chars), default: HEAD',
     )
-    parser.add_argument('--cicd-cfg', default='default')
+    parser.add_argument(
+        '--cicd-cfg',
+        default='default',
+        help='configuration key for ci, default: \'%(default)s\'',
+        )
     parser.add_argument(
         '--version',
         default=glci.model._parse_version_from_workingtree(),
+        help='Gardenlinux version number, e.g. \'318.9\', default: %(default)s',
     )
     parser.add_argument(
         '--gardenlinux-epoch',
         default=glci.model.gardenlinux_epoch_from_workingtree(),
+        help='Gardenlinux epoch, e.g. \'318\', default: %(default)s',
         type=int,
-    )
-    parser.add_argument(
-        '--build-type',
-        type=glci.model.BuildType,
-        default=glci.model.BuildType.SNAPSHOT,
     )
     parser.add_argument(
         '--outfile', '-o',
         type=lambda f: open(f, 'w'),
         default=sys.stdout,
+        help='destination file for output, default: stdout'
     )
 
     return parser
 
 
 def retrieve_single_manifest():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description='Get manifests from the build artifact repository',
+        epilog='Example: retrieve-single-manifest --architecture=amd64 --platform=aws '
+        '--committish=71ceb0 --version=318.9 '
+        '--gardenlinux-epoch=318 --modifier=_prod,gardener'
+    )
     parser.add_argument(
         '--architecture',
         default=glci.model.Architecture.AMD64,
         type=glci.model.Architecture,
+        action=EnumAction,
+        help='CPU architecture, default: \'%(default)s\'',
     )
     parser.add_argument(
         '--platform',
         choices=[p.name for p in glci.model.platforms()],
+        help='Target (virtualization) platform',
+        required=True,
     )
 
     class AddModifierAction(argparse.Action):
@@ -129,11 +216,16 @@ def retrieve_single_manifest():
         '--modifier',
         action=AddModifierAction,
         dest='modifiers',
-        default=[],
+        default=('base', 'cloud', 'gardener', 'server', '_nopkg', '_prod', '_readonly', '_slim'),
+        help='Feature set, comma-separated, see '
+            'https://github.com/gardenlinux/gardenlinux/tree/main/features for possible values, '
+            'default: %(default)s',
     )
     _retrieve_argparse(parser=parser)
 
     parsed = parser.parse_args()
+    parsed.version = _fix_version(parsed.version, parsed.gardenlinux_epoch)
+    _print_used_args(vars(parsed))
 
     find_release = glci.util.preconfigured(
         func=glci.util.find_release,
@@ -162,12 +254,31 @@ def retrieve_single_manifest():
             Dumper=glci.util.EnumValueYamlDumper,
         )
 
+
 def retrieve_release_set():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description='Get manifest sets from the build artifact repository (S3)',
+        epilog='Example: retrieve-release-set --version=27.1.0 --gardenlinux-epoch=27 --build-type=release' # noqa E501
+    )
     _retrieve_argparse(parser=parser)
-    parser.add_argument('--flavourset-name', default='all')
+    parser.add_argument(
+        '--flavourset-name',
+        default='all',
+        help='Flavour set, see: https://github.com/gardenlinux/gardenlinux/blob/main/flavours.yaml'
+        ' default: %(default)s',
+    )
+
+    parser.add_argument(
+        '--build-type',
+        action=EnumAction,
+        default=glci.model.BuildType.RELEASE,
+        help='Build artifact type, default: \'%(default)s\'',
+        type=glci.model.BuildType,
+    )
 
     parsed = parser.parse_args()
+    parsed.version = _fix_version(parsed.version, parsed.gardenlinux_epoch)
+    _print_used_args(vars(parsed))
 
     find_release_set = glci.util.preconfigured(
         func=glci.util.find_release_set,
