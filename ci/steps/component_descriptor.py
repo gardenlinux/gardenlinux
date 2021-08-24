@@ -165,7 +165,7 @@ def virtual_machine_image_resource(
         name='gardenlinux',
         version=release_manifest.version,
         extraIdentity={
-            'featureFlags': ','.join(release_manifest.modifiers),
+            'feature-flags': ','.join(release_manifest.modifiers),
             'architecture': release_manifest.architecture,
             'platform': release_manifest.platform,
         },
