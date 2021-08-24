@@ -24,3 +24,9 @@ flavour_sets:
         platforms: [ ali, aws, azure, gcp, openstack, vmware, kvm ]
         modifiers: [ [ _prod, gardener ] ]
         fails: [ unit, integration ]
+  - name: 'jens'
+    flavour_combinations:
+      - architectures: [ 'amd64' ]
+        platforms: [ aws ]
+        modifiers: [ [ _prod, gardener ] ]
+        fails: [ unit, integration ]
