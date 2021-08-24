@@ -3,18 +3,38 @@
 from collections import namedtuple
 from dataclasses import dataclass
 import os
+import urllib3
 from typing import Dict
 import zipfile
 
 from kubernetes import client, config
 
 
-def getlogs(repo_dir: str, namespace: str, pipeline_run_name: str):
-    @dataclass
-    class TaskRunInfo:
-        name: str
-        pod_name: str
-        steps: Dict[str, str]  # step-name --> step container
+@dataclass
+class TaskRunInfo:
+    name: str
+    pod_name: str
+    steps: Dict[str, str]  # step-name --> step container
+
+
+@dataclass
+class K8sResponse:
+    data: urllib3.response.HTTPResponse
+    status_code: int # http-status-code
+    headers: urllib3.response.HTTPHeaderDict
+
+def getlogs(
+    repo_dir: str,
+    namespace: str,
+    pipeline_run_name: str,
+    zip_file_path:str=None,
+    tail_lines=256,
+) -> str:
+    '''
+    retrieves all pod logs and writes them into a zip archive
+
+    tail_lines: limits the amount of lines returned from each pod log
+    '''
 
     config.load_incluster_config()
     # in case you want to run locally use:
@@ -53,36 +73,39 @@ def getlogs(repo_dir: str, namespace: str, pipeline_run_name: str):
         )
 
     # create a zip file to store logs:
-    zip_name = os.path.join(repo_dir, 'build_log.zip')
-    with zipfile.ZipFile(zip_name, mode='w') as log_zip:
+    if not zip_file_path:
+        zip_file_path = os.path.join(repo_dir, 'build_log.zip')
+
+    with zipfile.ZipFile(zip_file_path, mode='w') as log_zip:
         for run_info in task_run_infos:
             pod_name = run_info.pod_name
-            counter = 0
-            for step, container_name in run_info.steps.items():
-                zip_comp = f'{run_info.name}/{counter:02}_{step}.log'
+            # steps: dict {<name>: <container>}
+            for idx, (step, container_name) in enumerate(run_info.steps.items()):
+                zip_comp = f'{run_info.name}/{idx:02}_{step}.log'
                 print(f'Getting logs for pod {pod_name}, step {step} in container {container_name}')
                 # Note the flag preload_content decides about streaming or full content in response,
                 # k8s client uses internally urllib3, see
                 # https://urllib3.readthedocs.io/en/stable/advanced-usage.html#stream
-                log_response = k8s.read_namespaced_pod_log_with_http_info(
+                data, status_code, headers = k8s.read_namespaced_pod_log_with_http_info(
                     name=pod_name,
                     container=container_name,
                     namespace=namespace,
+                    tail_lines=tail_lines,
                     _preload_content=False,
                 )
                 # returns tuple (response_data, http status, headers)
-                K8sResponse = namedtuple("K8sResponse", ["data", "status", "header"])
-                log_response = K8sResponse(*log_response)
+                log_response = K8sResponse(
+                    data=data,
+                    status_code=status_code,
+                    headers=headers,
+                )
+
                 if log_response.status != 200:
-                    print(f'Getting logs failed with http-error {log_response.status}')
-                else:
-                    chunk_size = 64 * 1024
-                    with log_zip.open(zip_comp, mode='w') as zipcomp:
-                        end_reached = False
-                        while not end_reached:
-                            chunk = log_response.data.read(chunk_size)
-                            if len(chunk) > 0:
-                                zipcomp.write(chunk)
-                            else:
-                                end_reached = True
-                counter += 1
+                    print(f'Getting logs failed with {log_response.status_code=}')
+                    continue
+
+                with log_zip.open(zip_comp, mode='w') as zipcomp:
+                    for chunk in log_response.data.stream(chunk_size=4096)
+                        zipcomp.write(chunk)
+
+    return zip_file_path
