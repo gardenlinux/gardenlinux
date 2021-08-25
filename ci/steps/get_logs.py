@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 #  export KUBECONFIG=/Users/d058463/Documents/SAP-Dev/Kubernetes/kubeconfigs/kubeconfig--gdnlinux--build.yaml
-from collections import namedtuple
 from dataclasses import dataclass
 import os
 import urllib3
@@ -22,6 +21,7 @@ class K8sResponse:
     data: urllib3.response.HTTPResponse
     status_code: int # http-status-code
     headers: urllib3.response.HTTPHeaderDict
+
 
 def getlogs(
     repo_dir: str,
@@ -100,12 +100,12 @@ def getlogs(
                     headers=headers,
                 )
 
-                if log_response.status != 200:
+                if log_response.status_code != 200:
                     print(f'Getting logs failed with {log_response.status_code=}')
                     continue
 
                 with log_zip.open(zip_comp, mode='w') as zipcomp:
-                    for chunk in log_response.data.stream(chunk_size=4096)
+                    for chunk in log_response.data.stream(amt=4096):
                         zipcomp.write(chunk)
 
     return zip_file_path
