@@ -10,7 +10,8 @@ cd $src
 mv packaging/debian .
 rm -rf packaging
 version=$(dpkg-parsechangelog --show-field Version | sed "s/[0-9]*:\?\([^\-]*\)-\?.*/\1/")
-dch -i 'rebuild since no offical package anymore'
+dch -lgardenlinux 'rebuild since no offical package anymore'
+sed -i "s/g1gardenlinux/gardenlinux/" debian/changelog
 dch -r ''
 TMPDIR=.. mk-build-deps debian/control
 sudo apt-get install -y --no-install-recommends -f ../$src-build-deps_*_all.deb
