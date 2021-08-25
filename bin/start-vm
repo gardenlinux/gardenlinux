@@ -1,130 +1,179 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# TODO: add -runas
-
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
-source "$thisDir/.constants.sh" \
-	--flags 'cpu:,mem:,disk:,bridge:,port:' \
-	--flags 'daemonize' \
-	--flags 'pxelocal:' \
-	--flags 'pxe:' \
-	--flags 'uefi' \
-	--flags 'ueficode:' \
-	--flags 'uefivars:' \
-	-- \
-	'[--cpu:3] [--mem:16384] [--disk:3G] [--daemonize] [--pxe:dir] [--pxelocal] <image file>' \
-	'example'
-
-eval "$dgetopt"
 cpu=2
-memory=2048
-disk=-1
+arch=x86_64
+memory=2Gi
 bridge=
 daemonize=
 pxe=
-pxeConfig=
 pxeLocal=
-port=2223
+portbase=2223
+port=$portbase; while ss -tul | grep :$port &> /dev/null; do (( ++port )); done
 uefi=
 uefiCode=/usr/share/OVMF/OVMF_CODE.fd
 uefiVars=/usr/share/OVMF/OVMF_VARS.fd
+vnc=
+vncbase=5900
+vncport=0; while ss -tul | grep :$(( vncport + $vncbase )) &> /dev/null; do (( ++vncport )); done
+keypress=1
+mac="$(printf '02:%02X:%02X:%02X:%02X:%02X' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)))"
+inflatelist=( )
+source "${thisDir}/.constants.sh" \
+	--flags 'daemonize,uefi,skipkp,vnc' \
+	--flags 'cpu:,mem:,bridge:,port:,mac:,arch:' \
+	--flags 'pxelocal:,pxe:' \
+	--flags 'ueficode:,uefivars:' \
+	--usage '[ --daemonize ] [ --cpu:<#> ] [ --mem:<size> ] [ --pxe:<dir> ] [ --pxelocal ] [<image file>[,<size>]]*' \
+	--sample '.build/rootfs.raw' \
+        --sample ',1G ubuntu-16.04.7-server-amd64.iso' \
+	--help  "Starts a virtual machine with the most basic environment, needed. Perfect use for test cases and running samples of GardenLinux. This script can run unprivileged but it should have the possibility to use kvm (group kvm) otherwise it will be super slow. If not being root, the network will be slow and no ICMP (ping) capabilities are with the VM.
+	
+--cpu <int>	number of vCPUs to start the VM with (default: $cpu)
+--arch <platform> set the emulated platform. 
+		i386, x86_64, x86_64-microvm, arm, aarch64 are supported. (default: $arch)
+--mem <int>	memory provided to the virtual machine (default: $memory) in MB if unit is omitted
+
+--uefi		boot with uefi bios enabled, needs \`apt-get install ovmf\` (default: no)
+--ueficode <path> defines the uefi code used. The file is readonly (default: $uefiCode)
+--uefivars <path> defines the uefi variables used. The file will be !modified! if vartiables are
+		set (default: $uefiVars)
+
+--bridge <if>	disables host networking and bridges the machine to the specified interface
+--port <int>	specifies the local ssh port. this port is mounted to the running machine, 
+		not if --bridge is specified (default: $portbase)
+--mac <macaddr> the mac address is usually randomized. It is used to identify the monitoring
+		port, the mac address of the machine and the UUID. Can be set to this value.
+
+--daemonize	start the virtual machine in background, console deactivated (default: no)
+--skipkp	skip the keypress to the verify status before execute.
+		needed for automated testing, disabled on --daemonize
+--vnc		sitches from serial console to vnc graphics console / enables vnc in --daemonize
+		the vnc baseport is $vncbase. if this is not empty we try the next
+
+<image file>	a file containing the image to boot. Format is determined by the extension. 
+                raw, vdi, vpc, vhd, vhdx, vmdk, qcow2, iso are recognized. 
+		http://, https:// and ssh:// is supported as source
+		,<size> is optional. If the file is smaller then <size> it will be resized
+		withthe sparse feature of the filesystem to  the requested size. 
+		If <image file> is omitted and only ,<size> is specified, a temporary file 
+		of this size will be created. The file will not be deleted."
+	
+eval "$dgetopt"
 while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
 	case "$flag" in
 		--cpu)		cpu="$1"; 	shift ;;
+		--arch)		arch="$1"; 	shift ;;
 		--mem)		memory="$1"; 	shift ;;
-		--disk)		disk="$(numfmt --from=auto --suffix="B" --format "%f" $1 | head -c-2)"; 
-						shift ;;
-		--daemonize) 	daemonize=1; 	;;
+		--daemonize) 	daemonize=1; keypress=; ;;
+		--vnc)	 	vnc=1; 		;;
+		--uefi) 	uefi=1; 	;;
+		--mac)		mac="$1";	shift ;;
+		--ueficode)     uefiCode="$1";  shift ;;
+		--uefivars)     uefiVars="$1";  shift ;;
 		--bridge ) 	bridge="$1";  	shift ;;
 		--pxe )         pxe="$1";       shift ;;
 		--pxelocal)     pxeLocal="$1";  shift ;;
 		--port)         port="$1";  shift ;;
-		--uefi) 	uefi=1; 	;;
-		--ueficode)     uefiCode="$1";  shift ;;
-		--uefivars)     uefiVars="$1";  shift ;;
+		--skipkp) 	keypress=; 	;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
 done
 
-hasImage=1
-if [ "$pxe" -o "$pxeLocal" ]; then
-	hasImage=
-fi
+# TODO: add -runas
+#TODO uefi secure boot, uefi certificate
+# pxe, pxelocal, pxeconfig
+#TODO sysctl -w net.ipv4.ping_group_range='0 2147483647'
 
-if [ $hasImage ]; then
-	imagefile="${1:-}";     shift || eusage 'missing image file to start'
-	[ ! -s $imagefile ] && ( echo "file does not exist"; exit 1; )
-fi
+[[ "${memory: -1}" =~ [0-9] ]] && memory="${memory}Mi"
+memory=$(numfmt --from=auto --suffix="B" --format "%f" ${memory} | head -c-2)
 
-virtOpts=(
-	-smp $cpu
-	-m $memory
-	)
-# add a watchdog to maintain auto reboot 
-virtOpts+=( -watchdog i6300esb )
+virtOpts=(	"-smp $cpu"
+	   	"-m $(( $memory / 1048576 ))" )
 
-# make sure memory grows on demand
-virtOpts+=( -device virtio-balloon )
+# add a watchdog to maintain automatic reboots 
+virtOpts+=(	"-watchdog i6300esb" )
+
+# make sure to use minimal memory
+virtOpts+=(	"-device virtio-balloon" )
 
 # adding the random number generator of the host
-virtOpts+=(
-	-device virtio-rng-pci,rng=rng0
-	-object rng-random,id=rng0,filename=/dev/random
-	)
+virtOpts+=(	"-device virtio-rng-pci,rng=rng0"
+	   	"-object rng-random,id=rng0,filename=/dev/random" )
 
-# daemonize
-if [ $daemonize ]; then
-	virtOpts+=(
-		-display none
-		-daemonize
-		)
-else
-	virtOpts+=(
-		-nographic
-		)
-fi
+# adding a bmc simulator
+virtOpts+=(	"-device ipmi-bmc-sim,id=bmc0"
+		"-device isa-ipmi-kcs,bmc=bmc0,ioport=0xca2"  )
 
-# uefi
+# adding a uuid since this is expected by systemd and gardenlinux
+virtOpts+=(     "-uuid 12345678-0000-0000-0000-$(tr -d ":" <<< ${mac,,})" )
+
+# virtualization with max performance if the cpu has vmx
+cpuinfo="$(grep "^flags" /proc/cpuinfo | uniq)"
+[ -n "${cpuinfo##*vmx*}" -o -n "${cpuinfo##*svm*}" ] &&
+	virtOpts+=(	"-enable-kvm"
+			"-cpu host"  )
+
+# adding a monitoring port for extended commands
+virtOpts+=(	"-monitor unix:${thisDir}/$(tr -d ":" <<< ${mac,,}).monitor,server,nowait" )
+
+[ -e ${thisDir}/$(tr -d ":" <<< ${mac,,}).monitor ] && eusage "monitor to this macaddress already exists $(tr -d ":" <<< ${mac,,}).monitor"
+
+[ $daemonize ] && virtOpts+=(	"-daemonize" )
+[ $daemonize ] || virtOpts+=(	"-nographic" 
+				"-serial mon:stdio" )
+[ $vnc ] && 	  virtOpts+=(	"-vnc :${vncport},password" )
+[ $daemonize ] && [ ! $vnc ] && virtOpts+=(	"-display none" )
+
 if [ $uefi ]; then
-	if [ ! -f $uefiCode ]; then
-		eusage "Missing ueficode at $ueficode.\n Run: apt-get install ovmf"
-	fi
-	if [ ! -f $uefiVars ]; then
-		eusage "Missing uefivars at $uefiVars.\n Run: apt-get install ovmf"
-	fi
+	[ -r $uefiCode ] || eusage "Missing ueficode at $ueficode.\n Run: apt-get install ovmf"
+	[ -w $uefiVars ] || eusage "Missing uefivars at $uefiVars.\n Run: apt-get install ovmf"
 
-	virtOpts+=(
-		-machine q35,smm=on
-		-global driver=cfi.pflash01,property=secure,value=on
-		-drive if=pflash,format=raw,unit=0,file=${uefiCode},readonly=on
-		-drive if=pflash,format=raw,unit=1,file=${uefiVars}
-	)
+	virtOpts+=(	"-machine q35,smm=on"
+			"-global driver=cfi.pflash01,property=secure,value=on"
+			"-drive if=pflash,format=raw,unit=0,file=${uefiCode},readonly=on"
+			"-drive if=pflash,format=raw,unit=1,file=${uefiVars}" )
 fi
 
-# disk
-if [ $hasImage ]; then
-	if [ $(stat --printf="%s" $imagefile) -lt $disk ]; then
-		# disk grows if requested size then is bigger then image size 
-		dd if=/dev/zero of=$imagefile count=0 bs=1 seek=$disk
+# adding the disks
+hasdisk=0
+[ "$#" == "" ] || virtOpts+=(     "-device virtio-scsi-pci,id=scsi0" )
+while (( "$#" )); do
+	imagefile=$1
+	imagesize=0
+	if [[ $imagefile == *","* ]]; then	imagesize=${imagefile##*,}	# check if a ,3G or such is present
+						imagefile=${imagefile%%,$imagesize}; fi
+	[ "$imagefile" == "" ] && 		imagefile=$(mktemp --suff=.raw)  # if no filename is left point to tmp  
+	if [[ $imagefile == *"."* ]]; then      imageext=${imagefile##*.}; fi
+	imagesizeB=$(numfmt --from=auto --suffix="B" --format "%f" ${imagesize} | head -c-2)  # calculate in bytes
+	[ -f $imagefile ] || eusage "file \"$imagefile\" does not exist"
+
+	if [ "$imageext" == "iso" ]; then
+		virtOpts+=(	"-drive media=cdrom,file=$imagefile,readonly" )
+	else
+		# do we have O_DIRECT or do we run maybe in memory
+		aio=""
+		dd if=$imagefile of=/dev/null count=1 iflag=direct 2> /dev/null && aio="aio=native,cache.direct=on,"
+
+		# if there is a bigger size, we need to inflate
+		[ $(stat --printf="%s" $imagefile) -lt ${imagesizeB} ] && inflatelist+=( "$imagefile,$imagesizeB" )
+
+		virtOpts+=(	"-device scsi-hd,drive=drive${hasdisk},bus=scsi0.0"
+				"-drive format=${imageext/^vhd$/vpc},if=none,discard=unmap,${aio}id=drive${hasdisk},file=${imagefile}" )
 	fi
-	imageext=${imagefile##*.}
-	case $imageext in
-		vhd | vpc ) imageext="vpc" ;;
-	esac
-	virtOpts+=(
-		-device virtio-scsi-pci,id=scsi0
-		-device scsi-hd,drive=drive0,bus=scsi0.0
-			-drive format=$imageext,if=none,discard=unmap,aio=native,cache.direct=on,id=drive0,file=$imagefile
-		)
-fi
+	(( ++hasdisk ))
+	shift
+done
+[ $hasdisk -gt 0 -o "$pxe" -o "$pxeLocal" ] || eusage 'missing bootdisk. boot via --pxe, provide tmpdisk via --disk or provide bootdisk image file'
+
 
 # pxe
-# TODO : a disk image is not needed when booting via pxe
-
+#TODO
+pxeConfig=
 if [ "$pxe" -o "$pxeLocal" ]; then
 	tempDir=$(mktemp -d)
 	rand=$(cat /proc/sys/kernel/random/uuid)
@@ -152,38 +201,58 @@ if [ "$pxe" -o "$pxeLocal" ]; then
 	fi
 	pxeConfig=",tftp=$tempDir,bootfile=/boot.pxe"
 	virtOpts+=( -boot order=nc )
-
 fi
-# network
-macaddr="$(printf '02:%02X:%02X:%02X:%02X:%02X' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)))"
+
+# handling the network
+			virtOpts+=(	"-device virtio-net-pci,netdev=net0,mac=${mac,,}" )
+if [ $bridge ]; then 	virtOpts+=(	"-netdev bridge,id=net0,br=${bridge}${pxeConfig}" )
+else			virtOpts+=( 	"-netdev user,id=net0,hostfwd=tcp::$port-:22,hostname=garden${pxeConfig}" )
+fi
+[ $bridge ] && ( [ -e /sys/class/net/$bridge/bridge ] || eusage "interface $bridge is no bridge" )
+
+# status report
+printf "Status:\n"
+printf "  UUID: 12345678-0000-0000-0000-%s\n  MAC: %s\n" $(tr -d ":" <<< ${mac,,}) ${mac,,}
+printf "  monitor: %s.monitor\n" ${thisDir}/$(tr -d ":" <<< ${mac,,})
+[ $bridge ] && printf "  interface: %s  bridged\n" $bridge
+[ ! $bridge ] && printf "  sshport: %s  unbridged\n" $port
+[ $vnc ] && printf "  vncport: %s\n" $(( vncport + 5900 ))
+for i in "${inflatelist[@]}"; do
+	printf "  file: %s will be inflated to %s\n" $(cut -d',' -f1 <<< $i) $(cut -d',' -f2 <<< $i)
+done
+[ $uefi ] && printf "  file %s may change content!\n" ${uefiVars}
+( printf "\n  commandline: qemu-system-%s " $arch
+printf '%s ' "${virtOpts[@]}";printf "\n" ) | sed 's/ /!/g;s/!-/ -/g' | fold -s -w $(( $(tput cols) - 4 )) | sed 's/!/ /g;3,$ s|^|    |'
+
+if [ $keypress ]; then
+	printf "\nPress Enter to boot\n"
+	read a
+fi
+
+### from here on things are actually done!!!
+# modifying /etc/qemu/bridge.conf - would be good to be root!!!
 if [ $bridge ]; then
-	tmp="$(echo -e "$(cat /etc/qemu/bridge.conf)\nallow $bridge" | sort -u | sed '/^$/d')"
-	echo "$tmp" > /etc/qemu/bridge.conf
-	virtOpts+=( -netdev bridge,id=net0,br=$bridge"$pxeConfig" )
-else
-	virtOpts+=( -netdev user,id=net0,hostfwd=tcp::$port-:22,hostname=garden"$pxeConfig" )
+	mkdir -p /etc/qemu
+	touch /etc/qemu/bridge.conf
+	chown root:kvm /etc/qemu/bridge.conf 
+	chmod 0640 /etc/qemu/bridge.conf
+
+	printf "%s\nallow %s\n" "$(sudo cat /etc/qemu/bridge.conf)" $bridge | awk '!seen[$0]++' > bridge.conf.clean
+	mv bridge.conf.clean /etc/qemu/bridge.conf
 fi
-virtOpts+=( -device virtio-net-pci,netdev=net0,mac=$macaddr )
-
-# virtualization tech
-cpuinfo="$(grep "^flags" /proc/cpuinfo | uniq)"
-if [ "$(echo $cpuinfo | grep vmx)" != "" -o "$(echo $cpuinfo | grep svm)" != "" ]; then
-	virtOpts+=(
-		-enable-kvm
-		-cpu host
-		)
+# inflating selected files
+for i in "${inflatelist[@]}"; do
+	dd if=/dev/zero of=$(cut -d',' -f1 <<< $i) count=0 bs=1 seek=$(cut -d',' -f2 <<< $i) 2> /dev/null
+done
+# creating a separate thread to set the VNC password
+if [ $vnc ]; then
+	( while [ ! -e $(tr -d ":" <<< ${mac,,}).monitor ]; do sleep 0.1; done
+	printf "change vnc password\n%s\n" MYPASSWORD | socat - UNIX-CONNECT:$(tr -d ":" <<< ${mac,,}).monitor &> /dev/null )&
 fi
 
-virtOpts+=(
-      -device ipmi-bmc-sim,id=bmc0 
-      -device isa-ipmi-kcs,bmc=bmc0,ioport=0xca2
-)
+qemu-system-$arch ${virtOpts[@]}
+[ $daemonize ] || rm -f ${thisDir}/$(tr -d ":" <<< ${mac,,})
 
-
-echo "qemu-system-x86_64 ${virtOpts[@]}"
-echo
-echo "Press Enter to boot"
-read a
-qemu-system-x86_64 ${virtOpts[@]}
-
+# printing a hint how to reach the console - socat should be installed on garden linux
+[ $daemonize ] && printf "\nConnect to VM monitor via\n  socat - UNIX-CONNECT:${thisDir}/$(tr -d ":" <<< ${mac,,}).monitor\n"
 
