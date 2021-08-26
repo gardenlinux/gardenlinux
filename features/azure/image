@@ -2,5 +2,5 @@
 
 set -x
 
-makef.sh --read-only-usr --image-size 4G --grub-target bios --force $2 $2.tar.xz
+makef.sh --read-only-usr --image-size 4G --force $2 $2.tar.xz
 make-vhd -o subformat=fixed,force_size $2.raw $2.vhd

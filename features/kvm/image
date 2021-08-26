@@ -1,1 +1,1 @@
-makef.sh --grub-target bios,uefi --force $2 $2.tar.xz
+makef.sh --force $2 $2.tar.xz
