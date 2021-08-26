@@ -4,20 +4,22 @@ set -uoeE pipefail
 
 bootDir="/boot/efi"
 kernelDir="$bootDir/Default"
-configDir="/etc/default/syslinux.d"
+configDir="/etc/kernel/cmdline.d"
 configFile="/boot/efi/syslinux/syslinux.cfg"
 
-check_version() {
+check_version_and_cp() {
 	local v=$1
 	if [ ! -d "$kernelDir/$v" ]; then 
 		return 1
 	fi
 	if [ ! -f "$kernelDir/$v/linux" ]; then
-		return 1
+		cp "/boot/vmlinuz-$v" "$kernelDir/$v/linux" && \
+			chown root:root "$kernelDir/$v/linux" && \
+			chmod 0644 "$kernelDir/$v/linux"
 	fi
-	if [ ! -f "$kernelDir/$v/initrd.img-$v" ]; then
-		return 1
-	fi
+	cp -u "/boot/initrd.img-$v" "$kernelDir/$v/initrd.img-$v" && \
+		chown root:root "$kernelDir/$v/initrd.img-$v" && \
+		chmod 0600 "$kernelDir/$v/initrd.img-$v"
 	return 0
 }
 # preliminary checks
@@ -30,9 +32,6 @@ if ! which syslinux &> /dev/null; then
 	exit 0
 fi
 
-# load defaults
-source /etc/default/syslinux
-
 # load extra stuff
 for i in "${configDir}"/*-*.cfg; do
 	[ -e "$i" ] || continue
@@ -42,7 +41,7 @@ done
 versions=()
 # kernel / initrd
 for kernel in /boot/vmlinuz-*; do 
-	if check_version "${kernel#*-}"; then
+	if check_version_and_cp "${kernel#*-}"; then
 		versions+=("${kernel#*-}")
 	fi
 done
@@ -58,13 +57,13 @@ readarray -t vSorted < <(printf '%s\n' "${versions[@]}" | sort -rV)
 	echo "PROMPT 0"
 	echo
 	echo "MENU TITLE Gardenlinux" 
-	echo "TIMEOUT $SYSLINUX_TIMEOUT"
+	echo "TIMEOUT $TIMEOUT"
 	echo "DEFAULT ${vSorted[0]}" 
 	echo
 	for v in "${vSorted[@]}"; do
 		echo "LABEL Linux $v"
 		echo " LINUX ../Default/$v/linux"
-		echo " APPEND root=${SYSLINUX_DEVICE} ${SYSLINUX_CMDLINE_LINUX}"
+		echo " APPEND root=${DEVICE} ${CMDLINE_LINUX}"
 		echo " INITRD ../Default/${v}/initrd.img-${v}"
 		echo
 	done
