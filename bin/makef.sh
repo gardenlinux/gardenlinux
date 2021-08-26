@@ -213,31 +213,14 @@ EOF
 # enable the systemd units
 chroot ${dir_name} systemctl enable boot-efi.mount remount-root.service grow-root.service
 
-echo "### installing grub"
-for t in "${grub_target[@]}"
-do
-    case "$t" in
-        bios) if [ -e ${dir_name}/usr/sbin/grub-install ]; then
-		# TODO fully remove the grub part, the disk is wrong anyway
-		chroot ${dir_name} grub-install --recheck --target=i386-pc $loopback
-	      else
-		echo "syslinux"
-		chroot ${dir_name} dd bs=440 count=1 conv=notrunc if=/usr/lib/SYSLINUX/gptmbr.bin of=${loopback}
-		chroot ${dir_name} syslinux -d syslinux -i "$loopback"p1
-	      fi ;;
-        uefi) if [ -e ${dir_name}/usr/sbin/grub-install ]; then
-	        chroot ${dir_name} grub-install --recheck --target=x86_64-efi --no-nvram  $loopback
-	      else
-		chroot ${dir_name} bootctl --no-variables install 
-	      fi ;;
-        *) echo "Unknown target ${t}";;
-    esac
-done
-if [ -e ${dir_name}/usr/sbin/grub-install ]; then
-  mv ${dir_name}/etc/grub.d/30_uefi-firmware ${dir_name}/etc/grub.d/30_uefi-firmware~
-  chroot ${dir_name} update-grub
-  mv ${dir_name}/etc/grub.d/30_uefi-firmware~ ${dir_name}/etc/grub.d/30_uefi-firmware
-fi
+echo "### installing bootloaders"
+echo "### syslinux"
+chroot ${dir_name} dd bs=440 count=1 conv=notrunc if=/usr/lib/SYSLINUX/gptmbr.bin of=${loopback}
+chroot ${dir_name} syslinux -d syslinux -i "$loopback"p1
+echo "### systemd-boot"
+chroot ${dir_name} bootctl --no-variables install
+
+#chroot ${dir_name} /usr/local/sbin/update-bootloaders
 
 echo "### unmouting"
 umount -R ${dir_name}
