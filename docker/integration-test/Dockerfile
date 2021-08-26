@@ -1,3 +1,9 @@
+FROM golang:latest as golang
+RUN go get -u golang.org/x/lint/golint \
+     && git clone https://github.com/microsoft/azure-vhd-utils.git \
+     && cd azure-vhd-utils \
+     && make
+
 FROM gardenlinux/slim
 ENV	DEBIAN_FRONTEND noninteractive
 ENV SHELL /bin/bash
@@ -23,5 +29,7 @@ RUN	apt-get update \
      && apt-get install -y google-cloud-sdk \
      && curl -sL https://aka.ms/InstallAzureCLIDeb | bash \
      &&	rm -rf /var/lib/apt/lists/*
+
+copy --from=golang /go/azure-vhd-utils/azure-vhd-utils /usr/local/bin/azure-vhd-utils
 
 WORKDIR	/gardenlinux/tests
