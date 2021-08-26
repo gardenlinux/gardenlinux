@@ -1,8 +1,8 @@
 import ccc.github
 import ci.util
 import distutils.util
-from email import encoders
 from email.mime.base import MIMEBase
+import email.message
 import glci.notify
 import glci.util
 import json
@@ -10,6 +10,7 @@ import mailutil
 import os
 from string import Template
 import urllib
+import typing
 
 
 def _email_cfg(cicd_cfg: glci.model.CicdCfg):
@@ -24,6 +25,52 @@ def _smtp_client(email_cfg):
         user=email_cfg.credentials().username(),
         passwd=email_cfg.credentials().passwd(),
 )
+
+
+def _attach_and_send(
+    repo_dir: str,
+    mail_msg: email.message.EmailMessage,
+    email_cfg,
+):
+    # check if there is a log file to attach
+    log_zip_name = 'build_log.zip'
+    log_zip = os.path.join(repo_dir, log_zip_name)
+    if os.path.exists(log_zip):
+        with open(log_zip, 'rb') as att_file:
+            zip_data = att_file.read()
+        if mail_msg.is_multipart():
+            part = MIMEBase('application', "zip")
+            part.set_payload(zip_data)
+            email.encoders.encode_base64(part)
+            part.add_header('Content-Disposition', f'attachment; filename="{log_zip_name}"')
+            mail_msg.attach(part)
+        else:
+            mail_msg.add_attachment(
+                zip_data,
+                maintype='application',
+                subtype='zip',
+                filename=log_zip_name,
+            )
+    # for debugging generate a local file
+    # with open('email_out.html', 'w') as file:
+    #     file.write(mail_body)
+
+    mail_client = _smtp_client(email_cfg=email_cfg)
+    mail_client.send_message(msg=mail_msg)
+
+def _mk_plain_text_body(
+    text: str,
+    recipients: typing.Sequence[str],
+    subject: str,
+    sender: str,
+) -> email.message.EmailMessage:
+    msg = msg = email.message.EmailMessage()
+    msg.set_content(text)
+    msg['Subject'] = subject
+    msg['From'] = sender
+    msg['To'] = ', '.join(recipients)
+
+    return msg
 
 
 def send_notification(
@@ -57,7 +104,7 @@ def send_notification(
         print("All tasks succeded, no notification sent")
         return
 
-    result_table = ""
+    html_result_table = ""
     for task, status in status_dict.items():
         if status == 'Succeeded':
             status_symbol = '&#9989;'
@@ -66,15 +113,23 @@ def send_notification(
         else:
             status_symbol = '?'
 
-        result_table += f'<tr><td class="align_left">{task}</td><td>{status_symbol}</td></tr>'
+        html_result_table += f'<tr><td class="align_left">{task}</td><td>{status_symbol}</td></tr>'
+
+    txt_result_table = ""
+    for task, status in status_dict.items():
+        txt_result_table += f'Task: {task}\nStatus: {status}\n'
 
     subject = f'Tekton Pipeline Garden Linux build failure in {pipeline_name}'
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
     email_cfg = _email_cfg(cicd_cfg=cicd_cfg)
 
-    template_path = os.path.abspath(os.path.join(repo_dir,"ci/templates/email_notification.html"))
-    with open(template_path, 'r') as mail_template_file:
-        mail_template = mail_template_file.read()
+    html_template_path = os.path.abspath(os.path.join(repo_dir,"ci/templates/email_notification.html"))
+    with open(html_template_path, 'r') as mail_template_file:
+        html_mail_template = mail_template_file.read()
+
+    txt_template_path = os.path.abspath(os.path.join(repo_dir,"ci/templates/email_notification.txt"))
+    with open(txt_template_path, 'r') as mail_template_file:
+        txt_mail_template = mail_template_file.read()
 
     # read the logo
     logo_path = os.path.abspath(os.path.join(repo_dir,"logo/gardenlinux.svg"))
@@ -87,17 +142,20 @@ def send_notification(
         '<title>Garden Linux Logo</title>')
 
     # fill template parameters:
-    html_template = Template(mail_template)
+    html_template = Template(html_mail_template)
+    txt_template = Template(txt_mail_template)
     values = {
         'pipeline': pipeline_name,
-        'status_table': result_table,
+        'status_table': html_result_table,
         'pipeline_run': pipeline_run_name,
         'namespace': namespace,
         'logo_src': logo_svg,
     }
 
     # generate mail body
-    mail_body = html_template.safe_substitute(values)
+    html_mail_body = html_template.safe_substitute(values)
+    values['status_table'] = txt_result_table
+    txt_mail_body = txt_template.safe_substitute(values)
 
     # if only_recipients are set do not get defaults from codeowners
     if only_recipients_set:
@@ -120,29 +178,24 @@ def send_notification(
         print('Mail not sent, could not find any recipient.')
         return
 
-    print(f'Send notification to following recipients: {recipients}')
+    # filter recipients for crippled providers like gmx dropping too complex emails:
+    recipients_crippled = [recp for recp in recipients if recp.endswith('gmx.de')]
+    recipients = [recp for recp in recipients if recp not in recipients_crippled]
+
+    print(f'Send html notification to following recipients: {recipients}')
     mail_msg = glci.notify.mk_html_mail_body(
-        text=mail_body,
+        text=html_mail_body,
         recipients=recipients,
         subject=subject,
         sender=email_cfg.sender_name(),
     )
+    _attach_and_send(repo_dir=repo_dir, mail_msg=mail_msg, email_cfg=email_cfg)
 
-    # check if there is a log file to attach
-    log_zip_name = 'build_log.zip'
-    log_zip = os.path.join(repo_dir, log_zip_name)
-    if os.path.exists(log_zip):
-        with open(log_zip, 'rb') as att_file:
-            zip_data = att_file.read()
-        part = MIMEBase('application', "zip")
-        part.set_payload(zip_data)
-        encoders.encode_base64(part)
-        part.add_header('Content-Disposition', f'attachment; filename="{log_zip_name}"')
-        mail_msg.attach(part)
-
-    # for debugging generate a local file
-    # with open('email_out.html', 'w') as file:
-    #     file.write(mail_body)
-
-    mail_client = _smtp_client(email_cfg=email_cfg)
-    mail_client.send_message(msg=mail_msg)
+    print(f'Send plain text notification to following recipients: {recipients_crippled}')
+    mail_msg = _mk_plain_text_body(
+        text=txt_mail_body,
+        recipients=recipients_crippled,
+        subject=subject,
+        sender=email_cfg.sender_name(),
+    )
+    _attach_and_send(repo_dir=repo_dir, mail_msg=mail_msg, email_cfg=email_cfg)

@@ -57,9 +57,23 @@ def mk_html_mail_body(
     return msg
 
 
+def mk_plain_text_body(
+    text: str,
+    recipients: typing.Sequence[str],
+    subject: str,
+    sender: str,
+) -> email.message.EmailMessage:
+    msg = msg = email.message.EmailMessage()
+    msg.set_content(text)
+    msg['Subject'] = subject
+    msg['From'] = sender
+    msg['To'] = ', '.join(recipients)
+
+    return msg
+
+
 def send_mail(
     sender: str,
-    recipients: typing.Sequence[str],
     message: email.message.EmailMessage,
     client: smtplib.SMTP,
 ):

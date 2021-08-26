@@ -1,0 +1,14 @@
+Garden Linux Build Pipeline: $pipeline
+Notification from the Garden Linux Build Pipeline: Failure in pipeline <strong>$pipeline</strong>.
+The pipeline run $pipeline_run running in namespace $namespace failed in at least one task.
+
+Build Status: $pipeline_run
+$status_table
+
+--------------------------
+Check https://tekton-dashboard.gardenlinux.io/#/namespaces/$namespace/pipelineruns/$pipeline_run>
+for detailed information.
+
+--------------------------
+This email is sent to https://github.com/gardenlinux/gardenlinux/blob/main/CODEOWNERS of the
+GardenLinux repository.
