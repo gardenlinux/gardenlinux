@@ -87,7 +87,7 @@ loopback=$(losetup -f --show ${raw_image})
 #type=21686148-6449-6E6F-744E-656564454649, name="BIOS", size=1MiB
 echo "### using ${loopback}"
 echo 'label: gpt
-type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, name="EFI", size=100MiB
+type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, name="EFI", size=128MiB
 type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, name="USR", size=1GiB
 type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, name="ROOT"' | sfdisk $loopback --no-reread --no-tell-kernel
 losetup -d $loopback
