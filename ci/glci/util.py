@@ -287,7 +287,7 @@ def find_release(
     bucket_name: str,
     release_identifier: glci.model.ReleaseIdentifier,
     prefix: str=glci.model.ReleaseManifest.manifest_key_prefix,
-):
+) -> typing.Optional[glci.model.OnlineReleaseManifest]:
     normalised = glci.model.normalised_release_identifier
     release_manifest_key = release_identifier.canonical_release_manifest_key()
 
@@ -323,7 +323,7 @@ def find_releases(
     version: str,
     gardenlinux_epoch: int,
     prefix: str=glci.model.ReleaseManifest.manifest_key_prefix,
-):
+) -> typing.Generator[glci.model.OnlineReleaseManifest, None, None]:
     flavours = set(flavour_set.flavours())
 
     for flavour in flavours:

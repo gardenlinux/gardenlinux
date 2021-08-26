@@ -2,12 +2,13 @@ import dataclasses
 import logging
 import pprint
 import sys
+import typing
 
 import glci
 import glci.util
+import glci.model
 
 import gci.componentmodel as cm
-import glci.model
 import glci.s3
 import version as version_util
 import product.v2
@@ -49,13 +50,13 @@ def build_component_descriptor(
     ]
     if glci.model.PublishingAction.COMPONENT_DESCRIPTOR not in publishing_actions:
         print(
-            f'publishing action {glci.model.PublishingAction.COMPONENT_DESCRIPTOR} not specified '
+            f'{glci.model.PublishingAction.COMPONENT_DESCRIPTOR} not specified '
             'exiting now'
         )
         sys.exit(0)
     if glci.model.PublishingAction.BUILD_ONLY in publishing_actions:
         print(
-            f'publishing action {glci.model.PublishingAction.BUILD_ONLY=} specified - exiting now'
+            f'{glci.model.PublishingAction.BUILD_ONLY=} specified - exiting now'
         )
         sys.exit(0)
 
@@ -127,8 +128,9 @@ def build_component_descriptor(
 
 
 def virtual_machine_image_resource(
-    release_manifest,
+    release_manifest: glci.model.OnlineReleaseManifest,
     cicd_cfg,
+    effective_version: str,
 ):
     resource_type = 'virtual_machine_image'
     image_file_suffix = glci.util.virtual_image_artifact_for_platform(release_manifest.platform)
