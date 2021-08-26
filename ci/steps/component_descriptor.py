@@ -35,6 +35,17 @@ def _virtual_image_packages(release_manifest, cicd_cfg):
         yield line.decode('utf-8')
 
 
+def _calculate_effective_version(
+    version: str,
+    publishing_actions: typing.Sequence[glci.model.PublishingAction],
+    committish: str,
+) -> str:
+    if glci.model.PublishingAction.RELEASE not in publishing_actions:
+        return version
+    else:
+        return f'{version}-{committish}'
+
+
 def build_component_descriptor(
     version: str,
     committish: str,
@@ -68,6 +79,13 @@ def build_component_descriptor(
         cicd_cfg=cicd_cfg,
     )
 
+    # effective version is used to incorporate into component-descriptor
+    # (may deviate from gardenlinux-versions, which are always "final")
+    effective_version = _calculate_effective_version(
+        version=version,
+        publishing_actions=publishing_actions,
+    )
+
     releases = tuple(find_releases(
         flavour_set=flavour_set,
         version=version,
@@ -76,13 +94,7 @@ def build_component_descriptor(
         prefix=glci.model.ReleaseManifest.manifest_key_prefix,
         )
     )
-
-    if glci.model.PublishingAction.RELEASE not in publishing_actions:
-      version = version_util.process_version(
-        version_str=version,
-        operation=version_util.SET_PRERELEASE,
-        prerelease=committish,
-      )
+    releases: typing.Tuple[glci.model.OnlineReleaseManifest]
 
     base_url = _resolve_ctx_repository_config(ctx_repository_config_name)
     if snapshot_ctx_repository_config_name:
@@ -91,16 +103,20 @@ def build_component_descriptor(
         snapshot_repo_base_url = None
 
     component_descriptor = _base_component_descriptor(
-        version=version,
+        version=effective_version,
         branch=branch,
         commit=committish,
         ctx_repository_base_url=base_url
     )
 
-    component_descriptor.component.resources.extend([
-        virtual_machine_image_resource(release_manifest, cicd_cfg)
+    component_descriptor.component.resources = [
+        virtual_machine_image_resource(
+            release_manifest=release_manifest,
+            cicd_cfg=cicd_cfg,
+            effective_version=effective_version,
+        )
         for release_manifest in releases
-    ])
+    ]
 
     logger.info(
         'Generated Component-Descriptor:\n'
@@ -165,7 +181,7 @@ def virtual_machine_image_resource(
 
     return cm.Resource(
         name='gardenlinux',
-        version=release_manifest.version,
+        version=effective_version,
         extraIdentity={
             'feature-flags': ','.join(release_manifest.modifiers),
             'architecture': release_manifest.architecture,
