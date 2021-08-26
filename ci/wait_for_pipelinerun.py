@@ -84,6 +84,7 @@ def main():
     parser.add_argument('--pipelinerun-file')
     parser.add_argument('--namespace')
     parser.add_argument('--cicd-cfg', default='default')
+    parser.add_argument('--send-notification', action=argparse.BooleanOptionalAction, default=False)
 
     parsed = parser.parse_args()
 
@@ -113,11 +114,12 @@ def main():
     except RuntimeError as rte:
         print(rte)
         print('pipeline run failed')
-        notify(
-            pipelinerun_name=pipelinerun_name,
-            namespace=namespace,
-            cicd_cfg=cicd_cfg,
-        )
+        if parsed.send_notification:
+            notify(
+                pipelinerun_name=pipelinerun_name,
+                namespace=namespace,
+                cicd_cfg=cicd_cfg,
+            )
         raise rte
 
 
