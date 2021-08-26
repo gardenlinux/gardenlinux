@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+. $(dirname $0)/.helper
+
+sudo sed -i "s/^\(deb-src.*\) testing \(.*\)/\1 experimental \2/" /etc/apt/sources.list
+sudo apt-get update
+
+sudo apt-get build-dep -y --no-install-recommends $src
+apt-get source $src
+
+cd $src-*/
+dch -lgardenlinux 'x'
+dch -r ''
+
+donotmove="$(ls ..)"
+debuild
+move_package .. $donotmove
+
+sudo sed -i "s/^\(deb-src.*\) experimental \(.*\)/\1 testing \2/" /etc/apt/sources.list
+sudo apt-get update
