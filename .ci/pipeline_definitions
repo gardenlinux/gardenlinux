@@ -16,7 +16,6 @@ gardenlinux:
           execute:
           - '../ci/render_pipelines_and_trigger_job'
           - --image-build
-          - --wait
           vars:
             PROMOTE_TARGET: "'snapshot'"
             PUBLISHING_ACTIONS: "'manifests,component_descriptor'"
@@ -28,7 +27,6 @@ gardenlinux:
           execute:
           - '../ci/render_pipelines_and_trigger_job'
           - --package-build
-          - --wait
           vars:
             PROMOTE_TARGET: "'snapshot'"
             PUBLISHING_ACTIONS: "'manifests'"
