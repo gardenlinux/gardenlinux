@@ -1,5 +1,0 @@
-# DO NOT CHANGE THIS FILE! USE /etc/default/syslinux.d
-SYSLINUX_CMDLINE_LINUX="ro console=ttyS0,115200 console=tty0 earlyprintk=ttyS0,115200 consoleblank=0"
-SYSLINUX_DEVICE="LABEL=ROOT"
-# WARNING! 0 disables the TIMEOUT
-SYSLINUX_TIMEOUT=1
