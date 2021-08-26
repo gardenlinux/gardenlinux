@@ -13,6 +13,7 @@
     <a href="#build-requirements">Build Requirements</a> &bull;
     <a href="#quick-start">Quick Start</a> &bull;
     <a href="#customize-builds">Customize</a> &bull;
+    <a href="#garden-linux-releases">Releases</a> &bull;
 </p>
 <hr />
 
@@ -110,6 +111,12 @@ if you want to manually build choose:
 builds a server image, cloud-like, with a container host for the VMware platform. The build result can be found in `build/`
 
 also look into our [Version scheme](VERSION.md) since adding a date or a Version targets the whole build for a specific date
+
+
+## Garden Linux releases
+
+Garden Linux frequently publishes snapshot releases. These are available as machine images in most major cloud providers as well as
+file-system images for manual import. See the [releases](docs/releases.md) page for more info.
 
 ## Pipeline Integration
 Garden Linux can build in an automated way for continous integration. See [ci/README.md](ci/README.md) for details.
