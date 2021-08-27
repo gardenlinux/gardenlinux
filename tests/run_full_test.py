@@ -242,6 +242,72 @@ class AWSFullTest:
             logger.info("Tests not successful, instance still running")
 
 
+
+class AzureFullTest:
+
+    def __init__(self, config):
+        self.azure_config = config["azure"]
+
+    def upload_image(self):
+        logger.debug("Uploading image %s" % image_url)
+        image_file = o.path
+        cmd = [
+            os.path.join(self.repo_root, "bin", "make-azure-ami"),
+            "--resource-group",
+            self.azure_config["resource_group"],
+            "--storage-account-name",
+            self.azure_config["storage_account_name"],
+            "--image-name",
+            self.azure_config["image_name"],
+            "--image-path",
+            self.azure_config["image"]
+        ]
+        if self.debug:
+            cmd = cmd + ["--debug"]
+        logger.debug("Running command: " + (" ".join([v for v in cmd])))
+        result = subprocess.run(cmd, capture_output=True)
+        if result.returncode != 0:
+            sys.exit("Error uploading image %s" % (result.stderr.decode("utf-8")))
+        logger.debug("Result of upload_image %s" % (result.stdout.decode("utf-8")))
+
+
+    def upload_ssh_key(self):
+       
+        cmd = [
+            os.path.join(self.repo_root, "az"), "sshkey", "list", "--subscription", self.subscription, "--resource-group", self.resource_group
+        ]
+        if result.returncode != 0:
+            sys.exit("Error retrieving ssh keys: %s" % (result.stderr.decode("utf-8")))
+
+        keys = json.loads(result.stdout)
+        
+        if "ssh_key_filepath" in self.azure_config:
+            ssh_key_file_path=self.azure_config["ssh_key_filepath"]
+        else:
+            sys.exit("SSH keyfile not given in test configuration")
+            # TODO: generate a key on the fly
+        key_name = self.azure_config["key_name"]
+        k = paramiko.RSAKey.from_private_key_file(os.path.abspath(ssh_key_file_path))
+        pub = k.get_name() + " " + k.get_base64()
+
+        for key in keys:
+            if key_name == key["name"]:
+                logger.info("key %s already uploaded" % key_name)
+                return
+        logger.info("Uploading key %s" % key_name)
+        cmd = [
+            os.path.join(self.repo_root, "az"), "sshkey", "create", "--public-key", pub, "--name", key_name)
+        ]
+        result = subprocess.run(cmd, capture_output=True)
+        if result.returncode != 0:
+            sys.exit("Error uploading key: %s" % (result.stderr.decode("utf-8")))
+
+
+    def run(self):
+        self.upload_image()
+        self.upload_ssh_key()
+
+
 class FullTest:
     def __init__(self, args):
         self.config_file = args.config
@@ -267,7 +333,8 @@ class FullTest:
             sys.exit("Test for GCP not yet implemented.")
             #return GCPFullTest(self.config["gcp"])
         elif self.iaas == "azure":
-            sys.exit("Test for Azure not yet implemented.")
+            return AzureFullTest(self.config["azure"]
+
         else:
             sys.exit("Unknown cloud provider.")
 
