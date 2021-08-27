@@ -8,7 +8,6 @@ memory=2Gi
 bridge=
 daemonize=
 pxe=
-pxeLocal=
 portbase=2223
 port=$portbase; while ss -tul | grep :$port &> /dev/null; do (( ++port )); done
 uefi=
@@ -23,9 +22,9 @@ inflatelist=( )
 source "${thisDir}/.constants.sh" \
 	--flags 'daemonize,uefi,skipkp,vnc' \
 	--flags 'cpu:,mem:,bridge:,port:,mac:,arch:' \
-	--flags 'pxelocal:,pxe:' \
+	--flags 'pxe:' \
 	--flags 'ueficode:,uefivars:' \
-	--usage '[ --daemonize ] [ --cpu:<#> ] [ --mem:<size> ] [ --pxe:<dir> ] [ --pxelocal ] [<image file>[,<size>]]*' \
+	--usage '[ --daemonize ] [ --cpu:<#> ] [ --mem:<size> ] [ --pxe:<dir> ] [<image file>[,<size>]]*' \
 	--sample '.build/rootfs.raw' \
         --sample ',1G ubuntu-16.04.7-server-amd64.iso' \
 	--help  "Starts a virtual machine with the most basic environment, needed. Perfect use for test cases and running samples of GardenLinux. This script can run unprivileged but it should have the possibility to use kvm (group kvm) otherwise it will be super slow. If not being root, the network will be slow and no ICMP (ping) capabilities are with the VM.
@@ -45,6 +44,7 @@ source "${thisDir}/.constants.sh" \
 		not if --bridge is specified (default: $portbase)
 --mac <macaddr> the mac address is usually randomized. It is used to identify the monitoring
 		port, the mac address of the machine and the UUID. Can be set to this value.
+--pxe <dir>	enables pxe boot on the vm. <dir> specifies where to find the boot files
 
 --daemonize	start the virtual machine in background, console deactivated (default: no)
 --skipkp	skip the keypress to the verify status before execute.
@@ -54,7 +54,6 @@ source "${thisDir}/.constants.sh" \
 
 <image file>	a file containing the image to boot. Format is determined by the extension. 
                 raw, vdi, vpc, vhd, vhdx, vmdk, qcow2, iso are recognized. 
-		http://, https:// and ssh:// is supported as source
 		,<size> is optional. If the file is smaller then <size> it will be resized
 		withthe sparse feature of the filesystem to  the requested size. 
 		If <image file> is omitted and only ,<size> is specified, a temporary file 
@@ -75,28 +74,38 @@ while true; do
 		--ueficode)     uefiCode="$1";  shift ;;
 		--uefivars)     uefiVars="$1";  shift ;;
 		--bridge ) 	bridge="$1";  	shift ;;
-		--pxe )         pxe="$1";       shift ;;
-		--pxelocal)     pxeLocal="$1";  shift ;;
-		--port)         port="$1";  shift ;;
+		--pxe )         pxe="$(realpath $1)";  shift ;;
+		--port)         port="$1";	shift ;;
 		--skipkp) 	keypress=; 	;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
 done
 
-# TODO: add -runas
+# TODO: add -runas -> valid if running as root
 #TODO uefi secure boot, uefi certificate
-# pxe, pxelocal, pxeconfig
+# tpm https://qemu-project.gitlab.io/qemu/specs/tpm.html
+# serial console on --daemonize to unix socket file
+# virtual console fixing size problems ? vc
+# -snapshot per disk? detect-zeroes=unmap
+# virtio-blk instead of scsi ?
 #TODO sysctl -w net.ipv4.ping_group_range='0 2147483647'
 
 [[ "${memory: -1}" =~ [0-9] ]] && memory="${memory}Mi"
 memory=$(numfmt --from=auto --suffix="B" --format "%f" ${memory} | head -c-2)
+pxedir=$(tr -d ":" <<< ${mac,,}).pxe
+pxefile=$thisDir/../examples/ipxe/start-vm.ipxe
+
+[ $EUID -e 0 ] && virtOpts=(	"-runas nobody" )
 
 virtOpts=(	"-smp $cpu"
 	   	"-m $(( $memory / 1048576 ))" )
 
 # add a watchdog to maintain automatic reboots 
 virtOpts+=(	"-watchdog i6300esb" )
+
+# remove default things like floppies, serial port, parallel port
+virtOpts+=(	"-nodefaults" )
 
 # make sure to use minimal memory
 virtOpts+=(	"-device virtio-balloon" )
@@ -119,9 +128,9 @@ cpuinfo="$(grep "^flags" /proc/cpuinfo | uniq)"
 			"-cpu host"  )
 
 # adding a monitoring port for extended commands
-virtOpts+=(	"-monitor unix:${thisDir}/$(tr -d ":" <<< ${mac,,}).monitor,server,nowait" )
+virtOpts+=(	"-monitor unix:$(tr -d ":" <<< ${mac,,}).monitor,server,nowait" )
 
-[ -e ${thisDir}/$(tr -d ":" <<< ${mac,,}).monitor ] && eusage "monitor to this macaddress already exists $(tr -d ":" <<< ${mac,,}).monitor"
+[ -e $(tr -d ":" <<< ${mac,,}).monitor ] && eusage "monitor to this macaddress already exists $(tr -d ":" <<< ${mac,,}).monitor"
 
 [ $daemonize ] && virtOpts+=(	"-daemonize" )
 [ $daemonize ] || virtOpts+=(	"-nographic" 
@@ -168,52 +177,36 @@ while (( "$#" )); do
 	(( ++hasdisk ))
 	shift
 done
-[ $hasdisk -gt 0 -o "$pxe" -o "$pxeLocal" ] || eusage 'missing bootdisk. boot via --pxe, provide tmpdisk via --disk or provide bootdisk image file'
-
+[ $hasdisk -gt 0 -o "$pxe" ] || eusage 'missing bootdisk. boot via --pxe, provide tmpdisk via --disk or provide bootdisk image file'
 
 # pxe
-#TODO
-pxeConfig=
-if [ "$pxe" -o "$pxeLocal" ]; then
-	tempDir=$(mktemp -d)
-	rand=$(cat /proc/sys/kernel/random/uuid)
-	mkdir -p "$thisDir/../hack/pxe/$rand"
-	trap 'echo "Cleaning up ..."; rm -rf "$tempDir"; rm -rf "$thisDir/../hack/pxe/$rand"' EXIT
-
-	if [ "$pxeLocal" ]; then
-		# copy the kernel image and initramfs to be able to be booted from PXE
-		cp "$pxeLocal/"{rootfs.initrd,rootfs.vmlinuz} "$tempDir/"
-		cp "$pxeLocal/root.squashfs" "$tempDir/"
-		cp "$thisDir/.boot.pxe" "$tempDir/boot.pxe"
-		cp "$thisDir/*.ign" "$tempDir/" || true
-		# modify the boot.pxe to load the proper kernel and initramfs
-		sed -i "s/PATHGOESHERE//" "${tempDir}/boot.pxe" 
-		sed -i "s/IPADDRESSGOESHERE/10.0.2.2/" "${tempDir}/boot.pxe" 
-	else
-		# copy the kernel image and initramfs to be able to be booted from PXE
-		cp "$pxe/{rootfs.initrd,rootfs.vmlinuz}" "$thisDir/../hack/pxe/$rand/"
-		cp "$thisDir/.boot.pxe" "$tempDir/boot.pxe"
-
-		# modify the boot.pxe to load the proper kernel and initramfs
-		# TODO : get ip as parameter or load from config or something else
-		sed -i "s/PATHGOESHERE/pxe\/${rand}/" "${tempDir}/boot.pxe" 
-		sed -i "s/IPADDRESSGOESHERE/172.31.31.177/" "${tempDir}/boot.pxe" 
-	fi
-	pxeConfig=",tftp=$tempDir,bootfile=/boot.pxe"
+if [ "$pxe" ]; then
+	[ -f $pxedir ] && eusage "the directory $pxedir cannot be a file!"
+	mkdir $pxedir
+	trap 'rm -rf $pxedir/*; rmdir $pxedir' EXIT
+	for i in $(ls $pxe/*.ign) $pxe/rootfs.initrd $pxe/rootfs.vmlinuz $pxe/root.squashfs; do
+		ln -s	$i $pxedir
+	done
+	[ -e "$pxe/boot.ipxe" ] && pxefile="$pxe/boot.ipxe"
+	# modify the boot.ipxe to load the proper kernel and initramfs
+	sed "s/PATHGOESHERE//g;s/IPADDRESSGOESHERE/10.0.2.2/g" "$pxefile" > "$pxedir/boot.ipxe"
+	
 	virtOpts+=( -boot order=nc )
 fi
 
 # handling the network
 			virtOpts+=(	"-device virtio-net-pci,netdev=net0,mac=${mac,,}" )
-if [ $bridge ]; then 	virtOpts+=(	"-netdev bridge,id=net0,br=${bridge}${pxeConfig}" )
-else			virtOpts+=( 	"-netdev user,id=net0,hostfwd=tcp::$port-:22,hostname=garden${pxeConfig}" )
+if [ $bridge ]; then 	virtOpts+=(	"-netdev bridge,id=net0,br=${bridge}" )
+elif [ $pxe ]; then	virtOpts+=( 	"-netdev user,id=net0,hostfwd=tcp::$port-:22,hostname=garden,tftp=$pxedir,bootfile=/boot.ipxe" )
+else			virtOpts+=( 	"-netdev user,id=net0,hostfwd=tcp::$port-:22,hostname=garden" )
 fi
 [ $bridge ] && ( [ -e /sys/class/net/$bridge/bridge ] || eusage "interface $bridge is no bridge" )
 
 # status report
 printf "Status:\n"
 printf "  UUID: 12345678-0000-0000-0000-%s\n  MAC: %s\n" $(tr -d ":" <<< ${mac,,}) ${mac,,}
-printf "  monitor: %s.monitor\n" ${thisDir}/$(tr -d ":" <<< ${mac,,})
+printf "  monitor: %s.monitor\n" $(tr -d ":" <<< ${mac,,})
+[ $pxe ] && printf "  pxefiles: %s/\n" $pxedir
 [ $bridge ] && printf "  interface: %s  bridged\n" $bridge
 [ ! $bridge ] && printf "  sshport: %s  unbridged\n" $port
 [ $vnc ] && printf "  vncport: %s\n" $(( vncport + 5900 ))
@@ -251,8 +244,8 @@ if [ $vnc ]; then
 fi
 
 qemu-system-$arch ${virtOpts[@]}
-[ $daemonize ] || rm -f ${thisDir}/$(tr -d ":" <<< ${mac,,})
+[ $daemonize ] || rm -f $(tr -d ":" <<< ${mac,,}).monitor
 
 # printing a hint how to reach the console - socat should be installed on garden linux
-[ $daemonize ] && printf "\nConnect to VM monitor via\n  socat - UNIX-CONNECT:${thisDir}/$(tr -d ":" <<< ${mac,,}).monitor\n"
+[ $daemonize ] && printf "\nConnect to VM monitor via\n  socat - UNIX-CONNECT:$(tr -d ":" <<< ${mac,,}).monitor\n"
 
