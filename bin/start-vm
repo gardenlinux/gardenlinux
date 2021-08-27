@@ -96,7 +96,7 @@ memory=$(numfmt --from=auto --suffix="B" --format "%f" ${memory} | head -c-2)
 pxedir=$(tr -d ":" <<< ${mac,,}).pxe
 pxefile=$thisDir/../examples/ipxe/start-vm.ipxe
 
-[ $EUID -e 0 ] && virtOpts=(	"-runas nobody" )
+[ $EUID == 0 ] && virtOpts=(	"-runas nobody" )
 
 virtOpts=(	"-smp $cpu"
 	   	"-m $(( $memory / 1048576 ))" )
