@@ -27,7 +27,8 @@ def _get_and_zip_logs(
     namespace: str,
     pipeline_run_name: str,
     zip_file_path:str,
-    tail_lines,
+    tail_lines: int,
+    only_failed: bool
 ) -> str:
     '''
     retrieves all pod logs and writes them into a zip archive
@@ -62,14 +63,24 @@ def _get_and_zip_logs(
 
     task_run_infos = []
     for tr in task_runs.values():
-        task_steps = {step['name']: step['container'] for step in tr['status']['steps']}
-        task_run_infos.append(
-            TaskRunInfo(
-                name=tr['pipelineTaskName'],
-                pod_name=tr['status']['podName'],
-                steps=task_steps,
+        if only_failed:
+            # Note that some steps of the pipelineRun are not yet finished. e.g. current step
+            # getting the logs and thus do not have a 'terminated' key.
+            task_steps = {step['name']: step['container'] for step in tr['status']['steps']
+                            if 'terminated' in step and step['terminated']['exitCode'] != 0}
+            do_append = tr['status']['conditions'][0]['reason'] != 'Succeeded'
+        else:
+            task_steps = {step['name']: step['container'] for step in tr['status']['steps']}
+            do_append = True
+
+        if do_append:
+            task_run_infos.append(
+                TaskRunInfo(
+                    name=tr['pipelineTaskName'],
+                    pod_name=tr['status']['podName'],
+                    steps=task_steps,
+                )
             )
-        )
 
     # create a zip file to store logs:
     if not zip_file_path:
@@ -120,17 +131,13 @@ def getlogs(
     pipeline_run_name: str,
     zip_file_path:str=None,
     tail_lines:int=None,
-    status_dict_str:str=None,
+    only_failed:bool=True,
 ) -> str:
-
-    # failed_pods = []
-    # if status_dict_str:
-    #     status_dict = json.loads(status_dict_str)
-
     return _get_and_zip_logs(
         repo_dir=repo_dir,
         namespace=namespace,
         pipeline_run_name=pipeline_run_name,
         zip_file_path=zip_file_path,
         tail_lines=tail_lines,
+        only_failed=only_failed,
     )
