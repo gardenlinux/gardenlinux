@@ -58,6 +58,7 @@ def _attach_and_send(
     mail_client = _smtp_client(email_cfg=email_cfg)
     mail_client.send_message(msg=mail_msg)
 
+
 def _mk_plain_text_body(
     text: str,
     recipients: typing.Sequence[str],
@@ -123,11 +124,15 @@ def send_notification(
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
     email_cfg = _email_cfg(cicd_cfg=cicd_cfg)
 
-    html_template_path = os.path.abspath(os.path.join(repo_dir,"ci/templates/email_notification.html"))
+    html_template_path = os.path.abspath(
+        os.path.join(repo_dir, "ci/templates/email_notification.html")
+    )
     with open(html_template_path, 'r') as mail_template_file:
         html_mail_template = mail_template_file.read()
 
-    txt_template_path = os.path.abspath(os.path.join(repo_dir,"ci/templates/email_notification.txt"))
+    txt_template_path = os.path.abspath(
+        os.path.join(repo_dir, "ci/templates/email_notification.txt")
+    )
     with open(txt_template_path, 'r') as mail_template_file:
         txt_mail_template = mail_template_file.read()
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#  export KUBECONFIG=/Users/d058463/Documents/SAP-Dev/Kubernetes/kubeconfigs/kubeconfig--gdnlinux--build.yaml
 from dataclasses import dataclass
 import os
 import urllib3
@@ -23,12 +22,12 @@ class K8sResponse:
     headers: urllib3.response.HTTPHeaderDict
 
 
-def getlogs(
+def _get_and_zip_logs(
     repo_dir: str,
     namespace: str,
     pipeline_run_name: str,
-    zip_file_path:str=None,
-    tail_lines=256,
+    zip_file_path:str,
+    tail_lines,
 ) -> str:
     '''
     retrieves all pod logs and writes them into a zip archive
@@ -86,13 +85,17 @@ def getlogs(
                 # Note the flag preload_content decides about streaming or full content in response,
                 # k8s client uses internally urllib3, see
                 # https://urllib3.readthedocs.io/en/stable/advanced-usage.html#stream
-                data, status_code, headers = k8s.read_namespaced_pod_log_with_http_info(
-                    name=pod_name,
-                    container=container_name,
-                    namespace=namespace,
-                    tail_lines=tail_lines,
-                    _preload_content=False,
-                )
+                # tail lines only if not None:
+                args = {
+                    'name': pod_name,
+                    'container': container_name,
+                    'namespace': namespace,
+                    '_preload_content': False,
+                }
+                if tail_lines:
+                    args['tail_lines'] = tail_lines
+
+                data, status_code, headers = k8s.read_namespaced_pod_log_with_http_info(**args)
                 # returns tuple (response_data, http status, headers)
                 log_response = K8sResponse(
                     data=data,
@@ -109,3 +112,25 @@ def getlogs(
                         zipcomp.write(chunk)
 
     return zip_file_path
+
+
+def getlogs(
+    repo_dir: str,
+    namespace: str,
+    pipeline_run_name: str,
+    zip_file_path:str=None,
+    tail_lines:int=None,
+    status_dict_str:str=None,
+) -> str:
+
+    # failed_pods = []
+    # if status_dict_str:
+    #     status_dict = json.loads(status_dict_str)
+
+    return _get_and_zip_logs(
+        repo_dir=repo_dir,
+        namespace=namespace,
+        pipeline_run_name=pipeline_run_name,
+        zip_file_path=zip_file_path,
+        tail_lines=tail_lines,
+    )
