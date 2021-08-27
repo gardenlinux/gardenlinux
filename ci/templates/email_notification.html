@@ -104,8 +104,8 @@ hr {
 
 img {
     display: block;
-    height: auto; 
-    max-width: 100%; 
+    height: auto;
+    max-width: 100%;
 }
 
 figure {
@@ -137,12 +137,12 @@ table th { background: var(--secondary-color); font-weight: bold; }
 table th, table td { padding: 1rem; }
 table th:not(last-of-type), table td:not(last-of-type) { border-right: 1px solid var(--primary-color); }
 
-input { 
-    appearance: none; 
+input {
+    appearance: none;
     border: 1px solid var(--text-color);
     display: block;
     margin: 0.5rem 0;
-    padding: 0.8rem; 
+    padding: 0.8rem;
 }
 input:focus, input:active { background-color: var(--secondary-color); border-color: var(--link-color); }
 
@@ -167,15 +167,16 @@ body{margin:0 auto;max-width:50rem;}
 
 </head>
 <body>
-    <main role="main">    
+    <main role="main">
     <div id="top" class="page" role="document">
         <header role="banner">
           <div style="text-align:center;">
           $logo_src
           </div>
           <h3>Garden Linux Build Pipeline: $pipeline</h3>
-          <p>Notification from the Garden Linux Build Pipeline: Failure in pipeline <strong>$pipeline</strong>.
-              The pipeline run $pipeline_run running in namespace $namespace failed in at least one task.
+          <p>Notification from the Garden Linux Build Pipeline: Failure in pipeline
+             <strong>$pipeline</strong>. The pipeline run $pipeline_run running in namespace
+             <strong>$namespace</strong> failed in at least one task.
           </p>
         </header>
         <article id="build_status">
@@ -195,16 +196,20 @@ body{margin:0 auto;max-width:50rem;}
                 $status_table
             </tbody>
             </table>
-        </article>                          
+        </article>
         <article id="status_footer">
             <div>
-                <p>Check the <a href="https://tekton-dashboard.gardenlinux.io/#/namespaces/$namespace/pipelineruns/$pipeline_run">Dashboard</a> for detailed information.</p>
+                <p>Check the
+                   <a href="https://tekton-dashboard.gardenlinux.io/#/namespaces/$namespace/pipelineruns/$pipeline_run">Dashboard</a>
+                   for detailed information.</p>
             </div>
         </article>
     </main>
     <footer role="contentinfo">
       <hr>
-      <p><small>This email is sent to <a href="https://github.com/gardenlinux/gardenlinux/blob/main/CODEOWNERS">CODEOWNERS </a>of the GardenLinux repository.</small></p>
-    </footer>          
+      <p><small>This email is sent to
+          <a href="https://github.com/gardenlinux/gardenlinux/blob/main/CODEOWNERS">CODEOWNERS </a>
+        of the GardenLinux repository.</small></p>
+    </footer>
 </body>
 </html>

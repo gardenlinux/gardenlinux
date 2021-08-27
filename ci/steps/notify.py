@@ -132,14 +132,12 @@ def send_notification(
         txt_mail_template = mail_template_file.read()
 
     # read the logo
-    logo_path = os.path.abspath(os.path.join(repo_dir,"logo/gardenlinux.svg"))
+    logo_path = os.path.abspath(os.path.join(repo_dir,"logo/gardenlinux_minified.svg"))
     with open(logo_path, 'r') as logo_file:
         logo_svg = logo_file.read()
 
     # replace id and add some attributes
-    logo_svg = logo_svg.replace('<svg id="Layer_1"', '<svg id="gl_logo" width="100px"')
-    logo_svg = logo_svg.replace('<title>Garden Linux_logo</title>',
-        '<title>Garden Linux Logo</title>')
+    logo_svg = logo_svg.replace('<svg data-name="Layer 1"', '<svg data-name="gl_logo" width="100px"')
 
     # fill template parameters:
     html_template = Template(html_mail_template)
@@ -178,24 +176,26 @@ def send_notification(
         print('Mail not sent, could not find any recipient.')
         return
 
-    # filter recipients for crippled providers like gmx dropping too complex emails:
-    recipients_crippled = [recp for recp in recipients if recp.endswith('gmx.de')]
+    # filter recipients for those who should get plain-text emails:
+    recipients_crippled = [] # [recp for recp in recipients if recp.endswith('gmx.de')]
     recipients = [recp for recp in recipients if recp not in recipients_crippled]
 
     print(f'Send html notification to following recipients: {recipients}')
-    mail_msg = glci.notify.mk_html_mail_body(
-        text=html_mail_body,
-        recipients=recipients,
-        subject=subject,
-        sender=email_cfg.sender_name(),
-    )
-    _attach_and_send(repo_dir=repo_dir, mail_msg=mail_msg, email_cfg=email_cfg)
+    if recipients:
+        mail_msg = glci.notify.mk_html_mail_body(
+            text=html_mail_body,
+            recipients=recipients,
+            subject=subject,
+            sender=email_cfg.sender_name(),
+        )
+        _attach_and_send(repo_dir=repo_dir, mail_msg=mail_msg, email_cfg=email_cfg)
 
     print(f'Send plain text notification to following recipients: {recipients_crippled}')
-    mail_msg = _mk_plain_text_body(
-        text=txt_mail_body,
-        recipients=recipients_crippled,
-        subject=subject,
-        sender=email_cfg.sender_name(),
-    )
-    _attach_and_send(repo_dir=repo_dir, mail_msg=mail_msg, email_cfg=email_cfg)
+    if recipients_crippled:
+        mail_msg = _mk_plain_text_body(
+            text=txt_mail_body,
+            recipients=recipients_crippled,
+            subject=subject,
+            sender=email_cfg.sender_name(),
+        )
+        _attach_and_send(repo_dir=repo_dir, mail_msg=mail_msg, email_cfg=email_cfg)
