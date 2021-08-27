@@ -72,6 +72,7 @@ else
 	chown "${userID}":"${userGID}" "${buildLog}"
 fi
 
+echo > "${buildLog}"
 exec > >(tee -a "${buildLog}") 2> >(tee -a "${buildLog}" >&2)
 
 touch_epoch() {
