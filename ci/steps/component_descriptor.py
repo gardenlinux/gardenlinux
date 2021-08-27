@@ -84,6 +84,7 @@ def build_component_descriptor(
     effective_version = _calculate_effective_version(
         version=version,
         publishing_actions=publishing_actions,
+        committish=committish,
     )
 
     releases = tuple(find_releases(
