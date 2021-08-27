@@ -135,7 +135,7 @@ def run_tests(
         sys.exit(1)
     if not pytest_cfg:
         print('No tests configured, nothing to do')
-        sys.exit(0)
+        result = ExitCode.OK
     else:
         final_arg = None
         with open(test_cfg_path) as file:
@@ -150,17 +150,17 @@ def run_tests(
             sub_cfg = test_profile['architecture'][architecture]
             if platform in sub_cfg['platform']:
                 final_arg = sub_cfg['platform'][platform]
-        if not final_arg:
+        if final_arg:
+            template = Template(final_arg)
+            pytest_args = template.substitute(platform=platform, architecture=architecture)
+            pytest_arg_list = pytest_args.split()
+            print(f'Running integration tests with pytest args: {pytest_arg_list}')
+            with pushd(repo_dir):
+                result = pytest.main(pytest_arg_list, plugins=[params_plugin])
+                print(f'Integration tests finished with result {result=}')
+        else:
             print(f'No test configured for {architecture=}, {platform=} in {cfg_name}')
-            return 0
-        template = Template(final_arg)
-        pytest_args = template.substitute(platform=platform, architecture=architecture)
-        pytest_arg_list = pytest_args.split()
-
-    print(f'Running integration tests with pytest args: {pytest_arg_list}')
-    with pushd(repo_dir):
-        result = pytest.main(pytest_arg_list, plugins=[params_plugin])
-        print(f'Integration tests finished with result {result=}')
+            result = ExitCode.OK
 
     # Store result for later upload in manifest in file
     test_results = glci.model.ReleaseTestResult(
