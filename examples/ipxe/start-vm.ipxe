@@ -3,6 +3,7 @@
 set pxeserver IPADDRESSGOESHERE 
 set pxepath PATHGOESHERE 
 
-kernel tftp://${pxeserver}/${pxepath}/rootfs.vmlinuz gl.url=tftp://${pxeserver}/root.squashfs gl.live=1 ip=dhcp console=ttyS0
+kernel tftp://${pxeserver}/${pxepath}/rootfs.vmlinuz gl.url=tftp://${pxeserver}/root.squashfs gl.live=1 ip=dhcp console=ttyS0 gl.ovl=/:tmpfs
 initrd tftp://${pxeserver}/${pxepath}/rootfs.initrd
+sleep 10
 boot
