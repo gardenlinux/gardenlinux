@@ -10,6 +10,7 @@ import yaml
 
 from .aws import AWS
 from .gcp import GCP
+from .azure import AZURE
 from .sshclient import RemoteClient
 
 logger = logging.getLogger(__name__)
@@ -37,9 +38,10 @@ def client(request, config: dict, iaas) -> Iterator[RemoteClient]:
         yield from AWS.fixture(config["aws"])
     elif iaas == "gcp":
         yield from GCP.fixture(config["gcp"])
+    elif iaas = "azure":
+        yield from AZURE.fixture(config["azure"])
     else:
         raise ValueError(f"invalid {iaas=}")
-
 
 def test_clock(client):
     (exit_code, output, error) = client.execute_command("date '+%s'")

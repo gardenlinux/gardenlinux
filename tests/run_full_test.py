@@ -19,7 +19,7 @@ import json
 import boto3
 import botocore
 import glci.aws
-
+import azurewrapper
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -246,7 +246,10 @@ class AWSFullTest:
 class AzureFullTest:
 
     def __init__(self, config):
-        self.azure_config = config["azure"]
+        self.config = config["azure"]
+        self.subscription =
+        self.resource_group =
+        self.az = AzureWrapper(self.azure_config)
 
     def upload_image(self):
         logger.debug("Uploading image %s" % image_url)
@@ -271,41 +274,43 @@ class AzureFullTest:
         logger.debug("Result of upload_image %s" % (result.stdout.decode("utf-8")))
 
 
+    def delete_image(self):
+        raise Excption("not yet implemented")
+
+
     def upload_ssh_key(self):
-       
-        cmd = [
-            os.path.join(self.repo_root, "az"), "sshkey", "list", "--subscription", self.subscription, "--resource-group", self.resource_group
-        ]
-        if result.returncode != 0:
-            sys.exit("Error retrieving ssh keys: %s" % (result.stderr.decode("utf-8")))
+        if self.az.get_ssh_key(self.subscription, self.resource_group, self.config["ssh_key_name"]) == None:
+            self.az.upload_ssh_key(self.subscription, self.resource_group, self.config["ssh_key_filepath"], self.config["ssh_key_name"])
 
-        keys = json.loads(result.stdout)
-        
-        if "ssh_key_filepath" in self.azure_config:
-            ssh_key_file_path=self.azure_config["ssh_key_filepath"]
+
+    def delte_ssh_key(self):
+        self.az.delte_ssh_key(self.subscription, self.resource_group, self.config["ssh_key_name"])
+
+    def run_integration_test(self, configfile):
+        logger.info("Starting integration tests")
+        cmd = ["pytest", "--iaas=zure", "--configfile=" + configfile, "integration/"]
+        logger.debug("Running command: " + " ".join([v for v in cmd]))
+        result = subprocess.run(cmd, capture_output=True, cwd="/gardenlinux/tests")
+        logger.info("Integration tests returned with %d" % result.returncode)
+        logger.info(result.stdout.decode("utf-8"))
+        logger.info(result.stderr.decode("utf-8"))
+        if result.returncode == 0:
+            return True
         else:
-            sys.exit("SSH keyfile not given in test configuration")
-            # TODO: generate a key on the fly
-        key_name = self.azure_config["key_name"]
-        k = paramiko.RSAKey.from_private_key_file(os.path.abspath(ssh_key_file_path))
-        pub = k.get_name() + " " + k.get_base64()
-
-        for key in keys:
-            if key_name == key["name"]:
-                logger.info("key %s already uploaded" % key_name)
-                return
-        logger.info("Uploading key %s" % key_name)
-        cmd = [
-            os.path.join(self.repo_root, "az"), "sshkey", "create", "--public-key", pub, "--name", key_name)
-        ]
-        result = subprocess.run(cmd, capture_output=True)
-        if result.returncode != 0:
-            sys.exit("Error uploading key: %s" % (result.stderr.decode("utf-8")))
+            return False
 
 
     def run(self):
         self.upload_image()
         self.upload_ssh_key()
+
+        test_result = self.run_integration_test(self.new_config_file)
+        if test_result == True:
+            logger.info("Tests successful, deleting image")
+            self.delete_image()
+            self.delete_ssh_key()
+        else:
+            logger.info("Tests not successful, instance still running")
 
 
 class FullTest:
