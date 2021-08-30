@@ -34,6 +34,7 @@ vncbase=5900
 vncport=0; while ss -tul | grep :$(( vncport + $vncbase )) &> /dev/null; do (( ++vncport )); done
 keypress=1
 mac="$(printf '02:%02x:%02x:%02x:%02x:%02x' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)))"
+virtOpts=( )
 source "${thisDir}/.constants.sh" \
 	--flags 'daemonize,uefi,skipkp,vnc' \
 	--flags 'cpu:,mem:,bridge:,port:,mac:,arch:' \
@@ -137,7 +138,7 @@ done
 
 [[ "${memory: -1}" =~ [0-9] ]] && memory="${memory}Mi"
 memory=$(numfmt --from=auto --suffix="B" --format "%f" ${memory} | head -c-2)
-virtOpts=(	"-smp $cpu"
+virtOpts+=(	"-smp $cpu"
 	   	"-m $(( $memory / 1048576 ))" )
 
 # add a watchdog to maintain automatic reboots 
@@ -159,7 +160,7 @@ virtOpts+=(	"-device ipmi-bmc-sim,id=bmc0"
 
 # adding a uuid since this is expected by systemd and gardenlinux
 mac="$(printf "%012s" | tr -d ":" <<< ${mac,,})"
-macfull="$(sed s/../&:/g;s/:$// | <<< $mac)"
+macfull="$(sed 's/../&:/g;s/:$//' <<< $mac)"
 uuid="12345678-0000-0000-0000-${mac}"
 virtOpts+=(     "-uuid $uuid" )
 
@@ -199,7 +200,7 @@ if [ $uefi ]; then
 fi
 
 # pxe
-if [ "$pxe" ]; then
+if [ $pxe ]; then
 	[ -e "$targetDir/$mac.ipxe" ] || cp $pxefile $targetDir/$mac.ipxe
 
 	# modify the boot.ipxe to load the proper kernel and initramfs
@@ -218,7 +219,7 @@ fi
 
 # status report
 printf "Status:\n"
-printf "  starting VM(UUID:%s) with MAC:%s in %s" $uuid $macfull $targetDir
+printf "  starting VM(UUID:%s) with MAC:%s in %s\n" $uuid $macfull $targetDir
 [ $monitor ]	&& printf "  monitor: %s.monitor\tconnect: socat - UNIX-CONNECT:%s\n" $mac $targetDir/$mac.monitor
 [ $pxe ]	&& printf "  pxeboot: %.ipxe/\n" $mac
 [ $bridge ]	&& printf "  interface: %s  bridged\n" $bridge
