@@ -179,7 +179,8 @@ def release_manifest_set(
         config=dacite.Config(
             cast=[
                 glci.model.Architecture,
-                typing.Tuple
+                typing.Tuple,
+                glci.model.TestResultCode,
             ],
         ),
     )
@@ -193,6 +194,14 @@ def _json_serialisable_manifest(manifest: glci.model.ReleaseManifest):
         if isinstance(val, enum.Enum)
     }
     manifest = dataclasses.replace(manifest, **patch_args)
+    # patch test results enum:
+    for attr, val in manifest.__dict__.items():
+        if isinstance(val, glci.model.ReleaseTestResult):
+            patch_args = {
+                attr: val2.value for attr2, val2 in val.__dict__.items()
+                    if isinstance(val2, enum.Enum)
+            }
+            manifest.__dict__[attr] = dataclasses.replace(val, **patch_args)
     return manifest
 
 
@@ -203,10 +212,9 @@ def upload_release_manifest(
     manifest: glci.model.ReleaseManifest,
 ):
     manifest = _json_serialisable_manifest(manifest=manifest)
-
+    print(f'after: {dataclasses.asdict(manifest)}')
     manifest_bytes = yaml.safe_dump(dataclasses.asdict(manifest)).encode('utf-8')
     manifest_fobj = io.BytesIO(initial_bytes=manifest_bytes)
-
     return s3_client.upload_fileobj(
         Fileobj=manifest_fobj,
         Bucket=bucket_name,
