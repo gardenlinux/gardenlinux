@@ -443,6 +443,7 @@ class OnlineReleaseManifest(ReleaseManifest):
     s3_key: str
     s3_bucket: str
     test_result: typing.Optional[ReleaseTestResult]
+    logs: typing.Optional[str]
 
     def stripped_manifest(self):
         raw = dataclasses.asdict(self)
@@ -461,6 +462,11 @@ class OnlineReleaseManifest(ReleaseManifest):
     def with_test_result(self,  test_result: ReleaseTestResult):
         new_dict = self.__dict__
         new_dict['test_result'] = test_result
+        return OnlineReleaseManifest(**new_dict)
+
+    def with_logfile(self,  blob_name: str):
+        new_dict = self.__dict__
+        new_dict['logs'] = blob_name
         return OnlineReleaseManifest(**new_dict)
 
 
