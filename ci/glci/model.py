@@ -329,7 +329,7 @@ class OciPublishedImage:
 
 
 class TestResultCode(enum.Enum):
-    OK = 'sucess'
+    OK = 'success'
     FAILED = 'failure'
 
 
