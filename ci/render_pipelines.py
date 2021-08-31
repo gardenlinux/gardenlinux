@@ -185,7 +185,10 @@ def mk_pipeline_promote_task(
     )
 
 
-def mk_pipeline_notify_task(previous_tasks: typing.List[str],):
+def mk_pipeline_notify_task(
+    previous_tasks: typing.List[str],
+    gardenlinux_flavour: GardenlinuxFlavour,
+):
     status_dict = {}
     for task in previous_tasks:
         status_dict['status_' + task.name] = f'$(tasks.{task.name}.status)'
@@ -208,6 +211,13 @@ def mk_pipeline_notify_task(previous_tasks: typing.List[str],):
             value='$(context.pipelineRun.name)'
         )
 
+    if gardenlinux_flavour:
+        modifier_names = _get_modifier_names(gardenlinux_flavour)
+        platform = gardenlinux_flavour.platform
+    else:
+        modifier_names = ' '
+        platform = ' '
+
     return PipelineTask(
         name='notify-task',
         taskRef=TaskRef(name='notify-task'),
@@ -215,9 +225,13 @@ def mk_pipeline_notify_task(previous_tasks: typing.List[str],):
             pass_param(name='cicd_cfg_name'),
             pass_param(name='committish'),
             pass_param('disable_notifications'),
+            pass_param(name='gardenlinux_epoch'),
             pass_param(name='giturl'),
             pass_param(name='additional_recipients'),
             pass_param(name='only_recipients'),
+            pass_param(name='version'),
+            NamedParam(name='modifiers', value=modifier_names),
+            NamedParam(name='platform', value=platform),
             status_param,
             namespace_param,
             pipeline_name_param,
@@ -266,7 +280,7 @@ def mk_pipeline_packages():
     run_after += package_kernel_task.name
     tasks.append(package_kernel_task)
 
-    notify_task = mk_pipeline_notify_task(tasks)
+    notify_task = mk_pipeline_notify_task(previous_tasks=tasks, gardenlinux_flavour=None)
 
     pipeline = Pipeline(
         metadata=Metadata(
@@ -340,7 +354,7 @@ def mk_pipeline(
     )
     tasks.append(promote_task)
 
-    notify_task = mk_pipeline_notify_task(tasks)
+    notify_task = mk_pipeline_notify_task(previous_tasks=tasks, gardenlinux_flavour=glf,)
 
     pipeline = Pipeline(
         metadata=Metadata(
