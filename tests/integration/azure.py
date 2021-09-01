@@ -3,7 +3,7 @@ import logging
 import json
 import sys
 import subprocess
-import azurewrapper
+from azurewrapper import AzureWrapper
 from os import path
 
 from .sshclient import RemoteClient
@@ -16,12 +16,14 @@ class AZURE:
 
     @classmethod
     def fixture(cls, config) -> RemoteClient:
+        logger.info(json.dumps(config))
         azure = AZURE(config)
-        instance = azure.create_vm()
+        logger.debug(json.dumps(config))
+        instance = azure.create_vm(config)
         ssh = None
         try:
             ssh = RemoteClient(
-                host=instance.public_dns_name,
+                host=instance["publicIpAddress"],
                 user=config["user"],
                 ssh_key_filepath=config["ssh_key_filepath"],
                 passphrase=config["passphrase"],
@@ -49,16 +51,23 @@ class AZURE:
         if self.instance:
             self.terminate_vm(self.instance)
             self.instance = None
-        if self.security_group_id:
-            self.delete_security_group((self.security_group_id))
-            self.security_group_id = None
 
-    def create_vm(self):
-        if self.wrapper.get_nsg(self.config["subscription"]), self.config["nsg_name"], self.config["resource_group"]) == None:
-            self.wrapper.create_nsg_cmd(self.config["nsg_name"], self.config["resource_group"], self.config["subscription"])
-        self.vm = self.wrapper.create_vm(self.config["subscription"], self.config["image"],"integration-test" ,self.config["resource_group"], "azureuser", self.config["nsg_name"], self.config["ssh_key_name"], "Standard_B1s")
-        return self.vm["id"]
+
+    def import_key(self, config):
+        if self.az.get_ssh_key(config["ssh_key_name"]) == None:
+            self.az.upload_ssh_key(config["ssh_key_path"], config["ssh_key_name"])
+
+    def create_vm(self, config):
+        if self.az.get_nsg(config["nsg_name"]) == None:
+            self.az.create_nsg(config["nsg_name"])
+        self.instance = self.az.create_vm(config["image_name"], "integration-test" , config["user"], config["nsg_name"], config["ssh_key_name"], "Standard_B1s")
+        self.instance_view = self.az.get_vm("integration-test")
+        return self.instance
 
 
     def terminate_vm(self, instance):
-        self.wrapper.terminate_vm(self.config["subscription"]), self.config["resource_group"], self.vm["id"]) == None:
+        pass
+#        self.az.terminate_vm(self.instance["id"])
+ #       self.az.delete_disk(self.instance_view["storageProfile"]["osDisk"]["managedDisk"]["id"])
+  #      self.az.delete_vm_nic(self.instance_view["networkProfile"]["networkInterfaces"][0]["id"])
+   #     self.az.delete_nsg(self.config["nsg_name"])

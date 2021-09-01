@@ -34,11 +34,12 @@ def config(configFile):
 
 @pytest.fixture(scope="module")
 def client(request, config: dict, iaas) -> Iterator[RemoteClient]:
+    logger.info(config)
     if iaas == "aws":
         yield from AWS.fixture(config["aws"])
     elif iaas == "gcp":
         yield from GCP.fixture(config["gcp"])
-    elif iaas = "azure":
+    elif iaas == "azure":
         yield from AZURE.fixture(config["azure"])
     else:
         raise ValueError(f"invalid {iaas=}")
@@ -92,7 +93,8 @@ def test_metadata_connection(client):
     assert exit_code == 0, f"no {error=} expected"
     assert f"Connecting to {metadata_host}:80... connected." in error
     assert "200 OK" in error
-
+    # azure
+    # curl "http://169.254.169.254/metadata/instance/compute?api-version=2021-01-01&format=json" -H "Metadata: true"
 
 @pytest.fixture(params=["8.8.8.8", "dns.google", "heise.de"])
 def ping4_host(request):

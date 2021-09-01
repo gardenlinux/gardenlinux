@@ -19,7 +19,7 @@ import json
 import boto3
 import botocore
 import glci.aws
-import azurewrapper
+from azurewrapper import AzureWrapper
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -247,8 +247,8 @@ class AzureFullTest:
 
     def __init__(self, config):
         self.config = config["azure"]
-        self.subscription =
-        self.resource_group =
+        self.subscription = self.config["subscription"]
+        self.resource_group = self.config["resource_group"]
         self.az = AzureWrapper(self.azure_config)
 
     def upload_image(self):
@@ -338,8 +338,7 @@ class FullTest:
             sys.exit("Test for GCP not yet implemented.")
             #return GCPFullTest(self.config["gcp"])
         elif self.iaas == "azure":
-            return AzureFullTest(self.config["azure"]
-
+            return AzureFullTest(self.config["azure"])
         else:
             sys.exit("Unknown cloud provider.")
 
