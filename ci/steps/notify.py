@@ -144,6 +144,17 @@ def send_notification(
     # replace id and add some attributes
     logo_svg = logo_svg.replace('<svg data-name="Layer 1"', '<svg data-name="gl_logo" width="100px"')
 
+    # read the S3 download URL for the full log file:
+    s3_path = os.path.join(repo_dir, 'log_url.txt')
+    if os.path.exists(s3_path):
+        with open(s3_path) as f:
+            log_url = f.readline()
+        log_url_href = log_url.strip()
+        log_url_descr = 'here'
+    else:
+        log_url_href = "#"
+        log_url_descr = '<not available>'
+
     # fill template parameters:
     html_template = Template(html_mail_template)
     txt_template = Template(txt_mail_template)
@@ -153,6 +164,8 @@ def send_notification(
         'pipeline_run': pipeline_run_name,
         'namespace': namespace,
         'logo_src': logo_svg,
+        'log_url_href': log_url_href,
+        'log_url_descr': log_url_descr,
     }
 
     # generate mail body

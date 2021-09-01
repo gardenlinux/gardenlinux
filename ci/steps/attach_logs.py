@@ -24,6 +24,10 @@ def _upload_file(
           Fileobj=fobj,
           Bucket=s3_bucket_name,
           Key=upload_key,
+          ExtraArgs={
+              'ContentDisposition': 'attachment; filename="build_log.zip"',
+              'ContentType': 'application/zip',
+          }
         )
 
     name, suffix = os.path.splitext(log_file_path)
@@ -107,6 +111,10 @@ def _attach_and_upload_logs(
       key=manifest_path,
       manifest=new_manifest,
     )
+
+    # write a file with the download URL so that it can be later added to the email
+    with open(os.path.join(repo_dir, 'log_url.txt'), 'w') as f:
+        f.write(f'https://gardenlinux.s3.eu-central-1.amazonaws.com/{s3_key}')
 
 
 def upload_logs(
