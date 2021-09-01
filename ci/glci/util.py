@@ -187,22 +187,21 @@ def release_manifest_set(
     return manifest
 
 
-def _json_serialisable_manifest(manifest: glci.model.ReleaseManifest):
-    # workaround: need to convert enums to str
-    patch_args = {
-        attr: val.value for attr, val in manifest.__dict__.items()
-        if isinstance(val, enum.Enum)
-    }
-    manifest = dataclasses.replace(manifest, **patch_args)
-    # patch test results enum:
-    for attr, val in manifest.__dict__.items():
-        if isinstance(val, glci.model.ReleaseTestResult):
-            patch_args = {
-                attr: val2.value for attr2, val2 in val.__dict__.items()
-                    if isinstance(val2, enum.Enum)
-            }
-            manifest.__dict__[attr] = dataclasses.replace(val, **patch_args)
-    return manifest
+def _json_serialisable_manifest(object: typing.Any):
+    # workaround: need to convert enums to str recursively
+    # Note this is not a generic implementation, sequences etc. are not converted
+    if hasattr(object, '__dict__'):
+        if not dataclasses.is_dataclass(object):
+            raise TypeError(f'cannot json-serialize non dataclass object: {object}')
+        patch_args = {}
+        for attr, val in object.__dict__.items():
+            if isinstance(val, enum.Enum):
+                patch_args[attr] = val.value
+            elif dataclasses.is_dataclass(val):
+                patch_args[attr] = _json_serialisable_manifest(val)
+        if patch_args:
+            object = dataclasses.replace(object, **patch_args)
+    return object
 
 
 def upload_release_manifest(
@@ -211,8 +210,7 @@ def upload_release_manifest(
     key: str,
     manifest: glci.model.ReleaseManifest,
 ):
-    manifest = _json_serialisable_manifest(manifest=manifest)
-    print(f'after: {dataclasses.asdict(manifest)}')
+    manifest = _json_serialisable_manifest(object=manifest)
     manifest_bytes = yaml.safe_dump(dataclasses.asdict(manifest)).encode('utf-8')
     manifest_fobj = io.BytesIO(initial_bytes=manifest_bytes)
     return s3_client.upload_fileobj(
