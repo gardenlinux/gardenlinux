@@ -97,8 +97,7 @@ loopback=$(losetup -f --partscan --show ${raw_image})
 echo "### reconnected loopback to ${loopback}"
 
 echo "### setting boot flag on EFI partition"
-#sfdisk --part-attrs ${loopback} -N 1 2
-sgdisk ${loopback} --attributes=1:set:2
+sfdisk --part-attrs ${loopback} 1 LegacyBIOSBootable
 
 echo "### creating filesystems"
 mkfs.vfat -n EFI ${loopback}p1
