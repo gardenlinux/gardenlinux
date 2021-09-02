@@ -1,0 +1,10 @@
+#!/bin/sh
+
+version="$1"
+
+# passing the kernel version is required
+[ -z "${version}" ] && exit 0
+
+echo "kernel-install: removing kernel ${version}" 
+/usr/bin/kernel-install remove "${version}" 
+

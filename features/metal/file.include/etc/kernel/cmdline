@@ -1,1 +1,0 @@
-root=LABEL=ROOT ro console=ttyS1,115200n8 console=tty0 earlyprintk=ttyS1,115200n8 consoleblank=0 security=selinux

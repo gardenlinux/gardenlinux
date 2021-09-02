@@ -2,7 +2,7 @@
 
 set -x
 
-makef.sh --read-only-usr --grub-target bios --force $2 $2.tar.xz
+makef.sh --read-only-usr --force $2 $2.tar.xz
 
 # NOTE: vmdk as image format is required on the SAP CC EE
 qemu-img convert -o subformat=streamOptimized -f raw -O vmdk $2.raw $2.vmdk
