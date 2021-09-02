@@ -6,7 +6,7 @@ Build Status: $pipeline_run
 $status_table
 
 --------------------------
-Check https://tekton-dashboard.gardenlinux.io/#/namespaces/$namespace/pipelineruns/$pipeline_run>
+Check $dashboard_url
 for detailed information.
 
 The build log for failed steps is attached. Full logs can be found at $log_url_descr:

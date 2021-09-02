@@ -85,6 +85,7 @@ def send_notification(
     status_dict_str: str,
     additional_recipients: str = None,
     only_recipients: str = None,
+    recipients_plaintext: typing.Sequence[str] = [],
 ):
     if distutils.util.strtobool(disable_notifications):
         print('Notification is disabled, not sending email')
@@ -144,6 +145,8 @@ def send_notification(
     # replace id and add some attributes
     logo_svg = logo_svg.replace('<svg data-name="Layer 1"', '<svg data-name="gl_logo" width="100px"')
 
+    dashboard_url = f'https://tekton-dashboard.gardenlinux.io/#/namespaces/{namespace}/pipelineruns/{pipeline_run_name}'
+
     # read the S3 download URL for the full log file:
     s3_path = os.path.join(repo_dir, 'log_url.txt')
     if os.path.exists(s3_path):
@@ -161,7 +164,7 @@ def send_notification(
     values = {
         'pipeline': pipeline_name,
         'status_table': html_result_table,
-        'pipeline_run': pipeline_run_name,
+        'dashboard_url': dashboard_url,
         'namespace': namespace,
         'logo_src': logo_svg,
         'log_url_href': log_url_href,
@@ -195,8 +198,8 @@ def send_notification(
         return
 
     # filter recipients for those who should get plain-text emails:
-    recipients_crippled = [] # [recp for recp in recipients if recp.endswith('gmx.de')]
-    recipients = [recp for recp in recipients if recp not in recipients_crippled]
+    # Note currently unused, but left as option for future configuration
+    recipients = [recp for recp in recipients if recp not in recipients_plaintext]
 
     print(f'Send html notification to following recipients: {recipients}')
     if recipients:
@@ -208,11 +211,11 @@ def send_notification(
         )
         _attach_and_send(repo_dir=repo_dir, mail_msg=mail_msg, email_cfg=email_cfg)
 
-    print(f'Send plain text notification to following recipients: {recipients_crippled}')
-    if recipients_crippled:
+    print(f'Send plain text notification to following recipients: {recipients_plaintext}')
+    if recipients_plaintext:
         mail_msg = _mk_plain_text_body(
             text=txt_mail_body,
-            recipients=recipients_crippled,
+            recipients=recipients_plaintext,
             subject=subject,
             sender=email_cfg.sender_name(),
         )

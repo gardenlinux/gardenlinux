@@ -460,15 +460,10 @@ class OnlineReleaseManifest(ReleaseManifest):
         )
 
     def with_test_result(self,  test_result: ReleaseTestResult):
-        new_dict = self.__dict__
-        new_dict['test_result'] = test_result
-        return OnlineReleaseManifest(**new_dict)
+        return dataclasses.replace(self, test_result='test_result')
 
     def with_logfile(self,  blob_name: str):
-        new_dict = self.__dict__
-        new_dict['logs'] = blob_name
-        return OnlineReleaseManifest(**new_dict)
-
+        return dataclasses.replace(self, logs=blob_name)
 
 @dataclasses.dataclass(frozen=True)
 class ReleaseManifestSet:
