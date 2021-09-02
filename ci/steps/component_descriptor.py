@@ -40,7 +40,7 @@ def _calculate_effective_version(
     publishing_actions: typing.Sequence[glci.model.PublishingAction],
     committish: str,
 ) -> str:
-    if glci.model.PublishingAction.RELEASE not in publishing_actions:
+    if glci.model.PublishingAction.RELEASE in publishing_actions:
         return version
     else:
         return f'{version}-{committish}'
