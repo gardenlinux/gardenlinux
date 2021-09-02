@@ -350,7 +350,6 @@ def  _get_build_and_test_parameters():
     )
     modifiers = NamedParam(
         name='modifiers',
-        default='bullseye',
         description='the build modifiers',
     )
     outfile = NamedParam(
@@ -360,7 +359,6 @@ def  _get_build_and_test_parameters():
     )
     platform = NamedParam(
         name='platform',
-        default='bullseye',
         description='the target platform (aws, gcp, metal, kvm, ..)',
     )
     publishing_actions = NamedParam(
@@ -708,6 +706,8 @@ def notify_task(
         default='~',
         description='JSON string with status for all tasks',
     )
+    params_def = _get_build_and_test_parameters()
+
     namespace = NamedParam(
             name='namespace',
             description='Namespace of current pipeline run',
@@ -723,8 +723,8 @@ def notify_task(
 
     params = [
         additional_recipients,
-        cicd_cfg_name,
-        committish,
+        params_def.cicd_cfg_name,
+        params_def.committish,
         disable_notifications,
         _giturl,
         only_recipients,
@@ -733,6 +733,12 @@ def notify_task(
         namespace,
         pipeline_name,
         pipeline_run_name,
+        params_def.arch,
+        params_def.glepoch,
+        params_def.modifiers,
+        params_def.platform,
+        params_def.publishing_actions,
+        params_def.version,
     ]
     clone_step =  steps.clone_step(
         committish=committish,
@@ -745,6 +751,20 @@ def notify_task(
         repo_dir=_repodir,
         pipeline_run_name=pipeline_run_name,
         namespace=namespace,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+    attach_log_step = steps.attach_log_step(
+        architecture=params_def.arch,
+        cicd_cfg_name=cicd_cfg_name,
+        committish=committish,
+        gardenlinux_epoch=params_def.glepoch,
+        modifiers=params_def.modifiers,
+        namespace=namespace,
+        pipeline_run_name=pipeline_run_name,
+        platform=params_def.platform,
+        repo_dir=_repodir,
+        version=params_def.version,
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
@@ -768,6 +788,7 @@ def notify_task(
             params=params,
             steps=[
                 clone_step,
+                attach_log_step,
                 log_step,
                 notify_step,
             ],
