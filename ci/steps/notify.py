@@ -169,6 +169,7 @@ def send_notification(
         'logo_src': logo_svg,
         'log_url_href': log_url_href,
         'log_url_descr': log_url_descr,
+        'pipeline_run': pipeline_run_name,
     }
 
     # generate mail body

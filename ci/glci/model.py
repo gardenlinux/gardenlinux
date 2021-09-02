@@ -460,7 +460,7 @@ class OnlineReleaseManifest(ReleaseManifest):
         )
 
     def with_test_result(self,  test_result: ReleaseTestResult):
-        return dataclasses.replace(self, test_result='test_result')
+        return dataclasses.replace(self, test_result=test_result)
 
     def with_logfile(self,  blob_name: str):
         return dataclasses.replace(self, logs=blob_name)
