@@ -3,10 +3,13 @@
 import argparse
 import dataclasses
 import enum
+import io
 import os
 import re
 import sys
 import yaml
+
+import ccc.aws
 
 own_dir = os.path.abspath(os.path.dirname(__file__))
 repo_root = os.path.abspath(os.path.join(own_dir, os.pardir))
@@ -131,11 +134,57 @@ def  _fix_version(parsed_version: str, parsed_epoch: int):
     return result
 
 
+def _download_obj_to_file(
+    cicd_cfg: glci.util.cicd_cfg,
+    bucket_name: str,
+    s3_key: str,
+    file_name: str,
+):
+    s3_session = ccc.aws.session(cicd_cfg.build.aws_cfg_name)
+    s3_client = s3_session.client('s3')
+    s3_client.download_file(bucket_name, s3_key, file_name)
+    return 0
+
+
+def _download_release_artifact(
+        cicd_cfg: glci.util.cicd_cfg,
+        name: str,
+        outfile: str,
+        manifest: glci.model.OnlineReleaseManifest,
+):
+    if name == 'log' or name == 'logs':
+        s3_bucket = cicd_cfg.build.s3_bucket_name, # Note: is a tuple
+        s3_bucket = s3_bucket[0]
+        s3_key = manifest.logs
+        if not s3_key:
+            print('Error: No logs attached to release manifest')
+            return 1
+    else:
+        file_objs = [entry for entry in manifest.paths if entry.name == name]
+        if not file_objs:
+            print(f'Error: No object in release manifest with name {name}')
+            return 1
+        if len(file_objs) > 1:
+            print(f'Warning.: Found more than one file with name {name}, using first one')
+        s3_key = file_objs[0].s3_key
+        s3_bucket = file_objs[0].s3_bucket_name
+
+    print(f'Downloading object with S3-key: {s3_key} from bucket {s3_bucket}, to {outfile}')
+    return _download_obj_to_file(
+        cicd_cfg=cicd_cfg,
+        bucket_name=s3_bucket,
+        s3_key=s3_key,
+        file_name=outfile,
+    )
+
+
 def _print_used_args(parsed_args: dict):
     print('finding release(set)s with following properties:')
     for arg_key, arg_value in parsed_args.items():
         if isinstance(arg_value, enum.Enum):
             arg_value = arg_value.value
+        elif isinstance(arg_value, io.IOBase):
+            arg_value = arg_value.name
         print(f'{arg_key} : {arg_value}')
     print('--------')
 
@@ -221,6 +270,12 @@ def retrieve_single_manifest():
             'https://github.com/gardenlinux/gardenlinux/tree/main/features for possible values, '
             'default: %(default)s',
     )
+
+    parser.add_argument(
+        '--download',
+        help='Download an artifact from this manifest, value is one of paths/name or log'
+    )
+
     _retrieve_argparse(parser=parser)
 
     parsed = parser.parse_args()
@@ -246,6 +301,27 @@ def retrieve_single_manifest():
     if not release:
         print('ERROR: no such release found')
         sys.exit(1)
+
+    if parsed.download:
+        # try to download the given artifact
+        if parsed.outfile == sys.stdout:
+            if parsed.download == 'log' or parsed.download == 'logs':
+                outfile_name = 'build_log.zip'
+            else:
+                outfile_name = parsed.download
+        else:
+            outfile_name = parsed.outfile.name
+            parsed.outfile.close()
+            if os.path.exists(outfile_name):
+                os.remove(outfile_name)
+
+        res_code = _download_release_artifact(
+            cicd_cfg=glci.util.cicd_cfg(parsed.cicd_cfg),
+            name=parsed.download,
+            outfile=outfile_name,
+            manifest=release,
+        )
+        return res_code
 
     with parsed.outfile as f:
         yaml.dump(
