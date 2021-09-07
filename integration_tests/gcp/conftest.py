@@ -1,13 +1,12 @@
-from dataclasses import dataclass
-import tempfile
-import json
-import os
-from typing import Any
+import dataclasses
 
-import ccc.gcp
+import google.oauth2.service_account
+import googleapiclient.discovery
+
 import model.gcp
-from util import ctx
 import pytest
+
+from util import ctx
 
 
 # Documentation:
@@ -15,7 +14,7 @@ import pytest
 # https://github.com/GoogleCloudPlatform/python-docs-samples
 # reference: https://cloud.google.com/compute/docs/reference/rest/v1
 
-@dataclass
+@dataclasses.dataclass
 class GCP_Cfg:
     svc_account: model.gcp.GcpServiceAccount
     project_id: str
@@ -24,12 +23,27 @@ class GCP_Cfg:
 @pytest.fixture(scope="session")
 def gcp_cfg():
     gcp_cfg = ctx().cfg_factory().gcp("gardenlinux")
-    return GCP_Cfg(svc_account=gcp_cfg, project_id=gcp_cfg.project())
+    return gcp_cfg
+
+
+@pytest.fixture(scope='session')
+def gcp_credentials(gcp_cfg, pytestconfig) -> 'google.auth.credentials.Credentials':
+    if pytestconfig.getoption('local'):
+        # passing 'None' as credential to gcp clients will implicitly look for other, local methods
+        # (e.g. existing gcloud auth)
+        return None
+    else:
+        return google.oauth2.service_account.Credentials.from_service_account_info(
+            gcp_cfg.service_account_key(),
+        )
 
 
 @pytest.fixture(scope="session")
-def compute_client(gcp_cfg):
+def compute_client(gcp_credentials):
     '''
-    get a Google client instance to further interact with GCP compute instances 
+    get a Google client instance to further interact with GCP compute instances
     '''
-    return ccc.gcp.authenticated_build_func(gcp_cfg.svc_account)('compute', 'v1')
+    return googleapiclient.discovery.build(
+        'compute', 'v1',
+        credentials=gcp_credentials,
+    )
