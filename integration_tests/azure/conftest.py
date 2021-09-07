@@ -1,7 +1,10 @@
 from dataclasses import dataclass
 import pytest
 
-from azure.identity import ClientSecretCredential
+from azure.identity import (
+    AzureCliCredential,
+    ClientSecretCredential,
+)
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.storage import StorageManagementClient
 
@@ -45,12 +48,16 @@ def azure_cfg():
     )
 
 
-def _get_credentials(azure_cfg: AzureCfg):
-    return ClientSecretCredential(
-        client_id=azure_cfg.client_id,
-        client_secret=azure_cfg.client_secret,
-        tenant_id=azure_cfg.tenant_id
-    )
+@pytest.fixture(scope='session')
+def azure_credentials(azure_cfg: AzureCfg, pytestconfig):
+    if pytestconfig.getoption('local'):
+        return AzureCliCredential()
+    else:
+        return ClientSecretCredential(
+            client_id=azure_cfg.client_id,
+            client_secret=azure_cfg.client_secret,
+            tenant_id=azure_cfg.tenant_id
+        )
 
 
 @pytest.fixture(scope="session")
@@ -66,19 +73,16 @@ def marketplace_client(azure_cfg) -> glci.az.AzureMarketplaceClient:
 
 
 @pytest.fixture(scope="session")
-def compute_client(azure_cfg):
+def compute_client(azure_credentials, azure_cfg):
     '''
     get a Azure client instance to further interact with Azure compute instances
     '''
-    credential = _get_credentials(azure_cfg)
-
-    return ComputeManagementClient(credential, azure_cfg.subscription_id)
+    return ComputeManagementClient(azure_credentials, azure_cfg.subscription_id)
 
 
 @pytest.fixture(scope="session")
-def storage_client(azure_cfg):
+def storage_client(azure_credentials, azure_cfg):
     '''
     get a Azure client instance to further interact with Azure storage instances
     '''
-    credential = _get_credentials(azure_cfg)
-    return StorageManagementClient(credential, azure_cfg.subscription_id)
+    return StorageManagementClient(azure_credentials, azure_cfg.subscription_id)
