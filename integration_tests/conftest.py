@@ -62,3 +62,13 @@ def s3_bucket(test_params) -> S3Info:
         target_image_name=f'integration-test-image-{test_params.committish}',
     )
 
+
+def pytest_addoption(parser):
+    parser.addoption(
+        '--local',
+        action='store_true',
+        help=(
+            "run test using local authentication (requires successful authentication prior to "
+            " execution, e.g.: 'gcloud auth application-default login' or 'az login')"
+        ),
+    )
