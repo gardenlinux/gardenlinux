@@ -9,7 +9,9 @@ paramiko = "*"
 pyyaml = "*"
 scp = "*"
 google-api-python-client = "*"
+google-cloud = "*"
 oauth2client = "*"
+dacite = "*"
 
 [dev-packages]
 flake8 = "*"

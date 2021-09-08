@@ -7,7 +7,7 @@ import boto3
 from .sshclient import RemoteClient
 
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.DEBUG)
 
 class AWS:
     """Handle resources in AWS cloud"""
@@ -171,6 +171,7 @@ class AWS:
         ami_id = self.config["ami_id"]
         key_name = self.config["key_name"]
         ssh_key_filepath = path.expanduser(self.config["ssh_key_filepath"])
+        logger.debug("ssh_key_filepath: %s" % ssh_key_filepath)
 
         if not ssh_key_filepath:
             ssh_key_filepath = "gardenlinux-test"

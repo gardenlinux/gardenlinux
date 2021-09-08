@@ -37,7 +37,7 @@ while true; do
 		*) 	eusage "unknown flag '${flag}'" ;;
 	esac
 done
-input="${1:-$(sed -e "s/#.*\$//" -e "/^$/d" "${versionfile}")}";  shift || /bin/true
+input="${1:-$(sed -e "s/#.*\$//" -e "/^$/d" "${versionfile}")}";  shift || true
 input=$(sed "s/^[[:space:]]*//;s/[[:space:]]*\$//" <<< ${input})
 
 # no version / timestamp on versionfile
