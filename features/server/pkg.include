@@ -25,6 +25,7 @@ less
 tcpdump
 vim-tiny
 quota
+netcat-openbsd
 nvme-cli
 selinux-basics
 selinux-policy-default
