@@ -77,7 +77,7 @@ rm -rf debian/config debian/patches debian/patches-rt/*
 cp -R ../linux-$KERNEL_DEBIAN/debian/patches ../linux-$KERNEL_DEBIAN/debian/config debian/
 mv debian/config.defines debian/config/defines
 
-# if debian is older then our patchset 
+# if debian is older then our patchset
 if $(dpkg --compare-versions $KERNEL_DEBIAN lt $KERNEL_VERSION); then
 	echo "### integrating rt-patches"
 	debian/bin/genpatch-rt ../patches-$KERNEL_RT_VERSION.tar.xz
@@ -114,7 +114,7 @@ patch -p1 < $srcDir/series.patch
 echo "### setting certificate"
 # to make sure we do not take this accidently
 rm -f debian/certs/debian-uefi-certs.pem
-cp "${CERT_DIR}kernel.full" debian/certs/gardenlinux-kernel-certs.pem
+cp "${CERT_DIR}/kernel.full" debian/certs/gardenlinux-kernel-certs.pem
 sed -i "s/debian-uefi-certs.pem/gardenlinux-kernel-certs.pem/" debian/config/config debian/config/featureset*/config
 CHANGELOG+="  * Replaced Debian signing certs with GardenLinux certs\n"
 
