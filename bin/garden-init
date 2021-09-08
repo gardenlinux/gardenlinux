@@ -190,6 +190,7 @@ if [ -z "$nonDebian" ]; then
 		$([ -z "$debianPorts" ] || echo '--ports') \
 		"$targetDir" "$suite"
 	"$thisDir/garden-apt-get" "$targetDir" update -qq
+	"$thisDir/garden-apt-get" "$targetDir" upgrade -y
 fi
 
 set -x
