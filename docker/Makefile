@@ -3,7 +3,7 @@ ALTNAME=
 
 ALTNAME_INTERNAL=$(shell [ -n "$(ALTNAME)" ] && printf "%s %s" "-t" "$(ALTNAME)" ) 
 
-all: build-image
+all: build-image build-integration-test
 
 .PHONY: needslim
 needslim:
@@ -21,8 +21,8 @@ build: needslim
 build-deb: build
 	@docker build -t gardenlinux/build-deb $(ALTNAME_INTERNAL) build-deb
 
-.PHONY: integration-test
-integration-test:
+.PHONY: build-integration-test
+build-integration-test:
 	@docker build -t gardenlinux/integration-test:$(VERSION) integration-test
 
 .PHONY: clean
