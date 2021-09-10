@@ -336,7 +336,7 @@ class TestResultCode(enum.Enum):
 @dataclasses.dataclass(frozen=True)
 class ReleaseTestResult:
     test_suite_cfg_name: str
-    test_result: TestResultCode
+    test_result: str
     test_timestamp: str
 
 
