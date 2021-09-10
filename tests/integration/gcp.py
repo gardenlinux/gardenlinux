@@ -6,6 +6,7 @@ from datetime import datetime
 from os import path
 from urllib.parse import urlparse
 
+import paramiko
 import googleapiclient.discovery
 import google.oauth2.service_account
 from google.oauth2.service_account import Credentials
@@ -123,6 +124,10 @@ class GCP:
         """Get resource name from GCP url"""
         return urlparse(url).path.split("/")[-1]
 
+    def get_public_key(self):
+        k = paramiko.RSAKey.from_private_key_file(self.ssh_key_filepath)
+        return k.get_name() + " " + k.get_base64()
+
     def create_vm(self):
         """
         Create a ComputeEngine instance
@@ -135,7 +140,9 @@ class GCP:
 
         machine_type = f"zones/{self.zone}/machineTypes/{self.machine_type}"
         time = datetime.now().strftime("%Y-%m-%dt%H-%M-%S")
-        name = f"gardenlinux-test-{self.image_name}-{time}"
+        # name = f"gardenlinux-test-{self.image_name}-{time}"
+        # name too long
+        name = f"test-{self.image_name}"
         config = {
             "name": name,
             "machineType": machine_type,
@@ -154,7 +161,18 @@ class GCP:
                     ],
                 }
             ],
+            "metadata": {
+                "kind": "compute#metadata",
+                "items": [
+                    {
+                        "key": "ssh-keys",
+                        "value": self.user + ":" + self.get_public_key() 
+                    }
+                ]
+            },
         }
+        print(config)
+        logger.error(config)
 
         operation = (
             self._compute.instances()

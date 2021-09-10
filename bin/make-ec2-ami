@@ -1,208 +1,484 @@
 #!/usr/bin/env python3
 
 import argparse
-import os
 import re
 import sys
 import subprocess
 import json
 import time
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+handler = logging.StreamHandler(sys.stderr)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
 
 class Ec2ImageBuild:
+    def __init__(self, args):
+        self.bucket = args.bucket
+        self.region = args.region
+        self.permission = args.permission_public
+        self.distribute = args.distribute
+        self.raw_image = args.raw_image
+        self.image_name = args.image_name
+        self.debug = args.debug
+        self.purpose = args.purpose
+        self.image_overwrite = (
+            False if "false" == args.image_overwrite.lower() else True
+        )
+        if self.debug:
+            handler.setLevel(logging.DEBUG)
+            logger.setLevel(logging.DEBUG)
 
-    def __init__(self, bucket, region, raw_image, image_name, permission=False, distribute=False):
-        self.bucket = bucket
-        self.region = region
-        self.permission = permission
-        self.distribute = distribute
-        self.raw_image = raw_image
-        self.image_name = image_name
+    def aws_command_prefix(self):
+        return ["aws", "--region", self.region, "--output", "json"]
 
-    def upload_image(self, region, bucket, image_raw, image_name):
-        print("Checking whether s3 bucket exists")
-        cmd = ["aws", "s3api", "list-buckets", "--output=json" , "--query=Buckets[].Name"]
+    def upload_image(self):
+        logger.debug("Checking whether s3 bucket %s exists" % self.bucket)
+        cmd = self.aws_command_prefix() + [
+            "s3api",
+            "list-buckets",
+            "--query=Buckets[].Name",
+        ]
+        logger.debug("Running %s" % " ".join([v for v in cmd]))
         result = subprocess.run(cmd, capture_output=True)
+        logger.debug(result.stdout.decode('utf8'))
         if result.returncode != 0:
-            sys.exit("Unable to query s3 buckets: " + str(result.stdout) + " " + str(result.stderr))
+            sys.exit(
+                "Unable to query s3 buckets: "
+                + result.stdout.decode("utf-8")
+                + " "
+                + result.stderr.decode("utf-8")
+            )
         doc = json.loads(result.stdout)
         found = False
         for i in doc:
-          if i == bucket:
-              found = True
+            if i == self.bucket:
+                found = True
         if found == False:
-            sys.exit("Bucket " + bucket + " does not exist.")
-        print("Bucket " + bucket + " exists.")
+            sys.exit("Bucket " + self.bucket + " does not exist.")
+        logger.debug("Bucket " + self.bucket + " exists.")
 
-        print("Checking bucket location")
-        cmd = ["aws", "s3api", "get-bucket-location", "--bucket=" + bucket, "--output=json"]
+        logger.debug("Checking bucket location")
+        cmd = self.aws_command_prefix() + [
+            "s3api",
+            "get-bucket-location",
+            "--bucket=" + self.bucket,
+        ]
         result = subprocess.run(cmd, capture_output=True)
         if result.returncode != 0:
-            sys.exit("Unable to query bucket location for bucket " + bucket + ": " + str(result.stdout) + " " + str(result.stderr))
+            sys.exit(
+                "Unable to query bucket location for bucket "
+                + self.bucket
+                + ": "
+                + result.stdout.decode("utf-8")
+                + " "
+                + result.stderr.decode("utf-8")
+            )
         doc = json.loads(result.stdout)
-        if doc["LocationConstraint"] != region:
-            sys.exit("Bucket " + bucket + " is location in region " +doc["LocationConstraint"] + " but image shall be imported in region " + region)
+        if doc["LocationConstraint"] != self.region:
+            sys.exit(
+                "Bucket "
+                + self.bucket
+                + " is location in region "
+                + doc["LocationConstraint"]
+                + " but image shall be imported in region "
+                + self.region
+            )
         else:
-            print("Bucket is in chosen region " + region)
-  
-        print("Uploading to " + "s3://" + bucket + "/" + image_name)
-        result = subprocess.run(["aws", "--region", region, "s3", "cp", "--no-progress", image_raw, "s3://" + bucket + "/" + image_name], capture_output=True)
+            logger.debug("Bucket is in chosen region " + self.region)
 
+        logger.debug("Checking whether image has already been uplodaded")
+        cmd = self.aws_command_prefix() + [
+            "s3",
+            "ls",
+            self.bucket + "/" + self.image_name,
+        ]
+        result = subprocess.run(cmd, capture_output=True)
+        if len(result.stdout) > 0:
+            image_available = True
+        else:
+            image_available = False
+
+        if not (image_available == True and self.image_overwrite == False):
+            logger.info("Uploading to " + "s3://" + self.bucket + "/" + self.image_name)
+            result = subprocess.run(
+                self.aws_command_prefix()
+                + [
+                    "s3",
+                    "cp",
+                    "--no-progress",
+                    self.raw_image,
+                    "s3://" + self.bucket + "/" + self.image_name,
+                ],
+                capture_output=True,
+            )
+
+            if result.returncode != 0:
+                sys.exit(
+                    "Unable to upload image "
+                    + self.raw_image
+                    + ": "
+                    + result.stdout.decode("utf-8")
+                    + " "
+                    + result.stderr.decode("utf-8")
+                )
+            logger.debug(result.stdout)
+            return True
+        else:
+            logger.info(
+                "Image %s already in bucket and image_overwrite set to False. Continuing with existing image."
+                % self.image_name
+            )
+            return False
+
+    def import_snapshot(self):
+        """A role is required for the import_snapshot operation to succeed, see
+        https://docs.aws.amazon.com/snowball/latest/developer-guide/ec2-ami-import-cli.html"""
+        container_string = (
+            "Description='Import for %s',Format=raw,UserBucket={S3Bucket=%s,S3Key=%s}"
+            % (self.image_name, self.bucket, self.image_name)
+        )
+        result = subprocess.run(
+            self.aws_command_prefix()
+            + [
+                "ec2",
+                "import-snapshot",
+                "--disk-container",
+                container_string,
+                "--description",
+                "Import for %s" % self.image_name,
+            ],
+            capture_output=True,
+        )
         if result.returncode != 0:
-            sys.exit("Unable to upload image " + image_raw + ": " + str(result.stdout) + " " + str(result.stderr))
-        print(result.stdout)
-
-    def import_snapshot(self, region, bucket, image_name):
-
-        container_string = ("Description=gardenlinux,Format=raw,UserBucket={S3Bucket=%s,S3Key=%s}" % (bucket, image_name))
-        result = subprocess.run(["aws", "--region", region, "ec2", "import-snapshot", "--disk-container", container_string], capture_output= True)
-        if result.returncode != 0:
-            sys.exit("Unable to create snapshot for " + image_name + ": " + str(result.stderr))
-
+            sys.exit(
+                "Unable to create snapshot for "
+                + self.image_name
+                + ": "
+                + str(result.stderr)
+            )
+        if self.debug:
+            logger.debug("Result of import-snapshot operation: %s" % result.stdout)
         doc = json.loads(result.stdout)
-        task_id = doc["ImportTaskId"]
+        import_task_id = doc["ImportTaskId"]
         status = doc["SnapshotTaskDetail"]["Status"]
-        print("Creating Snapshot for %s, id: %s, status: %s" % (image_name, task_id, status))
-        time.sleep(20)
+        logger.info(
+            "Creating Snapshot for %s, import_task_id: %s, status: %s"
+            % (self.image_name, import_task_id, status)
+        )
+        snapshot_id = ""
 
         i = 0
         while i < 80 and status == "active":
             i += 1
-            time.sleep(5)
-            result = subprocess.run(["aws", "--region", region, "ec2", "describe-import-snapshot-tasks", "--import-task-ids", task_id], capture_output=True)
+            result = subprocess.run(
+                self.aws_command_prefix()
+                + [
+                    "ec2",
+                    "describe-import-snapshot-tasks",
+                    "--import-task-ids",
+                    import_task_id,
+                ],
+                capture_output=True,
+            )
             if result.returncode != 0:
-                sys.exit("Unable to create snapshot for %s: %s %s" % image_name, result.stdout, result.stderr)
+                sys.exit(
+                    "Unable to describe snapshot task %s for image %s: %s, %s"
+                    % (
+                        import_task_id,
+                        image_name,
+                        result.stdout.decode("utf-8"),
+                        result.stderr.decode("utf-8"),
+                    )
+                )
             doc = json.loads(result.stdout)
+            logger.debug(
+                "Result of describe-import-snapshot-tasks: %s"
+                % result.stdout.decode("utf-8")
+            )
             status = doc["ImportSnapshotTasks"][0]["SnapshotTaskDetail"]["Status"]
+            if status == "deleted":
+                if (
+                    "StatusMessage"
+                    in doc["ImportSnapshotTasks"][0]["SnapshotTaskDetail"]
+                ):
+                    sys.exit(
+                        "Snapshot creation failed with %s"
+                        % doc["ImportSnapshotTasks"][0]["SnapshotTaskDetail"][
+                            "StatusMessage"
+                        ]
+                    )
+                else:
+                    sys.exit("Snapshot creation failed with no message")
             if "SnapshotId" in doc["ImportSnapshotTasks"][0]["SnapshotTaskDetail"]:
-                snapshot_id = doc["ImportSnapshotTasks"][0]["SnapshotTaskDetail"]["SnapshotId"]
-        print("Snapshot id %s" % snapshot_id)
+                snapshot_id = doc["ImportSnapshotTasks"][0]["SnapshotTaskDetail"][
+                    "SnapshotId"
+                ]
+            time.sleep(5)
+        if snapshot_id == "":
+            sys.exit(
+                "No snapshot_id which means most likely that no snapshot has been created"
+            )
+        logger.debug("Snapshot id %s" % snapshot_id)
+
+        tag_specifications = "Key='purpose',Value='%s'" % self.purpose
+        self.tag_snapshot(snapshot_id, tag_specifications)
+
         return snapshot_id
 
-    def register_image(self, region, snapshot_id, image_name):
+    def tag_snapshot(self, snapshot_id, tag_specifications):
+        logger.debug("Tagging snapshot %s with %s" % (snapshot_id, tag_specifications))
+        result = subprocess.run(
+            self.aws_command_prefix()
+            + [
+                "ec2",
+                "create-tags",
+                "--resources",
+                snapshot_id,
+                "--tags",
+                tag_specifications,
+            ],
+            capture_output=True,
+        )
+        if result.returncode != 0:
+            logger.error(
+                "Unable to tag snapshot. Continuing. Errors: %s %s"
+                % (result.stdout.decode("utf-8"), result.stderr.decode("utf-8"))
+            )
+        else:
+            logger.debug(
+                "Resource %s successfully tagged with %s"
+                % (snapshot_id, tag_specifications)
+            )
+
+    def register_image(self, snapshot_id):
         def max(old, new):
             if new > old:
                 return new
             else:
                 return old
-        print("Check whether image with name " + image_name + " does exist.")
-        cmd = ["aws", "--region=" + region, "ec2", "describe-images", "--owner=self", "--output=json"]
+
+        logger.debug(
+            "Check whether image with name " + self.image_name + " does exist."
+        )
+        cmd = self.aws_command_prefix() + [
+            "ec2",
+            "describe-images",
+            "--owner=self",
+            "--output=json",
+        ]
         result = subprocess.run(cmd, capture_output=True)
         if result.returncode != 0:
-            sys.exit("Unable to read images for for region: %s %s" % (result.stdout, result.stderr))
+            sys.exit(
+                "Unable to read images for for region: %s %s"
+                % (result.stdout.decode("utf-8"), result.stderr.decode("utf-8"))
+            )
         doc = json.loads(result.stdout)
         idx = 0
         for val in doc["Images"]:
             name = val["Name"]
-            if name.startswith(image_name):
-                if name == image_name:
+            if name.startswith(self.image_name):
+                if name == self.image_name:
                     idx = max(idx, 1)
                 else:
-                    m = re.search(r'-(\d+)$',name)
+                    m = re.search(r"-(\d+)$", name)
                     if m:
-                        idx = max(int(m.group(1))+1, idx)
+                        idx = max(int(m.group(1)) + 1, idx)
 
         if idx != 0:
-            image_name = image_name + "-" + str(idx)
+            self.image_name = self.image_name + "-" + str(idx)
 
-        print("Registering image for snapshot " + snapshot_id)
-        result = subprocess.run(["aws", "--region", region, "ec2", "register-image",
-            "--name", image_name,
-            "--description", "Garden Linux",
-            "--architecture", "x86_64",
-            "--root-device-name", "/dev/xvda",
-            "--virtualization-type", "hvm",
-            "--ena-support",
-            "--architecture", "x86_64",
-            "--block-device-mapping", "DeviceName=/dev/xvda,Ebs={DeleteOnTermination=True,SnapshotId=%s,VolumeType=gp2}" % snapshot_id],
-            capture_output=True)
-        print(result)
-        print(result.stdout)
+        logger.debug("Registering image for snapshot " + snapshot_id)
+        result = subprocess.run(
+            self.aws_command_prefix()
+            + [
+                "ec2",
+                "register-image",
+                "--name",
+                self.image_name,
+                "--description",
+                "Garden Linux",
+                "--architecture",
+                "x86_64",
+                "--root-device-name",
+                "/dev/xvda",
+                "--virtualization-type",
+                "hvm",
+                "--ena-support",
+                "--architecture",
+                "x86_64",
+                "--block-device-mapping",
+                "DeviceName=/dev/xvda,Ebs={DeleteOnTermination=True,SnapshotId=%s,VolumeType=gp2}"
+                % snapshot_id,
+            ],
+            capture_output=True,
+        )
         if result.returncode != 0:
-            sys.exit("Unable to register image for snapshot " + snapshot_id + ": " + str(result.stdout) + " " + str(result.stderr))
+            sys.exit(
+                "Unable to register image for snapshot "
+                + snapshot_id
+                + ": "
+                + result.stdout.decode("utf-8")
+                + ": "
+                + result.stderr.decode("utf-8")
+            )
         doc = json.loads(result.stdout)
-        return doc["ImageId"]
+        logger.debug("Result of register-image: %s" % doc)
+
+        ami_id = doc["ImageId"]
+
+        tag_specifications = "Key='ami-name',Value='%s'" % self.image_name
+        self.tag_snapshot(snapshot_id, tag_specifications)
+
+        tag_specifications = "Key='purpose',Value='%s'" % self.purpose
+        self.tag_snapshot(ami_id, tag_specifications)
+
+        tag_specifications = "Key='ami-id',Value='%s'" % ami_id
+        self.tag_snapshot(snapshot_id, tag_specifications)
+
+        return ami_id
 
     def make_amis_public(self, amis):
         if self.permission == False:
             return
 
         for region, ami in amis.items():
-            print("Making ami {} in region {} public.".format(ami, region))
-            result = subprocess.run(["aws", "--region", region, "ec2", "modify-image-attribute",
-                "--image-id", ami,
-                "--launch-permission", "Add=[{Group=all}]"],
-                capture_output=True)
-            print(result)
-            print(result.stdout)
+            logger.debug("Making ami {} in region {} public.".format(ami, region))
+            result = subprocess.run(
+                [
+                    "aws",
+                    "--region",
+                    region,
+                    "ec2",
+                    "modify-image-attribute",
+                    "--image-id",
+                    ami,
+                    "--launch-permission",
+                    "Add=[{Group=all}]",
+                ],
+                capture_output=True,
+            )
+            logging.debug("modify-image-attribute call result: %s" % str(result))
             if result.returncode != 0:
-                sys.exit("Unable to make ami public: " + ami + " in region: " + region + ". " + str(result.stdout) + " " + str(result.stderr))
+                sys.exit(
+                    "Unable to make ami public: "
+                    + ami
+                    + " in region: "
+                    + region
+                    + ". "
+                    + result.stdout.decode("utf-8")
+                    + " "
+                    + result.stdout.decode("utf-8")
+                )
 
-    def distribute_ami(self, src_ami, image_name):
+    def distribute_ami(self, src_ami):
         src_region = self.region
         amis = {src_region: src_ami}
         if self.distribute == False:
             return amis
 
-        regions_raw = json.loads(subprocess.run(['aws', 'ec2', 'describe-regions'], encoding='utf-8', stdout=subprocess.PIPE).stdout)['Regions']
-        for dst_region in list(map(lambda x: x['RegionName'], regions_raw)):
+        regions_raw = json.loads(
+            subprocess.run(
+                ["aws", "ec2", "describe-regions"],
+                encoding="utf-8",
+                stdout=subprocess.PIPE,
+            ).stdout
+        )["Regions"]
+        for dst_region in list(map(lambda x: x["RegionName"], regions_raw)):
             if dst_region != src_region:
                 result = subprocess.run(
-                    ["aws", "ec2", "copy-image", "--source-image-id", src_ami, "--source-region", src_region, "--region", dst_region, "--name", image_name ],
-                    capture_output=True)
+                    [
+                        "aws",
+                        "ec2",
+                        "copy-image",
+                        "--source-image-id",
+                        src_ami,
+                        "--source-region",
+                        src_region,
+                        "--region",
+                        dst_region,
+                        "--name",
+                        self.image_name,
+                    ],
+                    capture_output=True,
+                )
                 if result.returncode != 0:
-                    sys.exit("Unable to copy ami: " + src_ami + " to region: " + dst_region + ": " + str(result.stdout) + " " + str(result.stderr))
+                    sys.exit(
+                        "Unable to copy ami: "
+                        + src_ami
+                        + " to region: "
+                        + dst_region
+                        + ": "
+                        + result.stdout.decode("utf-8")
+                        + " "
+                        + result.stderr.decode("utf-8")
+                    )
                 dst_ami = json.loads(result.stdout)["ImageId"]
                 amis[dst_region] = dst_ami
         return amis
 
     def run(self):
-        self.upload_image(self.region, self.bucket, self.raw_image, self.image_name)
-        snapshot_id = self.import_snapshot(self.region, self.bucket, self.image_name)
-        ami_id = self.register_image(self.region, snapshot_id, self.image_name)
-        print("Got ami_id: " + ami_id)
-        amis = self.distribute_ami(ami_id, self.image_name)
+        image_uploaded = self.upload_image()
+        snapshot_id = self.import_snapshot()
+        ami_id = self.register_image(snapshot_id)
+        logging.debug("Got ami_id: " + ami_id)
+        amis = self.distribute_ami(ami_id)
         self.make_amis_public(amis)
+        result = {
+            "snapshot-id": snapshot_id,
+            "ami-id": ami_id,
+            "image-uploaded": image_uploaded,
+            "all-amis": amis,
+        }
+        print(json.dumps(result, indent=4))
 
     @classmethod
     def _argparse_register(cls, parser):
 
         parser.add_argument(
-            '--bucket',
-            type=str,
-            dest='bucket',
-            help='Upload bucket',
-            required=True
+            "--bucket", type=str, dest="bucket", help="Upload bucket", required=True
         )
         parser.add_argument(
-            '--permission-public',
+            "--permission-public",
             type=bool,
             default=False,
-            help='Make snapshot and image public',
+            help="Make snapshot and image public",
         )
         parser.add_argument(
-            '--distribute',
+            "--distribute",
             type=bool,
             default=False,
             help="Copy the image across AWS regions",
         )
+        parser.add_argument("--region", type=str, help="AWS region", required=True)
         parser.add_argument(
-            '--region',
+            "--image-name",
             type=str,
-            help="AWS region",
-            required=True
+            dest="image_name",
+            help="Name of image in bucket and snapshot",
+            required=True,
+        )
+        parser.add_argument("raw_image", type=str, help="RAW image file")
+        parser.add_argument(
+            "--image-overwrite",
+            type=str,
+            default="True",
+            dest="image_overwrite",
+            help="If set to false it will use an existing image in the bucket, otherwise it will overwrite the image",
         )
         parser.add_argument(
-            '--image-name',
+            "--purpose",
             type=str,
-            dest='image_name',
-            help='Name of image in bucket and snapshot',
-            required=True
+            default="test",
+            help="purpose of this upload (defaults to test so it can be removed without affecting production",
         )
-        parser.add_argument(
-            'raw_image',
-            type=str,
-            help="RAW image file"
-        )
+        parser.add_argument("--debug", action="store_true", help="debug")
 
     @classmethod
     def _main(cls):
@@ -210,8 +486,9 @@ class Ec2ImageBuild:
         cls._argparse_register(parser)
         args = parser.parse_args()
 
-        ec2_img_build = cls(region=args.region, bucket=args.bucket, raw_image=args.raw_image, image_name=args.image_name, permission=args.permission_public, distribute=args.distribute)
+        ec2_img_build = cls(args)
         ec2_img_build.run()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     Ec2ImageBuild._main()

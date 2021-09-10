@@ -6,51 +6,182 @@ import sys
 import subprocess
 import json
 import time
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+handler = logging.StreamHandler(sys.stderr)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
 
 class GcpImageBuild:
+    def __init__(self, args):
+        self.raw_image_path = args.raw_image_path
+        self.image_name = args.image_name
+        self.permission = args.permission_public
+        self.project = args.project
+        self.bucket = args.bucket
+        self.region = args.region
+        self.debug = args.debug
+        self.labels = args.labels
+        if self.debug:
+            handler.setLevel(logging.DEBUG)
+            logger.setLevel(logging.DEBUG)
 
-    def __init__(self, bucket, raw_image_path, image_name, permission):
-        self.bucket = bucket
-        self.raw_image_path = raw_image_path
-        self.image_name = image_name
-        self.permission = permission
+        self.gcloud_configure()
+
+    def gcloud_configure(self):
+        if self.project != "":
+            logger.debug(f"Setting project to {self.project}")
+            result = subprocess.run(
+                ["gcloud", "config", "set", "project", self.project],
+                capture_output=True,
+            )
+            if result.returncode != 0:
+                sys.exit(
+                    "Unable to configure project %s: %s"
+                    % (self.project, result.stderr.decode("utf-8"))
+                )
+
+        if self.region != "":
+            logger.debug(f"Setting region to {self.region}")
+            result = subprocess.run(
+                ["gcloud", "config", "set", "compute/region", self.region],
+                capture_output=True,
+            )
+            if result.returncode != 0:
+                sys.exit(
+                    "Unable to configure region %s: %s"
+                    % (self.region, result.stderr.decode("utf-8"))
+                )
 
     def logged_on_bucket_available(self, bucket):
         bucket_name = "gs://" + bucket + "/"
-        result = subprocess.run(["gsutil", "ls", "-L", "-b", bucket_name], capture_output=True)
+        logger.debug(f"Checking whether bucket {bucket} exists.")
+        result = subprocess.run(
+            ["gsutil", "ls", "-L", "-b", bucket_name], capture_output=True
+        )
         if result.returncode != 0:
-            sys.exit("Bucket " + bucket + " does not exist or not logged on: " + str(result.stderr))
+            sys.exit(
+                "Bucket "
+                + bucket
+                + " does not exist or not logged on: "
+                + result.stderr.decode("utf-8")
+            )
+        logger.debug(f"Bucket {bucket} exists")
 
     def upload_image(self, bucket, raw_image_path, image_name):
         bucket_image = "gs://" + bucket + "/" + image_name + ".tar.gz"
-        #result = subprocess.run(["gsutil", "-q", "stat", bucket_image], capture_output=True)
-        #if result.returncode == 0:
-        #    sys.exit("Image " + bucket_image + " already exists.")
+        logger.debug(
+            f"Checking wheter image file {image_name}.tar.gz exists in bucket."
+        )
+        result = subprocess.run(
+            ["gsutil", "-q", "stat", bucket_image], capture_output=True
+        )
+        if result.returncode == 0:
+            sys.exit(f"Image {image_name}.tar.gz exists in bucket {bucket}.")
 
-        print ("Uploading %s to %s" % (raw_image_path, bucket_image))
-        result = subprocess.run(["gsutil", "cp", raw_image_path, bucket_image], capture_output=True)
+        logger.info(f"Uploading {raw_image_path} to bucket {bucket}")
+        result = subprocess.run(
+            ["gsutil", "cp", raw_image_path, bucket_image], capture_output=True
+        )
         if result.returncode != 0:
-            print(result.stdout)
-            sys.exit("Unable to upload image " + raw_image_path + ": " + str(result.stdout) + " " + str(result.stderr))
+            sys.exit(
+                "Unable to upload image "
+                + raw_image_path
+                + ": "
+                + result.stdout.decode("utf-8")
+                + "\n"
+                + result.stderr.decode("utf-8")
+            )
+        logger.info(f"{raw_image_path} successfully uploaded.")
 
     def create_image(self, bucket, image_name):
         # sanitze image name, names must match '(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)'
         gcp_image_name = image_name.replace(".", "-")
-        result = subprocess.run(["gcloud", " compute", "images", "describe", gcp_image_name], capture_output=True)
+        result = subprocess.run(
+            ["gcloud", "compute", "images", "describe", gcp_image_name, self.project],
+            capture_output=True,
+        )
         if result.returncode == 0:
-            sys.exit("Image " + image + " does already exist.")
+            sys.exit("Image " + gcp_image_name + " does already exist.")
+
         bucket_image = "gs://" + bucket + "/" + image_name + ".tar.gz"
-        result = subprocess.run(["gcloud", "compute", "images", "create", gcp_image_name,
-            "--source-uri", bucket_image ],
-            capture_output=True)
+        logger.info(f"Creating image {gcp_image_name} from {bucket_image}")
+        result = subprocess.run(
+            [
+                "gcloud",
+                "compute",
+                "images",
+                "create",
+                gcp_image_name,
+                "--source-uri",
+                bucket_image,
+            ],
+            capture_output=True,
+        )
         if result.returncode != 0:
-            print(result.stdout)
-            sys.exit("Unable to create image " + image_name+ ": " + str(result.stdout) + " " + str(result.stderr))
+            sys.exit(
+                "Unable to create image "
+                + image_name
+                + ": "
+                + result.stdout.decode("utf-8")
+                + " "
+                + result.stderr.decode("utf-8")
+            )
+        logger.info(f"Image {gcp_image_name} successfully created")
+        if self.labels != "":
+            logger.debug(f"Adding labels {self.labels} to {gcp_image_name}")
+            result = subprocess.run(
+                [
+                    "gcloud",
+                    "compute",
+                    "images",
+                    "add-labels",
+                    gcp_image_name,
+                    "--labels=" + self.labels,
+                ],
+                capture_output=True,
+            )
+            if result.returncode != 0:
+                print(result)
+                logger.warning(
+                    f"Failed to add labels to {gcp_image_name}, ignoring error: "
+                    + result.stderr.decode("utf-8")
+                )
+            else:
+                logger.info(
+                    f"Successfully added labels {self.labels} to image {gcp_image_name}"
+                )
+
         if self.permission == True:
-            result = subprocess.run(["gcloud", "compute", "images", "add-iam-policy-binding", image_name,
-                "--member", "allAuthenticatedUsers", "--role", "roles/compute.imageUser" ],
-                capture_output=True)
-            print(result)
+            logger.debug(f"Making image {gcp_image_name} public.")
+            result = subprocess.run(
+                [
+                    "gcloud",
+                    "compute",
+                    "images",
+                    "add-iam-policy-binding",
+                    image_name,
+                    "--member",
+                    "allAuthenticatedUsers",
+                    "--role",
+                    "roles/compute.imageUser",
+                ],
+                capture_output=True,
+            )
+            if result.returncode != 0:
+                sys.exit(
+                    f"Failed to make {gcp_image_name} public: "
+                    + result.stdout.decode("utf-8")
+                    + "\n"
+                    + result.stderr.decode("utf-8")
+                )
+            logger.info(f"Image {gcp_image_name} made public.")
 
     def run(self):
         self.logged_on_bucket_available(self.bucket)
@@ -61,38 +192,44 @@ class GcpImageBuild:
     def _argparse_register(cls, parser):
 
         parser.add_argument(
-            '--bucket',
-            type=str,
-            dest='bucket',
-            help='Upload bucket',
-            required=True
+            "--region", type=str, dest="region", help="Region", default=""
         )
         parser.add_argument(
-            '--raw-image-path',
-            type=str,
-            help="RAW image file tar.gz file"
+            "--bucket", type=str, dest="bucket", help="Upload bucket", required=True
         )
         parser.add_argument(
-            '--image-name',
+            "--raw-image-path",
             type=str,
-            help="Image name on GCP"
+            help="RAW image file tar.gz file",
+            required=True,
         )
         parser.add_argument(
-            '--permission-public',
+            "--image-name", type=str, help="Image name on GCP", required=True
+        )
+        parser.add_argument(
+            "--permission-public",
             type=bool,
             default=False,
-            help='Make snapshot and image public',
+            help="Make snapshot and image public",
         )
+        parser.add_argument(
+            "--project",
+            default="",
+            type=str,
+            help="Project name",
+        )
+        parser.add_argument("--debug", action="store_true", help="Verbose debug output")
+        parser.add_argument("--labels", type=str, default="", help="Labels")
 
     @classmethod
     def _main(cls):
         parser = argparse.ArgumentParser()
         cls._argparse_register(parser)
         args = parser.parse_args()
-        print(args)
 
-        gcp_img_build = cls(bucket=args.bucket, raw_image_path=args.raw_image_path, image_name=args.image_name, permission=args.permission_public)
+        gcp_img_build = cls(args=args)
         gcp_img_build.run()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     GcpImageBuild._main()
