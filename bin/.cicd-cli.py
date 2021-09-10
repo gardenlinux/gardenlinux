@@ -68,6 +68,11 @@ def clean_build_result_repository():
         help='delete manifests older than (number of days), default: %(default)s',
         type=int,
     )
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help=('only print information about objects to be deleted'),
+    )
 
     parsed = parser.parse_args()
 
@@ -77,16 +82,21 @@ def clean_build_result_repository():
     clean.clean_single_release_manifests(
         max_age_days=parsed.snapshot_max_age_days,
         cicd_cfg=cicd_cfg,
+        dry_run=parsed.dry_run,
     )
 
     print('purging outdated build result snapshot sets (release-candidates)')
     clean.clean_release_manifest_sets(
         max_age_days=parsed.snapshot_max_age_days,
         cicd_cfg=cicd_cfg,
+        dry_run=parsed.dry_run,
     )
 
     print('purging loose objects')
-    clean.clean_orphaned_objects(cicd_cfg=cicd_cfg)
+    clean.clean_orphaned_objects(
+        cicd_cfg=cicd_cfg,
+        dry_run=parsed.dry_run,
+    )
 
 
 def gardenlinux_epoch():

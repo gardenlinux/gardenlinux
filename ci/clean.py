@@ -16,6 +16,7 @@ def clean_release_manifest_sets(
       glci.model.ReleaseManifestSet.release_manifest_set_prefix,
       glci.model.PipelineFlavour.SNAPSHOT.value,
     ),
+    dry_run: bool=False,
 ):
     enumerate_release_sets = glci.util.preconfigured(
         glci.util.enumerate_release_sets,
@@ -42,13 +43,16 @@ def clean_release_manifest_sets(
           return (False, release_manifest_set)
 
       # XXX also purge published images (if any)!
-      s3_client.delete_object(
-          Bucket=release_manifest_set.s3_bucket,
-          Key=release_manifest_set.s3_key,
-      )
-
-      print(f'purged {release_manifest_set.s3_key=}')
-      return (True, release_manifest_set)
+      if dry_run:
+          print(f'Would delete {release_manifest_set.s3_bucket}/{release_manifest_set.s3_key}')
+          return (False, release_manifest_set)
+      else:
+        s3_client.delete_object(
+            Bucket=release_manifest_set.s3_bucket,
+            Key=release_manifest_set.s3_key,
+        )
+        print(f'purged {release_manifest_set.s3_key=}')
+        return (True, release_manifest_set)
 
     for purged, manifest in executor.map(
         purge_if_outdated,
@@ -61,6 +65,7 @@ def clean_single_release_manifests(
     max_age_days: int=14,
     cicd_cfg: glci.model.CicdCfg=glci.util.cicd_cfg(),
     prefix: str=glci.model.ReleaseManifest.manifest_key_prefix,
+    dry_run: bool=False,
 ):
     enumerate_releases = glci.util.preconfigured(
         glci.util.enumerate_releases,
@@ -76,15 +81,19 @@ def clean_single_release_manifests(
     s3_client = glci.s3.s3_client(cicd_cfg=cicd_cfg)
 
     def purge_if_outdated(release_manifest: glci.model.ReleaseManifest):
-      if release_manifest.build_ts_as_date() < oldest_allowed_date:
-          # XXX also purge published images (if any)!
-          s3_client.delete_object(
-              Bucket=release_manifest.s3_bucket,
-              Key=release_manifest.s3_key,
-          )
-          print(f'purged {release_manifest.s3_key=}')
-          return (True, release_manifest)
-      return (False, release_manifest)
+        if release_manifest.build_ts_as_date() < oldest_allowed_date:
+            # XXX also purge published images (if any)!
+            if dry_run:
+                print(f'would delete {release_manifest.s3_bucket}/{release_manifest.s3_key}')
+                return (False, release_manifest)
+            else:
+                s3_client.delete_object(
+                    Bucket=release_manifest.s3_bucket,
+                    Key=release_manifest.s3_key,
+                )
+                print(f'purged {release_manifest.s3_key=}')
+                return (True, release_manifest)
+        return (False, release_manifest)
 
     for purged, manifest in executor.map(purge_if_outdated, enumerate_releases()):
         pass
@@ -119,6 +128,7 @@ def _enumerate_objects_from_release_manifest_sets(
 def clean_orphaned_objects(
     cicd_cfg: glci.model.CicdCfg=glci.util.cicd_cfg(),
     prefix='objects',
+    dry_run: bool=False,
 ):
     all_objects = {
         object_descriptor for object_descriptor in
@@ -164,16 +174,19 @@ def clean_orphaned_objects(
         # determine those keys that are no longer referenced by any manifest
         loose_object_keys = object_keys - all_object_keys
 
-        if loose_object_keys:
-            s3_client.delete_objects(
-                Bucket=s3_bucket_name,
-                Delete={
-                  'Objects': [
-                    {'Key': key} for key in loose_object_keys
-                  ],
-                },
-            )
-            print(f'purged {len(loose_object_keys)=} unreferenced objs')
+        if dry_run:
+            f'would delete {len(loose_object_keys)=} unreferenced objs'
+        else:
+            if loose_object_keys:
+                s3_client.delete_objects(
+                    Bucket=s3_bucket_name,
+                    Delete={
+                    'Objects': [
+                        {'Key': key} for key in loose_object_keys
+                    ],
+                    },
+                )
+                print(f'purged {len(loose_object_keys)=} unreferenced objs')
 
         print(f'{len(object_keys)=} - {len(loose_object_keys)=}')
 
