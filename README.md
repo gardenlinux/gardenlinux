@@ -91,7 +91,7 @@ Building specific platform images:
     make kvm
     make metal
 
-See in `build/` folder for the outcome
+See in `.build/` folder for the outcome, there are subdirectories for the platform and the build date.
 
 ## Customize builds
 
