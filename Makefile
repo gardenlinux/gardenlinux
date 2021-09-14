@@ -19,7 +19,7 @@ docker:
 
 all_prod: ali aws gcp azure openstack vmware kvm
 
-all_dev: ali-dev aws-dev gcp-dev azure-dev openstack-dev vmware-dev
+all_dev: ali-dev aws-dev gcp-dev azure-dev openstack-dev vmware-dev kvm-dev
 
 ALI_IMAGE_NAME=$(IMAGE_BASENAME)-ali-$(VERSION)
 ali: docker cert/sign.pub
@@ -111,13 +111,16 @@ cloud: docker cert/sign.pub
 	./build.sh --no-build --features server,cloud $(BUILDDIR)/cloud $(VERSION)
 
 kvm: docker cert/sign.pub
-	./build.sh --no-build --features server,cloud,kvm,_dev $(BUILDDIR)/kvm $(VERSION)
+	./build.sh --no-build --features server,cloud,kvm $(BUILDDIR)/kvm $(VERSION)
+
+kvm-dev: docker cert/sign.pub
+	./build.sh --no-build --features server,cloud,kvm,_dev $(BUILDDIR)/kvm-dev $(VERSION)
 
 pxe: docker cert/sign.pub
 	./build.sh --no-build --features server,cloud,_pxe $(BUILDDIR)/pxe $(VERSION)
 
 pxe-dev: docker cert/sign.pub
-	./build.sh --no-build --features server,cloud,_dev,_pxe $(BUILDDIR)/pxe $(VERSION)
+	./build.sh --no-build --features server,cloud,_dev,_pxe $(BUILDDIR)/pxe-dev $(VERSION)
 
 anvil: docker cert/sign.pub
 	./build.sh --no-build --features server,cloud-anvil,kvm,_dev $(BUILDDIR)/anvil $(VERSION)
