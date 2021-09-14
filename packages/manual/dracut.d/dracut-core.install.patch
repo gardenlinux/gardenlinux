@@ -1,0 +1,10 @@
+--- a/debian/dracut-core.install	2021-09-14 11:10:46.399836717 +0200
++++ b/debian/dracut-core.install	2021-09-14 10:38:41.051700354 +0200
+@@ -4,6 +4,7 @@
+ usr/lib/dracut/dracut-functions
+ usr/lib/dracut/dracut-functions.sh
+ usr/lib/dracut/dracut-init.sh
++usr/lib/dracut/dracut-util
+ usr/lib/dracut/dracut-initramfs-restore
+ usr/lib/dracut/dracut-install
+ usr/lib/dracut/skipcpio

@@ -1,0 +1,13 @@
+--- a/debian/dracut-network.install	2021-09-14 11:10:54.571803753 +0200
++++ b/debian/dracut-network.install	2021-09-14 06:54:09.513028848 +0200
+@@ -1,5 +1,10 @@
+ debian/etc/11-ifcfg.conf etc/dracut.conf.d
+ modules.d/01systemd-networkd usr/lib/dracut/modules.d
++modules.d/01systemd-sysusers usr/lib/dracut/modules.d
++modules.d/01systemd-resolved usr/lib/dracut/modules.d
++modules.d/09dbus usr/lib/dracut/modules.d
++modules.d/06dbus-daemon usr/lib/dracut/modules.d
++modules.d/06dbus-broker usr/lib/dracut/modules.d
+ modules.d/35network-manager usr/lib/dracut/modules.d
+ modules.d/35network-legacy usr/lib/dracut/modules.d
+ modules.d/40network	usr/lib/dracut/modules.d
