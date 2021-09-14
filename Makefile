@@ -17,9 +17,9 @@ cert/sign.pub:
 docker:
 	make --directory=docker all
 
-all_prod: ali aws gcp azure openstack vmware kvm
+all_prod: ali aws gcp azure metal openstack vmware kvm
 
-all_dev: ali-dev aws-dev gcp-dev azure-dev openstack-dev vmware-dev kvm-dev
+all_dev: ali-dev aws-dev gcp-dev azure-dev metal-dev openstack-dev vmware-dev kvm-dev
 
 ALI_IMAGE_NAME=$(IMAGE_BASENAME)-ali-$(VERSION)
 ali: docker cert/sign.pub
