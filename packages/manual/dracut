@@ -11,13 +11,19 @@ apt-get source $src
 
 bash
 
+# TODO figure out what other modules from upstream might be needed in different scenarios
 cd $src-*/
 patch -p1 < $srcDir/noperl.patch
+patch -p1 < $srcDir/dracut-network.install.patch
+patch -p1 < $srcDir/dracut-core.install.patch
 dch -lgardenlinux 'moving pkg-config from Depends to Recommends'
 dch -r ''
 
+# remove the systemd-sysusers patch, not really needed
+quilt delete systemd-users 
+
 donotmove="$(ls ..)"
-debuild
+debuild -us
 move_package .. $donotmove
 
 sudo sed -i "s/^\(deb-src.*\) experimental \(.*\)/\1 testing \2/" /etc/apt/sources.list
