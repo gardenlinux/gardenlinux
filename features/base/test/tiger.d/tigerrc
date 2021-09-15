@@ -49,7 +49,8 @@ Tiger_Check_BOOT=Y              # Fast
 Tiger_Check_INITTAB=Y           # Fast
 Tiger_Check_RCUMASK=Y           # Fast
 Tiger_Check_NEVERLOG=Y          # Fast
-Tiger_Check_OS=Y                # Fast
+# disable because of check_release for debian is going to fail
+Tiger_Check_OS=N                # Fast
 Tiger_Check_NETWORKCONFIG=N     # Fast
 Tiger_Deb_CheckMD5Sums=N       
 Tiger_Deb_NoPackFiles=N

@@ -18,7 +18,7 @@ lessram=
 arch=
 qemu=
 features=
-suite="bullseye"
+suite="testing"
 suiteports=
 notests=0
 while true; do
