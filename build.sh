@@ -110,5 +110,5 @@ else
 	docker run --name $containerName $dockerArgs --rm \
 		"${buildImage}" \
 		/opt/gardenlinux/bin/garden-build.sh &
-	wait
+	wait %1
 fi
