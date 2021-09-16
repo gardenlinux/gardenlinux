@@ -394,4 +394,9 @@ else
 	find "${outputDir}" -type f -exec install -v -m 0644 -p -o "${userID}" -g "${userGID}" {} "${volumeDir}" \;
 fi
 echo
-echo "Done"
+if [ "$failcounter" -eq 0 ]; then
+	echo "Done"
+else
+	echo "Done, but with errors"
+	exit 1
+fi
