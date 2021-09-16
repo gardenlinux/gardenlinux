@@ -1,21 +1,29 @@
 # Tests
 
 
-## Full Integration Test Including Image Upload
+## 1. Full Integration Tests Including Image Upload
 
-1. Write a configuration file
+## 1.1 Prerequisites
+
+Build the integration test container with all necessary dependencies
+
+```
+make docker
+```
+
+## 2. Tests by Cloud Provider
+
+### 2.1 AWS
 
 Notes for AWS credentials:
-- credentials must be supplied either in the test configuration file itself (keys `access_key_id`, `secret_access_key` and `region`)
 - or credentials can be supplied in ~/.aws/config and ~/.aws/credentials
+
+Use the following configuration file:
 
 ```
 aws:
+    # region where the VM will be created (required)
     region: eu-central-1
-    # the AWS access key
-    #access_key_id: xxx
-    # the AWS secret access key
-    #secret_access_key: xxx
     # If specified this AMI will be used (no image upload)
     #ami_id: ami-xxx
     # user and ssh key used to connect to the ec2 instance
@@ -37,34 +45,34 @@ aws:
     #image: s3://gardenlinux/objects/078f440a76024ccd1679481708ebfc32f5431569
 ```
 
-2. Build the integration test container with all necessary dependencies
+Start docker container with dependencies:
+
+- mount Garden Linux repository to `/gardenlinux`
+- mount AWS credentials to `/root/.aws`
+- mount SSH keys to `/root/.ssh`
+- mount build result directory to `/build` (if not part of the Garden Linux file tree)
+- mount directory with configfile to `/config`
 
 ```
-make docker
+docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.aws:/root/.aws -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
 ```
 
-3. Start docker container with dependencies:
-- mount Garden Linux repository to /gardenlinux
-- mount AWS credentials to /root/.aws
-- mount SSH keys to /root/.ssh
-- mount build result directory to /build (if not part of the Garden Linux file tree)
-
-```
-docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.aws:/root/.aws -v $HOME/.ssh:/root/.ssh  gardenlinux/integration-test:`bin/garden-version` bash
-```
-
-**NOTE**: You need to extend the PYTHONPATH in your container to include the directory `ci` of the gardenlinux repository, i.e. `/gardenlinux/ci` in the above example.
-
-3. Set up dependencies
+Run the tests:
 
 ```
 pipenv install --dev
-pipenv shell
+pipenv run pytest --iaas=aws --configfile=/config/myawsconfig.yaml integration/
 ```
 
-3.1 Run single tests
+### 2.2 Azure
 
-3.1.1 Azure
+Login using the following command
+
+```
+az login
+```
+
+Note: ohter means of authentiacation, e.g. usage of service accounts should be possible.
 
 Use the following test configuration:
 
@@ -88,49 +96,91 @@ azure:
     remote_path:
 ```
 
+Start docker container with dependencies:
 
-Start container with 
+- mount Garden Linux repository to `/gardenlinux`
+- mount Azure credentials to `/root/.azure`
+- mount SSH keys to `/root/.ssh`
+- mount build result directory to `/build` (if not part of the Garden Linux file tree)
+- mount directory with configfile to `/config`
+
 ```
-docker run -it -v ~/src/gardenlinux:/gardenlinux -v ~/.azure:/root/.azure -v ~/tmp:/tmp -v ~/.ssh:/root/.ssh gardenlinux/integration-test:517.0 bash
+docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.azure:/root/.azure -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
 ```
 
-Initialize environment
+Run the tests:
 
 ```
-export PYTHONPATH=/gardenlinux/bin:/gardenlinux/ci
 pipenv install --dev
-pipenv shell
+pipenv run pytest --iaas=azure --configfile=/config/myawsconfig.yaml integration/
 ```
 
-Run test:
+#### 2.3 GCP
+
+Obtain credentials using the following command:
 
 ```
-pytest --configfile=/tmp/test_config.yaml --iaas azure integration/
+gcloud auth application-default login
 ```
 
-4. Run tests
+Use the following test configuration:
 
 ```
-./run_full_test.py --debug --iaas aws --config /tmp/tmp_test_config.yaml
+gcp:
+    # project id (required)
+    project:
+    # Zone where the VM should be created (required)
+    zone: europe-west1-d
 
+    #service_account_json:
+    #service_account_json_path: /root/.config/gcloud/application_default_credentials.json
+
+    # Optional image name: if specified an existing image will be used
+    # if there is no image with that name the image specified in image 
+    # will be used
+    image_name:
+
+    # Optional image file: if specified image will be uploaded and used
+    # for the test
+    image: /build/gcp-dev/20210915/amd64/bullseye/rootfs-gcpimage.tar.gz
+
+    # the bucket must exist in the specififed project
+    bucket:
+
+    # machine type (required)
+    machine_type: n1-standard-1
+    # user and ssh key used to connect to the vm
+    user: gardenlinux
+    ssh_key_filepath: /root/.ssh/id_rsa_gardenlinux_test
+    passphrase:
+    remote_path: /
+
+    # Define if all resources should be kept after the test
+    #keep_running: true
 ```
 
-## Prerequisites
+Start docker container with dependencies:
 
-Python 3.8
+- mount Garden Linux repository to `/gardenlinux`
+- mount GCP credentials to `/root/.config`
+- mount SSH keys to `/root/.ssh`
+- mount build result directory to `/build` (if not part of the Garden Linux file tree)
+- mount directory with configfile to `/config`
 
-to install on debian buster:
 ```
-apt-get update && apt install python3 -t bullseye
+docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
 ```
 
-install pipenv and install dependencies:
+Run the tests:
+
 ```
-apt-get update && apt-get install pipenv
 pipenv install --dev
+pipenv run pytest --iaas=gcp --configfile=/config/myawsconfig.yaml integration/
 ```
 
-## auto-format using black
+## 3. Misc
+
+### auto-format using black
 
 in order to auto format the source code run
 
@@ -138,26 +188,8 @@ in order to auto format the source code run
 pipenv run black .
 ```
 
-## run static checks
+### run static checks
 
 ```
 pipenv run flake8 .
 ```
-
-## Run tests
-
-on GCP:
-
-```
-pipenv run pytest --iaas gcp integration/
-```
-
-on AWS:
-
-```
-pipenv run pytest --iaas aws integration/
-```
-
-The test configuration is read from `test_config.yaml`
-
-
