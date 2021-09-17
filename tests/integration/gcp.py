@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import sys
 import time
 from datetime import datetime
 from os import path
@@ -11,8 +12,10 @@ import googleapiclient.discovery
 import google.oauth2.service_account
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import Resource
+from google.cloud import storage
 
 from .sshclient import RemoteClient
+from . import utild
 
 
 logger = logging.getLogger(__name__)
@@ -25,7 +28,13 @@ class GCP:
 
     @classmethod
     def fixture(cls, config):
+
+        test_name = "gl-test-" + str(int(time.time()))
+        if not "image_name" in config:
+            config["image_name"] = test_name
+
         gcp = GCP(config)
+        gcp.init_environment()
         _, public_ip = gcp.create_vm()
         ssh = None
         try:
@@ -48,10 +57,23 @@ class GCP:
         :param config: configuration
         """
         self.config = config
-        credentials: Credentials = self._auth(config)
-        self._compute: Resource = googleapiclient.discovery.build(
-            "compute", "v1", credentials=credentials, cache_discovery=False
-        )
+        os.environ["GOOGLE_CLOUD_PROJECT"] = self.config["project"]
+        if "service_account_json_path" in config:
+        
+            credentials: Credentials = self._auth(config)
+            self._compute: Resource = googleapiclient.discovery.build(
+                "compute", "v1", credentials=credentials, cache_discovery=False
+            )
+            self._storage = storage.Client(credentials=credentials, project=self.config["project"])
+        else:
+            # assume application default credentials
+            if not "GOOGLE_APPLICATION_CREDENTIALS" in os.environ:
+                default_path = os.path.join(os.path.expanduser("~"), ".config", ".gcloud", "application_default_credentials.json")
+                if os.path.isfile(default_path):
+                    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = default_path
+            self._compute: Resource = googleapiclient.discovery.build("compute", "v1")
+            self._storage = storage.Client(project=self.config["project"])
+
         self.project = config["project"]
         self.zone = config["zone"]
         self.image_name = self.config["image_name"]
@@ -59,12 +81,25 @@ class GCP:
         self.machine_type = self.config["machine_type"]
         self.ssh_key_filepath = path.expanduser(self.config["ssh_key_filepath"])
         self.user = self.config["user"]
+        self.image_uploaded = False
+
+    def init_environment(self):
+        if "image" in self.config and self._get_image(self.config["project"], self.config["image_name"]) == None:
+            self._upload_image(self.config["project"], self.config["image_name"], self.config["image"])
+
+        self._ensure_firewall_rules()
 
     def __del__(self):
         """Cleanup resources held by this object"""
-        if self.instance:
-            self.delete_vm(self.instance)
-            self.instance = None
+        if "keep_running" in self.config:
+            logger.info("VM and all resources are still running.")
+        else:
+            if self.instance:
+                self.delete_vm(self.instance)
+                self.instance = None
+            if self.image_uploaded:
+                self._delete_image(self.config["project"], self.config["image_name"])
+            utild.delete_firewall_rule(self._compute, self.config["project"], "test-allow-ssh-icmp")
 
     def _auth(self, config) -> Credentials:
         """Loads the authentication credentials given in the config
@@ -82,17 +117,103 @@ class GCP:
             json.loads(service_account_json)
         )
 
+    def _ensure_firewall_rules(self):
+        myip = utild.get_my_ip()
+
+        rules = {
+            "name": "test-allow-ssh-icmp",
+            "allowed": [
+            {
+                "IPProtocol": "tcp",
+                "ports": [
+                    "22"
+                ]
+            },
+            {
+                "IPProtocol": "icmp"
+            }
+            ],
+            "description": "Firewall rule for integration tests",
+            "direction": "INGRESS",
+            "enableLogging": False,
+            "kind": "compute#firewall",
+            "logConfig": {
+              "enable": False
+            },
+            "network": "projects/" + self.config["project"] + "/global/networks/default",
+            "priority": 1000.0,
+            "sourceRanges": [ myip ],
+            "targetTags": [
+                "gardenlinux-integration-test"
+            ]
+        }
+        utild.ensure_firewall_rules(self._compute, self.config["project"], rules)
+        
+    def _bucket_exists(self, name):
+        try: 
+            self._storage.get_bucket(name)
+            return True
+        except:
+            return False
+
+    def _upload_image(self, project, image_name, image):
+
+            blob_name = image_name + ".tar.gz"
+            gcp_bucket = self._storage.get_bucket(self.config["bucket"])
+            image_blob = gcp_bucket.blob(blob_name)
+            if image_blob.exists():
+                raise Exception("Image %s already uploaded in bucket %s." % (blob_name, self.config["bucket"]))
+            logger.info("Uploading %s" % image)
+            with open(image, "rb") as tfh:
+                image_blob.upload_from_file(
+                    tfh,
+                    content_type='application/x-tar',
+                )
+
+            logger.info("Image blob uploaded to %s %s" % (self.config["bucket"], blob_name))
+
+            images = self._compute.images()
+
+            blob_url = "https://storage.cloud.google.com/" + self.config["bucket"] + "/" + blob_name
+            logger.info("Using %s for image import" % blob_url)
+            insertion_rq = images.insert(
+                project=self.config["project"],
+                body={
+                    'description': 'gardenlinux',
+                    'name': image_name,
+                    'rawDisk': {
+                        'source': blob_url,
+                    },
+                },
+            )
+
+            resp = insertion_rq.execute()
+            op_name = resp['name']
+
+            logger.info(f'waiting for {op_name=}')
+            utild.wait_for_global_operation(self._compute, self.config["project"], op_name)
+            image_blob.delete()
+            logger.info(f'uploaded image {blob_url} to {image_name}')
+            self.image_uploaded = True
+
+    def _delete_image(self, project, image_name):
+        request = self._compute.images().delete(project=project, image=image_name)
+        response = request.execute()
+
     def _get_image(self, project, image_name):
         """Get image with given name
 
         :param image_name: name of the image
         """
-        response = (
-            self._compute.images().get(project=project, image=image_name,).execute()
-        )
-        image = response.get("selfLink")
-        logger.info(f"{image=}")
-        return image
+        try:
+            response = (
+                self._compute.images().get(project=project, image=image_name,).execute()
+            )
+            image = response.get("selfLink")
+            logger.info(f"{image=}")
+            return image
+        except:
+            return None
 
     def _wait_for_operation(self, operation):
         """Wait for a GCP operation to finish"""
@@ -150,7 +271,7 @@ class GCP:
                 {
                     "boot": True,
                     "autoDelete": True,
-                    "initializeParams": {"diskSizeGb": 3, "sourceImage": image,},
+                    "initializeParams": {"diskSizeGb": 7, "sourceImage": image,},
                 }
             ],
             "networkInterfaces": [
@@ -170,9 +291,12 @@ class GCP:
                     }
                 ]
             },
+            "tags": {
+                "items": [
+                    "gardenlinux-integration-test"
+                ]
+            },
         }
-        print(config)
-        logger.error(config)
 
         operation = (
             self._compute.instances()
