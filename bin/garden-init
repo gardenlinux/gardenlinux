@@ -118,7 +118,6 @@ done
 include_aptversion=
 include_aptfile=
 include_wget=
-include_bootstrap=
 for i in $(filter_comment <<< $include | filter_variables | filter_if); do
     if [[ $i = *.deb ]]; then
 	if [[ $i = *://* ]]; then	include_wget+="$i "
@@ -126,11 +125,9 @@ for i in $(filter_comment <<< $include | filter_variables | filter_if); do
 	else				include_wget+="${mirror_pool}$i "
 	fi
 	include_aptfile+="./$(basename $i) "
-    elif [[ $i = *"="* ]]; then	include_aptversion+="$i "
-    else 			include_bootstrap+="$i,"
+    else 			include_aptversion+="$i "
     fi
 done
-include_bootstrap=${include_bootstrap%,}
 exclude="$(filter_comment <<< $exclude | filter_variables | filter_if | paste -sd, -)"
 
 debootstrapArgs=()
@@ -161,7 +158,6 @@ fi
 [ -n "$noMergedUsr" ] && debootstrapArgs+=( --no-merged-usr ) || debootstrapArgs+=( --merged-usr )
 [ -z "$keyring" ] || debootstrapArgs+=( --keyring="$keyring" )
 [ -z "$arch" ] || debootstrapArgs+=( --arch="$arch" )
-[ -z "${include_bootstrap}" ] || debootstrapArgs+=( --include="${include_bootstrap}" )
 [ -z "$exclude" ] || debootstrapArgs+=( --exclude="$exclude" )
 
 debootstrapArgs+=(
@@ -194,19 +190,8 @@ if [ -z "$nonDebian" ]; then
 		$([ -z "$debianPorts" ] || echo '--ports') \
 		"$targetDir" "$suite"
 	"$thisDir/garden-apt-get" "$targetDir" update -qq
+	"$thisDir/garden-apt-get" "$targetDir" upgrade -y
 fi
-
-# since we're minbase, we know everything included is either essential, or a dependency of essential, so let's get clean "apt-mark showmanual" output
-"$thisDir/garden-chroot" "$targetDir" bash -c '
-	if apt-mark --help &> /dev/null; then
-		apt-mark auto ".*" > /dev/null
-		if [ -n "$1" ]; then
-			# if the user asked for anything to be included extra (like "xyz-archive-keyring"), mark those packages as manually installed
-			IFS=","; includePackages=( $1 ); unset IFS
-			apt-mark manual "${includePackages[@]}"
-		fi
-	fi
-' -- "$include_bootstrap"
 
 set -x
 tmp=$(mktemp -d -p $targetDir)
