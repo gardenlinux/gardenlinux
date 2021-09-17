@@ -5,18 +5,21 @@
 
 ## 1.1 Prerequisites
 
-Build the integration test container with all necessary dependencies
+Build the integration test container with all necessary dependencies. This container image will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP).
 
 ```
-make docker
+make --directory=docker build-integration-test
 ```
+
+The resulting container image will be tagged as `gardenlinux/integration-test:<version>` with `<version>` being the version that is returned by `bin/garden-version` in this repository.
 
 ## 2. Tests by Cloud Provider
 
 ### 2.1 AWS
 
 Notes for AWS credentials:
-- or credentials can be supplied in ~/.aws/config and ~/.aws/credentials
+- credentials must be supplied by having them ready in `~/.aws/config` and `~/.aws/credentials`
+- `~/.aws` gets mounted into the container that executes the integration tests
 
 Use the following configuration file:
 
@@ -48,31 +51,30 @@ aws:
 Start docker container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
-- mount AWS credentials to `/root/.aws`
-- mount SSH keys to `/root/.ssh`
+- mount AWS credential folder (usually `~/.aws`) to `/root/.aws`
+- mount SSH keys that are used to log in to the virtual machine to `/root/.ssh`
 - mount build result directory to `/build` (if not part of the Garden Linux file tree)
 - mount directory with configfile to `/config`
 
 ```
-docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.aws:/root/.aws -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+docker run -it --rm -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.aws:/root/.aws -v $HOME/.ssh:/root/.ssh -v ~/config:/config gardenlinux/integration-test:`bin/garden-version` /bin/bash
 ```
 
-Run the tests:
+Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
 ```
-pipenv install --dev
-pipenv run pytest --iaas=aws --configfile=/config/myawsconfig.yaml integration/
+pytest --iaas=aws --configfile=/config/myawsconfig.yaml integration/
 ```
 
 ### 2.2 Azure
 
-Login using the following command
+Login using the following command on your local machine (i.e. not inside of the integration test container) to authenticate to Azure and set up the API access token:
 
 ```
 az login
 ```
 
-Note: ohter means of authentiacation, e.g. usage of service accounts should be possible.
+**Note:** other means of authentication, e.g. usage of service accounts should be possible.
 
 Use the following test configuration:
 
@@ -108,16 +110,15 @@ Start docker container with dependencies:
 docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.azure:/root/.azure -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
 ```
 
-Run the tests:
+Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
 ```
-pipenv install --dev
-pipenv run pytest --iaas=azure --configfile=/config/myawsconfig.yaml integration/
+pytest --iaas=azure --configfile=/config/myawsconfig.yaml integration/
 ```
 
-#### 2.3 GCP
+### 2.3 GCP
 
-Obtain credentials using the following command:
+Obtain credentials by using the following command to authenticate to Google Cloud Platform and set up the API access token:
 
 ```
 gcloud auth application-default login
@@ -171,11 +172,10 @@ Start docker container with dependencies:
 docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
 ```
 
-Run the tests:
+Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
 ```
-pipenv install --dev
-pipenv run pytest --iaas=gcp --configfile=/config/myawsconfig.yaml integration/
+pytest --iaas=gcp --configfile=/config/myawsconfig.yaml integration/
 ```
 
 ## 3. Misc
