@@ -377,7 +377,7 @@ def  _get_build_and_test_parameters():
     )
     suite = NamedParam(
         name='suite',
-        default='bullseye',
+        default='bookworm',
         description='Debian release (buster, bullseye, ..)',
     )
     version = NamedParam(

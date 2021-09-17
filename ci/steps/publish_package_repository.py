@@ -5,7 +5,7 @@ import tempfile
 
 import glci.s3
 
-GARDENLINUX_DISTRIBUTION = 'bullseye'
+GARDENLINUX_DISTRIBUTION = 'bookworm'
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +19,8 @@ def setup(reprepro_base_dir: str):
 
     with open(os.path.join(config_dir, 'distributions'), 'w') as f:
         f.write(
-            'Origin: Gardenlinux-bullseye\n'
-            'Label: Gardenlinux-bullseye\n'
+            'Origin: Gardenlinux-bookworm\n'
+            'Label: Gardenlinux-bookworm\n'
             f'Codename: {GARDENLINUX_DISTRIBUTION}\n'
             'Architectures: amd64\n'
             'Components: gardenlinux\n'

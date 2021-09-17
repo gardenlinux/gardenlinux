@@ -45,8 +45,14 @@ epoch="$(garden-version --epoch "$version")"
 serial="$(garden-version --date "$version")"
 dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
 
+debuerreotypeScriptsDir="$(dirname "$(readlink -f "$(which garden-init)")")"
+featureDir="$debuerreotypeScriptsDir/../features"
+
+snapshotUrl="$("$debuerreotypeScriptsDir/.snapshot-url.sh" "@$epoch")/dists/$suite/Release"
+codename=$(wget -qO - $snapshotUrl | awk -F: '$1 == "Codename" { print $2 }' | tr -d ' ')
+
 if [ -z "${prefix+x}" ]; then
-  prefix="/$serial/$dpkgArch/$suite"
+  prefix="/$serial/$dpkgArch/$codename"
 fi
 
 exportDir="output"
@@ -82,8 +88,6 @@ touch_epoch() {
 	done
 }
 
-debuerreotypeScriptsDir="$(dirname "$(readlink -f "$(which garden-init)")")"
-featureDir="$debuerreotypeScriptsDir/../features"
 
 for archive in "" security; do
 	snapshotUrlFile="$outputDir/snapshot-url${archive:+-${archive}}"
@@ -130,8 +134,6 @@ else
 		"$outputDir/Release.gpg" \
 		"$outputDir/Release"
 fi
-
-codename="$(awk -F ": " "\$1 == \"Codename\" { print \$2; exit }" "$outputDir/Release")"
 
 {
 	initArgs=( --arch="$dpkgArch" )
