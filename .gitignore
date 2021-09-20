@@ -15,6 +15,7 @@
 !/cert/gardenlinux.kernel.sign.crt
 !/cert/gardenlinux.sign.pub
 /features/metal/file.include/lib/firmware/
+/docker/*/_pipfiles
 .idea
 __pycache__
 /dev

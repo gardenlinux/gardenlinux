@@ -22,11 +22,14 @@ build-deb: build
 	@docker build -t gardenlinux/build-deb $(ALTNAME_INTERNAL) build-deb
 
 .PHONY: build-integration-test
-build-integration-test:
+build-integration-test: needslim
+	mkdir -p integration-test/_pipfiles
+	cp ../tests/Pipfile* integration-test/_pipfiles
 	@docker build -t gardenlinux/integration-test:$(VERSION) integration-test
 
 .PHONY: clean
 clean:
+	rm -rf integration-test/_pipfiles
 	-@[ -n "$$(docker image ls gardenlinux/integration-test --format "{{.ID}}")" ] && docker image rm --force $$(docker image ls gardenlinux/integration-test --format "{{.Repository}}:{{.Tag}}"); true
 	-@[ -n "$$(docker image ls gardenlinux/build-image --format "{{.ID}}")" ] && docker image rm --force $$(docker image ls gardenlinux/build-image --format "{{.Repository}}:{{.Tag}}"); true
 	-@[ -n "$$(docker image ls gardenlinux/build-deb --format "{{.ID}}")" ] && docker image rm --force $$(docker image ls gardenlinux/build-deb --format "{{.Repository}}:{{.Tag}}"); true
