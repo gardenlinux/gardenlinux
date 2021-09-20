@@ -140,6 +140,18 @@ def register_image(
         VirtualizationType='hvm', # | paravirtual
     )
 
+    ec2_client.create_tags(
+        Resources=[
+            result['ImageId'],
+        ],
+        Tags=[
+            {
+                'Key': 'sec-by-def-public-image-exception',
+                'Value': 'enabled',
+            },
+        ]
+    )
+
     # XXX need to wait until image is available (before publishing)
     return result['ImageId']
 
