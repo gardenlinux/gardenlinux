@@ -8,11 +8,13 @@ thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
 	--flags 'ports,snapshot' \
 	--flags 'deb-src' \
+	--flags 'gardenlinux-only' \
 	-- \
-	'[--deb-src] [--ports] [--snapshot] <target-dir> <suite> <version>' \
+	'[--deb-src] [--ports] [--snapshot] [--gardenlinux-only] <target-dir> <suite> <version>' \
 	'--snapshot rootfs stretch 520.0'
 
 eval "$dgetopt"
+gardenlinuxOnly=
 ports=
 snapshot=
 debSrc=
@@ -20,6 +22,7 @@ while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
 	case "$flag" in
+		--gardenlinux-only) gardenlinuxOnly=1 ;;
 		--ports) ports=1 ;;
 		--snapshot) snapshot=1 ;;
 		--deb-src) debSrc=1 ;;
@@ -102,24 +105,26 @@ deb() {
 {
 	deb "$version" main gardenlinux
 
-	case "$suite" in
-		sid|unstable|testing)
-			deb "$suite" "$comp" standard
-			;;
+	if [[ -z "$gardenlinuxOnly" ]]; then
+		case "$suite" in
+			sid|unstable|testing)
+				deb "$suite" "$comp" standard
+				;;
 
-		*)
-			# https://salsa.debian.org/installer-team/apt-setup/tree/d7a642fb5fc76e4f0b684db53984bdb9123f8360/generators
-			deb "$suite"          "$comp" standard # "50mirror"
-			deb "$suite-security" "$comp" security # "91security"
-			deb "$suite-updates"  "$comp" standard # "92updates"
-			# https://wiki.debian.org/SourcesList#Example_sources.list
+			*)
+				# https://salsa.debian.org/installer-team/apt-setup/tree/d7a642fb5fc76e4f0b684db53984bdb9123f8360/generators
+				deb "$suite"          "$comp" standard # "50mirror"
+				deb "$suite-security" "$comp" security # "91security"
+				deb "$suite-updates"  "$comp" standard # "92updates"
+				# https://wiki.debian.org/SourcesList#Example_sources.list
 
-			if [ "$suite" = 'squeeze' ]; then
-				# https://wiki.debian.org/DebianSqueeze#FAQ
-				deb "$suite-lts" "$comp" standard
-			fi
-			;;
-	esac
+				if [ "$suite" = 'squeeze' ]; then
+					# https://wiki.debian.org/DebianSqueeze#FAQ
+					deb "$suite-lts" "$comp" standard
+				fi
+				;;
+		esac
+	fi
 } > "$targetDir/etc/apt/sources.list"
 chmod 0644 "$targetDir/etc/apt/sources.list"
 

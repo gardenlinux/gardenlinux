@@ -160,7 +160,7 @@ fi
 echo "$epoch" > "$targetDir/garden-epoch"
 
 if [ -z "$nonDebian" ]; then
-	"$thisDir/garden-debian-sources-list" --snapshot \
+	"$thisDir/garden-debian-sources-list" --snapshot --gardenlinux-only \
 		$([ -z "$debianPorts" ] || echo '--ports') \
 		"$targetDir" "$suite" "$version"
 	cp "$keyringPlain" "$targetDir/etc/apt/trusted.gpg.d/gardenlinux.asc"
