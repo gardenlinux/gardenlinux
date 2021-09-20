@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import time
+import datetime
 from pathlib import Path
 from typing import Iterator
 
@@ -116,6 +117,28 @@ def test_metadata_connection_az(client, azure):
     )
     assert exit_code == 0, f"no {error=} expected"
 
+def test_hostname_azure(client, azure):
+    start_time = datetime.datetime.now()
+    (exit_code, output, error) = client.execute_command("nslookup $(hostname)")
+    assert exit_code == 0, f"no {error=} expected"
+    end_time = datetime.datetime.now()
+    time_diff = (end_time - start_time)
+    execution_time = round(time_diff.total_seconds())
+    assert execution_time <= 2, f"nslookup should not run in a timeout {error}"
+
+
+def test_timesync(client, azure):
+    """Ensure symbolic link has been created"""
+    (exit_code, output, error) = client.execute_command("test -L /dev/ptp_hyperv")
+    assert exit_code == 0, f"Expected /dev/ptp_hyperv to be a symbolic link"
+
+def test_loadavg(client):
+    """This test does not produce any load. Make sure no 
+       other process does."""
+    (exit_code, output, error) = client.execute_command("cat /proc/loadavg")
+    assert exit_code == 0, f"Expected to be able to show contents of /proc/loadavg"
+    load =  float(output.split(" ")[1])
+    assert load  < 0.5, f"Expected load to be less than 0.5 but is {load}"
 
 @pytest.fixture(params=["8.8.8.8", "dns.google", "heise.de"])
 def ping4_host(request):
