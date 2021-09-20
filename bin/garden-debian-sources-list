@@ -9,8 +9,8 @@ source "$thisDir/.constants.sh" \
 	--flags 'ports,snapshot' \
 	--flags 'deb-src' \
 	-- \
-	'[--deb-src] [--ports] [--snapshot] <target-dir> <suite>' \
-	'--snapshot rootfs stretch'
+	'[--deb-src] [--ports] [--snapshot] <target-dir> <suite> <version>' \
+	'--snapshot rootfs stretch 520.0'
 
 eval "$dgetopt"
 ports=
@@ -30,9 +30,12 @@ done
 
 targetDir="${1:-}"; shift || eusage 'missing target-dir'
 suite="${1:-}"; shift || eusage 'missing suite'
+version="${1:-}"; shift || eusage 'missing version'
 [ -n "$targetDir" ]
 
 epoch="$(< "$targetDir/garden-epoch")"
+
+gardenlinuxMirror='http://repo.gardenlinux.io/gardenlinux'
 
 if [ -z "$ports" ]; then
 	standardMirror='https://deb.debian.org/debian'
@@ -57,6 +60,7 @@ deb() {
 	case "$target" in
 		standard) nonSnapshotMirror="$standardMirror"; snapshotMirrors=( "${snapshotStandardMirrors[@]}" ) ;;
 		security) nonSnapshotMirror="$securityMirror"; snapshotMirrors=( "${snapshotSecurityMirrors[@]}" ) ;;
+		gardenlinux) nonSnapshotMirror="$gardenlinuxMirror"; snapshotMirrors=( "${gardenlinuxMirror}" ) ;;
 		*) echo >&2 "error: unknown 'deb' line target: '$target'"; exit 1 ;;
 	esac
 
@@ -96,6 +100,8 @@ deb() {
 
 # https://github.com/tianon/go-aptsources/blob/e066ed9cd8cd9eef7198765bd00ec99679e6d0be/target.go#L16-L58
 {
+	deb "$version" main gardenlinux
+
 	case "$suite" in
 		sid|unstable|testing)
 			deb "$suite" "$comp" standard

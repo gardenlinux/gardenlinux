@@ -33,7 +33,6 @@ lessram=
 arch=
 features=
 disablefeatures=
-suite="testing"
 tests=1
 output=".build"
 while true; do
@@ -47,7 +46,6 @@ while true; do
 		--arch)		arch="$1"; 	shift ;;
 		--features) 	features="$1";	shift ;;
 		--disable-features) 	disablefeatures="$1";shift ;;
-		--suite) 	suite="$1";	shift ;;
 		--skip-tests)   tests=0	;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
@@ -65,7 +63,7 @@ userGID=$(id -g)
 envArgs=(
 	TZ="UTC"
 	LC_ALL="C"
-	suite="$suite"
+	suite="bookworm"
 	debug=$debug
 	manual=$manual
 	arch="$arch"
