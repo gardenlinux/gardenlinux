@@ -6,17 +6,16 @@ set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
-	--flags 'ports,snapshot' \
+	--flags 'ports' \
 	--flags 'deb-src' \
 	--flags 'gardenlinux-only' \
 	-- \
-	'[--deb-src] [--ports] [--snapshot] [--gardenlinux-only] <target-dir> <suite> <version>' \
-	'--snapshot rootfs stretch 520.0'
+	'[--deb-src] [--ports] [--gardenlinux-only] <target-dir> <suite> <version>' \
+	'rootfs stretch 520.0'
 
 eval "$dgetopt"
 gardenlinuxOnly=
 ports=
-snapshot=
 debSrc=
 while true; do
 	flag="$1"; shift
@@ -24,7 +23,6 @@ while true; do
 	case "$flag" in
 		--gardenlinux-only) gardenlinuxOnly=1 ;;
 		--ports) ports=1 ;;
-		--snapshot) snapshot=1 ;;
 		--deb-src) debSrc=1 ;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
@@ -42,14 +40,11 @@ gardenlinuxMirror='http://repo.gardenlinux.io/gardenlinux'
 
 if [ -z "$ports" ]; then
 	standardMirror='https://deb.debian.org/debian'
-	snapshotStandardMirrors=( "$("$thisDir/.snapshot-url.sh" "@$epoch")" )
 else
 	standardMirror='https://deb.debian.org/debian-ports'
-	snapshotStandardMirrors=( "$("$thisDir/.snapshot-url.sh" "@$epoch" 'debian-ports')" )
 fi
 
 securityMirror='http://security.debian.org/debian-security'
-snapshotSecurityMirrors=( "$("$thisDir/.snapshot-url.sh" "@$epoch" 'debian-security')" )
 
 comp='main'
 arch="$("$thisDir/.dpkg-arch.sh" "$targetDir")"
@@ -59,42 +54,13 @@ deb() {
 	local comp="$1"; shift
 	local target="$1"; shift # "standard" or "security"
 
-	local nonSnapshotMirror= snapshotMirrors=()
 	case "$target" in
-		standard) nonSnapshotMirror="$standardMirror"; snapshotMirrors=( "${snapshotStandardMirrors[@]}" ) ;;
-		security) nonSnapshotMirror="$securityMirror"; snapshotMirrors=( "${snapshotSecurityMirrors[@]}" ) ;;
-		gardenlinux) nonSnapshotMirror="$gardenlinuxMirror"; snapshotMirrors=( "${gardenlinuxMirror}" ) ;;
+		standard) mirror="$standardMirror" ;;
+		security) mirror="$securityMirror" ;;
+		gardenlinux) mirror="$gardenlinuxMirror" ;;
 		*) echo >&2 "error: unknown 'deb' line target: '$target'"; exit 1 ;;
 	esac
 
-	local found= mirror
-	for mirror in "${snapshotMirrors[@]}"; do
-		# https://snapshot.debian.org/archive/debian-archive/20160314T000000Z/debian/dists/squeeze-updates/main/binary-amd64/Packages.gz
-		if \
-			wget --quiet --spider -O /dev/null -o /dev/null "$mirror/dists/$suite/$comp/binary-$arch/Packages.xz" \
-			|| wget --quiet --spider -O /dev/null -o /dev/null "$mirror/dists/$suite/$comp/binary-$arch/Packages.gz" \
-		; then
-			found="$mirror"
-			break
-		fi
-	done
-	if [ -z "$found" ]; then
-		if [ "$target" = 'security' ] && [[ "$suite" == *-security ]]; then
-			# https://lists.debian.org/debian-devel-announce/2019/07/msg00004.html
-			deb "${suite%-security}/updates" "$comp" "$target"
-			return
-		fi
-		echo >&2 "warning: no apparent '$suite/$comp' for '$arch' on any of the following; skipping"
-		for mirror in "${snapshotMirrors[@]}"; do echo >&2 "  - $mirror"; done
-		return
-	fi
-
-	if [ -n "$snapshot" ]; then
-		mirror="$found"
-	else
-		echo "# deb $found $suite $comp"
-		mirror="$nonSnapshotMirror"
-	fi
 	echo "deb $mirror $suite $comp"
 	if [ -n "$debSrc" ]; then
 		echo "deb-src $mirror $suite $comp"

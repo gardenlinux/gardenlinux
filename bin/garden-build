@@ -47,8 +47,6 @@ epoch="$(garden-version --epoch "$version")"
 serial="$(garden-version --date "$version")"
 dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
 
-snapshotUrl="$("$scriptsDir/.snapshot-url.sh" "@$epoch")/dists/$suite/Release"
-codename=$(wget -qO - $snapshotUrl | awk -F: '$1 == "Codename" { print $2 }' | tr -d ' ')
 fullfeatures="$(garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" features)"
 
 if [ -z "${prefix+x}" ]; then
