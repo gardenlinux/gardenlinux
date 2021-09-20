@@ -83,17 +83,6 @@ export SOURCE_DATE_EPOCH="$epoch"
 
 mirror="http://repo.gardenlinux.io/gardenlinux"
 
-# setup mirror_pool, i.e. the archive where the gardenlinux-local packages are kept
-mirror_host="$(sed "s/^\(.*\/\/[^\/]*\)\/.*/\1/" <<< $mirror)"
-mirror_pool="${mirror_host}/gardenlinux/pool/"
-
-if ! wget -t1 -qO/dev/null ${mirror_pool}; then
-	# there are gardenlinux-local packages on the main snapshot mirror, try
-	# snapshot-url.sh again for a gardenlinux-specific one
-	mirror_host=$("$thisDir/.snapshot-url.sh" "@$epoch" "gardenlinux" "gardenlinux" | sed "s/^\(.*\/\/[^\/]*\)\/.*/\1/")
-	mirror_pool="${mirror_host}/gardenlinux/pool/"
-fi
-
 include="$(tr "," "\n" <<< $include)"$'\n'
 exclude="$(tr "," "\n" <<< $include)"$'\n'
 
@@ -112,8 +101,6 @@ exclude="$(filter_comment <<< $exclude | filter_variables | filter_if)"
 for i in $(filter_comment <<< $include | filter_variables | filter_if | grep -v -f <(echo "$exclude")); do
     if [[ $i = *.deb ]]; then
 	if [[ $i = *://* ]]; then	include_wget+="$i "
-	elif [[ $i = /* ]]; then	include_wget+="${mirror_host}$i "
-	else				include_wget+="${mirror_pool}$i "
 	fi
 	include_aptfile+="./$(basename $i) "
     else 			include_aptversion+="$i "
