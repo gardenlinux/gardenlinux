@@ -135,7 +135,7 @@ class AZURE:
             config["user"],
             config["nsg_name"],
             config["ssh_key_name"],
-            size="Standard_B1s",
+            size="Standard_B2s",
             os_disk_size="7"
         )
         logger.info("VM %s created with ip %s" % (self.instance["id"], self.instance["publicIpAddress"]))

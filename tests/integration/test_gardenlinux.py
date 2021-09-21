@@ -169,7 +169,7 @@ def test_systemctl_no_failed_units(client):
     assert len(json.loads(output)) == 0
 
 def test_startup_time(client):
-    tolerated_startup_time = 60
+    tolerated_startup_time = 20
     (exit_code, output, error) = client.execute_command("systemd-analyze")
     assert exit_code == 0, f"no {error=} expected"
     lines = output.splitlines()
@@ -177,6 +177,13 @@ def test_startup_time(client):
     time=items[12]
     tf = float(time[:-1])
     assert tf < tolerated_startup_time, f"startup time too long: {tf}seconds but only {tolerated_startup_time} tolerated."
+
+def test_chrony(client, azure):
+    """Test for specific chrony configuration on azure"""
+    expected_config = "refclock PHC /dev/ptp_hyperv poll 3 dpoll -2 offset 0"
+    (exit_code, output, error) = client.execute_command("cat /etc/chrony/chrony.conf")
+    assert exit_code == 0, f"no {error=} expected"
+    assert output.find(expected_config) != -1, f"chrony config for ptp expected but not found"
 
 def test_growpart(client):
     (exit_code, output, error) = client.execute_command("df --output=size -BG /")
