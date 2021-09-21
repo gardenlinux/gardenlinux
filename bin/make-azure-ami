@@ -19,7 +19,8 @@ logger.addHandler(handler)
 
 class AzureImageBuild:
 
-    def __init__(self, resource_group, storage_account_name, image_name, image_path, debug):
+    def __init__(self, subscription, resource_group, storage_account_name, image_name, image_path, debug):
+        self.subscription=subscription
         self.resource_group=resource_group
         self.storage_account_name=storage_account_name
         self.image_name=image_name
@@ -31,7 +32,18 @@ class AzureImageBuild:
 
     def get_account_key(self, resource_group, storage_account_name):
         logger.debug("Getting account keys for storage account %s and resource group %s" %(storage_account_name, resource_group)) 
-        result = subprocess.run(["az", "storage", "account", "keys", "list", "--resource-group", resource_group, "--account-name", storage_account_name], capture_output=True)
+        result = subprocess.run(["az",
+            "storage",
+            "account",
+            "keys",
+            "list",
+            "--subscription",
+            self.subscription,
+            "--resource-group",
+            resource_group,
+            "--account-name",
+            storage_account_name
+        ], capture_output=True)
         if result.returncode != 0:
             sys.exit("Unable to get account key for storage account " + storage_account_name + ": " + result.stdout.decode("utf-8") + " " + result.stderr.decode("utf-8"))
 
@@ -58,7 +70,11 @@ class AzureImageBuild:
     def disk_create(self, resource_group, storage_account_name, image_name):
         logger.debug("Creating disk for image " + image_name)
         source = "https://" + storage_account_name + ".blob.core.windows.net/vhds/" + image_name + ".vhd"
-        result = subprocess.run(["az", "disk", "create",
+        result = subprocess.run(["az",
+            "disk",
+            "create",
+            "--subscription",
+            self.subscription,
             "-g", resource_group,
             "--name", image_name,
             "--source", source],
@@ -72,7 +88,11 @@ class AzureImageBuild:
 
     def image_create(self, resource_group, image_name, disk_id):
         logging.debug("Creating Azure image for disk id " + disk_id)
-        result = subprocess.run(["az", "image", "create",
+        result = subprocess.run(["az",
+            "image",
+            "create",
+            "--subscription",
+            self.subscription,
             "-g", resource_group,
             "--name", image_name,
             "--source", disk_id,
@@ -123,6 +143,13 @@ class AzureImageBuild:
             required=True
         )
         parser.add_argument(
+            '--subscription',
+            type=str,
+            dest='subscription',
+            help='Azure subscription ID',
+            required=True
+        )
+        parser.add_argument(
             '--debug',
             type=bool,
             default=False,
@@ -137,6 +164,7 @@ class AzureImageBuild:
         print(args)
 
         azure_img_build = cls(
+            subscription=args.subscription,
             resource_group=args.resource_group,
             storage_account_name=args.storage_account_name,
             image_name=args.image_name,
