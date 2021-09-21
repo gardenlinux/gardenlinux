@@ -100,6 +100,8 @@ class AZURE:
             logger.debug("Uploading image %s" % image_file)
             cmd = [
                 os.path.join(repo_root, "bin", "make-azure-ami"),
+                "--subscription",
+                self.config["subscription"],
                 "--resource-group",
                 self.config["resource_group"],
                 "--storage-account-name",
