@@ -1,6 +1,7 @@
 import subprocess
 import logging
 import json
+import urllib.request
 
 from googleapiclient.errors import HttpError
 
@@ -8,13 +9,13 @@ logger = logging.getLogger(__name__)
 
 def get_my_ip():
     """Obtain external visible IP address"""
-    cmd = [ "curl", "-4", "https://api.myip.com" ]
-    logger.debug("Running %s" % " ".join([v for v in cmd]))
-    result = subprocess.run(cmd, capture_output=True)
-    if result.returncode != 0:
-        raise Exception("Unable to obtain my public IP: %s" % result.stderr.decode("utf-8"))
-    doc = json.loads(result.stdout)
-    return doc["ip"]
+    url='https://api.myip.com'
+
+    response = urllib.request.urlopen(url)
+    if response.status != 200:
+        raise Exception(f'Unable to obtain this hosts public IP, got HTTP status {response.status} from {url}')
+    doc = json.load(response)
+    return doc['ip']
 
 def delete_firewall_rule(compute, project, name):
     try:

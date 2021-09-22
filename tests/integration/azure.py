@@ -39,10 +39,7 @@ class AZURE:
         try:
             ssh = RemoteClient(
                 host=instance["publicIpAddress"],
-                user=config["user"],
-                ssh_key_filepath=config["ssh_key_filepath"],
-                passphrase=config["passphrase"],
-                remote_path=config["remote_path"],
+                sshconfig=config["ssh"],
             )
             yield ssh
         finally:
@@ -58,6 +55,7 @@ class AZURE:
         :param config: configuration
         """
         self.config = config
+        self.ssh_config = config["ssh"]
         self.image_uploaded = False
         self.resource_group_created = False
         self.storage_account_created = False
@@ -132,7 +130,7 @@ class AZURE:
         self.instance = self.az.create_vm(
             config["image_name"],
             "integration-test",
-            config["user"],
+            self.ssh_config["user"],
             config["nsg_name"],
             config["ssh_key_name"],
             size="Standard_B2s",

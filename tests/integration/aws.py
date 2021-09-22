@@ -20,10 +20,7 @@ class AWS:
         try:
             ssh = RemoteClient(
                 host=instance.public_dns_name,
-                user=config["user"],
-                ssh_key_filepath=config["ssh_key_filepath"],
-                passphrase=config["passphrase"],
-                remote_path=config["remote_path"],
+                sshconfig=config["ssh"],
             )
             yield ssh
         finally:
@@ -39,17 +36,8 @@ class AWS:
         :param config: configuration
         """
         self.config = config
-        if (
-            self.config["access_key_id"]
-            and self.config["secret_access_key"]
-            and self.config["region"]
-        ):
-            self.session = boto3.Session(
-                aws_access_key_id=self.config["access_key_id"],
-                aws_secret_access_key=self.config["secret_access_key"],
-                region_name=self.config["region"],
-            )
-        elif self.config["region"]:
+        self.ssh_config = config["ssh"]
+        if "region" in self.config:
             self.session = boto3.Session(region_name=self.config["region"])
         else:
             self.session = boto3.Session()
@@ -62,12 +50,13 @@ class AWS:
 
     def __del__(self):
         """Cleanup resources held by this object"""
-        if self.instance:
-            self.terminate_vm(self.instance)
-            self.instance = None
-        if self.security_group_id:
-            self.delete_security_group((self.security_group_id))
-            self.security_group_id = None
+        if not "keep_running" in self.config:
+            if self.instance:
+                self.terminate_vm(self.instance)
+                self.instance = None
+            if self.security_group_id:
+                self.delete_security_group((self.security_group_id))
+                self.security_group_id = None
 
     def get_default_vpcs(self):
         """Get list of default VPCs"""
@@ -169,8 +158,8 @@ class AWS:
     def create_instance(self):
         """Create AWS instance from given AMI and with given security group."""
         ami_id = self.config["ami_id"]
-        key_name = self.config["key_name"]
-        ssh_key_filepath = path.expanduser(self.config["ssh_key_filepath"])
+        key_name = self.ssh_config["key_name"]
+        ssh_key_filepath = path.expanduser(self.ssh_config["ssh_key_filepath"])
         logger.debug("ssh_key_filepath: %s" % ssh_key_filepath)
 
         if not ssh_key_filepath:
@@ -179,7 +168,7 @@ class AWS:
             path.exists(ssh_key_filepath) and path.exists(f"{ssh_key_filepath}.pub")
         ):
             passphrase = self.config["passphrase"]
-            user = self.config["user"]
+            user = self.ssh_config["user"]
             RemoteClient.generate_key_pair(ssh_key_filepath, 2048, passphrase, user)
         if not self.find_key(key_name):
             self.import_key(key_name, ssh_key_filepath)
@@ -192,7 +181,7 @@ class AWS:
                     "VirtualName": "string",
                     "Ebs": {
                         "DeleteOnTermination": True,
-                        "VolumeSize": 3,
+                        "VolumeSize": 7,
                         "VolumeType": "standard",
                         "Encrypted": False,
                     },
@@ -236,6 +225,7 @@ class AWS:
         waiter = self.client.get_waiter("instance_status_ok")
         waiter.wait(InstanceIds=[self.instance.id])
         logger.info(f"status checks of {self.instance} succeeded")
+        logger.info(f"ec2 instance is accessible through {self.instance.public_dns_name}")
 
         return self.instance
 
