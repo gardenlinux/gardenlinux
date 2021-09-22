@@ -57,6 +57,10 @@ def azure(iaas):
     if iaas != 'azure':
         pytest.skip('test only supported on azure')
 
+@pytest.fixture(scope='module')
+def aws(iaas):
+    if iaas != 'aws':
+        pytest.skip('test only supported on aws')
 
 def test_clock(client):
     (exit_code, output, error) = client.execute_command("date '+%s'")
@@ -198,3 +202,27 @@ def test_docker(client):
     (exit_code, output, error) = client.execute_command("sudo docker run --rm  alpine:3.14.2 sh -c 'echo from container'")
     assert exit_code == 0, f"no {error=} expected"
     assert output == "from container\n", f"Expected 'from container' output but got {output}"
+
+def test_clocksource(client, aws):
+    # kvm or xen
+    (exit_code, output, error) = client.execute_command("systemd-detect-virt")
+    assert exit_code == 0, f"no {error=} expected"
+    hypervisor = output
+    (exit_code, output, error) = client.execute_command("/sys/devices/system/clocksource/clocksource0/current_clocksource")
+    assert exit_code == 0, f"no {error=} expected"
+    if hypervisor == "xen":
+        assert output == "tsc", f"expected clocksoure for xen to be set to tsc but got {output}"
+    elif hypervisor == "kvm":
+        assert output == "kvm-clock", f"expected clocksoure for kvm to be set to kvm-clock but got {output}"
+    else:
+        assert False, f"unknown hypervisor {hypervisor}"
+
+def test_correct_ntp(client, aws):
+    (exit_code, output, error) = client.execute_command("grep -c ^NTP=169.254.169.123 timesyncd.conf")
+    assert exit_code == 0, f"no {error=} expected"
+    assert output == "1", "Expected NTP server to be configured to 169.254.169.123"
+
+def test_nvme_kernel_parameter(client, aws):
+    (exit_code, output, error) = client.execute_command("grep -c nvme_core.io_timeout=4294967295 /proc/cmdline ")
+    assert exit_code == 0, f"no {error=} expected"
+    assert output == "1", "Expected 'nvme_core.io_timeout=4294967295' kernel parameter"
