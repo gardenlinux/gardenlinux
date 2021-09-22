@@ -10,7 +10,6 @@ import tasks
 import tkn.model
 
 
-NamedParam = tkn.model.NamedParam
 SecretName = tkn.model.SecretName
 SecretVolume = tkn.model.SecretVolume
 
@@ -78,8 +77,6 @@ def render_task(
     raw_base_build_task = dataclasses.asdict(base_build_task)
 
     package_task = tasks.nokernel_package_task(
-        package_name=NamedParam(name='pkg_name'),
-        repo_dir=NamedParam('repo_dir'),
         env_vars=env_vars,
         volumes=volumes,
         volume_mounts=volume_mounts,
@@ -87,8 +84,6 @@ def render_task(
     raw_package_task = dataclasses.asdict(package_task)
 
     kernel_package_task = tasks.kernel_package_task(
-        repo_dir=NamedParam('repo_dir'),
-        package_names=NamedParam('pkg_names'),
         env_vars=env_vars,
         volumes=volumes,
         volume_mounts=volume_mounts,
@@ -102,16 +97,6 @@ def render_task(
     )
     raw_build_task = dataclasses.asdict(build_task)
 
-    ctx_repository_config_name = NamedParam(
-        name='ctx_repository_config_name',
-        default='gardener-dev',
-        description='Name of the component-descriptor repository-context config to use',
-    )
-    snapshot_ctx_repository_config_name = NamedParam(
-        name='snapshot_ctx_repository_config_name',
-        default='gardener-public',
-        description='Name of the snapshot component-descriptor repository-context config to use',
-    )
     test_task = tasks.test_task(
         env_vars=env_vars,
         volumes=volumes,
@@ -120,16 +105,6 @@ def render_task(
     raw_test_task = dataclasses.asdict(test_task)
 
     promote_task = tasks.promote_task(
-        branch=NamedParam(name='branch'),
-        cicd_cfg_name=NamedParam(name='cicd_cfg_name'),
-        committish=NamedParam(name='committish'),
-        flavourset=NamedParam(name='flavourset'),
-        gardenlinux_epoch=NamedParam(name='gardenlinux_epoch'),
-        publishing_actions=NamedParam(name='publishing_actions'),
-        snapshot_timestamp=NamedParam(name='snapshot_timestamp'),
-        version=NamedParam(name='version'),
-        ctx_repository_config_name=ctx_repository_config_name,
-        snapshot_ctx_repository_config_name=snapshot_ctx_repository_config_name,
         env_vars=env_vars,
         volumes=volumes,
         volume_mounts=volume_mounts,
@@ -174,11 +149,6 @@ def render_task(
         )
 
     print(f'dumped tasks to {outfile_tasks}')
-    for task in all_tasks:
-        print(f"task {task.metadata.name} has parameters:")
-        for param in task.spec.params:
-            print(f'   name: {param.name} of type {type(param)}')
-
     return all_tasks
 
 

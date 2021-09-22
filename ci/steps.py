@@ -2,6 +2,7 @@ import enum
 import os
 import typing
 
+import params
 import tkn.model
 
 IMAGE_VERSION = '1.1477.0'
@@ -80,9 +81,7 @@ def task_step_script(
 
 
 def clone_step(
-    committish: tkn.model.NamedParam,
-    git_url: tkn.model.NamedParam,
-    repo_dir: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -94,11 +93,11 @@ def clone_step(
             script_type=ScriptType.PYTHON3,
             callable='clone_and_copy',
             params=[
-                committish,
-                git_url,
-                repo_dir,
+                params.committish,
+                params.giturl,
+                params.repo_dir,
             ],
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
@@ -109,10 +108,7 @@ def clone_step(
 
 def cfssl_clone_step(
     name: str,
-    committish: tkn.model.NamedParam,
-    git_url: tkn.model.NamedParam,
-    working_dir: tkn.model.NamedParam,
-    gardenlinux_repo_path_param: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -125,7 +121,7 @@ def cfssl_clone_step(
             callable="git_clone('$(params.cfssl_git_url)', '$(params.cfssl_committish)', "
                      "'$(params.cfssl_dir)'); dummy",
             params=[],
-            repo_path_param=gardenlinux_repo_path_param,
+            repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
@@ -135,16 +131,7 @@ def cfssl_clone_step(
 
 
 def upload_results_step(
-    architecture: tkn.model.NamedParam,
-    cicd_cfg_name: tkn.model.NamedParam,
-    committish: tkn.model.NamedParam,
-    gardenlinux_epoch: tkn.model.NamedParam,
-    modifiers: tkn.model.NamedParam,
-    outfile: tkn.model.NamedParam,
-    platform: tkn.model.NamedParam,
-    publishing_actions: tkn.model.NamedParam,
-    repo_dir: tkn.model.NamedParam,
-    version: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -156,17 +143,17 @@ def upload_results_step(
             script_type=ScriptType.PYTHON3,
             callable='upload_results_step',
             params=[
-                architecture,
-                cicd_cfg_name,
-                committish,
-                gardenlinux_epoch,
-                modifiers,
-                outfile,
-                platform,
-                publishing_actions,
-                version,
+                params.architecture,
+                params.cicd_cfg_name,
+                params.committish,
+                params.gardenlinux_epoch,
+                params.modifiers,
+                params.outfile,
+                params.platform,
+                params.publishing_actions,
+                params.version,
             ],
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
@@ -174,15 +161,7 @@ def upload_results_step(
 
 
 def promote_single_step(
-    architecture: tkn.model.NamedParam,
-    cicd_cfg_name: tkn.model.NamedParam,
-    committish: tkn.model.NamedParam,
-    gardenlinux_epoch: tkn.model.NamedParam,
-    modifiers: tkn.model.NamedParam,
-    platform: tkn.model.NamedParam,
-    publishing_actions: tkn.model.NamedParam,
-    repo_dir: tkn.model.NamedParam,
-    version: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -194,16 +173,16 @@ def promote_single_step(
             script_type=ScriptType.PYTHON3,
             callable='promote_single_step',
             params=[
-                architecture,
-                cicd_cfg_name,
-                committish,
-                gardenlinux_epoch,
-                modifiers,
-                platform,
-                publishing_actions,
-                version,
+                params.architecture,
+                params.cicd_cfg_name,
+                params.committish,
+                params.gardenlinux_epoch,
+                params.modifiers,
+                params.platform,
+                params.publishing_actions,
+                params.version,
             ],
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
@@ -211,13 +190,7 @@ def promote_single_step(
 
 
 def promote_step(
-    cicd_cfg_name: tkn.model.NamedParam,
-    committish: tkn.model.NamedParam,
-    flavourset: tkn.model.NamedParam,
-    gardenlinux_epoch: tkn.model.NamedParam,
-    publishing_actions: tkn.model.NamedParam,
-    repo_dir: tkn.model.NamedParam,
-    version: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -229,14 +202,14 @@ def promote_step(
             script_type=ScriptType.PYTHON3,
             callable='promote_step',
             params=[
-                cicd_cfg_name,
-                committish,
-                flavourset,
-                gardenlinux_epoch,
-                publishing_actions,
-                version,
+                params.cicd_cfg_name,
+                params.committish,
+                params.flavourset,
+                params.gardenlinux_epoch,
+                params.publishing_actions,
+                params.version,
             ],
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
@@ -244,15 +217,7 @@ def promote_step(
 
 
 def pre_build_step(
-    architecture: tkn.model.NamedParam,
-    cicd_cfg_name: tkn.model.NamedParam,
-    committish: tkn.model.NamedParam,
-    gardenlinux_epoch: tkn.model.NamedParam,
-    modifiers: tkn.model.NamedParam,
-    platform: tkn.model.NamedParam,
-    publishing_actions: tkn.model.NamedParam,
-    repo_dir: tkn.model.NamedParam,
-    version: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -264,16 +229,16 @@ def pre_build_step(
             script_type=ScriptType.PYTHON3,
             callable='pre_build_step',
             params=[
-                architecture,
-                cicd_cfg_name,
-                committish,
-                gardenlinux_epoch,
-                modifiers,
-                platform,
-                publishing_actions,
-                version,
+                params.architecture,
+                params.cicd_cfg_name,
+                params.committish,
+                params.gardenlinux_epoch,
+                params.modifiers,
+                params.platform,
+                params.publishing_actions,
+                params.version,
             ],
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
@@ -281,11 +246,7 @@ def pre_build_step(
 
 
 def release_step(
-    committish: tkn.model.NamedParam,
-    gardenlinux_epoch: tkn.model.NamedParam,
-    giturl: tkn.model.NamedParam,
-    publishing_actions: tkn.model.NamedParam,
-    repo_dir: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -297,12 +258,12 @@ def release_step(
             script_type=ScriptType.PYTHON3,
             callable='release_step',
             params=[
-                committish,
-                gardenlinux_epoch,
-                giturl,
-                publishing_actions,
+                params.committish,
+                params.gardenlinux_epoch,
+                params.giturl,
+                params.publishing_actions,
             ],
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
@@ -310,9 +271,7 @@ def release_step(
 
 
 def build_cfssl_step(
-    repo_dir: tkn.model.NamedParam,
-    cfssl_fastpath: tkn.model.NamedParam,
-    cfssl_dir: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -323,12 +282,12 @@ def build_cfssl_step(
             path=os.path.join(steps_dir, 'build_cfssl.sh'),
             script_type=ScriptType.BOURNE_SHELL,
             callable='build_cfssl',
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
             params=[
                 # !DO NOT CHANGE ORDER!
-                repo_dir,
-                cfssl_fastpath,
-                cfssl_dir,
+                params.repo_dir,
+                params.cfssl_fastpath,
+                params.cfssl_dir,
             ],
         ),
         volumeMounts=volume_mounts,
@@ -337,8 +296,7 @@ def build_cfssl_step(
 
 
 def write_key_step(
-    repo_dir: tkn.model.NamedParam,
-    key_config_name: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -350,10 +308,10 @@ def write_key_step(
             script_type=ScriptType.PYTHON3,
             callable='write_key',
             params=[
-                repo_dir,
-                key_config_name,
+                params.repo_dir,
+                params.key_config_name,
             ],
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
@@ -361,7 +319,7 @@ def write_key_step(
 
 
 def build_cert_step(
-    repo_dir: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -373,9 +331,9 @@ def build_cert_step(
             script_type=ScriptType.BOURNE_SHELL,
             callable='build_cert',
             params=[
-                repo_dir,
+                params.repo_dir,
             ],
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
@@ -383,8 +341,7 @@ def build_cert_step(
 
 
 def build_package_step(
-    repo_dir: tkn.model.NamedParam,
-    package_name: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -396,8 +353,8 @@ def build_package_step(
             script_type=ScriptType.BOURNE_SHELL,
             callable='build_package',
             params=[
-                repo_dir,
-                package_name,
+                params.repo_dir,
+                params.pkg_name,
             ],
         ),
         volumeMounts=volume_mounts,
@@ -406,8 +363,7 @@ def build_package_step(
 
 
 def build_kernel_package_step(
-    repo_dir: tkn.model.NamedParam,
-    package_names: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -419,8 +375,8 @@ def build_kernel_package_step(
             script_type=ScriptType.BOURNE_SHELL,
             callable='build_kernel_package',
             params=[
-                repo_dir,
-                package_names,
+                params.repo_dir,
+                params.pkg_names,
             ],
         ),
         volumeMounts=volume_mounts,
@@ -429,9 +385,7 @@ def build_kernel_package_step(
 
 
 def build_upload_packages_step(
-    repo_dir: tkn.model.NamedParam,
-    cicd_cfg_name: tkn.model.NamedParam,
-    s3_package_path: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -442,10 +396,10 @@ def build_upload_packages_step(
             path=os.path.join(steps_dir, 'upload_packages.py'),
             script_type=ScriptType.PYTHON3,
             callable='upload_packages',
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
             params=[
-                cicd_cfg_name,
-                s3_package_path,
+                params.cicd_cfg_name,
+                params.s3_package_path,
             ],
         ),
         volumeMounts=volume_mounts,
@@ -454,9 +408,7 @@ def build_upload_packages_step(
 
 
 def build_publish_packages_repository_step(
-    cicd_cfg_name: tkn.model.NamedParam,
-    s3_package_path: tkn.model.NamedParam,
-    repo_dir: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -467,10 +419,10 @@ def build_publish_packages_repository_step(
             path=os.path.join(steps_dir, 'publish_package_repository.py'),
             script_type=ScriptType.PYTHON3,
             callable='main',
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
             params=[
-                cicd_cfg_name,
-                s3_package_path,
+                params.cicd_cfg_name,
+                params.s3_package_path,
             ],
         ),
         volumeMounts=volume_mounts,
@@ -479,15 +431,7 @@ def build_publish_packages_repository_step(
 
 
 def build_image_step(
-    repo_dir: tkn.model.NamedParam,
-    suite: tkn.model.NamedParam,
-    gardenlinux_epoch: tkn.model.NamedParam,
-    timestamp: tkn.model.NamedParam,
-    platform: tkn.model.NamedParam,
-    modifiers: tkn.model.NamedParam,
-    arch: tkn.model.NamedParam,
-    committish: tkn.model.NamedParam,
-    gardenversion: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -522,17 +466,17 @@ def build_image_step(
             path=os.path.join(steps_dir, 'build_image.sh'),
             script_type=ScriptType.BOURNE_SHELL,
             callable='build_image',
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
             params=[
                 # !DO NOT CHANGE ORDER!
-                suite,
-                gardenlinux_epoch,
-                timestamp,
-                platform,
-                modifiers,
-                arch,
-                committish,
-                gardenversion
+                params.suite,
+                params.gardenlinux_epoch,
+                params.snapshot_timestamp,
+                params.platform,
+                params.modifiers,
+                params.architecture,
+                params.committish,
+                params.version
             ],
         ),
         volumeMounts=build_image_step_volume_mounts,
@@ -543,9 +487,7 @@ def build_image_step(
 
 
 def build_base_image_step(
-    repo_dir: tkn.model.NamedParam,
-    oci_path: tkn.model.NamedParam,
-    version_label: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -556,11 +498,11 @@ def build_base_image_step(
             path=os.path.join(steps_dir, 'build_base_image.py'),
             script_type=ScriptType.PYTHON3,
             callable='build_base_image',
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
             params=[
-                oci_path,
-                repo_dir,
-                version_label,
+                params.oci_path,
+                params.repo_dir,
+                params.version_label,
             ],
         ),
         volumeMounts=volume_mounts,
@@ -569,15 +511,7 @@ def build_base_image_step(
 
 
 def create_component_descriptor_step(
-    repo_dir: tkn.model.NamedParam,
-    branch: tkn.model.NamedParam,
-    version: tkn.model.NamedParam,
-    committish: tkn.model.NamedParam,
-    cicd_cfg_name: tkn.model.NamedParam,
-    gardenlinux_epoch: tkn.model.NamedParam,
-    ctx_repository_config_name: tkn.model.NamedParam,
-    snapshot_ctx_repository_config_name: tkn.model.NamedParam,
-    publishing_actions: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -588,16 +522,16 @@ def create_component_descriptor_step(
             path=os.path.join(steps_dir, 'component_descriptor.py'),
             script_type=ScriptType.PYTHON3,
             callable='build_component_descriptor',
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
             params=[
-                branch,
-                cicd_cfg_name,
-                committish,
-                ctx_repository_config_name,
-                gardenlinux_epoch,
-                publishing_actions,
-                snapshot_ctx_repository_config_name,
-                version,
+                params.branch,
+                params.cicd_cfg_name,
+                params.committish,
+                params.ctx_repository_config_name,
+                params.gardenlinux_epoch,
+                params.publishing_actions,
+                params.snapshot_ctx_repository_config_name,
+                params.version,
             ],
         ),
         volumeMounts=volume_mounts,
@@ -606,16 +540,7 @@ def create_component_descriptor_step(
 
 
 def notify_step(
-    additional_recipients: tkn.model.NamedParam,
-    cicd_cfg_name: tkn.model.NamedParam,
-    disable_notifications: tkn.model.NamedParam,
-    git_url: tkn.model.NamedParam,
-    namespace: tkn.model.NamedParam,
-    only_recipients: tkn.model.NamedParam,
-    pipeline_name: tkn.model.NamedParam,
-    pipeline_run_name: tkn.model.NamedParam,
-    repo_dir: tkn.model.NamedParam,
-    status_dict_str: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -626,18 +551,18 @@ def notify_step(
             path=os.path.join(steps_dir, 'notify.py'),
             script_type=ScriptType.PYTHON3,
             callable='send_notification',
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
             params=[
-                additional_recipients,
-                cicd_cfg_name,
-                disable_notifications,
-                git_url,
-                namespace,
-                only_recipients,
-                pipeline_name,
-                pipeline_run_name,
-                repo_dir,
-                status_dict_str,
+                params.additional_recipients,
+                params.cicd_cfg_name,
+                params.disable_notifications,
+                params.giturl,
+                params.namespace,
+                params.only_recipients,
+                params.pipeline_name,
+                params.pipeline_run_name,
+                params.repo_dir,
+                params.status_dict_str,
             ],
         ),
         volumeMounts=volume_mounts,
@@ -646,9 +571,7 @@ def notify_step(
 
 
 def get_logs_step(
-    repo_dir: tkn.model.NamedParam,
-    pipeline_run_name: tkn.model.NamedParam,
-    namespace: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -659,11 +582,11 @@ def get_logs_step(
             path=os.path.join(steps_dir, 'get_logs.py'),
             script_type=ScriptType.PYTHON3,
             callable='getlogs',
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
             params=[
-                repo_dir,
-                pipeline_run_name,
-                namespace,
+                params.repo_dir,
+                params.pipeline_run_name,
+                params.namespace,
             ],
         ),
         volumeMounts=volume_mounts,
@@ -672,15 +595,7 @@ def get_logs_step(
 
 
 def pre_check_tests_step(
-    architecture: tkn.model.NamedParam,
-    cicd_cfg_name: tkn.model.NamedParam,
-    committish: tkn.model.NamedParam,
-    gardenlinux_epoch: tkn.model.NamedParam,
-    modifiers: tkn.model.NamedParam,
-    platform: tkn.model.NamedParam,
-    publishing_actions: tkn.model.NamedParam,
-    repo_dir: tkn.model.NamedParam,
-    version: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -691,16 +606,16 @@ def pre_check_tests_step(
             path=os.path.join(steps_dir, 'pre_check_tests.py'),
             script_type=ScriptType.PYTHON3,
             callable='pre_check_tests',
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
             params=[
-                architecture,
-                cicd_cfg_name,
-                committish,
-                gardenlinux_epoch,
-                modifiers,
-                platform,
-                publishing_actions,
-                version,
+                params.architecture,
+                params.cicd_cfg_name,
+                params.committish,
+                params.gardenlinux_epoch,
+                params.modifiers,
+                params.platform,
+                params.publishing_actions,
+                params.version,
             ],
         ),
         volumeMounts=volume_mounts,
@@ -709,18 +624,7 @@ def pre_check_tests_step(
 
 
 def test_step(
-    architecture: tkn.model.NamedParam,
-    cicd_cfg_name: tkn.model.NamedParam,
-    committish: tkn.model.NamedParam,
-    gardenlinux_epoch: tkn.model.NamedParam,
-    modifiers: tkn.model.NamedParam,
-    platform: tkn.model.NamedParam,
-    publishing_actions: tkn.model.NamedParam,
-    repo_dir: tkn.model.NamedParam,
-    suite: tkn.model.NamedParam,
-    snapshot_timestamp: tkn.model.NamedParam,
-    version: tkn.model.NamedParam,
-    pytest_cfg: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -731,20 +635,20 @@ def test_step(
             path=os.path.join(steps_dir, 'run_tests.py'),
             script_type=ScriptType.PYTHON3,
             callable='run_tests',
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
             params=[
-                architecture,
-                cicd_cfg_name,
-                committish,
-                gardenlinux_epoch,
-                modifiers,
-                platform,
-                publishing_actions,
-                repo_dir,
-                snapshot_timestamp,
-                suite,
-                version,
-                pytest_cfg,
+                params.architecture,
+                params.cicd_cfg_name,
+                params.committish,
+                params.gardenlinux_epoch,
+                params.modifiers,
+                params.platform,
+                params.publishing_actions,
+                params.repo_dir,
+                params.snapshot_timestamp,
+                params.suite,
+                params.version,
+                params.pytest_cfg,
             ],
         ),
         volumeMounts=volume_mounts,
@@ -753,15 +657,7 @@ def test_step(
 
 
 def upload_test_results_step(
-    architecture: tkn.model.NamedParam,
-    cicd_cfg_name: tkn.model.NamedParam,
-    committish: tkn.model.NamedParam,
-    gardenlinux_epoch: tkn.model.NamedParam,
-    modifiers: tkn.model.NamedParam,
-    platform: tkn.model.NamedParam,
-    publishing_actions: tkn.model.NamedParam,
-    repo_dir: tkn.model.NamedParam,
-    version: tkn.model.NamedParam,
+    params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -772,17 +668,17 @@ def upload_test_results_step(
             path=os.path.join(steps_dir, 'upload_test_results.py'),
             script_type=ScriptType.PYTHON3,
             callable='upload_test_results',
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
             params=[
-                architecture,
-                cicd_cfg_name,
-                committish,
-                gardenlinux_epoch,
-                modifiers,
-                platform,
-                publishing_actions,
-                repo_dir,
-                version,
+                params.architecture,
+                params.cicd_cfg_name,
+                params.committish,
+                params.gardenlinux_epoch,
+                params.modifiers,
+                params.platform,
+                params.publishing_actions,
+                params.repo_dir,
+                params.version,
             ],
         ),
         volumeMounts=volume_mounts,
@@ -791,16 +687,7 @@ def upload_test_results_step(
 
 
 def attach_log_step(
-        architecture: tkn.model.NamedParam,
-        cicd_cfg_name: tkn.model.NamedParam,
-        committish: tkn.model.NamedParam,
-        gardenlinux_epoch: tkn.model.NamedParam,
-        modifiers: tkn.model.NamedParam,
-        namespace: tkn.model.NamedParam,
-        pipeline_run_name: tkn.model.NamedParam,
-        platform: tkn.model.NamedParam,
-        repo_dir: tkn.model.NamedParam,
-        version: tkn.model.NamedParam,
+        params: params.AllParams,
         env_vars: typing.List[typing.Dict] = [],
         volume_mounts: typing.List[typing.Dict] = [],
     ):
@@ -811,18 +698,18 @@ def attach_log_step(
             path=os.path.join(steps_dir, 'attach_logs.py'),
             script_type=ScriptType.PYTHON3,
             callable='upload_logs',
-            repo_path_param=repo_dir,
+            repo_path_param=params.repo_dir,
             params=[
-                architecture,
-                cicd_cfg_name,
-                committish,
-                gardenlinux_epoch,
-                modifiers,
-                namespace,
-                pipeline_run_name,
-                platform,
-                repo_dir,
-                version,
+                params.architecture,
+                params.cicd_cfg_name,
+                params.committish,
+                params.gardenlinux_epoch,
+                params.modifiers,
+                params.namespace,
+                params.pipeline_run_name,
+                params.platform,
+                params.repo_dir,
+                params.version,
             ],
         ),
     volumeMounts=volume_mounts,
