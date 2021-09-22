@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import time
+import datetime
 from pathlib import Path
 from typing import Iterator
 
@@ -116,6 +117,28 @@ def test_metadata_connection_az(client, azure):
     )
     assert exit_code == 0, f"no {error=} expected"
 
+def test_hostname_azure(client, azure):
+    start_time = datetime.datetime.now()
+    (exit_code, output, error) = client.execute_command("nslookup $(hostname)")
+    assert exit_code == 0, f"no {error=} expected"
+    end_time = datetime.datetime.now()
+    time_diff = (end_time - start_time)
+    execution_time = round(time_diff.total_seconds())
+    assert execution_time <= 2, f"nslookup should not run in a timeout {error}"
+
+
+def test_timesync(client, azure):
+    """Ensure symbolic link has been created"""
+    (exit_code, output, error) = client.execute_command("test -L /dev/ptp_hyperv")
+    assert exit_code == 0, f"Expected /dev/ptp_hyperv to be a symbolic link"
+
+def test_loadavg(client):
+    """This test does not produce any load. Make sure no 
+       other process does."""
+    (exit_code, output, error) = client.execute_command("cat /proc/loadavg")
+    assert exit_code == 0, f"Expected to be able to show contents of /proc/loadavg"
+    load =  float(output.split(" ")[1])
+    assert load  < 0.5, f"Expected load to be less than 0.5 but is {load}"
 
 @pytest.fixture(params=["8.8.8.8", "dns.google", "heise.de"])
 def ping4_host(request):
@@ -146,7 +169,7 @@ def test_systemctl_no_failed_units(client):
     assert len(json.loads(output)) == 0
 
 def test_startup_time(client):
-    tolerated_startup_time = 60
+    tolerated_startup_time = 20
     (exit_code, output, error) = client.execute_command("systemd-analyze")
     assert exit_code == 0, f"no {error=} expected"
     lines = output.splitlines()
@@ -154,6 +177,13 @@ def test_startup_time(client):
     time=items[12]
     tf = float(time[:-1])
     assert tf < tolerated_startup_time, f"startup time too long: {tf}seconds but only {tolerated_startup_time} tolerated."
+
+def test_chrony(client, azure):
+    """Test for specific chrony configuration on azure"""
+    expected_config = "refclock PHC /dev/ptp_hyperv poll 3 dpoll -2 offset 0"
+    (exit_code, output, error) = client.execute_command("cat /etc/chrony/chrony.conf")
+    assert exit_code == 0, f"no {error=} expected"
+    assert output.find(expected_config) != -1, f"chrony config for ptp expected but not found"
 
 def test_growpart(client):
     (exit_code, output, error) = client.execute_command("df --output=size -BG /")
