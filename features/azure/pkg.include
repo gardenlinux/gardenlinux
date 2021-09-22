@@ -1,6 +1,3 @@
 # Azure images require waagent
-#waagent
-# debootstrap does not pull python3-cffi-backend
-#python3-cffi-backend
-#
-#cloud-init
+main/w/waagent_2.2.47-2gardenlinux1_all.deb
+chrony

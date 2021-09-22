@@ -173,7 +173,7 @@ def test_systemctl_no_failed_units(client):
     assert len(json.loads(output)) == 0
 
 def test_startup_time(client):
-    tolerated_startup_time = 20
+    tolerated_startup_time = 30
     (exit_code, output, error) = client.execute_command("systemd-analyze")
     assert exit_code == 0, f"no {error=} expected"
     lines = output.splitlines()
