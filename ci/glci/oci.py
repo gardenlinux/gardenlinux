@@ -1,3 +1,4 @@
+import collections
 import dataclasses
 import datetime
 import enum
@@ -56,6 +57,29 @@ class ImageManifestV2_2:
     layers: typing.List[ImageManifestV2_2Layers]
     schemaVersion: int = 2
     mediaType: typing.Optional[str] = DOCKER_IMAGE_MANIFEST_V2_S2_MEDIATYPE
+
+
+@dataclasses.dataclass
+class PlatformConfig:
+    architecture: str
+    os: str
+    features: typing.List[str] = None
+    variant: str = None
+
+
+@dataclasses.dataclass
+class ManifestListEntry:
+    digest: str
+    platform: PlatformConfig
+    size: int
+    mediaType: str = DOCKER_IMAGE_MANIFEST_V2_S2_MEDIATYPE
+
+
+@dataclasses.dataclass
+class ManifestList:
+    manifests: typing.List[ManifestListEntry]
+    mediaType: str = DOCKER_IMAGE_LIST_MEDIATYPE
+    schemaVersion: int = 2
 
 
 @dataclasses.dataclass
@@ -289,3 +313,76 @@ def publish_from_release(
         logger.info('publishing succeeded')
 
     return image_manifest_digest, image_manifest_size
+
+
+def publish_from_release_set(
+    release_set: glci.model.OnlineReleaseManifestSet,
+    publish_cfg: glci.model.OciPublishCfg,
+    oci_client,
+    s3_client,
+):
+    # version is only present in manifests, but should be the same in all
+    version = release_set.manifests[0].version
+    # we only care about oci-releases
+    filtered_manifests = tuple(filter(lambda m: m.platform == 'oci', release_set.manifests))
+
+    # group releases by potential image-tag, ignoring architecture. Releases that end up in the
+    # same bucket are just architecture-variants of the same feature-set
+    sorted_release_manifests = collections.defaultdict(list)
+    for release_manifest in filtered_manifests:
+        flavour_identifier = _flavour_identifier(release_manifest.flavour(), include_arch=False)
+        image_tag = f'{version}-{flavour_identifier}'
+        sorted_release_manifests[image_tag].append(release_manifest)
+
+    logger.info(f'Publishing {len(sorted_release_manifests)} multi-arch images.')
+
+    # create a multiarch-image for each bucket
+    for image_tag in sorted_release_manifests:
+        image_reference = f'{publish_cfg.image_prefix}:{version}-{image_tag}'
+        logger.info(
+            f'Publishing multi-arch image {image_reference}. '
+            'Beginning to push architecture variants now...'
+        )
+        image_manifests = []
+        for release_manifest in sorted_release_manifests[image_tag]:
+            image_manifest_digest, image_manifest_size = publish_from_release(
+                release=release_manifest,
+                image_reference=image_reference,
+                oci_client=oci_client,
+                s3_client=s3_client,
+            )
+
+            published_image_reference = glci.model.OciPublishedImage(
+                image_reference=image_reference,
+            )
+            dataclasses.replace(release_manifest, published_image_metadata=published_image_reference)
+
+            architecture = Architecture(release_manifest.architecture.value)
+            os = OperatingSystem.LINUX  # currently not set in release-sets
+
+            image_manifests.append(
+                ManifestListEntry(
+                    digest=image_manifest_digest,
+                    size=image_manifest_size,
+                    platform=PlatformConfig(
+                        architecture=architecture.value,
+                        os=os.value,
+                    )
+                )
+            )
+
+        logger.info(
+            f'Successfully pushed architecture variants for {image_reference}. '
+            'Publishing manifest list...'
+        )
+        manifest_list = ManifestList(manifests=image_manifests)
+        oci_client.put_manifest(
+            image_reference=image_reference,
+            manifest=json.dumps(dataclasses.asdict(
+                manifest_list,
+                dict_factory=lambda x: {k: v for (k, v) in x if v is not None},
+            )).encode('utf-8'),
+        )
+        logger.info(f'Publishing multi-arch image {image_reference} succeeded')
+
+    return release_set
