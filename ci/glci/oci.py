@@ -1,232 +1,271 @@
 import dataclasses
 import datetime
+import enum
+import gziputil
 import hashlib
-import io
 import json
 import logging
 import lzma
-import os
-import random
-import tarfile
 import tempfile
 import typing
+import zlib
 
 import glci.model
+import oci.util as ou
+
 
 logger = logging.getLogger(__name__)
 
-dc = dataclasses.dataclass
 
-@dc
-class OCIConfig:
-    pass
-
-@dc
-class OCIContainerCfg:
-    Hostname: str
-    Image: str # sha256-hash
-    Domainname: str = ''
-    User: str = ''
-    AttachStdin: bool = False
-    AttachStdout: bool = False
-    Tty: bool = False
-    OpenStdin: bool = False
-    StdinOnce: bool = False
-    Env: typing.Tuple[str] = (
-        'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
-    )
-    Cmd: typing.Tuple[str] = ('/bin/sh',)
-    ArgsEscaped: bool = False
-    Volumes: typing.Optional[typing.Tuple[str]] = None
-    WorkingDir: str = ''
-    Entrypoint: str = None
-    OnBuild: str = None
-    Labels: typing.Dict[str, str] = dataclasses.field(
-        default_factory=dict,
-    )
-
-@dc
-class OCI_Fs:
-    diff_ids: typing.Tuple[str] # tuple of layer-sha256-digests
-    type: str = 'layers'
-
-@dc
-class OCIManifestEntry:
-    config: OCIContainerCfg
-    container_config: OCIContainerCfg
-    created: str # iso8601-ts
-    container: str # container-hash
-    # container_config: OCIContainerCfg
-    rootfs: OCI_Fs
-    architecture: str='amd64'
-    docker_version: str='18.09.7'
-    history: typing.Tuple[dict] = ()
-    os: str = 'linux'
+DOCKER_IMAGE_MANIFEST_V2_S2_MEDIATYPE = 'application/vnd.docker.distribution.manifest.v2+json'
+DOCKER_IMAGE_LIST_MEDIATYPE = 'application/vnd.docker.distribution.manifest.list.v2+json'
 
 
-@dc
-class OCIManifest:
-    __filename__ = 'manifest.json'
-    Config: str # relpath to config.json
-    Layers: typing.Tuple[str] # relpaths to <layer>/layer.tar
-    RepoTags: typing.Tuple[str] # repo-tags (e.g. eu.gcr.io/foo/bar:latest)
+class OperatingSystem(enum.Enum):
+    # For all possible values, see the allowed values of $GOOS
+    # https://golang.org/doc/install/source#environment
+    LINUX = 'linux'
 
 
-@dc
-class LayerContainerCfg:
-    Cmd: typing.List[str]
+class Architecture(enum.Enum):
+    # For all possible values, see the allowed values of $GOARCH in
+    # https://golang.org/doc/install/source#environment
+    AMD64 = 'amd64'
+    ARM64 = 'arm64'
 
 
-@dc
-class LayerCfg:
-    container_config: LayerContainerCfg
-    created: str # isoformat ts
-    id: str # digest
+@dataclasses.dataclass
+class ImageManifestV2_2Config:
+    size: int
+    digest: str
+    mediaType: str = 'application/vnd.docker.container.image.v1+json'
 
 
-def buf_leng(fileobj):
-    leng = fileobj.seek(0, io.SEEK_END)
-    fileobj.seek(0)
-    return leng
+@dataclasses.dataclass
+class ImageManifestV2_2Layers:
+    size: int
+    digest: str
+    urls: typing.Optional[typing.List[str]] = None
+    mediaType: str = 'application/vnd.docker.image.rootfs.diff.tar.gzip'
 
 
-def image_from_rootfs(
-    rootfs_tar_xz: str,
+@dataclasses.dataclass
+class ImageManifestV2_2:
+    # See https://github.com/distribution/distribution/blob/main/docs/spec/manifest-v2-2.md#image-manifest-field-descriptions
+    config: ImageManifestV2_2Config
+    layers: typing.List[ImageManifestV2_2Layers]
+    schemaVersion: int = 2
+    mediaType: typing.Optional[str] = DOCKER_IMAGE_MANIFEST_V2_S2_MEDIATYPE
+
+
+@dataclasses.dataclass
+class ContainerImageConfig:
+    User: typing.Optional[str] = None
+    ExposedPorts: typing.Optional[object] = None
+    Env: typing.Optional[typing.List[str]] = None
+    Entrypoint: typing.Optional[typing.List[str]] = None
+    Cmd: typing.Optional[typing.List[str]] = None
+    Volumes: typing.Optional[object] = None
+    WorkingDir: typing.Optional[str] = None
+    Labels: typing.Optional[object] = None
+    StopSignal: typing.Optional[str] = None
+    Memory: typing.Optional[int] = None
+    MemorySwap: typing.Optional[int] = None
+    CpuShares: typing.Optional[int] = None
+    Healthcheck: typing.Optional[object] = None
+
+
+@dataclasses.dataclass
+class RootfsConfig:
+    type: str
+    diff_ids: typing.List[str]
+
+
+@dataclasses.dataclass
+class HistoryConfig:
+    created: typing.Optional[str] = None
+    author: typing.Optional[str] = None
+    created_by: typing.Optional[str] = None
+    comment: typing.Optional[str] = None
+    empty_layer: typing.Optional[bool] = None
+
+
+@dataclasses.dataclass
+class ImageConfig:
+    # see https://github.com/moby/moby/blob/v20.10.8/image/spec/v1.2.md#image-json-description
+    architecture: str
+    author: str
+    created: str
+    history: typing.List[HistoryConfig]
+    os: str
+    rootfs: RootfsConfig
+    config: typing.Optional[ContainerImageConfig] = None
+
+
+def publish_container_image_from_tarfile(
+    tar_file: typing.Union[str, typing.IO],
+    oci_client,
     image_reference: str,
+    architecture: Architecture,
+    os: OperatingSystem = OperatingSystem.LINUX,
+    additional_tags: typing.List[str] = [],
 ):
-    '''
-    creates an OCI-compliant container image, based on the legacy V1 spec used
-    by docker with exactly one layer, containing the filesystem contained in
-    `rootfs_tar_xz`, which is expected to be an xzip-compressed tarfile.
+    image_reference = ou.normalise_image_reference(image_reference=image_reference)
+    image_name = image_reference.rsplit(':', 1)[0]
+    image_references = (image_reference,) + tuple([f'{image_name}:{tag}' for tag in additional_tags])
 
-    the resulting file is created as a (named) temporary file, and returned to
-    the caller. The caller is responsible for unlinking the file.
-    '''
-    # extract and calculate sha256 digest
-    rootfs_tar = tempfile.NamedTemporaryFile()
-    rootfs_sha256_hash = hashlib.sha256()
-    with lzma.open(rootfs_tar_xz) as f:
-        while chunk := f.read(4069):
-            rootfs_sha256_hash.update(chunk)
-            rootfs_tar.write(chunk)
-    rootfs_sha256_digest = rootfs_sha256_hash.hexdigest()
-    rootfs_tar.flush()
+    uncompressed_hash = hashlib.sha256()
 
-    now_ts = datetime.datetime.now().isoformat() + 'Z'
-    container_id = hashlib.sha256(f'{random.randint(0, 2 ** 32)}'.encode('utf-8')).hexdigest()
+    with tempfile.TemporaryFile() as gzip_file:
 
-    logger.info(f'{container_id=}')
+        compressed_hash = hashlib.sha256()
+        length = 0
+        src_length = 0
+        crc = 0
 
-    # create manifest entry (name it as the hash)
-    manifest_entry = OCIManifestEntry(
-        created=now_ts,
-        container=rootfs_sha256_digest, # deviates from what docker does
-        config=OCIContainerCfg(
-            Hostname=rootfs_sha256_digest,
-            Image=f'sha256:{rootfs_sha256_digest}',
-            # use defaults from dataclass definition
-        ),
-        container_config=OCIContainerCfg(
-            Hostname=rootfs_sha256_digest,
-            Image=f'sha256:{rootfs_sha256_digest}',
-            # use defaults from dataclass definition
-        ),
-        rootfs=OCI_Fs(
-            diff_ids=[f'sha256:{rootfs_sha256_digest}'],
-            type='layers',
-        ),
-        architecture='amd64',
-        os='linux',
-    )
-    manifest_buf = io.BytesIO(json.dumps(dataclasses.asdict(manifest_entry)).encode('utf-8'))
-    manifest_buf_leng = buf_leng(manifest_buf)
-    manifest_sha256_hash = hashlib.sha256(manifest_buf.read())
-    manifest_buf.seek(0)
-    manifest_entry_fname = f'{manifest_sha256_hash.hexdigest()}.json'
+        with lzma.open(tar_file) as f:
+            gzip_file.write(gzip_header := gziputil.gzip_header(fname=b'layer.tar'))
+            compressed_hash.update(gzip_header)
+            length += len(gzip_header)
 
-    image_tar = tarfile.open(tempfile.NamedTemporaryFile().name, 'w')
+            compressor = gziputil.zlib_compressobj()
 
-    manifest_info = tarfile.TarInfo(name=manifest_entry_fname)
-    manifest_info.size = manifest_buf_leng
-    image_tar.addfile(tarinfo=manifest_info, fileobj=manifest_buf)
+            while chunk := f.read(1024):
+                uncompressed_hash.update(chunk)
+                crc = zlib.crc32(chunk, crc)
+                src_length += len(chunk)
 
+                chunk = compressor.compress(chunk)
+                compressed_hash.update(chunk)
+                length += len(chunk)
+                gzip_file.write(chunk)
 
-    # add img-dir
-    img_directory_info = tarfile.TarInfo(name=container_id)
-    img_directory_info.type = tarfile.DIRTYPE
-    img_directory_info.mode = 0x755
-    image_tar.addfile(tarinfo=img_directory_info)
+            gzip_file.write((remainder := compressor.flush()))
+            compressed_hash.update(remainder)
+            length += len(remainder)
 
-
-    version_info = tarfile.TarInfo(name=f'{container_id}/VERSION')
-    version_buf = io.BytesIO(b'1.0')
-    version_buf_leng = buf_leng(version_buf)
-    version_info.size = version_buf_leng
-    image_tar.addfile(tarinfo=version_info, fileobj=version_buf)
-
-    layer_json_info = tarfile.TarInfo(name=f'{container_id}/json')
-    layer_info_buf = io.BytesIO(
-        json.dumps(
-            dataclasses.asdict(
-                LayerCfg(
-                    id=container_id,
-                    created=now_ts,
-                    container_config=LayerContainerCfg(
-                        Cmd=[''],
-                    ),
-                )
+            gzip_footer = gziputil.gzip_footer(
+                crc32=crc,
+                uncompressed_size=src_length,
             )
-        ).encode('utf-8')
+            gzip_file.write(gzip_footer)
+            compressed_hash.update(gzip_footer)
+            length += len(gzip_footer)
+
+            gzip_file.seek(0)
+
+            logger.info(f"pushing blob created from tarfile '{tar_file}'")
+            oci_client.put_blob(
+                image_reference=image_reference,
+                digest=(compressed_digest := f'sha256:{compressed_hash.hexdigest()}'),
+                octets_count=length,
+                data=gzip_file,
+            )
+
+    image_config = ImageConfig(
+        created=(timestamp :=  datetime.datetime.now().replace(microsecond=0).isoformat() + 'Z'),
+        author='Gardenlinux CI',
+        architecture=architecture.value,
+        os=os.value,
+        config=ContainerImageConfig(
+            Env=['PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'],
+            Cmd=['/bin/sh'],
+        ),
+        rootfs=RootfsConfig(
+            type='layers',
+            diff_ids=[f'sha256:{uncompressed_hash.hexdigest()}'],
+        ),
+        history=[HistoryConfig(created=timestamp)]
     )
-    layer_json_info.size = buf_leng(layer_info_buf)
-    image_tar.addfile(tarinfo=layer_json_info, fileobj=layer_info_buf)
+    image_config = json.dumps(dataclasses.asdict(image_config)).encode('utf-8')
+    image_config_digest = f'sha256:{hashlib.sha256(image_config).hexdigest()}'
 
-    layer_tar_fname = f'{container_id}/layer.tar'
-    image_tar.add(name=rootfs_tar.name, arcname=layer_tar_fname)
-
-    # add manifest.json
-    manifest = OCIManifest(
-        Config=manifest_entry_fname,
-        Layers=[layer_tar_fname],
-        RepoTags=[image_reference],
+    logger.info('pushing blob created from image config')
+    oci_client.put_blob(
+        image_reference=image_reference,
+        digest=image_config_digest,
+        octets_count=len(image_config),
+        data=image_config,
     )
-    manifest_buf = io.BytesIO(
-        json.dumps([dataclasses.asdict(manifest)]).encode('utf-8'),
+
+    image_manifest = ImageManifestV2_2(
+        config=ImageManifestV2_2Config(
+            digest=image_config_digest,
+            size=len(image_config),
+        ),
+        layers=[
+            ImageManifestV2_2Layers(
+                digest=compressed_digest,
+                size=length,
+            ),
+        ],
     )
-    manifest_info = tarfile.TarInfo(name='manifest.json')
-    manifest_info.size = buf_leng(manifest_buf)
-    image_tar.addfile(tarinfo=manifest_info, fileobj=manifest_buf)
+    image_manifest = json.dumps(dataclasses.asdict(image_manifest)).encode('utf-8')
+    image_manifest_digest = f'sha256:{hashlib.sha256(image_manifest).hexdigest()}'
+    image_manifest_size = len(image_manifest)
 
-    # add repositories
-    repo, tag = image_reference.split(':')
+    for tgt_ref in image_references:
+        logger.info(f'publishing manifest {tgt_ref=}')
+        oci_client.put_manifest(
+        image_reference=image_reference,
+        manifest=image_manifest,
+    )
 
-    repositories_dict = {
-        repo: {
-            tag: container_id,
-        },
-    }
-    repositories_buf = io.BytesIO(json.dumps(repositories_dict).encode('utf-8'))
-    repositories_info = tarfile.TarInfo(name='repositories')
-    repositories_info.size = buf_leng(repositories_buf)
+    return image_manifest_digest, image_manifest_size
 
-    image_tar.addfile(tarinfo=repositories_info, fileobj=repositories_buf)
 
-    image_tar.fileobj.flush()
+def _flavour_identifier(
+    flavour: glci.model.GardenlinuxFlavour,
+    include_arch: bool = True,
+) -> str:
+    features = [
+        f.name.strip('_')
+        for f in flavour.calculate_modifiers()
+        if f.name != 'oci'
+    ]
+    if include_arch:
+        features = [flavour.architecture] + features
 
-    print(image_tar.name)
-    return image_tar.name
+    return '-'.join(features)
 
 
 def publish_image(
     release: glci.model.OnlineReleaseManifest,
     publish_cfg: glci.model.OciPublishCfg,
+    release_build: bool,
+    oci_client,
     s3_client,
-    publish_oci_image_func: callable,
 ):
-    image_tag = f'{release.version}-{release.canonical_release_manifest_key_suffix()}'. \
-      replace('_', '-')
-    image_name = f'{publish_cfg.image_prefix}:{image_tag}'
+    flavour_identifier = _flavour_identifier(release.flavour())
+    image_tag = f'{release.version}-{release.build_committish[:6]}-{flavour_identifier}'
+    image_reference = f'{publish_cfg.image_prefix}:{image_tag}'
 
+    additional_image_tags = []
+    if release_build:
+        additional_image_tags.append(f'{release.version}-{flavour_identifier}')
+
+    publish_from_release(
+        release=release,
+        image_reference=image_reference,
+        oci_client=oci_client,
+        s3_client=s3_client,
+        additional_tags=additional_image_tags,
+    )
+
+    published_image_reference = glci.model.OciPublishedImage(
+        image_reference=image_reference,
+    )
+
+    return dataclasses.replace(release, published_image_metadata=published_image_reference)
+
+
+def publish_from_release(
+    release: glci.model.OnlineReleaseManifest,
+    image_reference: str,
+    oci_client,
+    s3_client,
+    additional_tags=[],
+):
     rootfs_key = release.path_by_suffix('rootfs.tar.xz').s3_key
     rootfs_bucket_name = release.path_by_suffix('rootfs.tar.xz').s3_bucket_name
 
@@ -239,26 +278,14 @@ def publish_image(
         tfh.seek(0)
         logger.info(f'retrieved raw image fs from {rootfs_bucket_name=}')
 
-        oci_image_file = image_from_rootfs(
-            rootfs_tar_xz=tfh,
-            image_reference=image_name,
+        image_manifest_digest, image_manifest_size = publish_container_image_from_tarfile(
+            tar_file=tfh,
+            oci_client=oci_client,
+            image_reference=image_reference,
+            architecture=Architecture(release.architecture),
+            additional_tags=additional_tags,
         )
-        logger.info(f'created serialised {oci_image_file=}')
 
-    try:
-      oci_image_fileobj = open(oci_image_file)
+        logger.info('publishing succeeded')
 
-      publish_oci_image_func(
-          image_reference=image_name,
-          image_file_obj=oci_image_fileobj,
-      )
-      logger.info('publishing succeeded')
-    finally:
-      oci_image_fileobj.close()
-      os.unlink(oci_image_file)
-
-    published_image_reference = glci.model.OciPublishedImage(
-        image_reference=image_name,
-    )
-
-    return dataclasses.replace(release, published_image_metadata=published_image_reference)
+    return image_manifest_digest, image_manifest_size
