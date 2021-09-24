@@ -119,6 +119,13 @@ def build_component_descriptor(
         for release_manifest in releases
     ]
 
+    component_descriptor.component.resources.extend(
+        oci_image_resources(
+            releases=releases,
+            effective_version=effective_version,
+        )
+    )
+
     logger.info(
         'Generated Component-Descriptor:\n'
         f'{pprint.pformat(dataclasses.asdict(component_descriptor))}'
@@ -142,6 +149,35 @@ def build_component_descriptor(
             component_descriptor_v2=component_descriptor,
             on_exist=product.v2.UploadMode.OVERWRITE,
         )
+
+
+def oci_image_resources(
+    releases: typing.List[glci.model.OnlineReleaseManifest],
+    effective_version: str,
+):
+    for release_manifest in releases:
+        if (
+            release_manifest.platform == 'oci'
+            and (meta := release_manifest.published_image_metadata)
+        ):
+            yield cm.Resource(
+                name='gardenlinux',
+                version=effective_version,
+                type=cm.ResourceType.OCI_IMAGE,
+                relation=cm.ResourceRelation.LOCAL,
+                access=cm.OciAccess(
+                    type=cm.AccessType.OCI_REGISTRY,
+                    imageReference=meta.image_reference,
+                ),
+                labels=[
+                    cm.Label(
+                        name='gardener.cloud/gardenlinux/ci/build-metadata',
+                        value={
+                            'modifiers': release_manifest.modifiers,
+                        }
+                    ),
+                ]
+            ),
 
 
 def virtual_machine_image_resource(

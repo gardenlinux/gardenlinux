@@ -9,6 +9,7 @@ import tarfile
 import glci.model
 import glci.util
 import glci.s3
+import promote
 
 '''
 this script is rendered into build-task from step.py/render_task.py
@@ -118,6 +119,15 @@ def upload_results_step(
       paths=uploaded_relpaths,
       published_image_metadata=None,
     )
+
+    # always publish oci image
+    if manifest.platform == 'oci':
+        release_build = glci.model.PublishingAction.RELEASE in publishing_actions
+        manifest = promote._publish_oci_image(
+            release=manifest,
+            cicd_cfg=cicd_cfg,
+            release_build=release_build,
+        )
 
     manifest_path_suffix = manifest.canonical_release_manifest_key_suffix()
     manifest_path = f'{glci.model.ReleaseManifest.manifest_key_prefix}/{manifest_path_suffix}'

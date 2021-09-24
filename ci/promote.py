@@ -218,17 +218,21 @@ def _publish_gcp_image(release: glci.model.OnlineReleaseManifest,
 def _publish_oci_image(
     release: glci.model.OnlineReleaseManifest,
     cicd_cfg: glci.model.CicdCfg,
+    release_build: bool = True,
 ) -> glci.model.OnlineReleaseManifest:
     import ccc.aws
     import glci.oci
-    import container.registry
+    import ccc.oci
+
+    oci_client = ccc.oci.oci_client()
     s3_client = ccc.aws.session(cicd_cfg.build.aws_cfg_name).client('s3')
 
     return glci.oci.publish_image(
         release=release,
         publish_cfg=cicd_cfg.publish.oci,
         s3_client=s3_client,
-        publish_oci_image_func=container.registry.publish_container_image,
+        oci_client=oci_client,
+        release_build=release_build,
     )
 
 
