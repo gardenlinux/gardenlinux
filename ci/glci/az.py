@@ -401,7 +401,7 @@ def check_offer_transport_state(
     '''
 
     transport_state = release.published_image_metadata.transport_state
-    if transport_state == glci.model.AzureTransportState.RELEASED:
+    if transport_state is glci.model.AzureTransportState.RELEASED:
         return release
 
     marketplace_client = AzureMarketplaceClient(
@@ -420,19 +420,22 @@ def check_offer_transport_state(
     )
 
     # Check first if the process has been failed.
-    if operation_status == AzmpOperationState.FAILED:
+    if operation_status is AzmpOperationState.FAILED:
         published_image = glci.model.AzurePublishedImage(
             transport_state=glci.model.AzureTransportState.FAILED,
             publish_operation_id=release.published_image_metadata.publish_operation_id,
             golive_operation_id='',
             urn='',
         )
-        if release.published_image_metadata.transport_state == glci.model.AzureTransportState.GO_LIVE:
+        if release.published_image_metadata.transport_state is glci.model.AzureTransportState.GO_LIVE:
             published_image.golive_operation_id = release.published_image_metadata.golive_operation_id
         return dataclasses.replace(release, published_image_metadata=published_image)
 
     # Publish completed. Trigger go live to transport the offer changes to production.
-    if transport_state == glci.model.AzureTransportState.PUBLISH and operation_status == AzmpOperationState.SUCCEEDED:
+    if (
+        transport_state is glci.model.AzureTransportState.PUBLISH
+        and operation_status is AzmpOperationState.SUCCEEDED
+    ):
         logger.info('Publishing of gardenlinux offer to staging succeeded. Trigger go live...')
         marketplace_client.go_live(publisher_id=publisher_id, offer_id=offer_id)
         golive_operation_id = marketplace_client.fetch_ongoing_operation_id(
@@ -449,7 +452,10 @@ def check_offer_transport_state(
         return dataclasses.replace(release, published_image_metadata=published_image)
 
     # Go Live completed. Done!
-    if transport_state == glci.model.AzureTransportState.GO_LIVE and operation_status == AzmpOperationState.SUCCEEDED:
+    if (
+        transport_state is glci.model.AzureTransportState.GO_LIVE
+        and operation_status is AzmpOperationState.SUCCEEDED
+    ):
         logger.info('Tranport to production of gardenlinux offer succeeded.')
         published_image = glci.model.AzurePublishedImage(
             transport_state=glci.model.AzureTransportState.RELEASED,
