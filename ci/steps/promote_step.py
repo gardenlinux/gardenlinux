@@ -1,4 +1,5 @@
 import dataclasses
+import os
 import sys
 
 import glci.model
@@ -104,6 +105,7 @@ def promote_step(
     gardenlinux_epoch: parsable_to_int,
     committish: str,
     version: str,
+    build_type: glci.model.BuildType = glci.model.BuildType.RELEASE,
 ):
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
     flavour_set = glci.util.flavour_set(flavourset)
@@ -142,7 +144,33 @@ def promote_step(
     print(publishing_actions)
 
     # if this line is reached, the release has been complete
-    # XXX now create and publish manifest-set
+    # now create and publish manifest-set
 
-    # patch azure-release
-    print('XXX should not publish manifest-set (not implemented, yet)')
+    upload_release_manifest_set = glci.util.preconfigured(
+        func=glci.util.upload_release_manifest_set,
+        cicd_cfg=cicd_cfg,
+    )
+
+    manifest_set = glci.model.ReleaseManifestSet(
+        manifests=releases,
+        flavour_set_name=flavour_set.name,
+    )
+
+    manifest_path = os.path.join(
+        glci.model.ReleaseManifestSet.release_manifest_set_prefix,
+        build_type.value,
+        glci.util.release_set_manifest_name(
+            build_committish=committish,
+            gardenlinux_epoch=gardenlinux_epoch,
+            version=version,
+            flavourset_name=flavour_set.name,
+            build_type=build_type,
+        ),
+    )
+
+    upload_release_manifest_set(
+        key=manifest_path,
+        manifest_set=manifest_set,
+    )
+
+    print(f'uploaded manifest-set: {manifest_path=}')
