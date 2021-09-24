@@ -1,8 +1,10 @@
+import dataclasses
 import sys
 
 import glci.model
 import glci.util
 import promote
+import version as version_util
 
 parsable_to_int = str
 
@@ -59,6 +61,22 @@ def promote_single_step(
         # transactional semantics in place
         print('artifacts were already published - exiting now')
         sys.exit(0)
+
+    if release_manifest.platform == 'azure':
+        # publishing on azure is currently a lengthy process. We do, however, already know the URN
+        # it will end up at.
+        # Prepare the information here already - will be overwritten if actual publishing proceeds.
+        publisher_id = cicd_cfg.publish.azure.publisher_id,
+        offer_id = cicd_cfg.publish.azure.offer_id,
+        plan_id = cicd_cfg.publish.azure.plan_id,
+        parsed_version = version_util.parse_to_semver(version)
+        published_image_metadata = glci.model.AzurePublishedImage(
+            transport_state=glci.model.AzureTransportState.PROVISIONAL,
+            publish_operation_id='',
+            golive_operation_id='',
+            urn=f'{publisher_id}:{offer_id}:{plan_id}:{parsed_version}',
+        )
+        dataclasses.replace(release_manifest, published_image_metadata=published_image_metadata)
 
     new_manifest = promote.publish_image(
         release=release_manifest,
@@ -125,4 +143,6 @@ def promote_step(
 
     # if this line is reached, the release has been complete
     # XXX now create and publish manifest-set
+
+    # patch azure-release
     print('XXX should not publish manifest-set (not implemented, yet)')

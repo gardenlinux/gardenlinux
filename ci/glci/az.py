@@ -19,6 +19,7 @@ from azure.storage.blob import (
 )
 
 import glci.model
+import version as version_util
 
 logger = logging.getLogger(__name__)
 
@@ -506,11 +507,13 @@ def upload_and_publish_image(
         notification_recipients=notification_emails,
     )
 
+    # use anticipated URN for now
+    parsed_version = version_util.parse_to_semver(release.version)
     published_image = glci.model.AzurePublishedImage(
         transport_state=glci.model.AzureTransportState.PUBLISH,
         publish_operation_id=publish_operation_id,
         golive_operation_id='',
-        urn='',
+        urn=generate_urn(marketplace_cfg, parsed_version),
     )
 
     return dataclasses.replace(release, published_image_metadata=published_image)

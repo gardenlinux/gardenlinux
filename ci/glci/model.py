@@ -280,6 +280,7 @@ class GcpPublishedImage(PublishedImageBase):
 
 
 class AzureTransportState(enum.Enum):
+    PROVISIONAL = 'provisional'
     PUBLISH = 'publishing'
     GO_LIVE = 'going_live'
     RELEASED = 'released'
