@@ -5,7 +5,8 @@ set -euo pipefail
 
 VERSION=20210629.00-0ubuntu1
 
-sudo apt-get install -y --no-install-recommends devscripts dpkg-dev dh-golang golang-any
+# TODO consider adding the debian-keyring to the build imag
+sudo apt-get install -y --no-install-recommends devscripts dpkg-dev dh-golang golang-any debian-keyring
 
 mkdir $src
 cd $src
