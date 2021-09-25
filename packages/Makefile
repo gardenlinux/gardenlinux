@@ -1,4 +1,4 @@
-POOLDIR=$(realpath ../.packages)
+POOLDIR=$$(mkdir -p ../.packages; realpath ../.packages)
 MANUALDIR=$(realpath manual)
 KERNELDIR=$(realpath kernel)
 CERTDIR=$(realpath ../cert)
