@@ -1,8 +1,17 @@
 import datetime
 import logging
+import time
+import json
+import os
+import pathlib
+import subprocess
+import sys
+
 from os import path
+from urllib.parse import urlparse
 
 import boto3
+from botocore.exceptions import ClientError
 
 from .sshclient import RemoteClient
 
@@ -20,10 +29,7 @@ class AWS:
         try:
             ssh = RemoteClient(
                 host=instance.public_dns_name,
-                user=config["user"],
-                ssh_key_filepath=config["ssh_key_filepath"],
-                passphrase=config["passphrase"],
-                remote_path=config["remote_path"],
+                sshconfig=config["ssh"],
             )
             yield ssh
         finally:
@@ -39,21 +45,13 @@ class AWS:
         :param config: configuration
         """
         self.config = config
-        if (
-            self.config["access_key_id"]
-            and self.config["secret_access_key"]
-            and self.config["region"]
-        ):
-            self.session = boto3.Session(
-                aws_access_key_id=self.config["access_key_id"],
-                aws_secret_access_key=self.config["secret_access_key"],
-                region_name=self.config["region"],
-            )
-        elif self.config["region"]:
+        self.ssh_config = config["ssh"]
+        if "region" in self.config:
             self.session = boto3.Session(region_name=self.config["region"])
         else:
             self.session = boto3.Session()
         self.client = self.session.client("ec2")
+        self.s3 = self.session.client("s3")
         self.ec2 = self.session.resource("ec2")
         self.security_group_id = None
         self.instance = None
@@ -62,12 +60,13 @@ class AWS:
 
     def __del__(self):
         """Cleanup resources held by this object"""
-        if self.instance:
-            self.terminate_vm(self.instance)
-            self.instance = None
-        if self.security_group_id:
-            self.delete_security_group((self.security_group_id))
-            self.security_group_id = None
+        if not "keep_running" in self.config:
+            if self.instance:
+                self.terminate_vm(self.instance)
+                self.instance = None
+            if self.security_group_id:
+                self.delete_security_group((self.security_group_id))
+                self.security_group_id = None
 
     def get_default_vpcs(self):
         """Get list of default VPCs"""
@@ -166,11 +165,75 @@ class AWS:
         except boto3.exceptions.Boto3Error as e:
             logger.exception(e)
 
+
+    def upload_image(self, image_url):
+        o = urlparse(image_url)
+        image_name = "gl-integration-test-" + str(int(time.time()))
+
+        if o.scheme != "s3" and o.scheme != "file":
+            raise NotImplementedError("Only local image file uploads and S3 buckets are implemented.")
+        
+        if o.scheme == "file":
+            logger.debug("Uploading image %s" % image_url)
+            image_file = o.path
+            repo_root = pathlib.Path(__file__).parent.parent.parent
+            cmd = [
+                os.path.join(repo_root, "bin", "make-ec2-ami"),
+                "--bucket",
+                self.config["bucket"],
+                "--region",
+                self.config["region"],
+                "--image-name",
+                image_name,
+                "--purpose",
+                "integration-test",
+                "--image-overwrite",
+                "false",
+                image_file,
+            ]
+            logger.debug("Running command: " + (" ".join([v for v in cmd])))
+            result = subprocess.run(cmd, capture_output=True)
+            if result.returncode != 0:
+                sys.exit("Error uploading image %s" % (result.stderr.decode("utf-8")))
+            logger.debug("Result of upload_image %s" % (result.stdout.decode("utf-8")))
+            return json.loads(result.stdout)
+
+        if o.scheme == "s3":
+            images = self.ec2.describe_images(Filters=[{
+                "Name": "name",
+                "Values": [image_name]
+            }])
+            if len(images['Images']) > 0:
+                ami_id = images['Images'][0]['ImageId']
+                logger.debug("Image with AMI id %s already exists", ami_id)
+                return {"ami-id": ami_id}
+
+            snapshot_task_id = glci.aws.import_snapshot(
+                ec2_client=self.ec2,
+                s3_bucket_name=o.netloc,
+                image_key=o.path.lstrip("/"),
+            )
+            snapshot_id = glci.aws.wait_for_snapshot_import(
+                ec2_client=self.ec2,
+                snapshot_task_id=snapshot_task_id,
+            )
+            initial_ami_id = glci.aws.register_image(
+               ec2_client=self.ec2,
+               snapshot_id=snapshot_id,
+               image_name="gl-integration-test-image-" + o.path.split("/objects/",1)[1],
+            )
+            logger.debug("Imported image %s as AMI %s", image_url, initial_ami_id)
+            return {"ami-id": initial_ami_id}
+
     def create_instance(self):
         """Create AWS instance from given AMI and with given security group."""
+        if not "ami_id" in self.config:
+            ami = self.upload_image(self.config["image"])
+            self.config["ami_id"] = ami["ami-id"]
+
         ami_id = self.config["ami_id"]
-        key_name = self.config["key_name"]
-        ssh_key_filepath = path.expanduser(self.config["ssh_key_filepath"])
+        key_name = self.ssh_config["key_name"]
+        ssh_key_filepath = path.expanduser(self.ssh_config["ssh_key_filepath"])
         logger.debug("ssh_key_filepath: %s" % ssh_key_filepath)
 
         if not ssh_key_filepath:
@@ -179,7 +242,7 @@ class AWS:
             path.exists(ssh_key_filepath) and path.exists(f"{ssh_key_filepath}.pub")
         ):
             passphrase = self.config["passphrase"]
-            user = self.config["user"]
+            user = self.ssh_config["user"]
             RemoteClient.generate_key_pair(ssh_key_filepath, 2048, passphrase, user)
         if not self.find_key(key_name):
             self.import_key(key_name, ssh_key_filepath)
@@ -192,7 +255,7 @@ class AWS:
                     "VirtualName": "string",
                     "Ebs": {
                         "DeleteOnTermination": True,
-                        "VolumeSize": 3,
+                        "VolumeSize": 7,
                         "VolumeType": "standard",
                         "Encrypted": False,
                     },
@@ -236,6 +299,7 @@ class AWS:
         waiter = self.client.get_waiter("instance_status_ok")
         waiter.wait(InstanceIds=[self.instance.id])
         logger.info(f"status checks of {self.instance} succeeded")
+        logger.info(f"ec2 instance is accessible through {self.instance.public_dns_name}")
 
         return self.instance
 

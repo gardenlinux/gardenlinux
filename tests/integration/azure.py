@@ -39,10 +39,7 @@ class AZURE:
         try:
             ssh = RemoteClient(
                 host=instance["publicIpAddress"],
-                user=config["user"],
-                ssh_key_filepath=config["ssh_key_filepath"],
-                passphrase=config["passphrase"],
-                remote_path=config["remote_path"],
+                sshconfig=config["ssh"],
             )
             yield ssh
         finally:
@@ -58,6 +55,7 @@ class AZURE:
         :param config: configuration
         """
         self.config = config
+        self.ssh_config = config["ssh"]
         self.image_uploaded = False
         self.resource_group_created = False
         self.storage_account_created = False
@@ -86,13 +84,13 @@ class AZURE:
             self.az.create_storage_account(self.config["storage_account_name"])
             self.storage_account_created = True
 
-        self.import_key(self.config)
+        self.import_key(self.ssh_config)
 
         img = self.az.get_image(self.config["image_name"])
         if img == None:
             self.upload_image()
             self.image_uploaded = True
-        instance = self.create_vm(self.config)
+        instance = self.create_vm(self.config, self.ssh_config)
 
 
     def upload_image(self):
@@ -102,6 +100,8 @@ class AZURE:
             logger.debug("Uploading image %s" % image_file)
             cmd = [
                 os.path.join(repo_root, "bin", "make-azure-ami"),
+                "--subscription",
+                self.config["subscription"],
                 "--resource-group",
                 self.config["resource_group"],
                 "--storage-account-name",
@@ -126,15 +126,15 @@ class AZURE:
         if self.az.get_ssh_key(config["ssh_key_name"]) == None:
             self.az.upload_ssh_key(config["ssh_key_filepath"], config["ssh_key_name"])
 
-    def create_vm(self, config):
+    def create_vm(self, config, ssh_config):
         if self.az.get_nsg(config["nsg_name"]) == None:
             self.az.create_nsg(config["nsg_name"])
         self.instance = self.az.create_vm(
             config["image_name"],
             "integration-test",
-            config["user"],
+            self.ssh_config["user"],
             config["nsg_name"],
-            config["ssh_key_name"],
+            ssh_config["ssh_key_name"],
             size="Standard_B2s",
             os_disk_size="7"
         )

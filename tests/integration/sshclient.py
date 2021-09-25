@@ -45,20 +45,29 @@ class RemoteClient:
 
     def __init__(
         self,
-        host: str,
-        user: str,
-        ssh_key_filepath: str,
-        passphrase: str,
-        remote_path: str,
+        host,
+        sshconfig
     ) -> None:
         self.host = host
-        self.user = user
-        self.ssh_key_filepath = path.expanduser(ssh_key_filepath)
-        self.passphrase = passphrase
-        self.remote_path = remote_path
         self.client = None
         self.scp = None
         self.conn = None
+
+        self.passphrase = None
+        self.remote_path = "/" 
+
+        if 'passphrase' in sshconfig:
+            self.passphrase = sshconfig['passphrase']
+        if 'remote_path' in sshconfig:
+            self.remote_path = sshconfig['remote_path']
+
+        if not "user" in sshconfig:
+            raise Exception('user not given in ssh config')
+        if not 'ssh_key_filepath' in sshconfig:
+            raise Exception('ssh_key_filepath not in sshconfig')
+        self.user = sshconfig['user']
+        self.ssh_key_filepath = path.expanduser(sshconfig['ssh_key_filepath'])
+
 
     def __get_ssh_key(self):
         """Fetch locally stored SSH key."""

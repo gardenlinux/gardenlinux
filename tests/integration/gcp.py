@@ -15,7 +15,7 @@ from googleapiclient.discovery import Resource
 from google.cloud import storage
 
 from .sshclient import RemoteClient
-from . import utild
+from . import util
 
 
 logger = logging.getLogger(__name__)
@@ -40,10 +40,7 @@ class GCP:
         try:
             ssh = RemoteClient(
                 host=public_ip,
-                user=config["user"],
-                ssh_key_filepath=config["ssh_key_filepath"],
-                passphrase=config["passphrase"],
-                remote_path=config["remote_path"],
+                sshconfig=config["ssh"],
             )
             yield ssh
         finally:
@@ -57,6 +54,7 @@ class GCP:
         :param config: configuration
         """
         self.config = config
+        self.ssh_config = config["ssh"]
         os.environ["GOOGLE_CLOUD_PROJECT"] = self.config["project"]
         if "service_account_json_path" in config:
         
@@ -79,8 +77,8 @@ class GCP:
         self.image_name = self.config["image_name"]
         self.image_project = self.config["image_project"]
         self.machine_type = self.config["machine_type"]
-        self.ssh_key_filepath = path.expanduser(self.config["ssh_key_filepath"])
-        self.user = self.config["user"]
+        self.ssh_key_filepath = path.expanduser(self.ssh_config["ssh_key_filepath"])
+        self.user = self.ssh_config["user"]
         self.image_uploaded = False
 
     def init_environment(self):
@@ -99,7 +97,7 @@ class GCP:
                 self.instance = None
             if self.image_uploaded:
                 self._delete_image(self.config["project"], self.config["image_name"])
-            utild.delete_firewall_rule(self._compute, self.config["project"], "test-allow-ssh-icmp")
+            util.delete_firewall_rule(self._compute, self.config["project"], "test-allow-ssh-icmp")
 
     def _auth(self, config) -> Credentials:
         """Loads the authentication credentials given in the config
@@ -118,7 +116,7 @@ class GCP:
         )
 
     def _ensure_firewall_rules(self):
-        myip = utild.get_my_ip()
+        myip = util.get_my_ip()
 
         rules = {
             "name": "test-allow-ssh-icmp",
@@ -147,7 +145,7 @@ class GCP:
                 "gardenlinux-integration-test"
             ]
         }
-        utild.ensure_firewall_rules(self._compute, self.config["project"], rules)
+        util.ensure_firewall_rules(self._compute, self.config["project"], rules)
         
     def _bucket_exists(self, name):
         try: 
@@ -191,7 +189,7 @@ class GCP:
             op_name = resp['name']
 
             logger.info(f'waiting for {op_name=}')
-            utild.wait_for_global_operation(self._compute, self.config["project"], op_name)
+            util.wait_for_global_operation(self._compute, self.config["project"], op_name)
             image_blob.delete()
             logger.info(f'uploaded image {blob_url} to {image_name}')
             self.image_uploaded = True
