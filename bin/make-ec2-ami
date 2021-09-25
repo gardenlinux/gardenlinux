@@ -342,6 +342,9 @@ class Ec2ImageBuild:
         tag_specifications = "Key='ami-id',Value='%s'" % ami_id
         self.tag_snapshot(snapshot_id, tag_specifications)
 
+        tag_specifications = "Key='sec-by-def-public-image-exception',Value='enabled'"
+        self.tag_snapshot(ami_id, tag_specifications)
+
         return ami_id
 
     def make_amis_public(self, amis):
