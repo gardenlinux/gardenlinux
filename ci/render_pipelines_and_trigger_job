@@ -7,8 +7,8 @@ repo_root="${own_dir}/.."
 
 source "${own_dir}/lib.sh"
 
-# install_kubectl
-# install_tkn
+install_kubectl
+install_tkn
 
 # retrieve and configure kubeconfig (sets KUBECONFIG env var)
 if [ -z ${KUBECONFIG:-} ] &&  [ -n ${SECRETS_SERVER_ENDPOINT:-} ]; then
@@ -65,17 +65,17 @@ if [ ! -z "${PYTEST_CFG:-}" ]; then
   EXTRA_ARGS="${PYTEST_CFG} --pytest-cfg={PYTEST_CFG}"
 fi
 
-# cleanup_pipelineruns
+cleanup_pipelineruns
 
 # for local dev rendering use latest remote commit and no local one.
-# if [ ! -z "${CC_CONFIG_DIR:-}" ]; then
-#   # does not work on MacOS:
-#   # git ls-remote origin refs/heads/${BRANCH_NAME} | { read head_commit dummy_rest_of_line ; }
-#   read head_commit dummy_rest_of_line <<< $(git ls-remote origin refs/heads/${BRANCH_NAME})
-# else
-#   head_commit="$(git rev-parse @)"
-# fi
-head_commit="$(git rev-parse @)"
+if [ ! -z "${CC_CONFIG_DIR:-}" ]; then
+  echo "Local dev enviroment, using remote commit"
+  # does not work on MacOS:
+  # git ls-remote origin refs/heads/${BRANCH_NAME} | { read head_commit dummy_rest_of_line ; }
+  read head_commit dummy_rest_of_line <<< $(git ls-remote origin refs/heads/${BRANCH_NAME})
+else
+  head_commit="$(git rev-parse @)"
+fi
 echo "head-commit: ${head_commit}"
 
 pipeline_run="$PWD/pipeline_run.yaml"
@@ -122,8 +122,8 @@ for manifest in \
   "${outfile_pipeline_main}" \
   "${outfile_pipeline_packages}"
 do
-  echo "SKIP Apply of ${manifest}"
-  # $(which kubectl) apply -n "${GARDENLINUX_TKN_WS}" -f "${manifest}"
+  echo "Apply of ${manifest}"
+  $(which kubectl) apply -n "${GARDENLINUX_TKN_WS}" -f "${manifest}"
 done
 
 image_build=false
