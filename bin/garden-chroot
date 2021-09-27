@@ -26,13 +26,20 @@ epoch="$(< "$targetDir/garden-epoch")"
 [ -n "$epoch" ]
 
 export targetDir epoch
-unshare --mount bash -Eeuo pipefail -c '
+unshare -f --mount bash -Eeuo pipefail -c '
 	[ -n "$targetDir" ] # just to be safe
 	for dir in dev proc sys; do
 		if [ -e "$targetDir/$dir" ]; then
 			mount --rbind "/$dir" "$targetDir/$dir"
 		fi
 	done
+	if [[ ! -e "$targetDir/etc/resolv.conf" && -L "$targetDir/etc/resolv.conf" ]]; then
+		mv "$targetDir/etc/resolv.conf" "$targetDir/etc/resolv.conf.orig"
+		touch $targetDir/etc/resolv.conf
+	fi
 	mount --rbind --read-only /etc/resolv.conf "$targetDir/etc/resolv.conf"
 	exec chroot "$targetDir" /usr/bin/env -i PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" TZ="$TZ" LC_ALL="$LC_ALL" SOURCE_DATE_EPOCH="$epoch" "$@"
 ' -- "$cmd" "$@"
+if [[ -e "$targetDir/etc/resolv.conf.orig" || -L "$targetDir/etc/resolv.conf.orig" ]]; then
+	mv "$targetDir/etc/resolv.conf.orig" "$targetDir/etc/resolv.conf"
+fi
