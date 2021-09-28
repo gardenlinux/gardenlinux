@@ -93,234 +93,137 @@ def get_deb_build_image(
     # return 'eu.gcr.io/gardener-project/gardenlinux/gardenlinux-build-deb:413.0.0'
 
 
-def mk_pipeline_packages_run(
-    branch: str,
-    cicd_cfg: str,
-    committish: str,
-    disable_notifications: str,
-    gardenlinux_epoch: int,
-    git_url: str,
-    pipeline_name: str,
-    key_config_name: str,
-    publishing_actions: typing.Sequence[glci.model.PublishingAction],
-    oci_path: str,
-    version: str,
-    additional_recipients: str = [],
-    only_recipients: str = [],
-    node_selector: dict = {},
-    security_context: dict = {},
+def get_version(
+    args: typing.Dict[str, str]
 ):
-    run_name = mk_pipeline_name(
-        pipeline_name=pipeline_name,
-        publishing_actions=publishing_actions,
-        version=version,
-        committish=committish,
-    )
-    version_label = get_version_label(version, committish)
-    build_deb_image = get_deb_build_image(oci_path, version_label)
-    snapshot_timestamp = glci.model.snapshot_date(gardenlinux_epoch=gardenlinux_epoch)
-    plrun = PipelineRun(
-        metadata=tkn.model.Metadata(
-            name=run_name,
+    if 'version' in args and args['version']:
+        version = args['version']
+    else:
+        version = glci.model.next_release_version_from_workingtree()
+    return version
+
+
+def get_param_from_arg(
+    args: typing.Dict[str, str],
+    key: str,
+) -> NamedParam:
+    if key in args:
+        return NamedParam(name=key, value=str(args[key]))
+    else:
+        raise ValueError(f'Missing required argument --{key}')
+
+
+def find_param(
+    key: str,
+    params: typing.Sequence[NamedParam],
+) -> NamedParam:
+    return [p for p in params if p.name == key][0]
+
+
+def get_common_parameters(
+    args: typing.Dict[str, str]
+) -> typing.Sequence[NamedParam]:
+    # if version is not specified, derive from worktree (i.e. VERSION file)
+    version = get_version(args)
+    version_label = get_version_label(version, args['committish'])
+    build_deb_image = get_deb_build_image(args['oci_path'], version_label)
+    params = [
+        get_param_from_arg(args, 'additional_recipients'),
+        get_param_from_arg(args, 'branch'),
+        NamedParam(name='cicd_cfg_name', value=args['cicd_cfg']),
+        get_param_from_arg(args, 'committish'),
+        get_param_from_arg(args, 'disable_notifications'),
+        NamedParam(name='gardenlinux_build_deb_image', value=build_deb_image),
+        get_param_from_arg(args, 'gardenlinux_epoch'),
+        get_param_from_arg(args, 'oci_path'),
+        get_param_from_arg(args, 'only_recipients'),
+        NamedParam(
+            name='publishing_actions',
+            value=','.join(a.value for a in args['publishing_actions'])
         ),
-        spec=PipelineRunSpec(
-            params=[
-                NamedParam(
-                    name='branch',
-                    value=branch,
-                ),
-                NamedParam(
-                    name='committish',
-                    value=committish,
-                ),
-                NamedParam(
-                    name='additional_recipients',
-                    value=additional_recipients,
-                ),
-                NamedParam(
-                    name='only_recipients',
-                    value=only_recipients,
-                ),
-                NamedParam(
-                    name='disable_notifications',
-                    value=disable_notifications,
-                ),
-                NamedParam(
-                    name='gardenlinux_epoch',
-                    value=str(gardenlinux_epoch),  # tekton only knows str
-                ),
-                NamedParam(
-                    name='snapshot_timestamp',
-                    value=snapshot_timestamp,
-                ),
-                NamedParam(
-                    name='cicd_cfg_name',
-                    value=cicd_cfg,
-                ),
-                NamedParam(
-                    name='version',
-                    value=version,
-                ),
-                NamedParam(
-                    name='publishing_actions',
-                    value=','.join((a.value for a in publishing_actions))
-                ),
-                NamedParam(
-                    name='giturl',
-                    value=git_url,
-                ),
-                NamedParam(
-                    name='oci_path',
-                    value=oci_path,
-                ),
-                NamedParam(
-                    name='version_label',
-                    value=version_label,
-                ),
-                NamedParam(
-                    name='gardenlinux_build_deb_image',
-                    value=build_deb_image,
-                ),
-                NamedParam(
-                    name='key_config_name',
-                    value=key_config_name,
-                )
-            ],
-            pipelineRef=PipelineRef(
-                name=pipeline_name,
-            ),
-            podTemplate=PodTemplate(nodeSelector=node_selector, securityContext=security_context),
-            workspaces=[],
-            timeout='12h',
+        NamedParam(
+            name='snapshot_timestamp',
+            value=glci.model.snapshot_date(gardenlinux_epoch=args['gardenlinux_epoch']),
         ),
-    )
-    return plrun
+        NamedParam(name='version', value=version),
+        NamedParam(name='version_label', value=version_label),
+    ]
+    return params
 
 
 def mk_pipeline_run(
-    branch: str,
-    cicd_cfg: str,
-    committish: str,
-    disable_notifications: str,
-    flavour_set: glci.model.GardenlinuxFlavourSet,
-    gardenlinux_epoch: int,
-    git_url: str,
     pipeline_name: str,
-    promote_target: glci.model.BuildType,
-    publishing_actions: typing.Sequence[glci.model.PublishingAction],
-    oci_path: str,
-    version: str,
-    additional_recipients: str = [],
-    pytest_cfg: str = '',
-    only_recipients: str = [],
+    args: argparse.ArgumentParser,
+    params: typing.Sequence[NamedParam],
     node_selector: dict = {},
     security_context: dict = {},
+    timeout: str = '1h'
 ):
-
     run_name = mk_pipeline_name(
         pipeline_name=pipeline_name,
-        publishing_actions=publishing_actions,
-        version=version,
-        committish=committish,
+        publishing_actions=args.publishing_actions,
+        version=get_version(vars(args)),
+        committish=args.committish,
     )
-
-    version_label = get_version_label(version, committish)
-    build_image = get_build_image(oci_path, version_label)
-    build_deb_image = get_deb_build_image(oci_path, version_label)
-    snapshot_timestamp = glci.model.snapshot_date(gardenlinux_epoch=gardenlinux_epoch)
-
-    flavour_count = len(list(flavour_set.flavours()))
-
-    if flavour_count == 0:
-        flavour_count = 1  # at least one workspace must be created
 
     plrun = PipelineRun(
         metadata=tkn.model.Metadata(
             name=run_name,
         ),
         spec=PipelineRunSpec(
-            params=[
-                NamedParam(
-                    name='branch',
-                    value=branch,
-                ),
-                NamedParam(
-                    name='committish',
-                    value=committish,
-                ),
-                NamedParam(
-                    name='disable_notifications',
-                    value=disable_notifications,
-                ),
-                NamedParam(
-                    name='gardenlinux_epoch',
-                    value=str(gardenlinux_epoch),  # tekton only knows str
-                ),
-                NamedParam(
-                    name='snapshot_timestamp',
-                    value=snapshot_timestamp,
-                ),
-                NamedParam(
-                    name='cicd_cfg_name',
-                    value=cicd_cfg,
-                ),
-                NamedParam(
-                    name='version',
-                    value=version,
-                ),
-                NamedParam(
-                    name='flavourset',
-                    value=flavour_set.name,
-                ),
-                NamedParam(
-                    name='promote_target',
-                    value=promote_target.value,
-                ),
-                NamedParam(
-                    name='publishing_actions',
-                    value=','.join((a.value for a in publishing_actions))
-                ),
-                NamedParam(
-                    name='giturl',
-                    value=git_url,
-                ),
-                NamedParam(
-                    name='oci_path',
-                    value=oci_path,
-                ),
-                NamedParam(
-                    name='version_label',
-                    value=version_label,
-                ),
-                NamedParam(
-                    name='build_image',
-                    value=build_image,
-                ),
-                NamedParam(
-                    name='gardenlinux_build_deb_image',
-                    value=build_deb_image,
-                ),
-                NamedParam(
-                    name='additional_recipients',
-                    value=additional_recipients,
-                ),
-                NamedParam(
-                    name='only_recipients',
-                    value=only_recipients,
-                ),
-                NamedParam(
-                    name='pytest_cfg',
-                    value=pytest_cfg,
-                ),
-            ],
+            params=params,
             pipelineRef=PipelineRef(
                 name=pipeline_name,
             ),
             podTemplate=PodTemplate(nodeSelector=node_selector, securityContext=security_context),
             workspaces=[],
+            timeout=timeout,
         ),
     )
     return plrun
+
+
+def mk_pipeline_packages_run(
+    args: argparse.ArgumentParser,
+    node_selector: dict = {},
+    security_context: dict = {},
+):
+    params = get_common_parameters(vars(args))
+    params.append(NamedParam(name='key_config_name', value='gardenlinux'))
+
+    return mk_pipeline_run(
+        pipeline_name='gl-packages-build',
+        args=args,
+        params=params,
+        node_selector=node_selector,
+        security_context=security_context
+    )
+
+
+def mk_pipeline_main_run(
+    args: argparse.ArgumentParser,
+    node_selector: dict = {},
+    security_context: dict = {},
+):
+    flavour_set = glci.util.flavour_set(
+        flavour_set_name=args.flavour_set,
+        build_yaml=args.pipeline_cfg,
+    )
+
+    params = get_common_parameters(vars(args))
+    params.append(NamedParam(name='flavourset', value=flavour_set.name))
+    params.append(NamedParam(name='promote_target', value=args.promote_target.value))
+    params.append(NamedParam(name='pytest_cfg', value=args.pytest_cfg))
+    build_image = get_build_image(args.oci_path, find_param('version_label', params).value)
+    params.append(NamedParam(name='build_image', value=build_image))
+
+    return mk_pipeline_run(
+        pipeline_name='gardenlinux-build',
+        args=args,
+        params=params,
+        node_selector=node_selector,
+        security_context=security_context
+    )
 
 
 def main():
@@ -360,35 +263,10 @@ def main():
     parsed = parser.parse_args()
     parsed.publishing_actions = set(parsed.publishing_actions)
 
-    flavour_set = glci.util.flavour_set(
-        flavour_set_name=parsed.flavour_set,
-        build_yaml=parsed.pipeline_cfg,
-    )
-
-    if (version := parsed.version) is None:
-        # if version is not specify, derive from worktree (i.e. VERSION file)
-        version = glci.model.next_release_version_from_workingtree()
-
-    disable_notifications = parsed.disable_notifications
-
-    # XXX hardcode pipeline names and flavour for now
     pipeline_run = mk_pipeline_packages_run(
-        branch=parsed.branch,
-        cicd_cfg=parsed.cicd_cfg,
-        committish=parsed.committish,
-        disable_notifications=str(disable_notifications),
-        gardenlinux_epoch=parsed.gardenlinux_epoch,
-        git_url=parsed.git_url,
-        oci_path=parsed.oci_path,
-        pipeline_name='gl-packages-build',
-        key_config_name='gardenlinux',
-        publishing_actions=parsed.publishing_actions,
-        version=version,
-        additional_recipients=parsed.additional_recipients,
-        only_recipients=parsed.only_recipients,
+        args=parsed,
         security_context={'runAsUser': 0},
     )
-
     pipeline_run_dict = dataclasses.asdict(pipeline_run)
 
     with open(parsed.outfile_packages, 'w') as f:
@@ -396,23 +274,8 @@ def main():
 
     print(f'pipeline-packages-run written to {parsed.outfile_packages}')
 
-    # XXX hardcode pipeline names and flavour for now
-    pipeline_run = mk_pipeline_run(
-        branch=parsed.branch,
-        cicd_cfg=parsed.cicd_cfg,
-        committish=parsed.committish,
-        disable_notifications=str(disable_notifications),
-        flavour_set=flavour_set,
-        gardenlinux_epoch=parsed.gardenlinux_epoch,
-        git_url=parsed.git_url,
-        oci_path=parsed.oci_path,
-        pipeline_name='gardenlinux-build',
-        promote_target=parsed.promote_target,
-        publishing_actions=parsed.publishing_actions,
-        version=version,
-        additional_recipients=parsed.additional_recipients,
-        only_recipients=parsed.only_recipients,
-        pytest_cfg=parsed.pytest_cfg,
+    pipeline_run = mk_pipeline_main_run(
+        args=parsed,
     )
 
     pipeline_run_dict = dataclasses.asdict(pipeline_run)
