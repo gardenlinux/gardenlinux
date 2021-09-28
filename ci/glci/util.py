@@ -140,7 +140,7 @@ def release_manifest(
             cast=[
                 glci.model.Architecture,
                 typing.Tuple,
-                # glci.model.TestResultCode,
+                glci.model.TestResultCode,
             ],
         ),
     )
