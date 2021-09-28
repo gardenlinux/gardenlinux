@@ -28,6 +28,7 @@ class Ec2ImageBuild:
         self.image_name = args.image_name
         self.debug = args.debug
         self.purpose = args.purpose
+        self.tags = args.tags
         self.image_overwrite = (
             False if "false" == args.image_overwrite.lower() else True
         )
@@ -228,19 +229,19 @@ class Ec2ImageBuild:
         logger.debug("Snapshot id %s" % snapshot_id)
 
         tag_specifications = "Key='purpose',Value='%s'" % self.purpose
-        self.tag_snapshot(snapshot_id, tag_specifications)
+        self.tag_resource(snapshot_id, tag_specifications)
 
         return snapshot_id
 
-    def tag_snapshot(self, snapshot_id, tag_specifications):
-        logger.debug("Tagging snapshot %s with %s" % (snapshot_id, tag_specifications))
+    def tag_resource(self, resource_id, tag_specifications):
+        logger.debug("Tagging resource %s with %s" % (resource_id, tag_specifications))
         result = subprocess.run(
             self.aws_command_prefix()
             + [
                 "ec2",
                 "create-tags",
                 "--resources",
-                snapshot_id,
+                resource_id,
                 "--tags",
                 tag_specifications,
             ],
@@ -248,14 +249,15 @@ class Ec2ImageBuild:
         )
         if result.returncode != 0:
             logger.error(
-                "Unable to tag snapshot. Continuing. Errors: %s %s"
+                "Unable to tag resource. Continuing. Errors: %s %s"
                 % (result.stdout.decode("utf-8"), result.stderr.decode("utf-8"))
             )
         else:
             logger.debug(
                 "Resource %s successfully tagged with %s"
-                % (snapshot_id, tag_specifications)
+                % (resource_id, tag_specifications)
             )
+
 
     def register_image(self, snapshot_id):
         def max(old, new):
@@ -334,13 +336,24 @@ class Ec2ImageBuild:
         ami_id = doc["ImageId"]
 
         tag_specifications = "Key='ami-name',Value='%s'" % self.image_name
-        self.tag_snapshot(snapshot_id, tag_specifications)
-
-        tag_specifications = "Key='purpose',Value='%s'" % self.purpose
-        self.tag_snapshot(ami_id, tag_specifications)
+        self.tag_resource(snapshot_id, tag_specifications)
 
         tag_specifications = "Key='ami-id',Value='%s'" % ami_id
-        self.tag_snapshot(snapshot_id, tag_specifications)
+        self.tag_resource(snapshot_id, tag_specifications)
+
+        if self.purpose != "":
+            tag_specifications = "Key='purpose',Value='%s'" % self.purpose
+            self.tag_resource(ami_id, tag_specifications)
+
+        if self.tags != "":
+            tags=str.split(",")
+            for tag in tags:
+                kv = tag.split("=")
+                tag_specifications = "Key='%s',Value='%s'" % (kv[0],kv[1])
+                self.tag_resource(ami_id, tag_specifications)
+
+        tag_specifications = "Key='ami-id',Value='%s'" % ami_id
+        self.tag_resource(snapshot_id, tag_specifications)
 
         tag_specifications = "Key='sec-by-def-public-image-exception',Value='enabled'"
         self.tag_snapshot(ami_id, tag_specifications)
@@ -478,8 +491,14 @@ class Ec2ImageBuild:
         parser.add_argument(
             "--purpose",
             type=str,
-            default="test",
+            default="",
             help="purpose of this upload (defaults to test so it can be removed without affecting production",
+        )
+        parser.add_argument(
+            "--tags",
+            type=str,
+            default="",
+            help="additional tags to set in format name=value,name1=value1,..."
         )
         parser.add_argument("--debug", action="store_true", help="debug")
 
