@@ -114,7 +114,13 @@ patch -p1 < $srcDir/series.patch
 echo "### setting certificate"
 # to make sure we do not take this accidently
 rm -f debian/certs/debian-uefi-certs.pem
-cp "${CERT_DIR}/kernel.full" debian/certs/gardenlinux-kernel-certs.pem
+if [ -e "${CERT_DIR}/kernel.full" ]; then
+	cp "${CERT_DIR}/kernel.full" debian/certs/gardenlinux-kernel-certs.pem
+elif [ -e "${CERT_DIR}/Kernel.sign.full" ]; then
+	cp "${CERT_DIR}/Kernel.sign.full" debian/certs/gardenlinux-kernel-certs.pem
+else
+	cp /kernel.full debian/certs/gardenlinux-kernel-certs.pem
+fi
 sed -i "s/debian-uefi-certs.pem/gardenlinux-kernel-certs.pem/" debian/config/config debian/config/featureset*/config
 CHANGELOG+="  * Replaced Debian signing certs with GardenLinux certs\n"
 
