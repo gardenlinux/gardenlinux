@@ -356,7 +356,7 @@ class Ec2ImageBuild:
         self.tag_resource(snapshot_id, tag_specifications)
 
         tag_specifications = "Key='sec-by-def-public-image-exception',Value='enabled'"
-        self.tag_snapshot(ami_id, tag_specifications)
+        self.tag_resource(ami_id, tag_specifications)
 
         return ami_id
 
