@@ -90,7 +90,7 @@ class AZURE:
         if img == None:
             self.upload_image()
             self.image_uploaded = True
-        instance = self.create_vm(self.config, self.ssh_config)
+        instance = self.create_vm(self.config)
 
 
     def upload_image(self):
@@ -126,7 +126,7 @@ class AZURE:
         if self.az.get_ssh_key(config["ssh_key_name"]) == None:
             self.az.upload_ssh_key(config["ssh_key_filepath"], config["ssh_key_name"])
 
-    def create_vm(self, config, ssh_config):
+    def create_vm(self, config):
         if self.az.get_nsg(config["nsg_name"]) == None:
             self.az.create_nsg(config["nsg_name"])
         self.instance = self.az.create_vm(
@@ -134,7 +134,7 @@ class AZURE:
             "integration-test",
             self.ssh_config["user"],
             config["nsg_name"],
-            ssh_config["ssh_key_name"],
+            self.ssh_config["ssh_key_name"],
             size="Standard_B2s",
             os_disk_size="7"
         )

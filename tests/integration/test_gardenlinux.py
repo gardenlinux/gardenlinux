@@ -173,14 +173,24 @@ def test_systemctl_no_failed_units(client):
     assert len(json.loads(output)) == 0
 
 def test_startup_time(client):
-    tolerated_startup_time = 30
+    tolerated_kernel_time = 15
+    tolerated_userspace_time = 30
     (exit_code, output, error) = client.execute_command("systemd-analyze")
     assert exit_code == 0, f"no {error=} expected"
     lines = output.splitlines()
     items = lines[0].split(" ")
-    time=items[12]
-    tf = float(time[:-1])
-    assert tf < tolerated_startup_time, f"startup time too long: {tf}seconds but only {tolerated_startup_time} tolerated."
+    time_initrd = 0
+    for i, v in enumerate(items):
+        if v == "(kernel)":
+            time_kernel = items[i-1]
+        if v == "(initrd)":
+            time_initrd = items[i-1]
+        if v == "(userspace)":
+            time_userspace = items[i-1]
+    tf_kernel = float(time_kernel[:-1]) + float(time_initrd[:-1])
+    tf_userspace = float(time_userspace[:-1])
+    assert tf_kernel < tolerated_kernel_time, f"startup time in kernel space too long: {tf_kernel} seconds =  but only {tolerated_kernel_time} tolerated."
+    assert tf_userspace < tolerated_userspace_time, f"startup time in user space too long: {tf_userspace}seconds but only {tolerated_userspace_time} tolerated."
 
 def test_chrony(client, azure):
     """Test for specific chrony configuration on azure"""
