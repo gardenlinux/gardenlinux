@@ -211,9 +211,11 @@ def mk_pipeline_main_run(
     )
 
     params = get_common_parameters(vars(args))
-    params.append(NamedParam(name='flavourset', value=flavour_set.name))
-    params.append(NamedParam(name='promote_target', value=args.promote_target.value))
-    params.append(NamedParam(name='pytest_cfg', value=args.pytest_cfg))
+    params.extend((
+        NamedParam(name='flavourset', value=flavour_set.name),
+        NamedParam(name='promote_target', value=args.promote_target.value),
+        NamedParam(name='pytest_cfg', value=args.pytest_cfg),
+    ))
     build_image = get_build_image(args.oci_path, find_param('version_label', params).value)
     params.append(NamedParam(name='build_image', value=build_image))
 

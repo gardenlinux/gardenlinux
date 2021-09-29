@@ -156,8 +156,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--use-secrets-server', action='store_true')
     parser.add_argument('--outfile-tasks', default='tasks.yaml')
-    # parser.add_argument('--giturl', default='https://github.com/gardenlinux/gardenlinux')
-    # parser.add_argument('--minimal', action='store_true',  help='omit prebuild and promote steps')
 
     parsed = parser.parse_args()
     render_task(

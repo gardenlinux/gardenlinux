@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import argparse
 import dataclasses
 import json
 import typing
@@ -9,7 +8,6 @@ import yaml
 
 import glci.model
 import glci.util
-import paths
 import params
 import tkn.model
 
@@ -457,36 +455,3 @@ def render_pipelines(
         yaml.safe_dump_all((pipeline_raw,), stream=f)
 
     print(f'dumped pipeline with {len(gardenlinux_flavours)} task(s) to {outfile_pipeline_main}')
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--pipeline_cfg',
-        default=paths.flavour_cfg_path,
-    )
-    parser.add_argument(
-        '--flavour-set',
-        default='all',
-    )
-    parser.add_argument(
-        '--outfile-pipeline-main',
-        default='pipeline.yaml',
-    )
-    parser.add_argument(
-        '--outfile-pipeline-packages',
-        default='pipeline-packages.yaml',
-    )
-    parsed = parser.parse_args()
-
-    #  Render pipelines:
-    render_pipelines(
-        build_yaml=parsed.pipeline_cfg,
-        flavour_set=parsed.flavour_set,
-        outfile_main=parsed.outfile_pipeline_main,
-        outfile_packages=parsed.outfile_pipeline_packages,
-    )
-
-
-if __name__ == '__main__':
-    main()
