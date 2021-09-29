@@ -42,7 +42,7 @@ class AllParams:
         description='cfssl branch to clone',
         default='master'
     )
-    cfss_git_url = NamedParam(
+    cfssl_git_url = NamedParam(
         name='cfssl_git_url',
         description='cfssl git url to clone',
         default='https://github.com/cloudflare/cfssl.git'

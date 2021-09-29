@@ -85,6 +85,11 @@ def clone_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
+    step_params = [
+        params.committish,
+        params.giturl,
+        params.repo_dir,
+    ]
     step = tkn.model.TaskStep(
         name='clone-repo-step',
         image=DEFAULT_IMAGE,
@@ -92,18 +97,14 @@ def clone_step(
             path=os.path.join(steps_dir, 'clone_repo_step.py'),
             script_type=ScriptType.PYTHON3,
             callable='clone_and_copy',
-            params=[
-                params.committish,
-                params.giturl,
-                params.repo_dir,
-            ],
+            params=step_params,
             repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
 
-    return step
+    return step, step_params
 
 
 def cfssl_clone_step(
@@ -112,6 +113,11 @@ def cfssl_clone_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
+    step_params = [
+        params.cfssl_git_url,
+        params.cfssl_committish,
+        params.cfssl_dir,
+    ]
     step = tkn.model.TaskStep(
         name=name,
         image=DEFAULT_IMAGE,
@@ -127,7 +133,7 @@ def cfssl_clone_step(
         env=env_vars,
     )
 
-    return step
+    return step, step_params
 
 
 def upload_results_step(
@@ -135,29 +141,31 @@ def upload_results_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.architecture,
+        params.cicd_cfg_name,
+        params.committish,
+        params.gardenlinux_epoch,
+        params.modifiers,
+        params.outfile,
+        params.platform,
+        params.publishing_actions,
+        params.version,
+    ]
+    step = tkn.model.TaskStep(
         name='upload-results',
         image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'upload_results_step.py'),
             script_type=ScriptType.PYTHON3,
             callable='upload_results_step',
-            params=[
-                params.architecture,
-                params.cicd_cfg_name,
-                params.committish,
-                params.gardenlinux_epoch,
-                params.modifiers,
-                params.outfile,
-                params.platform,
-                params.publishing_actions,
-                params.version,
-            ],
+            params=step_params,
             repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    return step, step_params
 
 
 def promote_single_step(
@@ -165,28 +173,30 @@ def promote_single_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.architecture,
+        params.cicd_cfg_name,
+        params.committish,
+        params.gardenlinux_epoch,
+        params.modifiers,
+        params.platform,
+        params.publishing_actions,
+        params.version,
+    ]
+    step = tkn.model.TaskStep(
         name='promote-step',
         image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'promote_step.py'),
             script_type=ScriptType.PYTHON3,
             callable='promote_single_step',
-            params=[
-                params.architecture,
-                params.cicd_cfg_name,
-                params.committish,
-                params.gardenlinux_epoch,
-                params.modifiers,
-                params.platform,
-                params.publishing_actions,
-                params.version,
-            ],
+            params=step_params,
             repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    return step, step_params
 
 
 def promote_step(
@@ -194,26 +204,28 @@ def promote_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.cicd_cfg_name,
+        params.committish,
+        params.flavourset,
+        params.gardenlinux_epoch,
+        params.publishing_actions,
+        params.version,
+    ]
+    step = tkn.model.TaskStep(
         name='finalise-promotion-step',
         image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'promote_step.py'),
             script_type=ScriptType.PYTHON3,
             callable='promote_step',
-            params=[
-                params.cicd_cfg_name,
-                params.committish,
-                params.flavourset,
-                params.gardenlinux_epoch,
-                params.publishing_actions,
-                params.version,
-            ],
+            params=step_params,
             repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    return step, step_params
 
 
 def pre_build_step(
@@ -221,28 +233,30 @@ def pre_build_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.architecture,
+        params.cicd_cfg_name,
+        params.committish,
+        params.gardenlinux_epoch,
+        params.modifiers,
+        params.platform,
+        params.publishing_actions,
+        params.version,
+    ]
+    step = tkn.model.TaskStep(
         name='prebuild-step',
         image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'pre_build_step.py'),
             script_type=ScriptType.PYTHON3,
             callable='pre_build_step',
-            params=[
-                params.architecture,
-                params.cicd_cfg_name,
-                params.committish,
-                params.gardenlinux_epoch,
-                params.modifiers,
-                params.platform,
-                params.publishing_actions,
-                params.version,
-            ],
+            params=step_params,
             repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    return step, step_params
 
 
 def release_step(
@@ -250,24 +264,26 @@ def release_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.committish,
+        params.gardenlinux_epoch,
+        params.giturl,
+        params.publishing_actions,
+    ]
+    step = tkn.model.TaskStep(
         name='release-step',
         image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'release_step.py'),
             script_type=ScriptType.PYTHON3,
             callable='release_step',
-            params=[
-                params.committish,
-                params.gardenlinux_epoch,
-                params.giturl,
-                params.publishing_actions,
-            ],
+            params=step_params,
             repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    return step, step_params
 
 
 def build_cfssl_step(
@@ -275,7 +291,13 @@ def build_cfssl_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        # !DO NOT CHANGE ORDER!
+        params.repo_dir,
+        params.cfssl_fastpath,
+        params.cfssl_dir,
+    ]
+    step = tkn.model.TaskStep(
         name='build-cfssl-step',
         image='golang:latest',
         script=task_step_script(
@@ -283,16 +305,12 @@ def build_cfssl_step(
             script_type=ScriptType.BOURNE_SHELL,
             callable='build_cfssl',
             repo_path_param=params.repo_dir,
-            params=[
-                # !DO NOT CHANGE ORDER!
-                params.repo_dir,
-                params.cfssl_fastpath,
-                params.cfssl_dir,
-            ],
+            params=step_params,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    return step, step_params
 
 
 def write_key_step(
@@ -300,22 +318,24 @@ def write_key_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.repo_dir,
+        params.key_config_name,
+    ]
+    step = tkn.model.TaskStep(
         name='write-key',
         image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'write_key.py'),
             script_type=ScriptType.PYTHON3,
             callable='write_key',
-            params=[
-                params.repo_dir,
-                params.key_config_name,
-            ],
+            params=step_params,
             repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    return step, step_params
 
 
 def build_cert_step(
@@ -323,21 +343,23 @@ def build_cert_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.repo_dir,
+    ]
+    step = tkn.model.TaskStep(
         name='build-cert',
         image='golang:latest',
         script=task_step_script(
             path=os.path.join(steps_dir, 'build_cert.sh'),
             script_type=ScriptType.BOURNE_SHELL,
             callable='build_cert',
-            params=[
-                params.repo_dir,
-            ],
+            params=step_params,
             repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    return step, step_params
 
 
 def build_package_step(
@@ -345,21 +367,24 @@ def build_package_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.repo_dir,
+        params.pkg_name,
+    ]
+    step = tkn.model.TaskStep(
         name='build-package',
         image='$(params.gardenlinux_build_deb_image)',
         script=task_step_script(
             path=os.path.join(steps_dir, 'build_package.sh'),
             script_type=ScriptType.BOURNE_SHELL,
             callable='build_package',
-            params=[
-                params.repo_dir,
-                params.pkg_name,
-            ],
+            params=step_params,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    print(f'## returning {step_params=}')
+    return step, step_params
 
 
 def build_kernel_package_step(
@@ -367,21 +392,23 @@ def build_kernel_package_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.repo_dir,
+        params.pkg_names,
+    ]
+    step = tkn.model.TaskStep(
         name='build-package',
         image='$(params.gardenlinux_build_deb_image)',
         script=task_step_script(
             path=os.path.join(steps_dir, 'build_kernel_package.sh'),
             script_type=ScriptType.BOURNE_SHELL,
             callable='build_kernel_package',
-            params=[
-                params.repo_dir,
-                params.pkg_names,
-            ],
+            params=step_params,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    return step, step_params
 
 
 def build_upload_packages_step(
@@ -389,7 +416,11 @@ def build_upload_packages_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.cicd_cfg_name,
+        params.s3_package_path,
+    ]
+    step = tkn.model.TaskStep(
         name='upload-packages-s3',
         image=DEFAULT_IMAGE,
         script=task_step_script(
@@ -397,14 +428,12 @@ def build_upload_packages_step(
             script_type=ScriptType.PYTHON3,
             callable='upload_packages',
             repo_path_param=params.repo_dir,
-            params=[
-                params.cicd_cfg_name,
-                params.s3_package_path,
-            ],
+            params=step_params,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    return step, step_params
 
 
 def build_publish_packages_repository_step(
@@ -412,7 +441,11 @@ def build_publish_packages_repository_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.cicd_cfg_name,
+        params.s3_package_path,
+    ]
+    step = tkn.model.TaskStep(
         name='publish-package-repository-s3',
         image='$(params.gardenlinux_build_deb_image)',
         script=task_step_script(
@@ -420,14 +453,12 @@ def build_publish_packages_repository_step(
             script_type=ScriptType.PYTHON3,
             callable='main',
             repo_path_param=params.repo_dir,
-            params=[
-                params.cicd_cfg_name,
-                params.s3_package_path,
-            ],
+            params=step_params,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    return step, step_params
 
 
 def build_image_step(
@@ -459,7 +490,18 @@ def build_image_step(
           'add': ['SYS_ADMIN'],
         },
     }
-    return tkn.model.TaskStep(
+    step_params = [
+        # !DO NOT CHANGE ORDER!
+        params.suite,
+        params.gardenlinux_epoch,
+        params.snapshot_timestamp,
+        params.platform,
+        params.modifiers,
+        params.architecture,
+        params.committish,
+        params.version
+    ]
+    step = tkn.model.TaskStep(
         name='build-image',
         image='$(params.build_image)',
         script=task_step_script(
@@ -467,23 +509,14 @@ def build_image_step(
             script_type=ScriptType.BOURNE_SHELL,
             callable='build_image',
             repo_path_param=params.repo_dir,
-            params=[
-                # !DO NOT CHANGE ORDER!
-                params.suite,
-                params.gardenlinux_epoch,
-                params.snapshot_timestamp,
-                params.platform,
-                params.modifiers,
-                params.architecture,
-                params.committish,
-                params.version
-            ],
+            params=step_params,
         ),
         volumeMounts=build_image_step_volume_mounts,
         env=env_vars,
         resources=build_image_step_resource_config,
         securityContext=build_image_step_security_context,
     )
+    return step, step_params
 
 
 def build_base_image_step(
@@ -491,7 +524,12 @@ def build_base_image_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.oci_path,
+        params.repo_dir,
+        params.version_label,
+    ]
+    step = tkn.model.TaskStep(
         name='basebuild',
         image=KANIKO_IMAGE,
         script=task_step_script(
@@ -499,15 +537,12 @@ def build_base_image_step(
             script_type=ScriptType.PYTHON3,
             callable='build_base_image',
             repo_path_param=params.repo_dir,
-            params=[
-                params.oci_path,
-                params.repo_dir,
-                params.version_label,
-            ],
+            params=step_params,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    return step, step_params
 
 
 def create_component_descriptor_step(
@@ -515,7 +550,17 @@ def create_component_descriptor_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.branch,
+        params.cicd_cfg_name,
+        params.committish,
+        params.ctx_repository_config_name,
+        params.gardenlinux_epoch,
+        params.publishing_actions,
+        params.snapshot_ctx_repository_config_name,
+        params.version,
+    ]
+    step = tkn.model.TaskStep(
         name='component-descriptor',
         image=DEFAULT_IMAGE,
         script=task_step_script(
@@ -523,20 +568,12 @@ def create_component_descriptor_step(
             script_type=ScriptType.PYTHON3,
             callable='build_component_descriptor',
             repo_path_param=params.repo_dir,
-            params=[
-                params.branch,
-                params.cicd_cfg_name,
-                params.committish,
-                params.ctx_repository_config_name,
-                params.gardenlinux_epoch,
-                params.publishing_actions,
-                params.snapshot_ctx_repository_config_name,
-                params.version,
-            ],
+            params=step_params,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    return step, step_params
 
 
 def notify_step(
@@ -544,7 +581,19 @@ def notify_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.additional_recipients,
+        params.cicd_cfg_name,
+        params.disable_notifications,
+        params.giturl,
+        params.namespace,
+        params.only_recipients,
+        params.pipeline_name,
+        params.pipeline_run_name,
+        params.repo_dir,
+        params.status_dict_str,
+    ]
+    step = tkn.model.TaskStep(
         name='notify-status',
         image=DEFAULT_IMAGE,
         script=task_step_script(
@@ -552,22 +601,12 @@ def notify_step(
             script_type=ScriptType.PYTHON3,
             callable='send_notification',
             repo_path_param=params.repo_dir,
-            params=[
-                params.additional_recipients,
-                params.cicd_cfg_name,
-                params.disable_notifications,
-                params.giturl,
-                params.namespace,
-                params.only_recipients,
-                params.pipeline_name,
-                params.pipeline_run_name,
-                params.repo_dir,
-                params.status_dict_str,
-            ],
+            params=step_params,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    return step, step_params
 
 
 def get_logs_step(
@@ -575,7 +614,12 @@ def get_logs_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.repo_dir,
+        params.pipeline_run_name,
+        params.namespace,
+    ]
+    step = tkn.model.TaskStep(
         name='get-logs',
         image=DEFAULT_IMAGE,
         script=task_step_script(
@@ -583,15 +627,12 @@ def get_logs_step(
             script_type=ScriptType.PYTHON3,
             callable='getlogs',
             repo_path_param=params.repo_dir,
-            params=[
-                params.repo_dir,
-                params.pipeline_run_name,
-                params.namespace,
-            ],
+            params=step_params,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    return step, step_params
 
 
 def pre_check_tests_step(
@@ -599,7 +640,17 @@ def pre_check_tests_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.architecture,
+        params.cicd_cfg_name,
+        params.committish,
+        params.gardenlinux_epoch,
+        params.modifiers,
+        params.platform,
+        params.publishing_actions,
+        params.version,
+    ]
+    step = tkn.model.TaskStep(
         name='pre-check-tests',
         image=DEFAULT_IMAGE,
         script=task_step_script(
@@ -607,20 +658,12 @@ def pre_check_tests_step(
             script_type=ScriptType.PYTHON3,
             callable='pre_check_tests',
             repo_path_param=params.repo_dir,
-            params=[
-                params.architecture,
-                params.cicd_cfg_name,
-                params.committish,
-                params.gardenlinux_epoch,
-                params.modifiers,
-                params.platform,
-                params.publishing_actions,
-                params.version,
-            ],
+            params=step_params,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    return step, step_params
 
 
 def test_step(
@@ -628,7 +671,21 @@ def test_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.architecture,
+        params.cicd_cfg_name,
+        params.committish,
+        params.gardenlinux_epoch,
+        params.modifiers,
+        params.platform,
+        params.publishing_actions,
+        params.repo_dir,
+        params.snapshot_timestamp,
+        params.suite,
+        params.version,
+        params.pytest_cfg,
+    ]
+    step = tkn.model.TaskStep(
         name='run-tests',
         image=DEFAULT_IMAGE,
         script=task_step_script(
@@ -636,24 +693,12 @@ def test_step(
             script_type=ScriptType.PYTHON3,
             callable='run_tests',
             repo_path_param=params.repo_dir,
-            params=[
-                params.architecture,
-                params.cicd_cfg_name,
-                params.committish,
-                params.gardenlinux_epoch,
-                params.modifiers,
-                params.platform,
-                params.publishing_actions,
-                params.repo_dir,
-                params.snapshot_timestamp,
-                params.suite,
-                params.version,
-                params.pytest_cfg,
-            ],
+            params=step_params,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    return step, step_params
 
 
 def upload_test_results_step(
@@ -661,7 +706,18 @@ def upload_test_results_step(
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.architecture,
+        params.cicd_cfg_name,
+        params.committish,
+        params.gardenlinux_epoch,
+        params.modifiers,
+        params.platform,
+        params.publishing_actions,
+        params.repo_dir,
+        params.version,
+    ]
+    step = tkn.model.TaskStep(
         name='upload-test-results',
         image=DEFAULT_IMAGE,
         script=task_step_script(
@@ -669,21 +725,12 @@ def upload_test_results_step(
             script_type=ScriptType.PYTHON3,
             callable='upload_test_results',
             repo_path_param=params.repo_dir,
-            params=[
-                params.architecture,
-                params.cicd_cfg_name,
-                params.committish,
-                params.gardenlinux_epoch,
-                params.modifiers,
-                params.platform,
-                params.publishing_actions,
-                params.repo_dir,
-                params.version,
-            ],
+            params=step_params,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    return step, step_params
 
 
 def attach_log_step(
@@ -691,7 +738,19 @@ def attach_log_step(
         env_vars: typing.List[typing.Dict] = [],
         volume_mounts: typing.List[typing.Dict] = [],
     ):
-    return tkn.model.TaskStep(
+    step_params = [
+        params.architecture,
+        params.cicd_cfg_name,
+        params.committish,
+        params.gardenlinux_epoch,
+        params.modifiers,
+        params.namespace,
+        params.pipeline_run_name,
+        params.platform,
+        params.repo_dir,
+        params.version,
+]
+    step = tkn.model.TaskStep(
         name='upload-logs-step',
         image=DEFAULT_IMAGE,
         script=task_step_script(
@@ -699,19 +758,9 @@ def attach_log_step(
             script_type=ScriptType.PYTHON3,
             callable='upload_logs',
             repo_path_param=params.repo_dir,
-            params=[
-                params.architecture,
-                params.cicd_cfg_name,
-                params.committish,
-                params.gardenlinux_epoch,
-                params.modifiers,
-                params.namespace,
-                params.pipeline_run_name,
-                params.platform,
-                params.repo_dir,
-                params.version,
-            ],
+            params=step_params,
         ),
     volumeMounts=volume_mounts,
     env=env_vars,
     )
+    return step, step_params
