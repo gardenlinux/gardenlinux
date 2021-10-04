@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-set -x
+# set -x
 
 own_dir="$(readlink -f "$(dirname "${0}")")"
 repo_root="${own_dir}/.."
@@ -48,8 +48,8 @@ echo "render pipelines"
 cd "${repo_root}"
 
 pipeline_cfg="${repo_root}/flavours.yaml"
-outfile='rendered_pipeline.yaml'
-outfile_packages='rendered_pipeline_packages.yaml'
+outfile_pipeline_main='rendered_pipeline_main.yaml'
+outfile_pipeline_packages='rendered_pipeline_packages.yaml'
 
 EXTRA_ARGS=
 if [ ! -z "${VERSION:-}" ]; then
@@ -69,6 +69,7 @@ cleanup_pipelineruns
 
 # for local dev rendering use latest remote commit and no local one.
 if [ ! -z "${CC_CONFIG_DIR:-}" ]; then
+  echo "Local dev enviroment, using remote commit"
   # does not work on MacOS:
   # git ls-remote origin refs/heads/${BRANCH_NAME} | { read head_commit dummy_rest_of_line ; }
   read head_commit dummy_rest_of_line <<< $(git ls-remote origin refs/heads/${BRANCH_NAME})
@@ -95,11 +96,6 @@ ci/render_pipeline_run.py $EXTRA_ARGS \
   --outfile "${pipeline_run}" \
   --outfile-packages "${pipeline_package_run}"
 
-ci/render_pipelines.py \
-  --pipeline_cfg "${pipeline_cfg}" \
-  --flavour-set "${FLAVOUR_SET}" \
-  --outfile "${outfile}" \
-  --outfile-packages "${outfile_packages}"
 
 RENDER_TASK_EXTRA_ARGS=
 if [ ! -z ${SECRETS_SERVER_ENDPOINT:-} ]; then
@@ -111,18 +107,22 @@ else
   create_credentials
 fi
 
-ci/render_task.py \
-  --outfile "${rendered_task}" \
+ci/render_all.py \
+  --pipeline_cfg "${pipeline_cfg}" \
+  --flavour-set "${FLAVOUR_SET}" \
+  --outfile-pipeline-main "${outfile_pipeline_main}" \
+  --outfile-pipeline-packages "${outfile_pipeline_packages}" \
+  --outfile-tasks "${rendered_task}" \
   ${RENDER_TASK_EXTRA_ARGS}
 
 # XXX hardcode other resources for now
 
 for manifest in \
   "${rendered_task}" \
-  "${outfile}" \
-  "${outfile_packages}"
+  "${outfile_pipeline_main}" \
+  "${outfile_pipeline_packages}"
 do
-  echo "Skip apply of ${manifest}"
+  echo "Apply of ${manifest}"
   $(which kubectl) apply -n "${GARDENLINUX_TKN_WS}" -f "${manifest}"
 done
 
