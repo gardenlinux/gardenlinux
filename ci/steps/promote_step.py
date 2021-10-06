@@ -24,9 +24,10 @@ def promote_single_step(
     publishing_actions = [
         glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
     ]
-    if glci.model.PublishingAction.RELEASE not in publishing_actions:
+    if glci.model.PublishingAction.RELEASE_CANDIDATE not in publishing_actions:
         print(
-            f'publishing action {glci.model.PublishingAction.RELEASE=} not specified - exiting now'
+            f'publishing action {glci.model.PublishingAction.RELEASE_CANDIDATE=} not specified'
+            ' - exiting now'
         )
         sys.exit(0)
 

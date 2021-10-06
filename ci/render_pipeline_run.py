@@ -37,6 +37,8 @@ def mk_pipeline_name(
     def _publishing_action_shorthand(publishing_action):
         if publishing_action is glci.model.PublishingAction.RELEASE:
             return 'rel'
+        elif publishing_action is glci.model.PublishingAction.RELEASE_CANDIDATE:
+            return 'rc'
         elif publishing_action is glci.model.PublishingAction.BUILD_ONLY:
             return 'bo'
         elif publishing_action is glci.model.PublishingAction.IMAGES:
