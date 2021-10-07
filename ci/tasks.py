@@ -28,18 +28,21 @@ def promote_task(
 
     promote_step, params_step = steps.promote_step(
         params=all_params,
+        env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
     params += params_step
 
     release_step, params_step = steps.release_step(
         params=all_params,
+        env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
     params += params_step
 
     build_cd_step, params_step = steps.create_component_descriptor_step(
         params=all_params,
+        env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
     params += params_step

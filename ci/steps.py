@@ -383,7 +383,6 @@ def build_package_step(
         volumeMounts=volume_mounts,
         env=env_vars,
     )
-    print(f'## returning {step_params=}')
     return step, step_params
 
 
