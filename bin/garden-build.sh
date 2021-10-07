@@ -265,6 +265,8 @@ fi
 		for i in $(echo "base,$features" | tr ',' '\n' | norm_features); do
 			if [ -s $featureDir/$i/image ]; then
 				bash -c "$featureDir/$i/image $rootfs $targetBase"
+			elif [ -f "$featureDir/$i/fstab" ]; then
+				makeimage "$rootfs" "$targetBase.raw" < "$featureDir/$i/fstab"
 			else
 				true
 			fi

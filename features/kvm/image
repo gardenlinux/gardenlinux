@@ -1,1 +1,0 @@
-makef.sh --force $2 $2.tar.xz
