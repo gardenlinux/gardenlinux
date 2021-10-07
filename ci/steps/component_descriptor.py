@@ -177,7 +177,7 @@ def oci_image_resources(
                         }
                     ),
                 ]
-            ),
+            )
 
 
 def virtual_machine_image_resource(
