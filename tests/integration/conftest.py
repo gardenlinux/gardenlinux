@@ -5,7 +5,6 @@ def pytest_addoption(parser: Parser):
     parser.addoption(
         "--iaas",
         action="store",
-        default="gcp",
         help="Infrastructure the tests should run on",
     )
     parser.addoption(
