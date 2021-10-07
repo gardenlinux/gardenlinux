@@ -145,7 +145,6 @@ def mk_pipeline_build_task(
     task_name = _generate_task_name(prefix='', gardenlinux_flavour=gardenlinux_flavour)
     task_ref_name = 'build-gardenlinux-task'
 
-    print('--- making build pipeline step build-gardenlinux-task')
     params = _get_passed_parameters(
         name=task_ref_name,
         all_tasks=all_tasks,
@@ -377,7 +376,6 @@ def mk_pipeline(
     params += task_ref.spec.params
 
     for task in tasks:
-        print(f'{task.name=}, {task.taskRef.name=}')
         matched_task = _find_task(task.taskRef.name, all_tasks)
         params += matched_task.spec.params
 
