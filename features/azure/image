@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
+set -Eeuo pipefail
 
-set -x
+dir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
-makef.sh --read-only-usr --image-size 4G --force $2 $2.tar.xz
-make-vhd -o subformat=fixed,force_size $2.raw $2.vhd
+makeimage "$1" "$2.raw" < "$dir/fstab"
+
+if [[ "$(wc -c "$2.raw" | cut -d " " -f 1)" -gt 4294967296 ]]; then
+	echo "image too large"
+	exit 1
+fi
+
+truncate -s 4GiB "$2.raw"
+
+# fix GPT and image size mismatch
+echo | sfdisk "$2.raw"
+make-vhd -o subformat=fixed,force_size "$2.raw" "$2.vhd"

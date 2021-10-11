@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
+set -Eeuo pipefail
 
-set -x
+dir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
-makef.sh --read-only-usr --force $2 $2.tar.xz
+makeimage "$1" "$2.raw" < "$dir/fstab"
 
 # NOTE: vmdk as image format is required on the SAP CC EE
-qemu-img convert -o subformat=streamOptimized -f raw -O vmdk $2.raw $2.vmdk
+qemu-img convert -o subformat=streamOptimized -f raw -O vmdk "$2.raw" "$2.vmdk"
 
 # NOTE: qcow2 as image format can be used on most OpenStack environments
 #       (or can be easily converted back to raw format)
-qemu-img convert -f raw -O qcow2 $2.raw $2.qcow2
+qemu-img convert -f raw -O qcow2 "$2.raw" "$2.qcow2"

@@ -1,12 +1,7 @@
 #!/usr/bin/env bash
+set -Eeuo pipefail
 
-set -x
+dir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
-makef.sh --read-only-usr --force $2 $2.tar.xz
-
-DISK_NAME=$(dirname $2)/disk.raw
-cp $2.raw ${DISK_NAME}
-DIR=$(dirname $2)
-GCP_TAR=$2-gcpimage.tar.gz
-tar --format=oldgnu -C ${DIR} -Sczf ${GCP_TAR} $(basename ${DISK_NAME})
-rm ${DISK_NAME}
+makeimage "$1" "$2.raw" < "$dir/fstab"
+tar --format=oldgnu --transform "s|$2|disk|" -cSzf "$2-gcpimage.tar.gz" "$2.raw"

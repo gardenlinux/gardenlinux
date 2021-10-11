@@ -1,5 +1,5 @@
 # <file system>    <dir>        <type>    <options>                                <makeimg agrs>
 LABEL=EFI          /boot/efi    vfat      umask=0077                               type=uefi,syslinux
 LABEL=ROOT         /            ext4      rw,errors=remount-ro,prjquota,discard
-LABEL=USR          /usr         ext4      ro,defaults,discard
-LABEL=SWAP         none         swap      sw                                       type=swap,size=512MiB
+LABEL=USR          /usr         ext4      ro,discard
+LABEL=SWAP         none         swap      sw                                       type=swap,size=2GiB

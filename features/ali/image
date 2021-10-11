@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+set -Eeuo pipefail
 
-set -x
+dir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
-makef.sh --read-only-usr --force $2 $2.tar.xz
-qemu-img convert -f raw -O qcow2 $2.raw $2.qcow2
+makeimage "$1" "$2.raw" < "$dir/fstab"
+qemu-img convert -f raw -O qcow2 "$2.raw" "$2.qcow2"

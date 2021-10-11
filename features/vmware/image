@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
+set -Eeuo pipefail
 
-set -x
+dir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
-makef.sh --read-only-usr --force $2 $2.tar.xz
-qemu-img convert -o subformat=streamOptimized -o adapter_type=lsilogic -f raw -O vmdk $2.raw $2.vmdk
-make-ova --vmdk $2.vmdk --guest-id debian10_64Guest --template "${REPO_ROOT}/templates/vmware.ovf.template"
+makeimage "$1" "$2.raw" < "$dir/fstab"
+qemu-img convert -o subformat=streamOptimized -o adapter_type=lsilogic -f raw -O vmdk "$2.raw" "$2.vmdk"
+make-ova --vmdk "$2.vmdk" --guest-id debian10_64Guest --template "$REPO_ROOT/templates/vmware.ovf.template"
