@@ -12,6 +12,7 @@ openstack image create \
      --disk-format vmdk \
      --min-disk 16 \
      --min-ram 1008 \
+     -f json\
      --property vmware_disktype="streamOptimized" \
      --property vmware_adaptertype="paraVirtual" \
      --property vmware_ostype="debian10_64Guest" \

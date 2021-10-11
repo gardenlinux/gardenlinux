@@ -2,17 +2,17 @@ import dataclasses
 import typing
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, eq=True)
 class _NamedParamBase:
     name: str
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, eq=True)
 class _NamedParamWithValue(_NamedParamBase):
     value: typing.Optional[str] = None
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, eq=True)
 class _NamedParamWithDefault(_NamedParamBase):
     default: str = None
     description: str = None

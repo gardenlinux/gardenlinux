@@ -10,7 +10,6 @@ import tasks
 import tkn.model
 
 
-NamedParam = tkn.model.NamedParam
 SecretName = tkn.model.SecretName
 SecretVolume = tkn.model.SecretVolume
 
@@ -25,16 +24,11 @@ def multiline_str_presenter(dumper, data):
     return dumper.represent_scalar('tag:yaml.org,2002:str', data)
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--use-secrets-server', action='store_true')
-    parser.add_argument('--outfile', default='tasks.yaml')
-    parser.add_argument('--giturl', default='https://github.com/gardenlinux/gardenlinux')
-    parser.add_argument('--minimal', action='store_true',  help='omit prebuild and promote steps')
-
-    parsed = parser.parse_args()
-
-    if not parsed.use_secrets_server:
+def render_task(
+    use_secrets_server: bool,
+    outfile_tasks: str,
+):
+    if not use_secrets_server:
         env_vars = [{
             'name': 'SECRETS_SERVER_CACHE',
             'value': '/secrets/config.json',
@@ -83,8 +77,6 @@ def main():
     raw_base_build_task = dataclasses.asdict(base_build_task)
 
     package_task = tasks.nokernel_package_task(
-        package_name=NamedParam(name='pkg_name'),
-        repo_dir=NamedParam('repo_dir'),
         env_vars=env_vars,
         volumes=volumes,
         volume_mounts=volume_mounts,
@@ -92,8 +84,6 @@ def main():
     raw_package_task = dataclasses.asdict(package_task)
 
     kernel_package_task = tasks.kernel_package_task(
-        repo_dir=NamedParam('repo_dir'),
-        package_names=NamedParam('pkg_names'),
         env_vars=env_vars,
         volumes=volumes,
         volume_mounts=volume_mounts,
@@ -107,16 +97,6 @@ def main():
     )
     raw_build_task = dataclasses.asdict(build_task)
 
-    ctx_repository_config_name = NamedParam(
-        name='ctx_repository_config_name',
-        default='gardener-dev',
-        description='Name of the component-descriptor repository-context config to use',
-    )
-    snapshot_ctx_repository_config_name = NamedParam(
-        name='snapshot_ctx_repository_config_name',
-        default='gardener-public',
-        description='Name of the snapshot component-descriptor repository-context config to use',
-    )
     test_task = tasks.test_task(
         env_vars=env_vars,
         volumes=volumes,
@@ -125,16 +105,6 @@ def main():
     raw_test_task = dataclasses.asdict(test_task)
 
     promote_task = tasks.promote_task(
-        branch=NamedParam(name='branch'),
-        cicd_cfg_name=NamedParam(name='cicd_cfg_name'),
-        committish=NamedParam(name='committish'),
-        flavourset=NamedParam(name='flavourset'),
-        gardenlinux_epoch=NamedParam(name='gardenlinux_epoch'),
-        publishing_actions=NamedParam(name='publishing_actions'),
-        snapshot_timestamp=NamedParam(name='snapshot_timestamp'),
-        version=NamedParam(name='version'),
-        ctx_repository_config_name=ctx_repository_config_name,
-        snapshot_ctx_repository_config_name=snapshot_ctx_repository_config_name,
         env_vars=env_vars,
         volumes=volumes,
         volume_mounts=volume_mounts,
@@ -154,8 +124,17 @@ def main():
     # This should do the trick but add_representer has noeffect on safe dumper
     # yaml.add_representer(str, multiline_str_presenter)
     yaml.representer.SafeRepresenter.add_representer(str, multiline_str_presenter)
+    all_tasks = (
+                base_build_task,
+                build_task,
+                kernel_package_task,
+                package_task,
+                test_task,
+                promote_task,
+                notify_task,
+            )
 
-    with open(parsed.outfile, 'w') as f:
+    with open(outfile_tasks, 'w') as f:
         yaml.safe_dump_all(
             (
                 raw_base_build_task,
@@ -169,7 +148,20 @@ def main():
             f,
         )
 
-    print(f'dumped tasks to {parsed.outfile}')
+    print(f'dumped tasks to {outfile_tasks}')
+    return all_tasks
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--use-secrets-server', action='store_true')
+    parser.add_argument('--outfile-tasks', default='tasks.yaml')
+
+    parsed = parser.parse_args()
+    render_task(
+        use_secrets_server=parsed.use_secrets_server,
+        outfile_tasks=parsed.outfile_tasks,
+    )
 
 
 if __name__ == '__main__':

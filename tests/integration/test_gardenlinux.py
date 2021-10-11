@@ -12,6 +12,7 @@ import yaml
 from .aws import AWS
 from .gcp import GCP
 from .azure import AZURE
+from .openstackccee import OpenStackCCEE
 from .sshclient import RemoteClient
 
 logger = logging.getLogger(__name__)
@@ -42,6 +43,8 @@ def client(request, config: dict, iaas) -> Iterator[RemoteClient]:
         yield from GCP.fixture(config["gcp"])
     elif iaas == "azure":
         yield from AZURE.fixture(config["azure"])
+    elif iaas == "openstack-ccee":
+        yield from OpenStackCCEE.fixture(config["openstack_ccee"])
     else:
         raise ValueError(f"invalid {iaas=}")
 
@@ -50,7 +53,6 @@ def client(request, config: dict, iaas) -> Iterator[RemoteClient]:
 def non_azure(iaas):
     if iaas == 'azure':
         pytest.skip('test not supported on azure')
-
 
 @pytest.fixture(scope='module')
 def azure(iaas):
@@ -61,6 +63,20 @@ def azure(iaas):
 def aws(iaas):
     if iaas != 'aws':
         pytest.skip('test only supported on aws')
+
+@pytest.fixture(scope='module')
+def non_openstack(iaas):
+    if iaas == 'openstack-ccee':
+        pytest.skip('test not supported on openstack')
+
+@pytest.fixture(scope='module')
+def openstack(iaas):
+    if iaas != 'openstack-ccee':
+        pytest.skip('test only supported on openstack')
+
+@pytest.fixture(scope='module')
+def openstack_flavor():
+    return OpenStackCCEE.instance().flavor
 
 def test_clock(client):
     (exit_code, output, error) = client.execute_command("date '+%s'")
@@ -173,14 +189,24 @@ def test_systemctl_no_failed_units(client):
     assert len(json.loads(output)) == 0
 
 def test_startup_time(client):
-    tolerated_startup_time = 30
+    tolerated_kernel_time = 15
+    tolerated_userspace_time = 30
     (exit_code, output, error) = client.execute_command("systemd-analyze")
     assert exit_code == 0, f"no {error=} expected"
     lines = output.splitlines()
     items = lines[0].split(" ")
-    time=items[12]
-    tf = float(time[:-1])
-    assert tf < tolerated_startup_time, f"startup time too long: {tf}seconds but only {tolerated_startup_time} tolerated."
+    time_initrd = 0
+    for i, v in enumerate(items):
+        if v == "(kernel)":
+            time_kernel = items[i-1]
+        if v == "(initrd)":
+            time_initrd = items[i-1]
+        if v == "(userspace)":
+            time_userspace = items[i-1]
+    tf_kernel = float(time_kernel[:-1]) + float(time_initrd[:-1])
+    tf_userspace = float(time_userspace[:-1])
+    assert tf_kernel < tolerated_kernel_time, f"startup time in kernel space too long: {tf_kernel} seconds =  but only {tolerated_kernel_time} tolerated."
+    assert tf_userspace < tolerated_userspace_time, f"startup time in user space too long: {tf_userspace}seconds but only {tolerated_userspace_time} tolerated."
 
 def test_chrony(client, azure):
     """Test for specific chrony configuration on azure"""
@@ -189,12 +215,22 @@ def test_chrony(client, azure):
     assert exit_code == 0, f"no {error=} expected"
     assert output.find(expected_config) != -1, f"chrony config for ptp expected but not found"
 
-def test_growpart(client):
+def test_growpart(client, non_openstack):
     (exit_code, output, error) = client.execute_command("df --output=size -BG /")
     assert exit_code == 0, f"no {error=} expected"
     lines = output.splitlines()
     sgb = int(lines[1].strip()[:-1])
     assert sgb == 6, f"partition size expected to be ~6 GB but is {sgb}"
+
+def test_growpart(client, openstack, openstack_flavor):
+    """Disk size on OpenStack is only configurable via flavors"""
+    disk_size = int(openstack_flavor["disk"])
+    expected_disk_size = disk_size - 1
+    (exit_code, output, error) = client.execute_command("df --output=size -BG /")
+    assert exit_code == 0, f"no {error=} expected"
+    lines = output.splitlines()
+    sgb = int(lines[1].strip()[:-1])
+    assert sgb == expected_disk_size, f"partition size expected to be ~{expected_disk_size} GB but is {sgb}"
 
 def test_docker(client):
     (exit_code, output, error) = client.execute_command("sudo systemctl start docker")

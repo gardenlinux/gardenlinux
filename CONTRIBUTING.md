@@ -1,0 +1,75 @@
+# Contributing to Garden Linux
+
+## Code of conduct
+
+All members of the Garden Linux community must abide by the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/master/code-of-conduct.md). Only by respecting each other can we develop a productive, collaborative community. Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting gardenlinux.opensource@sap.com and/or a Garden Linux project maintainer.
+
+## Contributing
+
+Garden Linux uses GitHub to manage reviews of pull requests.
+
+If you are a new contributor see: [Steps to Contribute](#Steps-to-Contribute)
+
+If you have a trivial fix or improvement, go ahead and create a pull request.
+
+If you plan to do something more involved, first discuss your ideas on our [mailing list](#Mailing-List). This will avoid unnecessary work and surely give you and us a good deal of inspiration.
+
+## Steps to Contribute
+
+Should you wish to work on an issue, please claim it first by commenting on the GitHub issue that you want to work on it. This is to prevent duplicated efforts from contributors on the same issue.
+
+If you have questions about one of the issues, with or without the tag, please comment on them and one of the maintainers will clarify it.
+
+We kindly ask you to follow the [Pull Request Checklist](#Pull-Request-Checklist) to ensure reviews can happen accordingly.
+
+## Contributing Code
+
+You are welcome to contribute code to Garden Linux in order to fix a bug or to implement a new feature.
+
+The following rules govern code contributions:
+
+1. Contributions must be licensed under the MIT License.
+2. You need to sign the Developer Certificate of Origin.
+
+## Contributing Documentation
+
+You are welcome to contribute documentation to Garden Linux.
+
+The following rules govern documentation contributions:
+
+1. Contributions must be licensed under the Creative Commons Attribution 4.0 International License.
+2. You need to sign the Developer Certificate of Origin.
+
+## Developer Certificate of Origin
+
+Due to legal reasons, contributors will be asked to accept a Developer Certificate of Origin (DCO) before they submit the first pull request to this projects, this happens in an automated fashion during the submission process. We use the standard DCO text of the Linux Foundation.
+
+## Pull Request Checklist
+
+1. Branch from the master branch and, if needed, rebase to the current master branch before submitting your pull request. If it doesn’t merge cleanly with master you may be asked to rebase your changes.
+
+2. Commits should be as small as possible, while ensuring that each commit is correct independently (i.e., each commit should compile and pass tests).
+
+3. Test your changes as thoroughly as possible before you commit them. Preferably, automate your test by unit and/or integration tests. If tested manually, provide information about the test scope in the PR description.
+
+4. Create Work In Progress [WIP] pull requests only if you need a clarification or an explicit review before you can continue your work item.
+
+5. If your patch is not getting reviewed or you need a specific person to review it, you can @-reply a reviewer asking for a review in the pull request or a comment, or you can ask for a review on our [mailing list](#Mailing-List).
+
+6. Post review:
+
+    1. If a review requires you to change your commit(s), please test the changes again. 
+    2. Amend the affected commit(s) and force push onto your branch.
+    3. Set respective comments in your GitHub review to resolved.
+    4. Create a general PR comment to notify the reviewers that your amendments are ready for another round of review.
+
+
+## Issues and Planning
+
+We use GitHub issues to track bugs and enhancement requests. Please provide as much context as possible when you open an issue. The information you provide must be comprehensive enough to reproduce that issue for the assignee. Therefore, contributors may use but aren’t restricted to the issue template provided by the Garden Linux maintainers.
+
+## Mailing List
+
+gardenlinux@googlegroups.com
+
+The mailing list is hosted through Google Groups. To receive the lists' emails, join the group, as you would any other Google Groups at https://groups.google.com/g/gardenlinux.
