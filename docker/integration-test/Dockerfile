@@ -39,6 +39,7 @@ RUN apt-get update \
      && echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ bullseye main" | tee /etc/apt/sources.list.d/azure-cli.list \
      && apt-get update \
      && apt-get install -y azure-cli \
+     && pip3 install python-openstackclient \
      && apt-get clean && rm -rf /var/lib/apt/lists/* \
      && mkdir -p /root/.aws /root/.ssh /config \
      && cd /_pipfiles && pipenv install --system --dev && cd / && rm -rf /_pipfiles

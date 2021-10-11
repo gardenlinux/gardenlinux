@@ -188,17 +188,93 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 pytest --iaas=azure --configfile=/config/myazconfig.yaml integration/
 ```
 
-### 2.3 GCP
+### 2.4 OpenStack (CC EE flavor)
 
-Obtain credentials by using the following command to authenticate to Google Cloud Platform and set up the API access token:
+Obtain credentials by downloading an OpenStack RC file and source it entering your password. Alternatively you could statically add the password to it (environment variable `OS_PASSWORD`) and specifcy that file in the configuration.
 
-```
-gcloud auth application-default login
-```
+Note that the test will not attempt to create networks, security groups, or attached floating IPs to the virtual machines. The security group and network must exist and most likely the test will have to be executed from a machine in the same network.
 
 Use the following test configuration:
 
 ```
+openstack_ccee:
+    # the OpenStack RC filename
+    credentials:
+
+    # if an image id is provided the test will not attempt
+    # to upload an image
+    # image_id: e3685bf1-2b6d-4291-86af-d4a73d54c6bd
+
+    # image file (a vmdk)
+    image: <image-file.vmdk>
+
+    # image name is optional, if not provided a name will be chosen
+    image_name: integration-test
+
+    # OpenStack flavor (`openstack flavor list`)
+    flavor: g_c1_m2
+
+    # security group (must exist)
+    security_group: gardenlinux-sg
+
+    # network name (must exist)
+    network_name: gardenlinux
+
+    # ssh related configuration for logging in to the VM (required)
+    ssh:
+        # path to the ssh key file (required)
+        ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
+        # key name in OpenStack
+        key_name: gardenlinux_integration_test
+        # passphrase for a secured SSH key (optional)
+        passphrase:
+        # username used to connect to the Azure instance (required)
+        user: gardenlinux
+
+    # keep instance running after tests finishes (optional)
+    keep_running: false
+```
+
+#### 2.3.1 Configuration options
+
+<details>
+
+- **credentials** _(optional)_: the openstack rc file downloaded from the UI with the password added. If unset the test runtime will read the values from the environment
+
+- **image_name** _(optional)_: the image name for the uploaded image. If unset a generic name will be used.
+- **image_id** _(optional)_: if specified the tests will use an existing image for the test. No image will be uploaded
+- **image** _(optional/required)_: if no **image_id** is specified this must reference the image `vmdk` file.
+- **flavor** _(required)_: an existing flavor name (installation specific)
+- **security_group** _(required)_: the security group name for the virtual machine 
+- **network_name** _(required)_: the network name for the virtual machine
+- **ssh_key_filepath** _(required)_: The SSH key that will be deployed to the GCE instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand.
+- **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
+- **user** _(required)_: The user that will be provisioned to the GCE instance, which the SSH key gets assigned to and that is used by the test framework to log on the Azure instance.
+
+- **keep_running** _(optional)_: if set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow for debugging
+
+</details>
+
+#### 2.3.2 Running the tests
+
+Start docker container with dependencies:
+
+- mount Garden Linux repository to `/gardenlinux`
+- mount GCP credentials to `/root/.config`
+- mount SSH keys to `/root/.ssh`
+- mount build result directory to `/build` (if not part of the Garden Linux file tree)
+- mount directory with configfile to `/config`
+
+```
+docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+```
+
+Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
+
+```
+pytest --iaas=gcp --configfile=/config/mygcpconfig.yaml integration/
+```
+
 gcp:
     # project id (required)
     project:
@@ -274,6 +350,7 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 ```
 pytest --iaas=gcp --configfile=/config/mygcpconfig.yaml integration/
 ```
+
 
 ## 3. Misc
 
