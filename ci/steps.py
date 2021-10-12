@@ -209,6 +209,7 @@ def promote_step(
         params.committish,
         params.flavourset,
         params.gardenlinux_epoch,
+        params.promote_target,
         params.publishing_actions,
         params.version,
     ]

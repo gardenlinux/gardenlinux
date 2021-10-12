@@ -106,11 +106,12 @@ def promote_step(
     gardenlinux_epoch: parsable_to_int,
     committish: str,
     version: str,
-    build_type: glci.model.BuildType = glci.model.BuildType.RELEASE,
+    promote_target: str,
 ):
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
     flavour_set = glci.util.flavour_set(flavourset)
     flavours = tuple(flavour_set.flavours())
+    build_type: glci.model.BuildType = glci.model.BuildType(promote_target)
     publishing_actions = [
         glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
     ]
