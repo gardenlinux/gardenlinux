@@ -19,6 +19,7 @@ sysstat
 systemd
 systemd-coredump
 systemd-cron
+systemd-timesyncd
 traceroute
 wget
 less
