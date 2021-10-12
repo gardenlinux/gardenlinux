@@ -203,6 +203,7 @@ class GCP:
 
         :param image_name: name of the image
         """
+        logger.debug(f"Looking for {image_name=} in {project=}")
         try:
             response = (
                 self._compute.images().get(project=project, image=image_name,).execute()
@@ -211,6 +212,7 @@ class GCP:
             logger.info(f"{image=}")
             return image
         except:
+            logger.debug(f"failed to find image in {project=}")
             return None
 
     def _wait_for_operation(self, operation):

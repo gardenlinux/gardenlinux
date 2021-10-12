@@ -66,6 +66,11 @@ def aws(iaas):
         pytest.skip('test only supported on aws')
 
 @pytest.fixture(scope='module')
+def gcp(iaas):
+    if iaas != 'gcp':
+        pytest.skip('test only supported on gcp')
+
+@pytest.fixture(scope='module')
 def non_openstack(iaas):
     if iaas == 'openstack-ccee':
         pytest.skip('test not supported on openstack')
@@ -258,6 +263,11 @@ def test_correct_ntp(client, aws):
     (exit_code, output, error) = client.execute_command("grep -c ^NTP=169.254.169.123 /etc/systemd/timesyncd.conf")
     assert exit_code == 0, f"no {error=} expected"
     assert output.rstrip() == "1", "Expected NTP server to be configured to 169.254.169.123"
+
+def test_correct_ntp(client, gcp):
+    (exit_code, output, error) = client.execute_command("grep -c ^NTP=metadata.google.internal /etc/systemd/timesyncd.conf")
+    assert exit_code == 0, f"no {error=} expected"
+    assert output.rstrip() == "1", "Expected NTP server to be configured to metadata.google.internal"
 
 def test_nvme_kernel_parameter(client, aws):
     (exit_code, output, error) = client.execute_command("grep -c nvme_core.io_timeout=4294967295 /proc/cmdline")
