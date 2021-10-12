@@ -1,11 +1,13 @@
 """ Client to manage connections and run commands via ssh on a remote host."""
 import logging
+import time
 import subprocess
 from os import path
 from binascii import hexlify
 
 from paramiko import SSHClient, AutoAddPolicy, RSAKey
 from paramiko.auth_handler import AuthenticationException, SSHException
+from paramiko.ssh_exception import NoValidConnectionsError
 from paramiko.py3compat import u
 from scp import SCPClient, SCPException
 
@@ -119,16 +121,29 @@ class RemoteClient:
             if pk is None:
                 logger.error(f"private key {self.ssh_key_filepath} not found")
                 exit(1)
-            self.client.connect(
-                hostname=self.host,
-                username=self.user,
-                passphrase=self.passphrase,
-                pkey=pk,
-                look_for_keys=True,
-                auth_timeout=30,
-                timeout=60,
-            )
-            self.scp = SCPClient(self.client.get_transport())
+
+
+            max_errors = 5
+            errors = 0
+            while errors < max_errors:
+                try:
+                    self.client.connect(
+                        hostname=self.host,
+                        username=self.user,
+                        passphrase=self.passphrase,
+                        pkey=pk,
+                        look_for_keys=True,
+                        auth_timeout=30,
+                        timeout=60,
+                    )
+                    self.scp = SCPClient(self.client.get_transport())
+                    break
+                except NoValidConnectionsError as e:
+                    logger.exception("Unable to connect")
+                    errors = errors + 1
+                    if errors == 5:
+                        raise Exception("Too many connection failures. Giving up.")
+                    time.sleep(5)
         except AuthenticationException as error:
             logger.exception("Authentication failed")
             raise error
