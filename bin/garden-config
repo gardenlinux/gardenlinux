@@ -40,7 +40,7 @@ done
 for i in $(echo "base,$features" | tr ',' '\n' | norm_features); do
 	if [ -f $featureDir/$i/exec.config ]; then
 		echo "executing from $i: exec.config"
-		$thisDir/garden-chroot "$targetDir" bash -c "$(cat $featureDir/$i/exec.config)"
+		$thisDir/garden-chroot "$targetDir" bash -Eueo pipefail -c "$(cat $featureDir/$i/exec.config)"
 	fi
 done
 
