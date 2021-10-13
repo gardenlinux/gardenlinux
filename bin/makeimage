@@ -6,8 +6,8 @@ rootfs="$1"
 img="$2"
 
 if [[ -e "$img" ]]; then
-    echo "$img already exists"
-    exit 1
+	echo "$img already exists"
+	exit 1
 fi
 
 rootfs_work=$(mktemp -d)
@@ -97,8 +97,16 @@ while read depth source target fs options args; do
 	if [[ "$fs" = "ext4" ]]; then
 		tune2fs -Q usrquota,grpquota,prjquota "$file"
 		if [[ "$resize" = 1 ]]; then
-			e2fsck -y -f "$file"
+			e2fsck -y -f "$file" || [[ $? == 1 ]] # exit code 1: "File system errors corrected"
 			resize2fs -M "$file"
+
+			if [[ "$depth" = 0 ]]; then
+				# add small size overhead/buffer to root partition for selinux first boot magic
+				# (otherwise we'll get "A valid context for root could not be obtained." error at login)
+				size=$(du -b "$file" | awk '{ padded_size = $1 + (MB - ($1 % MB) % MB); print (padded_size / MB) + 16 "MiB" }' 'MB=1048576')
+				truncate -s "$size" "$file"
+				resize2fs "$file"
+			fi
 		fi
 	fi
 
@@ -116,7 +124,7 @@ while read depth source target fs options args; do
 	echo -e "$part_uuid\t$type\t$size\t$syslinux\t$file\t$label" >> "$second_pass"
 done
 
-# --- first pass: assemble image ---
+# --- second pass: assemble image ---
 
 img_size=0
 syslinux_mbr=0
