@@ -131,18 +131,22 @@ CHANGELOG+="  * Replaced Debian signing certs with GardenLinux certs\n"
 echo "### populating the changelog"
 mv debian/changelog debian/changelog.org
 cat - > debian/changelog <<EOF
-linux (${KERNEL_VERSION}-1gardenlinux1) UNRELEASED; urgency=medium
+linux (${KERNEL_VERSION}-1) UNRELEASED; urgency=medium
 
   [ Garden Linux Maintainers ]
   * new upstream Version ${KERNEL_VERSION}
 $(echo -e "$CHANGELOG")
+
  -- Garden Linux Maintainers <contact@gardenlinux.io>  $(date -R)
 
 EOF
+
 debian/bin/stable-update ../linux-stable ${KERNEL_VERSION}
 mv debian/changelog debian/changelog.newkernel
 cat debian/changelog.newkernel debian/changelog.org > debian/changelog
 rm -f debian/changelog.new debian/changelog.newkernel debian/changelog.org
+dch -lgardenlinux ""
+dch -r ""
 
 echo "### generating a debian conform orig file and install"
 [ -e ../orig/linux_*.tar.xz ] || PYTHONHASHSEED=0 debian/bin/genorig.py ../linux-*.tar.xz
