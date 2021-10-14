@@ -1,4 +1,4 @@
-# <file system>    <dir>        <type>    <options>                                <makeimg agrs>
+# <file system>    <dir>        <type>    <options>                                <makeimg args>
 LABEL=EFI          /boot/efi    vfat      umask=0077                               type=uefi,syslinux
 LABEL=ROOT         /            ext4      rw,errors=remount-ro,prjquota,discard
 LABEL=USR          /usr         ext4      ro,discard
