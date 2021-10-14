@@ -198,7 +198,8 @@ def mk_pipeline_packages_run(
         args=args,
         params=params,
         node_selector=node_selector,
-        security_context=security_context
+        security_context=security_context,
+        timeout='12h',
     )
 
 
