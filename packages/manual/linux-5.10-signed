@@ -12,11 +12,12 @@ mkdir -p "${CERT_DIR}"
 openssl pkcs12 -export -out ${CERT_DIR}/kernel.p12 -inkey "/kernel.key" -in "/kernel.crt" -passout pass:""
 pk12util -i "${CERT_DIR}/kernel.p12" -d "${CERT_DIR}" -W "" -K ""
 
-if $(dpkg --compare-versions $KERNEL_DEBIAN lt $KERNEL_VERSION); then
-	KERNEL_VERSION="$KERNEL_VERSION-1"
-else
-	KERNEL_VERSION="$KERNEL_DEBIAN"
-fi
+#if $(dpkg --compare-versions $KERNEL_DEBIAN gt $KERNEL_VERSION); then
+#	KERNEL_VERSION="$KERNEL_DEBIAN"
+#else
+	KERNEL_VERSION="$KERNEL_VERSION-1gardenlinux1"
+#fi
+
 sudo apt-get install -y --no-install-recommends -f \
 	$BUILDTARGET/main/l/linux/linux-kbuild-$(cut -d. -f-2 <<< ${KERNEL_BASE})_${KERNEL_VERSION}_${KERNEL_ARCH}.deb \
 	$BUILDTARGET/main/l/linux/linux-support-${KERNEL_BASEABI}_${KERNEL_VERSION}_all.deb \
