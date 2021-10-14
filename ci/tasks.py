@@ -217,6 +217,14 @@ def build_task(
         volume_mounts=volume_mounts,
     )
     params += params_step
+
+    promote_step, params_step = steps.promote_single_step(
+        params=all_params,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+    params += params_step
+
     params = unify_params(params)
 
     task_volumes = [v for v in volumes]
@@ -239,6 +247,7 @@ def build_task(
                 pre_build_step,
                 build_image_step,
                 upload_step,
+                promote_step,
             ],
             volumes=task_volumes,
         ),

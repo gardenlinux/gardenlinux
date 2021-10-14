@@ -24,9 +24,10 @@ def promote_single_step(
     publishing_actions = [
         glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
     ]
-    if glci.model.PublishingAction.RELEASE not in publishing_actions:
+    if glci.model.PublishingAction.RELEASE_CANDIDATE not in publishing_actions:
         print(
-            f'publishing action {glci.model.PublishingAction.RELEASE=} not specified - exiting now'
+            f'publishing action {glci.model.PublishingAction.RELEASE_CANDIDATE=} not specified'
+            ' - exiting now'
         )
         sys.exit(0)
 
@@ -67,9 +68,9 @@ def promote_single_step(
         # publishing on azure is currently a lengthy process. We do, however, already know the URN
         # it will end up at.
         # Prepare the information here already - will be overwritten if actual publishing proceeds.
-        publisher_id = cicd_cfg.publish.azure.publisher_id,
-        offer_id = cicd_cfg.publish.azure.offer_id,
-        plan_id = cicd_cfg.publish.azure.plan_id,
+        publisher_id = cicd_cfg.publish.azure.publisher_id
+        offer_id = cicd_cfg.publish.azure.offer_id
+        plan_id = cicd_cfg.publish.azure.plan_id
         parsed_version = version_util.parse_to_semver(version)
         published_image_metadata = glci.model.AzurePublishedImage(
             transport_state=glci.model.AzureTransportState.PROVISIONAL,
@@ -77,12 +78,24 @@ def promote_single_step(
             golive_operation_id='',
             urn=f'{publisher_id}:{offer_id}:{plan_id}:{parsed_version}',
         )
-        dataclasses.replace(release_manifest, published_image_metadata=published_image_metadata)
+        release_manifest = dataclasses.replace(
+            release_manifest,
+            published_image_metadata=published_image_metadata,
+        )
 
-    new_manifest = promote.publish_image(
-        release=release_manifest,
-        cicd_cfg=cicd_cfg,
-    )
+    try:
+        new_manifest = promote.publish_image(
+            release=release_manifest,
+            cicd_cfg=cicd_cfg,
+        )
+    except Exception:
+        # issues with azure are to be expected, given the current approach. Continue with the
+        # provisional information available.
+        if release_manifest.platform == 'azure':
+            new_manifest = release_manifest
+        else:
+            # for all other platforms no issues are expected
+            raise
 
     # the (modified) release manifest contains the publishing resource URLs - re-upload to persist
     upload_release_manifest = glci.util.preconfigured(
@@ -105,11 +118,12 @@ def promote_step(
     gardenlinux_epoch: parsable_to_int,
     committish: str,
     version: str,
-    build_type: glci.model.BuildType = glci.model.BuildType.RELEASE,
+    promote_target: str,
 ):
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
     flavour_set = glci.util.flavour_set(flavourset)
     flavours = tuple(flavour_set.flavours())
+    build_type: glci.model.BuildType = glci.model.BuildType(promote_target)
     publishing_actions = [
         glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
     ]
