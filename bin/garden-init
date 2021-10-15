@@ -118,7 +118,8 @@ done
 include_aptversion=
 include_aptfile=
 include_wget=
-for i in $(filter_comment <<< $include | filter_variables | filter_if); do
+exclude="$(filter_comment <<< $exclude | filter_variables | filter_if)"
+for i in $(filter_comment <<< $include | filter_variables | filter_if | grep -v -f <(echo "$exclude")); do
     if [[ $i = *.deb ]]; then
 	if [[ $i = *://* ]]; then	include_wget+="$i "
 	elif [[ $i = /* ]]; then	include_wget+="${mirror_host}$i "
@@ -128,7 +129,7 @@ for i in $(filter_comment <<< $include | filter_variables | filter_if); do
     else 			include_aptversion+="$i "
     fi
 done
-exclude="$(filter_comment <<< $exclude | filter_variables | filter_if | paste -sd, -)"
+exclude="$(paste -sd, - <<< $exclude)"
 
 debootstrapArgs=()
 

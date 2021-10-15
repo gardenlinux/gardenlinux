@@ -69,6 +69,12 @@ def render_task(
                 'value': '/cc/utils',
             })
 
+    # TODO: re-enable once all packages successfully build centrally
+    # env_vars.append({
+    #     'name': 'RUNNING_ON_CI',
+    #     'value': 'true',
+    # })
+
     base_build_task = tasks.base_image_build_task(
         volumes=volumes,
         volume_mounts=volume_mounts,

@@ -131,7 +131,7 @@ def build_component_descriptor(
         f'{pprint.pformat(dataclasses.asdict(component_descriptor))}'
     )
 
-    if glci.model.PublishingAction.RELEASE in publishing_actions:
+    if glci.model.PublishingAction.RELEASE_CANDIDATE in publishing_actions:
         product.v2.upload_component_descriptor_v2_to_oci_registry(
             component_descriptor_v2=component_descriptor,
         )

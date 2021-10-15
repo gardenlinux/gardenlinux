@@ -188,6 +188,9 @@ fi
 	echo "GARDENLINUX_VERSION=$($debuerreotypeScriptsDir/garden-version)" >> rootfs/etc/os-release
 	echo "GARDENLINUX_COMMIT_ID=$commitid" >> rootfs/etc/os-release
 	echo "VERSION_CODENAME=$suite" >> rootfs/etc/os-release
+	if [ -f rootfs/etc/update-motd.d/05-logo ]; then
+		sed -i "s/@VERSION@/$(garden-version)/" rootfs/etc/update-motd.d/05-logo
+	fi
 
 	create_artifacts() {
 		local targetBase="$1"; shift

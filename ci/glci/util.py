@@ -141,6 +141,7 @@ def release_manifest(
                 glci.model.Architecture,
                 typing.Tuple,
                 glci.model.TestResultCode,
+                glci.model.AzureTransportState,
             ],
         ),
     )
@@ -181,6 +182,7 @@ def release_manifest_set(
                 glci.model.Architecture,
                 typing.Tuple,
                 glci.model.TestResultCode,
+                glci.model.AzureTransportState,
             ],
         ),
     )

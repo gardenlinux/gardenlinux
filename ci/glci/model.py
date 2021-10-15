@@ -22,6 +22,7 @@ class PublishingAction(enum.Enum):
     COMPONENT_DESCRIPTOR = 'component_descriptor'
     IMAGES = 'images'
     MANIFESTS = 'manifests'
+    RELEASE_CANDIDATE = 'release_candidate'
     RELEASE = 'release'
     RUN_TESTS = 'run_tests'
 

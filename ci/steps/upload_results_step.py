@@ -122,7 +122,7 @@ def upload_results_step(
 
     # always publish oci image
     if manifest.platform == 'oci':
-        release_build = glci.model.PublishingAction.RELEASE in publishing_actions
+        release_build = glci.model.PublishingAction.RELEASE_CANDIDATE in publishing_actions
         manifest = promote._publish_oci_image(
             release=manifest,
             cicd_cfg=cicd_cfg,

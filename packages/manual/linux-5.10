@@ -34,11 +34,11 @@ while [ ! -e patches-$KERNEL_RT_VERSION.tar.xz ] || ! $(xz -dc patches-$KERNEL_R
 done
 
 echo "### cloning the latest and greatest debian release environment to for the kernel"
-if [ -d $src ]; then	cd $src; git reset --hard; git checkout HEAD; git pull --ff-only -q; cd ..
-else			git clone --single  https://salsa.debian.org/kernel-team/linux.git $src
+if [ -d $src ]; then	cd $src; git reset --hard; git checkout $BUILDENV; git pull --ff-only -q; cd ..
+else			git clone --single --branch $BUILDENV https://salsa.debian.org/kernel-team/linux.git $src
 fi
 cd $src
-## binding build env tho the version when gardenlinux was build
+## binding build env to the version when gardenlinux was build
 #BUILDENV=$(git log --before "@${BUILDEPOCH}" -n1 --oneline --no-abbrev-commit | cut -f1 -d' ')
 #git -c advice.detachedHead=false checkout $BUILDENV
 #CHANGELOG+="  * using Build Environment of $BUILDENV\n"
@@ -93,12 +93,15 @@ CHANGELOG+="  * [aufs5] Update to $aufscommit\n"
 echo "### setting Garden Linux abi"
 sed -i "s/abiname:.*/abiname:$KERNEL_ABI/" debian/config/defines
 CHANGELOG+="  * Bump ABI to $KERNEL_ABI.\n"
-# no rt branch
-sed -i "s/enabled: true/enabled: false/" debian/config/defines
-CHANGELOG+="  * Disabled RT featureset\n"
-# no cloud branch
-#sed -i "/^ cloud-amd64$/d" debian/config/amd64/none/defines
-#CHANGELOG+="  * Disabled cloud featureset\n"
+
+if [[ $KERNEL_FLAVOURS != *"-rt"* ]]; then
+	sed -i "s/enabled: true/enabled: false/" debian/config/defines
+	CHANGELOG+="  * Disabled RT featureset\n"
+fi
+if [[ $KERNEL_FLAVOURS != *"-cloud"* ]]; then
+	sed -i "/^ cloud-amd64$/d" debian/config/amd64/none/defines
+	CHANGELOG+="  * Disabled cloud featureset\n"
+fi
 
 #export DEB_BUILD_OPTIONS="nodoc tersee"
 #export DEB_BUILD_PROFILES="nodoc nopython pkg.linux.nosource pkg.linux.notools"
@@ -106,10 +109,11 @@ CHANGELOG+="  * Disabled RT featureset\n"
 echo "### patching Garden Linux enhancements"
 #patch -p1 < $srcDir/rt-0038.patch
 cp $srcDir/fpga-ofs.patch debian/patches
-CHANGELOG+="  * Added Intel FPGA OFS\n"
 patch -p1 < $srcDir/fpga-config.patch
-patch -p1 < $srcDir/mok.patch
-patch -p1 < $srcDir/series.patch
+printf "\n# Intel IOFS patches\nfpga-ofs.patch\n" >> debian/series
+CHANGELOG+="  * Added Intel FPGA OFS\n"
+#patch -p1 < $srcDir/mok.patch
+#patch -p1 < $srcDir/series.patch
 
 echo "### setting certificate"
 # to make sure we do not take this accidently
@@ -132,13 +136,17 @@ linux (${KERNEL_VERSION}-1) UNRELEASED; urgency=medium
   [ Garden Linux Maintainers ]
   * new upstream Version ${KERNEL_VERSION}
 $(echo -e "$CHANGELOG")
+
  -- Garden Linux Maintainers <contact@gardenlinux.io>  $(date -R)
 
 EOF
+
 debian/bin/stable-update ../linux-stable ${KERNEL_VERSION}
 mv debian/changelog debian/changelog.newkernel
 cat debian/changelog.newkernel debian/changelog.org > debian/changelog
 rm -f debian/changelog.new debian/changelog.newkernel debian/changelog.org
+dch -lgardenlinux ""
+dch -r ""
 
 echo "### generating a debian conform orig file and install"
 [ -e ../orig/linux_*.tar.xz ] || PYTHONHASHSEED=0 debian/bin/genorig.py ../linux-*.tar.xz

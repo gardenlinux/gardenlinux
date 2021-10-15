@@ -1,0 +1,17 @@
+[Unit]
+Description=GardenLinux End Service
+
+Before=initrd-switch-root.service
+Wants=initrd-switch-root.target
+
+OnFailure=emergency.target
+OnFailureJobMode=isolate
+DefaultDependencies=no
+
+ConditionPathExists=/sysroot/gardenlinux.dracut.end
+
+[Service]
+Type=oneshot
+TimeoutStartSec=600
+RemainAfterExit=yes
+ExecStart=/bin/bash -Eeuo pipefail -c 'mv /sysroot/gardenlinux.dracut.end /run/dracut.end || cp /sysroot/gardenlinux.dracut.end /run/dracut.end; ./run/dracut.end; rm -f /run/dracut.end'
