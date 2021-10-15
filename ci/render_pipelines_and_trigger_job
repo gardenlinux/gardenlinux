@@ -96,6 +96,11 @@ ci/render_pipeline_run.py $EXTRA_ARGS \
   --outfile "${pipeline_run}" \
   --outfile-packages "${pipeline_package_run}"
 
+PATCH_BRANCH=
+if [ ! -z ${USE_PATCHING:-} ]; then
+  export PATCH_BRANCH="${BRANCH_NAME}"
+  echo "Patching target working dir with local diff against ${PATCH_BRANCH}"
+fi
 
 RENDER_TASK_EXTRA_ARGS=
 if [ ! -z ${SECRETS_SERVER_ENDPOINT:-} ]; then
