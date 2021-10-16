@@ -5,6 +5,7 @@ dracut
 iproute2
 iptables
 iputils-ping
+kexec-tools
 libnss-resolve
 libnss-systemd
 libpam-systemd
