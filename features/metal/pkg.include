@@ -4,12 +4,10 @@ fdisk
 lvm2
 dosfstools
 efibootmgr
-kexec-tools
 haveged
 ipmitool
 #grub-cloud-amd64
 cloud-guest-utils
-kexec-tools
 #irqbalance
 pciutils
 usbutils
