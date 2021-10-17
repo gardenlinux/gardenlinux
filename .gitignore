@@ -4,6 +4,8 @@
 /repository/reprepro/db
 /repository/reprepro/logs
 /features/_dev/id_dev
+/features/_dev/id_dev.pub
+/features/_dev/file.include/authorized_keys
 /cert/cfssl
 /cert/*.key
 /cert/*.crt
