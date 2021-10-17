@@ -217,7 +217,7 @@ echo "### syslinux"
 chroot ${dir_name} dd bs=440 count=1 conv=notrunc if=/usr/lib/SYSLINUX/gptmbr.bin of=${loopback}
 chroot ${dir_name} syslinux -d syslinux -i "$loopback"p1
 echo "### systemd-boot"
-chroot ${dir_name} bootctl --no-variables install
+chroot ${dir_name} bootctl --no-variables --make-machine-id-directory=no install
 
 #chroot ${dir_name} /usr/local/sbin/update-bootloaders
 

@@ -162,7 +162,13 @@ fi
 
 	[ -n "$features" ] && configArgs+=( --features "$features" )
 
+	# TODO fix for the pipelines, paths probably won't match
+	touch rootfs/etc/gl-sign.crt rootfs/etc/gl-sign.key
+	mount --bind /kernel.crt rootfs/etc/gl-sign.crt
+	mount --bind /kernel.key rootfs/etc/gl-sign.key
 	garden-config "${configArgs[@]}" rootfs
+	umount rootfs/etc/gl-sign.crt rootfs/etc/gl-sign.key
+	rm -f rootfs/etc/gl-sign.crt rootfs/etc/gl-sign.key
 	#garden-apt-get rootfs update -qq
 	#garden-apt-get rootfs dist-upgrade -yqq
 
