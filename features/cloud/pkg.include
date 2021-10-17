@@ -7,5 +7,5 @@ cloud-guest-utils
 libpam-cracklib
 rng-tools5
 
-main/l/linux-signed-amd64/linux-image-cloud-${arch}_5.10.38-1_${arch}.deb
-main/l/linux-signed-amd64/linux-image-5.10.0-8-cloud-${arch}_5.10.38-1_${arch}.deb
+main/l/linux-signed-amd64/linux-image-cloud-${arch}_5.10.70-1_${arch}.deb
+main/l/linux-signed-amd64/linux-image-5.10.0-9-cloud-${arch}_5.10.70-1_${arch}.deb

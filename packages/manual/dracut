@@ -9,8 +9,6 @@ sudo apt-get update
 sudo apt-get build-dep -y --no-install-recommends $src
 apt-get source $src
 
-bash
-
 # TODO figure out what other modules from upstream might be needed in different scenarios
 cd $src-*/
 patch -p1 < $srcDir/noperl.patch
