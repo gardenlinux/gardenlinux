@@ -275,7 +275,7 @@ fi
 			if [ -s $featureDir/$i/image ]; then
 				"$featureDir/$i/image" "$rootfs" "$targetBase"
 			elif [ -f "$featureDir/$i/fstab" ]; then
-				makeimage "$rootfs" "$targetBase.raw" < "$featureDir/$i/fstab"
+				makepart "$rootfs" < "$featureDir/$i/fstab" | makedisk "$rootfs" "$targetBase.raw"
 			else
 				true
 			fi

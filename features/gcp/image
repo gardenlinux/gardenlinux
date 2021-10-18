@@ -3,5 +3,5 @@ set -Eeuo pipefail
 
 dir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
-makeimage "$1" "$2.raw" < "$dir/fstab"
+makepart "$1" < "$dir/fstab" | makedisk "$1" "$2.raw"
 tar --format=oldgnu --transform "s|$2|disk|" -cSzf "$2-gcpimage.tar.gz" "$2.raw"
