@@ -21,13 +21,6 @@ build_image() {
     repodir="$(params.repo_dir)"
     CERTDIR=$(realpath $repodir/cert)
     
-    # debug
-    echo "repodir is $repodir"
-    echo "certdir is $CERTDIR"
-    ls -la $repodir
-    echo "---"
-    ls -la $CERTDIR
-
     ln -s ${CERTDIR}/Kernel.sign.full /kernel.full
     ln -s ${CERTDIR}/Kernel.sign.crt /kernel.crt
     ln -s ${CERTDIR}/Kernel.sign.key /kernel.key
