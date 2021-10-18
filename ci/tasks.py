@@ -204,6 +204,35 @@ def build_task(
     )
     params += params_step
 
+    clone_step_cfssl, params_step = steps.cfssl_clone_step(
+        name='clone-step-cfssl',
+        params=all_params,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+    params += params_step
+
+    write_key_step, params_step = steps.write_key_step(
+        params=all_params,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+    params += params_step
+
+    cfssl_build_step, params_step = steps.build_cfssl_step(
+        params=all_params,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+    params += params_step
+
+    build_certs_step, params_step = steps.build_cert_step(
+        params=all_params,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+    params += params_step
+
     build_image_step, params_step = steps.build_image_step(
         params=all_params,
         env_vars=env_vars,
@@ -245,6 +274,10 @@ def build_task(
             steps=[
                 clone_step,
                 pre_build_step,
+                clone_step_cfssl,
+                write_key_step,
+                cfssl_build_step,
+                build_certs_step,
                 build_image_step,
                 upload_step,
                 promote_step,
