@@ -3,14 +3,14 @@
 set -uoeE pipefail
 
 bootDir="/boot/efi"
-kernelDir="$bootDir/Default"
+kernelDir="$bootDir/legacy"
 configDir="/etc/kernel/cmdline.d"
 configFile="/boot/efi/syslinux/syslinux.cfg"
 
-check_version_and_cp() {
+prepare_files() {
 	local v=$1
 	if [ ! -d "$kernelDir/$v" ]; then 
-		return 1
+		mkdir -p "$kernelDir/$v"
 	fi
 	if [ ! -f "$kernelDir/$v/linux" ]; then
 		cp "/boot/vmlinuz-$v" "$kernelDir/$v/linux" && \
@@ -41,7 +41,7 @@ done
 versions=()
 # kernel / initrd
 for kernel in /boot/vmlinuz-*; do 
-	if check_version_and_cp "${kernel#*-}"; then
+	if prepare_files "${kernel#*-}"; then
 		versions+=("${kernel#*-}")
 	fi
 done
@@ -62,9 +62,9 @@ readarray -t vSorted < <(printf '%s\n' "${versions[@]}" | sort -rV)
 	echo
 	for v in "${vSorted[@]}"; do
 		echo "LABEL Linux $v"
-		echo " LINUX ../Default/$v/linux"
+		echo " LINUX ../legacy/$v/linux"
 		echo " APPEND root=${DEVICE} ${CMDLINE_LINUX}"
-		echo " INITRD ../Default/${v}/initrd.img-${v}"
+		echo " INITRD ../legacy/${v}/initrd.img-${v}"
 		echo
 	done
 } > "${bootDir}/syslinux/syslinux.cfg.new" 

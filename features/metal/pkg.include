@@ -4,12 +4,10 @@ fdisk
 lvm2
 dosfstools
 efibootmgr
-kexec-tools
 haveged
 ipmitool
 #grub-cloud-amd64
 cloud-guest-utils
-kexec-tools
 #irqbalance
 pciutils
 usbutils
@@ -21,5 +19,5 @@ bird2
 syslinux
 syslinux-common
 
-main/l/linux-signed-amd64/linux-image-${arch}_5.10.38-1_${arch}.deb
-main/l/linux-signed-amd64/linux-image-5.10.0-8-${arch}_5.10.38-1_${arch}.deb
+main/l/linux-signed-amd64/linux-image-${arch}_5.10.70-1gardenlinux1_${arch}.deb
+main/l/linux-signed-amd64/linux-image-5.10.0-9-${arch}_5.10.70-1gardenlinux1_${arch}.deb
