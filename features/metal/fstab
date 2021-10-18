@@ -1,5 +1,5 @@
 # <file system>    <dir>        <type>    <options>                                <makeimg args>
-LABEL=EFI          /boot/efi    vfat      umask=0077                               type=uefi,syslinux,size=128MiB
+LABEL=EFI          /boot/efi    vfat      umask=0077                               type=uefi,size=128MiB
 LABEL=ROOT         /            ext4      rw,errors=remount-ro,prjquota,discard
 LABEL=USR          /usr         ext4      ro,discard
 LABEL=SWAP         none         swap      sw                                       size=1GiB

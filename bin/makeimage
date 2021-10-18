@@ -45,7 +45,7 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 	type=$([[ "$fs" = "swap" ]] && echo "swap" || echo "linux")
 	size=
 	resize=1
-	syslinux=0
+	syslinux=$([[ "$(cut -c -5 <<< "$target")" = "/boot" ]] && [[ -f "$rootfs/usr/bin/syslinux" ]] && echo 1 || echo 0)
 	while IFS="=" read -r key value; do
 		case "$key" in
 			"type")
