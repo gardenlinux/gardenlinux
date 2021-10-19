@@ -262,6 +262,8 @@ def mk_pipeline_packages(all_tasks: typing.Sequence[tkn.model.Task]):
         'iproute2',
         'pam',
         'python3.9',
+        'selinux-basics',
+        'waagent',
         ]:
         package_task = mk_pipeline_package_build_task(package, [base_build_task.name], all_tasks)
         package_tasks.append(package_task)
