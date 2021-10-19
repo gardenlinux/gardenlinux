@@ -8,7 +8,7 @@ VERSION="2.2.47-2"
 
 sudo apt-get update
 sudo apt-get build-dep -y --no-install-recommends $src
-sudo apt-get install debian-keyring
+sudo apt-get install -y debian-keyring quilt
 dget -x http://ftp.debian.org/debian/pool/main/w/waagent/waagent_${VERSION}.dsc
 
 cd $src-*/
