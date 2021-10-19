@@ -21,12 +21,20 @@ export_env
 function cleanup_pipelineruns {
   echo "purging old pipelineruns"
   tkn \
-    --namespace "${GARDENLINUX_TKN_WS}" \
+    -n "${GARDENLINUX_TKN_WS}" \
     pipelineruns \
     delete \
     --force \
     --all \
     --keep 20
+  echo "purging old taskruns"
+    tkn \
+   -n "${GARDENLINUX_TKN_WS}" \
+    taskruns \
+    delete \
+    --force \
+    --all \
+    --keep 50
 }
 
 function create_credentials {
