@@ -9,7 +9,10 @@ sudo rm -f /etc/dpkg/dpkg.cfg.d/docker
 sudo apt-get build-dep -y --no-install-recommends $src
 sudo apt-get install -y libgdbm-dev
 
-wget -P /tmp https://snapshot.debian.org/archive/debian-ports/20200409T204941Z/pool/main/s/sphinx/{libjs-sphinxdoc_1.8.5-9_all.deb,python3-sphinx_1.8.5-9_all.deb,sphinx-common_1.8.5-9_all.deb} 
+wget -P /tmp https://snapshot.debian.org/archive/debian/20210413T152040Z/pool/main/p/python-docutils/{docutils-common_0.16%2Bdfsg-4_all.deb,python3-docutils_0.16%2Bdfsg-4_all.deb}
+wget -P /tmp https://snapshot.debian.org/archive/debian-ports/20200409T204941Z/pool/main/s/sphinx/{libjs-sphinxdoc_1.8.5-9_all.deb,python3-sphinx_1.8.5-9_all.deb,sphinx-common_1.8.5-9_all.deb}
+sudo dpkg -i /tmp/docutils-common_0.16+dfsg-4_all.deb
+sudo dpkg -i /tmp/python3-docutils_0.16+dfsg-4_all.deb
 sudo dpkg -i /tmp/libjs-sphinxdoc_1.8.5-9_all.deb
 sudo dpkg -i /tmp/sphinx-common_1.8.5-9_all.deb
 sudo dpkg -i /tmp/python3-sphinx_1.8.5-9_all.deb
