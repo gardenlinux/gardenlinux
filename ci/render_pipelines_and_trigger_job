@@ -21,7 +21,7 @@ export_env
 function cleanup_pipelineruns {
   echo "purging old pipelineruns"
   tkn \
-    --all-namespaces \
+    --namespace "${GARDENLINUX_TKN_WS}" \
     pipelineruns \
     delete \
     --force \
@@ -29,7 +29,7 @@ function cleanup_pipelineruns {
     --keep 20
   echo "purging old taskruns"
     tkn \
-    --all-namespaces \
+    --namespace "${GARDENLINUX_TKN_WS}" \
     taskruns \
     delete \
     --force \
