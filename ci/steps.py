@@ -39,7 +39,7 @@ def create_patch(remote_branch: str):
     untracked = repo.untracked_files
     git.fetch('origin', remote_branch)
     for f in untracked:
-        print(f'  add untracked file: {f}')
+        print(f'add untracked file: {f}')
         git.add(f, '--intent-to-add')
     info = git.diff(f'origin/{remote_branch}', '--name-only')
     info = info.replace('\n', ', ')
