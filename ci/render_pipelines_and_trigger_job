@@ -7,11 +7,8 @@ repo_root="${own_dir}/.."
 
 source "${own_dir}/lib.sh"
 
-# install required tools but not in a dev environment
-if [ -z "${CC_CONFIG_DIR:-}" ]; then
-  install_kubectl
-  install_tkn
-fi
+install_kubectl
+install_tkn
 
 # retrieve and configure kubeconfig (sets KUBECONFIG env var)
 if [ -z ${KUBECONFIG:-} ] &&  [ -n ${SECRETS_SERVER_ENDPOINT:-} ]; then
@@ -24,12 +21,20 @@ export_env
 function cleanup_pipelineruns {
   echo "purging old pipelineruns"
   tkn \
-    --namespace "${GARDENLINUX_TKN_WS}" \
+    --all-namespaces \
     pipelineruns \
     delete \
     --force \
     --all \
     --keep 20
+  echo "purging old taskruns"
+    tkn \
+    --all-namespaces \
+    taskruns \
+    delete \
+    --force \
+    --all \
+    --keep 50
 }
 
 function create_credentials {
@@ -68,10 +73,7 @@ if [ ! -z "${PYTEST_CFG:-}" ]; then
   EXTRA_ARGS="${PYTEST_CFG} --pytest-cfg={PYTEST_CFG}"
 fi
 
-# install required tools but not in a dev environment
-if [ -z "${CC_CONFIG_DIR:-}" ]; then
-  cleanup_pipelineruns
-fi
+cleanup_pipelineruns
 
 # for local dev rendering use latest remote commit and no local one.
 if [ ! -z "${CC_CONFIG_DIR:-}" ]; then
