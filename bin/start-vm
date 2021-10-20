@@ -191,7 +191,7 @@ if [ $uefi ]; then
 	[ -r $uefiCode ] || eusage "Missing ueficode at $ueficode.\n Run: apt-get install ovmf"
 	[ -r $uefiVars ] || eusage "Missing uefivars at $uefiVars.\n Run: apt-get install ovmf"
 
-	[ -e $targetDir/$mac.vars ] || $uefiVars $targetDir/$mac.vars
+	[ -e $targetDir/$mac.vars ] || cp $uefiVars $targetDir/$mac.vars
 
 	virtOpts+=(	"-machine q35,smm=on"
 			"-global driver=cfi.pflash01,property=secure,value=on"

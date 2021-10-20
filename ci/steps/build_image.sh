@@ -18,6 +18,13 @@ build_image() {
     export OUT_FILE="$(params.outfile)"
     export OUTPUT_DIR="${OUT_FILE}"
 
+    repodir="$(params.repo_dir)"
+    CERTDIR=$(realpath $repodir/cert)
+    
+    ln -s ${CERTDIR}/Kernel.sign.full /kernel.full
+    ln -s ${CERTDIR}/Kernel.sign.crt /kernel.crt
+    ln -s ${CERTDIR}/Kernel.sign.key /kernel.key
+
     pwd
     echo "running build.."
     $(params.repo_dir)/bin/garden-build.sh \
