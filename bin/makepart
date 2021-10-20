@@ -13,6 +13,9 @@ mnt=$(mktemp -d)
 
 cp -a "$rootfs/." "$rootfs_work"
 
+chroot "$rootfs_work" /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
+rm "$rootfs_work/.autorelabel"
+
 # setup systemd boot (setting SYSTEMD_ESP_PATH env needed to bypass bootctl checking if mounted from esp partition)
 touch "$rootfs_work/boot/efi/loader/loader.conf"
 chroot "$rootfs_work" /usr/bin/env -i SYSTEMD_ESP_PATH="/boot/efi" bootctl --no-variables install
