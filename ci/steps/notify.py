@@ -75,7 +75,9 @@ def _mk_plain_text_body(
 
 
 def send_notification(
+    branch: str,
     cicd_cfg_name: str,
+    committish: str,
     disable_notifications: str,
     namespace: str,
     giturl: str,
@@ -162,6 +164,8 @@ def send_notification(
     html_template = Template(html_mail_template)
     txt_template = Template(txt_mail_template)
     values = {
+        'branch': branch,
+        'commit': committish,
         'pipeline': pipeline_name,
         'status_table': html_result_table,
         'dashboard_url': dashboard_url,
