@@ -27,6 +27,7 @@ RUN apt-get update \
           procps \
           openssh-client \
           inetutils-ping \
+          wget \
      && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
      && unzip awscliv2.zip \
      && ./aws/install \
@@ -40,6 +41,11 @@ RUN apt-get update \
      && apt-get update \
      && apt-get install -y azure-cli \
      && pip3 install python-openstackclient \
+     && wget https://github.com/aliyun/aliyun-cli/releases/download/v3.0.94/aliyun-cli-linux-3.0.94-amd64.tgz -O /aliyun-cli-linux-3.0.94-amd64.tgz \
+     && (cd /usr/local/bin ; tar xf /aliyun-cli-linux-3.0.94-amd64.tgz) \
+     && rm /aliyun-cli-linux-3.0.94-amd64.tgz \
+     && wget https://gosspublic.alicdn.com/ossutil/1.7.6/ossutil64?spm=a2c63.p38356.a3.3.44692454KkczI0 -O /usr/local/bin/ossutil \
+     && chmod 755 /usr/local/bin/ossutil \
      && apt-get clean && rm -rf /var/lib/apt/lists/* \
      && mkdir -p /root/.aws /root/.ssh /config \
      && cd /_pipfiles && pipenv install --system --dev && cd / && rm -rf /_pipfiles

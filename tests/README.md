@@ -235,6 +235,63 @@ openstack_ccee:
     keep_running: false
 ```
 
+### 2.6 Aliyun
+
+You need credentials as used for the aliyun command line client, e.g. a `config.json` document. Prior to running the tests the following objects must be created in the account:
+
+- A vSwitch with a cidr range (e.g. 192.168.0.0/24)
+- A security group which allows ingress traffic on TCP port 22 from source IP address of the test run
+- a bucket for uploading the disk image files
+
+Use the following test configuration:
+
+```
+ali:
+    # mandatory, aliyun credential file location (config.json)
+    credential_file: 
+
+    # optional, if an image id is provided the test will not attempt
+    # to upload an image
+    image_id:   # m-....
+
+    # image file (qcow2)
+    image:  # image.qcow2
+
+    # a valid instance type for the selected region
+    instance_type: ecs.t5-lc1m2.large
+
+    # mandatory, the security group id
+    security_group_id:  # sg-...
+
+    # mandatory, the vswtich id
+    vswitch_id:  # vsw-...
+
+    # mandatory, region and zone
+    region_id: eu-central-1
+    zone_id: eu-central-1a
+
+    # mandatory: bucket name
+    bucket:  # my-test-upload-bucket
+
+    # optional, path in bucket 
+    bucket_path: integration-test
+
+
+    # ssh related configuration for logging in to the VM (required)
+    ssh:
+        # path to the ssh key file (required)
+        ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
+        # key name
+        key_name: gardenlinux-test
+        # passphrase for a secured SSH key (optional)
+        passphrase:
+        # username
+        user: admin
+
+    # keep instance running after tests finishes if set to true (optional)
+    keep_running: false
+```
+
 #### 2.3.1 Configuration options
 
 <details>
