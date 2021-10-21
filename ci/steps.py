@@ -628,7 +628,9 @@ def notify_step(
 ):
     step_params = [
         params.additional_recipients,
+        params.branch,
         params.cicd_cfg_name,
+        params.committish,
         params.disable_notifications,
         params.giturl,
         params.namespace,
