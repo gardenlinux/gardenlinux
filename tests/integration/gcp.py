@@ -22,6 +22,9 @@ logger = logging.getLogger(__name__)
 googleapiclient_logger = logging.getLogger("googleapiclient")
 googleapiclient_logger.setLevel(logging.ERROR)
 
+startup_script = """#!/bin/bash
+touch /tmp/startup-script-ok
+"""
 
 class GCP:
     """Handle resources in GCP"""
@@ -288,6 +291,10 @@ class GCP:
                     {
                         "key": "ssh-keys",
                         "value": self.user + ":" + self.get_public_key() 
+                    },
+                    {
+                        "key": "startup-script",
+                        "value" : startup_script
                     }
                 ]
             },
