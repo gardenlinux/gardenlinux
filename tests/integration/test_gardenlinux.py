@@ -379,3 +379,8 @@ sys     0m0.108s
     m=re.search(p_real, error)
     duration = (int(m.group(1)) * 60) + int(m.group(2))
     assert duration < 5, "Expected the test to run in less than 5 seconds"
+
+def test_startup_script(client, gcp):
+    (exit_code, output, error) = client.execute_command("test -f /tmp/startup-script-ok")
+    assert exit_code == 0, f"no {error=} expected. Startup script did not run"
+
