@@ -77,6 +77,9 @@ grep -q apparmor <<< $dockerinfo  && securityArgs+=( --security-opt apparmor=unc
 buildImage=${BUILD_IMAGE:-"gardenlinux/build-image:$version"}
 [ $build ] && make --directory=docker ALTNAME=$buildImage build-image
 
+[ -e ${thisDir}/cert/Kernel.sign.crt ] || make -C cert Kernel.sign.crt
+[ -e ${thisDir}/cert/Kernel.sign.key ] || make -C cert Kernel.sign.key
+
 # using the buildimage in a temporary container with
 # build directory mounted in memory (--tmpfs ...) and
 # dev mounted via bind so loopback device changes are reflected into the container
