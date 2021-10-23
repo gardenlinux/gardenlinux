@@ -13,6 +13,7 @@ mnt=$(mktemp -d)
 
 cp -a "$rootfs/." "$rootfs_work"
 
+chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
 chroot "$rootfs_work" /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
 rm "$rootfs_work/.autorelabel"
 
