@@ -9,7 +9,7 @@
 
 <hr />
 <p align="center">&bull;
-    <a href="#Features">Features</a> &bull;
+    <a href="#flavors">Flavors</a> &bull;
     <a href="#build-requirements">Build Requirements</a> &bull;
     <a href="#quick-start">Quick Start</a> &bull;
     <a href="#customize-builds">Customize</a> &bull;
@@ -17,9 +17,8 @@
 </p>
 <hr />
 
-Garden Linux is a [Debian](https://debian.org) derivate that aims to provide a small, auditable linux image for most Cloud Providers and Bare Metal.
+Garden Linux is a [Debian](https://debian.org) derivate that aims to provide a small, auditable linux image. It comes in different flavors, suitable for most Cloud Providers and Bare Metal.
 
-## Features:
 - easy to use build system for OS images
 - builds are repeatable and auditable
 - small footprint (based on minbase of Debian)
@@ -41,6 +40,17 @@ Garden Linux is a [Debian](https://debian.org) derivate that aims to provide a s
   - major virtualizer VMware, OpenStack, KVM
   - bare metal
 
+## Flavors
+
+- *ali* - Alibaba Cloud
+- *aws* - Amazon Web Services
+- *gcp* - Google Cloud Platform
+- *azure* - Microsoft Azure
+- *openstack* - OpenStack (OpenStack API with ESXi hypervisor)
+- *vmware* - VMware
+- *kvm* - KVM
+- *metal* - Bare Metal
+
 ## Build Requirements
 
 The entire build runs in a docker container (well a privileged one with extended capabilities - since we need loop back support)
@@ -52,11 +62,11 @@ We can run on any system supporting Docker and having loopback support and has
 
 ### Required packages for a convenient build (on Debian/Ubuntu):
 
-`apt install bash docker.io docker-compose make coreutils gnupg git qemu-system-x86`
+    apt-get install bash docker.io docker-compose make coreutils gnupg git qemu-system-x86
 
 ### Required packages for deployment on cloud services:
 
-`apt install python3`
+    apt-get install python3
 
 - Alicloud: [Aliyun CLI](https://github.com/aliyun/aliyun-cli)
 - AWS: [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
@@ -70,9 +80,8 @@ ext4, loop, squashfs, vfat, vsock (for VM image builds and extended virtualized 
 
 ### Required packages to configure the CI pipeline
 
-`apt install bash git python`
-
-`pip install tekton`
+    apt-get install bash git python
+    pip install tekton
 
 ## Quick start
 
@@ -120,3 +129,18 @@ file-system images for manual import. See the [releases](docs/releases.md) page 
 
 ## Pipeline Integration
 Garden Linux can build in an automated way for continous integration. See [ci/README.md](ci/README.md) for details.
+
+## Versioning
+
+Garden Linux is versioned by the day of the created binary release (image):
+
+The Release 1 would have been when the project was created on March 31st 2020.
+Since there was much more coding to be done the first stable release was 27 ->
+created on April 27th 2020.
+
+Release day (as in Date) - April 1st 2020 (+1) = version number
+
+     27.04.2020 - 01.04.2020 + 1 = 27
+     01.06.2020 - 01.04.2020 + 1 = 62
+
+All this calculation is done in `bin/garden-version`.

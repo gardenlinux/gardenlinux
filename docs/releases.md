@@ -1,23 +1,16 @@
-<p align="center">
-  <img
-     src="https://raw.githubusercontent.com/gardenlinux/gardenlinux/main/logo/gardenlinux.svg"
-     width="380"
-  />
-  <h1 align="center">Garden Linux Releases</h1>
- </a>
-</p>
+# Garden Linux Releases
 
 Garden Linux frequently publishes snapshot releases. We distinguish between stable releases, (i.e. those that are productively used on Gardener nodes) and development releases.
 
 The most recent stable release is Garden Linux **318.8** (git commit id `ae20c2`).
 
-# Stable released images for Cloud providers
+## Stable released images for Cloud providers
 
 Garden Linux is meant to be used as an operating system for Kubernetes nodes in hyperscalers or on physical hardware. Therefore, we publish machine images in most common cloud providers.
 
 If you want to use Gardenlinux, you can reference these image IDs for your VMs in your very own Hyperscaler account.
 
-## Amazon Web Services (AWS)
+### Amazon Web Services (AWS)
 
 The following AMIs are the IDs for the latest stable Garden Linux in the different AWS regions.
 
@@ -51,7 +44,7 @@ us-east-1:       ami-066eb78156cb8e30d
 us-east-2:       ami-08782642e97383550
 ```
 
-## Google Cloud Platform (GCP)
+### Google Cloud Platform (GCP)
 
 The latest stable Garden Linux image can be imported from the Garden Linux project.
 
@@ -59,7 +52,7 @@ The latest stable Garden Linux image can be imported from the Garden Linux proje
 projects/sap-se-gcp-gardenlinux/global/images/gardenlinux-gcp-cloud-gardener--prod-318-8-ae20c2
 ```
 
-## Microsoft Azure (AZ)
+### Microsoft Azure (AZ)
 
 The latest stable Garden Linux image can be imported from Azures image gallery.
 
@@ -67,7 +60,7 @@ The latest stable Garden Linux image can be imported from Azures image gallery.
 urn: sap:gardenlinux:greatest:318.8.0
 ```
 
-## Alibaba Cloud (alicloud)
+### Alibaba Cloud (alicloud)
 
 The following are the IDs for the latest stable Garden Linux in the different alicloud regions.
 
@@ -103,7 +96,7 @@ me-east-1:       m-eb3bjhkkxn3wuw4jgeqc
 ```
 
 
-# Stable released snapshots
+## Stable released snapshots
 
 If you want to import Garden Linux to your hyperscaler account yourself, you can download the filesystem snapshots and follow the import guidelines by the resepctive cloud provider.
 
@@ -132,6 +125,6 @@ VMware:
 - [download .OVA](https://gardenlinux.s3.eu-central-1.amazonaws.com/objects/726ce0b438062dd48373e269c5588eb9ba9eb42c)
 
 
-# Development releases
+## Development releases
 
 Development releases will be added at a later point in time.
