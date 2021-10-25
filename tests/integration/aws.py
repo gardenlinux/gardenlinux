@@ -98,13 +98,14 @@ class AWS:
         :param key_name: name of the key
         :param ssh_key_filepath: path of the private key in the local filesystem
         """
+        logger.info(f"Importing key from file {ssh_key_filepath} as {key_name}")
         with open(f"{ssh_key_filepath}.pub", "rb") as f:
             public_key_bytes = f.read()
             response = self.client.import_key_pair(
                 KeyName=key_name, PublicKeyMaterial=public_key_bytes,
             )
             fingerprint = response["KeyFingerprint"]
-            logger.info(f"imported key-pair {key_name} with fingerprint {fingerprint}")
+            logger.info(f"imported key-pair {key_name} from {ssh_key_filepath} with fingerprint {fingerprint}")
 
     def find_security_group(self, name):
         """
@@ -241,6 +242,7 @@ class AWS:
         if not (
             path.exists(ssh_key_filepath) and path.exists(f"{ssh_key_filepath}.pub")
         ):
+            logger.info(f"Key {ssh_key_filepath} does not exist. Generating a new key")
             passphrase = self.config["passphrase"]
             user = self.ssh_config["user"]
             RemoteClient.generate_key_pair(ssh_key_filepath, 2048, passphrase, user)
