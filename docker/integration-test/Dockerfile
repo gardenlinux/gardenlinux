@@ -9,9 +9,7 @@ FROM gardenlinux/slim
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV SHELL /bin/bash
-ENV PYTHONPATH /gardenlinux/bin:/gardenlinux/ci
-
-COPY _pipfiles /_pipfiles
+ENV PYTHONPATH /gardenlinux/bin:/gardenlinux/ci:/gardenlinux/ci/glci
 
 RUN apt-get update \
      && apt-get install -y --no-install-recommends \
@@ -23,7 +21,7 @@ RUN apt-get update \
           gnupg \
           pipenv \
           python3-pytest \
-          vim-tiny \
+          vim \
           procps \
           openssh-client \
           inetutils-ping \
@@ -47,8 +45,10 @@ RUN apt-get update \
      && wget https://gosspublic.alicdn.com/ossutil/1.7.6/ossutil64?spm=a2c63.p38356.a3.3.44692454KkczI0 -O /usr/local/bin/ossutil \
      && chmod 755 /usr/local/bin/ossutil \
      && apt-get clean && rm -rf /var/lib/apt/lists/* \
-     && mkdir -p /root/.aws /root/.ssh /config \
-     && cd /_pipfiles && pipenv install --system --dev && cd / && rm -rf /_pipfiles
+     && mkdir -p /root/.aws /root/.ssh /config
+
+COPY _pipfiles /_pipfiles
+RUN cd /_pipfiles && pipenv --python 3.9 install --system --dev && cd / && rm -rf /_pipfiles
 
 COPY --from=golang /go/azure-vhd-utils/azure-vhd-utils /usr/local/bin/azure-vhd-utils
 
