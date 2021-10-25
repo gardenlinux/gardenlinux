@@ -279,8 +279,10 @@ def test_growpart(client, openstack, openstack_flavor):
 
 def test_docker(client):
     (exit_code, output, error) = client.execute_command("sudo systemctl start docker")
+    if exit_code != 0:
+        (journal_rc, output, error) = client.execute_command("sudo journactl --no-pager -xu docker.service")
     assert exit_code == 0, f"no {error=} expected"
-    (exit_code, output, error) = client.execute_command("sudo docker run --rm  alpine:3.14.2 sh -c 'echo from container'")
+    (exit_code, output, error) = client.execute_command("sudo docker run --rm  eu.gcr.io/gardenlinux/gardenlinux:184.0 sh -c 'echo from container'")
     assert exit_code == 0, f"no {error=} expected"
     assert output == "from container\n", f"Expected 'from container' output but got {output}"
 
