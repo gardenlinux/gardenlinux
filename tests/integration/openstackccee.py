@@ -9,6 +9,7 @@ import paramiko
 
 from novaclient import client
 from .sshclient import RemoteClient
+from . import util
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -30,22 +31,18 @@ class OpenStackCCEE:
         logger.info("Image name %s" % config["image_name"])
 
         openstack = OpenStackCCEE(config)
-
-        openstack._boot_image(
-                flavor_id=openstack.flavor["id"], 
-                image_id=config["image_id"], 
-                security_group=config["security_group"],
-                network_id=openstack.network["id"],
-                key_name=config["ssh"]["key_name"], 
-                vm_name=config["image_id"]
-        )
-        logger.info("VM booted")
         cls.openstack = openstack
 
+        if openstack.floating_ip != None:
+            ip = openstack.floating_ip
+        else:
+            ip = openstack.ip
+
+        logger.info(f"Using ip {ip} to connect to VM.")
         try:
             ssh = None
             ssh = RemoteClient(
-                host=openstack.ip,
+                host=ip,
                 sshconfig=config["ssh"],
             )
             yield ssh
@@ -61,6 +58,7 @@ class OpenStackCCEE:
 
     def __init__(self, config):
 
+        self.floating_ip_attached = False
         self.config = config
         if "credentials" in self.config and self.config["credentials"] != None:
             logger.info("Credentials: %s" % config["credentials"])
@@ -95,18 +93,39 @@ class OpenStackCCEE:
         self.flavor = self._get_flavor(config["flavor"])
         self.network = self._get_network(config["network_name"])
 
+        self._boot_image(
+                flavor_id=self.flavor["id"], 
+                image_id=config["image_id"], 
+                security_group=config["security_group"],
+                network_id=self.network["id"],
+                key_name=config["ssh"]["key_name"], 
+                vm_name=config["image_id"]
+        )
+        logger.info(f"VM with id {self.vm_id} booted.")
+
+        fip = util.get_config_value(config, "floating_ip")
+        if fip != None:
+            fip_json = self._get_floating_ip(fip)
+            if fip_json["fixed_ip_address"] != None:
+                raise Exception(f"Floating IP address {fip} is in use.")
+            logger.info(f"Attaching floating ip addess {fip_json['floating_ip_address']} to vm {self.vm_id}")
+            self._attach_floating_ip(self.vm_id, fip_json['floating_ip_address'])
+            self.floating_ip_attached = True
+            self.floating_ip = fip_json["fixed_ip_address"]
+
     def __del__(self):
         """Cleanup resources held by this object"""
         if "keep_running" in self.config and self.config["keep_running"] == True:
             logger.info("Keeping all resources")
         else:
+            if self.floating_ip_attached:
+                self._detach_floating_ip(self.vm_id, self.config["floating_ip"])
             if self.server:
                 self._delete_vm(self.vm_id)
             if self.image:
                 self._delete_image(self.image["id"])
 
     def _nova_connect(self):
-
         self.nova = client.Client(
             version=self.env["OS_COMPUTE_API_VERSION"],
             username=self.env["OS_USERNAME"],
@@ -243,7 +262,20 @@ class OpenStackCCEE:
         if result.returncode != 0:
             raise Exception("Image %s could not be uploaded as %s: %s" %( image, image_name, result.stderr.decode('utf-8')))
         doc = json.loads(result.stdout)
+        id = doc['id']
+
+        cmd = [
+            "openstack",
+            "image",
+            "set",
+            "--tag",
+            "purpose=integration-test",
+            id
+        ]
         logger.debug(json.dumps(doc, indent=4))
+        result = subprocess.run(cmd, env=self.env, capture_output=True)
+        if result.returncode != 0:
+            logger.error("ignored: image %s could not be tagged: %s" % (id, result.stderr.decode('utf-8')))
         return doc
 
     def _delete_image(self, image_id):
@@ -289,8 +321,55 @@ class OpenStackCCEE:
         self.ip = addr[0]["addr"]
         self.vm_id = values["id"]
         logger.info("VM IP address %s" % self.ip)
+        return self.vm_id
 
     def _delete_vm(self, id):
         self._nova_connect()
         server = self.nova.servers.get(server=id)
         server.delete()
+
+    def _get_floating_ip(self, fip):
+        cmd = [
+            "openstack",
+            "floating",
+            "ip",
+            "show",
+            "-f",
+            "json",
+            fip
+        ]
+        logging.debug("Running %s" % " ".join([v for v in cmd]))
+        result = subprocess.run(cmd, env=self.env, capture_output=True)
+        if result.returncode != 0:
+            raise Exception("Unable to get floating ip %s: %s" % (fip, result.stderr.decode('utf-8')))
+        return json.loads(result.stdout)
+
+    def _attach_floating_ip(self, vm_id, fip):
+        cmd = [
+            "openstack",
+            "server",
+            "add",
+            "floating",
+            "ip",
+            vm_id,
+            fip
+        ]
+        logging.debug("Running %s" % " ".join([v for v in cmd]))
+        result = subprocess.run(cmd, env=self.env, capture_output=True)
+        if result.returncode != 0:
+            raise Exception("Unable to attach floating ip %s to server %s: %s" % (fip, vm_id, result.stderr.decode('utf-8')))
+
+    def _detach_floating_ip(self, vm_id, fip):
+        cmd = [
+            "openstack",
+            "server",
+            "remove",
+            "floating",
+            "ip",
+            vm_id,
+            fip
+        ]
+        logging.debug("Running %s" % " ".join([v for v in cmd]))
+        result = subprocess.run(cmd, env=self.env, capture_output=True)
+        if result.returncode != 0:
+            raise Exception("Unable to remove floating ip %s from server %s: %s" % (fip, vm_id, result.stderr.decode('utf-8')))

@@ -55,3 +55,9 @@ def wait_for_global_operation(compute, project, operation):
         if "error" in response:
             error = response["error"]
         raise Exception("Operation %s failed: %s" % (operation, error))
+
+def get_config_value(config, key):
+    if key in config and config[key] != "":
+        return config[key]
+    else:
+        return None
