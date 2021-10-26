@@ -1,14 +1,10 @@
 import logging
 import json
-import re
 import time
 import os
 import subprocess
-import tempfile
-import time
 from oslo_utils.strutils import mask_dict_password
 
-from novaclient import client
 from .sshclient import RemoteClient
 from . import util
 
@@ -165,7 +161,7 @@ class ALI:
 
     def _delete_ssh_key(self, keyname):
         request = DeleteKeyPairsRequest()
-        request.set_KeyPairName(keyname)
+        request.set_KeyPairNames(keyname)
         response = self._send_request(request)
         logger.info("ssh key delete key pair response")
         logger.info(response)
