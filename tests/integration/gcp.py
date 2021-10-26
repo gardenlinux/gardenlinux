@@ -85,8 +85,8 @@ class GCP:
         self.image_uploaded = False
 
     def init_environment(self):
-        if "image" in self.config and self._get_image(self.config["project"], self.config["image_name"]) == None:
-            self._upload_image(self.config["project"], self.config["image_name"], self.config["image"])
+        if "image" in self.config and self._get_image(self.image_project, self.image_name) == None:
+            self._upload_image(self.image_project, self.image_name, self.config["image"])
 
         self._ensure_firewall_rules()
 
@@ -176,9 +176,9 @@ class GCP:
             images = self._compute.images()
 
             blob_url = "https://storage.cloud.google.com/" + self.config["bucket"] + "/" + blob_name
-            logger.info("Using %s for image import" % blob_url)
+            logger.info(f'Importing {blob_url} as {image_name=} into {project=}')
             insertion_rq = images.insert(
-                project=self.config["project"],
+                project=project,
                 body={
                     'description': 'gardenlinux',
                     'name': image_name,
@@ -192,7 +192,7 @@ class GCP:
             op_name = resp['name']
 
             logger.info(f'waiting for {op_name=}')
-            util.wait_for_global_operation(self._compute, self.config["project"], op_name)
+            util.wait_for_global_operation(self._compute, project, op_name)
             image_blob.delete()
             logger.info(f'uploaded image {blob_url} to {image_name}')
             self.image_uploaded = True
