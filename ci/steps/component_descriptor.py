@@ -131,10 +131,10 @@ def build_component_descriptor(
         f'{pprint.pformat(dataclasses.asdict(component_descriptor))}'
     )
 
-    if glci.model.PublishingAction.RELEASE_CANDIDATE in publishing_actions:
-        product.v2.upload_component_descriptor_v2_to_oci_registry(
-            component_descriptor_v2=component_descriptor,
-        )
+    product.v2.upload_component_descriptor_v2_to_oci_registry(
+        component_descriptor_v2=component_descriptor,
+        on_exist=product.v2.UploadMode.OVERWRITE,
+    )
 
     if snapshot_repo_base_url:
         if base_url != snapshot_repo_base_url:
