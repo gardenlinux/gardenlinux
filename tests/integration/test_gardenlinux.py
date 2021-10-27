@@ -295,7 +295,7 @@ def test_clocksource(client, aws):
     assert exit_code == 0, f"no {error=} expected"
     if hypervisor == "xen":
         assert output.rstrip() == "tsc", f"expected clocksoure for xen to be set to tsc but got {output}"
-    elif hypervisor == "kvm":
+    elif hypervisor == "kvm" or hypervisor == "amazon":
         assert output.rstrip() == "kvm-clock", f"expected clocksoure for kvm to be set to kvm-clock but got {output}"
     else:
         assert False, f"unknown hypervisor {hypervisor}"

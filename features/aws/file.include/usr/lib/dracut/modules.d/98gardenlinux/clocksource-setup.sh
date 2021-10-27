@@ -7,9 +7,9 @@ fi
 hypervisor=$(systemd-detect-virt)
 available_clock_sources=$(cat /sys/devices/system/clocksource/clocksource0/available_clocksource)
 case $hypervisor in
-kvm)
+kvm|amazon)
  if [[ "$available_clock_sources" =~ "kvm-clock" ]] ; then
-   echo "Detected hypervisor KVM, setting clocksource kvm-clock" | systemd-cat -p info -t clocksource-setup
+   echo "Detected hypervisor KVM/Amazon Nitro, setting clocksource kvm-clock" | systemd-cat -p info -t clocksource-setup
    echo kvm-clock > /sys/devices/system/clocksource/clocksource0/current_clocksource
  fi
  ;;
