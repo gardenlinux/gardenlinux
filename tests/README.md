@@ -449,6 +449,46 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 
     pytest --iaas=ali --configfile=/config/mygcpconfig.yaml integration/
 
+
+### 2.6. Manual testing
+
+So for some reason, you do not want to test Garden Linux by using a tool that automatically sets up the testbed in a cloud environment for you.
+
+You rather want to set up a host running Garden Linux yourself, create a user in it, somehow slip in an SSH public key and have a hostname/ip-address you can use to connect. Now all you want is to have the tests run on that host. This section about _Manual testing_ is for you then.
+
+Use the following (very simple) test configuration:
+
+```yaml
+manual:
+    # mandatory, the hostname/ip-address of the host the tests should run on
+    host: 
+
+    # ssh related configuration for logging in to the VM (required)
+    ssh:
+        # path to the ssh private key file (required)
+        ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
+        # passphrase for a secured SSH key (optional)
+        passphrase:
+        # username
+        user: admin
+```
+
+#### 2.6.1 Running the tests
+
+Start docker container with dependencies:
+
+- mount Garden Linux repository to `/gardenlinux`
+- mount SSH keys to `/root/.ssh`
+- mount directory with configfile to `/config`
+
+```
+docker run -it --rm  -v `pwd`:/gardenlinux -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+```
+
+Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
+
+    pytest --iaas=manual --configfile=/config/myconfig.yaml integration/
+
 ## 3. Misc
 
 ### auto-format using black
