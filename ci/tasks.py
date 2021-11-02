@@ -19,7 +19,7 @@ def promote_task(
     volume_mounts=[],
 ):
     params = []
-    clone_step, params_step  = steps.clone_step(
+    clone_step, params_step = steps.clone_step(
         params=all_params,
         env_vars=env_vars,
         volume_mounts=volume_mounts,

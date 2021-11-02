@@ -10,7 +10,7 @@ import tkn.model
 IMAGE_VERSION = '1.1477.0'
 DEFAULT_IMAGE = f'eu.gcr.io/gardener-project/cc/job-image:{IMAGE_VERSION}'
 KANIKO_IMAGE = f'eu.gcr.io/gardener-project/cc/job-image-kaniko:{IMAGE_VERSION}'
-CACHED_PATCH: str  = None
+CACHED_PATCH: str = None
 
 own_dir = os.path.abspath(os.path.dirname(__file__))
 scripts_dir = os.path.join(own_dir)

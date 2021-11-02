@@ -67,11 +67,11 @@ define BASH_BUILD
 git clone https://github.com/cloudflare/cfssl.git
 cd cfssl
 make
-mv bin/* /build 
+mv bin/* /build
 endef
 export BASH_BUILD
 
-all: Kernel.sign.crt sign.pub 
+all: Kernel.sign.crt sign.pub
 test:
 	echo "$(INTERNAL_HOSTNAME)"
 
@@ -98,7 +98,7 @@ $(SIGN_CA).crt: $(SIGN_CA).key
 
 .PRECIOUS: %.ca.crt
 %.ca.crt: %.ca.key $(SIGN_CA).crt
-	@echo "Signing CA $(@:.ca.crt=) by $(SIGN_CA)" 
+	@echo "Signing CA $(@:.ca.crt=) by $(SIGN_CA)"
 	$(eval tmpfile := $(shell mktemp))
 	@echo "$$profile" > $(tmpfile)
 	@cfssl/cfssl sign -ca $(SIGN_CA).crt -ca-key $(SIGN_CA).key -config $(tmpfile) -profile ca $(<:.key=.csr) | cfssl/cfssljson -bare -stdout | ./rename $(@:.crt=) $(SIGN_CA)
@@ -116,7 +116,7 @@ $(SIGN_CA).crt: $(SIGN_CA).key
 
 .PRECIOUS: %.sign.crt
 %.sign.crt: %.sign.key $(SIGN_CERT).crt
-	@echo "Signing Signature Certificate $(@:.sign.crt=) by $(SIGN_CERT)" 
+	@echo "Signing Signature Certificate $(@:.sign.crt=) by $(SIGN_CERT)"
 	$(eval tmpfile := $(shell mktemp))
 	@echo "$$profile" > $(tmpfile)
 	@cfssl/cfssl sign -ca $(SIGN_CERT).crt -ca-key $(SIGN_CERT).key -config $(tmpfile) -profile=sign $(<:.key=.csr) | cfssl/cfssljson -bare -stdout | ./rename $(@:.crt=) $(SIGN_CERT)
@@ -134,7 +134,7 @@ $(SIGN_CA).crt: $(SIGN_CA).key
 
 .PRECIOUS: %.client.crt
 %.client.crt: %.client.key $(SIGN_CERT).crt
-	@echo "Signing Signature Certificate $(@:.client.crt=) by $(SIGN_CERT)" 
+	@echo "Signing Signature Certificate $(@:.client.crt=) by $(SIGN_CERT)"
 	$(eval tmpfile := $(shell mktemp))
 	@echo "$$profile" > $(tmpfile)
 	@cfssl/cfssl sign -ca $(SIGN_CERT).crt -ca-key $(SIGN_CERT).key -config $(tmpfile) -profile=client $(<:.key=.csr) | cfssl/cfssljson -bare -stdout | ./rename $(@:.crt=) $(SIGN_CERT)
@@ -153,7 +153,7 @@ $(SIGN_CA).crt: $(SIGN_CA).key
 .PRECIOUS: %.server.crt
 %.server.crt: %.server.key $(SIGN_CERT).crt
 	@echo "Signing Server Certificate $(@:.server.crt=) by $(SIGN_CERT)"
-	@find . -lname $@ -exec rm -rf {} \;	
+	@find . -lname $@ -exec rm -rf {} \;
 	$(eval tmpfile := $(shell mktemp))
 	@echo "$$profile" > $(tmpfile)
 	@cfssl/cfssl sign -ca $(SIGN_CERT).crt -ca-key $(SIGN_CERT).key -config $(tmpfile) -profile=server $(INTERNAL_HOSTNAME)  $(<:.key=.csr) | cfssl/cfssljson -bare -stdout | ./rename $(@:.crt=) $(SIGN_CERT)
@@ -172,7 +172,7 @@ $(SIGN_CA).crt: $(SIGN_CA).key
 .PRECIOUS: %.peer.crt
 %.peer.crt: %.peer.key $(SIGN_CERT).crt
 	@echo "Signing Server Certificate $(@:.peer.crt=) by $(SIGN_CERT)"
-	@find . -lname $@ -exec rm -rf {} \;	
+	@find . -lname $@ -exec rm -rf {} \;
 	$(eval tmpfile := $(shell mktemp))
 	@echo "$$profile" > $(tmpfile)
 	@cfssl/cfssl sign -ca $(SIGN_CERT).crt -ca-key $(SIGN_CERT).key -config $(tmpfile) -profile=peer $(INTERNAL_HOSTNAME)  $(<:.key=.csr) | cfssl/cfssljson -bare -stdout | ./rename $(@:.crt=) $(SIGN_CERT)
@@ -206,4 +206,3 @@ clean:
 PHONY: superclean
 superclean: clean
 	rm -rf cfssl
-
