@@ -273,7 +273,9 @@ fi
 		[ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
 		for i in $(echo "base,$features" | tr ',' '\n' | norm_features); do
 			if [ -s $featureDir/$i/image ]; then
-				bash -c "$featureDir/$i/image $rootfs $targetBase"
+				"$featureDir/$i/image" "$rootfs" "$targetBase"
+			elif [ -f "$featureDir/$i/fstab" ]; then
+				makepart "$rootfs" < "$featureDir/$i/fstab" | makedisk "$rootfs" "$targetBase.raw"
 			else
 				true
 			fi

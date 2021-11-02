@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-makef.sh --read-only-usr --force $2 $2.tar.xz
