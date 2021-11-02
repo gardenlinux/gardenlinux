@@ -85,7 +85,7 @@ cfssl/cfssl cfssl/cfssljson:
 .PHONY: %.ca
 %.ca: cfssl/cfssl cfssl/cfssljson
 	@echo "Recreating CN=Garden Linux $(@:.ca=) CA"
-	@rm -f $@*.crt
+	@rm -rf $@*.crt
 	@echo "$$cert" | sed "s/%%CN%%/Garden Linux $(@:.ca=) CA/" | cfssl/cfssl gencert -initca - | cfssl/cfssljson -bare -stdout | ./rename $@
 
 .PRECIOUS: %.ca.key
@@ -94,7 +94,7 @@ cfssl/cfssl cfssl/cfssljson:
 
 .PRECIOUS: $(SIGN_CA).crt $(SIGN_CA).key
 $(SIGN_CA).crt: $(SIGN_CA).key
-	@rm -f $(SIGN_CA).csr
+	@rm -rf $(SIGN_CA).csr
 
 .PRECIOUS: %.ca.crt
 %.ca.crt: %.ca.key $(SIGN_CA).crt
@@ -102,7 +102,7 @@ $(SIGN_CA).crt: $(SIGN_CA).key
 	$(eval tmpfile := $(shell mktemp))
 	@echo "$$profile" > $(tmpfile)
 	@cfssl/cfssl sign -ca $(SIGN_CA).crt -ca-key $(SIGN_CA).key -config $(tmpfile) -profile ca $(<:.key=.csr) | cfssl/cfssljson -bare -stdout | ./rename $(@:.crt=) $(SIGN_CA)
-	@rm -f $(tmpfile) $(<:.key=.csr)
+	@rm -rf $(tmpfile) $(<:.key=.csr)
 
 #### signature
 .PHONY: %.sign
@@ -120,7 +120,7 @@ $(SIGN_CA).crt: $(SIGN_CA).key
 	$(eval tmpfile := $(shell mktemp))
 	@echo "$$profile" > $(tmpfile)
 	@cfssl/cfssl sign -ca $(SIGN_CERT).crt -ca-key $(SIGN_CERT).key -config $(tmpfile) -profile=sign $(<:.key=.csr) | cfssl/cfssljson -bare -stdout | ./rename $(@:.crt=) $(SIGN_CERT)
-	@rm -f $(tmpfile) $(<:.key=.csr)
+	@rm -rf $(tmpfile) $(<:.key=.csr)
 
 #### client
 .PHONY: %.client
@@ -138,7 +138,7 @@ $(SIGN_CA).crt: $(SIGN_CA).key
 	$(eval tmpfile := $(shell mktemp))
 	@echo "$$profile" > $(tmpfile)
 	@cfssl/cfssl sign -ca $(SIGN_CERT).crt -ca-key $(SIGN_CERT).key -config $(tmpfile) -profile=client $(<:.key=.csr) | cfssl/cfssljson -bare -stdout | ./rename $(@:.crt=) $(SIGN_CERT)
-	@rm -f $(tmpfile) $(<:.key=.csr)
+	@rm -rf $(tmpfile) $(<:.key=.csr)
 
 #### server
 .PHONY: %.server
@@ -153,11 +153,11 @@ $(SIGN_CA).crt: $(SIGN_CA).key
 .PRECIOUS: %.server.crt
 %.server.crt: %.server.key $(SIGN_CERT).crt
 	@echo "Signing Server Certificate $(@:.server.crt=) by $(SIGN_CERT)"
-	@find . -lname $@ -exec rm -f {} \;	
+	@find . -lname $@ -exec rm -rf {} \;	
 	$(eval tmpfile := $(shell mktemp))
 	@echo "$$profile" > $(tmpfile)
 	@cfssl/cfssl sign -ca $(SIGN_CERT).crt -ca-key $(SIGN_CERT).key -config $(tmpfile) -profile=server $(INTERNAL_HOSTNAME)  $(<:.key=.csr) | cfssl/cfssljson -bare -stdout | ./rename $(@:.crt=) $(SIGN_CERT)
-	@rm -f $(tmpfile) $(<:.key=.csr)
+	@rm -rf $(tmpfile) $(<:.key=.csr)
 
 #### peer
 .PHONY: %.peer
@@ -172,11 +172,11 @@ $(SIGN_CA).crt: $(SIGN_CA).key
 .PRECIOUS: %.peer.crt
 %.peer.crt: %.peer.key $(SIGN_CERT).crt
 	@echo "Signing Server Certificate $(@:.peer.crt=) by $(SIGN_CERT)"
-	@find . -lname $@ -exec rm -f {} \;	
+	@find . -lname $@ -exec rm -rf {} \;	
 	$(eval tmpfile := $(shell mktemp))
 	@echo "$$profile" > $(tmpfile)
 	@cfssl/cfssl sign -ca $(SIGN_CERT).crt -ca-key $(SIGN_CERT).key -config $(tmpfile) -profile=peer $(INTERNAL_HOSTNAME)  $(<:.key=.csr) | cfssl/cfssljson -bare -stdout | ./rename $(@:.crt=) $(SIGN_CERT)
-	@rm -f $(tmpfile) $(<:.key=.csr)
+	@rm -rf $(tmpfile) $(<:.key=.csr)
 
 #### format change
 .PRECIOUS: %.p12
@@ -201,7 +201,7 @@ sign.key:
 PHONY: clean
 clean:
 	@echo "removing *.full  *.chain *.crt *.key *.csr *.p12 but nothing with gardenlinux.*"
-	@find . \( -name '*.full' -o -name '*.crt' -o -name '*.pub' -o -name '*.key' -o -name '*.csr' -o -name '*.p12' -o -name '*.chain' \) -a -not -name 'gardenlinux.*' -exec rm -f {} \;
+	@find . \( -name '*.full' -o -name '*.crt' -o -name '*.pub' -o -name '*.key' -o -name '*.csr' -o -name '*.p12' -o -name '*.chain' \) -a -not -name 'gardenlinux.*' -exec rm -rf {} \;
 
 PHONY: superclean
 superclean: clean

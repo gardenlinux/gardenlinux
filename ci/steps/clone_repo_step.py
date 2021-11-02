@@ -1,10 +1,29 @@
+import base64
 import os
 import urllib.parse
 
 import git
 
 import ccc.github
+import distutils.util
 import gitutil
+
+
+def apply_patch(
+        repo_dir: str,
+):
+    patch = PATCH_CONTENT # global variable rendered at runtime
+    patch_decoded = base64.b64decode(patch.encode('utf-8'))
+    patch_decoded = patch_decoded.decode('utf-8')
+
+    patch_path = os.path.join(repo_dir, 'gardenlinux.patch')
+    with open(patch_path, 'w') as f:
+        f.write(patch_decoded)
+
+    repo = git.Repo(repo_dir)
+    git_cli = repo.git
+    patch = git_cli.apply(patch_path, '--whitespace=nowarn')
+    os.unlink(patch_path)
 
 
 def clone_and_checkout_with_technical_user(
@@ -72,3 +91,7 @@ def clone_and_copy(
 
     print(f'cloned to {repo_dir=} {commit_hash=}')
     print(f'Commit Message: {commit_msg}')
+
+    if PATCH_CONTENT:
+        print("Applying patch containing all diffs against remote")
+        apply_patch(repo_dir=repo_dir)

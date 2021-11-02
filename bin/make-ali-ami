@@ -1,14 +1,17 @@
 #!/usr/bin/env bash 
 set -x
-VERSION=43
 
-region=eu-central-1
+bucket=$1
+region=$2
+ossobject=$3  # gardenlinux/garden-linux-dev-ali-${VERSION}.qcow2
+image_name=$4
+
 aliyun ecs ImportImage \
- --Description="gardenlinux-dev-ali-$VERSION" \
+ --Description=${image_name} \
  --Platform='Others Linux' \
- --ImageName="gardenlinux-dev-ali-$VERSION" \
- --DiskDeviceMapping.1.OSSBucket=gardenlinux-development \
- --DiskDeviceMapping.1.OSSObject="gardenlinux/garden-linux-dev-ali-${VERSION}.qcow2" \
+ --ImageName=${image_name} \
+ --DiskDeviceMapping.1.OSSBucket=${bucket} \
+ --DiskDeviceMapping.1.OSSObject=${ossobject} \
  --DiskDeviceMapping.1.Format=qcow2 \
  --DiskDeviceMapping.1.DiskImSize=5 \
- --RegionId=$region
+ --RegionId=${region}

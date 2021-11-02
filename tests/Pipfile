@@ -15,6 +15,10 @@ google-cloud-datastore = "*"
 google-cloud = "*"
 oauth2client = "*"
 dacite = "*"
+aliyun-python-sdk-core = "*"
+aliyun-python-sdk-ecs = "*"
+oss2 = "*"
+python-openstackclient = "*"
 
 [dev-packages]
 flake8 = "*"

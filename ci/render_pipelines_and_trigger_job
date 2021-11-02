@@ -21,12 +21,20 @@ export_env
 function cleanup_pipelineruns {
   echo "purging old pipelineruns"
   tkn \
-    --namespace "${GARDENLINUX_TKN_WS}" \
+    -n "${GARDENLINUX_TKN_WS}" \
     pipelineruns \
     delete \
     --force \
     --all \
     --keep 20
+  echo "purging old taskruns"
+    tkn \
+   -n "${GARDENLINUX_TKN_WS}" \
+    taskruns \
+    delete \
+    --force \
+    --all \
+    --keep 50
 }
 
 function create_credentials {
@@ -96,6 +104,11 @@ ci/render_pipeline_run.py $EXTRA_ARGS \
   --outfile "${pipeline_run}" \
   --outfile-packages "${pipeline_package_run}"
 
+PATCH_BRANCH=
+if [ ! -z ${USE_PATCHING:-} ]; then
+  export PATCH_BRANCH="${BRANCH_NAME}"
+  echo "Patching target working dir with local diff against ${PATCH_BRANCH}"
+fi
 
 RENDER_TASK_EXTRA_ARGS=
 if [ ! -z ${SECRETS_SERVER_ENDPOINT:-} ]; then

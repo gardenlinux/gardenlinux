@@ -98,13 +98,14 @@ class AWS:
         :param key_name: name of the key
         :param ssh_key_filepath: path of the private key in the local filesystem
         """
+        logger.info(f"Importing key from file {ssh_key_filepath} as {key_name}")
         with open(f"{ssh_key_filepath}.pub", "rb") as f:
             public_key_bytes = f.read()
             response = self.client.import_key_pair(
                 KeyName=key_name, PublicKeyMaterial=public_key_bytes,
             )
             fingerprint = response["KeyFingerprint"]
-            logger.info(f"imported key-pair {key_name} with fingerprint {fingerprint}")
+            logger.info(f"imported key-pair {key_name} from {ssh_key_filepath} with fingerprint {fingerprint}")
 
     def find_security_group(self, name):
         """
@@ -199,7 +200,10 @@ class AWS:
             return json.loads(result.stdout)
 
         if o.scheme == "s3":
-            images = self.ec2.describe_images(Filters=[{
+            # late import because we do not need it if image is not in S3
+            import glci.aws
+
+            images = self.client.describe_images(Filters=[{
                 "Name": "name",
                 "Values": [image_name]
             }])
@@ -209,16 +213,16 @@ class AWS:
                 return {"ami-id": ami_id}
 
             snapshot_task_id = glci.aws.import_snapshot(
-                ec2_client=self.ec2,
+                ec2_client=self.client,
                 s3_bucket_name=o.netloc,
                 image_key=o.path.lstrip("/"),
             )
             snapshot_id = glci.aws.wait_for_snapshot_import(
-                ec2_client=self.ec2,
+                ec2_client=self.client,
                 snapshot_task_id=snapshot_task_id,
             )
             initial_ami_id = glci.aws.register_image(
-               ec2_client=self.ec2,
+               ec2_client=self.client,
                snapshot_id=snapshot_id,
                image_name="gl-integration-test-image-" + o.path.split("/objects/",1)[1],
             )
@@ -241,7 +245,8 @@ class AWS:
         if not (
             path.exists(ssh_key_filepath) and path.exists(f"{ssh_key_filepath}.pub")
         ):
-            passphrase = self.config["passphrase"]
+            logger.info(f"Key {ssh_key_filepath} does not exist. Generating a new key")
+            passphrase = self.ssh_config["passphrase"]
             user = self.ssh_config["user"]
             RemoteClient.generate_key_pair(ssh_key_filepath, 2048, passphrase, user)
         if not self.find_key(key_name):

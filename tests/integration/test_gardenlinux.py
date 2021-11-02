@@ -14,6 +14,7 @@ from .aws import AWS
 from .gcp import GCP
 from .azure import AZURE
 from .openstackccee import OpenStackCCEE
+from .ali import ALI
 from .sshclient import RemoteClient
 
 logger = logging.getLogger(__name__)
@@ -46,9 +47,21 @@ def client(request, config: dict, iaas) -> Iterator[RemoteClient]:
         yield from AZURE.fixture(config["azure"])
     elif iaas == "openstack-ccee":
         yield from OpenStackCCEE.fixture(config["openstack_ccee"])
+    elif iaas == "ali":
+        yield from ALI.fixture(config["ali"])
     else:
         raise ValueError(f"invalid {iaas=}")
 
+
+@pytest.fixture(scope='module')
+def non_ali(iaas):
+    if iaas == 'ali':
+        pytest.skip('test not supported on ali')
+
+@pytest.fixture(scope='module')
+def ali(iaas):
+    if iaas != 'ali':
+        pytest.skip('test only supported on ali')
 
 @pytest.fixture(scope='module')
 def non_azure(iaas):
@@ -91,8 +104,23 @@ def test_clock(client):
     remote_seconds = int(output)
     assert (
         abs(local_seconds - remote_seconds) < 5
-    ), "clock skew should be less than 5 seconds"
+    ), "clock skew should be less than 5 seconds. Local time is %s and remote time is %s" % (local_seconds, remote_seconds)
 
+def test_ntp(client, non_azure):
+    """azure does not use systemd-timesyncd"""
+    (exit_code, output, error) = client.execute_command("timedatectl show")
+    assert exit_code == 0, f"no {error=} expected"
+    lines = output.splitlines()
+    npt_ok=False
+    ntp_synchronised_ok=False
+    for l in lines:
+        nv = l.split("=")
+        if nv[0] == "NTP" and nv[1] == "yes":
+            ntp_ok = True
+        if nv[0] == "NTPSynchronized" and nv[1] == "yes":
+            ntp_synchronised_ok = True
+    assert ntp_ok, "NTP not activated"
+    assert ntp_synchronised_ok, "NTP not synchronized"
 
 def test_ls(client):
     (exit_code, output, error) = client.execute_command("ls /")
@@ -125,7 +153,7 @@ def test_no_man(client):
     assert "man: command not found" in error
 
 
-def test_metadata_connection_non_az(client, non_azure):
+def test_metadata_connection_non_az_non_ali(client, non_azure, non_ali):
     metadata_host = "169.254.169.254"
     (exit_code, output, error) = client.execute_command(
         f"wget --timeout 5 http://{metadata_host}"
@@ -138,6 +166,13 @@ def test_metadata_connection_non_az(client, non_azure):
 def test_metadata_connection_az(client, azure):
 
     metadata_url = "http://169.254.169.254/metadata/instance/compute?api-version=2021-01-01&format=json"
+    (exit_code, output, error) = client.execute_command(
+        f"curl --connect-timeout 5 '{metadata_url}' -H 'Metadata: true'"
+    )
+    assert exit_code == 0, f"no {error=} expected"
+
+def test_metadate_connection_ali(client, ali):
+    metadata_url = "http://100.100.100.200/2016-01-01"
     (exit_code, output, error) = client.execute_command(
         f"curl --connect-timeout 5 '{metadata_url}' -H 'Metadata: true'"
     )
@@ -209,6 +244,10 @@ def test_startup_time(client):
             time_initrd = items[i-1]
         if v == "(userspace)":
             time_userspace = items[i-1]
+    if len(time_kernel) >2 and time_kernel[-2:] == "ms":
+        time_kernel = str(float(time_kernel[:-2]) / 1000.0) + "s"
+    if len(time_initrd) >2 and time_initrd[-2:] == "ms":
+        time_initrd = str(float(time_initrd[:-2]) / 1000.0) + "s"
     tf_kernel = float(time_kernel[:-1]) + float(time_initrd[:-1])
     tf_userspace = float(time_userspace[:-1])
     assert tf_kernel < tolerated_kernel_time, f"startup time in kernel space too long: {tf_kernel} seconds =  but only {tolerated_kernel_time} tolerated."
@@ -240,8 +279,10 @@ def test_growpart(client, openstack, openstack_flavor):
 
 def test_docker(client):
     (exit_code, output, error) = client.execute_command("sudo systemctl start docker")
+    if exit_code != 0:
+        (journal_rc, output, error) = client.execute_command("sudo journactl --no-pager -xu docker.service")
     assert exit_code == 0, f"no {error=} expected"
-    (exit_code, output, error) = client.execute_command("sudo docker run --rm  alpine:3.14.2 sh -c 'echo from container'")
+    (exit_code, output, error) = client.execute_command("sudo docker run --rm  eu.gcr.io/gardenlinux/gardenlinux:184.0 sh -c 'echo from container'")
     assert exit_code == 0, f"no {error=} expected"
     assert output == "from container\n", f"Expected 'from container' output but got {output}"
 
@@ -254,7 +295,7 @@ def test_clocksource(client, aws):
     assert exit_code == 0, f"no {error=} expected"
     if hypervisor == "xen":
         assert output.rstrip() == "tsc", f"expected clocksoure for xen to be set to tsc but got {output}"
-    elif hypervisor == "kvm":
+    elif hypervisor == "kvm" or hypervisor == "amazon":
         assert output.rstrip() == "kvm-clock", f"expected clocksoure for kvm to be set to kvm-clock but got {output}"
     else:
         assert False, f"unknown hypervisor {hypervisor}"
@@ -340,3 +381,8 @@ sys     0m0.108s
     m=re.search(p_real, error)
     duration = (int(m.group(1)) * 60) + int(m.group(2))
     assert duration < 5, "Expected the test to run in less than 5 seconds"
+
+def test_startup_script(client, gcp):
+    (exit_code, output, error) = client.execute_command("test -f /tmp/startup-script-ok")
+    assert exit_code == 0, f"no {error=} expected. Startup script did not run"
+

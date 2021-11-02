@@ -1,6 +1,7 @@
 Garden Linux Build Pipeline: $pipeline
-Notification from the Garden Linux Build Pipeline: Failure in pipeline <strong>$pipeline</strong>.
-The pipeline run $pipeline_run running in namespace $namespace failed in at least one task.
+Notification from the Garden Linux Build Pipeline: Failure in pipeline $pipeline.
+The pipeline run $pipeline_run running in namespace $namespace failed in at least one task. Build was
+done from branch $branch, commit $commit.
 
 Build Status: $pipeline_run
 $status_table
