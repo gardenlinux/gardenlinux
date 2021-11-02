@@ -340,7 +340,6 @@ def build_cfssl_step(
     step_params = [
         # !DO NOT CHANGE ORDER!
         params.repo_dir,
-        params.cfssl_fastpath,
         params.cfssl_dir,
     ]
     step = tkn.model.TaskStep(
@@ -386,15 +385,23 @@ def write_key_step(
 
 def build_cert_step(
     params: params.AllParams,
+    use_build_image: bool = True,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
     step_params = [
         params.repo_dir,
     ]
+
+    if use_build_image:
+        image = '$(params.gardenlinux_build_deb_image)'
+        step_params.append(params.gardenlinux_build_deb_image)
+    else:
+        image = 'golang:latest'
+
     step = tkn.model.TaskStep(
         name='build-cert',
-        image='golang:latest',
+        image=image,
         script=task_step_script(
             path=os.path.join(steps_dir, 'build_cert.sh'),
             script_type=ScriptType.BOURNE_SHELL,

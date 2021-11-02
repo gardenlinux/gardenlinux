@@ -241,6 +241,7 @@ def main():
         help='the gardenlinux epoch defining the snapshot timestamp to build against',
     )
     parser.add_argument('--cicd-cfg', default='default')
+    parser.add_argument('--skip-cfssl-build', action='store_true')
     parser.add_argument('--pipeline-cfg', default=paths.flavour_cfg_path)
     parser.add_argument('--outfile', default='pipeline_run.yaml')
     parser.add_argument('--outfile-packages', default='pipeline_package_run.yaml')

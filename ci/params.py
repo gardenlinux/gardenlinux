@@ -32,10 +32,10 @@ class AllParams:
         default='/workspace/cfssl',
         description='git wokring dir to clone and build cfssl',
     )
-    cfssl_fastpath = NamedParam(
-        name='cfssl_fastpath',
-        default='false',
-        description='bypass cfssl build and copy binaries from github (set to true/false)',
+    skip_cfssl_build = NamedParam(
+        name='skip_cfssl_build',
+        default='False',
+        description='bypass cfssl build, use binaries from base-image',
     )
     cfssl_committish = NamedParam(
         name='cfssl_committish',
