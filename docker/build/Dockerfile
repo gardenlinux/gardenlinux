@@ -1,3 +1,6 @@
+FROM	$build_base_image as downloader
+
+
 ARG build_base_image=gardenlinux/slim
 FROM	$build_base_image
 
@@ -10,7 +13,7 @@ RUN	mkdir /etc/sudoers.d \
      && echo "#deb-src https://deb.debian.org/debian unstable main" >> /etc/apt/sources.list \
      && echo "APT::Install-Recommends false;\nAPT::Install-Suggests false;\nApt::AutoRemove::SuggestsImportant false;\n" > /etc/apt/apt.conf.d/no-recommends \
      &&	echo "progress=bar:force:noscroll" >> /etc/wgetrc \
-     &&	echo "force-confold\nforce-confdef" > /etc/dpkg/dpkg.cfg.d/forceold 
+     &&	echo "force-confold\nforce-confdef" > /etc/dpkg/dpkg.cfg.d/forceold
 
 ARG	BUILDARCH=amd64
 
@@ -29,6 +32,9 @@ RUN	apt-get update \
      &&	addgroup --system wheel \
      &&	adduser dev --disabled-password --gecos dev \
      &&	adduser dev wheel
+
+COPY install-cfssl.sh /setup/
+RUN  /setup/install-cfssl.sh
 
 USER	dev
 WORKDIR	/home/dev
