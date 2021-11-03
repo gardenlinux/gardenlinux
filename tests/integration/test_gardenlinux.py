@@ -14,6 +14,7 @@ from .aws import AWS
 from .gcp import GCP
 from .azure import AZURE
 from .openstackccee import OpenStackCCEE
+from .manual import Manual
 from .ali import ALI
 from .sshclient import RemoteClient
 
@@ -49,6 +50,8 @@ def client(request, config: dict, iaas) -> Iterator[RemoteClient]:
         yield from OpenStackCCEE.fixture(config["openstack_ccee"])
     elif iaas == "ali":
         yield from ALI.fixture(config["ali"])
+    elif iaas == "manual":
+        yield from Manual.fixture(config["manual"])
     else:
         raise ValueError(f"invalid {iaas=}")
 
