@@ -70,6 +70,7 @@ def _upload_package_file(
 
 def _attach_and_upload_logs(
     architecture: str,
+    build_targets: str,
     cicd_cfg_name: str,
     committish: str,
     gardenlinux_epoch: str,
@@ -89,6 +90,11 @@ def _attach_and_upload_logs(
         print("No file found with log files, won't upload.")
         print("Exiting with failure, see logs from previous steps")
         return False
+
+    build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
+    if not glci.model.BuildTarget.MANIFEST in build_target_set:
+        print(f'build target {glci.model.BuildTarget.MANIFEST=} not specified - skip upload')
+        return True
 
     manifest_available = True
     if not platform.strip() or not modifiers.strip():
@@ -160,6 +166,7 @@ def _attach_and_upload_logs(
 
 def upload_logs(
     architecture: str,
+    build_targets: str,
     cicd_cfg_name: str,
     committish: str,
     gardenlinux_epoch: str,
@@ -182,6 +189,7 @@ def upload_logs(
     if ok:
         _attach_and_upload_logs(
             architecture=architecture,
+            build_targets=build_targets,
             cicd_cfg_name=cicd_cfg_name,
             committish=committish,
             gardenlinux_epoch=gardenlinux_epoch,

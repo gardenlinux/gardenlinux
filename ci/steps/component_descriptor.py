@@ -37,10 +37,10 @@ def _virtual_image_packages(release_manifest, cicd_cfg):
 
 def _calculate_effective_version(
     version: str,
-    publishing_actions: typing.Sequence[glci.model.PublishingAction],
+    build_targets: typing.Set[glci.model.BuildTarget],
     committish: str,
 ) -> str:
-    if glci.model.PublishingAction.RELEASE in publishing_actions:
+    if glci.model.BuildTarget.FREEZE_VERSION in build_targets:
         return version
     else:
         return f'{version}-{committish}'
@@ -51,23 +51,17 @@ def build_component_descriptor(
     committish: str,
     cicd_cfg_name: str,
     gardenlinux_epoch: str,
-    publishing_actions: str,
+    build_targets: str,
     ctx_repository_config_name: str,
     branch: str,
     snapshot_ctx_repository_config_name: str = None,
 ):
-    publishing_actions = [
-        glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
-    ]
-    if glci.model.PublishingAction.COMPONENT_DESCRIPTOR not in publishing_actions:
+    build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
+
+    if glci.model.BuildTarget.COMPONENT_DESCRIPTOR not in build_target_set:
         print(
-            f'{glci.model.PublishingAction.COMPONENT_DESCRIPTOR} not specified '
+            f'{glci.model.BuildTarget.COMPONENT_DESCRIPTOR} not specified '
             'exiting now'
-        )
-        sys.exit(0)
-    if glci.model.PublishingAction.BUILD_ONLY in publishing_actions:
-        print(
-            f'{glci.model.PublishingAction.BUILD_ONLY=} specified - exiting now'
         )
         sys.exit(0)
 
@@ -83,7 +77,7 @@ def build_component_descriptor(
     # (may deviate from gardenlinux-versions, which are always "final")
     effective_version = _calculate_effective_version(
         version=version,
-        publishing_actions=publishing_actions,
+        build_targets=build_target_set,
         committish=committish,
     )
 
@@ -131,10 +125,11 @@ def build_component_descriptor(
         f'{pprint.pformat(dataclasses.asdict(component_descriptor))}'
     )
 
-    product.v2.upload_component_descriptor_v2_to_oci_registry(
-        component_descriptor_v2=component_descriptor,
-        on_exist=product.v2.UploadMode.OVERWRITE,
-    )
+    if glci.model.BuildTarget.COMPONENT_DESCRIPTOR in build_target_set:
+        product.v2.upload_component_descriptor_v2_to_oci_registry(
+            component_descriptor_v2=component_descriptor,
+            on_exist=product.v2.UploadMode.OVERWRITE,
+        )
 
     if snapshot_repo_base_url:
         if base_url != snapshot_repo_base_url:

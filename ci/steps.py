@@ -165,7 +165,7 @@ def upload_results_step(
         params.modifiers,
         params.outfile,
         params.platform,
-        params.publishing_actions,
+        params.build_targets,
         params.version,
     ]
     step = tkn.model.TaskStep(
@@ -196,7 +196,7 @@ def promote_single_step(
         params.gardenlinux_epoch,
         params.modifiers,
         params.platform,
-        params.publishing_actions,
+        params.build_targets,
         params.version,
     ]
     step = tkn.model.TaskStep(
@@ -226,7 +226,7 @@ def promote_step(
         params.flavourset,
         params.gardenlinux_epoch,
         params.promote_target,
-        params.publishing_actions,
+        params.build_targets,
         params.version,
     ]
     step = tkn.model.TaskStep(
@@ -257,7 +257,7 @@ def pre_build_step(
         params.gardenlinux_epoch,
         params.modifiers,
         params.platform,
-        params.publishing_actions,
+        params.build_targets,
         params.version,
     ]
     step = tkn.model.TaskStep(
@@ -285,7 +285,7 @@ def release_step(
         params.committish,
         params.gardenlinux_epoch,
         params.giturl,
-        params.publishing_actions,
+        params.build_targets,
     ]
     step = tkn.model.TaskStep(
         name='release-step',
@@ -549,7 +549,7 @@ def create_component_descriptor_step(
         params.committish,
         params.ctx_repository_config_name,
         params.gardenlinux_epoch,
-        params.publishing_actions,
+        params.build_targets,
         params.snapshot_ctx_repository_config_name,
         params.version,
     ]
@@ -642,7 +642,7 @@ def pre_check_tests_step(
         params.gardenlinux_epoch,
         params.modifiers,
         params.platform,
-        params.publishing_actions,
+        params.build_targets,
         params.version,
     ]
     step = tkn.model.TaskStep(
@@ -673,7 +673,7 @@ def test_step(
         params.gardenlinux_epoch,
         params.modifiers,
         params.platform,
-        params.publishing_actions,
+        params.build_targets,
         params.repo_dir,
         params.snapshot_timestamp,
         params.suite,
@@ -708,7 +708,7 @@ def upload_test_results_step(
         params.gardenlinux_epoch,
         params.modifiers,
         params.platform,
-        params.publishing_actions,
+        params.build_targets,
         params.repo_dir,
         params.version,
     ]
@@ -735,6 +735,7 @@ def attach_log_step(
     ):
     step_params = [
         params.architecture,
+        params.build_targets,
         params.cicd_cfg_name,
         params.committish,
         params.gardenlinux_epoch,

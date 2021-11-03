@@ -11,13 +11,12 @@ def pre_check_tests(
     gardenlinux_epoch: str,
     architecture: str,
     platform: str,
-    publishing_actions: str,
+    build_targets: str,
 ):
-    publishing_actions = [
-        glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
-    ]
-    if not glci.model.PublishingAction.RUN_TESTS in publishing_actions:
-        print('publishing action "run_tests" not specified - skipping tests')
+    build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
+
+    if not glci.model.BuildTarget.TESTS in build_target_set:
+        print('build target "tests" not specified - skipping tests')
         return True
 
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)

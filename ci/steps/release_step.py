@@ -8,14 +8,12 @@ def release_step(
     giturl: str,
     committish: str,
     gardenlinux_epoch: parsable_to_int,
-    publishing_actions: str,
+    build_targets: str,
 ):
-    publishing_actions = [
-        glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
-    ]
+    build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
 
-    if not glci.model.PublishingAction.RELEASE in publishing_actions:
-      print(f'{publishing_actions=} - will not perform release')
+    if not glci.model.BuildTarget.GITHUB_RELEASE in build_target_set:
+      print(f'{build_target_set=} - will not perform release')
       return
 
     release.ensure_target_branch_exists(

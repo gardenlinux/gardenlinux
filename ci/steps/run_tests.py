@@ -22,7 +22,7 @@ class TestRunParameters:
         gardenlinux_epoch: str,
         modifiers: str,
         platform: str,
-        publishing_actions: str,
+        build_targets: str,
         repo_dir: str,
         suite: str,
         snapshot_timestamp: str,
@@ -34,7 +34,7 @@ class TestRunParameters:
         self.gardenlinux_epoch = gardenlinux_epoch
         self.modifiers = modifiers
         self.platform = platform
-        self.publishing_actions = publishing_actions
+        self.build_targets = build_targets
         self.repo_dir = repo_dir
         self.suite = suite
         self.snapshot_timestamp = snapshot_timestamp
@@ -88,7 +88,7 @@ def run_tests(
     gardenlinux_epoch: str,
     modifiers: str,
     platform: str,
-    publishing_actions: str,
+    build_targets: str,
     repo_dir: str,
     suite: str,
     snapshot_timestamp: str,
@@ -97,14 +97,13 @@ def run_tests(
     pytest_cfg: str = None,
 ):
     print(f'run_test with: {architecture=}, {cicd_cfg_name=}, {gardenlinux_epoch=}')
-    print(f'   : {modifiers=}, {platform=}, {publishing_actions=}, {repo_dir=}')
+    print(f'   : {modifiers=}, {platform=}, {build_targets=}, {repo_dir=}')
     print(f'   : {suite=}, {snapshot_timestamp=}, {version=}')
-    publishing_actions = [
-        glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
-    ]
-
-    if not glci.model.PublishingAction.RUN_TESTS in publishing_actions:
-        print('publishing action "run_tests" not specified - skipping tests')
+    build_targets = (
+        glci.model.BuildTarget(action.strip()) for action in build_targets.split(',')
+    )
+    if not glci.model.BuildTarget.TESTS in build_targets:
+        print('build target "tests" not specified - skipping tests')
         return True
 
     if os.path.exists('/workspace/skip_tests'):
@@ -119,7 +118,7 @@ def run_tests(
         gardenlinux_epoch=gardenlinux_epoch,
         modifiers=modifiers,
         platform=platform,
-        publishing_actions=publishing_actions,
+        build_targets=build_targets,
         repo_dir=repo_dir,
         suite=suite,
         snapshot_timestamp=snapshot_timestamp,

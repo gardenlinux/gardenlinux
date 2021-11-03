@@ -104,7 +104,7 @@ ci/render_pipeline_run.py $EXTRA_ARGS \
   --git-url "${GIT_URL}" \
   --promote-target "${PROMOTE_TARGET}" \
   --oci-path "${OCI_PATH}" \
-  --publishing-action "${PUBLISHING_ACTIONS}" \
+  --build-targets "${BUILD_TARGETS}" \
   --outfile "${pipeline_run}" \
   --outfile-packages "${pipeline_package_run}"
 

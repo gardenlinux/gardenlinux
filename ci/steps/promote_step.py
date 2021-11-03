@@ -18,17 +18,13 @@ def promote_single_step(
     gardenlinux_epoch: parsable_to_int,
     modifiers: str,
     version: str,
-    publishing_actions: str,
+    build_targets: str,
 ):
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
-    publishing_actions = [
-        glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
-    ]
-    if glci.model.PublishingAction.RELEASE_CANDIDATE not in publishing_actions:
-        print(
-            f'publishing action {glci.model.PublishingAction.RELEASE_CANDIDATE=} not specified'
-            ' - exiting now'
-        )
+    build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
+
+    if glci.model.BuildTarget.PUBLISH not in build_target_set:
+        print(f'build target {glci.model.BuildTarget.PUBLISH=} not specified - exiting now')
         sys.exit(0)
 
     find_release = glci.util.preconfigured(
@@ -114,7 +110,7 @@ def promote_single_step(
 def promote_step(
     cicd_cfg_name: str,
     flavourset: str,
-    publishing_actions: str,
+    build_targets: str,
     gardenlinux_epoch: parsable_to_int,
     committish: str,
     version: str,
@@ -124,14 +120,10 @@ def promote_step(
     flavour_set = glci.util.flavour_set(flavourset)
     flavours = tuple(flavour_set.flavours())
     build_type: glci.model.BuildType = glci.model.BuildType(promote_target)
-    publishing_actions = [
-        glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
-    ]
+    build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
 
-    if glci.model.PublishingAction.BUILD_ONLY in publishing_actions:
-        print(
-            f'publishing action {glci.model.PublishingAction.BUILD_ONLY=} specified - exiting now'
-        )
+    if glci.model.BuildTarget.MANIFEST not in build_target_set:
+        print(f'build target {glci.model.BuildTarget.MANIFEST=} not specified - exiting now')
         sys.exit(0)
 
     find_releases = glci.util.preconfigured(
@@ -152,10 +144,10 @@ def promote_step(
     # ensure all previous tasks really were successful
     is_complete = len(releases) == len(flavours)
     if not is_complete:
-        print('release was not complete - will not promote (this indicates a bug!)')
+        print('release was not complete - will not publish (this indicates a bug!)')
         sys.exit(1)  # do not signal an error
 
-    print(publishing_actions)
+    print(build_target_set)
 
     # if this line is reached, the release has been complete
     # now create and publish manifest-set

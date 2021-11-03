@@ -1,3 +1,4 @@
+from __future__ import annotations
 import dataclasses
 import datetime
 import dateutil.parser
@@ -17,14 +18,18 @@ repo_root = os.path.abspath(os.path.join(
     own_dir, os.path.pardir, os.path.pardir))
 
 
-class PublishingAction(enum.Enum):
-    BUILD_ONLY = 'build_only'
-    COMPONENT_DESCRIPTOR = 'component_descriptor'
-    IMAGES = 'images'
-    MANIFESTS = 'manifests'
-    RELEASE_CANDIDATE = 'release_candidate'
-    RELEASE = 'release'
-    RUN_TESTS = 'run_tests'
+class BuildTarget(enum.Enum):
+    BUILD = 'build'                                # compile, link, create arifacts local
+    MANIFEST = 'manifest'                          # upload artifacts to S3, create manifest
+    COMPONENT_DESCRIPTOR = 'component-descriptor'  # create and upload component descr
+    TESTS = 'tests'                                # run gardenlinux integration tests
+    PUBLISH = 'publish'                            # upload images to cloud providers
+    FREEZE_VERSION = 'freeze-version'              # use version epoch.y.z instead of epoch-commit
+    GITHUB_RELEASE = 'github-release'              # create a github release (branch, tag, release)
+
+    @staticmethod
+    def set_from_str(comma_separated: str) -> typing.Set[BuildTarget]:
+        return {BuildTarget(action.strip()) for action in comma_separated.split(',')}
 
 
 class FeatureType(enum.Enum):
