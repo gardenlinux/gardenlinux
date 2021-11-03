@@ -14,7 +14,7 @@ RUN	apt-get update \
 		debootstrap patch \
 		wget ca-certificates gettext-base \
 		dosfstools squashfs-tools e2fsprogs \
-		fdisk mount gnupg xz-utils \
+		fdisk mount gnupg xz-utils bsdextrautils \
 		\
 		libcap2-bin \
 		python3 \
