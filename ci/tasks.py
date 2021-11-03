@@ -68,7 +68,6 @@ def _package_task(
     task_name: str,
     package_build_step: tkn.model.TaskStep,
     package_build_params: typing.Sequence[NamedParam],
-    skip_cfssl_build: bool,
     is_kernel_task: bool,
     env_vars,
     volumes,
@@ -97,31 +96,7 @@ def _package_task(
     )
     params += params_step
 
-    task_steps = [
-        clone_step_gl,
-        write_key_step,
-    ]
-
-    # add necessary steps if we're to build cfssl in this task
-    if not skip_cfssl_build:
-        clone_step_cfssl, params_step = steps.cfssl_clone_step(
-            name='clone-step-cfssl',
-            params=all_params,
-            env_vars=env_vars,
-            volume_mounts=volume_mounts,
-        )
-        params += params_step
-
-        cfssl_build_step, params_step = steps.build_cfssl_step(
-            params=all_params,
-            env_vars=env_vars,
-            volume_mounts=volume_mounts,
-        )
-        params += params_step
-        task_steps += [clone_step_cfssl, cfssl_build_step]
-
     build_certs_step, params_step = steps.build_cert_step(
-        use_build_image=skip_cfssl_build,
         params=all_params,
         env_vars=env_vars,
         volume_mounts=volume_mounts,
@@ -135,7 +110,9 @@ def _package_task(
     )
     params += params_step
 
-    task_steps += [
+    task_steps = [
+        clone_step_gl,
+        write_key_step,
         build_certs_step,
         package_build_step,
         s3_upload_packages_step,
@@ -154,7 +131,6 @@ def _package_task(
 
 
 def nokernel_package_task(
-    skip_cfssl_build,
     env_vars,
     volumes,
     volume_mounts,
@@ -166,7 +142,6 @@ def nokernel_package_task(
         task_name='build-packages',
         package_build_step=package_build_step,
         package_build_params=step_params,
-        skip_cfssl_build=skip_cfssl_build,
         is_kernel_task=False,
         env_vars=env_vars,
         volumes=volumes,
@@ -175,7 +150,6 @@ def nokernel_package_task(
 
 
 def kernel_package_task(
-    skip_cfssl_build,
     env_vars,
     volumes,
     volume_mounts,
@@ -187,7 +161,6 @@ def kernel_package_task(
         task_name='build-kernel-packages',
         package_build_step=package_build_step,
         package_build_params=step_params,
-        skip_cfssl_build=skip_cfssl_build,
         is_kernel_task=True,
         env_vars=env_vars,
         volumes=volumes,
@@ -198,10 +171,9 @@ def kernel_package_task(
 def build_task(
     env_vars,
     volume_mounts,
-    skip_cfssl_build,
     volumes=[],
 ):
-    params = [all_params.build_image]
+    params = [all_params.build_image, all_params.gardenlinux_build_deb_image]
 
     clone_step, params_step = steps.clone_step(
         params=all_params,
@@ -224,33 +196,8 @@ def build_task(
     )
     params += params_step
 
-    task_steps = [
-        clone_step,
-        pre_build_step,
-        write_key_step,
-    ]
-
-    # add necessary steps if we're to build cfssl in this task
-    if not skip_cfssl_build:
-        clone_step_cfssl, params_step = steps.cfssl_clone_step(
-            name='clone-step-cfssl',
-            params=all_params,
-            env_vars=env_vars,
-            volume_mounts=volume_mounts,
-        )
-        params += params_step
-
-        cfssl_build_step, params_step = steps.build_cfssl_step(
-            params=all_params,
-            env_vars=env_vars,
-            volume_mounts=volume_mounts,
-        )
-        params += params_step
-        task_steps += [clone_step_cfssl, cfssl_build_step]
-
     build_certs_step, params_step = steps.build_cert_step(
         params=all_params,
-        use_build_image=skip_cfssl_build,
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
@@ -288,7 +235,10 @@ def build_task(
         }]
     )
 
-    task_steps += [
+    task_steps = [
+        clone_step,
+        pre_build_step,
+        write_key_step,
         build_certs_step,
         build_image_step,
         upload_step,
