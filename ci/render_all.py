@@ -26,11 +26,13 @@ def main():
     # for tasks:
     parser.add_argument('--use-secrets-server', action='store_true')
     parser.add_argument('--outfile-tasks', default='tasks.yaml')
+    parser.add_argument('--skip-cfssl-build', action='store_true')
 
     parsed = parser.parse_args()
 
     # Render tasks:
     all_tasks = render_task.render_task(
+        skip_cfssl_build=parsed.skip_cfssl_build,
         use_secrets_server=parsed.use_secrets_server,
         outfile_tasks=parsed.outfile_tasks,
     )

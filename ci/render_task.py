@@ -27,6 +27,7 @@ def multiline_str_presenter(dumper, data):
 def render_task(
     use_secrets_server: bool,
     outfile_tasks: str,
+    skip_cfssl_build: bool,
 ):
     if not use_secrets_server:
         env_vars = [{
@@ -82,6 +83,7 @@ def render_task(
     raw_base_build_task = dataclasses.asdict(base_build_task)
 
     package_task = tasks.nokernel_package_task(
+        skip_cfssl_build=skip_cfssl_build,
         env_vars=env_vars,
         volumes=volumes,
         volume_mounts=volume_mounts,
@@ -89,6 +91,7 @@ def render_task(
     raw_package_task = dataclasses.asdict(package_task)
 
     kernel_package_task = tasks.kernel_package_task(
+        skip_cfssl_build=skip_cfssl_build,
         env_vars=env_vars,
         volumes=volumes,
         volume_mounts=volume_mounts,
@@ -96,6 +99,7 @@ def render_task(
     raw_kernel_package_task = dataclasses.asdict(kernel_package_task)
 
     build_task = tasks.build_task(
+        skip_cfssl_build=skip_cfssl_build,
         env_vars=env_vars,
         volumes=volumes,
         volume_mounts=volume_mounts,
@@ -161,6 +165,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--use-secrets-server', action='store_true')
     parser.add_argument('--outfile-tasks', default='tasks.yaml')
+    parser.add_argument('--skip_cfssl_build', action='store_true')
 
     parsed = parser.parse_args()
     render_task(
