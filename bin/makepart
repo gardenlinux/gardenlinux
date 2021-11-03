@@ -92,7 +92,7 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 		cp -a "$rootfs_work$target/." "$mnt"
 		if [[ "$depth" = 0 ]]; then
 			# we iterate depth sorted, so all other partitions should already have been processed and written to fstab
-			cp "$fstab" "$mnt/etc/fstab"
+			column -t "$fstab" > "$mnt/etc/fstab"
 		fi
 		umount "$mnt"
 		rm -rf "$rootfs_work$target"
