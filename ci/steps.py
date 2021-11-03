@@ -395,7 +395,6 @@ def build_cert_step(
 
     if use_build_image:
         image = '$(params.gardenlinux_build_deb_image)'
-        step_params.append(params.gardenlinux_build_deb_image)
     else:
         image = 'golang:latest'
 
@@ -412,6 +411,8 @@ def build_cert_step(
         volumeMounts=volume_mounts,
         env=env_vars,
     )
+    if use_build_image:
+        step_params.append(params.gardenlinux_build_deb_image)
     return step, step_params
 
 

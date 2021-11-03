@@ -282,6 +282,7 @@ def main():
 
     pipeline_run = mk_pipeline_main_run(
         args=parsed,
+        security_context={'runAsUser': 0},
     )
 
     pipeline_run_dict = dataclasses.asdict(pipeline_run)
