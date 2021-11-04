@@ -1,0 +1,12 @@
+vim
+build-essential
+ca-certificates
+curl
+gnupg
+lsb-release
+bash
+make
+coreutils
+gnupg
+git
+qemu-system-x86
