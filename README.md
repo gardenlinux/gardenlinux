@@ -17,6 +17,8 @@
 </p>
 <hr />
 
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/3925/badge)](https://bestpractices.coreinfrastructure.org/projects/3925)
+
 Garden Linux is a [Debian](https://debian.org) derivate that aims to provide a small, auditable linux image for most Cloud Providers and Bare Metal.
 
 ## Features:
