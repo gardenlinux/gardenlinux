@@ -1,4 +1,5 @@
 vim
+htop
 build-essential
 ca-certificates
 curl
@@ -8,5 +9,6 @@ bash
 make
 coreutils
 gnupg
+gpg
 git
 qemu-system-x86
