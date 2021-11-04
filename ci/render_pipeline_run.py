@@ -128,7 +128,14 @@ def get_common_parameters(
     # if version is not specified, derive from worktree (i.e. VERSION file)
     version = get_version(args)
     version_label = get_version_label(version, args['committish'])
-    build_deb_image = get_deb_build_image(args['oci_path'], version_label)
+
+    # check if to use an older existing base image or base image from currrent commit:
+    if 'gardenlinux_base_image' in args and args['gardenlinux_base_image']:
+        path, label = args['gardenlinux_base_image'].split(':')
+        build_deb_image = path + '/gardenlinux-build-deb:' + label
+    else:
+        build_deb_image = get_deb_build_image(args['oci_path'], version_label)
+
     params = [
         get_param_from_arg(args, 'additional_recipients'),
         get_param_from_arg(args, 'branch'),
@@ -219,7 +226,13 @@ def mk_pipeline_main_run(
         NamedParam(name='promote_target', value=args.promote_target.value),
         NamedParam(name='pytest_cfg', value=args.pytest_cfg),
     ))
-    build_image = get_build_image(args.oci_path, find_param('version_label', params).value)
+
+    if args.gardenlinux_base_image:
+        path, label = args.gardenlinux_base_image.split(':')
+        build_image = path + '/gardenlinux-build-image:' + label
+    else:
+        build_image = get_build_image(args.oci_path, find_param('version_label', params).value)
+
     params.append(NamedParam(name='build_image', value=build_image))
 
     return mk_pipeline_run(
@@ -265,6 +278,7 @@ def main():
         dest='publishing_actions',
         default=[glci.model.PublishingAction.MANIFESTS],
     )
+    parser.add_argument('--gardenlinux-base-image')
 
     parsed = parser.parse_args()
     parsed.publishing_actions = set(parsed.publishing_actions)

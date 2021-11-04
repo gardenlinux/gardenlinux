@@ -70,8 +70,12 @@ if [ ! -z "${ONLY_RECIPIENTS:-}" ]; then
   EXTRA_ARGS="${EXTRA_ARGS} --only-recipients=${ONLY_RECIPIENTS}"
 fi
 if [ ! -z "${PYTEST_CFG:-}" ]; then
-  EXTRA_ARGS="${PYTEST_CFG} --pytest-cfg={PYTEST_CFG}"
+  EXTRA_ARGS="${EXTRA_ARGS} --pytest-cfg=${PYTEST_CFG}"
 fi
+if [ ! -z "${GARDENLINUX_BASE_IMAGE:-}" ]; then
+  EXTRA_ARGS="${EXTRA_ARGS} --gardenlinux-base-image=${GARDENLINUX_BASE_IMAGE}"
+fi
+
 
 cleanup_pipelineruns
 

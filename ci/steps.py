@@ -516,6 +516,8 @@ def build_base_image_step(
     volume_mounts: typing.List[typing.Dict] = [],
 ):
     step_params = [
+        params.build_image,
+        params.gardenlinux_build_deb_image,
         params.oci_path,
         params.repo_dir,
         params.version_label,
