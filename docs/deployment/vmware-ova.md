@@ -1,4 +1,11 @@
-# VMware OVA
+---
+title: GardenLinux via VMWare OVA
+weight: 10
+disableToc: true
+---
+
+
+# GardenLinux via VMware OVA
 
 Building an ova can be done with `bin/make-ova`.
 

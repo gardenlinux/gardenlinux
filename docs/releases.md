@@ -1,3 +1,11 @@
+---
+title: Releases
+weight: 10
+disableToc: false
+---
+
+# Releases
+
 <p align="center">
   <img
      src="https://raw.githubusercontent.com/gardenlinux/gardenlinux/main/logo/gardenlinux.svg"
