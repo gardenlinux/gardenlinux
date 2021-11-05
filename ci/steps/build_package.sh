@@ -2,11 +2,11 @@ build_package() {
     set -e
     set -x
 
-    repodir=$1
+    repo_dir=$1
     pkg_name=$2
 
     if [ -z "$SOURCE_PATH" ]; then
-    SOURCE_PATH="$(readlink -f ${repodir})"
+    SOURCE_PATH="$(readlink -f ${repo_dir})"
     fi
 
     if [ -z "${pkg_name}" ]; then
@@ -16,14 +16,14 @@ build_package() {
 
     echo $(pwd)
 
-    MANUALDIR=$(realpath $repodir/packages/manual)
-    KERNELDIR=$(realpath $repodir/packages/kernel)
+    MANUALDIR=$(realpath ${repo_dir}/packages/manual)
+    KERNELDIR=$(realpath ${repo_dir}/packages/kernel)
 
     export DEBFULLNAME="Garden Linux Maintainers"
     export DEBEMAIL="contact@gardenlinux.io"
     export BUILDIMAGE="gardenlinux/build-deb"
     export BUILDKERNEL="gardenlinux/build-kernel"
-    export CERTDIR=$(realpath $repodir/cert)
+    export CERTDIR=$(realpath ${repo_dir}/cert)
     echo "MANUALDIR: ${MANUALDIR}"
     echo "KERNELDIR: ${KERNELDIR}"
     echo "CERTDIR: ${CERTDIR}"
