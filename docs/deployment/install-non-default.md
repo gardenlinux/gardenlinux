@@ -5,7 +5,6 @@ disableToc: false
 ---
 
 
-# Non-Default Installation
 *e.g. on a bare metal system or a simple virtual machine*
 
 ## Idea

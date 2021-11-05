@@ -5,7 +5,6 @@ disableToc: true
 ---
 
 
-# GardenLinux via VMware OVA
 
 Building an ova can be done with `bin/make-ova`.
 

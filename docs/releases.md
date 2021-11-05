@@ -4,7 +4,6 @@ weight: 10
 disableToc: false
 ---
 
-# Releases
 
 <p align="center">
   <img
