@@ -137,6 +137,7 @@ def nokernel_package_task(
 ):
     package_build_step, step_params = steps.build_package_step(
             params=all_params,
+            env_vars=env_vars,
     )
     return _package_task(
         task_name='build-packages',
@@ -156,6 +157,7 @@ def kernel_package_task(
 ):
     package_build_step, step_params = steps.build_kernel_package_step(
             params=all_params,
+            env_vars=env_vars,
     )
     return _package_task(
         task_name='build-kernel-packages',
