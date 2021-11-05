@@ -10,12 +10,15 @@ build_cert() {
 
     pushd "${cert_dir}"
 
-    # in order to prevent downloading/building cfssl if it's already present
-    # in the build image, create links to expected files before calling make
+    # check if cfssl/cfssljson are present. They are required to create
+    # the certificates.
     if [[ "$(which cfssl)" ]] && [[ "$(which cfssljson)" ]]; then
         mkdir -p "cfssl/"
         ln -s "$(which cfssl)" "${cert_dir}/cfssl/cfssl"
         ln -s "$(which cfssljson)" "${cert_dir}/cfssl/cfssljson"
+    else
+        echo "cfssl/cfssljson not found. Aborting"
+        exit 1
     fi
 
     make

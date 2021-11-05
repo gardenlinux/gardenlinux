@@ -152,35 +152,6 @@ def clone_step(
     return step, step_params
 
 
-def cfssl_clone_step(
-    name: str,
-    params: params.AllParams,
-    env_vars: typing.List[typing.Dict] = [],
-    volume_mounts: typing.List[typing.Dict] = [],
-):
-    step_params = [
-        params.cfssl_git_url,
-        params.cfssl_committish,
-        params.cfssl_dir,
-    ]
-    step = tkn.model.TaskStep(
-        name=name,
-        image=DEFAULT_IMAGE,
-        script=task_step_script(
-            script_type=ScriptType.PYTHON3,
-            path=os.path.join(steps_dir, 'clone_simple_step.py'),
-            callable="git_clone('$(params.cfssl_git_url)', '$(params.cfssl_committish)', "
-                     "'$(params.cfssl_dir)'); dummy",
-            params=[],
-            repo_path_param=params.repo_dir,
-        ),
-        volumeMounts=volume_mounts,
-        env=env_vars,
-    )
-
-    return step, step_params
-
-
 def upload_results_step(
     params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
@@ -332,32 +303,6 @@ def release_step(
     return step, step_params
 
 
-def build_cfssl_step(
-    params: params.AllParams,
-    env_vars: typing.List[typing.Dict] = [],
-    volume_mounts: typing.List[typing.Dict] = [],
-):
-    step_params = [
-        # !DO NOT CHANGE ORDER!
-        params.repo_dir,
-        params.cfssl_dir,
-    ]
-    step = tkn.model.TaskStep(
-        name='build-cfssl-step',
-        image='golang:latest',
-        script=task_step_script(
-            path=os.path.join(steps_dir, 'build_cfssl.sh'),
-            script_type=ScriptType.BOURNE_SHELL,
-            callable='build_cfssl',
-            repo_path_param=params.repo_dir,
-            params=step_params,
-        ),
-        volumeMounts=volume_mounts,
-        env=env_vars,
-    )
-    return step, step_params
-
-
 def write_key_step(
     params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
@@ -385,7 +330,6 @@ def write_key_step(
 
 def build_cert_step(
     params: params.AllParams,
-    use_build_image: bool = True,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -393,14 +337,9 @@ def build_cert_step(
         params.repo_dir,
     ]
 
-    if use_build_image:
-        image = '$(params.gardenlinux_build_deb_image)'
-    else:
-        image = 'golang:latest'
-
     step = tkn.model.TaskStep(
         name='build-cert',
-        image=image,
+        image='$(params.gardenlinux_build_deb_image)',
         script=task_step_script(
             path=os.path.join(steps_dir, 'build_cert.sh'),
             script_type=ScriptType.BOURNE_SHELL,
@@ -411,8 +350,7 @@ def build_cert_step(
         volumeMounts=volume_mounts,
         env=env_vars,
     )
-    if use_build_image:
-        step_params.append(params.gardenlinux_build_deb_image)
+
     return step, step_params
 
 
