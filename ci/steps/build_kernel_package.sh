@@ -62,7 +62,7 @@ build_kernel_package(){
     for package in "${packages[@]}"
     do
     echo "Building now ${package}"
-    pkg_build_script_path="manual/${package}"
+    pkg_build_script_path="${repo_dir}/packages/manual/${package}"
     echo "pkg_build_script_path: ${pkg_build_script_path}"
 
     if [ ! -f "${pkg_build_script_path}" ]; then

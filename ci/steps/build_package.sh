@@ -45,7 +45,7 @@ build_package() {
     # originally this is called on docker startup
     gpg --import ${CERTDIR}/sign.pub
 
-    pkg_build_script_path="manual/${pkg_name}"
+    pkg_build_script_path="${repo_dir}/packages/manual/${pkg_name}"
     echo "pkg_build_script_path: ${pkg_build_script_path}"
 
     if [ ! -f "${pkg_build_script_path}" ]; then
