@@ -34,9 +34,7 @@ build_package() {
     ls -l ${CERTDIR}
     ln -s ${MANUALDIR} /workspace/manual
     ln -s /../Makefile.inside /workspace/Makefile
-    echo "$(gpgconf --list-dir agent-socket)"
-    mkdir -p /workspace/.gnupg
-    ln -s $(gpgconf --list-dir agent-socket) /workspace/.gnupg/S.gpg-agent
+
     ln -s ${CERTDIR}/sign.pub /sign.pub
     ln -s ${CERTDIR}/Kernel.sign.full /kernel.full
     ln -s ${CERTDIR}/Kernel.sign.crt /kernel.crt
