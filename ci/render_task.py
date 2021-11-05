@@ -73,6 +73,10 @@ def render_task(
         'name': 'RUNNING_ON_CI',
         'value': 'true',
     })
+    env_vars.append({
+        'name': 'HOME',
+        'value': '/workspace/tekton_home',
+    })
 
     base_build_task = tasks.base_image_build_task(
         volumes=volumes,
