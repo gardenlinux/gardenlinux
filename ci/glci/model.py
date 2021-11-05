@@ -19,17 +19,43 @@ repo_root = os.path.abspath(os.path.join(
 
 
 class BuildTarget(enum.Enum):
-    BUILD = 'build'                                # compile, link, create arifacts local
-    MANIFEST = 'manifest'                          # upload artifacts to S3, create manifest
-    COMPONENT_DESCRIPTOR = 'component-descriptor'  # create and upload component descr
-    TESTS = 'tests'                                # run gardenlinux integration tests
-    PUBLISH = 'publish'                            # upload images to cloud providers
-    FREEZE_VERSION = 'freeze-version'              # use version epoch.y.z instead of epoch-commit
-    GITHUB_RELEASE = 'github-release'              # create a github release (branch, tag, release)
+    # compile, link, create arifacts local
+    BUILD = 'build', {}
+    # upload artifacts to S3, create manifest
+    MANIFEST = 'manifest', {'build', }
+    # create and upload component descr
+    COMPONENT_DESCRIPTOR = 'component-descriptor', {'build', }
+    # run gardenlinux integration tests
+    TESTS = 'tests', {'build', }
+    # upload images to cloud providers
+    PUBLISH = 'publish', {'build', 'manifest', 'component-descriptor'}
+    # use version epoch.y.z instead of epoch-commit
+    FREEZE_VERSION = 'freeze-version', {'build', 'manifest', 'component-descriptor'}
+    # create a github release (branch, tag, release)
+    GITHUB_RELEASE = 'github-release', {'build', 'manifest', 'component-descriptor', 'freeze-version'}
+
+    def __new__(cls, value, requires=None):
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj._requires_ = requires
+        return obj
 
     @staticmethod
     def set_from_str(comma_separated: str) -> typing.Set[BuildTarget]:
-        return {BuildTarget(action.strip()) for action in comma_separated.split(',')}
+        targets = {BuildTarget(action.strip()) for action in comma_separated.split(',')}
+        BuildTarget.check_requirements(targets)
+        return targets
+
+    @staticmethod
+    def check_requirements(bt_set: typing.Set[BuildTarget]) :
+        for e in bt_set:
+            missing = set()
+            for r in e._requires_:
+                target = BuildTarget(r)
+                if not target in bt_set:
+                    missing.add(r)
+            if missing:
+                raise ValueError(f' {e.value}: missing required build target(s): {missing}')
 
 
 class FeatureType(enum.Enum):

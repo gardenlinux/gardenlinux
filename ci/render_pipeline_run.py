@@ -177,6 +177,9 @@ def mk_pipeline_run(
         committish=args.committish,
     )
 
+    # check if build-targets are correct (exit early)
+    glci.model.BuildTarget.check_requirements(args.build_targets)
+
     plrun = PipelineRun(
         metadata=tkn.model.Metadata(
             name=run_name,
