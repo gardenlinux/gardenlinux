@@ -3,7 +3,7 @@ version: 1.3.0
 ignition:
   config:
     merge:
-      - source: #URL to install_w_syslinux.json
+      - source: #URL to install.json
 storage:
   files:
   - path: /opt/onmetal-install/partitions
