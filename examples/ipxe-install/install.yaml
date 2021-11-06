@@ -1,0 +1,135 @@
+variant: fcos
+version: 1.3.0
+storage:
+  files:
+    - path: /etc/dracut.conf.d/disable-gllive.conf
+      append:
+        - inline: |
+            omit_dracutmodules+=" gardenlinux-live "
+    - path: /usr/local/sbin/reinit
+      overwrite: yes
+      mode: 0755
+      contents:
+        inline: |
+          #!/usr/bin/env bash
+          echo "removing other bootloaders ..."
+          for i in $(cat bb | grep "Linux Boot Manager" | sed "s/Boot\([0-9]*\)\*\? .*/\1/"); do
+             efibootmgr -B -b $i
+          done
+          echo "restarting"
+          reboot
+    - path: /opt/onmetal-install/boot-efi.mount
+      overwrite: yes
+      mode: 0755
+      contents:
+        inline: |
+          [Unit]
+          After=blockdev@dev-disk-by\x2dlabel-EFI.target
+          [Mount]
+          Where=/boot/efi
+          What=/dev/disk/by-label/EFI
+          Type=vfat
+          Options=umask=0077
+          [Install]
+          WantedBy=local-fs.target
+    - path: /opt/onmetal-install/remount-root.service
+      overwrite: yes
+      mode: 0755
+      contents:
+        inline: |
+          # This is used to mount the rootfs with proper mount options
+          [Unit]
+          Description=Remount rootfs when no fstab is in
+          DefaultDependencies=no
+          Conflicts=shutdown.target
+          Before=local-fs-pre.target local-fs.target shutdown.target
+          Wants=local-fs-pre.target
+          [Service]
+          Type=oneshot
+          RemainAfterExit=yes
+          ExecStart=/bin/mount -o remount,rw,errors=remount-ro,prjquota,discard /
+          [Install]
+          WantedBy=local-fs.target
+    - path: /opt/onmetal-install/install.sh
+      overwrite: yes
+      mode: 0755
+      contents:
+        inline: |
+          #!/usr/bin/env bash
+          set -x
+          set -e
+          kernel=$(uname -r)
+          oni=/opt/onmetal-install
+
+          target=${1:-/dev/sda}
+          targetpart=$(echo $target | sed 's/\([0-9]\)$/\1p/')
+
+          cat ${oni}/partitions | sfdisk $target
+          udevadm settle --timeout=30 --exit-if-exists=${targetpart}1
+          mkfs.vfat -I -n EFI ${targetpart}1
+          mkfs.ext4 -F -L ROOT -E lazy_itable_init=0,lazy_journal_init=0,quotatype=usrquota:grpquota:prjquota ${targetpart}2
+
+          mkdir -p ${oni}/mnt
+          mount ${targetpart}2 ${oni}/mnt
+          mkdir -p ${oni}/mnt/boot/efi
+          mount ${targetpart}1 ${oni}/mnt/boot/efi
+
+          mkdir -p ${oni}/mntsrc
+          mount -t overlay ovl ${oni}/mntsrc -o lowerdir=/run/rootfs,upperdir=/run/sysroot.ovl/upper,workdir=/run/sysroot.ovl/work
+          tar c --xattrs -C ${oni}/mntsrc . | tar xv --xattrs-include='*.*' -C ${oni}/mnt
+          umount ${oni}/mntsrc
+
+          mount -t proc proc ${oni}/mnt/proc
+          mount -t sysfs sys ${oni}/mnt/sys
+          mount --bind /dev  ${oni}/mnt/dev
+          mount --bind /run  ${oni}/mnt/run
+
+          if mount -t efivarfs efivarfs ${oni}/mnt/sys/firmware/efi/efivars; then
+            echo "UEFI install selected"
+            hasefi=1
+          else
+            echo "Legacy install selected"
+            hasefi=0
+          fi
+
+          cp ${oni}/remount-root.service ${oni}/mnt/etc/systemd/system/remount-root.service
+          chroot ${oni}/mnt systemctl enable remount-root.service
+
+          chroot ${oni}/mnt /etc/kernel/postinst.d/dracut ${kernel}
+
+          cp ${oni}/boot-efi.mount ${oni}/mnt/etc/systemd/system/boot-efi.mount
+          chroot ${oni}/mnt systemctl enable boot-efi.mount
+
+          if [ "$hasefi" == "1" ]; then
+            mkdir -p ${oni}/mnt/efi/Default
+            chroot ${oni}/mnt /etc/kernel/postinst.d/zz-kernel-install ${kernel}
+            chroot ${oni}/mnt bootctl install
+          else
+            sfdisk --part-attrs ${target} 1 LegacyBIOSBootable
+            chroot ${oni}/mnt mkdir -p /boot/efi/syslinux
+            chroot ${oni}/mnt cp /usr/lib/syslinux/modules/bios/menu.c32 /boot/efi/syslinux/
+            chroot ${oni}/mnt cp /usr/lib/syslinux/modules/bios/libutil.c32 /boot/efi/syslinux/
+            chroot ${oni}/mnt update-syslinux
+
+            chroot ${oni}/mnt dd bs=440 count=1 conv=notrunc if=/usr/lib/SYSLINUX/gptmbr.bin of=${target}
+            chroot ${oni}/mnt syslinux -d syslinux -i ${targetpart}1
+          fi
+
+          rm -rf ${oni}/mnt/etc/systemd/system/install.service ${oni}/mnt${oni}
+
+          kexec -l ${oni}/mnt/boot/vmlinuz-${kernel} --initrd=${oni}/mnt/boot/initrd.img-${kernel} --command-line="$(cat /etc/kernel/cmdline)"
+          kexec -e
+systemd:
+  units:
+    - name: install.service
+      enabled: true
+      contents: |
+        [Unit]
+        ConditionFirstBoot=yes
+        After=local-fs.target network.target
+        [Service]
+        Type=oneshot
+        EnvironmentFile=/opt/onmetal-install/target
+        ExecStart=/opt/onmetal-install/install.sh ${disk}
+        [Install]
+        WantedBy=multi-user.target
