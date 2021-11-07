@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+echo "### Deleting libdb forcefully"
+$thisDir/garden-chroot $targetDir apt-get autoremove --purge -y libdb5.3
+
