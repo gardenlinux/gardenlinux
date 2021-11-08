@@ -1,4 +1,10 @@
-# GardenLinux for OpenStack
+---
+title: GardenLinux for OpenStack
+weight: 10
+disableToc: false
+---
+
+
 
 A word of **WARNING**: Since OpenStack is an open environment, we can only provide a reference implementation at this point.
 
