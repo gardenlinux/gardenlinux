@@ -1,0 +1,22 @@
+variant: fcos
+version: 1.3.0
+ignition:
+  config:
+    merge:
+      - source: #URL to install.json
+storage:
+  files:
+  - path: /opt/onmetal-install/partitions
+      overwrite: yes
+      mode: 0755
+      contents:
+        inline: |
+          label: gpt
+          type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, name="EFI", size=510MiB
+          type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, name="ROOT"
+    - path: /opt/onmetal-install/target
+      overwrite: yes
+      mode: 0755
+      contents:
+        inline: |
+          disk=/dev/sda
