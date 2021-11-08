@@ -1,8 +1,0 @@
-gardenlinux/slim          -> das kleinste Garden Linux, mit ohne alles
-gardenlinux/standard  -> Garden Linux mit standard conveinience: man pages, und keine anderen expliziten deletes
-gardenlinux/build         -> Garden Linux:slim mit compiler, fakeroot (um als root ohne root zu bauen) , dev user und minimal devutils
-gardenlinux/build-kernel      -> Garden Linux mir allen kernel headern (wonach Darren fragt und auch Lior Oakman)
-gardenlinux/create-image      -> Abfallprodukt, das image womit wir Gardenlinux bauen
-gardenlinux/build-deb          -> Abfallprodukt, das image womit unser debian Paket builder debian pakete baut
-gardenlinux/distroless
-alle haben einen versionstag z.b. gardenlinux-slim:latest oder eben gardenlinux-slim:184 fuer das build datum (edited) 

@@ -107,8 +107,8 @@ fi
 include="$(tr "," "\n" <<< $include)"$'\n'
 exclude="$(tr "," "\n" <<< $include)"$'\n'
 
-[ -s $thisDir/.init-includes ] && include+="$(cat $thisDir/.init-includes)"$'\n'
-[ -s $thisDir/.init-excludes ] && exclude+="$(cat $thisDir/.init-excludes)"$'\n'
+[ -s $featureDir/pkg.include ] && include+="$(cat $featureDir/pkg.include)"$'\n'
+[ -s $featureDir/pkg.exclude ] && exclude+="$(cat $featureDir/pkg.exclude)"$'\n'
 
 for i in $(echo "base,$features" | tr ',' '\n' | norm_features); do
 	[ -s $featureDir/$i/pkg.include ] && include+="$(cat $featureDir/$i/pkg.include)"$'\n'

@@ -1,5 +1,11 @@
-# Installing Garden Linux non-default
-#### e.g. on a bare metal system or a simple virtual machine
+---
+title: Non-Default Install
+weight: 10
+disableToc: false
+---
+
+
+*e.g. on a bare metal system or a simple virtual machine*
 
 ## Idea
 Garden Linux is usually used either with a cloud provider (aws, azure, gcp, alicloud ...) as an image in their image repositories.

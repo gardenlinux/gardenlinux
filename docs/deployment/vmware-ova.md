@@ -1,4 +1,10 @@
-# VMware OVA
+---
+title: GardenLinux via VMWare OVA
+weight: 10
+disableToc: true
+---
+
+
 
 Building an ova can be done with `bin/make-ova`.
 
@@ -50,7 +56,7 @@ and the `guest-id` of the OS.
 
 ```bash
 $ ./make-ova --vmdk garden-linux-27.1.0.vmdk \
-           --template /gardenlinux/templates/vmware.ovf.template \
+           --template /gardenlinux/features/vmware/vmware.ovf.template \
            --guest-id debian10_64Guest
 garden-linux-27.1.0.ova
 ```

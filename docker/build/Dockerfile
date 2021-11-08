@@ -1,7 +1,4 @@
-FROM	$build_base_image as downloader
-
-
-ARG build_base_image=gardenlinux/slim
+ARG  build_base_image=gardenlinux/slim
 FROM	$build_base_image
 
 ARG	DEBIAN_FRONTEND=noninteractive
