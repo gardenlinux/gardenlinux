@@ -1,14 +1,24 @@
 # Spin up a Dev VM
 
 This folder contains a simple vagrant setup,
-that spins up a VM with all dependencies installed to build garden linux.
+that spins up a VM with all build dependencies installed and gardenlinux sources synced 
+to ```/code```directory within the VM.
+
 You can adapt the VM parameters in the ```Vagrantfile```. The ```init.sh```
 is executed when the VM is provisioned, and installs all debian packages
 listed in ```deps.list```.
 
+## Create VM
 
-Just run ```vagrant up``` to start the VM, and ```vagrant ssh``` to login
-into a shell of the VM.
+```
+# Create and Start the VM
+vagrant up
+
+# Login to the VM
+vagrant ssh
+
+```
+
 
 
 
