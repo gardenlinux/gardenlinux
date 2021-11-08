@@ -46,7 +46,7 @@ function create_credentials {
   fi
 
   echo "Creating secret"
-  $(which kubectl) create secret generic secrets \
+  kubectl create secret generic secrets \
     -n "${GARDENLINUX_TKN_WS}" \
     --from-file=config.json="${credentials_outfile}"
 }
@@ -140,7 +140,7 @@ for manifest in \
   "${outfile_pipeline_packages}"
 do
   echo "Apply of ${manifest}"
-  $(which kubectl) apply -n "${GARDENLINUX_TKN_WS}" -f "${manifest}"
+  kubectl apply -n "${tekton_namespace}" -f "${manifest}"
 done
 
 image_build=false
