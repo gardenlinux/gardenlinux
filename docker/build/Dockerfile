@@ -1,6 +1,3 @@
-FROM	$build_base_image as downloader
-
-
 ARG build_base_image=gardenlinux/slim
 FROM	$build_base_image
 
