@@ -138,6 +138,9 @@ def get_common_parameters(
     else:
         build_deb_image = get_deb_build_image(args['oci_path'], version_label)
 
+    # for git-url rename arg git_url to giturl:
+    git_url_param = NamedParam(name='giturl', value=str(args['git_url']))
+
     params = [
         get_param_from_arg(args, 'additional_recipients'),
         get_param_from_arg(args, 'branch'),
@@ -146,6 +149,7 @@ def get_common_parameters(
         get_param_from_arg(args, 'disable_notifications'),
         NamedParam(name='gardenlinux_build_deb_image', value=build_deb_image),
         get_param_from_arg(args, 'gardenlinux_epoch'),
+        git_url_param,
         get_param_from_arg(args, 'oci_path'),
         get_param_from_arg(args, 'only_recipients'),
         NamedParam(
