@@ -41,12 +41,26 @@ function kubecfg()  {
 }
 
 function export_env() {
-  export BRANCH_NAME="${BRANCH_NAME:-main}"
+  export BRANCH_NAME="${BRANCH_NAME:-${GARDENLINUX_BRANCH:-main}}"
+  export GARDENLINUX_TKN_WS="${GARDENLINUX_TKN_WS:-${GARDENLINUX_BRANCH:-gardenlinux}}"
   export FLAVOUR_SET="${FLAVOUR_SET:-all}"
-  export GARDENLINUX_TKN_WS="${GARDENLINUX_TKN_WS:-gardenlinux}"
   export GIT_URL="${GIT_URL:-https://github.com/gardenlinux/gardenlinux}"
   export OCI_PATH="${OCI_PATH:-eu.gcr.io/gardener-project/gardenlinux}"
   export PROMOTE_TARGET="${PROMOTE_TARGET:-snapshot}"
   export BUILD_TARGETS="${BUILD_TARGETS:-build}"
   export PATH="${PATH}:${bin_dir}"
+}
+
+function seconds_since_epoch() {
+  timestamp="$1"
+  date '+%s' --date="${timestamp}"
+}
+
+function days_since_last_pipeline_run() {
+  namespace="$1"
+  oldest_run=$(kubectl get pipelineruns.tekton.dev -n ${namespace} \
+    --sort-by=.metadata.creationTimestamp -o jsonpath={.items[-1:].metadata.creationTimestamp})
+  now=$(date --iso-8601=seconds)
+  seconds=$(( $(seconds_since_epoch "${now}") - $(seconds_since_epoch "${oldest_run}") ))
+  echo $(( $seconds / (60*60*24) ))
 }
