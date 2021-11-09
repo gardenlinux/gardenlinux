@@ -1,10 +1,3 @@
-FROM golang:latest as golang
-RUN go get -u golang.org/x/lint/golint \
-     && git clone https://github.com/microsoft/azure-vhd-utils.git \
-     && cd azure-vhd-utils \
-     && make
-
-
 FROM gardenlinux/slim
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -50,7 +43,5 @@ RUN apt-get update \
 
 COPY _pipfiles /_pipfiles
 RUN cd /_pipfiles && pipenv --python 3.9 install --system --dev && cd / && rm -rf /_pipfiles
-
-COPY --from=golang /go/azure-vhd-utils/azure-vhd-utils /usr/local/bin/azure-vhd-utils
 
 WORKDIR /gardenlinux/tests

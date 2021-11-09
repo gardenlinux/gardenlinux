@@ -19,12 +19,20 @@ aliyun-python-sdk-core = "*"
 aliyun-python-sdk-ecs = "*"
 oss2 = "*"
 python-openstackclient = "*"
+azure-core = "*"
+azure-identity = "*"
+azure-mgmt-subscription = "*"
+azure-mgmt-resource = "*"
+azure-mgmt-compute = "*"
+azure-mgmt-storage = "*"
+azure-mgmt-network  = "*"
+azure-storage-blob = "*"
 
 [dev-packages]
-flake8 = "*"
-black = "*"
-pylint = "*"
 pytest = "*"
+flake8 = "*"
+# black = "*"
+pylint = "*"
 
 [requires]
 python_version = "3.9"
