@@ -125,10 +125,10 @@ class AllParams:
         name='platform',
         description='the target platform (aws, gcp, metal, kvm, ..)',
     )
-    publishing_actions = NamedParam(
-        name='publishing_actions',
+    build_targets = NamedParam(
+        name='build_targets',
         default='manifests',
-        description='how artifacts should be published (glci.model.PublishingAction)',
+        description='how artifacts should be published (glci.model.BuildTarget)',
     )
     pytest_cfg = NamedParam(
         name='pytest_cfg',

@@ -15,16 +15,19 @@ def upload_test_results(
     gardenlinux_epoch: str,
     modifiers: str,
     platform: str,
-    publishing_actions: str,
+    build_targets: str,
     repo_dir: str,
     version: str,
 ):
-    publishing_actions = [
-        glci.model.PublishingAction(action.strip()) for action in publishing_actions.split(',')
-    ]
-    if not glci.model.PublishingAction.RUN_TESTS in publishing_actions:
-        print('publishing action "run_tests" not specified - skipping tests')
-        return True
+    build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
+
+    if not glci.model.BuildTarget.TESTS in build_target_set:
+        print('build target "tests" not specified - nothing to upload')
+        sys.exit(0)
+
+    if not glci.model.BuildTarget.MANIFEST in build_target_set:
+        print('build target "manifest" not specified - skipping uploads')
+        sys.exit(0)
 
     if os.path.exists('/workspace/skip_tests'):
         print('Tests already uploaded in previous run, skipping upload step')

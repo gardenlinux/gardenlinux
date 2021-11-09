@@ -47,6 +47,6 @@ function export_env() {
   export GIT_URL="${GIT_URL:-https://github.com/gardenlinux/gardenlinux}"
   export OCI_PATH="${OCI_PATH:-eu.gcr.io/gardener-project/gardenlinux}"
   export PROMOTE_TARGET="${PROMOTE_TARGET:-snapshot}"
-  export PUBLISHING_ACTIONS="${PUBLISHING_ACTIONS:-build_only}"
+  export BUILD_TARGETS="${BUILD_TARGETS:-build}"
   export PATH="${PATH}:${bin_dir}"
 }

@@ -29,10 +29,10 @@ def parse_args():
     parser.add_argument('--committish')
     parser.add_argument('--gardenlinux-epoch', type=int)
     parser.add_argument(
-      '--publishing-action',
+      '--build-target',
       action='append',
-      type=glci.model.PublishingAction,
-      dest='publishing_actions',
+      type=glci.model.BuildTarget,
+      dest='build_targets',
     )
     parser.add_argument('--version', required=True)
     parser.add_argument('--source', default='snapshots')
@@ -280,13 +280,13 @@ def promote(
     build_committish: str,
     gardenlinux_epoch: int,
     version_str: str,
-    publishing_actions: typing.Sequence[glci.model.PublishingAction],
+    build_targets: typing.Set[glci.model.BuildTarget],
     cicd_cfg: glci.model.CicdCfg,
     flavour_set: glci.model.GardenlinuxFlavourSet,
     build_type: glci.model.BuildType,
 ):
 
-    if glci.model.PublishingAction.IMAGES in publishing_actions:
+    if glci.model.BuildTarget.BUILD in build_targets:
         executor = concurrent.futures.ThreadPoolExecutor(
             max_workers=len(releases))
         _publish_img = functools.partial(publish_image, cicd_cfg=cicd_cfg)
@@ -297,7 +297,7 @@ def promote(
         for release in releases:
             print(release.published_image_metadata)
 
-        if glci.model.PublishingAction.MANIFESTS in publishing_actions:
+        if glci.model.BuildTarget.MANIFEST in build_targets:
             upload_release_manifest_set = glci.util.preconfigured(
                 func=glci.util.upload_release_manifest_set,
                 cicd_cfg=cicd_cfg,
@@ -373,7 +373,7 @@ def main():
             parsed.target.value,
         ),
         version_str=version,
-        publishing_actions=parsed.publishing_actions,
+        build_targets=parsed.build_targets,
         cicd_cfg=cicd_cfg,
         flavour_set=flavour_set,
         build_type=parsed.target,

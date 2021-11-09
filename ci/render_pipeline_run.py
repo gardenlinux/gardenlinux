@@ -30,33 +30,35 @@ VolumeClaimTemplateSpec = tkn.model.VolumeClaimTemplateSpec
 # k8s only allows dns names / leng restriction applies
 def mk_pipeline_name(
     pipeline_name: str,
-    publishing_actions: typing.Sequence[glci.model.PublishingAction],
+    build_targets: typing.Set[glci.model.BuildTarget],
     version: str,
     committish: str,
 ):
-    def _publishing_action_shorthand(publishing_action):
-        if publishing_action is glci.model.PublishingAction.RELEASE:
-            return 'rel'
-        elif publishing_action is glci.model.PublishingAction.RELEASE_CANDIDATE:
-            return 'rc'
-        elif publishing_action is glci.model.PublishingAction.BUILD_ONLY:
-            return 'bo'
-        elif publishing_action is glci.model.PublishingAction.IMAGES:
-            return 'imgs'
-        elif publishing_action is glci.model.PublishingAction.MANIFESTS:
-            return 'man'
-        elif publishing_action is glci.model.PublishingAction.COMPONENT_DESCRIPTOR:
-            return 'cd'
-        elif publishing_action is glci.model.PublishingAction.RUN_TESTS:
-            return 'tst'
+    def _build_targets_shorthand(build_targets):
+        result = ''
+        if glci.model.BuildTarget.BUILD in build_targets:
+            result += 'b'
+        if glci.model.BuildTarget.MANIFEST in build_targets:
+            result += 'm'
+        if glci.model.BuildTarget.COMPONENT_DESCRIPTOR in build_targets:
+            result += 'c'
+        if glci.model.BuildTarget.TESTS in build_targets:
+            result += 't'
+        if glci.model.BuildTarget.PUBLISH in build_targets:
+            result += 'p'
+        if glci.model.BuildTarget.FREEZE_VERSION in build_targets:
+            result += 'v'
+        if glci.model.BuildTarget.GITHUB_RELEASE in build_targets:
+            result += 'g'
+        return result
 
     # add last 4 seconds of time since epoch (to avoid issues with identical pipeline names for
     # repeated builds of the same commit)
     build_ts = str(int(time.time()))[-4:]
-    if publishing_actions:
+    if build_targets:
         name_parts = (
             pipeline_name[:11],
-            '-'.join([_publishing_action_shorthand(a) for a in publishing_actions]),
+            _build_targets_shorthand(build_targets),
             version.replace('.', '-'),
             committish[:6],
             build_ts,
@@ -128,7 +130,14 @@ def get_common_parameters(
     # if version is not specified, derive from worktree (i.e. VERSION file)
     version = get_version(args)
     version_label = get_version_label(version, args['committish'])
-    build_deb_image = get_deb_build_image(args['oci_path'], version_label)
+
+    # check if to use an older existing base image or base image from currrent commit:
+    if 'gardenlinux_base_image' in args and args['gardenlinux_base_image']:
+        path, label = args['gardenlinux_base_image'].split(':')
+        build_deb_image = path + '/gardenlinux-build-deb:' + label
+    else:
+        build_deb_image = get_deb_build_image(args['oci_path'], version_label)
+
     params = [
         get_param_from_arg(args, 'additional_recipients'),
         get_param_from_arg(args, 'branch'),
@@ -140,8 +149,8 @@ def get_common_parameters(
         get_param_from_arg(args, 'oci_path'),
         get_param_from_arg(args, 'only_recipients'),
         NamedParam(
-            name='publishing_actions',
-            value=','.join(a.value for a in args['publishing_actions'])
+            name='build_targets',
+            value=','.join(a.value for a in args['build_targets'])
         ),
         NamedParam(
             name='snapshot_timestamp',
@@ -163,10 +172,13 @@ def mk_pipeline_run(
 ):
     run_name = mk_pipeline_name(
         pipeline_name=pipeline_name,
-        publishing_actions=args.publishing_actions,
+        build_targets=args.build_targets,
         version=get_version(vars(args)),
         committish=args.committish,
     )
+
+    # check if build-targets are correct (exit early)
+    glci.model.BuildTarget.check_requirements(args.build_targets)
 
     plrun = PipelineRun(
         metadata=tkn.model.Metadata(
@@ -219,7 +231,13 @@ def mk_pipeline_main_run(
         NamedParam(name='promote_target', value=args.promote_target.value),
         NamedParam(name='pytest_cfg', value=args.pytest_cfg),
     ))
-    build_image = get_build_image(args.oci_path, find_param('version_label', params).value)
+
+    if args.gardenlinux_base_image:
+        path, label = args.gardenlinux_base_image.split(':')
+        build_image = path + '/gardenlinux-build-image:' + label
+    else:
+        build_image = get_build_image(args.oci_path, find_param('version_label', params).value)
+
     params.append(NamedParam(name='build_image', value=build_image))
 
     return mk_pipeline_run(
@@ -259,15 +277,16 @@ def main():
         default=glci.model.BuildType.SNAPSHOT,
     )
     parser.add_argument(
-        '--publishing-action',
-        type=lambda x: (glci.model.PublishingAction(v) for v in x.split(',')),
+        '--build-targets',
+        type=lambda x: (glci.model.BuildTarget(v) for v in x.split(',')),
         action='extend',
-        dest='publishing_actions',
-        default=[glci.model.PublishingAction.MANIFESTS],
+        dest='build_targets',
+        # default=[glci.model.BuildTarget.MANIFEST],
     )
+    parser.add_argument('--gardenlinux-base-image')
 
     parsed = parser.parse_args()
-    parsed.publishing_actions = set(parsed.publishing_actions)
+    parsed.build_targets = set(parsed.build_targets)
 
     pipeline_run = mk_pipeline_packages_run(
         args=parsed,

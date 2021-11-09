@@ -1,5 +1,5 @@
 # Introduction
-The following section describes how Garden Linux can be built using a pipeline. 
+The following section describes how Garden Linux can be built using a pipeline.
 The open source project [Tekton](https://github.com/tektoncd/pipeline) is used as environment to run the build. The build pipeline is fully containerized and requires a Kubernetes cluster.
 
 ## Overview About The Build
@@ -32,7 +32,7 @@ tekton-cli (installed automatically from script)
 ```
 
 ### Set Limits
-The build machine requires a certain amount of resources usually not available by default. Apply the 
+The build machine requires a certain amount of resources usually not available by default. Apply the
 following limits:
 
 ```
@@ -55,7 +55,7 @@ spec:
       ephemeral-storage: 20Gi
       memory: 4G
       cpu: 1.0
-    
+
 ```
 
 ### Grant API Permissions To Script User
@@ -114,15 +114,15 @@ The build uses two pipelines: One to build the packages and one to build the VM 
 Build variants:
 The build can handle various variants of build artifacts. These are configured by a flavour set. The flavours are defined in the file flavours.yaml in the root directory of th Git repository. By default there is one set in this file named "all". You can add more sets according to your needs.
 
-Publishing action:
-There are options how the build artifacts are handled after build. This is set in the environment variable PUBLISHING_ACTIONS (see also class PublishingAction in ci/glci/model.py). Currently there are four variants supported:
+Build-Target:
+There are options how the build artifacts are handled after build. This is set in the environment variable BUILD_TARGETS (see also class BuildTarget in ci/glci/model.py). Currently there are four variants supported:
 
- - `manifests`
- - `images`
+ - `build`
+ - `manifest`
  - `release`
- - `build_only`
+ - `publish`
 
-If the variable is not set it defaults to "`build-only`" 
+If the variable is not set it defaults to "`build`"
 
 The flavour set build by the pipeline is contained in the environment variable FLAVOUR_SET and defaults to "all" if not set.
 
@@ -146,7 +146,7 @@ The script to generate the pipeline definitions reads various environment variab
 # Namespace where pipelines are deployed defaults to "gardenlinux":
 export GARDENLINUX_TKN_WS=gardenlinux
 # type of artifacts to be built:
-export PUBLISHING_ACTIONS=manifests
+export BUILD_TARGETS=manifests
 # build variant: defaults to "all"
 export FLAVOUR_SET=all
 # Git branch to build, defaults to "main"
@@ -180,7 +180,7 @@ Example:
 
 ### Credential Handling
 
-The build pipeline can be used with a central server managing configuration and secrets. As an alternative all credentials can be read from a Kubernetes secret named "secrets" in the corresponding namespace. This secret will be automatically generated from configuration files. The switch between central server and a Kubernetes secret is done by an environment variable named `SECRET_SERVER_ENDPOINT`. If it is not set the secret will be generated and applied. At minimum there need to be two secrets: One for uploading the artifacts to an S3-like Object store and one to upload container images to an OCI registry. Example files are provided in the folder `ci/cfg`. 
+The build pipeline can be used with a central server managing configuration and secrets. As an alternative all credentials can be read from a Kubernetes secret named "secrets" in the corresponding namespace. This secret will be automatically generated from configuration files. The switch between central server and a Kubernetes secret is done by an environment variable named `SECRET_SERVER_ENDPOINT`. If it is not set the secret will be generated and applied. At minimum there need to be two secrets: One for uploading the artifacts to an S3-like Object store and one to upload container images to an OCI registry. Example files are provided in the folder `ci/cfg`.
 
 Edit the files cfg/cfg_types.yaml. Each top-level entry refers to another file
 containing the credentials. Examples with templates are provided. A second entry is for uploading the base-image and to an OCI registry. Additional configuration information is found in [cicd.yaml](cicd.yaml)
@@ -221,4 +221,4 @@ kubectl apply -f ./ci/integrationtest-task.yaml
 # run the actual test as taskrun
 kubectl create -f ./ci/it-run.yaml
 ```
-Running the integration tests is work-in-progress. 
+Running the integration tests is work-in-progress.
