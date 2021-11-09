@@ -61,6 +61,12 @@ def clone_and_checkout_anonymously(
     return repo.head.commit.message, repo.head.commit.hexsha
 
 
+def prepare_home_dir():
+    if home_dir := os.environ.get('HOME'):
+        print(f"Preparing HOME at '{home_dir}'")
+        os.makedirs(os.path.abspath(home_dir), exist_ok=True)
+
+
 def clone_and_copy(
     giturl: str,
     committish: str,
@@ -88,6 +94,8 @@ def clone_and_copy(
             )
         else:
             raise RuntimeError(f"Unable to clone {giturl}")
+
+    prepare_home_dir()
 
     print(f'cloned to {repo_dir=} {commit_hash=}')
     print(f'Commit Message: {commit_msg}')

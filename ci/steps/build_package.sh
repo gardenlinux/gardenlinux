@@ -2,11 +2,11 @@ build_package() {
     set -e
     set -x
 
-    repodir=$1
+    repo_dir=$1
     pkg_name=$2
 
     if [ -z "$SOURCE_PATH" ]; then
-    SOURCE_PATH="$(readlink -f ${repodir})"
+    SOURCE_PATH="$(readlink -f ${repo_dir})"
     fi
 
     if [ -z "${pkg_name}" ]; then
@@ -16,14 +16,14 @@ build_package() {
 
     echo $(pwd)
 
-    MANUALDIR=$(realpath $repodir/packages/manual)
-    KERNELDIR=$(realpath $repodir/packages/kernel)
+    MANUALDIR=$(realpath ${repo_dir}/packages/manual)
+    KERNELDIR=$(realpath ${repo_dir}/packages/kernel)
 
     export DEBFULLNAME="Garden Linux Maintainers"
     export DEBEMAIL="contact@gardenlinux.io"
     export BUILDIMAGE="gardenlinux/build-deb"
     export BUILDKERNEL="gardenlinux/build-kernel"
-    export CERTDIR=$(realpath $repodir/cert)
+    export CERTDIR=$(realpath ${repo_dir}/cert)
     echo "MANUALDIR: ${MANUALDIR}"
     echo "KERNELDIR: ${KERNELDIR}"
     echo "CERTDIR: ${CERTDIR}"
@@ -34,9 +34,7 @@ build_package() {
     ls -l ${CERTDIR}
     ln -s ${MANUALDIR} /workspace/manual
     ln -s /../Makefile.inside /workspace/Makefile
-    echo "$(gpgconf --list-dir agent-socket)"
-    mkdir -p /workspace/.gnupg
-    ln -s $(gpgconf --list-dir agent-socket) /workspace/.gnupg/S.gpg-agent
+
     ln -s ${CERTDIR}/sign.pub /sign.pub
     ln -s ${CERTDIR}/Kernel.sign.full /kernel.full
     ln -s ${CERTDIR}/Kernel.sign.crt /kernel.crt
@@ -45,7 +43,7 @@ build_package() {
     # originally this is called on docker startup
     gpg --import ${CERTDIR}/sign.pub
 
-    pkg_build_script_path="manual/${pkg_name}"
+    pkg_build_script_path="${repo_dir}/packages/manual/${pkg_name}"
     echo "pkg_build_script_path: ${pkg_build_script_path}"
 
     if [ ! -f "${pkg_build_script_path}" ]; then
