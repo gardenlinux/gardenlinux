@@ -1,3 +1,9 @@
+---
+title: On Metal install via IPXE
+weight: 10
+disableToc: false
+---
+
 ## Installing Garden Linux on metal with IPXE
 
 ## Idea
@@ -5,11 +11,11 @@ The installation procedure runs in a live version of Garden Linux. For this the 
 
 The installation procedure itself consists of copying the live instance to a specified disk while installing an appropriate bootloader. The system then switches directly into the installed OS. Here is an overview:
 
-<img src="svg/firstboot.svg">
+<img src="../.media/firstboot.svg">
 
 The installation process is not invoked on every boot of the system but only on firstboot. Just before completing the installer disables the dracut module responsible for livebooting and removes the installer. On UEFI systems also the boot order is changed so that subsequent boots go straight to GardenLinux.
 
-<img src="svg/subsboots.svg">
+<img src="../.media/subsboots.svg">
 
 #### disk layout & format
 The targeted disk will have two partitions. The first partition is created to be *ESP (Efi System Partition)* compatible and serve the bootloaders (see *bootloader installation*). Garden Linux will install its rootfs to the second partition with ext4 format.
