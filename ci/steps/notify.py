@@ -14,6 +14,7 @@ import ccc.slack
 import ci.util
 import glci.notify
 import glci.util
+import glci.github
 import mailutil
 
 
@@ -139,6 +140,30 @@ def send_notification(
     only_recipients: str = None,
     recipients_plaintext: typing.Sequence[str] = [],
 ):
+    dashboard_url = (
+        f'https://tekton-dashboard.gardenlinux.io/#/namespaces/{namespace}'
+        f'/pipelineruns/{pipeline_run_name}'
+    )
+
+    status_dict = json.loads(status_dict_str)
+    task_failed = not all([
+        True if status == 'Succeeded' else False
+        for status in status_dict.values()
+    ])
+    github_cfg = ccc.github.github_cfg_for_hostname('github.com')
+    if task_failed:
+        status_to_report = glci.github.GitHubStatus.FAILURE
+    else:
+        status_to_report = glci.github.GitHubStatus.SUCCESS
+
+    glci.github.post_github_status(
+        github_cfg=github_cfg,
+        committish=committish,
+        state=status_to_report,
+        target_url=dashboard_url,
+        description='Pipeline run finished',
+    )
+
     if distutils.util.strtobool(disable_notifications):
         print('Notification is disabled, not sending email')
         return
@@ -151,7 +176,6 @@ def send_notification(
     print(f'sending to additional recipients: {additional_recipients_set}')
     print(f'sending only to recipients: {only_recipients_set}')
 
-    status_dict = json.loads(status_dict_str)
     must_send = True in [True for status in status_dict.values() if status != 'Succeeded']
 
     if not must_send:
@@ -196,8 +220,6 @@ def send_notification(
 
     # replace id and add some attributes
     logo_svg = logo_svg.replace('<svg data-name="Layer 1"', '<svg data-name="gl_logo" width="100px"')
-
-    dashboard_url = f'https://tekton-dashboard.gardenlinux.io/#/namespaces/{namespace}/pipelineruns/{pipeline_run_name}'
 
     # read the S3 download URL for the full log file:
     s3_path = os.path.join(repo_dir, 'log_url.txt')
