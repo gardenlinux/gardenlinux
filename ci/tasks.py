@@ -330,6 +330,13 @@ def base_image_build_task(env_vars, volumes, volume_mounts):
     )
     params += params_step
 
+    update_status_step, params_step = steps.status_step(
+        params=all_params,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+    params += params_step
+
     build_base_image_step, params_step = steps.build_base_image_step(
         params=all_params,
         env_vars=env_vars,
@@ -344,6 +351,7 @@ def base_image_build_task(env_vars, volumes, volume_mounts):
             params=params,
             steps=[
                 clone_repo_step,
+                update_status_step,
                 build_base_image_step,
             ],
             volumes=volumes,
