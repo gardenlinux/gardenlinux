@@ -158,6 +158,7 @@ def mk_pipeline_build_task(
         taskRef=TaskRef(name=task_ref_name),
         params=params,
         runAfter=run_after,
+        timeout='2h'
     )
 
 
