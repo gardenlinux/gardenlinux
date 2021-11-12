@@ -30,3 +30,6 @@ cicd_cfgs:
         image_prefix: 'eu.gcr.io/gardenlinux/gardenlinux'
     notify:
       email_cfg_name: 'ses_gardener_cloud_sap'
+      slack_cfg_name: 'ti_workspace'
+      slack_channel: 'GURQBS34Z'
+      branches: ['main']
