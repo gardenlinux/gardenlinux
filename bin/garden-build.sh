@@ -348,8 +348,8 @@ fi
 
 				# move the actual tests from one of the features that enables it
 				actualTest="${featureDir}/$(echo ${enabledBy} | awk '{ print $1 }')/test/${t}"
-				cp -L ${actualTest} "${rootfs}/tmp/${test}"
 				if [ ${t##*.} == "chroot" ]; then
+					cp -L ${actualTest} "${rootfs}/tmp/${test}"
 					if garden-chroot "${rootfs}" ./tmp/${test}; then
 						echo -e "\e[32mpassed\e[39m"
 						echo
@@ -359,7 +359,7 @@ fi
 						let "failcounter=failcounter+1"
 					fi
 				else
-					if "${rootfs}/tmp/${test}" ${rootfs} ${targetBase}; then
+					if "${actualTest}" ${rootfs} ${targetBase}; then
 						echo -e "\e[32mpassed\e[39m"
 						echo
 					else
