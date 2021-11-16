@@ -56,7 +56,7 @@ for i in $(echo "base,$features" | tr ',' '\n' | norm_features); do
 		$thisDir/garden-chroot $targetDir /tmp/$(basename $featureDir)/$i/exec.config | indent
 	fi
 done
-rm -rf $targetDir/tmp/$featureDir
+rm -r "$targetDir/tmp/$(basename $featureDir)"
 
 printf "## deleting file.exclude\n"
 set -o noglob
