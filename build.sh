@@ -41,7 +41,7 @@ while true; do
 done
 
 outputDir="${1:-}";	shift || eusage 'missing output-dir'
-version="$(bin/garden-version ${1:-})";	shift || /bin/true
+version="$(${thisDir}/bin/garden-version ${1:-})";	shift || /bin/true
 
 mkdir -p "$outputDir"
 outputDir="$(readlink -f "$outputDir")"
@@ -75,7 +75,7 @@ grep -q apparmor <<< $dockerinfo  && securityArgs+=( --security-opt apparmor=unc
 
 # external variable BUILD_IMAGE forces a different buildimage name
 buildImage=${BUILD_IMAGE:-"gardenlinux/build-image:$version"}
-[ $build ] && make --directory=docker ALTNAME=$buildImage build-image
+[ $build ] && make --directory=${thisDir}/docker ALTNAME=$buildImage build-image
 
 [ -e ${thisDir}/cert/Kernel.sign.crt ] || make -C cert Kernel.sign.crt
 [ -e ${thisDir}/cert/Kernel.sign.key ] || make -C cert Kernel.sign.key

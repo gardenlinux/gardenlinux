@@ -52,7 +52,7 @@ snapshotUrl="$("$debuerreotypeScriptsDir/.snapshot-url.sh" "@$epoch")/dists/$sui
 codename=$(wget -qO - $snapshotUrl | awk -F: '$1 == "Codename" { print $2 }' | tr -d ' ')
 
 if [ -z "${prefix+x}" ]; then
-  prefix="/$serial/$dpkgArch/$codename"
+  prefix="/$dpkgArch-$version"
 fi
 
 exportDir="output"
