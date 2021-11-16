@@ -608,6 +608,9 @@ class PublishCfg:
 @dataclasses.dataclass(frozen=True)
 class NotificationCfg:
     email_cfg_name: str
+    slack_cfg_name: str
+    slack_channel: str
+    branches: typing.Tuple[str, ...]
 
 
 @dataclasses.dataclass(frozen=True)

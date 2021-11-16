@@ -15,7 +15,7 @@ build-image: needslim
 
 .PHONY: build
 build: needslim
-	@docker build --build-arg BUILDARCH="$$(dpkg --print-architecture | awk -F- "{ print \$$NF }")" -t gardenlinux/build $(ALTNAME_INTERNAL) build
+	@docker build --build-arg BUILDARCH="$$([ "$$(uname -m)" = "aarch64" ] && echo "arm64" || echo "amd64")" -t gardenlinux/build $(ALTNAME_INTERNAL) build
 
 .PHONY: build-deb
 build-deb: build

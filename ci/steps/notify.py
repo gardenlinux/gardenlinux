@@ -1,16 +1,23 @@
-import ccc.github
-import ci.util
 import distutils.util
-from email.mime.base import MIMEBase
 import email.message
+import json
+import logging
+import os
+import typing
+import urllib
+
+from email.mime.base import MIMEBase
+from string import Template
+
+import ccc.github
+import ccc.slack
+import ci.util
 import glci.notify
 import glci.util
-import json
 import mailutil
-import os
-from string import Template
-import urllib
-import typing
+
+
+logger = logging.getLogger(__name__)
 
 
 def _email_cfg(cicd_cfg: glci.model.CicdCfg):
@@ -72,6 +79,49 @@ def _mk_plain_text_body(
     msg['To'] = ', '.join(recipients)
 
     return msg
+
+
+def _post_to_slack(
+    repo_dir: str,
+    branch_name: str,
+    dashboard_url: str,
+    slack_cfg_name: str,
+    channel: str,
+    title: str,
+):
+    ctx = ci.util.ctx()
+    cfg_factory = ctx.cfg_factory()
+
+    slack_cfg = cfg_factory.slack(slack_cfg_name)
+    slack_client = ccc.slack.client(slack_cfg)
+
+    log_zip_name = 'build_log.zip'
+    log_zip = os.path.join(repo_dir, log_zip_name)
+    if os.path.exists(log_zip):
+        logger.info('Posting notification to slack channel and attaching build log')
+        response = slack_client.files_upload(
+            file=log_zip,
+            channels=channel,
+            initial_comment=(
+                f'Tekton Pipeline for branch `{branch_name}` failed. To see the job in the '
+                f'dashboard, use the following link: {dashboard_url}'
+            ),
+            title=title,
+            filetype='zip',
+        )
+    else:
+        logger.info('Posting notification to slack channel')
+        response = slack_client.chat_postMessage(
+            channel=channel,
+            text=(
+                f'Tekton Pipeline for branch `{branch_name}` failed. To see the job in the '
+                f'dashboard, use the following link: {dashboard_url}.\n '
+                'No build log available'
+            )
+        )
+
+    if not response['ok']:
+        raise RuntimeError(f"failed to post to slack channel '{channel}': {response['error']}")
 
 
 def send_notification(
@@ -225,3 +275,13 @@ def send_notification(
             sender=email_cfg.sender_name(),
         )
         _attach_and_send(repo_dir=repo_dir, mail_msg=mail_msg, email_cfg=email_cfg)
+
+    if branch in cicd_cfg.notify.branches:
+        _post_to_slack(
+            repo_dir=repo_dir,
+            branch_name=branch,
+            dashboard_url=dashboard_url,
+            slack_cfg_name=cicd_cfg.notify.slack_cfg_name,
+            channel=cicd_cfg.notify.slack_channel,
+            title='Build Logs',
+        )
