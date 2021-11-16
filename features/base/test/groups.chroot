@@ -8,12 +8,12 @@ thisDir=$(readlink -e "$(dirname "${BASH_SOURCE[0]}")")
 rc=0
 failMessage=""
 
-cat "${thisDir}/groups.d/"*.list | awk '!(h[$1]) {h[$1]=$0; next} h[$1] {k=$1;$1="";h[k]=h[k]" "$0}END{for (i in h) print h[i]}' > "${thisDir}/groups.d/user_groups_final.list"
+cat "${thisDir}/groups.d/"*.list | awk '!(h[$1]) {h[$1]=$0; next} h[$1] {k=$1;$1="";h[k]=h[k]","$0}END{for (i in h) print h[i]}' > "${thisDir}/groups.d/user_groups_final.list"
 
 for grp in $(getent group | grep -f <( awk -F: '{print $1}' "${thisDir}/groups.d/user_groups_final.list")); do
 	users=$(echo "$grp" | awk -F: '{print $4}' | tr "," "\n" | sort | paste -s -d " ")
 	group=$(echo "$grp" | awk -F: '{print $1}')
-	expectedUsers=$(grep "${group}:" "${thisDir}/groups.d/user_groups_final.list" | awk -F: '{ print $2 }' | tr "," "\n" | sort | paste -s -d " ")
+	expectedUsers=$(grep "${group}:" "${thisDir}/groups.d/user_groups_final.list" | awk -F: '{ print $2 }' | tr "," "\n" | sort | awk 'NF' | paste -s -d " ")
 	if [[ "$users" != "$expectedUsers" ]]; then
 		rc=1
 		failMessage="${failMessage}${group} group         : ${users}\n"
