@@ -34,7 +34,7 @@ sosreport
 binutils
 sbsigntool
 main/s/selinux-basics/selinux-basics_0.5.8gardenlinux1_all.deb
-main/i/iproute2/iproute2_5.14.0-1gardenlinux1_${arch}.deb
+main/i/iproute2/iproute2_5.15.0-1gardenlinux1_${arch}.deb
 main/p/pam/libpam-runtime_1.4.0-10gardenlinux1_all.deb
 main/p/pam/libpam-modules-bin_1.4.0-10gardenlinux1_${arch}.deb
 main/p/pam/libpam-modules_1.4.0-10gardenlinux1_${arch}.deb
