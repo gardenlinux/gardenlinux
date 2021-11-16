@@ -16,7 +16,14 @@ import (
 
 func usage() {
 	_, _ = fmt.Fprintf(os.Stderr, "Usage: %s <command> [--option]... arg...\n", filepath.Base(os.Args[0]))
-	_, _ = fmt.Fprintf(os.Stderr, "Commands: cname, elements, features, flags, ignore, params, platform\n")
+	_, _ = fmt.Fprintf(os.Stderr, "Commands:\n" +
+		" cname - effective minimum of features equivalent to specified features (ordered)\n" +
+		" features - effective maximum of all features (each feature used, no duplicates, ordered)\n\n" +
+		" platform - platforms in the featureset\n" +
+		" flags - flags in the featureset\n" +
+		" elements - all elements of the featureset (including platform because of possible execution order)\n\n" +
+		" ignore - ignored elements (no duplicates)\n" +
+		" params - debugging output\n\n")
 	_, _ = fmt.Fprintf(os.Stderr, "Options:\n")
 	flag.PrintDefaults()
 }
@@ -27,12 +34,14 @@ func parseCmdLine(argv []string) (progName string, cmd string, featDir string, f
 	flag.ErrHelp = nil
 	flag.CommandLine = flag.NewFlagSet(argv[0], flag.ContinueOnError)
 
-	flag.StringVar(&featDir, "feat-dir", "../features", "Directory of GardenLinux features")
+	flag.StringVarP(&featDir, "features-dir", "d", "../features", "Directory of GardenLinux features")
 	flag.StringSliceVarP(&ignore, "ignore", "i", nil, "List of feaures to ignore (comma-separated)")
 	flag.StringSliceVarP(&features, "features", "f", nil, "List of feaures (comma-separated)")
 
 	var help bool
 	flag.BoolVarP(&help, "help", "h", false, "Show this help message")
+	// multiplatform support?
+	// list elements and flags
 
 	err := flag.CommandLine.Parse(argv[1:])
 	if err != nil {
