@@ -44,6 +44,8 @@ for i in $(echo "base,$features" | tr ',' '\n' | norm_features); do
 	fi
 done
 
+rm -r "$targetDir/tmp/$(basename $featureDir)"
+
 for i in $(echo "base,$features" | tr ',' '\n' | norm_features); do
 	if [ -f "$featureDir/$i/file.exclude" ]; then
 		echo "deleting from $i: $(cat $featureDir/$i/file.exclude | paste -sd' '  -)"
