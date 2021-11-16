@@ -34,7 +34,7 @@ func parseCmdLine(argv []string) (progName string, cmd string, featDir string, f
 	flag.ErrHelp = nil
 	flag.CommandLine = flag.NewFlagSet(argv[0], flag.ContinueOnError)
 
-	flag.StringVarP(&featDir, "features-dir", "d", "../features", "Directory of GardenLinux features")
+	flag.StringVarP(&featDir, "featureDir", "d", "../features", "Directory of GardenLinux features")
 	flag.StringSliceVarP(&ignore, "ignore", "i", nil, "List of feaures to ignore (comma-separated)")
 	flag.StringSliceVarP(&features, "features", "f", nil, "List of feaures (comma-separated)")
 
@@ -458,7 +458,7 @@ func filterByType(allFeatures featureSet, features []string, types ...string) ([
 func printStrings(strings ...string) error {
 	for i, s := range strings {
 		if i > 0 {
-			_, err := fmt.Print(" ")
+			_, err := fmt.Print(",")
 			if err != nil {
 				return err
 			}

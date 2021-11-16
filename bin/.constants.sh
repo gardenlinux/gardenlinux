@@ -4,6 +4,7 @@
 export TZ='UTC' LC_ALL='C'
 umask 0002
 scriptsDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+featureDir="$scriptsDir/../features"
 self="$(basename "$0")"
 
 #getFeatures() {

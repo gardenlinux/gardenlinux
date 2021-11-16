@@ -27,7 +27,7 @@ build_image() {
 
     pwd
     echo "running build.."
-    $(params.repo_dir)/bin/garden-build.sh \
+    $(params.repo_dir)/bin/garden-build \
         --arch $arch \
         --commitid $commitid \
         --suite $suite \

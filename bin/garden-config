@@ -5,7 +5,6 @@
 set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
-featureDir="$thisDir/../features"
 source "$thisDir/.constants.sh" \
 	--flags 'features:' \
 	-- \

@@ -4,7 +4,6 @@ set -Eeuo pipefail
 # Contains sources from https://github.com/debuerreotype/debuerreotype
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
-featureDir="$thisDir/../features"
 source "$thisDir/.constants.sh" \
 	--flags 'debian,debian-ports,non-debian' \
 	--flags 'debootstrap:' \

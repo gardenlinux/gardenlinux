@@ -1,6 +1,6 @@
 ARG build_base_image=gardenlinux/slim
 FROM	golang:latest as golang
-RUN	go get -u golang.org/x/lint/golint \
+RUN	go install golang.org/x/lint/golint@latest \
      &&	git clone https://github.com/microsoft/azure-vhd-utils.git \
      &&	cd azure-vhd-utils \
      &&	make
