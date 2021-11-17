@@ -1,9 +1,13 @@
 ARG build_base_image=gardenlinux/slim
 FROM	golang:latest as golang
+COPY	garden-feat.go /go/src
 RUN	go install golang.org/x/lint/golint@latest \
-     &&	git clone https://github.com/microsoft/azure-vhd-utils.git \
-     &&	cd azure-vhd-utils \
-     &&	make
+     && cd /go/src \
+     && golint garden-feat.go \
+     && go mod init garden-feat.go \
+     && go mod tidy -go=1.16 \
+     && go mod tidy -go=1.17 \
+     && go build garden-feat.go
 
 FROM 	$build_base_image
 ARG	DEBIAN_FRONTEND=noninteractive
@@ -25,8 +29,8 @@ RUN	apt-get update \
      &&	rm -rf /var/lib/apt/lists/*
 
 ENV	PATH=${PATH}:/opt/gardenlinux/bin
-COPY	--from=gcr.io/kaniko-project/executor:latest /kaniko/executor /usr/local/bin/executor
-COPY	--from=golang /go/azure-vhd-utils/azure-vhd-utils /usr/local/bin/azure-vhd-utils
+#COPY	--from=gcr.io/kaniko-project/executor:latest /kaniko/executor /usr/local/bin/executor
+COPY	--from=golang /go/src/garden-feat /usr/local/bin/garden-feat
 RUN	echo "progress=bar:force:noscroll\nverbose=off" >> /etc/wgetrc
 
 WORKDIR	/tmp
