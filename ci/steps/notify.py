@@ -277,11 +277,15 @@ def send_notification(
         _attach_and_send(repo_dir=repo_dir, mail_msg=mail_msg, email_cfg=email_cfg)
 
     if branch in cicd_cfg.notify.branches:
-        _post_to_slack(
-            repo_dir=repo_dir,
-            branch_name=branch,
-            dashboard_url=dashboard_url,
-            slack_cfg_name=cicd_cfg.notify.slack_cfg_name,
-            channel=cicd_cfg.notify.slack_channel,
-            title='Build Logs',
-        )
+        # prevent slack-messages from manually generated/deployed test-pipelines. These are
+        # sometimes created _from_ the main branch, but deployed to a manually selected tekton-
+        # namespace
+        if namespace == branch:
+            _post_to_slack(
+                repo_dir=repo_dir,
+                branch_name=branch,
+                dashboard_url=dashboard_url,
+                slack_cfg_name=cicd_cfg.notify.slack_cfg_name,
+                channel=cicd_cfg.notify.slack_channel,
+                title='Build Logs',
+            )
