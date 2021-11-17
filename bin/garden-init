@@ -100,16 +100,13 @@ if ! wget -t1 -qO/dev/null ${mirror_pool}; then
 	mirror_pool="${mirror_host}/gardenlinux/pool/"
 fi
 
-#featurelist=$(getFeatures $features)
-[ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
-
 include="$(tr "," "\n" <<< $include)"$'\n'
 exclude="$(tr "," "\n" <<< $include)"$'\n'
 
 [ -s $featureDir/pkg.include ] && include+="$(cat $featureDir/pkg.include)"$'\n'
 [ -s $featureDir/pkg.exclude ] && exclude+="$(cat $featureDir/pkg.exclude)"$'\n'
 
-for i in $(echo "base,$features" | tr ',' '\n' | norm_features); do
+for i in $(tr ',' '\n' <<< $features); do
 	[ -s $featureDir/$i/pkg.include ] && include+="$(cat $featureDir/$i/pkg.include)"$'\n'
 	[ -s $featureDir/$i/pkg.exclude ] && exclude+="$(cat $featureDir/$i/pkg.exclude)"$'\n'
 done

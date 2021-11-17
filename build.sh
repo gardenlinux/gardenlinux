@@ -3,15 +3,18 @@ set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/bin/.constants.sh" \
-	--flags 'no-build,debug,lessram,manual,skip-tests' \
-	--flags 'arch:,features:,nofeatures:,suite:' \
-	--usage '[--no-build] [--lessram] [--debug] [--manual] [--arch=<arch>] [--skip-tests] <output-dir> [<version/timestamp>]' \
-	--sample '--features kvm,khost -nofeatures _slimify .build' \
+	--flags 'skip-build,debug,lessram,manual,skip-tests' \
+	--flags 'arch:,features:,disable-features:,suite:' \
+	--usage '[--skip-build] [--lessram] [--debug] [--manual] [--arch=<arch>] [--skip-tests] [<output-dir>] [<version/timestamp>]' \
+	--sample '--features kvm,khost --disable-features _slimify .build' \
 	--sample '--features metal,_pxe --lessram .build' \
 	--help  "Generates a Garden Linux image based on features
 
+<output-dir>	target to store the output artifacts (default: .build)
+<version>	which version to build (see bin/garden-version)
+
 --features <element>[,<element>]*	comma separated list of features activated (see features/) (default:base)
---nofeatures <element>[,<element>]*	comma separated list of features to deactivate (see features/), 
+--disable-features <element>[,<element>]*	comma separated list of features to deactivate (see features/), 
 		can only be implicit features another feature pulls in  (default:)
 --lessram	build will be no longer in memory (default: off)
 --debug		activates basically \`set -x\` everywhere (default: off)
@@ -19,7 +22,7 @@ source "$thisDir/bin/.constants.sh" \
 --arch		builds for a specific architecture (default: architecture the build runs on)
 --suite		specifies the debian suite to build for e.g. bullseye, potatoe (default: testing)
 --skip-tests	deactivating tests (default: off)
---no-build	do not create the build container BUILD_IMAGE variable would specify an alternative name
+--skip-build	do not create the build container BUILD_IMAGE variable would specify an alternative name
 "
 
 eval "$dgetopt"
@@ -29,28 +32,29 @@ manual=
 lessram=
 arch=
 features=
-nofeatures=
+disablefeatures=
 suite="testing"
-notests=0
+tests=1
+output=".build"
 while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
 	case "$flag" in
-		--no-build)	build=		;;
+		--skip-build)	build=		;;
 		--lessram)	lessram=1	;;
 		--debug)	debug=1		;;
 		--manual)	manual=1	;;
 		--arch)		arch="$1"; 	shift ;;
 		--features) 	features="$1";	shift ;;
-		--nofeatures) 	nofeatures="$1";shift ;;
+		--disable-features) 	disablefeatures="$1";shift ;;
 		--suite) 	suite="$1";	shift ;;
-		--skip-tests)   notests=1	;;
+		--skip-tests)   tests=0	;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
 done
 
-outputDir="${1:-}";	shift || eusage 'missing output-dir'
+outputDir="${1:-$output}";	shift || /bin/true
 version="$(${thisDir}/bin/garden-version ${1:-})";	shift || /bin/true
 
 mkdir -p "$outputDir"
@@ -62,13 +66,13 @@ envArgs=(
 	TZ="UTC"
 	LC_ALL="C"
 	suite="$suite"
-	debug="$debug"
-	manual="$manual"
+	debug=$debug
+	manual=$manual
 	arch="$arch" 
 	features="$features"
-	nofeatures="$nofeatures"
+	disablefeatures="$disablefeatures"
 	version="$version"
-	notests="$notests"
+	tests=$tests
 	userID="$userID"
 	userGID="$userGID"
 )
@@ -82,11 +86,12 @@ securityArgs=(
 dockerinfo="$(docker info)"       || eusage "docker not working, check permissions or work with bin/garden-build"
 grep -q apparmor <<< $dockerinfo  && securityArgs+=( --security-opt apparmor=unconfined )
 
+make --directory=${thisDir}/bin
+
 # external variable BUILD_IMAGE forces a different buildimage name
 buildImage=${BUILD_IMAGE:-"gardenlinux/build-image:$version"}
 [ $build ] && make --directory=${thisDir}/docker ALTNAME=$buildImage build-image
 
-make --directory=${thisDir}/bin
 [ -e ${thisDir}/cert/Kernel.sign.crt ] || make --directory=${thisDir}/cert Kernel.sign.crt
 [ -e ${thisDir}/cert/Kernel.sign.key ] || make --directory=${thisDir}/cert Kernel.sign.key
 

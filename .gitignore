@@ -18,6 +18,7 @@
 !/cert/gardenlinux.sign.pub
 /features/metal/file.include/lib/firmware/
 /docker/*/_pipfiles
+/docker/build-image/garden-feat.go
 /bin/garden-feat
 .idea
 __pycache__

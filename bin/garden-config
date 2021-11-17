@@ -30,9 +30,8 @@ targetDir="${1:-}"; shift || eusage 'missing target-dir'
 
 aptVersion="$("$thisDir/.apt-version.sh" "$targetDir")"
 
-[ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
 printf "## executing exec.pre\n"
-for i in $(echo "base,$features" | tr ',' '\n' | norm_features); do
+for i in $(tr ',' '\n' <<< $features); do
         if [ -x $featureDir/$i/exec.pre ]; then
                 printf "### $i:\n"
                 thisDir=$thisDir targetDir=$targetDir $featureDir/$i/exec.pre "$targetDir" | indent
@@ -40,7 +39,7 @@ for i in $(echo "base,$features" | tr ',' '\n' | norm_features); do
 done
 
 printf "## copying from file.include\n"
-for i in $(echo "base,$features" | tr ',' '\n' | norm_features); do
+for i in $(tr ',' '\n' <<< $features); do
 	if [ -d "$featureDir/$i/file.include" ]; then
 		printf "### $i:\n"
 		tar --owner=0 --group=0 -cC $featureDir/$i/file.include . | tar -xvC $targetDir 2>&1 | grep -v "^./$" | paste -sd' '  - | indent
@@ -49,7 +48,7 @@ done
 
 cp -r $featureDir $targetDir/tmp/
 printf "## executing exec.config\n"
-for i in $(echo "base,$features" | tr ',' '\n' | norm_features); do
+for i in $(tr ',' '\n' <<< $features); do
 	if [ -f $featureDir/$i/exec.config ]; then
 		printf "### $i:\n"
 		$thisDir/garden-chroot $targetDir /tmp/$(basename $featureDir)/$i/exec.config | indent
@@ -58,8 +57,7 @@ done
 rm -r "$targetDir/tmp/$(basename $featureDir)"
 
 printf "## deleting file.exclude\n"
-set -o noglob
-for i in $(echo "base,$features" | tr ',' '\n' | norm_features); do
+for i in $(tr ',' '\n' <<< $features); do
 	if [ -f "$featureDir/$i/file.exclude" ]; then
 		printf "### $i:\n"
 		cat $featureDir/$i/file.exclude | paste -sd' '  - | indent
@@ -74,10 +72,9 @@ for i in $(echo "base,$features" | tr ',' '\n' | norm_features); do
 		done
 	fi
 done
-set +o noglob
 
 printf "## executing exec.post\n"
-for i in $(echo "base,$features" | tr ',' '\n' | norm_features); do
+for i in $(tr ',' '\n' <<< $features); do
 	if [ -x $featureDir/$i/exec.post ]; then
 		printf "### $i:\n"
 		thisDir=$thisDir targetDir=$targetDir $featureDir/$i/exec.post "$targetDir" | indent

@@ -11,6 +11,7 @@ needslim:
 
 .PHONY: build-image
 build-image: needslim
+	cp ../bin/garden-feat.go build-image/
 	@docker build --build-arg VERSION=$(VERSION) -t gardenlinux/build-image:$(VERSION) $(ALTNAME_INTERNAL) build-image
 
 .PHONY: build
