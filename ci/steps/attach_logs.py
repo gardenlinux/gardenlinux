@@ -1,9 +1,11 @@
+import os
+import sys
+import hashlib
+
 import glci.model
 import glci.util
 import glci.s3
 import logs
-import os
-import hashlib
 
 
 def _upload_file(
@@ -78,7 +80,7 @@ def _attach_and_upload_logs(
     platform: str,
     repo_dir: str,
     version: str,
-):
+) -> bool:
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
     s3_client = glci.s3.s3_client(cicd_cfg)
     aws_cfg_name = cicd_cfg.build.aws_cfg_name
@@ -96,13 +98,13 @@ def _attach_and_upload_logs(
         print(f'build target {glci.model.BuildTarget.MANIFEST=} not specified - skip upload')
         return True
 
-    manifest_available = True
+    manifest_expected = True
     if not platform.strip() or not modifiers.strip():
         print('No platform or modifiers given, cannot find release manifest, log upload skipped.')
         print('This is probably a package build.')
-        manifest_available = False
+        manifest_expected = False
 
-    if manifest_available:
+    if manifest_expected:
         print(f'downloading release manifest from s3 {aws_cfg_name=} {s3_bucket_name=}')
         find_release = glci.util.preconfigured(
             func=glci.util.find_release,
@@ -123,8 +125,18 @@ def _attach_and_upload_logs(
             bucket_name=s3_bucket_name,
         )
 
+        # Manifest not found can be caused by:
+        # broken build and manifest was never written
+        # manifest is not in build targets
+        # -> write logs to separate S3 section for non-manifest build logs
+        # if we are in a Release build logs mut be always attached and a missing manifest is a
+        # hard error
+        if not manifest and glci.model.BuildType.RELEASE in build_target_set:
+            print('Could not find release-manifest in release build, exit with failure')
+            return False
+
         if not manifest:
-            print('Could not find release-manifest, attaching logs to manifest failed.')
+            print('Could not find release-manifest, no log attachment created.')
             return False
 
         # upload file:
@@ -162,6 +174,7 @@ def _attach_and_upload_logs(
     # write a file with the download URL so that it can be later added to the email
     with open(os.path.join(repo_dir, 'log_url.txt'), 'w') as f:
         f.write(f'https://gardenlinux.s3.eu-central-1.amazonaws.com/{s3_key}')
+    return True
 
 
 def upload_logs(
@@ -187,7 +200,7 @@ def upload_logs(
         only_failed=False,
     )
     if ok:
-        _attach_and_upload_logs(
+        ok = _attach_and_upload_logs(
             architecture=architecture,
             build_targets=build_targets,
             cicd_cfg_name=cicd_cfg_name,
@@ -198,3 +211,10 @@ def upload_logs(
             repo_dir=repo_dir,
             version=version,
         )
+
+    print(f'Upload logs finished with result {ok}')
+    if not ok:
+        # write a file with log status (do not exit(1) as we want the task to continue to send
+        # notifications)
+        with open(os.path.join(repo_dir, 'status.txt'), 'w') as f:
+            f.write('Uploading logs to S3 failed')

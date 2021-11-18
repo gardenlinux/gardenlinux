@@ -5,6 +5,7 @@ import logging
 import os
 import typing
 import urllib
+import sys
 
 from email.mime.base import MIMEBase
 from string import Template
@@ -315,3 +316,9 @@ def send_notification(
                 channel=cicd_cfg.notify.slack_channel,
                 title='Build Logs',
             )
+
+    # check if we have a status file indicating that some previous step failed, exit with error then
+    with open(os.path.join(repo_dir, 'status.txt')) as f:
+        err = f.read()
+        print(f'Exiting with error, one of the previous steps failed with: {err}')
+        sys.exit(1)
