@@ -33,7 +33,7 @@ PrintMotd no
 AcceptEnv LANG
 
 # override default of no subsystems
-Subsystem sftp  /usr/lib/ssh/sftp-server -f AUTHPRIV -l INFO
+Subsystem sftp /usr/lib/openssh/sftp-server -f AUTHPRIV -l INFO
 
 # autologout inactive users after 10 minutes
 ClientAliveInterval 600
