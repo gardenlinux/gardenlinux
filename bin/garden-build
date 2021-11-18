@@ -4,7 +4,7 @@ set -Eeuo pipefail
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
 	--flags 'no-build,debug,skip-tests,suite:,gardenversion:,timestamp:' \
-	--flags 'ports,arch:,qemu,features:,nofeatures:,commitid:,userid:,usergid:' \
+	--flags 'ports,arch:,qemu,features:,disable-features:,commitid:,userid:,usergid:' \
 	--flags 'suffix:,prefix:' \
 	--
 
@@ -22,13 +22,13 @@ while true; do
 		--arch) arch="$1"; shift ;; # for adding "--arch" to garden-init
 		--qemu) qemu=1 ;;	# for using "qemu-debootstrap"
 		--features) features="$1"; shift ;; # adding features
-		--nofeatures) nofeatures="$1"; shift ;; # ignoring features
+		--disable-features) disablefeatures="$1"; shift ;; # ignoring features
 		--suite) suite="$1"; shift ;; # suite is a parameter this time
 		--gardenversion|--timestamp) version="$1"; shift ;; # timestamp is a parameter this time
 		--suffix) suffix="$1"; shift ;; # target name prefix
 		--prefix) prefix="$1"; shift ;; # target name suffix
 		--commitid) commitid="$1"; shift ;; # build commit hash
-		--skip-tests) notests=1 shift ;; # skip tests
+		--skip-tests) tests=0 shift ;; # skip tests
 		--userid) userID="$1" shift ;;
 		--usergid) userGID="$1" shift ;;
 		--) break ;;
@@ -42,15 +42,17 @@ fi
 
 userID="${userID:-$(id -u)}";
 userGID="${userGID:-$(id -g)}";
+disablefeatures="${disablefeatures:-}"
 epoch="$(garden-version --epoch "$version")"
 serial="$(garden-version --date "$version")"
 dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
 
 snapshotUrl="$("$scriptsDir/.snapshot-url.sh" "@$epoch")/dists/$suite/Release"
 codename=$(wget -qO - $snapshotUrl | awk -F: '$1 == "Codename" { print $2 }' | tr -d ' ')
+fullfeatures="$(garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" features)"
 
 if [ -z "${prefix+x}" ]; then
-	prefix="/$(garden-feat --featureDir $featureDir --features "$features" --ignore "$nofeatures" cname)-$dpkgArch-$version-$commitid"
+	prefix="/$(garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
 fi
 
 exportDir="output"
@@ -144,8 +146,7 @@ fi
 	fi
 	initArgs+=( --keyring "$keyring" )
 
-	[ -n "$features" ] && initArgs+=( --features "$features" )
-	[ -n "$nofeatures" ] && initArgs+=( --nofeatures "$nofeatures" )
+	[ -n "$fullfeatures" ] && initArgs+=( --features "$fullfeatures" )
 
 	# disable merged-usr (for now?) due to the following compelling arguments:
 	#  - https://bugs.debian.org/src:usrmerge ("dpkg-query" breaks, etc)
@@ -159,8 +160,7 @@ fi
 
 	garden-init "${initArgs[@]}" rootfs "$suite" "@$epoch"
 
-	[ -n "$features" ] && configArgs+=( --features "$features" )
-	[ -n "$nofeatures" ] && configArgs+=( --nofeatures "$nofeatures" )
+	[ -n "$fullfeatures" ] && configArgs+=( --features "$fullfeatures" )
 
 	# TODO fix for the pipelines, paths probably won't match
 	touch rootfs/etc/gl-sign.crt rootfs/etc/gl-sign.key
@@ -190,7 +190,7 @@ fi
 	sed -i "s/^HOME_URL=.*$/HOME_URL=\"https:\/\/gardenlinux.io\/\"/g" rootfs/etc/os-release
 	sed -i "s/^SUPPORT_URL=.*$/SUPPORT_URL=\"https:\/\/github.com\/gardenlinux\/gardenlinux\"/g" rootfs/etc/os-release
 	sed -i "s/^BUG_REPORT_URL=.*$/BUG_REPORT_URL=\"https:\/\/github.com\/gardenlinux\/gardenlinux\/issues\"/g" rootfs/etc/os-release
-	echo "GARDENLINUX_FEATURES=$(garden-feat --featureDir $featureDir --features "$features" --ignore "$nofeatures" features)" >> rootfs/etc/os-release
+	echo "GARDENLINUX_FEATURES=$fullfeatures" >> rootfs/etc/os-release
 	echo "GARDENLINUX_VERSION=$($scriptsDir/garden-version)" >> rootfs/etc/os-release
 	echo "GARDENLINUX_COMMIT_ID=$commitid" >> rootfs/etc/os-release
 	echo "VERSION_CODENAME=$suite" >> rootfs/etc/os-release
@@ -269,9 +269,8 @@ fi
 			fi
 		done
 
-		echo "#### features"
-		[ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
-		for i in $(echo "base,$features" | tr ',' '\n' | norm_features); do
+		echo "#### fullfeatures"
+		for i in $(tr ',' '\n' <<< $fullfeatures); do
 			if [ -s $featureDir/$i/image ]; then
 				"$featureDir/$i/image" "$rootfs" "$targetBase"
 			elif [ -f "$featureDir/$i/fstab" ]; then
@@ -281,7 +280,6 @@ fi
 			fi
 		done
 		echo "#### tests"
-		[ "$features" = "full" ] && features=$(ls $featureDir | paste -sd, -)
 		disabledBy=""
 		enabledBy=""
 		testcounter=0
@@ -296,7 +294,7 @@ fi
 		for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basename {} \; | grep -v .disable | sort | uniq); do
 			let "testcounter=testcounter+1"
 			test=$(basename $t | cut -d. -f 1)
-			if [ "${notests:-}" = 1 ]; then
+			if [ "${tests:-1}" = "0" ]; then
 				echo "test ${test} is being skipped, --skip-tests has been used"
 				let "skipcounter=skipcounter+1"
 				continue
@@ -304,7 +302,7 @@ fi
 			# go over features and build the enabled/disabled lists
 			# a test with .disabled in a specific feature disables the test globally
 			# a test that is not executable is not enabled for the specific feature
-			for f in $(echo "base,$features" | tr ',' '\n' | norm_features); do
+			for f in $(tr ',' '\n' <<< $fullfeatures); do
 				featureTest="${featureDir}/${f}/test/${test}"
 				if [ -f "${featureTest}.disable" ]; then
 					disabledBy=$(echo "${f} ${disabledBy}")

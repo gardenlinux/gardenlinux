@@ -7,31 +7,6 @@ scriptsDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 featureDir="$scriptsDir/../features"
 self="$(basename "$0")"
 
-#getFeatures() {
-#	featureDir="$thisDir/../features"
-#	features="$(echo $1 | tr "," "\n")"
-#
-#	if [ "$1" = "full" ]; then
-#		features=($(ls $featureDir | grep -v '^_' | grep -v '.dpkg-'))
-#	else
-#		IFS=', ' read -r -a features <<< "$1"
-#
-#	i=0
-#	processed=
-#	exclude=
-#	while [ i -lt ${#feature[@]} ];  do
-#		i=$(echo "$features" | head -n1)
-#
-#		[[ " ${array[@]} " =~ " $i " ]] && continue
-#		processsed+=( $i )
-#
-#		[ ! -d $featureDir/$i] && continue
-#
-#		[ -s $featureDir/$i/feature.include ] && for i in $(cat $featureDir/$i/include); do include+=( $i ); done
-#		[ -s $featureDir/$i/feature.exclude ] && for i in $(cat $featureDir/$i/exclude); do include+=( $i ); done
-#	done
-#}
-
 options="$(getopt -n "$BASH_SOURCE" -o '+' --long 'flags:,flags-short:,help:,usage:,sample:' -- "$@")"
 dFlags='help,version'
 dFlagsShort='h?'
@@ -161,8 +136,4 @@ filter_if() {
         gsub(/ /,"",$NF)
         print $NF
       }'
-}
-norm_features() {
-    # remove duplicates without sorting, last entry "wins"
-    tac | awk '!seen[$0]++' | tac
 }

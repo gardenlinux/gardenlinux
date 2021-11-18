@@ -1,3 +1,4 @@
+import glob
 import os
 
 import build_kaniko as builder
@@ -25,6 +26,12 @@ def build_base_image(
 
     docker_dirs = ['build', 'build-deb', 'build-image']
 
+    go_files = glob.glob(os.path.join(repo_dir, "bin", '*.go'), recursive=False)
+    for f in go_files:
+        f_name = os.path.basename(f)
+        dst = os.path.join(repo_dir, "docker", 'build-image', f_name)
+        os.symlink(f, dst)
+
     for docker_dir in docker_dirs:
         dockerfile_relpath = os.path.join(repo_dir, "docker", docker_dir, "Dockerfile")
         print(f'---Building now {dockerfile_relpath}')
@@ -33,6 +40,8 @@ def build_base_image(
             build_base_image = f'{oci_path}/gardenlinux-build:{version_label}'
         else:
             build_base_image = 'debian:testing-slim'
+
+
         context_dir = os.path.join(repo_dir, "docker", docker_dir)
         print(f'---Using base image {build_base_image}')
         builder.build_and_push_kaniko(
