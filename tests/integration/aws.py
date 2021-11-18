@@ -1,11 +1,8 @@
-import datetime
 import logging
 import time
 import json
 import os
-import pathlib
-import subprocess
-import sys
+import uuid
 
 from os import path
 from urllib.parse import urlparse
@@ -14,6 +11,10 @@ import boto3
 from botocore.exceptions import ClientError
 
 from .sshclient import RemoteClient
+from paramiko import RSAKey
+
+import glci.aws
+from glci.aws import response_ok
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -23,7 +24,13 @@ class AWS:
 
     @classmethod
     def fixture(cls, config) -> RemoteClient:
-        aws = AWS(config)
+        test_name = f"gl-test-{time.strftime('%Y%m%d%H%M%S')}"
+
+        if not("securitygroup_name" in config and config["securitygroup_name"] != None):
+            config["securitygroup_name"] = f"{test_name}-sg"
+        logger.info(f"Using security group {config['securitygroup_name']}")
+
+        aws = AWS(config, test_name)
         instance = aws.create_vm()
         ssh = None
         try:
@@ -36,207 +43,451 @@ class AWS:
             if ssh is not None:
                 ssh.disconnect()
             if aws is not None:
-                aws.__del__()
+                aws.cleanup_test_resources()
 
-    def __init__(self, config):
+
+    def tags_equal(self, tags1, tags2 = None):
+        if not tags2:
+            tags2 = self._tags
+        t1 = {t['Key']: t['Value'] for t in tags1}
+        t2 = {t['Key']: t['Value'] for t in tags2}
+        self.logger.debug(f"Test tags: {t2}, resource tags: {t1}")
+        return t1 == t2
+
+    def aws_set_ec2_resource_tags(self, id: str):
+        resp = response_ok(self.ec2_client.create_tags(
+            Resources = [id],
+            Tags = self._tags
+        ))
+
+    def aws_get_ec2_resource_tags(self, id: str):
+        res = response_ok(self.ec2_client.describe_tags(
+            Filters=[{
+                'Name': 'resource-id',
+                'Values': [id]
+            }]
+        ))
+        return res['Tags']
+
+
+    def aws_get_default_vpcs(self):
+        """Get list of default VPCs"""
+        response = response_ok(self.ec2_client.describe_vpcs(
+            Filters=[{
+                "Name": "isDefault",
+                "Values": ["true"]
+            }]
+        ))
+        return response['Vpcs']
+
+
+    def aws_get_security_group(self, name: str):
+        resp = response_ok(self.ec2_client.describe_security_groups(
+            Filters=[{
+                'Name': 'group-name',
+                'Values': [name],
+            }],
+        ))
+
+        if len(resp['SecurityGroups']) > 0:
+            return resp['SecurityGroups'][0]['GroupId']
+        else:
+            return None
+
+    def aws_create_security_group(self, name: str, vpc_id: str = None):
+        """Create AWS security group allowing ssh access on port 22."""
+
+        if not vpc_id:
+            vpc_id = self.aws_get_default_vpcs()[0]['VpcId']
+
+        self.logger.info(f"Creating security group {name} for VPC {vpc_id}...")
+        security_group = response_ok(self.ec2_client.create_security_group(
+            GroupName = name,
+            VpcId = vpc_id,
+            Description="allow incoming SSH access",
+            TagSpecifications = [{
+                'ResourceType': 'security-group',
+                'Tags': self._tags
+            }],
+        ))
+        security_group_id = security_group['GroupId']
+
+        self.logger.info(f"Enabling incoming SSH connections to security group {security_group_id}...")
+        rule = response_ok(self.ec2_client.authorize_security_group_ingress(
+            GroupId = security_group['GroupId'],
+            IpPermissions=[
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 22,         # note, this is not the port to connection comes from but the first port in a range of allowed ports...
+                    "ToPort": 22,           # ... and likewise, this is the last port in the range of allowed ports
+                    "IpRanges": [{"CidrIp": "0.0.0.0/1"}, {"CidrIp": "128.0.0.0/1"}],
+                }
+            ],
+            TagSpecifications = [{
+                'ResourceType': 'security-group-rule',
+                'Tags': self._tags
+            }],
+        ))
+
+        return security_group_id
+
+    def aws_delete_security_group(self, group_id: str, force: bool = False):
+        tags = self.aws_get_ec2_resource_tags(group_id)
+        if self.tags_equal(tags, self._tags) or force:
+            self.logger.info(f"Deleting security group with {group_id=}...")
+            self.ec2_client.delete_security_group(GroupId=group_id)
+        else:
+            self.logger.info(f"Keeping security group with {group_id=} as it was not created by this test.")
+
+
+    def aws_get_ssh_key(self, name: str):
+        resp = response_ok(self.ec2_client.describe_key_pairs(
+            Filters=[{
+                'Name': 'key-name',
+                'Values': [name],
+            }],
+        ))
+
+        if len(resp['KeyPairs']) > 0:
+            return resp['KeyPairs'][0]['KeyPairId']
+        else:
+            return None
+
+    def aws_get_ssh_key_name(self, keypair_id: str):
+        resp = response_ok(self.ec2_client.describe_key_pairs(
+            Filters=[{
+                'Name': 'key-pair-id',
+                'Values': [keypair_id],
+            }],
+        ))
+        if len(resp['KeyPairs']) > 0:
+            return resp['KeyPairs'][0]['KeyName']
+        else:
+            return None
+
+    def aws_upload_ssh_key(self, name: str, filepath: str):
+        keydata = RSAKey.from_private_key_file(os.path.abspath(filepath))
+        pubkey = keydata.get_name() + " " + keydata.get_base64()
+
+        self.logger.info(f"Creating SSH key {name}...")
+        resp = response_ok(self.ec2_client.import_key_pair(
+            KeyName = name,
+            PublicKeyMaterial = pubkey,
+            TagSpecifications = [{
+                'ResourceType': 'key-pair',
+                'Tags': self._tags
+            }],
+        ))
+        return resp['KeyPairId']
+
+    def aws_delete_ssh_key(self, keypair_id: str, force: bool = False):
+        tags = self.aws_get_ec2_resource_tags(keypair_id)
+
+        if self.tags_equal(tags, self._tags) or force:
+            self.logger.info(f"Deleting SSH keypair with {keypair_id=}...")
+            self.ec2_client.delete_key_pair(KeyPairId = keypair_id)
+        else:
+            self.logger.info(f"Keeping SSH keypair with {keypair_id=} as it was not created by this test.")
+
+
+    def aws_get_storage_bucket(self, name: str):
+        def _check_bucket_region():
+            self.logger.debug(f"Checking if bucket is in region {self.session.region_name}")
+            resp = response_ok(self.s3_client.get_bucket_location(Bucket = name))
+            if resp['LocationConstraint'] == self.session.region_name:
+                return True
+            return False
+
+        self.logger.debug(f"Checking if S3 bucket {name} exists")
+        resp = response_ok(self.s3_client.list_buckets())
+        for i in resp['Buckets']:
+            if i['Name'] == name and _check_bucket_region():
+                return i['Name']
+        return None
+
+    def aws_create_storage_bucket(self, name: str):
+        self.logger.info(f"Creating S3 storage bucket {name}...")
+        resp = self.s3_client.create_bucket(
+            Bucket = name,
+            CreateBucketConfiguration = {
+                'LocationConstraint': self.session.region_name,
+            },
+            ACL = 'private',
+        )
+
+        resp = self.s3_client.put_bucket_tagging(
+            Bucket = name,
+            Tagging = {
+                'TagSet': self._tags
+            },
+        )
+
+        self.logger.info(f"Setting access policies on storage bucket {name}...")
+        policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Deny",
+                    "Principal": "*",
+                    "Action": "s3:*",
+                    "Resource": [f"arn:aws:s3:::{name}", f"arn:aws:s3:::{name}/*"],
+                    "Condition": {
+                        "Bool": {
+                            "aws:SecureTransport": "false"
+                        }
+                    }
+                },
+                {
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": [
+                        "s3:GetBucketLocation",
+                        "s3:GetObject",
+                        "s3:PutObject"
+                    ],
+                    "Resource": [f"arn:aws:s3:::{name}", f"arn:aws:s3:::{name}/*"],
+                }
+            ]
+        }
+
+        resp = self.s3_client.put_bucket_policy(
+            Bucket = name,
+            Policy=json.dumps(policy)
+        )
+
+        resp = self.s3_client.put_public_access_block(
+            Bucket = name,
+            PublicAccessBlockConfiguration = {
+                'BlockPublicAcls': True,
+                'IgnorePublicAcls': True,
+                'BlockPublicPolicy': True,
+                'RestrictPublicBuckets': True,
+            },
+        )
+        return name
+
+    def aws_delete_storage_bucket(self, name: str, force: bool = False):
+        try:
+            tags = self.s3_client.get_bucket_tagging(Bucket = name)['TagSet']
+        except ClientError:
+            if not force:
+                self.logger.info(f"Keeping S3 storage bucket {name} as it has no tags attached.")
+                return
+
+        if self.tags_equal(tags, self._tags) or force:
+            self.logger.info(f"Deleting S3 storage bucket {name}...")
+            resp = self.s3_client.delete_bucket(
+                Bucket = name,
+            )
+        else:
+            self.logger.info(f"Keeping S3 storage bucket {name} as it was not created by this test.")
+
+    def aws_delete_storage_object(self, bucket: str, key: str, force: bool = False):
+        try:
+            tags = self.s3_client.get_object_tagging(Bucket=bucket, Key=key)['TagSet']
+        except ClientError:
+            if not force:
+                self.logger.info(f"Keeping S3 object {key} in bucket {bucket} as it has no tags attached.")
+                return
+
+        if self.tags_equal(tags, self._tags) or force:
+            self.logger.info(f"Deleting S3 object {key} in bucket {bucket}...")
+            resp = self.s3_client.delete_object(
+                Bucket = bucket,
+                Key = key
+            )
+        else:
+            self.logger.info(f"Keeping S3 object {key} in bucket {bucket} as it was not created by this test.")
+
+
+    def aws_get_ami(self, name: str):
+        images = response_ok(self.ec2_client.describe_images(
+            Filters=[{
+                "Name": "name",
+                "Values": [name]
+           }]
+        ))
+
+        if len(images['Images']) > 0:
+            return images['Images'][0]['ImageId']
+
+    def aws_delete_ami(self, ami_id: str, force: bool = False):
+        tags = self.aws_get_ec2_resource_tags(ami_id)
+        ami_tags = self._tags.copy()
+        ami_tags.append({'Key': 'sec-by-def-public-image-exception', 'Value': 'enabled'})
+        if self.tags_equal(tags, ami_tags) or force:
+            self.logger.info(f"Deleting ami with {ami_id=}...")
+            self.ec2_client.deregister_image(ImageId = ami_id)
+        else:
+            self.logger.info(f"Keeping ami with {ami_id=} as it was not created by this test.")
+
+
+    def aws_delete_snapshot(self, snapshot_id: str, force: bool = False):
+        tags = self.aws_get_ec2_resource_tags(snapshot_id)
+        if self.tags_equal(tags, self._tags) or force:
+            self.logger.info(f"Deleting snapshot with {snapshot_id=}...")
+            self.ec2_client.delete_snapshot(SnapshotId = snapshot_id)
+        else:
+            self.logger.info(f"Keeping snapshot with {snapshot_id=} as it was not created by this test.")
+
+
+    def __init__(self, config, test_name):
         """
         Create instance of AWS class
 
         :param config: configuration
         """
+
         self.config = config
         self.ssh_config = config["ssh"]
+        self.test_name = test_name
+        self.test_uuid = str(uuid.uuid4())
+
+        self._tags = [
+            {"Key": "component", "Value": "gardenlinux"},
+            {"Key": "test-type", "Value": "integration-test"},
+            {"Key": "test-name", "Value": self.test_name},
+            {"Key": "test-uuid", "Value": self.test_uuid}
+        ]
+
         if "region" in self.config:
             self.session = boto3.Session(region_name=self.config["region"])
         else:
             self.session = boto3.Session()
-        self.client = self.session.client("ec2")
-        self.s3 = self.session.client("s3")
-        self.ec2 = self.session.resource("ec2")
-        self.security_group_id = None
-        self.instance = None
+
+        self.ec2_client = self.session.client("ec2")
+        self.s3_client = self.session.client("s3")
+        self.ec2_resource = self.session.resource("ec2")
+
+        self.logger = logging.getLogger('aws-testbed')
+        self.logger.setLevel(logging.DEBUG)
+        self.logger.info(f"This test's name is {self.test_name} and its uuid is: {self.test_uuid}")
+
+        self._storage_bucket_name = None
+
+        self._security_group_id = None
+        self._ssh_key_id = None
+        self._image_key = None
+        self._snapshot_id = None
+        self._ami_id = None
+
+        self._instance = None
         self.instance_type = config["instance_type"]
 
 
     def __del__(self):
         """Cleanup resources held by this object"""
-        if not "keep_running" in self.config:
-            if self.instance:
-                self.terminate_vm(self.instance)
-                self.instance = None
-            if self.security_group_id:
-                self.delete_security_group((self.security_group_id))
-                self.security_group_id = None
+        self.cleanup_test_resources()
 
-    def get_default_vpcs(self):
-        """Get list of default VPCs"""
-        response = self.client.describe_vpcs(
-            Filters=[{"Name": "isDefault", "Values": ["true"],}]
-        )
-        vpcs = [v["VpcId"] for v in response["Vpcs"]]
-        return vpcs
 
-    def find_key(self, name) -> bool:
-        """
-        Find ssh key with given name.
-
-        :param name: name of the key uploaded to AWS
-        :returns: the key if it exists
-        """
-        response = self.client.describe_key_pairs()
-        try:
-            found = next(k for k in response["KeyPairs"] if k["KeyName"] == name)
-        except StopIteration:
-            found = None
-        logger.info(f"found ssh key {name}: {found}")
-        return found
-
-    def import_key(self, key_name, ssh_key_filepath):
-        """
-        Import a public ssh key to AWS
-
-        :param key_name: name of the key
-        :param ssh_key_filepath: path of the private key in the local filesystem
-        """
-        logger.info(f"Importing key from file {ssh_key_filepath} as {key_name}")
-        with open(f"{ssh_key_filepath}.pub", "rb") as f:
-            public_key_bytes = f.read()
-            response = self.client.import_key_pair(
-                KeyName=key_name, PublicKeyMaterial=public_key_bytes,
-            )
-            fingerprint = response["KeyFingerprint"]
-            logger.info(f"imported key-pair {key_name} from {ssh_key_filepath} with fingerprint {fingerprint}")
-
-    def find_security_group(self, name):
-        """
-        Find a security group by name and return its id
-
-        :param name: name of the security group
-        :returns: the group id of the security group
-        """
-        response = self.client.describe_security_groups(
-            Filters=[{"Name": "group-name", "Values": [name,]}]
-        )
-        groups = response.get("SecurityGroups")
-        if not groups:
+    def cleanup_test_resources(self):
+        if "keep_running" in self.config and self.config['keep_running'] == True:
+            self.logger.info(f"Keeping resource group {self._resourcegroup.name} and all resources in it alive.")
             return
-        group_id = groups[0].get("GroupId")
-        logger.info(f"found {group_id=}")
-        return group_id
-
-    def create_security_group(self, group_name):
-        """Create AWS security group allowing ssh access on port 22."""
-        vpcs = self.get_default_vpcs()
-        vpc_id = vpcs[0]
-        logger.info(f"default vpc: {vpc_id=}")
-        security_group_id = self.find_security_group(group_name)
-        if not security_group_id:
-            logger.info("security group %s doesn't exist -> create it" % group_name)
-            security_group = self.ec2.create_security_group(
-                GroupName=group_name,
-                Description=f"{group_name} allowing ssh access",
-                VpcId=vpc_id,
-            )
-            security_group_id = security_group.id
-            logger.info(f"security group created {security_group_id} in vpc {vpc_id}.")
-
-            self.client.authorize_security_group_ingress(
-                GroupId=security_group_id,
-                IpPermissions=[
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": 22,
-                        "ToPort": 22,
-                        "IpRanges": [{"CidrIp": "0.0.0.0/1"}, {"CidrIp": "128.0.0.0/1"}],
-                    }
-                ],
-            )
-            logger.info("ingress successfully set")
-        else:
-            logger.info(
-                f"security group {group_name} already exists with id {security_group_id}"
-            )
-        return security_group_id
-
-    def delete_security_group(self, security_group_id):
-        """Delete the given security group, must not be referenced anymore"""
-        try:
-            self.client.delete_security_group(GroupId=security_group_id)
-            logger.info(f"deleted security group {security_group_id=}")
-        except boto3.exceptions.Boto3Error as e:
-            logger.exception(e)
+        if self._instance:
+            self.terminate_vm(self._instance)
+            self._instance = None
+        if self._ssh_key_id:
+            self.aws_delete_ssh_key(self._ssh_key_id)
+            self._ssh_key_id = None
+        if self._security_group_id:
+            self.aws_delete_security_group(self._security_group_id)
+            self._security_group_id = None
+        if self._ami_id:
+            self.aws_delete_ami(self._ami_id)
+            self._ami_id = None
+        if self._snapshot_id:
+            self.aws_delete_snapshot(self._snapshot_id)
+            self._snapshot_id = None
+        if self._image_key:
+            self.aws_delete_storage_object(self._storage_bucket_name, self._image_key)
+            self._image_key = None
+        if self._storage_bucket_name:
+            self.aws_delete_storage_bucket(self._storage_bucket_name)
+            self._storage_bucket_name = None
 
 
     def upload_image(self, image_url):
+        # image_name = "gl-integration-test-" + str(int(time.time()))
+        image_name = f"img-{self.test_name}"
+
+        if 'ami_id' in self.config:
+            ami_id = self.aws_get_ami(self.config['ami_id'])
+            self.logger.info(f"Using image with {ami_id=} for this test.")
+            return ami_id
+
         o = urlparse(image_url)
-        image_name = "gl-integration-test-" + str(int(time.time()))
 
-        if o.scheme != "s3" and o.scheme != "file":
-            raise NotImplementedError("Only local image file uploads and S3 buckets are implemented.")
-        
         if o.scheme == "file":
-            logger.debug("Uploading image %s" % image_url)
-            image_file = o.path
-            repo_root = pathlib.Path(__file__).parent.parent.parent
-            cmd = [
-                os.path.join(repo_root, "bin", "make-ec2-ami"),
-                "--bucket",
-                self.config["bucket"],
-                "--region",
-                self.config["region"],
-                "--image-name",
-                image_name,
-                "--purpose",
-                "integration-test",
-                "--image-overwrite",
-                "false",
-                image_file,
-            ]
-            logger.debug("Running command: " + (" ".join([v for v in cmd])))
-            result = subprocess.run(cmd, capture_output=True)
-            if result.returncode != 0:
-                sys.exit("Error uploading image %s" % (result.stderr.decode("utf-8")))
-            logger.debug("Result of upload_image %s" % (result.stdout.decode("utf-8")))
-            return json.loads(result.stdout)
+            if not self.aws_get_storage_bucket(self.config["bucket"]):
+                self.aws_create_storage_bucket(self.config["bucket"])
+            self._storage_bucket_name = self.config['bucket']
+            self._image_key = f"{image_name}-{os.path.basename(o.path)}"
 
-        if o.scheme == "s3":
-            # late import because we do not need it if image is not in S3
-            import glci.aws
+            image_key = self._image_key
+            bucket_name = self._storage_bucket_name
+            self.logger.info(f"Uploading local image {o.path} to S3 storage bucket {bucket_name} - this might take a while...")
+            with open(o.path, 'rb') as f:
+                self.s3_client.upload_fileobj(Fileobj = f, Bucket = bucket_name, Key = image_key)
 
-            images = self.client.describe_images(Filters=[{
-                "Name": "name",
-                "Values": [image_name]
-            }])
-            if len(images['Images']) > 0:
-                ami_id = images['Images'][0]['ImageId']
-                logger.debug("Image with AMI id %s already exists", ami_id)
-                return {"ami-id": ami_id}
+            resp = response_ok(self.s3_client.put_object_tagging(
+                Bucket = bucket_name,
+                Key = image_key,
+                Tagging = {
+                    'TagSet': self._tags
+                },
+            ))
 
-            snapshot_task_id = glci.aws.import_snapshot(
-                ec2_client=self.client,
-                s3_bucket_name=o.netloc,
-                image_key=o.path.lstrip("/"),
+            response = self.s3_client.put_object_acl(
+                ACL = 'bucket-owner-full-control',
+                Bucket = bucket_name,
+                Key = image_key,
             )
-            snapshot_id = glci.aws.wait_for_snapshot_import(
-                ec2_client=self.client,
-                snapshot_task_id=snapshot_task_id,
-            )
-            initial_ami_id = glci.aws.register_image(
-               ec2_client=self.client,
-               snapshot_id=snapshot_id,
-               image_name="gl-integration-test-image-" + o.path.split("/objects/",1)[1],
-            )
-            logger.debug("Imported image %s as AMI %s", image_url, initial_ami_id)
-            return {"ami-id": initial_ami_id}
+        elif o.scheme == "s3":
+            bucket_name = o.netloc
+            image_key = o.path.lstrip("/")
+        else:
+            raise NotImplementedError("Only local image file uploads and S3 buckets are implemented.")
 
-    def create_instance(self):
+        self.logger.info(f"Importing snapshot from S3 object {image_key} in bucket {bucket_name}...")
+        snapshot_task_id = glci.aws.import_snapshot(
+            ec2_client = self.ec2_client,
+            s3_bucket_name = bucket_name,
+            image_key = image_key,
+        )
+        try:
+            self._snapshot_id = glci.aws.wait_for_snapshot_import(
+                ec2_client = self.ec2_client,
+                snapshot_task_id = snapshot_task_id,
+            )
+        except RuntimeError as r:
+            import_task = self.ec2_client.describe_import_snapshot_tasks(ImportTaskIds=[snapshot_task_id])
+            import_error = import_task['ImportSnapshotTasks'][0]['SnapshotTaskDetail']['StatusMessage']
+            logger.error(f"Failed to import snapshot: {import_error}.")
+            self.cleanup_test_resources
+            raise RuntimeError(f"Failed to import snapshot: {import_error}.")
+
+        self.ec2_client.create_tags(
+            Resources = [self._snapshot_id],
+            Tags = self._tags
+        )
+
+        self.logger.info(f"Registering ami from snapshot {self._snapshot_id}...")
+        self._ami_id = glci.aws.register_image(
+            ec2_client = self.ec2_client,
+            snapshot_id = self._snapshot_id,
+            image_name = image_name
+        )
+        self.ec2_client.create_tags(
+            Resources = [self._ami_id],
+            Tags = self._tags
+        )
+
+        self.logger.info(f"Image id is {self._ami_id}")
+        return self._ami_id
+
+    def create_instance(self, name: str, ami_id: str, disk_size: int = 7, disk_type: str = 'gp3'):
         """Create AWS instance from given AMI and with given security group."""
-        if not "ami_id" in self.config:
-            ami = self.upload_image(self.config["image"])
-            self.config["ami_id"] = ami["ami-id"]
-
-        ami_id = self.config["ami_id"]
-        key_name = self.ssh_config["key_name"]
         ssh_key_filepath = path.expanduser(self.ssh_config["ssh_key_filepath"])
         logger.debug("ssh_key_filepath: %s" % ssh_key_filepath)
 
@@ -249,32 +500,37 @@ class AWS:
             passphrase = self.ssh_config["passphrase"]
             user = self.ssh_config["user"]
             RemoteClient.generate_key_pair(ssh_key_filepath, 2048, passphrase, user)
-        if not self.find_key(key_name):
-            self.import_key(key_name, ssh_key_filepath)
 
-        name = f"gardenlinux-test-{ami_id}-{datetime.datetime.now().isoformat()}"
-        instance = self.ec2.create_instances(
+        self._ssh_key_id = self.aws_get_ssh_key(name = self.ssh_config['key_name'])
+        if not self._ssh_key_id:
+            self._ssh_key_id = self.aws_upload_ssh_key(self.ssh_config['key_name'], ssh_key_filepath)
+
+        instance_tags = self._tags.copy()
+        instance_tags.append({'Key': 'Name', 'Value': name})
+
+        instance = self.ec2_resource.create_instances(
             BlockDeviceMappings=[
                 {
                     "DeviceName": "/dev/xvda",
                     "VirtualName": "string",
                     "Ebs": {
                         "DeleteOnTermination": True,
-                        "VolumeSize": 7,
-                        "VolumeType": "standard",
+                        "VolumeSize": disk_size,
+                        "VolumeType": disk_type,
                         "Encrypted": False,
                     },
                 }
             ],
             ImageId=ami_id,
             InstanceType=self.instance_type,
-            KeyName=key_name,
+            KeyName=self.aws_get_ssh_key_name(self._ssh_key_id),
             MaxCount=1,
             MinCount=1,
-            SecurityGroupIds=[self.security_group_id,],
-            TagSpecifications=[
-                {"ResourceType": "instance", "Tags": [{"Key": "Name", "Value": name}]}
-            ],
+            SecurityGroupIds=[self._security_group_id],
+            TagSpecifications=[{
+                "ResourceType": "instance",
+                "Tags": instance_tags
+            }],
         )
         return instance[0]
 
@@ -286,33 +542,38 @@ class AWS:
 
         :returns: instance) to enable cleanup
         """
-        self.security_group_id = self.create_security_group(
-            group_name="gardenlinux-test"
-        )
-        self.instance = self.create_instance()
+        self._security_group_id = self.aws_get_security_group(name = self.config['securitygroup_name'])
+        if not self._security_group_id:
+            self._security_group_id = self.aws_create_security_group(self.config['securitygroup_name'])
+        self.logger.info(f"Security group id is {self._security_group_id}")
 
-        self.instance.wait_until_exists()
-        self.instance.reload()
+        if not "ami_id" in self.config:
+            ami_id = self.upload_image(self.config["image"])
+            self.config["ami_id"] = ami_id
 
-        ami_id = self.config["ami_id"]
-        logger.info(f"created {self.instance} from ami {ami_id}, waiting for start ...")
+        self._instance = self.create_instance(self.test_name, ami_id=self.config['ami_id'])
 
-        self.instance.wait_until_running()
-        self.instance.reload()
-        logger.info(f"{self.instance} is running, waiting for status checks ...")
+        self._instance.wait_until_exists()
+        self._instance.reload()
 
-        waiter = self.client.get_waiter("instance_status_ok")
-        waiter.wait(InstanceIds=[self.instance.id])
-        logger.info(f"status checks of {self.instance} succeeded")
-        logger.info(f"ec2 instance is accessible through {self.instance.public_dns_name}")
+        self.logger.info(f"Created {self._instance} from ami {self.config['ami_id']}, waiting for start...")
 
-        return self.instance
+        self._instance.wait_until_running()
+        self._instance.reload()
+        self.logger.info(f"Instance {self._instance} is running, waiting for status checks...")
+
+        waiter = self.ec2_client.get_waiter("instance_status_ok")
+        waiter.wait(InstanceIds=[self._instance.id])
+        self.logger.info(f"Status checks of {self._instance} succeeded.")
+        self.logger.info(f"Ec2 instance is accessible through {self._instance.public_dns_name}")
+
+        return self._instance
 
     def terminate_vm(self, instance):
         """Stop and terminate the given ec2 instance"""
         instance.terminate()
-        logger.info("terminating ec2 instance {instance} ...")
+        self.logger.info(f"Terminating ec2 instance {instance}...")
         instance.wait_until_terminated()
         instance.reload()
-        logger.info(f"terminated ec2 instance {instance}")
+        self.logger.info(f"Terminated ec2 instance {instance}")
         return instance
