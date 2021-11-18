@@ -1,0 +1,14 @@
+patches/environment/builderror.patch
+patches/environment/missinglds.patch
+patches/debian/fuzz.patch
+
+patches/debian/relax.patch
+patches/environment/analogix.patch
+patches/debian/series.patch
+
+patches/environment/python3-dev.patch
+patches/debian/version.patch
+patches/debian/0003-MODSIGN.patch
+patches/environment/cpupower.patch
+patches/debian/fs-add.patch
+patches/environment/scsi_common.patch

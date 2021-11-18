@@ -55,21 +55,20 @@ rm -f debian/certs/debian-uefi-certs.pem
 cp /kernel.full debian/certs/gardenlinux-kernel-certs.pem
 sed -i "s/debian-uefi-certs.pem/gardenlinux-kernel-certs.pem/" debian/config/config debian/config/featureset*/config debian/config/defines
 
-patch -p1 < $srcDir/builderror.patch
-patch -p1 < $srcDir/missinglds.patch
-patch -p1 < $srcDir/fuzz.patch
+patch -p1 < $srcDir/patches/environment/builderror.patch
+patch -p1 < $srcDir/patches/environment/missinglds.patch
+patch -p1 < $srcDir/patches/debian/fuzz.patch
 
-patch -p1 < $srcDir/relax.patch
-#patch -p1 < $srcDir/udev.patch
-patch -p1 < $srcDir/analogix.patch
-patch -p1 < $srcDir/series.patch
+patch -p1 < $srcDir/patches/debian/relax.patch
+patch -p1 < $srcDir/patches/environment/analogix.patch
+patch -p1 < $srcDir/patches/debian/series.patch
 
-patch -p1 < $srcDir/python3-dev.patch
-patch -p1 < $srcDir/version.patch
-patch -p1 < $srcDir/0003-MODSIGN.patch
-patch -p1 < $srcDir/cpupower.patch
-patch -p1 < $srcDir/fs-add.patch
-patch -p1 < $srcDir/rt0133.patch
+patch -p1 < $srcDir/patches/environment/python3-dev.patch
+patch -p1 < $srcDir/patches/debian/version.patch
+patch -p1 < $srcDir/patches/debian/0003-MODSIGN.patch
+patch -p1 < $srcDir/patches/environment/cpupower.patch
+patch -p1 < $srcDir/patches/debian/fs-add.patch
+patch -p1 < $srcDir/patches/environment/scsi_common.patch
 
 echo "### populating the changelog"
 mv debian/changelog debian/changelog.tmp
@@ -112,8 +111,9 @@ sudo apt-get install -y --no-install-recommends -f ../linux-build-deps_*_${KERNE
 
 echo "### downgrade sphinx for 5.4 kernel"
 # old sphinx runs faster and does not bail out on errors for kernel 5.4
+wget -P /tmp https://snapshot.debian.org/archive/debian/20210413T152040Z/pool/main/p/python-docutils/{docutils-common_0.16%2Bdfsg-4_all.deb,python3-docutils_0.16%2Bdfsg-4_all.deb}
 wget -P /tmp https://snapshot.debian.org/archive/debian-ports/20200409T204941Z/pool/main/s/sphinx/{libjs-sphinxdoc_1.8.5-9_all.deb,python3-sphinx_1.8.5-9_all.deb,sphinx-common_1.8.5-9_all.deb}
-sudo apt-get install -y --allow-downgrades -f /tmp/{libjs-sphinxdoc_1.8.5-9_all.deb,python3-sphinx_1.8.5-9_all.deb,sphinx-common_1.8.5-9_all.deb}
+sudo apt-get install -y --allow-downgrades -f /tmp/{libjs-sphinxdoc_1.8.5-9_all.deb,python3-sphinx_1.8.5-9_all.deb,sphinx-common_1.8.5-9_all.deb,docutils-common_0.16+dfsg-4_all.deb,python3-docutils_0.16+dfsg-4_all.deb}
 
 echo "### enabling control file (supposed to fail)"
 make -f debian/rules debian/control-real || /bin/true
