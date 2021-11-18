@@ -8,6 +8,14 @@
  
  # Arch features
  features/mips/MIPS-Loongson-3-Add-Loongson-LS3A-RS780E-1-way-machi.patch
+@@ -81,7 +81,6 @@
+ # Miscellaneous bug fixes
+ bugfix/all/disable-some-marvell-phys.patch
+ bugfix/all/fs-add-module_softdep-declarations-for-hard-coded-cr.patch
+-bugfix/all/partially-revert-usb-kconfig-using-select-for-usb_co.patch
+ debian/revert-objtool-fix-config_stack_validation-y-warning.patch
+ bugfix/all/partially-revert-net-socket-implement-64-bit-timestamps.patch
+ 
 @@ -98,11 +97,7 @@
  features/all/lockdown/lockdown-refer-to-debian-wiki-until-manual-page-exists.patch
  
