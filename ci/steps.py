@@ -152,6 +152,35 @@ def clone_step(
     return step, step_params
 
 
+def status_step(
+    params: params.AllParams,
+    env_vars: typing.List[typing.Dict] = [],
+    volume_mounts: typing.List[typing.Dict] = [],
+):
+    step_params = [
+        params.committish,
+        params.giturl,
+        params.pipeline_run_name,
+        params.namespace,
+    ]
+
+    step = tkn.model.TaskStep(
+        name='update-status-step',
+        image=DEFAULT_IMAGE,
+        script=task_step_script(
+            path=os.path.join(steps_dir, 'update_status.py'),
+            script_type=ScriptType.PYTHON3,
+            callable='update_status',
+            params=step_params,
+            repo_path_param=params.repo_dir,
+        ),
+        volumeMounts=volume_mounts,
+        env=env_vars,
+    )
+
+    return step, step_params
+
+
 def upload_results_step(
     params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],

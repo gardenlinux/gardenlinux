@@ -79,11 +79,18 @@ def mk_pipeline_base_build_task(
     all_tasks: typing.Sequence[tkn.model.Task]
 ):
     name = "build-baseimage"
-    params = _get_passed_parameters(name=name, all_tasks=all_tasks)
+    params = _get_passed_parameters(
+        name=name,
+        all_tasks=all_tasks,
+        overrides={
+            NamedParam(name='pipeline_run_name', value='$(context.pipelineRun.name)'),
+            NamedParam(name='namespace', value='$(context.pipelineRun.namespace)'),
+        },
+    )
     return PipelineTask(
         name=name,
         taskRef=TaskRef(name=name),
-        params=params,
+        params=tuple(params),
         runAfter=None,
     )
 
@@ -230,7 +237,6 @@ def mk_pipeline_notify_task(
             NamedParam(name='platform', value=platform),
             NamedParam(name='pipeline_run_name', value='$(context.pipelineRun.name)'),
             NamedParam(name='pipeline_name', value='$(context.pipeline.name)'),
-            NamedParam(name='pipeline_run_name', value='$(context.pipelineRun.name)'),
             NamedParam(name='namespace', value='$(context.pipelineRun.namespace)'),
             NamedParam(name='status_dict_str', value=status_str),
         }
@@ -389,8 +395,8 @@ def mk_pipeline(
     params.remove(all_params.modifiers)
     params.remove(all_params.namespace)
     params.remove(all_params.platform)
-    params.remove(all_params.pipeline_name)
     params.remove(all_params.pipeline_run_name)
+    params.remove(all_params.pipeline_name)
 
     # convert to list as set is not rendered to yaml
     params = tuple(params)
