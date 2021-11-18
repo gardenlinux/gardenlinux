@@ -221,7 +221,8 @@ fi
 printf "Status:\n"
 printf "  starting VM(UUID:%s) with MAC:%s in %s\n" $uuid $macfull $targetDir
 [ $monitor ]	&& printf "  monitor: %s.monitor\tconnect: socat - UNIX-CONNECT:%s\n" $mac $targetDir/$mac.monitor
-[ $pxe ]	&& printf "  pxeboot: %.ipxe/\n" $mac
+[ $pxe ]	&& printf "  pxeboot: %s.ipxe\n" $mac
+[ $pxe ]	&& printf "  pxeboot: files served from %s\n" "$pxe"
 [ $bridge ]	&& printf "  interface: %s  bridged\n" $bridge
 [ $bridge ]	|| printf "  sshport: %s  unbridged\n" $port
 [ $vnc ] 	&& printf "  vncport: %s\n" $(( vncport + 5900 ))
@@ -233,6 +234,18 @@ done
 printf '%s ' "${virtOpts[@]}";printf "\n" ) | sed 's/ /!/g;s/!-/ -/g' | fold -s -w $(( $(tput cols) - 4 )) | sed 's/!/ /g;3,$ s|^|    |'
 [ $keypress ]	&& read -n 1 -r -s -p $'Press any key to continue...\n'
 
+# pxe helper container
+if [ $pxe ]; then
+	containerName=$(cat /proc/sys/kernel/random/uuid)
+	function stop(){
+		echo "stopping helper for pxe"
+		docker stop -t 0 $1
+		echo "everything stopped..."
+	}
+	trap 'stop $containerName' EXIT
+	echo "starting helper container"
+	docker run -it --rm -d -p 127.0.0.1:8888:80 --name ${containerName} -v ${pxe}:/usr/share/nginx/html:ro nginx
+fi
 
 ### from here on things are actually done!!!
 # modifying /etc/qemu/bridge.conf - would be good to be root!!!
