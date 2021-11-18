@@ -135,8 +135,10 @@ def get_common_parameters(
     if 'gardenlinux_base_image' in args and args['gardenlinux_base_image']:
         path, label = args['gardenlinux_base_image'].split(':')
         build_deb_image = path + '/gardenlinux-build-deb:' + label
+        build_image = path + '/gardenlinux-build-image:' + label
     else:
         build_deb_image = get_deb_build_image(args['oci_path'], version_label)
+        build_image = get_build_image(args['oci_path'], version_label)
 
     # for git-url rename arg git_url to giturl:
     git_url_param = NamedParam(name='giturl', value=str(args['git_url']))
@@ -144,6 +146,7 @@ def get_common_parameters(
     params = [
         get_param_from_arg(args, 'additional_recipients'),
         get_param_from_arg(args, 'branch'),
+        NamedParam(name='build_image', value=build_image),
         NamedParam(name='cicd_cfg_name', value=args['cicd_cfg']),
         get_param_from_arg(args, 'committish'),
         get_param_from_arg(args, 'disable_notifications'),
@@ -237,14 +240,6 @@ def mk_pipeline_main_run(
         NamedParam(name='promote_target', value=args.promote_target.value),
         NamedParam(name='pytest_cfg', value=args.pytest_cfg),
     ))
-
-    if args.gardenlinux_base_image:
-        path, label = args.gardenlinux_base_image.split(':')
-        build_image = path + '/gardenlinux-build-image:' + label
-    else:
-        build_image = get_build_image(args.oci_path, find_param('version_label', params).value)
-
-    params.append(NamedParam(name='build_image', value=build_image))
 
     return mk_pipeline_run(
         pipeline_name='gardenlinux-build',
