@@ -16,7 +16,7 @@ AuthenticationMethods publickey
 LogLevel VERBOSE
  
 # Log sftp level file access (read/write/etc.) that would not be easily logged otherwise - be aware that the path has to be adapted to the Distribution installed.
-Subsystem sftp /usr/lib/ssh/sftp-server -f AUTHPRIV -l INFO
+Subsystem sftp /usr/lib/openssh/sftp-server -f AUTHPRIV -l INFO
  
 # Root login is not allowed for auditing reasons. This is because it's difficult to track which process belongs to which root user:
 #
