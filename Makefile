@@ -117,10 +117,10 @@ kvm-dev: container-build cert/sign.pub
 	./build.sh --skip-build --features server,cloud,kvm,_dev $(BUILDDIR) $(VERSION)
 
 pxe: container-build cert/sign.pub
-	./build.sh --skip-build --features server,cloud,_pxe $(BUILDDIR) $(VERSION)
+	./build.sh --skip-build --features metal,server,_pxe $(BUILDDIR) $(VERSION)
 
 pxe-dev: container-build cert/sign.pub
-	./build.sh --skip-build --features server,cloud,_dev,_pxe $(BUILDDIR) $(VERSION)
+	./build.sh --skip-build --features metal,server,_dev,_pxe $(BUILDDIR) $(VERSION)
 
 anvil: container-build cert/sign.pub
 	./build.sh --skip-build --features server,cloud-anvil,kvm,_dev $(BUILDDIR) $(VERSION)
