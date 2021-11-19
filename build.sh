@@ -14,7 +14,7 @@ source "$thisDir/bin/.constants.sh" \
 <version>	which version to build (see bin/garden-version)
 
 --features <element>[,<element>]*	comma separated list of features activated (see features/) (default:base)
---disable-features <element>[,<element>]*	comma separated list of features to deactivate (see features/), 
+--disable-features <element>[,<element>]*	comma separated list of features to deactivate (see features/),
 		can only be implicit features another feature pulls in  (default:)
 --lessram	build will be no longer in memory (default: off)
 --debug		activates basically \`set -x\` everywhere (default: off)
@@ -34,7 +34,7 @@ arch=
 features=
 disablefeatures=
 suite="testing"
-tests=1
+tests=0
 output=".build"
 while true; do
 	flag="$1"; shift
@@ -68,7 +68,7 @@ envArgs=(
 	suite="$suite"
 	debug=$debug
 	manual=$manual
-	arch="$arch" 
+	arch="$arch"
 	features="$features"
 	disablefeatures="$disablefeatures"
 	version="$version"
@@ -77,10 +77,8 @@ envArgs=(
 	userGID="$userGID"
 )
 
-securityArgs=( 
-	--cap-add SYS_ADMIN	# needed for mounts in image
-	--cap-drop SETFCAP
-	--privileged		# needed for creating bootable images with losetup and a mounted /dev
+securityArgs=(
+	--cap-add SYS_ADMIN	# needed for unshare in garden-chroot
 )
 
 dockerinfo="$(docker info)"       || eusage "docker not working, check permissions or work with bin/garden-build"

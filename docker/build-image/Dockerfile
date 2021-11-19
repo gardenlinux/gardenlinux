@@ -17,7 +17,7 @@ RUN	apt-get update \
 		debian-ports-archive-keyring \
 		debootstrap \
 		wget ca-certificates gettext-base \
-		dosfstools squashfs-tools e2fsprogs \
+		dosfstools mtools faketime squashfs-tools e2fsprogs \
 		fdisk mount gnupg xz-utils bsdextrautils \
 		\
 		libcap2-bin \

@@ -6,12 +6,18 @@ set -Eeuo pipefail
 exec 3>&1
 exec 1>&2
 
+function uuid_hash {
+	hash=$(sha256sum)
+	echo "${hash:0:8}-${hash:8:4}-${hash:12:4}-${hash:16:4}-${hash:20:12}"
+}
+
 rootfs="$1"
 
 rootfs_work=$(mktemp -d)
-mnt=$(mktemp -d)
 
 cp -a "$rootfs/." "$rootfs_work"
+
+rm -rf "$rootfs_work/var/log"
 
 chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
 chroot "$rootfs_work" /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
@@ -20,8 +26,12 @@ rm "$rootfs_work/.autorelabel"
 # setup systemd boot (setting SYSTEMD_ESP_PATH env needed to bypass bootctl checking if mounted from esp partition)
 touch "$rootfs_work/boot/efi/loader/loader.conf"
 chroot "$rootfs_work" /usr/bin/env -i SYSTEMD_ESP_PATH="/boot/efi" bootctl --no-variables --make-machine-id-directory=no install
+rm "$rootfs_work/boot/efi/loader/random-seed" # random seed would obviously break reproducibility
 
 fstab=$(mktemp)
+
+timestamp=$(garden-version --epoch "$version")
+export E2FSPROGS_FAKE_TIME=$timestamp
 
 # strip comments and blank lines and sort by path depth (deepest first)
 sed 's/#.*//;/^[[:blank:]]*$/d' \
@@ -70,15 +80,49 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 	file=$(mktemp)
 	truncate -s "$size" "$file"
 
+	if [[ "$depth" = 0 ]]; then
+		# we iterate depth sorted, so all other partitions should already have been processed and written to fstab
+		column -t "$fstab" > "$rootfs_work/etc/fstab"
+	fi
+
 	case "$fs" in
 		"ext4")
-			mkfs.ext4 ${uuid:+"-U"} ${uuid:+"$uuid"} ${label:+"-L"} ${label:+"$label"} -I 256 "$file"
+			# set uuid and HTREE hash_seed to reproducible values instead of default random generated ones
+			uuid=${uuid:-$(echo "gardenlinux:$version:fs_uuid:$fs:$target" | uuid_hash)}
+			hash_seed=$(echo "gardenlinux:$version:ext4_hash_seed:$fs:$target" | uuid_hash)
+			mke2fs -E hash_seed="$hash_seed" -U "$uuid" ${label:+"-L"} ${label:+"$label"} -I 256 -d "$rootfs_work$target" "$file"
+
+			# set quota options and resize to minimum size needed for contents (when run on a file resize2fs automatically truncates)
+			tune2fs -Q usrquota,grpquota,prjquota "$file"
+			resize2fs -M "$file"
+
+			if [[ "$depth" = 0 ]]; then
+				# add small size overhead/buffer to root partition
+				size=$(du -b "$file" | awk '{ padded_size = $1 + (MB - ($1 % MB) % MB); print (padded_size / MB) + 16 "MiB" }' 'MB=1048576')
+				truncate -s "$size" "$file"
+				resize2fs "$file"
+			fi
+
+			# fixup timestamp on all used inodes to create reproducible ext4 image
+			num_inodes=$(dumpe2fs -h "$file" 2> /dev/null | grep '^Inode count:' | cut -d ':' -f 2 | tr -d ' ')
+			used_inodes=$(for (( inode=1; inode <= "$num_inodes"; inode++ )); do echo "testi <$inode>"; done | debugfs "$file" 2> /dev/null | grep -oP '(?<=Inode )[0-9]+(?= is marked in use)')
+			for inode in $used_inodes; do for field in {a,m,c}time; do echo "set_inode_field <$inode> $field $timestamp"; done; done | debugfs -w "$file" &> /dev/null
+
+			rm -rf "$rootfs_work$target"
+			mkdir "$rootfs_work$target"
 			;;
 		"vfat")
-			mkfs.vfat ${uuid:+"-i"} ${uuid:+"$uuid"} ${label:+"-n"} ${label:+"$label"} "$file"
+			uuid=${uuid:-$(echo "gardenlinux:$version:fs_uuid:$fs:$target" | sha256sum | cut -c -8)}
+			faketime "@$timestamp" mformat -i "$file" -F -N "$uuid" ${label:+"-v"} ${label:+"$label"} ::
+			pushd "$rootfs_work$target"
+				faketime "@$timestamp" mcopy -i "$file" -s -p $(ls -A) ::
+			popd
+			rm -rf "$rootfs_work$target"
+			mkdir "$rootfs_work$target"
 			;;
 		"swap")
-			mkswap ${uuid:+"-U"} ${uuid:+"$uuid"} ${label:+"-L"} ${label:+"$label"} "$file"
+			uuid=${uuid:-$(echo "gardenlinux:$version:fs_uuid:$fs:$target" | uuid_hash)}
+			mkswap -U "$uuid" ${label:+"-L"} ${label:+"$label"} "$file"
 			;;
 		*)
 			echo "filesystem type $fs not yet supported"
@@ -86,49 +130,20 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 			;;
 	esac
 
-	# for mount points (i.e. not swap, etc) copy from rootfs
-	if [[ "$(cut -c 1 <<< "$target")" = "/" ]]; then
-		mount -t "$fs" -o loop "$file" "$mnt"
-		cp -a "$rootfs_work$target/." "$mnt"
-		if [[ "$depth" = 0 ]]; then
-			# we iterate depth sorted, so all other partitions should already have been processed and written to fstab
-			column -t "$fstab" > "$mnt/etc/fstab"
-		fi
-		umount "$mnt"
-		rm -rf "$rootfs_work$target"
-		mkdir "$rootfs_work$target"
-	fi
-
-	# for ext4 set quota options and resize to minimum needed for contents (when run on a file resize2fs automatically truncates)
-	if [[ "$fs" = "ext4" ]]; then
-		tune2fs -Q usrquota,grpquota,prjquota "$file"
-		if [[ "$resize" = 1 ]]; then
-			e2fsck -y -f "$file" || [[ $? == 1 ]] # exit code 1: "File system errors corrected"
-			resize2fs -M "$file"
-
-			if [[ "$depth" = 0 ]]; then
-				# add small size overhead/buffer to root partition for selinux first boot magic
-				# (otherwise we'll get "A valid context for root could not be obtained." error at login)
-				size=$(du -b "$file" | awk '{ padded_size = $1 + (MB - ($1 % MB) % MB); print (padded_size / MB) + 16 "MiB" }' 'MB=1048576')
-				truncate -s "$size" "$file"
-				resize2fs "$file"
-			fi
-		fi
-	fi
-
-	# install syslinux if extra argument given in fstab
-	if [[ "$syslinux" = 1 ]]; then
-		PATH="$PATH:$rootfs/usr/bin" syslinux -d syslinux -i "$file"
-	fi
+	# # install syslinux if extra argument given in fstab
+	# if [[ "$syslinux" = 1 ]]; then
+	# 	PATH="$PATH:$rootfs/usr/bin" syslinux -d syslinux -i "$file"
+	# fi
 
 	# recalc size, since it might have change (e.g. from resize2fs)
 	size=$(du -b "$file" | awk '{ padded_size = $1 + (MB - ($1 % MB) % MB); print (padded_size / MB) }' 'MB=1048576')
 
-	# known uuids (rather than auto generated by fdisk) needed to query offsets later on
-	part_uuid=$(cat /proc/sys/kernel/random/uuid)
+	part_uuid=$(echo "gardenlinux:$version:part_uuid:$source" | uuid_hash)
+
+	echo "$target $(sha256sum "$file")"
 
 	echo -e "$part_uuid\t$type\t$size\t$syslinux\t$file\t$label" >&3
   done
 
 # cleanup
-rm -rf "$rootfs_work" "$mnt" "$fstab"
+rm -rf "$rootfs_work" "$fstab"
