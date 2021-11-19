@@ -495,8 +495,6 @@ class OnlineReleaseManifest(ReleaseManifest):
     def with_test_result(self,  test_result: ReleaseTestResult):
         return dataclasses.replace(self, test_result=test_result)
 
-    def with_logfile(self,  blob_name: str):
-        return dataclasses.replace(self, logs=blob_name)
 
 @dataclasses.dataclass(frozen=True)
 class ReleaseManifestSet:
@@ -506,14 +504,19 @@ class ReleaseManifestSet:
     # treat as static final
     release_manifest_set_prefix = 'meta/sets'
 
+    def with_logfile(self,  blob_name: str):
+        return dataclasses.replace(self, logs=blob_name)
+
 
 @dataclasses.dataclass(frozen=True)
 class OnlineReleaseManifestSet(ReleaseManifestSet):
     # injected iff retrieved from s3 bucket
     s3_key: str
     s3_bucket: str
+    logs: typing.Optional[str] = None
 
-
+    def with_logfile(self,  blob_name: str):
+        return dataclasses.replace(self, logs=blob_name)
 class PipelineFlavour(enum.Enum):
     SNAPSHOT = 'snapshot'
     RELEASE = 'release'
