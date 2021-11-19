@@ -17,10 +17,6 @@ chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
 chroot "$rootfs_work" /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
 rm "$rootfs_work/.autorelabel"
 
-# setup systemd boot (setting SYSTEMD_ESP_PATH env needed to bypass bootctl checking if mounted from esp partition)
-touch "$rootfs_work/boot/efi/loader/loader.conf"
-chroot "$rootfs_work" /usr/bin/env -i SYSTEMD_ESP_PATH="/boot/efi" bootctl --no-variables --make-machine-id-directory=no install
-
 fstab=$(mktemp)
 
 # strip comments and blank lines and sort by path depth (deepest first)
