@@ -19,7 +19,7 @@ RUN	apt-get update \
 		wget ca-certificates gettext-base \
 		dosfstools mtools faketime squashfs-tools e2fsprogs \
 		fdisk mount gnupg xz-utils bsdextrautils \
-		\
+		sbsigntool \
 		libcap2-bin \
 		python3 \
 		python3-mako \
