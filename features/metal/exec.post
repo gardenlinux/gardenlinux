@@ -5,7 +5,7 @@ timestamp=$(garden-version --epoch "$version")
 
 # sign bootloader
 find "$targetDir/boot/efi/Default/" -name "linux" | while read f; do
-	faketime @"$timestamp" sbsign --cert /kernel.crt --key /kernel.key --output "$f" "$f"
+	datefudge -s @"$timestamp" sbsign --cert /kernel.crt --key /kernel.key --output "$f" "$f"
 done
 
 # prepare cert for later loading
