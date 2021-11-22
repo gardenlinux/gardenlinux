@@ -79,7 +79,7 @@ test:
 cfssl/cfssl cfssl/cfssljson:
 	@echo "Building cfssl / cfssljson"
 	@mkdir -p cfssl
-	@docker run --volume "$$(realpath cfssl):/build" --rm -ti golang:latest bash -c "$$BASH_BUILD"
+	@docker run --volume "$$(realpath cfssl):/build" --rm golang:latest bash -c "$$BASH_BUILD"
 
 #### CA
 .PHONY: %.ca
