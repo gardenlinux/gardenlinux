@@ -152,31 +152,49 @@ def promote_step(
     # if this line is reached, the release has been complete
     # now create and publish manifest-set
 
-    upload_release_manifest_set = glci.util.preconfigured(
-        func=glci.util.upload_release_manifest_set,
-        cicd_cfg=cicd_cfg,
+    find_release_set = glci.util.preconfigured(
+        func=glci.util.find_release_set,
+        cicd_cfg=glci.util.cicd_cfg(cicd_cfg_name)
     )
 
-    manifest_set = glci.model.ReleaseManifestSet(
-        manifests=releases,
-        flavour_set_name=flavour_set.name,
+    build_type = glci.model.BuildType(promote_target)
+    manifest_set = find_release_set(
+        flavourset_name=flavour_set.name,
+        build_committish=committish,
+        gardenlinux_epoch=int(gardenlinux_epoch),
+        version=version,
+        build_type=build_type,
+        absent_ok=True,
     )
 
-    manifest_path = os.path.join(
-        glci.model.ReleaseManifestSet.release_manifest_set_prefix,
-        build_type.value,
-        glci.util.release_set_manifest_name(
-            build_committish=committish,
-            gardenlinux_epoch=gardenlinux_epoch,
-            version=version,
-            flavourset_name=flavour_set.name,
-            build_type=build_type,
-        ),
-    )
+    if manifest_set:
+        print('manifest-set already exists, not uploading')
+    else:
+        upload_release_manifest_set = glci.util.preconfigured(
+            func=glci.util.upload_release_manifest_set,
+            cicd_cfg=cicd_cfg,
+        )
 
-    upload_release_manifest_set(
-        key=manifest_path,
-        manifest_set=manifest_set,
-    )
+        manifest_set = glci.model.ReleaseManifestSet(
+            manifests=releases,
+            flavour_set_name=flavour_set.name,
+        )
 
-    print(f'uploaded manifest-set: {manifest_path=}')
+        manifest_path = os.path.join(
+            glci.model.ReleaseManifestSet.release_manifest_set_prefix,
+            build_type.value,
+            glci.util.release_set_manifest_name(
+                build_committish=committish,
+                gardenlinux_epoch=gardenlinux_epoch,
+                version=version,
+                flavourset_name=flavour_set.name,
+                build_type=build_type,
+            ),
+        )
+
+        upload_release_manifest_set(
+            key=manifest_path,
+            manifest_set=manifest_set,
+        )
+
+        print(f'uploaded manifest-set: {manifest_path=}')

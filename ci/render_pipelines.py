@@ -233,8 +233,6 @@ def mk_pipeline_notify_task(
         name=name,
         all_tasks=all_tasks,
         overrides={
-            NamedParam(name='modifiers', value=modifier_names),
-            NamedParam(name='platform', value=platform),
             NamedParam(name='pipeline_run_name', value='$(context.pipelineRun.name)'),
             NamedParam(name='pipeline_name', value='$(context.pipeline.name)'),
             NamedParam(name='namespace', value='$(context.pipelineRun.namespace)'),
@@ -310,9 +308,7 @@ def mk_pipeline_packages(all_tasks: typing.Sequence[tkn.model.Task]):
     params = set(params)
 
     # remove some special parameters that are calculated
-    params.remove(all_params.modifiers)
     params.remove(all_params.namespace)
-    params.remove(all_params.platform)
     params.remove(all_params.pipeline_name)
     params.remove(all_params.pipeline_run_name)
     params.remove(all_params.pkg_names)

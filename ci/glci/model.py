@@ -476,7 +476,7 @@ class OnlineReleaseManifest(ReleaseManifest):
     s3_key: str
     s3_bucket: str
     test_result: typing.Optional[ReleaseTestResult]
-    logs: typing.Optional[str]
+    logs: typing.Optional[str] # unused but manifests with this field may be in S3
 
     def stripped_manifest(self):
         raw = dataclasses.asdict(self)
@@ -504,19 +504,23 @@ class ReleaseManifestSet:
     # treat as static final
     release_manifest_set_prefix = 'meta/sets'
 
-    def with_logfile(self,  blob_name: str):
-        return dataclasses.replace(self, logs=blob_name)
-
 
 @dataclasses.dataclass(frozen=True)
 class OnlineReleaseManifestSet(ReleaseManifestSet):
     # injected iff retrieved from s3 bucket
     s3_key: str
     s3_bucket: str
-    logs: typing.Optional[str] = None
+    logs: typing.Optional[typing.Tuple[S3_ReleaseFile, ...]] = None
 
-    def with_logfile(self,  blob_name: str):
-        return dataclasses.replace(self, logs=blob_name)
+    def with_logfile(self, file: S3_ReleaseFile):
+        log_files = self.logs
+        if log_files:
+            log_files = log_files + (file, )
+        else:
+            log_files = (file, )
+        return dataclasses.replace(self, logs=log_files)
+
+
 class PipelineFlavour(enum.Enum):
     SNAPSHOT = 'snapshot'
     RELEASE = 'release'
