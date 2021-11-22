@@ -44,9 +44,9 @@ manual: docker sign
 		--env DEBEMAIL=$(DEBEMAIL) \
 		--env WORKDIR="/home/dev" \
 		$(BUILDIMAGE) bash -c "manual/.docker; bash"
-.PHONY: pipeline 
+.PHONY: pipeline
 pipeline: docker sign
-	docker run --rm -ti \
+	docker run --rm \
 		--volume $(POOLDIR):/pool \
 		--volume $(MANUALDIR):/home/dev/manual \
 		--volume $(MANUALDIR)/../Makefile.inside:/home/dev/Makefile \
@@ -64,7 +64,7 @@ pipeline: docker sign
 		--env WORKDIR="/home/dev" \
 		$(BUILDIMAGE) bash -c "gpg --import /sign.pub; make"
 manual-kernel: docker-kernel
-	docker run --rm -ti --volume "$(POOLDIR)":/pool --volume "$(KERNELDIR)":/home/dev/manual \
+	docker run --rm --volume "$(POOLDIR)":/pool --volume "$(KERNELDIR)":/home/dev/manual \
 	       	--env BUILDTARGET="$(POOLDIR)" \
 		--env BUILDIMAGE="$(BUILDKERNEL)" \
 		--env BUILDVERSION=$(BUILDVERSION) \
