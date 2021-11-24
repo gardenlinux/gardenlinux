@@ -1,3 +1,5 @@
+import sys
+
 import github_release
 import glci.model
 import release
@@ -33,7 +35,7 @@ def release_step(
     )
 
     # Make the github release
-    github_release.make_release(
+    release_created = github_release.make_release(
         cicd_cfg_name=cicd_cfg_name,
         committish=committish,
         ctx_repository_config_name=ctx_repository_config_name,
@@ -43,3 +45,5 @@ def release_step(
         repo_dir=repo_dir,
         version=version,
     )
+
+    sys.exit(0 if release_created else 1)

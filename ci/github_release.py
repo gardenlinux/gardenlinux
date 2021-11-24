@@ -32,12 +32,12 @@ def _get_download_url(
         platform=platform,
         manifest_set=manifest_set,
     )
-    if manifest == None:
+    if manifest is None:
         print('Could not find release-manifest for platform {manifest}, skipping release.')
         return None
 
     path = _find_path_in_manifest(suffix, manifest)
-    if path == None:
+    if path is None:
         print(f'Could not find path for platform {platform=}, skipping release.')
         return None
 
@@ -90,7 +90,7 @@ def make_release(
     giturl: str,
     version: str,
     repo_dir: str,
-):
+) -> bool: # True if a release was created, False otherwise
     manifest_set = get_manifest(
         cicd_cfg_name=cicd_cfg_name,
         committish=committish,
@@ -103,7 +103,7 @@ def make_release(
         return False
 
     platform = 'ali'
-    suffix = 'rootfs.qcow2'
+    suffix = glci.util.virtual_image_artifact_for_platform(platform)
     name_ali, download_link_ali, ids_ali = _get_download_url(
         platform=platform,
         suffix=suffix,
@@ -116,7 +116,7 @@ def make_release(
     print(f'{ids_ali_formatted}')
 
     platform = 'aws'
-    suffix = 'rootfs.raw'
+    suffix = glci.util.virtual_image_artifact_for_platform(platform)
     name_aws, download_link_aws, ids_aws = _get_download_url(
         platform=platform,
         suffix=suffix,
@@ -129,7 +129,7 @@ def make_release(
     print(f'{ids_aws_formatted}')
 
     platform = 'azure'
-    suffix = 'rootfs.vhd'
+    suffix = glci.util.virtual_image_artifact_for_platform(platform)
     name_azure, download_link_azure, id_azure = _get_download_url(
         platform=platform,
         suffix=suffix,
@@ -139,7 +139,7 @@ def make_release(
     print(f'Azure: name: {name_azure}, urL: {download_link_azure}, image-name: {id_azure}')
 
     platform = 'gcp'
-    suffix = 'rootfs-gcpimage.tar.gz'
+    suffix = glci.util.virtual_image_artifact_for_platform(platform)
     name_gcp, download_link_gcp, id_gcp = _get_download_url(
         platform=platform,
         suffix=suffix,
@@ -149,7 +149,7 @@ def make_release(
     print(f'GCP: name: {name_gcp}, url: {download_link_gcp}, image-name: {id_gcp}')
 
     platform = 'openstack'
-    suffix = 'rootfs.vmdk'
+    suffix = glci.util.virtual_image_artifact_for_platform(platform)
     name_openstack, download_link_openstack, ids_openstack = _get_download_url(
         platform=platform,
         suffix=suffix,
@@ -187,8 +187,8 @@ def make_release(
     release_descr = release_template.safe_substitute(values)
 
     # for development:
-    with open(os.path.join(repo_dir, 'github_release.md'), 'w') as out_file:
-        out_file.write(release_descr)
+    # with open(os.path.join(repo_dir, 'github_release.md'), 'w') as out_file:
+    #     out_file.write(release_descr)
 
     # create the Github release:
     gh_release = release.create_release(
@@ -211,7 +211,7 @@ def make_release(
         ctx_repo_base_url=ctx_repo_base_url,
         cache_dir=None,
     )
-    # print(f'Downloaded component descriptor to {result}')
+
     with open(os.path.join(repo_dir, 'component-descriptor'), 'w') as out_file:
         out_file.write(release_descr)
 
@@ -221,3 +221,5 @@ def make_release(
             name='component-descriptor',
             asset=cd_file,
         )
+
+    return True
