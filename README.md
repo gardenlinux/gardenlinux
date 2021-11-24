@@ -33,7 +33,7 @@ Garden Linux is a [Debian](https://debian.org) derivate that aims to provide a s
 - thorough automated testing
   - unit tests against the local build and
   - integration tests against the various cloud Providers (only rc builds)
-- aiming to always integrate the latest LTS kernel [#100](https://github.com/gardenlinux/gardenlinux/issues/100) (currently 5.4)
+- aiming to always integrate the latest LTS kernel [#100](https://github.com/gardenlinux/gardenlinux/issues/100) (currently 5.15)
 - running scans against common issues like
   - license voilations (we try to be completely open! [#1](https://github.com/gardenlinux/gardenlinux/issues/1))
   - scans for outdated software versions
