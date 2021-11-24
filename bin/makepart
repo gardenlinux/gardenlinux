@@ -14,12 +14,12 @@ mnt=$(mktemp -d)
 cp -a "$rootfs/." "$rootfs_work"
 
 chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
-chroot "$rootfs_work" /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
+chroot "$rootfs_work" /usr/bin/env -i /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
 rm "$rootfs_work/.autorelabel"
 
 # setup systemd boot (setting SYSTEMD_ESP_PATH env needed to bypass bootctl checking if mounted from esp partition)
 touch "$rootfs_work/boot/efi/loader/loader.conf"
-chroot "$rootfs_work" /usr/bin/env -i SYSTEMD_ESP_PATH="/boot/efi" bootctl --no-variables --make-machine-id-directory=no install
+chroot "$rootfs_work" /usr/bin/env -i SYSTEMD_ESP_PATH="/boot/efi" /usr/bin/bootctl --no-variables --make-machine-id-directory=no install
 
 fstab=$(mktemp)
 
@@ -118,7 +118,15 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 
 	# install syslinux if extra argument given in fstab
 	if [[ "$syslinux" = 1 ]]; then
-		PATH="$PATH:$rootfs/usr/bin" syslinux -d syslinux -i "$file"
+		[[ ! -e "$rootfs$file" ]]
+		touch "$rootfs$file"
+		mount --bind "$file" "$rootfs$file"
+		[[ -d "$rootfs/proc" ]] && [[ -z "$(ls -A "$rootfs/proc")" ]]
+		mount -t proc none "$rootfs/proc"
+		chroot "$rootfs" /usr/bin/env -i /usr/bin/syslinux -d syslinux -i "$file"
+		umount "$rootfs/proc"
+		umount "$rootfs$file"
+		rm "$rootfs$file"
 	fi
 
 	# recalc size, since it might have change (e.g. from resize2fs)

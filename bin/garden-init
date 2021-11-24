@@ -115,16 +115,32 @@ include_aptversion=
 include_aptfile=
 include_wget=
 exclude="$(filter_comment <<< $exclude | filter_variables | filter_if)"
-for i in $(filter_comment <<< $include | filter_variables | filter_if | grep -v -f <(echo "$exclude")); do
-    if [[ $i = *.deb ]]; then
-	if [[ $i = *://* ]]; then	include_wget+="$i "
-	elif [[ $i = /* ]]; then	include_wget+="${mirror_host}$i "
-	else				include_wget+="${mirror_pool}$i "
-	fi
-	include_aptfile+="./$(basename $i) "
-    else 			include_aptversion+="$i "
-    fi
-done
+if [ -z "${PKG_DIR+x}" ]; then
+	for i in $(filter_comment <<< $include | filter_variables | filter_if | grep -v -f <(echo "$exclude")); do
+	    if [[ $i = *.deb ]]; then
+			if [[ $i = *://* ]]; then	include_wget+="$i "
+			elif [[ $i = /* ]]; then	include_wget+="${mirror_host}$i "
+			else				include_wget+="${mirror_pool}$i "
+			fi
+			include_aptfile+="./$(basename $i) "
+	    else
+			include_aptversion+="$i "
+	    fi
+	done
+else
+	for i in $(filter_comment <<< $include | filter_variables | filter_if | grep -v -f <(echo "$exclude")); do
+	    if [[ $i = *.deb ]]; then
+			if [[ $i = *://* ]]; then
+				include_wget+="$i "
+				include_aptfile+="./$(basename $i) "
+			else
+				include_aptfile+="$PKG_DIR/$i "
+			fi
+	    else
+			include_aptversion+="$i "
+	    fi
+	done
+fi
 exclude="$(paste -sd, - <<< $exclude)"
 
 debootstrapArgs=()
@@ -211,10 +227,14 @@ fi
 
 # INITRD="No" - really hackish solution to skip ramdisk generation
 [ "${include_aptfile}" != "" ] &&
+mkdir "$targetDir/pool"
+mount --bind "/pool" "$targetDir/pool"
 "$thisDir/garden-chroot" "$targetDir" bash -c '
 	cd '${tmp#$targetDir}'
 	INITRD="No" apt-get install -y --allow-downgrades --no-install-recommends -f $1
 ' -- "$include_aptfile"
+umount "$targetDir/pool"
+rmdir "$targetDir/pool"
 rm -rf $tmp
 
 [ "${include_aptversion}" != "" ] &&

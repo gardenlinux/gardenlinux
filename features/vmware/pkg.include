@@ -2,5 +2,5 @@ python3-cffi-backend
 python3-boto
 cloud-init
 dmidecode
-open-vm-tools
+[${arch}=amd64] open-vm-tools
 python3-netifaces

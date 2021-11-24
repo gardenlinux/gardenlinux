@@ -137,6 +137,7 @@ fi
 
 {
 	initArgs=( --arch="$dpkgArch" )
+	configArgs=( --arch="$dpkgArch" )
 	initArgs+=( --debian )
 	if [ -n "${ports-}" ]; then
 		initArgs+=(

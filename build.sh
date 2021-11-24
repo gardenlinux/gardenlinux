@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/bin/.constants.sh" \
-	--flags 'skip-build,debug,lessram,manual,skip-tests' \
+	--flags 'skip-build,debug,lessram,manual,skip-tests,use-local-pkgs' \
 	--flags 'arch:,features:,disable-features:,suite:' \
 	--usage '[--skip-build] [--lessram] [--debug] [--manual] [--arch=<arch>] [--skip-tests] [<output-dir>] [<version/timestamp>]' \
 	--sample '--features kvm,khost --disable-features _slimify .build' \
@@ -14,7 +14,7 @@ source "$thisDir/bin/.constants.sh" \
 <version>	which version to build (see bin/garden-version)
 
 --features <element>[,<element>]*	comma separated list of features activated (see features/) (default:base)
---disable-features <element>[,<element>]*	comma separated list of features to deactivate (see features/), 
+--disable-features <element>[,<element>]*	comma separated list of features to deactivate (see features/),
 		can only be implicit features another feature pulls in  (default:)
 --lessram	build will be no longer in memory (default: off)
 --debug		activates basically \`set -x\` everywhere (default: off)
@@ -31,6 +31,7 @@ debug=
 manual=
 lessram=
 arch=
+use_local_pkgs=
 features=
 disablefeatures=
 suite="testing"
@@ -45,6 +46,7 @@ while true; do
 		--debug)	debug=1		;;
 		--manual)	manual=1	;;
 		--arch)		arch="$1"; 	shift ;;
+		--use-local-pkgs) use_local_pkgs=1 ;;
 		--features) 	features="$1";	shift ;;
 		--disable-features) 	disablefeatures="$1";shift ;;
 		--suite) 	suite="$1";	shift ;;
@@ -68,7 +70,7 @@ envArgs=(
 	suite="$suite"
 	debug=$debug
 	manual=$manual
-	arch="$arch" 
+	arch="$arch"
 	features="$features"
 	disablefeatures="$disablefeatures"
 	version="$version"
@@ -77,7 +79,7 @@ envArgs=(
 	userGID="$userGID"
 )
 
-securityArgs=( 
+securityArgs=(
 	--cap-add SYS_ADMIN	# needed for mounts in image
 	--cap-drop SETFCAP
 	--privileged		# needed for creating bootable images with losetup and a mounted /dev
@@ -108,6 +110,10 @@ dockerArgs="--hostname garden-build
 	--mount type=bind,source=/dev,target=/dev"
 
 [ $lessram ] || dockerArgs+=" --tmpfs /tmp:dev,exec,suid,noatime"
+
+if [ $use_local_pkgs ]; then
+	dockerArgs+=" --volume $thisDir/.packages:/pool:ro -e PKG_DIR=/pool"
+fi
 
 if [ $manual ]; then
 	echo -e "\n### running in debug mode"
