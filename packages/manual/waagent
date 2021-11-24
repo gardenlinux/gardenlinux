@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eexuo pipefail
 
 . $(dirname $0)/.helper
+
+if [ "$ARCH" != "$(dpkg --print-architecture)" ]; then
+	echo "$src builds architecture all packages only, so no cross arch build needed."
+	exit 0
+fi
 
 #TODO switch this to waagent-old and build latest 2.3 version as well
 VERSION="2.2.47-2"
 
 sudo apt-get update
-sudo apt-get build-dep -y --no-install-recommends $src
 sudo apt-get install -y debian-keyring quilt
 dget -x http://ftp.debian.org/debian/pool/main/w/waagent/waagent_${VERSION}.dsc
 
@@ -18,6 +22,7 @@ quilt push -a
 dch -lgardenlinux 'remove tostring() methods for python3.9 / switch ifup/down to networkctl reconfigure'
 dch -r ''
 
+install_build_deps
 donotmove="$(ls ..)"
-debuild
+build
 move_package .. $donotmove

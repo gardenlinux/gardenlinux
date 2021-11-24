@@ -19,26 +19,25 @@ pk12util -i "${CERT_DIR}/kernel.p12" -d "${CERT_DIR}" -W "" -K ""
 #fi
 
 sudo apt-get install -y --no-install-recommends -f \
-	$BUILDTARGET/main/l/linux/linux-kbuild-$(cut -d. -f-2 <<< ${KERNEL_BASE})_${KERNEL_VERSION}_${KERNEL_ARCH}.deb \
+	$BUILDTARGET/main/l/linux/linux-kbuild-$(cut -d. -f-2 <<< ${KERNEL_BASE})_${KERNEL_VERSION}_${ARCH}.deb \
 	$BUILDTARGET/main/l/linux/linux-support-${KERNEL_BASEABI}_${KERNEL_VERSION}_all.deb \
-	$BUILDTARGET/main/l/linux/linux-image-${KERNEL_ARCH}-signed-template_${KERNEL_VERSION}_${KERNEL_ARCH}.deb
-	
+	$BUILDTARGET/main/l/linux/linux-image-${ARCH}-signed-template_${KERNEL_VERSION}_${ARCH}.deb
+
 
 for i in $KERNEL_FLAVOURS; do
 	sudo apt-get install -y --no-install-recommends \
-		$BUILDTARGET/main/l/linux/linux-image-${i}-${KERNEL_ARCH}-unsigned_${KERNEL_VERSION}_${KERNEL_ARCH}.deb
+		$BUILDTARGET/main/l/linux/linux-image-${i}-${ARCH}-unsigned_${KERNEL_VERSION}_${ARCH}.deb
 done
 
-cp -R /usr/share/code-signing/linux-image-${KERNEL_ARCH}-signed-template/source-template linux-signed-${KERNEL_ARCH}
+cp -R /usr/share/code-signing/linux-image-${ARCH}-signed-template/source-template linux-signed-${ARCH}
 
-cd linux-signed-${KERNEL_ARCH}
+cd linux-signed-${ARCH}
 for i in $KERNEL_FLAVOURS; do
-	../$(dirname $0)/linux-$(cut -d. -f-2 <<< ${KERNEL_BASE}).d/sign-helper linux-image-${i}-${KERNEL_ARCH}-unsigned debian/signatures
+	../$(dirname $0)/linux-$(cut -d. -f-2 <<< ${KERNEL_BASE}).d/sign-helper linux-image-${i}-${ARCH}-unsigned debian/signatures
 done
-TMPDIR=.. mk-build-deps debian/control
-sudo apt-get install -y --no-install-recommends -f ../linux-signed-${KERNEL_ARCH}-build-deps*.deb
+install_build_deps
 
 donotmove="$(ls ..)"
-debuild
-src=linux-signed-${KERNEL_ARCH}
+build
+src=linux-signed-${ARCH}
 move_package .. $donotmove

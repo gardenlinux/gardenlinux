@@ -21,3 +21,22 @@ move_package () {
 	sudo mv -v $(find .. -maxdepth 1 -type f -not -path '*/\.*' $(printf "! -name %s " $donotmove)) $BUILDTARGET/$targetpath;
 }
 
+install_build_deps () {
+	local control_file="$PWD/debian/control"
+	pushd "$(mktemp -d)"
+	if [ "$ARCH" = "$(dpkg --print-architecture)" ]; then
+		mk-build-deps --install --root-cmd "sudo" --tool "apt-get -y" "$control_file"
+	else
+		mk-build-deps -A --install --root-cmd "sudo" --tool "apt-get -y" "$control_file"
+		DEB_BUILD_PROFILES="cross ${DEB_BUILD_PROFILES:-}" mk-build-deps -B --host-arch $ARCH --install --root-cmd "sudo" --tool "apt-get -y" "$control_file"
+	fi
+	popd
+}
+
+build () {
+	if [ "$ARCH" = "$(dpkg --print-architecture)" ]; then
+		debuild
+	else
+		DEB_BUILD_OPTIONS="nocheck nopgo nodoc ${DEB_BUILD_OPTIONS:-}" DEB_BUILD_PROFILES="cross ${DEB_BUILD_PROFILES:-}" debuild -B -a$ARCH
+	fi
+}

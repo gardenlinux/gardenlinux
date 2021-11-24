@@ -1,22 +1,21 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eexuo pipefail
 
 . $(dirname $0)/.helper
 
-# no manpage cleaning
-sudo rm -f /etc/dpkg/dpkg.cfg.d/docker
-
-sudo apt-get build-dep -y --no-install-recommends $src
-sudo apt-get install -y libgdbm-dev
-
 apt-get source $src
 
-sudo apt-get remove -y --purge libdb5.3-dev
 cd $src-*/
-patch -p1 < $srcDir/libdb.patch
-dch -lgardenlinux 'remove libdb'
+
+patch -p1 < /$srcDir/control.patch
+patch -p1 < /$srcDir/libdb.patch
+dch -lgardenlinux 'remove ftparchive/libdb'
 dch -r ''
 
+install_build_deps
 donotmove="$(ls ..)"
-debuild
+if [ "$ARCH" != "$(dpkg --print-architecture)" ]; then
+	export DEB_BUILD_OPTIONS="no-gssapi ${DEB_BUILD_OPTIONS:-}"
+fi
+build
 move_package .. $donotmove

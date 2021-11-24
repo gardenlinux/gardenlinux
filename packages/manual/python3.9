@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eexuo pipefail
 
 . $(dirname $0)/.helper
 
 # preselect media-types
-sudo apt-get install media-types
-sudo apt-get build-dep -y --no-install-recommends $src
+sudo apt-get install -y media-types
+sudo apt-get remove -y git # yeah... no idea why, but python3.9 has `Build-Conflicts: git` set, so remove before build ¯\_(ツ)_/¯
 apt-get source $src
 
-sudo apt-get remove -y --purge libdb5.3-dev
 cd $src-*/
 patch -p1 < $srcDir/libdb.patch
 patch -p1 < $srcDir/testsuite.patch
@@ -17,7 +16,7 @@ dch -a 'parse error on test for libpython3.9-testsuite fixed'
 dch -r ''
 debian/rules control-file
 
+install_build_deps
 donotmove="$(ls ..)"
-debuild
+DEB_BUILD_OPTIONS="nocheck nopgo ${DEB_BUILD_OPTIONS:-}" build
 move_package .. $donotmove
-

@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eexuo pipefail
 
 . $(dirname $0)/.helper
 
-sudo apt-get build-dep -y --no-install-recommends $src 
 apt-get source $src
 
-#sudo apt-get remove -y --purge libdb5.3-dev
-cd $src-*/ 
+cd $src-*/
+
+install_build_deps
+
 patch -p1 < /$srcDir/libdb.patch
 dch -lgardenlinux 'remove ftparchive/libdb'
 dch -r ''
+cd . # this is needed, because for whatever reason `dch` sometimes renames the current working directory, which breaks subsequent pwd and pushd / popd
 
 donotmove="$(ls ..)"
-debuild
+DEB_BUILD_OPTIONS="" build
 move_package .. $donotmove

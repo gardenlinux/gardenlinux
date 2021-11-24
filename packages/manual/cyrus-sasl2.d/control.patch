@@ -1,0 +1,18 @@
+--- a/debian/control
++++ b/debian/control
+@@ -18,13 +18,13 @@
+                libkrb5-dev <!pkg.cyrus-sasl2.nogssapi>,
+                libldap2-dev <!pkg.cyrus-sasl2.noldap>,
+                libpam0g-dev,
+-               libpod-pom-view-restructured-perl,
+                libpq-dev <!pkg.cyrus-sasl2.nosql>,
+                libsqlite3-dev,
+                libssl-dev,
+                po-debconf,
+-               python3-sphinx,
+                quilt
++Build-Depends-Indep: libpod-pom-view-restructured-perl,
++                     python3-sphinx
+ Build-Conflicts: heimdal-dev
+ Vcs-Browser: https://salsa.debian.org/debian/cyrus-sasl2
+ Vcs-Git: https://salsa.debian.org/debian/cyrus-sasl2.git

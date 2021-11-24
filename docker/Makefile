@@ -1,7 +1,9 @@
 VERSION=`../bin/garden-version`
 ALTNAME=
 
-ALTNAME_INTERNAL=$(shell [ -n "$(ALTNAME)" ] && printf "%s %s" "-t" "$(ALTNAME)" ) 
+ALTNAME_INTERNAL=$(shell [ -n "$(ALTNAME)" ] && printf "%s %s" "-t" "$(ALTNAME)" )
+
+ARCH ?= $(shell [ "$$(uname -m)" = "aarch64" ] && echo "arm64" || echo "amd64")
 
 all: build-image build-integration-test
 
@@ -14,13 +16,9 @@ build-image: needslim
 	cp ../bin/garden-feat.go build-image/
 	@docker build --build-arg VERSION=$(VERSION) -t gardenlinux/build-image:$(VERSION) $(ALTNAME_INTERNAL) build-image
 
-.PHONY: build
-build: needslim
-	@docker build --build-arg BUILDARCH="$$([ "$$(uname -m)" = "aarch64" ] && echo "arm64" || echo "amd64")" -t gardenlinux/build $(ALTNAME_INTERNAL) build
-
 .PHONY: build-deb
-build-deb: build
-	@docker build -t gardenlinux/build-deb $(ALTNAME_INTERNAL) build-deb
+build-deb: needslim
+	@docker build --build-arg ARCH=$(ARCH) -t gardenlinux/build-deb-$(ARCH) $(ALTNAME_INTERNAL) build-deb
 
 .PHONY: build-integration-test
 build-integration-test: needslim
@@ -33,6 +31,5 @@ clean:
 	rm -rf integration-test/_pipfiles
 	-@[ -n "$$(docker image ls gardenlinux/integration-test --format "{{.ID}}")" ] && docker image rm --force $$(docker image ls gardenlinux/integration-test --format "{{.Repository}}:{{.Tag}}"); true
 	-@[ -n "$$(docker image ls gardenlinux/build-image --format "{{.ID}}")" ] && docker image rm --force $$(docker image ls gardenlinux/build-image --format "{{.Repository}}:{{.Tag}}"); true
-	-@[ -n "$$(docker image ls gardenlinux/build-deb --format "{{.ID}}")" ] && docker image rm --force $$(docker image ls gardenlinux/build-deb --format "{{.Repository}}:{{.Tag}}"); true
-	-@[ -n "$$(docker image ls gardenlinux/build --format "{{.ID}}")" ] && docker image rm --force $$(docker image ls gardenlinux/build --format "{{.Repository}}:{{.Tag}}"); true
+	-@[ -n "$$(docker image ls gardenlinux/build-deb-$(ARCH) --format "{{.ID}}")" ] && docker image rm --force $$(docker image ls gardenlinux/build-deb-$(ARCH) --format "{{.Repository}}:{{.Tag}}"); true
 	-@[ -n "$$(docker image ls gardenlinux/slim --format "{{.ID}}")" ] && docker image rm --force $$(docker image ls gardenlinux/slim --format "{{.Repository}}:{{.Tag}}"); true

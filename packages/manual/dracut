@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eexuo pipefail
 
 . $(dirname $0)/.helper
+
+sudo apt-get install -y quilt
 
 sudo sed -i "s/^\(deb-src.*\) testing \(.*\)/\1 experimental \2/" /etc/apt/sources.list
 sudo apt-get update
 
-sudo apt-get build-dep -y --no-install-recommends $src
 apt-get source $src
 
 # TODO figure out what other modules from upstream might be needed in different scenarios
 cd $src-*/
+
 patch -p1 < $srcDir/noperl.patch
 patch -p1 < $srcDir/dracut-network.install.patch
 patch -p1 < $srcDir/dracut-core.install.patch
@@ -18,10 +20,12 @@ dch -lgardenlinux 'moving pkg-config from Depends to Recommends'
 dch -r ''
 
 # remove the systemd-sysusers patch, not really needed
-quilt delete systemd-users 
+quilt delete systemd-users
+
+install_build_deps
 
 donotmove="$(ls ..)"
-debuild -us
+build
 move_package .. $donotmove
 
 sudo sed -i "s/^\(deb-src.*\) experimental \(.*\)/\1 testing \2/" /etc/apt/sources.list

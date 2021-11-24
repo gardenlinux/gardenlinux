@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eexuo pipefail
 
 . $(dirname $0)/.helper
 
-sudo apt-get build-dep -y --no-install-recommends $src
+if [ "$ARCH" != "$(dpkg --print-architecture)" ]; then
+	echo "$src builds architecture all packages only, so no cross arch build needed."
+	exit 0
+fi
+
 apt-get source $src
 
 cd $src-*/
 patch -p1 < $srcDir/perl.patch
-dch -lgardenlinux 'moved postfix-nochroot out to separate package dependency on perl for selinux-basic' 
+dch -lgardenlinux 'moved postfix-nochroot out to separate package dependency on perl for selinux-basic'
 dch -r ''
+cd . # this is needed, because for whatever reason `dch` sometimes renames the current working directory, which breaks subsequent pwd and pushd / popd
 
+install_build_deps
 donotmove="$(ls ..)"
-debuild
+build
 move_package .. $donotmove
