@@ -123,6 +123,8 @@ def _enumerate_objects_from_release_manifest_sets(
     for release_manifest_set in enumerate_release_sets(prefix=prefix):
         for release_manifest in release_manifest_set.manifests:
             yield from release_manifest.paths
+        if release_manifest_set.logs:
+            yield from release_manifest_set.logs
 
 
 def clean_orphaned_objects(
@@ -153,6 +155,10 @@ def clean_orphaned_objects(
 
     s3_client = glci.s3.s3_client(cicd_cfg=cicd_cfg)
 
+    # print('referenced objects:')
+    # for key in all_object_keys:
+    #     print(f'{key}')
+
     continuation_token = None
     while True:
         ctoken_args = {'ContinuationToken': continuation_token} \
@@ -169,13 +175,17 @@ def clean_orphaned_objects(
 
         continuation_token = res.get('NextContinuationToken')
 
+        print('Got next chunk from S3')
         object_keys = {obj_dict['Key'] for obj_dict in res['Contents']}
 
         # determine those keys that are no longer referenced by any manifest
         loose_object_keys = object_keys - all_object_keys
 
         if dry_run:
-            f'would delete {len(loose_object_keys)=} unreferenced objs'
+            print(f'would delete {len(loose_object_keys)=} unreferenced objs:')
+            # for key in loose_object_keys:
+            #     print(key)
+
         else:
             if loose_object_keys:
                 s3_client.delete_objects(
@@ -188,7 +198,7 @@ def clean_orphaned_objects(
                 )
                 print(f'purged {len(loose_object_keys)=} unreferenced objs')
 
-        print(f'{len(object_keys)=} - {len(loose_object_keys)=}')
+        # print(f'{len(object_keys)=} - {len(loose_object_keys)=}')
 
         if not continuation_token:
           break
