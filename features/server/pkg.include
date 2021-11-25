@@ -1,4 +1,5 @@
 auditd
+bsdextrautils
 ca-certificates
 dnsutils
 dracut
