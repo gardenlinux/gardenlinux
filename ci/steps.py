@@ -128,6 +128,7 @@ def clone_step(
         params.committish,
         params.giturl,
         params.repo_dir,
+        params.pr_id,
     ]
 
     code_prefix = "PATCH_CONTENT=''"
@@ -616,6 +617,7 @@ def notify_step(
         params.pipeline_run_name,
         params.repo_dir,
         params.status_dict_str,
+        params.pr_id,
     ]
     step = tkn.model.TaskStep(
         name='notify-status',

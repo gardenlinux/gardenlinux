@@ -152,6 +152,7 @@ def get_common_parameters(
         git_url_param,
         get_param_from_arg(args, 'oci_path'),
         get_param_from_arg(args, 'only_recipients'),
+        get_param_from_arg(args, 'pr_id'),
         NamedParam(
             name='build_targets',
             value=','.join(a.value for a in args['build_targets'])
@@ -271,6 +272,7 @@ def main():
     parser.add_argument('--outfile-packages', default='pipeline_package_run.yaml')
     parser.add_argument('--oci-path', default='eu.gcr.io/gardener-project/test/gardenlinux-test')
     parser.add_argument('--git-url', default='https://github.com/gardenlinux/gardenlinux.git')
+    parser.add_argument('--pr-id', default=0)
     parser.add_argument('--flavour-set', default='all')
     parser.add_argument('--version', default=None)
     parser.add_argument('--disable-notifications', action='store_const', const=True, default=False)
