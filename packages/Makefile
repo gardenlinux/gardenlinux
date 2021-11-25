@@ -9,9 +9,8 @@ BUILDIMAGE="gardenlinux/build-deb-$(ARCH)"
 BUILDVERSION=$$(../bin/garden-version)
 BUILDEPOCH=$$(../bin/garden-version --epoch)
 
-PACKAGES=apt cyrus-sasl2 dracut iproute2 pam python3.9 linux-5.10 linux-5.10-signed selinux-basics waagent
-PACKAGES_AMD64=google-compute-engine google-compute-engine-oslogin google-guest-agent
-.PHONY: $(PACKAGES) $(PACKAGES_AMD64)
+PACKAGES=apt cyrus-sasl2 dracut iproute2 pam python3.9 linux-5.10 linux-5.10-signed selinux-basics waagent google-compute-engine google-compute-engine-oslogin google-guest-agent
+.PHONY: $(PACKAGES)
 
 .PHONY: all
 all: $(PACKAGES)
@@ -51,7 +50,7 @@ manual: docker sign
 		--env DEBEMAIL=$(DEBEMAIL) \
 		--env WORKDIR="/home/dev" \
 		$(BUILDIMAGE) bash -c "manual/.docker; bash"
-$(PACKAGES) $(PACKAGES_AMD64): docker sign
+$(PACKAGES): docker sign
 	docker run --rm \
 		--volume $(POOLDIR):/pool \
 		--volume $(MANUALDIR):/home/dev/manual \

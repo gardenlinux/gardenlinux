@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eexuo pipefail
 
 . $(dirname $0)/.helper
 
@@ -23,15 +23,17 @@ patch -p1 < $srcDir/debian.patch
 
 dch -lgardenlinux 'rebuild since no offical package anymore'
 dch -r ''
-TMPDIR=.. mk-build-deps debian/control
-sudo apt-get install -y --no-install-recommends -f ../$src-build-deps_*_all.deb
+
+install_build_deps
+
 go mod vendor
 mkdir -p debian/extra
 mv vendor debian/extra
 
 donotmove="$(ls ..)"
 tar cJ --exclude ${src}/debian --exclude ${src}/.git -f ../${src}_${version_git}.orig.tar.xz -C .. ${src}
-debuild
+sudo patch -d / -p 1 < $srcDir/dh-golang.patch # golang debian helper fails at install step for cross builds, so patch before debuild
+build
+sudo patch -R -d / -p 1 < $srcDir/dh-golang.patch
 sourcepath=main/g/google-compute-image-packages/
 move_package .. $donotmove
-

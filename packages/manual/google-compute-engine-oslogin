@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eexuo pipefail
 
 . $(dirname $0)/.helper
 
-sudo apt-get install -y --no-install-recommends git equivs
+if [ "$ARCH" != ""$(dpkg --print-architecture)"" ]; then
+	sudo apt-get install -y libstdc++6:$ARCH
+fi
 git clone https://github.com/GoogleCloudPlatform/guest-oslogin.git $src
 
 cd $src
@@ -20,12 +22,11 @@ git log --oneline --pretty="%s\n" $version_cl..$version_git | while read line; d
 done
 dch -lgardenlinux 'rebuild since no offical package anymore'
 dch -r ''
-TMPDIR=.. mk-build-deps debian/control
-sudo apt-get install -y --no-install-recommends -f ../$src-build-deps_*_all.deb
+
+install_build_deps
 
 donotmove="$(ls ..)"
 tar cJ --exclude ${src}/debian --exclude ${src}/.git -f ../${src}_${version_git}.orig.tar.xz -C .. ${src}
-debuild
+build
 sourcepath=main/g/google-compute-image-packages/
 move_package .. $donotmove
-

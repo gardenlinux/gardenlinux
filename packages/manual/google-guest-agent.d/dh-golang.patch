@@ -1,0 +1,15 @@
+--- a/usr/share/perl5/Debian/Debhelper/Buildsystem/golang.pm
++++ b/usr/share/perl5/Debian/Debhelper/Buildsystem/golang.pm
+@@ -651,11 +651,7 @@
+     my @binaries = glob "$builddir/bin/*";
+     if ($install_binaries and @binaries > 0) {
+         $this->doit_in_builddir('mkdir', '-p', "$destdir/usr");
+-        if (is_cross_compiling()) {
+-            $this->doit_in_builddir('cp', '-r', '-T', "bin/$ENV{GOOS}_$ENV{GOARCH}", "$destdir/usr/bin");
+-        } else {
+-            $this->doit_in_builddir('cp', '-r', 'bin', "$destdir/usr");
+-        }
++        $this->doit_in_builddir('cp', '-r', 'bin', "$destdir/usr");
+     }
+
+     if ($install_source) {
