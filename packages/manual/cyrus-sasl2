@@ -7,15 +7,11 @@ apt-get source $src
 
 cd $src-*/
 
-patch -p1 < /$srcDir/control.patch
 patch -p1 < /$srcDir/libdb.patch
 dch -lgardenlinux 'remove ftparchive/libdb'
 dch -r ''
 
 install_build_deps
 donotmove="$(ls ..)"
-if [ "$ARCH" != "$(dpkg --print-architecture)" ]; then
-	export DEB_BUILD_OPTIONS="no-gssapi ${DEB_BUILD_OPTIONS:-}"
-fi
 build
 move_package .. $donotmove
