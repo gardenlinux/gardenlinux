@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 
 import glci.model
@@ -36,6 +37,7 @@ def _upload_file(
 
 
 def _attach_and_upload_logs(
+    build_dict_str: str,
     build_targets: str,
     cicd_cfg_name: str,
     committish: str,
@@ -83,6 +85,13 @@ def _attach_and_upload_logs(
     with open(os.path.join(repo_dir, 'log_url.txt'), 'w') as f:
         f.write(f'https://gardenlinux.s3.eu-central-1.amazonaws.com/{s3_key}')
 
+    build_dict = json.loads(build_dict_str)
+    for task, key in build_dict.items():
+        if key and key.strip():
+            print(f'Task {task} build result uploaded to: {key}')
+        else:
+            print(f'Task {task} was not built in this run')
+
     if not is_package_build:
         print(f'downloading release manifest from s3 {aws_cfg_name=} {s3_bucket_name=}')
         build_type = glci.model.BuildType(promote_target)
@@ -97,7 +106,7 @@ def _attach_and_upload_logs(
             build_type=build_type,
             absent_ok=True,
         )
-        print(f'Found existing manifest-set: {manifest_set}')
+        print(f'Found existing manifest-set.')
 
         # Manifest-set not found can be caused by:
         # broken build and manifest was never written
@@ -118,6 +127,7 @@ def _attach_and_upload_logs(
                     version=version,
                     flavourset_name=flavour_set.name,
                     build_type=build_type,
+                    with_timestamp=True,
                 ),
             )
 
@@ -142,6 +152,7 @@ def _attach_and_upload_logs(
 
 
 def upload_logs(
+    build_dict_str: str,
     build_targets: str,
     cicd_cfg_name: str,
     committish: str,
@@ -164,6 +175,7 @@ def upload_logs(
     )
     if ok:
         ok = _attach_and_upload_logs(
+            build_dict_str=build_dict_str,
             build_targets=build_targets,
             cicd_cfg_name=cicd_cfg_name,
             committish=committish,

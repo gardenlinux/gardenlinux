@@ -1,5 +1,6 @@
 import typing
 import params
+import results
 import steps
 import tkn.model
 
@@ -214,6 +215,7 @@ def build_task(
 
     upload_step, params_step = steps.upload_results_step(
         params=all_params,
+        results=results.AllResults,
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
@@ -253,6 +255,7 @@ def build_task(
         metadata=tkn.model.Metadata(name='build-gardenlinux-task'),
         spec=tkn.model.TaskSpec(
             params=params,
+            results=[results.AllResults.build_result, ],
             steps=task_steps,
             volumes=task_volumes,
         ),

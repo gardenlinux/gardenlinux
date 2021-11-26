@@ -5,6 +5,7 @@ import typing
 
 from git import Repo
 import params
+import results
 import tkn.model
 
 IMAGE_VERSION = '1.1529.0'
@@ -45,7 +46,8 @@ def create_patch(remote_branch: str):
     info = info.replace('\n', ', ')
     patch = git.diff(f'origin/{remote_branch}')
     patch += '\n'
-    print(f'Creating patch against: {remote_branch}, contains files: {info} and has length: {len(patch)}')
+    print(f'Creating patch against: {remote_branch}, contains files: {info} and has length: \
+        {len(patch)}')
 
     git.reset('--mixed')
     enc_patch = base64.b64encode(patch.encode('utf-8'))
@@ -63,6 +65,7 @@ def task_step_script(
     script_type: ScriptType,
     callable: str,
     params: typing.List[tkn.model.NamedParam],
+    results:  typing.List[tkn.model.NamedParam]=None,
     repo_path_param: typing.Optional[tkn.model.NamedParam]=None,
     path: str = None,
     inline_script: str = None,
@@ -97,11 +100,17 @@ def task_step_script(
         args = ','.join((
             f"{param.name.replace('-', '_')}='$(params.{param.name})'" for param in params
         ))
+        if results:
+            args += ',' + ','.join((
+                f"{result.name.replace('-', '_')}='$(results.{result.name}.path)'" for result in results
+            ))
         callable_str = f'{callable}({args})'
     elif script_type is ScriptType.BOURNE_SHELL:
         shebang = '#!/usr/bin/env bash'
         preamble = ''
         args = ' '.join([f'"$(params.{param.name})"' for param in params])
+        if results:
+            args = ' ' + ' '.join([f'"$(results.{result.name}.path)"' for result in results])
         callable_str = f'{callable} {args}'
 
     if callable:
@@ -184,6 +193,7 @@ def status_step(
 
 def upload_results_step(
     params: params.AllParams,
+    results: results.AllResults,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -198,6 +208,9 @@ def upload_results_step(
         params.build_targets,
         params.version,
     ]
+    result_params = [
+        results.build_result
+    ]
     step = tkn.model.TaskStep(
         name='upload-results',
         image=DEFAULT_IMAGE,
@@ -206,6 +219,7 @@ def upload_results_step(
             script_type=ScriptType.PYTHON3,
             callable='upload_results_step',
             params=step_params,
+            results=result_params,
             repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
@@ -770,6 +784,7 @@ def attach_log_step(
         volume_mounts: typing.List[typing.Dict] = [],
     ):
     step_params = [
+        params.build_dict_str,
         params.build_targets,
         params.cicd_cfg_name,
         params.committish,
