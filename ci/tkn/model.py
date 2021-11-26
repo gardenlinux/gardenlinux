@@ -97,6 +97,7 @@ class TaskSpec:
     workspaces: typing.List[_NamedParamBase] = dataclasses.field(default_factory=list)
     volumes: typing.List[Volume] = dataclasses.field(default_factory=list)
     #volumeMounts: typing.List[VolumeMount]=dataclasses.field(default_factory=list)
+    results: typing.List[_NamedParamWithValue] = None
 
 
 @dataclasses.dataclass
@@ -127,6 +128,7 @@ class PipelineSpec:
     _finally: str
     tasks: typing.List[PipelineTask]
     params: typing.List[NamedParam] = dataclasses.field(default_factory=list)
+    results: typing.List[_NamedParamWithValue] = None
     workspaces: typing.List[NamedParam] = dataclasses.field(default_factory=list)
 
     # special methods for handling finally which is a Python keyword

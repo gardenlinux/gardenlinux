@@ -19,6 +19,11 @@ class AllParams:
         name='branch',
         description='branch of git repository',
     )
+    build_dict_str = tkn.model.NamedParam(
+        name='build_dict_str',
+        default='~',
+        description='JSON string with manifest keys for all build task having built',
+    )
     build_image = NamedParam(
         name='build_image',
         description='the container image for gardenlinux build (dynamically created)',
