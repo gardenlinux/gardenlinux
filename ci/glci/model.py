@@ -476,7 +476,8 @@ class OnlineReleaseManifest(ReleaseManifest):
     s3_key: str
     s3_bucket: str
     test_result: typing.Optional[ReleaseTestResult]
-    logs: typing.Optional[str] # unused but manifests with this field may be in S3
+    logs: typing.Optional[typing.Union[S3_ReleaseFile, str]] = None
+            # Note Union can be removed after all old manifests have been removed
 
     def stripped_manifest(self):
         raw = dataclasses.asdict(self)
@@ -495,8 +496,8 @@ class OnlineReleaseManifest(ReleaseManifest):
     def with_test_result(self,  test_result: ReleaseTestResult):
         return dataclasses.replace(self, test_result=test_result)
 
-    def with_logfile(self,  blob_name: str):
-        return dataclasses.replace(self, logs=blob_name)
+    def with_logfile(self, log: S3_ReleaseFile):
+        return dataclasses.replace(self, logs=log)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -515,12 +516,12 @@ class OnlineReleaseManifestSet(ReleaseManifestSet):
     s3_bucket: str
     logs: typing.Optional[typing.Tuple[S3_ReleaseFile, ...]] = None
 
-    def with_logfile(self, file: S3_ReleaseFile):
+    def with_logfiles(self, files: typing.Tuple[S3_ReleaseFile]):
         log_files = self.logs
         if log_files:
-            log_files = log_files + (file, )
+            log_files = log_files + files
         else:
-            log_files = (file, )
+            log_files = files
         return dataclasses.replace(self, logs=log_files)
 
 

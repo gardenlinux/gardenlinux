@@ -212,7 +212,6 @@ def mk_pipeline_promote_task(
 
 def mk_pipeline_notify_task(
     previous_tasks: typing.List[str],
-    gardenlinux_flavour: GardenlinuxFlavour,
     all_tasks: typing.Sequence[tkn.model.Task],
     build_tasks: typing.Sequence[tkn.model.Task],
     platform_set: typing.Set[str] = set(),
@@ -227,11 +226,6 @@ def mk_pipeline_notify_task(
         build_dict['build_' + task.name] = f'$(tasks.{task.name}.results.build_result)'
     build_str = json.dumps(build_dict)
 
-    if gardenlinux_flavour:
-        modifier_names = _get_modifier_names(gardenlinux_flavour)
-    else:
-        modifier_names = ' '
-
     platform_set_str = ','.join(platform_set)
 
     # generate default params for all task parameters just passing the value
@@ -240,7 +234,6 @@ def mk_pipeline_notify_task(
         name=name,
         all_tasks=all_tasks,
         overrides={
-            NamedParam(name='modifiers', value=modifier_names),
             NamedParam(name='platform_set', value=platform_set_str),
             NamedParam(name='pipeline_run_name', value='$(context.pipelineRun.name)'),
             NamedParam(name='pipeline_name', value='$(context.pipeline.name)'),
@@ -303,7 +296,6 @@ def mk_pipeline_packages(all_tasks: typing.Sequence[tkn.model.Task]):
     task_ref = _find_task('notify-task', all_tasks)
     notify_task = mk_pipeline_notify_task(
         previous_tasks=tasks,
-        gardenlinux_flavour=None,
         all_tasks=all_tasks,
         build_tasks=[],
     )
@@ -390,7 +382,6 @@ def mk_pipeline(
     notify_task = mk_pipeline_notify_task(
         previous_tasks=tasks,
         build_tasks=build_tasks,
-        gardenlinux_flavour=glf,
         all_tasks=all_tasks,
         platform_set=platform_set,
     )

@@ -1,7 +1,6 @@
 import datetime
 import json
 import os
-from re import A
 
 import glci.model
 import glci.util
@@ -41,6 +40,7 @@ def _attach_logs_to_single_manifest(
     build_dict_str: str,
     s3_client: glci.s3.s3_client,
     s3_bucket_name: str,
+    s3_log_key: str,
 ):
     build_dict = json.loads(build_dict_str)
     for task, key in build_dict.items():
@@ -51,7 +51,14 @@ def _attach_logs_to_single_manifest(
                 bucket_name=s3_bucket_name,
                 key=key,
             )
-            new_manifest = manifest.with_logfile(key)
+            name = os.path.basename(s3_log_key)
+            log_entry = glci.model.S3_ReleaseFile(
+                name=name,
+                suffix=name,
+                s3_key=s3_log_key,
+                s3_bucket_name=s3_bucket_name,
+            )
+            new_manifest = manifest.with_logfile(log_entry)
             # upload manifest
             manifest_path_suffix = manifest.canonical_release_manifest_key_suffix()
             manifest_path = f'{glci.model.ReleaseManifest.manifest_key_prefix}/{manifest_path_suffix}'
@@ -74,7 +81,6 @@ def _attach_and_upload_logs(
     flavour_set: str,
     gardenlinux_epoch: str,
     is_package_build: bool,
-    modifiers: str,
     platform_set: str,
     promote_target: str,
     repo_dir: str,
@@ -122,6 +128,7 @@ def _attach_and_upload_logs(
             build_dict_str=build_dict_str,
             s3_client=s3_client,
             s3_bucket_name=s3_bucket_name,
+            s3_log_key=s3_key,
         )
     else:
         print(f'build target {glci.model.BuildTarget.MANIFEST=} not specified - do not attach logs')
@@ -149,31 +156,39 @@ def _attach_and_upload_logs(
         print('Found existing manifest-set.')
         # Attach log files to manifest-set
         # collect log-keys from single manifests for all artifacts:
+        log_files = {uploaded_file, } # note use set as there will be duplicate entries
         platforms = set(platform_set.split(','))
         print(f'Collecting logs from manifests for {platforms=}')
-        modifiers = tuple(modifiers.split(','))
+
         for platform in platforms:
-            release_identifier=glci.model.ReleaseIdentifier(
-                    build_committish=committish,
-                    version=version,
-                    gardenlinux_epoch=int(gardenlinux_epoch),
-                    architecture=glci.model.Architecture(architecture),
-                    platform=platform,
-                    modifiers=modifiers,
-                )
+            for flavour in flavour_set.flavours():
+                if flavour.platform == platform:
+                    modifiers = sorted((m.name for m in flavour.calculate_modifiers()))
+                    release_identifier = glci.model.ReleaseIdentifier(
+                            build_committish=committish,
+                            version=version,
+                            gardenlinux_epoch=int(gardenlinux_epoch),
+                            architecture=glci.model.Architecture(architecture),
+                            platform=platform,
+                            modifiers=modifiers,
+                        )
 
-            manifest = glci.util.find_release(
-                release_identifier=release_identifier,
-                s3_client=s3_client,
-                bucket_name=s3_bucket_name,
-            )
-            if manifest:
-                print(f'Found manifest {manifest.s3_key} with logs {manifest.logs}')
-            else:
-                print(f'Manifest for platform {platform}, \
-                    {release_identifier.canonical_release_manifest_key()} not found.')
+                    print(f'Created release identifier for {release_identifier=}')
+                    manifest = glci.util.find_release(
+                        release_identifier=release_identifier,
+                        s3_client=s3_client,
+                        bucket_name=s3_bucket_name,
+                    )
+                    if manifest:
+                        print(f'Found manifest {manifest.s3_key} with logs {manifest.logs}')
+                        if manifest.logs:
+                            log_files.add(manifest.logs)
+                    else:
+                        print(f'Manifest for platform {platform}, \
+                            {release_identifier.canonical_release_manifest_key()} not found.')
 
-        new_manifest_set = manifest_set.with_logfile(uploaded_file)
+        print(f'Attaching {len(log_files)} logs to manifest')
+        new_manifest_set = manifest_set.with_logfiles(tuple(log_files))
 
         manifest_path = os.path.join(
             glci.model.ReleaseManifestSet.release_manifest_set_prefix,
@@ -192,6 +207,7 @@ def _attach_and_upload_logs(
             func=glci.util.upload_release_manifest_set,
             cicd_cfg=cicd_cfg,
         )
+        print(f'Uploading manifest set to {manifest_path}')
         upload_release_manifest_set(
             key=manifest_path,
             manifest_set=new_manifest_set,
@@ -214,7 +230,6 @@ def upload_logs(
     committish: str,
     flavourset: str,
     gardenlinux_epoch: str,
-    modifiers: str,
     namespace: str,
     pipeline_run_name: str,
     platform_set: str,
@@ -241,7 +256,6 @@ def upload_logs(
             flavour_set=flavourset,
             gardenlinux_epoch=gardenlinux_epoch,
             is_package_build='gl-packages' in pipeline_run_name,
-            modifiers=modifiers,
             platform_set=platform_set,
             promote_target=promote_target,
             repo_dir=repo_dir,
