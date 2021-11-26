@@ -786,7 +786,6 @@ def attach_log_step(
         params.committish,
         params.flavourset,
         params.gardenlinux_epoch,
-        params.modifiers,
         params.namespace,
         params.pipeline_run_name,
         params.platform_set,
