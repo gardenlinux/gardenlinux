@@ -63,8 +63,13 @@ def upload_results_step(
     version: str,
     outfile: str,
     build_targets: str,
+    build_result: str,
 ):
     build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
+
+    # force that the results file exists otherwise dependent tasks are not scheduled
+    with open(build_result, 'w') as f:
+       pass
 
     if not glci.model.BuildTarget.MANIFEST in build_target_set:
         print(f'build target {glci.model.BuildTarget.MANIFEST=} not specified - exiting now')
@@ -136,3 +141,7 @@ def upload_results_step(
     )
     print(f'uploaded manifest: {manifest_path=}\n')
     pprint.pprint(dataclasses.asdict(manifest))
+
+    # write result that the build was ok:
+    with open(build_result, 'w') as f:
+       f.write(manifest_path)

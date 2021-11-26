@@ -213,12 +213,18 @@ def mk_pipeline_promote_task(
 def mk_pipeline_notify_task(
     previous_tasks: typing.List[str],
     gardenlinux_flavour: GardenlinuxFlavour,
-    all_tasks: typing.Sequence[tkn.model.Task]
+    all_tasks: typing.Sequence[tkn.model.Task],
+    build_tasks: typing.Sequence[tkn.model.Task],
 ):
     status_dict = {}
+    build_dict = {}
     for task in previous_tasks:
         status_dict['status_' + task.name] = f'$(tasks.{task.name}.status)'
     status_str = json.dumps(status_dict)
+
+    for task in build_tasks:
+        build_dict['build_' + task.name] = f'$(tasks.{task.name}.results.build_result)'
+    build_str = json.dumps(build_dict)
 
     if gardenlinux_flavour:
         modifier_names = _get_modifier_names(gardenlinux_flavour)
@@ -237,6 +243,7 @@ def mk_pipeline_notify_task(
             NamedParam(name='pipeline_name', value='$(context.pipeline.name)'),
             NamedParam(name='namespace', value='$(context.pipelineRun.namespace)'),
             NamedParam(name='status_dict_str', value=status_str),
+            NamedParam(name='build_dict_str', value=build_str),
         }
     )
 
@@ -295,6 +302,7 @@ def mk_pipeline_packages(all_tasks: typing.Sequence[tkn.model.Task]):
         previous_tasks=tasks,
         gardenlinux_flavour=None,
         all_tasks=all_tasks,
+        build_tasks=[],
     )
 
     # collect all parameters
@@ -345,6 +353,7 @@ def mk_pipeline(
     tasks.append(base_build_task)
 
     build_tasks = []
+    test_tasks = []
     # build gardenlinux in all flavours
     for glf in gardenlinux_flavours:
         build_task = mk_pipeline_build_task(
@@ -360,9 +369,10 @@ def mk_pipeline(
             run_after=[build_task.name],
             all_tasks=all_tasks,
         )
-        build_tasks.append(test_task)
+        test_tasks.append(test_task)
 
     tasks += build_tasks
+    tasks += test_tasks
 
     promote_task = mk_pipeline_promote_task(
         run_after=[plt.name for plt in build_tasks],
@@ -373,6 +383,7 @@ def mk_pipeline(
     task_ref = _find_task('notify-task', all_tasks)
     notify_task = mk_pipeline_notify_task(
         previous_tasks=tasks,
+        build_tasks=build_tasks,
         gardenlinux_flavour=glf,
         all_tasks=all_tasks,
     )

@@ -1,5 +1,6 @@
 import concurrent.futures
 import dataclasses
+import datetime
 import enum
 import faulthandler
 import functools
@@ -361,14 +362,19 @@ def release_set_manifest_name(
     version: str,
     flavourset_name: str,
     build_type: glci.model.BuildType,
+    with_timestamp: bool = False,
 ):
     BT = glci.model.BuildType
 
     if build_type in (BT.SNAPSHOT, BT.DAILY):
-        return f'{gardenlinux_epoch}-{build_committish[:6]}-{flavourset_name}'
+        name = f'{gardenlinux_epoch}-{build_committish[:6]}-{flavourset_name}'
     elif build_type is BT.RELEASE:
-        return f'{version}-{flavourset_name}'
+        name = f'{version}-{flavourset_name}'
 
+    if with_timestamp:
+        name += '-' + datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')
+
+    return name
 
 def enumerate_release_sets(
     s3_client: 'botocore.client.S3',
