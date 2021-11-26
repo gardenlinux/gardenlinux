@@ -215,6 +215,7 @@ def mk_pipeline_notify_task(
     gardenlinux_flavour: GardenlinuxFlavour,
     all_tasks: typing.Sequence[tkn.model.Task],
     build_tasks: typing.Sequence[tkn.model.Task],
+    platform_set: typing.Set[str] = set(),
 ):
     status_dict = {}
     build_dict = {}
@@ -228,10 +229,10 @@ def mk_pipeline_notify_task(
 
     if gardenlinux_flavour:
         modifier_names = _get_modifier_names(gardenlinux_flavour)
-        platform = gardenlinux_flavour.platform
     else:
         modifier_names = ' '
-        platform = ' '
+
+    platform_set_str = ','.join(platform_set)
 
     # generate default params for all task parameters just passing the value
     name = 'notify-task'
@@ -239,6 +240,8 @@ def mk_pipeline_notify_task(
         name=name,
         all_tasks=all_tasks,
         overrides={
+            NamedParam(name='modifiers', value=modifier_names),
+            NamedParam(name='platform_set', value=platform_set_str),
             NamedParam(name='pipeline_run_name', value='$(context.pipelineRun.name)'),
             NamedParam(name='pipeline_name', value='$(context.pipeline.name)'),
             NamedParam(name='namespace', value='$(context.pipelineRun.namespace)'),
@@ -321,6 +324,7 @@ def mk_pipeline_packages(all_tasks: typing.Sequence[tkn.model.Task]):
     params.remove(all_params.pipeline_run_name)
     params.remove(all_params.pkg_names)
     params.remove(all_params.pkg_name)
+    params.remove(all_params.platform_set)
 
     # convert to list as set is not rendered to yaml
     params = tuple(params)
@@ -354,6 +358,7 @@ def mk_pipeline(
 
     build_tasks = []
     test_tasks = []
+    platform_set = set()
     # build gardenlinux in all flavours
     for glf in gardenlinux_flavours:
         build_task = mk_pipeline_build_task(
@@ -370,6 +375,7 @@ def mk_pipeline(
             all_tasks=all_tasks,
         )
         test_tasks.append(test_task)
+        platform_set.add(glf.platform)
 
     tasks += build_tasks
     tasks += test_tasks
@@ -386,6 +392,7 @@ def mk_pipeline(
         build_tasks=build_tasks,
         gardenlinux_flavour=glf,
         all_tasks=all_tasks,
+        platform_set=platform_set,
     )
 
     params = []
@@ -404,6 +411,7 @@ def mk_pipeline(
     params.remove(all_params.platform)
     params.remove(all_params.pipeline_run_name)
     params.remove(all_params.pipeline_name)
+    params.remove(all_params.platform_set)
 
     # convert to list as set is not rendered to yaml
     params = tuple(params)
