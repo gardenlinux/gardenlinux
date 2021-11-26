@@ -1,6 +1,7 @@
 import datetime
 import json
 import os
+from re import A
 
 import glci.model
 import glci.util
@@ -36,7 +37,36 @@ def _upload_file(
     )
 
 
+def _attach_logs_to_single_manifest(
+    build_dict_str: str,
+    s3_client: glci.s3.s3_client,
+    s3_bucket_name: str,
+):
+    build_dict = json.loads(build_dict_str)
+    for task, key in build_dict.items():
+        if key and key.strip():
+            print(f'Attach logs from task {task}, {key} to manifest')
+            manifest = glci.util.release_manifest(
+                s3_client=s3_client,
+                bucket_name=s3_bucket_name,
+                key=key,
+            )
+            new_manifest = manifest.with_logfile(key)
+            # upload manifest
+            manifest_path_suffix = manifest.canonical_release_manifest_key_suffix()
+            manifest_path = f'{glci.model.ReleaseManifest.manifest_key_prefix}/{manifest_path_suffix}'
+            glci.util.upload_release_manifest(
+              s3_client=s3_client,
+              bucket_name=s3_bucket_name,
+              key=manifest_path,
+              manifest=new_manifest,
+            )
+        else:
+            print(f'Task {task} was not built in this run')
+
+
 def _attach_and_upload_logs(
+    architecture: str,
     build_dict_str: str,
     build_targets: str,
     cicd_cfg_name: str,
@@ -44,6 +74,8 @@ def _attach_and_upload_logs(
     flavour_set: str,
     gardenlinux_epoch: str,
     is_package_build: bool,
+    modifiers: str,
+    platform_set: str,
     promote_target: str,
     repo_dir: str,
     version: str,
@@ -57,11 +89,6 @@ def _attach_and_upload_logs(
         print("No file found with log files, won't upload.")
         print("Exiting with failure, see logs from previous steps")
         return False
-
-    build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
-    if not glci.model.BuildTarget.MANIFEST in build_target_set:
-        print(f'build target {glci.model.BuildTarget.MANIFEST=} not specified - skip upload')
-        return True
 
     prefix = 'objects/' + datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S') + '-' + \
         committish[:6] + '-'
@@ -85,81 +112,112 @@ def _attach_and_upload_logs(
     with open(os.path.join(repo_dir, 'log_url.txt'), 'w') as f:
         f.write(f'https://gardenlinux.s3.eu-central-1.amazonaws.com/{s3_key}')
 
-    build_dict = json.loads(build_dict_str)
-    for task, key in build_dict.items():
-        if key and key.strip():
-            print(f'Task {task} build result uploaded to: {key}')
-        else:
-            print(f'Task {task} was not built in this run')
+    if is_package_build:
+        return True
 
-    if not is_package_build:
-        print(f'downloading release manifest from s3 {aws_cfg_name=} {s3_bucket_name=}')
-        build_type = glci.model.BuildType(promote_target)
-        flavour_set = glci.util.flavour_set(flavour_set_name=flavour_set)
-        manifest_set = glci.util.find_release_set(
+    # if we create manifests attach logs to all manifests that actually have been build in this run
+    build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
+    if glci.model.BuildTarget.MANIFEST in build_target_set:
+        _attach_logs_to_single_manifest(
+            build_dict_str=build_dict_str,
             s3_client=s3_client,
-            bucket_name=s3_bucket_name,
-            flavourset_name=flavour_set.name,
-            build_committish=committish,
-            gardenlinux_epoch=int(gardenlinux_epoch),
-            version=version,
-            build_type=build_type,
-            absent_ok=True,
+            s3_bucket_name=s3_bucket_name,
         )
-        print(f'Found existing manifest-set.')
+    else:
+        print(f'build target {glci.model.BuildTarget.MANIFEST=} not specified - do not attach logs')
+        return True
 
-        # Manifest-set not found can be caused by:
-        # broken build and manifest was never written
-        # publish is not in build targets
-        # it was a package build
-        if manifest_set:
-            # Attach log files to manifest-set
-            print(f'old logs: {manifest_set.logs}')
-            new_manifest_set = manifest_set.with_logfile(uploaded_file)
-            print(f' - log-key: {new_manifest_set.logs}')
+    print(f'downloading release manifest from s3 {aws_cfg_name=} {s3_bucket_name=}')
+    build_type = glci.model.BuildType(promote_target)
+    flavour_set = glci.util.flavour_set(flavour_set_name=flavour_set)
+    manifest_set = glci.util.find_release_set(
+        s3_client=s3_client,
+        bucket_name=s3_bucket_name,
+        flavourset_name=flavour_set.name,
+        build_committish=committish,
+        gardenlinux_epoch=int(gardenlinux_epoch),
+        version=version,
+        build_type=build_type,
+        absent_ok=True,
+    )
 
-            manifest_path = os.path.join(
-                glci.model.ReleaseManifestSet.release_manifest_set_prefix,
-                build_type.value,
-                glci.util.release_set_manifest_name(
+    # Manifest-set not found can be caused by:
+    # broken build and manifest was never written
+    # publish is not in build targets
+    # it was a package build
+    if manifest_set:
+        print('Found existing manifest-set.')
+        # Attach log files to manifest-set
+        # collect log-keys from single manifests for all artifacts:
+        platforms = set(platform_set.split(','))
+        print(f'Collecting logs from manifests for {platforms=}')
+        modifiers = tuple(modifiers.split(','))
+        for platform in platforms:
+            release_identifier=glci.model.ReleaseIdentifier(
                     build_committish=committish,
-                    gardenlinux_epoch=gardenlinux_epoch,
                     version=version,
-                    flavourset_name=flavour_set.name,
-                    build_type=build_type,
-                    with_timestamp=True,
-                ),
-            )
+                    gardenlinux_epoch=int(gardenlinux_epoch),
+                    architecture=glci.model.Architecture(architecture),
+                    platform=platform,
+                    modifiers=modifiers,
+                )
 
-            upload_release_manifest_set = glci.util.preconfigured(
-                func=glci.util.upload_release_manifest_set,
-                cicd_cfg=cicd_cfg,
+            manifest = glci.util.find_release(
+                release_identifier=release_identifier,
+                s3_client=s3_client,
+                bucket_name=s3_bucket_name,
             )
-            upload_release_manifest_set(
-                key=manifest_path,
-                manifest_set=new_manifest_set,
-            )
-        else:
-            print('Could not find release-manifest-set')
+            if manifest:
+                print(f'Found manifest {manifest.s3_key} with logs {manifest.logs}')
+            else:
+                print(f'Manifest for platform {platform}, \
+                    {release_identifier.canonical_release_manifest_key()} not found.')
+
+        new_manifest_set = manifest_set.with_logfile(uploaded_file)
+
+        manifest_path = os.path.join(
+            glci.model.ReleaseManifestSet.release_manifest_set_prefix,
+            build_type.value,
+            glci.util.release_set_manifest_name(
+                build_committish=committish,
+                gardenlinux_epoch=gardenlinux_epoch,
+                version=version,
+                flavourset_name=flavour_set.name,
+                build_type=build_type,
+                with_timestamp=True,
+            ),
+        )
+
+        upload_release_manifest_set = glci.util.preconfigured(
+            func=glci.util.upload_release_manifest_set,
+            cicd_cfg=cicd_cfg,
+        )
+        upload_release_manifest_set(
+            key=manifest_path,
+            manifest_set=new_manifest_set,
+        )
 
     # if we are in a Release build logs mut be always attached and a missing manifest is a
     # hard error
-    if not manifest_set and glci.model.BuildType.RELEASE in build_target_set:
+    elif glci.model.BuildType.RELEASE in build_target_set:
         print('Could not find release-manifest-set in release build, exit with failure')
         return False
-    else:
-        return True
+
+    return True
 
 
 def upload_logs(
+    architecture: str,
     build_dict_str: str,
     build_targets: str,
     cicd_cfg_name: str,
     committish: str,
     flavourset: str,
     gardenlinux_epoch: str,
+    modifiers: str,
     namespace: str,
     pipeline_run_name: str,
+    platform_set: str,
     promote_target: str,
     repo_dir: str,
     version: str,
@@ -175,13 +233,16 @@ def upload_logs(
     )
     if ok:
         ok = _attach_and_upload_logs(
+            architecture=architecture,
             build_dict_str=build_dict_str,
             build_targets=build_targets,
             cicd_cfg_name=cicd_cfg_name,
             committish=committish,
             flavour_set=flavourset,
             gardenlinux_epoch=gardenlinux_epoch,
-            is_package_build = 'gl-packages' in pipeline_run_name,
+            is_package_build='gl-packages' in pipeline_run_name,
+            modifiers=modifiers,
+            platform_set=platform_set,
             promote_target=promote_target,
             repo_dir=repo_dir,
             version=version,

@@ -779,14 +779,17 @@ def attach_log_step(
         volume_mounts: typing.List[typing.Dict] = [],
     ):
     step_params = [
+        params.architecture,
         params.build_dict_str,
         params.build_targets,
         params.cicd_cfg_name,
         params.committish,
         params.flavourset,
         params.gardenlinux_epoch,
+        params.modifiers,
         params.namespace,
         params.pipeline_run_name,
+        params.platform_set,
         params.promote_target,
         params.repo_dir,
         params.version,

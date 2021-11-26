@@ -130,6 +130,10 @@ class AllParams:
         name='platform',
         description='the target platform (aws, gcp, metal, kvm, ..)',
     )
+    platform_set = NamedParam(
+        name='platform_set',
+        description='set of platforms build in this pipeline (aws, gcp, metal, kvm, ..)',
+    )
     build_targets = NamedParam(
         name='build_targets',
         default='manifests',
