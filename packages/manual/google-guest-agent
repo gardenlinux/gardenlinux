@@ -34,6 +34,7 @@ donotmove="$(ls ..)"
 tar cJ --exclude ${src}/debian --exclude ${src}/.git -f ../${src}_${version_git}.orig.tar.xz -C .. ${src}
 sudo patch -d / -p 1 < $srcDir/dh-golang.patch # golang debian helper fails at install step for cross builds, so patch before debuild
 build
+link_version
 sudo patch -R -d / -p 1 < $srcDir/dh-golang.patch
 sourcepath=main/g/google-compute-image-packages/
 move_package .. $donotmove

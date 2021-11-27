@@ -28,5 +28,6 @@ install_build_deps
 donotmove="$(ls ..)"
 tar cJ --exclude ${src}/debian --exclude ${src}/.git -f ../${src}_${version_git}.orig.tar.xz -C .. ${src}
 build
+link_version
 sourcepath=main/g/google-compute-image-packages/
 move_package .. $donotmove

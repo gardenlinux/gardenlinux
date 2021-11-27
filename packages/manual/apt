@@ -16,4 +16,5 @@ cd . # this is needed, because for whatever reason `dch` sometimes renames the c
 
 donotmove="$(ls ..)"
 DEB_BUILD_OPTIONS="" build
+link_version
 move_package .. $donotmove

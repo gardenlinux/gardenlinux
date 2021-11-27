@@ -163,6 +163,7 @@ make -f debian/rules debian/control-real || /bin/true
 donotmove="$(ls ..)"
 echo "### build"
 build
+link_version
 mv ../orig/linux_*.tar.xz ..
 rm -rf ../orig
 src=linux

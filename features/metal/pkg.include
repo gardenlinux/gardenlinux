@@ -18,5 +18,5 @@ bird2
 [${arch}=amd64] syslinux
 [${arch}=amd64] syslinux-common
 
-main/l/linux-signed-${arch}/linux-image-${arch}_5.10.70-1gardenlinux1_${arch}.deb
-main/l/linux-signed-${arch}/linux-image-5.10.0-9-${arch}_5.10.70-1gardenlinux1_${arch}.deb
+main/l/linux-signed-${arch}/linux-image-${arch}_${arch}.deb
+main/l/linux-signed-${arch}/linux-image-5.10.0-9-${arch}_${arch}.deb

@@ -26,6 +26,7 @@ install_build_deps
 
 donotmove="$(ls ..)"
 build
+link_version
 move_package .. $donotmove
 
 sudo sed -i "s/^\(deb-src.*\) experimental \(.*\)/\1 testing \2/" /etc/apt/sources.list

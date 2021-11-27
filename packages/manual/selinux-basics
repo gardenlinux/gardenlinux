@@ -19,4 +19,5 @@ cd . # this is needed, because for whatever reason `dch` sometimes renames the c
 install_build_deps
 donotmove="$(ls ..)"
 build
+link_version
 move_package .. $donotmove

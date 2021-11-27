@@ -25,4 +25,5 @@ dch -r ''
 install_build_deps
 donotmove="$(ls ..)"
 build
+link_version
 move_package .. $donotmove

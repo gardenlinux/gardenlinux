@@ -19,4 +19,5 @@ debian/rules control-file
 install_build_deps
 donotmove="$(ls ..)"
 DEB_BUILD_OPTIONS="nocheck nopgo ${DEB_BUILD_OPTIONS:-}" build
+link_version
 move_package .. $donotmove

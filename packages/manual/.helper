@@ -18,7 +18,7 @@ move_package () {
 	local targetpath=${sourcepath:-"$(apt-cache showsrc $src | grep "^Directory" | cut -d: -f2- | cut -d'/' -f2- | head -n1)"}
 	echo "moving to $BUILDTARGET/$targetpath"
 	sudo mkdir --parent $BUILDTARGET/$targetpath
-	sudo mv -v $(find .. -maxdepth 1 -type f -not -path '*/\.*' $(printf "! -name %s " $donotmove)) $BUILDTARGET/$targetpath;
+	sudo mv -v $(find .. -maxdepth 1 -type f,l -not -path '*/\.*' $(printf "! -name %s " $donotmove)) $BUILDTARGET/$targetpath;
 }
 
 install_build_deps () {
@@ -39,4 +39,15 @@ build () {
 	else
 		DEB_BUILD_OPTIONS="nocheck nopgo nodoc ${DEB_BUILD_OPTIONS:-}" DEB_BUILD_PROFILES="cross ${DEB_BUILD_PROFILES:-}" debuild -B -a$ARCH
 	fi
+}
+
+link_version () {
+	cat debian/control | grep '^Package:' | cut -d ' ' -f 2 | \
+	while read pkg; do
+		find .. -name "$pkg"'_*.deb' -maxdepth 1 | \
+		while read file; do
+			suffix=$(grep -o '_[a-z0-9]\+\.deb$' <<< "$file")
+			ln -sr "$file" "../$pkg$suffix"
+		done
+	done
 }

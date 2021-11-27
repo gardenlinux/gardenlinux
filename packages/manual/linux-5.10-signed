@@ -39,5 +39,6 @@ install_build_deps
 
 donotmove="$(ls ..)"
 build
+link_version
 src=linux-signed-${ARCH}
 move_package .. $donotmove
