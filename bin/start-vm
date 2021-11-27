@@ -16,7 +16,7 @@ set -Eeuo pipefail
 thisDir=$(dirname "$(readlink -f "$BASH_SOURCE")")
 targetDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cpu=2
-arch=x86_64
+arch="$(uname -m)"
 memory=2Gi
 monitor=1
 bridge=
@@ -26,8 +26,8 @@ pxefile=$thisDir/../examples/ipxe/start-vm.ipxe
 portbase=2223
 port=$portbase; while ss -tul | grep :$port &> /dev/null; do (( ++port )); done
 uefi=
-uefiCode=/usr/share/OVMF/OVMF_CODE.fd
-uefiVars=/usr/share/OVMF/OVMF_VARS.fd
+uefiCode=
+uefiVars=
 tpm=1
 vnc=
 vncbase=5900
@@ -44,9 +44,9 @@ source "${thisDir}/.constants.sh" \
 	--sample '.build/rootfs.raw' \
         --sample ',1G ubuntu-16.04.7-server-amd64.iso' \
 	--help  "Starts a virtual machine with the most basic environment, needed. Perfect use for test cases and running samples of GardenLinux. This script can run unprivileged but it should have the possibility to use kvm (group kvm) otherwise it will be super slow. If not being root, the network will be slow and no ICMP (ping) capabilities are with the VM.
-	
+
 --cpu <int>	number of vCPUs to start the VM with (default: $cpu)
---arch <platform> set the emulated platform. 
+--arch <platform> set the emulated platform.
 		i386, x86_64, x86_64-microvm, arm, aarch64 are supported. (default: $arch)
 --mem <int>	memory provided to the virtual machine (default: $memory) in MB if unit is omitted
 
@@ -56,7 +56,7 @@ source "${thisDir}/.constants.sh" \
 		set (default: $uefiVars)
 
 --bridge <if>	disables host networking and bridges the machine to the specified interface
---port <int>	specifies the local ssh port. this port is mounted to the running machine, 
+--port <int>	specifies the local ssh port. this port is mounted to the running machine,
 		not if --bridge is specified (default: $portbase)
 --mac <macaddr> the mac address is usually randomized. It is used to identify the monitoring
 		port, the mac address of the machine and the UUID. Can be set to this value.
@@ -68,13 +68,13 @@ source "${thisDir}/.constants.sh" \
 --vnc		sitches from serial console to vnc graphics console / enables vnc in --daemonize
 		the vnc baseport is $vncbase. if this is not empty we try the next
 
-<image file>	a file containing the image to boot. Format is determined by the extension. 
-                raw, vdi, vpc, vhd, vhdx, vmdk, qcow2, iso are recognized. 
+<image file>	a file containing the image to boot. Format is determined by the extension.
+                raw, vdi, vpc, vhd, vhdx, vmdk, qcow2, iso are recognized.
 		,<size> is optional. If the file is smaller then <size> it will be resized
-		withthe sparse feature of the filesystem to  the requested size. 
-		If <image file> is omitted and only ,<size> is specified, a temporary file 
+		withthe sparse feature of the filesystem to  the requested size.
+		If <image file> is omitted and only ,<size> is specified, a temporary file
 		of this size will be created. The file will not be deleted."
-	
+
 eval "$dgetopt"
 while true; do
 	flag="$1"; shift
@@ -98,6 +98,15 @@ while true; do
 	esac
 done
 
+if [ "$arch" = x86_64 ]; then
+	uefiCode="${uefiCode:-/usr/share/OVMF/OVMF_CODE.fd}"
+	uefiVars="${uefiVars:-/usr/share/OVMF/OVMF_VARS.fd}"
+elif [ "$arch" = aarch64 ]; then
+	uefi=1
+	uefiCode="${uefiCode:-/usr/share/AAVMF/AAVMF_CODE.fd}"
+	uefiVars="${uefiVars:-/usr/share/AAVMF/AAVMF_VARS.fd}"
+fi
+
 # adding the disks (using parameters without - or --)
 inflatelist=( )
 diskcount=0
@@ -108,8 +117,8 @@ while (( "$#" )); do
 	imagedirect=""
 	if [[ $imagefile == *","* ]]; then	imagesize=${imagefile##*,}	# check if a ,3G or such is present
 						imagefile=${imagefile%%,$imagesize}; fi
-	[ "$imagefile" == "" ] && 		imagefile=$(mktemp --suff=.raw)  # if no filename is left point to tmp  
-	[[ $imagefile == *"."* ]] &&		imageext=${imagefile##*.}; 
+	[ "$imagefile" == "" ] && 		imagefile=$(mktemp --suff=.raw)  # if no filename is left point to tmp
+	[[ $imagefile == *"."* ]] &&		imageext=${imagefile##*.};
 	[ -e $imagefile ] || eusage "file \"$imagefile\" does not exist"
 
 	imagesizeBytes=$(numfmt --from=auto --suffix="B" --format "%f" ${imagesize} | head -c-2)  # calculate in bytes
@@ -141,7 +150,7 @@ memory=$(numfmt --from=auto --suffix="B" --format "%f" ${memory} | head -c-2)
 virtOpts+=(	"-smp $cpu"
 	   	"-m $(( $memory / 1048576 ))" )
 
-# add a watchdog to maintain automatic reboots 
+# add a watchdog to maintain automatic reboots
 virtOpts+=(	"-watchdog i6300esb" )
 
 # remove default things like floppies, serial port, parallel port
@@ -154,9 +163,11 @@ virtOpts+=(	"-device virtio-balloon" )
 virtOpts+=(	"-device virtio-rng-pci,rng=rng0"
 	   	"-object rng-random,id=rng0,filename=/dev/random" )
 
-# adding a bmc simulator
-virtOpts+=(	"-device ipmi-bmc-sim,id=bmc0"
-		"-device isa-ipmi-kcs,bmc=bmc0,ioport=0xca2"  )
+if [ "$arch" = x86_64 ]; then
+	# adding a bmc simulator
+	virtOpts+=(	"-device ipmi-bmc-sim,id=bmc0"
+			"-device isa-ipmi-kcs,bmc=bmc0,ioport=0xca2"  )
+fi
 
 # adding a uuid since this is expected by systemd and gardenlinux
 mac="$(printf "%012s" | tr -d ":" <<< ${mac,,})"
@@ -165,15 +176,27 @@ uuid="12345678-0000-0000-0000-${mac}"
 virtOpts+=(     "-uuid $uuid" )
 
 # support for qemu guest agent. There is no way for this script if inside VM is connected or not
-virtOpts+=(	"-chardev socket,path=$targetDir/$mac.guest,server,nowait,id=qga0"
+virtOpts+=(	"-chardev socket,path=$targetDir/$mac.guest,server=on,wait=off,id=qga0"
 		"-device virtio-serial"
 		"-device virtserialport,chardev=qga0,name=org.qemu.guest_agent.0" )
 
-# virtualization with max performance if the cpu has vmx
-cpuinfo="$(grep "^flags" /proc/cpuinfo | uniq)"
-[ -z "${cpuinfo##*vmx*}" -o -z "${cpuinfo##*svm*}" ] &&
-	virtOpts+=(	"-enable-kvm"
-			"-cpu host"  )
+if [ "$arch" = "$(uname -m)" ]; then
+	if [ "$arch" = x86_64 ]; then
+		# virtualization with max performance if the cpu has vmx
+		cpuinfo="$(grep "^flags" /proc/cpuinfo | uniq)"
+		[ -z "${cpuinfo##*vmx*}" -o -z "${cpuinfo##*svm*}" ] &&
+			virtOpts+=("-enable-kvm" "-cpu host" "-machine q35,smm=on")
+		elif [ "$arch" = aarch64 ]; then
+			virtOpts+=("-cpu host" "-machine virt")
+			[ -e "/dev/kvm" ] && virtOpts+=("-accel kvm")
+		fi
+else
+	if [ "$arch" = x86_64 ]; then
+		virtOpts+=("-cpu Broadwell")
+	elif [ "$arch" = aarch64 ]; then
+		virtOpts+=("-cpu cortex-a72" "-machine virt")
+	fi
+fi
 
 # adding a monitoring port for extended commands
 if [ $monitor ]; then
@@ -182,7 +205,7 @@ if [ $monitor ]; then
 fi
 
 [ $daemonize ] && virtOpts+=(	"-daemonize" )
-[ $daemonize ] || virtOpts+=(	"-nographic" 
+[ $daemonize ] || virtOpts+=(	"-nographic"
 				"-serial mon:stdio" )
 [ $vnc ] && 	  virtOpts+=(	"-vnc :${vncport},password" )
 [ $daemonize ] && [ ! $vnc ] && virtOpts+=(	"-display none" )
@@ -193,10 +216,12 @@ if [ $uefi ]; then
 
 	[ -e $targetDir/$mac.vars ] || cp $uefiVars $targetDir/$mac.vars
 
-	virtOpts+=(	"-machine q35,smm=on"
-			"-global driver=cfi.pflash01,property=secure,value=on"
-			"-drive if=pflash,format=raw,unit=0,file=${uefiCode},readonly=on"
-			"-drive if=pflash,format=raw,unit=1,file=$targetDir/$mac.vars" )
+	if [ "$arch" = x86_64 ]; then
+		virtOpts+=("-global driver=cfi.pflash01,property=secure,value=on")
+	fi
+
+	virtOpts+=("-drive if=pflash,format=raw,unit=0,file=${uefiCode},readonly=on"
+	           "-drive if=pflash,format=raw,unit=1,file=$targetDir/$mac.vars")
 fi
 
 # pxe
@@ -205,7 +230,7 @@ if [ $pxe ]; then
 
 	# modify the boot.ipxe to load the proper kernel and initramfs
 	sed -i "s/PATHGOESHERE//g;s/IPADDRESSGOESHERE/10.0.2.2/g" $targetDir/$mac.ipxe
-	
+
 	virtOpts+=( -boot order=nc )
 fi
 
@@ -251,7 +276,7 @@ fi
 # modifying /etc/qemu/bridge.conf - would be good to be root!!!
 if [ $bridge ]; then
 	[ $(id -u) == 0 ] || eusage "for bridging you must be root"
-	if [ ! -d /etc/qemu ]; then 
+	if [ ! -d /etc/qemu ]; then
 		mkdir -p /etc/qemu
 		chown root:kvm /etc/qemu
 	fi
@@ -279,4 +304,3 @@ qemu-system-$arch ${virtOpts[@]}
 
 ### cleanup
 [ $daemonize ] || rm -f $targetDir/$mac.monitor
-
