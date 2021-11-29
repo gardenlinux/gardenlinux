@@ -21,7 +21,7 @@ RUN addgroup --system wheel \
     && adduser dev --disabled-password --gecos dev \
     && adduser dev wheel
 
-ARG ARCH
+ARG ARCH=amd64
 
 RUN if [ "$ARCH" != "$(dpkg --print-architecture)" ]; then \
         dpkg --add-architecture $ARCH \
