@@ -111,29 +111,31 @@ Use the following test configuration:
 azure:
     # region/zone/location in Azure where the test resources will get created (required)
     location:
-    # the Azure subscription ID to be used (required)
+    # the Azure subscription name to be used (required/alternatively optional)
     subscription: my-subscription-id
+    # the Azure subscription ID to be used (required/alternatively optional)
+    subscription_id: 00123456-abcd-1234-5678-1234abcdef78
     # resource group if ommitted a new group will be created (optional)
     resource_group: rg-gardenlinux-test-01
-    # network security group (required)
+    # network security group (optional)
     nsg_name: nsg-gardenlinux-test-42
 
-    # storage account to be used for image upload (required)
-    storage_account_name: stg-gardenlinux-test-01
-    # local image file to be uploaded and to be tested (required/optional)
+    # storage account to be used for image upload (optional)
+    storage_account_name: stggardenlinuxtest01
+    # local image file to be uploaded and to be tested (required/alternatively optional)
     image: /build/azure/20210915/amd64/bullseye/rootfs.vhd
-    # already existing image in Azure to be used for testing (required/optional)
+    # already existing image in Azure to be used for testing (required/alternatively optional)
     image_name: <image name>
 
-    # ssh related configuration for logging in to the VM (required)
+    # ssh related configuration for logging in to the VM (optional)
     ssh:
-        # path to the ssh key file (required)
+        # path to the ssh key file (optional)
         ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
         # passphrase for a secured SSH key (optional)
         passphrase:
-        # name of the public ssh key object as it gets imported into Azure (required)
+        # name of the public ssh key object as it gets imported into Azure (optional)
         ssh_key_name: gardenlinux-test-2
-        # username used to connect to the Azure instance (required)
+        # username used to connect to the Azure instance (optional)
         user: azureuser
 
     # keep instance running after tests finishes (optional)
@@ -142,21 +144,24 @@ azure:
 
 #### 2.2.1 Configuration options
 
+Only three parameters are required for the test: the Azure `subscription` or `subscription_id`, the Azure `location` and the image to be tested. All other parameters are optional and can be generated at runtime.
+
 <details>
 
 - **location** _(required)_: the Azure region in which all test relevant resources will be created 
-- **subscription** _(required)_: the Azure subscription which is used for creating all relevant resources and running the tests
+- **subscription** _(required/optional)_: The Azure subscription (as in subscription name) which is used for creating all relevant resources and running the test. Either the subscription name or the `subscription_id` needs to be provided.
+- **subscription_id** _(required/optioal)_: The Azure subscription (its ID) which is used for creating all relevant resources and running the test. Either the 'subscription' name or its needs to be provided.
 - **resource_group** _(optional)_: all relevant resources for the integration test will be assigned to an Azure resource group. If you want to reuse an existing resource group, you can specify it here. If left empty, a new resource group gets created for the duration of the test.
-- **nsg_name** _(required)_: the integration tests need to create a new network security group, this is its name
+- **nsg_name** _(optional)_: The integration tests need to create a new network security group, this is its name. If you want to reuse an existing security group, specify its name here. If left empty, a new network security group will be created for the duration of the test.
 
-- **storage_account_name** _(optional/required)_: the storage account to which the image gets uploaded
+- **storage_account_name** _(optional)_: the storage account to which the image gets uploaded
 - **image_name** _(optional/required)_: If the tests should get executed against an already existing Image, this is its name. Either **image_name** or **image** must be supplied but not both.
 - **image** _(optional/required)_: If the tests should be executed against a Garden Linux filesystem snapshot that resulted from a local build, this option is the path that points to it. The file must be of type `.vhd`. The image will be removed from Azure once the test finishes. Either **image_name** or **image** must be supplied but not both.
 
-- **ssh_key_filepath** _(required)_: The SSH key that will be deployed to the Azure instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand.
+- **ssh_key_filepath** _(optional)_: The SSH key that will be deployed to the Azure instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand. If left empty, a temporary key with 2048 bits will be generated by the test.
 - **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
-- **ssh_key_name** _(required)_: The SSH key gets uploaded to Azure, this is the name of the key object resource.
-- **user** _(required)_: The user that will be provisioned to the Azure instance, which the SSH key gets assigned to and that is used by the test framework to log on the Azure instance.
+- **ssh_key_name** _(optional)_: The SSH key gets uploaded to Azure, this is the name of the key object resource.
+- **user** _(optional)_: The user that will be provisioned to the Azure instance, which the SSH key gets assigned to and that is used by the test framework to log on the Azure instance. If not provided, the user defaults to `azureuser`.
 
 - **keep_running** _(optional)_: if set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow for debugging
 

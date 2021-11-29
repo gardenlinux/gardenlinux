@@ -356,20 +356,48 @@ class AZURE:
 
 
     @classmethod
+    def validate_config(cls, cfg: dict, test_name: str):
+        if not 'location' in cfg:
+            pytest.exit("Azure location not specified, cannot continue.", 1)
+        if not 'subscription' in cfg and not 'subscription_id' in cfg:
+            pytest.exit("Azure subscription name or subscription ID not specified, cannot continue.", 2)
+        if not 'image_name' in cfg and not 'image' in cfg:
+            pytest.exit("Neither 'image' nor 'image_name' specified, cannot continue.", 3)
+        if not 'image_name' in cfg:
+            cfg['image_name'] = f"img-{test_name}"
+        if not 'resource_group' in cfg:
+            cfg['resource_group'] = f"rg-{test_name}"
+        if not 'storage_account_name' in cfg:
+            cfg['storage_account_name'] = f"sa{re.sub('-', '', test_name)}"
+        if not 'nsg_name' in cfg:
+            cfg['nsg_name'] = f"nsg-{test_name}"
+        if not 'keep_running' in cfg:
+            cfg['keep_running'] = False
+        if not 'ssh' in cfg:
+            cfg['ssh'] = {}
+        if not 'ssh_key_filepath' in cfg['ssh']:
+            import tempfile
+            keyfile = tempfile.NamedTemporaryFile(prefix=f"sshkey-{test_name}-", suffix=".key", delete=False)
+            keyfp = RemoteClient.generate_key_pair(
+                filename = keyfile.name,
+            )
+            logger.info(f"Generated SSH keypair with fingerprint {keyfp}.")
+            cfg['ssh']['ssh_key_filepath'] = keyfile.name
+        if not 'ssh_key_name' in cfg['ssh']:
+            cfg['ssh']['ssh_key_name'] = f"key-{test_name}"
+        if not 'user' in cfg['ssh']:
+            cfg['ssh']['user'] = "azureuser"
+
+
+    @classmethod
     def fixture(cls, config) -> RemoteClient:
 
         test_name = f"gl-test-{time.strftime('%Y%m%d%H%M%S')}"
-        if not("resource_group" in config and config["resource_group"] != None):
-            config["resource_group"] = "rg-" + test_name
+        AZURE.validate_config(config, test_name)
+
         logger.info("Using resource group %s" % config["resource_group"])
-
-        if not("storage_account_name" in config and config["storage_account_name"] != None):
-            config["storage_account_name"] = "sa" + re.sub("-", "", test_name)
         logger.info("Using storage account name %s" % config["storage_account_name"])
-
-        if not("image_name" in config and config["image_name"] != None):
-            config["image_name"] = test_name
-        logger.info("Image name %s" % config["image_name"])
+        logger.info("Using image name %s" % config["image_name"])
 
         azure = AZURE(config, test_name)
         azure.init_environment()
