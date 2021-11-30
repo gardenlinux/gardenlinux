@@ -136,6 +136,7 @@ def send_notification(
     pipeline_run_name: str,
     repo_dir: str,
     status_dict_str: str,
+    pr_id: str = None,
     additional_recipients: str = None,
     only_recipients: str = None,
     recipients_plaintext: typing.Sequence[str] = [],
@@ -166,6 +167,9 @@ def send_notification(
 
     if distutils.util.strtobool(disable_notifications):
         print('Notification is disabled, not sending email')
+        return
+    if pr_id and int(pr_id) > 0:
+        # don't send any sort of notification for PR-builds
         return
 
     additional_recipients_set = set(additional_recipients.strip().split(';'))
