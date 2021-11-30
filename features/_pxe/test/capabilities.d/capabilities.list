@@ -1,1 +1,2 @@
+/bin/ping cap_net_raw=ep
 /usr/bin/arping cap_net_raw=ep
