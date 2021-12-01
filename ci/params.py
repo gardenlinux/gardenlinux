@@ -89,6 +89,11 @@ class AllParams:
         description='config name of the key to use for signing the packages',
         default='gardenlinux',
     )
+    manifest_set_key = NamedParam(
+        name='manifest_set_key',
+        default='~',
+        description='S3 key of manifest-set created in a previous step',
+    )
     modifiers = NamedParam(
         name='modifiers',
         description='the build modifiers',

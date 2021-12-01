@@ -228,6 +228,11 @@ def mk_pipeline_notify_task(
 
     platform_set_str = ','.join(platform_set)
 
+    if build_tasks:
+        manifest_set_key = '$(tasks.promote-gardenlinux-task.results.manifest_set_key_result)'
+    else:
+        manifest_set_key = '~'
+
     # generate default params for all task parameters just passing the value
     name = 'notify-task'
     params = _get_passed_parameters(
@@ -240,6 +245,7 @@ def mk_pipeline_notify_task(
             NamedParam(name='namespace', value='$(context.pipelineRun.namespace)'),
             NamedParam(name='status_dict_str', value=status_str),
             NamedParam(name='build_dict_str', value=build_str),
+            NamedParam(name='manifest_set_key', value=manifest_set_key),
         }
     )
 
