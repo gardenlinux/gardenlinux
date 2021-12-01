@@ -163,12 +163,18 @@ def _download_release_artifact(
         manifest: glci.model.OnlineReleaseManifest,
 ):
     if name == 'log' or name == 'logs':
-        s3_bucket = cicd_cfg.build.s3_bucket_name, # Note: is a tuple
-        s3_bucket = s3_bucket[0]
-        s3_key = manifest.logs
-        if not s3_key:
+        log_obj = manifest.logs
+        if not log_obj:
             print('Error: No logs attached to release manifest')
             return 1
+        elif type(log_obj) is glci.model.S3_ReleaseFile:
+            s3_key = log_obj.s3_key
+            s3_bucket = log_obj.s3_bucket_name
+        else:
+            s3_bucket = cicd_cfg.build.s3_bucket_name, # Note: is a tuple
+            s3_bucket = s3_bucket[0]
+            s3_key = log_obj # old format (str) can be removed if all old manifests are cleaned
+
     else:
         file_objs = [entry for entry in manifest.paths if entry.name == name]
         if not file_objs:
