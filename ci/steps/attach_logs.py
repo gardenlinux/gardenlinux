@@ -81,6 +81,7 @@ def _attach_and_upload_logs(
     flavour_set: str,
     gardenlinux_epoch: str,
     is_package_build: bool,
+    manifest_set_key: str,
     platform_set: str,
     promote_target: str,
     repo_dir: str,
@@ -96,14 +97,14 @@ def _attach_and_upload_logs(
         print("Exiting with failure, see logs from previous steps")
         return False
 
-    prefix = 'objects/' + datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S') + '-' + \
+    prefix = datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S') + '-' + \
         committish[:6] + '-'
 
     if is_package_build:
-        s3_key = prefix + 'package_build_log.zip',
+        s3_key = 'logs/' + prefix + 'package_build_log.zip'
         s3_bucket_name = cicd_cfg.package_build.s3_bucket_name
     else:
-        s3_key = prefix + 'build_log.zip'
+        s3_key = 'objects/' + prefix + 'build_log.zip'
         s3_bucket_name = cicd_cfg.build.s3_bucket_name
 
     print(f'uploaded zipped logs to {s3_key=}')
@@ -135,18 +136,16 @@ def _attach_and_upload_logs(
         return True
 
     print(f'downloading release manifest from s3 {aws_cfg_name=} {s3_bucket_name=}')
-    build_type = glci.model.BuildType(promote_target)
     flavour_set = glci.util.flavour_set(flavour_set_name=flavour_set)
-    manifest_set = glci.util.find_release_set(
-        s3_client=s3_client,
-        bucket_name=s3_bucket_name,
-        flavourset_name=flavour_set.name,
-        build_committish=committish,
-        gardenlinux_epoch=int(gardenlinux_epoch),
-        version=version,
-        build_type=build_type,
-        absent_ok=True,
-    )
+    if manifest_set_key:
+        manifest_set = glci.util.release_manifest_set(
+            s3_client=s3_client,
+            bucket_name=s3_bucket_name,
+            manifest_key=manifest_set_key,
+            absent_ok=True,
+        )
+    else:
+        manifest_set = None
 
     # Manifest-set not found can be caused by:
     # broken build and manifest was never written
@@ -173,7 +172,6 @@ def _attach_and_upload_logs(
                             modifiers=modifiers,
                         )
 
-                    print(f'Created release identifier for {release_identifier=}')
                     manifest = glci.util.find_release(
                         release_identifier=release_identifier,
                         s3_client=s3_client,
@@ -190,26 +188,13 @@ def _attach_and_upload_logs(
         print(f'Attaching {len(log_files)} logs to manifest')
         new_manifest_set = manifest_set.with_logfiles(tuple(log_files))
 
-        manifest_path = os.path.join(
-            glci.model.ReleaseManifestSet.release_manifest_set_prefix,
-            build_type.value,
-            glci.util.release_set_manifest_name(
-                build_committish=committish,
-                gardenlinux_epoch=gardenlinux_epoch,
-                version=version,
-                flavourset_name=flavour_set.name,
-                build_type=build_type,
-                with_timestamp=True,
-            ),
-        )
-
         upload_release_manifest_set = glci.util.preconfigured(
             func=glci.util.upload_release_manifest_set,
             cicd_cfg=cicd_cfg,
         )
-        print(f'Uploading manifest set to {manifest_path}')
+        print(f'Uploading manifest set to {manifest_set_key}')
         upload_release_manifest_set(
-            key=manifest_path,
+            key=manifest_set_key,
             manifest_set=new_manifest_set,
         )
 
@@ -222,6 +207,24 @@ def _attach_and_upload_logs(
     return True
 
 
+# Logging Concept:
+# - collect logs from all pods and containers of this pipeline run and pack into a ZIP file
+# - store the ZIP in S3 under objects with a readable key like <date>-<time>-<commit>-<kind>_log.zip
+# example: 20211201-063143-07f80e-build_log.zip
+# If the build is broken and no manifest is created the log zip is standalone and will be cleaned up
+# by clean-job together with other outdated artifacts. It can be found by readable key.
+# if build is okay attach logs to single manifests for those artifacts being build in this run (some
+# may already have been build in earlier runs and thus are already attached to their manifests)
+# if this is a publish-build a manifest set is written to S3. Attach logs to this manifest set from
+# this run and collect and attach all logs from artifacts that have been built in previous runs
+# from their single manifests.
+# Append a timestamp to each manifest set so that mutliple and potentially concurrent runs are safe
+# Log files are referenced from manifest-sets and thus not cleaned up as long as the manifest-set
+# exists. Snapshot manifest sets are cleaned after some time and with that the referenced log files.
+# Release manifest-sets are never cleaned up and thus the log file are preserved forever.
+# Implementation note: We use two result objects: one to indicate in each build if the artifact was
+# built or already existed. And the other one to pass the information with the S3 manifest-set key.
+# As this is created during publishing and contains the timestamp it can not be recalculated later
 def upload_logs(
     architecture: str,
     build_dict_str: str,
@@ -230,6 +233,7 @@ def upload_logs(
     committish: str,
     flavourset: str,
     gardenlinux_epoch: str,
+    manifest_set_key: str,
     namespace: str,
     pipeline_run_name: str,
     platform_set: str,
@@ -256,6 +260,7 @@ def upload_logs(
             flavour_set=flavourset,
             gardenlinux_epoch=gardenlinux_epoch,
             is_package_build='gl-packages' in pipeline_run_name,
+            manifest_set_key=manifest_set_key,
             platform_set=platform_set,
             promote_target=promote_target,
             repo_dir=repo_dir,

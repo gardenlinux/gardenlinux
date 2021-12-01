@@ -7,7 +7,7 @@ import tkn.model
 NamedParam = tkn.model.NamedParam
 
 all_params = params.AllParams
-
+all_results = results.AllResults
 
 def unify_params(params: typing.Sequence[NamedParam]) -> typing.Sequence[NamedParam]:
     return list(set(params))
@@ -29,6 +29,7 @@ def promote_task(
 
     promote_step, params_step = steps.promote_step(
         params=all_params,
+        results=all_results,
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
@@ -53,6 +54,7 @@ def promote_task(
         metadata=tkn.model.Metadata(name=name),
         spec=tkn.model.TaskSpec(
             params=params,
+            results=[results.AllResults.manifest_set_key_result, ],
             steps=[
                 clone_step,
                 build_cd_step,
@@ -215,7 +217,7 @@ def build_task(
 
     upload_step, params_step = steps.upload_results_step(
         params=all_params,
-        results=results.AllResults,
+        results=all_results,
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )

@@ -11,3 +11,7 @@ class AllResults:
         name='build_result',
         description='manifest key if build was sucessful',
     )
+    manifest_set_key_result = NamedParam(
+        name='manifest_set_key_result',
+        description='s3 key with timestamp when manifest-set is created',
+    )

@@ -261,6 +261,7 @@ def promote_single_step(
 
 def promote_step(
     params: params.AllParams,
+    results: results.AllResults,
     env_vars: typing.List[typing.Dict] = [],
     volume_mounts: typing.List[typing.Dict] = [],
 ):
@@ -273,6 +274,11 @@ def promote_step(
         params.build_targets,
         params.version,
     ]
+
+    result_params = [
+        results.manifest_set_key_result,
+    ]
+
     step = tkn.model.TaskStep(
         name='finalise-promotion-step',
         image=DEFAULT_IMAGE,
@@ -281,6 +287,7 @@ def promote_step(
             script_type=ScriptType.PYTHON3,
             callable='promote_step',
             params=step_params,
+            results=result_params,
             repo_path_param=params.repo_dir,
         ),
         volumeMounts=volume_mounts,
@@ -791,6 +798,7 @@ def attach_log_step(
         params.committish,
         params.flavourset,
         params.gardenlinux_epoch,
+        params.manifest_set_key,
         params.namespace,
         params.pipeline_run_name,
         params.platform_set,
