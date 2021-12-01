@@ -182,3 +182,7 @@ class AllParams:
         default='~',
         description='JSON string with status for all tasks',
     )
+    pr_id = NamedParam(
+        name='pr_id',
+        description='The PR-id for PR-builds',
+    )

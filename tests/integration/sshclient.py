@@ -20,7 +20,8 @@ class RemoteClient:
     @classmethod
     def generate_key_pair(
         cls,
-        filename: str,
+        filename: str = None,
+        fileobj = None,
         bits: int = 2048,
         passphrase: str = None,
         comment: str = None,
@@ -33,7 +34,10 @@ class RemoteClient:
         :param comment: comment for RSA key
         """
         priv = RSAKey.generate(bits=bits)
-        priv.write_private_key_file(filename, password=passphrase)
+        if filename:
+            priv.write_private_key_file(filename, password=passphrase)
+        elif fileobj:
+            priv.write_private_key(file_obj=fileobj, password=passphrase)
         pub = RSAKey(filename=filename, password=passphrase)
         logger.info(f"generated RSA key pair: {filename}")
         with open(f"{filename}.pub", "w") as f:

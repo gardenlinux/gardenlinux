@@ -100,8 +100,15 @@ if [ ! -z "${GARDENLINUX_BASE_IMAGE:-}" ]; then
   EXTRA_ARGS="${EXTRA_ARGS} --gardenlinux-base-image=${GARDENLINUX_BASE_IMAGE}"
 fi
 
-
 cleanup_pipelineruns "${tekton_namespace}"
+
+if [ -z "$(git config --get pullrequest.id)" ]; then
+  pr_id=""
+else
+  pr_id="$(git config --get pullrequest.id)"
+  echo "Is a PR: ${pr_id}"
+  EXTRA_ARGS="${EXTRA_ARGS} --pr-id ${pr_id}"
+fi
 
 # for local dev rendering use latest remote commit and no local one.
 if [ ! -z "${CC_CONFIG_DIR:-}" ]; then

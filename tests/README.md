@@ -29,26 +29,26 @@ Use the following configuration file:
 aws:
     # region in which all test resources will be created (required)
     region: eu-central-1
-    # machine/instance type of the test VM - not all machines are available in all regions (required)
+    # machine/instance type of the test VM - not all machines are available in all regions (optional)
     instance_type: t3.micro
 
-    # ssh related configuration for logging in to the VM (required)
+    # ssh related configuration for logging in to the VM (optional)
     ssh:
-        # path to the ssh key file (required)
+        # path to the ssh key file (optional)
         ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
         # passphrase for a secured SSH key (optional)
         passphrase:
-        # name of the public ssh key object as it gets imported into EC2 (required)
+        # name of the public ssh key object as it gets imported into EC2 (optional)
         key_name: gardenlinux-test-2
-        # username used to connect to the EC2 instance (required, must be admin on AWS)
+        # username used to connect to the EC2 instance (optional, must be admin on AWS)
         user: admin
 
-    # if specified this already existing AMI will be used and no image uploaded (optional/required)
+    # if specified this already existing AMI will be used and no image uploaded (optional/alternatively required)
     #ami_id: ami-xxx
-    # local/S3 image file to be uploaded for the test (optional/required)
+    # local/S3 image file to be uploaded for the test (optional/alternatively required)
     image: file:/build/aws/20210714/amd64/bullseye/rootfs.raw
     #image: s3://gardenlinux/objects/078f440a76024ccd1679481708ebfc32f5431569
-    # bucket where the image will be uploded to (required if local file is used)
+    # bucket where the image will be uploded to (optional)
     bucket: import-to-ec2-gardenlinux-validation
 
     # keep instance running after tests finishes (optional)
@@ -60,22 +60,22 @@ aws:
 <details>
 
 - **region** _(required)_: the AWS region in which all test relevant resources will be created 
-- **instanc-type** _(required)_: the instance type that will be used for the EC2 instance used for testing
+- **instanc-type** _(optional)_: the instance type that will be used for the EC2 instance used for testing, defaults to `t3.micro` if not specified
 
-- **ssh_key_filepath** _(required)_: The SSH key that will be deployed to the EC2 instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand.
+- **ssh_key_filepath** _(optional)_: The SSH key that will be deployed to the EC2 instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand. If not provided, a new SSH key with 2048 bits will be generated just for the test.
 - **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
-- **key_name** _(required)_: The SSH key gets uploaded to EC2, this is the name of the key object resource.
-- **user** _(required)_: The user that will be provisioned to the EC2 instance, which the SSH key gets assigned to and that is used by the test framework to log on the EC2 instance. On AWS, this must be `admin`.
+- **key_name** _(optional)_: The SSH key gets uploaded to EC2, this is the name of the key object resource.
+- **user** _(optional)_: The user that will be provisioned to the EC2 instance, which the SSH key gets assigned to and that is used by the test framework to log on the EC2 instance. Defaults to `admin`.
 
-- **ami_id** _(optional/required)_: If the tests should get executed against an already existing AMI, this is its ID. It must exist in the region given above. Either **ami_id** or **image** must be supplied but not both.
-- **image** _(optional/required)_: If the tests should be executed against a Garden Linux filesystem snapshot that resulted from (local) build, this option is the URI that points to it. The file must be of type `.raw`. Either **ami_id** or **image** must be supplied but not both.
+- **ami_id** _(optional/alternatively required)_: If the tests should get executed against an already existing AMI, this is its ID. It must exist in the region given above. Either **ami_id** or **image** must be supplied but not both.
+- **image** _(optional/alternatively required)_: If the tests should be executed against a Garden Linux filesystem snapshot that resulted from (local) build, this option is the URI that points to it. The file must be of type `.raw`. Either **ami_id** or **image** must be supplied but not both.
 The URI can be:
     - `file:/path/to/my/rootfs.raw`: for local files, in that case, the option **bucket** must be provided as well
     - `s3://mybucketname/objects/objectkey`: for files in S3
 
-- **bucket** _(optional)_: To create an AMI/EC2 instance from a local filesystem snapshot, it needs to be uploaded to an S3 bucket first. The bucket needs to exist in the given region and its name must be provided here.
+- **bucket** _(optional)_: To create an AMI/EC2 instance from a local filesystem snapshot, it needs to be uploaded to an S3 bucket first. The bucket needs to exist in the given region and its name must be provided here. If not provided, a bucket will be created in the given region.
 
-- **keep_running** _(optional)_: if set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow for debugging
+- **keep_running** _(optional)_: if set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow for debugging. Defaults to `False`.
 
 </details>
 
@@ -111,29 +111,31 @@ Use the following test configuration:
 azure:
     # region/zone/location in Azure where the test resources will get created (required)
     location:
-    # the Azure subscription ID to be used (required)
+    # the Azure subscription name to be used (required/alternatively optional)
     subscription: my-subscription-id
+    # the Azure subscription ID to be used (required/alternatively optional)
+    subscription_id: 00123456-abcd-1234-5678-1234abcdef78
     # resource group if ommitted a new group will be created (optional)
     resource_group: rg-gardenlinux-test-01
-    # network security group (required)
+    # network security group (optional)
     nsg_name: nsg-gardenlinux-test-42
 
-    # storage account to be used for image upload (required)
-    storage_account_name: stg-gardenlinux-test-01
-    # local image file to be uploaded and to be tested (required/optional)
+    # storage account to be used for image upload (optional)
+    storage_account_name: stggardenlinuxtest01
+    # local image file to be uploaded and to be tested (required/alternatively optional)
     image: /build/azure/20210915/amd64/bullseye/rootfs.vhd
-    # already existing image in Azure to be used for testing (required/optional)
+    # already existing image in Azure to be used for testing (required/alternatively optional)
     image_name: <image name>
 
-    # ssh related configuration for logging in to the VM (required)
+    # ssh related configuration for logging in to the VM (optional)
     ssh:
-        # path to the ssh key file (required)
+        # path to the ssh key file (optional)
         ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
         # passphrase for a secured SSH key (optional)
         passphrase:
-        # name of the public ssh key object as it gets imported into Azure (required)
+        # name of the public ssh key object as it gets imported into Azure (optional)
         ssh_key_name: gardenlinux-test-2
-        # username used to connect to the Azure instance (required)
+        # username used to connect to the Azure instance (optional)
         user: azureuser
 
     # keep instance running after tests finishes (optional)
@@ -142,21 +144,24 @@ azure:
 
 #### 2.2.1 Configuration options
 
+Only three parameters are required for the test: the Azure `subscription` or `subscription_id`, the Azure `location` and the image to be tested. All other parameters are optional and can be generated at runtime.
+
 <details>
 
 - **location** _(required)_: the Azure region in which all test relevant resources will be created 
-- **subscription** _(required)_: the Azure subscription which is used for creating all relevant resources and running the tests
+- **subscription** _(required/optional)_: The Azure subscription (as in subscription name) which is used for creating all relevant resources and running the test. Either the subscription name or the `subscription_id` needs to be provided.
+- **subscription_id** _(required/optioal)_: The Azure subscription (its ID) which is used for creating all relevant resources and running the test. Either the 'subscription' name or its needs to be provided.
 - **resource_group** _(optional)_: all relevant resources for the integration test will be assigned to an Azure resource group. If you want to reuse an existing resource group, you can specify it here. If left empty, a new resource group gets created for the duration of the test.
-- **nsg_name** _(required)_: the integration tests need to create a new network security group, this is its name
+- **nsg_name** _(optional)_: The integration tests need to create a new network security group, this is its name. If you want to reuse an existing security group, specify its name here. If left empty, a new network security group will be created for the duration of the test.
 
-- **storage_account_name** _(optional/required)_: the storage account to which the image gets uploaded
+- **storage_account_name** _(optional)_: the storage account to which the image gets uploaded
 - **image_name** _(optional/required)_: If the tests should get executed against an already existing Image, this is its name. Either **image_name** or **image** must be supplied but not both.
 - **image** _(optional/required)_: If the tests should be executed against a Garden Linux filesystem snapshot that resulted from a local build, this option is the path that points to it. The file must be of type `.vhd`. The image will be removed from Azure once the test finishes. Either **image_name** or **image** must be supplied but not both.
 
-- **ssh_key_filepath** _(required)_: The SSH key that will be deployed to the Azure instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand.
+- **ssh_key_filepath** _(optional)_: The SSH key that will be deployed to the Azure instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand. If left empty, a temporary key with 2048 bits will be generated by the test.
 - **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
-- **ssh_key_name** _(required)_: The SSH key gets uploaded to Azure, this is the name of the key object resource.
-- **user** _(required)_: The user that will be provisioned to the Azure instance, which the SSH key gets assigned to and that is used by the test framework to log on the Azure instance.
+- **ssh_key_name** _(optional)_: The SSH key gets uploaded to Azure, this is the name of the key object resource.
+- **user** _(optional)_: The user that will be provisioned to the Azure instance, which the SSH key gets assigned to and that is used by the test framework to log on the Azure instance. If not provided, the user defaults to `azureuser`.
 
 - **keep_running** _(optional)_: if set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow for debugging
 

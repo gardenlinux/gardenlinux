@@ -35,4 +35,3 @@ fi
 echo "kernel-install: installing kernel ${version}" 
 /usr/bin/kernel-install remove "${version}" 
 /usr/bin/kernel-install add "${version}" "${kernel}" "zzz-skip-initrd"
-dracut --uefi -f "/boot/efi/Default/${kernel#*-}/linux" ${kernel#*-} --reproducible --kernel-cmdline "$(cat /etc/kernel/cmdline)"

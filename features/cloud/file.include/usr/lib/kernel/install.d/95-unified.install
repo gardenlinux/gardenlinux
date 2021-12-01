@@ -1,0 +1,30 @@
+#!/bin/sh
+set -eu
+
+COMMAND="$1"
+KERNEL_VERSION="$2"
+BOOT_DIR_ABS="$3"
+
+if [ "$COMMAND" = remove ]; then
+    exit 0
+fi
+
+if [ "$COMMAND" != add ]; then
+    echo "Invalid command $COMMAND" >&2
+    exit 1
+fi
+
+if [ "$KERNEL_INSTALL_VERBOSE" -gt 0 ]; then
+	echo "Generating unified image for ${KERNEL_VERSION}"
+	stdlog=4
+fi
+
+dracut \
+--force \
+--kver "${KERNEL_VERSION}" \
+--uefi \
+--stdlog ${stdlog-1} \
+--kernel-cmdline "$(cat /etc/kernel/cmdline)" \
+"${BOOT_DIR_ABS}/linux"
+
+exit 0
