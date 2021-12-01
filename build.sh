@@ -34,7 +34,7 @@ arch=
 features=
 disablefeatures=
 suite="testing"
-tests=0
+tests=1
 output=".build"
 while true; do
 	flag="$1"; shift
@@ -78,6 +78,7 @@ envArgs=(
 )
 
 securityArgs=(
+	--privileged
 	--cap-add SYS_ADMIN	# needed for unshare in garden-chroot
 )
 
