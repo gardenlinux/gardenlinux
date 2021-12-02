@@ -27,9 +27,6 @@ RUN	apt-get update \
 ENV	PATH=${PATH}:/opt/gardenlinux/bin
 COPY	--from=gcr.io/kaniko-project/executor:latest /kaniko/executor /usr/local/bin/executor
 COPY	--from=golang /go/azure-vhd-utils/azure-vhd-utils /usr/local/bin/azure-vhd-utils
-COPY	debootstrap.patch /tmp/debootstrap.patch
-RUN	patch -p1 < /tmp/debootstrap.patch \
-     &&	rm -f /tmp/debootstrap.patch \
-     &&	echo "progress=bar:force:noscroll\nverbose=off" >> /etc/wgetrc
+RUN	echo "progress=bar:force:noscroll\nverbose=off" >> /etc/wgetrc
 
 WORKDIR	/tmp
