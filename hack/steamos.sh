@@ -94,7 +94,6 @@ docker run \
 				--keyring "$keyring" \
 				--include valve-archive-keyring \
 				--exclude debian-archive-keyring \
-				--no-merged-usr \
 				rootfs "$suite" "$mirror"
 			echo "deb $mirror $suite main contrib non-free" | tee rootfs/etc/apt/sources.list
 
