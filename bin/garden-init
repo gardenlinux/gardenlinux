@@ -9,7 +9,6 @@ source "$thisDir/.constants.sh" \
 	--flags 'debootstrap:' \
 	--flags 'debootstrap-script:' \
 	--flags 'keyring:,arch:,include:,exclude:,features:' \
-	--flags 'merged-usr,no-merged-usr' \
 	--flags 'check-gpg,no-check-gpg' \
 	-- \
 	'<target-dir> <suite> <timestamp>' \
@@ -44,8 +43,6 @@ while true; do
 		--include)	include="${include:+$include,}$1"; shift ;;
 		--exclude)	exclude="${exclude:+$exclude,}$1"; shift ;;
 		--features)	features="${features:+$features,}$1"; shift ;;
-		--merged-usr)	noMergedUsr=  ;;
-		--no-merged-usr) noMergedUsr=1 ;;
 		--check-gpg)	noCheckGpg=  ;;
 		--no-check-gpg)	noCheckGpg=1 ;;
 		--) break ;;
@@ -152,7 +149,6 @@ if [ -n "$minbaseSupported" ]; then
 	debootstrapArgs+=( --variant=minbase )
 fi
 
-[ -n "$noMergedUsr" ] && debootstrapArgs+=( --no-merged-usr ) || debootstrapArgs+=( --merged-usr )
 [ -z "$keyring" ] || debootstrapArgs+=( --keyring="$keyring" )
 [ -z "$arch" ] || debootstrapArgs+=( --arch="$arch" )
 
