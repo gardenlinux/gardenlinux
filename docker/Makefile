@@ -1,7 +1,9 @@
 VERSION=`../bin/garden-version`
 ALTNAME=
-
 ALTNAME_INTERNAL=$(shell [ -n "$(ALTNAME)" ] && printf "%s %s" "-t" "$(ALTNAME)" ) 
+
+PATH_KERNEL_PACKAGES="../.packages/main/l/linux"
+KERNEL_VERSION=5.10
 
 all: build-image build-integration-test
 
@@ -27,6 +29,15 @@ build-integration-test: needslim
 	mkdir -p integration-test/_pipfiles
 	cp ../tests/Pipfile* integration-test/_pipfiles
 	@docker build -t gardenlinux/integration-test:$(VERSION) integration-test
+
+.PHONY: build-lkm
+build-lkm: build
+	rm -rf build-lkm/packages
+	mkdir -p build-lkm/packages/
+	cp ../.packages/main/l/linux/linux-kbuild*$(KERNEL_VERSION)*.deb build-lkm/packages/ || (echo "Error: Build Kernel packages first." && exit 1)
+	cp ../.packages/main/l/linux/linux-compiler-gcc*$(KERNEL_VERSION)*.deb build-lkm/packages/ || (echo "Error: Build Kernel packages first." && exit 1)
+	cp ../.packages/main/l/linux/linux-headers*$(KERNEL_VERSION)*.deb build-lkm/packages/ || (echo "Error: Build Kernel packages first." && exit 1)
+	@docker build -t gardenlinux/build-lkm:$(KERNEL_VERSION) build-lkm
 
 .PHONY: clean
 clean:
