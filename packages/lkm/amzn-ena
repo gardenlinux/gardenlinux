@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euox pipefail
+
+baseName="amzn-ena"
+enaVersion=2.6.0
+packageName="${baseName}-${enaVersion}"
+
+callerDir="$(readlink -f "$(pwd)")"
+scriptDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+baseDir="${scriptDir}/${baseName}.d"
+srcDir="${packageName}-src"
+packageDir="${packageName}"
+
+mkdir "${srcDir}"
+pushd "${srcDir}"
+
+    git clone --depth 1 --branch ena_linux_${enaVersion}  https://github.com/amzn/amzn-drivers/
+
+    echo "### make ena drivers"
+    pushd amzn-drivers/kernel/linux/ena
+        make 
+    popd ||exit 1
+
+popd || exit 1
+
+# Create a fresh folder for packaging and copy only required files from build output above
+mkdir "${packageDir}"
+pushd "${packageDir}"
+    cp -r "${baseDir}/DEBIAN" .
+
+    maintainerString="${DEBFULLNAME} <${DEBEMAIL}>"
+    echo "### setting maintainer to ${maintainerString}"
+    sed -i "s/Maintainer:/Maintainer: ${maintainerString}/g" DEBIAN/control
+    
+    echo "### prepare folder structure for dpkg packaging"
+    mkdir -p opt/drivers
+    cp "${callerDir}/${srcDir}/amzn-drivers/kernel/linux/ena/ena.ko" opt/drivers/ena.ko
+
+popd || exit 1
+
+echo "### create deb file"
+dpkg -b ${packageName}
+
+targetpath="main/e/ena"
+echo "### move deb file to ${BUILDTARGET}/${targetpath}/"
+sudo mkdir -p "${BUILDTARGET}/${targetpath}/"
+sudo mv "${packageName}.deb" "${BUILDTARGET}/${targetpath}/"

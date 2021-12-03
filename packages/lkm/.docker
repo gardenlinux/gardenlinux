@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail 
+
+sudo apt-get install --no-install-recommends -y wget quilt vim less

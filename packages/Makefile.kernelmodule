@@ -1,0 +1,9 @@
+.PHONY: all
+all: amzn-ena
+
+%:
+	lkm/$@
+
+.PHONY: clean
+clean:
+	sudo rm -r amzn-ena*

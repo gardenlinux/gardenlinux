@@ -1,11 +1,13 @@
 POOLDIR=$$(mkdir -p ../.packages; realpath ../.packages)
 MANUALDIR=$(realpath manual)
-KERNELDIR=$(realpath kernel)
+KERNELMODDIR=$(realpath lkm)
+BUILDLOGDIR=$$(mkdir -p ../.buildlogs; realpath ../.buildlogs)
 CERTDIR=$(realpath ../cert)
 DEBFULLNAME="Garden Linux Maintainers"
 DEBEMAIL="contact@gardenlinux.io"
 BUILDIMAGE="gardenlinux/build-deb"
-BUILDKERNEL="gardenlinux/build-kernel"
+BUILDKERNEL="gardenlinux/build-kernelmodule"
+KERNELVERSION=5.10
 BUILDVERSION=$$(../bin/garden-version)
 BUILDEPOCH=$$(../bin/garden-version --epoch)
 .PHONY: all
@@ -19,8 +21,8 @@ sign:
 docker:
 	make --directory=../docker $$(basename $(BUILDIMAGE))
 
-.PHONY: docker-kernel
-docker-kernel:
+.PHONY: docker-kernelmodule
+docker-kernelmodule:
 	make --directory=../docker $$(basename $(BUILDKERNEL))
 
 #--volume $(MANUALDIR)/../quiltrc:/home/dev/.quiltrc
@@ -44,6 +46,28 @@ manual: docker sign
 		--env DEBEMAIL=$(DEBEMAIL) \
 		--env WORKDIR="/home/dev" \
 		$(BUILDIMAGE) bash -c "manual/.docker; bash"
+
+.PHONY: manual-kernelmodule
+manual-kernelmodule: docker-kernelmodule sign
+	docker run --rm -ti \
+		--volume $(POOLDIR):/pool \
+		--volume $(KERNELMODDIR):/home/dev/lkm \
+		--volume $(KERNELMODDIR)/../Makefile.kernelmodule:/home/dev/Makefile \
+		--volume "$$(gpgconf --list-dir agent-socket)":/home/dev/.gnupg/S.gpg-agent \
+		--volume $(CERTDIR)/sign.pub:/sign.pub \
+		--volume $(CERTDIR)/Kernel.sign.full:/kernel.full \
+		--volume $(CERTDIR)/Kernel.sign.crt:/kernel.crt \
+		--volume $(CERTDIR)/Kernel.sign.key:/kernel.key \
+		 --tmpfs /tmp:exec,noatime \
+	       	--env BUILDTARGET="/pool" \
+		--env BUILDIMAGE=$(BUILDKERNEL) \
+		--env BUILDVERSION=$(BUILDVERSION) \
+		--env BUILDEPOCH=$(BUILDEPOCH) \
+		--env DEBFULLNAME=$(DEBFULLNAME) \
+		--env DEBEMAIL=$(DEBEMAIL) \
+		--env WORKDIR="/home/dev" \
+		$(BUILDKERNEL):$(KERNELVERSION) bash -c "lkm/.docker; bash"
+
 .PHONY: pipeline
 pipeline: docker sign
 	docker run --rm \
@@ -63,17 +87,4 @@ pipeline: docker sign
 		--env DEBEMAIL=$(DEBEMAIL) \
 		--env WORKDIR="/home/dev" \
 		$(BUILDIMAGE) bash -c "gpg --import /sign.pub; make"
-manual-kernel: docker-kernel
-	docker run --rm --volume "$(POOLDIR)":/pool --volume "$(KERNELDIR)":/home/dev/manual \
-	       	--env BUILDTARGET="$(POOLDIR)" \
-		--env BUILDIMAGE="$(BUILDKERNEL)" \
-		--env BUILDVERSION=$(BUILDVERSION) \
-		--env BUILDEPOCH=$(BUILDEPOCH) \
-		--env DEBFULLNAME="$(DEBFULLNAME)" \
-		--env DEBEMAIL="$(DEBEMAIL)" \
-		--env WORKDIR="/home/dev" \
-		$(BUILDKERNEL) bash -c " \
-		set -euo pipefail \
-		sudo apt-get install --no-install-recommends -y wget quilt vim less \
-		\
-		bash"
+
