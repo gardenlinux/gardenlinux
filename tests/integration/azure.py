@@ -12,6 +12,9 @@ from azure.core.exceptions import (
     ResourceNotFoundError
 )
 
+from urllib.request import urlopen
+from urllib.parse import urlparse
+
 from azure.identity import AzureCliCredential
 
 from azure.mgmt.subscription import SubscriptionClient
@@ -492,6 +495,7 @@ class AZURE:
         if self._image == None:
             self._image = self.upload_image()
 
+
     def upload_image(self, progress_function = None):
         if "image" in self.config:
             image_file = self.config["image"]
@@ -519,23 +523,48 @@ class AZURE:
                 blob_name = f"{image_name}.vhd",
             )
 
-            file_size = os.path.getsize(image_file)
-            blob_client.create_page_blob(file_size)
-            self.logger.info(f"Uploading {image_file} ({file_size} bytes) - this may take a while...")
+            chunksize = 4 * 1024 * 1024
+            offset = 0
+            o = urlparse(image_file)
 
-            with open(image_file, 'rb') as f:
-                chunksize = 4 * 1024 * 1024
-                offset = 0
+            if o.scheme == "file":
+                image_file = o.path
+                file_size = os.path.getsize(image_file)
+                blob_client.create_page_blob(file_size)
+                self.logger.info(f"Uploading {image_file} ({file_size} bytes) - this may take a while...")
+
+                with open(image_file, 'rb') as f:
+
+                    while offset < file_size:
+                        data = f.read(chunksize)
+                        remaining = file_size - offset
+                        actual_cp_bytes = min(chunksize, remaining)
+
+                        blob_client.upload_page(
+                            page=data,
+                            offset=offset,
+                            length=actual_cp_bytes,
+                        )
+                        offset += actual_cp_bytes
+                        if progress_function:
+                            progress_function(total=file_size, uploaded=offset)
+
+            elif o.scheme == "s3":
+                s3_url = f"https://{o.hostname}.s3.eu-central-1.amazonaws.com/{o.path.lstrip('/')}"
+                meta = urlopen(s3_url)
+                file_size = int(meta.getheader('Content-Length'))
+                blob_client.create_page_blob(file_size)
+                self.logger.info(f"Uploading image from {s3_url} ({file_size} bytes) - this may take a while...")
 
                 while offset < file_size:
-                    data = f.read(chunksize)
                     remaining = file_size - offset
                     actual_cp_bytes = min(chunksize, remaining)
 
-                    blob_client.upload_page(
-                        page=data,
+                    blob_client.upload_pages_from_url(
+                        source_url=s3_url,
                         offset=offset,
                         length=actual_cp_bytes,
+                        source_offset=offset,
                     )
                     offset += actual_cp_bytes
                     if progress_function:
