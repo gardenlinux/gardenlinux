@@ -698,12 +698,15 @@ def _parse_version_from_workingtree(version_file_path: str=paths.version_path) -
             raise ValueError(f'did not find uncommented, non-empty line in {version_file_path}')
 
 
-def next_release_version_from_workingtree(version_file_path: str=paths.version_path):
+def next_release_version_from_workingtree(
+    epoch: str=gardenlinux_epoch(),
+    version_file_path: str=paths.version_path
+):
     version_str = _parse_version_from_workingtree(version_file_path=version_file_path)
 
     if version_str == version_today:
         # the first release-candidate is always <gardenlinux-epoch>.0
-        return f'{gardenlinux_epoch_from_workingtree()}.0'
+        return f'{gardenlinux_epoch_from_workingtree(epoch = epoch)}.0'
 
     # if version is not `today`, we expect to period-separated integers (<epoch>.<patchlevel>)
     epoch, patchlevel = version_str.split('.')
@@ -715,7 +718,10 @@ def next_release_version_from_workingtree(version_file_path: str=paths.version_p
     return version_str
 
 
-def gardenlinux_epoch_from_workingtree(version_file_path: str=paths.version_path):
+def gardenlinux_epoch_from_workingtree(
+    version_file_path: str=paths.version_path,
+    epoch: str=gardenlinux_epoch()
+):
     '''
     determines the configured gardenlinux epoch from the current working tree.
 
@@ -738,7 +744,7 @@ def gardenlinux_epoch_from_workingtree(version_file_path: str=paths.version_path
         pass
 
     if version_str == version_today:
-        return gardenlinux_epoch()
+        return epoch
 
     raise ValueError(f'{version_str=} was not understood - either semver or "today" are supported')
 

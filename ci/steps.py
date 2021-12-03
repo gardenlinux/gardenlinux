@@ -312,10 +312,15 @@ def release_step(
     volume_mounts: typing.List[typing.Dict] = [],
 ):
     step_params = [
+        params.build_targets,
+        params.cicd_cfg_name,
         params.committish,
+        params.ctx_repository_config_name,
+        params.flavourset,
         params.gardenlinux_epoch,
         params.giturl,
-        params.build_targets,
+        params.repo_dir,
+        params.version,
     ]
     step = tkn.model.TaskStep(
         name='release-step',
