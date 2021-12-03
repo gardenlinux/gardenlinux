@@ -367,7 +367,7 @@ fi
 					fi
 				fi
 				rm -rf "${rootfs}/tmp/${test}.d"
-				rm -f "${rootfs}/tmp/$test"
+				rm -rf "${rootfs}/tmp/$test"
 			elif [ "$enabledBy" == "" ]; then
 				echo "test ${test} is not enabled in any feature, skipping"
 				let "skipcounter=skipcounter+1"
