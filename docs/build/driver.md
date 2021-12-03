@@ -6,9 +6,9 @@ disableToc: false
 
 Drivers/LKMs not included in upstream linux of kernel.org can be build out of tree.
 
-## build-lkm container 
+## build-kernelmodule container 
 
-The ```gardenlinux/build-lkm:$(KERNEL_VERSION)``` container comes with pre-installed kernel headers for the respective kernel version.
+The ```gardenlinux/build-kernelmodule:$(KERNEL_VERSION)``` container comes with pre-installed kernel headers for the respective kernel version.
 
 Before building this container, the following packages are required to be available under ```.packages/main/l/linux/```
 
