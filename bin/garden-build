@@ -136,6 +136,8 @@ else
 fi
 
 {
+	export version="$version"
+
 	initArgs=( --arch="$dpkgArch" )
 	initArgs+=( --debian )
 	if [ -n "${ports-}" ]; then
@@ -245,6 +247,7 @@ fi
 		du -hsx "$targetBase.tar.xz"
 
 		sha256sum "$targetBase.tar.xz" | cut -d" " -f1 > "$targetBase.tar.xz.sha256"
+		cat "$targetBase.tar.xz.sha256"
 		touch_epoch "$targetBase.tar.xz.sha256"
 
 		garden-chroot "$rootfs" bash -c '
