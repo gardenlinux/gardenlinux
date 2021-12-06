@@ -136,6 +136,8 @@ else
 fi
 
 {
+	export version="$version"
+
 	initArgs=( --arch="$dpkgArch" )
 	initArgs+=( --debian )
 	if [ -n "${ports-}" ]; then
