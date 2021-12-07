@@ -106,6 +106,25 @@ def ensure_target_branch_exists(
     )
 
 
+def create_release(
+        giturl: str,
+        tag_name: str,
+        target_commitish: str,
+        body: str,
+        draft: bool,
+        prerelease: bool,
+):
+    gh_repo = _github_repo(giturl=giturl)
+    release = gh_repo.create_release(
+        target_commitish=target_commitish,
+        tag_name=tag_name,
+        body=body,
+        draft=draft,
+        prerelease=prerelease,
+    )
+    return release
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cicd-cfg', default='default')
