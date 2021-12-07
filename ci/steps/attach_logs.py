@@ -37,12 +37,12 @@ def _upload_file(
 
 
 def _attach_logs_to_single_manifest(
-    build_dict_str: str,
+    build_dict_json: str,
     s3_client: glci.s3.s3_client,
     s3_bucket_name: str,
     s3_log_key: str,
 ):
-    build_dict = json.loads(build_dict_str)
+    build_dict = json.loads(build_dict_json)
     for task, key in build_dict.items():
         if key and key.strip():
             print(f'Attach logs from task {task}, {key} to manifest')
@@ -74,7 +74,7 @@ def _attach_logs_to_single_manifest(
 
 def _attach_and_upload_logs(
     architecture: str,
-    build_dict_str: str,
+    build_dict_json: str,
     build_targets: str,
     cicd_cfg_name: str,
     committish: str,
@@ -117,7 +117,7 @@ def _attach_and_upload_logs(
 
     # write a file with the download URL so that it can be later added to the email
     with open(os.path.join(repo_dir, 'log_url.txt'), 'w') as f:
-        f.write(f'https://gardenlinux.s3.eu-central-1.amazonaws.com/{s3_key}')
+        f.write(f'https://{cicd_cfg.build.s3_bucket_name}.s3.{cicd_cfg.build.aws_region}.amazonaws.com/{s3_key}')
 
     if is_package_build:
         return True
@@ -126,13 +126,13 @@ def _attach_and_upload_logs(
     build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
     if glci.model.BuildTarget.MANIFEST in build_target_set:
         _attach_logs_to_single_manifest(
-            build_dict_str=build_dict_str,
+            build_dict_json=build_dict_json,
             s3_client=s3_client,
             s3_bucket_name=s3_bucket_name,
             s3_log_key=s3_key,
         )
     else:
-        print(f'build target {glci.model.BuildTarget.MANIFEST=} not specified - do not attach logs')
+        print(f'build target {glci.model.BuildTarget.MANIFEST=} not specified - won\'t attach logs')
         return True
 
     print(f'downloading release manifest from s3 {aws_cfg_name=} {s3_bucket_name=}')
@@ -207,27 +207,9 @@ def _attach_and_upload_logs(
     return True
 
 
-# Logging Concept:
-# - collect logs from all pods and containers of this pipeline run and pack into a ZIP file
-# - store the ZIP in S3 under objects with a readable key like <date>-<time>-<commit>-<kind>_log.zip
-# example: 20211201-063143-07f80e-build_log.zip
-# If the build is broken and no manifest is created the log zip is standalone and will be cleaned up
-# by clean-job together with other outdated artifacts. It can be found by readable key.
-# if build is okay attach logs to single manifests for those artifacts being build in this run (some
-# may already have been build in earlier runs and thus are already attached to their manifests)
-# if this is a publish-build a manifest set is written to S3. Attach logs to this manifest set from
-# this run and collect and attach all logs from artifacts that have been built in previous runs
-# from their single manifests.
-# Append a timestamp to each manifest set so that mutliple and potentially concurrent runs are safe
-# Log files are referenced from manifest-sets and thus not cleaned up as long as the manifest-set
-# exists. Snapshot manifest sets are cleaned after some time and with that the referenced log files.
-# Release manifest-sets are never cleaned up and thus the log file are preserved forever.
-# Implementation note: We use two result objects: one to indicate in each build if the artifact was
-# built or already existed. And the other one to pass the information with the S3 manifest-set key.
-# As this is created during publishing and contains the timestamp it can not be recalculated later
 def upload_logs(
     architecture: str,
-    build_dict_str: str,
+    build_dict_json: str,
     build_targets: str,
     cicd_cfg_name: str,
     committish: str,
@@ -241,6 +223,26 @@ def upload_logs(
     repo_dir: str,
     version: str,
 ):
+    """Logging Concept:
+    - collect logs from all pods and containers of this pipeline run and pack into a ZIP file
+    - store the ZIP in S3 under objects with a readable key <date>-<time>-<commit>-<kind>_log.zip
+    example: 20211201-063143-07f80e-build_log.zip
+    If the build is broken and no manifest is created the log zip is standalone and will be cleaned
+    up by clean-job together with other outdated artifacts. It can be found by readable key.
+    if build is okay attach logs to single manifests for those artifacts being build in this run
+    (some may already have been build in earlier runs and thus are already attached to their
+    manifests)if this is a publish-build a manifest set is written to S3. Attach logs to this
+    manifest set from this run and collect and attach all logs from artifacts that have been built
+    in previous runs from their single manifests.
+    Append a timestamp to each manifest set so that mutliple and potentially concurrent runs are safe
+    Log files are referenced from manifest-sets and thus not cleaned up as long as the manifest-set
+    exists. Snapshot manifest sets are cleaned after some time and with that the referenced log
+    files.
+    Release manifest-sets are never cleaned up and thus the log file are preserved forever.
+    Implementation note: We use two result objects: one to indicate in each build if the artifact was
+    built or already existed. And the other one to pass the information with the S3 manifest-set key.
+    As this is created during publishing and contains the timestamp it can not be recalculated later
+    """
     zip_file_path = os.path.join(repo_dir, 'build_log_full.zip')
     ok = logs.get_and_zip_logs(
         repo_dir=repo_dir,
@@ -253,7 +255,7 @@ def upload_logs(
     if ok:
         ok = _attach_and_upload_logs(
             architecture=architecture,
-            build_dict_str=build_dict_str,
+            build_dict_json=build_dict_json,
             build_targets=build_targets,
             cicd_cfg_name=cicd_cfg_name,
             committish=committish,

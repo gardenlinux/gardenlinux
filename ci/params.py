@@ -19,9 +19,9 @@ class AllParams:
         name='branch',
         description='branch of git repository',
     )
-    build_dict_str = tkn.model.NamedParam(
-        name='build_dict_str',
-        default='~',
+    build_dict_json = tkn.model.NamedParam(
+        name='build_dict_json',
+        default='null',
         description='JSON string with manifest keys for all build task having built',
     )
     build_image = NamedParam(
@@ -137,7 +137,7 @@ class AllParams:
     )
     platform_set = NamedParam(
         name='platform_set',
-        description='set of platforms build in this pipeline (aws, gcp, metal, kvm, ..)',
+        description='set of platforms built in this pipeline (aws, gcp, metal, kvm, ..)',
     )
     build_targets = NamedParam(
         name='build_targets',

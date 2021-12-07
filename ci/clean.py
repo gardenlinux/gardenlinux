@@ -155,10 +155,6 @@ def clean_orphaned_objects(
 
     s3_client = glci.s3.s3_client(cicd_cfg=cicd_cfg)
 
-    # print('referenced objects:')
-    # for key in all_object_keys:
-    #     print(f'{key}')
-
     continuation_token = None
     while True:
         ctoken_args = {'ContinuationToken': continuation_token} \
@@ -175,7 +171,6 @@ def clean_orphaned_objects(
 
         continuation_token = res.get('NextContinuationToken')
 
-        print('Got next chunk from S3')
         object_keys = {obj_dict['Key'] for obj_dict in res['Contents']}
 
         # determine those keys that are no longer referenced by any manifest
@@ -183,8 +178,6 @@ def clean_orphaned_objects(
 
         if dry_run:
             print(f'would delete {len(loose_object_keys)=} unreferenced objs:')
-            # for key in loose_object_keys:
-            #     print(key)
 
         else:
             if loose_object_keys:
@@ -197,8 +190,6 @@ def clean_orphaned_objects(
                     },
                 )
                 print(f'purged {len(loose_object_keys)=} unreferenced objs')
-
-        # print(f'{len(object_keys)=} - {len(loose_object_keys)=}')
 
         if not continuation_token:
           break

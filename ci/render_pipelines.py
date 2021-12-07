@@ -214,7 +214,7 @@ def mk_pipeline_notify_task(
     previous_tasks: typing.List[str],
     all_tasks: typing.Sequence[tkn.model.Task],
     build_tasks: typing.Sequence[tkn.model.Task],
-    platform_set: typing.Set[str] = set(),
+    platform_set: typing.Set[str] = frozenset(),
 ):
     status_dict = {}
     build_dict = {}
@@ -244,7 +244,7 @@ def mk_pipeline_notify_task(
             NamedParam(name='pipeline_name', value='$(context.pipeline.name)'),
             NamedParam(name='namespace', value='$(context.pipelineRun.namespace)'),
             NamedParam(name='status_dict_str', value=status_str),
-            NamedParam(name='build_dict_str', value=build_str),
+            NamedParam(name='build_dict_json', value=build_str),
             NamedParam(name='manifest_set_key', value=manifest_set_key),
         }
     )
