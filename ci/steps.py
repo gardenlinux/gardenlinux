@@ -787,7 +787,7 @@ def attach_log_step(
     ):
     step_params = [
         params.architecture,
-        params.build_dict_str,
+        params.build_dict_json,
         params.build_targets,
         params.cicd_cfg_name,
         params.committish,

@@ -171,8 +171,7 @@ def _download_release_artifact(
             s3_key = log_obj.s3_key
             s3_bucket = log_obj.s3_bucket_name
         else:
-            s3_bucket = cicd_cfg.build.s3_bucket_name, # Note: is a tuple
-            s3_bucket = s3_bucket[0]
+            s3_bucket = cicd_cfg.build.s3_bucket_name
             s3_key = log_obj # old format (str) can be removed if all old manifests are cleaned
 
     else:
