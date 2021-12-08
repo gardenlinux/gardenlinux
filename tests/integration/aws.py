@@ -391,7 +391,9 @@ class AWS:
 
         self.logger = logging.getLogger('aws-testbed')
         self.logger.setLevel(logging.DEBUG)
-        self.logger.info(f"This test's name is {self.test_name} and its uuid is: {self.test_uuid}")
+        self.logger.info(f"This test's tags are:")
+        for tag in self._tags:
+            self.logger.info(f"\t{tag['Key']}: {tag['Value']}")
 
         self._storage_bucket_name = None
 
@@ -412,7 +414,7 @@ class AWS:
 
     def cleanup_test_resources(self):
         if "keep_running" in self.config and self.config['keep_running'] == True:
-            self.logger.info(f"Keeping resource group {self._resourcegroup.name} and all resources in it alive.")
+            self.logger.info(f"Keeping all resources alive as requested.")
             return
         if self._instance:
             self.terminate_vm(self._instance)
@@ -438,7 +440,6 @@ class AWS:
 
 
     def upload_image(self, image_url):
-        # image_name = "gl-integration-test-" + str(int(time.time()))
         image_name = f"img-{self.test_name}"
 
         if 'ami_id' in self.config:
