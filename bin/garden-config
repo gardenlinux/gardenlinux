@@ -54,7 +54,8 @@ for i in $(tr ',' '\n' <<< $features); do
 		$thisDir/garden-chroot $targetDir /tmp/$(basename $featureDir)/$i/exec.config | indent
 	fi
 done
-rm -r "$targetDir/tmp/$(basename $featureDir)"
+
+rm -rf "$targetDir/tmp/$(basename $featureDir)"
 
 printf "## deleting file.exclude\n"
 for i in $(tr ',' '\n' <<< $features); do

@@ -113,7 +113,9 @@ patch -p1 < $srcDir/fpga-config.patch
 printf "\n# Intel IOFS patches\nfpga-ofs.patch\n" >> debian/series
 CHANGELOG+="  * Added Intel FPGA OFS\n"
 #patch -p1 < $srcDir/mok.patch
-#patch -p1 < $srcDir/series.patch
+patch -p1 < $srcDir/series.patch
+patch -p1 < $srcDir/perf-pmu.patch
+patch -p1 < $srcDir/android.patch
 
 echo "### setting certificate"
 # to make sure we do not take this accidently
