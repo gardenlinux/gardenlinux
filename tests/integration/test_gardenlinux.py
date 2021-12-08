@@ -390,6 +390,6 @@ def test_startup_script(client, gcp):
     assert exit_code == 0, f"no {error=} expected. Startup script did not run"
 
 def test_aws_ena_driver(client, aws):
-    (exit_code, output, error) = client.execute_command("ethtool -i $(ip -j link show  | jq -r '.[] | if .ifname != \"lo\" and .ifname != \"docker0\" then .ifname else empty end') | grep \"^driver\" | awk '{print $2}'")
+    (exit_code, output, error) = client.execute_command("sudo /sbin/ethtool -i $(ip -j link show  | jq -r '.[] | if .ifname != \"lo\" and .ifname != \"docker0\" then .ifname else empty end') | grep \"^driver\" | awk '{print $2}'")
     assert exit_code == 0, f"no {error=} expected"
     assert output.rstrip() == "ena", "Expected network interface to run with ena driver"
