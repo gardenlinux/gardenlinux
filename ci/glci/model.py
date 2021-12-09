@@ -575,6 +575,7 @@ class AzureServicePrincipalCfg:
 class AzureStorageAccountCfg:
     storage_account_name: str
     container_name: str
+    container_name_sig: str
     access_key: str
 
 
@@ -585,8 +586,22 @@ class AzurePublishCfg:
     plan_id: str
     service_principal_cfg_name: str
     storage_account_cfg_name: str
+    shared_gallery_cfg_name: str
     notification_emails: typing.Tuple[str, ...]
 
+
+@dataclasses.dataclass(frozen=True)
+class AzureSharedGalleryCfg:
+    resource_group_name: str
+    gallery_name: str
+    location: str
+    published_name: str
+    description: str
+    eula: str
+    release_note_uri: str
+    identifier_publisher: str
+    identifier_offer: str
+    identifier_sku: str
 
 @dataclasses.dataclass(frozen=True)
 class OpenstackEnvironment:
