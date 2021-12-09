@@ -9,7 +9,7 @@ NamedParam = tkn.model.NamedParam
 class AllResults:
     build_result = NamedParam(
         name='build_result',
-        description='manifest key if build was sucessful',
+        description='manifest key if build was successful',
     )
     manifest_set_key_result = NamedParam(
         name='manifest_set_key_result',

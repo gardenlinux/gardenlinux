@@ -231,7 +231,7 @@ def mk_pipeline_notify_task(
     if build_tasks:
         manifest_set_key = '$(tasks.promote-gardenlinux-task.results.manifest_set_key_result)'
     else:
-        manifest_set_key = '~'
+        manifest_set_key = 'null'
 
     # generate default params for all task parameters just passing the value
     name = 'notify-task'
