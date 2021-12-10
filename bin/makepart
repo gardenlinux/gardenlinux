@@ -24,6 +24,9 @@ chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
 chroot "$rootfs_work" /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
 rm "$rootfs_work/.autorelabel"
 
+# sign unified image
+datefudge -s "@$timestamp" sbsign --cert /kernel.crt --key /kernel.key --output "$rootfs_work/boot/efi/EFI/BOOT/BOOTX64.EFI" "$rootfs_work/boot/efi/EFI/BOOT/BOOTX64.EFI"
+
 fstab=$(mktemp)
 
 export E2FSPROGS_FAKE_TIME=$timestamp
