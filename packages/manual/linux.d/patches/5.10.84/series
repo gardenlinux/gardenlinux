@@ -1,0 +1,3 @@
+debian/disable-android.patch
+debian/perf-pmu-fix.patch
+debian/series.patch
