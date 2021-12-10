@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+timestamp=$(garden-version --epoch "$version")
+
+# sign bootloader
+find "$targetDir/boot/efi/Default/" -name "linux" | while read f; do
+	datefudge -s @"$timestamp" sbsign --cert /kernel.crt --key /kernel.key --output "$f" "$f"
+done
+
+# prepare cert for later loading
+openssl x509 -outform der -in /kernel.crt -out $targetDir/boot/efi/gardenlinux.der

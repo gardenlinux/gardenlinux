@@ -15,7 +15,7 @@ export BASH_BUILD
 all: garden-feat
 
 garden-feat: *.go
-	docker run -v $(SCRIPTDIR):/go/src -ti golang:latest bash -c "$$BASH_BUILD"
+	docker run -v $(SCRIPTDIR):/go/src golang:latest bash -c "$$BASH_BUILD"
 	rm -f go.mod go.sum
 
 .PHONY: clean

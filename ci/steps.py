@@ -128,6 +128,7 @@ def clone_step(
         params.committish,
         params.giturl,
         params.repo_dir,
+        params.pr_id,
     ]
 
     code_prefix = "PATCH_CONTENT=''"
@@ -311,10 +312,15 @@ def release_step(
     volume_mounts: typing.List[typing.Dict] = [],
 ):
     step_params = [
+        params.build_targets,
+        params.cicd_cfg_name,
         params.committish,
+        params.ctx_repository_config_name,
+        params.flavourset,
         params.gardenlinux_epoch,
         params.giturl,
-        params.build_targets,
+        params.repo_dir,
+        params.version,
     ]
     step = tkn.model.TaskStep(
         name='release-step',
@@ -616,6 +622,7 @@ def notify_step(
         params.pipeline_run_name,
         params.repo_dir,
         params.status_dict_str,
+        params.pr_id,
     ]
     step = tkn.model.TaskStep(
         name='notify-status',

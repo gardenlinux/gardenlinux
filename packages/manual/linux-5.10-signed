@@ -2,7 +2,7 @@
 set -euox pipefail
 
 . $(dirname $0)/.helper
-. $(dirname $0)/linux-5.10.d/VERSION
+. ${scriptDir}/linux-5.10.d/VERSION
 
 CERT_DIR="${CERTDIR:-${WORKDIR}/certdir}"
 
@@ -33,7 +33,7 @@ cp -R /usr/share/code-signing/linux-image-${KERNEL_ARCH}-signed-template/source-
 
 cd linux-signed-${KERNEL_ARCH}
 for i in $KERNEL_FLAVOURS; do
-	../$(dirname $0)/linux-$(cut -d. -f-2 <<< ${KERNEL_BASE}).d/sign-helper linux-image-${i}-${KERNEL_ARCH}-unsigned debian/signatures
+	${scriptDir}/linux-$(cut -d. -f-2 <<< ${KERNEL_BASE}).d/sign-helper linux-image-${i}-${KERNEL_ARCH}-unsigned debian/signatures
 done
 TMPDIR=.. mk-build-deps debian/control
 sudo apt-get install -y --no-install-recommends -f ../linux-signed-${KERNEL_ARCH}-build-deps*.deb

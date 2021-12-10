@@ -105,7 +105,6 @@ docker run \
 			garden-init --non-debian \
 				--arch="$dpkgArch" \
 				--keyring "$keyring" \
-				--no-merged-usr \
 				rootfs "$suite" "$mirror"
 			# TODO setup proper sources.list for Ubuntu
 			# deb http://archive.ubuntu.com/ubuntu xenial main restricted universe multiverse

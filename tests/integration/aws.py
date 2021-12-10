@@ -3,6 +3,7 @@ import time
 import json
 import os
 import uuid
+import pytest
 
 from os import path
 from urllib.parse import urlparse
@@ -25,9 +26,8 @@ class AWS:
     @classmethod
     def fixture(cls, config) -> RemoteClient:
         test_name = f"gl-test-{time.strftime('%Y%m%d%H%M%S')}"
+        AWS.validate_config(config, test_name)
 
-        if not("securitygroup_name" in config and config["securitygroup_name"] != None):
-            config["securitygroup_name"] = f"{test_name}-sg"
         logger.info(f"Using security group {config['securitygroup_name']}")
 
         aws = AWS(config, test_name)
@@ -44,6 +44,36 @@ class AWS:
                 ssh.disconnect()
             if aws is not None:
                 aws.cleanup_test_resources()
+
+
+    @classmethod
+    def validate_config(cls, cfg: dict, test_name: str):
+        if not 'region' in cfg:
+            pytest.exit("AWS region not specified, cannot continue.", 1)
+        if not 'ami_id' in cfg and not 'image' in cfg:
+            pytest.exit("Neither 'image' nor 'ami_id' specified, cannot continue.", 2)
+        if not 'instance_type' in cfg:
+            cfg['instance_type'] = "t3.micro"
+        if not 'bucket' in cfg:
+            cfg['bucket'] = f"img-{test_name}-upload"
+        if not 'securitygroup_name' in cfg:
+            cfg['securitygroup_name'] = f"{test_name}-sg"
+        if not 'keep_running' in cfg:
+            cfg['keep_running'] = False
+        if not 'ssh' in cfg:
+            cfg['ssh'] = {}
+        if not 'ssh_key_filepath' in cfg['ssh']:
+            import tempfile
+            keyfile = tempfile.NamedTemporaryFile(prefix=f"sshkey-{test_name}-", suffix=".key", delete=False)
+            keyfp = RemoteClient.generate_key_pair(
+                filename = keyfile.name,
+            )
+            logger.info(f"Generated SSH keypair with fingerprint {keyfp}.")
+            cfg['ssh']['ssh_key_filepath'] = keyfile.name
+        if not 'key_name' in cfg['ssh']:
+            cfg['ssh']['key_name'] = f"key-{test_name}"
+        if not 'user' in cfg['ssh']:
+            cfg['ssh']['user'] = "admin"
 
 
     def tags_equal(self, tags1, tags2 = None):
@@ -361,7 +391,9 @@ class AWS:
 
         self.logger = logging.getLogger('aws-testbed')
         self.logger.setLevel(logging.DEBUG)
-        self.logger.info(f"This test's name is {self.test_name} and its uuid is: {self.test_uuid}")
+        self.logger.info(f"This test's tags are:")
+        for tag in self._tags:
+            self.logger.info(f"\t{tag['Key']}: {tag['Value']}")
 
         self._storage_bucket_name = None
 
@@ -382,7 +414,7 @@ class AWS:
 
     def cleanup_test_resources(self):
         if "keep_running" in self.config and self.config['keep_running'] == True:
-            self.logger.info(f"Keeping resource group {self._resourcegroup.name} and all resources in it alive.")
+            self.logger.info(f"Keeping all resources alive as requested.")
             return
         if self._instance:
             self.terminate_vm(self._instance)
@@ -408,7 +440,6 @@ class AWS:
 
 
     def upload_image(self, image_url):
-        # image_name = "gl-integration-test-" + str(int(time.time()))
         image_name = f"img-{self.test_name}"
 
         if 'ami_id' in self.config:
@@ -489,17 +520,6 @@ class AWS:
     def create_instance(self, name: str, ami_id: str, disk_size: int = 7, disk_type: str = 'gp3'):
         """Create AWS instance from given AMI and with given security group."""
         ssh_key_filepath = path.expanduser(self.ssh_config["ssh_key_filepath"])
-        logger.debug("ssh_key_filepath: %s" % ssh_key_filepath)
-
-        if not ssh_key_filepath:
-            ssh_key_filepath = "gardenlinux-test"
-        if not (
-            path.exists(ssh_key_filepath) and path.exists(f"{ssh_key_filepath}.pub")
-        ):
-            logger.info(f"Key {ssh_key_filepath} does not exist. Generating a new key")
-            passphrase = self.ssh_config["passphrase"]
-            user = self.ssh_config["user"]
-            RemoteClient.generate_key_pair(ssh_key_filepath, 2048, passphrase, user)
 
         self._ssh_key_id = self.aws_get_ssh_key(name = self.ssh_config['key_name'])
         if not self._ssh_key_id:

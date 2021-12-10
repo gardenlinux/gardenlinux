@@ -1,10 +1,10 @@
-/bin/su,0,0
 /usr/bin/passwd,0,0
 /usr/bin/chfn,0,0
 /usr/bin/chsh,0,0
 /usr/bin/newgrp,0,0
 /usr/bin/pkexec,0,0
 /usr/bin/gpasswd,0,0
+/usr/bin/su,0,0
 /usr/bin/sudo,0,0
 /usr/lib/openssh/ssh-keysign,0,0
 /usr/lib/policykit-1/polkit-agent-helper-1,0,0

@@ -1,4 +1,5 @@
 auditd
+bsdextrautils
 ca-certificates
 dnsutils
 dracut
@@ -47,4 +48,4 @@ main/p/python3.9/python3.9-minimal_3.9.7-4gardenlinux1_${arch}.deb
 main/p/python3.9/libpython3.9-minimal_3.9.7-4gardenlinux1_${arch}.deb
 main/p/python3.9/libpython3.9-stdlib_3.9.7-4gardenlinux1_${arch}.deb
 main/d/dracut/dracut_055-1gardenlinux1_all.deb
-main/d/dracut/dracut-core_055-1gardenlinux1_${arch}.deb 
+main/d/dracut/dracut-core_055-1gardenlinux1_${arch}.deb

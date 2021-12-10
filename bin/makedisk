@@ -4,6 +4,11 @@ set -Eeuo pipefail
 
 exec 1>&2
 
+function uuid_hash {
+	hash=$(sha256sum)
+	echo "${hash:0:8}-${hash:8:4}-${hash:12:4}-${hash:16:4}-${hash:20:12}"
+}
+
 rootfs="$1"
 img="$2"
 
@@ -30,9 +35,12 @@ img_size=$((img_size + 2))
 
 truncate -s "${img_size}MiB" "$img"
 
+disk_uuid=$(echo "gardenlinux:$version:disk_uuid" | uuid_hash)
+
 # setup partition table
 {
 	echo "label: gpt"
+	echo "label-id: $disk_uuid"
 	while IFS=$'\t' read -r part_uuid type size syslinux file label; do
 		echo "uuid=$part_uuid;type=$type;size=${size}MiB${label:+";name="}${label:+"$label"}$( ([[ "$syslinux" = 1 ]] && echo ";attrs=LegacyBIOSBootable") || true)"
 	done <<< "$second_pass"
@@ -56,3 +64,5 @@ while IFS=$'\t' read -r part_uuid type size syslinux file label; do
 	dd if="$file" of="$img" bs="$sector_size" seek="$start_sector" count="$num_sectors" conv=notrunc
 	rm "$file"
 done <<< "$second_pass"
+
+sha256sum "$img"

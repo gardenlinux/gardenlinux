@@ -89,7 +89,6 @@ docker run \
 			garden-init --non-debian \
 				--arch "$dpkgArch" \
 				--keyring /usr/share/keyrings/raspbian-archive-keyring.gpg \
-				--no-merged-usr \
 				rootfs "$suite" "$mirror"
 
 			epoch="$(< rootfs/garden-epoch)"

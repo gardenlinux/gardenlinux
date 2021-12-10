@@ -2,8 +2,7 @@
 set -euo pipefail
 
 . $(dirname $0)/.helper
-. $(dirname $0)/linux-5.4.d/VERSION
-own_dir="$(readlink -f "$(dirname "${0}")")"
+. ${scriptDir}/linux-5.4.d/VERSION
 
 sudo apt-get install -y --no-install-recommends vim less equivs pesign
 
@@ -27,7 +26,7 @@ cd linux-signed-${KERNEL_ARCH}
 pwd
 ls -la
 for i in $KERNEL_FLAVOURS; do
-	../$(dirname $0)/linux-$(cut -d. -f-2 <<< ${KERNEL_BASE}).d/sign-helper linux-image-${i}-${KERNEL_ARCH}-unsigned debian/signatures
+	${scriptDir}/linux-$(cut -d. -f-2 <<< ${KERNEL_BASE}).d/sign-helper linux-image-${i}-${KERNEL_ARCH}-unsigned debian/signatures
 done
 TMPDIR=.. mk-build-deps debian/control
 sudo apt-get install -y --no-install-recommends -f ../linux-signed-${KERNEL_ARCH}-build-deps*.deb

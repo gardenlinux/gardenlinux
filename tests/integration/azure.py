@@ -12,6 +12,9 @@ from azure.core.exceptions import (
     ResourceNotFoundError
 )
 
+from urllib.request import urlopen
+from urllib.parse import urlparse
+
 from azure.identity import AzureCliCredential
 
 from azure.mgmt.subscription import SubscriptionClient
@@ -356,20 +359,48 @@ class AZURE:
 
 
     @classmethod
+    def validate_config(cls, cfg: dict, test_name: str):
+        if not 'location' in cfg:
+            pytest.exit("Azure location not specified, cannot continue.", 1)
+        if not 'subscription' in cfg and not 'subscription_id' in cfg:
+            pytest.exit("Azure subscription name or subscription ID not specified, cannot continue.", 2)
+        if not 'image_name' in cfg and not 'image' in cfg:
+            pytest.exit("Neither 'image' nor 'image_name' specified, cannot continue.", 3)
+        if not 'image_name' in cfg:
+            cfg['image_name'] = f"img-{test_name}"
+        if not 'resource_group' in cfg:
+            cfg['resource_group'] = f"rg-{test_name}"
+        if not 'storage_account_name' in cfg:
+            cfg['storage_account_name'] = f"sa{re.sub('-', '', test_name)}"
+        if not 'nsg_name' in cfg:
+            cfg['nsg_name'] = f"nsg-{test_name}"
+        if not 'keep_running' in cfg:
+            cfg['keep_running'] = False
+        if not 'ssh' in cfg:
+            cfg['ssh'] = {}
+        if not 'ssh_key_filepath' in cfg['ssh']:
+            import tempfile
+            keyfile = tempfile.NamedTemporaryFile(prefix=f"sshkey-{test_name}-", suffix=".key", delete=False)
+            keyfp = RemoteClient.generate_key_pair(
+                filename = keyfile.name,
+            )
+            logger.info(f"Generated SSH keypair with fingerprint {keyfp}.")
+            cfg['ssh']['ssh_key_filepath'] = keyfile.name
+        if not 'ssh_key_name' in cfg['ssh']:
+            cfg['ssh']['ssh_key_name'] = f"key-{test_name}"
+        if not 'user' in cfg['ssh']:
+            cfg['ssh']['user'] = "azureuser"
+
+
+    @classmethod
     def fixture(cls, config) -> RemoteClient:
 
         test_name = f"gl-test-{time.strftime('%Y%m%d%H%M%S')}"
-        if not("resource_group" in config and config["resource_group"] != None):
-            config["resource_group"] = "rg-" + test_name
+        AZURE.validate_config(config, test_name)
+
         logger.info("Using resource group %s" % config["resource_group"])
-
-        if not("storage_account_name" in config and config["storage_account_name"] != None):
-            config["storage_account_name"] = "sa" + re.sub("-", "", test_name)
         logger.info("Using storage account name %s" % config["storage_account_name"])
-
-        if not("image_name" in config and config["image_name"] != None):
-            config["image_name"] = test_name
-        logger.info("Image name %s" % config["image_name"])
+        logger.info("Using image name %s" % config["image_name"])
 
         azure = AZURE(config, test_name)
         azure.init_environment()
@@ -464,6 +495,7 @@ class AZURE:
         if self._image == None:
             self._image = self.upload_image()
 
+
     def upload_image(self, progress_function = None):
         if "image" in self.config:
             image_file = self.config["image"]
@@ -491,23 +523,48 @@ class AZURE:
                 blob_name = f"{image_name}.vhd",
             )
 
-            file_size = os.path.getsize(image_file)
-            blob_client.create_page_blob(file_size)
-            self.logger.info(f"Uploading {image_file} ({file_size} bytes) - this may take a while...")
+            chunksize = 4 * 1024 * 1024
+            offset = 0
+            o = urlparse(image_file)
 
-            with open(image_file, 'rb') as f:
-                chunksize = 4 * 1024 * 1024
-                offset = 0
+            if o.scheme == "file":
+                image_file = o.path
+                file_size = os.path.getsize(image_file)
+                blob_client.create_page_blob(file_size)
+                self.logger.info(f"Uploading {image_file} ({file_size} bytes) - this may take a while...")
+
+                with open(image_file, 'rb') as f:
+
+                    while offset < file_size:
+                        data = f.read(chunksize)
+                        remaining = file_size - offset
+                        actual_cp_bytes = min(chunksize, remaining)
+
+                        blob_client.upload_page(
+                            page=data,
+                            offset=offset,
+                            length=actual_cp_bytes,
+                        )
+                        offset += actual_cp_bytes
+                        if progress_function:
+                            progress_function(total=file_size, uploaded=offset)
+
+            elif o.scheme == "s3":
+                s3_url = f"https://{o.hostname}.s3.eu-central-1.amazonaws.com/{o.path.lstrip('/')}"
+                meta = urlopen(s3_url)
+                file_size = int(meta.getheader('Content-Length'))
+                blob_client.create_page_blob(file_size)
+                self.logger.info(f"Uploading image from {s3_url} ({file_size} bytes) - this may take a while...")
 
                 while offset < file_size:
-                    data = f.read(chunksize)
                     remaining = file_size - offset
                     actual_cp_bytes = min(chunksize, remaining)
 
-                    blob_client.upload_page(
-                        page=data,
+                    blob_client.upload_pages_from_url(
+                        source_url=s3_url,
                         offset=offset,
                         length=actual_cp_bytes,
+                        source_offset=offset,
                     )
                     offset += actual_cp_bytes
                     if progress_function:
