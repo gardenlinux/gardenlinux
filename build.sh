@@ -78,7 +78,6 @@ envArgs=(
 )
 
 securityArgs=(
-	--privileged
 	--cap-add SYS_ADMIN	# needed for unshare in garden-chroot
 )
 
