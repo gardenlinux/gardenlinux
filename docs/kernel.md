@@ -15,22 +15,62 @@ Garden Linux aims to integrate the latest long term release.
 
 ## How to build a Linux Kernel for Garden Linux
 
-Compiling, packaging and signing a Linux kernel package for garden Linux can be
-done with the help of scripts located in ```packages/manual```.
+
+Compiling, packaging and signing a Linux kernel package for garden Linux can be done like this:
 
 ```bash
 cd packages
 
 # creates a docker container build environment
 make manual
-
 # build a Linux kernel .deb package
-./manual/Linux-5.10
-
+make linux-5.10
 # sign the Linux .deb package
-./manual/Linux-5.10-signed
-
+make linux-5.10-signed
 ```
+
+### versions
+
+```packages/manual/linux.d/versions/VERSION-5.10``` contains the used versions for a linux-5.10 build. There exists a file for each supported linux kernel in ```packages/manual/linux.d/versions/``` analog to the VERSION-5.10 file.
+
+
+To have reproducible builds we fix the version numbers for 
+* KERNEL_RT_VERSION: Version of [Realtime Kernel Patches](https://mirrors.kernel.org/pub/linux/kernel/projects/rt/)
+* KERNEL_VERSION: Version of [kernel.org's linux kernel](https://www.kernel.org)
+* KERNEL_DEBIAN: Version of [Debian's older Kernel](https://salsa.debian.org/kernel-team/linux/)
+* BUILDENV: Version of [Debian's Buildenvironment](https://salsa.debian.org/kernel-team/linux/)
+
+
+
+### Changing/Upgrading Versions
+For each supported kernel version, there also exists a ```packages/manual/linux.d/patches/5.10.84``` folder containing all gardenlinux patches to be applied via quilt during the kernel build. If you upgrade any version number from the `VERSION-5.10` you will probably also need to adapt some patches, or in case of a KERNEL_VERSION change, make sure to have the respective subfolder in ```packages/manual/linux.d/patches/``` created. 
+
+In the case of `KERNEL_VERSION > KERNEL_DEBIAN`, we may need to patch the Buildenv. 
+
+
+### Pre-Download Sources
+
+Use this for your local development, if you want to avoid multiple downloads of the same sources. This safes time and resources. 
+
+```bash
+
+cd packages
+
+# Download all sources required for a kernel build (except gpgkeys). 
+make download-linux-5.10
+
+# Start build container with packages/downloads:/downloads mounted. 
+make manual-debug
+
+# skipps download phase and copies sources from /downloads/linux-5.10.84 to the workingdir
+make linux-5.10-local
+
+# signing as usual
+make linux-5.10-signed
+```
+
+NOTE: the linux-*-local build targets also add some debug flags. Check the Makefile.inside and manual/linux script for details. 
+
 
 ## Why does Garden Linux not integrate the mainline stable?
 Mainline stable introduces features to the new Linux kernel, which happens every ~2 months. Some of those features affect the way e.g. container or network environment interact with the kernel and need some time to be adopted in surrounding tooling. Also some other feature introduce bugs, recognized after release and need to be reverted or other changes. In short: to avoid this we wait until a kernel version becomes a longterm stable and try to integrate always the latest long term stable and the one before to have a decent deprecation phase.   
