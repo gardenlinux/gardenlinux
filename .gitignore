@@ -1,4 +1,5 @@
 /.build
+/.buildlogs
 /.packages
 /.repository
 /repository/reprepro/db
