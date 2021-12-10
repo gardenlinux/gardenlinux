@@ -18,7 +18,7 @@ RUN	apt-get update \
 		debootstrap \
 		wget ca-certificates gettext-base \
 		dosfstools mtools datefudge squashfs-tools e2fsprogs \
-		fdisk mount gnupg xz-utils bsdextrautils \
+		fdisk mount cryptsetup gnupg xz-utils bsdextrautils \
 		sbsigntool \
 		libcap2-bin \
 		python3 \

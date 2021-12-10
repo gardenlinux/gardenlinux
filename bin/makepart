@@ -15,8 +15,8 @@ rootfs="$1"
 timestamp=$(garden-version --epoch "$version")
 
 rootfs_work=$(mktemp -d)
-
 cp -a "$rootfs/." "$rootfs_work"
+mkdir -p "$rootfs_work/overlay"/{etc,var}/{upper,work}
 
 find "$rootfs_work/var/log/" -type f -delete
 
@@ -27,7 +27,10 @@ rm "$rootfs_work/.autorelabel"
 # sign unified image
 datefudge -s "@$timestamp" sbsign --cert /kernel.crt --key /kernel.key --output "$rootfs_work/boot/efi/EFI/BOOT/BOOTX64.EFI" "$rootfs_work/boot/efi/EFI/BOOT/BOOTX64.EFI"
 
+uefi_partition=$(mktemp)
 fstab=$(mktemp)
+veritytab=$(mktemp)
+root_hash=$(mktemp)
 
 export E2FSPROGS_FAKE_TIME=$timestamp
 
@@ -40,18 +43,11 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
   done \
 | sort -k 1 -n -r \
 | while read -r depth source target fs options args; do
-	# set dump and pass options for output fstab to defaults
-	dump=0
-	pass=$( ([[ "$(cut -c 1 <<< "$target")" != "/" ]] && echo 0) || ([[ "$target" = "/" ]] && echo 1) || echo 2)
-	if [[ "$depth" = 0 ]]; then
-		options="$options,x-systemd.growfs"
-	fi
-	echo "$source" "$target" "$fs" "$options" "$dump" "$pass" >> "$fstab"
-
 	# parse extra fstab arguments to determine partition attributes
 	type=$([[ "$fs" = "swap" ]] && echo "swap" || echo "linux")
 	size=
 	resize=1
+	verity=0
 	syslinux=$([[ "$(cut -c -5 <<< "$target")" = "/boot" ]] && [[ -f "$rootfs/usr/bin/syslinux" ]] && echo 1 || echo 0)
 	while IFS="=" read -r key value; do
 		case "$key" in
@@ -61,6 +57,9 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 			"size")
 				size="$value"
 				resize=0
+				;;
+			"verity")
+				verity=1
 				;;
 			"syslinux")
 				syslinux=1
@@ -73,14 +72,23 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 	label=$(grep -oP '(?<=^LABEL=)[a-zA-Z0-9\_\-]*$' <<< "$source" || true)
 
 	# compute sufficiently padded size for partition (aligned to nearest MB (2048 sectors))
-	size=${size:-$(du -sb "$rootfs_work$target" | awk '{ size = $1 * 1.25; padded_size = size + (MB - (size % MB) % MB); print (padded_size / MB) "MiB" }' 'MB=1048576')}
+	size=${size:-$(du -sb "$rootfs_work$target" | awk '{ size = $1 * 1.5; padded_size = size + (MB - (size % MB) % MB); print (padded_size / MB) "MiB" }' 'MB=1048576')}
 
-	file=$(mktemp)
+	file=$([[ "$type" = "uefi" ]] && echo "$uefi_partition" || mktemp)
 	truncate -s "$size" "$file"
 
 	if [[ "$depth" = 0 ]]; then
 		# we iterate depth sorted, so all other partitions should already have been processed and written to fstab
+		if [[ "$verity" = 0 ]]; then
+			options="$options,x-systemd.growfs"
+			echo "$source" "$target" "$fs" "$options" "$dump" "$pass" >> "$fstab"
+			rm -rf "$rootfs_work/overlay"
+		else
+			echo "overlay /var overlay defaults,lowerdir=/var,upperdir=/overlay/var/upper,workdir=/overlay/var/work,x-systemd.requires-mounts-for=/overlay 0 2" >> "$fstab"
+			echo "overlay /etc overlay defaults,lowerdir=/etc,upperdir=/overlay/etc/upper,workdir=/overlay/etc/work,x-systemd.requires-mounts-for=/overlay 0 2" >> "$fstab"
+		fi
 		column -t "$fstab" > "$rootfs_work/etc/fstab"
+		column -t "$veritytab" > "$rootfs_work/etc/veritytab"
 	fi
 
 	case "$fs" in
@@ -88,17 +96,20 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 			# set uuid and HTREE hash_seed to reproducible values instead of default random generated ones
 			uuid=${uuid:-$(echo "gardenlinux:$version:fs_uuid:$fs:$target" | uuid_hash)}
 			hash_seed=$(echo "gardenlinux:$version:ext4_hash_seed:$fs:$target" | uuid_hash)
-			mke2fs -E hash_seed="$hash_seed" -U "$uuid" ${label:+"-L"} ${label:+"$label"} -I 256 -d "$rootfs_work$target" "$file"
+			mke2fs -t ext4 -b 4096 -E hash_seed="$hash_seed" -U "$uuid" ${label:+"-L"} ${label:+"$label"} -I 256 -d "$rootfs_work$target" "$file"
 
 			# set quota options and resize to minimum size needed for contents (when run on a file resize2fs automatically truncates)
 			tune2fs -Q usrquota,grpquota,prjquota "$file"
-			resize2fs -M "$file"
 
-			if [[ "$depth" = 0 ]]; then
-				# add small size overhead/buffer to root partition
-				size=$(du -b "$file" | awk '{ padded_size = $1 + (MB - ($1 % MB) % MB); print (padded_size / MB) + 16 "MiB" }' 'MB=1048576')
-				truncate -s "$size" "$file"
-				resize2fs "$file"
+			if [[ "$resize" = 1 ]]; then
+				resize2fs -M "$file"
+
+				if [[ "$depth" = 0 ]]; then
+					# add small size overhead/buffer to root partition
+					size=$(du -b "$file" | awk '{ padded_size = $1 + (MB - ($1 % MB) % MB); print (padded_size / MB) + 16 "MiB" }' 'MB=1048576')
+					truncate -s "$size" "$file"
+					resize2fs "$file"
+				fi
 			fi
 
 			# fixup timestamp on all used inodes to create reproducible ext4 image
@@ -136,12 +147,75 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 	# recalc size, since it might have change (e.g. from resize2fs)
 	size=$(du -b "$file" | awk '{ padded_size = $1 + (MB - ($1 % MB) % MB); print (padded_size / MB) }' 'MB=1048576')
 
-	part_uuid=$(echo "gardenlinux:$version:part_uuid:$source" | uuid_hash)
-
 	echo "$target $(sha256sum "$file")"
 
-	echo -e "$part_uuid\t$type\t$size\t$syslinux\t$file\t$label" >&3
+	# set dump and pass options for output fstab to defaults
+	dump=0
+	pass=$( ([[ "$(cut -c 1 <<< "$target")" != "/" ]] && echo 0) || ([[ "$target" = "/" ]] && echo 1) || echo 2)
+
+	if [[ "$verity" = 1 ]]; then
+		verity_uuid=$(echo "gardenlinux:$version:verity_uuid:$fs:$target" | uuid_hash)
+		verity_salt=$(echo "gardenlinux:$version:verity_salt:$fs:$target" | sha256sum | cut -c -64)
+		hash_file=$([[ "$depth" = 0 ]] && echo "$root_hash" || mktemp)
+		verity_file="$file.verity"
+		veritysetup format --uuid "$verity_uuid" --salt "$verity_salt" --data-block-size=4096 --hash-block-size=4096 --root-hash-file "$hash_file" "$file" "$verity_file"
+		verity_size=$(du -b "$verity_file" | awk '{ padded_size = $1 + (MB - ($1 % MB) % MB); print (padded_size / MB) }' 'MB=1048576')
+		hash=$(cat "$hash_file")
+		part_uuid="${hash:0:8}-${hash:8:4}-${hash:12:4}-${hash:16:4}-${hash:20:12}"
+		verity_part_uuid="${hash:32:8}-${hash:40:4}-${hash:44:4}-${hash:48:4}-${hash:52:12}"
+		echo -e "$part_uuid\t$type\t$size\t$syslinux\t$file\t$label" >&3
+		echo -e "$verity_part_uuid\tlinux\t$verity_size\t0\t$verity_file" >&3
+
+		if [[ "$depth" != 0 ]]; then
+			verity_name="verity$(sed 's|/|_|' <<< "$target")"
+			echo "$verity_name" "UUID=$uuid" "UUID=$verity_uuid" "$hash" >> "$veritytab"
+			echo "/dev/mapper/$verity_name" "$target" "$fs" "$options" "$dump" "$pass" >> "$fstab"
+		fi
+	else
+		part_uuid=$(echo "gardenlinux:$version:part_uuid:$source" | uuid_hash)
+		echo -e "$part_uuid\t$type\t$size\t$syslinux\t$file\t$label" >&3
+		echo "$source" "$target" "$fs" "$options" "$dump" "$pass" >> "$fstab"
+	fi
   done
 
+read -r _ cmdline < "$rootfs/etc/kernel/cmdline"
+cat "$root_hash"
+if [[ -z "$(cat "$root_hash")" ]]; then
+	root_source=$(tail -n 1 "$fstab" | cut -d " " -f 1)
+	cmdline="root=$root_source $cmdline"
+else
+	cmdline="roothash=$(cat "$root_hash") root=/dev/mapper/root $cmdline"
+fi
+
+unified_image="$(mktemp)"
+[[ ! -e "$rootfs$unified_image" ]]
+touch "$rootfs$unified_image"
+mount --bind "$unified_image" "$rootfs$unified_image"
+[[ ! -e "$rootfs/etc/veritytab" ]]
+touch "$rootfs/etc/veritytab"
+mount --bind "$veritytab" "$rootfs/etc/veritytab"
+[[ -d "$rootfs/proc" ]] && [[ -z "$(ls -A "$rootfs/proc")" ]]
+mount -t proc none "$rootfs/proc"
+
+kernel_file=$(find "$rootfs/boot/" -name 'vmlinuz-*')
+chroot "$rootfs" dracut \
+	--force \
+	--kver "${kernel_file#*-}" \
+	--uefi \
+	--modules "bash dash systemd systemd-initrd systemd-veritysetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd gardenlinux base fs-lib shutdown" \
+	--install "/etc/veritytab" \
+	--kernel-cmdline "$cmdline" \
+	--reproducible \
+	"$unified_image"
+
+umount "$rootfs/proc"
+umount "$rootfs$unified_image"
+rm "$rootfs$unified_image"
+umount "$rootfs/etc/veritytab"
+rm "$rootfs/etc/veritytab"
+datefudge -s "@$timestamp" mcopy -i "$uefi_partition" -o -p "$unified_image" "::/EFI/BOOT/BOOTX64.EFI"
+
+cat "$fstab" "$veritytab"
+
 # cleanup
-rm -rf "$rootfs_work" "$fstab"
+rm -rf "$rootfs_work" "$fstab" "$veritytab" "$root_hash" "$unified_image"
