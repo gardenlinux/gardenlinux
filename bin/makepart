@@ -18,7 +18,7 @@ rootfs_work=$(mktemp -d)
 
 cp -a "$rootfs/." "$rootfs_work"
 
-rm -rf "$rootfs_work/var/log"
+find "$rootfs_work/var/log/" -type f -delete
 
 chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
 chroot "$rootfs_work" /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
