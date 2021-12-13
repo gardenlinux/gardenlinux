@@ -179,7 +179,6 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
   done
 
 read -r _ cmdline < "$rootfs/etc/kernel/cmdline"
-cat "$root_hash"
 if [[ -z "$(cat "$root_hash")" ]]; then
 	root_source=$(tail -n 1 "$fstab" | cut -d " " -f 1)
 	cmdline="root=$root_source $cmdline"
@@ -187,7 +186,11 @@ else
 	cmdline="roothash=$(cat "$root_hash") root=/dev/mapper/root $cmdline"
 fi
 
+initrd="$(mktemp)"
 unified_image="$(mktemp)"
+[[ ! -e "$rootfs$initrd" ]]
+touch "$rootfs$initrd"
+mount --bind "$initrd" "$rootfs$initrd"
 [[ ! -e "$rootfs$unified_image" ]]
 touch "$rootfs$unified_image"
 mount --bind "$unified_image" "$rootfs$unified_image"
@@ -198,9 +201,19 @@ mount --bind "$veritytab" "$rootfs/etc/veritytab"
 mount -t proc none "$rootfs/proc"
 
 kernel_file=$(find "$rootfs/boot/" -name 'vmlinuz-*')
+kernel_version="${kernel_file#*-}"
+
 chroot "$rootfs" dracut \
 	--force \
-	--kver "${kernel_file#*-}" \
+	--kver "$kernel_version" \
+	--modules "bash dash systemd systemd-initrd systemd-veritysetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd gardenlinux base fs-lib shutdown" \
+	--install "/etc/veritytab" \
+	--reproducible \
+	"$initrd"
+
+chroot "$rootfs" dracut \
+	--force \
+	--kver "$kernel_version" \
 	--uefi \
 	--modules "bash dash systemd systemd-initrd systemd-veritysetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd gardenlinux base fs-lib shutdown" \
 	--install "/etc/veritytab" \
@@ -209,13 +222,19 @@ chroot "$rootfs" dracut \
 	"$unified_image"
 
 umount "$rootfs/proc"
+umount "$rootfs$initrd"
+rm "$rootfs$initrd"
 umount "$rootfs$unified_image"
 rm "$rootfs$unified_image"
 umount "$rootfs/etc/veritytab"
 rm "$rootfs/etc/veritytab"
+datefudge -s "@$timestamp" mcopy -i "$uefi_partition" -o -p "$initrd" "::/legacy/$kernel_version/initrd.img-$kernel_version"
 datefudge -s "@$timestamp" mcopy -i "$uefi_partition" -o -p "$unified_image" "::/EFI/BOOT/BOOTX64.EFI"
 
-cat "$fstab" "$veritytab"
+syslinux_conf="$(mktemp)"
+mcopy -i "$uefi_partition" "::/syslinux/syslinux.cfg" "$syslinux_conf"
+sed -i 's|APPEND.*|APPEND '"$cmdline"'|' "$syslinux_conf"
+datefudge -s "@$timestamp" mcopy -i "$uefi_partition" -o -p "$syslinux_conf" "::/syslinux/syslinux.cfg"
 
 # cleanup
-rm -rf "$rootfs_work" "$fstab" "$veritytab" "$root_hash" "$unified_image"
+rm -rf "$rootfs_work" "$fstab" "$veritytab" "$root_hash" "$initrd" "$unified_image" "$syslinux_conf"
