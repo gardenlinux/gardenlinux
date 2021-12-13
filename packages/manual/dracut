@@ -9,16 +9,22 @@ sudo apt-get update
 sudo apt-get build-dep -y --no-install-recommends $src
 apt-get source $src
 
-# TODO figure out what other modules from upstream might be needed in different scenarios
 cd $src-*/
 patch -p1 < $srcDir/noperl.patch
-patch -p1 < $srcDir/dracut-network.install.patch
-patch -p1 < $srcDir/dracut-core.install.patch
 dch -lgardenlinux 'moving pkg-config from Depends to Recommends'
 dch -r ''
 
 # remove the systemd-sysusers patch, not really needed
 quilt delete systemd-users 
+
+quilt import $srcDir/sysusers-configs.patch
+quilt import $srcDir/sysusers-override.patch
+quilt import $srcDir/tr.patch
+quilt push -a
+patch -p1 < $srcDir/dracut-files.patch
+
+dch -lgardenlinux 'add missing modules and files and reorganize'
+dch -r ''
 
 donotmove="$(ls ..)"
 debuild -us
