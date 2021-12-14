@@ -1,3 +1,3 @@
 # Azure images require waagent
-main/w/waagent/waagent_2.2.47-2gardenlinux1_all.deb
+waagent
 chrony

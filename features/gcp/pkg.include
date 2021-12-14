@@ -1,3 +1,1 @@
-main/g/google-compute-image-packages/google-guest-agent_20211015.00-1gardenlinux1_${arch}.deb
-main/g/google-compute-image-packages/google-compute-engine-oslogin_20211013.00-1gardenlinux1_${arch}.deb
-main/g/google-compute-image-packages/google-compute-engine_20210916.00-1gardenlinux1_all.deb
+google-compute-engine

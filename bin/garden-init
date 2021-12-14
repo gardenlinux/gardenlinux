@@ -8,13 +8,13 @@ source "$thisDir/.constants.sh" \
 	--flags 'debian,debian-ports,non-debian' \
 	--flags 'debootstrap:' \
 	--flags 'debootstrap-script:' \
-	--flags 'keyring:,arch:,include:,exclude:,features:' \
+	--flags 'keyring:,keyring-plain:,arch:,include:,exclude:,features:' \
 	--flags 'check-gpg,no-check-gpg' \
 	-- \
-	'<target-dir> <suite> <timestamp>' \
-	'rootfs stretch 2017-05-08T00:00:00Z' \
+	'<target-dir> <version> <timestamp>' \
+	'rootfs 520.0 2017-05-08T00:00:00Z' \
 	\
-	'--non-debian [--debootstrap-script=xyz] <target-dir> <suite> <mirror>' \
+	'--non-debian [--debootstrap-script=xyz] <target-dir> <suite> <version> <mirror>' \
 	'--non-debian rootfs xenial http://archive.ubuntu.com/ubuntu'
 
 eval "$dgetopt"
@@ -23,6 +23,7 @@ debianPorts=
 debootstrap=
 script=
 keyring=
+keyringPlain=
 arch=
 include=
 exclude=
@@ -39,6 +40,7 @@ while true; do
 		--debootstrap)	debootstrap="$1"; shift ;;
 		--debootstrap-script) script="$1"; shift ;;
 		--keyring)	keyring="$1"; shift ;;
+		--keyring-plain) keyringPlain="$1"; shift ;;
 		--arch)		arch="$1"; shift ;;
 		--include)	include="${include:+$include,}$1"; shift ;;
 		--exclude)	exclude="${exclude:+$exclude,}$1"; shift ;;
@@ -58,6 +60,7 @@ if [ -e "$targetDir" ] && [ -z "$(find "$targetDir" -maxdepth 0 -empty)" ]; then
 fi
 
 suite="${1:-}"; shift || eusage 'missing suite'
+version="${1:-}"; shift || eusage 'missing version'
 
 timestamp=
 mirror=
@@ -78,24 +81,7 @@ fi
 epoch="$(date --date "$timestamp" '+%s')"
 export SOURCE_DATE_EPOCH="$epoch"
 
-if [ -z "$nonDebian" ]; then
-		if [ -z "$debianPorts" ]; then
-			mirror="$("$thisDir/.snapshot-url.sh" "@$epoch")"
-		else
-			mirror="$("$thisDir/.snapshot-url.sh" "@$epoch" 'debian-ports')"
-		fi
-fi
-
-# setup mirror_pool, i.e. the archive where the gardenlinux-local packages are kept
-mirror_host="$(sed "s/^\(.*\/\/[^\/]*\)\/.*/\1/" <<< $mirror)"
-mirror_pool="${mirror_host}/gardenlinux/pool/"
-
-if ! wget -t1 -qO/dev/null ${mirror_pool}; then
-	# there are gardenlinux-local packages on the main snapshot mirror, try
-	# snapshot-url.sh again for a gardenlinux-specific one
-	mirror_host=$("$thisDir/.snapshot-url.sh" "@$epoch" "gardenlinux" "gardenlinux" | sed "s/^\(.*\/\/[^\/]*\)\/.*/\1/")
-	mirror_pool="${mirror_host}/gardenlinux/pool/"
-fi
+mirror="http://repo.gardenlinux.io/gardenlinux"
 
 include="$(tr "," "\n" <<< $include)"$'\n'
 exclude="$(tr "," "\n" <<< $include)"$'\n'
@@ -115,8 +101,6 @@ exclude="$(filter_comment <<< $exclude | filter_variables | filter_if)"
 for i in $(filter_comment <<< $include | filter_variables | filter_if | grep -v -f <(echo "$exclude")); do
     if [[ $i = *.deb ]]; then
 	if [[ $i = *://* ]]; then	include_wget+="$i "
-	elif [[ $i = /* ]]; then	include_wget+="${mirror_host}$i "
-	else				include_wget+="${mirror_pool}$i "
 	fi
 	include_aptfile+="./$(basename $i) "
     else 			include_aptversion+="$i "
@@ -132,28 +116,13 @@ else
 	debootstrapArgs+=( --no-check-gpg )
 fi
 
-minbaseSupported="$(
-	scriptFile="$(
-		if [ -n "$script" ]; then
-			readlink -f "$script"
-		else
-			cd /usr/share/debootstrap/scripts
-			readlink -f "$suite"
-		fi
-	)"
-	if grep -q 'minbase' "$scriptFile"; then
-		echo 1
-	fi
-)"
-if [ -n "$minbaseSupported" ]; then
-	debootstrapArgs+=( --variant=minbase )
-fi
+debootstrapArgs+=( --variant=minbase )
 
 [ -z "$keyring" ] || debootstrapArgs+=( --keyring="$keyring" )
 [ -z "$arch" ] || debootstrapArgs+=( --arch="$arch" )
 
 debootstrapArgs+=(
-	"$suite" "$targetDir" "$mirror"
+	"$version" "$targetDir" "$mirror"
 )
 [ -z "$script" ] || debootstrapArgs+=( "$script" )
 
@@ -178,9 +147,10 @@ fi
 echo "$epoch" > "$targetDir/garden-epoch"
 
 if [ -z "$nonDebian" ]; then
-	"$thisDir/garden-debian-sources-list" --snapshot \
+	"$thisDir/garden-debian-sources-list" --gardenlinux-only \
 		$([ -z "$debianPorts" ] || echo '--ports') \
-		"$targetDir" "$suite"
+		"$targetDir" "$suite" "$version"
+	cp "$keyringPlain" "$targetDir/etc/apt/trusted.gpg.d/gardenlinux.asc"
 	"$thisDir/garden-apt-get" "$targetDir" update -qq
 	"$thisDir/garden-apt-get" "$targetDir" upgrade -y
 fi
