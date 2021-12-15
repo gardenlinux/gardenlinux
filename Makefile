@@ -122,6 +122,9 @@ pxe: container-build cert/sign.pub
 pxe-dev: container-build cert/sign.pub
 	./build.sh --skip-build --features metal,server,_dev,_pxe $(BUILDDIR) $(VERSION)
 
+metal-iso: container-build cert/sign.pub
+	./build.sh --skip-build --features metal,server,_iso $(BUILDDIR) $(VERSION)
+
 anvil: container-build cert/sign.pub
 	./build.sh --skip-build --features server,cloud-anvil,kvm,_dev $(BUILDDIR) $(VERSION)
 

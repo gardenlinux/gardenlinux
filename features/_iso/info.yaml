@@ -1,0 +1,6 @@
+description: "iso"
+type: flag
+fs:
+  - dest: /
+    type: squashfs
+
