@@ -1,5 +1,6 @@
 import dataclasses
 import logging
+import os
 import pprint
 import sys
 import typing
@@ -46,6 +47,11 @@ def _calculate_effective_version(
         return f'{version}-{committish}'
 
 
+def _is_finalized_version(version):
+    parsed = version_util.parse_to_semver(version)
+    return parsed.finalize_version()
+
+
 def build_component_descriptor(
     version: str,
     committish: str,
@@ -66,7 +72,9 @@ def build_component_descriptor(
         sys.exit(0)
 
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
-    flavour_set = glci.util.flavour_set(flavour_set_name='all')
+
+    flavour_set_name = 'all'
+    flavour_set = glci.util.flavour_set(flavour_set_name=flavour_set_name)
 
     find_releases = glci.util.preconfigured(
         func=glci.util.find_releases,
@@ -119,6 +127,57 @@ def build_component_descriptor(
             effective_version=effective_version,
         )
     )
+
+    component_descriptor.component.resources.extend(
+        [
+            _image_rootfs_resource(
+                release_manifest=release_manifest,
+                cicd_cfg=cicd_cfg,
+                effective_version=effective_version,
+            )
+            for release_manifest in releases
+        ]
+    )
+
+    if _is_finalized_version(effective_version):
+        build_type = glci.model.BuildType.RELEASE
+    else:
+        build_type = glci.model.BuildType.SNAPSHOT
+
+    find_release_set = glci.util.preconfigured(
+        func=glci.util.find_release_set,
+        cicd_cfg=cicd_cfg,
+    )
+
+    release_set = find_release_set(
+        flavourset_name=flavour_set_name,
+        build_committish=committish,
+        version=version,
+        gardenlinux_epoch=gardenlinux_epoch,
+        build_type=build_type,
+        absent_ok=True,
+    )
+
+    if release_set:
+        manifest_key = os.path.join(
+            glci.model.ReleaseManifestSet.release_manifest_set_prefix,
+            build_type.value,
+            glci.util.release_set_manifest_name(
+                build_committish=committish,
+                gardenlinux_epoch=gardenlinux_epoch,
+                version=version,
+                flavourset_name=flavour_set_name,
+                build_type=build_type,
+            ),
+        )
+
+        component_descriptor.component.resources.append(
+            release_manifest_set_resource(
+                cicd_cfg=cicd_cfg,
+                effective_version=effective_version,
+                manifest_set_s3_key=manifest_key,
+            )
+        )
 
     logger.info(
         'Generated Component-Descriptor:\n'
@@ -225,6 +284,70 @@ def virtual_machine_image_resource(
     )
 
 
+def _image_rootfs_resource(
+    release_manifest: glci.model.OnlineReleaseManifest,
+    cicd_cfg,
+    effective_version: str,
+):
+    labels = [
+        cm.Label(
+          name='gardener.cloud/gardenlinux/ci/build-metadata',
+          value={
+              'modifiers': release_manifest.modifiers,
+              'buildTimestamp': release_manifest.build_timestamp,
+              'debianPackages': [p for p in _virtual_image_packages(release_manifest, cicd_cfg)],
+          }
+        ),
+    ]
+
+    rootfs_file_path = release_manifest.path_by_suffix('rootfs.tar.xz')
+    bucket_name = cicd_cfg.build.s3_bucket_name
+
+    resource_access = cm.S3Access(
+        type=cm.AccessType.S3,
+        bucketName=bucket_name,
+        objectKey=rootfs_file_path.s3_key,
+    )
+
+    resource_type = 'application/tar+vm-image-rootfs'
+
+    return cm.Resource(
+        name='rootfs',
+        version=effective_version,
+        extraIdentity={
+            'feature-flags': ','.join(release_manifest.modifiers),
+            'architecture': release_manifest.architecture,
+            'platform': release_manifest.platform,
+        },
+        type=resource_type,
+        labels=labels,
+        access=resource_access,
+    )
+
+
+def release_manifest_set_resource(
+    cicd_cfg,
+    effective_version: str,
+    manifest_set_s3_key: str,
+):
+    resource_type = 'release_manifest_set'
+
+    bucket_name = cicd_cfg.build.s3_bucket_name
+
+    resource_access = cm.S3Access(
+        type=cm.AccessType.S3,
+        bucketName=bucket_name,
+        objectKey=manifest_set_s3_key,
+    )
+
+    return cm.Resource(
+        name='release_manifest_set',
+        version=effective_version,
+        type=resource_type,
+        access=resource_access,
+    )
+
+
 def _base_component_descriptor(
     version: str,
     ctx_repository_base_url: str,
@@ -232,8 +355,7 @@ def _base_component_descriptor(
     branch: str,
     component_name: str='github.com/gardenlinux/gardenlinux',
 ):
-    parsed_version = version_util.parse_to_semver(version)
-    if parsed_version.finalize_version() == parsed_version:
+    if _is_finalized_version(version):
         # "final" version --> there will be a tag, later
         src_ref = f'refs/tags/{version}'
     else:
