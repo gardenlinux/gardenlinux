@@ -67,13 +67,15 @@ def ensure_target_branch_exists(
     release_branch_exists = release_branch in {b.name for b in gh_repo.branches()}
     print(f'{release_branch_exists=}')
 
+    release_commit = repo.rev_parse(release_committish)
+    print(f'{release_commit=}')
+
     if is_first_release:
         # release_branch MUST not exist, yet
         if release_branch_exists:
             print(f'Error: {release_branch=} already exists - aborting release')
             sys.exit(1)
 
-        repo = git_helper.repo
         release_commit = repo.rev_parse(release_committish)
         print(f'{release_commit=}')
 
