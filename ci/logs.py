@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 import urllib3
 from kubernetes import client, config
+from kubernetes.client.rest import ApiException
 import os
 from typing import Dict
 import zipfile
-
 
 @dataclass
 class K8sResponse:
@@ -113,17 +113,26 @@ def get_and_zip_logs(
                 if tail_lines:
                     args['tail_lines'] = tail_lines
 
-                data, status_code, headers = k8s.read_namespaced_pod_log_with_http_info(**args)
-                # returns tuple (response_data, http status, headers)
-                log_response = K8sResponse(
-                    data=data,
-                    status_code=status_code,
-                    headers=headers,
-                )
+                try:
+                    data, status_code, headers = k8s.read_namespaced_pod_log_with_http_info(**args)
+                    # returns tuple (response_data, http status, headers)
+                    log_response = K8sResponse(
+                        data=data,
+                        status_code=status_code,
+                        headers=headers,
+                    )
 
-                if log_response.status_code != 200:
-                    print(f'Getting logs failed with {log_response.status_code=}')
-                    continue
+                    if log_response.status_code != 200:
+                        print(f'Getting logs failed with {log_response.status_code=}')
+                        continue
+                except ApiException as ex:
+                    if ex.status == 404:
+                        print(f'Log for pod {pod_name} is already gone {str(ex)}')
+                    else:
+                        print(f'Getting logs for pod {pod_name} failed {str(ex)}')
+
+                    with open(zip_comp, 'w') as f:
+                        f.write('Log file for {pod_name} could not be retrieved: {str(ex)}')
 
                 with log_zip.open(zip_comp, mode='w') as zipcomp:
                     for chunk in log_response.data.stream(amt=4096):
