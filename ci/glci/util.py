@@ -368,13 +368,12 @@ def release_set_manifest_name(
 
     if build_type in (BT.SNAPSHOT, BT.DAILY):
         name = f'{gardenlinux_epoch}-{build_committish[:6]}-{flavourset_name}'
+        if with_timestamp:
+            name += '-' + datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')
     elif build_type is BT.RELEASE:
         name = f'{version}-{flavourset_name}'
     else:
         raise ValueError(build_type)
-
-    if with_timestamp:
-        name += '-' + datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')
 
     return name
 
