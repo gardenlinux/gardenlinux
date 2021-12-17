@@ -22,6 +22,7 @@ cicd_cfgs:
         plan_id: 'greatest'
         service_principal_cfg_name: 'shoot-operator-dev'
         storage_account_cfg_name: 'gardenlinux-dev'
+        shared_gallery_cfg_name: 'gardenlinux-shared-gallery'
         notification_emails: [andreas.burger@sap.com, dominic.kistner@sap.com]
       openstack:
         environment_cfg_name: 'gardenlinux'

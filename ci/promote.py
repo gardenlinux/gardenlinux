@@ -17,6 +17,7 @@ import typing
 
 import glci.util
 import glci.model
+import version
 
 glci.util.configure_logging()
 
@@ -29,10 +30,10 @@ def parse_args():
     parser.add_argument('--committish')
     parser.add_argument('--gardenlinux-epoch', type=int)
     parser.add_argument(
-      '--build-target',
-      action='append',
-      type=glci.model.BuildTarget,
-      dest='build_targets',
+        '--build-targets',
+        type=lambda x: (glci.model.BuildTarget(v) for v in x.split(',')),
+        action='extend',
+        dest='build_targets',
     )
     parser.add_argument('--version', required=True)
     parser.add_argument('--source', default='snapshots')
@@ -43,6 +44,11 @@ def parse_args():
     )
     parser.add_argument('--cicd-cfg', default='default')
     parser.add_argument('--allow-partial', default=False, action='store_true')
+    parser.add_argument('--azure-sig',
+        default=False,
+        action='store_true',
+        help='Test Azure Shared Image Gallery'
+    )
 
     return parser.parse_args()
 
@@ -64,6 +70,8 @@ def publish_image(
         cleanup_function = None
     elif release.platform == 'azure':
         publish_function = _publish_azure_image
+        # For publishing using community gallery use:
+        # publish_function = _publish_azure_shared_image_gallery
         cleanup_function = None
     elif release.platform == 'openstack':
         publish_function = _publish_openstack_image
@@ -191,6 +199,40 @@ def _publish_azure_image(release: glci.model.OnlineReleaseManifest,
         marketplace_cfg=azure_marketplace_cfg,
         release=release,
         notification_emails=cicd_cfg.publish.azure.notification_emails,
+    )
+
+
+def _publish_azure_shared_image_gallery(
+    release: glci.model.OnlineReleaseManifest,
+    cicd_cfg: glci.model.CicdCfg,
+) -> str:
+    import glci.az
+    import glci.model
+    import ccc.aws
+    import ci.util
+
+    s3_client = ccc.aws.session(cicd_cfg.build.aws_cfg_name).client('s3')
+    cfg_factory = ci.util.ctx().cfg_factory()
+
+    storage_account_cfg = cfg_factory.azure_storage_account(
+        cicd_cfg.publish.azure.storage_account_cfg_name
+    )
+    storage_account_cfg_serialized = glci.model.AzureStorageAccountCfg(
+        **storage_account_cfg.raw
+    )
+    # get credential object from configured user and secret
+    azure_principal = cfg_factory.azure_service_principal(cfg_name=cicd_cfg.publish.azure.service_principal_cfg_name)
+    azure_principal_serialized =  glci.model.AzureServicePrincipalCfg(**azure_principal.raw)
+
+    shared_gallery_cfg = cfg_factory.azure_shared_gallery(cfg_name=cicd_cfg.publish.azure.shared_gallery_cfg_name)
+    shared_gallery_cfg_serialized = glci.model.AzureSharedGalleryCfg(**shared_gallery_cfg.raw)
+
+    return glci.az.publish_azure_shared_image_gallery(
+        s3_client=s3_client,
+        release=release,
+        service_principal_cfg=azure_principal_serialized,
+        storage_account_cfg=storage_account_cfg_serialized,
+        shared_gallery_cfg=shared_gallery_cfg_serialized,
     )
 
 
@@ -343,11 +385,9 @@ def main():
     )
 
     # XXX hard-code version naming convention
-    build_version = f'{gardenlinux_epoch}-{committish[:6]}'
-
     releases = tuple(find_releases(
         flavour_set=flavour_set,
-        version=build_version,
+        version=version,
         build_committish=committish,
         gardenlinux_epoch=gardenlinux_epoch,
         prefix=glci.model.ReleaseManifest.manifest_key_prefix,
@@ -364,20 +404,30 @@ def main():
             logger.error(f'{parsed.allow_partial=} -> aborting')
             sys.exit(1)
 
-    promote(
-        releases=releases,
-        build_committish=committish,
-        gardenlinux_epoch=gardenlinux_epoch,
-        target_prefix=os.path.join(
-            glci.model.ReleaseManifestSet.release_manifest_set_prefix,
-            parsed.target.value,
-        ),
-        version_str=version,
-        build_targets=parsed.build_targets,
-        cicd_cfg=cicd_cfg,
-        flavour_set=flavour_set,
-        build_type=parsed.target,
-    )
+    if parsed.azure_sig:
+        filtered = [release for release in releases if release.platform == 'azure']
+        release = filtered[0] # there should be only one
+
+        manifest = _publish_azure_shared_image_gallery(
+            cicd_cfg=cicd_cfg,
+            release=release,
+        )
+        print(f'Manifest created with: {manifest.published_image_metadata=}')
+    else:
+        promote(
+            releases=releases,
+            build_committish=committish,
+            gardenlinux_epoch=gardenlinux_epoch,
+            target_prefix=os.path.join(
+                glci.model.ReleaseManifestSet.release_manifest_set_prefix,
+                parsed.target.value,
+            ),
+            version_str=version,
+            build_targets=parsed.build_targets,
+            cicd_cfg=cicd_cfg,
+            flavour_set=flavour_set,
+            build_type=parsed.target,
+        )
 
 
 if __name__ == '__main__':
