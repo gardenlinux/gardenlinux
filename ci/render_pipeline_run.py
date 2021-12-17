@@ -10,6 +10,7 @@ import glci.model
 import glci.util
 import tkn.model
 import paths
+import version as version_lib
 
 GardenlinuxFlavour = glci.model.GardenlinuxFlavour
 
@@ -129,7 +130,15 @@ def get_common_parameters(
 ) -> typing.Sequence[NamedParam]:
     # if version is not specified, derive from worktree (i.e. VERSION file)
     version = get_version(args)
+
     version_label = get_version_label(version, args['committish'])
+
+    parsed_version = version_lib.parse_to_semver(version_label)
+    if parsed_version.minor > 0:
+        base_version_label = f'rel-{parsed_version.major}'
+        print(f'Use base images tagged for release: {parsed_version.major}: {base_version_label}')
+    else:
+        base_version_label = version_label
 
     # check if to use an older existing base image or base image from currrent commit:
     if 'gardenlinux_base_image' in args and args['gardenlinux_base_image']:
@@ -137,8 +146,8 @@ def get_common_parameters(
         build_deb_image = path + '/gardenlinux-build-deb:' + label
         build_image = path + '/gardenlinux-build-image:' + label
     else:
-        build_deb_image = get_deb_build_image(args['oci_path'], version_label)
-        build_image = get_build_image(args['oci_path'], version_label)
+        build_deb_image = get_deb_build_image(args['oci_path'], base_version_label)
+        build_image = get_build_image(args['oci_path'], base_version_label)
 
     # for git-url rename arg git_url to giturl:
     git_url_param = NamedParam(name='giturl', value=str(args['git_url']))

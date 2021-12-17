@@ -577,6 +577,7 @@ def build_base_image_step(
         params.oci_path,
         params.repo_dir,
         params.version_label,
+        params.build_targets,
     ]
     step = tkn.model.TaskStep(
         name='basebuild',
