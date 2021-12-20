@@ -19,6 +19,8 @@ repo_root = os.path.abspath(os.path.join(
 
 
 class BuildTarget(enum.Enum):
+    # build the base-image for BUILD step
+    BASE_BUILD = 'build-baseimage', {}
     # compile, link, create arifacts local
     BUILD = 'build', {}
     # upload artifacts to S3, create manifest
@@ -30,9 +32,11 @@ class BuildTarget(enum.Enum):
     # upload images to cloud providers
     PUBLISH = 'publish', {'build', 'manifest', 'component-descriptor'}
     # use version epoch.y.z instead of epoch-commit
-    FREEZE_VERSION = 'freeze-version', {'build', 'manifest', 'component-descriptor'}
+    FREEZE_VERSION = 'freeze-version', {'build-baseimage', 'build', 'manifest',
+        'component-descriptor'}
     # create a github release (branch, tag, release)
-    GITHUB_RELEASE = 'github-release', {'build', 'manifest', 'component-descriptor', 'freeze-version'}
+    GITHUB_RELEASE = 'github-release', {'build-baseimage', 'build', 'manifest',
+        'component-descriptor', 'freeze-version'}
 
     def __new__(cls, value, requires=None):
         obj = object.__new__(cls)
@@ -47,7 +51,7 @@ class BuildTarget(enum.Enum):
         return targets
 
     @staticmethod
-    def check_requirements(bt_set: typing.Set[BuildTarget]) :
+    def check_requirements(bt_set: typing.Set[BuildTarget]):
         for e in bt_set:
             missing = set()
             for r in e._requires_:
