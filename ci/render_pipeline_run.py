@@ -94,8 +94,6 @@ def get_deb_build_image(
     version_label: str,
 ):
     return f'{oci_path}/gardenlinux-build-deb:{version_label}'
-    # for fixed path from concourse buildimage pipeline
-    # return 'eu.gcr.io/gardener-project/gardenlinux/gardenlinux-build-deb:413.0.0'
 
 
 def get_version(
@@ -138,10 +136,12 @@ def get_common_parameters(
         base_version_label = f'rel-{parsed_version.major}'
         print(f'Use base images tagged for release: {parsed_version.major}: {base_version_label}')
     else:
-        base_version_label = version_label
+        base_version_label = 'latest'
 
     # check if to use an older existing base image or base image from currrent commit:
     if 'gardenlinux_base_image' in args and args['gardenlinux_base_image']:
+        print('Found gardenlinux_base_image in args, force using base-image: '
+            f'{args["gardenlinux_base_image"]}')
         path, label = args['gardenlinux_base_image'].split(':')
         build_deb_image = path + '/gardenlinux-build-deb:' + label
         build_image = path + '/gardenlinux-build-image:' + label

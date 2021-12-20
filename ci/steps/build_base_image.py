@@ -17,15 +17,9 @@ def build_base_image(
     additional_tags = ['latest']
     build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
 
-    # check if build is configured to use an existing (older) base-image
-    # if yes skip building base images otherwise build base images for commit
-    targeted_build_deb_image = f'{oci_path}/gardenlinux-build-deb:{version_label}'
-    targeted_build_image = f'{oci_path}/gardenlinux-build-image:{version_label}'
-
-    if (gardenlinux_build_deb_image != targeted_build_deb_image and
-        build_image != targeted_build_image):
-        print(f'Build will use (older) base images {gardenlinux_build_deb_image}, {build_image}'
-            ' skip step.')
+    if not glci.model.BuildTarget.BASE_BUILD in build_target_set:
+        print(f'Build target {glci.model.BuildTarget.BASE_BUILD.value} not set: skip base image'
+            ' build')
         return
 
     # if we are in a release and have a .x version with x>0 do not build base image
