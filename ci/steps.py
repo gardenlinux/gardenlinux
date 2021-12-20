@@ -208,6 +208,7 @@ def upload_results_step(
         params.platform,
         params.build_targets,
         params.version,
+        params.build_image,
     ]
     result_params = [
         results.build_result

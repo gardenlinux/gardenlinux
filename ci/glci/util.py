@@ -133,6 +133,8 @@ def release_manifest(
     # patch-in transient attrs
     parsed['s3_key'] = key
     parsed['s3_bucket'] = bucket_name
+    if not 'base_image' in parsed:
+        parsed['base_image'] = None
 
     manifest = dacite.from_dict(
         data_class=glci.model.OnlineReleaseManifest,
