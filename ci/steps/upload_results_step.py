@@ -64,6 +64,7 @@ def upload_results_step(
     outfile: str,
     build_targets: str,
     build_result: str,
+    build_image: str,
 ):
     build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
 
@@ -119,6 +120,7 @@ def upload_results_step(
       modifiers=modifiers,
       paths=uploaded_relpaths,
       published_image_metadata=None,
+      base_image=build_image,
     )
 
     # always publish oci image

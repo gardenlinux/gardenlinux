@@ -385,6 +385,9 @@ class ReleaseManifest(ReleaseIdentifier):
     '''
     build_timestamp: str
     paths: typing.Tuple[S3_ReleaseFile, ...]
+    base_image: typing.Optional[str]
+
+
     published_image_metadata: typing.Union[
         AlicloudPublishedImageSet,
         AwsPublishedImageSet,

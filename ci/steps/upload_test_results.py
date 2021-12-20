@@ -33,18 +33,6 @@ def upload_test_results(
         print('Tests already uploaded in previous run, skipping upload step')
         sys.exit(0)
 
-    manifest = glci.model.ReleaseManifest(
-      build_committish=committish,
-      version=version,
-      build_timestamp=None,
-      gardenlinux_epoch=gardenlinux_epoch,
-      architecture=glci.model.Architecture(architecture).value,
-      platform=platform,
-      modifiers=modifiers,
-      paths=None,
-      published_image_metadata=None,
-    )
-
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
     s3_client = glci.s3.s3_client(cicd_cfg)
     aws_cfg_name = cicd_cfg.build.aws_cfg_name
