@@ -19,10 +19,10 @@ class AllParams:
         name='branch',
         description='branch of git repository',
     )
-    build_dict_json = tkn.model.NamedParam(
-        name='build_dict_json',
+    build_tasks = tkn.model.NamedParam(
+        name='build_tasks',
         default='null',
-        description='JSON string with manifest keys for all build task having built',
+        description='comma separated list of all tasks building gardenlinux',
     )
     build_image = NamedParam(
         name='build_image',
@@ -88,11 +88,6 @@ class AllParams:
         name='key_config_name',
         description='config name of the key to use for signing the packages',
         default='gardenlinux',
-    )
-    manifest_set_key = NamedParam(
-        name='manifest_set_key',
-        default='~',
-        description='S3 key of manifest-set created in a previous step',
     )
     modifiers = NamedParam(
         name='modifiers',

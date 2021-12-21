@@ -102,7 +102,8 @@ def task_step_script(
         ))
         if results:
             args += ',' + ','.join((
-                f"{result.name.replace('-', '_')}='$(results.{result.name}.path)'" for result in results
+                f"{result.name.replace('-', '_')}='$(results.{result.name}.path)'"
+                    for result in results
             ))
         callable_str = f'{callable}({args})'
     elif script_type is ScriptType.BOURNE_SHELL:
@@ -792,17 +793,15 @@ def attach_log_step(
     ):
     step_params = [
         params.architecture,
-        params.build_dict_json,
+        params.build_tasks,
         params.build_targets,
         params.cicd_cfg_name,
         params.committish,
         params.flavourset,
         params.gardenlinux_epoch,
-        params.manifest_set_key,
         params.namespace,
         params.pipeline_run_name,
         params.platform_set,
-        params.promote_target,
         params.repo_dir,
         params.version,
 ]

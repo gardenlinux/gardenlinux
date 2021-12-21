@@ -1,5 +1,4 @@
 import datetime
-import json
 import os
 
 import glci.model
@@ -82,7 +81,6 @@ def _attach_and_upload_logs(
     is_package_build: bool,
     manifest_set_key: str,
     platform_set: str,
-    promote_target: str,
     repo_dir: str,
     version: str,
 ) -> bool:
@@ -208,17 +206,15 @@ def _attach_and_upload_logs(
 
 def upload_logs(
     architecture: str,
-    build_dict_json: str,
+    build_tasks: str,
     build_targets: str,
     cicd_cfg_name: str,
     committish: str,
     flavourset: str,
     gardenlinux_epoch: str,
-    manifest_set_key: str,
     namespace: str,
     pipeline_run_name: str,
     platform_set: str,
-    promote_target: str,
     repo_dir: str,
     version: str,
 ):
@@ -256,12 +252,12 @@ def upload_logs(
         only_failed=False,
     )
     if ok:
-        tasks = build_dict_json.split(',')
+        tasks = build_tasks.split(',')
         build_dict = dict()
         for task_name in tasks:
             build_dict[task_name] = logs.get_task_result(
                 task_runs_dict=pipeline_run,
-                task_ref_name='task_name',
+                task_ref_name=task_name,
                 result_name='build_result',
             )
 
@@ -280,9 +276,8 @@ def upload_logs(
             flavour_set=flavourset,
             gardenlinux_epoch=gardenlinux_epoch,
             is_package_build='gl-packages' in pipeline_run_name,
-            pipeline_run=manifest_set_key,
+            manifest_set_key=manifest_set_key,
             platform_set=platform_set,
-            promote_target=promote_target,
             repo_dir=repo_dir,
             version=version,
         )
