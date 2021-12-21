@@ -604,11 +604,12 @@ def create_component_descriptor_step(
 ):
     step_params = [
         params.branch,
+        params.build_targets,
         params.cicd_cfg_name,
         params.committish,
         params.ctx_repository_config_name,
+        params.flavour_set_name,
         params.gardenlinux_epoch,
-        params.build_targets,
         params.snapshot_ctx_repository_config_name,
         params.version,
     ]
