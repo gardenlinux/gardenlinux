@@ -58,6 +58,7 @@ def build_component_descriptor(
     cicd_cfg_name: str,
     gardenlinux_epoch: str,
     build_targets: str,
+    flavour_set_name: str,
     ctx_repository_config_name: str,
     branch: str,
     snapshot_ctx_repository_config_name: str = None,
@@ -73,7 +74,6 @@ def build_component_descriptor(
 
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
 
-    flavour_set_name = 'all'
     flavour_set = glci.util.flavour_set(flavour_set_name=flavour_set_name)
 
     find_releases = glci.util.preconfigured(
@@ -150,7 +150,7 @@ def build_component_descriptor(
     )
 
     release_set = find_release_set(
-        flavourset_name=flavour_set_name,
+        flavour_set_name=flavour_set_name,
         build_committish=committish,
         version=version,
         gardenlinux_epoch=gardenlinux_epoch,
@@ -166,7 +166,7 @@ def build_component_descriptor(
                 build_committish=committish,
                 gardenlinux_epoch=gardenlinux_epoch,
                 version=version,
-                flavourset_name=flavour_set_name,
+                flavour_set_name=flavour_set_name,
                 build_type=build_type,
             ),
         )
