@@ -372,7 +372,7 @@ def retrieve_release_set():
     )
 
     release_set = find_release_set(
-        flavourset_name=parsed.flavourset_name,
+        flavour_set_name=parsed.flavourset_name,
         build_committish=parsed.committish,
         version=parsed.version,
         gardenlinux_epoch=parsed.gardenlinux_epoch,

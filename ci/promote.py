@@ -314,7 +314,7 @@ def promote(
                     build_committish=build_committish,
                     gardenlinux_epoch=gardenlinux_epoch,
                     version=version_str,
-                    flavourset_name=flavour_set.name,
+                    flavour_set_name=flavour_set.name,
                     build_type=build_type,
                 ),
             )

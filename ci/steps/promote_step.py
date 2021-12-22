@@ -177,7 +177,7 @@ def promote_step(
             build_committish=committish,
             gardenlinux_epoch=gardenlinux_epoch,
             version=version,
-            flavourset_name=flavour_set.name,
+            flavour_set_name=flavour_set.name,
             build_type=build_type,
         ),
     )
