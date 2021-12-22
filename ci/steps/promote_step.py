@@ -113,7 +113,7 @@ def promote_single_step(
 
 def promote_step(
     cicd_cfg_name: str,
-    flavourset: str,
+    flavour_set_name: str,
     publishing_actions: str,
     gardenlinux_epoch: parsable_to_int,
     committish: str,
@@ -121,7 +121,7 @@ def promote_step(
     promote_target: str,
 ):
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
-    flavour_set = glci.util.flavour_set(flavourset)
+    flavour_set = glci.util.flavour_set(flavour_set_name)
     flavours = tuple(flavour_set.flavours())
     build_type: glci.model.BuildType = glci.model.BuildType(promote_target)
     publishing_actions = [

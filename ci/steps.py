@@ -252,7 +252,7 @@ def promote_step(
     step_params = [
         params.cicd_cfg_name,
         params.committish,
-        params.flavourset,
+        params.flavour_set_name,
         params.gardenlinux_epoch,
         params.promote_target,
         params.publishing_actions,
