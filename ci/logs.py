@@ -20,7 +20,28 @@ class TaskRunInfo:
     steps: Dict[str, str]  # step-name --> step container
 
 
+def load_kube_config():
+    if 'CC_CONFIG_DIR' in os.environ:
+        # run locally then use:
+        config.load_kube_config()
+    else:
+        config.load_incluster_config()
+
+
+def get_pipeline_run(pipeline_run_name: str, namespace: str):
+    # fetching the custom resource definition (CRD) api
+    api = client.CustomObjectsApi()
+    return api.get_namespaced_custom_object(
+        group="tekton.dev",
+        namespace=namespace,
+        name=pipeline_run_name,
+        plural='pipelineruns',
+        version='v1alpha1',
+    )
+
+
 def get_and_zip_logs(
+    pipeline_run: dict[str, any],
     repo_dir: str,
     namespace: str,
     pipeline_run_name: str,
@@ -34,22 +55,8 @@ def get_and_zip_logs(
     tail_lines: limits the amount of lines returned from each pod log
     '''
 
-    if 'CC_CONFIG_DIR' in os.environ:
-        # run locally then use:
-        config.load_kube_config()
-    else:
-        config.load_incluster_config()
-
     k8s = client.CoreV1Api()
-    # fetching the custom resource definition (CRD) api
-    api = client.CustomObjectsApi()
-    pipeline_run = api.get_namespaced_custom_object(
-        group="tekton.dev",
-        namespace=namespace,
-        name=pipeline_run_name,
-        plural='pipelineruns',
-        version='v1alpha1',
-    )
+
     # Compile all task names from the PipelineRun
     task_names = [t['name'] for t in pipeline_run['status']['pipelineSpec']['tasks']]
     if 'finally' in  pipeline_run['status']['pipelineSpec']:
@@ -123,3 +130,24 @@ def get_and_zip_logs(
                         zipcomp.write(chunk)
 
     return zip_file_path
+
+
+def get_task_result(
+    task_runs_dict,
+    task_ref_name: str,
+    result_name: str,
+):
+    """
+    get result value from termination message of a taks run. Read directly the taskRun K8s object
+    to find a result from a task. This method avoids using a $(tasks.xyz.results...) construct to
+    workaround the problem that using a result requires the task to execute successfully. This
+    method allows using a result without having the dependency that the result was actually set.
+    """
+    task_runs_dict =  task_runs_dict['status']['taskRuns']
+    for tr_dict in task_runs_dict.values():
+        if tr_dict['pipelineTaskName'] == task_ref_name and 'taskResults' in tr_dict['status']:
+            results_dict = tr_dict['status']['taskResults']
+            for r in results_dict:
+                if r['name'] == result_name:
+                    return r['value']
+    return None

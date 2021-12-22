@@ -1,5 +1,4 @@
 import datetime
-import json
 import os
 
 import glci.model
@@ -37,12 +36,11 @@ def _upload_file(
 
 
 def _attach_logs_to_single_manifest(
-    build_dict_json: str,
+    build_dict: dict[str,str],
     s3_client: glci.s3.s3_client,
     s3_bucket_name: str,
     s3_log_key: str,
 ):
-    build_dict = json.loads(build_dict_json)
     for task, key in build_dict.items():
         if key and key.strip():
             print(f'Attach logs from task {task}, {key} to manifest')
@@ -74,7 +72,7 @@ def _attach_logs_to_single_manifest(
 
 def _attach_and_upload_logs(
     architecture: str,
-    build_dict_json: str,
+    build_dict: dict[str, str],
     build_targets: str,
     cicd_cfg_name: str,
     committish: str,
@@ -83,7 +81,6 @@ def _attach_and_upload_logs(
     is_package_build: bool,
     manifest_set_key: str,
     platform_set: str,
-    promote_target: str,
     repo_dir: str,
     version: str,
 ) -> bool:
@@ -126,7 +123,7 @@ def _attach_and_upload_logs(
     build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
     if glci.model.BuildTarget.MANIFEST in build_target_set:
         _attach_logs_to_single_manifest(
-            build_dict_json=build_dict_json,
+            build_dict=build_dict,
             s3_client=s3_client,
             s3_bucket_name=s3_bucket_name,
             s3_log_key=s3_key,
@@ -209,17 +206,15 @@ def _attach_and_upload_logs(
 
 def upload_logs(
     architecture: str,
-    build_dict_json: str,
+    build_tasks: str,
     build_targets: str,
     cicd_cfg_name: str,
     committish: str,
     flavourset: str,
     gardenlinux_epoch: str,
-    manifest_set_key: str,
     namespace: str,
     pipeline_run_name: str,
     platform_set: str,
-    promote_target: str,
     repo_dir: str,
     version: str,
 ):
@@ -244,7 +239,11 @@ def upload_logs(
     As this is created during publishing and contains the timestamp it can not be recalculated later
     """
     zip_file_path = os.path.join(repo_dir, 'build_log_full.zip')
+    logs.load_kube_config()
+    pipeline_run = logs.get_pipeline_run(pipeline_run_name, namespace)
+
     ok = logs.get_and_zip_logs(
+        pipeline_run=pipeline_run,
         repo_dir=repo_dir,
         namespace=namespace,
         pipeline_run_name=pipeline_run_name,
@@ -253,9 +252,25 @@ def upload_logs(
         only_failed=False,
     )
     if ok:
+        tasks = build_tasks.split(',')
+        build_dict = {
+          task_name: logs.get_task_result(
+            task_runs_dict=pipeline_run,
+            task_ref_name=task_name,
+            result_name='build_result'
+          ) for task_name in tasks
+        }
+
+
+        # get the results from previous tasks by directly looking at pipelineRun custom resource:
+        manifest_set_key = logs.get_task_result(
+            task_runs_dict=pipeline_run,
+            task_ref_name='promote-gardenlinux-task',
+            result_name='manifest_set_key_result',
+        )
         ok = _attach_and_upload_logs(
             architecture=architecture,
-            build_dict_json=build_dict_json,
+            build_dict=build_dict,
             build_targets=build_targets,
             cicd_cfg_name=cicd_cfg_name,
             committish=committish,
@@ -264,7 +279,6 @@ def upload_logs(
             is_package_build='gl-packages' in pipeline_run_name,
             manifest_set_key=manifest_set_key,
             platform_set=platform_set,
-            promote_target=promote_target,
             repo_dir=repo_dir,
             version=version,
         )

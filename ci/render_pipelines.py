@@ -217,21 +217,13 @@ def mk_pipeline_notify_task(
     platform_set: typing.Set[str] = frozenset(),
 ):
     status_dict = {}
-    build_dict = {}
+
     for task in previous_tasks:
         status_dict['status_' + task.name] = f'$(tasks.{task.name}.status)'
     status_str = json.dumps(status_dict)
 
-    for task in build_tasks:
-        build_dict['build_' + task.name] = f'$(tasks.{task.name}.results.build_result)'
-    build_str = json.dumps(build_dict)
-
+    build_task_names = ','.join([task.name for task in  build_tasks])
     platform_set_str = ','.join(platform_set)
-
-    if build_tasks:
-        manifest_set_key = '$(tasks.promote-gardenlinux-task.results.manifest_set_key_result)'
-    else:
-        manifest_set_key = 'null'
 
     # generate default params for all task parameters just passing the value
     name = 'notify-task'
@@ -244,8 +236,7 @@ def mk_pipeline_notify_task(
             NamedParam(name='pipeline_name', value='$(context.pipeline.name)'),
             NamedParam(name='namespace', value='$(context.pipelineRun.namespace)'),
             NamedParam(name='status_dict_str', value=status_str),
-            NamedParam(name='build_dict_json', value=build_str),
-            NamedParam(name='manifest_set_key', value=manifest_set_key),
+            NamedParam(name='build_tasks', value=build_task_names),
         }
     )
 

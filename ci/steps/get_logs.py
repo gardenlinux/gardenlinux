@@ -10,7 +10,11 @@ def getlogs(
     tail_lines:int=None,
     only_failed:bool=True,
 ) -> str:
+    logs.load_kube_config()
+    pipeline_run = logs.get_pipeline_run(pipeline_run_name, namespace)
+
     return logs.get_and_zip_logs(
+        pipeline_run=pipeline_run,
         repo_dir=repo_dir,
         namespace=namespace,
         pipeline_run_name=pipeline_run_name,

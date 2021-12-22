@@ -318,7 +318,9 @@ def send_notification(
             )
 
     # check if we have a status file indicating that some previous step failed, exit with error then
-    with open(os.path.join(repo_dir, 'status.txt')) as f:
-        err = f.read()
-        print(f'Exiting with error, one of the previous steps failed with: {err}')
-        sys.exit(1)
+    status_txt = os.path.join(repo_dir, 'status.txt')
+    if os.path.exists(status_txt):
+        with open() as f:
+            err = f.read()
+            print(f'Exiting with error, one of the previous steps failed with: {err}')
+            sys.exit(1)
