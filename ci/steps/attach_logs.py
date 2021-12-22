@@ -76,7 +76,7 @@ def _attach_and_upload_logs(
     build_targets: str,
     cicd_cfg_name: str,
     committish: str,
-    flavour_set: str,
+    flavour_set_name: str,
     gardenlinux_epoch: str,
     is_package_build: bool,
     manifest_set_key: str,
@@ -133,7 +133,7 @@ def _attach_and_upload_logs(
         return True
 
     print(f'downloading release manifest from s3 {aws_cfg_name=} {s3_bucket_name=}')
-    flavour_set = glci.util.flavour_set(flavour_set_name=flavour_set)
+    flavour_set = glci.util.flavour_set(flavour_set_name=flavour_set_name)
     if manifest_set_key:
         manifest_set = glci.util.release_manifest_set(
             s3_client=s3_client,
@@ -210,7 +210,7 @@ def upload_logs(
     build_targets: str,
     cicd_cfg_name: str,
     committish: str,
-    flavourset: str,
+    flavour_set_name: str,
     gardenlinux_epoch: str,
     namespace: str,
     pipeline_run_name: str,
@@ -274,7 +274,7 @@ def upload_logs(
             build_targets=build_targets,
             cicd_cfg_name=cicd_cfg_name,
             committish=committish,
-            flavour_set=flavourset,
+            flavour_set_name=flavour_set_name,
             gardenlinux_epoch=gardenlinux_epoch,
             is_package_build='gl-packages' in pipeline_run_name,
             manifest_set_key=manifest_set_key,
