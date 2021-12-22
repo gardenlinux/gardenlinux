@@ -39,7 +39,7 @@ def release_step(
         cicd_cfg_name=cicd_cfg_name,
         committish=committish,
         ctx_repository_config_name=ctx_repository_config_name,
-        flavourset_name=flavour_set_name,
+        flavour_set_name=flavour_set_name,
         gardenlinux_epoch=gardenlinux_epoch,
         giturl=giturl,
         repo_dir=repo_dir,
