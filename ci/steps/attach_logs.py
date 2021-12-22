@@ -253,13 +253,14 @@ def upload_logs(
     )
     if ok:
         tasks = build_tasks.split(',')
-        build_dict = dict()
-        for task_name in tasks:
-            build_dict[task_name] = logs.get_task_result(
-                task_runs_dict=pipeline_run,
-                task_ref_name=task_name,
-                result_name='build_result',
-            )
+        build_dict = {
+          task_name: logs.get_task_result(
+            task_runs_dict=pipeline_run,
+            task_ref_name=task_name,
+            result_name='build_result'
+          ) for task_name in tasks
+        }
+
 
         # get the results from previous tasks by directly looking at pipelineRun custom resource:
         manifest_set_key = logs.get_task_result(
