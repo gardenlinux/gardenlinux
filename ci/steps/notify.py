@@ -202,7 +202,7 @@ def send_notification(
     for task, status in status_dict.items():
         txt_result_table += f'Task: {task}\nStatus: {status}\n'
 
-    subject = f'Tekton Pipeline Garden Linux build failure in {pipeline_name}'
+    subject = f'Garden Linux build failure in {pipeline_name} in branch {namespace}'
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
     email_cfg = _email_cfg(cicd_cfg=cicd_cfg)
 
