@@ -362,22 +362,23 @@ def release_set_manifest_name(
     build_committish: str,
     gardenlinux_epoch: int,
     version: str,
-    flavourset_name: str,
+    flavour_set_name: str,
     build_type: glci.model.BuildType,
     with_timestamp: bool = False,
 ):
     BT = glci.model.BuildType
 
     if build_type in (BT.SNAPSHOT, BT.DAILY):
-        name = f'{gardenlinux_epoch}-{build_committish[:6]}-{flavourset_name}'
+        name = f'{gardenlinux_epoch}-{build_committish[:6]}-{flavour_set_name}'
         if with_timestamp:
             name += '-' + datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')
     elif build_type is BT.RELEASE:
-        name = f'{version}-{flavourset_name}'
+        name = f'{version}-{flavour_set_name}'
     else:
         raise ValueError(build_type)
 
     return name
+
 
 def enumerate_release_sets(
     s3_client: 'botocore.client.S3',
@@ -430,7 +431,7 @@ def enumerate_release_sets(
 def find_release_set(
     s3_client: 'botocore.client.S3',
     bucket_name: str,
-    flavourset_name: str,
+    flavour_set_name: str,
     build_committish: str,
     gardenlinux_epoch: int,
     version: str,
@@ -447,7 +448,7 @@ def find_release_set(
             build_committish=build_committish,
             gardenlinux_epoch=gardenlinux_epoch,
             version=version,
-            flavourset_name=flavourset_name,
+            flavour_set_name=flavour_set_name,
             build_type=build_type,
         ),
     )

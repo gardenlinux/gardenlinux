@@ -51,7 +51,7 @@ def _get_download_url(
 def get_manifest(
     cicd_cfg_name: str,
     committish: str,
-    flavourset_name: str,
+    flavour_set_name: str,
     gardenlinux_epoch: str,
     version: str,
 ) -> bool: # True on success else False:
@@ -71,7 +71,7 @@ def get_manifest(
     )
 
     manifest = find_release_set(
-        flavourset_name=flavourset_name,
+        flavour_set_name=flavour_set_name,
         build_committish=committish,
         version=version,
         gardenlinux_epoch=gardenlinux_epoch,
@@ -85,7 +85,7 @@ def make_release(
     cicd_cfg_name: str,
     ctx_repository_config_name: str,
     committish: str,
-    flavourset_name: str,
+    flavour_set_name: str,
     gardenlinux_epoch: str,
     giturl: str,
     version: str,
@@ -94,7 +94,7 @@ def make_release(
     manifest_set = get_manifest(
         cicd_cfg_name=cicd_cfg_name,
         committish=committish,
-        flavourset_name=flavourset_name,
+        flavour_set_name=flavour_set_name,
         gardenlinux_epoch=gardenlinux_epoch,
         version=version,
     )

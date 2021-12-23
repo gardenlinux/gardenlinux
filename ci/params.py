@@ -67,10 +67,10 @@ class AllParams:
         default='false',
         description='if true no notification emails are sent',
     )
-    flavourset = NamedParam(
-        name='flavourset',
+    flavour_set_name = NamedParam(
+        name='flavour_set_name',
         default='all',
-        description='the flavourset name this task is a part of',
+        description='the name of the flavour set this task is a part of',
     )
     gardenlinux_build_deb_image = NamedParam(
         name='gardenlinux_build_deb_image',
