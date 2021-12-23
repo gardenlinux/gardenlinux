@@ -20,23 +20,37 @@ repo_root = os.path.abspath(os.path.join(
 
 class BuildTarget(enum.Enum):
     # build the base-image for BUILD step
-    BASE_BUILD = 'build-baseimage', {}
+    BASE_BUILD = ('build-baseimage',
+        {}
+    )
     # compile, link, create arifacts local
-    BUILD = 'build', {}
+    BUILD = ('build',
+        {}
+    )
     # upload artifacts to S3, create manifest
-    MANIFEST = 'manifest', {'build', }
+    MANIFEST = ('manifest',
+        {'build', }
+    )
     # create and upload component descr
-    COMPONENT_DESCRIPTOR = 'component-descriptor', {'build', }
+    COMPONENT_DESCRIPTOR = ('component-descriptor',
+        {'build', }
+    )
     # run gardenlinux integration tests
-    TESTS = 'tests', {'build', }
+    TESTS = ('tests',
+        {'build', }
+    )
     # upload images to cloud providers
-    PUBLISH = 'publish', {'build', 'manifest', 'component-descriptor'}
+    PUBLISH = ('publish',
+        {'build', 'manifest', 'component-descriptor'}
+    )
     # use version epoch.y.z instead of epoch-commit
-    FREEZE_VERSION = 'freeze-version', {'build-baseimage', 'build', 'manifest',
-        'component-descriptor'}
+    FREEZE_VERSION = ('freeze-version',
+        {'build-baseimage', 'build', 'manifest', 'component-descriptor'}
+    )
     # create a github release (branch, tag, release)
-    GITHUB_RELEASE = 'github-release', {'build-baseimage', 'build', 'manifest',
-        'component-descriptor', 'freeze-version'}
+    GITHUB_RELEASE = ('github-release',
+        {'build-baseimage', 'build', 'manifest', 'component-descriptor', 'freeze-version'}
+    )
 
     def __new__(cls, value, requires=None):
         obj = object.__new__(cls)

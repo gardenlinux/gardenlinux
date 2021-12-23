@@ -115,7 +115,7 @@ def get_and_zip_logs(
                         headers=headers,
                     )
 
-                    if log_response.status_code != 200:
+                    if log_response.status_code >= 400:
                         print(f'Getting logs failed with {log_response.status_code=}')
                         continue
                 except ApiException as ex:
