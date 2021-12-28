@@ -1,4 +1,5 @@
 import base64
+import logging
 import os
 import urllib.parse
 
@@ -6,6 +7,8 @@ import git
 
 import ccc.github
 import gitutil
+
+logger = logging.getLogger(__name__)
 
 
 def apply_patch(
@@ -72,7 +75,7 @@ def clone_and_checkout_anonymously(
 
 def prepare_home_dir():
     if home_dir := os.environ.get('HOME'):
-        print(f"Preparing HOME at '{home_dir}'")
+        logger.info(f"Preparing HOME at '{home_dir}'")
         os.makedirs(os.path.abspath(home_dir), exist_ok=True)
 
 
@@ -109,9 +112,9 @@ def clone_and_copy(
 
     prepare_home_dir()
 
-    print(f'cloned to {repo_dir=} {commit_hash=}')
-    print(f'Commit Message: {commit_msg}')
+    logger.info(f'cloned to {repo_dir=} {commit_hash=}')
+    logger.info(f'Commit Message: {commit_msg}')
 
     if PATCH_CONTENT:
-        print("Applying patch containing all diffs against remote")
+        logger.info("Applying patch containing all diffs against remote")
         apply_patch(repo_dir=repo_dir)

@@ -1,10 +1,13 @@
 import datetime
+import logging
 import os
 
 import glci.model
-import glci.util
 import glci.s3
+import glci.util
 import logs
+
+logger = logging.getLogger(__name__)
 
 
 def _upload_file(
@@ -26,7 +29,7 @@ def _upload_file(
             }
         )
 
-    print(f'upload succeeded: {s3_key}')
+    logger.info(f'upload succeeded: {s3_key}')
     return glci.model.S3_ReleaseFile(
         name=name,
         suffix=name,
@@ -43,7 +46,7 @@ def _attach_logs_to_single_manifest(
 ):
     for task, key in build_dict.items():
         if key and key.strip():
-            print(f'Attach logs from task {task}, {key} to manifest')
+            logger.info(f'Attach logs from task {task}, {key} to manifest')
             manifest = glci.util.release_manifest(
                 s3_client=s3_client,
                 bucket_name=s3_bucket_name,
@@ -59,7 +62,10 @@ def _attach_logs_to_single_manifest(
             new_manifest = manifest.with_logfile(log_entry)
             # upload manifest
             manifest_path_suffix = manifest.canonical_release_manifest_key_suffix()
-            manifest_path = f'{glci.model.ReleaseManifest.manifest_key_prefix}/{manifest_path_suffix}'
+            manifest_path = (
+                f'{glci.model.ReleaseManifest.manifest_key_prefix}/'
+                f'{manifest_path_suffix}'
+            )
             glci.util.upload_release_manifest(
               s3_client=s3_client,
               bucket_name=s3_bucket_name,
@@ -67,7 +73,7 @@ def _attach_logs_to_single_manifest(
               manifest=new_manifest,
             )
         else:
-            print(f'Task {task} was not built in this run')
+            logger.info(f'Task {task} was not built in this run')
 
 
 def _attach_and_upload_logs(
@@ -90,8 +96,8 @@ def _attach_and_upload_logs(
 
     log_path = os.path.join(repo_dir, 'build_log_full.zip')
     if not os.path.exists(log_path):
-        print("No file found with log files, won't upload.")
-        print("Exiting with failure, see logs from previous steps")
+        logger.error("No file found with log files, won't upload.")
+        logger.error("Exiting with failure, see logs from previous steps")
         return False
 
     prefix = datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S') + '-' + \
@@ -104,7 +110,7 @@ def _attach_and_upload_logs(
         s3_key = 'objects/' + prefix + 'build_log.zip'
         s3_bucket_name = cicd_cfg.build.s3_bucket_name
 
-    print(f'uploaded zipped logs to {s3_key=}')
+    logger.info(f'uploaded zipped logs to {s3_key=}')
     uploaded_file = _upload_file(
         log_file_path=log_path,
         s3_key=s3_key,
@@ -114,7 +120,10 @@ def _attach_and_upload_logs(
 
     # write a file with the download URL so that it can be later added to the email
     with open(os.path.join(repo_dir, 'log_url.txt'), 'w') as f:
-        f.write(f'https://{cicd_cfg.build.s3_bucket_name}.s3.{cicd_cfg.build.aws_region}.amazonaws.com/{s3_key}')
+        f.write(
+            f'https://{cicd_cfg.build.s3_bucket_name}.s3.{cicd_cfg.build.aws_region}.amazonaws.com/'
+            f'{s3_key}'
+        )
 
     if is_package_build:
         return True
@@ -129,10 +138,12 @@ def _attach_and_upload_logs(
             s3_log_key=s3_key,
         )
     else:
-        print(f'build target {glci.model.BuildTarget.MANIFEST=} not specified - won\'t attach logs')
+        logger.info(
+            f"build target {glci.model.BuildTarget.MANIFEST=} not specified - won't attach logs"
+        )
         return True
 
-    print(f'downloading release manifest from s3 {aws_cfg_name=} {s3_bucket_name=}')
+    logger.info(f'downloading release manifest from s3 {aws_cfg_name=} {s3_bucket_name=}')
     flavour_set = glci.util.flavour_set(flavour_set_name=flavour_set_name)
     if manifest_set_key:
         manifest_set = glci.util.release_manifest_set(
@@ -149,12 +160,12 @@ def _attach_and_upload_logs(
     # publish is not in build targets
     # it was a package build
     if manifest_set:
-        print('Found existing manifest-set.')
+        logger.info('Found existing manifest-set.')
         # Attach log files to manifest-set
         # collect log-keys from single manifests for all artifacts:
         log_files = {uploaded_file, } # note use set as there will be duplicate entries
         platforms = set(platform_set.split(','))
-        print(f'Collecting logs from manifests for {platforms=}')
+        logger.info(f'Collecting logs from manifests for {platforms=}')
 
         for platform in platforms:
             for flavour in flavour_set.flavours():
@@ -175,21 +186,21 @@ def _attach_and_upload_logs(
                         bucket_name=s3_bucket_name,
                     )
                     if manifest:
-                        print(f'Found manifest {manifest.s3_key} with logs {manifest.logs}')
+                        logger.info(f'Found manifest {manifest.s3_key} with logs {manifest.logs}')
                         if manifest.logs:
                             log_files.add(manifest.logs)
                     else:
-                        print(f'Manifest for platform {platform}, \
+                        logger.warning(f'Manifest for platform {platform}, \
                             {release_identifier.canonical_release_manifest_key()} not found.')
 
-        print(f'Attaching {len(log_files)} logs to manifest')
+        logger.info(f'Attaching {len(log_files)} logs to manifest')
         new_manifest_set = manifest_set.with_logfiles(tuple(log_files))
 
         upload_release_manifest_set = glci.util.preconfigured(
             func=glci.util.upload_release_manifest_set,
             cicd_cfg=cicd_cfg,
         )
-        print(f'Uploading manifest set to {manifest_set_key}')
+        logger.info(f'Uploading manifest set to {manifest_set_key}')
         upload_release_manifest_set(
             key=manifest_set_key,
             manifest_set=new_manifest_set,
@@ -260,7 +271,6 @@ def upload_logs(
             result_name='build_result'
           ) for task_name in tasks
         }
-
 
         # get the results from previous tasks by directly looking at pipelineRun custom resource:
         manifest_set_key = logs.get_task_result(

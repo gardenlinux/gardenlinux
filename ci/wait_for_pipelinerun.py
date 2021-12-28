@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import logging
 
 import git
 import yaml
@@ -12,6 +13,8 @@ import glci.util
 import glci.model
 import tkn.util
 import paths
+
+logger = logging.getLogger(__name__)
 
 
 def _email_cfg(cicd_cfg: glci.model.CicdCfg):
@@ -39,7 +42,7 @@ def notify(
     task_status = tkn.util.pipeline_taskrun_status(name=pipelinerun_name, namespace=namespace)
 
     for failed_info in task_status.failed_details:
-        print(f'{failed_info["name"]=} failed with {failed_info["message"]}')
+        logger.warning(f'{failed_info["name"]=} failed with {failed_info["message"]}')
 
     failed_task_names = [fd['name'] for fd in task_status.failed_details]
     failed_tname_html = '\n'.join([f'<li>{name}</li>' for name in failed_task_names])
@@ -102,18 +105,18 @@ def main():
             metadata = parsed_pipelinerun['metadata']
             pipelinerun_name = metadata['name']
 
-    print(f'waiting for {pipelinerun_name=} to finish')
+    logger.info(f'waiting for {pipelinerun_name=} to finish')
 
     try:
         tkn.util.wait_for_pipelinerun_status(
             name=pipelinerun_name,
             namespace=namespace,
         )
-        print('{pipelinerun=} succeeded')
+        logger.info('{pipelinerun=} succeeded')
 
     except RuntimeError as rte:
-        print(rte)
-        print('pipeline run failed')
+        logger.error(rte)
+        logger.error('pipeline run failed')
         if parsed.send_notification:
             notify(
                 pipelinerun_name=pipelinerun_name,

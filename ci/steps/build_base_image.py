@@ -1,9 +1,12 @@
 import glob
 import os
+import logging
 
 import build_kaniko as builder
 import glci.model
 import version
+
+logger = logging.getLogger(__name__)
 
 
 def build_base_image(
@@ -34,7 +37,7 @@ def build_base_image(
         additional_tags.append(tag)
 
     dockerfile_relpath = os.path.join(repo_dir, "docker", "build-image", "Dockerfile")
-    print(f'repo_dir is: {repo_dir}')
+    logger.info(f'repo_dir is: {repo_dir}')
 
     docker_dirs = ['build', 'build-deb', 'build-image']
 
@@ -46,7 +49,7 @@ def build_base_image(
 
     for docker_dir in docker_dirs:
         dockerfile_relpath = os.path.join(repo_dir, "docker", docker_dir, "Dockerfile")
-        print(f'---Building now {dockerfile_relpath}')
+        logger.info(f'---Building now {dockerfile_relpath}')
 
         if docker_dir == 'build-deb':
             build_base_image = f'{oci_path}/gardenlinux-build:{version_label}'
@@ -54,7 +57,7 @@ def build_base_image(
             build_base_image = 'debian:testing-slim'
 
         context_dir = os.path.join(repo_dir, "docker", docker_dir)
-        print(f'---Using base image {build_base_image}')
+        logger.info(f'---Using base image {build_base_image}')
         builder.build_and_push_kaniko(
             dockerfile_path=dockerfile_relpath,
             context_dir=context_dir,

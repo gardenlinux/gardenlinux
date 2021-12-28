@@ -100,8 +100,8 @@ def wait_for_snapshot_import(
         task_id = status['SnapshotTaskDetail']['SnapshotId']
         return task_id
 
-    while not (status:= current_status()) is TaskStatus.COMPLETED:
-        print(f'{snapshot_task_id=}: {status=}')
+    while not (status := current_status()) is TaskStatus.COMPLETED:
+        logger.info(f'{snapshot_task_id=}: {status=}')
 
         if status is TaskStatus.DELETED:
             raise RuntimeError(f'image uploaded by {snapshot_task_id=} was rejected')
@@ -261,7 +261,7 @@ def image_ids_by_name(
         # there must either be one or none
         images = images['Images']
         if len(images) < 1:
-            print(f'did not find {image_name=} in {region_name=}')
+            logger.warning(f'did not find {image_name=} in {region_name=}')
             continue
         if len(images) > 1:
             raise ValueError('found more than one image (this is a bug)')
@@ -291,7 +291,7 @@ def unregister_images_by_name(
         def unregister_image():
             ec2 = mk_session(region_name=region_name).client('ec2')
             ec2.deregister_image(ImageId=image_id)
-            print(f'unregistered {image_id=}')
+            logger.info(f'unregistered {image_id=}')
         results.append(executor.submit(unregister_image))
 
     concurrent.futures.wait(results)

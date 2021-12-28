@@ -1,6 +1,10 @@
+import logging
+
 import glci.model
-import glci.util
 import glci.s3
+import glci.util
+
+logger = logging.getLogger(__name__)
 
 
 def pre_check_tests(
@@ -16,7 +20,7 @@ def pre_check_tests(
     build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
 
     if not glci.model.BuildTarget.TESTS in build_target_set:
-        print('build target "tests" not specified - skipping tests')
+        logger.info('build target "tests" not specified - skipping tests')
         return True
 
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
@@ -44,10 +48,10 @@ def pre_check_tests(
       # check if tests have been run and create a marker file
       test_result = release.test_result
       if test_result and test_result.test_result == glci.model.TestResultCode.OK:
-          print('Tests have been run successfully previously, will be skipped')
+          logger.info('Tests have been run successfully previously, will be skipped')
           with open('/workspace/skip_tests', 'w') as f:
               f.write('skip tests (already done)')
       else:
-          print('Tests have not been run or failed - running tests')
+          logger.info('Tests have not been run or failed - running tests')
     else:
-      print('no release manifest found - running tests')
+      logger.info('no release manifest found - running tests')

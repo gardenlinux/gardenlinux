@@ -25,6 +25,8 @@ Architecture = glci.model.Architecture
 
 CicdCfg = glci.model.CicdCfg
 
+logger = logging.getLogger(__name__)
+
 
 def configure_logging():
     faulthandler.enable()
@@ -176,7 +178,7 @@ def release_manifest_set(
     parsed['s3_bucket'] = bucket_name
     parsed['s3_key'] = manifest_key
 
-    print(manifest_key)
+    logger.debug(manifest_key)
     manifest = dacite.from_dict(
         data_class=glci.model.OnlineReleaseManifestSet,
         data=parsed,
@@ -280,7 +282,7 @@ def enumerate_releases(
         is_truncated = bool(res['IsTruncated'])
         continuation_token = res.get('NextContinuationToken')
 
-        print(f'found {key_count} release manifests')
+        logger.info(f'found {key_count} release manifests')
 
         def wrap_release_manifest(key):
             return _release_manifest(key=key)
@@ -317,11 +319,11 @@ def find_release(
         return manifest
     else:
         # warn about not matching expected contents from canonical name
-        print(f'WARNING: {release_manifest_key=} contained unexpected contents:')
-        print('this is the release-identifier we searched for:')
-        pprint.pprint(dataclasses.asdict(searched_ri))
-        print('this is the release-identifier we found:')
-        pprint.pprint(dataclasses.asdict(found_ri))
+        logger.warning(f'{release_manifest_key=} contained unexpected contents:')
+        logger.warning('this is the release-identifier we searched for:')
+        logger.warning(pprint.pformat(dataclasses.asdict(searched_ri)))
+        logger.warning('this is the release-identifier we found:')
+        logger.warning(pprint.pformat(dataclasses.asdict(found_ri)))
 
         return None
 
@@ -408,7 +410,7 @@ def enumerate_release_sets(
         is_truncated = bool(res['IsTruncated'])
         continuation_token = res.get('NextContinuationToken')
 
-        print(f'found {key_count} release manifests')
+        logger.info(f'found {key_count} release manifests')
 
         keys = [
             key for obj_dict in res['Contents']
@@ -453,7 +455,7 @@ def find_release_set(
         ),
     )
 
-    print(manifest_key)
+    logger.debug(manifest_key)
 
     manifest = release_manifest_set(
         s3_client=s3_client,

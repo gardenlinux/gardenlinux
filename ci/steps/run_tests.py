@@ -2,6 +2,7 @@ import contextlib
 import dataclasses
 import datetime
 import json
+import logging
 import os
 from string import Template
 
@@ -11,6 +12,8 @@ import glci.util
 import pytest
 import sys
 import yaml
+
+logger = logging.getLogger(__name__)
 
 
 # @dataclass -> do no use dataclass this silently breaks pytest
@@ -96,18 +99,18 @@ def run_tests(
     committish: str,
     pytest_cfg: str = None,
 ):
-    print(f'run_test with: {architecture=}, {cicd_cfg_name=}, {gardenlinux_epoch=}')
-    print(f'   : {modifiers=}, {platform=}, {build_targets=}, {repo_dir=}')
-    print(f'   : {suite=}, {snapshot_timestamp=}, {version=}')
+    logger.info(f'run_test with: {architecture=}, {cicd_cfg_name=}, {gardenlinux_epoch=}')
+    logger.info(f'   : {modifiers=}, {platform=}, {build_targets=}, {repo_dir=}')
+    logger.info(f'   : {suite=}, {snapshot_timestamp=}, {version=}')
     build_targets = (
         glci.model.BuildTarget(action.strip()) for action in build_targets.split(',')
     )
     if not glci.model.BuildTarget.TESTS in build_targets:
-        print('build target "tests" not specified - skipping tests')
+        logger.info('build target "tests" not specified - skipping tests')
         return True
 
     if os.path.exists('/workspace/skip_tests'):
-        print('Tests already uploaded in previous run, skipping test step')
+        logger.info('Tests already uploaded in previous run, skipping test step')
         sys.exit(0)
 
     modifiers = tuple(modifiers.split(','))
@@ -130,10 +133,10 @@ def run_tests(
     cfg_name = pytest_cfg.strip()
     test_cfg_path = os.path.join(repo_dir, "ci", "test_cfg.yaml")
     if not os.path.exists(test_cfg_path):
-        print(f'Configuration file for tests: {test_cfg_path} not found, exiting')
+        logger.error(f'Configuration file for tests: {test_cfg_path} not found, exiting')
         sys.exit(1)
     if not pytest_cfg:
-        print('No tests configured, nothing to do')
+        logger.info('No tests configured, nothing to do')
         result = ExitCode.OK
     else:
         final_arg = None
@@ -141,7 +144,7 @@ def run_tests(
             test_cfgs = yaml.safe_load(file)
 
         if  not (cfgs := test_cfgs.get('test_cfgs')) or not cfg_name in cfgs:
-            print(f'Profile: {cfg_name} not found in file {test_cfg_path}. Stopping')
+            logger.error(f'Profile: {cfg_name} not found in file {test_cfg_path}. Stopping')
             sys.exit(1)
 
         test_profile = test_cfgs['test_cfgs'][cfg_name]
@@ -153,12 +156,12 @@ def run_tests(
             template = Template(final_arg)
             pytest_args = template.substitute(platform=platform, architecture=architecture)
             pytest_arg_list = pytest_args.split()
-            print(f'Running integration tests with pytest args: {pytest_arg_list}')
+            logger.info(f'Running integration tests with pytest args: {pytest_arg_list}')
             with pushd(repo_dir):
                 result = pytest.main(pytest_arg_list, plugins=[params_plugin])
-                print(f'Integration tests finished with result {result=}')
+                logger.info(f'Integration tests finished with result {result=}')
         else:
-            print(f'No test configured for {architecture=}, {platform=} in {cfg_name}')
+            logger.info(f'No test configured for {architecture=}, {platform=} in {cfg_name}')
             result = ExitCode.OK
 
     # Store result for later upload in manifest in file
@@ -170,7 +173,7 @@ def run_tests(
     )
 
     outfile_name = os.path.join(repo_dir, 'test_results.json')
-    print(f'Test results written to {outfile_name}')
+    logger.info(f'Test results written to {outfile_name}')
 
     with open(outfile_name, 'w') as f:
         json.dump(dataclasses.asdict(glci.util._json_serialisable_manifest(test_results)), f)

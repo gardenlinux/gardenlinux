@@ -2,12 +2,15 @@ import collections
 import dataclasses
 import enum
 import json
+import logging
 import shutil
 import subprocess
 import time
 
 import dacite
 import dateutil.parser
+
+logger = logging.getLogger(__name__)
 
 
 def _tkn_executable():
@@ -37,7 +40,7 @@ class TknCondition:
 
 def run_tkn(*args, namespace: str='gardenlinux'):
     tkn = _tkn_executable()
-    print(args)
+    logger.debug(args)
 
     result = subprocess.run(
         [
@@ -62,8 +65,8 @@ def _pipelinerun(name: str, namespace: str='gardenlinux'):
     )
 
     if not res.returncode == 0:
-        print(res.stdout)
-        print(res.stderr)
+        logger.debug(res.stdout)
+        logger.debug(res.stderr)
         raise RuntimeError(f'pipelinerun cmd returned {res.returncode}')
 
     res_dict = json.loads(res.stdout)
@@ -129,9 +132,9 @@ def wait_for_pipelinerun_status(
         else:
             reason = None
 
-        print(f'{reason=}')
+        logger.debug(f'{reason=}')
         if reason in (StatusReason.FAILED, StatusReason.PIPELINE_RUN_CANCELLED):
-            print(f'{reason=} - aborting')
+            logger.error(f'{reason=} - aborting')
             raise RuntimeError(reason)
         elif reason in (StatusReason.RUNNING, StatusReason.PIPELINE_RUN_STOPPING, None):
             passed_seconds = time.time() - start_time
@@ -141,7 +144,7 @@ def wait_for_pipelinerun_status(
         else:
             raise NotImplementedError(reason)
 
-    print(f'pipelinerun {name=} reached {target_status=}')
+    logger.info(f'pipelinerun {name=} reached {target_status=}')
 
 
 def pipeline_taskrun_status(name: str, namespace: str='gardenlinux'):

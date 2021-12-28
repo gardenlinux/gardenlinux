@@ -68,12 +68,11 @@ class SecretName():
 class SecretVolume(Volume):
     secret: SecretName
 
+
 @dataclasses.dataclass
 class VolumeMount:
     mountPath: str
     name: str
-
-
 
 
 EnvVar = _NamedParamWithValue
@@ -146,6 +145,7 @@ class PipelineSpec:
             name = '_finally'
         super().__setattribute__(name, value)
 
+
 @dataclasses.dataclass
 class Pipeline:
     metadata: Metadata
@@ -205,6 +205,7 @@ class PipelineRunSpec:
     podTemplate: PodTemplate
     workspaces: typing.List[PipelineRunWorkspace]
     timeout: str = '1h'
+
 
 @dataclasses.dataclass
 class PipelineRun:

@@ -1,23 +1,24 @@
 import distutils.util
 import email.message
+import email.mime.base
 import json
 import logging
 import os
+import string
+import sys
 import typing
 import urllib
-import sys
-
-from email.mime.base import MIMEBase
-from string import Template
 
 import ccc.github
 import ccc.slack
 import ci.util
+import glci.github
 import glci.notify
 import glci.util
-import glci.github
 import mailutil
 
+
+logger = logging.getLogger(__name__)
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ def _attach_and_send(
         with open(log_zip, 'rb') as att_file:
             zip_data = att_file.read()
         if mail_msg.is_multipart():
-            part = MIMEBase('application', "zip")
+            part = email.mime.base.MIMEBase('application', "zip")
             part.set_payload(zip_data)
             email.encoders.encode_base64(part)
             part.add_header('Content-Disposition', f'attachment; filename="{log_zip_name}"')
@@ -167,7 +168,7 @@ def send_notification(
     )
 
     if distutils.util.strtobool(disable_notifications):
-        print('Notification is disabled, not sending email')
+        logger.info('Notification is disabled, not sending email')
         return
     if pr_id and int(pr_id) > 0:
         # don't send any sort of notification for PR-builds
@@ -178,13 +179,13 @@ def send_notification(
     # remove empty elements because split of an empty string gives a list with an empty elem
     additional_recipients_set = {elem for elem in additional_recipients_set if elem}
     only_recipients_set = {elem for elem in only_recipients_set if elem}
-    print(f'sending to additional recipients: {additional_recipients_set}')
-    print(f'sending only to recipients: {only_recipients_set}')
+    logger.info(f'sending to additional recipients: {additional_recipients_set}')
+    logger.info(f'sending only to recipients: {only_recipients_set}')
 
     must_send = True in [True for status in status_dict.values() if status != 'Succeeded']
 
     if not must_send:
-        print("All tasks succeded, no notification sent")
+        logger.info("All tasks succeded, no notification sent")
         return
 
     html_result_table = ""
@@ -238,8 +239,8 @@ def send_notification(
         log_url_descr = '<not available>'
 
     # fill template parameters:
-    html_template = Template(html_mail_template)
-    txt_template = Template(txt_mail_template)
+    html_template = string.Template(html_mail_template)
+    txt_template = string.Template(txt_mail_template)
     values = {
         'branch': branch,
         'commit': committish,
@@ -262,7 +263,7 @@ def send_notification(
     if only_recipients_set:
         recipients = only_recipients_set
     else:
-        print("getting recipients from CODEOWNERS")
+        logger.info("getting recipients from CODEOWNERS")
         parsed_url = urllib.parse.urlparse(giturl)
         github_cfg = ccc.github.github_cfg_for_hostname(parsed_url.hostname)
         github_api = ccc.github.github_api(github_cfg)
@@ -276,14 +277,14 @@ def send_notification(
     # add given additional recipients
     recipients |= additional_recipients_set
     if len(recipients) == 0:
-        print('Mail not sent, could not find any recipient.')
+        logger.warning('Mail not sent, could not find any recipient.')
         return
 
     # filter recipients for those who should get plain-text emails:
     # Note currently unused, but left as option for future configuration
     recipients = [recp for recp in recipients if recp not in recipients_plaintext]
 
-    print(f'Send html notification to following recipients: {recipients}')
+    logger.info(f'Send html notification to following recipients: {recipients}')
     if recipients:
         mail_msg = glci.notify.mk_html_mail_body(
             text=html_mail_body,
@@ -293,7 +294,7 @@ def send_notification(
         )
         _attach_and_send(repo_dir=repo_dir, mail_msg=mail_msg, email_cfg=email_cfg)
 
-    print(f'Send plain text notification to following recipients: {recipients_plaintext}')
+    logger.info(f'Send plain text notification to following recipients: {recipients_plaintext}')
     if recipients_plaintext:
         mail_msg = _mk_plain_text_body(
             text=txt_mail_body,

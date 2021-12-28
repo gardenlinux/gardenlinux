@@ -2,12 +2,15 @@
 
 import argparse
 import dataclasses
+import logging
 import os
 
 import yaml
 
 import tasks
 import tkn.model
+
+logger = logging.getLogger(__name__)
 
 
 SecretName = tkn.model.SecretName
@@ -157,7 +160,7 @@ def render_task(
             f,
         )
 
-    print(f'dumped tasks to {outfile_tasks}')
+    logger.info(f'dumped tasks to {outfile_tasks}')
     return all_tasks
 
 

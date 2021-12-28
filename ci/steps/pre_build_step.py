@@ -1,8 +1,11 @@
 import sys
+import logging
 
 import glci.model
-import glci.util
 import glci.s3
+import glci.util
+
+logger = logging.getLogger(__name__)
 
 
 def _write_not_build_marker_file(reason: str):
@@ -49,4 +52,4 @@ def pre_build_step(
     ):
         _write_not_build_marker_file('already done')
     else:
-        print('no matching build results found - will perform build')
+        logger.info('no matching build results found - will perform build')
