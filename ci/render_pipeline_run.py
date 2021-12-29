@@ -4,6 +4,7 @@ import argparse
 import dataclasses
 import time
 import typing
+import logging
 import yaml
 
 import glci.model
@@ -11,6 +12,8 @@ import glci.util
 import tkn.model
 import paths
 import version as version_lib
+
+logger = logging.getLogger(__name__)
 
 GardenlinuxFlavour = glci.model.GardenlinuxFlavour
 
@@ -309,7 +312,7 @@ def main():
     with open(parsed.outfile_packages, 'w') as f:
         yaml.safe_dump(pipeline_run_dict, f)
 
-    print(f'pipeline-packages-run written to {parsed.outfile_packages}')
+    logger.info(f'pipeline-packages-run written to {parsed.outfile_packages}')
 
     pipeline_run = mk_pipeline_main_run(
         args=parsed,
@@ -321,7 +324,7 @@ def main():
     with open(parsed.outfile, 'w') as f:
         yaml.safe_dump(pipeline_run_dict, f)
 
-    print(f'pipeline-run written to {parsed.outfile}')
+    logger.info(f'pipeline-run written to {parsed.outfile}')
 
 
 if __name__ == '__main__':

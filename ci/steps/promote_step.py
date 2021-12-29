@@ -1,6 +1,7 @@
 import dataclasses
 import os
 import sys
+import logging
 
 import glci.model
 import glci.util
@@ -8,6 +9,8 @@ import promote
 import version as version_util
 
 parsable_to_int = str
+
+logger = logging.getLogger(__name__)
 
 
 def promote_single_step(
@@ -24,7 +27,7 @@ def promote_single_step(
     build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
 
     if glci.model.BuildTarget.PUBLISH not in build_target_set:
-        print(f'build target {glci.model.BuildTarget.PUBLISH=} not specified - exiting now')
+        logger.info(f'build target {glci.model.BuildTarget.PUBLISH=} not specified - exiting now')
         sys.exit(0)
 
     find_release = glci.util.preconfigured(
@@ -57,7 +60,7 @@ def promote_single_step(
     if release_manifest.published_image_metadata is not None:
         # XXX should actually check for completeness - assume for now there is
         # transactional semantics in place
-        print('artifacts were already published - exiting now')
+        logger.info('artifacts were already published - exiting now')
         sys.exit(0)
 
     if release_manifest.platform == 'azure':
@@ -128,7 +131,7 @@ def promote_step(
        pass
 
     if glci.model.BuildTarget.MANIFEST not in build_target_set:
-        print(f'build target {glci.model.BuildTarget.MANIFEST=} not specified - exiting now')
+        logger.info(f'build target {glci.model.BuildTarget.MANIFEST=} not specified - exiting now')
         sys.exit(0)
 
     find_releases = glci.util.preconfigured(
@@ -149,10 +152,10 @@ def promote_step(
     # ensure all previous tasks really were successful
     is_complete = len(releases) == len(flavours)
     if not is_complete:
-        print('release was not complete - will not publish (this indicates a bug!)')
+        logger.error('release was not complete - will not publish (this indicates a bug!)')
         sys.exit(1)  # do not signal an error
 
-    print(build_target_set)
+    logger.debug(build_target_set)
 
     # if this line is reached, the release has been complete
     # now create and publish manifest-set
@@ -185,7 +188,7 @@ def promote_step(
         manifest_set=manifest_set,
     )
 
-    print(f'uploaded manifest-set: {manifest_path=}')
+    logger.info(f'uploaded manifest-set: {manifest_path=}')
 
     with open(manifest_set_key_result, 'w') as f:
        f.write(manifest_path)

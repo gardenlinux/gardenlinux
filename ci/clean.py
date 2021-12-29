@@ -1,12 +1,15 @@
 import concurrent.futures
 import datetime
 import itertools
+import logging
 import os
 import typing
 
 import glci.model
 import glci.s3
 import glci.util
+
+logger = logging.getLogger(__name__)
 
 
 def clean_release_manifest_sets(
@@ -27,37 +30,39 @@ def clean_release_manifest_sets(
 
     now = datetime.datetime.now()
     oldest_allowed_date = now - datetime.timedelta(days=max_age_days)
-    print(f'{oldest_allowed_date=}')
+    logger.debug(f'{oldest_allowed_date=}')
 
     s3_client = glci.s3.s3_client(cicd_cfg=cicd_cfg)
 
     def purge_if_outdated(release_manifest_set: glci.model.ReleaseManifestSet):
-      if len(release_manifest_set.manifests) < 1:
-          print(f'WARNING: {release_manifest_set.s3_key=} did not contain any manifests')
-          return (False, release_manifest_set)
+        if len(release_manifest_set.manifests) < 1:
+            logger.warning(f'{release_manifest_set.s3_key=} did not contain any manifests')
+            return (False, release_manifest_set)
 
-      first_manifest = release_manifest_set.manifests[0]
-      # all timestamps should usually be pretty close to each other
+        first_manifest = release_manifest_set.manifests[0]
+        # all timestamps should usually be pretty close to each other
 
-      if first_manifest.build_ts_as_date() > oldest_allowed_date:
-          return (False, release_manifest_set)
+        if first_manifest.build_ts_as_date() > oldest_allowed_date:
+            return (False, release_manifest_set)
 
-      # XXX also purge published images (if any)!
-      if dry_run:
-          print(f'Would delete {release_manifest_set.s3_bucket}/{release_manifest_set.s3_key}')
-          return (False, release_manifest_set)
-      else:
-        s3_client.delete_object(
-            Bucket=release_manifest_set.s3_bucket,
-            Key=release_manifest_set.s3_key,
-        )
-        print(f'purged {release_manifest_set.s3_key=}')
-        return (True, release_manifest_set)
+        # XXX also purge published images (if any)!
+        if dry_run:
+            logger.info(
+                f'Would delete {release_manifest_set.s3_bucket}/{release_manifest_set.s3_key}'
+            )
+            return (False, release_manifest_set)
+        else:
+            s3_client.delete_object(
+                Bucket=release_manifest_set.s3_bucket,
+                Key=release_manifest_set.s3_key,
+            )
+            logger.info(f'purged {release_manifest_set.s3_key=}')
+            return (True, release_manifest_set)
 
     for purged, manifest in executor.map(
         purge_if_outdated,
         enumerate_release_sets(prefix=prefix)
-      ):
+    ):
         pass
 
 
@@ -76,7 +81,7 @@ def clean_single_release_manifests(
 
     now = datetime.datetime.now()
     oldest_allowed_date = now - datetime.timedelta(days=max_age_days)
-    print(f'{oldest_allowed_date=}')
+    logger.debug(f'{oldest_allowed_date=}')
 
     s3_client = glci.s3.s3_client(cicd_cfg=cicd_cfg)
 
@@ -84,14 +89,14 @@ def clean_single_release_manifests(
         if release_manifest.build_ts_as_date() < oldest_allowed_date:
             # XXX also purge published images (if any)!
             if dry_run:
-                print(f'would delete {release_manifest.s3_bucket}/{release_manifest.s3_key}')
+                logger.info(f'would delete {release_manifest.s3_bucket}/{release_manifest.s3_key}')
                 return (False, release_manifest)
             else:
                 s3_client.delete_object(
                     Bucket=release_manifest.s3_bucket,
                     Key=release_manifest.s3_key,
                 )
-                print(f'purged {release_manifest.s3_key=}')
+                logger.info(f'purged {release_manifest.s3_key=}')
                 return (True, release_manifest)
         return (False, release_manifest)
 
@@ -150,8 +155,8 @@ def clean_orphaned_objects(
         o.s3_key for o in all_objects if o.s3_bucket_name == s3_bucket_name
     }
 
-    print(f'{len(all_objects)=}')
-    print(f'{len(all_object_keys)=}')
+    logger.debug(f'{len(all_objects)=}')
+    logger.debug(f'{len(all_object_keys)=}')
 
     s3_client = glci.s3.s3_client(cicd_cfg=cicd_cfg)
 
@@ -177,7 +182,7 @@ def clean_orphaned_objects(
         loose_object_keys = object_keys - all_object_keys
 
         if dry_run:
-            print(f'would delete {len(loose_object_keys)=} unreferenced objs:')
+            logger.info(f'would delete {len(loose_object_keys)=} unreferenced objs:')
 
         else:
             if loose_object_keys:
@@ -189,7 +194,7 @@ def clean_orphaned_objects(
                     ],
                     },
                 )
-                print(f'purged {len(loose_object_keys)=} unreferenced objs')
+                logger.info(f'purged {len(loose_object_keys)=} unreferenced objs')
 
         if not continuation_token:
           break

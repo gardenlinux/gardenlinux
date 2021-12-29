@@ -508,7 +508,11 @@ class OnlineReleaseManifest(ReleaseManifest):
         return ReleaseManifest(**raw)
 
     @classmethod
-    def from_release_manifest(cls, release_manifest: ReleaseManifest, test_result: ReleaseTestResult):
+    def from_release_manifest(
+        cls,
+        release_manifest: ReleaseManifest,
+        test_result: ReleaseTestResult,
+    ):
         return OnlineReleaseManifest(
             **release_manifest.__dict__,
             test_result=test_result
@@ -519,6 +523,7 @@ class OnlineReleaseManifest(ReleaseManifest):
 
     def with_logfile(self, log: S3_ReleaseFile):
         return dataclasses.replace(self, logs=log)
+
 
 
 @dataclasses.dataclass(frozen=True)
@@ -591,6 +596,7 @@ class AzureServicePrincipalCfg:
     client_id: str
     client_secret: str
     subscription_id: str
+
 
 @dataclasses.dataclass(frozen=True)
 class AzureStorageAccountCfg:
@@ -856,4 +862,3 @@ def feature_by_name(feature_name: str):
         if feature.name == feature_name:
             return feature
     raise ValueError(feature_name)
-

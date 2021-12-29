@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import sys
 
@@ -6,6 +7,8 @@ import dacite
 import glci.model
 import glci.util
 import glci.s3
+
+logger = logging.getLogger(__name__)
 
 
 def upload_test_results(
@@ -22,15 +25,15 @@ def upload_test_results(
     build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
 
     if not glci.model.BuildTarget.TESTS in build_target_set:
-        print('build target "tests" not specified - nothing to upload')
+        logger.info('build target "tests" not specified - nothing to upload')
         sys.exit(0)
 
     if not glci.model.BuildTarget.MANIFEST in build_target_set:
-        print('build target "manifest" not specified - skipping uploads')
+        logger.info('build target "manifest" not specified - skipping uploads')
         sys.exit(0)
 
     if os.path.exists('/workspace/skip_tests'):
-        print('Tests already uploaded in previous run, skipping upload step')
+        logger.info('Tests already uploaded in previous run, skipping upload step')
         sys.exit(0)
 
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
@@ -41,17 +44,17 @@ def upload_test_results(
 
     test_result_file_name = os.path.join(repo_dir, 'test_results.json')
     if not os.path.exists(test_result_file_name):
-        print("No file found with test results, tests did not run, won't upload.")
-        print("Exiting with failure, see logs from previous steps")
+        logger.error("No file found with test results, tests did not run, won't upload.")
+        logger.error("Exiting with failure, see logs from previous steps")
         sys.exit(1)
 
-    print(f'Loading test-results from previous steps from: {test_result_file_name}')
+    logger.info(f'Loading test-results from previous steps from: {test_result_file_name}')
     with open(test_result_file_name, 'r') as f:
         test_result = json.load(f)
 
-    print(f'Load local test-results, found: {test_result=}')
+    logger.info(f'Load local test-results, found: {test_result=}')
     if not test_result:
-        print(f'Failed to load test results from {test_result_file_name}')
+        logger.error(f'Failed to load test results from {test_result_file_name}')
         sys.exit(1)
 
     # convert dict to dataclass:
@@ -61,7 +64,7 @@ def upload_test_results(
             config=dacite.Config(cast=[glci.model.TestResultCode]),
         )
 
-    print(f'downloading release manifest from s3 {aws_cfg_name=} {s3_bucket_name=}')
+    logger.info(f'downloading release manifest from s3 {aws_cfg_name=} {s3_bucket_name=}')
     find_release = glci.util.preconfigured(
         func=glci.util.find_release,
         cicd_cfg=glci.util.cicd_cfg(cicd_cfg_name)
@@ -80,10 +83,10 @@ def upload_test_results(
     )
 
     if not manifest:
-        print('Could not find release-manifest, uploading test results failed.')
+        logger.error('Could not find release-manifest, uploading test results failed.')
         sys.exit(1)
 
-    print(f'downloaded manifest: {type(manifest)=}')
+    logger.info(f'downloaded manifest: {type(manifest)=}')
 
     # copy manifest and attach test_results
     new_manifest = manifest.with_test_result(glci.util._json_serialisable_manifest(test_result))
@@ -96,9 +99,9 @@ def upload_test_results(
       key=manifest_path,
       manifest=new_manifest,
     )
-    print(f'uploaded updated manifest: {new_manifest.test_result=}')
+    logger.info(f'uploaded updated manifest: {new_manifest.test_result=}')
 
     if test_result.test_result != glci.model.TestResultCode.OK:
-        print('Upload successful')
-        print('Step is failing due to previous test errors, see logs from previous steps')
+        logger.error('Upload successful')
+        logger.error('Step is failing due to previous test errors, see logs from previous steps')
         sys.exit(1)

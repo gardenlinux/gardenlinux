@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import argparse
-import urllib.parse
+import logging
 import sys
+import urllib.parse
 
 import ccc.github
 import gitutil
@@ -10,6 +11,8 @@ import gitutil
 import glci.util
 import glci.model
 import paths
+
+logger = logging.getLogger(__name__)
 
 
 def _github_cfg(giturl: str):
@@ -66,27 +69,27 @@ def ensure_target_branch_exists(
     repo = git_helper.repo
 
     release_branch_exists = release_branch in {b.name for b in gh_repo.branches()}
-    print(f'{release_branch_exists=}')
+    logger.debug(f'{release_branch_exists=}')
 
     repo = git_helper.repo
     release_commit = repo.rev_parse(release_committish)
-    print(f'{release_commit=}')
+    logger.debug(f'{release_commit=}')
 
     if is_first_release:
         # release_branch MUST not exist, yet
         if release_branch_exists:
-            print(f'Error: {release_branch=} already exists - aborting release')
+            logger.error(f'{release_branch=} already exists - aborting release')
             sys.exit(1)
 
         gh_repo.create_branch_ref(
             name=release_branch,
             sha=release_commit.hexsha,
         )
-        print(f'created new branch {release_branch=} pointing to {release_commit=}')
+        logger.info(f'created new branch {release_branch=} pointing to {release_commit=}')
     else:
         # release_branch MUST exist
         if not release_branch_exists:
-            print(f'Error {release_branch=} does not exist - aborting patch-release')
+            logger.error(f'{release_branch=} does not exist - aborting patch-release')
             sys.exit(1)
 
     # stamp tag + create release + create bump-commit
@@ -160,7 +163,7 @@ def main():
     release_branch = release_branch_name(gardenlinux_epoch=gardenlinux_epoch)
     release_committish = parsed.release_committish
 
-    print(f'next release version: {release_version=}')
+    logger.info(f'next release version: {release_version=}')
 
     ensure_target_branch_exists(
         release_committish=release_committish,

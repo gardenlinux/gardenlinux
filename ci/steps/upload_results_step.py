@@ -4,6 +4,7 @@ import hashlib
 import os
 import pprint
 import sys
+import logging
 
 import glci.model
 import glci.util
@@ -15,6 +16,8 @@ this script is rendered into build-task from step.py/render_task.py
 '''
 
 parsable_to_int = str
+
+logger = logging.getLogger(__name__)
 
 
 def upload_files(
@@ -44,7 +47,7 @@ def upload_files(
                   Key=upload_key,
                 )
 
-            print(f'upload succeeded: {upload_key}')
+            logger.info(f'upload succeeded: {upload_key}')
             yield glci.model.S3_ReleaseFile(
                 name=fname,
                 suffix=os.path.basename(full_path),
@@ -73,23 +76,23 @@ def upload_results_step(
        pass
 
     if not glci.model.BuildTarget.MANIFEST in build_target_set:
-        print(f'build target {glci.model.BuildTarget.MANIFEST=} not specified - exiting now')
+        logger.info(f'build target {glci.model.BuildTarget.MANIFEST=} not specified - exiting now')
         sys.exit(0)
 
     if os.path.isfile('/workspace/skip_build'):
-        print('/workspace/skip_build found - skipping upload')
+        logger.info('/workspace/skip_build found - skipping upload')
         sys.exit(0)
 
     build_result_fname = outfile
     if not os.path.isdir(build_result_fname):
-        print('ERROR: no build result - see previous step for errs')
+        logger.error('No build result - see previous step for errs')
         sys.exit(1)
 
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
     s3_client = glci.s3.s3_client(cicd_cfg)
     aws_cfg_name = cicd_cfg.build.aws_cfg_name
     s3_bucket_name = cicd_cfg.build.s3_bucket_name
-    print(f'uploading to s3 {aws_cfg_name=} {s3_bucket_name=}')
+    logger.info(f'uploading to s3 {aws_cfg_name=} {s3_bucket_name=}')
     gardenlinux_epoch = int(gardenlinux_epoch)
 
     # always use <epoch>-<commit-hash> as version
@@ -141,8 +144,8 @@ def upload_results_step(
       key=manifest_path,
       manifest=manifest,
     )
-    print(f'uploaded manifest: {manifest_path=}\n')
-    pprint.pprint(dataclasses.asdict(manifest))
+    logger.info(f'uploaded manifest: {manifest_path=}\n')
+    logger.info(pprint.pformat(dataclasses.asdict(manifest)))
 
     # write result that the build was ok:
     with open(build_result, 'w') as f:

@@ -57,7 +57,7 @@ def publish_image(
     release: glci.model.OnlineReleaseManifest,
     cicd_cfg: glci.model.CicdCfg,
 ) -> glci.model.OnlineReleaseManifest:
-    print(f'running release for {release.platform=}')
+    logger.info(f'running release for {release.platform=}')
 
     if release.platform == 'ali':
         publish_function = _publish_alicloud_image
@@ -80,7 +80,7 @@ def publish_image(
         publish_function = _publish_oci_image
         cleanup_function = None
     else:
-        print(f'do not know how to publish {release.platform=}, yet')
+        logger.warning(f'do not know how to publish {release.platform=}, yet')
         return release
 
     try:
@@ -91,7 +91,7 @@ def publish_image(
         if not cleanup_function is None:
             cleanup_function(release, cicd_cfg)
         else:
-            print(f'warning: do not know how to cleanup {release.platform=}')
+            logger.warning(f'do not know how to cleanup {release.platform=}')
         raise
 
 
@@ -333,11 +333,11 @@ def promote(
             max_workers=len(releases))
         _publish_img = functools.partial(publish_image, cicd_cfg=cicd_cfg)
 
-        print(f'running {len(releases)} publishing jobs in parallel')
+        logger.info(f'running {len(releases)} publishing jobs in parallel')
         releases = tuple(executor.map(_publish_img, releases))
 
         for release in releases:
-            print(release.published_image_metadata)
+            logger.debug(release.published_image_metadata)
 
         if glci.model.BuildTarget.MANIFEST in build_targets:
             upload_release_manifest_set = glci.util.preconfigured(
@@ -366,7 +366,7 @@ def promote(
                 manifest_set=manifest_set,
             )
 
-            print(f'uploaded manifest-set: {manifest_path=}')
+            logger.info(f'uploaded manifest-set: {manifest_path=}')
 
 
 def main():

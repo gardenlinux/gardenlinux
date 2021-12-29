@@ -6,15 +6,14 @@ import sys
 import typing
 
 import glci
-import glci.util
 import glci.model
-
-import gci.componentmodel as cm
 import glci.s3
-import version as version_util
-import product.v2
+import glci.util
 
 import ctx
+import gci.componentmodel as cm
+import product.v2
+import version as version_util
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +65,7 @@ def build_component_descriptor(
     build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
 
     if glci.model.BuildTarget.COMPONENT_DESCRIPTOR not in build_target_set:
-        print(
+        logger.info(
             f'{glci.model.BuildTarget.COMPONENT_DESCRIPTOR} not specified '
             'exiting now'
         )

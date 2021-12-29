@@ -3,6 +3,7 @@
 import dataclasses
 import json
 import typing
+import logging
 
 import yaml
 
@@ -11,6 +12,7 @@ import glci.util
 import params
 import tkn.model
 
+logger = logging.getLogger(__name__)
 
 GardenlinuxFlavour = glci.model.GardenlinuxFlavour
 
@@ -45,7 +47,7 @@ def _generate_task_name(prefix: str, gardenlinux_flavour: GardenlinuxFlavour):
         .replace('readonly', 'ro')  # hardcoded shortening (length-restriction)
 
     if len(task_name) > 64:
-        print(f'WARNING: {task_name=} too long - will shorten')
+        logger.warning(f'{task_name=} too long - will shorten')
         task_name = task_name[:64]
     return task_name
 
@@ -450,7 +452,7 @@ def render_pipelines(
         pipeline_raw = dataclasses.asdict(pipeline)
         yaml.safe_dump_all((pipeline_raw,), stream=f)
 
-    print(f'dumped pipeline for packages to {outfile_pipeline_packages}')
+    logger.info(f'dumped pipeline for packages to {outfile_pipeline_packages}')
 
     # generate pipeline for gardenlinux build
     gardenlinux_flavours = set(flavour_set.flavours())
@@ -464,4 +466,6 @@ def render_pipelines(
         pipeline_raw = dataclasses.asdict(pipeline)
         yaml.safe_dump_all((pipeline_raw,), stream=f)
 
-    print(f'dumped pipeline with {len(gardenlinux_flavours)} task(s) to {outfile_pipeline_main}')
+    logger.info(
+        f'dumped pipeline with {len(gardenlinux_flavours)} task(s) to {outfile_pipeline_main}'
+    )

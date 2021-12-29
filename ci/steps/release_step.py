@@ -1,3 +1,4 @@
+import logging
 import sys
 
 import github_release
@@ -5,6 +6,8 @@ import glci.model
 import release
 
 parsable_to_int = str
+
+logger = logging.getLogger(__name__)
 
 
 def release_step(
@@ -21,7 +24,7 @@ def release_step(
     build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
 
     if not glci.model.BuildTarget.GITHUB_RELEASE in build_target_set:
-      print(f'{build_target_set=} - will not perform release')
+      logger.info(f'{build_target_set=} - will not perform release')
       return
 
     print(f'Making release for {committish=}')

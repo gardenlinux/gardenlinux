@@ -1,5 +1,6 @@
 import base64
 import enum
+import logging
 import os
 import typing
 
@@ -12,6 +13,8 @@ IMAGE_VERSION = '1.1544.0'
 DEFAULT_IMAGE = f'eu.gcr.io/gardener-project/cc/job-image:{IMAGE_VERSION}'
 KANIKO_IMAGE = f'eu.gcr.io/gardener-project/cc/job-image-kaniko:{IMAGE_VERSION}'
 CACHED_PATCH: str = None
+
+logger = logging.getLogger(__name__)
 
 own_dir = os.path.abspath(os.path.dirname(__file__))
 scripts_dir = os.path.join(own_dir)
@@ -40,14 +43,16 @@ def create_patch(remote_branch: str):
     untracked = repo.untracked_files
     git.fetch('origin', remote_branch)
     for f in untracked:
-        print(f'  add untracked file: {f}')
+        logger.info(f'add untracked file: {f}')
         git.add(f, '--intent-to-add')
     info = git.diff(f'origin/{remote_branch}', '--name-only')
     info = info.replace('\n', ', ')
     patch = git.diff(f'origin/{remote_branch}')
     patch += '\n'
-    print(f'Creating patch against: {remote_branch}, contains files: {info} and has length: \
-        {len(patch)}')
+    logger.info(
+        f'Creating patch against: {remote_branch}, '
+        f'contains files: {info} and has length: {len(patch)}'
+    )
 
     git.reset('--mixed')
     enc_patch = base64.b64encode(patch.encode('utf-8'))

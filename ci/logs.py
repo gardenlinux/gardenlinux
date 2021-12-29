@@ -1,23 +1,29 @@
-from dataclasses import dataclass
-import urllib3
-from kubernetes import client, config
-from kubernetes.client.rest import ApiException
+import dataclasses
+import logging
 import os
-from typing import Dict
+import typing
+import urllib3
 import zipfile
 
-@dataclass
+from kubernetes import client, config
+from kubernetes.client.rest import ApiException
+
+
+logger = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass
 class K8sResponse:
     data: urllib3.response.HTTPResponse
     status_code: int # http-status-code
     headers: urllib3.response.HTTPHeaderDict
 
 
-@dataclass
+@dataclasses.dataclass
 class TaskRunInfo:
     name: str
     pod_name: str
-    steps: Dict[str, str]  # step-name --> step container
+    steps: typing.Dict[str, str]  # step-name --> step container
 
 
 def load_kube_config():
@@ -61,7 +67,7 @@ def get_and_zip_logs(
     task_names = [t['name'] for t in pipeline_run['status']['pipelineSpec']['tasks']]
     if 'finally' in  pipeline_run['status']['pipelineSpec']:
         task_names += [t['name'] for t in pipeline_run['status']['pipelineSpec']['finally']]
-    print(f'Getting all steps for the followings tasks: {task_names=}')
+    logger.info(f'Getting all steps for the followings tasks: {task_names=}')
 
     # Compile a dictionary with task name as key and pod name as value
     # Note: Dict contains only those tasks that have run and are completed
@@ -99,7 +105,9 @@ def get_and_zip_logs(
             # steps: dict {<name>: <container>}
             for idx, (step, container_name) in enumerate(run_info.steps.items()):
                 zip_comp = f'{run_info.name}/{idx:02}_{step}.log'
-                print(f'Getting logs for pod {pod_name}, step {step} in container {container_name}')
+                logger.info(
+                    f'Getting logs for pod {pod_name}, step {step} in container {container_name}'
+                )
                 # Note the flag preload_content decides about streaming or full content in response,
                 # k8s client uses internally urllib3, see
                 # https://urllib3.readthedocs.io/en/stable/advanced-usage.html#stream
@@ -123,13 +131,13 @@ def get_and_zip_logs(
                     )
 
                     if log_response.status_code >= 400:
-                        print(f'Getting logs failed with {log_response.status_code=}')
+                        logger.warning(f'Getting logs failed with {log_response.status_code=}')
                         continue
                 except ApiException as ex:
                     if ex.status == 404:
-                        print(f'Log for pod {pod_name} is already gone {str(ex)}')
+                        logger.warning(f'Log for pod {pod_name} is already gone {str(ex)}')
                     else:
-                        print(f'Getting logs for pod {pod_name} failed {str(ex)}')
+                        logger.error(f'Getting logs for pod {pod_name} failed {str(ex)}')
 
                     with open(zip_comp, 'w') as f:
                         f.write('Log file for {pod_name} could not be retrieved: {str(ex)}')
