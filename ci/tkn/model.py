@@ -213,3 +213,43 @@ class PipelineRun:
     metadata: PipelineRunMetadata
     apiVersion: str = 'tekton.dev/v1beta1'
     kind: str = 'PipelineRun'
+
+
+@dataclasses.dataclass(frozen=True)
+class LimitObject:
+    ephemeral_storage: str = None
+    memory: str = None
+    cpu: float = None
+
+
+@dataclasses.dataclass(frozen=True)
+class Limits:
+    type: str
+    max: LimitObject
+    min: LimitObject
+    default: LimitObject
+    defaultRequest: LimitObject
+
+
+@dataclasses.dataclass(frozen=True)
+class LimitSpec:
+    limits: typing.List[Limits]
+
+
+@dataclasses.dataclass(frozen=True)
+class LimitRange:
+    metadata: Metadata
+    spec: LimitSpec
+    apiVersion: str = 'v1'
+    kind: str = 'LimitRange'
+
+
+def limits_asdict_factory(data):
+
+    def convert_field(obj):
+        if obj == 'ephemeral_storage':
+            return 'ephemeral-storage'
+        else:
+            return obj
+
+    return dict((convert_field(k), v) for k, v in data if v is not None)

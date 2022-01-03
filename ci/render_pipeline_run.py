@@ -263,6 +263,36 @@ def mk_pipeline_main_run(
     )
 
 
+def mk_limits(
+    name: str,
+):
+    limits = tkn.model.LimitRange(
+        metadata=tkn.model.Metadata(
+            name=name,
+        ),
+        spec=tkn.model.LimitSpec(
+            limits=[
+                tkn.model.Limits(
+                    type='Container',
+                    max=tkn.model.LimitObject(ephemeral_storage='128Gi'),
+                    min=tkn.model.LimitObject(ephemeral_storage='16Gi'),
+                    default=tkn.model.LimitObject(
+                        ephemeral_storage='128Gi',
+                        memory='24G',
+                        cpu=16.0,
+                    ),
+                    defaultRequest=tkn.model.LimitObject(
+                        ephemeral_storage='20Gi',
+                        memory='4G',
+                        cpu=1.0,
+                    ),
+                ),
+            ],
+        ),
+    )
+    return limits
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--committish', default='main')
@@ -303,6 +333,9 @@ def main():
     parsed = parser.parse_args()
     parsed.build_targets = set(parsed.build_targets)
 
+    limits = mk_limits(name='gardenlinux')
+    limits_dict = dataclasses.asdict(limits, dict_factory=tkn.model.limits_asdict_factory)
+
     pipeline_run = mk_pipeline_packages_run(
         args=parsed,
         security_context={'runAsUser': 0},
@@ -310,7 +343,7 @@ def main():
     pipeline_run_dict = dataclasses.asdict(pipeline_run)
 
     with open(parsed.outfile_packages, 'w') as f:
-        yaml.safe_dump(pipeline_run_dict, f)
+        yaml.safe_dump_all((pipeline_run_dict, limits_dict), f)
 
     logger.info(f'pipeline-packages-run written to {parsed.outfile_packages}')
 
@@ -318,7 +351,6 @@ def main():
         args=parsed,
         security_context={'runAsUser': 0},
     )
-
     pipeline_run_dict = dataclasses.asdict(pipeline_run)
 
     with open(parsed.outfile, 'w') as f:
