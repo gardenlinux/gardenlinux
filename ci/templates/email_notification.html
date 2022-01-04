@@ -87,7 +87,7 @@ cite {
 
 kbd,code,samp,pre,var { font-family: monospace; font-weight: bold; }
 code, pre {
-    background: var(--tertiary-color);
+    /* background: var(--tertiary-color); */
     padding: 0.5rem 1rem;
 }
 code pre , pre code { padding: 0; }
@@ -205,6 +205,12 @@ body{margin:0 auto;max-width:50rem;}
                    for detailed information.</p>
                 <p>The build log for failed steps is attached. Full logs can be found
                     <a href="$log_url_href">$log_url_descr</a></p>
+            </div>
+        </article>
+        <article id="status_footer">
+            <h3>Logs of failed steps</h3>
+            <div>
+                <pre>$log_excerpt</pre>
             </div>
         </article>
     </main>
