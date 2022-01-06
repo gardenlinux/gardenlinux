@@ -175,6 +175,21 @@ if [ "${include_wget}" != "" ]; then
 	done
 fi
 
+if [[ -v PKG_DIR ]]; then
+	pushd "$PKG_DIR"
+	dpkg-scanpackages . /dev/null > Packages
+	popd
+
+	mkdir "$targetDir$PKG_DIR"
+	mount --rbind --make-rslave "$PKG_DIR" "$targetDir$PKG_DIR"
+
+	APT_SOURCES_LIST="$(cat "$targetDir/etc/apt/sources.list")"
+	printf "deb [trusted=yes] file:/opt/packages ./\n%s\n" "$APT_SOURCES_LIST" > "$targetDir/etc/apt/sources.list"
+
+	"$thisDir/garden-apt-get" "$targetDir" update
+	"$thisDir/garden-apt-get" "$targetDir" upgrade -y
+fi
+
 # INITRD="No" - really hackish solution to skip ramdisk generation
 [ "${include_aptfile}" != "" ] &&
 "$thisDir/garden-chroot" "$targetDir" bash -c '
@@ -187,6 +202,13 @@ rm -rf $tmp
 "$thisDir/garden-chroot" "$targetDir" bash -c '
 	INITRD="No" apt-get install -y --allow-downgrades --no-install-recommends -f $1
 ' -- "$include_aptversion"
+
+if [[ -v PKG_DIR ]]; then
+	umount -R "$targetDir$PKG_DIR"
+	rmdir "$targetDir$PKG_DIR"
+
+	echo "$APT_SOURCES_LIST" > "$targetDir/etc/apt/sources.list"
+fi
 
 # fix ownership/permissions on / (otherwise "debootstrap" leaves them as-is which causes reproducibility issues)
 chown 0:0 "$targetDir"
