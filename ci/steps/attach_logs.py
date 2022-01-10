@@ -293,6 +293,16 @@ def upload_logs(
             version=version,
         )
 
+    # get log excerpts for failed logs to include them in email notification:
+    logs.get_failed_excerpts(
+        namespace=namespace,
+        pipeline_run=pipeline_run,
+        pipeline_run_name=pipeline_run_name,
+        only_failed=True,
+        repo_dir=repo_dir,
+        lines=15,
+    )
+
     print(f'Upload logs finished with result {ok}')
     if not ok:
         # write a file with log status (do not exit(1) as we want the task to continue to send

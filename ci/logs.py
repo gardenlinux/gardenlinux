@@ -46,23 +46,11 @@ def get_pipeline_run(pipeline_run_name: str, namespace: str):
     )
 
 
-def get_and_zip_logs(
+def  _get_task_run_infos(
     pipeline_run: dict[str, any],
-    repo_dir: str,
-    namespace: str,
     pipeline_run_name: str,
-    zip_file_path:str,
-    tail_lines: int,
-    only_failed: bool
-) -> str:
-    '''
-    retrieves all pod logs and writes them into a zip archive
-
-    tail_lines: limits the amount of lines returned from each pod log
-    '''
-
-    k8s = client.CoreV1Api()
-
+    only_failed: bool,
+):
     # Compile all task names from the PipelineRun
     task_names = [t['name'] for t in pipeline_run['status']['pipelineSpec']['tasks']]
     if 'finally' in  pipeline_run['status']['pipelineSpec']:
@@ -94,6 +82,79 @@ def get_and_zip_logs(
                     steps=task_steps,
                 )
             )
+    return task_run_infos
+
+
+def get_failed_excerpts(
+    namespace: str,
+    pipeline_run: dict[str, any],
+    pipeline_run_name: str,
+    only_failed: bool,
+    repo_dir: str,
+    lines: int,
+):
+    task_run_infos = _get_task_run_infos(
+        pipeline_run=pipeline_run,
+        pipeline_run_name=pipeline_run_name,
+        only_failed=only_failed,
+    )
+
+    k8s = client.CoreV1Api()
+    file_path = os.path.join(repo_dir, 'failed_summary.txt')
+    with open(file_path, "w") as out_file:
+        for run_info in task_run_infos:
+            pod_name = run_info.pod_name
+            for idx, (step, container_name) in enumerate(run_info.steps.items()):
+                logger.info(
+                    f'Getting logs for pod {pod_name}, step {step} in container {container_name}'
+                )
+                out_file.write(f'### Pod: {pod_name}, step: {step}, container: {container_name}')
+                try:
+                    data, status_code, headers = k8s.read_namespaced_pod_log_with_http_info(
+                        name=pod_name,
+                        container=container_name,
+                        namespace=namespace,
+                        tail_lines=lines,
+                    )
+
+                    if status_code >= 400:
+                        logger.warning(f'Getting logs failed with {status_code=}')
+                        continue
+
+                    out_file.write(data)
+                except ApiException as ex:
+                    if ex.status == 404:
+                        msg = f'Log for pod {pod_name} is already gone {str(ex)}'
+                        logger.warning(msg)
+                        out_file.write(msg)
+                    else:
+                        msg = f'Getting logs for pod {pod_name} failed {str(ex)}'
+                        logger.error(msg)
+                        out_file.write(msg)
+
+
+def get_and_zip_logs(
+    pipeline_run: dict[str, any],
+    repo_dir: str,
+    namespace: str,
+    pipeline_run_name: str,
+    zip_file_path:str,
+    tail_lines: int,
+    only_failed: bool
+) -> str:
+    '''
+    retrieves all pod logs and writes them into a zip archive
+
+    tail_lines: limits the amount of lines returned from each pod log
+    '''
+
+    task_run_infos = _get_task_run_infos(
+        pipeline_run=pipeline_run,
+        pipeline_run_name=pipeline_run_name,
+        only_failed=only_failed,
+    )
+
+    k8s = client.CoreV1Api()
 
     # create a zip file to store logs:
     if not zip_file_path:

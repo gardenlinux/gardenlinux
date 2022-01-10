@@ -238,6 +238,14 @@ def send_notification(
         log_url_href = "#"
         log_url_descr = '<not available>'
 
+    # get log excerpts:
+    log_path = os.path.join(repo_dir, 'failed_summary.txt')
+    if os.path.exists(log_path):
+        with open(log_path) as f:
+            log_text = f.read()
+    else:
+        log_text = '<Logs not available.>'
+
     # fill template parameters:
     html_template = string.Template(html_mail_template)
     txt_template = string.Template(txt_mail_template)
@@ -252,10 +260,12 @@ def send_notification(
         'log_url_href': log_url_href,
         'log_url_descr': log_url_descr,
         'pipeline_run': pipeline_run_name,
+        'log_excerpt': log_text,
     }
 
     # generate mail body
     html_mail_body = html_template.safe_substitute(values)
+
     values['status_table'] = txt_result_table
     txt_mail_body = txt_template.safe_substitute(values)
 
