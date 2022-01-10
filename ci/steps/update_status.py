@@ -1,6 +1,3 @@
-import urllib.parse
-
-import ccc.github
 import glci.github
 
 
@@ -14,13 +11,9 @@ def update_status(
         f'https://tekton-dashboard.gardenlinux.io/#/namespaces/{namespace}'
         f'/pipelineruns/{pipeline_run_name}'
     )
-    repo_url = urllib.parse.urlparse(giturl)
-    github_cfg = ccc.github.github_cfg_for_hostname(
-        repo_url.hostname,
-    )
 
     glci.github.post_github_status(
-        github_cfg=github_cfg,
+        git_url=giturl,
         committish=committish,
         target_url=dashboard_url,
         state=glci.github.GitHubStatus.PENDING,

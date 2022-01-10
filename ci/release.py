@@ -3,55 +3,14 @@
 import argparse
 import logging
 import sys
-import urllib.parse
 
-import ccc.github
-import gitutil
+import github
 
 import glci.util
 import glci.model
 import paths
 
 logger = logging.getLogger(__name__)
-
-
-def _github_cfg(giturl: str):
-    repo_url = urllib.parse.urlparse(giturl)
-    github_cfg = ccc.github.github_cfg_for_hostname(
-        repo_url.hostname,
-    )
-    return github_cfg
-
-
-def _git_helper(
-    giturl: str,
-):
-    github_cfg = _github_cfg(giturl=giturl)
-    repo_url = urllib.parse.urlparse(giturl)
-
-    repo_url = urllib.parse.urlparse(giturl)
-    repo_path = repo_url.path
-
-    return gitutil.GitHelper(
-        repo=paths.repo_root,
-        github_cfg=github_cfg,
-        github_repo_path=repo_path,
-    )
-
-
-def _github_repo(
-    giturl: str,
-):
-    repo_url = urllib.parse.urlparse(giturl)
-    github_cfg = _github_cfg(giturl=giturl)
-    org, repo = repo_url.path.strip('/').split('/')
-    repo = repo.removesuffix('.git')
-
-    github_api = ccc.github.github_api(github_cfg)
-
-    gh_repo = github_api.repository(owner=org, repository=repo)
-
-    return gh_repo
 
 
 def ensure_target_branch_exists(
@@ -65,7 +24,7 @@ def ensure_target_branch_exists(
 
     is_first_release = minor == 0
 
-    gh_repo = _github_repo(giturl=giturl)
+    gh_repo = github.github_repo(giturl=giturl)
     repo = git_helper.repo
 
     release_branch_exists = release_branch in {b.name for b in gh_repo.branches()}
@@ -117,7 +76,7 @@ def create_release(
         draft: bool,
         prerelease: bool,
 ):
-    gh_repo = _github_repo(giturl=giturl)
+    gh_repo = github.github_repo(giturl=giturl)
     release = gh_repo.create_release(
         target_commitish=target_commitish,
         tag_name=tag_name,
@@ -158,7 +117,7 @@ def main():
     release_version = parsed.release_version
     gardenlinux_epoch = int(release_version.split('.')[0])
 
-    git_helper = _git_helper(giturl=parsed.giturl)
+    git_helper = github.git_helper(giturl=parsed.giturl)
 
     release_branch = release_branch_name(gardenlinux_epoch=gardenlinux_epoch)
     release_committish = parsed.release_committish
