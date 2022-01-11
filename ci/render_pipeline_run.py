@@ -240,7 +240,6 @@ def mk_pipeline_main_run(
     node_selector: dict = {},
     security_context: dict = {},
 ):
-    print(f'{args.flavour_set}')
     flavour_set = glci.util.flavour_set(
         flavour_set_name=args.flavour_set,
         build_yaml=args.pipeline_cfg,
