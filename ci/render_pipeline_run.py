@@ -240,7 +240,6 @@ def mk_pipeline_main_run(
     node_selector: dict = {},
     security_context: dict = {},
 ):
-    print(f'{args.flavour_set}')
     flavour_set = glci.util.flavour_set(
         flavour_set_name=args.flavour_set,
         build_yaml=args.pipeline_cfg,
@@ -248,7 +247,7 @@ def mk_pipeline_main_run(
 
     params = get_common_parameters(vars(args))
     params.extend((
-        NamedParam(name='flavourset', value=flavour_set.name),
+        NamedParam(name='flavour_set_name', value=flavour_set.name),
         NamedParam(name='promote_target', value=args.promote_target.value),
         NamedParam(name='pytest_cfg', value=args.pytest_cfg),
     ))

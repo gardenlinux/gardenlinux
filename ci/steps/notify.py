@@ -153,14 +153,17 @@ def send_notification(
         True if status == 'Succeeded' else False
         for status in status_dict.values()
     ])
-    github_cfg = ccc.github.github_cfg_for_hostname('github.com')
+
+    parsed_url = urllib.parse.urlparse(giturl)
+    github_cfg = ccc.github.github_cfg_for_hostname(parsed_url.hostname)
+
     if task_failed:
         status_to_report = glci.github.GitHubStatus.FAILURE
     else:
         status_to_report = glci.github.GitHubStatus.SUCCESS
 
     glci.github.post_github_status(
-        github_cfg=github_cfg,
+        git_url=giturl,
         committish=committish,
         state=status_to_report,
         target_url=dashboard_url,
@@ -274,8 +277,6 @@ def send_notification(
         recipients = only_recipients_set
     else:
         logger.info("getting recipients from CODEOWNERS")
-        parsed_url = urllib.parse.urlparse(giturl)
-        github_cfg = ccc.github.github_cfg_for_hostname(parsed_url.hostname)
         github_api = ccc.github.github_api(github_cfg)
         codeowners = mailutil.determine_local_repository_codeowners_recipients(
             github_api=github_api,
