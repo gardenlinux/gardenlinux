@@ -148,7 +148,7 @@ echo "$epoch" > "$targetDir/garden-epoch"
 
 if [ -v PKG_DIR ]; then
 	pushd "$PKG_DIR"
-	dpkg-scanpackages . /dev/null > Packages
+	dpkg-scanpackages --multiversion . /dev/null > Packages
 	popd
 
 	mkdir "$targetDir/run/packages"

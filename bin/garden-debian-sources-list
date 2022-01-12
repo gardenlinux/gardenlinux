@@ -104,6 +104,12 @@ deb() {
 } > "$targetDir/etc/apt/sources.list"
 chmod 0644 "$targetDir/etc/apt/sources.list"
 
+if [ -n "$local_pkgs" ]; then
+	printf 'Package: *\nPin: origin ""\nPin-Priority: 600\n' > "$targetDir/etc/apt/preferences.d/local_pkgs"
+else
+	rm -f "$targetDir/etc/apt/preferences.d/local_pkgs"
+fi
+
 if [ ! -s "$targetDir/etc/apt/sources.list" ]; then
 	echo >&2 "error: sources.list ended up empty -- something is definitely wrong"
 	exit 1
