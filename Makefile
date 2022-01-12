@@ -5,7 +5,12 @@ AWS_DISTRIBUTE=
 BUILDDIR=.build
 MAINTAINER_EMAIL="contact@gardenlinux.io"
 
+ifneq ($(wildcard .packages),)
+LOCAL_PKGS=.packages
+endif
+
 ifdef LOCAL_PKGS
+$(info using local packages from $(LOCAL_PKGS))
 override BUILD_OPTS += --local-pkgs=$(LOCAL_PKGS)
 endif
 
