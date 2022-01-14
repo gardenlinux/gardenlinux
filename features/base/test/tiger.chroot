@@ -11,6 +11,12 @@ fi
 
 DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -qq tiger apt-utils> /dev/null
 
+for dir in sys dev proc; do
+	if [ -e "/$dir" ]; then
+		mountpoint -q "/$dir" && umount -l "/$dir"
+	fi
+done
+
 # fake it when running inside a chroot environment
 if [[ "done" == $(tail -1 /usr/lib/tiger/systems/Linux/default/gen_mounts) ]]; then
 	echo 'echo "/ ext4 /dev/fake1"' >> /usr/lib/tiger/systems/Linux/default/gen_mounts 
