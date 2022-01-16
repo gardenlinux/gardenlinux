@@ -1,8 +1,6 @@
 fdisk
-#[${arch}=amd64] grub-cloud-amd64
-#[${arch}=arm64] grub-cloud-arm64
-syslinux
-syslinux-common
+[${arch}=amd64] syslinux
+[${arch}=amd64] syslinux-common
 cloud-guest-utils
 libpam-cracklib
 rng-tools5

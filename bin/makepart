@@ -21,11 +21,8 @@ mkdir -p "$rootfs_work/overlay"/{etc,var}/{upper,work}
 find "$rootfs_work/var/log/" -type f -delete
 
 chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
-chroot "$rootfs_work" /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
+chroot "$rootfs_work" /usr/bin/env -i /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
 rm "$rootfs_work/.autorelabel"
-
-# sign unified image
-datefudge -s "@$timestamp" sbsign --cert /kernel.crt --key /kernel.key --output "$rootfs_work/boot/efi/EFI/BOOT/BOOTX64.EFI" "$rootfs_work/boot/efi/EFI/BOOT/BOOTX64.EFI"
 
 uefi_partition=$(mktemp)
 fstab=$(mktemp)
@@ -188,6 +185,7 @@ fi
 
 initrd="$(mktemp)"
 unified_image="$(mktemp)"
+unified_image_signed="$(mktemp)"
 [[ ! -e "$rootfs$initrd" ]]
 touch "$rootfs$initrd"
 mount --bind "$initrd" "$rootfs$initrd"
@@ -221,6 +219,9 @@ chroot "$rootfs" dracut \
 	--reproducible \
 	"$unified_image"
 
+# sign unified image
+datefudge -s "@$timestamp" sbsign --cert /kernel.crt --key /kernel.key --output "$unified_image_signed" "$unified_image"
+
 umount "$rootfs/proc"
 umount "$rootfs$initrd"
 rm "$rootfs$initrd"
@@ -228,13 +229,20 @@ umount "$rootfs$unified_image"
 rm "$rootfs$unified_image"
 umount "$rootfs/etc/veritytab"
 rm "$rootfs/etc/veritytab"
-datefudge -s "@$timestamp" mcopy -i "$uefi_partition" -o -p "$initrd" "::/legacy/$kernel_version/initrd.img-$kernel_version"
-datefudge -s "@$timestamp" mcopy -i "$uefi_partition" -o -p "$unified_image" "::/EFI/BOOT/BOOTX64.EFI"
+case "$arch" in
+	amd64) uefi_arch=X64;;
+	arm64) uefi_arch=AA64;;
+esac
+datefudge -s "@$timestamp" mcopy -i "$uefi_partition" -o -p "$unified_image_signed" "::/EFI/BOOT/BOOT$uefi_arch.EFI"
 
-syslinux_conf="$(mktemp)"
-mcopy -i "$uefi_partition" "::/syslinux/syslinux.cfg" "$syslinux_conf"
-sed -i 's|APPEND.*|APPEND '"$cmdline"'|' "$syslinux_conf"
-datefudge -s "@$timestamp" mcopy -i "$uefi_partition" -o -p "$syslinux_conf" "::/syslinux/syslinux.cfg"
+if [[ -f "$rootfs/usr/bin/syslinux" ]]; then
+	syslinux_conf="$(mktemp)"
+	mcopy -i "$uefi_partition" "::/syslinux/syslinux.cfg" "$syslinux_conf"
+	sed -i 's|APPEND.*|APPEND '"$cmdline"'|' "$syslinux_conf"
+	datefudge -s "@$timestamp" mcopy -i "$uefi_partition" -o -p "$syslinux_conf" "::/syslinux/syslinux.cfg"
+	datefudge -s "@$timestamp" mcopy -i "$uefi_partition" -o -p "$initrd" "::/legacy/$kernel_version/initrd.img-$kernel_version"
+	rm "$syslinux_conf"
+fi
 
 # cleanup
-rm -rf "$rootfs_work" "$fstab" "$veritytab" "$root_hash" "$initrd" "$unified_image" "$syslinux_conf"
+rm -rf "$rootfs_work" "$fstab" "$veritytab" "$root_hash" "$initrd" "$unified_image" "$unified_image_signed"

@@ -16,6 +16,6 @@ mdadm
 hdparm
 smartmontools
 bird2
-syslinux
-syslinux-common
+[${arch}=amd64] syslinux
+[${arch}=amd64] syslinux-common
 linux-image-5.10-${arch}

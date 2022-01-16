@@ -12,6 +12,8 @@ RUN	go install golang.org/x/lint/golint@latest \
 FROM 	$build_base_image
 ARG	DEBIAN_FRONTEND=noninteractive
 
+RUN if [ "$(dpkg --print-architecture)" != amd64 ]; then dpkg --add-architecture amd64; fi
+
 RUN	apt-get update \
      &&	apt-get install -y --no-install-recommends \
 		debian-ports-archive-keyring \
@@ -26,7 +28,7 @@ RUN	apt-get update \
 		qemu-user-static \
 		qemu-utils \
 		cpio \
-                syslinux syslinux-common isolinux xorriso \
+		syslinux:amd64 syslinux-common:amd64 isolinux:amd64 xorriso:amd64 \
 		dpkg-dev \
      &&	rm -rf /var/lib/apt/lists/*
 

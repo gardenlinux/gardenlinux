@@ -6,18 +6,20 @@ set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
-	--flags 'features:' \
+	--flags 'features:,arch:' \
 	-- \
 	'<target-dir>' \
 	'rootfs'
 
 eval "$dgetopt"
 features=
+arch=
 while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
 	case "$flag" in
 		--features) features="${features:+$features,}$1"; shift ;;
+		--arch) arch="$1"; shift ;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
@@ -51,7 +53,7 @@ printf "## executing exec.config\n"
 for i in $(tr ',' '\n' <<< $features); do
 	if [ -f $featureDir/$i/exec.config ]; then
 		printf "### $i:\n"
-		$thisDir/garden-chroot $targetDir /tmp/$(basename $featureDir)/$i/exec.config | indent
+		"$thisDir/garden-chroot" "$targetDir" env arch="$arch" "/tmp/$(basename $featureDir)/$i/exec.config" 2>&1 | indent
 	fi
 done
 
