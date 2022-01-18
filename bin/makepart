@@ -69,7 +69,7 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 	label=$(grep -oP '(?<=^LABEL=)[a-zA-Z0-9\_\-]*$' <<< "$source" || true)
 
 	# compute sufficiently padded size for partition (aligned to nearest MB (2048 sectors))
-	size=${size:-$(du -sb "$rootfs_work$target" | awk '{ size = $1 * 1.5; padded_size = size + (MB - (size % MB) % MB); print (padded_size / MB) "MiB" }' 'MB=1048576')}
+	size=${size:-$(du -sb "$rootfs_work$target" | awk '{ min_size = 64 * MB; size = $1 * 1.5; padded_size = size + (MB - (size % MB) % MB); if (padded_size < min_size) padded_size = min_size; print (padded_size / MB) "MiB" }' 'MB=1048576')}
 
 	file=$([[ "$type" = "uefi" ]] && echo "$uefi_partition" || mktemp)
 	truncate -s "$size" "$file"
@@ -186,12 +186,10 @@ fi
 initrd="$(mktemp)"
 unified_image="$(mktemp)"
 unified_image_signed="$(mktemp)"
+
 [[ ! -e "$rootfs$initrd" ]]
 touch "$rootfs$initrd"
 mount --bind "$initrd" "$rootfs$initrd"
-[[ ! -e "$rootfs$unified_image" ]]
-touch "$rootfs$unified_image"
-mount --bind "$unified_image" "$rootfs$unified_image"
 [[ ! -e "$rootfs/etc/veritytab" ]]
 touch "$rootfs/etc/veritytab"
 mount --bind "$veritytab" "$rootfs/etc/veritytab"
@@ -209,30 +207,39 @@ chroot "$rootfs" dracut \
 	--reproducible \
 	"$initrd"
 
-chroot "$rootfs" dracut \
-	--force \
-	--kver "$kernel_version" \
-	--uefi \
-	--modules "bash dash systemd systemd-initrd systemd-veritysetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd gardenlinux base fs-lib shutdown" \
-	--install "/etc/veritytab" \
-	--kernel-cmdline "$cmdline" \
-	--reproducible \
-	"$unified_image"
+umount "$rootfs/proc"
+umount "$rootfs$initrd"
+rm "$rootfs$initrd"
+umount "$rootfs/etc/veritytab"
+rm "$rootfs/etc/veritytab"
+
+case "$arch" in
+	amd64)
+		uefi_arch=X64
+		gnu_arch=x86_64
+		initrd_vma=0x3000000
+		;;
+	arm64)
+		uefi_arch=AA64
+		gnu_arch=aarch64
+		initrd_vma=0x4000000
+		;;
+esac
+
+# create unified image
+cmdline_file=$(mktemp)
+echo "$cmdline" > "$cmdline_file"
+"${gnu_arch}-linux-gnu-objcopy" \
+	--add-section .cmdline="$cmdline_file" --change-section-vma .cmdline=0x1000000 \
+	--add-section .linux="$kernel_file" --change-section-vma .linux=0x2000000 \
+	--add-section .initrd="$initrd" --change-section-vma .initrd="$initrd_vma" \
+	"$rootfs/usr/lib/systemd/boot/efi/linux$(tr '[:upper:]' '[:lower:]' <<< "$uefi_arch").efi.stub" "$unified_image"
+rm "$cmdline_file"
 
 # sign unified image
 datefudge -s "@$timestamp" sbsign --cert /kernel.crt --key /kernel.key --output "$unified_image_signed" "$unified_image"
 
-umount "$rootfs/proc"
-umount "$rootfs$initrd"
-rm "$rootfs$initrd"
-umount "$rootfs$unified_image"
-rm "$rootfs$unified_image"
-umount "$rootfs/etc/veritytab"
-rm "$rootfs/etc/veritytab"
-case "$arch" in
-	amd64) uefi_arch=X64;;
-	arm64) uefi_arch=AA64;;
-esac
+# copy unified image to uefi partition
 datefudge -s "@$timestamp" mcopy -i "$uefi_partition" -o -p "$unified_image_signed" "::/EFI/BOOT/BOOT$uefi_arch.EFI"
 
 if [[ -f "$rootfs/usr/bin/syslinux" ]]; then
