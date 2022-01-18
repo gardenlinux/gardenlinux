@@ -41,7 +41,7 @@ input="${1:-$(sed -e "s/#.*\$//" -e "/^$/d" "${versionfile}")}";  shift || true
 input=$(sed "s/^[[:space:]]*//;s/[[:space:]]*\$//" <<< ${input})
 
 # no version / timestamp on versionfile
-[ -z ${input} ] && input="today"
+[ -z ${input} ] && input="dev"
 
 minor=0
 if [[ ${input} =~ ^[0-9\.]*$ && $(cut -d. -f1 <<< ${input}) -lt 10000000 ]]; 
@@ -51,8 +51,14 @@ then	[ $(cut -d. -sf3 <<< ${input}) ] && eusage "invalid version format ${input}
 	if [ $(cut -d. -sf2 <<< ${input}) ]; then 
 		minor="$(cut -d. -f2 <<< ${input})"
 	fi
-else	indate=$(date --date "${input}" +%s 2>/dev/null) || eusage "invalid date ${input}"
-	major="$(( (${indate} - $(date --date "${startdate}" +%s)) / (60*60*24) ))"
+else	if	[[ ${input} = dev ]];
+	then	indate=$(date --date "today" +%s 2>/dev/null)
+		major="$(( (${indate} - $(date --date "${startdate}" +%s)) / (60*60*24) ))"
+		version=dev
+	else	indate=$(date --date "${input}" +%s 2>/dev/null) || eusage "invalid date ${input}"
+		major="$(( (${indate} - $(date --date "${startdate}" +%s)) / (60*60*24) ))"
+		version="${major}.${minor}"
+	fi
 fi
 
 case "${typeout}" in
@@ -61,7 +67,7 @@ case "${typeout}" in
 	--date)		date --date "${startdate} + ${major} days" +%Y%m%d ;;
 	--datefull)	date --date "${startdate} + ${major} days" +%Y%m%dT%H%M%SZ ;;
 	--epoch)	date --date "${startdate} + ${major} days" +%s ;;
-	--git)		echo "${major}.${minor}-$(git -C "${scriptsDir}" rev-parse --short 'HEAD^{commit}')" ;;
-        *)		echo "${major}.${minor}" ;;
+	--git)		echo "${version}-$(git -C "${scriptsDir}" rev-parse --short 'HEAD^{commit}')" ;;
+        *)		echo "${version}" ;;
 esac
 
