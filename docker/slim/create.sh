@@ -7,7 +7,7 @@ GARDENLINUX_VERSION="$(${SCRIPTPATH}/../../bin/garden-version)"
 
 pushd ${SCRIPTPATH}
 echo '### create rootfs.tar.xz'
-../../build.sh --features=oci . || :
+../../build.sh --features=oci,_slim . || :
 
 
 echo '### build gardenlinux base image'

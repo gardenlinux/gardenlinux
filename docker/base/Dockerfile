@@ -1,0 +1,4 @@
+FROM scratch
+ARG ROOTFS_PATH
+ADD ${ROOTFS_PATH} /
+CMD ["bash"]

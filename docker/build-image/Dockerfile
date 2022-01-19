@@ -1,4 +1,4 @@
-ARG build_base_image=gardenlinux/slim
+ARG build_base_image=debian:testing-slim
 FROM	golang:latest as golang
 COPY	garden-feat.go /go/src
 RUN	go install golang.org/x/lint/golint@latest \
