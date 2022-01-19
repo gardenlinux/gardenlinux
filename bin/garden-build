@@ -96,6 +96,7 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 	export version="$version"
 
 	initArgs=( --arch="$dpkgArch" )
+	configArgs=( --arch="$dpkgArch" )
 	initArgs+=( --debian )
 	if [ -n "${ports-}" ]; then
 		initArgs+=(

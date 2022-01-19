@@ -36,6 +36,11 @@ rm -f "$targetDir/run/mount/utab"
 # (also remove the directory, but only if it's empty)
 rmdir "$targetDir/run/mount" 2>/dev/null || :
 
+if [ -d "$targetDir/run/packages" ]; then
+	umount -R "$targetDir/run/packages"
+	rmdir "$targetDir/run/packages"
+fi
+
 find "$targetDir" \
 	-newermt "@$epoch" \
 	-exec touch --no-dereference --date="@$epoch" '{}' +

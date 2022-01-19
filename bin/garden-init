@@ -146,9 +146,19 @@ if ! "$debootstrap" "${debootstrapArgs[@]}"; then
 fi
 echo "$epoch" > "$targetDir/garden-epoch"
 
+if [[ -v PKG_DIR ]]; then
+	pushd "$PKG_DIR"
+	dpkg-scanpackages --multiversion . /dev/null > Packages
+	popd
+
+	mkdir "$targetDir/run/packages"
+	mount --rbind --make-rslave "$PKG_DIR" "$targetDir/run/packages"
+fi
+
 if [ -z "$nonDebian" ]; then
 	"$thisDir/garden-debian-sources-list" --gardenlinux-only \
 		$([ -z "$debianPorts" ] || echo '--ports') \
+		$([[ -v PKG_DIR ]] && echo --local-pkgs /run/packages) \
 		"$targetDir" "$suite" "$version"
 	cp "$keyringPlain" "$targetDir/etc/apt/trusted.gpg.d/gardenlinux.asc"
 	"$thisDir/garden-apt-get" "$targetDir" update -qq

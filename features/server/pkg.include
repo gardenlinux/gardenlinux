@@ -32,5 +32,3 @@ nvme-cli
 selinux-basics
 selinux-policy-default
 sosreport
-binutils
-sbsigntool
