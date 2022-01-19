@@ -6,7 +6,7 @@ source "$thisDir/bin/.constants.sh" \
 	--flags 'skip-build,debug,lessram,manual,skip-tests' \
 	--flags 'arch:,features:,disable-features:,suite:,local-pkgs:' \
 	--usage '[--skip-build] [--lessram] [--debug] [--manual] [--arch=<arch>] [--skip-tests] [<output-dir>] [<version/timestamp>]' \
-	--sample '--features kvm,khost --disable-features _slimify .build' \
+	--sample '--features kvm,khost --disable-features _slim .build' \
 	--sample '--features metal,_pxe --lessram .build' \
 	--help  "Generates a Garden Linux image based on features
 
