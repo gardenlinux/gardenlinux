@@ -1,0 +1,16 @@
+name: build
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        architecture: [ amd64, arm64 ]
+        platform: [ kvm, metal, gcp, aws, azure, ali, openstack, vmware ]
+        modifier: [ "", "-dev" ]
+    steps:
+      - uses: actions/checkout@v2
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends qemu-user-static binfmt-support
+        env:
+          DEBIAN_FRONTEND: noninteractive
+      - run: make ARCH=${{ matrix.architecture }} ${{ matrix.platform }}${{ matrix.modifier }}
