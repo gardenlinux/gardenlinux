@@ -12,8 +12,10 @@ RUN	go install golang.org/x/lint/golint@latest \
 FROM 	$build_base_image
 ARG	DEBIAN_FRONTEND=noninteractive
 
-RUN	apt-get update \
-     &&	apt-get install -y --no-install-recommends \
+RUN if [ "$(dpkg --print-architecture)" != amd64 ]; then dpkg --add-architecture amd64; fi
+
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
 		debian-ports-archive-keyring \
 		debootstrap \
 		wget ca-certificates gettext-base \
@@ -26,9 +28,15 @@ RUN	apt-get update \
 		qemu-user-static \
 		qemu-utils \
 		cpio \
-                syslinux syslinux-common isolinux xorriso \
-		dpkg-dev \
-     &&	rm -rf /var/lib/apt/lists/*
+		syslinux:amd64 syslinux-common:amd64 isolinux:amd64 xorriso:amd64 \
+		dpkg-dev
+
+RUN echo "deb https://deb.debian.org/debian unstable main" >> /etc/apt/sources.list \
+	&& echo 'APT::Default-Release "testing";' > /etc/apt/apt.conf.d/default-testing \
+	&& apt-get update \
+	&& apt-get install -t unstable -y --no-install-recommends binutils-x86-64-linux-gnu binutils-aarch64-linux-gnu
+
+RUN rm -rf /var/lib/apt/lists/*
 
 ENV	PATH=${PATH}:/opt/gardenlinux/bin
 #COPY	--from=gcr.io/kaniko-project/executor:latest /kaniko/executor /usr/local/bin/executor

@@ -5,6 +5,9 @@ AWS_DISTRIBUTE=
 BUILDDIR=.build
 MAINTAINER_EMAIL="contact@gardenlinux.io"
 
+ARCH ?= $(shell ./get_arch.sh)
+override BUILD_OPTS += --arch=$(ARCH)
+
 ifneq ($(wildcard local_packages),)
 LOCAL_PKGS=local_packages
 endif
