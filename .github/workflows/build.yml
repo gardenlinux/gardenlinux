@@ -10,7 +10,5 @@ jobs:
         modifier: [ "", "-dev" ]
     steps:
       - uses: actions/checkout@v2
-      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends qemu-user-static binfmt-support
-        env:
-          DEBIAN_FRONTEND: noninteractive
+      - run: wget https://deb.debian.org/debian/pool/main/q/qemu/qemu-user-static_6.2+dfsg-1_amd64.deb && sudo dpkg -i qemu-user-static_6.2+dfsg-1_amd64.deb
       - run: make ARCH=${{ matrix.architecture }} ${{ matrix.platform }}${{ matrix.modifier }}
