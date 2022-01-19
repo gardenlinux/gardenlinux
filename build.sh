@@ -4,7 +4,7 @@ set -Eeuo pipefail
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/bin/.constants.sh" \
 	--flags 'skip-build,debug,lessram,manual,skip-tests' \
-	--flags 'arch:,features:,disable-features:,suite:' \
+	--flags 'arch:,features:,disable-features:,suite:,local-pkgs:' \
 	--usage '[--skip-build] [--lessram] [--debug] [--manual] [--arch=<arch>] [--skip-tests] [<output-dir>] [<version/timestamp>]' \
 	--sample '--features kvm,khost --disable-features _slimify .build' \
 	--sample '--features metal,_pxe --lessram .build' \
@@ -34,6 +34,7 @@ arch=
 features=
 disablefeatures=
 tests=1
+local_pkgs=
 output=".build"
 while true; do
 	flag="$1"; shift
@@ -47,6 +48,7 @@ while true; do
 		--features) 	features="$1";	shift ;;
 		--disable-features) 	disablefeatures="$1";shift ;;
 		--skip-tests)   tests=0	;;
+		--local-pkgs) local_pkgs="$1"; shift ;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
@@ -104,6 +106,10 @@ dockerArgs="--hostname garden-build
 	--mount type=bind,source=/dev,target=/dev"
 
 [ $lessram ] || dockerArgs+=" --tmpfs /tmp:dev,exec,suid,noatime"
+
+if [ -n "$local_pkgs" ]; then
+	dockerArgs+=" --volume $(realpath "$local_pkgs"):/opt/packages/pool:ro -e PKG_DIR=/opt/packages"
+fi
 
 if [ $manual ]; then
 	echo -e "\n### running in debug mode"

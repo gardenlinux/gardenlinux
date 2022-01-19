@@ -27,6 +27,7 @@ RUN	apt-get update \
 		qemu-utils \
 		cpio \
                 syslinux syslinux-common isolinux xorriso \
+		dpkg-dev \
      &&	rm -rf /var/lib/apt/lists/*
 
 ENV	PATH=${PATH}:/opt/gardenlinux/bin

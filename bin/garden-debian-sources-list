@@ -9,6 +9,7 @@ source "$thisDir/.constants.sh" \
 	--flags 'ports' \
 	--flags 'deb-src' \
 	--flags 'gardenlinux-only' \
+	--flags 'local-pkgs:' \
 	-- \
 	'[--deb-src] [--ports] [--gardenlinux-only] <target-dir> <suite> <version>' \
 	'rootfs stretch 520.0'
@@ -17,6 +18,7 @@ eval "$dgetopt"
 gardenlinuxOnly=
 ports=
 debSrc=
+local_pkgs=
 while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
@@ -24,6 +26,7 @@ while true; do
 		--gardenlinux-only) gardenlinuxOnly=1 ;;
 		--ports) ports=1 ;;
 		--deb-src) debSrc=1 ;;
+		--local-pkgs) local_pkgs="$1"; shift ;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
@@ -69,6 +72,13 @@ deb() {
 
 # https://github.com/tianon/go-aptsources/blob/e066ed9cd8cd9eef7198765bd00ec99679e6d0be/target.go#L16-L58
 {
+	if [ -n "$local_pkgs" ]; then
+		echo "deb [trusted=yes] file:$local_pkgs ./"
+		if [ -n "$debSrc" ]; then
+			echo "deb-src [trusted=yes] file:$local_pkgs ./"
+		fi
+	fi
+
 	deb "$version" main gardenlinux
 
 	if [[ -z "$gardenlinuxOnly" ]]; then
@@ -93,6 +103,12 @@ deb() {
 	fi
 } > "$targetDir/etc/apt/sources.list"
 chmod 0644 "$targetDir/etc/apt/sources.list"
+
+if [ -n "$local_pkgs" ]; then
+	printf 'Package: *\nPin: origin ""\nPin-Priority: 600\n' > "$targetDir/etc/apt/preferences.d/local_pkgs"
+else
+	rm -f "$targetDir/etc/apt/preferences.d/local_pkgs"
+fi
 
 if [ ! -s "$targetDir/etc/apt/sources.list" ]; then
 	echo >&2 "error: sources.list ended up empty -- something is definitely wrong"
