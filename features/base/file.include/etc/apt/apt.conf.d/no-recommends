@@ -1,3 +1,2 @@
-APT::Install-Recommends false;
-APT::Install-Suggests false;
-Apt::AutoRemove::SuggestsImportant "false";
+APT::Install-Recommends "false";
+Apt::AutoRemove::RecommendsImportant "false";
