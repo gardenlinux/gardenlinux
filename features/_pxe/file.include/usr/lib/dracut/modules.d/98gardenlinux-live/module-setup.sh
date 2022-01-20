@@ -37,4 +37,7 @@ install() {
     # ignition-fetch after resolved
     mkdir -m 0755 -p "${initdir}/etc/systemd/system/ignition-fetch.service.d"
     inst_simple "$moddir/ignition-fetch.conf" /etc/systemd/system/ignition-fetch.service.d/ignition-fetch.conf
+
+    # clean up
+    inst_hook cleanup 00 "$moddir/cleanup.sh"
 }
