@@ -1,0 +1,14 @@
+name: build
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        architecture: [ amd64, arm64 ]
+        platform: [ kvm, metal, gcp, aws, azure, ali, openstack, vmware ]
+        modifier: [ "", "-dev" ]
+    steps:
+      - uses: actions/checkout@v2
+      - run: wget https://deb.debian.org/debian/pool/main/q/qemu/qemu-user-static_6.2+dfsg-1_amd64.deb && sudo dpkg -i qemu-user-static_6.2+dfsg-1_amd64.deb
+      - run: make ARCH=${{ matrix.architecture }} ${{ matrix.platform }}${{ matrix.modifier }}
