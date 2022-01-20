@@ -1,5 +1,0 @@
-# settings used for the repository, if nothing is supplied by command line
-
-PACKAGES_DEBIAN="packages_debian"
-CODENAME="bullseye"
-REPOSITORY="deb https://ftp.de.debian.org/debian bullseye main"
