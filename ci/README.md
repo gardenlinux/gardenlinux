@@ -3,7 +3,7 @@ The following section describes how Garden Linux can be built using a pipeline.
 The open source project [Tekton](https://github.com/tektoncd/pipeline) is used as environment to run the build. The build pipeline is fully containerized and requires a Kubernetes cluster.
 
 ## Overview About The Build
-The Garden Linux build is done in several phases and runs fully containerized. In the first phase some images are created that are used as base images for the subsequent build steps. The second phase builds several packages and the Linux kernel. The third phase build the VM images using the packages from step 2 and standard Debian packages. The final VM images are uploaded to an (S3-like) object store and can optionally be uploaded to hyperscalers (Alicloud, AWS, Azure or Google).
+The Garden Linux build is done in several phases and runs fully containerized. In the first phase some images are created that are used as base images for the subsequent build steps. The second phase build the VM images. The final VM images are uploaded to an (S3-like) object store and can optionally be uploaded to hyperscalers (Alicloud, AWS, Azure or Google).
 
 ## Installation
 You have to install Tekton pipelines and the Tekton dashboard (recommended)
@@ -107,9 +107,9 @@ The namespace can be set according to your preferences. In this document and in 
 
 ### Overview About The Build
 
-The Garden Linux build is done in several phases and runs fully containerized. In the first phase some images are created that are used as base images for the subsequent build steps. The second phase builds several packages and the Linux kernel. The third phase build the VM images using the packages from step 2 and standard Debian packages. The final VM images are uploaded to an (S3-like) object store and can optionally be uploaded to hyperscalers (Alicloud, AWS, Azure or Google).
+The Garden Linux build is done in several phases and runs fully containerized. In the first phase some images are created that are used as base images for the subsequent build steps. The second phase build the VM images. The final VM images are uploaded to an (S3-like) object store and can optionally be uploaded to hyperscalers (Alicloud, AWS, Azure or Google).
 
-The build uses two pipelines: One to build the packages and one to build the VM images. Package builds are time consuming and resource intensive. A package build needs at least 70GB of disk space and takes >4h to build on a typical build machine.
+The build uses one pipeline to build the VM images.
 
 Build variants:
 The build can handle various variants of build artifacts. These are configured by a flavour set. The flavours are defined in the file flavours.yaml in the root directory of th Git repository. By default there is one set in this file named "all". You can add more sets according to your needs.
@@ -170,7 +170,6 @@ This script creates several yaml files containing the Tekton definitions for the
 This script has the following parameters:
 
 * `--image-build`: Build Garden Linux
-* `--package-build`: Build the packages
 * `--wait`: The script terminates when pipeline run is finished
 
 Example:

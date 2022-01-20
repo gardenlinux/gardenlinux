@@ -19,10 +19,6 @@ def main():
         '--outfile-pipeline-main',
         default='pipeline.yaml',
     )
-    parser.add_argument(
-        '--outfile-pipeline-packages',
-        default='pipeline-packages.yaml',
-    )
     # for tasks:
     parser.add_argument('--use-secrets-server', action='store_true')
     parser.add_argument('--outfile-tasks', default='tasks.yaml')
@@ -40,7 +36,6 @@ def main():
         build_yaml=parsed.pipeline_cfg,
         flavour_set=parsed.flavour_set,
         outfile_pipeline_main=parsed.outfile_pipeline_main,
-        outfile_pipeline_packages=parsed.outfile_pipeline_packages,
         tasks=all_tasks,
     )
 

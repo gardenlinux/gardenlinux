@@ -81,7 +81,6 @@ cd "${repo_root}"
 
 pipeline_cfg="${repo_root}/flavours.yaml"
 outfile_pipeline_main='rendered_pipeline_main.yaml'
-outfile_pipeline_packages='rendered_pipeline_packages.yaml'
 
 EXTRA_ARGS=
 if [ ! -z "${VERSION:-}" ]; then
@@ -122,7 +121,6 @@ fi
 echo "head-commit: ${head_commit}"
 
 pipeline_run="$PWD/pipeline_run.yaml"
-pipeline_package_run="$PWD/pipeline_packages_run.yaml"
 rendered_task="$PWD/rendered_task.yaml"
 credentials_outfile="$PWD/credentials.json"
 
@@ -137,7 +135,6 @@ ci/render_pipeline_run.py $EXTRA_ARGS \
   --oci-path "${OCI_PATH}" \
   --build-targets "${BUILD_TARGETS}" \
   --outfile "${pipeline_run}" \
-  --outfile-packages "${pipeline_package_run}"
 
 PATCH_BRANCH=
 if [ ! -z ${USE_PATCHING:-} ]; then
@@ -159,7 +156,6 @@ ci/render_all.py \
   --pipeline_cfg "${pipeline_cfg}" \
   --flavour-set "${FLAVOUR_SET}" \
   --outfile-pipeline-main "${outfile_pipeline_main}" \
-  --outfile-pipeline-packages "${outfile_pipeline_packages}" \
   --outfile-tasks "${rendered_task}" \
   ${RENDER_TASK_EXTRA_ARGS}
 
@@ -168,23 +164,18 @@ ci/render_all.py \
 for manifest in \
   "${rendered_task}" \
   "${outfile_pipeline_main}" \
-  "${outfile_pipeline_packages}"
 do
   echo "Apply of ${manifest}"
   kubectl apply -n "${tekton_namespace}" -f "${manifest}"
 done
 
 image_build=false
-package_build=false
 wait=false
 for arg in "$@"
 do
     echo "Found arg $arg";
     if [ $arg ==  "--image-build" ]; then
       image_build=true
-    fi
-    if [ $arg ==  "--package-build" ]; then
-      package_build=true
     fi
     if [ $arg ==  "--wait" ]; then
       wait=true
@@ -198,16 +189,6 @@ if [ ${image_build} = true ] ; then
   if [ ${wait} = true ] ; then
     echo "waiting for new pipelinerun ${pipeline_run}"
     ci/wait_for_pipelinerun.py --pipelinerun-file "${pipeline_run}" --namespace "${tekton_namespace}"
-  fi
-fi
-
-# --package-build calls triggering the pipeline run for image build
-if [ ${package_build} = true ]; then
-  echo "Build packages"
-  kubectl apply -n "${tekton_namespace}" -f "${pipeline_package_run}"
-  if [ ${wait} = true ]; then
-    echo "waiting for new pipelinerun ${pipeline_package_run}"
-    ci/wait_for_pipelinerun.py --pipelinerun-file "${pipeline_package_run}" --namespace "${tekton_namespace}"
   fi
 fi
 

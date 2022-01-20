@@ -12,9 +12,6 @@ cicd_cfgs:
       oss_bucket_name: 'gardenlinux' #alicloud
       alicloud_region: 'eu-central-1'
       alicloud_cfg_name: 'gardenlinux'
-    package_build:
-      aws_cfg_name: 'gardenlinux'
-      s3_bucket_name: 'gardenlinux-pkgs'
     publish:
       azure:
         offer_id: 'gardenlinux'
