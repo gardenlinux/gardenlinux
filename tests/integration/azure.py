@@ -15,8 +15,6 @@ from azure.core.exceptions import (
 from urllib.request import urlopen
 from urllib.parse import urlparse
 
-from azure.identity import AzureCliCredential
-
 from azure.mgmt.subscription import SubscriptionClient
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.compute import ComputeManagementClient
@@ -45,6 +43,15 @@ def progress_function(capsys, total, uploaded):
 
 class AZURE:
     """Handle resources in Azure cloud"""
+
+    @classmethod
+    def find_subscription_id(cls, credential, subscription_name: str) -> str:
+        subscription_client = SubscriptionClient(credential)
+        for sub in subscription_client.subscriptions.list():
+            if sub.display_name == subscription_name:
+                return sub.subscription_id
+        raise RuntimeError(f"Cannot find a subscription with display name {subscription_name}")
+
 
     def az_get_resource_group(self, name: str):
         try:
@@ -350,21 +357,13 @@ class AZURE:
         ).result()
 
 
-    def _find_subscription_id(self, credential, subscription_name: str) -> str:
-        subscription_client = SubscriptionClient(credential)
-        for sub in subscription_client.subscriptions.list():
-            if sub.display_name == subscription_name:
-                return sub.subscription_id
-        raise RuntimeError(f"Cannot find a subscription with display name {subscription_name}")
-
-
     @classmethod
-    def validate_config(cls, cfg: dict, test_name: str):
+    def validate_config(cls, cfg: dict, image: str, test_name: str):
         if not 'location' in cfg:
             pytest.exit("Azure location not specified, cannot continue.", 1)
-        if not 'subscription' in cfg and not 'subscription_id' in cfg:
-            pytest.exit("Azure subscription name or subscription ID not specified, cannot continue.", 2)
-        if not 'image_name' in cfg and not 'image' in cfg:
+        # if not 'subscription' in cfg and not 'subscription_id' in cfg:
+        #     pytest.exit("Azure subscription name or subscription ID not specified, cannot continue.", 2)
+        if not image and not 'image_name' in cfg and not 'image' in cfg:
             pytest.exit("Neither 'image' nor 'image_name' specified, cannot continue.", 3)
         if not 'image_name' in cfg:
             cfg['image_name'] = f"img-{test_name}"
@@ -376,7 +375,7 @@ class AZURE:
             cfg['nsg_name'] = f"nsg-{test_name}"
         if not 'keep_running' in cfg:
             cfg['keep_running'] = False
-        if not 'ssh' in cfg:
+        if not 'ssh' in cfg or not cfg['ssh']:
             cfg['ssh'] = {}
         if not 'ssh_key_filepath' in cfg['ssh']:
             import tempfile
@@ -393,16 +392,16 @@ class AZURE:
 
 
     @classmethod
-    def fixture(cls, config) -> RemoteClient:
-
+    def fixture(cls, credentials, config, imageurl) -> RemoteClient:
         test_name = f"gl-test-{time.strftime('%Y%m%d%H%M%S')}"
-        AZURE.validate_config(config, test_name)
+        AZURE.validate_config(config, imageurl, test_name)
 
+        logger.info(f"Setting up testbed for image {imageurl}...")
         logger.info("Using resource group %s" % config["resource_group"])
         logger.info("Using storage account name %s" % config["storage_account_name"])
         logger.info("Using image name %s" % config["image_name"])
 
-        azure = AZURE(config, test_name)
+        azure = AZURE(credentials, config, imageurl, test_name)
         azure.init_environment()
         (instance, ip) = azure.create_vm(config)
         ssh = None
@@ -419,13 +418,15 @@ class AZURE:
                 azure.cleanup_test_resources()
 
 
-    def __init__(self, config, test_name):
+    def __init__(self, credentials, config, imageurl, test_name):
         """
         Create instance of AZURE class
 
         :param config: configuration
         """
         self.config = config
+        if imageurl:
+            self.config['image'] = imageurl
         self.ssh_config = config["ssh"]
         self.test_name = test_name
 
@@ -437,22 +438,12 @@ class AZURE:
         }
 
         self.logger = logging.getLogger("azure-testbed")
+        self.logger.info(f"Using {credentials.subscription_id=} for tests")
 
-        credential = AzureCliCredential()
-        if 'subscription_id' in self.config:
-            subscription_id = self.config['subscription_id']
-        elif 'subscription' in self.config:
-            try:
-                subscription_id = self._find_subscription_id(credential, self.config['subscription'])
-            except RuntimeError as err:
-                pytest.exit(err, 1)
-        
-        self.logger.info(f"Using {subscription_id=} for tests")
-
-        self.cclient = ComputeManagementClient(credential, subscription_id)
-        self.rclient = ResourceManagementClient(credential, subscription_id)
-        self.sclient = StorageManagementClient(credential, subscription_id)
-        self.nclient = NetworkManagementClient(credential, subscription_id)
+        self.cclient = ComputeManagementClient(credentials.credential, credentials.subscription_id)
+        self.rclient = ResourceManagementClient(credentials.credential, credentials.subscription_id)
+        self.sclient = StorageManagementClient(credentials.credential, credentials.subscription_id)
+        self.nclient = NetworkManagementClient(credentials.credential, credentials.subscription_id)
 
 
     def __del__(self):

@@ -1,15 +1,21 @@
-from _pytest.fixtures import pytestconfig
 import pytest
-import glci.util
-
-import os
+import logging
 import yaml
+
+import glci.util
 
 from typing import Iterator
 from .sshclient import RemoteClient
 
+from util import ctx
 from dataclasses import dataclass
 from _pytest.config.argparsing import Parser
+
+from .aws import AWS
+from .azure import AZURE
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 def pytest_addoption(parser: Parser):
     parser.addoption(
@@ -128,6 +134,14 @@ def testconfig(pipeline, iaas, pytestconfig):
                 'ssh': ssh_config
             }
         elif iaas == 'azure':
+            ssh_config = {
+                'user': 'azureuser'
+            }
+            config = {
+                'location': 'westeurope',
+                'keep_running': 'false',
+                'ssh': ssh_config
+            }
             pass
         elif iaas == 'gcp':
             pass
@@ -144,7 +158,6 @@ def aws_session(testconfig, pipeline, request):
     
     if pipeline:
         import ccc.aws
-        import glci.util
 
         @dataclass
         class AWSCfg:
@@ -164,16 +177,89 @@ def aws_session(testconfig, pipeline, request):
         return boto3.Session()
 
 
+@pytest.fixture(scope="session")
+def azure_cfg():
+
+    @dataclass
+    class AzureCfg:
+        client_id: str
+        client_secret: str
+        tenant_id: str
+        subscription_id: str
+        marketplace_cfg: glci.model.AzureMarketplaceCfg
+
+    cicd_cfg = glci.util.cicd_cfg()
+    service_principal_cfg_tmp = ctx().cfg_factory().azure_service_principal(
+        cicd_cfg.publish.azure.service_principal_cfg_name,
+    )
+    service_principal_cfg = glci.model.AzureServicePrincipalCfg(
+        **service_principal_cfg_tmp.raw
+    )
+
+    azure_marketplace_cfg = glci.model.AzureMarketplaceCfg(
+        publisher_id=cicd_cfg.publish.azure.publisher_id,
+        offer_id=cicd_cfg.publish.azure.offer_id,
+        plan_id=cicd_cfg.publish.azure.plan_id,
+    )
+
+    return AzureCfg(
+        client_id=service_principal_cfg.client_id,
+        client_secret=service_principal_cfg.client_secret,
+        tenant_id=service_principal_cfg.tenant_id,
+        marketplace_cfg=azure_marketplace_cfg,
+        subscription_id=service_principal_cfg.subscription_id,
+    )
+
+
+@pytest.fixture(scope="session")
+def azure_credentials(testconfig, pipeline, request):
+    from azure.identity import (
+        AzureCliCredential,
+        ClientSecretCredential
+    )
+
+    @dataclass
+    class AZCredentials:
+        credential: object
+        subscription_id: str
+
+    if pipeline:
+        azure_cfg = request.getfixturevalue('azure_cfg')
+        credentials = ClientSecretCredential(
+            client_id=azure_cfg.client_id,
+            client_secret=azure_cfg.client_secret,
+            tenant_id=azure_cfg.tenant_id
+        )
+        return AZCredentials(
+            credential = credentials,
+            subscription_id = azure_cfg.subscription_id
+        )
+    else:
+        credential = AzureCliCredential()
+        if 'subscription_id' in testconfig:
+            subscription_id = testconfig['subscription_id']
+        elif 'subscription' in testconfig:
+            try:
+                subscription_id = AZURE.find_subscription_id(credential, testconfig['subscription'])
+            except RuntimeError as err:
+                pytest.exit(err, 1)
+        return AZCredentials(
+            credential = credential,
+            subscription_id = subscription_id
+        )
+
+
 @pytest.fixture(scope="module")
 def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
+    logger.info(f"Testconfig for {iaas=} is {testconfig}")
     if iaas == "aws":
-        from .aws import AWS
         session = request.getfixturevalue('aws_session')
         yield from AWS.fixture(session, testconfig, imageurl)
     elif iaas == "gcp":
         yield from GCP.fixture(config["gcp"])
     elif iaas == "azure":
-        yield from AZURE.fixture(config["azure"])
+        credentials = request.getfixturevalue('azure_credentials')
+        yield from AZURE.fixture(credentials, testconfig, imageurl)
     elif iaas == "openstack-ccee":
         yield from OpenStackCCEE.fixture(config["openstack_ccee"])
     elif iaas == "chroot":
