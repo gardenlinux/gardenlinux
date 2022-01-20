@@ -21,46 +21,6 @@ from .ali import ALI
 from .sshclient import RemoteClient
 
 logger = logging.getLogger(__name__)
-giaas = None
-
-@pytest.fixture(scope="module")
-def config(configFile):
-    try:
-        if os.path.exists(configFile):
-            realName = configFile
-        else:
-            root = Path(os.path.dirname(os.path.abspath(__file__))).parent
-            realName = root.joinpath(configFile)
-        with open(realName) as f:
-            options = yaml.load(f, Loader=yaml.FullLoader)
-    except OSError as e:
-        logger.exception(e)
-        exit(1)
-    yield options
-
-
-@pytest.fixture(scope="module")
-def client(request, config: dict, iaas) -> Iterator[RemoteClient]:
-    logger.info(config)
-    if iaas == "aws":
-        yield from AWS.fixture(config["aws"])
-    elif iaas == "gcp":
-        yield from GCP.fixture(config["gcp"])
-    elif iaas == "azure":
-        yield from AZURE.fixture(config["azure"])
-    elif iaas == "openstack-ccee":
-        yield from OpenStackCCEE.fixture(config["openstack_ccee"])
-    elif iaas == "chroot":
-        yield from CHROOT.fixture(config["chroot"])
-    elif iaas == "kvm":
-        yield from KVM.fixture(config["kvm"])
-    elif iaas == "ali":
-        yield from ALI.fixture(config["ali"])
-    elif iaas == "manual":
-        yield from Manual.fixture(config["manual"])
-    else:
-        raise ValueError(f"invalid {iaas=}")
-
 
 @pytest.fixture(scope='module')
 def non_ali(iaas):
@@ -123,6 +83,7 @@ def openstack(iaas):
 @pytest.fixture(scope='module')
 def openstack_flavor():
     return OpenStackCCEE.instance().flavor
+
 
 def test_clock(client):
     (exit_code, output, error) = client.execute_command("date '+%s'")
@@ -191,7 +152,6 @@ def test_metadata_connection_non_az_non_ali(client, non_azure, non_ali):
  
 
 def test_metadata_connection_az(client, azure):
-
     metadata_url = "http://169.254.169.254/metadata/instance/compute?api-version=2021-01-01&format=json"
     (exit_code, output, error) = client.execute_command(
         f"curl --connect-timeout 5 '{metadata_url}' -H 'Metadata: true'"

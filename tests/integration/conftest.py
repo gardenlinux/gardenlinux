@@ -1,5 +1,15 @@
-from _pytest.config.argparsing import Parser
+from _pytest.fixtures import pytestconfig
+import pytest
+import glci.util
 
+import os
+import yaml
+
+from typing import Iterator
+from .sshclient import RemoteClient
+
+from dataclasses import dataclass
+from _pytest.config.argparsing import Parser
 
 def pytest_addoption(parser: Parser):
     parser.addoption(
@@ -13,6 +23,16 @@ def pytest_addoption(parser: Parser):
         default="test_config.yaml",
         help="Test configuration file"
     )
+    parser.addoption(
+        "--pipeline",
+        action='store_true',
+        help="tests are run from a pipeline context and thus, certain pieces of information are retrieved differently"
+    )
+    parser.addoption(
+        "--image",
+        nargs="?",
+        help="URI for the image to be tested (overwrites value in config.yaml)"
+    )
 #    parser.addoption(
 #        "--debug",
 #        action="store_true",
@@ -20,10 +40,149 @@ def pytest_addoption(parser: Parser):
 #    )
 
 
-def pytest_generate_tests(metafunc):
-    option = metafunc.config.getoption("iaas")
-    if "iaas" in metafunc.fixturenames:
-        metafunc.parametrize("iaas", [option], scope="module")
-    configfile = metafunc.config.getoption("configfile")
-    if "configFile" in metafunc.fixturenames:
-        metafunc.parametrize("configFile", [configfile], scope="module")
+@pytest.fixture(scope="session")
+def pipeline(pytestconfig):
+    if pytestconfig.getoption('pipeline'):
+        return True
+    return False
+
+
+@pytest.fixture(scope="session")
+def iaas(pytestconfig):
+    if pytestconfig.getoption('iaas'):
+        return pytestconfig.getoption('iaas')
+    pytest.exit("Need to specify which IaaS to test on.", 1)
+
+
+@pytest.fixture(scope="session")
+def s3_image_location(test_params):
+    ''' 
+    returns a S3Info object and gives access to the S3 bucket containing the build artifacts
+    from the current pipeline run. Typically use to be uploaded to hyperscalers for testing.
+    '''
+
+    @dataclass
+    class S3Info:
+        bucket_name: str
+        raw_image_key: str
+        target_image_name: str
+
+    cicd_cfg = glci.util.cicd_cfg(cfg_name=test_params.cicd_cfg_name)
+    find_release = glci.util.preconfigured(
+        func=glci.util.find_release,
+        cicd_cfg=cicd_cfg,
+    )
+
+    release = find_release(
+        release_identifier=glci.model.ReleaseIdentifier(
+            build_committish=test_params.committish,
+            version=test_params.version,
+            gardenlinux_epoch=int(test_params.gardenlinux_epoch),
+            architecture=glci.model.Architecture(test_params.architecture),
+            platform=test_params.platform,
+            modifiers=test_params.modifiers,
+        ),
+    )
+
+    return S3Info(
+        raw_image_key=release.path_by_suffix('rootfs.raw').s3_key,
+        bucket_name=release.path_by_suffix('rootfs.raw').s3_bucket_name,
+        target_image_name=f'integration-test-image-{test_params.committish}',
+    )
+
+
+@pytest.fixture(scope="session")
+def imageurl(pipeline, testconfig, pytestconfig, request):
+    if pipeline:
+        s3_image_location = request.getfixturevalue('s3_image_location')
+        return f's3://{s3_image_location.bucket_name}/{s3_image_location.raw_image_key}'
+    elif pytestconfig.getoption('image'):
+        return pytestconfig.getoption('image')
+    else:
+        if 'image' in testconfig:
+            return testconfig['image']
+
+
+@pytest.fixture(scope="session")
+def testconfig(pipeline, iaas, pytestconfig):
+    if not pipeline:
+        configfile = pytestconfig.getoption("configfile")
+        try:
+            with open(configfile) as f:
+                configoptions = yaml.load(f, Loader=yaml.FullLoader)
+        except OSError as err:
+            pytest.exit(err, 1)
+        if iaas in configoptions:
+            return configoptions[iaas]
+        else:
+            pytest.exit(f"Configuration section for {iaas} not found in {configfile}.", 1)
+    else:
+        if iaas == 'aws':
+            ssh_config = {
+                'user': 'admin'
+            }
+            config = {
+                'region': 'eu-central-1',
+                'instance_type': 'm5.large',
+                'keep_running': 'false',
+                'ssh': ssh_config
+            }
+        elif iaas == 'azure':
+            pass
+        elif iaas == 'gcp':
+            pass
+        elif iaas == 'ali':
+            pass
+        elif iaas == 'openstack-ccee':
+            pass
+        return config
+
+
+@pytest.fixture(scope="session")
+def aws_session(testconfig, pipeline, request):
+    import boto3
+    
+    if pipeline:
+        import ccc.aws
+        import glci.util
+
+        @dataclass
+        class AWSCfg:
+            aws_cfg_name: str
+            aws_region: str
+
+        test_params=request.getfixturevalue('test_params')
+        cicd_cfg = glci.util.cicd_cfg(cfg_name=test_params.cicd_cfg_name)
+        aws_cfg = AWSCfg(
+            aws_cfg_name=cicd_cfg.build.aws_cfg_name,
+            aws_region=cicd_cfg.build.aws_region
+        )
+        return ccc.aws.session(aws_cfg.aws_cfg_name, aws_cfg.aws_region)
+    elif "region" in testconfig:
+        return boto3.Session(region_name=testconfig["region"])
+    else:
+        return boto3.Session()
+
+
+@pytest.fixture(scope="module")
+def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
+    if iaas == "aws":
+        from .aws import AWS
+        session = request.getfixturevalue('aws_session')
+        yield from AWS.fixture(session, testconfig, imageurl)
+    elif iaas == "gcp":
+        yield from GCP.fixture(config["gcp"])
+    elif iaas == "azure":
+        yield from AZURE.fixture(config["azure"])
+    elif iaas == "openstack-ccee":
+        yield from OpenStackCCEE.fixture(config["openstack_ccee"])
+    elif iaas == "chroot":
+        yield from CHROOT.fixture(config["chroot"])
+    elif iaas == "kvm":
+        yield from KVM.fixture(config["kvm"])
+    elif iaas == "ali":
+        yield from ALI.fixture(config["ali"])
+    elif iaas == "manual":
+        yield from Manual.fixture(config["manual"])
+    else:
+        raise ValueError(f"invalid {iaas=}")

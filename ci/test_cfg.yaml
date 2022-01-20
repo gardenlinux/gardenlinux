@@ -3,16 +3,16 @@ test_cfgs:
       architecture:
         amd64:
           platform:
-            ali: integration_tests/${platform}
-            aws: integration_tests/aws
-            azure: integration_tests/${platform}
-            gcp: integration_tests/${platform}
-            openstack: integration_tests/${platform}
+            ali: tests/integration
+            aws: tests/integration
+            azure: tests/integration
+            gcp: tests/integration
+            openstack: tests/integration
         arm64:
           platform:
-            aws: integration_tests/aws_for_${architecture}
+            aws: tests/integration
     test_only_aws:
       architecture:
         amd64:
           platform:
-            aws: integration_tests/aws
+            aws: tests/integration

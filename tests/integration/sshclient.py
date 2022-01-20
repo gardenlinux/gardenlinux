@@ -202,7 +202,7 @@ class RemoteClient:
             self.conn = self.__connect()
         self.scp.get(file)
 
-    def execute_command(self, command: str, timeout: int = 30) -> (int, str, str):
+    def execute_command(self, command: str, timeout: int = 30) -> tuple[int, str, str]:
         """
         Execute commands on remote host
 
