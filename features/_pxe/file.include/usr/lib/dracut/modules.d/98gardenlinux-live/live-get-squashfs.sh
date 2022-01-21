@@ -21,13 +21,6 @@ if ! curl --globoff --location --retry 3 --fail --show-error "${url}" --output "
        exit 1
 fi       
 
-# FIXME: consider removing this, or check the 0x73717368 magic number, will also make initrd smaller 
-# check if the file is a squashfs
-if ! file -m /usr/lib/file/magic.mgc -b "${squashFile}" | grep -q "Squashfs filesystem" ; then
-	warn "the provided image via gl.url is not a valid squashfs image"
-	exit 1
-fi
-
 # verify sha256
 if [ ! -f "${shaFile}" ]; then
 	warn "no sha256sum file exists - exiting"

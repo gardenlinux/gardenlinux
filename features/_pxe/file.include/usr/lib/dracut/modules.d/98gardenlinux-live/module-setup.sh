@@ -11,7 +11,7 @@ depends() {
 
 install() {
     #inst_multiple grep sfdisk growpart udevadm awk mawk sed rm readlink
-    inst_multiple curl grep sfdisk awk mawk file sha256sum
+    inst_multiple curl grep sfdisk awk mawk sha256sum
    
     inst_simple "$moddir/live-get-squashfs.service" ${systemdsystemunitdir}/live-get-squashfs.service
     inst_simple "$moddir/gl-end.service" ${systemdsystemunitdir}/gl-end.service
@@ -25,7 +25,7 @@ install() {
     # for ignition
     inst_simple "$moddir/is-live-image.sh" "/usr/bin/is-live-image"
 
-    inst_simple "/usr/lib/file/magic.mgc" "/usr/lib/file/magic.mgc"
+    #inst_simple "/usr/lib/file/magic.mgc" "/usr/lib/file/magic.mgc"
 
     mkdir -m 0755 -p ${initdir}/etc/systemd/system/systemd-networkd-wait-online.service.d
     inst_simple "$moddir/any.conf" "/etc/systemd/system/systemd-networkd-wait-online.service.d/any.conf"
@@ -33,4 +33,11 @@ install() {
     # ignition environment
     inst_script "$moddir/ignition-env-generator.sh" $systemdutildir/system-generators/ignition-env-generator
     inst_simple "$moddir/ignition-files.env" /etc/ignition-files.env
+
+    # ignition-fetch after resolved
+    mkdir -m 0755 -p "${initdir}/etc/systemd/system/ignition-fetch.service.d"
+    inst_simple "$moddir/ignition-fetch.conf" /etc/systemd/system/ignition-fetch.service.d/ignition-fetch.conf
+
+    # clean up
+    inst_hook cleanup 00 "$moddir/cleanup.sh"
 }
