@@ -11,6 +11,7 @@
 <p align="center">&bull;
     <a href="#Features">Features</a> &bull;
     <a href="#build-requirements">Build Requirements</a> &bull;
+    <a href="#build-options">Build Options</a> &bull;
     <a href="#quick-start">Quick Start</a> &bull;
     <a href="#customize-builds">Customize</a> &bull;
     <a href="#garden-linux-releases">Releases</a> &bull;
@@ -45,12 +46,12 @@ Garden Linux is a [Debian](https://debian.org) derivate that aims to provide a s
 
 ## Build Requirements
 
-The entire build runs in a docker container (well a privileged one with extended capabilities - since we need loop back support)
-We can run on any system supporting Docker and having loopback support and has
+The entire build runs in a docker container (well a privileged one with extended capabilities - since we need loop back support).
+We can run on any system supporting Docker and having loopback support and has:
 
-- 2+ GiB (use RAM-disk; use fs with sparse-file support)
+- 2+ GiB (use '--lessram' to lower memory usage)
 - 10+ GiB free disk space
-- Internet connection to access snapshot.debian.org and repo.gardenlinux.io
+- Internet connection (snapshot.debian.org, deb.debian.org, repo.gardenlinux.io, docker.io, golang.org, gopkg.in, github.com)
 
 ### Required packages for a convenient build (on Debian/Ubuntu):
 
@@ -72,9 +73,23 @@ ext4, loop, squashfs, vfat, vsock (for VM image builds and extended virtualized 
 
 ### Required packages to configure the CI pipeline
 
-`apt install bash git python`
+`apt install bash git python python-pip`
 
 `pip install tekton`
+
+## Build Options
+
+| Option | Description  |
+|---|---|
+| --features  | Comma separated list of features activated (see features/) (default:base) |
+| --disable-features | Comma separated list of features to deactivate (see features/) |
+| --lessram | Build will be no longer in memory (default: off) |
+| --debug | Activates basically \`set -x\` everywhere (default: off) |
+| --manual | Built will stop in build environment and activate manual mode (debugging) (default:off) |
+| --arch | Builds for a specific architecture (default: architecture the build runs on) |
+| --suite | Specifies the debian suite to build for e.g. bullseye, potatoe (default: testing) |
+| --skip-tests | Deactivating tests (default: off) |
+| --skip-build | Do not create the build container BUILD_IMAGE variable would specify an alternative name |
 
 ## Quick start
 
@@ -94,6 +109,8 @@ Building specific platform images:
     make metal
 
 See in `.build/` folder for the outcome, there are subdirectories for the platform and the build date.
+Related dev images can be created by appending the '-dev' suffix (e.g. "make aws-dev").
+
 
 ## Customize builds
 
