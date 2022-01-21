@@ -102,8 +102,7 @@ dockerArgs="--hostname garden-build
 	--volume ${thisDir}:/opt/gardenlinux
 	--volume ${outputDir}:/output
 	--volume ${thisDir}/cert/Kernel.sign.crt:/kernel.crt
-	--volume ${thisDir}/cert/Kernel.sign.key:/kernel.key
-	--mount type=bind,source=/dev,target=/dev"
+	--volume ${thisDir}/cert/Kernel.sign.key:/kernel.key"
 
 [ $lessram ] || dockerArgs+=" --tmpfs /tmp:dev,exec,suid,noatime"
 
