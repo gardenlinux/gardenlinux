@@ -12,6 +12,12 @@ fi
 
 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq rkhunter apt-utils &> /dev/null
 
+for dir in sys dev proc; do
+	if [ -e "/$dir" ]; then
+		mountpoint -q "/$dir" && umount -l "/$dir"
+	fi
+done
+
 # run propupd just to avoid extra warnings in the log
 rkhunter --configfile "${thisDir}/rkhunter.d/rkhunter.conf" --propupd -q
 rkhunter --configfile "${thisDir}/rkhunter.d/rkhunter.conf" --enable system_configs_ssh,group_accounts,filesystem,group_changes,passwd_changes,startup_malware,system_configs_ssh,properties -q --rwo --noappend-log 2>/dev/null
