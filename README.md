@@ -11,6 +11,7 @@
 <p align="center">&bull;
     <a href="#Features">Features</a> &bull;
     <a href="#build-requirements">Build Requirements</a> &bull;
+    <a href="#build-options">Build Options</a> &bull;
     <a href="#quick-start">Quick Start</a> &bull;
     <a href="#customize-builds">Customize</a> &bull;
     <a href="#garden-linux-releases">Releases</a> &bull;
@@ -52,21 +53,6 @@ We can run on any system supporting Docker and having loopback support and has:
 - 10+ GiB free disk space
 - Internet connection (snapshot.debian.org, deb.debian.org, repo.gardenlinux.io, docker.io, golang.org, gopkg.in, github.com)
 
-## Build Options
-
-| Option | Description  |
-|---|---|
-| --features  | Comma separated list of features activated (see features/) (default:base) |
-| --disable-features | Comma separated list of features to deactivate (see features/) |
-| --lessram | Build will be no longer in memory (default: off) |
-| --debug | Activates basically \`set -x\` everywhere (default: off) |
-| --manual | Built will stop in build environment and activate manual mode (debugging) (default:off) |
-| --arch | Builds for a specific architecture (default: architecture the build runs on) |
-| --suite | Specifies the debian suite to build for e.g. bullseye, potatoe (default: testing) |
-| --skip-tests | Deactivating tests (default: off) |
-| --skip-build | Do not create the build container BUILD_IMAGE variable would specify an alternative name |
-
-
 ### Required packages for a convenient build (on Debian/Ubuntu):
 
 `apt install bash docker.io docker-compose make coreutils gnupg git qemu-system-x86`
@@ -90,6 +76,20 @@ ext4, loop, squashfs, vfat, vsock (for VM image builds and extended virtualized 
 `apt install bash git python python-pip`
 
 `pip install tekton`
+
+## Build Options
+
+| Option | Description  |
+|---|---|
+| --features  | Comma separated list of features activated (see features/) (default:base) |
+| --disable-features | Comma separated list of features to deactivate (see features/) |
+| --lessram | Build will be no longer in memory (default: off) |
+| --debug | Activates basically \`set -x\` everywhere (default: off) |
+| --manual | Built will stop in build environment and activate manual mode (debugging) (default:off) |
+| --arch | Builds for a specific architecture (default: architecture the build runs on) |
+| --suite | Specifies the debian suite to build for e.g. bullseye, potatoe (default: testing) |
+| --skip-tests | Deactivating tests (default: off) |
+| --skip-build | Do not create the build container BUILD_IMAGE variable would specify an alternative name |
 
 ## Quick start
 
