@@ -42,6 +42,9 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 | while read -r depth source target fs options args; do
 	# parse extra fstab arguments to determine partition attributes
 	type=$([[ "$fs" = "swap" ]] && echo "swap" || echo "linux")
+	# consider switching this to args
+	[[ "$target" = "/" && "$arch" = "amd64" ]] && type="4f68bce3-e8cd-4db1-96e7-fbcaf984b709"
+	[[ "$target" = "/" && "$arch" = "arm64" ]] && type="b921b045-1df0-41c3-af44-4c6f280d3fae"
 	size=
 	resize=1
 	verity=0
