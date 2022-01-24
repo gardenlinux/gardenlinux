@@ -393,3 +393,8 @@ def test_aws_ena_driver(client, aws):
     (exit_code, output, error) = client.execute_command("sudo /sbin/ethtool -i $(ip -j link show  | jq -r '.[] | if .ifname != \"lo\" and .ifname != \"docker0\" then .ifname else empty end') | grep \"^driver\" | awk '{print $2}'")
     assert exit_code == 0, f"no {error=} expected"
     assert output.rstrip() == "ena", "Expected network interface to run with ena driver"
+
+def test_apparmor(client):
+    (exit_code, output, error) = client.execute_command("/usr/bin/aa-enabled")
+    assert exit_code == 0, f"no {error=} expected"
+    assert output.rstrip() == "Yes", "Expected AppArmor to be enabled."
