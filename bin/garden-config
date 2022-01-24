@@ -44,7 +44,7 @@ printf "## copying from file.include\n"
 for i in $(tr ',' '\n' <<< $features); do
 	if [ -d "$featureDir/$i/file.include" ]; then
 		printf "### $i:\n"
-		tar --owner=0 --group=0 -cC $featureDir/$i/file.include . | tar -xvC $targetDir 2>&1 | grep -v "^./$" | paste -sd' '  - | indent
+		tar --owner=0 --group=0 -cC $featureDir/$i/file.include . | tar -xvhC $targetDir 2>&1 | grep -v "^./$" | paste -sd' '  - | indent
 	fi
 done
 
