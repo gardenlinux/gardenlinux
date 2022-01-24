@@ -1,5 +1,5 @@
 apparmor
-containerd
+http://snapshot.debian.org/archive/debian/20220120T210710Z/pool/main/c/containerd/containerd_1.5.9~ds1-1_amd64.deb
 containernetworking-plugins
 docker.io
 ethtool
