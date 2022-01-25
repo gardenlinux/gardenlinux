@@ -159,10 +159,6 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 		local version="$1"; shift
 		local variant="$1"; shift
 
-		# make a copy of the snapshot-facing sources.list file before we overwrite it
-		cp "$rootfs/etc/apt/sources.list" "$targetBase.sources-list-snapshot"
-		touch_epoch "$targetBase.sources-list-snapshot"
-
 		local tarArgs=()
 		if [ -n "${qemu:-}" ]; then
 			tarArgs+=( --exclude="./usr/bin/qemu-*-static" )
@@ -192,10 +188,9 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 				dpkg -l
 			fi
 		' > "$targetBase.manifest"
-		echo "$epoch" > "$targetBase.garden-epoch"
-		touch_epoch "$targetBase.manifest" "$targetBase.garden-epoch"
+		touch_epoch "$targetBase.manifest"
 
-		for f in debian_version os-release apt/sources.list; do
+		for f in os-release; do
 			targetFile="$targetBase.$(basename "$f" | sed -r "s/[^a-zA-Z0-9_-]+/-/g")"
 			if [ -e "$rootfs/etc/$f" ]; then
 				cp "$rootfs/etc/$f" "$targetFile"
