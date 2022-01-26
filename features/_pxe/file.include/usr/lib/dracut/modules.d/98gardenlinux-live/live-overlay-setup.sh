@@ -28,7 +28,7 @@ if echo "$ovlconf" | grep -q '^/:\|,/:'; then
 	devescape=$(systemd-escape -p --suffix=service "$dev")
 	mkdir -p "/run/sysroot.ovl"
 
-	if [[ "$dev" != tmpfs ]]; then	
+	if [[ "$dev" != tmpfs ]]; then
 		echo "[Unit]
 		Before=sysroot.mount
 		After=ignition-disks.service
@@ -45,7 +45,7 @@ if echo "$ovlconf" | grep -q '^/:\|,/:'; then
             	echo "[Unit]
             	After=ignition-disks.service" > ${GENERATOR_DIR}/systemd-fsck@${devescape}.d/after-ignition-disks.conf
 	fi
-	
+
 	echo "[Unit]
 	After=run-sysroot.ovl.mount
 	After=ignition-disks.service
@@ -57,12 +57,13 @@ if echo "$ovlconf" | grep -q '^/:\|,/:'; then
 	User=root
 	Group=root
 	ExecStart=/bin/mkdir -p /run/sysroot.ovl/upper /run/sysroot.ovl/work" | awk '{$1=$1}1' > "${GENERATOR_DIR}/create-mountpoints.service"
-	
+
 	echo "[Unit]
 	Before=initrd-root-fs.target
 	After=run-rootfs.mount
 	After=ignition-disks.service
 	After=create-mountpoints.service
+	Requires=create-mountpoints.service
 	DefaultDependencies=no
 	Description=sysroot.mount
 	[Mount]
@@ -73,10 +74,9 @@ if echo "$ovlconf" | grep -q '^/:\|,/:'; then
 
 	mkdir -p "$GENERATOR_DIR"/initrd-root-fs.target.requires
 	ln -s ../sysroot.mount "$GENERATOR_DIR"/initrd-root-fs.target.requires/sysroot.mount
-	if [[ "$dev" != tmpfs ]]; then	
+	if [[ "$dev" != tmpfs ]]; then
 		ln -s ../run-sysroot.ovl.mount "$GENERATOR_DIR"/initrd-root-fs.target.requires/run-sysroot.ovl.mount
 	fi
-	ln -s ../create-mountpoints.service "$GENERATOR_DIR"/initrd-root-fs.target.requires/create-mountpoints.service
 
 	exit 0
 fi
@@ -105,7 +105,7 @@ while read -r line; do
 	echo "After=sysroot.mount"
 	echo "DefaultDependencies=no"
 	echo "Description=$unit"
-	
+
 	echo "[Mount]"
 	echo "What=ovl_$what"
 	echo "Where=/sysroot$what"

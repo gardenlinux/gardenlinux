@@ -4,7 +4,7 @@ set -Eeuo pipefail
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
 	--flags 'no-build,debug,skip-tests,suite:,gardenversion:,timestamp:' \
-	--flags 'ports,arch:,qemu,features:,disable-features:,commitid:,userid:,usergid:' \
+	--flags 'ports,arch:,qemu,features:,disable-features:,disable-images:,commitid:,userid:,usergid:' \
 	--flags 'suffix:,prefix:' \
 	--
 
@@ -23,6 +23,7 @@ while true; do
 		--qemu) qemu=1 ;;	# for using "qemu-debootstrap"
 		--features) features="$1"; shift ;; # adding features
 		--disable-features) disablefeatures="$1"; shift ;; # ignoring features
+		--disable-images) disableimages="$1"; shift ;;
 		--suite) suite="$1"; shift ;; # suite is a parameter this time
 		--gardenversion|--timestamp) version="$1"; shift ;; # timestamp is a parameter this time
 		--suffix) suffix="$1"; shift ;; # target name prefix
@@ -43,6 +44,7 @@ fi
 userID="${userID:-$(id -u)}";
 userGID="${userGID:-$(id -g)}";
 disablefeatures="${disablefeatures:-}"
+disableimages="${disableimages:-}"
 epoch="$(garden-version --epoch "$version")"
 serial="$(garden-version --date "$version")"
 dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
@@ -205,7 +207,9 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 
 		echo "#### fullfeatures"
 		for i in $(tr ',' '\n' <<< $fullfeatures); do
-			if [ -s $featureDir/$i/image ]; then
+			if [[ ",$disableimages," = *",$i,"* ]]; then # skip if image is in disableimages list
+				true
+			elif [ -s $featureDir/$i/image ]; then
 				"$featureDir/$i/image" "$rootfs" "$targetBase"
 			elif [ -f "$featureDir/$i/fstab" ]; then
 				makepart "$rootfs" < "$featureDir/$i/fstab" | makedisk "$rootfs" "$targetBase.raw"

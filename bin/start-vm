@@ -23,6 +23,7 @@ bridge=
 daemonize=
 pxe=
 pxefile=$thisDir/../examples/ipxe/start-vm.ipxe
+pxe_binary=
 portbase=2223
 port=$portbase; while ss -tul | grep :$port &> /dev/null; do (( ++port )); done
 uefi=
@@ -107,6 +108,11 @@ elif [ "$arch" = aarch64 ]; then
 	uefiVars="${uefiVars:-/usr/share/AAVMF/AAVMF_VARS.fd}"
 fi
 
+if [ "$pxe" ] && [ "$uefi" ]; then
+	pxe_binary="$pxe"
+	pxe=
+fi
+
 # adding the disks (using parameters without - or --)
 inflatelist=( )
 diskcount=0
@@ -141,7 +147,7 @@ while (( "$#" )); do
 	fi
 	shift
 done
-[ $diskcount -gt 0 -o "$pxe" ] || eusage 'missing bootdisk. boot via --pxe, provide tmpdisk via --disk or provide bootdisk image file'
+[ $diskcount -gt 0 -o "$pxe" -o "$pxe_binary" ] || eusage 'missing bootdisk. boot via --pxe, provide tmpdisk via --disk or provide bootdisk image file'
 
 [ $(id -u) == 0 ] && virtOpts=(	"-runas nobody" )
 
@@ -234,12 +240,22 @@ if [ $pxe ]; then
 	virtOpts+=( -boot order=nc )
 fi
 
+if [ "$pxe_binary" ]; then
+	cp "$pxe_binary" "$targetDir/$mac.efi"
+	virtOpts+=( -boot order=nc )
+fi
+
 # handling the network
-			virtOpts+=(	"-device virtio-net-pci,netdev=net0,mac=$macfull" )
+if [ $pxe_binary ]; then virtOpts+=( "-device virtio-net-pci,romfile=,netdev=net0,mac=$macfull" )
+else virtOpts+=( "-device virtio-net-pci,netdev=net0,mac=$macfull" )
+fi
+
 if [ $bridge ]; then 	virtOpts+=(	"-netdev bridge,id=net0,br=${bridge}" )
 elif [ $pxe ]; then	virtOpts+=( 	"-netdev user,id=net0,hostfwd=tcp::$port-:22,hostname=garden,tftp=$targetDir,bootfile=$mac.ipxe" )
+elif [ $pxe_binary ]; then virtOpts+=( "-netdev user,id=net0,hostfwd=tcp::$port-:22,hostname=garden,tftp=$targetDir,bootfile=$mac.efi" )
 else			virtOpts+=( 	"-netdev user,id=net0,hostfwd=tcp::$port-:22,hostname=garden" )
 fi
+
 [ $bridge ] && ( [ -e /sys/class/net/$bridge/bridge ] || eusage "interface $bridge is no bridge" )
 
 # status report
