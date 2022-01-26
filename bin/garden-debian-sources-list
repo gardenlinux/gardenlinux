@@ -79,9 +79,12 @@ deb() {
 		fi
 	fi
 
+	printf "# Gardenlinux Repo\n"
+
 	deb "$version" main gardenlinux
 
 	if [[ -z "$gardenlinuxOnly" ]]; then
+	        printf "\n# Debian Repo for backup\n"
 		case "$suite" in
 			sid|unstable|testing)
 				deb "$suite" "$comp" standard
