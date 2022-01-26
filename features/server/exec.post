@@ -5,6 +5,3 @@ set -Eeuo pipefail
 $thisDir/garden-chroot $targetDir find /usr/lib -type d -name __pycache__ -exec rm -rf {} +
 
 rm $targetDir/etc/nvme/hostid $targetDir/etc/nvme/hostnqn
-
-echo "# Deleting libdb forcefully"
-$thisDir/garden-chroot $targetDir apt-get autoremove --purge -y libdb5.3
