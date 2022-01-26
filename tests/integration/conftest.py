@@ -1,5 +1,6 @@
 import pytest
 import logging
+import json
 import yaml
 
 import glci.util
@@ -7,12 +8,14 @@ import glci.util
 from typing import Iterator
 from .sshclient import RemoteClient
 
-from util import ctx
+from os import path
 from dataclasses import dataclass
 from _pytest.config.argparsing import Parser
 
 from .aws import AWS
 from .azure import AZURE
+from .gcp import GCP
+from .ali import ALI
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -61,7 +64,19 @@ def iaas(pytestconfig):
 
 
 @pytest.fixture(scope="session")
-def s3_image_location(test_params):
+def image_suffix(iaas):
+    image_suffixes = {
+        "aws": "rootf.raw",
+        "azure": "rootfs.vhd",
+        "gcp": "rootfs-gcpimage.tar.gz",
+        "ali": "rootfs.qcow2",
+        "openstack-ccee": "rootfs.vmdk"
+    }
+    return image_suffixes[iaas]
+
+
+@pytest.fixture(scope="session")
+def s3_image_location(test_params, image_suffix):
     ''' 
     returns a S3Info object and gives access to the S3 bucket containing the build artifacts
     from the current pipeline run. Typically use to be uploaded to hyperscalers for testing.
@@ -91,8 +106,8 @@ def s3_image_location(test_params):
     )
 
     return S3Info(
-        raw_image_key=release.path_by_suffix('rootfs.raw').s3_key,
-        bucket_name=release.path_by_suffix('rootfs.raw').s3_bucket_name,
+        raw_image_key=release.path_by_suffix(image_suffix).s3_key,
+        bucket_name=release.path_by_suffix(image_suffix).s3_bucket_name,
         target_image_name=f'integration-test-image-{test_params.committish}',
     )
 
@@ -142,9 +157,17 @@ def testconfig(pipeline, iaas, pytestconfig):
                 'keep_running': 'false',
                 'ssh': ssh_config
             }
-            pass
         elif iaas == 'gcp':
-            pass
+            ssh_config = {
+                'user': 'gardenlinux'
+            }
+            config = {
+                'region': 'europe-west1',
+                'zone': 'europe-west1-d',
+                'machine_type': 'n1-standard-2',
+                'keep_running': 'false',
+                'ssh': ssh_config
+            }
         elif iaas == 'ali':
             pass
         elif iaas == 'openstack-ccee':
@@ -179,6 +202,8 @@ def aws_session(testconfig, pipeline, request):
 
 @pytest.fixture(scope="session")
 def azure_cfg():
+    # late import because only needed in case of pipeline context and probably not available in standalone context
+    from util import ctx
 
     @dataclass
     class AzureCfg:
@@ -249,6 +274,29 @@ def azure_credentials(testconfig, pipeline, request):
         )
 
 
+@pytest.fixture(scope='session')
+def gcp_credentials(testconfig, pipeline, request):
+    import google.oauth2.service_account
+
+    if pipeline:
+        # late import because only needed in case of pipeline context and probably not available in standalone context
+        from util import ctx
+        gcp_cfg = ctx().cfg_factory().gcp("gardenlinux")
+        return google.oauth2.service_account.Credentials.from_service_account_info(
+            gcp_cfg.service_account_key(),
+        )
+    else:
+        if "service_account_json_path" in testconfig:
+            service_account_json_path = path.expanduser(testconfig["service_account_json_path"])
+            with open(service_account_json_path, "r") as f:
+                service_account_json = f.read()
+            return google.oauth2.service_account.Credentials.from_service_account_info(
+                json.loads(service_account_json)
+            )
+        else:
+            return None
+
+
 @pytest.fixture(scope="module")
 def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
     logger.info(f"Testconfig for {iaas=} is {testconfig}")
@@ -256,7 +304,9 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
         session = request.getfixturevalue('aws_session')
         yield from AWS.fixture(session, testconfig, imageurl)
     elif iaas == "gcp":
-        yield from GCP.fixture(config["gcp"])
+        credentials = request.getfixturevalue('gcp_credentials')
+        logger.info("Requesting GCP fixture")
+        yield from GCP.fixture(credentials, testconfig, imageurl)
     elif iaas == "azure":
         credentials = request.getfixturevalue('azure_credentials')
         yield from AZURE.fixture(credentials, testconfig, imageurl)
