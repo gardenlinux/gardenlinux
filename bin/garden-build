@@ -11,7 +11,7 @@ source "$thisDir/.constants.sh" \
 export PATH="${thisDir}:${PATH}"
 export REPO_ROOT="$(readlink -f "${thisDir}/..")"
 
-commitid="local"
+commitid="${commitid:-local}"
 eval "$dgetopt"
 while true; do
 	flag="$1"; shift
@@ -64,16 +64,11 @@ if [ "${OUTPUT_DIR+defined}" ]; then
 	touch "${buildLog}"
 else
 	volumeDir="/output$prefix"
-	buildLog="${volumeDir}/build.log"
-	mkdir -p "${volumeDir}"
+	buildLog="/output$prefix.log"
 
-	volDirOwn="$volumeDir"
-	while [ $(dirname "${volDirOwn}") != "/" ]; do
-		chown "${userID}":"${userGID}" "${volDirOwn}"
-		volDirOwn=$(dirname "${volDirOwn}")
-	done
 	touch "${buildLog}"
 	chown "${userID}":"${userGID}" "${buildLog}"
+	chmod 644 "${buildLog}"
 fi
 
 echo > "${buildLog}"
@@ -331,7 +326,11 @@ if [ "${OUTPUT_DIR+defined}" ]; then
 	echo
 	echo ${outputDir}
 else
-	find "${outputDir}" -type f -exec install -v -m 0644 -p -o "${userID}" -g "${userGID}" {} "${volumeDir}" \;
+        for i in $(find "${outputDir}" -type f); do
+		newname="$(dirname $i).$(basename $i | cut -d. -f 2-)"
+		mv $i $newname
+		install -v -m 0644 -p -o "${userID}" -g "${userGID}" $newname "/output" 
+	done
 fi
 echo
 if [ "$failcounter" -eq 0 ]; then
