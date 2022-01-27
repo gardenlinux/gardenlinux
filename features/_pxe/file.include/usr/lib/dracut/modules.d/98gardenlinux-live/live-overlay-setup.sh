@@ -61,6 +61,7 @@ if echo "$ovlconf" | grep -q '^/:\|,/:'; then
 	echo "[Unit]
 	Before=initrd-root-fs.target
 	After=run-rootfs.mount
+	Requires=run-rootfs.mount
 	After=ignition-disks.service
 	After=create-mountpoints.service
 	Requires=create-mountpoints.service
