@@ -4,8 +4,7 @@ import argparse
 import logging
 import sys
 
-import github
-
+import glci.github
 import glci.util
 import glci.model
 import paths
@@ -76,7 +75,7 @@ def create_release(
         draft: bool,
         prerelease: bool,
 ):
-    gh_repo = github.github_repo(giturl=giturl)
+    gh_repo = glci.github.github_repo(giturl=giturl)
     release = gh_repo.create_release(
         target_commitish=target_commitish,
         tag_name=tag_name,
