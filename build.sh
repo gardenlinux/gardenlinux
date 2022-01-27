@@ -4,7 +4,7 @@ set -Eeuo pipefail
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/bin/.constants.sh" \
 	--flags 'skip-build,debug,lessram,manual,skip-tests' \
-	--flags 'arch:,features:,disable-features:,suite:,local-pkgs:' \
+	--flags 'arch:,features:,disable-features:,disable-images:,suite:,local-pkgs:' \
 	--usage '[--skip-build] [--lessram] [--debug] [--manual] [--arch=<arch>] [--skip-tests] [<output-dir>] [<version/timestamp>]' \
 	--sample '--features kvm,khost --disable-features _slim .build' \
 	--sample '--features metal,_pxe --lessram .build' \
@@ -16,6 +16,7 @@ source "$thisDir/bin/.constants.sh" \
 --features <element>[,<element>]*	comma separated list of features activated (see features/) (default:base)
 --disable-features <element>[,<element>]*	comma separated list of features to deactivate (see features/),
 		can only be implicit features another feature pulls in  (default:)
+--disable-images <element>[,<element>]*	comma separated list of features for which to skip image builds
 --lessram	build will be no longer in memory (default: off)
 --debug		activates basically \`set -x\` everywhere (default: off)
 --manual	built will stop in build environment and activate manual mode (debugging) (default:off)
@@ -33,6 +34,7 @@ lessram=
 arch=
 features=
 disablefeatures=
+disableimages=
 tests=1
 local_pkgs=
 output=".build"
@@ -47,6 +49,7 @@ while true; do
 		--arch)		arch="$1"; 	shift ;;
 		--features) 	features="$1";	shift ;;
 		--disable-features) 	disablefeatures="$1";shift ;;
+		--disable-images)	disableimages="$1"; shift ;;
 		--skip-tests)   tests=0	;;
 		--local-pkgs) local_pkgs="$1"; shift ;;
 		--) break ;;
@@ -71,6 +74,7 @@ envArgs=(
 	arch="$arch"
 	features="$features"
 	disablefeatures="$disablefeatures"
+	disableimages="$disableimages"
 	version="$version"
 	tests=$tests
 	userID="$userID"
