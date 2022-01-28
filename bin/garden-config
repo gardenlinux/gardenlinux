@@ -65,7 +65,7 @@ for i in $(tr ',' '\n' <<< $features); do
 		printf "### $i:\n"
 		cat $featureDir/$i/file.exclude | paste -sd' '  - | indent
 		for j in $(cat $featureDir/$i/file.exclude); do
-			rm -f $targetDir$j || true
+			rm -fr $targetDir$j || true
 		done
 	fi
 done
