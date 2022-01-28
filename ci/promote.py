@@ -147,8 +147,10 @@ def _publish_aws_image(release: glci.model.OnlineReleaseManifest,
         release=release,
     )
 
-def _cleanup_aws(release: glci.model.OnlineReleaseManifest,
-                       cicd_cfg: glci.model.CicdCfg,
+
+def _cleanup_aws(
+    release: glci.model.OnlineReleaseManifest,
+    cicd_cfg: glci.model.CicdCfg,
 ) -> glci.model.OnlineReleaseManifest:
     import glci.aws
     import ccc.aws
@@ -177,13 +179,19 @@ def _publish_azure_image(release: glci.model.OnlineReleaseManifest,
         cicd_cfg.publish.azure.service_principal_cfg_name
     )
     service_principal_cfg_serialized = glci.model.AzureServicePrincipalCfg(
-        **service_principal_cfg.raw
+        tenant_id=service_principal_cfg.tenant_id(),
+        client_id=service_principal_cfg.client_id(),
+        client_secret=service_principal_cfg.client_secret(),
+        subscription_id=service_principal_cfg.subscription_id(),
     )
     storage_account_cfg = cfg_factory.azure_storage_account(
         cicd_cfg.publish.azure.storage_account_cfg_name
     )
     storage_account_cfg_serialized = glci.model.AzureStorageAccountCfg(
-        **storage_account_cfg.raw
+        storage_account_name=storage_account_cfg.storage_account_name(),
+        access_key=storage_account_cfg.access_key(),
+        container_name=storage_account_cfg.container_name(),
+        container_name_sig=storage_account_cfg.container_name_sig(),
     )
 
     azure_marketplace_cfg = glci.model.AzureMarketplaceCfg(
@@ -218,14 +226,37 @@ def _publish_azure_shared_image_gallery(
         cicd_cfg.publish.azure.storage_account_cfg_name
     )
     storage_account_cfg_serialized = glci.model.AzureStorageAccountCfg(
-        **storage_account_cfg.raw
+        storage_account_name=storage_account_cfg.storage_account_name(),
+        access_key=storage_account_cfg.access_key(),
+        container_name=storage_account_cfg.container_name(),
+        container_name_sig=storage_account_cfg.container_name_sig(),
     )
     # get credential object from configured user and secret
-    azure_principal = cfg_factory.azure_service_principal(cfg_name=cicd_cfg.publish.azure.service_principal_cfg_name)
-    azure_principal_serialized =  glci.model.AzureServicePrincipalCfg(**azure_principal.raw)
+    azure_principal = cfg_factory.azure_service_principal(
+        cfg_name=cicd_cfg.publish.azure.service_principal_cfg_name
+    )
+    azure_principal_serialized =  glci.model.AzureServicePrincipalCfg(
+        tenant_id=azure_principal.tenant_id(),
+        client_id=azure_principal.client_id(),
+        client_secret=azure_principal.client_secret(),
+        subscription_id=azure_principal.subscription_id(),
+    )
 
-    shared_gallery_cfg = cfg_factory.azure_shared_gallery(cfg_name=cicd_cfg.publish.azure.shared_gallery_cfg_name)
-    shared_gallery_cfg_serialized = glci.model.AzureSharedGalleryCfg(**shared_gallery_cfg.raw)
+    shared_gallery_cfg = cfg_factory.azure_shared_gallery(
+        cfg_name=cicd_cfg.publish.azure.shared_gallery_cfg_name
+    )
+    shared_gallery_cfg_serialized = glci.model.AzureSharedGalleryCfg(
+        resource_group_name=shared_gallery_cfg.resource_group_name(),
+        gallery_name=shared_gallery_cfg.gallery_name(),
+        location=shared_gallery_cfg.location(),
+        published_name=shared_gallery_cfg.published_name(),
+        description=shared_gallery_cfg.description(),
+        eula=shared_gallery_cfg.eula(),
+        release_note_uri=shared_gallery_cfg.release_note_uri(),
+        identifier_publisher=shared_gallery_cfg.identifier_publisher(),
+        identifier_offer=shared_gallery_cfg.identifier_offer(),
+        identifier_sku=shared_gallery_cfg.identifier_sku(),
+    )
 
     return glci.az.publish_azure_shared_image_gallery(
         s3_client=s3_client,
