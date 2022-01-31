@@ -3,6 +3,7 @@ type: platform
 features:
   include: 
     - cloud
+    - _fstab_verity
 disk:
   boot: 
     - efi
