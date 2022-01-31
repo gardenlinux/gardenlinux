@@ -2,7 +2,7 @@
 
 # constants of the universe
 export TZ='UTC' LC_ALL='C'
-umask 0002
+umask 0022
 scriptsDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 featureDir="$scriptsDir/../features"
 self="$(basename "$0")"
