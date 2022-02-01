@@ -3,4 +3,4 @@ dosfstools
 btrfs-progs
 xfsprogs
 dracut-network
-https://snapshot.debian.org/archive/debian/20220127T211926Z/pool/main/i/ignition/ignition_2.13.0+ds1-1_${arch}.deb
+ignition
