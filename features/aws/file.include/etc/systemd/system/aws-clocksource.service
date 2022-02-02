@@ -1,0 +1,9 @@
+[Unit]
+Description=AWS Clocksource Setup
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/clocksource-setup.sh
+
+[Install]
+WantedBy=basic.target
