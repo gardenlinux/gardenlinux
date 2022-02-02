@@ -48,3 +48,6 @@ main/p/python3.9/libpython3.9-minimal_3.9.7-4gardenlinux1_${arch}.deb
 main/p/python3.9/libpython3.9-stdlib_3.9.7-4gardenlinux1_${arch}.deb
 main/d/dracut/dracut_055-1gardenlinux1_all.deb
 main/d/dracut/dracut-core_055-1gardenlinux1_${arch}.deb 
+https://snapshot.debian.org/archive/debian-security/20220125T173322Z/pool/updates/main/p/policykit-1/policykit-1_0.105-31%2Bdeb11u1_amd64.deb
+https://snapshot.debian.org/archive/debian-security/20220125T173322Z/pool/updates/main/p/policykit-1/libpolkit-agent-1-0_0.105-31%2Bdeb11u1_amd64.deb
+https://snapshot.debian.org/archive/debian-security/20220125T173322Z/pool/updates/main/p/policykit-1/libpolkit-gobject-1-0_0.105-31%2Bdeb11u1_amd64.deb
