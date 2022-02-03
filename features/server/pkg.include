@@ -14,7 +14,6 @@ lsb-release
 net-tools
 netbase
 openssh-server
-policykit-1
 procps
 sudo
 sysstat
