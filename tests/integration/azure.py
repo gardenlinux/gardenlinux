@@ -440,6 +440,10 @@ class AZURE:
         self.logger = logging.getLogger("azure-testbed")
         self.logger.info(f"Using {credentials.subscription_id=} for tests")
 
+        self.logger.info(f"This test's tags are:")
+        for key in self._tags:
+            self.logger.info(f"\t{key}: {self._tags[key]}")
+
         self.cclient = ComputeManagementClient(credentials.credential, credentials.subscription_id)
         self.rclient = ResourceManagementClient(credentials.credential, credentials.subscription_id)
         self.sclient = StorageManagementClient(credentials.credential, credentials.subscription_id)
