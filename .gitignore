@@ -24,3 +24,7 @@
 .idea
 __pycache__
 /dev
+/test.log
+/test_results.json
+/tests/*.log
+/tests/*.xml
