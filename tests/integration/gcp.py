@@ -101,30 +101,20 @@ class GCP:
         bucket.create()
         bucket.make_private()
 
-    def _gcp_wait_for_global_operation(self, operation):
-        self.logger.info(f"Waiting for global operation {operation} to complete...")
-        response = self._compute.globalOperations().wait(project=self.project, operation=operation).execute()
-        if response["status"] != "DONE":
-            self.logger.error("Operation failed %s" % json.dumps(response, indent=4))
-            error = ""
-            if "error" in response:
-                error = response["error"]
-            raise Exception("Operation %s failed: %s" % (operation, error))
 
-    def _gcp_wait_for_zonal_operation(self, operation):
-        """Wait for a GCP operation to finish"""
-        self.logger.info(f"Waiting for zonal operation {operation} to complete ...")
-        response = self._compute.zoneOperations().wait(project=self.project, zone=self.zone, operation=operation).execute()
-        if response["status"] != "DONE":
-            self.logger.error("Operation failed %s" % json.dumps(response, indent=4))
-            error = ""
-            if "error" in response:
-                error = response["error"]
-            raise Exception("Operation %s failed: %s" % (operation, error))
+    def _gcp_wait_for_operation(self, operation):
+        self.logger.info(f"Waiting for operation {operation['name']} to complete...")
+        kwargs = {"project": self.project, "operation": operation['name']}
+        if 'zone' in operation:
+            client = self._compute.zoneOperations()
+            kwargs["zone"] = operation['zone'].rsplit("/", maxsplit=1)[1]
+        elif 'region' in operation:
+            client = self._compute.regionOperations()
+            kwargs["region"] = operation['region'].rsplit("/", maxsplit=1)[1]
+        else:
+            client = self._compute.globalOperations()
+        response = client.wait(**kwargs).execute()
 
-    def _gcp_wait_for_regional_operation(self, operation):
-        self.logger.info(f"Waiting for regional operation {operation} to complete...")
-        response = self._compute.regionOperations().wait(project=self.project, region=self.region, operation=operation).execute()
         if response["status"] != "DONE":
             self.logger.error("Operation failed %s" % json.dumps(response, indent=4))
             error = ""
@@ -137,9 +127,8 @@ class GCP:
         try:
             self.logger.info(f"Deleting firewall rule with name {rule_name}...")
             fw_request = self._compute.firewalls().delete(project=self.project, firewall=rule_name)
-            response = fw_request.execute()
-            op_name = response['name']
-            self._gcp_wait_for_global_operation(operation=op_name)
+            operation = fw_request.execute()
+            self._gcp_wait_for_operation(operation)
         except HttpError as h:
             if h.resp.status != 404:
                 raise
@@ -154,9 +143,8 @@ class GCP:
 
         self.logger.info(f"Inserting firewall rule {rule_name}...")
         req = self._compute.firewalls().insert(project=self.project, body=fw_rest_body)
-        response = req.execute()
-        op_name = response['name']
-        self._gcp_wait_for_global_operation(operation=op_name)
+        operation = req.execute()
+        self._gcp_wait_for_operation(operation)
         return rule_name
 
 
@@ -175,9 +163,9 @@ class GCP:
                 "routingMode": "REGIONAL"
             }
         }
-        resp = self._compute.networks().insert(project=self.project, body=vpc_rest_body).execute()
-        vpc_selflink = resp['targetLink']
-        self._gcp_wait_for_global_operation(resp['name'])
+        operation = self._compute.networks().insert(project=self.project, body=vpc_rest_body).execute()
+        vpc_selflink = operation['targetLink']
+        self._gcp_wait_for_operation(operation)
 
         self.logger.info(f"Creating subnet with CIDR {subnet_cidr} in VPC {network_name} and region {self.region}...")
         subnet_rest_body = {
@@ -189,19 +177,19 @@ class GCP:
             "privateIpGoogleAccess": False,
             "region": self.region
         }
-        resp = self._compute.subnetworks().insert(project=self.project, region=self.region, body=subnet_rest_body).execute()
-        self._gcp_wait_for_regional_operation(resp['name'])
+        operation = self._compute.subnetworks().insert(project=self.project, region=self.region, body=subnet_rest_body).execute()
+        self._gcp_wait_for_operation(operation)
         return network_name
 
 
     def _gcp_delete_vpc(self, name):
         self.logger.info(f"Deleting subnets from VPC {name}...")
-        resp = self._compute.subnetworks().delete(project=self.project, region=self.region, subnetwork=name).execute()
-        self._gcp_wait_for_regional_operation(resp['name'])
+        operation = self._compute.subnetworks().delete(project=self.project, region=self.region, subnetwork=name).execute()
+        self._gcp_wait_for_operation(operation)
         
         self.logger.info(f"Deleting VPC {name}...")
-        resp = self._compute.networks().delete(project=self.project, network=name).execute()
-        self._gcp_wait_for_global_operation(resp['name'])
+        operation = self._compute.networks().delete(project=self.project, network=name).execute()
+        self._gcp_wait_for_operation(operation)
 
 
     def __init__(self, config, credentials, test_name):
@@ -379,7 +367,7 @@ class GCP:
             o = urlparse(image)
             if o.scheme == "file":
                 self.logger.info(f"Uploading image {image} - this may take a while...")
-                with open(image, "rb") as tfh:
+                with open(o.path, "rb") as tfh:
                     image_blob.upload_from_file(
                         tfh,
                         content_type='application/x-tar',
@@ -427,8 +415,8 @@ class GCP:
             },
         )
 
-        resp = insertion_rq.execute()
-        self._gcp_wait_for_global_operation(operation=resp['name'])
+        operation = insertion_rq.execute()
+        self._gcp_wait_for_operation(operation)
         image_blob.delete()
         self.logger.info(f'Uploaded image {blob_url} to project {self.project} as {image_name}')
         self._image = images.get(image=image_name, project=self.image_project).execute()
@@ -524,12 +512,8 @@ class GCP:
             },
         }
 
-        operation = (
-            self._compute.instances()
-            .insert(project=self.project, zone=self.zone, body=config)
-            .execute()
-        )
-        self._gcp_wait_for_zonal_operation(operation["name"])
+        operation = self._compute.instances().insert(project=self.project, zone=self.zone, body=config).execute()
+        self._gcp_wait_for_operation(operation)
         url = operation.get("targetLink")
         self._instance_name = self._get_resource_name(url)
         list_result = (
@@ -553,9 +537,5 @@ class GCP:
         :param instance: the instance to delete
         """
         self.logger.info(f"Destroying instance {self._instance_name}...")
-        operation = (
-            self._compute.instances()
-            .delete(project=self.project, zone=self.zone, instance=self._instance_name)
-            .execute()
-        )
-        self._gcp_wait_for_zonal_operation(operation["name"])
+        operation = self._compute.instances().delete(project=self.project, zone=self.zone, instance=self._instance_name).execute()
+        self._gcp_wait_for_operation(operation)
