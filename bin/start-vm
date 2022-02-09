@@ -23,6 +23,7 @@ bridge=
 daemonize=
 pxe=
 pxefile=$thisDir/../examples/ipxe/start-vm.ipxe
+ignfile=""
 pxe_binary=
 portbase=2223
 port=$portbase; while ss -tul | grep :$port &> /dev/null; do (( ++port )); done
@@ -40,6 +41,7 @@ source "${thisDir}/.constants.sh" \
 	--flags 'daemonize,uefi,skipkp,vnc' \
 	--flags 'cpu:,mem:,bridge:,port:,mac:,arch:' \
 	--flags 'pxe:' \
+	--flags 'ignfile:' \
 	--flags 'ueficode:,uefivars:' \
 	--usage '[ --daemonize ] [ --cpu:<#> ] [ --mem:<size> ] [ --pxe:<dir> ] [<image file>[,<size>]]*' \
 	--sample '.build/rootfs.raw' \
@@ -62,6 +64,7 @@ source "${thisDir}/.constants.sh" \
 --mac <macaddr> the mac address is usually randomized. It is used to identify the monitoring
 		port, the mac address of the machine and the UUID. Can be set to this value.
 --pxe		enables pxe boot on the vm. Minimum one image file must be a directory
+--ignfile	provide an ignition file whe pxe booting
 
 --daemonize	start the virtual machine in background, console deactivated (default: no)
 --skipkp	skip the keypress to the verify status before execute.
@@ -92,6 +95,7 @@ while true; do
 		--uefivars)     uefiVars="$1";  shift ;;
 		--bridge ) 	bridge="$1";  	shift ;;
 		--pxe )         pxe="$(realpath $1)";  shift ;;
+		--ignfile )     ignfile="$(realpath $1)";  shift ;;
 		--port)         port="$1";	shift ;;
 		--skipkp) 	keypress=; 	;;
 		--) break ;;
@@ -232,7 +236,39 @@ fi
 
 # pxe
 if [ $pxe ]; then
+	if [ "$ignfile" ]; then
+		pxefile=$thisDir/../examples/ipxe/start-vm-ignition.ipxe
+	fi
 	[ -e "$targetDir/$mac.ipxe" ] || cp $pxefile $targetDir/$mac.ipxe
+
+	glbuilds=()
+	glbuild=""
+	for v in $(find "$pxe" -type f -name '*.vmlinuz' -exec basename {} \; | cut -d. -f 1); do
+		glbuilds+=(${v})
+	done
+	if [ "${#glbuilds[@]}" == "0" ]; then
+		echo "no vmlinuz found!" 1>&2
+		exit 1
+	elif [ "${#glbuilds[@]}" == "1" ]; then
+		glbuild="${glbuilds[0]}"
+	else
+		echo "Multiple builds found, which one should be used?"
+		for i in ${!glbuilds[@]}; do
+			echo "[$i] ${glbuilds[i]}"
+		done
+		echo -n "ENTER entry number : "
+		read n
+		if [[ ! "$n" =~ ^[0-9]+$ ]] ; then
+			echo "Not a valid entry number"
+			exit 1
+		fi
+		if [[ "$n" -gt "${#glbuilds[@]}" ]]; then
+			echo "Not a valid entry"
+			exit 1
+		fi
+		glbuild="${glbuilds[${n}]}"
+	fi
+
 
 	# modify the boot.ipxe to load the proper kernel and initramfs
 	sed -i "s/PATHGOESHERE//g;s/IPADDRESSGOESHERE/10.0.2.2/g" $targetDir/$mac.ipxe
@@ -279,13 +315,24 @@ printf '%s ' "${virtOpts[@]}";printf "\n" ) | sed 's/ /!/g;s/!-/ -/g' | fold -s 
 if [ $pxe ]; then
 	containerName=$(cat /proc/sys/kernel/random/uuid)
 	function stop(){
+		echo "removing symlinks"
+		rm  "$pxe/root."{vmlinuz,initrd,squashfs}
 		echo "stopping helper for pxe"
 		docker stop -t 0 $1
+		[[ ! -s "$pxe/ignition.json" ]] && rm -f "$pxe/ignition.json"
 		echo "everything stopped..."
 	}
+	echo
+	if [[ -f "${pxe}/${glbuild}.vmlinuz" ]]; then ln -sf "$glbuild.vmlinuz" "$pxe/root.vmlinuz"; else echo "Missing ${glbuild}.vmlinuz, exiting"; exit 1; fi
+	if [[ -f "${pxe}/${glbuild}.initrd" ]]; then ln -sf "$glbuild.initrd" "$pxe/root.initrd"; else echo "Missing ${glbuild}.initrd, exiting"; exit 1; fi
+	if [[ -f "${pxe}/${glbuild}.squashfs" ]]; then ln -sf "$glbuild.squashfs" "$pxe/root.squashfs"; else echo "Missing ${glbuild}.squashfs, exiting"; exit 1; fi
 	trap 'stop $containerName' EXIT
 	echo "starting helper container"
-	docker run -it --rm -d -p 127.0.0.1:8888:80 --name ${containerName} -v ${pxe}:/usr/share/nginx/html:ro nginx
+	if [ "$ignfile" ]; then
+		docker run -it --rm -d -p 127.0.0.1:8888:80 --name ${containerName} -v ${pxe}:/usr/share/nginx/html -v ${ignfile}:/usr/share/nginx/html/ignition.json nginx
+	else
+		docker run -it --rm -d -p 127.0.0.1:8888:80 --name ${containerName} -v ${pxe}:/usr/share/nginx/html:ro nginx
+	fi
 fi
 
 ### from here on things are actually done!!!
