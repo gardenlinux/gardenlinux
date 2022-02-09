@@ -4,6 +4,6 @@ set pxeserver IPADDRESSGOESHERE
 set pxepath PATHGOESHERE 
 set port 8888
 
-kernel http://${pxeserver}:${port}/${pxepath}/rootfs.vmlinuz gl.url=http://${pxeserver}:${port}/root.squashfs gl.live=1 ip=dhcp console=ttyS0 gl.ovl=/:tmpfs
-initrd http://${pxeserver}:${port}/${pxepath}/rootfs.initrd
+kernel http://${pxeserver}:${port}/${pxepath}/root.vmlinuz gl.url=http://${pxeserver}:${port}/root.squashfs gl.live=1 ip=dhcp console=ttyS0 gl.ovl=/:tmpfs
+initrd http://${pxeserver}:${port}/${pxepath}/root.initrd
 boot

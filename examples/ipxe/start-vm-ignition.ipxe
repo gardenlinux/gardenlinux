@@ -1,0 +1,9 @@
+#!ipxe
+
+set pxeserver IPADDRESSGOESHERE
+set pxepath PATHGOESHERE
+set port 8888
+
+kernel http://${pxeserver}:${port}/${pxepath}/root.vmlinuz gl.url=http://${pxeserver}:${port}/root.squashfs gl.live=1 ip=dhcp console=ttyS0 gl.ovl=/:tmpfs ignition.firstboot=1 ignition.config.url=http://${pxeserver}:${port}/${pxepath}/ignition.json ignition.platform.id=metal
+initrd http://${pxeserver}:${port}/${pxepath}/root.initrd
+boot
