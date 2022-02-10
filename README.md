@@ -38,7 +38,7 @@ Garden Linux is a [Debian](https://debian.org) derivate that aims to provide a s
 - running scans against common issues like
   - license violations (we try to be completely open! [#1](https://github.com/gardenlinux/gardenlinux/issues/1))
   - scans for outdated software versions
-- project licensed under [MIT](https://github.com/gardenlinux/gardenlinux/blob/master/LICENSE)
+- project licensed under [MIT](https://github.com/gardenlinux/gardenlinux/blob/master/LICENSE.md)
 - supporting major platforms out-of-the-box
   - major cloud providers AWS, Azure, Google, Alicloud
   - major virtualizer VMware, OpenStack, KVM
