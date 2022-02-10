@@ -39,7 +39,7 @@ version="${1:-}"; shift || eusage 'missing version'
 
 epoch="$(< "$targetDir/garden-epoch")"
 
-gardenlinuxMirror='http://repo.gardenlinux.io/gardenlinux'
+gardenlinuxMirror='https://repo.gardenlinux.io/gardenlinux'
 
 if [ -z "$ports" ]; then
 	standardMirror='https://deb.debian.org/debian'
