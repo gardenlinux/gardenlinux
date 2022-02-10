@@ -89,7 +89,7 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 			echo "overlay /etc overlay defaults,lowerdir=/etc,upperdir=/overlay/etc/upper,workdir=/overlay/etc/work,x-systemd.requires-mounts-for=/overlay 0 2" >> "$fstab"
 		fi
 		column -t "$fstab" > "$rootfs_work/etc/fstab"
-		column -t "$veritytab" > "$rootfs_work/etc/veritytab"
+		column -t "$veritytab" >> "$rootfs_work/etc/veritytab"
 	fi
 
 	case "$fs" in
@@ -194,7 +194,6 @@ unified_image_signed="$(mktemp)"
 [[ ! -e "$rootfs$initrd" ]]
 touch "$rootfs$initrd"
 mount --bind "$initrd" "$rootfs$initrd"
-[[ ! -e "$rootfs/etc/veritytab" ]]
 touch "$rootfs/etc/veritytab"
 mount --bind "$veritytab" "$rootfs/etc/veritytab"
 [[ -d "$rootfs/proc" ]] && [[ -z "$(ls -A "$rootfs/proc")" ]]
