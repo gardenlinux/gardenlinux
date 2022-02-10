@@ -217,24 +217,6 @@ def mk_pipeline_run(
     return plrun
 
 
-def mk_pipeline_packages_run(
-    args: argparse.ArgumentParser,
-    node_selector: dict = {},
-    security_context: dict = {},
-):
-    params = get_common_parameters(vars(args))
-    params.append(NamedParam(name='key_config_name', value='gardenlinux'))
-
-    return mk_pipeline_run(
-        pipeline_name='gl-packages-build',
-        args=args,
-        params=params,
-        node_selector=node_selector,
-        security_context=security_context,
-        timeout='12h',
-    )
-
-
 def mk_pipeline_main_run(
     args: argparse.ArgumentParser,
     node_selector: dict = {},
@@ -305,7 +287,6 @@ def main():
     parser.add_argument('--skip-cfssl-build', action='store_true')
     parser.add_argument('--pipeline-cfg', default=paths.flavour_cfg_path)
     parser.add_argument('--outfile', default='pipeline_run.yaml')
-    parser.add_argument('--outfile-packages', default='pipeline_package_run.yaml')
     parser.add_argument('--oci-path', default='eu.gcr.io/gardener-project/test/gardenlinux-test')
     parser.add_argument('--git-url', default='https://github.com/gardenlinux/gardenlinux.git')
     parser.add_argument('--pr-id', default=0)
@@ -334,17 +315,6 @@ def main():
 
     limits = mk_limits(name='gardenlinux')
     limits_dict = dataclasses.asdict(limits, dict_factory=tkn.model.limits_asdict_factory)
-
-    pipeline_run = mk_pipeline_packages_run(
-        args=parsed,
-        security_context={'runAsUser': 0},
-    )
-    pipeline_run_dict = dataclasses.asdict(pipeline_run)
-
-    with open(parsed.outfile_packages, 'w') as f:
-        yaml.safe_dump_all((pipeline_run_dict, limits_dict), f)
-
-    logger.info(f'pipeline-packages-run written to {parsed.outfile_packages}')
 
     pipeline_run = mk_pipeline_main_run(
         args=parsed,

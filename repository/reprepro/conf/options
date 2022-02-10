@@ -1,6 +1,0 @@
-ask-passphrase
-outdir +b/../repository
-dbdir +b/db
-logdir +b/logs
-morguedir +b/morguedir
-verbose

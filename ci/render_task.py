@@ -88,20 +88,6 @@ def render_task(
     )
     raw_base_build_task = dataclasses.asdict(base_build_task)
 
-    package_task = tasks.nokernel_package_task(
-        env_vars=env_vars,
-        volumes=volumes,
-        volume_mounts=volume_mounts,
-    )
-    raw_package_task = dataclasses.asdict(package_task)
-
-    kernel_package_task = tasks.kernel_package_task(
-        env_vars=env_vars,
-        volumes=volumes,
-        volume_mounts=volume_mounts,
-    )
-    raw_kernel_package_task = dataclasses.asdict(kernel_package_task)
-
     build_task = tasks.build_task(
         env_vars=env_vars,
         volumes=volumes,
@@ -139,8 +125,6 @@ def render_task(
     all_tasks = (
                 base_build_task,
                 build_task,
-                kernel_package_task,
-                package_task,
                 test_task,
                 promote_task,
                 notify_task,
@@ -151,8 +135,6 @@ def render_task(
             (
                 raw_base_build_task,
                 raw_build_task,
-                raw_kernel_package_task,
-                raw_package_task,
                 raw_test_task,
                 raw_promote_task,
                 raw_notify_task,

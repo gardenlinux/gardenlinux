@@ -72,10 +72,6 @@ class AllParams:
         default='all',
         description='the name of the flavour set this task is a part of',
     )
-    gardenlinux_build_deb_image = NamedParam(
-        name='gardenlinux_build_deb_image',
-        description='image to use for package build',
-    )
     giturl = NamedParam(
         name='giturl',
         default='ssh://git@github.com/gardenlinux/gardenlinux'
@@ -83,11 +79,6 @@ class AllParams:
     gardenlinux_epoch = NamedParam(
         name='gardenlinux_epoch',
         description='the gardenlinux epoch to use for as snapshot repo timestamp'
-    )
-    key_config_name = NamedParam(
-        name='key_config_name',
-        description='config name of the key to use for signing the packages',
-        default='gardenlinux',
     )
     modifiers = NamedParam(
         name='modifiers',
@@ -109,14 +100,6 @@ class AllParams:
         name='outfile',
         default='/workspace/gardenlinux.out',
         description='build result file (parameter is used to pass between steps)'
-    )
-    pkg_names = NamedParam(
-        name='pkg_names',
-        description='list of kernel-package to build (comma separated string)',
-    )
-    pkg_name = NamedParam(
-        name='pkg_name',
-        description='name of package to build',
     )
     pipeline_name = NamedParam(
             name='pipeline_name',
@@ -153,11 +136,6 @@ class AllParams:
         name='repo_dir',
         default='/workspace/gardenlinux_git',
         description='Gardenlinux working dir',
-    )
-    s3_package_path = NamedParam(
-        name='package_path_s3_prefix',
-        default='packages/pool',
-        description='path relative to the root of the s3 bucket to upload the built packages to',
     )
     snapshot_ctx_repository_config_name = NamedParam(
         name='snapshot_ctx_repository_config_name',
