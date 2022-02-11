@@ -163,7 +163,7 @@ ci/render_all.py \
 
 for manifest in \
   "${rendered_task}" \
-  "${outfile_pipeline_main}" \
+  "${outfile_pipeline_main}"
 do
   echo "Apply of ${manifest}"
   kubectl apply -n "${tekton_namespace}" -f "${manifest}"

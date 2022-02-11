@@ -455,7 +455,7 @@ def build_image_step(
         params.modifiers,
         params.architecture,
         params.committish,
-        params.version
+        params.garden_build_version
     ]
     step = tkn.model.TaskStep(
         name='build-image',

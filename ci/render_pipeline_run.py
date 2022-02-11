@@ -104,9 +104,10 @@ def get_version(
 ):
     if 'version' in args and args['version']:
         version = args['version']
+        gardenbuild_version = version
     else:
-        version = glci.model.next_release_version_from_workingtree()
-    return version
+        version, gardenbuild_version = glci.model.next_release_version_from_workingtree()
+    return version, gardenbuild_version
 
 
 def get_param_from_arg(
@@ -130,7 +131,7 @@ def get_common_parameters(
     args: typing.Dict[str, str]
 ) -> typing.Sequence[NamedParam]:
     # if version is not specified, derive from worktree (i.e. VERSION file)
-    version = get_version(args)
+    version, gardenbuild_version = get_version(args)
 
     version_label = get_version_label(version, args['committish'])
 
@@ -176,6 +177,7 @@ def get_common_parameters(
             name='snapshot_timestamp',
             value=glci.model.snapshot_date(gardenlinux_epoch=args['gardenlinux_epoch']),
         ),
+        NamedParam(name='gardenbuild_version', value=gardenbuild_version),
         NamedParam(name='version', value=version),
         NamedParam(name='version_label', value=version_label),
     ]
@@ -193,7 +195,7 @@ def mk_pipeline_run(
     run_name = mk_pipeline_name(
         pipeline_name=pipeline_name,
         build_targets=args.build_targets,
-        version=get_version(vars(args)),
+        version=get_version(vars(args))[0],
         committish=args.committish,
     )
 

@@ -72,6 +72,10 @@ class AllParams:
         default='all',
         description='the name of the flavour set this task is a part of',
     )
+    gardenlinux_build_deb_image = NamedParam(
+        name='gardenlinux_build_deb_image',
+        description='image to use for package build',
+    )
     giturl = NamedParam(
         name='giturl',
         default='ssh://git@github.com/gardenlinux/gardenlinux'
@@ -79,6 +83,11 @@ class AllParams:
     gardenlinux_epoch = NamedParam(
         name='gardenlinux_epoch',
         description='the gardenlinux epoch to use for as snapshot repo timestamp'
+    )
+    key_config_name = NamedParam(
+        name='key_config_name',
+        description='config name of the key to use for signing the packages',
+        default='gardenlinux',
     )
     modifiers = NamedParam(
         name='modifiers',
@@ -159,6 +168,10 @@ class AllParams:
     version = NamedParam(
         name='version',
         description='the target version to build / release',
+    )
+    garden_build_version = NamedParam(
+        name='gardenbuild_version',
+        description='the version string passed to garden-build',
     )
     version_label = NamedParam(
         name='version_label',

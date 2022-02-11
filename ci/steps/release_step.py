@@ -32,7 +32,7 @@ def release_step(
     release.ensure_target_branch_exists(
         release_branch=release.release_branch_name(gardenlinux_epoch=gardenlinux_epoch),
         release_committish=committish,
-        release_version=glci.model.next_release_version_from_workingtree(epoch=gardenlinux_epoch),
+        release_version=glci.model.next_release_version_from_workingtree(epoch=gardenlinux_epoch)[0],
         git_helper=release._git_helper(giturl=giturl),
         giturl=giturl,
     )
