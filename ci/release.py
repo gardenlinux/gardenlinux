@@ -95,7 +95,7 @@ def parse_args():
     )
     parser.add_argument(
         '--release-version',
-        default=glci.model.next_release_version_from_workingtree(),
+        default=glci.model.next_release_version_from_workingtree()[0],
     )
     parser.add_argument(
         '--release-committish',
