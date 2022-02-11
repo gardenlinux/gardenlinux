@@ -173,6 +173,9 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 			# see https://github.com/debuerreotype/debuerreotype/pull/8#issuecomment-305855521
 		fi
 
+		# delete 'External Installation Planner Protocol' log
+		rm "$rootfs/var/log/apt/eipp.log.xz"
+
 		garden-tar "${tarArgs[@]}" "$rootfs" "$targetBase.tar.xz"
 		du -hsx "$targetBase.tar.xz"
 
