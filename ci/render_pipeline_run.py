@@ -104,9 +104,10 @@ def get_version(
 ):
     if 'version' in args and args['version']:
         version = args['version']
+        gardenbuild_version = version
     else:
-        version = glci.model.next_release_version_from_workingtree()
-    return version
+        version, gardenbuild_version = glci.model.next_release_version_from_workingtree()
+    return version, gardenbuild_version
 
 
 def get_param_from_arg(
@@ -130,7 +131,7 @@ def get_common_parameters(
     args: typing.Dict[str, str]
 ) -> typing.Sequence[NamedParam]:
     # if version is not specified, derive from worktree (i.e. VERSION file)
-    version = get_version(args)
+    version, gardenbuild_version = get_version(args)
 
     version_label = get_version_label(version, args['committish'])
 
@@ -176,6 +177,7 @@ def get_common_parameters(
             name='snapshot_timestamp',
             value=glci.model.snapshot_date(gardenlinux_epoch=args['gardenlinux_epoch']),
         ),
+        NamedParam(name='gardenbuild_version', value=gardenbuild_version),
         NamedParam(name='version', value=version),
         NamedParam(name='version_label', value=version_label),
     ]
@@ -193,7 +195,7 @@ def mk_pipeline_run(
     run_name = mk_pipeline_name(
         pipeline_name=pipeline_name,
         build_targets=args.build_targets,
-        version=get_version(vars(args)),
+        version=get_version(vars(args))[0],
         committish=args.committish,
     )
 
@@ -215,24 +217,6 @@ def mk_pipeline_run(
         ),
     )
     return plrun
-
-
-def mk_pipeline_packages_run(
-    args: argparse.ArgumentParser,
-    node_selector: dict = {},
-    security_context: dict = {},
-):
-    params = get_common_parameters(vars(args))
-    params.append(NamedParam(name='key_config_name', value='gardenlinux'))
-
-    return mk_pipeline_run(
-        pipeline_name='gl-packages-build',
-        args=args,
-        params=params,
-        node_selector=node_selector,
-        security_context=security_context,
-        timeout='12h',
-    )
 
 
 def mk_pipeline_main_run(
@@ -305,7 +289,6 @@ def main():
     parser.add_argument('--skip-cfssl-build', action='store_true')
     parser.add_argument('--pipeline-cfg', default=paths.flavour_cfg_path)
     parser.add_argument('--outfile', default='pipeline_run.yaml')
-    parser.add_argument('--outfile-packages', default='pipeline_package_run.yaml')
     parser.add_argument('--oci-path', default='eu.gcr.io/gardener-project/test/gardenlinux-test')
     parser.add_argument('--git-url', default='https://github.com/gardenlinux/gardenlinux.git')
     parser.add_argument('--pr-id', default=0)
@@ -334,17 +317,6 @@ def main():
 
     limits = mk_limits(name='gardenlinux')
     limits_dict = dataclasses.asdict(limits, dict_factory=tkn.model.limits_asdict_factory)
-
-    pipeline_run = mk_pipeline_packages_run(
-        args=parsed,
-        security_context={'runAsUser': 0},
-    )
-    pipeline_run_dict = dataclasses.asdict(pipeline_run)
-
-    with open(parsed.outfile_packages, 'w') as f:
-        yaml.safe_dump_all((pipeline_run_dict, limits_dict), f)
-
-    logger.info(f'pipeline-packages-run written to {parsed.outfile_packages}')
 
     pipeline_run = mk_pipeline_main_run(
         args=parsed,

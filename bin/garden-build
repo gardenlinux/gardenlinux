@@ -48,6 +48,7 @@ disableimages="${disableimages:-}"
 epoch="$(garden-version --epoch "$version")"
 serial="$(garden-version --date "$version")"
 dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
+export arch="$arch"
 
 fullfeatures="$(garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" features)"
 
@@ -202,7 +203,7 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 			elif [ -s $featureDir/$i/image ]; then
 				"$featureDir/$i/image" "$rootfs" "$targetBase"
 			elif [ -f "$featureDir/$i/fstab" ]; then
-				makepart "$rootfs" < "$featureDir/$i/fstab" | makedisk "$rootfs" "$targetBase.raw"
+				makepart "$rootfs" "$arch" < "$featureDir/$i/fstab" | makedisk "$rootfs" "$targetBase.raw"
 			else
 				true
 			fi

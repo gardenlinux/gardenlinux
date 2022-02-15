@@ -12,6 +12,7 @@ function uuid_hash {
 }
 
 rootfs="$1"
+arch="${2:-$arch}"
 timestamp=$(garden-version --epoch "$version")
 
 rootfs_work=$(mktemp -d)

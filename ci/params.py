@@ -110,14 +110,6 @@ class AllParams:
         default='/workspace/gardenlinux.out',
         description='build result file (parameter is used to pass between steps)'
     )
-    pkg_names = NamedParam(
-        name='pkg_names',
-        description='list of kernel-package to build (comma separated string)',
-    )
-    pkg_name = NamedParam(
-        name='pkg_name',
-        description='name of package to build',
-    )
     pipeline_name = NamedParam(
             name='pipeline_name',
             description='Namespace of current pipeline',
@@ -154,11 +146,6 @@ class AllParams:
         default='/workspace/gardenlinux_git',
         description='Gardenlinux working dir',
     )
-    s3_package_path = NamedParam(
-        name='package_path_s3_prefix',
-        default='packages/pool',
-        description='path relative to the root of the s3 bucket to upload the built packages to',
-    )
     snapshot_ctx_repository_config_name = NamedParam(
         name='snapshot_ctx_repository_config_name',
         default='gardener-public',
@@ -181,6 +168,10 @@ class AllParams:
     version = NamedParam(
         name='version',
         description='the target version to build / release',
+    )
+    garden_build_version = NamedParam(
+        name='gardenbuild_version',
+        description='the version string passed to garden-build',
     )
     version_label = NamedParam(
         name='version_label',

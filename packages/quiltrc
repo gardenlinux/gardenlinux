@@ -1,7 +1,0 @@
-QUILT_NO_DIFF_INDEX=1
-QUILT_NO_DIFF_TIMESTAMPS=1
-QUILT_REFRESH_ARGS="-p ab"
-QUILT_DIFF_ARGS="--color=auto" # If you want some color when using `quilt diff`.
-QUILT_PATCH_OPTS="--reject-format=unified"
-QUILT_SERIES_ARGS="--color=auto"
-QUILT_PUSH_ARGS="-a --color=auto"

@@ -1,7 +1,0 @@
-debian/series.patch
-# use BUILDENV in VERSIONS file to fix issue.. 
-# environment/builderror.patch
-environment/fpga-config.patch
-
-#environment/scsi_common.patch
-

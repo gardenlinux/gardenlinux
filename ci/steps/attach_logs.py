@@ -84,7 +84,6 @@ def _attach_and_upload_logs(
     committish: str,
     flavour_set_name: str,
     gardenlinux_epoch: str,
-    is_package_build: bool,
     manifest_set_key: str,
     platform_set: str,
     repo_dir: str,
@@ -103,12 +102,8 @@ def _attach_and_upload_logs(
     prefix = datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S') + '-' + \
         committish[:6] + '-'
 
-    if is_package_build:
-        s3_key = 'logs/' + prefix + 'package_build_log.zip'
-        s3_bucket_name = cicd_cfg.package_build.s3_bucket_name
-    else:
-        s3_key = 'objects/' + prefix + 'build_log.zip'
-        s3_bucket_name = cicd_cfg.build.s3_bucket_name
+    s3_key = 'objects/' + prefix + 'build_log.zip'
+    s3_bucket_name = cicd_cfg.build.s3_bucket_name
 
     logger.info(f'uploaded zipped logs to {s3_key=}')
     uploaded_file = _upload_file(
@@ -124,9 +119,6 @@ def _attach_and_upload_logs(
             f'https://{cicd_cfg.build.s3_bucket_name}.s3.{cicd_cfg.build.aws_region}.amazonaws.com/'
             f'{s3_key}'
         )
-
-    if is_package_build:
-        return True
 
     # if we create manifests attach logs to all manifests that actually have been build in this run
     build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
@@ -286,7 +278,6 @@ def upload_logs(
             committish=committish,
             flavour_set_name=flavour_set_name,
             gardenlinux_epoch=gardenlinux_epoch,
-            is_package_build='gl-packages' in pipeline_run_name,
             manifest_set_key=manifest_set_key,
             platform_set=platform_set,
             repo_dir=repo_dir,
