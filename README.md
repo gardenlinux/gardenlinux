@@ -18,6 +18,7 @@
 </p>
 <hr />
 
+[![build](https://github.com/gardenlinux/gardenlinux/actions/workflows/build.yml/badge.svg)](https://github.com/gardenlinux/gardenlinux/actions/workflows/build.yml)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/3925/badge)](https://bestpractices.coreinfrastructure.org/projects/3925)
 
 Garden Linux is a [Debian](https://debian.org) derivate that aims to provide a small, auditable linux image for most Cloud Providers and Bare Metal.
@@ -135,7 +136,7 @@ also look into our [Version scheme](VERSION.md) since adding a date or a Version
 ## Garden Linux releases
 
 Garden Linux frequently publishes snapshot releases. These are available as machine images in most major cloud providers as well as
-file-system images for manual import. See the [releases](docs/releases.md) page for more info.
+file-system images for manual import. See the [releases](https://github.com/gardenlinux/gardenlinux/releases) page for more info.
 
 ## Pipeline Integration
 Garden Linux can build in an automated way for continous integration. See [ci/README.md](ci/README.md) for details.
