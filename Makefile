@@ -149,9 +149,9 @@ metal-dev: container-build cert/sign.pub
 
 metalk: container-build cert/sign.pub
 	./build.sh $(BUILD_OPTS) --skip-build --features metal,khost,_pxe $(BUILDDIR) $(VERSION)
-metalk-dev: container-build cert/sign.pub
-        ./build.sh $(BUILD_OPTS) --skip-build --features metal,khost,_pxe,_dev $(BUILDDIR) $(VERSION)
 
+metalk-dev: container-build cert/sign.pub
+	./build.sh $(BUILD_OPTS) --skip-build --features metal,khost,_pxe,_dev $(BUILDDIR) $(VERSION)
 
 clean:
 	@echo "emptying $(BUILDDIR)"
