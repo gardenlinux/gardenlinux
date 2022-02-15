@@ -47,7 +47,7 @@ else
 	standardMirror='https://deb.debian.org/debian-ports'
 fi
 
-securityMirror='http://security.debian.org/debian-security'
+securityMirror='https://security.debian.org/debian-security'
 
 comp='main'
 arch="$("$thisDir/.dpkg-arch.sh" "$targetDir")"
