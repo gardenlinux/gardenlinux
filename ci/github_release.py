@@ -205,7 +205,7 @@ def make_release(
     cfg = f.ctx_repository(ctx_repository_config_name)
     ctx_repo_base_url = cfg.base_url()
 
-    product.v2.download_component_descriptor_v2(
+    comp_descr = product.v2.download_component_descriptor_v2(
         component_name='github.com/gardenlinux/gardenlinux',
         component_version=version,
         ctx_repo_base_url=ctx_repo_base_url,
@@ -213,7 +213,7 @@ def make_release(
     )
 
     with open(os.path.join(repo_dir, 'component-descriptor'), 'w') as out_file:
-        out_file.write(release_descr)
+        comp_descr.to_fobj(out_file)
 
     with open(os.path.join(repo_dir, 'component-descriptor')) as cd_file:
         gh_release.upload_asset(
