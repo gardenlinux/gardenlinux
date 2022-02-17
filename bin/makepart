@@ -118,6 +118,8 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 			used_inodes=$(for (( inode=1; inode <= "$num_inodes"; inode++ )); do echo "testi <$inode>"; done | debugfs "$file" 2> /dev/null | grep -oP '(?<=Inode )[0-9]+(?= is marked in use)')
 			for inode in $used_inodes; do for field in {a,m,c}time; do echo "set_inode_field <$inode> $field $timestamp"; done; done | debugfs -w "$file" &> /dev/null
 
+			chcon -R system_u:object_r:dosfs_t:s0 "$rootfs_work/boot/efi"
+
 			rm -rf "$rootfs_work$target"
 			mkdir "$rootfs_work$target"
 			;;
