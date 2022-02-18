@@ -1,5 +1,0 @@
-# <file system>    <dir>        <type>    <options>                                <makeimg agrs>
-LABEL=EFI          /boot/efi    vfat      umask=0077                               type=uefi
-LABEL=ROOT         /            ext4      rw,errors=remount-ro,prjquota,discard    verity
-LABEL=USR          /usr         ext4      ro,discard                               verity
-LABEL=OVERLAY      /overlay     ext4      rw,discard                               size=512MiB
