@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+echo "testing kernel configuration"
+
+rootfsDir=$1
+thisDir=$(readlink -e "$(dirname "${BASH_SOURCE[0]}")")
+rootfsDir=$(readlink -e "$rootfsDir")
+
+
+function check_config_line() {
+    file=$1
+    option=$2
+    value=$3
+
+    config_line=$(cat $1 | grep -ve "^#" | grep -w $2)
+    IFS="=" read key val <<< $config_line
+    ucval=$(tr \[a-z\] \[A-Z\] <<< $val)
+
+    case $value in
+      unset)
+        if [ -n "$config_line" -a "$ucval" != "N" ]; then
+            echo "FAIL - $config_line must not be enabled in $file"
+            exit 1
+        fi
+      ;;
+      set)
+        if [ -z "$config_line" -o "$ucval" == "N" ]; then
+            echo "FAIL - $config_line must be enabled in $file"
+            exit 1
+        fi
+      ;;
+      *)
+        if [ -z "$config_line" -o "$val" == "$value" ]; then
+            echo "FAIL: $config_line must be have value $value in $file"
+            exit 1
+        fi
+      ;;
+    esac
+
+    echo "OK - $config_line has value $value in $file"
+}
+
+
+kernel_configfiles=$(ls -1 ${rootfsDir}/boot/config-*)
+
+for config in $kernel_configfiles; do
+    check_config_line $config "CONFIG_DEBUG_INFO_BTF" "set"
+done
