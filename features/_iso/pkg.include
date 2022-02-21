@@ -1,2 +1,3 @@
-main/d/dracut/dracut-core_055-1gardenlinux2_${arch}.deb
-main/d/dracut/dracut_055-1gardenlinux2_all.deb
+dracut-core
+dracut
+binutils
