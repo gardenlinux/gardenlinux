@@ -57,11 +57,11 @@ def get_manifest(
 ) -> bool: # True on success else False:
 
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
-    if not (package_build_cfg := cicd_cfg.package_build):
+    if not (build_cfg := cicd_cfg.build):
         raise RuntimeError(f"No package-build config found in cicd-config {cicd_cfg_name}")
 
     aws_cfg_name = cicd_cfg.build.aws_cfg_name
-    s3_bucket_name = package_build_cfg.s3_bucket_name
+    s3_bucket_name = build_cfg.s3_bucket_name
 
     print(f'downloading release manifest from s3 {aws_cfg_name=} {s3_bucket_name=}')
 
