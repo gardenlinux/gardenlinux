@@ -203,7 +203,11 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 			elif [ -s $featureDir/$i/image ]; then
 				"$featureDir/$i/image" "$rootfs" "$targetBase"
 			elif [ -f "$featureDir/$i/fstab" ]; then
-				makepart "$rootfs" "$arch" < "$featureDir/$i/fstab" | makedisk "$rootfs" "$targetBase.raw"
+				# find the writable partition and make sure it is the last one in the next step
+				rwpart=$(sed -n '/rw/ s/LABEL=\([[:upper:]]*\).*/\1/p' < "$featureDir/$i/fstab")
+				makepart "$rootfs" "$arch" < "$featureDir/$i/fstab" \
+				| sed '$a\\n' | sed "/$rwpart/{h;d}; \$g; /^$/d" \
+				| makedisk "$rootfs" "$targetBase.raw"
 			else
 				true
 			fi
