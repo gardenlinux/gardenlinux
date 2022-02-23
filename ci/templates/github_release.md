@@ -52,6 +52,9 @@ urn: $azure_id
 ### Openstack CCEE (AMD64, VMware as Hypervisor)
 * [$openstack_name]($openstack_url)
 
+### VMware vSphere (AMD64)
+* [$vsphere_name]($vsphere_url)
+
 <details>
 
 ## How to import images to public Cloud Providers
