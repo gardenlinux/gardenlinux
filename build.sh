@@ -132,10 +132,10 @@ else
 	}
 	containerName=$(cat /proc/sys/kernel/random/uuid)
 	trap 'stop $containerName' INT
-	#docker run --name $containerName $dockerArgs --rm \
-		#"${buildImage}" \
-		#/opt/gardenlinux/bin/garden-build &
-	#wait %1
+	docker run --name $containerName $dockerArgs --rm \
+		"${buildImage}" \
+		/opt/gardenlinux/bin/garden-build &
+	wait %1
 
 	# Run tests if activated
         if [ $tests -eq 1 ]; then
