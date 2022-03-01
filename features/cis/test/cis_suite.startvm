@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+# Everything within this file will
+# be executed within a QEMU VM.
+uptime
+uname -a
+echo "from vm"
