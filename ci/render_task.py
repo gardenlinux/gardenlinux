@@ -43,6 +43,10 @@ def render_task(
         volume_mounts = []
         volumes = []
 
+    env_vars.append({
+        'name': 'SECRETS_SERVER_ENDPOINT',
+        'value': 'http://secrets-server.concourse.svc.cluster.local',
+    })
     if secret_key := os.getenv('SECRET_KEY'):
         env_vars.append({
             'name': 'SECRET_KEY',
