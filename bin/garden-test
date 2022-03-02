@@ -99,7 +99,7 @@ sshwatch() {
 # Extract and use pre built
 # rootfs from production
 mkdir -p /rootfs/
-tar xf /output/*.tar.xz -C /rootfs/
+tar xf /output/${prefix}.tar.xz -C /rootfs/
 echo $epoch > /rootfs/garden-epoch
 
 # Start unit tests
@@ -119,7 +119,7 @@ garden-apt-get $rootfs update
 sed -i 's/testing/bookworm/g' /etc/apt/sources.list
 rm /etc/apt/apt.conf.d/default-testing
 apt-get update
-apt-get -y install procps iproute2 netcat-traditional rsync openssh-client qemu-system-x86
+apt-get -y install procps iproute2 rsync openssh-client qemu-system-arm qemu-system-x86
 
 # Find unit tests in activated features
 for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basename {} \; | grep -v .disable | sort | uniq); do
