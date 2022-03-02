@@ -41,10 +41,15 @@ def _get_download_url(
         print(f'Could not find path for platform {platform=}, skipping release.')
         return None
 
+    if image_metadata_tag:
+        image_metadata = getattr(manifest.published_image_metadata, image_metadata_tag)
+    else:
+        image_metadata = None
+
     return (
         path.name,
         f'https://gardenlinux.s3.eu-central-1.amazonaws.com/{path.s3_key}',
-        getattr(manifest.published_image_metadata, image_metadata_tag),
+        image_metadata,
     )
 
 
@@ -57,11 +62,11 @@ def get_manifest(
 ) -> bool: # True on success else False:
 
     cicd_cfg = glci.util.cicd_cfg(cfg_name=cicd_cfg_name)
-    if not (package_build_cfg := cicd_cfg.package_build):
+    if not (build_cfg := cicd_cfg.build):
         raise RuntimeError(f"No package-build config found in cicd-config {cicd_cfg_name}")
 
     aws_cfg_name = cicd_cfg.build.aws_cfg_name
-    s3_bucket_name = package_build_cfg.s3_bucket_name
+    s3_bucket_name = build_cfg.s3_bucket_name
 
     print(f'downloading release manifest from s3 {aws_cfg_name=} {s3_bucket_name=}')
 
@@ -158,6 +163,16 @@ def make_release(
     )
     print(f'Openstack: name: {name_openstack}, url: {download_link_openstack}')
 
+    platform = 'vmware'
+    suffix = glci.util.virtual_image_artifact_for_platform(platform)
+    name_vmware, download_link_vmware, ids_vmware = _get_download_url(
+        platform=platform,
+        suffix=suffix,
+        manifest_set=manifest_set,
+        image_metadata_tag=None
+    )
+    print(f'VMware: name: {name_vmware}, url: {download_link_vmware}')
+
     # Generate markdown:
     template_path = os.path.abspath(
         os.path.join(repo_dir, "ci/templates/github_release.md")
@@ -183,6 +198,8 @@ def make_release(
         'gcp_id': id_gcp,
         'openstack_name': name_openstack,
         'openstack_url': download_link_openstack,
+        'vsphere_name': name_vmware,
+        'vsphere_url': download_link_vmware,
     }
     release_descr = release_template.safe_substitute(values)
 
