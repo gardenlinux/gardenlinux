@@ -143,6 +143,7 @@ else
                 docker run --name $containerName $dockerArgs --rm \
                         "${buildImage}" \
                         /opt/gardenlinux/bin/garden-test &
+	wait %1
         fi
 
 fi
