@@ -229,13 +229,12 @@ for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basena
                         	fi
                 	done
 			# Start new generated image for unit tests
-                        qemuArch=$(uname -m)
-                        if [ "$qemuArch" = x86_64 ]; then
-                                echo "Starting VM for ${qemuArch}"
-                                qemu-system-${qemuArch} -display none -daemonize -pidfile /tmp/qemu.pid -m 1024M -device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89 -netdev user,id=net0,hostfwd=tcp::2223-:22,hostname=garden /tmp/test.raw
-                        elif [ "$qemuArch" = aarch64 ]; then
-                                echo "Starting VM for ${qemuArch}"
-                                qemu-system-${qemuArch} -display none -daemonize -cpu cortex-a72 -machine virt -pidfile /tmp/qemu.pid -m 1024M -device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89 -netdev user,id=net0,hostfwd=tcp::2223-:22,hostname=garden /tmp/test.raw
+                        if [ "$arch" = amd64 ]; then
+                                echo "Starting VM for ${arch}"
+                                qemu-system-x86_64 -display none -daemonize -pidfile /tmp/qemu.pid -m 1024M -device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89 -netdev user,id=net0,hostfwd=tcp::2223-:22,hostname=garden /tmp/test.raw
+                        elif [ "$arch" = arm64 ]; then
+                                echo "Starting VM for ${arch}"
+                                qemu-system-aarch64 -display none -daemonize -cpu cortex-a72 -machine virt -pidfile /tmp/qemu.pid -m 1024M -device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89 -netdev user,id=net0,hostfwd=tcp::2223-:22,hostname=garden /tmp/test.raw
                         fi
 
 			# Wait for SSH in VM to be present
