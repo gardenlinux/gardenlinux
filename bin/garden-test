@@ -209,7 +209,7 @@ for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basena
 			garden-chroot "${rootfs}" mkdir -p /home/${startvmUser}/tests/
 			garden-chroot "${rootfs}" mkdir -p /home/${startvmUser}/.ssh/
 			garden-chroot "${rootfs}" chmod 700 /home/${startvmUser}/.ssh/
-			/rootfs/usr/bin/ssh-keygen -q -t rsa -N '' -f /rootfs/home/${startvmUser}/.ssh/id_rsa -m pem
+			/usr/bin/ssh-keygen -q -t rsa -N '' -f /rootfs/home/${startvmUser}/.ssh/id_rsa -m pem
 			cp /rootfs/home/${startvmUser}/.ssh/id_rsa.pub /rootfs/home/${startvmUser}/.ssh/authorized_keys
 			garden-chroot "${rootfs}" chmod 600 /home/${startvmUser}/.ssh/authorized_keys
 			garden-chroot "${rootfs}" chown -R ${startvmUser}:${startvmUser} /home/${startvmUser}/.ssh/
