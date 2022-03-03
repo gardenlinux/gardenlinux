@@ -234,7 +234,7 @@ for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basena
                                 qemu-system-x86_64 -display none -daemonize -pidfile /tmp/qemu.pid -m 1024M -device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89 -netdev user,id=net0,hostfwd=tcp::2223-:22,hostname=garden /tmp/test.raw
                         elif [ "$arch" = arm64 ]; then
                                 echo "Starting VM for ${arch}"
-                                qemu-system-aarch64 -display none -daemonize -cpu cortex-a72 -machine virt -pidfile /tmp/qemu.pid -m 1024M -device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89 -netdev user,id=net0,hostfwd=tcp::2223-:22,hostname=garden /tmp/test.raw
+                                qemu-system-aarch64 -display none -daemonize -cpu cortex-a72 -machine virt -pidfile /tmp/qemu.pid -bios /usr/share/qemu-efi-aarch64/QEMU_EFI.fd -m 1024M -device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89 -netdev user,id=net0,hostfwd=tcp::2223-:22,hostname=garden /tmp/test.raw
                         fi
 
 			# Wait for SSH in VM to be present
