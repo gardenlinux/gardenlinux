@@ -3,9 +3,9 @@ set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
-	--flags 'no-build,debug,skip-tests,suite:,gardenversion:,timestamp:' \
-	--flags 'ports,arch:,qemu,features:,disable-features:,disable-images:,commitid:,userid:,usergid:' \
-	--flags 'suffix:,prefix:' \
+	--flags 'no-build,debug,gardenversion:,timestamp:' \
+	--flags 'arch:features:,disable-features:,disable-images:,commitid:,userid:,usergid:' \
+	--flags 'prefix:' \
 	--
 
 export PATH="${thisDir}:${PATH}"
@@ -93,14 +93,13 @@ sshwatch() {
     echo "Waiting for SSH on port $1 to become ready..."
     while ! ssh-keyscan -p $1 localhost ; do sleep 2 ; done
     echo "SSH on port $1 is ready."
-
 }
 
 # Extract and use pre built
 # rootfs from production
-mkdir -p /rootfs/
-tar xf /output/${prefix}.tar.xz -C /rootfs/
-echo $epoch > /rootfs/garden-epoch
+mkdir -p ${rootfs}/
+tar xf /output/${prefix}.tar.xz -C ${rootfs}/
+echo $epoch > ${rootfs}/garden-epoch
 
 # Start unit tests
 echo "#### tests"
@@ -110,8 +109,8 @@ testcounter=0
 failcounter=0
 skipcounter=0
 
-mkdir -p rootfs/etc/ssl
-mount --bind /etc/ssl rootfs/etc/ssl
+mkdir -p ${rootfs}/etc/ssl
+mount --bind /etc/ssl ${rootfs}/etc/ssl
 garden-apt-get $rootfs update
 
 # Define APT settings and install
@@ -125,11 +124,6 @@ apt-get -y install procps iproute2 rsync openssh-client qemu-system-arm qemu-sys
 for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basename {} \; | grep -v .disable | sort | uniq); do
         let "testcounter=testcounter+1"
         test=$(basename $t | cut -d. -f 1)
-        if [ "${tests:-1}" = "0" ]; then
-                echo "test ${test} is being skipped, --skip-tests has been used"
-                let "skipcounter=skipcounter+1"
-                continue
-        fi
         # go over features and build the enabled/disabled lists
         # a test with .disabled in a specific feature disables the test globally
         # a test that is not executable is not enabled for the specific feature
@@ -185,7 +179,7 @@ for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basena
                 # move the actual tests from one of the features that enables it
                 actualTest="${featureDir}/$(echo ${enabledBy} | awk '{ print $1 }')/test/${t}"
 
-		# Test: chroot 
+                # Test: chroot
                 if [ ${t##*.} == "chroot" ]; then
                         cp -L ${actualTest} "${rootfs}/tmp/${test}"
                         if garden-chroot "${rootfs}" ./tmp/${test}; then
@@ -204,11 +198,9 @@ for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basena
 			startvmUser=$(echo ${enabledBy} | head -c-1)
 			# Create a temporary and only for unit tests valid
 			# ssh key for each user and feature
-			garden-chroot "${rootfs}" useradd -m ${startvmUser}
-			garden-chroot "${rootfs}" adduser ${startvmUser} wheel
+			garden-chroot "${rootfs}" useradd -m -G wheel ${startvmUser}
 			garden-chroot "${rootfs}" mkdir -p /home/${startvmUser}/tests/
-			garden-chroot "${rootfs}" mkdir -p /home/${startvmUser}/.ssh/
-			garden-chroot "${rootfs}" chmod 700 /home/${startvmUser}/.ssh/
+			garden-chroot "${rootfs}" mkdir -p /home/${startvmUser}/.ssh/ -m 700
 			/usr/bin/ssh-keygen -q -t rsa -N '' -f /rootfs/home/${startvmUser}/.ssh/id_rsa -m pem
 			cp /rootfs/home/${startvmUser}/.ssh/id_rsa.pub /rootfs/home/${startvmUser}/.ssh/authorized_keys
 			garden-chroot "${rootfs}" chmod 600 /home/${startvmUser}/.ssh/authorized_keys
@@ -231,10 +223,25 @@ for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basena
 			# Start new generated image for unit tests
                         if [ "$arch" = amd64 ]; then
                                 echo "Starting VM for ${arch}"
-                                qemu-system-x86_64 -display none -daemonize -pidfile /tmp/qemu.pid -m 1024M -device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89 -netdev user,id=net0,hostfwd=tcp::2223-:22,hostname=garden /tmp/test.raw
+                                qemu-system-x86_64 -display none					\
+					-daemonize							\
+					-pidfile /tmp/qemu.pid						\
+					-m 1024M							\
+					-device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89	\
+					-netdev user,id=net0,hostfwd=tcp::2223-:22,hostname=garden	\
+					/tmp/test.raw
                         elif [ "$arch" = arm64 ]; then
                                 echo "Starting VM for ${arch}"
-                                qemu-system-aarch64 -display none -daemonize -cpu cortex-a72 -machine virt -pidfile /tmp/qemu.pid -bios /usr/share/qemu-efi-aarch64/QEMU_EFI.fd -m 1024M -device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89 -netdev user,id=net0,hostfwd=tcp::2223-:22,hostname=garden /tmp/test.raw
+                                qemu-system-aarch64 -display none					\
+					-daemonize 							\
+					-cpu cortex-a72							\
+					-machine virt 							\
+					-pidfile /tmp/qemu.pid 						\
+					-bios /usr/share/qemu-efi-aarch64/QEMU_EFI.fd			\
+					-m 1024M		 					\
+					-device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89	\
+					-netdev user,id=net0,hostfwd=tcp::2223-:22,hostname=garden 	\
+					/tmp/test.raw
                         fi
 
 			# Wait for SSH in VM to be present
@@ -242,7 +249,10 @@ for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basena
 			echo "Starting VM - this will take some time"
 			sshwatch 2223
 			# Finally perform test
-			ssh -i /rootfs/home/${startvmUser}/.ssh/id_rsa ${startvmUser}@localhost -p 2223 -o StrictHostKeyChecking=no /home/${startvmUser}/tests/${test}.startvm
+			ssh -i /rootfs/home/${startvmUser}/.ssh/id_rsa	\
+				${startvmUser}@localhost -p 2223 	\
+				-o StrictHostKeyChecking=no 		\
+				/home/${startvmUser}/tests/${test}.startvm
                         if [ $? -ne 0 ]; then
                                 echo -e "\e[31mfailed\e[39m"
                                 echo
@@ -276,5 +286,11 @@ for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basena
         enabledBy=""
 done
 
-umount rootfs/etc/ssl
 echo "Tests done. ${failcounter}/${testcounter} failed. ${skipcounter}/${testcounter} skipped."
+
+if [ "$failcounter" -eq 0 ]; then
+	echo "Done"
+else
+	echo "Done, but with errors"
+	exit 1
+fi

@@ -138,12 +138,12 @@ else
 	wait %1
 
 	# Run tests if activated
-        if [ $tests -eq 1 ]; then
+	if [ $tests -eq 1 ]; then
 		echo "Running tests"
-                docker run --name $containerName $dockerArgs --rm \
-                        "${buildImage}" \
-                        /opt/gardenlinux/bin/garden-test &
-	wait %1
-        fi
-
+		containerName=$(cat /proc/sys/kernel/random/uuid)
+		docker run --name $containerName $dockerArgs --rm \
+			"${buildImage}" \
+			/opt/gardenlinux/bin/garden-test &
+		wait %1
+	fi
 fi
