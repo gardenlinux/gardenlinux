@@ -98,7 +98,8 @@ sshwatch() {
 # Extract and use pre built
 # rootfs from production
 mkdir -p ${rootfs}/
-tar xf /output/${prefix}.tar.xz -C ${rootfs}/
+tar -xp --acl --selinux --anchored --xattrs --xattrs-include='security.capability' \
+    -f /output/${prefix}.tar.xz -C ${rootfs}/
 echo $epoch > ${rootfs}/garden-epoch
 
 # Start unit tests
