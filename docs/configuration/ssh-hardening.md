@@ -61,7 +61,7 @@ As [RFC 9142](https://datatracker.ietf.org/doc/rfc9142/) stats, the default ciph
 
 #### Kex Algorithms
 
-The [OpenSSH configuration](42https://salsa.debian.org/ssh-team/openssh/-/blob/debian/1%258.8p1-1/sshd_config.0#L276-278) uses Key Exchange (Kex) Algorithms like:
+The [OpenSSH configuration](https://salsa.debian.org/ssh-team/openssh/-/blob/debian/1%258.8p1-1/sshd_config.0#L582-586) uses Key Exchange (Kex) Algorithms like:
 ```
 curve25519-sha256,curve25519-sha256@libssh.org,
 ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,
@@ -75,7 +75,7 @@ As [RFC 9142](https://datatracker.ietf.org/doc/rfc9142/) stats, the default Kex 
 
 #### Message Authentication Codes (MACs)
 
-The [OpenSSH configuration](https://salsa.debian.org/ssh-team/openssh/-/blob/debian/1%258.8p1-1/sshd_config.0#L276-278) uses MACs like:
+The [OpenSSH configuration](https://salsa.debian.org/ssh-team/openssh/-/blob/debian/1%258.8p1-1/sshd_config.0#L669-673) uses MACs like:
 ```
 umac-64-etm@openssh.com,umac-128-etm@openssh.com,
 hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,
