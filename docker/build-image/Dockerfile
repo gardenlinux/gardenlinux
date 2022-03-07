@@ -29,7 +29,14 @@ RUN apt-get update \
 		qemu-utils \
 		cpio \
 		syslinux:amd64 syslinux-common:amd64 isolinux:amd64 xorriso:amd64 \
-		dpkg-dev
+		dpkg-dev \
+		procps \
+		iproute2 \
+		rsync \
+		openssh-client \
+		qemu-system-arm \
+		qemu-system-x86
+
 
 RUN echo "deb https://deb.debian.org/debian unstable main" >> /etc/apt/sources.list \
 	&& echo 'APT::Default-Release "testing";' > /etc/apt/apt.conf.d/default-testing \

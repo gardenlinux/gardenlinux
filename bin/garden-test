@@ -112,14 +112,9 @@ skipcounter=0
 
 mkdir -p ${rootfs}/etc/ssl
 mount --bind /etc/ssl ${rootfs}/etc/ssl
+# This will be needed for
+# apt-utils and rootkit hunter.
 garden-apt-get $rootfs update
-
-# Define APT settings and install
-# needed dependencies
-sed -i 's/testing/bookworm/g' /etc/apt/sources.list
-rm /etc/apt/apt.conf.d/default-testing
-apt-get update
-apt-get -y install procps iproute2 rsync openssh-client qemu-system-arm qemu-system-x86
 
 # Find unit tests in activated features
 for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basename {} \; | grep -v .disable | sort | uniq); do
