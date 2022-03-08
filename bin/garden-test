@@ -243,14 +243,14 @@ for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basena
 				${startvmUser}@localhost -p 2223 	\
 				-o StrictHostKeyChecking=no 		\
 				/home/${startvmUser}/tests/${test}.startvm
-						if [ $? -ne 0 ]; then
-								echo -e "\e[31mfailed\e[39m"
-								echo
-								let "failcounter=failcounter+1"
-						else
-								echo -e "\e[32mpassed\e[39m"
-								echo
-						fi
+			if [ $? -ne 0 ]; then
+				echo -e "\e[31mfailed\e[39m"
+				echo
+				let "failcounter=failcounter+1"
+			else
+				echo -e "\e[32mpassed\e[39m"
+				echo
+			fi
 			# Stop QEMU
 			pkill -F /tmp/qemu.pid
 
