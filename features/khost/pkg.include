@@ -1,5 +1,4 @@
 apparmor
-containernetworking-plugins
 conntrack
 ethtool
 ipvsadm

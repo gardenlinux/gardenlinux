@@ -9,7 +9,7 @@ import params
 import results
 import tkn.model
 
-IMAGE_VERSION = '1.1565.0'
+IMAGE_VERSION = '1.1619.0'
 DEFAULT_IMAGE = f'eu.gcr.io/gardener-project/cc/job-image:{IMAGE_VERSION}'
 KANIKO_IMAGE = f'eu.gcr.io/gardener-project/cc/job-image-kaniko:{IMAGE_VERSION}'
 CACHED_PATCH: str = None

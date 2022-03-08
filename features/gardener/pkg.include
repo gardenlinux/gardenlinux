@@ -1,6 +1,5 @@
 apparmor
 containerd
-containernetworking-plugins
 docker.io
 ethtool
 ipvsadm
