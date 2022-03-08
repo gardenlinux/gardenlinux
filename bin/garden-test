@@ -239,9 +239,9 @@ for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basena
 			echo "Starting VM - this will take some time"
 			sshwatch 2223
 			# Finally perform test
-			ssh -i /rootfs/home/${startvmUser}/.ssh/id_rsa	\
-				${startvmUser}@localhost -p 2223 	\
-				-o StrictHostKeyChecking=no 		\
+			ssh -i ${rootfs}/home/${startvmUser}/.ssh/id_rsa \
+				${startvmUser}@localhost -p 2223 \
+				-o StrictHostKeyChecking=no \
 				/home/${startvmUser}/tests/${test}.startvm
 			if [ $? -ne 0 ]; then
 				echo -e "\e[31mfailed\e[39m"
