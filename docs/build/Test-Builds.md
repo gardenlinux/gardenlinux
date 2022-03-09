@@ -31,11 +31,11 @@ There's no need to change any other files for this Virtualization Test.
 - https://docs.fedoraproject.org/en-US/fedora-coreos/producing-ign/
 
 ---
-## Test your .iso Buildfile
-This does not fully work yet - use the branch named "iso".
+## Test .iso Build
+This does not fully work yet - use the branch named "iso" for building and testing.
 You should be able to successfully build the .iso file, as always by adding _iso feature.
 
-it is planned to also test it by running 
+it is planned to also be able to test it by running
 
 	`gardenlinux/bin/start-vm gardenlinux/.build/metal_iso-amd64-dev-local.iso`
 
