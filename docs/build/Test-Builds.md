@@ -48,3 +48,7 @@ in the meanwhile the following command should work (choose the right .iso file, 
 (exchange qemu_system_x86_64 with qemu_system_x86 if you use a x86 machine)
 
 (You can also exit QEMU by typing Ctrl+A, X)
+
+## Alternative Way for testing .raw Build:
+
+	qemu-system-x86_64 -drive format=raw,file=gardenlinux/.build/<filename>.raw -m 2048 -nographic
