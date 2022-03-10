@@ -203,110 +203,15 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 			elif [ -s $featureDir/$i/image ]; then
 				"$featureDir/$i/image" "$rootfs" "$targetBase"
 			elif [ -f "$featureDir/$i/fstab" ]; then
-				makepart "$rootfs" "$arch" < "$featureDir/$i/fstab" | makedisk "$rootfs" "$targetBase.raw"
+				# find the writable partition and make sure it is the last one in the next step
+				rwpart=$(sed -n '/rw/ s/LABEL=\([[:upper:]]*\).*/\1/p' < "$featureDir/$i/fstab")
+				makepart "$rootfs" "$arch" < "$featureDir/$i/fstab" \
+				| sed '$a\\n' | sed "/$rwpart/{h;d}; \$g; /^$/d" \
+				| makedisk "$rootfs" "$targetBase.raw"
 			else
 				true
 			fi
 		done
-		echo "#### tests"
-		disabledBy=""
-		enabledBy=""
-		testcounter=0
-		failcounter=0
-		skipcounter=0
-
-		# build the list of tests first
-		echo "preparing apt lists in case we need to install packages for the tests"
-		mkdir -p rootfs/etc/ssl
-		mount --bind /etc/ssl rootfs/etc/ssl
-		garden-apt-get rootfs update
-		for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basename {} \; | grep -v .disable | sort | uniq); do
-			let "testcounter=testcounter+1"
-			test=$(basename $t | cut -d. -f 1)
-			if [ "${tests:-1}" = "0" ]; then
-				echo "test ${test} is being skipped, --skip-tests has been used"
-				let "skipcounter=skipcounter+1"
-				continue
-			fi
-			# go over features and build the enabled/disabled lists
-			# a test with .disabled in a specific feature disables the test globally
-			# a test that is not executable is not enabled for the specific feature
-			for f in $(tr ',' '\n' <<< $fullfeatures); do
-				featureTest="${featureDir}/${f}/test/${test}"
-				if [ -f "${featureTest}.disable" ]; then
-					disabledBy=$(echo "${f} ${disabledBy}")
-					continue
-				fi
-				if [ -f "${featureTest}.chroot" ]; then
-					if [ ! -x "${featureTest}.chroot" ]; then
-						continue
-					fi
-					enabledBy=$(echo "${f} ${enabledBy}")
-					continue
-				fi
-				if [ -f "${featureTest}" ]; then
-					if [ ! -x "${featureTest}" ]; then
-						continue
-					fi
-					enabledBy=$(echo "${f} ${enabledBy}")
-				fi
-			done
-			if [ "$disabledBy" != "" ]; then
-				echo "test ${test} is disabled by the following features: ${disabledBy}"
-				# remove disabled tests that might be enabled in another feature
-				enabledBy=$(echo $enabledBy |  tr " " "\n" | grep -vf <(echo $disabledBy | tr " " "\n"))
-			elif [ "$enabledBy" != "" ]; then
-				echo "test ${test} is enabled by the following features: ${enabledBy}"
-				# prepare all other dependencies from the test
-				for fd in $(echo "${enabledBy}"); do
-					if [ -d "${featureDir}/${fd}/test/${test}.d" ]; then
-						mkdir -p "${rootfs}/tmp/${test}.d"
-						for fdep in "${featureDir}/${fd}/test/${test}.d"/*; do
-							[ -e "$fdep" ] || continue
-							fdepshort=$(basename $fdep)
-							if [[ "$fdepshort" == "pkg.include" || "$fdepshort" == "pkg.exclude" ]]; then
-								cat $fdep | filter_variables | filter_if >> "${rootfs}/tmp/${test}.d/${fdepshort}.list"
-							else
-								cat $fdep >> "${rootfs}/tmp/${test}.d/${fdepshort}"
-							fi
-						done
-					fi
-				done
-
-				# move the actual tests from one of the features that enables it
-				actualTest="${featureDir}/$(echo ${enabledBy} | awk '{ print $1 }')/test/${t}"
-				if [ ${t##*.} == "chroot" ]; then
-					cp -L ${actualTest} "${rootfs}/tmp/${test}"
-					if garden-chroot "${rootfs}" ./tmp/${test}; then
-						echo -e "\e[32mpassed\e[39m"
-						echo
-					else
-						echo -e "\e[31mfailed\e[39m"
-						echo
-						let "failcounter=failcounter+1"
-					fi
-				else
-					if "${actualTest}" ${rootfs} ${targetBase}; then
-						echo -e "\e[32mpassed\e[39m"
-						echo
-					else
-						echo -e "\e[31mfailed\e[39m"
-						echo
-						let "failcounter=failcounter+1"
-					fi
-				fi
-				rm -rf "${rootfs}/tmp/${test}.d"
-				rm -f "${rootfs}/tmp/$test"
-			elif [ "$enabledBy" == "" ]; then
-				echo "test ${test} is not enabled in any feature, skipping"
-				let "skipcounter=skipcounter+1"
-				echo
-			fi
-			disabledBy=""
-			enabledBy=""
-		done
-		umount rootfs/etc/ssl
-		echo "Tests done. ${failcounter}/${testcounter} failed. ${skipcounter}/${testcounter} skipped."
 	}
 
 	for rootfs in rootfs*/; do
@@ -336,11 +241,4 @@ else
 		mv $i $newname
 		install -v -m 0644 -p -o "${userID}" -g "${userGID}" $newname "/output" 
 	done
-fi
-echo
-if [ "$failcounter" -eq 0 ]; then
-	echo "Done"
-else
-	echo "Done, but with errors"
-	exit 1
 fi
