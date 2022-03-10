@@ -1,4 +1,4 @@
-## Test your previously created PXE-Build (raw file)
+## Testrun your previously created PXE-Build (raw file)
 
 This is an easy way to test your build on most systems. A handy way to run gardenlinux is via PXE-Boot. Gardenlinux provides a script to run your build with qemu, e.g. qemu-system-x86_64. 
 This script should run on all kinds of devices. No need for root privileges.
