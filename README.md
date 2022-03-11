@@ -124,9 +124,9 @@ The feature system distinguishes between
 
 if you want to manually build choose:
 
-    build.sh <Platform>,[<feature1>],[<featureX>],[_modifier1],[_modifierX] destination [version]
+    build.sh --features <Platform>,[<feature1>],[<featureX>],[_modifier1],[_modifierX] destination [version]
 
-    e.g. build.sh server,cloud,chost,vmware build/
+    e.g. build.sh --features server,cloud,chost,vmware build/
 
 builds a server image, cloud-like, with a container host for the VMware platform. The build result can be found in `build/`
 
