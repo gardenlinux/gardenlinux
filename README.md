@@ -127,11 +127,11 @@ Building Garden Linux is based on a [feature system](features/README.md).
 
 if you want to build manually choose:
 ```
-build.sh <Platform>,[<feature1>],[<featureX>],[_modifier1],[_modifierX] destination [version]
+build.sh  --features <Platform>,[<feature1>],[<featureX>],[_modifier1],[_modifierX] destination [version]
 ```
 **Example:**
 ```
-build.sh server,cloud,cis,vmware .build/
+build.sh  --features server,cloud,cis,vmware .build/
 ```
 This builds a server image, cloud-like, with `CIS`feature for the VMware platform. The build result can be found in `.build/`. Also look into our [Version scheme](VERSION.md) since adding a date or a Version targets the whole build for a specific date.
 
