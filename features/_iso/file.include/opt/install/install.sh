@@ -72,9 +72,9 @@ chroot ${target}/ /etc/kernel/postinst.d/dracut ${kernel}
 
 echo "persistent_policy=by-label" > ${target}/etc/dracut.conf.d/20-policy.conf
 if [ "$hasefi" == "1" ]; then
-  mkdir -p ${target}/boot/efi/Default
+  chroot ${target} systemd-machine-id-setup
+  chroot ${target} bootctl --esp-path=/boot/efi --make-machine-id-directory=yes install
   chroot ${target} /etc/kernel/postinst.d/zz-kernel-install ${kernel}
-  chroot ${target} bootctl --esp-path=/boot/efi --make-machine-id-directory=no install
 else
   chroot ${target} sfdisk --part-attrs ${targetDisk} 1 LegacyBIOSBootable
   chroot ${target} dd if="/usr/lib/SYSLINUX/gptmbr.bin" of=${targetDisk} bs=440 count=1 conv=notrunc
