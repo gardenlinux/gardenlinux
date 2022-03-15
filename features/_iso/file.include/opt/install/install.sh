@@ -2,16 +2,18 @@
 
 set -e
 
+thisDir=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
+
 echo "Please provide the device where you would like to install e.g. /dev/sda:"
 read targetDisk 
 
 echo "You are about to install to $targetDisk"
 echo
 echo "Using the following partition configuration:"
-cat install.part
+cat "${thisDir}/install.part"
 echo
 echo "Using the following fstab:"
-cat install.fstab
+cat "${thisDir}/install.fstab"
 echo
 echo "THIS WILL DESTROY ALL DATA ON PROVIDED TARGET!"
 echo
@@ -38,14 +40,14 @@ for f in $(cat install.fstab | awk '$3=="ext4"{print $1}' | awk -F= '{ print $2}
 	mkfs.ext4 -F -L $f -E quotatype=usrquota:grpquota:prjquota "/dev/disk/by-partlabel/${f}" 
 done
 
-cat install.fstab | awk -v pref="${target}" '{$2=pref$2;print $0}' > /etc/fstab 
+cat "${thisDir}/install.fstab" | awk -v pref="${target}" '{$2=pref$2;print $0}' > /etc/fstab
 
-for f in $(cat install.fstab | awk '$2=="none"{next}{print $2}' | tr -s '/' | awk -F/ '{ print NF-1" "$0}' | sort -k 1 | awk '{ print $2}'); do
+for f in $(cat "${thisDir}/install.fstab" | awk '$2=="none"{next}{print $2}' | tr -s '/' | awk -F/ '{ print NF-1" "$0}' | sort -k 1 | awk '{ print $2}'); do
 	mkdir -p "${target}/${f}"
 	mount "${target}/${f}"
 done
 
-tar c --xattrs -C /run/rootfs . | tar xv --xattrs-include='*.*' -C ${target}/
+tar c --xattrs -C /run/rootfsbase . | tar xv --xattrs-include='*.*' -C ${target}/
 
 mount -t proc proc ${target}/proc
 mount -t sysfs sys ${target}/sys
@@ -70,9 +72,9 @@ chroot ${target}/ /etc/kernel/postinst.d/dracut ${kernel}
 
 echo "persistent_policy=by-label" > ${target}/etc/dracut.conf.d/20-policy.conf
 if [ "$hasefi" == "1" ]; then
-  mkdir -p ${target}/boot/efi/Default
+  chroot ${target} systemd-machine-id-setup
+  chroot ${target} bootctl --esp-path=/boot/efi --make-machine-id-directory=yes install
   chroot ${target} /etc/kernel/postinst.d/zz-kernel-install ${kernel}
-  chroot ${target} bootctl --esp-path=/boot/efi --make-machine-id-directory=no install
 else
   chroot ${target} sfdisk --part-attrs ${targetDisk} 1 LegacyBIOSBootable
   chroot ${target} dd if="/usr/lib/SYSLINUX/gptmbr.bin" of=${targetDisk} bs=440 count=1 conv=notrunc
@@ -93,7 +95,7 @@ echo "Cleaning up"
 
 chroot ${target} rm -rf /etc/systemd/system/getty@tty1.service.d /etc/systemd/system/serial-getty@.service.d
 
-mv install.fstab ${target}/etc/fstab
+cp "${thisDir}/install.fstab" ${target}/etc/fstab
 chmod 0644 ${target}/etc/fstab
 
 rm -f ${target}/root/{install,install,part}
