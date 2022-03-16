@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -x
+set -xe
 
 makef.sh --read-only-usr --image-size 4G --force $2 $2.tar.xz
 make-vhd -o subformat=fixed,force_size $2.raw $2.vhd
