@@ -4,6 +4,8 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV SHELL /bin/bash
 ENV PYTHONPATH /gardenlinux/bin:/gardenlinux/ci:/gardenlinux/ci/glci
 
+RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc/apt/sources.list
+RUN cat /etc/apt/sources.list
 RUN apt-get update \
      && apt-get install -y --no-install-recommends \
           curl \
@@ -19,6 +21,10 @@ RUN apt-get update \
           openssh-client \
           inetutils-ping \
           wget \
+          iproute2 \
+          libguestfs-tools \
+          qemu-system-x86 \
+          qemu-system-arm \
      && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
      && unzip awscliv2.zip \
      && ./aws/install \

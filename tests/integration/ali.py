@@ -68,6 +68,7 @@ class ALI:
             ssh = None
             ssh = RemoteClient(
                 host=ali.ip,
+                port=port,
                 sshconfig=config["ssh"],
             )
             yield ssh

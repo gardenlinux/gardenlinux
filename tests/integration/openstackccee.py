@@ -43,6 +43,7 @@ class OpenStackCCEE:
             ssh = None
             ssh = RemoteClient(
                 host=ip,
+                port=port,
                 sshconfig=config["ssh"],
             )
             yield ssh

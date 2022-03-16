@@ -409,6 +409,7 @@ class AZURE:
         try:
             ssh = RemoteClient(
                 host=ip.ip_address,
+                port=port,
                 sshconfig=config["ssh"],
             )
             yield ssh

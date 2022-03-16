@@ -32,6 +32,9 @@ aws:
     # machine/instance type of the test VM - not all machines are available in all regions (optional)
     instance_type: t3.micro
 
+    # port for remote connection
+    port: 22
+
     # ssh related configuration for logging in to the VM (optional)
     ssh:
         # path to the ssh key file (optional)
@@ -127,6 +130,9 @@ azure:
     # already existing image in Azure to be used for testing (required/alternatively optional)
     image_name: <image name>
 
+    # port for remote connection
+    port: 22
+
     # ssh related configuration for logging in to the VM (optional)
     ssh:
         # path to the ssh key file (optional)
@@ -215,6 +221,9 @@ gcp:
     # GCE machine type (required)
     machine_type: n1-standard-1
 
+    # port for remote connection
+    port: 22
+
     # ssh related configuration for logging in to the VM (required)
     ssh:
         # path to the ssh key file (required)
@@ -301,6 +310,9 @@ openstack_ccee:
 
     # network name (must exist)
     network_name: gardenlinux
+
+    # port for remote connection
+    port: 22
 
     # ssh related configuration for logging in to the VM (required)
     ssh:
@@ -397,6 +409,9 @@ ali:
     # optional, path in bucket 
     bucket_path: integration-test
 
+    # port for remote connection
+    port: 22
+
     # ssh related configuration for logging in to the VM (required)
     ssh:
         # path to the ssh key file (required)
@@ -455,7 +470,75 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
     pytest --iaas=ali --configfile=/config/mygcpconfig.yaml integration/
 
 
-### 2.6. Manual testing
+### 2.6 KVM
+
+Notes for KVM credentials:
+- If no SSH key is given, a new temporary key will be created
+
+Use the following configuration file:
+
+```yaml
+kvm:
+    # ip/host for remote connection (usually '127.0.0.1'; optional)
+    ip: 127.0.0.1
+
+    # port for remote connection (usually 2223; optional)
+    port: 2223
+
+    # ssh related configuration for logging in to the VM (optional)
+    ssh:
+        # path to the ssh key file (optional)
+        ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
+        # passphrase for a secured SSH key (optional)
+        passphrase:
+        # name of the public ssh key object as it gets imported into EC2 (optional)
+        key_name: gardenlinux-test-2
+        # username used to connect to the KVM image
+        user: root
+
+    # local image file to use in KVM (required)
+    image: file:/gardenlinux/.build/kvm_dev-amd64-dev-local.raw
+
+    # keep instance running after tests finishes (optional)
+    keep_running: false
+```
+
+#### 2.6.1 Configuration options
+
+<details>
+
+- **ssh_key_filepath** _(optional)_: The SSH key that will be deployed to the EC2 instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand. If not provided, a new SSH key with 2048 bits will be generated just for the test.
+- **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
+- **key_name** _(optional)_: The SSH key gets uploaded to EC2, this is the name of the key object resource.
+- **user** _(required)_: The user that will be provisioned to the EC2 instance, which the SSH key gets assigned to and that is used by the test framework to log on the EC2 instance. Defaults to `root`.
+
+- **image** _(optional/alternatively required)_: If the tests should be executed against a Garden Linux filesystem snapshot that resulted from (local) build, this option is the URI that points to it. The file must be of type `.raw`. Either **ami_id** or **image** must be supplied but not both.
+The URI can be:
+    - `file:/path/to/my/rootfs.raw`: for local files, in that case, the option **bucket** must be provided as well
+
+- **keep_running** _(optional)_: if set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow for debugging. Defaults to `False`.
+
+</details>
+
+#### 2.6.2 Running the tests
+
+Start docker container with dependencies:
+
+- mount Garden Linux repository to `/gardenlinux`
+- mount SSH keys that are used to log in to the virtual machine to `/root/.ssh`
+- mount build result directory to `/build` (if not part of the Garden Linux file tree)
+- mount directory with configfile to `/config`
+- mount /boot and /lib/modules for guestfish support
+```
+docker run -it --rm -v `pwd`:/gardenlinux -v /boot/:/boot -v /lib/modules:/lib/modules -v `pwd`/.build/:/build -v $HOME/.ssh:/root/.ssh -v ~/config:/config gardenlinux/integration-test:`bin/garden-version` /bin/bash
+```
+
+Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
+
+    pytest --iaas=kvm --configfile=/config/mykvmconfig.yaml integration/
+
+
+### 2.7. Manual testing
 
 So for some reason, you do not want to test Garden Linux by using a tool that automatically sets up the testbed in a cloud environment for you.
 
@@ -478,7 +561,7 @@ manual:
         user: admin
 ```
 
-#### 2.6.1 Running the tests
+#### 2.7.1 Running the tests
 
 Start docker container with dependencies:
 
