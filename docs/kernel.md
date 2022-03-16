@@ -21,7 +21,7 @@ Compiling, packaging and signing a Linux kernel package for garden Linux can be 
 ```bash
 cd packages
 
-# creates a docker container build environment
+# creates a podman container build environment
 make manual
 # build a Linux kernel .deb package
 make linux-5.10

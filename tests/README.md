@@ -221,7 +221,7 @@ The URI can be:
 
 #### Running the tests
 
-Start docker container with dependencies:
+Start podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount AWS credential folder (usually `~/.aws`) to `/root/.aws`
@@ -230,7 +230,7 @@ Start docker container with dependencies:
 - mount directory with configfile to `/config`
 
 ```
-docker run -it --rm -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.aws:/root/.aws -v $HOME/.ssh:/root/.ssh -v ~/config:/config gardenlinux/integration-test:`bin/garden-version` /bin/bash
+sudo podman run -it --rm -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.aws:/root/.aws -v $HOME/.ssh:/root/.ssh -v ~/config:/config gardenlinux/integration-test:`bin/garden-version` /bin/bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -313,7 +313,7 @@ The URI can be:
 
 #### Running the tests
 
-Start docker container with dependencies:
+Start podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount Azure credentials to `/root/.azure`
@@ -322,7 +322,7 @@ Start docker container with dependencies:
 - mount directory with configfile to `/config`
 
 ```
-docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.azure:/root/.azure -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.azure:/root/.azure -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -465,7 +465,7 @@ The URI can be:
 
 #### Running the tests
 
-Start docker container with dependencies:
+Start podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount GCP credentials to `/root/.config`
@@ -474,7 +474,7 @@ Start docker container with dependencies:
 - mount directory with configfile to `/config`
 
 ```
-docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -557,13 +557,13 @@ Start docker container with dependencies:
 **With SSH autogeneration**
 This is the default and recommended way.
 ```
-docker run -it --rm -v /boot/:/boot -v /lib/modules:/lib/modules -v `pwd`:/gardenlinux gardenlinux/integration-test:dev /bin/bash
+sudo podman run -it --rm -v /boot/:/boot -v /lib/modules:/lib/modules -v `pwd`:/gardenlinux gardenlinux/integration-test:dev /bin/bash
 ```
 
 **Without SSH autogeneration**
 Use this only when really needed.
 ```
-docker run -it --rm -v `pwd`:/gardenlinux -v /boot/:/boot -v /lib/modules:/lib/modules -v `pwd`/.build/:/build -v $HOME/.ssh:/root/.ssh -v ~/config:/config gardenlinux/integration-test:`bin/garden-version` /bin/bash
+sudo podman run -it --rm -v `pwd`:/gardenlinux -v /boot/:/boot -v /lib/modules:/lib/modules -v `pwd`/.build/:/build -v $HOME/.ssh:/root/.ssh -v ~/config:/config gardenlinux/integration-test:`bin/garden-version` /bin/bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -603,7 +603,7 @@ Start docker container with dependencies:
 - mount directory with configfile to `/config`
 
 ```
-docker run -it --rm  -v `pwd`:/gardenlinux -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -680,7 +680,7 @@ openstack_ccee:
 
 #### Running the tests
 
-Start docker container with dependencies:
+Start podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount GCP credentials to `/root/.config`
@@ -689,7 +689,7 @@ Start docker container with dependencies:
 - mount directory with configfile to `/config`
 
 ```
-docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):

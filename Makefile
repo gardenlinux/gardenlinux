@@ -157,9 +157,9 @@ clean:
 	@echo "emptying $(BUILDDIR)"
 	@rm -rf $(BUILDDIR)/*
 	@echo "deleting all containers running gardenlinux/build-image"
-	@-docker container rm $$(docker container ls -a | awk '{ print $$1,$$2 }' | grep gardenlinux/build-image: | awk '{ print $$1 }') 2> /dev/null || true
+	@-sudo podman container rm $$(sudo podman container ls -a | awk '{ print $$1,$$2 }' | grep gardenlinux/build-image: | awk '{ print $$1 }') 2> /dev/null || true
 	@echo "deleting all containers running gardenlinux/integration-test"
-	@-docker container rm $$(docker container ls -a | awk '{ print $$1,$$2 }' | grep gardenlinux/integration-test: | awk '{ print $$1 }') 2> /dev/null || true
+	@-sudo podman container rm $$(sudo podman container ls -a | awk '{ print $$1,$$2 }' | grep gardenlinux/integration-test: | awk '{ print $$1 }') 2> /dev/null || true
 
 distclean: clean
 	make --directory=docker clean

@@ -91,7 +91,7 @@ else
 fi
 # Cloud watch agent is irrelevant on Gardener AMIs as we push logs via fluentd.
 ######## CLOUDWATCH ############
-# CLOUDWATCH_DS=$(sudo docker ps | grep -i "cloudwatch")
+# CLOUDWATCH_DS=$(sudo podman ps | grep -i "cloudwatch")
 # if [ -z "$CLOUDWATCH_DS" ]
 # then
 #   CLOUDWATCH_CONFIG=$(sudo cat /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json | grep -i "/var/log/syslog")
