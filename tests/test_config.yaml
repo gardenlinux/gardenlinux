@@ -1,17 +1,38 @@
 kvm:
-    # image file (.raw file)
-    #image: <image-file.raw>
+    # Path to a final artifact. Represents the .raw image file (required)
     image: /gardenlinux/.build/kvm_dev-amd64-dev-local.raw
-    #ip: 10.10.10.1
-    port: 2223
-    # keep instance running after tests finishes (optional)
-    keep_running: false
+
+    # IP or hostname of target machine (optional)
+    # Default: 127.0.0.1
+    #ip: 127.0.0.1
+
+    # Port of running sshd in target machine (optional)
+    # Default: 2223
+    #port: 2223
+
+    # Keep machine running after performing tests
+    # for further debugging (optional)
+    # Default: false
+    #keep_running: false
+
+    # Architecture to boot (optional)
+    # Default: amd64
+    #arch: arm64
+
+    # SSH configuration (required)
     ssh:
-        # path to the ssh key file (optional)
+        # Defines if a new SSH key should be generated (optional)
+        # Default: true
+        ssh_key_generate: true
+
+        # Defines path where to look for a given key
+        # or to save the new generated one. Take care
+        # that you do NOT overwrite your key. (required)
         ssh_key_filepath: /tmp/ssh_priv_key
-        # passphrase for a secured SSH key (optional)
-        #passphrase:
-        # name of the public ssh key object as it gets imported into EC2 (optional)
-        #key_name: gardenlinux-test-2
-        # username used to connect to the EC2 instance (optional, must be admin on AWS)
+
+        # Defines if a passphrase for a given key is needed (optional)
+        #passphrase: xxyyzz
+
+        # Defines the user for SSH login (required)
+        # Default: root
         user: root
