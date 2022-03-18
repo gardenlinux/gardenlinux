@@ -178,7 +178,8 @@ class KVM:
         logger.info("Adjusting KVM image. This will take some time for earch command...")
         image = self.config["image"]
         authorized_keys_file = "/tmp/authorized_keys"
-        sshd_config_file = "integration/misc/sshd_config"
+        sshd_config_file = "integration/misc/sshd_config_integration_tests"
+        sshd_systemd_file = "integration/misc/sshd-integration.test.service"
 
         # Command list for adjustments
         cmd_kvm_adj = []
@@ -197,11 +198,15 @@ class KVM:
               image=image))
             cmd_kvm_adj.append("guestfish -a {image} -i chmod 0600 /root/.ssh/authorized_keys".format(
               image=image))
+        # Copy custom SSHD config for executing remote integration tests
+        # without changing the production sshd_config
+        cmd_kvm_adj.append("virt-copy-in -a {image} {sshd_systemd_file} /etc/systemd/system/".format(
+          image=image, sshd_systemd_file=sshd_systemd_file))
         cmd_kvm_adj.append("virt-copy-in -a {image} {sshd_config_file} /etc/ssh/".format(
           image=image, sshd_config_file=sshd_config_file))
-        cmd_kvm_adj.append("guestfish -a {image} -i chown 0 0 /etc/ssh/sshd_config".format(
+        cmd_kvm_adj.append("guestfish -a {image} -i chown 0 0 /etc/ssh/sshd_config_integration_tests".format(
           image=image))
-        cmd_kvm_adj.append("guestfish -a {image} -i chmod 0644 /etc/ssh/sshd_config".format(
+        cmd_kvm_adj.append("guestfish -a {image} -i chmod 0644 /etc/ssh/sshd_config_integration_tests".format(
           image=image))
 
         for i in cmd_kvm_adj:
@@ -227,12 +232,12 @@ class KVM:
               -pidfile /tmp/qemu.pid \
               -m 1024M \
               -device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89 \
-              -netdev user,id=net0,hostfwd=tcp::{port}-:22,hostname=garden \
+              -netdev user,id=net0,hostfwd=tcp::{port}-:2223,hostname=garden \
               {image}".format(port=port, image=image)
             logger.info(cmd_kvm)
             p = subprocess.Popen([cmd_kvm], shell=True)
             logger.info("VM starting as amd64 in KVM.")
-        if arch == "arm64":
+        elif arch == "arm64":
             cmd_kvm = "qemu-system-aarch64 \
               -display none \
               -daemonize \
@@ -242,13 +247,13 @@ class KVM:
               -pidfile /tmp/qemu.pid \
               -m 1024M \
               -device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89 \
-              -netdev user,id=net0,hostfwd=tcp::{port}-:22,hostname=garden \
+              -netdev user,id=net0,hostfwd=tcp::{port}-:2223,hostname=garden \
               {image}".format(port=port, image=image)
             logger.info(cmd_kvm)
             p = subprocess.Popen([cmd_kvm], shell=True)
             logger.info("VM starting as arm64 in KVM.")
         else:
-            logger.info("Unsupported architecture.")
+            logger.error("Unsupported architecture.")
 
     def _wait_kvm(self):
         """ Wait for defined SSH port to become ready in VM """
