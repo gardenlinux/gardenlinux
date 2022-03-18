@@ -36,7 +36,6 @@ class AWS:
         try:
             ssh = RemoteClient(
                 host=instance.public_dns_name,
-                port=port,
                 sshconfig=config["ssh"],
             )
             yield ssh

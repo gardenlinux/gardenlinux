@@ -52,8 +52,8 @@ class RemoteClient:
     def __init__(
         self,
         host,
-        port,
-        sshconfig
+        sshconfig,
+        port="22"
     ) -> None:
         self.host = host
         self.port = port

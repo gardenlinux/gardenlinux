@@ -43,7 +43,6 @@ class GCP:
         try:
             ssh = RemoteClient(
                 host=public_ip,
-                port=port,
                 sshconfig=config["ssh"],
             )
             yield ssh

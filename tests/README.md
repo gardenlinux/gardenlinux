@@ -32,9 +32,6 @@ aws:
     # machine/instance type of the test VM - not all machines are available in all regions (optional)
     instance_type: t3.micro
 
-    # port for remote connection (required)
-    port: 22
-
     # ssh related configuration for logging in to the VM (optional)
     ssh:
         # path to the ssh key file (optional)
@@ -130,9 +127,6 @@ azure:
     # already existing image in Azure to be used for testing (required/alternatively optional)
     image_name: <image name>
 
-    # port for remote connection (required)
-    port: 22
-
     # ssh related configuration for logging in to the VM (optional)
     ssh:
         # path to the ssh key file (optional)
@@ -221,9 +215,6 @@ gcp:
     # GCE machine type (required)
     machine_type: n1-standard-1
 
-    # port for remote connection (required)
-    port: 22
-
     # ssh related configuration for logging in to the VM (required)
     ssh:
         # path to the ssh key file (required)
@@ -310,9 +301,6 @@ openstack_ccee:
 
     # network name (must exist)
     network_name: gardenlinux
-
-    # port for remote connection (required)
-    port: 22
 
     # ssh related configuration for logging in to the VM (required)
     ssh:
@@ -409,9 +397,6 @@ ali:
     # optional, path in bucket 
     bucket_path: integration-test
 
-    # port for remote connection (required)
-    port: 22
-
     # ssh related configuration for logging in to the VM (required)
     ssh:
         # path to the ssh key file (required)
@@ -489,7 +474,7 @@ kvm:
     # Default: 127.0.0.1
     #ip: 127.0.0.1
 
-    # Port of running sshd in target machine (required)
+    # port for remote connection (required)
     # Default: 2223
     port: 2223
 

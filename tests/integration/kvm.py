@@ -42,8 +42,8 @@ class KVM:
         try:
             ssh = RemoteClient(
                 host=ip,
-                port=port,
                 sshconfig=config["ssh"],
+                port=port,
             )
             yield ssh
         finally:
