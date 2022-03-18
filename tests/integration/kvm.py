@@ -61,14 +61,14 @@ class KVM:
         # Define self.config
         self.config = config
         # Validate
-        ssh_generate, arch = self._validate()
+        ssh_inject, ssh_generate, arch = self._validate()
         # Create SSH
         if ssh_generate:
             self._generate_ssh_key()
         else:
             logger.info("Using defined SSH key for integration tests.")
         # Adjust KVM image 
-        self._adjust_kvm()
+        self._adjust_kvm(ssh_inject)
         # Start KVM
         self._start_kvm(arch)
         # Wait for VM in KVM to be ready
@@ -139,7 +139,26 @@ class KVM:
         else:
             user = self.config["ssh"]["user"]
             logger.info("'user' is defined. Using user {user}.".format(user=user))
-        return ssh_generate, arch
+
+        # Validate if a SSH key was already injected
+        # (Check for an 'authorized_keys' file for 'root')
+        logger.info("Validating if a SSH key already got injected to image.")
+        image = self.config["image"]
+        kvm_file_val = "/root/.ssh/authorized_keys"
+        cmd_kvm_val = "guestfish --ro -a {image} -i checksum sha256 {fname}".format(
+          image=image, fname=kvm_file_val)
+        p = subprocess.Popen([cmd_kvm_val], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        output, error = p.communicate()
+        rc = p.returncode
+        if rc == 0:
+            logger.warning("SSH file already present: {fname}".format(fname=kvm_file_val))
+            logger.warning("No SSH key will be injected.")
+            ssh_inject = False
+        else:
+            logger.info("SSH file not present: {fname}".format(fname=kvm_file_val))
+            logger.info("SSH key will be injected.")
+            ssh_inject = True
+        return ssh_inject, ssh_generate, arch
 
     def _generate_ssh_key(self):
         """ Generate new SSH key for integration test if needed """
@@ -154,7 +173,7 @@ class KVM:
             f.write("ssh-rsa " + public_key)
         logger.info("SSH key for integration tests generated.")
 
-    def _adjust_kvm(self):
+    def _adjust_kvm(self, ssh_inject):
         """ Adjust KVM image and inject needed files """
         logger.info("Adjusting KVM image. This will take some time for earch command...")
         image = self.config["image"]
@@ -163,18 +182,21 @@ class KVM:
 
         # Command list for adjustments
         cmd_kvm_adj = []
-        cmd_kvm_adj.append("guestfish -a {image} -i mkdir /root/.ssh".format(
-          image=image))
-        cmd_kvm_adj.append("virt-copy-in -a {image} {authorized_keys_file} /root/.ssh/".format(
-          image=image, authorized_keys_file=authorized_keys_file))
-        cmd_kvm_adj.append("guestfish -a {image} -i chown 0 0 /root/.ssh".format(
-          image=image))
-        cmd_kvm_adj.append("guestfish -a {image} -i chown 0 0 /root/.ssh/authorized_keys".format(
-          image=image))
-        cmd_kvm_adj.append("guestfish -a {image} -i chmod 0700 /root/.ssh".format(
-          image=image))
-        cmd_kvm_adj.append("guestfish -a {image} -i chmod 0600 /root/.ssh/authorized_keys".format(
-          image=image))
+        # Only inject SSH keys if they're not
+        # already present in .raw image
+        if ssh_inject:
+            cmd_kvm_adj.append("guestfish -a {image} -i mkdir /root/.ssh".format(
+              image=image))
+            cmd_kvm_adj.append("virt-copy-in -a {image} {authorized_keys_file} /root/.ssh/".format(
+              image=image, authorized_keys_file=authorized_keys_file))
+            cmd_kvm_adj.append("guestfish -a {image} -i chown 0 0 /root/.ssh".format(
+              image=image))
+            cmd_kvm_adj.append("guestfish -a {image} -i chown 0 0 /root/.ssh/authorized_keys".format(
+              image=image))
+            cmd_kvm_adj.append("guestfish -a {image} -i chmod 0700 /root/.ssh".format(
+              image=image))
+            cmd_kvm_adj.append("guestfish -a {image} -i chmod 0600 /root/.ssh/authorized_keys".format(
+              image=image))
         cmd_kvm_adj.append("virt-copy-in -a {image} {sshd_config_file} /etc/ssh/".format(
           image=image, sshd_config_file=sshd_config_file))
         cmd_kvm_adj.append("guestfish -a {image} -i chown 0 0 /etc/ssh/sshd_config".format(

@@ -6,9 +6,9 @@ kvm:
     # Default: 127.0.0.1
     #ip: 127.0.0.1
 
-    # Port of running sshd in target machine (optional)
+    # Port of running sshd in target machine (required)
     # Default: 2223
-    #port: 2223
+    port: 2223
 
     # Keep machine running after performing tests
     # for further debugging (optional)
