@@ -88,11 +88,11 @@ yum install bash make gnupg git qemu-kvm qemu-img
 | --disable-features | Comma separated list of features to deactivate (see features/) |
 | --lessram | Build will be no longer in memory (default: off) |
 | --debug | Activates basically \`set -x\` everywhere (default: off) |
-| --manual | Built will stop in build environment and activate manual mode (debugging) (default:off) |
+| --manual | Built will stop in build environment and activate manual mode (default:off) |
 | --arch | Builds for a specific architecture (default: architecture the build runs on) |
 | --suite | Specifies the debian suite to build for e.g. bullseye, potatoe (default: testing) |
 | --skip-tests | Deactivating tests (default: off) |
-| --skip-build | Do not create the build container BUILD_IMAGE variable would specify an alternative name |
+| --skip-build | Do not create the build container |
 
 ### Building
 
