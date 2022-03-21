@@ -7,19 +7,21 @@ targetBase=$2
 targetBaseDir=$(dirname "$targetBase")
 
 kernel=$(echo ${rootfs}/boot/vmlinuz-* | tr " " '\n' | cut -d- -f 2- | sort -V | tail -1)
-garden-chroot "${rootfs}" dracut -f /tmp/unified ${kernel} --uefi --kernel-cmdline "console=tty0 console=ttyS0,115200 gl.ovl=/:tmpfs ip=dhcp gl.ram=1"  -m "bash dash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd fs-lib shutdown gardenlinux-live" -o "gardenlinux" --reproducible
+garden-chroot "${rootfs}" dracut -f /tmp/unified ${kernel} --uefi --kernel-cmdline "console=tty0 console=ttyS0,115200 rd.live.squashimg=squashfs.img root=live:CDLABEL=GardenlinuxISO rd.live.overlay.overlayfs rd.live.dir=live rd.live.ram"  -m "bash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo dracut-systemd shutdown dmsquash-live" --reproducible
+
+garden-chroot "${rootfs}" dracut -f /tmp/initrd ${kernel} -m "bash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo dracut-systemd shutdown dmsquash-live" --reproducible
 
 mkdir /tmp/CD_root
-mkdir /tmp/CD_root/{isolinux,images,kernel,boot,boot/images,boot/syslinux}
+mkdir /tmp/CD_root/{isolinux,images,kernel,boot,boot/images,boot/syslinux,live}
 
-mksquashfs "$rootfs" "/tmp/CD_root/squashfs.img" -comp lzo
+mksquashfs "$rootfs" "/tmp/CD_root/live/squashfs.img" -comp lzo
 cp "$rootfs/boot/"vmlinuz* "/tmp/CD_root/boot/images/vmlinuz"
-cp "$rootfs/boot/"initrd* "/tmp/CD_root/boot/images/initrd"
-
-#TODO: determine right size
+mv "$rootfs/tmp/"initrd* "/tmp/CD_root/boot/images/initrd"
 mv "${rootfs}/tmp/unified" bootx64.efi
-dd if=/dev/zero of=efiboot.img bs=512 count=65535
-mkfs.msdos -F 12 -n 'EFIBOOTISO' efiboot.img
+
+#TODO: determine proper size
+dd if=/dev/zero of=efiboot.img bs=512 count=131072
+mkfs.msdos -F 16 -n 'EFIBOOTISO' efiboot.img
 mmd -i efiboot.img ::EFI
 mmd -i efiboot.img ::EFI/BOOT
 mcopy -i efiboot.img bootx64.efi ::EFI/BOOT/bootx64.efi
@@ -43,7 +45,7 @@ DEFAULT GardenlinuxRam
 
 LABEL GardenlinuxRam
 MENU LABEL Gardenlinux Live in RAM
-LINUX /boot/images/vmlinuz console=tty0 console=ttyS0,115200 gl.ovl=/:tmpfs gl.ram=1
+LINUX /boot/images/vmlinuz console=tty0 console=ttyS0,115200 rd.live.squashimg=squashfs.img root=live:CDLABEL=GardenlinuxISO rd.live.overlay.overlayfs rd.live.dir=live rd.live.ram
 INITRD /boot/images/initrd
 EOF
 
