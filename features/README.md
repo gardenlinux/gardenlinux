@@ -3,13 +3,14 @@ This is the Feature Folder. Each Folder describes one feature, which can be adde
 
 A Feature defines a set of packages and/or configurations. It can contain the following parts, which function is described shortly:
 
-### currently available Platforms:
-- metal (for Bare-Metal Systems)
-- kvm (adapted metal, specialized for use in kvm-machines)
-- ali (AliCloud)
-- azure (Microsoft Azure)
-- vmware (VMware Platform)
-- 
+| Feature Type | Includes |
+|---|---|
+| Platforms | ali, aws, azure, gcp, kvm, baremetal... |
+| Features | container host, virtual host, ... |
+| Modifiers | _slim, _readonly, _pxe, _iso ... |
+| Element | cis, fedramp |
+
+___
 
 #### info.yaml
 This file contains basic information:
@@ -19,28 +20,33 @@ This file contains basic information:
 - other elements (TODO)
 
 
-#### exec.config
-This file is used to add commands to run inside chroot of the current build, e.g. for configuration.
-#### exec.pre
-//Todo
+___
 
-seldomly used - more info coming soon
+#### pkg.exclude
+
+    define packages which are removed during build process, if they exist
+#### pkg.include
+    ~ package musthaves
+
+    define packages from official sources to install to the Gardenlinux Build
+
+    pkg.include is triggered as the first step before any configuration
+
+#### exec.config
+    This file is used to add commands to run inside chroot of the current build, e.g. for configuration.
+#### exec.pre
+    //Todo
+
+    seldomly used - more info coming soon
 #### exec.post
-//Todo
+    //Todo
 
 
 #### file.exclude
-used to define unwanted files - after the build is done the outputimage won't contain files defined in this file
+    used to define unwanted files - after the build is done the outputimage won't contain files defined in this file
 #### (dir) file.include
-used to add files manually - 
+    used to add files manually - 
 
-the folder "file.include" represents "/" - e.g: 
+    the folder "file.include" represents "/" - e.g: 
 
-if you want to add /etc/custom.file to Gardenlinux, just place that file "custom.file" inside file.include/etc/custom.file
-#### pkg.exclude
-
-define packages which are removed during build process, if they exist
-#### pkg.include
-~ package musthaves
-
-define packages from official sources to install to the Gardenlinux Build
+    if you want to add /etc/custom.file to Gardenlinux, just place that file "custom.file" inside file.include/etc/custom.file
