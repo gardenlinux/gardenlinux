@@ -127,7 +127,7 @@ If the variable is not set it defaults to "`build`"
 The flavour set build by the pipeline is contained in the environment variable FLAVOUR_SET and defaults to "all" if not set.
 
 **Example:**
-Here is example to build nly the AWS image. Append the following snippet to `flavours.yaml`:
+Here is example to build only the AWS image. Append the following snippet to `flavours.yaml`:
 
 ```
   - name: 'aws'

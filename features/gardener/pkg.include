@@ -6,8 +6,6 @@ ipvsadm
 socat
 curl
 logrotate
-arptables
-ebtables
 xfsprogs
 btrfs-progs
 jq

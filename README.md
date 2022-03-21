@@ -1,85 +1,87 @@
-<p align="center">
- <a href="https://www.gardenlinux.io/">
-  <img
-     src="https://raw.githubusercontent.com/gardenlinux/gardenlinux/main/logo/gardenlinux-logo-black-text.svg"
-     width="380"
-  />
- </a>
-</p>
-
-<hr />
-<p align="center">&bull;
-    <a href="#Features">Features</a> &bull;
-    <a href="#build-requirements">Build Requirements</a> &bull;
-    <a href="#build-options">Build Options</a> &bull;
-    <a href="#quick-start">Quick Start</a> &bull;
-    <a href="#customize-builds">Customize</a> &bull;
-    <a href="#garden-linux-releases">Releases</a> &bull;
-</p>
-<hr />
-
 [![build](https://github.com/gardenlinux/gardenlinux/actions/workflows/build.yml/badge.svg)](https://github.com/gardenlinux/gardenlinux/actions/workflows/build.yml)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/3925/badge)](https://bestpractices.coreinfrastructure.org/projects/3925)
+ [![MIT License](https://img.shields.io/github/license/gardenlinux/gardenlinux)](https://img.shields.io/github/license/gardenlinux/gardenlinux)
+[![Gitter Chat](https://img.shields.io/gitter/room/gardenlinux/community)](https://img.shields.io/gitter/room/gardenlinux/community)
+[![GitHub Open Issues](https://img.shields.io/github/issues-raw/gardenlinux/gardenlinux)](https://img.shields.io/github/issues-raw/gardenlinux/gardenlinux)
+[![GitHub Closed PRs](https://img.shields.io/github/issues-pr-closed-raw/gardenlinux/gardenlinux)](https://img.shields.io/github/issues-pr-closed-raw/gardenlinux/gardenlinux)
 
-Garden Linux is a [Debian](https://debian.org) derivate that aims to provide a small, auditable linux image for most Cloud Providers and Bare Metal.
 
-## Features:
-- easy to use build system for OS images
-- builds are repeatable and auditable
-- small footprint (based on minbase of Debian)
-- subscribes for debian/testing, so no huge (problematic) version jumps needed
-- whole setup is purely systemd based (network, fstab etc.) [#101](https://github.com/gardenlinux/gardenlinux/issues/101) [#102](https://github.com/gardenlinux/gardenlinux/issues/102)
-- initramfs is dracut generated [#105](https://github.com/gardenlinux/gardenlinux/issues/105)
-- optional complete immutability [#104](https://github.com/gardenlinux/gardenlinux/issues/105)
-- regular updates (since the whole build process is completely automated via a Tekton CI) and
-- thorough automated testing
-  - unit tests against the local build and
-  - integration tests against the various cloud Providers (only rc builds)
-- aiming to always integrate the latest LTS kernel [#100](https://github.com/gardenlinux/gardenlinux/issues/100) (currently 5.15)
-- running scans against common issues like
-  - license violations (we try to be completely open! [#1](https://github.com/gardenlinux/gardenlinux/issues/1))
-  - scans for outdated software versions
-- project licensed under [MIT](https://github.com/gardenlinux/gardenlinux/blob/master/LICENSE.md)
-- supporting major platforms out-of-the-box
-  - major cloud providers AWS, Azure, Google, Alicloud
-  - major virtualizer VMware, OpenStack, KVM
-  - bare metal
+# Gardenlinux
+<img align="left" width="80" height="80" src="https://raw.githubusercontent.com/gardenlinux/gardenlinux/main/logo/gardenlinux-logo-black-text.svg"> <a href="https://gardenlinux.io/">Garden Linux</a> is a <a href="https://debian.org/">Debian GNU/Linux</a> derivate that aims to provide small, auditable linux images for most Cloud Providers (e.g. AWS, Azure, GCP etc.) and Bare Metal. Garden Linux is the best Linux for <a href="https://gardener.cloud/">Gardener</a> nodes. Garden Linux provides great possibilities for customizing and provides a great feature set to fit your needs. <br><br>
 
-## Build Requirements
+## Table of Content
+- [Features](#Features)
+- [Quick Start](#Quick-Start)
+  * [Build Requirements](#Build-Requirements)
+  * [Build Options](#Build-Options)
+  * [Building](#Building)
+- [Customizing](#Customizing)
+- [Release](#Release)
+- [Documentation](#Documentation)
+- [Community](#Community)
 
-The entire build runs in a docker container (well a privileged one with extended capabilities - since we need loop back support).
-We can run on any system supporting Docker and having loopback support and has:
+## Features
+- Easy to use build system
+- Builds are repeatable and auditable
+- Small footprint
+- Purely systemd based (network, fstab etc.)
+- Initramfs is dracut generated
+- Optional complete immutability
+- Thorough automated testing
+  - Unit tests against the local build
+  - Integration tests against the supported cloud platforms
+  - License violations
+  - Outdated software versions
+- Aiming to always integrate the latest LTS Kernel
+- Project licensed under [MIT](https://github.com/gardenlinux/gardenlinux/blob/master/LICENSE.md)
+- Supporting major platforms out-of-the-box
+  - Major cloud providers AWS, Azure, Google, Alicloud
+  - Major virtualizer VMware, OpenStack, KVM
+  - Bare Metal
 
-- 2+ GiB (use '--lessram' to lower memory usage)
-- 10+ GiB free disk space
-- Internet connection (snapshot.debian.org, deb.debian.org, repo.gardenlinux.io, docker.io, golang.org, gopkg.in, github.com)
+## Quick Start
+The entire build runs in a <i>privileged</i> Docker container that orchestrates all further actions. If not explicitly skipped, unit tests will be performed. Extended capabilities are at least needed for loop back support. Currently AMD64 and ARM64 architectures are supported.
 
-### Required packages for a convenient build (on Debian/Ubuntu):
+### Build Requirements
 
-`apt install bash docker.io docker-compose make coreutils gnupg git qemu-system-x86`
+**System:**
+* RAM: 2+ GiB (use '--lessram' to lower memory usage)
+* Disk: 10+ GiB
+* Internet connection
 
-### Required packages for deployment on cloud services:
+**Packages:**
 
-`apt install python3`
+**Debian/Ubuntu:**
+```
+apt install bash docker.io docker-compose make coreutils gnupg git qemu-system-x86 qemu-system-aarch64
+```
 
-- Alicloud: [Aliyun CLI](https://github.com/aliyun/aliyun-cli)
-- AWS: [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
-- Azure: [Azure CLI](https://docs.microsoft.com/de-de/cli/azure/install-azure-cli-apt)
-- GCP: [Cloud SDK](https://cloud.google.com/sdk/docs/quickstart?utm_source=youtube&utm_medium=Unpaidsocial&utm_campaign=car-20200311-Quickstart-Mac#linux), [gsutil](https://cloud.google.com/storage/docs/gsutil_install?hl=de#install)
-- OpenStack: [OpenStackCLI](https://github.com/openstack/python-openstackclient)
+**CentOS/RedHat (>=8):**
 
-### Required kernel modules
+CFSSL requires `GLIBC 2.28`. Therefore, we recommand to build on systems running CentOS/RedHat 8 or later.
 
-ext4, loop, squashfs, vfat, vsock (for VM image builds and extended virtualized tests)
+```
+# Please use Docker repository for CentOS/RedHat:
+# https://docs.docker.com/engine/install/centos/
+yum install docker-ce docker-ce-cli containerd.io
 
-### Required packages to configure the CI pipeline
+# Install Docker compose
+curl -L "https://github.com/docker/compose/releases/download/2.3.3/docker-compose-$(uname -s)-$(uname -m)" \
+-o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
 
-`apt install bash git python python-pip`
+# Install needed packages
+yum install bash make gnupg git qemu-kvm qemu-img
+```
 
-`pip install tekton`
+**Kernel Modules:**
+* ext4
+* loop
+* squashfs
+* vfat
+* vsock <i><small>(image builds and extended virtualized tests)</i></small>
 
-## Build Options
-
+### Build Options
 | Option | Description  |
 |---|---|
 | --features  | Comma separated list of features activated (see features/) (default:base) |
@@ -92,14 +94,15 @@ ext4, loop, squashfs, vfat, vsock (for VM image builds and extended virtualized 
 | --skip-tests | Deactivating tests (default: off) |
 | --skip-build | Do not create the build container BUILD_IMAGE variable would specify an alternative name |
 
-## Quick start
+### Building
 
-Build all images:
-
+To build all supported images you may just run the following command:
+```
     make all
+```
 
-Building specific platform images:
-
+However, to safe time you may also build just a platform specific image by running one of the following commands. Related dev images can be created by appending the '-dev' suffix (e.g. "make aws-dev").
+```
     make aws
     make gcp
     make azure
@@ -108,35 +111,50 @@ Building specific platform images:
     make openstack
     make kvm
     make metal
+```
 
-See in `.build/` folder for the outcome, there are subdirectories for the platform and the build date.
-Related dev images can be created by appending the '-dev' suffix (e.g. "make aws-dev").
+Artifacts are located in the `.build/` folder of the project's build directory.
 
+## Customizing
+Building Garden Linux is based on a [feature system](features/README.md).
 
-## Customize builds
+| Feature Type | Includes |
+|---|---|
+| Platforms | ali, aws, azure, gcp, ... |
+| Features | container host, vitual host, ... |
+| Modifiers | _slim. _readonly, _pxe ... |
+| Element | cis, fedramp |
 
-Our build is based on a [feature system](features/README.md).
+if you want to build manually choose:
+```
+build.sh  --features <Platform>,[<feature1>],[<featureX>],[_modifier1],[_modifierX] destination [version]
+```
+**Example:**
+```
+build.sh  --features server,cloud,cis,vmware .build/
+```
+This builds a server image, cloud-like, with `CIS`feature for the VMware platform. The build result can be found in `.build/`. Also look into our [Version scheme](VERSION.md) since adding a date or a Version targets the whole build for a specific date.
 
-The feature system distinguishes between
-- Platforms (aws, azure, google ...)
-- Features (container host, virtual host ...)
-- Modifiers (_slim. _readonly, _pxe ...)
+## Deploying
+Deploying on common cloud platforms requires additional packages. The following overview gives a short quick start to run cloud platform deployments. Currently, all modules are based on `Python`. Therefore, please make sure to have Python installed.
 
-if you want to manually build choose:
+| Platform | Module  |
+|---|---|
+| Alicloud | [Aliyun CLI](https://github.com/aliyun/aliyun-cli)
+| AWS: | [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+| Azure | [Azure CLI](https://docs.microsoft.com/de-de/cli/azure/install-azure-cli-apt)
+| GCP: | [Cloud SDK](https://cloud.google.com/sdk/docs/quickstart?utm_source=youtube&utm_medium=Unpaidsocial&utm_campaign=car-20200311-Quickstart-Mac#linux), [gsutil](https://cloud.google.com/storage/docs/gsutil_install?hl=de#install)
+| OpenStack | [OpenStackCLI](https://github.com/openstack/python-openstackclient)
 
-    build.sh <Platform>,[<feature1>],[<featureX>],[_modifier1],[_modifierX] destination [version]
+## Release
+Garden Linux frequently publishes snapshot releases. These are available as machine images in most major cloud providers as well as file-system images for manual import. See the [releases](https://github.com/gardenlinux/gardenlinux/releases) page for more info.
 
-    e.g. build.sh server,cloud,chost,vmware build/
+## Documentation
+Garden Linux provides a great documentation for build options, customizing, configuration, tests and pipeline integrations. The documentation can be found within the project's `docs/` path or by clicking <a href="https://github.com/gardenlinux/gardenlinux/tree/main/docs">here</a>. Next to this, Garden Linux can build in an automated way for continous integration. See [ci/README.md](ci/README.md) for details.
 
-builds a server image, cloud-like, with a container host for the VMware platform. The build result can be found in `build/`
+<i>Feel free to add further documentation or to adjust already existing one. Please take care about our style guide. More information are available in in <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> and our `docs/`.</i>
 
-also look into our [Version scheme](VERSION.md) since adding a date or a Version targets the whole build for a specific date
+## Community
+Garden Linux has a large grown community. If you need further asstiance, have any issues or just want to get in touch with other Garden Linux users feel free to join our public chat room on Gitter.
 
-
-## Garden Linux releases
-
-Garden Linux frequently publishes snapshot releases. These are available as machine images in most major cloud providers as well as
-file-system images for manual import. See the [releases](https://github.com/gardenlinux/gardenlinux/releases) page for more info.
-
-## Pipeline Integration
-Garden Linux can build in an automated way for continous integration. See [ci/README.md](ci/README.md) for details.
+Link: https://gitter.im/gardenlinux/community

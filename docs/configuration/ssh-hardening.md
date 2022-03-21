@@ -50,32 +50,31 @@ If the default configuration of OpenSSH would provide a non secure Cipher Suite,
 
 #### Cipher Suites
 
-The [OpenSSH configuration](https://salsa.debian.org/ssh-team/openssh/-/blob/debian/1%258.8p1-1/sshd_config.0#L276-278) of the corresponding Debian package uses the following default ciphers:
+The [OpenSSH configuration](https://salsa.debian.org/ssh-team/openssh/-/blob/debian/1%258.9p1-3/sshd_config.0#L276-278) of the corresponding Debian package uses the following default ciphers:
 ```
 chacha20-poly1305@openssh.com,
 aes128-ctr,aes192-ctr,aes256-ctr,
 aes128-gcm@openssh.com,aes256-gcm@openssh.com
 ```
 
-As [RFC 9142](https://datatracker.ietf.org/doc/rfc9142/) stats, the default ciphers used by OpenSSH are considered to be strong.
-
 #### Kex Algorithms
 
-The [OpenSSH configuration](https://salsa.debian.org/ssh-team/openssh/-/blob/debian/1%258.8p1-1/sshd_config.0#L582-586) of the corresponding Debian package uses default Key Exchange (Kex) Algorithms like:
+The [OpenSSH configuration](https://salsa.debian.org/ssh-team/openssh/-/blob/debian/1%258.9p1-3/sshd_config.0#L580-585) of the corresponding Debian package uses default Key Exchange (Kex) Algorithms like:
 ```
 curve25519-sha256,curve25519-sha256@libssh.org,
 ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,
+sntrup761x25519-sha512@openssh.com,
 diffie-hellman-group-exchange-sha256,
 diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,
 diffie-hellman-group14-sha256
 
 ```
 
-As [RFC 9142](https://datatracker.ietf.org/doc/rfc9142/) stats, the default Kex Algorithms used by OpenSSH are considered to be strong, too.
+As [RFC 9142](https://datatracker.ietf.org/doc/rfc9142/) stats, the default Kex Algorithms used by OpenSSH are considered to be strong.
 
 #### Message Authentication Codes (MACs)
 
-The [OpenSSH configuration](https://salsa.debian.org/ssh-team/openssh/-/blob/debian/1%258.8p1-1/sshd_config.0#L669-673) of the corresponding Debian package uses default MACs like:
+The [OpenSSH configuration](https://salsa.debian.org/ssh-team/openssh/-/blob/debian/1%258.9p1-3/sshd_config.0#L668-672) of the corresponding Debian package uses default MACs like:
 ```
 umac-64-etm@openssh.com,umac-128-etm@openssh.com,
 hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,

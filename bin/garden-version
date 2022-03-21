@@ -51,6 +51,7 @@ then	[ $(cut -d. -sf3 <<< ${input}) ] && eusage "invalid version format ${input}
 	if [ $(cut -d. -sf2 <<< ${input}) ]; then 
 		minor="$(cut -d. -f2 <<< ${input})"
 	fi
+	version="${major}.${minor}"
 else	if	[[ ${input} = dev ]];
 	then	indate=$(date --date "today" +%s 2>/dev/null)
 		major="$(( (${indate} - $(date --date "${startdate}" +%s)) / (60*60*24) ))"
