@@ -147,8 +147,7 @@ class KVM:
         kvm_file_val = "/root/.ssh/authorized_keys"
         cmd_kvm_val = "guestfish --ro -a {image} -i checksum sha256 {fname}".format(
           image=image, fname=kvm_file_val)
-        p = subprocess.Popen([cmd_kvm_val], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        output, error = p.communicate()
+        p = subprocess.run([cmd_kvm_val], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         rc = p.returncode
         if rc == 0:
             logger.warning("SSH file already present: {fname}".format(fname=kvm_file_val))
@@ -175,11 +174,13 @@ class KVM:
 
     def _adjust_kvm(self, ssh_inject):
         """ Adjust KVM image and inject needed files """
-        logger.info("Adjusting KVM image. This will take some time for earch command...")
+        logger.info("Adjusting KVM image. This will take some time for each command...")
         image = self.config["image"]
         authorized_keys_file = "/tmp/authorized_keys"
-        sshd_config_file = "integration/misc/sshd_config_integration_tests"
-        sshd_systemd_file = "integration/misc/sshd-integration.test.service"
+        sshd_config_src_file = "integration/misc/sshd_config_integration_tests"
+        sshd_config_dst_file = "/etc/ssh/sshd_config_integration_tests"
+        sshd_systemd_src_file = "integration/misc/sshd-integration.test.service"
+        systemd_dst_path = "/etc/systemd/system/"
 
         # Command list for adjustments
         cmd_kvm_adj = []
@@ -199,20 +200,25 @@ class KVM:
             cmd_kvm_adj.append("guestfish -a {image} -i chmod 0600 /root/.ssh/authorized_keys".format(
               image=image))
         # Copy custom SSHD config for executing remote integration tests
-        # without changing the production sshd_config
-        cmd_kvm_adj.append("virt-copy-in -a {image} {sshd_systemd_file} /etc/systemd/system/".format(
-          image=image, sshd_systemd_file=sshd_systemd_file))
-        cmd_kvm_adj.append("virt-copy-in -a {image} {sshd_config_file} /etc/ssh/".format(
-          image=image, sshd_config_file=sshd_config_file))
-        cmd_kvm_adj.append("guestfish -a {image} -i chown 0 0 /etc/ssh/sshd_config_integration_tests".format(
-          image=image))
-        cmd_kvm_adj.append("guestfish -a {image} -i chmod 0644 /etc/ssh/sshd_config_integration_tests".format(
-          image=image))
+        # without changing the production sshd_config. This SSHD runs on
+        # port tcp/2222
+        cmd_kvm_adj.append("virt-copy-in -a {image} {sshd_systemd_src_file} {systemd_dst_path}".format(
+          image=image, sshd_systemd_src_file=sshd_systemd_src_file, systemd_dst_path=systemd_dst_path))
+        cmd_kvm_adj.append("virt-copy-in -a {image} {sshd_config_src_file} /etc/ssh/".format(
+          image=image, sshd_config_src_file=sshd_config_src_file))
+        cmd_kvm_adj.append("guestfish -a {image} -i chown 0 0 {sshd_config_dst_file}".format(
+          image=image, sshd_config_dst_file=sshd_config_dst_file))
+        cmd_kvm_adj.append("guestfish -a {image} -i chmod 0644 {sshd_config_dst_file}".format(
+          image=image, sshd_config_dst_file=sshd_config_dst_file))
+        # Create a symlink since Debian watches for type 'link'
+        cmd_kvm_adj.append(("guestfish -a {image} -i ln-s ".format(image=image) +
+          "{systemd_path}sshd-integration.test.service ".format(systemd_path=systemd_dst_path) +
+          "{systemd_path}multi-user.target.wants/sshd-integration.test.service".format(
+            systemd_path=systemd_dst_path)))
 
         for i in cmd_kvm_adj:
             logger.info("Running: {cmd}".format(cmd=i))
-            p = subprocess.Popen([i], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            output, error = p.communicate()
+            p = subprocess.run([i], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             rc = p.returncode
             if rc == 0:
                 logger.info("Succeeded: {cmd}".format(cmd=i))
@@ -232,7 +238,7 @@ class KVM:
               -pidfile /tmp/qemu.pid \
               -m 1024M \
               -device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89 \
-              -netdev user,id=net0,hostfwd=tcp::{port}-:2223,hostname=garden \
+              -netdev user,id=net0,hostfwd=tcp::{port}-:2222,hostname=garden \
               {image}".format(port=port, image=image)
             logger.info(cmd_kvm)
             p = subprocess.Popen([cmd_kvm], shell=True)
@@ -247,7 +253,7 @@ class KVM:
               -pidfile /tmp/qemu.pid \
               -m 1024M \
               -device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89 \
-              -netdev user,id=net0,hostfwd=tcp::{port}-:2223,hostname=garden \
+              -netdev user,id=net0,hostfwd=tcp::{port}-:2222,hostname=garden \
               {image}".format(port=port, image=image)
             logger.info(cmd_kvm)
             p = subprocess.Popen([cmd_kvm], shell=True)
@@ -257,8 +263,9 @@ class KVM:
 
     def _wait_kvm(self):
         """ Wait for defined SSH port to become ready in VM """
-        logger.info("Waiting for VM in KVM to be ready...")
         port = self.config["port"]
+        logger.info("Waiting for VM in KVM to be ready on tcp/{port}...".format(
+          port=port))
         cmd_kvm = "ssh-keyscan -p {port} localhost".format(
           port=port)
 

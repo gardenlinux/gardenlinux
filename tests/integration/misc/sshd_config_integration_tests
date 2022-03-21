@@ -2,7 +2,7 @@
 PermitRootLogin without-password
 PubkeyAuthentication yes
 PubkeyAcceptedKeyTypes=+ssh-rsa
-Port 2223
+Port 2222
 # Only use the more secure SSHv2 protocol.
 Protocol 2
 

@@ -4,8 +4,8 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV SHELL /bin/bash
 ENV PYTHONPATH /gardenlinux/bin:/gardenlinux/ci:/gardenlinux/ci/glci
 
-RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc/apt/sources.list
-RUN apt-get update \
+RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc/apt/sources.list \
+     && apt-get update \
      && apt-get install -y --no-install-recommends \
           curl \
           unzip \
