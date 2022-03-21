@@ -120,10 +120,10 @@ Building Garden Linux is based on a [feature system](features/README.md).
 
 | Feature Type | Includes |
 |---|---|
-| Platforms | ali, aws, azure, gcp, ... |
+| Platforms | ali, aws, azure, gcp, kvm, baremetal... |
 | Features | container host, vitual host, ... |
-| Modifiers | _slim. _readonly, _pxe ... |
-| Element | cis, fedramp |
+| Modifiers | _slim, _readonly, _pxe, _iso ... |
+| Element | cis, fedramp, gardener |
 
 if you want to build manually choose:
 ```
