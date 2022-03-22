@@ -52,9 +52,11 @@ class RemoteClient:
     def __init__(
         self,
         host,
-        sshconfig
+        sshconfig,
+        port="22"
     ) -> None:
         self.host = host
+        self.port = port
         self.client = None
         self.scp = None
         self.conn = None
@@ -133,6 +135,7 @@ class RemoteClient:
                 try:
                     self.client.connect(
                         hostname=self.host,
+                        port=self.port,
                         username=self.user,
                         passphrase=self.passphrase,
                         pkey=pk,
