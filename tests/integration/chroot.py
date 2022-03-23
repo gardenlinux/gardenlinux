@@ -150,13 +150,9 @@ class CHROOT:
         """ Generate new SSH key for integration test """
         logger.info("Generating new SSH key for integration tests.")
         ssh_key_path = self.config["ssh"]["ssh_key_filepath"]
-        # Private key
-        key = paramiko.RSAKey.generate(2048)
-        key.write_private_key_file(ssh_key_path)
-        # Public key (as authorized_keys)
-        public_key = key.get_base64()
-        with open("/tmp/authorized_keys", "w") as f:
-            f.write("ssh-rsa " + public_key)
+        keyfp = RemoteClient.generate_key_pair(
+            filename = ssh_key_path,
+        )
         logger.info("SSH key for integration tests generated.")
 
 
@@ -219,12 +215,13 @@ class CHROOT:
             logger.error("Could not copy sshd_config_integration_tests to {dir}".format(
               dir=chroot_sshd_cfg_dir))
         # Copy ssh / authorized_keys file for root user
+        local_ssh_key_path = self.config["ssh"]["ssh_key_filepath"] + ".pub"
         chroot_root_dir = tmp_dir + "/root/"
         chroot_ssh_authorized_keys = chroot_root_dir + ".ssh/authorized_keys"
         ssh_authorized_keys = "/tmp/authorized_keys"
         self._create_dir(chroot_root_dir+".ssh", 0o600)
         try:
-            shutil.copyfile("/tmp/authorized_keys", chroot_ssh_authorized_keys)
+            shutil.copyfile(local_ssh_key_path, chroot_ssh_authorized_keys)
             logger.info("Copied authorized_keys to: {dir}".format(
               dir=chroot_ssh_authorized_keys))
         except OSError:
