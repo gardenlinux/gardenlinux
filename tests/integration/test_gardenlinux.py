@@ -14,6 +14,7 @@ from .aws import AWS
 from .gcp import GCP
 from .azure import AZURE
 from .openstackccee import OpenStackCCEE
+from .chroot import CHROOT
 from .kvm import KVM
 from .manual import Manual
 from .ali import ALI
@@ -49,6 +50,8 @@ def client(request, config: dict, iaas) -> Iterator[RemoteClient]:
         yield from AZURE.fixture(config["azure"])
     elif iaas == "openstack-ccee":
         yield from OpenStackCCEE.fixture(config["openstack_ccee"])
+    elif iaas == "chroot":
+        yield from CHROOT.fixture(config["chroot"])
     elif iaas == "kvm":
         yield from KVM.fixture(config["kvm"])
     elif iaas == "ali":
@@ -97,6 +100,15 @@ def non_kvm(iaas):
 def kvm(iaas):
     if iaas != 'kvm':
         pytest.skip('test only supported on kvm')
+
+def non_chroot(iaas):
+    if iaas == 'chroot':
+        pytest.skip('test not supported on chroot')
+
+@pytest.fixture(scope='module')
+def chroot(iaas):
+    if iaas != 'chroot':
+        pytest.skip('test only supported on chroot')
 
 @pytest.fixture(scope='module')
 def non_openstack(iaas):
