@@ -88,11 +88,11 @@ yum install bash make gnupg git qemu-kvm qemu-img
 | --disable-features | Comma separated list of features to deactivate (see features/) |
 | --lessram | Build will be no longer in memory (default: off) |
 | --debug | Activates basically \`set -x\` everywhere (default: off) |
-| --manual | Built will stop in build environment and activate manual mode (debugging) (default:off) |
+| --manual | Built will stop in build environment and activate manual mode (default:off) |
 | --arch | Builds for a specific architecture (default: architecture the build runs on) |
 | --suite | Specifies the debian suite to build for e.g. bullseye, potatoe (default: testing) |
 | --skip-tests | Deactivating tests (default: off) |
-| --skip-build | Do not create the build container BUILD_IMAGE variable would specify an alternative name |
+| --skip-build | Do not create the build container |
 
 ### Building
 
@@ -120,10 +120,10 @@ Building Garden Linux is based on a [feature system](features/README.md).
 
 | Feature Type | Includes |
 |---|---|
-| Platforms | ali, aws, azure, gcp, ... |
+| Platforms | ali, aws, azure, gcp, kvm, baremetal... |
 | Features | container host, vitual host, ... |
-| Modifiers | _slim. _readonly, _pxe ... |
-| Element | cis, fedramp |
+| Modifiers | _slim, _readonly, _pxe, _iso ... |
+| Element | cis, fedramp, gardener |
 
 if you want to build manually choose:
 ```

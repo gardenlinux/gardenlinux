@@ -115,7 +115,7 @@ if [ -n "$local_pkgs" ]; then
 fi
 
 if [ $manual ]; then
-	echo -e "\n### running in debug mode"
+	echo -e "\n### running in manual mode"
 	echo -e "please run -> /opt/gardenlinux/bin/garden-build <- (all configs are set)\n"
 	set -x
 	docker run $dockerArgs -ti \
