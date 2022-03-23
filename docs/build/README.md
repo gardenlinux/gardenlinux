@@ -46,7 +46,7 @@ After the Build finishes, you are still inside the docker environment. The outpu
 
 ### --arch  (default: architecture the build runs on)
 
-builds for a specific architecture - currently either "amd64" or arm64
+builds for a specific architecture - currently either `amd64` or `arm64`
 
 ### --suite (default: testing)
 
