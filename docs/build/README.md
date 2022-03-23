@@ -73,7 +73,6 @@ Inside the outputfolder you find a few different files, depending on the include
 - .squashfs
 - .vmlinuz
 - .initrd
-- 
 
 #### _iso:
 
