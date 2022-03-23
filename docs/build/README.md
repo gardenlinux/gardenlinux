@@ -18,10 +18,7 @@ build will be no longer in memory
 
 activates basically `set -x` everywhere 
 
-(-x ~= xtrace: Print commands and their arguments as they are executed)
-
-
-[set manpage linuxcommand.org](https://linuxcommand.org/lc3_man_pages/seth.html)
+[set manpage gnu.org](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html)
 
 ### --manual (default: off)
 
@@ -90,3 +87,4 @@ Inside the outputfolder you find a few different files, depending on the include
 
 - TODO: How does BUILD_IMAGE variable in build.sh work?
 - TODO: Add more Information to possible output files
+- TODO: Finish Manual Build Documentation
