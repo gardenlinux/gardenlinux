@@ -70,13 +70,13 @@ class CHROOT:
         # Perform basic validation
         self._validate()
         # Unarchive defined tar ball
-        tmp_dir = self._unarchive_image()
+        rootfs = self._unarchive_image()
         # Generate temporary keys for integration testing
         self._generate_ssh_key()
         # Adjust chroot to be able to connect
-        self._adjust_chroot(tmp_dir)
+        self._adjust_chroot(rootfs)
         # Start sshd inside the chroot
-        self._start_sshd_chroot(tmp_dir)
+        self._start_sshd_chroot(rootfs)
         # Make sure ssh is up and running to avoid
         # Paramiko error messages
         self._wait_sshd()
@@ -120,16 +120,16 @@ class CHROOT:
     def _unarchive_image(self):
         """ Unarchive image tar ball """
         image = self.config["image"]
-        logger.info("Creating tmp_dir")
-        tmp_dir = tempfile.mkdtemp(prefix="gl-int-chroot-")
-        logger.info("Created tmp_dir in {tmp_dir}".format(
-          tmp_dir=tmp_dir))
-        logger.info("Unarchiving image {image} to {tmp_dir}".format(
-          image=image, tmp_dir=tmp_dir))
+        logger.info("Creating rootfs as tmpdir")
+        rootfs = tempfile.mkdtemp(prefix="gl-int-chroot-")
+        logger.info("Created rootfs in {rootfs}".format(
+          rootfs=rootfs))
+        logger.info("Unarchiving image {image} to {rootfs}".format(
+          image=image, rootfs=rootfs))
         try:
             with lzma.open(self.config["image"]) as f:
                 with tarfile.open(fileobj=f) as tar:
-                    content = tar.extractall(tmp_dir)
+                    content = tar.extractall(rootfs)
         except IOError:
             logger.error("Could not unarchive image file due to IO Error.")
         except lzma.LZMAError:
@@ -141,9 +141,9 @@ class CHROOT:
             logger.error("Used compression is not supported.")
         except tarfile.HeaderError:
             logger.error("Malformed tar header information.")
-        logger.info("Unarchived image {image} to {tmp_dir}".format(
-          image=image, tmp_dir=tmp_dir))
-        return tmp_dir
+        logger.info("Unarchived image {image} to {rootfs}".format(
+          image=image, rootfs=rootfs))
+        return rootfs
 
 
     def _generate_ssh_key(self):
@@ -156,26 +156,25 @@ class CHROOT:
         logger.info("SSH key for integration tests generated.")
 
 
-    def _adjust_chroot(self, tmp_dir):
+    def _adjust_chroot(self, rootfs):
         """ Adjust chroot to make it usable """
         logger.info("Adjusting chroot environment")
         # Adjust garden-epoch to dev
-        chroot_epoch = tmp_dir + "/" + "garden-epoch"
-        chroot_epoch_bool = os.path.exists(chroot_epoch)
-        if chroot_epoch_bool:
+        chroot_epoch = rootfs + "/" + "garden-epoch"
+        if os.path.exists(chroot_epoch):
             logger.warning("'garden-epoch' already present. This will be set to 'dev', now.")
         try:
             with open(chroot_epoch, 'w') as f:
                 f.write("dev")
-            logger.info("Wrote garden-epoch to chroot in {tmp_dir}".format(
-              tmp_dir=tmp_dir))
+            logger.info("Wrote garden-epoch to chroot in {rootfs}".format(
+              rootfs=rootfs))
         except IOError:
-            logger.error("Could not write garden-epoch to chroot in {tmp_dir}".format(
-              tmp_dir=tmp_dir))
+            logger.error("Could not write garden-epoch to chroot in {rootfs}".format(
+              rootfs=rootfs))
         # Generate SSH hostkeys for chroot
         # (this way we do not need to execute this inside the 'chroot'
         #  environment and still support amd64 and arm64 architectures)
-        chroot_ssh_dir = tmp_dir + "/etc/ssh/"
+        chroot_ssh_dir = rootfs + "/etc/ssh/"
         cmd_ssh_keys = []
         cmd_ssh_keys.append('ssh-keygen -q -N "" -t dsa -f {ssh_dir}/ssh_host_dsa_key'.format(
           ssh_dir=chroot_ssh_dir))
@@ -196,9 +195,9 @@ class CHROOT:
             else:
                 logger.info("Command sucessfully executed.")
         # Generate chroot sshd directory for run/pid
-        chroot_sshd_run_dir = tmp_dir + "/run/sshd"
+        chroot_sshd_run_dir = rootfs + "/run/sshd"
         try:
-            os.mkdir(tmp_dir + "/run/sshd")
+            os.mkdir(rootfs + "/run/sshd")
             logger.info("Created directory: {dir}".format(
               dir=chroot_sshd_run_dir))
         except OSError:
@@ -206,7 +205,7 @@ class CHROOT:
               dir=chroot_sshd_run_dir))
         # Copy dedicated sshd config to chroot
         sshd_config_src_file = "integration/misc/sshd_config_integration_tests"
-        chroot_sshd_cfg_dir = tmp_dir + "/etc/ssh/"
+        chroot_sshd_cfg_dir = rootfs + "/etc/ssh/"
         try:
             shutil.copyfile(sshd_config_src_file, chroot_sshd_cfg_dir+"sshd_config_integration_tests")
             logger.info("Copied sshd_config_integration_tests to: {dir}".format(
@@ -216,7 +215,7 @@ class CHROOT:
               dir=chroot_sshd_cfg_dir))
         # Copy ssh / authorized_keys file for root user
         local_ssh_key_path = self.config["ssh"]["ssh_key_filepath"] + ".pub"
-        chroot_root_dir = tmp_dir + "/root/"
+        chroot_root_dir = rootfs + "/root/"
         chroot_ssh_authorized_keys = chroot_root_dir + ".ssh/authorized_keys"
         ssh_authorized_keys = "/tmp/authorized_keys"
         self._create_dir(chroot_root_dir+".ssh", 0o600)
@@ -229,11 +228,11 @@ class CHROOT:
               dir=chroot_ssh_authorized_keys))
 
 
-    def _start_sshd_chroot(self, tmp_dir):
+    def _start_sshd_chroot(self, rootfs):
         """ Start sshd inside the chroot """
         # Define vars to have it more readable
         gl_chroot_bin = "/gardenlinux/bin/garden-chroot"
-        chroot = tmp_dir
+        chroot = rootfs
         chroot_cmd = "/usr/sbin/sshd -D -f /etc/ssh/sshd_config_integration_tests"
         # Execute in Popen as background task
         # while we may perform our integration tests
@@ -250,15 +249,13 @@ class CHROOT:
         port = self.config["port"]
         logger.info("Waiting for SSHD in chroot to be ready on tcp/{port}...".format(
           port=port))
-        cmd_kvm = "ssh-keyscan -p {port} localhost".format(
+        cmd_chroot = "ssh-keyscan -p {port} localhost".format(
           port=port)
 
         rc = 1
         while rc != 0:
-            p = subprocess.Popen([cmd_kvm], shell=True, stdout=subprocess.PIPE, \
+            p = subprocess.run([cmd_chroot], shell=True, stdout=subprocess.PIPE, \
               stderr=subprocess.STDOUT)
-            output = p.stdout.read()
-            output, error = p.communicate()
             rc = p.returncode
             logger.info(str(p.returncode) + " Waiting...")
             time.sleep(5)
