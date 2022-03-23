@@ -82,11 +82,6 @@ Inside the outputfolder you find a few different files, depending on the include
 
 - .iso
 
-
-#### ... :
- 
-- TODO
-
 ---
 
 ## Additional Information
@@ -94,3 +89,4 @@ Inside the outputfolder you find a few different files, depending on the include
 ---
 
 - TODO: How does BUILD_IMAGE variable in build.sh work?
+- TODO: Add more Information to possible output files
