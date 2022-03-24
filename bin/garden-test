@@ -4,7 +4,7 @@ set -Eeuo pipefail
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
 	--flags 'no-build,debug,gardenversion:,timestamp:' \
-	--flags 'arch:features:,disable-features:,disable-images:,commitid:,userid:,usergid:' \
+	--flags 'arch:features:,disable-features:,commitid:,userid:,usergid:' \
 	--flags 'prefix:' \
 	--
 
@@ -21,7 +21,6 @@ while true; do
 		--arch) arch="$1"; shift ;; # for adding "--arch" to garden-init
 		--features) features="$1"; shift ;; # adding features
 		--disable-features) disablefeatures="$1"; shift ;; # ignoring features
-		--disable-images) disableimages="$1"; shift ;;
 		--gardenversion|--timestamp) version="$1"; shift ;; # timestamp is a parameter this time
 		--prefix) prefix="$1"; shift ;; # target name suffix
 		--commitid) commitid="$1"; shift ;; # build commit hash
@@ -39,7 +38,6 @@ fi
 userID="${userID:-$(id -u)}";
 userGID="${userGID:-$(id -g)}";
 disablefeatures="${disablefeatures:-}"
-disableimages="${disableimages:-}"
 epoch="$(garden-version --epoch "$version")"
 serial="$(garden-version --date "$version")"
 dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
@@ -200,9 +198,7 @@ for t in $(find $featureDir/*/test/ -maxdepth 1 -type f -executable -exec basena
 			# Build new disk from modified root fs for unit tests
 			# (This image will be dropped afterwards)
 			for i in $(tr ',' '\n' <<< $fullfeatures); do
-				if [[ ",$disableimages," = *",$i,"* ]]; then # skip if image is in disableimages list
-					true
-				elif [ -s $featureDir/$i/image ]; then
+				if [ -s $featureDir/$i/image ]; then
 					"$featureDir/$i/image" "$rootfs" "$targetBase"
 				elif [ -f "$featureDir/$i/fstab" ]; then
 					makepart "$rootfs" "$arch" < "$featureDir/$i/fstab" | makedisk "$rootfs" "test.raw"
