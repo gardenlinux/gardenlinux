@@ -197,7 +197,7 @@ class CHROOT:
         # Generate chroot sshd directory for run/pid
         chroot_sshd_run_dir = rootfs + "/run/sshd"
         try:
-            os.mkdir(rootfs + "/run/sshd")
+            os.mkdir(chroot_sshd_run_dir)
             logger.info("Created directory: {dir}".format(
               dir=chroot_sshd_run_dir))
         except OSError:
@@ -207,7 +207,7 @@ class CHROOT:
         sshd_config_src_file = "integration/misc/sshd_config_integration_tests"
         chroot_sshd_cfg_dir = rootfs + "/etc/ssh/"
         try:
-            shutil.copyfile(sshd_config_src_file, chroot_sshd_cfg_dir+"sshd_config_integration_tests")
+            shutil.copy(sshd_config_src_file, chroot_sshd_cfg_dir)
             logger.info("Copied sshd_config_integration_tests to: {dir}".format(
               dir=chroot_sshd_cfg_dir))
         except OSError:
@@ -232,13 +232,12 @@ class CHROOT:
         """ Start sshd inside the chroot """
         # Define vars to have it more readable
         gl_chroot_bin = "/gardenlinux/bin/garden-chroot"
-        chroot = rootfs
         chroot_cmd = "/usr/sbin/sshd -D -f /etc/ssh/sshd_config_integration_tests"
         # Execute in Popen as background task
         # while we may perform our integration tests
         proc_exec = "{chroot_bin} {chroot_env} {chroot_cmd}".format(
           chroot_bin=gl_chroot_bin,
-          chroot_env=chroot,
+          chroot_env=rootfs,
           chroot_cmd=chroot_cmd)
         p = subprocess.Popen([proc_exec], shell=True)
         logger.info("Started SSHD in chroot environment.")
@@ -249,12 +248,12 @@ class CHROOT:
         port = self.config["port"]
         logger.info("Waiting for SSHD in chroot to be ready on tcp/{port}...".format(
           port=port))
-        cmd_chroot = "ssh-keyscan -p {port} localhost".format(
+        cmd = "ssh-keyscan -p {port} localhost".format(
           port=port)
 
         rc = 1
         while rc != 0:
-            p = subprocess.run([cmd_chroot], shell=True, stdout=subprocess.PIPE, \
+            p = subprocess.run([cmd], shell=True, stdout=subprocess.PIPE, \
               stderr=subprocess.STDOUT)
             rc = p.returncode
             logger.info(str(p.returncode) + " Waiting...")
