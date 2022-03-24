@@ -9,15 +9,6 @@ jobs:
 
     - run: |
         echo "Install shellcheck"
-        echo "deb http://archive.ubuntu.com/ubuntu jammy main restricted universe multiverse" | \
-          sudo tee -a /etc/apt/sources.list \
-        sudo apt update
-        printf "%s\n" \
-          "Package: *" \
-          "Pin: release a=jammy" \
-          "Pin-Priority: 100" \
-        | sudo tee -a /etc/apt/preferences.d/shellcheck.perf
-
         sudo apt install shellcheck
     - run: shellcheck --version
     - run: |
