@@ -195,7 +195,6 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 		done
 
 		echo "#### building diskimage"
-		currentfstab=""
 		for i in $(tr ',' '\n' <<< $fullfeatures); do
 			if [ -r "$featureDir/$i/fstab" ]; then
 				printf "  found new fstab in $i\n"
@@ -210,8 +209,8 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 		if [ -n "$currentfstab" ]; then
 			printf "  building rawfile\n"
 			# find the writable partition and make sure it is the last one in the next step
-			currentfstab=$(sed -n '/rw/ s/LABEL=\([[:upper:]]*\).*/\1/p' <<< "$currentfstab")
-			makepart "$rootfs" "$arch" < "$currentfstab" \
+			rwpart=$(sed -n '/rw/ s/LABEL=\([[:upper:]]*\).*/\1/p' <<< $currentfstab)
+			makepart "$rootfs" "$arch" <<< $currentfstab \
 			| sed '$a\\n' | sed "/$rwpart/{h;d}; \$g; /^$/d" \
 			| makedisk "$rootfs" "$targetBase.raw"
 		fi
