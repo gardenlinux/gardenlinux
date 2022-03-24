@@ -1,0 +1,35 @@
+name: shellcheck
+on: [ push, pull_request]  
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - run: |
+        echo "Install shellcheck"
+        echo "deb http://archive.ubuntu.com/ubuntu jammy main restricted universe multiverse" | \
+          sudo tee -a /etc/apt/sources.list \
+        sudo apt update
+        printf "%s\n" \
+          "Package: *" \
+          "Pin: release a=jammy" \
+          "Pin-Priority: 100" \
+        | sudo tee -a /etc/apt/preferences.d/shellcheck.perf
+
+        sudo apt install shellcheck
+    - run: shellcheck --version
+    - run: |
+        echo "Do shellcheck on all *.sh files"
+        status=0
+        set +e 
+        while IFS= read -r -d '' file
+        do
+        first_line=$(head -n 1 "$file")
+        if [[ "$first_line" == *"bash"* ]]; then
+            shellcheck --severity=warning "$file"
+            status=$((status +$?))
+        fi
+        done < <(find . -type f -print0)
+        if [ $status ]; then exit 1; fi
