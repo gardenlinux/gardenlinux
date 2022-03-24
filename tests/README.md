@@ -544,7 +544,68 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
     pytest --iaas=kvm --configfile=/config/mykvmconfig.yaml integration/
 
 
-### 2.7. Manual testing
+### 2.7 CHROOT
+
+CHROOT tests are designed to run directly on your platform within a `chroot` environment and boosts up the time for the integration tests that do not need any target platform.
+
+Notes:
+ * CHROOT will run inside your `integration-test` Docker container
+ * Docker container needs `SYS_ADMIN` capability
+ * Temporary SSH keys are auto generated and injected
+
+Use the following configuration file to proceed; only the path to the TAR image needs to be adjusted:
+
+```yaml
+chroot:
+    # Path to a final artifact. Represents the .tar.xz archive image file (required)
+    image: /gardenlinux/.build/kvm_dev-amd64-dev-local.tar.xz
+
+    # IP or hostname of target machine (required)
+    # Default: 127.0.0.1
+    ip: 127.0.0.1
+
+    # port for remote connection (required)
+    # Default: 2223
+    port: 2222
+
+    # SSH configuration (required)
+    ssh:
+        # Defines path where to look for a given key
+        # or to save the new generated one. Take care
+        # that you do NOT overwrite your key. (required)
+        ssh_key_filepath: /tmp/ssh_priv_key
+
+        # Defines the user for SSH login (required)
+        # Default: root
+        user: root
+```
+
+#### 2.7.1 Configuration options
+
+<details>
+
+- **ssh_key_filepath** _(required)_: The SSH key that will be injected to the *chroot* and that will be used by the test framework to log on to it. In default, you do **not** need to provide or mount your real SSH key; a new one will be generated and injected by every new run. However, if you really want, a present one can be defined - take care that this will not be overwritten and set `ssh_key_generate` to false.
+- **user** _(required)_: The user that will be used for the connection.
+</details>
+
+#### 2.7.2 Running the tests
+
+Start docker container with dependencies:
+
+- mount Garden Linux repository to `/gardenlinux`
+- mount build result directory to `/build` (if not part of the Garden Linux file tree)
+- mount directory with configfile to `/config`
+
+```
+docker run --cap-add SYS_ADMIN --security-opt apparmor=unconfined -it --rm -v `pwd`:/gardenlinux gardenlinux/integration-test:dev /bin/bash
+```
+
+Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
+
+    pytest --iaas=chroot --configfile=/config/mychrootmconfig.yaml integration/
+
+
+### 2.8. Manual testing
 
 So for some reason, you do not want to test Garden Linux by using a tool that automatically sets up the testbed in a cloud environment for you.
 
@@ -567,7 +628,7 @@ manual:
         user: admin
 ```
 
-#### 2.7.1 Running the tests
+#### 2.8.1 Running the tests
 
 Start docker container with dependencies:
 
