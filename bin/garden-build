@@ -195,26 +195,26 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 		done
 
 		echo "#### building diskimage"
-		for i in $(tr ',' '\n' <<< $fullfeatures); do
+		for i in $(tr ',' '\n' <<< "$fullfeatures"); do
 			if [ -r "$featureDir/$i/fstab" ]; then
 				printf "  found new fstab in $i\n"
 				currentfstab="$(cat $featureDir/$i/fstab)"
 			fi
 			if [ -x "$featureDir/$i/fstab.mod" ]; then
-				printf "    modifying fstab with $i\n"
-				currentfstab=$("$featureDir/$i/fstab.mod" <<< $currentfstab)
+				printf "    modifying fstab with %s\n" "$i"
+				currentfstab=$("$featureDir/$i/fstab.mod" <<< "$currentfstab")
 			fi
 		done
-		currentfstab="$(sed -e "s/#.*\$//" -e "/^$/d" <<< $currentfstab)"
+		currentfstab="$(sed -e "s/#.*\$//" -e "/^$/d" <<< "$currentfstab")"
 		if [ -n "$currentfstab" ]; then
 			printf "  building rawfile\n"
 			# find the writable partition and make sure it is the last one in the next step
-			rwpart=$(sed -n '/rw/ s/LABEL=\([[:upper:]]*\).*/\1/p' <<< $currentfstab)
-			makepart "$rootfs" "$arch" <<< $currentfstab \
+			rwpart=$(sed -n '/rw/ s/LABEL=\([[:upper:]]*\).*/\1/p' <<< "$currentfstab")
+			makepart "$rootfs" "$arch" <<< "$currentfstab" \
 			| sed '$a\\n' | sed "/$rwpart/{h;d}; \$g; /^$/d" \
 			| makedisk "$rootfs" "$targetBase.raw"
 		fi
-		for i in $(tr ',' '\n' <<< $fullfeatures); do
+		for i in $(tr ',' '\n' <<< "$fullfeatures"); do
 			if [ -x $featureDir/$i/image ]; then
 				printf "  building separat extra image for $i\n"
                                 "$featureDir/$i/image" "$rootfs" "$targetBase"
