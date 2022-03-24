@@ -4,7 +4,7 @@ set -Eeuo pipefail
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
 	--flags 'no-build,debug,skip-tests,suite:,gardenversion:,timestamp:' \
-	--flags 'ports,arch:,qemu,features:,disable-features:,disable-images:,commitid:,userid:,usergid:' \
+	--flags 'ports,arch:,qemu,features:,disable-features:,commitid:,userid:,usergid:' \
 	--flags 'suffix:,prefix:' \
 	--
 
@@ -23,7 +23,6 @@ while true; do
 		--qemu) qemu=1 ;;	# for using "qemu-debootstrap"
 		--features) features="$1"; shift ;; # adding features
 		--disable-features) disablefeatures="$1"; shift ;; # ignoring features
-		--disable-images) disableimages="$1"; shift ;;
 		--suite) suite="$1"; shift ;; # suite is a parameter this time
 		--gardenversion|--timestamp) version="$1"; shift ;; # timestamp is a parameter this time
 		--suffix) suffix="$1"; shift ;; # target name prefix
@@ -44,7 +43,6 @@ fi
 userID="${userID:-$(id -u)}";
 userGID="${userGID:-$(id -g)}";
 disablefeatures="${disablefeatures:-}"
-disableimages="${disableimages:-}"
 epoch="$(garden-version --epoch "$version")"
 serial="$(garden-version --date "$version")"
 dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
@@ -196,21 +194,35 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 			fi
 		done
 
-		echo "#### fullfeatures"
-		for i in $(tr ',' '\n' <<< $fullfeatures); do
-			if [[ ",$disableimages," = *",$i,"* ]]; then # skip if image is in disableimages list
-				true
-			elif [ -s $featureDir/$i/image ]; then
-				"$featureDir/$i/image" "$rootfs" "$targetBase"
-			elif [ -f "$featureDir/$i/fstab" ]; then
-				# find the writable partition and make sure it is the last one in the next step
-				rwpart=$(sed -n '/rw/ s/LABEL=\([[:upper:]]*\).*/\1/p' < "$featureDir/$i/fstab")
-				makepart "$rootfs" "$arch" < "$featureDir/$i/fstab" \
-				| sed '$a\\n' | sed "/$rwpart/{h;d}; \$g; /^$/d" \
-				| makedisk "$rootfs" "$targetBase.raw"
-			else
-				true
+		echo "#### building diskimage"
+		for i in $(tr ',' '\n' <<< "$fullfeatures"); do
+			if [ -r "$featureDir/$i/fstab" ]; then
+				printf "  found new fstab in $i\n"
+				currentfstab="$(cat $featureDir/$i/fstab)"
 			fi
+			if [ -x "$featureDir/$i/fstab.mod" ]; then
+				printf "    modifying fstab with %s\n" "$i"
+				currentfstab=$("$featureDir/$i/fstab.mod" <<< "$currentfstab")
+			fi
+		done
+		currentfstab="$(sed -e "s/#.*\$//" -e "/^$/d" <<< "$currentfstab")"
+		if [ -n "$currentfstab" ]; then
+			printf "  building rawfile\n"
+			# find the writable partition and make sure it is the last one in the next step
+			rwpart=$(sed -n '/rw/ s/LABEL=\([[:upper:]]*\).*/\1/p' <<< "$currentfstab")
+			makepart "$rootfs" "$arch" <<< "$currentfstab" \
+			| sed '$a\\n' | sed "/$rwpart/{h;d}; \$g; /^$/d" \
+			| makedisk "$rootfs" "$targetBase.raw"
+		fi
+		for i in $(tr ',' '\n' <<< "$fullfeatures"); do
+			if [ -x $featureDir/$i/image ]; then
+				printf "  building separat extra image for $i\n"
+                                "$featureDir/$i/image" "$rootfs" "$targetBase"
+			fi
+			if [ -x $featureDir/$i/convert ]; then
+                                printf "  converting image format for $i\n"
+                                "$featureDir/$i/convert" "$targetBase"
+                        fi
 		done
 	}
 

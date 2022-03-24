@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-set -Eeuo pipefail
-
-dir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
-
-makepart "$1" < "$dir/fstab" | makedisk "$1" "$2.raw"
-qemu-img convert -f raw -O qcow2 "$2.raw" "$2.qcow2"

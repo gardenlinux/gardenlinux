@@ -129,10 +129,10 @@ kvm-dev: container-build cert/sign.pub
 	./build.sh $(BUILD_OPTS) --skip-build --features server,cloud,kvm,_dev $(BUILDDIR) $(VERSION)
 
 pxe: container-build cert/sign.pub
-	./build.sh $(BUILD_OPTS) --skip-build --features metal,server,_pxe --disable-images=metal $(BUILDDIR) $(VERSION)
+	./build.sh $(BUILD_OPTS) --skip-build --features metal,server,_pxe $(BUILDDIR) $(VERSION)
 
 pxe-dev: container-build cert/sign.pub
-	./build.sh $(BUILD_OPTS) --skip-build --features metal,server,_dev,_pxe --disable-images=metal $(BUILDDIR) $(VERSION)
+	./build.sh $(BUILD_OPTS) --skip-build --features metal,server,_dev,_pxe $(BUILDDIR) $(VERSION)
 
 metal-iso: container-build cert/sign.pub
 	./build.sh $(BUILD_OPTS) --skip-build --features metal,server,_iso $(BUILDDIR) $(VERSION)
