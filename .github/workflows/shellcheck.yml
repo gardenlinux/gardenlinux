@@ -13,6 +13,7 @@ jobs:
     - run: shellcheck --version
     - run: |
         echo "Do shellcheck on all *.sh files"
+        export SHELLCHECK_OPTS="-e SC1090"
         status=0
         set +e 
         while IFS= read -r -d '' file
