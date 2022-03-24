@@ -5,4 +5,4 @@ fdisk
 #cloud-guest-utils
 libpam-cracklib
 rng-tools5
-linux-image-5.10-cloud-${arch}
+linux-image-5.15-cloud-${arch}
