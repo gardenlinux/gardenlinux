@@ -18,5 +18,5 @@ smartmontools
 bird2
 [${arch}=amd64] syslinux
 [${arch}=amd64] syslinux-common
-linux-image-5.10-${arch}
+linux-image-5.15-${arch}
 tpm2-tools
