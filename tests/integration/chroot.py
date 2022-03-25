@@ -51,6 +51,7 @@ class CHROOT:
                 port=port,
                 sshconfig=config["ssh"],
             )
+            ssh.wait_ssh()
             yield ssh
         finally:
             if ssh is not None:
@@ -77,9 +78,6 @@ class CHROOT:
         self._adjust_chroot(rootfs)
         # Start sshd inside the chroot
         self._start_sshd_chroot(rootfs)
-        # Make sure ssh is up and running to avoid
-        # Paramiko error messages
-        self._wait_sshd()
 
 
     def __del__(self):
@@ -178,7 +176,6 @@ class CHROOT:
         cmd_ssh_keys = []
         cmd_ssh_keys.append('ssh-keygen -q -N "" -t dsa -f {ssh_dir}/ssh_host_dsa_key'.format(
           ssh_dir=chroot_ssh_dir))
-        logger.info(cmd_ssh_keys)
         cmd_ssh_keys.append('ssh-keygen -q -N "" -t rsa -b 4096 -f {ssh_dir}/ssh_host_rsa_key'.format(
           ssh_dir=chroot_ssh_dir))
         cmd_ssh_keys.append('ssh-keygen -q -N "" -t ecdsa -f {ssh_dir}/ssh_host_ecdsa_key'.format(
@@ -241,24 +238,6 @@ class CHROOT:
           chroot_cmd=chroot_cmd)
         p = subprocess.Popen([proc_exec], shell=True)
         logger.info("Started SSHD in chroot environment.")
-
-
-    def _wait_sshd(self):
-        """ Wait for defined SSH port to become ready in chroot environment """
-        port = self.config["port"]
-        logger.info("Waiting for SSHD in chroot to be ready on tcp/{port}...".format(
-          port=port))
-        cmd = "ssh-keyscan -p {port} localhost".format(
-          port=port)
-
-        rc = 1
-        while rc != 0:
-            p = subprocess.run([cmd], shell=True, stdout=subprocess.PIPE, \
-              stderr=subprocess.STDOUT)
-            rc = p.returncode
-            logger.info(str(p.returncode) + " Waiting...")
-            time.sleep(5)
-        logger.info("SSH ready in chroot.")
 
 
     def _create_dir(self, dir, mode):
