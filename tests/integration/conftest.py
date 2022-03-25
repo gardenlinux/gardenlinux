@@ -16,6 +16,9 @@ from .aws import AWS
 from .azure import AZURE
 from .gcp import GCP
 from .ali import ALI
+from .openstackccee import OpenStackCCEE
+from .chroot import CHROOT
+from .kvm import KVM
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -172,6 +175,10 @@ def testconfig(pipeline, iaas, pytestconfig):
             pass
         elif iaas == 'openstack-ccee':
             pass
+        elif iaas == 'chroot':
+            pass
+        elif iaas == 'kvm':
+            pass
         return config
 
 
@@ -311,14 +318,14 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
         credentials = request.getfixturevalue('azure_credentials')
         yield from AZURE.fixture(credentials, testconfig, imageurl)
     elif iaas == "openstack-ccee":
-        yield from OpenStackCCEE.fixture(config["openstack_ccee"])
+        yield from OpenStackCCEE.fixture(testconfig)
     elif iaas == "chroot":
-        yield from CHROOT.fixture(config["chroot"])
+        yield from CHROOT.fixture(testconfig)
     elif iaas == "kvm":
-        yield from KVM.fixture(config["kvm"])
+        yield from KVM.fixture(testconfig)
     elif iaas == "ali":
-        yield from ALI.fixture(config["ali"])
+        yield from ALI.fixture(testconfig)
     elif iaas == "manual":
-        yield from Manual.fixture(config["manual"])
+        yield from Manual.fixture(testconfig)
     else:
         raise ValueError(f"invalid {iaas=}")
