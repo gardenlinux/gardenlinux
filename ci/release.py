@@ -128,7 +128,7 @@ def parse_args():
 
 
 def release_branch_name(gardenlinux_epoch):
-    return f'rel-{gardenlinux_epoch}'
+    return f'release/{gardenlinux_epoch}'
 
 
 def main():
