@@ -1,4 +1,4 @@
-## KVM Feature
+## VMWare Feature
 
 VMware platform (cloud-init, open-vm-tools)
 
