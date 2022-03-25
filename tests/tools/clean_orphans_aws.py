@@ -122,7 +122,9 @@ def clean_instances(client, force: bool = False):
     for r in instances['Reservations']:
         instance_count += len(r['Instances'])
         for i in r['Instances']:
-            print(f"ID: {i['InstanceId']}\tUsed AMI: {i['ImageId']}")
+            if i['State']['Code'] == 48: # instance terminated
+                continue
+            print(f"ID: {i['InstanceId']}\t\tUsed AMI: {i['ImageId']}")
             print(f"Type: {i['InstanceType']}")
             print(f"IP address: {i['PrivateIpAddress']}")
             print("Tags:")
@@ -132,7 +134,10 @@ def clean_instances(client, force: bool = False):
             if not force:
                 delete = input(f"\nTerminate this instance (y/N)? ")
             if delete == "y" or force:
-                client.terminate_instances(InstanceIds = i['InstanceId'])
+                client.terminate_instances(InstanceIds = [i['InstanceId']])
+                waiter = client.get_waiter('instance_terminated')
+                print("Waiting for instance to terminate...")
+                waiter.wait(InstanceIds=[i['InstanceId']])
 
     if instance_count == 0:
         print("No instances originating from tests found.")

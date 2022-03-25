@@ -46,6 +46,7 @@ class KVM:
                 port=port,
             )
             yield ssh
+            ssh.wait_ssh()
         finally:
             if ssh is not None:
                 ssh.disconnect()
@@ -71,8 +72,7 @@ class KVM:
         self._adjust_kvm(ssh_inject)
         # Start KVM
         self._start_kvm(arch)
-        # Wait for VM in KVM to be ready
-        self._wait_kvm()
+
 
     def __del__(self):
         """ Cleanup resources held by this object """
@@ -260,22 +260,3 @@ class KVM:
             logger.info("VM starting as arm64 in KVM.")
         else:
             logger.error("Unsupported architecture.")
-
-    def _wait_kvm(self):
-        """ Wait for defined SSH port to become ready in VM """
-        port = self.config["port"]
-        logger.info("Waiting for VM in KVM to be ready on tcp/{port}...".format(
-          port=port))
-        cmd_kvm = "ssh-keyscan -p {port} localhost".format(
-          port=port)
-
-        rc = 1
-        while rc != 0:
-            p = subprocess.Popen([cmd_kvm], shell=True, stdout=subprocess.PIPE, \
-              stderr=subprocess.STDOUT)
-            output = p.stdout.read()
-            output, error = p.communicate()
-            rc = p.returncode
-            logger.info(str(p.returncode) + " Waiting...")
-            time.sleep(10)
-        logger.info("VM in KVM ready.")

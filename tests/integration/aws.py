@@ -8,7 +8,6 @@ import pytest
 from os import path
 from urllib.parse import urlparse
 
-import boto3
 from botocore.exceptions import ClientError
 
 from .sshclient import RemoteClient
@@ -24,14 +23,14 @@ class AWS:
     """Handle resources in AWS cloud"""
 
     @classmethod
-    def fixture(cls, config) -> RemoteClient:
+    def fixture(cls, session, config, image) -> RemoteClient:
         test_name = f"gl-test-{time.strftime('%Y%m%d%H%M%S')}"
-        AWS.validate_config(config, test_name)
+        AWS.validate_config(config, test_name, image)
 
         logger.info(f"Using security group {config['securitygroup_name']}")
 
-        aws = AWS(config, test_name)
-        instance = aws.create_vm()
+        aws = AWS(config, session, test_name)
+        instance = aws.create_vm(image)
         ssh = None
         try:
             ssh = RemoteClient(
@@ -45,12 +44,11 @@ class AWS:
             if aws is not None:
                 aws.cleanup_test_resources()
 
-
     @classmethod
-    def validate_config(cls, cfg: dict, test_name: str):
+    def validate_config(cls, cfg: dict, test_name: str, image: str):
         if not 'region' in cfg:
             pytest.exit("AWS region not specified, cannot continue.", 1)
-        if not 'ami_id' in cfg and not 'image' in cfg:
+        if not image and not 'ami_id' in cfg and not 'image' in cfg:
             pytest.exit("Neither 'image' nor 'ami_id' specified, cannot continue.", 2)
         if not 'instance_type' in cfg:
             cfg['instance_type'] = "t3.micro"
@@ -60,7 +58,7 @@ class AWS:
             cfg['securitygroup_name'] = f"{test_name}-sg"
         if not 'keep_running' in cfg:
             cfg['keep_running'] = False
-        if not 'ssh' in cfg:
+        if not 'ssh' in cfg or not cfg['ssh']:
             cfg['ssh'] = {}
         if not 'ssh_key_filepath' in cfg['ssh']:
             import tempfile
@@ -361,7 +359,7 @@ class AWS:
             self.logger.info(f"Keeping snapshot with {snapshot_id=} as it was not created by this test.")
 
 
-    def __init__(self, config, test_name):
+    def __init__(self, config, session, test_name):
         """
         Create instance of AWS class
 
@@ -380,10 +378,7 @@ class AWS:
             {"Key": "test-uuid", "Value": self.test_uuid}
         ]
 
-        if "region" in self.config:
-            self.session = boto3.Session(region_name=self.config["region"])
-        else:
-            self.session = boto3.Session()
+        self.session = session
 
         self.ec2_client = self.session.client("ec2")
         self.s3_client = self.session.client("s3")
@@ -554,7 +549,7 @@ class AWS:
         )
         return instance[0]
 
-    def create_vm(self):
+    def create_vm(self, image):
         """
         Create an AWS ec2 instance
         - according to the config passed to the constructor
@@ -568,7 +563,7 @@ class AWS:
         self.logger.info(f"Security group id is {self._security_group_id}")
 
         if not "ami_id" in self.config:
-            ami_id = self.upload_image(self.config["image"])
+            ami_id = self.upload_image(image)
             self.config["ami_id"] = ami_id
 
         self._instance = self.create_instance(self.test_name, ami_id=self.config['ami_id'])

@@ -1,6 +1,7 @@
 """ Client to manage connections and run commands via ssh on a remote host."""
 import logging
 import time
+import pytest
 import subprocess
 from os import path
 from binascii import hexlify
@@ -173,6 +174,35 @@ class RemoteClient:
         self.scp = None
         logger.info(f"disconnected from {self.host=}")
 
+    def wait_ssh(self, counter_max=20, sleep=5):
+        """ Wait for defined SSH port to become ready in test environment """
+        port = self.port
+        ip = self.host
+        logger.info("Waiting for SSHD in test env to become ready on tcp/{port} and {ip}".format(
+          port=port, ip=ip))
+        cmd = "ssh-keyscan -p {port} {ip}".format(
+          port=port, ip=ip)
+
+        counter = 0
+        err_msg = "Too many retries. Something went wrong."
+        rc = 1
+        while rc != 0:
+            if counter == counter_max:
+                logger.error(err_msg)
+                # Do not only raise log msg; let it fail
+                pytest.exit(err_msg, 1)
+            p = subprocess.run(
+                [cmd],
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT)
+            rc = p.returncode
+            counter = counter + 1
+            logger.info(str(p.returncode) + " Waiting... Run: {counter}/{max} ".format(
+                counter=counter, max=counter_max))
+            time.sleep(sleep)
+        logger.info("SSH ready in test env.")
+
     def bulk_upload(self, files):
         """
         Upload multiple files to a remote directory.
@@ -202,7 +232,7 @@ class RemoteClient:
             self.conn = self.__connect()
         self.scp.get(file)
 
-    def execute_command(self, command: str, timeout: int = 30) -> (int, str, str):
+    def execute_command(self, command: str, timeout: int = 30) -> tuple[int, str, str]:
         """
         Execute commands on remote host
 

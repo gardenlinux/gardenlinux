@@ -15,7 +15,6 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-
 # @dataclass -> do no use dataclass this silently breaks pytest
 class TestRunParameters:
     def __init__(
@@ -156,6 +155,8 @@ def run_tests(
             template = Template(final_arg)
             pytest_args = template.substitute(platform=platform, architecture=architecture)
             pytest_arg_list = pytest_args.split()
+            pytest_arg_list.append(f"--pipeline")
+            pytest_arg_list.append(f"--iaas={platform}")
             logger.info(f'Running integration tests with pytest args: {pytest_arg_list}')
             with pushd(repo_dir):
                 result = pytest.main(pytest_arg_list, plugins=[params_plugin])
