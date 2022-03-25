@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+
+set -Eeufo pipefail
+
+veritytab=
+key="/secureboot.key"
+cert="/secureboot.crt"
+timestamp=0
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-r|--rootfs)
+			rootfs="$2"
+			shift 2
+			;;
+		-c|--cmdline)
+			cmdline="$2"
+			shift 2
+			;;
+		-v|--veritytab)
+			veritytab="$2"
+			shift 2
+			;;
+		--key)
+			key="$2"
+			shift 2
+			;;
+		--cert)
+			cert="$2"
+			shift 2
+			;;
+		-t|--timestamp)
+			timestamp="$2"
+			shift 2
+			;;
+		*)
+			break
+			;;
+	esac
+done
+
+initrd="$(mktemp)"
+unified_image="$(mktemp)"
+unified_image_signed="$(mktemp)"
+
+[ ! -e "$rootfs$initrd" ]
+touch "$rootfs$initrd"
+mount --bind "$initrd" "$rootfs$initrd"
+[ ! -s "$rootfs/etc/veritytab" ]
+touch "$rootfs/etc/veritytab"
+[ -z "$veritytab" ] || mount --bind "$veritytab" "$rootfs/etc/veritytab"
+[ -d "$rootfs/proc" ] && [ -z "$(ls -A "$rootfs/proc")" ]
+mount -t proc none "$rootfs/proc"
+
+kernel_file=$(find "$rootfs/boot/" -name 'vmlinuz-*')
+kernel_version="${kernel_file#*-}"
+
+chroot "$rootfs" dracut \
+	--force \
+	--kver "$kernel_version" \
+	--modules "bash dash systemd systemd-initrd systemd-repart systemd-veritysetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown" \
+	--install "/etc/veritytab" \
+	--reproducible \
+	"$initrd"
+
+umount "$rootfs/proc"
+umount "$rootfs$initrd"
+rm "$rootfs$initrd"
+umount "$rootfs/etc/veritytab"
+rm "$rootfs/etc/veritytab"
+
+case "$arch" in
+	amd64)
+		uefi_arch=X64
+		gnu_arch=x86_64
+		initrd_vma=0x3000000
+		;;
+	arm64)
+		uefi_arch=AA64
+		gnu_arch=aarch64
+		initrd_vma=0x4000000
+		;;
+esac
+
+# create unified image
+cmdline_file=$(mktemp)
+echo "$cmdline" > "$cmdline_file"
+"${gnu_arch}-linux-gnu-objcopy" \
+	--add-section .cmdline="$cmdline_file" --change-section-vma .cmdline=0x1000000 \
+	--add-section .linux="$kernel_file" --change-section-vma .linux=0x2000000 \
+	--add-section .initrd="$initrd" --change-section-vma .initrd="$initrd_vma" \
+	"$rootfs/usr/lib/systemd/boot/efi/linux$(tr '[:upper:]' '[:lower:]' <<< "$uefi_arch").efi.stub" "$unified_image"
+rm "$cmdline_file" "$initrd"
+
+# sign unified image
+datefudge -s "@$timestamp" sbsign --cert "$cert" --key "$key" --output "$unified_image_signed" "$unified_image"
+rm "$unified_image"
+
+while read -r partition_file; do
+	# copy unified image to uefi partition
+	datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$unified_image_signed" "::/EFI/BOOT/BOOT$uefi_arch.EFI"
+done
+
+rm "$unified_image_signed"
