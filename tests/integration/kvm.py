@@ -45,8 +45,9 @@ class KVM:
                 sshconfig=config["ssh"],
                 port=port,
             )
-            yield ssh
             ssh.wait_ssh()
+            yield ssh
+
         finally:
             if ssh is not None:
                 ssh.disconnect()
