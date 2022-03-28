@@ -1,4 +1,13 @@
-# Uploading Image to GCP
+## Google Compute Engine Feature
+
+Google Compute Engine platform (gce guest environment)
+
+	Type: Platform
+	Included Features: cloud
+
+#
+
+### Uploading Image to GCP
 
 - create compressed tar image (disk must be called disk.raw)
 
@@ -13,3 +22,4 @@
 
 ```gcloud compute images create garden-linux-gcp-01 --source-uri gs://garden-linux-test/compressed-image.tar.gz```
 
+#
