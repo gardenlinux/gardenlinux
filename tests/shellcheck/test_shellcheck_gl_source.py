@@ -43,11 +43,11 @@ def get_files_to_check(directory):
                 ret.append(filename)
     return ret
 
-FILES_TO_CHECK = get_files_to_check('../features/metal')
+FILES_TO_CHECK = get_files_to_check('..')
 
 @pytest.mark.parametrize('filepath', FILES_TO_CHECK)
 def test_shellcheck_on_file(filepath):
-    command = ['shellcheck','--severity=warning' , filepath]
+    command = ['shellcheck','--exclude', 'SC1090', '--severity=warning' , filepath]
     result = run(command, stdout=PIPE, stderr=PIPE, universal_newlines=True)
     assert result.returncode==0, f"Shellcheck failed for: {filepath} \n {result.stderr} {result.stdout} "
     #assert result.returncode==0, f"Shellcheck failed for: {filepath}"
