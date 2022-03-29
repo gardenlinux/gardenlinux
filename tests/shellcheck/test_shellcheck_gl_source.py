@@ -2,8 +2,12 @@ import logging
 import glob
 import os
 import pytest
+import re
+
 from pathlib import Path
 from subprocess import PIPE, run
+from itertools import filterfalse
+
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +28,6 @@ def has_skip_comment(filepath):
     ret = False
     for i, line in enumerate(fp):
         if i == 1:
-            logger.info(line)
             if SKIP_COMMENT in line:
                 ret = True
                 break
@@ -33,6 +36,31 @@ def has_skip_comment(filepath):
 
     fp.close()
     return ret
+
+def get_ignore_list():
+    ret = list()
+    with open(Path(os.getcwd() +  '/shellcheck/shellcheck.ignore')) as file:
+        for line in file.readlines():
+            ret.append(line.rstrip())
+    return ret
+
+def is_file_ignored(filename, ignore_list):
+    for ignore_expression in ignore_list:
+        if not ignore_expression:
+            continue
+        if ignore_expression.isspace():
+            continue
+        if ignore_expression.startswith('#'):
+            continue
+        regex = rf"\.\.\/" + re.escape(ignore_expression) + ".*"
+        if re.search(regex, str(filename), re.IGNORECASE):
+            return True
+    return False
+
+def apply_ignore_filter(ignore_list, all_list):
+
+    filtered_list = [file for file in all_list if not is_file_ignored(file, ignore_list)]
+    return filtered_list
 
 def get_files_to_check(directory):
     all_files = Path(directory).glob('**/*')
@@ -43,7 +71,7 @@ def get_files_to_check(directory):
                 ret.append(filename)
     return ret
 
-FILES_TO_CHECK = get_files_to_check('..')
+FILES_TO_CHECK = apply_ignore_filter(get_ignore_list(), get_files_to_check('..'))
 
 @pytest.mark.parametrize('filepath', FILES_TO_CHECK)
 def test_shellcheck_on_file(filepath):
