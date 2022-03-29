@@ -2,23 +2,24 @@ import pytest
 import logging
 import json
 import yaml
+import os
 
 import glci.util
 
 from typing import Iterator
-from .sshclient import RemoteClient
+from integration.sshclient import RemoteClient
 
 from os import path
 from dataclasses import dataclass
 from _pytest.config.argparsing import Parser
 
-from .aws import AWS
-from .azure import AZURE
-from .gcp import GCP
-from .ali import ALI
-from .openstackccee import OpenStackCCEE
-from .chroot import CHROOT
-from .kvm import KVM
+from integration.aws import AWS
+from integration.azure import AZURE
+from integration.gcp import GCP
+from integration.ali import ALI
+from integration.openstackccee import OpenStackCCEE
+from integration.chroot import CHROOT
+from integration.kvm import KVM
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -304,7 +305,7 @@ def gcp_credentials(testconfig, pipeline, request):
             return None
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
     logger.info(f"Testconfig for {iaas=} is {testconfig}")
     if iaas == "aws":
@@ -329,3 +330,20 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
         yield from Manual.fixture(testconfig)
     else:
         raise ValueError(f"invalid {iaas=}")
+
+def pytest_configure():
+    pytest.package_musthave_exec_already = False
+    pytest.blacklisted_packages_exec_already = False
+    pytest.capabilities_exec_already = False
+
+
+@pytest.fixture
+def features(client):
+    (exit_code, output, error) = client.execute_command("cat /etc/os-release")
+    if exit_code != 0:
+        sys.exit(error)
+    for line in output.split('\n'):
+        if line.startswith('GARDENLINUX_FEATURES'):
+            features = line.split('=')[1]
+    current = (os.getenv('PYTEST_CURRENT_TEST')).split('/')
+    yield features.split(','), current[0]

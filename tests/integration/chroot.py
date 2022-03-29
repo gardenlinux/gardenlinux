@@ -147,10 +147,13 @@ class CHROOT:
         """ Generate new SSH key for integration test """
         logger.info("Generating new SSH key for integration tests.")
         ssh_key_path = self.config["ssh"]["ssh_key_filepath"]
-        keyfp = RemoteClient.generate_key_pair(
-            filename = ssh_key_path,
-        )
-        logger.info("SSH key for integration tests generated.")
+        if not os.path.isfile(ssh_key_path):
+          keyfp = RemoteClient.generate_key_pair(
+              filename = ssh_key_path,
+          )
+          logger.info("SSH key for integration tests generated.")
+        else:
+          logger.info("SSH key already exists, skipping generating SSH key")
 
 
     def _adjust_chroot(self, rootfs):
