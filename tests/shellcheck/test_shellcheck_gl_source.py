@@ -14,6 +14,7 @@ from itertools import filterfalse
 logger = logging.getLogger(__name__)
 
 SKIP_COMMENT = "skip-shellcheck"
+SHEBANG_REGEX = r"^#! */[^ ]*/(env *)?[abk]*sh"
 
 
 def is_bash_script(filepath):
@@ -25,7 +26,7 @@ def is_bash_script(filepath):
     except IOError:
         logger.warn('File {filepath} not found')
         return False
-    if 'bash' in head:
+    if re.search(SHEBANG_REGEX, str(head), re.IGNORECASE):
         return True
     return False
 
