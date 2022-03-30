@@ -3,6 +3,8 @@
 # All files must be specified relative to the root dir of this repository
 bin/
 ci/
+env/
+tests/env
 
 # Explicitly ignore single file
 docker/build/install-cfssl.sh
