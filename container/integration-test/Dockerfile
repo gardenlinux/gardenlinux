@@ -50,4 +50,4 @@ RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc
 COPY _pipfiles /_pipfiles
 RUN cd /_pipfiles && pipenv --python 3.9 install --system --dev && cd / && rm -rf /_pipfiles
 
-WORKDIR /gardenlinux/tests
+WORKDIR /gardenlinux
