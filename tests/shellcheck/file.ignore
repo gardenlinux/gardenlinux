@@ -4,3 +4,4 @@
 ci/
 env/
 tests/env
+.git/
