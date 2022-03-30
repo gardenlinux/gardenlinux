@@ -11,7 +11,6 @@ from pathlib import Path
 from subprocess import PIPE, run
 from itertools import filterfalse
 
-
 logger = logging.getLogger(__name__)
 
 SKIP_COMMENT = "skip-shellcheck"
@@ -50,6 +49,12 @@ def get_ignore_list(ignore_path):
         return ret
     with open(ignore_path) as file:
         for line in file.readlines():
+            if not line:
+                continue
+            if line.isspace():
+                continue
+            if line.startswith('#'):
+                continue
             ret.append(line.rstrip())
     return ret
 
@@ -97,14 +102,13 @@ ERRORS_TO_IGNORE = \
 
 
 @pytest.mark.parametrize('filepath', FILES_TO_CHECK)
-def test_shellcheck_on_file(filepath):
+def test_shellcheck_on_file(severity_level, filepath):
     command = ['shellcheck']
 
     for err in ERRORS_TO_IGNORE:
         command.append('--exclude')
         command.append(err)
-
-    command.append('--severity=warning')
+    command.append(f"--severity={severity_level}")
     command.append(filepath)
 
     result = run(command, stdout=PIPE, stderr=PIPE, universal_newlines=True)

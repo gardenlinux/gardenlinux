@@ -35,6 +35,14 @@ Checkout the github readme from the [koalaman/shellcheck](https://github.com/koa
 
 ## Configuration
 
+### Severity Level
+Severity level determines for what kind of findings the shellcheck tests should fail.  
+Starting from the most sensitive, to least sensitive, the available levels are: `error`, `warning`, `info`, `style`
+
+```
+pytest shellcheck --severity=error
+```
+
 ### Ignoring Shellcheck errors/warnings
 The text file `tests/shellcheck/error.ignore` is a line separated list of errors that must be ignored by the shellcheck pytests.
 
