@@ -46,7 +46,7 @@ Garden Linux supports integration testing on all major cloud platforms (Alicloud
 
 Build the integration test container with all necessary dependencies. This container image will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP) and KVM/QEMU.
 
-    make --directory=docker build-integration-test
+    make --directory=container build-integration-test
 
 The resulting container image will be tagged as `gardenlinux/integration-test:<version>` with `<version>` being the version that is returned by `bin/garden-version` in this repository. All fruther tests run inside this container.
 

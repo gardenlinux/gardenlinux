@@ -27,7 +27,7 @@ cert/sign.pub:
 
 .PHONY: container-build
 container-build:
-	make --directory=docker build-image
+	make --directory=container build-image
 
 all_prod: ali aws gcp azure metal openstack vmware kvm
 
@@ -162,4 +162,4 @@ clean:
 	@-sudo podman container rm $$(sudo podman container ls -a | awk '{ print $$1,$$2 }' | grep gardenlinux/integration-test: | awk '{ print $$1 }') 2> /dev/null || true
 
 distclean: clean
-	make --directory=docker clean
+	make --directory=container clean
