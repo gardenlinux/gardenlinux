@@ -16,13 +16,15 @@ def test_capabilities(client, features):
             assert exit_code == 0, f"no {error=} expected"
 
             capabilities = Helper.read_test_config(enabledfeatures, 'capabilities', '.list')
+
             cap_found = []
             cap_notfound = []
-            for line in output.split('\n'):
+            for line in output.splitlines():
                 if line not in capabilities:
                     cap_notfound.append(line)
                 if line in capabilities:
                     cap_found.append(line)
+
             assert len(cap_found) == len(capabilities), "Found capabilities do not match expected capabilities. Found: %s Expected: %s" % (', '.join(cap_found), ', '.join(capabilities))
             assert len(cap_notfound) == 0, "Capabilities %s are not in expected capabilities list" % (', '.join(cap_notfound))
         else:
