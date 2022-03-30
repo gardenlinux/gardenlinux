@@ -22,22 +22,27 @@ def is_bash_script(filepath):
             head = file.readline()
     except UnicodeDecodeError:
         return False  # Ignore binary data
+    except IOError:
+        logger.warn('File {filepath} not found')
+        return False
     if 'bash' in head:
         return True
     return False
 
 
 def has_skip_comment(filepath):
-    fp = open(filepath)
-    ret = False
-    for i, line in enumerate(fp):
-        if i == 1:
-            if SKIP_COMMENT in line:
-                ret = True
+    try:
+        fp = open(filepath)
+        ret = False
+        for i, line in enumerate(fp):
+            if i == 1:
+                if SKIP_COMMENT in line:
+                    ret = True
+                    break
+            if i > 1:
                 break
-        if i > 1:
-            break
-
+    except IOError:
+        logger.warn('File {filepath} not found')
     fp.close()
     return ret
 
@@ -74,10 +79,8 @@ def is_file_ignored(filename, ignore_list):
 
 
 def apply_ignore_filter(ignore_list, all_list):
-
     filtered_list = \
         [file for file in all_list if not is_file_ignored(file, ignore_list)]
-
     return filtered_list
 
 
