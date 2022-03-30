@@ -346,4 +346,4 @@ def features(client):
         if line.startswith('GARDENLINUX_FEATURES'):
             features = line.split('=')[1]
     current = (os.getenv('PYTEST_CURRENT_TEST')).split('/')
-    yield features.split(','), current[0]
+    yield features.split(','), current[1]
