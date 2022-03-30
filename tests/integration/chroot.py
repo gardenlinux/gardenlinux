@@ -125,22 +125,21 @@ class CHROOT:
         logger.info("Unarchiving image {image} to {rootfs}".format(
           image=image, rootfs=rootfs))
         try:
-            with lzma.open(self.config["image"]) as f:
-                with tarfile.open(fileobj=f) as tar:
-                    content = tar.extractall(rootfs)
-        except IOError:
-            logger.error("Could not unarchive image file due to IO Error.")
-        except lzma.LZMAError:
-            logger.error("LZMA decompression error.")
-        except tarfile.ReadError:
-            logger.error(("Archive is present but can not be handled by tar."+
-                          "Validate that your tar archive is not corrupt."))
-        except tarfile.CompressionError:
-            logger.error("Used compression is not supported.")
-        except tarfile.HeaderError:
-            logger.error("Malformed tar header information.")
-        logger.info("Unarchived image {image} to {rootfs}".format(
-          image=image, rootfs=rootfs))
+            cmd = (("tar -xp --acl --selinux --anchored --xattrs ")+
+                   ("--xattrs-include='security.capability' ")+
+                   ("-f '{image}' -C '{rootfs}'".format(image=image,rootfs=rootfs)))
+            p = subprocess.run([cmd], shell=True, stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT, check=True)
+            logger.info("Unarchived image {image} to {rootfs}".format(
+              image=image, rootfs=rootfs))
+        except subprocess.CalledProcessError:
+            logger.error("Error while unarchiving image {image} to {rootfs}".format(
+              image=image, rootfs=rootfs))
+            pytest.exit("Error", 1)
+        except OSError:
+            logger.error("Error while unarchiving image {image} to {rootfs}".format(
+              image=image, rootfs=rootfs))
+            pytest.exit("Error", 1)
         return rootfs
 
 
