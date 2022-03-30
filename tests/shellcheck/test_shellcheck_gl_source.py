@@ -13,8 +13,8 @@ from itertools import filterfalse
 
 logger = logging.getLogger(__name__)
 
-SKIP_COMMENT = "skip-shellcheck"
-SHEBANG_REGEX = r"^#! */[^ ]*/(env *)?[abk]*sh"
+SKIP_COMMENT = 'skip-shellcheck'
+SHEBANG_REGEX = r'^#! */[^ ]*/(env *)?[abk]*sh'
 
 
 def is_bash_script(filepath):
@@ -24,7 +24,7 @@ def is_bash_script(filepath):
     except UnicodeDecodeError:
         return False  # Ignore binary data
     except IOError:
-        logger.warn('File {filepath} not found')
+        logger.warn(f'File {filepath} not found')
         return False
     if re.search(SHEBANG_REGEX, str(head), re.IGNORECASE):
         return True
@@ -43,7 +43,7 @@ def has_skip_comment(filepath):
             if i > 1:
                 break
     except IOError:
-        logger.warn('File {filepath} not found')
+        logger.warn(f'File {filepath} not found')
     fp.close()
     return ret
 
@@ -51,7 +51,7 @@ def has_skip_comment(filepath):
 def get_ignore_list(ignore_path):
     ret = list()
     if not os.path.isfile(ignore_path):
-        logger.warn(f"File {ignore_path} does not exist")
+        logger.warn(f'File {ignore_path} does not exist')
         return ret
     with open(ignore_path) as file:
         for line in file.readlines():
@@ -73,7 +73,7 @@ def is_file_ignored(filename, ignore_list):
             continue
         if ignore_expression.startswith('#'):
             continue
-        regex = rf"\.\.\/" + re.escape(ignore_expression) + ".*"
+        regex = rf'\.\.\/' + re.escape(ignore_expression) + '.*'
         if re.search(regex, str(filename), re.IGNORECASE):
             return True
     return False
@@ -112,9 +112,9 @@ def test_shellcheck_on_file(severity_level, filepath):
     for err in ERRORS_TO_IGNORE:
         command.append('--exclude')
         command.append(err)
-    command.append(f"--severity={severity_level}")
+    command.append(f'--severity={severity_level}')
     command.append(filepath)
 
     result = run(command, stdout=PIPE, stderr=PIPE, universal_newlines=True)
     assert result.returncode == 0, \
-        f"Shellcheck failed on: {filepath} \n {result.stderr} {result.stdout} "
+        f'Shellcheck failed on: {filepath} \n {result.stderr} {result.stdout}'
