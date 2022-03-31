@@ -203,7 +203,7 @@ class CHROOT:
             logger.error("Could not create directory: {dir}".format(
               dir=chroot_sshd_run_dir))
         # Copy dedicated sshd config to chroot
-        sshd_config_src_file = "tests/integration/misc/sshd_config_integration_tests"
+        sshd_config_src_file = "integration/misc/sshd_config_integration_tests"
         chroot_sshd_cfg_dir = rootfs + "/etc/ssh/"
         try:
             shutil.copy(sshd_config_src_file, chroot_sshd_cfg_dir)
