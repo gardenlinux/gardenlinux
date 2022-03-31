@@ -331,11 +331,6 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
     else:
         raise ValueError(f"invalid {iaas=}")
 
-def pytest_configure():
-    pytest.package_musthave_exec_already = False
-    pytest.blacklisted_packages_exec_already = False
-    pytest.capabilities_exec_already = False
-
 
 @pytest.fixture
 def features(client):
