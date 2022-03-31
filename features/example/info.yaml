@@ -5,6 +5,8 @@ features:
     - _slim
   exclude:
     - chost
+  incompatible:
+    - _readonly
 tar:
   compression: xz
   include-dev: false
