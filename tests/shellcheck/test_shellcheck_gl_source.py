@@ -50,18 +50,18 @@ def has_skip_comment(filepath):
 
 def get_ignore_list(ignore_path):
     ret = list()
-    if not os.path.isfile(ignore_path):
-        logger.warn(f'File {ignore_path} does not exist')
-        return ret
-    with open(ignore_path) as file:
-        for line in file.readlines():
-            if not line:
-                continue
-            if line.isspace():
-                continue
-            if line.startswith('#'):
-                continue
-            ret.append(line.rstrip())
+    try:
+        with open(ignore_path) as file:
+            for line in file.readlines():
+                if not line:
+                    continue
+                if line.isspace():
+                    continue
+                if line.startswith('#'):
+                    continue
+                ret.append(line.rstrip())
+    except IOError:
+        logger.error(f"Could not open {ignore_path}")
     return ret
 
 
