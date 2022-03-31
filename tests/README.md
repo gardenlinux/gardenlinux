@@ -3,7 +3,27 @@
 
 ## 1. Full Integration Tests Including Image Upload
 
-## 1.1 Prerequisites
+## 1.1 General
+
+ Garden Linux supports integration testing on all major cloud platforms (Alicloud, AWS, Azur, GCP). To allow testing even without access to any cloud platform we created an universal `kvm` platform that may run locally and is accessed in the same way via a `ssh client object` as any other cloud platform. Therefore, you do not need to adjust tests to perform local integration tests. All platformes are described in detail below.
+
+## 1.2 Unit Tests
+
+**Corner case**: When it comes to unit testing these tests will be executed in a context of integration tests. This means that a specific platform type (`chroot`) of integration tests is used to perform regular `unit tests`. This is due to the fact that we want to achive a common test platform based on `Pytest` and theses ones should still be executable on any platform without further adjustments. However, these tests are still located in a subfolder (`test`) within the features directory and must be prefixed with `test_`. This means, that any feature may provide a subfolder called `test` including their `unit test(s)`. `Pytest` will automaticly include these files and validate if they need to run (e.g. `cis` tests will only run if the given artifact was built with this feature).
+
+**Location of Unit Tests:**
+
+`features/$FEATUR_NAME/test/test_$TEST_NAME.py`
+
+**Example:**
+
+| Feature | Unit test | Test location |
+|---|---|---|
+| $FEATURE_NAME | test_$TEST_NAME.py | features/$FEATUR_NAME/test/test_$TEST_NAME.py |
+| CIS | test_cis.py | [features/cis/test/test_cis.py](../features/cis/test/test_cis.py) |
+
+
+## 1.3 Prerequisites
 
 Build the integration test container with all necessary dependencies. This container image will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP) and KVM/QEMU.
 
