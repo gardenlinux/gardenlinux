@@ -154,7 +154,7 @@ docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.con
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
-    pytest --iaas=ali --configfile=/config/mygcpconfig.yaml integration/
+    pytest --iaas=ali --configfile=/config/mygcpconfig.yaml
 
 
 ### AWS
@@ -235,7 +235,7 @@ docker run -it --rm -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.aws:
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
-    pytest --iaas=aws --configfile=/config/myawsconfig.yaml integration/
+    pytest --iaas=aws --configfile=/config/myawsconfig.yaml
 
 ### Azure
 
@@ -327,7 +327,7 @@ docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.azu
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
-    pytest --iaas=azure --configfile=/config/myazconfig.yaml integration/
+    pytest --iaas=azure --configfile=/config/myazconfig.yaml
 
 
 ### CHROOT
@@ -388,7 +388,7 @@ docker run --cap-add SYS_ADMIN --security-opt apparmor=unconfined -it --rm -v `p
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
-    pytest --iaas=chroot --configfile=/config/mychrootconfig.yaml integration/
+    pytest --iaas=chroot --configfile=/config/mychrootconfig.yaml
 
 
 ### GCP
@@ -479,7 +479,7 @@ docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.con
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
-    pytest --iaas=gcp --configfile=/config/mygcpconfig.yaml integration/
+    pytest --iaas=gcp --configfile=/config/mygcpconfig.yaml
 
 
 ### KVM
@@ -568,7 +568,7 @@ docker run -it --rm -v `pwd`:/gardenlinux -v /boot/:/boot -v /lib/modules:/lib/m
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
-    pytest --iaas=kvm --configfile=/config/mykvmconfig.yaml integration/
+    pytest --iaas=kvm --configfile=/config/mykvmconfig.yaml
 
 
 ### Manual Testing
@@ -608,7 +608,7 @@ docker run -it --rm  -v `pwd`:/gardenlinux -v $HOME/.ssh:/root/.ssh -v ~/config:
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
-    pytest --iaas=manual --configfile=/config/myconfig.yaml integration/
+    pytest --iaas=manual --configfile=/config/myconfig.yaml
 
 
 ### OpenStack CC EE flavor
@@ -694,7 +694,7 @@ docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.con
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
-    pytest --iaas=openstack-ccee --configfile=/config/mygcpconfig.yaml integration/
+    pytest --iaas=openstack-ccee --configfile=/config/mygcpconfig.yaml
 
 
 ## Misc
