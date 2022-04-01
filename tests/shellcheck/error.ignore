@@ -1,0 +1,4 @@
+# For the sake of simplicity we do not care about non-constant source links,
+# we just scan every bash file in the repository, unless specified explicitly in the file.ignore file.
+# See https://github.com/koalaman/shellcheck/wiki/SC1090
+SC1090
