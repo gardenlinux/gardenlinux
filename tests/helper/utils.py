@@ -2,6 +2,8 @@ import os
 import re
 
 def get_package_list(client):
+    """Return list with the installed packages.
+    Needs the fixture client to connect into the image"""
     (exit_code, output, error) = client.execute_command("dpkg -l")
     assert exit_code == 0, f"no {error=} expected"
     pkgslist = []
@@ -14,7 +16,10 @@ def get_package_list(client):
     return pkgslist
 
 
-def read_test_config(features, testname, suffix):
+def read_test_config(features, testname, suffix = ".list"):
+    """Collect the configuration of a test from all enabled features.
+    Needs the fixture feature to get the enabled features and the name of the test, the suffix is optional.
+    It returns a list of the aggregated configs for a test."""
     config = []
     for feature in features:
         path = ("/gardenlinux/features/%s/test/%s.d/%s%s" % (feature, testname, testname, suffix))
