@@ -1,9 +1,7 @@
 import logging
-from socketserver import ThreadingUnixStreamServer
 
 from helper import utils
-from helper.exception import NotPartOfFeatureError
-from helper.exception import TestFailed
+from helper.exception import NotPartOfFeatureError, TestFailed, DisabledBy
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +23,14 @@ class Capabilities():
         if cls.failed_before:
             raise Exception("This test failed before in another feature")
 
-        # check if the test is part of the features used to build the gardenlinux image
         (enabledfeatures, myfeature) = features
+
+        # check if test is disabled in a feature
+        test_is_disabled = utils.is_disabled(enabledfeatures, 'capabilities')
+        if not len(test_is_disabled) == 0:
+            raise DisabledBy("Test is explicitly disabled by features %s" % (', '.join(test_is_disabled)))
+
+        # check if the test is part of the features used to build the gardenlinux image
         if myfeature in enabledfeatures:
 
             # first check if there is already an instance of this class, if it is the first time this instance is initiated

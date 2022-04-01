@@ -7,3 +7,7 @@ class NotPartOfFeatureError(Exception):
 class TestFailed(Exception):
     """Custom exception to throw when a test has failed."""
     pass
+
+class DisabledBy(Exception):
+    """Custom exception to throw when a test is explicitly disabled"""
+    pass
