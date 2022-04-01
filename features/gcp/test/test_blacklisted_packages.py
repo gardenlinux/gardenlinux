@@ -1,11 +1,10 @@
 from helper.exception import NotPartOfFeatureError, DisabledBy
-from helper.tests.packages_musthave import PackagesMusthave
-
+from helper.tests.blacklisted_packages import BlacklistedPackages
 import pytest
 
-def test_packages_musthave(client, features):
+def test_blacklisted_packages(client, features):
     """The test function executed by pytest"""
     try:
-        PackagesMusthave(client, features)
+        BlacklistedPackages(client, features)
     except (NotPartOfFeatureError, DisabledBy) as e:
         pytest.skip(str(e))
