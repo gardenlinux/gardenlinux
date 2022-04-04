@@ -9,14 +9,19 @@ The location of sources are at `/etc/apt/sources.list` respectively in the folde
 
 #### Generally:
 
-	deb http://repo.gardenlinux.io/gardenlinux $GARDENLINUX_EPOCH main
+	deb http://repo.gardenlinux.io/gardenlinux $days_since_garden_linux_release main
 
-`$GARDENLINUX_EPOCH` is generally `dev`, but the Garden Linux Version number can be defined here. It is the number of days since first Garden Linux release.
+`$days_since_garden_linux_release` is the number of days since 31.03.2020.
+
+For each day since we switched to an own package repository, we offer a respective distribution in our repo.gardenlinux.io apt repository.
+
+While `dev` contains always the latest package versions, the dated-distros contain the packages from that day.
+
 
 <details>
   <summary>More Info</summary>
   
-Try running [bin/garden-version](bin/garden-version), to get the $GARDENLINUX_EPOCH value:
+Try running [bin/garden-version](bin/garden-version), to get the $days_since_garden_linux_release value:
   ```
 # ./bin/garden-version
     dev
