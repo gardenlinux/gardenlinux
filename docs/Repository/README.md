@@ -44,7 +44,7 @@ The Source Line for this example should look like:
 
 ## Misc
 
-- currently we keep old packages in `dev` dist, and I think we are keeping it that way for now.
+- currently we keep old packages in `dev` dist.
 - the repository contains own packages, and a selected set of packages mirrored from `debian testing`
 - garden packages are being built in our gitlab pipelines
 
