@@ -24,6 +24,7 @@ RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc
           libguestfs-tools \
           qemu-system-x86 \
           qemu-system-arm \
+          shellcheck \
      && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
      && unzip awscliv2.zip \
      && ./aws/install \
