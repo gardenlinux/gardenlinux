@@ -21,7 +21,7 @@ While `dev` contains always the latest package versions, the dated-distros conta
 <details>
   <summary>More Info</summary>
   
-Try running [bin/garden-version](bin/garden-version), to get the $days_since_garden_linux_release value:
+Try running [bin/garden-version](../../bin/garden-version), to get the $days_since_garden_linux_release value:
   ```
 # ./bin/garden-version
     dev
