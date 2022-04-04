@@ -105,7 +105,7 @@ dockerArgs="--hostname garden-build
 	--volume ${thisDir}/cert/Kernel.sign.crt:/kernel.crt
 	--volume ${thisDir}/cert/Kernel.sign.key:/kernel.key"
 
-[ $lessram ] || dockerArgs+=" --tmpfs /tmp:dev,exec,suid,noatime"
+[ $lessram ] || dockerArgs+=" --tmpfs /tmp:dev,exec,suid"
 
 if [ -n "$local_pkgs" ]; then
 	dockerArgs+=" --volume $(realpath "$local_pkgs"):/opt/packages/pool:ro -e PKG_DIR=/opt/packages"
