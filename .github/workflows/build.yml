@@ -13,5 +13,5 @@ jobs:
       - run: |
           sudo apt-get update
           sudo apt-get -y install podman
-          sudo bash -c 'echo -e "[registries.search]\nregistries = [\"docker.io\"]" >> /etc/containers/registries.conf'
+          sudo bash -c 'echo -e "unqualified-search-registries = [\"docker.io\"]\n\n[[registry]]\nprefix = \"docker.io\"\ninsecure = true\nlocation = "docker.io"\n[[registry.mirror]]\nlocation = \"http://10.0.2.2:5000\"\ninsecure = true" >> /etc/containers/registries.conf'
       - run: make ARCH=${{ matrix.architecture }} ${{ matrix.target }}${{ matrix.modifier }}
