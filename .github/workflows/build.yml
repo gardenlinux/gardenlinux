@@ -13,4 +13,5 @@ jobs:
       - run: |
           sudo apt-get update
           sudo apt-get -y install podman
+          sudo bash -c 'echo -e "[registries.search]\nregistries = ['docker.io']" >> /etc/containers/registries.conf'
       - run: make ARCH=${{ matrix.architecture }} ${{ matrix.target }}${{ matrix.modifier }}
