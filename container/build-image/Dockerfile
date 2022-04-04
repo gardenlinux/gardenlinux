@@ -1,5 +1,5 @@
 ARG build_base_image=gardenlinux/slim
-FROM	docker.io/golang:latest as golang
+FROM	golang:latest as golang
 COPY	garden-feat.go /go/src
 RUN	go install golang.org/x/lint/golint@latest \
      && cd /go/src \
