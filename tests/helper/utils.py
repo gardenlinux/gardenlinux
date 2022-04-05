@@ -18,11 +18,12 @@ def get_package_list(client):
 
 def read_test_config(features, testname, suffix = ".list"):
     """Collect the configuration of a test from all enabled features.
-    Needs the list of enabled features and the name of the test, the suffix is optional.
-    It returns a list of the aggregated configs for a test."""
+    Needs the list of enabled features and the name of the test, the suffix is
+    optional. It returns a list of the aggregated configs for a test."""
     config = []
     for feature in features:
-        path = ("/gardenlinux/features/%s/test/%s.d/%s%s" % (feature, testname, testname, suffix))
+        path = (f"/gardenlinux/features/{feature}/test/{testname}.d/" +
+            f"{testname}{suffix}")
         if os.path.isfile(path):
             file = open(path, 'r')
             for line in file:
@@ -40,7 +41,7 @@ def disabled_by(features, testname):
     It returns a list of the features where the test is disabled."""
     disabled = []
     for feature in features:
-        path = ("/gardenlinux/features/%s/test/%s.disable" % (feature, testname))
+        path = (f"/gardenlinux/features/{feature}/test/{testname}.disable")
         if os.path.isfile(path):
             disabled.append(feature)
     return disabled
