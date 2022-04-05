@@ -58,6 +58,7 @@ The entire build runs in a <i>privileged</i> Docker container that orchestrates 
 ```
 apt install bash podman make coreutils gnupg git qemu-system-x86 qemu-system-aarch64
 ```
+Note: You may need to add *docker.io* to your [registries.conf](https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md)
 
 **CentOS/RedHat (>=8):**
 
@@ -67,6 +68,7 @@ CFSSL requires `GLIBC 2.28`. Therefore, we recommand to build on systems running
 # Install needed packages
 yum install bash podman make gnupg git qemu-kvm qemu-img
 ```
+Note: You may need to add *docker.io* to your [registries.conf](https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md)
 
 **Kernel Modules:**
 * ext4
