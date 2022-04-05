@@ -38,15 +38,6 @@ truncate -s "${img_size}MiB" "$img"
 disk_uuid=$(echo "gardenlinux:$version:disk_uuid" | uuid_hash)
 
 # setup partition table
-echo "### setup partition table"
-{
-	echo "label: gpt"
-	echo "label-id: $disk_uuid"
-	while IFS=$'\t' read -r part_uuid type size syslinux file label; do
-		echo "uuid=$part_uuid;type=$type;size=${size}MiB${label:+";name="}${label:+"$label"}$( ([[ "$syslinux" = 1 ]] && echo ";attrs=LegacyBIOSBootable") || true)"
-	done <<< "$second_pass"
-}
-echo "---------------------------------------------"
 {
 	echo "label: gpt"
 	echo "label-id: $disk_uuid"
@@ -54,7 +45,6 @@ echo "---------------------------------------------"
 		echo "uuid=$part_uuid;type=$type;size=${size}MiB${label:+";name="}${label:+"$label"}$( ([[ "$syslinux" = 1 ]] && echo ";attrs=LegacyBIOSBootable") || true)"
 	done <<< "$second_pass"
 } | sfdisk "$img"
-echo "### setup partition table - DONE"
 
 # when using syslinux on any partition write to MBR
 if [[ "$syslinux_mbr" = 1 ]]; then
