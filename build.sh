@@ -80,6 +80,7 @@ envArgs=(
 securityArgs=(
 	--cap-add sys_admin	# needed for unshare in garden-chroot
 	--cap-add mknod     # needed for debootstrap in garden-init
+	--cap-add audit_write	# needed for selinux in makepart
 )
 
 dockerinfo="$(sudo podman info)"       || eusage "sudo podman not working, check permissions or work with bin/garden-build"
