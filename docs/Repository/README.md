@@ -4,7 +4,7 @@ Garden Linux is a Debian-based Operating System. Therefore it uses apt.
 
 The location of sources are at `/etc/apt/sources.list` respectively in the folder `/etc/apt/sources.list.d/`
 
-#### Default Repo:
+#### `Dev` Repo:
 	deb http://repo.gardenlinux.io/gardenlinux dev main
 
 #### Generally:
