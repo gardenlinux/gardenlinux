@@ -34,7 +34,7 @@ def read_test_config(features, testname, suffix = ".list"):
     return config
 
 
-def is_disabled(features, testname):
+def disabled_by(features, testname):
     """Checks is a test is explicitly disabled by a feature.
     Needs the list of enabled features and the name of the test.
     It returns a list of the features where the test is disabled."""
