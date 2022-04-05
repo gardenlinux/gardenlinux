@@ -2,27 +2,28 @@ package main
 
 import (
 	"fmt"
-	"github.com/geofffranks/simpleyaml"
-	"github.com/geofffranks/spruce"
-	flag "github.com/spf13/pflag"
-	"gopkg.in/alediaferia/stackgo.v1"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
+
+	"github.com/geofffranks/simpleyaml"
+	"github.com/geofffranks/spruce"
+	flag "github.com/spf13/pflag"
+	"gopkg.in/alediaferia/stackgo.v1"
+	"gopkg.in/yaml.v2"
 )
 
 func usage() {
 	_, _ = fmt.Fprintf(os.Stderr, "Usage: %s <command> [--option]... arg...\n", filepath.Base(os.Args[0]))
-	_, _ = fmt.Fprintf(os.Stderr, "Commands:\n" +
-		" cname - effective minimum of features equivalent to specified features (ordered)\n" +
-		" features - effective maximum of all features (each feature used, no duplicates, ordered)\n\n" +
-		" platform - platforms in the featureset\n" +
-		" flags - flags in the featureset\n" +
-		" elements - all elements of the featureset (including platform because of possible execution order)\n\n" +
-		" ignore - ignored elements (no duplicates)\n" +
+	_, _ = fmt.Fprintf(os.Stderr, "Commands:\n"+
+		" cname - effective minimum of features equivalent to specified features (ordered)\n"+
+		" features - effective maximum of all features (each feature used, no duplicates, ordered)\n\n"+
+		" platform - platforms in the featureset\n"+
+		" flags - flags in the featureset\n"+
+		" elements - all elements of the featureset (including platform because of possible execution order)\n\n"+
+		" ignore - ignored elements (no duplicates)\n"+
 		" params - debugging output\n\n")
 	_, _ = fmt.Fprintf(os.Stderr, "Options:\n")
 	flag.PrintDefaults()
@@ -313,8 +314,9 @@ type feature struct {
 	Description string `yaml:"description,omitempty"`
 	Type        string `yaml:"type,omitempty"`
 	Features    struct {
-		Include []string `yaml:"include,omitempty"`
-		Exclude []string `yaml:"exclude,omitempty"`
+		Include   []string `yaml:"include,omitempty"`
+		Exclude   []string `yaml:"exclude,omitempty"`
+		Incompatible []string `yaml:"incompatible,omitempty"`
 	} `yaml:"features,omitempty"`
 	yaml map[interface{}]interface{}
 }
@@ -679,6 +681,7 @@ func expandFeatures(allFeatures featureSet, features []string, ignored set) ([]s
 	gInc := buildInclusionGraph(allFeatures)
 	collectedIgn := make(set)
 	collectedExcl := make(set)
+	collectedIncompatible := make(set)
 	var expanded []string
 
 	seen := make(set, len(gInc))
@@ -696,6 +699,10 @@ func expandFeatures(allFeatures featureSet, features []string, ignored set) ([]s
 			for _, e := range allFeatures[v].Features.Exclude {
 				collectedExcl[e] = struct{}{}
 			}
+
+			for _, e := range allFeatures[v].Features.Incompatible {
+				collectedIncompatible[e] = struct{}{}
+			}
 		})
 		if err != nil {
 			return nil, nil, err
@@ -706,6 +713,11 @@ func expandFeatures(allFeatures featureSet, features []string, ignored set) ([]s
 		if _, ok := collectedExcl[f]; ok {
 			return nil, nil, fmt.Errorf("%s has been excluded by another feature", f)
 		}
+
+                if _, ok := collectedIncompatible[f]; ok {
+                        // return error if feature is incompatible
+                        return nil, nil, fmt.Errorf("%s is an incompatible feature. Please adjust your feature list.", f)
+                }
 	}
 
 	return expanded, collectedIgn, nil
