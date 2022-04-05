@@ -1,6 +1,6 @@
 class NotPartOfFeatureError(Exception):
-    """Custom exception to throw when a test is called that is not in a feature that was used to build
-    the gardenlinux image.
+    """Custom exception to throw when a test is called that is not in a feature
+    that was used to build the gardenlinux image.
     """
     pass
 
@@ -9,5 +9,5 @@ class TestFailed(Exception):
     pass
 
 class DisabledBy(Exception):
-    """Custom exception to throw when a test is explicitly disabled"""
+    """Custom exception to throw when a test is explicitly disabled."""
     pass
