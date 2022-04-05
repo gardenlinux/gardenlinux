@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+rootfsDir=$1
+rootfsDir=$(readlink -f "$rootfsDir")
+
+hotplug_file=/lib/udev/rules.d/10-cloud-init-hook-hotplug.rules
+echo "checking for cloud-init hotplug udev rules"
+
+if [ ! -f ${rootfsDir}${hotplug_file} ] ; then
+	echo "OK - hotplug file ${hotplug_file} does not exist."
+	exit 0
+else
+	echo "FAIL - hotplug file ${hotplug_file} exists."
+	exit 1
+fi
