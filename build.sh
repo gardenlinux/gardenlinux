@@ -4,8 +4,8 @@ set -Eeuo pipefail
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/bin/.constants.sh" \
 	--flags 'skip-build,debug,lessram,manual,skip-tests' \
-	--flags 'arch:,features:,disable-features:,suite:,local-pkgs:' \
-	--usage '[--skip-build] [--lessram] [--debug] [--manual] [--arch=<arch>] [--skip-tests] [<output-dir>] [<version/timestamp>]' \
+	--flags 'arch:,features:,disable-features:,suite:,local-pkgs:,tests:' \
+	--usage '[--skip-build] [--lessram] [--debug] [--manual] [--arch=<arch>] [--skip-tests] [--tests=<test>,<test>,...] [<output-dir>] [<version/timestamp>]' \
 	--sample '--features kvm,khost --disable-features _slim .build' \
 	--sample '--features metal,_pxe --lessram .build' \
 	--help  "Generates a Garden Linux image based on features
@@ -22,6 +22,7 @@ source "$thisDir/bin/.constants.sh" \
 --arch		builds for a specific architecture (default: architecture the build runs on)
 --suite		specifies the debian suite to build for e.g. bullseye, potatoe (default: testing)
 --skip-tests	deactivating tests (default: off)
+--tests		test suite to use, available tests are unittests, kvm, chroot (default: unittest)
 --skip-build	do not create the build container BUILD_IMAGE variable would specify an alternative name
 "
 
@@ -33,7 +34,10 @@ lessram=
 arch=$(${thisDir}/get_arch.sh)
 features=
 disablefeatures=
-tests=1
+commitid="${commitid:-local}"
+dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
+skip_tests=1
+tests="unittests"
 local_pkgs=
 output=".build"
 while true; do
@@ -47,7 +51,8 @@ while true; do
 		--arch)		arch="$1"; 	shift ;;
 		--features) 	features="$1";	shift ;;
 		--disable-features) 	disablefeatures="$1";shift ;;
-		--skip-tests)   tests=0	;;
+		--skip-tests)   skip_tests=0	;;
+		--tests)	tests="$1"; shift ;;
 		--local-pkgs) local_pkgs="$1"; shift ;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
@@ -72,7 +77,8 @@ envArgs=(
 	features="$features"
 	disablefeatures="$disablefeatures"
 	version="$version"
-	tests=$tests
+	skip_tests=$skip_tests
+	tests="$tests"
 	userID="$userID"
 	userGID="$userGID"
 )
@@ -136,12 +142,102 @@ else
 	wait %1
 
 	# Run tests if activated
-	if [ $tests -eq 1 ]; then
+	if [ ${skip_tests} -eq 1 ] && [[ "${tests}" =~ .*"unittests".* ]]; then
 		echo "Running tests"
 		containerName=$(cat /proc/sys/kernel/random/uuid)
 		sudo podman run --name $containerName $dockerArgs --rm \
 			"${buildImage}" \
 			/opt/gardenlinux/bin/garden-test &
 		wait %1
+	fi
+	if [ ${skip_tests} -eq 1 ] && [[ "${tests}" == *chroot* ]]; then
+		echo "Creating config file for chroot tests"
+		containerName=$(cat /proc/sys/kernel/random/uuid)
+		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$arch-$version-$commitid"
+		mkdir -p ${thisDir}/config
+		cat > ${thisDir}/config/${containerName}.yaml << EOF
+chroot:
+    # Path to a final artifact. Represents the .tar.xz archive image file (required)
+    image: /gardenlinux/${outputDir##*/}/${prefix}.tar.xz
+
+    # IP or hostname of target machine (required)
+    # Default: 127.0.0.1
+    ip: 127.0.0.1
+
+    # port for remote connection (required)
+    # Default: 2223
+    port: 2222
+
+    # SSH configuration (required)
+    ssh:
+        # Defines path where to look for a given key
+        # or to save the new generated one. Take care
+        # that you do NOT overwrite your key. (required)
+        ssh_key_filepath: /tmp/ssh_priv_key
+
+        # Defines the user for SSH login (required)
+        # Default: root
+        user: root
+EOF
+		echo "Running pytests in chroot"
+		docker run --cap-add SYS_ADMIN --security-opt apparmor=unconfined \
+			--name $containerName --rm -v `pwd`:/gardenlinux \
+			gardenlinux/integration-test:dev \
+			pytest --iaas=chroot --configfile=/gardenlinux/config/${containerName}.yaml -k 'test_blacklist' &
+		wait %1
+		rm config/${containerName}.yaml
+	fi
+	if [ ${skip_tests} -eq 1 ] && [[ "${tests}" == *kvm* ]]; then
+		echo "Creating config file for KVM tests"
+		containerName=$(cat /proc/sys/kernel/random/uuid)
+		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$arch-$version-$commitid"
+		mkdir -p ${thisDir}/config
+		cat > ${thisDir}/config/${containerName}.yaml << EOF
+kvm:
+    # Path to a final artifact. Represents the .raw image file (required)
+    image: /gardenlinux/${outputDir##*/}/${prefix}.raw
+
+    # IP or hostname of target machine (optional)
+    # Default: 127.0.0.1
+    #ip: 127.0.0.1
+
+    # port for remote connection (required)
+    # Default: 2223
+    port: 2223
+
+    # Keep machine running after performing tests
+    # for further debugging (optional)
+    # Default: false
+    #keep_running: false
+
+    # Architecture to boot (optional)
+    # Default: amd64
+    arch: ${dpkgArch}
+
+    # SSH configuration (required)
+    ssh:
+        # Defines if a new SSH key should be generated (optional)
+        # Default: true
+        ssh_key_generate: true
+
+        # Defines path where to look for a given key
+        # or to save the new generated one. Take care
+        # that you do NOT overwrite your key. (required)
+        ssh_key_filepath: /tmp/ssh_priv_key
+
+        # Defines if a passphrase for a given key is needed (optional)
+        #passphrase: xxyyzz
+
+        # Defines the user for SSH login (required)
+        # Default: root
+        user: root
+EOF
+		echo "Running pytests in KVM"
+		docker run --name $containerName --rm -v /boot/:/boot \
+			-v /lib/modules:/lib/modules -v `pwd`:/gardenlinux  \
+			gardenlinux/integration-test:dev \
+			pytest --iaas=kvm --configfile=/gardenlinux/config/${containerName}.yaml -k 'test_blacklist' &
+		wait %1
+		rm config/${containerName}.yaml
 	fi
 fi
