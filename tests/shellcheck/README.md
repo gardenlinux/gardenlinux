@@ -10,7 +10,7 @@ Neither do the test require the repository to be in a buildable state.
 The `gardenlinux/integration-test` container has all dependencies installed that are required to run the shellcheck tests.
 Build the container image from the base directory of this repository by running: 
 ```
-make --directory=docker build-integration-test
+make --directory=container build-integration-test
 ```
 
 ## Configuration Options

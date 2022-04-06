@@ -90,7 +90,7 @@ make --directory=${thisDir}/bin
 
 # external variable BUILD_IMAGE forces a different buildimage name
 buildImage=${BUILD_IMAGE:-"gardenlinux/build-image:$version"}
-[ $build ] && make --directory=${thisDir}/docker ALTNAME=$buildImage build-image
+[ $build ] && make --directory=${thisDir}/container ALTNAME=$buildImage build-image
 
 [ -e ${thisDir}/cert/Kernel.sign.crt ] || make --directory=${thisDir}/cert Kernel.sign.crt
 [ -e ${thisDir}/cert/Kernel.sign.key ] || make --directory=${thisDir}/cert Kernel.sign.key
