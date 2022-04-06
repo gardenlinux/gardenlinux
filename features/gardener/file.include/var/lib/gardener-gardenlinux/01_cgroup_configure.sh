@@ -66,7 +66,7 @@ CMDLINE_LINUX="$CMDLINE_LINUX systemd.unified_cgroup_hierarchy=1"
 __EOF
 
 else
-    echo "desired cgroup version "$desired_cgroup" cannot be enabled, leaving system with "$current_cgroup""
+    echo "desired cgroup version $desired_cgroup cannot be enabled, leaving system with $current_cgroup"
     exit 1
 fi
 
@@ -74,10 +74,10 @@ fi
 /usr/local/sbin/update-syslinux
 
 if [[ "$desired_cgroup" == "${current_cgroup%% *}" ]]; then
-    echo "system already running with cgroup "$desired_cgroup" - not triggering a reboot"
+    echo "system already running with cgroup $desired_cgroup - not triggering a reboot"
     exit 0
 else
-    echo "scheduling a reboot to activate cgroup "$desired_cgroup""
+    echo "scheduling a reboot to activate cgroup $desired_cgroup"
     mkdir -p /var/run/gardener-gardenlinux
     touch /var/run/gardener-gardenlinux/restart-required
 fi

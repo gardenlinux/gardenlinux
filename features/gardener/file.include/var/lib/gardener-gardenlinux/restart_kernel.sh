@@ -37,7 +37,7 @@ if [ ! -e "$cmdline" ]; then
 fi
 
 # we seem to have everything so lets restart the kernel with kexec
-rm -f $RESTART_CONTROL_FILE
+rm -f "$RESTART_CONTROL_FILE"
 
 # kexec would be nice because it is fast but at the moment, it seems to be failing on some
 # systems due to initrd size or acpi or something else, so commenting it out for now

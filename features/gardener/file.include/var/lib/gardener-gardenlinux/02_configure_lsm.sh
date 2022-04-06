@@ -6,9 +6,9 @@ LSM_CMDLINE="/etc/kernel/cmdline.d/90-lsm.cfg"
 LSM_GARDENER="/var/lib/gardener-gardenlinux/etc/lsm"
 
 function check_current_lsm {
-    if [ -n "$(grep selinux /sys/kernel/security/lsm)" ]; then
+    if grep -q selinux /sys/kernel/security/lsm; then
         echo SELinux
-    elif [ -n "$(grep apparmor /sys/kernel/security/lsm)" ]; then
+    elif grep -q apparmor /sys/kernel/security/lsm; then
         echo AppArmor
     else
         echo none
@@ -38,7 +38,7 @@ CMDLINE_LINUX="$CMDLINE_LINUX security=selinux"
 __EOF
 
 else
-    echo "desired lsm "$desired_lsm" cannot be enabled, leaving system with "$current_lsm""
+    echo "desired lsm $desired_lsm cannot be enabled, leaving system with $current_lsm"
     exit 1
 fi
 
@@ -46,10 +46,10 @@ fi
 /usr/local/sbin/update-syslinux
 
 if [[ "$desired_lsm" == "${current_lsm}" ]]; then
-    echo "system already running with "$desired_lsm" - not triggering a reboot"
+    echo "system already running with $desired_lsm - not triggering a reboot"
     exit 0
 else
-    echo "scheduling a reboot to activate "$desired_lsm""
+    echo "scheduling a reboot to activate $desired_lsm"
     mkdir -p /var/run/gardener-gardenlinux
     touch /var/run/gardener-gardenlinux/restart-required
 fi

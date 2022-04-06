@@ -25,7 +25,6 @@ function check_netfilter_frontend {
 [ ! -f "$NETFILTER_GARDENER" ] && exit 0
 
 desired_nff=$(cat "$NETFILTER_GARDENER")
-current_nff=$(check_netfilter_frontend)
 
 if [ "$desired_nff" == "iptables" -o "$desired_nff" == "legacy" ]; then
     nf_frontend="/usr/sbin/iptables-legacy"
@@ -35,7 +34,7 @@ elif [ "$desired_nff" == "nftables" -o "$desired_nff" == "nft" ]; then
     nf6_frontend="/usr/sbin/ip6tables-nft"
 fi
 
-for nff in $nf_frontend $nf_frontend; do
+for nff in $nf_frontend $nf6_frontend; do
     if [ ! -x "$nff" ]; then
         echo "$nff does not exist or is not executable" >&2
         exit 1
