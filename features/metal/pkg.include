@@ -18,6 +18,5 @@ smartmontools
 bird2
 syslinux
 syslinux-common
-
-https://repo.gardenlinux.io/gardenlinux/pool/main/l/linux-signed-5.10-${arch}/linux-image-5.10.103-garden-${arch}_5.10.103-0gardenlinux1_${arch}.deb
-https://repo.gardenlinux.io/gardenlinux/pool/main/l/linux-signed-5.10-${arch}/linux-image-5.10-${arch}_5.10.103-0gardenlinux1_${arch}.deb
+https://repo.gardenlinux.io/gardenlinux/pool/main/l/linux-signed-5.10-${arch}/linux-image-5.10.109-garden-${arch}_5.10.109-0gardenlinux2_${arch}.deb
+https://repo.gardenlinux.io/gardenlinux/pool/main/l/linux-signed-5.10-${arch}/linux-image-5.10-${arch}_5.10.109-0gardenlinux2_${arch}.deb
