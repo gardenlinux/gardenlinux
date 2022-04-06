@@ -1,76 +1,54 @@
-# FAQ
-This is a Section for Frequently Asked Questions.
-If you have any Issues with Garden Linux which might benefit the community, feel free to add your information at the right spot by creating a Pull Request.
-
-## Table of Content
-- [Build](#Build)
-  * [Build Issues](#Build-Issues)
-
 ---
-# Build
-### Build Issues
-
----
-#### [Issue] Build fails because of AppArmor
-
-Happened on Manjaro Linux with incorrect AppArmor:
-
-`Error connecting to audit system.`
-
-<details>
-  <summary>log</summary>
-  
-  ```
-  ## executing exec.post
-### server:
-### metal:
-690M    rootfs
-174M    output/metal_dev-amd64-dev-local/rootfs.tar.xz
-4c580d62ad38ead941ceb7584dcd89c4ee4d17be44fba15773a1b8954b013125
-#### building diskimage
-  found new fstab in base
-  building rawfile
-Error connecting to audit system.
-Checking that no-one is using this disk right now ... OK
-
-Disk output/metal_dev-amd64-dev-local/rootfs.raw: 2 MiB, 2097152 bytes, 4096 sectors
-Units: sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-
->>> Script header accepted.
->>> Script header accepted.
->>> line 3: unsupported command
-
-New situation:
-Leaving.
-
-make: *** [Makefile:148: metal-dev] Error 1
-  ```
-</details>
-
-#### [Solution]
-If you are running a System with AppArmor (e.g. Manjaro Linux),
-have a look at `/proc/cmdline` by running `cat /proc/cmdline`:
-
-Make sure, the output contains the following part: `apparmor=1 security=apparmor`
-
-Also make sure `aa-status` returns `yes`.
-
-My Issue were missing kernel parameter - the systemd service was not able to reach status `Active: active (exited)`.
-
-If you are actually missing `apparmor=1 security=apparmor`, open `/etc/default/grub` and add it to `GRUB_CMDLINE_LINUX_DEFAULT`.
-
-result:
-
-	 GRUB_CMDLINE_LINUX_DEFAULT="quiet apparmor=1 security=apparmor udev.log_priority=3"
-
-save and close the file, and run
-
-	sudo update-grub
-
-and reboot your device. now recheck `/proc/cmdline` and `aa-status`
-
+title: FAQ
+weight: 10
+disableToc: false
 ---
 
-####
+# QA
+
+**Table of Content**
+- [QA](#qa)
+- [Linux Kernel](#linux-kernel)
+  - [Why does Garden Linux not integrate the mainline stable?](#why-does-garden-linux-not-integrate-the-mainline-stable)
+  - [A new long term kernel is released, when will it be integrated?](#a-new-long-term-kernel-is-released-when-will-it-be-integrated)
+  - [Why does Garden Linux use Debian kernel patches and configuration?](#why-does-garden-linux-use-debian-kernel-patches-and-configuration)
+
+
+# Linux Kernel
+
+Garden Linux aims towards a complete open, reproducible and easy-to-understand solution. That also includes all activities around the Kernel.
+[Kernel.org](https://kernel.org) is the source of the official Linux kernels and therefore all kernels in Garden Linux are mainly based on this. Not to forget our Debian roots: we integrate with the build environment [debian kernels](https://wiki.debian.org/Kernel) to support the Debian featureset to be compatible. Garden Linux tries to keep the amount of patches in the kernel diverging from Debian and kernel.org low, so everybody can easily support the Garden Linux kernel and no deep knowlege of Garden Linux inernals is needed.
+In contrast to Debian Garden Linux integrates always with the latest Long Term Support kernel (LTS) and maintains this kernel at least for one overlapping period till the next kernel will be available. You can find the release categoies and the time schedule for LTS releases also [kernel.org](https://www.kernel.org/category/releases.html).
+Garden Linux aims to integrate the latest long term release.
+
+## Why does Garden Linux not integrate the mainline stable?
+Mainline stable introduces features to the new Linux kernel, which happens every ~2 months. Some of those features affect the way e.g. container or network environment interact with the kernel and need some time to be adopted in surrounding tooling. Also some other feature introduce bugs, recognized after release and need to be reverted or other changes. In short: to avoid this we wait until a kernel version becomes a longterm stable and try to integrate always the latest long term stable and the one before to have a decent deprecation phase.   
+**Garden Linux takes advantage of these patches.**
+
+## A new long term kernel is released, when will it be integrated?
+We are probably on it, but feel free to open a Github issue.
+
+## Why does Garden Linux use Debian kernel patches and configuration?
+Garden Linux :heart: Debian.
+
+Debian is free and open source software. There are good [reasons](https://www.debian.org/intro/why_debian)
+to use Debian. In the following we explain our reasons in the kernel context.
+
+First, debian provides an enterprise grade server operating system,
+while protecting the claim to stay 100% free and open source.
+Debian is rigorous when it comes to non-free software licenses,
+also when it comes to the Linux Kernel. A prominent example of
+what this means, is the extraction of non-free firmware from
+the Linux Kernel.
+
+Debian scans licenses and patches out everything
+that violates the claim to stay 100% free. Since Garden Linux shares this
+approach, we benefit from Debian patches.
+
+Additionally, debian provides a good kernel configuration,
+which is used by Garden Linux as a base for configuration.
+We extend this kernel configuration to our specific requirements during the
+kernel integration process.
+
+Furthermore, debian kernel [patches](https://salsa.debian.org/kernel-team/linux/-/tree/master/debian/patches) are applied in most cases.
+
