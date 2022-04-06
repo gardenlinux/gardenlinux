@@ -314,8 +314,8 @@ type feature struct {
 	Description string `yaml:"description,omitempty"`
 	Type        string `yaml:"type,omitempty"`
 	Features    struct {
-		Include   []string `yaml:"include,omitempty"`
-		Exclude   []string `yaml:"exclude,omitempty"`
+		Include      []string `yaml:"include,omitempty"`
+		Exclude      []string `yaml:"exclude,omitempty"`
 		Incompatible []string `yaml:"incompatible,omitempty"`
 	} `yaml:"features,omitempty"`
 	yaml map[interface{}]interface{}
@@ -714,10 +714,10 @@ func expandFeatures(allFeatures featureSet, features []string, ignored set) ([]s
 			return nil, nil, fmt.Errorf("%s has been excluded by another feature", f)
 		}
 
-                if _, ok := collectedIncompatible[f]; ok {
-                        // return error if feature is incompatible
-                        return nil, nil, fmt.Errorf("%s is an incompatible feature. Please adjust your feature list.", f)
-                }
+		if _, ok := collectedIncompatible[f]; ok {
+			// return error if feature is incompatible
+			return nil, nil, fmt.Errorf("%s is an incompatible feature", f)
+		}
 	}
 
 	return expanded, collectedIgn, nil
