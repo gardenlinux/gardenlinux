@@ -50,16 +50,17 @@ class PackagesMusthave():
         if not hasattr(cls, 'instance'):
             cls.instance = super(PackagesMusthave, cls).__new__(cls)
 
-            pkgslist = utils.get_package_list(client)
+            installed_pkgslist = utils.get_package_list(client)
 
-            installed = utils.read_test_config(
+            must_installed = utils.read_test_config(
                 enabled_features, 'packages-musthave')
 
-            musthave = [pkg for pkg in installed if pkg not in pkgslist] 
+            missing = [pkg for pkg in must_installed \
+                        if pkg not in installed_pkgslist]
             
-            if not len(musthave) == 0:
+            if not len(missing) == 0:
                 cls.failed_before = True
-                raise TestFailed(f"{', '.join(musthave)} are a musthave, " +
+                raise TestFailed(f"{', '.join(missing)} are a musthave, " +
                     "but not installed")
             
         return cls.instance
