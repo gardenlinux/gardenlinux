@@ -1,6 +1,5 @@
 """ Client to manage connections and run commands via ssh on a remote host."""
 import logging
-from re import A
 import time
 import pytest
 import subprocess

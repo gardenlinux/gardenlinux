@@ -27,8 +27,10 @@ def read_test_config(features, testname, suffix = ".list"):
         if os.path.isfile(path):
             file = open(path, 'r')
             for line in file:
-                if line.startswith('#'):
+                # Skip comment lines
+                if re.match(r'^ *#',line):
                     continue
+                # Skip empty lines
                 if re.match(r'^\s*$', line):
                     continue
                 config.append(line.strip('\n'))
