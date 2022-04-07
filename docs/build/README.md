@@ -65,7 +65,12 @@ The https://gitlab.com/gardenlinux/gardenlinux-package-build contains the centra
 To create a package from a git source that contains already the `Debian` files you need to:
 
 1. create a gitlab repository in the gardenlinux group
-2. add a `.gitlab-ci.yml`, for example:
+1. add a `.gitlab-ci.yml`
+1. Add a (unique) git tag to the repository. The git tag must contain the correct version name.
+
+<details> 
+    <summary>Example: .gitlab-ci.yml</summary>
+
 ```
 variables:
   DEBFULLNAME: "Garden Linux builder"
@@ -79,7 +84,8 @@ include:
   file:
   - pipeline/pipeline.yml
 ```
-3. Add a (unique) git tag to the repository. The git tag must contain the correct version name.
+
+</details>
 
 ## Snapshot Source
 
@@ -87,13 +93,18 @@ To create a new package version that is compatible with old runtime dependency (
 you need to:
 
 1. Create a gitlab repository, or a branch if there exists already a gitlab repo for a non-backported version
-2. Copy the relevant pipelines to the new gitlab repo/branch
-   1. https://gitlab.com/gardenlinux/gardenlinux-package-build/-/blob/main/pipeline/build.yml
-3. Modify the pipelines to use 
-   1. a specific snapshot docker image for the build, for example: `Debian:unstable-20211011-slim`
-   2. a specific apr repository for the build, for example: `deb http://snapshot.debian.org/archive/debian/20211028T151025Z/ bookworm main`
-4. Download and install additional dependencies from snapshot.debian.org, for example `https://snapshot.debian.org/archive/debian/20211028T151025Z/pool/`
-5. Configure the .gitlab-ci.yml of the new gitlab repo/branch to use the local versions of the pipelines
+1. Copy the relevant pipelines to the new gitlab repo/branch
+    * https://gitlab.com/gardenlinux/gardenlinux-package-build/-/blob/main/pipeline/build.yml
+1. Modify the pipelines to use 
+    * a specific snapshot docker image for the build, for example: `Debian:unstable-20211011-slim`
+    * a specific apr repository for the build, for example: `deb http://snapshot.debian.org/archive/debian/20211028T151025Z/ bookworm main`
+1. Download and install additional dependencies from snapshot.debian.org, for example `https://snapshot.debian.org/archive/debian/20211028T151025Z/pool/`
+1. Configure the .gitlab-ci.yml of the new gitlab repo/branch to use the local versions of the pipelines
+
+
+<details> 
+    <summary>Example: .gitlab-ci.yml</summary>
+
 ```
 include:
 - project: gardenlinux/gardenlinux-package-build
@@ -103,5 +114,6 @@ include:
 - local: .gitlab/ci/build.yml
 ``` 
 
+</details> 
 
 
