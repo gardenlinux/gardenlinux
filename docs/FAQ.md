@@ -11,13 +11,13 @@ disableToc: false
 - [Linux Kernel](#linux-kernel)
   - [Why does Garden Linux not integrate the mainline stable?](#why-does-garden-linux-not-integrate-the-mainline-stable)
   - [A new long term kernel is released, when will it be integrated?](#a-new-long-term-kernel-is-released-when-will-it-be-integrated)
-  - [Why does Garden Linux use Debian kernel patches and configuration?](#why-does-garden-linux-use-debian-kernel-patches-and-configuration)
+  - [Why does Garden Linux use Debian kernel patches and configuration?](#why-does-garden-linux-use-Debian-kernel-patches-and-configuration)
 
 
 # Linux Kernel
 
 Garden Linux aims towards a complete open, reproducible and easy-to-understand solution. That also includes all activities around the Kernel.
-[Kernel.org](https://kernel.org) is the source of the official Linux kernels and therefore all kernels in Garden Linux are mainly based on this. Not to forget our Debian roots: we integrate with the build environment [debian kernels](https://wiki.debian.org/Kernel) to support the Debian featureset to be compatible. Garden Linux tries to keep the amount of patches in the kernel diverging from Debian and kernel.org low, so everybody can easily support the Garden Linux kernel and no deep knowledge of Garden Linux internals is needed.
+[Kernel.org](https://kernel.org) is the source of the official Linux kernels and therefore all kernels in Garden Linux are mainly based on this. Not to forget our Debian roots: we integrate with the build environment [Debian kernels](https://wiki.debian.org/Kernel) to support the Debian featureset to be compatible. Garden Linux tries to keep the amount of patches in the kernel diverging from Debian and kernel.org low, so everybody can easily support the Garden Linux kernel and no deep knowledge of Garden Linux internals is needed.
 In contrast to Debian, Garden Linux integrates always with the latest Long Term Support kernel (LTS) and maintains this kernel at least for one overlapping period till the next kernel will be available. You can find the release categories and the time schedule for LTS releases also on [kernel.org](https://www.kernel.org/category/releases.html).
 Garden Linux aims to integrate the latest long term release.
 
@@ -45,10 +45,10 @@ Debian scans licenses and patches out everything
 that violates the claim to stay 100% free. Since Garden Linux shares this
 approach, we benefit from Debian patches.
 
-Additionally, debian provides a good kernel configuration,
+Additionally, Debian provides a good kernel configuration,
 which is used by Garden Linux as a base for configuration.
 We extend this kernel configuration to our specific requirements during the
 kernel integration process.
 
-Furthermore, debian kernel [patches](https://salsa.debian.org/kernel-team/linux/-/tree/master/debian/patches) are applied in most cases.
+Furthermore, Debian kernel [patches](https://salsa.debian.org/kernel-team/linux/-/tree/master/debian/patches) are applied in most cases.
 

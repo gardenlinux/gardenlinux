@@ -62,7 +62,7 @@ The https://gitlab.com/gardenlinux/gardenlinux-package-build contains the centra
 [Garden Linux Gitlab Group ](https://gitlab.com/gardenlinux).
 
 ## Git Source 
-To create a package from a git source that contains already the `debian` files you need to:
+To create a package from a git source that contains already the `Debian` files you need to:
 
 1. create a gitlab repository in the gardenlinux group
 2. add a `.gitlab-ci.yml`, for example:
@@ -90,7 +90,7 @@ you need to:
 2. Copy the relevant pipelines to the new gitlab repo/branch
    1. https://gitlab.com/gardenlinux/gardenlinux-package-build/-/blob/main/pipeline/build.yml
 3. Modify the pipelines to use 
-   1. a specific snapshot docker image for the build, for example: `debian:unstable-20211011-slim`
+   1. a specific snapshot docker image for the build, for example: `Debian:unstable-20211011-slim`
    2. a specific apr repository for the build, for example: `deb http://snapshot.debian.org/archive/debian/20211028T151025Z/ bookworm main`
 4. Download and install additional dependencies from snapshot.debian.org, for example `https://snapshot.debian.org/archive/debian/20211028T151025Z/pool/`
 5. Configure the .gitlab-ci.yml of the new gitlab repo/branch to use the local versions of the pipelines

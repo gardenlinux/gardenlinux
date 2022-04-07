@@ -4,7 +4,7 @@ The apt repository is exposed at `repo.gardenlinux.io`.
 If you have added the repository to the `/etc/apt/sources.list` or a file in the folder `/etc/apt/sources.list.d/`,
 you can search for packets via `apt search`. Searching by opening the url in a webbrowser is currently disabled.
 
-The `repo.gardenlinux.io` repository contains own packages, and a selected set of packages mirrored from `debian testing`.
+The `repo.gardenlinux.io` repository contains own packages, and a selected set of packages mirrored from `Debian testing`.
 Packages are built, signed and deployed via the Garden Linux gitlab pipelines.
 
 
