@@ -60,6 +60,11 @@ apt install bash podman make coreutils gnupg git qemu-system-x86 qemu-system-aar
 ```
 Note: You may need to add *docker.io* to your [registries.conf](https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md)
 
+Example registries.conf entry for *docker.io*
+```
+unqualified-search-registries = ["docker.io"]
+```
+
 **CentOS/RedHat (>=8):**
 
 CFSSL requires `GLIBC 2.28`. Therefore, we recommand to build on systems running CentOS/RedHat 8 or later.
