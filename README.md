@@ -56,7 +56,13 @@ The entire build runs in a <i>privileged</i> Docker container that orchestrates 
 
 **Debian/Ubuntu:**
 ```
-apt install bash docker.io docker-compose make coreutils gnupg git qemu-system-x86 qemu-system-aarch64
+apt install bash podman make coreutils gnupg git qemu-system-x86 qemu-system-aarch64
+```
+Note: You may need to add *docker.io* to your [registries.conf](https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md)
+
+Example registries.conf entry for *docker.io*
+```
+unqualified-search-registries = ["docker.io"]
 ```
 
 **CentOS/RedHat (>=8):**
@@ -64,18 +70,10 @@ apt install bash docker.io docker-compose make coreutils gnupg git qemu-system-x
 CFSSL requires `GLIBC 2.28`. Therefore, we recommand to build on systems running CentOS/RedHat 8 or later.
 
 ```
-# Please use Docker repository for CentOS/RedHat:
-# https://docs.docker.com/engine/install/centos/
-yum install docker-ce docker-ce-cli containerd.io
-
-# Install Docker compose
-curl -L "https://github.com/docker/compose/releases/download/2.3.3/docker-compose-$(uname -s)-$(uname -m)" \
--o /usr/local/bin/docker-compose
-chmod +x /usr/local/bin/docker-compose
-
 # Install needed packages
-yum install bash make gnupg git qemu-kvm qemu-img
+yum install bash podman make gnupg git qemu-kvm qemu-img
 ```
+Note: You may need to add *docker.io* to your [registries.conf](https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md)
 
 **Kernel Modules:**
 * ext4

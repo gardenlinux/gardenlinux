@@ -78,17 +78,19 @@ envArgs=(
 )
 
 securityArgs=(
-	--cap-add SYS_ADMIN	# needed for unshare in garden-chroot
+	--cap-add sys_admin	# needed for unshare in garden-chroot
+	--cap-add mknod     # needed for debootstrap in garden-init
+	--cap-add audit_write	# needed for selinux in makepart
 )
 
-dockerinfo="$(docker info)"       || eusage "docker not working, check permissions or work with bin/garden-build"
+dockerinfo="$(sudo podman info)"       || eusage "sudo podman not working, check permissions or work with bin/garden-build"
 grep -q apparmor <<< $dockerinfo  && securityArgs+=( --security-opt apparmor=unconfined )
 
 make --directory=${thisDir}/bin
 
 # external variable BUILD_IMAGE forces a different buildimage name
 buildImage=${BUILD_IMAGE:-"gardenlinux/build-image:$version"}
-[ $build ] && make --directory=${thisDir}/docker ALTNAME=$buildImage build-image
+[ $build ] && make --directory=${thisDir}/container ALTNAME=$buildImage build-image
 
 [ -e ${thisDir}/cert/Kernel.sign.crt ] || make --directory=${thisDir}/cert Kernel.sign.crt
 [ -e ${thisDir}/cert/Kernel.sign.key ] || make --directory=${thisDir}/cert Kernel.sign.key
@@ -104,7 +106,7 @@ dockerArgs="--hostname garden-build
 	--volume ${thisDir}/cert/Kernel.sign.crt:/kernel.crt
 	--volume ${thisDir}/cert/Kernel.sign.key:/kernel.key"
 
-[ $lessram ] || dockerArgs+=" --tmpfs /tmp:dev,exec,suid,noatime"
+[ $lessram ] || dockerArgs+=" --tmpfs /tmp:dev,exec,suid"
 
 if [ -n "$local_pkgs" ]; then
 	dockerArgs+=" --volume $(realpath "$local_pkgs"):/opt/packages/pool:ro -e PKG_DIR=/opt/packages"
@@ -114,21 +116,21 @@ if [ $manual ]; then
 	echo -e "\n### running in manual mode"
 	echo -e "please run -> /opt/gardenlinux/bin/garden-build <- (all configs are set)\n"
 	set -x
-	docker run $dockerArgs -ti \
+	sudo podman run $dockerArgs -ti \
 		"${buildImage}" \
 		/bin/bash
 else
 	set -x
 	function stop(){
 		echo "trapped ctrl-c"
-		docker stop -t 0 $1
+		sudo podman stop -t 0 $1
 		wait
 		echo "everything stopped..."
 		exit 1
 	}
 	containerName=$(cat /proc/sys/kernel/random/uuid)
 	trap 'stop $containerName' INT
-	docker run --name $containerName $dockerArgs --rm \
+	sudo podman run --name $containerName $dockerArgs --rm \
 		"${buildImage}" \
 		/opt/gardenlinux/bin/garden-build &
 	wait %1
@@ -137,7 +139,7 @@ else
 	if [ $tests -eq 1 ]; then
 		echo "Running tests"
 		containerName=$(cat /proc/sys/kernel/random/uuid)
-		docker run --name $containerName $dockerArgs --rm \
+		sudo podman run --name $containerName $dockerArgs --rm \
 			"${buildImage}" \
 			/opt/gardenlinux/bin/garden-test &
 		wait %1

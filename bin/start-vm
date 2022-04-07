@@ -318,7 +318,7 @@ if [ $pxe ]; then
 		echo "removing symlinks"
 		rm  "$pxe/root."{vmlinuz,initrd,squashfs}
 		echo "stopping helper for pxe"
-		docker stop -t 0 $1
+		sudo podman stop -t 0 $1
 		[[ ! -s "$pxe/ignition.json" ]] && rm -f "$pxe/ignition.json"
 		echo "everything stopped..."
 	}
@@ -329,9 +329,9 @@ if [ $pxe ]; then
 	trap 'stop $containerName' EXIT
 	echo "starting helper container"
 	if [ "$ignfile" ]; then
-		docker run -it --rm -d -p 127.0.0.1:8888:80 --name ${containerName} -v ${pxe}:/usr/share/nginx/html -v ${ignfile}:/usr/share/nginx/html/ignition.json nginx
+		sudo podman run -it --rm -d -p 127.0.0.1:8888:80 --name ${containerName} -v ${pxe}:/usr/share/nginx/html -v ${ignfile}:/usr/share/nginx/html/ignition.json nginx
 	else
-		docker run -it --rm -d -p 127.0.0.1:8888:80 --name ${containerName} -v ${pxe}:/usr/share/nginx/html:ro nginx
+		sudo podman run -it --rm -d -p 127.0.0.1:8888:80 --name ${containerName} -v ${pxe}:/usr/share/nginx/html:ro nginx
 	fi
 fi
 
