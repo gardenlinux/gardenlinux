@@ -22,7 +22,7 @@ source "$thisDir/bin/.constants.sh" \
 --arch		builds for a specific architecture (default: architecture the build runs on)
 --suite		specifies the debian suite to build for e.g. bullseye, potatoe (default: testing)
 --skip-tests	deactivating tests (default: off)
---tests		test suite to use, available tests are unittests, kvm, chroot (default: unittest)
+--tests		test suite to use, available tests are unittests, kvm, chroot (default: unittests)
 --skip-build	do not create the build container BUILD_IMAGE variable would specify an alternative name
 "
 
@@ -35,7 +35,6 @@ arch=$(${thisDir}/get_arch.sh)
 features=
 disablefeatures=
 commitid="${commitid:-local}"
-dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
 skip_tests=1
 tests="unittests"
 local_pkgs=
@@ -59,6 +58,7 @@ while true; do
 	esac
 done
 
+dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
 outputDir="${1:-$output}";	shift || /bin/true
 version="$(${thisDir}/bin/garden-version ${1:-})";	shift || /bin/true
 
@@ -153,7 +153,7 @@ else
 	if [ ${skip_tests} -eq 1 ] && [[ "${tests}" == *chroot* ]]; then
 		echo "Creating config file for chroot tests"
 		containerName=$(cat /proc/sys/kernel/random/uuid)
-		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$arch-$version-$commitid"
+		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
 		mkdir -p ${thisDir}/config
 		cat > ${thisDir}/config/${containerName}.yaml << EOF
 chroot:
@@ -183,14 +183,14 @@ EOF
 		docker run --cap-add SYS_ADMIN --security-opt apparmor=unconfined \
 			--name $containerName --rm -v `pwd`:/gardenlinux \
 			gardenlinux/integration-test:dev \
-			pytest --iaas=chroot --configfile=/gardenlinux/config/${containerName}.yaml -k 'test_blacklist' &
+			pytest --iaas=chroot --configfile=/gardenlinux/config/${containerName}.yaml &
 		wait %1
 		rm config/${containerName}.yaml
 	fi
 	if [ ${skip_tests} -eq 1 ] && [[ "${tests}" == *kvm* ]]; then
 		echo "Creating config file for KVM tests"
 		containerName=$(cat /proc/sys/kernel/random/uuid)
-		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$arch-$version-$commitid"
+		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
 		mkdir -p ${thisDir}/config
 		cat > ${thisDir}/config/${containerName}.yaml << EOF
 kvm:
@@ -236,7 +236,7 @@ EOF
 		docker run --name $containerName --rm -v /boot/:/boot \
 			-v /lib/modules:/lib/modules -v `pwd`:/gardenlinux  \
 			gardenlinux/integration-test:dev \
-			pytest --iaas=kvm --configfile=/gardenlinux/config/${containerName}.yaml -k 'test_blacklist' &
+			pytest --iaas=kvm --configfile=/gardenlinux/config/${containerName}.yaml &
 		wait %1
 		rm config/${containerName}.yaml
 	fi
