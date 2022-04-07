@@ -43,7 +43,7 @@
   - Bare Metal
 
 ## Quick Start
-The entire build runs in a <i>privileged</i> Docker container that orchestrates all further actions. If not explicitly skipped, unit tests will be performed. Extended capabilities are at least needed for loop back support. Currently AMD64 and ARM64 architectures are supported.
+The entire build runs in a <i>privileged</i> Podman/Docker container that orchestrates all further actions. If not explicitly skipped, unit tests will be performed. Extended capabilities are at least needed for loop back support. Currently AMD64 and ARM64 architectures are supported.
 
 ### Build Requirements
 
@@ -56,13 +56,7 @@ The entire build runs in a <i>privileged</i> Docker container that orchestrates 
 
 **Debian/Ubuntu:**
 ```
-apt install bash podman make coreutils gnupg git qemu-system-x86 qemu-system-aarch64
-```
-Note: You may need to add *docker.io* to your [registries.conf](https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md)
-
-Example registries.conf entry for *docker.io*
-```
-unqualified-search-registries = ["docker.io"]
+apt install bash podman crun make coreutils gnupg git qemu-system-x86 qemu-system-aarch64
 ```
 
 **CentOS/RedHat (>=8):**
@@ -71,9 +65,16 @@ CFSSL requires `GLIBC 2.28`. Therefore, we recommand to build on systems running
 
 ```
 # Install needed packages
-yum install bash podman make gnupg git qemu-kvm qemu-img
+yum install bash podman crun make gnupg git qemu-kvm qemu-img
 ```
-Note: You may need to add *docker.io* to your [registries.conf](https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md)
+
+**Adjust Repository:**
+
+Add `docker.io` to `unqualified-search-registries` in your [registries.conf](https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md). On freshly installed `Podman` systems this can be done by executing:
+```
+echo 'unqualified-search-registries = ["docker.io"]' >> /etc/containers/registries.conf
+```
+If `Podman` was already present please add the repository yourself to `unqualified-search-registries` in `/etc/containers/registries.conf`.
 
 **Kernel Modules:**
 * ext4
