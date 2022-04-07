@@ -56,7 +56,7 @@ docker pull registry.gitlab.com/gardenlinux/driver/gardenlinux-driver-build-cont
 
 
 # Package Build
-Packages provided via the [repository](/docs/repository/README.md) are built, signed and deployed via the garden linux gitlab pipelines.
+Packages provided via the [repository](/docs/repository/README.md) are built, signed and deployed via the Garden Linux gitlab pipelines.
 
 The https://gitlab.com/gardenlinux/gardenlinux-package-build contains the central gitlab pipelines, used by packages in the 
 [Garden Linux Gitlab Group ](https://gitlab.com/gardenlinux).

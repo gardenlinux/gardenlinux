@@ -5,13 +5,13 @@ If you have added the repository to the `/etc/apt/sources.list` or a file in the
 you can search for packets via `apt search`. Searching by opening the url in a webbrowser is currently disabled.
 
 The `repo.gardenlinux.io` repository contains own packages, and a selected set of packages mirrored from `debian testing`.
-Packages are built, signed and deployed via the garden linux gitlab pipelines.
+Packages are built, signed and deployed via the Garden Linux gitlab pipelines.
 
 
 | Release  | Line for `/etc/apt/sources.list`  | Description  |
 |---|---|---|
 | dev  | `deb http://repo.gardenlinux.io/gardenlinux dev main`  | New package versions are publishes here first. |
-| `$major.$minor` | `deb http://repo.gardenlinux.io/gardenlinux major.minor main` | Packages for the the garden linux version `major.minor`  |
+| `$major.$minor` | `deb http://repo.gardenlinux.io/gardenlinux major.minor main` | Packages for the the Garden Linux version `major.minor`  |
 
 
 ### Versioning

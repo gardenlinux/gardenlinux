@@ -1,6 +1,6 @@
 # Documentation Guide
 
-The ```docs/``` folder contains (technical) documentation for garden linux.
+The ```docs/``` folder contains (technical) documentation for Garden Linux.
 
 
 ## Folder Structure
@@ -18,7 +18,7 @@ Place your diagram sources in the ```docs/.media``` folder.
 ### docs/deployment
 
 All markdown files in the subfolder ```docs/deployment``` describes
-how to deploy garden linux. Each describes a different platform.
+how to deploy Garden Linux. Each describes a different platform.
 
 
 
