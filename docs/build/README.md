@@ -12,7 +12,7 @@
 
 # Introduction
 
-Garden Linux offers pre-built images via the [Github Release feature](https://github.com/gardenlinux/gardenlinux/releases )in non-regular intervals.
+Garden Linux offers pre-built images via the [Github Release feature](https://github.com/gardenlinux/gardenlinux/releases) in non-regular intervals.
 The following section explains how to create your own build.
 Creating your own build also allows to customize the image to your requirements.
 
