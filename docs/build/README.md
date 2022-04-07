@@ -24,7 +24,7 @@ Use the [Makefile](/Makefile) to build a Garden Linux Image with a pre-defined s
 # Example 
 make metal-dev
 ```
-For more targets, checkout the [Makefile](/Makefile). The targets call ` build.sh` with a pre-defined set of features.  
+For more targets, checkout the [Makefile](/Makefile). The targets call `build.sh` with a pre-defined set of features.  
 
 You can also customize a Makefile target to your needs, e.g. by adding a feature.
 
@@ -41,7 +41,7 @@ Some artifacts will only be created by certain features.
 Drivers/LKMs not included in upstream linux of kernel.org can be build out of tree.
 
 ## build-kernelmodule container 
-We provide build container that come with gardenlinux linux-headers installed. 
+We provide a build container that come with Garden Linux linux-headers installed. 
 These build containers have a `uname -r` wrapper installed. 
 This wrapper outputs the latest installed kernel header in that container.
 

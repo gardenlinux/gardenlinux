@@ -17,8 +17,8 @@ disableToc: false
 # Linux Kernel
 
 Garden Linux aims towards a complete open, reproducible and easy-to-understand solution. That also includes all activities around the Kernel.
-[Kernel.org](https://kernel.org) is the source of the official Linux kernels and therefore all kernels in Garden Linux are mainly based on this. Not to forget our Debian roots: we integrate with the build environment [debian kernels](https://wiki.debian.org/Kernel) to support the Debian featureset to be compatible. Garden Linux tries to keep the amount of patches in the kernel diverging from Debian and kernel.org low, so everybody can easily support the Garden Linux kernel and no deep knowlege of Garden Linux inernals is needed.
-In contrast to Debian Garden Linux integrates always with the latest Long Term Support kernel (LTS) and maintains this kernel at least for one overlapping period till the next kernel will be available. You can find the release categoies and the time schedule for LTS releases also [kernel.org](https://www.kernel.org/category/releases.html).
+[Kernel.org](https://kernel.org) is the source of the official Linux kernels and therefore all kernels in Garden Linux are mainly based on this. Not to forget our Debian roots: we integrate with the build environment [debian kernels](https://wiki.debian.org/Kernel) to support the Debian featureset to be compatible. Garden Linux tries to keep the amount of patches in the kernel diverging from Debian and kernel.org low, so everybody can easily support the Garden Linux kernel and no deep knowledge of Garden Linux internals is needed.
+In contrast to Debian, Garden Linux integrates always with the latest Long Term Support kernel (LTS) and maintains this kernel at least for one overlapping period till the next kernel will be available. You can find the release categories and the time schedule for LTS releases also on [kernel.org](https://www.kernel.org/category/releases.html).
 Garden Linux aims to integrate the latest long term release.
 
 ## Why does Garden Linux not integrate the mainline stable?
@@ -34,7 +34,7 @@ Garden Linux :heart: Debian.
 Debian is free and open source software. There are good [reasons](https://www.debian.org/intro/why_debian)
 to use Debian. In the following we explain our reasons in the kernel context.
 
-First, debian provides an enterprise grade server operating system,
+First, Debian provides an enterprise grade server operating system,
 while protecting the claim to stay 100% free and open source.
 Debian is rigorous when it comes to non-free software licenses,
 also when it comes to the Linux Kernel. A prominent example of
