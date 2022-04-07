@@ -34,17 +34,21 @@ class RemoteClient:
         :param passphrase: passphrase of the RSA key
         :param comment: comment for RSA key
         """
-        priv = RSAKey.generate(bits=bits)
-        if filename:
-            priv.write_private_key_file(filename, password=passphrase)
-        elif fileobj:
-            priv.write_private_key(file_obj=fileobj, password=passphrase)
-        pub = RSAKey(filename=filename, password=passphrase)
-        logger.info(f"generated RSA key pair: {filename}")
-        with open(f"{filename}.pub", "w") as f:
-            f.write(f"{pub.get_name()} {pub.get_base64()}")
-            if comment:
-                f.write(f" {comment}")
+        if path.exists(filename):
+            pub = RSAKey(filename=filename, password=passphrase)
+            logger.info("SSH key already exists, skipping generating SSH key")
+        else:
+            priv = RSAKey.generate(bits=bits)
+            if filename:
+                priv.write_private_key_file(filename, password=passphrase)
+            elif fileobj:
+                priv.write_private_key(file_obj=fileobj, password=passphrase)
+            pub = RSAKey(filename=filename, password=passphrase)
+            logger.info(f"generated RSA key pair: {filename}")
+            with open(f"{filename}.pub", "w") as f:
+                f.write(f"{pub.get_name()} {pub.get_base64()}")
+                if comment:
+                    f.write(f" {comment}")
         hash = u(hexlify(pub.get_fingerprint()))
         fingerprint = ":".join([hash[i : 2 + i] for i in range(0, len(hash), 2)])
         logger.info(f"fingerprint: {bits} {fingerprint} {filename}.pub (RSA)")

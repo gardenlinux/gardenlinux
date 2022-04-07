@@ -10,15 +10,15 @@ from typing import Iterator
 import pytest
 import yaml
 
-from .aws import AWS
-from .gcp import GCP
-from .azure import AZURE
-from .openstackccee import OpenStackCCEE
-from .chroot import CHROOT
-from .kvm import KVM
-from .manual import Manual
-from .ali import ALI
-from .sshclient import RemoteClient
+from integration.aws import AWS
+from integration.gcp import GCP
+from integration.azure import AZURE
+from integration.openstackccee import OpenStackCCEE
+from integration.chroot import CHROOT
+from integration.kvm import KVM
+from integration.manual import Manual
+from integration.ali import ALI
+from integration.sshclient import RemoteClient
 
 logger = logging.getLogger(__name__)
 
