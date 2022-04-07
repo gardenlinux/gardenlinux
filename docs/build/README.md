@@ -12,11 +12,9 @@
 
 # Introduction
 
-Garden Linux makes use of the Github Release feature. Checkout available Releases [here](https://github.com/gardenlinux/gardenlinux/releases).
-But you can also decide to customize and build Garden Linux with the included build tools. 
-
-Customization is done via the the Garden Linux Feature System. 
-The feature system allows for a deliberate, and granular selection of features to be included in the final Garden Linux Image.
+Garden Linux offers pre-built images via the [Github Release feature](https://github.com/gardenlinux/gardenlinux/releases )in non-regular intervals.
+The following section explains how to create your own build.
+Creating your own build also allows to customize the image to your requirements.
 
 ## Build via make (recommended)
 Use the [Makefile](/Makefile) to build a Garden Linux Image with a pre-defined set of features. 
@@ -52,9 +50,9 @@ docker pull registry.gitlab.com/gardenlinux/driver/gardenlinux-driver-build-cont
 ```
 
 1. Load your kernel module sources into the container
-2. If the Makefile does not use `uname -r`, make sure to reference the correct kernel headers
+1. If the Makefile does not use `uname -r`, make sure to reference the correct kernel headers
     * e.g: ```$(MAKE) -C /lib/modules/$(BUILD_KERNEL)/build M=$(CURDIR) modules```
-3. continue with the LKM build instructions
+1. continue with the LKM build instructions
 
 
 # Package Build
