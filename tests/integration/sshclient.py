@@ -34,7 +34,7 @@ class RemoteClient:
         :param passphrase: passphrase of the RSA key
         :param comment: comment for RSA key
         """
-        if path.exists(filename):
+        if filename and path.exists(filename) and path.getsize(filename) > 0:
             pub = RSAKey(filename=filename, password=passphrase)
             logger.info("SSH key already exists, skipping generating SSH key")
         else:
