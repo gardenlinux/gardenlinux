@@ -159,7 +159,7 @@ else
 		docker run --cap-add SYS_ADMIN --security-opt apparmor=unconfined \
 			--name $containerName --rm -v `pwd`:/gardenlinux \
 			gardenlinux/integration-test:dev \
-			pytest --iaas=chroot --configfile=/gardenlinux/config/${containerName}.yaml -k "test_blacklisted" &
+			pytest --iaas=chroot --configfile=/gardenlinux/config/${containerName}.yaml &
 		wait %1
 		rm config/${containerName}.yaml
 	fi
@@ -172,7 +172,7 @@ else
 		docker run --name $containerName --rm -v /boot/:/boot \
 			-v /lib/modules:/lib/modules -v `pwd`:/gardenlinux  \
 			gardenlinux/integration-test:dev \
-			pytest --iaas=kvm --configfile=/gardenlinux/config/${containerName}.yaml -k "test_blacklisted" &
+			pytest --iaas=kvm --configfile=/gardenlinux/config/${containerName}.yaml &
 		wait %1
 		rm config/${containerName}.yaml
 	fi
