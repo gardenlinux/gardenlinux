@@ -15,11 +15,13 @@ from azure.core.exceptions import (
 from urllib.request import urlopen
 from urllib.parse import urlparse
 
-from azure.mgmt.subscription import SubscriptionClient
-from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.storage import StorageManagementClient
 from azure.mgmt.network import NetworkManagementClient
+from azure.mgmt.resource import (
+    ResourceManagementClient,
+    SubscriptionClient
+)
 
 from azure.mgmt.storage.models import StorageAccountCheckNameAvailabilityParameters
 from azure.storage.blob import BlobClient
