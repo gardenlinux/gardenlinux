@@ -70,6 +70,7 @@ def import_snapshot(
             'Format': 'raw',
             'Description': 'uploaded by gardenlinux-cicd',
         },
+        Encrypted=False,
     )
 
     import_task_id = res['ImportTaskId']
@@ -243,6 +244,7 @@ def copy_image(
             SourceImageId=ami_image_id,
             SourceRegion=src_region_name,
             Name=image_name,
+            Encrypted=False,
         )
         # XXX: return (new) image-AMI
         response_ok(res)
