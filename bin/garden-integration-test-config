@@ -14,8 +14,6 @@ set -Eeuo pipefail
 # thisDir:      root of the gardenlinux repository which is also the default
 # arch:         architecture of the build target, defaults the arch of the image/archive to test
 
-echo $1
-
 if [[ ! "$1" == "chroot" ]] && [[ ! "$1" == "kvm" ]]; then
     echo "The first argument must be 'chroot' or 'kvm'."
     exit 1

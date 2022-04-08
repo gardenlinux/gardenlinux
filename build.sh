@@ -167,7 +167,7 @@ else
 		echo "Creating config file for KVM tests"
 		containerName=$(cat /proc/sys/kernel/random/uuid)
 		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
-		${thisDir}/bin/garden-integration-test-config kvm ${prefix} ${containerName} ${outputDir} ${thisDir} ${dpkgArch}
+		${thisDir}/bin/garden-integration-test-config kvm ${prefix} ${containerName} ${outputDir}
 		echo "Running pytests in KVM"
 		docker run --name $containerName --rm -v /boot/:/boot \
 			-v /lib/modules:/lib/modules -v `pwd`:/gardenlinux  \
