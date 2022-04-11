@@ -140,7 +140,7 @@ ali:
 
 #### Running the tests
 
-Start docker container with dependencies:
+Start Podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount GCP credentials to `/root/.config`
@@ -149,7 +149,7 @@ Start docker container with dependencies:
 - mount directory with configfile to `/config`
 
 ```
-docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -322,7 +322,7 @@ Start podman container with dependencies:
 - mount directory with configfile to `/config`
 
 ```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.azure:/root/.azure -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+sudo podman run --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.azure:/root/.azure -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -335,8 +335,8 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 CHROOT tests are designed to run directly on your platform within a `chroot` environment and boosts up the time for the integration tests that do not need any target platform.
 
 Notes:
- * CHROOT will run inside your `integration-test` Docker container
- * Docker container needs `SYS_ADMIN` capability
+ * CHROOT will run inside your `integration-test` Podman container
+ * Podman container needs `SYS_ADMIN` capability
  * Temporary SSH keys are auto generated and injected
 
 Use the following configuration file to proceed; only the path to the TAR image needs to be adjusted:
@@ -376,14 +376,14 @@ chroot:
 
 #### Running the tests
 
-Start docker container with dependencies:
+Start Podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount build result directory to `/build` (if not part of the Garden Linux file tree)
 - mount directory with configfile to `/config`
 
 ```
-docker run --cap-add SYS_ADMIN --security-opt apparmor=unconfined -it --rm -v `pwd`:/gardenlinux gardenlinux/integration-test:dev /bin/bash
+sudo podman run --cap-add SYS_ADMIN --security-opt apparmor=unconfined -it --rm -v `pwd`:/gardenlinux gardenlinux/integration-test:dev /bin/bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -486,7 +486,7 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 
 KVM tests are designed to run directly on your platform. Currently, AMD64 and ARM64 architectures are supported.
 Notes:
- * KVM/QEMU will run inside your `integration-test` Docker container
+ * KVM/QEMU will run inside your `integration-test` Podman container
  * (Default) New temporary SSH keys are auto generated and injected
  * (Default: amd64) AMD64 and ARM64 architecutres are supported
 
@@ -546,7 +546,7 @@ kvm:
 
 #### Running the tests
 
-Start docker container with dependencies:
+Start Podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount /boot and /lib/modules for guestfish support (required for KVM tools)
@@ -596,7 +596,7 @@ manual:
 
 #### Running the tests
 
-Start docker container with dependencies:
+Start Podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount SSH keys to `/root/.ssh`
