@@ -156,7 +156,7 @@ else
 		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
 		${thisDir}/bin/garden-integration-test-config chroot ${prefix} ${containerName} ${outputDir}
 		echo "Running pytests in chroot"
-		sudo podman run --cap-add SYS_ADMIN,MKNOD --security-opt apparmor=unconfined \
+		sudo podman run --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE --security-opt apparmor=unconfined \
 			--name $containerName --rm -v `pwd`:/gardenlinux \
 			gardenlinux/integration-test:dev \
 			pytest --iaas=chroot --configfile=/gardenlinux/config/${containerName}.yaml &

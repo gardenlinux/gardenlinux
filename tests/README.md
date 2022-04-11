@@ -336,7 +336,7 @@ CHROOT tests are designed to run directly on your platform within a `chroot` env
 
 Notes:
  * CHROOT will run inside your `integration-test` Docker container
- * Podman container needs `SYS_ADMIN` and `MKNOD` capability
+ * Podman container needs `SYS_ADMIN`, `MKNOD` and `AUDIT_WRITE` capability
  * Temporary SSH keys are auto generated and injected
 
 Use the following configuration file to proceed; only the path to the TAR image needs to be adjusted:
@@ -383,7 +383,7 @@ Start podman container with dependencies:
 - mount directory with configfile to `/config`
 
 ```
-sudo podman run --cap-add SYS_ADMIN,MKNOD --security-opt apparmor=unconfined -it --rm -v `pwd`:/gardenlinux gardenlinux/integration-test:dev /bin/bash
+sudo podman run --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE --security-opt apparmor=unconfined -it --rm -v `pwd`:/gardenlinux gardenlinux/integration-test:dev /bin/bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
