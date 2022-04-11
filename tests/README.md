@@ -140,7 +140,7 @@ ali:
 
 #### Running the tests
 
-Start docker container with dependencies:
+Start podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount GCP credentials to `/root/.config`
@@ -149,7 +149,7 @@ Start docker container with dependencies:
 - mount directory with configfile to `/config`
 
 ```
-docker run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -336,7 +336,7 @@ CHROOT tests are designed to run directly on your platform within a `chroot` env
 
 Notes:
  * CHROOT will run inside your `integration-test` Docker container
- * Docker container needs `SYS_ADMIN` capability
+ * Podman container needs `SYS_ADMIN` and `MKNOD` capability
  * Temporary SSH keys are auto generated and injected
 
 Use the following configuration file to proceed; only the path to the TAR image needs to be adjusted:
@@ -376,14 +376,14 @@ chroot:
 
 #### Running the tests
 
-Start docker container with dependencies:
+Start podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount build result directory to `/build` (if not part of the Garden Linux file tree)
 - mount directory with configfile to `/config`
 
 ```
-docker run --cap-add SYS_ADMIN --security-opt apparmor=unconfined -it --rm -v `pwd`:/gardenlinux gardenlinux/integration-test:dev /bin/bash
+sudo podman run --cap-add SYS_ADMIN,MKNOD --security-opt apparmor=unconfined -it --rm -v `pwd`:/gardenlinux gardenlinux/integration-test:dev /bin/bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -546,7 +546,7 @@ kvm:
 
 #### Running the tests
 
-Start docker container with dependencies:
+Start podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount /boot and /lib/modules for guestfish support (required for KVM tools)
@@ -596,7 +596,7 @@ manual:
 
 #### Running the tests
 
-Start docker container with dependencies:
+Start podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount SSH keys to `/root/.ssh`

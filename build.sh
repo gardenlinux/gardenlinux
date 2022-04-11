@@ -156,7 +156,7 @@ else
 		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
 		${thisDir}/bin/garden-integration-test-config chroot ${prefix} ${containerName} ${outputDir}
 		echo "Running pytests in chroot"
-		docker run --cap-add SYS_ADMIN --security-opt apparmor=unconfined \
+		sudo podman run --cap-add SYS_ADMIN,MKNOD --security-opt apparmor=unconfined \
 			--name $containerName --rm -v `pwd`:/gardenlinux \
 			gardenlinux/integration-test:dev \
 			pytest --iaas=chroot --configfile=/gardenlinux/config/${containerName}.yaml &
@@ -169,7 +169,7 @@ else
 		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
 		${thisDir}/bin/garden-integration-test-config kvm ${prefix} ${containerName} ${outputDir}
 		echo "Running pytests in KVM"
-		docker run --name $containerName --rm -v /boot/:/boot \
+		sudo podman run --name $containerName --rm -v /boot/:/boot \
 			-v /lib/modules:/lib/modules -v `pwd`:/gardenlinux  \
 			gardenlinux/integration-test:dev \
 			pytest --iaas=kvm --configfile=/gardenlinux/config/${containerName}.yaml &
