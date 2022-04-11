@@ -1,0 +1,5 @@
+###
+# We do not have two responsive nameserver
+skip-test=NETW-2705
+# Iptables loaded but no active rules
+skip-test=FIRE-4512

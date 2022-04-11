@@ -126,7 +126,7 @@ kvm: container-build cert/sign.pub
 	./build.sh $(BUILD_OPTS) --skip-build --features server,cloud,kvm $(BUILDDIR) $(VERSION)
 
 kvm-dev: container-build cert/sign.pub
-	./build.sh $(BUILD_OPTS) --skip-build --features server,cloud,kvm,_dev $(BUILDDIR) $(VERSION)
+	./build.sh $(BUILD_OPTS) --skip-build --features server,cloud,kvm,_dev,cis $(BUILDDIR) $(VERSION)
 
 pxe: container-build cert/sign.pub
 	./build.sh $(BUILD_OPTS) --skip-build --features metal,server,_pxe $(BUILDDIR) $(VERSION)
