@@ -32,7 +32,7 @@ def test_clock(client):
         abs(local_seconds - remote_seconds) < 5
     ), "clock skew should be less than 5 seconds. Local time is %s and remote time is %s" % (local_seconds, remote_seconds)
 
-def test_ntp(client, non_azure):
+def test_ntp(client, non_azure, non_chroot):
     """azure does not use systemd-timesyncd"""
     (exit_code, output, error) = client.execute_command("timedatectl show")
     assert exit_code == 0, f"no {error=} expected"
@@ -79,7 +79,7 @@ def test_no_man(client):
     assert "man: command not found" in error
 
 
-def test_metadata_connection_non_az_non_ali(client, non_azure, non_ali):
+def test_metadata_connection_non_az_non_ali(client, non_azure, non_ali,  non_chroot, non_kvm):
     metadata_host = "169.254.169.254"
     (exit_code, output, error) = client.execute_command(
         f"wget --timeout 5 http://{metadata_host}"
@@ -118,7 +118,7 @@ def test_timesync(client, azure):
     (exit_code, output, error) = client.execute_command("test -L /dev/ptp_hyperv")
     assert exit_code == 0, f"Expected /dev/ptp_hyperv to be a symbolic link"
 
-def test_loadavg(client):
+def test_loadavg(client, non_kvm):
     """This test does not produce any load. Make sure no 
        other process does."""
     (exit_code, output, error) = client.execute_command("cat /proc/loadavg")
@@ -149,12 +149,12 @@ def test_ping6(client, ping6_host):
     assert exit_code == 0, f'no {error=} expected when executing "{command}"'
     assert "5 packets transmitted, 5 received, 0% packet loss" in output
 
-def test_systemctl_no_failed_units(client):
+def test_systemctl_no_failed_units(client, non_chroot, non_kvm):
     (exit_code, output, error) = client.execute_command("systemctl list-units --output=json --state=failed")
     assert exit_code == 0, f"no {error=} expected"
     assert len(json.loads(output)) == 0
 
-def test_startup_time(client):
+def test_startup_time(client, non_chroot, non_kvm):
     tolerated_kernel_time = 15
     tolerated_userspace_time = 30
     (exit_code, output, error) = client.execute_command("systemd-analyze")
@@ -202,10 +202,10 @@ def test_growpart(client, openstack, openstack_flavor):
     sgb = int(lines[1].strip()[:-1])
     assert sgb == expected_disk_size, f"partition size expected to be ~{expected_disk_size} GB but is {sgb}"
 
-def test_docker(client):
+def test_docker(client, non_chrooti, non_kvm):
     (exit_code, output, error) = client.execute_command("sudo systemctl start docker")
     if exit_code != 0:
-        (journal_rc, output, error) = client.execute_command("sudo journactl --no-pager -xu docker.service")
+        (journal_rc, output, error) = client.execute_command("sudo journalctl --no-pager -xu docker.service")
     assert exit_code == 0, f"no {error=} expected"
     (exit_code, output, error) = client.execute_command("sudo docker run --rm  eu.gcr.io/gardenlinux/gardenlinux:184.0 sh -c 'echo from container'")
     assert exit_code == 0, f"no {error=} expected"
@@ -316,7 +316,7 @@ def test_aws_ena_driver(client, aws):
     assert exit_code == 0, f"no {error=} expected"
     assert output.rstrip() == "ena", "Expected network interface to run with ena driver"
 
-def test_apparmor(client):
+def test_apparmor(client, non_chroot, non_kvm):
     (exit_code, output, error) = client.execute_command("/usr/bin/aa-enabled")
     assert exit_code == 1, f"expected aa-enabled to return with rc=1"
     assert "No" in output.rstrip(), "Expected AppArmor not to be enabled by default."
