@@ -3,6 +3,7 @@ import logging
 import json
 import yaml
 import os
+import sys
 
 import glci.util
 
