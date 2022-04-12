@@ -202,7 +202,7 @@ def test_growpart(client, openstack, openstack_flavor):
     sgb = int(lines[1].strip()[:-1])
     assert sgb == expected_disk_size, f"partition size expected to be ~{expected_disk_size} GB but is {sgb}"
 
-def test_docker(client, non_chrooti, non_kvm):
+def test_docker(client, non_chroot, non_kvm):
     (exit_code, output, error) = client.execute_command("sudo systemctl start docker")
     if exit_code != 0:
         (journal_rc, output, error) = client.execute_command("sudo journalctl --no-pager -xu docker.service")
