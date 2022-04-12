@@ -140,7 +140,7 @@ ali:
 
 #### Running the tests
 
-Start podman container with dependencies:
+Start Podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount GCP credentials to `/root/.config`
@@ -221,7 +221,7 @@ The URI can be:
 
 #### Running the tests
 
-Start podman container with dependencies:
+Start Podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount AWS credential folder (usually `~/.aws`) to `/root/.aws`
@@ -313,7 +313,7 @@ The URI can be:
 
 #### Running the tests
 
-Start podman container with dependencies:
+Start Podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount Azure credentials to `/root/.azure`
@@ -376,7 +376,7 @@ chroot:
 
 #### Running the tests
 
-Start podman container with dependencies:
+Start Podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount build result directory to `/build` (if not part of the Garden Linux file tree)
@@ -465,7 +465,7 @@ The URI can be:
 
 #### Running the tests
 
-Start podman container with dependencies:
+Start Podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount GCP credentials to `/root/.config`
@@ -546,7 +546,7 @@ kvm:
 
 #### Running the tests
 
-Start podman container with dependencies:
+Start Podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount /boot and /lib/modules for guestfish support (required for KVM tools)
@@ -596,7 +596,7 @@ manual:
 
 #### Running the tests
 
-Start podman container with dependencies:
+Start Podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount SSH keys to `/root/.ssh`
@@ -680,7 +680,7 @@ openstack_ccee:
 
 #### Running the tests
 
-Start podman container with dependencies:
+Start Podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount GCP credentials to `/root/.config`
