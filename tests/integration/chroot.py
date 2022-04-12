@@ -16,7 +16,7 @@ import shutil
 import socket
 from contextlib import closing
 from novaclient import client
-from .sshclient import RemoteClient
+from helper.sshclient import RemoteClient
 from . import util
 
 # Define global logger

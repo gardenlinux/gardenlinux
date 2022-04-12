@@ -9,7 +9,7 @@ import sys
 import glci.util
 
 from typing import Iterator
-from integration.sshclient import RemoteClient
+from helper.sshclient import RemoteClient
 
 from os import path
 from dataclasses import dataclass

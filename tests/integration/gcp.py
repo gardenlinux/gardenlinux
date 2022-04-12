@@ -19,7 +19,7 @@ from google.cloud import storage
 from google.cloud.storage import constants as storage_constants
 from googleapiclient.errors import HttpError
 
-from .sshclient import RemoteClient
+from helper.sshclient import RemoteClient
 from . import util
 
 logger = logging.getLogger(__name__)

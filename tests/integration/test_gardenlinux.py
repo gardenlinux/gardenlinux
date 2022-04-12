@@ -18,7 +18,7 @@ from integration.chroot import CHROOT
 from integration.kvm import KVM
 from integration.manual import Manual
 from integration.ali import ALI
-from integration.sshclient import RemoteClient
+from helper.sshclient import RemoteClient
 
 logger = logging.getLogger(__name__)
 

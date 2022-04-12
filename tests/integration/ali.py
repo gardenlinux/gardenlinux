@@ -5,7 +5,7 @@ import os
 import subprocess
 from oslo_utils.strutils import mask_dict_password
 
-from .sshclient import RemoteClient
+from helper.sshclient import RemoteClient
 from . import util
 
 from aliyunsdkcore.client import AcsClient
