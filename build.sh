@@ -154,26 +154,26 @@ else
 		echo "Creating config file for chroot tests"
 		containerName=$(cat /proc/sys/kernel/random/uuid)
 		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
-		config=$(${thisDir}/bin/garden-integration-test-config chroot ${prefix} ${outputDir})
+		configDir=$(${thisDir}/bin/garden-integration-test-config chroot ${prefix} ${outputDir})
 		echo "Running pytests in chroot"
 		sudo podman run --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW --security-opt apparmor=unconfined \
-			--name $containerName --rm -v `pwd`:/gardenlinux \
+			--name $containerName --rm -v `pwd`:/gardenlinux -v ${configDir}:/config \
 			gardenlinux/integration-test:dev \
-			pytest --iaas=chroot --configfile=/gardenlinux/${config} &
+			pytest --iaas=chroot --configfile=/config/config.yaml &
 		wait %1
-		rm ${config}
+		rm -r ${configDir}
 	fi
 	if [ ${skip_tests} -eq 0 ] && [[ "${tests}" == *"kvm"* ]]; then
 		echo "Creating config file for KVM tests"
 		containerName=$(cat /proc/sys/kernel/random/uuid)
 		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
-		config=$(${thisDir}/bin/garden-integration-test-config kvm ${prefix} ${outputDir})
+		configDir=$(${thisDir}/bin/garden-integration-test-config kvm ${prefix} ${outputDir})
 		echo "Running pytests in KVM"
 		sudo podman run --name $containerName --rm -v /boot/:/boot \
-			-v /lib/modules:/lib/modules -v `pwd`:/gardenlinux  \
+			-v /lib/modules:/lib/modules -v `pwd`:/gardenlinux -v ${configDir}:/config \
 			gardenlinux/integration-test:dev \
-			pytest --iaas=kvm --configfile=/gardenlinux/${config} &
+			pytest --iaas=kvm --configfile=/config/config.yaml &
 		wait %1
-		rm ${config}
+		rm -r ${configDir}
 	fi
 fi

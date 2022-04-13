@@ -28,4 +28,3 @@ __pycache__
 /test_results.json
 /tests/*.log
 /tests/*.xml
-/tmp.*

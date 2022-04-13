@@ -34,11 +34,11 @@ thisDir=${4:-$thisDir}
 arch=${5:-$arch}
 
 # create directory for the test configs
-config=$(mktemp -p ${thisDir})
+configDir=$(mktemp -d)
 
 # write config for the chroot integration test
 if [[ "${test}" == "chroot" ]]; then
-    cat > ${config} << EOF
+    cat > ${configDir}/config.yaml << EOF
 chroot:
     # Path to a final artifact. Represents the .tar.xz archive image file (required)
     image: /gardenlinux/${outputDir##*/}/${prefix}.tar.xz
@@ -66,7 +66,7 @@ fi
 
 # write config for the kvm integration test
 if [[ "${test}" == "kvm" ]]; then
-    cat > ${config} << EOF
+    cat > ${configDir}/config.yaml << EOF
 kvm:
     # Path to a final artifact. Represents the .raw image file (required)
     image: /gardenlinux/${outputDir##*/}/${prefix}.raw
@@ -108,4 +108,4 @@ kvm:
 EOF
 fi
 
-echo ${config##*/}
+echo ${configDir}
