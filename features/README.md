@@ -1,4 +1,6 @@
 # Features
+
+<website-features>
 ## General
 Each folder represents a usable Garden Linux `feature` that can be added to a final Garden Linux artifact. This allows you to build Garden Linux for different cloud platforms with a different set of features like `CIS`, `read only` etc. Currently, the following feature types are available:
 
@@ -224,3 +226,4 @@ file.include/
             ├── foo.io.conf
             └── gardenlinux.io.conf
 ```
+</website-features>
