@@ -9,7 +9,6 @@ set -Eeuo pipefail
 # usage:        garden-integration-test-config <test> <prefix> <arch> <name> <outputDir> <thisDir>
 # test:         name of the test to create the configuration for, possible values are chroot or kvm
 # prefix:       name of the image/archive before the file suffix (default: kvm_dev-amd64-dev-local)
-# name:         name for the config file, defaults to a random uuid prefixed with the name of the test
 # outputDir:    directory where the outcome of the build is stored (default: .build)
 # thisDir:      root of the gardenlinux repository which is also the default
 # arch:         architecture of the build target, defaults the arch of the image/archive to test
@@ -26,22 +25,20 @@ outputDir=".build"
 prefix="kvm_dev-amd64-dev-local"
 # extract the default arch from the image/archive name
 arch=$(sed "s/.*-\(.*\)-.*-.*/\1/g" <<< ${prefix})
-name="$1-$(cat /proc/sys/kernel/random/uuid)"
 
 # use positional arguments if given else use the defaults
 test=$1
 prefix=${2:-$prefix}
-name=${3:-$name}
-outputDir=${4:-$outputDir}
-thisDir=${5:-$thisDir}
-arch=${6:-$arch}
+outputDir=${3:-$outputDir}
+thisDir=${4:-$thisDir}
+arch=${5:-$arch}
 
 # create directory for the test configs
-mkdir -p ${thisDir}/config
+config=$(mktemp -p ${thisDir})
 
 # write config for the chroot integration test
 if [[ "${test}" == "chroot" ]]; then
-    cat > ${thisDir}/config/${name}.yaml << EOF
+    cat > ${config} << EOF
 chroot:
     # Path to a final artifact. Represents the .tar.xz archive image file (required)
     image: /gardenlinux/${outputDir##*/}/${prefix}.tar.xz
@@ -69,7 +66,7 @@ fi
 
 # write config for the kvm integration test
 if [[ "${test}" == "kvm" ]]; then
-    cat > ${thisDir}/config/${name}.yaml << EOF
+    cat > ${config} << EOF
 kvm:
     # Path to a final artifact. Represents the .raw image file (required)
     image: /gardenlinux/${outputDir##*/}/${prefix}.raw
@@ -110,3 +107,5 @@ kvm:
         user: root
 EOF
 fi
+
+echo ${config##*/}
