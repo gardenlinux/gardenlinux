@@ -380,5 +380,10 @@ def test_aws_ena_driver(client, aws):
 
 def test_apparmor(client):
     (exit_code, output, error) = client.execute_command("/usr/bin/aa-enabled")
+    assert exit_code == 1, f"expected aa-enabled to return with rc=1"
+    assert "No" in output.rstrip(), "Expected AppArmor not to be enabled by default."
+
+def test_selinux(client):
+    (exit_code, output, error) = client.execute_command("grep selinux /sys/kernel/security/lsm")
     assert exit_code == 0, f"no {error=} expected"
-    assert output.rstrip() == "Yes", "Expected AppArmor to be enabled."
+    assert "selinux" in output.rstrip(), "Expected SELinux to be enabled."
