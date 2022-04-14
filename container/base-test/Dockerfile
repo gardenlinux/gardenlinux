@@ -26,6 +26,7 @@ RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc
           qemu-system-arm \
           shellcheck \
           build-essential \
+          libpython3-dev \
      && (test -x /usr/bin/pytest-3 && ln -sf /usr/bin/pytest-3 /usr/bin/pytest)
 
 COPY _pipfiles /_pipfiles
