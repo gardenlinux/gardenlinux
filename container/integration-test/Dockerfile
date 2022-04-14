@@ -21,7 +21,4 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
      && apt-get clean && rm -rf /var/lib/apt/lists/* \
      && mkdir -p /root/.aws /root/.ssh /config
 
-COPY _pipfiles /_pipfiles
-RUN cd /_pipfiles && pipenv --python 3.9 install --system --dev && cd / && rm -rf /_pipfiles
-
 WORKDIR /gardenlinux/tests
