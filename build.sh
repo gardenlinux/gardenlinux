@@ -158,7 +158,7 @@ else
 		echo "Running pytests in chroot"
 		sudo podman run --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW --security-opt apparmor=unconfined \
 			--name $containerName --rm -v `pwd`:/gardenlinux -v ${configDir}:/config \
-			gardenlinux/integration-test:dev \
+			gardenlinux/base-test:dev \
 			pytest --iaas=chroot --configfile=/config/config.yaml &
 		wait %1
 		rm -r ${configDir}
@@ -171,7 +171,7 @@ else
 		echo "Running pytests in KVM"
 		sudo podman run --name $containerName --rm -v /boot/:/boot \
 			-v /lib/modules:/lib/modules -v `pwd`:/gardenlinux -v ${configDir}:/config \
-			gardenlinux/integration-test:dev \
+			gardenlinux/base-test:dev \
 			pytest --iaas=kvm --configfile=/config/config.yaml &
 		wait %1
 		rm -r ${configDir}

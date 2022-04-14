@@ -24,8 +24,14 @@ build: needslim
 build-deb: build
 	@sudo podman build -t gardenlinux/build-deb $(ALTNAME_INTERNAL) build-deb
 
+.PHONY: build-base-test
+build-base-test: needslim
+	mkdir -p base-test/_pipfiles
+	cp ../tests/Pipfile* base-test/_pipfiles
+	@sudo podman build -t gardenlinux/base-test:$(VERSION) base-test
+
 .PHONY: build-integration-test
-build-integration-test: needslim
+build-integration-test: build-base-test
 	mkdir -p integration-test/_pipfiles
 	cp ../tests/Pipfile* integration-test/_pipfiles
 	@sudo podman build -t gardenlinux/integration-test:$(VERSION) integration-test
