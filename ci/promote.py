@@ -169,13 +169,18 @@ def _publish_azure_image(release: glci.model.OnlineReleaseManifest,
         cicd_cfg.publish.azure.service_principal_cfg_name
     )
     service_principal_cfg_serialized = glci.model.AzureServicePrincipalCfg(
-        **service_principal_cfg.raw
+        tenant_id=service_principal_cfg.tenant_id(),
+        client_id=service_principal_cfg.client_id(),
+        client_secret=service_principal_cfg.client_secret(),
+        subscription_id=service_principal_cfg.subscription_id(),
     )
     storage_account_cfg = cfg_factory.azure_storage_account(
         cicd_cfg.publish.azure.storage_account_cfg_name
     )
     storage_account_cfg_serialized = glci.model.AzureStorageAccountCfg(
-        **storage_account_cfg.raw
+        storage_account_name=storage_account_cfg.storage_account_name(),
+        container_name=storage_account_cfg.container_name(),
+        access_key=storage_account_cfg.access_key(),
     )
 
     azure_marketplace_cfg = glci.model.AzureMarketplaceCfg(
