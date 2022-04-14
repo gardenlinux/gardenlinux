@@ -5,6 +5,7 @@ from datetime import (
 )
 from enum import Enum
 import logging
+import time
 import typing
 
 import requests
@@ -381,6 +382,11 @@ def update_and_publish_marketplace_offer(
         offer_id=offer_id,
         notification_mails=notification_recipients,
     )
+
+    logger.info(
+        'Sleeping for two minutes to ensure that Azure knows about the new publishing process'
+    )
+    time.sleep(120)
 
     publish_operation_id = marketplace_client.fetch_ongoing_operation_id(
         publisher_id=publisher_id,
