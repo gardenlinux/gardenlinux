@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 TIME_OUT = 120 * 60  # in seconds, 2h
 
-
 class AlicloudImageStatus(enum.Enum):
     CREATING = "Creating"
     WAITING = "Waiting"
@@ -35,12 +34,6 @@ class AlicloudImageStatus(enum.Enum):
     @staticmethod
     def to_availbel_str_array() -> []:
         return [v.value for v in AlicloudImageStatus]
-
-class ImageShareOption(enum.Enum):
-    SHARE = "HIDDEN"
-    UNSHARE = "PRIVATE"
-    def __str__(self):
-        return self.value
 
 class AlicloudImageMaker:
     def __init__(
@@ -131,7 +124,7 @@ class AlicloudImageMaker:
             )
             req = ModifyImageSharePermissionRequest.ModifyImageSharePermissionRequest()
             req.set_ImageId(image_id)
-            req.set_LaunchPermission(str(ImageShareOption.SHARE))
+            req.set_IsPublic(True)
             self.acs_client.do_action_with_exception(req)
 
         self.acs_client.set_region_id(self.region)
@@ -141,7 +134,7 @@ class AlicloudImageMaker:
         self.acs_client.set_region_id(region)
         req = ModifyImageSharePermissionRequest.ModifyImageSharePermissionRequest()
         req.set_ImageId(image_id)
-        req.set_LaunchPermission(str(ImageShareOption.UNSHARE))
+        req.set_IsPublic(False)
         self.acs_client.do_action_with_exception(req)
         req = DeleteImageRequest.DeleteImageRequest()
         req.set_ImageId(image_id)
