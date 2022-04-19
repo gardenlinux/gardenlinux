@@ -13,7 +13,7 @@ RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc
           less \
           apt-transport-https \
           gnupg \
-          pipenv \
+          python3-pip \
           python3-pytest \
           vim \
           procps \
@@ -29,6 +29,7 @@ RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc
           libpython3-dev \
      && (test -x /usr/bin/pytest-3 && ln -sf /usr/bin/pytest-3 /usr/bin/pytest)
 
+run pip install pipenv==11.9.0
 COPY _pipfiles /_pipfiles
 RUN cd /_pipfiles && pipenv --python 3.9 install --system --dev && cd / && rm -rf /_pipfiles
 
