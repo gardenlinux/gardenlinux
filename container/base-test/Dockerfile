@@ -29,6 +29,7 @@ RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc
           libpython3-dev \
      && (test -x /usr/bin/pytest-3 && ln -sf /usr/bin/pytest-3 /usr/bin/pytest)
 
+# pipenv package was removed from bookworm https://tracker.debian.org/pkg/pipenv
 run pip install pipenv==11.9.0
 COPY _pipfiles /_pipfiles
 RUN cd /_pipfiles && pipenv --python 3.9 install --system --dev && cd / && rm -rf /_pipfiles
