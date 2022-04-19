@@ -1,0 +1,7 @@
+# This subfeature can only be used with
+# its base feature: cis
+description: "CIS Subfeature: Packages"
+type: element
+features:
+  depends:
+    - cis

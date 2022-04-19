@@ -1,0 +1,90 @@
+# Config from CIS feature
+# Disable root login.
+PermitRootLogin no
+
+# Only use the more secure SSHv2 protocol.
+Protocol 2
+
+# No X11 forwarding.
+X11Forwarding no
+
+# Check permissions of configuration files related to SSH on login.
+# If this fails, the user won’t be able to login.
+StrictModes yes
+
+# Disable host-based authentications.
+IgnoreRhosts yes
+HostbasedAuthentication no
+
+# Set log level to be verbose.
+# we need to log the fingerprint
+LogLevel VERBOSE 
+
+# Ensure usage of PAM
+UsePAM yes
+
+# override default of no subsystems
+Subsystem sftp /usr/lib/openssh/sftp-server -f AUTHPRIV -l INFO
+
+# autologout inactive users after 10 minutes
+ClientAliveInterval 600
+ClientAliveCountMax 0
+
+# Password based logins are disabled - only public key based logins are allowed.
+AuthenticationMethods publickey
+
+# Supported HostKey algorithms by order of preference.
+HostKey /etc/ssh/ssh_host_ed25519_key
+HostKey /etc/ssh/ssh_host_rsa_key
+
+## Additional CIS config
+PrintMotd yes
+# 5.2.11
+PermitEmptyPasswords no
+# 5.2.12
+PermitUserEnvironment no
+# 5.2.13
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
+# 5.2.14
+MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512,hmac-sha2-256
+# 5.2.15
+KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,diffie-hellman-group14-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256,diffie-hellman-group-exchange-sha256
+# 5.2.16
+ClientAliveInterval 300
+# 5.2.17
+LoginGraceTime 60
+# 5.2.18
+AllowUsers *
+AllowGroups *
+DenyUsers nobody
+DenyGroups nobody
+# 5.2.19
+Banner /etc/ssh/sshd-banner
+# 5.2.21
+# 5.2.22
+maxstartups 10:30:60
+AllowTCPForwarding no
+# 5.2.23
+maxsessions 10
+# 5.2.7
+MaxAuthTries 4
+# 99.5.2.1
+PubkeyAuthentication yes
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+KerberosAuthentication no
+ChallengeResponseAuthentication no
+GSSAPIAuthentication no
+GSSAPIKeyExchange no
+RekeyLimit 512M 6h
+# 99.5.2.3
+AllowAgentForwarding no
+AllowTcpForwarding no
+AllowStreamLocalForwarding no
+PermitTunnel no
+PermitUserRC no
+GatewayPorts no
+# 99.5.2.6
+AcceptEnv LANG LC_*
+# 99.5.2.8
+UsePrivilegeSeparation sandbox
