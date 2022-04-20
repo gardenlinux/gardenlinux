@@ -3,6 +3,7 @@ import logging
 import json
 import yaml
 import os
+import sys
 
 import glci.util
 
@@ -336,7 +337,8 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
 def features(client):
     (exit_code, output, error) = client.execute_command("cat /etc/os-release")
     if exit_code != 0:
-        sys.exit(error)
+        logger.error(error)
+        sys.exit(exit_code)
     for line in output.split('\n'):
         if line.startswith('GARDENLINUX_FEATURES'):
             features = line.split('=')[1]
