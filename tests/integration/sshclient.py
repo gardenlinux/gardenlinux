@@ -236,7 +236,7 @@ class RemoteClient:
             self.conn = self.__connect()
         self.scp.get(file)
 
-    def execute_command(self, command: str, timeout: int = 30) -> tuple[int, str, str]:
+    def execute_command(self, command: str, timeout: int = 30, quiet: bool = False) -> tuple[int, str, str]:
         """
         Execute commands on remote host
 
@@ -247,17 +247,19 @@ class RemoteClient:
         """
         if self.client is None:
             self.client = self.__connect()
-
-        logger.info(f"$ {command.rstrip()}")
+        if not quiet:
+            logger.info(f"$ {command.rstrip()}")
 
         _, stdout, stderr = self.client.exec_command(command=command, timeout=timeout)
         exit_status = stdout.channel.recv_exit_status()
-        logger.info(f"{exit_status=}")
+        if not quiet:
+            logger.info(f"{exit_status=}")
 
         output, error = stdout.read().decode(), stderr.read().decode()
-        if len(error) > 0:
-            logger.info(error)
-        else:
-            logger.info(output)
+        if not quiet:
+            if len(error) > 0:
+                logger.info(error)
+            else:
+                logger.info(output)
 
         return exit_status, output, error

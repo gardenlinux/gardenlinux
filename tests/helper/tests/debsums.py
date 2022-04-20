@@ -51,13 +51,13 @@ class Debsums():
 
             utils.AptUpdate(client)                
             (exit_code, output, error) = client.execute_command(
-                "apt-get install -y --no-install-recommends debsums apt-utils")
+                "apt-get install -y --no-install-recommends debsums apt-utils", quiet=True)
             assert exit_code == 0, f"no {error=} expected"
 
             debsums_exclude = utils.read_test_config(
                 enabled_features, 'debsums', '_exclude.list')
 
-            (exit_code, output, error) = client.execute_command("debsums -l")
+            (exit_code, output, error) = client.execute_command("debsums -l", quiet=True)
             assert exit_code == 0, f"no {error=} expected"
 
             if not output == '':
@@ -65,7 +65,7 @@ class Debsums():
                 raise TestFailed(
                     f"the following packages don't have md5sums: {output}")
 
-            (exit_code, output, error) = client.execute_command("debsums -sc")
+            (exit_code, output, error) = client.execute_command("debsums -sc", quiet=True)
             assert exit_code == 0 or exit_code == 2, f"no {error=} expected"
             
             changed = []

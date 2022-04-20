@@ -1,0 +1,111 @@
+#!/bin/bash
+set -Eeuo pipefail
+
+# helper script for the integration tests called in build.sh
+# create a config directory and create the configuration for the integration test chroot or kvm
+# 
+# NOTE: The args for this script are positional!!!
+#
+# usage:        garden-integration-test-config <test> <prefix> <arch> <name> <outputDir> <thisDir>
+# test:         name of the test to create the configuration for, possible values are chroot or kvm
+# prefix:       name of the image/archive before the file suffix (default: kvm_dev-amd64-dev-local)
+# outputDir:    directory where the outcome of the build is stored (default: .build)
+# thisDir:      root of the gardenlinux repository which is also the default
+# arch:         architecture of the build target, defaults the arch of the image/archive to test
+
+if [[ ! "$1" == "chroot" ]] && [[ ! "$1" == "kvm" ]]; then
+    echo "The first argument must be 'chroot' or 'kvm'."
+    exit 1
+fi
+
+# define more or less sane defaults
+workDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+thisDir="${workDir%/bin}"
+outputDir=".build"
+prefix="kvm_dev-amd64-dev-local"
+# extract the default arch from the image/archive name
+arch=$(sed "s/.*-\(.*\)-.*-.*/\1/g" <<< ${prefix})
+
+# use positional arguments if given else use the defaults
+test=$1
+prefix=${2:-$prefix}
+outputDir=${3:-$outputDir}
+thisDir=${4:-$thisDir}
+arch=${5:-$arch}
+
+# create directory for the test configs
+configDir=$(mktemp -d)
+
+# write config for the chroot integration test
+if [[ "${test}" == "chroot" ]]; then
+    cat > ${configDir}/config.yaml << EOF
+chroot:
+    # Path to a final artifact. Represents the .tar.xz archive image file (required)
+    image: /gardenlinux/${outputDir##*/}/${prefix}.tar.xz
+
+    # IP or hostname of target machine (required)
+    # Default: 127.0.0.1
+    ip: 127.0.0.1
+
+    # port for remote connection (required)
+    # Default: 2223
+    port: 2222
+
+    # SSH configuration (required)
+    ssh:
+        # Defines path where to look for a given key
+        # or to save the new generated one. Take care
+        # that you do NOT overwrite your key. (required)
+        ssh_key_filepath: /tmp/ssh_priv_key
+
+        # Defines the user for SSH login (required)
+        # Default: root
+        user: root
+EOF
+fi
+
+# write config for the kvm integration test
+if [[ "${test}" == "kvm" ]]; then
+    cat > ${configDir}/config.yaml << EOF
+kvm:
+    # Path to a final artifact. Represents the .raw image file (required)
+    image: /gardenlinux/${outputDir##*/}/${prefix}.raw
+
+    # IP or hostname of target machine (optional)
+    # Default: 127.0.0.1
+    #ip: 127.0.0.1
+
+    # port for remote connection (required)
+    # Default: 2223
+    port: 2223
+
+    # Keep machine running after performing tests
+    # for further debugging (optional)
+    # Default: false
+    #keep_running: false
+
+    # Architecture to boot (optional)
+    # Default: amd64
+    arch: ${arch}
+
+    # SSH configuration (required)
+    ssh:
+        # Defines if a new SSH key should be generated (optional)
+        # Default: true
+        ssh_key_generate: true
+
+        # Defines path where to look for a given key
+        # or to save the new generated one. Take care
+        # that you do NOT overwrite your key. (required)
+        ssh_key_filepath: /tmp/ssh_priv_key
+
+        # Defines if a passphrase for a given key is needed (optional)
+        #passphrase: xxyyzz
+
+        # Defines the user for SSH login (required)
+        # Default: root
+        user: root
+EOF
+fi
+
+echo ${configDir}
