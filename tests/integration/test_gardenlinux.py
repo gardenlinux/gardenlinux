@@ -79,7 +79,7 @@ def test_no_man(client):
     assert "man: command not found" in error
 
 
-def test_metadata_connection(client, non_azure, non_ali,  non_chroot, non_kvm):
+def test_metadata_connection(client, non_azure, non_ali, non_chroot, non_kvm):
     metadata_host = "169.254.169.254"
     (exit_code, output, error) = client.execute_command(
         f"wget --timeout 5 http://{metadata_host}"
@@ -150,7 +150,7 @@ def test_ping6(client, ping6_host):
     assert "5 packets transmitted, 5 received, 0% packet loss" in output
 
 def test_systemctl_no_failed_units(client, non_chroot, non_kvm):
-    """rngd.service does not start in kvm due of missing /dev/tpm0"""
+    """this test always fails on kvm therefore kvm has it's own, chroot does not use systemd"""
     (exit_code, output, error) = client.execute_command("systemctl list-units --output=json --state=failed")
     assert exit_code == 0, f"no {error=} expected"
     assert len(json.loads(output)) == 0
