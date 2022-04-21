@@ -16,7 +16,7 @@ def get_package_list(client):
     return pkgslist
 
 
-def read_test_config(features, testname, suffix = ".list"):
+def read_test_config(features, testname, suffix = ".list", filter_comments = True):
     """Collect the configuration of a test from all enabled features.
     Needs the list of enabled features and the name of the test, the suffix is
     optional. It returns a list of the aggregated configs for a test."""
@@ -28,7 +28,7 @@ def read_test_config(features, testname, suffix = ".list"):
             file = open(path, 'r')
             for line in file:
                 # Skip comment lines
-                if re.match(r'^ *#',line):
+                if re.match(r'^ *#',line) and filter_comments:
                     continue
                 # Skip empty lines
                 if re.match(r'^\s*$', line):
