@@ -4,8 +4,8 @@ set -Eeuo pipefail
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/bin/.constants.sh" \
 	--flags 'skip-build,debug,lessram,manual,skip-tests' \
-	--flags 'arch:,features:,disable-features:,suite:,local-pkgs:' \
-	--usage '[--skip-build] [--lessram] [--debug] [--manual] [--arch=<arch>] [--skip-tests] [<output-dir>] [<version/timestamp>]' \
+	--flags 'arch:,features:,disable-features:,suite:,local-pkgs:,tests:' \
+	--usage '[--skip-build] [--lessram] [--debug] [--manual] [--arch=<arch>] [--skip-tests] [--tests=<test>,<test>,...] [<output-dir>] [<version/timestamp>]' \
 	--sample '--features kvm,khost --disable-features _slim .build' \
 	--sample '--features metal,_pxe --lessram .build' \
 	--help  "Generates a Garden Linux image based on features
@@ -22,6 +22,7 @@ source "$thisDir/bin/.constants.sh" \
 --arch		builds for a specific architecture (default: architecture the build runs on)
 --suite		specifies the debian suite to build for e.g. bullseye, potatoe (default: testing)
 --skip-tests	deactivating tests (default: off)
+--tests		test suite to use, available tests are unittests, kvm, chroot (default: unittests)
 --skip-build	do not create the build container BUILD_IMAGE variable would specify an alternative name
 "
 
@@ -33,7 +34,9 @@ lessram=
 arch=$(${thisDir}/get_arch.sh)
 features=
 disablefeatures=
-tests=1
+commitid="${commitid:-local}"
+skip_tests=0
+tests="unittests"
 local_pkgs=
 output=".build"
 while true; do
@@ -47,13 +50,15 @@ while true; do
 		--arch)		arch="$1"; 	shift ;;
 		--features) 	features="$1";	shift ;;
 		--disable-features) 	disablefeatures="$1";shift ;;
-		--skip-tests)   tests=0	;;
+		--skip-tests)   skip_tests=1	;;
+		--tests)	tests="$1"; shift ;;
 		--local-pkgs) local_pkgs="$1"; shift ;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
 done
 
+dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
 outputDir="${1:-$output}";	shift || /bin/true
 version="$(${thisDir}/bin/garden-version ${1:-})";	shift || /bin/true
 
@@ -72,7 +77,8 @@ envArgs=(
 	features="$features"
 	disablefeatures="$disablefeatures"
 	version="$version"
-	tests=$tests
+	skip_tests=$skip_tests
+	tests="$tests"
 	userID="$userID"
 	userGID="$userGID"
 )
@@ -136,12 +142,38 @@ else
 	wait %1
 
 	# Run tests if activated
-	if [ $tests -eq 1 ]; then
+	if [ ${skip_tests} -eq 0 ] && [[ "${tests}" =~ .*"unittests".* ]]; then
 		echo "Running tests"
 		containerName=$(cat /proc/sys/kernel/random/uuid)
 		sudo podman run --name $containerName $dockerArgs --rm \
 			"${buildImage}" \
 			/opt/gardenlinux/bin/garden-test &
 		wait %1
+	fi
+	if [ ${skip_tests} -eq 0 ] && [[ "${tests}" == *"chroot"* ]]; then
+		echo "Creating config file for chroot tests"
+		containerName=$(cat /proc/sys/kernel/random/uuid)
+		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
+		configDir=$(${thisDir}/bin/garden-integration-test-config chroot ${prefix} ${outputDir})
+		echo "Running pytests in chroot"
+		sudo podman run --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW --security-opt apparmor=unconfined \
+			--name $containerName --rm -v `pwd`:/gardenlinux -v ${configDir}:/config \
+			gardenlinux/base-test:dev \
+			pytest --iaas=chroot --configfile=/config/config.yaml &
+		wait %1
+		rm -r ${configDir}
+	fi
+	if [ ${skip_tests} -eq 0 ] && [[ "${tests}" == *"kvm"* ]]; then
+		echo "Creating config file for KVM tests"
+		containerName=$(cat /proc/sys/kernel/random/uuid)
+		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
+		configDir=$(${thisDir}/bin/garden-integration-test-config kvm ${prefix} ${outputDir})
+		echo "Running pytests in KVM"
+		sudo podman run --name $containerName --rm -v /boot/:/boot \
+			-v /lib/modules:/lib/modules -v `pwd`:/gardenlinux -v ${configDir}:/config \
+			gardenlinux/base-test:dev \
+			pytest --iaas=kvm --configfile=/config/config.yaml &
+		wait %1
+		rm -r ${configDir}
 	fi
 fi

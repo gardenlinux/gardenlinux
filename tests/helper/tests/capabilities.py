@@ -49,7 +49,7 @@ class Capabilities():
         if not hasattr(cls, 'instance'):
             cls.instance = super(Capabilities, cls).__new__(cls)
             (exit_code, output, error) = client.execute_command(
-                "find /boot /etc /usr /var -type f -exec getcap {} \\;")
+                "find /boot /etc /usr /var -type f -exec getcap {} \\;", quiet=True)
             assert exit_code == 0, f"no {error=} expected"
 
             capabilities = utils.read_test_config(

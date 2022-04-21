@@ -4,7 +4,7 @@ import re
 def get_package_list(client):
     """Return list with the installed packages.
     Needs the fixture client to connect into the image"""
-    (exit_code, output, error) = client.execute_command("dpkg -l")
+    (exit_code, output, error) = client.execute_command("dpkg -l", quiet=True)
     assert exit_code == 0, f"no {error=} expected"
     pkgslist = []
     for line in output.split('\n'):
