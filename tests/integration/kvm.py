@@ -162,6 +162,7 @@ class KVM:
         """ Adjust KVM image and inject needed files """
         logger.info("Adjusting KVM image. This will take some time for each command...")
         image = self.config["image"]
+        image_name = image.split('/')[-1]
         authorized_keys_file = "/tmp/authorized_keys"
         sshd_config_src_file = "integration/misc/sshd_config_integration_tests"
         sshd_config_dst_file = "/etc/ssh/sshd_config_integration_tests"
@@ -171,33 +172,33 @@ class KVM:
         # Command list for adjustments
         cmd_kvm_adj = []
         # Create a snapshot image and inject SSH key
-        cmd_kvm_adj.append("qemu-img create -f qcow2 -F raw -b {image} {image}.snapshot.img".format(
-            image=image))
-        cmd_kvm_adj.append("guestfish -a {image}.snapshot.img -i mkdir /root/.ssh".format(
-            image=image))
-        cmd_kvm_adj.append("virt-copy-in -a {image}.snapshot.img {authorized_keys_file} /root/.ssh/".format(
-            image=image, authorized_keys_file=authorized_keys_file))
-        cmd_kvm_adj.append("guestfish -a {image}.snapshot.img -i chown 0 0 /root/.ssh".format(
-            image=image))
-        cmd_kvm_adj.append("guestfish -a {image}.snapshot.img -i chown 0 0 /root/.ssh/authorized_keys".format(
-            image=image))
-        cmd_kvm_adj.append("guestfish -a {image}.snapshot.img -i chmod 0700 /root/.ssh".format(
-            image=image))
-        cmd_kvm_adj.append("guestfish -a {image}.snapshot.img -i chmod 0600 /root/.ssh/authorized_keys".format(
-            image=image))
+        cmd_kvm_adj.append("qemu-img create -f qcow2 -F raw -b {image} /tmp/{image_name}.snapshot.img".format(
+            image=image, image_name=image_name))
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i mkdir /root/.ssh".format(
+            image_name=image_name))
+        cmd_kvm_adj.append("virt-copy-in -a /tmp/{image_name}.snapshot.img {authorized_keys_file} /root/.ssh/".format(
+            image_name=image_name, authorized_keys_file=authorized_keys_file))
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chown 0 0 /root/.ssh".format(
+            image_name=image_name))
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chown 0 0 /root/.ssh/authorized_keys".format(
+            image_name=image_name))
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chmod 0700 /root/.ssh".format(
+            image_name=image_name))
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chmod 0600 /root/.ssh/authorized_keys".format(
+            image_name=image_name))
         # Copy custom SSHD config for executing remote integration tests
         # without changing the production sshd_config. This SSHD runs on
         # port tcp/2222
-        cmd_kvm_adj.append("virt-copy-in -a {image}.snapshot.img {sshd_systemd_src_file} {systemd_dst_path}".format(
-          image=image, sshd_systemd_src_file=sshd_systemd_src_file, systemd_dst_path=systemd_dst_path))
-        cmd_kvm_adj.append("virt-copy-in -a {image}.snapshot.img {sshd_config_src_file} /etc/ssh/".format(
-          image=image, sshd_config_src_file=sshd_config_src_file))
-        cmd_kvm_adj.append("guestfish -a {image}.snapshot.img -i chown 0 0 {sshd_config_dst_file}".format(
-          image=image, sshd_config_dst_file=sshd_config_dst_file))
-        cmd_kvm_adj.append("guestfish -a {image}.snapshot.img -i chmod 0644 {sshd_config_dst_file}".format(
-          image=image, sshd_config_dst_file=sshd_config_dst_file))
+        cmd_kvm_adj.append("virt-copy-in -a /tmp/{image_name}.snapshot.img {sshd_systemd_src_file} {systemd_dst_path}".format(
+          image_name=image_name, sshd_systemd_src_file=sshd_systemd_src_file, systemd_dst_path=systemd_dst_path))
+        cmd_kvm_adj.append("virt-copy-in -a /tmp/{image_name}.snapshot.img {sshd_config_src_file} /etc/ssh/".format(
+          image_name=image_name, sshd_config_src_file=sshd_config_src_file))
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chown 0 0 {sshd_config_dst_file}".format(
+          image_name=image_name, sshd_config_dst_file=sshd_config_dst_file))
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chmod 0644 {sshd_config_dst_file}".format(
+          image_name=image_name, sshd_config_dst_file=sshd_config_dst_file))
         # Create a symlink since Debian watches for type 'link'
-        cmd_kvm_adj.append(("guestfish -a {image}.snapshot.img -i ln-s ".format(image=image) +
+        cmd_kvm_adj.append(("guestfish -a /tmp/{image_name}.snapshot.img -i ln-s ".format(image_name=image_name) +
           "{systemd_path}sshd-integration.test.service ".format(systemd_path=systemd_dst_path) +
           "{systemd_path}multi-user.target.wants/sshd-integration.test.service".format(
             systemd_path=systemd_dst_path)))
@@ -215,6 +216,7 @@ class KVM:
         """ Start VM in KVM for defined arch """
         logger.info("Starting VM in KVM.")
         image = self.config["image"]
+        image_name = image.split('/')[-1]
         port = self.config["port"]
 
         if arch == "amd64":
@@ -225,7 +227,7 @@ class KVM:
               -m 1024M \
               -device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89 \
               -netdev user,id=net0,hostfwd=tcp::{port}-:2222,hostname=garden \
-              {image}.snapshot.img".format(port=port, image=image)
+              /tmp/{image_name}.snapshot.img".format(port=port, image_name=image_name)
             logger.info(cmd_kvm)
             p = subprocess.Popen([cmd_kvm], shell=True)
             logger.info("VM starting as amd64 in KVM.")
@@ -240,7 +242,7 @@ class KVM:
               -m 1024M \
               -device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89 \
               -netdev user,id=net0,hostfwd=tcp::{port}-:2222,hostname=garden \
-              {image}.snapshot.img".format(port=port, image=image)
+              /tmp/{image_name}.snapshot.img".format(port=port, image_name=image_name)
             logger.info(cmd_kvm)
             p = subprocess.Popen([cmd_kvm], shell=True)
             logger.info("VM starting as arm64 in KVM.")
@@ -251,14 +253,15 @@ class KVM:
         """ Stop VM and remove injected file """
         logger.info("Stopping VM and cleaning up")
         image = self.config["image"]
+        image_name = image.split('/')[-1]
         p = subprocess.run("pkill qemu", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         rc = p.returncode
         if rc == 0:
             logger.info("Succeeded stopping qemu")
-            if os.path.exists("{image}.snapshot.img".format(image=image)):
-                os.remove("{image}.snapshot.img".format(image=image))
+            if os.path.exists("/tmp/{image_name}.snapshot.img".format(image_name=image_name)):
+                os.remove("/tmp/{image_name}.snapshot.img".format(image_name=image_name))
             else:
-                logger.info("{image}.snapshot.img does not exist".format(image=image))
+                logger.info("/tmp/{image_name}.snapshot.img does not exist".format(image_name=image_name))
             if os.path.exists("/tmp/qemu.pid"):
                 os.remove("/tmp/qemu.pid")
         else:
