@@ -162,7 +162,7 @@ class KVM:
         """ Adjust KVM image and inject needed files """
         logger.info("Adjusting KVM image. This will take some time for each command...")
         image = self.config["image"]
-        image_name = image.split('/')[-1]
+        image_name = os.path.basename(image)
         authorized_keys_file = "/tmp/authorized_keys"
         sshd_config_src_file = "integration/misc/sshd_config_integration_tests"
         sshd_config_dst_file = "/etc/ssh/sshd_config_integration_tests"
@@ -216,7 +216,7 @@ class KVM:
         """ Start VM in KVM for defined arch """
         logger.info("Starting VM in KVM.")
         image = self.config["image"]
-        image_name = image.split('/')[-1]
+        image_name = os.path.basename(image)
         port = self.config["port"]
 
         if arch == "amd64":
@@ -253,7 +253,7 @@ class KVM:
         """ Stop VM and remove injected file """
         logger.info("Stopping VM and cleaning up")
         image = self.config["image"]
-        image_name = image.split('/')[-1]
+        image_name = os.path.basename(image)
         p = subprocess.run("pkill qemu", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         rc = p.returncode
         if rc == 0:

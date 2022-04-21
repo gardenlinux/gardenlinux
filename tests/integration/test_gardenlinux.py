@@ -79,7 +79,7 @@ def test_no_man(client):
     assert "man: command not found" in error
 
 
-def test_metadata_connection_non_az_non_ali(client, non_azure, non_ali,  non_chroot, non_kvm):
+def test_metadata_connection(client, non_azure, non_ali,  non_chroot, non_kvm):
     metadata_host = "169.254.169.254"
     (exit_code, output, error) = client.execute_command(
         f"wget --timeout 5 http://{metadata_host}"
@@ -150,9 +150,23 @@ def test_ping6(client, ping6_host):
     assert "5 packets transmitted, 5 received, 0% packet loss" in output
 
 def test_systemctl_no_failed_units(client, non_chroot, non_kvm):
+    """rngd.service does not start in kvm due of missing /dev/tpm0"""
     (exit_code, output, error) = client.execute_command("systemctl list-units --output=json --state=failed")
     assert exit_code == 0, f"no {error=} expected"
     assert len(json.loads(output)) == 0
+
+def test_systemctl_no_failed_units_kvm(client, kvm):
+    """rngd.service does not start in kvm due of missing /dev/tpm0"""
+    (exit_code, output, error) = client.execute_command("systemctl list-units --output=json --state=failed")
+    assert exit_code == 0, f"no {error=} expected"
+    out = (json.loads(output))
+    error_count = 0
+    error_out = []
+    for entry in out:
+        if not entry['unit'] == "rngd.service":
+            error_count += 1
+            error_out.append(entry['unit'])
+    assert error_count == 0, f"systemd units {', '.join(error_out)} failed"
 
 def test_startup_time(client, non_chroot, non_kvm):
     tolerated_kernel_time = 15
