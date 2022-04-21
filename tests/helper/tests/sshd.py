@@ -76,12 +76,15 @@ class Sshd():
                     missing, where = cls._compare_as_set(cls.instance,
                                         sshd_config_value, expected_value)
                     if where == cls.NOT_IN_SSHD_CONFIG:
+                        cls.failed_before = True
                         raise TestFailed(f"For {key} '{', '.join(missing)}'" +
                             " is expected but missing")
                     if where == cls.IN_SSHD_CONFIG:
+                        cls.failed_before = True
                         raise TestFailed(f"For {key} '{', '.join(missing)}'" +
                             " is set but not expected")
                     if where == cls.DIFFERENT:
+                        cls.failed_before = True
                         raise TestFailed(f"For {key} " +
                             f"'{', '.join(expected_value)}' is expected, " +
                             f"'{', '.join(sshd_config_value)}' is set")
