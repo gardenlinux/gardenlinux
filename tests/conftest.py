@@ -345,3 +345,68 @@ def features(client):
             features = line.split('=')[1]
     current = (os.getenv('PYTEST_CURRENT_TEST')).split('/')
     yield features.split(','), current[0]
+
+
+@pytest.fixture
+def non_ali(iaas):
+    if iaas == 'ali':
+        pytest.skip('test not supported on ali')
+
+@pytest.fixture
+def ali(iaas):
+    if iaas != 'ali':
+        pytest.skip('test only supported on ali')
+
+@pytest.fixture
+def non_azure(iaas):
+    if iaas == 'azure':
+        pytest.skip('test not supported on azure')
+
+@pytest.fixture
+def azure(iaas):
+    if iaas != 'azure':
+        pytest.skip('test only supported on azure')
+
+@pytest.fixture
+def aws(iaas):
+    if iaas != 'aws':
+        pytest.skip('test only supported on aws')
+
+@pytest.fixture
+def gcp(iaas):
+    if iaas != 'gcp':
+        pytest.skip('test only supported on gcp')
+
+@pytest.fixture
+def non_kvm(iaas):
+    if iaas == 'kvm':
+        pytest.skip('test not supported on kvm')
+
+@pytest.fixture
+def kvm(iaas):
+    if iaas != 'kvm':
+        pytest.skip('test only supported on kvm')
+
+@pytest.fixture
+def non_chroot(iaas):
+    if iaas == 'chroot':
+        pytest.skip('test not supported on chroot')
+
+@pytest.fixture
+def chroot(iaas):
+    if iaas != 'chroot':
+        pytest.skip('test only supported on chroot')
+
+@pytest.fixture
+def non_openstack(iaas):
+    if iaas == 'openstack-ccee':
+        pytest.skip('test not supported on openstack')
+
+@pytest.fixture
+def openstack(iaas):
+    if iaas != 'openstack-ccee':
+        pytest.skip('test only supported on openstack')
+
+@pytest.fixture
+def openstack_flavor():
+    return OpenStackCCEE.instance().flavor

@@ -22,68 +22,6 @@ from integration.sshclient import RemoteClient
 
 logger = logging.getLogger(__name__)
 
-@pytest.fixture(scope='module')
-def non_ali(iaas):
-    if iaas == 'ali':
-        pytest.skip('test not supported on ali')
-
-@pytest.fixture(scope='module')
-def ali(iaas):
-    if iaas != 'ali':
-        pytest.skip('test only supported on ali')
-
-@pytest.fixture(scope='module')
-def non_azure(iaas):
-    if iaas == 'azure':
-        pytest.skip('test not supported on azure')
-
-@pytest.fixture(scope='module')
-def azure(iaas):
-    if iaas != 'azure':
-        pytest.skip('test only supported on azure')
-
-@pytest.fixture(scope='module')
-def aws(iaas):
-    if iaas != 'aws':
-        pytest.skip('test only supported on aws')
-
-@pytest.fixture(scope='module')
-def gcp(iaas):
-    if iaas != 'gcp':
-        pytest.skip('test only supported on gcp')
-
-def non_kvm(iaas):
-    if iaas == 'kvm':
-        pytest.skip('test not supported on kvm')
-
-@pytest.fixture(scope='module')
-def kvm(iaas):
-    if iaas != 'kvm':
-        pytest.skip('test only supported on kvm')
-
-def non_chroot(iaas):
-    if iaas == 'chroot':
-        pytest.skip('test not supported on chroot')
-
-@pytest.fixture(scope='module')
-def chroot(iaas):
-    if iaas != 'chroot':
-        pytest.skip('test only supported on chroot')
-
-@pytest.fixture(scope='module')
-def non_openstack(iaas):
-    if iaas == 'openstack-ccee':
-        pytest.skip('test not supported on openstack')
-
-@pytest.fixture(scope='module')
-def openstack(iaas):
-    if iaas != 'openstack-ccee':
-        pytest.skip('test only supported on openstack')
-
-@pytest.fixture(scope='module')
-def openstack_flavor():
-    return OpenStackCCEE.instance().flavor
-
 
 def test_clock(client):
     (exit_code, output, error) = client.execute_command("date '+%s'")
