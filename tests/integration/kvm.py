@@ -172,7 +172,7 @@ class KVM:
         # Command list for adjustments
         cmd_kvm_adj = []
         # Create a snapshot image and inject SSH key
-        cmd_kvm_adj.append("qemu-img create -f qcow2 -F raw -b {image} /tmp/{image_name}.snapshot.img".format(
+        cmd_kvm_adj.append("qemu-img create -f qcow2 -F raw -b {image} /tmp/{image_name}.snapshot.img 2G".format(
             image=image, image_name=image_name))
         cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i mkdir /root/.ssh".format(
             image_name=image_name))
