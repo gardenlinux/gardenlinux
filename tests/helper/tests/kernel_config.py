@@ -1,4 +1,5 @@
 import logging
+import re
 
 from helper import utils
 from helper.exception import NotPartOfFeatureError, TestFailed, DisabledBy
@@ -50,7 +51,7 @@ class KernelConfig():
             cls.instance = super(KernelConfig, cls).__new__(cls)
 
             (exit_code, output, error) = client.execute_command(
-                "cat /boot/config-* | grep CONFIG_", quiet=True)
+                "cat /boot/config-*", quiet=True)
             assert exit_code == 0, f"no {error=} expected"
 
             expected_config = utils.read_test_config(
@@ -60,6 +61,7 @@ class KernelConfig():
             config_dict = cls._to_dict(cls.instance, output)
             expected_config_dict = cls._to_dict(cls.instance, expected_config)
 
+            logger.info(expected_config_dict)
             not_matching = []
             for key, value in expected_config_dict.items():
                 if key in config_dict and not config_dict[key] == value:
@@ -75,7 +77,7 @@ class KernelConfig():
 
     def _to_dict(self, input):
         """convert input into a dictionary where the first entry of a line is
-        used as key"""
+        used as key, remove everything that is not a CONFIG_ parameter"""
         input_list = []
         if not type(input) == list:
             for line in input.splitlines():
@@ -84,10 +86,11 @@ class KernelConfig():
             input_list = input
         output = {}
         for entry in input_list:
-            entry = entry.replace("# ", "")
+            if not re.match(r".*CONFIG_", entry):
+                continue
+            entry = re.sub("^# *", "", entry)
             entry = entry.replace("=", " ")
-            entry_as_list = entry.split(" ")
-            output.update({entry_as_list[0] : \
-                        ' '.join(entry_as_list[-(len(entry_as_list)-1):])})
+            entry_as_list = entry.split(" ", 1)
+            output.update({entry_as_list[0] : entry_as_list[1]})
         return output
 
