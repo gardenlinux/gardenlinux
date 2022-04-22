@@ -216,7 +216,10 @@ def test_growpart(client, openstack, openstack_flavor):
     sgb = int(lines[1].strip()[:-1])
     assert sgb == expected_disk_size, f"partition size expected to be ~{expected_disk_size} GB but is {sgb}"
 
-def test_docker(client, non_chroot, non_kvm):
+def test_docker(client, non_chroot):
+    (exit_code, output, error) = client.execute_command("grep GARDENLINUX_FEATURES /etc/os-release | grep gardener", quiet=True)
+    if exit_code != 0:
+        pytest.skip("test_docker needs the gardenlinux feature gardener to be enabled")
     (exit_code, output, error) = client.execute_command("sudo systemctl start docker")
     if exit_code != 0:
         (journal_rc, output, error) = client.execute_command("sudo journalctl --no-pager -xu docker.service")
@@ -330,10 +333,9 @@ def test_aws_ena_driver(client, aws):
     assert exit_code == 0, f"no {error=} expected"
     assert output.rstrip() == "ena", "Expected network interface to run with ena driver"
 
-def test_apparmor(client, non_chroot, non_kvm):
-    (exit_code, output, error) = client.execute_command("/usr/bin/aa-enabled")
-    assert exit_code == 1, f"expected aa-enabled to return with rc=1"
-    assert "No" in output.rstrip(), "Expected AppArmor not to be enabled by default."
+def test_apparmor(client, non_chroot):
+    (exit_code, output, error) = client.execute_command("grep apparmor /sys/kernel/security/lsm")
+    assert exit_code == 1, f"expected apparmor to be disabled"
 
 def test_selinux(client):
     (exit_code, output, error) = client.execute_command("grep selinux /sys/kernel/security/lsm")
