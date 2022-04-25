@@ -64,8 +64,13 @@ class KernelConfig():
             logger.info(expected_config_dict)
             not_matching = []
             for key, value in expected_config_dict.items():
-                if key in config_dict and not config_dict[key] == value:
-                    not_matching.append(key)
+                if key in config_dict:
+                    if (value == "n" or value == "is not set") and \
+                       (config_dict[key] == "n" or \
+                        config_dict[key] == "is not set"):
+                        continue
+                    if not config_dict[key] == value:
+                        not_matching.append(key)
 
             if not len(not_matching) == 0:
                 cls.failed_before = True
@@ -93,4 +98,3 @@ class KernelConfig():
             entry_as_list = entry.split(" ", 1)
             output.update({entry_as_list[0] : entry_as_list[1]})
         return output
-
