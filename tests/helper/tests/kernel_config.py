@@ -1,5 +1,6 @@
 import logging
 import re
+import string
 
 from helper import utils
 from helper.exception import NotPartOfFeatureError, TestFailed, DisabledBy
@@ -96,5 +97,6 @@ class KernelConfig():
             entry = re.sub("^# *", "", entry)
             entry = entry.replace("=", " ")
             entry_as_list = entry.split(" ", 1)
-            output.update({entry_as_list[0] : entry_as_list[1]})
+            output.update({entry_as_list[0] : \
+                entry_as_list[1].strip(string.whitespace)})
         return output
