@@ -20,6 +20,7 @@ class _Kaniko_save_fs_state():
     ca_certs_bak: str = None
     python_lib_dir: str = None
     python_bak_dir: str = None
+    python_bin_bak_dir: str = None
     bin_dir: str = None
     bin_bak_dir: str = None
 
@@ -65,7 +66,23 @@ def _prepare_for_kaniko_purgefs() -> _Kaniko_save_fs_state:
     if not os.path.exists(bin_bak_dir):
         shutil.copytree(bin_dir, bin_bak_dir)
 
+    python_bin_bak_dir = os.path.join('/', 'kaniko', 'python_bin.bak')
+    if not os.path.exists(python_bin_bak_dir):
+        os.makedirs(python_bin_bak_dir)
+        shutil.move(
+            os.path.join('/', 'usr', 'bin', 'python3.9'),
+            os.path.join(python_bin_bak_dir, 'python3.9'),
+        )
+        shutil.move(
+            os.path.join('/', 'usr', 'bin', 'python3'),
+            os.path.join(python_bin_bak_dir, 'python3'),
+        )
+    else:
+        os.remove(os.path.join('/', 'usr', 'bin', 'python3.9'))
+        os.remove(os.path.join('/', 'usr', 'bin', 'python3'))
+
     # HACK remove '/usr/lib' and '/cc/utils' to avoid pip from failing in the first stage of builds
+
     shutil.rmtree(path=os.path.join('/', 'usr', 'lib'), ignore_errors=True)
     shutil.rmtree(path=os.path.join('/', 'cc', 'utils'), ignore_errors=True)
 
@@ -76,6 +93,7 @@ def _prepare_for_kaniko_purgefs() -> _Kaniko_save_fs_state:
         ca_certs_bak=ca_certs_bak,
         python_lib_dir=python_lib_dir,
         python_bak_dir=python_bak_dir,
+        python_bin_bak_dir=python_bin_bak_dir,
         bin_dir=bin_dir,
         bin_bak_dir=bin_bak_dir,
     )
@@ -93,6 +111,16 @@ def _restore_after_kaniko_purgefs(state: _Kaniko_save_fs_state):
 
     if not os.path.exists(state.python_lib_dir):
       os.symlink(state.python_bak_dir, state.python_lib_dir)
+
+    if os.path.exists(state.python_bin_bak_dir):
+        shutil.copy(
+            os.path.join(state.python_bin_bak_dir, 'python3.9'),
+            os.path.join('/', 'usr', 'bin', 'python3.9'),
+        )
+        shutil.copy(
+            os.path.join(state.python_bin_bak_dir, 'python3'),
+            os.path.join('/', 'usr', 'bin', 'python3'),
+        )
 
     shutil.copytree(state.bin_bak_dir, state.bin_dir, dirs_exist_ok=True)
 
