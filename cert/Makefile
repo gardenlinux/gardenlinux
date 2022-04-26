@@ -6,6 +6,8 @@ KEYTYPE=RSA
 KEYLENGTH=4096
 HOSTNAME=
 
+GARDENLINUX_BUILD_CRE ?= sudo podman
+
 #internal
 INTERNAL_HOSTNAME=$(shell [ -n "$(HOSTNAME)" ] && printf "%s=%s" "-hostname" "$(HOSTNAME)" )
 
@@ -79,7 +81,7 @@ test:
 cfssl/cfssl cfssl/cfssljson:
 	@echo "Building cfssl / cfssljson"
 	@mkdir -p cfssl
-	@sudo podman run --volume "$$(realpath cfssl):/build" --rm golang:latest bash -c "$$BASH_BUILD"
+	@$(GARDENLINUX_BUILD_CRE) run --volume "$$(realpath cfssl):/build" --rm golang:latest bash -c "$$BASH_BUILD"
 
 #### CA
 .PHONY: %.ca

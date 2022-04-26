@@ -65,6 +65,8 @@ version="$(${thisDir}/bin/garden-version ${1:-})";	shift || /bin/true
 mkdir -p "$outputDir"
 outputDir="$(readlink -f "$outputDir")"
 
+gardenlinux_build_cre=${GARDENLINUX_BUILD_CRE:-"sudo podman"}
+
 userID=$(id -u)
 userGID=$(id -g)
 envArgs=(
@@ -89,7 +91,7 @@ securityArgs=(
 	--cap-add audit_write	# needed for selinux in makepart
 )
 
-dockerinfo="$(sudo podman info)"       || eusage "sudo podman not working, check permissions or work with bin/garden-build"
+dockerinfo="$(${gardenlinux_build_cre} info)"       || eusage "${gardenlinux_build_cre} not working, check permissions or work with bin/garden-build"
 grep -q apparmor <<< $dockerinfo  && securityArgs+=( --security-opt apparmor=unconfined )
 
 make --directory=${thisDir}/bin
@@ -122,21 +124,21 @@ if [ $manual ]; then
 	echo -e "\n### running in manual mode"
 	echo -e "please run -> /opt/gardenlinux/bin/garden-build <- (all configs are set)\n"
 	set -x
-	sudo podman run $dockerArgs -ti \
+	${gardenlinux_build_cre} run $dockerArgs -ti \
 		"${buildImage}" \
 		/bin/bash
 else
 	set -x
 	function stop(){
 		echo "trapped ctrl-c"
-		sudo podman stop -t 0 $1
+		${gardenlinux_build_cre} stop -t 0 $1
 		wait
 		echo "everything stopped..."
 		exit 1
 	}
 	containerName=$(cat /proc/sys/kernel/random/uuid)
 	trap 'stop $containerName' INT
-	sudo podman run --name $containerName $dockerArgs --rm \
+	${gardenlinux_build_cre} run --name $containerName $dockerArgs --rm \
 		"${buildImage}" \
 		/opt/gardenlinux/bin/garden-build &
 	wait %1
@@ -145,7 +147,7 @@ else
 	if [ ${skip_tests} -eq 0 ] && [[ "${tests}" =~ .*"unittests".* ]]; then
 		echo "Running tests"
 		containerName=$(cat /proc/sys/kernel/random/uuid)
-		sudo podman run --name $containerName $dockerArgs --rm \
+		${gardenlinux_build_cre} run --name $containerName $dockerArgs --rm \
 			"${buildImage}" \
 			/opt/gardenlinux/bin/garden-test &
 		wait %1
@@ -156,7 +158,7 @@ else
 		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
 		configDir=$(${thisDir}/bin/garden-integration-test-config chroot ${prefix} ${outputDir})
 		echo "Running pytests in chroot"
-		sudo podman run --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW --security-opt apparmor=unconfined \
+		${gardenlinux_build_cre} run --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW --security-opt apparmor=unconfined \
 			--name $containerName --rm -v `pwd`:/gardenlinux -v ${configDir}:/config \
 			gardenlinux/base-test:dev \
 			pytest --iaas=chroot --configfile=/config/config.yaml &
@@ -169,7 +171,7 @@ else
 		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
 		configDir=$(${thisDir}/bin/garden-integration-test-config kvm ${prefix} ${outputDir})
 		echo "Running pytests in KVM"
-		sudo podman run --name $containerName --rm -v /boot/:/boot \
+		${gardenlinux_build_cre} run --name $containerName --rm -v /boot/:/boot \
 			-v /lib/modules:/lib/modules -v `pwd`:/gardenlinux -v ${configDir}:/config \
 			gardenlinux/base-test:dev \
 			pytest --iaas=kvm --configfile=/config/config.yaml &
