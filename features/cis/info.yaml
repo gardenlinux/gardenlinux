@@ -10,3 +10,4 @@ features:
     - cis_audit
     - cis_sshd
     - cis_modprobe
+    - cis_aide
