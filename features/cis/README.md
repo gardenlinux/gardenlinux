@@ -12,7 +12,7 @@ Sub features are included by the `cis/info.yaml` configuration file. Sub feature
 
 | Feature Name | Description |
 |---|---|
-| cis_aide | Replace tripwire, install and configure aide |
+| cis_aide | Installs the host-based intrusion detection system Aide |
 | cis_audit | Configuring the `auditd` daemon |
 | cis_firewall | Adding/Installing the `Garden Linux CIS Firewall` |
 | cis_modprobe | Removing/Blacklisting Kernel modules |
