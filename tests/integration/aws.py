@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 
 from botocore.exceptions import ClientError
 
-from .sshclient import RemoteClient
+from helper.sshclient import RemoteClient
 from paramiko import RSAKey
 
 import glci.aws

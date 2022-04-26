@@ -5,7 +5,7 @@ import re
 import pytest
 import uuid
 
-from .sshclient import RemoteClient
+from helper.sshclient import RemoteClient
 
 from azure.core.exceptions import (
     ResourceExistsError,
