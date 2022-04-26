@@ -1,0 +1,183 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+import argparse
+import subprocess
+import shutil
+import tempfile
+import logging
+
+
+def main():
+    """ Inject SSH pubkey to Garden Linux image"""
+    # Configure logger
+    logging.basicConfig(format='%(asctime)s %(message)s',
+                        datefmt='%Y-%m-%d %I:%M:', stream=sys.stdout, level=logging.DEBUG)
+
+    # Configure argparse
+    argparser = argparse.ArgumentParser(description='Inject SSH pubkey to image.')
+    argparser.add_argument('-i', '--image', type=str, help='Path to image', required=True)
+    argparser.add_argument('-k', '--key', type=str, help='Path to SSH pubkey', required=True)
+    argparser.add_argument('-u', '--user', type=str, help='PAM user account to use', required=True)
+    argparser.add_argument('-d', '--homedir', type=str, help='PAM user account to use', default=None)
+    argparser.add_argument('-t', '--type', type=str, help='Image type [raw, qcow2]', default="raw")
+    args = argparser.parse_args()
+
+    image = args.image
+    key = args.key
+    user = args.user
+    home = args.homedir
+    type = args.type
+
+    logging.info("Start injecting SSH pubkey to image...")
+
+    # Validate if files are present
+    test_files = [
+                  image,
+                  key
+                 ]
+    eval_files_present(test_files)
+
+    # Validate if a custom homedir for a specific user is given
+    if home is None:
+        path_home = eval_user_path(user)
+        logging.info(f"No custom home directory defined. Using: {path_home} for user {user}")
+    else:
+        path_home = home
+        logging.info(f"Custom home directory defined. Using: {path_home} for user {user}")
+
+    # Inject SSH pubkey into specific image type
+    if type == "raw" or "qcow2":
+        logging.info(f"Using image format: {type}")
+        # Eveluate userid from image
+        if user != "root":
+            userid = raw_eval_userid(user,image)
+        ssh_dir = raw_validate(image,path_home)
+        raw_inject(image,path_home,user,key,ssh_dir,userid)
+
+    logging.info("SSH pubkey sucessfully injected.")
+
+
+def eval_files_present(files):
+    """ Evaluates if the files are present """
+    logging.info("Validating that file(s) is/are present.")
+    for i in files:
+        if os.path.isfile(i):
+            logging.info(f"File is present: {i}")
+        else:
+            logging.error(f"File is absent: {i}. Can NOT proceed.")
+            sys.exit(1)
+
+
+def eval_user_path(user):
+    """ Evaluates the home directory path by a given username """
+    if user == "root":
+        return "/root/"
+    else:
+        return f"/home/{user}/"
+
+
+def raw_eval_userid(user,image):
+    """ Evaluates the userid for a given user from a .raw image """
+    userid = None
+
+    # Get passwd from given image
+    logging.info(f"Getting userid for user {user} from image")
+    cmd = f"guestfish -a {image} -i cat /etc/passwd"
+    p = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+
+    # Get userid for given user
+    lst_decode = p.stdout.decode()
+    passwd_lst = lst_decode.splitlines()
+    for i in passwd_lst:
+        # Make sure we compare userfield
+        i_split = i.split(":")
+        if i_split[0] == user:
+            # Return the userid
+            userid = i_split[2]
+            logging.info(f"User is present within image. Using userid: {userid}")
+            return userid
+
+    # We need to exit when the user is not present by the
+    # given image.
+    if userid is None:
+        logging.info(f"User is NOT present within image. We can not proceed.")
+        sys.exit(1)
+
+
+def raw_validate(image,path_home):
+    """ Validates if a .ssh directory is already present """
+    # Validate for a .ssh directory in path_home
+    logging.info(f"Validating for an already present .ssh directory")
+    cmd = f"guestfish --ro -a {image} -i is-dir {path_home}/.ssh"
+    p = subprocess.run([cmd], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    # Unfortunately we get a byte like object returned
+    if "true" in str(p.stdout):
+        logging.info(f".ssh directory already present in {path_home}")
+        return True
+    else:
+        logging.info(f".ssh directory not present in {path_home}. This will be created.")
+        return False
+
+
+def raw_inject(image,path_home,user,key,ssh_dir,userid):
+    """ Injects a SSH pubkey into a RAW image """
+    cmds = []
+    # Create .ssh directory if not already present
+    if not ssh_dir:
+        cmds.append(f"guestfish -a {image} -i mkdir {path_home}/.ssh")
+        if user == "root":
+            cmds.append(f"guestfish -a {image} -i chown 0 0 {path_home}/.ssh")
+        else:
+            cmds.append(f"guestfish -a {image} -i chown {userid} {userid} {path_home}/.ssh")
+        cmds.append(f"guestfish -a {image} -i chmod 0700 {path_home}/.ssh")
+
+    # Copy authorized_keys file into image
+    tmp = tmp_dir("tmp")
+    tmp_key = f"{tmp.name}/authorized_keys"
+    logging.info(f"Created tmp directory: {tmp.name}")
+
+    try:
+        logging.info(f"Copy {key} as a copy to a temporary directory")
+        shutil.copyfile(key,tmp_key)
+    except PermissionError:
+        logging.error("Permission denied.")
+    except IsADirectoryError:
+        logging.error("Destination is a directory.")
+
+    # Get all needed commands to inject pubkey
+    cmds.append(f"virt-copy-in -a {image} {tmp_key} {path_home}/.ssh/")
+    cmds.append(f"guestfish -a {image} -i chmod 0600 {path_home}/.ssh/authorized_keys")
+    if user == "root":
+        cmds.append(f"guestfish -a {image} -i chown 0 0 {path_home}/.ssh/authorized_keys")
+    else:
+        cmds.append(
+            f"guestfish -a {image} -i chown {userid} {userid} {path_home}/.ssh/authorized_keys")
+
+    # Execute all commands to inject SSH pubkey into image
+    logging.info("Injecting SSH pubkey...")
+    for i in cmds:
+        p = subprocess.run([i], shell=True, stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT, check=True)
+        rc = p.returncode
+    logging.info("SSH pubkey injected.")
+
+    # Remove tmp dir
+    logging.info("Removing tmp files.")
+    tmp_dir(tmp, remove=True)
+
+
+def tmp_dir(tmp_dir, remove=False):
+    """ Creates/Removes a tmp directory """
+    if remove:
+        # Ensure that all Py versions delete the tmp file
+        shutil.rmtree(tmp_dir.name)
+    else:
+        tmp_dir = tempfile.TemporaryDirectory()
+        return tmp_dir
+
+
+if __name__ == '__main__':
+    main()
