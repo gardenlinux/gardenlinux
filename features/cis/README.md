@@ -23,7 +23,7 @@ Sub features are included by the `cis/info.yaml` configuration file. Sub feature
 | cis_sysctl | Adjusting further sysctl options (e.g. deactivates IPv6) |
 
 ### Feature: cis_aide
-This feature replaces tripwire. Tripwire depends on libdb, which is not available in Garden Linux. It installs Aide, adds a configuration file for aide, adds a systemd unit that creates an Aide database at boot time if it doesn't exist and adds a cronjob to /etc/cron.d to run Aide every night.
+This feature installs the host-based intrusion detection system Aide, adds a configuration file for Aide, adds a systemd unit that creates an Aide database at boot time if it doesn't exist and adds a cronjob to /etc/cron.d to run Aide every night.
 
 ### Feature: cis_audit
 This feature adjust the basic `auditd` configuration regarding the logging of events. This includes changes of date/time, sudo logging, as well as options how to proceed if disk space get low or is full.
