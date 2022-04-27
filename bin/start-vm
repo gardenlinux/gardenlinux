@@ -37,6 +37,7 @@ vncport=0; while ss -tul | grep :$(( vncport + $vncbase )) &> /dev/null; do (( +
 keypress=1
 mac="$(printf '02:%02x:%02x:%02x:%02x:%02x' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)))"
 virtOpts=( )
+gardenlinux_build_cre=${GARDENLINUX_BUILD_CRE:-"sudo podman"}
 source "${thisDir}/.constants.sh" \
 	--flags 'daemonize,uefi,skipkp,vnc' \
 	--flags 'cpu:,mem:,bridge:,port:,mac:,arch:' \
@@ -318,7 +319,7 @@ if [ $pxe ]; then
 		echo "removing symlinks"
 		rm  "$pxe/root."{vmlinuz,initrd,squashfs}
 		echo "stopping helper for pxe"
-		sudo podman stop -t 0 $1
+		${gardenlinux_build_cre} stop -t 0 $1
 		[[ ! -s "$pxe/ignition.json" ]] && rm -f "$pxe/ignition.json"
 		echo "everything stopped..."
 	}
@@ -329,9 +330,9 @@ if [ $pxe ]; then
 	trap 'stop $containerName' EXIT
 	echo "starting helper container"
 	if [ "$ignfile" ]; then
-		sudo podman run -it --rm -d -p 127.0.0.1:8888:80 --name ${containerName} -v ${pxe}:/usr/share/nginx/html -v ${ignfile}:/usr/share/nginx/html/ignition.json nginx
+		${gardenlinux_build_cre} run -it --rm -d -p 127.0.0.1:8888:80 --name ${containerName} -v ${pxe}:/usr/share/nginx/html -v ${ignfile}:/usr/share/nginx/html/ignition.json nginx
 	else
-		sudo podman run -it --rm -d -p 127.0.0.1:8888:80 --name ${containerName} -v ${pxe}:/usr/share/nginx/html:ro nginx
+		${gardenlinux_build_cre} run -it --rm -d -p 127.0.0.1:8888:80 --name ${containerName} -v ${pxe}:/usr/share/nginx/html:ro nginx
 	fi
 fi
 

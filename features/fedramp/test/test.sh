@@ -1,4 +1,7 @@
 #!/bin/sh
+
+gardenlinux_build_cre=${GARDENLINUX_BUILD_CRE:-"sudo podman"}
+
 ######## BANNER ################
 BANNER=$(cat /etc/issue.net | grep "You are accessing a U.S. Government")
 if [ -z "$BANNER" ]
@@ -91,7 +94,7 @@ else
 fi
 # Cloud watch agent is irrelevant on Gardener AMIs as we push logs via fluentd.
 ######## CLOUDWATCH ############
-# CLOUDWATCH_DS=$(sudo podman ps | grep -i "cloudwatch")
+# CLOUDWATCH_DS=$(${gardenlinux_build_cre} ps | grep -i "cloudwatch")
 # if [ -z "$CLOUDWATCH_DS" ]
 # then
 #   CLOUDWATCH_CONFIG=$(sudo cat /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json | grep -i "/var/log/syslog")

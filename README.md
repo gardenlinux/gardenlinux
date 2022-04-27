@@ -45,6 +45,8 @@
 ## Quick Start
 The entire build runs in a <i>privileged</i> Podman/Docker container that orchestrates all further actions. If not explicitly skipped, unit tests will be performed. Extended capabilities are at least needed for loop back support. Currently AMD64 and ARM64 architectures are supported.
 
+By default, Garden Linux uses [Podman](https://podman.io/) as container runtime for building Garden Linux images (Garden Linux artifacts however will have Docker in them to maintain compatibility with older Kubernetes versions). If - for whatever reason - you want or need to use Docker instead, you can set the environment variable `GARDENLINUX_BUILD_CRE=docker` before invoking the build.
+
 ### Build Requirements
 
 **System:**
@@ -104,7 +106,7 @@ To build all supported images you may just run the following command:
     make all
 ```
 
-However, to safe time you may also build just a platform specific image by running one of the following commands. Related dev images can be created by appending the '-dev' suffix (e.g. "make aws-dev").
+However, to save time you may also build just a platform specific image by running one of the following commands. Related dev images can be created by appending the '-dev' suffix (e.g. "make aws-dev").
 ```
     make aws
     make gcp
