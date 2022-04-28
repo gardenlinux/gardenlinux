@@ -186,6 +186,8 @@ class KVM:
             image_name=image_name))
         cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chmod 0600 /root/.ssh/authorized_keys".format(
             image_name=image_name))
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i write-append /etc/hosts.allow 'ALL: 10.\n'".format(
+            image_name=image_name))
         # Copy custom SSHD config for executing remote integration tests
         # without changing the production sshd_config. This SSHD runs on
         # port tcp/2222

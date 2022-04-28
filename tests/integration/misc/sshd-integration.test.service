@@ -3,6 +3,8 @@ Description=OpenBSD Secure Shell server for Integration Tests
 Documentation=man:sshd(8) man:sshd_config(5)
 After=network.target auditd.service
 ConditionPathExists=!/etc/ssh/sshd_not_to_be_run
+StartLimitIntervalSec=1s
+StartLimitBurst=20
 
 [Service]
 EnvironmentFile=-/etc/default/ssh
