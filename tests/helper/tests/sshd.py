@@ -6,13 +6,12 @@ from helper.exception import NotPartOfFeatureError, TestFailed, DisabledBy
 
 logger = logging.getLogger(__name__)
 
+IN_SSHD_CONFIG = 1
+NOT_IN_SSHD_CONFIG = 2
+DIFFERENT = 3
 
 class Sshd():
     """Class containing the test for blacklisted packages"""
-
-    IN_SSHD_CONFIG = 1
-    NOT_IN_SSHD_CONFIG = 2
-    DIFFERENT = 3
 
     failed_before = False
     def __new__(cls, client, features):
@@ -61,79 +60,78 @@ class Sshd():
                                                                 quiet=True)
             assert exit_code == 0, f"no {error=} expected"
 
-            sshd_config = cls._create_dict(cls.instance, output)
+            sshd_config = _create_dict(output)
 
             expected = utils.read_test_config(
                 enabled_features, 'sshd', '_expected')
-            sshd_expected = cls._create_dict(cls.instance, expected)
+            sshd_expected = _create_dict(expected)
 
-            for key, value in sshd_config.items():
+            for key, values in sshd_config.items():
                 if key in sshd_expected:
-                    sshd_config_value = cls._normalize_value(
-                                            cls.instance, value)
-                    expected_value = cls._normalize_value(
-                                        cls.instance, sshd_expected[key])
-                    missing, where = cls._compare_as_set(cls.instance,
-                                        sshd_config_value, expected_value)
-                    if where == cls.NOT_IN_SSHD_CONFIG:
+                    sshd_config_values = _normalize_value(values)
+                    expected_values = _normalize_value(
+                                        sshd_expected[key])
+                    missing, where = _compare_as_set(sshd_config_values,
+                                                        expected_values)
+                    if where == NOT_IN_SSHD_CONFIG:
                         cls.failed_before = True
                         raise TestFailed(f"For {key} '{', '.join(missing)}'" +
                             " is expected but missing")
-                    if where == cls.IN_SSHD_CONFIG:
+                    if where == IN_SSHD_CONFIG:
                         cls.failed_before = True
                         raise TestFailed(f"For {key} '{', '.join(missing)}'" +
                             " is set but not expected")
-                    if where == cls.DIFFERENT:
+                    if where == DIFFERENT:
                         cls.failed_before = True
                         raise TestFailed(f"For {key} " +
-                            f"'{', '.join(expected_value)}' is expected, " +
-                            f"'{', '.join(sshd_config_value)}' is set")
+                            f"'{', '.join(expected_values)}' is expected, " +
+                            f"'{', '.join(sshd_config_values)}' is set")
 
         return cls.instance
 
-    def _create_dict(self, input):
-        """Create a dictionary.
-        Expecting a list or newline seperated input. The first word of a line
-        or list element will become the key, the rest is the value, the value 
-        is returned as a list"""
-        out = {}
-        if type(input) == list:
-            for line in input:
-                l = line.split(' ')
-                out.update({l[0].lower(): l[1:]})
-        else:
-            for line in input.splitlines():
-                l = line.split(' ')
-                out.update({l[0].lower(): l[1:]})
-        return out
+def _create_dict(input):
+    """Create a dictionary.
+    Expecting a list or newline seperated input. The first word of a line
+    or list element will become the key, the rest is the value, the value 
+    is returned as a list"""
+    out = {}
+    if type(input) == list:
+        for line in input:
+            l = line.split(' ')
+            out.update({l[0].lower(): l[1:]})
+    else:
+        for line in input.splitlines():
+            l = line.split(' ')
+            out.update({l[0].lower(): l[1:]})
+    return out
 
-    def _normalize_value(self, list):
-        """Convert a given list.
-        All elements will be converted to lower case and the list will be
-        returned as a set. If the element contains a comma separated string,
-        it will be split into a list first."""
-        normalized = []
-        for item in list:
-            normalized.append(item.lower())
-        if len(normalized) == 1 and re.match(r".*,.*",normalized[0]):
-            value_as_set = set(normalized[0].split(','))
-        else:
-            value_as_set = set(normalized)
-        return value_as_set
+def _normalize_value(list):
+    """Convert a given list.
+    All elements will be converted to lower case and the list will be
+    returned as a set. If the element contains a comma separated string,
+    it will be split into a list first."""
+    normalized = []
+    for item in list:
+        normalized.append(item.lower())
+    if len(normalized) == 1 and re.match(r".*,.*",normalized[0]):
+        value_as_set = set(normalized[0].split(','))
+    else:
+        value_as_set = set(normalized)
+    return value_as_set
 
-    def _compare_as_set(self, sshd_config_value, expected_value):
-        """Compare 2 sets.
-        If the sets are not identical, return the difference between the sets
-        and in which set the difference is missing"""
-        if not (sshd_config_value.issuperset(expected_value) and
-                expected_value.issuperset(sshd_config_value)):
-            missing_value = sshd_config_value.symmetric_difference(
-                                expected_value)
-            if sshd_config_value.issubset(expected_value):
-                return missing_value, self.NOT_IN_SSHD_CONFIG
-            if expected_value.issubset(sshd_config_value):
-                return missing_value, self.IN_SSHD_CONFIG
-            else:
-                return missing_value, self.DIFFERENT
+def _compare_as_set(sshd_config_value, expected_value):
+    """Compare 2 sets.
+    If the sets are not identical, return the difference between the sets
+    and in which set the difference is missing"""
+    if not (sshd_config_value.issuperset(expected_value) and
+            expected_value.issuperset(sshd_config_value)):
+        missing_value = sshd_config_value.symmetric_difference(
+                            expected_value)
+        if sshd_config_value.issubset(expected_value):
+            return missing_value, NOT_IN_SSHD_CONFIG
+        if expected_value.issubset(sshd_config_value):
+            return missing_value, IN_SSHD_CONFIG
         else:
-            return None, 0
+            return missing_value, DIFFERENT
+    else:
+        return None, 0
