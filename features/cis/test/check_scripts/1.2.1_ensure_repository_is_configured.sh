@@ -1,47 +1,56 @@
-#!/bin/bash
-
-# run-shellcheck
-#
-# CIS Debian Hardening
-#
-
-#
-# 1.7.1.4 Ensure SELinux is activated (Scored)
+# 1.2.1 Ensure repository is configured (Not scored)
 #
 
 set -e # One error, it's over
 set -u # One variable unset, it's over
 
 # shellcheck disable=2034
-HARDENING_LEVEL=3
+HARDENING_LEVEL=1
 # shellcheck disable=2034
-DESCRIPTION="Ensure SELinux is enforcing."
+DESCRIPTION="Garden Linux repository is present."
+
 
 # This function will be called if the script status is on enabled / audit mode
 audit() {
-    ERROR=0
-    get_selinux_status
-    if [ "$FNRET" != 0 ]; then
-        crit "SELinux is not active."
-        ERROR=1
+    get_apt_policy
+    if [ "$FNRET" = 0 ]; then
+        ok "APT policy looks good"
     else
-        ok "SELinux is active."
+        crit "APT policy is broken"
     fi
-}
 
-# Get SELinux status 
-get_selinux_status() {
-    STATUS=$(getenforce)
-    if [ $STATUS == "Enforcing" ]; then
-        FNRET=0
-    else
-        FNRET=1
+    get_apt_gl_repo
+    if [ "$FNRET" = 0 ]; then 
+        ok "Garden Linux repository is configured"
+    else    
+        crit "Garden Linux repository is not configured" 
     fi
 }
 
 # This function will check config parameters required
 check_config() {
     :
+}
+
+# Get APT Policy
+get_apt_policy() {
+    STATUS=$(apt-cache policy)
+    retVal=$?
+    if [ $retVal > 0  ]; then
+        FNRET=0
+    else
+        FNRET=1
+    fi
+}
+
+# Get GL repo from APT
+get_apt_gl_repo() {
+    OUTPUT=$(apt-cache policy | grep "origin repo.gardenlinux.io" | awk {'print $2'} | tail -n1)
+    if [ $OUTPUT == "repo.gardenlinux.io" ]; then
+        FNRET=0
+    else
+        FNRET=1
+    fi
 }
 
 # Source Root Dir Parameter

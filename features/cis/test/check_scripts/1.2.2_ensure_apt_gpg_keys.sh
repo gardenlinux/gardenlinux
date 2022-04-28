@@ -1,47 +1,55 @@
-#!/bin/bash
-
-# run-shellcheck
-#
-# CIS Debian Hardening
-#
-
-#
-# 1.7.1.4 Ensure SELinux is activated (Scored)
+# 1.2.2 Ensure APT GPG keys are configured (Not scored)
 #
 
 set -e # One error, it's over
 set -u # One variable unset, it's over
 
 # shellcheck disable=2034
-HARDENING_LEVEL=3
+HARDENING_LEVEL=1
 # shellcheck disable=2034
-DESCRIPTION="Ensure SELinux is enforcing."
+DESCRIPTION="GPG APT Key are present"
 
 # This function will be called if the script status is on enabled / audit mode
 audit() {
-    ERROR=0
-    get_selinux_status
-    if [ "$FNRET" != 0 ]; then
-        crit "SELinux is not active."
-        ERROR=1
+    get_apt_gpg
+    if [ "$FNRET" = 0 ]; then
+        ok "APT policy looks good"
     else
-        ok "SELinux is active."
+        crit "APT policy is broken"
     fi
-}
 
-# Get SELinux status 
-get_selinux_status() {
-    STATUS=$(getenforce)
-    if [ $STATUS == "Enforcing" ]; then
-        FNRET=0
-    else
-        FNRET=1
+    get_apt_gl_gpg
+    if [ "$FNRET" = 0 ]; then 
+        ok "Garden Linux repository is configured"
+    else    
+        crit "Garden Linux repository is not configured" 
     fi
 }
 
 # This function will check config parameters required
 check_config() {
     :
+}
+
+# Get APT GPG 
+get_apt_gpg() {
+    STATUS=$(apt-key list)
+    retVal=$?
+    if [ $retVal > 0  ]; then
+        FNRET=0
+    else
+        FNRET=1
+    fi
+}
+
+# Get GL key from APT GPG
+get_apt_gl_gpg() {
+    OUTPUT=$(apt-key list | grep "Garden Linux Automatic Signing Key" | awk {'print $4 $5'})
+    if [ $OUTPUT == "GardenLinux" ]; then
+        FNRET=0
+    else
+        FNRET=1
+    fi
 }
 
 # Source Root Dir Parameter
