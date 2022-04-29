@@ -1,3 +1,11 @@
+#!/bin/bash
+
+# run-shellcheck
+#
+# CIS Debian Hardening
+#
+
+#
 # 1.5.1 Ensure permissions on bootloader config are configured (Scored)
 #
 
@@ -7,17 +15,15 @@ set -u # One variable unset, it's over
 # shellcheck disable=2034
 HARDENING_LEVEL=1
 # shellcheck disable=2034
-DESCRIPTION="User and group root owner of grub bootloader config."
+DESCRIPTION="User and group root owner of syslinux bootloader config."
 
-# Assertion : Grub Based.
+# Assertion : Syslinux Based.
 
-FILE='/boot/grub/grub.cfg'
-FILE_ALT='/boot/efi/syslinux/syslinux.cfg'
+FILE='/boot/efi/syslinux/syslinux.cfg'
 USER='root'
 GROUP='root'
 PERMISSIONS='400'
-PERMISSIONSOK='400 600'
-PERMISSIONSOK_ALT='700'
+PERMISSIONSOK='400 700'
 
 # This function will be called if the script status is on enabled / audit mode
 audit() {
@@ -25,25 +31,14 @@ audit() {
     if [ "$FNRET" = 0 ]; then
         ok "$FILE has correct ownership"
     else
-        has_file_correct_ownership "$FILE_ALT" "$USER" "$GROUP"
-        if [ "$FNRET" = 0 ]; then
-            ok "$FILE_ALT has correct ownership"
-        else
-            crit "$FILE ownership was not set to $USER:$GROUP"
-        fi
+        crit "$FILE ownership was not set to $USER:$GROUP"
     fi
 
     has_file_one_of_permissions "$FILE" "$PERMISSIONSOK"
     if [ "$FNRET" = 0 ]; then
         ok "$FILE has correct permissions"
     else
-        # Syslinux needs executable bit, however only for root
-        has_file_one_of_permissions "$FILE_ALT" "$PERMISSIONSOK_ALT"
-        if [ "$FNRET" = 0 ]; then
-            ok "$FILE_ALT has correct permissions"
-        else
-            crit "permissions were not set correctly"
-        fi
+        crit "$FILE permissions were not set to $PERMISSIONS"
     fi
 }
 
@@ -69,13 +64,10 @@ apply() {
 # This function will check config parameters required
 check_config() {
 
-    is_pkg_installed "grub-common"
-    if [ "$FNRET" != 0 ]; then
-        warn "Grub is not installed, not handling configuration. Will check for syslinux..."
-    fi
     is_pkg_installed "syslinux-common"
     if [ "$FNRET" != 0 ]; then
-        warn "Syslinux is not installed, not handling configuration. Will check for Grub..."
+        warn "Syslinux is not installed, not handling configuration"
+        exit 2
     fi
     does_user_exist "$USER"
     if [ "$FNRET" != 0 ]; then
@@ -85,6 +77,11 @@ check_config() {
     does_group_exist "$GROUP"
     if [ "$FNRET" != 0 ]; then
         crit "$GROUP does not exist"
+        exit 2
+    fi
+    does_file_exist "$FILE"
+    if [ "$FNRET" != 0 ]; then
+        crit "$FILE does not exist"
         exit 2
     fi
 }

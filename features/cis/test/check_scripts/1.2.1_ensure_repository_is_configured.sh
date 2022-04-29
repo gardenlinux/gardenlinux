@@ -46,7 +46,8 @@ get_apt_policy() {
 # Get GL repo from APT
 get_apt_gl_repo() {
     OUTPUT=$(apt-cache policy | grep "origin repo.gardenlinux.io" | awk {'print $2'} | tail -n1)
-    if [ $OUTPUT == "repo.gardenlinux.io" ]; then
+    retVal=$?
+    if [ $retVal > 0  ]; then
         FNRET=0
     else
         FNRET=1
