@@ -56,3 +56,5 @@ class AptUpdate():
 
         (exit_code, output, error) = client.execute_command("apt-get update")
         assert exit_code == 0, f"no {error=} expected"
+
+        return cls.instance

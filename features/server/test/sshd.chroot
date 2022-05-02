@@ -21,8 +21,8 @@ if awk 'BEGIN {chr=0}; $2 == "/" {chr=1}; END {exit chr}' /proc/mounts 2> /dev/n
 fi
 
 absPath=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
-ssh_exp="${absPath}/sshd.d/ssh_expected"
-ssh_nexp="${absPath}/sshd.d/ssh_not_expected"
+ssh_exp="${absPath}/sshd.d/sshd_expected"
+ssh_nexp="${absPath}/sshd.d/sshd_not_expected"
 
 if ! sshd_config=$(sshd -T | awk '{print tolower($0)}'); then 
 	echo "FATAL - can't get the ssh config!"
