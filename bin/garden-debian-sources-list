@@ -39,7 +39,9 @@ version="${1:-}"; shift || eusage 'missing version'
 
 epoch="$(< "$targetDir/garden-epoch")"
 
+# Garden Linux Repository configuration
 gardenlinuxMirror='https://repo.gardenlinux.io/gardenlinux'
+gardenlinuxMirrorKey='/etc/apt/trusted.gpg.d/gardenlinux.asc'
 
 if [ -z "$ports" ]; then
 	standardMirror='https://deb.debian.org/debian'
@@ -60,7 +62,7 @@ deb() {
 	case "$target" in
 		standard) mirror="$standardMirror" ;;
 		security) mirror="$securityMirror" ;;
-		gardenlinux) mirror="$gardenlinuxMirror" ;;
+		gardenlinux) mirror="[arch=$arch signed-by=$gardenlinuxMirrorKey] $gardenlinuxMirror" ;;
 		*) echo >&2 "error: unknown 'deb' line target: '$target'"; exit 1 ;;
 	esac
 
