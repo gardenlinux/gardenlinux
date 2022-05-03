@@ -1,6 +1,5 @@
 import logging
 import os
-from re import A, I
 
 from helper import utils
 from helper.exception import NotPartOfFeatureError, TestFailed, DisabledBy
