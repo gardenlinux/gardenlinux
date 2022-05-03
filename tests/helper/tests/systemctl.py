@@ -51,14 +51,14 @@ class Systemctl():
         if not hasattr(cls, 'instance'):
             cls.instance = super(Systemctl, cls).__new__(cls)
 
-            # get list of enabled system services
+            # get list of enabled systemd services
             (exit_code, output, error) = client.execute_command(
                 "systemctl list-unit-files | awk '$2~/static/ { print $1; " +
                 "next} $2~/enabled/ { print $1; next; }'", quiet=True)
             assert exit_code == 0, f"no {error=} expected"
             enabled = output
 
-            # get list of disabled system services
+            # get list of disabled systemd services
             (exit_code, output, error) = client.execute_command(
                 "systemctl list-unit-files | awk '$2~/disabled/ { print $1; " +
                 "next}'", quiet=True)
