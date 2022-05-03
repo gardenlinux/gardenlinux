@@ -52,13 +52,15 @@ class Tiger():
 
             utils.AptUpdate(client)                
             (exit_code, output, error) = client.execute_command(
-                "apt-get install -y --no-install-recommends tiger apt-utils", quiet=True)
+                "apt-get install -y --no-install-recommends tiger apt-utils",
+                quiet=True)
             assert exit_code == 0, f"no {error=} expected"
 
             # merge tiger config files for enabled features
             with open("/tmp/tigerrc", "w") as merged_config:
                 for feature in enabled_features:
-                    path = f"/gardenlinux/features/{feature}/test/tiger.d/tigerrc"
+                    path = (f"/gardenlinux/features/{feature}" + 
+                            "/test/tiger.d/tigerrc")
                     if os.path.isfile(path):
                         with open(path) as feature_config:
                             merged_config.write(feature_config.read())
@@ -69,13 +71,16 @@ class Tiger():
 
             # unmount directories that make the tiger checks fail
             for dir in ["sys", "dev", "proc"]:
-                (exit_code, output, error) = client.execute_command(f"mountpoint -q /{dir} && umount -l /{dir}", quiet=True)
+                (exit_code, output, error) = client.execute_command(
+                    f"mountpoint -q /{dir} && umount -l /{dir}", quiet=True)
                 assert exit_code == 0, f"no {error=} expected"
 
-            (exit_code, output, error) = client.execute_command("tiger -c /tmp/tigerrc -q", quiet=True)
+            (exit_code, output, error) = client.execute_command(
+                "tiger -c /tmp/tigerrc -q", quiet=True)
             assert exit_code == 0, f"no {error=} expected"
 
-            (exit_code, output, error) = client.execute_command("grep -hw FAIL /var/log/tiger/security.report.*", quiet=True)
+            (exit_code, output, error) = client.execute_command(
+                "grep -hw FAIL /var/log/tiger/security.report.*", quiet=True)
             if not output == '':
                 cls.failed_before = True
                 raise TestFailed(
