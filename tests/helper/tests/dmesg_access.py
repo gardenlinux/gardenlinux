@@ -13,30 +13,30 @@ class DmesgAccess():
     def do_test_check_dmesg_access(cls, client):
         """Verifies that non-root users can NOT access dmesg"""
         cls.instance = super(DmesgAccess, cls).__new__(cls)
-        message = "OK - dmesg restricted"
-        rc = 1
 
+        # Check if dmesg_restrict is explicitly enabled in config
         (exit_code, output, error) = client.execute_command(
-            f"grep -q 'CONFIG_SECURITY_DMESG_RESTRICT=y' /boot/config-*",
+            f"grep -qr 'kernel.dmesg_restrict = 1' /etc/sysctl.conf /etc/sysctl.d/*.conf",
             quiet=True)
 
-        if exit_code == 0:
-            message += "| kernel config parameter"
-            rc = 0
+        assert exit_code == 0, \
+            f"Expected kernel.dmesg_restrict to be enabled"
 
+        # Check if dmesg_restrict is explicitly disabled in config
         (exit_code, output, error) = client.execute_command(
-            f"grep -qr 'kernel.dmesg_restrict = 1' /etc/sysctl*;",
+            f"grep -qr 'kernel.dmesg_restrict = 0' /etc/sysctl.conf /etc/sysctl.d/*.conf",
             quiet=True)
 
-        if exit_code == 0:
-            message += "| sysctl parameter"
-            rc = 0
+        assert exit_code == 1, \
+            f"Unexpectedly detected kernel.dmesg_restrict to be disabled"
 
-        assert rc == 0,\
-            f"FAIL - dmesg access for non-root users is not restricted"
+        # Check if dmesg_restrict is enabled
+        (exit_code, output, error) = client.execute_command(
+            f"sysctl kernel.dmesg_restrict",
+            quiet=True)
 
-        if rc == 0:
-            logger.info(message)
+        assert output == 'kernel.dmesg_restrict = 1',\
+            f"sysctl kernel.dmesg_restrict returned unexpected output"
 
     def __new__(cls, client, features):
 
