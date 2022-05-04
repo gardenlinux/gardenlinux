@@ -7,7 +7,8 @@ logger = logging.getLogger(__name__)
 
 
 class SoftHardLinks():
-    """Class containing the test for checking the file capabilities"""
+    """Class containing the test for checking the soft and hard links
+    settings."""
     failed_before = False
     def __new__(cls, client, features):
         """The actual test.
