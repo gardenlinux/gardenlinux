@@ -50,12 +50,12 @@ class PasswordShadow():
             cls.instance = super(PasswordShadow, cls).__new__(cls)
 
             (exit_code, output, error) = client.execute_command(
-                "awk -F: '$2~/\*/ { next; } $2~/!/ { next; } {print $0; exit 1}' /etc/shadow", quiet=True)
+                "awk -F: '$2~/\\*/ { next; } $2~/!/ { next; } {print $0; exit 1}' /etc/shadow", quiet=True)
             if exit_code != 0:
                 raise TestFailed(f"No passwords should be set in /etc/shadow")
 
             (exit_code, output, error) = client.execute_command(
-                "awk -F: '$2~/\*/ { next; } $2~/x/ { next; } {print $0; exit 1}' /etc/passwd", quiet=True)
+                "awk -F: '$2~/\\*/ { next; } $2~/x/ { next; } {print $0; exit 1}' /etc/passwd", quiet=True)
             if exit_code != 0:
                 raise TestFailed(f"Malformed entries in /etc/passwd \n {output} {error}")
 
