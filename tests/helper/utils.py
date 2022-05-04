@@ -58,3 +58,12 @@ class AptUpdate():
         assert exit_code == 0, f"no {error=} expected"
 
         return cls.instance
+
+
+def get_file_perm(client, fname):
+    """Return file permissions of a given file/dir in as int"""
+    (exit_code, output, error) = client.execute_command(
+        f"stat --format '%a' {fname}", quiet=True)
+    # Make sure we do not test non existent directories
+    if not "cannot statx" in error:
+        return int(output) 
