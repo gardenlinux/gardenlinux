@@ -212,8 +212,7 @@ class CHROOT:
         # Copy ssh / authorized_keys file for root user
         local_ssh_key_path = self.config["ssh"]["ssh_key_filepath"] + ".pub"
         chroot_root_dir = rootfs + "/root/"
-        chroot_ssh_authorized_keys = chroot_root_dir + ".ssh/authorized_keys"
-        ssh_authorized_keys = "/tmp/authorized_keys"
+        chroot_ssh_authorized_keys = chroot_root_dir + ".ssh/test_authorized_keys"
         self._create_dir(chroot_root_dir+".ssh", 0o600)
         try:
             shutil.copyfile(local_ssh_key_path, chroot_ssh_authorized_keys)

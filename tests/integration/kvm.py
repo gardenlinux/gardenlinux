@@ -146,16 +146,12 @@ class KVM:
         return ssh_generate, arch
 
     def _generate_ssh_key(self):
-        """ Generate new SSH key for integration test if needed """
+        """ Generate new SSH key for integration test """
         logger.info("Generating new SSH key for integration tests.")
         ssh_key_path = self.config["ssh"]["ssh_key_filepath"]
-        # Private key
-        key = paramiko.RSAKey.generate(2048)
-        key.write_private_key_file(ssh_key_path)
-        # Public key (as authorized_keys)
-        public_key = key.get_base64()
-        with open("/tmp/authorized_keys", "w") as f:
-            f.write("ssh-rsa " + public_key)
+        keyfp = RemoteClient.generate_key_pair(
+            filename = ssh_key_path,
+        )
         logger.info("SSH key for integration tests generated.")
 
     def _adjust_kvm(self):
@@ -163,7 +159,9 @@ class KVM:
         logger.info("Adjusting KVM image. This will take some time for each command...")
         image = self.config["image"]
         image_name = os.path.basename(image)
-        authorized_keys_file = "/tmp/authorized_keys"
+        ssh_key_path = self.config["ssh"]["ssh_key_filepath"]
+        ssh_key = os.path.basename(ssh_key_path)
+        authorized_keys_file = f"{ssh_key_path}.pub"
         sshd_config_src_file = "integration/misc/sshd_config_integration_tests"
         sshd_config_dst_file = "/etc/ssh/sshd_config_integration_tests"
         sshd_systemd_src_file = "integration/misc/sshd-integration.test.service"
@@ -178,13 +176,15 @@ class KVM:
             image_name=image_name))
         cmd_kvm_adj.append("virt-copy-in -a /tmp/{image_name}.snapshot.img {authorized_keys_file} /root/.ssh/".format(
             image_name=image_name, authorized_keys_file=authorized_keys_file))
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i mv /root/.ssh/{ssh_key}.pub /root/.ssh/test_authorized_keys".format(
+            image_name=image_name, ssh_key=ssh_key))
         cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chown 0 0 /root/.ssh".format(
             image_name=image_name))
-        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chown 0 0 /root/.ssh/authorized_keys".format(
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chown 0 0 /root/.ssh/test_authorized_keys".format(
             image_name=image_name))
         cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chmod 0700 /root/.ssh".format(
             image_name=image_name))
-        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chmod 0600 /root/.ssh/authorized_keys".format(
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chmod 0600 /root/.ssh/test_authorized_keys".format(
             image_name=image_name))
         cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i write-append /etc/hosts.allow 'ALL: 10.\n'".format(
             image_name=image_name))
