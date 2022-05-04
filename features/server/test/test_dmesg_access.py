@@ -3,7 +3,7 @@ from helper.tests.dmesg_access import DmesgAccess
 import pytest
 
 
-def test_dmesg_access(client, features):
+def test_dmesg_access(client, features, non_chroot):
     """The test function executed by pytest"""
     try:
         DmesgAccess(client, features)
