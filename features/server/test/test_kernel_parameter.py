@@ -1,10 +1,10 @@
 from helper.exception import NotPartOfFeatureError, DisabledBy
-from helper.tests.soft_hard_links import SoftHardLinks
+from helper.tests.kernel_parameter import KernelParameter
 import pytest
 
-def test_soft_hard_links(client, features):
+def test_kernel_parameter(client, features):
     """The test function executed by pytest"""
     try:
-        SoftHardLinks(client, features)
+        KernelParameter(client, features)
     except (NotPartOfFeatureError, DisabledBy) as e:
         pytest.skip(str(e))

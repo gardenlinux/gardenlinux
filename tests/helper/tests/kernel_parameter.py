@@ -1,4 +1,5 @@
 import logging
+import string
 
 from helper import utils
 from helper.exception import NotPartOfFeatureError, TestFailed, DisabledBy
@@ -6,9 +7,8 @@ from helper.exception import NotPartOfFeatureError, TestFailed, DisabledBy
 logger = logging.getLogger(__name__)
 
 
-class SoftHardLinks():
-    """Class containing the test for checking the soft and hard links
-    settings."""
+class KernelParameter():
+    """Class containing the test for checking kernel parameters."""
     failed_before = False
     def __new__(cls, client, features):
         """The actual test.
@@ -32,7 +32,8 @@ class SoftHardLinks():
         (enabled_features, my_feature) = features
 
         # check if test is disabled in a feature
-        test_is_disabled = utils.disabled_by(enabled_features, 'soft_hard_links')
+        test_is_disabled = utils.disabled_by(enabled_features,
+                                                'kernel-parameter')
         if not len(test_is_disabled) == 0:
             raise DisabledBy("Test is explicitly disabled by features " +
                 f"{', '.join(test_is_disabled)}")
@@ -48,20 +49,26 @@ class SoftHardLinks():
         # instance containing the instance itself and then do the actual
         # testing. 
         if not hasattr(cls, 'instance'):
-            cls.instance = super(SoftHardLinks, cls).__new__(cls)
-            
-            for parameter in ["protected_symlinks", "protected_hardlinks"]:
+            cls.instance = super(KernelParameter, cls).__new__(cls)
+
+            expected_parameters = utils.read_test_config(enabled_features,
+                                                        "kernel-parameter")
+
+            for parameter in expected_parameters:
+                parameter = parameter.split('=')
+                for idx, value in enumerate(parameter):
+                    parameter[idx] = value.strip(string.whitespace)
+
                 (exit_code, output, error) = client.execute_command(
-                    f"sysctl -n fs.{parameter}", quiet=True)
+                    f"sysctl -n {parameter[0]}", quiet=True)
                 assert exit_code == 0, f"no {error=} expected"
 
-                logger.info(output)
-
-                if int(output) != 1:
+                if output.strip(string.whitespace) != parameter[1]:
                     cls.failed_before = True
-                    msgerr = (f"{parameter.capitalize()} are not configured " +
-                              f"correctly. Expected fs.{parameter} set to 1.")
-                    logger.error(msgerr)
-                    raise TestFailed(msgerr)
+                    msg_err = (f"{parameter[0].capitalize()} are not " +
+                              f"configured correctly. Expected " +
+                              f"{parameter[0]} set to {parameter[1]}.")
+                    logger.error(msg_err)
+                    raise TestFailed(msg_err)
                     
         return cls.instance
