@@ -1,4 +1,6 @@
 import logging
+import yaml
+import os
 
 from helper import utils
 from helper.exception import NotPartOfFeatureError, TestFailed, DisabledBy
@@ -49,12 +51,24 @@ class DebianCIS():
         if not hasattr(cls, 'instance'):
             cls.instance = super(DebianCIS, cls).__new__(cls)
 
-            git_debian_cis =  "https://github.com/ovh/debian-cis.git"
-            git_gardenlinux = "https://github.com/gardenlinux/gardenlinux.git"
-            config_src = "/tmp/gardenlinux/features/cis/test/conf.d/*.cfg"
-            config_dst = "/tmp/debian-cis/etc/conf.d/"
-            script_src = "/tmp/gardenlinux/features/cis/test/check_scripts/*.sh"
-            script_dst = "/tmp/debian-cis/bin/hardening/"
+            config_file = f"/gardenlinux/features/{my_feature}/test/config.yaml"
+            if os.path.exists(config_file):
+                with open(config_file) as f:
+                    feature_config = yaml.safe_load(f)
+            else:
+                msg_err = f"config for feature {my_feature} is not present."
+                logger.error(msg_err)
+                pytest.exit(msg_err, 1)
+
+            # Redefine VARs from YAML (shortener)
+            git_debian_cis = feature_config[my_feature]["git_debian_cis"]
+            git_debian_cis =  feature_config[my_feature]["git_debian_cis"]
+            git_gardenlinux = feature_config[my_feature]["git_gardenlinux"]
+            config_src = feature_config[my_feature]["config_src"]
+            config_dst = feature_config[my_feature]["config_dst"]
+            script_src = feature_config[my_feature]["script_src"]
+            script_dst = feature_config[my_feature]["script_dst"]
+
             # /tmp has 'noexec' flag; therefore we need to
             # call each script with bash.
             cmd_debian_cis = "for i in `ls /tmp/debian-cis/bin/hardening/*.sh`; do /bin/bash $i; done"
