@@ -1,0 +1,7 @@
+cis:
+  git_debian_cis: "https://github.com/ovh/debian-cis.git"
+  git_gardenlinux: "https://github.com/gardenlinux/gardenlinux.git"
+  config_src: "/tmp/gardenlinux/features/cis/test/conf.d/*.cfg"
+  config_dst: "/tmp/debian-cis/etc/conf.d/"
+  script_src: "/tmp/gardenlinux/features/cis/test/check_scripts/*.sh"
+  script_dst: "/tmp/debian-cis/bin/hardening/"
