@@ -35,7 +35,7 @@ class DmesgAccess():
             f"sysctl kernel.dmesg_restrict",
             quiet=True)
 
-        assert output == 'kernel.dmesg_restrict = 1',\
+        assert output == 'kernel.dmesg_restrict = 1\n',\
             f"sysctl kernel.dmesg_restrict returned unexpected output"
 
     def __new__(cls, client, features):
