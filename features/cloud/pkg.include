@@ -6,5 +6,5 @@ syslinux-common
 cloud-guest-utils
 libpam-cracklib
 rng-tools5
-https://repo.gardenlinux.io/gardenlinux/pool/main/l/linux-signed-5.10-${arch}/linux-image-5.10.109-garden-cloud-${arch}_5.10.109-0gardenlinux2_${arch}.deb
-https://repo.gardenlinux.io/gardenlinux/pool/main/l/linux-signed-5.10-${arch}/linux-image-5.10-cloud-${arch}_5.10.109-0gardenlinux2_${arch}.deb
+https://repo.gardenlinux.io/gardenlinux/pool/main/l/linux-signed-5.10-${arch}/linux-image-5.10.113-garden-cloud-${arch}_5.10.113-0gardenlinux2_${arch}.deb
+https://repo.gardenlinux.io/gardenlinux/pool/main/l/linux-signed-5.10-${arch}/linux-image-5.10-cloud-${arch}_5.10.113-0gardenlinux2_${arch}.deb

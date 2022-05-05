@@ -1,6 +1,7 @@
 apparmor
-http://snapshot.debian.org/archive/debian/20220120T210710Z/pool/main/c/containerd/containerd_1.5.9~ds1-1_amd64.deb
-http://snapshot.debian.org/archive/debian/20220120T210710Z/pool/main/d/docker.io/docker.io_20.10.11+dfsg1-2+b1_amd64.deb
+https://gitlab.com/gardenlinux/gardenlinux-package-containerd/-/jobs/2412559315/artifacts/raw/_output/containerd_1.5.11-1gardenlinux~0.531054003.c1a628c0_amd64.deb
+https://gitlab.com/gardenlinux/gardenlinux-package-runc/-/jobs/2419399276/artifacts/raw/_output/runc_1.0.3-2gardenlinux~0.532276027.ddafebce_amd64.deb
+https://snapshot.debian.org/archive/debian/20220502T032918Z/pool/main/d/docker.io/docker.io_20.10.14+dfsg1-1+b1_amd64.deb
 ethtool
 ipvsadm
 socat
