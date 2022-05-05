@@ -104,6 +104,25 @@ class CHROOT:
             logger.error("Image archive is not present: {path}".format(
               path=self.config["image"]))
 
+        # Validate if image extension is defined corretly
+        allowed_image_ext = [
+                            "tar.xz",
+                            "txz",
+                            "tgz",
+                            "tar",
+                            "tar.gz"
+                            ]
+        file_name = os.path.basename(self.config["image"])
+        # Get extensions by dot counting in reverse order
+        file_ext = file_name.split(".")[1:]
+        # Join file extension if we have multiple ones (e.g. .tar.gz)
+        file_ext = ".".join(file_ext)
+        # Fail on unsupported image types
+        if not file_ext in allowed_image_ext:
+            msg_err = f"{file_ext} is not supported for this platform test type."
+            logger.error(msg_err)
+            pytest.exit(msg_err, 1)
+
         # Check if port is defined
         if not "port" in self.config:
             logger.error("No port for ssh connection defined.")
