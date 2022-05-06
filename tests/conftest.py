@@ -432,6 +432,10 @@ def openstack_flavor():
     return OpenStackCCEE.instance().flavor
 
 @pytest.fixture
-def non_arm64(testconfig):
-    if "arm64" in testconfig["image"]:
+def non_arm64(client):
+    (exit_code, output, error) = client.execute_command("dpkg --print-architecture", quiet=True)
+    if exit_code != 0:
+        logger.error(error)
+        sys.exit(exit_code)
+    if "arm64" in output:
         pytest.skip('test not supported on arm64 architecture')
