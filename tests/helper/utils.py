@@ -1,5 +1,8 @@
 import os
 import re
+import os
+import yaml
+
 
 def get_package_list(client):
     """Return list with the installed packages.
@@ -66,4 +69,17 @@ def get_file_perm(client, fname):
         f"stat --format '%a' {fname}", quiet=True)
     # Make sure we do not test non existent directories
     if not "cannot statx" in error:
-        return int(output) 
+        return int(output)
+
+
+def get_feature_config(feature):
+    """Loads the features YAML config file"""
+    config_file = f"/gardenlinux/features/{feature}/test/config.yaml"
+    if os.path.exists(config_file):
+        with open(config_file) as f:
+            feature_config = yaml.safe_load(f)
+            return feature_config
+    else:
+        msg_err = f"config for feature {my_feature} is not present."
+        logger.error(msg_err)
+        pytest.exit(msg_err, 1)

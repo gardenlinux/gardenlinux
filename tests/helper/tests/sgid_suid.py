@@ -1,6 +1,4 @@
 import logging
-import yaml
-import os
 
 from helper import utils
 from helper.exception import NotPartOfFeatureError, TestFailed, DisabledBy
@@ -8,8 +6,8 @@ from helper.exception import NotPartOfFeatureError, TestFailed, DisabledBy
 logger = logging.getLogger(__name__)
 
 
-class DebianCIS():
-    """Class containing the test for validating CIS compliance by OVH"""
+class SGIDSUID():
+    """Class containing the test to find SGID and SUID files"""
     failed_before = False
     def __new__(cls, client, features):
         """The actual test.
@@ -33,7 +31,7 @@ class DebianCIS():
         (enabled_features, my_feature) = features
 
         # check if test is disabled in a feature
-        test_is_disabled = utils.disabled_by(enabled_features, 'cis')
+        test_is_disabled = utils.disabled_by(enabled_features, 'sgid_suid')
         if not len(test_is_disabled) == 0:
             raise DisabledBy("Test is explicitly disabled by features " +
                 f"{', '.join(test_is_disabled)}")
@@ -49,44 +47,43 @@ class DebianCIS():
         # instance containing the instance itself and then do the actual
         # testing. 
         if not hasattr(cls, 'instance'):
-            cls.instance = super(DebianCIS, cls).__new__(cls)
+            cls.instance = super(SGIDSUID, cls).__new__(cls)
 
             # Load the features YAML config file
             feature_config = utils.get_feature_config(my_feature)
 
-            # Redefine VARs from YAML (shortener)
-            git_debian_cis = feature_config[my_feature]["git_debian_cis"]
-            git_debian_cis =  feature_config[my_feature]["git_debian_cis"]
-            git_gardenlinux = feature_config[my_feature]["git_gardenlinux"]
-            config_src = feature_config[my_feature]["config_src"]
-            config_dst = feature_config[my_feature]["config_dst"]
-            script_src = feature_config[my_feature]["script_src"]
-            script_dst = feature_config[my_feature]["script_dst"]
+            # Find SGID files
+            sgid_whitelist = feature_config[my_feature]["sgid"]["whitelist"]
+            sgid_found = []
+            cmd = "find / -type f -perm -2000 -exec stat -c '%n,%u,%g' {} \; 2> /dev/null"
+            (exit_code, output, error) = client.execute_command(
+                cmd, quiet=True)
 
-            # /tmp has 'noexec' flag; therefore we need to
-            # call each script with bash.
-            cmd_debian_cis = "for i in `ls /tmp/debian-cis/bin/hardening/*.sh`; do /bin/bash $i; done"
+            for line in output.split('\n'):
+                if line != '':
+                    sgid_found.append(line)
 
-            (exit_code, output, error) = client.execute_command(f"cd /tmp/ && git clone {git_debian_cis}")
-            assert exit_code == 0, f"no {error=} expected"
+            sgid_diff = set(sgid_found) - set(sgid_whitelist)
+            if len(list(sgid_diff)) > 0:
+                msg_err = f"Following SGID files were found: {sgid_diff}"
+                logger.error(msg_err)
+                raise TestFailed(msg_err)
 
-            (exit_code, output, error) = client.execute_command(f"cd /tmp/ && git clone {git_gardenlinux}")
-            assert exit_code == 0, f"no {error=} expected"
+            # Find SUID files
+            suid_whitelist = feature_config[my_feature]["suid"]["whitelist"]
+            suid_found = []
+            cmd = "find / -type f -perm -4000 -exec stat -c '%n,%u,%g' {} \; 2> /dev/null"
+            (exit_code, output, error) = client.execute_command(
+                cmd, quiet=True)
 
-            (exit_code, output, error) = client.execute_command("echo CIS_ROOT_DIR='/tmp/debian-cis' > /etc/default/cis-hardening")
-            assert exit_code == 0, f"no {error=} expected"
+            for line in output.split('\n'):
+                if line != '':
+                    suid_found.append(line)
 
-            (exit_code, output, error) = client.execute_command(f"cp {config_src} {config_dst}")
-            assert exit_code == 0, f"no {error=} expected"
-
-
-            (exit_code, output, error) = client.execute_command(f"cp {script_src} {script_dst}")
-            assert exit_code == 0, f"no {error=} expected"
-
-            (exit_code, output, error) = client.execute_command(f"{cmd_debian_cis}")
-            if "Check Failed" in output:
-                exit_code == 1
-                assert output
-            assert exit_code == 0, f"no {error=} expected"
+            suid_diff = set(suid_found) - set(suid_whitelist)
+            if len(list(suid_diff)) > 0:
+                msg_err = f"Following SUID files were found: {suid_diff}"
+                logger.error(msg_err)
+                raise TestFailed(msg_err)
 
         return cls.instance
