@@ -56,18 +56,21 @@ class KernelParameter():
 
             for parameter in expected_parameters:
                 parameter = parameter.split('=')
-                for idx, value in enumerate(parameter):
-                    parameter[idx] = value.strip(string.whitespace)
+
+                config_key = parameter[0].strip(string.whitespace)
+                expected_value = parameter[1].strip(string.whitespace)
 
                 (exit_code, output, error) = client.execute_command(
-                    f"sysctl -n {parameter[0]}", quiet=True)
+                    f"sysctl -n {config_key}", quiet=True)
                 assert exit_code == 0, f"no {error=} expected"
 
-                if output.strip(string.whitespace) != parameter[1]:
+                running_value = output.strip(string.whitespace)
+
+                if running_value != expected_value:
                     cls.failed_before = True
-                    msg_err = (f"{parameter[0].capitalize()} are not " +
+                    msg_err = (f"{config_key.capitalize()} is not " +
                               f"configured correctly. Expected " +
-                              f"{parameter[0]} set to {parameter[1]}.")
+                              f"{config_key} set to {expected_value}.")
                     logger.error(msg_err)
                     raise TestFailed(msg_err)
                     
