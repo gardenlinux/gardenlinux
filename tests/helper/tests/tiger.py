@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class Tiger():
-    """Class containing the test for checking if debsums are available"""
+    """Class containing for running the tiger security tool test"""
     failed_before = False
     def __new__(cls, client, features):
         """The actual test.
