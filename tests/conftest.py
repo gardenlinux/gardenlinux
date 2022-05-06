@@ -430,3 +430,8 @@ def openstack(iaas):
 @pytest.fixture
 def openstack_flavor():
     return OpenStackCCEE.instance().flavor
+
+@pytest.fixture
+def non_arm64(testconfig):
+    if "arm64" in testconfig["image"]:
+        pytest.skip('test not supported on arm64 architecture')

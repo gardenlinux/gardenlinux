@@ -48,7 +48,7 @@ def test_ntp(client, non_azure, non_chroot):
     assert ntp_ok, "NTP not activated"
     assert ntp_synchronised_ok, "NTP not synchronized"
 
-def test_ls(client):
+def test_ls(client, non_arm64):
     (exit_code, output, error) = client.execute_command("ls /")
     assert exit_code == 0, f"no {error=} expected"
     assert output
@@ -131,7 +131,7 @@ def ping4_host(request):
     return request.param
 
 
-def test_ping4(client, ping4_host):
+def test_ping4(client, ping4_host, non_chroot):
     command = f"ping -c 5 -W 5 {ping4_host}"
     (exit_code, output, error) = client.execute_command(command)
     assert exit_code == 0, f'no {error=} expected when executing "{command}"'
