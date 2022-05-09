@@ -1,0 +1,49 @@
+# Disable root login.
+PermitRootLogin no
+
+# Only use the more secure SSHv2 protocol.
+Protocol 2
+
+# No X11 forwarding.
+X11Forwarding no
+
+# Check permissions of configuration files related to SSH on login.
+# If this fails, the user won’t be able to login.
+StrictModes yes
+
+# Disable host-based authentications.
+IgnoreRhosts yes
+HostbasedAuthentication no
+
+# Set log level to be verbose.
+# we need to log the fingerprint
+LogLevel VERBOSE 
+
+# Ensure usage of PAM
+UsePAM yes
+
+# Disable message of the day
+PrintMotd no
+
+# Allow client to pass locale environment variables
+AcceptEnv LANG
+
+# override default of no subsystems
+Subsystem sftp /usr/lib/openssh/sftp-server -f AUTHPRIV -l INFO
+
+# autologout inactive users after 10 minutes
+ClientAliveInterval 600
+ClientAliveCountMax 0
+
+# Password based logins are disabled - only public key based logins are allowed.
+AuthenticationMethods publickey
+
+# Empty Passwords are disabled (strictly defined for FedRAMP tests)
+PermitEmptyPasswords no
+
+# Use custom banner
+Banner /etc/issue.net
+
+# Supported HostKey algorithms by order of preference.
+HostKey /etc/ssh/ssh_host_ed25519_key
+HostKey /etc/ssh/ssh_host_rsa_key

@@ -1,5 +1,7 @@
+import uuid
 import os
 import re
+
 
 def get_package_list(client):
     """Return list with the installed packages.
@@ -66,4 +68,16 @@ def get_file_perm(client, fname):
         f"stat --format '%a' {fname}", quiet=True)
     # Make sure we do not test non existent directories
     if not "cannot statx" in error:
-        return int(output) 
+        return int(output)
+
+
+def create_remote_tmp_dir(client):
+    """Create a temporary directory on remote without Python usage"""
+    tmp_random = uuid.uuid4()
+    tmp_prefix = "gl-test-"
+    tmp_name   = f"/tmp/{tmp_prefix}{tmp_random}"
+
+    (exit_code, output, error) = client.execute_command(f"stat {tmp_name}", quiet=True)
+    if exit_code is not 0:
+       (rc, output, error) = client.execute_command(f"mkdir {tmp_name}", quiet=True)
+    return tmp_name

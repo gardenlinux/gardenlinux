@@ -1,0 +1,13 @@
+[Unit]
+Description=Garden Linux Firewall IPv6
+DefaultDependencies=no
+After=systemd-sysctl.service
+Before=sysinit.target
+[Service]
+Type=oneshot
+ExecStart=/sbin/ip6tables-restore /etc/firewall/ipv6_gl_default.conf
+ExecReload=/sbin/ip6tables-restore /etc/firewall/ipv6_gl_default.conf
+ExecStop=/etc/firewall/ipv6_flush.sh
+RemainAfterExit=yes
+[Install]
+WantedBy=multi-user.target
