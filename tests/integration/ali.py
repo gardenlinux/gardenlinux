@@ -46,6 +46,8 @@ class ALI:
             config["image_name"] = test_name
         if not ("vm_name" in config and config["vm_name"] != None):
             config["vm_name"] = test_name + "_vm"
+        if not "image_region" in config:
+            config["image_region"] = "eu-central-1"
         logger.info("Image name %s" % config["image_name"])
 
         ali = ALI(config)
@@ -186,7 +188,7 @@ class ALI:
                 bucket.put_object(image_name_in_bucket, fileobj)
 
         elif o.scheme == "s3":
-            s3_url = f"https://{o.hostname}.s3.eu-central-1.amazonaws.com/{o.path.lstrip('/')}"
+            s3_url = f"https://{o.hostname}.s3.{self.config['image_region']}.amazonaws.com/{o.path.lstrip('/')}"
             meta = urlopen(s3_url)
             file_size = int(meta.getheader('Content-Length'))
             chunk_size = 4 * 1024 * 1024
