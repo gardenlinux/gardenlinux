@@ -3,18 +3,19 @@ import json
 import time
 import os
 import subprocess
-from oslo_utils.strutils import mask_dict_password
+import tempfile
+import requests
+
+from urllib.request import urlopen
+from urllib.parse import urlparse
 
 from helper.sshclient import RemoteClient
 from . import util
 
 from aliyunsdkcore.client import AcsClient
-from aliyunsdkecs.request.v20140526 import CopyImageRequest
 from aliyunsdkecs.request.v20140526 import DeleteImageRequest
 from aliyunsdkecs.request.v20140526 import DescribeImagesRequest
-from aliyunsdkecs.request.v20140526 import DescribeRegionsRequest
 from aliyunsdkecs.request.v20140526 import ImportImageRequest
-from aliyunsdkecs.request.v20140526 import ModifyImageSharePermissionRequest
 from aliyunsdkecs.request.v20140526.CreateInstanceRequest import CreateInstanceRequest
 from aliyunsdkecs.request.v20140526.StartInstanceRequest import StartInstanceRequest
 from aliyunsdkecs.request.v20140526.DescribeInstancesRequest import DescribeInstancesRequest
@@ -45,6 +46,8 @@ class ALI:
             config["image_name"] = test_name
         if not ("vm_name" in config and config["vm_name"] != None):
             config["vm_name"] = test_name + "_vm"
+        if not "image_region" in config:
+            config["image_region"] = "eu-central-1"
         logger.info("Image name %s" % config["image_name"])
 
         ali = ALI(config)
@@ -177,9 +180,32 @@ class ALI:
 
     def _upload_image(self, bucket_name, image, image_name_in_bucket):
         bucket = oss2.Bucket(self.oss_auth, self.oss_endpoint, bucket_name)
-        with open(image, 'rb') as fileobj:
-            bucket.put_object(image_name_in_bucket, fileobj)
-        
+
+        o = urlparse(image)
+        if o.scheme == "file":
+            logger.info(f"Uploading image {image} - this may take a while...")
+            with open(o.path, "rb") as fileobj:
+                bucket.put_object(image_name_in_bucket, fileobj)
+
+        elif o.scheme == "s3":
+            s3_url = f"https://{o.hostname}.s3.{self.config['image_region']}.amazonaws.com/{o.path.lstrip('/')}"
+            meta = urlopen(s3_url)
+            file_size = int(meta.getheader('Content-Length'))
+            chunk_size = 4 * 1024 * 1024
+
+            logger.info(f"Downloading from {s3_url} ({file_size} bytes) to temporary file...")
+            with tempfile.TemporaryFile() as tfh:
+                with requests.get(s3_url, stream=True) as r:
+                    for chunk in r.iter_content(chunk_size=chunk_size): 
+                        tfh.write(chunk)
+
+                tfh.seek(0)
+
+                logger.info(f"Re-uploading image to Ali-Cloud bucket {bucket.bucket_name}/{image_name_in_bucket} ({file_size} bytes)...")
+                bucket.put_object(image_name_in_bucket, tfh)
+
+        logger.info(f"Image blob successfully uploaded to Ali-Cloud bucket {bucket.bucket_name}/{image_name_in_bucket}")
+
         request = ImportImageRequest()
         request.set_Description(self.config["test-name"])
         request.set_Platform('Others Linux')
