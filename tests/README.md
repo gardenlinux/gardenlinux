@@ -7,11 +7,11 @@
   * [Prerequisites](#Prerequisites)
 - [Examples for Supported Platforms](#Examples-for-Supported-Platforms)
   * [General](#General)
-  * [Aliyun](#Aliyun)
   * [AWS](#AWS)
   * [Azure](#Azure)
-  * [CHROOT](#CHROOT)
   * [GCP](#GCP)
+  * [Aliyun](#Aliyun)
+  * [CHROOT](#CHROOT)
   * [KVM](#KVM)
   * [OpenStack CC EE flavor](#OpenStack-CC-EE-flavor)
   * [Manual Testing](#Manual-Testing)
@@ -57,105 +57,6 @@ The resulting container image will be tagged as `gardenlinux/integration-test:<v
 The integration tests require a config file containing vital information for interacting with the cloud providers. In the following sections, the configuration options are described in general and for each cloud provider individually.
 
 Since the configuration options are provided as a structured YAML with the cloud provider name as root elements, it is possible to have everything in just one file.
-
-### Aliyun
-
-You need credentials as used for the aliyun command line client, e.g. a `config.json` document. Prior to running the tests the following objects must be created in the account:
-
-- A vSwitch with a cidr range (e.g. 192.168.0.0/24)
-- A security group which allows ingress traffic on TCP for SSH (default: 22) from source IP address of the test run
-- a bucket for uploading the disk image files
-
-Use the following test configuration:
-
-```yaml
-ali:
-    # mandatory, aliyun credential file location (config.json)
-    credential_file: 
-
-    # optional, if an image id is provided the test will not attempt
-    # to upload an image
-    image_id:   # m-....
-
-    # image file (qcow2)
-    image:  # image.qcow2
-
-    # a valid instance type for the selected region
-    instance_type: ecs.t5-lc1m2.large
-
-    # mandatory, the security group id
-    security_group_id:  # sg-...
-
-    # mandatory, the vswtich id
-    vswitch_id:  # vsw-...
-
-    # mandatory, region and zone
-    region_id: eu-central-1
-    zone_id: eu-central-1a
-
-    # mandatory: bucket name
-    bucket:  # my-test-upload-bucket
-
-    # optional, path in bucket 
-    bucket_path: integration-test
-
-    # ssh related configuration for logging in to the VM (required)
-    ssh:
-        # path to the ssh key file (required)
-        ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
-        # key name
-        key_name: gardenlinux-test
-        # passphrase for a secured SSH key (optional)
-        passphrase:
-        # username
-        user: admin
-
-    # keep instance running after tests finishes if set to true (optional)
-    keep_running: false
-```
-
-#### Configuration options
-
-<details>
-
-- **credential_file**: 
-- **image_id**:
-- **image**:
-- **instance_type**: ecs.t5-lc1m2.large
-- **security_group_id**:  # sg-...
-- **vswitch_id**:  # vsw-...
-- **region_id**: eu-central-1
-- **zone_id**: eu-central-1a
-- **bucket**:  # my-test-upload-bucket
-- **bucket_path**: integration-test
-
-- **ssh_key_filepath** _(required)_: The SSH key that will be deployed to the ECS instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand.
-- **key_name** _(required)_: The SSH key gets uploaded to ECS, this is the name of the key object resource.
-- **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
-- **user** _(required)_: The user that will be provisioned to the ECS instance, which the SSH key gets assigned to and that is used by the test framework to log on the ECS instance.
-
-- **keep_running** _(optional)_: if set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow for debugging
-
-</details>
-
-#### Running the tests
-
-Start Podman container with dependencies:
-
-- mount Garden Linux repository to `/gardenlinux`
-- mount GCP credentials to `/root/.config`
-- mount SSH keys to `/root/.ssh`
-- mount build result directory to `/build` (if not part of the Garden Linux file tree)
-- mount directory with configfile to `/config`
-
-```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
-```
-
-Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
-
-    pytest --iaas=ali --configfile=/config/mygcpconfig.yaml
-
 
 ### AWS
 
@@ -210,7 +111,7 @@ aws:
 - **ami_id** _(optional/alternatively required)_: If the tests should get executed against an already existing AMI, this is its ID. It must exist in the region given above. Either **ami_id** or **image** must be supplied but not both.
 - **image** _(optional/alternatively required)_: If the tests should be executed against a Garden Linux filesystem snapshot that resulted from (local) build, this option is the URI that points to it. The file must be of type `.raw`. Either **ami_id** or **image** must be supplied but not both.
 The URI can be:
-    - `file:/path/to/my/rootfs.raw`: for local files, in that case
+    - `file:/path/to/my/rootfs.raw`: for local files
     - `s3://mybucketname/objects/objectkey`: for files in S3
 
 - **bucket** _(optional)_: To create an AMI/EC2 instance from a local filesystem snapshot, it needs to be uploaded to an S3 bucket first. The bucket needs to exist in the given region and its name must be provided here. If not provided, a bucket will be created in the given region.
@@ -299,7 +200,7 @@ Only three parameters are required for the test: the Azure `subscription` or `su
 - **image_name** _(optional/required)_: If the tests should get executed against an already existing Image, this is its name. Either **image_name** or **image** must be supplied but not both.
 - **image** _(optional/required)_: If the tests should be executed against a Garden Linux filesystem snapshot that resulted from a local build, this option is the path that points to it. The file must be of type `.vhd`. The image will be removed from Azure once the test finishes. Either **image_name** or **image** must be supplied but not both.
 The URI can be:
-    - `file:/path/to/my/rootfs.raw`: for local files
+    - `file:/path/to/my/rootfs.vhd`: for local files
     - `s3://mybucketname/objects/objectkey`: for files in S3
 
 - **ssh_key_filepath** _(optional)_: The SSH key that will be deployed to the Azure instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand. If left empty, a temporary key with 2048 bits will be generated by the test.
@@ -328,6 +229,199 @@ sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
     pytest --iaas=azure --configfile=/config/myazconfig.yaml
+
+
+### GCP
+
+Obtain credentials by using the following command to authenticate to Google Cloud Platform and set up the API access token:
+
+    gcloud auth application-default login
+
+Use the following test configuration:
+
+```yaml
+gcp:
+    # project id (required)
+    project:
+    # GCP region where the test resources should be created (required)
+    region: europe-west1
+    # zone where the VM should be created (required)
+    zone: europe-west1-d
+
+    # use a service account to log on to GCP instead of access token created with gcloud before (optional)
+    #service_account_json:
+    #service_account_json_path: /root/.config/gcloud/application_default_credentials.json
+
+    # use already existing image in GCE for tests (optional/required)
+    #image_name:
+    # upload this local image to GCE and use it for testing (optional/required)
+    image: file:/build/gcp-dev/20210915/amd64/bullseye/rootfs-gcpimage.tar.gz
+    #image: s3://gardenlinux/objects/078f440a76024ccd1679481708ebfc32f5431569
+    # GCS bucket for image upload, must exist and be used for local image upload (optional)
+    #bucket: 
+
+    # GCE machine type (optional)
+    machine_type: n1-standard-2
+
+    # ssh related configuration for logging in to the VM (required)
+    ssh:
+        # path to the ssh key file (required)
+        ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
+        # passphrase for a secured SSH key (optional)
+        passphrase:
+        # username used to connect to the Azure instance (required)
+        user: gardenlinux
+
+    # keep instance running after tests finishes (optional)
+    keep_running: false
+```
+
+#### Configuration options
+
+<details>
+
+- **project** _(required)_: the GCP project which is used for creating all relevant resources and running the tests
+- **zone** _(required)_: the GCP zone in which all test relevant resources will be created 
+
+- **service_account_json_path** _(optional)_: If a service account JSON file is provided, it will be used to authenticate to GCP instead of using an access token.
+
+- **image_name** _(optional/required)_: If the tests should get executed against an already existing Image, this is its name. Either **image_name** or **image** must be supplied but not both.
+- **image** _(optional/required)_: If the tests should be executed against a Garden Linux filesystem snapshot that resulted from a local build, this option is the path that points to it. The file must be of type `.tar.gz`. Either **image_name** or **image** must be supplied but not both.
+The URI can be:
+    - `file:/path/to/my/rootfs.tar.gz`: for local files
+    - `s3://mybucketname/objects/objectkey`: for files in S3
+
+- **bucket** _(optional)_: To create a GCE machine image from a local filesystem snapshot, it needs to be uploaded to a GCS bucket first. The will be created on the fly and a name will be generated if this field is left empty.
+
+- **machine_type** _(optional)_: The GCE machine type to be used to create the GCE instance for the test. Defaults to `n1-standard-2` if not given.
+
+- **ssh_key_filepath** _(required)_: The SSH key that will be deployed to the GCE instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand.
+- **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
+- **user** _(required)_: The user that will be provisioned to the GCE instance, which the SSH key gets assigned to and that is used by the test framework to log on the Azure instance.
+
+- **keep_running** _(optional)_: if set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow for debugging
+
+</details>
+
+#### Running the tests
+
+Start Podman container with dependencies:
+
+- mount Garden Linux repository to `/gardenlinux`
+- mount GCP credentials to `/root/.config`
+- mount SSH keys to `/root/.ssh`
+- mount build result directory to `/build` (if not part of the Garden Linux file tree)
+- mount directory with configfile to `/config`
+
+```
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+```
+
+Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
+
+    pytest --iaas=gcp --configfile=/config/mygcpconfig.yaml
+
+
+### Aliyun
+
+You need credentials as used for the aliyun command line client, e.g. a `config.json` document. Prior to running the tests the following objects must be created in the account:
+
+- A vSwitch with a cidr range (e.g. 192.168.0.0/24)
+- A security group which allows ingress traffic on TCP for SSH (default: 22) from source IP address of the test run
+- a bucket for uploading the disk image files
+
+Use the following test configuration:
+
+```yaml
+ali:
+    # mandatory, aliyun credential file location (config.json)
+    credential_file: 
+
+    # optional, if an image id is provided the test will not attempt
+    # to upload an image
+    image_id:   # m-....
+
+    # image file (qcow2)
+    image:  # image.qcow2
+
+    # a valid instance type for the selected region
+    instance_type: ecs.t5-lc1m2.large
+
+    # mandatory, the security group id
+    security_group_id:  # sg-...
+
+    # mandatory, the vswtich id
+    vswitch_id:  # vsw-...
+
+    # mandatory, region and zone
+    region_id: eu-central-1
+    zone_id: eu-central-1a
+
+    # mandatory: bucket name
+    bucket:  # my-test-upload-bucket
+
+    # optional, path in bucket 
+    bucket_path: integration-test
+
+    # ssh related configuration for logging in to the VM (required)
+    ssh:
+        # path to the ssh key file (required)
+        ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
+        # key name
+        key_name: gardenlinux-test
+        # passphrase for a secured SSH key (optional)
+        passphrase:
+        # username
+        user: admin
+
+    # keep instance running after tests finishes if set to true (optional)
+    keep_running: false
+```
+
+#### Configuration options
+
+<details>
+
+- **credential_file**: 
+- **image_id**:
+- **image** _(optional/required)_: If the tests should be executed against a Garden Linux filesystem snapshot that resulted from a local build, this option is the path that points to it. The file must be of type `.qcow2`. The image will be removed from Ali-Cloud once the test finishes. Either **image_id** or **image** must be supplied but not both.
+The URI can be:
+    - `file:/path/to/my/rootfs.qcow2`: for local files
+    - `s3://mybucketname/objects/objectkey`: for files in S3
+- **instance_type**: ecs.t5-lc1m2.large
+- **security_group_id**:  # sg-...
+- **vswitch_id**:  # vsw-...
+- **region_id**: eu-central-1
+- **zone_id**: eu-central-1a
+- **bucket**:  # my-test-upload-bucket
+- **bucket_path**: integration-test
+
+- **ssh_key_filepath** _(required)_: The SSH key that will be deployed to the ECS instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand.
+- **key_name** _(required)_: The SSH key gets uploaded to ECS, this is the name of the key object resource.
+- **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
+- **user** _(required)_: The user that will be provisioned to the ECS instance, which the SSH key gets assigned to and that is used by the test framework to log on the ECS instance.
+
+- **keep_running** _(optional)_: if set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow for debugging
+
+</details>
+
+#### Running the tests
+
+Start Podman container with dependencies:
+
+- mount Garden Linux repository to `/gardenlinux`
+- mount GCP credentials to `/root/.config`
+- mount SSH keys to `/root/.ssh`
+- mount build result directory to `/build` (if not part of the Garden Linux file tree)
+- mount directory with configfile to `/config`
+
+```
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+```
+
+Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
+
+    pytest --iaas=ali --configfile=/config/mygcpconfig.yaml
 
 
 ### CHROOT
@@ -390,97 +484,6 @@ sudo podman run --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW --security-opt app
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
     pytest --iaas=chroot --configfile=/config/mychrootconfig.yaml
-
-
-### GCP
-
-Obtain credentials by using the following command to authenticate to Google Cloud Platform and set up the API access token:
-
-    gcloud auth application-default login
-
-Use the following test configuration:
-
-```yaml
-gcp:
-    # project id (required)
-    project:
-    # GCP region where the test resources should be created (required)
-    region: europe-west1
-    # zone where the VM should be created (required)
-    zone: europe-west1-d
-
-    # use a service account to log on to GCP instead of access token created with gcloud before (optional)
-    #service_account_json:
-    #service_account_json_path: /root/.config/gcloud/application_default_credentials.json
-
-    # use already existing image in GCE for tests (optional/required)
-    #image_name:
-    # upload this local image to GCE and use it for testing (optional/required)
-    image: file:/build/gcp-dev/20210915/amd64/bullseye/rootfs-gcpimage.tar.gz
-    #image: s3://gardenlinux/objects/078f440a76024ccd1679481708ebfc32f5431569
-    # GCS bucket for image upload, must exist and be used for local image upload (optional)
-    #bucket: 
-
-    # GCE machine type (optional)
-    machine_type: n1-standard-2
-
-    # ssh related configuration for logging in to the VM (required)
-    ssh:
-        # path to the ssh key file (required)
-        ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
-        # passphrase for a secured SSH key (optional)
-        passphrase:
-        # username used to connect to the Azure instance (required)
-        user: gardenlinux
-
-    # keep instance running after tests finishes (optional)
-    keep_running: false
-```
-
-#### Configuration options
-
-<details>
-
-- **project** _(required)_: the GCP project which is used for creating all relevant resources and running the tests
-- **zone** _(required)_: the GCP zone in which all test relevant resources will be created 
-
-- **service_account_json_path** _(optional)_: If a service account JSON file is provided, it will be used to authenticate to GCP instead of using an access token.
-
-- **image_name** _(optional/required)_: If the tests should get executed against an already existing Image, this is its name. Either **image_name** or **image** must be supplied but not both.
-- **image** _(optional/required)_: If the tests should be executed against a Garden Linux filesystem snapshot that resulted from a local build, this option is the path that points to it. The file must be of type `.tar.gz`. Either **image_name** or **image** must be supplied but not both.
-The URI can be:
-    - `file:/path/to/my/rootfs.raw`: for local files
-    - `s3://mybucketname/objects/objectkey`: for files in S3
-
-- **bucket** _(optional)_: To create a GCE machine image from a local filesystem snapshot, it needs to be uploaded to a GCS bucket first. The will be created on the fly and a name will be generated if this field is left empty.
-
-- **machine_type** _(optional)_: The GCE machine type to be used to create the GCE instance for the test. Defaults to `n1-standard-2` if not given.
-
-- **ssh_key_filepath** _(required)_: The SSH key that will be deployed to the GCE instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand.
-- **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
-- **user** _(required)_: The user that will be provisioned to the GCE instance, which the SSH key gets assigned to and that is used by the test framework to log on the Azure instance.
-
-- **keep_running** _(optional)_: if set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow for debugging
-
-</details>
-
-#### Running the tests
-
-Start Podman container with dependencies:
-
-- mount Garden Linux repository to `/gardenlinux`
-- mount GCP credentials to `/root/.config`
-- mount SSH keys to `/root/.ssh`
-- mount build result directory to `/build` (if not part of the Garden Linux file tree)
-- mount directory with configfile to `/config`
-
-```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
-```
-
-Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
-
-    pytest --iaas=gcp --configfile=/config/mygcpconfig.yaml
 
 
 ### KVM
