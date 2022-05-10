@@ -11,11 +11,13 @@ go build garden-feat.go
 endef
 export BASH_BUILD
 
+GARDENLINUX_BUILD_CRE ?= sudo podman
+
 .PHONY: all
 all: garden-feat
 
 garden-feat: *.go
-	sudo podman run -v $(SCRIPTDIR):/go/src docker.io/library/golang:latest bash -c "$$BASH_BUILD"
+	$(GARDENLINUX_BUILD_CRE) run -v $(SCRIPTDIR):/go/src docker.io/library/golang:latest bash -c "$$BASH_BUILD"
 	rm -f go.mod go.sum
 
 .PHONY: clean

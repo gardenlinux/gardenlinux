@@ -65,6 +65,7 @@ Due to legal reasons, contributors will be asked to accept a Developer Certifica
     1. Set respective comments in your GitHub review to resolved.
     1. Create a general PR comment to notify the reviewers that your amendments are ready for another round of review.
 
+1. When merging into main, make sure that all commits belonging to a pull-request get squashed into one single commit that gets merged.
 
 ## Issues and Planning
 

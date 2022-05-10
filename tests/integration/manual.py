@@ -1,4 +1,4 @@
-from .sshclient import RemoteClient
+from helper.sshclient import RemoteClient
 
 class Manual:
     """Handle Manual Instance"""

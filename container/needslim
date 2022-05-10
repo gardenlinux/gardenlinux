@@ -2,26 +2,27 @@
 set -Eeuo pipefail
 
 VERSION="$(../bin/garden-version)"
+gardenlinux_build_cre=${GARDENLINUX_BUILD_CRE:-"sudo podman"}
 
-if [ "$(sudo podman image ls gardenlinux/slim --format \"{{.Repository}}:{{.Tag}}\")" == "" ]; then
+if [ "$(${gardenlinux_build_cre} image ls gardenlinux/slim --format \"{{.Repository}}:{{.Tag}}\")" == "" ]; then
 	echo "WARNING: There is no gardenlinux/slim on this box. Since this is the builder script, it will pull no binary docker images from public repos."
 	echo
 	echo "Since gardenlinux/slim is needed for almost all images we pull debian/testing-slim and rename it to gardenlinux/slim so we avoid the Chicken-and-Egg problem temporarily"
 	echo
 	echo "Please run 'make slim' afterwards"
 	echo
-	sudo podman pull debian:testing-slim
-	sudo podman tag  debian:testing-slim gardenlinux/slim
-	sudo podman tag  debian:testing-slim gardenlinux/slim:$VERSION
-	sudo podman tag  debian:testing-slim gardenlinux/slim:latest
+	${gardenlinux_build_cre} pull debian:testing-slim
+	${gardenlinux_build_cre} tag  debian:testing-slim gardenlinux/slim
+	${gardenlinux_build_cre} tag  debian:testing-slim gardenlinux/slim:$VERSION
+	${gardenlinux_build_cre} tag  debian:testing-slim gardenlinux/slim:latest
 else
-	if [ "$(sudo podman image ls gardenlinux/slim:latest --format \"{{.ID}}\")" == \
-	     "$(sudo podman image ls debian:testing-slim --format \"{{.ID}}\")" ]; then
+	if [ "$(${gardenlinux_build_cre} image ls gardenlinux/slim:latest --format \"{{.ID}}\")" == \
+	     "$(${gardenlinux_build_cre} image ls debian:testing-slim --format \"{{.ID}}\")" ]; then
 		echo "WARNING: You are still using a debian:testing-slim as a temporary replacement of gardenlinux/slim:latest!"
 		echo
 		echo "Please run 'make slim' to fix"
-	elif [ "$(sudo podman image ls gardenlinux/slim:$VERSION --format \"{{.ID}}\")" == \
-	       "$(sudo podman image ls debian:testing-slim --format \"{{.ID}}\")" ]; then
+	elif [ "$(${gardenlinux_build_cre} image ls gardenlinux/slim:$VERSION --format \"{{.ID}}\")" == \
+	       "$(${gardenlinux_build_cre} image ls debian:testing-slim --format \"{{.ID}}\")" ]; then
 		echo "WARNING: You are still using a debian:testing-slim as a temporary replacement of gardenlinux/slim:$VERSION!"
 		echo
 		echo "Please run 'make slim' to fix"

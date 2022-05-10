@@ -16,7 +16,7 @@ def get_package_list(client):
     return pkgslist
 
 
-def read_test_config(features, testname, suffix = ".list"):
+def read_test_config(features, testname, suffix = ".list", filter_comments = True):
     """Collect the configuration of a test from all enabled features.
     Needs the list of enabled features and the name of the test, the suffix is
     optional. It returns a list of the aggregated configs for a test."""
@@ -28,7 +28,7 @@ def read_test_config(features, testname, suffix = ".list"):
             file = open(path, 'r')
             for line in file:
                 # Skip comment lines
-                if re.match(r'^ *#',line):
+                if re.match(r'^ *#',line) and filter_comments:
                     continue
                 # Skip empty lines
                 if re.match(r'^\s*$', line):
@@ -56,3 +56,14 @@ class AptUpdate():
 
         (exit_code, output, error) = client.execute_command("apt-get update")
         assert exit_code == 0, f"no {error=} expected"
+
+        return cls.instance
+
+
+def get_file_perm(client, fname):
+    """Return file permissions of a given file/dir in as int"""
+    (exit_code, output, error) = client.execute_command(
+        f"stat --format '%a' {fname}", quiet=True)
+    # Make sure we do not test non existent directories
+    if not "cannot statx" in error:
+        return int(output) 

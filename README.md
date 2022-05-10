@@ -1,7 +1,7 @@
 [![build](https://github.com/gardenlinux/gardenlinux/actions/workflows/build.yml/badge.svg)](https://github.com/gardenlinux/gardenlinux/actions/workflows/build.yml)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/3925/badge)](https://bestpractices.coreinfrastructure.org/projects/3925)
  [![MIT License](https://img.shields.io/github/license/gardenlinux/gardenlinux)](https://img.shields.io/github/license/gardenlinux/gardenlinux)
-[![Gitter Chat](https://img.shields.io/gitter/room/gardenlinux/community)](https://img.shields.io/gitter/room/gardenlinux/community)
+[![Gitter](https://badges.gitter.im/gardenlinux/community.svg)](https://gitter.im/gardenlinux/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![GitHub Open Issues](https://img.shields.io/github/issues-raw/gardenlinux/gardenlinux)](https://img.shields.io/github/issues-raw/gardenlinux/gardenlinux)
 [![GitHub Closed PRs](https://img.shields.io/github/issues-pr-closed-raw/gardenlinux/gardenlinux)](https://img.shields.io/github/issues-pr-closed-raw/gardenlinux/gardenlinux)
 
@@ -10,7 +10,7 @@
 
 <website-main>
 
- <img align="left" width="80" height="80" src="https://raw.githubusercontent.com/gardenlinux/gardenlinux/main/logo/gardenlinux-logo-black-text.svg"> <a href="https://gardenlinux.io/">Garden Linux</a> is a <a href="https://debian.org/">Debian GNU/Linux</a> derivate that aims to provide small, auditable linux images for most Cloud Providers (e.g. AWS, Azure, GCP etc.) and Bare Metal. Garden Linux is the best Linux for <a href="https://gardener.cloud/">Gardener</a> nodes. Garden Linux provides great possibilities for customizing and provides a great feature set to fit your needs. <br><br>
+  <img align="left" width="80" height="80" src="https://raw.githubusercontent.com/gardenlinux/gardenlinux/main/logo/gardenlinux-logo-black-text.svg"> <a href="https://gardenlinux.io/">Garden Linux</a> is a <a href="https://debian.org/">Debian GNU/Linux</a> derivate that aims to provide small, auditable Linux images for most cloud providers (e.g. AWS, Azure, GCP etc.) and bare-metal machines. Garden Linux is the best Linux for <a href="https://gardener.cloud/">Gardener</a> nodes. Garden Linux provides great possibilities for customizing that is made by a highly customizable feature set to fit your needs. <br><br>
  
 </website-main>
  
@@ -30,25 +30,30 @@
 
 ## Features
 - Easy to use build system
-- Builds are repeatable and auditable
+- Repeatable and auditable builds
 - Small footprint
 - Purely systemd based (network, fstab etc.)
 - Initramfs is dracut generated
-- Optional complete immutability
-- Thorough automated testing
-  - Unit tests against the local build
-  - Integration tests against the supported cloud platforms
-  - License violations
-  - Outdated software versions
-- Aiming to always integrate the latest LTS Kernel
-- Project licensed under [MIT](https://github.com/gardenlinux/gardenlinux/blob/master/LICENSE.md)
+- Running latest LTS Kernel
+- [MIT](https://github.com/gardenlinux/gardenlinux/blob/master/LICENSE.md) license
+- Security
+  - Fully immutable image(s) *(optional)*
+  - OpenSSL 3.0 *(default)*
+  - CIS Framework *(optional)*
+- Testing
+  - Unit tests (Created image testing)
+  - Integration tests (Image integration tests in all supported platforms)
+  - License violations (Testing for any license violations)
+  - Outdated software versions (Testing for outdated software)
 - Supporting major platforms out-of-the-box
   - Major cloud providers AWS, Azure, Google, Alicloud
   - Major virtualizer VMware, OpenStack, KVM
-  - Bare Metal
+  - Bare-metal systems
 
 ## Quick Start
-The entire build runs in a <i>privileged</i> Podman/Docker container that orchestrates all further actions. If not explicitly skipped, unit tests will be performed. Extended capabilities are at least needed for loop back support. Currently AMD64 and ARM64 architectures are supported.
+The entire build runs in a <i>privileged</i> Podman/Docker container that orchestrates all further actions. If not explicitly skipped, unit tests will be performed. Extended capabilities are at least needed for loop back support. Currently `AMD64` and `ARM64` architectures are supported.
+
+By default, Garden Linux uses [Podman](https://podman.io/) as container runtime (`Docker` is optionally supported) for building Garden Linux images (Garden Linux artifacts however will have Docker in them to maintain compatibility with older Kubernetes versions). If - for whatever reason - you want or need to use Docker instead, you can set the environment variable `GARDENLINUX_BUILD_CRE=docker` before invoking the build.
 
 ### Build Requirements
 
@@ -109,7 +114,7 @@ To build all supported images you may just run the following command:
     make all
 ```
 
-However, to safe time you may also build just a platform specific image by running one of the following commands. Related dev images can be created by appending the '-dev' suffix (e.g. "make aws-dev").
+However, to save time you may also build just a platform specific image by running one of the following commands. Related dev images can be created by appending the '-dev' suffix (e.g. "make aws-dev").
 ```
     make aws
     make gcp

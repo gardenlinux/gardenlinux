@@ -17,6 +17,8 @@ $(info using local packages from $(LOCAL_PKGS))
 override BUILD_OPTS += --local-pkgs=$(LOCAL_PKGS)
 endif
 
+GARDENLINUX_BUILD_CRE ?= sudo podman 
+
 .PHONY:all
 all: all_dev all_prod
 
@@ -165,9 +167,9 @@ clean:
 	@echo "emptying $(BUILDDIR)"
 	@rm -rf $(BUILDDIR)/*
 	@echo "deleting all containers running gardenlinux/build-image"
-	@-sudo podman container rm $$(sudo podman container ls -a | awk '{ print $$1,$$2 }' | grep gardenlinux/build-image: | awk '{ print $$1 }') 2> /dev/null || true
+	@-$(GARDENLINUX_BUILD_CRE) container rm $$($(GARDENLINUX_BUILD_CRE) container ls -a | awk '{ print $$1,$$2 }' | grep gardenlinux/build-image: | awk '{ print $$1 }') 2> /dev/null || true
 	@echo "deleting all containers running gardenlinux/integration-test"
-	@-sudo podman container rm $$(sudo podman container ls -a | awk '{ print $$1,$$2 }' | grep gardenlinux/integration-test: | awk '{ print $$1 }') 2> /dev/null || true
+	@-$(GARDENLINUX_BUILD_CRE) container rm $$($(GARDENLINUX_BUILD_CRE) container ls -a | awk '{ print $$1,$$2 }' | grep gardenlinux/integration-test: | awk '{ print $$1 }') 2> /dev/null || true
 
 distclean: clean
 	make --directory=container clean
