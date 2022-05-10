@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 
 def machine_id(client):
     (exit_code, output, error) = client.execute_command(
-        "[[ ! -s /etc/machine-id ]] || cat /etc/machine-id", quiet=False)
+        "[[ ! -s /etc/machine-id ]] || cat /etc/machine-id", quiet=True)
 
     machine_id = output.strip(string.whitespace)
 

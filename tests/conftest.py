@@ -5,6 +5,9 @@ import yaml
 import sys
 import os
 import sys
+import mimetypes
+import tarfile
+import subprocess
 
 import glci.util
 
@@ -334,20 +337,30 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
         raise ValueError(f"invalid {iaas=}")
 
 
-@pytest.fixture(autouse=True)
-def test_features(client, request):
-    (exit_code, output, error) = client.execute_command("cat /etc/os-release", quiet=True)
-    if exit_code != 0:
-        logger.error(error)
-        sys.exit(exit_code)
-    for line in output.split('\n'):
+def pytest_collection_modifyitems(config, items):
+    skip = pytest.mark.skip(reason="test is not part of the enabled features")
+    iaas = config.getoption("--iaas")
+    config_file = config.getoption("--configfile")
+    with open(config_file) as f:
+        config_options = yaml.load(f, Loader=yaml.FullLoader)
+    image = config_options[iaas]["image"]
+    if "xz" in mimetypes.guess_type(image):
+        tar = tarfile.open(image)
+        os_release = tar.extractfile("etc/os-release").read()
+    else:
+        p = subprocess.run([f"virt-cat -a {image} /etc/os-release"], shell=True, capture_output=True)
+        os_release = p.stdout
+
+    os_release = os_release.decode()
+    for line in os_release.split('\n'):
         if line.startswith('GARDENLINUX_FEATURES'):
             features = line.split('=')[1]
-    current = (os.getenv('PYTEST_CURRENT_TEST')).split('/')
-    logger.info(current)
-    if request.node.get_closest_marker('skip_feature_if_not_enabled'):
-        if not current[0] in features.split(','):
-            pytest.skip('test is not part of the enabled features')
+    for item in items:
+        item_path = str(item.fspath)
+        if "features" in item_path:
+            feature = item_path.split('/')[3]
+            if not feature in features:
+                item.add_marker(skip)
 
 
 @pytest.fixture
