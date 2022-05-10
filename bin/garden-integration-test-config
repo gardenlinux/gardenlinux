@@ -9,9 +9,10 @@ set -Eeuo pipefail
 # usage:        garden-integration-test-config <test> <prefix> <arch> <name> <outputDir> <thisDir>
 # test:         name of the test to create the configuration for, possible values are chroot or kvm
 # prefix:       name of the image/archive before the file suffix (default: kvm_dev-amd64-dev-local)
+# features:     list of enabled features (default: base)
 # outputDir:    directory where the outcome of the build is stored (default: .build)
-# thisDir:      root of the gardenlinux repository which is also the default
 # arch:         architecture of the build target, defaults the arch of the image/archive to test
+# thisDir:      root of the gardenlinux repository which is also the default
 
 if [[ ! "$1" == "chroot" ]] && [[ ! "$1" == "kvm" ]]; then
     echo "The first argument must be 'chroot' or 'kvm'."
@@ -21,6 +22,7 @@ fi
 # define more or less sane defaults
 workDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 thisDir="${workDir%/bin}"
+features="base"
 outputDir=".build"
 prefix="kvm_dev-amd64-dev-local"
 # extract the default arch from the image/archive name
@@ -29,9 +31,10 @@ arch=$(sed "s/.*-\(.*\)-.*-.*/\1/g" <<< ${prefix})
 # use positional arguments if given else use the defaults
 test=$1
 prefix=${2:-$prefix}
-outputDir=${3:-$outputDir}
-thisDir=${4:-$thisDir}
+features=($(echo ${3:-features} | tr "," "\n"))
+outputDir=${4:-$outputDir}
 arch=${5:-$arch}
+thisDir=${6:-$thisDir}
 
 # create directory for the test configs
 configDir=$(mktemp -d)
@@ -50,6 +53,9 @@ chroot:
     # port for remote connection (required)
     # Default: 2223
     port: 2222
+
+    # list of features that is used to determine the tests to run
+    features: $(echo; for str in "${features[@]}"; do echo "      - \"$str\"";done)
 
     # SSH configuration (required)
     ssh:
@@ -83,6 +89,9 @@ kvm:
     # for further debugging (optional)
     # Default: false
     #keep_running: false
+
+    # list of features that is used to determine the tests to run
+    features: $(echo; for str in "${features[@]}"; do echo "      - \"$str\"";done)
 
     # Architecture to boot (optional)
     # Default: amd64

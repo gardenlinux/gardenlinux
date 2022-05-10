@@ -343,18 +343,7 @@ def pytest_collection_modifyitems(config, items):
     config_file = config.getoption("--configfile")
     with open(config_file) as f:
         config_options = yaml.load(f, Loader=yaml.FullLoader)
-    image = config_options[iaas]["image"]
-    if "xz" in mimetypes.guess_type(image):
-        tar = tarfile.open(image)
-        os_release = tar.extractfile("etc/os-release").read()
-    else:
-        p = subprocess.run([f"virt-cat -a {image} /etc/os-release"], shell=True, capture_output=True)
-        os_release = p.stdout
-
-    os_release = os_release.decode()
-    for line in os_release.split('\n'):
-        if line.startswith('GARDENLINUX_FEATURES'):
-            features = line.split('=')[1]
+    features = config_options[iaas]["features"]
     for item in items:
         item_path = str(item.fspath)
         if "features" in item_path:
