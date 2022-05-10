@@ -9,7 +9,7 @@ cicd_cfgs:
       storage_account_config_name: 'gardenlinux'
       service_principal_name: 'gardenlinux'
       plan_config_name: 'gardenlinux-greatest'
-      oss_bucket_name: 'gardenlinux' #alicloud
+      oss_bucket_name: 'gardenlinux-community' #alicloud
       alicloud_region: 'eu-central-1'
       alicloud_cfg_name: 'gardenlinux'
     package_build:
