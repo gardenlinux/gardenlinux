@@ -334,6 +334,20 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
         raise ValueError(f"invalid {iaas=}")
 
 
+@pytest.fixture(autouse=True)
+def test_features(client, request):
+    (exit_code, output, error) = client.execute_command("cat /etc/os-release", quiet=True)
+    if exit_code != 0:
+        logger.error(error)
+        sys.exit(exit_code)
+    for line in output.split('\n'):
+        if line.startswith('GARDENLINUX_FEATURES'):
+            features = line.split('=')[1]
+    if request.node.get_closest_marker('skip_feature'):
+        if not request.node.get_closest_marker('skip_feature').args[0] in features.split(','):
+            pytest.skip('test is not part of the enabled features')
+
+
 @pytest.fixture
 def features(client):
     (exit_code, output, error) = client.execute_command("cat /etc/os-release", quiet=True)
