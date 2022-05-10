@@ -343,8 +343,10 @@ def test_features(client, request):
     for line in output.split('\n'):
         if line.startswith('GARDENLINUX_FEATURES'):
             features = line.split('=')[1]
+    current = (os.getenv('PYTEST_CURRENT_TEST')).split('/')
+    logger.info(current)
     if request.node.get_closest_marker('skip_feature'):
-        if not request.node.get_closest_marker('skip_feature').args[0] in features.split(','):
+        if not current[0] in features.split(','):
             pytest.skip('test is not part of the enabled features')
 
 
