@@ -1,10 +1,19 @@
-from helper.exception import NotPartOfFeatureError, DisabledBy
-from helper.tests.blacklisted_packages import BlacklistedPackages
+from helper.tests.blacklisted_packages import blacklisted_packages
 import pytest
 
-def test_blacklisted_packages(client, features):
-    """The test function executed by pytest"""
-    try:
-        BlacklistedPackages(client, features)
-    except (NotPartOfFeatureError, DisabledBy) as e:
-        pytest.skip(str(e))
+@pytest.mark.parametrize(
+    "package",
+    [
+        "rlogin",
+        "rsh",
+        "rcp",
+        "telnet",
+        "libdb5.3:amd64",
+        "libdb5.3:arm64",
+        "libssl1.1:amd64",
+        "libssl1.1:arm64"
+    ]
+)
+@pytest.mark.skip_feature("base")
+def test_blacklisted_packages(client, package):
+    blacklisted_packages(client, package)
