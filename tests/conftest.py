@@ -345,7 +345,7 @@ def test_features(client, request):
             features = line.split('=')[1]
     current = (os.getenv('PYTEST_CURRENT_TEST')).split('/')
     logger.info(current)
-    if request.node.get_closest_marker('skip_feature'):
+    if request.node.get_closest_marker('skip_feature_if_not_enabled'):
         if not current[0] in features.split(','):
             pytest.skip('test is not part of the enabled features')
 
