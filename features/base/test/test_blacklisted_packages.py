@@ -14,6 +14,6 @@ import pytest
         "libssl1.1:arm64"
     ]
 )
-@pytest.mark.skip_feature("base")
+@pytest.mark.skip_feature_if_not_enabled()
 def test_blacklisted_packages(client, package):
     blacklisted_packages(client, package)
