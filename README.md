@@ -77,7 +77,7 @@ yum install bash podman crun make gnupg git qemu-kvm qemu-img
 
 Add `docker.io` to `unqualified-search-registries` in your [registries.conf](https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md). On freshly installed `Podman` systems this can be done by executing:
 ```
-echo 'unqualified-search-registries = ["docker.io"]' >> /etc/containers/registries.conf
+echo 'unqualified-search-registries = ["docker.io"]' | sudo tee -a /etc/containers/registries.conf
 ```
 If `Podman` was already present please add the repository yourself to `unqualified-search-registries` in `/etc/containers/registries.conf`.
 
