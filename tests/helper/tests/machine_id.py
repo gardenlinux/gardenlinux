@@ -4,6 +4,7 @@ import string
 logger = logging.getLogger(__name__)
 
 def machine_id(client, chroot):
+    """Test if /etc/machine_id exists and is not initialized"""
     (exit_code, output, error) = client.execute_command(
         "[[ ! -s /etc/machine-id ]] || cat /etc/machine-id", quiet=True)
 

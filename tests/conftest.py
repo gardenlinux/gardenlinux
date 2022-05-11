@@ -5,9 +5,6 @@ import yaml
 import sys
 import os
 import sys
-import mimetypes
-import tarfile
-import subprocess
 
 import glci.util
 
@@ -338,11 +335,16 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
 
 
 def pytest_collection_modifyitems(config, items):
+    """Skip tests that belong to a feature that is not enabled in the test config"""
     skip = pytest.mark.skip(reason="test is not part of the enabled features")
     iaas = config.getoption("--iaas")
     config_file = config.getoption("--configfile")
-    with open(config_file) as f:
-        config_options = yaml.load(f, Loader=yaml.FullLoader)
+    try:
+        with open(config_file) as f:
+            config_options = yaml.load(f, Loader=yaml.FullLoader)
+    except OSError as err:
+        logger.error(f"can not open config file {config_file}")
+        pytest.exit(err, 1)
     features = config_options[iaas]["features"]
     for item in items:
         item_path = str(item.fspath)
