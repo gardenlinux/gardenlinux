@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class Tiger():
-    """Class containing for running the tiger security tool test"""
+    """Class containing the test for checking if debsums are available"""
     failed_before = False
     def __new__(cls, client, features):
         """The actual test.
@@ -52,7 +52,7 @@ class Tiger():
 
             utils.AptUpdate(client)                
             (exit_code, output, error) = client.execute_command(
-                "apt-get install -y --no-install-recommends tiger",
+                "apt-get install -y --no-install-recommends tiger apt-utils",
                 quiet=True)
             assert exit_code == 0, f"no {error=} expected"
 
@@ -69,10 +69,14 @@ class Tiger():
             client.remote_path = "/tmp"
             client.bulk_upload(["/tmp/tigerrc"])
 
+            # unmount directories that make the tiger checks fail
+            for dir in ["sys", "dev", "proc"]:
+                (exit_code, output, error) = client.execute_command(
+                    f"mountpoint -q /{dir} && umount -l /{dir}", quiet=True)
+                assert exit_code == 0, f"no {error=} expected"
+
             (exit_code, output, error) = client.execute_command(
-                r"unshare --propagation unchanged --mount bash -c 'umount " +
-                r"-l /dev /sys /proc && tiger -c /tmp/tigerrc -q'",
-                quiet=True)
+                "tiger -c /tmp/tigerrc -q", quiet=True)
             assert exit_code == 0, f"no {error=} expected"
 
             (exit_code, output, error) = client.execute_command(
