@@ -468,7 +468,7 @@ chroot:
     # Default: 2223
     port: 2222
 
-    # list of features that is used to determine the tests will to run
+    # list of features that is used to determine the tests to run
     features:
       - "base"
 
@@ -539,7 +539,7 @@ kvm:
     # Default: false
     #keep_running: false
 
-    # list of features that is used to determine the tests will to run
+    # list of features that is used to determine the tests to run
     features:
       - "base"
 
