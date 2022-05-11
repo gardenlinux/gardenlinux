@@ -1,8 +1,0 @@
-# list of kernel parameters that have to be set
-#
-# check if soft and hard links are set properly
-fs.protected_symlinks = 1
-fs.protected_hardlinks = 1
-
-# check memory protection
-kernel.randomize_va_space = 2
