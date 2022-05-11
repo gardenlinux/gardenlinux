@@ -54,8 +54,7 @@ class AptUpdate():
         if not hasattr(cls, 'instance'):
             cls.instance = super(AptUpdate, cls).__new__(cls)
 
-        (exit_code, output, error) = client.execute_command("apt-get update",
-            quiet=True)
+        (exit_code, output, error) = client.execute_command("apt-get update")
         assert exit_code == 0, f"no {error=} expected"
 
         return cls.instance
