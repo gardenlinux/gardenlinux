@@ -488,7 +488,7 @@ chroot:
 
 <details>
 
-- **features** _(optional)_: If not set, the feature tests will be skipped, if set it must contain a list of features. The tests defined in the listed feature will be used. The features used to build the image can be found in the _image\_name_.os-release file in the output directory.
+- **features** _(optional)_: If not set, the feature tests will be skipped, if set it must contain a list of features. The tests defined in the listed features will be used. The features used to build the image can be found in the _image\_name_.os-release file in the output directory.
 - **ssh_key_filepath** _(required)_: The SSH key that will be injected to the *chroot* and that will be used by the test framework to log on to it. In default, you do **not** need to provide or mount your real SSH key; a new one will be generated and injected by every new run. However, if you really want, a present one can be defined - take care that this will not be overwritten and set `ssh_key_generate` to false.
 - **user** _(required)_: The user that will be used for the connection.
 </details>
@@ -570,7 +570,7 @@ kvm:
 
 <details>
 
-- **features** _(optional)_: If not set, the feature tests will be skipped, if set it must contain a list of features. The tests defined in the listed feature will be used. The features used to build the image can be found in the _image\_name_.os-release file in the output directory.
+- **features** _(optional)_: If not set, the feature tests will be skipped, if set it must contain a list of features. The tests defined in the listed features will be used. The features used to build the image can be found in the _image\_name_.os-release file in the output directory.
 - **ssh_key_filepath** _(required)_: The SSH key that will be injected to the .raw image file and that will be used by the test framework to log on to it. In default, you do **not** need to provide or mount your real SSH key; a new one will be generated and injected by every new run. However, if you really want, a present one can be defined - take care that this will not be overwritten and set `ssh_key_generate` to false.
 - **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
 - **user** _(required)_: The user that will be used for the connection.
