@@ -5,9 +5,6 @@ import yaml
 import sys
 import os
 import sys
-import mimetypes
-import tarfile
-import subprocess
 
 import glci.util
 
