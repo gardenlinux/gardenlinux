@@ -115,12 +115,12 @@ class AlicloudImageMaker:
         return dataclasses.replace(
             self.release, published_image_metadata=published_image_set)
 
-    # Share image in a hidden way. The account should apply for whitelist
+    # Share image as a community image. The account should apply for whitelist
     def _share_images(self, region_image_map: dict):
         for region, image_id in region_image_map.items():
             self.acs_client.set_region_id(region)
             logger.info(
-                f"share image ({region}/{image_id}) as a hidden image"
+                f"share image ({region}/{image_id}) as a community image"
             )
             req = ModifyImageSharePermissionRequest.ModifyImageSharePermissionRequest()
             req.set_ImageId(image_id)
