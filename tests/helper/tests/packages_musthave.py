@@ -1,66 +1,47 @@
-import logging
+from helper.utils import get_package_list
+from helper.utils import get_architecture
+import os
+import string
+import pytest
 
-from helper import utils
-from helper.exception import NotPartOfFeatureError, TestFailed, DisabledBy
+def packages_musthave(client):
+    """"Test if the packages defined in pkg.include are installed"""
+    installed_pkgslist = get_package_list(client)
 
-logger = logging.getLogger(__name__)
+    current = (os.getenv('PYTEST_CURRENT_TEST')).split('/')[0]
+    path = f"/gardenlinux/features/{current}/pkg.include"
+    try:
+        with open(path) as f:
+            packages = f.read()
+    except OSError:
+        pytest.skip(f"feature {current} does not have a pkg.include file")
 
+    arch = get_architecture(client)
 
-class PackagesMusthave():
-    """Class containing the test for packages that must be installed"""
-    failed_before = False
-    def __new__(cls, client, features):
-        """The actual test.
-        Placing the code for the test in the __new__ method allows to test if
-        there is already an instance of this class and avoid executing the
-        test more than once.
-        The class variable failed_before is used to make sure the test is
-        shown as failed when the first call of the test had failed.
-        If the test had passed the first time and is called again the same
-        instance is returned and the test is shown as passed, but the test is
-        NOT executed again. Therefore the test collects the test configuration
-        from all enabled features, so it is not necessary to executed the test
-        more than once.
-        """
+    missing = []
+    for package in packages.splitlines():
+        package = package.strip(string.whitespace)
+        # ignore comments
+        if package.startswith("#"):
+            continue
+        # normalize package name if the line in pkg.include contains:
+        # * the architecture as condition
+        elif package.startswith(r"[${arch}"):
+            if arch in package:
+                package = package.split(" ")[-1]
+            else:
+                continue
+        # * an url to the package
+        elif package.startswith("http"):
+            package_name = package.split("/")[-1]
+            package = package_name.split("_")[0]
+        # * the architecture as a variable in the package name
+        elif package.endswith(r"-${arch}"):
+            package = package.replace(r"${arch}", arch)
 
-        # throws exception if the test had failed before to make sure it is
-        # not show as passed when called again by another feature.
-        if cls.failed_before:
-            raise Exception("This test failed before in another feature")
+        if not (package in installed_pkgslist or
+                f"{package}:{arch}" in installed_pkgslist):
+            missing.append(package)
 
-        (enabled_features, my_feature) = features
-
-        # check if test is disabled in a feature
-        test_is_disabled = utils.disabled_by(
-            enabled_features, 'packages_musthave')
-        if not len(test_is_disabled) == 0:
-            raise DisabledBy("Test is explicitly disabled by features " +
-                f"{', '.join(test_is_disabled)}")
-
-        # check if the test is part of the features used to build the
-        # gardenlinux image
-        if my_feature not in enabled_features:
-            raise NotPartOfFeatureError(
-                f"Feature {my_feature} this test belongs to is not enabled")
-
-        # first check if there is already an instance of this class, if it is
-        # the first time this instance is initiated add the class variable
-        # instance containing the instance itself and then do the actual
-        # testing.
-        if not hasattr(cls, 'instance'):
-            cls.instance = super(PackagesMusthave, cls).__new__(cls)
-
-            installed_pkgslist = utils.get_package_list(client)
-
-            must_installed = utils.read_test_config(
-                enabled_features, 'packages-musthave')
-
-            missing = [pkg for pkg in must_installed \
-                        if pkg not in installed_pkgslist]
-            
-            if not len(missing) == 0:
-                cls.failed_before = True
-                raise TestFailed(f"{', '.join(missing)} are a musthave, " +
-                    "but not installed")
-            
-        return cls.instance
+    assert len(missing) == 0, \
+            f"{', '.join(missing)} should be installed, but are missing"
