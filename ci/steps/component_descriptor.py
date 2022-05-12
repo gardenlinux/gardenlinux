@@ -267,11 +267,6 @@ def virtual_machine_image_resource(
         type=cm.AccessType.S3,
         bucketName=bucket_name,
         objectKey=image_file_path.s3_key,
-        digest=cm.DigestSpec(
-            hashAlgorithm='NO-DIGEST',
-            normalisationAlgorithm='EXCLUDE-FROM-SIGNATURE',
-            value='NO-DIGEST',
-        )
     )
 
     return cm.Resource(
@@ -285,6 +280,11 @@ def virtual_machine_image_resource(
         type=resource_type,
         labels=labels,
         access=resource_access,
+        digest=cm.DigestSpec(
+            hashAlgorithm='NO-DIGEST',
+            normalisationAlgorithm='EXCLUDE-FROM-SIGNATURE',
+            value='NO-DIGEST',
+        ),
     )
 
 
