@@ -6,7 +6,7 @@ import pytest
     [
         ("fs.protected_symlinks", 1),
         ("fs.protected_hardlinks", 1),
-        ("kernel.randomize_va_space", 1)
+        ("kernel.randomize_va_space", 2)
     ]
 )
 def test_kernel_parameter(client, parameter, value):
