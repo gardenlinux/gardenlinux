@@ -1,7 +1,21 @@
-def key_val_in_file(client, fname, dict):
+import re
+
+
+def key_val_in_file(client, fname, args, invert=False, ignore_missing=False):
     """ Performing unit test to find key/val in files """
     content = _get_content_remote_file(client, fname)
-    _get_key_val_from_content(content, dict, fname)
+
+    if not content:
+        assert not content and ignore_missing, f"Content or file not found: {fname}."
+    else:
+        key_values = _get_key_values_from_content(content, args)
+        content_keys = set(key_values.keys())
+        arg_keys = set(args.keys())
+
+        if not invert:
+            assert content_keys == arg_keys, f"Could not find {args} in {fname}."
+        else:
+            assert len(content_keys) == 0, f"Found {args} in {fname}."
 
 
 def _get_content_remote_file(client, fname):
@@ -13,9 +27,12 @@ def _get_content_remote_file(client, fname):
         return output
 
 
-def _get_key_val_from_content(content, dict, fname):
-    """ Validates if key/val are present in content """
-    for k in dict:
-        for line in content.split('\n'):
-            if line.startswith(k):
-                assert dict[k] in line, f"Could not find {dict} in {fname}."
+def _get_key_values_from_content(content, args):
+    result = dict()
+    content_lines = content.split('\n')
+    for line in content_lines:
+        line_key = re.sub(r'(\w*).*', '\\1', line)
+
+        if line_key in args.keys() and args[line_key] in line:
+            result[line_key] = args[line_key]
+    return result
