@@ -334,6 +334,26 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
         raise ValueError(f"invalid {iaas=}")
 
 
+def pytest_collection_modifyitems(config, items):
+    """Skip tests that belong to a feature that is not enabled in the test config"""
+    skip = pytest.mark.skip(reason="test is not part of the enabled features")
+    iaas = config.getoption("--iaas")
+    config_file = config.getoption("--configfile")
+    try:
+        with open(config_file) as f:
+            config_options = yaml.load(f, Loader=yaml.FullLoader)
+    except OSError as err:
+        logger.error(f"can not open config file {config_file}")
+        pytest.exit(err, 1)
+    features = config_options[iaas].get("features", "")
+    for item in items:
+        item_path = str(item.fspath)
+        if "features" in item_path:
+            feature = item_path.split('/')[3]
+            if not feature in features:
+                item.add_marker(skip)
+
+
 @pytest.fixture
 def features(client):
     (exit_code, output, error) = client.execute_command("cat /etc/os-release", quiet=True)
