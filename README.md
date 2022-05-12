@@ -61,7 +61,7 @@ By default, Garden Linux uses [Podman](https://podman.io/) as container runtime 
 
 **Debian/Ubuntu:**
 ```
-sudo apt install bash podman crun make coreutils gnupg git qemu-system-x86 qemu-system-aarch64 coreutils
+sudo apt install bash podman crun make coreutils gnupg git qemu-system-x86 qemu-system-aarch64
 ```
 
 **CentOS/RedHat (>=8):**
