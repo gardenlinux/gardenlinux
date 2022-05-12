@@ -13,4 +13,3 @@ def kernel_parameter(client, parameter, value):
     assert running_value == str(value), (f"{parameter} is not " +
                     f"configured correctly. Expected " +
                     f"{parameter} set to {value}.")
-                    
