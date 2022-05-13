@@ -131,6 +131,14 @@ if [ -n "$cert" ]; then
 	dockerArgs+=" --volume $(realpath "$cert"):/cert:ro"
 fi
 
+if [ -z "$(git status --porcelain)" ]; then
+	commitid="$(git rev-parse --short HEAD)"
+	echo "clean working tree, using $commitid as commit id"
+	dockerArgs+=" -e commitid=$commitid"
+else
+	echo 'modified working tree, using "local" instead of commit id'
+fi
+
 if [ $manual ]; then
 	echo -e "\n### running in manual mode"
 	echo -e "please run -> /opt/gardenlinux/bin/garden-build <- (all configs are set)\n"

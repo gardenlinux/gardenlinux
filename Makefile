@@ -21,9 +21,9 @@ GARDENLINUX_BUILD_CRE ?= sudo podman
 .PHONY:all
 all: all_dev all_prod
 
-SECUREBOOT_CRT=cert/secureboot.db.auth
+SECUREBOOT_CRT=cert/secureboot.db.sign.crt
 
-$(SECUREBOOT_CRT): container-cert
+$(SECUREBOOT_CRT): | container-cert
 	$(GARDENLINUX_BUILD_CRE) run --rm --volume '$(realpath $(dir $@)):/cert' 'gardenlinux/build-cert:$(VERSION)' make --directory=/cert default
 
 .PHONY: container-build container-cert container-test container-integration

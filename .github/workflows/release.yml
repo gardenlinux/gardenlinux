@@ -1,0 +1,72 @@
+name: release
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: gardenlinux-${{ matrix.architecture }}
+    environment: secureboot_keys
+    strategy:
+      matrix:
+        architecture: [ amd64, arm64 ]
+        target: [ kvm, metal, gcp, aws, azure, ali, openstack, vmware, pxe ]
+        modifier: [ "" ]
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          sudo apt-get update
+          sudo apt-get -y install podman
+          sudo bash -c 'echo -e "unqualified-search-registries = [\"docker.io\"]\n\n[[registry]]\nprefix = \"docker.io\"\ninsecure = true\nlocation = \"docker.io\"\n[[registry.mirror]]\nlocation = \"10.0.2.2:5000\"\ninsecure = true" >> /etc/containers/registries.conf'
+      - run: |
+          echo "${{ secrets.SECUREBOOT_DB_SIGN_KEY }}" > cert/gardenlinux-secureboot.db.sign.key
+          for key in pk.auth null.pk.auth kek.auth db.auth db.sign.crt db.sign.key; do
+            echo cert/gardenlinux-secureboot.$key cert/secureboot.$key
+            ln -sr cert/gardenlinux-secureboot.$key cert/secureboot.$key
+          done
+          ls -lah cert
+          head cert/secureboot.db.sign.key
+          head cert/secureboot.db.auth
+      - run: |
+          bin/garden-version today > VERSION
+          git update-index --assume-unchanged VERSION
+      - run: make ARCH=${{ matrix.architecture }} ${{ matrix.target }}${{ matrix.modifier }}
+      - run: |
+          name="${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-$(bin/garden-version)-$(git rev-parse --short HEAD)"
+          mv .build "$name"
+          tar -czvf "$name.tar.gz" "$name"
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
+          path: ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*-*.tar.gz
+  create_release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          version="$(bin/garden-version today)"
+          .github/workflows/release.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} create "auto_release_$version" "$version" > .github_release
+      - uses: actions/upload-artifact@v2
+        with:
+          name: release
+          path: .github_release
+  upload_to_release:
+    needs: create_release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        architecture: [ amd64, arm64 ]
+        target: [ kvm, metal, gcp, aws, azure, ali, openstack, vmware, pxe ]
+        modifier: [ "" ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: release
+      - uses: actions/download-artifact@v2
+        with:
+          name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
+      - run: |
+          release="$(cat .github_release)"
+          find . -name '${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*-*.tar.gz' | .github/workflows/release.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
