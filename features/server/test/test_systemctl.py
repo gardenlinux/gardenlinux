@@ -1,10 +1,18 @@
-from helper.exception import NotPartOfFeatureError, DisabledBy
-from helper.tests.systemctl import Systemctl
+from helper.tests.systemctl import systemctl
 import pytest
 
-def test_systemctl(client, features):
-    """The test function executed by pytest"""
-    try:
-        Systemctl(client, features)
-    except (NotPartOfFeatureError, DisabledBy) as e:
-        pytest.skip(str(e))
+@pytest.mark.parametrize(
+    "state, services",
+    [
+        ("enabled", [
+                    "systemd-networkd.service",
+                    "auditd.service"
+                    ]
+        ),
+        ("disabled", []
+        )
+    ]
+)
+
+def test_systemctl(client, state, services):
+    systemctl(client, state, services)
