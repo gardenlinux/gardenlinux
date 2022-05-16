@@ -70,3 +70,23 @@ jobs:
       - run: |
           release="$(cat .github_release)"
           find . -name '${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*-*.tar.gz' | .github/workflows/release.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+  upload_to_s3:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: aws_s3_keys
+    strategy:
+      matrix:
+        architecture: [ amd64, arm64 ]
+        target: [ kvm, metal, gcp, aws, azure, ali, openstack, vmware, pxe ]
+        modifier: [ "" ]
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
+      - run: |
+          export AWS_ACCESS_KEY_ID="${{ secrets.AWS_KEY }}"
+          export AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET }}"
+          export AWS_DEFAULT_REGION="${{ secrets.AWS_REGION }}"
+          tar -xzvf "$(find . -name '${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*-*.tar.gz')"
+          dir="$(find . -name '${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*-*' -type d -printf '%P\n')"
+          aws s3 cp --recursive "$dir" "s3://${{ secrets.AWS_S3_BUCKET }}/$dir"
