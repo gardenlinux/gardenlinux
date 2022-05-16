@@ -1,5 +1,3 @@
-import re
-
 def sshd(client, expected):
     """Tests if a sshd option is set to an expected value. The expected
     option value string and the sshd_config are conterted into lists of 
@@ -13,7 +11,8 @@ def sshd(client, expected):
 
     expected = _create_list_of_tuples(expected)
 
-    assert expected[0] in sshd_config, f"{expected} not found in sshd_config"
+    assert all(option in sshd_config for option in expected), \
+            f"{expected} not found in sshd_config"
 
 
 def _create_list_of_tuples(input):
@@ -23,7 +22,10 @@ def _create_list_of_tuples(input):
     out = []
     for line in input.lower().splitlines():
         l = line.split(' ', 1)
-        out.append((l[0], _normalize_value(l[1])))
+        option = l[0]
+        value = l[1]
+        normalized_value = _normalize_value(value)
+        out.append((option, normalized_value))
     return out
 
 def _normalize_value(string):
@@ -31,7 +33,7 @@ def _normalize_value(string):
     The string will be returned as a set. If the element contains a comma
     separated string, it will be split into a list first."""
     normalized = string.split(" ")
-    if len(normalized) == 1 and re.match(r".*,.*",normalized[0]):
+    if len(normalized) == 1 and "," in normalized[0]:
         value_as_set = set(normalized[0].split(','))
     else:
         value_as_set = set(normalized)
