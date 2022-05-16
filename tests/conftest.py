@@ -439,3 +439,9 @@ def non_arm64(client):
         sys.exit(exit_code)
     if "arm64" in output:
         pytest.skip('test not supported on arm64 architecture')
+
+@pytest.fixture
+def non_metal(iaas, testconfig):
+    features = testconfig[iaas]["features"]
+    if "metal" in features:
+        pytest.skip('test not supported on metal')

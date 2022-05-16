@@ -257,7 +257,7 @@ def test_nvme_kernel_parameter(client, aws):
     assert exit_code == 0, f"no {error=} expected"
     assert output.rstrip() == "1", "Expected 'nvme_core.io_timeout=4294967295' kernel parameter"
 
-def test_random(client):
+def test_random(client, non_metal):
     (exit_code, output, error) = client.execute_command("time dd if=/dev/random of=/dev/null bs=8k count=1000 iflag=fullblock")
     """ Output should be like this:
 # time dd if=/dev/random of=/dev/null bs=8k count=1000 iflag=fullblock
