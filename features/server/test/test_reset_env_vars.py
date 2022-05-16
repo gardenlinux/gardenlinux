@@ -1,1 +1,5 @@
-from helper.tests.reset_env_vars import reset_env_vars as test_reset_env_vars
+from helper.tests.key_val_in_file import key_val_in_file
+
+def test_reset_env_vars(client):
+    key_val_in_file(client, "/etc/sudoers", {"Defaults": "env_reset"},
+                    invert=True, ignore_missing=True)
