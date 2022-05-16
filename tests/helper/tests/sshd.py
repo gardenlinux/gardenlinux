@@ -1,137 +1,39 @@
-import logging
 import re
 
-from helper import utils
-from helper.exception import NotPartOfFeatureError, TestFailed, DisabledBy
+def sshd(client, expected):
+    """Tests if a sshd option is set to an expected value. The expected
+    option value pair is a tuple, the sshd_config is conterted into a list 
+    of tuples"""
 
-logger = logging.getLogger(__name__)
+    (exit_code, output, error) = client.execute_command("sshd -T",
+                                                        quiet=True)
+    assert exit_code == 0, f"no {error=} expected"
 
-IN_SSHD_CONFIG = 1
-NOT_IN_SSHD_CONFIG = 2
-DIFFERENT = 3
+    sshd_config = _create_list_of_tuples(output)
 
-class Sshd():
-    """Class containing the test for blacklisted packages"""
+    expected = (expected[0].lower(), _normalize_value(expected[1]))
 
-    failed_before = False
-    def __new__(cls, client, features):
-        """The actual test.
-        Placing the code for the test in the __new__ method allows to test if
-        there is already an instance of this class and avoid executing the
-        test more than once.
-        The class variable failed_before is used to make sure the test is
-        shown as failed when the first call of the test had failed.
-        If the test had passed the first time and is called again the same
-        instance is returned and the test is shown as passed, but the test is
-        NOT executed again. Therefore the test collects the test configuration
-        from all enabled features, so it is not necessary to executed the test
-        more than once.
-        """
+    assert expected in sshd_config, f"{expected} not found in sshd_config"
 
-        # throws exception if the test had failed before to make sure it is
-        # not show as passed when called again by another feature.
-        if cls.failed_before:
-            raise Exception("This test failed before in another feature")
 
-        (enabled_features, my_feature) = features
-
-        # check if test is disabled in a feature
-        test_is_disabled = utils.disabled_by(
-            enabled_features, 'blacklisted_packages')
-        if not len(test_is_disabled) == 0:
-            raise DisabledBy(
-                "Test is explicitly disabled by features " +
-                    f"{', '.join(test_is_disabled)}")
-
-        # check if the test is part of the features used to build the
-        # gardenlinux image
-        if my_feature not in enabled_features:
-            raise NotPartOfFeatureError(
-                f"Feature {my_feature} this test belongs to is not enabled")
-
-        # first check if there is already an instance of this class, if it is
-        # the first time this instance is initiated add the class variable
-        # instance containing the instance itself and then do the actual
-        # testing.
-        if not hasattr(cls, 'instance'):
-            cls.instance = super(Sshd, cls).__new__(cls)
-
-            (exit_code, output, error) = client.execute_command("sshd -T",
-                                                                quiet=True)
-            assert exit_code == 0, f"no {error=} expected"
-
-            sshd_config = _create_dict(output)
-
-            expected = utils.read_test_config(
-                enabled_features, 'sshd', '_expected')
-            sshd_expected = _create_dict(expected)
-
-            for key, values in sshd_config.items():
-                if key in sshd_expected:
-                    sshd_config_values = _normalize_value(values)
-                    expected_values = _normalize_value(
-                                        sshd_expected[key])
-                    missing, where = _compare_as_set(sshd_config_values,
-                                                        expected_values)
-                    if where == NOT_IN_SSHD_CONFIG:
-                        cls.failed_before = True
-                        raise TestFailed(f"For {key} '{', '.join(missing)}'" +
-                            " is expected but missing")
-                    if where == IN_SSHD_CONFIG:
-                        cls.failed_before = True
-                        raise TestFailed(f"For {key} '{', '.join(missing)}'" +
-                            " is set but not expected")
-                    if where == DIFFERENT:
-                        cls.failed_before = True
-                        raise TestFailed(f"For {key} " +
-                            f"'{', '.join(expected_values)}' is expected, " +
-                            f"'{', '.join(sshd_config_values)}' is set")
-
-        return cls.instance
-
-def _create_dict(input):
-    """Create a dictionary.
-    Expecting a list or newline seperated input. The first word of a line
-    or list element will become the key, the rest is the value, the value 
-    is returned as a list"""
-    out = {}
-    if type(input) == list:
-        for line in input:
-            l = line.split(' ')
-            out.update({l[0].lower(): l[1:]})
-    else:
-        for line in input.splitlines():
-            l = line.split(' ')
-            out.update({l[0].lower(): l[1:]})
+def _create_list_of_tuples(input):
+    """Takes a multiline string and returns a list containing every line 
+    as a tuple. The 1st value of the tuple is the ssh option, the 2nd is
+    value"""
+    out = []
+    for line in input.splitlines():
+        l = line.split(' ', 1)
+        out.append((l[0], _normalize_value(l[1])))
     return out
 
-def _normalize_value(list):
-    """Convert a given list.
-    All elements will be converted to lower case and the list will be
+def _normalize_value(string):
+    """Convert a given string.
+    All elements will be converted to lower case and the string will be
     returned as a set. If the element contains a comma separated string,
     it will be split into a list first."""
-    normalized = []
-    for item in list:
-        normalized.append(item.lower())
+    normalized = string.lower().split(" ")
     if len(normalized) == 1 and re.match(r".*,.*",normalized[0]):
         value_as_set = set(normalized[0].split(','))
     else:
         value_as_set = set(normalized)
     return value_as_set
-
-def _compare_as_set(sshd_config_value, expected_value):
-    """Compare 2 sets.
-    If the sets are not identical, return the difference between the sets
-    and in which set the difference is missing"""
-    if not (sshd_config_value.issuperset(expected_value) and
-            expected_value.issuperset(sshd_config_value)):
-        missing_value = sshd_config_value.symmetric_difference(
-                            expected_value)
-        if sshd_config_value.issubset(expected_value):
-            return missing_value, NOT_IN_SSHD_CONFIG
-        if expected_value.issubset(sshd_config_value):
-            return missing_value, IN_SSHD_CONFIG
-        else:
-            return missing_value, DIFFERENT
-    else:
-        return None, 0
