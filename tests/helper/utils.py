@@ -1,5 +1,6 @@
 import os
 import re
+import string
 
 def get_package_list(client):
     """Return list with the installed packages.
@@ -67,3 +68,10 @@ def get_file_perm(client, fname):
     # Make sure we do not test non existent directories
     if not "cannot statx" in error:
         return int(output) 
+
+
+def get_architecture(client):
+    """Get the architecture of the environment to test"""
+    (exit_code, output, error) = client.execute_command("dpkg --print-architecture", quiet=True)
+    assert exit_code == 0, f"no {error=} expected"
+    return output.strip(string.whitespace)
