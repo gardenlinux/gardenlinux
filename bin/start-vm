@@ -76,7 +76,7 @@ source "${thisDir}/.constants.sh" \
 <image file>	a file containing the image to boot. Format is determined by the extension.
                 raw, vdi, vpc, vhd, vhdx, vmdk, qcow2, iso are recognized.
 		,<size> is optional. If the file is smaller then <size> it will be resized
-		withthe sparse feature of the filesystem to  the requested size.
+		with the sparse feature of the filesystem to the requested size.
 		If <image file> is omitted and only ,<size> is specified, a temporary file
 		of this size will be created. The file will not be deleted."
 
