@@ -1,8 +1,4 @@
-import logging
-
 import helper.utils as utils
-
-logger = logging.getLogger(__name__)
 
 def users(client):
     # Get content from /etc/passwd
