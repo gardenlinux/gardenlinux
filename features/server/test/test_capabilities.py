@@ -5,6 +5,7 @@ import pytest
     "capability_list",
     [
         [
+            "/usr/bin/arping cap_net_raw=ep",
             "/usr/bin/ping cap_net_raw=ep"
         ]
     ]
