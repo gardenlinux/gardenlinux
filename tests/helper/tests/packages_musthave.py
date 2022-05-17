@@ -32,8 +32,8 @@ def packages_musthave(client):
             else:
                 continue
         # * an url to the package
-        elif package.startswith("http"):
-            package_name = package.split("/")[-1]
+        elif package.endswith(r".deb"):
+            package_name = os.path.basename(package)
             package = package_name.split("_")[0]
         # * the architecture as a variable in the package name
         elif package.endswith(r"-${arch}"):
