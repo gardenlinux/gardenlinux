@@ -1,0 +1,14 @@
+#!/bin/bash
+set -Eeufo pipefail
+
+function write_efi_secureboot_var {
+	efi_var_file="/sys/firmware/efi/efivars/$1"
+	echo -n > "$efi_var_file"
+	chattr -i "$efi_var_file"
+	lsattr "$efi_var_file"
+	{ printf '\x27\x00\x00\x00'; cat; } | dd bs=1M of="$efi_var_file"
+}
+
+write_efi_secureboot_var PK-8be4df61-93ca-11d2-aa0d-00e098032b8c < /etc/gardenlinux/gardenlinux-secureboot.pk.auth
+write_efi_secureboot_var KEK-8be4df61-93ca-11d2-aa0d-00e098032b8c < /etc/gardenlinux/gardenlinux-secureboot.kek.auth
+write_efi_secureboot_var db-d719b2cb-3d3a-4596-a3bc-dad00e67656f < /etc/gardenlinux/gardenlinux-secureboot.db.auth
