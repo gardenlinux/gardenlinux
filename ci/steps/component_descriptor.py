@@ -246,12 +246,12 @@ def virtual_machine_image_resource(
 
     labels = [
         cm.Label(
-          name='gardener.cloud/gardenlinux/ci/build-metadata',
-          value={
-              'modifiers': release_manifest.modifiers,
-              'buildTimestamp': release_manifest.build_timestamp,
-              'debianPackages': [p for p in _virtual_image_packages(release_manifest, cicd_cfg)],
-          }
+            name='gardener.cloud/gardenlinux/ci/build-metadata',
+            value={
+                'modifiers': release_manifest.modifiers,
+                'buildTimestamp': release_manifest.build_timestamp,
+                'debianPackages': [p for p in _virtual_image_packages(release_manifest, cicd_cfg)],
+            }
         ),
     ]
 
@@ -280,6 +280,11 @@ def virtual_machine_image_resource(
         type=resource_type,
         labels=labels,
         access=resource_access,
+        digest=cm.DigestSpec(
+            hashAlgorithm='NO-DIGEST',
+            normalisationAlgorithm='EXCLUDE-FROM-SIGNATURE',
+            value='NO-DIGEST',
+        ),
     )
 
 

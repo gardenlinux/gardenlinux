@@ -1,9 +1,0 @@
-rlogin
-rsh
-rcp
-telnet
-# XXX: Test does not manage arch specifiers for multi-arch packages
-libdb5.3:amd64
-libdb5.3:arm64
-libssl1.1:amd64
-libssl1.1:arm64

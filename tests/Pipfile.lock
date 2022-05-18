@@ -842,11 +842,11 @@
         },
         "paramiko": {
             "hashes": [
-                "sha256:443f4da23ec24e9a9c0ea54017829c282abdda1d57110bf229360775ccd27a31",
-                "sha256:f6cbd3e1204abfdbcd40b3ecbc9d32f04027cd3080fe666245e21e7540ccfc1b"
+                "sha256:3c9ed6084f4b671ab66dc3c729092d32d96c3258f1426071301cb33654b09027",
+                "sha256:3d2e650b6812ce6d160abff701d6ef4434ec97934b13e95cf1ad3da70ffb5c58"
             ],
             "index": "pypi",
-            "version": "==2.10.1"
+            "version": "==2.10.4"
         },
         "pbr": {
             "hashes": [

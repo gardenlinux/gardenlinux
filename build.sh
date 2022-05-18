@@ -156,7 +156,7 @@ else
 		echo "Creating config file for chroot tests"
 		containerName=$(cat /proc/sys/kernel/random/uuid)
 		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
-		configDir=$(${thisDir}/bin/garden-integration-test-config chroot ${prefix} ${outputDir})
+		configDir=$(${thisDir}/bin/garden-integration-test-config chroot ${prefix} ${features} ${outputDir})
 		echo "Running pytests in chroot"
 		${gardenlinux_build_cre} run --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW --security-opt apparmor=unconfined \
 			--name $containerName --rm -v `pwd`:/gardenlinux -v ${configDir}:/config \
@@ -169,7 +169,7 @@ else
 		echo "Creating config file for KVM tests"
 		containerName=$(cat /proc/sys/kernel/random/uuid)
 		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
-		configDir=$(${thisDir}/bin/garden-integration-test-config kvm ${prefix} ${outputDir})
+		configDir=$(${thisDir}/bin/garden-integration-test-config kvm ${prefix} ${features} ${outputDir})
 		echo "Running pytests in KVM"
 		${gardenlinux_build_cre} run --name $containerName --rm -v /boot/:/boot \
 			-v /lib/modules:/lib/modules -v `pwd`:/gardenlinux -v ${configDir}:/config \

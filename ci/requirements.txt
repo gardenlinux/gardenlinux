@@ -1,4 +1,4 @@
-aliyun-python-sdk-core==2.13.16
+aliyun-python-sdk-core==2.13.36
 aliyun-python-sdk-ecs==4.24.13
 azure-identity==1.6.0
 azure-mgmt-compute~=22.1.0

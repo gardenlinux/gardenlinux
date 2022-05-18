@@ -30,13 +30,4 @@ diagram source files as text.
 * [Mermaid Diagrams](https://mermaid-js.github.io/mermaid/#/)
 
 
-## Publishing to gardenlinux.io
-
-All markdown files in the ```docs/``` folder are published on the
-[gardenlinux.io/documentation](gardenlinux.io/documentation) website.
-
-
-Check out the [Makefile](https://github.com/gardenlinux/website/blob/master/Makefile)
-of the gardenlinux/website for the publishing process.
-
 
