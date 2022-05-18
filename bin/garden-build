@@ -113,7 +113,6 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 
 	[ -n "$fullfeatures" ] && configArgs+=( --features "$fullfeatures" )
 
-	# TODO fix for the pipelines, paths probably won't match
 	garden-config "${configArgs[@]}" rootfs
 	#garden-apt-get rootfs update -qq
 	#garden-apt-get rootfs dist-upgrade -yqq
