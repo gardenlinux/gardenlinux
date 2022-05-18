@@ -1,0 +1,7 @@
+PRETTY_NAME="Garden Linux"
+NAME="GardenLinux"
+ID=gardenlinux
+ID_LIKE=debian
+HOME_URL="https://gardenlinux.io/"
+SUPPORT_URL="https://github.com/gardenlinux/gardenlinux#readme"
+BUG_REPORT_URL="https://github.com/gardenlinux/gardenlinux/issues/new/choose"
