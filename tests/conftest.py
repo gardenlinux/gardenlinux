@@ -445,3 +445,9 @@ def non_metal(testconfig):
     features = testconfig["features"]
     if "metal" in features:
         pytest.skip('test not supported on metal')
+
+@pytest.fixture
+def non_dev(testconfig):
+    features = testconfig["features"]
+    if "_dev" in features:
+        pytest.skip('test not supported on dev')

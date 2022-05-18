@@ -22,5 +22,5 @@ import pytest
 #    resulty any found pattern is an error.
 #  - Files that can not be found are ignored
 #    and will not fail the test.
-def test_autologin(client, file, args):
+def test_autologin(client, file, args, non_dev):
     key_val_in_file(client, file, args, invert=True, ignore_missing=True)
