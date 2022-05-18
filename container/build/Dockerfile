@@ -25,7 +25,7 @@ RUN	apt-get update \
      &&	apt-mark auto gcc g++ cpp gcc-multilib \
      &&	rm -f /*.deb \
      &&	dpkg -P gcc-9-base \
-     &&	apt-get install -y build-essential fakeroot sudo \
+     &&	apt-get install -y build-essential fakeroot sudo gettext uuid-runtime efitools \
      &&	addgroup --system wheel \
      &&	adduser dev --disabled-password --gecos dev \
      &&	adduser dev wheel
