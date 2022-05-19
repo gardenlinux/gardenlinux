@@ -1,0 +1,5 @@
+syslog-ng
+libpam-pwquality
+libpam-modules-bin
+tcpd
+git
