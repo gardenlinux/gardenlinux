@@ -46,7 +46,7 @@ Garden Linux supports integration testing on all major cloud platforms (Alicloud
 
 ## Prerequisites
 
-Build the integration test container with all necessary dependencies. This container image will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP) and KVM/QEMU.
+Build the integration test container with all necessary dependencies. This container image will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP). *Note: For `KVM` and `CHROOT` platforms the auto created `gardenlinux/base-test` container can be used (as documented) but will also work with the fullfleged testing container `gardenlinux/integration-test`.*
 
     make --directory=container build-integration-test
 
@@ -503,7 +503,7 @@ Start Podman container with dependencies:
 - NOTE: The testing SSHd expects the regular `authorized_keys` file to be named as `test_authorized_keys`
 
 ```
-sudo podman run --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW --security-opt apparmor=unconfined -it --rm -v `pwd`:/gardenlinux gardenlinux/integration-test:dev /bin/bash
+sudo podman run --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW --security-opt apparmor=unconfined -it --rm -v `pwd`:/gardenlinux gardenlinux/base-test:dev /bin/bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -592,13 +592,13 @@ Start Podman container with dependencies:
 **With SSH autogeneration**
 This is the default and recommended way.
 ```
-sudo podman run -it --rm -v /boot/:/boot -v /lib/modules:/lib/modules -v `pwd`:/gardenlinux gardenlinux/integration-test:dev /bin/bash
+sudo podman run -it --rm -v /boot/:/boot -v /lib/modules:/lib/modules -v `pwd`:/gardenlinux gardenlinux/base-test:dev /bin/bash
 ```
 
 **Without SSH autogeneration**
 Use this only when really needed.
 ```
-sudo podman run -it --rm -v `pwd`:/gardenlinux -v /boot/:/boot -v /lib/modules:/lib/modules -v `pwd`/.build/:/build -v $HOME/.ssh:/root/.ssh -v ~/config:/config gardenlinux/integration-test:`bin/garden-version` /bin/bash
+sudo podman run -it --rm -v `pwd`:/gardenlinux -v /boot/:/boot -v /lib/modules:/lib/modules -v `pwd`/.build/:/build -v $HOME/.ssh:/root/.ssh -v ~/config:/config gardenlinux/base-test:`bin/garden-version` /bin/bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
