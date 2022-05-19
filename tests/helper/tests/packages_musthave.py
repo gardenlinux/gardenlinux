@@ -4,7 +4,7 @@ import os
 import string
 import pytest
 
-def packages_musthave(client):
+def packages_musthave(client, testconfig):
     """"Test if the packages defined in pkg.include are installed"""
     installed_pkgslist = get_package_list(client)
 
@@ -15,6 +15,22 @@ def packages_musthave(client):
             packages = f.read()
     except OSError:
         pytest.skip(f"feature {current} does not have a pkg.include file")
+
+    # collect excluded packages from all enabled features 
+    features = testconfig["features"]
+    exclude = []
+    for feature in features:
+        path = f"/gardenlinux/features/{feature}/pkg.exclude"
+        try:
+            with open(path) as f:
+                for package in f:
+                    package = package.strip(string.whitespace)
+                    # Skip comment lines
+                    if package.startswith("#"):
+                        continue
+                    exclude.append(package)
+        except OSError:
+            continue
 
     arch = get_architecture(client)
 
@@ -38,6 +54,9 @@ def packages_musthave(client):
         # * the architecture as a variable in the package name
         elif package.endswith(r"-${arch}"):
             package = package.replace(r"${arch}", arch)
+        # explicitly excluded packages are allowed to miss 
+        elif package in exclude:
+            continue
 
         if not (package in installed_pkgslist or
                 f"{package}:{arch}" in installed_pkgslist):
