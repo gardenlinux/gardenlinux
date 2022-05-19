@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -eufo pipefail
+
+conf=gpg.conf
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		--conf)
+			conf="$2"
+			shift 2
+			;;
+		*)
+			break
+			;;
+	esac
+done
+
+base="${1%.*}"
+
+tmp_gnupg_home="$(mktemp -d)"
+chmod 700 "$tmp_gnupg_home"
+
+# using $tmp_gnupg_home as an ephemeral GNUPGHOME directory, since %secring parameter is a no-op in gpg >= 2.1
+export GNUPGHOME="$tmp_gnupg_home"
+
+echo "Generating GPG key ($GPG_EMAIL)"
+envsubst < "$conf" | gpg --generate-key --batch
+echo "Exporting GPG private key ($GPG_EMAIL) -> $base.key"
+gpg --export-secret-key --armor "$GPG_EMAIL" > "$base.key"
+echo "Exporting GPG public key ($GPG_EMAIL) -> $base.pub"
+gpg --export --armor "$GPG_EMAIL" > "$base.pub"
+
+# using separate variable here instead of GNUPGHOME to ensure that under no circumstances (e.g. accidentally commenting out setting GNUPGHOME) the user GNUPGHOME gets deleted
+rm -rf "$tmp_gnupg_home"

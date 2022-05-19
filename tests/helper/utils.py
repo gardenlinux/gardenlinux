@@ -1,6 +1,7 @@
 import uuid
 import os
 import re
+import string
 
 
 def get_package_list(client):
@@ -81,3 +82,10 @@ def create_remote_tmp_dir(client):
     if exit_code is not 0:
        (rc, output, error) = client.execute_command(f"mkdir {tmp_name}", quiet=True)
     return tmp_name
+
+
+def get_architecture(client):
+    """Get the architecture of the environment to test"""
+    (exit_code, output, error) = client.execute_command("dpkg --print-architecture", quiet=True)
+    assert exit_code == 0, f"no {error=} expected"
+    return output.strip(string.whitespace)

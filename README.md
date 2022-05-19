@@ -7,8 +7,13 @@
 
 
 # Garden Linux
-<img align="left" width="80" height="80" src="https://raw.githubusercontent.com/gardenlinux/gardenlinux/main/logo/gardenlinux-logo-black-text.svg"> <a href="https://gardenlinux.io/">Garden Linux</a> is a <a href="https://debian.org/">Debian GNU/Linux</a> derivate that aims to provide small, auditable Linux images for most cloud providers (e.g. AWS, Azure, GCP etc.) and bare-metal machines. Garden Linux is the best Linux for <a href="https://gardener.cloud/">Gardener</a> nodes. Garden Linux provides great possibilities for customizing that is made by a highly customizable feature set to fit your needs. <br><br>
 
+<website-main>
+
+<img align="left" width="80" height="80" src="https://raw.githubusercontent.com/gardenlinux/gardenlinux/main/logo/gardenlinux-logo-black-text.svg"> <a href="https://gardenlinux.io/">Garden Linux</a> is a <a href="https://debian.org/">Debian GNU/Linux</a> derivate that aims to provide small, auditable Linux images for most cloud providers (e.g. AWS, Azure, GCP etc.) and bare-metal machines. Garden Linux is the best Linux for <a href="https://gardener.cloud/">Gardener</a> nodes. Garden Linux provides great possibilities for customizing that is made by a highly customizable feature set to fit your needs. <br><br>
+ 
+</website-main>
+ 
 ## Table of Content
 - [Features](#Features)
 - [Quick Start](#Quick-Start)
@@ -61,7 +66,7 @@ By default, Garden Linux uses [Podman](https://podman.io/) as container runtime 
 
 **Debian/Ubuntu:**
 ```
-apt install bash podman crun make coreutils gnupg git qemu-system-x86 qemu-system-aarch64
+sudo apt install bash podman crun make coreutils gnupg git qemu-system-x86 qemu-system-aarch64
 ```
 
 **CentOS/RedHat (>=8):**
@@ -70,14 +75,14 @@ CFSSL requires `GLIBC 2.28`. Therefore, we recommand to build on systems running
 
 ```
 # Install needed packages
-yum install bash podman crun make gnupg git qemu-kvm qemu-img
+sudo yum install bash podman crun make gnupg git qemu-kvm qemu-img coreutils
 ```
 
 **Adjust Repository:**
 
 Add `docker.io` to `unqualified-search-registries` in your [registries.conf](https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md). On freshly installed `Podman` systems this can be done by executing:
 ```
-echo 'unqualified-search-registries = ["docker.io"]' >> /etc/containers/registries.conf
+echo 'unqualified-search-registries = ["docker.io"]' | sudo tee -a /etc/containers/registries.conf
 ```
 If `Podman` was already present please add the repository yourself to `unqualified-search-registries` in `/etc/containers/registries.conf`.
 

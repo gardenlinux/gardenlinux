@@ -20,10 +20,8 @@ build_image() {
 
     repodir="$(params.repo_dir)"
     CERTDIR=$(realpath $repodir/cert)
-    
-    ln -s ${CERTDIR}/Kernel.sign.full /kernel.full
-    ln -s ${CERTDIR}/Kernel.sign.crt /kernel.crt
-    ln -s ${CERTDIR}/Kernel.sign.key /kernel.key
+    mkdir -p /cert
+    mount --bind -o ro "$CERTDIR" /cert
 
     pwd
     echo "running build.."

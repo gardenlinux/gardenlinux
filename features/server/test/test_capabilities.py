@@ -1,10 +1,13 @@
-from helper.exception import NotPartOfFeatureError, DisabledBy
-from helper.tests.capabilities import Capabilities
+from helper.tests.capabilities import capabilities
 import pytest
 
-def test_capabilities(client, features):
-    """The test function executed by pytest"""
-    try:
-        Capabilities(client, features)
-    except (NotPartOfFeatureError, DisabledBy) as e:
-        pytest.skip(str(e))
+@pytest.mark.parametrize(
+    "capability_list",
+    [
+        [
+            "/usr/bin/ping cap_net_raw=ep"
+        ]
+    ]
+)
+def test_capabilities(client, capability_list):
+    capabilities(client, capability_list)

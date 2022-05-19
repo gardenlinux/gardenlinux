@@ -1,0 +1,79 @@
+#!/bin/bash
+
+set -eufo pipefail
+
+cert_json=cert.json
+conf_json=config.json
+
+ca_base=
+
+hostname=
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		--cert)
+			cert_json="$2"
+			shift 2
+			;;
+		--conf)
+			conf_json="$2"
+			shift 2
+			;;
+		--ca)
+			ca_base="${2%.crt}"
+			shift 2
+			;;
+		--hostname)
+			hostname="$2"
+			shift 2
+			;;
+		*)
+			break
+			;;
+	esac
+done
+
+base="${1%.crt}"
+name="${base%.*}"
+type="${base##*.}"
+
+function get_type_str {
+	case "$type" in
+		ca) echo CA ;;
+		sign) echo Signature ;;
+		*) tr '[:lower:]' '[:upper:]' <<< "${type:0:1}${type:1}" ;;
+	esac
+}
+
+type_str="$(get_type_str "$type")"
+export CERT_CN="$CERT_NAME_OU $name $type_str"
+
+if [ -z "$ca_base" ]; then
+	echo "Generating self signed $type_str certificate ($CERT_CN) -> $base.crt"
+else
+	echo "Generating $type_str certificate ($CERT_CN), signed by $ca_base.crt -> $base.crt"
+fi
+
+case "$type" in
+	ca)
+		cfssl gencert -initca <(envsubst < "$cert_json") | cfssljson -bare "$base"
+		[ -z "$ca_base" ] || cfssl sign -ca "$ca_base.crt" -ca-key "$ca_base.key" -config "$conf_json" -profile intermediate_ca "$base.csr" | cfssljson -bare "$base"
+		;;
+	*)
+		cfssl gencert -ca "$ca_base.crt" -ca-key "$ca_base.key" -config "$conf_json" -profile "$type" ${hostname:+-hostname "$hostname"} <(envsubst < "$cert_json") | cfssljson -bare "$base"
+		;;
+esac
+
+mv "$base.pem" "$base.crt"
+mv "$base-key.pem" "$base.key"
+rm "$base.csr"
+
+if [ -n "$ca_base" ]; then
+	if [ -f "$ca_base.chain" ]; then
+		echo "Writting certificate chain for $base.crt ($CERT_CN) -> $base.chain"
+		cat "$ca_base.chain" "$ca_base.crt" > "$base.chain"
+	else
+		echo "Initialising empty certificate chain (direct root CA successor) for $base.crt ($CERT_CN) -> $base.chain"
+		touch "$base.chain"
+	fi
+fi

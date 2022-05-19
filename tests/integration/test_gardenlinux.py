@@ -118,7 +118,7 @@ def test_timesync(client, azure):
     (exit_code, output, error) = client.execute_command("test -L /dev/ptp_hyperv")
     assert exit_code == 0, f"Expected /dev/ptp_hyperv to be a symbolic link"
 
-def test_loadavg(client, non_kvm):
+def test_loadavg(client, non_kvm, non_chroot):
     """This test does not produce any load. Make sure no 
        other process does."""
     (exit_code, output, error) = client.execute_command("cat /proc/loadavg")
@@ -337,7 +337,7 @@ def test_apparmor(client, non_chroot):
     (exit_code, output, error) = client.execute_command("grep apparmor /sys/kernel/security/lsm")
     assert exit_code == 1, f"expected apparmor to be disabled"
 
-def test_selinux(client):
+def test_selinux(client, non_chroot):
     (exit_code, output, error) = client.execute_command("grep selinux /sys/kernel/security/lsm")
     assert exit_code == 0, f"no {error=} expected"
     assert "selinux" in output.rstrip(), "Expected SELinux to be enabled."
