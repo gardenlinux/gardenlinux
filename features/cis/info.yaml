@@ -1,13 +1,13 @@
-description: "CIS Compliance"
+description: "CIS Framework"
 type: element
 features:
   include:
+    - aide
+    - cis_audit
+    - cis_modprobe
+    - cis_os
     - cis_packages
     - cis_partition 
-    - firewall
-    - cis_sysctl
-    - cis_os
-    - cis_audit
     - cis_sshd
-    - cis_modprobe
-    - aide
+    - cis_sysctl
+    - firewall

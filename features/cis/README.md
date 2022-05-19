@@ -14,15 +14,15 @@ Sub features are included by the `cis/info.yaml` configuration file. Sub feature
 |---|---|
 | aide | Installs the host-based intrusion detection system Aide |
 | cis_audit | Configuring the `auditd` daemon |
-| firewall | Adding/Installing the `Garden Linux CIS Firewall` |
 | cis_modprobe | Removing/Blacklisting Kernel modules |
 | cis_os | Adjusting basic settings for the OS (Operating System) |
 | cis_packages | Installing/Removing packages that may be needed or unwanted |
 | cis_partition | Providing a default partition layout |
 | cis_sshd | Adjusting the SSHd configuration |
 | cis_sysctl | Adjusting further sysctl options (e.g. deactivates IPv6) |
+| firewall | Adding/Installing the `Garden Linux CIS Firewall` |
 
-### Feature: cis_aide
+### Feature: aide
 This feature installs the host-based intrusion detection system Aide, adds a configuration file for Aide, adds a systemd unit that creates an Aide database at boot time if it doesn't exist and adds a cronjob to /etc/cron.d to run Aide every night.
 
 ### Feature: cis_audit
