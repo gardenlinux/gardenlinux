@@ -1,0 +1,1 @@
+0 30 * * * root /usr/bin/clamscan -ri / >> /var/log/clamav/clamd.log

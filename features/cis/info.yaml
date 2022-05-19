@@ -4,10 +4,10 @@ features:
   include:
     - cis_packages
     - cis_partition 
-    - cis_firewall
+    - firewall
     - cis_sysctl
     - cis_os
     - cis_audit
     - cis_sshd
     - cis_modprobe
-    - cis_aide
+    - aide
