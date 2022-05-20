@@ -189,13 +189,13 @@ fi
 [ "${include_aptfile}" != "" ] &&
 "$thisDir/garden-chroot" "$targetDir" bash -c '
 	cd '${tmp#$targetDir}'
-	INITRD="No" apt-get install -y --allow-downgrades --no-install-recommends -f $1
+	INITRD="No" DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-downgrades --no-install-recommends -f $1
 ' -- "$include_aptfile"
 rm -rf $tmp
 
 [ "${include_aptversion}" != "" ] &&
 "$thisDir/garden-chroot" "$targetDir" bash -c '
-	INITRD="No" apt-get install -y --allow-downgrades --no-install-recommends -f $1
+	INITRD="No" DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-downgrades --no-install-recommends -f $1
 ' -- "$include_aptversion"
 
 # fix ownership/permissions on / (otherwise "debootstrap" leaves them as-is which causes reproducibility issues)
