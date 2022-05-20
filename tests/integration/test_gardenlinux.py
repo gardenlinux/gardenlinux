@@ -19,6 +19,7 @@ from integration.kvm import KVM
 from integration.manual import Manual
 from integration.ali import ALI
 from helper.sshclient import RemoteClient
+from helper.utils import get_architecture
 
 logger = logging.getLogger(__name__)
 
@@ -48,10 +49,11 @@ def test_ntp(client, non_azure, non_chroot):
     assert ntp_ok, "NTP not activated"
     assert ntp_synchronised_ok, "NTP not synchronized"
 
-def test_ls(client, non_arm64):
+def test_ls(client):
     (exit_code, output, error) = client.execute_command("ls /")
     assert exit_code == 0, f"no {error=} expected"
     assert output
+    arch = get_architecture(client)
     lines = output.split("\n")
     assert "bin" in lines
     assert "boot" in lines
@@ -59,7 +61,8 @@ def test_ls(client, non_arm64):
     assert "etc" in lines
     assert "home" in lines
     assert "lib" in lines
-    assert "lib64" in lines
+    if arch == "amd64":
+        assert "lib64" in lines
     assert "mnt" in lines
     assert "opt" in lines
     assert "proc" in lines
