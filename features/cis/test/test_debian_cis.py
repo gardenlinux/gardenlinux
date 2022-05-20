@@ -1,10 +1,20 @@
-from helper.exception import NotPartOfFeatureError, DisabledBy
-from helper.tests.debian_cis import DebianCIS
 import pytest
+from helper.tests.debian_cis import DebianCIS
 
-def test_feature_debian_cis(client, features, non_chroot):
-    """The test function executed by pytest"""
-    try:
-        DebianCIS(client, features)
-    except (NotPartOfFeatureError, DisabledBy) as e:
-        pytest.skip(str(e))
+
+@pytest.mark.parametrize(
+    "args",
+    [
+       {
+            "git_debian_cis": "https://github.com/ovh/debian-cis.git",
+            "git_debian_cis_branch": "master",
+            "config_src": "/gardenlinux/features/cis/test/conf.d/",
+            "config_dst": "/tmp/debian-cis/etc/conf.d/",
+            "script_src": "/gardenlinux/features/cis/test/check_scripts/",
+            "script_dst": "/tmp/debian-cis/bin/hardening/"
+       }
+    ]
+)
+
+def test_debian_cis(client, args, non_chroot):
+    DebianCIS(client, args)
