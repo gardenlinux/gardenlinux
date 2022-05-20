@@ -10,7 +10,7 @@ if [[ ! -f "${thisDir}/rkhunter.d/rkhunter.conf" ]]; then
 	exit 1
 fi
 
-DEBIAN_FRONTEND=noninteractive apt-get install -y -qq rkhunter apt-utils &> /dev/null
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq rkhunter &> /dev/null
 
 for dir in sys dev proc; do
 	if [ -e "/$dir" ]; then
