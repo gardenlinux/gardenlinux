@@ -3,7 +3,6 @@ import os
 import re
 import string
 
-
 def get_package_list(client):
     """Return list with the installed packages.
     Needs the fixture client to connect into the image"""
@@ -89,3 +88,9 @@ def get_architecture(client):
     (exit_code, output, error) = client.execute_command("dpkg --print-architecture", quiet=True)
     assert exit_code == 0, f"no {error=} expected"
     return output.strip(string.whitespace)
+
+
+def unset_env_var(client, env_var):
+    """Unset env var on remote system"""
+    (exit_code, output, error) = client.execute_command(f'su - root -c "unset {env_var}"', quiet=True)
+    return exit_code
