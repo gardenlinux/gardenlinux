@@ -430,3 +430,24 @@ def openstack(iaas):
 @pytest.fixture
 def openstack_flavor():
     return OpenStackCCEE.instance().flavor
+
+@pytest.fixture
+def non_arm64(client):
+    (exit_code, output, error) = client.execute_command("dpkg --print-architecture", quiet=True)
+    if exit_code != 0:
+        logger.error(error)
+        sys.exit(exit_code)
+    if "arm64" in output:
+        pytest.skip('test not supported on arm64 architecture')
+
+@pytest.fixture
+def non_metal(testconfig):
+    features = testconfig["features"]
+    if "metal" in features:
+        pytest.skip('test not supported on metal')
+
+@pytest.fixture
+def non_dev(testconfig):
+    features = testconfig["features"]
+    if "_dev" in features:
+        pytest.skip('test not supported on dev')

@@ -52,7 +52,7 @@ class Tiger():
 
             utils.AptUpdate(client)                
             (exit_code, output, error) = client.execute_command(
-                "apt-get install -y --no-install-recommends tiger apt-utils",
+                "apt-get install -y --no-install-recommends tiger",
                 quiet=True)
             assert exit_code == 0, f"no {error=} expected"
 
@@ -70,13 +70,9 @@ class Tiger():
             client.bulk_upload(["/tmp/tigerrc"])
 
             # unmount directories that make the tiger checks fail
-            for dir in ["sys", "dev", "proc"]:
-                (exit_code, output, error) = client.execute_command(
-                    f"mountpoint -q /{dir} && umount -l /{dir}", quiet=True)
-                assert exit_code == 0, f"no {error=} expected"
-
             (exit_code, output, error) = client.execute_command(
-                "tiger -c /tmp/tigerrc -q", quiet=True)
+                "unshare --mount --propagation unchanged bash -c 'umount " +
+                "-l /sys /dev /proc && tiger -c /tmp/tigerrc -q'", quiet=True)
             assert exit_code == 0, f"no {error=} expected"
 
             (exit_code, output, error) = client.execute_command(
