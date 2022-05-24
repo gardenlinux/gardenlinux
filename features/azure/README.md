@@ -1,4 +1,4 @@
-## Azure Feature
+## Feature: azure
 
 <website-feature> This Feature adapts the Garden Linux Build for Microsoft Azure. </website-feature>
 
