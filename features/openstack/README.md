@@ -1,6 +1,8 @@
-## OpenStack Feature
+## Feature: openstack
 
-OpenStack platform (cloud-init, open-vm-tools)
+<website-feature> OpenStack platform (cloud-init, open-vm-tools) </website-feature>
+
+---
 
 	Type: platform
 	Included Features: cloud
