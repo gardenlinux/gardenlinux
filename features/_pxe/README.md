@@ -1,4 +1,4 @@
-## PXE Feature
+## Feature: _pxe
 
 <website-feature> This feature creates files meant to be booted via PXE Networkboot: .squashfs, .vmlinuz and .initrd </website-feature>
 
