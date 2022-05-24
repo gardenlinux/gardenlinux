@@ -1,6 +1,8 @@
 ## PXE Feature
 
-This feature creates files meant to be booted via PXE Networkboot.
+<website-feature> This feature creates files meant to be booted via PXE Networkboot: .squashfs, .vmlinuz and .initrd </website-feature>
+
+---
 
 	Type: Flag
 	Included Features: _ignite
@@ -10,12 +12,6 @@ Ignition Files can be used with PXE to inject information into the System at the
 
 This way Machines can be defined in a declarative way.
 
-#
-Relevant Outputfiles are:
-
-- .squashfs
-- .vmlinuz
-- initrd
 
 #
 
