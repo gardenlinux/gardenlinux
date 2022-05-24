@@ -1,0 +1,7 @@
+description: "FedRAMP Compliance"
+type: element
+features:
+  include:
+    - aide
+    - clamav
+    - firewall

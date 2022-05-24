@@ -19,6 +19,7 @@ from integration.kvm import KVM
 from integration.manual import Manual
 from integration.ali import ALI
 from helper.sshclient import RemoteClient
+from helper.utils import get_architecture
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,7 @@ def test_ls(client):
     (exit_code, output, error) = client.execute_command("ls /")
     assert exit_code == 0, f"no {error=} expected"
     assert output
+    arch = get_architecture(client)
     lines = output.split("\n")
     assert "bin" in lines
     assert "boot" in lines
@@ -59,7 +61,8 @@ def test_ls(client):
     assert "etc" in lines
     assert "home" in lines
     assert "lib" in lines
-    assert "lib64" in lines
+    if arch == "amd64":
+        assert "lib64" in lines
     assert "mnt" in lines
     assert "opt" in lines
     assert "proc" in lines
@@ -131,7 +134,7 @@ def ping4_host(request):
     return request.param
 
 
-def test_ping4(client, ping4_host):
+def test_ping4(client, ping4_host, non_chroot):
     command = f"ping -c 5 -W 5 {ping4_host}"
     (exit_code, output, error) = client.execute_command(command)
     assert exit_code == 0, f'no {error=} expected when executing "{command}"'
@@ -257,7 +260,7 @@ def test_nvme_kernel_parameter(client, aws):
     assert exit_code == 0, f"no {error=} expected"
     assert output.rstrip() == "1", "Expected 'nvme_core.io_timeout=4294967295' kernel parameter"
 
-def test_random(client):
+def test_random(client, non_metal):
     (exit_code, output, error) = client.execute_command("time dd if=/dev/random of=/dev/null bs=8k count=1000 iflag=fullblock")
     """ Output should be like this:
 # time dd if=/dev/random of=/dev/null bs=8k count=1000 iflag=fullblock

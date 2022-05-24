@@ -6,23 +6,23 @@ The [Garden Linux](https://gardenlinux.io/) [CIS](https://www.cisecurity.org) un
  related unit tests can be performed on any cloud platform (see also [../../tests/README.md](../../tests/README.md)) except of `chroot`.
 
 ## Overview
-This `cis` feature represents a meta feature that includes multiple sub features. All sub features are prefixed by `cis_`. Working with sub features provides an easy overview, adjustment and administration for each sub feature. While only including all sub features fits the CIS benchmarks, it is in an operators decision to adjust sub features to his needs. This allows changes to be as near as possible to `CIS`, even it may not fit the `CIS` benchmarks.
+This `cis` feature represents a meta feature that includes multiple sub features. Most sub features are prefixed by `cis_`. Working with sub features provides an easy overview, adjustment and administration for each sub feature. While only including all sub features fits the CIS benchmarks, it is in an operators decision to adjust sub features to his needs. This allows changes to be as near as possible to `CIS`, even it may not fit the `CIS` benchmarks.
 
 Sub features are included by the `cis/info.yaml` configuration file. Sub features **can not** be used as a standalone feature and always depend on `cis`. The `cis` feature currently exists of the following sub features:
 
 | Feature Name | Description |
 |---|---|
-| cis_aide | Installs the host-based intrusion detection system Aide |
+| aide | Installs the host-based intrusion detection system Aide |
 | cis_audit | Configuring the `auditd` daemon |
-| cis_firewall | Adding/Installing the `Garden Linux CIS Firewall` |
 | cis_modprobe | Removing/Blacklisting Kernel modules |
 | cis_os | Adjusting basic settings for the OS (Operating System) |
 | cis_packages | Installing/Removing packages that may be needed or unwanted |
 | cis_partition | Providing a default partition layout |
 | cis_sshd | Adjusting the SSHd configuration |
 | cis_sysctl | Adjusting further sysctl options (e.g. deactivates IPv6) |
+| firewall | Adding/Installing the `Garden Linux CIS Firewall` |
 
-### Feature: cis_aide
+### Feature: aide
 This feature installs the host-based intrusion detection system Aide, adds a configuration file for Aide, adds a systemd unit that creates an Aide database at boot time if it doesn't exist and adds a cronjob to /etc/cron.d to run Aide every night.
 
 ### Feature: cis_audit

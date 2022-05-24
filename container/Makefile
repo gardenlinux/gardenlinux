@@ -1,13 +1,13 @@
 VERSION=`../bin/garden-version`
 ALTNAME=
-ALTNAME_INTERNAL=$(shell [ -n "$(ALTNAME)" ] && printf "%s %s" "-t" "$(ALTNAME)" ) 
+ALTNAME_INTERNAL=$(shell [ -n "$(ALTNAME)" ] && printf "%s %s" "-t" "$(ALTNAME)" )
 
 PATH_KERNEL_PACKAGES="../.packages/main/l/linux"
 KERNEL_VERSION=5.10
 
 GARDENLINUX_BUILD_CRE ?= sudo podman
 
-all: build-image build-integration-test
+all: build-image build-cert build-integration-test
 
 .PHONY: needslim
 needslim:
@@ -17,6 +17,10 @@ needslim:
 build-image: needslim
 	cp ../bin/garden-feat.go build-image/
 	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/build-image:$(VERSION) $(ALTNAME_INTERNAL) build-image
+
+.PHONY: build-cert
+build-cert: needslim
+	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/build-cert:$(VERSION) $(ALTNAME_INTERNAL) build-cert
 
 .PHONY: build
 build: needslim

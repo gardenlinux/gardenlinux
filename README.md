@@ -59,7 +59,7 @@ By default, Garden Linux uses [Podman](https://podman.io/) as container runtime 
 
 **System:**
 * RAM: 2+ GiB (use '--lessram' to lower memory usage)
-* Disk: 10+ GiB
+* Disk: 10+ GiB (20+ GiB for running `integration tests`)
 * Internet connection
 
 **Packages:**
@@ -133,15 +133,18 @@ Building Garden Linux is based on a [feature system](features/README.md).
 
 | Feature Type | Includes |
 |---|---|
-| Platforms | ali, aws, azure, gcp, kvm, baremetal... |
-| Features | container host, vitual host, ... |
-| Modifiers | _slim, _readonly, _pxe, _iso ... |
-| Element | cis, fedramp, gardener |
+| Platforms | `ali`, `aws`, `azure`, `gcp`, `kvm`, `metal`, ... |
+| Features | `container host`, `vitual host`, ... |
+| Modifiers | `_slim`, `_readonly`, `_pxe`, `_iso`, ... |
+| Element | `cis`, `fedramp`, `gardener` |
 
 if you want to build manually choose:
 ```
 build.sh  --features <Platform>,[<feature1>],[<featureX>],[_modifier1],[_modifierX] destination [version]
 ```
+
+Additionally, please find some `build.sh` example calls in the `Makefile`.
+
 **Example:**
 ```
 build.sh  --features server,cloud,cis,vmware .build/
@@ -177,4 +180,4 @@ Feel free to add further documentation, to adjust already existing one or to con
 ## Community
 Garden Linux has a large grown community. If you need further asstiance, have any issues or just want to get in touch with other Garden Linux users feel free to join our public chat room on Gitter.
 
-Link: https://gitter.im/gardenlinux/community
+Link: <a href="https://gitter.im/gardenlinux/community">https://gitter.im/gardenlinux/community</a>

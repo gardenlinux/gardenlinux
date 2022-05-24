@@ -248,7 +248,7 @@ echo "$cmdline" > "$cmdline_file"
 rm "$cmdline_file"
 
 # sign unified image
-datefudge -s "@$timestamp" sbsign --cert /kernel.crt --key /kernel.key --output "$unified_image_signed" "$unified_image"
+datefudge -s "@$timestamp" sbsign --cert /cert/secureboot.db.sign.crt --key /cert/secureboot.db.sign.key --output "$unified_image_signed" "$unified_image"
 
 # copy unified image to uefi partition
 datefudge -s "@$timestamp" mcopy -i "$uefi_partition" -o -p "$unified_image_signed" "::/EFI/BOOT/BOOT$uefi_arch.EFI"

@@ -1,7 +1,0 @@
-# This subfeature can only be used with
-# its base feature: cis
-description: "CIS Subfeature: Aide"
-type: element
-features:
-  depends:
-    - cis

@@ -1,6 +1,10 @@
+> 🗒 Tests in this directory are only used by tekton pipelines.  
+> Please find the recommended default test setup in the `tests/` folder.  
+> Read the [tests/README.md](https://github.com/gardenlinux/gardenlinux/blob/main/tests/README.md) for further details.
+
 ### Integration Tests
 
-This directory contains the files that make up the integration test suites for the various providers.
+This directory contains the files that make up the integration test suites for the various providers. 
 
 ### Usage
 

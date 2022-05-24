@@ -4,7 +4,7 @@ set -Eeuo pipefail
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/bin/.constants.sh" \
 	--flags 'skip-build,debug,lessram,manual,skip-tests' \
-	--flags 'arch:,features:,disable-features:,suite:,local-pkgs:,tests:' \
+	--flags 'arch:,features:,disable-features:,suite:,local-pkgs:,tests:,cert:' \
 	--usage '[--skip-build] [--lessram] [--debug] [--manual] [--arch=<arch>] [--skip-tests] [--tests=<test>,<test>,...] [<output-dir>] [<version/timestamp>]' \
 	--sample '--features kvm,khost --disable-features _slim .build' \
 	--sample '--features metal,_pxe --lessram .build' \
@@ -36,9 +36,10 @@ features=
 disablefeatures=
 commitid="${commitid:-local}"
 skip_tests=0
-tests="unittests"
+tests="unittests,chroot"
 local_pkgs=
 output=".build"
+cert=cert/
 while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
@@ -53,6 +54,7 @@ while true; do
 		--skip-tests)   skip_tests=1	;;
 		--tests)	tests="$1"; shift ;;
 		--local-pkgs) local_pkgs="$1"; shift ;;
+		--cert) cert="$1"; shift ;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
@@ -100,9 +102,6 @@ make --directory=${thisDir}/bin
 buildImage=${BUILD_IMAGE:-"gardenlinux/build-image:$version"}
 [ $build ] && make --directory=${thisDir}/container ALTNAME=$buildImage build-image
 
-[ -e ${thisDir}/cert/Kernel.sign.crt ] || make --directory=${thisDir}/cert Kernel.sign.crt
-[ -e ${thisDir}/cert/Kernel.sign.key ] || make --directory=${thisDir}/cert Kernel.sign.key
-
 # using the buildimage in a temporary container with
 # build directory mounted in memory (--tmpfs ...) and
 # dev mounted via bind so loopback device changes are reflected into the container
@@ -110,14 +109,16 @@ dockerArgs="--hostname garden-build
 	${securityArgs[*]}
 	${envArgs[*]/#/-e }
 	--volume ${thisDir}:/opt/gardenlinux
-	--volume ${outputDir}:/output
-	--volume ${thisDir}/cert/Kernel.sign.crt:/kernel.crt
-	--volume ${thisDir}/cert/Kernel.sign.key:/kernel.key"
+	--volume ${outputDir}:/output"
 
 [ $lessram ] || dockerArgs+=" --tmpfs /tmp:dev,exec,suid"
 
 if [ -n "$local_pkgs" ]; then
 	dockerArgs+=" --volume $(realpath "$local_pkgs"):/opt/packages/pool:ro -e PKG_DIR=/opt/packages"
+fi
+
+if [ -n "$cert" ]; then
+	dockerArgs+=" --volume $(realpath "$cert"):/cert:ro"
 fi
 
 if [ $manual ]; then

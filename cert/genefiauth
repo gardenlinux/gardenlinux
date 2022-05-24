@@ -1,0 +1,50 @@
+#!/bin/bash
+
+set -eufo pipefail
+
+guid=
+ca_base=
+null=0
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		--guid)
+			guid="$2"
+			shift 2
+			;;
+		--guid-file)
+			guid="$(cat "$2")"
+			shift 2
+			;;
+		--ca)
+			ca_base="${2%.crt}"
+			shift 2
+			;;
+		--null)
+			null=1
+			shift
+			;;
+		*)
+			break
+			;;
+	esac
+done
+
+if [ "$null" = 0 ]; then
+	cert="$1"
+	shift
+fi
+base="${1%.auth}"
+
+type="${base##*.}"
+case "$type" in
+	pk) type=PK ;;
+	kek) type=KEK ;;
+esac
+
+if [ "$null" = 0 ]; then
+	cert-to-efi-sig-list -g "$guid" "$cert" "$base.esl"
+	sign-efi-sig-list -g "$guid" -c "$ca_base.crt" -k "$ca_base.key" "$type" "$base.esl" "$base.auth"
+else
+	sign-efi-sig-list -g "$guid" -c "$ca_base.crt" -k "$ca_base.key" "$type" /dev/null "$base.auth"
+fi
