@@ -1,6 +1,6 @@
-## Khost Feature
+## Feature: khost
 
-host for kubernetes workloads (vanilla)
+<website-feature> host for kubernetes workloads (vanilla) </website-feature>
 
 	Type: element
 	Included Features: chost
