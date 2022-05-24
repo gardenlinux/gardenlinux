@@ -1,6 +1,8 @@
-## ISO Feature
+## Feature: _iso
 
-This feature creates a bootable ISO-Image.
+<website-feature> This feature creates a bootable ISO-Image. </website-feature>
+
+---
 
 	Type: flag
 #

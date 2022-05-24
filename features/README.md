@@ -95,6 +95,13 @@ features:
 
 Next to this, there may be some additional fields that are dedicated to their parent feature. These ones will be explained by their parent feature `README.md`.
 
+	
+### README.md
+	
+Besides giving information, this file is also used as information source for the Garden Linux Website: As Unification we decided to add a paragraph after the main title, which is masked by \<website-feature> \</website-feature>, so an extraction script is able to find the relevant content. 
+	
+Have a look at the Raw Code (!) for `README.md` inside [features/example](../features/example) for a detailed example.
+
 
 ### pkg.exclude
 Removes autoinstalled `.deb` packages during the build process. These packages won't be included within the final artifact. These packages must be handled by local packet manager and already present. Not present packages will be ignored.

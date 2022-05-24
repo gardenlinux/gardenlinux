@@ -1,6 +1,8 @@
-## NoPkg Feature
+## Feature: _nopkg
 
-all package system related tools are removed (e.g. dpkg, apt)
+<website-feature> all package system related tools are removed (e.g. dpkg, apt) </website-feature>
+
+---
 
 	Type: flag
 #

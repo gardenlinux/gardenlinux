@@ -1,6 +1,8 @@
-## Base Feature
+## Feature: base
 
-base layer (debootstap --variant minbase, see docker:debian:xx-slim)
+<website-feature> base layer (debootstap --variant minbase, see docker:debian:xx-slim) </website-feature>
+
+---
 
 	Type: element
 	Included Features: _slim

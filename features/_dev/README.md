@@ -1,6 +1,8 @@
-## Developer Feature
+## Feature: _dev
   
-  developer features are enabled (e.g vim, autologin)
+<website-feature> developer features are enabled (e.g vim, autologin) </website-feature>
+
+---
 
 	Type: flag
 #

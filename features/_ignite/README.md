@@ -1,8 +1,8 @@
+## Feature: _ignite
 
+<website-feature> ignition is installed on the system. (Status: Planned) </website-feature>
 
-## Ignition Feature
-
-ignition is installed on the system
+---
 
 	Type: flag
 #

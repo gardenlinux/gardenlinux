@@ -1,6 +1,8 @@
-## Google Compute Engine Feature
+## Feature: gcp
 
-Google Compute Engine platform (gce guest environment)
+<website-feature> This Feature adapts the Garden Linux Build for Google Compute Engine (gce guest environment). </website-feature>
+
+---
 
 	Type: Platform
 	Included Features: cloud
