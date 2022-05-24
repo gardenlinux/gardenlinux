@@ -1,15 +1,6 @@
-This is a sample folder of a feature.
+# Feature: Example
+<website-feature> This is a sample folder of a feature. This paragraph is also the one, which might be used for the Garden Linux website. Have a look at the raw Code of `README.md` </website-feature>
 
-There are different sub markings:
-
-features
-packages
-files
-
-can be included or excluded
-
-also there are moments where you want to execute code in your folders:
-
-exec.chroot -> executes in the change root env
-exec.after -> executes after everything is done outside the chroot
-
+	Type: Element
+	Included Features: _slim  
+	Excluded Features: chost
