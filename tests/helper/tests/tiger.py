@@ -1,9 +1,5 @@
-import logging
 import os
-
 from helper import utils
-
-logger = logging.getLogger(__name__)
 
 def tiger(client, testconfig):
     utils.AptUpdate(client)
