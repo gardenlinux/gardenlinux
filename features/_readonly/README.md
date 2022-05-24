@@ -1,6 +1,8 @@
-## ReadOnly Feature
+## Feature: _readonly
 
-/usr directory will be readonly
+<website-feature> /usr directory will be readonly </website-feature>
+
+---
 
 	Type: flag
 	Included Features: server
