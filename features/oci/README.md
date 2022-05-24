@@ -1,6 +1,6 @@
-## Open Container Image Feature
+## Feature: oci
 
-<website-feature> creates a Open Container Image </website-feature>
+<website-feature> creates an Open Container Image </website-feature>
 
 ---
 
