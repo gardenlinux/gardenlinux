@@ -133,7 +133,7 @@ Building Garden Linux is based on a [feature system](features/README.md).
 
 | Feature Type | Includes |
 |---|---|
-| Platforms | `ali`, `aws`, `azure`, `gcp`, `kvm`, `baremetal`, ... |
+| Platforms | `ali`, `aws`, `azure`, `gcp`, `kvm`, `metal`, ... |
 | Features | `container host`, `vitual host`, ... |
 | Modifiers | `_slim`, `_readonly`, `_pxe`, `_iso`, ... |
 | Element | `cis`, `fedramp`, `gardener` |
@@ -142,6 +142,9 @@ if you want to build manually choose:
 ```
 build.sh  --features <Platform>,[<feature1>],[<featureX>],[_modifier1],[_modifierX] destination [version]
 ```
+
+Additionally, please find some `build.sh` example calls in the `Makefile`.
+
 **Example:**
 ```
 build.sh  --features server,cloud,cis,vmware .build/
