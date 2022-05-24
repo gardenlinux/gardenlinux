@@ -1,6 +1,6 @@
 ## Feature: ali
 
-<website-feature> This Feature adapts the Garden Linux Build for Alibaba Cloud. </website-feature>
+<website-feature> This Feature adapts the Garden Linux Image for Alibaba Cloud. </website-feature>
 
 ---
 
