@@ -1,6 +1,8 @@
 ## Open Container Image Feature
 
-creates a Open Container Image
+<website-feature> creates a Open Container Image </website-feature>
+
+---
 
 	Type: platform
 	Included Features: base
