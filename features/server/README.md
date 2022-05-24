@@ -1,6 +1,8 @@
-## Server Feature
+## Feature: server
 
-server layer with complete init system (systemd)
+<website-feature> server layer with complete init system (systemd) </website-feature>
+
+---
 
 	Type: element
 	Included Features: base
