@@ -132,7 +132,7 @@ while (( "$#" )); do
 	[[ $imagefile == *"."* ]] &&		imageext=${imagefile##*.};
 	[ -e $imagefile ] || eusage "file \"$imagefile\" does not exist"
 
-	imagesizeBytes=$(numfmt --from=auto --suffix="B" --format "%f" ${imagesize} | head -c-2)  # calculate in bytes
+	imagesizeBytes=$(numfmt --from=iec --suffix="B" --format "%f" ${imagesize} | head -c-2)  # calculate in bytes
 	imageext=${imageext/^vhd$/vpc}
 
 	if [ "$imageext" == "iso" ]; then
@@ -144,7 +144,7 @@ while (( "$#" )); do
 		dd if=$imagefile of=/dev/null count=1 iflag=direct 2> /dev/null && imagedirect="aio=native,cache.direct=on,"
 
 		# if there is a bigger size, we need to inflate
-		[ $(stat --printf="%s" $imagefile) -lt ${imagesizeBytes} ] && inflatelist+=( "${imagefile}|${imagesizeBytes}" )
+		[ $(stat --printf="%s" $imagefile) -lt ${imagesizeBytes} ] && inflatelist+=( "${imagefile},${imagesizeBytes}" )
 
 		virtOpts+=(	"-device scsi-hd,drive=drive${diskcount},bus=scsi0.0"
 				"-drive format=${imageext},if=none,discard=unmap,${imagedirect}id=drive${diskcount},file=${imagefile}" )
@@ -306,7 +306,7 @@ printf "  starting VM(UUID:%s) with MAC:%s in %s\n" $uuid $macfull $targetDir
 [ $vnc ] 	&& printf "  vncport: %s\n" $(( vncport + 5900 ))
 [ $uefi ]	&& printf "  uefi boot enabled. %s.vars stores efivars\n" $mac
 for i in "${inflatelist[@]}"; do
-	printf "  file: %s will be inflated to %s\n" $(cut -d\| -f1 <<< $i) $(cut -d\| -f2 <<< $i)
+	printf "  file: %s will be inflated to %s\n" $(cut -d, -f1 <<< "$i") $(cut -d, -f2 <<< "$i")
 done
 ( printf "\n  commandline: qemu-system-%s " $arch
 printf '%s ' "${virtOpts[@]}";printf "\n" ) | sed 's/ /!/g;s/!-/ -/g' | fold -s -w $(( $(tput cols) - 4 )) | sed 's/!/ /g;3,$ s|^|    |'
@@ -356,7 +356,7 @@ if [ $bridge ]; then
 fi
 # inflating selected files
 for i in "${inflatelist[@]}"; do
-	dd if=/dev/zero of=$(cut -d\| -f1 <<< $i) count=0 bs=1 seek=$(cut -d\| -f2 <<< $i) 2> /dev/null
+	dd if=/dev/zero of=$(cut -d, -f1 <<< "$i") count=0 bs=1 seek=$(cut -d, -f2 <<< "$i") 2> /dev/null
 done
 # creating a separate thread to set the VNC password
 if [ $vnc ]; then
