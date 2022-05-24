@@ -17,7 +17,7 @@ HARDENING_LEVEL=4
 # shellcheck disable=2034
 DESCRIPTION="Implement periodic execution of file integrity."
 
-FILES="/etc/crontab"
+FILES="/etc/crontab /var/spool/cron/crontabs/root"
 DIRECTORY="/etc/cron.d"
 PATTERN='aide --check'
 
