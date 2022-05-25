@@ -16,6 +16,7 @@ import pytest
                  "/usr/bin/ssh-agent,0,112",
                  "/usr/sbin/unix_chkpwd,0,42",
                  "/usr/lib/systemd-cron/crontab_setgid,0,114",
+                 "/usr/lib/systemd-cron/crontab_setgid,0,115",
                  "/usr/lib/systemd-cron/crontab_setgid,0,116"
                  ]
         ),
