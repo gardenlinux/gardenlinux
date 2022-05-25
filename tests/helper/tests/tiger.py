@@ -2,6 +2,7 @@ import os
 from helper import utils
 
 def tiger(client, testconfig):
+    """Run tiger to test for system security vulnerabilities"""
     utils.AptUpdate(client)
     (exit_code, output, error) = client.execute_command(
         "apt-get install -y --no-install-recommends tiger",
