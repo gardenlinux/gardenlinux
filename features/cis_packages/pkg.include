@@ -1,5 +1,5 @@
-syslog-ng
+git
 libpam-pwquality
 libpam-modules-bin
+syslog-ng
 tcpd
-git
