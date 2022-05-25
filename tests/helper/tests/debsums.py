@@ -4,8 +4,7 @@ def debsums(client, debsums_exclude):
     """Check the MD5 sums of installed Debian packages"""
     utils.AptUpdate(client)
     (exit_code, output, error) = client.execute_command(
-        "apt-get install -y --no-install-recommends debsums apt-utils",
-        quiet=True)
+        "apt-get install -y --no-install-recommends debsums", quiet=True)
     assert exit_code == 0, f"no {error=} expected"
 
     (exit_code, output, error) = client.execute_command("debsums -l",
