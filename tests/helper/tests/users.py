@@ -1,5 +1,6 @@
 import helper.utils as utils
 
+
 def users(client):
     # Get content from /etc/passwd
     (exit_code, output, error) = client.execute_command(
@@ -10,7 +11,6 @@ def users(client):
         # Ignore empty newline
         if line != '':
             line = line.split(":")
-
             user = line[0]
             uid = int(line[2])
             gid = int(line[3])
@@ -36,3 +36,18 @@ def users(client):
     perm_root_allow = 700
     assert perm_root == perm_root_allow, ("Directory /root is not set to " +
                                             f"{perm_root_allow}")
+
+    # There should NOT be any (abdondend) home directory present
+    # except of 'dev' from dev feature. User (uid >= 1000)
+    # with custom home directories are already handled within
+    # this PyTest earlier.
+    # https://github.com/gardenlinux/gardenlinux/issues/826
+    (exit_code, output, error) = client.execute_command(
+         "ls /home/", quiet=True)
+    assert exit_code == 0, f"no {error=} expected"
+
+    homes = []
+    for line in output.split('\n'):
+        if line != '':
+            homes.append(line)
+    assert len(homes) == 0, f"Found the following home directories: {homes}"
