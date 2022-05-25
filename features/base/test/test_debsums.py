@@ -1,10 +1,15 @@
-from helper.exception import NotPartOfFeatureError, DisabledBy
-from helper.tests.debsums import Debsums
+from helper.tests.debsums import debsums
 import pytest
 
-def test_debsums(client, features):
-    """The test function executed by pytest"""
-    try:
-        Debsums(client, features)
-    except (NotPartOfFeatureError, DisabledBy) as e:
-        pytest.skip(str(e))
+@pytest.mark.parametrize(
+    "exclude",
+    [
+        [
+            "/lib/systemd/system/dbus.socket",
+            "/usr/share/pam-configs/cracklib"
+        ]
+    ]
+)
+
+def test_debsums(client, exclude):
+    debsums(client, exclude)
