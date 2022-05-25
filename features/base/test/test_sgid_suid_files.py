@@ -11,10 +11,12 @@ import pytest
                  "/usr/bin/write,0,5",
                  "/usr/bin/wall,0,5",
                  "/usr/bin/chage,0,42",
+                 "/usr/bin/ssh-agent,0,114",
                  "/usr/bin/ssh-agent,0,113",
                  "/usr/bin/ssh-agent,0,112",
                  "/usr/sbin/unix_chkpwd,0,42",
-                 "/usr/lib/systemd-cron/crontab_setgid,0,114"
+                 "/usr/lib/systemd-cron/crontab_setgid,0,114",
+                 "/usr/lib/systemd-cron/crontab_setgid,0,116"
                  ]
         ),
         ("suid", [
