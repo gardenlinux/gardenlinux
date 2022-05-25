@@ -78,7 +78,7 @@ def create_remote_tmp_dir(client):
     tmp_name   = f"/tmp/{tmp_prefix}{tmp_random}"
 
     (exit_code, output, error) = client.execute_command(f"stat {tmp_name}", quiet=True)
-    if exit_code is not 0:
+    if exit_code != 0:
        (rc, output, error) = client.execute_command(f"mkdir {tmp_name}", quiet=True)
     return tmp_name
 

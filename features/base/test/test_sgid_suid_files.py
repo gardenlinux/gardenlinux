@@ -11,10 +11,14 @@ import pytest
                  "/usr/bin/write,0,5",
                  "/usr/bin/wall,0,5",
                  "/usr/bin/chage,0,42",
+                 "/usr/bin/ssh-agent,0,114",
                  "/usr/bin/ssh-agent,0,113",
                  "/usr/bin/ssh-agent,0,112",
                  "/usr/sbin/unix_chkpwd,0,42",
-                 "/usr/lib/systemd-cron/crontab_setgid,0,114"
+                 "/usr/lib/systemd-cron/crontab_setgid,0,106",
+                 "/usr/lib/systemd-cron/crontab_setgid,0,114",
+                 "/usr/lib/systemd-cron/crontab_setgid,0,115",
+                 "/usr/lib/systemd-cron/crontab_setgid,0,116"
                  ]
         ),
         ("suid", [
@@ -22,6 +26,7 @@ import pytest
                  "/usr/lib/openssh/ssh-keysign,0,0",
                  "/usr/bin/newgrp,0,0",
                  "/usr/bin/su,0,0",
+                 "/usr/lib/dbus-1.0/dbus-daemon-launch-helper,0,113",
                  "/usr/lib/dbus-1.0/dbus-daemon-launch-helper,0,111",
                  "/usr/lib/dbus-1.0/dbus-daemon-launch-helper,0,110",
                  "/usr/bin/chfn,0,0",
