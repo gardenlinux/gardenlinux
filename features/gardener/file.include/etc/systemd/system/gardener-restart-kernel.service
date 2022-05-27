@@ -1,0 +1,13 @@
+[Unit]
+Description=Optionally restart kernel to apply Gardener specific OS configuration
+Documentation=https://github.com/gardenlinux/gardenlinux/docs/gardener-kernel-restart.md
+After=gardener-configure-settings.service
+Before=kubelet.service
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/var/lib/gardener-gardenlinux/restart_kernel.sh
+StandardOutput=journal

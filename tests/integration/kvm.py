@@ -10,7 +10,7 @@ import paramiko
 import pytest
 import sys
 from novaclient import client
-from .sshclient import RemoteClient
+from helper.sshclient import RemoteClient
 from . import util
 
 # Define global logger
@@ -45,8 +45,9 @@ class KVM:
                 sshconfig=config["ssh"],
                 port=port,
             )
-            yield ssh
             ssh.wait_ssh()
+            yield ssh
+
         finally:
             if ssh is not None:
                 ssh.disconnect()
@@ -62,14 +63,14 @@ class KVM:
         # Define self.config
         self.config = config
         # Validate
-        ssh_inject, ssh_generate, arch = self._validate()
+        ssh_generate, arch = self._validate()
         # Create SSH
         if ssh_generate:
             self._generate_ssh_key()
         else:
             logger.info("Using defined SSH key for integration tests.")
         # Adjust KVM image 
-        self._adjust_kvm(ssh_inject)
+        self._adjust_kvm()
         # Start KVM
         self._start_kvm(arch)
 
@@ -78,6 +79,9 @@ class KVM:
         """ Cleanup resources held by this object """
         if "keep_running" in self.config and self.config["keep_running"] == True:
             logger.info("Keeping all resources")
+        else:
+            self._stop_kvm()
+            logger.info("Done.")
 
     def _validate(self):
         """ Start basic config validation """
@@ -86,6 +90,22 @@ class KVM:
             logger.error("'image' not defined. Please define path to image.")
         else:
             logger.info("'image' defined. Using: {image}".format(image=self.config["image"]))
+
+        # Validate if image extension is defined corretly
+        allowed_image_ext = [
+                            "raw",
+                            "qcow2"
+                            ]
+        file_name = os.path.basename(self.config["image"])
+        # Get extensions by dot counting in reverse order
+        file_ext = file_name.split(".")[1:]
+        # Join file extension if we have multiple ones (e.g. .tar.gz)
+        file_ext = ".".join(file_ext)
+        # Fail on unsupported image types
+        if not file_ext in allowed_image_ext:
+            msg_err = f"{file_ext} is not supported for this platform test type."
+            logger.error(msg_err)
+            pytest.exit(msg_err, 1)
 
         # Validate if image is already running
         pid = os.path.exists("/tmp/qemu.pid")
@@ -124,7 +144,6 @@ class KVM:
                 ssh_generate = False
                 logger.error(("'ssh_key_filepath' is defined and private key is present. " +
                               "We can NOT safely generate keys without overwriting them."))
-                pytest.exit("Stopping!", 1)
             else:
                 logger.info("'ssh_key_filepath' is not defined. We can safely generate keys.")
                 ssh_generate = True
@@ -140,43 +159,25 @@ class KVM:
             user = self.config["ssh"]["user"]
             logger.info("'user' is defined. Using user {user}.".format(user=user))
 
-        # Validate if a SSH key was already injected
-        # (Check for an 'authorized_keys' file for 'root')
-        logger.info("Validating if a SSH key already got injected to image.")
-        image = self.config["image"]
-        kvm_file_val = "/root/.ssh/authorized_keys"
-        cmd_kvm_val = "guestfish --ro -a {image} -i checksum sha256 {fname}".format(
-          image=image, fname=kvm_file_val)
-        p = subprocess.run([cmd_kvm_val], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        rc = p.returncode
-        if rc == 0:
-            logger.warning("SSH file already present: {fname}".format(fname=kvm_file_val))
-            logger.warning("No SSH key will be injected.")
-            ssh_inject = False
-        else:
-            logger.info("SSH file not present: {fname}".format(fname=kvm_file_val))
-            logger.info("SSH key will be injected.")
-            ssh_inject = True
-        return ssh_inject, ssh_generate, arch
+        return ssh_generate, arch
 
     def _generate_ssh_key(self):
-        """ Generate new SSH key for integration test if needed """
+        """ Generate new SSH key for integration test """
         logger.info("Generating new SSH key for integration tests.")
         ssh_key_path = self.config["ssh"]["ssh_key_filepath"]
-        # Private key
-        key = paramiko.RSAKey.generate(2048)
-        key.write_private_key_file(ssh_key_path)
-        # Public key (as authorized_keys)
-        public_key = key.get_base64()
-        with open("/tmp/authorized_keys", "w") as f:
-            f.write("ssh-rsa " + public_key)
+        keyfp = RemoteClient.generate_key_pair(
+            filename = ssh_key_path,
+        )
         logger.info("SSH key for integration tests generated.")
 
-    def _adjust_kvm(self, ssh_inject):
+    def _adjust_kvm(self):
         """ Adjust KVM image and inject needed files """
         logger.info("Adjusting KVM image. This will take some time for each command...")
         image = self.config["image"]
-        authorized_keys_file = "/tmp/authorized_keys"
+        image_name = os.path.basename(image)
+        ssh_key_path = self.config["ssh"]["ssh_key_filepath"]
+        ssh_key = os.path.basename(ssh_key_path)
+        authorized_keys_file = f"{ssh_key_path}.pub"
         sshd_config_src_file = "integration/misc/sshd_config_integration_tests"
         sshd_config_dst_file = "/etc/ssh/sshd_config_integration_tests"
         sshd_systemd_src_file = "integration/misc/sshd-integration.test.service"
@@ -184,34 +185,38 @@ class KVM:
 
         # Command list for adjustments
         cmd_kvm_adj = []
-        # Only inject SSH keys if they're not
-        # already present in .raw image
-        if ssh_inject:
-            cmd_kvm_adj.append("guestfish -a {image} -i mkdir /root/.ssh".format(
-              image=image))
-            cmd_kvm_adj.append("virt-copy-in -a {image} {authorized_keys_file} /root/.ssh/".format(
-              image=image, authorized_keys_file=authorized_keys_file))
-            cmd_kvm_adj.append("guestfish -a {image} -i chown 0 0 /root/.ssh".format(
-              image=image))
-            cmd_kvm_adj.append("guestfish -a {image} -i chown 0 0 /root/.ssh/authorized_keys".format(
-              image=image))
-            cmd_kvm_adj.append("guestfish -a {image} -i chmod 0700 /root/.ssh".format(
-              image=image))
-            cmd_kvm_adj.append("guestfish -a {image} -i chmod 0600 /root/.ssh/authorized_keys".format(
-              image=image))
+        # Create a snapshot image and inject SSH key
+        cmd_kvm_adj.append("qemu-img create -f qcow2 -F raw -b {image} /tmp/{image_name}.snapshot.img 2G".format(
+            image=image, image_name=image_name))
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i mkdir /root/.ssh".format(
+            image_name=image_name))
+        cmd_kvm_adj.append("virt-copy-in -a /tmp/{image_name}.snapshot.img {authorized_keys_file} /root/.ssh/".format(
+            image_name=image_name, authorized_keys_file=authorized_keys_file))
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i mv /root/.ssh/{ssh_key}.pub /root/.ssh/test_authorized_keys".format(
+            image_name=image_name, ssh_key=ssh_key))
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chown 0 0 /root/.ssh".format(
+            image_name=image_name))
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chown 0 0 /root/.ssh/test_authorized_keys".format(
+            image_name=image_name))
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chmod 0700 /root/.ssh".format(
+            image_name=image_name))
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chmod 0600 /root/.ssh/test_authorized_keys".format(
+            image_name=image_name))
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i write-append /etc/hosts.allow 'ALL: 10.\n'".format(
+            image_name=image_name))
         # Copy custom SSHD config for executing remote integration tests
         # without changing the production sshd_config. This SSHD runs on
         # port tcp/2222
-        cmd_kvm_adj.append("virt-copy-in -a {image} {sshd_systemd_src_file} {systemd_dst_path}".format(
-          image=image, sshd_systemd_src_file=sshd_systemd_src_file, systemd_dst_path=systemd_dst_path))
-        cmd_kvm_adj.append("virt-copy-in -a {image} {sshd_config_src_file} /etc/ssh/".format(
-          image=image, sshd_config_src_file=sshd_config_src_file))
-        cmd_kvm_adj.append("guestfish -a {image} -i chown 0 0 {sshd_config_dst_file}".format(
-          image=image, sshd_config_dst_file=sshd_config_dst_file))
-        cmd_kvm_adj.append("guestfish -a {image} -i chmod 0644 {sshd_config_dst_file}".format(
-          image=image, sshd_config_dst_file=sshd_config_dst_file))
+        cmd_kvm_adj.append("virt-copy-in -a /tmp/{image_name}.snapshot.img {sshd_systemd_src_file} {systemd_dst_path}".format(
+          image_name=image_name, sshd_systemd_src_file=sshd_systemd_src_file, systemd_dst_path=systemd_dst_path))
+        cmd_kvm_adj.append("virt-copy-in -a /tmp/{image_name}.snapshot.img {sshd_config_src_file} /etc/ssh/".format(
+          image_name=image_name, sshd_config_src_file=sshd_config_src_file))
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chown 0 0 {sshd_config_dst_file}".format(
+          image_name=image_name, sshd_config_dst_file=sshd_config_dst_file))
+        cmd_kvm_adj.append("guestfish -a /tmp/{image_name}.snapshot.img -i chmod 0644 {sshd_config_dst_file}".format(
+          image_name=image_name, sshd_config_dst_file=sshd_config_dst_file))
         # Create a symlink since Debian watches for type 'link'
-        cmd_kvm_adj.append(("guestfish -a {image} -i ln-s ".format(image=image) +
+        cmd_kvm_adj.append(("guestfish -a /tmp/{image_name}.snapshot.img -i ln-s ".format(image_name=image_name) +
           "{systemd_path}sshd-integration.test.service ".format(systemd_path=systemd_dst_path) +
           "{systemd_path}multi-user.target.wants/sshd-integration.test.service".format(
             systemd_path=systemd_dst_path)))
@@ -229,6 +234,7 @@ class KVM:
         """ Start VM in KVM for defined arch """
         logger.info("Starting VM in KVM.")
         image = self.config["image"]
+        image_name = os.path.basename(image)
         port = self.config["port"]
 
         if arch == "amd64":
@@ -239,7 +245,7 @@ class KVM:
               -m 1024M \
               -device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89 \
               -netdev user,id=net0,hostfwd=tcp::{port}-:2222,hostname=garden \
-              {image}".format(port=port, image=image)
+              /tmp/{image_name}.snapshot.img".format(port=port, image_name=image_name)
             logger.info(cmd_kvm)
             p = subprocess.Popen([cmd_kvm], shell=True)
             logger.info("VM starting as amd64 in KVM.")
@@ -254,9 +260,27 @@ class KVM:
               -m 1024M \
               -device virtio-net-pci,netdev=net0,mac=02:9f:ec:22:f8:89 \
               -netdev user,id=net0,hostfwd=tcp::{port}-:2222,hostname=garden \
-              {image}".format(port=port, image=image)
+              /tmp/{image_name}.snapshot.img".format(port=port, image_name=image_name)
             logger.info(cmd_kvm)
             p = subprocess.Popen([cmd_kvm], shell=True)
             logger.info("VM starting as arm64 in KVM.")
         else:
             logger.error("Unsupported architecture.")
+
+    def _stop_kvm(self):
+        """ Stop VM and remove injected file """
+        logger.info("Stopping VM and cleaning up")
+        image = self.config["image"]
+        image_name = os.path.basename(image)
+        p = subprocess.run("pkill qemu", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        rc = p.returncode
+        if rc == 0:
+            logger.info("Succeeded stopping qemu")
+            if os.path.exists("/tmp/{image_name}.snapshot.img".format(image_name=image_name)):
+                os.remove("/tmp/{image_name}.snapshot.img".format(image_name=image_name))
+            else:
+                logger.info("/tmp/{image_name}.snapshot.img does not exist".format(image_name=image_name))
+            if os.path.exists("/tmp/qemu.pid"):
+                os.remove("/tmp/qemu.pid")
+        else:
+            logger.error("Failed stopping qemu")

@@ -3,8 +3,8 @@
 set -Eeufo pipefail
 
 veritytab=
-key="/secureboot.key"
-cert="/secureboot.crt"
+key="/cert/secureboot.db.sign.key"
+cert="/cert/secureboot.db.sign.crt"
 timestamp=0
 
 while [ $# -gt 0 ]; do

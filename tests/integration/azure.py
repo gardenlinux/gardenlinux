@@ -5,7 +5,7 @@ import re
 import pytest
 import uuid
 
-from .sshclient import RemoteClient
+from helper.sshclient import RemoteClient
 
 from azure.core.exceptions import (
     ResourceExistsError,
@@ -15,11 +15,13 @@ from azure.core.exceptions import (
 from urllib.request import urlopen
 from urllib.parse import urlparse
 
-from azure.mgmt.subscription import SubscriptionClient
-from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.storage import StorageManagementClient
 from azure.mgmt.network import NetworkManagementClient
+from azure.mgmt.resource import (
+    ResourceManagementClient,
+    SubscriptionClient
+)
 
 from azure.mgmt.storage.models import StorageAccountCheckNameAvailabilityParameters
 from azure.storage.blob import BlobClient
@@ -367,6 +369,8 @@ class AZURE:
             pytest.exit("Neither 'image' nor 'image_name' specified, cannot continue.", 3)
         if not 'image_name' in cfg:
             cfg['image_name'] = f"img-{test_name}"
+        if not 'image_region' in cfg:
+            cfg['image_region'] = "eu-central-1"
         if not 'resource_group' in cfg:
             cfg['resource_group'] = f"rg-{test_name}"
         if not 'storage_account_name' in cfg:
@@ -545,7 +549,8 @@ class AZURE:
                             progress_function(total=file_size, uploaded=offset)
 
             elif o.scheme == "s3":
-                s3_url = f"https://{o.hostname}.s3.eu-central-1.amazonaws.com/{o.path.lstrip('/')}"
+                image_region = self.config['image_region']
+                s3_url = f"https://{o.hostname}.s3.{image_region}.amazonaws.com/{o.path.lstrip('/')}"
                 meta = urlopen(s3_url)
                 file_size = int(meta.getheader('Content-Length'))
                 blob_client.create_page_blob(file_size)

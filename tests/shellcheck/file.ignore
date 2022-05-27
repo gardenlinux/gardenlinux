@@ -1,0 +1,7 @@
+# Comments start with '#' and will be ignored
+
+# All files must be specified relative to the root dir of this repository
+ci/
+env/
+tests/env
+.git/

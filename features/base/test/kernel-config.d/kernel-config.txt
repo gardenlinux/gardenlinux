@@ -1,0 +1,2 @@
+# define kernel parameters that should be set or not set
+# uses the same syntax as the /boot/config-<kernel version> file

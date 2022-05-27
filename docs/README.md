@@ -1,6 +1,6 @@
 # Documentation Guide
 
-The ```docs/``` folder contains (technical) documentation for garden linux.
+The ```docs/``` folder contains (technical) documentation for Garden Linux.
 
 
 ## Folder Structure
@@ -18,7 +18,7 @@ Place your diagram sources in the ```docs/.media``` folder.
 ### docs/deployment
 
 All markdown files in the subfolder ```docs/deployment``` describes
-how to deploy garden linux. Each describes a different platform.
+how to deploy Garden Linux. Each describes a different platform.
 
 
 
@@ -29,14 +29,5 @@ diagram source files as text.
 
 * [Mermaid Diagrams](https://mermaid-js.github.io/mermaid/#/)
 
-
-## Publishing to gardenlinux.io
-
-All markdown files in the ```docs/``` folder are published on the
-[gardenlinux.io/documentation](gardenlinux.io/documentation) website.
-
-
-Check out the [Makefile](https://github.com/gardenlinux/website/blob/master/Makefile)
-of the gardenlinux/website for the publishing process.
 
 

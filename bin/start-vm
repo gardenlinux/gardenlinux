@@ -37,6 +37,7 @@ vncport=0; while ss -tul | grep :$(( vncport + $vncbase )) &> /dev/null; do (( +
 keypress=1
 mac="$(printf '02:%02x:%02x:%02x:%02x:%02x' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)))"
 virtOpts=( )
+gardenlinux_build_cre=${GARDENLINUX_BUILD_CRE:-"sudo podman"}
 source "${thisDir}/.constants.sh" \
 	--flags 'daemonize,uefi,skipkp,vnc' \
 	--flags 'cpu:,mem:,bridge:,port:,mac:,arch:' \
@@ -75,7 +76,7 @@ source "${thisDir}/.constants.sh" \
 <image file>	a file containing the image to boot. Format is determined by the extension.
                 raw, vdi, vpc, vhd, vhdx, vmdk, qcow2, iso are recognized.
 		,<size> is optional. If the file is smaller then <size> it will be resized
-		withthe sparse feature of the filesystem to  the requested size.
+		with the sparse feature of the filesystem to the requested size.
 		If <image file> is omitted and only ,<size> is specified, a temporary file
 		of this size will be created. The file will not be deleted."
 
@@ -131,7 +132,7 @@ while (( "$#" )); do
 	[[ $imagefile == *"."* ]] &&		imageext=${imagefile##*.};
 	[ -e $imagefile ] || eusage "file \"$imagefile\" does not exist"
 
-	imagesizeBytes=$(numfmt --from=auto --suffix="B" --format "%f" ${imagesize} | head -c-2)  # calculate in bytes
+	imagesizeBytes=$(numfmt --from=iec --suffix="B" --format "%f" ${imagesize} | head -c-2)  # calculate in bytes
 	imageext=${imageext/^vhd$/vpc}
 
 	if [ "$imageext" == "iso" ]; then
@@ -143,7 +144,7 @@ while (( "$#" )); do
 		dd if=$imagefile of=/dev/null count=1 iflag=direct 2> /dev/null && imagedirect="aio=native,cache.direct=on,"
 
 		# if there is a bigger size, we need to inflate
-		[ $(stat --printf="%s" $imagefile) -lt ${imagesizeBytes} ] && inflatelist+=( "${imagefile}\t${imagesizeBytes}" )
+		[ $(stat --printf="%s" $imagefile) -lt ${imagesizeBytes} ] && inflatelist+=( "${imagefile},${imagesizeBytes}" )
 
 		virtOpts+=(	"-device scsi-hd,drive=drive${diskcount},bus=scsi0.0"
 				"-drive format=${imageext},if=none,discard=unmap,${imagedirect}id=drive${diskcount},file=${imagefile}" )
@@ -305,7 +306,7 @@ printf "  starting VM(UUID:%s) with MAC:%s in %s\n" $uuid $macfull $targetDir
 [ $vnc ] 	&& printf "  vncport: %s\n" $(( vncport + 5900 ))
 [ $uefi ]	&& printf "  uefi boot enabled. %s.vars stores efivars\n" $mac
 for i in "${inflatelist[@]}"; do
-	printf "  file: %s will be inflated to %s\n" $(cut -f1 <<< $i) $(cut -f2 <<< $i)
+	printf "  file: %s will be inflated to %s\n" $(cut -d, -f1 <<< "$i") $(cut -d, -f2 <<< "$i")
 done
 ( printf "\n  commandline: qemu-system-%s " $arch
 printf '%s ' "${virtOpts[@]}";printf "\n" ) | sed 's/ /!/g;s/!-/ -/g' | fold -s -w $(( $(tput cols) - 4 )) | sed 's/!/ /g;3,$ s|^|    |'
@@ -318,7 +319,7 @@ if [ $pxe ]; then
 		echo "removing symlinks"
 		rm  "$pxe/root."{vmlinuz,initrd,squashfs}
 		echo "stopping helper for pxe"
-		docker stop -t 0 $1
+		${gardenlinux_build_cre} stop -t 0 $1
 		[[ ! -s "$pxe/ignition.json" ]] && rm -f "$pxe/ignition.json"
 		echo "everything stopped..."
 	}
@@ -329,9 +330,9 @@ if [ $pxe ]; then
 	trap 'stop $containerName' EXIT
 	echo "starting helper container"
 	if [ "$ignfile" ]; then
-		docker run -it --rm -d -p 127.0.0.1:8888:80 --name ${containerName} -v ${pxe}:/usr/share/nginx/html -v ${ignfile}:/usr/share/nginx/html/ignition.json nginx
+		${gardenlinux_build_cre} run -it --rm -d -p 127.0.0.1:8888:80 --name ${containerName} -v ${pxe}:/usr/share/nginx/html -v ${ignfile}:/usr/share/nginx/html/ignition.json nginx
 	else
-		docker run -it --rm -d -p 127.0.0.1:8888:80 --name ${containerName} -v ${pxe}:/usr/share/nginx/html:ro nginx
+		${gardenlinux_build_cre} run -it --rm -d -p 127.0.0.1:8888:80 --name ${containerName} -v ${pxe}:/usr/share/nginx/html:ro nginx
 	fi
 fi
 
@@ -355,7 +356,7 @@ if [ $bridge ]; then
 fi
 # inflating selected files
 for i in "${inflatelist[@]}"; do
-	dd if=/dev/zero of=$(cut -f1 <<< $i) count=0 bs=1 seek=$(cut -f2 <<< $i) 2> /dev/null
+	dd if=/dev/zero of=$(cut -d, -f1 <<< "$i") count=0 bs=1 seek=$(cut -d, -f2 <<< "$i") 2> /dev/null
 done
 # creating a separate thread to set the VNC password
 if [ $vnc ]; then

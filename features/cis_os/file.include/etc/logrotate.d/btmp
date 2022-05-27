@@ -1,0 +1,8 @@
+# no packages own wtmp -- we'll rotate it here
+/var/log/btmp {
+    missingok
+    monthly
+    create 0640 root utmp
+    minsize 1M
+    rotate 1
+}

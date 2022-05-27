@@ -2,7 +2,7 @@
 
 rc=0
 #DEBIAN_FRONTEND=noninteractive apt-get update > /dev/null
-DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends deborphan apt-utils > /dev/null
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends deborphan > /dev/null
 DEBIAN_FRONTEND=noninteractive apt-mark showmanual > /var/lib/deborphan/keep
 unneeded=$(deborphan -an)
 

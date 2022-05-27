@@ -169,7 +169,7 @@ else
 fi
 
 if [ -s "$secureboot_partitions" ]; then
-	makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -t "$timestamp" --key "/kernel.key" --cert "/kernel.crt" < "$secureboot_partitions"
+	makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -t "$timestamp" < "$secureboot_partitions"
 fi
 
 cat "$partitions" "$overlay_partitions" >&3

@@ -10,79 +10,18 @@ from typing import Iterator
 import pytest
 import yaml
 
-from .aws import AWS
-from .gcp import GCP
-from .azure import AZURE
-from .openstackccee import OpenStackCCEE
-from .chroot import CHROOT
-from .kvm import KVM
-from .manual import Manual
-from .ali import ALI
-from .sshclient import RemoteClient
+from integration.aws import AWS
+from integration.gcp import GCP
+from integration.azure import AZURE
+from integration.openstackccee import OpenStackCCEE
+from integration.chroot import CHROOT
+from integration.kvm import KVM
+from integration.manual import Manual
+from integration.ali import ALI
+from helper.sshclient import RemoteClient
+from helper.utils import get_architecture
 
 logger = logging.getLogger(__name__)
-
-@pytest.fixture(scope='module')
-def non_ali(iaas):
-    if iaas == 'ali':
-        pytest.skip('test not supported on ali')
-
-@pytest.fixture(scope='module')
-def ali(iaas):
-    if iaas != 'ali':
-        pytest.skip('test only supported on ali')
-
-@pytest.fixture(scope='module')
-def non_azure(iaas):
-    if iaas == 'azure':
-        pytest.skip('test not supported on azure')
-
-@pytest.fixture(scope='module')
-def azure(iaas):
-    if iaas != 'azure':
-        pytest.skip('test only supported on azure')
-
-@pytest.fixture(scope='module')
-def aws(iaas):
-    if iaas != 'aws':
-        pytest.skip('test only supported on aws')
-
-@pytest.fixture(scope='module')
-def gcp(iaas):
-    if iaas != 'gcp':
-        pytest.skip('test only supported on gcp')
-
-def non_kvm(iaas):
-    if iaas == 'kvm':
-        pytest.skip('test not supported on kvm')
-
-@pytest.fixture(scope='module')
-def kvm(iaas):
-    if iaas != 'kvm':
-        pytest.skip('test only supported on kvm')
-
-def non_chroot(iaas):
-    if iaas == 'chroot':
-        pytest.skip('test not supported on chroot')
-
-@pytest.fixture(scope='module')
-def chroot(iaas):
-    if iaas != 'chroot':
-        pytest.skip('test only supported on chroot')
-
-@pytest.fixture(scope='module')
-def non_openstack(iaas):
-    if iaas == 'openstack-ccee':
-        pytest.skip('test not supported on openstack')
-
-@pytest.fixture(scope='module')
-def openstack(iaas):
-    if iaas != 'openstack-ccee':
-        pytest.skip('test only supported on openstack')
-
-@pytest.fixture(scope='module')
-def openstack_flavor():
-    return OpenStackCCEE.instance().flavor
 
 
 def test_clock(client):
@@ -94,7 +33,7 @@ def test_clock(client):
         abs(local_seconds - remote_seconds) < 5
     ), "clock skew should be less than 5 seconds. Local time is %s and remote time is %s" % (local_seconds, remote_seconds)
 
-def test_ntp(client, non_azure):
+def test_ntp(client, non_azure, non_chroot):
     """azure does not use systemd-timesyncd"""
     (exit_code, output, error) = client.execute_command("timedatectl show")
     assert exit_code == 0, f"no {error=} expected"
@@ -114,6 +53,7 @@ def test_ls(client):
     (exit_code, output, error) = client.execute_command("ls /")
     assert exit_code == 0, f"no {error=} expected"
     assert output
+    arch = get_architecture(client)
     lines = output.split("\n")
     assert "bin" in lines
     assert "boot" in lines
@@ -121,7 +61,8 @@ def test_ls(client):
     assert "etc" in lines
     assert "home" in lines
     assert "lib" in lines
-    assert "lib64" in lines
+    if arch == "amd64":
+        assert "lib64" in lines
     assert "mnt" in lines
     assert "opt" in lines
     assert "proc" in lines
@@ -141,7 +82,7 @@ def test_no_man(client):
     assert "man: command not found" in error
 
 
-def test_metadata_connection_non_az_non_ali(client, non_azure, non_ali):
+def test_metadata_connection(client, non_azure, non_ali, non_chroot, non_kvm):
     metadata_host = "169.254.169.254"
     (exit_code, output, error) = client.execute_command(
         f"wget --timeout 5 http://{metadata_host}"
@@ -180,7 +121,7 @@ def test_timesync(client, azure):
     (exit_code, output, error) = client.execute_command("test -L /dev/ptp_hyperv")
     assert exit_code == 0, f"Expected /dev/ptp_hyperv to be a symbolic link"
 
-def test_loadavg(client):
+def test_loadavg(client, non_kvm, non_chroot):
     """This test does not produce any load. Make sure no 
        other process does."""
     (exit_code, output, error) = client.execute_command("cat /proc/loadavg")
@@ -193,7 +134,7 @@ def ping4_host(request):
     return request.param
 
 
-def test_ping4(client, ping4_host):
+def test_ping4(client, ping4_host, non_chroot):
     command = f"ping -c 5 -W 5 {ping4_host}"
     (exit_code, output, error) = client.execute_command(command)
     assert exit_code == 0, f'no {error=} expected when executing "{command}"'
@@ -211,12 +152,26 @@ def test_ping6(client, ping6_host):
     assert exit_code == 0, f'no {error=} expected when executing "{command}"'
     assert "5 packets transmitted, 5 received, 0% packet loss" in output
 
-def test_systemctl_no_failed_units(client):
+def test_systemctl_no_failed_units(client, non_chroot, non_kvm):
+    """this test always fails on kvm therefore kvm has it's own, chroot does not use systemd"""
     (exit_code, output, error) = client.execute_command("systemctl list-units --output=json --state=failed")
     assert exit_code == 0, f"no {error=} expected"
     assert len(json.loads(output)) == 0
 
-def test_startup_time(client):
+def test_systemctl_no_failed_units_kvm(client, kvm):
+    """rngd.service does not start in kvm due of missing /dev/tpm0"""
+    (exit_code, output, error) = client.execute_command("systemctl list-units --output=json --state=failed")
+    assert exit_code == 0, f"no {error=} expected"
+    out = (json.loads(output))
+    error_count = 0
+    error_out = []
+    for entry in out:
+        if not entry['unit'] == "rngd.service":
+            error_count += 1
+            error_out.append(entry['unit'])
+    assert error_count == 0, f"systemd units {', '.join(error_out)} failed"
+
+def test_startup_time(client, non_chroot, non_kvm):
     tolerated_kernel_time = 15
     tolerated_userspace_time = 30
     (exit_code, output, error) = client.execute_command("systemd-analyze")
@@ -264,10 +219,13 @@ def test_growpart(client, openstack, openstack_flavor):
     sgb = int(lines[1].strip()[:-1])
     assert sgb == expected_disk_size, f"partition size expected to be ~{expected_disk_size} GB but is {sgb}"
 
-def test_docker(client):
+def test_docker(client, non_chroot):
+    (exit_code, output, error) = client.execute_command("grep GARDENLINUX_FEATURES /etc/os-release | grep gardener", quiet=True)
+    if exit_code != 0:
+        pytest.skip("test_docker needs the gardenlinux feature gardener to be enabled")
     (exit_code, output, error) = client.execute_command("sudo systemctl start docker")
     if exit_code != 0:
-        (journal_rc, output, error) = client.execute_command("sudo journactl --no-pager -xu docker.service")
+        (journal_rc, output, error) = client.execute_command("sudo journalctl --no-pager -xu docker.service")
     assert exit_code == 0, f"no {error=} expected"
     (exit_code, output, error) = client.execute_command("sudo docker run --rm  eu.gcr.io/gardenlinux/gardenlinux:184.0 sh -c 'echo from container'")
     assert exit_code == 0, f"no {error=} expected"
@@ -302,7 +260,7 @@ def test_nvme_kernel_parameter(client, aws):
     assert exit_code == 0, f"no {error=} expected"
     assert output.rstrip() == "1", "Expected 'nvme_core.io_timeout=4294967295' kernel parameter"
 
-def test_random(client):
+def test_random(client, non_metal):
     (exit_code, output, error) = client.execute_command("time dd if=/dev/random of=/dev/null bs=8k count=1000 iflag=fullblock")
     """ Output should be like this:
 # time dd if=/dev/random of=/dev/null bs=8k count=1000 iflag=fullblock
@@ -378,7 +336,11 @@ def test_aws_ena_driver(client, aws):
     assert exit_code == 0, f"no {error=} expected"
     assert output.rstrip() == "ena", "Expected network interface to run with ena driver"
 
-def test_apparmor(client):
-    (exit_code, output, error) = client.execute_command("/usr/bin/aa-enabled")
+def test_apparmor(client, non_chroot):
+    (exit_code, output, error) = client.execute_command("grep apparmor /sys/kernel/security/lsm")
+    assert exit_code == 1, f"expected apparmor to be disabled"
+
+def test_selinux(client, non_chroot):
+    (exit_code, output, error) = client.execute_command("grep selinux /sys/kernel/security/lsm")
     assert exit_code == 0, f"no {error=} expected"
-    assert output.rstrip() == "Yes", "Expected AppArmor to be enabled."
+    assert "selinux" in output.rstrip(), "Expected SELinux to be enabled."

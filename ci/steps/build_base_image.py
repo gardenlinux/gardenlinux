@@ -17,6 +17,7 @@ def build_base_image(
     version_label: str,
     build_targets: str,
 ):
+    container_dir = "container"
     additional_tags = ['latest']
     build_target_set = glci.model.BuildTarget.set_from_str(build_targets)
 
@@ -36,7 +37,7 @@ def build_base_image(
         print(f'Set additional tag for later minor releases: {tag}')
         additional_tags.append(tag)
 
-    dockerfile_relpath = os.path.join(repo_dir, "docker", "build-image", "Dockerfile")
+    dockerfile_relpath = os.path.join(repo_dir, container_dir, "build-image", "Dockerfile")
     logger.info(f'repo_dir is: {repo_dir}')
 
     docker_dirs = ['build', 'build-deb', 'build-image']
@@ -44,11 +45,11 @@ def build_base_image(
     go_files = glob.glob(os.path.join(repo_dir, "bin", '*.go'), recursive=False)
     for f in go_files:
         f_name = os.path.basename(f)
-        dst = os.path.join(repo_dir, "docker", 'build-image', f_name)
+        dst = os.path.join(repo_dir, container_dir, 'build-image', f_name)
         os.symlink(f, dst)
 
     for docker_dir in docker_dirs:
-        dockerfile_relpath = os.path.join(repo_dir, "docker", docker_dir, "Dockerfile")
+        dockerfile_relpath = os.path.join(repo_dir, container_dir, docker_dir, "Dockerfile")
         logger.info(f'---Building now {dockerfile_relpath}')
 
         if docker_dir == 'build-deb':
@@ -56,7 +57,7 @@ def build_base_image(
         else:
             build_base_image = 'debian:testing-slim'
 
-        context_dir = os.path.join(repo_dir, "docker", docker_dir)
+        context_dir = os.path.join(repo_dir, container_dir, docker_dir)
         logger.info(f'---Using base image {build_base_image}')
         builder.build_and_push_kaniko(
             dockerfile_path=dockerfile_relpath,

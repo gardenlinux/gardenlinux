@@ -84,7 +84,7 @@ esac
 	"$rootfs/usr/lib/systemd/boot/efi/linux$uefi_arch.efi.stub" "$unified_image"
 
 # sign unified image
-datefudge -s "@$timestamp" sbsign --cert /kernel.crt --key /kernel.key --output "$unified_image_signed" "$unified_image"
+datefudge -s "@$timestamp" sbsign --cert /cert/secureboot.db.sign.crt --key /cert/secureboot.db.sign.key --output "$unified_image_signed" "$unified_image"
 
 # cleanup
 rm -rf "$cmdline" "$initrd" "$unified_image"

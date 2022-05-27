@@ -19,7 +19,7 @@ from google.cloud import storage
 from google.cloud.storage import constants as storage_constants
 from googleapiclient.errors import HttpError
 
-from .sshclient import RemoteClient
+from helper.sshclient import RemoteClient
 from . import util
 
 logger = logging.getLogger(__name__)
@@ -61,6 +61,8 @@ class GCP:
             cfg['project'] = credentials.project_id
         if not 'image_project' in cfg:
             cfg['image_project'] = cfg['project']
+        if not 'image_region' in cfg:
+            cfg['image_region'] = "eu-central-1"
         if not 'region' in cfg:
             pytest.exit("GCP region not specified, cannot continue.", 1)
         if not 'zone' in cfg:
@@ -374,7 +376,8 @@ class GCP:
                     )
 
             elif o.scheme == "s3":
-                s3_url = f"https://{o.hostname}.s3.eu-central-1.amazonaws.com/{o.path.lstrip('/')}"
+                image_region = self.config['image_region']
+                s3_url = f"https://{o.hostname}.s3.{image_region}.amazonaws.com/{o.path.lstrip('/')}"
                 meta = urlopen(s3_url)
                 file_size = int(meta.getheader('Content-Length'))
                 chunk_size = 4 * 1024 * 1024

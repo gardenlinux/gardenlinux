@@ -8,7 +8,7 @@ import time
 import paramiko
 
 from novaclient import client
-from .sshclient import RemoteClient
+from helper.sshclient import RemoteClient
 from . import util
 
 logger = logging.getLogger(__name__)

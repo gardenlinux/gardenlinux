@@ -16,7 +16,7 @@ import shutil
 import socket
 from contextlib import closing
 from novaclient import client
-from .sshclient import RemoteClient
+from helper.sshclient import RemoteClient
 from . import util
 
 # Define global logger
@@ -104,6 +104,25 @@ class CHROOT:
             logger.error("Image archive is not present: {path}".format(
               path=self.config["image"]))
 
+        # Validate if image extension is defined corretly
+        allowed_image_ext = [
+                            "tar.xz",
+                            "txz",
+                            "tgz",
+                            "tar",
+                            "tar.gz"
+                            ]
+        file_name = os.path.basename(self.config["image"])
+        # Get extensions by dot counting in reverse order
+        file_ext = file_name.split(".")[1:]
+        # Join file extension if we have multiple ones (e.g. .tar.gz)
+        file_ext = ".".join(file_ext)
+        # Fail on unsupported image types
+        if not file_ext in allowed_image_ext:
+            msg_err = f"{file_ext} is not supported for this platform test type."
+            logger.error(msg_err)
+            pytest.exit(msg_err, 1)
+
         # Check if port is defined
         if not "port" in self.config:
             logger.error("No port for ssh connection defined.")
@@ -125,22 +144,21 @@ class CHROOT:
         logger.info("Unarchiving image {image} to {rootfs}".format(
           image=image, rootfs=rootfs))
         try:
-            with lzma.open(self.config["image"]) as f:
-                with tarfile.open(fileobj=f) as tar:
-                    content = tar.extractall(rootfs)
-        except IOError:
-            logger.error("Could not unarchive image file due to IO Error.")
-        except lzma.LZMAError:
-            logger.error("LZMA decompression error.")
-        except tarfile.ReadError:
-            logger.error(("Archive is present but can not be handled by tar."+
-                          "Validate that your tar archive is not corrupt."))
-        except tarfile.CompressionError:
-            logger.error("Used compression is not supported.")
-        except tarfile.HeaderError:
-            logger.error("Malformed tar header information.")
-        logger.info("Unarchived image {image} to {rootfs}".format(
-          image=image, rootfs=rootfs))
+            cmd = (("tar -xp --acl --selinux --anchored --xattrs ")+
+                   ("--xattrs-include='security.capability' ")+
+                   ("-f '{image}' -C '{rootfs}'".format(image=image,rootfs=rootfs)))
+            p = subprocess.run([cmd], shell=True, stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT, check=True)
+            logger.info("Unarchived image {image} to {rootfs}".format(
+              image=image, rootfs=rootfs))
+        except subprocess.CalledProcessError:
+            logger.error("Error while unarchiving image {image} to {rootfs}".format(
+              image=image, rootfs=rootfs))
+            pytest.exit("Error", 1)
+        except OSError:
+            logger.error("Error while unarchiving image {image} to {rootfs}".format(
+              image=image, rootfs=rootfs))
+            pytest.exit("Error", 1)
         return rootfs
 
 
@@ -213,8 +231,7 @@ class CHROOT:
         # Copy ssh / authorized_keys file for root user
         local_ssh_key_path = self.config["ssh"]["ssh_key_filepath"] + ".pub"
         chroot_root_dir = rootfs + "/root/"
-        chroot_ssh_authorized_keys = chroot_root_dir + ".ssh/authorized_keys"
-        ssh_authorized_keys = "/tmp/authorized_keys"
+        chroot_ssh_authorized_keys = chroot_root_dir + ".ssh/test_authorized_keys"
         self._create_dir(chroot_root_dir+".ssh", 0o600)
         try:
             shutil.copyfile(local_ssh_key_path, chroot_ssh_authorized_keys)
