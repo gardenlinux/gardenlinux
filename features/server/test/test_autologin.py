@@ -10,7 +10,7 @@ import pytest
     "file,args",
     [
         ("/etc/systemd/system/serial-getty@.service.d/autologin.conf", {"ExecStart": "autologin"}),
-        ("/system/getty@tty1.service.d/autologin.conf", {"ExecStart": "autologin"})
+        ("/etc/systemd/system/getty@tty1.service.d/autologin.conf", {"ExecStart": "autologin"})
     ]
 )
 
