@@ -251,7 +251,7 @@ def test_correct_ntp(client, aws):
     assert output.rstrip() == "1", "Expected NTP server to be configured to 169.254.169.123"
 
 def test_correct_ntp(client, gcp):
-    (exit_code, output, error) = client.execute_command("grep -c ^NTP=metadata.google.internal /etc/systemd/timesyncd.conf")
+    (exit_code, output, error) = client.execute_command("timedatectl show-timesync | grep -c ^SystemNTPServers=metadata.google.internal")
     assert exit_code == 0, f"no {error=} expected"
     assert output.rstrip() == "1", "Expected NTP server to be configured to metadata.google.internal"
 
