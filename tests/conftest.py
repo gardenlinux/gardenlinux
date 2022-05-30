@@ -5,11 +5,13 @@ import yaml
 import sys
 import os
 import sys
+import re
 
 import glci.util
 
 from typing import Iterator
 from helper.sshclient import RemoteClient
+from helper.utils import disabled_by
 
 from os import path
 from dataclasses import dataclass
@@ -352,6 +354,11 @@ def pytest_collection_modifyitems(config, items):
             feature = item_path.split('/')[3]
             if not feature in features:
                 item.add_marker(skip)
+        plain_item_name = re.match(r"test_([\w_]+)\[?.*", item.name).group(1)
+        disabled = disabled_by(features, plain_item_name)
+        if len(disabled) != 0:
+            item.add_marker(pytest.mark.skip(reason=f"test is disabled by feature " +
+                                                    f"{', '.join(disabled)}"))
 
 
 @pytest.fixture
