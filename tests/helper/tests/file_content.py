@@ -39,8 +39,7 @@ def _get_key_values_from_content(content, args):
     result = dict()
     content_lines = content.split('\n')
     for line in content_lines:
-        line_key = re.sub(r'(\w*).*', '\\1', line)
-
+        line_key = re.sub(r'(\w*\.?\w*).*', '\\1', line)
         if line_key in args.keys() and args[line_key] in line:
             result[line_key] = args[line_key]
     return result
