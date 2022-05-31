@@ -1,10 +1,25 @@
-from helper.exception import NotPartOfFeatureError, DisabledBy
-from helper.tests.kernel_config import KernelConfig
+from helper.tests.file_content import file_content
 import pytest
 
-def test_kernel_config(client, features):
-    """The test function executed by pytest"""
-    try:
-        KernelConfig(client, features)
-    except (NotPartOfFeatureError, DisabledBy) as e:
-        pytest.skip(str(e))
+@pytest.mark.parametrize(
+    "args",
+    [
+        (   {
+            # example expected kernel config options:
+            #"CONFIG_INIT_ENV_ARG_LIMIT": "32",
+            #"CONFIG_COMPILE_TEST": "is not set",
+            #"CONFIG_WERROR": "n",
+            #"CONFIG_LOCALVERSION": "",
+            #"CONFIG_LOCALVERSION_AUTO": "is not set",
+            #"CONFIG_HAVE_KERNEL_GZIP": "y"
+            }
+        )
+    ]
+)
+
+def test_kernel_config(client, args):
+    """compare kernel config options from the parametrize section with the
+    kernel config options in the /boot/config-* file. The values 'is not set'
+    and 'n' are treated as the same."""
+    file = "/boot/config-*"
+    file_content(client, file, args, ignore_comments=True)
