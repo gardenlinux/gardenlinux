@@ -1,4 +1,4 @@
-from helper.tests.key_val_in_file import key_val_in_file
+from helper.tests.file_content import file_content
 import pytest
 
 # Parametrize the test unit with further
@@ -17,4 +17,4 @@ import pytest
 # Run the test unit to perform the
 # final tests by the given artifact.
 def test_umask(client, file, dict):
-    key_val_in_file(client, file, dict)
+    file_content(client, file, dict)

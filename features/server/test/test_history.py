@@ -1,4 +1,4 @@
-from helper.tests.key_val_in_file import key_val_in_file
+from helper.tests.file_content import file_content
 from helper.utils import unset_env_var
 import pytest
 
@@ -28,7 +28,7 @@ import pytest
 #    and will not fail the test.
 def test_history(client, file, args):
     # Test is config is present in file
-    key_val_in_file(client, file, args)
+    file_content(client, file, args)
 
     # Test write protection of an ENV var
     env_var = "HISTFILE"
