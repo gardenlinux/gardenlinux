@@ -1,7 +1,7 @@
 import re
 
 
-def file_content(client, fname, args, invert=False, ignore_missing=False, only_line_match=False):
+def file_content(client, fname, args, invert=False, ignore_missing=False, only_line_match=False, ignore_comments=False):
     """ Performing unit test to find key/val in files """
     content = _get_content_remote_file(client, fname)
 
@@ -15,7 +15,7 @@ def file_content(client, fname, args, invert=False, ignore_missing=False, only_l
             else:
                 assert not line_match, f"Found line {args} in {fname}, but should not be present."
         else:
-            key_values = _get_key_values_from_content(content, args)
+            key_values = _get_key_values_from_content(content, args, ignore_comments)
             content_keys = set(key_values.keys())
             arg_keys = set(args.keys())
 
@@ -34,12 +34,16 @@ def _get_content_remote_file(client, fname):
         return output
 
 
-def _get_key_values_from_content(content, args):
+def _get_key_values_from_content(content, args, ignore_comments):
     """ Get key/val from content and validate matches by args """
     result = dict()
     content_lines = content.split('\n')
     for line in content_lines:
-        line_key = re.sub(r'(\w*\.?\w*).*', '\\1', line)
+        if ignore_comments:
+            line_key = re.sub(r'#? *(\w*).*', '\\1', line)
+        else:
+            line_key = re.sub(r'(\w*\.?\w*).*', '\\1', line)
+
         if line_key in args.keys() and args[line_key] in line:
             result[line_key] = args[line_key]
     return result
