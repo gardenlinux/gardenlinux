@@ -18,5 +18,8 @@ import pytest
 )
 
 def test_kernel_config(client, args):
+    """compare kernel config options from the parametrize section with the
+    kernel config options in the /boot/config-* file. The values 'is not set'
+    and 'n' are treated as the same."""
     file = "/boot/config-*"
     file_content(client, file, args, ignore_comments=True)
