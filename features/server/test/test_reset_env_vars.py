@@ -1,4 +1,4 @@
-from helper.tests.key_val_in_file import key_val_in_file
+from helper.tests.file_content import file_content
 import pytest
 
 @pytest.mark.parametrize(
@@ -9,4 +9,4 @@ import pytest
 )
 
 def test_reset_env_vars(client, file, args):
-    key_val_in_file(client, file, args, invert=False, ignore_missing=False)
+    file_content(client, file, args, invert=False, ignore_missing=False)
