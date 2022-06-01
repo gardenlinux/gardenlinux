@@ -2,7 +2,8 @@ import uuid
 import os
 import re
 import string
-
+from subprocess import PIPE, Popen
+import subprocess
 
 def get_package_list(client):
     """Return list with the installed packages.
@@ -98,8 +99,31 @@ def unset_env_var(client, env_var):
 
 
 def get_kernel_version(client):
+    """ Get the current running kernel version """
     (exit_code, output, error) = client.execute_command(
         "uname -r", quiet=True)
     assert exit_code == 0, f"no {error=} expected"
     output = output.strip()
     return output
+
+
+def get_artifact_name(client):
+    """ Get the artifact name from GL /etc/os-release file """
+    (exit_code, output, error) = client.execute_command("cat /etc/os-release", quiet=True)
+    if exit_code != 0:
+        logger.error(error)
+        sys.exit(exit_code)
+    for line in output.split('\n'):
+        if line.startswith('GARDENLINUX_ARTIFACT_NAME'):
+            return line.split('=')[1]
+
+
+def get_local_command_output(cmd):
+    """ Run local commands in Docker container """
+    #with Popen(cmd, stdout=PIPE, stderr=None, shell=True) as process:
+    #    output = process.communicate()[0].decode("utf-8")
+    #return output
+    p = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    rc = p.returncode
+    out = p.stdout.decode()
+    return rc, out
