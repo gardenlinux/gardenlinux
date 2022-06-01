@@ -2,6 +2,7 @@ import uuid
 import os
 import re
 import string
+import subprocess
 
 
 def get_package_list(client):
@@ -103,3 +104,11 @@ def get_kernel_version(client):
     assert exit_code == 0, f"no {error=} expected"
     output = output.strip()
     return output
+
+
+def execute_local_command(cmd):
+    """ Run local commands in Docker container """
+    p = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    rc = p.returncode
+    out = p.stdout.decode()
+    return rc, out
