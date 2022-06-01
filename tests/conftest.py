@@ -434,6 +434,13 @@ def openstack(iaas):
     if iaas != 'openstack-ccee':
         pytest.skip('test only supported on openstack')
 
+# This fixture is an alias of "chroot" but does not use the "chroot" env.
+# However, it only needs the underlying container for its tests.
+@pytest.fixture
+def container(iaas):
+    if iaas != 'chroot':
+        pytest.skip('test only supported on containers')
+
 @pytest.fixture
 def openstack_flavor():
     return OpenStackCCEE.instance().flavor
