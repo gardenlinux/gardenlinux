@@ -112,3 +112,12 @@ def execute_local_command(cmd):
     rc = p.returncode
     out = p.stdout.decode()
     return rc, out
+
+
+def execute_remote_command(client, cmd):
+    """ Run remote command on test platform """
+    (exit_code, output, error) = client.execute_command(
+        cmd, quiet=True)
+    assert exit_code == 0, f"no {error=} expected"
+    output = output.strip()
+    return output

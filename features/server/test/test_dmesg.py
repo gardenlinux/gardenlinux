@@ -6,14 +6,13 @@ from helper.tests.file_content import file_content
 @pytest.mark.parametrize(
     "file,args",
     [
-        ("/boot/config-", {"CONFIG_SECURITY_DMESG_RESTRICT": "y"}),
-        ("/etc/sysctl.d/restric-dmesg.conf", {"kernel.dmesg_restrict": "1"})
+        ("/etc/sysctl.d/restric-dmesg.conf", {"kernel.dmesg_restrict": "1"}),
+        ("/tmp/sysctl.txt", {"kernel.dmesg_restrict": "1"})
     ]
 )
 
 
-def test_dmesg(client, file, args, non_chroot):
-    kernel_ver = get_kernel_version(client)
-    if '/boot/config-' in file:
-        file = f"{file}{kernel_ver}"
+def test_dmesg(client, file, args, non_chroot, non_feature_gardener):
+    cmd = "sysctl -a > /tmp/sysctl.txt"
+    execute_remote_command(client, cmd)
     file_content(client, file, args)
