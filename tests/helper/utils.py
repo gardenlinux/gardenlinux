@@ -121,3 +121,10 @@ def execute_remote_command(client, cmd):
     assert exit_code == 0, f"no {error=} expected"
     output = output.strip()
     return output
+
+
+def install_package_deb(client, pkg):
+    """ Installs (a) Debian packagei(s) on a target platform """
+    (exit_code, output, error) = client.execute_command(
+        f"apt-get install -y --no-install-recommends {pkg}", quiet=True)
+    assert exit_code == 0, f"Could not install Debian Package: {error}"
