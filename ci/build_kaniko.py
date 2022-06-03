@@ -136,10 +136,10 @@ def build_and_push_kaniko(
     context_dir: str,
     image_push_path: str,
     image_tag: str,
-    additional_tags = None,
-    build_args = None,
-    home_dir = '/kaniko',
-    force: bool = False,
+    additional_tags=None,
+    build_args=[],
+    home_dir='/kaniko',
+    force: bool=False,
 ):
 
     print("--- Writing kaniko config files ---")

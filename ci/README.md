@@ -22,7 +22,7 @@ Install Tekton dashboard (check compatibility with Tekton pipelines release):
 
 Install Python (>= 3.8) and pip
 Install Python libraries
-`pip install -r ci/requirements.txt`
+`pip install -r ci/images/step_image/requirements.txt`
 
 Install
 
