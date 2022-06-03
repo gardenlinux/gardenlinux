@@ -92,6 +92,13 @@ def get_build_image(
     return f'{oci_path}/gardenlinux-build-image:{version_label}'
 
 
+def get_step_image(
+    oci_path: str,
+    version_label: str,
+):
+    return f'{oci_path}/gardenlinux-step-image:{version_label}'
+
+
 def get_deb_build_image(
     oci_path: str,
     version_label: str,
@@ -153,6 +160,7 @@ def get_common_parameters(
         build_deb_image = get_deb_build_image(args['oci_path'], base_version_label)
         build_image = get_build_image(args['oci_path'], base_version_label)
 
+    step_image = get_step_image(args['oci_path'], base_version_label)
     # for git-url rename arg git_url to giturl:
     git_url_param = NamedParam(name='giturl', value=str(args['git_url']))
 
@@ -160,6 +168,7 @@ def get_common_parameters(
         get_param_from_arg(args, 'additional_recipients'),
         get_param_from_arg(args, 'branch'),
         NamedParam(name='build_image', value=build_image),
+        NamedParam(name='step_image', value=step_image),
         NamedParam(name='cicd_cfg_name', value=args['cicd_cfg']),
         get_param_from_arg(args, 'committish'),
         get_param_from_arg(args, 'disable_notifications'),
