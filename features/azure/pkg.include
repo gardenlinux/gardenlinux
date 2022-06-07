@@ -2,3 +2,4 @@
 #waagent
 chrony
 cloud-init
+python3-cffi-backend
