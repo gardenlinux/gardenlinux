@@ -1,3 +1,4 @@
 # Azure images require waagent
-waagent
+#waagent
 chrony
+cloud-init
