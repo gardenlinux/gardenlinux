@@ -39,7 +39,6 @@ def rkhunter(client, testconfig):
         "system_configs_ssh,group_accounts,filesystem,group_changes," +
         "passwd_changes,startup_malware,system_configs_ssh,properties -q " +
         "--rwo --noappend-log 2>/dev/null", quiet=True)
-    assert exit_code == 0, f"no {error=} expected"
 
     # check the rkhunter log file for any warnings
     (exit_code, output, error) = client.execute_command(
