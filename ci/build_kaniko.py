@@ -146,7 +146,7 @@ def build_and_push_kaniko(
     image_push_path: str,
     image_tag: str,
     additional_tags=None,
-    build_args=None,
+    build_args=[],
     home_dir='/kaniko',
     force: bool=False,
 ):

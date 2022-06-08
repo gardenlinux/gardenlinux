@@ -14,7 +14,8 @@ Instructions:
 
 This script needs a proper development environment to be executed. Ensure that:
 * you have the necessary environment variables set
-* you have a Python virtual environment with all requirements, see also requirements.txt
+* you have a Python virtual environment with all requirements, see also
+    images/step_image/requirements.txt
 """
 
 
