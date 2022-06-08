@@ -35,7 +35,10 @@ def rkhunter(client, testconfig):
 
     # run the actual rkhunter tests
     (exit_code, output, error) = client.execute_command(
-        "rkhunter --configfile /tmp/rkhunter.conf --enable system_configs_ssh,group_accounts,filesystem,group_changes,passwd_changes,startup_malware,system_configs_ssh,properties -q --rwo --noappend-log 2>/dev/null", quiet=True)
+        "rkhunter --configfile /tmp/rkhunter.conf --enable " +
+        "system_configs_ssh,group_accounts,filesystem,group_changes," +
+        "passwd_changes,startup_malware,system_configs_ssh,properties -q " +
+        "--rwo --noappend-log 2>/dev/null", quiet=True)
     assert exit_code == 0, f"no {error=} expected"
 
     # check the rkhunter log file for any warnings
