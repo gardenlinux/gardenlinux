@@ -227,21 +227,30 @@ def test_docker(client, non_chroot):
     if exit_code != 0:
         (journal_rc, output, error) = client.execute_command("sudo journalctl --no-pager -xu docker.service")
     assert exit_code == 0, f"no {error=} expected"
-    (exit_code, output, error) = client.execute_command("sudo docker run --rm  eu.gcr.io/gardenlinux/gardenlinux:184.0 sh -c 'echo from container'")
+    (exit_code, output, error) = client.execute_command("sudo docker run --rm alpine:latest ash -c 'echo from container'")
     assert exit_code == 0, f"no {error=} expected"
     assert output == "from container\n", f"Expected 'from container' output but got {output}"
 
 def test_clocksource(client, aws):
-    # kvm or xen
+    # refer to https://aws.amazon.com/premiumsupport/knowledge-center/manage-ec2-linux-clock-source/
+    # detect hypervisor type kvm or xen
     (exit_code, output, error) = client.execute_command("systemd-detect-virt")
     assert exit_code == 0, f"no {error=} expected"
     hypervisor = output.rstrip()
+    # which architecture are we on?
+    (exit_code, output, error) = client.execute_command("uname -m")
+    assert exit_code == 0, f"no {error=} expected"
+    arch = output.rstrip()
+    # check clock_source
     (exit_code, output, error) = client.execute_command("cat /sys/devices/system/clocksource/clocksource0/current_clocksource")
     assert exit_code == 0, f"no {error=} expected"
     if hypervisor == "xen":
         assert output.rstrip() == "tsc", f"expected clocksoure for xen to be set to tsc but got {output}"
     elif hypervisor == "kvm" or hypervisor == "amazon":
-        assert output.rstrip() == "kvm-clock", f"expected clocksoure for kvm to be set to kvm-clock but got {output}"
+        if arch == "aarch64":
+            assert output.rstrip() == "arch_sys_counter", f"expected clocksoure on ARM64 to be set to arch_sys_counter-clock but got {output}"
+        else:
+            assert output.rstrip() == "kvm-clock", f"expected clocksoure for kvm to be set to kvm-clock but got {output}"
     else:
         assert False, f"unknown hypervisor {hypervisor}"
 
