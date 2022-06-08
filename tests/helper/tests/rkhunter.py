@@ -7,10 +7,7 @@ logger = logging.getLogger(__name__)
 def rkhunter(client, testconfig):
     """Run rkhunter to test for rootkits"""
     utils.AptUpdate(client)
-    (exit_code, output, error) = client.execute_command(
-        "apt-get install -y --no-install-recommends rkhunter",
-        quiet=True)
-    assert exit_code == 0, f"no {error=} expected"
+    utils.install_package_deb(client, "rkhunter")
 
     enabled_features = testconfig["features"]
 
@@ -29,19 +26,18 @@ def rkhunter(client, testconfig):
 
     # causes rkhunter to update its data file of stored values with the
     # current values
-    (exit_code, output, error) = client.execute_command(
-        "rkhunter --configfile /tmp/rkhunter.conf --propupd -q", quiet=True)
-    assert exit_code == 0, f"no {error=} expected"
+    utils.execute_remote_command(client, "rkhunter --configfile " +
+                    "/tmp/rkhunter.conf --propupd -q", quiet=True)
 
     # run the actual rkhunter tests
-    (exit_code, output, error) = client.execute_command(
+    (_, _, _) = client.execute_command(
         "rkhunter --configfile /tmp/rkhunter.conf --enable " +
         "system_configs_ssh,group_accounts,filesystem,group_changes," +
         "passwd_changes,startup_malware,system_configs_ssh,properties -q " +
         "--rwo --noappend-log 2>/dev/null", quiet=True)
 
     # check the rkhunter log file for any warnings
-    (exit_code, output, error) = client.execute_command(
+    (_, output, _) = client.execute_command(
         "grep -w Warning: /var/log/rkhunter.log", quiet=True)
     
     # print the rkhunter warnings before failing the test
