@@ -123,7 +123,7 @@ def register_image(
 
     result = ec2_client.register_image(
         # ImageLocation=XX, s3-url?
-        Architecture=architecture # x86_64, i386, arm64
+        Architecture=architecture, # x86_64, i386, arm64
         BlockDeviceMappings=[
             {
                 'DeviceName': root_device_name,
@@ -138,7 +138,7 @@ def register_image(
         EnaSupport=True,
         Name=image_name,
         RootDeviceName=root_device_name,
-        VirtualizationType='hvm', # | paravirtual
+        VirtualizationType='hvm' # | paravirtual
     )
 
     ec2_client.create_tags(
