@@ -27,7 +27,7 @@ def rkhunter(client, testconfig):
     # causes rkhunter to update its data file of stored values with the
     # current values
     utils.execute_remote_command(client, "rkhunter --configfile " +
-                    "/tmp/rkhunter.conf --propupd -q", quiet=True)
+                    "/tmp/rkhunter.conf --propupd -q")
 
     # run the actual rkhunter tests
     (_, _, _) = client.execute_command(
