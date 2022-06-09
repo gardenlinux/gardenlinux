@@ -535,6 +535,11 @@ class AZURE:
                 with open(image_file, 'rb') as f:
 
                     while offset < file_size:
+                        # refer to https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-pageblob-overview?tabs=dotnet#writing-pages-to-a-page-blob
+                        # for sparse file upload logic and requirements for offset alignments
+                        offset = (f.seek(offset, os.SEEK_DATA) // chunksize) * chunksize
+                        f.seek(offset, os.SEEK_SET)
+                        
                         data = f.read(chunksize)
                         remaining = file_size - offset
                         actual_cp_bytes = min(chunksize, remaining)
