@@ -59,7 +59,7 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 	resize=1
 	verity=0
 	secureboot=0
-	syslinux=0
+	syslinux=$([[ "$(cut -c -5 <<< "$target")" = "/boot" ]] && [[ -f "$rootfs/usr/bin/syslinux" ]] && echo 1 || echo 0)
 	while IFS="=" read -r key value; do
 		case "$key" in
 			"type")
