@@ -6,6 +6,7 @@ import pytest
     [
         [
             "/lib/systemd/system/dbus.socket",
+            "/usr/share/runit/meta/ssh/installed",
             "/usr/share/pam-configs/cracklib"
         ]
     ]

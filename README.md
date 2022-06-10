@@ -66,7 +66,7 @@ By default, Garden Linux uses [Podman](https://podman.io/) as container runtime 
 
 **Debian/Ubuntu:**
 ```
-sudo apt install bash podman crun make coreutils gnupg git qemu-system-x86 qemu-system-aarch64
+apt install bash sudo podman crun make coreutils gnupg git qemu-system-x86 qemu-system-aarch64
 ```
 
 **CentOS/RedHat (>=8):**
@@ -75,7 +75,7 @@ CFSSL requires `GLIBC 2.28`. Therefore, we recommand to build on systems running
 
 ```
 # Install needed packages
-sudo yum install bash podman crun make gnupg git qemu-kvm qemu-img coreutils
+yum install bash sudo podman crun make gnupg git qemu-kvm qemu-img coreutils
 ```
 
 **Adjust Repository:**

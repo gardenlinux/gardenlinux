@@ -114,6 +114,7 @@ def register_image(
     ec2_client: 'botocore.client.EC2',
     snapshot_id: str,
     image_name: str,
+    architecture: str='x86_64',
 ) -> str:
     '''
     @return: ami-id of registered image
@@ -122,7 +123,7 @@ def register_image(
 
     result = ec2_client.register_image(
         # ImageLocation=XX, s3-url?
-        Architecture='x86_64', # | i386, arm64
+        Architecture=architecture, # x86_64, i386, arm64
         BlockDeviceMappings=[
             {
                 'DeviceName': root_device_name,
@@ -137,7 +138,7 @@ def register_image(
         EnaSupport=True,
         Name=image_name,
         RootDeviceName=root_device_name,
-        VirtualizationType='hvm', # | paravirtual
+        VirtualizationType='hvm' # | paravirtual
     )
 
     ec2_client.create_tags(

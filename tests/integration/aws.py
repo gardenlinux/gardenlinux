@@ -52,6 +52,8 @@ class AWS:
             pytest.exit("Neither 'image' nor 'ami_id' specified, cannot continue.", 2)
         if not 'instance_type' in cfg:
             cfg['instance_type'] = "t3.micro"
+        if not 'architecture' in cfg:
+            cfg['architecture'] = "x86_64"
         if not 'bucket' in cfg:
             cfg['bucket'] = f"img-{test_name}-upload"
         if not 'securitygroup_name' in cfg:
@@ -502,7 +504,8 @@ class AWS:
         self._ami_id = glci.aws.register_image(
             ec2_client = self.ec2_client,
             snapshot_id = self._snapshot_id,
-            image_name = image_name
+            image_name = image_name,
+            architecture = self.config["architecture"]
         )
         self.ec2_client.create_tags(
             Resources = [self._ami_id],

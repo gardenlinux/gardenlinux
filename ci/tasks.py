@@ -19,7 +19,7 @@ def promote_task(
     volumes=[],
     volume_mounts=[],
 ):
-    params = []
+    params = [all_params.step_image]
     clone_step, params_step = steps.clone_step(
         params=all_params,
         env_vars=env_vars,
@@ -72,7 +72,7 @@ def build_task(
     volume_mounts,
     volumes=[],
 ):
-    params = [all_params.build_image, all_params.gardenlinux_build_deb_image]
+    params = [all_params.build_image, all_params.gardenlinux_build_deb_image, all_params.step_image]
 
     clone_step, params_step = steps.clone_step(
         params=all_params,
@@ -163,7 +163,7 @@ def test_task(
     volume_mounts,
     volumes=[],
 ):
-    params = []
+    params = [all_params.step_image]
     clone_step, params_step = steps.clone_step(
         params=all_params,
         env_vars=env_vars,
@@ -242,6 +242,13 @@ def base_image_build_task(env_vars, volumes, volume_mounts):
         volume_mounts=volume_mounts,
     )
     params += params_step
+
+    build_step_image_step, params_step = steps.build_step_image_step(
+        params=all_params,
+        env_vars=env_vars,
+        volume_mounts=volume_mounts,
+    )
+    params += params_step
     params = unify_params(params)
 
     return tkn.model.Task(
@@ -252,6 +259,7 @@ def base_image_build_task(env_vars, volumes, volume_mounts):
                 clone_repo_step,
                 update_status_step,
                 build_base_image_step,
+                build_step_image_step,
             ],
             volumes=volumes,
         ),
@@ -263,7 +271,7 @@ def notify_task(
     volumes,
     volume_mounts,
 ):
-    params = []
+    params = [all_params.step_image]
     clone_step, params_step =  steps.clone_step(
         params=all_params,
         env_vars=env_vars,

@@ -5,11 +5,13 @@ import yaml
 import sys
 import os
 import sys
+import re
 
 import glci.util
 
 from typing import Iterator
 from helper.sshclient import RemoteClient
+from helper.utils import disabled_by
 
 from os import path
 from dataclasses import dataclass
@@ -345,13 +347,18 @@ def pytest_collection_modifyitems(config, items):
     except OSError as err:
         logger.error(f"can not open config file {config_file}")
         pytest.exit(err, 1)
-    features = config_options[iaas].get("features", "")
+    features = config_options[iaas].get("features", [])
     for item in items:
         item_path = str(item.fspath)
         if "features" in item_path:
             feature = item_path.split('/')[3]
             if not feature in features:
                 item.add_marker(skip)
+        plain_item_name = re.match(r"test_([\w_]+)\[?.*", item.name).group(1)
+        disabled = disabled_by(features, plain_item_name)
+        if len(disabled) != 0:
+            item.add_marker(pytest.mark.skip(reason=f"test is disabled by feature " +
+                                                    f"{', '.join(disabled)}"))
 
 
 @pytest.fixture
@@ -427,6 +434,13 @@ def openstack(iaas):
     if iaas != 'openstack-ccee':
         pytest.skip('test only supported on openstack')
 
+# This fixture is an alias of "chroot" but does not use the "chroot" env.
+# However, it only needs the underlying container for its tests.
+@pytest.fixture
+def container(iaas):
+    if iaas != 'chroot':
+        pytest.skip('test only supported on containers')
+
 @pytest.fixture
 def openstack_flavor():
     return OpenStackCCEE.instance().flavor
@@ -442,12 +456,18 @@ def non_arm64(client):
 
 @pytest.fixture
 def non_metal(testconfig):
-    features = testconfig["features"]
+    features = testconfig.get("features", [])
     if "metal" in features:
         pytest.skip('test not supported on metal')
 
 @pytest.fixture
+def non_feature_gardener(testconfig):
+    features = testconfig.get("features", [])
+    if "gardener" in features:
+        pytest.skip('test is not supported on gardener')
+
+@pytest.fixture
 def non_dev(testconfig):
-    features = testconfig["features"]
+    features = testconfig.get("features", [])
     if "_dev" in features:
         pytest.skip('test not supported on dev')

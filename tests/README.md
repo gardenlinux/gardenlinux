@@ -78,6 +78,8 @@ aws:
     region: eu-central-1
     # machine/instance type of the test VM - not all machines are available in all regions (optional)
     instance_type: t3.micro
+    # architecture of the image and VM to be used (optional)
+    architecture: x86_64
 
     # ssh related configuration for logging in to the VM (optional)
     ssh:
@@ -108,6 +110,7 @@ aws:
 
 - **region** _(required)_: the AWS region in which all test relevant resources will be created 
 - **instanc-type** _(optional)_: the instance type that will be used for the EC2 instance used for testing, defaults to `t3.micro` if not specified
+- **architecture** _(optional)_: the architecture under which the AMI of the image to test should be registered (`x86_64` or `arm64`), must match the instance type, defaults to `x86_64` if not specified
 
 - **ssh_key_filepath** _(optional)_: The SSH key that will be deployed to the EC2 instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand. If not provided, a new SSH key with 2048 bits will be generated just for the test.
 - **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.

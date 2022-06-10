@@ -2,6 +2,8 @@ import uuid
 import os
 import re
 import string
+import subprocess
+
 
 def get_package_list(client):
     """Return list with the installed packages.
@@ -94,3 +96,35 @@ def unset_env_var(client, env_var):
     """Unset env var on remote system"""
     (exit_code, output, error) = client.execute_command(f'su - root -c "unset {env_var}"', quiet=True)
     return exit_code
+
+
+def get_kernel_version(client):
+    (exit_code, output, error) = client.execute_command(
+        "uname -r", quiet=True)
+    assert exit_code == 0, f"no {error=} expected"
+    output = output.strip()
+    return output
+
+
+def execute_local_command(cmd):
+    """ Run local commands in Docker container """
+    p = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    rc = p.returncode
+    out = p.stdout.decode()
+    return rc, out
+
+
+def execute_remote_command(client, cmd):
+    """ Run remote command on test platform """
+    (exit_code, output, error) = client.execute_command(
+        cmd, quiet=True)
+    assert exit_code == 0, f"no {error=} expected"
+    output = output.strip()
+    return output
+
+
+def install_package_deb(client, pkg):
+    """ Installs (a) Debian packagei(s) on a target platform """
+    (exit_code, output, error) = client.execute_command(
+        f"apt-get install -y --no-install-recommends {pkg}", quiet=True)
+    assert exit_code == 0, f"Could not install Debian Package: {error}"
