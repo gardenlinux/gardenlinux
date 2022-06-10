@@ -20,6 +20,17 @@ chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
 chroot "$rootfs_work" /usr/bin/env -i /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
 rm "$rootfs_work/.autorelabel"
 
+if ! grep _secureboot <<<"$features" > /dev/null; then
+	machineid="$(mktemp)"
+	mount --rbind "${machineid}" "${rootfs_work}/etc/machine-id"
+	touch "$rootfs_work/boot/efi/loader/loader.conf"
+	touch "$rootfs_work/boot/efi/loader/entries.srel"
+	chroot "$rootfs_work" /usr/bin/env -i SYSTEMD_ESP_PATH="/boot/efi" bootctl --no-variables --make-machine-id-directory=no install
+	rm -f "${rootfs_work}/boot/efi/loader/random-seed"
+	umount "${rootfs_work}/etc/machine-id"
+	rm -f "$machineid"
+fi
+
 fstab="$(mktemp)"
 veritytab="$(mktemp)"
 root_hash="$(mktemp)"
