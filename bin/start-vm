@@ -198,8 +198,14 @@ if [ "$arch" = "$(uname -m)" ]; then
 		[ -z "${cpuinfo##*vmx*}" -o -z "${cpuinfo##*svm*}" ] &&
 			virtOpts+=("-enable-kvm" "-cpu host" "-machine q35,smm=on")
 		elif [ "$arch" = aarch64 ]; then
-			virtOpts+=("-cpu host" "-machine virt")
-			[ -e "/dev/kvm" ] && virtOpts+=("-accel kvm")
+                        # Check if aarch64 is running in a virtualized
+                        # environment where we may not use any accleration
+                        if [ "QEMU" = "$(dmesg  | grep "DMI: QEMU" | awk {'print $4'})" ] && [ "not" = "$(dmesg | grep -i kvm | awk {'print $7'})" ]; then
+			    virtOpts+=("-cpu max" "-machine virt")
+			else
+                            virtOpts+=("-cpu host" "-machine virt")
+			    [ -e "/dev/kvm" ] && virtOpts+=("-accel kvm")
+                        fi
 		fi
 else
 	if [ "$arch" = x86_64 ]; then
