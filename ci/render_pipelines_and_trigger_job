@@ -7,29 +7,39 @@ repo_root="${own_dir}/.."
 
 source "${own_dir}/lib.sh"
 
-install_kubectl
-install_tkn
+function sanitise_namespace_name {
+  namespace_name=$1
+  # sanitise given branch-name to k8s-namespace-name - k8s namespaces may contain only alphanumeric
+  # characters and dashes. Translate everything else to a dash.
+  # Note: they also must start and end with an alphanumeric character - if that isn't true for the
+  # branch name, this function will fail
+  echo -n ${namespace_name} | tr -c [:alnum:] -
+}
 
-# retrieve and configure kubeconfig (sets KUBECONFIG env var)
-if [ -z ${KUBECONFIG:-} ] &&  [ -n ${SECRETS_SERVER_ENDPOINT:-} ]; then
-  kubecfg
-fi
+function create_or_update_namespace {
+  namespace_name=$1
+  echo "Creating/Updating namespace with name: ${namespace_name}"
 
-# also handles default-values for env-vars
-export_env
+  # use kubectl to create a manifest for a namespace and apply it. Without the first step
+  # kubectl would complain if the namespace already exists.
+  # This will print a warning the first time this updates existing namespaces if they haven't been
+  # created with 'kubectl apply'
+  kubectl create ns "${namespace_name}" --dry-run=client -oyaml | kubectl apply -f -
+}
 
 function cleanup_pipelineruns {
-  echo "purging old pipelineruns"
+  namespace_name=$1
+  echo "purging old pipelineruns in namespace: ${namespace_name}"
   tkn \
-    -n "${GARDENLINUX_TKN_WS}" \
+    -n "${namespace_name}" \
     pipelineruns \
     delete \
     --force \
     --all \
     --keep 20
-  echo "purging old taskruns"
+  echo "purging old taskruns in namespace: ${namespace_name}"
     tkn \
-   -n "${GARDENLINUX_TKN_WS}" \
+   -n "${namespace_name}" \
     taskruns \
     delete \
     --force \
@@ -38,19 +48,33 @@ function cleanup_pipelineruns {
 }
 
 function create_credentials {
+  namespace_name=$1
   ci/render_credentials.py \
     --outfile "${credentials_outfile}"
 
-  if kubectl get secret -n "${GARDENLINUX_TKN_WS}" secrets &> /dev/null; then
-    kubectl delete secret -n "${GARDENLINUX_TKN_WS}" secrets
+  if kubectl get secret -n "${namespace_name}" secrets &> /dev/null; then
+    kubectl delete secret -n "${namespace_name}" secrets
   fi
 
-  echo "Creating secret"
+  echo "Creating secret in namespace: ${namespace_name}"
   $(which kubectl) create secret generic secrets \
-    -n "${GARDENLINUX_TKN_WS}" \
+    -n "${namespace_name}" \
     --from-file=config.json="${credentials_outfile}"
 }
 
+install_kubectl
+install_tkn
+
+# also handles default-values for env-vars
+export_env
+
+# retrieve and configure kubeconfig (sets KUBECONFIG env var)
+if [ -z ${KUBECONFIG:-} ] &&  [ -n ${SECRETS_SERVER_ENDPOINT:-} ]; then
+  kubecfg
+fi
+
+tekton_namespace="$(sanitise_namespace_name ${GARDENLINUX_TKN_WS})"
+create_or_update_namespace "${tekton_namespace}"
 
 echo "render pipelines"
 cd "${repo_root}"
@@ -73,7 +97,7 @@ if [ ! -z "${PYTEST_CFG:-}" ]; then
   EXTRA_ARGS="${PYTEST_CFG} --pytest-cfg={PYTEST_CFG}"
 fi
 
-cleanup_pipelineruns
+cleanup_pipelineruns "${tekton_namespace}"
 
 # for local dev rendering use latest remote commit and no local one.
 if [ ! -z "${CC_CONFIG_DIR:-}" ]; then
@@ -116,8 +140,8 @@ if [ ! -z ${SECRETS_SERVER_ENDPOINT:-} ]; then
 else
   # secrets-server won't be available; create config from local files and put it as
   # k8s secret into cluster.
-  echo "create credentials"
-  create_credentials
+  echo "creating credentials in cluster"
+  create_credentials "${tekton_namespace}"
 fi
 
 ci/render_all.py \
@@ -159,20 +183,20 @@ done
 # --image-build calls triggering the pipeline run for image build
 if [ ${image_build} = true ] ; then
   echo "Build images"
-  kubectl apply -n "${GARDENLINUX_TKN_WS}" -f "${pipeline_run}"
+  kubectl apply -n "${tekton_namespace}" -f "${pipeline_run}"
   if [ ${wait} = true ] ; then
     echo "waiting for new pipelinerun ${pipeline_run}"
-    ci/wait_for_pipelinerun.py --pipelinerun-file "${pipeline_run}" --namespace "${GARDENLINUX_TKN_WS}"
+    ci/wait_for_pipelinerun.py --pipelinerun-file "${pipeline_run}" --namespace "${tekton_namespace}"
   fi
 fi
 
 # --package-build calls triggering the pipeline run for image build
 if [ ${package_build} = true ]; then
   echo "Build packages"
-  kubectl apply -n "${GARDENLINUX_TKN_WS}" -f "${pipeline_package_run}"
+  kubectl apply -n "${tekton_namespace}" -f "${pipeline_package_run}"
   if [ ${wait} = true ]; then
     echo "waiting for new pipelinerun ${pipeline_package_run}"
-    ci/wait_for_pipelinerun.py --pipelinerun-file "${pipeline_package_run}" --namespace "${GARDENLINUX_TKN_WS}"
+    ci/wait_for_pipelinerun.py --pipelinerun-file "${pipeline_package_run}" --namespace "${tekton_namespace}"
   fi
 fi
 

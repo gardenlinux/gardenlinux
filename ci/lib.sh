@@ -41,9 +41,9 @@ function kubecfg()  {
 }
 
 function export_env() {
-  export BRANCH_NAME="${BRANCH_NAME:-main}"
+  export BRANCH_NAME="${BRANCH_NAME:-${GARDENLINUX_BRANCH:-main}}"
+  export GARDENLINUX_TKN_WS="${GARDENLINUX_TKN_WS:-${GARDENLINUX_BRANCH:-gardenlinux}}"
   export FLAVOUR_SET="${FLAVOUR_SET:-all}"
-  export GARDENLINUX_TKN_WS="${GARDENLINUX_TKN_WS:-gardenlinux}"
   export GIT_URL="${GIT_URL:-https://github.com/gardenlinux/gardenlinux}"
   export OCI_PATH="${OCI_PATH:-eu.gcr.io/gardener-project/gardenlinux}"
   export PROMOTE_TARGET="${PROMOTE_TARGET:-snapshot}"
