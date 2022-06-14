@@ -160,7 +160,7 @@ else
 		fullfeatures="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" features)"
 		configDir=$(${thisDir}/bin/garden-integration-test-config chroot ${prefix} ${fullfeatures} ${outputDir})
 		echo "Running pytests in chroot"
-		${gardenlinux_build_cre} run --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW --security-opt apparmor=unconfined \
+		${gardenlinux_build_cre} run --cap-add sys_admin --cap-add mknod --cap-add audit_write --cap-add net_raw --security-opt apparmor=unconfined \
 			--name $containerName --rm -v `pwd`:/gardenlinux -v ${configDir}:/config \
 			gardenlinux/base-test:dev \
 			pytest --iaas=chroot --configfile=/config/config.yaml &
