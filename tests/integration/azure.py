@@ -322,6 +322,11 @@ class AZURE:
                         }
                     ]
                 },
+                'diagnostics_profile': {
+                    'boot_diagnostics': {
+                        'enabled': True,
+                    }
+                },
                 'tags': self._tags
             }
         ).result()
