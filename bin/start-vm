@@ -15,6 +15,7 @@ set -Eeuo pipefail
 
 thisDir=$(dirname "$(readlink -f "$BASH_SOURCE")")
 targetDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+tmpDir=${TMPDIR:-/tmp}
 cpu=2
 arch="$(uname -m)"
 memory=2Gi
@@ -187,7 +188,7 @@ uuid="12345678-0000-0000-0000-${mac}"
 virtOpts+=(     "-uuid $uuid" )
 
 # support for qemu guest agent. There is no way for this script if inside VM is connected or not
-virtOpts+=(	"-chardev socket,path=$targetDir/$mac.guest,server=on,wait=off,id=qga0"
+virtOpts+=(	"-chardev socket,path=$tmpDir/$mac.guest,server=on,wait=off,id=qga0"
 		"-device virtio-serial"
 		"-device virtserialport,chardev=qga0,name=org.qemu.guest_agent.0" )
 
@@ -217,8 +218,8 @@ fi
 
 # adding a monitoring port for extended commands
 if [ $monitor ]; then
-	[ -e $targetDir/$mac.monitor ] && eusage "monitor to this macaddress already exists $targetDir/$mac.monitor"
-	virtOpts+=(	"-monitor unix:$targetDir/$mac.monitor,server,nowait" )
+	[ -e $tmpDir/$mac.monitor ] && eusage "monitor to this macaddress already exists $targetDir/$mac.monitor"
+	virtOpts+=(	"-monitor unix:$tmpDir/$mac.monitor,server,nowait" )
 fi
 
 [ $daemonize ] && virtOpts+=(	"-daemonize" )
@@ -371,6 +372,3 @@ if [ $vnc ]; then
 fi
 
 qemu-system-$arch ${virtOpts[@]}
-
-### cleanup
-[ $daemonize ] || rm -f $targetDir/$mac.monitor
