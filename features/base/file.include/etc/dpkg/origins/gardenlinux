@@ -1,0 +1,4 @@
+Vendor: GardenLinux
+Vendor-URL: https://gardenlinux.io/
+Bugs: https://github.com/gardenlinux/gardenlinux/issues/new
+Parent: Debian
