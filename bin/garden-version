@@ -3,10 +3,20 @@
 # Contains sources from https://github.com/debuerreotype/debuerreotype
 
 set -Eeuo pipefail
-
 thisDir="$(dirname "$(readlink -f "${BASH_SOURCE}")")"
 versionfile="$(readlink -f "${thisDir}/../VERSION")"
 startdate="Mar 31 00:00:00 UTC 2020"
+build_os="$(uname -s)"
+
+# Use "gdate" & sed (GNU) which must be installed by "Homebrew"
+# on macOS systems to have a normalized date interface
+if [ "Darwin" == $build_os ]; then
+        date_gnu="gdate"
+        sed_gnu="/usr/local/bin/gsed"
+else
+        date_gnu="date"
+        sed_gnu="sed"
+fi
 
 source "${thisDir}/.constants.sh" \
 	--flags 'major,minor,date,datefull,epoch,git' \
@@ -37,8 +47,9 @@ while true; do
 		*) 	eusage "unknown flag '${flag}'" ;;
 	esac
 done
-input="${1:-$(sed -e "s/#.*\$//" -e "/^$/d" "${versionfile}")}";  shift || true
-input=$(sed "s/^[[:space:]]*//;s/[[:space:]]*\$//" <<< ${input})
+
+input="${1:-$($sed_gnu -e "s/#.*\$//" -e "/^$/d" "${versionfile}")}";  shift || true
+input=$($sed_gnu "s/^[[:space:]]*//;s/[[:space:]]*\$//" <<< ${input})
 
 # no version / timestamp on versionfile
 [ -z ${input} ] && input="dev"
@@ -53,11 +64,11 @@ then	[ $(cut -d. -sf3 <<< ${input}) ] && eusage "invalid version format ${input}
 	fi
 	version="${major}.${minor}"
 else	if	[[ ${input} = dev ]];
-	then	indate=$(date --date "today" +%s 2>/dev/null)
-		major="$(( (${indate} - $(date --date "${startdate}" +%s)) / (60*60*24) ))"
+	then	indate=$($date_gnu --date "today" +%s 2>/dev/null)
+		major="$(( (${indate} - $($date_gnu --date "${startdate}" +%s)) / (60*60*24) ))"
 		version=dev
-	else	indate=$(date --date "${input}" +%s 2>/dev/null) || eusage "invalid date ${input}"
-		major="$(( (${indate} - $(date --date "${startdate}" +%s)) / (60*60*24) ))"
+	else	indate=$($date_gnu --date "${input}" +%s 2>/dev/null) || eusage "invalid date ${input}"
+		major="$(( (${indate} - $($date_gnu --date "${startdate}" +%s)) / (60*60*24) ))"
 		version="${major}.${minor}"
 	fi
 fi
@@ -65,9 +76,9 @@ fi
 case "${typeout}" in
 	--major)	echo ${major} ;;
 	--minor)	echo ${minor} ;;
-	--date)		date --date "${startdate} + ${major} days" +%Y%m%d ;;
-	--datefull)	date --date "${startdate} + ${major} days" +%Y%m%dT%H%M%SZ ;;
-	--epoch)	date --date "${startdate} + ${major} days" +%s ;;
+	--date)		$date_gnu --date "${startdate} + ${major} days" +%Y%m%d ;;
+	--datefull)	$date_gnu --date "${startdate} + ${major} days" +%Y%m%dT%H%M%SZ ;;
+	--epoch)	$date_gnu --date "${startdate} + ${major} days" +%s ;;
 	--git)		echo "${version}-$(git -C "${scriptsDir}" rev-parse --short 'HEAD^{commit}')" ;;
         *)		echo "${version}" ;;
 esac

@@ -15,18 +15,21 @@
 </website-main>
  
 ## Table of Content
-- [Features](#Features)
-- [Quick Start](#Quick-Start)
-  * [Build Requirements](#Build-Requirements)
-  * [Build Options](#Build-Options)
-  * [Building](#Building)
-- [Customizing](#Customizing)
-- [Release](#Release)
-- [Documentation](#Documentation)
-  * [Continous Integration](#Continous-Integration)
-  * [Integration Tests / Unit Tests](#Integration-Tests)
-- [Contributing](#Contributing)
-- [Community](#Community)
+- [Garden Linux](#garden-linux)
+  - [Table of Content](#table-of-content)
+  - [Features](#features)
+  - [Quick Start](#quick-start)
+    - [Build Requirements](#build-requirements)
+    - [Build Options](#build-options)
+    - [Building](#building)
+  - [Customizing](#customizing)
+  - [Deploying](#deploying)
+  - [Release](#release)
+  - [Documentation](#documentation)
+    - [Continous Integration](#continous-integration)
+    - [Integration Tests](#integration-tests)
+  - [Contributing](#contributing)
+  - [Community](#community)
 
 ## Features
 - Easy to use build system
@@ -78,7 +81,27 @@ CFSSL requires `GLIBC 2.28`. Therefore, we recommand to build on systems running
 yum install bash sudo podman crun make gnupg git qemu-kvm qemu-img coreutils
 ```
 
-**Adjust Repository:**
+**macOS (>=12):**
+
+Currently, the build support on `macOS` (>=12) is experimental and supports `Intel` (AMD64) and `Apple Silicon` (ARM64/AARCH64) with `M1` and  `M2` CPUs.
+
+Furthermore, building on macOS requires to fulfill further build requirements:
+ * Command Line Tools (CLT) for Xcode
+ * [Homebrew](https://brew.sh)
+ * [Docker](https://docs.docker.com/desktop/mac/install/)
+
+```
+# Install needed packages
+brew install coreutils bash gnu-getopt gnu-sed gawk
+
+# Change to bash (Default: ZSH)
+$> bash
+
+# Export Docker as Container Runtime Environment for Garden Linux
+$> export GARDENLINUX_BUILD_CRE=docker
+```
+
+**Adjust Repository (not macOS):**
 
 Add `docker.io` to `unqualified-search-registries` in your [registries.conf](https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md). On freshly installed `Podman` systems this can be done by executing:
 ```
@@ -135,7 +158,7 @@ Building Garden Linux is based on a [feature system](features/README.md).
 |---|---|
 | Platforms | `ali`, `aws`, `azure`, `gcp`, `kvm`, `metal`, ... |
 | Features | `container host`, `vitual host`, ... |
-| Modifiers | `_slim`, `_readonly`, `_pxe`, `_iso`, ... |
+| Modifiers | `_slim`, `_readonly`, `_pxe`, `_iso`, ... |
 | Element | `cis`, `fedramp`, `gardener` |
 
 if you want to build manually choose:

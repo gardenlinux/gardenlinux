@@ -7,11 +7,18 @@ scriptsDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 featureDir="$scriptsDir/../features"
 self="$(basename "$0")"
 
-options="$(getopt -n "$BASH_SOURCE" -o '+' --long 'flags:,flags-short:,help:,usage:,sample:' -- "$@")"
+build_os="$(uname -s)"
+if [ "Darwin" == $build_os ]; then
+    options=$(/usr/local/opt/gnu-getopt/bin/getopt -n "$BASH_SOURCE" -o '+' --long 'flags:,flags-short:,help:,usage:,sample:' -- "$@")
+else
+    options="$(getopt -n "$BASH_SOURCE" -o '+' --long 'flags:,flags-short:,help:,usage:,sample:' -- "$@")"
+fi
+
 dFlags='help,version'
 dFlagsShort='h?'
 dHelp=
 dUsage=
+
 __cgetopt() {
 	eval "set -- $options" # in a function since otherwise "set" will overwrite the parent script's positional args too
 	unset options
@@ -68,11 +75,19 @@ eusage() {
 }
 
 _dgetopt() {
-	getopt -n "error" \
-		-o "+$dFlagsShort" \
-		--long "$dFlags" \
-		-- "$@" \
-		|| eusage 
+        if [ "Darwin" == $build_os ]; then
+	        /usr/local/opt/gnu-getopt/bin/getopt -n "error" \
+		        -o "+$dFlagsShort" \
+		        --long "$dFlags" \
+		        -- "$@" \
+		        || eusage
+        else
+	        getopt -n "error" \
+		        -o "+$dFlagsShort" \
+		        --long "$dFlags" \
+		        -- "$@" \
+		        || eusage
+fi
 }
 
 dgetopt='options="$(_dgetopt "$@")"; eval "set -- $options"; unset options'
@@ -88,9 +103,7 @@ dgetopt-case() {
 filter_comment () {
     sed "s/#.*$//;/^$/d;s/^[[:space:]]*//;s/[[:space:]]*$//"
 }
-#filter_variables () {
-#    arch=$arch /usr/bin/envsubst
-#}
+
 filter_variables () {
     if [ "${1+defined}" ]; then
 	if [ "$1" == "" ]; then
@@ -115,6 +128,7 @@ filter_variables () {
 	exit 1
     fi
 }
+
 filter_if() {
     awk -F ']' '
       {
