@@ -12,7 +12,7 @@ build_os="$(uname -s)"
 # on macOS systems to have a normalized date interface
 if [ "Darwin" == $build_os ]; then
         date_gnu="gdate"
-        sed_gnu="/usr/local/bin/gsed"
+        sed_gnu="gsed"
 else
         date_gnu="date"
         sed_gnu="sed"

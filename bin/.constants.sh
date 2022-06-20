@@ -6,14 +6,25 @@ umask 0022
 scriptsDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 featureDir="$scriptsDir/../features"
 self="$(basename "$0")"
-
 build_os="$(uname -s)"
+
+# Determinate the OS for GNU tools
 if [ "Darwin" == $build_os ]; then
-    options=$(/usr/local/opt/gnu-getopt/bin/getopt -n "$BASH_SOURCE" -o '+' --long 'flags:,flags-short:,help:,usage:,sample:' -- "$@")
+
+    # Test for possible pathes of getopt
+    # in different brew locations
+    if [[ -f "/usr/local/opt/gnu-getopt/bin/getopt" ]]; then
+        getopt_gnu="/usr/local/opt/gnu-getopt/bin/getopt"
+    fi
+
+    if [[ -f "/opt/homebrew/opt/gnu-getopt/bin/getopt" ]]; then
+        getopt_gnu="/opt/homebrew/opt/gnu-getopt/bin/getopt"
+    fi
 else
-    options="$(getopt -n "$BASH_SOURCE" -o '+' --long 'flags:,flags-short:,help:,usage:,sample:' -- "$@")"
+    getopt_gnu="getopt"
 fi
 
+options=$($getopt_gnu -n "$BASH_SOURCE" -o '+' --long 'flags:,flags-short:,help:,usage:,sample:' -- "$@")
 dFlags='help,version'
 dFlagsShort='h?'
 dHelp=
@@ -75,19 +86,11 @@ eusage() {
 }
 
 _dgetopt() {
-        if [ "Darwin" == $build_os ]; then
-	        /usr/local/opt/gnu-getopt/bin/getopt -n "error" \
-		        -o "+$dFlagsShort" \
-		        --long "$dFlags" \
-		        -- "$@" \
-		        || eusage
-        else
-	        getopt -n "error" \
-		        -o "+$dFlagsShort" \
-		        --long "$dFlags" \
-		        -- "$@" \
-		        || eusage
-fi
+        $getopt_gnu -n "error" \
+	        -o "+$dFlagsShort" \
+	        --long "$dFlags" \
+	        -- "$@" \
+	        || eusage
 }
 
 dgetopt='options="$(_dgetopt "$@")"; eval "set -- $options"; unset options'
