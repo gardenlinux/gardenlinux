@@ -52,7 +52,7 @@ class AWS:
             pytest.exit("Neither 'image' nor 'ami_id' specified, cannot continue.", 2)
         if not 'instance_type' in cfg:
             cfg['instance_type'] = "t3.micro"
-        if not 'architecture' in cfg:
+        if not 'architecture' in cfg or cfg['architecture'] == "amd64":
             cfg['architecture'] = "x86_64"
         if not 'bucket' in cfg:
             cfg['bucket'] = f"img-{test_name}-upload"

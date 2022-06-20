@@ -477,6 +477,7 @@ class GCP:
 
         self.logger.info(f"Starting new instance from image {image}...")
         machine_type = f"zones/{self.zone}/machineTypes/{self.machine_type}"
+        disk_type = f"zones/{self.zone}/diskTypes/pd-ssd"
         name = f"vm-{self.test_name}"
         config = {
             "name": name,
@@ -485,7 +486,11 @@ class GCP:
                 {
                     "boot": True,
                     "autoDelete": True,
-                    "initializeParams": {"diskSizeGb": 7, "sourceImage": image,},
+                    "initializeParams": {
+                        "diskSizeGb": 7,
+                        "sourceImage": image,
+                        "diskType": disk_type,
+                    }
                 }
             ],
             "networkInterfaces": [
