@@ -26,7 +26,9 @@ cp -a "$rootfs/." "$rootfs_work"
 find "$rootfs_work/var/log/" -type f -delete
 
 chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
-chroot "$rootfs_work" /usr/bin/env -i /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
+# Temporary deactivated until this is fixed by upstream:
+# GitHub: https://github.com/gardenlinux/gardenlinux/issues/1014
+#chroot "$rootfs_work" /usr/bin/env -i /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
 rm "$rootfs_work/.autorelabel"
 
 # create the squashfs to include the fully generate image
