@@ -1,0 +1,9 @@
+curl
+git
+gnupg
+jq
+make
+podman
+
+http://deb.debian.org/debian/pool/main/b/bzip2/libbz2-1.0_1.0.8-5_${arch}.deb
+http://deb.debian.org/debian/pool/main/u/unzip/unzip_6.0-26_${arch}.deb

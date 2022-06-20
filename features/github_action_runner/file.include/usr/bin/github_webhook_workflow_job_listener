@@ -1,0 +1,95 @@
+#!/usr/bin/env node
+
+const { openSync } = require("fs");
+const { createServer } = require("http");
+const { spawnSync } = require("child_process");
+
+const log_file_fd = openSync(process.argv[2], "w");
+
+let label = process.argv[3];
+let max_num_runners = process.argv[4];
+let timeout = process.argv[5] * 1000 * 60 * 60;
+let start_script = process.argv[6];
+let check_script = process.argv[7];
+let stop_script = process.argv[8];
+
+let runner_instances = new Map();
+let num_queued_runners = 0;
+
+const start_runner = () => {
+	const runner_start_process = spawnSync("/bin/bash", [ "-c", start_script ], { stdio: [ "ignore", "pipe", log_file_fd ] });
+	if (runner_start_process.status === 0) {
+		const runner_instance_id = runner_start_process.stdout.toString().trim();
+		if (!runner_instance_id) {
+			console.error("emptyp runner_instance_id");
+			return;
+		}
+
+		console.log("runner " + runner_instance_id + " started");
+
+		const runner_timeout = setTimeout(stop_runner, timeout, runner_instance_id);
+		runner_timeout.unref();
+		const runner_interval = setInterval(check_runner, 1000 * 60 * 10, runner_instance_id);
+		runner_interval.unref();
+		runner_instances.set(runner_instance_id, { timeout: runner_timeout, interval: runner_interval });
+	}
+};
+
+const stop_runner = (runner_instance_id) => {
+	const runner_instance = runner_instances.get(runner_instance_id);
+	if (runner_instance) {
+		spawnSync("/bin/bash", [ "-c", stop_script, "--", runner_instance_id ], { stdio: [ "ignore", log_file_fd, log_file_fd ] });
+		clearTimeout(runner_instance.timeout);
+		clearInterval(runner_instance.interval);
+		runner_instances.delete(runner_instance_id);
+		console.log("runner " + runner_instance_id + " stopped");
+
+		update_runners();
+	}
+};
+
+const check_runner = (runner_instance_id) => {
+	console.log("checking runner " + runner_instance_id);
+
+	if (!runner_instances.has(runner_instance_id)) {
+		console.error("unknown runner " + runner_instance_id);
+		return;
+	}
+
+	const runner_check_process = spawnSync("/bin/bash", [ "-c", check_script, "--", runner_instance_id ], { stdio: [ "ignore", log_file_fd, log_file_fd ] });
+	if (runner_check_process.status !== 0) stop_runner(runner_instance_id);
+};
+
+const update_runners = () => {
+	while (num_queued_runners > 0 && runner_instances.size < max_num_runners) {
+		start_runner();
+		--num_queued_runners;
+	}
+};
+
+const request_runner = () => {
+	++num_queued_runners;
+	update_runners();
+}
+
+["exit", "uncaughtException", "SIGINT", "SIGTERM"].forEach((event) => {
+	process.on(event, () => {
+		runner_instances.forEach((_, instance_id) => { stop_runner(instance_id); });
+	});
+});
+
+setInterval(() => {
+	console.log("status: " + runner_instances.size + "/" + max_num_runners + " active runners, " + num_queued_runners + " queued runners");
+}, 1000 * 60);
+
+process.on("message", (data) => {
+	if (data instanceof Object && data.action === "queued" && data.workflow_job instanceof Object && data.workflow_job.labels instanceof Array && data.workflow_job.labels[0] === label) {
+		console.log("runner requestetd");
+		request_runner();
+	}
+
+	if (data instanceof Object && typeof data.aws_instance_id === "string") {
+		console.log("notify recieved from runner " + data.aws_instance_id);
+		setTimeout(check_runner, 1000 * 10, data.aws_instance_id);
+	}
+});
