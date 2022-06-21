@@ -11,3 +11,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: make BUILD_OPTS=--lessram ${{ matrix.target }}${{ matrix.modifier }}
+      - run: |
+          name="${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-$(bin/garden-version)-$(git rev-parse --short HEAD)"
+          mv .build "$name"
+          tar -czvf "$name.tar.gz" "$name"
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
+          path: ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*-*.tar.gz
