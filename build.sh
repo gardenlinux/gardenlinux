@@ -172,7 +172,7 @@ else
 		echo "Running pytests in chroot"
 		${gardenlinux_build_cre} run --cap-add sys_admin --cap-add mknod --cap-add audit_write --cap-add net_raw --security-opt apparmor=unconfined \
 			--name $containerName --rm -v `pwd`:/gardenlinux -v ${configDir}:/config \
-			gardenlinux/base-test:dev \
+			"gardenlinux/base-test:$version" \
 			pytest --iaas=chroot --configfile=/config/config.yaml &
 		wait %1
 		rm -r ${configDir}
@@ -186,7 +186,7 @@ else
 		echo "Running pytests in KVM"
 		${gardenlinux_build_cre} run --name $containerName --rm -v /boot/:/boot \
 			-v /lib/modules:/lib/modules -v `pwd`:/gardenlinux -v ${configDir}:/config \
-			gardenlinux/base-test:dev \
+			"gardenlinux/base-test:$version" \
 			pytest --iaas=kvm --configfile=/config/config.yaml &
 		wait %1
 		rm -r ${configDir}

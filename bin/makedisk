@@ -4,11 +4,6 @@ set -Eeuo pipefail
 
 exec 1>&2
 
-function uuid_hash {
-	hash=$(sha256sum)
-	echo "${hash:0:8}-${hash:8:4}-${hash:12:4}-${hash:16:4}-${hash:20:12}"
-}
-
 rootfs="$1"
 img="$2"
 
@@ -18,6 +13,7 @@ if [[ -e "$img" ]]; then
 fi
 
 second_pass="$(</dev/stdin)"
+[ -n "$second_pass" ]
 
 img_size=0
 syslinux_mbr=0

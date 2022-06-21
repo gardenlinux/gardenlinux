@@ -294,6 +294,7 @@ class AZURE:
                     'os_disk': {
                         'disk_size_gb': disk_size,
                         'create_option': 'FromImage',
+                        'storage_account_type': 'StandardSSD_LRS',
                         'delete_option': 'Delete'
                     }
                 },
@@ -594,6 +595,7 @@ class AZURE:
                             'os_state': 'Generalized',
                             'blob_uri': image_uri,
                             'caching': 'ReadWrite',
+                            'storage_account_type': 'StandardSSD_LRS',
                         }
                     },
                     'tags': self._tags

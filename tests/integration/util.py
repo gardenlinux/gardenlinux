@@ -8,7 +8,8 @@ logger = logging.getLogger(__name__)
 
 def get_my_ip():
     """Obtain external visible IP address"""
-    url='https://api.myip.com'
+    #url='https://api.myip.com'
+    url='https://api.ipify.org?format=json'
 
     response = urllib.request.urlopen(url)
     if response.status != 200:

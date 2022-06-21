@@ -34,4 +34,4 @@ fi
 
 echo "kernel-install: installing kernel ${version}" 
 /usr/bin/kernel-install remove "${version}" 
-/usr/bin/kernel-install add "${version}" "${kernel}" "zzz-skip-initrd"
+/usr/bin/kernel-install add "${version}" "${kernel}" "${initrd}"
