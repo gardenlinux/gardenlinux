@@ -101,7 +101,9 @@ $> bash
 $> export GARDENLINUX_BUILD_CRE=docker
 ```
 
-**Adjust Repository (not macOS):**
+**Adjust Repository:**
+
+*Note: This is **not** needed on macOS.*
 
 Add `docker.io` to `unqualified-search-registries` in your [registries.conf](https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md). On freshly installed `Podman` systems this can be done by executing:
 ```

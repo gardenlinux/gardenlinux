@@ -13,6 +13,15 @@ set -Eeuo pipefail
 #
 # pxe dir, mac : parsing
 
+# macOS is currently unsupported
+build_os="$(uname -s)"
+
+if [ "Darwin" == $build_os ]; then
+        echo -e "Warning: \tCurrently there isn't any QEMU support for macOS.
+        \tHowever, you may run your images with UTM: https://github.com/utmapp/UTM"
+        exit 1
+fi
+
 thisDir=$(dirname "$(readlink -f "$BASH_SOURCE")")
 targetDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 tmpDir=${TMPDIR:-/tmp}

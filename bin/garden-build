@@ -60,16 +60,24 @@ outputDir="$exportDir$prefix"
 if [ "${OUTPUT_DIR+defined}" ]; then
 	outputDir="${OUTPUT_DIR}${prefix}"
 	buildLog="${outputDir}/build.log"
+	fullfeature_file="${outputDir}/fullfeature.info"
+	prefix_file="${outputDir}/prefix.info"
 	mkdir -p "${outputDir}"
 	touch "${buildLog}"
 else
 	volumeDir="/output$prefix"
 	buildLog="/output$prefix.log"
 
+        fullfeature_file="/output/fullfeature.info"
+        prefix_file="/output/prefix.info"
+
 	touch "${buildLog}"
 	chown "${userID}":"${userGID}" "${buildLog}"
 	chmod 644 "${buildLog}"
 fi
+
+echo "$fullfeatures" > "$fullfeature_file"
+echo "$prefix" > "$prefix_file"
 
 echo > "${buildLog}"
 exec > >(tee -a "${buildLog}") 2> >(tee -a "${buildLog}" >&2)

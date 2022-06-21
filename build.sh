@@ -166,8 +166,8 @@ else
 	if [ ${skip_tests} -eq 0 ] && [[ "${tests}" == *"chroot"* ]]; then
 		echo "Creating config file for chroot tests"
 		containerName=$uuid_gen
-		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
-		fullfeatures="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" features)"
+		prefix="$(cat $outputDir/prefix.info)"
+		fullfeatures="$(cat $outputDir/fullfeature.info)"
 		configDir=$(${thisDir}/bin/garden-integration-test-config chroot ${prefix} ${fullfeatures} ${outputDir})
 		echo "Running pytests in chroot"
 		${gardenlinux_build_cre} run --cap-add sys_admin --cap-add mknod --cap-add audit_write --cap-add net_raw --security-opt apparmor=unconfined \
@@ -180,8 +180,8 @@ else
 	if [ ${skip_tests} -eq 0 ] && [[ "${tests}" == *"kvm"* ]]; then
 		echo "Creating config file for KVM tests"
 		containerName=$uuid_gen
-		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
-		fullfeatures="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" features)"
+		prefix="$(cat $outputDir/prefix.info)"
+		fullfeatures="$(cat $outputDir/fullfeature.info)"
 		configDir=$(${thisDir}/bin/garden-integration-test-config kvm ${prefix} ${fullfeatures} ${outputDir})
 		echo "Running pytests in KVM"
 		${gardenlinux_build_cre} run --name $containerName --rm -v /boot/:/boot \
