@@ -23,12 +23,16 @@ all: all_dev all_prod
 
 SECUREBOOT_CRT=cert/secureboot.db.auth
 
-$(SECUREBOOT_CRT): container-build
+$(SECUREBOOT_CRT): container-cert
 	$(GARDENLINUX_BUILD_CRE) run --rm --volume '$(realpath $(dir $@)):/cert' 'gardenlinux/build-cert:$(VERSION)' make --directory=/cert default
 
-.PHONY: container-build
+.PHONY: container-build container-cert container-test container-integration
+
 container-build:
-	make --directory=container build-image build-cert
+	make --directory=container build-image
+
+container-cert:
+	make --directory=container build-cert
 
 container-test:
 	make --directory=container build-base-test

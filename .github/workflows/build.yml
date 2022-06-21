@@ -1,7 +1,18 @@
 name: build
 on: [push, pull_request]
 jobs:
+  cert:
+    runs-on: ec2-gardenlinux-amd64
+    steps:
+      - uses: actions/checkout@v2
+      - run: make cert/secureboot.db.auth
+      - run: sudo tar -czv cert > cert.tar.gz
+      - uses: actions/upload-artifact@v2
+        with:
+          name: _cert
+          path: cert.tar.gz
   build:
+    needs: cert
     runs-on: ec2-gardenlinux-${{ matrix.architecture }}
     strategy:
       matrix:
@@ -10,6 +21,10 @@ jobs:
         modifier: [ "", "-dev" ]
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: _cert
+      - run: sudo tar -xzvf cert.tar.gz && rm cert.tar.gz
       - run: make BUILD_OPTS=--lessram ${{ matrix.target }}${{ matrix.modifier }}
       - run: |
           name="${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-$(bin/garden-version)-$(git rev-parse --short HEAD)"
