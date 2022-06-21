@@ -202,11 +202,7 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 		currentfstab="$(sed -e "s/#.*\$//" -e "/^$/d" <<< "$currentfstab")"
 		if [ -n "$currentfstab" ]; then
 			printf "  building rawfile\n"
-			# find the writable partition and make sure it is the last one in the next step
-			rwpart=$(sed -n '/rw/ s/LABEL=\([[:upper:]]*\).*/\1/p' <<< "$currentfstab")
-			makepart "$rootfs" "$arch" <<< "$currentfstab" \
-			| sed '$a\\n' | sed "/$rwpart/{h;d}; \$g; /^$/d" \
-			| makedisk "$rootfs" "$targetBase.raw"
+			makepart "$rootfs" "$arch" <<< "$currentfstab" | makedisk "$rootfs" "$targetBase.raw"
 		fi
 		for i in $(tr ',' '\n' <<< "$fullfeatures"); do
 			if [ -x $featureDir/$i/image ]; then

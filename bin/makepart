@@ -6,11 +6,6 @@ set -Eeuo pipefail
 exec 3>&1
 exec 1>&2
 
-function uuid_hash {
-	hash=$(sha256sum)
-	echo "${hash:0:8}-${hash:8:4}-${hash:12:4}-${hash:16:4}-${hash:20:12}"
-}
-
 rootfs="$1"
 arch="${2:-$arch}"
 timestamp=$(garden-version --epoch "$version")
@@ -27,10 +22,24 @@ chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
 #chroot "$rootfs_work" /usr/bin/env -i /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
 rm "$rootfs_work/.autorelabel"
 
-uefi_partition=$(mktemp)
-fstab=$(mktemp)
-veritytab=$(mktemp)
-root_hash=$(mktemp)
+if ! grep _secureboot <<<"$features" > /dev/null; then
+	machineid="$(mktemp)"
+	mount --rbind "${machineid}" "${rootfs_work}/etc/machine-id"
+	touch "$rootfs_work/boot/efi/loader/loader.conf"
+	touch "$rootfs_work/boot/efi/loader/entries.srel"
+	chroot "$rootfs_work" /usr/bin/env -i SYSTEMD_ESP_PATH="/boot/efi" bootctl --no-variables --make-machine-id-directory=no install
+	rm -f "${rootfs_work}/boot/efi/loader/random-seed"
+	umount "${rootfs_work}/etc/machine-id"
+	rm -f "$machineid"
+fi
+
+fstab="$(mktemp)"
+veritytab="$(mktemp)"
+root_hash="$(mktemp)"
+
+partitions="$(mktemp)"
+overlay_partitions="$(mktemp)"
+secureboot_partitions="$(mktemp)"
 
 export E2FSPROGS_FAKE_TIME=$timestamp
 
@@ -51,6 +60,7 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 	size=
 	resize=1
 	verity=0
+	secureboot=0
 	syslinux=$([[ "$(cut -c -5 <<< "$target")" = "/boot" ]] && [[ -f "$rootfs/usr/bin/syslinux" ]] && echo 1 || echo 0)
 	while IFS="=" read -r key value; do
 		case "$key" in
@@ -64,6 +74,9 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 			"verity")
 				verity=1
 				;;
+			"secureboot")
+				secureboot=1
+				;;
 			"syslinux")
 				syslinux=1
 				;;
@@ -71,13 +84,13 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 	done < <(echo "$args" | tr "," "\n")
 
 	# check if fstab entry specifies source by UUID or LABEL
-	uuid=$(grep -oP '(?<=^UUID=)[a-fA-F0-9\-]*$' <<< "$source" || true)
-	label=$(grep -oP '(?<=^LABEL=)[a-zA-Z0-9\_\-]*$' <<< "$source" || true)
+	uuid="$(grep -oP '(?<=^UUID=)[a-fA-F0-9\-]*$' <<< "$source" || true)"
+	label="$(grep -oP '(?<=^LABEL=)[a-zA-Z0-9\_\-]*$' <<< "$source" || true)"
 
 	# compute sufficiently padded size for partition (aligned to nearest MB (2048 sectors))
-	size=${size:-$(du -sb "$rootfs_work$target" | awk '{ min_size = 64 * MB; size = $1 * 1.5; padded_size = size + (MB - (size % MB) % MB); if (padded_size < min_size) padded_size = min_size; print (padded_size / MB) "MiB" }' 'MB=1048576')}
+	size=${size:-$(du -sb "$rootfs_work$target" | awk '{ min_size_bytes = min_size * MB; size = $1 * 1.5; padded_size = size + (MB - (size % MB) % MB); if (padded_size < min_size_bytes) padded_size = min_size_bytes; print (padded_size / MB) "MiB" }' "MB=1048576" "min_size=64")}
 
-	file=$([[ "$type" = "uefi" ]] && echo "$uefi_partition" || mktemp)
+	file="$(mktemp)"
 	truncate -s "$size" "$file"
 
 	if [[ "$depth" = 0 ]]; then
@@ -96,53 +109,13 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 
 	case "$fs" in
 		"ext4")
-			# set uuid and HTREE hash_seed to reproducible values instead of default random generated ones
-			uuid=${uuid:-$(echo "gardenlinux:$version:fs_uuid:$fs:$target" | uuid_hash)}
-			hash_seed=$(echo "gardenlinux:$version:ext4_hash_seed:$fs:$target" | uuid_hash)
-			mke2fs -t ext4 -b 4096 -E hash_seed="$hash_seed" -U "$uuid" ${label:+"-L"} ${label:+"$label"} -I 256 -d "$rootfs_work$target" "$file"
-
-			# set quota options and resize to minimum size needed for contents (when run on a file resize2fs automatically truncates)
-			tune2fs -Q usrquota,grpquota,prjquota "$file"
-
-			if [[ "$resize" = 1 ]]; then
-				resize2fs -M "$file"
-
-				if [[ "$depth" = 0 ]]; then
-					# add small size overhead/buffer to root partition
-					size=$(du -b "$file" | awk '{ padded_size = $1 + (MB - ($1 % MB) % MB); print (padded_size / MB) + 16 "MiB" }' 'MB=1048576')
-					truncate -s "$size" "$file"
-					resize2fs "$file"
-				fi
-			fi
-
-			# fixup timestamp on all used inodes to create reproducible ext4 image
-			num_inodes=$(dumpe2fs -h "$file" 2> /dev/null | grep '^Inode count:' | cut -d ':' -f 2 | tr -d ' ')
-			used_inodes=$(for (( inode=1; inode <= "$num_inodes"; inode++ )); do echo "testi <$inode>"; done | debugfs "$file" 2> /dev/null | grep -oP '(?<=Inode )[0-9]+(?= is marked in use)')
-			for inode in $used_inodes; do for field in {a,m,c}time; do echo "set_inode_field <$inode> $field $timestamp"; done; done | debugfs -w "$file" &> /dev/null
-
-			if [[ -d "$rootfs_work/boot/efi" ]]; then
-				chcon system_u:object_r:dosfs_t:s0 "$rootfs_work/boot/efi"
-			fi
-
-			rm -rf "$rootfs_work$target"
-			mkdir "$rootfs_work$target"
-
-			if [[ "$target" = "/overlay" ]]; then
-				chcon system_u:object_r:default_t:s0 "$rootfs_work/overlay"
-			fi
+			make_reproducible_ext4 -t "$timestamp" -h "gardenlinux:$version:partition:$target" ${uuid:+"-u"} ${uuid:+"$uuid"} ${label:+"-l"} ${label:+"$label"} -q -m -p 16 "$rootfs_work$target" "$file"
 			;;
 		"vfat")
-			uuid=${uuid:-$(echo "gardenlinux:$version:fs_uuid:$fs:$target" | sha256sum | cut -c -8)}
-			datefudge -s "@$timestamp" mformat -i "$file" -F -N "$uuid" ${label:+"-v"} ${label:+"$label"} ::
-			pushd "$rootfs_work$target"
-				datefudge -s "@$timestamp" mcopy -i "$file" -s -p $(ls -A) ::
-			popd
-			rm -rf "$rootfs_work$target"
-			mkdir "$rootfs_work$target"
+			make_reproducible_vfat -t "$timestamp" -h "gardenlinux:$version:partition:$target" ${uuid:+"-u"} ${uuid:+"$uuid"} ${label:+"-l"} ${label:+"$label"} "$rootfs_work$target" "$file"
 			;;
 		"swap")
-			uuid=${uuid:-$(echo "gardenlinux:$version:fs_uuid:$fs:$target" | uuid_hash)}
-			mkswap -U "$uuid" ${label:+"-L"} ${label:+"$label"} "$file"
+			make_reproducible_swap ${uuid:+"-u"} ${uuid:+"$uuid"} ${label:+"-l"} ${label:+"$label"} "$file"
 			;;
 		*)
 			echo "filesystem type $fs not yet supported"
@@ -150,13 +123,18 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 			;;
 	esac
 
+	# for real mount points (i.e. not swap) clear target directory after contents written to partition to avoid rewriting contents to parent mount point partition
+	if [[ "$(cut -c 1 <<< "$target")" = "/" ]]; then
+		find "$rootfs_work$target" -depth -mindepth 1 -delete
+	fi
+
 	# install syslinux if extra argument given in fstab
 	if [[ "$syslinux" = 1 ]]; then
 		PATH="$PATH:$rootfs/usr/bin" datefudge -s "@$timestamp" syslinux -d syslinux -i "$file"
 	fi
 
 	# recalc size, since it might have change (e.g. from resize2fs)
-	size=$(du -b "$file" | awk '{ padded_size = $1 + (MB - ($1 % MB) % MB); print (padded_size / MB) }' 'MB=1048576')
+	size=$(du -b "$file" | awk '{ padded_size = $1 + (MB - ($1 % MB) % MB); print (padded_size / MB) }' "MB=1048576")
 
 	echo "$target $(sha256sum "$file")"
 
@@ -174,22 +152,28 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 		hash=$(cat "$hash_file")
 		part_uuid="${hash:0:8}-${hash:8:4}-${hash:12:4}-${hash:16:4}-${hash:20:12}"
 		verity_part_uuid="${hash:32:8}-${hash:40:4}-${hash:44:4}-${hash:48:4}-${hash:52:12}"
-		echo -e "$part_uuid\t$type\t$size\t$syslinux\t$file\t$label" >&3
-		echo -e "$verity_part_uuid\tlinux\t$verity_size\t0\t$verity_file" >&3
+		echo -e "$part_uuid\t$type\t$size\t$syslinux\t$file\t$label" >> "$partitions"
+		echo -e "$verity_part_uuid\tlinux\t$verity_size\t0\t$verity_file" >> "$partitions"
 
 		if [[ "$depth" != 0 ]]; then
 			verity_name="verity$(sed 's|/|_|' <<< "$target")"
-			echo "$verity_name" "UUID=$uuid" "UUID=$verity_uuid" "$hash" >> "$veritytab"
+			echo "$verity_name" "$source" "UUID=$verity_uuid" "$hash" >> "$veritytab"
 			echo "/dev/mapper/$verity_name" "$target" "$fs" "$options" "$dump" "$pass" >> "$fstab"
 		fi
 	else
 		part_uuid=$(echo "gardenlinux:$version:part_uuid:$source" | uuid_hash)
-		echo -e "$part_uuid\t$type\t$size\t$syslinux\t$file\t$label" >&3
+		echo -e "$part_uuid\t$type\t$size\t$syslinux\t$file\t$label" >> "$([[ "$(cut -c -8 <<< "$target")" = "/overlay" ]] && echo "$overlay_partitions" || echo $partitions)"
 		echo "$source" "$target" "$fs" "$options" "$dump" "$pass" >> "$fstab"
+	fi
+
+	if [[ "$secureboot" = 1 ]]; then
+		echo "$file" >> "$secureboot_partitions"
 	fi
   done
 
-read -r _ cmdline < "$rootfs/etc/kernel/cmdline"
+rmdir "$rootfs_work"
+
+read -r _ cmdline < "$rootfs/etc/kernel/cmdline" # hacky assumption that root= is always at start of kernel cmdline. TODO: find better way to handle this
 if [[ -z "$(cat "$root_hash")" ]]; then
 	root_source=$(tail -n 1 "$fstab" | cut -d " " -f 1)
 	cmdline="root=$root_source $cmdline"
@@ -197,72 +181,11 @@ else
 	cmdline="roothash=$(cat "$root_hash") root=/dev/mapper/root $cmdline"
 fi
 
-initrd="$(mktemp)"
-unified_image="$(mktemp)"
-unified_image_signed="$(mktemp)"
-
-[[ ! -e "$rootfs$initrd" ]]
-touch "$rootfs$initrd"
-mount --bind "$initrd" "$rootfs$initrd"
-touch "$rootfs/etc/veritytab"
-mount --bind "$veritytab" "$rootfs/etc/veritytab"
-[[ -d "$rootfs/proc" ]] && [[ -z "$(ls -A "$rootfs/proc")" ]]
-mount -t proc none "$rootfs/proc"
-
-kernel_file=$(find "$rootfs/boot/" -name 'vmlinuz-*')
-kernel_version="${kernel_file#*-}"
-
-chroot "$rootfs" dracut \
-	--force \
-	--kver "$kernel_version" \
-	--modules "bash dash systemd systemd-initrd systemd-repart systemd-veritysetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown" \
-	--install "/etc/veritytab" \
-	--reproducible \
-	"$initrd"
-
-umount "$rootfs/proc"
-umount "$rootfs$initrd"
-rm "$rootfs$initrd"
-umount "$rootfs/etc/veritytab"
-rm "$rootfs/etc/veritytab"
-
-case "$arch" in
-	amd64)
-		uefi_arch=X64
-		gnu_arch=x86_64
-		initrd_vma=0x3000000
-		;;
-	arm64)
-		uefi_arch=AA64
-		gnu_arch=aarch64
-		initrd_vma=0x4000000
-		;;
-esac
-
-# create unified image
-cmdline_file=$(mktemp)
-echo "$cmdline" > "$cmdline_file"
-"${gnu_arch}-linux-gnu-objcopy" \
-	--add-section .cmdline="$cmdline_file" --change-section-vma .cmdline=0x1000000 \
-	--add-section .linux="$kernel_file" --change-section-vma .linux=0x2000000 \
-	--add-section .initrd="$initrd" --change-section-vma .initrd="$initrd_vma" \
-	"$rootfs/usr/lib/systemd/boot/efi/linux$(tr '[:upper:]' '[:lower:]' <<< "$uefi_arch").efi.stub" "$unified_image"
-rm "$cmdline_file"
-
-# sign unified image
-datefudge -s "@$timestamp" sbsign --cert /cert/secureboot.db.sign.crt --key /cert/secureboot.db.sign.key --output "$unified_image_signed" "$unified_image"
-
-# copy unified image to uefi partition
-datefudge -s "@$timestamp" mcopy -i "$uefi_partition" -o -p "$unified_image_signed" "::/EFI/BOOT/BOOT$uefi_arch.EFI"
-
-if [[ -f "$rootfs/usr/bin/syslinux" ]]; then
-	syslinux_conf="$(mktemp)"
-	mcopy -i "$uefi_partition" "::/syslinux/syslinux.cfg" "$syslinux_conf"
-	sed -i 's|APPEND.*|APPEND '"$cmdline"'|' "$syslinux_conf"
-	datefudge -s "@$timestamp" mcopy -i "$uefi_partition" -o -p "$syslinux_conf" "::/syslinux/syslinux.cfg"
-	datefudge -s "@$timestamp" mcopy -i "$uefi_partition" -o -p "$initrd" "::/legacy/$kernel_version/initrd.img-$kernel_version"
-	rm "$syslinux_conf"
+if [ -s "$secureboot_partitions" ]; then
+	makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -t "$timestamp" < "$secureboot_partitions"
 fi
 
+cat "$partitions" "$overlay_partitions" >&3
+
 # cleanup
-rm -rf "$rootfs_work" "$fstab" "$veritytab" "$root_hash" "$initrd" "$unified_image" "$unified_image_signed"
+rm "$fstab" "$veritytab" "$root_hash" "$partitions" "$overlay_partitions" "$secureboot_partitions"

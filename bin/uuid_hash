@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+set -Eeufo pipefail
+
+hash=$(sha256sum)
+echo "${hash:0:8}-${hash:8:4}-${hash:12:4}-${hash:16:4}-${hash:20:12}"

@@ -21,6 +21,8 @@ systemd
 systemd-coredump
 systemd-cron
 systemd-timesyncd
+systemd-boot
+systemd-boot-efi
 traceroute
 wget
 less

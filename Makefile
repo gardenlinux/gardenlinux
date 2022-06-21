@@ -162,6 +162,12 @@ metalk: build-environment $(SECUREBOOT_CRT)
 metalk-dev: build-environment $(SECUREBOOT_CRT)
 	./build.sh $(BUILD_OPTS) --skip-build --features metal,khost,_pxe,_dev $(BUILDDIR) $(VERSION)
 
+metal-secureboot: container-build cert/sign.pub
+	./build.sh $(BUILD_OPTS) --skip-build --features server,metal,_secureboot $(BUILDDIR) $(VERSION)
+
+metal-secureboot-dev: container-build cert/sign.pub
+	./build.sh $(BUILD_OPTS) --skip-build --features server,metal,_secureboot,_dev $(BUILDDIR) $(VERSION)
+
 clean:
 	@echo "emptying $(BUILDDIR)"
 	@rm -rf $(BUILDDIR)/*
