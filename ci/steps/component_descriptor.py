@@ -332,6 +332,11 @@ def _image_rootfs_resource(
         type=resource_type,
         labels=labels,
         access=resource_access,
+        digest=cm.DigestSpec(
+            hashAlgorithm='NO-DIGEST',
+            normalisationAlgorithm='EXCLUDE-FROM-SIGNATURE',
+            value='NO-DIGEST',
+        ),
     )
 
 
