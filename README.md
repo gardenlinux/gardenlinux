@@ -83,11 +83,11 @@ yum install bash sudo podman crun make gnupg git qemu-kvm qemu-img coreutils
 
 **macOS (>=12):**
 
-Currently, the build support on `macOS` (>=12) is experimental and supports `Intel` (AMD64) and `Apple Silicon` (ARM64/AARCH64) with `M1` and  `M2` CPUs.
+Build support on `macOS` (>=12) supports `Intel` (AMD64) and `Apple Silicon` (ARM64/AARCH64) architectures. Building on macOS requires the GNU versions of multiple tools that can be installed in different ways like Brew, MacPorts or self compiled. Self compiled GNU packages must be located in `/opt/local/bin/`. However, the following build instructions only cover the recommended `Brew` way.
 
 Furthermore, building on macOS requires to fulfill further build requirements:
  * Command Line Tools (CLT) for Xcode
- * [Homebrew](https://brew.sh)
+ * [Homebrew](https://brew.sh) (Optionally: MacPorts https://macports.org)
  * [Docker](https://docs.docker.com/desktop/mac/install/)
 
 ```

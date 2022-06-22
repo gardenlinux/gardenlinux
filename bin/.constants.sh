@@ -11,15 +11,29 @@ build_os="$(uname -s)"
 # Determinate the OS for GNU tools
 if [ "Darwin" == $build_os ]; then
 
+    getopt_gnu="unset"
     # Test for possible pathes of getopt
-    # in different brew locations
+    # (Home)Brew legacy path
     if [[ -f "/usr/local/opt/gnu-getopt/bin/getopt" ]]; then
         getopt_gnu="/usr/local/opt/gnu-getopt/bin/getopt"
     fi
 
+    # (Home)Brew path
     if [[ -f "/opt/homebrew/opt/gnu-getopt/bin/getopt" ]]; then
         getopt_gnu="/opt/homebrew/opt/gnu-getopt/bin/getopt"
     fi
+
+    # MacPorts path
+    if [[ -f "/opt/local/bin/getopt" ]]; then
+        getopt_gnu="/opt/local/bin/getopt"
+    fi
+
+    # Fail when we can not find any GNU getopt package
+    if [ "unset" == $getopt_gnu ]; then
+        echo "No GNU getopt binary for macOS found. Please make sure to install it by Brew or MacPorts."
+        exit 1
+    fi
+
 else
     getopt_gnu="getopt"
 fi
