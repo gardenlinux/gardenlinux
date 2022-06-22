@@ -2,9 +2,6 @@
 
 set -Eexufo pipefail
 
-runner_dir="$(mktemp -d)"
-cp -a /opt/github_action_runner/. "$runner_dir"
-
-cd "$runner_dir"
-
+cd /opt/github_action_runner
+ln -s "$(mktemp -d)" _work
 exec ./run.sh
