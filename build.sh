@@ -69,6 +69,16 @@ outputDir="$(readlink -f "$outputDir")"
 
 gardenlinux_build_cre=${GARDENLINUX_BUILD_CRE:-"sudo podman"}
 
+
+build_os="$(uname -s)"
+# Eval how to generate uuids based on
+# the underlying OS
+if [ "Darwin" == $build_os ]; then
+        uuid_gen="$(/usr/bin/uuidgen)"
+else
+        uuid_gen="$(cat /proc/sys/kernel/random/uuid)"
+fi
+
 userID=$(id -u)
 userGID=$(id -g)
 envArgs=(
@@ -137,7 +147,7 @@ else
 		echo "everything stopped..."
 		exit 1
 	}
-	containerName=$(cat /proc/sys/kernel/random/uuid)
+	containerName=$uuid_gen
 	trap 'stop $containerName' INT
 	${gardenlinux_build_cre} run --name $containerName $dockerArgs --rm \
 		"${buildImage}" \
@@ -147,7 +157,7 @@ else
 	# Run tests if activated
 	if [ ${skip_tests} -eq 0 ] && [[ "${tests}" =~ .*"unittests".* ]]; then
 		echo "Running tests"
-		containerName=$(cat /proc/sys/kernel/random/uuid)
+		containerName=$uuid_gen
 		${gardenlinux_build_cre} run --name $containerName $dockerArgs --rm \
 			"${buildImage}" \
 			/opt/gardenlinux/bin/garden-test &
@@ -155,9 +165,9 @@ else
 	fi
 	if [ ${skip_tests} -eq 0 ] && [[ "${tests}" == *"chroot"* ]]; then
 		echo "Creating config file for chroot tests"
-		containerName=$(cat /proc/sys/kernel/random/uuid)
-		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
-		fullfeatures="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" features)"
+		containerName=$uuid_gen
+		prefix="$(cat $outputDir/prefix.info)"
+		fullfeatures="$(cat $outputDir/fullfeature.info)"
 		configDir=$(${thisDir}/bin/garden-integration-test-config chroot ${prefix} ${fullfeatures} ${outputDir})
 		echo "Running pytests in chroot"
 		${gardenlinux_build_cre} run --cap-add sys_admin --cap-add mknod --cap-add audit_write --cap-add net_raw --security-opt apparmor=unconfined \
@@ -169,9 +179,9 @@ else
 	fi
 	if [ ${skip_tests} -eq 0 ] && [[ "${tests}" == *"kvm"* ]]; then
 		echo "Creating config file for KVM tests"
-		containerName=$(cat /proc/sys/kernel/random/uuid)
-		prefix="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
-		fullfeatures="$(${thisDir}/bin/garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" features)"
+		containerName=$uuid_gen
+		prefix="$(cat $outputDir/prefix.info)"
+		fullfeatures="$(cat $outputDir/fullfeature.info)"
 		configDir=$(${thisDir}/bin/garden-integration-test-config kvm ${prefix} ${fullfeatures} ${outputDir})
 		echo "Running pytests in KVM"
 		${gardenlinux_build_cre} run --name $containerName --rm -v /boot/:/boot \

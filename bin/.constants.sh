@@ -6,12 +6,44 @@ umask 0022
 scriptsDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 featureDir="$scriptsDir/../features"
 self="$(basename "$0")"
+build_os="$(uname -s)"
 
-options="$(getopt -n "$BASH_SOURCE" -o '+' --long 'flags:,flags-short:,help:,usage:,sample:' -- "$@")"
+# Determinate the OS for GNU tools
+if [ "Darwin" == $build_os ]; then
+
+    getopt_gnu="unset"
+    # Test for possible pathes of getopt
+    # (Home)Brew legacy path
+    if [[ -f "/usr/local/opt/gnu-getopt/bin/getopt" ]]; then
+        getopt_gnu="/usr/local/opt/gnu-getopt/bin/getopt"
+    fi
+
+    # (Home)Brew path
+    if [[ -f "/opt/homebrew/opt/gnu-getopt/bin/getopt" ]]; then
+        getopt_gnu="/opt/homebrew/opt/gnu-getopt/bin/getopt"
+    fi
+
+    # MacPorts path
+    if [[ -f "/opt/local/bin/getopt" ]]; then
+        getopt_gnu="/opt/local/bin/getopt"
+    fi
+
+    # Fail when we can not find any GNU getopt package
+    if [ "unset" == $getopt_gnu ]; then
+        echo "No GNU getopt binary for macOS found. Please make sure to install it by Brew or MacPorts."
+        exit 1
+    fi
+
+else
+    getopt_gnu="getopt"
+fi
+
+options=$($getopt_gnu -n "$BASH_SOURCE" -o '+' --long 'flags:,flags-short:,help:,usage:,sample:' -- "$@")
 dFlags='help,version'
 dFlagsShort='h?'
 dHelp=
 dUsage=
+
 __cgetopt() {
 	eval "set -- $options" # in a function since otherwise "set" will overwrite the parent script's positional args too
 	unset options
@@ -68,11 +100,11 @@ eusage() {
 }
 
 _dgetopt() {
-	getopt -n "error" \
-		-o "+$dFlagsShort" \
-		--long "$dFlags" \
-		-- "$@" \
-		|| eusage 
+        $getopt_gnu -n "error" \
+	        -o "+$dFlagsShort" \
+	        --long "$dFlags" \
+	        -- "$@" \
+	        || eusage
 }
 
 dgetopt='options="$(_dgetopt "$@")"; eval "set -- $options"; unset options'
@@ -88,9 +120,7 @@ dgetopt-case() {
 filter_comment () {
     sed "s/#.*$//;/^$/d;s/^[[:space:]]*//;s/[[:space:]]*$//"
 }
-#filter_variables () {
-#    arch=$arch /usr/bin/envsubst
-#}
+
 filter_variables () {
     if [ "${1+defined}" ]; then
 	if [ "$1" == "" ]; then
@@ -115,6 +145,7 @@ filter_variables () {
 	exit 1
     fi
 }
+
 filter_if() {
     awk -F ']' '
       {
