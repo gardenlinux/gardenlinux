@@ -7,7 +7,6 @@ efibootmgr
 haveged
 ipmitool
 #grub-cloud-amd64
-#cloud-guest-utils
 #irqbalance
 pciutils
 usbutils
