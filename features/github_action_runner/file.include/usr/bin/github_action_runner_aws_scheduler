@@ -12,6 +12,7 @@ max_num_runners=64
 ami=
 instance_type=
 security_group=
+region=
 repo=
 label=
 api_token=
@@ -29,6 +30,7 @@ while [ "$#" -gt 0 ]; do
 		-i|--ami) ami="$1"; shift ;;
 		-s|--security-group) security_group="$1"; shift ;;
 		-e|--ec2-instance-type) instance_type="$1"; shift ;;
+		-g|--region) region="$1"; shift ;;
 		-r|--repo) repo="$1"; shift ;;
 		-l|--label) label="$1"; shift ;;
 		-t|--token) api_token="$1"; shift ;;
@@ -44,6 +46,8 @@ if [ -n "$config" ]; then
 		declare "$key"="$value"
 	done < "$config"
 fi
+
+export AWS_DEFAULT_REGION="$region"
 
 verbose_log="$(mktemp)"
 

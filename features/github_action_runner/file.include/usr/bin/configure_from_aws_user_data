@@ -20,6 +20,7 @@ if [ "$scheduler_json" != "null" ]; then
 	echo "runner_dir_template=$runner_dir" >> "$scheduler_conf"
 
 	echo "ami=$(curl -sS http://169.254.169.254/latest/meta-data/ami-id)" >> "$scheduler_conf"
+	echo "region=$(curl -sS http://169.254.169.254/latest/meta-data/placement/region)" >> "$scheduler_conf"
 
 	echo "webhook_port=8080" >> "$scheduler_conf"
 	iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
