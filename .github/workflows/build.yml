@@ -1,17 +1,24 @@
 name: build
-on: [push, pull_request]
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        default: dev
 jobs:
   cert:
     runs-on: ec2-gardenlinux-amd64
     steps:
       - uses: actions/checkout@v2
-      - run: make cert/secureboot.db.auth
-      - run: sudo tar -czv cert > cert.tar.gz
+      - name: bulid certificates
+        run: make cert/secureboot.db.auth
+      - name: pack certificates for following bulid stages
+        run: sudo tar -czv cert > cert.tar.gz
       - uses: actions/upload-artifact@v2
         with:
           name: _cert
           path: cert.tar.gz
-  build:
+  images:
     needs: cert
     runs-on: ec2-gardenlinux-${{ matrix.architecture }}
     strategy:
@@ -24,9 +31,16 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: _cert
-      - run: sudo tar -xzvf cert.tar.gz && rm cert.tar.gz
-      - run: make BUILD_OPTS=--lessram ${{ matrix.target }}${{ matrix.modifier }}
-      - run: |
+      - name: unpack certificates from previous build stage
+        run: sudo tar -xzvf cert.tar.gz && rm cert.tar.gz
+      - name: set VERSION=${{ inputs.version }}
+        run: |
+          bin/garden-version "${{ inputs.version }}" > VERSION
+          git update-index --assume-unchanged VERSION
+      - name: build Garden Linux image
+        run: make BUILD_OPTS="--lessram" ${{ matrix.target }}${{ matrix.modifier }}
+      - name: pack build artifacts for upload
+        run: |
           name="${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-$(bin/garden-version)-$(git rev-parse --short HEAD)"
           mv .build "$name"
           tar -czvf "$name.tar.gz" "$name"
