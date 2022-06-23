@@ -9,3 +9,14 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version: today
+  upload_to_s3:
+    name: upload to S3
+    needs: build
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/upload_to_s3.yml
+    with:
+      bucket: gardenlinux-github-releases
+      region: eu-central-1
+      role: arn:aws:iam::544319711298:role/gardenlinux-github-oidc-role
+      session: gardenlinux-github-oidc-session
