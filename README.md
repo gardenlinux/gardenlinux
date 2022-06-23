@@ -92,7 +92,7 @@ Furthermore, building on macOS requires to fulfill further build requirements:
 
 ```
 # Install needed packages
-brew install coreutils bash gnu-getopt gnu-sed gawk
+brew install coreutils bash gnu-getopt gnu-sed gawk podman
 
 # Change to bash (Default: ZSH)
 $> bash

@@ -13,14 +13,28 @@ set -Eeuo pipefail
 #
 # pxe dir, mac : parsing
 
-# macOS is currently unsupported
-build_os="$(uname -s)"
+# Define default VARs
+gnu_head="head"
+gnu_stat="stat"
 
+# OS Validation: macOS
+build_os="$(uname -s)"
 if [ "Darwin" == $build_os ]; then
-        echo -e "Warning: \tCurrently there isn't any QEMU support for macOS.
-        \tHowever, you may run your images with UTM: https://github.com/utmapp/UTM"
-        exit 1
+        running_os="macos"
+        gnu_head="ghead"
+        gnu_stat="gstat"
 fi
+
+# OS Validation: CentOS
+if [[ -f "/etc/centos-release" ]]; then
+    running_os="centos"
+fi
+
+# OS Validation: Debian
+if [[ -f "/etc/debian_version" ]]; then
+    running_os="debian"
+fi
+
 
 thisDir=$(dirname "$(readlink -f "$BASH_SOURCE")")
 targetDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -36,14 +50,22 @@ pxefile=$thisDir/../examples/ipxe/start-vm.ipxe
 ignfile=""
 pxe_binary=
 portbase=2223
-port=$portbase; while ss -tul | grep :$port &> /dev/null; do (( ++port )); done
+if [ "macos" != $running_os ]; then
+    port=$portbase; while ss -tul | grep :$port &> /dev/null; do (( ++port )); done
+else
+    port=$portbase; while netstat -an -ptcp | grep LISTEN | awk {'print $4'} | grep :$port &> /dev/null; do (( ++port )); done
+fi
 uefi=
 uefiCode=
 uefiVars=
 tpm=1
 vnc=
 vncbase=5900
-vncport=0; while ss -tul | grep :$(( vncport + $vncbase )) &> /dev/null; do (( ++vncport )); done
+if [ "macos" != $running_os ]; then
+    vncport=0; while ss -tul | grep :$(( vncport + $vncbase )) &> /dev/null; do (( ++vncport )); done
+else
+    vncport=0; while netstat -an -ptcp | grep LISTEN | awk {'print $4'} | grep :$(( vncport + $vncbase )) &> /dev/null; do (( ++vncport )); done
+fi
 keypress=1
 mac="$(printf '02:%02x:%02x:%02x:%02x:%02x' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)))"
 virtOpts=( )
@@ -142,7 +164,7 @@ while (( "$#" )); do
 	[[ $imagefile == *"."* ]] &&		imageext=${imagefile##*.};
 	[ -e $imagefile ] || eusage "file \"$imagefile\" does not exist"
 
-	imagesizeBytes=$(numfmt --from=iec --suffix="B" --format "%f" ${imagesize} | head -c-2)  # calculate in bytes
+	imagesizeBytes=$(numfmt --from=iec --suffix="B" --format "%f" ${imagesize} | $gnu_head -c-2)  # calculate in bytes
 	imageext=${imageext/^vhd$/vpc}
 
 	if [ "$imageext" == "iso" ]; then
@@ -154,8 +176,7 @@ while (( "$#" )); do
 		dd if=$imagefile of=/dev/null count=1 iflag=direct 2> /dev/null && imagedirect="aio=native,cache.direct=on,"
 
 		# if there is a bigger size, we need to inflate
-		[ $(stat --printf="%s" $imagefile) -lt ${imagesizeBytes} ] && inflatelist+=( "${imagefile},${imagesizeBytes}" )
-
+		[ $($gnu_stat --printf="%s" $imagefile) -lt ${imagesizeBytes} ] && inflatelist+=( "${imagefile},${imagesizeBytes}" )
 		virtOpts+=(	"-device scsi-hd,drive=drive${diskcount},bus=scsi0.0"
 				"-drive format=${imageext},if=none,discard=unmap,${imagedirect}id=drive${diskcount},file=${imagefile}" )
 		(( ++diskcount ))
@@ -167,12 +188,15 @@ done
 [ $(id -u) == 0 ] && virtOpts=(	"-runas nobody" )
 
 [[ "${memory: -1}" =~ [0-9] ]] && memory="${memory}Mi"
-memory=$(numfmt --from=auto --suffix="B" --format "%f" ${memory} | head -c-2)
+memory=$(numfmt --from=auto --suffix="B" --format "%f" ${memory} | $gnu_head -c-2)
 virtOpts+=(	"-smp $cpu"
 	   	"-m $(( $memory / 1048576 ))" )
 
-# add a watchdog to maintain automatic reboots
-virtOpts+=(	"-watchdog i6300esb" )
+# Unsupported options on CentOS
+if [ "centos" != $running_os ]; then
+        # add a watchdog to maintain automatic reboots
+        virtOpts+=(	"-watchdog i6300esb" )
+fi
 
 # remove default things like floppies, serial port, parallel port
 virtOpts+=(	"-nodefaults" )
@@ -184,10 +208,13 @@ virtOpts+=(	"-device virtio-balloon" )
 virtOpts+=(	"-device virtio-rng-pci,rng=rng0"
 	   	"-object rng-random,id=rng0,filename=/dev/random" )
 
-if [ "$arch" = x86_64 ]; then
-	# adding a bmc simulator
-	virtOpts+=(	"-device ipmi-bmc-sim,id=bmc0"
-			"-device isa-ipmi-kcs,bmc=bmc0,ioport=0xca2"  )
+# Unsupported options on CentOS
+if [ "centos" != $running_os ]; then
+        if [ "$arch" = x86_64 ]; then
+	        # adding a bmc simulator
+        	virtOpts+=(	"-device ipmi-bmc-sim,id=bmc0"
+        			"-device isa-ipmi-kcs,bmc=bmc0,ioport=0xca2"  )
+        fi
 fi
 
 # adding a uuid since this is expected by systemd and gardenlinux
@@ -201,28 +228,30 @@ virtOpts+=(	"-chardev socket,path=$tmpDir/$mac.guest,server=on,wait=off,id=qga0"
 		"-device virtio-serial"
 		"-device virtserialport,chardev=qga0,name=org.qemu.guest_agent.0" )
 
-if [ "$arch" = "$(uname -m)" ]; then
-	if [ "$arch" = x86_64 ]; then
-		# virtualization with max performance if the cpu has vmx
-		cpuinfo="$(grep "^flags" /proc/cpuinfo | uniq)"
-		[ -z "${cpuinfo##*vmx*}" -o -z "${cpuinfo##*svm*}" ] &&
-			virtOpts+=("-enable-kvm" "-cpu host" "-machine q35,smm=on")
-		elif [ "$arch" = aarch64 ]; then
-                        # Check if aarch64 is running in a virtualized
-                        # environment where we may not use any accleration
-                        if [ "QEMU" = "$(dmesg  | grep "DMI: QEMU" | awk {'print $4'})" ] && [ "not" = "$(dmesg | grep -i kvm | awk {'print $7'})" ]; then
-			    virtOpts+=("-cpu max" "-machine virt")
-			else
-                            virtOpts+=("-cpu host" "-machine virt")
-			    [ -e "/dev/kvm" ] && virtOpts+=("-accel kvm")
-                        fi
-		fi
-else
-	if [ "$arch" = x86_64 ]; then
-		virtOpts+=("-cpu Broadwell")
-	elif [ "$arch" = aarch64 ]; then
-		virtOpts+=("-cpu cortex-a72" "-machine virt")
-	fi
+if [ "macos" != $running_os ]; then
+    if [ "$arch" = "$(uname -m)" ]; then
+	    if [ "$arch" = x86_64 ]; then
+		    # virtualization with max performance if the cpu has vmx
+		    cpuinfo="$(grep "^flags" /proc/cpuinfo | uniq)"
+		    [ -z "${cpuinfo##*vmx*}" -o -z "${cpuinfo##*svm*}" ] &&
+			    virtOpts+=("-enable-kvm" "-cpu host" "-machine q35,smm=on")
+		    elif [ "$arch" = aarch64 ]; then
+                            # Check if aarch64 is running in a virtualized
+                            # environment where we may not use any accleration
+                            if [ "QEMU" = "$(dmesg  | grep "DMI: QEMU" | awk {'print $4'})" ] && [ "not" = "$(dmesg | grep -i kvm | awk {'print $7'})" ]; then
+			        virtOpts+=("-cpu max" "-machine virt")
+			    else
+                                virtOpts+=("-cpu host" "-machine virt")
+			        [ -e "/dev/kvm" ] && virtOpts+=("-accel kvm")
+                            fi
+		    fi
+    else
+	    if [ "$arch" = x86_64 ]; then
+		    virtOpts+=("-cpu Broadwell")
+	    elif [ "$arch" = aarch64 ]; then
+		    virtOpts+=("-cpu cortex-a72" "-machine virt")
+	    fi
+    fi
 fi
 
 # adding a monitoring port for extended commands
@@ -380,4 +409,19 @@ if [ $vnc ]; then
 	printf "change vnc password\n%s\n" MYPASSWORD | socat - UNIX-CONNECT:$targetDir/$mac.monitor &> /dev/null )&
 fi
 
-qemu-system-$arch ${virtOpts[@]}
+# Start the OS related binary
+if [ "debian" == $running_os ]; then
+        qemu-system-$arch ${virtOpts[@]}
+fi
+
+if [ "centos" == $running_os ]; then
+        /usr/libexec/qemu-kvm ${virtOpts[@]}
+fi
+
+# Start the OS related binary
+if [ "macos" == $running_os ]; then
+       # This needs Podman via Brew which supports
+       # QEMU for "podman machine". Unfortunately, not
+       # all options can be used here.
+       /usr/local/bin/qemu-system-$arch -m $(( $memory / 1048576 )) -nographic -netdev user,id=net0,hostfwd=tcp::2223-:22,hostname=garden $imagefile
+fi
