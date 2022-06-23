@@ -35,7 +35,7 @@ jobs:
         run: sudo tar -xzvf cert.tar.gz && rm cert.tar.gz
       - name: set VERSION=${{ inputs.version }}
         run: |
-          bin/garden-version "${{ inputs.version }}" > VERSION
+          bin/garden-version "${{ inputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
       - name: build Garden Linux image
         run: make BUILD_OPTS="--lessram" ${{ matrix.target }}${{ matrix.modifier }}
