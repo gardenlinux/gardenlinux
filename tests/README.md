@@ -546,9 +546,12 @@ kvm:
     features:
       - "base"
 
-    # Architecture to boot (optional)
+    # Architecture to boot including its
+    # hardware accelerator (optional)
     # Default: amd64
     #arch: arm64
+    #accel: kvm		# [kvm,hvf,none]
+
 
     # SSH configuration (required)
     ssh:
