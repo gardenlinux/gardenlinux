@@ -249,8 +249,9 @@ class KVM:
             cmd_kvm = "qemu-system-aarch64 \
               -display none \
               -daemonize \
-              -cpu cortex-a72 \
+              -cpu host \
               -machine virt \
+              -accel kvm \
               -bios /usr/share/qemu-efi-aarch64/QEMU_EFI.fd \
               -pidfile /tmp/qemu.pid \
               -m 1024M \
