@@ -49,6 +49,30 @@ def test_ntp(client, non_azure, non_chroot):
     assert ntp_ok, "NTP not activated"
     assert ntp_synchronised_ok, "NTP not synchronized"
 
+def test_files_not_in_future(client):
+    testscript_name="/tmp/filemodtime-test.py"
+    testscript='''import os
+import sys
+from datetime import datetime
+
+now = datetime.now()
+dirs = ["/bin", "/etc/ssh"]
+for dir in dirs:
+    for (dirpath, dirnames, filenames) in os.walk(dir):
+        for f in filenames:
+            file = os.path.join(dir, f)
+            modification = datetime.fromtimestamp(os.path.getmtime(file))
+            if modification > now:
+                print(f"FAIL - {file}s timestamp is {modification}")
+                sys.exit(1)
+__EOF
+'''
+    (exit_code, output, error) = client.execute_command(f"cat << '__EOF'\n{testscript}\n > {testscript_name}")
+    assert exit_code == 0, f"no {error=} expected"
+    (exit_code, output, error) = client.execute_command(f"python3 {testscript_name}")
+    assert exit_code == 0, f"no {error=} expected"
+    assert "FAIL" not in output
+
 def test_ls(client):
     (exit_code, output, error) = client.execute_command("ls /")
     assert exit_code == 0, f"no {error=} expected"
