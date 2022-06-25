@@ -75,4 +75,4 @@ fi
 # fixup timestamp on all used inodes to create reproducible ext4 image
 num_inodes=$(dumpe2fs -h "$target" 2> /dev/null | grep '^Inode count:' | cut -d ':' -f 2 | tr -d ' ')
 used_inodes=$(for (( inode=1; inode <= "$num_inodes"; inode++ )); do echo "testi <$inode>"; done | debugfs "$target" 2> /dev/null | grep -oP '(?<=Inode )[0-9]+(?= is marked in use)')
-for inode in $used_inodes; do for field in {a,m,c}time; do echo "set_inode_field <$inode> $field $timestamp"; done; done | debugfs -w "$target" &> /dev/null
+for inode in $used_inodes; do for field in {a,m,c}time; do echo "set_inode_field <$inode> $field @$timestamp"; done; done | debugfs -w "$target" &> /dev/null
