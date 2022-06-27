@@ -150,10 +150,14 @@ if [ "$pxe" ] && [ "$uefi" ]; then
 	pxe=
 fi
 
-# adding the disks (using parameters without - or --)
+# Adding the disks (using parameters without - or --)
 inflatelist=( )
 diskcount=0
-[ "$#" == "" ] || virtOpts+=(     "-device virtio-scsi-pci,id=scsi0" )
+
+if [ "$arch" == "x86_64" ]; then
+        [ "$#" == "" ] || virtOpts+=(     "-device virtio-scsi-pci,id=scsi0" )
+fi
+
 while (( "$#" )); do
 	imagefile=$1
 	imagesize=0
@@ -177,8 +181,12 @@ while (( "$#" )); do
 
 		# if there is a bigger size, we need to inflate
 		[ $($gnu_stat --printf="%s" $imagefile) -lt ${imagesizeBytes} ] && inflatelist+=( "${imagefile},${imagesizeBytes}" )
-		virtOpts+=(	"-device scsi-hd,drive=drive${diskcount},bus=scsi0.0"
-				"-drive format=${imageext},if=none,discard=unmap,${imagedirect}id=drive${diskcount},file=${imagefile}" )
+                if [ "$arch" == "x86_64" ]; then
+		        virtOpts+=(	"-device scsi-hd,drive=drive${diskcount},bus=scsi0.0"
+			        	"-drive format=${imageext},if=none,discard=unmap,${imagedirect}id=drive${diskcount},file=${imagefile}" )
+                else
+		        virtOpts+=(	"-drive if=virtio,format=${imageext},file=$imagefile" )
+                fi
 		(( ++diskcount ))
 	fi
 	shift
@@ -201,20 +209,28 @@ fi
 # remove default things like floppies, serial port, parallel port
 virtOpts+=(	"-nodefaults" )
 
-# make sure to use minimal memory
-virtOpts+=(	"-device virtio-balloon" )
+if [ "$arch" == "x86_64" ]; then
+        # make sure to use minimal memory
+        virtOpts+=(	"-device virtio-balloon" )
 
-# adding the random number generator of the host
-virtOpts+=(	"-device virtio-rng-pci,rng=rng0"
-	   	"-object rng-random,id=rng0,filename=/dev/random" )
+        # adding the random number generator of the host
+        virtOpts+=(	"-device virtio-rng-pci,rng=rng0"
+	   	        "-object rng-random,id=rng0,filename=/dev/random" )
 
-# Unsupported options on CentOS
-if [ "centos" != $running_os ]; then
-        if [ "$arch" = x86_64 ]; then
-	        # adding a bmc simulator
-        	virtOpts+=(	"-device ipmi-bmc-sim,id=bmc0"
-        			"-device isa-ipmi-kcs,bmc=bmc0,ioport=0xca2"  )
+        # Unsupported options on CentOS
+        if [ "centos" != $running_os ]; then
+                if [ "$arch" = x86_64 ]; then
+	                # adding a bmc simulator
+        	        virtOpts+=(	"-device ipmi-bmc-sim,id=bmc0"
+        			        "-device isa-ipmi-kcs,bmc=bmc0,ioport=0xca2"  )
+                fi
         fi
+
+        # support for qemu guest agent. There is no way for this script if inside VM is connected or not
+        virtOpts+=(     "-chardev socket,path=$tmpDir/$mac.guest,server=on,wait=off,id=qga0"
+                        "-device virtio-serial"
+                        "-device virtserialport,chardev=qga0,name=org.qemu.guest_agent.0" )
+
 fi
 
 # adding a uuid since this is expected by systemd and gardenlinux
@@ -222,11 +238,6 @@ mac="$(printf "%012s" | tr -d ":" <<< ${mac,,})"
 macfull="$(sed 's/../&:/g;s/:$//' <<< $mac)"
 uuid="12345678-0000-0000-0000-${mac}"
 virtOpts+=(     "-uuid $uuid" )
-
-# support for qemu guest agent. There is no way for this script if inside VM is connected or not
-virtOpts+=(	"-chardev socket,path=$tmpDir/$mac.guest,server=on,wait=off,id=qga0"
-		"-device virtio-serial"
-		"-device virtserialport,chardev=qga0,name=org.qemu.guest_agent.0" )
 
 if [ "macos" != $running_os ]; then
     if [ "$arch" = "$(uname -m)" ]; then
