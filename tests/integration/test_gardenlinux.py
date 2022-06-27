@@ -38,7 +38,7 @@ def test_ntp(client, non_azure, non_chroot):
     (exit_code, output, error) = client.execute_command("timedatectl show")
     assert exit_code == 0, f"no {error=} expected"
     lines = output.splitlines()
-    npt_ok=False
+    ntp_ok=False
     ntp_synchronised_ok=False
     for l in lines:
         nv = l.split("=")
