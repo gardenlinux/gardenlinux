@@ -52,7 +52,7 @@ input="${1:-$($sed_gnu -e "s/#.*\$//" -e "/^$/d" "${versionfile}")}";  shift || 
 input=$($sed_gnu "s/^[[:space:]]*//;s/[[:space:]]*\$//" <<< ${input})
 
 # no version / timestamp on versionfile
-[ -z ${input} ] && input="dev"
+[ -z ${input} ] && input="today"
 
 minor=0
 if [[ ${input} =~ ^[0-9\.]*$ && $(cut -d. -f1 <<< ${input}) -lt 10000000 ]]; 
@@ -63,10 +63,10 @@ then	[ $(cut -d. -sf3 <<< ${input}) ] && eusage "invalid version format ${input}
 		minor="$(cut -d. -f2 <<< ${input})"
 	fi
 	version="${major}.${minor}"
-else	if	[[ ${input} = dev ]];
+else	if	[[ ${input} = today ]];
 	then	indate=$($date_gnu --date "today" +%s 2>/dev/null)
 		major="$(( (${indate} - $($date_gnu --date "${startdate}" +%s)) / (60*60*24) ))"
-		version=dev
+		version=today
 	else	indate=$($date_gnu --date "${input}" +%s 2>/dev/null) || eusage "invalid date ${input}"
 		major="$(( (${indate} - $($date_gnu --date "${startdate}" +%s)) / (60*60*24) ))"
 		version="${major}.${minor}"
