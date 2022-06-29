@@ -40,7 +40,7 @@ build-base-test: needslim
 build-integration-test: build-base-test
 	mkdir -p integration-test/_pipfiles
 	cp ../tests/Pipfile* integration-test/_pipfiles
-	@$(GARDENLINUX_BUILD_CRE) build -t gardenlinux/integration-test:$(VERSION) integration-test
+	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/integration-test:$(VERSION) integration-test
 
 .PHONY: build-kernelmodule
 build-kernelmodule: build
