@@ -168,7 +168,7 @@ else
 		containerName=$uuid_gen
 		prefix="$(cat $outputDir/prefix.info)"
 		fullfeatures="$(cat $outputDir/fullfeature.info)"
-		configDir=$(${thisDir}/bin/garden-integration-test-config chroot ${prefix} ${fullfeatures} ${outputDir})
+		configDir=$(${thisDir}/bin/garden-integration-test-config chroot ${prefix} ${fullfeatures} ${outputDir} ${arch})
 		echo "Running pytests in chroot"
 		${gardenlinux_build_cre} run --cap-add sys_admin --cap-add mknod --cap-add audit_write --cap-add net_raw --security-opt apparmor=unconfined \
 			--name $containerName --rm -v `pwd`:/gardenlinux -v ${configDir}:/config \
@@ -182,7 +182,7 @@ else
 		containerName=$uuid_gen
 		prefix="$(cat $outputDir/prefix.info)"
 		fullfeatures="$(cat $outputDir/fullfeature.info)"
-		configDir=$(${thisDir}/bin/garden-integration-test-config kvm ${prefix} ${fullfeatures} ${outputDir})
+		configDir=$(${thisDir}/bin/garden-integration-test-config kvm ${prefix} ${fullfeatures} ${outputDir} ${arch})
 		echo "Running pytests in KVM"
 		${gardenlinux_build_cre} run --name $containerName --rm -v /boot/:/boot \
 			-v /lib/modules:/lib/modules -v `pwd`:/gardenlinux -v ${configDir}:/config \
