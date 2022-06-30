@@ -4,7 +4,7 @@ PUBLIC=true
 AWS_DISTRIBUTE=
 BUILDDIR=.build
 
-ARCH ?= $(shell ./get_arch.sh)
+ARCH ?= $(shell bin/get_arch.sh)
 override BUILD_OPTS += --arch=$(ARCH)
 
 ifneq ($(wildcard local_packages),)
