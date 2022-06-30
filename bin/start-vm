@@ -291,8 +291,10 @@ if [ "$arch" = x86_64 ]; then
             # Validate for KVM support on x86_64
             # If no KVM support is present QEMU handles
             # the -cpu option itself
-            if [ -e "/dev/kvm" ]; then
+            if [ -w "/dev/kvm" ]; then
                 virtOpts+=("-enable-kvm" "-cpu host" "-machine q35,smm=on")
+            else
+                echo -e "WARNING: Can not use KVM acceleration. Please see:\n https://github.com/gardenlinux/gardenlinux/tree/main/bin#start-vm \n\n"
             fi
 
         fi
@@ -332,8 +334,11 @@ if [ "$arch" = aarch64 ]; then
         else
 
             # Validate for KVM support on AARCH64
-            if [ -e "/dev/kvm" ]; then
+            if [ -w "/dev/kvm" ]; then
                 virtOpts+=("-cpu host" "-machine virt" "-accel kvm")
+            else
+                echo -e "WARNING: Can not use KVM acceleration. Please see:\nhttps://github.com/gardenlinux/gardenlinux/tree/main/bin#start-vm \n\n"
+                virtOpts+=("-cpu max" "-machine virt")
             fi
 
         fi

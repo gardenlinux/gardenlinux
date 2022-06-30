@@ -70,10 +70,36 @@ This script allows to inject a SSH pubkey to a final Garden Linux image to ensur
 ### start-vm
 This script starts a given `.raw` or `.qcow2` image in a local QEMU/KVM VM and supports `amd64` and `arm64 builds`. Keep in mind, that running different architectures may be very slow. However, it may still be useful for validating and running unit tests. A spawned VM runs in `textmode` which a `hostfwd` (portforward) for SSH on `tcp/2222`. By the given options this allows the user to user copy/paste in the terminal, as well as connecting to the sshd. *(Hint: Custom SSH pubkeys can be injected with `inject-sshkey`.)*
 
+**Acceleration Support:**
+
+Currently, `start-vm` supports `KVM` and `HVF` acceleration. While `HVF` is only supported on macOS, `KVM` will mostly be used. When using `KVM` acceleration you need to ensure that `/dev/kvm` can be used by your user account. However, if `/dev/kvm` is not usable it will fallback to a non accelerated support that may still work but may be slower. Setting permissions on `/dev/kvm` can be don is several ways; for example:
+
+```
+# Adding specific user to related groups
+sudo usermod -G -a kvm "$username"
+sudo usermod -G -a libvirtd "$username"
+```
+
+```
+# Setting permissions for all users
+sudo chmod +666 /dev/kvm
+```
+
+**Options:**
+| Option (short) | Descriptions |
+|--|--|
+| --arch | Architecture to use [x86_64, aarch64] |
+| --cpu | CPU type to emulate if an specific should be used |
+| --mem | Memory size to use for VM |
+| --uuefi | Run in `UEFI` mode instead of legacy `Bios`|
+| --ueficode | Path to custom UEFI Code file |
+| --uefivars | Path to custom UEFI Vars file |
+
 **Usage:**
 
-`startvm /path/to/$image_name`
+Running same arch: `start-vm /path/to/$image_name`
 
+Running specific arch (e.g. `aarch64`): `start-vm --arch aarch64 /path/to/$image_name`
 
 ### make-ali-ami
 This script orchestrates the upload/integration of a Garden Linux image for the `ALI` platform.
