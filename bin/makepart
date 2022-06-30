@@ -101,7 +101,7 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 			rm -rf "$rootfs_work/overlay"
 		else
 			echo "overlay /var overlay defaults,lowerdir=/var,upperdir=/overlay/var/upper,workdir=/overlay/var/work,x-systemd.requires-mounts-for=/overlay 0 2" >> "$fstab"
-			echo "overlay /etc overlay defaults,lowerdir=/etc,upperdir=/overlay/etc/upper,workdir=/overlay/etc/work,x-systemd.requires-mounts-for=/overlay 0 2" >> "$fstab"
+			echo "overlay /etc overlay defaults,lowerdir=/sysroot/etc,upperdir=/sysroot/overlay/etc/upper,workdir=/sysroot/overlay/etc/work,x-systemd.requires-mounts-for=/sysroot/overlay,x-initrd.mount 0 2" >> "$fstab"
 		fi
 		column -t "$fstab" > "$rootfs_work/etc/fstab"
 		column -t "$veritytab" >> "$rootfs_work/etc/veritytab"
