@@ -184,7 +184,7 @@ else
 		fullfeatures="$(cat $outputDir/fullfeature.info)"
 		configDir=$(${thisDir}/bin/garden-integration-test-config kvm ${prefix} ${fullfeatures} ${outputDir} ${arch})
 		echo "Running pytests in KVM"
-		${gardenlinux_build_cre} run --name $containerName --rm -v /boot/:/boot \
+		${gardenlinux_build_cre} run --name $containerName --privileged --rm -v /boot/:/boot \
 			-v /lib/modules:/lib/modules -v `pwd`:/gardenlinux -v ${configDir}:/config \
 			"gardenlinux/base-test:$version" \
 			pytest --iaas=kvm --configfile=/config/config.yaml &

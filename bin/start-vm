@@ -61,6 +61,7 @@ if [ "macos" != $running_os ]; then
 else
     port=$portbase; while netstat -an -ptcp | grep LISTEN | awk {'print $4'} | grep :$port &> /dev/null; do (( ++port )); done
 fi
+port_dest=22
 uefi=
 uefiCode=
 uefiVars=
@@ -82,7 +83,7 @@ gardenlinux_build_cre=${GARDENLINUX_BUILD_CRE:-"sudo podman"}
 
 source "${thisDir}/.constants.sh" \
 	--flags 'daemonize,uefi,skipkp,vnc' \
-	--flags 'cpu:,mem:,bridge:,port:,mac:,arch:' \
+	--flags 'cpu:,mem:,bridge:,port:,destport:,mac:,arch:' \
 	--flags 'pxe:' \
 	--flags 'ignfile:' \
 	--flags 'ueficode:,uefivars:' \
@@ -102,8 +103,10 @@ source "${thisDir}/.constants.sh" \
 		set (default: $uefiVars)
 
 --bridge <if>	disables host networking and bridges the machine to the specified interface
---port <int>	specifies the local ssh port. this port is mounted to the running machine,
+--port <int>	specifies the local ssh port. This port is mounted to the running machine,
 		not if --bridge is specified (default: $portbase)
+--destport <int>	specifies the port of the SSH server within the image. In general this port
+                    is simple 22 but in some cases this may be configured differently.
 --mac <macaddr> the mac address is usually randomized. It is used to identify the monitoring
 		port, the mac address of the machine and the UUID. Can be set to this value.
 --pxe		enables pxe boot on the vm. Minimum one image file must be a directory
@@ -140,6 +143,7 @@ while true; do
 		--pxe )         pxe="$(realpath $1)";  shift ;;
 		--ignfile )     ignfile="$(realpath $1)";  shift ;;
 		--port)         port="$1";	shift ;;
+		--destport)     port_dest="$1";	shift ;;
 		--skipkp) 	keypress=; 	;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
@@ -435,9 +439,9 @@ else virtOpts+=( "-device virtio-net-pci,netdev=net0,mac=$macfull" )
 fi
 
 if [ $bridge ]; then 	virtOpts+=(	"-netdev bridge,id=net0,br=${bridge}" )
-elif [ $pxe ]; then	virtOpts+=( 	"-netdev user,id=net0,hostfwd=tcp::$port-:22,hostname=garden,tftp=$targetDir,bootfile=$mac.ipxe" )
-elif [ $pxe_binary ]; then virtOpts+=( "-netdev user,id=net0,hostfwd=tcp::$port-:22,hostname=garden,tftp=$targetDir,bootfile=$mac.efi" )
-else			virtOpts+=( 	"-netdev user,id=net0,hostfwd=tcp::$port-:22,hostname=garden" )
+elif [ $pxe ]; then	virtOpts+=( 	"-netdev user,id=net0,hostfwd=tcp::$port-:$port_dest,hostname=garden,tftp=$targetDir,bootfile=$mac.ipxe" )
+elif [ $pxe_binary ]; then virtOpts+=( "-netdev user,id=net0,hostfwd=tcp::$port-:$port_dest,hostname=garden,tftp=$targetDir,bootfile=$mac.efi" )
+else			virtOpts+=( 	"-netdev user,id=net0,hostfwd=tcp::$port-:$port_dest,hostname=garden" )
 fi
 
 [ $bridge ] && ( [ -e /sys/class/net/$bridge/bridge ] || eusage "interface $bridge is no bridge" )
@@ -449,7 +453,7 @@ printf "  starting VM(UUID:%s) with MAC:%s in %s\n" $uuid $macfull $targetDir
 [ $pxe ]	&& printf "  pxeboot: %s.ipxe\n" $mac
 [ $pxe ]	&& printf "  pxeboot: files served from %s\n" "$pxe"
 [ $bridge ]	&& printf "  interface: %s  bridged\n" $bridge
-[ $bridge ]	|| printf "  sshport: %s  unbridged\n" $port
+[ $bridge ]	|| printf "  sshport: %s (%s) unbridged\n" $port $port_dest
 [ $vnc ] 	&& printf "  vncport: %s\n" $(( vncport + 5900 ))
 [ $uefi ]	&& printf "  uefi boot enabled. %s.vars stores efivars\n" $mac
 for i in "${inflatelist[@]}"; do
