@@ -16,13 +16,20 @@ set -Eeuo pipefail
 # Define default VARs
 gnu_head="head"
 gnu_stat="stat"
+build_os="$(uname -s)"
+arch="$(uname -m)"
 
 # OS Validation: macOS
-build_os="$(uname -s)"
-if [ "Darwin" == $build_os ]; then
+if [ "Darwin" = $build_os ]; then
         running_os="macos"
         gnu_head="ghead"
         gnu_stat="gstat"
+
+        # Translate ARM64 to AARCH64
+        # on macOS
+        if [ "arm64" = $arch ]; then
+            arch="aarch64"
+        fi
 fi
 
 # OS Validation: CentOS
@@ -40,7 +47,6 @@ thisDir=$(dirname "$(readlink -f "$BASH_SOURCE")")
 targetDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 tmpDir=${TMPDIR:-/tmp}
 cpu=2
-arch="$(uname -m)"
 memory=2Gi
 monitor=1
 bridge=
@@ -136,25 +142,50 @@ while true; do
 	esac
 done
 
+# Add UEFI options
 if [ "$arch" = x86_64 ]; then
-	uefiCode="${uefiCode:-/usr/share/OVMF/OVMF_CODE.fd}"
-	uefiVars="${uefiVars:-/usr/share/OVMF/OVMF_VARS.fd}"
+
+        if [ "$running_os" = macos ]; then
+                # Test for HomeBrew path
+                homeBrewPrefix=$(brew info qemu | awk 'NR==4{print $1}')
+                uefiCode="${uefiCode:-$homeBrewPrefix/share/qemu/edk2-x86_64-code.fd}"
+                uefiVars="${uefiVars:-$homeBrewPrefix/share/qemu/edk2-i386-vars.fd}"
+        else
+                uefiCode="${uefiCode:-/usr/share/OVMF/OVMF_CODE.fd}"
+                uefiVars="${uefiVars:-/usr/share/OVMF/OVMF_VARS.fd}"
+        fi
+
 elif [ "$arch" = aarch64 ]; then
-	uefi=1
-	uefiCode="${uefiCode:-/usr/share/AAVMF/AAVMF_CODE.fd}"
-	uefiVars="${uefiVars:-/usr/share/AAVMF/AAVMF_VARS.fd}"
+
+        # Enable uefi mode
+        uefi=1
+
+        # Obtain uefiCode and uefiVars from
+        # Homebrew path on macOS
+        if [ "$running_os" = macos ]; then
+                # Test for HomeBrew path
+                homeBrewPrefix=$(brew info qemu | awk 'NR==4{print $1}')
+                uefiCode="${uefiCode:-$homeBrewPrefix/share/qemu/edk2-aarch64-code.fd}"
+                uefiVars="${uefiVars:-$homeBrewPrefix/share/qemu/edk2-arm-vars.fd}"
+        else
+                uefiCode="${uefiCode:-/usr/share/AAVMF/AAVMF_CODE.fd}"
+                uefiVars="${uefiVars:-/usr/share/AAVMF/AAVMF_VARS.fd}"
+        fi
+
 fi
+
 
 if [ "$pxe" ] && [ "$uefi" ]; then
 	pxe_binary="$pxe"
 	pxe=
 fi
 
+
 # Adding the disks (using parameters without - or --)
 inflatelist=( )
 diskcount=0
 
-if [ "$arch" == "x86_64" ]; then
+if [ "$arch" = "x86_64" ]; then
         [ "$#" == "" ] || virtOpts+=(     "-device virtio-scsi-pci,id=scsi0" )
 fi
 
@@ -181,7 +212,7 @@ while (( "$#" )); do
 
 		# if there is a bigger size, we need to inflate
 		[ $($gnu_stat --printf="%s" $imagefile) -lt ${imagesizeBytes} ] && inflatelist+=( "${imagefile},${imagesizeBytes}" )
-                if [ "$arch" == "x86_64" ]; then
+                if [ "$arch" = x86_64 ]; then
 		        virtOpts+=(	"-device scsi-hd,drive=drive${diskcount},bus=scsi0.0"
 			        	"-drive format=${imageext},if=none,discard=unmap,${imagedirect}id=drive${diskcount},file=${imagefile}" )
                 else
@@ -202,14 +233,16 @@ virtOpts+=(	"-smp $cpu"
 
 # Unsupported options on CentOS
 if [ "centos" != $running_os ]; then
+    if [ "macos" != $running_os ]; then
         # add a watchdog to maintain automatic reboots
         virtOpts+=(	"-watchdog i6300esb" )
+    fi
 fi
 
 # remove default things like floppies, serial port, parallel port
 virtOpts+=(	"-nodefaults" )
 
-if [ "$arch" == "x86_64" ]; then
+if [ "$arch" = "x86_64" ]; then
         # make sure to use minimal memory
         virtOpts+=(	"-device virtio-balloon" )
 
@@ -239,31 +272,82 @@ macfull="$(sed 's/../&:/g;s/:$//' <<< $mac)"
 uuid="12345678-0000-0000-0000-${mac}"
 virtOpts+=(     "-uuid $uuid" )
 
-if [ "macos" != $running_os ]; then
+
+# Validate x86_64 arch
+if [ "$arch" = x86_64 ]; then
+
+    # Validate for native or emulated arch
     if [ "$arch" = "$(uname -m)" ]; then
-	    if [ "$arch" = x86_64 ]; then
-		    # virtualization with max performance if the cpu has vmx
-		    cpuinfo="$(grep "^flags" /proc/cpuinfo | uniq)"
-		    [ -z "${cpuinfo##*vmx*}" -o -z "${cpuinfo##*svm*}" ] &&
-			    virtOpts+=("-enable-kvm" "-cpu host" "-machine q35,smm=on")
-		    elif [ "$arch" = aarch64 ]; then
-                            # Check if aarch64 is running in a virtualized
-                            # environment where we may not use any accleration
-                            if [ "QEMU" = "$(dmesg  | grep "DMI: QEMU" | awk {'print $4'})" ] && [ "not" = "$(dmesg | grep -i kvm | awk {'print $7'})" ]; then
-			        virtOpts+=("-cpu max" "-machine virt")
-			    else
-                                virtOpts+=("-cpu host" "-machine virt")
-			        [ -e "/dev/kvm" ] && virtOpts+=("-accel kvm")
-                            fi
-		    fi
+
+        # Running on native arch
+        # Check for acceleration support
+        if [ "$running_os" = macos ]; then
+            # macOS HVF support is always given on all new Intel Macs
+            # that are supported by the current HomeBrew version
+            virtOpts+=("-cpu host" "-accel hvf")
+
+        else
+
+            # Validate for KVM support on x86_64
+            # If no KVM support is present QEMU handles
+            # the -cpu option itself
+            if [ -e "/dev/kvm" ]; then
+                virtOpts+=("-enable-kvm" "-cpu host" "-machine q35,smm=on")
+            fi
+
+        fi
+
     else
-	    if [ "$arch" = x86_64 ]; then
-		    virtOpts+=("-cpu Broadwell")
-	    elif [ "$arch" = aarch64 ]; then
-		    virtOpts+=("-cpu cortex-a72" "-machine virt")
-	    fi
+        # Running on emulated arch
+        # Set default CPU on emulated arch
+        virtOpts+=("-cpu Broadwell")
+
     fi
+
 fi
+
+
+# Validate AARCH64/ARM64 arch
+if [ "$arch" = aarch64 ]; then
+
+    # Evaluate possible ARM64 arch outputs
+    testArch="undefined"
+    if [ "arm64" = $(uname -m) ]; then
+        testArch="aarch64"
+    fi
+    if [ "aarch64" = $(uname -m) ]; then
+        testArch="aarch64"
+    fi
+
+    # Validate for native or emulated arch
+    if [ "$arch" = "$testArch" ]; then
+
+        # Running on native arch
+        # Check for acceleration support
+        if [ "$running_os" = macos ]; then
+            # macOS HVF support is always given on all new Intel Macs
+            # that are supported by the current HomeBrew version
+            virtOpts+=("-cpu host" "-machine virt" "-accel hvf")
+
+        else
+
+            # Validate for KVM support on AARCH64
+            if [ -e "/dev/kvm" ]; then
+                virtOpts+=("-cpu host" "-machine virt" "-accel kvm")
+            fi
+
+        fi
+
+    else
+
+        # Running on emulated arch
+        # Set default CPU on emulated arch
+        virtOpts+=("-cpu max" "-machine virt")
+
+    fi
+
+fi
+
 
 # adding a monitoring port for extended commands
 if [ $monitor ]; then
@@ -420,19 +504,9 @@ if [ $vnc ]; then
 	printf "change vnc password\n%s\n" MYPASSWORD | socat - UNIX-CONNECT:$targetDir/$mac.monitor &> /dev/null )&
 fi
 
-# Start the OS related binary
-if [ "debian" == $running_os ]; then
-        qemu-system-$arch ${virtOpts[@]}
-fi
-
-if [ "centos" == $running_os ]; then
+# Start QEMU with virtOpts
+if [ "centos" = $running_os ]; then
         /usr/libexec/qemu-kvm ${virtOpts[@]}
-fi
-
-# Start the OS related binary
-if [ "macos" == $running_os ]; then
-       # This needs Podman via Brew which supports
-       # QEMU for "podman machine". Unfortunately, not
-       # all options can be used here.
-       /usr/local/bin/qemu-system-$arch -m $(( $memory / 1048576 )) -nographic -netdev user,id=net0,hostfwd=tcp::2223-:22,hostname=garden $imagefile
+else
+        qemu-system-$arch ${virtOpts[@]}
 fi
