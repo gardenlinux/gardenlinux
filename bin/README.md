@@ -21,6 +21,7 @@ By the given directory, we distinguish between scripts that are mandatory for th
 | garden-tar | Creates a `.tar.xf` image of the build env from `chroot` env |
 | garden-test | Performs basic unit tests |
 | garden-version | Creates a version schema |
+| get-arch | Evaluates the base arch of the build host |
 | makedisk | Creates the disks during the build process in the `chroot` env |
 | makepart | Creates the partitions during the build process in the `chroot` env |
 | shrink.sh | Shrinks the filesystem of a image |
