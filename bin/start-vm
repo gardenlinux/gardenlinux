@@ -75,7 +75,11 @@ fi
 keypress=1
 mac="$(printf '02:%02x:%02x:%02x:%02x:%02x' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)))"
 virtOpts=( )
+
+[ $(id -u) == 0 ] && virtOpts=(	"-runas nobody" )
+
 gardenlinux_build_cre=${GARDENLINUX_BUILD_CRE:-"sudo podman"}
+
 source "${thisDir}/.constants.sh" \
 	--flags 'daemonize,uefi,skipkp,vnc' \
 	--flags 'cpu:,mem:,bridge:,port:,mac:,arch:' \
@@ -223,8 +227,6 @@ while (( "$#" )); do
 	shift
 done
 [ $diskcount -gt 0 -o "$pxe" -o "$pxe_binary" ] || eusage 'missing bootdisk. boot via --pxe, provide tmpdisk via --disk or provide bootdisk image file'
-
-[ $(id -u) == 0 ] && virtOpts=(	"-runas nobody" )
 
 [[ "${memory: -1}" =~ [0-9] ]] && memory="${memory}Mi"
 memory=$(numfmt --from=auto --suffix="B" --format "%f" ${memory} | $gnu_head -c-2)
