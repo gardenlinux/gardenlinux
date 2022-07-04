@@ -106,6 +106,19 @@ def get_kernel_version(client):
     return output
 
 
+def validate_systemd_unit(client, systemd_unit):
+    """ Validate a given systemd unit """
+    cmd = f"systemctl status {systemd_unit}.service"
+    (exit_code, output, error) = client.execute_command(
+        cmd, quiet=True)
+    assert exit_code == 0, f"systemd-unit: {systemd_unit} exited with 1."
+
+    # Validate output lines of systemd-unit
+    for line in output.splitlines():
+        if "Active:" in line:
+            assert not "dead" in line, f"systemd-unit: {systemd_unit} did not start."
+
+
 def execute_local_command(cmd):
     """ Run local commands in Docker container """
     p = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)

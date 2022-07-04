@@ -7,32 +7,25 @@ import pytest
      "test_type,whitelist_files",
     [
         ("sgid", [
-                 "/usr/bin/expiry,0,42",
-                 "/usr/bin/write,0,5",
-                 "/usr/bin/wall,0,5",
-                 "/usr/bin/chage,0,42",
-                 "/usr/bin/ssh-agent,0,114",
-                 "/usr/bin/ssh-agent,0,113",
-                 "/usr/bin/ssh-agent,0,112",
-                 "/usr/sbin/unix_chkpwd,0,42",
-                 "/usr/lib/systemd-cron/crontab_setgid,0,106",
-                 "/usr/lib/systemd-cron/crontab_setgid,0,114",
-                 "/usr/lib/systemd-cron/crontab_setgid,0,115",
-                 "/usr/lib/systemd-cron/crontab_setgid,0,116"
+                 "/usr/bin/expiry,root,shadow",
+                 "/usr/bin/write,root,tty",
+                 "/usr/bin/wall,root,tty",
+                 "/usr/bin/chage,root,shadow",
+                 "/usr/bin/ssh-agent,root,_ssh",
+                 "/usr/sbin/unix_chkpwd,root,shadow",
+                 "/usr/lib/systemd-cron/crontab_setgid,root,crontab",
                  ]
         ),
         ("suid", [
-                 "/usr/bin/chsh,0,0",
-                 "/usr/lib/openssh/ssh-keysign,0,0",
-                 "/usr/bin/newgrp,0,0",
-                 "/usr/bin/su,0,0",
-                 "/usr/lib/dbus-1.0/dbus-daemon-launch-helper,0,113",
-                 "/usr/lib/dbus-1.0/dbus-daemon-launch-helper,0,111",
-                 "/usr/lib/dbus-1.0/dbus-daemon-launch-helper,0,110",
-                 "/usr/bin/chfn,0,0",
-                 "/usr/bin/gpasswd,0,0",
-                 "/usr/bin/sudo,0,0",
-                 "/usr/bin/passwd,0,0"
+                 "/usr/bin/chsh,root,root",
+                 "/usr/lib/openssh/ssh-keysign,root,root",
+                 "/usr/bin/newgrp,root,root",
+                 "/usr/bin/su,root,root",
+                 "/usr/lib/dbus-1.0/dbus-daemon-launch-helper,root,messagebus",
+                 "/usr/bin/chfn,root,root",
+                 "/usr/bin/gpasswd,root,root",
+                 "/usr/bin/sudo,root,root",
+                 "/usr/bin/passwd,root,root"
                  ]
         )
     ]

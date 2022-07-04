@@ -41,8 +41,6 @@ partitions="$(mktemp)"
 overlay_partitions="$(mktemp)"
 secureboot_partitions="$(mktemp)"
 
-export E2FSPROGS_FAKE_TIME=$timestamp
-
 # strip comments and blank lines and sort by path depth (deepest first)
 sed 's/#.*//;/^[[:blank:]]*$/d' \
 | while IFS= read -r line; do
@@ -100,8 +98,8 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 			echo "$source" "$target" "$fs" "$options" "$dump" "$pass" >> "$fstab"
 			rm -rf "$rootfs_work/overlay"
 		else
-			echo "overlay /var overlay defaults,lowerdir=/var,upperdir=/overlay/var/upper,workdir=/overlay/var/work,x-systemd.requires-mounts-for=/overlay 0 2" >> "$fstab"
-			echo "overlay /etc overlay defaults,lowerdir=/etc,upperdir=/overlay/etc/upper,workdir=/overlay/etc/work,x-systemd.requires-mounts-for=/overlay 0 2" >> "$fstab"
+			echo "overlay /var overlay defaults,lowerdir=/sysroot/var,upperdir=/sysroot/overlay/var/upper,workdir=/sysroot/overlay/var/work,x-systemd.requires-mounts-for=/sysroot/overlay,x-initrd.mount 0 2" >> "$fstab"
+			echo "overlay /etc overlay defaults,lowerdir=/sysroot/etc,upperdir=/sysroot/overlay/etc/upper,workdir=/sysroot/overlay/etc/work,x-systemd.requires-mounts-for=/sysroot/overlay,x-initrd.mount 0 2" >> "$fstab"
 		fi
 		column -t "$fstab" > "$rootfs_work/etc/fstab"
 		column -t "$veritytab" >> "$rootfs_work/etc/veritytab"
@@ -109,7 +107,7 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 
 	case "$fs" in
 		"ext4")
-			make_reproducible_ext4 -t "$timestamp" -h "gardenlinux:$version:partition:$target" ${uuid:+"-u"} ${uuid:+"$uuid"} ${label:+"-l"} ${label:+"$label"} -q -m -p 16 "$rootfs_work$target" "$file"
+			make_reproducible_ext4 -t "$timestamp" -h "gardenlinux:$version:partition:$target" ${uuid:+"-u"} ${uuid:+"$uuid"} ${label:+"-l"} ${label:+"$label"} -q $([ "$resize" = 0 ] || echo "-m") -p 16 "$rootfs_work$target" "$file"
 			;;
 		"vfat")
 			make_reproducible_vfat -t "$timestamp" -h "gardenlinux:$version:partition:$target" ${uuid:+"-u"} ${uuid:+"$uuid"} ${label:+"-l"} ${label:+"$label"} "$rootfs_work$target" "$file"

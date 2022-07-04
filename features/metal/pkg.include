@@ -7,7 +7,6 @@ efibootmgr
 haveged
 ipmitool
 #grub-cloud-amd64
-#cloud-guest-utils
 #irqbalance
 pciutils
 usbutils
@@ -15,7 +14,7 @@ numactl
 mdadm
 hdparm
 smartmontools
-bird2
+#bird2
 [${arch}=amd64] syslinux
 [${arch}=amd64] syslinux-common
 linux-image-5.15-${arch}

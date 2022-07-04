@@ -15,18 +15,22 @@
 </website-main>
  
 ## Table of Content
-- [Features](#Features)
-- [Quick Start](#Quick-Start)
-  * [Build Requirements](#Build-Requirements)
-  * [Build Options](#Build-Options)
-  * [Building](#Building)
-- [Customizing](#Customizing)
-- [Release](#Release)
-- [Documentation](#Documentation)
-  * [Continous Integration](#Continous-Integration)
-  * [Integration Tests / Unit Tests](#Integration-Tests)
-- [Contributing](#Contributing)
-- [Community](#Community)
+- [Garden Linux](#garden-linux)
+  - [Table of Content](#table-of-content)
+  - [Features](#features)
+  - [Quick Start](#quick-start)
+    - [Build Requirements](#build-requirements)
+    - [Build Options](#build-options)
+    - [Building](#building)
+    - [Cross-Build Support](#cross-build-support)
+  - [Customizing](#customizing)
+  - [Deploying](#deploying)
+  - [Release](#release)
+  - [Documentation](#documentation)
+    - [Continous Integration](#continous-integration)
+    - [Integration Tests](#integration-tests)
+  - [Contributing](#contributing)
+  - [Community](#community)
 
 ## Features
 - Easy to use build system
@@ -78,7 +82,29 @@ CFSSL requires `GLIBC 2.28`. Therefore, we recommand to build on systems running
 yum install bash sudo podman crun make gnupg git qemu-kvm qemu-img coreutils
 ```
 
+**macOS (>=12):**
+
+Build support on `macOS` (>=12) supports `Intel` (AMD64) and `Apple Silicon` (ARM64/AARCH64) architectures. Building on macOS requires the GNU versions of multiple tools that can be installed in different ways like Brew, MacPorts or self compiled. Self compiled GNU packages must be located in `/opt/local/bin/`. However, the following build instructions only cover the recommended `Brew` way.
+
+Furthermore, building on macOS requires to fulfill further build requirements:
+ * Command Line Tools (CLT) for Xcode
+ * [Homebrew](https://brew.sh) (Optionally: MacPorts https://macports.org)
+ * [Docker](https://docs.docker.com/desktop/mac/install/)
+
+```
+# Install needed packages
+brew install coreutils bash gnu-getopt gnu-sed gawk podman
+
+# Change to bash (Default: ZSH)
+$> bash
+
+# Export Docker as Container Runtime Environment for Garden Linux
+$> export GARDENLINUX_BUILD_CRE=docker
+```
+
 **Adjust Repository:**
+
+*Note: This is **not** needed on macOS.*
 
 Add `docker.io` to `unqualified-search-registries` in your [registries.conf](https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md). On freshly installed `Podman` systems this can be done by executing:
 ```
@@ -108,7 +134,6 @@ If `Podman` was already present please add the repository yourself to `unqualifi
 | --skip-build | Do not create the build container |
 
 ### Building
-
 To build all supported images you may just run the following command:
 ```
     make all
@@ -128,6 +153,26 @@ However, to save time you may also build just a platform specific image by runni
 
 Artifacts are located in the `.build/` folder of the project's build directory.
 
+### Cross-Build Support
+The Garden Linux pipeline supports cross-building on Linux based systems and requires `binfmt` support. `binfmt` support can easily be installed via packages from the used distribution. Afterwards, the build option `--arch` must be defined to the target arch (e.g. `--arch arm64`). Currently, `amd64` and `arm64` are supported and must be explicitly defined for cross-building.
+
+**Package Installation**
+
+**Debian:**
+```
+apt-get install binfmt-support
+```
+
+**CentOS:**
+```
+yum install qemu-user-binfmt
+```
+
+**macOS:**
+
+Not supported.
+
+
 ## Customizing
 Building Garden Linux is based on a [feature system](features/README.md).
 
@@ -135,7 +180,7 @@ Building Garden Linux is based on a [feature system](features/README.md).
 |---|---|
 | Platforms | `ali`, `aws`, `azure`, `gcp`, `kvm`, `metal`, ... |
 | Features | `container host`, `vitual host`, ... |
-| Modifiers | `_slim`, `_readonly`, `_pxe`, `_iso`, ... |
+| Modifiers | `_slim`, `_readonly`, `_pxe`, `_iso`, ... |
 | Element | `cis`, `fedramp`, `gardener` |
 
 if you want to build manually choose:

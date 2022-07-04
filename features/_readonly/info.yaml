@@ -1,7 +1,9 @@
 description: "/usr directory will be readonly"
 type: flag
 features:
-  include: [ server ]
+  include: 
+    - server
+    - _fstab_verity
 fs:
   - dest: /usr
     type: ext4

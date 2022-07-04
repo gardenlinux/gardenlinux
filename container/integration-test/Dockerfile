@@ -1,4 +1,5 @@
-FROM gardenlinux/base-test:dev
+ARG VERSION
+FROM gardenlinux/base-test:${VERSION}
 
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
      && unzip awscliv2.zip \

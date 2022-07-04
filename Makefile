@@ -4,7 +4,7 @@ PUBLIC=true
 AWS_DISTRIBUTE=
 BUILDDIR=.build
 
-ARCH ?= $(shell ./get_arch.sh)
+ARCH ?= $(shell bin/get_arch.sh)
 override BUILD_OPTS += --arch=$(ARCH)
 
 ifneq ($(wildcard local_packages),)
@@ -141,6 +141,12 @@ kvm: build-environment $(SECUREBOOT_CRT)
 kvm-dev: build-environment $(SECUREBOOT_CRT)
 	./build.sh $(BUILD_OPTS) --skip-build --features server,cloud,kvm,_dev $(BUILDDIR) $(VERSION)
 
+firecracker: build-environment $(SECUREBOOT_CRT)
+	./build.sh $(BUILD_OPTS) --skip-build --features firecracker $(BUILDDIR) $(VERSION)
+
+firecracker-dev: build-environment $(SECUREBOOT_CRT)
+	./build.sh $(BUILD_OPTS) --skip-build --features firecracker,_dev $(BUILDDIR) $(VERSION)
+
 pxe: build-environment $(SECUREBOOT_CRT)
 	./build.sh $(BUILD_OPTS) --skip-build --features metal,server,_pxe $(BUILDDIR) $(VERSION)
 
@@ -166,10 +172,10 @@ metalk: build-environment $(SECUREBOOT_CRT)
 metalk-dev: build-environment $(SECUREBOOT_CRT)
 	./build.sh $(BUILD_OPTS) --skip-build --features metal,khost,_pxe,_dev $(BUILDDIR) $(VERSION)
 
-metal-secureboot: container-build cert/sign.pub
+metal-secureboot: build-environment $(SECUREBOOT_CRT) cert/sign.pub
 	./build.sh $(BUILD_OPTS) --skip-build --features server,metal,_secureboot $(BUILDDIR) $(VERSION)
 
-metal-secureboot-dev: container-build cert/sign.pub
+metal-secureboot-dev: build-environment $(SECUREBOOT_CRT) cert/sign.pub
 	./build.sh $(BUILD_OPTS) --skip-build --features server,metal,_secureboot,_dev $(BUILDDIR) $(VERSION)
 
 github_action_runner: build-environment $(SECUREBOOT_CRT)

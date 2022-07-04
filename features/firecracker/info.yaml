@@ -1,0 +1,5 @@
+description: firecracker
+type: platform
+features:
+  include:
+    - server

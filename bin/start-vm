@@ -13,11 +13,40 @@ set -Eeuo pipefail
 #
 # pxe dir, mac : parsing
 
+# Define default VARs
+gnu_head="head"
+gnu_stat="stat"
+build_os="$(uname -s)"
+arch="$(uname -m)"
+
+# OS Validation: macOS
+if [ "Darwin" = $build_os ]; then
+        running_os="macos"
+        gnu_head="ghead"
+        gnu_stat="gstat"
+
+        # Translate ARM64 to AARCH64
+        # on macOS
+        if [ "arm64" = $arch ]; then
+            arch="aarch64"
+        fi
+fi
+
+# OS Validation: CentOS
+if [[ -f "/etc/centos-release" ]]; then
+    running_os="centos"
+fi
+
+# OS Validation: Debian
+if [[ -f "/etc/debian_version" ]]; then
+    running_os="debian"
+fi
+
+
 thisDir=$(dirname "$(readlink -f "$BASH_SOURCE")")
 targetDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 tmpDir=${TMPDIR:-/tmp}
 cpu=2
-arch="$(uname -m)"
 memory=2Gi
 monitor=1
 bridge=
@@ -27,18 +56,30 @@ pxefile=$thisDir/../examples/ipxe/start-vm.ipxe
 ignfile=""
 pxe_binary=
 portbase=2223
-port=$portbase; while ss -tul | grep :$port &> /dev/null; do (( ++port )); done
+if [ "macos" != $running_os ]; then
+    port=$portbase; while ss -tul | grep :$port &> /dev/null; do (( ++port )); done
+else
+    port=$portbase; while netstat -an -ptcp | grep LISTEN | awk {'print $4'} | grep :$port &> /dev/null; do (( ++port )); done
+fi
 uefi=
 uefiCode=
 uefiVars=
 tpm=1
 vnc=
 vncbase=5900
-vncport=0; while ss -tul | grep :$(( vncport + $vncbase )) &> /dev/null; do (( ++vncport )); done
+if [ "macos" != $running_os ]; then
+    vncport=0; while ss -tul | grep :$(( vncport + $vncbase )) &> /dev/null; do (( ++vncport )); done
+else
+    vncport=0; while netstat -an -ptcp | grep LISTEN | awk {'print $4'} | grep :$(( vncport + $vncbase )) &> /dev/null; do (( ++vncport )); done
+fi
 keypress=1
 mac="$(printf '02:%02x:%02x:%02x:%02x:%02x' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)))"
 virtOpts=( )
+
+[ $(id -u) == 0 ] && virtOpts=(	"-runas nobody" )
+
 gardenlinux_build_cre=${GARDENLINUX_BUILD_CRE:-"sudo podman"}
+
 source "${thisDir}/.constants.sh" \
 	--flags 'daemonize,uefi,skipkp,vnc' \
 	--flags 'cpu:,mem:,bridge:,port:,mac:,arch:' \
@@ -105,24 +146,53 @@ while true; do
 	esac
 done
 
+# Add UEFI options
 if [ "$arch" = x86_64 ]; then
-	uefiCode="${uefiCode:-/usr/share/OVMF/OVMF_CODE.fd}"
-	uefiVars="${uefiVars:-/usr/share/OVMF/OVMF_VARS.fd}"
+
+        if [ "$running_os" = macos ]; then
+                # Test for HomeBrew path
+                homeBrewPrefix=$(brew info qemu | awk 'NR==4{print $1}')
+                uefiCode="${uefiCode:-$homeBrewPrefix/share/qemu/edk2-x86_64-code.fd}"
+                uefiVars="${uefiVars:-$homeBrewPrefix/share/qemu/edk2-i386-vars.fd}"
+        else
+                uefiCode="${uefiCode:-/usr/share/OVMF/OVMF_CODE.fd}"
+                uefiVars="${uefiVars:-/usr/share/OVMF/OVMF_VARS.fd}"
+        fi
+
 elif [ "$arch" = aarch64 ]; then
-	uefi=1
-	uefiCode="${uefiCode:-/usr/share/AAVMF/AAVMF_CODE.fd}"
-	uefiVars="${uefiVars:-/usr/share/AAVMF/AAVMF_VARS.fd}"
+
+        # Enable uefi mode
+        uefi=1
+
+        # Obtain uefiCode and uefiVars from
+        # Homebrew path on macOS
+        if [ "$running_os" = macos ]; then
+                # Test for HomeBrew path
+                homeBrewPrefix=$(brew info qemu | awk 'NR==4{print $1}')
+                uefiCode="${uefiCode:-$homeBrewPrefix/share/qemu/edk2-aarch64-code.fd}"
+                uefiVars="${uefiVars:-$homeBrewPrefix/share/qemu/edk2-arm-vars.fd}"
+        else
+                uefiCode="${uefiCode:-/usr/share/AAVMF/AAVMF_CODE.fd}"
+                uefiVars="${uefiVars:-/usr/share/AAVMF/AAVMF_VARS.fd}"
+        fi
+
 fi
+
 
 if [ "$pxe" ] && [ "$uefi" ]; then
 	pxe_binary="$pxe"
 	pxe=
 fi
 
-# adding the disks (using parameters without - or --)
+
+# Adding the disks (using parameters without - or --)
 inflatelist=( )
 diskcount=0
-[ "$#" == "" ] || virtOpts+=(     "-device virtio-scsi-pci,id=scsi0" )
+
+if [ "$arch" = "x86_64" ]; then
+        [ "$#" == "" ] || virtOpts+=(     "-device virtio-scsi-pci,id=scsi0" )
+fi
+
 while (( "$#" )); do
 	imagefile=$1
 	imagesize=0
@@ -133,7 +203,7 @@ while (( "$#" )); do
 	[[ $imagefile == *"."* ]] &&		imageext=${imagefile##*.};
 	[ -e $imagefile ] || eusage "file \"$imagefile\" does not exist"
 
-	imagesizeBytes=$(numfmt --from=iec --suffix="B" --format "%f" ${imagesize} | head -c-2)  # calculate in bytes
+	imagesizeBytes=$(numfmt --from=iec --suffix="B" --format "%f" ${imagesize} | $gnu_head -c-2)  # calculate in bytes
 	imageext=${imageext/^vhd$/vpc}
 
 	if [ "$imageext" == "iso" ]; then
@@ -145,40 +215,57 @@ while (( "$#" )); do
 		dd if=$imagefile of=/dev/null count=1 iflag=direct 2> /dev/null && imagedirect="aio=native,cache.direct=on,"
 
 		# if there is a bigger size, we need to inflate
-		[ $(stat --printf="%s" $imagefile) -lt ${imagesizeBytes} ] && inflatelist+=( "${imagefile},${imagesizeBytes}" )
-
-		virtOpts+=(	"-device scsi-hd,drive=drive${diskcount},bus=scsi0.0"
-				"-drive format=${imageext},if=none,discard=unmap,${imagedirect}id=drive${diskcount},file=${imagefile}" )
+		[ $($gnu_stat --printf="%s" $imagefile) -lt ${imagesizeBytes} ] && inflatelist+=( "${imagefile},${imagesizeBytes}" )
+                if [ "$arch" = x86_64 ]; then
+		        virtOpts+=(	"-device scsi-hd,drive=drive${diskcount},bus=scsi0.0"
+			        	"-drive format=${imageext},if=none,discard=unmap,${imagedirect}id=drive${diskcount},file=${imagefile}" )
+                else
+		        virtOpts+=(	"-drive if=virtio,format=${imageext},file=$imagefile" )
+                fi
 		(( ++diskcount ))
 	fi
 	shift
 done
 [ $diskcount -gt 0 -o "$pxe" -o "$pxe_binary" ] || eusage 'missing bootdisk. boot via --pxe, provide tmpdisk via --disk or provide bootdisk image file'
 
-[ $(id -u) == 0 ] && virtOpts=(	"-runas nobody" )
-
 [[ "${memory: -1}" =~ [0-9] ]] && memory="${memory}Mi"
-memory=$(numfmt --from=auto --suffix="B" --format "%f" ${memory} | head -c-2)
+memory=$(numfmt --from=auto --suffix="B" --format "%f" ${memory} | $gnu_head -c-2)
 virtOpts+=(	"-smp $cpu"
 	   	"-m $(( $memory / 1048576 ))" )
 
-# add a watchdog to maintain automatic reboots
-virtOpts+=(	"-watchdog i6300esb" )
+# Unsupported options on CentOS
+if [ "centos" != $running_os ]; then
+    if [ "macos" != $running_os ]; then
+        # add a watchdog to maintain automatic reboots
+        virtOpts+=(	"-watchdog i6300esb" )
+    fi
+fi
 
 # remove default things like floppies, serial port, parallel port
 virtOpts+=(	"-nodefaults" )
 
-# make sure to use minimal memory
-virtOpts+=(	"-device virtio-balloon" )
+if [ "$arch" = "x86_64" ]; then
+        # make sure to use minimal memory
+        virtOpts+=(	"-device virtio-balloon" )
 
-# adding the random number generator of the host
-virtOpts+=(	"-device virtio-rng-pci,rng=rng0"
-	   	"-object rng-random,id=rng0,filename=/dev/random" )
+        # adding the random number generator of the host
+        virtOpts+=(	"-device virtio-rng-pci,rng=rng0"
+	   	        "-object rng-random,id=rng0,filename=/dev/random" )
 
-if [ "$arch" = x86_64 ]; then
-	# adding a bmc simulator
-	virtOpts+=(	"-device ipmi-bmc-sim,id=bmc0"
-			"-device isa-ipmi-kcs,bmc=bmc0,ioport=0xca2"  )
+        # Unsupported options on CentOS
+        if [ "centos" != $running_os ]; then
+                if [ "$arch" = x86_64 ]; then
+	                # adding a bmc simulator
+        	        virtOpts+=(	"-device ipmi-bmc-sim,id=bmc0"
+        			        "-device isa-ipmi-kcs,bmc=bmc0,ioport=0xca2"  )
+                fi
+        fi
+
+        # support for qemu guest agent. There is no way for this script if inside VM is connected or not
+        virtOpts+=(     "-chardev socket,path=$tmpDir/$mac.guest,server=on,wait=off,id=qga0"
+                        "-device virtio-serial"
+                        "-device virtserialport,chardev=qga0,name=org.qemu.guest_agent.0" )
+
 fi
 
 # adding a uuid since this is expected by systemd and gardenlinux
@@ -187,34 +274,87 @@ macfull="$(sed 's/../&:/g;s/:$//' <<< $mac)"
 uuid="12345678-0000-0000-0000-${mac}"
 virtOpts+=(     "-uuid $uuid" )
 
-# support for qemu guest agent. There is no way for this script if inside VM is connected or not
-virtOpts+=(	"-chardev socket,path=$tmpDir/$mac.guest,server=on,wait=off,id=qga0"
-		"-device virtio-serial"
-		"-device virtserialport,chardev=qga0,name=org.qemu.guest_agent.0" )
 
-if [ "$arch" = "$(uname -m)" ]; then
-	if [ "$arch" = x86_64 ]; then
-		# virtualization with max performance if the cpu has vmx
-		cpuinfo="$(grep "^flags" /proc/cpuinfo | uniq)"
-		[ -z "${cpuinfo##*vmx*}" -o -z "${cpuinfo##*svm*}" ] &&
-			virtOpts+=("-enable-kvm" "-cpu host" "-machine q35,smm=on")
-		elif [ "$arch" = aarch64 ]; then
-                        # Check if aarch64 is running in a virtualized
-                        # environment where we may not use any accleration
-                        if [ "QEMU" = "$(dmesg  | grep "DMI: QEMU" | awk {'print $4'})" ] && [ "not" = "$(dmesg | grep -i kvm | awk {'print $7'})" ]; then
-			    virtOpts+=("-cpu max" "-machine virt")
-			else
-                            virtOpts+=("-cpu host" "-machine virt")
-			    [ -e "/dev/kvm" ] && virtOpts+=("-accel kvm")
-                        fi
-		fi
-else
-	if [ "$arch" = x86_64 ]; then
-		virtOpts+=("-cpu Broadwell")
-	elif [ "$arch" = aarch64 ]; then
-		virtOpts+=("-cpu cortex-a72" "-machine virt")
-	fi
+# Validate x86_64 arch
+if [ "$arch" = x86_64 ]; then
+
+    # Validate for native or emulated arch
+    if [ "$arch" = "$(uname -m)" ]; then
+
+        # Running on native arch
+        # Check for acceleration support
+        if [ "$running_os" = macos ]; then
+            # macOS HVF support is always given on all new Intel Macs
+            # that are supported by the current HomeBrew version
+            virtOpts+=("-cpu host" "-accel hvf")
+
+        else
+
+            # Validate for KVM support on x86_64
+            # If no KVM support is present QEMU handles
+            # the -cpu option itself
+            if [ -w "/dev/kvm" ]; then
+                virtOpts+=("-enable-kvm" "-cpu host" "-machine q35,smm=on")
+            else
+                echo -e "WARNING: Can not use KVM acceleration. Please see:\n https://github.com/gardenlinux/gardenlinux/tree/main/bin#start-vm \n\n"
+            fi
+
+        fi
+
+    else
+        # Running on emulated arch
+        # Set default CPU on emulated arch
+        virtOpts+=("-cpu Broadwell")
+
+    fi
+
 fi
+
+
+# Validate AARCH64/ARM64 arch
+if [ "$arch" = aarch64 ]; then
+
+    # Evaluate possible ARM64 arch outputs
+    testArch="undefined"
+    if [ "arm64" = $(uname -m) ]; then
+        testArch="aarch64"
+    fi
+    if [ "aarch64" = $(uname -m) ]; then
+        testArch="aarch64"
+    fi
+
+    # Validate for native or emulated arch
+    if [ "$arch" = "$testArch" ]; then
+
+        # Running on native arch
+        # Check for acceleration support
+        if [ "$running_os" = macos ]; then
+            # macOS HVF support is always given on all new Intel Macs
+            # that are supported by the current HomeBrew version
+            virtOpts+=("-cpu host" "-machine virt" "-accel hvf")
+
+        else
+
+            # Validate for KVM support on AARCH64
+            if [ -w "/dev/kvm" ]; then
+                virtOpts+=("-cpu host" "-machine virt" "-accel kvm")
+            else
+                echo -e "WARNING: Can not use KVM acceleration. Please see:\nhttps://github.com/gardenlinux/gardenlinux/tree/main/bin#start-vm \n\n"
+                virtOpts+=("-cpu max" "-machine virt")
+            fi
+
+        fi
+
+    else
+
+        # Running on emulated arch
+        # Set default CPU on emulated arch
+        virtOpts+=("-cpu max" "-machine virt")
+
+    fi
+
+fi
+
 
 # adding a monitoring port for extended commands
 if [ $monitor ]; then
@@ -371,4 +511,9 @@ if [ $vnc ]; then
 	printf "change vnc password\n%s\n" MYPASSWORD | socat - UNIX-CONNECT:$targetDir/$mac.monitor &> /dev/null )&
 fi
 
-qemu-system-$arch ${virtOpts[@]}
+# Start QEMU with virtOpts
+if [ "centos" = $running_os ]; then
+        /usr/libexec/qemu-kvm ${virtOpts[@]}
+else
+        qemu-system-$arch ${virtOpts[@]}
+fi

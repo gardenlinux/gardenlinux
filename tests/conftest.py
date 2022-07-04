@@ -24,6 +24,7 @@ from integration.ali import ALI
 from integration.openstackccee import OpenStackCCEE
 from integration.chroot import CHROOT
 from integration.kvm import KVM
+from integration.manual import Manual
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -183,6 +184,8 @@ def testconfig(pipeline, iaas, pytestconfig):
         elif iaas == 'chroot':
             pass
         elif iaas == 'kvm':
+            pass
+        elif iaas == 'manual':
             pass
         return config
 

@@ -63,7 +63,7 @@ class KVM:
         # Define self.config
         self.config = config
         # Validate
-        ssh_generate, arch = self._validate()
+        ssh_generate, arch, accel = self._validate()
         # Create SSH
         if ssh_generate:
             self._generate_ssh_key()
@@ -72,7 +72,7 @@ class KVM:
         # Adjust KVM image 
         self._adjust_kvm()
         # Start KVM
-        self._start_kvm(arch)
+        self._start_kvm(arch, accel)
 
 
     def __del__(self):
@@ -116,10 +116,12 @@ class KVM:
                 logger.info("'arch' is defined. Executing for {arch}".format(
                   arch=self.config["arch"]))
                 arch = self.config["arch"]
+                accel = self.config.get("accel", None)
         else:
                 # Setting amd64 as default if not defined
                 logger.info("'arch' is not defined. Executing for amd64")
                 arch = "amd64"
+                accel = self.config.get("accel", None)
 
         # Validate if VM should remain after tests
         if "keep_running" in self.config:
@@ -155,7 +157,7 @@ class KVM:
             user = self.config["ssh"]["user"]
             logger.info("'user' is defined. Using user {user}.".format(user=user))
 
-        return ssh_generate, arch
+        return ssh_generate, arch, accel
 
     def _generate_ssh_key(self):
         """ Generate new SSH key for integration test """
@@ -226,7 +228,7 @@ class KVM:
             else:
                 logger.error("Failed: {cmd}".format(cmd=i))
 
-    def _start_kvm(self, arch):
+    def _start_kvm(self, arch, accel):
         """ Start VM in KVM for defined arch """
         logger.info("Starting VM in KVM.")
         image = self.config["image"]
@@ -246,11 +248,28 @@ class KVM:
             p = subprocess.Popen([cmd_kvm], shell=True)
             logger.info("VM starting as amd64 in KVM.")
         elif arch == "arm64":
-            cmd_kvm = "qemu-system-aarch64 \
+
+            # Running emulated ARM64 from other architectures (e.g. AMD64)
+            if not accel:
+                arm64_cpu = "cortex-a72"
+                arm64_accel = ""
+
+            # Running ARM64 with KVM accel
+            if accel == "kvm":
+                arm64_cpu = "host"
+                arm64_accel = "-accel kvm"
+
+            # Running ARM64 with HVF (Apple Silicon) accel
+            if accel == "hvf":
+                arm64_cpu = "host"
+                arm64_accel = "-accel hvf"
+
+            cmd_kvm = f"qemu-system-aarch64 \
               -display none \
               -daemonize \
-              -cpu cortex-a72 \
+              -cpu {arm64_cpu} \
               -machine virt \
+              {arm64_accel} \
               -bios /usr/share/qemu-efi-aarch64/QEMU_EFI.fd \
               -pidfile /tmp/qemu.pid \
               -m 1024M \

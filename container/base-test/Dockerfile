@@ -24,6 +24,7 @@ RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc
           libguestfs-tools \
           qemu-system-x86 \
           qemu-system-arm \
+          qemu-efi-aarch64 \
           shellcheck \
           build-essential \
           libpython3-dev
