@@ -12,7 +12,7 @@ def _get_remote_files(client, perm):
     """ Get remote files of given attribute """
     files = []
     cmd_find = f"find / -type f -perm {perm} -exec "
-    cmd_stat = "stat -c '%n,%u,%g' {} \\; 2> /dev/null"
+    cmd_stat = "stat -c '%n,%U,%G' {} \\; 2> /dev/null"
     cmd = cmd_find + cmd_stat
     (exit_code, output, error) = client.execute_command(
         cmd, quiet=True)
