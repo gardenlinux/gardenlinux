@@ -1,0 +1,2 @@
+linux-image-5.15-firecracker-${arch}
+rng-tools5

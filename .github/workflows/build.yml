@@ -6,7 +6,7 @@ jobs:
     strategy:
       matrix:
         architecture: [ amd64, arm64 ]
-        target: [ kvm, metal, gcp, aws, azure, ali, openstack, vmware, pxe ]
+        target: [ kvm, metal, gcp, aws, azure, ali, openstack, vmware, pxe, firecracker ]
         modifier: [ "", "-dev" ]
     steps:
       - uses: actions/checkout@v2

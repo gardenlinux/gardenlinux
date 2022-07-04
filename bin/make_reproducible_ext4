@@ -53,6 +53,8 @@ shift 2
 [ -d "$source" ]
 [ -f "$target" ]
 
+export E2FSPROGS_FAKE_TIME=$timestamp
+
 # set uuid and HTREE hash_seed to reproducible values instead of default random generated ones
 uuid=${uuid:-$(echo -n "$hash_prefix:uuid" | uuid_hash)}
 hash_seed=$(echo -n "$hash_prefix:hash_seed" | uuid_hash)

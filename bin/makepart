@@ -41,8 +41,6 @@ partitions="$(mktemp)"
 overlay_partitions="$(mktemp)"
 secureboot_partitions="$(mktemp)"
 
-export E2FSPROGS_FAKE_TIME=$timestamp
-
 # strip comments and blank lines and sort by path depth (deepest first)
 sed 's/#.*//;/^[[:blank:]]*$/d' \
 | while IFS= read -r line; do
