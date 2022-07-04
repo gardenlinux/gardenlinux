@@ -22,6 +22,7 @@
     - [Build Requirements](#build-requirements)
     - [Build Options](#build-options)
     - [Building](#building)
+    - [Cross-Build Support](#cross-build-support)
   - [Customizing](#customizing)
   - [Deploying](#deploying)
   - [Release](#release)
@@ -133,7 +134,6 @@ If `Podman` was already present please add the repository yourself to `unqualifi
 | --skip-build | Do not create the build container |
 
 ### Building
-
 To build all supported images you may just run the following command:
 ```
     make all
@@ -152,6 +152,26 @@ However, to save time you may also build just a platform specific image by runni
 ```
 
 Artifacts are located in the `.build/` folder of the project's build directory.
+
+### Cross-Build Support
+The Garden Linux pipeline supports cross-building on Linux based systems and requires `binfmt` support. `binfmt` support can easily be installed via packages from the used distribution. Afterwards, the build option `--arch` must be defined to the target arch (e.g. `--arch arm64`). Currently, `amd64` and `arm64` are supported and must be explicitly defined for cross-building.
+
+**Package Installation**
+
+**Debian:**
+```
+apt-get install binfmt-support
+```
+
+**CentOS:**
+```
+yum install qemu-user-binfmt
+```
+
+**macOS:**
+
+Not supported.
+
 
 ## Customizing
 Building Garden Linux is based on a [feature system](features/README.md).
