@@ -27,6 +27,7 @@ import pytest
                  "/usr/bin/newgrp,0,0",
                  "/usr/bin/su,0,0",
                  "/usr/lib/dbus-1.0/dbus-daemon-launch-helper,0,113",
+                 "/usr/lib/dbus-1.0/dbus-daemon-launch-helper,0,112",
                  "/usr/lib/dbus-1.0/dbus-daemon-launch-helper,0,111",
                  "/usr/lib/dbus-1.0/dbus-daemon-launch-helper,0,110",
                  "/usr/bin/chfn,0,0",
