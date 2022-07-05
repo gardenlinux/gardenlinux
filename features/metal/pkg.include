@@ -4,6 +4,7 @@ fdisk
 lvm2
 dosfstools
 efibootmgr
+efitools
 haveged
 ipmitool
 #grub-cloud-amd64
