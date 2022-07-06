@@ -470,6 +470,12 @@ def non_feature_gardener(testconfig):
         pytest.skip('test is not supported on gardener')
 
 @pytest.fixture
+def non_feature_github_action_runner(testconfig):
+    features = testconfig.get("features", [])
+    if "github_action_runner" in features:
+        pytest.skip('test is not supported on github_action_runner')
+
+@pytest.fixture
 def non_dev(testconfig):
     features = testconfig.get("features", [])
     if "_dev" in features:
