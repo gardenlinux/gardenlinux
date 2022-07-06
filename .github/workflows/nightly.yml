@@ -8,7 +8,7 @@ jobs:
   build:
     uses: ./.github/workflows/build.yml
     with:
-      version: today
+      version: now
   upload_to_s3:
     name: upload to S3
     needs: build

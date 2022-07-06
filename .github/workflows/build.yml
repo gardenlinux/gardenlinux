@@ -4,7 +4,7 @@ on:
     inputs:
       version:
         type: string
-        default: dev
+        default: today
 jobs:
   cert:
     runs-on: ec2-gardenlinux-amd64
