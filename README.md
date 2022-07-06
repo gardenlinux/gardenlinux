@@ -11,9 +11,9 @@
 <website-main>
 
 <img align="left" width="80" height="80" src="https://raw.githubusercontent.com/gardenlinux/gardenlinux/main/logo/gardenlinux-logo-black-text.svg"> <a href="https://gardenlinux.io/">Garden Linux</a> is a <a href="https://debian.org/">Debian GNU/Linux</a> derivate that aims to provide small, auditable Linux images for most cloud providers (e.g. AWS, Azure, GCP etc.) and bare-metal machines. Garden Linux is the best Linux for <a href="https://gardener.cloud/">Gardener</a> nodes. Garden Linux provides great possibilities for customizing that is made by a highly customizable feature set to fit your needs. <br><br>
- 
+
 </website-main>
- 
+
 ## Table of Content
 - [Garden Linux](#garden-linux)
   - [Table of Content](#table-of-content)
@@ -79,8 +79,10 @@ CFSSL requires `GLIBC 2.28`. Therefore, we recommand to build on systems running
 
 ```
 # Install needed packages
-yum install bash sudo podman crun make gnupg git qemu-kvm qemu-img coreutils
+yum install bash sudo podman crun make gnupg git qemu-kvm qemu-img coreutils edk2-aarch64 edk2-ovmf
 ```
+
+*Note: Running `AARCH64` on `x86_64` requires `qemu-system-aarch64` package which is not present in official repositories.*
 
 **macOS (>=12):**
 
@@ -93,7 +95,7 @@ Furthermore, building on macOS requires to fulfill further build requirements:
 
 ```
 # Install needed packages
-brew install coreutils bash gnu-getopt gnu-sed gawk podman
+brew install coreutils bash gnu-getopt gnu-sed gawk podman socat
 
 # Change to bash (Default: ZSH)
 $> bash

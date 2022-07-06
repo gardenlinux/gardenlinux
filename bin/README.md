@@ -86,15 +86,55 @@ sudo usermod -G -a libvirtd "$username"
 sudo chmod +666 /dev/kvm
 ```
 
+**Network Bridge:**
+
+Creating a network bridge requires `root` access and additional packages like `virsh`.
+
+`Debian`: `apt-get install libvirt-clients libvirt`
+
+`Ubuntu`: `apt-get install libvirt-clients libvirt`
+
+`CentOS`: `yum install libvirt-client libvirt-daemon libvirt-daemon-driver-qemu libvirt-daemon-config-network`
+
+`macOS`: `unsupported`
+
+
+Creating a bridge with `virsh`:
+```
+# You may need to start unit `libvirtd`
+
+# In default, it comes with an default profile
+$> virsh net-list --all
+ Name      State      Autostart   Persistent
+----------------------------------------------
+ default   inactive   no          yes
+
+# Start the default profile
+$> virsh net-start --network default
+
+# A new device virbr0 is up
+$> ip addr show virbr0
+12: virbr0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default qlen 1000
+    link/ether 52:54:00:d4:dd:c1 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.122.1/24 brd 192.168.122.255 scope global virbr0
+       valid_lft forever preferred_lft forever
+
+# Stat QEMU bridge with bridge interface
+$> bin/start-vm --bridge virbr0 .build/kvm_dev-amd64-today-local.raw
+```
+
 **Options:**
 | Option (short) | Descriptions |
 |--|--|
-| --arch | Architecture to use [x86_64, aarch64] |
+| --arch | Architecture to use [`amd64`, `arm64`] |
 | --cpu | CPU type to emulate if an specific should be used |
 | --mem | Memory size to use for VM |
 | --uuefi | Run in `UEFI` mode instead of legacy `Bios`|
 | --ueficode | Path to custom UEFI Code file |
 | --uefivars | Path to custom UEFI Vars file |
+| --skipkp |Skip keypress (boots directly the image) |
+| --vnc | Starts a VNC server session |
+| --bridge <interface> | Uses a network bridge with a defined interface (needs root) |
 
 **Usage:**
 

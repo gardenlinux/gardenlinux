@@ -1,519 +1,727 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# TODO: add -runas -> valid if running as root
-#TODO uefi secure boot, uefi certificate
-# tpm https://qemu-project.gitlab.io/qemu/specs/tpm.html
-# serial console on --daemonize to unix socket file
-# virtual console fixing size problems ? vc
-# -snapshot per disk? detect-zeroes=unmap
-# virtio-blk instead of scsi ?
-#TODO sysctl -w net.ipv4.ping_group_range='0 2147483647'
-# stty cols 132
-#
-# pxe dir, mac : parsing
+# Constants
+readonly CURR_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+readonly TARGET_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+readonly TMP_DIR=${TMP_DIR:-/tmp}
+QEMU_OPTS=( )
 
-# Define default VARs
-gnu_head="head"
-gnu_stat="stat"
-build_os="$(uname -s)"
-arch="$(uname -m)"
 
-# OS Validation: macOS
-if [ "Darwin" = $build_os ]; then
-        running_os="macos"
-        gnu_head="ghead"
-        gnu_stat="gstat"
+# Main function
+main () {
+    get_os
+    get_arch
+    set_defaults
+    get_opts "$@"
+    set_binaries
+    qemu_opt_pxe
+    qemu_opt_disk "${@: -1}"
+    qemu_opt_uefi
+    qemu_opt_cpu
+    qemu_opt_memory
+    qemu_opt_monitor
+    qemu_opt_remote_control
+    qemu_opt_network
+    qemu_opt_misc
+    qemu_status
+    qemu_execute
+}
 
-        # Translate ARM64 to AARCH64
-        # on macOS
-        if [ "arm64" = $arch ]; then
-            arch="aarch64"
+
+# Evaluate operating system
+get_os () {
+    # Obtain the currently used OS
+    host_os="$(uname -s)"
+
+    if [ $host_os = "Darwin" ]; then
+        os="macos"
+    elif [ $host_os = "Linux" ]; then
+        os="linux"
+        # Obtain the currently used Linux distribution
+        host_dist="$(hostnamectl | grep "Operating System:" | awk {'print tolower($3)}')"
+
+        # Evaluate Distribution
+        if [ $host_dist = "centos" ]; then
+            os="centos"
+        elif [ $host_dist = "debian" ]; then
+            os="debian"
+        elif [ $host_dist = "ubuntu" ]; then
+            os="ubuntu"
+        elif [ $host_dist = "arch" ]; then
+            os="arch"
+        else
+            echo "Error: Unsupported Linux distribution."
+            exit 1
         fi
-fi
 
-# OS Validation: CentOS
-if [[ -f "/etc/centos-release" ]]; then
-    running_os="centos"
-fi
-
-# OS Validation: Debian
-if [[ -f "/etc/debian_version" ]]; then
-    running_os="debian"
-fi
+    else
+        echo "Error: Unsupported Operating System."
+        exit 1
+    fi
+}
 
 
-thisDir=$(dirname "$(readlink -f "$BASH_SOURCE")")
-targetDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-tmpDir=${TMPDIR:-/tmp}
-cpu=2
-memory=2Gi
-monitor=1
-bridge=
-daemonize=
-pxe=
-pxefile=$thisDir/../examples/ipxe/start-vm.ipxe
-ignfile=""
-pxe_binary=
-portbase=2223
-if [ "macos" != $running_os ]; then
-    port=$portbase; while ss -tul | grep :$port &> /dev/null; do (( ++port )); done
-else
-    port=$portbase; while netstat -an -ptcp | grep LISTEN | awk {'print $4'} | grep :$port &> /dev/null; do (( ++port )); done
-fi
-uefi=
-uefiCode=
-uefiVars=
-tpm=1
-vnc=
-vncbase=5900
-if [ "macos" != $running_os ]; then
-    vncport=0; while ss -tul | grep :$(( vncport + $vncbase )) &> /dev/null; do (( ++vncport )); done
-else
-    vncport=0; while netstat -an -ptcp | grep LISTEN | awk {'print $4'} | grep :$(( vncport + $vncbase )) &> /dev/null; do (( ++vncport )); done
-fi
-keypress=1
-mac="$(printf '02:%02x:%02x:%02x:%02x:%02x' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)))"
-virtOpts=( )
+# Evaluate system architecture
+get_arch () {
+    # Include "get_arch.sh" for only maintaining a single
+    # file that evaluates the current used arch
+    arch=$(${CURR_DIR}/get_arch.sh)
+}
 
-[ $(id -u) == 0 ] && virtOpts=(	"-runas nobody" )
 
-gardenlinux_build_cre=${GARDENLINUX_BUILD_CRE:-"sudo podman"}
+# Set default values
+set_defaults () {
+    # Set CRE
+    gardenlinux_build_cre=${GARDENLINUX_BUILD_CRE:-"sudo podman"}
 
-source "${thisDir}/.constants.sh" \
-	--flags 'daemonize,uefi,skipkp,vnc' \
-	--flags 'cpu:,mem:,bridge:,port:,mac:,arch:' \
-	--flags 'pxe:' \
-	--flags 'ignfile:' \
-	--flags 'ueficode:,uefivars:' \
-	--usage '[ --daemonize ] [ --cpu:<#> ] [ --mem:<size> ] [ --pxe:<dir> ] [<image file>[,<size>]]*' \
-	--sample '.build/rootfs.raw' \
-        --sample ',1G ubuntu-16.04.7-server-amd64.iso' \
-	--help  "Starts a virtual machine with the most basic environment, needed. Perfect use for test cases and running samples of GardenLinux. This script can run unprivileged but it should have the possibility to use kvm (group kvm) otherwise it will be super slow. If not being root, the network will be slow and no ICMP (ping) capabilities are with the VM.
+    # Set default vars
+    cpu="2"
+    memory="2Gi"
+    mac="$(printf '02:%02x:%02x:%02x:%02x:%02x' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)))"
+    mac="$(printf "%012s" | tr -d ":" <<< ${mac,,})"
+    macfull="$(sed 's/../&:/g;s/:$//' <<< $mac)"
+    uuid="12345678-0000-0000-0000-${mac}"
+    monitor=1
+    bridge=
+    daemonize=
+    pxe=
+    pxe_binary=
+    pxefile=${CURR_DIR}/../examples/ipxe/start-vm.ipxe
+    ignfile=
+    uefi=
+    uefi_code=
+    uefi_vars=
+    tpm=1
+    vnc=
+    keypress=1
+    port_dest=22
+    port_base=2223
+    vnc_base=5900
 
---cpu <int>	number of vCPUs to start the VM with (default: $cpu)
---arch <platform> set the emulated platform.
-		i386, x86_64, x86_64-microvm, arm, aarch64 are supported. (default: $arch)
---mem <int>	memory provided to the virtual machine (default: $memory) in MB if unit is omitted
+    # Evaluate free and usable ports
+    if [ $os != "macos" ]; then
+        # Set port(s) on Linux based systems
+        port=$port_base; while ss -tul | grep :$port &> /dev/null; do (( ++port )); done
+        vnc_port=0; while ss -tul | grep :$(( vnc_port + $vnc_base )) &> /dev/null; do (( ++vnc_port )); done
+    else
+        # Set port(s) on macOS based systems
+        port=$port_base; while netstat -an -ptcp | grep LISTEN | awk {'print $4'} | grep :$port &> /dev/null; do (( ++port )); done
+        vnc_port=0; while netstat -an -ptcp | grep LISTEN | awk {'print $4'} | grep :$(( vnc_port + $vnc_base )) &> /dev/null; do (( ++vnc_port )); done
+    fi
 
---uefi		boot with uefi bios enabled, needs \`apt-get install ovmf\` (default: no)
---ueficode <path> defines the uefi code used. The file is readonly (default: $uefiCode)
---uefivars <path> defines the uefi variables used. The file will be !modified! if vartiables are
-		set (default: $uefiVars)
+    # Set QEMU defaults
+    # Run as user "nobody" when started as root user
+    if [ $(id -u) == 0 ]; then
+        QEMU_OPTS+=("-runas nobody")
+    fi
 
---bridge <if>	disables host networking and bridges the machine to the specified interface
---port <int>	specifies the local ssh port. this port is mounted to the running machine,
-		not if --bridge is specified (default: $portbase)
---mac <macaddr> the mac address is usually randomized. It is used to identify the monitoring
-		port, the mac address of the machine and the UUID. Can be set to this value.
---pxe		enables pxe boot on the vm. Minimum one image file must be a directory
---ignfile	provide an ignition file whe pxe booting
+    # Do not use defaults on QEMU
+    QEMU_OPTS+=("-nodefaults")
+    # UUID is expected by systemd and Garden Linux
+    QEMU_OPTS+=("-uuid $uuid" )
+}
 
---daemonize	start the virtual machine in background, console deactivated (default: no)
---skipkp	skip the keypress to the verify status before execute.
-		needed for automated testing, disabled on --daemonize
---vnc		sitches from serial console to vnc graphics console / enables vnc in --daemonize
-		the vnc baseport is $vncbase. if this is not empty we try the next
 
-<image file>	a file containing the image to boot. Format is determined by the extension.
-                raw, vdi, vpc, vhd, vhdx, vmdk, qcow2, iso are recognized.
-		,<size> is optional. If the file is smaller then <size> it will be resized
-		with the sparse feature of the filesystem to the requested size.
-		If <image file> is omitted and only ,<size> is specified, a temporary file
-		of this size will be created. The file will not be deleted."
+# Get (external) options that are
+# passed to this script
+get_opts () {
+source "${CURR_DIR}/.constants.sh" \
+    --flags 'daemonize,uefi,skipkp,vnc' \
+    --flags 'cpu:,mem:,bridge:,port:,mac:,arch:' \
+    --flags 'pxe:' \
+    --flags 'ignfile:' \
+    --flags 'ueficode:,uefivars:' \
+    --flags 'destport:' \
+    --usage '[ --daemonize ] [ --cpu:<#> ] [ --mem:<size> ] [ --pxe:<dir> ] [<image file>[,<size>]]*' \
+    --sample '.build/rootfs.raw' \
+    --sample ',1G ubuntu-16.04.7-server-amd64.iso' \
+    --help  "Starts a virtual machine with the most basic environment, needed. Perfect use for test cases and running samples of GardenLinux. This script can run unprivileged but it should have the possibility to use kvm (group kvm) otherwise it will be super slow. If not being root, the network will be slow and no ICMP (ping) capabilities are with the VM.
+
+--cpu       <int>         Number of vCPUs to start the VM. (default: $cpu)
+--arch      <platform>    Set the emulated platform. i386, x86_64, x86_64-microvm, arm, aarch64 are supported. (default: $arch)
+--mem       <int>         Memory provided to the virtual machine (default: $memory) in MB if unit is omitted.
+--uefi      <bool>        Boot with uefi bios enabled, needs \`apt-get install ovmf\`. (default: no)
+--ueficode  <path>        Defines the uefi code used. The file is readonly. (default: $uefi_code)
+--uefivars  <path>        Defines the uefi variables used. The file will be !modified! if vartiables are se. (default: $uefi_vars)
+--port      <int>         Specifies the local ssh port. This port is mounted to the running machine, not if --bridge is specified. (default: $port_base)
+--destport  <int>         Specifies the remote ssh port. This port is used to connect, to a specific sshd. (default: $port_dest)
+--mac       <macaddr>     The mac address is usually randomized. It is used to identify the monitoring port, the mac address of the machine and the UUID. Can be set to this value.
+--pxe       <bool>        Enables pxe boot on the vm. Minimum one image file must be a directory.
+--ignfile   <path>        Provide an ignition file whe pxe booting.
+--daemonize <bool>        Start the virtual machine in background, console deactivated (default: no).
+--skipkp    <bool>        Skip the keypress to the verify status before execute.
+--vnc       <bool>        Sitches from serial console to vnc graphics console / enables vnc in --daemonize.
+<image file>              A file containing the image to boot. Format is determined by the extension (raw, vdi, vpc, vhd, vhdx, vmdk, qcow2, iso)."
 
 eval "$dgetopt"
 while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
 	case "$flag" in
-		--cpu)		cpu="$1"; 	shift ;;
-		--arch)		arch="$1"; 	shift ;;
-		--mem)		memory="$1"; 	shift ;;
-		--daemonize) 	daemonize=1; keypress=; ;;
-		--vnc)	 	vnc=1; 		;;
-		--uefi) 	uefi=1; 	;;
-		--mac)		mac="$1";	shift ;;
-		--ueficode)     uefiCode="$1";  shift ;;
-		--uefivars)     uefiVars="$1";  shift ;;
-		--bridge ) 	bridge="$1";  	shift ;;
-		--pxe )         pxe="$(realpath $1)";  shift ;;
-		--ignfile )     ignfile="$(realpath $1)";  shift ;;
-		--port)         port="$1";	shift ;;
-		--skipkp) 	keypress=; 	;;
-		--) break ;;
-		*) eusage "unknown flag '$flag'" ;;
-	esac
+        --cpu)          cpu="$1";       shift ;;
+        --arch)         arch="$1";      shift ;;
+        --mem)          memory="$1";    shift ;;
+        --daemonize)    daemonize=1;    keypress=; ;;
+        --vnc)          vnc=1;                ;;
+        --uefi)         uefi=1;               ;;
+        --mac)          mac="$1";       shift ;;
+        --ueficode)     uefi_code="$1"; shift ;;
+        --uefivars)     uefi_vars="$1"; shift ;;
+        --bridge)       bridge="$1";    shift ;;
+        --pxe )         pxe="$(realpath $1)";      shift ;;
+        --ignfile )     ignfile="$(realpath $1)";  shift ;;
+        --port)         port="$1";      shift ;;
+        --destport)     port_dest="$1"; shift ;;
+        --skipkp)       keypress=;            ;;
+        --) break ;;
+        *) eusage "Unknown flag '$flag'"      ;;
+    esac
 done
+}
 
-# Add UEFI options
-if [ "$arch" = x86_64 ]; then
 
-        if [ "$running_os" = macos ]; then
-                # Test for HomeBrew path
-                homeBrewPrefix=$(brew info qemu | awk 'NR==4{print $1}')
-                uefiCode="${uefiCode:-$homeBrewPrefix/share/qemu/edk2-x86_64-code.fd}"
-                uefiVars="${uefiVars:-$homeBrewPrefix/share/qemu/edk2-i386-vars.fd}"
-        else
-                uefiCode="${uefiCode:-/usr/share/OVMF/OVMF_CODE.fd}"
-                uefiVars="${uefiVars:-/usr/share/OVMF/OVMF_VARS.fd}"
+# Set dedicated binaries for supported
+# Operating Systems
+set_binaries () {
+    # Retranslate the architecture to match
+    # the QEMU binaries if needed and support legacy inputs
+    if [ $arch = "amd64" ] || [ $arch = "x86_64" ]; then
+        # Depending on the used distribution QEMU may ship
+        # architecture related binaries
+        qemu_arch="x86_64"
+        arch="amd64"
+    elif [ $arch = "arm64" ] || [ $arch = "aarch64" ]; then
+        # Depending on the used distribution QEMU may ship
+        # architecture related binaries
+        qemu_arch="aarch64"
+        arch="arm64"
+    else
+        echo "Error: Unsupported architecture $arch"
+        exit 1
+    fi
+
+    # Binaries
+    bin_head="head"
+    bin_stat="stat"
+    bin_sed="sed"
+    bin_uuid="cat /proc/sys/kernel/random/uuid"
+    bin_qemu="qemu-system-$qemu_arch"
+
+    # CentOS specific binaries
+    if [ $os = "centos" ]; then
+        # Binary naming: https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/8.0_release_notes/index#virtualization
+        bin_qemu="/usr/libexec/qemu-kvm"
+    fi
+
+    # macOS specific binaries
+    if [ $os = "macos" ]; then
+        bin_head="ghead"
+        bin_stat="gstat"
+        bin_sed="gsed"
+        bin_uuid="/usr/bin/uuidgen"
+    fi
+}
+
+
+# Setup ignition to prepare PXE boot
+qemu_opt_ignition () {
+    if [ $pxe ]; then
+
+        # Check for ignition file
+        if [ "$ignfile" ]; then
+            pxefile=$CURR_DIR/../examples/ipxe/start-vm-ignition.ipxe
         fi
 
-elif [ "$arch" = aarch64 ]; then
+        [ -e "$TARGET_DIR/$mac.ipxe" ] || cp $pxefile $TARGET_DIR/$mac.ipxe
 
-        # Enable uefi mode
+        glbuilds=()
+        glbuild=""
+
+        # Get all vmlinuz files
+        for v in $(find "$pxe" -type f -name '*.vmlinuz' -exec basename {} \; | cut -d. -f 1); do
+            glbuilds+=(${v})
+        done
+
+        if [ "${#glbuilds[@]}" == "0" ]; then
+            echo "Error: No vmlinuz found!" 1>&2
+            exit 1
+        elif [ "${#glbuilds[@]}" == "1" ]; then
+            glbuild="${glbuilds[0]}"
+        else
+            echo "Error: Multiple builds found, which one should be used?"
+
+            for i in ${!glbuilds[@]}; do
+                echo "[$i] ${glbuilds[i]}"
+            done
+
+            echo -n "ENTER entry number : "
+            read n
+
+            if [[ ! "$n" =~ ^[0-9]+$ ]] ; then
+                echo "Error: Not a valid entry number"
+                exit 1
+            fi
+
+            if [[ "$n" -gt "${#glbuilds[@]}" ]]; then
+                echo "Error: Not a valid entry"
+                exit 1
+            fi
+
+            glbuild="${glbuilds[${n}]}"
+
+        fi
+
+        # modify the boot.ipxe to load the proper kernel and initramfs
+        $(bin_sed) -i "s/PATHGOESHERE//g;s/IPADDRESSGOESHERE/10.0.2.2/g" $TARGET_DIR/$mac.ipxe
+        QEMU_OPTS+=( -boot order=nc )
+    fi
+}
+
+
+# Validate and set the defined PXE options
+# and spawn a helper container within a CRE
+qemu_opt_pxe () {
+    if [ "$pxe" ] && [ "$uefi" ]; then
+        pxe_binary="$pxe"
+        pxe=
+    fi
+
+    if [ $pxe ]; then
+        # Run ignition function to prepare PXE
+        qemu_opt_ignition
+
+        container_name=$(bin_uuid)
+        function stop(){
+            rm  "$pxe/root."{vmlinuz,initrd,squashfs}
+            ${gardenlinux_build_cre} stop -t 0 $1
+            [[ ! -s "$pxe/ignition.json" ]] && rm -f "$pxe/ignition.json"
+            echo "INFO: PXE container stopped."
+        }
+        echo
+
+        # Link VMLinuz
+        if [[ -f "${pxe}/${glbuild}.vmlinuz" ]]; then
+            ln -sf "$glbuild.vmlinuz" "$pxe/root.vmlinuz"
+        else
+            echo "Error: Missing ${glbuild}.vmlinuz, exiting"; exit 1
+        fi
+
+        # Link Initrd
+        if [[ -f "${pxe}/${glbuild}.initrd" ]]; then
+            ln -sf "$glbuild.initrd" "$pxe/root.initrd"#
+        else
+            echo "Error: Missing ${glbuild}.initrd, exiting"; exit 1
+        fi
+
+        # Link squashFS
+        if [[ -f "${pxe}/${glbuild}.squashfs" ]]; then
+            ln -sf "$glbuild.squashfs" "$pxe/root.squashfs"
+        else
+            echo "Error: Missing ${glbuild}.squashfs, exiting"; exit 1
+        fi
+
+        trap 'stop $container_name' EXIT
+        echo "INFO: PXE container starting."
+
+        if [ "$ignfile" ]; then
+            ${gardenlinux_build_cre} run -it --rm -d -p 127.0.0.1:8888:80 --name ${container_name} -v ${pxe}:/usr/share/nginx/html -v ${ignfile}:/usr/share/nginx/html/ignition.json nginx
+        else
+            ${gardenlinux_build_cre} run -it --rm -d -p 127.0.0.1:8888:80 --name ${container_name} -v ${pxe}:/usr/share/nginx/html:ro nginx
+        fi
+
+        if [ "$pxe_binary" ]; then
+            cp "$pxe_binary" "$TARGET_DIR/$mac.efi"
+            QEMU_OPTS+=( -boot order=nc )
+        fi
+
+    fi
+}
+
+
+# Validate and set the defined image disk to
+# start
+qemu_opt_disk () {
+    inflate_list=( )
+    disk_count=0
+
+    if [ "$arch" = "amd64" ]; then
+        [ "$#" == "" ] || QEMU_OPTS+=("-device virtio-scsi-pci,id=scsi0")
+    fi
+
+    while (( "$#" )); do
+        image_file=$1
+        image_size=0
+        image_direct=""
+        if [[ $image_file == *","* ]]; then
+            image_size=${image_file##*,}
+            image_file=${image_file%%,$image_size}
+        fi
+
+        # If no filename is left point to tmp
+        [ "$image_file" == "" ]    &&  image_file=$(mktemp --suff=.raw)
+        [[ $image_file == *"."* ]] &&  image_ext=${image_file##*.};
+        [ -e $image_file ] || eusage "Error: File \"$image_file\" does not exist."
+
+        # Calculate in bytes
+        image_size_bytes=$(numfmt --from=iec --suffix="B" --format "%f" ${image_size} | $bin_head -c-2)
+        image_ext=${image_ext/^vhd$/vpc}
+
+        # Validate for .iso file as CD rom image
+        if [ "$image_ext" == "iso" ]; then
+            QEMU_OPTS+=(	"-drive media=cdrom,file=$image_file,readonly" )
+        elif [ -d $image_file ]; then
+            targetDir=$image_file
+        else
+            # Test if direct access is possible and image is not already in use
+            dd if=$image_file of=/dev/null count=1 iflag=direct 2> /dev/null && imagedirect="aio=native,cache.direct=on,"
+
+            # if there is a bigger size, we need to inflate
+            [ $($bin_stat --printf="%s" $image_file) -lt ${image_size_bytes} ] && inflate_list+=( "${image_file},${image_size_bytes}" )
+            if [ "$arch" = amd64 ]; then
+                QEMU_OPTS+=("-device scsi-hd,drive=drive${disk_count},bus=scsi0.0"
+                            "-drive format=${image_ext},if=none,discard=unmap,${image_direct}id=drive${disk_count},file=${image_file}")
+            else
+                QEMU_OPTS+=("-drive if=virtio,format=${image_ext},file=$image_file")
+            fi
+            (( ++disk_count ))
+        fi
+        shift
+    done
+
+    [ $disk_count -gt 0 -o "$pxe" -o "$pxe_binary" ] || eusage "Error: Missing bootdisk. boot via --pxe, provide tmpdisk via --disk or provide bootdisk image file."
+
+    # inflating selected files
+    for i in "${inflate_list[@]}"; do
+        dd if=/dev/zero of=$(cut -d, -f1 <<< "$i") count=0 bs=1 seek=$(cut -d, -f2 <<< "$i") 2> /dev/null
+    done
+}
+
+
+# Validate and set UEFI related options
+qemu_opt_uefi () {
+    # Evaluate UEFI code and vars files for realted architecture and OS
+    if [ "$arch" = amd64 ]; then
+        # UEFI is optional on x86_64
+        if [ $uefi ]; then
+            if [ "$os" = macos ]; then
+                # Test for HomeBrew path
+                homebrew_prefix=$(brew info qemu | awk 'NR==4{print $1}')
+                uefi_code="${uefi_code:-$homebrew_prefix/share/qemu/edk2-x86_64-code.fd}"
+                uefi_vars="${uefi_vars:-$homebrew_prefix/share/qemu/edk2-i386-vars.fd}"
+            elif [ "$os" = debian ]; then
+                uefi_code="${uefi_code:-/usr/share/OVMF/OVMF_CODE.fd}"
+                uefi_vars="${uefi_vars:-/usr/share/OVMF/OVMF_VARS.fd}"
+            elif [ "$os" = centos ]; then
+                uefi_code="${uefi_code:-/usr/share/OVMF/OVMF_CODE.secboot.fd}"
+                uefi_vars="${uefi_vars:-/usr/share/OVMF/OVMF_VARS.secboot.fd}"
+            else
+                echo "Error: Could not find UEFI code and vars file."
+                exit 1
+            fi
+        fi
+
+    elif [ "$arch" = arm64 ]; then
+        # Always enable UEFI mode on aarch64
         uefi=1
 
-        # Obtain uefiCode and uefiVars from
+        # Obtain UEFI code and vars from
         # Homebrew path on macOS
-        if [ "$running_os" = macos ]; then
-                # Test for HomeBrew path
-                homeBrewPrefix=$(brew info qemu | awk 'NR==4{print $1}')
-                uefiCode="${uefiCode:-$homeBrewPrefix/share/qemu/edk2-aarch64-code.fd}"
-                uefiVars="${uefiVars:-$homeBrewPrefix/share/qemu/edk2-arm-vars.fd}"
+        if [ "$os" = macos ]; then
+            # Test for HomeBrew path
+            homebrew_prefix=$(brew info qemu | awk 'NR==4{print $1}')
+            uefi_code="${uefi_code:-$homebrew_prefix/share/qemu/edk2-aarch64-code.fd}"
+            uefi_vars="${uefi_vars:-$homebrew_prefix/share/qemu/edk2-arm-vars.fd}"
+        elif [ "$os" = debian ]; then
+            uefi_code="${uefi_code:-/usr/share/AAVMF/AAVMF_CODE.fd}"
+            uefi_vars="${uefi_vars:-/usr/share/AAVMF/AAVMF_VARS.fd}"
+        elif [ "$os" = centos ]; then
+            # Note: Running `AARCH64` on `x86_64` requires `qemu-system-aarch64`
+            # package which is not present in official repositories
+            uefi_code="${uefi_code:-/usr/share/AAVMF/AAVMF_CODE.fd}"
+            uefi_vars="${uefi_vars:-/usr/share/AAVMF/AAVMF_VARS.fd}"
         else
-                uefiCode="${uefiCode:-/usr/share/AAVMF/AAVMF_CODE.fd}"
-                uefiVars="${uefiVars:-/usr/share/AAVMF/AAVMF_VARS.fd}"
+            echo "Error: Could not find UEFI code and vars file."
+            exit 1
         fi
 
-fi
+    fi
+
+    # Define UEFI options for QEMU
+    if [ $uefi ]; then
+
+        [ -r $uefi_code ] || eusage "Missing uefi code at $uefi_code.\n Run: apt-get install ovmf"
+        [ -r $uefi_vars ] || eusage "Missing uefi vars at $uefi_vars.\n Run: apt-get install ovmf"
+
+        [ -e $TARGET_DIR/$mac.vars ] || cp $uefi_vars $TARGET_DIR/$mac.vars
+
+        # Add support for amd64 architecture
+        if [ "$arch" = amd64 ]; then
+            QEMU_OPTS+=("-global driver=cfi.pflash01,property=secure,value=on")
+        fi
+
+        # Set UEFI code and vars files
+	    QEMU_OPTS+=("-drive if=pflash,format=raw,unit=0,file=${uefi_code},readonly=on"
+                    "-drive if=pflash,format=raw,unit=1,file=$TARGET_DIR/$mac.vars")
+
+    fi
+}
 
 
-if [ "$pxe" ] && [ "$uefi" ]; then
-	pxe_binary="$pxe"
-	pxe=
-fi
+# Validate and set the CPU architecture
+# cores and chipsets
+qemu_opt_cpu () {
+    # Set CPU count
+    QEMU_OPTS+=("-smp $cpu")
 
+    # Validate amd64 arch
+    if [ "$arch" = amd64 ]; then
 
-# Adding the disks (using parameters without - or --)
-inflatelist=( )
-diskcount=0
+       # Evaluate possible AMD64 arch outputs
+        test_arch="undefined"
 
-if [ "$arch" = "x86_64" ]; then
-        [ "$#" == "" ] || virtOpts+=(     "-device virtio-scsi-pci,id=scsi0" )
-fi
+        if [ "amd64" = $(uname -m) ]; then
+            test_arch="amd64"
+        fi
 
-while (( "$#" )); do
-	imagefile=$1
-	imagesize=0
-	imagedirect=""
-	if [[ $imagefile == *","* ]]; then	imagesize=${imagefile##*,}	# check if a ,3G or such is present
-						imagefile=${imagefile%%,$imagesize}; fi
-	[ "$imagefile" == "" ] && 		imagefile=$(mktemp --suff=.raw)  # if no filename is left point to tmp
-	[[ $imagefile == *"."* ]] &&		imageext=${imagefile##*.};
-	[ -e $imagefile ] || eusage "file \"$imagefile\" does not exist"
+        if [ "x86_64" = $(uname -m) ]; then
+            test_arch="amd64"
+        fi
 
-	imagesizeBytes=$(numfmt --from=iec --suffix="B" --format "%f" ${imagesize} | $gnu_head -c-2)  # calculate in bytes
-	imageext=${imageext/^vhd$/vpc}
+        # Validate for native or emulated arch
+        if [ "$arch" = "$test_arch" ]; then
 
-	if [ "$imageext" == "iso" ]; then
-		virtOpts+=(	"-drive media=cdrom,file=$imagefile,readonly" )
-	elif [ -d $imagefile ]; then
-		targetDir=$imagefile
-	else
-		# test if direct access is possible
-		dd if=$imagefile of=/dev/null count=1 iflag=direct 2> /dev/null && imagedirect="aio=native,cache.direct=on,"
+            # Running on native arch
+            # Check for acceleration support
+            if [ "$os" = macos ]; then
+                # macOS HVF support is always given on all new Intel Macs
+                # that are supported by the current HomeBrew version
+                QEMU_OPTS+=("-cpu host" "-accel hvf")
 
-		# if there is a bigger size, we need to inflate
-		[ $($gnu_stat --printf="%s" $imagefile) -lt ${imagesizeBytes} ] && inflatelist+=( "${imagefile},${imagesizeBytes}" )
-                if [ "$arch" = x86_64 ]; then
-		        virtOpts+=(	"-device scsi-hd,drive=drive${diskcount},bus=scsi0.0"
-			        	"-drive format=${imageext},if=none,discard=unmap,${imagedirect}id=drive${diskcount},file=${imagefile}" )
+            else
+
+                # Validate for KVM support on AMD64
+                # If no KVM support is present QEMU handles
+                # the -cpu option itself
+                if [ -w "/dev/kvm" ]; then
+                    QEMU_OPTS+=("-enable-kvm" "-cpu host" "-machine q35,smm=on")
                 else
-		        virtOpts+=(	"-drive if=virtio,format=${imageext},file=$imagefile" )
+                    echo -e "WARNING: Can not use KVM acceleration. Please see:\n https://github.com/gardenlinux/gardenlinux/tree/main/bin#start-vm \n\n"
                 fi
-		(( ++diskcount ))
-	fi
-	shift
-done
-[ $diskcount -gt 0 -o "$pxe" -o "$pxe_binary" ] || eusage 'missing bootdisk. boot via --pxe, provide tmpdisk via --disk or provide bootdisk image file'
 
-[[ "${memory: -1}" =~ [0-9] ]] && memory="${memory}Mi"
-memory=$(numfmt --from=auto --suffix="B" --format "%f" ${memory} | $gnu_head -c-2)
-virtOpts+=(	"-smp $cpu"
-	   	"-m $(( $memory / 1048576 ))" )
+            fi
 
-# Unsupported options on CentOS
-if [ "centos" != $running_os ]; then
-    if [ "macos" != $running_os ]; then
+        else
+            # Running on emulated arch
+            # Set default CPU on emulated arch
+            QEMU_OPTS+=("-cpu Broadwell")
+
+        fi
+
+    fi
+
+    # Validate AARCH64/ARM64 arch
+    if [ "$arch" = arm64 ]; then
+
+        # Evaluate possible ARM64 arch outputs
+        test_arch="undefined"
+
+        if [ "arm64" = $(uname -m) ]; then
+            test_arch="arm64"
+        fi
+
+        if [ "aarch64" = $(uname -m) ]; then
+            test_arch="arm64"
+        fi
+
+        # Validate for native or emulated arch
+        if [ "$arch" = "$test_arch" ]; then
+
+            # Running on native arch
+            # Check for acceleration support
+            if [ "$os" = macos ]; then
+                # macOS HVF support is always given on all new Intel Macs
+                # that are supported by the current HomeBrew version
+                QEMU_OPTS+=("-cpu host" "-machine virt" "-accel hvf")
+
+            else
+
+                # Validate for KVM support on AMD64
+                if [ -w "/dev/kvm" ]; then
+                    QEMU_OPTS+=("-cpu host" "-machine virt" "-accel kvm")
+                else
+                    echo -e "WARNING: Can not use KVM acceleration. Please see:\nhttps://github.com/gardenlinux/gardenlinux/tree/main/bin#start-vm \n\n"
+                    QEMU_OPTS+=("-cpu max" "-machine virt")
+                fi
+
+            fi
+
+        else
+            # Running on emulated arch
+            # Set default CPU on emulated arch
+            QEMU_OPTS+=("-cpu max" "-machine virt")
+
+        fi
+
+    fi
+}
+
+
+# Validate and define memory options
+# for VM
+qemu_opt_memory () {
+    [[ "${memory: -1}" =~ [0-9] ]] && memory="${memory}Mi"
+    memory=$(numfmt --from=auto --suffix="B" --format "%f" ${memory} | $bin_head -c-2)
+    QEMU_OPTS+=("-m $(( $memory / 1048576 ))")
+}
+
+
+# Validate and define monitor port for
+# extended commands
+qemu_opt_monitor () {
+    # Add Monitor
+    if [ $monitor ]; then
+        [ -e $TMP_DIR/$mac.monitor ] && eusage "Error: Monitor to this MAC address already exists $TARGET_DIR/$mac.monitor"
+        QEMU_OPTS+=("-monitor unix:$TMP_DIR/$mac.monitor,server,nowait")
+    fi
+
+    # Add Watchdog
+    if [ $os = debian ]; then
         # add a watchdog to maintain automatic reboots
-        virtOpts+=(	"-watchdog i6300esb" )
+        QEMU_OPTS+=("-watchdog i6300esb")
     fi
-fi
+}
 
-# remove default things like floppies, serial port, parallel port
-virtOpts+=(	"-nodefaults" )
+# Validate and define commands for remote
+# control of VM
+qemu_opt_remote_control () {
+    # VNC
+    if [ $vnc ]; then
+        ( while [ ! -e $TARGET_DIR/$mac.monitor ]; do sleep 0.1; done
+        echo "printf "WARNING: Change VNC password\n%s\n" MYPASSWORD | socat - UNIX-CONNECT:$TARGET_DIR/$mac.monitor &> /dev/null )&"
+        exit1
+        printf "WARNING: Change VNC password\n%s\n" MYPASSWORD | socat - UNIX-CONNECT:$TARGET_DIR/$mac.monitor &> /dev/null )&
+        QEMU_OPTS+=("-vnc :${vnc_port},password")
+    fi
 
-if [ "$arch" = "x86_64" ]; then
-        # make sure to use minimal memory
-        virtOpts+=(	"-device virtio-balloon" )
+    # IPMI
+    if [ "centos" != $os ]; then
+        if [ "$arch" = amd64 ]; then
+            # Add a BMC simulator
+            QEMU_OPTS+=("-device ipmi-bmc-sim,id=bmc0"
+                        "-device isa-ipmi-kcs,bmc=bmc0,ioport=0xca2")
 
-        # adding the random number generator of the host
-        virtOpts+=(	"-device virtio-rng-pci,rng=rng0"
-	   	        "-object rng-random,id=rng0,filename=/dev/random" )
-
-        # Unsupported options on CentOS
-        if [ "centos" != $running_os ]; then
-                if [ "$arch" = x86_64 ]; then
-	                # adding a bmc simulator
-        	        virtOpts+=(	"-device ipmi-bmc-sim,id=bmc0"
-        			        "-device isa-ipmi-kcs,bmc=bmc0,ioport=0xca2"  )
-                fi
-        fi
-
-        # support for qemu guest agent. There is no way for this script if inside VM is connected or not
-        virtOpts+=(     "-chardev socket,path=$tmpDir/$mac.guest,server=on,wait=off,id=qga0"
+            # Add QEMU guest agent support
+            QEMU_OPTS+=("-chardev socket,path=$TMP_DIR/$mac.guest,server=on,wait=off,id=qga0"
                         "-device virtio-serial"
-                        "-device virtserialport,chardev=qga0,name=org.qemu.guest_agent.0" )
-
-fi
-
-# adding a uuid since this is expected by systemd and gardenlinux
-mac="$(printf "%012s" | tr -d ":" <<< ${mac,,})"
-macfull="$(sed 's/../&:/g;s/:$//' <<< $mac)"
-uuid="12345678-0000-0000-0000-${mac}"
-virtOpts+=(     "-uuid $uuid" )
+                        "-device virtserialport,chardev=qga0,name=org.qemu.guest_agent.0")
+        fi
+    fi
+}
 
 
-# Validate x86_64 arch
-if [ "$arch" = x86_64 ]; then
-
-    # Validate for native or emulated arch
-    if [ "$arch" = "$(uname -m)" ]; then
-
-        # Running on native arch
-        # Check for acceleration support
-        if [ "$running_os" = macos ]; then
-            # macOS HVF support is always given on all new Intel Macs
-            # that are supported by the current HomeBrew version
-            virtOpts+=("-cpu host" "-accel hvf")
-
-        else
-
-            # Validate for KVM support on x86_64
-            # If no KVM support is present QEMU handles
-            # the -cpu option itself
-            if [ -w "/dev/kvm" ]; then
-                virtOpts+=("-enable-kvm" "-cpu host" "-machine q35,smm=on")
-            else
-                echo -e "WARNING: Can not use KVM acceleration. Please see:\n https://github.com/gardenlinux/gardenlinux/tree/main/bin#start-vm \n\n"
+# Validate and define monitor port for
+# extended commands
+qemu_opt_network () {
+    # Create network bridge (requires root).
+    # (currently unsupported on macOS)
+    if [ $os != macos ]; then
+        if [ $bridge ]; then
+            [ $(id -u) == 0 ] || eusage "Error: For bridging you must be root. More information can be found on: https://github.com/gardenlinux/gardenlinux/tree/main/bin#start-vm"
+            if [ ! -d /etc/qemu ]; then
+                mkdir -p /etc/qemu
+                chown root:kvm /etc/qemu
+            fi
+            if [ ! -e /etc/qemu/bridge.conf ]; then
+                    touch /etc/qemu/bridge.conf
+                chown root:kvm /etc/qemu/bridge.conf
+                chmod 0640 /etc/qemu/bridge.conf
             fi
 
+            printf "%s\nallow %s\n" "$(cat /etc/qemu/bridge.conf)" $bridge > $TARGET_DIR/$mac.bridge
+            awk '!seen[$0]++' < $TARGET_DIR/$mac.bridge > /etc/qemu/bridge.conf
+            rm -f $TARGET_DIR/$mac.bridge
         fi
+    fi
 
+    # Set rom file on PXE boot
+    if [ $pxe_binary ]; then
+        QEMU_OPTS+=("-device virtio-net-pci,romfile=,netdev=net0,mac=$macfull")
     else
-        # Running on emulated arch
-        # Set default CPU on emulated arch
-        virtOpts+=("-cpu Broadwell")
-
+        QEMU_OPTS+=("-device virtio-net-pci,netdev=net0,mac=$macfull")
     fi
 
-fi
-
-
-# Validate AARCH64/ARM64 arch
-if [ "$arch" = aarch64 ]; then
-
-    # Evaluate possible ARM64 arch outputs
-    testArch="undefined"
-    if [ "arm64" = $(uname -m) ]; then
-        testArch="aarch64"
-    fi
-    if [ "aarch64" = $(uname -m) ]; then
-        testArch="aarch64"
-    fi
-
-    # Validate for native or emulated arch
-    if [ "$arch" = "$testArch" ]; then
-
-        # Running on native arch
-        # Check for acceleration support
-        if [ "$running_os" = macos ]; then
-            # macOS HVF support is always given on all new Intel Macs
-            # that are supported by the current HomeBrew version
-            virtOpts+=("-cpu host" "-machine virt" "-accel hvf")
-
-        else
-
-            # Validate for KVM support on AARCH64
-            if [ -w "/dev/kvm" ]; then
-                virtOpts+=("-cpu host" "-machine virt" "-accel kvm")
-            else
-                echo -e "WARNING: Can not use KVM acceleration. Please see:\nhttps://github.com/gardenlinux/gardenlinux/tree/main/bin#start-vm \n\n"
-                virtOpts+=("-cpu max" "-machine virt")
-            fi
-
-        fi
-
+    # Set bridge or host fwd network
+    if [ $bridge ]; then
+        QEMU_OPTS+=("-netdev bridge,id=net0,br=${bridge}")
+    elif [ $pxe ]; then
+        QEMU_OPTS+=("-netdev user,id=net0,hostfwd=tcp::$port-:$port_dest,hostname=garden,tftp=$TARGET_DIR,bootfile=$mac.ipxe")
+    elif [ $pxe_binary ]; then
+        QEMU_OPTS+=("-netdev user,id=net0,hostfwd=tcp::$port-:$port_dest,hostname=garden,tftp=$TARGET_DIR,bootfile=$mac.efi")
     else
-
-        # Running on emulated arch
-        # Set default CPU on emulated arch
-        virtOpts+=("-cpu max" "-machine virt")
-
+        QEMU_OPTS+=("-netdev user,id=net0,hostfwd=tcp::$port-:$port_dest,hostname=garden")
     fi
+}
 
+
+qemu_opt_misc () {
+if [ "$arch" = "amd64" ]; then
+    # Use minimal memory
+    QEMU_OPTS+=("-device virtio-balloon")
+
+    # Add random number generator (RNG) to the host
+    QEMU_OPTS+=("-device virtio-rng-pci,rng=rng0"
+                "-object rng-random,id=rng0,filename=/dev/random")
 fi
 
-
-# adding a monitoring port for extended commands
-if [ $monitor ]; then
-	[ -e $tmpDir/$mac.monitor ] && eusage "monitor to this macaddress already exists $targetDir/$mac.monitor"
-	virtOpts+=(	"-monitor unix:$tmpDir/$mac.monitor,server,nowait" )
-fi
-
-[ $daemonize ] && virtOpts+=(	"-daemonize" )
-[ $daemonize ] || virtOpts+=(	"-nographic"
-				"-serial mon:stdio" )
-[ $vnc ] && 	  virtOpts+=(	"-vnc :${vncport},password" )
-[ $daemonize ] && [ ! $vnc ] && virtOpts+=(	"-display none" )
-
-if [ $uefi ]; then
-	[ -r $uefiCode ] || eusage "Missing ueficode at $ueficode.\n Run: apt-get install ovmf"
-	[ -r $uefiVars ] || eusage "Missing uefivars at $uefiVars.\n Run: apt-get install ovmf"
-
-	[ -e $targetDir/$mac.vars ] || cp $uefiVars $targetDir/$mac.vars
-
-	if [ "$arch" = x86_64 ]; then
-		virtOpts+=("-global driver=cfi.pflash01,property=secure,value=on")
-	fi
-
-	virtOpts+=("-drive if=pflash,format=raw,unit=0,file=${uefiCode},readonly=on"
-	           "-drive if=pflash,format=raw,unit=1,file=$targetDir/$mac.vars")
-fi
-
-# pxe
-if [ $pxe ]; then
-	if [ "$ignfile" ]; then
-		pxefile=$thisDir/../examples/ipxe/start-vm-ignition.ipxe
-	fi
-	[ -e "$targetDir/$mac.ipxe" ] || cp $pxefile $targetDir/$mac.ipxe
-
-	glbuilds=()
-	glbuild=""
-	for v in $(find "$pxe" -type f -name '*.vmlinuz' -exec basename {} \; | cut -d. -f 1); do
-		glbuilds+=(${v})
-	done
-	if [ "${#glbuilds[@]}" == "0" ]; then
-		echo "no vmlinuz found!" 1>&2
-		exit 1
-	elif [ "${#glbuilds[@]}" == "1" ]; then
-		glbuild="${glbuilds[0]}"
-	else
-		echo "Multiple builds found, which one should be used?"
-		for i in ${!glbuilds[@]}; do
-			echo "[$i] ${glbuilds[i]}"
-		done
-		echo -n "ENTER entry number : "
-		read n
-		if [[ ! "$n" =~ ^[0-9]+$ ]] ; then
-			echo "Not a valid entry number"
-			exit 1
-		fi
-		if [[ "$n" -gt "${#glbuilds[@]}" ]]; then
-			echo "Not a valid entry"
-			exit 1
-		fi
-		glbuild="${glbuilds[${n}]}"
-	fi
-
-
-	# modify the boot.ipxe to load the proper kernel and initramfs
-	sed -i "s/PATHGOESHERE//g;s/IPADDRESSGOESHERE/10.0.2.2/g" $targetDir/$mac.ipxe
-
-	virtOpts+=( -boot order=nc )
-fi
-
-if [ "$pxe_binary" ]; then
-	cp "$pxe_binary" "$targetDir/$mac.efi"
-	virtOpts+=( -boot order=nc )
-fi
-
-# handling the network
-if [ $pxe_binary ]; then virtOpts+=( "-device virtio-net-pci,romfile=,netdev=net0,mac=$macfull" )
-else virtOpts+=( "-device virtio-net-pci,netdev=net0,mac=$macfull" )
-fi
-
-if [ $bridge ]; then 	virtOpts+=(	"-netdev bridge,id=net0,br=${bridge}" )
-elif [ $pxe ]; then	virtOpts+=( 	"-netdev user,id=net0,hostfwd=tcp::$port-:22,hostname=garden,tftp=$targetDir,bootfile=$mac.ipxe" )
-elif [ $pxe_binary ]; then virtOpts+=( "-netdev user,id=net0,hostfwd=tcp::$port-:22,hostname=garden,tftp=$targetDir,bootfile=$mac.efi" )
-else			virtOpts+=( 	"-netdev user,id=net0,hostfwd=tcp::$port-:22,hostname=garden" )
-fi
-
-[ $bridge ] && ( [ -e /sys/class/net/$bridge/bridge ] || eusage "interface $bridge is no bridge" )
-
-# status report
-printf "Status:\n"
-printf "  starting VM(UUID:%s) with MAC:%s in %s\n" $uuid $macfull $targetDir
-[ $monitor ]	&& printf "  monitor: %s.monitor\tconnect: socat - UNIX-CONNECT:%s\n" $mac $targetDir/$mac.monitor
-[ $pxe ]	&& printf "  pxeboot: %s.ipxe\n" $mac
-[ $pxe ]	&& printf "  pxeboot: files served from %s\n" "$pxe"
-[ $bridge ]	&& printf "  interface: %s  bridged\n" $bridge
-[ $bridge ]	|| printf "  sshport: %s  unbridged\n" $port
-[ $vnc ] 	&& printf "  vncport: %s\n" $(( vncport + 5900 ))
-[ $uefi ]	&& printf "  uefi boot enabled. %s.vars stores efivars\n" $mac
-for i in "${inflatelist[@]}"; do
-	printf "  file: %s will be inflated to %s\n" $(cut -d, -f1 <<< "$i") $(cut -d, -f2 <<< "$i")
-done
-( printf "\n  commandline: qemu-system-%s " $arch
-printf '%s ' "${virtOpts[@]}";printf "\n" ) | sed 's/ /!/g;s/!-/ -/g' | fold -s -w $(( $(tput cols) - 4 )) | sed 's/!/ /g;3,$ s|^|    |'
-[ $keypress ]	&& read -n 1 -r -s -p $'Press any key to continue...\n'
-
-# pxe helper container
-if [ $pxe ]; then
-	containerName=$(cat /proc/sys/kernel/random/uuid)
-	function stop(){
-		echo "removing symlinks"
-		rm  "$pxe/root."{vmlinuz,initrd,squashfs}
-		echo "stopping helper for pxe"
-		${gardenlinux_build_cre} stop -t 0 $1
-		[[ ! -s "$pxe/ignition.json" ]] && rm -f "$pxe/ignition.json"
-		echo "everything stopped..."
-	}
-	echo
-	if [[ -f "${pxe}/${glbuild}.vmlinuz" ]]; then ln -sf "$glbuild.vmlinuz" "$pxe/root.vmlinuz"; else echo "Missing ${glbuild}.vmlinuz, exiting"; exit 1; fi
-	if [[ -f "${pxe}/${glbuild}.initrd" ]]; then ln -sf "$glbuild.initrd" "$pxe/root.initrd"; else echo "Missing ${glbuild}.initrd, exiting"; exit 1; fi
-	if [[ -f "${pxe}/${glbuild}.squashfs" ]]; then ln -sf "$glbuild.squashfs" "$pxe/root.squashfs"; else echo "Missing ${glbuild}.squashfs, exiting"; exit 1; fi
-	trap 'stop $containerName' EXIT
-	echo "starting helper container"
-	if [ "$ignfile" ]; then
-		${gardenlinux_build_cre} run -it --rm -d -p 127.0.0.1:8888:80 --name ${containerName} -v ${pxe}:/usr/share/nginx/html -v ${ignfile}:/usr/share/nginx/html/ignition.json nginx
-	else
-		${gardenlinux_build_cre} run -it --rm -d -p 127.0.0.1:8888:80 --name ${containerName} -v ${pxe}:/usr/share/nginx/html:ro nginx
-	fi
-fi
-
-### from here on things are actually done!!!
-# modifying /etc/qemu/bridge.conf - would be good to be root!!!
-if [ $bridge ]; then
-	[ $(id -u) == 0 ] || eusage "for bridging you must be root"
-	if [ ! -d /etc/qemu ]; then
-		mkdir -p /etc/qemu
-		chown root:kvm /etc/qemu
-	fi
-	if [ ! -e /etc/qemu/bridge.conf ]; then
-	       	touch /etc/qemu/bridge.conf
-		chown root:kvm /etc/qemu/bridge.conf
-		chmod 0640 /etc/qemu/bridge.conf
-	fi
-
-	printf "%s\nallow %s\n" "$(cat /etc/qemu/bridge.conf)" $bridge > $targetDir/$mac.bridge
-	awk '!seen[$0]++' < $targetDir/$mac.bridge > /etc/qemu/bridge.conf
-	rm -f $targetDir/$mac.bridge
-fi
-# inflating selected files
-for i in "${inflatelist[@]}"; do
-	dd if=/dev/zero of=$(cut -d, -f1 <<< "$i") count=0 bs=1 seek=$(cut -d, -f2 <<< "$i") 2> /dev/null
-done
-# creating a separate thread to set the VNC password
-if [ $vnc ]; then
-	( while [ ! -e $targetDir/$mac.monitor ]; do sleep 0.1; done
-	printf "change vnc password\n%s\n" MYPASSWORD | socat - UNIX-CONNECT:$targetDir/$mac.monitor &> /dev/null )&
-fi
-
-# Start QEMU with virtOpts
-if [ "centos" = $running_os ]; then
-        /usr/libexec/qemu-kvm ${virtOpts[@]}
+# Set QEMU start options depending on
+# daemonizing the VM
+if [ $daemonize ]; then
+    QEMU_OPTS+=("-daemonize"
+                "-display none")
 else
-        qemu-system-$arch ${virtOpts[@]}
+    QEMU_OPTS+=("-nographic"
+                "-serial mon:stdio")
 fi
+}
+
+
+# Print out status of QEMU execution command including
+# all defined options
+qemu_status () {
+    # Print status
+    printf "Status:\n"
+    printf "  starting VM(UUID:%s) with MAC:%s in %s\n" $uuid $macfull $TARGET_DIR
+    [ $monitor ]    && printf "  monitor: %s.monitor\tconnect: socat - UNIX-CONNECT:%s\n" $mac $TARGET_DIR/$mac.monitor
+    [ $pxe ]        && printf "  pxeboot: %s.ipxe\n" $mac
+    [ $pxe ]        && printf "  pxeboot: files served from %s\n" "$pxe"
+    [ $bridge ]     && printf "  interface: %s  bridged\n" $bridge
+    [ $bridge ]     || printf "  sshport: (host) tcp/%s -> (vm) tcp/%s  (unbridged)\n"  $port $port_dest
+    [ $vnc ]        && printf "  vncport: %s\n" $(( vnc_port + 5900 ))
+    [ $uefi ]       && printf "  uefi boot enabled. %s.vars stores efivars\n" $mac
+
+    # Print inflated disks
+    for i in "${inflatelist[@]}"; do
+        printf "  file: %s will be inflated to %s\n" $(cut -d, -f1 <<< "$i") $(cut -d, -f2 <<< "$i")
+    done
+
+    # Print QEMU command line output
+    ( printf "\n  commandline: %s " $bin_qemu
+    printf '%s ' "${QEMU_OPTS[@]}";printf "\n" ) | sed 's/ /!/g;s/!-/ -/g' | fold -s -w $(( $(tput cols) - 4 )) | sed 's/!/ /g;3,$ s|^|    |'
+
+    # Wait for input in not --skipkp is set
+    if [ $keypress ]; then
+        read -n 1 -r -s -p $'Press any key to continue...\n'
+    fi
+}
+
+
+# Start QEMU with QEMU_OPTS
+qemu_execute () {
+    # Execute Arch/Distro realted binary with according QEMU opts
+    $bin_qemu ${QEMU_OPTS[@]}
+}
+
+
+# Main
+main "$@"
