@@ -33,4 +33,4 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
-          path: ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*-*.tar.gz
+          path: ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.tar.gz

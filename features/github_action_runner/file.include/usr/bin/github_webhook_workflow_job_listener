@@ -1,7 +1,23 @@
 #!/usr/bin/env node
 
+/*
+ * spawn github action runner instances on demand based on webhooks
+ * - for each recieved workflow_job webhook, run the start_script
+ *   - start_script is expected to output an ID of the runner instance on stdout
+ *   - this ID will later be passed to check_script and stop_script
+ * - the runners instances are expected to notify the scheduler with their ID as payload once they completed their job
+ *   - once a notification is received the check_runner script gets called with the instance ID
+ *     (with a delay of 10 seconds to allow the instance to terminate after sending the notify)
+ *   - check_runner is also called regularly (with an interval of 10 min) to acount for runners that somehow fail without sending a notify
+ * - the check_script is expected to verify if the runner instance is still up and return 0 or any other exit code if it is down
+ * - if check_script returns non 0 exit code stop_script gets called on the runner instance ID
+ * - after timeout number of hours runner instances are force stopped to prevent broken runners running indefinately
+ * - stop_script is expected to terminate a runner instance
+ *   - output and exit code of stop_script are ignored
+ * - once stop_script is run any reference to the runner instance is dropped
+ */
+
 const { openSync } = require("fs");
-const { createServer } = require("http");
 const { spawnSync } = require("child_process");
 
 const log_file_fd = openSync(process.argv[2], "w");
@@ -21,7 +37,7 @@ const start_runner = () => {
 	if (runner_start_process.status === 0) {
 		const runner_instance_id = runner_start_process.stdout.toString().trim();
 		if (!runner_instance_id) {
-			console.error("emptyp runner_instance_id");
+			console.error("empty runner_instance_id");
 			return;
 		}
 
@@ -91,8 +107,8 @@ process.on("message", (data) => {
 		request_runner();
 	}
 
-	if (data instanceof Object && typeof data.aws_instance_id === "string") {
-		console.log("notify recieved from runner " + data.aws_instance_id);
-		setTimeout(check_runner, 1000 * 10, data.aws_instance_id);
+	if (data instanceof Object && typeof data.instance_id === "string") {
+		console.log("notify recieved from runner " + data.instance_id);
+		setTimeout(check_runner, 1000 * 10, data.instance_id);
 	}
 });
