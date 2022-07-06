@@ -19,7 +19,7 @@ labels: kind/bug
  
 **Environment:**
 
-|                     |       |
+| Name | Value |
 | ------------------- | ----- |
 | Garden Linux Branch | e.g.: *main* |
 | Container runtime (version)  | e.g.: *podman (3.4.7)* | 
