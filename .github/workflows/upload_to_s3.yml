@@ -1,0 +1,35 @@
+name: upload to S3
+on:
+  workflow_call:
+    secrets:
+      bucket:
+        required: true
+      region:
+        required: true
+      role:
+        required: true
+      session:
+        required: true
+jobs:
+  upload_to_s3:
+    name: upload to S3
+    runs-on: ec2-gardenlinux-amd64
+    permissions:
+      id-token: write
+    strategy:
+      matrix:
+        architecture: [ amd64, arm64 ]
+        target: [ kvm, metal, gcp, aws, azure, ali, openstack, vmware, pxe ]
+        modifier: [ "" ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.role }}
+          role-session-name: ${{ secrets.session }}
+          aws-region: ${{ secrets.region }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
+      - name: upload to S3 bucket ${{ secrets.bucket }}
+        run: .github/workflows/upload_to_s3.sh ${{ secrets.bucket }} ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.tar.gz

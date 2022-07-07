@@ -1,0 +1,20 @@
+name: nightly
+on:
+  schedule:
+    - cron: '0 6 * * *'
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      version: now
+  upload_to_s3:
+    name: upload to S3
+    needs: build
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/upload_to_s3.yml
+    secrets:
+      bucket: ${{ secrets.AWS_S3_BUCKET }}
+      region: ${{ secrets.AWS_REGION }}
+      role: ${{ secrets.AWS_IAM_ROLE }}
+      session: ${{ secrets.AWS_OIDC_SESSION }}
