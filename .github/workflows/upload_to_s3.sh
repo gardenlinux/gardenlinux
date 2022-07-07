@@ -19,17 +19,17 @@ done < "$name/$prefix.os-release"
 meta_yml="$(mktemp)"
 
 cat << EOF >> "$meta_yml"
-architecture: $arch
+architecture: '$arch'
 base_image: null
-build_committish: $GARDENLINUX_COMMIT_ID
+build_committish: '$GARDENLINUX_COMMIT_ID'
 build_timestamp: '$timestamp'
 gardenlinux_epoch: $(bin/garden-version --major "$GARDENLINUX_VERSION")
 logs: null
 modifiers: [$GARDENLINUX_FEATURES]
-platform: $platform
+platform: '$platform'
 published_image_metadata: null
-s3_bucket: $bucket
-s3_key: meta/singles/$name
+s3_bucket: '$bucket'
+s3_key: 'meta/singles/$name'
 test_result: null
 version: '$GARDENLINUX_VERSION'
 paths:
