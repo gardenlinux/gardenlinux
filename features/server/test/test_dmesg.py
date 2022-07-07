@@ -1,6 +1,6 @@
 import pytest
-from helper.utils import get_kernel_version
 from helper.tests.file_content import file_content
+from helper.utils import execute_remote_command
 
 
 @pytest.mark.parametrize(

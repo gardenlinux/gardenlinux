@@ -158,7 +158,7 @@ def ping4_host(request):
     return request.param
 
 
-def test_ping4(client, ping4_host, non_chroot):
+def test_ping4(client, ping4_host, non_chroot, non_kvm):
     command = f"ping -c 5 -W 5 {ping4_host}"
     (exit_code, output, error) = client.execute_command(command)
     assert exit_code == 0, f'no {error=} expected when executing "{command}"'
