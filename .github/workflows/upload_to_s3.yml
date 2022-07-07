@@ -1,18 +1,14 @@
 name: upload to S3
 on:
   workflow_call:
-    inputs:
+    secrets:
       bucket:
-        type: string
         required: true
       region:
-        type: string
         required: true
       role:
-        type: string
         required: true
       session:
-        type: string
         required: true
 jobs:
   upload_to_s3:
@@ -29,11 +25,11 @@ jobs:
       - uses: actions/checkout@v2
       - uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ inputs.role }}
-          role-session-name: ${{ inputs.session }}
-          aws-region: ${{ inputs.region }}
+          role-to-assume: ${{ secrets.role }}
+          role-session-name: ${{ secrets.session }}
+          aws-region: ${{ secrets.region }}
       - uses: actions/download-artifact@v2
         with:
           name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
-      - name: upload to S3 bucket ${{ inputs.bucket }}
-        run: .github/workflows/upload_to_s3.sh ${{ inputs.bucket }} ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.tar.gz
+      - name: upload to S3 bucket ${{ secrets.bucket }}
+        run: .github/workflows/upload_to_s3.sh ${{ secrets.bucket }} ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.tar.gz

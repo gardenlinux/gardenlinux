@@ -13,8 +13,8 @@ jobs:
     permissions:
       id-token: write
     uses: ./.github/workflows/upload_to_s3.yml
-    with:
-      bucket: gardenlinux-github-releases
-      region: eu-central-1
-      role: arn:aws:iam::544319711298:role/gardenlinux-github-oidc-role
-      session: gardenlinux-github-oidc-session
+    secrets:
+      bucket: ${{ secrets.AWS_S3_BUCKET }}
+      region: ${{ secrets.AWS_REGION }}
+      role: ${{ secrets.AWS_IAM_ROLE }}
+      session: ${{ secrets.AWS_OIDC_SESSION }}
