@@ -453,7 +453,7 @@ printf "  starting VM(UUID:%s) with MAC:%s in %s\n" $uuid $macfull $targetDir
 [ $pxe ]	&& printf "  pxeboot: %s.ipxe\n" $mac
 [ $pxe ]	&& printf "  pxeboot: files served from %s\n" "$pxe"
 [ $bridge ]	&& printf "  interface: %s  bridged\n" $bridge
-[ $bridge ]	|| printf "  sshport: %s (%s) unbridged\n" $port $port_dest
+[ $bridge ]	|| printf "  sshport: host %s (guest %s) unbridged\n" $port $port_dest
 [ $vnc ] 	&& printf "  vncport: %s\n" $(( vncport + 5900 ))
 [ $uefi ]	&& printf "  uefi boot enabled. %s.vars stores efivars\n" $mac
 for i in "${inflatelist[@]}"; do

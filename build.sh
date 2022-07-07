@@ -164,30 +164,55 @@ else
 		wait %1
 	fi
 	if [ ${skip_tests} -eq 0 ] && [[ "${tests}" == *"chroot"* ]]; then
+		# Prepare the test container execution
 		echo "Creating config file for chroot tests"
 		containerName=$uuid_gen
 		prefix="$(cat $outputDir/prefix.info)"
 		fullfeatures="$(cat $outputDir/fullfeature.info)"
 		configDir=$(${thisDir}/bin/garden-integration-test-config chroot ${prefix} ${fullfeatures} ${outputDir} ${arch})
+		dockerArgs=(
+			--cap-add sys_admin
+			--cap-add mknod
+			--cap-add audit_write
+			--cap-add net_raw
+			--security-opt apparmor=unconfined
+		)
+
+		# Run the test container using the chroot platform
 		echo "Running pytests in chroot"
-		${gardenlinux_build_cre} run --cap-add sys_admin --cap-add mknod --cap-add audit_write --cap-add net_raw --security-opt apparmor=unconfined \
-			--name $containerName --rm -v `pwd`:/gardenlinux -v ${configDir}:/config \
+		${gardenlinux_build_cre} run --name $containerName ${dockerArgs[@]} --rm \
+			-v `pwd`:/gardenlinux -v ${configDir}:/config \
 			"gardenlinux/base-test:$version" \
 			pytest --iaas=chroot --configfile=/config/config.yaml &
+
+		# Cleanup the test container
 		wait %1
 		rm -r ${configDir}
 	fi
 	if [ ${skip_tests} -eq 0 ] && [[ "${tests}" == *"kvm"* ]]; then
+		# Prepare the test container execution
 		echo "Creating config file for KVM tests"
 		containerName=$uuid_gen
 		prefix="$(cat $outputDir/prefix.info)"
 		fullfeatures="$(cat $outputDir/fullfeature.info)"
 		configDir=$(${thisDir}/bin/garden-integration-test-config kvm ${prefix} ${fullfeatures} ${outputDir} ${arch})
+		dockerArgs=()
+
+		# Check if the host system supports KVM.
+		# In this case, add it to the container device list.
+		if [ -w "/dev/kvm" ]; then
+			dockerArgs+="--device=/dev/kvm"
+		fi
+
+		# Run the test container using the KVM platform
 		echo "Running pytests in KVM"
-		${gardenlinux_build_cre} run --name $containerName --privileged --rm -v /boot/:/boot \
-			-v /lib/modules:/lib/modules -v `pwd`:/gardenlinux -v ${configDir}:/config \
+		${gardenlinux_build_cre} run --name $containerName ${dockerArgs[@]} --rm \
+			-v /boot/:/boot -v /lib/modules:/lib/modules \
+			-v `pwd`:/gardenlinux -v ${configDir}:/config \
 			"gardenlinux/base-test:$version" \
 			pytest --iaas=kvm --configfile=/config/config.yaml &
+
+		# Cleanup the test container
 		wait %1
 		rm -r ${configDir}
 	fi

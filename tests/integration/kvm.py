@@ -194,44 +194,33 @@ class KVM:
 
         # Copy some files to the snapshot
         copy_cmd = (
-            "virt-copy-in -a /tmp/{image_name}.snapshot.qcow2 "
-            "{authorized_keys_file} {sshd_systemd_file} {sshd_config_file} "
-            "/root".format(
-                image_name=image_name,
-                authorized_keys_file=authorized_keys_file,
-                sshd_systemd_file=sshd_systemd_file,
-                sshd_config_file=sshd_config_file
-            )
-        )
+            f"virt-copy-in -a /tmp/{image_name}.snapshot.qcow2 "
+            f"{authorized_keys_file} {sshd_systemd_file} {sshd_config_file} "
+            "/root")
+
         cmds.append(copy_cmd)
 
         # Modify the snapshot via guestfish
+        authorized_keys_file = os.path.basename(authorized_keys_file)
+        sshd_systemd_file = os.path.basename(sshd_systemd_file)
+        sshd_config_file = os.path.basename(sshd_config_file)
         guestfish_cmd = (
-            "guestfish -a /tmp/{image_name}.snapshot.qcow2 -i "
-            "mkdir {authorized_keys_dir} : "
-            "chown 0 0 {authorized_keys_dir} : "
-            "chmod 0700 {authorized_keys_dir} : "
-            "mv /root/{authorized_keys_file} {authorized_keys_dir}/test_authorized_keys : "
-            "mv /root/{sshd_systemd_file} {systemd_dir} : "
-            "mv /root/{sshd_config_file} {sshd_config_dir} : "
-            "chown 0 0 {authorized_keys_dir}/test_authorized_keys : "
-            "chmod 0600 {authorized_keys_dir}/test_authorized_keys : "
-            "chown 0 0 {sshd_config_dir}/{sshd_config_file} : "
-            "chmod 0644 {sshd_config_dir}/{sshd_config_file} : "
-            "write-append /etc/hosts.allow 'ALL: 10.\n' : "
-            "ln-s "
-            "  {systemd_dir}/{sshd_systemd_file} "
-            "  {systemd_dir}/multi-user.target.wants/{sshd_systemd_file}".format(
-                image_name=image_name,
-                ssh_key=ssh_key,
-                authorized_keys_file=os.path.basename(authorized_keys_file),
-                sshd_systemd_file=os.path.basename(sshd_systemd_file),
-                sshd_config_file=os.path.basename(sshd_config_file),
-                authorized_keys_dir=authorized_keys_dir,
-                sshd_config_dir=sshd_config_dir,
-                systemd_dir=systemd_dir
-            )
-        )
+            f"guestfish -a /tmp/{image_name}.snapshot.qcow2 -i "
+            f"mkdir {authorized_keys_dir} : "
+            f"chown 0 0 {authorized_keys_dir} : "
+            f"chmod 0700 {authorized_keys_dir} : "
+            f"mv /root/{authorized_keys_file} {authorized_keys_dir}/test_authorized_keys : "
+            f"mv /root/{sshd_systemd_file} {systemd_dir} : "
+            f"mv /root/{sshd_config_file} {sshd_config_dir} : "
+            f"chown 0 0 {authorized_keys_dir}/test_authorized_keys : "
+            f"chmod 0600 {authorized_keys_dir}/test_authorized_keys : "
+            f"chown 0 0 {sshd_config_dir}/{sshd_config_file} : "
+            f"chmod 0644 {sshd_config_dir}/{sshd_config_file} : "
+            f"write-append /etc/hosts.allow 'ALL: 10.\n' : "
+            f"ln-s "
+            f"  {systemd_dir}/{sshd_systemd_file} "
+            f"  {systemd_dir}/multi-user.target.wants/{sshd_systemd_file}")
+
         cmds.append(guestfish_cmd)
 
         # Execute all prepared commands
