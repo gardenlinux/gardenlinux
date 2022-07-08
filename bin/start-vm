@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+
 # Constants
 readonly CURR_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 readonly TARGET_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )

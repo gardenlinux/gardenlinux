@@ -20,5 +20,5 @@ import pytest
 
 # Run the test unit to perform the
 # final tests by the given artifact.
-def test_umask(client, file, dict):
+def test_autologout(client, file, dict):
     file_content(client, file, dict)

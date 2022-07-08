@@ -4,7 +4,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def rkhunter(client, testconfig):
+# Execute the rkhunter test only on chroot
+# since it must install some packages that
+# may not be possible on running machines.
+def rkhunter(client, testconfig, chroot):
     """Run rkhunter to test for rootkits"""
     utils.AptUpdate(client)
     utils.install_package_deb(client, "rkhunter")
