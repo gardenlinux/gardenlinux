@@ -182,9 +182,11 @@ class KVM:
         authorized_keys_file = f"{ssh_key_path}.pub"
         sshd_config_file = "integration/misc/sshd_config_integration_tests"
         sshd_systemd_file = "integration/misc/sshd-integration.test.service"
+        nft_ssh_integration_test_config = "integration/misc/nft_ssh_integration_test_ports.conf"
         authorized_keys_dir = "/root/.ssh"
         sshd_config_dir = "/etc/ssh"
         systemd_dir = "/etc/systemd/system"
+        nft_dropin_config_dir = "/etc/nft.d"
 
         # Command list for adjustments
         cmds = []
@@ -201,7 +203,7 @@ class KVM:
         copy_cmd = (
             f"virt-copy-in -a /tmp/{image_name}.snapshot.qcow2 "
             f"{authorized_keys_file} {sshd_systemd_file} {sshd_config_file} "
-            "/root")
+            f"{nft_ssh_integration_test_config} /root")
 
         cmds.append(copy_cmd)
 
@@ -209,14 +211,17 @@ class KVM:
         authorized_keys_file = os.path.basename(authorized_keys_file)
         sshd_systemd_file = os.path.basename(sshd_systemd_file)
         sshd_config_file = os.path.basename(sshd_config_file)
+        nft_ssh_integration_test_config = os.path.basename(nft_ssh_integration_test_config)
         guestfish_cmd = (
             f"guestfish -a /tmp/{image_name}.snapshot.qcow2 -i "
             f"mkdir {authorized_keys_dir} : "
+            f"mkdir-p {nft_dropin_config_dir} : "
             f"chown 0 0 {authorized_keys_dir} : "
             f"chmod 0700 {authorized_keys_dir} : "
             f"mv /root/{authorized_keys_file} {authorized_keys_dir}/test_authorized_keys : "
             f"mv /root/{sshd_systemd_file} {systemd_dir} : "
             f"mv /root/{sshd_config_file} {sshd_config_dir} : "
+            f"mv /root/{nft_ssh_integration_test_config} {nft_dropin_config_dir} : "
             f"chown 0 0 {authorized_keys_dir}/test_authorized_keys : "
             f"chmod 0600 {authorized_keys_dir}/test_authorized_keys : "
             f"chown 0 0 {sshd_config_dir}/{sshd_config_file} : "
