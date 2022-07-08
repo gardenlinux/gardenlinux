@@ -1,4 +1,2 @@
 description: "use signed unified uefi binary instead of bootloader"
 type: flag
-features:
-  include: [ _readonly ]
