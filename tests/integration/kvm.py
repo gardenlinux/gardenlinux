@@ -87,17 +87,19 @@ class KVM:
     def _validate(self):
         """ Start basic config validation """
         # Validate if .raw image is defined
+        image=None
         if not "image" in self.config:
             logger.error("'image' not defined. Please define path to image.")
         else:
-            logger.info("'image' defined. Using: {image}".format(image=self.config["image"]))
+            image = self.config["image"]
+            logger.info(f"'image' defined. Using: {image}")
 
         # Validate if image extension is defined corretly
         allowed_image_ext = (
                             ".raw",
                             ".qcow2"
                             )
-        file_name = os.path.basename(self.config["image"])
+        file_name = os.path.basename(image)
         # Fail on unsupported image types
         if not file_name.endswith(allowed_image_ext):
             msg_err = f"{file_ext} is not supported for this platform test type."
@@ -114,13 +116,13 @@ class KVM:
 
         # Validate target arch
         if "arch" in self.config:
-                logger.info("'arch' is defined. Executing for {arch}".format(
-                  arch=self.config["arch"]))
-                arch = self.config["arch"]
+            arch = self.config["arch"]
+            logger.info(f"'arch' is defined. Executing for {arch}")
         else:
-                # Setting amd64 as default if not defined
-                logger.info("'arch' is not defined. Executing for amd64")
-                arch = "amd64"
+            # Setting amd64 as default if not defined
+            arch = "amd64"
+            logger.info("'arch' is not defined. Executing for amd64")
+
 
         # Validate if VM should remain after tests
         if "keep_running" in self.config:
@@ -154,7 +156,7 @@ class KVM:
             logger.info("'user' is not defined. Default user root will be used.")
         else:
             user = self.config["ssh"]["user"]
-            logger.info("'user' is defined. Using user {user}.".format(user=user))
+            logger.info(f"'user' is defined. Using user {user}.")
 
         # Validate port
         port = self.config.get("port", DEFAULT_PORT)
@@ -189,8 +191,11 @@ class KVM:
 
         # Create a snapshot of the image
         # so that we can modify it for our tests
-        cmds.append("qemu-img create -f qcow2 -F raw -b {image} /tmp/{image_name}.snapshot.qcow2 2G".format(
-            image=image, image_name=image_name))
+        snapshot_cmd = (
+            f"qemu-img create -f qcow2 -F raw -b {image} "
+            f"/tmp/{image_name}.snapshot.qcow2 2G"
+        )
+        cmds.append(snapshot_cmd)
 
         # Copy some files to the snapshot
         copy_cmd = (
@@ -225,13 +230,14 @@ class KVM:
 
         # Execute all prepared commands
         for cmd in cmds:
-            logger.info("Running: {cmd}".format(cmd=cmd))
+            logger.info(f"Running: {cmd}")
             p = subprocess.run([cmd], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             rc = p.returncode
             if rc == 0:
-                logger.info("Succeeded: {cmd}".format(cmd=cmd))
+                logger.info(f"Succeeded: {cmd}")
             else:
-                logger.error("Failed: {cmd}: {error}".format(cmd=cmd, error=p.stdout))
+                error = p.stdout
+                logger.error(f"Failed: {cmd}: {error}")
 
     def _start_kvm(self, arch, port):
         """ Start VM in KVM for defined arch """
@@ -272,10 +278,10 @@ class KVM:
         rc = p.returncode
         if rc == 0:
             logger.info("Succeeded stopping qemu")
-            if os.path.exists("/tmp/{image_name}.snapshot.qcow2".format(image_name=image_name)):
-                os.remove("/tmp/{image_name}.snapshot.qcow2".format(image_name=image_name))
+            if os.path.exists(f"/tmp/{image_name}.snapshot.qcow2"):
+                os.remove(f"/tmp/{image_name}.snapshot.qcow2")
             else:
-                logger.info("/tmp/{image_name}.snapshot.qcow2 does not exist".format(image_name=image_name))
+                logger.info(f"/tmp/{image_name}.snapshot.qcow2 does not exist")
             if os.path.exists("/tmp/qemu.pid"):
                 os.remove("/tmp/qemu.pid")
         else:
