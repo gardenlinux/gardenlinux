@@ -14,17 +14,6 @@ def machine_id(client):
 
 def machine_id_powered_on(client):
     """Test if /etc/machine_id exists and is initialized"""
-    # Validate that systemd unit is started
-    systemd_unit = "systemd-machine-id-commit"
-    cmd = f"systemctl status {systemd_unit}.service"
-    (rc, out, err) = client.execute_command(
-        cmd, quiet=True)
-
-    # Validate output lines of systemd-unit
-    for line in out.splitlines():
-        if "Active:" in line:
-            assert not "dead" in line, f"systemd-unit: {systemd_unit} did not start."
-
     # Validate content of generated output
     # from systemd-machine-id-commit unit
     machine_id_file = "/etc/machine-id"

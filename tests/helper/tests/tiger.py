@@ -1,7 +1,10 @@
 import os
 from helper import utils
 
-def tiger(client, testconfig):
+# Execute the tiger test only on chroot
+# since it must install some packages that
+# may not be possible on running machines.
+def tiger(client, testconfig, chroot):
     """Run tiger to test for system security vulnerabilities"""
     utils.AptUpdate(client)
     (exit_code, output, error) = client.execute_command(
