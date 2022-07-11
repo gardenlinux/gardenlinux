@@ -12,5 +12,5 @@ import pytest
     ]
 )
 
-def test_debsums(client, exclude chroot):
+def test_debsums(client, exclude, chroot):
     debsums(client, exclude)
