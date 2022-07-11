@@ -54,8 +54,9 @@ def packages_musthave(client, testconfig):
         # * the architecture as a variable in the package name
         elif package.endswith(r"-${arch}"):
             package = package.replace(r"${arch}", arch)
+
         # explicitly excluded packages are allowed to miss 
-        elif package in exclude:
+        if package in exclude:
             continue
 
         if not (package in installed_pkgslist or
