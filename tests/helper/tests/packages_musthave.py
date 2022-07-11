@@ -6,7 +6,7 @@ import pytest
 
 def packages_musthave(client, testconfig):
     """"Test if the packages defined in pkg.include are installed"""
-    installed_pkgslist = get_package_list(client)
+    installed_package_list = get_package_list(client)
 
     current = (os.getenv('PYTEST_CURRENT_TEST')).split('/')[0]
     path = f"/gardenlinux/features/{current}/pkg.include"
@@ -54,12 +54,13 @@ def packages_musthave(client, testconfig):
         # * the architecture as a variable in the package name
         elif package.endswith(r"-${arch}"):
             package = package.replace(r"${arch}", arch)
+
         # explicitly excluded packages are allowed to miss 
-        elif package in exclude:
+        if package in exclude:
             continue
 
-        if not (package in installed_pkgslist or
-                f"{package}:{arch}" in installed_pkgslist):
+        if not (package in installed_package_list or
+                f"{package}:{arch}" in installed_package_list):
             missing.append(package)
 
     assert len(missing) == 0, \
