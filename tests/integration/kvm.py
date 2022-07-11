@@ -193,7 +193,7 @@ class KVM:
         # so that we can modify it for our tests
         snapshot_cmd = (
             f"qemu-img create -f qcow2 -F raw -b {image} "
-            f"/tmp/{image_name}.snapshot.qcow2 2G"
+            f"/tmp/{image_name}.snapshot.qcow2 4G"
         )
         cmds.append(snapshot_cmd)
 
