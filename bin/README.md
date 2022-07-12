@@ -103,7 +103,7 @@ Creating a bridge with `virsh`:
 ```
 # You may need to start unit `libvirtd`
 
-# In default, it comes with an default profile
+# By default, it comes with a default profile
 $> virsh net-list --all
  Name      State      Autostart   Persistent
 ----------------------------------------------

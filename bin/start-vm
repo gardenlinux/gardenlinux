@@ -17,7 +17,7 @@ main () {
     get_opts "$@"
     set_binaries
     qemu_opt_pxe
-    qemu_opt_disk "${@: -1}"
+    qemu_opt_disk
     qemu_opt_uefi
     qemu_opt_cpu
     qemu_opt_memory
@@ -57,7 +57,7 @@ get_os () {
         fi
 
     else
-        echo "Error: Unsupported Operating System."
+        echo "Error: Unsupported operating system."
         exit 1
     fi
 }
@@ -179,6 +179,10 @@ while true; do
         *) eusage "Unknown flag '$flag'"      ;;
     esac
 done
+
+# Get positional args in a dedicated var for
+# processing positional arguments in "qemu_opt_disk"
+images=$@
 }
 
 
@@ -347,11 +351,13 @@ qemu_opt_disk () {
     disk_count=0
 
     if [ "$arch" = "amd64" ]; then
-        [ "$#" == "" ] || QEMU_OPTS+=("-device virtio-scsi-pci,id=scsi0")
+        [ "$images" == "" ] || QEMU_OPTS+=("-device virtio-scsi-pci,id=scsi0")
     fi
 
-    while (( "$#" )); do
-        image_file=$1
+    # Iterate over all user defined images / disks
+    # and add them to QEMU
+    for i in $images; do
+        image_file=$i
         image_size=0
         image_direct=""
         if [[ $image_file == *","* ]]; then
@@ -387,7 +393,6 @@ qemu_opt_disk () {
             fi
             (( ++disk_count ))
         fi
-        shift
     done
 
     [ $disk_count -gt 0 -o "$pxe" -o "$pxe_binary" ] || eusage "Error: Missing bootdisk. boot via --pxe, provide tmpdisk via --disk or provide bootdisk image file."
@@ -634,7 +639,7 @@ qemu_opt_network () {
                 chown root:kvm /etc/qemu
             fi
             if [ ! -e /etc/qemu/bridge.conf ]; then
-                    touch /etc/qemu/bridge.conf
+                touch /etc/qemu/bridge.conf
                 chown root:kvm /etc/qemu/bridge.conf
                 chmod 0640 /etc/qemu/bridge.conf
             fi
@@ -666,24 +671,24 @@ qemu_opt_network () {
 
 
 qemu_opt_misc () {
-if [ "$arch" = "amd64" ]; then
-    # Use minimal memory
-    QEMU_OPTS+=("-device virtio-balloon")
+    if [ "$arch" = "amd64" ]; then
+        # Use minimal memory
+        QEMU_OPTS+=("-device virtio-balloon")
 
-    # Add random number generator (RNG) to the host
-    QEMU_OPTS+=("-device virtio-rng-pci,rng=rng0"
-                "-object rng-random,id=rng0,filename=/dev/random")
-fi
+        # Add random number generator (RNG) to the host
+        QEMU_OPTS+=("-device virtio-rng-pci,rng=rng0"
+                    "-object rng-random,id=rng0,filename=/dev/random")
+    fi
 
-# Set QEMU start options depending on
-# daemonizing the VM
-if [ $daemonize ]; then
-    QEMU_OPTS+=("-daemonize"
-                "-display none")
-else
-    QEMU_OPTS+=("-nographic"
-                "-serial mon:stdio")
-fi
+    # Set QEMU start options depending on
+    # daemonizing the VM
+    if [ $daemonize ]; then
+        QEMU_OPTS+=("-daemonize"
+                    "-display none")
+    else
+        QEMU_OPTS+=("-nographic"
+                    "-serial mon:stdio")
+    fi
 }
 
 
