@@ -68,6 +68,9 @@ get_arch () {
     # Include "get_arch.sh" for only maintaining a single
     # file that evaluates the current used arch
     arch=$(${CURR_DIR}/get_arch.sh)
+    # Create an immutable var including the original
+    # system architecture of the host system
+    readonly arch_orig=$arch
 }
 
 
@@ -483,19 +486,8 @@ qemu_opt_cpu () {
     # Validate amd64 arch
     if [ "$arch" = amd64 ]; then
 
-       # Evaluate possible AMD64 arch outputs
-        test_arch="undefined"
-
-        if [ "amd64" = $(uname -m) ]; then
-            test_arch="amd64"
-        fi
-
-        if [ "x86_64" = $(uname -m) ]; then
-            test_arch="amd64"
-        fi
-
         # Validate for native or emulated arch
-        if [ "$arch" = "$test_arch" ]; then
+        if [ "$arch" = "$arch_orig" ]; then
 
             # Running on native arch
             # Check for acceleration support
@@ -529,19 +521,8 @@ qemu_opt_cpu () {
     # Validate AARCH64/ARM64 arch
     if [ "$arch" = arm64 ]; then
 
-        # Evaluate possible ARM64 arch outputs
-        test_arch="undefined"
-
-        if [ "arm64" = $(uname -m) ]; then
-            test_arch="arm64"
-        fi
-
-        if [ "aarch64" = $(uname -m) ]; then
-            test_arch="arm64"
-        fi
-
         # Validate for native or emulated arch
-        if [ "$arch" = "$test_arch" ]; then
+        if [ "$arch" = "$arch_orig" ]; then
 
             # Running on native arch
             # Check for acceleration support
