@@ -138,8 +138,14 @@ cloud: build-environment $(SECUREBOOT_CRT)
 kvm: build-environment $(SECUREBOOT_CRT)
 	./build.sh $(BUILD_OPTS) --skip-build --features server,cloud,kvm $(BUILDDIR) $(VERSION)
 
+kvm-secureboot: build-environment $(SECUREBOOT_CRT)
+	./build.sh $(BUILD_OPTS) --skip-build --features server,cloud,kvm,_secureboot $(BUILDDIR) $(VERSION)
+
 kvm-dev: build-environment $(SECUREBOOT_CRT)
 	./build.sh $(BUILD_OPTS) --skip-build --features server,cloud,kvm,_dev $(BUILDDIR) $(VERSION)
+
+kvm-secureboot-dev: build-environment $(SECUREBOOT_CRT)
+	./build.sh $(BUILD_OPTS) --skip-build --features server,cloud,kvm,_secureboot,_dev $(BUILDDIR) $(VERSION)
 
 firecracker: build-environment $(SECUREBOOT_CRT)
 	./build.sh $(BUILD_OPTS) --skip-build --features firecracker $(BUILDDIR) $(VERSION)

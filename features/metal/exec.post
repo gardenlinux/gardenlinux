@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-set -Eeuo pipefail
-
-mkdir -p "$targetDir/etc/gardenlinux"
-
-for key in pk null.pk kek db; do
-	cp "/cert/secureboot.$key.auth" "$targetDir/etc/gardenlinux/gardenlinux-secureboot.$key.auth"
-done
