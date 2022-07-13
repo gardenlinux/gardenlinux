@@ -1,13 +1,17 @@
 ARG build_base_image=gardenlinux/slim
 FROM	golang:latest as golang
 COPY	garden-feat.go /go/src
-RUN	go install golang.org/x/lint/golint@latest \
-     && cd /go/src \
-     && golint garden-feat.go \
-     && go mod init garden-feat.go \
-     && go mod tidy -go=1.16 \
-     && go mod tidy -go=1.17 \
-     && go build garden-feat.go
+RUN	set -x; retry_cntr=10; while [ "$retry_cntr" -gt 0 ]; do \
+		go install golang.org/x/lint/golint@latest \
+		&& cd /go/src \
+		&& golint garden-feat.go \
+		&& go mod init garden-feat.go \
+		&& go mod tidy -go=1.16 \
+		&& go mod tidy -go=1.17 \
+		&& go build garden-feat.go \
+		&& break \
+		|| retry_cntr="$((retry_cntr-1))"; \
+	done
 
 FROM 	$build_base_image
 ARG	DEBIAN_FRONTEND=noninteractive
