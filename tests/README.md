@@ -1,32 +1,79 @@
 # Tests
 
 ## Table of Content
-- [Full Integration Tests Including Image Upload](#Full-Integration-Tests-Including-Image-Upload)
-  * [General](#General)
-  * [Unit Tests](#Unit-Tests)
-  * [Prerequisites](#Prerequisites)
-- [Examples for Supported Platforms](#Using-the-tests-on-Supported-Platforms)
-  * [General](#General)
-  * [Public Cloud Platforms](#Public-cloud-platforms)
-    * [AWS](#AWS)
-    * [Azure](#Azure)
-    * [Aliyun](#Aliyun)
-    * [GCP](#GCP)
-  * [Local test environments](#Local-test-environments)
-    * [CHROOT](#CHROOT)
-    * [KVM](#KVM)
-    * [Manual Testing](#Manual-Testing)
-    * [OpenStack CC EE flavor](#OpenStack-CC-EE-flavor)
-- [Misc](#Misc)
-  * [Autoformat Using Black](#Autoformat-Using-Black)
-  * [Run Static Checks](#Run-Static-Checks)
-  * [Shellcheck](#Shellcheck)
-
-## Full Integration Tests Including Image Upload
+- [Tests](#tests)
+  - [Table of Content](#table-of-content)
+  - [General](#general)
+  - [Chart](#chart)
+  - [Unit Tests](#unit-tests)
+  - [Prerequisites](#prerequisites)
+  - [Using the tests on supported platforms](#using-the-tests-on-supported-platforms)
+    - [General](#general-1)
+    - [Public cloud platforms](#public-cloud-platforms)
+      - [AWS](#aws)
+        - [Configuration options](#configuration-options)
+        - [Running the tests](#running-the-tests)
+      - [Azure](#azure)
+        - [Configuration options](#configuration-options-1)
+        - [Running the tests](#running-the-tests-1)
+      - [Aliyun](#aliyun)
+        - [Configuration options](#configuration-options-2)
+        - [Running the tests](#running-the-tests-2)
+      - [GCP](#gcp)
+        - [Configuration options](#configuration-options-3)
+        - [Running the tests](#running-the-tests-3)
+    - [Local test environments](#local-test-environments)
+      - [CHROOT](#chroot)
+        - [Configuration options](#configuration-options-4)
+        - [Running the tests](#running-the-tests-4)
+      - [KVM](#kvm)
+        - [Configuration options](#configuration-options-5)
+        - [Running the tests](#running-the-tests-5)
+      - [Manual Testing](#manual-testing)
+        - [Running the tests](#running-the-tests-6)
+      - [OpenStack CC EE flavor](#openstack-cc-ee-flavor)
+        - [Configuration options](#configuration-options-6)
+        - [Running the tests](#running-the-tests-7)
+  - [Misc](#misc)
+    - [Autoformat Using Black](#autoformat-using-black)
+    - [Run Static Checks](#run-static-checks)
+    - [Shellcheck](#shellcheck)
 
 ## General
 
-Garden Linux supports integration testing on all major cloud platforms (Alicloud, AWS, Azur, GCP). To allow testing even without access to any cloud platform we created an universal `kvm` platform that may run locally and is accessed in the same way via a `ssh client object` as any other cloud platform. Therefore, you do not need to adjust tests to perform local integration tests. All platformes are described in detail below. Beside this, you may also find additional tests that may be used for developing and contributing to fit the Garden Linux style guides.
+Garden Linux supports integration testing on all major cloud platforms (Alicloud, AWS, Azur, GCP). To allow testing even without access to any cloud platform we created an universal `kvm` platform that may run locally and is accessed in the same way via a `ssh client object` as any other cloud platform. Therefore, you do not need to adjust tests to perform local integration tests. All platforms are described in detail below. Beside this, you may also find additional tests that may be used for developing and contributing to fit the Garden Linux style guides.
+
+## Chart
+This chart briefly describes the process of unit-, platform/integration tests.
+
+```mermaid
+graph TD;
+    Source --> obj01[Build Pipeline]
+    obj01[Build Pipeline] --> obj02[Built Artifact]
+    obj02[Built Artifact] -- The build pipeline automatically performs<br>unit tests on just created artifacts --> test01{Testing}
+    obj03[External Artifact] -- An already present artifact can <br>be retested at any time --> test01{Testing}
+
+    test01{Testing} -. Optional platform specific tests .-> test02{Integration Tests}
+    test01{Testing} -- Basic unit tests on<br>a given artifact --> test03{Unit Tests}
+
+    AWS --> test05{Platform Tests}
+    Azure --> test05{Platform Tests}
+    Aliyun --> test05{Platform Tests}
+    GCP --> test05{Platform Tests}
+
+    test02{Integration Tests} -.-> AWS --> test04{Feature Tests}
+    test02{Integration Tests} -.-> Azure --> test04{Feature Tests}
+    test02{Integration Tests} -.-> Aliyun --> test04{Feature Tests}
+    test02{Integration Tests} -.-> GCP --> test04{Feature Tests}
+    test03{Unit Tests} -- Runs always --> CHROOT --> test04{Feature Tests}
+    test03{Unit Tests} -.-> KVM --> test04{Feature Tests}
+
+    test05{Platform Tests} --> test_case01[gardenlinux.py]
+
+    test04{Feature Tests} --> test_case02[feature/base/tests/test_*.py]
+    test04{Feature Tests} --> test_case03[feature/cloud/tests/test_*.py]
+    test04{Feature Tests} --> test_case04[...]
+```
 
 ## Unit Tests
 
@@ -52,7 +99,7 @@ Build the integration test container with all necessary dependencies. This conta
 
 The resulting container image will be tagged as `gardenlinux/integration-test:<version>` with `<version>` being the version that is returned by `bin/garden-version` in this repository. All fruther tests run inside this container.
 
-## Using the tests on Supported Platforms
+## Using the tests on supported platforms
 
 ### General
 
@@ -108,7 +155,7 @@ aws:
 
 <details>
 
-- **region** _(required)_: the AWS region in which all test relevant resources will be created 
+- **region** _(required)_: the AWS region in which all test relevant resources will be created
 - **instanc-type** _(optional)_: the instance type that will be used for the EC2 instance used for testing, defaults to `t3.micro` if not specified
 - **architecture** _(optional)_: the architecture under which the AMI of the image to test should be registered (`x86_64` or `arm64`), must match the instance type, defaults to `x86_64` if not specified
 
@@ -201,7 +248,7 @@ Only three parameters are required for the test: the Azure `subscription` or `su
 
 <details>
 
-- **location** _(required)_: the Azure region in which all test relevant resources will be created 
+- **location** _(required)_: the Azure region in which all test relevant resources will be created
 - **subscription** _(required/optional)_: The Azure subscription (as in subscription name) which is used for creating all relevant resources and running the test. Either the subscription name or the `subscription_id` needs to be provided.
 - **subscription_id** _(required/optioal)_: The Azure subscription (its ID) which is used for creating all relevant resources and running the test. Either the 'subscription' name or its needs to be provided.
 - **resource_group** _(optional)_: all relevant resources for the integration test will be assigned to an Azure resource group. If you want to reuse an existing resource group, you can specify it here. If left empty, a new resource group gets created for the duration of the test.
@@ -256,7 +303,7 @@ Use the following test configuration:
 ```yaml
 ali:
     # mandatory, aliyun credential file location (config.json)
-    credential_file: 
+    credential_file:
 
     # optional, if an image id is provided the test will not attempt
     # to upload an image
@@ -284,7 +331,7 @@ ali:
     # mandatory: bucket name
     bucket:  # my-test-upload-bucket
 
-    # optional, path in bucket 
+    # optional, path in bucket
     bucket_path: integration-test
 
     # ssh related configuration for logging in to the VM (required)
@@ -306,7 +353,7 @@ ali:
 
 <details>
 
-- **credential_file**: 
+- **credential_file**:
 - **image_id**:
 - **image** _(optional/required)_: If the tests should be executed against a Garden Linux filesystem snapshot that resulted from a local build, this option is the path that points to it. The file must be of type `.qcow2`. The image will be removed from Ali-Cloud once the test finishes. Either **image_id** or **image** must be supplied but not both.
 The URI can be:
@@ -378,7 +425,7 @@ gcp:
     #image_region: eu-central-1
 
     # GCS bucket for image upload, must exist and be used for local image upload (optional)
-    #bucket: 
+    #bucket:
 
     # GCE machine type (optional)
     machine_type: n1-standard-2
@@ -401,7 +448,7 @@ gcp:
 <details>
 
 - **project** _(required)_: the GCP project which is used for creating all relevant resources and running the tests
-- **zone** _(required)_: the GCP zone in which all test relevant resources will be created 
+- **zone** _(required)_: the GCP zone in which all test relevant resources will be created
 
 - **service_account_json_path** _(optional)_: If a service account JSON file is provided, it will be used to authenticate to GCP instead of using an access token.
 
@@ -624,7 +671,7 @@ Use the following (very simple) test configuration:
 ```yaml
 manual:
     # mandatory, the hostname/ip-address of the host the tests should run on
-    host: 
+    host:
 
     # ssh related configuration for logging in to the VM (required)
     ssh:
@@ -710,7 +757,7 @@ openstack_ccee:
 - **image_id** _(optional)_: if specified the tests will use an existing image for the test. No image will be uploaded
 - **image** _(optional/required)_: if no **image_id** is specified this must reference the image `vmdk` file.
 - **flavor** _(required)_: an existing flavor name (installation specific)
-- **security_group** _(required)_: the security group name for the virtual machine 
+- **security_group** _(required)_: the security group name for the virtual machine
 - **network_name** _(required)_: the network name for the virtual machine
 - **ssh_key_filepath** _(required)_: The SSH key that will be deployed to the GCE instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand.
 - **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
