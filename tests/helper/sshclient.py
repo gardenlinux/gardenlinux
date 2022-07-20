@@ -58,10 +58,12 @@ class RemoteClient:
         self,
         host,
         sshconfig,
-        port="22"
+        port="22",
+        sudo=False
     ) -> None:
         self.host = host
         self.port = port
+        self.sudo = sudo
         self.client = None
         self.scp = None
         self.conn = None
@@ -249,6 +251,8 @@ class RemoteClient:
             self.client = self.__connect()
         if not quiet:
             logger.info(f"$ {command.rstrip()}")
+        if self.sudo:
+            command = 'sudo ' + command
 
         _, stdout, stderr = self.client.exec_command(command=command, timeout=timeout)
         exit_status = stdout.channel.recv_exit_status()
