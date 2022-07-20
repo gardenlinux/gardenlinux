@@ -115,7 +115,23 @@ These tests test Garden Linux on public cloud providers like Amazons AWS, Google
 
 Notes for AWS credentials:
 - credentials must be supplied by having them ready in `~/.aws/config` and `~/.aws/credentials`
+  - The `aws configure` command can be used to create these files.
 - `~/.aws` gets mounted into the container that executes the integration tests
+- While using MFA, a dedicated MFA session must be created.
+  - This can be achieved by executing the following command (requires login)
+    ```
+    aws sts get-session-token --serial-number <MFA Device ID> --token-code <Token>
+    ```
+  - The returned `AccessKeyID`, `SecretAccessKey` and `SessionToken` must be stored in the `~/.aws/credentials` file.
+  - It is useful to use a dedicated profile for the MFA session, which could look like this:
+    ```
+    [mfa]
+    aws_access_key_id = <Access Key ID>
+    aws_secret_access_key = <Secret Access Key>
+    aws_session_token = <Session Token>
+    region = <Region>
+    ```
+  - In order to let pytest use the correct profile, it must be assigned via the `AWS_PROFILE` environment variable during execution.
 
 Use the following configuration file:
 
