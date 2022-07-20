@@ -12,7 +12,7 @@ This document describes the process how Gardener reconfigures kernel parameters 
 
 Gardener will place control files to `/var/lib/gardener-gardenlinux/etc` to declare what should be set on the operating system.
 
-**Example:** Gardener needs to be able to switch the cgroup hierarchy from the old legacy approach (cgroup v1) to the new unified hierarchy (cgroup v2) - and back. To do so, it will place a the file `/var/lib/gardener-gardenlinux/cgroup` and write either `v1` or `v2` to it. Scripts in Garden Linux are then responsible for picking up these files and do whatever is needed to change the cgroup hierarchy of the system.
+**Example:** Gardener needs to be able to change the Linux Security Module (lsm) from _AppArmor_ to _SELinux_. To do so, it will place a the file `/var/lib/gardener-gardenlinux/lsm` and write either `AppArmor` or `SELinux` to it. Scripts in Garden Linux are then responsible for picking up these files and do whatever is needed to change the lsm of the system.
 
 ## The applier scripts
 
