@@ -101,7 +101,7 @@ def test_ls(client):
 
 
 def test_no_man(client):
-    (exit_code, _, error) = client.execute_command("man ls")
+    (exit_code, _, error) = client.execute_command("man ls", disable_sudo=True)
     assert exit_code == 127, '"man" should not be installed'
     assert "man: command not found" in error
 
@@ -294,7 +294,7 @@ def test_nvme_kernel_parameter(client, aws):
     assert output.rstrip() == "1", "Expected 'nvme_core.io_timeout=4294967295' kernel parameter"
 
 def test_random(client, non_metal):
-    (exit_code, output, error) = client.execute_command("time dd if=/dev/random of=/dev/null bs=8k count=1000 iflag=fullblock")
+    (exit_code, output, error) = client.execute_command("time dd if=/dev/random of=/dev/null bs=8k count=1000 iflag=fullblock", disable_sudo=True)
     """ Output should be like this:
 # time dd if=/dev/random of=/dev/null bs=8k count=1000 iflag=fullblock
 1000+0 records in
@@ -316,7 +316,7 @@ sys     0m0.042s
     duration = (int(m.group(1)) * 60) + int(m.group(2))
     assert duration == 0, "runtime of test expected to be below one second %s" % m.group(1)
 
-    (exit_code, output, error) = client.execute_command("time rngtest --blockcount=9000  < /dev/random")
+    (exit_code, output, error) = client.execute_command("time rngtest --blockcount=9000  < /dev/random", disable_sudo=True)
     """ Output should be like this:
 # time rngtest --blockcount=9000  < /dev/random
 rngtest 5
@@ -365,7 +365,7 @@ def test_startup_script(client, gcp):
     assert exit_code == 0, f"no {error=} expected. Startup script did not run"
 
 def test_aws_ena_driver(client, aws):
-    (exit_code, output, error) = client.execute_command("sudo /sbin/ethtool -i $(ip -j link show  | jq -r '.[] | if .ifname != \"lo\" and .ifname != \"docker0\" then .ifname else empty end') | grep \"^driver\" | awk '{print $2}'")
+    (exit_code, output, error) = client.execute_command("/sbin/ethtool -i $(ip -j link show  | jq -r '.[] | if .ifname != \"lo\" and .ifname != \"docker0\" then .ifname else empty end') | grep \"^driver\" | awk '{print $2}'")
     assert exit_code == 0, f"no {error=} expected"
     assert output.rstrip() == "ena", "Expected network interface to run with ena driver"
 

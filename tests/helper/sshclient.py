@@ -238,7 +238,13 @@ class RemoteClient:
             self.conn = self.__connect()
         self.scp.get(file)
 
-    def execute_command(self, command: str, timeout: int = 30, quiet: bool = False) -> tuple[int, str, str]:
+    def execute_command(
+        self,
+        command: str,
+        timeout: int = 30,
+        quiet: bool = False,
+        disable_sudo: bool = False
+    ) -> tuple[int, str, str]:
         """
         Execute commands on remote host
 
@@ -251,7 +257,7 @@ class RemoteClient:
             self.client = self.__connect()
         if not quiet:
             logger.info(f"$ {command.rstrip()}")
-        if self.sudo:
+        if self.sudo and not disable_sudo:
             command = 'sudo ' + command
 
         _, stdout, stderr = self.client.exec_command(command=command, timeout=timeout)
