@@ -4,8 +4,7 @@ set -Eeuo pipefail
 
 # Constants
 readonly CURR_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")"
-readonly TARGET_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-readonly TMP_DIR=${TMP_DIR:-/tmp}
+readonly TMP_DIR="${TMP_DIR:-/tmp}"
 QEMU_OPTS=( )
 
 
@@ -241,7 +240,7 @@ qemu_opt_ignition () {
             pxefile=$CURR_DIR/../examples/ipxe/start-vm-ignition.ipxe
         fi
 
-        [ -e "$TARGET_DIR/$mac.ipxe" ] || cp $pxefile $TARGET_DIR/$mac.ipxe
+        [ -e "$CURR_DIR/$mac.ipxe" ] || cp $pxefile $CURR_DIR/$mac.ipxe
 
         glbuilds=()
         glbuild=""
@@ -281,7 +280,7 @@ qemu_opt_ignition () {
         fi
 
         # modify the boot.ipxe to load the proper kernel and initramfs
-        $(bin_sed) -i "s/PATHGOESHERE//g;s/IPADDRESSGOESHERE/10.0.2.2/g" $TARGET_DIR/$mac.ipxe
+        $(bin_sed) -i "s/PATHGOESHERE//g;s/IPADDRESSGOESHERE/10.0.2.2/g" $CURR_DIR/$mac.ipxe
         QEMU_OPTS+=( -boot order=nc )
     fi
 }
@@ -339,7 +338,7 @@ qemu_opt_pxe () {
         fi
 
         if [ "$pxe_binary" ]; then
-            cp "$pxe_binary" "$TARGET_DIR/$mac.efi"
+            cp "$pxe_binary" "$CURR_DIR/$mac.efi"
             QEMU_OPTS+=( -boot order=nc )
         fi
 
@@ -462,7 +461,7 @@ qemu_opt_uefi () {
         [ -r $uefi_code ] || eusage "Missing uefi code at $uefi_code.\n Run: apt-get install ovmf"
         [ -r $uefi_vars ] || eusage "Missing uefi vars at $uefi_vars.\n Run: apt-get install ovmf"
 
-        [ -e $TARGET_DIR/$mac.vars ] || cp $uefi_vars $TARGET_DIR/$mac.vars
+        [ -e $CURR_DIR/$mac.vars ] || cp $uefi_vars $CURR_DIR/$mac.vars
 
         # Add support for amd64 architecture
         if [ "$arch" = amd64 ]; then
@@ -471,7 +470,7 @@ qemu_opt_uefi () {
 
         # Set UEFI code and vars files
 	    QEMU_OPTS+=("-drive if=pflash,format=raw,unit=0,file=${uefi_code},readonly=on"
-                    "-drive if=pflash,format=raw,unit=1,file=$TARGET_DIR/$mac.vars")
+                    "-drive if=pflash,format=raw,unit=1,file=$CURR_DIR/$mac.vars")
 
     fi
 }
@@ -568,7 +567,7 @@ qemu_opt_memory () {
 qemu_opt_monitor () {
     # Add Monitor
     if [ $monitor ]; then
-        [ -e $TMP_DIR/$mac.monitor ] && eusage "Error: Monitor to this MAC address already exists $TARGET_DIR/$mac.monitor"
+        [ -e $TMP_DIR/$mac.monitor ] && eusage "Error: Monitor to this MAC address already exists $CURR_DIR/$mac.monitor"
         QEMU_OPTS+=("-monitor unix:$TMP_DIR/$mac.monitor,server,nowait")
     fi
 
@@ -584,10 +583,10 @@ qemu_opt_monitor () {
 qemu_opt_remote_control () {
     # VNC
     if [ $vnc ]; then
-        ( while [ ! -e $TARGET_DIR/$mac.monitor ]; do sleep 0.1; done
-        echo "printf "WARNING: Change VNC password\n%s\n" MYPASSWORD | socat - UNIX-CONNECT:$TARGET_DIR/$mac.monitor &> /dev/null )&"
+        ( while [ ! -e $CURR_DIR/$mac.monitor ]; do sleep 0.1; done
+        echo "printf "WARNING: Change VNC password\n%s\n" MYPASSWORD | socat - UNIX-CONNECT:$CURR_DIR/$mac.monitor &> /dev/null )&"
         exit1
-        printf "WARNING: Change VNC password\n%s\n" MYPASSWORD | socat - UNIX-CONNECT:$TARGET_DIR/$mac.monitor &> /dev/null )&
+        printf "WARNING: Change VNC password\n%s\n" MYPASSWORD | socat - UNIX-CONNECT:$CURR_DIR/$mac.monitor &> /dev/null )&
         QEMU_OPTS+=("-vnc :${vnc_port},password")
     fi
 
@@ -625,9 +624,9 @@ qemu_opt_network () {
                 chmod 0640 /etc/qemu/bridge.conf
             fi
 
-            printf "%s\nallow %s\n" "$(cat /etc/qemu/bridge.conf)" $bridge > $TARGET_DIR/$mac.bridge
-            awk '!seen[$0]++' < $TARGET_DIR/$mac.bridge > /etc/qemu/bridge.conf
-            rm -f $TARGET_DIR/$mac.bridge
+            printf "%s\nallow %s\n" "$(cat /etc/qemu/bridge.conf)" $bridge > $CURR_DIR/$mac.bridge
+            awk '!seen[$0]++' < $CURR_DIR/$mac.bridge > /etc/qemu/bridge.conf
+            rm -f $CURR_DIR/$mac.bridge
         fi
     fi
 
@@ -642,9 +641,9 @@ qemu_opt_network () {
     if [ $bridge ]; then
         QEMU_OPTS+=("-netdev bridge,id=net0,br=${bridge}")
     elif [ $pxe ]; then
-        QEMU_OPTS+=("-netdev user,id=net0,hostfwd=tcp::$port-:$port_dest,hostname=garden,tftp=$TARGET_DIR,bootfile=$mac.ipxe")
+        QEMU_OPTS+=("-netdev user,id=net0,hostfwd=tcp::$port-:$port_dest,hostname=garden,tftp=$CURR_DIR,bootfile=$mac.ipxe")
     elif [ $pxe_binary ]; then
-        QEMU_OPTS+=("-netdev user,id=net0,hostfwd=tcp::$port-:$port_dest,hostname=garden,tftp=$TARGET_DIR,bootfile=$mac.efi")
+        QEMU_OPTS+=("-netdev user,id=net0,hostfwd=tcp::$port-:$port_dest,hostname=garden,tftp=$CURR_DIR,bootfile=$mac.efi")
     else
         QEMU_OPTS+=("-netdev user,id=net0,hostfwd=tcp::$port-:$port_dest,hostname=garden")
     fi
@@ -678,8 +677,8 @@ qemu_opt_misc () {
 qemu_status () {
     # Print status
     printf "Status:\n"
-    printf "  starting VM(UUID:%s) with MAC:%s in %s\n" $uuid $macfull $TARGET_DIR
-    [ $monitor ]    && printf "  monitor: %s.monitor\tconnect: socat - UNIX-CONNECT:%s\n" $mac $TARGET_DIR/$mac.monitor
+    printf "  starting VM(UUID:%s) with MAC:%s in %s\n" $uuid $macfull $CURR_DIR
+    [ $monitor ]    && printf "  monitor: %s.monitor\tconnect: socat - UNIX-CONNECT:%s\n" $mac $CURR_DIR/$mac.monitor
     [ $pxe ]        && printf "  pxeboot: %s.ipxe\n" $mac
     [ $pxe ]        && printf "  pxeboot: files served from %s\n" "$pxe"
     [ $bridge ]     && printf "  interface: %s  bridged\n" $bridge
