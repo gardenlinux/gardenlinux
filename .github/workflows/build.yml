@@ -25,7 +25,7 @@ jobs:
       matrix:
         architecture: [ amd64, arm64 ]
         target: [ kvm, metal, gcp, aws, azure, ali, openstack, vmware, pxe, firecracker, github_action_runner ]
-        modifier: [ "", "-dev" ]
+        modifier: [ "" ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
