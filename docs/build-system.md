@@ -37,7 +37,8 @@ The [../bin/garden-test](../bin/garden-test) starts unit for a given image.
 Unit tests are defined per feature. 
 
 
-## Build Artifacts
+## Local Build Artifacts
+
 Build artifacts are stored in the output folder (default `.build/`).
 Some artifacts will only be created by certain features.
 

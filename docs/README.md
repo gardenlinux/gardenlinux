@@ -1,13 +1,25 @@
+
 # Documentaion
 Everything that is not included in the main [../README.md](../README.md),
 should be described or referenced in the `docs/` folder. 
 
+- [Documentaion](#documentaion)
+  - [Build System](#build-system)
+  - [Feature System](#feature-system)
+  - [Test](#test)
+  - [Pipelines](#pipelines)
+  - [Offical Garden Linux Releases](#offical-garden-linux-releases)
+  - [Deploy](#deploy)
+  - [Software packages](#software-packages)
+  - [Linux Kernel](#linux-kernel)
+  - [Troubleshooting](#troubleshooting)
+  - [FAQ](#faq)
 
 ## Build System
 
 We recommend to first checkout the [Quick Start](../README.md#quick-start) Guide, it will run you through a Garden Linux build step by step. If you need to understand the build system, please refer to the [build-system.md](build-system.md)
 
-# Feature System
+## Feature System
 
 Garden Linux OS is composed of features. The Garden Linux Maintainers define and maintain the feature sets for the official releases.
 See [releases](#offical-garden-linux-releases) chapter for more information on official releases.
@@ -16,24 +28,24 @@ The easiest method to customize Garden Linux in a reproducible way, is to work w
 Either by creating a new feature and add it to your feature set of your target build image,
 or by modifying existing features to your needs. Documentation for the feature system can be found in [../features/README.md](../features/README.md).
 
-# Test
+## Test
 
 The `tests/` folder provides a self-contained test environment for Garden Linux.
 It is used by the Garden Linux build system for unit tests, integration and platform tests.
 Documentation can be found [here](../tests/README.md).
 
-# Pipelines
+## Pipelines
 
 :construction: Pipelines are under construction. :construction:	
 GitHub Pipeline (build & test) -> Upload to S3 -> Tekton pipeline (publish)
  
-## Github Pipeline
+### Github Pipeline
 Documentation TODO.
 
-## Tekton Pipeline
+### Tekton Pipeline
 Documented [here](../ci/README.md)
 
-# Offical Garden Linux Releases
+## Offical Garden Linux Releases
 The following cloud platforms are officially supported by Garden linux.
 
 | Name                      | Garden Linux Feature              |
@@ -49,8 +61,7 @@ The following cloud platforms are officially supported by Garden linux.
 
 The release cycle is currently reworked, documentation update will follow.
 
-
-# Deploy
+## Deploy
 
 Garden Linux is installable on desktop machines, all relevant cloud providers and most known virtualization solutions.
 Export your freshly build raw image or use the well known iso format, or deploy it via PXE Boot.
@@ -61,7 +72,7 @@ Export your freshly build raw image or use the well known iso format, or deploy 
 - [manual / non default](deploy/install-non-default.md)
 
 
-# Software packages
+## Software packages
 Packages are maintained in separate gitlab repositories. 
 Each package repository has a `.gitlab-ci.yaml` that defines the pipeline process for that package.
 The Gitlab pipeline definitions are maintained and documented [here](https://gitlab.com/gardenlinux/gardenlinux-package-build).
@@ -92,17 +103,17 @@ Our current maintained kernel versions can be found here:
 A config list is maintained per kernel project, which explicitly enables (and tests) `CONFIG_` flags. 
 The Debian kernel sources which Garden Linux bases on, can be found in [here](https://salsa.debian.org/kernel-team/linux)
 
-# Troubleshooting
+## Troubleshooting
 
 In the [troubleshooting.md](troubleshooting.md) document you will find solutions for common and uncommon issues related to your build environment. If you are facing runtime issues with Garden Linux please open a Github Issue.
 
-# FAQ
+## FAQ
 
-# How can I contribute?
+### How can I contribute?
 
 Please read [../CONTRIBUTING.md](../CONTRIBUTING.md) if you want to contribute to the Garden Linux project.
 
-## Why does Garden Linux not integrate the mainline stable?                                           
+### Why does Garden Linux not integrate the mainline stable?                                           
                                                                                                       
 Mainline stable introduces features to the new Linux kernel, which happens every ~2 months. Some of   
 those features affect the way e.g. container or network environment interact with the kernel and need 
@@ -111,11 +122,11 @@ after release and need to be reverted or other changes. In short: to avoid this 
 version becomes a longterm stable and try to integrate always the latest long term stable and the one 
 before to have a decent deprecation phase. Garden Linux takes advantage of these patches.             
                                                                                                       
-## A new long term kernel is released, when will it be integrated?                                    
+### A new long term kernel is released, when will it be integrated?                                    
                                                                                                       
 We are probably on it, but feel free to open a Github issue.
 
-## Why does Garden Linux use Debian kernel patches and configuration?                                 
+### Why does Garden Linux use Debian kernel patches and configuration?                                 
                                                                                                       
 Debian is free and open source software. There are good reasons                                       
 https://www.debian.org/intro/why_debian to use Debian. In the following we explain our reasons in the 
