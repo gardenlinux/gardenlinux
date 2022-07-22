@@ -6,7 +6,7 @@ should be described or referenced in the `docs/` folder.
 - [Documentaion](#documentaion)
   - [Build System](#build-system)
   - [Feature System](#feature-system)
-  - [Test](#test)
+  - [Test System](#test-system)
   - [Pipelines](#pipelines)
   - [Offical Garden Linux Releases](#offical-garden-linux-releases)
   - [Deploy](#deploy)
@@ -28,7 +28,7 @@ The easiest method to customize Garden Linux in a reproducible way, is to work w
 Either by creating a new feature and add it to your feature set of your target build image,
 or by modifying existing features to your needs. Documentation for the feature system can be found in [../features/README.md](../features/README.md).
 
-## Test
+## Test System
 
 The `tests/` folder provides a self-contained test environment for Garden Linux.
 It is used by the Garden Linux build system for unit tests, integration and platform tests.
