@@ -1,0 +1,7 @@
+qemu-system
+qemu-utils
+libvirt-daemon-system
+libvirt-clients
+ovmf
+qemu-efi-aarch64
+swtpm
