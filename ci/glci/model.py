@@ -278,13 +278,7 @@ class ReleaseIdentifier:
 
         note that the full key should be prefixed (e.g. with manifest_key_prefix)
         '''
-        flavour_name = '-'.join((
-            f.name for f in canonicalised_features(
-                platform=self.platform,
-                modifiers=self.modifiers,
-            )
-        ))
-        return f'{flavour_name}-{self.version}-{self.build_committish[:6]}'
+        return f'{self.platform}-{self.architecture.value}-{self.version}-{self.build_committish[:7]}'
 
     def canonical_release_manifest_key(self):
         return f'{self.manifest_key_prefix}/{self.canonical_release_manifest_key_suffix()}'

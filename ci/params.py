@@ -24,10 +24,6 @@ class AllParams:
         default='null',
         description='comma separated list of all tasks building gardenlinux',
     )
-    build_image = NamedParam(
-        name='build_image',
-        description='the container image for gardenlinux build (dynamically created)',
-    )
     cicd_cfg_name = NamedParam(
         name='cicd_cfg_name',
         default='default',
@@ -36,11 +32,6 @@ class AllParams:
         name='cfssl_dir',
         default='/workspace/cfssl',
         description='git wokring dir to clone and build cfssl',
-    )
-    skip_cfssl_build = NamedParam(
-        name='skip_cfssl_build',
-        default='False',
-        description='bypass cfssl build, use binaries from base-image',
     )
     cfssl_committish = NamedParam(
         name='cfssl_committish',
@@ -71,10 +62,6 @@ class AllParams:
         name='flavour_set_name',
         default='all',
         description='the name of the flavour set this task is a part of',
-    )
-    gardenlinux_build_deb_image = NamedParam(
-        name='gardenlinux_build_deb_image',
-        description='image to use for package build',
     )
     giturl = NamedParam(
         name='giturl',
@@ -159,10 +146,6 @@ class AllParams:
         name='status_dict_str',
         default='~',
         description='JSON string with status for all tasks',
-    )
-    step_image = NamedParam(
-        name='step_image',
-        description='the container image for CI/CD steps (dynamically created)',
     )
     suite = NamedParam(
         name='suite',
