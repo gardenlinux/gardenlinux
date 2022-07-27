@@ -18,14 +18,14 @@ jobs:
         with:
           ref: ${{ github.ref }}
       - if: ${{ matrix.target == 'gcp' }}
-        uses: .github/workflows/gcp_platform_tests.yml
+        uses: ./.github/workflows/gcp_platform_tests.yml
         with:
           image_name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
       - if: ${{ matrix.target == 'aws' }}
-        uses: .github/workflows/aws_platform_tests.yml
+        uses: ./.github/workflows/aws_platform_tests.yml
         with:
           image_name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
       - if: ${{ matrix.target == 'azure' }}
-        uses: .github/workflows/azure_platform_tests.yml
+        uses: ./.github/workflows/azure_platform_tests.yml
         with:
           image_name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
