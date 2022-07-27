@@ -42,9 +42,9 @@ container-integration:
 
 build-environment: container-test container-build
 
-all_prod: ali aws gcp azure metal openstack vmware kvm
+all_prod: ali aws gcp azure metal openstack vmware kvm metalv
 
-all_dev: ali-dev aws-dev gcp-dev azure-dev metal-dev openstack-dev vmware-dev kvm-dev
+all_dev: ali-dev aws-dev gcp-dev azure-dev metal-dev openstack-dev vmware-dev kvm-dev metalv-dev
 
 ALI_IMAGE_NAME=$(IMAGE_BASENAME)-ali-$(VERSION)
 ali: build-environment $(SECUREBOOT_CRT)
