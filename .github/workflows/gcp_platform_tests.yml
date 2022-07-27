@@ -19,6 +19,8 @@ jobs:
       id-token: write
     steps:
     - uses: actions/checkout@v2
+      with:
+          ref: ${{ github.ref }}
     - uses: actions/download-artifact@v2
       with:
         name: ${{ inputs.image_name }}

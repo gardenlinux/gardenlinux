@@ -15,9 +15,11 @@ jobs:
             target: gcp
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
       - if: ${{ matrix.target == 'gcp' }}
-        uses: ././gitlab/workflows/gcp_platform_test.yml
+        uses: ./.github/workflows/gcp_platform_tests.yml
       - if: ${{ matrix.target == 'aws' }}
-        uses: ././gitlab/workflows/aws_platform_test.yml
+        uses: ./.github/workflows/aws_platform_tests.yml
       - if: ${{ matrix.target == 'azure' }}
-        uses: ././gitlab/workflows/azure_platform_test.yml
+        uses: ./.github/workflows/azure_platform_tests.yml
