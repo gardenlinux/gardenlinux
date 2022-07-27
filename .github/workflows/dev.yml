@@ -6,5 +6,5 @@ jobs:
     with:
       version: today
   platform_test:
-    uses: ./.github/workflows/platform_tests/platform_test_evoker.yml
+    uses: ./.github/workflows/platform_test_evoker.yml
     needs: build

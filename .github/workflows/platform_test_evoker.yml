@@ -5,11 +5,11 @@ jobs:
   platform_test:
     name: platform test
     runs-on: ec2-gardenlinux-amd64
-    environment: {{ $matrix.target }}
     strategy:
       matrix:
         architecture: [ amd64, arm64 ]
         target: [ gcp ]
+        modifier: [ "" ]
         exclude:
           - architecture: arm64
             target: gcp
@@ -18,6 +18,8 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
-      - uses: ./github/workflows/platform_tests/${{ matrix.target }}_platform_tests.yml
+      - name: Run on GCP
+        if: matrix.target == 'gcp'
+        uses: ./github/workflows/platform_tests/gcp_platform_tests.yml
         with: 
           image_name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}

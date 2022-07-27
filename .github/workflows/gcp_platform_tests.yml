@@ -9,6 +9,7 @@ on:
 
 jobs:
   platform_test:
+    environment: gcp
     env:
       gcp_project: ${{ secrets.gcp_project }}
       gcp_region: ${{ secrets.gcp_region }}

@@ -23,8 +23,10 @@ jobs:
     runs-on: ec2-gardenlinux-${{ matrix.architecture }}
     strategy:
       matrix:
-        architecture: [ amd64, arm64 ]
-        target: [ kvm, metal, gcp, aws, azure, ali, openstack, vmware, pxe, firecracker, github_action_runner, metalv ]
+        #architecture: [ amd64, arm64 ]
+        architecture: [ amd64 ]
+        #target: [ kvm, metal, gcp, aws, azure, ali, openstack, vmware, pxe, firecracker, github_action_runner ]
+        target: [ gcp ]
         modifier: [ "" ]
     steps:
       - uses: actions/checkout@v2
