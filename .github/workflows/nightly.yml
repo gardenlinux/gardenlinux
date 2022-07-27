@@ -7,9 +7,12 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version: now
+  platform_test:
+    uses: ./.github/workflows/platform_tests/platform_test_evoker.yml
+    needs: build
   upload_to_s3:
     name: upload to S3
-    needs: build
+    needs: platform_test
     permissions:
       id-token: write
     uses: ./.github/workflows/upload_to_s3.yml
