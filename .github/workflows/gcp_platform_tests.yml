@@ -18,8 +18,8 @@ jobs:
       contents: read
       id-token: write
     steps:
-    - uses: 'actions/checkout@v2'
-    - uses: 'actions/download-artifact@v2'
+    - uses: actions/checkout@v2
+    - uses: actions/download-artifact@v2
       with:
         name: ${{ inputs.image_name }}
     - id: 'auth'

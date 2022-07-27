@@ -14,6 +14,7 @@ jobs:
           - architecture: arm64
             target: gcp
     steps:
+      - uses: actions/checkout@v2
       - if: ${{ matrix.target == 'gcp' }}
         uses: ./gitlab/workflows/gcp_platform_test.yml
       - if: ${{ matrix.target == 'aws' }}
