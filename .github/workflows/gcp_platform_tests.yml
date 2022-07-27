@@ -4,7 +4,6 @@ on:
     inputs:
       image_name:
         required: true
-
 jobs:
   gcp_platform_tests:
     environment: gcp
