@@ -5,6 +5,9 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version: today
-  platform_test:
-    uses: ./.github/workflows/platform_test_multiplexer.yml
+  platform_tests:
+    name: run platform tests
     needs: build
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/platform_test_multiplexer.yml

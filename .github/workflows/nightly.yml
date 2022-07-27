@@ -12,7 +12,7 @@ jobs:
     needs: build
   upload_to_s3:
     name: upload to S3
-    needs: platform_test
+    needs: platform_tests
     permissions:
       id-token: write
     uses: ./.github/workflows/upload_to_s3.yml

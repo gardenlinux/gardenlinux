@@ -6,7 +6,7 @@ on:
         required: true
 
 jobs:
-  platform_test:
+  gcp_platform_tests:
     environment: gcp
     env:
       gcp_project: ${{ secrets.GCP_PROJECT }}
@@ -20,7 +20,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-          ref: ${{ github.ref }}
+        ref: ${{ github.ref }}
     - uses: actions/download-artifact@v2
       with:
         name: ${{ inputs.image_name }}
