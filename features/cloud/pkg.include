@@ -1,10 +1,8 @@
 fdisk
-#[${arch}=amd64] grub-cloud-amd64
-#[${arch}=arm64] grub-cloud-arm64
 syslinux
 syslinux-common
 cloud-guest-utils
 libpam-cracklib
 rng-tools5
-https://repo.gardenlinux.io/gardenlinux/pool/main/l/linux-signed-5.10-${arch}/linux-image-5.10.123-garden-cloud-${arch}_5.10.123-0gardenlinux1_${arch}.deb
-https://repo.gardenlinux.io/gardenlinux/pool/main/l/linux-signed-5.10-${arch}/linux-image-5.10-cloud-${arch}_5.10.123-0gardenlinux1_${arch}.deb
+https://repo.gardenlinux.io/gardenlinux/pool/main/l/linux-signed-5.10-${arch}/linux-image-5.10.133-garden-cloud-${arch}_5.10.133-0gardenlinux1_${arch}.deb
+https://repo.gardenlinux.io/gardenlinux/pool/main/l/linux-signed-5.10-${arch}/linux-image-5.10-cloud-${arch}_5.10.133-0gardenlinux1_${arch}.deb
