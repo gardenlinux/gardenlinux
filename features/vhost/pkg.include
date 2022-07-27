@@ -1,7 +1,8 @@
-qemu-system
+[${arch}=amd64] qemu-system-x86
+[${arch}=arm64] qemu-system-arm
 qemu-utils
 libvirt-daemon-system
 libvirt-clients
-ovmf
-qemu-efi-aarch64
+[${arch}=amd64] ovmf
+[${arch}=arm64] qemu-efi-aarch64
 swtpm
