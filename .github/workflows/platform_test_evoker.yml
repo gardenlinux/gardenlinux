@@ -18,6 +18,11 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
+      - name: Run on azure
+        if: matrix.target == 'azure'
+        uses: ./github/workflows/platform_tests/aws_platform_tests.yml
+        with: 
+          image_name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
       - name: Run on GCP
         if: matrix.target == 'gcp'
         uses: ./github/workflows/platform_tests/gcp_platform_tests.yml
