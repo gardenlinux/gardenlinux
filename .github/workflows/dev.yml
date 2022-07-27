@@ -6,8 +6,32 @@ jobs:
     with:
       version: today
   platform_tests:
-    name: run platform tests
+    name: platform tests
     needs: build
     permissions:
       id-token: write
-    uses: ./.github/workflows/platform_test_multiplexer.yml
+    runs-on: ec2-gardenlinux-amd64
+    strategy:
+      matrix:
+        architecture: [ amd64, arm64 ]
+        target: [ gcp ]
+        modifier: [ "" ]
+        exclude:
+          - architecture: arm64
+            target: gcp
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+      - if: ${{ matrix.target == 'gcp' }}
+        uses: ./.github/workflows/gcp_platform_tests.yml
+        with:
+          image_name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
+      - if: ${{ matrix.target == 'aws' }}
+        uses: ./.github/workflows/aws_platform_tests.yml
+        with:
+          image_name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
+      - if: ${{ matrix.target == 'azure' }}
+        uses: ./.github/workflows/azure_platform_tests.yml
+        with:
+          image_name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
