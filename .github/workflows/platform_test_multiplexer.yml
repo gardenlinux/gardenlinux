@@ -1,0 +1,22 @@
+name: multiplex platform test
+on:
+  workflow_call:
+jobs:
+  multiplex_platform_test:
+    name: multiplex platform test
+    runs-on: ec2-gardenlinux-amd64
+    strategy:
+      matrix:
+        architecture: [ amd64, arm64 ]
+        target: [ gcp ]
+        modifier: [ "" ]
+        exclude:
+          - architecture: arm64
+            target: gcp
+    steps:
+      - if: ${{ matrix.target == 'gcp' }}
+        uses: ./gitlab/workflows/gcp_platform_test.yml
+      - if: ${{ matrix.target == 'aws' }}
+        uses: ./gitlab/workflows/aws_platform_test.yml
+      - if: ${{ matrix.target == 'azure' }}
+        uses: ./gitlab/workflows/azure_platform_test.yml
