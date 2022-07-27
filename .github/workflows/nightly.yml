@@ -8,7 +8,7 @@ jobs:
     with:
       version: now
   platform_test:
-    uses: ./.github/workflows/platform_tests/platform_test_evoker.yml
+    uses: ./.github/workflows/platform_test_evoker.yml
     needs: build
   upload_to_s3:
     name: upload to S3
