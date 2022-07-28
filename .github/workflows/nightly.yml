@@ -8,7 +8,7 @@ jobs:
     with:
       version: now
   platform_test:
-    uses: ./.github/workflows/platform_test_multiplexer.yml
+    uses: ./.github/workflows/tests.yml
     needs: build
   upload_to_s3:
     name: upload to S3

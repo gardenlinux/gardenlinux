@@ -6,30 +6,7 @@ jobs:
     with:
       version: today
   platform_tests:
-    name: platform tests
+    uses: ./.github/workflows/tests.yml
     needs: build
     permissions:
       id-token: write
-    runs-on: ec2-gardenlinux-amd64
-    strategy:
-      matrix:
-        architecture: [ amd64, arm64 ]
-        target: [ gcp ]
-        modifier: [ "" ]
-        exclude:
-          - architecture: arm64
-            target: gcp
-    steps:
-      - uses: actions/checkout@v3
-      - if: ${{ matrix.target == 'gcp' }}
-        uses: ./.github/workflows/gcp_platform_tests.yml
-        with:
-          image_name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
-      - if: ${{ matrix.target == 'aws' }}
-        uses: ./.github/workflows/aws_platform_tests.yml
-        with:
-          image_name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
-      - if: ${{ matrix.target == 'azure' }}
-        uses: ./.github/workflows/azure_platform_tests.yml
-        with:
-          image_name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
