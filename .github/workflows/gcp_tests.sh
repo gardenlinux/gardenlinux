@@ -1,4 +1,5 @@
 #!/bin/bash
+set -Eeuo pipefail
 
 # Name of Image to test
 image=$1

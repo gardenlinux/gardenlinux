@@ -1,5 +1,5 @@
 name: build garden linux container
-on: [ push, pull_request ]
+on: [ push ]
 env:
   IMAGE_NAME: gardenlinux/integration-test:today
 jobs:
