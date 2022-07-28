@@ -9,7 +9,7 @@ jobs:
     needs: build
     permissions:
       id-token: write
-      packages: read
+      packages: write
     uses: ./.github/workflows/gcp_tests.yml
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}

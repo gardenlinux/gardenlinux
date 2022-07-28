@@ -21,7 +21,8 @@ jobs:
       gcp_zone: ${{ secrets.gcp_zone }}
     runs-on: ec2-gardenlinux-${{ matrix.architecture }}
     permissions:
-      packages: read
+      id-token: write
+      packages: write
     strategy:
       matrix:
         architecture: [ amd64 ]
