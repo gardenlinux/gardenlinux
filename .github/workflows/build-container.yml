@@ -23,5 +23,4 @@ jobs:
           echo $IMAGE_ID
           sudo podman images
           sudo podman tag gardenlinux/integration-test:today $IMAGE_ID:today
-          sudo podman push $IMAGE_ID:$VERSION
-
+          sudo podman push $IMAGE_ID:today
