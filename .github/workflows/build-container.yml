@@ -1,0 +1,24 @@
+name: build garden linux container
+on: [ push, pull_request ]
+env:
+  image_name: gardenlinux/integration-test:today
+jobs:
+  integration_test_container:
+    name: make integration test container
+    runs-on: ec2-gardenlinux-amd64
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: login to ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: make integration test container
+        run: make --directory=container build-integration-test
+
+      - name: upload integration test container to ghcr.io
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$image_name
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          podman tag localhost/$IMAGE_NAME:today $IMAGE_ID:today
+          podman push $IMAGE_ID:$VERSION
+

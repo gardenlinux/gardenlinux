@@ -12,7 +12,7 @@ jobs:
         run: make --directory=container build-integration-test
 
       - name: save gardenlinux/integration-test
-        run: podman save -o integration_test_container.tar gardenlinux/integration-test
+        run: sudo podman save -o integration_test_container.tar gardenlinux/integration-test
 
       - uses: actions/upload-artifact@v2
         with:
