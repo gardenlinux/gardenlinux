@@ -20,6 +20,8 @@ jobs:
       gcp_region: ${{ secrets.gcp_region }}
       gcp_zone: ${{ secrets.gcp_zone }}
     runs-on: ec2-gardenlinux-${{ matrix.architecture }}
+    container: 
+      image: ghcr.io/gardenlinux/gardenlinux/integration-test:today
     permissions:
       id-token: write
       packages: write
@@ -41,11 +43,11 @@ jobs:
           workload_identity_provider: ${{ secrets.gcp_identity_provider }}
           service_account: ${{ secrets.gcp_service_account }}
       
-      - name: login to ghcr.io
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u $ --password-stdin
+            # - name: login to ghcr.io
+            #run: echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u $ --password-stdin
 
-      - name: pull container image
-        run: sudo podman pull ghcr.io/gardenlinux/gardenlinux/integration-test:today
+            # - name: pull container image
+            #  run: sudo podman pull ghcr.io/gardenlinux/gardenlinux/integration-test:today
 
       - name: start platform test for gcp
         run: .github/workflows/gcp_tests.sh "gcp${{ matrix.modifier }}-${{ matrix.architecture }}-*.tar.gz" 

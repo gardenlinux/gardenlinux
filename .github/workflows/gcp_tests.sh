@@ -20,9 +20,10 @@ EOF
 
 mkdir -p .build
 mv $image .build/
-
+ls
+# Created credentials file at "/opt/github_action_runner/_work/gardenlinux/gardenlinux/gha-creds-*.json
 echo "### Start Integration Tests for gcp"
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/config:/config $containerName /bin/bash -s <<EOF
+#sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build $containerName /bin/bash -s <<EOF
 pytest --iaas=gcp --configfile=$configFile
-EOF
+#EOF
 
