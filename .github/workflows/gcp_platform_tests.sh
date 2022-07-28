@@ -22,4 +22,8 @@ pwd
 ls
 cat $configFile
 
+cd tests/
+pipenv install
+pytest --iaas=gcp --configfile=$configFile
+
 echo "### DEBUG: success"
