@@ -1,5 +1,7 @@
 name: build garden linux container
-on: [ push ]
+on:
+  schedule:
+   - cron: '0 5 * * *'
 env:
   IMAGE_NAME: gardenlinux/integration-test:today
 jobs:
