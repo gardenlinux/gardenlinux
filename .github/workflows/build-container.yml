@@ -22,6 +22,6 @@ jobs:
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
           echo $IMAGE_ID
           sudo podman images
-          sudo podman tag localhost/$IMAGE_NAME:today $IMAGE_ID:today
+          sudo podman tag localhost/gardenlinux/integration-test:today $IMAGE_ID:today
           sudo podman push $IMAGE_ID:$VERSION
 
