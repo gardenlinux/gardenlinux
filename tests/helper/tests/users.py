@@ -1,7 +1,7 @@
 import helper.utils as utils
 
 
-def users(client):
+def users(client, additional_user = ""):
     # Get content from /etc/passwd
     (exit_code, output, error) = client.execute_command(
         "getent passwd", quiet=True)
@@ -19,7 +19,7 @@ def users(client):
             # except of 'dev' from dev feature or 'nobody' from nfs
             # https://github.com/gardenlinux/gardenlinux/issues/854
             if uid >= 1000:
-                assert user in ["dev", "nobody"], \
+                assert user in ["dev", "nobody", additional_user], \
                     f"Unexpected user account found in /etc/passwd: {user}"
 
             # Serviceaccounts should NOT have a valid shell
