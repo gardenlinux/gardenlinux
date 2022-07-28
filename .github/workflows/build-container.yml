@@ -9,8 +9,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: debug
+        run: |
+          pwd
+          echo $HOME
+
       - name: login to ghcr.io
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
 
       - name: make integration test container
         run: make --directory=container build-integration-test
