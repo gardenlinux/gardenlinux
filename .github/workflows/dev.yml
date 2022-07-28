@@ -5,11 +5,8 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version: today
-  prepare_tests:
-    uses: ./.github/workflows/prepare_tests.yml
-    needs: build
   gcp_tests:
-    needs: prepare_tests
+    needs: build
     permissions:
       id-token: write
     uses: ./.github/workflows/gcp_tests.yml
