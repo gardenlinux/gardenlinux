@@ -6,18 +6,18 @@ on:
         required: true
 jobs:
   gcp_platform_tests:
+    name: gcp platform tests
+    runs-on: ec2-gardenlinux-amd64
     environment: gcp
     env:
       gcp_project: ${{ secrets.GCP_PROJECT }}
       gcp_region: ${{ secrets.GCP_REGION }}
       gcp_zone: ${{ secrets.GCP_ZONE }}
-    name: gcp platform tests
-    runs-on: ec2-gardenlinux-amd64
     permissions:
       contents: read
       id-token: write
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         ref: ${{ github.ref }}
     - uses: actions/download-artifact@v2
@@ -25,7 +25,7 @@ jobs:
         name: ${{ inputs.image_name }}
     - id: 'auth'
       name: 'Authenticate to Google Cloud'
-      uses: 'google-github-actions/auth@v0'
+      uses: google-github-actions/auth@v0
       with:
         workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER}}
         service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
