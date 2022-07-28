@@ -18,4 +18,8 @@ EOF
 
 # TODO: call test with $configFile
 
+pwd
+ls
+cat $configFile
+
 echo "### DEBUG: success"
