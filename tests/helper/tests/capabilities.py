@@ -1,5 +1,6 @@
 from helper.utils import read_test_config
 import string
+import re
 
 def capabilities(client, testconfig):
     """ Test if only the defined capabilities are set"""
@@ -17,10 +18,14 @@ def capabilities(client, testconfig):
     cap_notfound = []
     for line in output.splitlines():
         line.strip(string.whitespace)
-        if line not in capabilities:
-            cap_notfound.append(line)
-        if line in capabilities:
+        for cap in capabilities:
+            match = re.fullmatch(cap, line)
+            if match:
+                break
+        if match:
             cap_found.append(line)
+        else:
+            cap_notfound.append(line)
 
     assert len(cap_found) == len(capabilities), ("Found capabilities " +
         "do not match expected capabilities. Found: " +
