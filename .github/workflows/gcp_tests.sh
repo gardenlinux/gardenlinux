@@ -3,9 +3,10 @@ set -Eeuo pipefail
 
 # Name of Image to test
 image=$1
-configFile=$(mktemp)
 
-# generate yaml
+
+configFile=$(mktemp)
+containerName="ghcr.io/gardenlinux/gardenlinux/integration-test:today"
 
 cat << EOF > "$configFile"
 gcp:
@@ -20,8 +21,7 @@ EOF
 mv $image .build/
 
 echo "### Start Integration Tests for gcp"
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/config:/config  gardenlinux/integration-test:`bin/garden-version` /bin/bash -s <<EOF
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/config:/config $containerName /bin/bash -s <<EOF
 pytest --iaas=gcp --configfile=$configFile
 EOF
 
-echo "### DEBUG: success"
