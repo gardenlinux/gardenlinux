@@ -17,8 +17,11 @@ jobs:
 
       - name: upload integration test container to ghcr.io
         run: |
+          echo $IMAGE_NAME
           IMAGE_ID="ghcr.io/gardenlinux/gardenlinux/integration-test"
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          echo $IMAGE_ID
+          sudo podman images
           sudo podman tag localhost/$IMAGE_NAME:today $IMAGE_ID:today
           sudo podman push $IMAGE_ID:$VERSION
 
