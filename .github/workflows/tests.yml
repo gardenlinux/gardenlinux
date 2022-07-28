@@ -4,6 +4,7 @@ on:
 jobs:
   tests:
     name: test
+    environment: gcp
     runs-on: ec2-gardenlinux-amd64
     strategy:
       matrix:
