@@ -1,0 +1,33 @@
+name: gcp tests
+on:
+  workflow_call:
+jobs:
+  gcp_tests:
+    name: gcp tests
+    environment: gcp
+    env:
+      gcp_project: ${{ secrets.GCP_PROJECT }}
+      gcp_region: ${{ secrets.GCP_REGION }}
+      gcp_zone: ${{ secrets.GCP_ZONE }}
+    runs-on: ec2-gardenlinux-${{ matrix.architecture }}
+    strategy:
+      matrix:
+        architecture: [ amd64 ]
+        modifier: [ "" ]
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: build-${{ matrix.architecture }}-gcp${{ matrix.modifier }}
+
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: google-github-actions/auth@v0
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER}}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      
+      - name: start platform test for gcp
+        run: .github/workflows/gcp_platform_tests.sh "build-${{ matrix.architecture }}-gcp${{ matrix.modifier }}" 
+

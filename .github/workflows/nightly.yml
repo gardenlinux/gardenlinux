@@ -7,9 +7,6 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version: now
-  platform_test:
-    uses: ./.github/workflows/tests.yml
-    needs: build
   upload_to_s3:
     name: upload to S3
     needs: platform_tests
