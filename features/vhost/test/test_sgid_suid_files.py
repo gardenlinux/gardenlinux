@@ -25,7 +25,9 @@ import pytest
                  "/usr/bin/chfn,root,root",
                  "/usr/bin/gpasswd,root,root",
                  "/usr/bin/sudo,root,root",
-                 "/usr/bin/passwd,root,root"
+                 "/usr/bin/passwd,root,root",
+                 "/usr/libexec/polkit-agent-helper-1,root,root",
+                 "/usr/bin/pkexec,root,root"
                  ]
         )
     ]
@@ -34,5 +36,5 @@ import pytest
 
 # Run the test unit to perform the
 # final tests by the given artifact.
-def test_sgid_suid_files(client, test_type, whitelist_files, non_vhost):
+def test_sgid_suid_files(client, test_type, whitelist_files):
     sgid_suid_files(client, test_type, whitelist_files)
