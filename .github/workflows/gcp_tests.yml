@@ -20,16 +20,25 @@ jobs:
       gcp_region: ${{ secrets.gcp_region }}
       gcp_zone: ${{ secrets.gcp_zone }}
     runs-on: ec2-gardenlinux-${{ matrix.architecture }}
+    container:
+
     strategy:
       matrix:
         architecture: [ amd64 ]
         modifier: [ "" ]
     steps:
       - uses: actions/checkout@v3
-
+      
       - uses: actions/download-artifact@v2
         with:
           name: build-${{ matrix.architecture }}-gcp${{ matrix.modifier }}
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: test_container
+
+      - name: load integration test container
+        run: podman load -i integration_test_container.tar
 
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
@@ -39,5 +48,5 @@ jobs:
           service_account: ${{ secrets.gcp_service_account }}
       
       - name: start platform test for gcp
-        run: .github/workflows/gcp_platform_tests.sh "build-${{ matrix.architecture }}-gcp${{ matrix.modifier }}" 
+        run: .github/workflows/gcp_tests.sh "build-${{ matrix.architecture }}-gcp${{ matrix.modifier }}" 
 

@@ -16,14 +16,11 @@ gcp:
         user: gardenlinux
 EOF
 
-# TODO: call test with $configFile
+mv $image .build/
 
-pwd
-ls
-cat $configFile
-
-cd tests/
-pipenv install
+echo "### Start Integration Tests for gcp"
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/config:/config  gardenlinux/integration-test:`bin/garden-version` /bin/bash -s <<EOF
 pytest --iaas=gcp --configfile=$configFile
+EOF
 
 echo "### DEBUG: success"

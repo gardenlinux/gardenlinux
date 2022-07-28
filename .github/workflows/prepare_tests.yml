@@ -1,0 +1,20 @@
+name: prepare tests
+on:
+  workflow_call:
+jobs:
+  make_test_container:
+    name: make integration test container
+    runs-on: ec2-gardenlinux-amd64
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: make integration test container
+        run: make --directory=container build-integration-test
+
+      - name: save gardenlinux/integration-test
+        run: podman save -o integration_test_container.tar gardenlinux/integration-test
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: test_container
+          path: integration_test_container.tar
