@@ -41,5 +41,5 @@ jobs:
           service_account: ${{ secrets.gcp_service_account }}
       
       - name: start platform test for gcp
-        run: .github/workflows/gcp_tests.sh "build-${{ matrix.architecture }}-gcp${{ matrix.modifier }}" 
+        run: .github/workflows/gcp_tests.sh "gcp${{ matrix.modifier }}-${{ matrix.architecture }}-*.tar.gz" 
 
