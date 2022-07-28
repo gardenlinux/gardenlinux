@@ -18,6 +18,7 @@ gcp:
         user: gardenlinux
 EOF
 
+mkdir -p .build
 mv $image .build/
 
 echo "### Start Integration Tests for gcp"
