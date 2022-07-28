@@ -20,8 +20,8 @@ jobs:
       gcp_region: ${{ secrets.gcp_region }}
       gcp_zone: ${{ secrets.gcp_zone }}
     runs-on: ec2-gardenlinux-${{ matrix.architecture }}
-    container:
-
+    permissions:
+      packages: read
     strategy:
       matrix:
         architecture: [ amd64 ]
