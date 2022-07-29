@@ -4,7 +4,6 @@
 # Name of Image to test
 image=$1
 
-
 configFile=$(mktemp)
 containerName="ghcr.io/gardenlinux/gardenlinux/integration-test:today"
 
@@ -13,14 +12,15 @@ gcp:
     project: ${gcp_project}
     region: ${gcp_region}
     zone: ${gcp_zone}
-    image: ${image}
+    image: file:///gardenlinux/.build/${image}
     ssh:
         user: gardenlinux
 EOF
 
 mkdir -p .build
 mv $image .build/
-ls
+
+
 # Created credentials file at "/opt/github_action_runner/_work/gardenlinux/gardenlinux/gha-creds-*.json
 
 credFileName=$(find "`pwd`" -maxdepth 1 -type f -name "gha-creds-*.json" | xargs basename)
@@ -33,8 +33,8 @@ mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp
 cd /gardenlinux
 ls
-gcloud auth login --cred-file="/gardenlinux/$credFileName" || exit 1
+gcloud auth application-default login --cred-file="/gardenlinux/$credFileName" || exit 1
 gcloud config set project ${gcp_project}
-pytest --iaas=gcp --configfile=$configFile || exit 1
+pytest --iaas=gcp --configfile=/gardenlinux/$configFile || exit 1
 EOF
 
