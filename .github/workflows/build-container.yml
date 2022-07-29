@@ -1,7 +1,6 @@
 name: build garden linux container
 on:
-  schedule:
-   - cron: '0 5 * * *'
+  workflow_call:
 env:
   IMAGE_NAME: gardenlinux/integration-test:today
 jobs:
