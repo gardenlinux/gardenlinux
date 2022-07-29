@@ -1,12 +1,12 @@
 name: dev
 on: [ push, pull_request ]
 jobs:
-  build:
-    uses: ./.github/workflows/build.yml
-    with:
-      version: today
+  #build:
+    #   uses: ./.github/workflows/build.yml
+      # with:
+      #      version: today
   gcp_tests:
-    needs: build
+#    needs: build
     permissions:
       id-token: write
       packages: write

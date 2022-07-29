@@ -30,9 +30,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      - uses: actions/download-artifact@v2
-        with:
-          name: build-${{ matrix.architecture }}-gcp${{ matrix.modifier }}
+        #      - uses: actions/download-artifact@v2
+        #  with:
+        #   name: build-${{ matrix.architecture }}-gcp${{ matrix.modifier }}
 
       - id: 'auth'
         name: 'Authenticate to Google Cloud'

@@ -28,9 +28,12 @@ credFileName=$(find "`pwd`" -maxdepth 1 -type f -name "gha-creds-*.json" | xargs
 
 echo "### Start Integration Tests for gcp"
 sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build $containerName /bin/bash -s <<EOF
+ls
 mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp
-gcloud auth login --cred-file="$(pwd)/$credFileName" || exit 1
+cd /gardenlinux
+ls
+gcloud auth login --cred-file="/gardenlinux/$credFileName" || exit 1
 pytest --iaas=gcp --configfile=$configFile || exit 1
 EOF
 
