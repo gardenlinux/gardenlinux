@@ -34,6 +34,7 @@ TMPDIR=/gardenlinux/tmp
 cd /gardenlinux
 ls
 gcloud auth login --cred-file="/gardenlinux/$credFileName" || exit 1
+gcloud config set project ${gcp_project}
 pytest --iaas=gcp --configfile=$configFile || exit 1
 EOF
 
