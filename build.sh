@@ -132,9 +132,10 @@ if [ -n "$cert" ]; then
 fi
 
 if [ -z "$(git status --porcelain)" ]; then
+	commitid_long="$(git rev-parse HEAD)"
 	commitid="$(git rev-parse --short HEAD)"
 	echo "clean working tree, using $commitid as commit id"
-	dockerArgs+=" -e commitid=$commitid"
+	dockerArgs+=" -e commitid=$commitid -e commitid_long=$commitid_long"
 else
 	echo 'modified working tree, using "local" instead of commit id'
 fi
