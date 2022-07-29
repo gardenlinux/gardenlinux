@@ -9,7 +9,7 @@ jobs:
   build_container:
     uses: ./.github/workflows/build-container.yml
   gcp_tests:
-    needs: build_container
+    needs: [ build, build_container ]
     permissions:
       id-token: write
       packages: write
