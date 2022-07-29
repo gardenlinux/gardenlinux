@@ -1,6 +1,8 @@
 name: nightly
-on: [ push ]
-    #    - cron: '0 6 * * *'
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
 jobs:
   build:
     uses: ./.github/workflows/build.yml

@@ -1,7 +1,7 @@
 # Workflows
 
 ## Dev
-Runs on `push` and `pull_request` (enabled for branches created by Garden Linux Devs)
+Runs on `push` and `pull_request` (enabled for branches created by Garden Linux Developer)
 1. Build Garden Linux Images
 
 See [dev.yml](dev.yml) for implementation details.
@@ -15,7 +15,7 @@ Runs every day (enabled only for main branch):
 See [nightly.yml](nightly.yml) for implementation details. 
 
 ## Beta Release
-Runs weekly on main branch (
+Runs weekly on main branch
 1. Builds Garden Linux images
 2. Build integration test container
 3. Runs platform tests for each supported platform 
