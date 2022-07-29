@@ -1,0 +1,43 @@
+name: tests
+on:
+  workflow_call:
+    secrets:
+      gcp_identity_provider:
+        required: true
+      gcp_service_account:
+        required: true
+      gcp_project:
+        required: true
+      gcp_region:
+        required: true
+      gcp_zone:
+        required: true
+jobs:
+  platform_tests:
+    name: platform test
+    env:
+      gcp_project: ${{ secrets.gcp_project }}
+      gcp_region: ${{ secrets.gcp_region }}
+      gcp_zone: ${{ secrets.gcp_zone }}
+    runs-on: ec2-gardenlinux-${{ matrix.architecture }}
+    permissions:
+      id-token: write
+      packages: write
+    strategy:
+      matrix:
+        target: [ gcp ]
+        architecture: [ amd64 ]
+        modifier: [ "" ]
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: login to ghcr.io
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u $ --password-stdin
+
+    - name: pull container image
+      run: sudo podman pull ghcr.io/gardenlinux/gardenlinux/integration-test:today
+
+    - name: start platform test for ${{ matrix.target }}
+      run: .github/workflows/${{ matrix.target }}_tests.sh "${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.tar.gz
+
+

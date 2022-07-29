@@ -8,12 +8,12 @@ jobs:
       version: now
   build_container:
     uses: ./.github/workflows/build-container.yml
-  gcp_tests:
+  tests:
     needs: [ build, build_container ]
     permissions:
       id-token: write
       packages: write
-    uses: ./.github/workflows/gcp_tests.yml
+    uses: ./.github/workflows/tests.yml
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -22,8 +22,7 @@ jobs:
       gcp_zone: ${{ secrets.GCP_ZONE }}
   upload_to_s3:
     name: upload to S3
-    # last platform tests in chain of jobs above
-    needs: gcp_tests
+    needs: tests
     permissions:
       id-token: write
     uses: ./.github/workflows/upload_to_s3.yml
