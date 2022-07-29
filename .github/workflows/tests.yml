@@ -38,6 +38,4 @@ jobs:
       run: sudo podman pull ghcr.io/gardenlinux/gardenlinux/integration-test:today
 
     - name: start platform test for ${{ matrix.target }}
-      run: .github/workflows/${{ matrix.target }}_tests.sh "${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.tar.gz
-
-
+      run: .github/workflows/${{ matrix.target }}_tests.sh "${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.tar.gz"
