@@ -22,8 +22,15 @@ mkdir -p .build
 mv $image .build/
 ls
 # Created credentials file at "/opt/github_action_runner/_work/gardenlinux/gardenlinux/gha-creds-*.json
+
+credFileName=$(find "`pwd`" -maxdepth 1 -type f -name "gha-creds-*.json" | xargs basename)
+
+
 echo "### Start Integration Tests for gcp"
 sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build $containerName /bin/bash -s <<EOF
-pytest --iaas=gcp --configfile=$configFile
+mkdir /gardenlinux/tmp
+TMPDIR=/gardenlinux/tmp
+gcloud auth login --cred-file="$(pwd)/$credFileName" || exit 1
+pytest --iaas=gcp --configfile=$configFile || exit 1
 EOF
 
