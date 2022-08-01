@@ -14,6 +14,8 @@
 /cert/*.csr
 /cert/*.full
 /cert/*.chain
+/cert/secureboot.*
+/cert/GUID.txt
 !/cert/gardenlinux.kernel.sign.crt
 !/cert/gardenlinux.sign.pub
 /features/metal/file.include/lib/firmware/
@@ -25,3 +27,4 @@ __pycache__
 /test_results.json
 /tests/*.log
 /tests/*.xml
+/bin/garden-feat
