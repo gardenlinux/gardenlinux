@@ -37,6 +37,11 @@ jobs:
     - name: pull container image
       run: sudo podman pull ghcr.io/gardenlinux/gardenlinux/integration-test:today
 
+    - uses: actions/download-artifact@v2
+      with:
+        name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
+        path: /tmp/gardenlinux-build-artifacts
+
     - if: ${{ matrix.target }} == 'gcp'
       id: 'auth'
       name: 'Authenticate to Google Cloud'
