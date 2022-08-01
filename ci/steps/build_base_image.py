@@ -16,11 +16,11 @@ def build_base_image(
     for docker_dir in docker_dirs:
         dockerfile_relpath = os.path.join(repo_dir, "docker", docker_dir, "Dockerfile")
         print(f'---Building now {dockerfile_relpath}')
-        build_base_image = 'debian:testing-slim'
+        build_base_image = 'debian:stable-slim'
         if docker_dir == 'build-deb':
             build_base_image = f'{oci_path}/gardenlinux-build:{version_label}'
         else:
-            build_base_image = 'debian:testing-slim'
+            build_base_image = 'debian:stable-slim'
         context_dir = os.path.join(repo_dir, "docker", docker_dir)
         print(f'---Using base image {build_base_image}')
         builder.build_and_push_kaniko(
