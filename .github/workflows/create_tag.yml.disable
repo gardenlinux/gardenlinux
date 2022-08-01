@@ -1,4 +1,4 @@
-name: create tag
+name: create git tag tag
 on:
   workflow_call:
     inputs:
