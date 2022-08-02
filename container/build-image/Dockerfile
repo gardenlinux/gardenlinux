@@ -1,18 +1,4 @@
 ARG build_base_image=gardenlinux/slim
-FROM	golang:latest as golang
-COPY	garden-feat.go /go/src
-RUN	set -x; retry_cntr=10; while [ "$retry_cntr" -gt 0 ]; do \
-		go install golang.org/x/lint/golint@latest \
-		&& cd /go/src \
-		&& golint garden-feat.go \
-		&& go mod init garden-feat.go \
-		&& go mod tidy -go=1.16 \
-		&& go mod tidy -go=1.17 \
-		&& go build garden-feat.go \
-		&& break \
-		|| retry_cntr="$((retry_cntr-1))"; \
-	done
-
 FROM 	$build_base_image
 ARG	DEBIAN_FRONTEND=noninteractive
 
@@ -29,6 +15,7 @@ RUN apt-get update \
 		libcap2-bin \
 		python3 \
 		python3-mako \
+		python3-yaml \
 		qemu-user-static \
 		qemu-utils \
 		cpio \
@@ -55,8 +42,5 @@ RUN echo "deb https://deb.debian.org/debian unstable main" >> /etc/apt/sources.l
 RUN rm -rf /var/lib/apt/lists/*
 
 ENV	PATH=${PATH}:/opt/gardenlinux/bin
-#COPY	--from=gcr.io/kaniko-project/executor:latest /kaniko/executor /usr/local/bin/executor
-COPY	--from=golang /go/src/garden-feat /usr/local/bin/garden-feat
 RUN	echo "progress=bar:force:noscroll\nverbose=off" >> /etc/wgetrc
-
 WORKDIR	/tmp

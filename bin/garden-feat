@@ -1,0 +1,224 @@
+#!/usr/bin/env python3
+
+import sys
+import argparse
+import yaml
+import json
+import textwrap
+
+def main():
+    """ Validate and obtain Garden Linux features """
+    args = get_args()
+
+    feature_dir = args.featureDir
+    features = args.features
+    features_ignore = args.ignore
+    features_matrix = {}
+
+    # Get all features incuding their include / exclude features within a recursion
+    features_matrix  = get_all_features(feature_dir, features, features_ignore, features_matrix)
+
+    # Switch to defined action
+    if args.type == 'cname':
+        # cname is a shortened name alias an only returns
+        # a single element of platform and flags
+        _platform = [k for k,v in features_matrix['include'].items() if v['type'] in 'platform']
+        _flag = [k for k,v in features_matrix['include'].items() if v['type'] in '_flag']
+        filtered_output = []
+        filtered_output.append(_platform[0])
+        filtered_output.append(_flag[0].lstrip('_'))
+        # This affects the artifacts filename
+        print('_'.join(str(s) for s in filtered_output))
+
+    elif args.type == 'features':
+        filter = ['platform', 'element', 'flag']
+        filtered_output = [k for k,v in features_matrix['include'].items() if v['type'] in filter]
+        print(','.join(str(s) for s in filtered_output))
+
+    elif args.type == 'platforms':
+        filter = ['platform']
+        filtered_output = [k for k,v in features_matrix['include'].items() if v['type'] in filter]
+        # Only one platform may be given
+        if len(filtered_output) > 1:
+            print(f'Error: Only a single platform is supported. Given: {filtered_output}')
+            sys.exit(1)
+        print(','.join(str(s) for s in filtered_output))
+
+    elif args.type == 'flags':
+        filter = ['flag']
+        filtered_output = [k for k,v in features_matrix['include'].items() if v['type'] in filter]
+        print(','.join(str(s) for s in filtered_output))
+
+    elif args.type == 'elements':
+        filter = ['element']
+        filtered_output = [k for k,v in features_matrix['include'].items() if v['type'] in filter]
+        print(','.join(str(s) for s in filtered_output))
+
+    elif args.type == 'ignore':
+        filtered_output = [k for k,v in features_matrix['ignore'].items()]
+        if len(filtered_output) == 0 or filtered_output[0] == '':
+            print('garden-feat: warning: No feature is ignored.')
+        else:
+            print(','.join(str(s) for s in filtered_output))
+
+    elif args.type == 'params':
+        get_feature_params(features_matrix)
+
+
+def get_args():
+    """ Get external cli args """
+
+    # Reformat Argparse formatter_class
+    class argparse_raw_formater(argparse.HelpFormatter):
+        def _fill_text(self, text, width, indent):
+            return "\n".join([textwrap.fill(line, width) for line in textwrap.indent(textwrap.dedent(text), indent).splitlines()])
+
+    descripton = f'''
+        garden-feat: Managing features for Garden Linux.
+
+        positional arguments description:
+          cname:                Effective minimum of features equivalent to specified features (ordered)
+          features:             Effective maximum of all features (each feature used, no duplicates, ordered)
+          platform:             Platforms in the featureset
+          flags:                Flags in the featureset
+          elements:             All elements of the featureset (including platform because of possible execution order)
+          ignore:               Ignored elements (no duplicates)
+          params:               Debugging output
+        '''
+
+    # Load parser with custom formatter
+    parser = argparse.ArgumentParser(description=descripton, formatter_class=argparse_raw_formater)
+
+    # Argparse help descriptions
+    help_feature_dir="Directory of GardenLinux features"
+    help_features="List of feaures to ignore (comma-separated)"
+    help_ignore="List of feaures (comma-separated)"
+
+    # Impositional arg(s)
+    parser.add_argument('--featureDir', type=str, default="../features", help=help_feature_dir)
+    parser.add_argument('--features', type=str, required=True, help=help_features)
+    parser.add_argument('--ignore', type=str, default=",", help=help_ignore)
+
+    # Positional arg(s)
+    args_type_allowed = [
+        'cname',
+        'features',
+        'platforms',
+        'flags',
+        'elements',
+        'params',
+        'ignore'
+    ]
+
+    parser.add_argument("type", nargs="?", choices=args_type_allowed, default="cname")
+    args = parser.parse_args()
+    return(args)
+
+
+def conv_features_list(features):
+    """ Convert comma seperated list to Python list """
+    if type(features) != 'list':
+        list_features = features.split(",")
+        return list_features
+
+
+def get_yaml_content(fname):
+    """ Read YAML files and get content """
+    try:
+        with open(fname) as f:
+            content = yaml.load(f, Loader=yaml.FullLoader)
+            return content
+    except FileNotFoundError:
+        # Avoid creating an unexpected artifact with missing
+        # features
+        print(f'garden-feat: error: Could not find feature: {fname}')
+        sys.exit(1)
+
+
+def get_all_features(feature_dir, features, features_ignore, features_matrix):
+    """ Get all features including their include and exclude features """
+    # Convert feature list to Python list
+    features_include = conv_features_list(features)
+    features_ignore = conv_features_list(features_ignore)
+    features_matrix = {}
+    features_matrix['include'] = {}
+    features_matrix['exclude'] = {}
+    features_matrix['ignore'] = {}
+
+    # Run recursion to fetch all features and their include features
+    traverse_features_tree(feature_dir, features_matrix, features_ignore, features_include)
+
+    # Validate for features that are in- & excluded at the same time
+    check_excluded_features(features_matrix, features_ignore)
+
+    # Add ignored features to features_matrix to have a complete dict
+    # to work on later
+    features_matrix = add_ignored_featured(features_matrix, features_ignore)
+    return features_matrix
+
+
+def traverse_features_tree(feature_dir, features_matrix, ignored_features, features):
+    """ Traverse the complete feature tree based on a set of included features. """
+    for feature in features:
+        # Skip ignored features, we do not need
+        # to traverse them.
+        if feature in ignored_features:
+            continue
+
+        # Proceed with given feature (yaml) file
+        fname = f"{feature_dir}/{feature}/info.yaml"
+        yaml_content =  get_yaml_content(fname)
+
+        # Fetch features for feature matrix
+        features_matrix['include'][feature] = yaml_content
+
+        # Check if feature has additional feature inlcudes
+        sub_features = yaml_content.get('features', None)
+        included_sub_features = []
+        excluded_sub_features = []
+
+        if sub_features:
+            included_sub_features = sub_features.get('include', [])
+            excluded_sub_features = sub_features.get('exclude', [])
+
+        for excluded_feature in excluded_sub_features:
+            fname = f"{feature_dir}/{excluded_feature}/info.yaml"
+            yaml_content =  get_yaml_content(fname)
+            features_matrix['exclude'][excluded_feature] = yaml_content
+
+        # Run recursion
+        traverse_features_tree(feature_dir, features_matrix, ignored_features, included_sub_features)
+
+
+def check_excluded_features(features_matrix, features_ignore):
+    """ Check if a feature is included and excluded at the same time """
+    # Now check, if the feature tree excluded some features that usually
+    # should have been included. If so, this is an error.
+    for excluded_feature in features_matrix['exclude'].keys():
+        if excluded_feature in features_matrix['include'].keys():
+            print(f"garden-feat: error: {excluded_feature} has been excluded by another feature.")
+            sys.exit(1)
+
+
+def add_ignored_featured(features_matrix, features_ignore):
+    """ Set ignored features in features_matrix to have a complete dict """
+    for ignored_feature in features_ignore:
+        features_matrix['ignore'][ignored_feature] = ""
+    return features_matrix
+
+
+def get_feature_params(features_matrix):
+    """ Get params/metadata from features """
+    filter = ['description', 'type', 'features']
+    feature_params = {}
+
+    # Strip out all uneeded keys by filter
+    for k, v in features_matrix.items():
+        for a, b in v.items():
+            if a not in filter and a != '':
+                feature_params[a]=b
+    print(json.dumps(feature_params, indent=4, sort_keys=True))
+
+
+if __name__ == "__main__":
+    main()

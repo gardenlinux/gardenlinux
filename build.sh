@@ -114,8 +114,6 @@ securityArgs=(
 dockerinfo="$(${gardenlinux_build_cre} info)"       || eusage "${gardenlinux_build_cre} not working, check permissions or work with bin/garden-build"
 grep -q apparmor <<< $dockerinfo  && securityArgs+=( --security-opt apparmor=unconfined )
 
-make --directory=${thisDir}/bin
-
 # external variable BUILD_IMAGE forces a different buildimage name
 buildImage=${BUILD_IMAGE:-"gardenlinux/build-image:$version"}
 [ $build ] && make --directory=${thisDir}/container ALTNAME=$buildImage build-image
