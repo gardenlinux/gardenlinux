@@ -1,4 +1,4 @@
-# Feature: cis_firewall
+# Feature: firewall
 This feature adds a basic `nftables` based firewall to Garden Linux. `Garden Linux Firewall`
  is managed by `systemd` by the default systemd unit shipped with nftables.
 
