@@ -258,7 +258,7 @@ class RemoteClient:
         if not quiet:
             logger.info(f"$ {command.rstrip()}")
         if self.sudo and not disable_sudo:
-            command = 'sudo ' + command
+            command = f"sudo {command}"
 
         _, stdout, stderr = self.client.exec_command(command=command, timeout=timeout)
         exit_status = stdout.channel.recv_exit_status()
