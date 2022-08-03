@@ -146,6 +146,7 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 	sed -i "s/^BUG_REPORT_URL=.*$/BUG_REPORT_URL=\"https:\/\/github.com\/gardenlinux\/gardenlinux\/issues\"/g" rootfs/etc/os-release
 	echo "GARDENLINUX_FEATURES=$fullfeatures" >> rootfs/etc/os-release
 	echo "GARDENLINUX_VERSION=$($scriptsDir/garden-version)" >> rootfs/etc/os-release
+	echo "GARDENLINUX_VERSION_AT_BUILD=$($scriptsDir/garden-version --major | tr -d '\n'; echo -n "."; $scriptsDir/garden-version --minor)" >> rootfs/etc/os-release
 	echo "GARDENLINUX_COMMIT_ID_LONG=$commitid_long" >> rootfs/etc/os-release
 	echo "GARDENLINUX_COMMIT_ID=$commitid" >> rootfs/etc/os-release
 	echo "VERSION_CODENAME=$version" >> rootfs/etc/os-release
