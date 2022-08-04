@@ -4,4 +4,3 @@ features:
   include:
     - aide
     - clamav
-    - firewall

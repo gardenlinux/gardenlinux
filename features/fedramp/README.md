@@ -10,7 +10,6 @@ Sub features are included by the `fedramp/info.yaml` configuration file.
 |---|---|
 | aide | Installs the host-based intrusion detection system Aide |
 | clamav | Installs and configures the `clamav` anti virus scanner |
-| firewall | Adding/Installing the `Garden Linux CIS Firewall` |
 
 ### Feature: aide
 This feature installs the host-based intrusion detection system Aide, adds a configuration file for Aide, adds a systemd unit that creates an Aide database at boot time if it doesn't exist and adds a cronjob to /etc/cron.d to run Aide every night.
@@ -18,8 +17,8 @@ This feature installs the host-based intrusion detection system Aide, adds a con
 ### Feature: clamav
 This feature installs and configures the well known anti virus scanner `clamav` which will run nightly.
 
-### Feature: firewall
-This feature adds a basic `iptables` based firewall to Garden Linux. `Garden Linux Firewall`
+### Firewall
+The firewall is part of the FedRAMP feature and adds a basic `iptables` based firewall to Garden Linux. `Garden Linux FedRAMP Firewall`
  is managed by `systemd` by the following systemd unit files:
 
 * gardenlinux-fw-ipv4
