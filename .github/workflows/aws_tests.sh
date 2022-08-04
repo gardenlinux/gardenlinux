@@ -34,10 +34,9 @@ aws:
     keep_running: false
 RESPECT_TO_THE_MAN_IN_THE_ICECREAM_VAN
 
-credFileName=$(find "$(pwd)" -maxdepth 1 -type f -name "gha-creds-*.json" | xargs basename)
-
 echo "### Start Integration Tests for AWS"
-sudo podman run -it --rm  --env AWS_ACCESS_KEY_ID --env AWS_SECRET_ACCESS_KEY --env AWS_DEFAULT_REGION -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" $containerName /bin/bash -s << EOF
+sudo podman run -it --rm  -e=AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" -e=AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" -e=AWS_DEFAULT_REGION="$AWS_DEFAULT_REGION" -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" $containerName /bin/bash -s << EOF
+env
 mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/
 cd /gardenlinux/tests
