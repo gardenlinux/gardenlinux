@@ -12,6 +12,12 @@ on:
         required: true
       gcp_zone:
         required: true
+      aws_role:
+        required: true
+      aws_session:
+        required: true
+      aws_region:
+        required: true
 jobs:
   platform_tests:
     name: platform test
@@ -19,13 +25,14 @@ jobs:
       gcp_project: ${{ secrets.gcp_project }}
       gcp_region: ${{ secrets.gcp_region }}
       gcp_zone: ${{ secrets.gcp_zone }}
+      aws_region: ${{ secrets.aws_region }}
     runs-on: ec2-gardenlinux-${{ matrix.architecture }}
     permissions:
       id-token: write
       packages: write
     strategy:
       matrix:
-        target: [ gcp ]
+        target: [ gcp, aws ]
         architecture: [ amd64 ]
         modifier: [ "" ]
     steps:
@@ -43,12 +50,21 @@ jobs:
         path: /tmp/gardenlinux-build-artifacts
 
     - if: ${{ matrix.target }} == 'gcp'
-      id: 'auth'
+      id: 'auth_gcp'
       name: 'Authenticate to Google Cloud'
       uses: google-github-actions/auth@v0
       with:
         workload_identity_provider: ${{ secrets.gcp_identity_provider }}
         service_account: ${{ secrets.gcp_service_account }}
+
+    - if: ${{ matrix.target }} == 'aws'
+      id: 'auth_aws'
+      name: 'Authenticate to AWS'
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: ${{ secrets.aws_role }}
+        role-session-name: ${{ secrets.aws_session }}
+        aws-region: ${{ secrets.aws_region }}
 
     - name: start platform test for ${{ matrix.target }}
       run: .github/workflows/${{ matrix.target }}_tests.sh "${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.tar.gz"
