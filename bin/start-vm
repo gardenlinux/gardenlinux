@@ -451,6 +451,11 @@ qemu_opt_uefi () {
             # package which is not present in official repositories
             uefi_code="${uefi_code:-/usr/share/AAVMF/AAVMF_CODE.fd}"
             uefi_vars="${uefi_vars:-/usr/share/AAVMF/AAVMF_VARS.fd}"
+	elif [ "$os" = arch ]; then
+            # Note: Running `AARCH64` on `x86_64` requires `qemu-system-aarch64` and `edk2-armvirt`
+            # package which is *present* in official repositories
+            uefi_code="${uefi_code:-/usr/share/AAVMF/AAVMF_CODE.fd}"
+            uefi_vars="${uefi_vars:-/usr/share/AAVMF/AAVMF_VARS.fd}"
         else
             echo "Error: Could not find UEFI code and vars file."
             exit 1
