@@ -41,6 +41,7 @@ root_hash="$(mktemp)"
 partitions="$(mktemp)"
 overlay_partitions="$(mktemp)"
 secureboot_partitions="$(mktemp)"
+efi_partition="$(mktemp)"
 
 # strip comments and blank lines and sort by path depth (deepest first)
 sed 's/#.*//;/^[[:blank:]]*$/d' \
@@ -112,6 +113,7 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 			;;
 		"vfat")
 			make_reproducible_vfat -t "$timestamp" -h "gardenlinux:$version:partition:$target" ${uuid:+"-u"} ${uuid:+"$uuid"} ${label:+"-l"} ${label:+"$label"} "$rootfs_work$target" "$file"
+			echo $file > $efi_partition
 			;;
 		"swap")
 			make_reproducible_swap ${uuid:+"-u"} ${uuid:+"$uuid"} ${label:+"-l"} ${label:+"$label"} "$file"
@@ -178,6 +180,10 @@ if [[ -z "$(cat "$root_hash")" ]]; then
 	cmdline="root=$root_source $cmdline"
 else
 	cmdline="roothash=$(cat "$root_hash") root=/dev/mapper/root $cmdline"
+
+	if [ ! -s "$secureboot_partitions" ]; then
+		makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -t "$timestamp" -s "false" < "$efi_partition"
+	fi
 fi
 
 if [ -s "$secureboot_partitions" ]; then

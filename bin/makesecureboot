@@ -6,6 +6,7 @@ veritytab=
 key="/cert/secureboot.db.sign.key"
 cert="/cert/secureboot.db.sign.crt"
 timestamp=0
+secureboot="true"
 
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -31,6 +32,10 @@ while [ $# -gt 0 ]; do
 			;;
 		-t|--timestamp)
 			timestamp="$2"
+			shift 2
+			;;
+		-s|--secureboot)
+			secureboot="$2"
 			shift 2
 			;;
 		*)
@@ -92,16 +97,31 @@ echo "$cmdline" > "$cmdline_file"
 	"$rootfs/usr/lib/systemd/boot/efi/linux$(tr '[:upper:]' '[:lower:]' <<< "$uefi_arch").efi.stub" "$unified_image"
 rm "$cmdline_file" "$initrd"
 
-# sign unified image
-datefudge -s "@$timestamp" sbsign --cert "$cert" --key "$key" --output "$unified_image_signed" "$unified_image"
-rm "$unified_image"
-
 efi_dir="$(mktemp -d)"
 mkdir -p "$efi_dir/EFI/BOOT/"
-mv "$unified_image_signed" "$efi_dir/EFI/BOOT/BOOT$uefi_arch.EFI"
+
+if [[ "$secureboot" = "true" ]]; then
+	# sign unified image
+	datefudge -s "@$timestamp" sbsign --cert "$cert" --key "$key" --output "$unified_image_signed" "$unified_image"
+	rm "$unified_image"
+
+	mv "$unified_image_signed" "$efi_dir/EFI/BOOT/BOOT$uefi_arch.EFI"
+else
+	mv "$unified_image" "$efi_dir/EFI/BOOT/BOOT$uefi_arch.EFI"
+fi
 
 while read -r partition_file; do
+	if [[ ! "$secureboot" = "true" ]]; then
+	# add roothash to legacy boot kernel cmdline
+		mcopy -i $partition_file -p ::/syslinux/syslinux.cfg /tmp/.
+		sed -i "s/root=LABEL=ROOT/$(echo ${cmdline} | cut -d ' ' -f 1)/g" /tmp/syslinux.cfg
+		mcopy -i $partition_file -po /tmp/syslinux.cfg ::/syslinux/syslinux.cfg
+	fi
+
 	# copy unified image to uefi partition
+	if mdir -i "$partition_file" :: | grep -E '^EFI'; then
+		mdeltree -i "$partition_file" ::/EFI
+	fi
 	datefudge -s "@$timestamp" mcopy -i "$partition_file" -s -p "$efi_dir/EFI" "::/EFI"
 done
 
