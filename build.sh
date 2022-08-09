@@ -61,8 +61,8 @@ while true; do
 done
 
 dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
-outputDir="${1:-$output}";	shift || /bin/true
-version="$(${thisDir}/bin/garden-version ${1:-})";	shift || /bin/true
+outputDir="${1:-$output}";	shift || true
+version="$(${thisDir}/bin/garden-version ${1:-})";	shift || true
 
 mkdir -p "$outputDir"
 outputDir="$(readlink -f "$outputDir")"
