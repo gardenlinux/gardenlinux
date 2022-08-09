@@ -1,4 +1,5 @@
 VERSION=`../bin/garden-version`
+VERSION_NUMBER=`../bin/garden-version --major | tr -d '\n'; echo -n "."; ../bin/garden-version --minor`
 ALTNAME=
 ALTNAME_INTERNAL=$(shell [ -n "$(ALTNAME)" ] && printf "%s %s" "-t" "$(ALTNAME)" )
 
@@ -16,7 +17,10 @@ needslim:
 .PHONY: build-image
 build-image: needslim
 	cp ../bin/garden-feat.go build-image/
-	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/build-image:$(VERSION) $(ALTNAME_INTERNAL) build-image
+	if [ ! -n "$$($(GARDENLINUX_BUILD_CRE) image ls gardenlinux/build-image:$(VERSION_NUMBER) --format "{{.Repository}}:{{.Tag}}")" ]; then \
+		$(GARDENLINUX_BUILD_CRE) image rm --force $$($(GARDENLINUX_BUILD_CRE) image ls gardenlinux/build-image --format "{{.Repository}}:{{.Tag}}") || true; \
+	fi
+	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/build-image:$(VERSION) -t gardenlinux/build-image:$(VERSION_NUMBER) $(ALTNAME_INTERNAL) build-image; \
 
 .PHONY: build-cert
 build-cert: needslim
