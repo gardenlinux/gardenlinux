@@ -42,9 +42,9 @@ container-integration:
 
 build-environment: container-test container-build
 
-all_prod: ali aws gcp azure metal openstack vmware kvm
+all_prod: ali aws gcp azure metal openstack vmware kvm metalv
 
-all_dev: ali-dev aws-dev gcp-dev azure-dev metal-dev openstack-dev vmware-dev kvm-dev
+all_dev: ali-dev aws-dev gcp-dev azure-dev metal-dev openstack-dev vmware-dev kvm-dev metalv-dev
 
 ALI_IMAGE_NAME=$(IMAGE_BASENAME)-ali-$(VERSION)
 ali: build-environment $(SECUREBOOT_CRT)
@@ -183,6 +183,12 @@ metal-secureboot: build-environment $(SECUREBOOT_CRT) cert/sign.pub
 
 metal-secureboot-dev: build-environment $(SECUREBOOT_CRT) cert/sign.pub
 	./build.sh $(BUILD_OPTS) --skip-build --features server,metal,_secureboot,_dev $(BUILDDIR) $(VERSION)
+
+metalv: build-environment $(SECUREBOOT_CRT)
+	./build.sh $(BUILD_OPTS) --skip-build --features server,metal,vhost $(BUILDDIR) $(VERSION)
+
+metalv-dev: build-environment $(SECUREBOOT_CRT)
+	./build.sh $(BUILD_OPTS) --skip-build --features server,metal,vhost,_dev $(BUILDDIR) $(VERSION)
 
 github_action_runner: build-environment $(SECUREBOOT_CRT)
 	./build.sh $(BUILD_OPTS) --skip-build --features server,cloud,aws,github_action_runner $(BUILDDIR) $(VERSION)
