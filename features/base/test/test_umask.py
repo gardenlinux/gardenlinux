@@ -9,7 +9,7 @@ import pytest
 @pytest.mark.parametrize(
     "file,dict",
     [
-        ("/etc/login.defs", {"UMASK": "077"})
+        ("/etc/login.defs", {"UMASK": "027"})
     ]
 )
 
