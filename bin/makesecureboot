@@ -111,10 +111,10 @@ else
 fi
 
 while read -r partition_file; do
-	if [[ ! "$secureboot" = "true" ]]; then
+	if [[ "$arch" = "amd64" ]] && [[ ! "$secureboot" = "true" ]]; then
 	# add roothash to legacy boot kernel cmdline
 		mcopy -i $partition_file -p ::/syslinux/syslinux.cfg /tmp/.
-		sed -i "s/root=LABEL=ROOT/$(echo ${cmdline} | cut -d ' ' -f 1)/g" /tmp/syslinux.cfg
+		sed -i "s/root=[^ ]*/$(echo ${cmdline} | cut -d ' ' -f 1)/g" /tmp/syslinux.cfg
 		mcopy -i $partition_file -po /tmp/syslinux.cfg ::/syslinux/syslinux.cfg
 	fi
 
