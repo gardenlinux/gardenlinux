@@ -32,7 +32,7 @@ jobs:
       packages: write
     strategy:
       matrix:
-        target: [ gcp, aws ]
+        target: [ aws ]
         architecture: [ amd64 ]
         modifier: [ "" ]
     steps:
