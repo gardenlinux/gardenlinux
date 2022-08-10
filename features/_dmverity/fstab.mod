@@ -7,4 +7,5 @@ sed '/^[^[:space:]]\+[[:space:]]\+\/overlay[[:space:]]\+/d;/^[^[:space:]]\+[[:sp
 # make usr a readonly setup
 printf "LABEL=EFI          /boot/efi    vfat      umask=0077   type=uefi,size=96MiB\n"
 printf "LABEL=ROOT         /            ext4      ro           verity\n"
+printf "LABEL=USR          /usr         ext4      ro           verity\n"
 printf "LABEL=OVERLAY      /overlay     ext4      rw,discard,x-initrd.mount    size=512MiB\n"

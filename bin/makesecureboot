@@ -95,7 +95,7 @@ echo "$cmdline" > "$cmdline_file"
 	--add-section .linux="$kernel_file" --change-section-vma .linux=0x2000000 \
 	--add-section .initrd="$initrd" --change-section-vma .initrd="$initrd_vma" \
 	"$rootfs/usr/lib/systemd/boot/efi/linux$(tr '[:upper:]' '[:lower:]' <<< "$uefi_arch").efi.stub" "$unified_image"
-rm "$cmdline_file" "$initrd"
+rm "$cmdline_file"
 
 efi_dir="$(mktemp -d)"
 mkdir -p "$efi_dir/EFI/BOOT/"
@@ -116,13 +116,14 @@ while read -r partition_file; do
 		mcopy -i $partition_file -p ::/syslinux/syslinux.cfg /tmp/.
 		sed -i "s/root=[^ ]*/$(echo ${cmdline} | cut -d ' ' -f 1)/g" /tmp/syslinux.cfg
 		mcopy -i $partition_file -po /tmp/syslinux.cfg ::/syslinux/syslinux.cfg
-	fi
-
-	# copy unified image to uefi partition
-	if mdir -i "$partition_file" :: | grep -E '^EFI'; then
+	# clean up EFI directory and copy initrd.img for legacy boot when secureboot feature is not enabled
 		mdeltree -i "$partition_file" ::/EFI
+		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$initrd" "::/Default/${kernel_version}/initrd.img-${kernel_version}"
+		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$initrd" "::/legacy/${kernel_version}/initrd.img-${kernel_version}"
 	fi
+	# copy unified image to uefi partition
 	datefudge -s "@$timestamp" mcopy -i "$partition_file" -s -p "$efi_dir/EFI" "::/EFI"
 done
 
+rm "$initrd"
 rm -rf "$efi_dir"
