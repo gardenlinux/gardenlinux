@@ -1,5 +1,7 @@
 VERSION=`../bin/garden-version`
-VERSION_NUMBER=`../bin/garden-version --major | tr -d '\n'; echo -n "."; ../bin/garden-version --minor`
+VERSION_NUMBER_MAJOR=$(shell ../bin/garden-version --major)
+VERSION_NUMBER_MINOR=$(shell ../bin/garden-version --minor)
+VERSION_NUMBER=$(VERSION_NUMBER_MAJOR).$(VERSION_NUMBER_MINOR)
 ALTNAME=
 ALTNAME_INTERNAL=$(shell [ -n "$(ALTNAME)" ] && printf "%s %s" "-t" "$(ALTNAME)" )
 
