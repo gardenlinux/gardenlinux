@@ -178,6 +178,11 @@ read -r _ cmdline < "$rootfs/etc/kernel/cmdline" # hacky assumption that root= i
 if [[ -z "$(cat "$root_hash")" ]]; then
 	root_source=$(tail -n 1 "$fstab" | cut -d " " -f 1)
 	cmdline="root=$root_source $cmdline"
+
+	# enable verity if the root partition is writable, but any other partition has verity enabled, most likely /usr
+	if [[ ! -z "$(cat "$veritytab")" ]] && [ ! -s "$secureboot_partitions" ]; then
+		makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -t "$timestamp" -s "false" < "$efi_partition"
+	fi
 else
 	cmdline="roothash=$(cat "$root_hash") root=/dev/mapper/root $cmdline"
 
