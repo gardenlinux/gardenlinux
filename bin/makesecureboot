@@ -113,9 +113,10 @@ fi
 while read -r partition_file; do
 	if [[ "$arch" = "amd64" ]] && [[ ! "$secureboot" = "true" ]]; then
 	# add roothash to legacy boot kernel cmdline
-		mcopy -i $partition_file -p ::/syslinux/syslinux.cfg /tmp/.
-		sed -i "s/root=[^ ]*/$(echo ${cmdline} | cut -d ' ' -f 1)/g" /tmp/syslinux.cfg
-		mcopy -i $partition_file -po /tmp/syslinux.cfg ::/syslinux/syslinux.cfg
+		syslinux=$(mktemp)
+		mcopy -i $partition_file -p ::/syslinux/syslinux.cfg "$syslinux"
+		sed -i "s/root=[^ ]*/$(echo ${cmdline} | cut -d ' ' -f 1)/g" "$syslinux"
+		mcopy -i $partition_file -po "$syslinux" ::/syslinux/syslinux.cfg
 	# copy initrd.img for legacy boot when secureboot feature is not enabled
 		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$initrd" "::/Default/${kernel_version}/initrd.img-${kernel_version}"
 		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$initrd" "::/legacy/${kernel_version}/initrd.img-${kernel_version}"

@@ -6,7 +6,7 @@ features:
   exclude:
     - chost
   incompatible:
-    - _dmverity
+    - _readonly
 tar:
   compression: xz
   include-dev: false

@@ -1,4 +1,4 @@
-## Feature: _dmverity
+## Feature: _readonly
 
 <website-feature> enable dmverity </website-feature>
 

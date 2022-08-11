@@ -2,4 +2,4 @@ type: flag
 features:
   include:
     - _nopkg
-    - _dmverity
+    - _readonly
