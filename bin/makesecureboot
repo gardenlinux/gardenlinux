@@ -116,10 +116,13 @@ while read -r partition_file; do
 		mcopy -i $partition_file -p ::/syslinux/syslinux.cfg /tmp/.
 		sed -i "s/root=[^ ]*/$(echo ${cmdline} | cut -d ' ' -f 1)/g" /tmp/syslinux.cfg
 		mcopy -i $partition_file -po /tmp/syslinux.cfg ::/syslinux/syslinux.cfg
-	# clean up EFI directory and copy initrd.img for legacy boot when secureboot feature is not enabled
-		mdeltree -i "$partition_file" ::/EFI
+	# copy initrd.img for legacy boot when secureboot feature is not enabled
 		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$initrd" "::/Default/${kernel_version}/initrd.img-${kernel_version}"
 		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$initrd" "::/legacy/${kernel_version}/initrd.img-${kernel_version}"
+	fi
+	if [[ ! "$secureboot" = "true" ]]; then
+	# clean up EFI directory
+		mdeltree -i "$partition_file" ::/EFI
 	fi
 	# copy unified image to uefi partition
 	datefudge -s "@$timestamp" mcopy -i "$partition_file" -s -p "$efi_dir/EFI" "::/EFI"
