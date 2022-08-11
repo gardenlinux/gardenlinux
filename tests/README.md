@@ -569,7 +569,7 @@ Start Podman container with dependencies:
 - NOTE: The testing SSHd expects the regular `authorized_keys` file to be named as `test_authorized_keys`
 
 ```
-sudo podman run --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW --security-opt apparmor=unconfined -it --rm -v `pwd`:/gardenlinux gardenlinux/base-test:dev /bin/bash
+sudo podman run --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW --security-opt apparmor=unconfined -it --rm -v `pwd`:/gardenlinux gardenlinux/base-test:`bin/garden-version` /bin/bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -662,7 +662,7 @@ Start Podman container with dependencies:
 **With SSH autogeneration**
 This is the default and recommended way.
 ```
-sudo podman run -it --rm --device=/dev/kvm -v /boot/:/boot -v /lib/modules:/lib/modules -v `pwd`:/gardenlinux gardenlinux/base-test:dev /bin/bash
+sudo podman run -it --rm --device=/dev/kvm -v /boot/:/boot -v /lib/modules:/lib/modules -v `pwd`:/gardenlinux gardenlinux/base-test:`bin/garden-version` /bin/bash
 ```
 
 **Without SSH autogeneration**
