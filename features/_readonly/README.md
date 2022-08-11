@@ -2,6 +2,9 @@
 
 <website-feature> enable readonly </website-feature>
 
+This feature enables a readonly root partition with dmverity, additionally a separate readonly /usr partition can also use dmverity.
+If only /usr should be readonly and use dmverity, take a look at the next chapter to find an example for how to setup the fstab.mod for that case.
+
 ---
 
 	Type: flag
