@@ -131,7 +131,7 @@ if [ -n "$cert" ]; then
 	dockerArgs+=" --volume $(realpath "$cert"):/cert:ro"
 fi
 
-if [ -z "$(git status --porcelain)" ]; then
+if [ -d .git ] && [ -z "$(git status --porcelain)" ]; then
 	commitid_long="$(git rev-parse HEAD)"
 	commitid="$(git rev-parse --short HEAD)"
 	echo "clean working tree, using $commitid as commit id"
