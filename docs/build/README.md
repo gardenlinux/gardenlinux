@@ -29,7 +29,8 @@ You can also customize a Makefile target to your needs, e.g. by adding a feature
 ## Build via build.sh 
 If you really want to directly call build.sh, you can checkout [Makefile](/Makefile) for some good examples and start from there.
 
-In general, the `build.sh` starts and prepares the build container, in which `garden-build` and `garden-test` are executed.
+In general, the `build.sh` starts and prepares the build container, in which `garden-build` gets executed. Afterwards, PyTest
+based unit tests are performed.
 
 ## Build Artifacts
 Build artifacts are stored in the output folder (default `.build/`).

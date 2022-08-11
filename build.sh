@@ -22,7 +22,7 @@ source "$thisDir/bin/.constants.sh" \
 --arch		builds for a specific architecture (default: architecture the build runs on)
 --suite		specifies the debian suite to build for e.g. bullseye, potatoe (default: testing)
 --skip-tests	deactivating tests (default: off)
---tests		test suite to use, available tests are unittests, kvm, chroot (default: unittests)
+--tests		test suite to use, available tests are kvm, chroot (default: chroot)
 --skip-build	do not create the build container BUILD_IMAGE variable would specify an alternative name
 "
 
@@ -36,7 +36,7 @@ features=
 disablefeatures=
 commitid="${commitid:-local}"
 skip_tests=0
-tests="unittests,chroot"
+tests="chroot"
 local_pkgs=
 output=".build"
 cert=cert/
@@ -164,14 +164,6 @@ else
 	wait %1
 
 	# Run tests if activated
-	if [ ${skip_tests} -eq 0 ] && [[ "${tests}" =~ .*"unittests".* ]]; then
-		echo "Running tests"
-		containerName=$uuid_gen
-		${gardenlinux_build_cre} run --name $containerName $dockerArgs --rm \
-			"${buildImage}" \
-			/opt/gardenlinux/bin/garden-test &
-		wait %1
-	fi
 	if [ ${skip_tests} -eq 0 ] && [[ "${tests}" == *"chroot"* ]]; then
 		# Prepare the test container execution
 		echo "Creating config file for chroot tests"
