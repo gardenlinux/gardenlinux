@@ -424,8 +424,8 @@ qemu_opt_uefi () {
                 uefi_code="${uefi_code:-/usr/share/OVMF/OVMF_CODE.secboot.fd}"
                 uefi_vars="${uefi_vars:-/usr/share/OVMF/OVMF_VARS.secboot.fd}"
             elif [ "$os" = arch ]; then
-                uefi_code="${uefi_code:-/usr/share/OVMF/OVMF_CODE.secboot.fd}"
-                uefi_vars="${uefi_vars:-/usr/share/OVMF/OVMF_VARS.secboot.fd}"
+                uefi_code="${uefi_code:-/usr/share/OVMF/x64/OVMF_CODE.fd}"
+                uefi_vars="${uefi_vars:-/usr/share/OVMF/x64/OVMF_VARS.fd}"
             else
                 echo "Error: Could not find UEFI code and vars file."
                 exit 1
