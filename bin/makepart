@@ -6,6 +6,7 @@ set -Eeuo pipefail
 exec 3>&1
 exec 1>&2
 
+thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 rootfs="$1"
 arch="${2:-$arch}"
 timestamp=$(garden-version --epoch "$version")
@@ -16,10 +17,9 @@ mkdir -p "$rootfs_work/overlay"/{etc,var}/{upper,work}
 
 find "$rootfs_work/var/log/" -type f -delete
 
+# SELinux 'default' policy file contexts
 chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
-# Temporary deactivated until this is fixed by upstream:
-# GitHub: https://github.com/gardenlinux/gardenlinux/issues/1014
-#chroot "$rootfs_work" /usr/bin/env -i /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
+"$thisDir/garden-chroot" "$rootfs_work" /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
 rm "$rootfs_work/.autorelabel"
 
 if ! grep _secureboot <<<"$features" > /dev/null; then
