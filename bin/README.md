@@ -1,6 +1,6 @@
 # Garden Linux Binary Set
 ## General
-This directory contains many scripts to manage the Garden Linux build process. While most of them are used in a Docker container during the Garden Linux build (e.g. `garden-build`, `garden-test`, `makepart`, ...) there are also several useful scripts (e.g. `start-vm`, `inject-sshkey`, ...) that may be used afterwards.
+This directory contains many scripts to manage the Garden Linux build process. While most of them are used in a Docker container during the Garden Linux build (e.g. `garden-build`, `garden-feat`, `makepart`, ...) there are also several useful scripts (e.g. `start-vm`, `inject-sshkey`, ...) that may be used afterwards.
 
 ## Overview
 By the given directory, we distinguish between scripts that are mandatory for the Garden Linux build process and scripts that are optional but very useful for handling a final Garden Linux artifact. Therefore, we describe them by the given two sections and only describe the standalone usable ones in detail.
@@ -19,7 +19,6 @@ By the given directory, we distinguish between scripts that are mandatory for th
 | garden-init | Debootstraps Garden Linux |
 | garden-slimify | Creates a slimifyed version of Garden Linux |
 | garden-tar | Creates a `.tar.xf` image of the build env from `chroot` env |
-| garden-test | Performs basic unit tests |
 | garden-version | Creates a version schema |
 | get-arch | Evaluates the base arch of the build host |
 | makedisk | Creates the disks during the build process in the `chroot` env |
