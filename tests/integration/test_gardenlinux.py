@@ -368,13 +368,3 @@ def test_aws_ena_driver(client, aws):
     (exit_code, output, error) = client.execute_command("/sbin/ethtool -i $(ip -j link show  | jq -r '.[] | if .ifname != \"lo\" and .ifname != \"docker0\" then .ifname else empty end') | grep \"^driver\" | awk '{print $2}'")
     assert exit_code == 0, f"no {error=} expected"
     assert output.rstrip() == "ena", "Expected network interface to run with ena driver"
-
-def test_apparmor(client, non_chroot):
-    (exit_code, output, error) = client.execute_command("grep apparmor /sys/kernel/security/lsm")
-    assert exit_code == 0, f"no {error=} expected"
-    assert "apparmor" in output.rstrip(), "expected AppArmor to be in ist of lsms"
-
-def test_selinux(client, non_chroot):
-    (exit_code, output, error) = client.execute_command("grep selinux /sys/kernel/security/lsm")
-    assert exit_code == 1, f"expected selinux not in list of lsms"
-    assert "selinux" not in output.rstrip(), "Expected SELinux not to be enabled."
