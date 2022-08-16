@@ -6,7 +6,7 @@ OPTIND=1
 ORIG_UNAME="/bin/uname-orig"
 USE_ORIG=0
 KERNEL_ARCH=$(dpkg --print-architecture)
-KERNEL_FLAVOUR=${KERNEL_FLAVOUR:-}
+KERNEL_FLAVOR=${KERNEL_FLAVOR:-}
 KERNEL_BASE=${KERNEL_BASE:-}
 
 if [ $# -eq 0 ]; then
@@ -16,10 +16,10 @@ fi
 while getopts "aimnoprsv" opt; do
     case "$opt" in
         r)
-        if [ -z "${KERNEL_FLAVOUR}" ];then
-            basename "$(find /lib/modules -mindepth 1 -maxdepth 1 | grep -F -- "${KERNEL_BASE}" | grep -F -- "${KERNEL_ARCH}" | grep -v 'cloud\|rt' | sort -V | tail -n 1)"
+        if [ -z "${KERNEL_FLAVOR}" ];then
+            basename "$(find /lib/modules -mindepth 1 -maxdepth 1 | grep "gardenlinux" | grep -F -- "${KERNEL_BASE}" | grep -F -- "${KERNEL_ARCH}" | grep -v 'cloud\|rt\|firecracker' | sort -V | tail -n 1)"
 	    else
-            basename "$(find /lib/modules -mindepth 1 -maxdepth 1 | grep -F -- "${KERNEL_BASE}" | grep -F -- "${KERNEL_ARCH}" | grep -F -- "${KERNEL_FLAVOUR}" | sort -V | tail -n 1)"
+            basename "$(find /lib/modules -mindepth 1 -maxdepth 1 | grep "gardenlinux" | grep -F -- "${KERNEL_BASE}" | grep -F -- "${KERNEL_ARCH}" | grep -F -- "${KERNEL_FLAVOR}" | sort -V | tail -n 1)"
 	    fi
 	    ;;
         *) USE_ORIG=1
