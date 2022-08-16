@@ -68,15 +68,15 @@ then	[ $(cut -d. -sf3 <<< ${input}) ] && eusage "invalid version format ${input}
 	fi
 	version="${major}.${minor}"
 else 
-    if	[[ ${input} = today ]]; then
-	indate=$($date_gnu --date "today" +%s 2>/dev/null)
-        major="$(( (${indate} - $($date_gnu --date "${startdate}" +%s)) / (60*60*24) ))"
-	version=today
-    else
-	indate=$($date_gnu --date "${input}" +%s 2>/dev/null) || eusage "invalid date ${input}"
-	major="$(( (${indate} - $($date_gnu --date "${startdate}" +%s)) / (60*60*24) ))"
-	version="${major}.${minor}"
-    fi
+	if [[ ${input} = today ]]; then
+		indate=$($date_gnu --date "today" +%s 2>/dev/null)
+		major="$(( (${indate} - $($date_gnu --date "${startdate}" +%s)) / (60*60*24) ))"
+		version=today
+	else
+		indate=$($date_gnu --date "${input}" +%s 2>/dev/null) || eusage "invalid date ${input}"
+		major="$(( (${indate} - $($date_gnu --date "${startdate}" +%s)) / (60*60*24) ))"
+		version="${major}.${minor}"
+	fi
 fi
 
 if [[ "${KERNEL_VERSION}" == "latest" ]]; then
