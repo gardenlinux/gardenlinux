@@ -588,7 +588,7 @@ class AZURE:
                 image_name = image_name,
                 parameters = {
                     'location': self._resourcegroup.location,
-                    'hyper_v_generation': 'V1',
+                    'hyper_v_generation': 'V2',
                     'storage_profile': {
                         'os_disk': {
                             'os_type': 'Linux',
