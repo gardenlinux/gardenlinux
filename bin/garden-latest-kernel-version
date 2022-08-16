@@ -5,15 +5,11 @@ thisDir="$(dirname "$(readlink -f "${BASH_SOURCE}")")"
 
 KERNEL_ARCH=${KERNEL_ARCH:-"amd64"}
 
-HELP=$(cat <<- EOT
-EOT
-)
-
 usage() {
-  echo 	"Usage: $0 [ -a <target architecture ] [ -b <kernel major.minor version> ] [ -s <garden linux major.minor>]" \
-    "-a		select target CPU architecture "\
-    "-b		select kernel lts version (e.g 5.10, 5.15)"\
-    "-s		select garden linux epoch as suite (default today)"
+  echo -e "Usage: $0 [ -a <target architecture ] [ -b <kernel major.minor version> ] [ -s <garden linux major.minor>]\n" \
+    "-a		select target CPU architecture\n"\
+    "-b		select kernel lts version (e.g 5.10, 5.15)\n"\
+    "-s		select garden linux epoch as suite (default today)\n"
   exit 1 
 }
 
