@@ -5,8 +5,6 @@ ARG KERNEL_VERSION
 ARG GNU_TYPE_PACKAGE
 ARG TARGET_ARCH
 
-
-RUN echo "suite is: $GLSUITE"
 RUN dpkg --add-architecture $TARGET_ARCH
 RUN apt-get update -qy
 
@@ -37,4 +35,3 @@ RUN apt-get update -qy
 RUN apt-get install -qy "linux-headers-${KERNEL_VERSION}-gardenlinux-${TARGET_ARCH}" \
 			"linux-headers-${KERNEL_VERSION}-gardenlinux-cloud-${TARGET_ARCH}" \
 			"linux-headers-${KERNEL_VERSION}-gardenlinux-firecracker-${TARGET_ARCH}"
-
