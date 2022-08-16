@@ -1,0 +1,71 @@
+#!/bin/bash
+
+set -Eeuo pipefail
+thisDir="$(dirname "$(readlink -f "${BASH_SOURCE}")")"
+
+KERNEL_ARCH=${KERNEL_ARCH:-"amd64"}
+
+HELP=$(cat <<- EOT
+EOT
+)
+
+usage() {
+  echo 	"Usage: $0 -a <target architecture [ -b <kernel major.minor version> ] [ -s <garden linux major.minor>]" \
+    "-a		select target CPU architecture "\
+    "-b		select kernel lts version (e.g 5.10, 5.15)"\
+    "-s		select garden linux epoch as suite (default today)"
+  exit 1 
+}
+
+
+# per default we build arm64 and amd64 for every new kernel release
+target_arch="amd64"
+kernel_base=""
+glsuite="today"
+
+while getopts ":a:b:s:" o; do
+  case "${o}" in
+    a)
+      target_arch=${OPTARG}
+      ;;
+    b)
+      kernel_base=${OPTARG}
+      ;;
+    s)
+      glsuite=${OPTARG}
+      ;;
+    *)
+ #     usage
+      ;;
+  esac
+done
+shift $((OPTIND-1))
+
+
+ALL_VERSIONS=$(wget -O - -o /dev/null "http://repo.gardenlinux.io/gardenlinux/dists/${glsuite}/main/binary-${target_arch}/Packages" | \
+	grep -E "Package: linux-image-[0-9]+.[0-9]+.[0-9]+.*" | \
+	grep "${kernel_base}" | \
+	sort -r | \
+	cut -d ' ' -f2)
+
+LATEST_VERSION=$(echo $ALL_VERSIONS | \
+      head -n 1 | \
+      cut -d '-' -f3)
+
+echo "$LATEST_VERSION"
+
+#if [ -z "${KERNEL_FLAVOUR}" ];then
+#    "${SCRIPTPATH}/garden-list-kernel-header-versions" | \
+#        grep -- "${LATEST_VERSION}" | \
+#        grep -- "${KERNEL_ARCH}" | \
+#        grep -Ev -- "cloud|rt"
+#else
+#    "${SCRIPTPATH}/garden-list-kernel-header-versions" | \
+#        grep -- "${LATEST_VERSION}" | \
+#        grep -- "${KERNEL_ARCH}" | \
+#        grep -- "${KERNEL_FLAVOUR}"
+#fi
+
+
+
+

@@ -1,0 +1,6 @@
+# sourced in bin/garden-latest-kernel-version
+
+# latest will use latest available garden linux kernel
+KERNEL_VERSION=latest
+# Select supported long term kernel
+KERNEL_BASE="5.15"

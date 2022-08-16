@@ -6,7 +6,7 @@ ALTNAME=
 ALTNAME_INTERNAL=$(shell [ -n "$(ALTNAME)" ] && printf "%s %s" "-t" "$(ALTNAME)" )
 
 PATH_KERNEL_PACKAGES="../.packages/main/l/linux"
-KERNEL_VERSION=5.10
+KERNEL_VERSION=`../bin/garden-version --kernel`
 
 GARDENLINUX_BUILD_CRE ?= sudo podman
 
@@ -48,14 +48,15 @@ build-integration-test: build-base-test
 	cp ../tests/Pipfile* integration-test/_pipfiles
 	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/integration-test:$(VERSION) integration-test
 
-.PHONY: build-kernelmodule
-build-kernelmodule: build
-	rm -rf build-kernelmodule/packages
-	mkdir -p build-kernelmodule/packages/
-	cp ../.packages/main/l/linux/linux-kbuild*$(KERNEL_VERSION)*.deb build-kernelmodule/packages/ || (echo "Error: Build Kernel packages first." && exit 1)
-	cp ../.packages/main/l/linux/linux-compiler-gcc*$(KERNEL_VERSION)*.deb build-kernelmodule/packages/ || (echo "Error: Build Kernel packages first." && exit 1)
-	cp ../.packages/main/l/linux/linux-headers*$(KERNEL_VERSION)*.deb build-kernelmodule/packages/ || (echo "Error: Build Kernel packages first." && exit 1)
-	@$(GARDENLINUX_BUILD_CRE) build -t gardenlinux/build-kernelmodule:$(KERNEL_VERSION) build-kernelmodule
+.PHONY: kernelmodule-builder-arm64
+kernelmodule-builder-arm64:
+	cp ../gardenlinux.asc kernelmodule-builder
+	@$(GARDENLINUX_BUILD_CRE) build --build-arg KERNEL_VERSION=$(KERNEL_VERSION) --build-arg TARGET_ARCH="arm64" --build-arg GNU_TYPE_PACKAGE="aarch64-linux-gnu" --build-arg GLSUITE=$(VERSION) -t gardenlinux/build-kernelmodule:$(VERSION) kernelmodule-builder
+
+.PHONY: kernelmodule-builder-amd64
+kernelmodule-builder-amd64:
+	cp ../gardenlinux.asc kernelmodule-builder
+	@$(GARDENLINUX_BUILD_CRE) build --build-arg KERNEL_VERSION=$(KERNEL_VERSION) --build-arg TARGET_ARCH="amd64" --build-arg GNU_TYPE_PACKAGE="x86-64-linux-gnu" --build-arg GLSUITE=$(VERSION) -t gardenlinux/build-kernelmodule:$(VERSION) kernelmodule-builder
 
 .PHONY: clean
 clean:

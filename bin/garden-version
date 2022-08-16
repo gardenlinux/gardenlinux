@@ -5,6 +5,7 @@
 set -Eeuo pipefail
 thisDir="$(dirname "$(readlink -f "${BASH_SOURCE}")")"
 versionfile="$(readlink -f "${thisDir}/../VERSION")"
+source "$(readlink -f "${thisDir}/../KERNEL_VERSION")"
 startdate="Mar 31 00:00:00 UTC 2020"
 build_os="$(uname -s)"
 
@@ -19,8 +20,8 @@ else
 fi
 
 source "${thisDir}/.constants.sh" \
-	--flags 'major,minor,date,datefull,epoch,git' \
-	--usage '[ --major | --minor | --date | --datefull | --epoch | --git ] [<garden-version>|<timestamp>]' \
+	--flags 'major,minor,date,datefull,epoch,git,kernel' \
+	--usage '[ --major | --minor | --date | --datefull | --epoch | --git | --kernel ] [<garden-version>|<timestamp>]' \
 	--sample '20200427' \
 	--sample '--date 27.1' \
 	--help   "Generates version dependent values according to the file $versionfile or to the parameter handed over. Versions can be converted adequately
@@ -31,6 +32,7 @@ source "${thisDir}/.constants.sh" \
 --datefull	prints a full date deteministically usable by debootstrap
 --epoch		prints the seconds sinc 19700101 till garden-version
 --git		prints the version plus the last git-hash
+--kernel	prints the kernel version used. 'latest' will use the latest available garden linux kernel
 
 If no parameter is specified the full version <major>.<minor> e.g. 27.5 is printed. The version is taken from $versionfile. On HEAD this should always evaluate to 'today', on branch versions this always should resolve to the next version that will be build e.g. 27.1. This implies there is no branch with a .0 in the $versionfile file.
 The version calculated expresses the days since $startdate. Calculation is always UTC based."
@@ -41,7 +43,7 @@ while true; do
 	flag="$1"; shift
 	dgetopt-case "${flag}"
 	case "${flag}" in
-		--major|--minor|--date|--datefull|--epoch|--git)		
+		--major|--minor|--date|--datefull|--epoch|--git|--kernel)		
 			typeout="${flag}"   ;;
 		--)	break ;;
 		*) 	eusage "unknown flag '${flag}'" ;;
@@ -53,6 +55,9 @@ input=$($sed_gnu "s/^[[:space:]]*//;s/[[:space:]]*\$//" <<< ${input})
 
 # no version / timestamp on versionfile
 [ -z ${input} ] && input="today"
+
+[ -z ${KERNEL_VERSION} ] && KERNEL_VERSION="latest"
+
 
 minor=0
 if [[ ${input} =~ ^[0-9\.]*$ && $(cut -d. -f1 <<< ${input}) -lt 10000000 ]]; 
@@ -73,6 +78,14 @@ else	if	[[ ${input} = today ]];
 	fi
 fi
 
+if [[ "${KERNEL_VERSION}" == "latest" ]]; then
+	if [ -z ${KERNEL_BASE+x} ]; then
+		KERNEL_VERSION=$(${thisDir}/garden-latest-kernel-version -s "${major}.${minor}")
+	else
+		KERNEL_VERSION=$(${thisDir}/garden-latest-kernel-version -b "$KERNEL_BASE" -s "${major}.${minor}")
+	fi
+fi
+
 case "${typeout}" in
 	--major)	echo ${major} ;;
 	--minor)	echo ${minor} ;;
@@ -80,6 +93,7 @@ case "${typeout}" in
 	--datefull)	$date_gnu --date "${startdate} + ${major} days" +%Y%m%dT%H%M%SZ ;;
 	--epoch)	$date_gnu --date "${startdate} + ${major} days" +%s ;;
 	--git)		echo "${version}-$(git -C "${scriptsDir}" rev-parse --short 'HEAD^{commit}')" ;;
+	--kernel)	echo ${KERNEL_VERSION} ;;
         *)		echo "${version}" ;;
 esac
 
