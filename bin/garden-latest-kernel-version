@@ -10,13 +10,12 @@ EOT
 )
 
 usage() {
-  echo 	"Usage: $0 -a <target architecture [ -b <kernel major.minor version> ] [ -s <garden linux major.minor>]" \
+  echo 	"Usage: $0 [ -a <target architecture ] [ -b <kernel major.minor version> ] [ -s <garden linux major.minor>]" \
     "-a		select target CPU architecture "\
     "-b		select kernel lts version (e.g 5.10, 5.15)"\
     "-s		select garden linux epoch as suite (default today)"
   exit 1 
 }
-
 
 # per default we build arm64 and amd64 for every new kernel release
 target_arch="amd64"
@@ -35,7 +34,7 @@ while getopts ":a:b:s:" o; do
       glsuite=${OPTARG}
       ;;
     *)
- #     usage
+      usage
       ;;
   esac
 done
@@ -53,19 +52,3 @@ LATEST_VERSION=$(echo $ALL_VERSIONS | \
       cut -d '-' -f3)
 
 echo "$LATEST_VERSION"
-
-#if [ -z "${KERNEL_FLAVOUR}" ];then
-#    "${SCRIPTPATH}/garden-list-kernel-header-versions" | \
-#        grep -- "${LATEST_VERSION}" | \
-#        grep -- "${KERNEL_ARCH}" | \
-#        grep -Ev -- "cloud|rt"
-#else
-#    "${SCRIPTPATH}/garden-list-kernel-header-versions" | \
-#        grep -- "${LATEST_VERSION}" | \
-#        grep -- "${KERNEL_ARCH}" | \
-#        grep -- "${KERNEL_FLAVOUR}"
-#fi
-
-
-
-

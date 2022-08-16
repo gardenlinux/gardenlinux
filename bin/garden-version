@@ -55,9 +55,7 @@ input=$($sed_gnu "s/^[[:space:]]*//;s/[[:space:]]*\$//" <<< "${input}")
 
 # no version / timestamp on versionfile
 [ -z "${input}" ] && input="today"
-
 [ -z "${KERNEL_VERSION}" ] && KERNEL_VERSION="latest"
-
 
 minor=0
 if [[ ${input} =~ ^[0-9\.]*$ && $(cut -d. -f1 <<< ${input}) -lt 10000000 ]]; 
