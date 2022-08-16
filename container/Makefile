@@ -51,12 +51,12 @@ build-integration-test: build-base-test
 .PHONY: kernelmodule-builder-arm64
 kernelmodule-builder-arm64:
 	cp ../gardenlinux.asc kernelmodule-builder
-	@$(GARDENLINUX_BUILD_CRE) build --build-arg KERNEL_VERSION=$(KERNEL_VERSION) --build-arg TARGET_ARCH="arm64" --build-arg GNU_TYPE_PACKAGE="aarch64-linux-gnu" --build-arg GLSUITE=$(VERSION) -t gardenlinux/build-kernelmodule:$(VERSION) kernelmodule-builder
+	@$(GARDENLINUX_BUILD_CRE) build --build-arg KERNEL_VERSION=$(KERNEL_VERSION) --build-arg TARGET_ARCH="arm64" --build-arg GNU_TYPE_PACKAGE="aarch64-linux-gnu" --build-arg GLSUITE=$(VERSION) -t gardenlinux/kernelmodule-builder:$(VERSION) kernelmodule-builder
 
 .PHONY: kernelmodule-builder-amd64
 kernelmodule-builder-amd64:
 	cp ../gardenlinux.asc kernelmodule-builder
-	@$(GARDENLINUX_BUILD_CRE) build --build-arg KERNEL_VERSION=$(KERNEL_VERSION) --build-arg TARGET_ARCH="amd64" --build-arg GNU_TYPE_PACKAGE="x86-64-linux-gnu" --build-arg GLSUITE=$(VERSION) -t gardenlinux/build-kernelmodule:$(VERSION) kernelmodule-builder
+	@$(GARDENLINUX_BUILD_CRE) build --build-arg KERNEL_VERSION=$(KERNEL_VERSION) --build-arg TARGET_ARCH="amd64" --build-arg GNU_TYPE_PACKAGE="x86-64-linux-gnu" --build-arg GLSUITE=$(VERSION) -t gardenlinux/kernelmodule-builder:$(VERSION) kernelmodule-builder
 
 .PHONY: clean
 clean:
