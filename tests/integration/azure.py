@@ -583,12 +583,17 @@ class AZURE:
 
             image_uri = f"https://{self._storageaccount.name}.blob.core.windows.net/vhds/{image_name}.vhd"
 
+            if "hyper_v_generation" in self.config:
+                hyper_v_generation = self.config["hyper_v_generation"]
+            else:
+                hyper_v_generation = 'V1'
+
             result = self.cclient.images.begin_create_or_update(
                 resource_group_name = self._resourcegroup.name,
                 image_name = image_name,
                 parameters = {
                     'location': self._resourcegroup.location,
-                    'hyper_v_generation': 'V2',
+                    'hyper_v_generation': hyper_v_generation,
                     'storage_profile': {
                         'os_disk': {
                             'os_type': 'Linux',
