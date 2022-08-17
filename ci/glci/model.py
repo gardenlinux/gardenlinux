@@ -357,7 +357,8 @@ class AzurePublishedImage:
     '''
 
     transport_state: AzureTransportState
-    urn: str
+    urn: typing.Optional[str]
+    id: typing.Optional[str]
     publish_operation_id: str
     golive_operation_id: str
 
