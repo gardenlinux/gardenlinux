@@ -69,9 +69,10 @@ def publish_image(
         publish_function = _publish_gcp_image
         cleanup_function = None
     elif release.platform == 'azure':
-        publish_function = _publish_azure_image
-        # For publishing using community gallery use:
-        # publish_function = _publish_azure_shared_image_gallery
+        if cicd_cfg.publish.azure.shared_gallery_cfg_name:
+            publish_function = _publish_azure_shared_image_gallery
+        else:
+            publish_function = _publish_azure_image
         cleanup_function = None
     elif release.platform == 'openstack':
         publish_function = _publish_openstack_image
