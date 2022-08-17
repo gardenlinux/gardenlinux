@@ -3,6 +3,7 @@
 qemu-utils
 libvirt-daemon-system
 libvirt-clients
+virtinst
 [${arch}=amd64] ovmf
 [${arch}=arm64] qemu-efi-aarch64
 swtpm
