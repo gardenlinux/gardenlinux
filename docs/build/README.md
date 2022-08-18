@@ -9,6 +9,9 @@
 - [Package Build](#package-build)
 	- [Git Source](#git-source)
 	- [Snapshot Source](#snapshot-source)
+- [Customize] (#customize)
+  - [Local Packages] (#local-packages)
+  - [Replace Kernel] (#replace-kernel)
 
 # Introduction
 
@@ -117,4 +120,35 @@ include:
 
 </details> 
 
+# Customize
+The Garden Linux build pipeline offers some features to easily customize your own build of Garden Linux.
 
+
+
+## Local Packages
+To install locally build packages, that are not available in the Garden Linux repository the build pipeline offers an easy way to add own packages.
+To make a package available create the directory `local_packages` in the [root](/) of the Garden Linux directory where the `build.sh` is located.
+Place all you own packages in that directory and add the package name (the package name is the name you would use to install it via `apt` and not the
+file name of the package) to the `pkg.include` file of the feature that needs the package.
+
+## Replace Kernel
+Building a Garden Linux image with more than one kernel install is not supported. In general it should work with legacy boot, but with uefi boot it
+will not be possible to choose the kernel at boot time since Garden Linux does not offer a menu for that. With the _readonly or _secureboot feature
+enabled the image build will fail. The recommended way to use a custom kernel is to replace the default kernel.
+
+To replace the Garden Linux kernel with a custom kernel place the package with the custom kernel in the `local_packages` directory as describe in the
+[Local Packages](#local-packages) chapter. For the next steps we recommend to create your own new feature in the [features](/features) directory and
+place a `pkg.include`, `pgk.exclude` and an `info.yaml` in your feature directory. Last but not least add your new feature to the build target you are 
+building in the [Makefile](/Makefile).
+
+The `pkg.include` file should contain the package name of the custom kernel you placed in the `local_packages` directory and any other package you
+wish to install. The `pkg.exclude` file must contain the package name of the default kernel that normally would be installed, also you can exclude
+any other package here you do not want in the Garden Linux image. To find the package name of the default kernel check the `pkg.include` files of the
+cloud, metal or firecracker feature, depending of what flavor of Garden Linux your want to build. To make a directory in the [features](/features)
+directory a feature it must contain an `info.yaml` file, a minimal example looks like this.
+
+```example info.yaml
+description: "custom changes"
+type: flag
+```
+For more options take a look at the [info.yaml][/features/example/info.yaml] in the example feature.
