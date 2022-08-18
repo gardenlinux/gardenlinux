@@ -583,10 +583,10 @@ class AZURE:
 
             image_uri = f"https://{self._storageaccount.name}.blob.core.windows.net/vhds/{image_name}.vhd"
 
-            if "hyper_v_generation" in self.config:
-                hyper_v_generation = self.config["hyper_v_generation"]
-            else:
-                hyper_v_generation = 'V1'
+            allowed_generations = ["V1", "V2"]
+            hyper_v_generation = self.config.get("hyper_v_generation", allowed_generations[0])
+            if hyper_v_generation not in allowed_generations:
+                raise RuntimeError(f"Hypervisor generation '{hyper_v_generation}' not supported. Allowed values: ({allowed_generations})")
 
             result = self.cclient.images.begin_create_or_update(
                 resource_group_name = self._resourcegroup.name,
