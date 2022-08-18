@@ -151,4 +151,4 @@ directory a feature it must contain an `info.yaml` file, a minimal example looks
 description: "custom changes"
 type: flag
 ```
-For more options take a look at the [info.yaml][/features/example/info.yaml] in the example feature.
+For more options take a look at the [info.yaml](/features/example/info.yaml) in the example feature.
