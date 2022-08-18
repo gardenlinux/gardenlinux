@@ -144,11 +144,17 @@ building in the [Makefile](/Makefile).
 The `pkg.include` file should contain the package name of the custom kernel you placed in the `local_packages` directory and any other package you
 wish to install. The `pkg.exclude` file must contain the package name of the default kernel that normally would be installed, also you can exclude
 any other package here you do not want in the Garden Linux image. To find the package name of the default kernel check the `pkg.include` files of the
-cloud, metal or firecracker feature, depending of what flavor of Garden Linux your want to build. To make a directory in the [features](/features)
-directory a feature it must contain an `info.yaml` file, a minimal example looks like this.
+[cloud](/features/cloud), [metal](/features/metal) or [firecracker](/features/firecracker) feature, depending of what flavor of Garden Linux your want
+to build. To make a directory in the [features](/features) directory a feature it must contain an `info.yaml` file.
 
-```example info.yaml
+<details>
+    <summary>Example: info.yaml</summary>
+
+```
 description: "custom changes"
 type: flag
 ```
+
+</details>
+
 For more options take a look at the [info.yaml](/features/example/info.yaml) in the example feature.
