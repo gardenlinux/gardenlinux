@@ -30,7 +30,4 @@ tcpdump
 vim-tiny
 quota
 nvme-cli
-selinux-basics
-selinux-policy-default
-gardenlinux-selinux-module
 sosreport

@@ -1,6 +1,8 @@
 description: "base layer (debootstap --variant minbase, see docker:debian:xx-slim)"
 type: element
 features:
-  include: [ _slim ]
+  include:
+    - _slim
+    - _selinux
 tar:
   include-dev: false
