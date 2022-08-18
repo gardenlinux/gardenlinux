@@ -127,7 +127,7 @@ The Garden Linux build pipeline offers some features to easily customize your ow
 
 ## Local Packages
 To install locally build packages, that are not available in the Garden Linux repository the build pipeline offers an easy way to add own packages.
-To make a package available create the directory `local_packages` in the [root](/) of the Garden Linux directory where the `build.sh` is located.
+To make a package available create the directory `local_packages` in the root of the Garden Linux directory where the `build.sh` is located.
 Place all you own packages in that directory and add the package name (the package name is the name you would use to install it via `apt` and not the
 file name of the package) to the `pkg.include` file of the feature that needs the package.
 
