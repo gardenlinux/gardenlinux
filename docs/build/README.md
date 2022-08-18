@@ -9,9 +9,9 @@
 - [Package Build](#package-build)
 	- [Git Source](#git-source)
 	- [Snapshot Source](#snapshot-source)
-- [Customize] (#customize)
-  - [Local Packages] (#local-packages)
-  - [Replace Kernel] (#replace-kernel)
+- [Customize](#customize)
+  - [Local Packages](#local-packages)
+  - [Replace Kernel](#replace-kernel)
 
 # Introduction
 
