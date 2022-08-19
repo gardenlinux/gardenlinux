@@ -121,9 +121,7 @@ include:
 </details> 
 
 # Customize
-The Garden Linux build pipeline offers some features to easily customize your own build of Garden Linux.
-
-
+When customizing your own build of Garden Linux you may want to add your own packages that are not in the Garden Linux repository or add your own kernel.
 
 ## Local Packages
 To install locally build packages, that are not available in the Garden Linux repository the build pipeline offers an easy way to add own packages.
