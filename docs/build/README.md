@@ -131,7 +131,7 @@ file name of the package) to the `pkg.include` file of the feature that needs th
 
 ## Replace Kernel
 Building a Garden Linux image with more than one kernel install is not supported. In general it should work with legacy boot, but with uefi boot it
-will not be possible to choose the kernel at boot time since Garden Linux does not offer a menu for that. With the _readonly or _secureboot feature
+will not be possible to choose the kernel at boot time since Garden Linux does not offer a menu for that. With the `_readonly` or `_secureboot` feature
 enabled the image build will fail. The recommended way to use a custom kernel is to replace the default kernel.
 
 To replace the Garden Linux kernel with a custom kernel place the package with the custom kernel in the `local_packages` directory as describe in the
