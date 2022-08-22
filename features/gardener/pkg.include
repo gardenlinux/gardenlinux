@@ -1,6 +1,6 @@
 apparmor
-https://gitlab.com/gardenlinux/gardenlinux-package-containerd/-/jobs/2412559315/artifacts/raw/_output/containerd_1.5.11-1gardenlinux~0.531054003.c1a628c0_amd64.deb
-https://gitlab.com/gardenlinux/gardenlinux-package-runc/-/jobs/2419399276/artifacts/raw/_output/runc_1.0.3-2gardenlinux~0.532276027.ddafebce_amd64.deb
+https://repo.gardenlinux.io/gardenlinux/pool/main/c/containerd/containerd_1.5.13-1gardenlinux~576.1_amd64.deb
+https://repo.gardenlinux.io/gardenlinux/pool/main/r/runc/runc_1.0.3+ds1-1gardenlinux~576.1_amd64.deb
 https://snapshot.debian.org/archive/debian/20220502T032918Z/pool/main/d/docker.io/docker.io_20.10.14+dfsg1-1+b1_amd64.deb
 ethtool
 ipvsadm

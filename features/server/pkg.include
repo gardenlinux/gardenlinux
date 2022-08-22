@@ -52,5 +52,8 @@ https://snapshot.debian.org/archive/debian-security/20220125T173322Z/pool/update
 https://snapshot.debian.org/archive/debian-security/20220125T173322Z/pool/updates/main/p/policykit-1/libpolkit-agent-1-0_0.105-31%2Bdeb11u1_amd64.deb
 https://snapshot.debian.org/archive/debian-security/20220125T173322Z/pool/updates/main/p/policykit-1/libpolkit-gobject-1-0_0.105-31%2Bdeb11u1_amd64.deb
 https://snapshot.debian.org/archive/debian-security/20220401T152139Z/pool/updates/main/z/zlib/zlib1g_1.2.11.dfsg-2%2Bdeb11u1_amd64.deb
-https://gitlab.com/gardenlinux/gardenlinux-package-openssl/-/jobs/2298329340/artifacts/raw/output/libssl1.1_1.1.1n-1gardenlinux_amd64.deb
+https://gitlab.com/gardenlinux/legacy-packages/gardenlinux-package-openssl/-/jobs/2446212494/artifacts/raw/output/libssl1.1_1.1.1o-1gardenlinux1_amd64.deb
 https://gitlab.com/gardenlinux/legacy-packages/gardenlinux-package-openssl/-/jobs/2446212494/artifacts/raw/output/openssl_1.1.1o-1gardenlinux1_amd64.deb
+https://repo.gardenlinux.io/gardenlinux/pool/main/g/gnutls28/libgnutls30_3.7.7-2gardenlinux~576.1_amd64.deb
+https://snapshot.debian.org/archive/debian-security/20220807T085555Z/pool/updates/main/libt/libtirpc/libtirpc3_1.3.1-1%2Bdeb11u1_amd64.deb
+https://snapshot.debian.org/archive/debian/20220818T100320Z/pool/main/z/zlib/zlib1g_1.2.11.dfsg-4.1_amd64.deb
