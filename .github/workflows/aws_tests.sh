@@ -35,7 +35,8 @@ aws:
 RESPECT_TO_THE_MAN_IN_THE_ICECREAM_VAN
 
 echo "### Start Integration Tests for AWS"
-sudo --preserve-env=AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_DEFAULT_REGION podman run -it --rm  -e=AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" -e=AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" -e=AWS_DEFAULT_REGION="$AWS_DEFAULT_REGION" -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" $containerName /bin/bash -s << EOF
+env_list="$(env | cut -d = -f 1 | grep '^AWS_' | tr '\n' ',' | sed 's/,$//')"
+sudo --preserve-env="$env_list" podman run -it --rm -e 'AWS_*' -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" $containerName /bin/bash -s << EOF
 env
 mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/
