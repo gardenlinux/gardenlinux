@@ -9,3 +9,4 @@ printf "LABEL=EFI          /boot/efi    vfat      umask=0077   type=uefi,size=12
 printf "LABEL=ROOT         /            ext4      ro           verity\n"
 printf "LABEL=USR          /usr         ext4      ro           verity\n"
 printf "LABEL=OVERLAY      /overlay     ext4      rw,discard,x-initrd.mount    size=512MiB\n"
+printf "LABEL=VAR          /var         ext4      rw,x-systemd.growfs          resizable,type=4d21b016-b534-45c2-a9fb-5c16e091fd2d\n"

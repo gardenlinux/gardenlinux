@@ -13,7 +13,7 @@ timestamp=$(garden-version --epoch "$version")
 
 rootfs_work=$(mktemp -d)
 cp -a "$rootfs/." "$rootfs_work"
-mkdir -p "$rootfs_work/overlay"/{etc,var}/{upper,work}
+mkdir -p "$rootfs_work/overlay"/{etc,home,var}/{upper,work}
 
 find "$rootfs_work/var/log/" -type f -delete
 
@@ -40,7 +40,7 @@ veritytab="$(mktemp)"
 root_hash="$(mktemp)"
 
 partitions="$(mktemp)"
-overlay_partitions="$(mktemp)"
+resizable_partition="$(mktemp)"
 secureboot_partitions="$(mktemp)"
 efi_partition="$(mktemp)"
 
@@ -60,6 +60,7 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 	[[ "$target" = "/" && "$arch" = "arm64" ]] && type="b921b045-1df0-41c3-af44-4c6f280d3fae"
 	size=
 	resize=1
+	resizable=0
 	verity=0
 	secureboot=0
 	syslinux=$([[ "$(cut -c -5 <<< "$target")" = "/boot" ]] && [[ -f "$rootfs/usr/bin/syslinux" ]] && echo 1 || echo 0)
@@ -81,6 +82,9 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 			"syslinux")
 				syslinux=1
 				;;
+			"resizable")
+				resizable=1
+				;;
 		esac
 	done < <(echo "$args" | tr "," "\n")
 
@@ -94,6 +98,12 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 	file="$(mktemp)"
 	truncate -s "$size" "$file"
 
+	# empty /var if it has its own partition and is the resizable partition
+	if [[ "$target" = "/var" ]] && [[ "$resizable" = 1 ]]; then
+		rm -rf "$rootfs_work$target"
+		mkdir "$rootfs_work$target"
+	fi
+
 	if [[ "$depth" = 0 ]]; then
 		# we iterate depth sorted, so all other partitions should already have been processed and written to fstab
 		if [[ "$verity" = 0 ]]; then
@@ -103,7 +113,13 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 		else
 			echo "overlay /var overlay defaults,lowerdir=/sysroot/var,upperdir=/sysroot/overlay/var/upper,workdir=/sysroot/overlay/var/work,x-systemd.requires-mounts-for=/sysroot/overlay,x-initrd.mount 0 2" >> "$fstab"
 			echo "overlay /etc overlay defaults,lowerdir=/sysroot/etc,upperdir=/sysroot/overlay/etc/upper,workdir=/sysroot/overlay/etc/work,x-systemd.requires-mounts-for=/sysroot/overlay,x-initrd.mount 0 2" >> "$fstab"
+			echo "overlay /home overlay defaults,lowerdir=/sysroot/home,upperdir=/sysroot/overlay/home/upper,workdir=/sysroot/overlay/home/work,x-systemd.requires-mounts-for=/sysroot/overlay,x-initrd.mount 0 2" >> "$fstab"
 		fi
+		# remove overlayfs for the resizable partition
+		for line in "$(cat $resizable_partition)"; do
+			mountpoint=$(echo $line | awk '{print $6}')
+			sed -i "/^overlay.*${mountpoint,,}/d" "$fstab"
+		done
 		column -t "$fstab" > "$rootfs_work/etc/fstab"
 		column -t "$veritytab" >> "$rootfs_work/etc/veritytab"
 	fi
@@ -164,7 +180,8 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 		fi
 	else
 		part_uuid=$(echo "gardenlinux:$version:part_uuid:$source" | uuid_hash)
-		echo -e "$part_uuid\t$type\t$size\t$syslinux\t$file\t$label" >> "$([[ "$(cut -c -8 <<< "$target")" = "/overlay" ]] && echo "$overlay_partitions" || echo $partitions)"
+		# make sure the resizable partition is the last partition on disk
+		echo -e "$part_uuid\t$type\t$size\t$syslinux\t$file\t$label" >> "$([[ "$resizable" = 1 ]] && echo "$resizable_partition" || echo $partitions)"
 		echo "$source" "$target" "$fs" "$options" "$dump" "$pass" >> "$fstab"
 	fi
 
@@ -172,6 +189,13 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 		echo "$file" >> "$secureboot_partitions"
 	fi
   done
+
+# bail out if more than one partition is declared resizable
+if [[ $(wc -l "$resizable_partition" | cut -d ' ' -f 1) -gt 1 ]]; then
+	echo "more than 1 partition has the 'resizable' flag set"
+	cat "$resizable_partition"
+	exit 1
+fi
 
 rmdir "$rootfs_work"
 
@@ -196,7 +220,7 @@ if [ -s "$secureboot_partitions" ]; then
 	makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -t "$timestamp" < "$secureboot_partitions"
 fi
 
-cat "$partitions" "$overlay_partitions" >&3
+cat "$partitions" "$resizable_partition" >&3
 
 # cleanup
-rm "$fstab" "$veritytab" "$root_hash" "$partitions" "$overlay_partitions" "$secureboot_partitions"
+rm "$fstab" "$veritytab" "$root_hash" "$partitions" "$resizable_partition" "$secureboot_partitions"
