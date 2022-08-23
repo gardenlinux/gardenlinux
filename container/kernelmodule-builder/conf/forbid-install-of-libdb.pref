@@ -1,0 +1,13 @@
+Package: libdb5.3
+Pin: release *
+Pin-Priority: -1
+
+Package: libdb-dev
+Pin: release *
+Pin-Priority: -1
+
+
+Package: libdb-java
+Pin: release *
+Pin-Priority: -1
+

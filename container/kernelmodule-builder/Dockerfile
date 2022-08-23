@@ -1,9 +1,17 @@
-FROM debian:bookworm-slim
+FROM debian:bookworm-slim as base
 
 ARG GLSUITE
 ARG KERNEL_VERSION
 ARG GNU_TYPE_PACKAGE
 ARG TARGET_ARCH
+
+RUN apt-get remove --auto-remove libdb5.3
+
+# Add pre-apt configs
+ADD ./conf/forbid-install-of-libdb.pref /etc/apt/preferences.d/forbid-install-of-libdb.pref
+
+
+RUN apt-mark hold libdb5.3
 
 RUN dpkg --add-architecture $TARGET_ARCH
 RUN apt-get update -qy
@@ -35,3 +43,9 @@ RUN apt-get update -qy
 RUN apt-get install -qy "linux-headers-${KERNEL_VERSION}-gardenlinux-${TARGET_ARCH}" \
 			"linux-headers-${KERNEL_VERSION}-gardenlinux-cloud-${TARGET_ARCH}" \
 			"linux-headers-${KERNEL_VERSION}-gardenlinux-firecracker-${TARGET_ARCH}"
+
+
+FROM base as test
+ADD ./tests /tests
+RUN /tests/test_entry.sh
+
