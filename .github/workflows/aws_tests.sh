@@ -24,7 +24,7 @@ if [[ ! -e $image_file ]]; then
     exit 1
 fi
 
-cat << RESPECT_TO_THE_MAN_IN_THE_ICECREAM_VAN > "$configFile"
+cat << EOF > "$configFile"
 aws:
     region: ${aws_region}
     instance_type: m5.large
@@ -32,7 +32,7 @@ aws:
     ssh:
       user: admin
     keep_running: false
-RESPECT_TO_THE_MAN_IN_THE_ICECREAM_VAN
+EOF
 
 echo "### Start Integration Tests for AWS"
 env_list="$(env | cut -d = -f 1 | grep '^AWS_' | tr '\n' ',' | sed 's/,$//')"

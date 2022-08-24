@@ -32,9 +32,12 @@ jobs:
       packages: write
     strategy:
       matrix:
-        target: [ aws ]
-        architecture: [ amd64 ]
+        architecture: [ amd64, arm64 ]
+        target: [ gcp, aws ]
         modifier: [ "" ]
+        exclude:
+          - architecture: arm64
+            target: gcp
     steps:
     - uses: actions/checkout@v3
 
@@ -42,7 +45,9 @@ jobs:
       run: echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u $ --password-stdin
 
     - name: pull container image
-      run: sudo podman pull ghcr.io/gardenlinux/gardenlinux/integration-test:today
+      run: |
+        sudo podman pull "ghcr.io/gardenlinux/gardenlinux/integration-test:$GITHUB_SHA"
+        sudo podman tag "ghcr.io/gardenlinux/gardenlinux/integration-test:$GITHUB_SHA" ghcr.io/gardenlinux/gardenlinux/integration-test:today
 
     - uses: actions/download-artifact@v2
       with:

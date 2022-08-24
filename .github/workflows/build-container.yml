@@ -2,7 +2,7 @@ name: build garden linux container
 on:
   workflow_call:
 env:
-  IMAGE_NAME: gardenlinux/integration-test:today
+  IMAGE_NAME: gardenlinux/integration-test
 jobs:
   integration_test_container:
     name: make integration test container
@@ -18,10 +18,7 @@ jobs:
 
       - name: upload integration test container to ghcr.io
         run: |
-          echo $IMAGE_NAME
-          IMAGE_ID="ghcr.io/gardenlinux/gardenlinux/integration-test"
-          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-          echo $IMAGE_ID
-          sudo podman images
-          sudo podman tag gardenlinux/integration-test:today $IMAGE_ID:today
-          sudo podman push $IMAGE_ID:today
+          sudo podman tag "$IMAGE_NAME:today" "ghcr.io/gardenlinux/$IMAGE_NAME:today"
+          sudo podman tag "$IMAGE_NAME:today" "ghcr.io/gardenlinux/$IMAGE_NAME:$GITHUB_SHA"
+          sudo podman push "ghcr.io/gardenlinux/$IMAGE_NAME:today"
+          sudo podman push "ghcr.io/gardenlinux/$IMAGE_NAME:$GITHUB_SHA"
