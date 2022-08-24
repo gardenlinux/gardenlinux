@@ -244,6 +244,11 @@ azure:
     image_name: <image name>
     # hyperV generation to use. Possible values are 'V1' and 'V2'. Default is 'V1'
     hyper_v_generation: V1
+    # azure image size
+    #size: Standard_B2s
+    # enable azure accelerated networking
+    #accelerated_networking: false
+    
 
     # ssh related configuration for logging in to the VM (optional)
     ssh:
