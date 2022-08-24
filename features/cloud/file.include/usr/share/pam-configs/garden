@@ -4,10 +4,10 @@ Priority: 1024
 Conflicts: cracklib
 Password-Type: Primary
 Password:
-	required pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 minlen=8 retry=5 reject_username
+	required pam_passwdqc.so min=disabled,disabled,12,8,8 passphrase=4 similar=deny retry=5
 	required pam_pwhistory.so use_authtok remember=5 retry=5
 Password-Initial:
-	required pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 minlen=8 retry=5 reject_username
+	required pam_passwdqc.so min=disabled,disabled,12,8,8 passphrase=4 similar=deny retry=5
 	required pam_pwhistory.so use_authtok remember=5 retry=5
 Auth-Type: Primary
 Auth:
