@@ -11,9 +11,28 @@ More information about `dm-verity` can be found [here](https://www.kernel.org/do
 
 Additionally, a separate readonly `/usr` partition is configured to be used with `dm-verity`, too.
 
-If only `/usr` should be configured this way (readonly & dm-verity) without enabling this feature for the whole root parition, take a look at the next chapter to find an example for how to setup the [fstab.mod](https://github.com/gardenlinux/gardenlinux/blob/main/features/_readonly/fstab.mod) for this case.
+If only `/usr` should be configured this way (readonly & dm-verity) without enabling this feature for the whole root partition, take a look at the chapter [dm-verity only for /usr with writable root partition](dm-verity-only-for-usr-with-writable-root-partition) to find an example for how to setup the [fstab.mod](https://github.com/gardenlinux/gardenlinux/blob/main/features/_readonly/fstab.mod) for this case.
 
-### dm-verity only for /usr with writable root partition
+---
+
+	Type: flag
+	Included Features: server
+
+
+## resizable /var partition
+
+When the `/var` partition is writable via the OverlayFS it causes problems for containerd. Therefore it is necessary to have a separate writable `/var` partition that is not an OverlayFS and it should also be easily resizable to be able to store container images as needed.
+Add the following line to the `fstab.mod` to create a Garden Linux image with a separate `/var` partition.
+
+```
+printf "LABEL=VAR          /var         ext4      rw,x-systemd.growfs          resizable,type=4d21b016-b534-45c2-a9fb-5c16e091fd2d\n"
+```
+* `x-systemd.growfs`: Instructs systemd-growfs to grow the filesystem to the size of the partition.
+* `resizable`: Tells the `bin/makepart` script to move this partition to the end of the partition table to make the partition easily resizable.
+* `type=4d21b016-b534-45c2-a9fb-5c16e091fd2d`: Helps systemd-repart to identify the partition and enlarge the partition.
+
+## dm-verity only for /usr with writable root partition
+
 In order to only enable dm-verity for `/usr` and have a writable root partition the [fstab.mod](https://github.com/gardenlinux/gardenlinux/blob/main/features/_readonly/fstab.mod) must be adjusted accordingly. But keep in mind that `/etc/veritytab`, which is containing the hash for the partition, most likely is located on a writable partition and therefore easy to modify.
 
 NOTE: The sed statement does not remove the root partition from the fstab!
