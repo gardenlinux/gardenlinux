@@ -2,6 +2,6 @@ fdisk
 [${arch}=amd64] syslinux
 [${arch}=amd64] syslinux-common
 #[${arch}=arm64] grub-cloud-arm64
-libpam-cracklib
+libpam-passwdqc
 rng-tools5
 linux-image-5.15-cloud-${arch}

@@ -4,7 +4,7 @@ import pytest
 @pytest.mark.parametrize(
     "file,args",
     [
-        ("/etc/pam.d/common-password", "password required pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 minlen=8 retry=5 reject_username"),
+        ("/etc/pam.d/common-password", "password required pam_passwdqc.so min=disabled,disabled,12,8,8 passphrase=4 similar=deny retry=5"),
         ("/etc/pam.d/common-password", "password required pam_pwhistory.so use_authtok remember=5 retry=5")
     ]
 )
