@@ -507,3 +507,8 @@ def virtual_image_artifact_for_platform(platform: glci.model.Platform) -> str:
         )
 
     return platform_to_artifact_mapping[platform]
+
+def package_aliases(package_alias_file: str = paths.package_alias_path) -> dict:
+    with open(package_alias_file) as f:
+        parsed = yaml.safe_load(f)
+    return parsed.get('aliases', {})
