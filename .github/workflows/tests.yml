@@ -32,12 +32,12 @@ jobs:
       packages: write
     strategy:
       matrix:
-        architecture: [ amd64, arm64 ]
+        architecture: [ amd64 ] # [ amd64, arm64 ]
         target: [ gcp, aws ]
         modifier: [ "" ]
-        exclude:
-          - architecture: arm64
-            target: gcp
+        # exclude:
+        #   - architecture: arm64
+        #     target: gcp
     steps:
     - uses: actions/checkout@v3
 
