@@ -11,7 +11,7 @@ More information about `dm-verity` can be found [here](https://www.kernel.org/do
 
 Additionally, a separate readonly `/usr` partition is configured to be used with `dm-verity`, too.
 
-If only `/usr` should be configured this way (readonly & dm-verity) without enabling this feature for the whole root partition, take a look at the chapter [dm-verity only for /usr with writable root partition](dm-verity-only-for-usr-with-writable-root-partition) to find an example for how to setup the [fstab.mod](https://github.com/gardenlinux/gardenlinux/blob/main/features/_readonly/fstab.mod) for this case.
+If only `/usr` should be configured this way (readonly & dm-verity) without enabling this feature for the whole root partition, take a look at the chapter [dm-verity only for /usr with writable root partition](#dm-verity-only-for-usr-with-writable-root-partition) to find an example for how to setup the [fstab.mod](https://github.com/gardenlinux/gardenlinux/blob/main/features/_readonly/fstab.mod) for this case.
 
 ---
 
@@ -21,7 +21,7 @@ If only `/usr` should be configured this way (readonly & dm-verity) without enab
 
 ## resizable /var partition
 
-When the `/var` partition is writable via the OverlayFS it causes problems for containerd. Therefore it is necessary to have a separate writable `/var` partition that is not an OverlayFS and it should also be easily resizable to be able to store container images as needed. When `/var` is the resizable partition the content of `/var` will be remove during build. To make sure `/var` is properly initialized a systemd-tmpfiles configuration exists in the `_readonly` feature. Additionally every feature that needs files in `/var` has a systemd-tmpfiles configuration as well, to create files and directories as needed.
+When `/var` is writable via the OverlayFS it causes problems when containerd is used. Therefore it is necessary to have a separate writable `/var` partition that is not an OverlayFS and it should also be easily resizable to be able to store container images as needed. When `/var` is the resizable partition the content of `/var` will be remove during build. To make sure `/var` is properly initialized a systemd-tmpfiles configuration exists in the `_readonly` feature. Additionally every feature that needs files in `/var` has a systemd-tmpfiles configuration as well, to create files and directories as needed.
 Add the following line to the `fstab.mod` to create a Garden Linux image with a separate `/var` partition.
 
 ```
