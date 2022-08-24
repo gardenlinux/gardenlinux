@@ -25,7 +25,7 @@ def _resolve_ctx_repository_config(cfg_name):
     return cfg.base_url()
 
 
-def _virtual_image_packages(release_manifest, cicd_cfg):
+def _virtual_image_packages(release_manifest, cicd_cfg) -> typing.Generator[str, None, None]:
     s3_client = glci.s3.s3_client(cicd_cfg)
     manifest_file_path = release_manifest.path_by_suffix('rootfs.manifest')
     resp = s3_client.get_object(
@@ -265,10 +265,36 @@ def virtual_machine_image_resource(
             value={
                 'modifiers': release_manifest.modifiers,
                 'buildTimestamp': release_manifest.build_timestamp,
-                'debianPackages': [p for p in _virtual_image_packages(release_manifest, cicd_cfg)],
             }
         ),
     ]
+
+    # fetch package versions from release manifest and create label from them
+    packages = _virtual_image_packages(release_manifest, cicd_cfg)
+    package_aliases = glci.util.package_aliases()
+    package_versions = []
+
+    for package in packages:
+        match package.split(' '):
+            case [name, version]:
+                package_versions.append({
+                    'name': name,
+                    'aliases': package_aliases.get(name) or [],
+                    'version': version,
+                })
+            case _:
+                logger.warning(
+                    f'Unable to parse package-string {package}. No version-information will be '
+                    'added to the component-descriptor for this package.'
+                )
+
+    if package_versions:
+        labels.append(
+            cm.Label(
+                name='cloud.cnudie/dso/scanning-hints/package-versions',
+                value=package_versions,
+            )
+        )
 
     if (published_image_metadata := release_manifest.published_image_metadata):
         labels.append(
