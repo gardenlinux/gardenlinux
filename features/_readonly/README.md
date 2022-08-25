@@ -29,7 +29,7 @@ printf "LABEL=VAR          /var         ext4      rw,x-systemd.growfs          r
 ```
 * `x-systemd.growfs`: Instructs systemd-growfs to grow the filesystem to the size of the partition.
 * `resizable`: Tells the `bin/makepart` script to move this partition to the end of the partition table to make the partition easily resizable.
-* `type=4d21b016-b534-45c2-a9fb-5c16e091fd2d`: Helps systemd-repart to identify the partition and enlarge the partition.
+* `type=4d21b016-b534-45c2-a9fb-5c16e091fd2d`: Helps systemd-repart to identify the partition and enlarge the partition. A list of all available discoverable partition uuids can be found [here](https://systemd.io/DISCOVERABLE_PARTITIONS/).
 
 ## dm-verity only for /usr with writable root partition
 
