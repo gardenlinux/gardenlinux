@@ -98,6 +98,12 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 	file="$(mktemp)"
 	truncate -s "$size" "$file"
 
+	# make sure /opt is a link to /var/opt
+	if [[ "$target" = "/" ]]; then
+		rm -rf "${rootfs_work}${target}opt"
+		ln -sf /var/opt "${rootfs_work}${target}opt"
+	fi
+
 	# empty /var if it has its own partition and is the resizable partition
 	if [[ "$target" = "/var" ]] && [[ "$resizable" = 1 ]]; then
 		rm -rf "$rootfs_work$target"
