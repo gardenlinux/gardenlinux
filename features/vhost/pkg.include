@@ -1,5 +1,5 @@
 dmidecode
-dnsmasq
+dnsmasq-base
 [${arch}=amd64] qemu-system-x86
 [${arch}=arm64] qemu-system-arm
 qemu-utils
