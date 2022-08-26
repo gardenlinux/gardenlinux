@@ -480,3 +480,9 @@ def non_dev(testconfig):
     features = testconfig.get("features", [])
     if "_dev" in features:
         pytest.skip('test not supported on dev')
+
+@pytest.fixture
+def non_vhost(testconfig):
+    features = testconfig.get("features", [])
+    if "vhost" in features:
+        pytest.skip('test not supported with vhost feature enabled')

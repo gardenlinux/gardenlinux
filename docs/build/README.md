@@ -9,6 +9,9 @@
 - [Package Build](#package-build)
 	- [Git Source](#git-source)
 	- [Snapshot Source](#snapshot-source)
+- [Customize](#customize)
+  - [Local Packages](#local-packages)
+  - [Replace Kernel](#replace-kernel)
 
 # Introduction
 
@@ -29,7 +32,8 @@ You can also customize a Makefile target to your needs, e.g. by adding a feature
 ## Build via build.sh 
 If you really want to directly call build.sh, you can checkout [Makefile](/Makefile) for some good examples and start from there.
 
-In general, the `build.sh` starts and prepares the build container, in which `garden-build` and `garden-test` are executed.
+In general, the `build.sh` starts and prepares the build container, in which `garden-build` gets executed. Afterwards, PyTest
+based unit tests are performed.
 
 ## Build Artifacts
 Build artifacts are stored in the output folder (default `.build/`).
@@ -116,4 +120,40 @@ include:
 
 </details> 
 
+# Customize
+When customizing your own build of Garden Linux you may want to add your own packages that are not in the Garden Linux repository or add your own kernel.
 
+## Local Packages
+To install locally build packages, that are not available in the Garden Linux repository, the build pipeline offers an easy way to add own packages.
+To make a package available create the directory `local_packages` in the root of the Garden Linux directory where the `build.sh` is located.
+Place all you own packages in that directory and add the package name (the package name is the name you would use to install it via `apt` and not the
+file name of the package) to the `pkg.include` file of the feature that needs the package.
+
+## Replace Kernel
+Building a Garden Linux image with more than one kernel install is not supported. In general it should work with legacy boot, but with uefi boot it
+will not be possible to choose the kernel at boot time since Garden Linux does not offer a menu for that. With the `_readonly` or `_secureboot` feature
+enabled the image build will fail. The recommended way to use a custom kernel is to replace the default kernel.
+
+To replace the Garden Linux kernel with a custom kernel, place the package with the custom kernel in the `local_packages` directory as describe in the
+[Local Packages](#local-packages) chapter. For the next steps we recommend to create your own new feature in the [features](/features) directory and
+place a `pkg.include`, `pgk.exclude` and an `info.yaml` in your feature directory. Last but not least add your new feature to the build target you are 
+building in the [Makefile](/Makefile).
+
+The `pkg.include` file should contain the package name of the custom kernel you placed in the `local_packages` directory and any other package you
+wish to install. The `pkg.exclude` file must contain the package name of the default kernel that normally would be installed. Also, you can exclude
+any other package here you do not want in the Garden Linux image. To find the package name of the default kernel check the `pkg.include` files of the
+[cloud](/features/cloud/pkg.include), [metal](/features/metal/pkg.include) or [firecracker](/features/firecracker/pkg.include) feature, depending of
+what flavor of Garden Linux you want to build. To make a directory in the [features directory](/features) a [feature](/features/README.md), it must
+contain an `info.yaml` file.
+
+<details>
+    <summary>Example: info.yaml</summary>
+
+```
+description: "custom changes"
+type: flag
+```
+
+</details>
+
+For more options take a look at the [info.yaml](/features/example/info.yaml) in the example feature.

@@ -1,6 +1,6 @@
 # Garden Linux Binary Set
 ## General
-This directory contains many scripts to manage the Garden Linux build process. While most of them are used in a Docker container during the Garden Linux build (e.g. `garden-build`, `garden-test`, `makepart`, ...) there are also several useful scripts (e.g. `start-vm`, `inject-sshkey`, ...) that may be used afterwards.
+This directory contains many scripts to manage the Garden Linux build process. While most of them are used in a Docker container during the Garden Linux build (e.g. `garden-build`, `garden-feat`, `makepart`, ...) there are also several useful scripts (e.g. `start-vm`, `inject-sshkey`, ...) that may be used afterwards.
 
 ## Overview
 By the given directory, we distinguish between scripts that are mandatory for the Garden Linux build process and scripts that are optional but very useful for handling a final Garden Linux artifact. Therefore, we describe them by the given two sections and only describe the standalone usable ones in detail.
@@ -19,7 +19,6 @@ By the given directory, we distinguish between scripts that are mandatory for th
 | garden-init | Debootstraps Garden Linux |
 | garden-slimify | Creates a slimifyed version of Garden Linux |
 | garden-tar | Creates a `.tar.xf` image of the build env from `chroot` env |
-| garden-test | Performs basic unit tests |
 | garden-version | Creates a version schema |
 | get-arch | Evaluates the base arch of the build host |
 | makedisk | Creates the disks during the build process in the `chroot` env |
@@ -86,15 +85,55 @@ sudo usermod -G -a libvirtd "$username"
 sudo chmod +666 /dev/kvm
 ```
 
+**Network Bridge:**
+
+Creating a network bridge requires `root` access and additional packages like `virsh`.
+
+`Debian`: `apt-get install libvirt-clients libvirt`
+
+`Ubuntu`: `apt-get install libvirt-clients libvirt`
+
+`CentOS`: `yum install libvirt-client libvirt-daemon libvirt-daemon-driver-qemu libvirt-daemon-config-network`
+
+`macOS`: `unsupported`
+
+
+Creating a bridge with `virsh`:
+```
+# You may need to start unit `libvirtd`
+
+# By default, it comes with a default profile
+$> virsh net-list --all
+ Name      State      Autostart   Persistent
+----------------------------------------------
+ default   inactive   no          yes
+
+# Start the default profile
+$> virsh net-start --network default
+
+# A new device virbr0 is up
+$> ip addr show virbr0
+12: virbr0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default qlen 1000
+    link/ether 52:54:00:d4:dd:c1 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.122.1/24 brd 192.168.122.255 scope global virbr0
+       valid_lft forever preferred_lft forever
+
+# Stat QEMU bridge with bridge interface
+$> bin/start-vm --bridge virbr0 .build/kvm_dev-amd64-today-local.raw
+```
+
 **Options:**
 | Option (short) | Descriptions |
 |--|--|
-| --arch | Architecture to use [x86_64, aarch64] |
+| --arch | Architecture to use [`amd64`, `arm64`] |
 | --cpu | CPU type to emulate if an specific should be used |
 | --mem | Memory size to use for VM |
 | --uuefi | Run in `UEFI` mode instead of legacy `Bios`|
 | --ueficode | Path to custom UEFI Code file |
 | --uefivars | Path to custom UEFI Vars file |
+| --skipkp |Skip keypress (boots directly the image) |
+| --vnc | Starts a VNC server session |
+| --bridge <interface> | Uses a network bridge with a defined interface (needs root) |
 
 **Usage:**
 

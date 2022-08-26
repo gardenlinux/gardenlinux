@@ -2,6 +2,7 @@
 
 set -Eeuxo pipefail
 
+thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 rootfs=$1
 targetBase=$2
 targetBaseDir=$(dirname "$targetBase")
@@ -26,9 +27,8 @@ cp -a "$rootfs/." "$rootfs_work"
 find "$rootfs_work/var/log/" -type f -delete
 
 chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
-# Temporary deactivated until this is fixed by upstream:
-# GitHub: https://github.com/gardenlinux/gardenlinux/issues/1014
-#chroot "$rootfs_work" /usr/bin/env -i /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
+# SELinux 'default' policy file contexts
+"$thisDir/../../bin/garden-chroot" "$rootfs_work" /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
 rm "$rootfs_work/.autorelabel"
 
 # create the squashfs to include the fully generate image

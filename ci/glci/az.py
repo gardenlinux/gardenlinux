@@ -727,7 +727,7 @@ def publish_azure_shared_image_gallery(
         transport_state=glci.model.AzureTransportState.RELEASED,
         publish_operation_id='',
         golive_operation_id='',
-        urn=shared_img.id,
+        id=shared_img.id,
     )
 
     return dataclasses.replace(release, published_image_metadata=published_image)

@@ -1,0 +1,11 @@
+dmidecode
+dnsmasq-base
+[${arch}=amd64] qemu-system-x86
+[${arch}=arm64] qemu-system-arm
+qemu-utils
+libvirt-daemon-system
+libvirt-clients
+virtinst
+[${arch}=amd64] ovmf
+[${arch}=arm64] qemu-efi-aarch64
+swtpm

@@ -357,7 +357,8 @@ class AzurePublishedImage:
     '''
 
     transport_state: AzureTransportState
-    urn: str
+    urn: typing.Optional[str]
+    id: typing.Optional[str]
     publish_operation_id: str
     golive_operation_id: str
 
@@ -613,7 +614,7 @@ class AzurePublishCfg:
     plan_id: str
     service_principal_cfg_name: str
     storage_account_cfg_name: str
-    shared_gallery_cfg_name: str
+    shared_gallery_cfg_name: typing.Optional[str]
     notification_emails: typing.Tuple[str, ...]
 
 
