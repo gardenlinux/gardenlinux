@@ -2,6 +2,8 @@
 
 set -Eeufo pipefail
 
+export PKCS11_MODULE_PATH="/usr/lib/$(uname -m)-linux-gnu/pkcs11/aws_kms_pkcs11.so"
+
 conf=
 ca_base=
 algo=RSA
@@ -53,7 +55,7 @@ done
 if [ -n "$conf" ]; then
 	while IFS='=' read -r key value; do
 		declare "$key"="$value"
-	done < "$conf"
+	done < <(envsubst < "$conf")
 fi
 
 if [ -z "$algo_opt" ]; then
@@ -78,8 +80,8 @@ if [ -n "$ca_base" ]; then
 	if [ -f "$ca_base.key" ]; then
 		ca_key_params=(-CAkey "$ca_base.key")
 	elif [ -f "$ca_base.arn" ]; then
-		engine_params+=(-engine kms)
-		ca_key_params=(-CAkeyform engine -CAkey "$(cat "$ca_base.arn")")
+		engine_params+=(-engine pkcs11)
+		ca_key_params=(-CAkeyform engine -CAkey "pkcs11:token=$(basename "$(cat "$ca_base.arn")" | cut -c -32)")
 	else
 		echo "neither $ca_base.key nor $ca_base.arn exists, but at least one is required" >&2
 		exit 1
@@ -106,8 +108,8 @@ else
 		--query "KeyMetadata.Arn" \
 		--output text > "$base.arn"
 
-	engine_params+=(-engine kms)
-	key_params=(-keyform engine -key "$(cat "$base.arn")")
+	engine_params+=(-engine pkcs11)
+	key_params=(-keyform engine -key "pkcs11:token=$(basename "$(cat "$base.arn")" | cut -c -32)")
 fi
 
 subj="/CN=$CERT_CN/C=$CERT_C/L=$CERT_L/O=$CERT_O/OU=$CERT_OU/emailAddress=$CERT_E/"

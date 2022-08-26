@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/bin/.constants.sh" \
-	--flags 'skip-build,debug,lessram,manual,skip-tests' \
+	--flags 'skip-build,debug,lessram,manual,skip-tests,export-aws-access-key' \
 	--flags 'arch:,features:,disable-features:,suite:,local-pkgs:,tests:,cert:' \
 	--usage '[--skip-build] [--lessram] [--debug] [--manual] [--arch=<arch>] [--skip-tests] [--tests=<test>,<test>,...] [<output-dir>] [<version/timestamp>]' \
 	--sample '--features kvm,khost --disable-features _slim .build' \
@@ -40,6 +40,7 @@ tests="unittests,chroot"
 local_pkgs=
 output=".build"
 cert=cert/
+aws_access_key=0
 while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
@@ -55,6 +56,7 @@ while true; do
 		--tests)	tests="$1"; shift ;;
 		--local-pkgs) local_pkgs="$1"; shift ;;
 		--cert) cert="$1"; shift ;;
+		--export-aws-access-key) aws_access_key=1; shift ;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
@@ -96,6 +98,12 @@ envArgs=(
 	userID="$userID"
 	userGID="$userGID"
 )
+
+if [ "$aws_access_key" = 1 ]; then
+	for e in AWS_DEFAULT_REGION AWS_REGION AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN; do
+		envArgs+=("$e=${!e}")
+	done
+fi
 
 securityArgs=(
 	--cap-add sys_admin	# needed for unshare in garden-chroot

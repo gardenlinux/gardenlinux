@@ -23,8 +23,13 @@ all: all_dev all_prod
 
 SECUREBOOT_CRT=cert/secureboot.db.auth
 
+ifdef CERT_USE_KMS
+CERT_CONTAINER_OPTS=$(shell env | grep '^AWS_' | sed 's/^/-e /')
+CERT_MAKE_OPTS=USE_KMS=1
+endif
+
 $(SECUREBOOT_CRT): container-cert
-	$(GARDENLINUX_BUILD_CRE) run --rm --volume '$(realpath $(dir $@)):/cert' 'gardenlinux/build-cert:$(VERSION)' make --directory=/cert default
+	$(GARDENLINUX_BUILD_CRE) run --rm --volume '$(realpath $(dir $@)):/cert' $(CERT_CONTAINER_OPTS) 'gardenlinux/build-cert:$(VERSION)' make --directory=/cert $(CERT_MAKE_OPTS) default
 
 .PHONY: container-build container-cert container-test container-integration
 
