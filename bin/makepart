@@ -13,7 +13,7 @@ timestamp=$(garden-version --epoch "$version")
 
 rootfs_work=$(mktemp -d)
 cp -a "$rootfs/." "$rootfs_work"
-mkdir -p "$rootfs_work/overlay"/{etc,home,var}/{upper,work}
+mkdir -p "$rootfs_work/overlay"/etc/{upper,work}
 
 find "$rootfs_work/var/log/" -type f -delete
 
@@ -98,10 +98,12 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 	file="$(mktemp)"
 	truncate -s "$size" "$file"
 
-	# make sure /opt is a link to /var/opt
-	if [[ "$target" = "/" ]]; then
-		rm -rf "${rootfs_work}${target}opt"
-		ln -sf var/opt "${rootfs_work}${target}opt"
+	# make sure /opt and /home are writable
+	if [[ "$target" = "/var" ]]; then
+		rm -rf "${rootfs_work}/opt"
+		rm -rf "${rootfs_work}/home"
+		ln -sf var/opt "${rootfs_work}/opt"
+		ln -sf var/home "${rootfs_work}/home"
 	fi
 
 	# empty /var if it has its own partition and is the resizable partition
@@ -117,15 +119,8 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 			echo "$source" "$target" "$fs" "$options" "$dump" "$pass" >> "$fstab"
 			rm -rf "$rootfs_work/overlay"
 		else
-			echo "overlay /var overlay defaults,lowerdir=/sysroot/var,upperdir=/sysroot/overlay/var/upper,workdir=/sysroot/overlay/var/work,x-systemd.requires-mounts-for=/sysroot/overlay,x-initrd.mount 0 2" >> "$fstab"
 			echo "overlay /etc overlay defaults,lowerdir=/sysroot/etc,upperdir=/sysroot/overlay/etc/upper,workdir=/sysroot/overlay/etc/work,x-systemd.requires-mounts-for=/sysroot/overlay,x-initrd.mount 0 2" >> "$fstab"
-			echo "overlay /home overlay defaults,lowerdir=/sysroot/home,upperdir=/sysroot/overlay/home/upper,workdir=/sysroot/overlay/home/work,x-systemd.requires-mounts-for=/sysroot/overlay,x-initrd.mount 0 2" >> "$fstab"
 		fi
-		# remove overlayfs for the resizable partition
-		for line in "$(cat $resizable_partition)"; do
-			mountpoint=$(echo $line | awk '{print $6}')
-			sed -i "/^overlay.*${mountpoint,,}/d" "$fstab"
-		done
 		column -t "$fstab" > "$rootfs_work/etc/fstab"
 		column -t "$veritytab" >> "$rootfs_work/etc/veritytab"
 	fi
