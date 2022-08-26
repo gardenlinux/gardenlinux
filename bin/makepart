@@ -101,7 +101,7 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 	# make sure /opt is a link to /var/opt
 	if [[ "$target" = "/" ]]; then
 		rm -rf "${rootfs_work}${target}opt"
-		ln -sf /var/opt "${rootfs_work}${target}opt"
+		ln -sf var/opt "${rootfs_work}${target}opt"
 	fi
 
 	# empty /var if it has its own partition and is the resizable partition
