@@ -26,18 +26,18 @@ jobs:
       gcp_region: ${{ secrets.gcp_region }}
       gcp_zone: ${{ secrets.gcp_zone }}
       aws_region: ${{ secrets.aws_region }}
-    runs-on: ec2-gardenlinux-${{ matrix.architecture }}
+    runs-on: ec2-gardenlinux-amd64
     permissions:
       id-token: write
       packages: write
     strategy:
       matrix:
-        architecture: [ amd64 ] # [ amd64, arm64 ]
+        architecture: [ amd64, arm64 ]
         target: [ gcp, aws ]
         modifier: [ "" ]
-        # exclude:
-        #   - architecture: arm64
-        #     target: gcp
+        exclude:
+          - architecture: arm64
+            target: gcp
     steps:
     - uses: actions/checkout@v3
 
@@ -72,4 +72,4 @@ jobs:
         aws-region: ${{ secrets.aws_region }}
 
     - name: start platform test for ${{ matrix.target }}
-      run: .github/workflows/${{ matrix.target }}_tests.sh "${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.tar.gz"
+      run: .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.architecture }}" "${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.tar.gz"
