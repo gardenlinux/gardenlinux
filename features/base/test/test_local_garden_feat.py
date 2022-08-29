@@ -2,61 +2,108 @@ from helper.tests.garden_feat import garden_feat
 import pytest
 
 @pytest.mark.parametrize(
-    "test_case,config",
+    "test_case,config,input_features,output_features",
     [
         # Basic tests for positional cli args
-        ("features", [
-                      {"base": {'description': 'base', 'type': 'element', 'features': {'include': ['_slim']}}},
-                      {"_slim": {'description': '_slim', 'type': 'flag'}},
-                      {"_dev": {'description': '_dev', 'type': 'flag'}},
-                      {"kvm": {'description': 'kvm', 'type': 'platform', 'features': {'include': ['cloud']}}},
-                      {"cloud": {'description': 'cloud', 'type': 'element'}}
-                     ]
+        (
+            "features",
+            [
+                  {"base": {'description': 'base', 'type': 'element', 'features': {'include': ['_slim']}}},
+                  {"_slim": {'description': '_slim', 'type': 'flag'}},
+                  {"_dev": {'description': '_dev', 'type': 'flag'}},
+                  {"kvm": {'description': 'kvm', 'type': 'platform', 'features': {'include': ['cloud']}}},
+                  {"cloud": {'description': 'cloud', 'type': 'element'}}
+            ],
+            "base,kvm,_dev",
+            "_dev,_slim,base,cloud,kvm"
         ),
-        ("cname", [
-                      {"base": {'description': 'base', 'type': 'element', 'features': {'include': ['_slim']}}},
-                      {"_slim": {'description': '_slim', 'type': 'flag'}},
-                      {"_dev": {'description': '_dev', 'type': 'flag'}},
-                      {"kvm": {'description': 'kvm', 'type': 'platform', 'features': {'include': ['cloud']}}},
-                      {"cloud": {'description': 'cloud', 'type': 'element'}}
-                     ]
+        (
+            "features",
+            [
+                  {"base": {'description': 'base', 'type': 'element', 'features': {'include': ['_slim']}}},
+                  {"_slim": {'description': '_slim', 'type': 'flag'}},
+                  {"_dev": {'description': '_dev', 'type': 'flag'}},
+                  {"kvm": {'description': 'kvm', 'type': 'platform', 'features': {'exclude': ['cloud']}}},
+                  {"cloud": {'description': 'cloud', 'type': 'element'}}
+            ],
+            "base,kvm,_dev",
+            "_dev,_slim,base,kvm"
         ),
-        ("flags", [
-                      {"base": {'description': 'base', 'type': 'element', 'features': {'include': ['_slim', '_dev', 'firewall']}}},
-                      {"_slim": {'description': '_slim', 'type': 'flag'}},
-                      {"cloud": {'description': 'cloud', 'type': 'element'}},
-                      {"_dev": {'description': '_dev', 'type': 'flag'}},
-                      {"firewall": {'description': 'firewall', 'type': 'flag'}}
-                     ]
+        (
+            "features",
+            [
+                  {"base": {'description': 'base', 'type': 'element', 'features': {'include': ['_slim']}}},
+                  {"_slim": {'description': '_slim', 'type': 'flag'}},
+                  {"_dev": {'description': '_dev', 'type': 'flag'}},
+                  {"kvm": {'description': 'kvm', 'type': 'platform', 'features': {'exclude': ['cloud']}}},
+                  {"cloud": {'description': 'cloud', 'type': 'element', 'features': {'exclude': ['_ssh']}}},
+                  {"_ssh": {'description': '_ssh', 'type': 'flag'}}
+            ],
+            "base,kvm,_dev",
+            "_dev,_slim,base,kvm"
         ),
-        ("elements", [
-                      {"base": {'description': 'base', 'type': 'element', 'features': {'include': ['_slim']}}},
-                      {"cloud": {'description': 'cloud', 'type': 'element'}},
-                      {"_slim": {'description': '_slim', 'type': 'flag'}},
-                     ]
+        (
+            "cname",
+            [
+                  {"base": {'description': 'base', 'type': 'element', 'features': {'include': ['_slim']}}},
+                  {"_slim": {'description': '_slim', 'type': 'flag'}},
+                  {"_dev": {'description': '_dev', 'type': 'flag'}},
+                  {"kvm": {'description': 'kvm', 'type': 'platform', 'features': {'include': ['cloud']}}},
+                  {"cloud": {'description': 'cloud', 'type': 'element'}}
+            ],
+            "base,kvm,_dev",
+            "kvm_dev"
         ),
-        ("ignore", [
-                      {"base": {'description': 'base', 'type': 'element', 'features': {'exclude': ['_slim', 'cloud']}}},
-                      {"cloud": {'description': 'cloud', 'type': 'element'}},
-                      {"_slim": {'description': '_slim', 'type': 'flag'}}
-                     ]
+        (
+            "flags",
+            [
+                  {"base": {'description': 'base', 'type': 'element', 'features': {'include': ['_slim', '_dev', 'firewall']}}},
+                  {"kvm": {'description': 'kvm', 'type': 'platform', 'features': {'include': ['cloud']}}},
+                  {"_slim": {'description': '_slim', 'type': 'flag'}},
+                  {"cloud": {'description': 'cloud', 'type': 'element'}},
+                  {"_dev": {'description': '_dev', 'type': 'flag'}},
+                  {"firewall": {'description': 'firewall', 'type': 'flag'}}
+            ],
+            "base,kvm,_dev",
+            "_dev,_slim,firewall"
         ),
-        # Exclude tests for features
-        ("exclude_features", [
-                      {"base": {'description': 'base', 'type': 'element', 'features': {'exclude': ['_slim']}}},
-                      {"cloud": {'description': 'cloud', 'type': 'element'}},
-                      {"_slim": {'description': '_slim', 'type': 'flag'}}
-                     ]
+        (
+            "elements",
+            [
+                  {"base": {'description': 'base', 'type': 'element', 'features': {'include': ['_slim']}}},
+                  {"kvm": {'description': 'kvm', 'type': 'platform', 'features': {'include': ['cloud']}}},
+                  {"_slim": {'description': '_slim', 'type': 'flag'}},
+                  {"cloud": {'description': 'cloud', 'type': 'element'}}
+            ],
+            "base,kvm",
+            "base,cloud"
         ),
-        # Param JSON export
-        ("params", [
-                      {"cloud": {'description': 'cloud', 'type': 'element', 'features': {'include': ['server']}, 'fs': [{'dest': '/', 'type': 'ext4'}], 'disk': {'label': 'gpt', 'boot': ['mbr']}, 'convert': {'format': [{'type': 'raw'}]}}},
-                      {"server": {'description': 'server', 'type': 'element'}}
-                     ]
+        (
+            "ignore",
+            [
+                  {"base": {'description': 'base', 'type': 'element', 'features': {'include': ['_slim']}}},
+                  {"kvm": {'description': 'kvm', 'type': 'platform', 'features': {'include': ['cloud']}}},
+                  {"_slim": {'description': '_slim', 'type': 'flag'}},
+                  {"cloud": {'description': 'cloud', 'type': 'element'}}
+            ],
+            "base,kvm",
+            "garden-feat: warning: No feature is ignored."
+        ),
+        (
+            "params",
+            [
+                  {"base": {'description': 'base', 'type': 'element', 'features': {'include': ['_slim']}}},
+                  {"kvm": {'description': 'kvm', 'type': 'platform', 'features': {'include': ['cloud']}}},
+                  {"server": {'description': 'server', 'type': 'element'}},
+                  {"_slim": {'description': '_slim', 'type': 'flag'}},
+                  {"cloud": {'description': 'cloud', 'type': 'element', 'features': {'include': ['server']}, 'fs': [{'dest': '/', 'type': 'ext4'}], 'disk': {'label': 'gpt', 'boot': ['mbr']}, 'convert': {'format': [{'type': 'raw'}]}}}
+            ],
+            "base,kvm",
+            "raw"
         )
     ]
 )
 
 
-def test_garden_feat(client, test_case, config, chroot):
-    garden_feat(client, test_case, config)
+def test_garden_feat(client, test_case, config, input_features, output_features, chroot):
+    garden_feat(client, test_case, config, input_features, output_features)

@@ -5,79 +5,22 @@ import tempfile
 from helper import utils
 
 
-def garden_feat(client, test_case, config):
+def garden_feat(client, test_case, config, input_features, output_features):
     """Check the MD5 sums of installed Debian packages"""
 
-    # Run tests for cli opt "features"
-    if test_case == "features":
-        # Define feature set to test
-        features = "base,kvm,_dev"
-        val_ok = "_dev,_slim,base,cloud,kvm"
-        out = val_features(test_case, config, features)
-        out = ','.join(sorted(out.split(',')))
-        assert out == val_ok, f"Testcase: {test_case} - Mismatch: Expected: {val_ok} <> Is: {out}"
+    # Run tests for all garden-feat cli opts
+    out = val_features(test_case, config, input_features)
 
-    if test_case == "cname":
-        # Define feature set to test
-        features = "base,kvm,_dev"
-        val_ok = "kvm_dev"
-        out = val_features(test_case, config, features)
-        out = ','.join(sorted(out.split(',')))
-        assert out == val_ok, f"Testcase: {test_case} - Mismatch: Expected: {val_ok} <> Is: {out}"
-
-    if test_case == "flags":
-        # Define feature set to test
-        features = "base,cloud"
-        val_ok = "_dev,_slim,firewall"
-        out = val_features(test_case, config, features)
-        out = ','.join(sorted(out.split(',')))
-        assert out == val_ok, f"Testcase: {test_case} - Mismatch: Expected: {val_ok} <> Is: {out}"
-
-    if test_case == "elements":
-        # Define feature set to test
-        features = "base,cloud"
-        val_ok = "base,cloud"
-        out = val_features(test_case, config, features)
-        out = ','.join(sorted(out.split(',')))
-        assert out == val_ok, f"Testcase: {test_case} - Mismatch: Expected: {val_ok} <> Is: {out}"
-
-    if test_case == "ignore":
-        # Define feature set to test
-        features = "base"
-        val_ok = ""
-        out = val_features(test_case, config, features)
-        out = ','.join(sorted(out.split(',')))
-        assert out == val_ok, f"Testcase: {test_case} - Mismatch: Expected: {val_ok} <> Is: {out}"
-
-    if test_case == "exclude_features":
-        # Overwrite "test_case" to fake "features"
-        test_case = "features"
-        # Define feature set to test
-        features = "base,cloud"
-        val_ok = "base,cloud"
-        out = val_features(test_case, config, features)
-        out = ','.join(sorted(out.split(',')))
-        assert out == val_ok, f"Testcase: {test_case} - Mismatch: Expected: {val_ok} <> Is: {out}"
-
-    if test_case == "exclude_features":
-        # Overwrite "test_case" to fake "features"
-        test_case = "features"
-        # Define feature set to test
-        features = "base,cloud,_slim"
-        val_ok = "base,cloud"
-        out = val_features(test_case, config, features)
-        out = ','.join(sorted(out.split(',')))
-        assert out == val_ok, f"Testcase: {test_case} - Mismatch: Expected: {val_ok} <> Is: {out}"
-
+    # Prepare output
     if test_case == "params":
-        # Define feature set to test
-        features = "cloud"
         # Get JSON output
-        out = val_features(test_case, config, features)
         content = json.loads(out)
-        val_ok = "raw"
-        out = content['convert']['format'][0]['type']
-        assert out == val_ok, f"Testcase: {test_case} - Mismatch: Expected: {val_ok} <> Is: {out}"
+        out = content['cloud']['convert']['format'][0]['type']
+    else:
+        out = val_features(test_case, config, input_features)
+        out = ','.join(sorted(out.split(',')))
+
+    assert out == output_features, f"Testcase: {test_case} - Mismatch: Expected: {output_features} <> Is: {out}"
 
 
 def val_features(test_case, config, features):
