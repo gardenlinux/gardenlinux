@@ -24,6 +24,9 @@ def main():
         # a single element of platform and flags
         _platform = [k for k,v in features_matrix['include'].items() if v['type'] in 'platform']
         _flag = [k for k,v in features_matrix['include'].items() if v['type'] in '_flag']
+        # Sort elements in list
+        _platform = sorted(_platform)
+        _flag = sorted(_flag)
         filtered_output = []
         filtered_output.append(_platform[0])
         filtered_output.append(_flag[0].lstrip('_'))
