@@ -219,7 +219,7 @@ class AZURE:
             self.logger.info(f"Keeping network security group {name} as it was not created by this test.")
 
 
-    def az_create_vm(self, name: str, admin_username: str = 'azureuser', vm_size: str = 'Standard_B2s', disk_size: int = 7):
+    def az_create_vm(self, name: str, admin_username: str = 'azureuser', vm_size: str = 'Standard_B2s', disk_size: int = 7, accelerated_networking: bool = False):
         self.logger.info("Creating virtual network...")
         self._network = self.nclient.virtual_networks.begin_create_or_update(
             resource_group_name=self._resourcegroup.name,
@@ -277,7 +277,8 @@ class AZURE:
                         }
                     }
                 ],
-                'tags': self._tags
+                'tags': self._tags,
+                'enable_accelerated_networking': accelerated_networking
             }
         ).result()
 
@@ -622,6 +623,14 @@ class AZURE:
         self._nsg = self.az_get_nsg(config["nsg_name"])
         if self._nsg == None:
             self._nsg = self.az_create_nsg(config["nsg_name"])
-        self._instance = self.az_create_vm(f"vm-{self.test_name}")
+        if "vm_size" in config:
+            vm_size = config["vm_size"]
+        else:
+            vm_size = "Standard_B2s"
+        if "accelerated_networking" in config:
+            accelerated_networking = config["accelerated_networking"]
+        else:
+            accelerated_networking = False
+        self._instance = self.az_create_vm(f"vm-{self.test_name}", vm_size=vm_size, accelerated_networking=accelerated_networking)
         self.logger.info(f"VM {self._instance.name} created with IP {self._ipaddress.ip_address}")
         return (self._instance, self._ipaddress)
