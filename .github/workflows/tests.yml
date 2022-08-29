@@ -18,6 +18,12 @@ on:
         required: true
       aws_region:
         required: true
+      az_client_id:
+        required: true
+      az_tenant_id:
+        required: true
+      az_subscription_id:
+        required: true
 jobs:
   platform_tests:
     name: platform test
@@ -26,6 +32,8 @@ jobs:
       gcp_region: ${{ secrets.gcp_region }}
       gcp_zone: ${{ secrets.gcp_zone }}
       aws_region: ${{ secrets.aws_region }}
+      azure_subscription_id: ${{ secrets.az_subscription_id }}
+      AZURE_CONFIG_DIR: /tmp/azure_config_dir
     runs-on: ec2-gardenlinux-amd64
     permissions:
       id-token: write
@@ -33,7 +41,7 @@ jobs:
     strategy:
       matrix:
         architecture: [ amd64, arm64 ]
-        target: [ gcp, aws ]
+        target: [ gcp, aws, azure ]
         modifier: [ "" ]
         exclude:
           - architecture: arm64
@@ -70,6 +78,15 @@ jobs:
         role-to-assume: ${{ secrets.aws_role }}
         role-session-name: ${{ secrets.aws_session }}
         aws-region: ${{ secrets.aws_region }}
+
+    - if: ${{ matrix.target }} == 'azure'
+      id: 'auth_azure'
+      name: 'Authenticate to Azure'
+      uses: azure/login@v1
+      with:
+        client-id: ${{ secrets.az_client_id }}
+        tenant-id: ${{ secrets.az_tenant_id }}
+        subscription-id: ${{ secrets.az_subscription_id }}
 
     - name: start platform test for ${{ matrix.target }}
       run: .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.architecture }}" "${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.tar.gz"
