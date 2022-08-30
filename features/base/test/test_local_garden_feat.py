@@ -52,7 +52,7 @@ import pytest
                   {"cloud": {'description': 'cloud', 'type': 'element'}},
                   {"chost": {'description': 'chost', 'type': 'element'}}
             ],
-            "base,kvm,_dev,chost",
+            "kvm,_dev,chost",
             "kvm-chost_dev"
         ),
         (
