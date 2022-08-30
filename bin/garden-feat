@@ -42,7 +42,8 @@ def main():
         # Add content to output list
         filtered_output = []
         filtered_output.append(_platform[0])
-        filtered_output.append(_element[0])
+        if len(_element) > 0:
+            filtered_output.append(_element[0])
         # Transform flag output
         flag = _flag[0].lstrip('_')
         filtered_output.append(f'_{flag}')
