@@ -49,7 +49,7 @@ import pytest
                   {"_slim": {'description': '_slim', 'type': 'flag'}},
                   {"_dev": {'description': '_dev', 'type': 'flag'}},
                   {"kvm": {'description': 'kvm', 'type': 'platform', 'features': {'include': ['cloud', 'chost']}}},
-                  {"cloud": {'description': 'cloud', 'type': 'element'}}
+                  {"cloud": {'description': 'cloud', 'type': 'element'}},
                   {"chost": {'description': 'chost', 'type': 'element'}}
             ],
             "base,kvm,_dev,chost",
