@@ -2,7 +2,7 @@
 #set -Eeuo pipefail
 
 # Name of Image to test
-image=$1
+image="${@: -1}"
 
 configFile="gcp_config"
 containerName="ghcr.io/gardenlinux/gardenlinux/integration-test:today"
