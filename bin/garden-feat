@@ -21,17 +21,34 @@ def main():
     # Switch to defined action
     if args.type == 'cname':
         # cname is a shortened name alias an only returns
-        # a single element of platform and flags
+        # a single element of platform, flag and element
         _platform = [k for k,v in features_matrix['include'].items() if v['type'] in 'platform']
         _flag = [k for k,v in features_matrix['include'].items() if v['type'] in '_flag']
+        _element = []
+
+        # Get the primary element that was privously given as cli opt
+        _elements_all = [k for k,v in features_matrix['include'].items() if v['type'] in 'elements']
+        _elements_primary = features.split(",")
+        for element in _elements_all:
+            if element in _elements_primary and len(_element) == 0:
+                # Prefix primary element with dash
+                _element.append(f'-{element}')
+
         # Sort elements in list
         _platform = sorted(_platform)
+        _element = sorted(_element)
         _flag = sorted(_flag)
+
+        # Add content to output list
         filtered_output = []
         filtered_output.append(_platform[0])
-        filtered_output.append(_flag[0].lstrip('_'))
-        # This affects the artifacts filename
-        print('_'.join(str(s) for s in filtered_output))
+        filtered_output.append(_element[0])
+        # Transform flag output
+        flag = _flag[0].lstrip('_')
+        filtered_output.append(f'_{flag}')
+
+        # Finally print the artifact's final filename
+        print(''.join(str(s) for s in filtered_output))
 
     elif args.type == 'features':
         filter = ['platform', 'element', 'flag']
