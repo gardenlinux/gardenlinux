@@ -30,7 +30,7 @@ def main():
         _elements_all = [k for k,v in features_matrix['include'].items() if v['type'] in 'elements']
         _elements_primary = features.split(",")
         for element in _elements_all:
-            if element in _elements_primary and len(_element) == 0:
+            if element in _elements_primary:
                 # Prefix primary element with dash
                 _element.append(f'-{element}')
 
@@ -44,6 +44,7 @@ def main():
         filtered_output.append(_platform[0])
         if len(_element) > 0:
             filtered_output.append(_element[0])
+
         # Transform flag output
         flag = _flag[0].lstrip('_')
         filtered_output.append(f'_{flag}')
