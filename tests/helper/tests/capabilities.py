@@ -5,7 +5,7 @@ import re
 def capabilities(client, testconfig):
     """ Test if only the defined capabilities are set"""
     (exit_code, output, error) = client.execute_command(
-        "find /boot /etc /usr /var -type f -exec getcap {} \\;", quiet=True)
+        "sudo -u root find /boot /etc /usr /var -type f -exec /usr/sbin/getcap {} \\;", quiet=True)
     assert exit_code == 0, f"no {error=} expected"
 
     # get capabilities.list config from enabled features

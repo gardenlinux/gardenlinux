@@ -94,7 +94,7 @@ def get_architecture(client):
 
 def unset_env_var(client, env_var):
     """Unset env var on remote system"""
-    (exit_code, output, error) = client.execute_command(f'su - root -c "unset {env_var}"', quiet=True)
+    (exit_code, output, error) = client.execute_command(f'sudo -u root "unset {env_var}"', quiet=True)
     return exit_code
 
 

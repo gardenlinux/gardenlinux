@@ -3,7 +3,7 @@ def sshd(client, expected):
     option value string and the sshd_config are conterted into lists of 
     tuples"""
 
-    (exit_code, output, error) = client.execute_command("sshd -T",
+    (exit_code, output, error) = client.execute_command("sudo -u root /usr/sbin/sshd -T",
                                                         quiet=True)
     assert exit_code == 0, f"no {error=} expected"
 
