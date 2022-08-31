@@ -449,6 +449,15 @@ def openstack_flavor():
     return OpenStackCCEE.instance().flavor
 
 @pytest.fixture
+def non_amd64(client):
+    (exit_code, output, error) = client.execute_command("dpkg --print-architecture", quiet=True)
+    if exit_code != 0:
+        logger.error(error)
+        sys.exit(exit_code)
+    if "amd64" in output:
+        pytest.skip('test not supported on amd64 architecture')
+
+@pytest.fixture
 def non_arm64(client):
     (exit_code, output, error) = client.execute_command("dpkg --print-architecture", quiet=True)
     if exit_code != 0:
@@ -486,3 +495,11 @@ def non_vhost(testconfig):
     features = testconfig.get("features", [])
     if "vhost" in features:
         pytest.skip('test not supported with vhost feature enabled')
+
+@pytest.fixture
+# After solving #1240 define "firecracker" as IAAS
+def firecracker(testconfig):
+    features = testconfig.get("features", [])
+    if "firecracker" in features:
+        skip_msg = "Currently unsupported. Please see: https://github.com/gardenlinux/gardenlinux/issues/1240"
+        pytest.skip(skip_msg)
