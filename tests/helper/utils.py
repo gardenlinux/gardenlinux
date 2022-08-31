@@ -127,13 +127,17 @@ def execute_local_command(cmd):
     return rc, out
 
 
-def execute_remote_command(client, cmd):
+def execute_remote_command(client, cmd, skip_error=False):
     """ Run remote command on test platform """
     (exit_code, output, error) = client.execute_command(
         cmd, quiet=True)
-    assert exit_code == 0, f"no {error=} expected"
-    output = output.strip()
-    return output
+    if not skip_error:
+        assert exit_code == 0, f"no {error=} expected"
+        output = output.strip()
+        return output
+    else:
+        output = output.strip()
+        return exit_code, output
 
 
 def install_package_deb(client, pkg):
