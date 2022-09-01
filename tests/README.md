@@ -144,6 +144,9 @@ aws:
     # architecture of the image and VM to be used (optional)
     architecture: x86_64
 
+    # test name to be used for naming and/or tagging resources (optional)
+    test_name: my_gardenlinux_test
+
     # ssh related configuration for logging in to the VM (optional)
     ssh:
         # path to the ssh key file (optional)
@@ -174,6 +177,8 @@ aws:
 - **region** _(required)_: the AWS region in which all test relevant resources will be created
 - **instanc-type** _(optional)_: the instance type that will be used for the EC2 instance used for testing, defaults to `t3.micro` if not specified
 - **architecture** _(optional)_: the architecture under which the AMI of the image to test should be registered (`x86_64` or `arm64`), must match the instance type, defaults to `x86_64` if not specified
+
+- **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the Hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
 
 - **ssh_key_filepath** _(optional)_: The SSH key that will be deployed to the EC2 instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand. If not provided, a new SSH key with 2048 bits will be generated just for the test.
 - **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
@@ -239,6 +244,9 @@ azure:
     # enable accelerated networking for the VM on which the test runs (optional)
     accelerated_networking: false
 
+    # test name to be used for naming and/or tagging resources (optional)
+    test_name: my_gardenlinux_test
+
     # storage account to be used for image upload (optional)
     storage_account_name: stggardenlinuxtest01
     # local image file to be uploaded and to be tested (required/alternatively optional)
@@ -280,6 +288,8 @@ Only three parameters are required for the test: the Azure `subscription` or `su
     - 'V1': Boot = PCAT, Disk controllers = IDE
     - 'V2': Boot = UEFI, Disk controllers = SCSI
 - **accelerated_networking** _(optional)_: Enables [Azure Accelerated Networking](https://docs.microsoft.com/en-us/azure/virtual-network/accelerated-networking-overview) for the VM on which the test is going to run. Defaults to `false`, thus accelerated networking disabled.
+
+- **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the Hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
 
 - **storage_account_name** _(optional)_: the storage account to which the image gets uploaded
 - **image_name** _(optional/required)_: If the tests should get executed against an already existing Image, this is its name. Either **image_name** or **image** must be supplied but not both.
@@ -395,6 +405,8 @@ The URI can be:
 - **bucket**:  # my-test-upload-bucket
 - **bucket_path**: integration-test
 
+- **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the Hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
+
 - **ssh_key_filepath** _(required)_: The SSH key that will be deployed to the ECS instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand.
 - **key_name** _(required)_: The SSH key gets uploaded to ECS, this is the name of the key object resource.
 - **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
@@ -456,6 +468,9 @@ gcp:
 
     # GCE machine type (optional)
     machine_type: n1-standard-2
+
+    # test name to be used for naming and/or tagging resources (optional)
+    test_name: my_gardenlinux_test
 
     # ssh related configuration for logging in to the VM (required)
     ssh:
