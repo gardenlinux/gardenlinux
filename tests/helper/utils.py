@@ -106,17 +106,22 @@ def get_kernel_version(client):
     return output
 
 
-def validate_systemd_unit(client, systemd_unit):
+def validate_systemd_unit(client, systemd_unit, active=True):
     """ Validate a given systemd unit """
     cmd = f"systemctl status {systemd_unit}.service"
     (exit_code, output, error) = client.execute_command(
         cmd, quiet=True)
-    assert exit_code == 0, f"systemd-unit: {systemd_unit} exited with 1."
 
+    assert exit_code == 0, f"systemd-unit: {systemd_unit} exited with 1."
     # Validate output lines of systemd-unit
     for line in output.splitlines():
+        # This 'active' is realted to systemd's output
         if "Active:" in line:
-            assert not "dead" in line, f"systemd-unit: {systemd_unit} did not start."
+            # This active is set by the function's header
+            if active:
+                assert not "dead" in line, f"systemd-unit: {systemd_unit} did not start."
+            else:
+                assert "condition failed" in line, f"systemd-unit: {systemd_unit} condition for architecture failed."
 
 
 def execute_local_command(cmd):
