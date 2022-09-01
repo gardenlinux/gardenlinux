@@ -219,7 +219,7 @@ class AZURE:
             self.logger.info(f"Keeping network security group {name} as it was not created by this test.")
 
 
-    def az_create_vm(self, name: str, admin_username: str = 'azureuser', vm_size: str = 'Standard_B2s', disk_size: int = 7, accelerated_networking: bool = False):
+    def az_create_vm(self, name: str, admin_username: str = 'azureuser', vm_size: str = 'Standard_D4_v4', disk_size: int = 7, accelerated_networking: bool = False):
         self.logger.info("Creating virtual network...")
         self._network = self.nclient.virtual_networks.begin_create_or_update(
             resource_group_name=self._resourcegroup.name,
@@ -282,7 +282,7 @@ class AZURE:
             }
         ).result()
 
-        self.logger.info(f"Creating and booting Virtual machine from image {self._image.name}...")
+        self.logger.info(f"Creating and booting Virtual machine of size {vm_size} from image {self._image.name}...")
         self._instance = self.cclient.virtual_machines.begin_create_or_update(
             resource_group_name=self._resourcegroup.name,
             vm_name=name,
@@ -382,6 +382,10 @@ class AZURE:
             cfg['resource_group'] = f"rg-{test_name}"
         if not 'storage_account_name' in cfg:
             cfg['storage_account_name'] = f"sa{re.sub('-', '', test_name)}"
+        if not 'vm_size' in cfg:
+            cfg['vm_size'] = "Standard_D4_v4"
+        if not 'accelerated_networking' in cfg:
+            cfg['accelerated_networking'] = False
         if not 'nsg_name' in cfg:
             cfg['nsg_name'] = f"nsg-{test_name}"
         if not 'keep_running' in cfg:
@@ -623,14 +627,6 @@ class AZURE:
         self._nsg = self.az_get_nsg(config["nsg_name"])
         if self._nsg == None:
             self._nsg = self.az_create_nsg(config["nsg_name"])
-        if "vm_size" in config:
-            vm_size = config["vm_size"]
-        else:
-            vm_size = "Standard_B2s"
-        if "accelerated_networking" in config:
-            accelerated_networking = config["accelerated_networking"]
-        else:
-            accelerated_networking = False
-        self._instance = self.az_create_vm(f"vm-{self.test_name}", vm_size=vm_size, accelerated_networking=accelerated_networking)
+        self._instance = self.az_create_vm(name=f"vm-{self.test_name}", vm_size=config["vm_size"], accelerated_networking=config["accelerated_networking"])
         self.logger.info(f"VM {self._instance.name} created with IP {self._ipaddress.ip_address}")
         return (self._instance, self._ipaddress)
