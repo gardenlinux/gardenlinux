@@ -398,6 +398,11 @@ def azure(iaas):
         pytest.skip('test only supported on azure')
 
 @pytest.fixture
+def non_aws(iaas):
+    if iaas == 'aws':
+        pytest.skip('test not supported on aws')
+
+@pytest.fixture
 def aws(iaas):
     if iaas != 'aws':
         pytest.skip('test only supported on aws')
