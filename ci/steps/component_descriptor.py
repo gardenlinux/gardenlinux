@@ -235,6 +235,15 @@ def oci_image_resources(
                             'modifiers': release_manifest.modifiers,
                         }
                     ),
+                    cm.Label(
+                        name='cloud.gardener.cnudie/responsibles',
+                        value=[
+                            {
+                                'type': 'emailAddress',
+                                'email': 'thomas.buchner@sap.com',
+                            },
+                        ],
+                    ),
                 ]
             )
 
@@ -307,6 +316,15 @@ def _image_rootfs_resource(
               'buildTimestamp': release_manifest.build_timestamp,
               'debianPackages': [p for p in _virtual_image_packages(release_manifest, cicd_cfg)],
           }
+        ),
+        cm.Label(
+            name='cloud.gardener.cnudie/responsibles',
+            value=[
+                {
+                    'type': 'emailAddress',
+                    'email': 'thomas.buchner@sap.com',
+                },
+            ],
         ),
     ]
 
