@@ -400,9 +400,19 @@ def azure(iaas):
         pytest.skip('test only supported on azure')
 
 @pytest.fixture
+def non_aws(iaas):
+    if iaas == 'aws':
+        pytest.skip('test not supported on aws')
+
+@pytest.fixture
 def aws(iaas):
     if iaas != 'aws':
         pytest.skip('test only supported on aws')
+
+@pytest.fixture
+def non_gcp(iaas):
+    if iaas != 'gcp':
+        pytest.skip('test only supported on gcp')
 
 @pytest.fixture
 def gcp(iaas):
@@ -438,6 +448,11 @@ def non_openstack(iaas):
 def openstack(iaas):
     if iaas != 'openstack-ccee':
         pytest.skip('test only supported on openstack')
+
+@pytest.fixture
+def non_hyperscalers(iaas):
+    if iaas == 'aws' or iaas == 'gcp' or iaas == 'azure' or iaas == 'ali':
+        pytest.skip(f"test not supported on hyperscaler {iaas}")
 
 # This fixture is an alias of "chroot" but does not use the "chroot" env.
 # However, it only needs the underlying container for its tests.
