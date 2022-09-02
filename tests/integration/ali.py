@@ -38,9 +38,7 @@ class ALI:
     """Handle Ali"""
 
     @classmethod
-    def fixture(cls, config):
-
-        test_name = "gl-test-" + str(int(time.time()))
+    def fixture(cls, config, test_name):
         config["test-name"] = test_name
         if not("image_name" in config and config["image_name"] != None):
             config["image_name"] = test_name

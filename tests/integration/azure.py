@@ -1,6 +1,5 @@
 import logging
 import os
-import time
 import re
 import pytest
 import uuid
@@ -402,8 +401,7 @@ class AZURE:
 
 
     @classmethod
-    def fixture(cls, credentials, config, imageurl) -> RemoteClient:
-        test_name = f"gl-test-{time.strftime('%Y%m%d%H%M%S')}"
+    def fixture(cls, credentials, config, imageurl, test_name) -> RemoteClient:
         AZURE.validate_config(config, imageurl, test_name)
 
         logger.info(f"Setting up testbed for image {imageurl}...")

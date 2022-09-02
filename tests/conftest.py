@@ -1,6 +1,7 @@
 import pytest
 import logging
 import json
+import time
 import yaml
 import sys
 import os
@@ -315,16 +316,17 @@ def gcp_credentials(testconfig, pipeline, request):
 @pytest.fixture(scope="session")
 def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
     logger.info(f"Testconfig for {iaas=} is {testconfig}")
+    test_name = testconfig.get('test_name', f"gl-test-{time.strftime('%Y%m%d%H%M%S')}")
     if iaas == "aws":
         session = request.getfixturevalue('aws_session')
-        yield from AWS.fixture(session, testconfig, imageurl)
+        yield from AWS.fixture(session, testconfig, imageurl, test_name)
     elif iaas == "gcp":
         credentials = request.getfixturevalue('gcp_credentials')
         logger.info("Requesting GCP fixture")
-        yield from GCP.fixture(credentials, testconfig, imageurl)
+        yield from GCP.fixture(credentials, testconfig, imageurl, test_name)
     elif iaas == "azure":
         credentials = request.getfixturevalue('azure_credentials')
-        yield from AZURE.fixture(credentials, testconfig, imageurl)
+        yield from AZURE.fixture(credentials, testconfig, imageurl, test_name)
     elif iaas == "openstack-ccee":
         yield from OpenStackCCEE.fixture(testconfig)
     elif iaas == "chroot":
@@ -332,7 +334,7 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
     elif iaas == "kvm":
         yield from KVM.fixture(testconfig)
     elif iaas == "ali":
-        yield from ALI.fixture(testconfig)
+        yield from ALI.fixture(testconfig, test_name)
     elif iaas == "manual":
         yield from Manual.fixture(testconfig)
     else:
