@@ -94,11 +94,6 @@ class AZURE:
             return None
 
     def az_create_storage_account(self, name: str):
-        availability = self.sclient.storage_accounts.check_name_availability(
-            StorageAccountCheckNameAvailabilityParameters(name=name)
-        )
-        if not availability.name_available:
-            raise RuntimeError(f"Storage account name {name} not available: {availability.reason}")
         self.logger.info(f"Creating storage account {name} in resourcegroup {self._resourcegroup.name}...")
         return self.sclient.storage_accounts.begin_create(
             resource_group_name = self._resourcegroup.name,
