@@ -63,6 +63,7 @@ Following files may be placed inside a single feature folder. Except of the `inf
 | exec.post | Post execution hook: Allows to run commands after `exec.config` is executed | File (Shell) |
 | file.include | Allows to add files to the artifact | Directory (with files): e.g. Rebuild the filesystem structure [file.include/etc/hosts] to overwrite the hostfile |
 | file.exclude | Allows to remove files from the artifact | File (list): Absolute path to file to remove per line |
+| test | Providing feature related unit tests that can be performed on different target platforms by Pytest fixtures | Directory: Contains `PyTest` based unit tests (must be prefixed with `test_` and suffixed by `.py`) |
 
 All files for features are described in detail below.
 
@@ -234,4 +235,29 @@ file.include/
             ├── foo.io.conf
             └── gardenlinux.io.conf
 ```
+
+
+
+### test
+Allows to add additional and feature related (unit) tests. All tests are based on `PyTest` and can be performed on all or on only desired target platforms or hyperscaler if desired. Target platforms can be in-/excluded by `fixtures`. More information about tests and how to run them can be found [here](../tests/README.md).
+
+
+**Usage:**
+
+Directory: Place unit test files.
+Prefix: `test_`
+Suffix: `.py`
+Example name: `test_example_consistency.py`
+
+**Example:**
+```
+test
+├── debsums.disable
+├── test_autologout.py
+├── test_packages_musthave.py
+├── test_pam.py
+├── test_pam_faillock.py
+└── test_wireguard.py
+```
+
 </website-features>
