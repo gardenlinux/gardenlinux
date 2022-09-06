@@ -1,6 +1,8 @@
 ## Feature: vhost
 
-<website-feature> host for virtual workloads (kvm, libvirt) </website-feature>
+<website-feature>
+vhost feature for virtual workloads (KVM, libvirt)
+</website-feature>
 
 ---
 
