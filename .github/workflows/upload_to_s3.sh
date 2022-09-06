@@ -46,5 +46,5 @@ done
 
 cat "$meta_yml"
 
-aws s3 cp --recursive "$name" "s3://$bucket/objects/$name"
-aws s3 cp --content-type "text/yaml" "$meta_yml" "s3://$bucket/meta/singles/$name"
+aws s3 cp --recursive "$name" "s3://$bucket/objects/$prefix"
+aws s3 cp --content-type "text/yaml" "$meta_yml" "s3://$bucket/meta/singles/$prefix"
