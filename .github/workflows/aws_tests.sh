@@ -18,7 +18,7 @@ done
 # Name of Image to test
 image=$1
 
-configFile="gcp_config"
+configFile="aws_test_config.yaml"
 containerName="ghcr.io/gardenlinux/gardenlinux/integration-test:today"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
 
