@@ -9,6 +9,7 @@
 /features/_dev/file.include/authorized_keys
 /cert/cfssl
 /cert/*.key
+/cert/*.arn
 /cert/*.crt
 /cert/*.pub
 /cert/*.p12
