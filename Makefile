@@ -28,7 +28,7 @@ CERT_CONTAINER_OPTS=$(shell env | grep '^AWS_' | sed 's/^/-e /')
 CERT_MAKE_OPTS=USE_KMS=1
 endif
 
-$(SECUREBOOT_CRT): container-cert
+$(SECUREBOOT_CRT): | container-cert
 	$(GARDENLINUX_BUILD_CRE) run --rm --volume '$(realpath $(dir $@)):/cert' $(CERT_CONTAINER_OPTS) 'gardenlinux/build-cert:$(VERSION)' make --directory=/cert $(CERT_MAKE_OPTS) default
 
 .PHONY: container-build container-cert container-test container-integration
@@ -183,10 +183,10 @@ metalk: build-environment $(SECUREBOOT_CRT)
 metalk-dev: build-environment $(SECUREBOOT_CRT)
 	./build.sh $(BUILD_OPTS) --skip-build --features metal,khost,_pxe,_dev $(BUILDDIR) $(VERSION)
 
-metal-secureboot: build-environment $(SECUREBOOT_CRT) cert/sign.pub
+metal-secureboot: build-environment $(SECUREBOOT_CRT)
 	./build.sh $(BUILD_OPTS) --skip-build --features server,metal,_secureboot $(BUILDDIR) $(VERSION)
 
-metal-secureboot-dev: build-environment $(SECUREBOOT_CRT) cert/sign.pub
+metal-secureboot-dev: build-environment $(SECUREBOOT_CRT)
 	./build.sh $(BUILD_OPTS) --skip-build --features server,metal,_secureboot,_dev $(BUILDDIR) $(VERSION)
 
 metalv: build-environment $(SECUREBOOT_CRT)

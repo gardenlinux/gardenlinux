@@ -5,13 +5,33 @@ on:
       version:
         type: string
         default: today
+      use_kms:
+        type: boolean
+        default: false
+    secrets:
+      secureboot_db_kms_arn:
+        required: false
+      aws_region:
+        required: false
+      aws_kms_role:
+        required: false
+      aws_oidc_session:
+        required: false
 jobs:
   cert:
     runs-on: ec2-gardenlinux-amd64
     steps:
       - uses: actions/checkout@v2
       - name: bulid certificates
+        if: ${{ ! inputs.use_kms }}
         run: make cert/secureboot.db.auth
+      - name: use kms backed certificates
+        if: ${{ inputs.use_kms }}
+        run: |
+          echo "${{ secrets.secureboot_db_kms_arn }}" > cert/gardenlinux-secureboot.db.arn
+          for f in secureboot.{{pk,null.pk,kek,db}.auth,db.{crt,arn}}; do
+            ln -sr "cert/gardenlinux-$f" "cert/$f"
+          done
       - name: pack certificates for following bulid stages
         run: sudo tar -czv cert > cert.tar.gz
       - uses: actions/upload-artifact@v2
@@ -21,10 +41,12 @@ jobs:
   images:
     needs: cert
     runs-on: ec2-gardenlinux-${{ matrix.architecture }}
+    permissions:
+      id-token: write
     strategy:
       matrix:
         architecture: [ amd64, arm64 ]
-        target: [ kvm, metal, gcp, aws, azure, ali, openstack, vmware, pxe, firecracker, github_action_runner, metalv ]
+        target: [ kvm, kvm-secureboot, metal, metal-secureboot, gcp, aws, azure, ali, openstack, vmware, pxe, firecracker, github_action_runner, metalv ]
         modifier: [ "" ]
     steps:
       - uses: actions/checkout@v2
@@ -37,8 +59,14 @@ jobs:
         run: |
           bin/garden-version "${{ inputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
+      - if: ${{ inputs.use_kms }}
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.aws_kms_role }}
+          role-session-name: ${{ secrets.aws_oidc_session }}
+          aws-region: ${{ secrets.aws_region }}
       - name: build Garden Linux image
-        run: make BUILD_OPTS="--lessram" ${{ matrix.target }}${{ matrix.modifier }}
+        run: make BUILD_OPTS="--lessram ${{ inputs.use_kms && '--export-aws-access-key' || '' }}" ${{ matrix.target }}${{ matrix.modifier }}
       - name: pack build artifacts for upload
         run: |
           name="${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-$(bin/garden-version)-$(git rev-parse --short HEAD)"

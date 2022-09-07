@@ -56,7 +56,7 @@ while true; do
 		--tests)	tests="$1"; shift ;;
 		--local-pkgs) local_pkgs="$1"; shift ;;
 		--cert) cert="$1"; shift ;;
-		--export-aws-access-key) aws_access_key=1; shift ;;
+		--export-aws-access-key) aws_access_key=1 ;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
