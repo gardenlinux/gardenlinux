@@ -85,8 +85,20 @@ esac
 	--add-section .initrd="$initrd" --change-section-vma .initrd="$initrd_vma" \
 	"$rootfs/usr/lib/systemd/boot/efi/linux$uefi_arch.efi.stub" "$unified_image"
 
+export PKCS11_MODULE_PATH="/usr/lib/$(uname -m)-linux-gnu/pkcs11/aws_kms_pkcs11.so"
+cert_base="/cert/secureboot.db"
+
+if [ -f "$cert_base.key" ]; then
+	key_params=(--key "$cert_base.key")
+elif [ -f "$cert_base.arn" ]; then
+	key_params=(--engine pkcs11 --key "pkcs11:token=$(basename "$(cat "$cert_base.arn")" | cut -c -32)")
+else
+	echo "neither $cert_base.key nor $cert_base.arn exists, but at least one is required" >&2
+	exit 1
+fi
+
 # sign unified image
-datefudge -s "@$timestamp" sbsign --cert /cert/secureboot.db.sign.crt --key /cert/secureboot.db.sign.key --output "$unified_image_signed" "$unified_image"
+datefudge -s "@$timestamp" sbsign --cert "$cert_base.crt" "${key_params[@]}" --output "$unified_image_signed" "$unified_image"
 
 # cleanup
 rm -rf "$cmdline" "$initrd" "$unified_image"
