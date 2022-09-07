@@ -73,6 +73,16 @@ def get_file_perm(client, fname):
         return int(output)
 
 
+def check_file(client, fname):
+    """Return bool if file exists"""
+    (exit_code, output, error) = client.execute_command(
+        f"stat --format '%a' {fname}", quiet=True)
+    if exit_code == 0:
+        return True
+    else:
+        return False
+
+
 def create_remote_tmp_dir(client):
     """Create a temporary directory on remote without Python usage"""
     tmp_random = uuid.uuid4()
