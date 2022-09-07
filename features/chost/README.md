@@ -1,6 +1,6 @@
 ## Feature: chost
 
-<website-feature> host for container and kubernetes workloads (containerd) </website-feature>
+<website-feature>chost feature for container and Kubernetes workloads that provides containerd.</website-feature>
 
 ---
 

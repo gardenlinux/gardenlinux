@@ -50,11 +50,12 @@ def users(client, additional_user = ""):
          "ls /home/", quiet=True)
     assert exit_code == 0, f"no {error=} expected"
 
-    homes = []
+    permitted_homes = [ '', additional_user ]
+    discovered_homes = []
     for line in output.split('\n'):
-        if line != '':
-            homes.append(line)
-    assert len(homes) == 0, f"Found the following home directories: {homes}"
+        if line not in permitted_homes:
+            discovered_homes.append(line)
+    assert len(discovered_homes) == 0, f"Found the following home directories: {discovered_homes}"
 
 
 def _has_user_sudo_cmd(client, user):

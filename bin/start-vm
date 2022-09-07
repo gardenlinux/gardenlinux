@@ -38,8 +38,19 @@ get_os () {
         os="macos"
     elif [ $host_os = "Linux" ]; then
         os="linux"
-        # Obtain the currently used Linux distribution
-        host_dist="$(hostnamectl | grep "Operating System:" | awk {'print tolower($3)}')"
+
+        # Validate if this process is running inside a
+        # a container (like Docker) by checking what
+        # init process is used and set a default OS in
+        # case it is not systemd and a container then.
+        # Otherwise, If this is nativly running
+        # on a host, evaluate the running OS
+        init_system="$(cat /proc/1/sched | awk 'NR==1{print $1}')"
+        if [ $init_system != "systemd" ]; then
+            host_dist="debian"
+        else
+            host_dist="$(hostnamectl | grep "Operating System:" | awk {'print tolower($3)}')"
+        fi
 
         # Evaluate Distribution
         if [ $host_dist = "centos" ]; then

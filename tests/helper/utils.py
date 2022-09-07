@@ -94,7 +94,7 @@ def get_architecture(client):
 
 def unset_env_var(client, env_var):
     """Unset env var on remote system"""
-    (exit_code, output, error) = client.execute_command(f'su - root -c "unset {env_var}"', quiet=True)
+    (exit_code, output, error) = client.execute_command(f'sudo -u root "unset {env_var}"', quiet=True)
     return exit_code
 
 
@@ -106,17 +106,22 @@ def get_kernel_version(client):
     return output
 
 
-def validate_systemd_unit(client, systemd_unit):
+def validate_systemd_unit(client, systemd_unit, active=True):
     """ Validate a given systemd unit """
     cmd = f"systemctl status {systemd_unit}.service"
     (exit_code, output, error) = client.execute_command(
         cmd, quiet=True)
-    assert exit_code == 0, f"systemd-unit: {systemd_unit} exited with 1."
 
+    assert exit_code == 0, f"systemd-unit: {systemd_unit} exited with 1."
     # Validate output lines of systemd-unit
     for line in output.splitlines():
+        # This 'active' is realted to systemd's output
         if "Active:" in line:
-            assert not "dead" in line, f"systemd-unit: {systemd_unit} did not start."
+            # This active is set by the function's header
+            if active:
+                assert not "dead" in line, f"systemd-unit: {systemd_unit} did not start."
+            else:
+                assert "condition failed" in line, f"systemd-unit: {systemd_unit} condition for architecture failed."
 
 
 def execute_local_command(cmd):
@@ -127,13 +132,17 @@ def execute_local_command(cmd):
     return rc, out
 
 
-def execute_remote_command(client, cmd):
+def execute_remote_command(client, cmd, skip_error=False):
     """ Run remote command on test platform """
     (exit_code, output, error) = client.execute_command(
         cmd, quiet=True)
-    assert exit_code == 0, f"no {error=} expected"
-    output = output.strip()
-    return output
+    if not skip_error:
+        assert exit_code == 0, f"no {error=} expected"
+        output = output.strip()
+        return output
+    else:
+        output = output.strip()
+        return exit_code, output
 
 
 def install_package_deb(client, pkg):

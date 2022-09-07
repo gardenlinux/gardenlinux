@@ -144,6 +144,9 @@ aws:
     # architecture of the image and VM to be used (optional)
     architecture: x86_64
 
+    # test name to be used for naming and/or tagging resources (optional)
+    test_name: my_gardenlinux_test
+
     # ssh related configuration for logging in to the VM (optional)
     ssh:
         # path to the ssh key file (optional)
@@ -174,6 +177,8 @@ aws:
 - **region** _(required)_: the AWS region in which all test relevant resources will be created
 - **instanc-type** _(optional)_: the instance type that will be used for the EC2 instance used for testing, defaults to `t3.micro` if not specified
 - **architecture** _(optional)_: the architecture under which the AMI of the image to test should be registered (`x86_64` or `arm64`), must match the instance type, defaults to `x86_64` if not specified
+
+- **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the Hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
 
 - **ssh_key_filepath** _(optional)_: The SSH key that will be deployed to the EC2 instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand. If not provided, a new SSH key with 2048 bits will be generated just for the test.
 - **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
@@ -232,6 +237,15 @@ azure:
     resource_group: rg-gardenlinux-test-01
     # network security group (optional)
     nsg_name: nsg-gardenlinux-test-42
+    # vm_size specifies the Azure vm size to be used for the test (optional)
+    vm_size: Standard_D4_v4
+    # hyperV generation to use. Possible values are 'V1' and 'V2'. Default is 'V1'
+    hyper_v_generation: V1
+    # enable accelerated networking for the VM on which the test runs (optional)
+    accelerated_networking: false
+
+    # test name to be used for naming and/or tagging resources (optional)
+    test_name: my_gardenlinux_test
 
     # storage account to be used for image upload (optional)
     storage_account_name: stggardenlinuxtest01
@@ -242,8 +256,6 @@ azure:
     #image_region: eu-central-1
     # already existing image in Azure to be used for testing (required/alternatively optional)
     image_name: <image name>
-    # hyperV generation to use. Possible values are 'V1' and 'V2'. Default is 'V1'
-    hyper_v_generation: V1
 
     # ssh related configuration for logging in to the VM (optional)
     ssh:
@@ -271,6 +283,13 @@ Only three parameters are required for the test: the Azure `subscription` or `su
 - **subscription_id** _(required/optioal)_: The Azure subscription (its ID) which is used for creating all relevant resources and running the test. Either the 'subscription' name or its needs to be provided.
 - **resource_group** _(optional)_: all relevant resources for the integration test will be assigned to an Azure resource group. If you want to reuse an existing resource group, you can specify it here. If left empty, a new resource group gets created for the duration of the test.
 - **nsg_name** _(optional)_: The integration tests need to create a new network security group, this is its name. If you want to reuse an existing security group, specify its name here. If left empty, a new network security group will be created for the duration of the test.
+- **vm_size** _(optional)_: The given size will be used for the Azure virtual machine the test runs on. Check [this document](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes) for a list of possible VM sizes. Remember that the VM size will have an impact on test performance and startup times (which get tested and produce a failure should they exceed 30 seconds). This setting defaults to `Standard_D4_v4`.
+- **hyper_v_generation** _(optional)_: Choose the HyperV generation of the virtual machine created from the image. Possible values are 'V1' or 'V2'. If not set, 'V1' will be used as a default.
+    - 'V1': Boot = PCAT, Disk controllers = IDE
+    - 'V2': Boot = UEFI, Disk controllers = SCSI
+- **accelerated_networking** _(optional)_: Enables [Azure Accelerated Networking](https://docs.microsoft.com/en-us/azure/virtual-network/accelerated-networking-overview) for the VM on which the test is going to run. Defaults to `false`, thus accelerated networking disabled.
+
+- **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the Hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
 
 - **storage_account_name** _(optional)_: the storage account to which the image gets uploaded
 - **image_name** _(optional/required)_: If the tests should get executed against an already existing Image, this is its name. Either **image_name** or **image** must be supplied but not both.
@@ -279,9 +298,6 @@ The URI can be:
     - `file:/path/to/my/rootfs.vhd`: for local files
     - `s3://mybucketname/objects/objectkey`: for files in S3
 - **image_region** _(optional)_: If the image comes from an S3 bucket, the bucket location to download from can be specified here. Defaults to `eu-central-1` if omitted.
-- **hyper_v_generation** _(optional)_: Choose the hyperV generation of the virtual machine created from the image. Possible values are 'V1' or 'V2'. If not set, 'V1' will be used as a default.
-    - 'V1': Boot = PCAT, Disk controllers = IDE
-    - 'V2': Boot = UEFI, Disk controllers = SCSI
 
 - **ssh_key_filepath** _(optional)_: The SSH key that will be deployed to the Azure instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand. If left empty, a temporary key with 2048 bits will be generated by the test.
 - **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
@@ -389,6 +405,8 @@ The URI can be:
 - **bucket**:  # my-test-upload-bucket
 - **bucket_path**: integration-test
 
+- **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the Hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
+
 - **ssh_key_filepath** _(required)_: The SSH key that will be deployed to the ECS instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand.
 - **key_name** _(required)_: The SSH key gets uploaded to ECS, this is the name of the key object resource.
 - **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
@@ -450,6 +468,9 @@ gcp:
 
     # GCE machine type (optional)
     machine_type: n1-standard-2
+
+    # test name to be used for naming and/or tagging resources (optional)
+    test_name: my_gardenlinux_test
 
     # ssh related configuration for logging in to the VM (required)
     ssh:

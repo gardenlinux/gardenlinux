@@ -2,9 +2,9 @@
 #set -Eeuo pipefail
 
 # Name of Image to test
-image=$1
+image="${@: -1}"
 
-configFile="gcp_config"
+configFile="gcp_test_config.yaml"
 containerName="ghcr.io/gardenlinux/gardenlinux/integration-test:today"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
 

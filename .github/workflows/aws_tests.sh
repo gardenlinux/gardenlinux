@@ -1,10 +1,24 @@
 #!/bin/bash
 #set -Eeuo pipefail
 
+arch=amd64
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --arch)
+      arch="$2"
+      shift 2
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
 # Name of Image to test
 image=$1
 
-configFile="gcp_config"
+configFile="aws_test_config.yaml"
 containerName="ghcr.io/gardenlinux/gardenlinux/integration-test:today"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
 
@@ -24,10 +38,20 @@ if [[ ! -e $image_file ]]; then
     exit 1
 fi
 
+case "$arch" in
+  amd64) instance_type=m5.large ;;
+  arm64) instance_type=m6g.large ;;
+  *)
+    echo "unsupported architecture $arch" >&2
+    exit 1
+    ;;
+esac
+
 cat << EOF > "$configFile"
 aws:
     region: ${aws_region}
-    instance_type: m5.large
+    instance_type: $instance_type
+    architecture: $arch
     image: file:///artifacts/$(basename "$image_file")
     ssh:
       user: admin
@@ -37,7 +61,6 @@ EOF
 echo "### Start Integration Tests for AWS"
 env_list="$(env | cut -d = -f 1 | grep '^AWS_' | tr '\n' ',' | sed 's/,$//')"
 sudo --preserve-env="$env_list" podman run -it --rm -e 'AWS_*' -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" $containerName /bin/bash -s << EOF
-env
 mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/
 cd /gardenlinux/tests

@@ -1,9 +1,9 @@
 import re
 
 
-def file_content(client, fname, args, invert=False, ignore_missing=False, only_line_match=False, ignore_comments=False):
+def file_content(client, fname, args, invert=False, ignore_missing=False, only_line_match=False, ignore_comments=False, sudo=False):
     """ Performing unit test to find key/val in files """
-    content = _get_content_remote_file(client, fname)
+    content = _get_content_remote_file(client, fname, sudo)
 
     if not content:
         assert not content and ignore_missing, f"Content or file not found: {fname}."
@@ -25,9 +25,11 @@ def file_content(client, fname, args, invert=False, ignore_missing=False, only_l
                 assert len(content_keys) == 0, f"Found {args} in {fname}."
 
 
-def _get_content_remote_file(client, fname):
+def _get_content_remote_file(client, fname, sudo=False):
     """ Get the content of a remote file by the given file name """
     cmd = f"cat {fname}"
+    if sudo:
+        cmd = f"sudo -u root {cmd}"
     (exit_code, output, error) = client.execute_command(
         cmd, quiet=True)
     if not "No such file or directory" in error:

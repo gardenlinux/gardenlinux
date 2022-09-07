@@ -34,8 +34,7 @@ class GCP:
     """Handle resources in GCP"""
 
     @classmethod
-    def fixture(cls, credentials, config, imageurl):
-        test_name = f"gl-test-{time.strftime('%Y%m%d%H%M%S')}"
+    def fixture(cls, credentials, config, imageurl, test_name):
         GCP.validate_config(config, imageurl, test_name, credentials)
 
         logger.info(f"Setting up testbed for image {imageurl}...")

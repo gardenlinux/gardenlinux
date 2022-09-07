@@ -13,5 +13,5 @@ from helper.utils import validate_systemd_unit
 
 
 def test_systemd_unit(client, systemd_unit, non_chroot):
-    execute_remote_command(client, f"systemctl start {systemd_unit}")
+    execute_remote_command(client, f"sudo -u root systemctl start {systemd_unit}")
     validate_systemd_unit(client, f"{systemd_unit}")

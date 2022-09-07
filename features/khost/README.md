@@ -1,6 +1,8 @@
 ## Feature: khost
 
-<website-feature> host for kubernetes workloads (vanilla) </website-feature>
+<website-feature>
+khost feature for Kubernetes (vanilla) workloads
+</website-feature>
 
 ---
 

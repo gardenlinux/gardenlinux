@@ -1,5 +1,4 @@
 import logging
-import time
 import json
 import os
 import uuid
@@ -23,8 +22,7 @@ class AWS:
     """Handle resources in AWS cloud"""
 
     @classmethod
-    def fixture(cls, session, config, image) -> RemoteClient:
-        test_name = f"gl-test-{time.strftime('%Y%m%d%H%M%S')}"
+    def fixture(cls, session, config, image, test_name) -> RemoteClient:
         AWS.validate_config(config, test_name, image)
 
         logger.info(f"Using security group {config['securitygroup_name']}")

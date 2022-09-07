@@ -1,6 +1,7 @@
 import pytest
 import logging
 import json
+import time
 import yaml
 import sys
 import os
@@ -315,16 +316,17 @@ def gcp_credentials(testconfig, pipeline, request):
 @pytest.fixture(scope="session")
 def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
     logger.info(f"Testconfig for {iaas=} is {testconfig}")
+    test_name = testconfig.get('test_name', f"gl-test-{time.strftime('%Y%m%d%H%M%S')}")
     if iaas == "aws":
         session = request.getfixturevalue('aws_session')
-        yield from AWS.fixture(session, testconfig, imageurl)
+        yield from AWS.fixture(session, testconfig, imageurl, test_name)
     elif iaas == "gcp":
         credentials = request.getfixturevalue('gcp_credentials')
         logger.info("Requesting GCP fixture")
-        yield from GCP.fixture(credentials, testconfig, imageurl)
+        yield from GCP.fixture(credentials, testconfig, imageurl, test_name)
     elif iaas == "azure":
         credentials = request.getfixturevalue('azure_credentials')
-        yield from AZURE.fixture(credentials, testconfig, imageurl)
+        yield from AZURE.fixture(credentials, testconfig, imageurl, test_name)
     elif iaas == "openstack-ccee":
         yield from OpenStackCCEE.fixture(testconfig)
     elif iaas == "chroot":
@@ -332,7 +334,7 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
     elif iaas == "kvm":
         yield from KVM.fixture(testconfig)
     elif iaas == "ali":
-        yield from ALI.fixture(testconfig)
+        yield from ALI.fixture(testconfig, test_name)
     elif iaas == "manual":
         yield from Manual.fixture(testconfig)
     else:
@@ -398,9 +400,19 @@ def azure(iaas):
         pytest.skip('test only supported on azure')
 
 @pytest.fixture
+def non_aws(iaas):
+    if iaas == 'aws':
+        pytest.skip('test not supported on aws')
+
+@pytest.fixture
 def aws(iaas):
     if iaas != 'aws':
         pytest.skip('test only supported on aws')
+
+@pytest.fixture
+def non_gcp(iaas):
+    if iaas != 'gcp':
+        pytest.skip('test only supported on gcp')
 
 @pytest.fixture
 def gcp(iaas):
@@ -437,6 +449,11 @@ def openstack(iaas):
     if iaas != 'openstack-ccee':
         pytest.skip('test only supported on openstack')
 
+@pytest.fixture
+def non_hyperscalers(iaas):
+    if iaas == 'aws' or iaas == 'gcp' or iaas == 'azure' or iaas == 'ali':
+        pytest.skip(f"test not supported on hyperscaler {iaas}")
+
 # This fixture is an alias of "chroot" but does not use the "chroot" env.
 # However, it only needs the underlying container for its tests.
 @pytest.fixture
@@ -447,6 +464,15 @@ def container(iaas):
 @pytest.fixture
 def openstack_flavor():
     return OpenStackCCEE.instance().flavor
+
+@pytest.fixture
+def non_amd64(client):
+    (exit_code, output, error) = client.execute_command("dpkg --print-architecture", quiet=True)
+    if exit_code != 0:
+        logger.error(error)
+        sys.exit(exit_code)
+    if "amd64" in output:
+        pytest.skip('test not supported on amd64 architecture')
 
 @pytest.fixture
 def non_arm64(client):
@@ -486,3 +512,11 @@ def non_vhost(testconfig):
     features = testconfig.get("features", [])
     if "vhost" in features:
         pytest.skip('test not supported with vhost feature enabled')
+
+@pytest.fixture
+# After solving #1240 define "firecracker" as IAAS
+def firecracker(testconfig):
+    features = testconfig.get("features", [])
+    if "firecracker" in features:
+        skip_msg = "Currently unsupported. Please see: https://github.com/gardenlinux/gardenlinux/issues/1240"
+        pytest.skip(skip_msg)

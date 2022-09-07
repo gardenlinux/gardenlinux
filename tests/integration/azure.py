@@ -1,6 +1,5 @@
 import logging
 import os
-import time
 import re
 import pytest
 import uuid
@@ -94,11 +93,6 @@ class AZURE:
             return None
 
     def az_create_storage_account(self, name: str):
-        availability = self.sclient.storage_accounts.check_name_availability(
-            StorageAccountCheckNameAvailabilityParameters(name=name)
-        )
-        if not availability.name_available:
-            raise RuntimeError(f"Storage account name {name} not available: {availability.reason}")
         self.logger.info(f"Creating storage account {name} in resourcegroup {self._resourcegroup.name}...")
         return self.sclient.storage_accounts.begin_create(
             resource_group_name = self._resourcegroup.name,
@@ -219,7 +213,7 @@ class AZURE:
             self.logger.info(f"Keeping network security group {name} as it was not created by this test.")
 
 
-    def az_create_vm(self, name: str, admin_username: str = 'azureuser', vm_size: str = 'Standard_B2s', disk_size: int = 7):
+    def az_create_vm(self, name: str, admin_username: str = 'azureuser', vm_size: str = 'Standard_D4_v4', disk_size: int = 7, accelerated_networking: bool = False):
         self.logger.info("Creating virtual network...")
         self._network = self.nclient.virtual_networks.begin_create_or_update(
             resource_group_name=self._resourcegroup.name,
@@ -277,11 +271,12 @@ class AZURE:
                         }
                     }
                 ],
-                'tags': self._tags
+                'tags': self._tags,
+                'enable_accelerated_networking': accelerated_networking
             }
         ).result()
 
-        self.logger.info(f"Creating and booting Virtual machine from image {self._image.name}...")
+        self.logger.info(f"Creating and booting Virtual machine of size {vm_size} from image {self._image.name}...")
         self._instance = self.cclient.virtual_machines.begin_create_or_update(
             resource_group_name=self._resourcegroup.name,
             vm_name=name,
@@ -381,6 +376,10 @@ class AZURE:
             cfg['resource_group'] = f"rg-{test_name}"
         if not 'storage_account_name' in cfg:
             cfg['storage_account_name'] = f"sa{re.sub('-', '', test_name)}"
+        if not 'vm_size' in cfg:
+            cfg['vm_size'] = "Standard_D4_v4"
+        if not 'accelerated_networking' in cfg:
+            cfg['accelerated_networking'] = False
         if not 'nsg_name' in cfg:
             cfg['nsg_name'] = f"nsg-{test_name}"
         if not 'keep_running' in cfg:
@@ -402,8 +401,7 @@ class AZURE:
 
 
     @classmethod
-    def fixture(cls, credentials, config, imageurl) -> RemoteClient:
-        test_name = f"gl-test-{time.strftime('%Y%m%d%H%M%S')}"
+    def fixture(cls, credentials, config, imageurl, test_name) -> RemoteClient:
         AZURE.validate_config(config, imageurl, test_name)
 
         logger.info(f"Setting up testbed for image {imageurl}...")
@@ -622,6 +620,6 @@ class AZURE:
         self._nsg = self.az_get_nsg(config["nsg_name"])
         if self._nsg == None:
             self._nsg = self.az_create_nsg(config["nsg_name"])
-        self._instance = self.az_create_vm(f"vm-{self.test_name}")
+        self._instance = self.az_create_vm(name=f"vm-{self.test_name}", vm_size=config["vm_size"], accelerated_networking=config["accelerated_networking"])
         self.logger.info(f"VM {self._instance.name} created with IP {self._ipaddress.ip_address}")
         return (self._instance, self._ipaddress)
