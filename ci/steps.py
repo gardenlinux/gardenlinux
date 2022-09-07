@@ -608,7 +608,7 @@ def create_component_descriptor_step(
     ]
     step = tkn.model.TaskStep(
         name='component-descriptor',
-        image=DEFAULT_IMAGE,
+        image='eu.gcr.io/gardener-project/cc/job-image:1.1857.0',
         script=task_step_script(
             path=os.path.join(steps_dir, 'component_descriptor.py'),
             script_type=ScriptType.PYTHON3,
