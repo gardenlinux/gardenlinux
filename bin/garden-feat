@@ -6,6 +6,7 @@ import yaml
 import json
 import textwrap
 
+
 def main():
     """ Validate and obtain Garden Linux features """
     args = get_args()
@@ -20,37 +21,8 @@ def main():
 
     # Switch to defined action
     if args.type == 'cname':
-        # cname is a shortened name alias an only returns
-        # a single element of platform, flag and element
-        _platform = [k for k,v in features_matrix['include'].items() if v['type'] in 'platform']
-        _flag = [k for k,v in features_matrix['include'].items() if v['type'] in '_flag']
-        _element = []
-
-        # Get the primary element that was privously given as cli opt
-        _elements_all = [k for k,v in features_matrix['include'].items() if v['type'] in 'elements']
-        _elements_primary = features.split(",")
-        for element in _elements_all:
-            if element in _elements_primary:
-                # Prefix primary element with dash
-                _element.append(f'-{element}')
-
-        # Sort elements in list
-        _platform = sorted(_platform)
-        _element = sorted(_element)
-        _flag = sorted(_flag)
-
-        # Add content to output list
-        filtered_output = []
-        filtered_output.append(_platform[0])
-        if len(_element) > 0:
-            filtered_output.append(_element[0])
-
-        # Transform flag output
-        flag = _flag[0].lstrip('_')
-        filtered_output.append(f'_{flag}')
-
-        # Finally print the artifact's final filename
-        print(''.join(str(s) for s in filtered_output))
+        _cname = create_cname(features_matrix)
+        print(_cname)
 
     elif args.type == 'features':
         filter = ['platform', 'element', 'flag']
@@ -60,10 +32,6 @@ def main():
     elif args.type == 'platforms':
         filter = ['platform']
         filtered_output = [k for k,v in features_matrix['include'].items() if v['type'] in filter]
-        # Only one platform may be given
-        if len(filtered_output) > 1:
-            print(f'Error: Only a single platform is supported. Given: {filtered_output}')
-            sys.exit(1)
         print(','.join(str(s) for s in filtered_output))
 
     elif args.type == 'flags':
@@ -161,14 +129,16 @@ def get_all_features(feature_dir, features, features_ignore, features_matrix):
     """ Get all features including their include and exclude features """
     # Convert feature list to Python list
     features_include = conv_features_list(features)
+    features_primary = features_include.copy()
     features_ignore = conv_features_list(features_ignore)
     features_matrix = {}
+    features_matrix['platform_counter'] = 0
     features_matrix['include'] = {}
     features_matrix['exclude'] = {}
     features_matrix['ignore'] = {}
 
     # Run recursion to fetch all features and their include features
-    traverse_features_tree(feature_dir, features_matrix, features_ignore, features_include)
+    traverse_features_tree(feature_dir, features_matrix, features_ignore, features_include, features_primary)
 
     # Validate for features that are in- & excluded at the same time
     check_excluded_features(features_matrix, features_ignore)
@@ -179,8 +149,8 @@ def get_all_features(feature_dir, features, features_ignore, features_matrix):
     return features_matrix
 
 
-def traverse_features_tree(feature_dir, features_matrix, ignored_features, features):
-    """ Traverse the complete feature tree based on a set of included features. """
+def traverse_features_tree(feature_dir, features_matrix, ignored_features, features, features_primary):
+    """ Traverse the complete feature tree based on a set of included features """
     for feature in features:
         # Skip ignored features, we do not need
         # to traverse them.
@@ -191,8 +161,21 @@ def traverse_features_tree(feature_dir, features_matrix, ignored_features, featu
         fname = f"{feature_dir}/{feature}/info.yaml"
         yaml_content =  get_yaml_content(fname)
 
+        # Validate for a single platform type
+        if yaml_content['type'] == 'platform':
+            features_matrix['platform_counter'] = features_matrix['platform_counter'] + 1
+            if features_matrix['platform_counter'] > 1:
+                print(f'Error: Only a single platform is supported.')
+                sys.exit(1)
+
         # Fetch features for feature matrix
         features_matrix['include'][feature] = yaml_content
+
+        # Mark primary features
+        if feature in features_primary:
+            features_matrix['include'][feature]['primary'] = True
+        else:
+            features_matrix['include'][feature]['primary'] = False
 
         # Check if feature has additional feature inlcudes
         sub_features = yaml_content.get('features', None)
@@ -209,7 +192,7 @@ def traverse_features_tree(feature_dir, features_matrix, ignored_features, featu
             features_matrix['exclude'][excluded_feature] = yaml_content
 
         # Run recursion
-        traverse_features_tree(feature_dir, features_matrix, ignored_features, included_sub_features)
+        traverse_features_tree(feature_dir, features_matrix, ignored_features, included_sub_features, features_primary)
 
 
 def check_excluded_features(features_matrix, features_ignore):
@@ -218,7 +201,7 @@ def check_excluded_features(features_matrix, features_ignore):
     # should have been included. If so, this is an error.
     for excluded_feature in features_matrix['exclude'].keys():
         if excluded_feature in features_matrix['include'].keys():
-            print(f"garden-feat: error: {excluded_feature} has been excluded by another feature.")
+            print(f'garden-feat: error: {excluded_feature} has been excluded by another feature.')
             sys.exit(1)
 
 
@@ -240,6 +223,28 @@ def get_feature_params(features_matrix):
             if a not in filter and a != '':
                 feature_params[a]=b
     print(json.dumps(feature_params, indent=4, sort_keys=True))
+
+
+def create_cname(features_matrix):
+    """ Create cname output """
+    # Get all primary features that have been defined via positional cli arg(s)
+    _primary_platform = [k for k,v in features_matrix['include'].items() if v['primary'] and v['type'] == 'platform']
+    _primary_elements = [k for k,v in features_matrix['include'].items() if v['primary'] and v['type'] == 'element']
+    _primary_flags = [k for k,v in features_matrix['include'].items() if v['primary'] and v['type'] == 'flag']
+
+    # Remove possible duplicates
+    _primary_platform = set(_primary_platform)
+    _primary_elements = set(_primary_elements)
+    _primary_flags = set(_primary_flags)
+
+    # Create output
+    # We will only have a single platform
+    output = (''.join(str(s) for s in _primary_platform))
+    ## Create dash as a seperator
+    output = output + '-' + ('-'.join(str(s) for s in _primary_elements))
+    ## Flags are always prefixed with an underscore
+    output = output + (''.join(str(s) for s in _primary_flags))
+    return output
 
 
 if __name__ == "__main__":
