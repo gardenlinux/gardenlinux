@@ -28,7 +28,7 @@ jobs:
       - name: use kms backed certificates
         if: ${{ inputs.use_kms }}
         run: |
-          echo "${{ secrets.secureboot_db_kms_arn }}" > cert/gardenlinux-secureboot.db.arn
+          touch cert/gardenlinux-secureboot.db.arn
           for f in secureboot.{{pk,null.pk,kek,db}.auth,db.{crt,arn}}; do
             ln -sr "cert/gardenlinux-$f" "cert/$f"
           done
@@ -55,6 +55,9 @@ jobs:
           name: _cert
       - name: unpack certificates from previous build stage
         run: sudo tar -xzvf cert.tar.gz && rm cert.tar.gz
+      - name: write secureboot db arn for kms backed certificates
+        if: ${{ inputs.use_kms }}
+        run: echo "${{ secrets.secureboot_db_kms_arn }}" > cert/gardenlinux-secureboot.db.arn
       - name: set VERSION=${{ inputs.version }}
         run: |
           bin/garden-version "${{ inputs.version }}" | tee VERSION
