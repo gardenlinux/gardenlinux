@@ -231,7 +231,7 @@ def get_feature_params(features_matrix):
     feature_params = {}
 
     # Strip out all uneeded keys by filter
-    for k, v in features_matrix.items():
+    for k, v in features_matrix['include'].items():
         for a, b in v.items():
             if a not in filter and a != '':
                 feature_params[a]=b
