@@ -26,7 +26,7 @@ def main():
 
     elif args.type == 'features':
         # Write out an ordered features list based on include priorities
-        print(','.join(str(s) for s in features_matrix['dependencies']))
+        print(','.join(str(s) for s in features_matrix['ordered_features']))
 
     elif args.type == 'platforms':
         filter = ['platform']
@@ -133,6 +133,7 @@ def get_all_features(feature_dir, features, features_ignore, features_matrix):
     features_matrix = {}
     features_matrix['platform_counter'] = 0
     features_matrix['dependencies'] = []
+    features_matrix['ordered_features'] = []
     features_matrix['include'] = {}
     features_matrix['exclude'] = {}
     features_matrix['ignore'] = {}
@@ -197,7 +198,14 @@ def traverse_features_tree(feature_dir, features_matrix, ignored_features, featu
 
         # Add feature itself after traversing child features
         if feature not in features_matrix['dependencies']:
-            features_matrix['dependencies'].append(feature)
+             reversed_feature_list = features_matrix['dependencies'][::-1]
+             reversed_feature_list.append(feature)
+
+             # Now, add entries only if not already present within
+             # the ordered faeatures list
+             for feature in reversed_feature_list:
+                if feature not in features_matrix['ordered_features']:
+                    features_matrix['ordered_features'].append(feature)
 
 
 def check_excluded_features(features_matrix, features_ignore):
