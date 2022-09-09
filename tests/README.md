@@ -147,6 +147,10 @@ aws:
     # test name to be used for naming and/or tagging resources (optional)
     test_name: my_gardenlinux_test
 
+    # list of features that is used to determine the tests to run
+    features:
+      - "base"
+
     # ssh related configuration for logging in to the VM (optional)
     ssh:
         # path to the ssh key file (optional)
@@ -256,6 +260,10 @@ azure:
     #image_region: eu-central-1
     # already existing image in Azure to be used for testing (required/alternatively optional)
     image_name: <image name>
+
+    # list of features that is used to determine the tests to run
+    features:
+      - "base"
 
     # ssh related configuration for logging in to the VM (optional)
     ssh:
@@ -371,6 +379,10 @@ ali:
     # optional, path in bucket
     bucket_path: integration-test
 
+    # list of features that is used to determine the tests to run
+    features:
+      - "base"
+
     # ssh related configuration for logging in to the VM (required)
     ssh:
         # path to the ssh key file (required)
@@ -471,6 +483,10 @@ gcp:
 
     # test name to be used for naming and/or tagging resources (optional)
     test_name: my_gardenlinux_test
+
+    # list of features that is used to determine the tests to run
+    features:
+      - "base"
 
     # ssh related configuration for logging in to the VM (required)
     ssh:
@@ -773,6 +789,10 @@ openstack_ccee:
 
     # network name (must exist)
     network_name: gardenlinux
+
+    # list of features that is used to determine the tests to run
+    features:
+      - "base"
 
     # ssh related configuration for logging in to the VM (required)
     ssh:
