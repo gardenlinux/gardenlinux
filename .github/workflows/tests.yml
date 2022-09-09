@@ -45,7 +45,7 @@ jobs:
         modifier: [ "" ]
         exclude:
           - architecture: arm64
-            target: gcp
+            target: [ gcp, azure ]
     steps:
     - uses: actions/checkout@v3
 
