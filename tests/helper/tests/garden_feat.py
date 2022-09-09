@@ -15,7 +15,7 @@ def garden_feat(client, test_case, config, input_features, output_features):
     if test_case == "params":
         # Get JSON output
         content = json.loads(out)
-        out = content['cloud']['convert']['format'][0]['type']
+        out = content['convert']['format'][0]['type']
     else:
         out = val_features(test_case, config, input_features)
         out = ','.join(sorted(out.split(',')))
