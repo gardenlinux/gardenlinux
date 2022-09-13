@@ -11,11 +11,7 @@ RUN : "Install AWS requirements" \
      && echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
      && apt-get update \
      && apt-get install -y google-cloud-sdk && \
-    : "Install Azure requirements" \
-     && apt-get update \
-     && apt-get install -y azure-cli && \
-    : "Install Openstack requirements" \
-     && pip3 install python-openstackclient && \
+    : "Azure and OpenStack cli already installed in gardenlinux/base-test image" \
     : "Install AliCloud specific requirements" \
      && curl -sL -o /aliyun-cli-linux-3.0.94-amd64.tgz https://github.com/aliyun/aliyun-cli/releases/download/v3.0.94/aliyun-cli-linux-3.0.94-amd64.tgz \
      && (cd /usr/local/bin ; tar xf /aliyun-cli-linux-3.0.94-amd64.tgz) \
