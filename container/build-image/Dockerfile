@@ -39,8 +39,13 @@ RUN apt-get update \
 		rsync \
 		openssh-client \
 		qemu-system-arm \
-		qemu-system-x86
+		qemu-system-x86 \
+		openssl \
+		libengine-pkcs11-openssl
 
+RUN arch="$(dpkg --print-architecture)" && \
+	wget "https://gardenlinux-aws-kms-pkcs11.s3.eu-central-1.amazonaws.com/aws-sdk-cpp_$arch.deb" "https://gardenlinux-aws-kms-pkcs11.s3.eu-central-1.amazonaws.com/aws-kms-pkcs11_$arch.deb" && \
+	apt-get install -y --no-install-recommends "./aws-sdk-cpp_$arch.deb" "./aws-kms-pkcs11_$arch.deb"
 
 RUN echo "deb https://deb.debian.org/debian unstable main" >> /etc/apt/sources.list \
 	&& echo 'APT::Default-Release "testing";' > /etc/apt/apt.conf.d/default-testing \
