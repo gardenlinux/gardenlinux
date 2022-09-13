@@ -1,10 +1,22 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 import argparse
 import yaml
 import json
 import textwrap
+
+# Constants
+MATRIX_TYPE_INCLUDE = 0
+MATRIX_TYPE_EXCLUDE = 1
+MATRIX_TYPE_IGNORE = 2
+MATRIX_TYPE_START = 3
+MATRIX_TYPE_DEP_CHAIN = 4
+
+FEATURE_TYPE_PLATFORM = 'platform'
+FEATURE_TYPE_ELEMENT = 'element'
+FEATURE_TYPE_FLAG = 'flag'
 
 
 def main():
@@ -12,46 +24,61 @@ def main():
     args = get_args()
 
     feature_dir = args.featureDir
-    features = args.features
-    features_ignore = args.ignore
-    features_matrix = {}
+    start_features = args.features
+    ignored_features = args.ignore
 
-    # Get all features incuding their include / exclude features within a recursion
-    features_matrix  = get_all_features(feature_dir, features, features_ignore, features_matrix)
+    # First, load all features available for
+    # further processing. This makes it easier
+    # to access feature information later on.
+    all_features = get_all_features(feature_dir)
+
+    # Sort start features by their type.
+    # Platform > element > flag
+    start_features = sort_feature_names_by_type(all_features, start_features)
+
+    # Get a feature matrix of all included, excluded and ignored features.
+    # In addition, create a dependency list of features.
+    features_matrix  = get_feature_matrix(all_features, start_features, ignored_features)
 
     # Switch to defined action
     if args.type == 'cname':
-        _cname = create_cname(features_matrix)
-        print(_cname)
+        cname = get_cname(start_features, features_matrix[MATRIX_TYPE_DEP_CHAIN])
+        print(cname)
 
     elif args.type == 'features':
         # Write out an ordered features list based on include priorities
-        print(','.join(str(s) for s in features_matrix['ordered_features']))
+        print(','.join(str(s) for s in features_matrix[MATRIX_TYPE_DEP_CHAIN]))
 
-    elif args.type == 'platforms':
-        filter = ['platform']
-        filtered_output = [k for k,v in features_matrix['include'].items() if v['type'] in filter]
-        print(','.join(str(s) for s in filtered_output))
+    elif args.type == 'platform':
+        types = ['platform']
+        features = get_feature_names_by_types(all_features,
+            features_matrix[MATRIX_TYPE_DEP_CHAIN], types)
+        print(','.join(str(s) for s in features))
 
     elif args.type == 'flags':
-        filter = ['flag']
-        filtered_output = [k for k,v in features_matrix['include'].items() if v['type'] in filter]
-        print(','.join(str(s) for s in filtered_output))
+        types = ['flag']
+        features = get_feature_names_by_types(all_features,
+            features_matrix[MATRIX_TYPE_DEP_CHAIN], types)
+        print(','.join(str(s) for s in features))
 
     elif args.type == 'elements':
-        filter = ['element']
-        filtered_output = [k for k,v in features_matrix['include'].items() if v['type'] in filter]
-        print(','.join(str(s) for s in filtered_output))
+        types = ['element', 'platform']
+        features = get_feature_names_by_types(all_features,
+            features_matrix[MATRIX_TYPE_DEP_CHAIN], types)
+        print(','.join(str(s) for s in features))
 
     elif args.type == 'ignore':
-        filtered_output = [k for k,v in features_matrix['ignore'].items()]
-        if len(filtered_output) == 0 or filtered_output[0] == '':
+        features = get_feature_names(
+            features_matrix[MATRIX_TYPE_IGNORE].items())
+
+        if len(features) == 0 or features[0] == '':
             print('garden-feat: warning: No feature is ignored.')
         else:
-            print(','.join(str(s) for s in filtered_output))
+            print(','.join(str(s) for s in features))
 
     elif args.type == 'params':
-        get_feature_params(features_matrix)
+        feature_params = get_feature_params(features_matrix)
+        print(json.dumps(feature_params, indent=4, sort_keys=True))
 
 
 def get_args():
@@ -84,9 +111,21 @@ def get_args():
     help_ignore="List of feaures (comma-separated)"
 
     # Impositional arg(s)
-    parser.add_argument('--featureDir', type=str, default="../features", help=help_feature_dir)
-    parser.add_argument('--features', type=str, required=True, help=help_features)
-    parser.add_argument('--ignore', type=str, default=",", help=help_ignore)
+    parser.add_argument(
+        '--featureDir',
+        type=str,
+        default="../features",
+        help=help_feature_dir)
+    parser.add_argument(
+        '--features',
+        type=lambda arg: arg.split(','),
+        required=True,
+        help=help_features)
+    parser.add_argument(
+        '--ignore',
+        type=lambda arg: arg.split(','),
+        default=[],
+        help=help_ignore)
 
     # Positional arg(s)
     args_type_allowed = [
@@ -104,13 +143,6 @@ def get_args():
     return(args)
 
 
-def conv_features_list(features):
-    """ Convert comma seperated list to Python list """
-    if type(features) != 'list':
-        list_features = features.split(",")
-        return list_features
-
-
 def get_yaml_content(fname):
     """ Read YAML files and get content """
     try:
@@ -124,105 +156,46 @@ def get_yaml_content(fname):
         sys.exit(1)
 
 
-def get_all_features(feature_dir, features, features_ignore, features_matrix):
-    """ Get all features including their include and exclude features """
-    # Convert feature list to Python list
-    features_include = conv_features_list(features)
-    features_primary = features_include.copy()
-    features_ignore = conv_features_list(features_ignore)
-    features_matrix = {}
-    features_matrix['platform_counter'] = 0
-    features_matrix['dependencies'] = []
-    features_matrix['ordered_features'] = []
-    features_matrix['include'] = {}
-    features_matrix['exclude'] = {}
-    features_matrix['ignore'] = {}
+def get_cname(start_features, dependency_chain):
+    """ Return the cname """
+    cname_parts = []
 
-    # Run recursion to fetch all features and their include features
-    traverse_features_tree(feature_dir, features_matrix, features_ignore, features_include, features_primary)
+    # Iterate one by one through all start features which are
+    # sorted by their type (Platform > element > flag).
+    #
+    # If one of our sorted start features is a dependency of another start feature,
+    # we can skip it, because they are already clearly identified by the start feature
+    # which requires them.
+    #
+    # In order to identify dependent start features, simply jump from one
+    # sorted start feature to another in the dependency chain.
+    # If a start feature is on the left side of a higher sorted start feature in
+    # the dependency chain, the iterated start feature is then the dependency of the
+    # other one. At this point, the start feature is not relevant for the cname creation.
+    #
+    # At the end, there are only start features, that are no dependencies of other start
+    # features, which ultimately creates the unique cname.
+    for feature in start_features:
+        # If we already jumped to the end of our dependency chain,
+        # there is no start feature left which is not a dependency
+        # of another start feature. Therefore, stop here.
+        if len(dependency_chain) == 0:
+            break
 
-    # Validate for features that are in- & excluded at the same time
-    check_excluded_features(features_matrix, features_ignore)
-
-    # Add ignored features to features_matrix to have a complete dict
-    # to work on later
-    features_matrix = add_ignored_featured(features_matrix, features_ignore)
-    return features_matrix
-
-
-def traverse_features_tree(feature_dir, features_matrix, ignored_features, features, features_primary):
-    """ Traverse the complete feature tree based on a set of included features """
-    for feature in features:
-        # Skip ignored features, we do not need
-        # to traverse them.
-        if feature in ignored_features:
+        # If the start feature is not in the dependency chain (anymore),
+        # we can skip it then.
+        if feature not in dependency_chain:
             continue
 
-        # Proceed with given feature (yaml) file
-        fname = f"{feature_dir}/{feature}/info.yaml"
-        yaml_content =  get_yaml_content(fname)
+        # Search for the start feature in the dependency chain.
+        # Cut the dependency chain from left to ride each time,
+        # we found our start feature. Everything on the left side
+        # is a dependency and can therefore be skipped next time.
+        index = dependency_chain.index(feature)
+        dependency_chain = dependency_chain[index:]
+        cname_parts.append(feature)
 
-        # Validate for a single platform type
-        if yaml_content['type'] == 'platform':
-            features_matrix['platform_counter'] = features_matrix['platform_counter'] + 1
-            if features_matrix['platform_counter'] > 1:
-                print(f'Error: Only a single platform is supported.')
-                sys.exit(1)
-
-        # Fetch features for feature matrix
-        features_matrix['include'][feature] = yaml_content
-
-        # Mark primary features
-        if feature in features_primary:
-            features_matrix['include'][feature]['primary'] = True
-        else:
-            features_matrix['include'][feature]['primary'] = False
-
-        # Check if feature has additional feature inlcudes
-        sub_features = yaml_content.get('features', None)
-        included_sub_features = []
-        excluded_sub_features = []
-
-        if sub_features:
-            included_sub_features = sub_features.get('include', [])
-            excluded_sub_features = sub_features.get('exclude', [])
-            features_matrix['dependencies'] = features_matrix['dependencies'] + included_sub_features
-
-        for excluded_feature in excluded_sub_features:
-            fname = f"{feature_dir}/{excluded_feature}/info.yaml"
-            yaml_content =  get_yaml_content(fname)
-            features_matrix['exclude'][excluded_feature] = yaml_content
-
-        # Run recursion
-        traverse_features_tree(feature_dir, features_matrix, ignored_features, included_sub_features, features_primary)
-
-        # Add feature itself after traversing child features
-        if feature not in features_matrix['dependencies']:
-             reversed_feature_list = features_matrix['dependencies'][::-1]
-             reversed_feature_list.append(feature)
-
-             # Now, add entries only if not already present within
-             # the ordered faeatures list
-             for feature in reversed_feature_list:
-                if feature not in features_matrix['ordered_features']:
-                    features_matrix['ordered_features'].append(feature)
-
-
-def check_excluded_features(features_matrix, features_ignore):
-    """ Check if a feature is included and excluded at the same time """
-    # Now check, if the feature tree excluded some features that usually
-    # should have been included. If so, this is an error.
-    for excluded_feature in features_matrix['exclude'].keys():
-        if excluded_feature in features_matrix['include'].keys():
-            print(f'garden-feat: error: {excluded_feature} has been excluded by another feature.')
-            sys.exit(1)
-
-
-def add_ignored_featured(features_matrix, features_ignore):
-    """ Set ignored features in features_matrix to have a complete dict """
-    for ignored_feature in features_ignore:
-        features_matrix['ignore'][ignored_feature] = ""
-    return features_matrix
+    return "-".join(cname_parts)
 
 
 def get_feature_params(features_matrix):
@@ -231,33 +204,158 @@ def get_feature_params(features_matrix):
     feature_params = {}
 
     # Strip out all uneeded keys by filter
-    for k, v in features_matrix['include'].items():
+    for k, v in features_matrix[MATRIX_TYPE_INCLUDE].items():
         for a, b in v.items():
             if a not in filter and a != '':
                 feature_params[a]=b
-    print(json.dumps(feature_params, indent=4, sort_keys=True))
+
+    return feature_params
 
 
-def create_cname(features_matrix):
-    """ Create cname output """
-    # Get all primary features that have been defined via positional cli arg(s)
-    _primary_platform = [k for k,v in features_matrix['include'].items() if v['primary'] and v['type'] == 'platform']
-    _primary_elements = [k for k,v in features_matrix['include'].items() if v['primary'] and v['type'] == 'element']
-    _primary_flags = [k for k,v in features_matrix['include'].items() if v['primary'] and v['type'] == 'flag']
+def get_feature_names_by_types(all_features, feature_names, types):
+    """ Returns a list of filtered feature names by type """
+    return [k for k in feature_names if all_features[k]['type'] in types]
 
-    # Remove possible duplicates
-    _primary_platform = set(_primary_platform)
-    _primary_elements = set(_primary_elements)
-    _primary_flags = set(_primary_flags)
 
-    # Create output
-    # We will only have a single platform
-    output = (''.join(str(s) for s in _primary_platform))
-    ## Create dash as a seperator
-    output = output + '-' + ('-'.join(str(s) for s in _primary_elements))
-    ## Flags are always prefixed with an underscore
-    output = output + (''.join(str(s) for s in _primary_flags))
-    return output
+def get_feature_names(features):
+    """ Returns a flattend list of features """
+    return [k for k,v in features]
+
+
+def get_all_features(feature_dir):
+    """
+    Loads all features from a given directory
+    and return them as a dict
+    """
+    features = {}
+
+    for feature in os.listdir(feature_dir):
+        if not os.path.isdir(f"{feature_dir}/{feature}"):
+            continue
+
+        file_name = f"{feature_dir}/{feature}/info.yaml"
+        features[feature] = get_yaml_content(file_name)
+
+    return features
+
+
+def get_feature_matrix(all_features, start_feature_names, ignored_feature_names):
+    """
+    Get a feature matrix including all included, excluded and ignored features
+    as well as the dependency chain of features.
+    The dependency chain is a comma seperated list of features representing
+    a chain from the buttom to the top regarding the dependency.
+    """
+    features_matrix = {}
+    features_matrix[MATRIX_TYPE_INCLUDE] = {}
+    features_matrix[MATRIX_TYPE_EXCLUDE] = {}
+    features_matrix[MATRIX_TYPE_IGNORE] = {}
+    features_matrix[MATRIX_TYPE_DEP_CHAIN] = []
+
+    # Add ignored features to feature_matrix
+    add_ignored_features(all_features, features_matrix, ignored_feature_names)
+
+    # Run recursion to fetch all included and excluded features
+    # as well as the dependency chain.
+    traverse_features_tree(all_features, features_matrix, start_feature_names)
+
+    # Validate for features that are in- & excluded at the same time
+    check_excluded_features(features_matrix)
+
+    return features_matrix
+
+
+def traverse_features_tree(all_features, features_matrix, feature_names):
+    """ Traverse the complete feature tree based on a set of included features """
+    for feature in feature_names:
+        # Skip ignored features, we do not need
+        # to traverse them.
+        if feature in features_matrix[MATRIX_TYPE_IGNORE].keys():
+            continue
+
+        feature_content = all_features[feature]
+
+        # Check if processed feature has some sub features (include/exclude)
+        sub_features = all_features[feature].get('features', None)
+        included_feature_names = []
+        excluded_feature_names = []
+
+        if sub_features:
+            included_feature_names = sub_features.get('include', [])
+            excluded_feature_names = sub_features.get('exclude', [])
+
+        # Extend feature_matrix with the currently processed feature
+        # as one of the included ones.
+        features_matrix[MATRIX_TYPE_INCLUDE][feature] = feature_content
+
+        # Extend feature_matrix with all excluded features that
+        # are defined by the currently processed feature.
+        for excluded_feature in excluded_feature_names:
+            features_matrix[MATRIX_TYPE_EXCLUDE][excluded_feature] = all_features[excluded_feature]
+
+        # For all other included features, we run the recursion
+        # in order to traverse deeper into the feature tree.
+        traverse_features_tree(all_features, features_matrix, included_feature_names)
+
+        # Check if the processed feature is already part of the dependency chain.
+        # If not, add the currently processed feature to the chain.
+        # If yes, the processed feature has already been added by another feature before
+        # and is therefore a dependency of the another feature.
+        if feature not in features_matrix[MATRIX_TYPE_DEP_CHAIN]:
+            features_matrix[MATRIX_TYPE_DEP_CHAIN].append(feature)
+
+
+def check_excluded_features(features_matrix):
+    """ Check if a feature is included and excluded at the same time """
+    # Now check, if the feature tree excluded some features that usually
+    # should have been included. If so, this is an error.
+    for excluded_feature in features_matrix[MATRIX_TYPE_EXCLUDE].keys():
+        if excluded_feature in features_matrix[MATRIX_TYPE_INCLUDE].keys():
+            print(f'garden-feat: error: {excluded_feature} has been excluded by another feature.')
+            sys.exit(1)
+
+
+def sort_feature_names_by_type(all_features, feature_names):
+    """ Sort a list of feature names by their type """
+    sorted_feature_names = []
+    features = {
+        FEATURE_TYPE_PLATFORM: [],
+        FEATURE_TYPE_ELEMENT: [],
+        FEATURE_TYPE_FLAG: []
+    }
+
+    # First, get the content of all features
+    for feature in feature_names:
+        yaml_content = all_features[feature]
+        feature_type = yaml_content['type']
+
+        if feature_type not in features.keys():
+            print(f'Error: Feature {feature} uses unsupported type {feature_type}.')
+            sys.exit(1)
+
+        features[feature_type].append(feature)
+
+    # Check if there is more than one platform.
+    if len(features[FEATURE_TYPE_PLATFORM]) > 1:
+        print(f'Error: Only a single platform is supported.')
+        sys.exit(1)
+
+    # Check if there is at least one platform
+    if len(features[FEATURE_TYPE_PLATFORM]) == 0:
+        print(f'Error: No platform has been specified.')
+        sys.exit(1)
+
+    sorted_feature_names += features[FEATURE_TYPE_PLATFORM]
+    sorted_feature_names += features[FEATURE_TYPE_ELEMENT]
+    sorted_feature_names += features[FEATURE_TYPE_FLAG]
+
+    return sorted_feature_names
+
+
+def add_ignored_features(all_features, features_matrix, ignored_feature_names):
+    """ Add ignored features to the features_matrix to have a complete dict """
+    for feature in ignored_feature_names:
+        features_matrix[MATRIX_TYPE_IGNORE][feature] = all_features[feature]
 
 
 if __name__ == "__main__":
