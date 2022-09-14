@@ -42,7 +42,7 @@ def main():
 
     # Switch to defined action
     if args.type == 'cname':
-        cname = get_cname(start_features, features_matrix[MATRIX_TYPE_DEP_CHAIN])
+        cname = get_cname(all_features, start_features, features_matrix[MATRIX_TYPE_DEP_CHAIN])
         print(cname)
 
     elif args.type == 'features':
@@ -157,12 +157,13 @@ def get_yaml_content(fname):
         sys.exit(1)
 
 
-def get_cname(start_features, dependency_chain):
+def get_cname(all_features, start_features, dependency_chain):
     """ Return the cname """
-    cname_parts = []
+    cname_features = []
+    cname = ""
 
     # Iterate one by one through all start features which are
-    # sorted by their type (Platform > element > flag).
+    # already sorted by their type (Platform > element > flag).
     #
     # If one of our sorted start features is a dependency of another start feature,
     # we can skip it, because they are already clearly identified by the start feature
@@ -194,9 +195,23 @@ def get_cname(start_features, dependency_chain):
         # is a dependency and can therefore be skipped next time.
         index = dependency_chain.index(feature)
         dependency_chain = dependency_chain[index:]
-        cname_parts.append(feature)
+        cname_features.append(feature)
 
-    return "-".join(cname_parts)
+    # Finally, put all cname parts together to a string
+    # Keep in mind that flag features are concatinated without
+    # a seperator.
+    for feature in cname_features:
+        # First feature in the string, just add it
+        if len(cname) == 0:
+            cname = feature
+        # It is no flag feature, concatenate it with a seperator 
+        elif all_features[feature]['type'] != FEATURE_TYPE_FLAG:
+            cname += f"-{feature}"
+        # It is a flag feature, concatenate it without a seperator
+        else:
+            cname += feature
+
+    return cname
 
 
 def get_feature_params(features_matrix):
