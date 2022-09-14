@@ -18,7 +18,7 @@ def garden_feat(client, test_case, config, input_features, output_features):
         out = content['convert']['format'][0]['type']
     else:
         out = val_features(test_case, config, input_features)
-        out = ','.join(sorted(out.split(',')))
+        out = ','.join(out.split(','))
 
     assert out == output_features, f"Testcase: {test_case} - Mismatch: Expected: {output_features} <> Is: {out}"
 

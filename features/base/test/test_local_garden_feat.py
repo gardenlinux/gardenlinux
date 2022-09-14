@@ -15,7 +15,7 @@ import pytest
                   {"cloud": {'description': 'cloud', 'type': 'element'}}
             ],
             "base,kvm,_dev",
-            "_dev,_slim,base,cloud,kvm"
+            "cloud,kvm,_slim,base,_dev"
         ),
         (
             "features",
@@ -27,7 +27,7 @@ import pytest
                   {"cloud": {'description': 'cloud', 'type': 'element'}}
             ],
             "base,kvm,_dev",
-            "_dev,_slim,base,kvm"
+            "kvm,_slim,base,_dev"
         ),
         (
             "features",
@@ -40,7 +40,7 @@ import pytest
                   {"_ssh": {'description': '_ssh', 'type': 'flag'}}
             ],
             "base,kvm,_dev",
-            "_dev,_slim,base,kvm"
+            "kvm,_slim,base,_dev"
         ),
         (
             "cname",
@@ -53,7 +53,7 @@ import pytest
                   {"chost": {'description': 'chost', 'type': 'element'}}
             ],
             "kvm,_dev,chost",
-            "kvm-chost_dev"
+            "kvm_dev"
         ),
         (
             "flags",
@@ -66,7 +66,7 @@ import pytest
                   {"firewall": {'description': 'firewall', 'type': 'flag'}}
             ],
             "base,kvm,_dev",
-            "_dev,_slim,firewall"
+            "_slim,_dev,firewall"
         ),
         (
             "elements",
@@ -77,7 +77,7 @@ import pytest
                   {"cloud": {'description': 'cloud', 'type': 'element'}}
             ],
             "base,kvm",
-            "base,server,cloud,kvm"
+            "cloud,kvm,base"
         ),
         (
             "ignore",
