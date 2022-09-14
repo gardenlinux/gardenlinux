@@ -77,7 +77,7 @@ import pytest
                   {"cloud": {'description': 'cloud', 'type': 'element'}}
             ],
             "base,kvm",
-            "base,cloud"
+            "base,server,cloud,kvm"
         ),
         (
             "ignore",
