@@ -64,7 +64,7 @@ kernel_version="${kernel_file#*-}"
 chroot "$rootfs" dracut \
 	--force \
 	--kver "$kernel_version" \
-	--modules "bash dash systemd systemd-initrd systemd-repart systemd-veritysetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown" \
+	--modules "bash dash systemd systemd-initrd systemd-veritysetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown" \
 	--install "/etc/veritytab" \
 	--reproducible \
 	"$initrd"
