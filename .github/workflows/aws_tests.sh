@@ -56,6 +56,13 @@ aws:
     ssh:
       user: admin
     keep_running: false
+    features:
+      - aws
+      - gardener
+      - cloud
+      - server
+      - base
+      - _slim
 EOF
 
 echo "### Start Integration Tests for AWS"
@@ -64,6 +71,6 @@ sudo --preserve-env="$env_list" podman run -it --rm -e 'AWS_*' -v "$(pwd):/garde
 mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/
 cd /gardenlinux/tests
-pytest --iaas=aws --configfile=/gardenlinux/$configFile --junit-xml=/gardenlinux/test-$prefix-aws.xml integration || exit 1
+pytest --iaas=aws --configfile=/gardenlinux/$configFile --junit-xml=/gardenlinux/test-$prefix-aws.xml || exit 1
 exit 0
 EOF
