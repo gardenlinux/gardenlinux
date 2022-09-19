@@ -1,7 +1,7 @@
 import helper.utils as utils
 
 
-def users(client, additional_user = ""):
+def users(client, additional_user = "", additional_sudo_users=[]):
     # Get content from /etc/passwd
     (exit_code, output, error) = client.execute_command(
         "getent passwd", quiet=True)
@@ -30,8 +30,10 @@ def users(client, additional_user = ""):
                         or gid in [0, 65534], ("Unexpected shell found in " +
                                     f"/etc/passwd for user/service: {user}")
 
-            # Test for sudo priviledges for each user
-            if user != "root":
+            # Test for sudo priviledges for each user 
+            # (additional users may have sudo access)
+            additional_sudo_users.append("root")
+            if user not in additional_sudo_users:
                 _has_user_sudo_cmd(client, user)
 
     # Permissions for '/root' should be set to 700
