@@ -26,8 +26,6 @@
 !/cert/gardenlinux.sign.pub
 /features/metal/file.include/lib/firmware/
 /container/*/_pipfiles
-/container/build-image/garden-feat.go
-/bin/garden-feat
 .idea
 __pycache__
 /dev

@@ -18,7 +18,6 @@ needslim:
 
 .PHONY: build-image
 build-image: needslim
-	cp ../bin/garden-feat.go build-image/
 	if [ ! -n "$$($(GARDENLINUX_BUILD_CRE) image ls gardenlinux/build-image:$(VERSION_NUMBER) --format "{{.Repository}}:{{.Tag}}")" ]; then \
 		$(GARDENLINUX_BUILD_CRE) image rm --force $$($(GARDENLINUX_BUILD_CRE) image ls gardenlinux/build-image --format "{{.Repository}}:{{.Tag}}") || true; \
 	fi
