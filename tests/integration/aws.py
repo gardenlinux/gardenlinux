@@ -7,6 +7,8 @@ import pytest
 from os import path
 from urllib.parse import urlparse
 
+from . import util
+
 from botocore.exceptions import ClientError
 
 from helper.sshclient import RemoteClient
@@ -143,7 +145,8 @@ class AWS:
         ))
         security_group_id = security_group['GroupId']
 
-        self.logger.info(f"Enabling incoming SSH connections to security group {security_group_id}...")
+        my_ip = util.get_my_ip()
+        self.logger.info(f"Enabling incoming SSH connections from {my_ip} to security group {security_group_id}...")
         rule = response_ok(self.ec2_client.authorize_security_group_ingress(
             GroupId = security_group['GroupId'],
             IpPermissions=[
@@ -151,7 +154,12 @@ class AWS:
                     "IpProtocol": "tcp",
                     "FromPort": 22,         # note, this is not the port to connection comes from but the first port in a range of allowed ports...
                     "ToPort": 22,           # ... and likewise, this is the last port in the range of allowed ports
-                    "IpRanges": [{"CidrIp": "0.0.0.0/1"}, {"CidrIp": "128.0.0.0/1"}],
+                    "IpRanges": [
+                        {
+                            "CidrIp": f"{my_ip}/32",
+                            "Description": "Garden Linux test runner"
+                        }
+                    ],
                 }
             ],
             TagSpecifications = [{
