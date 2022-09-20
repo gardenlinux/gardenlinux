@@ -297,6 +297,24 @@ class AWS:
                 'RestrictPublicBuckets': True,
             },
         )
+
+        self.logger.info(f"Setting server side encryption on storage bucket {name}...")
+        encryption_configuration = {
+            'Rules': [
+                {
+                    'ApplyServerSideEncryptionByDefault': {
+                        'SSEAlgorithm': 'AES256'
+                    },
+                    'BucketKeyEnabled': False
+                }
+            ]
+        }
+
+        resp = self.s3_client.put_bucket_encryption(
+            Bucket = name,
+            ServerSideEncryptionConfiguration = encryption_configuration
+        )
+
         return name
 
     def aws_delete_storage_bucket(self, name: str, force: bool = False):
