@@ -130,13 +130,15 @@ class AWS:
             vpc_id = self.aws_get_default_vpcs()[0]['VpcId']
 
         self.logger.info(f"Creating security group {name} for VPC {vpc_id}...")
+        sg_tags = self._tags.copy()
+        sg_tags.append({'Key': 'sec-by-def-network-exception', 'Value': 'SSH'})
         security_group = response_ok(self.ec2_client.create_security_group(
             GroupName = name,
             VpcId = vpc_id,
             Description="allow incoming SSH access",
             TagSpecifications = [{
                 'ResourceType': 'security-group',
-                'Tags': self._tags
+                'Tags': sg_tags
             }],
         ))
         security_group_id = security_group['GroupId']
@@ -154,7 +156,7 @@ class AWS:
             ],
             TagSpecifications = [{
                 'ResourceType': 'security-group-rule',
-                'Tags': self._tags
+                'Tags': sg_tags
             }],
         ))
 
@@ -162,7 +164,9 @@ class AWS:
 
     def aws_delete_security_group(self, group_id: str, force: bool = False):
         tags = self.aws_get_ec2_resource_tags(group_id)
-        if self.tags_equal(tags, self._tags) or force:
+        sg_tags = self._tags.copy()
+        sg_tags.append({'Key': 'sec-by-def-network-exception', 'Value': 'SSH'})
+        if self.tags_equal(tags, sg_tags) or force:
             self.logger.info(f"Deleting security group with {group_id=}...")
             self.ec2_client.delete_security_group(GroupId=group_id)
         else:
@@ -353,7 +357,9 @@ class AWS:
 
     def aws_delete_snapshot(self, snapshot_id: str, force: bool = False):
         tags = self.aws_get_ec2_resource_tags(snapshot_id)
-        if self.tags_equal(tags, self._tags) or force:
+        snapshot_tags = self._tags.copy()
+        snapshot_tags.append({'Key': 'sec-by-def-ebs-encryption-exception', 'Value': 'enabled'})
+        if self.tags_equal(tags, snapshot_tags) or force:
             self.logger.info(f"Deleting snapshot with {snapshot_id=}...")
             self.ec2_client.delete_snapshot(SnapshotId = snapshot_id)
         else:
@@ -494,9 +500,11 @@ class AWS:
             self.cleanup_test_resources
             raise RuntimeError(f"Failed to import snapshot: {import_error}.")
 
+        snapshot_tags = self._tags.copy()
+        snapshot_tags.append({'Key': 'sec-by-def-ebs-encryption-exception', 'Value': 'enabled'})
         self.ec2_client.create_tags(
             Resources = [self._snapshot_id],
-            Tags = self._tags
+            Tags = snapshot_tags,
         )
 
         self.logger.info(f"Registering ami from snapshot {self._snapshot_id}...")
