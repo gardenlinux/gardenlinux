@@ -279,7 +279,7 @@ class AZURE:
             }
         ).result()
 
-        self.logger.info(f"Creating and booting Virtual machine of size {vm_size} from image {self._image.name}...")
+        self.logger.info(f"Creating and booting virtual machine of size {vm_size} from image version {self._image.name}...")
         self._instance = self.cclient.virtual_machines.begin_create_or_update(
             resource_group_name=self._resourcegroup.name,
             vm_name=name,
@@ -649,6 +649,8 @@ class AZURE:
                     }
                 }
             )
+
+            self.logger.info(f"Creating image version {gallery_image_version_name} from {image_file}.")
 
             result = self.cclient.gallery_image_versions.begin_create_or_update(
                 resource_group_name = self._resourcegroup.name,
