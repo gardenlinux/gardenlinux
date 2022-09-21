@@ -3,11 +3,11 @@ type: element
 features:
   include:
     - aide
-    - cis_audit
-    - cis_modprobe
-    - cis_os
-    - cis_packages
-    - cis_partition 
-    - cis_sshd
-    - cis_sysctl
+    - cisAudit
+    - cisModprobe
+    - cisOS
+    - cisPackages
+    - cisPartition
+    - cisSshd
+    - cisSysctl
     - firewall

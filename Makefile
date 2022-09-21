@@ -195,11 +195,11 @@ metalv: build-environment $(SECUREBOOT_CRT)
 metalv-dev: build-environment $(SECUREBOOT_CRT)
 	./build.sh $(BUILD_OPTS) --skip-build --features server,metal,vhost,_dev $(BUILDDIR) $(VERSION)
 
-github_action_runner: build-environment $(SECUREBOOT_CRT)
-	./build.sh $(BUILD_OPTS) --skip-build --features server,cloud,aws,github_action_runner $(BUILDDIR) $(VERSION)
+githubActionRunner: build-environment $(SECUREBOOT_CRT)
+	./build.sh $(BUILD_OPTS) --skip-build --features server,cloud,aws,githubActionRunner $(BUILDDIR) $(VERSION)
 
-github_action_runner-dev: build-environment $(SECUREBOOT_CRT)
-	./build.sh $(BUILD_OPTS) --skip-build --features server,cloud,aws,github_action_runner,_dev $(BUILDDIR) $(VERSION)
+githubActionRunner-dev: build-environment $(SECUREBOOT_CRT)
+	./build.sh $(BUILD_OPTS) --skip-build --features server,cloud,aws,githubActionRunner,_dev $(BUILDDIR) $(VERSION)
 
 clean:
 	@echo "emptying $(BUILDDIR)"

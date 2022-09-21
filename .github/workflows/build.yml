@@ -46,7 +46,7 @@ jobs:
     strategy:
       matrix:
         architecture: [ amd64, arm64 ]
-        target: [ kvm, kvm-secureboot, metal, metal-secureboot, gcp, aws, azure, ali, openstack, vmware, pxe, firecracker, github_action_runner, metalv ]
+        target: [ kvm, kvm-secureboot, metal, metal-secureboot, gcp, aws, azure, ali, openstack, vmware, pxe, firecracker, githubActionRunner, metalv ]
         modifier: [ "" ]
     steps:
       - uses: actions/checkout@v2

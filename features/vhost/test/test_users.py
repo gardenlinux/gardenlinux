@@ -8,5 +8,5 @@ import pytest
      ]
 )
 
-def test_users(client, non_dev, non_feature_github_action_runner, additional_user):
+def test_users(client, non_dev, non_feature_githubActionRunner, additional_user):
      users(client, additional_user)
