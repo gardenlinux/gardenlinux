@@ -44,6 +44,7 @@ jobs:
     permissions:
       id-token: write
     strategy:
+      fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
         target: [ kvm, kvm-secureboot, metal, metal-secureboot, gcp, aws, azure, ali, openstack, vmware, pxe, firecracker, github_action_runner, metalv ]
