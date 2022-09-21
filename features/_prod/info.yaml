@@ -2,4 +2,3 @@ type: flag
 features:
   include:
     - _nopkg
-    - _readonly
