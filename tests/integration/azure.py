@@ -1,6 +1,9 @@
+from email.mime import image
 import logging
 import os
+from platform import architecture
 import re
+from unittest import result
 import pytest
 import uuid
 
@@ -376,6 +379,12 @@ class AZURE:
             cfg['resource_group'] = f"rg-{test_name}"
         if not 'storage_account_name' in cfg:
             cfg['storage_account_name'] = f"sa{re.sub('-', '', test_name)}"
+        if not 'gallery_name' in cfg:
+            cfg['gallery_name'] = f"gallery{re.sub('-', '', test_name)}"
+        if not 'gallery_image_name' in cfg:
+            cfg['gallery_image_name'] = f"galleryimage{re.sub('-', '', test_name)}"
+        if not 'gallery_image_version_name' in cfg:
+            cfg['gallery_image_version_name'] = "0.0.0"
         if not 'vm_size' in cfg:
             cfg['vm_size'] = "Standard_D4_v4"
         if not 'accelerated_networking' in cfg:
@@ -586,7 +595,7 @@ class AZURE:
             if hyper_v_generation not in allowed_generations:
                 raise RuntimeError(f"Hypervisor generation '{hyper_v_generation}' not supported. Allowed values: ({allowed_generations})")
 
-            result = self.cclient.images.begin_create_or_update(
+            image = self.cclient.images.begin_create_or_update(
                 resource_group_name = self._resourcegroup.name,
                 image_name = image_name,
                 parameters = {
@@ -606,6 +615,61 @@ class AZURE:
             ).result()
 
             self.logger.info(f"Image {image_file} uploaded as {image_name}")
+
+            gallery_name = self.config['gallery_name']
+            gallery_image_name = self.config['gallery_image_name']
+            gallery_image_version_name = self.config['gallery_image_version_name']
+            self.cclient.galleries.begin_create_or_update(
+                resource_group_name = self._resourcegroup.name,
+                gallery_name = gallery_name,
+                gallery = {
+                    'location': self._resourcegroup.location,
+                }
+            )
+
+            allowed_architectures = ["x64", "Arm64"]
+            architecture = self.config.get("architecture", allowed_architectures[0])
+            if architecture not in allowed_architectures:
+                raise RuntimeError(f"Architecture '{architecture}' not supported. Allowed values: ({allowed_architectures})")
+
+            self.cclient.gallery_images.begin_create_or_update(
+                resource_group_name = self._resourcegroup.name,
+                gallery_name = gallery_name,
+                gallery_image_name = gallery_image_name,
+                gallery_image = {
+                    'location': self._resourcegroup.location,
+                    'os_type': 'Linux',
+                    'os_state': 'Generalized',
+                    'hyper_v_generation': hyper_v_generation,
+                    'architecture': architecture,
+                    'identifier': {
+                        'publisher': 'Gardenlinux',
+                        'offer': 'Gardenlinux',
+                        'sku': 'Gardenlinux'
+                    }
+                }
+            )
+
+            result = self.cclient.gallery_image_versions.begin_create_or_update(
+                resource_group_name = self._resourcegroup.name,
+                gallery_name = gallery_name,
+                gallery_image_name = gallery_image_name,
+                gallery_image_version_name = gallery_image_version_name,
+                gallery_image_version = {
+                    'location': self._resourcegroup.location,
+                    'publishing_profile': {
+                        'replica_count': 1,
+                        'storage_account_type': 'Standard_LRS',
+                        'replication_mode': 'Shallow'
+                    },
+                    'storage_profile': {
+                        'source': {
+                            'id': image.id
+                        }
+                    }
+                }
+            ).result()
+
             return result
         else:
             raise Exception("No image with name %s available and no image file given" % self.config["image_name"])

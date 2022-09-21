@@ -245,6 +245,8 @@ azure:
     vm_size: Standard_D4_v4
     # hyperV generation to use. Possible values are 'V1' and 'V2'. Default is 'V1'
     hyper_v_generation: V1
+    # architecture to use. Possible values are 'x64' and 'Arm64'. Default is 'x64'
+    architecture: x64
     # enable accelerated networking for the VM on which the test runs (optional)
     accelerated_networking: false
 
@@ -291,10 +293,11 @@ Only three parameters are required for the test: the Azure `subscription` or `su
 - **subscription_id** _(required/optioal)_: The Azure subscription (its ID) which is used for creating all relevant resources and running the test. Either the 'subscription' name or its needs to be provided.
 - **resource_group** _(optional)_: all relevant resources for the integration test will be assigned to an Azure resource group. If you want to reuse an existing resource group, you can specify it here. If left empty, a new resource group gets created for the duration of the test.
 - **nsg_name** _(optional)_: The integration tests need to create a new network security group, this is its name. If you want to reuse an existing security group, specify its name here. If left empty, a new network security group will be created for the duration of the test.
-- **vm_size** _(optional)_: The given size will be used for the Azure virtual machine the test runs on. Check [this document](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes) for a list of possible VM sizes. Remember that the VM size will have an impact on test performance and startup times (which get tested and produce a failure should they exceed 30 seconds). This setting defaults to `Standard_D4_v4`.
+- **vm_size** _(optional)_: The given size will be used for the Azure virtual machine the test runs on. Check [this document](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes) for a list of possible VM sizes. Remember that the VM size will have an impact on test performance and startup times (which get tested and produce a failure should they exceed 30 seconds). This setting defaults to `Standard_D4_v4` which matches the architecture `x64`, for running `Arm64` images the VM size `Standard_D4ps_v5` would be a good choice to start with.
 - **hyper_v_generation** _(optional)_: Choose the HyperV generation of the virtual machine created from the image. Possible values are 'V1' or 'V2'. If not set, 'V1' will be used as a default.
     - 'V1': Boot = PCAT, Disk controllers = IDE
     - 'V2': Boot = UEFI, Disk controllers = SCSI
+- **architecture** _(optional)_: Choose the architecture. Azure offers x86_64 (x64) and Arm64. Make sure to also choose a VM size that matches the architecture. When running an Arm64 image the HyperV generation needs to be 'V2'.
 - **accelerated_networking** _(optional)_: Enables [Azure Accelerated Networking](https://docs.microsoft.com/en-us/azure/virtual-network/accelerated-networking-overview) for the VM on which the test is going to run. Defaults to `false`, thus accelerated networking disabled.
 
 - **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the Hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
