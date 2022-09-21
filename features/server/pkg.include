@@ -34,3 +34,4 @@ selinux-basics
 selinux-policy-default
 gardenlinux-selinux-module
 sosreport
+policykit-1
