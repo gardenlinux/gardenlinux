@@ -11,5 +11,5 @@ from helper.tests.groups import groups
 )
 
 
-def test_groups(client, group, user, non_dev, non_feature_github_action_runner):
+def test_groups(client, group, user, non_dev, non_feature_githubActionRunner):
      groups(client, group, user)

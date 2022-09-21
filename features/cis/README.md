@@ -6,26 +6,26 @@ The [Garden Linux](https://gardenlinux.io/) [CIS](https://www.cisecurity.org) un
  related unit tests can be performed on any cloud platform (see also [../../tests/README.md](../../tests/README.md)) except of `chroot`.
 
 ## Overview
-This `cis` feature represents a meta feature that includes multiple sub features. Most sub features are prefixed by `cis_`. Working with sub features provides an easy overview, adjustment and administration for each sub feature. While only including all sub features fits the CIS benchmarks, it is in an operators decision to adjust sub features to his needs. This allows changes to be as near as possible to `CIS`, even it may not fit the `CIS` benchmarks.
+This `cis` feature represents a meta feature that includes multiple sub features. Most sub features are prefixed by `cis`. Working with sub features provides an easy overview, adjustment and administration for each sub feature. While only including all sub features fits the CIS benchmarks, it is in an operators decision to adjust sub features to his needs. This allows changes to be as near as possible to `CIS`, even it may not fit the `CIS` benchmarks.
 
 Sub features are included by the `cis/info.yaml` configuration file. Sub features **can not** be used as a standalone feature and always depend on `cis`. The `cis` feature currently exists of the following sub features:
 
 | Feature Name | Description |
 |---|---|
 | aide | Installs the host-based intrusion detection system Aide |
-| cis_audit | Configuring the `auditd` daemon |
-| cis_modprobe | Removing/Blacklisting Kernel modules |
-| cis_os | Adjusting basic settings for the OS (Operating System) |
-| cis_packages | Installing/Removing packages that may be needed or unwanted |
-| cis_partition | Providing a default partition layout |
-| cis_sshd | Adjusting the SSHd configuration |
-| cis_sysctl | Adjusting further sysctl options (e.g. deactivates IPv6) |
+| cisAaudit | Configuring the `auditd` daemon |
+| cisModprobe | Removing/Blacklisting Kernel modules |
+| cisOS | Adjusting basic settings for the OS (Operating System) |
+| cisPackages | Installing/Removing packages that may be needed or unwanted |
+| cisPartition | Providing a default partition layout |
+| cisSshd | Adjusting the SSHd configuration |
+| cisSysctl | Adjusting further sysctl options (e.g. deactivates IPv6) |
 | firewall | Adding/Installing the `Garden Linux CIS Firewall` |
 
 ### Feature: aide
 This feature installs the host-based intrusion detection system Aide, adds a configuration file for Aide, adds a systemd unit that creates an Aide database at boot time if it doesn't exist and adds a cronjob to /etc/cron.d to run Aide every night.
 
-### Feature: cis_audit
+### Feature: cisAudit
 This feature adjust the basic `auditd` configuration regarding the logging of events. This includes changes of date/time, sudo logging, as well as options how to proceed if disk space get low or is full.
 
 ### Feature: firewall
@@ -42,7 +42,7 @@ By default, only the following rules are allowed:
  * tcp/22 [SSH]
  * state/related-established
 
-### Feature: cis_modprobe
+### Feature: cisModprobe
 This feature removes/blacklists unwanted und not needed Kernel modules. Regarding `CIS` benchmark, `fat` should also be blacklisted. However, this is needed for booting `UEFI`.
 
 The following modules are blacklisted:
@@ -56,7 +56,7 @@ The following modules are blacklisted:
 * tipc
 * udf
 
-### Feature: cis_packages
+### Feature: cisPackages
 This feature installs needed packages as well as it removed unwanted packages. While Garden Linux base is a really slim image, no packages need to be removed.
 
 The following packages are installed:
@@ -65,7 +65,7 @@ The following packages are installed:
 * libpam-pwquality
 * tcpd
 
-### Feature: cis_partition
+### Feature: cisPartition
 Regarding `CIS` benchmarks, further options like `noexec`, `nodev`must be set for several mounts. Therefore, a default partition layout is shipped by this feature. The size for any mount can be adjusted:
 
 **FSTab**
@@ -86,10 +86,10 @@ LABEL=VARLOGAUD    /var/log/audit     ext4      defaults,nosuid,noexec,nodev    
 Options=mode=1777,strictatime,nosuid,nodev,noexec
 ```
 
-### Feature: cis_sshd
+### Feature: cisSshd
 This feature only adjusts the `sshd_config` to fit the `CIS` benchmark requirements.
 
-### Feature: cis_systcl
+### Feature: cisSystcl
 This feature sets further `sysctl` options. This options are mostly IPv4 and IPv6 related. Keep in mind that this deactivates the IPv6 support in default.
 
 ## Unit Tests
