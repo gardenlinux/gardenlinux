@@ -32,6 +32,13 @@ gcp:
     image: file:///artifacts/$(basename "$image_file")
     ssh:
         user: gardenlinux
+    features:
+      - gcp
+      - gardener
+      - cloud
+      - server
+      - base
+      - _slim
 EOF
 
 credFileName=$(find "$(pwd)" -maxdepth 1 -type f -name "gha-creds-*.json" | xargs basename)
@@ -42,6 +49,6 @@ mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/
 cd /gardenlinux/tests
 export GOOGLE_APPLICATION_CREDENTIALS="/gardenlinux/$credFileName"
-pytest --iaas=gcp --configfile=/gardenlinux/$configFile --junit-xml=/gardenlinux/test-$prefix-gcp.xml integration || exit 1
+pytest --iaas=gcp --configfile=/gardenlinux/$configFile --junit-xml=/gardenlinux/test-$prefix-gcp.xml || exit 1
 exit 0
 EOF

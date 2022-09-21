@@ -1,0 +1,23 @@
+[Unit]
+# Based on https://github.com/coreos/ignition/blob/main/systemd/ignition-delete-config.service
+Description=Ignition disable after first boot
+
+ConditionFirstBoot=true
+ConditionPathExists=/run/ignition.env
+RequiresMountsFor=/boot/efi
+
+DefaultDependencies=no
+Before=sysinit.target
+
+# TODO : do we really need to fail to boot?
+OnFailure=emergency.target
+OnFailureJobMode=isolate
+
+[Service]
+Type=oneshot
+EnvironmentFile=/run/ignition.env
+ExecStart=/bin/bash -c "rm -f /etc/kernel/cmdline.d/50-ignition.cfg && /usr/local/sbin/update-bootloaders"
+RemainAfterExit=yes
+
+[Install]
+WantedBy=sysinit.target

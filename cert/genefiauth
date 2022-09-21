@@ -1,6 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -eufo pipefail
+set -Eeufo pipefail
+
+export PKCS11_MODULE_PATH="/usr/lib/$(uname -m)-linux-gnu/pkcs11/aws_kms_pkcs11.so"
 
 guid=
 ca_base=
@@ -18,6 +20,10 @@ while [ $# -gt 0 ]; do
 			;;
 		--ca)
 			ca_base="${2%.crt}"
+			if [ "$ca_base.crt" != "$2" ]; then
+				echo "CA file must end in .crt" >&2
+				exit 1
+			fi
 			shift 2
 			;;
 		--null)
@@ -42,9 +48,25 @@ case "$type" in
 	kek) type=KEK ;;
 esac
 
+if [ -n "$ca_base" ]; then
+	if [ ! -f "$ca_base.crt" ]; then
+		echo "$ca_base.crt does not exist" >&2
+		exit 1
+	fi
+
+	if [ -f "$ca_base.key" ]; then
+		ca_key_params=(-k "$ca_base.key")
+	elif [ -f "$ca_base.arn" ]; then
+		ca_key_params=(-e pkcs11 -k "pkcs11:token=$(basename "$(cat "$ca_base.arn")" | cut -c -32)")
+	else
+		echo "neither $ca_base.key nor $ca_base.arn exists, but at least one is required" >&2
+		exit 1
+	fi
+fi
+
 if [ "$null" = 0 ]; then
 	cert-to-efi-sig-list -g "$guid" "$cert" "$base.esl"
-	sign-efi-sig-list -g "$guid" -c "$ca_base.crt" -k "$ca_base.key" "$type" "$base.esl" "$base.auth"
+	sign-efi-sig-list -g "$guid" -c "$ca_base.crt" "${ca_key_params[@]}" "$type" "$base.esl" "$base.auth"
 else
-	sign-efi-sig-list -g "$guid" -c "$ca_base.crt" -k "$ca_base.key" "$type" /dev/null "$base.auth"
+	sign-efi-sig-list -g "$guid" -c "$ca_base.crt" "${ca_key_params[@]}" "$type" /dev/null "$base.auth"
 fi

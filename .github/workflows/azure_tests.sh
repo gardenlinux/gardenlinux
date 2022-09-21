@@ -37,6 +37,13 @@ azure:
     ssh:
       user: azureuser
     keep_running: false
+    features:
+      - azure
+      - gardener
+      - cloud
+      - server
+      - base
+      - _slim
 EOF
 
 echo "### Start Integration Tests for Azure"
@@ -45,6 +52,6 @@ mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/
 cd /gardenlinux/tests
 
-pytest --iaas=azure --configfile=/gardenlinux/$configFile --junit-xml=/gardenlinux/test-$prefix-azure.xml integration || exit 1
+pytest --iaas=azure --configfile=/gardenlinux/$configFile --junit-xml=/gardenlinux/test-$prefix-azure.xml || exit 1
 exit 0
 EOF

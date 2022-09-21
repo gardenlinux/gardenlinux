@@ -3,3 +3,6 @@ qemu-guest-agent
 #fail2ban
 #ferm
 #python3-systemd
+dracut-network
+ignition
+curl

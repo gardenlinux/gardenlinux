@@ -18,7 +18,6 @@ needslim:
 
 .PHONY: build-image
 build-image: needslim
-	cp ../bin/garden-feat.go build-image/
 	if [ ! -n "$$($(GARDENLINUX_BUILD_CRE) image ls gardenlinux/build-image:$(VERSION_NUMBER) --format "{{.Repository}}:{{.Tag}}")" ]; then \
 		$(GARDENLINUX_BUILD_CRE) image rm --force $$($(GARDENLINUX_BUILD_CRE) image ls gardenlinux/build-image --format "{{.Repository}}:{{.Tag}}") || true; \
 	fi
@@ -44,8 +43,6 @@ build-base-test: needslim
 
 .PHONY: build-integration-test
 build-integration-test: build-base-test
-	mkdir -p integration-test/_pipfiles
-	cp ../tests/Pipfile* integration-test/_pipfiles
 	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/integration-test:$(VERSION) integration-test
 
 .PHONY: build-kernelmodule

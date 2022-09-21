@@ -2,9 +2,10 @@
 
 set -Eeufo pipefail
 
+export PKCS11_MODULE_PATH="/usr/lib/$(uname -m)-linux-gnu/pkcs11/aws_kms_pkcs11.so"
+
 veritytab=
-key="/cert/secureboot.db.sign.key"
-cert="/cert/secureboot.db.sign.crt"
+cert_base="/cert/secureboot.db"
 timestamp=0
 secureboot="true"
 
@@ -22,12 +23,12 @@ while [ $# -gt 0 ]; do
 			veritytab="$2"
 			shift 2
 			;;
-		--key)
-			key="$2"
-			shift 2
-			;;
 		--cert)
-			cert="$2"
+			cert_base="${2%.crt}"
+			if [ -n "$cert_base" ] && [ "$cert_base.crt" != "$2" ]; then
+				echo "cert file must end in .crt" >&2
+				exit 1
+			fi
 			shift 2
 			;;
 		-t|--timestamp)
@@ -63,7 +64,7 @@ kernel_version="${kernel_file#*-}"
 chroot "$rootfs" dracut \
 	--force \
 	--kver "$kernel_version" \
-	--modules "bash dash systemd systemd-initrd systemd-repart systemd-veritysetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown" \
+	--modules "bash dash systemd systemd-initrd systemd-veritysetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown" \
 	--install "/etc/veritytab" \
 	--reproducible \
 	"$initrd"
@@ -101,8 +102,17 @@ efi_dir="$(mktemp -d)"
 mkdir -p "$efi_dir/EFI/BOOT/"
 
 if [[ "$secureboot" = "true" ]]; then
+	if [ -f "$cert_base.key" ]; then
+		key_params=(--key "$cert_base.key")
+	elif [ -f "$cert_base.arn" ]; then
+		key_params=(--engine pkcs11 --key "pkcs11:token=$(basename "$(cat "$cert_base.arn")" | cut -c -32)")
+	else
+		echo "neither $cert_base.key nor $cert_base.arn exists, but at least one is required" >&2
+		exit 1
+	fi
+
 	# sign unified image
-	datefudge -s "@$timestamp" sbsign --cert "$cert" --key "$key" --output "$unified_image_signed" "$unified_image"
+	datefudge -s "@$timestamp" sbsign --cert "$cert_base.crt" "${key_params[@]}" --output "$unified_image_signed" "$unified_image"
 	rm "$unified_image"
 
 	mv "$unified_image_signed" "$efi_dir/EFI/BOOT/BOOT$uefi_arch.EFI"

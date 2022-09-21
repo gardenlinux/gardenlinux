@@ -440,6 +440,15 @@ def _base_component_descriptor(
                         commit=commit,
                     ),
                     version=version,
+                    labels=[
+                        cm.Label(
+                            name='cloud.gardener.cnudie/dso/scanning-hints/source_analysis/v1',
+                            value={
+                                'policy': 'skip',
+                                'comment': 'repo only contains build instructions, source in this repo will not get incoroprated into the final artefact'
+                            }
+                        )
+                    ],
                 )
             ],
             componentReferences=[],

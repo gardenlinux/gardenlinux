@@ -46,6 +46,8 @@ jobs:
         exclude:
           - architecture: arm64
             target: gcp
+          - architecture: arm64
+            target: azure
     steps:
     - uses: actions/checkout@v3
 
