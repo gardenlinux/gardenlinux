@@ -39,6 +39,7 @@ jobs:
       id-token: write
       packages: write
     strategy:
+      fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
         target: [ gcp, aws, azure ]
