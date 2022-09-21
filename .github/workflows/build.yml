@@ -5,6 +5,9 @@ on:
       version:
         type: string
         default: today
+      default_modifier:
+        type: string
+        default: ""
 jobs:
   cert:
     runs-on: ec2-gardenlinux-amd64
@@ -25,7 +28,7 @@ jobs:
       matrix:
         architecture: [ amd64, arm64 ]
         target: [ kvm, metal, gcp, aws, azure, ali, openstack, vmware, pxe, firecracker, github_action_runner, metalv ]
-        modifier: [ "" ]
+        modifier: [ "${{ inputs.default_modifier }}" ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2

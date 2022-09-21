@@ -8,6 +8,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version: now
+      default_modifier: "-prod"
   build_container:
     uses: ./.github/workflows/build-container.yml
   tests:

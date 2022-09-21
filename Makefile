@@ -52,6 +52,9 @@ all_dev: ali-dev aws-dev gcp-dev azure-dev metal-dev openstack-dev vmware-dev kv
 %-dev: make_targets/% build-environment $(SECUREBOOT_CRT)
 	./build.sh $(BUILD_OPTS) --skip-build --features "$$(cat $<),_dev" $(BUILDDIR) $(VERSION)
 
+%-prod: make_targets/% build-environment $(SECUREBOOT_CRT)
+	./build.sh $(BUILD_OPTS) --skip-build --features "$$(cat $<),_prod" $(BUILDDIR) $(VERSION)
+
 onmetal: metal
 
 ALI_IMAGE_NAME=$(IMAGE_BASENAME)-ali-$(VERSION)
