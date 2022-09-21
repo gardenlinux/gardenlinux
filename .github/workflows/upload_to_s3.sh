@@ -29,18 +29,19 @@ modifiers: [$GARDENLINUX_FEATURES]
 platform: '$platform'
 published_image_metadata: null
 s3_bucket: '$bucket'
-s3_key: 'meta/singles/$name'
+s3_key: 'meta/singles/$prefix'
 test_result: null
 version: '$GARDENLINUX_VERSION'
 paths:
 EOF
 
 for file in "$name/$prefix"*; do
+suffix="$(basename "$file" | sed "s/^$prefix//")"
 cat << EOF >> "$meta_yml"
 - name: $file
   s3_bucket_name: $bucket
-  s3_key: 'objects/$file'
-  suffix: $(basename "$file" | sed "s/${prefix}//")
+  s3_key: 'objects/$prefix/$prefix$suffix'
+  suffix: $suffix
 EOF
 done
 
