@@ -5,6 +5,9 @@ on:
       version:
         type: string
         default: today
+      default_modifier:
+        type: string
+        default: ""
       use_kms:
         type: boolean
         default: false
@@ -47,7 +50,7 @@ jobs:
       matrix:
         architecture: [ amd64, arm64 ]
         target: [ kvm, kvm-secureboot, metal, metal-secureboot, gcp, aws, azure, ali, openstack, vmware, pxe, firecracker, github_action_runner, metalv ]
-        modifier: [ "" ]
+        modifier: [ "${{ inputs.default_modifier }}" ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
