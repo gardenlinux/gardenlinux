@@ -25,7 +25,9 @@ import pytest
                  "/usr/bin/chfn,root,root",
                  "/usr/bin/gpasswd,root,root",
                  "/usr/bin/sudo,root,root",
-                 "/usr/bin/passwd,root,root"
+                 "/usr/bin/passwd,root,root",
+                 "/usr/libexec/polkit-agent-helper-1,root,root",
+                 "/usr/bin/pkexec,root,root"
                  ]
         )
     ]
