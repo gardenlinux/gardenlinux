@@ -42,7 +42,6 @@ def pre_check_tests(
       s3_client=s3_client,
       bucket_name=s3_bucket_name,
       release_identifier=release_identifier,
-      prefix=glci.model.ReleaseManifest.manifest_key_prefix,
     )
     if release:
       # check if tests have been run and create a marker file
