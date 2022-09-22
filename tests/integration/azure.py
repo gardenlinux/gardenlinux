@@ -1,9 +1,6 @@
-from email.mime import image
 import logging
 import os
-from platform import architecture
 import re
-from unittest import result
 import pytest
 import uuid
 
