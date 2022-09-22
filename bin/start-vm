@@ -291,7 +291,7 @@ qemu_opt_ignition () {
         fi
 
         # modify the boot.ipxe to load the proper kernel and initramfs
-        $(bin_sed) -i "s/PATHGOESHERE//g;s/IPADDRESSGOESHERE/10.0.2.2/g" $CURR_DIR/$mac.ipxe
+        ${bin_sed} -i "s/PATHGOESHERE//g;s/IPADDRESSGOESHERE/10.0.2.2/g" $CURR_DIR/$mac.ipxe
         QEMU_OPTS+=( -boot order=nc )
     fi
 }
@@ -309,7 +309,7 @@ qemu_opt_pxe () {
         # Run ignition function to prepare PXE
         qemu_opt_ignition
 
-        container_name=$(bin_uuid)
+        container_name=$($bin_uuid)
         function stop(){
             rm  "$pxe/root."{vmlinuz,initrd,squashfs}
             ${gardenlinux_build_cre} stop -t 0 $1
@@ -327,7 +327,7 @@ qemu_opt_pxe () {
 
         # Link Initrd
         if [[ -f "${pxe}/${glbuild}.initrd" ]]; then
-            ln -sf "$glbuild.initrd" "$pxe/root.initrd"#
+            ln -sf "$glbuild.initrd" "$pxe/root.initrd"
         else
             echo "Error: Missing ${glbuild}.initrd, exiting"; exit 1
         fi
