@@ -650,7 +650,7 @@ class AZURE:
                 }
             )
 
-            self.logger.info(f"Creating image version {gallery_image_version_name} from {image_name}.")
+            self.logger.info(f"Creating image version {gallery_image_version_name} from {image_name}...")
 
             result = self.cclient.gallery_image_versions.begin_create_or_update(
                 resource_group_name = self._resourcegroup.name,
