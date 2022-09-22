@@ -196,43 +196,6 @@ def status_step(
     return step, step_params
 
 
-def upload_results_step(
-    params: params.AllParams,
-    results: results.AllResults,
-    env_vars: typing.List[typing.Dict] = [],
-    volume_mounts: typing.List[typing.Dict] = [],
-):
-    step_params = [
-        params.architecture,
-        params.cicd_cfg_name,
-        params.committish,
-        params.gardenlinux_epoch,
-        params.modifiers,
-        params.outfile,
-        params.platform,
-        params.build_targets,
-        params.version,
-    ]
-    result_params = [
-        results.build_result
-    ]
-    step = tkn.model.TaskStep(
-        name='upload-results',
-        image=DEFAULT_IMAGE,
-        script=task_step_script(
-            path=os.path.join(steps_dir, 'upload_results_step.py'),
-            script_type=ScriptType.PYTHON3,
-            callable='upload_results_step',
-            params=step_params,
-            results=result_params,
-            repo_path_param=params.repo_dir,
-        ),
-        volumeMounts=volume_mounts,
-        env=env_vars,
-    )
-    return step, step_params
-
-
 def promote_single_step(
     params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
