@@ -297,7 +297,7 @@ Only three parameters are required for the test: the Azure `subscription` or `su
 - **hyper_v_generation** _(optional)_: Choose the HyperV generation of the virtual machine created from the image. Possible values are 'V1' or 'V2'. If not set, 'V1' will be used as a default.
     - 'V1': Boot = PCAT, Disk controllers = IDE
     - 'V2': Boot = UEFI, Disk controllers = SCSI
-- **architecture** _(optional)_: Choose the architecture. Azure offers x86_64 (x64) and Arm64. Make sure to also choose a VM size that matches the architecture. When running an Arm64 image the HyperV generation needs to be 'V2'.
+- **architecture** _(optional)_: Choose the architecture. Azure offers x86_64 (x64) and Arm64. Make sure to also choose a VM size that matches the architecture. When running an Arm64 image the HyperV generation needs to be 'V2'. Defaults to `x64`.
 - **accelerated_networking** _(optional)_: Enables [Azure Accelerated Networking](https://docs.microsoft.com/en-us/azure/virtual-network/accelerated-networking-overview) for the VM on which the test is going to run. Defaults to `false`, thus accelerated networking disabled.
 
 - **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the Hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
