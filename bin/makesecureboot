@@ -61,6 +61,8 @@ mount -t proc none "$rootfs/proc"
 kernel_file=$(find "$rootfs/boot/" -name 'vmlinuz-*')
 kernel_version="${kernel_file#*-}"
 
+mkdir -p "$rootfs/boot/Default"
+
 chroot "$rootfs" dracut \
 	--force \
 	--kver "$kernel_version" \
