@@ -13,6 +13,7 @@ MATRIX_TYPE_EXCLUDE = 1
 MATRIX_TYPE_IGNORE = 2
 MATRIX_TYPE_START = 3
 MATRIX_TYPE_DEP_CHAIN = 4
+MATRIX_TYPE_DEPENDENCIES = 5
 
 FEATURE_TYPE_PLATFORM = 'platform'
 FEATURE_TYPE_ELEMENT = 'element'
@@ -42,7 +43,7 @@ def main():
 
     # Switch to defined action
     if args.type == 'cname':
-        cname = get_cname(all_features, start_features, features_matrix[MATRIX_TYPE_DEP_CHAIN])
+        cname = get_cname(all_features, start_features, features_matrix[MATRIX_TYPE_DEPENDENCIES])
         print(cname)
 
     elif args.type == 'features':
@@ -157,57 +158,25 @@ def get_yaml_content(fname):
         sys.exit(1)
 
 
-def get_cname(all_features, start_features, dependency_chain):
+def get_cname(all_features, start_feature_names, dependency_feature_names):
     """ Return the cname """
-    cname_features = []
+    # Erases features that are considered to be dependencies from
+    # the start features list. The result are the root leaves which
+    # uniquely define a feature set. This is called "cname".
+    cname_features = [feature for feature in start_feature_names if feature not in dependency_feature_names]
     cname = ""
 
-    # Iterate one by one through all start features which are
-    # already sorted by their type (Platform > element > flag).
-    #
-    # If one of our sorted start features is a dependency of another start feature,
-    # we can skip it, because they are already clearly identified by the start feature
-    # which requires them.
-    #
-    # In order to identify dependent start features, simply jump from one
-    # sorted start feature to another in the dependency chain.
-    # If a start feature is on the left side of a higher sorted start feature in
-    # the dependency chain, the iterated start feature is then the dependency of the
-    # other one. At this point, the start feature is not relevant for the cname creation.
-    #
-    # At the end, there are only start features, that are no dependencies of other start
-    # features, which ultimately creates the unique cname.
-    for feature in start_features:
-        # If we already jumped to the end of our dependency chain,
-        # there is no start feature left which is not a dependency
-        # of another start feature. Therefore, stop here.
-        if len(dependency_chain) == 0:
-            break
-
-        # If the start feature is not in the dependency chain (anymore),
-        # we can skip it then.
-        if feature not in dependency_chain:
-            continue
-
-        # Search for the start feature in the dependency chain.
-        # Cut the dependency chain from left to ride each time,
-        # we found our start feature. Everything on the left side
-        # is a dependency and can therefore be skipped next time.
-        index = dependency_chain.index(feature)
-        dependency_chain = dependency_chain[index:]
-        cname_features.append(feature)
-
     # Finally, put all cname parts together to a string
-    # Keep in mind that flag features are concatinated without
-    # a seperator.
+    # Keep in mind that flag features are concatenated without
+    # a separator.
     for feature in cname_features:
         # First feature in the string, just add it
         if len(cname) == 0:
             cname = feature
-        # It is no flag feature, concatenate it with a seperator 
+        # It is no flag feature, concatenate it with a separator
         elif all_features[feature]['type'] != FEATURE_TYPE_FLAG:
             cname += f"-{feature}"
-        # It is a flag feature, concatenate it without a seperator
+        # It is a flag feature, concatenate it without a separator
         else:
             cname += feature
 
@@ -267,6 +236,7 @@ def get_feature_matrix(all_features, start_feature_names, ignored_feature_names)
     features_matrix[MATRIX_TYPE_EXCLUDE] = {}
     features_matrix[MATRIX_TYPE_IGNORE] = {}
     features_matrix[MATRIX_TYPE_DEP_CHAIN] = []
+    features_matrix[MATRIX_TYPE_DEPENDENCIES] = []
 
     # Add ignored features to feature_matrix
     add_ignored_features(all_features, features_matrix, ignored_feature_names)
@@ -299,6 +269,7 @@ def traverse_features_tree(all_features, features_matrix, feature_names):
         if sub_features:
             included_feature_names = sub_features.get('include', [])
             excluded_feature_names = sub_features.get('exclude', [])
+            features_matrix[MATRIX_TYPE_DEPENDENCIES] += included_feature_names
 
         # Extend feature_matrix with the currently processed feature
         # as one of the included ones.
