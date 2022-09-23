@@ -32,6 +32,22 @@ def packages_musthave(client, testconfig):
         except OSError:
             continue
 
+    # collect packages that should be ignored by the test 
+    # e.g. because they got excluded by later features
+    ignore = []
+    for feature in features:
+        path = f"/gardenlinux/features/{feature}/test/pkg.ignore"
+        try:
+            with open(path) as f:
+                for package in f:
+                    package = package.strip(string.whitespace)
+                    # Skip comment lines
+                    if package.startswith("#"):
+                        continue
+                    ignore.append(package)
+        except OSError:
+            continue
+    
     arch = get_architecture(client)
 
     missing = []
@@ -57,6 +73,10 @@ def packages_musthave(client, testconfig):
 
         # explicitly excluded packages are allowed to miss 
         if package in exclude:
+            continue
+
+        # packages that should be ignored should be ignored
+        if package in ignore:
             continue
 
         if not (package in installed_package_list or
