@@ -25,6 +25,8 @@ jobs:
       id-token: write
       packages: write
     uses: ./.github/workflows/tests.yml
+    with:
+      default_modifier: "-prod"
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -43,6 +45,8 @@ jobs:
     permissions:
       id-token: write
     uses: ./.github/workflows/upload_to_s3.yml
+    with:
+      default_modifier: "-prod"
     secrets:
       bucket: ${{ secrets.AWS_S3_BUCKET }}
       region: ${{ secrets.AWS_REGION }}

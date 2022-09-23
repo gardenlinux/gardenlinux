@@ -1,6 +1,10 @@
 name: tests
 on:
   workflow_call:
+    inputs:
+      default_modifier:
+        type: string
+        default: ""
     secrets:
       gcp_identity_provider:
         required: true
@@ -43,7 +47,7 @@ jobs:
       matrix:
         architecture: [ amd64, arm64 ]
         target: [ gcp, aws, azure ]
-        modifier: [ "" ]
+        modifier: [ "${{ inputs.default_modifier }}" ]
         exclude:
           - architecture: arm64
             target: gcp
