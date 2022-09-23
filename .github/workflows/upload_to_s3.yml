@@ -1,6 +1,10 @@
 name: upload to S3
 on:
   workflow_call:
+    inputs:
+      default_modifier:
+        type: string
+        default: ""
     secrets:
       bucket:
         required: true
@@ -21,7 +25,7 @@ jobs:
       matrix:
         architecture: [ amd64, arm64 ]
         target: [ kvm, metal, gcp, aws, azure, ali, openstack, vmware, pxe ]
-        modifier: [ "" ]
+        modifier: [ "${{ inputs.default_modifier }}" ]
     steps:
       - uses: actions/checkout@v2
       - uses: aws-actions/configure-aws-credentials@v1
