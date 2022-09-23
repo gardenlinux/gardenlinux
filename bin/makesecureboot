@@ -69,11 +69,23 @@ chroot "$rootfs" dracut \
 	--reproducible \
 	"$initrd"
 
+cp "$initrd" "$rootfs/boot/initrd.img-${kernel_version}"
+chroot "$rootfs" kernel-install add "${kernel_version}" "${kernel_file#rootfs}"
+
+# syslinux
+if [ -f "$rootfs/usr/bin/syslinux" ]; then
+    mkdir -p $rootfs/boot/efi/syslinux
+    cp $rootfs/usr/lib/syslinux/modules/bios/menu.c32 $rootfs/boot/efi/syslinux/
+    cp $rootfs/usr/lib/syslinux/modules/bios/libutil.c32 $rootfs/boot/efi/syslinux/
+
+   chroot "$rootfs" update-syslinux
+fi
+
 umount "$rootfs/proc"
 umount "$rootfs$initrd"
 rm "$rootfs$initrd"
-umount "$rootfs/etc/veritytab"
-rm "$rootfs/etc/veritytab"
+[ -z "$veritytab" ] || umount "$rootfs/etc/veritytab"
+[ -z "$veritytab" ] || rm "$rootfs/etc/veritytab"
 
 case "$arch" in
 	amd64)
@@ -124,12 +136,20 @@ while read -r partition_file; do
 	if [[ "$arch" = "amd64" ]] && [[ ! "$secureboot" = "true" ]]; then
 	# add roothash to legacy boot kernel cmdline
 		syslinux=$(mktemp)
-		mcopy -i $partition_file -p ::/syslinux/syslinux.cfg "$syslinux"
+		#mcopy -i $partition_file -p ::/syslinux/syslinux.cfg "$syslinux"
+		cp "$rootfs/boot/efi/syslinux/syslinux.cfg" "$syslinux"
 		sed -i "s/root=[^ ]*/$(echo ${cmdline} | cut -d ' ' -f 1)/g" "$syslinux"
+		mcopy -i $partition_file -p "$rootfs/boot/efi/syslinux" ::
 		mcopy -i $partition_file -po "$syslinux" ::/syslinux/syslinux.cfg
+		mmd -i "$partition_file" "::/Default"
+		mmd -i "$partition_file" "::/Default/${kernel_version}"
+		mmd -i "$partition_file" "::/legacy"
+		mmd -i "$partition_file" "::/legacy/${kernel_version}"
 	# copy initrd.img for legacy boot when secureboot feature is not enabled
-		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$initrd" "::/Default/${kernel_version}/initrd.img-${kernel_version}"
-		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$initrd" "::/legacy/${kernel_version}/initrd.img-${kernel_version}"
+		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$initrd" "::/Default/${kernel_version}/initrd"
+		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$kernel_file" "::/Default/${kernel_version}/linux"
+		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$initrd" "::/legacy/${kernel_version}/initrd"
+		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$kernel_file" "::/legacy/${kernel_version}/linux"
 	fi
 	if [[ ! "$secureboot" = "true" ]]; then
 	# clean up EFI directory

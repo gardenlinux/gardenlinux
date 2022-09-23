@@ -183,6 +183,8 @@ if [[ -z "$(cat "$root_hash")" ]]; then
 	# enable verity if the root partition is writable, but any other partition has verity enabled, most likely /usr
 	if [[ ! -z "$(cat "$veritytab")" ]] && [ ! -s "$secureboot_partitions" ]; then
 		makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -t "$timestamp" -s "false" < "$efi_partition"
+	else
+		makesecureboot -r "$rootfs" -c "$cmdline" -t "$timestamp" -s "false" < "$efi_partition"
 	fi
 else
 	cmdline="roothash=$(cat "$root_hash") root=/dev/mapper/root $cmdline"
