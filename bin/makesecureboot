@@ -61,12 +61,12 @@ mount -t proc none "$rootfs/proc"
 kernel_file=$(find "$rootfs/boot/" -name 'vmlinuz-*')
 kernel_version="${kernel_file#*-}"
 
-mkdir -p "$rootfs/boot/Default"
+mkdir -p "$rootfs/boot/efi/Default"
 
 chroot "$rootfs" dracut \
 	--force \
 	--kver "$kernel_version" \
-	--modules "bash dash systemd systemd-initrd systemd-veritysetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown" \
+	--modules "bash dash systemd systemd-initrd $([ -z "$veritytab" ] || echo -n "systemd-veritysetup") kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown" \
 	--install "/etc/veritytab" \
 	--reproducible \
 	"$initrd"
@@ -80,7 +80,7 @@ if [ -f "$rootfs/usr/bin/syslinux" ]; then
     cp $rootfs/usr/lib/syslinux/modules/bios/menu.c32 $rootfs/boot/efi/syslinux/
     cp $rootfs/usr/lib/syslinux/modules/bios/libutil.c32 $rootfs/boot/efi/syslinux/
 
-   chroot "$rootfs" update-syslinux
+    chroot "$rootfs" update-syslinux
 fi
 
 umount "$rootfs/proc"
@@ -145,20 +145,16 @@ while read -r partition_file; do
 		mcopy -i $partition_file -po "$syslinux" ::/syslinux/syslinux.cfg
 		mmd -i "$partition_file" "::/Default"
 		mmd -i "$partition_file" "::/Default/${kernel_version}"
-		mmd -i "$partition_file" "::/legacy"
-		mmd -i "$partition_file" "::/legacy/${kernel_version}"
+		PATH="$PATH:$rootfs/usr/bin" datefudge -s "@$timestamp" syslinux -d syslinux -i "$partition_file"
+
 	# copy initrd.img for legacy boot when secureboot feature is not enabled
 		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$initrd" "::/Default/${kernel_version}/initrd"
 		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$kernel_file" "::/Default/${kernel_version}/linux"
-		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$initrd" "::/legacy/${kernel_version}/initrd"
-		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$kernel_file" "::/legacy/${kernel_version}/linux"
-	fi
-	if [[ ! "$secureboot" = "true" ]]; then
-	# clean up EFI directory
-		mdeltree -i "$partition_file" ::/EFI
 	fi
 	# copy unified image to uefi partition
 	datefudge -s "@$timestamp" mcopy -i "$partition_file" -s -p "$efi_dir/EFI" "::/EFI"
+	mmd -i "$partition_file" "::/loader"
+	echo type1 | datefudge -s "@$timestamp" mcopy -i "$partition_file" -s -p - "::/loader/entries.srel"
 done
 
 rm "$initrd"

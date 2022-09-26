@@ -14,6 +14,7 @@ timestamp=$(garden-version --epoch "$version")
 rootfs_work=$(mktemp -d)
 cp -a "$rootfs/." "$rootfs_work"
 mkdir -p "$rootfs_work/overlay"/{etc,var}/{upper,work}
+mkdir -p "$rootfs_work/boot/efi"
 
 find "$rootfs_work/var/log/" -type f -delete
 
@@ -21,19 +22,6 @@ find "$rootfs_work/var/log/" -type f -delete
 chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
 "$thisDir/garden-chroot" "$rootfs_work" /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
 rm "$rootfs_work/.autorelabel"
-
-if ! grep _secureboot <<<"$features" > /dev/null; then
-	machineid="$(mktemp)"
-	mount --rbind "${machineid}" "${rootfs_work}/etc/machine-id"
-	mkdir -p "$rootfs_work/boot/efi/loader/"
-	touch "$rootfs_work/boot/efi/loader/loader.conf"
-	touch "$rootfs_work/boot/efi/loader/entries.srel"
-	chroot "$rootfs_work" /usr/bin/env -i SYSTEMD_ESP_PATH="/boot/efi" bootctl --no-variables --make-machine-id-directory=no install
-	echo type1 > "$rootfs_work/boot/efi/loader/entries.srel"
-	rm -f "${rootfs_work}/boot/efi/loader/random-seed"
-	umount "${rootfs_work}/etc/machine-id"
-	rm -f "$machineid"
-fi
 
 fstab="$(mktemp)"
 veritytab="$(mktemp)"
@@ -128,11 +116,6 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 	# for real mount points (i.e. not swap) clear target directory after contents written to partition to avoid rewriting contents to parent mount point partition
 	if [[ "$(cut -c 1 <<< "$target")" = "/" ]]; then
 		find "$rootfs_work$target" -depth -mindepth 1 -delete
-	fi
-
-	# install syslinux if extra argument given in fstab
-	if [[ "$syslinux" = 1 ]]; then
-		PATH="$PATH:$rootfs/usr/bin" datefudge -s "@$timestamp" syslinux -d syslinux -i "$file"
 	fi
 
 	# recalc size, since it might have change (e.g. from resize2fs)
