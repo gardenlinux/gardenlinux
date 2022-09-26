@@ -5,7 +5,7 @@ set -Eexuo pipefail
 bucket="$1"
 name="$(sed 's/.tar.gz$//g' <<< "$2")"
 platform="$(cut -d - -f 1 <<< "$name")"
-arch="$(cut -d - -f 2 <<< "$name")"
+arch="$(echo "$name" | rev | cut -d - -f 3 | rev)"
 
 tar xzvf "$name.tar.gz"
 
