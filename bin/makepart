@@ -183,11 +183,6 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 		find "$data_source" -depth -mindepth 1 -delete
 	fi
 
-	# install syslinux if extra argument given in fstab
-	if [[ "$syslinux" = 1 ]]; then
-		PATH="$PATH:$rootfs/usr/bin" datefudge -s "@$timestamp" syslinux -d syslinux -i "$file"
-	fi
-
 	# recalc size, since it might have change (e.g. from resize2fs)
 	size=$(du -b "$file" | awk '{ padded_size = $1 + (MB - ($1 % MB) % MB); print (padded_size / MB) }' "MB=1048576")
 
