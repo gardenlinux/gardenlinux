@@ -169,6 +169,11 @@ else
 		/opt/gardenlinux/bin/garden-build &
 	wait %1
 
+	# append test logs to build logs
+	testLog="${outputDir}/$(cat $outputDir/prefix.info).log"
+	printf "\nTests\n\n" >> "$testLog"
+	exec > >(tee -a "${testLog}") 2> >(tee -a "${testLog}" >&2)
+
 	# Run tests if activated
 	if [ ${skip_tests} -eq 0 ] && [[ "${tests}" == *"chroot"* ]]; then
 		# Prepare the test container execution
