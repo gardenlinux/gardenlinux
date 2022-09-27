@@ -5,7 +5,7 @@ set -Eeufo pipefail
 export PKCS11_MODULE_PATH="/usr/lib/$(uname -m)-linux-gnu/pkcs11/aws_kms_pkcs11.so"
 
 veritytab=
-cert_base="/cert/secureboot.db.sign"
+cert_base="/cert/secureboot.db"
 timestamp=0
 secureboot="true"
 
