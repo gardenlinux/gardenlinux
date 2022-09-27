@@ -14,7 +14,6 @@ timestamp=$(garden-version --epoch "$version")
 rootfs_work=$(mktemp -d)
 cp -a "$rootfs/." "$rootfs_work"
 mkdir -p "$rootfs_work/overlay"/{etc,var}/{upper,work}
-mkdir -p "$rootfs_work/boot/efi"
 
 find "$rootfs_work/var/log/" -type f -delete
 
