@@ -276,7 +276,7 @@ class AZURE:
             }
         ).result()
 
-        self.logger.info(f"Creating and booting virtual machine of size {vm_size} from image version {self._image.name}...")
+        self.logger.info(f"Creating and booting Virtual machine of size {vm_size} from image {self._image.name}...")
         self._instance = self.cclient.virtual_machines.begin_create_or_update(
             resource_group_name=self._resourcegroup.name,
             vm_name=name,
@@ -376,12 +376,6 @@ class AZURE:
             cfg['resource_group'] = f"rg-{test_name}"
         if not 'storage_account_name' in cfg:
             cfg['storage_account_name'] = f"sa{re.sub('-', '', test_name)}"
-        if not 'gallery_name' in cfg:
-            cfg['gallery_name'] = f"gallery{re.sub('-', '', test_name)}"
-        if not 'gallery_image_name' in cfg:
-            cfg['gallery_image_name'] = f"galleryimage{re.sub('-', '', test_name)}"
-        if not 'gallery_image_version_name' in cfg:
-            cfg['gallery_image_version_name'] = "0.0.0"
         if not 'vm_size' in cfg:
             cfg['vm_size'] = "Standard_D4_v4"
         if not 'accelerated_networking' in cfg:
@@ -592,7 +586,7 @@ class AZURE:
             if hyper_v_generation not in allowed_generations:
                 raise RuntimeError(f"Hypervisor generation '{hyper_v_generation}' not supported. Allowed values: ({allowed_generations})")
 
-            image = self.cclient.images.begin_create_or_update(
+            result = self.cclient.images.begin_create_or_update(
                 resource_group_name = self._resourcegroup.name,
                 image_name = image_name,
                 parameters = {
@@ -612,63 +606,6 @@ class AZURE:
             ).result()
 
             self.logger.info(f"Image {image_file} uploaded as {image_name}")
-
-            gallery_name = self.config['gallery_name']
-            gallery_image_name = self.config['gallery_image_name']
-            gallery_image_version_name = self.config['gallery_image_version_name']
-            self.cclient.galleries.begin_create_or_update(
-                resource_group_name = self._resourcegroup.name,
-                gallery_name = gallery_name,
-                gallery = {
-                    'location': self._resourcegroup.location,
-                }
-            )
-
-            allowed_architectures = ["x64", "Arm64"]
-            architecture = self.config.get("architecture", allowed_architectures[0])
-            if architecture not in allowed_architectures:
-                raise RuntimeError(f"Architecture '{architecture}' not supported. Allowed values: ({allowed_architectures})")
-
-            self.cclient.gallery_images.begin_create_or_update(
-                resource_group_name = self._resourcegroup.name,
-                gallery_name = gallery_name,
-                gallery_image_name = gallery_image_name,
-                gallery_image = {
-                    'location': self._resourcegroup.location,
-                    'os_type': 'Linux',
-                    'os_state': 'Generalized',
-                    'hyper_v_generation': hyper_v_generation,
-                    'architecture': architecture,
-                    'identifier': {
-                        'publisher': 'Gardenlinux',
-                        'offer': 'Gardenlinux',
-                        'sku': 'Gardenlinux'
-                    }
-                }
-            )
-
-            self.logger.info(f"Creating image version {gallery_image_version_name} from {image_name}...")
-
-            result = self.cclient.gallery_image_versions.begin_create_or_update(
-                resource_group_name = self._resourcegroup.name,
-                gallery_name = gallery_name,
-                gallery_image_name = gallery_image_name,
-                gallery_image_version_name = gallery_image_version_name,
-                gallery_image_version = {
-                    'location': self._resourcegroup.location,
-                    'publishing_profile': {
-                        'replica_count': 1,
-                        'storage_account_type': 'Standard_LRS',
-                        'replication_mode': 'Shallow'
-                    },
-                    'storage_profile': {
-                        'source': {
-                            'id': image.id
-                        }
-                    }
-                }
-            ).result()
-
             return result
         else:
             raise Exception("No image with name %s available and no image file given" % self.config["image_name"])
