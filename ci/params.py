@@ -147,6 +147,10 @@ class AllParams:
         default='~',
         description='JSON string with status for all tasks',
     )
+    step_image = NamedParam(
+        name='step_image',
+        description='the container image for CI/CD steps (dynamically created)',
+    )
     suite = NamedParam(
         name='suite',
         default='bookworm',

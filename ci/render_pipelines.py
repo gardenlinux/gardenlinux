@@ -215,6 +215,9 @@ def mk_pipeline(
     tasks = []
 
     # pre-build base images serving as container imager for further build steps:
+    base_build_task = mk_pipeline_base_build_task(all_tasks)
+    tasks.append(base_build_task)
+
     build_tasks = []
     test_tasks = []
     platform_set = set()
@@ -223,7 +226,7 @@ def mk_pipeline(
         build_task = mk_pipeline_build_task(
             gardenlinux_flavour=glf,
             pipeline_flavour=pipeline_flavour,
-            run_after=[],
+            run_after=[base_build_task.name],
             all_tasks=all_tasks,
         )
         build_tasks.append(build_task)
