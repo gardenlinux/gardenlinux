@@ -145,7 +145,6 @@ def promote_step(
         build_committish=committish,
         version=version,
         gardenlinux_epoch=int(gardenlinux_epoch),
-        prefix=glci.model.ReleaseManifest.manifest_key_prefix,
       )
     )
 

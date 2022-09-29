@@ -9,9 +9,8 @@ import params
 import results
 import tkn.model
 
-IMAGE_VERSION = '1.1687.0'
+IMAGE_VERSION = '1.1874.0'
 DEFAULT_IMAGE = f'eu.gcr.io/gardener-project/cc/job-image:{IMAGE_VERSION}'
-KANIKO_IMAGE = f'eu.gcr.io/gardener-project/cc/job-image-kaniko:{IMAGE_VERSION}'
 CACHED_PATCH: str = None
 
 logger = logging.getLogger(__name__)
@@ -197,44 +196,6 @@ def status_step(
     return step, step_params
 
 
-def upload_results_step(
-    params: params.AllParams,
-    results: results.AllResults,
-    env_vars: typing.List[typing.Dict] = [],
-    volume_mounts: typing.List[typing.Dict] = [],
-):
-    step_params = [
-        params.architecture,
-        params.cicd_cfg_name,
-        params.committish,
-        params.gardenlinux_epoch,
-        params.modifiers,
-        params.outfile,
-        params.platform,
-        params.build_targets,
-        params.version,
-        params.build_image,
-    ]
-    result_params = [
-        results.build_result
-    ]
-    step = tkn.model.TaskStep(
-        name='upload-results',
-        image='$(params.step_image)',
-        script=task_step_script(
-            path=os.path.join(steps_dir, 'upload_results_step.py'),
-            script_type=ScriptType.PYTHON3,
-            callable='upload_results_step',
-            params=step_params,
-            results=result_params,
-            repo_path_param=params.repo_dir,
-        ),
-        volumeMounts=volume_mounts,
-        env=env_vars,
-    )
-    return step, step_params
-
-
 def promote_single_step(
     params: params.AllParams,
     env_vars: typing.List[typing.Dict] = [],
@@ -252,7 +213,7 @@ def promote_single_step(
     ]
     step = tkn.model.TaskStep(
         name='promote-step',
-        image='$(params.step_image)',
+        image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'promote_step.py'),
             script_type=ScriptType.PYTHON3,
@@ -288,7 +249,7 @@ def promote_step(
 
     step = tkn.model.TaskStep(
         name='finalise-promotion-step',
-        image='$(params.step_image)',
+        image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'promote_step.py'),
             script_type=ScriptType.PYTHON3,
@@ -320,7 +281,7 @@ def pre_build_step(
     ]
     step = tkn.model.TaskStep(
         name='prebuild-step',
-        image='$(params.step_image)',
+        image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'pre_build_step.py'),
             script_type=ScriptType.PYTHON3,
@@ -352,178 +313,13 @@ def release_step(
     ]
     step = tkn.model.TaskStep(
         name='release-step',
-        image='$(params.step_image)',
+        image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'release_step.py'),
             script_type=ScriptType.PYTHON3,
             callable='release_step',
             params=step_params,
             repo_path_param=params.repo_dir,
-        ),
-        volumeMounts=volume_mounts,
-        env=env_vars,
-    )
-    return step, step_params
-
-
-def write_key_step(
-    params: params.AllParams,
-    env_vars: typing.List[typing.Dict] = [],
-    volume_mounts: typing.List[typing.Dict] = [],
-):
-    step_params = [
-        params.repo_dir,
-        params.key_config_name,
-    ]
-    step = tkn.model.TaskStep(
-        name='write-key',
-        image='$(params.step_image)',
-        script=task_step_script(
-            path=os.path.join(steps_dir, 'write_key.py'),
-            script_type=ScriptType.PYTHON3,
-            callable='write_key',
-            params=step_params,
-            repo_path_param=params.repo_dir,
-        ),
-        volumeMounts=volume_mounts,
-        env=env_vars,
-    )
-    return step, step_params
-
-
-def build_cert_step(
-    params: params.AllParams,
-    env_vars: typing.List[typing.Dict] = [],
-    volume_mounts: typing.List[typing.Dict] = [],
-):
-    step_params = [
-        params.repo_dir,
-    ]
-
-    step = tkn.model.TaskStep(
-        name='build-cert',
-        image='$(params.gardenlinux_build_deb_image)',
-        script=task_step_script(
-            path=os.path.join(steps_dir, 'build_cert.sh'),
-            script_type=ScriptType.BOURNE_SHELL,
-            callable='build_cert',
-            params=step_params,
-            repo_path_param=params.repo_dir,
-        ),
-        volumeMounts=volume_mounts,
-        env=env_vars,
-    )
-
-    return step, step_params
-
-
-def build_image_step(
-    params: params.AllParams,
-    env_vars: typing.List[typing.Dict] = [],
-    volume_mounts: typing.List[typing.Dict] = [],
-):
-    build_image_step_volume_mounts = [vm for vm in volume_mounts]
-    build_image_step_volume_mounts.extend([{
-        'mountPath': '/dev',
-        'name': 'dev',
-    }, {
-        'mountPath': '/build',
-        'name': 'build',
-    }])
-
-    build_image_step_resource_config = {
-        'requests': {
-            'memory': '1Gi',
-        },
-        'limits': {
-            'memory': '1.5Gi',
-        },
-    }
-    build_image_step_security_context = {
-        'privileged': True,
-        'allowPrivilegeEscalation': True,
-        'capabilities': {
-          'add': ['SYS_ADMIN'],
-        },
-    }
-    step_params = [
-        # !DO NOT CHANGE ORDER!
-        params.suite,
-        params.gardenlinux_epoch,
-        params.snapshot_timestamp,
-        params.platform,
-        params.modifiers,
-        params.architecture,
-        params.committish,
-        params.garden_build_version
-    ]
-    step = tkn.model.TaskStep(
-        name='build-image',
-        image='$(params.build_image)',
-        script=task_step_script(
-            path=os.path.join(steps_dir, 'build_image.sh'),
-            script_type=ScriptType.BOURNE_SHELL,
-            callable='build_image',
-            repo_path_param=params.repo_dir,
-            params=step_params,
-        ),
-        volumeMounts=build_image_step_volume_mounts,
-        env=env_vars,
-        resources=build_image_step_resource_config,
-        securityContext=build_image_step_security_context,
-    )
-    return step, step_params
-
-
-def build_base_image_step(
-    params: params.AllParams,
-    env_vars: typing.List[typing.Dict] = [],
-    volume_mounts: typing.List[typing.Dict] = [],
-):
-    step_params = [
-        params.build_image,
-        params.gardenlinux_build_deb_image,
-        params.oci_path,
-        params.repo_dir,
-        params.version_label,
-        params.build_targets,
-    ]
-    step = tkn.model.TaskStep(
-        name='basebuild',
-        image=KANIKO_IMAGE,
-        script=task_step_script(
-            path=os.path.join(steps_dir, 'build_base_image.py'),
-            script_type=ScriptType.PYTHON3,
-            callable='build_base_image',
-            repo_path_param=params.repo_dir,
-            params=step_params,
-        ),
-        volumeMounts=volume_mounts,
-        env=env_vars,
-    )
-    return step, step_params
-
-
-def build_step_image_step(
-    params: params.AllParams,
-    env_vars: typing.List[typing.Dict] = [],
-    volume_mounts: typing.List[typing.Dict] = [],
-):
-    step_params = [
-        params.oci_path,
-        params.repo_dir,
-        params.version_label,
-        params.build_targets,
-    ]
-    step = tkn.model.TaskStep(
-        name='build-step-image',
-        image=KANIKO_IMAGE,
-        script=task_step_script(
-            path=os.path.join(steps_dir, 'build_step_image.py'),
-            script_type=ScriptType.PYTHON3,
-            callable='build_step_image',
-            repo_path_param=params.repo_dir,
-            params=step_params,
         ),
         volumeMounts=volume_mounts,
         env=env_vars,
@@ -549,7 +345,7 @@ def create_component_descriptor_step(
     ]
     step = tkn.model.TaskStep(
         name='component-descriptor',
-        image='$(params.step_image)',
+        image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'component_descriptor.py'),
             script_type=ScriptType.PYTHON3,
@@ -585,7 +381,7 @@ def notify_step(
     ]
     step = tkn.model.TaskStep(
         name='notify-status',
-        image='$(params.step_image)',
+        image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'notify.py'),
             script_type=ScriptType.PYTHON3,
@@ -611,7 +407,7 @@ def get_logs_step(
     ]
     step = tkn.model.TaskStep(
         name='get-logs',
-        image='$(params.step_image)',
+        image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'get_logs.py'),
             script_type=ScriptType.PYTHON3,
@@ -642,7 +438,7 @@ def pre_check_tests_step(
     ]
     step = tkn.model.TaskStep(
         name='pre-check-tests',
-        image='$(params.step_image)',
+        image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'pre_check_tests.py'),
             script_type=ScriptType.PYTHON3,
@@ -677,7 +473,7 @@ def test_step(
     ]
     step = tkn.model.TaskStep(
         name='run-tests',
-        image='$(params.step_image)',
+        image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'run_tests.py'),
             script_type=ScriptType.PYTHON3,
@@ -709,7 +505,7 @@ def upload_test_results_step(
     ]
     step = tkn.model.TaskStep(
         name='upload-test-results',
-        image='$(params.step_image)',
+        image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'upload_test_results.py'),
             script_type=ScriptType.PYTHON3,
@@ -744,7 +540,7 @@ def attach_log_step(
 ]
     step = tkn.model.TaskStep(
         name='upload-logs-step',
-        image='$(params.step_image)',
+        image=DEFAULT_IMAGE,
         script=task_step_script(
             path=os.path.join(steps_dir, 'attach_logs.py'),
             script_type=ScriptType.PYTHON3,

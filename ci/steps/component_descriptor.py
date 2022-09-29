@@ -93,7 +93,6 @@ def build_component_descriptor(
         version=version,
         build_committish=committish,
         gardenlinux_epoch=int(gardenlinux_epoch),
-        prefix=glci.model.ReleaseManifest.manifest_key_prefix,
         )
     )
     releases: typing.Tuple[glci.model.OnlineReleaseManifest]

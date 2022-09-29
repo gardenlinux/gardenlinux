@@ -85,14 +85,7 @@ def render_task(
         'value': '/workspace/tekton_home',
     })
 
-    base_build_task = tasks.base_image_build_task(
-        volumes=volumes,
-        volume_mounts=volume_mounts,
-        env_vars=env_vars,
-    )
-    raw_base_build_task = dataclasses.asdict(base_build_task)
-
-    build_task = tasks.build_task(
+    build_task = tasks.promote_single_task(
         env_vars=env_vars,
         volumes=volumes,
         volume_mounts=volume_mounts,
@@ -127,7 +120,6 @@ def render_task(
     # yaml.add_representer(str, multiline_str_presenter)
     yaml.representer.SafeRepresenter.add_representer(str, multiline_str_presenter)
     all_tasks = (
-                base_build_task,
                 build_task,
                 test_task,
                 promote_task,
@@ -137,7 +129,6 @@ def render_task(
     with open(outfile_tasks, 'w') as f:
         yaml.safe_dump_all(
             (
-                raw_base_build_task,
                 raw_build_task,
                 raw_test_task,
                 raw_promote_task,

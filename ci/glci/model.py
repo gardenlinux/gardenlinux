@@ -6,6 +6,7 @@ import enum
 import functools
 import itertools
 import os
+import subprocess
 import typing
 
 import dacite
@@ -271,20 +272,15 @@ class ReleaseIdentifier:
 
         the key consists of:
 
-        <canonical flavour name>-<version>-<commit-hash[:6]>
+        <canonical flavour name>-<version>-<commit-hash[:7]>
 
         where <canonical flavour name> is calculated from canonicalised_features()
         and <version> is the intended target release version.
 
         note that the full key should be prefixed (e.g. with manifest_key_prefix)
         '''
-        flavour_name = '-'.join((
-            f.name for f in canonicalised_features(
-                platform=self.platform,
-                modifiers=self.modifiers,
-            )
-        ))
-        return f'{flavour_name}-{self.version}-{self.build_committish[:6]}'
+        cname = canonical_name(self.platform, self.modifiers)
+        return f'{cname}-{self.architecture.value}-{self.version}-{self.build_committish[:7]}'
 
     def canonical_release_manifest_key(self):
         return f'{self.manifest_key_prefix}/{self.canonical_release_manifest_key_suffix()}'
@@ -456,37 +452,39 @@ def normalised_modifiers(platform: Platform, modifiers) -> typing.Tuple[str, ...
 
 
 def normalised_release_identifier(release_identifier: ReleaseIdentifier):
-    modifiers = normalised_modifiers(
+    features = canonical_features(
         platform=release_identifier.platform,
         modifiers=release_identifier.modifiers,
     )
+    modifiers = ','.join(f.name for f in features)
 
     return dataclasses.replace(release_identifier, modifiers=modifiers)
 
 
-def canonicalised_features(platform: Platform, modifiers) -> typing.Tuple[FeatureDescriptor]:
+def canonical_features(platform: Platform, modifiers) -> typing.Tuple[FeatureDescriptor]:
     '''
     calculates the "canonical" (/minimal) tuple of features required to unambiguosly identify
     a gardenlinux flavour. The result is returned as a (ASCII-upper-case-sorted) tuple of
-    `FeatureDescriptor`, including the platform (which is always the first element).
+    `FeatureDescriptor`, including the platform.
 
     The minimal featureset is determined by removing all transitive dependencies (which are thus
     implied by the retained features).
     '''
-    platform = feature_by_name(platform)
-    minimal_modifiers = set((feature_by_name(m) for m in modifiers))
+    feature_str = _garden_feat(platform=platform, modifiers=modifiers, cmd='features')
 
-    # rm all transitive dependencies from platform
-    minimal_modifiers -= set((platform.included_features(), *modifiers))
+    return tuple(
+        feature_by_name(f)
+        for f in feature_str.split(',')
+    )
 
-    # rm all transitive dependencies from modifiers
-    for modifier in (feature_by_name(m) for m in modifiers):
-        minimal_modifiers -= set(modifier.included_features())
 
-    # canonical name: <platform>-<ordered-features> (UPPER-cased-sort, so _ is after alpha)
-    minimal_modifiers = sorted(minimal_modifiers, key=lambda m: m.name.upper())
+def canonical_name(platform: Platform, modifiers) -> str:
+    '''Calculates the canonical name of a gardenlinux flavour.
 
-    return tuple((platform, *minimal_modifiers))
+    The canonical name consists of the minimal sorted set of features in the given flavour, as
+    determined by bin/garden-feat, with the platform always being the first element.
+    '''
+    return _garden_feat(platform=platform, modifiers=modifiers, cmd='cname')
 
 
 @dataclasses.dataclass(frozen=True)
@@ -867,3 +865,23 @@ def feature_by_name(feature_name: str):
         if feature.name == feature_name:
             return feature
     raise ValueError(feature_name)
+
+
+def _garden_feat(
+    platform: str,
+    modifiers: typing.Tuple[str, ...],
+    cmd: str,
+) -> str:
+    all_mods = set(modifiers + (platform,))
+    completed = subprocess.run(
+        args=[
+            os.path.abspath(os.path.join(paths.repo_root, 'bin', 'garden-feat')),
+            '--featureDir', os.path.abspath(os.path.join(paths.repo_root, 'features')),
+            '--features', ','.join(all_mods),
+            cmd,
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return completed.stdout.strip()
