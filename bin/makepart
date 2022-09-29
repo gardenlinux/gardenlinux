@@ -22,19 +22,6 @@ chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
 "$thisDir/garden-chroot" "$rootfs_work" /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
 rm "$rootfs_work/.autorelabel"
 
-if ! grep _secureboot <<<"$features" > /dev/null; then
-	machineid="$(mktemp)"
-	mount --rbind "${machineid}" "${rootfs_work}/etc/machine-id"
-	mkdir -p "$rootfs_work/boot/efi/loader/"
-	touch "$rootfs_work/boot/efi/loader/loader.conf"
-	touch "$rootfs_work/boot/efi/loader/entries.srel"
-	chroot "$rootfs_work" /usr/bin/env -i SYSTEMD_ESP_PATH="/boot/efi" bootctl --no-variables --make-machine-id-directory=no install
-	echo type1 > "$rootfs_work/boot/efi/loader/entries.srel"
-	rm -f "${rootfs_work}/boot/efi/loader/random-seed"
-	umount "${rootfs_work}/etc/machine-id"
-	rm -f "$machineid"
-fi
-
 fstab="$(mktemp)"
 veritytab="$(mktemp)"
 root_hash="$(mktemp)"
@@ -130,11 +117,6 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 		find "$rootfs_work$target" -depth -mindepth 1 -delete
 	fi
 
-	# install syslinux if extra argument given in fstab
-	if [[ "$syslinux" = 1 ]]; then
-		PATH="$PATH:$rootfs/usr/bin" datefudge -s "@$timestamp" syslinux -d syslinux -i "$file"
-	fi
-
 	# recalc size, since it might have change (e.g. from resize2fs)
 	size=$(du -b "$file" | awk '{ padded_size = $1 + (MB - ($1 % MB) % MB); print (padded_size / MB) }' "MB=1048576")
 
@@ -181,8 +163,12 @@ if [[ -z "$(cat "$root_hash")" ]]; then
 	cmdline="root=$root_source $cmdline"
 
 	# enable verity if the root partition is writable, but any other partition has verity enabled, most likely /usr
-	if [[ ! -z "$(cat "$veritytab")" ]] && [ ! -s "$secureboot_partitions" ]; then
-		makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -t "$timestamp" -s "false" < "$efi_partition"
+	if [ ! -s "$secureboot_partitions" ]; then
+		if [[ ! -z "$(cat "$veritytab")" ]]; then
+			makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -t "$timestamp" -s "false" < "$efi_partition"
+		else
+			makesecureboot -r "$rootfs" -c "$cmdline" -t "$timestamp" -s "false" < "$efi_partition"
+		fi
 	fi
 else
 	cmdline="roothash=$(cat "$root_hash") root=/dev/mapper/root $cmdline"
