@@ -26,7 +26,7 @@ def _resolve_ctx_repository_config(cfg_name):
 
 def _virtual_image_packages(release_manifest, cicd_cfg) -> typing.Generator[str, None, None]:
     s3_client = glci.s3.s3_client(cicd_cfg)
-    manifest_file_path = release_manifest.path_by_suffix('rootfs.manifest')
+    manifest_file_path = release_manifest.path_by_suffix('.manifest')
     resp = s3_client.get_object(
         Bucket=manifest_file_path.s3_bucket_name,
         Key=manifest_file_path.s3_key,
@@ -347,7 +347,7 @@ def _image_rootfs_resource(
         ),
     ]
 
-    rootfs_file_path = release_manifest.path_by_suffix('rootfs.tar.xz')
+    rootfs_file_path = release_manifest.path_by_suffix('.tar.xz')
     bucket_name = cicd_cfg.build.s3_bucket_name
 
     resource_access = cm.S3Access(
