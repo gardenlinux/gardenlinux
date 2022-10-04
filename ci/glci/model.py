@@ -139,6 +139,7 @@ class Architecture(enum.Enum):
     gardenlinux' target architectures, following Debian's naming
     '''
     AMD64 = 'amd64'
+    ARM64 = 'arm64'
 
 
 @dataclasses.dataclass(frozen=True)
