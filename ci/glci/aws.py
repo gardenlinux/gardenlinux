@@ -110,11 +110,25 @@ def wait_for_snapshot_import(
     return snapshot_id()
 
 
+def _to_aws_architecture(
+    architecture: glci.model.Architecture,
+) -> str:
+    '''Convert the Value of our Architecture-enum to the values AWS knows/expects
+    '''
+    match architecture:
+        case glci.model.Architecture.AMD64:
+            return 'x86_64'
+        case glci.model.Architecture.ARM64:
+            return 'arm64'
+        case _:
+            raise NotImplementedError(architecture)
+
+
 def register_image(
     ec2_client: 'botocore.client.EC2',
     snapshot_id: str,
     image_name: str,
-    architecture: str='x86_64',
+    architecture: str,
 ) -> str:
     '''
     @return: ami-id of registered image
@@ -123,7 +137,7 @@ def register_image(
 
     result = ec2_client.register_image(
         # ImageLocation=XX, s3-url?
-        Architecture=architecture, # x86_64, i386, arm64
+        Architecture=architecture,
         BlockDeviceMappings=[
             {
                 'DeviceName': root_device_name,
@@ -367,6 +381,7 @@ def upload_and_register_gardenlinux_image(
         ec2_client=ec2_client,
         snapshot_id=snapshot_id,
         image_name=target_image_name,
+        architecture=_to_aws_architecture(release.architecture),
     )
     logger.info(f'registered {initial_ami_id=}')
 
