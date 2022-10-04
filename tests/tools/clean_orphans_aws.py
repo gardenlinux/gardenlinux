@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import boto3
+import argparse
 from botocore.exceptions import ClientError
 
 def clean_keypairs(client, force: bool = False):
@@ -24,7 +25,7 @@ def clean_keypairs(client, force: bool = False):
         
         if not force:
             delete = input(f"\nDelete this key (y/N)? ")
-        if delete == "y" or force:
+        if force or delete == "y":
             client.delete_key_pair(KeyPairId = key['KeyPairId'])
 
 
@@ -50,7 +51,7 @@ def clean_images(client, force: bool = False):
         
         if not force:
             delete = input(f"\nDeregister this image (y/N)? ")
-        if delete == "y" or force:
+        if force or delete == "y":
             client.deregister_image(ImageId = img['ImageId'])
 
 
@@ -81,7 +82,7 @@ def clean_security_groups(client, force: bool = False):
         
         if not force:
             delete = input(f"\nDelete this security group (y/N)? ")
-        if delete == "y" or force:
+        if force or delete == "y":
             client.delete_security_group(GroupId = sg['GroupId'])
 
 
@@ -105,7 +106,7 @@ def clean_snapshot(client, force: bool = False):
         
         if not force:
             delete = input(f"\nDelete this snapshot (y/N)? ")
-        if delete == "y" or force:
+        if force or delete == "y":
             client.delete_snapshot(SnapshotId = snap['SnapshotId'])
 
 
@@ -133,7 +134,7 @@ def clean_instances(client, force: bool = False):
             
             if not force:
                 delete = input(f"\nTerminate this instance (y/N)? ")
-            if delete == "y" or force:
+            if force or delete == "y":
                 client.terminate_instances(InstanceIds = [i['InstanceId']])
                 waiter = client.get_waiter('instance_terminated')
                 print("Waiting for instance to terminate...")
@@ -172,12 +173,12 @@ def clean_buckets(client, force: bool = False):
                         pass
                     if not force:
                         delete = input(f"\n\tDelete this object (y/N)? ")
-                    if delete == "y" or force:
+                    if force or delete == "y":
                         client.delete_object(Bucket=bckt['Name'], Key=c['Key'])
 
             if not force:
                 delete = input(f"\nDelete this bucket ({bckt['Name']}) (y/N)? ")
-            if delete == "y" or force:
+            if force or delete == "y":
                 client.delete_bucket(Bucket=bckt['Name'])
 
     if bucket_count == 0:
@@ -189,16 +190,20 @@ if __name__ == "__main__":
     ec2_client = session.client("ec2")
     s3_client = session.client("s3")
 
+    parser = argparse.ArgumentParser(description='AWS orphan cleaner.')
+    parser.add_argument('--nuke-em', dest='force', action='store_true', default=False, help="DANGEROUS: deletes all resources without asking")
+    args = parser.parse_args()
+
     print(f"Instances:")
-    clean_instances(ec2_client)
+    clean_instances(ec2_client, args.force)
     print(f"\nSecurity Groups:")
-    clean_security_groups(ec2_client)
+    clean_security_groups(ec2_client, args.force)
     print(f"\nImages/AMIs:")
-    clean_images(ec2_client)
+    clean_images(ec2_client, args.force)
     print(f"\nSnapshots:")
-    clean_snapshot(ec2_client)
+    clean_snapshot(ec2_client, args.force)
     print(f"\nSSH Keypairs:")
-    clean_keypairs(ec2_client)
+    clean_keypairs(ec2_client, args.force)
     print(f"\nS3 buckets:")
-    clean_buckets(s3_client)
-    
+    clean_buckets(s3_client, args.force)
+
