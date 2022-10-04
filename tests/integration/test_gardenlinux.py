@@ -197,7 +197,7 @@ def test_systemctl_no_failed_units_kvm(client, kvm):
 
 def test_startup_time(client, non_chroot, non_kvm):
     tolerated_kernel_time = 15
-    tolerated_userspace_time = 30
+    tolerated_userspace_time = 40
     (exit_code, output, error) = client.execute_command("systemd-analyze")
     assert exit_code == 0, f"no {error=} expected"
     lines = output.splitlines()
