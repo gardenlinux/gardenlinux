@@ -22,18 +22,21 @@
       - [GCP](#gcp)
         - [Configuration options](#configuration-options-3)
         - [Running the tests](#running-the-tests-3)
-    - [Local test environments](#local-test-environments)
-      - [CHROOT](#chroot)
+      - [Firecracker (MicroVM)](#firecracker-microvm)
         - [Configuration options](#configuration-options-4)
         - [Running the tests](#running-the-tests-4)
-      - [KVM](#kvm)
+    - [Local test environments](#local-test-environments)
+      - [CHROOT](#chroot)
         - [Configuration options](#configuration-options-5)
         - [Running the tests](#running-the-tests-5)
-      - [Manual Testing](#manual-testing)
-        - [Running the tests](#running-the-tests-6)
-      - [OpenStack CC EE flavor](#openstack-cc-ee-flavor)
+      - [KVM](#kvm)
         - [Configuration options](#configuration-options-6)
+        - [Running the tests](#running-the-tests-6)
+      - [Manual Testing](#manual-testing)
         - [Running the tests](#running-the-tests-7)
+      - [OpenStack CC EE flavor](#openstack-cc-ee-flavor)
+        - [Configuration options](#configuration-options-7)
+        - [Running the tests](#running-the-tests-8)
   - [Misc](#misc)
     - [Autoformat Using Black](#autoformat-using-black)
     - [Run Static Checks](#run-static-checks)
@@ -546,6 +549,115 @@ sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
     pytest --iaas=gcp --configfile=/config/mygcpconfig.yaml
+
+#### Firecracker (MicroVM)
+
+Firecracker tests are designed to run directly on your platform. Currently, AMD64 and ARM64 architectures are supported without any further cross platfrom support.
+
+Notes:
+Firecracker is currently limited to Linux base platforms only. Additionally, hardware acceleration is needed. Make sure, `/dev/kvm` is usable.
+
+Use the following test configuration:
+
+```yaml
+firecracker:
+    # Path to a final artifacts. This includes the Kernel
+    # and a filesystem image
+    kernel: /gardenlinux/.build/firecracker.vmlinux
+    image: /gardenlinux/.build/firecracker.ext4
+    # The filesystem image can optionally turned to readonly
+    # if nessescary (optional)
+    # Default: False
+    readonly: False
+    # Filesystem mount path to mount filesystem image for further
+    # inlcudes and adjustments (optioanl)
+    # Default: tmpdir
+    image_mount: /tmp/image_mount
+
+    # Network configurations for microvm and host system
+    # including additional bridge interface definitions. In default,
+    # this runs within a container. Therefore, these options can mostly
+    # be used as defaults and do not need any further adjustments
+    network:
+        # Firecracker / microvm
+        ip_vm: 169.254.0.21           # Optional (Default: 169.254.0.21)
+        port_ssh_vm: 2222             # Optional (Default: 2222)
+        netmask_vm: 255.255.255.252   # Optional (Default: 255.255.255.252)
+        if_vm: eth0                   # Optional (Default: eth0)
+        mac_vm: 02:FC:00:00:00:05     # Optional (Default: 02:FC:00:00:00:05)
+
+        # Hostsystem
+        ip_host: 169.254.0.22         # Optional: (Default: 169.254.0.22)
+        netmask_host: 255.255.255.252 # Optional (Default: 255.255.255.252)
+        if_host: eth0                 # Optional (Default: eth0)
+        if_tap_host: tap0             # Optional (Default: tap0)
+        if_bridge_host: br0           # Optional (Default: br0)
+
+    # Keep machine running after performing tests
+    # for further debugging (optional)
+    # Default: false
+    #keep_running: false
+
+    # List of features that is used to determine the tests to run
+    features:
+      - "base"
+
+    # SSH configuration (required)
+    ssh:
+        # Defines if a new SSH key should be generated (optional)
+        # Default: true
+        ssh_key_generate: true
+
+        # Defines path where to look for a given key
+        # or to save the new generated one. Take care
+        # that you do NOT overwrite your key. (required)
+        ssh_key_filepath: /tmp/ssh_priv_key
+
+        # Defines if a passphrase for a given key is needed (optional)
+        #passphrase: xxyyzz
+
+        # Defines the user for SSH login (required)
+        # Default: root
+        user: root
+```
+
+##### Configuration options
+
+<details>
+
+- **kernel** _(required)_: If the tests should get executed against an already existing image, this is its kernel name.
+- **image** _(required)_: If the tests should get executed against an already existing image, this is its filesystem image name.
+- **readonly** _(optional)_: Defines if the filesystem image should be mounted as readonly.
+- **image_mount** _(optional)_: Defines the path where the image should be mounted (and where it can be modified).
+- **ip_vm** _(optional)_: Defines the used IP addresss within the Firecracker/microvm instance.
+- **port_ssh_vm** _(optional)_: Defines the used SSH port within the Firecracker/microvm instance.
+- **netmask_vm** _(optional)_: Defines the used netmask (mostly /30) within the Firecracker/microvm instance.
+- **if_vm** _(optional)_: Defines the local interface within the Firecracker/microvm instance.
+- **mac_vm** _(optional)_: Defines the MAC address for the local interface within the Firecracker/microvm instance.
+- **ip_host** _(optional)_: Defines the IP address on the host system.
+- **netmask_host** _(optional)_: Defines the netmask (mostly /30) on the host system.
+- **if_host** _(optional)_: Defines the regular uplink interface on the host system.
+- **if_tap_host** _(optional)_: Defines the tap device on the host system to create.
+- **if_bridge_host** _(optional)_: Defines the bridge device on the host system to create.
+- **keep_running** _(optional)_: if set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow for debugging
+
+</details>
+
+##### Running the tests
+
+Start Podman container with dependencies:
+
+- mount Garden Linux repository to `/gardenlinux`
+- add `/dev/kvm` device to Container (or run privileged mode)
+- run in privileged mode for KVM device and network interface mappings
+
+```
+sudo podman run -it --rm --privileged -v `pwd`:/gardenlinux gardenlinux/integration-test:`bin/garden-version` bash
+```
+
+Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
+
+    pytest --iaas=firecracker --configfile=/config/myfirecrackerconfig.yaml
 
 
 ### Local test environments
