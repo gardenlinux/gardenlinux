@@ -559,6 +559,9 @@ class AWS:
         instance_tags = self._tags.copy()
         instance_tags.append({'Key': 'Name', 'Value': name})
 
+        volume_tags = self._tags.copy()
+        volume_tags.append({'Key': 'sec-by-def-ebs-encryption-exception', 'Value': 'enabled'})
+
         instance = self.ec2_resource.create_instances(
             BlockDeviceMappings=[
                 {
@@ -578,10 +581,16 @@ class AWS:
             MaxCount=1,
             MinCount=1,
             SecurityGroupIds=[self._security_group_id],
-            TagSpecifications=[{
-                "ResourceType": "instance",
-                "Tags": instance_tags
-            }],
+            TagSpecifications=[
+                {
+                    "ResourceType": "instance",
+                    "Tags": instance_tags
+                },
+                {
+                    "ResourceType": "volume",
+                    "Tags": volume_tags
+                },
+            ],
         )
         return instance[0]
 
