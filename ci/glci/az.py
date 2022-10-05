@@ -728,6 +728,7 @@ def publish_azure_shared_image_gallery(
         publish_operation_id='',
         golive_operation_id='',
         id=shared_img.id,
+        urn=None,
     )
 
     return dataclasses.replace(release, published_image_metadata=published_image)
