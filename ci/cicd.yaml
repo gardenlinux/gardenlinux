@@ -18,7 +18,7 @@ cicd_cfgs:
         publisher_id: 'sap'
         plan_id: 'greatest'
         service_principal_cfg_name: 'gardenlinux'
-        storage_account_cfg_name: 'gardenlinux'
+        storage_account_cfg_name: 'gardenlinux-community-gallery'
         shared_gallery_cfg_name: 'gardenlinux-community-gallery'
         notification_emails: [andreas.burger@sap.com, dominic.kistner@sap.com]
       openstack:
