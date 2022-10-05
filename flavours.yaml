@@ -14,6 +14,10 @@ flavour_sets:
         platforms: [ kvm ]
         modifiers: [ ['_prod', 'chost'], ['_prod', 'gardener'] ]
         fails: [ unit, integration ]
+      - architectures: [ 'arm64' ]
+        platforms: [ aws ]
+        modifiers: [ [ gardener, _prod ] ]
+        fails: [ unit, integration ]
   - name: 'testing'
     flavour_combinations:
       - architectures: [ 'amd64' ]
