@@ -24,7 +24,7 @@ from helper.utils import get_architecture
 logger = logging.getLogger(__name__)
 
 
-def test_clock(client):
+def test_clock(client, non_local):
     (exit_code, output, error) = client.execute_command("date '+%s'")
     local_seconds = time.time()
     assert exit_code == 0, f"no {error=} expected"
@@ -33,7 +33,7 @@ def test_clock(client):
         abs(local_seconds - remote_seconds) < 5
     ), "clock skew should be less than 5 seconds. Local time is %s and remote time is %s" % (local_seconds, remote_seconds)
 
-def test_ntp(client, non_azure, non_chroot):
+def test_ntp(client, non_azure, non_chroot, non_local):
     """azure does not use systemd-timesyncd"""
     (exit_code, output, error) = client.execute_command("timedatectl show")
     assert exit_code == 0, f"no {error=} expected"
@@ -49,7 +49,7 @@ def test_ntp(client, non_azure, non_chroot):
     assert ntp_ok, "NTP not activated"
     assert ntp_synchronised_ok, "NTP not synchronized"
 
-def test_files_not_in_future(client, non_container):
+def test_files_not_in_future(client, non_container, non_local):
     testscript_name="/tmp/filemodtime-test.py"
     testscript='''import os
 import sys
@@ -73,7 +73,7 @@ __EOF
     assert exit_code == 0, f"no {error=} expected"
     assert "FAIL" not in output
 
-def test_ls(client):
+def test_ls(client, non_local):
     (exit_code, output, error) = client.execute_command("ls /")
     assert exit_code == 0, f"no {error=} expected"
     assert output
@@ -100,13 +100,13 @@ def test_ls(client):
     assert "var" in lines
 
 
-def test_no_man(client):
+def test_no_man(client, non_local):
     (exit_code, _, error) = client.execute_command("man ls", disable_sudo=True)
     assert exit_code == 127, '"man" should not be installed'
     assert "man: command not found" in error
 
 
-def test_metadata_connection(client, non_azure, non_ali, non_chroot, non_kvm):
+def test_metadata_connection(client, non_azure, non_ali, non_chroot, non_kvm, non_local):
     metadata_host = "169.254.169.254"
     (exit_code, output, error) = client.execute_command(
         f"wget --timeout 5 http://{metadata_host}"
@@ -145,7 +145,7 @@ def test_timesync(client, azure):
     (exit_code, output, error) = client.execute_command("test -L /dev/ptp_hyperv")
     assert exit_code == 0, f"Expected /dev/ptp_hyperv to be a symbolic link"
 
-def test_loadavg(client, non_kvm, non_chroot):
+def test_loadavg(client, non_kvm, non_chroot, non_local):
     """This test does not produce any load. Make sure no 
        other process does."""
     (exit_code, output, error) = client.execute_command("cat /proc/loadavg")
@@ -158,7 +158,7 @@ def ping4_host(request):
     return request.param
 
 
-def test_ping4(client, ping4_host, non_chroot, non_kvm):
+def test_ping4(client, ping4_host, non_chroot, non_kvm, non_local):
     command = f"ping -c 5 -W 5 {ping4_host}"
     (exit_code, output, error) = client.execute_command(command)
     assert exit_code == 0, f'no {error=} expected when executing "{command}"'
@@ -170,13 +170,13 @@ def ping6_host(request):
     return request.param
 
 @pytest.mark.skip(reason="ipv6 not available in all vpcs")
-def test_ping6(client, ping6_host):
+def test_ping6(client, ping6_host, non_local):
     command = f"ping6 -c 5 -W 5 {ping6_host}"
     (exit_code, output, error) = client.execute_command(command)
     assert exit_code == 0, f'no {error=} expected when executing "{command}"'
     assert "5 packets transmitted, 5 received, 0% packet loss" in output
 
-def test_systemctl_no_failed_units(client, non_chroot, non_kvm):
+def test_systemctl_no_failed_units(client, non_chroot, non_kvm, non_local):
     """this test always fails on kvm therefore kvm has it's own, chroot does not use systemd"""
     (exit_code, output, error) = client.execute_command("systemctl list-units --output=json --state=failed")
     assert exit_code == 0, f"no {error=} expected"
@@ -195,7 +195,7 @@ def test_systemctl_no_failed_units_kvm(client, kvm):
             error_out.append(entry['unit'])
     assert error_count == 0, f"systemd units {', '.join(error_out)} failed"
 
-def test_startup_time(client, non_chroot, non_kvm):
+def test_startup_time(client, non_chroot, non_kvm, non_local):
     tolerated_kernel_time = 15
     tolerated_userspace_time = 40
     (exit_code, output, error) = client.execute_command("systemd-analyze")
@@ -226,7 +226,7 @@ def test_chrony(client, azure):
     assert exit_code == 0, f"no {error=} expected"
     assert output.find(expected_config) != -1, f"chrony config for ptp expected but not found"
 
-def test_growpart(client, non_openstack):
+def test_growpart(client, non_openstack, non_local):
     (exit_code, output, error) = client.execute_command("df --output=size -BG /")
     assert exit_code == 0, f"no {error=} expected"
     lines = output.splitlines()
@@ -243,7 +243,7 @@ def test_growpart(client, openstack, openstack_flavor):
     sgb = int(lines[1].strip()[:-1])
     assert sgb == expected_disk_size, f"partition size expected to be ~{expected_disk_size} GB but is {sgb}"
 
-def test_docker(client, non_chroot):
+def test_docker(client, non_chroot, non_local):
     (exit_code, output, error) = client.execute_command("grep GARDENLINUX_FEATURES /etc/os-release | grep gardener", quiet=True)
     if exit_code != 0:
         pytest.skip("test_docker needs the gardenlinux feature gardener to be enabled")
@@ -293,7 +293,8 @@ def test_nvme_kernel_parameter(client, aws):
     assert exit_code == 0, f"no {error=} expected"
     assert output.rstrip() == "1", "Expected 'nvme_core.io_timeout=4294967295' kernel parameter"
 
-def test_random(client, non_metal, non_container):
+
+def test_random(client, non_metal, non_container, non_local):
     (exit_code, output, error) = client.execute_command("time dd if=/dev/random of=/dev/null bs=8k count=1000 iflag=fullblock", disable_sudo=True)
     """ Output should be like this:
 # time dd if=/dev/random of=/dev/null bs=8k count=1000 iflag=fullblock
