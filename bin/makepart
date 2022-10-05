@@ -246,18 +246,18 @@ if [[ -z "$(cat "$root_hash")" ]]; then
 
 	# enable verity if the root partition is writable, but any other partition has verity enabled, most likely /usr
 	if [[ ! -z "$(cat "$veritytab")" ]] && [ ! -s "$secureboot_partitions" ]; then
-		makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -i "$dracut_include" -t "$timestamp" -s "false" < "$efi_partition"
+		makeboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -i "$dracut_include" -t "$timestamp" -s "false" < "$efi_partition"
 	fi
 else
 	cmdline="roothash=$(cat "$root_hash") root=/dev/mapper/root $cmdline"
 
 	if [ ! -s "$secureboot_partitions" ]; then
-		makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -i "$dracut_include" -t "$timestamp" -s "false" < "$efi_partition"
+		makeboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -i "$dracut_include" -t "$timestamp" -s "false" < "$efi_partition"
 	fi
 fi
 
 if [ -s "$secureboot_partitions" ]; then
-	makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -i "$dracut_include" -t "$timestamp" < "$secureboot_partitions"
+	makeboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -i "$dracut_include" -t "$timestamp" < "$secureboot_partitions"
 fi
 
 cat "$partitions" "$final_partition" >&3
