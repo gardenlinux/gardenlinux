@@ -1,0 +1,16 @@
+[Unit]
+Description=SSH Container
+After=auditd.service setup-debugbox-ssh.service
+Requires=setup-debugbox-ssh.service
+
+[Service]
+TimeoutStartSec=10
+Restart=always
+ExecStartPre=-/usr/bin/docker stop debugbox
+ExecStart=/usr/bin/docker start -a debugbox
+RuntimeDirectory=sshd
+RuntimeDirectoryMode=0755
+ExecStop=-/usr/bin/docker stop debugbox
+
+[Install]
+WantedBy=multi-user.target

@@ -1,5 +1,7 @@
-description: "OpenSSH server"
-type: element
+description: "ssh container"
+type: platform
 features:
   include:
-    - firewall
+    - base
+tar:
+  include-dev: false
