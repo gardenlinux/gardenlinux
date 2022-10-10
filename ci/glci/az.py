@@ -25,18 +25,20 @@ import version as version_util
 from azure.identity import ClientSecretCredential
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.storage import StorageManagementClient
+from azure.core.polling import LROPoller
 from azure.mgmt.compute.models import (
-    TargetRegion,
-    OperatingSystemTypes,
-    OperatingSystemStateTypes,
-    HyperVGeneration,
+    CommunityGalleryImageVersion,
+    GalleryArtifactVersionSource,
     GalleryImage,
     GalleryImageIdentifier,
     GalleryImageVersion,
     GalleryImageVersionPublishingProfile,
     GalleryImageVersionStorageProfile,
-    GalleryArtifactVersionSource,
-    StorageAccountType
+    HyperVGeneration,
+    OperatingSystemStateTypes,
+    OperatingSystemTypes,
+    StorageAccountType,
+    TargetRegion,
 )
 
 from azure.core.exceptions import (
@@ -552,7 +554,7 @@ def upload_and_publish_image(
 
 
 def _create_shared_image(
-    cclient,
+    cclient: ComputeManagementClient,
     shared_gallery_cfg: glci.model.AzureSharedGalleryCfg,
     resource_group_name: str,
     location: str,
@@ -560,7 +562,7 @@ def _create_shared_image(
     image_name: str,
     image_version: str,
     source_id: str
-):
+) -> CommunityGalleryImageVersion:
     print('Create Gallery image.')
     result = cclient.gallery_images.begin_create_or_update(
         resource_group_name=resource_group_name,
@@ -585,7 +587,7 @@ def _create_shared_image(
     result = result.result()
 
     print(f'Create Gallery image version {image_version=}')
-    result = cclient.gallery_image_versions.begin_create_or_update(
+    result: LROPoller[GalleryImageVersion] = cclient.gallery_image_versions.begin_create_or_update(
         resource_group_name=resource_group_name,
         gallery_name=gallery_name,
         gallery_image_name=image_name,
@@ -614,7 +616,36 @@ def _create_shared_image(
         )
     )
     print('...waiting for asynchronous operation to complete')
-    return result.result()
+    image_version: GalleryImageVersion = result.result()
+
+    # The creation above resulted in a GalleryImageVersion, which seems to be a supertype of both
+    # Community Gallery images and Shared Gallery images and thus lacks information we need later.
+    # Since there is no easy way to get the correct type and no direct connection to the Community
+    # Gallery, fetch the CommunityGalleryImageVersion corresponding to the image we just created
+    # and return it. It contains the proper "unique_id" we need to reference the shared image.
+    # Note: Maybe in future there will be a
+    # 'ComputeManagementClient.community_gallery_image_versions.begin_create_or_update()' function,
+    # but as of now this seems be the way to go.
+
+    gallery = cclient.galleries.get(
+        resource_group_name=resource_group_name,
+        gallery_name=gallery_name,
+    )
+
+    if not (public_gallery_name := next(
+        gallery.sharing_profile.community_gallery_info.public_names, None
+    )):
+        raise RuntimeError('Unable to determine the public gallery name for the published image.')
+
+    community_gallery_image_version = cclient.community_gallery_image_versions.get(
+        public_gallery_name=public_gallery_name,
+        gallery_image_name=image_name, # not obtainable from the created GalleryImageVersion
+        gallery_image_version_name=image_version.name,  # yes, the name is the version since
+                                                        # we have a GalleryImageVersion here
+        location=image_version.location,
+    )
+
+    return community_gallery_image_version
 
 
 def publish_azure_shared_image_gallery(
@@ -720,15 +751,16 @@ def publish_azure_shared_image_gallery(
         image_version=published_version,
         source_id=result.id
     )
-    print(f'Image shared: {shared_img.id=}, {shared_img.name=}, {shared_img.type=}')
+    unique_id = shared_img.unique_id
+
+    print(f'Image shared: {unique_id=}')
 
     # create manifest and return this as result:
     published_image = glci.model.AzurePublishedImage(
         transport_state=glci.model.AzureTransportState.RELEASED,
         publish_operation_id='',
         golive_operation_id='',
-        id=shared_img.id,
-        urn=None,
+        community_gallery_image_id=unique_id,
     )
 
     return dataclasses.replace(release, published_image_metadata=published_image)

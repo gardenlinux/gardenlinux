@@ -357,6 +357,7 @@ class AzurePublishedImage:
     publish_operation_id: str
     golive_operation_id: str
     urn: typing.Optional[str]
+    community_gallery_image_id : typing.Optional[str]
     id: typing.Optional[str]
 
 
