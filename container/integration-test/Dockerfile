@@ -22,6 +22,7 @@ RUN : "Install AWS requirements" \
      && apt-get clean && rm -rf /var/lib/apt/lists/* \
      && mkdir -p /root/.aws /root/.ssh /config && \
    : "Install firecracker specific binaries" \
+     && arch="$(uname -m)" \
      && firecracker_ver="v1.1.1" \
      && release_url="https://github.com/firecracker-microvm/firecracker/releases" \
      && echo ${release_url}/download/${firecracker_ver}/firecracker-${firecracker_ver}-${arch}.tgz \
