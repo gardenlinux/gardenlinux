@@ -116,6 +116,7 @@ def mk_pipeline_build_task(
         overrides={
             NamedParam(name='modifiers', value=modifier_names),
             NamedParam(name='platform', value=gardenlinux_flavour.platform),
+            NamedParam(name='architecture', value=gardenlinux_flavour.architecture),
          }
     )
     return PipelineTask(
