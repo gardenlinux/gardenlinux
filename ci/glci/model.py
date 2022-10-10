@@ -354,10 +354,10 @@ class AzurePublishedImage:
     '''
 
     transport_state: AzureTransportState
-    urn: typing.Optional[str]
-    id: typing.Optional[str]
     publish_operation_id: str
     golive_operation_id: str
+    urn: typing.Optional[str]
+    id: typing.Optional[str]
 
 
 @dataclasses.dataclass(frozen=True)
