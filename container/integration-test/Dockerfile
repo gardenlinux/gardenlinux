@@ -2,8 +2,12 @@ ARG VERSION
 FROM gardenlinux/base-test:${VERSION}
 ENV SHELL /bin/bash
 
-RUN : "Install AWS requirements" \
-     && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+RUN : "Eval hardware architecture" \
+     && arch="$(uname -m)" \
+     && [ $arch = "x86_64" ] && aliyun_arch=amd64 || aliyun_arch=arm64 \
+     && [ $arch = "x86_64" ] && ossutil_arch=64 || ossutil_arch=arm64 \
+    : "Install AWS requirements" \
+     && curl "https://awscli.amazonaws.com/awscli-exe-linux-${arch}.zip" -o "awscliv2.zip" \
      && unzip awscliv2.zip \
      && ./aws/install \
      && rm -rf ./aws && \
@@ -14,10 +18,12 @@ RUN : "Install AWS requirements" \
      && apt-get install -y google-cloud-sdk && \
     : "Azure and OpenStack cli already installed in gardenlinux/base-test image" \
     : "Install AliCloud specific requirements" \
-     && curl -sL -o /aliyun-cli-linux-3.0.94-amd64.tgz https://github.com/aliyun/aliyun-cli/releases/download/v3.0.94/aliyun-cli-linux-3.0.94-amd64.tgz \
-     && (cd /usr/local/bin ; tar xf /aliyun-cli-linux-3.0.94-amd64.tgz) \
-     && rm /aliyun-cli-linux-3.0.94-amd64.tgz \
-     && curl -sL -o /usr/local/bin/ossutil https://gosspublic.alicdn.com/ossutil/1.7.6/ossutil64?spm=a2c63.p38356.a3.3.44692454KkczI0  \
+     && aliyun_ver="3.0.94" \
+     && ossutil_ver="1.7.6" \
+     && curl -sL -o /aliyun-cli-linux-${aliyun_ver}-${aliyun_arch}.tgz https://github.com/aliyun/aliyun-cli/releases/download/v${aliyun_ver}/aliyun-cli-linux-${aliyun_ver}-${aliyun_arch}.tgz \
+     && (cd /usr/local/bin ; tar xf /aliyun-cli-linux-${aliyun_ver}-${aliyun_arch}.tgz) \
+     && rm /aliyun-cli-linux-${aliyun_ver}-${aliyun_arch}.tgz \
+     && curl -sL -o /usr/local/bin/ossutil https://gosspublic.alicdn.com/ossutil/${ossutil_ver}/ossutil${ossutil_arch}?spm=a2c63.p38356.a3.3.44692454KkczI0  \
      && chmod 755 /usr/local/bin/ossutil \
      && apt-get clean && rm -rf /var/lib/apt/lists/* \
      && mkdir -p /root/.aws /root/.ssh /config && \
