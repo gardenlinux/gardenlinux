@@ -24,6 +24,7 @@ from integration.gcp import GCP
 from integration.ali import ALI
 from integration.openstackccee import OpenStackCCEE
 from integration.chroot import CHROOT
+from integration.firecracker import FireCracker
 from integration.kvm import KVM
 from integration.manual import Manual
 
@@ -52,11 +53,6 @@ def pytest_addoption(parser: Parser):
         nargs="?",
         help="URI for the image to be tested (overwrites value in config.yaml)"
     )
-#    parser.addoption(
-#        "--debug",
-#        action="store_true",
-#        help="debug"
-#    )
 
 
 @pytest.fixture(scope="session")
@@ -183,6 +179,8 @@ def testconfig(pipeline, iaas, pytestconfig):
         elif iaas == 'openstack-ccee':
             pass
         elif iaas == 'chroot':
+            pass
+        elif iaas == 'firecracker':
             pass
         elif iaas == 'kvm':
             pass
@@ -331,6 +329,8 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
         yield from OpenStackCCEE.fixture(testconfig)
     elif iaas == "chroot":
         yield from CHROOT.fixture(testconfig)
+    elif iaas == "firecracker":
+        yield from FireCracker.fixture(testconfig)
     elif iaas == "kvm":
         yield from KVM.fixture(testconfig)
     elif iaas == "ali":
@@ -418,6 +418,16 @@ def non_gcp(iaas):
 def gcp(iaas):
     if iaas != 'gcp':
         pytest.skip('test only supported on gcp')
+
+@pytest.fixture
+def non_firecracker(iaas):
+    if iaas == 'firecracker':
+        pytest.skip('test not supported on firecracker')
+
+@pytest.fixture
+def firecracker(iaas):
+    if iaas != 'firecracker':
+        pytest.skip('test only supported on firecracker')
 
 @pytest.fixture
 def non_kvm(iaas):

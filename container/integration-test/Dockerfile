@@ -1,5 +1,6 @@
 ARG VERSION
 FROM gardenlinux/base-test:${VERSION}
+ENV SHELL /bin/bash
 
 RUN : "Install AWS requirements" \
      && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
@@ -19,6 +20,12 @@ RUN : "Install AWS requirements" \
      && curl -sL -o /usr/local/bin/ossutil https://gosspublic.alicdn.com/ossutil/1.7.6/ossutil64?spm=a2c63.p38356.a3.3.44692454KkczI0  \
      && chmod 755 /usr/local/bin/ossutil \
      && apt-get clean && rm -rf /var/lib/apt/lists/* \
-     && mkdir -p /root/.aws /root/.ssh /config
+     && mkdir -p /root/.aws /root/.ssh /config && \
+   : "Install firecracker specific binaries" \
+     && firecracker_ver="v1.1.1" \
+     && release_url="https://github.com/firecracker-microvm/firecracker/releases" \
+     && echo ${release_url}/download/${firecracker_ver}/firecracker-${firecracker_ver}-${arch}.tgz \
+     && curl -L ${release_url}/download/${firecracker_ver}/firecracker-${firecracker_ver}-${arch}.tgz | tar -xz \
+     && ln -s /release-${firecracker_ver}-${arch}/firecracker-${firecracker_ver}-${arch} /bin/firecracker
 
 WORKDIR /gardenlinux/tests
