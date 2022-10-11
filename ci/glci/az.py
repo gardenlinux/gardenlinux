@@ -22,10 +22,11 @@ import glci.model
 import version as version_util
 
 # For Shared Image Gallery:
+from azure.core.polling import LROPoller
 from azure.identity import ClientSecretCredential
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.storage import StorageManagementClient
-from azure.core.polling import LROPoller
+from azure.mgmt.subscription import SubscriptionClient
 from azure.mgmt.compute.models import (
     CommunityGalleryImageVersion,
     GalleryArtifactVersionSource,
@@ -555,15 +556,17 @@ def upload_and_publish_image(
 
 def _create_shared_image(
     cclient: ComputeManagementClient,
+    sbclient: SubscriptionClient,
     shared_gallery_cfg: glci.model.AzureSharedGalleryCfg,
     resource_group_name: str,
+    subscription_id: str,
     location: str,
     gallery_name: str,
     image_name: str,
     image_version: str,
     source_id: str
 ) -> CommunityGalleryImageVersion:
-    print('Create Gallery image.')
+    logger.info('Create Gallery image.')
     result = cclient.gallery_images.begin_create_or_update(
         resource_group_name=resource_group_name,
         gallery_name=gallery_name,
@@ -583,10 +586,16 @@ def _create_shared_image(
             )
         )
     )
-    print('...waiting for asynchronous operation to complete')
+    logger.info('...waiting for asynchronous operation to complete')
     result = result.result()
 
-    print(f'Create Gallery image version {image_version=}')
+    regions = {
+        l.name
+        for l in sbclient.subscriptions.list_locations(subscription_id)
+    }
+    regions.add(shared_gallery_cfg.location) # ensure that the gallery's location is present
+
+    logger.info(f'Create Gallery image version {image_version=}')
     result: LROPoller[GalleryImageVersion] = cclient.gallery_image_versions.begin_create_or_update(
         resource_group_name=resource_group_name,
         gallery_name=gallery_name,
@@ -598,10 +607,11 @@ def _create_shared_image(
             publishing_profile=GalleryImageVersionPublishingProfile(
                 target_regions=[
                     TargetRegion(
-                        name=shared_gallery_cfg.location,
+                        name=r,
                         storage_account_type=StorageAccountType.STANDARD_LRS,
                         regional_replica_count=1
-                    ),
+                    )
+                    for r in regions
                 ],
                 replica_count=1,
                 exclude_from_latest=False,
@@ -666,11 +676,11 @@ def publish_azure_shared_image_gallery(
     azure_release_artifact = glci.util.virtual_image_artifact_for_platform('azure')
     azure_release_artifact_path = release.path_by_suffix(azure_release_artifact)
 
-    print(f'{service_principal_cfg.subscription_id=}')
     cclient = ComputeManagementClient(credential, service_principal_cfg.subscription_id)
     sclient = StorageManagementClient(credential, service_principal_cfg.subscription_id)
+    sbclient = SubscriptionClient(credential)
 
-    print(f'using container name: {storage_account_cfg.container_name_sig=}')
+    logger.info(f'using container name: {storage_account_cfg.container_name_sig=}')
 
     # prepare a blob container suitable for Shared Image Gallery
     try:
@@ -683,11 +693,11 @@ def publish_azure_shared_image_gallery(
             }
         )
     except ResourceExistsError:
-        print(f'Info: blob container {storage_account_cfg.container_name} already exists.')
+        logger.info(f'Info: blob container {storage_account_cfg.container_name} already exists.')
 
     target_blob_name = _get_target_blob_name(release.version)
 
-    print(f'Copying from S3 to Azure Storage Account blob: {target_blob_name=}')
+    logger.info(f'Copying from S3 to Azure Storage Account blob: {target_blob_name=}')
     image_url = copy_image_from_s3_to_az_storage_account(
         storage_account_cfg=storage_account_cfg,
         s3_client=s3_client,
@@ -696,12 +706,12 @@ def publish_azure_shared_image_gallery(
         target_blob_name=target_blob_name,
         with_sas_token=False,
     )
-    print(f'publish_azure_shared_image_gallery() copied from S3 to Azure Storage: {image_url=}')
+    logger.info(f'publish_azure_shared_image_gallery() copied from S3 to Azure Storage: {image_url=}')
 
     published_version = str(version.parse_to_semver(release.version))
     published_name = target_blob_name
 
-    print(f'Create image {published_name=}')
+    logger.info(f'Create image {published_name=}')
 
     # Note: cclient.images.begin_create_or_update() can update an existing resource. However not all
     # properties can be updated. Especially updating image_url fails with an error.
@@ -711,15 +721,15 @@ def publish_azure_shared_image_gallery(
             resource_group_name=shared_gallery_cfg.resource_group_name,
             image_name=published_name,
         )
-        print(f'Found existing image {img_def.id=}, {img_def.name=}. Delete it first')
+        logger.info(f'Found existing image {img_def.id=}, {img_def.name=}. Delete it first')
         result = cclient.images.begin_delete(
             resource_group_name=shared_gallery_cfg.resource_group_name,
             image_name=published_name,
         )
         result = result.result()
-        print(f'Image deleted {result=}, will re-create now.')
+        logger.info(f'Image deleted {result=}, will re-create now.')
     except ResourceNotFoundError:
-        print('Image does not exist will create it')
+        logger.info('Image does not exist will create it')
 
     result = cclient.images.begin_create_or_update(
             resource_group_name=shared_gallery_cfg.resource_group_name,
@@ -737,14 +747,16 @@ def publish_azure_shared_image_gallery(
                 },
             }
     )
-    print('... waiting for operation to complete')
+    logger.info('... waiting for operation to complete')
     result = result.result()
-    print(f'Image created: {result.id=}, {result.name=}, {result.type=}')
+    logger.info(f'Image created: {result.id=}, {result.name=}, {result.type=}')
 
     shared_img = _create_shared_image(
         cclient=cclient,
+        sbclient=sbclient,
         shared_gallery_cfg=shared_gallery_cfg,
         resource_group_name=shared_gallery_cfg.resource_group_name,
+        subscription_id=service_principal_cfg.subscription_id,
         location=shared_gallery_cfg.location,
         gallery_name=shared_gallery_cfg.gallery_name,
         image_name=shared_gallery_cfg.published_name,
@@ -753,7 +765,7 @@ def publish_azure_shared_image_gallery(
     )
     unique_id = shared_img.unique_id
 
-    print(f'Image shared: {unique_id=}')
+    logger.info(f'Image shared: {unique_id=}')
 
     # create manifest and return this as result:
     published_image = glci.model.AzurePublishedImage(
