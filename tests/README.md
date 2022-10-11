@@ -1,12 +1,20 @@
 # Tests
 
-## Table of Content
+# Table of Content
 - [Tests](#tests)
-  - [Table of Content](#table-of-content)
-  - [General](#general)
-  - [Chart](#chart)
-  - [Unit Tests](#unit-tests)
+- [Table of Content](#table-of-content)
+- [General](#general)
+- [Chart](#chart)
+- [Unit Tests](#unit-tests)
   - [Prerequisites](#prerequisites)
+  - [Location of Unit Tests](#location-of-unit-tests)
+    - [Example](#example)
+    - [Running Unit Tests](#running-unit-tests)
+      - [Automated Unit Tests](#automated-unit-tests)
+      - [chroot](#chroot)
+      - [KVM](#kvm)
+- [Integration Tests](#integration-tests)
+  - [Prerequisites](#prerequisites-1)
   - [Using the tests on supported platforms](#using-the-tests-on-supported-platforms)
     - [General](#general-1)
     - [Public cloud platforms](#public-cloud-platforms)
@@ -26,10 +34,10 @@
         - [Configuration options](#configuration-options-4)
         - [Running the tests](#running-the-tests-4)
     - [Local test environments](#local-test-environments)
-      - [CHROOT](#chroot)
+      - [CHROOT](#chroot-1)
         - [Configuration options](#configuration-options-5)
         - [Running the tests](#running-the-tests-5)
-      - [KVM](#kvm)
+      - [KVM](#kvm-1)
         - [Configuration options](#configuration-options-6)
         - [Running the tests](#running-the-tests-6)
       - [Manual Testing](#manual-testing)
@@ -42,11 +50,11 @@
     - [Run Static Checks](#run-static-checks)
     - [Shellcheck](#shellcheck)
 
-## General
+# General
 
-Garden Linux supports integration testing on all major cloud platforms (Alicloud, AWS, Azur, GCP). To allow testing even without access to any cloud platform we created an universal `kvm` platform that may run locally and is accessed in the same way via a `ssh client object` as any other cloud platform. Therefore, you do not need to adjust tests to perform local integration tests. All platforms are described in detail below. Beside this, you may also find additional tests that may be used for developing and contributing to fit the Garden Linux style guides.
+Garden Linux supports integration testing on all major cloud platforms (Aliyun, AWS, Azur, GCP) as well as regular unit tests. To allow testing even without access to any cloud platform we created an universal `kvm` platform that may run locally and is accessed in the same way via a `ssh client object` as any other cloud platform. Therefore, you do not need to adjust tests to perform local integration tests. Next to this, the `KVM` and `chroot` platform are used for regular `unit tests`. All platforms share Pytest as a common base, are accessed in the same way (via a `RemoteClient` object) and are described in detail below. Beside this, you may also find additional tests that may be used for developing and contributing to fit the Garden Linux style guides.
 
-## Chart
+# Chart
 This chart briefly describes the process of unit-, platform/integration tests.
 
 ```mermaid
@@ -78,32 +86,53 @@ graph TD;
     test04{Feature Tests} --> test_case04[...]
 ```
 
-## Unit Tests
+# Unit Tests
+Unit testing are used to validate and test the functionality of Garden Linux sources and its whole feature sets. When adding a Garden Linux specific feature like `CIS`, all related `CIS` unit tests are executed. Each feature is represented by unit tests to ensure its conformity. Unit tests are defined as a default build target and will automatically run after each build. This also affects automated GitHub builds that are executed by GitHub runners but may also be executed manually on a defined artifact.
 
-**Corner case**: When it comes to unit testing these tests will be executed in a context of integration tests. This means that a specific platform type (`chroot`) of integration tests is used to perform regular `unit tests`. This is due to the fact that we want to achive a common test platform based on `Pytest` and theses ones should still be executable on any platform without further adjustments. However, these tests are still located in a subfolder (`test`) within the features directory and must be prefixed with `test_`. This means, that any feature may provide a subfolder called `test` including their `unit test(s)`. `Pytest` will automaticly include these files and validate if they need to run (e.g. `cis` tests will only run if the given artifact was built with this feature).
-
-**Location of Unit Tests:**
-
-`features/$FEATUR_NAME/test/test_$TEST_NAME.py`
-
-**Example:**
-
-| Feature | Unit test | Test location |
-|---|---|---|
-| $FEATURE_NAME | test_$TEST_NAME.py | features/$FEATUR_NAME/test/test_$TEST_NAME.py |
-| CIS | test_cis.py | [features/cis/test/test_cis.py](../features/cis/test/test_cis.py) |
-
+Unit tests are executed in a context of integration tests. This means that a specific platform type (`chroot`) of integration tests is used to perform regular `unit tests`. This is due to the fact that we want to achieve a common test platform based on `Pytest` and theses ones should still be executable on any platform without further adjustments.
 
 ## Prerequisites
+Build the base test container with all necessary dependencies. This container image will contain all necessary packages and modules
 
-Build the integration test container with all necessary dependencies. This container image will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP). *Note: For `KVM` and `CHROOT` platforms the auto created `gardenlinux/base-test` container can be used (as documented) but will also work with the fullfleged testing container `gardenlinux/integration-test`.*
+ *Note: The `gardenlinux/base-test` will be autocreated by building Garden Linux and usually doesn't need to be execute manually:*
+
+    make --directory=container build-base-test
+
+The resulting container image will be tagged as `gardenlinux/base-test:<version>` with `<version>` being the version that is returned by `bin/garden-version` in this repository. All further tests run inside this container.
+
+## Location of Unit Tests
+These tests are located in a subfolder (`test`) within a feature's directory and must be prefixed with `test_`. This means, that any feature may provide a subfolder called `test` including their `unit test(s)`. `Pytest` will automatically include these files and validate if they need to run (e.g. `cis` tests will only run if the given artifact was built with this feature):
+
+### Example
+| Feature | Unit test | Test location |
+|---|---|---|
+| $FEATURE_NAME | test_$TEST_NAME.py | features/$FEATURE_NAME/test/test_$TEST_NAME.py |
+| CIS | test_cis.py | [features/cis/test/test_cis.py](../features/cis/test/test_cis.py) |
+
+### Running Unit Tests
+Basic unit tests are executed after each build by the `chroot` platform. However, it may be necessary to run tests in a running system instead. Therefore, the `kvm` platform can be used.
+
+#### Automated Unit Tests
+As described, `chroot` tests are automatically performed after each build. By default, this doesn't include the `kvm` platform and may be added by appending `--tests	chroot,kvm` to the `build.sh`.
+
+Example: `./built.sh kvm-dev --tests chroot,kvm`
+
+#### chroot
+`chroot` tests may also be executed on a given artifact afterwards. A full documentation regarding running the unit tests on a `chroot` platform can be found [here](https://github.com/gardenlinux/gardenlinux/tree/main/tests#chroot).
+
+#### KVM
+`kvm` tests may also be executed on a given artifact afterwards. A full documentation regarding running the unit tests on a `kvm` platform can be found [here](https://github.com/gardenlinux/gardenlinux/tree/main/tests#kvm).
+
+
+# Integration Tests
+## Prerequisites
+Build the integration test container with all necessary dependencies. This container image will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP). *Note: For `KVM` and `CHROOT` platforms the auto created `gardenlinux/base-test` container can be used (as documented) but will also work with the full-fledged testing container `gardenlinux/integration-test`.*
 
     make --directory=container build-integration-test
 
-The resulting container image will be tagged as `gardenlinux/integration-test:<version>` with `<version>` being the version that is returned by `bin/garden-version` in this repository. All fruther tests run inside this container.
+The resulting container image will be tagged as `gardenlinux/integration-test:<version>` with `<version>` being the version that is returned by `bin/garden-version` in this repository. All further tests run inside this container.
 
 ## Using the tests on supported platforms
-
 ### General
 
 The integration tests require a config file containing vital information for interacting with the cloud providers. In the following sections, the configuration options are described in general and for each cloud provider individually.
@@ -112,7 +141,7 @@ Since the configuration options are provided as a structured YAML with the cloud
 
 ### Public cloud platforms
 
-These tests test Garden Linux on public cloud providers like Amazons AWS, Googles Cloud Platforms, Microsofts Azure or Aliyuns Allibaba Cloud. You need a valid subscription in these hyperscalers to run the tests.
+These tests test Garden Linux on public cloud providers like Amazons AWS, Googles Cloud Platforms, Microsoft's Azure or Aliyun's Alibaba cloud. You need a valid subscription in these hyperscalers to run the tests.
 
 #### AWS
 
@@ -170,7 +199,7 @@ aws:
     # local/S3 image file to be uploaded for the test (optional/alternatively required)
     image: file:/build/aws/20210714/amd64/bullseye/rootfs.raw
     #image: s3://gardenlinux/objects/078f440a76024ccd1679481708ebfc32f5431569
-    # bucket where the image will be uploded to (optional)
+    # bucket where the image will be uploaded to (optional)
     bucket: import-to-ec2-gardenlinux-validation
 
     # keep instance running after tests finishes (optional)
@@ -182,10 +211,10 @@ aws:
 <details>
 
 - **region** _(required)_: the AWS region in which all test relevant resources will be created
-- **instanc-type** _(optional)_: the instance type that will be used for the EC2 instance used for testing, defaults to `t3.micro` if not specified
+- **instance-type** _(optional)_: the instance type that will be used for the EC2 instance used for testing, defaults to `t3.micro` if not specified
 - **architecture** _(optional)_: the architecture under which the AMI of the image to test should be registered (`x86_64` or `arm64`), must match the instance type, defaults to `x86_64` if not specified
 
-- **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the Hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
+- **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
 
 - **ssh_key_filepath** _(optional)_: The SSH key that will be deployed to the EC2 instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand. If not provided, a new SSH key with 2048 bits will be generated just for the test.
 - **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
@@ -212,7 +241,7 @@ Start Podman container with dependencies:
 - mount AWS credential folder (usually `~/.aws`) to `/root/.aws`
 - mount SSH keys that are used to log in to the virtual machine to `/root/.ssh`
 - mount build result directory to `/build` (if not part of the Garden Linux file tree)
-- mount directory with configfile to `/config`
+- mount directory with config file to `/config`
 
 ```
 sudo podman run -it --rm -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.aws:/root/.aws -v $HOME/.ssh:/root/.ssh -v ~/config:/config gardenlinux/integration-test:`bin/garden-version` /bin/bash
@@ -240,7 +269,7 @@ azure:
     subscription: my-subscription-id
     # the Azure subscription ID to be used (required/alternatively optional)
     subscription_id: 00123456-abcd-1234-5678-1234abcdef78
-    # resource group if ommitted a new group will be created (optional)
+    # resource group if omitted a new group will be created (optional)
     resource_group: rg-gardenlinux-test-01
     # network security group (optional)
     nsg_name: nsg-gardenlinux-test-42
@@ -291,7 +320,7 @@ Only three parameters are required for the test: the Azure `subscription` or `su
 
 - **location** _(required)_: the Azure region in which all test relevant resources will be created
 - **subscription** _(required/optional)_: The Azure subscription (as in subscription name) which is used for creating all relevant resources and running the test. Either the subscription name or the `subscription_id` needs to be provided.
-- **subscription_id** _(required/optioal)_: The Azure subscription (its ID) which is used for creating all relevant resources and running the test. Either the 'subscription' name or its needs to be provided.
+- **subscription_id** _(required/optional)_: The Azure subscription (its ID) which is used for creating all relevant resources and running the test. Either the 'subscription' name or its needs to be provided.
 - **resource_group** _(optional)_: all relevant resources for the integration test will be assigned to an Azure resource group. If you want to reuse an existing resource group, you can specify it here. If left empty, a new resource group gets created for the duration of the test.
 - **nsg_name** _(optional)_: The integration tests need to create a new network security group, this is its name. If you want to reuse an existing security group, specify its name here. If left empty, a new network security group will be created for the duration of the test.
 - **vm_size** _(optional)_: The given size will be used for the Azure virtual machine the test runs on. Check [this document](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes) for a list of possible VM sizes. Remember that the VM size will have an impact on test performance and startup times (which get tested and produce a failure should they exceed 30 seconds). This setting defaults to `Standard_D4_v4`.
@@ -300,7 +329,7 @@ Only three parameters are required for the test: the Azure `subscription` or `su
     - 'V2': Boot = UEFI, Disk controllers = SCSI
 - **accelerated_networking** _(optional)_: Enables [Azure Accelerated Networking](https://docs.microsoft.com/en-us/azure/virtual-network/accelerated-networking-overview) for the VM on which the test is going to run. Defaults to `false`, thus accelerated networking disabled.
 
-- **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the Hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
+- **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
 
 - **storage_account_name** _(optional)_: the storage account to which the image gets uploaded
 - **image_name** _(optional/required)_: If the tests should get executed against an already existing Image, this is its name. Either **image_name** or **image** must be supplied but not both.
@@ -327,7 +356,7 @@ Start Podman container with dependencies:
 - mount Azure credentials to `/root/.azure`
 - mount SSH keys to `/root/.ssh`
 - mount build result directory to `/build` (if not part of the Garden Linux file tree)
-- mount directory with configfile to `/config`
+- mount directory with config file to `/config`
 
 ```
 sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.azure:/root/.azure -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
@@ -369,7 +398,7 @@ ali:
     # mandatory, the security group id
     security_group_id:  # sg-...
 
-    # mandatory, the vswtich id
+    # mandatory, the vswitch id
     vswitch_id:  # vsw-...
 
     # mandatory, region and zone
@@ -420,7 +449,7 @@ The URI can be:
 - **bucket**:  # my-test-upload-bucket
 - **bucket_path**: integration-test
 
-- **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the Hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
+- **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
 
 - **ssh_key_filepath** _(required)_: The SSH key that will be deployed to the ECS instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand.
 - **key_name** _(required)_: The SSH key gets uploaded to ECS, this is the name of the key object resource.
@@ -439,7 +468,7 @@ Start Podman container with dependencies:
 - mount GCP credentials to `/root/.config`
 - mount SSH keys to `/root/.ssh`
 - mount build result directory to `/build` (if not part of the Garden Linux file tree)
-- mount directory with configfile to `/config`
+- mount directory with config file to `/config`
 
 ```
 sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
@@ -540,7 +569,7 @@ Start Podman container with dependencies:
 - mount GCP credentials to `/root/.config`
 - mount SSH keys to `/root/.ssh`
 - mount build result directory to `/build` (if not part of the Garden Linux file tree)
-- mount directory with configfile to `/config`
+- mount directory with config file to `/config`
 
 ```
 sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
@@ -566,11 +595,11 @@ firecracker:
     kernel: /gardenlinux/.build/firecracker.vmlinux
     image: /gardenlinux/.build/firecracker.ext4
     # The filesystem image can optionally turned to readonly
-    # if nessescary (optional)
+    # if necessary (optional)
     # Default: False
     readonly: False
     # Filesystem mount path to mount filesystem image for further
-    # inlcudes and adjustments (optioanl)
+    # includes and adjustments (optional)
     # Default: tmpdir
     image_mount: /tmp/image_mount
 
@@ -629,7 +658,7 @@ firecracker:
 - **image** _(required)_: If the tests should get executed against an already existing image, this is its filesystem image name.
 - **readonly** _(optional)_: Defines if the filesystem image should be mounted as readonly.
 - **image_mount** _(optional)_: Defines the path where the image should be mounted (and where it can be modified).
-- **ip_vm** _(optional)_: Defines the used IP addresss within the Firecracker/microvm instance.
+- **ip_vm** _(optional)_: Defines the used IP address within the Firecracker/microvm instance.
 - **port_ssh_vm** _(optional)_: Defines the used SSH port within the Firecracker/microvm instance.
 - **netmask_vm** _(optional)_: Defines the used netmask (mostly /30) within the Firecracker/microvm instance.
 - **if_vm** _(optional)_: Defines the local interface within the Firecracker/microvm instance.
@@ -737,7 +766,7 @@ KVM tests are designed to run directly on your platform. Currently, AMD64 and AR
 Notes:
  * KVM/QEMU will run inside your `integration-test` Docker container
  * (Default) New temporary SSH keys are auto generated and injected
- * (Default: amd64) AMD64 and ARM64 architecutres are supported
+ * (Default: amd64) AMD64 and ARM64 architectures are supported
 
 Use the following configuration file to proceed; only the path to the image needs to be adjusted:
 
@@ -872,7 +901,7 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 
 #### OpenStack CC EE flavor
 
-Obtain credentials by downloading an OpenStack RC file and source it after adding your password to it. Alternatively you could statically add the password to it (environment variable `OS_PASSWORD`) and specifcy that file in the configuration.
+Obtain credentials by downloading an OpenStack RC file and source it after adding your password to it. Alternatively you could statically add the password to it (environment variable `OS_PASSWORD`) and specify that file in the configuration.
 
 **Note** that the test will not attempt to create networks, security groups, or attached floating IPs to the virtual machines. The security group and network must exist and most likely the test will have to be executed from a machine in the same network.
 
@@ -974,6 +1003,6 @@ in order to auto format the source code run
     pipenv run flake8 .
 
 ### Shellcheck
-Shellcheck is a static analysis tool and allows to analyse and validate given scripts. Tests must be executed explicitly via `pytest shellcheck`. This tool is disjunct from Garden Linux itself and can run on any files within the test container. For more details see Shellcheck [shellcheck/README.md](shellcheck/README.md).
+Shellcheck is a static analysis tool and allows to analyses and validate given scripts. Tests must be executed explicitly via `pytest shellcheck`. This tool is disjunct from Garden Linux itself and can run on any files within the test container. For more details see Shellcheck [shellcheck/README.md](shellcheck/README.md).
 
     pytest shellcheck --severity=error
