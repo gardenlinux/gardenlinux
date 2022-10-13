@@ -1,0 +1,2 @@
+/etc/init.d/fail2ban
+/var/log/fail2ban.log

@@ -1,0 +1,5 @@
+description: "SSH server"
+type: element
+features:
+  include:
+    - fail2ban
