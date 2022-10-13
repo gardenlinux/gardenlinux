@@ -15,7 +15,7 @@ check_version() {
 	if [ ! -f "$kernelDir/$v/linux" ]; then
 		return 1
 	fi
-	if [ ! -f "$kernelDir/$v/initrd" ]; then
+	if [ ! -f "$kernelDir/$v/initrd.img-$v" ]; then
 		return 1
 	fi
 	return 0
@@ -62,7 +62,7 @@ readarray -t vSorted < <(printf '%s\n' "${versions[@]}" | sort -rV)
 		echo "LABEL Linux $v"
 		echo " LINUX ../Default/$v/linux"
 		echo " APPEND root=${DEVICE} ${CMDLINE_LINUX}"
-		echo " INITRD ../Default/${v}/initrd"
+		echo " INITRD ../Default/${v}/initrd.img-$v"
 		echo
 	done
 } > "${configFile}.new" 
