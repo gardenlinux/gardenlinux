@@ -174,7 +174,7 @@ aws:
     # machine/instance type of the test VM - not all machines are available in all regions (optional)
     instance_type: t3.micro
     # architecture of the image and VM to be used (optional)
-    architecture: x86_64
+    architecture: amd64
 
     # test name to be used for naming and/or tagging resources (optional)
     test_name: my_gardenlinux_test
@@ -212,7 +212,7 @@ aws:
 
 - **region** _(required)_: the AWS region in which all test relevant resources will be created
 - **instance-type** _(optional)_: the instance type that will be used for the EC2 instance used for testing, defaults to `t3.micro` if not specified
-- **architecture** _(optional)_: the architecture under which the AMI of the image to test should be registered (`x86_64` or `arm64`), must match the instance type, defaults to `x86_64` if not specified
+- **architecture** _(optional)_: the architecture under which the AMI of the image to test should be registered (`amd64` or `arm64`), must match the instance type, defaults to `amd64` if not specified
 
 - **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
 
@@ -581,9 +581,9 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 
 #### Firecracker (MicroVM)
 
-Firecracker tests are designed to run directly on your platform. Currently, AMD64 and ARM64 architectures are supported without any further cross platfrom support.
+Firecracker tests are designed to run directly on your platform. Currently, AMD64 and ARM64 architectures are supported **without any further cross platform support**.
 
-Notes:
+**Notes**:
 Firecracker is currently limited to Linux base platforms only. Additionally, hardware acceleration is needed. Make sure, `/dev/kvm` is usable.
 
 Use the following test configuration:
@@ -792,12 +792,13 @@ kvm:
     features:
       - "base"
 
-    # Architecture to boot including its
-    # hardware accelerator (optional)
+    # Architecture to boot
     # Default: amd64
-    #arch: arm64
-    #accel: kvm		# [kvm,hvf,none]
+    #arch: amd64
 
+    # Hardware accelerator (kvm, hvf, none)
+    # Default: Will be auto detected (Fallback: None)
+    #accel: kvm
 
     # SSH configuration (required)
     ssh:
@@ -824,6 +825,8 @@ kvm:
 
 - **features** _(optional)_: If not set, the feature tests will be skipped, if set it must contain a list of features. The tests defined in the listed features will be used. The features used to build the image can be found in the _image\_name_.os-release file in the output directory.
 - **ssh_key_filepath** _(required)_: The SSH key that will be injected to the .raw image file and that will be used by the test framework to log on to it. In default, you do **not** need to provide or mount your real SSH key; a new one will be generated and injected by every new run. However, if you really want, a present one can be defined - take care that this will not be overwritten and set `ssh_key_generate` to false.
+- **arch** _(optional)_: The architecture under which the AMI of the image to test should be registered (`amd64` or `arm64`), must match the instance type, defaults to `amd64` if not specified.
+- **accel** _(optional)_: The hardware accelerator to use (`kvm`, `hvf`, `none`). Default: Will be auto detected (Fallback: None).
 - **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
 - **user** _(required)_: The user that will be used for the connection.
 - **keep_running** _(optional)_: If set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow further debugging. Default: `False`.
