@@ -33,7 +33,7 @@ The following rules govern code contributions:
 
 ## Contributing Documentation
 
-You are welcome to contribute documentation to Garden Linux.
+You are welcome to contribute documentation and code to Garden Linux.
 
 The following rules govern documentation contributions:
 
@@ -43,6 +43,32 @@ The following rules govern documentation contributions:
 ## Developer Certificate of Origin
 
 Due to legal reasons, contributors will be asked to accept a Developer Certificate of Origin (DCO) before they submit the first pull request to this projects, this happens in an automated fashion during the submission process. We use the standard DCO text of the Linux Foundation.
+
+## GIT Branch Naming Convention
+
+By contributing to Garden Linux please make sure to take care of our git branch naming convention. All new branches should provide a prefix (mostly `feature/`) followed by a reference to an issue and a summary.
+
+**Example**:
+
+`feature/<issue-id>-<summary>`
+
+which could look like:
+
+`feature/1337-add-fancy-stuff`
+
+This example represents the prefix `feature`, followed by the referenced GitHub issue `1337` with a summary.
+
+Next to this, more specific prefixes (unlike only `feature/`) may be used.
+
+| Prefix | Usage |
+|---|---|
+| feature/ | Adding new feature(s) (in code) to Garden Linux (generic) |
+| doc/ | Adding/Changing documentation in Garden Linux |
+| enhancement/ | Enhancements in Garden Linux that may change code, doc, features, etc. |
+| ci/ | Changes related to our internal CI/CD pipeline (only used by Garden Linux members) |
+| archive/ | Stale branches that are need to keep (not used for new branches) |
+| release/ | Only used by Garden Linux members. By newer release used as a tag instead of branch |
+
 
 ## Pull Request Checklist
 
@@ -60,7 +86,7 @@ Due to legal reasons, contributors will be asked to accept a Developer Certifica
 
 1. Post review:
 
-    1. If a review requires you to change your commit(s), please test the changes again. 
+    1. If a review requires you to change your commit(s), please test the changes again.
     1. Amend the affected commit(s) and force push onto your branch.
     1. Set respective comments in your GitHub review to resolved.
     1. Create a general PR comment to notify the reviewers that your amendments are ready for another round of review.
