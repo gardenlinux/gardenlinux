@@ -4,7 +4,12 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV SHELL /bin/bash
 ENV PYTHONPATH /gardenlinux/bin:/gardenlinux/ci:/gardenlinux/ci/glci:/gardenlinux/tests:/gardenlinux/features
 
-RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc/apt/sources.list \
+# Add letsencrypt rootCA and chain as ca-certificates
+# to make sure deb can be used on https to solve the chicken egg issue.
+# Afterwards, this will be overwritten by installing 'ca-certificates' package
+ADD letsencrypt.pem /etc/ssl/certs/ca-certificates.crt
+
+RUN echo "deb https://deb.debian.org/debian testing main contrib non-free" > /etc/apt/sources.list \
      && apt-get update \
      && apt-get install -y --no-install-recommends \
           curl \

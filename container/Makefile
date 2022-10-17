@@ -39,9 +39,11 @@ build-deb: build
 
 .PHONY: build-base-test
 build-base-test: needslim
+	cp ../cert/letsencrypt/letsencrypt.pem base-test/letsencrypt.pem
 	mkdir -p base-test/_pipfiles
 	cp ../tests/Pipfile* base-test/_pipfiles
 	@$(GARDENLINUX_BUILD_CRE) build -t gardenlinux/base-test:$(VERSION) base-test
+	rm base-test/letsencrypt.pem
 
 .PHONY: build-integration-test
 build-integration-test: build-base-test
