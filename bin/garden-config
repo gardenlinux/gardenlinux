@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 # Contains sources from https://github.com/debuerreotype/debuerreotype
 
 set -Eeuo pipefail
@@ -89,19 +88,3 @@ for i in $(tr ',' '\n' <<< $features); do
 		thisDir=$thisDir targetDir=$targetDir $featureDir/$i/exec.post "$targetDir" | indent
 	fi
 done
-
-# https://github.com/docker/docker/blob/d6f4fe9e38b60f63e429fff7ffced9c26cbf8236/contrib/mkimage/debootstrap#L63-L177
-
-# prevent init scripts from running during install/update
-#cat > "$targetDir/usr/sbin/policy-rc.d" <<-'EOF'
-	#!/bin/sh
-#	exit 101
-#EOF
-#chmod 0755 "$targetDir/usr/sbin/policy-rc.d"
-
-# prevent upstart scripts from running during install/update (but only if the "upstart" package exists)
-#if "$thisDir/garden-chroot" "$targetDir" apt-get install -qq -s upstart &> /dev/null; then
-#	"$thisDir/garden-chroot" "$targetDir" dpkg-divert --local --rename --add /sbin/initctl > /dev/null
-#	cp -a "$targetDir/usr/sbin/policy-rc.d" "$targetDir/sbin/initctl"
-#	sed -i 's/^exit.*/exit 0/' "$targetDir/sbin/initctl"
-#fi
