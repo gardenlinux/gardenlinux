@@ -129,7 +129,6 @@ while read -r partition_file; do
 		mcopy -i $partition_file -po "$syslinux" ::/syslinux/syslinux.cfg
 	# copy initrd.img for legacy boot when secureboot feature is not enabled
 		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$initrd" "::/Default/${kernel_version}/initrd.img-${kernel_version}"
-		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$initrd" "::/legacy/${kernel_version}/initrd.img-${kernel_version}"
 	fi
 	if [[ ! "$secureboot" = "true" ]]; then
 	# clean up EFI directory
