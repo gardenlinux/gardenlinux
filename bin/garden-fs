@@ -30,7 +30,6 @@ while true; do
 done
 
 rootfs="${1:-}";     shift || eusage 'missing rootfs'
-#rootfs_size=$(du -x $rootfs)
 
 tar2ext () {
 	size="500M"
@@ -143,5 +142,3 @@ echo "image ${image[@]}"
 echo "rootfs $roottype"
 echo "rootsize $rootsize"
 echo "rootfolder $rootfs"
-#		loopback=$(losetup -f --show rootfs.ext4)
-#		trap "losetup -d $loopback 2>&1 /dev/null" EXIT

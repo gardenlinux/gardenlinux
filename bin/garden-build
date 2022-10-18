@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
 	--flags 'no-build,debug,skip-tests,suite:,gardenversion:,timestamp:' \
@@ -58,7 +59,6 @@ fi
 exportDir="output"
 outputDir="$exportDir$prefix"
 
-#TODO: clean this up and use volumeDir as outputDir when lessram is used
 if [ "${OUTPUT_DIR+defined}" ]; then
 	outputDir="${OUTPUT_DIR}${prefix}"
 	buildLog="${outputDir}/build.log"
@@ -123,16 +123,8 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 	[ -n "$fullfeatures" ] && configArgs+=( --features "$fullfeatures" )
 
 	garden-config "${configArgs[@]}" rootfs
-	#garden-apt-get rootfs update -qq
-	#garden-apt-get rootfs dist-upgrade -yqq
 
 	aptVersion="$("$scriptsDir/.apt-version.sh" rootfs)"
-
-	# make a couple copies of rootfs so we can create other variants
-	#for variant in slim sbuild; do
-	#	mkdir "rootfs-$variant"
-	#	tar -cC rootfs . | tar -xC "rootfs-$variant"
-	#done
 
 	garden-slimify rootfs
 
