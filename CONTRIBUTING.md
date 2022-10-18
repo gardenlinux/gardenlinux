@@ -65,6 +65,7 @@ Next to this, more specific prefixes (unlike only `feature/`) may be used.
 | feature/ | Adding new feature(s) (in code) to Garden Linux (generic) |
 | doc/ | Adding/Changing documentation in Garden Linux |
 | enhancement/ | Enhancements in Garden Linux that may change code, doc, features, etc. |
+| cleanup/ | Code cleanup (e.g. remove legacy/deprecated content |
 | ci/ | Changes related to our internal CI/CD pipeline (only used by Garden Linux members) |
 | archive/ | Stale branches that are need to keep (not used for new branches) |
 | release/ | Only used by Garden Linux members. By newer release used as a tag instead of branch |
