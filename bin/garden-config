@@ -53,10 +53,13 @@ for i in $(tr ',' '\n' <<< $features); do
         if [ -f "$featureDir/$i/file.include.stat" ]; then
                 printf "### $i:\n"
                 cat $featureDir/$i/file.include.stat | paste -sd' '  - | indent
+		"$thisDir/garden-chroot" "$targetDir" bash -c "
+		set -e
                 while read -r fileUser fileGroup filePerm fileName; do
-                        chown $fileUser:$fileGroup $targetDir$fileName
-                        chmod $filePerm $targetDir$fileName
-                done <<< $(cat $featureDir/$i/file.include.stat)
+                        chown \$fileUser:\$fileGroup \$fileName
+                        chmod \$filePerm \$fileName
+                done <<< \"$(cat $featureDir/$i/file.include.stat)\"
+		"
         fi
 done
 
