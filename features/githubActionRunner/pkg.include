@@ -6,4 +6,4 @@ jq
 make
 nodejs
 podman
-azure-cli
+python3-pip
