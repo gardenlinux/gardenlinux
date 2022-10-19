@@ -43,7 +43,7 @@ printf "## copying from file.include\n"
 for i in $(tr ',' '\n' <<< $features); do
 	if [ -d "$featureDir/$i/file.include" ]; then
 		printf "### $i:\n"
-		tar --owner=0 --group=0 -cC $featureDir/$i/file.include . | tar -xvhC $targetDir 2>&1 | grep -v "^./$" | paste -sd' '  - | indent
+		(umask 0022; tar --mode='a+rwX' -cC $featureDir/$i/file.include . | tar --no-same-owner --no-same-permissions --no-overwrite-dir -xvhC $targetDir 2>&1 | grep -v "^./$" | paste -sd' '  - | indent)
 	fi
 done
 
@@ -52,10 +52,13 @@ for i in $(tr ',' '\n' <<< $features); do
         if [ -f "$featureDir/$i/file.include.stat" ]; then
                 printf "### $i:\n"
                 cat $featureDir/$i/file.include.stat | paste -sd' '  - | indent
+		"$thisDir/garden-chroot" "$targetDir" bash -c "
+		set -e
                 while read -r fileUser fileGroup filePerm fileName; do
-                        chown $fileUser:$fileGroup $targetDir$fileName
-                        chmod $filePerm $targetDir$fileName
-                done <<< $(cat $featureDir/$i/file.include.stat)
+                        chown \$fileUser:\$fileGroup \$fileName
+                        chmod \$filePerm \$fileName
+                done <<< \"$(cat $featureDir/$i/file.include.stat)\"
+		"
         fi
 done
 
