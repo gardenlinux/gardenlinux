@@ -55,7 +55,7 @@ get_os () {
         # Evaluate Distribution
         if [ $host_dist = "centos" ]; then
             os="centos"
-        elif [ $host_dist = "debian" ]; then
+        elif [ $host_dist = "debian" ] || [ $host_dist = "garden" ]; then
             os="debian"
         elif [ $host_dist = "ubuntu" ]; then
             os="ubuntu"

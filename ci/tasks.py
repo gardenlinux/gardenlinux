@@ -72,46 +72,10 @@ def build_task(
     volume_mounts,
     volumes=[],
 ):
-    params = [all_params.build_image, all_params.gardenlinux_build_deb_image, all_params.step_image]
+    params = [all_params.step_image]
 
     clone_step, params_step = steps.clone_step(
         params=all_params,
-        env_vars=env_vars,
-        volume_mounts=volume_mounts,
-    )
-    params += params_step
-
-    pre_build_step, params_step = steps.pre_build_step(
-        params=all_params,
-        env_vars=env_vars,
-        volume_mounts=volume_mounts,
-    )
-    params += params_step
-
-    write_key_step, params_step = steps.write_key_step(
-        params=all_params,
-        env_vars=env_vars,
-        volume_mounts=volume_mounts,
-    )
-    params += params_step
-
-    build_certs_step, params_step = steps.build_cert_step(
-        params=all_params,
-        env_vars=env_vars,
-        volume_mounts=volume_mounts,
-    )
-    params += params_step
-
-    build_image_step, params_step = steps.build_image_step(
-        params=all_params,
-        env_vars=env_vars,
-        volume_mounts=volume_mounts,
-    )
-    params += params_step
-
-    upload_step, params_step = steps.upload_results_step(
-        params=all_params,
-        results=all_results,
         env_vars=env_vars,
         volume_mounts=volume_mounts,
     )
@@ -137,11 +101,6 @@ def build_task(
 
     task_steps = [
         clone_step,
-        pre_build_step,
-        write_key_step,
-        build_certs_step,
-        build_image_step,
-        upload_step,
         promote_step,
     ]
 
@@ -229,20 +188,6 @@ def base_image_build_task(env_vars, volumes, volume_mounts):
     )
     params += params_step
 
-    update_status_step, params_step = steps.status_step(
-        params=all_params,
-        env_vars=env_vars,
-        volume_mounts=volume_mounts,
-    )
-    params += params_step
-
-    build_base_image_step, params_step = steps.build_base_image_step(
-        params=all_params,
-        env_vars=env_vars,
-        volume_mounts=volume_mounts,
-    )
-    params += params_step
-
     build_step_image_step, params_step = steps.build_step_image_step(
         params=all_params,
         env_vars=env_vars,
@@ -257,8 +202,6 @@ def base_image_build_task(env_vars, volumes, volume_mounts):
             params=params,
             steps=[
                 clone_repo_step,
-                update_status_step,
-                build_base_image_step,
                 build_step_image_step,
             ],
             volumes=volumes,

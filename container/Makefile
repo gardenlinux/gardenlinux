@@ -18,10 +18,12 @@ needslim:
 
 .PHONY: build-image
 build-image: needslim
+	cp ../gardenlinux.asc build-image/gardenlinux.asc
 	if [ ! -n "$$($(GARDENLINUX_BUILD_CRE) image ls gardenlinux/build-image:$(VERSION_NUMBER) --format "{{.Repository}}:{{.Tag}}")" ]; then \
 		$(GARDENLINUX_BUILD_CRE) image rm --force $$($(GARDENLINUX_BUILD_CRE) image ls gardenlinux/build-image --format "{{.Repository}}:{{.Tag}}") || true; \
 	fi
 	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/build-image:$(VERSION) -t gardenlinux/build-image:$(VERSION_NUMBER) $(ALTNAME_INTERNAL) build-image; \
+	rm build-image/gardenlinux.asc
 
 .PHONY: build-cert
 build-cert: needslim

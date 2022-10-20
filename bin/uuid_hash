@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 set -Eeufo pipefail
 
 hash=$(sha256sum)

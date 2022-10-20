@@ -299,7 +299,6 @@ def find_release(
     s3_client: 'botocore.client.S3',
     bucket_name: str,
     release_identifier: glci.model.ReleaseIdentifier,
-    prefix: str=glci.model.ReleaseManifest.manifest_key_prefix,
 ) -> typing.Optional[glci.model.OnlineReleaseManifest]:
     normalised = glci.model.normalised_release_identifier
     release_manifest_key = release_identifier.canonical_release_manifest_key()
@@ -335,7 +334,6 @@ def find_releases(
     build_committish: str,
     version: str,
     gardenlinux_epoch: int,
-    prefix: str=glci.model.ReleaseManifest.manifest_key_prefix,
 ) -> typing.Generator[glci.model.OnlineReleaseManifest, None, None]:
     flavours = set(flavour_set.flavours())
 
@@ -353,7 +351,6 @@ def find_releases(
             s3_client=s3_client,
             bucket_name=bucket_name,
             release_identifier=release_identifier,
-            prefix=prefix,
         )
 
         if existing_release:
@@ -502,15 +499,15 @@ def virtual_image_artifact_for_platform(platform: glci.model.Platform) -> str:
     # map each platform to the suffix/object that is of interest.
 
     platform_to_artifact_mapping = {
-        'ali': 'rootfs.qcow2',
-        'aws': 'rootfs.raw',
-        'azure': 'rootfs.vhd',
-        'gcp': 'rootfs-gcpimage.tar.gz',
-        'kvm': 'rootfs.raw',
-        'metal': 'rootfs.tar.xz',
-        'oci': 'rootfs.tar.xz',
-        'openstack': 'rootfs.vmdk',
-        'vmware': 'rootfs.ova',
+        'ali': '.qcow2',
+        'aws': '.raw',
+        'azure': '.vhd',
+        'gcp': '.tar.gz',
+        'kvm': '.raw',
+        'metal': '.tar.xz',
+        'oci': '.tar.xz',
+        'openstack': '.vmdk',
+        'vmware': '.ova',
     }
 
     if not platform in platform_to_artifact_mapping:

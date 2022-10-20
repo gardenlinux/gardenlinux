@@ -1,0 +1,11 @@
+# Make the VM product uuid world readable on Azure virtual machines
+# Taken from https://github.com/Azure/WALinuxAgent/blob/master/config/99-azure-product-uuid.rules
+
+SUBSYSTEM!="dmi", GOTO="product_uuid-exit"
+ATTR{sys_vendor}!="Microsoft Corporation", GOTO="product_uuid-exit"
+ATTR{product_name}!="Virtual Machine", GOTO="product_uuid-exit"
+TEST!="/sys/devices/virtual/dmi/id/product_uuid", GOTO="product_uuid-exit"
+
+RUN+="/bin/chmod 0444 /sys/devices/virtual/dmi/id/product_uuid"
+
+LABEL="product_uuid-exit"

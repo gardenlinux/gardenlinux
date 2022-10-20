@@ -63,10 +63,12 @@ def promote_single_step(
         logger.info('artifacts were already published - exiting now')
         sys.exit(0)
 
-    if release_manifest.platform == 'azure':
+    if release_manifest.platform == 'azure' and not cicd_cfg.publish.azure.shared_gallery_cfg_name:
         # publishing on azure is currently a lengthy process. We do, however, already know the URN
         # it will end up at.
         # Prepare the information here already - will be overwritten if actual publishing proceeds.
+        # Note: This is not done if we will publish using the community gallery (currently
+        # determined by the presence of a Gallery-cfg name)
         publisher_id = cicd_cfg.publish.azure.publisher_id
         offer_id = cicd_cfg.publish.azure.offer_id
         plan_id = cicd_cfg.publish.azure.plan_id
@@ -145,7 +147,6 @@ def promote_step(
         build_committish=committish,
         version=version,
         gardenlinux_epoch=int(gardenlinux_epoch),
-        prefix=glci.model.ReleaseManifest.manifest_key_prefix,
       )
     )
 
@@ -153,7 +154,7 @@ def promote_step(
     is_complete = len(releases) == len(flavours)
     if not is_complete:
         logger.error('release was not complete - will not publish (this indicates a bug!)')
-        sys.exit(1)  # do not signal an error
+        sys.exit(0)  # do not signal an error
 
     logger.debug(build_target_set)
 

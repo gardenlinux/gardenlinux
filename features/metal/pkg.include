@@ -1,5 +1,4 @@
 ethtool
-#busybox
 fdisk
 lvm2
 dosfstools
@@ -7,8 +6,6 @@ efibootmgr
 efitools
 haveged
 ipmitool
-#grub-cloud-amd64
-#irqbalance
 pciutils
 usbutils
 numactl

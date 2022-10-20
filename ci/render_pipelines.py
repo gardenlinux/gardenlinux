@@ -46,9 +46,9 @@ def _generate_task_name(prefix: str, gardenlinux_flavour: GardenlinuxFlavour):
         .replace('_', '').strip('-')\
         .replace('readonly', 'ro')  # hardcoded shortening (length-restriction)
 
-    if len(task_name) > 64:
+    if len(task_name) > 63:
         logger.warning(f'{task_name=} too long - will shorten')
-        task_name = task_name[:64]
+        task_name = task_name[:63]
     return task_name
 
 
@@ -116,6 +116,7 @@ def mk_pipeline_build_task(
         overrides={
             NamedParam(name='modifiers', value=modifier_names),
             NamedParam(name='platform', value=gardenlinux_flavour.platform),
+            NamedParam(name='architecture', value=gardenlinux_flavour.architecture.value),
          }
     )
     return PipelineTask(

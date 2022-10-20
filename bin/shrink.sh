@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -Eeuo pipefail
 set -x
 
@@ -48,6 +47,3 @@ truncate rootfs.raw -s $bytes_end
 sync
 
 dd if=gpt.bak of=rootfs.raw bs=$sectorsize count=$sectors_gpt seek=$sectors_end
-
-#loopback=$(losetup -f --partscan --show rootfs.raw)
-#echo -e "w\ny" | gdisk $loopback

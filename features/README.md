@@ -62,6 +62,7 @@ Following files may be placed inside a single feature folder. Except of the `inf
 | exec.config | Allows to run commands within the `chroot` during the build | File (Shell) |
 | exec.post | Post execution hook: Allows to run commands after `exec.config` is executed | File (Shell) |
 | file.include | Allows to add files to the artifact | Directory (with files): e.g. Rebuild the filesystem structure [file.include/etc/hosts] to overwrite the hostfile |
+| file.include.stat | Allows to edit permissions and owner of files | Per line to define: `$userOwner $groupOwner $filePermission $fileName` |
 | file.exclude | Allows to remove files from the artifact | File (list): Absolute path to file to remove per line |
 | test | Providing feature related unit tests that can be performed on different target platforms by Pytest fixtures | Directory: Contains `PyTest` based unit tests (must be prefixed with `test_` and suffixed by `.py`) |
 
@@ -77,7 +78,7 @@ All files for features are described in detail below.
 | type | String | Feature type | `element` |
 | features | Dict | Includes lists of type `include`, `exclude` and `incompatible` | `incompatible` |
 | (features) include | List (YAML) | List of features that should be included | `- cis` |
-| (features) exclude | List (YAML) | List of features that should be excluded | `- cis` | 
+| (features) exclude | List (YAML) | List of features that should be excluded | `- cis` |
 | (features) incompatible | List (YAML) | List of features that are incompatible and can not run in combination with the parent feature | `- cis` |
 
 **Example:**
@@ -96,11 +97,11 @@ features:
 
 Next to this, there may be some additional fields that are dedicated to their parent feature. These ones will be explained by their parent feature `README.md`.
 
-	
+
 ### README.md
-	
-Besides giving information, this file is also used as information source for the Garden Linux Website: As Unification we decided to add a paragraph after the main title, which is masked by \<website-feature> \</website-feature>, so an extraction script is able to find the relevant content. 
-	
+
+Besides giving information, this file is also used as information source for the Garden Linux Website: As Unification we decided to add a paragraph after the main title, which is masked by \<website-feature> \</website-feature>, so an extraction script is able to find the relevant content.
+
 Have a look at the Raw Code (!) for `README.md` inside [features/example](../features/example) for a detailed example.
 
 
@@ -234,6 +235,21 @@ file.include/
             ├── bar.io.conf
             ├── foo.io.conf
             └── gardenlinux.io.conf
+```
+
+
+### file.include.stat
+Allows to change user, group and file permissions to files within the Garden Linux image. Each line represents a change for a single file.
+
+**Usage:**
+For each line all values need to be defined:
+```$userOwner $groupOwner $filePermission $fileName```
+
+**Example:**
+
+```
+irc irc 777 /etc/test
+nginx nginx 0640 /etc/nginx/conf.d/vhosts/01-www.gardenlinux.io.conf
 ```
 
 

@@ -169,27 +169,20 @@ do
   kubectl apply -n "${tekton_namespace}" -f "${manifest}"
 done
 
-image_build=false
 wait=false
 for arg in "$@"
 do
     echo "Found arg $arg";
-    if [ $arg ==  "--image-build" ]; then
-      image_build=true
-    fi
     if [ $arg ==  "--wait" ]; then
       wait=true
     fi
 done
 
-# --image-build calls triggering the pipeline run for image build
-if [ ${image_build} = true ] ; then
-  echo "Build images"
-  kubectl apply -n "${tekton_namespace}" -f "${pipeline_run}"
-  if [ ${wait} = true ] ; then
-    echo "waiting for new pipelinerun ${pipeline_run}"
-    ci/wait_for_pipelinerun.py --pipelinerun-file "${pipeline_run}" --namespace "${tekton_namespace}"
-  fi
+echo "Promote images"
+kubectl apply -n "${tekton_namespace}" -f "${pipeline_run}"
+if [ ${wait} = true ] ; then
+  echo "waiting for new pipelinerun ${pipeline_run}"
+  ci/wait_for_pipelinerun.py --pipelinerun-file "${pipeline_run}" --namespace "${tekton_namespace}"
 fi
 
 echo 'done: refreshed pipeline(s) for current commit'

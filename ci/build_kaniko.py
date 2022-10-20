@@ -38,8 +38,7 @@ def _prepare_for_kaniko_purgefs() -> _Kaniko_save_fs_state:
     certifi_bak = os.path.join('/', 'kaniko', 'cacert.pem')
     certifi_certs_path = certifi.where()
     if not os.path.exists(certifi_bak):
-        os.link(certifi_certs_path, certifi_bak)
-
+        os.link(certifi_certs_path, certifi_bak, follow_symlinks=True)
     ca_certs_bak = os.path.join('/', 'kaniko', 'ca-certificates.crt')
     ca_certs_path = os.path.join('/', 'etc', 'ssl', 'certs', 'ca-certificates.crt')
     if not os.path.exists(ca_certs_bak):
@@ -87,6 +86,10 @@ def _prepare_for_kaniko_purgefs() -> _Kaniko_save_fs_state:
 
     shutil.rmtree(path=os.path.join('/', 'usr', 'lib'), ignore_errors=True)
     shutil.rmtree(path=os.path.join('/', 'cc', 'utils'), ignore_errors=True)
+
+    # Restore certifi's cert which is part of /usr/lib since we switched to a multi-stage build
+    os.makedirs(os.path.dirname(certifi_certs_path), exist_ok=True)
+    os.link(certifi_bak, certifi_certs_path, follow_symlinks=True)
 
     return _Kaniko_save_fs_state(
         certifi_certs_path=certifi_certs_path,
