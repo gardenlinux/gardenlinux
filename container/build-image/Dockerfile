@@ -21,11 +21,6 @@ RUN : "Initialize the build container package installation" \
 		&& echo 'APT::Default-Release "testing";' > /etc/apt/apt.conf.d/default-testing \
 		&& apt-get update \
 		&& \
-	: "Make AWS Tools available for the build" \
-		&& wget \
-			"https://gardenlinux-aws-kms-pkcs11.s3.eu-central-1.amazonaws.com/aws-sdk-cpp_$arch.deb" \
-			"https://gardenlinux-aws-kms-pkcs11.s3.eu-central-1.amazonaws.com/aws-kms-pkcs11_$arch.deb" \
-		&& \
 	: "Install all required build tools" \
 		&& apt-get install -y --no-install-recommends \
 			debian-ports-archive-keyring \
@@ -52,8 +47,8 @@ RUN : "Initialize the build container package installation" \
 			openssl \
 			libengine-pkcs11-openssl \
 			onmetal-image \
-			"./aws-sdk-cpp_$arch.deb" \
-			"./aws-kms-pkcs11_$arch.deb" \
+			aws-sdk-cpp \
+			aws-kms-pkcs11 \
 		&& apt-get install -t unstable -y --no-install-recommends \
 			binutils-x86-64-linux-gnu \
 			binutils-aarch64-linux-gnu \
