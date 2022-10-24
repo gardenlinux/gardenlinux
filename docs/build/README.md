@@ -1,17 +1,24 @@
 
 **Table of Content**
 - [Introduction](#introduction)
-	- [Build via make (recommended)](#build-via-make-recommended)
-	- [Build via build.sh](#build-via-buildsh)
-	- [Build Artifacts](#build-artifacts)
+  - [Build via make (recommended)](#build-via-make-recommended)
+  - [Build via build.sh](#build-via-buildsh)
+  - [Build Artifacts](#build-artifacts)
 - [Kernel Module](#kernel-module)
-	- [build-kernelmodule container](#build-kernelmodule-container)
+  - [build-kernelmodule container](#build-kernelmodule-container)
 - [Package Build](#package-build)
-	- [Git Source](#git-source)
-	- [Snapshot Source](#snapshot-source)
+  - [Git Source](#git-source)
+  - [Snapshot Source](#snapshot-source)
 - [Customize](#customize)
   - [Local Packages](#local-packages)
   - [Replace Kernel](#replace-kernel)
+- [Build in an air-gapped environment](#build-in-an-air-gapped-environment)
+  - [Requirements](#requirements)
+    - [Build tools](#build-tools)
+    - [Container Runtime Environment (CRE)](#container-runtime-environment-cre)
+    - [Sources](#sources)
+    - [Container images](#container-images)
+    - [Example](#example)
 
 # Introduction
 
@@ -20,16 +27,16 @@ The following section explains how to create your own build.
 Creating your own build also allows to customize the image to your requirements.
 
 ## Build via make (recommended)
-Use the [Makefile](/Makefile) to build a Garden Linux Image with a pre-defined set of features. 
+Use the [Makefile](/Makefile) to build a Garden Linux Image with a pre-defined set of features.
 ```
-# Example 
+# Example
 make metal-dev
 ```
-For more targets, checkout the [Makefile](/Makefile). The targets call `build.sh` with a pre-defined set of features.  
+For more targets, checkout the [Makefile](/Makefile). The targets call `build.sh` with a pre-defined set of features.
 
 You can also customize a Makefile target to your needs, e.g. by adding a feature.
 
-## Build via build.sh 
+## Build via build.sh
 If you really want to directly call build.sh, you can checkout [Makefile](/Makefile) for some good examples and start from there.
 
 In general, the `build.sh` starts and prepares the build container, in which `garden-build` gets executed. Afterwards, PyTest
@@ -37,14 +44,14 @@ based unit tests are performed.
 
 ## Build Artifacts
 Build artifacts are stored in the output folder (default `.build/`).
-Some artifacts will only be created by certain features. 
+Some artifacts will only be created by certain features.
 
 # Kernel Module
 Drivers/LKMs not included in upstream linux of kernel.org can be build out of tree.
 
-## build-kernelmodule container 
-We provide a build container that come with Garden Linux linux-headers installed. 
-These build containers have a `uname -r` wrapper installed. 
+## build-kernelmodule container
+We provide a build container that come with Garden Linux linux-headers installed.
+These build containers have a `uname -r` wrapper installed.
 This wrapper outputs the latest installed kernel header in that container.
 
 Container is created here: https://gitlab.com/gardenlinux/driver/gardenlinux-driver-build-container
@@ -62,17 +69,17 @@ docker pull registry.gitlab.com/gardenlinux/driver/gardenlinux-driver-build-cont
 # Package Build
 Packages provided via the [repository](/docs/repository/README.md) are built, signed and deployed via the Garden Linux gitlab pipelines.
 
-The https://gitlab.com/gardenlinux/gardenlinux-package-build contains the central gitlab pipelines, used by packages in the 
+The https://gitlab.com/gardenlinux/gardenlinux-package-build contains the central gitlab pipelines, used by packages in the
 [Garden Linux Gitlab Group ](https://gitlab.com/gardenlinux).
 
-## Git Source 
+## Git Source
 To create a package from a git source that contains already the `Debian` files you need to:
 
 1. create a gitlab repository in the gardenlinux group
 1. add a `.gitlab-ci.yml`
 1. Add a (unique) git tag to the repository. The git tag must contain the correct version name.
 
-<details> 
+<details>
     <summary>Example: .gitlab-ci.yml</summary>
 
 ```
@@ -93,20 +100,20 @@ include:
 
 ## Snapshot Source
 
-To create a new package version that is compatible with old runtime dependency (e.g. glibc), 
+To create a new package version that is compatible with old runtime dependency (e.g. glibc),
 you need to:
 
 1. Create a gitlab repository, or a branch if there exists already a gitlab repo for a non-backported version
 1. Copy the relevant pipelines to the new gitlab repo/branch
     * https://gitlab.com/gardenlinux/gardenlinux-package-build/-/blob/main/pipeline/build.yml
-1. Modify the pipelines to use 
+1. Modify the pipelines to use
     * a specific snapshot docker image for the build, for example: `Debian:unstable-20211011-slim`
     * a specific apr repository for the build, for example: `deb http://snapshot.debian.org/archive/debian/20211028T151025Z/ bookworm main`
 1. Download and install additional dependencies from snapshot.debian.org, for example `https://snapshot.debian.org/archive/debian/20211028T151025Z/pool/`
 1. Configure the .gitlab-ci.yml of the new gitlab repo/branch to use the local versions of the pipelines
 
 
-<details> 
+<details>
     <summary>Example: .gitlab-ci.yml</summary>
 
 ```
@@ -116,9 +123,9 @@ include:
   - pipeline/workflow.yml
 - local: .gitlab/ci/source.yml
 - local: .gitlab/ci/build.yml
-``` 
+```
 
-</details> 
+</details>
 
 # Customize
 When customizing your own build of Garden Linux you may want to add your own packages that are not in the Garden Linux repository or add your own kernel.
@@ -136,7 +143,7 @@ enabled the image build will fail. The recommended way to use a custom kernel is
 
 To replace the Garden Linux kernel with a custom kernel, place the package with the custom kernel in the `local_packages` directory as describe in the
 [Local Packages](#local-packages) chapter. For the next steps we recommend to create your own new feature in the [features](/features) directory and
-place a `pkg.include`, `pgk.exclude` and an `info.yaml` in your feature directory. Last but not least add your new feature to the build target you are 
+place a `pkg.include`, `pgk.exclude` and an `info.yaml` in your feature directory. Last but not least add your new feature to the build target you are
 building in the [Makefile](/Makefile).
 
 The `pkg.include` file should contain the package name of the custom kernel you placed in the `local_packages` directory and any other package you
@@ -157,3 +164,68 @@ type: flag
 </details>
 
 For more options take a look at the [info.yaml](/features/example/info.yaml) in the example feature.
+
+# Build in an air-gapped environment
+Garden Linux also supports building in an air-gapped environments (offline) without any further internet connectivity. However, this requires to obtain all needed dependencies before. Keep in mind, that unit tests that require external connection are unsupported, all other ones remain usable.
+
+## Requirements
+Make sure to match this requirements to build Garden Linux without any further internet connectivity.
+
+### Build tools
+Ensure that the build system satisfies the build requirements. This may depend on the used operating system and distribution. For the common ones see also [README.md](https://github.com/gardenlinux/gardenlinux#build-requirements).
+
+### Container Runtime Environment (CRE)
+Garden Linux heavily relies on containers for building the artifacts. Therefore, a CRE is required to build and to perform further unit tests. Currently, Podman and Docker are supported.
+
+### Sources
+At lease the following GitHub projects should be downloaded and shipped:
+
+ * Garden Linux source (download [repository](https://github.com/gardenlinux/gardenlinux/archive/refs/heads/main.zip))
+
+You may use the GIT, ZIP archive or any other way but keep in mind to have the tools to unarchive the files (e.g. `unzip` for the zip archive).
+
+### Container images
+While the whole build process is done within a container the following images related to your host build architecture are needed:
+
+ * gardenlinux/build-cert:today
+ * gardenlinux/build-image:today
+ * gardenlinux/base-test:today
+
+Currently, these images are not public and need to be created on a different machine before.
+
+### Example
+This example provides a short overview how to proceed. First, we start on a machine with internet access (called `A`). We expect to already fulfill the build requirements on both machines and may copy our container images to `B` afterwards.
+
+On machine `A`:
+```
+$> mkdir gardenlinux_build
+$> cd gardenlinux_build
+# Get Garden Linux sources
+$> wget https://github.com/gardenlinux/gardenlinux/archive/refs/heads/main.zip
+$> unzip main.zip
+$> cd gardenlinux/container
+# Build the container images
+$> make needslim
+$> make build-cert
+$> make build-image
+$> make build-base-test
+$> cd ../..
+# Export container images (you may just replace docker by podman if needed)
+$> docker save -o gl_slim.container gardenlinux/slim:today
+$> docker save -o gl_build_cert.container gardenlinux/build-cert:today
+$> docker save -o gl_build_image.container gardenlinux/build-image:today
+$> docker save -o gl_base_test.container gardenlinux/base-test:today
+```
+
+You can now copy the whole `gardenlinux_build` folder to an air-gapped system (`B`) and perform an offline build by running the following commands on machine `B`:
+```
+$> cd gardenlinux_build
+# Import container images (you may just replace docker by podman if needed)
+$> docker load -i gl_slim.container
+$> docker load -i gl_build_cert.container
+$> docker load -i gl_build_image.container
+$> docker load -i gl_base_test.container
+# Create your desired image (e.g. metal)
+$> cd gardenlinux
+$> make metal
+```
