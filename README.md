@@ -56,7 +56,7 @@
   - Bare-metal systems
 
 ## Quick Start
-The entire build runs in a <i>privileged</i> Podman/Docker container that orchestrates all further actions. If not explicitly skipped, unit tests will be performed. Extended capabilities are at least needed for loop back support. Currently `AMD64` and `ARM64` architectures are supported. Garden Linux can also be built in an *air-gapped* environment (offline)  without any further internet connectivity. However, this requires to obtain all needed dependencies before. Further instructions can be found [here](https://github.com/gardenlinux/gardenlinux/tree/main/docs/build##build-in-an-air-gapped-environment).
+The entire build runs in a <i>privileged</i> Podman/Docker container that orchestrates all further actions. If not explicitly skipped, unit tests will be performed. Extended capabilities are at least needed for loop back support. Currently `AMD64` and `ARM64` architectures are supported. Garden Linux can also be built in an *air-gapped* environment (offline) without any further internet connectivity. However, this requires to obtain all needed dependencies before. Further instructions can be found [here](https://github.com/gardenlinux/gardenlinux/tree/main/docs/build#build-in-an-air-gapped-environment).
 
 By default, Garden Linux uses [Podman](https://podman.io/) as container runtime (`Docker` is optionally supported) for building Garden Linux images (Garden Linux artifacts however will have Docker in them to maintain compatibility with older Kubernetes versions). If - for whatever reason - you want or need to use Docker instead, you can set the environment variable `GARDENLINUX_BUILD_CRE=docker` before invoking the build.
 
