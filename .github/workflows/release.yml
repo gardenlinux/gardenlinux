@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: create GitHub release
-        run: .github/workflows/release.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} create "${{ inputs.type == 'beta' && 'beta_' || '' }}${{ inputs.version }}" "${{ inputs.version }}" > .github_release
+        run: .github/workflows/release.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} create "${{ inputs.type == 'beta' && 'beta_' || '' }}${{ inputs.version }}" "${{ inputs.commit }}" "${{ inputs.version }}" > .github_release
       - uses: actions/upload-artifact@v2
         with:
           name: release

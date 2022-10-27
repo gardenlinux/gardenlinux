@@ -36,6 +36,7 @@ action="$1"; shift
 case "$action" in
 	"create")
 		tag="$1"; shift
+		commit="$1"; shift
 		name="$1"; shift
 
 		release="$(get "releases/tags/$tag" | jq -r '.id' || true)"
@@ -43,6 +44,7 @@ case "$action" in
 
 		release="$(post "releases" '{
 			"tag_name": "'$tag'",
+			"target_commitish": "'$commit'",
 			"name": "'$name'",
 			"body": "auto release, created by GitHub action",
 			"prerelease": true
