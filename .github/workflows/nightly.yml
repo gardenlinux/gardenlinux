@@ -9,7 +9,7 @@ jobs:
     permissions:
       id-token: write
     with:
-      version: now
+      version: yesterday
       default_modifier: "-prod"
       use_kms: true
     secrets:
