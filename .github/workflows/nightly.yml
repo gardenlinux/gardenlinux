@@ -3,13 +3,17 @@ on:
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:
+    inputs:
+      version:
+        type: string
+        default: now
 jobs:
   build:
     uses: ./.github/workflows/build.yml
     permissions:
       id-token: write
     with:
-      version: yesterday
+      version: ${{ inputs.version || 'now' }}
       default_modifier: "-prod"
       use_kms: true
     secrets:
@@ -26,6 +30,7 @@ jobs:
       packages: write
     uses: ./.github/workflows/tests.yml
     with:
+      version: ${{ inputs.version || 'now' }}
       default_modifier: "-prod"
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
