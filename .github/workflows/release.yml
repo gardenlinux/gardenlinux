@@ -70,12 +70,13 @@ jobs:
       fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
-        cname: [ gcp-gardener_prod, aws-gardener_prod, azure-gardener_prod ]
+        target: [ gcp, aws, azure ]
+        modifier: [ -prod ]
         exclude:
           - architecture: arm64
-            cname: gcp-gardener_prod
+            target: gcp
           - architecture: arm64
-            cname: azure-gardener_prod
+            target: azure
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
@@ -89,13 +90,13 @@ jobs:
       - name: download build artifacts from S3
         run: |
           commit="$(echo "${{ inputs.commit }}" | cut -c -7)"
-          prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
+          prefix="${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
           aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/integration-tests-logs/$prefix.integration-tests-log" ./
       - name: upload to release
         run: |
           commit="$(echo "${{ inputs.commit }}" | cut -c -7)"
           release="$(cat .github_release)"
-          prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
+          prefix="${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
           echo "$release $prefix.integration-tests-log"
           ls -lah "$prefix.integration-tests-log"
           echo "$prefix.integration-tests-log" | .github/workflows/release.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
