@@ -65,4 +65,4 @@ jobs:
         with:
           name: test-log-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
       - name: upload to S3 bucket ${{ secrets.bucket }}
-        run: .github/workflows/upload_to_s3.sh ${{ secrets.bucket }} ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.integration-tests-log
+        run: aws s3 cp "${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-"*.integration-tests-log "s3://${{ secrets.bucket }}/integration-tests-logs/"
