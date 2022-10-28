@@ -2,6 +2,9 @@ name: tests
 on:
   workflow_call:
     inputs:
+      version:
+        type: string
+        default: today
       default_modifier:
         type: string
         default: ""
@@ -94,6 +97,11 @@ jobs:
         client-id: ${{ secrets.az_client_id }}
         tenant-id: ${{ secrets.az_tenant_id }}
         subscription-id: ${{ secrets.az_subscription_id }}
+
+    - name: set VERSION=${{ inputs.version }}
+        run: |
+          bin/garden-version "${{ inputs.version }}" | tee VERSION
+          git update-index --assume-unchanged VERSION
 
     - name: start platform test for ${{ matrix.target }}
       run: |
