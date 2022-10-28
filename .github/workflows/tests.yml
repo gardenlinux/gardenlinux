@@ -99,9 +99,9 @@ jobs:
         subscription-id: ${{ secrets.az_subscription_id }}
 
     - name: set VERSION=${{ inputs.version }}
-        run: |
-          bin/garden-version "${{ inputs.version }}" | tee VERSION
-          git update-index --assume-unchanged VERSION
+      run: |
+        bin/garden-version "${{ inputs.version }}" | tee VERSION
+        git update-index --assume-unchanged VERSION
 
     - name: start platform test for ${{ matrix.target }}
       run: |
