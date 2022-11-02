@@ -1,9 +1,20 @@
 
 **Table of Content**
 - [Introduction](#introduction)
+- [Building](#building)
   - [Build via make (recommended)](#build-via-make-recommended)
   - [Build via build.sh](#build-via-buildsh)
   - [Build Artifacts](#build-artifacts)
+    - [Output files](#output-files)
+    - [Output image types](#output-image-types)
+    - [Naming of output files](#naming-of-output-files)
+  - [Build in an air-gapped environment](#build-in-an-air-gapped-environment)
+    - [Requirements](#requirements)
+      - [Build tools](#build-tools)
+      - [Container Runtime Environment (CRE)](#container-runtime-environment-cre)
+    - [Sources](#sources)
+      - [Container images](#container-images)
+      - [Example](#example)
 - [Kernel Module](#kernel-module)
   - [build-kernelmodule container](#build-kernelmodule-container)
 - [Package Build](#package-build)
@@ -12,19 +23,14 @@
 - [Customize](#customize)
   - [Local Packages](#local-packages)
   - [Replace Kernel](#replace-kernel)
-- [Build in an air-gapped environment](#build-in-an-air-gapped-environment)
-  - [Requirements](#requirements)
-    - [Build tools](#build-tools)
-    - [Container Runtime Environment (CRE)](#container-runtime-environment-cre)
-    - [Sources](#sources)
-    - [Container images](#container-images)
-    - [Example](#example)
 
 # Introduction
 
 Garden Linux offers pre-built images via the [Github Release feature](https://github.com/gardenlinux/gardenlinux/releases) in non-regular intervals.
 The following section explains how to create your own build.
 Creating your own build also allows to customize the image to your requirements.
+
+# Building
 
 ## Build via make (recommended)
 Use the [Makefile](/Makefile) to build a Garden Linux Image with a pre-defined set of features.
@@ -43,8 +49,111 @@ In general, the `build.sh` starts and prepares the build container, in which `ga
 based unit tests are performed.
 
 ## Build Artifacts
-Build artifacts are stored in the output folder (default `.build/`).
-Some artifacts will only be created by certain features.
+Build artifacts are stored in the output folder (default: `.build/`). The output folder can be overwritten by appending a directory name when invoking the `build.sh` (see also: [here](https://github.com/gardenlinux/gardenlinux/blob/main/build.sh#L8) or the help output on `stdout`).
+
+### Output files
+During the build multiple output files are created. Next to the primary image (the output file may differ based on the target hyperscaler [e.g. `.vhd` for Azure or `.ova` for VMWare]) further meta files and a rootfs for debugging are created.
+
+**Output:**
+| File | Description | Example |
+|----------|:-------------:|:-------------:|
+| Image | The bootable image for the related architecture | kvm_dev-arm64-today-local.raw|
+| rootfs| A compressed tar ball including the whole rootfs with all features | kvm_dev-arm64-today-local.tar.xz |
+| rootfs SHA256 | The SHA256 checksum for the rootfs | kvm_dev-arm64-today-local.tar.xz.sha256 |
+| fullfeature.info | A comma separated list oft features included the image | fullfeature.info |
+| OS release file | A copy of `/etc/os-release` including all important information | kvm_dev-arm64-today-local.os-release |
+| Package manifest | Containing all .deb based packages that are used | kvm_dev-arm64-today-local.manifest |
+
+*Hint: Keep in mind, that some artifacts will only be created by certain features. Image suffixes may also differ based on the defined target hyperscaler. More information can be found within the next chapter.*
+
+### Output image types
+Overview of all possible image output filetypes regarding the defined target hyperscaler/platform:
+
+| Hyperscaler/Platform | Suffix |
+|----------|:-------------:|
+| Aliyun | `.qcow2` |
+| AWS | `.raw` |
+| Azure | `.vhd` |
+| chroot | `.tar.gz` |
+| Firecracker | `.vmlinux` (kernel image) <br> `.ext4` (fs) |
+| GCP | `.tar.gz` |
+| KVM | `.raw` |
+| OpenStack | `.vmdk` |
+| VMWare | `.ova` |
+
+
+
+### Naming of output files
+The naming convention of output files is related to the Garden Linux [feature system](https://github.com/gardenlinux/gardenlinux/blob/main/features/README.md#general) where the `feature types` are represented in a hierarchy order together with the desired target hardware architecture. This results in a file name like:
+
+```
+<platform>_<feature>-<modifier>-<architecture>-<version>
+```
+
+## Build in an air-gapped environment
+Garden Linux also supports building in an air-gapped environments (offline) without any further internet connectivity. However, this requires to obtain all needed dependencies before. Keep in mind, that unit tests that require external connection are unsupported, all other ones remain usable.
+
+### Requirements
+Make sure to match this requirements to build Garden Linux without any further internet connectivity.
+
+#### Build tools
+Ensure that the build system satisfies the build requirements. This may depend on the used operating system and distribution. For the common ones see also [README.md](https://github.com/gardenlinux/gardenlinux#build-requirements).
+
+#### Container Runtime Environment (CRE)
+Garden Linux heavily relies on containers for building the artifacts. Therefore, a CRE is required to build and to perform further unit tests. Currently, Podman and Docker are supported.
+
+### Sources
+At lease the following GitHub projects should be downloaded and shipped:
+
+ * Garden Linux source (download [repository](https://github.com/gardenlinux/gardenlinux/archive/refs/heads/main.zip))
+
+You may use the GIT, ZIP archive or any other way but keep in mind to have the tools to unarchive the files (e.g. `unzip` for the zip archive).
+
+#### Container images
+While the whole build process is done within a container the following images related to your host build architecture are needed:
+
+ * gardenlinux/build-cert:today
+ * gardenlinux/build-image:today
+ * gardenlinux/base-test:today
+
+Currently, these images are not public and need to be created on a different machine before.
+
+#### Example
+This example provides a short overview how to proceed. First, we start on a machine with internet access (called `A`). We expect to already fulfill the build requirements on both machines and may copy our container images to `B` afterwards.
+
+On machine `A`:
+```
+$> mkdir gardenlinux_build
+$> cd gardenlinux_build
+# Get Garden Linux sources
+$> wget https://github.com/gardenlinux/gardenlinux/archive/refs/heads/main.zip
+$> unzip main.zip
+$> cd gardenlinux/container
+# Build the container images
+$> make needslim
+$> make build-cert
+$> make build-image
+$> make build-base-test
+$> cd ../..
+# Export container images (you may just replace docker by podman if needed)
+$> docker save -o gl_slim.container gardenlinux/slim:today
+$> docker save -o gl_build_cert.container gardenlinux/build-cert:today
+$> docker save -o gl_build_image.container gardenlinux/build-image:today
+$> docker save -o gl_base_test.container gardenlinux/base-test:today
+```
+
+You can now copy the whole `gardenlinux_build` folder to an air-gapped system (`B`) and perform an offline build by running the following commands on machine `B`:
+```
+$> cd gardenlinux_build
+# Import container images (you may just replace docker by podman if needed)
+$> docker load -i gl_slim.container
+$> docker load -i gl_build_cert.container
+$> docker load -i gl_build_image.container
+$> docker load -i gl_base_test.container
+# Create your desired image (e.g. metal)
+$> cd gardenlinux
+$> make metal
+```
 
 # Kernel Module
 Drivers/LKMs not included in upstream linux of kernel.org can be build out of tree.
@@ -136,6 +245,8 @@ To make a package available create the directory `local_packages` in the root of
 Place all you own packages in that directory and add the package name (the package name is the name you would use to install it via `apt` and not the
 file name of the package) to the `pkg.include` file of the feature that needs the package.
 
+*Hint: You may also define a remote URL to a .deb package within the `pkg.include` file like `https://repo.gardenlinux.io/mirror/vim/vim.deb`.*
+
 ## Replace Kernel
 Building a Garden Linux image with more than one kernel install is not supported. In general it should work with legacy boot, but with uefi boot it
 will not be possible to choose the kernel at boot time since Garden Linux does not offer a menu for that. With the `_readonly` or `_secureboot` feature
@@ -164,68 +275,3 @@ type: flag
 </details>
 
 For more options take a look at the [info.yaml](/features/example/info.yaml) in the example feature.
-
-# Build in an air-gapped environment
-Garden Linux also supports building in an air-gapped environments (offline) without any further internet connectivity. However, this requires to obtain all needed dependencies before. Keep in mind, that unit tests that require external connection are unsupported, all other ones remain usable.
-
-## Requirements
-Make sure to match this requirements to build Garden Linux without any further internet connectivity.
-
-### Build tools
-Ensure that the build system satisfies the build requirements. This may depend on the used operating system and distribution. For the common ones see also [README.md](https://github.com/gardenlinux/gardenlinux#build-requirements).
-
-### Container Runtime Environment (CRE)
-Garden Linux heavily relies on containers for building the artifacts. Therefore, a CRE is required to build and to perform further unit tests. Currently, Podman and Docker are supported.
-
-### Sources
-At lease the following GitHub projects should be downloaded and shipped:
-
- * Garden Linux source (download [repository](https://github.com/gardenlinux/gardenlinux/archive/refs/heads/main.zip))
-
-You may use the GIT, ZIP archive or any other way but keep in mind to have the tools to unarchive the files (e.g. `unzip` for the zip archive).
-
-### Container images
-While the whole build process is done within a container the following images related to your host build architecture are needed:
-
- * gardenlinux/build-cert:today
- * gardenlinux/build-image:today
- * gardenlinux/base-test:today
-
-Currently, these images are not public and need to be created on a different machine before.
-
-### Example
-This example provides a short overview how to proceed. First, we start on a machine with internet access (called `A`). We expect to already fulfill the build requirements on both machines and may copy our container images to `B` afterwards.
-
-On machine `A`:
-```
-$> mkdir gardenlinux_build
-$> cd gardenlinux_build
-# Get Garden Linux sources
-$> wget https://github.com/gardenlinux/gardenlinux/archive/refs/heads/main.zip
-$> unzip main.zip
-$> cd gardenlinux/container
-# Build the container images
-$> make needslim
-$> make build-cert
-$> make build-image
-$> make build-base-test
-$> cd ../..
-# Export container images (you may just replace docker by podman if needed)
-$> docker save -o gl_slim.container gardenlinux/slim:today
-$> docker save -o gl_build_cert.container gardenlinux/build-cert:today
-$> docker save -o gl_build_image.container gardenlinux/build-image:today
-$> docker save -o gl_base_test.container gardenlinux/base-test:today
-```
-
-You can now copy the whole `gardenlinux_build` folder to an air-gapped system (`B`) and perform an offline build by running the following commands on machine `B`:
-```
-$> cd gardenlinux_build
-# Import container images (you may just replace docker by podman if needed)
-$> docker load -i gl_slim.container
-$> docker load -i gl_build_cert.container
-$> docker load -i gl_build_image.container
-$> docker load -i gl_base_test.container
-# Create your desired image (e.g. metal)
-$> cd gardenlinux
-$> make metal
-```
