@@ -62,6 +62,9 @@ while true; do
 	esac
 done
 
+# Validate checksums
+sha256sum -c --ignore-missing checksums.sha256
+
 dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
 outputDir="${1:-$output}";	shift || true
 version="$(${thisDir}/bin/garden-version ${1:-})";	shift || true
