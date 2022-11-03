@@ -1,13 +1,16 @@
 ARG VERSION
 FROM gardenlinux/base-test:${VERSION}
 ENV SHELL /bin/bash
+COPY checksums.sha256 /gardenlinux/tests/checksums.sha256
 
 RUN : "Eval hardware architecture" \
      && arch="$(uname -m)" \
+     && [ $arch = "x86_64" ] && aws_arch=x86_64 || aws_arch=aarch64 \
      && [ $arch = "x86_64" ] && aliyun_arch=amd64 || aliyun_arch=arm64 \
      && [ $arch = "x86_64" ] && ossutil_arch=64 || ossutil_arch=arm64 \
     : "Install AWS requirements" \
-     && curl "https://awscli.amazonaws.com/awscli-exe-linux-${arch}.zip" -o "awscliv2.zip" \
+     && curl "https://awscli.amazonaws.com/awscli-exe-linux-${aws_arch}.zip" -o "awscliv2.zip" \
+     && ln -s awscliv2.zip awscli-exe-linux-${aws_arch}.zip \
      && unzip awscliv2.zip \
      && ./aws/install \
      && rm -rf ./aws && \
@@ -24,6 +27,7 @@ RUN : "Eval hardware architecture" \
      && (cd /usr/local/bin ; tar xf /aliyun-cli-linux-${aliyun_ver}-${aliyun_arch}.tgz) \
      && rm /aliyun-cli-linux-${aliyun_ver}-${aliyun_arch}.tgz \
      && curl -sL -o /usr/local/bin/ossutil https://gosspublic.alicdn.com/ossutil/${ossutil_ver}/ossutil${ossutil_arch}?spm=a2c63.p38356.a3.3.44692454KkczI0  \
+     && ln -s /usr/local/bin/ossutil /ossutil${ossutil_arch}?spm=a2c63.p38356.a3.3.44692454KkczI0 \
      && chmod 755 /usr/local/bin/ossutil \
      && apt-get clean && rm -rf /var/lib/apt/lists/* \
      && mkdir -p /root/.aws /root/.ssh /config && \
@@ -32,7 +36,9 @@ RUN : "Eval hardware architecture" \
      && firecracker_ver="v1.1.1" \
      && release_url="https://github.com/firecracker-microvm/firecracker/releases" \
      && echo ${release_url}/download/${firecracker_ver}/firecracker-${firecracker_ver}-${arch}.tgz \
-     && curl -L ${release_url}/download/${firecracker_ver}/firecracker-${firecracker_ver}-${arch}.tgz | tar -xz \
-     && ln -s /release-${firecracker_ver}-${arch}/firecracker-${firecracker_ver}-${arch} /bin/firecracker
+     && wget ${release_url}/download/${firecracker_ver}/firecracker-${firecracker_ver}-${arch}.tgz \
+     && tar xfvz firecracker-${firecracker_ver}-${arch}.tgz \
+     && ln -s /release-${firecracker_ver}-${arch}/firecracker-${firecracker_ver}-${arch} /bin/firecracker \
+     && sha256sum -c --ignore-missing /gardenlinux/tests/checksums.sha256
 
 WORKDIR /gardenlinux/tests

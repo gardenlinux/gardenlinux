@@ -31,7 +31,9 @@ build-cert: needslim
 
 .PHONY: build
 build: needslim
+	cp ../checksums.sha256 build/checksums.sha256
 	@$(GARDENLINUX_BUILD_CRE) build --build-arg BUILDARCH="$$([ "$$(uname -m)" = "aarch64" ] && echo "arm64" || echo "amd64")" -t gardenlinux/build $(ALTNAME_INTERNAL) build
+	rm build/checksums.sha256
 
 .PHONY: build-deb
 build-deb: build
@@ -45,7 +47,9 @@ build-base-test: needslim
 
 .PHONY: build-integration-test
 build-integration-test: build-base-test
+	cp ../checksums.sha256 integration-test/checksums.sha256
 	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/integration-test:$(VERSION) integration-test
+	rm integration-test/checksums.sha256
 
 .PHONY: build-kernelmodule
 build-kernelmodule: build

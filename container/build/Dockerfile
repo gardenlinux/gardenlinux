@@ -2,6 +2,7 @@ ARG  build_base_image=gardenlinux/slim
 FROM	$build_base_image
 
 ARG	DEBIAN_FRONTEND=noninteractive
+COPY	checksums.sha256 /checksums.sha256
 
 RUN	mkdir /etc/sudoers.d \
      &&	echo "%wheel ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/wheel \
@@ -19,7 +20,8 @@ ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/g++_10.2.1-1_${BUILDA
 ADD	https://deb.debian.org/debian/pool/main/g/gcc-defaults/cpp_10.2.1-1_${BUILDARCH}.deb /
 
 RUN	apt-get update \
-     && apt-get install -y wget ca-certificates \
+     && apt-get install -y wget ca-certificates coreutils \
+     && sha256sum -c --ignore-missing /checksums.sha256 \
      &&	if [ "${BUILDARCH}" = "amd64" ] ; then wget https://deb.debian.org/debian/pool/main/g/gcc-defaults/gcc-multilib_10.2.1-1_${BUILDARCH}.deb; fi \
      &&	apt-get install -y -f /*.deb \
      &&	apt-mark auto gcc g++ cpp gcc-multilib \
