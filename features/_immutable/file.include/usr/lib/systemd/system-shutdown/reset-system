@@ -3,10 +3,9 @@ set -Eeuo pipefail
 
 ENABLE=true
 
-# To disable immutability, create the file /etc/immutability
-# with the content 'ENABLE=false'
-if [[ -f /etc/immutability ]]; then
-    source /etc/immutability
+# To disable immutability, create the file /etc/immutability.disabled
+if [[ -f /etc/immutability.disabled ]]; then
+    ENABLE=false
 fi
 
 reset-system() {

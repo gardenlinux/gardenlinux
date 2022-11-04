@@ -1,47 +1,13 @@
-## Feature: _readonly
+## Feature: _immutable
 
-<website-feature> enable readonly </website-feature>
+<website-feature> add immutability </website-feature>
 
-This feature enables a readonly root partition together with `dm-verity`. By using `dm-verity`, the integrity of a block device is checked against a hash tree. Consequently, this ensures files have not changed between reboots or during runtime otherwise the access to those files would fail. An OverlayFS for `/var` and `/etc` ensures, that the Operating System stays operational during runtime.
+This feature adds immutability to Garden Linux. The Garden Linux image only contains a partition for the EFI bootloader and a USR partition. The USR partition is readonly and has `dm-verity` enabled. The image does NOT contain a ROOT partition, instead the initramfs contains the tools to initialize the ROOT partition on boot. By default the ROOT partition is deleted on `poweroff` or `halt`, but NOT on `reboot`. The ROOT partition is writable.
 
-More information about `dm-verity` can be found [here](https://www.kernel.org/doc/html/latest/admin-guide/device-mapper/verity.html).
+To persist the ROOT partition create the file `/etc/immutability.disabled`. This disables the deletion of the ROOT partition during shutdown.
 
-Additionally, a separate readonly `/usr` partition is configured to be used with `dm-verity`, too.
+To initialize the ROOT partition the systemd-repart and systemd-tmpfiles modules and their configurations are added to the initramfs. Additionally the `mkfs.ext4` binary and a modified `systemd-tmpfiles-setup.service` are needed to make the ROOT partition initialization work.
 
-If only `/usr` should be configured this way (readonly & dm-verity) without enabling this feature for the whole root partition, take a look at the chapter [dm-verity only for /usr with writable root partition](#dm-verity-only-for-usr-with-writable-root-partition) to find an example for how to setup the [fstab.mod](/features/_readonly/fstab.mod) for this case.
+The dm-verity hash for the USR partition is added to the kernel commandline with the `usrhash=` option and is needed, without this option the boot process gets stuck and the ROOT partition is not initialized.
 
----
-
-	Type: flag
-	Included Features: server
-
-
-## resizable /var partition
-
-When `/var` is writable via the OverlayFS it causes problems when containerd is used. Therefore it is necessary to have a separate writable `/var` partition that is not an OverlayFS and it should also be easily resizable to be able to store container images as needed. When `/var` is the resizable partition the content of `/var` will be remove during build. To make sure `/var` is properly initialized a [systemd-tmpfiles configuration](/features/_readonly/file.include/usr/lib/tmpfiles.d/var.conf) exists in the `_readonly` feature. Additionally every feature that needs files in `/var` has a systemd-tmpfiles configuration as well, to create files and directories as needed.
-Add the following line to the `fstab.mod` to create a Garden Linux image with a separate `/var` partition.
-
-```
-printf "LABEL=VAR          /var         ext4      rw,x-systemd.growfs          resizable,type=4d21b016-b534-45c2-a9fb-5c16e091fd2d\n"
-```
-* `x-systemd.growfs`: Instructs systemd-growfs to grow the filesystem to the size of the partition.
-* `resizable`: Tells the `bin/makepart` script to move this partition to the end of the partition table to make the partition easily resizable.
-* `type=4d21b016-b534-45c2-a9fb-5c16e091fd2d`: Helps systemd-repart to identify the partition and enlarge the partition. A list of all available discoverable partition uuids can be found [here](https://systemd.io/DISCOVERABLE_PARTITIONS/).
-
-## dm-verity only for /usr with writable root partition
-
-In order to only enable dm-verity for `/usr` and have a writable root partition the [fstab.mod](/features/_readonly/fstab.mod) must be adjusted accordingly. But keep in mind that `/etc/veritytab`, which is containing the hash for the partition, most likely is located on a writable partition and therefore easy to modify.
-
-NOTE: The sed statement does not remove the root partition from the fstab!
-
-```fstab.mod
-#!/usr/bin/env bash
-set -Eeuo pipefail
-
-# delete any predefinition of a overlay, usr and EFI partition
-sed '/^[^[:space:]]\+[[:space:]]\+\/overlay[[:space:]]\+/d;/^[^[:space:]]\+[[:space:]]\+\/usr[[:space:]]\+/d;/^[^[:space:]]\+[[:space:]]\+\/boot\/efi[[:space:]]\+/d'
-
-# make usr a readonly setup
-printf "LABEL=EFI          /boot/efi    vfat      umask=0077   type=uefi,size=96MiB\n"
-printf "LABEL=USR          /usr         ext4      ro           verity\n"
-```
+Also the feature disables `ignition` and `ignition` is not added to the initramsf as it causes a systemd dependencies loop with the modified `systemd-tmpfiles-setup.service` and breaks the boot process.
