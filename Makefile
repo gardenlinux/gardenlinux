@@ -5,7 +5,7 @@ AWS_DISTRIBUTE=
 BUILDDIR=.build
 
 ARCH ?= $(shell bin/get_arch.sh)
-override BUILD_OPTS += --arch=$(ARCH) --skip-tests
+override BUILD_OPTS += --arch=$(ARCH)
 
 ifneq ($(wildcard local_packages),)
 LOCAL_PKGS=local_packages
@@ -55,7 +55,7 @@ all_dev: ali-dev aws-dev gcp-dev azure-dev metal-dev openstack-dev vmware-dev kv
 	./build.sh $(BUILD_OPTS) --skip-build --features "$$(cat $<)" $(BUILDDIR) $(VERSION)
 
 %-dev: make_targets/% build-environment $(SECUREBOOT_CRT)
-	./build.sh $(BUILD_OPTS) --skip-build --features "$$(cat $<),_dev,_immutable" $(BUILDDIR) $(VERSION)
+	./build.sh $(BUILD_OPTS) --skip-build --features "$$(cat $<),_dev" $(BUILDDIR) $(VERSION)
 
 %-prod: make_targets/% build-environment $(SECUREBOOT_CRT)
 	./build.sh $(BUILD_OPTS) --skip-build --features "$$(cat $<),_prod" $(BUILDDIR) $(VERSION)
