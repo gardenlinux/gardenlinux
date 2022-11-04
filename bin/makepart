@@ -182,6 +182,7 @@ if [[ -z "$(cat "$root_hash")" ]]; then
 
 	# enable verity if the root partition is writable, but any other partition has verity enabled, most likely /usr
 	if [[ ! -z "$(cat "$veritytab")" ]] && [ ! -s "$secureboot_partitions" ]; then
+		cmdline="$cmdline usrhash=$(cat "$veritytab" | awk '{print $NF}')"
 		makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -t "$timestamp" -s "false" < "$efi_partition"
 	fi
 else
@@ -196,7 +197,11 @@ if [ -s "$secureboot_partitions" ]; then
 	makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -t "$timestamp" < "$secureboot_partitions"
 fi
 
-cat "$partitions" "$overlay_partitions" >&3
+if [[ -e $root_hash ]] && [[ ! -s $root_hash ]]; then
+	cat "$partitions" "$overlay_partitions" | sed "/ROOT/d" >&3
+else
+	cat "$partitions" "$overlay_partitions" >&3
+fi
 
 # cleanup
 rm "$fstab" "$veritytab" "$root_hash" "$partitions" "$overlay_partitions" "$secureboot_partitions"

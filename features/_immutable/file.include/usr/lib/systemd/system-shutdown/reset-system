@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+ENABLE=true
+
+# To disable immutability, create the file /etc/immutability
+# with the content 'ENABLE=false'
+if [[ -f /etc/immutability ]]; then
+    source /etc/immutability
+fi
+
+reset-system() {
+    sfdisk --delete /dev/sda 4
+}
+
+if [[ "${ENABLE}" = "true" ]]; then
+    case $1 in
+        halt) reset-system
+        ;;
+        poweroff) reset-system
+        ;;
+        reboot)
+        ;;
+        kexec)
+        ;;
+    esac
+fi
