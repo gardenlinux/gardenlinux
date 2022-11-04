@@ -38,6 +38,37 @@ Stable releases are just tagged by their version.
 | Example | 576.12 |
 
 # Release Process
-## first
-## second
-## third
+## Planning
+* Decide what features should be part of the next release
+* Create corresponding issues.
+* Label those issues with the `version/next` label.
+## Implementation
+* Reference style guides and the contribution documentation.
+* Make sure users know how branch should be named.
+* Describe how features are implemented and later reviewed.
+## Packaging
+* Briefly describe how the packaging process works
+  * The `today` and the major version of each day (e.g. 946.0) is created automatically each day
+  * There is no special task needed for the first major release of a day.
+  * Only if a patch release is created (e.g x.1, x.2, x.3, ...), then a manual task is needed.
+* Reference the following documentation:
+  * https://gitlab.com/gardenlinux/gardenlinux-package-build/-/blob/main/README.md
+  * https://gitlab.com/gardenlinux/gardenlinux-package-build/-/blob/main/docs/repo.md
+  * https://gitlab.com/gardenlinux/gardenlinux-package-build/-/blob/main/packages/README.md
+* Modification to the `today.yaml` define how the packages will look like in the Garden Linux repo once a new release would be created
+## Freeze
+### Github
+* Ensure that no new features are added to main
+* Make the main branch stable
+  * In order to have a release, a successful nightly build is crucial since those are the base for the release artifacts
+### Gitlab
+* Major releases and their packages are created automatically based on the today.yaml
+* If it's a patch release, a corresponding package definition for the patch must be created manually
+  * The package definition looks slightly different to the `today.yaml`
+    * There is no need to define the mirrors once again. Only the publishing configuration is important.
+    * Versions of the Garden Linux packages must be pinned because the package definitions are evaluated each day 
+      and without version pinning, the patch release would always get the newest Garden Linux packages available
+    * The same applies to the referenced mirrors. They should be pinned to the specific day that the patch release is based on.
+## Tagging
+
+## CI/CD
