@@ -51,6 +51,8 @@ Stable releases are just tagged by their version.
   * The `today` and the major version of each day (e.g. 946.0) is created automatically each day
   * There is no special task needed for the first major release of a day.
   * Only if a patch release is created (e.g x.1, x.2, x.3, ...), then a manual task is needed.
+* Upgrade the Linux Kernel to the latest patchlevel. 
+  * Releasing a new kernel is documented in the [GL kernel repo](https://gitlab.com/gardenlinux/gardenlinux-package-linux-5.15).
 * Reference the following documentation:
   * https://gitlab.com/gardenlinux/gardenlinux-package-build/-/blob/main/README.md
   * https://gitlab.com/gardenlinux/gardenlinux-package-build/-/blob/main/docs/repo.md
