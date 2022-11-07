@@ -35,3 +35,5 @@ selinux-policy-default
 gardenlinux-selinux-module
 sosreport
 policykit-1
+libssl3=3.0.7-1
+openssl=3.0.7-1
