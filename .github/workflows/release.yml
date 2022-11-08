@@ -30,6 +30,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
+    environment: oidc_aws_s3_upload
     runs-on: ec2-gardenlinux-amd64
     strategy:
       matrix:
@@ -62,6 +63,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
+    environment: oidc_aws_s3_upload
     runs-on: ec2-gardenlinux-amd64
     strategy:
       fail-fast: false
