@@ -45,6 +45,7 @@ jobs:
     permissions:
       id-token: write
       packages: write
+    environment: oidc_platform_tests
     strategy:
       fail-fast: false
       matrix:
