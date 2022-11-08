@@ -201,12 +201,12 @@ else
 
 		# Cleanup the test container
 		wait %1
-		rm -r "${configDir}"
 		echo "Remove files owned by root"
 		${gardenlinux_build_cre} run --name $containerName ${dockerArgs[@]} --rm \
 			-v "$(pwd)":/gardenlinux -v "${configDir}":/config \
 			"gardenlinux/base-test:$version" \
 			bash -c 'find /gardenlinux -user root -print0 | xargs -0 -I {} /bin/rm -rvf "{}"'
+		rm -r "${configDir}"
 	fi
 	if [ ${skip_tests} -eq 0 ] && [[ "${tests}" == *"kvm"* ]]; then
 		# Prepare the test container execution
