@@ -73,7 +73,7 @@ jobs:
           role-session-name: ${{ secrets.aws_oidc_session }}
           aws-region: ${{ secrets.aws_region }}
       - name: build Garden Linux image
-        run: make BUILD_OPTS="--lessram ${{ inputs.use_kms && '--export-aws-access-key' || '' }}" ${{ matrix.target }}${{ matrix.modifier }}
+        run: make -S BUILD_OPTS="--lessram ${{ inputs.use_kms && '--export-aws-access-key' || '' }}" ${{ matrix.target }}${{ matrix.modifier }}
       - name: pack build artifacts for upload
         run: |
           name="${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-$(bin/garden-version)-$(git rev-parse --short HEAD)"
