@@ -34,7 +34,7 @@ $(SECUREBOOT_CRT): | container-cert
 .PHONY: container-build container-cert container-test container-integration
 
 container-build:
-	make --directory=container build-image
+	make -S --directory=container build-image
 
 container-cert:
 	make --directory=container build-cert
