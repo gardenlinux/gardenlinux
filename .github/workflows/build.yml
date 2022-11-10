@@ -46,6 +46,7 @@ jobs:
     runs-on: ec2-gardenlinux-${{ matrix.architecture }}
     permissions:
       id-token: write
+    environment: ${{ inputs.use_kms && 'oidc_aws_kms_secureboot_signing' || '' }}
     strategy:
       fail-fast: false
       matrix:
