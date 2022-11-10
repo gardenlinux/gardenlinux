@@ -49,7 +49,7 @@ def test_ntp(client, non_azure, non_chroot):
     assert ntp_ok, "NTP not activated"
     assert ntp_synchronised_ok, "NTP not synchronized"
 
-def test_files_not_in_future(client):
+def test_files_not_in_future(client, non_container):
     testscript_name="/tmp/filemodtime-test.py"
     testscript='''import os
 import sys
@@ -293,7 +293,7 @@ def test_nvme_kernel_parameter(client, aws):
     assert exit_code == 0, f"no {error=} expected"
     assert output.rstrip() == "1", "Expected 'nvme_core.io_timeout=4294967295' kernel parameter"
 
-def test_random(client, non_metal):
+def test_random(client, non_metal, non_container):
     (exit_code, output, error) = client.execute_command("time dd if=/dev/random of=/dev/null bs=8k count=1000 iflag=fullblock", disable_sudo=True)
     """ Output should be like this:
 # time dd if=/dev/random of=/dev/null bs=8k count=1000 iflag=fullblock

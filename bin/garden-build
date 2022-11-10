@@ -51,6 +51,7 @@ dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
 export arch="$arch"
 
 fullfeatures="$(garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" features)"
+targetPlatform="$(garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures")"
 
 if [ -z "${prefix+x}" ]; then
 	prefix="/$(garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
@@ -191,24 +192,29 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 			fi
 		done
 
-		echo "#### building diskimage"
-		for i in $(tr ',' '\n' <<< "$fullfeatures"); do
-			if [ -r "$featureDir/$i/fstab" ]; then
-				printf "  found new fstab in $i\n"
-				currentfstab="$(cat $featureDir/$i/fstab)"
+		# Do not run when building for container image artifacts
+		if [ "$targetPlatform" != "container" ]; then
+
+			echo "#### building diskimage"
+			for i in $(tr ',' '\n' <<< "$fullfeatures"); do
+				if [ -r "$featureDir/$i/fstab" ]; then
+					printf "  found new fstab in $i\n"
+					currentfstab="$(cat $featureDir/$i/fstab)"
+				fi
+			done
+			for i in $(tr ',' '\n' <<< "$fullfeatures"); do
+				if [ -x "$featureDir/$i/fstab.mod" ]; then
+					printf "    modifying fstab with %s\n" "$i"
+					currentfstab=$("$featureDir/$i/fstab.mod" <<< "$currentfstab")
+				fi
+			done
+			currentfstab="$(sed -e "s/#.*\$//" -e "/^$/d" <<< "$currentfstab")"
+			if [ -n "$currentfstab" ]; then
+				printf "  building rawfile\n"
+				makepart "$rootfs" "$arch" <<< "$currentfstab" | makedisk "$rootfs" "$targetBase.raw"
 			fi
-		done
-		for i in $(tr ',' '\n' <<< "$fullfeatures"); do
-			if [ -x "$featureDir/$i/fstab.mod" ]; then
-				printf "    modifying fstab with %s\n" "$i"
-				currentfstab=$("$featureDir/$i/fstab.mod" <<< "$currentfstab")
-			fi
-		done
-		currentfstab="$(sed -e "s/#.*\$//" -e "/^$/d" <<< "$currentfstab")"
-		if [ -n "$currentfstab" ]; then
-			printf "  building rawfile\n"
-			makepart "$rootfs" "$arch" <<< "$currentfstab" | makedisk "$rootfs" "$targetBase.raw"
 		fi
+
 		for i in $(tr ',' '\n' <<< "$fullfeatures"); do
 			if [ -x $featureDir/$i/image ]; then
 				printf "  building separat extra image for $i\n"

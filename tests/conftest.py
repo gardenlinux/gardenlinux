@@ -530,3 +530,9 @@ def firecracker(testconfig):
     if "firecracker" in features:
         skip_msg = "Currently unsupported. Please see: https://github.com/gardenlinux/gardenlinux/issues/1240"
         pytest.skip(skip_msg)
+
+@pytest.fixture
+def non_container(testconfig):
+    features = testconfig.get("features", [])
+    if "container" in features:
+        pytest.skip('test is not supported on container')

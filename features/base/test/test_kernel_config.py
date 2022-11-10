@@ -17,7 +17,7 @@ import pytest
     ]
 )
 
-def test_kernel_config(client, args):
+def test_kernel_config(client, args, non_container):
     """compare kernel config options from the parametrize section with the
     kernel config options in the /boot/config-* file. The values 'is not set'
     and 'n' are treated as the same."""

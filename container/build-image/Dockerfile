@@ -45,6 +45,7 @@ RUN : "Initialize the build container package installation" \
 			qemu-system-arm \
 			qemu-system-x86 \
 			openssl \
+			podman fuse-overlayfs \
 			libengine-pkcs11-openssl \
 			onmetal-image \
 			aws-sdk-cpp \
