@@ -1,10 +1,19 @@
 ## Feature: _slim
+### Description
+<website-feature>
+This feature flag slimifies the whole Garden Linux artifact.
+</website-feature>
 
-<website-feature> whole setup is slimed (e.g. no man pages) </website-feature>
+### Features
+A slimified Garden Linux artifact is created by removing all man pages, removing unnecessary files.
 
----
+### Unit testing
+This feature does not support unit tests.
 
-	Type: flag
-	Included Features: server
-
-#
+### Meta
+|||
+|---|---|
+|type|flag|
+|artifact|None|
+|included_features|server|
+|excluded_features|None|

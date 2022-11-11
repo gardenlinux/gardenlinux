@@ -1,13 +1,29 @@
-# Feature: firewall
-This feature adds a basic `nftables` based firewall to Garden Linux. `Garden Linux Firewall`
- is managed by `systemd` by the default systemd unit shipped with nftables.
+## Feature: firewall
+### Description
+<website-feature>
+This features adds a basic `nftables` based firewall to Garden Linux.
+</website-feature>
 
+### Features
+This features adds a basic `nftables` based firewall to Garden Linux and is controlled by systemd.
 The firewall rules can be adjusted by editing the corresponding rule file:
 ```
 IPv4 and IPv6: /etc/nft.d/default.conf
 ```
 
-By default, only the following rules are allowed:
+By default, only the following incoming rules are allowed:
 
  * tcp/22 [SSH]
  * state/related-established
+
+
+### Unit testing
+This feature support unit tests and validates that the default incoming policy is set to drop. Additionally, all needed packages will be validated.
+
+### Meta
+|||
+|---|---|
+|type|element|
+|artifact|None|
+|included_features|None|
+|excluded_features|None|
