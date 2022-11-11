@@ -48,6 +48,24 @@ while true; do
 	esac
 done
 
+# Checks repo.gardenlinux.io for the highest available suite minor for the given major
+function get_minor_from_repo {
+  minor=0   # running index
+  limit=100 # hard limit the search in case of unexpected curl results
+  major=$1  # major to check the latest minor for
+  repo_url="http://repo.gardenlinux.io/gardenlinux/dists/$major.__MINOR__/Release"
+  while [ $minor -le $limit ]
+  do
+    check_url=${repo_url//__MINOR__/$minor}
+    if curl -s $check_url| grep -q "Error"; then
+      ((minor--))
+      echo $minor
+      return
+    fi
+    ((minor++))
+  done
+}
+
 input="${1:-$($sed_gnu -e "s/#.*\$//" -e "/^$/d" "${versionfile}")}";  shift || true
 input=$($sed_gnu "s/^[[:space:]]*//;s/[[:space:]]*\$//" <<< ${input})
 
@@ -61,9 +79,12 @@ then	[ $(cut -d. -sf3 <<< ${input}) ] && eusage "invalid version format ${input}
 	major="$(cut -d. -f1 <<< ${input})"
 	if [ $(cut -d. -sf2 <<< ${input}) ]; then 
 		minor="$(cut -d. -f2 <<< ${input})"
+	else 
+		minor=$(get_minor_from_repo $major)
 	fi
 	version="${major}.${minor}"
-else	if	[[ ${input} = today ]];
+else 
+  if	[[ ${input} = today ]];
 	then	indate=$($date_gnu --date "today" +%s 2>/dev/null)
 		major="$(( (${indate} - $($date_gnu --date "${startdate}" +%s)) / (60*60*24) ))"
 		version=today
