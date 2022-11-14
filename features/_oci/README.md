@@ -1,12 +1,12 @@
 ## Feature: _oci
+### Description
+<website-feature>
+This flag feature creates an artifact for Open Container Image (OCI) compatible platforms.
+</website-feature>
 
-<website-feature> This feature creates an archive containing the artifacts for an upload to an OCI compatible registry. This does *not* create a bootable container image. Instead the build artifacts are bundled into an OCI compatible image.</website-feature>
+### Features
+This feature creates an archive containing the artifacts for an upload to an OCI compatible registry. This does *not* create a bootable container image. Instead the build artifacts are bundled into an OCI compatible image.
 
----
-
-	Type: Flag
-	
----
 
 ### Usage
 
@@ -97,7 +97,7 @@ $ onmetal-image --store-path ./onmetal/ push ghcr.io/<username>/<project>:<versi
 Successfully pushed ghcr.io/<username>/<project>:<version> f0dcfde4f8b4b6033add31243096a4b560173cd9884be1e37c524c53219fa394
 ```
 
-### Using the artifacts
+#### Using the artifacts
 
 You can use *onmetal-image* once again to verify the contents:
 
@@ -211,7 +211,7 @@ $ curl -s -L -H "Authorization: Bearer <BEARER TOKEN>" -H "Accept: application/v
 }
 ```
 
-### Attaching additional artifacts (like buildlog)
+#### Attaching additional artifacts (like buildlog)
 
 The build process creates additional files like the buildlog. These file can be attached to an OCI compatible registry as additional artifacts. For this one must use a client which can handle these types.
 The following example shows how to attach these files files to an Azure registry using *oras*:
@@ -222,15 +222,26 @@ $ oras attach <registry>/<project>:<version> azure-gardener_dev_oci-amd64-today-
 $ oras attach <registry>/<project>:<version> azure-gardener_dev_oci-amd64-today-local.log --artifact-type build/log
 ```
 
-### docker / podman pull
+#### docker / podman pull
 
 Pulling these OCI compatible images using docker or podman is not possible. The last download step failed due to the fact that this images does not contain the expected filesystem layer.
 
 We wanted to create a simple possibility to pull the image usind docker or podman and display additional information. But without building a simple container this is not possible. An idea would be to create this simple container just holding the os-release, buildlog and manifest.
 
-### Additional information
+#### Additional information
 
 - [onmetal-image](https://github.com/onmetal/onmetal-image)
 - [OCI Distribution Specifications](https://github.com/opencontainers/distribution-spec/)
 - [OCI Registry As Storage (ORAS)](https://oras.land/)
 - [jq](https://stedolan.github.io/jq/)
+
+### Unit testing
+This feature does not support unit tests.
+
+### Meta
+|||
+|---|---|
+|type|flag|
+|artifact|`.oci.tar.xz`|
+|included_features|cloud|
+|excluded_features|None|
