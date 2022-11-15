@@ -1,6 +1,7 @@
 ## Feature: cis
 ### Description
 <website-feature>
+
 The [Garden Linux](https://gardenlinux.io/) [CIS](https://www.cisecurity.org) unit test is [Debian-CIS](https://github.com/ovh/debian-cis) (created by [OVH](https://github.com/ovh)) based. This test framework is mostly based on recommendations of [CIS (Center for Internet Security)](https://www.cisecurity.org) benchmarks for [Debian GNU/Linux](https://www.debian.org). However, Garden Linux may fulfill them in a slightly different way. This becomes important for unit testing where ACL's like `AppArmor` are replaced by `SELinux` (which is also accepted by CIS benchmarks). `CIS`
  related unit tests can be performed on any cloud platform (see also [../../tests/README.md](../../tests/README.md)) except of `chroot`.
 </website-feature>
@@ -23,7 +24,7 @@ Additional tests can be be included by placing an executable script nn [test/che
 ### Meta
 |||
 |---|---|
-|type|$platform/$feature|
-|artifact|`$output_type`|
-|included_features|aide,cisAaudit,cisModprobe,cisOS,cisPackages,cisPartition,cisSshd,cisSysctl,firewall|
+|type|element|
+|artifact|None|
+|included_features|aide,cisAudit,cisModprobe,cisOS,cisPackages,cisPartition,cisSshd,cisSysctl,firewall|
 |excluded_features|fedramp|

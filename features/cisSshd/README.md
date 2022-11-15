@@ -1,6 +1,7 @@
 ## Feature: cisSshd
 ### Description
 <website-feature>
+
 This subfeature manages the sshd configuration according to the CIS benchmarks. This features depends on its parents feature `cis`.
 </website-feature>
 

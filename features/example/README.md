@@ -1,5 +1,6 @@
 # Features
 <website-features>
+
 ## General
 Each folder represents a usable Garden Linux `feature` that can be added to a final Garden Linux artifact. This allows you to build Garden Linux for different cloud platforms with a different set of features like `CIS`, `read only` etc. Currently, the following feature types are available:
 
@@ -59,6 +60,8 @@ Following files may be placed inside a single feature folder. Except of the `inf
 | exec.pre | Pre execution hook: Allows to run commands before `exec.config` is executed | File (Shell) |
 | exec.config | Allows to run commands within the `chroot` during the build | File (Shell) |
 | exec.post | Post execution hook: Allows to run commands after `exec.config` is executed | File (Shell) |
+| image | Provides the possibility for creating an additional output artifact | File (Shell) |
+| convert | Provides the possibility to convert a given artifact to another artifact type | File (Shell) |
 | file.include | Allows to add files to the artifact | Directory (with files): e.g. Rebuild the filesystem structure [file.include/etc/hosts] to overwrite the hostfile |
 | file.include.stat | Allows to edit permissions and owner of files | Per line to define: `$userOwner $groupOwner $filePermission $fileName` |
 | file.exclude | Allows to remove files from the artifact | File (list): Absolute path to file to remove per line |
@@ -193,6 +196,71 @@ set -Eeuo pipefail
 
 userdel unittest
 rm -rf /home/unittest/
+```
+
+
+### image
+image hook: Allows to run shell commands which can be used to create additional output artifact. This can be used if multiple output files are needed.
+
+**Usage:**
+
+Shell/Bash/Python within the file
+
+**Example:**
+
+*image*
+```
+#!/bin/bash
+
+set -Eexuo pipefail
+
+rootfs="$1"
+targetBase="$2"
+
+rootfs_work="$(mktemp -d)"
+cp -a "$rootfs/." "$rootfs_work"
+
+find "$rootfs_work/var/log/" -type f -delete
+
+chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
+#chroot "$rootfs_work" /usr/bin/env -i /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
+rm "$rootfs_work/.autorelabel"
+
+file="$(mktemp)"
+
+size="${size:-$(du -sb "$rootfs_work" | awk '{ min_size_bytes = min_size * MB; size = $1 * 1.5; padded_size = size + (MB - (size % MB) % MB); if (padded_size < min_size_bytes) padded_size = min_size_bytes; print (padded_size / MB) "MiB" }' "MB=1048576" "min_size=64")}"
+truncate -s "$size" "$file"
+
+timestamp=$(garden-version --epoch "$version")
+make_reproducible_ext4 -t "$timestamp" -h "gardenlinux:$version:firecracker:rootfs" -m -p 16 "$rootfs_work" "$file"
+
+rm -rf "$rootfs_work"
+
+cp "$rootfs/boot/vmlinu"*"-firecracker-${arch}" "$targetBase.vmlinux"
+cp "$file" "$targetBase.ext4"
+
+rm "$file"
+```
+
+
+### convert
+convert hook: Allows to run shell commands which can be used to convert an already present artifact into another output format.
+
+**Usage:**
+
+Shell/Bash/Python within the file
+
+**Example:**
+
+*exec.post*
+```
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+dir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+
+qemu-img convert -o subformat=streamOptimized -o adapter_type=lsilogic -f raw -O vmdk "$1.raw" "$1.vmdk"
+make-ova --vmdk "$1.vmdk" --guest-id debian10_64Guest --template "$REPO_ROOT/features/vmware/vmware.ovf.template"
 ```
 
 

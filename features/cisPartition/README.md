@@ -1,6 +1,7 @@
 ## Feature: cisPartition
 ### Description
 <website-feature>
+
 This subfeature manages the partition layout according to the CIS benchmarks. This features depends on its parents feature `cis`.
 </website-feature>
 

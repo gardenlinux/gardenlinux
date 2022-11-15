@@ -1,6 +1,7 @@
 ## Feature: base
 ### Description
 <website-feature>
+
 This feature installs the `base` layer for Garden Linux.
 </website-feature>
 

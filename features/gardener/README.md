@@ -1,7 +1,8 @@
 ## Feature: gardener
 ### Description
 <website-feature>
-The gardener feature adjusts Garden Linux to fulfill the `gardener.cloud` requirements.
+
+The gardener feature adjusts Garden Linux to fulfill the [gardener.cloud](https://gardener.cloud) requirements.
 </website-feature>
 
 ### Features
