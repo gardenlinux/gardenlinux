@@ -39,7 +39,7 @@ build-deb: build
 
 .PHONY: build-base-test
 build-base-test: needslim
-	cp ../gardenlinux.asc base-test/gardenlinux.asc
+	cp -p ../gardenlinux.asc base-test/gardenlinux.asc
 	mkdir -p base-test/_pipfiles
 	cp ../tests/Pipfile* base-test/_pipfiles
 	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/base-test:$(VERSION) base-test
