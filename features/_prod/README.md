@@ -1,9 +1,19 @@
 ## Feature: _prod
+### Description
+<website-feature>
+This feature flag creates an explicit declared production artifact of Garden Linux.
+</website-feature>
 
-<website-feature> This Feature is used to build a productive Image with /usr Read-Only and without apt, dpkg, etc. </website-feature>
+### Features
+This Feature is used to build a productive Image with /usr Read-Only and without apt, dpkg, etc.
 
----
+### Unit testing
+This feature does not support unit tests.
 
-	Type: flag
-	Included Features: _nopkg, _readonly
-#
+### Meta
+|||
+|---|---|
+|type|flag|
+|artifact|None|
+|included_features|_nopkg,_readonly|
+|excluded_features|None|
