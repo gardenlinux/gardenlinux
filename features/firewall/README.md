@@ -1,6 +1,7 @@
 ## Feature: firewall
 ### Description
 <website-feature>
+
 This features adds a basic `nftables` based firewall to Garden Linux.
 </website-feature>
 

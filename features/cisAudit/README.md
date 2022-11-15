@@ -1,6 +1,7 @@
 ## Feature: cisAudit
 ### Description
 <website-feature>
+
 This subfeature installs and configures `auditd`. This features depends on its parents feature `cis`.
 </website-feature>
 
