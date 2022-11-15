@@ -15,6 +15,7 @@ main () {
     set_defaults
     get_opts "$@"
     set_binaries
+    qemu_opt_ignition
     qemu_opt_pxe
     qemu_opt_disk
     qemu_opt_uefi
@@ -162,7 +163,7 @@ source "${CURR_DIR}/.constants.sh" \
 --destport  <int>         Specifies the remote ssh port. This port is used to connect, to a specific sshd. (default: $port_dest)
 --mac       <macaddr>     The mac address is usually randomized. It is used to identify the monitoring port, the mac address of the machine and the UUID. Can be set to this value.
 --pxe       <bool>        Enables pxe boot on the vm. Minimum one image file must be a directory.
---ignfile   <path>        Provide an ignition file whe pxe booting.
+--ignfile   <path>        Provide an ignition file when pxe booting. Can be used standalone.
 --daemonize <bool>        Start the virtual machine in background, console deactivated (default: no).
 --skipkp    <bool>        Skip the keypress to the verify status before execute.
 --vnc       <bool>        Sitches from serial console to vnc graphics console / enables vnc in --daemonize.
@@ -242,7 +243,7 @@ set_binaries () {
 }
 
 
-# Setup ignition to prepare PXE boot
+# Setup ignition to prepare PXE boot or standalone ignition usage
 qemu_opt_ignition () {
     if [ $pxe ]; then
 
@@ -293,6 +294,12 @@ qemu_opt_ignition () {
         # modify the boot.ipxe to load the proper kernel and initramfs
         ${bin_sed} -i "s/PATHGOESHERE//g;s/IPADDRESSGOESHERE/10.0.2.2/g" $CURR_DIR/$mac.ipxe
         QEMU_OPTS+=( -boot order=nc )
+    else
+	# add neccessary ignfile config for qemu start
+	# https://docs.fedoraproject.org/en-US/fedora-coreos/provisioning-qemu/#_setting_up_a_new_vm
+	if [ "$ignfile" ]; then
+	    QEMU_OPTS+=( -fw_cfg name=opt/com.coreos/config,file=${ignfile} )
+	fi
     fi
 }
 
@@ -306,9 +313,6 @@ qemu_opt_pxe () {
     fi
 
     if [ $pxe ]; then
-        # Run ignition function to prepare PXE
-        qemu_opt_ignition
-
         container_name=$($bin_uuid)
         function stop(){
             rm  "$pxe/root."{vmlinuz,initrd,squashfs}

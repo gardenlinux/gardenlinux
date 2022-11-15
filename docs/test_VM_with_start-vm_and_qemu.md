@@ -26,9 +26,15 @@ There's no need to change any other files for this Virtualization Test.
 2. (Stop Gardenlinux Virtualization by pressing Ctrl+A, then X)
 
 
+## Testing .raw Build with ignition without PXE
+
+`gardenlinux/bin/start-vm --ignfile /path/to/ignition.json <filename>.raw`
+
+
 #### Additional Links/Info
 - run `gardenlinux/bin/start-vm --help`
 - https://docs.fedoraproject.org/en-US/fedora-coreos/producing-ign/
+
 
 ---
 ## Test .iso Build
@@ -52,3 +58,6 @@ in the meanwhile the following command should work (choose the right .iso file, 
 ## Alternative Way for testing .raw Build:
 
 	qemu-system-x86_64 -drive format=raw,file=gardenlinux/.build/<filename>.raw -m 2048 -nographic
+
+
+   
