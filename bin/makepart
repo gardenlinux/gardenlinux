@@ -197,7 +197,7 @@ if [ -s "$secureboot_partitions" ]; then
 	makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -t "$timestamp" < "$secureboot_partitions"
 fi
 
-if [[ -e $root_hash ]] && [[ ! -s $root_hash ]]; then
+if [[ -z "$(cat "$root_hash")" ]] && [[ ! -z "$(cat "$veritytab")" ]] && [ ! -s "$secureboot_partitions" ]; then
 	cat "$partitions" "$overlay_partitions" | sed "/ROOT/d" >&3
 else
 	cat "$partitions" "$overlay_partitions" >&3
