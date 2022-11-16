@@ -314,6 +314,7 @@ For each line all values need to be defined:
 **Example:**
 
 ```
+# <user> <group> <mode> <filename>
 irc irc 777 /etc/test
 nginx nginx 0640 /etc/nginx/conf.d/vhosts/01-www.gardenlinux.io.conf
 ```
