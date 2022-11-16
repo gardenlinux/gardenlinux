@@ -57,7 +57,7 @@ for i in $(tr ',' '\n' <<< $features); do
                 while read -r fileUser fileGroup filePerm fileName; do
                         chown \$fileUser:\$fileGroup \$fileName
                         chmod \$filePerm \$fileName
-                done <<< \"$(cat $featureDir/$i/file.include.stat)\"
+                done <<< \"$(grep -v '^#' $featureDir/$i/file.include.stat)\"
 		"
         fi
 done
