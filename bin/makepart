@@ -198,7 +198,7 @@ if [ -s "$secureboot_partitions" ]; then
 fi
 
 if [[ -z "$(cat "$root_hash")" ]] && [[ ! -z "$(cat "$veritytab")" ]] && [ ! -s "$secureboot_partitions" ]; then
-	cat "$partitions" "$overlay_partitions" | sed "/ROOT/d" >&3
+	cat "$partitions" "$overlay_partitions" | sed "/4f68bce3-e8cd-4db1-96e7-fbcaf984b709\|b921b045-1df0-41c3-af44-4c6f280d3fae/d" >&3
 else
 	cat "$partitions" "$overlay_partitions" >&3
 fi
