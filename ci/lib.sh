@@ -1,3 +1,4 @@
+#!/bin/bash
 own_dir="$(readlink -f "$(dirname "${0}")")"
 repo_root="$(readlink -f "${own_dir}/..")"
 bin_dir="${repo_root}/bin"

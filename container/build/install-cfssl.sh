@@ -1,4 +1,4 @@
-#!usr/bin/env bash
+#!/usr/bin/env bash
 
 # This script downloads cfssl binaries and moves them to /usr/bin/ (in PATH).
 # With cfssl installed, our central build can just refer to the existing

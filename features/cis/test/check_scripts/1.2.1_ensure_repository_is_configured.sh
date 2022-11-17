@@ -1,3 +1,4 @@
+#!/bin/bash
 # 1.2.1 Ensure repository is configured (Not scored)
 #
 
@@ -20,10 +21,10 @@ audit() {
     fi
 
     get_apt_gl_repo
-    if [ "$FNRET" = 0 ]; then 
+    if [ "$FNRET" = 0 ]; then
         ok "Garden Linux repository is configured"
-    else    
-        crit "Garden Linux repository is not configured" 
+    else
+        crit "Garden Linux repository is not configured"
     fi
 }
 
@@ -36,7 +37,7 @@ check_config() {
 get_apt_policy() {
     STATUS=$(apt-cache policy)
     retVal=$?
-    if [ $retVal > 0  ]; then
+    if [ $retVal -gt 0  ]; then
         FNRET=0
     else
         FNRET=1
@@ -47,7 +48,7 @@ get_apt_policy() {
 get_apt_gl_repo() {
     OUTPUT=$(apt-cache policy | grep "origin repo.gardenlinux.io" | awk {'print $2'} | tail -n1)
     retVal=$?
-    if [ $retVal > 0  ]; then
+    if [ $retVal -gt 0  ]; then
         FNRET=0
     else
         FNRET=1
