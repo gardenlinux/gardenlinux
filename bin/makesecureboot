@@ -65,7 +65,7 @@ chroot "$rootfs" dracut \
 	--force \
 	--kver "$kernel_version" \
 	--modules "bash dash systemd systemd-initrd systemd-veritysetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown $([[ "$cmdline" = *"usrhash"* ]] && echo "systemd-repart systemd-tmpfiles")" \
-	--install "$([[ "$cmdline" = *"usrhash"* ]] && echo "/usr/lib/tmpfiles.d/root.conf /usr/lib/tmpfiles.d/var.conf /usr/lib/repart.d/root.conf /usr/sbin/mkfs.ext4 /lib/systemd/system/systemd-tmpfiles-setup.service.d/sysroot.conf" || echo "/etc/veritytab")" \
+	--install "$([[ "$cmdline" = *"usrhash"* ]] && echo "/usr/lib/tmpfiles.d/root.conf /usr/lib/tmpfiles.d/var.conf /usr/lib/repart.d/root.conf /usr/sbin/mkfs.ext4" || echo "/etc/veritytab")" \
 	--reproducible \
 	"$initrd"
 
@@ -125,7 +125,7 @@ while read -r partition_file; do
 	# add roothash to legacy boot kernel cmdline
 		syslinux=$(mktemp)
 		mcopy -i $partition_file -p ::/syslinux/syslinux.cfg "$syslinux"
-		sed -i "s/APPEND.*/APPEND $(echo ${cmdline})/g" "$syslinux"
+		sed -i "s|APPEND.*|APPEND $(echo ${cmdline})|g" "$syslinux"
 		mcopy -i $partition_file -po "$syslinux" ::/syslinux/syslinux.cfg
 	# copy initrd.img for legacy boot when secureboot feature is not enabled
 		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$initrd" "::/Default/${kernel_version}/initrd.img-${kernel_version}"
