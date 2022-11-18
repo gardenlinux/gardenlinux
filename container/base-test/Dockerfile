@@ -6,7 +6,7 @@ ENV PYTHONPATH /gardenlinux/bin:/gardenlinux/ci:/gardenlinux/ci/glci:/gardenlinu
 ARG GARDENLINUX_MIRROR_KEY=/etc/apt/trusted.gpg.d/gardenlinux.asc
 ARG VERSION
 
-COPY gardenlinux.asc $GARDENLINUX_MIRROR
+COPY gardenlinux.asc $GARDENLINUX_MIRROR_KEY
 RUN  chown root:root $GARDENLINUX_MIRROR_KEY \
         && chmod 644 $GARDENLINUX_MIRROR_KEY
 
