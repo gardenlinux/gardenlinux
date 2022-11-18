@@ -38,7 +38,6 @@ RUN : "Eval hardware architecture" \
      && echo ${release_url}/download/${firecracker_ver}/firecracker-${firecracker_ver}-${arch}.tgz \
      && wget ${release_url}/download/${firecracker_ver}/firecracker-${firecracker_ver}-${arch}.tgz \
      && tar xfvz firecracker-${firecracker_ver}-${arch}.tgz \
-     && ln -s /release-${firecracker_ver}-${arch}/firecracker-${firecracker_ver}-${arch} /bin/firecracker \
-     && sha256sum -c --ignore-missing /gardenlinux/tests/checksums.sha256
+     && ln -s /release-${firecracker_ver}-${arch}/firecracker-${firecracker_ver}-${arch} /bin/firecracker
 
 WORKDIR /gardenlinux/tests

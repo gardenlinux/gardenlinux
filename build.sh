@@ -194,7 +194,7 @@ else
 
 		# Run the test container using the chroot platform
 		echo "Running pytests in chroot"
-		${gardenlinux_build_cre} run --name $containerName ${dockerArgs[@]} --rm \
+		${gardenlinux_build_cre} run --name $containerName "${dockerArgs[@]}" --rm \
 			-v "$(pwd)":/gardenlinux -v "${configDir}":/config \
 			"gardenlinux/base-test:$version" \
 			pytest --iaas=chroot --configfile=/config/config.yaml &
@@ -220,7 +220,7 @@ else
 
 		# Run the test container using the KVM platform
 		echo "Running pytests in KVM"
-		${gardenlinux_build_cre} run --name $containerName ${dockerArgs[@]} --rm \
+		${gardenlinux_build_cre} run --name $containerName "${dockerArgs[@]}" --rm \
 			-v /boot/:/boot -v /lib/modules:/lib/modules \
 			-v "$(pwd)":/gardenlinux -v "${configDir}":/config \
 			"gardenlinux/base-test:$version" \

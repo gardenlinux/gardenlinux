@@ -1,0 +1,3 @@
+# Adjust file permissions to 0600 and root:root
+# <user> <group> <mode> <filename>
+root	root	0600 /root/.ssh/authorized_keys

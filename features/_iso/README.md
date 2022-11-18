@@ -1,8 +1,20 @@
 ## Feature: _iso
+### Description
+<website-feature>
 
-<website-feature> This feature creates a bootable ISO-Image. </website-feature>
+This feature flag creates an `.iso` artifact of Garden Linux.
+</website-feature>
 
----
+### Features
+This feature simply creates a bootable `.iso` image as an additional artifact.
 
-	Type: flag
-#
+### Unit testing
+This feature does not support unit tests.
+
+### Meta
+|||
+|---|---|
+|type|flag|
+|artifact|None|
+|included_features|None|
+|excluded_features|None|
