@@ -129,11 +129,15 @@ def register_image(
     snapshot_id: str,
     image_name: str,
     architecture: str,
+    boot_mode: str,
 ) -> str:
     '''
     @return: ami-id of registered image
     '''
     root_device_name = '/dev/xvda'
+
+    # Ensure to choose the proper
+    if len(boot_mode) == 0:
 
     result = ec2_client.register_image(
         # ImageLocation=XX, s3-url?
@@ -152,7 +156,8 @@ def register_image(
         EnaSupport=True,
         Name=image_name,
         RootDeviceName=root_device_name,
-        VirtualizationType='hvm' # | paravirtual
+        VirtualizationType='hvm', # | paravirtual
+        BootMode=boot_mode
     )
 
     ec2_client.create_tags(

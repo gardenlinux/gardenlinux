@@ -55,6 +55,8 @@ class AWS:
             cfg['instance_type'] = "t3.micro"
         if not 'architecture' in cfg or cfg['architecture'] == "amd64":
             cfg['architecture'] = "x86_64"
+        if not 'boot_mode' in cfg:
+            cfg['boot_mode'] = None
         if not 'bucket' in cfg:
             cfg['bucket'] = f"img-{test_name}-upload"
         if not 'securitygroup_name' in cfg:
@@ -538,7 +540,8 @@ class AWS:
             ec2_client = self.ec2_client,
             snapshot_id = self._snapshot_id,
             image_name = image_name,
-            architecture = self.config["architecture"]
+            architecture = self.config["architecture"],
+            boot_mode = self.config["boot_mode"]
         )
         self.ec2_client.create_tags(
             Resources = [self._ami_id],
