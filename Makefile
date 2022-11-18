@@ -47,9 +47,9 @@ container-integration:
 
 build-environment: container-test container-build
 
-all_prod: ali aws gcp azure metal openstack vmware kvm metalv
+all_prod: ali aws container gcp azure metal openstack vmware kvm metalv
 
-all_dev: ali-dev aws-dev gcp-dev azure-dev metal-dev openstack-dev vmware-dev kvm-dev metalv-dev
+all_dev: ali-dev aws-dev container-dev gcp-dev azure-dev metal-dev openstack-dev vmware-dev kvm-dev metalv-dev
 
 %: make_targets/% build-environment $(SECUREBOOT_CRT)
 	./build.sh $(BUILD_OPTS) --skip-build --features "$$(cat $<)" $(BUILDDIR) $(VERSION)
