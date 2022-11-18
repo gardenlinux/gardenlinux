@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
-	--flags 'no-build,debug,skip-tests,suite:,gardenversion:,timestamp:' \
+	--flags 'no-build,debug,debian,skip-tests,suite:,gardenversion:,timestamp:' \
 	--flags 'ports,arch:,qemu,features:,disable-features:,commitid:,userid:,usergid:' \
 	--flags 'suffix:,prefix:' \
 	--
@@ -17,7 +17,8 @@ while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
 	case "$flag" in
-		--debug) debug=1 ;;	# for jumping in the prepared image"
+		--debug) debug=1 ;;	# for jumping in the prepared image
+		--debian) debian=1 ;;	# Allow debian repo in Garden Linux image
 		--ports) ports=1 ;;	# for using "debian-ports"
 		--arch) arch="$1"; shift ;; # for adding "--arch" to garden-init
 		--qemu) qemu=1 ;;	# for using "qemu-debootstrap"
@@ -103,7 +104,9 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 
 	initArgs=( --arch="$dpkgArch" )
 	configArgs=( --arch="$dpkgArch" )
-	initArgs+=( --debian )
+	if [ "$debian" == "1" ]; then
+		initArgs+=( --debian )
+	fi
 	if [ -n "${ports-}" ]; then
 		initArgs+=(
 			--debian-ports

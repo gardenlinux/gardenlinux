@@ -18,7 +18,7 @@ source "$thisDir/.constants.sh" \
 	'--non-debian rootfs xenial http://archive.ubuntu.com/ubuntu'
 
 eval "$dgetopt"
-nonDebian=
+debian=
 debianPorts=
 debootstrap=
 script=
@@ -34,9 +34,9 @@ while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
 	case "$flag" in
-		--debian)	nonDebian= ;;
-		--debian-ports)	nonDebian= ; debianPorts=1 ;;
-		--non-debian)	nonDebian=1 ;;
+		--debian)	debian=1 ;;
+		--debian-ports)	debian=1 ; debianPorts=1 ;;
+		--non-debian)	debian= ;;
 		--debootstrap)	debootstrap="$1"; shift ;;
 		--debootstrap-script) script="$1"; shift ;;
 		--keyring)	keyring="$1"; shift ;;
@@ -64,9 +64,7 @@ version="${1:-}"; shift || eusage 'missing version'
 
 timestamp=
 mirror=
-if [ -z "$nonDebian" ]; then
-	timestamp="${1:-}"; shift || eusage 'missing timestamp'
-else
+if [ "$debian" == "1" ]; then
 	mirror="${1:-}"; shift || eusage 'missing mirror'
 
 	timestamp="$(
@@ -76,6 +74,8 @@ else
 		} |tac|tac| awk -F ': ' '$1 == "Date" { print $2; exit }'
 	)"
 	# TODO re-calculate "timestamp" during garden-tar/fixup (possibly scraping from /var/lib/apt/lists/*Release* instead?)
+else
+	timestamp="${1:-}"; shift || eusage 'missing timestamp'
 fi
 
 epoch="$(date --date "$timestamp" '+%s')"
@@ -155,7 +155,7 @@ if [[ -v PKG_DIR ]]; then
 	mount --rbind --make-rslave "$PKG_DIR" "$targetDir/run/packages"
 fi
 
-if [ -z "$nonDebian" ]; then
+if [ "$debian" == "1" ]; then
 	"$thisDir/garden-debian-sources-list" --gardenlinux-only \
 		$([ -z "$debianPorts" ] || echo '--ports') \
 		$([[ -v PKG_DIR ]] && echo --local-pkgs /run/packages) \

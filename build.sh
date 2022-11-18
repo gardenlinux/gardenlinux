@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/bin/.constants.sh" \
-	--flags 'skip-build,debug,lessram,manual,skip-tests,export-aws-access-key' \
+	--flags 'skip-build,debug,debian,lessram,manual,skip-tests,export-aws-access-key' \
 	--flags 'arch:,features:,disable-features:,suite:,local-pkgs:,tests:,cert:' \
 	--usage '[--skip-build] [--lessram] [--debug] [--manual] [--arch=<arch>] [--skip-tests] [--tests=<test>,<test>,...] [<output-dir>] [<version/timestamp>]' \
 	--sample '--features kvm,khost --disable-features _slim .build' \
@@ -18,6 +18,7 @@ source "$thisDir/bin/.constants.sh" \
 		can only be implicit features another feature pulls in  (default:)
 --lessram	build will be no longer in memory (default: off)
 --debug		activates basically \`set -x\` everywhere (default: off)
+--debian	allows installation of packages from debian repo
 --manual	built will stop in build environment and activate manual mode (debugging) (default:off)
 --arch		builds for a specific architecture (default: architecture the build runs on)
 --suite		specifies the debian suite to build for e.g. bullseye, potatoe (default: testing)
@@ -29,6 +30,7 @@ source "$thisDir/bin/.constants.sh" \
 eval "$dgetopt"
 build=1
 debug=
+debian=
 manual=
 lessram=
 arch=$(${thisDir}/bin/get_arch.sh)
@@ -91,6 +93,7 @@ envArgs=(
 	LC_ALL="C"
 	suite="bookworm"
 	debug=$debug
+	debian=$debian
 	manual=$manual
 	arch="$arch"
 	features="$features"
