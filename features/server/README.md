@@ -1,9 +1,20 @@
 ## Feature: server
+### Description
+<website-feature>
+This server layer adds further services like auditd, SELinux and systemd for service management.
+</website-feature>
 
-<website-feature> server layer with complete init system (systemd) </website-feature>
+### Features
+This server layer adds further services like auditd and SELinux and systemd for service management.
+Additional tools like dnsutils, sudo, sysstat etc. are installed.
 
----
+### Unit testing
+This features support unit testing and validates extended capabilities on `ping`, the installed packages, sshd configuration, systemd units etc.
 
-	Type: element
-	Included Features: base
-#
+### Meta
+|||
+|---|---|
+|type|element|
+|artifact|None|
+|included_features|base,ssh|
+|excluded_features|None|

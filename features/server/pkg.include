@@ -13,7 +13,6 @@ libpam-systemd
 lsb-release
 net-tools
 netbase
-openssh-server
 procps
 sudo
 sysstat
