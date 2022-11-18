@@ -5,6 +5,8 @@ ARG	GARDENLINUX_MIRROR_KEY=/etc/apt/trusted.gpg.d/gardenlinux.asc
 ARG	VERSION
 
 COPY gardenlinux.asc $GARDENLINUX_MIRROR_KEY
+RUN  chown root:root $GARDENLINUX_MIRROR_KEY \
+        && chmod 644 $GARDENLINUX_MIRROR_KEY
 
 RUN if [ "$(dpkg --print-architecture)" != amd64 ]; then dpkg --add-architecture amd64; fi
 
