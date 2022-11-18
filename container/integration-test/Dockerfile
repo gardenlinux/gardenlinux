@@ -9,11 +9,8 @@ RUN : "Eval hardware architecture" \
      && [ $arch = "x86_64" ] && aliyun_arch=amd64 || aliyun_arch=arm64 \
      && [ $arch = "x86_64" ] && ossutil_arch=64 || ossutil_arch=arm64 \
     : "Install AWS requirements" \
-     && curl "https://awscli.amazonaws.com/awscli-exe-linux-${aws_arch}.zip" -o "awscliv2.zip" \
-     && ln -s awscliv2.zip awscli-exe-linux-${aws_arch}.zip \
-     && unzip awscliv2.zip \
-     && ./aws/install \
-     && rm -rf ./aws && \
+      && pip install awscliv2 \
+      && awsv2 --install \
     : "Install GCP requirements" \
      && curl -sL -o /usr/share/keyrings/cloud.google.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg \
      && echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
