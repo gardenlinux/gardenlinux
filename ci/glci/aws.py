@@ -137,9 +137,6 @@ def register_image(
     '''
     root_device_name = '/dev/xvda'
 
-    # Ensure to choose the proper
-    if len(boot_mode) == 0:
-
     result = ec2_client.register_image(
         # ImageLocation=XX, s3-url?
         Architecture=architecture,
