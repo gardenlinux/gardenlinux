@@ -137,7 +137,8 @@ def register_image(
     '''
     root_device_name = '/dev/xvda'
 
-    result = ec2_client.register_image(
+    # Define arguments for register_image
+    arguments = dict(
         # ImageLocation=XX, s3-url?
         Architecture=architecture,
         BlockDeviceMappings=[
@@ -155,9 +156,18 @@ def register_image(
         Name=image_name,
         RootDeviceName=root_device_name,
         VirtualizationType='hvm', # | paravirtual
-        BootMode=boot_mode,
-        UefiData=uefi_data,
     )
+
+    # Check if boot mode and uefi data
+    # are set properly and add them to
+    # the arguments
+    if len(boot_mode) > 0:
+        arguments['BootMode'] = boot_mode
+    if len(uefi_data) > 0:
+        arguments['UefiData'] = uefi_data
+
+    # Now, register image
+    result = ec2_client.register_image(**arguments)
 
     ec2_client.create_tags(
         Resources=[
