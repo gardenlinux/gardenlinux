@@ -157,6 +157,17 @@ def execute_remote_command(client, cmd, skip_error=False):
 
 def install_package_deb(client, pkg):
     """ Installs (a) Debian packagei(s) on a target platform """
+    # Packages for testing may not be included within the Garden Linux
+    # repository. We may add a native Debian repo to the temp chroot for
+    # further unit testing
+    (exit_code, output, error) = client.execute_command(
+        "grep 'https://deb.debian.org/debian bookworm main' /etc/apt/sources.list", quiet=True)
+    if exit_code > 0:
+       (exit_code, output, error) = client.execute_command(
+           "echo 'deb https://deb.debian.org/debian bookworm main' >> /etc/apt/sources.list && apt-get update", quiet=True)
+       assert exit_code == 0, f"Could not add native Debian repository."
+
+    # Finally, install the package
     (exit_code, output, error) = client.execute_command(
         f"apt-get install -y --no-install-recommends {pkg}", quiet=True)
     assert exit_code == 0, f"Could not install Debian Package: {error}"
