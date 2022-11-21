@@ -56,7 +56,9 @@ class AWS:
         if not 'architecture' in cfg or cfg['architecture'] == "amd64":
             cfg['architecture'] = "x86_64"
         if not 'boot_mode' in cfg:
-            cfg['boot_mode'] = None
+            cfg['boot_mode'] = ""
+        if not 'uefi_data' in cfg:
+            cfg['uefi_data'] = ""
         if not 'bucket' in cfg:
             cfg['bucket'] = f"img-{test_name}-upload"
         if not 'securitygroup_name' in cfg:
@@ -541,7 +543,8 @@ class AWS:
             snapshot_id = self._snapshot_id,
             image_name = image_name,
             architecture = self.config["architecture"],
-            boot_mode = self.config["boot_mode"]
+            boot_mode = self.config["boot_mode"],
+            uefi_data = self.config["uefi_data"]
         )
         self.ec2_client.create_tags(
             Resources = [self._ami_id],

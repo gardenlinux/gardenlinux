@@ -129,7 +129,8 @@ def register_image(
     snapshot_id: str,
     image_name: str,
     architecture: str,
-    boot_mode: str,
+    boot_mode: str='',
+    uefi_data: str='',
 ) -> str:
     '''
     @return: ami-id of registered image
@@ -157,7 +158,8 @@ def register_image(
         Name=image_name,
         RootDeviceName=root_device_name,
         VirtualizationType='hvm', # | paravirtual
-        BootMode=boot_mode
+        BootMode=boot_mode,
+        UefiData=uefi_data,
     )
 
     ec2_client.create_tags(
