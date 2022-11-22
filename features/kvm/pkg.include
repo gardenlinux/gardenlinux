@@ -1,5 +1,2 @@
 dosfstools
 qemu-guest-agent
-dracut-network
-ignition
-curl
