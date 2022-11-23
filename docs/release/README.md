@@ -13,9 +13,13 @@
     - [Github](#github)
     - [Gitlab](#gitlab)
       - [Major releases](#major-releases)
-      - [Minor & patch releases](#minor--patch-releases)
+      - [Minor \& patch releases](#minor--patch-releases)
   - [Tagging](#tagging)
+    - [Github](#github-1)
+    - [Gitlab](#gitlab-1)
   - [CI/CD](#cicd)
+    - [Artifact creation](#artifact-creation)
+    - [Artifact testing](#artifact-testing)
 
 # General
 Garden Linux frequently publishes snapshot releases. Beside this, beta and stables releases are published. Releases are available as machine images for most major cloud providers as well as file-system images for manual import. Release artifacts can be found within the [Github release section](https://github.com/gardenlinux/gardenlinux/releases).
@@ -207,5 +211,44 @@ Within this example, also an external mirror is used for `openssl` and obtained 
 ```
 
 ## Tagging
+### Github
+After having all features completed and included within the `main` branch on Github, a corresponding git tag may be set. This git tag represents the status of the git branch during the development at the time where it has been set. All current tags and releases can be found [here](https://github.com/gardenlinux/gardenlinux/tags).
+
+
+ The tag will be set as:
+```
+# Format
+$major.$minor
+
+# Example:
+943.1
+```
+
+A tag can be set by:
+```
+git tag $major.$minor
+git push --tags
+```
+
+### Gitlab
+Repository packages are maintained and built within the Gitlab pipeline. Garden Linux packages which are built by this pipeline are either versioned based on the source package provided by the configured distribution (e.g. debian:bookworm) or the version provided by the corresponding Git tag of the package project. In both cases, the Debian version of the package defines the general Garden Linux package version. It is then extended by a Garden Linux specific suffix in order to distinguish Garden Linux packages from their original Debian packages.
+
+If a commit is related to a Git tag however, the Git tag defines the whole package version. Thus, it must have the following structure to fit the general version schema:
+
+```
+gardenlinux/<Debian version>gardenlinux<count>
+gardenlinux/2.1.27+dfsg2-3gardenlinux1
+```
+
+Here, the count must be increased each time a Git tag already exists for the given Debian version. This allows us to release multiple Garden Linux packages for the same Debian version. Since, the tag defines how the Garden Linux package version will look like, it must be unique.
+
+Defining a git tag on a package will automatically include the package as the release version for an overall Garden Linux release. See also further [docs](https://gitlab.com/gardenlinux/gardenlinux-package-build).
 
 ## CI/CD
+### Artifact creation
+Releases are automatically created - for example a [nightly job](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/nightly.yml) release will created on a daily base at 6 AM. These releases are created by Github workflows and can be found in the subdirectory `.github`. These jobs are orchestrated by the [build config](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/build.yml). According to the [build config](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/build.yml) artifacts for `amd64` and `arm64` will be created for [all major platforms](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/build.yml#L53-L54).
+
+The same applies for the [release job](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/release.yml) that creates the final production artifacts with `gardener` support. Afterwards, the [release.sh script](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/release.sh) will upload the final artifacts to Github via the Github API.
+
+### Artifact testing
+Created images will be tested - this includes further unit- & platform integration tests. These tests are orchestrated by the [tests.yml config](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/tests.yml). Tests will run on all major platforms and are based on Pytest. The whole Pytest documentation for unit, platform and integration tests can be found [here](https://github.com/gardenlinux/gardenlinux/tree/main/tests).
