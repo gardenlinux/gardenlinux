@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-#mkdir -p /sysusr
 mkdir -p /sysusr/etc/repart.templates/1913e513-4d63-477b-8573-983185a2204f
 cp -a /etc/repart.templates/* /sysusr/etc/repart.templates/1913e513-4d63-477b-8573-983185a2204f/.
-
-#ln -f /etc /sysusr/etc
