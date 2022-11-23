@@ -1,0 +1,11 @@
+[Unit]
+Description=Reset system for immutability
+DefaultDependencies=no
+#After=systemd-repart.service sysusr-usr.mount initrd-usr-fs.target
+#Before=sysroot.mount initrd-root-fs.target
+Before=systemd-repart.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/reset-system
