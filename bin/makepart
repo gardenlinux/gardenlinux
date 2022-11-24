@@ -13,7 +13,6 @@ timestamp=$(garden-version --epoch "$version")
 
 rootfs_work=$(mktemp -d)
 cp -a "$rootfs/." "$rootfs_work"
-mkdir -p "$rootfs_work/overlay"/{etc,var}/{upper,work}
 
 find "$rootfs_work/var/log/" -type f -delete
 
@@ -38,21 +37,32 @@ fi
 fstab="$(mktemp)"
 veritytab="$(mktemp)"
 root_hash="$(mktemp)"
+root_repart="$(mktemp)"
+
+dracut_include="$(mktemp -d)"
+bind_mounts="$(mktemp -d)"
 
 partitions="$(mktemp)"
-overlay_partitions="$(mktemp)"
+final_partition="$(mktemp)"
 secureboot_partitions="$(mktemp)"
 efi_partition="$(mktemp)"
+
+part_num=0
 
 # strip comments and blank lines and sort by path depth (deepest first)
 sed 's/#.*//;/^[[:blank:]]*$/d' \
 | while IFS= read -r line; do
 	# get fstab entry target path depth
 	depth=$(echo "$line" | awk '{ print $2 }' | sed 's#^/\+##;s#/\+$##' | awk -F '/' '{ print NF }')
+	# /bind_mounts is a special partition that must be created after all others, but before root
+	if [ "$(echo "$line" | awk '{ print $2 }')" = "/bind_mounts" ]; then
+		depth=0.1
+	fi
 	echo "$depth" "$line"
   done \
 | sort -k 1 -n -r \
 | while read -r depth source target fs options args; do
+	part_num=$((part_num + 1))
 	# parse extra fstab arguments to determine partition attributes
 	type=$([[ "$fs" = "swap" ]] && echo "swap" || echo "linux")
 	# consider switching this to args
@@ -63,6 +73,9 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 	verity=0
 	secureboot=0
 	syslinux=$([[ "$(cut -c -5 <<< "$target")" = "/boot" ]] && [[ -f "$rootfs/usr/bin/syslinux" ]] && echo 1 || echo 0)
+	ephemeral=0
+	weight=1
+	is_final_partition=0
 	while IFS="=" read -r key value; do
 		case "$key" in
 			"type")
@@ -81,39 +94,73 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 			"syslinux")
 				syslinux=1
 				;;
+			"ephemeral")
+				ephemeral=1
+				;;
+			"weight")
+				weight="$value"
+				;;
+			"final_partition")
+				is_final_partition=1
+				;;
 		esac
 	done < <(echo "$args" | tr "," "\n")
 
 	# check if fstab entry specifies source by UUID or LABEL
 	uuid="$(grep -oP '(?<=^UUID=)[a-fA-F0-9\-]*$' <<< "$source" || true)"
 	label="$(grep -oP '(?<=^LABEL=)[a-zA-Z0-9\_\-]*$' <<< "$source" || true)"
+	repart="$(grep -oP '(?<=^REPART=)[0-9]*$' <<< "$source" || true)"
+
+	if [[ "$ephemeral" = 1 ]] && [[ -z "$repart" ]]; then
+		echo "WARNING: ephemeral flag only works for partitions created by systemd-repart"
+	fi
+
+	if [[ "$depth" = 0 ]]; then
+		if grep "/bind_mounts" "$fstab"; then
+			mkdir -p "$rootfs_work/bind_mounts"
+		fi
+		# we iterate depth sorted, so all other partitions should already have been processed and written to fstab
+		if [[ "$verity" = 0 ]] && [[ "$repart" = 0 ]]; then
+			options="$options,x-systemd.growfs"
+			echo "$source" "$target" "$fs" "$options" "$dump" "$pass" >> "$fstab"
+		fi
+		column -t "$fstab" | tac > "$rootfs_work/etc/fstab"
+		column -t "$veritytab" | tac >> "$rootfs_work/etc/veritytab"
+	fi
+
+	if [[ "$source" = "bind" ]]; then
+		parent=""$bind_mounts$(dirname "$target")""
+		mkdir -p "$parent"
+		mv "$rootfs_work$target" "$parent"
+		mkdir "$rootfs_work$target"
+		echo "/bind_mounts$target" "$target" "none" "bind,x-systemd.requires-mounts-for=/bind_mounts" "0" "2" >> "$fstab"
+		continue
+	fi
+
+	data_source="$([ "$target" = "/bind_mounts" ] && echo "$bind_mounts" || echo "$rootfs_work$target")"
+
+	if [[ -n "$repart" ]]; then
+		if [[ "$depth" = 0 ]]; then
+			find "$data_source/boot" -type f -delete
+			echo 1 > "$root_repart"
+		fi
+		make_repart_partition -t "$target" -f "$fs" -o "$options" -g "$type" -e "$ephemeral" -w "$weight" "$repart" "$data_source" "$dracut_include"
+		find "$data_source" -depth -mindepth 1 -delete
+		continue
+	fi
 
 	# compute sufficiently padded size for partition (aligned to nearest MB (2048 sectors))
-	size=${size:-$(du -sb "$rootfs_work$target" | awk '{ min_size_bytes = min_size * MB; size = $1 * 1.5; padded_size = size + (MB - (size % MB) % MB); if (padded_size < min_size_bytes) padded_size = min_size_bytes; print (padded_size / MB) "MiB" }' "MB=1048576" "min_size=64")}
+	size=${size:-$(du -sb "$data_source" | awk '{ min_size_bytes = min_size * MB; size = $1 * 1.5; padded_size = size + (MB - (size % MB) % MB); if (padded_size < min_size_bytes) padded_size = min_size_bytes; print (padded_size / MB) "MiB" }' "MB=1048576" "min_size=64")}
 
 	file="$(mktemp)"
 	truncate -s "$size" "$file"
 
-	if [[ "$depth" = 0 ]]; then
-		# we iterate depth sorted, so all other partitions should already have been processed and written to fstab
-		if [[ "$verity" = 0 ]]; then
-			options="$options,x-systemd.growfs"
-			echo "$source" "$target" "$fs" "$options" "$dump" "$pass" >> "$fstab"
-			rm -rf "$rootfs_work/overlay"
-		else
-			echo "overlay /var overlay defaults,lowerdir=/sysroot/var,upperdir=/sysroot/overlay/var/upper,workdir=/sysroot/overlay/var/work,x-systemd.requires-mounts-for=/sysroot/overlay,x-initrd.mount 0 2" >> "$fstab"
-			echo "overlay /etc overlay defaults,lowerdir=/sysroot/etc,upperdir=/sysroot/overlay/etc/upper,workdir=/sysroot/overlay/etc/work,x-systemd.requires-mounts-for=/sysroot/overlay,x-initrd.mount 0 2" >> "$fstab"
-		fi
-		column -t "$fstab" > "$rootfs_work/etc/fstab"
-		column -t "$veritytab" >> "$rootfs_work/etc/veritytab"
-	fi
-
 	case "$fs" in
 		"ext4")
-			make_reproducible_ext4 -t "$timestamp" -h "gardenlinux:$version:partition:$target" ${uuid:+"-u"} ${uuid:+"$uuid"} ${label:+"-l"} ${label:+"$label"} -q $([ "$resize" = 0 ] || echo "-m") -p 16 "$rootfs_work$target" "$file"
+			make_reproducible_ext4 -t "$timestamp" -h "gardenlinux:$version:partition:$target" ${uuid:+"-u"} ${uuid:+"$uuid"} ${label:+"-l"} ${label:+"$label"} -q $([ "$resize" = 0 ] || echo "-m") -p 16 "$data_source" "$file"
 			;;
 		"vfat")
-			make_reproducible_vfat -t "$timestamp" -h "gardenlinux:$version:partition:$target" ${uuid:+"-u"} ${uuid:+"$uuid"} ${label:+"-l"} ${label:+"$label"} "$rootfs_work$target" "$file"
+			make_reproducible_vfat -t "$timestamp" -h "gardenlinux:$version:partition:$target" ${uuid:+"-u"} ${uuid:+"$uuid"} ${label:+"-l"} ${label:+"$label"} "$data_source" "$file"
 			echo $file > $efi_partition
 			;;
 		"swap")
@@ -127,7 +174,7 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 
 	# for real mount points (i.e. not swap) clear target directory after contents written to partition to avoid rewriting contents to parent mount point partition
 	if [[ "$(cut -c 1 <<< "$target")" = "/" ]]; then
-		find "$rootfs_work$target" -depth -mindepth 1 -delete
+		find "$data_source" -depth -mindepth 1 -delete
 	fi
 
 	# install syslinux if extra argument given in fstab
@@ -156,7 +203,9 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 		verity_part_uuid="${hash:32:8}-${hash:40:4}-${hash:44:4}-${hash:48:4}-${hash:52:12}"
 		echo -e "$part_uuid\t$type\t$size\t$syslinux\t$file\t$label" >> "$partitions"
 		echo -e "$verity_part_uuid\tlinux\t$verity_size\t0\t$verity_file" >> "$partitions"
-
+		make_repart_partition -g "$type" --def-only "$part_num" "$dracut_include"
+		part_num=$((part_num + 1))
+		make_repart_partition -g linux --def-only "$part_num" "$dracut_include"
 		if [[ "$depth" != 0 ]]; then
 			verity_name="verity$(sed 's|/|_|' <<< "$target")"
 			echo "$verity_name" "$source" "UUID=$verity_uuid" "$hash" >> "$veritytab"
@@ -164,7 +213,13 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 		fi
 	else
 		part_uuid=$(echo "gardenlinux:$version:part_uuid:$source" | uuid_hash)
-		echo -e "$part_uuid\t$type\t$size\t$syslinux\t$file\t$label" >> "$([[ "$(cut -c -8 <<< "$target")" = "/overlay" ]] && echo "$overlay_partitions" || echo $partitions)"
+		if [ "$is_final_partition" = 1 ]; then
+			[ ! -s "$final_partition" ]
+			echo -e "$part_uuid\t$type\t$size\t$syslinux\t$file\t$label" >> "$final_partition"
+		else
+			echo -e "$part_uuid\t$type\t$size\t$syslinux\t$file\t$label" >> "$partitions"
+		fi
+		make_repart_partition -g "$type" --def-only "$part_num" "$dracut_include"
 		echo "$source" "$target" "$fs" "$options" "$dump" "$pass" >> "$fstab"
 	fi
 
@@ -173,30 +228,39 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 	fi
   done
 
+rmdir "$bind_mounts"
 rmdir "$rootfs_work"
+
+if [[ -n "$(find "$dracut_include/etc/repart.d/" -name "1.*.conf")" ]] || [[ "$(find "$dracut_include/etc/systemd/system-generators" -name "repart-*")" ]]; then
+	disk_uuid=$(echo "gardenlinux:$version:disk_uuid" | uuid_hash)
+	make_repart_disk "$disk_uuid" "$dracut_include"
+fi
 
 read -r _ cmdline < "$rootfs/etc/kernel/cmdline" # hacky assumption that root= is always at start of kernel cmdline. TODO: find better way to handle this
 if [[ -z "$(cat "$root_hash")" ]]; then
-	root_source=$(tail -n 1 "$fstab" | cut -d " " -f 1)
-	cmdline="root=$root_source $cmdline"
+	if [[ -z "$(cat "$root_repart")" ]]; then
+		root_source=$(tail -n 1 "$fstab" | cut -d " " -f 1)
+		cmdline="root=$root_source $cmdline"
+	fi
 
 	# enable verity if the root partition is writable, but any other partition has verity enabled, most likely /usr
 	if [[ ! -z "$(cat "$veritytab")" ]] && [ ! -s "$secureboot_partitions" ]; then
-		makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -t "$timestamp" -s "false" < "$efi_partition"
+		makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -i "$dracut_include" -t "$timestamp" -s "false" < "$efi_partition"
 	fi
 else
 	cmdline="roothash=$(cat "$root_hash") root=/dev/mapper/root $cmdline"
 
 	if [ ! -s "$secureboot_partitions" ]; then
-		makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -t "$timestamp" -s "false" < "$efi_partition"
+		makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -i "$dracut_include" -t "$timestamp" -s "false" < "$efi_partition"
 	fi
 fi
 
 if [ -s "$secureboot_partitions" ]; then
-	makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -t "$timestamp" < "$secureboot_partitions"
+	makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -i "$dracut_include" -t "$timestamp" < "$secureboot_partitions"
 fi
 
-cat "$partitions" "$overlay_partitions" >&3
+cat "$partitions" "$final_partition" >&3
 
 # cleanup
-rm "$fstab" "$veritytab" "$root_hash" "$partitions" "$overlay_partitions" "$secureboot_partitions"
+rm "$fstab" "$veritytab" "$root_hash" "$root_repart" "$partitions" "$final_partition" "$secureboot_partitions"
+rm -rf "$dracut_include"
