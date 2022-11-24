@@ -31,5 +31,5 @@ EOF
 mkdir -p "$target/etc/systemd/system/systemd-veritysetup@.service.d"
 cat > "$target/etc/systemd/system/systemd-veritysetup@.service.d/override.conf" << EOF
 [Unit]
-After=systemd-repart.service
+Before=systemd-repart.service
 EOF
