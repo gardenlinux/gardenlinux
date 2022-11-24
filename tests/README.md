@@ -175,6 +175,10 @@ aws:
     instance_type: t3.micro
     # architecture of the image and VM to be used (optional)
     architecture: amd64
+    # boot mode of the VM. One can choose between "uefi" and "legacy-bios" (optional)
+    boot_mode: legacy-bios
+    # UEFI data which is a base64 representation of the UEFI variable store
+    # uefi_data: "dGVzdAo=..."
 
     # test name to be used for naming and/or tagging resources (optional)
     test_name: my_gardenlinux_test
@@ -213,6 +217,8 @@ aws:
 - **region** _(required)_: the AWS region in which all test relevant resources will be created
 - **instance-type** _(optional)_: the instance type that will be used for the EC2 instance used for testing, defaults to `t3.micro` if not specified
 - **architecture** _(optional)_: the architecture under which the AMI of the image to test should be registered (`amd64` or `arm64`), must match the instance type, defaults to `amd64` if not specified
+- **boot_mode** _(optional)_: the boot mode that the AMI of the image should be started with. Keep in mind that Graviton (`arm64`) can only use UEFI. Choose between `uefi` and `legacy-bios`.
+- **uefi_data** _(optional)_: Base64 representation of the non-volatile UEFI variable store. You can inspect and modify the UEFI data by using the python-uefivars tool on GitHub.
 
 - **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
 
