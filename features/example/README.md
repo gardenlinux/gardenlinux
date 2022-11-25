@@ -126,7 +126,9 @@ irssi
 
 
 ### pkg.include
-Installs given packages from an included repository or by a given file path with minimal and needed dependency handling (recommended dependencies are ignored). Package(s) must be present within the used repositories or file system. Additional third-party repositories may be included (see [docs](../docs)). Packages will be installed before any further configuration starts. This may let you install packages and configure them afterwards.
+Installs given packages from the Garden Linux repository or by a given file path or file uri with minimal and needed dependency handling (recommended dependencies are ignored). Packages will be installed before any further configuration starts. This may let you install packages and configure them afterwards.
+
+*Hint: During the feature development the native Debian repository can additionally be used by adding `--debian-mirror` to the `build.sh`. Please take note that this is not supported for production builds and will raise an error. Therefore, needed packages must be repackaged or be mirrored on the Garden Linux repository.*
 
 **Usage:**
 

@@ -139,6 +139,7 @@ If `Podman` was already present please add the repository yourself to `unqualifi
 | --arch | Builds for a specific architecture (default: architecture the build runs on) |
 | --suite | Specifies the debian suite to build for e.g. bullseye, potatoe (default: testing) |
 | --skip-tests | Deactivating tests (default: off) |
+| --debian-mirror | Adds the native Debian repository (default: off [*only for development available*]) |
 | --tests | Test suite to use, available tests are unittests, kvm, chroot (default: unittests) |
 | --skip-build | Do not create the build container |
 

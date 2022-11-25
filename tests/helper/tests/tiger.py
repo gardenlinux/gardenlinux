@@ -7,10 +7,7 @@ from helper import utils
 def tiger(client, testconfig, chroot):
     """Run tiger to test for system security vulnerabilities"""
     utils.AptUpdate(client)
-    (exit_code, output, error) = client.execute_command(
-        "apt-get install -y --no-install-recommends tiger",
-        quiet=True)
-    assert exit_code == 0, f"no {error=} expected"
+    utils.install_package_deb(client, "tiger")
 
     enabled_features = testconfig["features"]
 

@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/bin/.constants.sh" \
-	--flags 'skip-build,debug,lessram,manual,skip-tests,export-aws-access-key' \
+	--flags 'skip-build,debug,lessram,manual,skip-tests,debian-mirror,export-aws-access-key' \
 	--flags 'arch:,features:,disable-features:,suite:,local-pkgs:,tests:,cert:' \
 	--usage '[--skip-build] [--lessram] [--debug] [--manual] [--arch=<arch>] [--skip-tests] [--tests=<test>,<test>,...] [<output-dir>] [<version/timestamp>]' \
 	--sample '--features kvm,khost --disable-features _slim .build' \
@@ -18,6 +18,7 @@ source "$thisDir/bin/.constants.sh" \
 		can only be implicit features another feature pulls in  (default:)
 --lessram	build will be no longer in memory (default: off)
 --debug		activates basically \`set -x\` everywhere (default: off)
+--debian-mirror	allows usage of native Debian repository (default: off)
 --manual	built will stop in build environment and activate manual mode (debugging) (default:off)
 --arch		builds for a specific architecture (default: architecture the build runs on)
 --suite		specifies the debian suite to build for e.g. bullseye, potatoe (default: testing)
@@ -29,6 +30,7 @@ source "$thisDir/bin/.constants.sh" \
 eval "$dgetopt"
 build=1
 debug=
+debianMirror=0
 manual=
 lessram=
 arch=$(${thisDir}/bin/get_arch.sh)
@@ -41,22 +43,25 @@ local_pkgs=
 output=".build"
 cert=cert/
 aws_access_key=0
+
+# Update all param flags
 while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
 	case "$flag" in
-		--skip-build)	build=		;;
-		--lessram)	lessram=1	;;
-		--debug)	debug=1		;;
-		--manual)	manual=1	;;
-		--arch)		arch="$1"; 	shift ;;
-		--features) 	features="$1";	shift ;;
-		--disable-features) 	disablefeatures="$1";shift ;;
-		--skip-tests)   skip_tests=1	;;
-		--tests)	tests="$1"; shift ;;
-		--local-pkgs) local_pkgs="$1"; shift ;;
-		--cert) cert="$1"; shift ;;
-		--export-aws-access-key) aws_access_key=1 ;;
+		--skip-build)			build=		;;
+		--lessram)			lessram=1	;;
+		--debug)			debug=1		;;
+		--debian-mirror)		debianMirror=1	;;
+		--manual)			manual=1	;;
+		--arch)				arch="$1"; 	shift ;;
+		--features)	 		features="$1";	shift ;;
+		--disable-features) 		disablefeatures="$1";shift ;;
+		--skip-tests)   		skip_tests=1	;;
+		--tests)			tests="$1"; shift ;;
+		--local-pkgs) 			local_pkgs="$1"; shift ;;
+		--cert) 			cert="$1"; shift ;;
+		--export-aws-access-key) 	aws_access_key=1 ;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
@@ -91,6 +96,7 @@ envArgs=(
 	LC_ALL="C"
 	suite="bookworm"
 	debug=$debug
+	debianMirror=$debianMirror
 	manual=$manual
 	arch="$arch"
 	features="$features"

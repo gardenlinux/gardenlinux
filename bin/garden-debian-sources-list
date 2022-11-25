@@ -1,43 +1,47 @@
 #!/usr/bin/env bash
-
 # Contains sources from https://github.com/debuerreotype/debuerreotype
-
 set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
 	--flags 'ports' \
 	--flags 'deb-src' \
-	--flags 'gardenlinux-only' \
+	--flags 'debian-mirror' \
 	--flags 'local-pkgs:' \
 	-- \
-	'[--deb-src] [--ports] [--gardenlinux-only] <target-dir> <suite> <version>' \
+	'[--deb-src] [--ports] <target-dir> <suite> <version>' \
 	'rootfs stretch 520.0'
 
 eval "$dgetopt"
-gardenlinuxOnly=
+gardenlinuxOnly=1
 ports=
+debianMirror=0
 debSrc=
 local_pkgs=
+
+# Update all param flags
 while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
 	case "$flag" in
-		--gardenlinux-only) gardenlinuxOnly=1 ;;
-		--ports) ports=1 ;;
-		--deb-src) debSrc=1 ;;
-		--local-pkgs) local_pkgs="$1"; shift ;;
+		--gardenlinux-only)	gardenlinuxOnly=1 ;;
+		--ports) 		ports=1 ;;
+		--debian-mirror) 	debianMirror=1 ;;
+		--deb-src)		debSrc=1 ;;
+		--local-pkgs)		local_pkgs="$1"; shift ;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
 done
 
-targetDir="${1:-}"; shift || eusage 'missing target-dir'
-suite="${1:-}"; shift || eusage 'missing suite'
-version="${1:-}"; shift || eusage 'missing version'
+targetDir="${1:-}";	shift || eusage 'missing target-dir'
+suite="${1:-}";		shift || eusage 'missing suite'
+version="${1:-}";	shift || eusage 'missing version'
+
 [ -n "$targetDir" ]
 
 epoch="$(< "$targetDir/garden-epoch")"
+
 
 # Garden Linux Repository configuration
 gardenlinuxMirror='https://repo.gardenlinux.io/gardenlinux'
@@ -74,6 +78,7 @@ deb() {
 
 # https://github.com/tianon/go-aptsources/blob/e066ed9cd8cd9eef7198765bd00ec99679e6d0be/target.go#L16-L58
 {
+	# Add local packages
 	if [ -n "$local_pkgs" ]; then
 		echo "deb [trusted=yes] file:$local_pkgs ./"
 		if [ -n "$debSrc" ]; then
@@ -81,8 +86,13 @@ deb() {
 		fi
 	fi
 
-	printf "# Gardenlinux Repo\n"
+        # Add Debian native mirror
+        if [ $debianMirror -eq 1 ]; then
+                echo "deb https://deb.debian.org/debian testing main"
+        fi
 
+
+	printf "# Gardenlinux Repo\n"
 	deb "$version" main gardenlinux
 
 	if [[ -z "$gardenlinuxOnly" ]]; then
@@ -107,14 +117,29 @@ deb() {
 		esac
 	fi
 } > "$targetDir/etc/apt/sources.list"
+# Adjust file permission for sources file
 chmod 0644 "$targetDir/etc/apt/sources.list"
 
+
+## Adjust repository priorities
+## Highest priority (600): Local packages
+## Regular priority (500/550): Garden Linux repository (550 when Debian Mirror is activated)
+## Lowest priority (500): Additional repositories like native Debian repository
+
+# Adjust repository priority for local packages
 if [ -n "$local_pkgs" ]; then
 	printf 'Package: *\nPin: origin ""\nPin-Priority: 600\n' > "$targetDir/etc/apt/preferences.d/local_pkgs"
 else
 	rm -f "$targetDir/etc/apt/preferences.d/local_pkgs"
 fi
 
+# Adjust repository priority for Garden Linux
+if [ $debianMirror -eq 1 ]; then
+	printf 'Package: *\nPin: origin repo.gardenlinux.io\nPin-Priority: 550\n' > "$targetDir/etc/apt/preferences.d/gardenlinux"
+fi
+
+
+# Validate sources.list file
 if [ ! -s "$targetDir/etc/apt/sources.list" ]; then
 	echo >&2 "error: sources.list ended up empty -- something is definitely wrong"
 	exit 1
