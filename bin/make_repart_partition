@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -Eexufo pipefail
+set -Eeufo pipefail
 
 mount_target=/
 fs=ext4
