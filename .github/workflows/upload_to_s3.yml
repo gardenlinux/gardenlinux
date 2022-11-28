@@ -31,8 +31,8 @@ jobs:
         target: [ kvm, metal, gcp, aws, azure, ali, openstack, vmware, "metal,_pxe" ]
         modifier: [ "${{ inputs.default_modifier }}" ]
     steps:
-      - uses: actions/checkout@v2
-      - uses: aws-actions/configure-aws-credentials@v1
+      - uses: actions/checkout@v3
+      - uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           role-to-assume: ${{ secrets.role }}
           role-session-name: ${{ secrets.session }}
@@ -46,7 +46,7 @@ jobs:
           cname="$(bin/garden-feat --featureDir features --features ${{ matrix.target }}${{ matrix.modifier }}${{ matrix.additional_modifer }})"
           artifact_name="$cname-${{ matrix.architecture }}-${{ inputs.version }}-$(git rev-parse --short HEAD)"
           printf 'cname=%s\nartifact_name=%s\n' "$cname" "$artifact_name" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: build-${{ env.artifact_name }}
       - name: upload to S3 bucket ${{ secrets.bucket }}
@@ -69,8 +69,8 @@ jobs:
           - architecture: arm64
             target: azure
     steps:
-      - uses: actions/checkout@v2
-      - uses: aws-actions/configure-aws-credentials@v1
+      - uses: actions/checkout@v3
+      - uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           role-to-assume: ${{ secrets.role }}
           role-session-name: ${{ secrets.session }}
@@ -84,7 +84,7 @@ jobs:
           cname="$(bin/garden-feat --featureDir features --features ${{ matrix.target }}${{ matrix.modifier }}${{ matrix.additional_modifer }})"
           artifact_name="$cname-${{ matrix.architecture }}-${{ inputs.version }}-$(git rev-parse --short HEAD)"
           printf 'cname=%s\nartifact_name=%s\n' "$cname" "$artifact_name" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: tests-${{ env.artifact_name }}
       - name: upload to S3 bucket ${{ secrets.bucket }}

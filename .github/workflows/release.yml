@@ -18,10 +18,10 @@ jobs:
   create_release:
     runs-on: ec2-gardenlinux-amd64
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: create GitHub release
         run: .github/workflows/release.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} create "${{ inputs.type == 'beta' && 'beta_' || '' }}${{ inputs.version }}" "${{ inputs.commit }}" "${{ inputs.version }}" > .github_release
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: release
           path: .github_release
@@ -38,11 +38,11 @@ jobs:
         architecture: [ amd64, arm64 ]
         cname: [ kvm_prod, metal_prod, gcp-gardener_prod, aws-gardener_prod, azure-gardener_prod, ali-gardener_prod, openstack-gardener_prod, vmware-gardener_prod, metal_pxe_prod ]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/download-artifact@v2
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
         with:
           name: release
-      - uses: aws-actions/configure-aws-credentials@v1
+      - uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
@@ -80,11 +80,11 @@ jobs:
           - architecture: arm64
             target: azure
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/download-artifact@v2
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
         with:
           name: release
-      - uses: aws-actions/configure-aws-credentials@v1
+      - uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
