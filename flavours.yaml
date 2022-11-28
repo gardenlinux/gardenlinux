@@ -1,36 +1,25 @@
----
-flavour_sets:
-  - name: 'gardener'
-    flavour_combinations:
-      - architectures: [ 'amd64' ]
-        platforms: [ ali, aws, azure, gcp, openstack, vmware ]
-        modifiers: [ [ gardener, _prod ] ]
-        fails: [ unit, integration ]
-      - architectures: [ 'arm64' ]
-        platforms: [ aws ]
-        modifiers: [ [ gardener, _prod ] ]
-        fails: [ unit, integration ]
-  - name: 'all'
-    flavour_combinations:
-      - architectures: [ 'amd64' ]
-        platforms: [ metal ]
-        modifiers: [ [ gardener, _prod ] , [ chost, _prod ] , [] ]
-        fails: [ unit, integration ]
-      - architectures: [ 'amd64' ]
-        platforms: [ ali, aws, azure, gcp, openstack, vmware ]
-        modifiers: [ [ gardener, _prod ] ]
-        fails: [ unit, integration ]
-      - architectures: [ 'amd64' ]
-        platforms: [ kvm ]
-        modifiers: [ ['_prod', 'chost'], ['_prod', 'gardener'] ]
-        fails: [ unit, integration ]
-      - architectures: [ 'arm64' ]
-        platforms: [ aws ]
-        modifiers: [ [ gardener, _prod ] ]
-        fails: [ unit, integration ]
-  - name: 'testing'
-    flavour_combinations:
-      - architectures: [ 'amd64' ]
-        platforms: [ ali, aws, azure, gcp, openstack, vmware, kvm ]
-        modifiers: [ [ _prod, gardener ] ]
-        fails: [ unit, integration ]
+targets:
+  - name: kvm
+    modifiers:
+      - _secureboot
+      - _secureboot,_readonly
+  - name: metal
+    modifiers:
+      - _secureboot
+      - _secureboot,_readonly
+      - _pxe
+      - vhost
+  - name: gcp
+  - name: aws
+    modifiers:
+      - _secureboot
+      - _secureboot,_readonly
+      - githubActionRunner
+  - name: azure
+  - name: ali
+  - name: openstack
+  - name: vmware
+  - name: firecracker
+modifiers:
+  - _dev
+  - gardener,_prod

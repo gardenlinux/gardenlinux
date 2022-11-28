@@ -14,7 +14,7 @@ jobs:
       id-token: write
     with:
       version: ${{ inputs.version || 'now' }}
-      default_modifier: "-prod"
+      default_modifier: ",gardener,_prod"
       use_kms: true
     secrets:
       secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
@@ -30,8 +30,8 @@ jobs:
       packages: write
     uses: ./.github/workflows/tests.yml
     with:
-      version: ${{ inputs.version || 'now' }}
-      default_modifier: "-prod"
+      version: ${{ needs.build.outputs.version }}
+      default_modifier: ",gardener,_prod"
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -46,12 +46,13 @@ jobs:
       az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   upload_to_s3:
     name: upload to S3
-    needs: tests
+    needs: [ build, tests ]
     permissions:
       id-token: write
     uses: ./.github/workflows/upload_to_s3.yml
     with:
-      default_modifier: "-prod"
+      version: ${{ needs.build.outputs.version }}
+      default_modifier: ",gardener,_prod"
     secrets:
       bucket: ${{ secrets.AWS_S3_BUCKET }}
       region: ${{ secrets.AWS_REGION }}
