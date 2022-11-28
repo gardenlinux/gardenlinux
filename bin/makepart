@@ -120,7 +120,7 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 			mkdir -p "$rootfs_work/bind_mounts"
 		fi
 		# we iterate depth sorted, so all other partitions should already have been processed and written to fstab
-		if [[ "$verity" = 0 ]] && [[ "$repart" = 0 ]]; then
+		if [[ "$verity" = 0 ]] && [[ -z "$repart" ]]; then
 			options="$options,x-systemd.growfs"
 			echo "$source" "$target" "$fs" "$options" "$dump" "$pass" >> "$fstab"
 		fi
