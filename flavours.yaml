@@ -16,6 +16,7 @@ targets:
     modifiers:
       - _secureboot
       - _secureboot,_readonly
+      - _secureboot,_readonly,_persistence
       - githubActionRunner
   - name: azure
   - name: ali

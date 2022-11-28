@@ -59,7 +59,7 @@ jobs:
       fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
-        target: [ kvm, "kvm,_secureboot", "kvm,_secureboot,_readonly", "kvm,_secureboot,_readonly,_persistence", metal, "metal,_secureboot", "metal,_secureboot,_readonly", "metal,_secureboot,_readonly,_persistence", gcp, aws, "aws,_secureboot", azure, ali, openstack, vmware, "metal,_pxe", firecracker, "aws,githubActionRunner", "metal,vhost" ]
+        target: [ kvm, "kvm,_secureboot", "kvm,_secureboot,_readonly", "kvm,_secureboot,_readonly,_persistence", metal, "metal,_secureboot", "metal,_secureboot,_readonly", "metal,_secureboot,_readonly,_persistence", gcp, aws, "aws,_secureboot", "aws,_secureboot,_readonly", "aws,_secureboot,_readonly,_persistence", azure, ali, openstack, vmware, "metal,_pxe", firecracker, "aws,githubActionRunner", "metal,vhost" ]
         modifier: [ "${{ inputs.default_modifier }}" ]
     steps:
       - uses: actions/checkout@v3
