@@ -8,6 +8,7 @@ veritytab=
 cert_base="/cert/secureboot.db"
 timestamp=0
 secureboot="true"
+dracut_include=
 
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -39,6 +40,10 @@ while [ $# -gt 0 ]; do
 			secureboot="$2"
 			shift 2
 			;;
+		-i|--include)
+			dracut_include="$2"
+			shift 2
+			;;
 		*)
 			break
 			;;
@@ -52,6 +57,9 @@ unified_image_signed="$(mktemp)"
 [ ! -e "$rootfs$initrd" ]
 touch "$rootfs$initrd"
 mount --bind "$initrd" "$rootfs$initrd"
+[ ! -e "$rootfs$dracut_include" ]
+mkdir -p "$rootfs$dracut_include"
+mount --bind "$dracut_include" "$rootfs$dracut_include"
 [ ! -s "$rootfs/etc/veritytab" ]
 touch "$rootfs/etc/veritytab"
 [ -z "$veritytab" ] || mount --bind "$veritytab" "$rootfs/etc/veritytab"
@@ -64,14 +72,17 @@ kernel_version="${kernel_file#*-}"
 chroot "$rootfs" dracut \
 	--force \
 	--kver "$kernel_version" \
-	--modules "bash dash systemd systemd-initrd systemd-veritysetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown" \
-	--install "/etc/veritytab" \
+	--modules "bash dash systemd systemd-initrd systemd-veritysetup systemd-repart kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown" \
+	--install "/etc/veritytab mkfs.ext4 systemd-escape" \
+	--include "$dracut_include" "/" \
 	--reproducible \
 	"$initrd"
 
 umount "$rootfs/proc"
 umount "$rootfs$initrd"
 rm "$rootfs$initrd"
+umount "$rootfs$dracut_include"
+rmdir "$rootfs$dracut_include"
 umount "$rootfs/etc/veritytab"
 rm "$rootfs/etc/veritytab"
 
@@ -115,6 +126,8 @@ if [[ "$secureboot" = "true" ]]; then
 	datefudge -s "@$timestamp" sbsign --cert "$cert_base.crt" "${key_params[@]}" --output "$unified_image_signed" "$unified_image"
 	rm "$unified_image"
 
+	ls -lah "$unified_image_signed"
+
 	mv "$unified_image_signed" "$efi_dir/EFI/BOOT/BOOT$uefi_arch.EFI"
 else
 	mv "$unified_image" "$efi_dir/EFI/BOOT/BOOT$uefi_arch.EFI"
@@ -129,7 +142,6 @@ while read -r partition_file; do
 		mcopy -i $partition_file -po "$syslinux" ::/syslinux/syslinux.cfg
 	# copy initrd.img for legacy boot when secureboot feature is not enabled
 		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$initrd" "::/Default/${kernel_version}/initrd.img-${kernel_version}"
-		datefudge -s "@$timestamp" mcopy -i "$partition_file" -o -p "$initrd" "::/legacy/${kernel_version}/initrd.img-${kernel_version}"
 	fi
 	if [[ ! "$secureboot" = "true" ]]; then
 	# clean up EFI directory

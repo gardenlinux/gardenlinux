@@ -52,6 +52,7 @@ RUN : "Initialize the build container package installation" \
 			onmetal-image \
 			aws-sdk-cpp \
 			aws-kms-pkcs11 \
+			systemd \
 		&& apt-get install -t unstable -y --no-install-recommends \
 			binutils-x86-64-linux-gnu \
 			binutils-aarch64-linux-gnu \

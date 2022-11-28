@@ -19,7 +19,7 @@ endif
 .PRECIOUS: %.crt
 
 ifndef CA
-default: $(PREFIX)kernel-sign.crt $(PREFIX)secureboot.pk.auth $(PREFIX)secureboot.null.pk.auth $(PREFIX)secureboot.kek.auth $(PREFIX)secureboot.db.auth $(PREFIX)sign.pub
+default: $(PREFIX)kernel-sign.crt $(PREFIX)secureboot.pk.auth $(PREFIX)secureboot.null.pk.auth $(PREFIX)secureboot.kek.auth $(PREFIX)secureboot.db.auth $(PREFIX)secureboot.aws-efivars $(PREFIX)sign.pub
 
 $(PREFIX)intermediate-ca.crt: $(PREFIX)root-ca.crt
 $(PREFIX)kernel-sign.crt: $(PREFIX)intermediate-ca.crt
@@ -53,13 +53,16 @@ GUID.txt:
 %.null.pk.auth: GUID.txt $(CA)
 	@./genefiauth --guid-file '$(word 1,$+)' --ca '$(word 2,$+)' --null '$@'
 
+%.aws-efivars: %.pk.auth %.kek.auth %.db.auth
+	@uefivars.py -i none -o aws -O '$@' -P '$*.pk.esl' -K '$*.kek.esl' -b '$*.db.esl'
+
 %.pub: gpg.conf
 	@./gengpg --conf '$<' '$@'
 
 clean:
-	@echo "Removing *.pub *.crt *.csr *.key *.arn *.chain GUID.txt *.esl *.auth but nothing starting with gardenlinux-"
-	@find . \( -name '*.pub' -o -name '*.crt' -o -name '*.csr' -o -name '*.key' -o -name '*.arn' -o -name '*.chain' -o -name 'GUID.txt' -o -name '*.esl' -o -name '*.auth' \) -a -not -name 'gardenlinux-*' -delete
+	@echo "Removing *.pub *.crt *.csr *.key *.arn *.chain GUID.txt *.esl *.auth *.aws-efivars but nothing starting with gardenlinux-"
+	@find . \( -name '*.pub' -o -name '*.crt' -o -name '*.csr' -o -name '*.key' -o -name '*.arn' -o -name '*.chain' -o -name 'GUID.txt' -o -name '*.esl' -o -name '*.auth' -o -name '*.aws-efivars' \) -a -not -name 'gardenlinux-*' -delete
 
 distclean:
-	@echo "Removing *.pub *.crt *.csr *.key *.arn *.chain GUID.txt *.esl *.auth"
-	@find . \( -name '*.pub' -o -name '*.crt' -o -name '*.csr' -o -name '*.key' -o -name '*.arn' -o -name '*.chain' -o -name 'GUID.txt' -o -name '*.esl' -o -name '*.auth' \) -delete
+	@echo "Removing *.pub *.crt *.csr *.key *.arn *.chain GUID.txt *.esl *.auth *.aws-efivars"
+	@find . \( -name '*.pub' -o -name '*.crt' -o -name '*.csr' -o -name '*.key' -o -name '*.arn' -o -name '*.chain' -o -name 'GUID.txt' -o -name '*.esl' -o -name '*.auth' -o -name '*.aws-efivars' \) -delete
