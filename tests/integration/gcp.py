@@ -6,6 +6,7 @@ import time
 import uuid
 import tempfile
 import requests
+import base64
 
 from os import path
 from urllib.request import urlopen
@@ -85,6 +86,18 @@ class GCP:
             cfg['ssh']['ssh_key_name'] = f"key-{test_name}"
         if not 'user' in cfg['ssh']:
             cfg['ssh']['user'] = "gardenlinux"
+        if not 'uefi' in cfg:
+            cfg['uefi'] = False
+        if not 'secureboot' in cfg:
+            cfg['secureboot'] = False
+        if not 'db_path' in cfg:
+            cfg['db_path'] = "/gardenlinux/cert/secureboot.db.auth"
+        if not 'kek_path' in cfg:
+            cfg['kek_path'] = "/gardenlinux/cert/secureboot.kek.auth"
+        if not 'pk_path' in cfg:
+            cfg['pk_path'] = "/gardenlinux/cert/secureboot.pk.auth"
+        if not 'cert_file_type' in cfg:
+            cfg['cert_file_type'] = 'BIN'
 
 
     def _gcp_create_bucket(self, bucket_name):
@@ -333,6 +346,13 @@ class GCP:
         else:
             self.logger.info(f"Keeping GCS bucket {name} as it was not created by this test.")
 
+    def _get_file_content_buffer(self, path, file_type):
+        if os.path.isfile(path):
+            with open(path, 'rb') as f:
+                return compute.FileContentBuffer(content=base64.b64encode(f.read()), file_type=file_type)
+        else:
+            self.logger.error(f"Secure boot certificate {path} does not exists")
+            os._exit(os.EX_IOERR)
 
     def _upload_image(self, image_name, image):
         blob_name = image_name + ".tar.gz"
@@ -382,18 +402,31 @@ class GCP:
 
         blob_url = image_blob.public_url
         self.logger.info(f'Importing {blob_url} as {image_name=} into project {self.image_project}')
-        operation = images.insert(
-            project=self.image_project,
-            image_resource={
+        config={
                 'description': 'gardenlinux',
                 'name': image_name,
                 'raw_disk': {
                     'source': blob_url,
                 },
                 'labels': self._tags,
-            },
-        )
+            }
 
+        if self.config['uefi'] or self.config['secureboot']:
+            guest_os_features = {'guest_os_features': [{'type_': "UEFI_COMPATIBLE"}]}
+            config.update(guest_os_features)
+
+        if self.config['secureboot']:
+            cert_file_type = self.config['cert_file_type']
+            shielded_instance_initial_state = {
+                'shielded_instance_initial_state': {
+                    'dbs': [self._get_file_content_buffer(self.config['db_path'], cert_file_type)],
+                    'keks': [self._get_file_content_buffer(self.config['kek_path'], cert_file_type)],
+                    'pk': self._get_file_content_buffer(self.config['pk_path'], cert_file_type),
+                }
+            }
+            config.update(shielded_instance_initial_state)
+
+        operation = images.insert(project=self.image_project, image_resource=config)
         self._gcp_wait_for_operation(operation)
         image_blob.delete()
         self.logger.info(f'Uploaded image {blob_url} to project {self.project} as {image_name}')
@@ -493,6 +526,16 @@ class GCP:
                 "items": self.network_tags
             },
         }
+
+        if self.config['secureboot']:
+            shielded_instance_config = {
+                "shielded_instance_config": {
+                    "enable_secure_boot": True,
+                    "enable_integrity_monitoring": True,
+                    "enable_vtpm": True,
+                }
+            }
+            config.update(shielded_instance_config)
 
         operation = self._compute_instances.insert(project=self.project, zone=self.zone, instance_resource=config)
         self._gcp_wait_for_operation(operation)
