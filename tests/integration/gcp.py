@@ -112,8 +112,9 @@ class GCP:
 
 
     def _gcp_wait_for_operation(self, operation):
-        while not operation.done():
-            time.sleep(5)
+        self.logger.info(f"Waiting for {operation.name} to complete...")
+        result = operation.result()
+        self.logger.info(f"{operation.name} done.")
 
 
     def _gcp_delete_firewall_rules(self, rule_name):
@@ -457,12 +458,11 @@ class GCP:
             return None
 
     def _wait_until_reachable(self, hostname):
-        self.logger.info(f"Waiting for {hostname} to respond to ping ...")
+        self.logger.info(f"Waiting for {hostname} to respond...")
         while True:
             response = os.system("timeout 1 bash -c \"</dev/tcp/" + hostname + "/22\"")
             if response == 0:
-                self.logger.info(f"Instance {hostname} is reachable, waiting another 20 seconds...")
-                time.sleep(20)
+                self.logger.info(f"Instance {hostname} is reachable...")
                 return
             time.sleep(1)
 
