@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
-	--flags 'no-build,debug,skip-tests,suite:,gardenversion:,timestamp:' \
+	--flags 'no-build,debug,skip-tests,suite:,debian-mirror,gardenversion:,timestamp:' \
 	--flags 'ports,arch:,qemu,features:,disable-features:,commitid:,userid:,usergid:' \
 	--flags 'suffix:,prefix:' \
 	--
@@ -13,25 +13,28 @@ export REPO_ROOT="$(readlink -f "${thisDir}/..")"
 
 commitid="${commitid:-local}"
 eval "$dgetopt"
+
+# Update all param flags
 while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
 	case "$flag" in
-		--debug) debug=1 ;;	# for jumping in the prepared image"
-		--ports) ports=1 ;;	# for using "debian-ports"
-		--arch) arch="$1"; shift ;; # for adding "--arch" to garden-init
-		--qemu) qemu=1 ;;	# for using "qemu-debootstrap"
-		--features) features="$1"; shift ;; # adding features
-		--disable-features) disablefeatures="$1"; shift ;; # ignoring features
-		--suite) suite="$1"; shift ;; # suite is a parameter this time
-		--gardenversion|--timestamp) version="$1"; shift ;; # timestamp is a parameter this time
-		--suffix) suffix="$1"; shift ;; # target name prefix
-		--prefix) prefix="$1"; shift ;; # target name suffix
-		--commitid) commitid="$1"; shift ;; # build commit hash
-		--commitid-long) commitid_long="$1"; shift ;; # build commit hash, untruncated - used for /etc/os-release only
-		--skip-tests) tests=0 shift ;; # skip tests
-		--userid) userID="$1" shift ;;
-		--usergid) userGID="$1" shift ;;
+		--debug)			debug=1 ;;			# for jumping in the prepared image"
+		--debian-mirror)		debianMirror=1 ;;		# for adding Debian native mirrors (only dev; default: 0)
+		--ports) 			ports=1 ;;			# for adding Debian native "debian-ports" repository
+		--arch) 			arch="$1"; shift ;; 		# for adding "--arch" to garden-init
+		--qemu) 			qemu=1 ;;			# for using "qemu-debootstrap"
+		--features) 			features="$1"; shift ;; 	# adding features
+		--disable-features)		disablefeatures="$1"; shift ;; 	# ignoring features
+		--suite)			suite="$1"; shift ;; 		# suite is a parameter this time
+		--gardenversion|--timestamp)	version="$1"; shift ;; 		# timestamp is a parameter this time
+		--suffix) 			suffix="$1"; shift ;; 		# target name prefix
+		--prefix) 			prefix="$1"; shift ;; 		# target name suffix
+		--commitid) 			commitid="$1"; shift ;; 	# build commit hash
+		--commitid-long) 		commitid_long="$1"; shift ;; 	# build commit hash, untruncated - used for /etc/os-release only
+		--skip-tests) 			tests=0 shift ;; 		# skip unit tests
+		--userid) 			userID="$1" shift ;;
+		--usergid)			userGID="$1" shift ;;
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
@@ -49,8 +52,18 @@ epoch="$(garden-version --epoch "$version")"
 serial="$(garden-version --date "$version")"
 dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
 export arch="$arch"
+export debianMirror=$debianMirror
 
 fullfeatures="$(garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" features)"
+targetPlatform="$(garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures")"
+
+# Using the native Debian repository on production builds (_prod) is not supported
+if [ $debianMirror -eq 1 ]; then
+	if [[ $fullfeatures = *_prod* ]]; then
+		echo "Using the native Debian repository on production builds (_prod) is not supported."
+		exit 1
+	fi
+fi
 
 if [ -z "${prefix+x}" ]; then
 	prefix="/$(garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
@@ -103,12 +116,18 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 	initArgs=( --arch="$dpkgArch" )
 	configArgs=( --arch="$dpkgArch" )
 	initArgs+=( --debian )
+
+	if [ $debianMirror -eq 1 ]; then
+		initArgs+=( --debian-mirror )
+	fi
+
 	if [ -n "${ports-}" ]; then
 		initArgs+=(
 			--debian-ports
 			--include=debian-ports-archive-keyring
 		)
 	fi
+
 	initArgs+=( --keyring "$keyring" --keyring-plain "$keyringPlain" )
 	initArgs+=( --debootstrap-script "$suite" )
 
@@ -191,24 +210,29 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 			fi
 		done
 
-		echo "#### building diskimage"
-		for i in $(tr ',' '\n' <<< "$fullfeatures"); do
-			if [ -r "$featureDir/$i/fstab" ]; then
-				printf "  found new fstab in $i\n"
-				currentfstab="$(cat $featureDir/$i/fstab)"
+		# Do not run when building for container image artifacts
+		if [ "$targetPlatform" != "container" ]; then
+
+			echo "#### building diskimage"
+			for i in $(tr ',' '\n' <<< "$fullfeatures"); do
+				if [ -r "$featureDir/$i/fstab" ]; then
+					printf "  found new fstab in $i\n"
+					currentfstab="$(cat $featureDir/$i/fstab)"
+				fi
+			done
+			for i in $(tr ',' '\n' <<< "$fullfeatures"); do
+				if [ -x "$featureDir/$i/fstab.mod" ]; then
+					printf "    modifying fstab with %s\n" "$i"
+					currentfstab=$("$featureDir/$i/fstab.mod" <<< "$currentfstab")
+				fi
+			done
+			currentfstab="$(sed -e "s/#.*\$//" -e "/^$/d" <<< "$currentfstab")"
+			if [ -n "$currentfstab" ]; then
+				printf "  building rawfile\n"
+				makepart "$rootfs" "$arch" <<< "$currentfstab" | makedisk "$rootfs" "$targetBase.raw"
 			fi
-		done
-		for i in $(tr ',' '\n' <<< "$fullfeatures"); do
-			if [ -x "$featureDir/$i/fstab.mod" ]; then
-				printf "    modifying fstab with %s\n" "$i"
-				currentfstab=$("$featureDir/$i/fstab.mod" <<< "$currentfstab")
-			fi
-		done
-		currentfstab="$(sed -e "s/#.*\$//" -e "/^$/d" <<< "$currentfstab")"
-		if [ -n "$currentfstab" ]; then
-			printf "  building rawfile\n"
-			makepart "$rootfs" "$arch" <<< "$currentfstab" | makedisk "$rootfs" "$targetBase.raw"
 		fi
+
 		for i in $(tr ',' '\n' <<< "$fullfeatures"); do
 			if [ -x $featureDir/$i/image ]; then
 				printf "  building separat extra image for $i\n"

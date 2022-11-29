@@ -1,0 +1,5 @@
+description: "OpenSSH server"
+type: element
+features:
+  include:
+    - firewall

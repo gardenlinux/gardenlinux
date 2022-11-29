@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-set -Eeuo pipefail
-
 # Contains sources from https://github.com/debuerreotype/debuerreotype
+set -Eeuo pipefail
 
 thisDir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 source "$thisDir/.constants.sh" \
-	--flags 'debian,debian-ports,non-debian' \
+	--flags 'debian,debian-ports,debian-mirror,non-debian' \
 	--flags 'debootstrap:' \
 	--flags 'debootstrap-script:' \
 	--flags 'keyring:,keyring-plain:,arch:,include:,exclude:,features:' \
@@ -20,6 +19,7 @@ source "$thisDir/.constants.sh" \
 eval "$dgetopt"
 nonDebian=
 debianPorts=
+debianMirror=0
 debootstrap=
 script=
 keyring=
@@ -30,30 +30,35 @@ exclude=
 features=
 noMergedUsr=
 noCheckGpg=
+
+# Update all param flags
 while true; do
 	flag="$1"; shift
 	dgetopt-case "$flag"
 	case "$flag" in
-		--debian)	nonDebian= ;;
-		--debian-ports)	nonDebian= ; debianPorts=1 ;;
-		--non-debian)	nonDebian=1 ;;
-		--debootstrap)	debootstrap="$1"; shift ;;
-		--debootstrap-script) script="$1"; shift ;;
-		--keyring)	keyring="$1"; shift ;;
-		--keyring-plain) keyringPlain="$1"; shift ;;
-		--arch)		arch="$1"; shift ;;
-		--include)	include="${include:+$include,}$1"; shift ;;
-		--exclude)	exclude="${exclude:+$exclude,}$1"; shift ;;
-		--features)	features="${features:+$features,}$1"; shift ;;
-		--check-gpg)	noCheckGpg=  ;;
-		--no-check-gpg)	noCheckGpg=1 ;;
+		--debian)		nonDebian= ;;
+		--debian-ports)		nonDebian= ; debianPorts=1 ;;
+		--debian-mirror)	debianMirror=1 ;;
+		--non-debian)		nonDebian=1 ;;
+		--debootstrap)		debootstrap="$1"; shift ;;
+		--debootstrap-script) 	script="$1"; shift ;;
+		--keyring)		keyring="$1"; shift ;;
+		--keyring-plain) 	keyringPlain="$1"; shift ;;
+		--arch)			arch="$1"; shift ;;
+		--include)		include="${include:+$include,}$1"; shift ;;
+		--exclude)		exclude="${exclude:+$exclude,}$1"; shift ;;
+		--features)		features="${features:+$features,}$1"; shift ;;
+		--check-gpg)		noCheckGpg=  ;;
+		--no-check-gpg)		noCheckGpg=1 ;;
 		--) break ;;
 		*)		eusage "unknown flag '$flag'" ;;
 	esac
 done
 
 targetDir="${1:-}"; shift || eusage 'missing target-dir'
+
 [ -n "$targetDir" ] || eusage 'target-dir required' # must be non-empty
+
 if [ -e "$targetDir" ] && [ -z "$(find "$targetDir" -maxdepth 0 -empty)" ]; then
 	echo >&2 "error: '$targetDir' already exists (and isn't empty)!"
 	exit 1
@@ -64,6 +69,7 @@ version="${1:-}"; shift || eusage 'missing version'
 
 timestamp=
 mirror=
+
 if [ -z "$nonDebian" ]; then
 	timestamp="${1:-}"; shift || eusage 'missing timestamp'
 else
@@ -98,6 +104,7 @@ include_aptversion=
 include_aptfile=
 include_wget=
 exclude="$(filter_comment <<< $exclude | filter_variables | filter_if)"
+
 for i in $(filter_comment <<< $include | filter_variables | filter_if | grep -v -f <(echo "$exclude")); do
     if [[ $i = *.deb ]]; then
 	if [[ $i = *://* ]]; then	include_wget+="$i "
@@ -128,6 +135,7 @@ debootstrapArgs+=(
 
 : "${debootstrap:=debootstrap}"
 echo "$debootstrap ${debootstrapArgs[@]}"
+
 if ! "$debootstrap" "${debootstrapArgs[@]}"; then
 	if [ -f "$targetDir/debootstrap/debootstrap.log" ]; then
 		echo >&2
@@ -144,6 +152,7 @@ if ! "$debootstrap" "${debootstrapArgs[@]}"; then
 	fi
 	exit 1
 fi
+
 echo "$epoch" > "$targetDir/garden-epoch"
 
 if [[ -v PKG_DIR ]]; then
@@ -156,11 +165,29 @@ if [[ -v PKG_DIR ]]; then
 fi
 
 if [ -z "$nonDebian" ]; then
-	"$thisDir/garden-debian-sources-list" --gardenlinux-only \
-		$([ -z "$debianPorts" ] || echo '--ports') \
-		$([[ -v PKG_DIR ]] && echo --local-pkgs /run/packages) \
-		"$targetDir" "$suite" "$version"
-	cp "$keyringPlain" "$targetDir/etc/apt/trusted.gpg.d/gardenlinux.asc"
+
+	if [ $debianMirror -eq 1 ]; then
+
+		# Integrate Garden Linux repository with additional Debian native mirror
+		"$thisDir/garden-debian-sources-list" --debian-mirror \
+			$([ -z "$debianPorts" ] || echo '--ports') \
+			$([[ -v PKG_DIR ]] && echo --local-pkgs /run/packages) \
+			"$targetDir" "$suite" "$version"
+		cp "$keyringPlain" "$targetDir/etc/apt/trusted.gpg.d/gardenlinux.asc"
+
+
+	else
+		# Integrate Garden Linux repository
+		"$thisDir/garden-debian-sources-list" \
+			$([ -z "$debianPorts" ] || echo '--ports') \
+			$([[ -v PKG_DIR ]] && echo --local-pkgs /run/packages) \
+			"$targetDir" "$suite" "$version"
+		cp "$keyringPlain" "$targetDir/etc/apt/trusted.gpg.d/gardenlinux.asc"
+
+
+	fi
+
+	# Update repositories
 	"$thisDir/garden-apt-get" "$targetDir" update -qq
 	"$thisDir/garden-apt-get" "$targetDir" upgrade -y
 fi
@@ -179,6 +206,7 @@ fi
 
 set -x
 tmp=$(mktemp -d -p $targetDir)
+
 if [ "${include_wget}" != "" ]; then
 	for pkg in $include_wget; do
 		wget -O "${tmp}/$(${thisDir}/get_filename ${pkg})" "$(${thisDir}/urlescape ${pkg})"

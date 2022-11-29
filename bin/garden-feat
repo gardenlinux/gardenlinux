@@ -254,6 +254,10 @@ def get_feature_matrix(all_features, start_feature_names, ignored_feature_names)
 def traverse_features_tree(all_features, features_matrix, feature_names):
     """ Traverse the complete feature tree based on a set of included features """
     for feature in feature_names:
+
+        # Validate that include feature exists in feature directory
+        validate_feature_exists(all_features, feature)
+
         # Skip ignored features, we do not need
         # to traverse them.
         if feature in features_matrix[MATRIX_TYPE_IGNORE].keys():
@@ -313,6 +317,10 @@ def sort_feature_names_by_type(all_features, feature_names):
 
     # First, get the content of all features
     for feature in feature_names:
+
+        # Validate that include feature exists in feature directory
+        validate_feature_exists(all_features, feature)
+
         yaml_content = all_features[feature]
         feature_type = yaml_content['type']
 
@@ -343,6 +351,13 @@ def add_ignored_features(all_features, features_matrix, ignored_feature_names):
     """ Add ignored features to the features_matrix to have a complete dict """
     for feature in ignored_feature_names:
         features_matrix[MATRIX_TYPE_IGNORE][feature] = all_features[feature]
+
+
+def validate_feature_exists(all_features, validate_feature):
+    """ Validate that an included feature exists in feature directory """
+    if validate_feature not in all_features.keys():
+        print(f'Error: Feature {validate_feature} does not exist in feature directory.')
+        sys.exit(1)
 
 
 if __name__ == "__main__":

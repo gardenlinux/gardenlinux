@@ -1,0 +1,8 @@
+description: "Container platform"
+type: platform
+features:
+  include: 
+    - base
+image:
+  format:
+    - type: .tar.gz

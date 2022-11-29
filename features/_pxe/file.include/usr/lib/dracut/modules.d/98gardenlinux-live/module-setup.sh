@@ -28,10 +28,6 @@ install() {
     mkdir -m 0755 -p ${initdir}/etc/systemd/system/systemd-networkd-wait-online.service.d
     inst_simple "$moddir/any.conf" "/etc/systemd/system/systemd-networkd-wait-online.service.d/any.conf"
 
-    # ignition environment
-    inst_script "$moddir/ignition-env-generator.sh" $systemdutildir/system-generators/ignition-env-generator
-    inst_simple "$moddir/ignition-files.env" /etc/ignition-files.env
-
     # ignition-fetch after resolved
     mkdir -m 0755 -p "${initdir}/etc/systemd/system/ignition-fetch.service.d"
     inst_simple "$moddir/ignition-fetch.conf" /etc/systemd/system/ignition-fetch.service.d/ignition-fetch.conf

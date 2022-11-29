@@ -5,6 +5,8 @@ ARG	GARDENLINUX_MIRROR_KEY=/etc/apt/trusted.gpg.d/gardenlinux.asc
 ARG	VERSION
 
 COPY gardenlinux.asc $GARDENLINUX_MIRROR_KEY
+RUN  chown root:root $GARDENLINUX_MIRROR_KEY \
+        && chmod 644 $GARDENLINUX_MIRROR_KEY
 
 RUN if [ "$(dpkg --print-architecture)" != amd64 ]; then dpkg --add-architecture amd64; fi
 
@@ -45,10 +47,12 @@ RUN : "Initialize the build container package installation" \
 			qemu-system-arm \
 			qemu-system-x86 \
 			openssl \
+			podman fuse-overlayfs \
 			libengine-pkcs11-openssl \
 			onmetal-image \
 			aws-sdk-cpp \
 			aws-kms-pkcs11 \
+			systemd \
 		&& apt-get install -t unstable -y --no-install-recommends \
 			binutils-x86-64-linux-gnu \
 			binutils-aarch64-linux-gnu \
