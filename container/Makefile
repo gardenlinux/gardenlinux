@@ -27,7 +27,9 @@ build-image: needslim
 
 .PHONY: build-cert
 build-cert: needslim
+	cp -p ../gardenlinux.asc build-cert/gardenlinux.asc
 	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/build-cert:$(VERSION) $(ALTNAME_INTERNAL) build-cert
+	rm build-cert/gardenlinux.asc
 
 .PHONY: build
 build: needslim
