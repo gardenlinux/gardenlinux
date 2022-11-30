@@ -352,7 +352,7 @@ class GCP:
             with open(path, 'rb') as f:
                 return compute.FileContentBuffer(content=base64.b64encode(f.read()), file_type=file_type)
         else:
-            self.logger.error(f"Secure boot certificate {path} does not exists")
+            self.logger.error(f"Secureboot key or db {path} does not exists")
             os._exit(os.EX_IOERR)
 
     def _upload_image(self, image_name, image):
