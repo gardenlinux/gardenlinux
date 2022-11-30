@@ -517,6 +517,17 @@ gcp:
     # GCS bucket for image upload, must exist and be used for local image upload (optional)
     #bucket:
 
+    # enable uefi boot, default is legacy boot (optional)
+    #uefi: false
+    # enable secureboot, implies uefi boot, default is off (optional)
+    #secureboot: false
+    # paths to the secureboot certificates, needed for secureboot (optional)
+    #db_path: /gardenlinux/cert/secureboot.db.auth
+    #kek_path: /gardenlinux/cert/secureboot.kek.auth
+    #pk_path: /gardenlinux/cert/secureboot.pk.auth
+    # the certificate type for secureboot, possible values are `BIN`, `X509`. Default is `BIN`
+    #cert_file_type: BIN
+
     # GCE machine type (optional)
     machine_type: n1-standard-2
 
@@ -557,6 +568,14 @@ The URI can be:
 - **image_region** _(optional)_: If the image comes from an S3 bucket, the bucket location to download from can be specified here. Defaults to `eu-central-1` if omitted.
 
 - **bucket** _(optional)_: To create a GCE machine image from a local filesystem snapshot, it needs to be uploaded to a GCS bucket first. The will be created on the fly and a name will be generated if this field is left empty.
+
+- **uefi** _(optional)_: To enable UEFI boot, by default legacy boot is used. Default is `false`
+
+- **secureboot** _(optional)_: To enable secureboot, if secureboot is enabled UEFI boot will be used, no matter how the `uefi` option is set. For secureboot it is important that the path options to the keys are set properly. Default is `false`. 
+- **db_path** _(optional)_: The path to the signature database for secureboot. Default is `/gardenlinux/cert/secureboot.db.auth`
+- **kek_path** _(optional)_: The path to the key exchange key for secureboot. Default is `/gardenlinux/cert/secureboot.kek.auth`
+- **pk_path** _(optional)_: The path to the platform key for secureboot. Default is `/gardenlinux/cert/secureboot.pk.auth`
+- **cert_file_type** _(optional)_: The type of the certificate, allowed values are `BIN` or `X509`. Default is `BIN`
 
 - **machine_type** _(optional)_: The GCE machine type to be used to create the GCE instance for the test. Defaults to `n1-standard-2` if not given.
 
