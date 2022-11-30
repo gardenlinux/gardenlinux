@@ -521,7 +521,7 @@ gcp:
     #uefi: false
     # enable secureboot, implies uefi boot, default is off (optional)
     #secureboot: false
-    # paths to the secureboot certificates, needed for secureboot (optional)
+    # paths to the secureboot keys and database, needed for secureboot (optional)
     #db_path: /gardenlinux/cert/secureboot.db.auth
     #kek_path: /gardenlinux/cert/secureboot.kek.auth
     #pk_path: /gardenlinux/cert/secureboot.pk.auth
@@ -571,7 +571,7 @@ The URI can be:
 
 - **uefi** _(optional)_: To enable UEFI boot, by default legacy boot is used. Default is `false`
 
-- **secureboot** _(optional)_: To enable secureboot, if secureboot is enabled UEFI boot will be used, no matter how the `uefi` option is set. For secureboot it is important that the path options to the keys are set properly. Default is `false`. 
+- **secureboot** _(optional)_: To enable secureboot, if secureboot is enabled UEFI boot will be used, no matter how the `uefi` option is set. For secureboot it is important that the path options to the keys and database are set properly. Default is `false`. 
 - **db_path** _(optional)_: The path to the signature database for secureboot. Default is `/gardenlinux/cert/secureboot.db.auth`
 - **kek_path** _(optional)_: The path to the key exchange key for secureboot. Default is `/gardenlinux/cert/secureboot.kek.auth`
 - **pk_path** _(optional)_: The path to the platform key for secureboot. Default is `/gardenlinux/cert/secureboot.pk.auth`
