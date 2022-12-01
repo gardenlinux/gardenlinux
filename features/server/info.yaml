@@ -3,6 +3,5 @@ type: element
 features:
   include:
     - base
-    - ssh
 tar:
   include-dev: true
