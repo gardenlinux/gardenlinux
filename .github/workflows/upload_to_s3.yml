@@ -88,4 +88,4 @@ jobs:
         with:
           name: tests-${{ env.artifact_name }}
       - name: upload to S3 bucket ${{ secrets.bucket }}
-        run: aws s3 cp "${{ env.artifact_name }}.integration-tests-log" "s3://${{ secrets.bucket }}/${{ env.artifact_name }}/"
+        run: aws s3 cp "${{ env.artifact_name }}.integration-tests-log" "s3://${{ secrets.bucket }}/objects/${{ env.artifact_name }}/"
