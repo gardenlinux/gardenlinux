@@ -45,6 +45,7 @@
       - [OpenStack CC EE flavor](#openstack-cc-ee-flavor)
         - [Configuration options](#configuration-options-7)
         - [Running the tests](#running-the-tests-8)
+      - [Local tests in the integration container](#local-tests-in-the-integration-container)
   - [Misc](#misc)
     - [Autoformat Using Black](#autoformat-using-black)
     - [Run Static Checks](#run-static-checks)
@@ -997,6 +998,52 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 
     pytest --iaas=openstack-ccee --configfile=/config/mygcpconfig.yaml
 
+
+#### Local tests in the integration container
+
+Sometimes it is neccessary to run tests for build results. This can be achieved by using the build results in the test-integration container.
+
+The following describes the configuration needed to run the tests for the build result of the **_oci**-feature.
+
+```yaml
+local:
+    # Path to a final artifact. Represents the .tar.xz archive image file (required)
+    image: /build/kvm_dev_oci-amd64-today-local.oci.tar.xz
+
+    kernel: /build/kvm_dev_oci-amd64-today-local.vmlinuz
+
+    # list of features that is used to determine the tests to run
+    features:
+      - "_oci"
+```
+
+##### Configuration options
+
+<details>
+
+- **image** the build result image used within the tests
+
+- **kernel** the name for the builded kernel
+
+- **features** list of features that is used to determine the tests to run
+
+</details>
+
+##### Running the tests
+
+Start Podman container with dependencies:
+
+- mount Garden Linux repository to `/gardenlinux`
+- mount build result directory to `/build` (if not part of the Garden Linux file tree)
+- mount directory with configfile to `/config`
+
+```
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+```
+
+Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
+
+    pytest --iaas=local --configfile=/config/mylocalconfig.yaml
 
 ## Misc
 Within this section further tests are listed that may help developing and contributing on Garden Linux. These tests are disjunct from the Garden Linux code itself and may only perform validation on code (like `Shellcheck` or `autopep`).

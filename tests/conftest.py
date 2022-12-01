@@ -186,6 +186,8 @@ def testconfig(pipeline, iaas, pytestconfig):
             pass
         elif iaas == 'manual':
             pass
+        elif iaas == 'local':
+            pass
         return config
 
 
@@ -312,6 +314,12 @@ def gcp_credentials(testconfig, pipeline, request):
 
 
 @pytest.fixture(scope="session")
+def local(iaas):
+    logger.info(f"Testconfig for {iaas=} is {testconfig}")
+    test_name = testconfig.get('test_name', f"gl-test-{time.strftime('%Y%m%d%H%M%S')}")
+
+
+@pytest.fixture(scope="session")
 def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
     logger.info(f"Testconfig for {iaas=} is {testconfig}")
     test_name = testconfig.get('test_name', f"gl-test-{time.strftime('%Y%m%d%H%M%S')}")
@@ -337,6 +345,8 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
         yield from ALI.fixture(testconfig, test_name)
     elif iaas == "manual":
         yield from Manual.fixture(testconfig)
+    elif iaas == "local":
+        yield testconfig
     else:
         raise ValueError(f"invalid {iaas=}")
 
@@ -448,6 +458,16 @@ def non_chroot(iaas):
 def chroot(iaas):
     if iaas != 'chroot':
         pytest.skip('test only supported on chroot')
+
+@pytest.fixture
+def non_local(iaas):
+    if iaas == 'local':
+        pytest.skip('test not supported on local')
+
+@pytest.fixture
+def local(iaas):
+    if iaas != 'local':
+        pytest.skip('test only supported on local')
 
 @pytest.fixture
 def non_openstack(iaas):
