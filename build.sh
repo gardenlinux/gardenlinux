@@ -124,7 +124,7 @@ dockerinfo="$(${gardenlinux_build_cre} info)"       || eusage "${gardenlinux_bui
 grep -q apparmor <<< $dockerinfo  && securityArgs+=( --security-opt apparmor=unconfined )
 
 # external variable BUILD_IMAGE forces a different buildimage name
-buildImage=${BUILD_IMAGE:-"gardenlinux/build-image:$version"}
+buildImage=${BUILD_IMAGE:-"localhost/gardenlinux/build-image:$version"}
 [ $build ] && make --directory=${thisDir}/container ALTNAME=$buildImage build-image
 
 # using the buildimage in a temporary container with

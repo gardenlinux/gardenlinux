@@ -2,6 +2,9 @@ name: upload to S3
 on:
   workflow_call:
     inputs:
+      version:
+        type: string
+        default: today
       default_modifier:
         type: string
         default: ""
@@ -20,29 +23,40 @@ jobs:
     runs-on: ec2-gardenlinux-amd64
     permissions:
       id-token: write
+    environment: oidc_aws_s3_upload
     strategy:
       fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
-        target: [ kvm, metal, gcp, aws, azure, ali, openstack, vmware, pxe ]
+        target: [ kvm, "kvm,_secureboot", "kvm,_secureboot,_readonly", "kvm,_secureboot,_readonly,_persistence", metal, "metal,_secureboot", "metal,_secureboot,_readonly", "metal,_secureboot,_readonly,_persistence", gcp, aws, "aws,_secureboot", "aws,_secureboot,_readonly", "aws,_secureboot,_readonly,_persistence", azure, ali, openstack, vmware, "metal,_pxe" ]
         modifier: [ "${{ inputs.default_modifier }}" ]
     steps:
-      - uses: actions/checkout@v2
-      - uses: aws-actions/configure-aws-credentials@v1
+      - uses: actions/checkout@v3
+      - uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           role-to-assume: ${{ secrets.role }}
           role-session-name: ${{ secrets.session }}
           aws-region: ${{ secrets.region }}
-      - uses: actions/download-artifact@v2
+      - name: set VERSION=${{ inputs.version }}
+        run: |
+          bin/garden-version "${{ inputs.version }}" | tee VERSION
+          git update-index --assume-unchanged VERSION
+      - name: get cname
+        run: |
+          cname="$(bin/garden-feat --featureDir features --features ${{ matrix.target }}${{ matrix.modifier }}${{ matrix.additional_modifer }})"
+          artifact_name="$cname-${{ matrix.architecture }}-${{ inputs.version }}-$(git rev-parse --short HEAD)"
+          printf 'cname=%s\nartifact_name=%s\n' "$cname" "$artifact_name" | tee -a "$GITHUB_ENV"
+      - uses: actions/download-artifact@v3
         with:
-          name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
+          name: build-${{ env.artifact_name }}
       - name: upload to S3 bucket ${{ secrets.bucket }}
-        run: .github/workflows/upload_to_s3.sh ${{ secrets.bucket }} ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.tar.gz
+        run: .github/workflows/upload_to_s3.sh ${{ secrets.bucket }} ${{ env.artifact_name }}.tar.gz
   upload_test_logs_to_s3:
     name: upload test logs to S3
     runs-on: ec2-gardenlinux-amd64
     permissions:
       id-token: write
+    environment: oidc_aws_s3_upload
     strategy:
       fail-fast: false
       matrix:
@@ -55,14 +69,23 @@ jobs:
           - architecture: arm64
             target: azure
     steps:
-      - uses: actions/checkout@v2
-      - uses: aws-actions/configure-aws-credentials@v1
+      - uses: actions/checkout@v3
+      - uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           role-to-assume: ${{ secrets.role }}
           role-session-name: ${{ secrets.session }}
           aws-region: ${{ secrets.region }}
-      - uses: actions/download-artifact@v2
+      - name: set VERSION=${{ inputs.version }}
+        run: |
+          bin/garden-version "${{ inputs.version }}" | tee VERSION
+          git update-index --assume-unchanged VERSION
+      - name: get cname
+        run: |
+          cname="$(bin/garden-feat --featureDir features --features ${{ matrix.target }}${{ matrix.modifier }}${{ matrix.additional_modifer }})"
+          artifact_name="$cname-${{ matrix.architecture }}-${{ inputs.version }}-$(git rev-parse --short HEAD)"
+          printf 'cname=%s\nartifact_name=%s\n' "$cname" "$artifact_name" | tee -a "$GITHUB_ENV"
+      - uses: actions/download-artifact@v3
         with:
-          name: test-log-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
+          name: tests-${{ env.artifact_name }}
       - name: upload to S3 bucket ${{ secrets.bucket }}
-        run: aws s3 cp "${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-"*.integration-tests-log "s3://${{ secrets.bucket }}/integration-tests-logs/"
+        run: aws s3 cp "${{ env.artifact_name }}.integration-tests-log" "s3://${{ secrets.bucket }}/objects/${{ env.artifact_name }}/"

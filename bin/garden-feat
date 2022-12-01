@@ -340,6 +340,9 @@ def sort_feature_names_by_type(all_features, feature_names):
         print(f'Error: No platform has been specified.')
         sys.exit(1)
 
+    for key in features:
+        features[key].sort()
+
     sorted_feature_names += features[FEATURE_TYPE_PLATFORM]
     sorted_feature_names += features[FEATURE_TYPE_ELEMENT]
     sorted_feature_names += features[FEATURE_TYPE_FLAG]

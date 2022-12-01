@@ -68,15 +68,25 @@ jobs:
         sudo podman pull "ghcr.io/gardenlinux/gardenlinux/integration-test:$GITHUB_SHA"
         sudo podman tag "ghcr.io/gardenlinux/gardenlinux/integration-test:$GITHUB_SHA" ghcr.io/gardenlinux/gardenlinux/integration-test:today
 
-    - uses: actions/download-artifact@v2
+    - name: set VERSION=${{ inputs.version }}
+      run: |
+        bin/garden-version "${{ inputs.version }}" | tee VERSION
+        git update-index --assume-unchanged VERSION
+    - name: get cname
+      run: |
+        cname="$(bin/garden-feat --featureDir features --features ${{ matrix.target }}${{ matrix.modifier }}${{ matrix.additional_modifer }})"
+        artifact_name="$cname-${{ matrix.architecture }}-${{ inputs.version }}-$(git rev-parse --short HEAD)"
+        printf 'cname=%s\nartifact_name=%s\n' "$cname" "$artifact_name" | tee -a "$GITHUB_ENV"
+
+    - uses: actions/download-artifact@v3
       with:
-        name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
+        name: build-${{ env.artifact_name }}
         path: /tmp/gardenlinux-build-artifacts
 
     - if: ${{ matrix.target }} == 'gcp'
       id: 'auth_gcp'
       name: 'Authenticate to Google Cloud'
-      uses: google-github-actions/auth@v0
+      uses: google-github-actions/auth@v1
       with:
         workload_identity_provider: ${{ secrets.gcp_identity_provider }}
         service_account: ${{ secrets.gcp_service_account }}
@@ -84,7 +94,7 @@ jobs:
     - if: ${{ matrix.target }} == 'aws'
       id: 'auth_aws'
       name: 'Authenticate to AWS'
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v1-node16
       with:
         role-to-assume: ${{ secrets.aws_role }}
         role-session-name: ${{ secrets.aws_session }}
@@ -99,17 +109,11 @@ jobs:
         tenant-id: ${{ secrets.az_tenant_id }}
         subscription-id: ${{ secrets.az_subscription_id }}
 
-    - name: set VERSION=${{ inputs.version }}
-      run: |
-        bin/garden-version "${{ inputs.version }}" | tee VERSION
-        git update-index --assume-unchanged VERSION
-
     - name: start platform test for ${{ matrix.target }}
       run: |
-        name="${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-$(bin/garden-version)-$(git rev-parse --short HEAD)"
-        .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.architecture }}" "${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.tar.gz" 2>&1 | tee "$name.integration-tests-log"
+        .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.architecture }}" "${{ env.artifact_name }}.tar.gz" 2>&1 | tee "${{ env.artifact_name }}.integration-tests-log"
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
-        name: test-log-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
-        path: ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.integration-tests-log
+        name: tests-${{ env.artifact_name }}
+        path: ${{ env.artifact_name }}.integration-tests-log

@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+
+import sys
+import yaml
+
+def flatten(list):
+	return [item for sublist in list for item in sublist]
+
+def expand_target(target):
+	name = target['name']
+	modifiers = target.get('modifiers', [])
+	return [ name ] + [ name + ',' + modifier for modifier in modifiers ]
+
+flavours = yaml.safe_load(sys.stdin.read())
+
+targets = flatten([ expand_target(target) for target in flavours['targets'] ])
+
+modifiers = flavours.get('modifiers', [])
+
+modified_targets = targets + [ target + "," + modifier for target in targets for modifier in modifiers ]
+for target in modified_targets:
+	print(target)

@@ -161,10 +161,10 @@ def install_package_deb(client, pkg):
     # repository. We may add a native Debian repo to the temp chroot for
     # further unit testing
     (exit_code, output, error) = client.execute_command(
-        "grep 'https://deb.debian.org/debian bookworm main' /etc/apt/sources.list", quiet=True)
+        "grep 'https://cdn-aws.deb.debian.org/debian bookworm main' /etc/apt/sources.list", quiet=True)
     if exit_code > 0:
        (exit_code, output, error) = client.execute_command(
-           "echo 'deb https://deb.debian.org/debian bookworm main' >> /etc/apt/sources.list && apt-get update", quiet=True)
+           "echo 'deb https://cdn-aws.deb.debian.org/debian bookworm main' >> /etc/apt/sources.list && apt-get update", quiet=True)
        assert exit_code == 0, f"Could not add native Debian repository."
 
     # Finally, install the package

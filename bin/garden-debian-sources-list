@@ -48,9 +48,9 @@ gardenlinuxMirror='https://repo.gardenlinux.io/gardenlinux'
 gardenlinuxMirrorKey='/etc/apt/trusted.gpg.d/gardenlinux.asc'
 
 if [ -z "$ports" ]; then
-	standardMirror='https://deb.debian.org/debian'
+	standardMirror='https://cdn-aws.deb.debian.org/debian'
 else
-	standardMirror='https://deb.debian.org/debian-ports'
+	standardMirror='https://cdn-aws.deb.debian.org/debian-ports'
 fi
 
 securityMirror='https://security.debian.org/debian-security'
@@ -88,7 +88,7 @@ deb() {
 
         # Add Debian native mirror
         if [ $debianMirror -eq 1 ]; then
-                echo "deb https://deb.debian.org/debian testing main"
+                echo "deb https://cdn-aws.deb.debian.org/debian testing main"
         fi
 
 

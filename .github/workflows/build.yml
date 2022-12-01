@@ -20,11 +20,19 @@ on:
         required: false
       aws_oidc_session:
         required: false
+    outputs:
+      version:
+        value: ${{ jobs.setup.outputs.version }}
 jobs:
-  cert:
+  setup:
     runs-on: ec2-gardenlinux-amd64
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - name: resolve version "${{ inputs.version }}"
+        id: version
+        run: echo version="$(bin/garden-version "${{ inputs.version }}")" | tee -a "$GITHUB_OUTPUT"
       - name: bulid certificates
         if: ${{ ! inputs.use_kms }}
         run: make cert/secureboot.db.auth
@@ -37,12 +45,12 @@ jobs:
           done
       - name: pack certificates for following bulid stages
         run: sudo tar -czv cert > cert.tar.gz
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: _cert
           path: cert.tar.gz
   images:
-    needs: cert
+    needs: setup
     runs-on: ec2-gardenlinux-${{ matrix.architecture }}
     permissions:
       id-token: write
@@ -51,11 +59,11 @@ jobs:
       fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
-        target: [ kvm, kvm-secureboot, metal, metal-secureboot, gcp, aws, azure, ali, openstack, vmware, pxe, firecracker, githubActionRunner, metalv ]
+        target: [ kvm, "kvm,_secureboot", "kvm,_secureboot,_readonly", "kvm,_secureboot,_readonly,_persistence", metal, "metal,_secureboot", "metal,_secureboot,_readonly", "metal,_secureboot,_readonly,_persistence", gcp, aws, "aws,_secureboot", "aws,_secureboot,_readonly", "aws,_secureboot,_readonly,_persistence", azure, ali, openstack, vmware, "metal,_pxe", firecracker, "aws,githubActionRunner", "metal,vhost" ]
         modifier: [ "${{ inputs.default_modifier }}" ]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/download-artifact@v2
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
         with:
           name: _cert
       - name: unpack certificates from previous build stage
@@ -63,24 +71,28 @@ jobs:
       - name: write secureboot db arn for kms backed certificates
         if: ${{ inputs.use_kms }}
         run: echo "${{ secrets.secureboot_db_kms_arn }}" > cert/gardenlinux-secureboot.db.arn
-      - name: set VERSION=${{ inputs.version }}
+      - name: set VERSION=${{ needs.setup.outputs.version }}
         run: |
-          bin/garden-version "${{ inputs.version }}" | tee VERSION
+          bin/garden-version "${{ needs.setup.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
+      - name: get cname
+        run: |
+          cname="$(bin/garden-feat --featureDir features --features ${{ matrix.target }}${{ matrix.modifier }}${{ matrix.additional_modifer }})"
+          artifact_name="$cname-${{ matrix.architecture }}-${{ needs.setup.outputs.version }}-$(git rev-parse --short HEAD)"
+          printf 'cname=%s\nartifact_name=%s\n' "$cname" "$artifact_name" | tee -a "$GITHUB_ENV"
       - if: ${{ inputs.use_kms }}
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           role-to-assume: ${{ secrets.aws_kms_role }}
           role-session-name: ${{ secrets.aws_oidc_session }}
           aws-region: ${{ secrets.aws_region }}
       - name: build Garden Linux image
-        run: make BUILD_OPTS="--lessram ${{ inputs.use_kms && '--export-aws-access-key' || '' }}" ${{ matrix.target }}${{ matrix.modifier }}
+        run: make BUILD_OPTS="--lessram ${{ inputs.use_kms && '--export-aws-access-key' || '' }}" "${{ env.cname }}"
       - name: pack build artifacts for upload
         run: |
-          name="${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-$(bin/garden-version)-$(git rev-parse --short HEAD)"
-          mv .build "$name"
-          tar -czvf "$name.tar.gz" "$name"
-      - uses: actions/upload-artifact@v2
+          mv .build "${{ env.artifact_name }}"
+          tar -czvf "${{ env.artifact_name }}.tar.gz" "${{ env.artifact_name }}"
+      - uses: actions/upload-artifact@v3
         with:
-          name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
-          path: ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.tar.gz
+          name: "build-${{ env.artifact_name }}"
+          path: "${{ env.artifact_name }}.tar.gz"
