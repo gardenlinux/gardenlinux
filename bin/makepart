@@ -27,7 +27,9 @@ if ! grep _secureboot <<<"$features" > /dev/null; then
 	mkdir -p "$rootfs_work/boot/efi/loader/"
 	touch "$rootfs_work/boot/efi/loader/loader.conf"
 	touch "$rootfs_work/boot/efi/loader/entries.srel"
+	mount -t proc none "$rootfs_work/proc"
 	chroot "$rootfs_work" /usr/bin/env -i SYSTEMD_ESP_PATH="/boot/efi" bootctl --no-variables --make-machine-id-directory=no install
+	umount "$rootfs_work/proc"
 	echo type1 > "$rootfs_work/boot/efi/loader/entries.srel"
 	rm -f "${rootfs_work}/boot/efi/loader/random-seed"
 	umount "${rootfs_work}/etc/machine-id"
