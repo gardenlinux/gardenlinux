@@ -117,21 +117,8 @@ class GCP:
         self.logger.info(f"{operation.name} done.")
 
 
-    def _gcp_delete_firewall_rules(self, rule_name):
-        try:
-            self.logger.info(f"Deleting firewall rule with name {rule_name}...")
-            operation = self._compute_firewalls.delete(project=self.project, firewall=rule_name)
-            self._gcp_wait_for_operation(operation)
-        except Exception as e:
-            raise
-
     def _gcp_create_firewall_rules(self, fw_rest_body):
         rule_name = fw_rest_body["name"]
-        try:
-            self._gcp_delete_firewall_rules(rule_name=rule_name)
-        except Exception as e:
-            pass
-
         self.logger.info(f"Inserting firewall rule {rule_name}...")
         operation = self._compute_firewalls.insert(project=self.project, firewall_resource=fw_rest_body)
         self._gcp_wait_for_operation(operation)
@@ -290,7 +277,7 @@ class GCP:
         myip = util.get_my_ip()
 
         rules = {
-            "name": "test-allow-ssh-icmp",
+            "name": f"fw-{self.test_name}",
             "allowed": [
                 {
                     "I_p_protocol": "tcp",
