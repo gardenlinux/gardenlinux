@@ -11,6 +11,7 @@ RUN  chown root:root $GARDENLINUX_MIRROR_KEY \
 RUN if [ "$(dpkg --print-architecture)" != amd64 ]; then dpkg --add-architecture amd64; fi
 
 RUN : "Initialize the build container package installation" \
+		&& sed -i 's/deb.debian.org/cdn-aws.deb.debian.org/g' /etc/apt/sources.list \
 		&& arch="$(dpkg --print-architecture)" \
 		&& apt-get update \
 		&& apt-get install -y --no-install-recommends \
@@ -19,7 +20,7 @@ RUN : "Initialize the build container package installation" \
 		&& \
 	: "Extend the sources with other required repos" \
 		&& echo "deb [signed-by=$GARDENLINUX_MIRROR_KEY] https://repo.gardenlinux.io/gardenlinux $VERSION main" >> /etc/apt/sources.list \
-		&& echo "deb https://deb.debian.org/debian unstable main" >> /etc/apt/sources.list \
+		&& echo "deb https://cdn-aws.deb.debian.org/debian unstable main" >> /etc/apt/sources.list \
 		&& echo 'APT::Default-Release "testing";' > /etc/apt/apt.conf.d/default-testing \
 		&& apt-get update \
 		&& \
