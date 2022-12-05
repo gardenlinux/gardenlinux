@@ -3,6 +3,7 @@
 import argparse
 import re
 import os
+import sys
 
 import google.cloud.compute as compute
 import google.cloud.storage as storage
@@ -96,7 +97,7 @@ def delete_instance(project, zone, name):
 def add_to_inventory(inventory_dict, key, value):
     try:
         if type(inventory_dict[key]) is dict:
-            inventory[key].update(value)
+            inventory_dict[key].update(value)
     except KeyError:
         inventory_dict[key] = value
     return inventory_dict
@@ -109,7 +110,7 @@ def sanity_check(inventory_dict, dependencies):
     return True
 
 
-while True:
+def main():
 
     buckets = get_buckets()
     images = get_images(args.project)
@@ -152,15 +153,12 @@ while True:
         pick = int(pick)
 
         if not (pick >= 0 and pick < len(inventory_key_list)):
-            os._exit(os.EX_DATAERR)
+            return os.EX_DATAERR
 
         test_environment = inventory_key_list[pick]
 
-        while True:
-            test_inventory_key_list = list(inventory[test_environment])
-            if len(test_inventory_key_list) == 0:
-                break
-
+        test_inventory_key_list = list(inventory[test_environment])
+        while len(test_inventory_key_list) > 0:
             # output the resources of the chosen test, offer option to delete one resource or all at once
             print("")
             for i in range(len(test_inventory_key_list)):
@@ -215,5 +213,11 @@ while True:
                         del inventory[test_environment]['bucket']
             print("")
 
+            test_inventory_key_list = list(inventory[test_environment])
+
     except ValueError:
-        os._exit(os.EX_OK)
+        return os.EX_OK
+    return os.EX_OK
+
+if __name__ == "__main__":
+    sys.exit(main())
