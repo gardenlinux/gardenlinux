@@ -165,7 +165,7 @@ while True:
             print("")
             for i in range(len(test_inventory_key_list)):
                 print(f"{i}: {test_inventory_key_list[i]}: {inventory[test_environment][test_inventory_key_list[i]]}")
-
+            print("")
             delete_pick = input("Which resource should be delete (digit), type 'A' for all, any other key for back: ")
             if (delete_pick == 'A'):
                 pass
@@ -213,6 +213,7 @@ while True:
                         print("Deleting bucket...")
                         delete_bucket(inventory[test_environment]['bucket'])
                         del inventory[test_environment]['bucket']
+            print("")
 
     except ValueError:
         os._exit(os.EX_OK)
