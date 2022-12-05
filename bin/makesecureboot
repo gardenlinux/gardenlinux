@@ -73,7 +73,7 @@ chroot "$rootfs" dracut \
 	--force \
 	--kver "$kernel_version" \
 	--modules "bash dash systemd systemd-initrd systemd-veritysetup systemd-repart kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown" \
-	--install "/etc/veritytab mkfs.ext4 systemd-escape" \
+	--install "/etc/veritytab cryptsetup head mkfs.ext4 systemd-escape" \
 	--include "$dracut_include" "/" \
 	--reproducible \
 	"$initrd"

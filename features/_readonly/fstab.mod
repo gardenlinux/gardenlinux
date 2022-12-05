@@ -8,5 +8,5 @@ sed '/^[^[:space:]]\+[[:space:]]\+\/overlay[[:space:]]\+/d;/^[^[:space:]]\+[[:sp
 cat << EOF
 LABEL=EFI    /boot/efi    vfat    ro,umask=0077    type=uefi,size=128MiB
 LABEL=USR    /usr         ext4    ro               verity
-REPART=00    /            ext4    rw               ephemeral
+REPART=00    /            ext4    rw               ephemeral_cryptsetup
 EOF
