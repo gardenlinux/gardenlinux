@@ -180,7 +180,7 @@ while True:
 
             # check if resource is deletable, delete resource if possible
             for i in range(len(test_inventory_key_list)):
-                if str(delete_pick) == str(i) or delete_pick == 'A':
+                if delete_pick == i or delete_pick == 'A':
                     if test_inventory_key_list[i] == 'instance':
                         print("Deleting instance...")
                         delete_instance(args.project, args.zone, inventory[test_environment]['instance'])
