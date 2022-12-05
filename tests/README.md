@@ -502,31 +502,20 @@ gcp:
     # zone where the VM should be created (required)
     zone: europe-west1-d
 
-    # use a service account to log on to GCP instead of access token created with gcloud before (optional)
-    #service_account_json:
-    #service_account_json_path: /root/.config/gcloud/application_default_credentials.json
-
-    # use already existing image in GCE for tests (optional/required)
-    #image_name:
     # upload this local image to GCE and use it for testing (optional/required)
     image: file:/build/gcp-dev/20210915/amd64/bullseye/rootfs-gcpimage.tar.gz
-    #image: s3://gardenlinux/objects/078f440a76024ccd1679481708ebfc32f5431569
-    # region of the S3 bucket from where the image should be downloaded from (optional)
-    #image_region: eu-central-1
-
-    # GCS bucket for image upload, must exist and be used for local image upload (optional)
-    #bucket:
 
     # enable uefi boot, default is legacy boot (optional)
     #uefi: false
     # enable secureboot, implies uefi boot, default is off (optional)
     #secureboot: false
-    # paths to the secureboot keys and database, needed for secureboot (optional)
-    #db_path: /gardenlinux/cert/secureboot.db.auth
-    #kek_path: /gardenlinux/cert/secureboot.kek.auth
-    #pk_path: /gardenlinux/cert/secureboot.pk.auth
-    # the certificate type for secureboot, possible values are `BIN`, `X509`. Default is `BIN`
-    #cert_file_type: BIN
+    secureboot_parameters:
+        # paths to the secureboot keys and database, needed for secureboot (optional)
+        #db_path: /gardenlinux/cert/secureboot.db.auth
+        #kek_path: /gardenlinux/cert/secureboot.kek.auth
+        #pk_path: /gardenlinux/cert/secureboot.pk.auth
+        # the certificate type for secureboot, possible values are `BIN`, `X509`. Default is `BIN`
+        #cert_file_type: BIN
 
     # GCE machine type (optional)
     machine_type: n1-standard-2

@@ -90,14 +90,14 @@ class GCP:
             cfg['uefi'] = False
         if not 'secureboot' in cfg:
             cfg['secureboot'] = False
-        if not 'db_path' in cfg:
-            cfg['db_path'] = "/gardenlinux/cert/secureboot.db.auth"
+        if not 'db_path' in cfg['secureboot_parameters']:
+            cfg['secureboot_parameters']['db_path'] = "/gardenlinux/cert/secureboot.db.auth"
         if not 'kek_path' in cfg:
-            cfg['kek_path'] = "/gardenlinux/cert/secureboot.kek.auth"
+            cfg['secureboot_parameters']['kek_path'] = "/gardenlinux/cert/secureboot.kek.auth"
         if not 'pk_path' in cfg:
-            cfg['pk_path'] = "/gardenlinux/cert/secureboot.pk.auth"
+            cfg['secureboot_parameters']['pk_path'] = "/gardenlinux/cert/secureboot.pk.auth"
         if not 'cert_file_type' in cfg:
-            cfg['cert_file_type'] = 'BIN'
+            cfg['secureboot_parameters']['cert_file_type'] = 'BIN'
 
 
     def _gcp_create_bucket(self, bucket_name):
@@ -111,9 +111,9 @@ class GCP:
         bucket.make_private()
 
 
-    def _gcp_wait_for_operation(self, operation):
+    def _gcp_wait_for_operation(self, operation, timeout=60):
         self.logger.info(f"Waiting for {operation.name} to complete...")
-        result = operation.result()
+        result = operation.result(timeout=timeout)
         self.logger.info(f"{operation.name} done.")
 
 
@@ -400,19 +400,21 @@ class GCP:
             }
 
         if self.config['uefi'] or self.config['secureboot']:
-            guest_os_features = {'guest_os_features': [{'type_': "UEFI_COMPATIBLE"}]}
-            config.update(guest_os_features)
+            config.update(
+                {'guest_os_features': [{'type_': "UEFI_COMPATIBLE"}]}
+            )
 
         if self.config['secureboot']:
-            cert_file_type = self.config['cert_file_type']
-            shielded_instance_initial_state = {
-                'shielded_instance_initial_state': {
-                    'dbs': [self._get_file_content_buffer(self.config['db_path'], cert_file_type)],
-                    'keks': [self._get_file_content_buffer(self.config['kek_path'], cert_file_type)],
-                    'pk': self._get_file_content_buffer(self.config['pk_path'], cert_file_type),
+            cert_file_type = self.config['secureboot_parameters']['cert_file_type']
+            config.update(
+                {
+                    'shielded_instance_initial_state': {
+                        'dbs': [self._get_file_content_buffer(self.config['secureboot_parameters']['db_path'], cert_file_type)],
+                        'keks': [self._get_file_content_buffer(self.config['secureboot_parameters']['kek_path'], cert_file_type)],
+                        'pk': self._get_file_content_buffer(self.config['secureboot_parameters']['pk_path'], cert_file_type),
+                    }
                 }
-            }
-            config.update(shielded_instance_initial_state)
+            )
 
         operation = images.insert(project=self.image_project, image_resource=config)
         self._gcp_wait_for_operation(operation)
@@ -446,16 +448,15 @@ class GCP:
 
     def _wait_until_reachable(self, hostname):
         self.logger.info(f"Waiting for {hostname} to respond...")
-        while True:
+        i=0
+        while i<20:
             response = os.system("timeout 1 bash -c \"</dev/tcp/" + hostname + "/22\"")
             if response == 0:
                 self.logger.info(f"Instance {hostname} is reachable...")
                 return
-            time.sleep(1)
-
-    def _get_resource_name(self, url):
-        """Get resource name from GCP url"""
-        return urlparse(url).path.split("/")[-1]
+            self.logger.info(f"Waiting for {hostname} to respond...")
+            time.sleep(2)
+            i += 1
 
 
     def create_vm(self):
@@ -469,7 +470,7 @@ class GCP:
         
         image = self._get_image(self.image_project, self.image_name)
 
-        self.logger.info(f"Starting new instance from image {image}...")
+        self.logger.info(f"Starting new instance from image {self.image_name}...")
         machine_type = f"zones/{self.zone}/machineTypes/{self.machine_type}"
         disk_type = f"zones/{self.zone}/diskTypes/pd-ssd"
         name = f"vm-{self.test_name}"
@@ -515,19 +516,19 @@ class GCP:
         }
 
         if self.config['secureboot']:
-            shielded_instance_config = {
-                "shielded_instance_config": {
-                    "enable_secure_boot": True,
-                    "enable_integrity_monitoring": True,
-                    "enable_vtpm": True,
+            config.update(
+                {
+                    "shielded_instance_config": {
+                        "enable_secure_boot": True,
+                        "enable_integrity_monitoring": True,
+                        "enable_vtpm": True,
+                    }
                 }
-            }
-            config.update(shielded_instance_config)
+            )
 
         operation = self._compute_instances.insert(project=self.project, zone=self.zone, instance_resource=config)
         self._gcp_wait_for_operation(operation)
-        url = self._compute_instances.get(project=self.project, zone=self.zone, instance=name).self_link
-        self._instance_name = self._get_resource_name(url)
+        self._instance_name = name
         list_result = (
             self._compute_instances
             .list(request={'project':self.project, 'zone':self.zone, 'filter': f"name = {self._instance_name}"})
@@ -538,7 +539,7 @@ class GCP:
         interface = self._instance.network_interfaces[0]
         access_config = interface.access_configs[0]
         self.public_ip = access_config.nat_i_p
-        self.logger.info(f"Successfully created instance {url=} with {self.public_ip=}")
+        self.logger.info(f"Successfully created instance {name} with {self.public_ip=}")
         self._wait_until_reachable(self.public_ip)
         return self._instance, self.public_ip
 

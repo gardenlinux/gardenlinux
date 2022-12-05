@@ -84,12 +84,13 @@ gcp:
     #uefi: false
     # enable secureboot, implies uefi boot, default is off (optional)
     secureboot: true
-    # paths to the secureboot keys and database, needed for secureboot (optional)
-    #db_path: /gardenlinux/cert/secureboot.db.auth
-    #kek_path: /gardenlinux/cert/secureboot.kek.auth
-    #pk_path: /gardenlinux/cert/secureboot.pk.auth
-    # the certificate type for secureboot, possible values are `BIN`, `X509`. Default is `BIN`
-    #cert_file_type: BIN
+    secureboot_parameters:
+        # paths to the secureboot keys and database, needed for secureboot (optional)
+        #db_path: /gardenlinux/cert/secureboot.db.auth
+        #kek_path: /gardenlinux/cert/secureboot.kek.auth
+        #pk_path: /gardenlinux/cert/secureboot.pk.auth
+        # the certificate type for secureboot, possible values are `BIN`, `X509`. Default is `BIN`
+        #cert_file_type: BIN
 
     # GCE machine type (optional)
     machine_type: n1-standard-2
@@ -160,7 +161,7 @@ INFO     gcp-testbed:gcp.py:461 Waiting for 34.76.177.199 to respond...
 INFO     gcp-testbed:gcp.py:465 Instance 34.76.177.199 is reachable...
 ```
 
-The instances is running with the so called `gardenlinux` user, so you can access this machine by the following command:
+The instance is running with the so called `gardenlinux` user, so you can access this machine by the following command:
 ```
 ssh -o userknownhostsfile=7/dev/null -o stricthostkeychecking=no -i /gardenlinux/config/id_rsa_gardenlinux_test gardenlinux@34.76.177.199
 ```
