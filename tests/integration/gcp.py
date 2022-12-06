@@ -391,14 +391,14 @@ class GCP:
 
         blob_url = image_blob.public_url
         self.logger.info(f'Importing {blob_url} as {image_name=} into project {self.image_project}')
-        config={
-                'description': 'gardenlinux',
-                'name': image_name,
-                'raw_disk': {
-                    'source': blob_url,
-                },
-                'labels': self._tags,
-            }
+        config = {
+            'description': 'gardenlinux',
+            'name': image_name,
+            'raw_disk': {
+                'source': blob_url,
+            },
+            'labels': self._tags,
+        }
 
         if self.config['uefi'] or self.config['secureboot']:
             config['guest_os_features'] = [{'type_': "UEFI_COMPATIBLE"}]
@@ -406,10 +406,10 @@ class GCP:
         if self.config['secureboot']:
             cert_file_type = self.config['secureboot_parameters']['cert_file_type']
             config['shielded_instance_initial_state'] = {
-                    'dbs': [self._get_file_content_buffer(self.config['secureboot_parameters']['db_path'], cert_file_type)],
-                    'keks': [self._get_file_content_buffer(self.config['secureboot_parameters']['kek_path'], cert_file_type)],
-                    'pk': self._get_file_content_buffer(self.config['secureboot_parameters']['pk_path'], cert_file_type),
-                    }
+                'dbs': [self._get_file_content_buffer(self.config['secureboot_parameters']['db_path'], cert_file_type)],
+                'keks': [self._get_file_content_buffer(self.config['secureboot_parameters']['kek_path'], cert_file_type)],
+                'pk': self._get_file_content_buffer(self.config['secureboot_parameters']['pk_path'], cert_file_type),
+            }
 
         operation = images.insert(project=self.image_project, image_resource=config)
         self._gcp_wait_for_operation(operation)
@@ -513,10 +513,10 @@ class GCP:
 
         if self.config['secureboot']:
             config["shielded_instance_config"] = {
-                    "enable_secure_boot": True,
-                    "enable_integrity_monitoring": True,
-                    "enable_vtpm": True,
-                    }
+                "enable_secure_boot": True,
+                "enable_integrity_monitoring": True,
+                "enable_vtpm": True,
+            }
 
         operation = self._compute_instances.insert(project=self.project, zone=self.zone, instance_resource=config)
         self._gcp_wait_for_operation(operation)
