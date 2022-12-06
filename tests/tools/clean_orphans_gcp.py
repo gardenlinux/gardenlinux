@@ -216,8 +216,11 @@ def main():
             test_inventory_key_list = list(inventory[test_environment])
 
     except ValueError:
-        return os.EX_OK
+        return os.EX_DATAERR
     return os.EX_OK
 
 if __name__ == "__main__":
-    sys.exit(main())
+    while True:
+        result = main()
+        if result != 0:
+            sys.exit(result)
