@@ -76,6 +76,7 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 	secureboot=0
 	syslinux=$([[ "$(cut -c -5 <<< "$target")" = "/boot" ]] && [[ -f "$rootfs/usr/bin/syslinux" ]] && echo 1 || echo 0)
 	ephemeral=0
+	ephemeral_cryptsetup=0
 	weight=1
 	is_final_partition=0
 	while IFS="=" read -r key value; do
@@ -99,6 +100,9 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 			"ephemeral")
 				ephemeral=1
 				;;
+			"ephemeral_cryptsetup")
+				ephemeral_cryptsetup=1
+				;;
 			"weight")
 				weight="$value"
 				;;
@@ -113,7 +117,7 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 	label="$(grep -oP '(?<=^LABEL=)[a-zA-Z0-9\_\-]*$' <<< "$source" || true)"
 	repart="$(grep -oP '(?<=^REPART=)[0-9]*$' <<< "$source" || true)"
 
-	if [[ "$ephemeral" = 1 ]] && [[ -z "$repart" ]]; then
+	if [[ "$ephemeral" = 1 ]] || [[ "$ephemeral_cryptsetup" = 1 ]] && [[ -z "$repart" ]]; then
 		echo "WARNING: ephemeral flag only works for partitions created by systemd-repart"
 	fi
 
@@ -146,7 +150,7 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 			find "$data_source/boot" -type f -delete
 			echo 1 > "$root_repart"
 		fi
-		make_repart_partition -t "$target" -f "$fs" -o "$options" -g "$type" -e "$ephemeral" -w "$weight" "$repart" "$data_source" "$dracut_include"
+		make_repart_partition -t "$target" -f "$fs" -o "$options" -g "$type" -e "$ephemeral" -c "$ephemeral_cryptsetup" -w "$weight" "$repart" "$data_source" "$dracut_include"
 		find "$data_source" -depth -mindepth 1 -delete
 		continue
 	fi
