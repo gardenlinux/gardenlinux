@@ -28,7 +28,7 @@ instance_client = compute.InstancesClient()
 
 def wait_for_operation(operation, name):
     print(f"Waiting for deletion of resource {name} to complete...")
-    result = operation.result()
+    result = operation.result(timeout=60)
     print(f"    {name} deleted.")
 
 
