@@ -7,6 +7,7 @@ import sys
 
 import google.cloud.compute as compute
 import google.cloud.storage as storage
+import google.oauth2
 
 
 parser = argparse.ArgumentParser(description = 'Cleanup integration test resources in GCP')
@@ -16,14 +17,21 @@ parser.add_argument('-r', '--region', metavar='region', required=False, dest='re
                     help='Default value is "europe-west1"')
 parser.add_argument('-z', '--zone', metavar='zone', required=False, dest='zone', default='europe-west1-d',
                     help='Default value is "europe-west1-d"')
+parser.add_argument('-a', '--auth', metavar='service_account.json', required=False, dest='auth_path', default='',
+                    help='Path to JSON file that holds the service account login credentials')
 args = parser.parse_args()
 
-storage_client = storage.Client(project=args.project)
-image_client = compute.ImagesClient()
-subnet_client = compute.SubnetworksClient()
-firewall_client = compute.FirewallsClient()
-network_client = compute.NetworksClient()
-instance_client = compute.InstancesClient()
+if os.path.exists(args.auth_path):
+    credentials = google.oauth2.service_account.Credentials.from_service_account_file(args.auth_path)
+else:
+    credentials = None
+
+storage_client = storage.Client(credentials=credentials, project=args.project)
+image_client = compute.ImagesClient(credentials=credentials)
+subnet_client = compute.SubnetworksClient(credentials=credentials)
+firewall_client = compute.FirewallsClient(credentials=credentials)
+network_client = compute.NetworksClient(credentials=credentials)
+instance_client = compute.InstancesClient(credentials=credentials)
 
 
 def wait_for_operation(operation, name):
