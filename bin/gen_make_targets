@@ -3,9 +3,14 @@
 set -Eeufo pipefail
 
 hash="$(sha256sum flavours.yaml | cut -c -64)"
-check="$(head -n 1 make_targets.cache || true)"
 
-if [ "$hash" != "$check" ]; then
+if [ -f "make_targets.cache" ]; then
+	cached_hash="$(head -n 1 make_targets.cache)"
+else
+	cached_hash=none
+fi
+
+if [ "$hash" != "$cached_hash" ]; then
 	echo "$hash" > make_targets.cache
 	bin/expand-flavours < flavours.yaml | while read features; do
 		bin/garden-feat cname --featureDir features --features "$features"
