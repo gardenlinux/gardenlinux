@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import sys
 import pytest
 import time
 import uuid
@@ -448,8 +449,8 @@ class GCP:
 
     def _wait_until_reachable(self, hostname):
         self.logger.info(f"Waiting for {hostname} to respond...")
-        i=0
-        while i<20:
+        i = 0
+        while i < 20:
             response = os.system("timeout 1 bash -c \"</dev/tcp/" + hostname + "/22\"")
             if response == 0:
                 self.logger.info(f"Instance {hostname} is reachable...")
@@ -457,6 +458,7 @@ class GCP:
             self.logger.info(f"Waiting for {hostname} to respond...")
             time.sleep(2)
             i += 1
+        raise Exception("Remote host unreachable")
 
 
     def create_vm(self):
@@ -540,7 +542,11 @@ class GCP:
         access_config = interface.access_configs[0]
         self.public_ip = access_config.nat_i_p
         self.logger.info(f"Successfully created instance {name} with {self.public_ip=}")
-        self._wait_until_reachable(self.public_ip)
+        try:
+            self._wait_until_reachable(self.public_ip)
+        except Exception as e:
+            self.logger.error(e)
+            sys.exit(os.EX_NOHOST)
         return self._instance, self.public_ip
 
     def delete_vm(self, instance):
