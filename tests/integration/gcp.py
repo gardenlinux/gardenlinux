@@ -401,21 +401,15 @@ class GCP:
             }
 
         if self.config['uefi'] or self.config['secureboot']:
-            config.update(
-                {'guest_os_features': [{'type_': "UEFI_COMPATIBLE"}]}
-            )
+            config['guest_os_features'] = [{'type_': "UEFI_COMPATIBLE"}]
 
         if self.config['secureboot']:
             cert_file_type = self.config['secureboot_parameters']['cert_file_type']
-            config.update(
-                {
-                    'shielded_instance_initial_state': {
-                        'dbs': [self._get_file_content_buffer(self.config['secureboot_parameters']['db_path'], cert_file_type)],
-                        'keks': [self._get_file_content_buffer(self.config['secureboot_parameters']['kek_path'], cert_file_type)],
-                        'pk': self._get_file_content_buffer(self.config['secureboot_parameters']['pk_path'], cert_file_type),
+            config['shielded_instance_initial_state'] = {
+                    'dbs': [self._get_file_content_buffer(self.config['secureboot_parameters']['db_path'], cert_file_type)],
+                    'keks': [self._get_file_content_buffer(self.config['secureboot_parameters']['kek_path'], cert_file_type)],
+                    'pk': self._get_file_content_buffer(self.config['secureboot_parameters']['pk_path'], cert_file_type),
                     }
-                }
-            )
 
         operation = images.insert(project=self.image_project, image_resource=config)
         self._gcp_wait_for_operation(operation)
@@ -518,15 +512,11 @@ class GCP:
         }
 
         if self.config['secureboot']:
-            config.update(
-                {
-                    "shielded_instance_config": {
-                        "enable_secure_boot": True,
-                        "enable_integrity_monitoring": True,
-                        "enable_vtpm": True,
+            config["shielded_instance_config"] = {
+                    "enable_secure_boot": True,
+                    "enable_integrity_monitoring": True,
+                    "enable_vtpm": True,
                     }
-                }
-            )
 
         operation = self._compute_instances.insert(project=self.project, zone=self.zone, instance_resource=config)
         self._gcp_wait_for_operation(operation)
