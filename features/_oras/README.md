@@ -1,25 +1,22 @@
-- [1. Building onmetal-image compatible images with oras](#1-building-onmetal-image-compatible-images-with-oras)
-  - [1.1. Investigating an image build with onmetal-image](#11-investigating-an-image-build-with-onmetal-image)
-    - [1.1.1. onmetal-image](#111-onmetal-image)
-    - [1.1.2. oras](#112-oras)
-  - [1.2. Create an onmetal-image compatible manifest using oras](#12-create-an-onmetal-image-compatible-manifest-using-oras)
-    - [1.2.1. Kernel command line](#121-kernel-command-line)
-    - [1.2.2. Push / Create](#122-push--create)
-- [2. List created image using oras](#2-list-created-image-using-oras)
-    - [2.1 Grab the config details using oras](#21-grab-the-config-details-using-oras)
-- [3. List using onmetal-image](#3-list-using-onmetal-image)
-- [4. Request artifacts via onmetal-image](#4-request-artifacts-via-onmetal-image)
-  - [4.1. Kernel](#41-kernel)
-  - [4.2. Initrd](#42-initrd)
-  - [4.3. Root filesystem](#43-root-filesystem)
-- [5. Used software versions](#5-used-software-versions)
-- [6. Additional information](#6-additional-information)
-  - [6.1 Signing](#61-signing)
-    - [6.1.1 cosign](#611-cosign)
-	
--------------------------------------------------------------------------------
+## Feature: _oras
 
-# 1. Building onmetal-image compatible images with oras
+### Description
+<website-feature>
+This flag shows how to push to an OCI compatible registry using [oras](https://oras.land). It is only for demonstration and does *not* alter the contents or results of the builded artifacts.
+</website-feature>
+
+
+### Usage
+
+``` shell
+$ ./build.sh --features kvm,_oras .build/
+```
+
+The output of the build process shows the oras command to push the artifacts in the way they can be consumed by onmetal-image.
+
+### Details
+
+#### Building onmetal-image compatible images with oras
 
 > This description show how to create an [onmetal-image](https://github.com/onmetal/onmetal-image) compatible image with [oras](https://oras.land/).
 
@@ -30,9 +27,9 @@ Each comparable section shows the _original_  usage / output of onmetal-image fo
 For pushing/pulling of images (and artifacts) an OCI compatible registry must be used. 
 
 
-## 1.1. Investigating an image build with onmetal-image
+#### Investigating an image build with onmetal-image
 
-### 1.1.1. onmetal-image
+#####  onmetal-image
 
 ```sh
 $ /config/onmetal-image --store-path /git/.build/onmetal inspect localhost:5000/gardenlinux:latest
@@ -76,7 +73,7 @@ $ /config/onmetal-image --store-path /git/.build/onmetal inspect localhost:5000/
 }
 ```
 
-### 1.1.2. oras
+##### oras
 
 Different to onmetal-image's output, oras does not extract the config -> commandLine. For this it is neccessary to request it's contents when using oras with an additonal query (in this example shown by using _curl_):
 
@@ -128,9 +125,9 @@ $ /config/oras manifest fetch-config localhost:5000/oras-gardenlinux:v3
 ```
 
 
-## 1.2. Create an onmetal-image compatible manifest using oras
+#### Create an onmetal-image compatible manifest using oras
 
-### 1.2.1. Kernel command line
+##### Kernel command line
 
 must be supplied via an own json-file _orasconfig.json_ in the following examples:
 
@@ -153,7 +150,7 @@ jq . orasconfig.json
 }
 ```
 
-### 1.2.2. Push / Create 
+##### Push / Create 
 
 ```sh
 $ /config/oras push localhost:5000/oras-gardenlinux:v1 kvm_oci-amd64-today-dc5ce3cd.oci.tar.xz:application/vnd.onmetal.image.rootfs.v1alpha1.rootfs  kvm_oci-amd64-today-dc5ce3cd.vmlinuz:application/vnd.onmetal.image.vmlinuz.v1alpha1.vmlinuz  kvm_oci-amd64-today-dc5ce3cd.initrd:application/vnd.onmetal.image.initramfs.v1alpha1.initramfs --config orasconfig.json:application/vnd.onmetal.image.config.v1alpha1+json
@@ -253,7 +250,7 @@ $ onmetal-image inspect localhost:5000/oras-gardenlinux:v4
 ```
 
 
-# 2. List created image using oras
+#### List created image using oras
 
 ```sh
 $  /config/oras manifest fetch localhost:5000/oras-gardenlinux:v2 | jq '.'
@@ -299,7 +296,7 @@ $  /config/oras manifest fetch localhost:5000/oras-gardenlinux:v2 | jq '.'
 
 So we have some additonal annotations here which are ignored by onmetal-image.
 
-## 2.1 Grab the config details using oras
+#### Grab the config details using oras
 
 ```sh
 $ oras manifest fetch-config localhost:5000/oras-gardenlinux:v3 | jq .
@@ -311,7 +308,7 @@ $ oras manifest fetch-config localhost:5000/oras-gardenlinux:v3 | jq .
 }
 ```
 
-# 3. List using onmetal-image
+#### List using onmetal-image
 
 ```sh
 $ /config/onmetal-image --store-path /git/.build/onmetal pull localhost:5000/oras-gardenlinux:v2
@@ -370,11 +367,11 @@ $ /config/onmetal-image --store-path /git/.build/onmetal inspect localhost:5000/
 }
 ```
 
-# 4. Request artifacts via onmetal-image
+#### Request artifacts via onmetal-image
 
 These steps verify that the layers created with the oras commands are still usable with onmetal-image and it's layer-specific subcommands.
 
-## 4.1. Kernel
+##### Kernel
 
 ```sh
 /config/onmetal-image --store-path /git/.build/onmetal url --layer kernel localhost:5000/oras-gardenlinux:v2
@@ -385,7 +382,7 @@ These steps verify that the layers created with the oras commands are still usab
 $ curl -s -L http://localhost:5000/v2/oras-gardenlinux/blobs/sha256:046ff03c1918ef70f7526d4820b66ac04b06415a5f0d5153d5f08d1b45dc87ca -o oras_vmlinuz
 ```
 
-## 4.2. Initrd
+##### Initrd
 
 ```sh
 $ /config/onmetal-image --store-path /git/.build/onmetal url --layer initramfs localhost:5000/oras-gardenlinux:v2
@@ -397,7 +394,7 @@ $ curl -s -L http://localhost:5000/v2/oras-gardenlinux/blobs/sha256:a45c40c17c93
 $ cmp oras_initrd kvm_oci-amd64-today-dc5ce3cd.initrd 
 ```
 
-## 4.3. Root filesystem
+##### Root filesystem
 
 ```sh
 $ /config/onmetal-image --store-path /git/.build/onmetal url --layer rootfs localhost:5000/oras-gardenlinux:v2
@@ -408,74 +405,10 @@ $ /config/onmetal-image --store-path /git/.build/onmetal url --layer rootfs loca
 $ curl -s -L http://localhost:5000/v2/oras-gardenlinux/blobs/sha256:cbde236614f165c30cb716ed335f829264a59672b19533119cb28e4da354806f  -o oras_rootfs
 ```
 
-# 5. Used software versions
+##### Used software versions
 
 Component | Version
 | :--- | ---: 
-docker-registry | 2.8.1
 oras | 0.16.0
 onmetal-image | Git-Commit: [26f6ac2607e1cac19c35fac94aa8cd963b19628a](https://github.com/onmetal/onmetal-image/commit/26f6ac2607e1cac19c35fac94aa8cd963b19628a)
 
-# 6. Additional information
-
-## 6.1 Signing
-
-_This section is only for information, no actual implementation is done._
-
-Artifacts and images should be signed, so an update of one of them could be discovered. 
-
-For this Docker implemented [Content Trust](https://docs.docker.com/engine/security/trust/) which only works in docker and does not provide options to move signed images to another registry.
-
-The [Notary Project](https://github.com/notaryproject/notaryproject) aims to provide specifications for cross registry usage but it is not yet finished.
-
-In contrast [cosign](https://github.com/sigstore/cosign) can be used.
-
-### 6.1.1 cosign
-
-Creating a key pair can be done with _cosign generate-key-pair_.
-
-To sign the artifact the sha256 digest must be used:
-
-```sh
-$ cosign sign --key cosign.key localhost:5000/oras-gardenlinux@sha256:2b0ab7951d92049b29696d65867b6f536ef413726de8abd8cd2523c6bfd8519b
-Enter password for private key: 
-Pushing signature to: localhost:5000/oras-gardenlinux
-```
-
-
-For validation the public key must be used. The following example shows verification using the wrong key:
-
-```sh
-cosign verify --key validate.pub localhost:5000/oras-gardenlinux@sha256:386acf4443a3d45dfe6de4160995bcb8307e08ade6c7b2d798a694a6322a8f23
-Error: no matching signatures:
-invalid signature when validating ASN.1 encoded signature
-main.go:62: error during command execution: no matching signatures:
-invalid signature when validating ASN.1 encoded signature
-```
-
-While using the correct public key everything is fine and the return code is correct:
-
-```sh
-$ cosign verify --key gl-cosign.pub localhost:5000/oras-gardenlinux@sha256:386acf4443a3d45dfe6de4160995bcb8307e08ade6c7b2d798a694a6322a8f23 | jq .
-
-Verification for localhost:5000/oras-gardenlinux@sha256:386acf4443a3d45dfe6de4160995bcb8307e08ade6c7b2d798a694a6322a8f23 --
-The following checks were performed on each of these signatures:
-  - The cosign claims were validated
-  - The signatures were verified against the specified public key
-[
-  {
-    "critical": {
-      "identity": {
-        "docker-reference": "localhost:5000/oras-gardenlinux"
-      },
-      "image": {
-        "docker-manifest-digest": "sha256:386acf4443a3d45dfe6de4160995bcb8307e08ade6c7b2d798a694a6322a8f23"
-      },
-      "type": "cosign container image signature"
-    },
-    "optional": null
-  }
-]
-$ echo $?
-0
-```
