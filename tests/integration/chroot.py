@@ -270,15 +270,15 @@ class CHROOT:
 
     def _create_dir(self, dir, mode):
         """ Helper func: Create directory by given path and mode """
+        orig_mask = os.umask(000)
         try:
-            orig_mask = os.umask(000)
             os.makedirs(dir, mode)
-            os.umask(orig_mask)
             logger.info("Created {dir} with mode {mode}.".format(
                 dir=dir, mode=mode))
         except OSError:
             logger.error("Directory {dir} already present.".format(
                 dir=dir))
+        os.umask(orig_mask)
 
 
     def _port_val(self, host, port):
