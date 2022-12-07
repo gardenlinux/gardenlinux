@@ -502,20 +502,20 @@ gcp:
     # zone where the VM should be created (required)
     zone: europe-west1-d
 
-    # use a service account to log on to GCP instead of access token created with gcloud before (optional)
-    #service_account_json:
-    #service_account_json_path: /root/.config/gcloud/application_default_credentials.json
-
-    # use already existing image in GCE for tests (optional/required)
-    #image_name:
     # upload this local image to GCE and use it for testing (optional/required)
     image: file:/build/gcp-dev/20210915/amd64/bullseye/rootfs-gcpimage.tar.gz
-    #image: s3://gardenlinux/objects/078f440a76024ccd1679481708ebfc32f5431569
-    # region of the S3 bucket from where the image should be downloaded from (optional)
-    #image_region: eu-central-1
 
-    # GCS bucket for image upload, must exist and be used for local image upload (optional)
-    #bucket:
+    # enable uefi boot, default is legacy boot (optional)
+    #uefi: false
+    # enable secureboot, implies uefi boot, default is off (optional)
+    #secureboot: false
+    secureboot_parameters:
+        # paths to the secureboot keys and database, needed for secureboot (optional)
+        #db_path: /gardenlinux/cert/secureboot.db.auth
+        #kek_path: /gardenlinux/cert/secureboot.kek.auth
+        #pk_path: /gardenlinux/cert/secureboot.pk.auth
+        # the certificate type for secureboot, possible values are `BIN`, `X509`. Default is `BIN`
+        #cert_file_type: BIN
 
     # GCE machine type (optional)
     machine_type: n1-standard-2
@@ -557,6 +557,14 @@ The URI can be:
 - **image_region** _(optional)_: If the image comes from an S3 bucket, the bucket location to download from can be specified here. Defaults to `eu-central-1` if omitted.
 
 - **bucket** _(optional)_: To create a GCE machine image from a local filesystem snapshot, it needs to be uploaded to a GCS bucket first. The will be created on the fly and a name will be generated if this field is left empty.
+
+- **uefi** _(optional)_: To enable UEFI boot, by default legacy boot is used. Default is `false`
+
+- **secureboot** _(optional)_: To enable secureboot, if secureboot is enabled UEFI boot will be used, no matter how the `uefi` option is set. For secureboot it is important that the path options to the keys and database are set properly. Default is `false`. 
+- **db_path** _(optional)_: The path to the signature database for secureboot. Default is `/gardenlinux/cert/secureboot.db.auth`
+- **kek_path** _(optional)_: The path to the key exchange key for secureboot. Default is `/gardenlinux/cert/secureboot.kek.auth`
+- **pk_path** _(optional)_: The path to the platform key for secureboot. Default is `/gardenlinux/cert/secureboot.pk.auth`
+- **cert_file_type** _(optional)_: The type of the certificate, allowed values are `BIN` or `X509`. Default is `BIN`
 
 - **machine_type** _(optional)_: The GCE machine type to be used to create the GCE instance for the test. Defaults to `n1-standard-2` if not given.
 
