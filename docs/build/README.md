@@ -36,11 +36,11 @@ Creating your own build also allows to customize the image to your requirements.
 Use the [Makefile](/Makefile) to build a Garden Linux Image with a pre-defined set of features.
 ```
 # Example
-make metal-dev
+make metal_dev
 ```
-For more targets, checkout the [Makefile](/Makefile). The targets call `build.sh` with a pre-defined set of features.
+For more targets, simply run `make generate-targets` which generates the defaults build targets in `make_targets.cache`. The build targets call the [build.sh](/build.sh) with a pre-defined set of features.
 
-You can also customize a Makefile target to your needs, e.g. by adding a feature.
+You can also customize the build target to your needs, e.g. by adding a feature, platform or modifier by editing the [flavours.yaml](/flavours.yaml) and rerunning `make generate-targets`. You may also pass the options directly to the
 
 ## Build via build.sh
 If you really want to directly call build.sh, you can checkout [Makefile](/Makefile) for some good examples and start from there.

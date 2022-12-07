@@ -149,19 +149,27 @@ To build all supported images you may just run the following command:
     make all
 ```
 
-However, to save time you may also build just a platform specific image by running one of the following commands. Related dev images can be created by appending the '-dev' suffix (e.g. "make aws-dev").
+However, to save time you may also build just a platform specific image by running one of the following commands. Related dev images can be created by appending the '_dev' suffix (e.g. "make aws_dev").
 ```
-    make aws
-    make gcp
-    make azure
     make ali
-    make vmware
-    make openstack
+    make aws
+    make azure
+    make container
+    make firecracker
+    make gcp
     make kvm
     make metal
+    make openstack
+    make vmware
 ```
 
-Artifacts are located in the `.build/` folder of the project's build directory.
+You may also generate a list of all default targets by running:
+```
+make generate-targets
+```
+Afterwards, all targets are located within the `make_targets.cache` file in the project's root directory.
+
+After building, all artifacts are located in the `.build/` folder of the project's root directory.
 
 ### Cross-Build Support
 The Garden Linux pipeline supports cross-building on Linux based systems and requires `binfmt` support. `binfmt` support can easily be installed via packages from the used distribution. Afterwards, the build option `--arch` must be defined to the target arch (e.g. `--arch arm64`). Currently, `amd64` and `arm64` are supported and must be explicitly defined for cross-building.
