@@ -405,6 +405,73 @@ $ /config/onmetal-image --store-path /git/.build/onmetal url --layer rootfs loca
 $ curl -s -L http://localhost:5000/v2/oras-gardenlinux/blobs/sha256:cbde236614f165c30cb716ed335f829264a59672b19533119cb28e4da354806f  -o oras_rootfs
 ```
 
+#### Manifest with annotations
+
+created by
+
+``` sh
+$ jq . annotations.json
+{
+  "$config": {
+    "os-release": "981.0",
+    "signature/src": "kjldaslkdjasdklsjada"
+  },
+  "$manifest": {
+    "signed-by": "author"
+  }
+}
+
+$ oras push --annotation-file annotations.json localhost:5000/oras-gardenlinux:981.0 kvm_oras-amd64-today-aab1c350.raw:application/vnd.onmetal.image.rootfs.v1alpha1.rootfs kvm_oras-amd64-today-aab1c350.vmlinuz:application/vnd.onmetal.image.vmlinuz.v1alpha1.vmlinuz kvm_oras-amd64-today-aab1c350.initrd:application/vnd.onmetal.image.initramfs.v1alpha1.initramfs --config kvm_oras-amd64-today-aab1c350.json:application/vnd.onmetal.image.config.v1alpha1+json
+```
+
+will result in
+
+``` sh
+{
+  "schemaVersion": 2,
+  "mediaType": "application/vnd.oci.image.manifest.v1+json",
+  "config": {
+    "mediaType": "application/vnd.onmetal.image.config.v1alpha1+json",
+    "digest": "sha256:923549919b8afae4ea8df24fdf1782603983562d2c4f74c6094e1d431482a292",
+    "size": 747,
+    "annotations": {
+      "os-release": "981.0",
+      "signature/src": "kjldaslkdjasdklsjada"
+    }
+  },
+  "layers": [
+    {
+      "mediaType": "application/vnd.onmetal.image.rootfs.v1alpha1.rootfs",
+      "digest": "sha256:fba672096e4383ed2a99a0a0d5f52ca80598af36cbe29ff4b11fadd0ad2fb76b",
+      "size": 722468864,
+      "annotations": {
+        "org.opencontainers.image.title": "kvm_oras-amd64-today-aab1c350.raw"
+      }
+    },
+    {
+      "mediaType": "application/vnd.onmetal.image.vmlinuz.v1alpha1.vmlinuz",
+      "digest": "sha256:0b9b2cb0fe1ac567972f597e4d455fb166412ed721927965d9ea2363781cab43",
+      "size": 13230848,
+      "annotations": {
+        "org.opencontainers.image.title": "kvm_oras-amd64-today-aab1c350.vmlinuz"
+      }
+    },
+    {
+      "mediaType": "application/vnd.onmetal.image.initramfs.v1alpha1.initramfs",
+      "digest": "sha256:eda9574599e3e3b52708a945e3b2dbb71a6cbecfeff2947100dadfd6af0e56a8",
+      "size": 27603392,
+      "annotations": {
+        "org.opencontainers.image.title": "kvm_oras-amd64-today-aab1c350.initrd"
+      }
+    }
+  ],
+  "annotations": {
+    "org.opencontainers.image.created": "2022-12-07T11:17:04Z",
+    "signed-by": "author"
+  }
+}
+```
+
 ##### Used software versions
 
 Component | Version
