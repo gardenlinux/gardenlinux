@@ -1037,7 +1037,7 @@ local:
     - **image** the build result image used within the tests
     - **kernel** the name for the builded kernel
 
-- **base** contains the configuration options for local tests in the `base` feature, at the moment there is not local test in `base` that has any configuration options
+- **base** contains the configuration options for local tests in the `base` feature, at the moment there is no local test in `base` that has any configuration options
 
 - **features** list of features that is used to determine the tests to run
 
