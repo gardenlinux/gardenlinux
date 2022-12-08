@@ -196,6 +196,13 @@ elif [ "$cryptsetup" = 1 ]; then
 	ExecStart=/usr/bin/make_ephemeral_cryptsetup "/etc/repart.templates/$repart_uuid" "$sysroot_target_escaped" "\$dev_path"
 	EOF
 
+	systemd_mapper_dev_dropin="\$2/$(systemd-escape "dev/mapper/$sysroot_target_escaped").device.d"
+	mkdir -p "\$systemd_mapper_dev_dropin"
+	cat > "\$systemd_mapper_dev_dropin/override.conf" << EOF
+	[Unit]
+	JobRunningTimeoutSec=infinity
+	EOF
+
 	cat > "\$2/$sysroot_mount_unit" << EOF
 	[Unit]
 	Before=initrd-root-fs.target
