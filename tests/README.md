@@ -1023,7 +1023,7 @@ local:
 
     base:
 
-      # list of features that is used to determine the tests to run
+    # list of features that is used to determine the tests to run
     features:
       - "base"
       - "_oci"
