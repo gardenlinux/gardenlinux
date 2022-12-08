@@ -1,4 +1,15 @@
 targets:
+  - name: ali
+  - name: aws
+    modifiers:
+      - _secureboot
+      - _secureboot,_readonly
+      - _secureboot,_readonly,_persistence
+      - githubActionRunner
+  - name: azure
+  - name: container
+  - name: firecracker
+  - name: gcp
   - name: kvm
     modifiers:
       - _secureboot
@@ -11,18 +22,8 @@ targets:
       - _secureboot,_readonly,_persistence
       - _pxe
       - vhost
-  - name: gcp
-  - name: aws
-    modifiers:
-      - _secureboot
-      - _secureboot,_readonly
-      - _secureboot,_readonly,_persistence
-      - githubActionRunner
-  - name: azure
-  - name: ali
   - name: openstack
   - name: vmware
-  - name: firecracker
 modifiers:
   - _dev
   - gardener,_prod
