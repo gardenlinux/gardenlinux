@@ -115,8 +115,10 @@ for i in $(filter_comment <<< $include | filter_variables | filter_if | grep -v 
 done
 exclude="$(paste -sd, - <<< $exclude)"
 
+## Define debootstrap arguments
 debootstrapArgs=()
 
+# Set GPG check
 if [ -z "$noCheckGpg" ]; then
 	debootstrapArgs+=( --force-check-gpg )
 else
@@ -125,6 +127,7 @@ fi
 
 # Set variant
 debootstrapArgs+=( --variant=minbase )
+
 # Set custom package includes from Garden Linux repository
 debootstrapArgs+=( --include=garden-repo-manager )
 
@@ -158,6 +161,12 @@ fi
 
 echo "$epoch" > "$targetDir/garden-epoch"
 
+# Set DEB822 as default
+echo "Prepare DEB822 repo format"
+"$thisDir/garden-chroot" "$targetDir" bash -c "
+	rm /etc/apt/sources.list
+"
+
 # Add support for local packages
 if [[ -v PKG_DIR ]]; then
 	# Create repository Packages file
@@ -170,9 +179,10 @@ if [[ -v PKG_DIR ]]; then
 	mount --rbind --make-rslave "$PKG_DIR" "$targetDir/run/packages"
 
 	# Add local package reposiotiry
-	"$thisDir/garden-chroot" "$targetDir" bash -c '
-		/sbin/garden-repo-manager add local -p /run/packages -a "$arch"
-	'
+	echo "Local packages will be added as a repository"
+	"$thisDir/garden-chroot" "$targetDir" bash -c "
+		/sbin/garden-repo-manager add local -p /run/packages/ -a "$arch"
+	"
 fi
 
 # Add basic repositories
@@ -184,15 +194,15 @@ if [ -z "$nonDebian" ]; then
 	# Add repositories to Garden Linux
 	if [ $debianMirror -eq 1 ]; then
 		# Integrate Garden Linux repository with additional Debian native mirror
-		"$thisDir/garden-chroot" "$targetDir" bash -c '
-			/sbin/garden-repo-manager add gardenlinux -a "$arch" && \
-			/sbin/garden-repo-manager add debian testing -s main contrib -a "$arch"
-		'
+		"$thisDir/garden-chroot" "$targetDir" bash -c "
+			/sbin/garden-repo-manager add gardenlinux -a $arch && \
+			/sbin/garden-repo-manager add debian testing -c main contrib -a $arch
+		"
 	else
 		# Integrate Garden Linux repository
-		"$thisDir/garden-chroot" "$targetDir" bash -c '
-			/sbin/garden-repo-manager add gardenlinux -a "$arch"
-		'
+		"$thisDir/garden-chroot" "$targetDir" bash -c "
+			/sbin/garden-repo-manager add gardenlinux -a $arch
+		"
 	fi
 
 	# Update repositories
