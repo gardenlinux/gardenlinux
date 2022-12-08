@@ -38,13 +38,13 @@ make aws-secureboot-dev BUILD_OPTS="--lessram"
 ## Prepare spawning
 This chapter describes what steps are required to successfully spawn an AWS instance with Garden Linux running with secure boot. There are two options to choose from.
 
-You can either enable secure boot internally. This way you simply need to spawn the Garden Linux image and execute the `enroll-gardenlinux-secureboot-keys`, which will prepare the Garden Linux image for secure boot by using UEFI's setup mode. After a reboot, the Garden Linux image will then run with secure boot enabled.
+You can either enable secure boot internally. This way you simply need to spawn the Garden Linux image and execute the `enroll-gardenlinux-secureboot-keys`, which will prepare the Garden Linux image for secure boot by using UEFI's setup mode. Ensure to reboot the system to have secure boot fully enabled.
 
-Besides of this, you can also enable secure boot externally. This way, you have secure boot enabled right at the first start, but you need to provide all information during  the creation of the instances, which also requires some additional tools to be executed on your workstation.
+Besides of this, you can also enable secure boot externally. This way, you have secure boot enabled right at the first start, but you need to provide all information during the creation of the instances, which also requires some additional tools to be executed on your workstation.
 
 ### Option A: Enable secure boot internally
 
-By creating a Garden Linux with the secure boot feature enabled and by using UEFI's setup mode, you can activate secure boot from within the AWS instance once the Garden Linux image has been spawned successfully. As long as you do not enable secure boot from within the instance, the Garden Linux image will simply spawn without secure boot enabled. This must be kept in mind.
+By creating a Garden Linux with the secure boot feature enabled and by using UEFI's setup mode, you can activate secure boot from within the AWS instance once the Garden Linux image has been spawned successfully. As long as you do not enable secure boot within the instance, the Garden Linux image will simply spawn without secure boot enabled. This must be kept in mind.
 
 #### Integration test configuration
 Before starting the required AWS environment, a configuration for the integration test platform is needed.
