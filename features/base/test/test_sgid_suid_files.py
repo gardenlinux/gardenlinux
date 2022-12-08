@@ -36,5 +36,5 @@ import pytest
 
 # Run the test unit to perform the
 # final tests by the given artifact.
-def test_sgid_suid_files(client, test_type, whitelist_files, non_vhost, non_local):
+def test_sgid_suid_files(client, test_type, whitelist_files, non_vhost):
     sgid_suid_files(client, test_type, whitelist_files)

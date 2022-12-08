@@ -23,16 +23,22 @@ def test_oci_feat(local, testconfig):
     """
 
     # check for neccessary configuration options
-    if not "image" in testconfig["_oci"]:
+    if not "image" in testconfig["oci"]:
         logger.error("No path to image archive defined.")
     else:
-        image = testconfig["_oci"]["image"]
+        image = testconfig["oci"]["image"]
         logger.info(f"Path to image archive defined: {image}")
-    if not "kernel" in testconfig["_oci"]:
+    if not "kernel" in testconfig["oci"]:
         logger.error("No kernel to compare defined.")
     else:
-        kernelcmp = testconfig["_oci"]["kernel"]
+        kernelcmp = testconfig["oci"]["kernel"]
         logger.info(f"Kernel to compare is defined: {kernelcmp}")
+
+    # update package index files
+    cmd = f"apt-get update"
+    rc, out = utils.execute_local_command(cmd)
+    assert rc == 0, f"Could not update Debian Package Index."
+    logger.info(f"Updated Package Index.")
 
     # install docker-registry
     pkg = "docker-registry"

@@ -4,7 +4,7 @@ import os
 import string
 import pytest
 
-def packages_musthave(client, testconfig, non_local):
+def packages_musthave(client, testconfig):
     """"Test if the packages defined in pkg.include are installed"""
     installed_package_list = get_package_list(client)
 

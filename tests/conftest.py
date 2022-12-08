@@ -362,7 +362,10 @@ def pytest_collection_modifyitems(config, items):
     except OSError as err:
         logger.error(f"can not open config file {config_file}")
         pytest.exit(err, 1)
-    features = config_options[iaas].get("features", [])
+    if not iaas == 'local':
+        features = config_options[iaas].get("features", [])
+    else:
+        features = []
     for item in items:
         item_path = str(item.fspath)
         if "features" in item_path:

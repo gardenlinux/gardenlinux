@@ -1016,31 +1016,26 @@ The following describes the configuration needed to run local tests.
 ```yaml
 local:
     # configuration parameters for tests separated by features
-    _oci:
+    oci:
       # Path to a final artifact. Represents the .tar.xz archive image file (required)
       image: /build/kvm_dev_oci-amd64-today-local.oci.tar.xz
       kernel: /build/kvm_dev_oci-amd64-today-local.vmlinuz
 
-    base:
+    garden_feat:
 
-    # list of features that is used to determine the tests to run
-    features:
-      - "base"
-      - "_oci"
 ```
 
 ##### Configuration options
 
 <details>
 
-- **_oci** contains the configuration options for local tests in the `_oci` feature
+- **oci** contains the configuration options for local test `test_oci`
     - **image** the build result image used within the tests
     - **kernel** the name for the builded kernel
 
-- **base** contains the configuration options for local tests in the `base` feature, at the moment there is no local test in `base` that has any configuration options
+- **garden_feat** contains the configuration option for the `test_garden_feat` test. This is just an example since the `test_garden_feat` test does not have any configuration options
 
-- **features** list of features that is used to determine the tests to run
-
+Check the [readme](local/README.md) for detailed configuration options of all the local tests.
 </details>
 
 ##### Running the tests
@@ -1058,6 +1053,8 @@ sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v ~/con
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
     pytest --iaas=local --configfile=/config/mylocalconfig.yaml
+
+NOTE: With the `-k EXPRESSION` you can filter the tests by name to only run the tests you want, instead of all local tests. See `pytest --help` for more information.
 
 ## Misc
 Within this section further tests are listed that may help developing and contributing on Garden Linux. These tests are disjunct from the Garden Linux code itself and may only perform validation on code (like `Shellcheck` or `autopep`).

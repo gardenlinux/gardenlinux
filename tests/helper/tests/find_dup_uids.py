@@ -1,4 +1,4 @@
-def find_dup_uids(client, non_local):
+def find_dup_uids(client):
     """find duplicated uids"""
     # Call binary on remote and get passwd
     (exit_code, output, error) = client.execute_command(

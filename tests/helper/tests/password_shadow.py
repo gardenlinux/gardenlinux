@@ -1,4 +1,4 @@
-def password_shadow(client, non_local):
+def password_shadow(client):
     """check that no passwords are set in /etc/shadow or /etc/passwd"""
     (exit_code, output, error) = client.execute_command(
         "getent shadow", quiet=True)
