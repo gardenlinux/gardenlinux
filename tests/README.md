@@ -1009,9 +1009,9 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 
 #### Local tests in the integration container
 
-Sometimes it is neccessary to run tests for build results. This can be achieved by using the build results in the base-test container.
+Sometimes it is neccessary to run tests locally for build results and not in a chroot or kvm environment that is accessed via ssh. This can be achieved by using the build results in the base-test container with the `local` configuration for `pytest`.
 
-The following describes the configuration needed to run the tests for the build result of the **_oci**-feature.
+The following describes the configuration needed to run local tests.
 
 ```yaml
 local:
