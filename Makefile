@@ -41,6 +41,9 @@ $(SECUREBOOT_CRT): | container-cert
 
 .PHONY: container-build container-cert container-test container-integration
 
+generate-targets:
+	@printf "%s\n" "All available targets have been generated and written to the 'make_targets.cache' file."
+
 container-build:
 	make --directory=container build-image
 
