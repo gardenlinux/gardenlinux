@@ -1,4 +1,4 @@
-def password_hashes(client):
+def password_hashes(client, non_local):
     """Check configured password hashes"""
     # Call binary on remote and get content of file
     (exit_code, output, error) = client.execute_command(

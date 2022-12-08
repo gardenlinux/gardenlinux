@@ -1009,19 +1009,23 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 
 #### Local tests in the integration container
 
-Sometimes it is neccessary to run tests for build results. This can be achieved by using the build results in the test-integration container.
+Sometimes it is neccessary to run tests for build results. This can be achieved by using the build results in the base-test container.
 
 The following describes the configuration needed to run the tests for the build result of the **_oci**-feature.
 
 ```yaml
 local:
-    # Path to a final artifact. Represents the .tar.xz archive image file (required)
-    image: /build/kvm_dev_oci-amd64-today-local.oci.tar.xz
+    # configuration parameters for tests separated by features
+    _oci:
+      # Path to a final artifact. Represents the .tar.xz archive image file (required)
+      image: /build/kvm_dev_oci-amd64-today-local.oci.tar.xz
+      kernel: /build/kvm_dev_oci-amd64-today-local.vmlinuz
 
-    kernel: /build/kvm_dev_oci-amd64-today-local.vmlinuz
+    base:
 
-    # list of features that is used to determine the tests to run
+      # list of features that is used to determine the tests to run
     features:
+      - "base"
       - "_oci"
 ```
 
@@ -1029,9 +1033,11 @@ local:
 
 <details>
 
-- **image** the build result image used within the tests
+- **_oci** contains the configuration options for local tests in the `_oci` feature
+    - **image** the build result image used within the tests
+    - **kernel** the name for the builded kernel
 
-- **kernel** the name for the builded kernel
+- **base** contains the configuration options for local tests in the `base` feature, at the moment there is not local test in `base` that has any configuration options
 
 - **features** list of features that is used to determine the tests to run
 
@@ -1046,7 +1052,7 @@ Start Podman container with dependencies:
 - mount directory with configfile to `/config`
 
 ```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v ~/config:/config  gardenlinux/base-test:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):

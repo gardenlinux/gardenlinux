@@ -14,5 +14,5 @@ import pytest
         "libssl1.1:arm64"
     ]
 )
-def test_blacklisted_packages(client, package):
+def test_blacklisted_packages(client, package, non_local):
     blacklisted_packages(client, package)

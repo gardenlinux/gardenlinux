@@ -106,5 +106,5 @@ import pytest
 )
 
 
-def test_garden_feat(client, test_case, config, input_features, output_features, chroot):
+def test_garden_feat(client, test_case, config, input_features, output_features, local):
     garden_feat(client, test_case, config, input_features, output_features)
