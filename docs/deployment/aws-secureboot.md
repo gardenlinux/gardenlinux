@@ -12,8 +12,11 @@ This article describes all steps needed to spawn a secure enabled Garden Linux i
 
 - [Create image](#create-image)
 - [Prepare spawning](#prepare-spawning)
-  - [UEFI variables](#uefi-variables)
-  - [Integration test configuration](#integration-test-configuration)
+  - [Option A: Enable secure boot internally](#option-a-enable-secure-boot-internally)
+    - [Integration test configuration](#integration-test-configuration)
+  - [Option B: Enable secure boot externally](#option-b-enable-secure-boot-externally)
+    - [UEFI variables](#uefi-variables)
+    - [Integration test configuration](#integration-test-configuration-1)
 - [Spawn environment](#spawn-environment)
 - [Use secure boot enabled Garden Linux](#use-secure-boot-enabled-garden-linux)
 - [Cleanup everything](#cleanup-everything)
@@ -33,45 +36,26 @@ make aws-secureboot-dev BUILD_OPTS="--lessram"
 ```
 
 ## Prepare spawning
-This chapter describes what steps are required to successfully spawn an AWS instance with Garden Linux running with secure boot.
+This chapter describes what steps are required to successfully spawn an AWS instance with Garden Linux running with secure boot. There are two options to choose from.
 
-### UEFI variables
+You can either enable secure boot internally. This way you simply need to spawn the Garden Linux image and execute the `enroll-gardenlinux-secureboot-keys`, which will prepare the Garden Linux image for secure boot by using UEFI's setup mode. Ensure to reboot the system to have secure boot fully enabled.
 
-Once you have build a new Garden Linux image using the secure boot feature, there will also be signature databases which are required for secure boot. These databases must be uploaded to AWS as UEFI vars, so that UEFI can verify the integrity of the booted system during the startup process.
+Besides of this, you can also enable secure boot externally. This way, you have secure boot enabled right at the first start, but you need to provide all information during the creation of the instances, which also requires some additional tools to be executed on your workstation.
 
-The signature databases are created in the [cert/](../../cert/) directory during the build of the image. There, you will find the following files:
-* secureboot.db.esl
-* secureboot.kek.esl
-* secureboot.pk.esl
+### Option A: Enable secure boot internally
 
-These files are required during startup. Therefore, they must be added to the spawned AWS instance as UEFI variables. In order to achieve this, Amazon provides a tool for creating a file blob, that can be added to the spawning AWS instance. These blob is then used as UEFI variables during boot to verify the booted system.
+By creating a Garden Linux with the secure boot feature enabled and by using UEFI's setup mode, you can activate secure boot from within the AWS instance once the Garden Linux image has been spawned successfully. As long as you do not enable secure boot within the instance, the Garden Linux image will simply spawn without secure boot enabled. This must be kept in mind.
 
-The tool can be found here:
-* https://github.com/awslabs/python-uefivars
+#### Integration test configuration
+Before starting the required AWS environment, a configuration for the integration test platform is needed.
 
-Simply checkout the git repository and execute the `uefivars.py` script within the repo. If you run this command on Debian bullseye, make sure to install the `crc32c` python module. Unfortunately, there is no debian package for `crc32c` at the moment, but you can install it via `pip` for example.
+The following example shows such a configuration. For test purposes, it uses the `eu-west-1` region, a small instance type (e.g. `t3.micro`), an image with `amd64` architecture and most importantly the `UEFI` boot mode.
 
-Once downloaded, the signature databases must be converted to the secure boot file blob:
-```
-./uefivars.py \
-  -i none \
-  -o aws \
-  -O secure_boot_blob.bin \
-  -P cert/secureboot.pk.esl \
-  -K cert/secureboot.kek.esl \
-  --db cert/secureboot.pk.esl
-```
-If the execution was successful, there should be a file called `secure_boot_blob.bin`. The content of the file can now be added to the created AWS instance. Since this documentation uses the integration test platform for spawning all required AWS resources and the integration test platform uses its own configuration, the content of the created file must be added to the integration test configuration. The configuration and its required values are described in the next chapter.
+Generally, there is no need to adjust this configuration, if you have created the Garden Linux image as described in this [chapter](#create-image).
 
-### Integration test configuration
-Before one can spawn the required AWS environment, a configuration for the integration test platform is needed.
+However, you may need to adjust the path to your image artifact which could look like `aws-gardener_secureboot_dev-amd64-today-<commit hash|local>.raw`.
 
-The following example shows such a configuration. For test purposes, it uses the `eu-west-1` region, a small instance type, an image with `amd64` architecture and most importantly the `UEFI` boot mode.
-
-In general, there is no need to adjust this configuration, if you have created the Garden Linux image as described in this [chapter](#create-image).
-
-However, you may need to adjust the path to your image artifact which should look like `aws-gardener_secureboot_dev-amd64-today-<commit hash|local>.raw` and you have to paste the content of the `secure_boot_blob.bin` to the `uefi_data` attribute.
-
+The configuration looks like this then:
 ```
 aws:
     # region
@@ -93,7 +77,71 @@ aws:
 
 ```
 
-The content must be saved into a YAML file and it must be mounted to the integration test container later on. For this, create a folder in your home directory and place the YAML in there. This folder will be mounted to the integration test container then. The configuration could be called `aws-secureboot.yaml` for example.
+Finally, the content must be saved into a YAML file and it has to be mounted to the integration test container later on. For this case, create a folder in your home directory and place the YAML in there. This folder will be mounted to the integration test container afterwards. The configuration could be called `aws-secureboot.yaml` for example.
+
+
+#### Enroll signature databases
+
+Once the image has been started as described in chapter [Spawn image](#spawn-environment) and you are connected via SSH as described [here](#use-secure-boot-enabled-garden-linux), you need to enroll the signature databases to the UEFI variables. This works because the UEFI is in setup mode on AWS by default. As soon as the signature databases got uploaded, the setup mode will be exited.
+
+For enrolling the signature databases, simply run the following command:
+```
+sudo /usr/sbin/enroll-gardenlinux-secureboot-keys
+```
+
+The signature databases are located in the `/etc/gardenlinux` directory and are uploaded from there to the UEFI variables. Now, the environment is ready to run secure boot. For this, simply reboot the instance. After that, secure boot should be enabled.
+
+
+### Option B: Enable secure boot externally
+
+Instead of enabling secure boot internally, you can also enable it externally. This is achieved by already providing the required information during the creation and spawning of the image.
+
+The following chapters explain, what needs to be done.
+
+#### UEFI variables
+
+As soon as you have build a new Garden Linux image using the secure boot feature, there will also be signature databases which are required for secure boot. These databases must be uploaded to AWS as UEFI vars, so that UEFI can verify the integrity of the booted system during the startup process.
+
+The signature databases are created in the [cert/](../../cert/) directory during the build of the image. There, you will find the following files:
+* secureboot.db.esl
+* secureboot.kek.esl
+* secureboot.pk.esl
+
+These files are required during startup. Therefore, they must be added to the spawned AWS instance as UEFI variables. In order to achieve this, Amazon provides a tool for creating a file blob. This file blob can be added to the spawning AWS instance since it contains the signature databases. This blob is then used as UEFI variables during boot, so that UEFI can verify the booted system.
+
+The corresponding tool can be found here:
+* https://github.com/awslabs/python-uefivars
+
+Simply checkout the git repository and execute the `uefivars.py` script within the repo. If you run this command on Debian bullseye, make sure to install the `crc32c` python module. Unfortunately, there is no debian package for `crc32c` at the moment, but you can install it via `pip` for example.
+
+Once downloaded, the signature databases must be converted to the secure boot file blob:
+```
+./uefivars.py \
+  -i none \
+  -o aws \
+  -O secure_boot_blob.bin \
+  -P cert/secureboot.pk.esl \
+  -K cert/secureboot.kek.esl \
+  --db cert/secureboot.pk.esl
+```
+If the execution was successful, there should be a file called `secure_boot_blob.bin`. The content of the file can now be added to the created AWS instance. Since this documentation uses the integration test platform for spawning all required AWS resources and the integration test platform uses its own configuration, the content of the created file must be added to the integration test configuration. The configuration and its required values are described in the next chapter.
+
+#### Integration test configuration
+
+Similar to the configuration and explanation of chapter [Integration test configuration](#integration-test-configuration) from the previous option, you can use the same configuration from there also for this option, but it must be adjusted slightly to provide the UEFI variables that have been prepared previously.
+
+This way, you ensure that the Garden Linux instance will start with secure boot right from the beginning. No further tasks are then needed.
+
+The integration test configuration needs the following additional attribute configured:
+```
+aws:
+    ...
+    # UEFI data. This contains the UEFI variables
+    uefi_data: <content of secure_boot_blob.bin>
+    ...
+```
+
+As you can see, it has the `uefi_data` attribute set, which contains the content of the `secure_boot_blob.bin` file.
 
 ## Spawn environment
 
