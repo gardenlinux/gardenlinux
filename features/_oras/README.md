@@ -479,3 +479,66 @@ Component | Version
 oras | 0.16.0
 onmetal-image | Git-Commit: [26f6ac2607e1cac19c35fac94aa8cd963b19628a](https://github.com/onmetal/onmetal-image/commit/26f6ac2607e1cac19c35fac94aa8cd963b19628a)
 
+### Additional information
+
+#### Signing
+
+_This section is only for information, no actual implementation is done._
+
+Artifacts and images should be signed, so an update of one of them could be discovered. 
+
+For this Docker implemented [Content Trust](https://docs.docker.com/engine/security/trust/) which only works in docker and does not provide options to move signed images to another registry.
+
+The [Notary Project](https://github.com/notaryproject/notaryproject) aims to provide specifications for cross registry usage but it is not yet finished.
+
+In contrast [cosign](https://github.com/sigstore/cosign) can be used.
+
+##### cosign
+
+Creating a key pair can be done with _cosign generate-key-pair_.
+
+To sign the artifact the sha256 digest must be used:
+
+```sh
+$ cosign sign --key cosign.key localhost:5000/oras-gardenlinux@sha256:2b0ab7951d92049b29696d65867b6f536ef413726de8abd8cd2523c6bfd8519b
+Enter password for private key: 
+Pushing signature to: localhost:5000/oras-gardenlinux
+```
+
+
+For validation the public key must be used. The following example shows verification using the wrong key:
+
+```sh
+cosign verify --key validate.pub localhost:5000/oras-gardenlinux@sha256:386acf4443a3d45dfe6de4160995bcb8307e08ade6c7b2d798a694a6322a8f23
+Error: no matching signatures:
+invalid signature when validating ASN.1 encoded signature
+main.go:62: error during command execution: no matching signatures:
+invalid signature when validating ASN.1 encoded signature
+```
+
+While using the correct public key everything is fine and the return code is correct:
+
+```sh
+$ cosign verify --key gl-cosign.pub localhost:5000/oras-gardenlinux@sha256:386acf4443a3d45dfe6de4160995bcb8307e08ade6c7b2d798a694a6322a8f23 | jq .
+
+Verification for localhost:5000/oras-gardenlinux@sha256:386acf4443a3d45dfe6de4160995bcb8307e08ade6c7b2d798a694a6322a8f23 --
+The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - The signatures were verified against the specified public key
+[
+  {
+    "critical": {
+      "identity": {
+        "docker-reference": "localhost:5000/oras-gardenlinux"
+      },
+      "image": {
+        "docker-manifest-digest": "sha256:386acf4443a3d45dfe6de4160995bcb8307e08ade6c7b2d798a694a6322a8f23"
+      },
+      "type": "cosign container image signature"
+    },
+    "optional": null
+  }
+]
+$ echo $?
+0
+```
