@@ -2,8 +2,8 @@
 
 # Table of Content
 - [General](#general)
-- [Test oci][#test_oci]
-- [Test garden_feat](#test_garden_feat)
+- [Test oci](#test-oci)
+- [Test garden_feat](#test-garden_feat)
 
 # General
 
@@ -22,7 +22,6 @@ local:
       kernel: /build/kvm_dev_oci-amd64-today-local.vmlinuz
 
     garden_feat:
-
 ```
 
 # Test oci
