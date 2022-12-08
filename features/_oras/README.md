@@ -481,6 +481,10 @@ onmetal-image | Git-Commit: [26f6ac2607e1cac19c35fac94aa8cd963b19628a](https://g
 
 ### Additional information
 
+#### Image spec
+
+[Pre-defined annotation keys](https://github.com/opencontainers/image-spec/blob/v1.0.1/annotations.md#pre-defined-annotation-keys)
+
 #### Signing
 
 _This section is only for information, no actual implementation is done._
