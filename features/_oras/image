@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -Eeuxo pipefail
+
+echo "Creating and puhsing OCI using oras.."
+
+rootfs=$1
+targetBase=$2
+targetBaseDir=$(dirname "$targetBase")
+
+# extract kernel image, cmdline and initramfs
+cp "$rootfs/boot/"vmlinuz* "$targetBase.vmlinuz"
+cp "$rootfs/boot/"initrd* "$targetBase.initrd"
+read -r _ cmdline < "$rootfs/etc/kernel/cmdline" 
+
+# get the actual root fs
+# if it's the empty default (#) we need to rewrite that
+root_source=$(tail -n 1 "$rootfs/etc/fstab" | cut -d " " -f 1)
+if [ $root_source = "#" ]; then
+  root_source="LABEL=ROOT"
+fi
+
+cmdline="root=$root_source $cmdline"
+
+# os-release
+osrelease=$(sed 's/$/\\n/g' $targetBaseDir/rootfs.os-release | tr -d "\n")
+osrelease=$(echo $osrelease | sed 's/"//g')
+
+echo "$(cat <<EOJ 
+{
+	"commandLine": "$cmdline",
+	"os-release": "$osrelease"
+}
+EOJ
+)" > $targetBase-oras-config.json
+
+# tag
+BUILD=$(grep BUILD $targetBaseDir/rootfs.os-release | cut -d= -f2)
+
+DEST=$(basename $targetBaseDir)
+
+echo "oras push localhost:5000/oras-gardenlinux:$BUILD $DEST.raw:application/vnd.onmetal.image.rootfs.v1alpha1.rootfs $DEST.vmlinuz:application/vnd.onmetal.image.vmlinuz.v1alpha1.vmlinuz $DEST.initrd:application/vnd.onmetal.image.initramfs.v1alpha1.initramfs --config $DEST.json:application/vnd.onmetal.image.config.v1alpha1+json"
