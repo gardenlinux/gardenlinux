@@ -12,7 +12,7 @@ numactl
 mdadm
 hdparm
 smartmontools
-bird2
+frr
 [${arch}=amd64] syslinux
 [${arch}=amd64] syslinux-common
 linux-image-5.15-${arch}
