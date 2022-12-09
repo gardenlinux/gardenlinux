@@ -35,7 +35,8 @@ RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc
           qemu-efi-aarch64 \
           shellcheck \
           build-essential \
-          libpython3-dev
+          libpython3-dev \
+          onmetal-image
 
 # pipenv package was removed from bookworm https://tracker.debian.org/pkg/pipenv
 RUN pip install pipenv==2022.4.8

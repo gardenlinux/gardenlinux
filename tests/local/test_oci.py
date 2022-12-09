@@ -23,16 +23,22 @@ def test_oci_feat(local, testconfig):
     """
 
     # check for neccessary configuration options
-    if not "image" in testconfig:
+    if not "image" in testconfig["oci"]:
         logger.error("No path to image archive defined.")
     else:
-        image = testconfig["image"]
+        image = testconfig["oci"]["image"]
         logger.info(f"Path to image archive defined: {image}")
-    if not "kernel" in testconfig:
+    if not "kernel" in testconfig["oci"]:
         logger.error("No kernel to compare defined.")
     else:
-        kernelcmp = testconfig["kernel"]
+        kernelcmp = testconfig["oci"]["kernel"]
         logger.info(f"Kernel to compare is defined: {kernelcmp}")
+
+    # update package index files
+    cmd = f"apt-get update"
+    rc, out = utils.execute_local_command(cmd)
+    assert rc == 0, f"Could not update Debian Package Index."
+    logger.info(f"Updated Package Index.")
 
     # install docker-registry
     pkg = "docker-registry"
@@ -75,21 +81,21 @@ def test_oci_feat(local, testconfig):
     logger.info(f"Tagging image {image}")
     digest = onmetaldata["manifests"][0]["digest"]
     onmetalpath = os.path.join(ociextract, "onmetal")
-    cmd = f"/gardenlinux/features/_oci/onmetal-image tag {digest} localhost:5000/gardenlinux:latest --store-path {onmetalpath}"
+    cmd = f"onmetal-image tag {digest} localhost:5000/gardenlinux:latest --store-path {onmetalpath}"
     rc, out = utils.execute_local_command(cmd)
     assert rc == 0, f"Unable to tag image using onmetal-image"
     logger.info(f"Successfully tagged image")
 
     # push the image to the local registy
     logger.info(f"Uploading image to local registry")
-    cmd = f"/gardenlinux/features/_oci/onmetal-image push localhost:5000/gardenlinux:latest --store-path {onmetalpath}"
+    cmd = f"onmetal-image push localhost:5000/gardenlinux:latest --store-path {onmetalpath}"
     rc, out = utils.execute_local_command(cmd)
     assert rc == 0, f"Unable to push image using onmetal-image to local registry"
     logger.info(f"Successfully uploaded image to local registry")
 
     # retrieve kernel layer
     logger.info(f"Retrieving url for kernel layer")
-    cmd = f"/gardenlinux/features/_oci/onmetal-image --store-path {onmetalpath} url --layer kernel localhost:5000/gardenlinux:latest"
+    cmd = f"onmetal-image --store-path {onmetalpath} url --layer kernel localhost:5000/gardenlinux:latest"
     rc, out = utils.execute_local_command(cmd)
     assert rc == 0, f"Kernel layer url: {out}"
 
