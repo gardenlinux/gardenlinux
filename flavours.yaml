@@ -20,6 +20,7 @@ targets:
       - _secureboot
       - _secureboot,_readonly
       - _secureboot,_readonly,_persistence
+      - khost,_pxe
       - _pxe
       - vhost
   - name: openstack
