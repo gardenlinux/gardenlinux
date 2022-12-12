@@ -51,6 +51,7 @@ RUN : "Initialize the build container package installation" \
 			podman fuse-overlayfs \
 			libengine-pkcs11-openssl \
 			onmetal-image \
+			oras \
 			aws-sdk-cpp \
 			aws-kms-pkcs11 \
 			systemd \
