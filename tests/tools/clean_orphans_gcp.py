@@ -18,7 +18,7 @@ parser.add_argument('-r', '--region', metavar='region', required=False, dest='re
 parser.add_argument('-z', '--zone', metavar='zone', required=False, dest='zone', default='europe-west1-d',
                     help='Default value is "europe-west1-d"')
 parser.add_argument('-a', '--auth', metavar='service_account.json', required=False, dest='auth_path', default='',
-                    help='Path to JSON file that holds the service account login credentials')
+                    help='Path to JSON file that holds the service account login credentials. Defaults to Google application default credentials (ADC).')
 args = parser.parse_args()
 
 if os.path.exists(args.auth_path):
@@ -34,7 +34,8 @@ try:
     network_client = compute.NetworksClient(credentials=credentials)
     instance_client = compute.InstancesClient(credentials=credentials)
 except google.auth.exceptions.DefaultCredentialsError as e:
-    print(f"No credentials found. {e}")
+    print(f"No credentials found. {e}\n\n")
+    parser.print_help()
     sys.exit(os.EX_CONFIG)
 
 
