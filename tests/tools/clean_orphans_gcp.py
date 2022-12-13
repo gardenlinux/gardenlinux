@@ -26,18 +26,22 @@ if os.path.exists(args.auth_path):
 else:
     credentials = None
 
-storage_client = storage.Client(credentials=credentials, project=args.project)
-image_client = compute.ImagesClient(credentials=credentials)
-subnet_client = compute.SubnetworksClient(credentials=credentials)
-firewall_client = compute.FirewallsClient(credentials=credentials)
-network_client = compute.NetworksClient(credentials=credentials)
-instance_client = compute.InstancesClient(credentials=credentials)
+try:
+    storage_client = storage.Client(credentials=credentials, project=args.project)
+    image_client = compute.ImagesClient(credentials=credentials)
+    subnet_client = compute.SubnetworksClient(credentials=credentials)
+    firewall_client = compute.FirewallsClient(credentials=credentials)
+    network_client = compute.NetworksClient(credentials=credentials)
+    instance_client = compute.InstancesClient(credentials=credentials)
+except google.auth.exceptions.DefaultCredentialsError as e:
+    print(f"No credentials found. {e}")
+    sys.exit(os.EX_CONFIG)
 
 
 def wait_for_operation(operation, name):
     print(f"Waiting for deletion of resource {name} to complete...")
     result = operation.result(timeout=60)
-    print(f"    {name} deleted.")
+    print(f"\t{name} deleted.")
 
 
 def get_buckets():
@@ -49,7 +53,7 @@ def delete_bucket(name):
     bucket = storage_client.bucket(bucket_name=name)
     print(f"Deleting bucket {name}...")
     bucket.delete(force=True)
-    print(f"    {name} deleted.")
+    print(f"\t{name} deleted.")
 
 
 def get_images(project):
@@ -153,7 +157,7 @@ def main():
     for i in range(len(inventory_key_list)):
         print(f"{i}: {inventory_key_list[i]}")
         for key,value in inventory[inventory_key_list[i]].items():
-            print(f"       {key}: {value}")
+            print(f"\t{key}: {value}")
         print("")
 
     pick = input("Choose the test resources to delete (digit, any other key quits): ")
@@ -172,7 +176,7 @@ def main():
             for i in range(len(test_inventory_key_list)):
                 print(f"{i}: {test_inventory_key_list[i]}: {inventory[test_environment][test_inventory_key_list[i]]}")
             print("")
-            delete_pick = input("Which resource should be delete (digit), type 'A' for all, any other key for back: ")
+            delete_pick = input("Which resource should be deleted (digit), type 'A' for all, any other key for back: ")
             if (delete_pick == 'A'):
                 pass
             elif delete_pick.strip().isdigit():
