@@ -178,14 +178,11 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 
 		tarArgs+=( --include-dev )
 
-		if [ "$variant" != "sbuild" ]; then
-			garden-debian-sources-list "${sourcesListArgs[@]}" "$rootfs" "$suite" "$version"
-		else
-			# sbuild needs "deb-src" entries
-			garden-debian-sources-list --deb-src "${sourcesListArgs[@]}" "$rootfs" "$suite" "$version"
-
-			# schroot is picky about "/dev" (which is excluded by default in "garden-tar")
-			# see https://github.com/debuerreotype/debuerreotype/pull/8#issuecomment-305855521
+		# Add source repository on sbuild variants
+		if [ "$variant" = "sbuild" ]; then
+			garden-chroot "$rootfs" bash -c "
+				/sbin/garden-repo-manager add gardenlinux -s -a $arch
+			"
 		fi
 
 		garden-tar "${tarArgs[@]}" "$rootfs" "$targetBase.tar.xz"

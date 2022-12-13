@@ -66,7 +66,6 @@ fi
 
 suite="${1:-}"; shift || eusage 'missing suite'
 version="${1:-}"; shift || eusage 'missing version'
-
 timestamp=
 mirror=
 
@@ -115,15 +114,21 @@ for i in $(filter_comment <<< $include | filter_variables | filter_if | grep -v 
 done
 exclude="$(paste -sd, - <<< $exclude)"
 
+## Define debootstrap arguments
 debootstrapArgs=()
 
+# Set GPG check
 if [ -z "$noCheckGpg" ]; then
 	debootstrapArgs+=( --force-check-gpg )
 else
 	debootstrapArgs+=( --no-check-gpg )
 fi
 
+# Set variant
 debootstrapArgs+=( --variant=minbase )
+
+# Set custom package includes from Garden Linux repository
+debootstrapArgs+=( --include=garden-repo-manager )
 
 [ -z "$keyring" ] || debootstrapArgs+=( --keyring="$keyring" )
 [ -z "$arch" ] || debootstrapArgs+=( --arch="$arch" )
@@ -155,36 +160,49 @@ fi
 
 echo "$epoch" > "$targetDir/garden-epoch"
 
+# Set DEB822 as default
+echo "Prepare DEB822 repo format"
+"$thisDir/garden-chroot" "$targetDir" bash -c "
+	rm /etc/apt/sources.list
+"
+
+# Add support for local packages
 if [[ -v PKG_DIR ]]; then
+	# Create repository Packages file
 	pushd "$PKG_DIR"
 	dpkg-scanpackages --multiversion . /dev/null > Packages
 	popd
 
+	# Mount package directroy
 	mkdir "$targetDir/run/packages"
-	mount --rbind --make-rslave "$PKG_DIR" "$targetDir/run/packages"
+	mount --rbind --make-rslave "$PKG_DIR" "$targetDir/run"
+
+	# Add local package reposiotiry
+	echo "Local packages will be added as a repository"
+	"$thisDir/garden-chroot" "$targetDir" bash -c "
+		/sbin/garden-repo-manager add local -p /run/ -a $arch
+	"
 fi
 
+# Add basic repositories
 if [ -z "$nonDebian" ]; then
 
+	# Copy Garden Linux repository key
+	cp "$keyringPlain" "$targetDir/etc/apt/trusted.gpg.d/gardenlinux.asc"
+
+	# Add repositories to Garden Linux
 	if [ $debianMirror -eq 1 ]; then
-
 		# Integrate Garden Linux repository with additional Debian native mirror
-		"$thisDir/garden-debian-sources-list" --debian-mirror \
-			$([ -z "$debianPorts" ] || echo '--ports') \
-			$([[ -v PKG_DIR ]] && echo --local-pkgs /run/packages) \
-			"$targetDir" "$suite" "$version"
-		cp "$keyringPlain" "$targetDir/etc/apt/trusted.gpg.d/gardenlinux.asc"
-
-
+		# DO NOT USE THIS FOR PRODUCTION RELEASES
+		"$thisDir/garden-chroot" "$targetDir" bash -c "
+			/sbin/garden-repo-manager add gardenlinux -a $arch && \
+			/sbin/garden-repo-manager add debian testing -c main contrib -a $arch
+		"
 	else
 		# Integrate Garden Linux repository
-		"$thisDir/garden-debian-sources-list" \
-			$([ -z "$debianPorts" ] || echo '--ports') \
-			$([[ -v PKG_DIR ]] && echo --local-pkgs /run/packages) \
-			"$targetDir" "$suite" "$version"
-		cp "$keyringPlain" "$targetDir/etc/apt/trusted.gpg.d/gardenlinux.asc"
-
-
+		"$thisDir/garden-chroot" "$targetDir" bash -c "
+			/sbin/garden-repo-manager add gardenlinux -a $arch -t $version
+		"
 	fi
 
 	# Update repositories
@@ -233,12 +251,12 @@ chmod 0755 "$targetDir"
 # inject qemu-arm-static binary
 chrootUsrBinDir="/usr/bin/"
 
-if [ "$arch" = x86_64 ]; then
+# Set qemu static binary for crosscompile
+if [ "$arch" = amd64 ]; then
     qemuStaticBin="/usr/bin/qemu-x86_64-static"
 else
     qemuStaticBin="/usr/bin/qemu-aarch64-static"
 fi
-
 cp "$qemuStaticBin" "$targetDir/$chrootUsrBinDir"
 
 # https://bugs.debian.org/857803
