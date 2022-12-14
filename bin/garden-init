@@ -85,7 +85,6 @@ fi
 
 epoch="$(date --date "$timestamp" '+%s')"
 export SOURCE_DATE_EPOCH="$epoch"
-
 mirror="https://repo.gardenlinux.io/gardenlinux"
 
 include="$(tr "," "\n" <<< $include)"$'\n'

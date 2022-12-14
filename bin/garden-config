@@ -29,8 +29,6 @@ indent() { sed 's/^/  /'; }
 targetDir="${1:-}"; shift || eusage 'missing target-dir'
 [ -n "$targetDir" ]
 
-aptVersion="$("$thisDir/.apt-version.sh" "$targetDir")"
-
 printf "## executing exec.pre\n"
 for i in $(tr ',' '\n' <<< $features); do
         if [ -x $featureDir/$i/exec.pre ]; then
