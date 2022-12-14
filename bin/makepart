@@ -183,6 +183,11 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 		find "$data_source" -depth -mindepth 1 -delete
 	fi
 
+	# install syslinux if extra argument given in fstab
+	if [[ "$syslinux" = 1 ]]; then
+		PATH="$PATH:$rootfs/usr/bin" datefudge -s "@$timestamp" syslinux -d syslinux -i "$file"
+	fi
+
 	# recalc size, since it might have change (e.g. from resize2fs)
 	size=$(du -b "$file" | awk '{ padded_size = $1 + (MB - ($1 % MB) % MB); print (padded_size / MB) }' "MB=1048576")
 
@@ -246,18 +251,18 @@ if [[ -z "$(cat "$root_hash")" ]]; then
 
 	# enable verity if the root partition is writable, but any other partition has verity enabled, most likely /usr
 	if [[ ! -z "$(cat "$veritytab")" ]] && [ ! -s "$secureboot_partitions" ]; then
-		makeboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -i "$dracut_include" -t "$timestamp" -s "false" < "$efi_partition"
+		makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -i "$dracut_include" -t "$timestamp" -s "false" < "$efi_partition"
 	fi
 else
 	cmdline="roothash=$(cat "$root_hash") root=/dev/mapper/root $cmdline"
 
 	if [ ! -s "$secureboot_partitions" ]; then
-		makeboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -i "$dracut_include" -t "$timestamp" -s "false" < "$efi_partition"
+		makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -i "$dracut_include" -t "$timestamp" -s "false" < "$efi_partition"
 	fi
 fi
 
 if [ -s "$secureboot_partitions" ]; then
-	makeboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -i "$dracut_include" -t "$timestamp" < "$secureboot_partitions"
+	makesecureboot -r "$rootfs" -c "$cmdline" -v "$veritytab" -i "$dracut_include" -t "$timestamp" < "$secureboot_partitions"
 fi
 
 cat "$partitions" "$final_partition" >&3
