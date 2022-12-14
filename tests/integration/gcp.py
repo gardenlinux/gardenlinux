@@ -91,6 +91,8 @@ class GCP:
             cfg['uefi'] = False
         if not 'secureboot' in cfg:
             cfg['secureboot'] = False
+        if not 'secureboot_parameters' in cfg:
+            cfg['secureboot_parameters'] = {}
         if not 'db_path' in cfg['secureboot_parameters']:
             cfg['secureboot_parameters']['db_path'] = "/gardenlinux/cert/secureboot.db.auth"
         if not 'kek_path' in cfg:
@@ -112,7 +114,7 @@ class GCP:
         bucket.make_private()
 
 
-    def _gcp_wait_for_operation(self, operation, timeout=60):
+    def _gcp_wait_for_operation(self, operation, timeout=120):
         self.logger.info(f"Waiting for {operation.name} to complete...")
         _ = operation.result(timeout=timeout)
         self.logger.info(f"{operation.name} done.")
