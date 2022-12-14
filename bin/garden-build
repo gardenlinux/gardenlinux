@@ -143,8 +143,6 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 
 	garden-config "${configArgs[@]}" rootfs
 
-	aptVersion="$("$scriptsDir/.apt-version.sh" rootfs)"
-
 	garden-slimify rootfs
 
 	sourcesListArgs=()
@@ -192,12 +190,15 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 		cat "$targetBase.tar.xz.sha256"
 		touch_epoch "$targetBase.tar.xz.sha256"
 
-		garden-chroot "$rootfs" bash -c '
-			if ! dpkg-query -f='\''${binary:Package} ${Version}\n'\'' -W 2> /dev/null; then
-				dpkg -l
-			fi
-		' > "$targetBase.manifest"
-		touch_epoch "$targetBase.manifest"
+		# Do not perform on distroless images
+		if [[ ! "$fullfeatures" =~ distroless ]]; then
+			garden-chroot "$rootfs" bash -c '
+				if ! dpkg-query -f='\''${binary:Package} ${Version}\n'\'' -W 2> /dev/null; then
+					dpkg -l
+				fi
+			' > "$targetBase.manifest"
+			touch_epoch "$targetBase.manifest"
+		fi
 
 		for f in os-release; do
 			targetFile="$targetBase.$(basename "$f" | sed -r "s/[^a-zA-Z0-9_-]+/-/g")"
@@ -208,7 +209,7 @@ gpg --batch --no-default-keyring --keyring "$keyring" --import "$keyringPlain"
 		done
 
 		# Do not run when building for container image artifacts
-		if [ "$targetPlatform" != "container" ]; then
+		if [[ ! "$targetPlatform" =~ container ]]; then
 
 			echo "#### building diskimage"
 			for i in $(tr ',' '\n' <<< "$fullfeatures"); do

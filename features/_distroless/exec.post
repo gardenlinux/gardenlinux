@@ -1,0 +1,63 @@
+#!/bin/sh
+
+echo "Creating a distroless image"
+
+# Remove packages
+garden-chroot rootfs bash -c "
+	dpkg --force-all -P \
+		apt \
+		base-passwd \
+		ca-certificates \
+		debconf \
+		debian-archive-keyring \
+		dpkg \
+		gpgv \
+		grep \
+		gzip \
+		hostname \
+		init-system-helpers \
+		libdebconfclient0 \
+		libgpg-error0 \
+		libgssapi-krb5-2 \
+		libgcrypt20 \
+		liblz4-1 \
+		liblzma5 \
+		libtirpc3 \
+		media-types \
+		ncurses-base \
+		ncurses-bin \
+		sed \
+		perl-base \
+		usr-is-merged \
+		zlib1g
+"
+
+# Remove distro related directories
+# and files that should not be included
+garden-chroot rootfs bash -c "
+	rm -rf \
+		/var/lib/systemd \
+		/var/lib/dpkg \
+		/var/backups \
+		/var/cache/debconf \
+		/usr/share/zoneinfo \
+		/usr/share/doc \
+		/usr/share/doc-base \
+		/var/cache/debconf \
+		/usr/share/debianutils \
+		/etc/apt \
+		/etc/systemd \
+		/etc/dpkg \
+		/etc/alternatives \
+		/usr/bin/which.debianutils \
+		/etc/debian_version \
+		/home \
+		/root/.bashrc \
+		/root/.profile \
+		/usr/games \
+		/usr/include \
+		/usr/lib/systemd \
+		/usr/lib/ssl \
+		/usr/share/bash-completion \
+		/usr/share/util-linux
+"

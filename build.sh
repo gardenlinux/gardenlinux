@@ -76,8 +76,13 @@ version="$("${thisDir}"/bin/garden-version ${1:-})";	shift || true
 mkdir -p "$outputDir"
 outputDir="$(readlink -f "$outputDir")"
 
+# Set CRE
 gardenlinux_build_cre=${GARDENLINUX_BUILD_CRE:-"sudo podman"}
 
+# Skip tests on distroless builds
+if [[ "$features" =~ container ]]; then
+	skip_tests=1
+fi
 
 build_os="$(uname -s)"
 # Eval how to generate uuids based on

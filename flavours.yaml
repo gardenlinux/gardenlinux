@@ -8,6 +8,8 @@ targets:
       - githubActionRunner
   - name: azure
   - name: container
+    modifiers:
+      - _distroless
   - name: firecracker
   - name: gcp
   - name: kvm
