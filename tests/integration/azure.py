@@ -1,6 +1,5 @@
 import logging
 import os
-from pickle import FALSE
 import re
 import pytest
 import uuid
@@ -708,7 +707,7 @@ class AZURE:
         self.logger.info(f"Deleted gallery image version {gallery_image_version_name}")
 
         while True:
-            try: 
+            try:
                 self.logger.info(f"Deleting gallery image {gallery_image_name}")
                 poller = self.cclient.gallery_images.begin_delete(
                     resource_group_name = self._resourcegroup.name,
