@@ -50,7 +50,7 @@ def main():
         # Write out an ordered features list based on include priorities
         print(','.join(str(s) for s in features_matrix[MATRIX_TYPE_DEP_CHAIN]))
 
-    elif args.type == 'platform':
+    elif args.type == 'platforms':
         types = ['platform']
         features = get_feature_names_by_types(all_features,
             features_matrix[MATRIX_TYPE_DEP_CHAIN], types)
@@ -90,13 +90,13 @@ def get_args():
         def _fill_text(self, text, width, indent):
             return "\n".join([textwrap.fill(line, width) for line in textwrap.indent(textwrap.dedent(text), indent).splitlines()])
 
-    descripton = f'''
+    description = f'''
         garden-feat: Managing features for Garden Linux.
 
         positional arguments description:
           cname:                Effective minimum of features equivalent to specified features (ordered)
           features:             Effective maximum of all features (each feature used, no duplicates, ordered)
-          platform:             Platforms in the featureset
+          platforms:            Platforms in the featureset
           flags:                Flags in the featureset
           elements:             All elements of the featureset (including platform because of possible execution order)
           ignore:               Ignored elements (no duplicates)
@@ -104,7 +104,7 @@ def get_args():
         '''
 
     # Load parser with custom formatter
-    parser = argparse.ArgumentParser(description=descripton, formatter_class=argparse_raw_formater)
+    parser = argparse.ArgumentParser(description=description, formatter_class=argparse_raw_formater)
 
     # Argparse help descriptions
     help_feature_dir="Directory of GardenLinux features"
