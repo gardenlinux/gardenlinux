@@ -276,7 +276,7 @@ class AZURE:
             }
         ).result()
 
-        self.logger.info(f"Creating and booting Virtual machine of size {vm_size} from image {self._image.name}...")
+        self.logger.info(f"Creating and booting virtual machine of size {vm_size} from image version {self._image.name}...")
         self._instance = self.cclient.virtual_machines.begin_create_or_update(
             resource_group_name=self._resourcegroup.name,
             vm_name=name,
@@ -376,6 +376,12 @@ class AZURE:
             cfg['resource_group'] = f"rg-{test_name}"
         if not 'storage_account_name' in cfg:
             cfg['storage_account_name'] = f"sa{re.sub('-', '', test_name)}"
+        if not 'gallery_name' in cfg:
+            cfg['gallery_name'] = f"gallery{re.sub('-', '', test_name)}"
+        if not 'gallery_image_name' in cfg:
+            cfg['gallery_image_name'] = f"galleryimage{re.sub('-', '', test_name)}"
+        if not 'gallery_image_version_name' in cfg:
+            cfg['gallery_image_version_name'] = "0.0.0"
         if not 'vm_size' in cfg:
             cfg['vm_size'] = "Standard_D4_v4"
         if not 'accelerated_networking' in cfg:
@@ -384,6 +390,16 @@ class AZURE:
             cfg['nsg_name'] = f"nsg-{test_name}"
         if not 'keep_running' in cfg:
             cfg['keep_running'] = False
+        allowed_generations = ["V1", "V2"]
+        if not 'hyper_v_generation' in cfg:
+            cfg['hyper_v_generation'] = allowed_generations[0]
+        if 'hyper_v_generation' in cfg and cfg['hyper_v_generation'] not in allowed_generations:
+            raise RuntimeError(f"Hypervisor generation '{cfg['hyper_v_generation']}' not supported. Allowed values: ({allowed_generations})")
+        allowed_architectures = ["x64", "Arm64"]
+        if not 'architecture' in cfg:
+            cfg['architecture'] = allowed_architectures[0]
+        if 'architecture' in cfg and cfg['architecture'] not in allowed_architectures:
+            raise RuntimeError(f"Architecture '{cfg['architecture']}' not supported. Allowed values: ({allowed_architectures})")
         if not 'ssh' in cfg or not cfg['ssh']:
             cfg['ssh'] = {}
         if not 'ssh_key_filepath' in cfg['ssh']:
@@ -474,7 +490,8 @@ class AZURE:
             self.az_delete_nsg(name=self._nsg.name)
             self._nsg = None
         if self._image:
-            self.az_delete_image(name=self._image.name)
+            self.az_delete_gallery()
+            self.az_delete_image(name=self.config["image_name"])
             self._image = None
         if self._storageaccount:
             self.az_delete_storage_account(self._storageaccount.name)
@@ -581,17 +598,12 @@ class AZURE:
 
             image_uri = f"https://{self._storageaccount.name}.blob.core.windows.net/vhds/{image_name}.vhd"
 
-            allowed_generations = ["V1", "V2"]
-            hyper_v_generation = self.config.get("hyper_v_generation", allowed_generations[0])
-            if hyper_v_generation not in allowed_generations:
-                raise RuntimeError(f"Hypervisor generation '{hyper_v_generation}' not supported. Allowed values: ({allowed_generations})")
-
-            result = self.cclient.images.begin_create_or_update(
+            image = self.cclient.images.begin_create_or_update(
                 resource_group_name = self._resourcegroup.name,
                 image_name = image_name,
                 parameters = {
                     'location': self._resourcegroup.location,
-                    'hyper_v_generation': hyper_v_generation,
+                    'hyper_v_generation': self.config['hyper_v_generation'],
                     'storage_profile': {
                         'os_disk': {
                             'os_type': 'Linux',
@@ -606,6 +618,58 @@ class AZURE:
             ).result()
 
             self.logger.info(f"Image {image_file} uploaded as {image_name}")
+
+            gallery_name = self.config['gallery_name']
+            gallery_image_name = self.config['gallery_image_name']
+            gallery_image_version_name = self.config['gallery_image_version_name']
+            self.cclient.galleries.begin_create_or_update(
+                resource_group_name = self._resourcegroup.name,
+                gallery_name = gallery_name,
+                gallery = {
+                    'location': self._resourcegroup.location,
+                }
+            )
+
+            self.cclient.gallery_images.begin_create_or_update(
+                resource_group_name = self._resourcegroup.name,
+                gallery_name = gallery_name,
+                gallery_image_name = gallery_image_name,
+                gallery_image = {
+                    'location': self._resourcegroup.location,
+                    'os_type': 'Linux',
+                    'os_state': 'Generalized',
+                    'hyper_v_generation': self.config['hyper_v_generation'],
+                    'architecture': self.config['architecture'],
+                    'identifier': {
+                        'publisher': 'Gardenlinux',
+                        'offer': 'Gardenlinux',
+                        'sku': 'Gardenlinux'
+                    }
+                }
+            )
+
+            self.logger.info(f"Creating image version {gallery_image_version_name} from {image_name}...")
+
+            result = self.cclient.gallery_image_versions.begin_create_or_update(
+                resource_group_name = self._resourcegroup.name,
+                gallery_name = gallery_name,
+                gallery_image_name = gallery_image_name,
+                gallery_image_version_name = gallery_image_version_name,
+                gallery_image_version = {
+                    'location': self._resourcegroup.location,
+                    'publishing_profile': {
+                        'replica_count': 1,
+                        'storage_account_type': 'Standard_LRS',
+                        'replication_mode': 'Shallow'
+                    },
+                    'storage_profile': {
+                        'source': {
+                            'id': image.id
+                        }
+                    }
+                }
+            ).result()
+
             return result
         else:
             raise Exception("No image with name %s available and no image file given" % self.config["image_name"])
@@ -623,3 +687,51 @@ class AZURE:
         self._instance = self.az_create_vm(name=f"vm-{self.test_name}", vm_size=config["vm_size"], accelerated_networking=config["accelerated_networking"])
         self.logger.info(f"VM {self._instance.name} created with IP {self._ipaddress.ip_address}")
         return (self._instance, self._ipaddress)
+
+    def az_delete_gallery(self):
+        gallery_name = self.config['gallery_name']
+        gallery_image_name = self.config['gallery_image_name']
+        gallery_image_version_name = self.config['gallery_image_version_name']
+
+        self.logger.info(f"Deleting gallery image version {gallery_image_version_name}")
+        poller = self.cclient.gallery_image_versions.begin_delete(
+            resource_group_name = self._resourcegroup.name,
+            gallery_name = gallery_name,
+            gallery_image_name = gallery_image_name,
+            gallery_image_version_name = gallery_image_version_name
+        )
+        while not poller.done():
+            self.logger.info(f"Waiting for gallery image version {gallery_image_version_name} to disappear...")
+            poller.wait(5.0)
+
+        self.logger.info(f"Deleted gallery image version {gallery_image_version_name}")
+
+        while True:
+            try:
+                self.logger.info(f"Deleting gallery image {gallery_image_name}")
+                poller = self.cclient.gallery_images.begin_delete(
+                    resource_group_name = self._resourcegroup.name,
+                    gallery_name = gallery_name,
+                    gallery_image_name = gallery_image_name
+                )
+                while not poller.done():
+                    self.logger.info(f"Waiting for {gallery_image_name} to disappear...")
+                    poller.wait(5.0)
+
+                self.logger.info(f"Deleted gallery image {gallery_image_name}")
+                break
+            except ResourceExistsError as error:
+                #self.logger.info(error)
+                self.logger.info(f"Failed to delete {gallery_image_name}, try again...")
+                continue
+
+        self.logger.info(f"Deleting gallery {gallery_name}")
+        poller = self.cclient.galleries.begin_delete(
+            resource_group_name = self._resourcegroup.name,
+            gallery_name = gallery_name
+        )
+        while not poller.done():
+            self.logger.info(f"Waiting for {gallery_name} to disappear...")
+            poller.wait(5.0)
+
+        self.logger.info(f"Deleted gallery {gallery_name}")
