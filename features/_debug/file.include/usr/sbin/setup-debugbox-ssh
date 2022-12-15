@@ -23,9 +23,7 @@ FROM debian:testing-slim
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends openssh-server && \
-    mkdir -p /root/.ssh && chmod 0700 /root/.ssh
-ADD ssh-public-key /root/.ssh/authorized_keys
+    apt-get install -y --no-install-recommends openssh-server sudo
 EOF
         docker build --tag ${IMAGE} .
     else
@@ -64,9 +62,4 @@ if [[ -z "$(docker ps --all --quiet --format='debugbox')" ]]; then
     --volume /etc/localtime:/etc/localtime \
     --volume /:/host \
     ${REGISTRY}${IMAGE} ${CMD}
-
-    #docker cp -a debugbox:/etc/ssh/ssh_host_ed25519_key /etc/ssh/.
-    #docker cp -a debugbox:/etc/ssh/ssh_host_ed25519_key.pub /etc/ssh/.
-    #docker cp -a debugbox:/etc/ssh/ssh_host_rsa_key /etc/ssh/.
-    #docker cp -a debugbox:/etc/ssh/ssh_host_rsa_key.pub /etc/ssh/.
 fi
