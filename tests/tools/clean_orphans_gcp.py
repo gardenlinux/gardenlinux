@@ -17,6 +17,8 @@ parser.add_argument('-r', '--region', metavar='region', required=False, dest='re
                     help='Default value is "europe-west1"')
 parser.add_argument('-z', '--zone', metavar='zone', required=False, dest='zone', default='europe-west1-d',
                     help='Default value is "europe-west1-d"')
+parser.add_argument('-t', '--timeout', metavar='timeout', required=False, dest='timeout', default=300, type=int,
+                    help='Time to wait for an operation to finish in seconds. Defaults to 300 seconds')
 parser.add_argument('-a', '--auth', metavar='service_account.json', required=False, dest='auth_path', default='',
                     help='Path to JSON file that holds the service account login credentials. Defaults to Google application default credentials (ADC).')
 args = parser.parse_args()
@@ -41,7 +43,11 @@ except google.auth.exceptions.DefaultCredentialsError as e:
 
 def wait_for_operation(operation, name):
     print(f"Waiting for deletion of resource {name} to complete...")
-    result = operation.result(timeout=60)
+    try:
+        result = operation.result(timeout=args.timeout)
+    except Exception:
+        print(f"\nTimeout of {args.timeout}s reached, Operation wasn't finished.\n")
+        sys.exit(os.EX_IOERR)
     print(f"\t{name} deleted.")
 
 
@@ -154,6 +160,10 @@ def main():
         inventory = add_to_inventory(inventory, re.sub(r"vpc-", "", network.name), {"network": network.name})
 
     inventory_key_list = list(inventory)
+
+    if len(inventory_key_list) == 0:
+        print('No resources found/left to delete')
+        sys.exit(os.EX_OK)
 
     for i in range(len(inventory_key_list)):
         print(f"{i}: {inventory_key_list[i]}")
