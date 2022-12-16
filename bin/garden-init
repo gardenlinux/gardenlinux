@@ -188,7 +188,7 @@ fi
 if [ -z "$nonDebian" ]; then
 
 	# Copy Garden Linux repository key
-	cp "$keyringPlain" "$targetDir/etc/apt/trusted.gpg.d/gardenlinux.asc"
+	install -o root -g root -m 644 "$keyringPlain" "$targetDir/etc/apt/trusted.gpg.d/gardenlinux.asc"	
 
 	# Add repositories to Garden Linux
 	if [ $debianMirror -eq 1 ]; then
