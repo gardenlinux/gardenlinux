@@ -1,11 +1,11 @@
 ## Feature: chost
 ### Description
 <website-feature>
-The chost feature adjusts Garden Linux to support running container and Kubernetes worload.
+The `chost` feature adjusts Garden Linux to support running container and Kubernetes workload.
 </website-feature>
 
 ### Features
-The chost feature adjusts Garden Linux to support running container and Kubernetes worload and installs and configures all related packages like `containerd`. 
+The `chost` feature adjusts Garden Linux to support running container and Kubernetes workload and installs and configures all related packages like `containerd`.
 
 ### Unit testing
 To be fully complaint these unit tests validate the extended capabilities on `ping` and `gstreamer`, the installed packages, correctly defined suids and sgids as well as the systemd unit files.

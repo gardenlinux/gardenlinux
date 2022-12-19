@@ -16,5 +16,5 @@ This platform feature supports unit testing and is based on the `metal` fixture 
 |---|---|
 |type|platform|
 |artifact|`.raw`,`.qcow2`|
-|included_features|cloud|
+|included_features|`cloud`|
 |excluded_features|None|

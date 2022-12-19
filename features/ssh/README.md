@@ -22,5 +22,5 @@ This feature supports unit tests that will validate the correct configuration of
 |---|---|
 |type|element|
 |artifact|None|
-|included_features|firewall|
+|included_features|`firewall`|
 |excluded_features|None|

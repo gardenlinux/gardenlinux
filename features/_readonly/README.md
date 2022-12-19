@@ -1,11 +1,11 @@
 ## Feature: _readonly
 ### Description
 <website-feature>
-This feature flag adds readonly mode to the Garden Linux artifact.
+This flag feature adds a read only mode to the Garden Linux artifact.
 </website-feature>
 
 ### Features
-This feature enables a readonly root partition together with `dm-verity`. By using `dm-verity`, the integrity of a block device is checked against a hash tree. Consequently, this ensures files have not changed between reboots or during runtime otherwise the access to those files would fail. An OverlayFS for `/var` and `/etc` ensures, that the Operating System stays operational during runtime.
+This feature enables a read only root partition together with `dm-verity`. By using `dm-verity`, the integrity of a block device is checked against a hash tree. Consequently, this ensures files have not changed between reboots or during runtime otherwise the access to those files would fail. An OverlayFS for `/var` and `/etc` ensures, that the Operating System stays operational during runtime.
 
 More information about `dm-verity` can be found [here](https://www.kernel.org/doc/html/latest/admin-guide/device-mapper/verity.html).
 
