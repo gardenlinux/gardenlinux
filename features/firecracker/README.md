@@ -8,7 +8,8 @@ This platform feature creates an artifact for firecracker (microVM) environments
 This feature creates a firecracker (microVM) compatible image artifact that consists of two parts:
 
 **Kernel**: `.vmlinux`
-**Filesytem**: `.ext4` 
+
+**Filesystem**: `.ext4`
 
 ### Unit testing
 This platform feature supports unit testing and is based on the `firecracker` fixture to validate the applied changes according its feature configuration.
@@ -18,5 +19,5 @@ This platform feature supports unit testing and is based on the `firecracker` fi
 |---|---|
 |type|platform|
 |artifact|`.vmlinux`, `.ext4`|
-|included_features|server|
+|included_features|`server`|
 |excluded_features|None|

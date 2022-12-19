@@ -26,5 +26,5 @@ Additional tests can be be included by placing an executable script nn [test/che
 |---|---|
 |type|element|
 |artifact|None|
-|included_features|aide,cisAudit,cisModprobe,cisOS,cisPackages,cisPartition,cisSshd,cisSysctl,firewall|
-|excluded_features|fedramp|
+|included_features|`aide`, `cisAudit`, `cisModprobe`, `cisOS`, `cisPackages`, `cisPartition`, `cisSshd`, `cisSysctl`, `clamav`, `firewall`|
+|excluded_features|`fedramp`|

@@ -1,8 +1,20 @@
 ## Feature: _nopkg
+### Description
+<website-feature>
 
-<website-feature> all package system related tools are removed (e.g. dpkg, apt) </website-feature>
+This flag features removes all packaging related tools from the artifact.
+</website-feature>
 
----
+### Features
+All packaging related tools like (`dpkg`, `apt`, etc.) will be removed from the Garden Linux artifact.
 
-	Type: flag
-#
+### Unit testing
+This feature does not support unit testing.
+
+### Meta
+|||
+|---|---|
+|type|flag|
+|artifact|None|
+|included_features|None|
+|excluded_features|None|

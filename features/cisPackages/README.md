@@ -6,7 +6,7 @@ This subfeature manages the required and unwanted packages from the distribution
 </website-feature>
 
 ### Features
-This feature installs needed packages as well as it removed unwanted packages. While Garden Linux base is a really slim image, no packages need to be removed.
+This feature installs needed packages as well as it removes unwanted packages.
 
 The following packages are installed:
 * git

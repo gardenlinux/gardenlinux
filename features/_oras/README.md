@@ -2,7 +2,7 @@
 
 ### Description
 <website-feature>
-This flag shows how to push to an OCI compatible registry using [oras](https://oras.land). It is only for demonstration and does *not* alter the contents or results of the builded artifacts.
+This flag feature shows how to push to an OCI compatible registry image using [oras](https://oras.land). It is only for demonstration and does *not* alter the contents or results of a built artifacts.
 </website-feature>
 
 
@@ -12,7 +12,7 @@ This flag shows how to push to an OCI compatible registry using [oras](https://o
 $ ./build.sh --features kvm,_oras .build/
 ```
 
-The output of the build process shows the oras command to push the artifacts in the way they can be consumed by onmetal-image.
+The output of the build process shows the oras command to push the artifacts in the way they can be consumed by a `onmetal` image.
 
 ### Details
 
@@ -24,7 +24,7 @@ onmetal-image uses specific _mediaTypes_ while creating a bundeled image and it 
 
 Each comparable section shows the _original_  usage / output of onmetal-image followed by the corresponding commands for oras.
 
-For pushing/pulling of images (and artifacts) an OCI compatible registry must be used. 
+For pushing/pulling of images (and artifacts) an OCI compatible registry must be used.
 
 
 #### Investigating an image build with onmetal-image
@@ -141,7 +141,7 @@ $ jq '.' orasconfig.json
 Just like that we can easily put additional fields into this config snippet:
 
 ```sh
-jq . orasconfig.json 
+jq . orasconfig.json
 {
   "commandLine": "root=LABEL=ROOT ro console=tty0 console=ttyS0,115200 earlyprintk=ttyS0,115200 consoleblank=0 cgroup_enable=memory swapaccount=1 ignition.firstboot=1 ignition.platform.id=qemu security=selinux",
   "os-release": "974.0",
@@ -150,7 +150,7 @@ jq . orasconfig.json
 }
 ```
 
-##### Push / Create 
+##### Push / Create
 
 ```sh
 $ /config/oras push localhost:5000/oras-gardenlinux:v1 kvm_oci-amd64-today-dc5ce3cd.oci.tar.xz:application/vnd.onmetal.image.rootfs.v1alpha1.rootfs  kvm_oci-amd64-today-dc5ce3cd.vmlinuz:application/vnd.onmetal.image.vmlinuz.v1alpha1.vmlinuz  kvm_oci-amd64-today-dc5ce3cd.initrd:application/vnd.onmetal.image.initramfs.v1alpha1.initramfs --config orasconfig.json:application/vnd.onmetal.image.config.v1alpha1+json
@@ -391,7 +391,7 @@ $ /config/onmetal-image --store-path /git/.build/onmetal url --layer initramfs l
 }
 $ curl -s -L http://localhost:5000/v2/oras-gardenlinux/blobs/sha256:a45c40c17c93fb1cb1275126f82bc5383a3f53fb7bf42e7d335deb263eab3e8b  -o oras_initrd
 
-$ cmp oras_initrd kvm_oci-amd64-today-dc5ce3cd.initrd 
+$ cmp oras_initrd kvm_oci-amd64-today-dc5ce3cd.initrd
 ```
 
 ##### Root filesystem
@@ -475,7 +475,7 @@ will result in
 ##### Used software versions
 
 Component | Version
-| :--- | ---: 
+| :--- | ---:
 oras | 0.16.0
 onmetal-image | Git-Commit: [26f6ac2607e1cac19c35fac94aa8cd963b19628a](https://github.com/onmetal/onmetal-image/commit/26f6ac2607e1cac19c35fac94aa8cd963b19628a)
 
@@ -489,7 +489,7 @@ onmetal-image | Git-Commit: [26f6ac2607e1cac19c35fac94aa8cd963b19628a](https://g
 
 _This section is only for information, no actual implementation is done._
 
-Artifacts and images should be signed, so an update of one of them could be discovered. 
+Artifacts and images should be signed, so an update of one of them could be discovered.
 
 For this Docker implemented [Content Trust](https://docs.docker.com/engine/security/trust/) which only works in docker and does not provide options to move signed images to another registry.
 
@@ -505,7 +505,7 @@ To sign the artifact the sha256 digest must be used:
 
 ```sh
 $ cosign sign --key cosign.key localhost:5000/oras-gardenlinux@sha256:2b0ab7951d92049b29696d65867b6f536ef413726de8abd8cd2523c6bfd8519b
-Enter password for private key: 
+Enter password for private key:
 Pushing signature to: localhost:5000/oras-gardenlinux
 ```
 

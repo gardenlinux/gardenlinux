@@ -2,11 +2,11 @@
 ### Description
 <website-feature>
 
-This subfeature removes and blacklists unwated kernel modules. This features depends on its parents feature `cis`.
+This subfeature removes and blacklists unwanted kernel modules. This features depends on its parents feature `cis`.
 </website-feature>
 
 ### Features
-Regarding `CIS` benchmark, `fat` should also be blacklisted. However, this is needed for booting `UEFI`.
+Regarding `CIS` benchmark, the `fat` module should also be blacklisted. However, this is needed for booting `UEFI`. Therefore, we can not blacklist this one (see also unit testing).
 
 The following modules are blacklisted:
 * cramfs
