@@ -52,7 +52,7 @@ RUN : "Initialize the build container package installation" \
 			libengine-pkcs11-openssl \
 			onmetal-image \
 			oras \
-			aws-sdk-cpp \
+			libaws-sdk-cpp-dev \
 			aws-kms-pkcs11 \
 			systemd \
 		&& apt-get install -t unstable -y --no-install-recommends \
