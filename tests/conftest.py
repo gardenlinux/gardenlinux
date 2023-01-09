@@ -8,7 +8,6 @@ import os
 import sys
 import re
 
-import glci.util
 
 from typing import Iterator
 from helper.sshclient import RemoteClient
@@ -80,42 +79,6 @@ def image_suffix(iaas):
     }
     return image_suffixes[iaas]
 
-
-@pytest.fixture(scope="session")
-def s3_image_location(test_params, image_suffix):
-    ''' 
-    returns a S3Info object and gives access to the S3 bucket containing the build artifacts
-    from the current pipeline run. Typically use to be uploaded to hyperscalers for testing.
-    '''
-
-    @dataclass
-    class S3Info:
-        bucket_name: str
-        raw_image_key: str
-        target_image_name: str
-
-    cicd_cfg = glci.util.cicd_cfg(cfg_name=test_params.cicd_cfg_name)
-    find_release = glci.util.preconfigured(
-        func=glci.util.find_release,
-        cicd_cfg=cicd_cfg,
-    )
-
-    release = find_release(
-        release_identifier=glci.model.ReleaseIdentifier(
-            build_committish=test_params.committish,
-            version=test_params.version,
-            gardenlinux_epoch=int(test_params.gardenlinux_epoch),
-            architecture=glci.model.Architecture(test_params.architecture),
-            platform=test_params.platform,
-            modifiers=test_params.modifiers,
-        ),
-    )
-
-    return S3Info(
-        raw_image_key=release.path_by_suffix(image_suffix).s3_key,
-        bucket_name=release.path_by_suffix(image_suffix).s3_bucket_name,
-        target_image_name=f'integration-test-image-{test_params.committish}',
-    )
 
 
 @pytest.fixture(scope="session")
@@ -195,61 +158,10 @@ def testconfig(pipeline, iaas, pytestconfig):
 def aws_session(testconfig, pipeline, request):
     import boto3
     
-    if pipeline:
-        import ccc.aws
-
-        @dataclass
-        class AWSCfg:
-            aws_cfg_name: str
-            aws_region: str
-
-        test_params=request.getfixturevalue('test_params')
-        cicd_cfg = glci.util.cicd_cfg(cfg_name=test_params.cicd_cfg_name)
-        aws_cfg = AWSCfg(
-            aws_cfg_name=cicd_cfg.build.aws_cfg_name,
-            aws_region=cicd_cfg.build.aws_region
-        )
-        return ccc.aws.session(aws_cfg.aws_cfg_name, aws_cfg.aws_region)
-    elif "region" in testconfig:
+    if "region" in testconfig:
         return boto3.Session(region_name=testconfig["region"])
     else:
         return boto3.Session()
-
-
-@pytest.fixture(scope="session")
-def azure_cfg():
-    # late import because only needed in case of pipeline context and probably not available in standalone context
-    from util import ctx
-
-    @dataclass
-    class AzureCfg:
-        client_id: str
-        client_secret: str
-        tenant_id: str
-        subscription_id: str
-        marketplace_cfg: glci.model.AzureMarketplaceCfg
-
-    cicd_cfg = glci.util.cicd_cfg()
-    service_principal_cfg_tmp = ctx().cfg_factory().azure_service_principal(
-        cicd_cfg.publish.azure.service_principal_cfg_name,
-    )
-    service_principal_cfg = glci.model.AzureServicePrincipalCfg(
-        **service_principal_cfg_tmp.raw
-    )
-
-    azure_marketplace_cfg = glci.model.AzureMarketplaceCfg(
-        publisher_id=cicd_cfg.publish.azure.publisher_id,
-        offer_id=cicd_cfg.publish.azure.offer_id,
-        plan_id=cicd_cfg.publish.azure.plan_id,
-    )
-
-    return AzureCfg(
-        client_id=service_principal_cfg.client_id,
-        client_secret=service_principal_cfg.client_secret,
-        tenant_id=service_principal_cfg.tenant_id,
-        marketplace_cfg=azure_marketplace_cfg,
-        subscription_id=service_principal_cfg.subscription_id,
-    )
 
 
 @pytest.fixture(scope="session")
@@ -264,53 +176,33 @@ def azure_credentials(testconfig, pipeline, request):
         credential: object
         subscription_id: str
 
-    if pipeline:
-        azure_cfg = request.getfixturevalue('azure_cfg')
-        credentials = ClientSecretCredential(
-            client_id=azure_cfg.client_id,
-            client_secret=azure_cfg.client_secret,
-            tenant_id=azure_cfg.tenant_id
-        )
-        return AZCredentials(
-            credential = credentials,
-            subscription_id = azure_cfg.subscription_id
-        )
-    else:
-        credential = AzureCliCredential()
-        if 'subscription_id' in testconfig:
-            subscription_id = testconfig['subscription_id']
-        elif 'subscription' in testconfig:
-            try:
-                subscription_id = AZURE.find_subscription_id(credential, testconfig['subscription'])
-            except RuntimeError as err:
-                pytest.exit(err, 1)
-        return AZCredentials(
-            credential = credential,
-            subscription_id = subscription_id
-        )
+    credential = AzureCliCredential()
+    if 'subscription_id' in testconfig:
+        subscription_id = testconfig['subscription_id']
+    elif 'subscription' in testconfig:
+        try:
+            subscription_id = AZURE.find_subscription_id(credential, testconfig['subscription'])
+        except RuntimeError as err:
+            pytest.exit(err, 1)
+    return AZCredentials(
+        credential = credential,
+        subscription_id = subscription_id
+    )
 
 
 @pytest.fixture(scope='session')
 def gcp_credentials(testconfig, pipeline, request):
     import google.oauth2.service_account
 
-    if pipeline:
-        # late import because only needed in case of pipeline context and probably not available in standalone context
-        from util import ctx
-        gcp_cfg = ctx().cfg_factory().gcp("gardenlinux")
+    if "service_account_json_path" in testconfig:
+        service_account_json_path = path.expanduser(testconfig["service_account_json_path"])
+        with open(service_account_json_path, "r") as f:
+            service_account_json = f.read()
         return google.oauth2.service_account.Credentials.from_service_account_info(
-            gcp_cfg.service_account_key(),
+            json.loads(service_account_json)
         )
     else:
-        if "service_account_json_path" in testconfig:
-            service_account_json_path = path.expanduser(testconfig["service_account_json_path"])
-            with open(service_account_json_path, "r") as f:
-                service_account_json = f.read()
-            return google.oauth2.service_account.Credentials.from_service_account_info(
-                json.loads(service_account_json)
-            )
-        else:
-            return None
+        return None
 
 
 @pytest.fixture(scope="session")

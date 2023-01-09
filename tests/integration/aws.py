@@ -3,6 +3,9 @@ import json
 import os
 import uuid
 import pytest
+import enum
+
+import botocore.client
 
 from os import path
 from urllib.parse import urlparse
@@ -14,11 +17,130 @@ from botocore.exceptions import ClientError
 from helper.sshclient import RemoteClient
 from paramiko import RSAKey
 
-import glci.aws
-from glci.aws import response_ok
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+class TaskStatus(enum.Enum):
+    ACTIVE = 'active'
+    COMPLETED = 'completed'
+    DELETED = 'deleted' # indicates an error (image was rejected)
+
+def response_ok(response: dict):
+    resp_meta = response['ResponseMetadata']
+    if (status_code := resp_meta['HTTPStatusCode']) == 200:
+        return response
+
+    raise RuntimeError(f'rq {resp_meta["RequestId"]=} failed {status_code=}')
+
+def register_image(
+    ec2_client: 'botocore.client.EC2',
+    snapshot_id: str,
+    image_name: str,
+    architecture: str,
+) -> str:
+    '''
+    @return: ami-id of registered image
+    '''
+    root_device_name = '/dev/xvda'
+
+    result = ec2_client.register_image(
+        # ImageLocation=XX, s3-url?
+        Architecture=architecture,
+        BlockDeviceMappings=[
+            {
+                'DeviceName': root_device_name,
+                'Ebs': {
+                    'DeleteOnTermination': True,
+                    'SnapshotId': snapshot_id,
+                    'VolumeType': 'gp2',
+                }
+            }
+        ],
+        Description='gardenlinux',
+        EnaSupport=True,
+        Name=image_name,
+        RootDeviceName=root_device_name,
+        VirtualizationType='hvm' # | paravirtual
+    )
+
+    ec2_client.create_tags(
+        Resources=[
+            result['ImageId'],
+        ],
+        Tags=[
+            {
+                'Key': 'sec-by-def-public-image-exception',
+                'Value': 'enabled',
+            },
+        ]
+    )
+
+    # XXX need to wait until image is available (before publishing)
+    return result['ImageId']
+
+def import_snapshot(
+    ec2_client: 'botocore.client.EC2',
+    s3_bucket_name: str,
+    image_key: str,
+) -> str:
+    '''
+    @return import_task_id (use for `wait_for_snapshot_import`)
+    '''
+    res = ec2_client.import_snapshot(
+        ClientData={
+            'Comment': 'uploaded by gardenlinux-cicd',
+        },
+        Description='uploaded by gardenlinux-cicd',
+        DiskContainer={
+            'UserBucket': {
+                'S3Bucket': s3_bucket_name,
+                'S3Key': image_key,
+            },
+            'Format': 'raw',
+            'Description': 'uploaded by gardenlinux-cicd',
+        },
+        Encrypted=False,
+    )
+
+    import_task_id = res['ImportTaskId']
+    return import_task_id
+
+
+def wait_for_snapshot_import(
+    ec2_client: 'botocore.client.EC2',
+    snapshot_task_id: str,
+    polling_interval_seconds: int=15,
+):
+    '''
+    @return snapshot_id
+    '''
+    def describe_import_snapshot_task():
+        status = ec2_client.describe_import_snapshot_tasks(
+            ImportTaskIds=[snapshot_task_id]
+        )['ImportSnapshotTasks'][0]
+        return status
+
+    def current_status() -> TaskStatus:
+        status = describe_import_snapshot_task()
+        status = TaskStatus(status['SnapshotTaskDetail']['Status'])
+        return status
+
+    def snapshot_id():
+        status = describe_import_snapshot_task()
+        task_id = status['SnapshotTaskDetail']['SnapshotId']
+        return task_id
+
+    while not (status := current_status()) is TaskStatus.COMPLETED:
+        logger.info(f'{snapshot_task_id=}: {status=}')
+
+        if status is TaskStatus.DELETED:
+            status = describe_import_snapshot_task()
+            details = status['SnapshotTaskDetail']
+            raise RuntimeError(f'image uploaded by {snapshot_task_id=} was rejected: {details=}')
+        time.sleep(polling_interval_seconds)
+
+    return snapshot_id()
 
 class AWS:
     """Handle resources in AWS cloud"""
@@ -513,13 +635,13 @@ class AWS:
             raise NotImplementedError("Only local image file uploads and S3 buckets are implemented.")
 
         self.logger.info(f"Importing snapshot from S3 object {image_key} in bucket {bucket_name}...")
-        snapshot_task_id = glci.aws.import_snapshot(
+        snapshot_task_id = import_snapshot(
             ec2_client = self.ec2_client,
             s3_bucket_name = bucket_name,
             image_key = image_key,
         )
         try:
-            self._snapshot_id = glci.aws.wait_for_snapshot_import(
+            self._snapshot_id = wait_for_snapshot_import(
                 ec2_client = self.ec2_client,
                 snapshot_task_id = snapshot_task_id,
             )
@@ -538,7 +660,7 @@ class AWS:
         )
 
         self.logger.info(f"Registering ami from snapshot {self._snapshot_id}...")
-        self._ami_id = glci.aws.register_image(
+        self._ami_id = register_image(
             ec2_client = self.ec2_client,
             snapshot_id = self._snapshot_id,
             image_name = image_name,
