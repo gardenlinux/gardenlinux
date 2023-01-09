@@ -25,13 +25,15 @@
 Garden Linux frequently publishes snapshot releases. Beside this, beta and stables releases are published. Releases are available as machine images for most major cloud providers as well as file-system images for manual import. Release artifacts can be found within the [Github release section](https://github.com/gardenlinux/gardenlinux/releases).
 
 ## Versioning
-Versioning is done by the [garden-version](https://github.com/gardenlinux/gardenlinux/blob/main/bin/garden-version) script. In default, it returns just `today` by working on a regular git branch with its [versionfile](https://github.com/gardenlinux/gardenlinux/blob/main/VERSION) (also often called `$versionfile`).
+The version number is calculated by [bin/garden-version](https://github.com/gardenlinux/gardenlinux/blob/main/bin/garden-version) which uses the [VERSION](https://github.com/gardenlinux/gardenlinux/blob/main/VERSION) file.
+For release branches, the VERSION file contains the Garden Linux version to build. The main branch`VERSION` file contains `today`, which tells the `bin/garden-version` to calculate the version of today.
 
-If no parameter is specified the full version &#60;major&#62;.&#60;minor&#62; e.g. 27.5 is printed. The version is taken from the `versionfile`. On HEAD this should always evaluate to 'today', on branch versions this always should resolve to the next version that will be build e.g. 27.1. This implies there is no branch with a .0 in the `versionfile` file.
-The version calculated expresses the days since $startdate and is always UTC based.
+## Branches
+Each day a version of Garden Linux is build from the main branch via the [nightly](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/nightly.yml) GitHub action. 
+Release branches start with `rel-` and are used to publish Garden Linux images to supported Cloud Providers.  
 
-## Naming in GIT
-Garden Linux's source code is maintained and versioned in a git project on GitHub. While mostly branches are being used for feature implementations, docs and further enhancements (see also [branch naming convention](https://github.com/gardenlinux/gardenlinux/blob/main/CONTRIBUTING.md#git-branch-naming-convention)) releases are based on git tags where we distinguish between beta and stable releases. An overview of all tags (releases) can be found [here](https://github.com/gardenlinux/gardenlinux/tags).
+
+Branches are also used for development, the branch naming convention is described [here](https://github.com/gardenlinux/gardenlinux/blob/main/CONTRIBUTING.md#git-branch-naming-convention)).
 
 ### Beta
 Beta releases are tagged by a `beta_` prefix as well as their version.
