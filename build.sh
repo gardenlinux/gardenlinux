@@ -33,7 +33,7 @@ debug=
 debianMirror=0
 manual=
 lessram=
-arch=$(${thisDir}/bin/get_arch.sh)
+arch=$("${thisDir}"/bin/get_arch.sh)
 features=
 disablefeatures=
 commitid="${commitid:-local}"
@@ -70,9 +70,8 @@ done
 # Validate checksums
 sha256sum -c --ignore-missing checksums.sha256
 
-dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
 outputDir="${1:-$output}";	shift || true
-version="$(${thisDir}/bin/garden-version ${1:-})";	shift || true
+version="$("${thisDir}"/bin/garden-version ${1:-})";	shift || true
 
 mkdir -p "$outputDir"
 outputDir="$(readlink -f "$outputDir")"
@@ -125,7 +124,7 @@ grep -q apparmor <<< $dockerinfo  && securityArgs+=( --security-opt apparmor=unc
 
 # external variable BUILD_IMAGE forces a different buildimage name
 buildImage=${BUILD_IMAGE:-"gardenlinux/build-image:$version"}
-[ $build ] && make --directory=${thisDir}/container ALTNAME=$buildImage build-image
+[ $build ] && make --directory="${thisDir}"/container ALTNAME=$buildImage build-image
 
 # using the buildimage in a temporary container with
 # build directory mounted in memory (--tmpfs ...) and
@@ -190,7 +189,7 @@ else
 		containerName=$uuid_gen
 		prefix="$(cat $outputDir/prefix.info)"
 		fullfeatures="$(cat $outputDir/fullfeature.info)"
-		configDir=$(${thisDir}/bin/garden-integration-test-config chroot ${prefix} ${fullfeatures} ${outputDir} ${arch})
+		configDir=$("${thisDir}"/bin/garden-integration-test-config chroot ${prefix} ${fullfeatures} ${outputDir} ${arch})
 		dockerArgs=(
 			--cap-add sys_admin
 			--cap-add mknod
@@ -202,13 +201,13 @@ else
 		# Run the test container using the chroot platform
 		echo "Running pytests in chroot"
 		${gardenlinux_build_cre} run --name $containerName "${dockerArgs[@]}" --rm \
-			-v `pwd`:/gardenlinux -v ${configDir}:/config \
+			-v "$(pwd)":/gardenlinux -v "${configDir}":/config \
 			"gardenlinux/base-test:$version" \
 			pytest --iaas=chroot --configfile=/config/config.yaml &
 
 		# Cleanup the test container
 		wait %1
-		rm -r ${configDir}
+		rm -r "${configDir}"
 	fi
 	if [ ${skip_tests} -eq 0 ] && [[ "${tests}" == *"kvm"* ]]; then
 		# Prepare the test container execution
@@ -216,7 +215,7 @@ else
 		containerName=$uuid_gen
 		prefix="$(cat $outputDir/prefix.info)"
 		fullfeatures="$(cat $outputDir/fullfeature.info)"
-		configDir=$(${thisDir}/bin/garden-integration-test-config kvm ${prefix} ${fullfeatures} ${outputDir} ${arch})
+		configDir=$("${thisDir}/bin/garden-integration-test-config" kvm ${prefix} ${fullfeatures} ${outputDir} ${arch})
 		dockerArgs=()
 
 		# Check if the host system supports KVM.
@@ -229,12 +228,12 @@ else
 		echo "Running pytests in KVM"
 		${gardenlinux_build_cre} run --name $containerName "${dockerArgs[@]}" --rm \
 			-v /boot/:/boot -v /lib/modules:/lib/modules \
-			-v `pwd`:/gardenlinux -v ${configDir}:/config \
+			-v "$(pwd)":/gardenlinux -v "${configDir}":/config \
 			"gardenlinux/base-test:$version" \
 			pytest --iaas=kvm --configfile=/config/config.yaml &
 
 		# Cleanup the test container
 		wait %1
-		rm -r ${configDir}
+		rm -r "${configDir}"
 	fi
 fi
