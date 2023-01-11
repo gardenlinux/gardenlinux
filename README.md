@@ -70,46 +70,54 @@ By default, Garden Linux uses [Podman](https://podman.io/) as container runtime 
 **Packages:**
 
 **Debian/Ubuntu:**
-```
-apt install bash sudo podman crun make coreutils gnupg git qemu-system-x86 qemu-system-aarch64
-```
+
+> mandatory:
+> ```
+> apt install --no-install-recommends bash sudo podman make 
+> ```
+> for release builds:
+> ```
+> apt install --no-install-recommends gnupg git 
+> ```
+> for platform tests:
+> ```
+> apt install --no-install-recommends qemu-system-x86 qemu-system-aarch64
+> ```
 
 **CentOS/RedHat (>=8):**
 
-CFSSL requires `GLIBC 2.28`. Therefore, we recommand to build on systems running CentOS/RedHat 8 or later.
-
-```
-# Install needed packages
-yum install bash sudo podman crun make gnupg git qemu-kvm qemu-img coreutils edk2-aarch64 edk2-ovmf
-```
-
-*Note: Running `AARCH64` on `x86_64` requires `qemu-system-aarch64` package which is not present in official repositories.*
+> CFSSL requires `GLIBC 2.28`. Therefore, we recommand to build on systems running CentOS/RedHat 8 or later.
+>
+> ```
+> # Install needed packages
+> yum install bash sudo podman crun make gnupg git qemu-kvm qemu-img coreutils edk2-aarch64 edk2-ovmf
+> ```
+> *Note: Running `AARCH64` on `x86_64` requires `qemu-system-aarch64` package which is not present in official repositories.*
 
 **ArchLinux/Manjaro:**
-```
-pacman -S bash sudo podman crun make coreutils gnupg git qemu-system-x86 qemu-system-aarch64 edk2-ovmf
-```
-
+> ```
+> pacman -S bash sudo podman crun make coreutils gnupg git qemu-system-x86 qemu-system-aarch64 edk2-ovmf
+> ```
 
 **macOS (>=12):**
 
-Build support on `macOS` (>=12) supports `Intel` (AMD64) and `Apple Silicon` (ARM64/AARCH64) architectures. Building on macOS requires the GNU versions of multiple tools that can be installed in different ways like Brew, MacPorts or self compiled. Self compiled GNU packages must be located in `/opt/local/bin/`. However, the following build instructions only cover the recommended `Brew` way.
-
-Furthermore, building on macOS requires to fulfill further build requirements:
- * Command Line Tools (CLT) for Xcode
- * [Homebrew](https://brew.sh) (Optionally: MacPorts https://macports.org)
- * [Docker](https://docs.docker.com/desktop/mac/install/)
-
-```
-# Install needed packages
-brew install coreutils bash gnu-getopt gnu-sed gawk podman socat
-
-# Change to bash (Default: ZSH)
-$> bash
-
-# Export Docker as Container Runtime Environment for Garden Linux
-$> export GARDENLINUX_BUILD_CRE=docker
-```
+> Build support on `macOS` (>=12) supports `Intel` (AMD64) and `Apple Silicon` (ARM64/AARCH64) architectures. Building on macOS requires the GNU versions of multiple tools that can be installed in different ways like Brew, MacPorts or self compiled. Self compiled GNU packages must be located in `/opt/local/bin/`. However, the following build instructions only cover the recommended `Brew` way.
+>
+> Furthermore, building on macOS requires to fulfill further build requirements:
+> * Command Line Tools (CLT) for Xcode
+> * [Homebrew](https://brew.sh) (Optionally: MacPorts https://macports.org)
+> * [Docker](https://docs.docker.com/desktop/mac/install/)
+>
+> ```
+> # Install needed packages
+> brew install coreutils bash gnu-getopt gnu-sed gawk podman socat
+>
+> # Change to bash (Default: ZSH)
+> bash
+>
+> # Export Docker as Container Runtime Environment for Garden Linux
+> export GARDENLINUX_BUILD_CRE=docker
+> ```
 
 **Adjust Repository:**
 
