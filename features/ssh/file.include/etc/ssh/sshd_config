@@ -41,3 +41,6 @@ AuthenticationMethods publickey
 # Supported HostKey algorithms by order of preference.
 HostKey /etc/ssh/ssh_host_ed25519_key
 HostKey /etc/ssh/ssh_host_rsa_key
+
+# Add ssh-rsa to allowed HostKeyAlgorithms
+HostKeyAlgorithms=+ssh-rsa
