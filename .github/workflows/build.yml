@@ -1,0 +1,64 @@
+name: build
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        default: today
+      default_modifier:
+        type: string
+        default: ""
+    outputs:
+      version:
+        value: ${{ jobs.setup.outputs.version }}
+jobs:
+  setup:
+    runs-on: ec2-gardenlinux-amd64
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: resolve version "${{ inputs.version }}"
+        id: version
+        run: echo version="$(bin/garden-version "${{ inputs.version }}")" | tee -a "$GITHUB_OUTPUT"
+  images:
+    needs: setup
+    runs-on: ec2-gardenlinux-${{ matrix.architecture }}
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [ amd64 ]
+        target: [ "ali,gardener", "aws,gardener", "azure,gardener", "gcp,gardener", "kvm,gardener", "kvm,chost", "metal,gardener", "metal,chost", "openstack,gardener", "vmware,gardener" ]
+        modifier: [ "${{ inputs.default_modifier }}" ]
+    steps:
+      - run: |
+          sudo mkdir -p /var/lib/docker
+          sudo mount -t tmpfs -o size=100% none /var/lib/docker
+          export DEBIAN_FRONTEND=noninteractive
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends docker.io apparmor
+      - uses: actions/checkout@v3
+      # - name: get cname
+      #   run: |
+      #     cname="$(bin/garden-feat --featureDir features --features ${{ matrix.target }}${{ matrix.modifier }}${{ matrix.additional_modifer }})"
+      #     artifact_name="$cname-${{ matrix.architecture }}-${{ needs.setup.outputs.version }}-$(git rev-parse --short HEAD)"
+      #     printf 'cname=%s\nartifact_name=%s\n' "$cname" "$artifact_name" | tee -a "$GITHUB_ENV"
+      - if: ${{ inputs.use_kms }}
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ secrets.aws_kms_role }}
+          role-session-name: ${{ secrets.aws_oidc_session }}
+          aws-region: ${{ secrets.aws_region }}
+      - name: build Garden Linux image
+        run: |
+          sudo make docker-build cert/sign.pub
+          sudo ./build.sh --no-build --features "$target" .build "${{ needs.setup.outputs.version }}"
+      - run: find .build
+      # - name: pack build artifacts for upload
+      #   run: |
+      #     mv .build "${{ env.artifact_name }}"
+      #     tar -czvf "${{ env.artifact_name }}.tar.gz" "${{ env.artifact_name }}"
+      # - uses: actions/upload-artifact@v3
+      #   with:
+      #     name: "build-${{ env.artifact_name }}"
+      #     path: "${{ env.artifact_name }}.tar.gz"

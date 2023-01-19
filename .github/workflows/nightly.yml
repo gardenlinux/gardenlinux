@@ -1,0 +1,60 @@
+name: nightly
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      version:
+        type: string
+        default: now
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    permissions:
+      id-token: write
+    with:
+      version: ${{ inputs.version || 'now' }}
+      default_modifier: ",gardener,_prod"
+      use_kms: true
+    secrets:
+      secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_kms_role: ${{ secrets.SECUREBOOT_DB_IAM_ROLE }}
+      aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
+  build_container:
+    uses: ./.github/workflows/build-container.yml
+  tests:
+    needs: [ build, build_container ]
+    permissions:
+      id-token: write
+      packages: write
+    uses: ./.github/workflows/tests.yml
+    with:
+      version: ${{ needs.build.outputs.version }}
+      default_modifier: ",gardener,_prod"
+    secrets:
+      gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      gcp_project: ${{ secrets.GCP_PROJECT }}
+      gcp_region: ${{ secrets.GCP_REGION }}
+      gcp_zone: ${{ secrets.GCP_ZONE }}
+      aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
+      aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
+      aws_region: ${{ secrets.AWS_TESTS_REGION }}
+      az_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      az_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  upload_to_s3:
+    name: upload to S3
+    needs: [ build, tests ]
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/upload_to_s3.yml
+    with:
+      version: ${{ needs.build.outputs.version }}
+      default_modifier: ",gardener,_prod"
+    secrets:
+      bucket: ${{ secrets.AWS_S3_BUCKET }}
+      region: ${{ secrets.AWS_REGION }}
+      role: ${{ secrets.AWS_IAM_ROLE }}
+      session: ${{ secrets.AWS_OIDC_SESSION }}

@@ -1,0 +1,104 @@
+name: release
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        type: choice
+        default: beta
+        options:
+        - beta
+        - stable
+      version:
+        required: true
+        type: string
+      commit:
+        required: true
+        type: string
+jobs:
+  create_release:
+    runs-on: ec2-gardenlinux-amd64
+    steps:
+      - uses: actions/checkout@v3
+      - name: create GitHub release
+        run: .github/workflows/release.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} create "${{ inputs.type == 'beta' && 'beta_' || '' }}${{ inputs.version }}" "${{ inputs.commit }}" "${{ inputs.version }}" > .github_release
+      - uses: actions/upload-artifact@v3
+        with:
+          name: release
+          path: .github_release
+  upload_to_release:
+    needs: create_release
+    permissions:
+      contents: write
+      id-token: write
+    environment: oidc_aws_s3_upload
+    runs-on: ec2-gardenlinux-amd64
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [ amd64, arm64 ]
+        cname: [ kvm_prod, metal_prod, gcp-gardener_prod, aws-gardener_prod, azure-gardener_prod, ali-gardener_prod, openstack-gardener_prod, vmware-gardener_prod, metal_pxe_prod ]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: release
+      - uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: download build artifacts from S3
+        run: |
+          commit="$(echo "${{ inputs.commit }}" | cut -c -7)"
+          prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
+          .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$prefix"
+          tar -cv "$prefix" | xz -9 > "$prefix.tar.xz"
+      - name: upload to release
+        run: |
+          commit="$(echo "${{ inputs.commit }}" | cut -c -7)"
+          release="$(cat .github_release)"
+          prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
+          echo "$release $prefix.tar.xz"
+          ls -lah "$prefix.tar.xz"
+          echo "$prefix.tar.xz" | .github/workflows/release.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+  upload_integration_tests_logs_to_release:
+    needs: create_release
+    permissions:
+      contents: write
+      id-token: write
+    environment: oidc_aws_s3_upload
+    runs-on: ec2-gardenlinux-amd64
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [ amd64, arm64 ]
+        target: [ gcp, aws, azure ]
+        modifier: [ -prod ]
+        exclude:
+          - architecture: arm64
+            target: gcp
+          - architecture: arm64
+            target: azure
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: release
+      - uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: download build artifacts from S3
+        run: |
+          commit="$(echo "${{ inputs.commit }}" | cut -c -7)"
+          prefix="${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
+          aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/integration-tests-logs/$prefix.integration-tests-log" ./
+      - name: upload to release
+        run: |
+          commit="$(echo "${{ inputs.commit }}" | cut -c -7)"
+          release="$(cat .github_release)"
+          prefix="${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
+          echo "$release $prefix.integration-tests-log"
+          ls -lah "$prefix.integration-tests-log"
+          echo "$prefix.integration-tests-log" | .github/workflows/release.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"

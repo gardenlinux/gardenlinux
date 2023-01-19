@@ -8,7 +8,7 @@ source "$thisDir/bin/.constants.sh" \
 	-- \
 	'[--no-build] [--lessram] [--debug] [--manual] [--arch=<arch>] [--qemu] [--skip-tests] <output-dir> <version/timestamp>' \
 	'output stretch 2017-05-08T00:00:00Z
---arch i386 output bullseye 2016-03-14T00:00:00Z' 
+--arch i386 output bullseye 2016-03-14T00:00:00Z'
 
 eval "$dgetopt"
 build=1
@@ -34,7 +34,7 @@ while true; do
 		--features) 	features="$1"; shift ;; # adding featurelist
 		--suite) 	suite="$1"; shift ;; # adding suite
 		--ports)        suiteports=1 ; shift ;;      # enables "debian-ports" support for suite
-		--skip-tests)   notests=1 ;;    # skip running tests 
+		--skip-tests)   notests=1 ;;    # skip running tests
 		--) break ;;
 		*) eusage "unknown flag '$flag'" ;;
 	esac
@@ -56,7 +56,7 @@ envArgs=(
 	debug="$debug"
 	manual="$manual"
 	qemu="$qemu"
-	arch="$arch" 
+	arch="$arch"
 	features="$features"
 	version="$version"
 	notests="$notests"
@@ -64,7 +64,7 @@ envArgs=(
 	userGID="$userGID"
 )
 
-securityArgs=( 
+securityArgs=(
 	--cap-add SYS_ADMIN	# needed for mounts in image
 	--cap-drop SETFCAP
 	--privileged		# needed for creating bootable images with losetup and a mounted /dev
@@ -98,7 +98,7 @@ if [ $manual ]; then
 	echo -e "\n### running in debug mode"
 	echo -e "please run -> /opt/gardenlinux/bin/garden-build.sh <- (all configs are set)\n"
 	set -x
-	docker run $dockerArgs -ti \
+	docker run $dockerArgs \
 		"${buildImage}" \
 		/bin/bash
 else

@@ -1,0 +1,7 @@
+name: dev
+on: [ push, pull_request ]
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      version: 576.12

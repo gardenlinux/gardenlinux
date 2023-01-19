@@ -1,7 +1,7 @@
 VERSION=`../bin/garden-version`
 ALTNAME=
 
-ALTNAME_INTERNAL=$(shell [ -n "$(ALTNAME)" ] && printf "%s %s" "-t" "$(ALTNAME)" ) 
+ALTNAME_INTERNAL=$(shell [ -n "$(ALTNAME)" ] && printf "%s %s" "-t" "$(ALTNAME)" )
 
 all: build-image build-integration-test
 
