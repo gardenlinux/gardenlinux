@@ -16,5 +16,5 @@ This features support unit testing and validates extended capabilities on `ping`
 |---|---|
 |type|element|
 |artifact|None|
-|included_features|`base`, `ssh`|
+|included_features|`base`, `ssh`,`_selinux`|
 |excluded_features|None|

@@ -4,5 +4,6 @@ features:
   include:
     - base
     - ssh
+    - _selinux
 tar:
   include-dev: true

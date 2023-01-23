@@ -16,10 +16,12 @@ cp -a "$rootfs/." "$rootfs_work"
 
 find "$rootfs_work/var/log/" -type f -delete
 
-# SELinux 'default' policy file contexts
-chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
-"$thisDir/garden-chroot" "$rootfs_work" /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
-rm "$rootfs_work/.autorelabel"
+if grep _selinux <<<"$features" > /dev/null; then
+  # SELinux 'default' policy file contexts
+  chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
+  "$thisDir/garden-chroot" "$rootfs_work" /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
+  rm "$rootfs_work/.autorelabel"
+fi
 
 if ! grep _secureboot <<<"$features" > /dev/null; then
 	machineid="$(mktemp)"

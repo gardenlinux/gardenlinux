@@ -10,10 +10,6 @@ cp -a "$rootfs/." "$rootfs_work"
 
 find "$rootfs_work/var/log/" -type f -delete
 
-chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
-#chroot "$rootfs_work" /usr/bin/env -i /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
-rm "$rootfs_work/.autorelabel"
-
 file="$(mktemp)"
 
 size="${size:-$(du -sb "$rootfs_work" | awk '{ min_size_bytes = min_size * MB; size = $1 * 1.5; padded_size = size + (MB - (size % MB) % MB); if (padded_size < min_size_bytes) padded_size = min_size_bytes; print (padded_size / MB) "MiB" }' "MB=1048576" "min_size=64")}"
