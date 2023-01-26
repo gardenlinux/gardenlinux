@@ -31,8 +31,8 @@ AcceptEnv LANG
 # override default of no subsystems
 Subsystem sftp /usr/lib/openssh/sftp-server -f AUTHPRIV -l INFO
 
-# autologout inactive users after 10 minutes
-ClientAliveInterval 600
+# autologout inactive users after 3 minutes
+ClientAliveInterval 180
 ClientAliveCountMax 0
 
 # Password based logins are disabled - only public key based logins are allowed.
@@ -41,3 +41,6 @@ AuthenticationMethods publickey
 # Supported HostKey algorithms by order of preference.
 HostKey /etc/ssh/ssh_host_ed25519_key
 HostKey /etc/ssh/ssh_host_rsa_key
+
+# Add ssh-rsa to allowed HostKeyAlgorithms
+HostKeyAlgorithms=+ssh-rsa
