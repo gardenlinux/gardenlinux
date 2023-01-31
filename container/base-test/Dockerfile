@@ -41,6 +41,6 @@ RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc
 # pipenv package was removed from bookworm https://tracker.debian.org/pkg/pipenv
 RUN pip install pipenv==2022.4.8
 COPY _pipfiles /_pipfiles
-RUN cd /_pipfiles && pipenv --python 3.10 install --system --skip-lock --dev && cd / && rm -rf /_pipfiles
+RUN cd /_pipfiles && pipenv install --system --skip-lock --dev && cd / && rm -rf /_pipfiles
 
 WORKDIR /gardenlinux/tests
