@@ -62,11 +62,6 @@ else
   hasefi=0
 fi
 
-# disable selinux
-rm -f ${target}/.autorelabel
-rm -f ${target}/etc/kernel/cmdline.d/90-selinux.cfg
-chroot ${target} update-kernel-cmdline
-
 rm -rf ${target}/usr/lib/dracut/modules.d/98gardenlinux-live
 chroot ${target}/ /etc/kernel/postinst.d/dracut ${kernel}
 

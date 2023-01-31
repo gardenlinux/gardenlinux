@@ -415,6 +415,12 @@ def non_metal(testconfig):
         pytest.skip('test not supported on metal')
 
 @pytest.fixture
+def non_feature_firecracker(testconfig):
+    features = testconfig.get("features", [])
+    if "firecracker" in features:
+        pytest.skip('test is not supported on firecracker')
+
+@pytest.fixture
 def non_feature_gardener(testconfig):
     features = testconfig.get("features", [])
     if "gardener" in features:
