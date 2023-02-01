@@ -54,8 +54,8 @@ dpkgArch="${arch:-$(dpkg --print-architecture | awk -F- "{ print \$NF }")}"
 export arch="$arch"
 export debianMirror=$debianMirror
 
-fullfeatures="$(garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" features)"
-targetPlatform="$(garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures")"
+fullfeatures="$(garden-feat --featureDir "$featureDir" --features "$features" --ignore "$disablefeatures" features)"
+targetPlatform="$(garden-feat --featureDir "$featureDir" --features "$features" --ignore "$disablefeatures" platforms)"
 
 # Using the native Debian repository on production builds (_prod) is not supported
 if [ $debianMirror -eq 1 ]; then
@@ -66,7 +66,7 @@ if [ $debianMirror -eq 1 ]; then
 fi
 
 if [ -z "${prefix+x}" ]; then
-	prefix="/$(garden-feat --featureDir $featureDir --features "$features" --ignore "$disablefeatures" cname)-$dpkgArch-$version-$commitid"
+	prefix="/$(garden-feat --featureDir "$featureDir" --features "$features" --ignore "$disablefeatures")-$dpkgArch-$version-$commitid"
 fi
 
 exportDir="output"

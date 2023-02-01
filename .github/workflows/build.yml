@@ -77,7 +77,7 @@ jobs:
           git update-index --assume-unchanged VERSION
       - name: get cname
         run: |
-          cname="$(bin/garden-feat --featureDir features --features ${{ matrix.target }}${{ matrix.modifier }}${{ matrix.additional_modifer }})"
+          cname="$(bin/garden-feat --features ${{ matrix.target }}${{ matrix.modifier }}${{ matrix.additional_modifer }})"
           artifact_name="$cname-${{ matrix.architecture }}-${{ needs.setup.outputs.version }}-$(git rev-parse --short HEAD)"
           printf 'cname=%s\nartifact_name=%s\n' "$cname" "$artifact_name" | tee -a "$GITHUB_ENV"
       - if: ${{ inputs.use_kms }}

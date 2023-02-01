@@ -1,2 +1,5 @@
 description: GitHub action self hosted runner
 type: element
+features:
+  include:
+    - server

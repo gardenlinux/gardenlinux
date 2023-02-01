@@ -13,7 +13,7 @@ fi
 if [ "$hash" != "$cached_hash" ]; then
 	echo "$hash" > make_targets.cache
 	bin/expand-flavours < flavours.yaml | while read features; do
-		bin/garden-feat cname --featureDir features --features "$features"
+		bin/garden-feat --features "$features"
 	done | sort >> make_targets.cache
 fi
 
