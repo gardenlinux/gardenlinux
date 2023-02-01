@@ -23,6 +23,7 @@ RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc
           gnupg \
           python3-pip \
           python3-pytest \
+          python3-novaclient \
           vim \
           procps \
           openssh-client \
