@@ -103,7 +103,7 @@ include_aptfile=
 include_wget=
 exclude="$(filter_comment <<< $exclude | filter_variables | filter_if)"
 
-for i in $(filter_comment <<< $include | filter_variables | filter_if | grep -v -f <(echo "$exclude")); do
+for i in $(filter_comment <<< $include | filter_variables | filter_if | grep -v -f <(echo -n "$exclude")); do
     if [[ $i = *.deb ]]; then
 	if [[ $i = *://* ]]; then	include_wget+="$i "
 	fi
