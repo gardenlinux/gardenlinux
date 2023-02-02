@@ -55,6 +55,7 @@ RUN : "Initialize the build container package installation" \
 			libaws-sdk-cpp-dev \
 			aws-kms-pkcs11 \
 			systemd \
+			python3-networkx \
 		&& apt-get install -t unstable -y --no-install-recommends \
 			binutils-x86-64-linux-gnu \
 			binutils-aarch64-linux-gnu \
