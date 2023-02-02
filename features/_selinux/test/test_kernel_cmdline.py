@@ -10,5 +10,5 @@ from helper.tests.file_content import file_content
 )
 
 
-def test_kernel_cmdline(client, file, args, non_feature_githubActionRunner, non_feature_firecracker):
+def test_kernel_cmdline(client, file, args):
     file_content(client, file, args, only_line_match=True)
