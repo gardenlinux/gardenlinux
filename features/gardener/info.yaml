@@ -3,3 +3,5 @@ type: element
 features:
   include:
     - server
+  exclude:
+    - _selinux

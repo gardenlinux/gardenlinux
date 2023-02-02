@@ -157,7 +157,7 @@ def testconfig(pipeline, iaas, pytestconfig):
 @pytest.fixture(scope="session")
 def aws_session(testconfig, pipeline, request):
     import boto3
-    
+
     if "region" in testconfig:
         return boto3.Session(region_name=testconfig["region"])
     else:
@@ -413,12 +413,6 @@ def non_metal(testconfig):
     features = testconfig.get("features", [])
     if "metal" in features:
         pytest.skip('test not supported on metal')
-
-@pytest.fixture
-def non_feature_firecracker(testconfig):
-    features = testconfig.get("features", [])
-    if "firecracker" in features:
-        pytest.skip('test is not supported on firecracker')
 
 @pytest.fixture
 def non_feature_gardener(testconfig):

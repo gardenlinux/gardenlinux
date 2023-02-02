@@ -3,3 +3,5 @@ type: platform
 features:
   include:
     - server
+  exclude:
+    - _selinux
