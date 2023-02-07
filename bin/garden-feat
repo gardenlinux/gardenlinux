@@ -1,3 +1,21 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+exec 3>&1
+exec 4>&2
+exec 1>/dev/null
+exec 2>/dev/null
+
+venv="$(dirname "$BASH_SOURCE")/garden-feat.venv"
+python3 -m venv "$venv"
+source "$venv/bin/activate"
+pip install pyyaml networkx
+
+exec 1>&3
+exec 1>&4
+exec python <(sed -n '/^#!\/usr\/bin\/env python3$/,$ p' < "$BASH_SOURCE") "$@"
+
 #!/usr/bin/env python3
 
 import os
