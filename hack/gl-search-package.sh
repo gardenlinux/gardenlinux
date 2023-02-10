@@ -6,18 +6,27 @@
 #   - arch:  sudo pacman -S fzf
 #   - osx: brew install fzf
 
-# Select Garden Linux Distribution by setting env variable "gl_dist=934.3"
-# Default: today
+export gls_gl_dist=$(echo "today" |fzf --header 'Enter the Garden Linux Version you are interested in, or select today' --print-query | tail -1)
 
+# If user did not provide minor version but only a major, assume user wants: $major.0
+if [ "$gls_gl_dist" != "today" ]; then
+  if ! [[ "$gls_gl_dist" =~ "." ]]; then
+    major=$(echo $gls_gl_dist | cut -d. -f1)
+    minor=$(echo $gls_gl_dist | cut -d. -f2)
+    gls_gl_dist="${major}.0"
+  fi
+fi  
 
-# TODO:
-# - user select architecture via fzf 
-# - user select version via fzf
+repo_url="http://repo.gardenlinux.io/gardenlinux/dists/${gls_gl_dist}/Release"
+
+# Check if repo exists for user provided garden linux version string
+if curl -s $repo_url| grep -q "Error"; then
+  echo "Repo does not exist for $gls_gl_dist"
+  echo "  ${repo_url}"
+  exit
+fi
 
 export gls_selected_arch=$(echo -e "amd64\narm64" | fzf --header 'Select Garden Linux package architecture' )
-
-
-export gls_gl_dist="${gl_dist:-today}"
 packages_file="$(curl -s http://repo.gardenlinux.io/gardenlinux/dists/${gls_gl_dist}/main/binary-${gls_selected_arch}/Packages)"
 
 function filter_package_info() {
