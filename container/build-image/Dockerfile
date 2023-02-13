@@ -11,7 +11,7 @@ RUN  chown root:root $GARDENLINUX_MIRROR_KEY \
 RUN if [ "$(dpkg --print-architecture)" != amd64 ]; then dpkg --add-architecture amd64; fi
 
 RUN : "Initialize the build container package installation" \
-		&& sed -i 's/deb.debian.org/cdn-aws.deb.debian.org/g' /etc/apt/sources.list \
+		&& sed -i 's/deb.debian.org/cdn-aws.deb.debian.org/g' /etc/apt/sources.list.d/debian.sources \
 		&& arch="$(dpkg --print-architecture)" \
 		&& apt-get update \
 		&& apt-get install -y --no-install-recommends \
