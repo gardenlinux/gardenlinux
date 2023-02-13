@@ -50,7 +50,7 @@ RUN : "Initialize the build container package installation" \
 			openssl \
 			libengine-pkcs11-openssl \
 			onmetal-image \
-			aws-sdk-cpp \
+			libaws-sdk-cpp-dev \
 			aws-kms-pkcs11 \
 		&& apt-get install -t unstable -y --no-install-recommends \
 			binutils-x86-64-linux-gnu \
