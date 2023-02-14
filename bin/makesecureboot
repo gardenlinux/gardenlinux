@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -Eeufo pipefail
+set -Eeuxfo pipefail
 
 export PKCS11_MODULE_PATH="/usr/lib/$(uname -m)-linux-gnu/pkcs11/aws_kms_pkcs11.so"
 
