@@ -73,7 +73,7 @@ By default, Garden Linux uses [Podman](https://podman.io/) as container runtime 
 
 > mandatory:
 > ```
-> apt install --no-install-recommends bash sudo podman make 
+> apt install --no-install-recommends bash sudo podman make python3-yaml python3-networkx
 > ```
 > for release builds:
 > ```
@@ -90,13 +90,13 @@ By default, Garden Linux uses [Podman](https://podman.io/) as container runtime 
 >
 > ```
 > # Install needed packages
-> yum install bash sudo podman crun make gnupg git qemu-kvm qemu-img coreutils edk2-aarch64 edk2-ovmf
+> yum install bash sudo podman crun make gnupg git qemu-kvm qemu-img coreutils edk2-aarch64 edk2-ovmf python-networkx python3-PyYAML
 > ```
 > *Note: Running `AARCH64` on `x86_64` requires `qemu-system-aarch64` package which is not present in official repositories.*
 
 **ArchLinux/Manjaro:**
 > ```
-> pacman -S bash sudo podman crun make coreutils gnupg git qemu-system-x86 qemu-system-aarch64 edk2-ovmf
+> pacman -S bash sudo podman crun make coreutils gnupg git qemu-system-x86 qemu-system-aarch64 edk2-ovmf python-yaml python-networkx
 > ```
 
 **macOS (>=12):**
