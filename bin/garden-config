@@ -29,13 +29,15 @@ indent() { sed 's/^/  /'; }
 targetDir="${1:-}"; shift || eusage 'missing target-dir'
 [ -n "$targetDir" ]
 
+cp -r $featureDir $targetDir/tmp/
 printf "## executing exec.pre\n"
 for i in $(tr ',' '\n' <<< $features); do
         if [ -x $featureDir/$i/exec.pre ]; then
                 printf "### $i:\n"
-                thisDir=$thisDir targetDir=$targetDir $featureDir/$i/exec.pre "$targetDir" | indent
+                "$thisDir/garden-chroot" "$targetDir" env arch="$arch" targetDir=$targetDir thisDir=$thisDir "/tmp/$(basename $featureDir)/$i/exec.pre" | indent
         fi
 done
+rm -rf "$targetDir/tmp/$(basename $featureDir)"
 
 printf "## copying from file.include\n"
 for i in $(tr ',' '\n' <<< $features); do
@@ -68,7 +70,6 @@ for i in $(tr ',' '\n' <<< $features); do
 		"$thisDir/garden-chroot" "$targetDir" env arch="$arch" "/tmp/$(basename $featureDir)/$i/exec.config" 2>&1 | indent
 	fi
 done
-
 rm -rf "$targetDir/tmp/$(basename $featureDir)"
 
 printf "## deleting file.exclude\n"
@@ -82,10 +83,12 @@ for i in $(tr ',' '\n' <<< $features); do
 	fi
 done
 
+cp -r $featureDir $targetDir/tmp/
 printf "## executing exec.post\n"
 for i in $(tr ',' '\n' <<< $features); do
 	if [ -x $featureDir/$i/exec.post ]; then
 		printf "### $i:\n"
-		thisDir=$thisDir targetDir=$targetDir $featureDir/$i/exec.post "$targetDir" | indent
+		"$thisDir/garden-chroot" "$targetDir" env arch="$arch" targetDir=$targetDir thisDir=$thisDir "/tmp/$(basename $featureDir)/$i/exec.post" | indent
 	fi
 done
+rm -rf "$targetDir/tmp/$(basename $featureDir)"
