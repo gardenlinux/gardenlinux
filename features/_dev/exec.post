@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -Eeuo pipefail
+set -Exeuo pipefail
 
 adduser dev --disabled-password --gecos dev
 adduser dev wheel
