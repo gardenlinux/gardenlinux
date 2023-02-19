@@ -55,6 +55,7 @@ export arch="$arch"
 export debianMirror=$debianMirror
 
 fullfeatures="$(garden-feat --featureDir "$featureDir" --features "$features" --ignore "$disablefeatures" features)"
+export fullfeatures
 targetPlatform="$(garden-feat --featureDir "$featureDir" --features "$features" --ignore "$disablefeatures" platforms)"
 
 # Using the native Debian repository on production builds (_prod) is not supported
