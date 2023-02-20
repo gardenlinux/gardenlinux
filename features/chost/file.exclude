@@ -1,1 +1,2 @@
 /etc/init.d/apparmor
+/var/lib/containerd/opt
