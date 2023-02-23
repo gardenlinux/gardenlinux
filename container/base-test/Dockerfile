@@ -24,6 +24,7 @@ RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc
           gnupg \
           python3-pip \
           python3-pytest \
+          python3-venv \
           vim \
           procps \
           openssh-client \
@@ -38,6 +39,11 @@ RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc
           build-essential \
           libpython3-dev \
           onmetal-image
+
+# Prepare virtual environment
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # pipenv package was removed from bookworm https://tracker.debian.org/pkg/pipenv
 RUN pip install pipenv==2022.4.8
