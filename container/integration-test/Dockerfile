@@ -18,7 +18,7 @@ RUN : "Azure and OpenStack cli already installed in gardenlinux/base-test image"
      && [ $arch = "x86_64" ] && ossutil_arch=64 || ossutil_arch=arm64 \
      && aliyun_ver="3.0.150" \
      && ossutil_ver="1.7.6" \
-     && set -x && curl -sL -o /aliyun-cli-linux-${aliyun_ver}-${aliyun_arch}.tgz https://github.com/aliyun/aliyun-cli/releases/download/v${aliyun_ver}/aliyun-cli-linux-${aliyun_ver}-${aliyun_arch}.tgz \
+     && curl -sL -o /aliyun-cli-linux-${aliyun_ver}-${aliyun_arch}.tgz https://github.com/aliyun/aliyun-cli/releases/download/v${aliyun_ver}/aliyun-cli-linux-${aliyun_ver}-${aliyun_arch}.tgz \
      && (cd /usr/local/bin ; tar xf /aliyun-cli-linux-${aliyun_ver}-${aliyun_arch}.tgz) \
      && rm /aliyun-cli-linux-${aliyun_ver}-${aliyun_arch}.tgz \
      && curl -sL -o /usr/local/bin/ossutil https://gosspublic.alicdn.com/ossutil/${ossutil_ver}/ossutil${ossutil_arch}?spm=a2c63.p38356.a3.3.44692454KkczI0  \
