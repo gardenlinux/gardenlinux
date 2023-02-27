@@ -7,16 +7,16 @@ RUN : "Eval hardware architecture" \
      && arch="$(uname -m)" \
      && [ $arch = "x86_64" ] && aws_arch=x86_64 || aws_arch=aarch64 \
      && [ $arch = "x86_64" ] && aliyun_arch=amd64 || aliyun_arch=arm64 \
-     && [ $arch = "x86_64" ] && ossutil_arch=64 || ossutil_arch=arm64 \
-    : "Install AWS requirements" \
-      && pip install awscliv2 \
-      && awsv2 --install \
-    : "Install GCP requirements" \
+     && [ $arch = "x86_64" ] && ossutil_arch=64 || ossutil_arch=arm64
+RUN : "Install AWS requirements" \
+     && pip install awscliv2 \
+     && awsv2 --install
+RUN : "Install GCP requirements" \
      && curl -sL -o /usr/share/keyrings/cloud.google.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg \
      && echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
      && apt-get update \
      && apt-get install -y google-cloud-sdk && \
-    : "Azure and OpenStack cli already installed in gardenlinux/base-test image" \
+RUN : "Azure and OpenStack cli already installed in gardenlinux/base-test image"
     : "Install AliCloud specific requirements" \
      && aliyun_ver="3.0.94" \
      && ossutil_ver="1.7.6" \
@@ -28,7 +28,7 @@ RUN : "Eval hardware architecture" \
      && chmod 755 /usr/local/bin/ossutil \
      && apt-get clean && rm -rf /var/lib/apt/lists/* \
      && mkdir -p /root/.aws /root/.ssh /config && \
-   : "Install firecracker specific binaries" \
+RUN : "Install firecracker specific binaries"
      && arch="$(uname -m)" \
      && firecracker_ver="v1.1.1" \
      && release_url="https://github.com/firecracker-microvm/firecracker/releases" \
