@@ -30,7 +30,7 @@ RUN : "Azure and OpenStack cli already installed in gardenlinux/base-test image"
      && mkdir -p /root/.aws /root/.ssh /config && \
 RUN : "Install firecracker specific binaries"
      && arch="$(uname -m)" \
-     && firecracker_ver="v1.1.1" \
+     && firecracker_ver="v1.1.4" \
      && release_url="https://github.com/firecracker-microvm/firecracker/releases" \
      && echo ${release_url}/download/${firecracker_ver}/firecracker-${firecracker_ver}-${arch}.tgz \
      && wget ${release_url}/download/${firecracker_ver}/firecracker-${firecracker_ver}-${arch}.tgz \
