@@ -2,6 +2,7 @@ ARG VERSION
 FROM gardenlinux/base-test:${VERSION}
 ENV SHELL /bin/bash
 COPY checksums.sha256 /gardenlinux/tests/checksums.sha256
+COPY cloud.google.gpg /usr/share/keyrings/cloud.google.gpg
 
 RUN : "Eval hardware architecture" \
      && arch="$(uname -m)" \
@@ -12,11 +13,10 @@ RUN : "Install AWS requirements" \
      && pip install awscliv2 \
      && awsv2 --install
 RUN : "Install GCP requirements" \
-     && curl -sL -o /usr/share/keyrings/cloud.google.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg \
      && echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
      && apt-get update \
-     && apt-get install -y google-cloud-sdk && \
-RUN : "Azure and OpenStack cli already installed in gardenlinux/base-test image"
+     && apt-get install -y google-cloud-sdk
+RUN : "Azure and OpenStack cli already installed in gardenlinux/base-test image" \
     : "Install AliCloud specific requirements" \
      && aliyun_ver="3.0.94" \
      && ossutil_ver="1.7.6" \
