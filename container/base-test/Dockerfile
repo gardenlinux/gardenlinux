@@ -24,6 +24,7 @@ RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc
           gnupg \
           python3-pip \
           python3-pytest \
+          python3-venv \
           vim \
           procps \
           openssh-client \
@@ -36,11 +37,17 @@ RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc
           qemu-efi-aarch64 \
           shellcheck \
           build-essential \
-          libpython3-dev
+          libpython3-dev \
+          onmetal-image
+
+# Prepare virtual environment
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # pipenv package was removed from bookworm https://tracker.debian.org/pkg/pipenv
 RUN pip install pipenv==2022.4.8
 COPY _pipfiles /_pipfiles
-RUN cd /_pipfiles && pipenv --python 3.11 install --system --skip-lock --dev && cd / && rm -rf /_pipfiles
+RUN cd /_pipfiles && pipenv install --system --skip-lock --dev && cd / && rm -rf /_pipfiles
 
 WORKDIR /gardenlinux/tests
