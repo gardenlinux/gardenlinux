@@ -401,6 +401,9 @@ class AWS:
                     "Condition": {
                         "Bool": {
                             "aws:SecureTransport": "false"
+                        },
+                        "NumericLessThan": {
+                            "s3:TlsVersion": '1.2'
                         }
                     }
                 },
