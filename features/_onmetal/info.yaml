@@ -1,0 +1,8 @@
+description: "onmetal specific modifications"
+type: flag 
+features:
+  include: 
+    - gardener
+  exclude:
+    - firewall
+    - log

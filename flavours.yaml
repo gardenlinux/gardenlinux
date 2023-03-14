@@ -17,6 +17,7 @@ targets:
       - _secureboot
       - _secureboot,_readonly
       - _secureboot,_readonly,_persistence
+      - _onmetal
   - name: metal
     modifiers:
       - _secureboot
