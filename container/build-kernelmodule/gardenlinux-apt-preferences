@@ -1,0 +1,15 @@
+Package: *
+Pin: release o=GardenLinux
+Pin-Priority: 1000
+
+Package: linux-*
+Pin: release o=bookworm
+Pin-Priority: -1
+
+Package: linux-*
+Pin: release o=sid
+Pin-Priority: -1
+
+Package: linux-*
+Pin: release o=experimental
+Pin-Priority: -1
