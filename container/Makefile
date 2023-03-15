@@ -60,7 +60,16 @@ build-integration-test: build-base-test
 .PHONY: build-kernelmodule
 build-kernelmodule:
 	cp -p ../gardenlinux.asc build-kernelmodule/gardenlinux.asc
-	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/build-kernelmodule:$(VERSION) build-kernelmodule
+	@$(GARDENLINUX_BUILD_CRE) build \
+			--build-arg VERSION=$(VERSION) \
+			--build-arg ARCH="arm64" \
+			--build-arg GNU_TYPE_PACKAGE="aarch64-linux-gnu"\
+			-t gardenlinux/build-kernelmodule-arm64:$(VERSION) build-kernelmodule
+	@$(GARDENLINUX_BUILD_CRE) build \
+			--build-arg VERSION=$(VERSION) \
+			--build-arg ARCH="amd64" \
+			--build-arg GNU_TYPE_PACKAGE="x86-64-linux-gnu" \
+			-t gardenlinux/build-kernelmodule-amd64:$(VERSION) build-kernelmodule
 	rm build-kernelmodule/gardenlinux.asc
 
 .PHONY: clean
