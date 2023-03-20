@@ -112,6 +112,9 @@ By default, Garden Linux uses [Podman](https://podman.io/) as container runtime 
 > # Install needed packages
 > brew install coreutils bash gnu-getopt gnu-sed gawk podman socat
 >
+> # Install Python dependencies via pip
+> pip3 install -r requirements.txt
+>
 > # Change to bash (Default: ZSH)
 > bash
 >
