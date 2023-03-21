@@ -2,9 +2,6 @@
 
 # Generate Release Notes for a Garden Linux Release
 #
-# Example Usage:
-#    ./<this script name>.py --version 934.6 --commitish 76ea662
-#
 
 import click
 import os
@@ -149,8 +146,7 @@ def _parse_match_section(pkg_list: list):
 def generate_package_update_section(version):
     repo_definition_url =\
     f"https://gitlab.com/gardenlinux/gardenlinux-package-build/-/raw/main/packages/{version}.yaml"
-    # test data with security note annotations:
-    # "https://gitlab.com/gardenlinux/gardenlinux-package-build/-/raw/96f717072edf0c454e588e8bafa8d4419807a412/packages/934.6.yaml"
+
     output = ""
     with urllib.request.urlopen(repo_definition_url) as f:
         data = yaml.load(f.read().decode('utf-8'), Loader=SafeLoader)
@@ -178,8 +174,8 @@ def cli():
     pass #Entry Point
 
 
-@cli.command()
-@click.option('--version', required=True)
+@cli.command(help='Only generates Package Updates Section')
+@click.option('--version', required=True, help='Target Garden Linux Version')
 def generate_package_notes(version):
     output = "## Package Updates\n"
     output += generate_package_update_section(version)
@@ -187,9 +183,9 @@ def generate_package_notes(version):
     print(output)
 
 
-@cli.command()
-@click.option('--version', required=True)
-@click.option('--commitish', required=True)
+@cli.command(help='Only generates publishing info section')
+@click.option('--version', required=True, help='Target Garden Linux Version')
+@click.option('--commitish', required=False, help='commitish used by publishing pipeline. required to download respective manifests')
 def generate_publish_notes(version, commitish):
     output = "## Public cloud images\n"
     output += generate_publish_release_note_section(version, commitish)
@@ -197,9 +193,9 @@ def generate_publish_notes(version, commitish):
     print(output)
 
 
-@cli.command()
-@click.option('--version', required=True)
-@click.option('--commitish', required=False)
+@cli.command(help='Generates full release notes')
+@click.option('--version', required=True, help='Target Garden Linux Version')
+@click.option('--commitish', required=False, help='commitish used by publishing pipeline. required to download respective manifests')
 def generate(version, commitish):
 
     output = "## Package Updates\n"
