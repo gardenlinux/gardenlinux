@@ -1,0 +1,18 @@
+#
+# Log anything besides private authentication messages to a single log file
+#
+*.*;auth,authpriv.none		-/var/log/syslog
+
+#
+# Log commonly used facilities to their own log file
+#
+auth,authpriv.*			/var/log/auth.log
+cron.*				-/var/log/cron.log
+kern.*				-/var/log/kern.log
+mail.*				-/var/log/mail.log
+user.*				-/var/log/user.log
+
+#
+# Emergencies are sent to everybody logged in.
+#
+*.emerg				:omusrmsg:*
