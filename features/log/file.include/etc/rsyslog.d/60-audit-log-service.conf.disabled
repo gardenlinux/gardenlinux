@@ -1,0 +1,9 @@
+$ModLoad omrelp
+*.* action(type="omrelp" target="<RSYSLOG_HOST>" port="10515" timeout="90" Template="SyslogForwarderTemplate"
+rebindInterval="1000"
+tls="on"
+tls.caCert="<PATH_TO_SERVER_CA>"
+tls.myCert="<PATH_TO_CLIENT_CRT>"
+tls.myPrivKey="<PATH_TOCLIENT_KEY>"
+tls.authmode="name"
+tls.permittedpeer=["auditlog-rsyslog-server"])

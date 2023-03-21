@@ -4,6 +4,8 @@ features:
   include:
     - base
     - ssh
+    - sap
+    - log
     - _selinux
 tar:
   include-dev: true
