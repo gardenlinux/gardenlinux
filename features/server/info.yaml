@@ -3,5 +3,7 @@ type: element
 features:
   include:
     - base
+    - sap
+    - log
 tar:
   include-dev: true
