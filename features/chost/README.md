@@ -10,6 +10,12 @@ The `chost` feature adjusts Garden Linux to support running container and Kubern
 ### Unit testing
 To be fully complaint these unit tests validate the extended capabilities on `ping` and `gstreamer`, the installed packages, correctly defined suids and sgids as well as the systemd unit files.
 
+TODO
+cosign
+nerdctl
+bypass4netns
+buildkit
+
 ### Meta
 |||
 |---|---|
