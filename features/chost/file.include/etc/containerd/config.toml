@@ -1,0 +1,10 @@
+version = 2
+
+[plugins."io.containerd.grpc.v1.cri".cni]
+  bin_dir = "/var/lib/containerd/io.containerd.grpc.v1.cri.cni"
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+  runtime_type = "io.containerd.runc.v2"
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+  SystemdCgroup = true
+[plugins."io.containerd.internal.v1.opt"]
+  path = "/var/lib/containerd/io.containerd.internal.v1.opt"

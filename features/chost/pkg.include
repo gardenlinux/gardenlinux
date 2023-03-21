@@ -1,3 +1,5 @@
 apparmor
 containerd
 ethtool
+rootlesskit
+dbus-user-session
