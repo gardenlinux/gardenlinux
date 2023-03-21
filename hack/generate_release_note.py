@@ -172,8 +172,32 @@ def generate_package_update_section(version):
                     output += _parse_match_section(s['matchBinaries'])
     return output
 
+@click.group()
+@click.version_option()
+def cli():
+    pass #Entry Point
 
-@click.command()
+
+@cli.command()
+@click.option('--version', required=True)
+def generate_package_notes(version):
+    output = "## Package Updates\n"
+    output += generate_package_update_section(version)
+    output += "\n"
+    print(output)
+
+
+@cli.command()
+@click.option('--version', required=True)
+@click.option('--commitish', required=True)
+def generate_publish_notes(version, commitish):
+    output = "## Public cloud images\n"
+    output += generate_publish_release_note_section(version, commitish)
+    output += "\n"
+    print(output)
+
+
+@cli.command()
 @click.option('--version', required=True)
 @click.option('--commitish', required=False)
 def generate(version, commitish):
@@ -188,4 +212,4 @@ def generate(version, commitish):
 
 
 if __name__ == '__main__':
-    generate()
+    cli()
