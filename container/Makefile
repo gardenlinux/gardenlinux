@@ -58,13 +58,19 @@ build-integration-test: build-base-test
 	rm integration-test/cloud.google.gpg
 
 .PHONY: build-kernelmodule
-build-kernelmodule: build
-	rm -rf build-kernelmodule/packages
-	mkdir -p build-kernelmodule/packages/
-	cp ../.packages/main/l/linux/linux-kbuild*$(KERNEL_VERSION)*.deb build-kernelmodule/packages/ || (echo "Error: Build Kernel packages first." && exit 1)
-	cp ../.packages/main/l/linux/linux-compiler-gcc*$(KERNEL_VERSION)*.deb build-kernelmodule/packages/ || (echo "Error: Build Kernel packages first." && exit 1)
-	cp ../.packages/main/l/linux/linux-headers*$(KERNEL_VERSION)*.deb build-kernelmodule/packages/ || (echo "Error: Build Kernel packages first." && exit 1)
-	@$(GARDENLINUX_BUILD_CRE) build -t gardenlinux/build-kernelmodule:$(KERNEL_VERSION) build-kernelmodule
+build-kernelmodule:
+	cp -p ../gardenlinux.asc build-kernelmodule/gardenlinux.asc
+	@$(GARDENLINUX_BUILD_CRE) build \
+			--build-arg VERSION=$(VERSION) \
+			--build-arg ARCH="arm64" \
+			--build-arg GNU_TYPE_PACKAGE="aarch64-linux-gnu"\
+			-t gardenlinux/build-kernelmodule-arm64:$(VERSION) build-kernelmodule
+	@$(GARDENLINUX_BUILD_CRE) build \
+			--build-arg VERSION=$(VERSION) \
+			--build-arg ARCH="amd64" \
+			--build-arg GNU_TYPE_PACKAGE="x86-64-linux-gnu" \
+			-t gardenlinux/build-kernelmodule-amd64:$(VERSION) build-kernelmodule
+	rm build-kernelmodule/gardenlinux.asc
 
 .PHONY: clean
 clean:
