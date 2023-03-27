@@ -79,13 +79,16 @@ jobs:
         run: |
           bin/garden-version "${{ inputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
+        shell: bash
       - name: get cname
         run: |
           cname="$(bin/garden-feat --features ${{ matrix.target }}${{ matrix.modifier }}${{ matrix.additional_modifer }})"
           artifact_name="$cname-${{ matrix.architecture }}-${{ inputs.version }}-$(git rev-parse --short HEAD)"
           printf 'cname=%s\nartifact_name=%s\n' "$cname" "$artifact_name" | tee -a "$GITHUB_ENV"
+        shell: bash
       - uses: actions/download-artifact@v3
         with:
           name: tests-${{ env.artifact_name }}
       - name: upload to S3 bucket ${{ secrets.bucket }}
         run: aws s3 cp "${{ env.artifact_name }}.integration-tests-log" "s3://${{ secrets.bucket }}/objects/${{ env.artifact_name }}/"
+        shell: bash
