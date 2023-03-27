@@ -47,11 +47,18 @@ azure:
 EOF
 
 echo "### Start Integration Tests for Azure"
-sudo podman run -it --rm -v "${AZURE_CONFIG_DIR}:/root/.azure" -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" $containerName /bin/bash -s <<EOF
+sudo podman run -it --rm -v "${AZURE_CONFIG_DIR}:/root/.azure" -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" $containerName /bin/bash -s << _EOF
 mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/
 cd /gardenlinux/tests
 
-pytest --iaas=azure --configfile=/gardenlinux/$configFile --junit-xml=/gardenlinux/test-$prefix-azure.xml || exit 1
-exit 0
-EOF
+pytest --iaas=azure --configfile=/gardenlinux/$configFile --junit-xml=/gardenlinux/test-$prefix-azure.xml
+
+pytest_rc=\$?
+echo PyTest exited with rc=\$pytest_rc
+exit \$pytest_rc
+_EOF
+
+container_rc=$?
+echo "Test container exited with rc=$container_rc"
+exit $container_rc

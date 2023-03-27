@@ -67,10 +67,18 @@ EOF
 
 echo "### Start Integration Tests for AWS"
 env_list="$(env | cut -d = -f 1 | grep '^AWS_' | tr '\n' ',' | sed 's/,$//')"
-sudo --preserve-env="$env_list" podman run -it --rm -e 'AWS_*' -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" $containerName /bin/bash -s << EOF
+sudo --preserve-env="$env_list" podman run -it --rm -e 'AWS_*' -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" $containerName /bin/bash -s << _EOF
 mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/
 cd /gardenlinux/tests
-pytest --iaas=aws --configfile=/gardenlinux/$configFile --junit-xml=/gardenlinux/test-$prefix-aws.xml || exit 1
-exit 0
-EOF
+
+pytest --iaas=aws --configfile=/gardenlinux/$configFile --junit-xml=/gardenlinux/test-$prefix-aws.xml
+
+pytest_rc=\$?
+echo PyTest exited with rc=\$pytest_rc
+exit \$pytest_rc
+_EOF
+
+container_rc=$?
+echo "Test container exited with rc=$container_rc"
+exit $container_rc
