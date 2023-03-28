@@ -44,11 +44,19 @@ EOF
 credFileName=$(find "$(pwd)" -maxdepth 1 -type f -name "gha-creds-*.json" | xargs basename)
 
 echo "### Start Integration Tests for gcp"
-sudo podman run -it --rm  -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" $containerName /bin/bash -s <<EOF
+sudo podman run -it --rm  -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" $containerName /bin/bash -s << _EOF
 mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/
 cd /gardenlinux/tests
 export GOOGLE_APPLICATION_CREDENTIALS="/gardenlinux/$credFileName"
-pytest --iaas=gcp --configfile=/gardenlinux/$configFile --junit-xml=/gardenlinux/test-$prefix-gcp.xml || exit 1
-exit 0
-EOF
+
+pytest --iaas=gcp --configfile=/gardenlinux/$configFile --junit-xml=/gardenlinux/test-$prefix-gcp.xml
+
+pytest_rc=\$?
+echo PyTest exited with rc=\$pytest_rc
+exit \$pytest_rc
+_EOF
+
+container_rc=$?
+echo "Test container exited with rc=$container_rc"
+exit $container_rc
