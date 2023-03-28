@@ -106,9 +106,10 @@ jobs:
 
     - name: start platform test for ${{ matrix.target }}
       run: |
-        name="${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-$(bin/garden-version)-$(git rev-parse --short HEAD)"
+        set -o pipefail && name="${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-$(bin/garden-version)-$(git rev-parse --short HEAD)"
         .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.architecture }}" "${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.tar.gz" 2>&1 | tee "$name.integration-tests-log"
-
+      shell: bash
+      
     - uses: actions/upload-artifact@v2
       with:
         name: test-log-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
