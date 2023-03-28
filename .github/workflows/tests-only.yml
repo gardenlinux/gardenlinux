@@ -78,8 +78,8 @@ jobs:
         printf 'artifact_name=%s\n' "$artifact_name" | tee -a "$GITHUB_ENV"
       shell: bash
 
-    - name: download artifact to test from S3 bucket ${{ secrets.bucket }}
-      run: aws s3 cp "s3://${{ secrets.bucket }}/objects/" . --exclude "*" --include "${{ env.artifact_name }}*" 
+    - name: download artifact to test from S3 bucket ${{ secrets.AWS_S3_BUCKET }}
+      run: aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/" . --exclude "*" --include "${{ env.artifact_name }}*" 
       shell: bash
 
     - if: ${{ matrix.target }} == 'gcp'
