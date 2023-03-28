@@ -56,11 +56,6 @@ jobs:
       run: echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u $ --password-stdin
       shell: bash
 
-    - name: pull container image
-      run: |
-        sudo podman pull "ghcr.io/gardenlinux/gardenlinux/integration-test:${{ inputs.commitish }}"
-        sudo podman tag "ghcr.io/gardenlinux/gardenlinux/integration-test:${{ inputs.commitish }}" ghcr.io/gardenlinux/gardenlinux/integration-test:today
-      shell: bash
 
     - name: set VERSION=${{ inputs.version }}
       run: |
@@ -116,6 +111,12 @@ jobs:
         client-id: ${{ secrets.az_client_id }}
         tenant-id: ${{ secrets.az_tenant_id }}
         subscription-id: ${{ secrets.az_subscription_id }}
+
+    - name: pull container image
+      run: |
+        sudo podman pull "ghcr.io/gardenlinux/gardenlinux/integration-test:${{ inputs.commitish }}"
+        sudo podman tag "ghcr.io/gardenlinux/gardenlinux/integration-test:${{ inputs.commitish }}" ghcr.io/gardenlinux/gardenlinux/integration-test:today
+      shell: bash
 
     - name: start platform test for ${{ matrix.target }}
       run: |
