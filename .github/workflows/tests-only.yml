@@ -8,9 +8,9 @@ on:
         type: string
         default: today
       default_modifier:
-        description: "gardenlinux feature modifier, usually empty, but must be provided if it was specified in original build"
+        description: "gardenlinux feature modifier, if other than default, make sure it has the right format. e.g. use bin/garden-feature --features"
         type: string
-        default: ",gardener,_prod"
+        default: "-gardener_prod"
       commitish:
         description: "Full commitish of the artifact that should be tested. Must be present in s3"
         type: string
@@ -52,8 +52,6 @@ jobs:
             target: azure
     steps:
     - uses: actions/checkout@v3
-      with:
-        ref: ${{ inputs.commitish }}
 
     - name: login to ghcr.io
       run: echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u $ --password-stdin
@@ -74,7 +72,7 @@ jobs:
     - name: get artifact_name
       run: |
         cname="${{ matrix.target }}${{ matrix.modifier }}"
-        artifact_name="$cname-${{ matrix.architecture }}-${{ inputs.version }}-$(git rev-parse --short HEAD)"
+        artifact_name="$cname-${{ matrix.architecture }}-${{ inputs.version }}-$(git rev-parse --short ${{ inputs.commitish }})"
         printf 'artifact_name=%s\n' "$artifact_name" | tee -a "$GITHUB_ENV"
       shell: bash
 
