@@ -72,9 +72,8 @@ jobs:
 
     - name: get artifact_name
       run: |
-        cname="$(bin/garden-feat --features ${{ matrix.target }}${{ matrix.modifier }}${{ matrix.additional_modifer }})"
         artifact_name="$cname-${{ matrix.architecture }}-${{ inputs.version }}-$(git rev-parse --short HEAD)"
-        printf 'cname=%s\nartifact_name=%s\n' "$cname" "$artifact_name" | tee -a "$GITHUB_ENV"
+        printf 'artifact_name=%s\n' "$artifact_name" | tee -a "$GITHUB_ENV"
       shell: bash
 
     - name: download artifact to test from S3 bucket ${{ secrets.bucket }}
