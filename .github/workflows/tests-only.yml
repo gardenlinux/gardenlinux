@@ -12,9 +12,10 @@ on:
         type: string
         default: ""
       commitish:
-        description: "Commitish of the artifact that should be tested. Must be present in s3"
+        description: "Full commitish of the artifact that should be tested. Must be present in s3"
         type: string
         required: true
+
 jobs:
   platform_tests:
     name: platform test
@@ -69,11 +70,10 @@ jobs:
         git update-index --assume-unchanged VERSION
       shell: bash
 
-    - name: get cname
+    - name: get artifact_name
       run: |
-        cname="$(bin/garden-feat --features ${{ matrix.target }}${{ matrix.modifier }}${{ matrix.additional_modifer }})"
-        artifact_name="$cname-${{ matrix.architecture }}-${{ inputs.version }}-${{ inputs.commitish }}"
-        printf 'cname=%s\nartifact_name=%s\n' "$cname" "$artifact_name" | tee -a "$GITHUB_ENV"
+        artifact_name="$cname-${{ matrix.architecture }}-${{ inputs.version }}-$(git rev-parse --short HEAD)"
+        printf 'artifact_name=%s\n' "$artifact_name" | tee -a "$GITHUB_ENV"
       shell: bash
 
     - name: download artifact to test from S3 bucket ${{ secrets.bucket }}
@@ -110,8 +110,3 @@ jobs:
       run: |
         set -o pipefail && .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.architecture }}" "${{ env.artifact_name }}.tar.gz" 2>&1 | tee "${{ env.artifact_name }}.integration-tests-log"
       shell: bash
-
-    # - uses: actions/upload-artifact@v3
-    #   with:
-    #     name: tests-${{ env.artifact_name }}
-    #     path: ${{ env.artifact_name }}.integration-tests-log
