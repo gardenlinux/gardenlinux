@@ -52,8 +52,12 @@ jobs:
         aws-region: ${{ secrets.AWS_REGION }}
 
     - name: download artifact to test from S3 bucket
-      run: aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/" . --exclude "*" --include "${{ env.artifact_name }}*" 
+      run: aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/${{ env.artifact_name }}" . 
       shell: bash
+
+    - name: pack build artifacts for upload
+      run: |
+        tar -czvf "${{ env.artifact_name }}.tar.gz" "${{ env.artifact_name }}"
 
     - uses: actions/upload-artifact@v3
       with:
