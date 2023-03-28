@@ -17,10 +17,11 @@ on:
         required: true
 
 jobs:
-  download_artifacts:
-    name: download artifacts from s3
+  platform_tests:
+    name: platform test
+    env:
+      AZURE_CONFIG_DIR: /tmp/azure_config_dir
     runs-on: ec2-gardenlinux-amd64
-    environment: oidc_aws_s3_upload
     permissions:
       id-token: write
       packages: write
@@ -37,6 +38,17 @@ jobs:
             target: azure
     steps:
     - uses: actions/checkout@v3
+
+    - name: login to ghcr.io
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u $ --password-stdin
+      shell: bash
+
+
+    - name: set VERSION=${{ inputs.version }}
+      run: |
+        bin/garden-version "${{ inputs.version }}" | tee VERSION
+        git update-index --assume-unchanged VERSION
+      shell: bash
 
     - name: get artifact_name
       run: |
@@ -57,104 +69,41 @@ jobs:
         aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/${{ env.artifact_name }}" "${{ env.artifact_name }}"  --recursive
       shell: bash
 
-    - name: pack build artifacts for upload
+    - name: pack build artifacts for tests
       run: |
         tar -czvf "${{ env.artifact_name }}.tar.gz" "${{ env.artifact_name }}"
-
-    - uses: actions/upload-artifact@v3
-      with:
-        name: "build-${{ env.artifact_name }}"
-        path: "${{ env.artifact_name }}.tar.gz"
-
-  platform_tests:
-    needs: download_artifacts
-    name: platform test
-    env:
-      gcp_project: ${{ secrets.gcp_project }}
-      gcp_region: ${{ secrets.gcp_region }}
-      gcp_zone: ${{ secrets.gcp_zone }}
-      aws_region: ${{ secrets.aws_region }}
-      azure_subscription_id: ${{ secrets.az_subscription_id }}
-      AZURE_CONFIG_DIR: /tmp/azure_config_dir
-      gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-      gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-      aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
-      aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
-      az_client_id: ${{ secrets.AZURE_CLIENT_ID }}
-      az_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
-      az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-    runs-on: ec2-gardenlinux-amd64
-    permissions:
-      id-token: write
-      packages: write
-    environment: oidc_platform_tests
-    strategy:
-      fail-fast: false
-      matrix:
-        architecture: [ amd64, arm64 ]
-        target: [ gcp, aws, azure ]
-        modifier: [ "${{ inputs.default_modifier }}" ]
-        exclude:
-          - architecture: arm64
-            target: gcp
-          - architecture: arm64
-            target: azure
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: login to ghcr.io
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u $ --password-stdin
-      shell: bash
-
-    - name: pull container image
-      run: |
-        sudo podman pull "ghcr.io/gardenlinux/gardenlinux/integration-test:${{ inputs.commitish }}"
-        sudo podman tag "ghcr.io/gardenlinux/gardenlinux/integration-test:${{ inputs.commitish }}" ghcr.io/gardenlinux/gardenlinux/integration-test:today
-      shell: bash
-
-    - name: set VERSION=${{ inputs.version }}
-      run: |
-        bin/garden-version "${{ inputs.version }}" | tee VERSION
-        git update-index --assume-unchanged VERSION
-      shell: bash
-
-    - name: get artifact_name
-      run: |
-        cname="${{ matrix.target }}${{ matrix.modifier }}"
-        artifact_name="$cname-${{ matrix.architecture }}-${{ inputs.version }}-$(git rev-parse --short ${{ inputs.commitish }})"
-        printf 'artifact_name=%s\n' "$artifact_name" | tee -a "$GITHUB_ENV"
-      shell: bash
-
-    - uses: actions/download-artifact@v3
-      with:
-        name: build-${{ env.artifact_name }}
-        path: /tmp/gardenlinux-build-artifacts
 
     - if: ${{ matrix.target }} == 'gcp'
       id: 'auth_gcp'
       name: 'Authenticate to Google Cloud'
       uses: google-github-actions/auth@v1
       with:
-        workload_identity_provider: ${{ secrets.gcp_identity_provider }}
-        service_account: ${{ secrets.gcp_service_account }}
+        workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+        service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
     - if: ${{ matrix.target }} == 'aws'
       id: 'auth_aws'
       name: 'Authenticate to AWS'
       uses: aws-actions/configure-aws-credentials@v1-node16
       with:
-        role-to-assume: ${{ secrets.aws_role }}
-        role-session-name: ${{ secrets.aws_session }}
-        aws-region: ${{ secrets.aws_region }}
+        role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
+        role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
+        aws-region: ${{ secrets.AWS_REGION}}
 
     - if: ${{ matrix.target }} == 'azure'
       id: 'auth_azure'
       name: 'Authenticate to Azure'
       uses: azure/login@v1
       with:
-        client-id: ${{ secrets.az_client_id }}
-        tenant-id: ${{ secrets.az_tenant_id }}
-        subscription-id: ${{ secrets.az_subscription_id }}
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: pull container image
+      run: |
+        sudo podman pull "ghcr.io/gardenlinux/gardenlinux/integration-test:${{ inputs.commitish }}"
+        sudo podman tag "ghcr.io/gardenlinux/gardenlinux/integration-test:${{ inputs.commitish }}" ghcr.io/gardenlinux/gardenlinux/integration-test:today
+      shell: bash
 
     - name: start platform test for ${{ matrix.target }}
       run: |
