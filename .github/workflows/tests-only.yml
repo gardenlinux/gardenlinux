@@ -18,7 +18,6 @@ on:
 
 jobs:
   platform_tests:
-    needs: download_artifacts
     name: platform test
     env:
       gcp_project: ${{ secrets.gcp_project }}
