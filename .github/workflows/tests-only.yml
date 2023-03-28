@@ -17,10 +17,53 @@ on:
         required: true
 
 jobs:
+  download_artifacts:
+    name: download artifacts from s3
+    runs-on: ec2-gardenlinux-amd64
+    environment: oidc_aws_s3_upload
+    permissions:
+      id-token: write
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [ amd64, arm64 ]
+        target: [ gcp, aws, azure ]
+        modifier: [ "${{ inputs.default_modifier }}" ]
+        exclude:
+          - architecture: arm64
+            target: gcp
+          - architecture: arm64
+            target: azure
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: get artifact_name
+      run: |
+        cname="${{ matrix.target }}${{ matrix.modifier }}"
+        artifact_name="$cname-${{ matrix.architecture }}-${{ inputs.version }}-$(git rev-parse --short ${{ inputs.commitish }})"
+        printf 'artifact_name=%s\n' "$artifact_name" | tee -a "$GITHUB_ENV"
+      shell: bash
+
+    - uses: aws-actions/configure-aws-credentials@v1-node16
+      with:
+        role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+        role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: download artifact to test from S3 bucket
+      run: aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/" . --exclude "*" --include "${{ env.artifact_name }}*" 
+      shell: bash
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: "build-${{ env.artifact_name }}"
+        path: "${{ env.artifact_name }}.tar.gz"
+
   platform_tests:
+    needs: download_artifacts
     name: platform test
     env:
-      bucket: '${{ secrets.AWS_S3_BUCKET }}'
       gcp_project: ${{ secrets.gcp_project }}
       gcp_region: ${{ secrets.gcp_region }}
       gcp_zone: ${{ secrets.gcp_zone }}
@@ -76,15 +119,10 @@ jobs:
         printf 'artifact_name=%s\n' "$artifact_name" | tee -a "$GITHUB_ENV"
       shell: bash
 
-    - uses: aws-actions/configure-aws-credentials@v1-node16
+    - uses: actions/download-artifact@v3
       with:
-        role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-        role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
-        aws-region: ${{ secrets.AWS_REGION }}
-
-    - name: download artifact to test from S3 bucket
-      run: aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/" . --exclude "*" --include "${{ env.artifact_name }}*" 
-      shell: bash
+        name: build-${{ env.artifact_name }}
+        path: /tmp/gardenlinux-build-artifacts
 
     - if: ${{ matrix.target }} == 'gcp'
       id: 'auth_gcp'
