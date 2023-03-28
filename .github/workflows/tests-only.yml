@@ -71,7 +71,8 @@ jobs:
 
     - name: pack build artifacts for tests
       run: |
-        tar -czvf "${{ env.artifact_name }}.tar.gz" "${{ env.artifact_name }}"
+        mkdir -p /tmp/gardenlinux-build-artifacts
+        tar -czvf "/tmp/gardenlinux-build-artifacts/${{ env.artifact_name }}.tar.gz" "${{ env.artifact_name }}"
 
     - if: ${{ matrix.target }} == 'gcp'
       id: 'auth_gcp'
