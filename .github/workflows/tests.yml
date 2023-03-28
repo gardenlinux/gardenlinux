@@ -62,21 +62,26 @@ jobs:
 
     - name: login to ghcr.io
       run: echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u $ --password-stdin
+      shell: bash
 
     - name: pull container image
       run: |
         sudo podman pull "ghcr.io/gardenlinux/gardenlinux/integration-test:$GITHUB_SHA"
         sudo podman tag "ghcr.io/gardenlinux/gardenlinux/integration-test:$GITHUB_SHA" ghcr.io/gardenlinux/gardenlinux/integration-test:today
+      shell: bash
 
     - name: set VERSION=${{ inputs.version }}
       run: |
         bin/garden-version "${{ inputs.version }}" | tee VERSION
         git update-index --assume-unchanged VERSION
+      shell: bash
+
     - name: get cname
       run: |
         cname="$(bin/garden-feat --features ${{ matrix.target }}${{ matrix.modifier }}${{ matrix.additional_modifer }})"
         artifact_name="$cname-${{ matrix.architecture }}-${{ inputs.version }}-$(git rev-parse --short HEAD)"
         printf 'cname=%s\nartifact_name=%s\n' "$cname" "$artifact_name" | tee -a "$GITHUB_ENV"
+      shell: bash
 
     - uses: actions/download-artifact@v3
       with:
@@ -111,7 +116,8 @@ jobs:
 
     - name: start platform test for ${{ matrix.target }}
       run: |
-        .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.architecture }}" "${{ env.artifact_name }}.tar.gz" 2>&1 | tee "${{ env.artifact_name }}.integration-tests-log"
+        set -o pipefail && .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.architecture }}" "${{ env.artifact_name }}.tar.gz" 2>&1 | tee "${{ env.artifact_name }}.integration-tests-log"
+      shell: bash
 
     - uses: actions/upload-artifact@v3
       with:
