@@ -37,7 +37,7 @@ jobs:
     permissions:
       id-token: write
       packages: write
-    environment: oidc_platform_tests
+    environment: oidc_aws_s3_upload
     strategy:
       fail-fast: false
       matrix:
