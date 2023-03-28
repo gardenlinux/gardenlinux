@@ -20,6 +20,7 @@ jobs:
   platform_tests:
     name: platform test
     env:
+      bucket: ${{ secrets.AWS_S3_BUCKET }}
       gcp_project: ${{ secrets.gcp_project }}
       gcp_region: ${{ secrets.gcp_region }}
       gcp_zone: ${{ secrets.gcp_zone }}
