@@ -25,7 +25,7 @@ jobs:
     name: platform test
     env:
       AZURE_CONFIG_DIR: /tmp/azure_config_dir
-    runs-on: ec2-gardenlinux-amd64
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
       packages: write
