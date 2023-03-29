@@ -32,6 +32,7 @@ class GCP:
 
     @classmethod
     def fixture(cls, credentials, config, imageurl, test_name):
+        GCP.set_config_defaults(config, test_name, credentials)
         GCP.validate_config(config, imageurl, test_name, credentials)
 
         logger.info(f"Setting up testbed for image {imageurl}...")
@@ -50,32 +51,25 @@ class GCP:
             if ssh is not None:
                 ssh.disconnect()
 
-
     @classmethod
-    def validate_config(cls, cfg: dict, image: str, test_name: str, credentials):
-        if not 'project' in cfg:
+    def set_config_defaults(cls, cfg: dict, test_name: str, credentials):
+        if 'project' not in cfg:
             cfg['project'] = credentials.project_id
-        if not 'image_project' in cfg:
+        if 'image_project' not in cfg:
             cfg['image_project'] = cfg['project']
-        if not 'image_region' in cfg:
+        if 'image_region' not in cfg:
             cfg['image_region'] = "eu-central-1"
-        if not 'region' in cfg:
-            pytest.exit("GCP region not specified, cannot continue.", 1)
-        if not 'zone' in cfg:
-            pytest.exit("GCP zone not specified, cannot continue.", 1)
-        if not image and not 'image_name' in cfg and not 'image' in cfg:
-            pytest.exit("Neither 'image' nor 'image_name' specified, cannot continue.", 3)
-        if not 'image_name' in cfg:
+        if 'image_name' not in cfg:
             cfg['image_name'] = f"img-{test_name}"
-        if not 'bucket' in cfg:
+        if 'bucket' not in cfg:
             cfg['bucket'] = f"gl-upload-{test_name}"
-        if not 'keep_running' in cfg:
+        if 'keep_running' not in cfg:
             cfg['keep_running'] = False
-        if not 'machine_type' in cfg:
+        if 'machine_type' not in cfg:
             cfg['machine_type'] = 'n1-standard-2'
-        if not 'ssh' in cfg or not cfg['ssh']:
+        if 'ssh' not in cfg or not cfg['ssh']:
             cfg['ssh'] = {}
-        if not 'ssh_key_filepath' in cfg['ssh']:
+        if 'ssh_key_filepath' not in cfg['ssh']:
             import tempfile
             keyfile = tempfile.NamedTemporaryFile(prefix=f"sshkey-{test_name}-", suffix=".key", delete=False)
             keyfp = RemoteClient.generate_key_pair(
@@ -83,25 +77,33 @@ class GCP:
             )
             logger.info(f"Generated SSH keypair with fingerprint {keyfp}.")
             cfg['ssh']['ssh_key_filepath'] = keyfile.name
-        if not 'ssh_key_name' in cfg['ssh']:
+        if 'ssh_key_name' not in cfg['ssh']:
             cfg['ssh']['ssh_key_name'] = f"key-{test_name}"
-        if not 'user' in cfg['ssh']:
+        if 'user' not in cfg['ssh']:
             cfg['ssh']['user'] = "gardenlinux"
-        if not 'uefi' in cfg:
+        if 'uefi' not in cfg:
             cfg['uefi'] = False
-        if not 'secureboot' in cfg:
+        if 'secureboot' not in cfg:
             cfg['secureboot'] = False
-        if not 'secureboot_parameters' in cfg:
+        if 'secureboot_parameters' not in cfg:
             cfg['secureboot_parameters'] = {}
-        if not 'db_path' in cfg['secureboot_parameters']:
+        if 'db_path' not in cfg['secureboot_parameters']:
             cfg['secureboot_parameters']['db_path'] = "/gardenlinux/cert/secureboot.db.auth"
-        if not 'kek_path' in cfg:
+        if 'kek_path' not in cfg:
             cfg['secureboot_parameters']['kek_path'] = "/gardenlinux/cert/secureboot.kek.auth"
-        if not 'pk_path' in cfg:
+        if 'pk_path' not in cfg:
             cfg['secureboot_parameters']['pk_path'] = "/gardenlinux/cert/secureboot.pk.auth"
-        if not 'cert_file_type' in cfg:
+        if 'cert_file_type' not in cfg:
             cfg['secureboot_parameters']['cert_file_type'] = 'BIN'
 
+    @classmethod
+    def validate_config(cls, cfg: dict, image: str, test_name: str, credentials):
+        if 'region' not in cfg:
+            pytest.exit("GCP region not specified, cannot continue.", 1)
+        if 'zone' not in cfg:
+            pytest.exit("GCP zone not specified, cannot continue.", 1)
+        if not image and 'image_name' not in cfg and 'image' not in cfg:
+            pytest.exit("Neither 'image' nor 'image_name' specified, cannot continue.", 3)
 
     def _gcp_create_bucket(self, bucket_name):
         bucket = self._storage.bucket(bucket_name=bucket_name)
@@ -113,12 +115,10 @@ class GCP:
         bucket.create()
         bucket.make_private()
 
-
     def _gcp_wait_for_operation(self, operation, timeout=120):
         self.logger.info(f"Waiting for {operation.name} to complete...")
         _ = operation.result(timeout=timeout)
         self.logger.info(f"{operation.name} done.")
-
 
     def _gcp_create_firewall_rules(self, fw_rest_body):
         rule_name = fw_rest_body["name"]
@@ -126,7 +126,6 @@ class GCP:
         operation = self._compute_firewalls.insert(project=self.project, firewall_resource=fw_rest_body)
         self._gcp_wait_for_operation(operation)
         return rule_name
-
 
     def _gcp_create_vpc(self):
         network_name = f"vpc-{self.test_name}"
@@ -177,6 +176,7 @@ class GCP:
 
         :param config: configuration
         """
+        GCP.set_config_defaults(config, test_name, credentials)
         self.config = config
         self.ssh_config = config["ssh"]
         self.test_name = test_name
