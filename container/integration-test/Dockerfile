@@ -4,6 +4,10 @@ ENV SHELL /bin/bash
 COPY checksums.sha256 /gardenlinux/tests/checksums.sha256
 COPY cloud.google.gpg /usr/share/keyrings/cloud.google.gpg
 
+#Virtual Env Created in base-test
+ENV VIRTUAL_ENV=/opt/pipfiles/.venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
 RUN : "Install AWS requirements" \
      && pip install awscliv2 \
      && awsv2 --install

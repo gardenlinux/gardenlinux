@@ -41,13 +41,13 @@ RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc
           onmetal-image
 
 # Prepare virtual environment
-ENV VIRTUAL_ENV=/opt/venv
+ENV VIRTUAL_ENV=/opt/pipfiles/.venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # pipenv package was removed from bookworm https://tracker.debian.org/pkg/pipenv
 RUN pip install pipenv==2022.4.8
-COPY _pipfiles /_pipfiles
-RUN cd /_pipfiles && pipenv install --system --skip-lock --dev && cd / && rm -rf /_pipfiles
+COPY _pipfiles /opt/pipfiles
+RUN cd /opt/pipfiles && pipenv install --system --skip-lock --dev && cd / && rm -rf /_pipfiles
 
 WORKDIR /gardenlinux/tests
