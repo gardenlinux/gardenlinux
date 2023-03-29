@@ -25,6 +25,7 @@ RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc
           python3-pip \
           python3-pytest \
           python3-venv \
+          pipenv \
           vim \
           procps \
           openssh-client \
@@ -41,13 +42,14 @@ RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc
           onmetal-image
 
 # Prepare virtual environment
-ENV VIRTUAL_ENV=/opt/venv
+# We need a virtual env to install packages via pip, and not via apt.
+# See: https://peps.python.org/pep-0668/
+ENV VIRTUAL_ENV_PARENT=/opt/python-test-env
+ENV VIRTUAL_ENV="$VIRTUAL_ENV_PARENT/.venv"
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# pipenv package was removed from bookworm https://tracker.debian.org/pkg/pipenv
-RUN pip install pipenv==2022.4.8
-COPY _pipfiles /_pipfiles
-RUN cd /_pipfiles && pipenv install --system --skip-lock --dev && cd / && rm -rf /_pipfiles
-
+COPY Pipfile "$VIRTUAL_ENV_PARENT"
+# Do not use --system, we want the pip from the virtual env
+RUN cd "$VIRTUAL_ENV_PARENT" && pipenv install --dev --skip-lock
 WORKDIR /gardenlinux/tests
