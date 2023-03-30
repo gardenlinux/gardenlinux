@@ -1,4 +1,5 @@
 awscli
+azure-cli
 curl
 git
 gnupg
@@ -6,4 +7,5 @@ jq
 make
 nodejs
 podman
-azure-cli
+python3-networkx
+python3-yaml
