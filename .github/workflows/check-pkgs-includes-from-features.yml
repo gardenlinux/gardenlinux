@@ -1,5 +1,7 @@
 name: Check Package Availability
 on:
+  schedule:
+    - cron: '0 6 * * *'
   workflow_dispatch:
   pull_request:
     branches:
@@ -28,5 +30,5 @@ jobs:
 
       - name: Check for missing packages in repo
         run: |
-          ./bin/check-pkgs-availability.sh $PWD today
+          ./bin/check-pkgs-availability.sh $PWD $(bin/garden-version)
         
