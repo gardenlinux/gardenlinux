@@ -44,14 +44,14 @@ fi
 
 # Note: file is located in github runner within checked out repo.
 #        later, we mount the repo folder to /gardenlinux inside the container.
-if [[ ! ${credentials_file_path:-} ]]; then
+if [[ ! ${gcp_credentials_file_path:-} ]]; then
     echo "credentials_file_path not set by google-github-actions/auth action."
     exit 1
 fi
 
 # google-githun-actions/auth cleans up credential file. We just take the name,
 # to reference it inside the container
-credentials_file_name="$(echo "$credentials_file_path" | xargs basename)"
+credentials_file_name="$(echo "$gcp_credentials_file_path" | xargs basename)"
 
 cat << EOF > "$configFile"
 gcp:
