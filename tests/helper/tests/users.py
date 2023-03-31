@@ -65,7 +65,7 @@ def _has_user_sudo_cmd(client, user):
 
     # This test assumes the executing user has NOPASSWD for sudo cmd
     cmd = "groups | grep -w wheel"
-    out = utils.execute_remote_command(client, cmd)
+    out = utils.execute_remote_command(client, cmd, skip_error=True)
     was_in_wheel = False
     if "wheel" in out:
         was_in_wheel = True
