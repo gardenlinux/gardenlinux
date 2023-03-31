@@ -42,9 +42,17 @@ if [[ ! ${gcp_zone:-} ]]; then
     exit 1
 fi
 
+credFileName=$(find "$(pwd)" -maxdepth 1 -type f -print0 -name "gha-creds-*.json" | xargs basename)
+
+if [[ ! ${credFileName:-} ]]; then
+    echo "No credentials file for gcp found."
+    exit 1
+fi
+
 cat << EOF > "$configFile"
 gcp:
     project: ${gcp_project}
+    service_account_json_path: "/gardenlinux/${credFileName}"
     region: ${gcp_region}
     zone: ${gcp_zone}
     image: file:///artifacts/$(basename "$image_file")
@@ -59,7 +67,6 @@ gcp:
       - _slim
 EOF
 
-credFileName=$(find "$(pwd)" -maxdepth 1 -type f -print0 -name "gha-creds-*.json" | xargs basename)
 
 echo "### Start Integration Tests for gcp"
 sudo podman run -it --rm  -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" -v "$platform_test_log_dir:/platform-test-logs" $containerName /bin/bash -s << EOF
