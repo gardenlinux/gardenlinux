@@ -91,7 +91,7 @@ def _has_user_sudo_cmd(client, user):
             sudo_cmd = output_lines[-1]
 
     # clean up only if we added wheel during this test
-    if was_in_wheel:
+    if not was_in_wheel:
         cmd = "deluser $(whoami) wheel"
         out = utils.execute_remote_command(client, cmd)
 
