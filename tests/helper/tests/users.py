@@ -62,12 +62,17 @@ def users(client, additional_user = "", additional_sudo_users=[]):
 
 def _has_user_sudo_cmd(client, user):
     """ Check if user has any sudo permissions """
+
+    # make sure executing user is in wheel group
+    cmd = "usermod -a -G wheel $(whoami)"
+    out = utils.execute_remote_command(client, cmd)
+
     # Execute command on remote platform
     cmd = f"sudo -l -U {user}"
     out = utils.execute_remote_command(client, cmd)
 
     # Write each line as output in list
-    output_lines = [] 
+    output_lines = []
     for line in out.split("\n"):
        output_lines.append(line)
 
