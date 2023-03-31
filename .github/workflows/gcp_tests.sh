@@ -27,6 +27,21 @@ if [[ ! -e $image_file ]]; then
     exit 1
 fi
 
+if [[ ${gcp_project:-} ]]; then
+    echo "gcp_project variable not set"
+    exit 1
+fi
+
+if [[ ${gcp_region:-} ]]; then
+    echo "gcp_project variable not set"
+    exit 1
+fi
+
+if [[ ${gcp_zone:-} ]]; then
+    echo "gcp_project variable not set"
+    exit 1
+fi
+
 cat << EOF > "$configFile"
 gcp:
     project: ${gcp_project}
@@ -44,7 +59,7 @@ gcp:
       - _slim
 EOF
 
-credFileName=$(find "$(pwd)" -maxdepth 1 -type f -name "gha-creds-*.json" | xargs basename)
+credFileName=$(find "$(pwd)" -maxdepth 1 -type f -print0 -name "gha-creds-*.json" | xargs basename)
 
 echo "### Start Integration Tests for gcp"
 sudo podman run -it --rm  -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" -v "$platform_test_log_dir:/platform-test-logs" $containerName /bin/bash -s << EOF
