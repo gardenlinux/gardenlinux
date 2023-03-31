@@ -42,17 +42,21 @@ if [[ ! ${gcp_zone:-} ]]; then
     exit 1
 fi
 
-credFileName=$(find "$(pwd)" -maxdepth 1 -type f -print0 -name "gha-creds-*.json" | xargs basename)
-
-if [[ ! ${credFileName:-} ]]; then
-    echo "No credentials file for gcp found."
+# Note: file is located in github runner within checked out repo.
+#        later, we mount the repo folder to /gardenlinux inside the container.
+if [[ ! ${credentials_file_path:-} ]]; then
+    echo "credentials_file_path not set by google-github-actions/auth action."
     exit 1
 fi
+
+# google-githun-actions/auth cleans up credential file. We just take the name,
+# to reference it inside the container
+credentials_file_name="$(echo "$credentials_file_path" | xargs basename)"
 
 cat << EOF > "$configFile"
 gcp:
     project: ${gcp_project}
-    service_account_json_path: "/gardenlinux/${credFileName}"
+    service_account_json_path: "/gardenlinux/$credentials_file_name"
     region: ${gcp_region}
     zone: ${gcp_zone}
     image: file:///artifacts/$(basename "$image_file")
@@ -73,7 +77,9 @@ sudo podman run -it --rm  -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):
 mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/
 cd /gardenlinux/tests
-export GOOGLE_APPLICATION_CREDENTIALS="/gardenlinux/$credFileName"
+export GOOGLE_APPLICATION_CREDENTIALS="/gardenlinux/$credentials_file_name"
 pytest --iaas=gcp --configfile=/gardenlinux/$configFile --junit-xml=/platform-test-logs/test-$prefix-gcp_junit.xml || exit 1
 exit 0
 EOF
+
+
