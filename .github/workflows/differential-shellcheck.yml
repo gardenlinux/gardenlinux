@@ -1,5 +1,9 @@
 name: Differential ShellCheck
 on:
+  push:
+    branches:
+    - main
+    - rel-*
   pull_request:
     branches:
     - main
