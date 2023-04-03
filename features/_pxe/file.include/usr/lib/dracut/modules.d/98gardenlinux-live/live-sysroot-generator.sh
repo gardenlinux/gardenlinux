@@ -6,6 +6,7 @@ set -e
 
 GENERATOR_DIR=$1
 
+getarg gl.ovl= > /dev/null || exit 0
 ovlconf=$(getarg gl.ovl=)
 ovlconf=${ovlconf#gl.ovl=}
 

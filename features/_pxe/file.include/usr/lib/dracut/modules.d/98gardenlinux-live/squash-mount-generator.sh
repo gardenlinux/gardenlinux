@@ -12,6 +12,7 @@ if [ ! -e /run/root.squashfs ]; then
 	if [ -e /root.squashfs ]; then
 		mv /root.squashfs /run/root.squashfs
 	else
+		getarg gl.url= > /dev/null || exit 0
 		cat >"${GENERATOR_DIR}/live-get-squashfs.service" <<-EOF
 		[Unit]
 		Description=Download squashfs image
