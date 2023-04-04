@@ -88,7 +88,7 @@ jobs:
         name: build-${{ env.artifact_name }}
         path: /tmp/gardenlinux-build-artifacts
 
-    - if: ${{ matrix.target }} == 'gcp'
+    - if: ${{ matrix.target == 'gcp' }}
       id: 'auth_gcp'
       name: 'Authenticate to Google Cloud'
       uses: google-github-actions/auth@v1
@@ -99,7 +99,7 @@ jobs:
         cleanup_credentials: true
         export_environment_variables: true
 
-    - if: ${{ matrix.target }} == 'aws'
+    - if: ${{ matrix.target == 'aws' }}
       id: 'auth_aws'
       name: 'Authenticate to AWS'
       uses: aws-actions/configure-aws-credentials@v1-node16
@@ -108,7 +108,7 @@ jobs:
         role-session-name: ${{ secrets.aws_session }}
         aws-region: ${{ secrets.aws_region }}
 
-    - if: ${{ matrix.target }} == 'azure'
+    - if: ${{ matrix.target == 'azure' }}
       id: 'auth_azure'
       name: 'Authenticate to Azure'
       uses: azure/login@v1
