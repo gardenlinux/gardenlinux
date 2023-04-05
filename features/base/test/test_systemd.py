@@ -19,8 +19,7 @@ def test_systemctl_no_failed_units(client, non_chroot, non_kvm):
             print(f"journalctl failed to receive logs for unit {unit}. exited with {log_exit_code}")
             print(log_error)
 
-    assert failed_units == 0, f"systemd units {', '.join(failed_units)} failed"
-    assert len(json.loads(output)) == 0
+    assert len(failed_units) == 0, f"systemd units {', '.join(failed_units)} failed"
 
 
 def test_systemctl_no_failed_units_kvm(client, kvm):
@@ -40,4 +39,4 @@ def test_systemctl_no_failed_units_kvm(client, kvm):
             print(f"journalctl failed to receive logs for unit {unit}. exited with {log_exit_code}")
             print(log_error)
 
-    assert failed_units == 0, f"systemd units {', '.join(failed_units)} failed"
+    assert len(failed_units) == 0, f"systemd units {', '.join(failed_units)} failed"
