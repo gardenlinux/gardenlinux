@@ -64,7 +64,7 @@ def _has_user_sudo_cmd(client, user):
     """ Check if user has any sudo permissions """
 
     # Execute command on remote platform
-    cmd = f"sudo -l -U {user}"
+    cmd = f"sudo -s sudo -l -U {user}"
     out = utils.execute_remote_command(client, cmd)
 
     # Write each line as output in list
