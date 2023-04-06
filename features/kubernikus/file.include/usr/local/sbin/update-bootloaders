@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -e
+
+update-kernel-cmdline
+update-syslinux
+for kernel in /boot/vmlinuz-*; do
+   kernel-install add "${kernel#*-}" "${kernel}"
+done

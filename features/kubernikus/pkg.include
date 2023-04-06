@@ -1,0 +1,14 @@
+cloud-init
+open-vm-tools
+containerd
+docker.io
+ethtool
+socat
+curl
+logrotate
+jq
+nfs-common
+netcat-openbsd
+ebtables
+arptables
+vim

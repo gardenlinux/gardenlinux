@@ -1,0 +1,16 @@
+description: "OpenStack platform (ignition, cloud-init, open-vm-tools)"
+type: platform
+features:
+  include: 
+    - cloud
+    - _ignite
+    - sssd
+  exclude:
+    - firewall
+convert:
+  format: 
+    - type: vmdk
+upload:
+  target:
+    - type: openstack
+      image-name: $(OPENSTACK_IMAGE_NAME)

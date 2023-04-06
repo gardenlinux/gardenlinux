@@ -1,0 +1,34 @@
+# This file can is used to configure base path aliases as in:
+#
+# /aliased_path /original_path_as_configured_in_file_contexts
+#
+# where original_path_as_configured_in_file_contexts is a base
+# path being used in the main file_contexts configuration file.
+#
+# It does not perform substitutions as done by sed(1), for
+# example, but aliasing.
+#
+/bin /usr/bin
+/lib /usr/lib
+/lib32 /usr/lib
+/lib64 /usr/lib
+/libx32 /usr/lib
+/sbin /usr/sbin
+/etc/init.d /etc/rc.d/init.d
+/lib/systemd /usr/lib/systemd
+/run/lock /var/lock
+/usr/lib32 /usr/lib
+/usr/lib64 /usr/lib
+/usr/libx32 /usr/lib
+/usr/local/lib32 /usr/lib
+/usr/local/lib64 /usr/lib
+/usr/local/lib /usr/lib
+/var/lib/private /var/lib
+/var/cache/private /var/cache
+/var/log/private /var/log
+/var/lib/krb5kdc /var/kerberos/krb5kdc
+
+# backward compatibility
+# not for refpolicy intern, but for /var/run using applications,
+# like systemd tmpfiles or systemd socket configurations
+/var/run /run
