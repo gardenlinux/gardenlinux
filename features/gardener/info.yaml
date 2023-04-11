@@ -3,5 +3,6 @@ type: element
 features:
   include:
     - server
+    - sap
   exclude:
     - _selinux
