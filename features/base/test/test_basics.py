@@ -10,7 +10,7 @@ def test_no_man(client):
     assert "man: command not found" in error
 
 
-def test_loadavg(client, non_kvm, non_chroot):
+def test_loadavg(client, non_kvm, non_chroot, non_azure):
     """ This test does not produce any load. Make sure no other process does """
     (exit_code, output, error) = client.execute_command("cat /proc/loadavg")
     assert exit_code == 0, f"Expected to be able to show contents of /proc/loadavg"
@@ -46,7 +46,7 @@ def test_ls(client):
     assert "var" in lines
 
 
-def test_startup_time(client, non_chroot, non_kvm):
+def test_startup_time(client, non_chroot, non_kvm, non_azure):
     """ Test for startup time """
     tolerated_kernel_time = 15
     tolerated_userspace_time = 40
