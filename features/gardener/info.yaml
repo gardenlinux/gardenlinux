@@ -3,3 +3,4 @@ type: element
 features:
   include:
     - server
+    - sap
