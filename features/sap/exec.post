@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-$thisDir/garden-chroot $targetDir rm /var/log/README
+# shellcheck shell=sh disable=SC2154
+"$thisDir/garden-chroot" "$targetDir" rm /var/log/README
