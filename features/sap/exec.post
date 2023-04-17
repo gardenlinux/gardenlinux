@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+$thisDir/garden-chroot $targetDir rm /var/log/README
