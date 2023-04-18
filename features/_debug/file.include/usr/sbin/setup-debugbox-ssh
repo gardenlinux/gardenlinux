@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+set -Eeufo pipefail
+
+IMAGE="debugbox"
+REGISTRY=""
+CMD='/usr/sbin/sshd -D'
+CONTAINER_ARCHIVE=""
+
+if [ -f /etc/debugbox.conf ]; then
+    source /etc/debugbox.conf
+fi
+
+if [[ -z "${REGISTRY}" ]]; then
+    if [[ -z "${CONTAINER_ARCHIVE}" ]]; then
+        build_dir=/var/tmp/debugbox/ssh
+        mkdir -p ${build_dir}
+
+        cd $build_dir
+
+        cat <<EOF > Dockerfile
+FROM debian:testing-slim
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends openssh-server sudo
+EOF
+        docker build --tag ${IMAGE} .
+    else
+        IMAGE_HASH=$(docker import "${CONTAINER_ARCHIVE}")
+        docker tag "${IMAGE_HASH}" "${IMAGE}"
+    fi
+else
+    docker pull ${REGISTRY}${IMAGE}
+fi
+
+if ! id sshd; then
+    adduser --system --ingroup nogroup --no-create-home --home /run/sshd --shell /usr/sbin/nologin --disabled-login sshd
+fi
+
+if [[ -z "$(docker ps --all --quiet --format='debugbox')" ]]; then
+    echo "creating container"
+    docker create -it --name debugbox --net=host \
+    --pid=host \
+    --ipc=host \
+    --tty \
+    --interactive \
+    --env HOST=/host \
+    --env NAME="debugbox" \
+    --env IMAGE="${IMAGE}" \
+    --security-opt label=disable \
+    --volume /run:/run \
+    --volume /etc/passwd:/etc/passwd \
+    --volume /etc/group:/etc/group \
+    --volume /etc/shadow:/etc/shadow \
+    --volume /etc/sudoers:/etc/sudoers \
+    --volume /etc/sudoers.d:/etc/sudoers.d \
+    --volume /etc/ssh:/etc/ssh \
+    --volume /home:/home \
+    --volume /var/log:/var/log \
+    --volume /etc/machine-id:/etc/machine-id \
+    --volume /etc/localtime:/etc/localtime \
+    --volume /:/host \
+    ${REGISTRY}${IMAGE} ${CMD}
+fi
