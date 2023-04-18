@@ -10,7 +10,7 @@ import pytest
     "file,dict",
     [
         ("/etc/profile.d/50-autologout.sh", {
-            "TMOUT": "600",
+            "TMOUT": "900",
             "readonly": "TMOUT",
             "export": "TMOUT"
         })
