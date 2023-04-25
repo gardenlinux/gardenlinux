@@ -421,16 +421,6 @@ class AWS:
                             "s3:TlsVersion": '1.2'
                         }
                     }
-                },
-                {
-                    "Effect": "Allow",
-                    "Principal": "*",
-                    "Action": [
-                        "s3:GetBucketLocation",
-                        "s3:GetObject",
-                        "s3:PutObject"
-                    ],
-                    "Resource": [f"arn:aws:s3:::{name}", f"arn:aws:s3:::{name}/*"],
                 }
             ]
         }
@@ -440,6 +430,7 @@ class AWS:
             Policy=json.dumps(policy)
         )
 
+        self.logger.info(f"Setting public access block on storage bucket {name}...")
         resp = self.s3_client.put_public_access_block(
             Bucket = name,
             PublicAccessBlockConfiguration = {
@@ -641,11 +632,6 @@ class AWS:
                 },
             ))
 
-            response = self.s3_client.put_object_acl(
-                ACL = 'bucket-owner-full-control',
-                Bucket = bucket_name,
-                Key = image_key,
-            )
         elif o.scheme == "s3":
             bucket_name = o.netloc
             image_key = o.path.lstrip("/")
