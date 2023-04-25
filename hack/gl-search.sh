@@ -12,8 +12,19 @@
 # - rdepends: (EXPERIMENTAL) find what package in garden linux depends on this package
 # - download: downloads the selected deb package
 
+gl_selected_os="$(echo -e "gardenlinux\ndebian" | fzf --header 'Select OS or enter custom url (e.g. ftp.debian.org/debian)' --print-query | tail -1)"
 gl_selected_action="$(echo -e "search\ndep-check\nrdepends\ndownload" | fzf --header 'Select Action' )"
-gls_gl_dist="$(echo "today" |fzf --header 'Enter the Garden Linux Version you are interested in, or select today' --print-query | tail -1)"
+
+if [ "$gl_selected_os" == "gardenlinux" ]; then
+  gls_gl_dist="$(echo "today" |fzf --header 'Enter the Garden Linux Version you are interested in, or select today' --print-query | tail -1)"
+elif [ "$gl_selected_os" == "debian" ]; then
+  base_url="http://ftp.debian.org/debian/"
+  gls_gl_dist="$(echo -e "bookworm\nsid\nbullseye" |fzf --header 'Enter the Version you are interested in' --print-query | tail -1)"
+else
+  gls_gl_dist="$(echo "" |fzf --header 'Enter the Version you are interested in' --print-query | tail -1)"
+  base_url="$gl_selected_os"
+fi
+
 export gls_gl_dist
 
 # If user did not provide minor version but only a major, assume user wants: $major.0
@@ -25,7 +36,7 @@ if [ "$gls_gl_dist" != "today" ]; then
   fi
 fi  
 
-base_url="http://repo.gardenlinux.io/gardenlinux"
+base_url=${base_url:-"http://repo.gardenlinux.io/gardenlinux"}
 repo_url="$base_url/dists/${gls_gl_dist}/Release?ignoreCaching=1"
 
 # Check if repo exists for user provided garden linux version string
@@ -40,7 +51,20 @@ export gls_selected_arch
 packages_file=$(mktemp)
 export packages_file
 trap 'rm -rf -- "$packages_file"' EXIT
-curl -s "$base_url/dists/${gls_gl_dist}/main/binary-${gls_selected_arch}/Packages?ignoreCaching=1" > "$packages_file"
+
+packages_url_base="$base_url/dists/${gls_gl_dist}/main/binary-${gls_selected_arch}"
+
+# If packages raw exist, use it
+if curl -s -o /dev/null -w "%{http_code}" "$packages_url_base/Packages" | grep -q 200; then
+  curl -s "$packages_url_base/Packages?ignoreCaching=1" > "$packages_file"
+elif curl -s -o /dev/null -w "%{http_code}" "$packages_url_base/Packages.gz" | grep -q 200; then
+  packages_file_compressed=$(mktemp)
+  curl -s "$packages_url_base/Packages.gz?ignoreCaching=1" > "$packages_file_compressed"
+  gunzip -c "$packages_file_compressed" > "$packages_file"
+else
+  echo "No Packacges file found in $packages_url_base"
+  exit
+fi
 
 export packages_file
 
@@ -66,7 +90,7 @@ function dependency_search(){
   for dep in ${dependencies}
   do
     if does_pkg_exist "$dep"; then
-      echo "Covered Dependency: $dep"
+      echo "message"o "Covered Dependency: $dep"
     else 
       echo "Foreign Dependency: $dep"
     fi
