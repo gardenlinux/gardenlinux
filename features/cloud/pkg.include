@@ -4,4 +4,4 @@ fdisk
 #[${arch}=arm64] grub-cloud-arm64
 libpam-passwdqc
 rng-tools5
-linux-image-5.15-cloud-${arch}
+linux-image-6.1-cloud-${arch}

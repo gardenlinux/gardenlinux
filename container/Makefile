@@ -6,8 +6,6 @@ ALTNAME=
 ALTNAME_INTERNAL=$(shell [ -n "$(ALTNAME)" ] && printf "%s %s" "-t" "$(ALTNAME)" )
 
 PATH_KERNEL_PACKAGES="../.packages/main/l/linux"
-KERNEL_VERSION=5.10
-
 GARDENLINUX_BUILD_CRE ?= sudo podman
 
 all: build-image build-cert build-integration-test
