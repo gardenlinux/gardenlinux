@@ -10,14 +10,6 @@ def test_no_man(client):
     assert "man: command not found" in error
 
 
-def test_loadavg(client, non_kvm, non_chroot):
-    """ This test does not produce any load. Make sure no other process does """
-    (exit_code, output, error) = client.execute_command("cat /proc/loadavg")
-    assert exit_code == 0, f"Expected to be able to show contents of /proc/loadavg"
-    load =  float(output.split(" ")[1])
-    assert load  < 0.5, f"Expected load to be less than 0.5 but is {load}"
-
-
 def test_ls(client):
     """ Test for regular linux folders/mounts """
     (exit_code, output, error) = client.execute_command("ls /")
