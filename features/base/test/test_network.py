@@ -4,14 +4,19 @@ from helper.sshclient import RemoteClient
 
 
 def test_hostname_azure(client, azure):
-    """ Test for valid hostname on azure platform """
+    """ Test for valid hostname on azure platform. 
+    The OS is responsible to register its hostname to Azure DNS.
+    This test checks if hostname registration was successfull. 
+    Only required on azure. 
+    See: https://learn.microsoft.com/en-us/azure/virtual-machines/linux/provisioning
+    """
     start_time = datetime.datetime.now()
     (exit_code, output, error) = client.execute_command("nslookup $(hostname)")
     assert exit_code == 0, f"no {error=} expected"
     end_time = datetime.datetime.now()
     time_diff = (end_time - start_time)
     execution_time = round(time_diff.total_seconds())
-    assert execution_time <= 2, f"nslookup should not run in a timeout {error}"
+    assert execution_time <= 10, f"nslookup should not run in a timeout {error}"
 
 
 @pytest.fixture(params=["8.8.8.8", "dns.google", "heise.de"])

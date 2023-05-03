@@ -1,0 +1,11 @@
+[Unit]
+Description=SSH Container Setup
+PropagatesReloadTo=ssh.service
+
+[Service]
+#RemainAfterExit=true
+Type=oneshot
+ExecStart=/usr/sbin/setup-debugbox-ssh
+
+[Install]
+WantedBy=ssh.service

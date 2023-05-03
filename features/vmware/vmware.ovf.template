@@ -64,7 +64,7 @@
       </Property>
     </ProductSection>
 
-    <VirtualHardwareSection ovf:transport="iso">
+    <VirtualHardwareSection ovf:transport="com.vmware.guestInfo">
       <Info>Virtual hardware requirements</Info>
       <System>
         <vssd:ElementName>Virtual Hardware Family</vssd:ElementName>

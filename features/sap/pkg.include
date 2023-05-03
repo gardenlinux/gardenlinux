@@ -1,2 +1,4 @@
 auditd
 ca-certificates
+acl
+python3-apt

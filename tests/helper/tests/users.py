@@ -63,19 +63,8 @@ def users(client, additional_user = "", additional_sudo_users=[]):
 def _has_user_sudo_cmd(client, user):
     """ Check if user has any sudo permissions """
 
-    # This test assumes the executing user has NOPASSWD for sudo cmd
-    cmd = "groups | grep -w wheel"
-    out = utils.execute_remote_command(client, cmd, skip_error=True)
-    was_in_wheel = False
-    if "wheel" in out:
-        was_in_wheel = True
-    else:
-        # make sure executing user is in wheel group for this test
-        cmd = "usermod -a -G wheel $(whoami)"
-        out = utils.execute_remote_command(client, cmd)
-
     # Execute command on remote platform
-    cmd = f"sudo -l -U {user}"
+    cmd = f"sudo -s sudo -l -U {user}"
     out = utils.execute_remote_command(client, cmd)
 
     # Write each line as output in list
@@ -89,10 +78,5 @@ def _has_user_sudo_cmd(client, user):
     if len(output_lines) > 3:
         if "may run the following commands on" in output_lines[-2]:
             sudo_cmd = output_lines[-1]
-
-    # clean up only if we added wheel during this test
-    if not was_in_wheel:
-        cmd = "deluser $(whoami) wheel"
-        out = utils.execute_remote_command(client, cmd)
 
     assert not sudo_cmd, f"User: {user} has sudo permissions for: {sudo_cmd}"

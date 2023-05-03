@@ -38,15 +38,15 @@ case "$action" in
 		tag="$1"; shift
 		commit="$1"; shift
 		name="$1"; shift
-
+		body="$(.github/workflows/generate_release_note.py generate --version "$name" --commitish "$commit")"
 		release="$(get "releases/tags/$tag" | jq -r '.id' || true)"
 		[ ! "$release" ] || delete "releases/$release"
 
 		release="$(post "releases" '{
-			"tag_name": "'$tag'",
-			"target_commitish": "'$commit'",
-			"name": "'$name'",
-			"body": "auto release, created by GitHub action",
+			"tag_name": "'"$tag"'",
+			"target_commitish": "'"$commit"'",
+			"name": "'"$name"'",
+			"body": "'"$body"'",
 			"prerelease": true
 		}' | jq -r '.id')"
 
