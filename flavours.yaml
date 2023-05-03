@@ -26,7 +26,9 @@ targets:
       - _pxe
       - vhost
   - name: openstack
+  - name: openstackCC
   - name: vmware
+  - name: vmwareCC
 modifiers:
   - _dev
   - gardener,_prod

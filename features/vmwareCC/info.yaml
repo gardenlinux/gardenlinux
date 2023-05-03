@@ -1,0 +1,12 @@
+description: "VMware platform in CC"
+type: platform
+features:
+  include: 
+    - kubernikus
+disk:
+  boot: 
+    - mbr
+convert:
+  format: 
+    - type: ova
+      template: gardenlinux.ovf.template

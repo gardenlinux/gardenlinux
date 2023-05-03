@@ -1,5 +1,5 @@
-description: "OpenStack platform (ignition, cloud-init, open-vm-tools)"
-type: platform
+description: "Converged Cloud platform (ignition, sssd, open-vm-tools)"
+type: element
 features:
   include: 
     - cloud
@@ -7,10 +7,3 @@ features:
     - sssd
   exclude:
     - firewall
-convert:
-  format: 
-    - type: vmdk
-upload:
-  target:
-    - type: openstack
-      image-name: $(OPENSTACK_IMAGE_NAME)

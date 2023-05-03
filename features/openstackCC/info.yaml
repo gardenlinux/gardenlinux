@@ -1,0 +1,12 @@
+description: "OpenStack platform in CC"
+type: platform
+features:
+  include: 
+    - kubernikus
+convert:
+  format: 
+    - type: vmdk
+upload:
+  target:
+    - type: openstack
+      image-name: $(OPENSTACK_IMAGE_NAME)
