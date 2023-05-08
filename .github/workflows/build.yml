@@ -89,7 +89,7 @@ jobs:
           printf 'cname=%s\nartifact_name=%s\n' "$cname" "$artifact_name" | tee -a "$GITHUB_ENV"
         shell: bash
       - if: ${{ inputs.use_kms }}
-        uses: aws-actions/configure-aws-credentials@v1-node16
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.aws_kms_role }}
           role-session-name: ${{ secrets.aws_oidc_session }}
