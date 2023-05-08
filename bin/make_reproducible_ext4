@@ -9,6 +9,7 @@ label=
 quota=0
 resize=0
 size_padding=0
+large_journal=0
 
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -40,6 +41,10 @@ while [ $# -gt 0 ]; do
 			size_padding="$2"
 			shift 2
 			;;
+		-j|--large-journal)
+			large_journal=1
+			shift
+			;;
 		*)
 			break
 			;;
@@ -58,6 +63,12 @@ export E2FSPROGS_FAKE_TIME=$timestamp
 # set uuid and HTREE hash_seed to reproducible values instead of default random generated ones
 uuid=${uuid:-$(echo -n "$hash_prefix:uuid" | uuid_hash)}
 hash_seed=$(echo -n "$hash_prefix:hash_seed" | uuid_hash)
+
+if [ "$resize" = 1 ] && [ "$large_journal" = 1 ]; then
+	# pretend disk is 64GB in size to get sane defaults for journal size
+	truncate -s 64G "$target"
+fi
+
 mke2fs -t ext4 -b 4096 -E hash_seed="$hash_seed" -U "$uuid" ${label:+"-L"} ${label:+"$label"} -I 256 -d "$source" "$target"
 
 if [ "$quota" = 1 ]; then

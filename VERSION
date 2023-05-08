@@ -1,4 +1,4 @@
 # the version defined in this file specifies the _next_ release version of gardenlinux, as well as
 # (implicitly) the gardenlinux epoch (days since 2020-04-01) to use as dependency timestamp.
 # use `today` to build against latest
-934.7
+934.8
