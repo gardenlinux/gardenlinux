@@ -68,7 +68,7 @@ jobs:
           bin/garden-version "${{ inputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
       - if: ${{ inputs.use_kms }}
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.aws_kms_role }}
           role-session-name: ${{ secrets.aws_oidc_session }}
