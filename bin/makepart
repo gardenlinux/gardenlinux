@@ -165,7 +165,7 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 
 	case "$fs" in
 		"ext4")
-			make_reproducible_ext4 -t "$timestamp" -h "gardenlinux:$version:partition:$target" ${uuid:+"-u"} ${uuid:+"$uuid"} ${label:+"-l"} ${label:+"$label"} -q $([ "$resize" = 0 ] || echo "-m") -p 16 "$data_source" "$file"
+			make_reproducible_ext4 -t "$timestamp" -h "gardenlinux:$version:partition:$target" ${uuid:+"-u"} ${uuid:+"$uuid"} ${label:+"-l"} ${label:+"$label"} -q $([ "$resize" = 0 ] || echo "-m") $(grep -v x-systemd.growfs <<< "$options" &> /dev/null || echo "-j") -p 16 "$data_source" "$file"
 			;;
 		"vfat")
 			make_reproducible_vfat -t "$timestamp" -h "gardenlinux:$version:partition:$target" ${uuid:+"-u"} ${uuid:+"$uuid"} ${label:+"-l"} ${label:+"$label"} "$data_source" "$file"
