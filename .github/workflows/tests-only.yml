@@ -66,7 +66,7 @@ jobs:
         printf 'artifact_name=%s\n' "$artifact_name" | tee -a "$GITHUB_ENV"
       shell: bash
 
-    - uses: aws-actions/configure-aws-credentials@v1-node16
+    - uses: aws-actions/configure-aws-credentials@v2
       with:
         role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
         role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
@@ -94,7 +94,7 @@ jobs:
     - if: ${{ matrix.target == 'aws' }}
       id: 'auth_aws'
       name: 'Authenticate to AWS'
-      uses: aws-actions/configure-aws-credentials@v1-node16
+      uses: aws-actions/configure-aws-credentials@v2
       with:
         role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
         role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
