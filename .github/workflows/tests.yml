@@ -68,7 +68,7 @@ jobs:
         sudo podman pull "ghcr.io/gardenlinux/gardenlinux/integration-test:$GITHUB_SHA"
         sudo podman tag "ghcr.io/gardenlinux/gardenlinux/integration-test:$GITHUB_SHA" ghcr.io/gardenlinux/gardenlinux/integration-test:today
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: build-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
         path: /tmp/gardenlinux-build-artifacts
@@ -110,7 +110,7 @@ jobs:
         .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.architecture }}" "${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.tar.gz" 2>&1 | tee "$name.integration-tests-log"
       shell: bash
       
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: test-log-${{ matrix.architecture }}-${{ matrix.target }}${{ matrix.modifier }}
         path: ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.architecture }}-*.integration-tests-log
