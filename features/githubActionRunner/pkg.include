@@ -7,5 +7,6 @@ jq
 make
 nodejs
 podman
+python3-click
 python3-networkx
 python3-yaml
