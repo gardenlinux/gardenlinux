@@ -14,6 +14,7 @@ on:
       commit:
         required: true
         type: string
+        description: "Full commitish"
 jobs:
   create_release:
     runs-on: ec2-gardenlinux-amd64
