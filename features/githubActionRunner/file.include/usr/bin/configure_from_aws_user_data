@@ -22,8 +22,9 @@ if [ "$scheduler_json" != "null" ]; then
 	echo "ami=$(curl -sS http://169.254.169.254/latest/meta-data/ami-id)" >> "$scheduler_conf"
 	echo "region=$(curl -sS http://169.254.169.254/latest/meta-data/placement/region)" >> "$scheduler_conf"
 
+	nft 'add rule inet filter input tcp dport http-alt ct state new counter accept'
+	nft 'add rule inet nat prerouting tcp dport http redirect to http-alt'
 	echo "webhook_port=8080" >> "$scheduler_conf"
-	iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
 
 	systemctl start github_action_scheduler.service
 fi
