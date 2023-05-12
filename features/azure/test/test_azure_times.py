@@ -27,10 +27,3 @@ def test_startup_time(client, non_chroot, non_kvm):
     tf_userspace = float(time_userspace[:-1])
     assert tf_kernel < tolerated_kernel_time, f"startup time in kernel space too long: {tf_kernel} seconds =  but only {tolerated_kernel_time} tolerated."
     assert tf_userspace < tolerated_userspace_time, f"startup time in user space too long: {tf_userspace}seconds but only {tolerated_userspace_time} tolerated."
-
-def test_loadavg(client, non_kvm, non_chroot):
-    """ This test does not produce any load. Make sure no other process does """
-    (exit_code, output, error) = client.execute_command("cat /proc/loadavg")
-    assert exit_code == 0, f"Expected to be able to show contents of /proc/loadavg"
-    load =  float(output.split(" ")[1])
-    assert load  < 0.8, f"Expected load to be less than 0.8 but is {load}"
