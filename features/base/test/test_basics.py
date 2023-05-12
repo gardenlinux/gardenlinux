@@ -38,7 +38,7 @@ def test_ls(client):
     assert "var" in lines
 
 
-def test_startup_time(client, non_chroot, non_kvm):
+def test_startup_time(client, non_chroot, non_kvm, non_azure):
     """ Test for startup time """
     tolerated_kernel_time = 15
     tolerated_userspace_time = 40
