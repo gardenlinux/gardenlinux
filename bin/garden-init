@@ -202,17 +202,6 @@ rm -rf $tmp
 chown 0:0 "$targetDir"
 chmod 0755 "$targetDir"
 
-# inject qemu-arm-static binary
-chrootUsrBinDir="/usr/bin/"
-
-if [ "$arch" = x86_64 ]; then
-    qemuStaticBin="/usr/bin/qemu-x86_64-static"
-else
-    qemuStaticBin="/usr/bin/qemu-aarch64-static"
-fi
-
-cp "$qemuStaticBin" "$targetDir/$chrootUsrBinDir"
-
 # https://bugs.debian.org/857803
 # adjust field 3 in /etc/shadow and /etc/shadow- to $(( epoch / 60 / 60 / 24 )), if it's larger
 sp_lstchg="$(( epoch / 60 / 60 / 24 ))"
