@@ -28,7 +28,7 @@
   - [Deploying](#deploying)
   - [Release](#release)
   - [Documentation](#documentation)
-    - [Continous Integration](#continous-integration)
+    - [Continuous Integration](#continuous-integration)
     - [Integration Tests](#integration-tests)
   - [Contributing](#contributing)
   - [Community](#community)
@@ -86,7 +86,7 @@ By default, Garden Linux uses [Podman](https://podman.io/) as container runtime 
 
 **CentOS/RedHat (>=8):**
 
-> CFSSL requires `GLIBC 2.28`. Therefore, we recommand to build on systems running CentOS/RedHat 8 or later.
+> CFSSL requires `GLIBC 2.28`. Therefore, we recommend to build on systems running CentOS/RedHat 8 or later.
 >
 > ```
 > # Install needed packages
@@ -212,7 +212,7 @@ Building Garden Linux is based on a [feature system](features/README.md).
 | Feature Type | Includes |
 |---|---|
 | Platforms | `ali`, `aws`, `azure`, `gcp`, `kvm`, `metal`, ... |
-| Features | `container host`, `vitual host`, ... |
+| Features | `container host`, `virtual host`, ... |
 | Modifiers | `_slim`, `_readonly`, `_pxe`, `_iso`, ... |
 | Element | `cis`, `fedramp`, `gardener` |
 
@@ -244,18 +244,18 @@ Deploying on common cloud platforms requires additional packages. The following 
 Garden Linux frequently publishes snapshot releases. These are available as machine images in most major cloud providers as well as file-system images for manual import. See the [releases](https://github.com/gardenlinux/gardenlinux/releases) page for more info.
 
 ## Documentation
-Garden Linux provides a great documentation for build options, customizing, configuration, tests and pipeline integrations. The documentation can be found within the project's `docs/` path or by clicking <a href="https://github.com/gardenlinux/gardenlinux/tree/main/docs">here</a>. Next to this, you may find a corresponding `README.md` in each directory explaning some more details. Below, you may find some important documentations for continous integration and integration tests.
+Garden Linux provides a great documentation for build options, customizing, configuration, tests and pipeline integrations. The documentation can be found within the project's `docs/` path or by clicking <a href="https://github.com/gardenlinux/gardenlinux/tree/main/docs">here</a>. Next to this, you may find a corresponding `README.md` in each directory explaning some more details. Below, you may find some important documentations for continuous integration and integration tests.
 
-### Continous Integration
-Garden Linux can build in an automated way for continous integration. See [ci/README.md](ci/README.md) for details.
+### Continuous Integration
+Garden Linux can build in an automated way for continuous integration. See [ci/README.md](ci/README.md) for details.
 
 ### Integration Tests
-While it may be confusing for beginners we highlight this chapter for `integration tests` here. Garden Linux supports integration testing on all major cloud platforms (Alicloud, AWS, Azur, GCP). To allow testing even without access to any cloud platform we created an universal `kvm` platform that may run locally and is accessed in the same way via a `ssh client object` as any other cloud platform. Therefore, you do not need to adjust tests to perform local integration tests. Just to mention here that there is another platform called `chroot`. This platform is used to perform `unit tests` and will run as a local `integration test`. More details can be found within the documentation in  [tests/README.md](tests/README.md).
+While it may be confusing for beginners we highlight this chapter for `integration tests` here. Garden Linux supports integration testing on all major cloud platforms (Alicloud, AWS, Azure, GCP). To allow testing even without access to any cloud platform we created an universal `kvm` platform that may run locally and is accessed in the same way via a `ssh client object` as any other cloud platform. Therefore, you do not need to adjust tests to perform local integration tests. Just to mention here that there is another platform called `chroot`. This platform is used to perform `unit tests` and will run as a local `integration test`. More details can be found within the documentation in  [tests/README.md](tests/README.md).
 
 ## Contributing
 Feel free to add further documentation, to adjust already existing one or to contribute with code. Please take care about our style guide and naming conventions. More information are available in in <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> and our `docs/`.
 
 ## Community
-Garden Linux has a large grown community. If you need further asstiance, have any issues or just want to get in touch with other Garden Linux users feel free to join our public chat room on Gitter.
+Garden Linux has a large grown community. If you need further assistance, have any issues or just want to get in touch with other Garden Linux users feel free to join our public chat room on Gitter.
 
 Link: <a href="https://gitter.im/gardenlinux/community">https://gitter.im/gardenlinux/community</a>

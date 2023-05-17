@@ -5,7 +5,7 @@ This platform feature creates an artifact for (bare) metal systems.
 </website-feature>
 
 ### Features
-This feature creates a (bare) metal compatible image artifact as an `.iso` file and inlcudes further metal related stuff like standard kernel, grub, etc. that are required for physical components.
+This feature creates a (bare) metal compatible image artifact as an `.iso` file and includes further metal related stuff like standard kernel, grub, etc. that are required for physical components.
 
 
 ### Unit testing
