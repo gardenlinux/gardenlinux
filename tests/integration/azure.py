@@ -4,6 +4,7 @@ import re
 import pytest
 import uuid
 
+from helper.utils import wait_systemd_boot
 from helper.sshclient import RemoteClient
 
 from azure.core.exceptions import (
@@ -434,6 +435,8 @@ class AZURE:
                 host=ip.ip_address,
                 sshconfig=config["ssh"],
             )
+            logger.info("Waiting for systemd to finish with boot")
+            wait_systemd_boot(ssh)
             yield ssh
         finally:
             if ssh is not None:
