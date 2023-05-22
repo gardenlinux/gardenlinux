@@ -11,7 +11,7 @@ More information about `dm-verity` can be found [here](https://www.kernel.org/do
 
 Additionally, a separate readonly `/usr` partition is configured to be used with `dm-verity`, too.
 
-If only `/usr` should be configured this way (readonly & dm-verity) without enabling this feature for the whole root parition, take a look at the next chapter to find an example for how to setup the [fstab.mod](https://github.com/gardenlinux/gardenlinux/blob/main/features/_readonly/fstab.mod) for this case.
+If only `/usr` should be configured this way (readonly & dm-verity) without enabling this feature for the whole root partition, take a look at the next chapter to find an example for how to setup the [fstab.mod](https://github.com/gardenlinux/gardenlinux/blob/main/features/_readonly/fstab.mod) for this case.
 
 ### dm-verity only for /usr with writable root partition
 In order to only enable dm-verity for `/usr` and have a writable root partition the [fstab.mod](https://github.com/gardenlinux/gardenlinux/blob/main/features/_readonly/fstab.mod) must be adjusted accordingly. But keep in mind that `/etc/veritytab`, which is containing the hash for the partition, most likely is located on a writable partition and therefore easy to modify.

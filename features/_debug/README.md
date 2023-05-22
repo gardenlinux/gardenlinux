@@ -8,7 +8,7 @@ This flag adds a debug container to the image. In the case the image is immutabl
 It adds a script to spawn a container, the script pulls a Debian slim container and installs the `openssh-server` and starts the container with the `sshd` running on port 22. Make sure the host system is not running a `sshd` instance. Alternatively the script can create a container from a local archive or pull a container from an external registry, in this cases the container will not be modified by the script. Also two systemd services are installed to create and start the container a boot time of the host system.
 
 ### Usage
-By default the Debian slim container is pulled and `openssh-server` is installed in the container before it is started. The defaults can be changed in the configfile `/etc/debugbox.conf`.
+By default the Debian slim container is pulled and `openssh-server` is installed in the container before it is started. The defaults can be changed in the config file `/etc/debugbox.conf`.
 
 - **IMAGE** defaults to `debugbox`, if a registry is set, it should contain the name of the image to pull
 - **REGISTRY** default is empty, sets the registry to pull an external image from
