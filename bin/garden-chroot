@@ -37,7 +37,7 @@ unshare -f --mount bash -Eeuo pipefail -c '
 		mv "$targetDir/etc/resolv.conf" "$targetDir/etc/resolv.conf.orig"
 		touch $targetDir/etc/resolv.conf
 	fi
-	mount --rbind --read-only /etc/resolv.conf "$targetDir/etc/resolv.conf"
+	cp /etc/resolv.conf "$targetDir/etc/resolv.conf"
 	exec chroot "$targetDir" /usr/bin/env -i PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" TZ="$TZ" LC_ALL="$LC_ALL" SOURCE_DATE_EPOCH="$epoch" "$@"
 ' -- "$cmd" "$@"
 if [[ -e "$targetDir/etc/resolv.conf.orig" || -L "$targetDir/etc/resolv.conf.orig" ]]; then

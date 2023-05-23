@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+container_image=ghcr.io/gardenlinux/builder:5b191b8df6fb61a41365f2d77ef921a346d1a976
+container_engine=podman
+
+container_run_opts=(
+	--security-opt seccomp=unconfined
+	--security-opt apparmor=unconfined
+	--security-opt label=disable
+	--read-only
+)
+
+container_mount_opts=(
+	-v "$PWD/features:/builder/features:ro"
+	-v "$PWD/keyring.gpg:/builder/keyring.gpg:ro"
+	-v "$PWD/.build:/builder/.build"
+)
+
+use_kms=0
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		--container-image)
+			container_image="$2"
+			shift 2
+			;;
+		--container-engine)
+			container_engine="$2"
+			shift 2
+			;;
+		--container-run-opts)
+			declare -a "container_run_opts=($2)"
+			shift 2
+			;;
+		--kms)
+			use_kms=1
+			shift
+			;;
+		--print-container-image)
+			printf '%s\n' "$container_image"
+			exit 0
+			;;
+		*)
+			break
+			;;
+	esac
+done
+
+if [ "$container_image" = localhost/builder ]; then
+	dir="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")"
+	"$container_engine" build -t "$container_image" "$dir"
+fi
+
+repo="$(./get_repo)"
+commit="$(./get_commit)"
+timestamp="$(./get_timestamp)"
+default_version="$(./get_version)"
+
+make_opts=(
+	REPO="$repo"
+	COMMIT="$commit"
+	TIMESTAMP="$timestamp"
+	DEFAULT_VERSION="$default_version"
+)
+
+if [ "$use_kms" = 1 ]; then
+	for e in AWS_DEFAULT_REGION AWS_REGION AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN; do
+		if [ -n "${!e-}" ]; then
+			make_opts+=("$e=${!e}")
+		fi
+	done
+fi
+
+[ -d .build ] || mkdir .build
+if [ -d cert ]; then
+	container_mount_opts+=(-v "$PWD/cert:/builder/cert:ro")
+fi
+
+"$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" make --no-print-directory -C /builder "${make_opts[@]}" "$@"

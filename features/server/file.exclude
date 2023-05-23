@@ -20,3 +20,6 @@
 /initrd.img.old
 /vmlinuz
 /vmlinuz.old
+/usr/lib/**/__pycache__
+/etc/nvme/hostid
+/etc/nvme/hostnqn

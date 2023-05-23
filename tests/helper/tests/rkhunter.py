@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 # Execute the rkhunter test only on chroot
 # since it must install some packages that
 # may not be possible on running machines.
-def rkhunter(client, testconfig, chroot, non_container):
+def rkhunter(client, testconfig, chroot, non_container, non_chroot):
     """Run rkhunter to test for rootkits"""
     utils.AptUpdate(client)
     utils.install_package_deb(client, "rkhunter")
@@ -42,7 +42,7 @@ def rkhunter(client, testconfig, chroot, non_container):
     # check the rkhunter log file for any warnings
     (_, output, _) = client.execute_command(
         "grep -w Warning: /var/log/rkhunter.log", quiet=True)
-    
+
     # print the rkhunter warnings before failing the test
     if output != '':
         for line in output.splitlines():

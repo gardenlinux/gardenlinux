@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-set -Eeuo pipefail
-
-$thisDir/garden-chroot $targetDir adduser dev --disabled-password --gecos dev
-$thisDir/garden-chroot $targetDir adduser dev wheel
-$thisDir/garden-chroot $targetDir mkdir /home/dev/.ssh
-$thisDir/garden-chroot $targetDir chmod 750 /home/dev/
-$thisDir/garden-chroot $targetDir chmod 700 /home/dev/.ssh
-$thisDir/garden-chroot $targetDir chown dev:dev -R /home/dev/.ssh

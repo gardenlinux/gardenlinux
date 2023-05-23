@@ -5,3 +5,4 @@
 /etc/runit
 /etc/sv
 /usr/share/runit
+/etc/mdadm/mdadm.conf

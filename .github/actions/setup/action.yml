@@ -1,0 +1,18 @@
+runs:
+  using: composite
+  steps:
+    - name: increase swap
+      shell: bash
+      run: |
+        swap_file="$(swapon --noheadings --show=NAME)"
+        sudo swapoff "$swap_file"
+        sudo rm "$swap_file"
+        sudo fallocate -l 12GiB "$swap_file"
+        sudo chmod 600 "$swap_file"
+        sudo mkswap "$swap_file"
+        sudo swapon "$swap_file"
+    - name: install required packages
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qemu-user-static

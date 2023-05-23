@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+input="$(realpath -- "$1")"
+output="$(realpath -- "$2")"
+
+dir="$(mktemp -d)"
+pushd "$dir" > /dev/null
+
+export PATH="/builder/image.d:$PATH"
+
+chroot_dir="$(mktemp -d)"
+mount -t tmpfs tmpfs "$chroot_dir"
+tar --extract --xattrs --xattrs-include '*' --directory "$chroot_dir" < "$input"
+
+cp "$chroot_dir/boot/"vmlinuz* vmlinux
+cp "$chroot_dir/boot/"initrd* initrd
+
+mksquashfs "$chroot_dir" root.squashfs -noappend -comp xz -mkfs-time "$BUILDER_TIMESTAMP" -all-time "$BUILDER_TIMESTAMP"
+
+echo "console=ttyS0 gl.live=1 gl.ovl=/:tmpfs" > cmdline
+
+touch tmp_initrd
+[[ ! -e "$chroot_dir/initrd" ]]
+touch "$chroot_dir/initrd"
+mount --bind tmp_initrd "$chroot_dir/initrd"
+[[ ! -e "$chroot_dir/root.squashfs" ]]
+touch "$chroot_dir/root.squashfs"
+mount --bind root.squashfs "$chroot_dir/root.squashfs"
+
+[[ -d "$chroot_dir/proc" ]] && [[ -z "$(ls -A "$chroot_dir/proc")" ]]
+mount --rbind /proc "$chroot_dir/proc"
+
+kernel_file=$(find "$chroot_dir/boot/" -name 'vmlinuz-*')
+kernel_version="${kernel_file#*-}"
+
+unshare --user --map-root-user --mount -- bash -c 'mount -t tmpfs tmpfs '"$chroot_dir/var/tmp"' && mount -t tmpfs none /sys && mount --bind /usr/bin/false /usr/bin/systemd-detect-virt && "$@"' -- \
+chroot "$chroot_dir" env dracut \
+	--force \
+	--kver "$kernel_version" \
+	--modules "bash dash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd fs-lib shutdown gardenlinux-live" \
+	--include "/root.squashfs" "root.squashfs" \
+	--reproducible \
+	--no-hostonly \
+	"/initrd"
+
+umount -l "$chroot_dir/proc"
+
+umount "$chroot_dir/initrd"
+rm "$chroot_dir/initrd"
+umount "$chroot_dir/root.squashfs"
+rm "$chroot_dir/root.squashfs"
+
+case "$BUILDER_ARCH" in
+	amd64)
+		uefi_arch=x64
+		gnu_arch=x86_64
+		initrd_vma=0x3000000
+		;;
+	arm64)
+		uefi_arch=aa64
+		gnu_arch=aarch64
+		initrd_vma=0x4000000
+		;;
+esac
+
+# create unified image
+"${gnu_arch}-linux-gnu-objcopy" \
+	--add-section .cmdline=cmdline --change-section-vma .cmdline=0x1000000 \
+	--add-section .linux=vmlinux --change-section-vma .linux=0x2000000 \
+	--add-section .initrd=tmp_initrd --change-section-vma .initrd="$initrd_vma" \
+	"$chroot_dir/usr/lib/systemd/boot/efi/linux$uefi_arch.efi.stub" unified_image
+
+export PKCS11_MODULE_PATH="/usr/lib/$(uname -m)-linux-gnu/pkcs11/aws_kms_pkcs11.so"
+cert_base="/builder/cert/secureboot.db"
+
+if [ -f "$cert_base.key" ]; then
+	key_params=(--key "$cert_base.key")
+elif [ -f "$cert_base.arn" ]; then
+	key_params=(--engine pkcs11 --key "pkcs11:token=$(basename "$(cat "$cert_base.arn")" | cut -c -32)")
+else
+	echo "neither $cert_base.key nor $cert_base.arn exists, but at least one is required" >&2
+	exit 1
+fi
+
+# sign unified image
+datefudge -s "@$BUILDER_TIMESTAMP" sbsign --cert "$cert_base.crt" "${key_params[@]}" --output boot.efi unified_image
+
+umount "$chroot_dir"
+rmdir "$chroot_dir"
+
+tar --create --mtime="@$BUILDER_TIMESTAMP" --sort name --numeric-owner --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime vmlinux initrd root.squashfs boot.efi | gzip > "$output"
+
+popd > /dev/null
+rm -rf "$dir"

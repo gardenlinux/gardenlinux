@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+rootfs="$1"
+
+# loop mounting rootfs into itself serves two purposes:
+# - hides any /proc mounts etc
+# - tricks setfiles into not seeing it as / => not trying to log to audit system
+
+[ ! -e "$rootfs/loop" ]
+mkdir "$rootfs/loop"
+mount --bind "$rootfs" "$rootfs/loop"
+
+PATH="/native_bin:$PATH" chroot "$rootfs" setfiles -r /loop /etc/selinux/default/contexts/files/file_contexts /loop
+
+umount "$rootfs/loop"
+rmdir "$rootfs/loop"

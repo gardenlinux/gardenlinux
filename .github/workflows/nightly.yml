@@ -1,5 +1,6 @@
 name: nightly
 on:
+  push:
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:
@@ -14,7 +15,7 @@ jobs:
       id-token: write
     with:
       version: ${{ inputs.version || 'now' }}
-      default_modifier: ",gardener,_prod"
+      default_modifier: "-gardener_prod"
       use_kms: true
     secrets:
       secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
@@ -22,7 +23,8 @@ jobs:
       aws_kms_role: ${{ secrets.SECUREBOOT_DB_IAM_ROLE }}
       aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
   build_container:
-    uses: ./.github/workflows/build-container.yml
+    name: build container
+    uses: ./.github/workflows/build_container.yml
   tests:
     needs: [ build, build_container ]
     permissions:
@@ -31,7 +33,7 @@ jobs:
     uses: ./.github/workflows/tests.yml
     with:
       version: ${{ needs.build.outputs.version }}
-      default_modifier: ",gardener,_prod"
+      default_modifier: "-gardener_prod"
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -52,7 +54,7 @@ jobs:
     uses: ./.github/workflows/upload_to_s3.yml
     with:
       version: ${{ needs.build.outputs.version }}
-      default_modifier: ",gardener,_prod"
+      default_modifier: "-gardener_prod"
     secrets:
       bucket: ${{ secrets.AWS_S3_BUCKET }}
       region: ${{ secrets.AWS_REGION }}

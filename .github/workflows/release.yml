@@ -16,7 +16,7 @@ on:
         type: string
 jobs:
   create_release:
-    runs-on: ec2-gardenlinux-amd64
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: create GitHub release
@@ -31,7 +31,7 @@ jobs:
       contents: write
       id-token: write
     environment: oidc_aws_s3_upload
-    runs-on: ec2-gardenlinux-amd64
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -67,7 +67,7 @@ jobs:
       contents: write
       id-token: write
     environment: oidc_aws_s3_upload
-    runs-on: ec2-gardenlinux-amd64
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:

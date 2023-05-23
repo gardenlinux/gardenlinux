@@ -1,7 +1,6 @@
 bsdextrautils
 ca-certificates
 dnsutils
-dracut
 iproute2
 iptables
 iputils-ping

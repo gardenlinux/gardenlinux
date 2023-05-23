@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+dir="$(dirname "${BASH_SOURCE[0]}")"
+
+container_image=
+container_engine=podman
+
+container_run_opts=(
+	--security-opt seccomp=unconfined
+	--security-opt apparmor=unconfined
+	--security-opt label=disable
+	--read-only
+)
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		--container-image)
+			container_image="$2"
+			shift 2
+			;;
+		--container-engine)
+			container_engine="$2"
+			shift 2
+			;;
+		--container-run-opts)
+			declare -a "container_run_opts=($2)"
+			shift 2
+			;;
+		*)
+			break
+			;;
+	esac
+done
+
+cname="$(basename "$(realpath "$dir/.build/$1")" .artifacts)"
+
+container_mount_opts=(
+	-v "$(realpath "$dir")/tests:/gardenlinux/tests"
+	-v "$(realpath "$dir")/features:/gardenlinux/features:ro"
+	-v "$(realpath "$dir")/bin:/gardenlinux/bin:ro"
+	-v "$(realpath "$dir")/.build/$cname.tar:/gardenlinux/input.tar:ro"
+	-v "$(realpath "$dir")/.build/$cname.release:/gardenlinux/input.release:ro"
+)
+
+if [ -z "$container_image" ]; then
+	base_image="$("$dir/build" --print-container-image)"
+	image_file="$(mktemp)"
+	"$container_engine" build --iidfile "$image_file" --build-arg base="$base_image" "$dir/tests"
+	container_image="$(cat "$image_file")"
+	rm "$image_file"
+fi
+
+"$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" 2>&1 | tee "$dir/.build/$cname.test-log"
+echo "$cname.test-log" >> "$dir/.build/$cname.artifacts"

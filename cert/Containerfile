@@ -1,0 +1,10 @@
+ARG base=debian:bookworm
+FROM $base
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends awscli efitools gettext git gnupg libcurl4 libengine-pkcs11-openssl libjson-c5 make openssl python3 python3-venv uuid-runtime
+
+# Prepare virtual environment
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN pip install git+https://github.com/awslabs/python-uefivars

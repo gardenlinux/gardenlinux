@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+useradd --user-group --groups wheel --create-home dev
+id dev
+
+mkdir /home/dev/.ssh
+chmod -R 700 /home/dev/.ssh
+chown -R dev:dev /home/dev/.ssh
+find /home/dev -printf '%M %u:%g %p\n'

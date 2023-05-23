@@ -9,19 +9,10 @@ from binascii import hexlify
 from paramiko import SSHClient, AutoAddPolicy, RSAKey
 from paramiko.auth_handler import AuthenticationException, SSHException
 from paramiko.ssh_exception import NoValidConnectionsError
+from paramiko.util import u
 from scp import SCPClient, SCPException
 
 logger = logging.getLogger(__name__)
-
-# paramiko.py3compat was removed with paramiko 3.0.0
-# https://www.paramiko.org/changelog.html
-def decode_unicode_or_bytes(s, encoding='utf8'):
-    """ decodes bytes or unicode to unicode"""
-    if isinstance(s, str):
-        return s
-    elif isinstance(s, bytes):
-        return s.decode(encoding)
-    raise TypeError("{!r} is not unicode or byte".format(s))
 
 
 class RemoteClient:
@@ -58,7 +49,7 @@ class RemoteClient:
                 f.write(f"{pub.get_name()} {pub.get_base64()}")
                 if comment:
                     f.write(f" {comment}")
-        hash = decode_unicode_or_bytes(hexlify(pub.get_fingerprint()))
+        hash = u(hexlify(pub.get_fingerprint()))
         fingerprint = ":".join([hash[i : 2 + i] for i in range(0, len(hash), 2)])
         logger.info(f"fingerprint: {bits} {fingerprint} {filename}.pub (RSA)")
         return fingerprint
@@ -78,7 +69,7 @@ class RemoteClient:
         self.conn = None
 
         self.passphrase = None
-        self.remote_path = "/" 
+        self.remote_path = "/"
 
         if 'passphrase' in sshconfig:
             self.passphrase = sshconfig['passphrase']
