@@ -10,6 +10,9 @@ import uuid
 
 import boto3
 
+# number of intervals to wait for the snapshot import
+# each interval is 5 seconds so the given value of 120 here is 10 minutes
+IMPORT_TIMEOUT_INTERVALS = 120
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -248,7 +251,7 @@ class Ec2ImageImport:
 
         snapshot_id = ""
 
-        for _ in range(120): # we wait at most for 10 minutes for an import task to complete
+        for _ in range(IMPORT_TIMEOUT_INTERVALS):
             resp = response_ok(self.ec2_client.describe_import_snapshot_tasks(
                 ImportTaskIds=[
                     import_task_id,
@@ -296,12 +299,6 @@ class Ec2ImageImport:
 
 
     def register_image(self, snapshot_id):
-        def max(old, new):
-            if new > old:
-                return new
-            else:
-                return old
-
         logger.debug(f"Check whether image with name {self.image_name} already exists.")
 
         resp = response_ok(self.ec2_client.describe_images(
