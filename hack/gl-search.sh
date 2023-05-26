@@ -12,7 +12,7 @@
 # - rdepends: (EXPERIMENTAL) find what package in garden linux depends on this package
 # - download: downloads the selected deb package
 
-THIS_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+THIS_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[@]}")")"
 # shellcheck source=/dev/null
 source "${THIS_DIR}/.gl-search-functions.sh"
 
