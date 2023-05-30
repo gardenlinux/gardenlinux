@@ -1,30 +1,27 @@
 import json
 import logging
 import os
+import sys
 import pytest
 import time
 import uuid
 import tempfile
 import requests
+import base64
 
 from os import path
 from urllib.request import urlopen
 from urllib.parse import urlparse
 
-import googleapiclient.discovery
 import google.oauth2.service_account
 from google.oauth2.service_account import Credentials
-from googleapiclient.discovery import Resource
-from google.cloud import storage
-from google.cloud.storage import constants as storage_constants
-from googleapiclient.errors import HttpError
+import google.cloud.compute as compute
+import google.cloud.storage as storage
 
 from helper.sshclient import RemoteClient
 from . import util
 
 logger = logging.getLogger(__name__)
-googleapiclient_logger = logging.getLogger("googleapiclient")
-googleapiclient_logger.setLevel(logging.ERROR)
 
 startup_script = """#!/bin/bash
 touch /tmp/startup-script-ok
@@ -90,6 +87,18 @@ class GCP:
             cfg['ssh']['ssh_key_name'] = f"key-{test_name}"
         if not 'user' in cfg['ssh']:
             cfg['ssh']['user'] = "gardenlinux"
+        if not 'uefi' in cfg:
+            cfg['uefi'] = False
+        if not 'secureboot' in cfg:
+            cfg['secureboot'] = False
+        if not 'db_path' in cfg['secureboot_parameters']:
+            cfg['secureboot_parameters']['db_path'] = "/gardenlinux/cert/secureboot.db.auth"
+        if not 'kek_path' in cfg:
+            cfg['secureboot_parameters']['kek_path'] = "/gardenlinux/cert/secureboot.kek.auth"
+        if not 'pk_path' in cfg:
+            cfg['secureboot_parameters']['pk_path'] = "/gardenlinux/cert/secureboot.pk.auth"
+        if not 'cert_file_type' in cfg:
+            cfg['secureboot_parameters']['cert_file_type'] = 'BIN'
 
 
     def _gcp_create_bucket(self, bucket_name):
@@ -103,48 +112,16 @@ class GCP:
         bucket.make_private()
 
 
-    def _gcp_wait_for_operation(self, operation):
-        self.logger.info(f"Waiting for operation {operation['name']} to complete...")
-        kwargs = {"project": self.project, "operation": operation['name']}
-        if 'zone' in operation:
-            client = self._compute.zoneOperations()
-            kwargs["zone"] = operation['zone'].rsplit("/", maxsplit=1)[1]
-        elif 'region' in operation:
-            client = self._compute.regionOperations()
-            kwargs["region"] = operation['region'].rsplit("/", maxsplit=1)[1]
-        else:
-            client = self._compute.globalOperations()
-        response = client.wait(**kwargs).execute()
+    def _gcp_wait_for_operation(self, operation, timeout=60):
+        self.logger.info(f"Waiting for {operation.name} to complete...")
+        result = operation.result(timeout=timeout)
+        self.logger.info(f"{operation.name} done.")
 
-        if response["status"] != "DONE":
-            self.logger.error("Operation failed %s" % json.dumps(response, indent=4))
-            error = ""
-            if "error" in response:
-                error = response["error"]
-            raise Exception("Operation %s failed: %s" % (operation, error))
-
-
-    def _gcp_delete_firewall_rules(self, rule_name):
-        try:
-            self.logger.info(f"Deleting firewall rule with name {rule_name}...")
-            fw_request = self._compute.firewalls().delete(project=self.project, firewall=rule_name)
-            operation = fw_request.execute()
-            self._gcp_wait_for_operation(operation)
-        except HttpError as h:
-            if h.resp.status != 404:
-                raise
 
     def _gcp_create_firewall_rules(self, fw_rest_body):
         rule_name = fw_rest_body["name"]
-        try:
-            self._gcp_delete_firewall_rules(rule_name=rule_name)
-        except HttpError as h:
-            if h.resp.status == 404:
-                pass
-
         self.logger.info(f"Inserting firewall rule {rule_name}...")
-        req = self._compute.firewalls().insert(project=self.project, body=fw_rest_body)
-        operation = req.execute()
+        operation = self._compute_firewalls.insert(project=self.project, firewall_resource=fw_rest_body)
         self._gcp_wait_for_operation(operation)
         return rule_name
 
@@ -155,41 +132,40 @@ class GCP:
 
         self.logger.info(f"Creating VPC {network_name}...")
         vpc_rest_body = {
-            "autoCreateSubnetworks": False,
+            "auto_create_subnetworks": False,
             "description": "vpc for Garden Linux integration tests",
-            "labels": self._tags,
             "mtu": 1460,
             "name": network_name,
-            "routingConfig": {
-                "routingMode": "REGIONAL"
+            "routing_config": {
+                "routing_mode": "REGIONAL"
             }
         }
-        operation = self._compute.networks().insert(project=self.project, body=vpc_rest_body).execute()
-        vpc_selflink = operation['targetLink']
+        operation = self._compute_networks.insert(project=self.project, network_resource=vpc_rest_body)
+        vpc_selflink = self._compute_networks.get(network=network_name, project=self.project).self_link
         self._gcp_wait_for_operation(operation)
 
         self.logger.info(f"Creating subnet with CIDR {subnet_cidr} in VPC {network_name} and region {self.region}...")
         subnet_rest_body = {
             "description": "Subnet for Garden Linux integration tests",
-            "enableFlowLogs": False,
-            "ipCidrRange": subnet_cidr,
+            "enable_flow_logs": False,
+            "ip_cidr_range": subnet_cidr,
             "name": network_name,
             "network": vpc_selflink,
-            "privateIpGoogleAccess": False,
+            "private_ip_google_access": False,
             "region": self.region
         }
-        operation = self._compute.subnetworks().insert(project=self.project, region=self.region, body=subnet_rest_body).execute()
+        operation = self._compute_subnetworks.insert(project=self.project, region=self.region, subnetwork_resource=subnet_rest_body)
         self._gcp_wait_for_operation(operation)
         return network_name
 
 
     def _gcp_delete_vpc(self, name):
         self.logger.info(f"Deleting subnets from VPC {name}...")
-        operation = self._compute.subnetworks().delete(project=self.project, region=self.region, subnetwork=name).execute()
+        operation = self._compute_subnetworks.delete(project=self.project, region=self.region, subnetwork=name)
         self._gcp_wait_for_operation(operation)
         
         self.logger.info(f"Deleting VPC {name}...")
-        operation = self._compute.networks().delete(project=self.project, network=name).execute()
+        operation = self._compute_networks.delete(project=self.project, network=name)
         self._gcp_wait_for_operation(operation)
 
 
@@ -220,7 +196,11 @@ class GCP:
         self.project = config["project"]
         
         os.environ["GOOGLE_CLOUD_PROJECT"] = self.project
-        self._compute: Resource = googleapiclient.discovery.build("compute", "v1", credentials=credentials, cache_discovery=False)
+        self._compute_networks = compute.NetworksClient(credentials=credentials)
+        self._compute_subnetworks = compute.SubnetworksClient(credentials=credentials)
+        self._compute_firewalls = compute.FirewallsClient(credentials=credentials)
+        self._compute_images = compute.ImagesClient(credentials=credentials)
+        self._compute_instances = compute.InstancesClient(credentials=credentials)
         self._storage = storage.Client(credentials=credentials)
 
         self.network_tags = [f"network-{test_name}"]
@@ -287,7 +267,7 @@ class GCP:
             self._gcp_delete_vpc(self._vpc_name)
             self._vpc_name = None
         if self._image:
-            self._delete_image(self._image['name'])
+            self._delete_image(self._image.name)
             self._image = None
         if self._bucket:
             self._delete_bucket(self._bucket.name)
@@ -298,29 +278,28 @@ class GCP:
         myip = util.get_my_ip()
 
         rules = {
-            "name": "test-allow-ssh-icmp",
+            "name": f"fw-{self.test_name}",
             "allowed": [
                 {
-                    "IPProtocol": "tcp",
+                    "I_p_protocol": "tcp",
                     "ports": [
                         "22"
                     ]
                 },
                 {
-                    "IPProtocol": "icmp"
+                    "I_p_protocol": "icmp"
                 }
             ],
             "description": "allow incoming SSH and ICMP for Garden Linux integration tests",
             "direction": "INGRESS",
-            "enableLogging": False,
             "kind": "compute#firewall",
-            "logConfig": {
+            "log_config": {
                 "enable": False
             },
             "network": f"projects/{self.config['project']}/global/networks/{network}",
-            "priority": 1000.0,
-            "sourceRanges": [myip],
-            "targetTags": self.network_tags,
+            "priority": 1000,
+            "source_ranges": [myip],
+            "target_tags": self.network_tags,
         }
 
         return self._gcp_create_firewall_rules(rules)
@@ -333,10 +312,10 @@ class GCP:
             return bucket
 
         self.logger.info(f"Creating GCS bucket {name} for image upload...")
-        bucket.storage_class = storage_constants.STANDARD_STORAGE_CLASS
+        bucket.storage_class = storage.constants.STANDARD_STORAGE_CLASS
 
         bucket.iam_configuration.public_access_prevention = (
-            storage_constants.PUBLIC_ACCESS_PREVENTION_ENFORCED
+            storage.constants.PUBLIC_ACCESS_PREVENTION_ENFORCED
         )
         bucket.labels = self._tags
         bucket.create(location=self.config['region'])
@@ -356,6 +335,13 @@ class GCP:
         else:
             self.logger.info(f"Keeping GCS bucket {name} as it was not created by this test.")
 
+    def _get_file_content_buffer(self, path, file_type):
+        if os.path.isfile(path):
+            with open(path, 'rb') as f:
+                return compute.FileContentBuffer(content=base64.b64encode(f.read()), file_type=file_type)
+        else:
+            self.logger.error(f"Secureboot key or db {path} does not exists")
+            os._exit(os.EX_IOERR)
 
     def _upload_image(self, image_name, image):
         blob_name = image_name + ".tar.gz"
@@ -401,36 +387,43 @@ class GCP:
         else:
             self.logger.info(f"Image file {image_blob.name} already exists in bucket {self._bucket}.")
 
-        images = self._compute.images()
+        images = self._compute_images
 
         blob_url = image_blob.public_url
         self.logger.info(f'Importing {blob_url} as {image_name=} into project {self.image_project}')
-        insertion_rq = images.insert(
-            project=self.image_project,
-            body={
-                'description': 'gardenlinux',
-                'name': image_name,
-                'rawDisk': {
-                    'source': blob_url,
-                },
-                'labels': self._tags,
+        config = {
+            'description': 'gardenlinux',
+            'name': image_name,
+            'raw_disk': {
+                'source': blob_url,
             },
-        )
+            'labels': self._tags,
+        }
 
-        operation = insertion_rq.execute()
+        if self.config['uefi'] or self.config['secureboot']:
+            config['guest_os_features'] = [{'type_': "UEFI_COMPATIBLE"}]
+
+        if self.config['secureboot']:
+            cert_file_type = self.config['secureboot_parameters']['cert_file_type']
+            config['shielded_instance_initial_state'] = {
+                'dbs': [self._get_file_content_buffer(self.config['secureboot_parameters']['db_path'], cert_file_type)],
+                'keks': [self._get_file_content_buffer(self.config['secureboot_parameters']['kek_path'], cert_file_type)],
+                'pk': self._get_file_content_buffer(self.config['secureboot_parameters']['pk_path'], cert_file_type),
+            }
+
+        operation = images.insert(project=self.image_project, image_resource=config)
         self._gcp_wait_for_operation(operation)
         image_blob.delete()
         self.logger.info(f'Uploaded image {blob_url} to project {self.project} as {image_name}')
-        self._image = images.get(image=image_name, project=self.image_project).execute()
+        self._image = images.get(image=image_name, project=self.image_project)
 
     def _delete_image(self, image_name):
-        image = self._compute.images().get(image=image_name, project=self.image_project).execute()
-        if image['labels'] == self._tags:
+        image = self._compute_images.get(image=image_name, project=self.image_project)
+        if image.labels == self._tags:
             self.logger.info(f"Deleting image {image_name}...")
-            request = self._compute.images().delete(project=self.image_project, image=image_name)
-            response = request.execute()
+            request = self._compute_images.delete(project=self.image_project, image=image_name)
         else:
-            self.logger.info(f"Keeping image {image_name} in project {self.imagep_project} as it was not created by this test.")
+            self.logger.info(f"Keeping image {image_name} in project {self.image_project} as it was not created by this test.")
 
     def _get_image(self, project, image_name):
         """Get image with given name
@@ -440,27 +433,26 @@ class GCP:
         self.logger.debug(f"Looking for {image_name=} in {project=}")
         try:
             response = (
-                self._compute.images().get(project=project, image=image_name,).execute()
+                self._compute_images.get(project=project, image=image_name,)
             )
-            image = response.get("selfLink")
+            image = response.self_link
             return image
         except:
             self.logger.debug(f"Failed to find image in {project=}")
             return None
 
     def _wait_until_reachable(self, hostname):
-        self.logger.info(f"Waiting for {hostname} to respond to ping ...")
-        while True:
-            response = os.system("ping -c 1 " + hostname)
+        self.logger.info(f"Waiting for {hostname} to respond...")
+        i = 0
+        while i < 20:
+            response = os.system("timeout 1 bash -c \"</dev/tcp/" + hostname + "/22\"")
             if response == 0:
-                self.logger.info(f"Instance {hostname} is reachable, waiting another 20 seconds...")
-                time.sleep(20)
+                self.logger.info(f"Instance {hostname} is reachable...")
                 return
-            time.sleep(1)
-
-    def _get_resource_name(self, url):
-        """Get resource name from GCP url"""
-        return urlparse(url).path.split("/")[-1]
+            self.logger.info(f"Waiting for {hostname} to respond...")
+            time.sleep(2)
+            i += 1
+        raise Exception("Remote host unreachable")
 
 
     def create_vm(self):
@@ -474,29 +466,29 @@ class GCP:
         
         image = self._get_image(self.image_project, self.image_name)
 
-        self.logger.info(f"Starting new instance from image {image}...")
+        self.logger.info(f"Starting new instance from image {self.image_name}...")
         machine_type = f"zones/{self.zone}/machineTypes/{self.machine_type}"
         disk_type = f"zones/{self.zone}/diskTypes/pd-ssd"
         name = f"vm-{self.test_name}"
         config = {
             "name": name,
-            "machineType": machine_type,
+            "machine_type": machine_type,
             "disks": [
                 {
                     "boot": True,
-                    "autoDelete": True,
-                    "initializeParams": {
-                        "diskSizeGb": 7,
-                        "sourceImage": image,
-                        "diskType": disk_type,
+                    "auto_delete": True,
+                    "initialize_params": {
+                        "disk_size_gb": 7,
+                        "source_image": image,
+                        "disk_type": disk_type,
                     }
                 }
             ],
-            "networkInterfaces": [
+            "network_interfaces": [
                 {
                     "subnetwork": f"projects/{self.project}/regions/{self.region}/subnetworks/{self._vpc_name}",
-                    "accessConfigs": [
-                        {"type": "ONE_TO_ONE_NAT", "name": "External NAT"}
+                    "access_configs": [
+                        {"type_": "ONE_TO_ONE_NAT", "name": "External NAT"}
                     ],
                 }
             ],
@@ -519,23 +511,32 @@ class GCP:
             },
         }
 
-        operation = self._compute.instances().insert(project=self.project, zone=self.zone, body=config).execute()
+        if self.config['secureboot']:
+            config["shielded_instance_config"] = {
+                "enable_secure_boot": True,
+                "enable_integrity_monitoring": True,
+                "enable_vtpm": True,
+            }
+
+        operation = self._compute_instances.insert(project=self.project, zone=self.zone, instance_resource=config)
         self._gcp_wait_for_operation(operation)
-        url = operation.get("targetLink")
-        self._instance_name = self._get_resource_name(url)
+        self._instance_name = name
         list_result = (
-            self._compute.instances()
-            .list(project=self.project, zone=self.zone, filter=f"name = {self._instance_name}")
-            .execute()
+            self._compute_instances
+            .list(request={'project':self.project, 'zone':self.zone, 'filter': f"name = {self._instance_name}"})
         )
-        if len(list_result["items"]) != 1:
+        if len(list_result.items) != 1:
             raise KeyError(f"unexpected number of items: {len(list_result['items'])}")
-        self._instance = list_result["items"][0]
-        interface = self._instance["networkInterfaces"][0]
-        access_config = interface["accessConfigs"][0]
-        self.public_ip = access_config["natIP"]
-        self.logger.info(f"Successfully created instance {url=} with {self.public_ip=}")
-        self._wait_until_reachable(self.public_ip)
+        self._instance = list_result.items[0]
+        interface = self._instance.network_interfaces[0]
+        access_config = interface.access_configs[0]
+        self.public_ip = access_config.nat_i_p
+        self.logger.info(f"Successfully created instance {name} with {self.public_ip=}")
+        try:
+            self._wait_until_reachable(self.public_ip)
+        except Exception as e:
+            self.logger.error(e)
+            sys.exit(os.EX_NOHOST)
         return self._instance, self.public_ip
 
     def delete_vm(self, instance):
@@ -544,5 +545,5 @@ class GCP:
         :param instance: the instance to delete
         """
         self.logger.info(f"Destroying instance {self._instance_name}...")
-        operation = self._compute.instances().delete(project=self.project, zone=self.zone, instance=self._instance_name).execute()
+        operation = self._compute_instances.delete(project=self.project, zone=self.zone, instance=self._instance_name)
         self._gcp_wait_for_operation(operation)
