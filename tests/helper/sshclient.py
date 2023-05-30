@@ -69,12 +69,14 @@ class RemoteClient:
         sshconfig,
         port="22",
         sudo=False,
+        ssh_connect_timeout: int=60,
         ssh_max_retries: int=20,
         ssh_retry_timeout_seconds: int=15,
     ) -> None:
         self.host = host
         self.port = port
         self.sudo = sudo
+        self.ssh_connect_timeout = ssh_connect_timeout
         self.ssh_max_retries = ssh_max_retries
         self.ssh_retry_timeout_seconds = ssh_retry_timeout_seconds
         self.client = None
@@ -160,14 +162,14 @@ class RemoteClient:
                         pkey=pk,
                         look_for_keys=True,
                         auth_timeout=30,
-                        timeout=60,
+                        timeout=self.ssh_connect_timeout,
                     )
                     self.scp = SCPClient(self.client.get_transport())
                     break
                 except NoValidConnectionsError as e:
                     errors += 1
                     if errors >= self.ssh_max_retries:
-                        pytest.exit(f"Unable to establish an SSH connection after {errors*self.ssh_retry_timeout_seconds} seconds. Aborting all tests.", returncode=5)
+                        pytest.exit(f"Unable to establish an SSH connection after {errors*(self.ssh_connect_timeout+self.ssh_retry_timeout_seconds)} seconds. Aborting all tests.", returncode=5)
                     logger.warning(f"Unable to connect, retrying in {self.ssh_retry_timeout_seconds} seconds...")
                     time.sleep(self.ssh_retry_timeout_seconds)
         except AuthenticationException as error:
