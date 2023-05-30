@@ -114,7 +114,7 @@ class GCP:
 
     def _gcp_wait_for_operation(self, operation, timeout=60):
         self.logger.info(f"Waiting for {operation.name} to complete...")
-        result = operation.result(timeout=timeout)
+        _ = operation.result(timeout=timeout)
         self.logger.info(f"{operation.name} done.")
 
 
@@ -412,7 +412,7 @@ class GCP:
             }
 
         operation = images.insert(project=self.image_project, image_resource=config)
-        self._gcp_wait_for_operation(operation)
+        self._gcp_wait_for_operation(operation, timeout=600)
         image_blob.delete()
         self.logger.info(f'Uploaded image {blob_url} to project {self.project} as {image_name}')
         self._image = images.get(image=image_name, project=self.image_project)
