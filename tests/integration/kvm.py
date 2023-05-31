@@ -254,6 +254,7 @@ class KVM:
         if arch == "amd64":
             cmd = f"/gardenlinux/bin/start-vm \
               --daemonize \
+              --no-watchdog \
               --arch x86_64 \
               --port {port} \
               --destport 2222 \
@@ -263,6 +264,7 @@ class KVM:
         elif arch == "arm64":
             cmd = f"/gardenlinux/bin/start-vm \
               --daemonize \
+              --no-watchdog \
               --arch aarch64 \
               --port {port} \
               --destport 2222 \

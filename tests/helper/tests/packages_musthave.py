@@ -71,10 +71,6 @@ def packages_musthave(client, testconfig):
         elif package.endswith(r"-${arch}"):
             package = package.replace(r"${arch}", arch)
 
-        # check if the package has a version tag and chop it off
-        if len(package.split("=")) == 2:
-            package = package.split('=')[0]
-
         # explicitly excluded packages are allowed to miss 
         if package in exclude:
             continue

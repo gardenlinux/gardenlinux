@@ -7,16 +7,15 @@ name = "pypi"
 pytest = "*"
 boto3 = "*"
 paramiko = "*"
+python-novaclient = "*"
 click = "*"
 pyyaml = "*"
 scp = "*"
 dacite = "*"
 # Google/GCP SDK packages
 google-auth = "*"
-google-cloud = "*"
+google-cloud-compute = "*"
 google-cloud-storage = "*"
-google-cloud-datastore = "*"
-google-api-python-client = "*"
 # Aliyun SDK packages
 oss2 = "*"
 aliyun-python-sdk-core = "*"
@@ -41,7 +40,7 @@ flake8 = "*"
 pylint = "*"
 
 [requires]
-python_version = "3.10"
+python_version = "3.11"
 
 [pipenv]
 allow_prereleases = true

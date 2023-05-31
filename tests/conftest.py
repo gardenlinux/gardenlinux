@@ -149,13 +149,15 @@ def testconfig(pipeline, iaas, pytestconfig):
             pass
         elif iaas == 'manual':
             pass
+        elif iaas == 'local':
+            pass
         return config
 
 
 @pytest.fixture(scope="session")
 def aws_session(testconfig, pipeline, request):
     import boto3
-    
+
     if "region" in testconfig:
         return boto3.Session(region_name=testconfig["region"])
     else:
@@ -204,6 +206,12 @@ def gcp_credentials(testconfig, pipeline, request):
 
 
 @pytest.fixture(scope="session")
+def local(iaas):
+    logger.info(f"Testconfig for {iaas=} is {testconfig}")
+    test_name = testconfig.get('test_name', f"gl-test-{time.strftime('%Y%m%d%H%M%S')}")
+
+
+@pytest.fixture(scope="session")
 def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
     logger.info(f"Testconfig for {iaas=} is {testconfig}")
     test_name = testconfig.get('test_name', f"gl-test-{time.strftime('%Y%m%d%H%M%S')}")
@@ -229,6 +237,8 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
         yield from ALI.fixture(testconfig, test_name)
     elif iaas == "manual":
         yield from Manual.fixture(testconfig)
+    elif iaas == "local":
+        yield testconfig
     else:
         raise ValueError(f"invalid {iaas=}")
 
@@ -244,7 +254,10 @@ def pytest_collection_modifyitems(config, items):
     except OSError as err:
         logger.error(f"can not open config file {config_file}")
         pytest.exit(err, 1)
-    features = config_options[iaas].get("features", [])
+    if not iaas == 'local':
+        features = config_options[iaas].get("features", [])
+    else:
+        features = []
     for item in items:
         item_path = str(item.fspath)
         if "features" in item_path:
@@ -342,6 +355,16 @@ def chroot(iaas):
         pytest.skip('test only supported on chroot')
 
 @pytest.fixture
+def non_local(iaas):
+    if iaas == 'local':
+        pytest.skip('test not supported on local')
+
+@pytest.fixture
+def local(iaas):
+    if iaas != 'local':
+        pytest.skip('test only supported on local')
+
+@pytest.fixture
 def non_openstack(iaas):
     if iaas == 'openstack-ccee':
         pytest.skip('test not supported on openstack')
@@ -422,3 +445,9 @@ def firecracker(testconfig):
     if "firecracker" in features:
         skip_msg = "Currently unsupported. Please see: https://github.com/gardenlinux/gardenlinux/issues/1240"
         pytest.skip(skip_msg)
+
+@pytest.fixture
+def non_container(testconfig):
+    features = testconfig.get("features", [])
+    if "container" in features:
+        pytest.skip('test is not supported on container')

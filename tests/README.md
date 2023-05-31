@@ -45,6 +45,7 @@
       - [OpenStack CC EE flavor](#openstack-cc-ee-flavor)
         - [Configuration options](#configuration-options-7)
         - [Running the tests](#running-the-tests-8)
+      - [Local tests in the integration container](#local-tests-in-the-integration-container)
   - [Misc](#misc)
     - [Autoformat Using Black](#autoformat-using-black)
     - [Run Static Checks](#run-static-checks)
@@ -175,6 +176,10 @@ aws:
     instance_type: t3.micro
     # architecture of the image and VM to be used (optional)
     architecture: amd64
+    # boot mode of the VM. One can choose between "uefi" and "legacy-bios" (optional)
+    boot_mode: legacy-bios
+    # UEFI data which is a base64 representation of the UEFI variable store
+    # uefi_data: "dGVzdAo=..."
 
     # test name to be used for naming and/or tagging resources (optional)
     test_name: my_gardenlinux_test
@@ -213,6 +218,8 @@ aws:
 - **region** _(required)_: the AWS region in which all test relevant resources will be created
 - **instance-type** _(optional)_: the instance type that will be used for the EC2 instance used for testing, defaults to `t3.micro` if not specified
 - **architecture** _(optional)_: the architecture under which the AMI of the image to test should be registered (`amd64` or `arm64`), must match the instance type, defaults to `amd64` if not specified
+- **boot_mode** _(optional)_: the boot mode that the AMI of the image should be started with. Keep in mind that Graviton (`arm64`) can only use UEFI. Choose between `uefi` and `legacy-bios`.
+- **uefi_data** _(optional)_: Base64 representation of the non-volatile UEFI variable store. You can inspect and modify the UEFI data by using the python-uefivars tool on GitHub.
 
 - **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
 
@@ -277,6 +284,8 @@ azure:
     vm_size: Standard_D4_v4
     # hyperV generation to use. Possible values are 'V1' and 'V2'. Default is 'V1'
     hyper_v_generation: V1
+    # architecture to use. Possible values are 'x64' and 'Arm64'. Default is 'x64'
+    architecture: x64
     # enable accelerated networking for the VM on which the test runs (optional)
     accelerated_networking: false
 
@@ -323,10 +332,11 @@ Only three parameters are required for the test: the Azure `subscription` or `su
 - **subscription_id** _(required/optional)_: The Azure subscription (its ID) which is used for creating all relevant resources and running the test. Either the 'subscription' name or its needs to be provided.
 - **resource_group** _(optional)_: all relevant resources for the integration test will be assigned to an Azure resource group. If you want to reuse an existing resource group, you can specify it here. If left empty, a new resource group gets created for the duration of the test.
 - **nsg_name** _(optional)_: The integration tests need to create a new network security group, this is its name. If you want to reuse an existing security group, specify its name here. If left empty, a new network security group will be created for the duration of the test.
-- **vm_size** _(optional)_: The given size will be used for the Azure virtual machine the test runs on. Check [this document](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes) for a list of possible VM sizes. Remember that the VM size will have an impact on test performance and startup times (which get tested and produce a failure should they exceed 30 seconds). This setting defaults to `Standard_D4_v4`.
+- **vm_size** _(optional)_: The given size will be used for the Azure virtual machine the test runs on. Check [this document](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes) for a list of possible VM sizes. Remember that the VM size will have an impact on test performance and startup times (which get tested and produce a failure should they exceed 30 seconds). The VM size also defines the CPU architecture. This setting defaults to `Standard_D4_v4` which matches the architecture `x64`, for running `Arm64` images the VM size `Standard_D4ps_v5` would be a good choice to start with.
 - **hyper_v_generation** _(optional)_: Choose the HyperV generation of the virtual machine created from the image. Possible values are 'V1' or 'V2'. If not set, 'V1' will be used as a default.
     - 'V1': Boot = PCAT, Disk controllers = IDE
     - 'V2': Boot = UEFI, Disk controllers = SCSI
+- **architecture** _(optional)_: Choose the architecture. Azure offers x86_64 (x64) and Arm64. Make sure to also choose a VM size that matches the architecture. When running an Arm64 image the HyperV generation needs to be 'V2'. Defaults to `x64`.
 - **accelerated_networking** _(optional)_: Enables [Azure Accelerated Networking](https://docs.microsoft.com/en-us/azure/virtual-network/accelerated-networking-overview) for the VM on which the test is going to run. Defaults to `false`, thus accelerated networking disabled.
 
 - **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
@@ -495,20 +505,20 @@ gcp:
     # zone where the VM should be created (required)
     zone: europe-west1-d
 
-    # use a service account to log on to GCP instead of access token created with gcloud before (optional)
-    #service_account_json:
-    #service_account_json_path: /root/.config/gcloud/application_default_credentials.json
-
-    # use already existing image in GCE for tests (optional/required)
-    #image_name:
     # upload this local image to GCE and use it for testing (optional/required)
     image: file:/build/gcp-dev/20210915/amd64/bullseye/rootfs-gcpimage.tar.gz
-    #image: s3://gardenlinux/objects/078f440a76024ccd1679481708ebfc32f5431569
-    # region of the S3 bucket from where the image should be downloaded from (optional)
-    #image_region: eu-central-1
 
-    # GCS bucket for image upload, must exist and be used for local image upload (optional)
-    #bucket:
+    # enable uefi boot, default is legacy boot (optional)
+    #uefi: false
+    # enable secureboot, implies uefi boot, default is off (optional)
+    #secureboot: false
+    secureboot_parameters:
+        # paths to the secureboot keys and database, needed for secureboot (optional)
+        #db_path: /gardenlinux/cert/secureboot.db.auth
+        #kek_path: /gardenlinux/cert/secureboot.kek.auth
+        #pk_path: /gardenlinux/cert/secureboot.pk.auth
+        # the certificate type for secureboot, possible values are `BIN`, `X509`. Default is `BIN`
+        #cert_file_type: BIN
 
     # GCE machine type (optional)
     machine_type: n1-standard-2
@@ -550,6 +560,14 @@ The URI can be:
 - **image_region** _(optional)_: If the image comes from an S3 bucket, the bucket location to download from can be specified here. Defaults to `eu-central-1` if omitted.
 
 - **bucket** _(optional)_: To create a GCE machine image from a local filesystem snapshot, it needs to be uploaded to a GCS bucket first. The will be created on the fly and a name will be generated if this field is left empty.
+
+- **uefi** _(optional)_: To enable UEFI boot, by default legacy boot is used. Default is `false`
+
+- **secureboot** _(optional)_: To enable secureboot, if secureboot is enabled UEFI boot will be used, no matter how the `uefi` option is set. For secureboot it is important that the path options to the keys and database are set properly. Default is `false`. 
+- **db_path** _(optional)_: The path to the signature database for secureboot. Default is `/gardenlinux/cert/secureboot.db.auth`
+- **kek_path** _(optional)_: The path to the key exchange key for secureboot. Default is `/gardenlinux/cert/secureboot.kek.auth`
+- **pk_path** _(optional)_: The path to the platform key for secureboot. Default is `/gardenlinux/cert/secureboot.pk.auth`
+- **cert_file_type** _(optional)_: The type of the certificate, allowed values are `BIN` or `X509`. Default is `BIN`
 
 - **machine_type** _(optional)_: The GCE machine type to be used to create the GCE instance for the test. Defaults to `n1-standard-2` if not given.
 
@@ -991,6 +1009,55 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 
     pytest --iaas=openstack-ccee --configfile=/config/mygcpconfig.yaml
 
+
+#### Local tests in the integration container
+
+Sometimes it is neccessary to run tests locally for build results and not in a chroot or kvm environment that is accessed via ssh. This can be achieved by using the build results in the base-test container with the `local` configuration for `pytest`.
+
+The following describes the configuration needed to run local tests.
+
+```yaml
+local:
+    # configuration parameters for tests separated by features
+    oci:
+      # Path to a final artifact. Represents the .tar.xz archive image file (required)
+      image: /build/kvm_dev_oci-amd64-today-local.oci.tar.xz
+      kernel: /build/kvm_dev_oci-amd64-today-local.vmlinuz
+
+    garden_feat:
+
+```
+
+##### Configuration options
+
+<details>
+
+- **oci** contains the configuration options for local test `test_oci`
+    - **image** the build result image used within the tests
+    - **kernel** the name for the builded kernel
+
+- **garden_feat** contains the configuration option for the `test_garden_feat` test. This is just an example since the `test_garden_feat` test does not have any configuration options
+
+Check the [readme](local/README.md) for detailed configuration options of all the local tests.
+</details>
+
+##### Running the tests
+
+Start Podman container with dependencies:
+
+- mount Garden Linux repository to `/gardenlinux`
+- mount build result directory to `/build` (if not part of the Garden Linux file tree)
+- mount directory with configfile to `/config`
+
+```
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v ~/config:/config  gardenlinux/base-test:`bin/garden-version` bash
+```
+
+Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
+
+    pytest --iaas=local --configfile=/config/mylocalconfig.yaml
+
+NOTE: With the `-k EXPRESSION` you can filter the tests by name to only run the tests you want, instead of all local tests. See `pytest --help` for more information.
 
 ## Misc
 Within this section further tests are listed that may help developing and contributing on Garden Linux. These tests are disjunct from the Garden Linux code itself and may only perform validation on code (like `Shellcheck` or `autopep`).

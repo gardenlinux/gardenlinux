@@ -1,3 +1,5 @@
+import re
+
 def password_hashes(client):
     """Check configured password hashes"""
     # Call binary on remote and get content of file
@@ -8,8 +10,10 @@ def password_hashes(client):
     # Validate that the main part is present
     match_list = []
     for line in output.split('\n'):
-        # First fetch the corresponding line(s)
-        if "[success=1 default=ignore]" in line:
+        # success=n specifies to skip the next n lines during config parsing.
+        # sssd uses success=2, and adds 2 fallback lines in case of non success.
+        # but non-sssd default is success=1
+        if re.search("^.*\[success=. default=ignore\].*", line):
             # Do not fetch comments
             if not line.startswith("#"):
                 match_list.append(line)

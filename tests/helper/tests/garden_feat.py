@@ -5,7 +5,7 @@ import tempfile
 from helper import utils
 
 
-def garden_feat(client, test_case, config, input_features, output_features):
+def garden_feat(test_case, config, input_features, output_features):
     """Check the MD5 sums of installed Debian packages"""
 
     # Run tests for all garden-feat cli opts
