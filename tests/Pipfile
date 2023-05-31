@@ -13,10 +13,8 @@ scp = "*"
 dacite = "*"
 # Google/GCP SDK packages
 google-auth = "*"
-google-cloud = "*"
+google-cloud-compute = "*"
 google-cloud-storage = "*"
-google-cloud-datastore = "*"
-google-api-python-client = "*"
 # Aliyun SDK packages
 oss2 = "*"
 aliyun-python-sdk-core = "*"
