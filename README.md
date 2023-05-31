@@ -247,7 +247,7 @@ Garden Linux frequently publishes snapshot releases. These are available as mach
 Garden Linux provides a great documentation for build options, customizing, configuration, tests and pipeline integrations. The documentation can be found within the project's `docs/` path or by clicking <a href="https://github.com/gardenlinux/gardenlinux/tree/main/docs">here</a>. Next to this, you may find a corresponding `README.md` in each directory explaning some more details. Below, you may find some important documentations for continuous integration and integration tests.
 
 ### Continuous Integration
-Garden Linux can build in an automated way for continuous integration. See [ci/README.md](ci/README.md) for details.
+Garden Linux can build in an automated way for continuous integration. See [.github/workflows/README.md](.github/workflows/README.md) for details.
 
 ### Integration Tests
 While it may be confusing for beginners we highlight this chapter for `integration tests` here. Garden Linux supports integration testing on all major cloud platforms (Alicloud, AWS, Azure, GCP). To allow testing even without access to any cloud platform we created an universal `kvm` platform that may run locally and is accessed in the same way via a `ssh client object` as any other cloud platform. Therefore, you do not need to adjust tests to perform local integration tests. Just to mention here that there is another platform called `chroot`. This platform is used to perform `unit tests` and will run as a local `integration test`. More details can be found within the documentation in  [tests/README.md](tests/README.md).
