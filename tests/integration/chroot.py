@@ -183,6 +183,21 @@ class CHROOT:
         except IOError:
             logger.error("Could not write garden-epoch to chroot in {rootfs}".format(
               rootfs=rootfs))
+        # Install openssh-server if needed for platforms that were
+        # created without ssh-server
+        if not os.path.exists(f'{rootfs}/usr/sbin/sshd'):
+            cmd_ssh_install = []
+            cmd_ssh_install.append(f'chroot {rootfs} /bin/bash -c "apt-get update && apt-get -y install openssh-server"')
+            cmd_ssh_install.append(f'chroot {rootfs} /bin/bash -c "apt --fix-broken install"')
+            for i in cmd_ssh_install:
+                logger.info("Running command: {cmd}".format(
+                  cmd=i))
+                p = subprocess.run([i], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                rc = p.returncode
+                if rc != 0:
+                    logger.error("Command failed.")
+                else:
+                    logger.info("Command sucessfully executed.")
         # Generate SSH hostkeys for chroot
         # (this way we do not need to execute this inside the 'chroot'
         #  environment and still support amd64 and arm64 architectures)

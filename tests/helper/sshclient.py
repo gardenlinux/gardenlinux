@@ -68,17 +68,11 @@ class RemoteClient:
         host,
         sshconfig,
         port="22",
-        sudo=False,
-        ssh_connect_timeout: int=60,
-        ssh_max_retries: int=20,
-        ssh_retry_timeout_seconds: int=15,
+        sudo=False
     ) -> None:
         self.host = host
         self.port = port
         self.sudo = sudo
-        self.ssh_connect_timeout = ssh_connect_timeout
-        self.ssh_max_retries = ssh_max_retries
-        self.ssh_retry_timeout_seconds = ssh_retry_timeout_seconds
         self.client = None
         self.scp = None
         self.conn = None
@@ -150,9 +144,10 @@ class RemoteClient:
                 logger.error(f"private key {self.ssh_key_filepath} not found")
                 exit(1)
 
-            logger.info(f"Attempting to establish an SSH connection to {self.host}:{self.port}...")
+
+            max_errors = 5
             errors = 0
-            while errors < self.ssh_max_retries:
+            while errors < max_errors:
                 try:
                     self.client.connect(
                         hostname=self.host,
@@ -162,16 +157,16 @@ class RemoteClient:
                         pkey=pk,
                         look_for_keys=True,
                         auth_timeout=30,
-                        timeout=self.ssh_connect_timeout,
+                        timeout=60,
                     )
                     self.scp = SCPClient(self.client.get_transport())
                     break
                 except NoValidConnectionsError as e:
-                    errors += 1
-                    if errors >= self.ssh_max_retries:
-                        pytest.exit(f"Unable to establish an SSH connection after {errors*(self.ssh_connect_timeout+self.ssh_retry_timeout_seconds)} seconds. Aborting all tests.", returncode=5)
-                    logger.warning(f"Unable to connect, retrying in {self.ssh_retry_timeout_seconds} seconds...")
-                    time.sleep(self.ssh_retry_timeout_seconds)
+                    logger.exception("Unable to connect")
+                    errors = errors + 1
+                    if errors == 5:
+                        raise Exception("Too many connection failures. Giving up.")
+                    time.sleep(5)
         except AuthenticationException as error:
             logger.exception("Authentication failed")
             raise error

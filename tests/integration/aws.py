@@ -39,13 +39,16 @@ def register_image(
     snapshot_id: str,
     image_name: str,
     architecture: str,
+    boot_mode: str='',
+    uefi_data: str='',
 ) -> str:
     '''
     @return: ami-id of registered image
     '''
     root_device_name = '/dev/xvda'
 
-    result = ec2_client.register_image(
+    # Define arguments for register_image
+    arguments = dict(
         # ImageLocation=XX, s3-url?
         Architecture=architecture,
         BlockDeviceMappings=[
@@ -62,8 +65,19 @@ def register_image(
         EnaSupport=True,
         Name=image_name,
         RootDeviceName=root_device_name,
-        VirtualizationType='hvm' # | paravirtual
+        VirtualizationType='hvm', # | paravirtual
     )
+
+    # Check if boot mode and uefi data
+    # are set properly and add them to
+    # the arguments
+    if len(boot_mode) > 0:
+        arguments['BootMode'] = boot_mode
+    if len(uefi_data) > 0:
+        arguments['UefiData'] = uefi_data
+
+    # Now, register image
+    result = ec2_client.register_image(**arguments)
 
     ec2_client.create_tags(
         Resources=[
@@ -178,6 +192,10 @@ class AWS:
             cfg['instance_type'] = "t3.micro"
         if not 'architecture' in cfg or cfg['architecture'] == "amd64":
             cfg['architecture'] = "x86_64"
+        if not 'boot_mode' in cfg:
+            cfg['boot_mode'] = ""
+        if not 'uefi_data' in cfg:
+            cfg['uefi_data'] = ""
         if not 'bucket' in cfg:
             cfg['bucket'] = f"img-{test_name}-upload"
         if not 'securitygroup_name' in cfg:
@@ -398,6 +416,9 @@ class AWS:
                     "Condition": {
                         "Bool": {
                             "aws:SecureTransport": "false"
+                        },
+                        "NumericLessThan": {
+                            "s3:TlsVersion": '1.2'
                         }
                     }
                 }
@@ -647,7 +668,9 @@ class AWS:
             ec2_client = self.ec2_client,
             snapshot_id = self._snapshot_id,
             image_name = image_name,
-            architecture = self.config["architecture"]
+            architecture = self.config["architecture"],
+            boot_mode = self.config["boot_mode"],
+            uefi_data = self.config["uefi_data"]
         )
         self.ec2_client.create_tags(
             Resources = [self._ami_id],
