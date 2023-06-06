@@ -5,6 +5,7 @@
 [![Gitter](https://badges.gitter.im/gardenlinux/community.svg)](https://gitter.im/gardenlinux/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![GitHub Open Issues](https://img.shields.io/github/issues-raw/gardenlinux/gardenlinux)](https://img.shields.io/github/issues-raw/gardenlinux/gardenlinux)
 [![GitHub Closed PRs](https://img.shields.io/github/issues-pr-closed-raw/gardenlinux/gardenlinux)](https://img.shields.io/github/issues-pr-closed-raw/gardenlinux/gardenlinux)
+[![GitLab Package Check](https://github.com/gardenlinux/gardenlinux/actions/workflows/check-packages.yml/badge.svg)](https://github.com/gardenlinux/gardenlinux/actions/workflows/check-packages.yml)
 
 
 # Garden Linux
