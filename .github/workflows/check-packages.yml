@@ -41,16 +41,20 @@ jobs:
           source venv/bin/activate
           pip install requests pyyaml
 
-      - name: Run script
-        id: run-script
+      - name: Generate report
+        id: generate_report
         run: |
           source venv/bin/activate
-          python .github/workflows/generate_package_report.py > report.yaml
-          if [[ -s report.yaml ]]; then
-            echo "Package Report:"
-            cat report.yaml
-            exit 1
+          echo "::set-output name=report::$(python .github/workflows/generate_package_report.py)"
+        env:
+          GITLAB_PRIVATE_TOKEN: ${{ secrets.GITLAB_PRIVATE_TOKEN }}
+
+      - name: Print report
+        run: |
+          echo "${{ steps.generate_report.outputs.report }}"
+          if [ "${{ steps.generate_report.outputs.report }}" = "None" ]
+          then
+            echo "No failed package pipelines detected."
           else
-            echo "All package pipelines are successful"
-          fi
-          
+            exit 1
+          fi          
