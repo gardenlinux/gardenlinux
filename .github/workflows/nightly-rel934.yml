@@ -1,0 +1,9 @@
+name: nightly rel-934
+on:
+  schedule:
+    - cron: '0 6 * * *'
+jobs:
+  trigger_workflow_dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -vv --fail-with-body -X POST -u "token:${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/actions/workflows/28837699/dispatches" -d '{"ref":"rel-934"}'
