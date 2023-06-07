@@ -54,4 +54,7 @@ for project in projects:
 
 sorted_report = sorted(report.items(), key=lambda x: x[1]['pipeline_status'] != 'failed', )
 
-print(yaml.dump(dict(sorted_report)))
+if sorted_report:
+    print(yaml.dump(dict(sorted_report)))
+else:
+    print("None")
