@@ -1,0 +1,58 @@
+name: Check Packages
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+  pull_request:
+    branches:
+    - rel-*
+
+permissions:
+  contents: read
+
+jobs:
+  check-pkgs:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      # required for all workflows
+      security-events: write
+
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
+
+    steps:
+      - name: Repository checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Check for missing packages in repo
+        run: |
+          ./bin/check-pkgs-availability.sh $PWD $(bin/garden-version)
+        
+      - name: Check Package Status
+        run: |
+        
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install requests pyyaml
+
+      - name: Run script
+        id: run-script
+        run: |
+          source venv/bin/activate
+          python .github/workflows/generate_package_report.py > report.yaml
+          if [[ -s report.yaml ]]; then
+            echo "Some package pipelines were not successful"
+            exit 1
+          else
+            echo "All package pipelines are successful"
+          fi
+          
+      - name: Print report
+        run: |
+          cat report.yaml
