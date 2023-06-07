@@ -47,12 +47,10 @@ jobs:
           source venv/bin/activate
           python .github/workflows/generate_package_report.py > report.yaml
           if [[ -s report.yaml ]]; then
-            echo "Some package pipelines were not successful"
+            echo "Package Report:"
+            cat report.yaml
             exit 1
           else
             echo "All package pipelines are successful"
           fi
           
-      - name: Print report
-        run: |
-          cat report.yaml
