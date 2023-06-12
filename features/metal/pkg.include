@@ -4,7 +4,6 @@ lvm2
 dosfstools
 efibootmgr
 efitools
-haveged
 ipmitool
 pciutils
 usbutils

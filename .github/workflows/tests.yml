@@ -102,7 +102,7 @@ jobs:
     - if: ${{ matrix.target == 'aws' }}
       id: 'auth_aws'
       name: 'Authenticate to AWS'
-      uses: aws-actions/configure-aws-credentials@v1-node16
+      uses: aws-actions/configure-aws-credentials@v2
       with:
         role-to-assume: ${{ secrets.aws_role }}
         role-session-name: ${{ secrets.aws_session }}

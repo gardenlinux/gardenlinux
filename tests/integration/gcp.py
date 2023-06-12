@@ -117,7 +117,7 @@ class GCP:
 
     def _gcp_wait_for_operation(self, operation, timeout=120):
         self.logger.info(f"Waiting for {operation.name} to complete...")
-        result = operation.result(timeout=timeout)
+        _ = operation.result(timeout=timeout)
         self.logger.info(f"{operation.name} done.")
 
     def _gcp_create_firewall_rules(self, fw_rest_body):
@@ -414,9 +414,10 @@ class GCP:
             }
 
         operation = images.insert(project=self.image_project, image_resource=config)
-        self._gcp_wait_for_operation(operation)
-        image_blob.delete()
+        self._gcp_wait_for_operation(operation, timeout=600)
         self.logger.info(f'Uploaded image {blob_url} to project {self.project} as {image_name}')
+        image_blob.delete()
+        self._delete_bucket(name=self._bucket.name)
         self._image = images.get(image=image_name, project=self.image_project)
 
     def _delete_image(self, image_name):

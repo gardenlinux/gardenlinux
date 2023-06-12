@@ -116,6 +116,16 @@ def get_kernel_version(client):
     return output
 
 
+def wait_systemd_boot(client):
+    """ Wait for systemd to finish booting """
+
+    cmd = "systemctl is-system-running --wait"
+
+    (exit_code, output, error) = client.execute_command(cmd, quiet=False)
+
+    assert exit_code == 0, f"Failed to wait for systemd"
+
+
 def validate_systemd_unit(client, systemd_unit, active=True):
     """ Validate a given systemd unit """
     cmd = f"systemctl status {systemd_unit}.service"

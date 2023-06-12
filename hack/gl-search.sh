@@ -12,6 +12,9 @@
 # - rdepends: (EXPERIMENTAL) find what package in garden linux depends on this package
 # - download: downloads the selected deb package
 
+THIS_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[@]}")")"
+# shellcheck source=/dev/null
+source "${THIS_DIR}/.gl-search-functions.sh"
 
 gl_selected_os="$(echo -e "gardenlinux\ndebian\nfrom_env_var" | fzf --header 'Select OS or enter custom url (e.g. ftp.debian.org/debian)' --print-query | tail -1)"
 if [ "$gl_selected_os" == "gardenlinux" ]; then
@@ -29,6 +32,7 @@ else
   gls_gl_dist="$(echo "" |fzf --header 'Enter the Version you are interested in' --print-query | tail -1)"
   base_url="$gl_selected_os"
 fi
+
 
 export gls_gl_dist
 
@@ -73,75 +77,12 @@ fi
 
 export packages_file
 
-function filter_package_info() {
-  pkg=$1;
-  sed -n "/Package: $pkg$/,/^$/p" "$packages_file"
-}
-
-function get_dependencies(){
-  pkg=$1;
-  sed -n "/Package: $pkg$/,/^$/p" "$packages_file" | grep "^Depends:" | sed -e "s/^Depends://" | sed -e "s/(.*)//" | sed -e "s/|/,/" | sed -r "s/,/ /g" 
-}
-
-function does_pkg_exist(){
-  pkg=$1;
-
-  sed -n "/Package: $pkg$/,/^$/p" "$packages_file" | grep -q "Package"  
-}
-
-function dependency_search(){
-  dependencies="$(get_dependencies "$1"  | sed -r "s/,/ /g")"
-
-  for dep in ${dependencies}
-  do
-    if does_pkg_exist "$dep"; then
-      echo "Covered Dependency: $dep"
-    else 
-      echo "Foreign Dependency: $dep"
-    fi
-  done
-}
-
-function get_packages(){
-    grep "^Package: " "$packages_file"
-}
-
-
-function rdepends_package(){
-  pkg="$1"
-  gardenlinux_packages="$(get_packages "$pkg")"
-  # check all garden linux packages
-  for chk_pkg in ${gardenlinux_packages} 
-  do
-    if get_dependencies "$chk_pkg" | grep -q "$pkg"; then
-      echo "Reverse Dependency: ${chk_pkg}"
-    fi
-  done
-  
-}
-
-function get_filename(){
-  pkg="$1"
-  gardenlinux_packages="$(get_packages "$pkg")"
-  # check all garden linux packages
-  filename=$(sed -n "/Package: $pkg$/,/^$/p" "$packages_file" | grep "Filename:" | cut -d':' -f 2)
-  echo "$filename" | xargs
-   
-}
-# fzf preview requires function to be available in spawned subshell
-export -f filter_package_info
-export -f dependency_search
-export -f get_dependencies
-export -f does_pkg_exist
-export -f rdepends_package
-export -f get_packages
-export -f get_filename
 case "$gl_selected_action" in
   "dep-check")
     grep "^Package:.*" "$packages_file" |  cut -d' ' -f 2 | \
       fzf \
       --multi \
-      --preview "bash -c \"packages_file=$packages_file dependency_search {1}\"" \
+      --preview "bash -c \"source ${THIS_DIR}/.gl-search-functions.sh; packages_file=$packages_file dependency_search {1}\"" \
       --header 'Select Garden Linux Package to see details on the right window. You can type to filter.'
     ;;
   "download")
@@ -158,14 +99,14 @@ case "$gl_selected_action" in
     grep "^Package:.*" "$packages_file" | cut -d' ' -f 2 | \
       fzf \
       --multi \
-      --preview "bash -c \"packages_file=$packages_file filter_package_info {1}\""\
+      --preview "bash -c \"source ${THIS_DIR}/.gl-search-functions.sh; packages_file=$packages_file filter_package_info {1}\""\
       --header 'Select Garden Linux Package to see details on the right window. You can type to filter.'
     ;;
   "rdepends")
     grep "^Package:.*" "$packages_file" | cut -d' ' -f 2 | \
       fzf \
       --multi \
-      --preview "bash -c \"packages_file=$packages_file rdepends_package {1}\"" \
+      --preview "bash -c \"source ${THIS_DIR}/.gl-search-functions.sh; packages_file=$packages_file rdepends_package {1}\"" \
       --header 'Select Garden Linux Package to see details on the right window. You can type to filter.'
     ;;
   *)

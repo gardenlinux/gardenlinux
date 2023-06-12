@@ -19,7 +19,11 @@ find "$rootfs_work/var/log/" -type f -delete
 if grep _selinux <<< "$fullfeatures" > /dev/null; then
   # SELinux 'default' policy file contexts
   chcon -R system_u:object_r:unlabeled_t:s0 "$rootfs_work"
-  "$thisDir/garden-chroot" "$rootfs_work" /sbin/setfiles /etc/selinux/default/contexts/files/file_contexts /
+  mkdir "$rootfs_work/loop"
+  mount --bind "$rootfs_work" "$rootfs_work/loop"
+  "$thisDir/garden-chroot" "$rootfs_work" /sbin/setfiles -r /loop /etc/selinux/default/contexts/files/file_contexts /loop
+  umount "$rootfs_work/loop"
+  rmdir "$rootfs_work/loop"
   rm "$rootfs_work/.autorelabel"
 fi
 
@@ -165,7 +169,7 @@ sed 's/#.*//;/^[[:blank:]]*$/d' \
 
 	case "$fs" in
 		"ext4")
-			make_reproducible_ext4 -t "$timestamp" -h "gardenlinux:$version:partition:$target" ${uuid:+"-u"} ${uuid:+"$uuid"} ${label:+"-l"} ${label:+"$label"} -q $([ "$resize" = 0 ] || echo "-m") -p 16 "$data_source" "$file"
+			make_reproducible_ext4 -t "$timestamp" -h "gardenlinux:$version:partition:$target" ${uuid:+"-u"} ${uuid:+"$uuid"} ${label:+"-l"} ${label:+"$label"} -q $([ "$resize" = 0 ] || echo "-m") $(grep -v x-systemd.growfs <<< "$options" &> /dev/null || echo "-j") -p 16 "$data_source" "$file"
 			;;
 		"vfat")
 			make_reproducible_vfat -t "$timestamp" -h "gardenlinux:$version:partition:$target" ${uuid:+"-u"} ${uuid:+"$uuid"} ${label:+"-l"} ${label:+"$label"} "$data_source" "$file"

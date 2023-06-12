@@ -4,6 +4,7 @@ import re
 import pytest
 import uuid
 
+from helper.utils import wait_systemd_boot
 from helper.sshclient import RemoteClient
 
 from azure.core.exceptions import (
@@ -142,6 +143,16 @@ class AZURE:
                 'tags': self._tags
             }
         )
+    
+    def az_delete_ssh_key(self, name: str, force: bool = False):
+        key = self.az_get_ssh_key(name)
+        if key.tags == self._tags or force:
+            self.cclient.ssh_public_keys.delete(
+                resource_group_name = self._resourcegroup.name,
+                ssh_public_key_name = name
+            )
+        else:
+            self.logger.info(f"Keeping SSH public key {name} as it was not created by this test.")
 
 
     def az_get_image(self, name: str):
@@ -434,6 +445,8 @@ class AZURE:
                 host=ip.ip_address,
                 sshconfig=config["ssh"],
             )
+            logger.info("Waiting for systemd to finish with boot")
+            wait_systemd_boot(ssh)
             yield ssh
         finally:
             if ssh is not None:
@@ -496,8 +509,11 @@ class AZURE:
         if self._storageaccount:
             self.az_delete_storage_account(self._storageaccount.name)
             self._storageaccount = None
+        if self._ssh_key:
+            self.az_delete_ssh_key(self._ssh_key.name)
+            self._ssh_key = None
         if self._resourcegroup:
-            self.az_delete_resourcegroup(name=self._resourcegroup.name, wait_for_completion=False)
+            self.az_delete_resourcegroup(name=self._resourcegroup.name, wait_for_completion=True)
             self._resourcegroup = None
 
     def init_environment(self):
