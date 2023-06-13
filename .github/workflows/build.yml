@@ -22,10 +22,14 @@ on:
         required: false
     outputs:
       version:
-        value: ${{ jobs.setup.outputs.version }}
+        value: ${{ jobs.version.outputs.version }}
 jobs:
-  setup:
-    runs-on: ec2-gardenlinux-amd64
+  version:
+    name: resolve version
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
@@ -33,11 +37,23 @@ jobs:
       - name: resolve version "${{ inputs.version }}"
         id: version
         run: echo version="$(bin/garden-version "${{ inputs.version }}")" | tee -a "$GITHUB_OUTPUT"
+  cert:
+    name: certificates
+    needs: version
+    runs-on: ubuntu-latest
+    defaults:
+      run:
         shell: bash
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup
+      - name: set VERSION=${{ needs.version.outputs.version }}
+        run: |
+          bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
+          git update-index --assume-unchanged VERSION
       - name: bulid certificates
         if: ${{ ! inputs.use_kms }}
-        run: make cert/secureboot.db.auth
-        shell: bash
+        run: ./cert/build
       - name: use kms backed certificates
         if: ${{ inputs.use_kms }}
         run: |
@@ -45,64 +61,112 @@ jobs:
           for f in secureboot.{{pk,null.pk,kek,db}.auth,db.{crt,arn}}; do
             ln -sr "cert/gardenlinux-$f" "cert/$f"
           done
-        shell: bash
-      - name: pack certificates for following bulid stages
-        run: sudo tar -czv cert > cert.tar.gz
-        shell: bash
-      - uses: actions/upload-artifact@v3
+      - uses: actions/cache/save@v3
         with:
-          name: _cert
-          path: cert.tar.gz
+          path: cert
+          key: cert-${{ github.run_id }}-${{ github.run_attempt }}
+  base:
+    name: bootstrap stage
+    needs: version
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup
+      - name: set VERSION=${{ needs.version.outputs.version }}
+        run: |
+          bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
+          git update-index --assume-unchanged VERSION
+      - name: build base-amd64 base-arm64
+        run: ./build base-amd64 base-arm64
+      - uses: actions/cache/save@v3
+        with:
+          path: .build
+          key: base-${{ github.run_id }}-${{ github.run_attempt }}
+  test_container:
+    name: container image for tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup
+      - run: podman build --tag test --build-arg base="$(./build --print-container-image)" tests
+      - run: podman save --format oci-archive test > test.oci
+      - uses: actions/cache/save@v3
+        with:
+          path: test.oci
+          key: test_container-${{ github.run_id }}-${{ github.run_attempt }}
   images:
-    needs: setup
-    runs-on: ec2-gardenlinux-${{ matrix.architecture }}
+    needs: [ version, cert, base, test_container ]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     permissions:
       id-token: write
     environment: ${{ inputs.use_kms && 'oidc_aws_kms_secureboot_signing' || '' }}
     strategy:
       fail-fast: false
       matrix:
-        architecture: [ amd64, arm64 ]
-        target: [ kvm, "kvm,_secureboot", "kvm,_secureboot,_readonly", "kvm,_secureboot,_readonly,_persistence", metal, "metal,_secureboot", "metal,_secureboot,_readonly", "metal,_secureboot,_readonly,_persistence", gcp, aws, "aws,_secureboot", "aws,_secureboot,_readonly", "aws,_secureboot,_readonly,_persistence", azure, ali, openstack, vmware, "metal,_pxe", firecracker, "aws,githubActionRunner", "metal,vhost" ]
+        arch: [ amd64, arm64 ]
+        target: [ kvm, "kvm_secureboot", "kvm_secureboot_readonly", "kvm_secureboot_readonly_persistence", metal, "metal_secureboot", "metal_secureboot_readonly", "metal_secureboot_readonly_persistence", gcp, aws, "aws_secureboot", "aws_secureboot_readonly", "aws_secureboot_readonly_persistence", azure, ali, openstack, vmware, "metal_pxe", firecracker, "metal-vhost" ]
         modifier: [ "${{ inputs.default_modifier }}" ]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: ./.github/actions/setup
+      - name: set VERSION=${{ needs.version.outputs.version }}
+        run: |
+          bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
+          git update-index --assume-unchanged VERSION
+      - name: load cert cache
+        uses: actions/cache/restore@v3
         with:
-          name: _cert
-      - name: unpack certificates from previous build stage
-        run: sudo tar -xzvf cert.tar.gz && rm cert.tar.gz
-        shell: bash
+          path: cert
+          key: cert-${{ github.run_id }}-${{ github.run_attempt }}
+          fail-on-cache-miss: true
       - name: write secureboot db arn for kms backed certificates
         if: ${{ inputs.use_kms }}
         run: echo "${{ secrets.secureboot_db_kms_arn }}" > cert/gardenlinux-secureboot.db.arn
-        shell: bash
-      - name: set VERSION=${{ needs.setup.outputs.version }}
-        run: |
-          bin/garden-version "${{ needs.setup.outputs.version }}" | tee VERSION
-          git update-index --assume-unchanged VERSION
-        shell: bash
-      - name: get cname
-        run: |
-          cname="$(bin/garden-feat --features ${{ matrix.target }}${{ matrix.modifier }}${{ matrix.additional_modifer }})"
-          artifact_name="$cname-${{ matrix.architecture }}-${{ needs.setup.outputs.version }}-$(git rev-parse --short HEAD)"
-          printf 'cname=%s\nartifact_name=%s\n' "$cname" "$artifact_name" | tee -a "$GITHUB_ENV"
-        shell: bash
-      - if: ${{ inputs.use_kms }}
+      - name: configure aws credentials for kms signing
+        if: ${{ inputs.use_kms }}
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.aws_kms_role }}
           role-session-name: ${{ secrets.aws_oidc_session }}
           aws-region: ${{ secrets.aws_region }}
-      - name: build Garden Linux image
-        run: make BUILD_OPTS="--lessram ${{ inputs.use_kms && '--export-aws-access-key' || '' }}" "${{ env.cname }}"
-        shell: bash
-      - name: pack build artifacts for upload
+      - name: load bootstrap stage cache
+        uses: actions/cache/restore@v3
+        with:
+          path: .build
+          key: base-${{ github.run_id }}-${{ github.run_attempt }}
+          fail-on-cache-miss: true
+      - name: load test container cache
+        uses: actions/cache/restore@v3
+        with:
+          path: test.oci
+          key: test_container-${{ github.run_id }}-${{ github.run_attempt }}
+          fail-on-cache-miss: true
+      - name: import test container image
         run: |
-          mv .build "${{ env.artifact_name }}"
-          tar -czvf "${{ env.artifact_name }}.tar.gz" "${{ env.artifact_name }}"
-        shell: bash
+          podman load < test.oci
+          rm test.oci
+      - name: update bootstrap stage build artifact timestamps
+        run: |
+          t="$(date '+%s')"
+          find .build -exec touch -d "@$t" {} +
+      - name: build
+        run: ./build ${{ inputs.use_kms && '--kms' || '' }} ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
+      - name: test
+        run: ./test --container-image test ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
+      - name: get cname
+        run: echo "cname=$(basename "$(realpath ".build/${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}")" .artifacts)" | tee -a "$GITHUB_ENV"
+      - name: pack build artifacts for upload
+        run: tar -cSzvf "${{ env.cname }}.tar.gz" -C .build -T ".build/${{ env.cname }}.artifacts"
       - uses: actions/upload-artifact@v3
         with:
-          name: "build-${{ env.artifact_name }}"
-          path: "${{ env.artifact_name }}.tar.gz"
+          name: "${{ env.cname }}"
+          path: "${{ env.cname }}.tar.gz"

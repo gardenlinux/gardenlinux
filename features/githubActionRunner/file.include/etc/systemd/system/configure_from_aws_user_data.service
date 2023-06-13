@@ -1,8 +1,0 @@
-[Unit]
-After=network-online.target
-
-[Service]
-ExecStart=/usr/bin/configure_from_aws_user_data
-
-[Install]
-WantedBy=multi-user.target

@@ -3,6 +3,7 @@ from helper.utils import get_architecture
 import os
 import string
 import pytest
+import subprocess
 
 def packages_musthave(client, testconfig):
     """"Test if the packages defined in pkg.include are installed"""
@@ -16,7 +17,7 @@ def packages_musthave(client, testconfig):
     except OSError:
         pytest.skip(f"feature {current} does not have a pkg.include file")
 
-    # collect excluded packages from all enabled features 
+    # collect excluded packages from all enabled features
     features = testconfig["features"]
     exclude = []
     for feature in features:
@@ -32,7 +33,7 @@ def packages_musthave(client, testconfig):
         except OSError:
             continue
 
-    # collect packages that should be ignored by the test 
+    # collect packages that should be ignored by the test
     # e.g. because they got excluded by later features
     ignore = []
     for feature in features:
@@ -47,31 +48,17 @@ def packages_musthave(client, testconfig):
                     ignore.append(package)
         except OSError:
             continue
-    
+
     arch = get_architecture(client)
 
     missing = []
     for package in packages.splitlines():
+        package = subprocess.Popen(f'set -eufo pipefail; cd "$(mktemp -d)"; arch="{arch}"; PATH=""; set -r; read line; eval "echo $line"', shell=True, executable="/bin/bash", stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate(input=package.encode("utf-8"))[0].decode("utf-8")
         package = package.strip(string.whitespace)
-        # ignore comments
-        if package.startswith("#"):
+        if package == "":
             continue
-        # normalize package name if the line in pkg.include contains:
-        # * the architecture as condition
-        elif package.startswith(r"[${arch}"):
-            if arch in package:
-                package = package.split(" ")[-1]
-            else:
-                continue
-        # * an url to the package
-        elif package.endswith(r".deb"):
-            package_name = os.path.basename(package)
-            package = package_name.split("_")[0]
-        # * the architecture as a variable in the package name
-        elif package.endswith(r"-${arch}"):
-            package = package.replace(r"${arch}", arch)
 
-        # explicitly excluded packages are allowed to miss 
+        # explicitly excluded packages are allowed to miss
         if package in exclude:
             continue
 

@@ -1,0 +1,15 @@
+ARG base=debian:bookworm
+FROM $base
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates build-essential libpython3-dev openssh-client python3 python3-venv
+
+# Prepare virtual environment
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN pip install pipenv
+COPY Pipfile Pipfile
+RUN pipenv install --system --skip-lock --dev --verbose
+
+COPY init /init
+CMD /init

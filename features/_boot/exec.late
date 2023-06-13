@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+update-kernel-cmdline
+
+mkdir -p /boot/efi/Default
+
+for kernel in /boot/vmlinuz-*; do
+	unshare --mount bash -c 'mount -t tmpfs none /sys && mount --bind /usr/bin/false /usr/bin/systemd-detect-virt && "$@"' \
+	DRACUT_COMPRESS_XZ="$(command -v xz)" dracut \
+	--no-hostonly \
+	--force \
+	--kver "${kernel#*-}" \
+	--modules "bash dash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown" \
+	--reproducible \
+	"/boot/initrd.img-${kernel#*-}"
+
+	kernel-install add "${kernel#*-}" "${kernel}"
+done
+
+sed 's/boot\/efi\///' -i /boot/efi/loader/entries/*.conf
+
+SYSTEMD_ESP_PATH=/boot/efi bootctl --no-variables install
+
+mkdir -p /boot/efi/syslinux
+
+# syslinux
+if [ -f "/usr/bin/syslinux" ]; then
+	mkdir -p /boot/efi/syslinux
+	cp /usr/lib/syslinux/modules/bios/menu.c32 /boot/efi/syslinux/
+	cp /usr/lib/syslinux/modules/bios/libutil.c32 /boot/efi/syslinux/
+
+	update-syslinux
+fi

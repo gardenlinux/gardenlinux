@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+rootfs="$1"
+
+if [ -f "$rootfs/etc/hosts" ] && [ ! -L "$rootfs/etc/hosts" ]; then
+cat > "$rootfs/etc/hosts" << EOF
+127.0.0.1	localhost
+127.0.1.1	garden
+
+# The following lines are desirable for IPv6 capable hosts
+::1     localhost ip6-localhost ip6-loopback
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+EOF
+fi
+
+if [ -f "$rootfs/etc/resolv.conf" ] && [ ! -L "$rootfs/etc/resolv.conf" ]; then
+cat > "$rootfs/etc/resolv.conf" << EOF
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+nameserver 2001:4860:4860::8888
+nameserver 2001:4860:4860::8844
+EOF
+fi
+
+if [ -f "$rootfs/etc/.resolv.conf.systemd-resolved.bak" ]; then
+rm "$rootfs/etc/.resolv.conf.systemd-resolved.bak"
+fi
+
+find "$rootfs/var/log/" "$rootfs/var/cache/" -type f -delete

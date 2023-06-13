@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-set -Eeuo pipefail
 
-# remove python's __pycache__
-$thisDir/garden-chroot $targetDir find /usr/lib -type d -name __pycache__ -exec rm -rf {} +
+set -eufo pipefail
 
-if [ -d "$targetDir/etc/nvme" ]; then
-	rm "$targetDir/etc/nvme/hostid" "$targetDir/etc/nvme/hostnqn"
-fi
+rootfs="$1"
+
+rm "$rootfs/etc/hostname"
+echo -n > "$rootfs/etc/hostname"
+
+rm "$rootfs/etc/resolv.conf"
+ln -s /run/systemd/resolve/resolv.conf "$rootfs/etc/resolv.conf"

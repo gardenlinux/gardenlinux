@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+input="$(realpath -- "$1")"
+output="$(realpath -- "$2")"
+
+dir="$(mktemp -d)"
+pushd "$dir" > /dev/null
+
+mkdir -p blobs/sha256
+
+rootfs_sha256="$(sha256sum < "$input" | head -c 64)"
+
+gzip < "$input" > layer
+layer_sha256="$(sha256sum < layer | head -c 64)"
+layer_size="$(stat -c '%s' layer)"
+mv layer "blobs/sha256/$layer_sha256"
+
+cat > config << EOF
+{
+  "architecture": "$BUILDER_ARCH",
+  "os": "linux",
+  "rootfs": {
+    "type": "layers",
+    "diff_ids": [
+      "sha256:$rootfs_sha256"
+    ]
+  }
+}
+EOF
+
+config_sha256="$(sha256sum < config | head -c 64)"
+config_size="$(stat -c '%s' config)"
+mv config "blobs/sha256/$config_sha256"
+
+cat > manifest << EOF
+{
+  "schemaVersion": 2,
+  "mediaType": "application/vnd.oci.image.manifest.v1+json",
+  "config": {
+    "mediaType": "application/vnd.oci.image.config.v1+json",
+    "digest": "sha256:$config_sha256",
+    "size": $config_size
+  },
+  "layers": [
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+      "digest": "sha256:$layer_sha256",
+      "size": $layer_size
+    }
+  ]
+}
+EOF
+
+manifest_sha256="$(sha256sum < manifest | head -c 64)"
+manifest_size="$(stat -c '%s' manifest)"
+mv manifest "blobs/sha256/$manifest_sha256"
+
+cat > index.json << EOF
+{
+  "schemaVersion": 2,
+  "manifests": [
+    {
+      "mediaType": "application/vnd.oci.image.manifest.v1+json",
+      "digest": "sha256:$manifest_sha256",
+      "size": $manifest_size
+    }
+  ]
+}
+EOF
+
+cat > oci-layout << EOF
+{
+  "imageLayoutVersion": "1.0.0"
+}
+EOF
+
+tar c blobs index.json oci-layout > "$output"
+
+popd > /dev/null
+rm -rf "$dir"

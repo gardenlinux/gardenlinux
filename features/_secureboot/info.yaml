@@ -1,2 +1,5 @@
 description: "use signed unified uefi binary instead of bootloader"
 type: flag
+features:
+  exclude:
+    - _boot
