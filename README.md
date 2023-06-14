@@ -61,154 +61,59 @@
   - Bare-metal systems
 
 ## Quick Start
-The entire build runs in a <i>privileged</i> Podman/Docker container that orchestrates all further actions. If not explicitly skipped, unit tests will be performed. Extended capabilities are at least needed for loop back support. Currently `AMD64` and `ARM64` architectures are supported. Garden Linux can also be built in an *air-gapped* environment (offline) without any further internet connectivity. However, this requires to obtain all needed dependencies before. Further instructions can be found [here](https://github.com/gardenlinux/gardenlinux/tree/main/docs/build#build-in-an-air-gapped-environment).
 
-By default, Garden Linux uses [Podman](https://podman.io/) as container runtime (`Docker` is optionally supported) for building Garden Linux images (Garden Linux artifacts however will have Docker in them to maintain compatibility with older Kubernetes versions). If - for whatever reason - you want or need to use Docker instead, you can set the environment variable `GARDENLINUX_BUILD_CRE=docker` before invoking the build.
+The build system utilizes the [gardenlinux/builder](https://github.com/gardenlinux/builder) tool.
 
-### Build Requirements
+To build, simply execute the command `./build ${target}`, where `${target}` represents the desired build target for creating a Garden Linux image. You can specify multiple targets by separating them with spaces in the build command.
 
-**System:**
-* RAM: 2+ GiB (use '--lessram' to lower memory usage)
-* Disk: 10+ GiB (20+ GiB for running `integration tests`)
-* Internet connection
+For example:
 
-**Packages:**
-
-**Debian/Ubuntu:**
-
-> mandatory:
-> ```
-> apt install --no-install-recommends bash sudo podman make python3-yaml python3-networkx
-> ```
-> for release builds:
-> ```
-> apt install --no-install-recommends gnupg git 
-> ```
-> for platform tests:
-> ```
-> apt install --no-install-recommends qemu-system-x86 qemu-system-aarch64
-> ```
-
-**CentOS/RedHat (>=8):**
-
-> CFSSL requires `GLIBC 2.28`. Therefore, we recommend to build on systems running CentOS/RedHat 8 or later.
->
-> ```
-> # Install needed packages
-> yum install bash sudo podman crun make gnupg git qemu-kvm qemu-img coreutils edk2-aarch64 edk2-ovmf python-networkx python3-PyYAML
-> ```
-> *Note: Running `AARCH64` on `x86_64` requires `qemu-system-aarch64` package which is not present in official repositories.*
-
-**ArchLinux/Manjaro:**
-> ```
-> pacman -S bash sudo podman crun make coreutils gnupg git qemu-system-x86 qemu-system-aarch64 edk2-ovmf python-yaml python-networkx
-> ```
-
-**macOS (>=12):**
-
-> Build support on `macOS` (>=12) supports `Intel` (AMD64) and `Apple Silicon` (ARM64/AARCH64) architectures. Building on macOS requires the GNU versions of multiple tools that can be installed in different ways like Brew, MacPorts or self compiled. Self compiled GNU packages must be located in `/opt/local/bin/`. However, the following build instructions only cover the recommended `Brew` way.
->
-> Furthermore, building on macOS requires to fulfill further build requirements:
-> * Command Line Tools (CLT) for Xcode
-> * [Homebrew](https://brew.sh) (Optionally: MacPorts https://macports.org)
-> * [Docker](https://docs.docker.com/desktop/mac/install/)
->
-> ```
-> # Install needed packages
-> brew install coreutils bash gnu-getopt gnu-sed gawk podman socat
->
-> # Install Python dependencies via pip
-> pip3 install -r requirements.txt
->
-> # Change to bash (Default: ZSH)
-> bash
->
-> # Export Docker as Container Runtime Environment for Garden Linux
-> export GARDENLINUX_BUILD_CRE=docker
-> ```
-
-**Adjust Repository:**
-
-*Note: This is **not** needed on macOS.*
-
-Add `docker.io` to `unqualified-search-registries` in your [registries.conf](https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md). On freshly installed `Podman` systems this can be done by executing:
-```
-echo 'unqualified-search-registries = ["docker.io"]' | sudo tee -a /etc/containers/registries.conf
-```
-If `Podman` was already present please add the repository yourself to `unqualified-search-registries` in `/etc/containers/registries.conf`.
-
-**Kernel Modules:**
-* ext4
-* loop
-* squashfs
-* vfat
-* vsock <i><small>(image builds and extended virtualized tests)</i></small>
-
-### Build Options
-| Option | Description  |
-|---|---|
-| --features  | Comma separated list of features activated (see features/) (default:base) |
-| --disable-features | Comma separated list of features to deactivate (see features/) |
-| --lessram | Build will be no longer in memory (default: off) |
-| --debug | Activates basically \`set -x\` everywhere (default: off) |
-| --manual | Built will stop in build environment and activate manual mode (default:off) |
-| --arch | Builds for a specific architecture (default: architecture the build runs on) |
-| --suite | Specifies the debian suite to build for e.g. bullseye, potatoe (default: testing) |
-| --skip-tests | Deactivating tests (default: off) |
-| --debian-mirror | Adds the native Debian repository (default: off [*only for development available*]) |
-| --tests | Test suite to use, available tests are unittests, kvm, chroot (default: unittests) |
-| --skip-build | Do not create the build container |
-
-### Building
-To build all supported images you may just run the following command:
-```
-    make all
+```shell
+./build kvm metal aws gcp azure
 ```
 
-However, to save time you may also build just a platform specific image by running one of the following commands. Related dev images can be created by appending the '_dev' suffix (e.g. "make aws_dev").
+The build script will automatically fetch the necessary builder container and execute all the required build steps internally. By default, the build system employs rootless podman. However, you can configure it to use a different container engine by utilizing the `--container-engine` flag.
+
+## Build Requirements
+
+To successfully build the project, ensure the following requirements are met:
+
+- **Memory:** The build process may require up to 8GiB of memory, depending on the selected targets. If your system has insufficient RAM, configure swap space accordingly.
+- **Container Engine:** The Builder has minimal dependencies and only requires a working container engine. It is recommended to use rootless Podman. Please refer to the [Podman rootless setup guide](https://github.com/containers/podman/blob/main/docs/tutorials/rootless_tutorial.md) for instructions on setting it up.
+
+## Secureboot
+
+If you intend to build targets with the `_secureboot` feature, you must first build the secureboot certificates.
+Run the command `./cert/build` to generate the secureboot certificates.
+
+By default, the command uses local files as the private key storage. However, you can configure it to use the AWS KMS key store by using the `--kms` flag. Note that valid AWS credentials need to be configured using the standard AWS environment variables.
+
+## Tests
+
+To run unit tests for a specific target, use the command `./test ${target}`.
+
+## Parallel Builds
+
+For efficient parallel builds of multiple targets, use the `-j ${number_of_threads}` option in the build script. However, note the following:
+
+- Building in parallel significantly increases memory usage.
+- There are no mechanisms in place to handle memory exhaustion gracefully.
+- This feature is only recommended for users with large build machines, ideally with 8GiB of RAM per builder thread. It may work with 4GiB per thread due to spikes in memory usage being only intermittent during the build, but your milage may vary.
+
+## Cross Architecture Builds
+
+By default, the build targets the native architecture of the build system. However, cross-building for other architectures is simple.
+
+Append the target architecture to the target name in the build command, like so: `./build ${target}-${arch}`.
+For example, to build for both amd64 and arm64 architectures:
+
 ```
-    make ali
-    make aws
-    make azure
-    make container
-    make firecracker
-    make gcp
-    make kvm
-    make metal
-    make openstack
-    make vmware
+./build kvm-amd64 kvm-arm64
 ```
 
-You may also generate a list of all default targets by running:
-```
-make generate-targets
-```
-Afterwards, all targets are located within the `make_targets.cache` file in the project's root directory.
+This requires setting up [binfmt_misc](https://docs.kernel.org/admin-guide/binfmt-misc.html) handlers for the target architecture, allowing the system to execute foreign binaries.
 
-After building, all artifacts are located in the `.build/` folder of the project's root directory.
-
-### Cross-Build Support
-The Garden Linux pipeline supports cross-building on Linux based systems and requires `binfmt` support. `binfmt` support can easily be installed via packages from the used distribution. Afterwards, the build option `--arch` must be defined to the target arch (e.g. `--arch arm64`). Currently, `amd64` and `arm64` are supported and must be explicitly defined for cross-building.
-
-**Package Installation**
-
-**Debian:**
-```
-apt-get install binfmt-support
-```
-
-**CentOS:**
-```
-yum install qemu-user-binfmt
-```
-**ArchLinux/Manjaro:**
-```
-yay -S binfmt-qemu-static-all-arch
-```
-
-**macOS:**
-
-Not supported.
+On most distributions, you can install QEMU user static to set up binfmt_misc handlers. For example, on Debian, use the command `apt install qemu-user-static`.
 
 
 ## Customizing
