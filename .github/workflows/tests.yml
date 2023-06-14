@@ -41,7 +41,10 @@ jobs:
       aws_region: ${{ secrets.aws_region }}
       azure_subscription_id: ${{ secrets.az_subscription_id }}
       AZURE_CONFIG_DIR: /tmp/azure_config_dir
-    runs-on: ec2-gardenlinux-amd64
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     permissions:
       id-token: write
       packages: write
@@ -49,44 +52,39 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        architecture: [ amd64, arm64 ]
+        arch: [ amd64, arm64 ]
         target: [ gcp, aws, azure ]
         modifier: [ "${{ inputs.default_modifier }}" ]
         exclude:
-          - architecture: arm64
+          - arch: arm64
             target: gcp
-          - architecture: arm64
+          - arch: arm64
             target: azure
     steps:
     - uses: actions/checkout@v3
 
     - name: login to ghcr.io
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u $ --password-stdin
-      shell: bash
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
 
     - name: pull container image
       run: |
-        sudo podman pull "ghcr.io/gardenlinux/gardenlinux/integration-test:$GITHUB_SHA"
-        sudo podman tag "ghcr.io/gardenlinux/gardenlinux/integration-test:$GITHUB_SHA" ghcr.io/gardenlinux/gardenlinux/integration-test:today
-      shell: bash
+        podman pull "ghcr.io/gardenlinux/gardenlinux/integration-test:$GITHUB_SHA"
+        podman tag "ghcr.io/gardenlinux/gardenlinux/integration-test:$GITHUB_SHA" ghcr.io/gardenlinux/gardenlinux/integration-test:today
 
     - name: set VERSION=${{ inputs.version }}
       run: |
         bin/garden-version "${{ inputs.version }}" | tee VERSION
         git update-index --assume-unchanged VERSION
-      shell: bash
 
     - name: get cname
-      run: |
-        cname="$(bin/garden-feat --features ${{ matrix.target }}${{ matrix.modifier }}${{ matrix.additional_modifer }})"
-        artifact_name="$cname-${{ matrix.architecture }}-${{ inputs.version }}-$(git rev-parse --short HEAD)"
-        printf 'cname=%s\nartifact_name=%s\n' "$cname" "$artifact_name" | tee -a "$GITHUB_ENV"
-      shell: bash
+      run: echo "cname=$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})" | tee -a "$GITHUB_ENV"
 
     - uses: actions/download-artifact@v3
       with:
-        name: build-${{ env.artifact_name }}
+        name: ${{ env.cname }}
         path: /tmp/gardenlinux-build-artifacts
+
+    - run: ls -lah /tmp/gardenlinux-build-artifacts
 
     - if: ${{ matrix.target == 'gcp' }}
       id: 'auth_gcp'
@@ -119,10 +117,10 @@ jobs:
 
     - name: start platform test for ${{ matrix.target }}
       run: |
-        set -o pipefail && .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.architecture }}" "${{ env.artifact_name }}.tar.gz" 2>&1 | tee "${{ env.artifact_name }}.integration-tests-log"
-      shell: bash
+        set -o pipefail
+        .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.arch }}" "${{ env.cname }}" 2>&1 | tee "${{ env.cname }}.integration-tests-log"
 
     - uses: actions/upload-artifact@v3
       with:
-        name: tests-${{ env.artifact_name }}
-        path: ${{ env.artifact_name }}.integration-tests-log
+        name: tests-${{ env.cname }}
+        path: ${{ env.cname }}.integration-tests-log

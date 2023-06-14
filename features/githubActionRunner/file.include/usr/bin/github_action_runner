@@ -1,7 +1,0 @@
-#!/bin/bash
-
-set -Eexufo pipefail
-
-cd /opt/github_action_runner
-ln -s "$(mktemp -d)" _work
-exec ./run.sh

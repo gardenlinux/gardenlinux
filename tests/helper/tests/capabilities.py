@@ -2,7 +2,7 @@ from helper.utils import read_test_config
 import string
 import re
 
-def capabilities(client, testconfig):
+def capabilities(client, testconfig, non_chroot):
     """ Test if only the defined capabilities are set"""
     (exit_code, output, error) = client.execute_command(
         "sudo -u root find /boot /etc /usr /var -type f -exec /usr/sbin/getcap {} \\;", quiet=True)

@@ -1,16 +1,17 @@
 description: "metal features (standard kernel, starndard grub, physical components)"
 type: platform
 features:
-  include: 
+  include:
     - server
+    - _boot
 fs:
   - dest: /
     type: ext4
 disk:
   label: gpt
-  boot: 
+  boot:
     - efi
     - mbr
 convert:
-  format: 
+  format:
     - type: raw

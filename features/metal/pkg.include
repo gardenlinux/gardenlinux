@@ -12,7 +12,5 @@ mdadm
 hdparm
 smartmontools
 frr
-[${arch}=amd64] syslinux
-[${arch}=amd64] syslinux-common
-linux-image-6.1-${arch}
+linux-image-6.1-$arch
 tpm2-tools

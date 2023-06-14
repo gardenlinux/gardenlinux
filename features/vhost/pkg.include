@@ -1,11 +1,11 @@
 dmidecode
 dnsmasq-base
-[${arch}=amd64] qemu-system-x86
-[${arch}=arm64] qemu-system-arm
+$(if [ $arch = amd64 ]; then echo qemu-system-x86; fi)
+$(if [ $arch = arm64 ]; then echo qemu-system-arm; fi)
 qemu-utils
 libvirt-daemon-system
 libvirt-clients
 virtinst
-[${arch}=amd64] ovmf
-[${arch}=arm64] qemu-efi-aarch64
+$(if [ $arch = amd64 ]; then echo ovmf; fi)
+$(if [ $arch = arm64 ]; then echo qemu-efi-aarch64; fi)
 swtpm

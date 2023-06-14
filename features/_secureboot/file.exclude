@@ -1,1 +1,4 @@
-/boot/efi/*
+/etc/kernel/cmdline.d/50-ignition.cfg
+/etc/dracut.conf.d/30-ignition.conf
+/etc/systemd/system/ignition-disable.service
+/etc/repart.d/root.conf

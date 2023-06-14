@@ -30,41 +30,38 @@ jobs:
       gcp_region: ${{ secrets.GCP_REGION }}
       gcp_zone: ${{ secrets.GCP_ZONE }}
       AZURE_CONFIG_DIR: /tmp/azure_config_dir
-    runs-on: ec2-gardenlinux-amd64
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     permissions:
       id-token: write
       packages: write
     strategy:
       fail-fast: false
       matrix:
-        architecture: [ amd64, arm64 ]
+        arch: [ amd64, arm64 ]
         target: [ gcp, aws, azure ]
         modifier: [ "${{ inputs.default_modifier }}" ]
         exclude:
-          - architecture: arm64
+          - arch: arm64
             target: gcp
-          - architecture: arm64
+          - arch: arm64
             target: azure
     steps:
     - uses: actions/checkout@v3
 
     - name: login to ghcr.io
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u $ --password-stdin
-      shell: bash
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
 
 
     - name: set VERSION=${{ inputs.version }}
       run: |
         bin/garden-version "${{ inputs.version }}" | tee VERSION
         git update-index --assume-unchanged VERSION
-      shell: bash
 
-    - name: get artifact_name
-      run: |
-        cname="${{ matrix.target }}${{ matrix.modifier }}"
-        artifact_name="$cname-${{ matrix.architecture }}-${{ inputs.version }}-$(git rev-parse --short ${{ inputs.commitish }})"
-        printf 'artifact_name=%s\n' "$artifact_name" | tee -a "$GITHUB_ENV"
-      shell: bash
+    - name: get cname
+      run: echo "cname=$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})" | tee -a "$GITHUB_ENV"
 
     - uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -74,14 +71,13 @@ jobs:
 
     - name: download artifact to test from S3 bucket
       run: |
-        mkdir -p "${{ env.artifact_name }}"
-        aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/${{ env.artifact_name }}" "${{ env.artifact_name }}"  --recursive
-      shell: bash
+        mkdir -p "${{ env.cname }}"
+        aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/${{ env.cname }}" "${{ env.cname }}" --recursive
 
     - name: pack build artifacts for tests
       run: |
         mkdir -p /tmp/gardenlinux-build-artifacts
-        tar -czvf "/tmp/gardenlinux-build-artifacts/${{ env.artifact_name }}.tar.gz" "${{ env.artifact_name }}"
+        tar -czvf "/tmp/gardenlinux-build-artifacts/${{ env.cname }}.tar.gz" "${{ env.cname }}"
 
     - if: ${{ matrix.target == 'gcp' }}
       id: 'auth_gcp'
@@ -111,11 +107,9 @@ jobs:
 
     - name: pull container image
       run: |
-        sudo podman pull "ghcr.io/gardenlinux/gardenlinux/integration-test:${{ inputs.integration_test_container_version }}"
-        sudo podman tag "ghcr.io/gardenlinux/gardenlinux/integration-test:${{ inputs.integration_test_container_version }}" ghcr.io/gardenlinux/gardenlinux/integration-test:today
-      shell: bash
+        podman pull "ghcr.io/gardenlinux/gardenlinux/integration-test:${{ inputs.integration_test_container_version }}"
+        podman tag "ghcr.io/gardenlinux/gardenlinux/integration-test:${{ inputs.integration_test_container_version }}" ghcr.io/gardenlinux/gardenlinux/integration-test:today
 
     - name: start platform test for ${{ matrix.target }}
       run: |
-        set -o pipefail && .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.architecture }}" "${{ env.artifact_name }}.tar.gz" 2>&1 | tee "${{ env.artifact_name }}.integration-tests-log"
-      shell: bash
+        set -o pipefail && .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.arch }}" "${{ env.cname }}.tar.gz" 2>&1 | tee "${{ env.cname }}.integration-tests-log"

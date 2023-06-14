@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-set -Eeuo pipefail
-
-dir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
-
-qemu-img convert -o subformat=streamOptimized -o adapter_type=lsilogic -f raw -O vmdk "$1.raw" "$1.vmdk"
-make-ova --vmdk "$1.vmdk" --guest-id debian10_64Guest --template "$REPO_ROOT/features/vmware/vmware.ovf.template"

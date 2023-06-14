@@ -1,0 +1,26 @@
+name: build garden linux container
+on:
+  workflow_call:
+env:
+  IMAGE_NAME: gardenlinux/integration-test
+jobs:
+  integration_test_container:
+    name: make integration test container
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: login to ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
+
+      - name: make integration test container
+        run: make --directory=container GARDENLINUX_BUILD_CRE=podman build-integration-test
+
+      - name: upload integration test container to ghcr.io
+        run: |
+          echo "$IMAGE_NAME:$(bin/garden-version)"
+          podman image list
+          podman tag "$IMAGE_NAME:$(bin/garden-version)" "ghcr.io/gardenlinux/$IMAGE_NAME:$(bin/garden-version)"
+          podman tag "$IMAGE_NAME:$(bin/garden-version)" "ghcr.io/gardenlinux/$IMAGE_NAME:$GITHUB_SHA"
+          podman push "ghcr.io/gardenlinux/$IMAGE_NAME:$(bin/garden-version)"
+          podman push "ghcr.io/gardenlinux/$IMAGE_NAME:$GITHUB_SHA"

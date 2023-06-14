@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-set -Eeuo pipefail
-
-dir="$(dirname "$(readlink -f "$BASH_SOURCE")")"
-
-qemu-img convert -f raw -O qcow2 "$1.raw" "$1.qcow2"

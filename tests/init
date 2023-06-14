@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+. /gardenlinux/input.release
+
+IFS=',' read -r -a features <<< "$GARDENLINUX_FEATURES"
+
+cat > /tmp/test_config.yaml <<EOF
+chroot:
+  image: /gardenlinux/input.tar
+  ip: 127.0.0.1
+  port: 2222
+  features:
+$(for feature in "${features[@]}"; do echo "    - $feature"; done)
+  ssh:
+    ssh_key_filepath: /tmp/ssh_priv_key
+    user: root
+EOF
+
+cd /gardenlinux/tests
+python3 -m pytest --iaas=chroot --configfile=/tmp/test_config.yaml

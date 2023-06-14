@@ -348,7 +348,7 @@ class AZURE:
             resource_group_name = self._resourcegroup.name,
             vm_name = name
         ).result()
-        
+
         self.nclient.network_interfaces.begin_delete(
             resource_group_name=self._resourcegroup.name,
             network_interface_name=self._nic.name
@@ -576,7 +576,7 @@ class AZURE:
                         # for sparse file upload logic and requirements for offset alignments
                         offset = (f.seek(offset, os.SEEK_DATA) // chunksize) * chunksize
                         f.seek(offset, os.SEEK_SET)
-                        
+
                         data = f.read(chunksize)
                         remaining = file_size - offset
                         actual_cp_bytes = min(chunksize, remaining)

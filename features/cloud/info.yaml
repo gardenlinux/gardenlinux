@@ -3,6 +3,7 @@ type: element
 features:
   include:
     - server
+    - _boot
 fs:
   - dest: /
     type: ext4

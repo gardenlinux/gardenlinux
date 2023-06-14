@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+dir="$(dirname "${BASH_SOURCE[0]}")"
+cd "$dir"
+[ -z "$(git status --porcelain 2> /dev/null)" ] && git rev-parse HEAD 2> /dev/null || echo local

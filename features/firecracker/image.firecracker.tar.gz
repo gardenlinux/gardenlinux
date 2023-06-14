@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+input="$(realpath -- "$1")"
+output="$(realpath -- "$2")"
+
+dir="$(mktemp -d)"
+pushd "$dir" > /dev/null
+
+export PATH="/builder/image.d:$PATH"
+
+chroot_dir="$(mktemp -d)"
+mount -t tmpfs tmpfs "$chroot_dir"
+tar --extract --xattrs --xattrs-include '*' --directory "$chroot_dir" < "$input"
+
+size="${size:-$(du -sb "$chroot_dir" | awk '{ min_size_bytes = min_size * MB; size = $1 * 1.5; padded_size = size + (MB - (size % MB) % MB); if (padded_size < min_size_bytes) padded_size = min_size_bytes; print (padded_size / MB) "MiB" }' "MB=1048576" "min_size=64")}"
+truncate -s "$size" disk.ext4
+
+make_reproducible_ext4 -t "$BUILDER_TIMESTAMP" -h "gardenlinux:$BUILDER_VERSION:firecracker:rootfs" -m -p 16 "$chroot_dir" disk.ext4
+cp "$chroot_dir"/boot/vmlinu*firecracker* vmlinux
+
+umount "$chroot_dir"
+rmdir "$chroot_dir"
+
+tar --create --mtime="@$BUILDER_TIMESTAMP" --sort name --numeric-owner --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime disk.ext4 vmlinux | gzip > "$output"
+
+popd > /dev/null
+rm -rf "$dir"

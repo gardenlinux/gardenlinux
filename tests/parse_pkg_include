@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+arch="$1"
+
+cd "$(mktemp -d)"
+PATH=""
+set -r
+
+while read -r line; do
+	eval "echo $line"
+done

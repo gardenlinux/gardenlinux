@@ -9,5 +9,5 @@ import pytest
         ("kernel.randomize_va_space", 2)
     ]
 )
-def test_kernel_parameter(client, parameter, value):
+def test_kernel_parameter(client, parameter, value, non_chroot):
     kernel_parameter(client, parameter, value)
