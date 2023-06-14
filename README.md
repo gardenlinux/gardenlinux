@@ -16,6 +16,11 @@
 
 </website-main>
 
+**Warning**
+We are in the process of changing to a new build process (Gardenlinux 2.0). Since this is a complex setup and we are splitting the repository into multiple, to make Gardenlinux even more simple and more container based. Please be warned that current main might have hickups, and wrong docs and isses. This should be fixed soon. June 14th 2023.
+**Warning**
+
+
 ## Table of Content
 - [Garden Linux](#garden-linux)
   - [Table of Content](#table-of-content)
