@@ -45,6 +45,12 @@ jobs:
       run:
         shell: bash
     steps:
+      - uses: nkraetzschmar/workflow-telemetry-action@v1
+        with:
+          metric_frequency: 1
+          proc_trace_min_duration: 10
+          proc_trace_chart_max_count: 50
+          comment_on_pr: false
       - uses: actions/checkout@v3
       - uses: ./.github/actions/setup
       - name: set VERSION=${{ needs.version.outputs.version }}
@@ -73,6 +79,12 @@ jobs:
       run:
         shell: bash
     steps:
+      - uses: nkraetzschmar/workflow-telemetry-action@v1
+        with:
+          metric_frequency: 1
+          proc_trace_min_duration: 10
+          proc_trace_chart_max_count: 50
+          comment_on_pr: false
       - uses: actions/checkout@v3
       - uses: ./.github/actions/setup
       - name: set VERSION=${{ needs.version.outputs.version }}
@@ -92,6 +104,12 @@ jobs:
       run:
         shell: bash
     steps:
+      - uses: nkraetzschmar/workflow-telemetry-action@v1
+        with:
+          metric_frequency: 1
+          proc_trace_min_duration: 10
+          proc_trace_chart_max_count: 50
+          comment_on_pr: false
       - uses: actions/checkout@v3
       - uses: ./.github/actions/setup
       - run: podman build --tag test --build-arg base="$(./build --print-container-image)" tests
@@ -116,6 +134,12 @@ jobs:
         target: [ kvm, "kvm_secureboot", "kvm_secureboot_readonly", "kvm_secureboot_readonly_persistence", metal, "metal_secureboot", "metal_secureboot_readonly", "metal_secureboot_readonly_persistence", gcp, aws, "aws_secureboot", "aws_secureboot_readonly", "aws_secureboot_readonly_persistence", azure, ali, openstack, vmware, "metal_pxe", firecracker, "metal-vhost" ]
         modifier: [ "${{ inputs.default_modifier }}" ]
     steps:
+      - uses: nkraetzschmar/workflow-telemetry-action@v1
+        with:
+          metric_frequency: 1
+          proc_trace_min_duration: 10
+          proc_trace_chart_max_count: 50
+          comment_on_pr: false
       - uses: actions/checkout@v3
       - uses: ./.github/actions/setup
       - name: set VERSION=${{ needs.version.outputs.version }}
@@ -162,6 +186,10 @@ jobs:
         run: ./build ${{ inputs.use_kms && '--kms' || '' }} ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
       - name: test
         run: ./test --container-image test ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
+      - uses: pmeier/pytest-results-action@main
+        if: always()
+        with:
+          path: tests/test.xml
       - name: get cname
         run: echo "cname=$(basename "$(realpath ".build/${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}")" .artifacts)" | tee -a "$GITHUB_ENV"
       - name: pack build artifacts for upload

@@ -19,4 +19,4 @@ $(for feature in "${features[@]}"; do echo "    - $feature"; done)
 EOF
 
 cd /gardenlinux/tests
-python3 -m pytest --iaas=chroot --configfile=/tmp/test_config.yaml
+python3 -m pytest --iaas=chroot --configfile=/tmp/test_config.yaml --junit-xml=test.xml
