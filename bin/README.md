@@ -8,6 +8,8 @@ By the given directory, we distinguish between scripts that are mandatory for th
 ### Mandatory for Garden Linux Build Process
 | Name | Descriptions |
 |--|--|
+| check-pkgs-availability.py | Scans the `features/*/pkg.include` and checks if all pkgs are available in the garden linux apt repository |
+| check-pkgs-pipelines.py | Generates a status report for all package pipelines. By default it only includes packages that have a failed pipeline status. Utilizes the public gitlab API. |
 | garden-apt-get | Handles `apt-get` commands in `chroot` env |
 | garden-build | Main script to build Garden Linux (creates a `chroot` env in a Docker container) |
 | garden-chroot | Performs all necessary steps to integrate Garden Linux features |

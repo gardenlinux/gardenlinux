@@ -15,10 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     
     permissions:
-      # required for all workflows
       security-events: write
-
-      # only required for workflows in private repositories
       actions: read
       contents: read
 
@@ -28,33 +25,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check for missing packages in repo
-        run: |
-          ./bin/check-pkgs-availability.sh $PWD $(bin/garden-version)
-        
-      - name: Check Package Status
-        run: |
-        
       - name: Install dependencies
         run: |
           python -m venv venv
           source venv/bin/activate
           pip install requests pyyaml
 
+      - name: Check for missing packages in repo
+        run: |
+          ./bin/check-pkgs-availability.py -d $(bin/garden-version)
+        
       - name: Generate report
         id: generate_report
         run: |
           source venv/bin/activate
-          echo "::set-output name=report::$(python .github/workflows/generate_package_report.py)"
+          ./bin/check-pkgs-pipelines.py
         env:
           GITLAB_PRIVATE_TOKEN: ${{ secrets.GITLAB_PRIVATE_TOKEN }}
-
-      - name: Print report
-        run: |
-          echo "${{ steps.generate_report.outputs.report }}"
-          if [ "${{ steps.generate_report.outputs.report }}" = "None" ]
-          then
-            echo "No failed package pipelines detected."
-          else
-            exit 1
-          fi          
