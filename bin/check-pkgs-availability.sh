@@ -45,13 +45,24 @@ while IFS= read -r pkg; do
   fi
 
   arch="both"
-  # respect architecture annotation
-  if grep "^[\[].*" -q <<< "$pkg"; then
+  if [[ $line =~ \$\(if ]]; then
+      if [[ $line =~ $regex_package ]]; then
+          pkg="${BASH_REMATCH[1]}"
+          echo "$package_name"
+      fi
+      if [[ $line =~ $regex_arch ]]; then
+          arch="${BASH_REMATCH[1]}"
+          echo "Architecture: $arch"
+      fi
+  elif grep "^[\[].*" -q <<< "$pkg"; then
+    # respect architecture annotation
     in_var=$pkg
     arch=${in_var#*=}
     arch=${arch%]*}
     pkg=${pkg#*]}
   fi
+
+  echo $pkg
 
   case $arch in
     arm64)
