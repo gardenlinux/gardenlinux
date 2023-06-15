@@ -70,7 +70,7 @@ jobs:
       - uses: actions/cache/save@v3
         with:
           path: cert
-          key: cert-${{ github.run_id }}-${{ github.run_attempt }}
+          key: cert-${{ github.run_id }}
   base:
     name: bootstrap stage
     needs: version
@@ -96,7 +96,7 @@ jobs:
       - uses: actions/cache/save@v3
         with:
           path: .build
-          key: base-${{ github.run_id }}-${{ github.run_attempt }}
+          key: base-${{ github.run_id }}
   test_container:
     name: container image for tests
     runs-on: ubuntu-latest
@@ -115,8 +115,8 @@ jobs:
       - name: build test container
         run: |
           podman login -u ${{ github.actor }} -p ${{ github.token }} ghcr.io
-          podman build --squash --tag ghcr.io/${{ github.repository }}/test-container:${{ github.run_id }}-${{ github.run_attempt }} --build-arg base="$(./build --print-container-image)" tests
-          podman push ghcr.io/${{ github.repository }}/test-container:${{ github.run_id }}-${{ github.run_attempt }}
+          podman build --squash --tag ghcr.io/${{ github.repository }}/test-container:${{ github.run_id }} --build-arg base="$(./build --print-container-image)" tests
+          podman push ghcr.io/${{ github.repository }}/test-container:${{ github.run_id }}
   images:
     needs: [ version, cert, base, test_container ]
     runs-on: ubuntu-latest
@@ -149,7 +149,7 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: cert
-          key: cert-${{ github.run_id }}-${{ github.run_attempt }}
+          key: cert-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: write secureboot db arn for kms backed certificates
         if: ${{ inputs.use_kms }}
@@ -165,7 +165,7 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: .build
-          key: base-${{ github.run_id }}-${{ github.run_attempt }}
+          key: base-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: update bootstrap stage build artifact timestamps
         run: |
@@ -174,7 +174,7 @@ jobs:
       - name: build
         run: ./build ${{ inputs.use_kms && '--kms' || '' }} ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
       - name: test
-        run: ./test --container-image "ghcr.io/${{ github.repository }}/test-container:${{ github.run_id }}-${{ github.run_attempt }}" ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
+        run: ./test --container-image "ghcr.io/${{ github.repository }}/test-container:${{ github.run_id }}" ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
       - uses: pmeier/pytest-results-action@main
         if: always()
         with:
