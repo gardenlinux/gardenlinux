@@ -2,7 +2,7 @@
 
 set -eufo pipefail
 
-container_image=ghcr.io/gardenlinux/builder:5d05982bf4132b0d7814080ea3042344d500adc3
+container_image=ghcr.io/gardenlinux/builder:7efe47b03f60d7873dc970a37e2eaeac3a63f988
 container_engine=podman
 
 container_run_opts=(
