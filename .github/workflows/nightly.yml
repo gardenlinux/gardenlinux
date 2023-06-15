@@ -12,6 +12,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     permissions:
       id-token: write
+      packages: write
     with:
       version: ${{ inputs.version || 'now' }}
       default_modifier: "-gardener_prod"
