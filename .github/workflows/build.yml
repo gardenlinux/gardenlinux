@@ -70,7 +70,7 @@ jobs:
       - uses: actions/cache/save@v3
         with:
           path: cert
-          key: cert-${{ github.run_id }}-${{ github.run_attempt }}
+          key: cert-${{ github.run_id }}
   base:
     name: bootstrap stage
     needs: version
@@ -96,7 +96,7 @@ jobs:
       - uses: actions/cache/save@v3
         with:
           path: .build
-          key: base-${{ github.run_id }}-${{ github.run_attempt }}
+          key: base-${{ github.run_id }}
   test_container:
     name: container image for tests
     runs-on: ubuntu-latest
@@ -112,12 +112,11 @@ jobs:
           comment_on_pr: false
       - uses: actions/checkout@v3
       - uses: ./.github/actions/setup
-      - run: podman build --tag test --build-arg base="$(./build --print-container-image)" tests
-      - run: podman save --format oci-archive test > test.oci
-      - uses: actions/cache/save@v3
-        with:
-          path: test.oci
-          key: test_container-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: build test container
+        run: |
+          podman login -u ${{ github.actor }} -p ${{ github.token }} ghcr.io
+          podman build --squash --tag ghcr.io/${{ github.repository }}/test-container:${{ github.run_id }} --build-arg base="$(./build --print-container-image)" tests
+          podman push ghcr.io/${{ github.repository }}/test-container:${{ github.run_id }}
   images:
     needs: [ version, cert, base, test_container ]
     runs-on: ubuntu-latest
@@ -150,7 +149,7 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: cert
-          key: cert-${{ github.run_id }}-${{ github.run_attempt }}
+          key: cert-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: write secureboot db arn for kms backed certificates
         if: ${{ inputs.use_kms }}
@@ -166,18 +165,8 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: .build
-          key: base-${{ github.run_id }}-${{ github.run_attempt }}
+          key: base-${{ github.run_id }}
           fail-on-cache-miss: true
-      - name: load test container cache
-        uses: actions/cache/restore@v3
-        with:
-          path: test.oci
-          key: test_container-${{ github.run_id }}-${{ github.run_attempt }}
-          fail-on-cache-miss: true
-      - name: import test container image
-        run: |
-          podman load < test.oci
-          rm test.oci
       - name: update bootstrap stage build artifact timestamps
         run: |
           t="$(date '+%s')"
@@ -185,7 +174,7 @@ jobs:
       - name: build
         run: ./build ${{ inputs.use_kms && '--kms' || '' }} ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
       - name: test
-        run: ./test --container-image test ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
+        run: ./test --container-image "ghcr.io/${{ github.repository }}/test-container:${{ github.run_id }}" ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
       - uses: pmeier/pytest-results-action@main
         if: always()
         with:
