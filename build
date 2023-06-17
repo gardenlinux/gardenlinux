@@ -4,18 +4,13 @@ set -eufo pipefail
 
 container_image=ghcr.io/gardenlinux/builder:7efe47b03f60d7873dc970a37e2eaeac3a63f988
 container_engine=podman
+target_dir=.build
 
 container_run_opts=(
 	--security-opt seccomp=unconfined
 	--security-opt apparmor=unconfined
 	--security-opt label=disable
 	--read-only
-)
-
-container_mount_opts=(
-	-v "$PWD/features:/builder/features:ro"
-	-v "$PWD/keyring.gpg:/builder/keyring.gpg:ro"
-	-v "$PWD/.build:/builder/.build"
 )
 
 use_kms=0
@@ -47,11 +42,21 @@ while [ $# -gt 0 ]; do
 			resolve_cname=1
 			shift
 			;;
+                --target)
+                        target_dir="$2"
+                        shift 2
+                        ;;
 		*)
 			break
 			;;
 	esac
 done
+
+container_mount_opts=(
+        -v "$PWD/features:/builder/features:ro"
+        -v "$PWD/keyring.gpg:/builder/keyring.gpg:ro"
+        -v "$PWD/$target_dir:/builder/.build"
+)
 
 if [ "$container_image" = localhost/builder ]; then
 	dir="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")"
@@ -63,7 +68,7 @@ commit="$(./get_commit)"
 timestamp="$(./get_timestamp)"
 default_version="$(./get_version)"
 
-[ -d .build ] || mkdir .build
+[ -d $target_dir ] || mkdir $target_dir
 
 if [ "$resolve_cname" = 1 ]; then
 	arch="$("$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" dpkg --print-architecture)"
