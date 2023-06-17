@@ -58,11 +58,6 @@ container_mount_opts=(
         -v "$(realpath "$target_dir"):/builder/.build"
 )
 
-if [ "$container_image" = localhost/builder ]; then
-	dir="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")"
-	"$container_engine" build -t "$container_image" "$dir"
-fi
-
 repo="$(./get_repo)"
 commit="$(./get_commit)"
 timestamp="$(./get_timestamp)"
