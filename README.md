@@ -17,7 +17,7 @@
 </website-main>
 
 > **Warning**
-> We are in the process of changing to a new build process (Gardenlinux 2.0). Since this is a complex setup and we are splitting the repository into multiple, to make Gardenlinux even more simple and more container based. Please be warned that current main might have hickups, and wrong docs and isses. This should be fixed soon. June 14th 2023.
+> We are in the process of changing to a new build process (Gardenlinux 2.0). Since this is a complex setup and we are splitting the repository into multiple, to make Gardenlinux even more simple and more container based. Please be warned that current main might have hiccups, wrong docs and issues. This should be fixed soon. June 14th 2023.
 
 
 ## Table of Content
@@ -154,7 +154,7 @@ Deploying on common cloud platforms requires additional packages. The following 
 Garden Linux frequently publishes snapshot releases. These are available as machine images in most major cloud providers as well as file-system images for manual import. See the [releases](https://github.com/gardenlinux/gardenlinux/releases) page for more info.
 
 ## Documentation
-Garden Linux provides a great documentation for build options, customizing, configuration, tests and pipeline integrations. The documentation can be found within the project's `docs/` path or by clicking <a href="https://github.com/gardenlinux/gardenlinux/tree/main/docs">here</a>. Next to this, you may find a corresponding `README.md` in each directory explaning some more details. Below, you may find some important documentations for continuous integration and integration tests.
+Garden Linux provides a great documentation for build options, customizing, configuration, tests and pipeline integrations. The documentation can be found within the project's `docs/` path or by clicking <a href="https://github.com/gardenlinux/gardenlinux/tree/main/docs">here</a>. Next to this, you may find a corresponding `README.md` in each directory explaining some more details. Below, you may find some important documentations for continuous integration and integration tests.
 
 ### Continuous Integration
 Garden Linux can build in an automated way for continuous integration. See [.github/workflows/README.md](.github/workflows/README.md) for details.
