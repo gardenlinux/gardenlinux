@@ -55,7 +55,7 @@ done
 container_mount_opts=(
         -v "$PWD/features:/builder/features:ro"
         -v "$PWD/keyring.gpg:/builder/keyring.gpg:ro"
-        -v "$PWD/$target_dir:/builder/.build"
+        -v "$(realpath "$target_dir"):/builder/.build"
 )
 
 if [ "$container_image" = localhost/builder ]; then
