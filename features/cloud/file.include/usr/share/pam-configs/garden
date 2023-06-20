@@ -1,7 +1,7 @@
 Name: Garden Linux pam policies
 Default: yes
 Priority: 1024
-Conflicts: cracklib
+Conflicts: passwdqc
 Password-Type: Primary
 Password:
 	required pam_passwdqc.so min=disabled,disabled,12,8,8 passphrase=4 similar=deny retry=5
