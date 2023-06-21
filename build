@@ -63,7 +63,7 @@ commit="$(./get_commit)"
 timestamp="$(./get_timestamp)"
 default_version="$(./get_version)"
 
-[ -d $target_dir ] || mkdir $target_dir
+[ -d "$target_dir" ] || mkdir "$target_dir"
 
 if [ "$resolve_cname" = 1 ]; then
 	arch="$("$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" dpkg --print-architecture)"
