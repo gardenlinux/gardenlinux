@@ -8,6 +8,7 @@ kexec-tools
 less
 libnss-resolve
 libnss-systemd
+libpam-passwdqc
 libpam-systemd
 lsb-release
 net-tools
