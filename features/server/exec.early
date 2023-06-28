@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+mkdir -p /run/systemd/resolve/
+cp /etc/resolv.conf /run/systemd/resolve/stub-resolv.conf
