@@ -114,9 +114,10 @@ jobs:
       - uses: ./.github/actions/setup
       - name: build test container
         run: |
+          export REPOSITORY=$(echo ${{github.repository}} | tr '[:upper:]' '[:lower:]')
           podman login -u ${{ github.actor }} -p ${{ github.token }} ghcr.io
-          podman build --squash --tag ghcr.io/${{ github.repository }}/test-container:${{ github.run_id }} --build-arg base="$(./build --print-container-image)" tests
-          podman push ghcr.io/${{ github.repository }}/test-container:${{ github.run_id }}
+          podman build --squash --tag ghcr.io/$REPOSITORY/test-container:${{ github.run_id }} --build-arg base="$(./build --print-container-image)" tests
+          podman push ghcr.io/$REPOSITORY/test-container:${{ github.run_id }}
   images:
     needs: [ version, cert, base, test_container ]
     runs-on: ubuntu-latest
