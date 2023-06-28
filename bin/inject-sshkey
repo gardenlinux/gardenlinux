@@ -7,6 +7,8 @@ import subprocess
 import shutil
 import tempfile
 import logging
+import shlex
+import re
 
 
 def main():
@@ -19,13 +21,13 @@ def main():
     argparser = argparse.ArgumentParser(description='Inject SSH pubkey to image.')
     argparser.add_argument('-i', '--image', type=str, help='Path to image', required=True)
     argparser.add_argument('-k', '--key', type=str, help='Path to SSH pubkey', required=True)
-    argparser.add_argument('-u', '--user', type=str, help='PAM user account to use', required=True)
+    argparser.add_argument('-u', '--user', type=validate_user, help='PAM user account to use', required=True)
     argparser.add_argument('-d', '--homedir', type=str, help='PAM user account to use', default=None)
-    argparser.add_argument('-t', '--type', type=str, help='Image type [raw, qcow2]', default="raw")
+    argparser.add_argument('-t', '--type', type=str, choices=['raw', 'qcow2'], help='Image type [raw, qcow2]', default="raw")
     args = argparser.parse_args()
 
-    image = args.image
-    key = args.key
+    image = shlex.quote(args.image)
+    key = shlex.quote(args.key)
     user = args.user
     home = args.homedir
     type = args.type
@@ -44,20 +46,23 @@ def main():
         path_home = eval_user_path(user)
         logging.info(f"No custom home directory defined. Using: {path_home} for user {user}")
     else:
-        path_home = home
+        path_home = shlex.quote(home)
         logging.info(f"Custom home directory defined. Using: {path_home} for user {user}")
 
     # Inject SSH pubkey into specific image type
     if type == "raw" or "qcow2":
         logging.info(f"Using image format: {type}")
         # Eveluate userid from image
-        if user != "root":
-            userid = raw_eval_userid(user,image)
+        userid = raw_eval_userid(user,image)
         ssh_dir = raw_validate(image,path_home)
         raw_inject(image,path_home,user,key,ssh_dir,userid)
 
     logging.info("SSH pubkey sucessfully injected.")
 
+def validate_user(user, pat=re.compile(r"^[a-z_][a-z0-9_-]*[$]?$")):
+    if not pat.match(user):
+        raise argparse.ArgumentTypeError("invalid user provided")
+    return user
 
 def eval_files_present(files):
     """ Evaluates if the files are present """
@@ -81,11 +86,14 @@ def eval_user_path(user):
 def raw_eval_userid(user,image):
     """ Evaluates the userid for a given user from a .raw image """
     userid = None
+    if user == "root":
+        logging.info(f"User is root, not checking for userid in the image, just using 0")
+        return 0
 
     # Get passwd from given image
     logging.info(f"Getting userid for user {user} from image")
     cmd = f"guestfish -a {image} -i cat /etc/passwd"
-    p = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+    p = subprocess.run(shlex.split(cmd), shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
 
     # Get userid for given user
     lst_decode = p.stdout.decode()
@@ -111,7 +119,7 @@ def raw_validate(image,path_home):
     # Validate for a .ssh directory in path_home
     logging.info(f"Validating for an already present .ssh directory")
     cmd = f"guestfish --ro -a {image} -i is-dir {path_home}/.ssh"
-    p = subprocess.run([cmd], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p = subprocess.run(shlex.split(cmd), shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     # Unfortunately we get a byte like object returned
     if "true" in str(p.stdout):
@@ -159,7 +167,7 @@ def raw_inject(image,path_home,user,key,ssh_dir,userid):
     # Execute all commands to inject SSH pubkey into image
     logging.info("Injecting SSH pubkey...")
     for i in cmds:
-        p = subprocess.run([i], shell=True, stdout=subprocess.PIPE,
+        p = subprocess.run(shlex.split(i), shell=False, stdout=subprocess.PIPE,
                            stderr=subprocess.STDOUT, check=True)
         rc = p.returncode
     logging.info("SSH pubkey injected.")
