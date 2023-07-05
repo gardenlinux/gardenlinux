@@ -81,6 +81,13 @@ To successfully build the project, ensure the following requirements are met:
 - **Memory:** The build process may require up to 8GiB of memory, depending on the selected targets. If your system has insufficient RAM, configure swap space accordingly.
 - **Container Engine:** The Builder has minimal dependencies and only requires a working container engine. It is recommended to use rootless Podman. Please refer to the [Podman rootless setup guide](https://github.com/containers/podman/blob/main/docs/tutorials/rootless_tutorial.md) for instructions on setting it up.
 
+### SELinux
+
+If you intend to build targets with the `_selinux` feature some additional requirements apply to the build machine.
+Building the `_selinux` feature will not work on machines running in SELinux enforcing mode. Ideally you should build on a build machine with SELinux disabled, but if you want to build with SELinux in permissive mode this can be achieved by running build as root with the `--privileged` flag.
+
+i.e.: `sudo ./build --privileged ${target}`
+
 ## Secureboot
 
 If you intend to build targets with the `_secureboot` feature, you must first build the secureboot certificates.
