@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-set -eufo pipefail
+set -euo pipefail
+shopt -s nullglob
 
-container_image=ghcr.io/gardenlinux/builder:33f40419183261641b2fb702240b8bde44ee0f1c
+container_image=ghcr.io/gardenlinux/builder:a54e5c8a6be14333121ae4ee65610cf32ded9e94
 container_engine=podman
 target_dir=.build
 
@@ -62,10 +63,15 @@ done
 [ -d "$target_dir" ] || mkdir "$target_dir"
 
 container_mount_opts=(
-	-v "$PWD/features:/builder/features:ro"
 	-v "$PWD/keyring.gpg:/builder/keyring.gpg:ro"
 	-v "$(realpath "$target_dir"):/builder/.build"
 )
+
+for feature in features/*; do
+	if [ -d "$feature" ]; then
+		container_mount_opts+=(-v "$(realpath -- "$feature"):/builder/$feature:ro")
+	fi
+done
 
 if [ "$container_image" = localhost/builder ]; then
 	dir="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")"
