@@ -170,6 +170,7 @@ class Ec2ImageImport:
         self.profile_name = args.profile_name
         self.architecture = args.architecture
         self.image_overwrite = args.image_overwrite
+        self.show_progress = args.show_progress
 
         if self.debug:
             handler.setLevel(logging.DEBUG)
@@ -186,6 +187,28 @@ class Ec2ImageImport:
 
     def upload_image(self):
         logger.debug(f"Checking whether S3 bucket {self.s3_bucket} exists...")
+
+        class ProgressPercentageClass(object):
+
+            def __init__(self, filename, show_progress: bool):
+                import os
+                self.total = os.path.getsize(filename)
+                self.show_progress = show_progress
+                self.uploaded = 0
+
+            def __call__(self, bytes_amount):
+                if self.show_progress is not True:
+                    return
+                self.uploaded += bytes_amount
+                if not (self.uploaded % 1024 == 0 or self.uploaded == self.total):
+                    return
+                print(
+                    f"Uploaded {self.uploaded} of {self.total} bytes ({self.uploaded/self.total*100:.2f}%)",
+                    end="\r",
+                    flush=True,
+                )
+
+        progress_callback = ProgressPercentageClass
 
         found = False
         for b in response_ok(self.s3_client.list_buckets()).get('Buckets'):
@@ -217,7 +240,7 @@ class Ec2ImageImport:
         if (not image_available) or self.image_overwrite:
             logger.info(f"Uploading to s3://{self.s3_bucket}/{self.image_name}...")
             with open(self.raw_image, 'rb') as image_data:
-                self.s3_client.upload_fileobj(Fileobj=image_data, Bucket=self.s3_bucket, Key=self.image_name)
+                self.s3_client.upload_fileobj(Fileobj=image_data, Bucket=self.s3_bucket, Key=self.image_name,Callback=progress_callback(self.raw_image, self.show_progress))
                 logger.info(f"Image uploaded to s3://{self.s3_bucket}/{self.image_name}")
             return True
         else:
@@ -487,6 +510,12 @@ class Ec2ImageImport:
             type=str,
             default="",
             help="additional tags to set in format name=value,name1=value1,..."
+        )
+        parser.add_argument(
+            "--show-progress",
+            dest="show_progress",
+            action="store_true",
+            help="Show a progress indicator while uploading the raw image"
         )
         parser.add_argument(
             "--profile_name",
