@@ -6,3 +6,4 @@ features:
     - sap
   exclude:
     - _selinux
+    - firewall
