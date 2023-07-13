@@ -276,7 +276,7 @@ class CHROOT:
             logger.info("Created {dir} with mode {mode}.".format(
                 dir=dir, mode=mode))
         except OSError:
-            logger.error("Directory {dir} already present.".format(
+            logger.warning("Directory {dir} already present.".format(
                 dir=dir))
         os.umask(orig_mask)
 
