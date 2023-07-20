@@ -1,0 +1,48 @@
+name: publish gardenlinux container base image
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        default: today
+      default_modifier:
+        type: string
+        default: ""
+jobs:
+  publish_container:
+    name: publish gardenlinux container base image
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+      - name: set VERSION=${{ inputs.version }}
+        run: |
+          bin/garden-version "${{ inputs.version }}" | tee VERSION
+          git update-index --assume-unchanged VERSION
+      - name: get cname
+        run: |
+          echo "cname_amd64=$(./build --resolve-cname container${{ inputs.default_modifier }}-amd64)" | tee -a "$GITHUB_ENV"
+          echo "cname_arm64=$(./build --resolve-cname container${{ inputs.default_modifier }}-arm64)" | tee -a "$GITHUB_ENV"
+      - uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.cname_amd64 }}
+      - uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.cname_arm64 }}
+      - name: publish gardenlinux container base image
+        run: |
+          podman login -u ${{ github.actor }} -p ${{ github.token }} ghcr.io
+          tar xzv < "${{ env.cname_amd64 }}.tar.gz"
+          image="$(podman load < ${{ env.cname_amd64 }}.oci | awk '{ print $NF }')"
+          podman tag "$image" ghcr.io/${{ github.repository }}:amd64-nightly
+          podman push ghcr.io/${{ github.repository }}:amd64-nightly
+          tar xzv < "${{ env.cname_arm64 }}.tar.gz"
+          image="$(podman load < ${{ env.cname_arm64 }}.oci | awk '{ print $NF }')"
+          podman tag "$image" ghcr.io/${{ github.repository }}:arm64-nightly
+          podman push ghcr.io/${{ github.repository }}:arm64-nightly
+          podman manifest create ghcr.io/${{ github.repository }}:nightly
+          podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:amd64-nightly
+          podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:arm64-nightly
+          podman push ghcr.io/${{ github.repository }}:nightly

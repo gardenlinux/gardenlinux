@@ -60,3 +60,10 @@ jobs:
       region: ${{ secrets.AWS_REGION }}
       role: ${{ secrets.AWS_IAM_ROLE }}
       session: ${{ secrets.AWS_OIDC_SESSION }}
+  publish_container:
+    name: publish gardenlinux container base image
+    needs: [ build, tests ]
+    uses: ./.github/workflows/publish_container.yml
+    with:
+      version: ${{ needs.build.outputs.version }}
+      default_modifier: "-gardener_prod"
