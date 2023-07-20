@@ -21,6 +21,9 @@ cat > config << EOF
 {
   "architecture": "$BUILDER_ARCH",
   "os": "linux",
+  "config": {
+    "Cmd": [ "/bin/bash" ]
+  },
   "rootfs": {
     "type": "layers",
     "diff_ids": [
