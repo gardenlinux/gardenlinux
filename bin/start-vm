@@ -106,7 +106,7 @@ set_defaults () {
     pxefile=${CURR_DIR}/../examples/ipxe/start-vm.ipxe
     ignfile=
     pidfile=
-    uefi=
+    uefi=1
     uefi_code=
     uefi_vars=
     tpm=1
@@ -144,7 +144,7 @@ set_defaults () {
 # passed to this script
 get_opts () {
 source "${CURR_DIR}/.constants.sh" \
-    --flags 'daemonize,no-watchdog,uefi,skipkp,vnc' \
+    --flags 'daemonize,no-watchdog,uefi,legacy-bios,skipkp,vnc' \
     --flags 'cpu:,mem:,bridge:,port:,mac:,arch:' \
     --flags 'pxe:' \
     --flags 'ignfile:' \
@@ -159,7 +159,8 @@ source "${CURR_DIR}/.constants.sh" \
 --cpu       <int>         Number of vCPUs to start the VM. (default: $cpu)
 --arch      <platform>    Set the emulated platform. i386, x86_64, x86_64-microvm, arm, aarch64 are supported. (default: $arch)
 --mem       <int>         Memory provided to the virtual machine (default: $memory) in MB if unit is omitted.
---uefi      <bool>        Boot with uefi bios enabled, needs \`apt-get install ovmf\`. (default: no)
+--uefi      <bool>        Boot with uefi bios enabled, needs \`apt-get install ovmf\`. (default: yes)
+--legacy-bios <bool>        Boot with uefi bios disabled, can't be used with uefi. (default: no)
 --ueficode  <path>        Defines the uefi code used. The file is readonly. (default: $uefi_code)
 --uefivars  <path>        Defines the uefi variables used. The file will be !modified! if vartiables are se. (default: $uefi_vars)
 --port      <int>         Specifies the local ssh port. This port is mounted to the running machine, not if --bridge is specified. (default: $port_base)
@@ -186,6 +187,7 @@ while true; do
         --no-watchdog)  no_watchdog=1;        ;;
         --vnc)          vnc=1;                ;;
         --uefi)         uefi=1;               ;;
+        --legacy-bios)  uefi=;                ;;
         --mac)          mac="$1";       shift ;;
         --ueficode)     uefi_code="$1"; shift ;;
         --uefivars)     uefi_vars="$1"; shift ;;
@@ -439,7 +441,7 @@ qemu_opt_uefi () {
                 homebrew_prefix=$(brew info qemu | awk 'NR==4{print $1}')
                 uefi_code="${uefi_code:-$homebrew_prefix/share/qemu/edk2-x86_64-code.fd}"
                 uefi_vars="${uefi_vars:-$homebrew_prefix/share/qemu/edk2-i386-vars.fd}"
-            elif [ "$os" = debian ]; then
+            elif [ "$os" = debian ] || [ "$os" = ubuntu ] ; then
                 uefi_code="${uefi_code:-/usr/share/OVMF/OVMF_CODE.fd}"
                 uefi_vars="${uefi_vars:-/usr/share/OVMF/OVMF_VARS.fd}"
             elif [ "$os" = centos ]; then
@@ -465,7 +467,7 @@ qemu_opt_uefi () {
             homebrew_prefix=$(brew info qemu | awk 'NR==4{print $1}')
             uefi_code="${uefi_code:-$homebrew_prefix/share/qemu/edk2-aarch64-code.fd}"
             uefi_vars="${uefi_vars:-$homebrew_prefix/share/qemu/edk2-arm-vars.fd}"
-        elif [ "$os" = debian ]; then
+        elif [ "$os" = debian ] || [ "$os" = ubuntu ] ; then
             uefi_code="${uefi_code:-/usr/share/AAVMF/AAVMF_CODE.fd}"
             uefi_vars="${uefi_vars:-/usr/share/AAVMF/AAVMF_VARS.fd}"
         elif [ "$os" = centos ]; then
