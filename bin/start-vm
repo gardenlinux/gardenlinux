@@ -458,6 +458,9 @@ qemu_opt_uefi () {
 
     elif [ "$arch" = arm64 ]; then
         # Always enable UEFI mode on aarch64
+        if [[ -z "$uefi" ]]; then
+            echo "WARNING: --legacy-boot is not supported on AARCH64. Enabling UEFI."
+        fi
         uefi=1
 
         # Obtain UEFI code and vars from
