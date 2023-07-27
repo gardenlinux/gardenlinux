@@ -61,9 +61,6 @@ const stop_runner = (runner_instance_id) => {
 		console.log("runner " + runner_instance_id + " stopped");
 
 		update_runners();
-
-		// make sure there is always one idle runner to improve latency of cert build step and reap any orphaned jobs in case a webhook delivery fails
-		if (runner_instances.size === 0) request_runner();
 	}
 };
 
