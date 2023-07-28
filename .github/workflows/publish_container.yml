@@ -33,7 +33,7 @@ jobs:
           name: ${{ env.cname_arm64 }}
       - name: publish gardenlinux container base image
         run: |
-          podman login -u ${{ github.actor }} -p ${{ github.token }} ghcr.io
+          podman login -u token -p ${{ github.token }} ghcr.io
           tar xzv < "${{ env.cname_amd64 }}.tar.gz"
           image="$(podman load < ${{ env.cname_amd64 }}.oci | awk '{ print $NF }')"
           podman tag "$image" ghcr.io/${{ github.repository }}:amd64-nightly
