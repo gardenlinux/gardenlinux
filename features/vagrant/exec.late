@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+# Configure box for vagrant, cf https://unix.stackexchange.com/a/222907
+useradd --user-group --groups wheel --create-home vagrant
+id vagrant
+
+# vagrant user needs password vagrant, but chpasswd seems not to accept the password because it is too simple
+grep --invert-match vagrant /etc/shadow > /tmp/shadow
+echo 'vagrant:$y$j9T$FBmWMMaSAZXFfooUf9ZFb/$M/XrMBIsmpqK5FrsZQS1hgwmMFWjLNoaM9np87KqNWB:19445:0:99999:7:::' >> /tmp/shadow
+mv /tmp/shadow /etc/shadow
+
+mkdir /home/vagrant/.ssh
+chmod -R 700 /home/vagrant/.ssh
+curl -o /home/vagrant/.ssh/authorized_keys https://raw.githubusercontent.com/hashicorp/vagrant/main/keys/vagrant.pub
+chown -R vagrant:vagrant /home/vagrant/.ssh
+find /home/vagrant -printf '%M %u:%g %p\n'
+
+echo "vagrant ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+sed -i -e 's/Defaults    requiretty/### Defaults    requiretty/g' /etc/sudoers
