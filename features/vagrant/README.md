@@ -4,6 +4,16 @@
 This feature flag adds vagrant libvirt to the Garden Linux artifact.
 </website-feature>
 
+## Setup
+
+Only tested on linux hosts so far.
+
+Ensure [vagrant](https://developer.hashicorp.com/vagrant/downloads?product_intent=vagrant), [libvirt](https://libvirt.org) and [the libvirt provider for vagrant](https://github.com/vagrant-libvirt/vagrant-libvirt) are set up.
+
+Download the built artifact with a name like `gardenlinux_libvirt*.box`, where the cpu architecture matches yours.
+
+Run the following commands to create and start a vagrant vm with Garden Linux:
+
 ```
 vagrant box add --name gardenlinux gardenlinux_libvirt.box
 vagrant init gardenlinux
