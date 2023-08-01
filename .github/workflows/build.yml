@@ -134,7 +134,7 @@ jobs:
       fail-fast: false
       matrix:
         arch: [ amd64, arm64 ]
-        target: [ kvm, "kvm_secureboot", "kvm_secureboot_readonly", "kvm_secureboot_readonly_persistence", metal, "metal_secureboot", "metal_secureboot_readonly", "metal_secureboot_readonly_persistence", gcp, aws, "aws_secureboot", "aws_secureboot_readonly", "aws_secureboot_readonly_persistence", azure, ali, openstack, vmware, "metal_pxe", firecracker, "metal-vhost", container ]
+        target: [ kvm, "kvm_secureboot", "kvm_secureboot_readonly", "kvm_secureboot_readonly_persistence", metal, "metal_secureboot", "metal_secureboot_readonly", "metal_secureboot_readonly_persistence", gcp, aws, "aws_secureboot", "aws_secureboot_readonly", "aws_secureboot_readonly_persistence", azure, ali, openstack, vmware, "metal_pxe", firecracker, "metal-vhost" ]
         modifier: [ "${{ inputs.default_modifier }}" ]
     steps:
       - uses: nkraetzschmar/workflow-telemetry-action@v1
@@ -195,6 +195,67 @@ jobs:
           path: tests/test.xml
       - name: get cname
         run: echo "cname=$(basename "$(realpath ".build/${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}")" .artifacts)" | tee -a "$GITHUB_ENV"
+      - name: pack build artifacts for upload
+        run: tar -cSzvf "${{ env.cname }}.tar.gz" -C .build -T ".build/${{ env.cname }}.artifacts"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "${{ env.cname }}"
+          path: "${{ env.cname }}.tar.gz"
+  container:
+    needs: [ version, base, test_container ]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ amd64, arm64 ]
+    steps:
+      - uses: nkraetzschmar/workflow-telemetry-action@v1
+        with:
+          metric_frequency: 1
+          proc_trace_min_duration: 10
+          proc_trace_chart_max_count: 50
+          comment_on_pr: false
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup
+      - name: set VERSION=${{ needs.version.outputs.version }}
+        run: |
+          bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
+          git update-index --assume-unchanged VERSION
+      - name: load bootstrap stage cache
+        uses: actions/cache/restore@v3
+        with:
+          path: .build
+          key: base-${{ github.run_id }}
+          fail-on-cache-miss: true
+      - name: download test container cache
+        uses: actions/cache/restore@v3
+        with:
+          path: test.oci
+          key: test_container:${{ github.run_id }}
+          fail-on-cache-miss: true
+      - name: import test container image
+        run: |
+          podman load < test.oci
+          rm test.oci
+      - name: update bootstrap stage build artifact timestamps
+        run: |
+          t="$(date '+%s')"
+          find .build -exec touch -d "@$t" {} +
+      - name: build
+        run: ./build container-${{ matrix.arch }}
+      - name: test
+        run: ./test --container-image test container-${{ matrix.arch }}
+      - uses: pmeier/pytest-results-action@main
+        if: always()
+        with:
+          path: tests/test.xml
+      - name: get cname
+        run: echo "cname=$(basename "$(realpath ".build/container-${{ matrix.arch }}")" .artifacts)" | tee -a "$GITHUB_ENV"
       - name: pack build artifacts for upload
         run: tar -cSzvf "${{ env.cname }}.tar.gz" -C .build -T ".build/${{ env.cname }}.artifacts"
       - uses: actions/upload-artifact@v3
