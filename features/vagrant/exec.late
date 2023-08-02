@@ -8,6 +8,8 @@ id vagrant
 
 # vagrant user needs password vagrant, but chpasswd seems not to accept the password because it is too simple
 grep --invert-match vagrant /etc/shadow > /tmp/shadow
+# Ignore shellcheck false positive: No expansion wanted here
+# shellcheck disable=SC2016
 echo 'vagrant:$y$j9T$FBmWMMaSAZXFfooUf9ZFb/$M/XrMBIsmpqK5FrsZQS1hgwmMFWjLNoaM9np87KqNWB:19445:0:99999:7:::' >> /tmp/shadow
 mv /tmp/shadow /etc/shadow
 
