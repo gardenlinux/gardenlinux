@@ -16,7 +16,7 @@ for kernel in /boot/vmlinuz-*; do
 	--reproducible \
 	"/boot/initrd.img-${kernel#*-}"
 
-	kernel-install add "${kernel#*-}" "${kernel}"
+	SYSTEMD_ESP_PATH=/boot/efi kernel-install add "${kernel#*-}" "${kernel}"
 done
 
 sed 's/boot\/efi\///' -i /boot/efi/loader/entries/*.conf
