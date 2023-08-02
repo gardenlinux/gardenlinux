@@ -15,16 +15,13 @@ jobs:
     - name: Setup
       run: |
         sudo apt-get update
-        sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qemu-user-static qemu-utils
+        sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qemu-user-static
 
     - name: Build
       run: |
         ./build kvm-vagrant-${{ matrix.arch }}
 
-    - run: qemu-img convert -f raw -O qcow2  .build/kvm*-${{ matrix.arch }}-today-*.raw  gl.qcow2
-    - run: mv gl.qcow2 box.img; cp features/vagrant/Vagrantfile .; cp features/vagrant/metadata.json .
-    - run: tar cvzf gardenlinux_libvirt-${{ matrix.arch }}.box ./metadata.json ./Vagrantfile ./box.img
     - uses: actions/upload-artifact@v3
       with:
         name: gardenlinux-vagrant-libvirt-${{ matrix.arch }}
-        path: gardenlinux_libvirt-${{ matrix.arch }}.box
+        path: .build/kvm-vagrant-${{ matrix.arch }}*.box

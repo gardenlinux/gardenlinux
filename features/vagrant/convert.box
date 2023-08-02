@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+input="$1"
+output="$2"
+
+tmp="$(mktemp -d)"
+
+qemu-img convert -f raw -O qcow2 "$input" "$tmp"/gl.qcow2
+mv "$tmp"/gl.qcow2 "$tmp"/box.img
+
+cp features/vagrant/metadata.json "$tmp"/metadata.json
+cp features/vagrant/Vagrantfile "$tmp"/Vagrantfile
+
+# Ensure all files in the tarball are in top level, not in sub directories
+tar cvzf "$output" --directory="$tmp" metadata.json Vagrantfile box.img

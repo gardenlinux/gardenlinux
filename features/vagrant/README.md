@@ -8,6 +8,8 @@ This feature flag adds vagrant libvirt to the Garden Linux artifact.
 
 Only tested on linux hosts so far.
 
+Based on [this StackExchange answer](https://unix.stackexchange.com/questions/222427/how-to-create-custom-vagrant-box-from-libvirt-kvm-instance/222907#222907).
+
 Ensure [vagrant](https://developer.hashicorp.com/vagrant/downloads?product_intent=vagrant), [libvirt](https://libvirt.org) and [the libvirt provider for vagrant](https://github.com/vagrant-libvirt/vagrant-libvirt) are set up.
 
 Download the built artifact with a name like `gardenlinux_libvirt*.box`, where the cpu architecture matches yours.
