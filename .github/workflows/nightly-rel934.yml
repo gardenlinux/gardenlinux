@@ -6,4 +6,17 @@ jobs:
   trigger_workflow_dispatch:
     runs-on: ubuntu-latest
     steps:
-      - run: curl -vv --fail-with-body -X POST -u "token:${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/actions/workflows/28837699/dispatches" -d '{"ref":"rel-934"}'
+
+      - name: Checkout 934 branch
+        uses: actions/checkout@v2
+        with:
+          ref: 'rel-934'
+
+      - name: Get the latest 934 version (including minor version)
+        run: echo "VERSION=$(./bin/garden-version)" >> $GITHUB_ENV
+
+      - name: Trigger nightly for rel-934 with version input
+        run: |
+          curl -vv --fail-with-body -X POST -u "token:${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/actions/workflows/28837699/dispatches" -d "{\"ref\":\"rel-934\", \"inputs\":{\"version\":\"$VERSION\"}}"
+
+
