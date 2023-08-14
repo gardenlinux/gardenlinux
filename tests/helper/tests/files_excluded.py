@@ -3,15 +3,16 @@ import os
 import pytest
 import string
 
+
 def files_excluded(client):
     files_to_be_excluded = []
 
     # get the list of excluded files from the current feature
-    current = (os.getenv('PYTEST_CURRENT_TEST')).split('/')[0]
+    current = (os.getenv("PYTEST_CURRENT_TEST")).split("/")[0]
     path = f"/gardenlinux/features/{current}/file.exclude"
     try:
         with open(path) as f:
-            files_to_be_excluded.append(f.read().splitlines)
+            files_to_be_excluded.extend(f.read().splitlines())
     except OSError:
         pass
 
@@ -36,5 +37,6 @@ def files_excluded(client):
         if check_file(client, excluded_file) is True:
             actually_present.append(excluded_file)
 
-    assert len(actually_present) == 0, \
-            f"{', '.join(actually_present)} must not be in the image but is actually present"
+    assert (
+        len(actually_present) == 0
+    ), f"{', '.join(actually_present)} must not be in the image but is actually present"
