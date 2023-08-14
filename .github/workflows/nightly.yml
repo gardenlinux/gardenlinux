@@ -66,4 +66,3 @@ jobs:
     uses: ./.github/workflows/publish_container.yml
     with:
       version: ${{ needs.build.outputs.version }}
-      default_modifier: "-gardener_prod"
