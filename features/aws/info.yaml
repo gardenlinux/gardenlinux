@@ -3,11 +3,3 @@ type: platform
 features:
   include: 
     - cloud
-upload:
-  target:
-    - type: aws
-      bucket: ami-debian-image-test 
-      region: eu-central-1 
-      image-name: $(AWS_IMAGE_NAME) 
-      public: $(PUBLIC) 
-      distribute: $(AWS_DISTRIBUTE)

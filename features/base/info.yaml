@@ -2,5 +2,3 @@ description: "base layer (debootstap --variant minbase, see docker:debian:xx-sli
 type: element
 features:
   include: [ _slim ]
-tar:
-  include-dev: false

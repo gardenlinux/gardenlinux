@@ -4,14 +4,3 @@ features:
   include:
     - server
     - _boot
-fs:
-  - dest: /
-    type: ext4
-disk:
-  label: gpt
-  boot:
-    - efi
-    - mbr
-convert:
-  format:
-    - type: raw

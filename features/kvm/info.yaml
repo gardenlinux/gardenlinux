@@ -4,11 +4,3 @@ features:
   include: 
     - cloud
     - _ignite
-disk:
-  boot: 
-    - efi
-    - mbr
-convert:
-  format: 
-    - type: raw
-    - type: qcow2

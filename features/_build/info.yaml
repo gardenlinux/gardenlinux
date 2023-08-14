@@ -1,5 +1,2 @@
 description: "debootstrap will use buildd as init variant (includes build-essential)"
 type: flag
-init:
-  variant: buildd
-
