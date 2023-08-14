@@ -7,5 +7,3 @@ features:
     - sap
     - log
     - _selinux
-tar:
-  include-dev: true

@@ -4,10 +4,3 @@ features:
   include: 
     - cloud
     - _ignite
-disk:
-  boot: 
-    - mbr
-convert:
-  format: 
-    - type: ova
-      template: gardenlinux.ovf.template
