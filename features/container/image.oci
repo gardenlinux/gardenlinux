@@ -29,7 +29,8 @@ cat > config << EOF
     "diff_ids": [
       "sha256:$rootfs_sha256"
     ]
-  }
+  },
+  "history": [{}]
 }
 EOF
 
