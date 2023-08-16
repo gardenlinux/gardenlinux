@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 
-# Generate Release Notes for a Garden Linux Release
-#
+# This is currently not part of the automated pipeline. A garden linux maintainer must execute this locally
+# # install python dependencies 
+# python3 -m venv venv
+# source venv/bin/activate
+# pip install boto3 pyyaml
+# # Execute the command (example for 934.10):
+# .github/workflows/generate_release_note.py generate --version 934.10 --commitish f057c9b 
 
-import click
 import os
 import boto3
 import yaml
 import urllib.request
 import sys
 from yaml.loader import SafeLoader
+import argparse
 
 arches = [
     'amd64',
@@ -110,14 +115,21 @@ def download_meta_single_manifest(bucket, bucket_path, image_name, dest_path):
 
 
 def download_all_singles(bucket, path, version, commitish):
-
+    if commitish == None:
+        raise Exception("Commitish is not set")
     local_dest_path = "s3_downloads"
     os.makedirs(local_dest_path, exist_ok=True)
     manifests = list()
     for a in arches:
         for p in cloud_fullname_dict:
             fname = construct_full_image_name(p, "gardener_prod", a, version, commitish)
-            manifests.append(download_meta_single_manifest(bucket, path, fname, "s3_downloads/"))
+            try:
+                manifests.append(download_meta_single_manifest(bucket, path, fname, "s3_downloads/"))
+            except Exception as e:
+                print(f"Failed to get manifest. Error: {e}")
+                print(f"\tfname:{fname}")
+                print(f"\tfname:{path}")
+
     return manifests
 
 
@@ -168,36 +180,45 @@ def generate_package_update_section(version):
                     output += _parse_match_section(s['matchBinaries'])
     return output
 
-@click.group()
-@click.version_option()
-def cli():
-    pass #Entry Point
+def main():
+    parser = argparse.ArgumentParser(description="Command Line Interface", add_help=False)
+    subparsers = parser.add_subparsers(dest="cmd", required=True)
 
+    generate_package_notes_parser = subparsers.add_parser('generate_package_notes', help='Only generates Package Updates Section')
+    generate_package_notes_parser.add_argument('--version', required=True, help='Target Garden Linux Version')
 
-@cli.command(help='Only generates Package Updates Section')
-@click.option('--version', required=True, help='Target Garden Linux Version')
+    generate_publish_notes_parser = subparsers.add_parser('generate_publish_notes', help='Only generates publishing info section')
+    generate_publish_notes_parser.add_argument('--version', required=True, help='Target Garden Linux Version')
+    generate_publish_notes_parser.add_argument('--commitish', required=True, help='commitish used by publishing pipeline. required to download respective manifests')
+
+    generate_parser = subparsers.add_parser('generate', help='Generates full release notes')
+    generate_parser.add_argument('--version', required=True, help='Target Garden Linux Version')
+    generate_parser.add_argument('--commitish', required=True, help='commitish used by publishing pipeline. required to download respective manifests')
+
+    args = parser.parse_args()
+
+    if args.cmd == "generate_package_notes":
+        generate_package_notes(args.version)
+
+    elif args.cmd == "generate_publish_notes":
+        generate_publish_notes(args.version, args.commitish)
+
+    elif args.cmd == "generate":
+        generate(args.version, args.commitish)
+
 def generate_package_notes(version):
     output = "## Package Updates\n"
     output += generate_package_update_section(version)
     output += "\n"
     print(output)
 
-
-@cli.command(help='Only generates publishing info section')
-@click.option('--version', required=True, help='Target Garden Linux Version')
-@click.option('--commitish', required=False, help='commitish used by publishing pipeline. required to download respective manifests')
 def generate_publish_notes(version, commitish):
     output = "## Public cloud images\n"
     output += generate_publish_release_note_section(version, commitish)
     output += "\n"
     print(output)
 
-
-@cli.command(help='Generates full release notes')
-@click.option('--version', required=True, help='Target Garden Linux Version')
-@click.option('--commitish', required=False, help='commitish used by publishing pipeline. required to download respective manifests')
 def generate(version, commitish):
-
     output = "## Package Updates\n"
     output += generate_package_update_section(version)
     output += "\n"
@@ -207,5 +228,6 @@ def generate(version, commitish):
     print(output)
 
 
+
 if __name__ == '__main__':
-    cli()
+    main()
