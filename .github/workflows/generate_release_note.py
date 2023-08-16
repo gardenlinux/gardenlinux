@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 
-# Generate Release Notes for a Garden Linux Release
-#
+# This is currently not part of the automated pipeline. A garden linux maintainer must execute this locally
+# # install python dependencies 
+# python3 -m venv venv
+# source venv/bin/activate
+# pip install boto3 pyyaml
+# # Execute the command (example for 934.10):
+# .github/workflows/generate_release_note.py generate --version 934.10 --commitish f057c9b 
 
 import os
 import boto3
