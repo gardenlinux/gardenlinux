@@ -218,7 +218,7 @@ jobs:
       fail-fast: false
       matrix:
         arch: [ amd64, arm64 ]
-        config: [ libc, sapmachine ]
+        config: [ libc, python, nodejs, sapmachine ]
     steps:
       - uses: nkraetzschmar/workflow-telemetry-action@v1
         with:
