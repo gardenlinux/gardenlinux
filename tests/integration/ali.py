@@ -80,11 +80,12 @@ class ALI:
 
     @classmethod
     def instance(cls):
-        return cls.openstack
+        return cls.ali
 
     def __init__(self, config):
         self.config = config
         self.image_created = False
+        self.ssh_config = self.config["ssh"]
         self.ssh_key_uploaded = False
         credentials = config["credential_file"]
         (access_key_id, access_key_secret) = self._read_credentials(credentials)
@@ -109,10 +110,22 @@ class ALI:
             )
             logger.info("Uploaded image %s" % config["image_id"])
 
-        if not self._ssh_key_exists(self.config["ssh"]["key_name"]):
+        if self.ssh_config.get("key_name", None) == None:
+            self.ssh_config["key_name"] = f"ssh-key-{self.config['test-name']}"
+
+        if not self._ssh_key_exists(self.ssh_config["key_name"]):
+            if self.ssh_config.get("ssh_key_filepath", None) == None:
+                import tempfile
+                keyfile = tempfile.NamedTemporaryFile(prefix=f"sshkey-{self.config['test_name']}-", suffix=".key", delete=False)
+                keyfp = RemoteClient.generate_key_pair(
+                    filename = keyfile.name,
+                )
+                self.ssh_config["ssh_key_filepath"] = keyfile.name
+                logger.info(f"Generated SSH keypair with fingerprint {keyfp}.")
+
             self._upload_ssh_key(
-                keyfile=self.config["ssh"]["ssh_key_filepath"],
-                keyname=self.config["ssh"]["key_name"]
+                keyfile=self.ssh_config["ssh_key_filepath"],
+                keyname=self.ssh_config["key_name"]
             )
 
     def __del__(self):

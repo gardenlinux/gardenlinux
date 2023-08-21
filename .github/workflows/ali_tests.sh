@@ -34,7 +34,6 @@ ali:
     bucket: gardenlinux-test-upload
     ssh:
       ssh_key_filepath: /gardenlinux/tmp/id_rsa
-      key_name: gardenlinux-test
       user: admin
     keep_running: false
     features:
