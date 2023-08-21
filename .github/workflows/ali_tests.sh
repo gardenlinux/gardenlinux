@@ -24,7 +24,6 @@ fi
 
 cat << EOF > "$configFile"
 ali:
-    test_name: gl-selinux-credativ
     credential_file: /gardenlinux/ali-service-account.json
     image: file:///artifacts/$(basename "$image_file")
     instance_type: ecs.t6-c1m2.large
@@ -32,7 +31,7 @@ ali:
     vswitch_id: vsw-gw8itw7yozjthfek7xgel
     region_id: eu-central-1
     zone_id: eu-central-1a
-    bucket: develop-gardener
+    bucket: gardenlinux-test-upload
     ssh:
       ssh_key_filepath: /gardenlinux/tmp/id_rsa
       key_name: gardenlinux-test
