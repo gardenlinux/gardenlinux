@@ -31,6 +31,8 @@ on:
         required: true
       az_subscription_id:
         required: true
+      ccc_credentials:
+        required: true
 jobs:
   platform_tests:
     name: platform test
@@ -53,13 +55,15 @@ jobs:
       fail-fast: false
       matrix:
         arch: [ amd64, arm64 ]
-        target: [ gcp, aws, azure ]
+        target: [ gcp, aws, azure, ali ]
         modifier: [ "${{ inputs.default_modifier }}" ]
         exclude:
           - arch: arm64
             target: gcp
           - arch: arm64
             target: azure
+          - arch: arm64
+            target: ali
     steps:
     - uses: actions/checkout@v3
 
@@ -114,6 +118,10 @@ jobs:
         client-id: ${{ secrets.az_client_id }}
         tenant-id: ${{ secrets.az_tenant_id }}
         subscription-id: ${{ secrets.az_subscription_id }}
+
+    - if: ${{ matrix.target == 'ali' }}
+      name: 'Create ali cloud credential file'
+      run: base64 -d <<< "${{ secrets.ccc_credentials }}" | .github/workflows/ali_credentials.jq > ali-service-account.json
 
     - name: start platform test for ${{ matrix.target }}
       run: |
