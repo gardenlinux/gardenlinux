@@ -18,14 +18,14 @@ mount --rbind --make-rprivate /sys "$chroot_dir/sys"
 mount --rbind --make-rprivate /dev "$chroot_dir/dev"
 mount --bind /usr/bin/false "${chroot_dir}/usr/bin/systemd-detect-virt"
 
-kernel=$(echo ${chroot_dir}/boot/vmlinuz-* | tr " " '\n' | cut -d- -f 2- | sort -V | tail -1)
-chroot "$chroot_dir" dracut -f /tmp/initrd ${kernel} -m "bash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo dracut-systemd shutdown dmsquash-live" --reproducible
+kernel=$(echo "${chroot_dir}"/boot/vmlinuz-* | tr " " '\n' | cut -d- -f 2- | sort -V | tail -1)
+chroot "$chroot_dir" dracut -f /tmp/initrd "${kernel}" -m "bash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo dracut-systemd shutdown dmsquash-live" --reproducible
 
 # we use ukify because dracut 059 and systemd 254 don't mix, dracut generate a broken uki
 # https://github.com/dracutdevs/dracut/issues/2431
 # TODO: fix when dracut is fixed
 #chroot "${chroot_dir}" dracut -f /tmp/unified ${kernel} --uefi --kernel-cmdline "console=tty0 console=ttyS0,115200 rd.live.squashimg=squashfs.img root=live:CDLABEL=GardenlinuxISO rd.live.overlay.overlayfs rd.live.dir=live rd.live.ram"  -m "bash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo dracut-systemd shutdown dmsquash-live" --reproducible
-chroot "${chroot_dir}" /lib/systemd/ukify build --output=/tmp/unified --linux=/boot/vmlinuz-${kernel} --initrd=/tmp/initrd --cmdline="console=tty0 console=ttyS0,115200 rd.live.squashimg=squashfs.img root=live:CDLABEL=GardenlinuxISO rd.live.overlay.overlayfs rd.live.dir=live rd.live.ram"
+chroot "${chroot_dir}" /lib/systemd/ukify build --output=/tmp/unified --linux=/boot/vmlinuz-"${kernel}" --initrd=/tmp/initrd --cmdline="console=tty0 console=ttyS0,115200 rd.live.squashimg=squashfs.img root=live:CDLABEL=GardenlinuxISO rd.live.overlay.overlayfs rd.live.dir=live rd.live.ram"
 
 umount -l "$chroot_dir/proc"
 umount -l "$chroot_dir/sys"
@@ -74,7 +74,7 @@ EOF
 xorriso -as mkisofs \
  -volid "GardenlinuxISO" \
  -o "${output}" \
- -isohybrid-mbr ${chroot_dir}/usr/lib/ISOLINUX/isohdpfx.bin \
+ -isohybrid-mbr "${chroot_dir}/usr/lib/ISOLINUX/isohdpfx.bin" \
  -c isolinux/boot.cat \
  -b isolinux/isolinux.bin \
  -no-emul-boot -boot-load-size 4 -boot-info-table \
