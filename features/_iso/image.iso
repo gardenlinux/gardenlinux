@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+input="$(realpath -- "$1")"
+output="$(realpath -- "$2")"
+
+dir="$(mktemp -d)"
+pushd "$dir" > /dev/null
+
+export PATH="/builder/image.d:$PATH"
+
+chroot_dir="$(mktemp -d)"
+mount -t tmpfs tmpfs "$chroot_dir"
+tar --extract --xattrs --xattrs-include '*' --directory "$chroot_dir" < "$input"
+
+mount --rbind --make-rprivate /proc "$chroot_dir/proc"
+mount --rbind --make-rprivate /sys "$chroot_dir/sys"
+mount --rbind --make-rprivate /dev "$chroot_dir/dev"
+mount --bind /usr/bin/false "${chroot_dir}/usr/bin/systemd-detect-virt"
+
+kernel=$(echo ${chroot_dir}/boot/vmlinuz-* | tr " " '\n' | cut -d- -f 2- | sort -V | tail -1)
+chroot "$chroot_dir" dracut -f /tmp/initrd ${kernel} -m "bash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo dracut-systemd shutdown dmsquash-live" --reproducible
+
+# we use ukify because dracut 059 and systemd 254 don't mix, dracut generate a broken uki
+# https://github.com/dracutdevs/dracut/issues/2431
+# TODO: fix when dracut is fixed
+#chroot "${chroot_dir}" dracut -f /tmp/unified ${kernel} --uefi --kernel-cmdline "console=tty0 console=ttyS0,115200 rd.live.squashimg=squashfs.img root=live:CDLABEL=GardenlinuxISO rd.live.overlay.overlayfs rd.live.dir=live rd.live.ram"  -m "bash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo dracut-systemd shutdown dmsquash-live" --reproducible
+chroot "${chroot_dir}" /lib/systemd/ukify build --output=/tmp/unified --linux=/boot/vmlinuz-${kernel} --initrd=/tmp/initrd --cmdline="console=tty0 console=ttyS0,115200 rd.live.squashimg=squashfs.img root=live:CDLABEL=GardenlinuxISO rd.live.overlay.overlayfs rd.live.dir=live rd.live.ram"
+
+umount -l "$chroot_dir/proc"
+umount -l "$chroot_dir/sys"
+umount -l "$chroot_dir/dev"
+umount "${chroot_dir}/usr/bin/systemd-detect-virt"
+
+mkdir CD_root
+mkdir CD_root/{isolinux,images,kernel,boot,boot/images,boot/syslinux,live}
+
+mksquashfs "$chroot_dir" "CD_root/live/squashfs.img" -comp lzo
+cp "${chroot_dir}/boot/"vmlinuz* "CD_root/boot/images/vmlinuz"
+mv "${chroot_dir}/tmp/"initrd* "CD_root/boot/images/initrd"
+mv "${chroot_dir}/tmp/unified" bootx64.efi
+
+#TODO: determine proper size
+dd if=/dev/zero of=efiboot.img bs=512 count=131072
+mkfs.msdos -F 16 -n 'EFIBOOTISO' efiboot.img
+mmd -i efiboot.img ::EFI
+mmd -i efiboot.img ::EFI/BOOT
+mcopy -i efiboot.img bootx64.efi ::EFI/BOOT/BOOTX64.EFI
+
+mv efiboot.img CD_root/isolinux/
+cp "${chroot_dir}/usr/lib/ISOLINUX/isolinux.bin" CD_root/isolinux/
+cp "${chroot_dir}/usr/lib/ISOLINUX/isohdpfx.bin" CD_root/isolinux/
+cp "${chroot_dir}/usr/lib/syslinux/modules/bios/ldlinux.c32" CD_root/isolinux
+
+cat << EOF > CD_root/isolinux/isolinux.cfg
+PATH /boot/syslinux
+DEFAULT loadconfig
+
+LABEL loadconfig
+  CONFIG /boot/syslinux/syslinux.cfg
+EOF
+
+cat << EOF > CD_root/boot/syslinux/syslinux.cfg
+MENU TITLE gardenlinux
+DEFAULT GardenlinuxRam
+
+LABEL GardenlinuxRam
+MENU LABEL Gardenlinux Live in RAM
+LINUX /boot/images/vmlinuz console=tty0 console=ttyS0,115200 rd.live.squashimg=squashfs.img root=live:CDLABEL=GardenlinuxISO rd.live.overlay.overlayfs rd.live.dir=live rd.live.ram
+INITRD /boot/images/initrd
+EOF
+
+# TODO: make this reproducible
+xorriso -as mkisofs \
+ -volid "GardenlinuxISO" \
+ -o "${output}" \
+ -isohybrid-mbr ${chroot_dir}/usr/lib/ISOLINUX/isohdpfx.bin \
+ -c isolinux/boot.cat \
+ -b isolinux/isolinux.bin \
+ -no-emul-boot -boot-load-size 4 -boot-info-table \
+ -eltorito-alt-boot \
+ -e isolinux/efiboot.img \
+ -no-emul-boot \
+ -isohybrid-gpt-basdat \
+ CD_root
