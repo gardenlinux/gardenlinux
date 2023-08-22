@@ -51,5 +51,5 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 COPY Pipfile "$VIRTUAL_ENV_PARENT"
 # Do not use --system, we want the pip from the virtual env
-RUN cd "$VIRTUAL_ENV_PARENT" && pipenv install --dev --skip-lock
+RUN cd "$VIRTUAL_ENV_PARENT" && pipenv install --dev 
 WORKDIR /gardenlinux/tests

@@ -11,10 +11,11 @@ if [ "$(${gardenlinux_build_cre} image ls gardenlinux/slim --format \"{{.Reposit
 	echo
 	echo "Please run 'make slim' afterwards"
 	echo
-	${gardenlinux_build_cre} pull debian:testing-slim
-	${gardenlinux_build_cre} tag  debian:testing-slim gardenlinux/slim
-	${gardenlinux_build_cre} tag  debian:testing-slim gardenlinux/slim:$VERSION
-	${gardenlinux_build_cre} tag  debian:testing-slim gardenlinux/slim:latest
+	base_container="ghcr.io/gardenlinux/gardenlinux:nightly"
+	${gardenlinux_build_cre} pull "$base_container" 
+	${gardenlinux_build_cre} tag  "$base_container" gardenlinux/slim
+	${gardenlinux_build_cre} tag  "$base_container" gardenlinux/slim:$VERSION
+	${gardenlinux_build_cre} tag  "$base_container" gardenlinux/slim:latest
 else
 	if [ "$(${gardenlinux_build_cre} image ls gardenlinux/slim:latest --format \"{{.ID}}\")" == \
 	     "$(${gardenlinux_build_cre} image ls debian:testing-slim --format \"{{.ID}}\")" ]; then
