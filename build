@@ -3,7 +3,7 @@
 set -euo pipefail
 shopt -s nullglob
 
-container_image=ghcr.io/gardenlinux/builder:d14bc38a9d13abaf5a515104861d03f859ff7b17
+container_image=ghcr.io/gardenlinux/builder:bd5be310c8f6cda595e6f0418fd41519f3fcff43
 container_engine=podman
 target_dir=.build
 
