@@ -10,7 +10,7 @@ RUN	mkdir /etc/sudoers.d \
      &&	echo "#deb https://deb.debian.org/debian unstable main" >> /etc/apt/sources.list \
      && echo "#deb-src https://deb.debian.org/debian unstable main" >> /etc/apt/sources.list \
      && sed -i 's/deb.debian.org/cdn-aws.deb.debian.org/g' /etc/apt/sources.list \
-     && sed -i 's/deb.debian.org/cdn-aws.deb.debian.org/g' /etc/apt/sources.list.d/debian.sources \
+     && if [ -f "/etc/apt/sources.list.d/debian.sources"] ; then sed -i 's/deb.debian.org/cdn-aws.deb.debian.org/g' /etc/apt/sources.list.d/debian.sources ; else echo "file not present" ; fi \
      && echo "APT::Install-Recommends false;\nAPT::Install-Suggests false;\nApt::AutoRemove::SuggestsImportant false;\n" > /etc/apt/apt.conf.d/no-recommends \
      &&	echo "progress=bar:force:noscroll" >> /etc/wgetrc \
      &&	echo "force-confold\nforce-confdef" > /etc/dpkg/dpkg.cfg.d/forceold
