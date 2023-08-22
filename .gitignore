@@ -37,3 +37,4 @@ __pycache__
 /tests/*.xml
 make_targets.cache
 /bin/*.vars
+.DS_Store
