@@ -1,8 +1,4 @@
----
-title: SSH Hardening
-weight: 10
-disableToc: false
----
+# SSH Hardening
 
 This document highlights which SSH configuration parameters are set in Garden Linux in order to harden it. Thereby, it also explains which specific values are set and what their reasons are.
 

@@ -1,19 +1,3 @@
----
-title: FAQ
-weight: 10
-disableToc: false
----
-
-# QA
-
-**Table of Content**
-- [QA](#qa)
-- [Linux Kernel](#linux-kernel)
-  - [Why does Garden Linux not integrate the mainline stable?](#why-does-garden-linux-not-integrate-the-mainline-stable)
-  - [A new long term kernel is released, when will it be integrated?](#a-new-long-term-kernel-is-released-when-will-it-be-integrated)
-  - [Why does Garden Linux use Debian kernel patches and configuration?](#why-does-garden-linux-use-Debian-kernel-patches-and-configuration)
-
-
 # Linux Kernel
 
 Garden Linux aims towards a complete open, reproducible and easy-to-understand solution. That also includes all activities around the Kernel.

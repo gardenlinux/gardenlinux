@@ -1,9 +1,3 @@
----
-title: Enable secure boot for Garden Linux on GCP
-weight: 10
-disableToc: false
----
-
 # Enable secure boot for Garden Linux on GCP
 
 This article describes all steps needed to spawn a secure boot enabled Garden Linux image on GCP. Thereby, it uses the integration testing platform for spawning all required GCP resources. For more information about the integration testing platform used for Garden Linux, take a look [here](../../tests/README.md)

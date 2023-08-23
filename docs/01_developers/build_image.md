@@ -30,7 +30,7 @@ Garden Linux offers pre-built images via the [Github Release feature](https://gi
 The following section explains how to create your own build.
 Creating your own build also allows to customize the image to your requirements.
 
-# Building
+# Build
 
 ## Build via make (recommended)
 Use the [Makefile](/Makefile) to build a Garden Linux Image with a pre-defined set of features.
