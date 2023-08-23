@@ -192,9 +192,9 @@ Deploying on common cloud platforms requires additional packages. The following 
 | Platform | Module  |
 |---|---|
 | Alicloud | [Aliyun CLI](https://github.com/aliyun/aliyun-cli)
-| AWS: | [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+| AWS | [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
 | Azure | [Azure CLI](https://docs.microsoft.com/de-de/cli/azure/install-azure-cli-apt)
-| GCP: | [Cloud SDK](https://cloud.google.com/sdk/docs/quickstart?utm_source=youtube&utm_medium=Unpaidsocial&utm_campaign=car-20200311-Quickstart-Mac#linux), [gsutil](https://cloud.google.com/storage/docs/gsutil_install?hl=de#install)
+| GCP | [Cloud SDK](https://cloud.google.com/sdk/docs/quickstart?utm_source=youtube&utm_medium=Unpaidsocial&utm_campaign=car-20200311-Quickstart-Mac#linux), [gsutil](https://cloud.google.com/storage/docs/gsutil_install?hl=de#install)
 | OpenStack | [OpenStackCLI](https://github.com/openstack/python-openstackclient)
 
 ## Release
