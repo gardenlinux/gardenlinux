@@ -26,6 +26,7 @@
   - [SELinux](#selinux)
   - [Secureboot](#secureboot)
   - [Maintained Images](#maintained-images)
+- [Building 934](#building-934)
 - [Tests](#tests)
 - [Deploying](#deploying)
 - [Release](#release)
@@ -167,24 +168,19 @@ Garden Linux offers a range of official images tailored for various architecture
 
 To understand the build process for these images, refer to the [build action](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/build.yml). For details on the publishing process, check out the [upload action](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/upload_to_s3.yml) and the [gardenlinux/glci](https://github.com/gardenlinux/glci) repository.
 
-> :warning: **Warning on Building 934 Release**
->
-> For the sake of reproducibility, it's important to note that previous releases, especially the 934 releases, utilize the old Garden Linux builder.
->
-> Building a 934 image is distinct from the current process. If you need to build a 934 image, follow these steps:
->
-> 1. Checkout the `rel-934` branch.
-> 2. Utilize the provided Makefile.
->
-> Here's a quick guide on building the 934 image:
-> ```shell
-> # Ensure you're working in a clean environment (optional but recommended)
-> make clean
-> make aws-prod
-> ```
->
-> If you encounter any issues specifically with the 934 build, please [open an issue](https://github.com/gardenlinux/gardenlinux/issues) on our GitHub repository. Make sure to mention that your issue pertains to the 934 build for clarity.
+## Building 934
 
+For the sake of reproducibility, the earlier versions like 934 use the old Garden Linux builder.
+
+Here's a quick guide on building the 934 image:
+```shell
+git checkout rel-934
+# Ensure you're working in a clean environment (optional but recommended)
+make clean
+make aws-prod
+```
+
+If you encounter any issues specifically with the 934 build, please [open an issue](https://github.com/gardenlinux/gardenlinux/issues) on our GitHub repository. Make sure to mention that your issue pertains to the 934 build for clarity.
 
 ## Tests
 
