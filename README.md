@@ -151,14 +151,19 @@ Garden Linux offers a range of official images tailored for various architecture
 - amd64
 
 **Supported Platforms:**
-- Ali
-- AWS
-- Azure
-- GCP
-- KVM
-- Metal
-- OpenStack
-- VMware
+
+
+| Name | Identifier |
+|------|------------|
+| [Ali](https://github.com/gardenlinux/gardenlinux/tree/main/features/ali) | `ali` |
+| [AWS](https://github.com/gardenlinux/gardenlinux/tree/main/features/aws) | `aws` |
+| [Azure](https://github.com/gardenlinux/gardenlinux/tree/main/features/azure) | `azure` |
+| [GCP](https://github.com/gardenlinux/gardenlinux/tree/main/features/gcp) | `gcp` |
+| [KVM](https://github.com/gardenlinux/gardenlinux/tree/main/features/kvm) | `kvm` |
+| [Metal](https://github.com/gardenlinux/gardenlinux/tree/main/features/metal) | `metal` |
+| [OpenStack](https://github.com/gardenlinux/gardenlinux/tree/main/features/openstack) | `openstack` |
+| [VMware](https://github.com/gardenlinux/gardenlinux/tree/main/features/vmware) | `vmware` |
+
 
 To understand the build process for these images, refer to the [build action](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/build.yml). For details on the publishing process, check out the [upload action](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/upload_to_s3.yml) and the [gardenlinux/glci](https://github.com/gardenlinux/glci) repository.
 
