@@ -16,27 +16,25 @@
 
 </website-main>
 
-> **Warning**
-> We are in the process of changing to a new build process (Gardenlinux 2.0). Since this is a complex setup and we are splitting the repository into multiple, to make Gardenlinux even more simple and more container based. Please be warned that current main might have hiccups, wrong docs and issues. This should be fixed soon. June 14th 2023.
-
-
-## Table of Content
+## Table of Contents
 - [Garden Linux](#garden-linux)
-  - [Table of Content](#table-of-content)
-  - [Features](#features)
-  - [Quick Start](#quick-start)
-    - [Build Requirements](#build-requirements)
-    - [Build Options](#build-options)
-    - [Building](#building)
-    - [Cross-Build Support](#cross-build-support)
-  - [Customizing](#customizing)
-  - [Deploying](#deploying)
-  - [Release](#release)
-  - [Documentation](#documentation)
-    - [Continuous Integration](#continuous-integration)
-    - [Integration Tests](#integration-tests)
-  - [Contributing](#contributing)
-  - [Community](#community)
+- [Features](#features)
+- [Build](#build)
+  - [Build Requirements](#build-requirements)
+  - [Parallel Builds](#parallel-builds)
+  - [Cross Architecture Builds](#cross-architecture-builds)
+  - [SELinux](#selinux)
+  - [Secureboot](#secureboot)
+  - [Maintained Images](#maintained-images)
+- [Building 934](#building-934)
+- [Tests](#tests)
+- [Deploying](#deploying)
+- [Release](#release)
+- [Documentation](#documentation)
+  - [Continuous Integration](#continuous-integration)
+  - [Integration Tests](#integration-tests)
+- [Contributing](#contributing)
+- [Community](#community)
 
 ## Features
 - Easy to use build system
@@ -60,46 +58,42 @@
   - Major virtualizer VMware, OpenStack, KVM
   - Bare-metal systems
 
-## Quick Start
+## Build
 
-The build system utilizes the [gardenlinux/builder](https://github.com/gardenlinux/builder) tool.
+The build system utilises the [gardenlinux/builder](https://github.com/gardenlinux/builder) to create customized Linux distributions. [gardenlinux/gardenlinux](https://github.com/gardenlinux/gardenlinux) is maintained by the Garden Linux team, highlighting specialized "features" available for other projects.
 
-To build, simply execute the command `./build ${target}`, where `${target}` represents the desired build target for creating a Garden Linux image. You can specify multiple targets by separating them with spaces in the build command.
 
-For example:
 
+To initiate a build, use the command:
 ```shell
-./build kvm metal aws gcp azure
+./build ${platform}-${feature}_${modifier}
 ```
 
-The build script will automatically fetch the necessary builder container and execute all the required build steps internally. By default, the build system employs rootless podman. However, you can configure it to use a different container engine by utilizing the `--container-engine` flag.
+Where:
+- `${platform}` denotes the desired platform (e.g., kvm, metal, aws).
+- `${feature}` represents a specific feature from the `features/` folder.
+- `${modifier}` is an optional modifier from the `features/` folder, prefixed with an underscore "_".
 
-## Build Requirements
+You can combine multiple platforms, features, and modifiers as needed.
 
-To successfully build the project, ensure the following requirements are met:
+Example:
+```shell
+./build kvm-python_dev
+```
+
+The build script fetches the required builder container and manages all internal build steps. By default, it uses rootless podman, but you can switch to another container engine with the `--container-engine` flag.
+
+
+### Build Requirements
 
 - **Memory:** The build process may require up to 8GiB of memory, depending on the selected targets. If your system has insufficient RAM, configure swap space accordingly.
-- **Container Engine:** The Builder has minimal dependencies and only requires a working container engine. It is recommended to use rootless Podman. Please refer to the [Podman rootless setup guide](https://github.com/containers/podman/blob/main/docs/tutorials/rootless_tutorial.md) for instructions on setting it up.
+- **Container Engine:** The Builder has minimal dependencies and only requires a working container engine. You have two options:
+  - **Rootless Podman:** It's recommended to use rootless Podman. Please refer to the [Podman rootless setup guide](https://github.com/containers/podman/blob/main/docs/tutorials/rootless_tutorial.md) for instructions on setting it up.
+  - **Sudo Podman:** Alternatively, you can use Podman with sudo for elevated privileges.
 
-### SELinux
+To ensure a successful build, please refer to the [Build Requirements section](https://github.com/gardenlinux/builder#requirements) in the `gardenlinux/builder` repository.
 
-If you intend to build targets with the `_selinux` feature some additional requirements apply to the build machine.
-Building the `_selinux` feature will not work on machines running in SELinux enforcing mode. Ideally you should build on a build machine with SELinux disabled, but if you want to build with SELinux in permissive mode this can be achieved by running build as root with the `--privileged` flag.
-
-i.e.: `sudo ./build --privileged ${target}`
-
-## Secureboot
-
-If you intend to build targets with the `_secureboot` feature, you must first build the secureboot certificates.
-Run the command `./cert/build` to generate the secureboot certificates.
-
-By default, the command uses local files as the private key storage. However, you can configure it to use the AWS KMS key store by using the `--kms` flag. Note that valid AWS credentials need to be configured using the standard AWS environment variables.
-
-## Tests
-
-To run unit tests for a specific target, use the command `./test ${target}`.
-
-## Parallel Builds
+### Parallel Builds
 
 For efficient parallel builds of multiple targets, use the `-j ${number_of_threads}` option in the build script. However, note the following:
 
@@ -107,7 +101,7 @@ For efficient parallel builds of multiple targets, use the `-j ${number_of_threa
 - There are no mechanisms in place to handle memory exhaustion gracefully.
 - This feature is only recommended for users with large build machines, ideally with 8GiB of RAM per builder thread. It may work with 4GiB per thread due to spikes in memory usage being only intermittent during the build, but your milage may vary.
 
-## Cross Architecture Builds
+### Cross Architecture Builds
 
 By default, the build targets the native architecture of the build system. However, cross-building for other architectures is simple.
 
@@ -122,29 +116,75 @@ This requires setting up [binfmt_misc](https://docs.kernel.org/admin-guide/binfm
 
 On most distributions, you can install QEMU user static to set up binfmt_misc handlers. For example, on Debian, use the command `apt install qemu-user-static`.
 
+### SELinux
 
-## Customizing
-Building Garden Linux is based on a [feature system](features/README.md).
+If you intend to build targets with the `_selinux` feature, some additional requirements apply to the build machine.
 
-| Feature Type | Includes |
-|---|---|
-| Platforms | `ali`, `aws`, `azure`, `gcp`, `kvm`, `metal`, ... |
-| Features | `container host`, `virtual host`, ... |
-| Modifiers | `_slim`, `_readonly`, `_pxe`, `_iso`, ... |
-| Element | `cis`, `fedramp`, `gardener` |
 
-if you want to build manually choose:
+Building the `_selinux` feature will not work on machines running in SELinux enforcing mode. Ideally, you should build on a machine with SELinux disabled. However, if you want to build with SELinux in permissive mode, this can be achieved by running the build as root with the `--privileged` flag.
+
+i.e.: `sudo ./build --privileged ${target}`
+
+**SELinux Workaround for Podman:**
+> :warning: **Note:** [Podman Desktop](https://podman-desktop.io) and [Podman on macOS](https://podman.io) have by default SELinux enabled in their VMs. This may cause issues when building the `_selinux` feature. See [issue #16](https://github.com/gardenlinux/builder/issues/16) for details.
+
+If you're using Podman on macOS, follow these steps to disable SELinux in the podman VM:
+
+1. SSH into the Podman VM: `podman machine ssh`
+2. Run the following command to disable SELinux: `echo SELINUX=disabled | sudo tee /etc/selinux/config`
+3. Exit the SSH connection.
+4. Restart the Podman VM: `podman machine stop && podman machine start`
+
+
+### Secureboot
+
+If you intend to build targets with the `_secureboot` feature, you must first build the secureboot certificates.
+Run the command `./cert/build` to generate the secureboot certificates.
+
+By default, the command uses local files as the private key storage. However, you can configure it to use the AWS KMS key store by using the `--kms` flag. Note that valid AWS credentials need to be configured using the standard AWS environment variables.
+
+### Maintained Images
+
+Garden Linux offers a range of official images tailored for various architectures and platforms. Instead of listing all the specific image variants here, you can find the most up-to-date list of maintained images on the [Garden Linux releases page on GitHub](https://github.com/gardenlinux/gardenlinux/releases).
+
+**Supported Architectures:**
+- arm64
+- amd64
+
+**Supported Platforms:**
+
+
+| Name | Identifier |
+|------|------------|
+| [Ali](https://github.com/gardenlinux/gardenlinux/tree/main/features/ali) | `ali` |
+| [AWS](https://github.com/gardenlinux/gardenlinux/tree/main/features/aws) | `aws` |
+| [Azure](https://github.com/gardenlinux/gardenlinux/tree/main/features/azure) | `azure` |
+| [GCP](https://github.com/gardenlinux/gardenlinux/tree/main/features/gcp) | `gcp` |
+| [KVM](https://github.com/gardenlinux/gardenlinux/tree/main/features/kvm) | `kvm` |
+| [Metal](https://github.com/gardenlinux/gardenlinux/tree/main/features/metal) | `metal` |
+| [OpenStack](https://github.com/gardenlinux/gardenlinux/tree/main/features/openstack) | `openstack` |
+| [VMware](https://github.com/gardenlinux/gardenlinux/tree/main/features/vmware) | `vmware` |
+
+
+To understand the build process for these images, refer to the [build action](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/build.yml). For details on the publishing process, check out the [upload action](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/upload_to_s3.yml) and the [gardenlinux/glci](https://github.com/gardenlinux/glci) repository.
+
+## Building 934
+
+For the sake of reproducibility, the earlier versions like 934 use the old Garden Linux builder.
+
+Here's a quick guide on building the 934 image:
+```shell
+git checkout rel-934
+# Ensure you're working in a clean environment (optional but recommended)
+make clean
+make aws-prod
 ```
-build.sh  --features <Platform>,[<feature1>],[<featureX>],[_modifier1],[_modifierX] destination [version]
-```
 
-Additionally, please find some `build.sh` example calls in the `Makefile`.
+If you encounter any issues specifically with the 934 build, please [open an issue](https://github.com/gardenlinux/gardenlinux/issues) on our GitHub repository. Make sure to mention that your issue pertains to the 934 build for clarity.
 
-**Example:**
-```
-build.sh  --features server,cloud,cis,vmware .build/
-```
-This builds a server image, cloud-like, with `CIS`feature for the VMware platform. The build result can be found in `.build/`. Also look into our [Version scheme](VERSION.md) since adding a date or a Version targets the whole build for a specific date.
+## Tests
+
+To run unit tests for a specific target, use the command `./test ${target}`.
 
 ## Deploying
 Deploying on common cloud platforms requires additional packages. The following overview gives a short quick start to run cloud platform deployments. Currently, all modules are based on `Python`. Therefore, please make sure to have Python installed.
@@ -170,7 +210,11 @@ Garden Linux can build in an automated way for continuous integration. See [.git
 While it may be confusing for beginners we highlight this chapter for `integration tests` here. Garden Linux supports integration testing on all major cloud platforms (Alicloud, AWS, Azure, GCP). To allow testing even without access to any cloud platform we created an universal `kvm` platform that may run locally and is accessed in the same way via a `ssh client object` as any other cloud platform. Therefore, you do not need to adjust tests to perform local integration tests. Just to mention here that there is another platform called `chroot`. This platform is used to perform `unit tests` and will run as a local `integration test`. More details can be found within the documentation in  [tests/README.md](tests/README.md).
 
 ## Contributing
-Feel free to add further documentation, to adjust already existing one or to contribute with code. Please take care about our style guide and naming conventions. More information are available in in <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> and our `docs/`.
+
+Feel free to add further documentation, to adjust already existing one or to contribute with code.
+Please take care about our style guide and naming conventions.
+More information are available in in <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> and our `docs/`.
+Be aware that this repository leverages the [gardenlinux/builder](https://github.com/gardenlinux/builder) for creating customized Linux distributions. While `gardenlinux/gardenlinux` is a representation of one such distribution.
 
 ## Community
 Garden Linux has a large grown community. If you need further assistance, have any issues or just want to get in touch with other Garden Linux users feel free to join our public chat room on Gitter.
