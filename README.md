@@ -125,10 +125,10 @@ Building the `_selinux` feature will not work on machines running in SELinux enf
 
 i.e.: `sudo ./build --privileged ${target}`
 
-**SELinux build workaround for Podman Desktop:**
-> :warning: **Warning:** By default, [Podman Desktop](https://podman-desktop.io) has SELinux enabled. This can lead to issues when building the `_selinux` feature, as described in [issue #16](https://github.com/gardenlinux/builder/issues/16).
+**SELinux Workaround for Podman:**
+> :warning: **Note:** [Podman Desktop](https://podman-desktop.io) and [Podman on macOS](https://podman.io) have by default SELinux enabled in their VMs. This may cause issues when building the `_selinux` feature. See [issue #16](https://github.com/gardenlinux/builder/issues/16) for details.
 
-If you're using Podman Desktop, follow these steps to disable SELinux:
+If you're using Podman on macOS, follow these steps to disable SELinux in the podman VM:
 
 1. SSH into the Podman VM: `podman machine ssh`
 2. Run the following command to disable SELinux: `echo SELINUX=disabled | sudo tee /etc/selinux/config`
