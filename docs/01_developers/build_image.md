@@ -1,4 +1,3 @@
-
 **Table of Content**
 - [Introduction](#introduction)
 - [Building](#building)
