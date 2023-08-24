@@ -32,7 +32,10 @@ You can combine multiple platforms, features, and modifiers as needed.
 
 ## Official Combinations
 
-| Platform | Official Target Combinations with Modifier |
+Garden Linux images are constructed during the [nightly GitHub action](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/nightly.yml). The following table showcases the flavors that are built and tested with each nightly run.
+
+
+| Platform | feature/modifier combinations |
 |----------|--------------------------------------------|
 | KVM      | `kvm-gardener_prod`                        |
 |          | `kvm_secureboot-gardener_prod`             |
