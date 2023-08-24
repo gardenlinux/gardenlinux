@@ -1,7 +1,0 @@
-description: "The base layer for all other features. It pulls no extra packets only debootstap minbase"
-type: element
-features:
-  include:
-    - _slim
-  exclude:
-    - chost

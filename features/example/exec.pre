@@ -1,3 +1,0 @@
-#stuff executed after debootstrap but before files are copied (not in chroot)
-
-printf "EXAMPLE: this is executed before all other feature stuff is happening\n" 
