@@ -13,7 +13,7 @@ import pytest
                  "/usr/bin/chage,root,shadow",
                  "/usr/bin/ssh-agent,root,_ssh",
                  "/usr/sbin/unix_chkpwd,root,shadow",
-                 "/usr/lib/systemd-cron/crontab_setgid,root,crontab",
+                 "/usr/libexec/systemd-cron/crontab_setgid,root,crontab",
                  ]
         ),
         ("suid", [
