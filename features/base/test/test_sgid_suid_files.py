@@ -13,7 +13,7 @@ import pytest
                  "/usr/bin/chage,root,shadow",
                  "/usr/bin/ssh-agent,root,_ssh",
                  "/usr/sbin/unix_chkpwd,root,shadow",
-                 "/usr/lib/systemd-cron/crontab_setgid,root,crontab",
+                 "/usr/libexec/systemd-cron/crontab_setgid,root,crontab",
                  ]
         ),
         ("suid", [
@@ -36,5 +36,5 @@ import pytest
 
 # Run the test unit to perform the
 # final tests by the given artifact.
-def test_sgid_suid_files(client, test_type, whitelist_files, non_vhost):
+def test_sgid_suid_files(client, test_type, whitelist_files):
     sgid_suid_files(client, test_type, whitelist_files)
