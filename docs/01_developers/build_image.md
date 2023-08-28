@@ -1,6 +1,6 @@
 # Building a Garden Linux Image
 
-Building a Garden Linux image is a straightforward process, thanks to the new Garden Linux builder. This guide will walk you through the steps to create your custom Garden Linux image.
+Building a Garden Linux image is a straightforward process, thanks to the Garden Linux builder. This guide will walk you through the steps to create your custom Garden Linux image.
 
 ## Prerequisites
 
