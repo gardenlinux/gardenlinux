@@ -316,6 +316,7 @@ class GCP:
         self.logger.info(f"Creating GCS bucket {name} for image upload...")
         bucket.storage_class = storage.constants.STANDARD_STORAGE_CLASS
 
+        bucket.iam_configuration.uniform_bucket_level_access_enabled = True
         bucket.iam_configuration.public_access_prevention = (
             storage.constants.PUBLIC_ACCESS_PREVENTION_ENFORCED
         )
