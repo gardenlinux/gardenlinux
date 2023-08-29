@@ -415,8 +415,9 @@ class GCP:
 
         operation = images.insert(project=self.image_project, image_resource=config)
         self._gcp_wait_for_operation(operation, timeout=600)
-        image_blob.delete()
         self.logger.info(f'Uploaded image {blob_url} to project {self.project} as {image_name}')
+        image_blob.delete()
+        self._delete_bucket(name=self._bucket.name)
         self._image = images.get(image=image_name, project=self.image_project)
 
     def _delete_image(self, image_name):
