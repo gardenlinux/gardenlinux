@@ -1,7 +1,5 @@
 # Features
 
-<website-features>
-
 ## General
 Each folder represents a usable Garden Linux `feature` that can be added to a final Garden Linux artifact. This allows you to build Garden Linux for different cloud platforms (e.g. `azure`, `gcp`, `container` etc.) with a different set of features like `CIS`, `read_only`, `firewall` etc. Currently, the following feature types are available:
 
@@ -14,39 +12,49 @@ Each folder represents a usable Garden Linux `feature` that can be added to a fi
 
 *Keep in mind that `not all features` may be combined together. However, features may in-/exclude other features or block the build process by given exclusive/incompatible feature combinations.*
 
-## Selecting Features
- Desired features can be selected in two ways.
+## Building a custom set of features and modifiers
 
- * Editing the [Makefile](../Makefile)
- * Explicit calling of `./build.sh --features <feature1\>,<feature2\>`
+Garden Linux utilizes the [gardenlinux/builder](https://github.com/gardenlinux/builder) to create customized Linux distributions. The `gardenlinux/gardenlinux` repository is maintained by the Garden Linux team, highlighting specialized "features" that are also available for other projects.
 
- ### Editing the [Makefile](../Makefile)
- The recommended way to change the features is by adjusting the [Makefile](../Makefile). This ensures the compatibility with our [documentation](../docs). Therefore, you may just change the block of your desired artifact.
+To initiate a build, navigate to the root directory of the `gardenlinux/gardenlinux` repository and use the command:
 
- **Example:**
-
- If you want to add the `cis` feature for `kvm_dev` you may adjust the [Makefile](../Makefile):
-
- From:
- ```
-kvm-dev: container-build cert/sign.pub
-	./build.sh $(BUILD_OPTS) --skip-build --features server,cloud,kvm,_dev $(BUILDDIR) $(VERSION)
-```
- To:
- ```
-kvm-dev: container-build cert/sign.pub
-	./build.sh $(BUILD_OPTS) --skip-build --features server,cloud,kvm,cis,_dev $(BUILDDIR) $(VERSION)
+```bash
+./build ${platform}-${feature}_${modifier}
 ```
 
-Afterwards, the artifact can be created by executing `make kvm_dev`.
+Where:
+
+- `${platform}` denotes the desired platform (e.g., kvm, metal, aws).
+- `${feature}` represents a specific feature from the `features/` folder.
+- `${modifier}` is an optional modifier from the `features/` folder, prefixed with an underscore "_".
+
+You can combine multiple platforms, features, and modifiers as needed.
+
+## Official Combinations
+
+Garden Linux images are constructed during the [nightly GitHub action](https://github.com/gardenlinux/gardenlinux/blob/main/.github/workflows/nightly.yml). The following table showcases the flavors that are built and tested with each nightly run.
 
 
-### Explicit Calling of `./build.sh --features <feature1\>,<feature2\>`
-This method is slightly different from the first one and results in calling the `build.sh` directly, which is even called from the [Makefile](../Makefile). Within this method features can be directly passed by the `cli`.
+| Platform | feature/modifier combinations |
+|----------|--------------------------------------------|
+| KVM      | `kvm-gardener_prod`                        |
+|          | `kvm_secureboot-gardener_prod`             |
+|          | `kvm_secureboot_readonly-gardener_prod`    |
+|          | `kvm_secureboot_readonly_persistence-gardener_prod` |
+| Metal    | `metal-gardener_prod`                      |
+|          | `metal_secureboot-gardener_prod`           |
+|          | `metal_secureboot_readonly-gardener_prod`  |
+|          | `metal_secureboot_readonly_persistence-gardener_prod` |
+|          | `metal_pxe-gardener_prod`                  |
+|          | `metal-vhost-gardener_prod`                |
+| GCP      | `gcp-gardener_prod`                        |
+| AWS      | `aws-gardener_prod`                        |
+|          | `aws_secureboot-gardener_prod`             |
+|          | `aws_secureboot_readonly-gardener_prod`    |
+|          | `aws_secureboot_readonly_persistence-gardener_prod` |
+| Azure    | `azure-gardener_prod`                      |
+| Ali      | `ali-gardener_prod`                        |
+| OpenStack| `openstack-gardener_prod`                  |
+| VMware   | `vmware-gardener_prod`                     |
+| Firecracker | `firecracker-gardener_prod`             |
 
-**Example:**
-
-`./build.sh --features <feature1\>,<feature2\> [...]`
-
-## Details
-More details and examples for each option can be found within the [example/](example/README.md) folder for all present options.

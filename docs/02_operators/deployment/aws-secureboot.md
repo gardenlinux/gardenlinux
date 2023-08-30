@@ -1,9 +1,3 @@
----
-title: Enable secure boot for Garden Linux on AWS
-weight: 10
-disableToc: false
----
-
 # Enable secure boot for Garden Linux on AWS
 
 This article describes all steps needed to spawn a secure enabled Garden Linux image on AWS. Thereby, it uses the integration testing platform for spawning all required AWS resources. For more information about the integration testing platform used for Garden Linux, take a look [here](../../tests/README.md)

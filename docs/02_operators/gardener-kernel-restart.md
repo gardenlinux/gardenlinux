@@ -1,8 +1,4 @@
----
-title: Gardener Kernel restart
-weight: 10
-disableToc: false
----
+# Gardener Kernel restart
 
 [Gardener](https://gardener.cloud), one of the major consumers of Garden Linux, must be able to configure certain settings of the operating system before the [kubelet](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/) comes up. Some of these settings might require a reboot/restart of the kernel.
 

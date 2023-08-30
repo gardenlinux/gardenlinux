@@ -1,4 +1,4 @@
-## Garden Linux Repositories
+# Garden Linux Repositories
 
 The apt repository is exposed at `repo.gardenlinux.io`.
 If you have added the repository to the `/etc/apt/sources.list` or a file in the folder `/etc/apt/sources.list.d/`,
@@ -14,7 +14,7 @@ Packages are built, signed and deployed via the Garden Linux gitlab pipelines.
 | `$major.$minor` | `deb http://repo.gardenlinux.io/gardenlinux major.minor main` | Packages for the the Garden Linux version `major.minor`  |
 
 
-### Versioning
+## Versioning
 `$major` is the number of days since `31.03.2020`.
 
 For each day since we switched to an own package repository, 

@@ -1,11 +1,3 @@
----
-title: GardenLinux for OpenStack
-weight: 10
-disableToc: false
----
-
-
-
 A word of **WARNING**: Since OpenStack is an open environment, we can only provide a reference implementation at this point.
 
 Our reference implementation goes by the name _CC EE_ and uses OpenStack with VMware ESXi as hypervisor (which is why you will find `open-vm-tools` in `features/openstack/pkg.include` and why the code snippet below deals with `vmdk`-files).

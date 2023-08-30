@@ -1,12 +1,6 @@
----
-title: Time configuration
-weight: 10
-disableToc: false
----
+# Time (NTP) configuration in Garden Linux
 
 This document describes the time configuration (NTP, PTP, etc.) in Garden Linux images.
-
-# Time (NTP) configuration in Garden Linux
 
 Depending on the cloud provider for which the Garden Linux is built, different time sources are configured. The configuration generally follows the recommendations of the cloud providers.
 

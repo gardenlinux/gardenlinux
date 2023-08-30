@@ -1,9 +1,3 @@
----
-title: On Metal install via IPXE
-weight: 10
-disableToc: false
----
-
 ## Installing Garden Linux on metal with IPXE
 
 ## Idea
