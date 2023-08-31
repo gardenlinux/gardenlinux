@@ -14,13 +14,12 @@ disclosure but will need help from relevant developers and release managers
 to successfully run this process. The Garden Linux Security Team consists of the
 following volunteers:
 
-* Christian Cwienk, (**[@ccwienk](https://github.com/ccwienk)**)
-* Dirk Marwinski, (**[@marwinski](https://github.com/marwinski)**)
 * Andre Russ, (**[@gehoern](https://github.com/gehoern)**)
-* Matthias Sohn, (**[@msohn](https://github.com/msohn)**)
+* Vincent Riesop (**[@vincinator](https://github.com/vincinator/)**)
+* Nikolas Kraetzschmar (**[@nkraetzschmar](https://github.com/nkraetzschmar/)**)
 * Frederik Thormaehlen, (**[@ThormaehlenFred](https://github.com/ThormaehlenFred)**)
-* Martin Vladev, (**[@mvladev](https://github.com/mvladev)**)
-
+* Dirk Marwinski, (**[@marwinski](https://github.com/marwinski)**)
+* Christian Cwienk, (**[@ccwienk](https://github.com/ccwienk)**)
 
 ## Disclosures
 
