@@ -98,7 +98,7 @@ These tests are located in a subfolder (`test`) within a feature's directory and
 | Feature | Unit test | Test location |
 |---|---|---|
 | $FEATURE_NAME | test_$TEST_NAME.py | features/$FEATURE_NAME/test/test_$TEST_NAME.py |
-| CIS | test_cis.py | [features/cis/test/test_cis.py](../features/cis/test/test_cis.py) |
+| CIS | test_cis.py | [features/cis/test/test_cis.py](../features/cis/test/test_debian_cis.py) |
 
 # Integration Tests
 ## Prerequisites
