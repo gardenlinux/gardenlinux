@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+qemu-img convert -f raw -O qcow2 "$1" "$2"
