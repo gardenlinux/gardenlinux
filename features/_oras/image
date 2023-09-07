@@ -4,11 +4,19 @@ set -Eeuxo pipefail
 
 echo "Creating and puhsing OCI using oras.."
 
-rootfs=$1
-targetBase=$2
-targetBaseDir=$(dirname "$targetBase")
+input_artifact=$1
+output_artifact=$2
+targetBaseDir=$(dirname "$output_artifact")
+targetName="${input_artifact##*/}"
+targetName="${targetName%.*}"
 
-# extract kernel image, cmdline and initramfs
+# extract rootfs temporarily to create oci artifact
+targetBase="${input_artifact%.tar}"
+rootfs=$targetBase
+mkdir -p $rootfs
+tar xf $input_artifact -C $rootfs
+
+# copy kernel image, cmdline and initramfs
 cp "$rootfs/boot/"vmlinuz* "$targetBase.vmlinuz"
 cp "$rootfs/boot/"initrd* "$targetBase.initrd"
 read -r _ cmdline < "$rootfs/etc/kernel/cmdline" 
@@ -23,7 +31,8 @@ fi
 cmdline="root=$root_source $cmdline"
 
 # os-release
-osrelease=$(sed 's/$/\\n/g' $targetBaseDir/rootfs.os-release | tr -d "\n")
+# TODO: check if os-release is now called release in the new builder?
+osrelease=$(sed 's/$/\\n/g' $targetBase.release | tr -d "\n")
 osrelease=$(echo $osrelease | sed 's/"//g')
 
 echo "$(cat <<EOJ 
@@ -35,8 +44,7 @@ EOJ
 )" > $targetBase-oras-config.json
 
 # tag
-BUILD=$(grep BUILD $targetBaseDir/rootfs.os-release | cut -d= -f2)
+GARDENLINUX_VERSION=$(grep GARDENLINUX_VERSION $targetBase.release  | cut -d= -f2)
 
-DEST=$(basename $targetBaseDir)
 
-echo "oras push localhost:5000/oras-gardenlinux:$BUILD $DEST.raw:application/vnd.onmetal.image.rootfs.v1alpha1.rootfs $DEST.vmlinuz:application/vnd.onmetal.image.vmlinuz.v1alpha1.vmlinuz $DEST.initrd:application/vnd.onmetal.image.initramfs.v1alpha1.initramfs --config $DEST.json:application/vnd.onmetal.image.config.v1alpha1+json"
+echo "oras push localhost:5000/oras-gardenlinux:$GARDENLINUX_VERSION $targetName.raw:application/vnd.onmetal.image.rootfs.v1alpha1.rootfs $targetName.vmlinuz:application/vnd.onmetal.image.vmlinuz.v1alpha1.vmlinuz $targetName.initrd:application/vnd.onmetal.image.initramfs.v1alpha1.initramfs --config $targetName.json:application/vnd.onmetal.image.config.v1alpha1+json"
