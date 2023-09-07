@@ -10,9 +10,9 @@ Example config (build image locally, adapt path, save config as `gardenlinux.yam
 
 ```
 images:
-- location: "path/to/kvm-lima-amd64-today-local.raw"
+- location: "path/to/kvm-lima-amd64-today-local.qcow2"
   arch: "x86_64"
-- location: "path/to/kvm-lima-arm64-today-local.raw"
+- location: "path/to/kvm-lima-arm64-today-local.qcow2"
   arch: "aarch64"
 ```
 
