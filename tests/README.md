@@ -6,13 +6,8 @@
 - [General](#general)
 - [Chart](#chart)
 - [Unit Tests](#unit-tests)
-  - [Prerequisites](#prerequisites)
+  - [Running Unit Tests](#running-unit-tests)
   - [Location of Unit Tests](#location-of-unit-tests)
-    - [Example](#example)
-    - [Running Unit Tests](#running-unit-tests)
-      - [Automated Unit Tests](#automated-unit-tests)
-      - [chroot](#chroot)
-      - [KVM](#kvm)
 - [Integration Tests](#integration-tests)
   - [Prerequisites](#prerequisites-1)
   - [Using the tests on supported platforms](#using-the-tests-on-supported-platforms)
@@ -88,46 +83,26 @@ graph TD;
 ```
 
 # Unit Tests
-Unit testing are used to validate and test the functionality of Garden Linux sources and its whole feature sets. When adding a Garden Linux specific feature like `CIS`, all related `CIS` unit tests are executed. Each feature is represented by unit tests to ensure its conformity. Unit tests are defined as a default build target and will automatically run after each build. This also affects automated GitHub builds that are executed by GitHub runners but may also be executed manually on a defined artifact.
+Unit testing are used to validate and test the functionality of Garden Linux sources and its whole feature sets. When adding a Garden Linux specific feature like `CIS`, all related `CIS` unit tests are executed. Each feature is represented by unit tests to ensure its conformity. 
 
-Unit tests are executed in a context of integration tests. This means that a specific platform type (`chroot`) of integration tests is used to perform regular `unit tests`. This is due to the fact that we want to achieve a common test platform based on `Pytest` and theses ones should still be executable on any platform without further adjustments.
+## Running Unit tests
 
-## Prerequisites
-Build the base test container with all necessary dependencies. This container image will contain all necessary packages and modules
+To run all unit tests for a Garden Linux image, you can use the command
 
- *Note: The `gardenlinux/base-test` will be autocreated by building Garden Linux and usually doesn't need to be execute manually:*
-
-    make --directory=container build-base-test
-
-The resulting container image will be tagged as `gardenlinux/base-test:<version>` with `<version>` being the version that is returned by `bin/garden-version` in this repository. All further tests run inside this container.
+    ./test ${target}
 
 ## Location of Unit Tests
-These tests are located in a subfolder (`test`) within a feature's directory and must be prefixed with `test_`. This means, that any feature may provide a subfolder called `test` including their `unit test(s)`. `Pytest` will automatically include these files and validate if they need to run (e.g. `cis` tests will only run if the given artifact was built with this feature):
+These tests are located in a subfolder (`test`) within a feature's directory and must be prefixed with `test_`. This means, that any feature may provide a subfolder called `test` including their `unit test(s)`. `Pytest` will automatically include these files and validate if they need to run (e.g. `cis` tests will only run if the given artifact was built with this feature).
 
-### Example
+### Example Location
 | Feature | Unit test | Test location |
 |---|---|---|
 | $FEATURE_NAME | test_$TEST_NAME.py | features/$FEATURE_NAME/test/test_$TEST_NAME.py |
 | CIS | test_cis.py | [features/cis/test/test_cis.py](../features/cis/test/test_cis.py) |
 
-### Running Unit Tests
-Basic unit tests are executed after each build by the `chroot` platform. However, it may be necessary to run tests in a running system instead. Therefore, the `kvm` platform can be used.
-
-#### Automated Unit Tests
-As described, `chroot` tests are automatically performed after each build. By default, this doesn't include the `kvm` platform and may be added by appending `--tests	chroot,kvm` to the `build.sh`.
-
-Example: `./built.sh kvm-dev --tests chroot,kvm`
-
-#### chroot
-`chroot` tests may also be executed on a given artifact afterwards. A full documentation regarding running the unit tests on a `chroot` platform can be found [here](https://github.com/gardenlinux/gardenlinux/tree/main/tests#chroot).
-
-#### KVM
-`kvm` tests may also be executed on a given artifact afterwards. A full documentation regarding running the unit tests on a `kvm` platform can be found [here](https://github.com/gardenlinux/gardenlinux/tree/main/tests#kvm).
-
-
 # Integration Tests
 ## Prerequisites
-Build the integration test container with all necessary dependencies. This container image will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP). *Note: For `KVM` and `CHROOT` platforms the auto created `gardenlinux/base-test` container can be used (as documented) but will also work with the full-fledged testing container `gardenlinux/integration-test`.*
+Build the integration test container with all necessary dependencies. This container image will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP). *Note: For `KVM` and `CHROOT` platforms the `gardenlinux/base-test` container can be used but will also work with the full-fledged testing container `gardenlinux/integration-test`.*
 
     make --directory=container build-integration-test
 
