@@ -19,7 +19,7 @@ DESCRIPTION="Enable auditing for processes that start prior to auditd."
 
 GRUB='/etc/default/grub'
 GRUB_OPTIONS='selinux=1'
-SYSLINUX='/boot/efi/syslinux/syslinux.cfg'
+SYSLINUX='/efi/syslinux/syslinux.cfg'
 SYSLINUX_OPTIONS='security=selinux'
 
 # This function will be called if the script status is on enabled / audit mode

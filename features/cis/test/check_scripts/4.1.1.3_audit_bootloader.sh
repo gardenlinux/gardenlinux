@@ -18,7 +18,7 @@ HARDENING_LEVEL=4
 DESCRIPTION="Enable auditing for processes that start prior to auditd."
 
 GRUB='/etc/default/grub'
-SYSLINUX='/boot/efi/syslinux/syslinux.cfg'
+SYSLINUX='/efi/syslinux/syslinux.cfg'
 GRUB_OPTIONS='^GRUB_CMDLINE_LINUX=audit=1'
 SYSLINUX_OPTIONS='^\sAPPEND root=.*audit=1.'
 

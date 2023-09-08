@@ -19,7 +19,7 @@ DESCRIPTION="User and group root owner of syslinux bootloader config."
 
 # Assertion : Syslinux Based.
 
-FILE='/boot/efi/syslinux/syslinux.cfg'
+FILE='/efi/syslinux/syslinux.cfg'
 USER='root'
 GROUP='root'
 PERMISSIONS='400'

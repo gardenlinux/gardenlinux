@@ -17,7 +17,7 @@ HARDENING_LEVEL=4
 DESCRIPTION="Configure audit_backlog_limit to be sufficient."
 
 GRUB='/etc/default/grub'
-SYSLINUX='/boot/efi/syslinux/syslinux.cfg'
+SYSLINUX='/efi/syslinux/syslinux.cfg'
 GRUB_OPTIONS='^GRUB_CMDLINE_LINUX=".*audit_backlog_limit=8192'
 SYSLINUX_OPTIONS='^\sAPPEND root=.*audit_backlog_limit=8192.'
 

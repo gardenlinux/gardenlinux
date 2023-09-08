@@ -1,5 +1,5 @@
 # <file system>    <dir>        <type>    <options>                                <makeimg args>
-LABEL=EFI          /boot/efi    vfat      umask=0077                               type=uefi
+LABEL=EFI          /efi         vfat      umask=0077                               type=uefi
 LABEL=ROOT         /            ext4      rw,errors=remount-ro,prjquota,discard size=1024MiB
 LABEL=HOME         /home        ext4      defaults,nosuid,noexec,nodev size=64MiB
 LABEL=VAR          /var         ext4      defaults,nosuid,noexec,nodev size=128MiB
