@@ -27,6 +27,7 @@ from azure.mgmt.storage.models import StorageAccountCheckNameAvailabilityParamet
 from azure.storage.blob import BlobClient
 
 from paramiko import RSAKey
+from . import util
 
 
 logger = logging.getLogger(__name__)
@@ -182,6 +183,7 @@ class AZURE:
             return None
 
     def az_create_nsg(self, name):
+        my_ip = util.get_my_ip()
         self.logger.info(f"Creating network security group {name} in resourcegroup {self._resourcegroup.name}...")
         nsg = self.nclient.network_security_groups.begin_create_or_update(
             resource_group_name = self._resourcegroup.name,
@@ -204,7 +206,7 @@ class AZURE:
                 'access': 'Allow',
                 'priority': 300,
                 'direction': 'Inbound',
-                'source_address_prefixes': {'0.0.0.0/1', '128.0.0.0/1'},
+                'source_address_prefixes': {f"{my_ip}/32"},
                 'destination_address_prefix': 'VirtualNetwork',
             }
         ).result()
