@@ -2,7 +2,7 @@
 
 set -uoeE pipefail
 
-bootDir="/boot/efi"
+bootDir="/efi"
 kernelDir="${bootDir}/Default"
 configDir="/etc/kernel/cmdline.d"
 configFile="${bootDir}/syslinux/syslinux.cfg"

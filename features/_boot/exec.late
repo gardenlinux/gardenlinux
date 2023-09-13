@@ -4,7 +4,7 @@ set -euo pipefail
 
 update-kernel-cmdline
 
-mkdir -p /boot/efi/Default
+mkdir -p /efi/Default
 
 for kernel in /boot/vmlinuz-*; do
 	unshare --mount bash -c 'mount -t tmpfs none /sys && mount --bind /usr/bin/false /usr/bin/systemd-detect-virt && "$@"' \
@@ -16,20 +16,20 @@ for kernel in /boot/vmlinuz-*; do
 	--reproducible \
 	"/boot/initrd.img-${kernel#*-}"
 
-	SYSTEMD_ESP_PATH=/boot/efi kernel-install add "${kernel#*-}" "${kernel}"
+	SYSTEMD_ESP_PATH=/efi kernel-install add "${kernel#*-}" "${kernel}"
 done
 
-sed 's/boot\/efi\///' -i /boot/efi/loader/entries/*.conf
+sed 's/efi\///' -i /efi/loader/entries/*.conf
 
-SYSTEMD_ESP_PATH=/boot/efi bootctl --no-variables install
+SYSTEMD_ESP_PATH=/efi bootctl --no-variables install
 
-mkdir -p /boot/efi/syslinux
+mkdir -p /efi/syslinux
 
 # syslinux
 if [ -f "/usr/bin/syslinux" ]; then
-	mkdir -p /boot/efi/syslinux
-	cp /usr/lib/syslinux/modules/bios/menu.c32 /boot/efi/syslinux/
-	cp /usr/lib/syslinux/modules/bios/libutil.c32 /boot/efi/syslinux/
+	mkdir -p /efi/syslinux
+	cp /usr/lib/syslinux/modules/bios/menu.c32 /efi/syslinux/
+	cp /usr/lib/syslinux/modules/bios/libutil.c32 /efi/syslinux/
 
 	update-syslinux
 fi

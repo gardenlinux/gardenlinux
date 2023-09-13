@@ -4,7 +4,7 @@ Description=Ignition disable after first boot
 
 ConditionFirstBoot=true
 ConditionPathExists=/run/ignition.env
-RequiresMountsFor=/boot/efi
+RequiresMountsFor=/efi
 
 DefaultDependencies=no
 Before=sysinit.target
