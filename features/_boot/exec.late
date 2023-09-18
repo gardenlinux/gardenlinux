@@ -31,5 +31,5 @@ if [ -f "/usr/bin/syslinux" ]; then
 	cp /usr/lib/syslinux/modules/bios/menu.c32 /efi/syslinux/
 	cp /usr/lib/syslinux/modules/bios/libutil.c32 /efi/syslinux/
 
-	update-syslinux
+	ESP_PATH=/efi update-syslinux
 fi
