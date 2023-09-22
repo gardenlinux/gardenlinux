@@ -56,6 +56,8 @@ get_os () {
         # Evaluate Distribution
         if [ $host_dist = "centos" ]; then
             os="centos"
+        elif [ $host_dist = "fedora" ]; then
+            os="fedora"
         elif [ $host_dist = "debian" ] || [ $host_dist = "garden" ]; then
             os="debian"
         elif [ $host_dist = "ubuntu" ]; then
@@ -444,7 +446,7 @@ qemu_opt_uefi () {
             elif [ "$os" = debian ] || [ "$os" = ubuntu ] ; then
                 uefi_code="${uefi_code:-/usr/share/OVMF/OVMF_CODE.fd}"
                 uefi_vars="${uefi_vars:-/usr/share/OVMF/OVMF_VARS.fd}"
-            elif [ "$os" = centos ]; then
+            elif [ "$os" = centos ] || [ "$os" = fedora ] ; then
                 uefi_code="${uefi_code:-/usr/share/OVMF/OVMF_CODE.secboot.fd}"
                 uefi_vars="${uefi_vars:-/usr/share/OVMF/OVMF_VARS.secboot.fd}"
             elif [ "$os" = arch ]; then
@@ -473,7 +475,7 @@ qemu_opt_uefi () {
         elif [ "$os" = debian ] || [ "$os" = ubuntu ] ; then
             uefi_code="${uefi_code:-/usr/share/AAVMF/AAVMF_CODE.fd}"
             uefi_vars="${uefi_vars:-/usr/share/AAVMF/AAVMF_VARS.fd}"
-        elif [ "$os" = centos ]; then
+        elif [ "$os" = centos ] || [ "$os" = fedora ] ; then
             # Note: Running `AARCH64` on `x86_64` requires `qemu-system-aarch64`
             # package which is not present in official repositories
             uefi_code="${uefi_code:-/usr/share/AAVMF/AAVMF_CODE.fd}"
