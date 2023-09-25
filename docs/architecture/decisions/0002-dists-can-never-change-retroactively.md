@@ -20,7 +20,7 @@ One of the mission statements of Garden Linux is to ensure reproducibility of Ga
 ## Decision
 
 With the exception of `next` distributions, all apt distributions must be immutable. 
-Any apt distribution used to bootstrap its corresponding Garden Linux version should never be altered retroactively.
+Any apt distribution used to bootstrap its corresponding Garden Linux version must never be altered retroactively.
 
 
 ## Consequences
