@@ -24,9 +24,9 @@ jobs:
         run: echo "cname=$(./build --resolve-cname "${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}" | sha256sum | head -c 64)" | tee -a "$GITHUB_ENV" "$GITHUB_STEP_SUMMARY"
       # - name: get cname
       #   run: echo "cname=$(cat /proc/sys/kernel/random/uuid)" | tee -a "$GITHUB_ENV"
-      - name: create fake artifact
-        run: head -c 512M /dev/urandom > "${{ env.cname }}.tar.gz"
-      - uses: actions/upload-artifact@v3
-        with:
-          name: "${{ env.cname }}"
-          path: "${{ env.cname }}.tar.gz"
+      # - name: create fake artifact
+      #   run: head -c 512M /dev/urandom > "${{ env.cname }}.tar.gz"
+      # - uses: actions/upload-artifact@v3
+      #   with:
+      #     name: "${{ env.cname }}"
+      #     path: "${{ env.cname }}.tar.gz"
