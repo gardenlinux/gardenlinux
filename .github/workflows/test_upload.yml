@@ -6,7 +6,6 @@ jobs:
       run:
         shell: bash
     strategy:
-      fail-fast: false
       matrix:
         arch: [ amd64, arm64 ]
         target: [ kvm, "kvm_secureboot", "kvm_secureboot_readonly", "kvm_secureboot_readonly_persistence", metal, "metal_secureboot", "metal_secureboot_readonly", "metal_secureboot_readonly_persistence", gcp, aws, "aws_secureboot", "aws_secureboot_readonly", "aws_secureboot_readonly_persistence", azure, ali, openstack, vmware, "metal_pxe", firecracker, "metal-vhost" ]
