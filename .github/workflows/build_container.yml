@@ -24,7 +24,7 @@ jobs:
           mkdir /tmp/podman
 
       - name: make integration test container
-        run: make --directory=container GARDENLINUX_BUILD_CRE=podman build-integration-test || true
+        run: make --directory=container GARDENLINUX_BUILD_CRE='podman --storage-driver=overlay' build-integration-test || true
 
       - run: df -h
 
