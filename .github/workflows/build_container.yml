@@ -10,23 +10,23 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: login to ghcr.io
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u $ --password-stdin
 
       - run: df -h
 
-      - run: sudo apt-get update && sudo env DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y podman fuse-overlayfs
-      - run: sudo rm -rf "$HOME/.local/share/containers"
+      # - run: sudo apt-get update && sudo env DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y podman fuse-overlayfs
+      # - run: sudo rm -rf "$HOME/.local/share/containers"
 
       - name: make integration test container
-        run: make --directory=container GARDENLINUX_BUILD_CRE='podman --storage-driver=fuse-overlayfs' build-integration-test
+        run: make --directory=container GARDENLINUX_BUILD_CRE='sudo podman' build-integration-test
 
       - run: df -h
 
       - name: upload integration test container to ghcr.io
         run: |
           echo "$IMAGE_NAME:$(bin/garden-version)"
-          podman image list
-          podman tag "$IMAGE_NAME:$(bin/garden-version)" "ghcr.io/gardenlinux/$IMAGE_NAME:$(bin/garden-version)"
-          podman tag "$IMAGE_NAME:$(bin/garden-version)" "ghcr.io/gardenlinux/$IMAGE_NAME:$GITHUB_SHA"
-          podman push "ghcr.io/gardenlinux/$IMAGE_NAME:$(bin/garden-version)"
-          podman push "ghcr.io/gardenlinux/$IMAGE_NAME:$GITHUB_SHA"
+          sudo podman image list
+          sudo podman tag "$IMAGE_NAME:$(bin/garden-version)" "ghcr.io/gardenlinux/$IMAGE_NAME:$(bin/garden-version)"
+          sudo podman tag "$IMAGE_NAME:$(bin/garden-version)" "ghcr.io/gardenlinux/$IMAGE_NAME:$GITHUB_SHA"
+          sudo podman push "ghcr.io/gardenlinux/$IMAGE_NAME:$(bin/garden-version)"
+          sudo podman push "ghcr.io/gardenlinux/$IMAGE_NAME:$GITHUB_SHA"
