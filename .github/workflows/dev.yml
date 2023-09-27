@@ -1,9 +1,9 @@
 name: dev
 on:
-  push:
-    paths-ignore:
-      - 'docs/**'
-      - '**/README.md'
+  # push:
+  #   paths-ignore:
+  #     - 'docs/**'
+  #     - '**/README.md'
   pull_request:
     paths-ignore:
       - 'docs/**'
