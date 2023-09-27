@@ -23,6 +23,8 @@ jobs:
           sudo podman info
           mkdir /tmp/podman
 
+      - run: cat /etc/os-release
+
       - name: make integration test container
         run: make --directory=container GARDENLINUX_BUILD_CRE='podman --storage-driver=overlay' build-integration-test || true
 
