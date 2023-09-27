@@ -14,10 +14,7 @@ jobs:
 
       - run: df -h
 
-      - run: sudo apt-get update && sudo env DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y fuse-overlayfs
-      - run: |
-          find "$HOME/.config/containers/"
-          cat "$HOME/.config/containers/storage.conf"
+      - run: sudo apt-get update && sudo env DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y podman fuse-overlayfs
       - run: sudo rm -rf "$HOME/.local/share/containers"
 
       - name: make integration test container
