@@ -24,6 +24,7 @@ build-base-test: needslim
 	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/base-test:$(VERSION) base-test
 	rm base-test/gardenlinux.asc
 	rm base-test/Pipfile
+	df -h
 
 .PHONY: build-integration-test
 build-integration-test: build-base-test
@@ -32,6 +33,7 @@ build-integration-test: build-base-test
 	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/integration-test:$(VERSION) integration-test
 	rm integration-test/checksums.sha256
 	rm integration-test/cloud.google.gpg
+	df -h
 
 .PHONY: clean
 clean:
