@@ -15,6 +15,7 @@ jobs:
       - run: df -h
 
       - run: sudo apt-get update && sudo env DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y fuse-overlayfs
+      - run: sudo rm -rf "$HOME/.local/share/containers"
 
       - name: make integration test container
         run: make --directory=container GARDENLINUX_BUILD_CRE='podman --storage-driver=fuse-overlayfs' build-integration-test
