@@ -17,8 +17,13 @@ jobs:
       # - run: sudo apt-get update && sudo env DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y podman fuse-overlayfs
       # - run: sudo rm -rf "$HOME/.local/share/containers"
 
+      - run: |
+          env
+          podman info
+          mkdir /tmp/podman
+
       - name: make integration test container
-        run: make --directory=container GARDENLINUX_BUILD_CRE='sudo podman --cgroup-manager=cgroupfs --events-backend=file' build-integration-test || true
+        run: make --directory=container GARDENLINUX_BUILD_CRE='sudo podman --cgroup-manager=cgroupfs --root=/tmp/podman --storage-driver=overlay' build-integration-test || true
 
       - run: df -h
 
