@@ -12,12 +12,14 @@ jobs:
       - name: login to ghcr.io
         run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
 
-      - run: |
-          findmnt
-          df -h
+      - run: df -h
+
+      - run: sudo apt-get update && sudo env DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y fuse-overlayfs
 
       - name: make integration test container
         run: make --directory=container GARDENLINUX_BUILD_CRE=podman build-integration-test
+
+      - run: df -h
 
       - name: upload integration test container to ghcr.io
         run: |
