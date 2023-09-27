@@ -18,7 +18,7 @@ jobs:
       # - run: sudo rm -rf "$HOME/.local/share/containers"
 
       - name: make integration test container
-        run: make --directory=container GARDENLINUX_BUILD_CRE='sudo podman' build-integration-test
+        run: make --directory=container GARDENLINUX_BUILD_CRE='sudo podman --cgroup-manager=cgroupfs' build-integration-test
 
       - run: df -h
 
