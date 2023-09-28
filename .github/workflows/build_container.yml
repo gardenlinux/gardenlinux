@@ -7,23 +7,16 @@ jobs:
     name: make integration test container
     runs-on: ubuntu-latest
     steps:
+      - run: |
+          sudo rm -rf /{usr/{local/{lib/{android,heroku},.ghcup,share/{dotnet,powershell,miniconda,swift}},share/{dotnet,miniconda,swift}},opt/{hostedtoolcache,microsoft},imagegeneration}
+          sudo docker system prune -a -f
+          podman system prune -a -f
+          sudo podman system prune -a -f
+          sudo df -h
       - uses: actions/checkout@v3
 
       - name: login to ghcr.io
         run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
-
-      - run: |
-          podman info
-          ls -lah /var/tmp
-          findmnt -T /var/tmp
-          df -h
-
-      - run: make --directory=container GARDENLINUX_BUILD_CRE=podman build-base-test
-
-      - run: |
-          ls -lah /var/tmp
-          findmnt -T /var/tmp
-          df -h
 
       - name: make integration test container
         run: make --directory=container GARDENLINUX_BUILD_CRE=podman build-integration-test
