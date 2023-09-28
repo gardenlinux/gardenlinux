@@ -12,10 +12,21 @@ jobs:
       - name: login to ghcr.io
         run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
 
-      - run: podman info
+      - run: |
+          podman info
+          ls -lah /var/tmp
+          findmnt -T /var/tmp
+          df -h
+
+      - run: make --directory=container GARDENLINUX_BUILD_CRE=podman build-base-test
+
+      - run: |
+          ls -lah /var/tmp
+          findmnt -T /var/tmp
+          df -h
 
       - name: make integration test container
-        run: make --directory=container GARDENLINUX_BUILD_CRE='podman --storage-driver=overlay' build-integration-test
+        run: make --directory=container GARDENLINUX_BUILD_CRE=podman build-integration-test
 
       - name: upload integration test container to ghcr.io
         run: |
