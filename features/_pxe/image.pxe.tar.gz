@@ -58,11 +58,9 @@ rm "$chroot_dir/root.squashfs"
 case "$BUILDER_ARCH" in
 	amd64)
 		uefi_arch=x64
-		gnu_arch=x86_64
 		;;
 	arm64)
 		uefi_arch=aa64
-		gnu_arch=aarch64
 		;;
 esac
 
