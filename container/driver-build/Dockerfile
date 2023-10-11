@@ -9,11 +9,15 @@ RUN apt-get update && \
         flex libelf-dev libssl-dev dwarves \
         devscripts kernel-wedge pristine-lfs python3-debian quilt dkms
 
-# Install Garden Linux Kernel meta packages 
+RUN sudo dpkg --add-architecture arm64
+RUN sudo dpkg --add-architecture amd64
+
+# Install Garden Linux kernel header meta packages 
 # Note: https://gitlab.com/gardenlinux/gardenlinux-package-linux
-RUN ARCH=$(dpkg --print-architecture) && \
-    apt-get update && \
+RUN apt-get update && \
     apt-get install -y \
         kmod \
-        linux-headers-cloud-${ARCH} \
-        linux-headers-${ARCH}
+        linux-headers-cloud-amd64 \
+        linux-headers-cloud-arm64 \
+        linux-headers-amd64 \
+        linux-headers-arm64
