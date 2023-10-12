@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+K8S_VERSION=${K8S_VERSION:-$(wget --quiet -O- https://storage.googleapis.com/kubernetes-release/release/stable.txt)}
+K8S_VERSION_REPO="${K8S_VERSION%.*}"
+
+wget --quiet -O- "https://pkgs.k8s.io/core:/stable:/${K8S_VERSION_REPO}/deb/Release.key" | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/${K8S_VERSION_REPO}/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list
+apt update -y
+apt install -y --no-install-recommends "kubelet=${K8S_VERSION#v}*" "kubectl=${K8S_VERSION#v}*" "kubeadm=${K8S_VERSION#v}*"
+
