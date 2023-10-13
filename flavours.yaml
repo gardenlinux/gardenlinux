@@ -3,7 +3,7 @@ flavour_sets:
   - name: 'gardener'
     flavour_combinations:
       - architectures: [ 'amd64' ]
-        platforms: [ ali, aws, azure, gcp, openstack, vmware ]
+        platforms: [ ali, aws, azure, gcp, openstack, openstack-baremetal, vmware ]
         modifiers: [ [ gardener, _prod ] ]
         fails: [ unit, integration ]
       - architectures: [ 'arm64' ]

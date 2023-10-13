@@ -34,3 +34,4 @@ __pycache__
 /tests/*.log
 /tests/*.xml
 *.cache
+.DS_Store

@@ -102,6 +102,14 @@ OPENSTACK_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-openstack-dev-$(VERSION)
 openstack-dev-upload:
 	./bin/upload-openstack $(BUILDDIR)/openstack-gardener_dev-amd64-$(VERSION)-local/rootfs.vmdk $(OPENSTACK_DEV_IMAGE_NAME)
 
+OPENSTACK_BM_IMAGE_NAME=$(IMAGE_BASENAME)-openstack-baremetal-$(VERSION)
+openstack-bm-upload:
+	./bin/upload-openstack $(BUILDDIR)/openstack-baremetal-gardener-amd64-$(VERSION)-local/rootfs.vmdk $(OPENSTACK_IMAGE_NAME)
+
+OPENSTACK_BM_DEV_IMAGE_NAME=$(IMAGE_BASENAME)-openstack-baremetal-dev-$(VERSION)
+openstack-bm-dev-upload:
+	./bin/upload-openstack $(BUILDDIR)/openstack-baremetal-gardener_dev-amd64-$(VERSION)-local/rootfs.vmdk $(OPENSTACK_DEV_IMAGE_NAME)
+
 clean:
 	@echo "emptying $(BUILDDIR)"
 	@rm -rf $(BUILDDIR)/*
