@@ -39,9 +39,13 @@ provision:
       export DEBIAN_FRONTEND=noninteractive
       apt-get update
       command -v podman >/dev/null 2>&1 && exit 0
-      apt-get -y install podman
-      apt-get -y install git
-      apt-get -y install qemu-system-x86 qemu-system-arm qemu-efi-aarch64 qemu-user-static
+      apt-get -y install podman git curl qemu-system-x86 qemu-system-arm qemu-efi-aarch64 qemu-user-static
+      # Install github cli ('gh'), cf https://github.com/cli/cli/blob/trunk/docs/install_linux.md#debian-ubuntu-linux-raspberry-pi-os-apt
+      curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+        && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+        && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+        && apt-get update \
+        && apt-get -y install gh
   - mode: user
     script: |
       #!/bin/bash
