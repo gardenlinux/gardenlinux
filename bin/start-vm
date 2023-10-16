@@ -609,7 +609,7 @@ qemu_opt_monitor () {
     fi
 
     # Add Watchdog
-    if [ $os = debian ] && [ "$no_watchdog" = 0 ]; then
+    if [ $os = debian ] && [ "$no_watchdog" = 0 ] && [ $bin_qemu != qemu-system-aarch64 ]; then
         # add a watchdog to maintain automatic reboots
         QEMU_OPTS+=("-watchdog i6300esb")
     fi
