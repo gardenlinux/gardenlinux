@@ -495,8 +495,8 @@ qemu_opt_uefi () {
     # Define UEFI options for QEMU
     if [ $uefi ]; then
 
-        [ -r $uefi_code ] || eusage "Missing uefi code at $uefi_code.\n Run: apt-get install ovmf"
-        [ -r $uefi_vars ] || eusage "Missing uefi vars at $uefi_vars.\n Run: apt-get install ovmf"
+        [ -r $uefi_code ] || eusage "Missing uefi code at $uefi_code.\n Run: apt-get install ovmf qemu-efi-aarch64"
+        [ -r $uefi_vars ] || eusage "Missing uefi vars at $uefi_vars.\n Run: apt-get install ovmf qemu-efi-aarch64"
 
         [ -e $CURR_DIR/$mac.vars ] || cp $uefi_vars $CURR_DIR/$mac.vars
 
