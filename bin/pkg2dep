@@ -1,0 +1,177 @@
+#!/usr/bin/env python3
+
+# pkg2dep
+# Validate for unfulfilled dependencies of a given new package within
+# a specified Garden Linux version.
+# Example: ./pkg2dep -r http://ftp.debian.org -d sid -v 2.65 -g 934.10 -p dpkg-www
+# Author: Florian Paul Azim Hoberg @gyptazy <gyptazy@gyptazy.ch>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+import argparse
+import os
+import sys
+import tempfile
+import urllib.request
+import gzip
+import tarfile
+
+
+# Constants
+__META_FILE_ARCH__ = ['binary-all','binary-amd64','binary-arm64']
+
+
+def parse_arguments():
+    """ Parse arguments by cli input """
+    args_parser = argparse.ArgumentParser(description='pk2dep', usage='%(prog)s')
+    args_parser.add_argument('-r', '--repository', type=str, help='URL of a remote repository holding the requested package.', required=True)
+    args_parser.add_argument('-p', '--package', type=str, help='Package name to lookup dependencies.', required=True)
+    args_parser.add_argument('-d', '--dist', type=str, help='Distribution to use (e.g. bookworm).', required=True)
+    args_parser.add_argument('-v', '--version', type=str, help='Package version to lookup dependencies.', required=True)
+    args_parser.add_argument('-g', '--gardenlinux-version', type=str, help='Garden Linux version to evaluate', required=True)
+    args_parser.add_argument('-a', '--architecture', type=str, help='Hardware architecture to honor.', default='any', required=False)
+    return args_parser.parse_args()
+
+
+def locate_deb_package(arguments, tmp_dir):
+    """ """
+    for arch in __META_FILE_ARCH__:
+        url = f'{arguments.repository}/debian/dists/{arguments.dist}/main/{arch}/Packages.gz'
+        repo_file = download_repo_file(url, tmp_dir, repo_file=True)
+        repo_pkg_path = locate_deb_package_url(arguments, repo_file)
+        return f'{arguments.repository}/debian/{repo_pkg_path}'.replace('_all.deb', '.tar.xz')
+
+
+def locate_deb_package_url(arguments, repo_file):
+    """ """
+    for line in repo_file.decode().strip().split('\n'):
+        if 'Filename:' in line:
+            if f'{arguments.package}_{arguments.version}' in line:
+                return(line.strip('Filename: '))
+
+
+def create_tmp_dir():
+    """ Create a temporary directory """
+    tmp_dir = tempfile.TemporaryDirectory()
+    return tmp_dir
+
+
+def download_repo_file(remote_url, tmp_dir, repo_file=False):
+    """ Download a file from a given location """
+    if repo_file:
+        with urllib.request.urlopen(remote_url) as file_name:
+            with gzip.GzipFile(fileobj=file_name) as file_uncompressed:
+                # Validate file type by file header
+                file_header = file_uncompressed.read(7)
+                if file_header.decode('ascii') != 'Package':
+                    print('Error: Can not validate the repository "Sources.gz" file.')
+                    sys.exit(1)
+                return file_uncompressed.read()
+    else:
+        urllib.request.urlretrieve(remote_url, f'{tmp_dir.name}/{os.path.basename(remote_url)}')
+        return f'{tmp_dir.name}/{os.path.basename(remote_url)}'
+
+
+def unarchive_tar_file(arguments, tmp_dir, artifact_location, control_file_only=True):
+    """ Unarchive a (compressed) tarball """
+    tar_file = tarfile.open(artifact_location)
+    if control_file_only:
+        tar_file.extract(f'{arguments.package}-{arguments.version}/debian/control', tmp_dir.name)
+    else:
+        tar_file.extractall(tmp_dir.name)
+    tar_file.close()
+
+
+def read_file(file_name):
+    """ Read content from a given file """
+    with open(file_name) as file_handler:
+        file_contents = file_handler.read()
+    return file_contents
+
+
+def main():
+    """ Run pkg2dep main """
+    arguments = parse_arguments()
+    tmp_dir = create_tmp_dir()
+    repo_pkg_url = locate_deb_package(arguments, tmp_dir)
+    artifact_location = download_repo_file(repo_pkg_url, tmp_dir)
+    unarchive_tar_file(arguments, tmp_dir, artifact_location)
+    file_content = read_file(f'{tmp_dir.name}/{arguments.package}-{arguments.version}/debian/control')
+    print(file_content)
+
+
+
+
+
+
+
+
+
+
+
+
+
+    #print(f'{arguments.repository}/debian/{repo_pkg_path}'.replace('_all.deb', '.tar.xz'))
+
+
+
+#def download_file(url, location):
+#    response = requests.get(url, stream=True)
+#    with open(location, mode="wb") as file:
+#        for chunk in response.iter_content(chunk_size=10 * 1024):
+#            file.write(chunk)
+
+#def create_repo_upstream(arguments, repo_file):
+#    """ """
+#    repo_upstream = {}
+#    for line in repo_file.decode().strip().split('\n'):#
+#
+#        # Validate for the passed package name
+#        if 'Package:' in line:
+#            if re.findall('\\b'+arguments.package+'$', line):
+#                repo_upstream['name'] = line.strip('Package: ')#
+#
+#        # Validate for the passed package version
+#        if 'Version:' in line:
+#                repo_upstream['version'] = line.strip('Version: ')#
+#
+#        # Add all dependencies of passed package name
+#        if 'Depends:' in line:
+#                repo_upstream['depends'] = line.strip('Depends: ')#
+#
+#    print(repo_upstream)
+
+    #create_repo_upstream(arguments, repo_file)
+
+
+
+    #print(repo_file.decode().strip())
+    #for line in repo_file.decode().strip().split('\n'):
+    #    #print(line)
+    #    if 'Package:' in line:
+    #        if arguments.package in line:
+    #            print(line)
+
+
+
+
+
+    #repo_package = download_file(url, f'{tmp_dir.name}/{source}')
+    #with gzip.open(f'{tmp_dir.name}/{source}', 'rb') as f:
+    #    for line in f:
+    #        print(line)
+    #        #print(line.decode().strip())
+
+
+main()
