@@ -40,12 +40,20 @@ provision:
       apt-get update
       command -v podman >/dev/null 2>&1 && exit 0
       apt-get -y install podman git curl qemu-system-x86 qemu-system-arm qemu-efi-aarch64 qemu-user-static
-      # Install github cli ('gh'), cf https://github.com/cli/cli/blob/trunk/docs/install_linux.md#debian-ubuntu-linux-raspberry-pi-os-apt
-      curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
-        && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
-        && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages testing main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-        && apt-get update \
-        && apt-get -y install gh
+      # Install github cli gh, pin to version to allow checksum compare
+      # On update, update both GH_CSUM and the download url
+      ARCH=$(dpkg --print-architecture)
+      declare -A GH_CSUM
+      GH_CSUM=( ["amd64"]="a6f20316b627ab924447a6c7069edf64e33be20cccdb9b56b1952c7eb47eec2b" ["arm64"]="06f3943f9a48ab344ca92dfa0c9c190ce95dd4076dd3cfaa718d99bf71ae49c0")
+      curl -fsSL https://github.com/cli/cli/releases/download/v2.36.0/gh_2.36.0_linux_$ARCH.deb --output gh.deb
+      calculated_checksum=$(sha256sum gh.deb | awk '{ print $1 }')
+      if [ ${GH_CSUM[$ARCH]} == "$calculated_checksum" ]; then
+          apt install -y ./gh.deb
+          rm gh.deb
+      else
+          echo "Checksums do not match"
+          exit 1
+      fi
   - mode: user
     script: |
       #!/bin/bash
