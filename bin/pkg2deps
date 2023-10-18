@@ -1,0 +1,188 @@
+#!/usr/bin/env python3
+
+# pkg2deps:
+# Validate for unfulfilled dependencies within the Garden Linux repository of a given
+# Garden Linux release version for a given package from any external repository.
+# Author: Florian Paul Azim Hoberg @gyptazy <gyptazy@gyptazy.ch>
+#
+# Examples: 
+# $> ./pkg2deps -r http://ftp.debian.org/debian -d trixie -v 2.65 -g 934.10 -p dpkg-www
+# $> 
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+import argparse
+import os
+import sys
+import re
+import urllib.request
+import gzip
+import debian.deb822
+from debian.debian_support import Version
+
+
+# Constants
+__META_FILE_ARCHITECTURES__ = ['binary-all','binary-amd64','binary-arm64']
+
+
+def parse_arguments():
+    """ Parse arguments by cli input """
+    args_parser = argparse.ArgumentParser(description='pk2dep', usage='%(prog)s')
+    args_parser.add_argument('-r', '--repository', type=str, help='URL of a remote repository holding the requested package.', required=True)
+    args_parser.add_argument('-p', '--package', type=str, help='Package name to lookup dependencies.', required=True)
+    args_parser.add_argument('-d', '--dist', type=str, help='Distribution to use (e.g. bookworm).', required=True)
+    args_parser.add_argument('-v', '--version', type=str, help='Package version to lookup dependencies.', required=True)
+    args_parser.add_argument('-g', '--gardenlinux-version', type=str, help='Garden Linux version to evaluate', required=True)
+    args_parser.add_argument('-m', '--missing', type=str, help='Garden Linux version to evaluate', default=True, required=False)
+
+    return args_parser.parse_args()
+
+
+def fetch_repositories_metadata(arguments):
+    """ Fetch repository metadata """
+    repositories = [arguments.repository, 'http://repo.gardenlinux.io/gardenlinux']
+    repository_metadata = {}
+    repository_metadata['foreign'] = {}
+    repository_metadata['gardenlinux'] = {}
+
+    # Fetch the repository metadata for each architecture and
+    # repository mirror
+    for architecture in __META_FILE_ARCHITECTURES__:
+        for repository in repositories:
+
+            # Overload vars to create a common base of remote url
+            if repository == 'http://repo.gardenlinux.io/gardenlinux':
+                dist = arguments.gardenlinux_version
+                metadata_key = 'gardenlinux'
+            # Use cli defaults for foreign destination
+            else:
+                dist = arguments.dist
+                metadata_key = 'foreign'
+
+            remote_url = f'{repository}/dists/{dist}/main/{architecture}/Packages.gz'
+            content = download_repository_metadata(remote_url)
+            repository_metadata[metadata_key][architecture] = content
+    
+    return repository_metadata
+
+
+def download_repository_metadata(remote_url):
+    """ Download a compressed repository meta file """
+    with urllib.request.urlopen(remote_url) as file_name:
+        return gzip.GzipFile(fileobj=file_name).read()
+
+
+def evaluate_package_dependencies(arguments, repository_metadata):
+    """ Evaluate the binary dependencies of a given package from a foreign repository """
+    package_found = False
+    architectures = repository_metadata['foreign'].keys()
+    for architecture in architectures:
+
+        # Only perform this a single time. It might be that a package if present for all hardware
+        # architectures or even only in a single one
+        if not package_found:
+            for packages in debian.deb822.Packages.iter_paragraphs(repository_metadata['foreign'][architecture]):
+                if packages['package'] == arguments.package and packages['version'] == arguments.version:
+                    package_found = True
+                    package_dependencies = sort_packages(packages['depends'])
+
+    if package_found:
+        return package_dependencies
+    else:
+        print(f'Error: The requested package {arguments.package} with version {arguments.version} could not be found in foreign repository.')
+        sys.exit(1)
+
+
+def evaluate_package_version(repository_metadata, package_dependencies):
+    """ Evaluate the version of a package within the Garden Linux repository """
+    package_found = False
+    architectures = repository_metadata['gardenlinux'].keys()
+    for architecture in architectures:
+
+        # Only perform this a single time. It might be that a package if present for all hardware
+        # architectures or even only in a single one
+        if not package_found:
+            for packages in debian.deb822.Packages.iter_paragraphs(repository_metadata['gardenlinux'][architecture]):
+                for foreign_package in package_dependencies['foreign'].keys():
+                    if packages['package'] == foreign_package:
+
+                        # Add present versions from Garden Linux repository to the dictionary
+                        package_dependencies['gardenlinux'][foreign_package] = packages['version']
+
+
+def compare_repository_package_version(package_dependencies):
+    """ Compare package versions from foreign and Garden Linux repository """
+    packages_missing = []
+    packages_wrong_version = {}
+    for foreign_package in package_dependencies['foreign'].keys():
+        if not package_dependencies['gardenlinux'].get(foreign_package):
+            packages_missing.append(foreign_package)
+        else:
+            if package_dependencies['foreign'][foreign_package] >= package_dependencies['gardenlinux'][foreign_package]:
+                packages_wrong_version[foreign_package] = package_dependencies['foreign'][foreign_package]
+
+    return packages_missing, packages_wrong_version
+        
+
+
+def sort_packages(packages_versions_raw):
+    """ Sort and convert packages to a dictionary """
+    package_dependencies = {}
+    package_dependencies['foreign'] = {}
+    package_dependencies['gardenlinux'] = {}
+
+    # Convert comma separated string list to real list
+    packages_versions_raw = packages_versions_raw.replace(' ', '')
+    packages = packages_versions_raw.split(',')
+
+    for package in packages:
+        # Obtain version number from content
+        # This will remove the package name by obtaining everything within the brackets
+        # and only uses digit and points as valid chars afterwards
+        package_version = re.findall(r'\(.*?\)', package)
+        package_version = re.sub('[^0123456789\.]','',str(package_version))
+
+        # Obtain package name from content
+        # This will remove everything from the string until the first bracket of a potential
+        # version declaring might be found
+        package_name = re.sub(' *\\(.*', '', package)
+
+        # Finally add all packages to the dictionary
+        package_dependencies['foreign'][package_name] = package_version
+
+    return package_dependencies
+
+
+def write_packages_output(arguments, packages_missing, packages_wrong_version):
+    """ Write and return the output for the user of missing and wrong package dependencies """
+    if arguments.missing:
+        print('The following packages are missing:')
+        for package in packages_missing:
+            print(f'Package: {package}')
+    
+    print('The following packages must to be upgraded in Garden Linux:')
+    for package in packages_wrong_version.keys():
+        print(f'Package: {package} | Version: {packages_wrong_version[package]}')
+
+
+def main():
+    """ Run the main function of pkg2deps """
+    arguments = parse_arguments()
+    repository_metadata = fetch_repositories_metadata(arguments)
+    package_dependencies = evaluate_package_dependencies(arguments, repository_metadata)
+    evaluate_package_version(repository_metadata, package_dependencies)
+    packages_missing, packages_wrong_version = compare_repository_package_version(package_dependencies)
+    write_packages_output(arguments, packages_missing, packages_wrong_version)
+
+main()
