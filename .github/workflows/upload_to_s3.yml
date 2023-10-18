@@ -24,7 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
-        target: [ kvm, metal, gcp, aws, azure, ali, openstack, vmware ]
+        target: [ kvm, metal, gcp, aws, azure, ali, openstack, openstackbaremetal, vmware ]
         modifier: [ "${{ inputs.default_modifier }}" ]
     steps:
       - uses: actions/checkout@v2
