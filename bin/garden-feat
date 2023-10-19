@@ -35,7 +35,7 @@ def main():
 
     # Sort start features by their type.
     # Platform > element > flag
-    start_features = sort_feature_names_by_type(all_features, start_features)
+    start_features = sort_feature_names_by_type(all_features, start_features, args.warn_only)
 
     # Get a feature matrix of all included, excluded and ignored features.
     # In addition, create a dependency list of features.
@@ -127,6 +127,12 @@ def get_args():
         type=lambda arg: [i for i in arg.split(',') if i],
         default=[],
         help=help_ignore)
+    parser.add_argument(
+        '--warn-only',
+        action="store_true",
+        default=False,
+        help="convert feature related errors to warnings"
+    )
 
     # Positional arg(s)
     args_type_allowed = [
@@ -145,6 +151,16 @@ def get_args():
     return(args)
 
 
+def error_exit(message: str, rc: int = 1, warn_only: bool = False):
+    if warn_only:
+        message = f"garden-feat: warning: {message}"
+    else:
+        message = f"garden-feat: error: {message}"
+    print(message, file=sys.stderr)
+    if not warn_only and rc > 0:
+        sys.exit(rc)
+
+
 def get_yaml_content(fname):
     """ Read YAML files and get content """
     try:
@@ -154,8 +170,7 @@ def get_yaml_content(fname):
     except FileNotFoundError:
         # Avoid creating an unexpected artifact with missing
         # features
-        print(f'garden-feat: error: Could not find feature: {fname}')
-        sys.exit(1)
+        error_exit(f"Could not find feature: {fname}", rc=1)
 
 
 def get_cname(all_features, start_feature_names, dependency_feature_names):
@@ -298,11 +313,10 @@ def check_excluded_features(features_matrix):
     # should have been included. If so, this is an error.
     for excluded_feature in features_matrix[MATRIX_TYPE_EXCLUDE].keys():
         if excluded_feature in features_matrix[MATRIX_TYPE_INCLUDE].keys():
-            print(f'garden-feat: error: {excluded_feature} has been excluded by another feature.')
-            sys.exit(1)
+            error_exit(f"{excluded_feature} has been excluded by another feature.", rc=1)
 
 
-def sort_feature_names_by_type(all_features, feature_names):
+def sort_feature_names_by_type(all_features, feature_names, warn_only: bool = False):
     """ Sort a list of feature names by their type """
     sorted_feature_names = []
     features = {
@@ -317,20 +331,17 @@ def sort_feature_names_by_type(all_features, feature_names):
         feature_type = yaml_content['type']
 
         if feature_type not in features.keys():
-            print(f'Error: Feature {feature} uses unsupported type {feature_type}.')
-            sys.exit(1)
+            error_exit(f"feature {feature} uses unsupported type {feature_type}.", rc=1)
 
         features[feature_type].append(feature)
 
     # Check if there is more than one platform.
     if len(features[FEATURE_TYPE_PLATFORM]) > 1:
-        print(f'Error: Only a single platform is supported.')
-        sys.exit(1)
+        error_exit(f"Only a single platform is supported.", rc=1, warn_only=warn_only)
 
     # Check if there is at least one platform
     if len(features[FEATURE_TYPE_PLATFORM]) == 0:
-        print(f'Error: No platform has been specified.')
-        sys.exit(1)
+        error_exit(f"Error: No platform has been specified.", rc=1)
 
     sorted_feature_names += features[FEATURE_TYPE_PLATFORM]
     sorted_feature_names += features[FEATURE_TYPE_ELEMENT]
