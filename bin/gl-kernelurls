@@ -1,0 +1,237 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import os
+import sys
+import re
+import requests
+import lzma
+import gzip
+import getopt
+import platform
+import json
+import yaml
+
+def usage():
+    print('Options:')
+    print('  -a, --arch')
+    print('      Architecture of the Linux kernel. Possible values are `amd64` and `arm64`.')
+    print('      Option can be specified multiple times. Default is the hosts architecture.')
+    print('      Example: -a arm64')
+    print('  -g, --gardenlinux')
+    print('      Get Linux kernel package urls for a specific Gardenlinux version. The -r and -v options')
+    print('      are ignored/overwritten by this option.')
+    print('      Example: -g 934.10')
+    print('  -o, --output')
+    print('      Select output format. Possible values `yaml` or `json`. The default is `yaml`.')
+    print('      Example: -o json')
+    print('  -r, --repository')
+    print('      Repository to search for kernel packages, format "uri suite component1 [component2] ..."')
+    print('      for more information see `man sources.list`. Default is all found repositories in ')
+    print('      /etc/apt/sources.list and /etc/apt/sources.list.d.')
+    print('      Option can be specified multiple times.')
+    print('      Example: -r "http://repo.gardenlinux.io/gardenlinux 934.10 main"')
+    print('  -v, --version')
+    print('      Version of the Linux kernel to search for packages for, same syntax as output of')
+    print('      `uname -r`. Default is all kernel versions found in /boot. If used with the -a option')
+    print('      omitting the architecture is recommended.')
+    print('      Option can be specified multiple times.')
+    print('      Example: -v "5.15.125-gardenlinux-amd64"')
+    print('  -h, --help')
+    print('      Print this help message.')
+
+def main():
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "a:g:o:r:v:h", ["arch", "gardenlinux", "output", "repository", "version", "help"])
+    except getopt.GetoptError as err:
+        print(err)
+        usage()
+        sys.exit(2)
+
+    repository = []
+    version = []
+    architecture = []
+    gardenlinux = ''
+    output = 'yaml'
+
+    for opt, arg in opts:
+        if opt in ("-r", "--repository"):
+            repository.append(arg)
+        elif opt in ("-v", "--version"):
+            version.append(arg)
+        elif opt in ("-a", "--arch"):
+            architecture.append(arg)
+        elif opt in ("-g", "--gardenlinux"):
+            gardenlinux = arg
+        elif opt in ("-o", "--output"):
+            output = arg
+        elif opt in ("-h", "--help"):
+            usage()
+            sys.exit()
+
+    if not repository:
+        repositories = get_repositories()
+    else:
+        repositories = repository
+
+    if not version and not gardenlinux:
+        versions = get_linux_image_versions()
+    elif gardenlinux:
+        versions = []
+    else:
+        versions = version
+
+    if not architecture:
+        machine = platform.machine()
+        if machine == 'x86_64':
+            architecture = ['amd64']
+        elif machine == 'aarch64':
+            architecture = ['arm64']
+    # fix version if version is determined from installed kernels on the
+    # host, but given architecture does not match the host
+    elif not version:
+        new_versions = []
+        for ver in versions:
+            for arch in architecture:
+                new_ver = re.sub('amd64|arm64', arch, ver)
+                new_versions.append(new_ver)
+        versions = new_versions
+
+    if gardenlinux:
+        repositories = [f'http://repo.gardenlinux.io/gardenlinux {gardenlinux} main']
+
+    for arch in architecture:
+        packages = get_package_list(repositories, arch)
+
+        if gardenlinux:
+            for _, package_list in packages.items():
+                for package in package_list.split('\n'):
+                    if 'linux-headers' in package:
+                        ex_version = re.match(".*/linux-headers-(\d.*-gardenlinux).*", package)
+                        if ex_version:
+                            versions.append(ex_version.group(1))
+
+        package_urls = check_urls(versions, get_package_urls(packages, 'linux-headers'), arch)
+        output_urls(package_urls, output)
+
+def get_repositories():
+    '''Extract repositories url from /etc/apt/source.list and /etc/apt/source.list.d/*.
+    '''
+
+    repository_files = ['/etc/apt/sources.list']
+    for root, _, files in os.walk('/etc/apt/sources.list.d'):
+        for file in files:
+            repository_files.append(f'{root}/{file}')
+
+    repositories = []
+    for repository_file in repository_files:
+        with open(repository_file, 'r') as file:
+            for line in file:
+                if line.startswith('deb '):
+                    repo = re.match(".*(http.*|ftp.*|file.*)", line).group(1)
+                    repositories.append(repo)
+
+    return repositories
+
+def get_package_list(repositories, arch):
+    '''Get Packages lists from repository and return it as dictionary.
+    '''
+    packages_dict = {}
+    for repo in repositories:
+        repo_entries = repo.split(' ')
+        uri = repo_entries[0]
+        suite = repo_entries[1]
+        for component in repo_entries[2:]:
+            all_packages_url = f'{uri}/dists/{suite}/{component}/binary-all/Packages.xz'
+            all_response = requests.get(all_packages_url)
+            if all_response.status_code == 200:
+               all_packages = lzma.decompress(all_response.content).decode("UTF-8")
+            else:
+                all_packages_url = f'{uri}/dists/{suite}/{component}/binary-all/Packages.gz'
+                all_response = requests.get(all_packages_url)
+                if all_response.status_code == 200:
+                   all_packages = gzip.decompress(all_response.content).decode("UTF-8")
+
+            arch_packages_url = f'{uri}/dists/{suite}/{component}/binary-{arch}/Packages.xz'
+            arch_response = requests.get(arch_packages_url)
+            if  arch_response.status_code == 200:
+                packages = f'{all_packages}\n{lzma.decompress(arch_response.content).decode("UTF-8")}'
+            else:
+                arch_packages_url = f'{uri}/dists/{suite}/{component}/binary-{arch}/Packages.gz'
+                arch_response = requests.get(arch_packages_url)
+                packages = f'{all_packages}\n{gzip.decompress(arch_response.content).decode("UTF-8")}'
+
+            packages_dict.update({f'{uri}-{component}': packages})  
+
+    return packages_dict
+
+def get_package_urls(package_list, package_name, resolve_depends=True):
+    '''Check if kernel headers and their dependencies are available. Returns a list
+    with the complete urls to all found kernel header packages and their dependencies.
+    '''
+    header_packages = []
+    dependencies = []
+    for repo, packages in package_list.items():
+        uri = re.match('(.*?)-.*', repo).group(1)
+        for line in packages.split('\n'):
+            if resolve_depends and line.startswith('Depends:'):
+                dependencies = re.sub(' ?\(.*?\),?|,', '', re.match("Depends: (.*)", line).group(1)).split(' ')
+            if line.startswith('Filename:') and f'/{package_name}' in line:
+                filename = re.match("Filename: (.*)", line).group(1)
+                header_packages.append(f'{uri}/{filename}')
+                if resolve_depends:
+                    for dependency in dependencies:
+                        header_packages.extend(get_package_urls(package_list, dependency, False))
+
+    return header_packages
+
+def get_linux_image_versions():
+    '''Returns a list of all found Linux image versions on the host in /boot.
+    '''
+    linux_image_versions = []
+    for _, _, files in os.walk('/boot'):
+        for file in files:
+            if file.startswith('vmlinuz-'):
+                version = re.match("vmlinuz-(.*)", file).group(1)
+                linux_image_versions.append(version)
+
+    return linux_image_versions
+
+def check_urls(linux_versions, header_package_urls, arch):
+    '''Pick the package urls that match the Linux image versions.
+    '''
+    result = {}
+    versions = {}
+    result[arch] = {}
+    for version in linux_versions:
+        result[arch][version] = []
+        for package in header_package_urls:
+            if version in package:
+                result[arch][version].append(package)
+                versions[version] = re.match(".*?(_.*)\.deb", package).group(1)
+            # Workaround for linux compiler package name on arm64 architecture
+            if 'arm64' in package and re.match('.*/gcc-\d\d_.*', package):
+                result[arch][version].append(package)
+    for kernel, version in versions.items():
+        for package in header_package_urls:
+            if version in package and not 'linux-headers' in package:
+                result[arch][kernel].append(package)
+    
+    for key, value in result.items():
+        for nested_key, nested_value  in value.items():
+            result[key][nested_key] = list(dict.fromkeys(nested_value))
+
+    return result
+
+def output_urls(package_urls, output):
+    '''Output the urls in a usable format.
+    '''
+    if output == 'json':
+        print(json.dumps(package_urls))
+    elif output == 'yaml':
+        print(yaml.dump(package_urls))
+    else:
+        print('Invalid output format, choose `json` or `yaml`.')
+
+if __name__ == "__main__":
+    main()
