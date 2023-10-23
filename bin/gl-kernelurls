@@ -11,6 +11,7 @@ import getopt
 import platform
 import json
 import yaml
+import itertools
 
 def usage():
     print('Options:')
@@ -100,28 +101,28 @@ def main():
     if gardenlinux:
         repositories = [f'http://repo.gardenlinux.io/gardenlinux {gardenlinux} main']
 
-    for arch in architecture:
-        packages = get_package_list(repositories, arch)
+    packages = get_package_list(repositories, architecture)
 
-        if gardenlinux:
-            for _, package_list in packages.items():
-                for package in package_list.split('\n'):
-                    if 'linux-headers' in package:
-                        ex_version = re.match(".*/linux-headers-(\d.*-gardenlinux).*", package)
-                        if ex_version:
-                            versions.append(ex_version.group(1))
+    # find all Linux kernel versions available for the specified Gardenlinux version
+    if gardenlinux:
+        for package_list in packages.values():
+            for package in package_list.split('\n'):
+                if 'linux-headers' in package:
+                    ex_version = ''
+                    ex_version = re.match(".*/linux-headers-(\d.*-gardenlinux).*", package)
+                    if ex_version:
+                        versions.append(ex_version.group(1))
+        versions = list(dict.fromkeys(versions))
 
-        package_urls = check_urls(versions, get_package_urls(packages, 'linux-headers'), arch)
-        output_urls(package_urls, output)
+    package_urls = check_urls(versions, get_package_urls(packages, 'linux-headers'), architecture)
+    output_urls(package_urls, output)
 
 def get_repositories():
     '''Extract repositories url from /etc/apt/source.list and /etc/apt/source.list.d/*.
     '''
-
     repository_files = ['/etc/apt/sources.list']
-    for root, _, files in os.walk('/etc/apt/sources.list.d'):
-        for file in files:
-            repository_files.append(f'{root}/{file}')
+    for file in os.listdir('/etc/apt/sources.list.d'):
+        repository_files.append(f'/etc/apt/sources.list.d/{file}')
 
     repositories = []
     for repository_file in repository_files:
@@ -133,7 +134,7 @@ def get_repositories():
 
     return repositories
 
-def get_package_list(repositories, arch):
+def get_package_list(repositories, architecture):
     '''Get Packages lists from repository and return it as dictionary.
     '''
     packages_dict = {}
@@ -141,27 +142,18 @@ def get_package_list(repositories, arch):
         repo_entries = repo.split(' ')
         uri = repo_entries[0]
         suite = repo_entries[1]
-        for component in repo_entries[2:]:
-            all_packages_url = f'{uri}/dists/{suite}/{component}/binary-all/Packages.xz'
-            all_response = requests.get(all_packages_url)
-            if all_response.status_code == 200:
-               all_packages = lzma.decompress(all_response.content).decode("UTF-8")
-            else:
-                all_packages_url = f'{uri}/dists/{suite}/{component}/binary-all/Packages.gz'
-                all_response = requests.get(all_packages_url)
-                if all_response.status_code == 200:
-                   all_packages = gzip.decompress(all_response.content).decode("UTF-8")
+        for component, arch, compression in itertools.product(repo_entries[2:], ['all'] + architecture, ['.gz', '.xz', '']):
+            packages_url = f'{uri}/dists/{suite}/{component}/binary-{arch}/Packages{compression}'
+            response = requests.get(packages_url)
+            if response.status_code == 200:
+                if compression == '.xz':
+                    packages = lzma.decompress(response.content).decode("UTF-8")
+                elif compression == '.gz':
+                    packages = gzip.decompress(response.content).decode("UTF-8")
+                else:
+                    packages = response.content.decode("UTF-8")
 
-            arch_packages_url = f'{uri}/dists/{suite}/{component}/binary-{arch}/Packages.xz'
-            arch_response = requests.get(arch_packages_url)
-            if  arch_response.status_code == 200:
-                packages = f'{all_packages}\n{lzma.decompress(arch_response.content).decode("UTF-8")}'
-            else:
-                arch_packages_url = f'{uri}/dists/{suite}/{component}/binary-{arch}/Packages.gz'
-                arch_response = requests.get(arch_packages_url)
-                packages = f'{all_packages}\n{gzip.decompress(arch_response.content).decode("UTF-8")}'
-
-            packages_dict.update({f'{uri}-{component}': packages})  
+            packages_dict.update({f'{uri}-{component}-{arch}': packages})
 
     return packages_dict
 
@@ -189,36 +181,35 @@ def get_linux_image_versions():
     '''Returns a list of all found Linux image versions on the host in /boot.
     '''
     linux_image_versions = []
-    for _, _, files in os.walk('/boot'):
-        for file in files:
-            if file.startswith('vmlinuz-'):
-                version = re.match("vmlinuz-(.*)", file).group(1)
-                linux_image_versions.append(version)
+    for file in os.listdir('/boot'):
+        if file.startswith('vmlinuz-'):
+            version = re.match("vmlinuz-(.*)", file).group(1)
+            linux_image_versions.append(version)
 
     return linux_image_versions
 
-def check_urls(linux_versions, header_package_urls, arch):
+def check_urls(linux_versions, header_package_urls, architecture):
     '''Pick the package urls that match the Linux image versions.
     '''
     result = {}
     versions = {}
-    result[arch] = {}
-    for version in linux_versions:
+    for arch, version in itertools.product(architecture, linux_versions):
+        if not arch in result:
+            result[arch] = {}
         result[arch][version] = []
-        for package in header_package_urls:
-            if version in package:
-                result[arch][version].append(package)
-                versions[version] = re.match(".*?(_.*)\.deb", package).group(1)
-            # Workaround for linux compiler package name on arm64 architecture
-            if 'arm64' in package and re.match('.*/gcc-\d\d_.*', package):
-                result[arch][version].append(package)
-    for kernel, version in versions.items():
-        for package in header_package_urls:
-            if version in package and not 'linux-headers' in package:
-                result[arch][kernel].append(package)
+    for version, arch, package in itertools.product(linux_versions, architecture, header_package_urls):
+        if version in package and arch in package:
+            result[arch][version].append(package)
+            versions[version] = re.match(".*?(_.*)\.deb", package).group(1)
+        # Workaround for linux compiler package name on arm64 architecture
+        if 'arm64' in package and arch == 'arm64' and re.match('.*/gcc-\d\d_.*', package):
+            result[arch][version].append(package)
+    for version, arch, package in itertools.product(versions, architecture, header_package_urls):
+        if versions[version] in package and arch in package and not 'linux-headers' in package:
+            result[arch][version].append(package)
     
     for key, value in result.items():
-        for nested_key, nested_value  in value.items():
+        for nested_key, nested_value in value.items():
             result[key][nested_key] = list(dict.fromkeys(nested_value))
 
     return result
