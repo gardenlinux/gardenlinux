@@ -15,6 +15,7 @@ import urllib.request
 import sys
 from yaml.loader import SafeLoader
 import argparse
+import subprocess
 
 arches = [
     'amd64',
@@ -224,6 +225,11 @@ def generate(version, commitish):
     output += "\n"
     output += "## Public cloud images\n"
     output += generate_publish_release_note_section(version, commitish)
+    output += "\n"
+    output += "## Kernel URLs\n"
+    output += "```yaml\n"
+    output += subprocess.run(["bin/gl-kernelurls", "-g", version, "-a", "arm64", "-a", "amd64"], capture_output=True).stdout.decode('UTF-8')
+    output += "```"
     output += "\n"
     print(output)
 
