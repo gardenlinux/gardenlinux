@@ -23,8 +23,10 @@ containerd:
 images:
   - location: "https://cloud.debian.org/images/cloud/trixie/daily/20231010-1529/debian-13-genericcloud-amd64-daily-20231010-1529.qcow2"
     arch: "x86_64"
+    digest: "sha512:e27e58a8f1d2448ee5e98bba3d178b277645075e558e48d3959df41f9c0a540a1b9d5a684fa627536bf5eaa36c5a7ce8738acdb4c7e33c42fb8c8d23f3cfe288"
   - location: "https://cloud.debian.org/images/cloud/trixie/daily/20231010-1529/debian-13-genericcloud-arm64-daily-20231010-1529.qcow2"
     arch: "aarch64"
+    digest: "sha512:1d6858baab7bdf75f5e01e9035dc7738f05fbb557ed724c4c666fd13a93ce88d880443a8719b1afe905ffe0bf9b0eb07419bb8141d191c2efa1267d5fabc956c"
 
 mounts:
   - location: "~"
