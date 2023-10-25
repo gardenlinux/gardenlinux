@@ -2,4 +2,4 @@
 
 set -eufo pipefail
 
-echo "http://repo.gardenlinux.io/gardenlinux"
+echo "https://repo.gardenlinux.io/gardenlinux"
