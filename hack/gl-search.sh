@@ -19,9 +19,9 @@ source "${THIS_DIR}/.gl-search-functions.sh"
 gl_selected_os="$(echo -e "gardenlinux\ndebian\nfrom_env_var" | fzf --header 'Select OS or enter custom url (e.g. ftp.debian.org/debian)' --print-query | tail -1)"
 if [ "$gl_selected_os" == "gardenlinux" ]; then
   gls_gl_dist="$(echo "today" |fzf --header 'Enter the Garden Linux Version you are interested in, or select today' --print-query | tail -1)"
-  base_url="http://repo.gardenlinux.io/gardenlinux"
+  base_url="https://repo.gardenlinux.io/gardenlinux"
 elif [ "$gl_selected_os" == "debian" ]; then
-  base_url="http://ftp.debian.org/debian"
+  base_url="https://ftp.debian.org/debian"
   gls_gl_dist="$(echo -e "bookworm\nsid\nbullseye" |fzf --header 'Enter the Version you are interested in' --print-query | tail -1)"
 elif [ "$gl_selected_os" == "from_env_var" ]; then
   if [ -z ${base_url+x} ]; then
