@@ -9,7 +9,6 @@ from binascii import hexlify
 from paramiko import SSHClient, AutoAddPolicy, RSAKey
 from paramiko.auth_handler import AuthenticationException, SSHException
 from paramiko.ssh_exception import NoValidConnectionsError
-from paramiko.util import u
 from scp import SCPClient, SCPException
 
 logger = logging.getLogger(__name__)
@@ -49,7 +48,7 @@ class RemoteClient:
                 f.write(f"{pub.get_name()} {pub.get_base64()}")
                 if comment:
                     f.write(f" {comment}")
-        hash = u(hexlify(pub.get_fingerprint()))
+        hash = hexlify(pub.get_fingerprint()).decode(encoding="utf-8")
         fingerprint = ":".join([hash[i : 2 + i] for i in range(0, len(hash), 2)])
         logger.info(f"fingerprint: {bits} {fingerprint} {filename}.pub (RSA)")
         return fingerprint
