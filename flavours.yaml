@@ -26,6 +26,7 @@ targets:
       - _pxe
       - vhost
   - name: openstack
+  - name: openstackbaremetal
   - name: vmware
 modifiers:
   - _dev

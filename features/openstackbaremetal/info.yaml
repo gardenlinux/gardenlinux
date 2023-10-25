@@ -1,0 +1,12 @@
+description: "OpenStack baremetal platform (cloud-init, metal kernel)"
+type: platform
+features:
+  include:
+    - metal
+convert:
+  format:
+    - type: vmdk
+upload:
+  target:
+    - type: openstackbaremetal
+      image-name: $(OPENSTACK_BM_IMAGE_NAME)
