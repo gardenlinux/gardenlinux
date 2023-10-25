@@ -10,6 +10,7 @@
 
 import os
 import boto3
+import botocore
 import yaml
 import urllib.request
 import sys
@@ -134,10 +135,7 @@ def download_all_singles(bucket, path, version, commitish):
     return manifests
 
 
-def generate_publish_release_note_section(version, commitish):
-    singles_path = "meta/singles"
-    bucket = "gardenlinux-github-releases"
-    manifests = download_all_singles(bucket, singles_path, version, commitish)
+def generate_publish_release_note_section(manifests):
     out = ""
     for m in manifests:
         out += construct_release_note_single(m)
@@ -181,6 +179,65 @@ def generate_package_update_section(version):
                     output += _parse_match_section(s['matchBinaries'])
     return output
 
+def generate_image_download_section(manifests, version, commitish):
+    output = ""
+    for manifest_path in manifests:
+        with open(manifest_path) as f:
+            manifest_data = yaml.load(f, Loader=SafeLoader)
+        arch = manifest_data['architecture'].upper()
+        platform = manifest_data['platform']
+        paths = manifest_data['paths']
+
+        for path in paths:
+            if platform == 'ali' and '.qcow2' == path['suffix']:
+                output += f"### {cloud_fullname_dict['ali']} ({arch})\n"
+                output += f"* [{version}-{commitish}-rootfs.qcow2]({get_image_object_url(path['s3_bucket_name'], path['s3_key'])})\n"
+            elif platform == 'aws' and '.raw' == path['suffix']:
+                output += f"### {cloud_fullname_dict['aws']} ({arch})\n"
+                output += f"* [{version}-{commitish}-rootfs.raw]({get_image_object_url(path['s3_bucket_name'], path['s3_key'])})\n"
+            elif platform == 'gcp' and '.tar.gz' == path['suffix']:
+                output += f"### {cloud_fullname_dict['gcp']} ({arch})\n"
+                output += f"* [{version}-{commitish}-rootfs-gcpimage.tar.gz]({get_image_object_url(path['s3_bucket_name'], path['s3_key'])})\n"
+            elif platform == 'azure' and '.vhd' == path['suffix']:
+                output += f"### {cloud_fullname_dict['azure']} ({arch})\n"
+                output += f"* [{version}-{commitish}-rootfs.vhd]({get_image_object_url(path['s3_bucket_name'], path['s3_key'])})\n"
+    return output
+
+def generate_image_readme():
+    output = ""
+    output += '''<details>
+## How to import images to public Cloud Providers
+
+- Alibaba Cloud
+    - [Import custom images](https://www.alibabacloud.com/help/doc-detail/25464.htm) to Alibaba Cloud
+
+- AWS
+    - [Importing an Image into Your Device as an Amazon EC2 AMI](https://docs.aws.amazon.com/snowball/latest/developer-guide/ec2-ami-import-cli.html)
+    - recommended `aws` command with parameters:
+      ```shell
+      aws ec2 register-image --name gardenlinux --description "Garden Linux" --architecture x86_64 --root-device-name /dev/xvda --virtualization-type hvm --ena-support --block-device-mapping "DeviceName=/dev/xvda,Ebs={DeleteOnTermination=True,SnapshotId=<your snapshot ID from snapshot import>,VolumeType=gp2}"
+      ```
+
+- Google Cloud Platform
+    - [Importing a bootable virtual disk](https://cloud.google.com/compute/docs/import/importing-virtual-disks#bootable) to GCP
+
+- Microsoft Azure
+    - [Bringing and creating Linux images in Azure](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/imaging)
+
+</details>'''
+
+    return output
+
+
+def get_image_object_url(bucket, object, expiration=0):
+    s3 = boto3.client('s3')
+    s3_config = s3._client_config
+    s3_config.signature_version = botocore.UNSIGNED
+    s3_client = boto3.client('s3', config=s3_config)
+    url = s3_client.generate_presigned_url('get_object', Params={'Bucket': bucket, 'Key': object}, ExpiresIn = expiration)
+    return url
+
+
 def main():
     parser = argparse.ArgumentParser(description="Command Line Interface", add_help=False)
     subparsers = parser.add_subparsers(dest="cmd", required=True)
@@ -198,14 +255,18 @@ def main():
 
     args = parser.parse_args()
 
+    singles_path = "meta/singles"
+    bucket = "gardenlinux-github-releases"
     if args.cmd == "generate_package_notes":
         generate_package_notes(args.version)
 
     elif args.cmd == "generate_publish_notes":
-        generate_publish_notes(args.version, args.commitish)
+        manifests = download_all_singles(bucket, singles_path, args.version, args.commitish)
+        generate_publish_notes(manifests)
 
     elif args.cmd == "generate":
-        generate(args.version, args.commitish)
+        manifests = download_all_singles(bucket, singles_path, args.version, args.commitish)
+        generate(args.version, args.commitish, manifests)
 
 def generate_package_notes(version):
     output = "## Package Updates\n"
@@ -213,18 +274,23 @@ def generate_package_notes(version):
     output += "\n"
     print(output)
 
-def generate_publish_notes(version, commitish):
+def generate_publish_notes(manifests):
     output = "## Public cloud images\n"
-    output += generate_publish_release_note_section(version, commitish)
+    output += generate_publish_release_note_section(manifests)
     output += "\n"
     print(output)
 
-def generate(version, commitish):
+def generate(version, commitish, manifests):
     output = "## Package Updates\n"
     output += generate_package_update_section(version)
     output += "\n"
     output += "## Public cloud images\n"
-    output += generate_publish_release_note_section(version, commitish)
+    output += generate_publish_release_note_section(manifests)
+    output += "\n"
+    output += "## Pre-built images available for download\n"
+    output += generate_image_download_section(manifests, version, commitish)
+    output += "\n"
+    output += generate_image_readme()
     output += "\n"
     output += "## Kernel URLs\n"
     output += "```yaml\n"
