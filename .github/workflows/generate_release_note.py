@@ -230,9 +230,7 @@ def generate_image_readme():
 
 
 def get_image_object_url(bucket, object, expiration=0):
-    s3 = boto3.client('s3')
-    s3_config = s3._client_config
-    s3_config.signature_version = botocore.UNSIGNED
+    s3_config = botocore.config.Config(signature_version=botocore.UNSIGNED)
     s3_client = boto3.client('s3', config=s3_config)
     url = s3_client.generate_presigned_url('get_object', Params={'Bucket': bucket, 'Key': object}, ExpiresIn = expiration)
     return url
