@@ -45,7 +45,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: nkraetzschmar/workflow-telemetry-action@v1
+      - uses: gardenlinux/workflow-telemetry-action@v1
         with:
           metric_frequency: 1
           proc_trace_min_duration: 10
@@ -79,7 +79,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: nkraetzschmar/workflow-telemetry-action@v1
+      - uses: gardenlinux/workflow-telemetry-action@v1
         with:
           metric_frequency: 1
           proc_trace_min_duration: 10
@@ -104,7 +104,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: nkraetzschmar/workflow-telemetry-action@v1
+      - uses: gardenlinux/workflow-telemetry-action@v1
         with:
           metric_frequency: 1
           proc_trace_min_duration: 10
@@ -144,7 +144,7 @@ jobs:
             arch: arm64
             modifier: ""
     steps:
-      - uses: nkraetzschmar/workflow-telemetry-action@v1
+      - uses: gardenlinux/workflow-telemetry-action@v1
         with:
           metric_frequency: 1
           proc_trace_min_duration: 10
@@ -196,7 +196,7 @@ jobs:
         run: ./build ${{ inputs.use_kms && '--kms' || '' }} ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
       - name: test
         run: ./test --container-image test ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
-      - uses: pmeier/pytest-results-action@main
+      - uses: pmeier/pytest-results-action@8104ed7b3d3ba4bb0d550e406fc26aa756630fcc
         if: always()
         with:
           path: tests/test.xml
@@ -220,7 +220,7 @@ jobs:
         arch: [ amd64, arm64 ]
         config: [ libc, python, nodejs, sapmachine ]
     steps:
-      - uses: nkraetzschmar/workflow-telemetry-action@v1
+      - uses: gardenlinux/workflow-telemetry-action@v1
         with:
           metric_frequency: 1
           proc_trace_min_duration: 10
