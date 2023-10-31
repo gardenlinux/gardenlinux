@@ -24,14 +24,14 @@
 ##  systems, the object’s security level.
 ##
 ## Things that could affect time
--a always,exit -F arch=b32 -S adjtimex,settimeofday,stime -F key=time-change
--a always,exit -F arch=b64 -S adjtimex,settimeofday -F key=time-change
--a always,exit -F arch=b32 -S clock_settime -F a0=0x0 -F key=time-change
--a always,exit -F arch=b64 -S clock_settime -F a0=0x0 -F key=time-change
+#-a always,exit -F arch=b32 -S adjtimex,settimeofday,stime -F key=time-change
+#-a always,exit -F arch=b64 -S adjtimex,settimeofday -F key=time-change
+#-a always,exit -F arch=b32 -S clock_settime -F a0=0x0 -F key=time-change
+#-a always,exit -F arch=b64 -S clock_settime -F a0=0x0 -F key=time-change
 # Introduced in 2.6.39, commented out because it can make false positives
 #-a always,exit -F arch=b32 -S clock_adjtime -F key=time-change
 #-a always,exit -F arch=b64 -S clock_adjtime -F key=time-change
--w /etc/localtime -p wa -k time-change
+#-w /etc/localtime -p wa -k time-change
 
 ## Things that affect identity
 -w /etc/group -p wa -k identity
@@ -41,13 +41,13 @@
 -w /etc/security/opasswd -p wa -k identity
 
 ## Things that could affect system locale
--a always,exit -F arch=b32 -S sethostname,setdomainname -F key=system-locale
--a always,exit -F arch=b64 -S sethostname,setdomainname -F key=system-locale
--w /etc/issue -p wa -k system-locale
--w /etc/issue.net -p wa -k system-locale
--w /etc/hosts -p wa -k system-locale
--w /etc/hostname -p wa -k system-locale
--a always,exit -F dir=/etc/NetworkManager/ -F perm=wa -F key=system-locale
+#-a always,exit -F arch=b32 -S sethostname,setdomainname -F key=system-locale
+#-a always,exit -F arch=b64 -S sethostname,setdomainname -F key=system-locale
+#-w /etc/issue -p wa -k system-locale
+#-w /etc/issue.net -p wa -k system-locale
+#-w /etc/hosts -p wa -k system-locale
+#-w /etc/hostname -p wa -k system-locale
+#-a always,exit -F dir=/etc/NetworkManager/ -F perm=wa -F key=system-locale
 
 ## Things that could affect MAC policy
 -a always,exit -F dir=/etc/selinux/ -F perm=wa -F key=MAC-policy
@@ -131,9 +131,9 @@
 -w /etc/sudoers.d/ -p wa -k actions
 
 ## Special case for systemd-run. It is not audit aware, specifically watch it
--a always,exit -F path=/usr/bin/systemd-run -F perm=x -F auid!=unset -F key=maybe-escalation
+#-a always,exit -F path=/usr/bin/systemd-run -F perm=x -F auid!=unset -F key=maybe-escalation
 ## Special case for pkexec. It is not audit aware, specifically watch it
--a always,exit -F path=/usr/bin/pkexec -F perm=x -F key=maybe-escalation
+#-a always,exit -F path=/usr/bin/pkexec -F perm=x -F key=maybe-escalation
 
 ## (GEN002860: CAT II) (Previously – G674) The SA and/or IAO will
 ##ensure old audit logs are closed and new audit logs are started daily.
