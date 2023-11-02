@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import tempfile
 
 from bs4 import BeautifulSoup
 from urllib.request import urlopen, urlretrieve
@@ -17,20 +18,7 @@ Please test if the updated images work before merging changes created by this sc
 This script is supposed to not rely on any external dependencies (except for BeautifulSoup)
 """
 
-lima_manifest_template = """# Development environment for Garden Linux using lima (https://github.com/lima-vm/lima)
-# This is intended to be used with the VS Code SSH Remote plugin: https://code.visualstudio.com/docs/remote/ssh
-# Usage instructions:
-# Make sure lima and qemu are installed.
-#
-# Run the following commands:
-#
-#  limactl create --name gl-dev hack/lima-dev-env.yaml
-#  echo "Include ${LIMA_HOME:-$HOME/.lima}/gl-dev/ssh.config" >> ~/.ssh/config
-#  limactl start gl-dev
-#
-# Connect to host 'lima-gl-dev' in VS Code via the SSH Remote plugin
-
-vmType: qemu
+lima_manifest_template = """vmType: qemu
 os: Linux
 memory: 8GiB
 ssh:
@@ -46,11 +34,6 @@ images:
   - location: "__ARM64_IMAGE_URL__"
     arch: "aarch64"
     digest: "sha512:__ARM64_IMAGE_CSUM__"
-
-mounts:
-  - location: "~"
-  - location: "/tmp/lima"
-    writable: true
 
 provision:
   - mode: system
@@ -132,17 +115,18 @@ def get_current_debian_images():
         amd_url = f"{DEBIAN_TESTING_BASE_URL}/{debian_testing_version}/debian-13-genericcloud-amd64-daily-{debian_testing_version}.qcow2"
         arm_url = f"{DEBIAN_TESTING_BASE_URL}/{debian_testing_version}/debian-13-genericcloud-arm64-daily-{debian_testing_version}.qcow2"
 
-        urlretrieve(f"{DEBIAN_TESTING_BASE_URL}/{debian_testing_version}/{SHA_SUMS}", SHA_SUMS)
+        temp_sha_sums_file = f"{tempfile.gettempdir()}/{SHA_SUMS}"
+        urlretrieve(f"{DEBIAN_TESTING_BASE_URL}/{debian_testing_version}/{SHA_SUMS}", temp_sha_sums_file)
         amd_sum = ""
         arm_sum = ""
-        with open(SHA_SUMS) as sums:
+        with open(temp_sha_sums_file) as sums:
             for line in sums:
                 if f"debian-13-genericcloud-amd64-daily-{debian_testing_version}.qcow2" in line:
                     amd_sum = line.split("  ")[0]
                 if f"debian-13-genericcloud-arm64-daily-{debian_testing_version}.qcow2" in line:
                     arm_sum = line.split("  ")[0]
 
-        os.remove(SHA_SUMS)
+        os.remove(temp_sha_sums_file)
 
         print(amd_sum)
         print(arm_sum)
@@ -166,7 +150,7 @@ def main():
         .replace("__ARM64_IMAGE_URL__", current_images['arm_url']) \
         .replace("__ARM64_IMAGE_CSUM__", current_images['arm_sum'])
 
-    with open("hack/lima-dev-env.yaml", "w+") as file:
+    with open("hack/lima-dev-env/gl-dev.yaml", "w+") as file:
         file.write(lima_manifest)
 
 
