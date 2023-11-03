@@ -1,16 +1,3 @@
-# Development environment for Garden Linux using lima (https://github.com/lima-vm/lima)
-# This is intended to be used with the VS Code SSH Remote plugin: https://code.visualstudio.com/docs/remote/ssh
-# Usage instructions:
-# Make sure lima and qemu are installed.
-#
-# Run the following commands:
-#
-#  limactl create --name gl-dev hack/lima-dev-env.yaml
-#  echo "Include ${LIMA_HOME:-$HOME/.lima}/gl-dev/ssh.config" >> ~/.ssh/config
-#  limactl start gl-dev
-#
-# Connect to host 'lima-gl-dev' in VS Code via the SSH Remote plugin
-
 vmType: qemu
 os: Linux
 memory: 8GiB
@@ -28,11 +15,6 @@ images:
     arch: "aarch64"
     digest: "sha512:1d6858baab7bdf75f5e01e9035dc7738f05fbb557ed724c4c666fd13a93ce88d880443a8719b1afe905ffe0bf9b0eb07419bb8141d191c2efa1267d5fabc956c"
 
-mounts:
-  - location: "~"
-  - location: "/tmp/lima"
-    writable: true
-
 provision:
   - mode: system
     script: |
@@ -41,7 +23,7 @@ provision:
       export DEBIAN_FRONTEND=noninteractive
       apt-get update
       command -v podman >/dev/null 2>&1 && exit 0
-      apt-get -y install podman git curl qemu-system-x86 qemu-system-arm qemu-efi-aarch64 qemu-user-static
+      apt-get -y install podman git curl qemu-system-x86 qemu-system-arm qemu-efi-aarch64 qemu-user-static python3-bs4
       # Install github cli gh, pin to version to allow checksum compare
       # On update, update both GH_CSUM and the download url
       ARCH=$(dpkg --print-architecture)
