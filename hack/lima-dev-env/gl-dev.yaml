@@ -8,12 +8,12 @@ containerd:
   user: false
 
 images:
-  - location: "https://cloud.debian.org/images/cloud/trixie/daily/20231010-1529/debian-13-genericcloud-amd64-daily-20231010-1529.qcow2"
+  - location: "https://cloud.debian.org/images/cloud/trixie/daily/20231103-1553/debian-13-genericcloud-amd64-daily-20231103-1553.qcow2"
     arch: "x86_64"
-    digest: "sha512:e27e58a8f1d2448ee5e98bba3d178b277645075e558e48d3959df41f9c0a540a1b9d5a684fa627536bf5eaa36c5a7ce8738acdb4c7e33c42fb8c8d23f3cfe288"
-  - location: "https://cloud.debian.org/images/cloud/trixie/daily/20231010-1529/debian-13-genericcloud-arm64-daily-20231010-1529.qcow2"
+    digest: "sha512:e944cbca479d09d984b70b6f1dd64e8a0168b057a9a611fb55bc36cd50d3f372da3470345f1f3e2207f66291e2e98908173abacd26b4bd9ccbb08f92b953a795"
+  - location: "https://cloud.debian.org/images/cloud/trixie/daily/20231103-1553/debian-13-genericcloud-arm64-daily-20231103-1553.qcow2"
     arch: "aarch64"
-    digest: "sha512:1d6858baab7bdf75f5e01e9035dc7738f05fbb557ed724c4c666fd13a93ce88d880443a8719b1afe905ffe0bf9b0eb07419bb8141d191c2efa1267d5fabc956c"
+    digest: "sha512:2befd5bc7e45af40557d479b496a182b392df2788d1084067bc1629db08820fda7d683ef0d0705ae1f49a5a879bfa7908845aee4668987ebcb77a1194f86242f"
 
 provision:
   - mode: system
