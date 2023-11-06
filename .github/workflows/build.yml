@@ -33,7 +33,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: actions/checkout@v4.1.1
       - name: resolve version "${{ inputs.version }}"
         id: version
         run: echo version="$(bin/garden-version "${{ inputs.version }}")" | tee -a "$GITHUB_OUTPUT"
@@ -51,7 +51,7 @@ jobs:
           proc_trace_min_duration: 10
           proc_trace_chart_max_count: 50
           comment_on_pr: false
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: actions/checkout@v4.1.1
       - uses: ./.github/actions/setup
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
@@ -85,7 +85,7 @@ jobs:
           proc_trace_min_duration: 10
           proc_trace_chart_max_count: 50
           comment_on_pr: false
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: actions/checkout@v4.1.1
       - uses: ./.github/actions/setup
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
@@ -110,7 +110,7 @@ jobs:
           proc_trace_min_duration: 10
           proc_trace_chart_max_count: 50
           comment_on_pr: false
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: actions/checkout@v4.1.1
       - uses: ./.github/actions/setup
       - name: build test container
         run: |
@@ -150,7 +150,7 @@ jobs:
           proc_trace_min_duration: 10
           proc_trace_chart_max_count: 50
           comment_on_pr: false
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: actions/checkout@v4.1.1
       - uses: ./.github/actions/setup
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
@@ -196,7 +196,7 @@ jobs:
         run: ./build ${{ inputs.use_kms && '--kms' || '' }} ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
       - name: test
         run: ./test --container-image test ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
-      - uses: pmeier/pytest-results-action@8104ed7b3d3ba4bb0d550e406fc26aa756630fcc
+      - uses: pmeier/pytest-results-action@v0.3.0
         if: always()
         with:
           path: tests/test.xml
@@ -226,7 +226,7 @@ jobs:
           proc_trace_min_duration: 10
           proc_trace_chart_max_count: 50
           comment_on_pr: false
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: actions/checkout@v4.1.1
       - uses: ./.github/actions/setup
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |

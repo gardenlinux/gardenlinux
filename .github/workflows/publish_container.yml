@@ -13,7 +13,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: actions/checkout@v4.1.1
       - name: set VERSION=${{ inputs.version }}
         run: |
           bin/garden-version "${{ inputs.version }}" | tee VERSION
@@ -54,7 +54,7 @@ jobs:
       matrix:
         config: [ libc, python, nodejs, sapmachine ]
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: actions/checkout@v4.1.1
       - uses: actions/download-artifact@v3
         with:
           name: distroless-${{ matrix.config }}-amd64
