@@ -13,7 +13,7 @@ permissions:
 jobs:
   check-pkgs:
     runs-on: ubuntu-latest
-    
+
     permissions:
       security-events: write
       actions: read
@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: Repository checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           fetch-depth: 0
 
@@ -34,7 +34,7 @@ jobs:
       - name: Check for missing packages in repo
         run: |
           ./bin/check-pkgs-availability.py -d $(bin/garden-version)
-        
+
       - name: Generate report
         id: generate_report
         run: |

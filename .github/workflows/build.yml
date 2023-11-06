@@ -33,7 +33,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - name: resolve version "${{ inputs.version }}"
         id: version
         run: echo version="$(bin/garden-version "${{ inputs.version }}")" | tee -a "$GITHUB_OUTPUT"
@@ -45,13 +45,13 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@v1
+      - uses: gardenlinux/workflow-telemetry-action@6f19ac2411a52a120abb74c812592b44f165d05c # pin@v1
         with:
           metric_frequency: 1
           proc_trace_min_duration: 10
           proc_trace_chart_max_count: 50
           comment_on_pr: false
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
@@ -67,7 +67,7 @@ jobs:
           for f in secureboot.{{pk,null.pk,kek,db}.auth,db.{crt,arn}}; do
             ln -sr "cert/gardenlinux-$f" "cert/$f"
           done
-      - uses: actions/cache/save@v3
+      - uses: actions/cache/save@704facf57e6136b1bc63b828d79edcd491f0ee84 # pin@v3
         with:
           path: cert
           key: cert-${{ github.run_id }}
@@ -79,13 +79,13 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@v1
+      - uses: gardenlinux/workflow-telemetry-action@6f19ac2411a52a120abb74c812592b44f165d05c # pin@v1
         with:
           metric_frequency: 1
           proc_trace_min_duration: 10
           proc_trace_chart_max_count: 50
           comment_on_pr: false
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
@@ -93,7 +93,7 @@ jobs:
           git update-index --assume-unchanged VERSION
       - name: build base-amd64 base-arm64
         run: ./build base-amd64 base-arm64
-      - uses: actions/cache/save@v3
+      - uses: actions/cache/save@704facf57e6136b1bc63b828d79edcd491f0ee84 # pin@v3
         with:
           path: .build
           key: base-${{ github.run_id }}
@@ -104,20 +104,20 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@v1
+      - uses: gardenlinux/workflow-telemetry-action@6f19ac2411a52a120abb74c812592b44f165d05c # pin@v1
         with:
           metric_frequency: 1
           proc_trace_min_duration: 10
           proc_trace_chart_max_count: 50
           comment_on_pr: false
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
       - name: build test container
         run: |
           podman build --squash --tag test --build-arg base="$(./build --print-container-image)" tests
           podman save --format oci-archive test > test.oci
       - name: upload test container
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@704facf57e6136b1bc63b828d79edcd491f0ee84 # pin@v3
         with:
           path: test.oci
           key: test_container:${{ github.run_id }}
@@ -144,20 +144,20 @@ jobs:
             arch: arm64
             modifier: ""
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@v1
+      - uses: gardenlinux/workflow-telemetry-action@6f19ac2411a52a120abb74c812592b44f165d05c # pin@v1
         with:
           metric_frequency: 1
           proc_trace_min_duration: 10
           proc_trace_chart_max_count: 50
           comment_on_pr: false
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
       - name: load cert cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@704facf57e6136b1bc63b828d79edcd491f0ee84 # pin@v3
         with:
           path: cert
           key: cert-${{ github.run_id }}
@@ -167,19 +167,19 @@ jobs:
         run: echo "${{ secrets.secureboot_db_kms_arn }}" > cert/gardenlinux-secureboot.db.arn
       - name: configure aws credentials for kms signing
         if: ${{ inputs.use_kms }}
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@010d0da01d0b5a38af31e9c3470dbfdabdecca3a # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_kms_role }}
           role-session-name: ${{ secrets.aws_oidc_session }}
           aws-region: ${{ secrets.aws_region }}
       - name: load bootstrap stage cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@704facf57e6136b1bc63b828d79edcd491f0ee84 # pin@v3
         with:
           path: .build
           key: base-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: download test container cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@704facf57e6136b1bc63b828d79edcd491f0ee84 # pin@v3
         with:
           path: test.oci
           key: test_container:${{ github.run_id }}
@@ -196,7 +196,7 @@ jobs:
         run: ./build ${{ inputs.use_kms && '--kms' || '' }} ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
       - name: test
         run: ./test --container-image test ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
-      - uses: pmeier/pytest-results-action@v0.3.0
+      - uses: pmeier/pytest-results-action@a2c1430e2bddadbad9f49a6f9b879f062c6b19b1 # pin@v0.3.0
         if: always()
         with:
           path: tests/test.xml
@@ -204,7 +204,7 @@ jobs:
         run: echo "cname=$(basename "$(realpath ".build/${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}")" .artifacts)" | tee -a "$GITHUB_ENV"
       - name: pack build artifacts for upload
         run: tar -cSzvf "${{ env.cname }}.tar.gz" -C .build -T ".build/${{ env.cname }}.artifacts"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # pin@v3
         with:
           name: "${{ env.cname }}"
           path: "${{ env.cname }}.tar.gz"
@@ -220,20 +220,20 @@ jobs:
         arch: [ amd64, arm64 ]
         config: [ libc, python, nodejs, sapmachine ]
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@v1
+      - uses: gardenlinux/workflow-telemetry-action@6f19ac2411a52a120abb74c812592b44f165d05c # pin@v1
         with:
           metric_frequency: 1
           proc_trace_min_duration: 10
           proc_trace_chart_max_count: 50
           comment_on_pr: false
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
       - name: load bootstrap stage cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@704facf57e6136b1bc63b828d79edcd491f0ee84 # pin@v3
         with:
           path: .build
           key: base-${{ github.run_id }}
@@ -244,7 +244,7 @@ jobs:
           find .build -exec touch -d "@$t" {} +
       - name: build
         run: ./build_distroless --arch "${{ matrix.arch }}" "${{ matrix.config }}"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # pin@v3
         with:
           name: "distroless-${{ matrix.config }}-${{ matrix.arch }}"
           path: ".build/distroless/${{ matrix.config }}-${{ matrix.arch }}.oci"

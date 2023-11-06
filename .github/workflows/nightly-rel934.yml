@@ -8,7 +8,7 @@ jobs:
     steps:
 
       - name: Checkout 934 branch
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           ref: 'rel-934'
 
@@ -18,5 +18,3 @@ jobs:
       - name: Trigger nightly for rel-934 with version input
         run: |
           curl -vv --fail-with-body -X POST -u "token:${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/actions/workflows/28837699/dispatches" -d "{\"ref\":\"rel-934\", \"inputs\":{\"version\":\"$VERSION\"}}"
-
-
