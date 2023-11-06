@@ -49,7 +49,7 @@ jobs:
           - arch: arm64
             target: azure
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: login to ghcr.io
       run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
