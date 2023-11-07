@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-K8S_VERSION=${K8S_VERSION:-$(wget --quiet -O- https://storage.googleapis.com/kubernetes-release/release/stable.txt)}
+K8S_VERSION=v1.28.3
 K8S_VERSION_REPO="${K8S_VERSION%.*}"
 
 wget --quiet -O- "https://pkgs.k8s.io/core:/stable:/${K8S_VERSION_REPO}/deb/Release.key" | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
