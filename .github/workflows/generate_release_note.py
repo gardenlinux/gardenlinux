@@ -241,7 +241,7 @@ def main():
     subparsers = parser.add_subparsers(dest="cmd", required=True)
 
     generate_package_notes_parser = subparsers.add_parser('generate_package_notes', help='Only generates Package Updates Section')
-    generate_package_notes_parser.add_argument('--version', required=True, help='Target Garden Linux Version')
+    generate_package_notes_parser.add_argument('--version', type=str, required=True, help='Target Garden Linux Version')
 
     generate_publish_notes_parser = subparsers.add_parser('generate_publish_notes', help='Only generates publishing info section')
     generate_publish_notes_parser.add_argument('--version', required=True, help='Target Garden Linux Version')
@@ -279,9 +279,13 @@ def generate_publish_notes(manifests):
     print(output)
 
 def generate(version, commitish, manifests):
-    output = "## Package Updates\n"
-    output += generate_package_update_section(version)
-    output += "\n"
+    if not version.endswith('.0'):
+        output = "## Package Updates\n"
+        output += generate_package_update_section(version)
+        output += "\n"
+    else:
+        print("Info: new Major release has no packages file in package pipeline.")
+        print("Info: not generating Package Update section")
     output += "## Public cloud images\n"
     output += generate_publish_release_note_section(manifests)
     output += "\n"
