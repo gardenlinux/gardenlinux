@@ -65,7 +65,7 @@ jobs:
           - arch: arm64
             target: ali
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
 
     - name: login to ghcr.io
       run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
@@ -83,7 +83,7 @@ jobs:
     - name: get cname
       run: echo "cname=$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})" | tee -a "$GITHUB_ENV"
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # pin@v3
       with:
         name: ${{ env.cname }}
         path: /tmp/gardenlinux-build-artifacts
@@ -93,7 +93,7 @@ jobs:
     - if: ${{ matrix.target == 'gcp' }}
       id: 'auth_gcp'
       name: 'Authenticate to Google Cloud'
-      uses: google-github-actions/auth@v1
+      uses: google-github-actions/auth@35b0e87d162680511bf346c299f71c9c5c379033 # pin@v1
       with:
         workload_identity_provider: ${{ secrets.gcp_identity_provider }}
         service_account: ${{ secrets.gcp_service_account }}
@@ -104,7 +104,7 @@ jobs:
     - if: ${{ matrix.target == 'aws' }}
       id: 'auth_aws'
       name: 'Authenticate to AWS'
-      uses: aws-actions/configure-aws-credentials@v4
+      uses: aws-actions/configure-aws-credentials@010d0da01d0b5a38af31e9c3470dbfdabdecca3a # pin@v4
       with:
         role-to-assume: ${{ secrets.aws_role }}
         role-session-name: ${{ secrets.aws_session }}
@@ -113,7 +113,7 @@ jobs:
     - if: ${{ matrix.target == 'azure' }}
       id: 'auth_azure'
       name: 'Authenticate to Azure'
-      uses: azure/login@v1
+      uses: azure/login@92a5484dfaf04ca78a94597f4f19fea633851fa2 # pin@v1
       with:
         client-id: ${{ secrets.az_client_id }}
         tenant-id: ${{ secrets.az_tenant_id }}
@@ -128,7 +128,7 @@ jobs:
         set -o pipefail
         .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.arch }}" "${{ env.cname }}" 2>&1 | tee "${{ env.cname }}.integration-tests-log"
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # pin@v3
       with:
         name: tests-${{ env.cname }}
         path: ${{ env.cname }}.integration-tests-log

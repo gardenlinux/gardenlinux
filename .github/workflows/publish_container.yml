@@ -13,7 +13,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - name: set VERSION=${{ inputs.version }}
         run: |
           bin/garden-version "${{ inputs.version }}" | tee VERSION
@@ -22,10 +22,10 @@ jobs:
         run: |
           echo "cname_amd64=$(./build --resolve-cname container-amd64)" | tee -a "$GITHUB_ENV"
           echo "cname_arm64=$(./build --resolve-cname container-arm64)" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # pin@v3
         with:
           name: ${{ env.cname_amd64 }}
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # pin@v3
         with:
           name: ${{ env.cname_arm64 }}
       - name: publish gardenlinux container base image
@@ -54,11 +54,11 @@ jobs:
       matrix:
         config: [ libc, python, nodejs, sapmachine ]
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-      - uses: actions/download-artifact@v3
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # pin@v3
         with:
           name: distroless-${{ matrix.config }}-amd64
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # pin@v3
         with:
           name: distroless-${{ matrix.config }}-arm64
       - run: ls -lah

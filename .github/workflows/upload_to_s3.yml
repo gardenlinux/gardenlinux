@@ -34,8 +34,8 @@ jobs:
         target: [ kvm, "kvm_secureboot", "kvm_secureboot_readonly", "kvm_secureboot_readonly_persistence", metal, "metal_secureboot", "metal_secureboot_readonly", "metal_secureboot_readonly_persistence", gcp, aws, "aws_secureboot", "aws_secureboot_readonly", "aws_secureboot_readonly_persistence", azure, ali, openstack, openstackbaremetal, vmware, "metal_pxe" ]
         modifier: [ "${{ inputs.default_modifier }}" ]
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: aws-actions/configure-aws-credentials@010d0da01d0b5a38af31e9c3470dbfdabdecca3a # pin@v4
         with:
           role-to-assume: ${{ secrets.role }}
           role-session-name: ${{ secrets.session }}
@@ -46,7 +46,7 @@ jobs:
           git update-index --assume-unchanged VERSION
       - name: get cname
         run: echo "cname=$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # pin@v3
         with:
           name: ${{ env.cname }}
       - name: upload to S3 bucket ${{ secrets.bucket }}
@@ -72,8 +72,8 @@ jobs:
           - arch: arm64
             target: azure
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: aws-actions/configure-aws-credentials@010d0da01d0b5a38af31e9c3470dbfdabdecca3a # pin@v4
         with:
           role-to-assume: ${{ secrets.role }}
           role-session-name: ${{ secrets.session }}
@@ -84,7 +84,7 @@ jobs:
           git update-index --assume-unchanged VERSION
       - name: get cname
         run: echo "cname=$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # pin@v3
         with:
           name: tests-${{ env.cname }}
       - name: upload to S3 bucket ${{ secrets.bucket }}
