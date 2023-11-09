@@ -91,14 +91,14 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
       - name: download build artifacts from S3
         run: |
-          commit="$(echo "${{ inputs.commit }}" | cut -c -7)"
+          commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
-          aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/$prefix/$prefix.integration-tests-log" ./
+          aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/$prefix/$prefix.tests-log" ./
       - name: upload to release
         run: |
-          commit="$(echo "${{ inputs.commit }}" | cut -c -7)"
+          commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
           release="$(cat .github_release)"
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
-          echo "$release $prefix.integration-tests-log"
-          ls -lah "$prefix.integration-tests-log"
-          echo "$prefix.integration-tests-log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          echo "$release $prefix.tests-log"
+          ls -lah "$prefix.tests-log"
+          echo "$prefix.tests-log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
