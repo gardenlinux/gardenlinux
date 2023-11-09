@@ -38,8 +38,7 @@ case "$action" in
 		tag="$1"; shift
 		commit="$1"; shift
 		name="$1"; shift
-		#		body="$(.github/workflows/generate_release_note.py generate --version "$name" --commitish "$commit")"
-		body="Placeholder."
+		body="$(.github/workflows/generate_release_note.py generate --version "$name" --commitish "$commit")"
 		release="$(get "releases/tags/$tag" | jq -r '.id' || true)"
 		[ ! "$release" ] || delete "releases/$release"
 

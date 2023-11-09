@@ -17,6 +17,10 @@ on:
         description: "Full commitish"
 jobs:
   create_release:
+    environment: oidc_aws_s3_upload
+    permissions:
+      id-token: write
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
@@ -27,6 +31,7 @@ jobs:
           name: release
           path: .github_release
   upload_to_release:
+    environment: oidc_aws_s3_upload
     needs: create_release
     permissions:
       contents: write
@@ -63,11 +68,11 @@ jobs:
           ls -lah "$prefix.tar.xz"
           echo "$prefix.tar.xz" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
   upload_integration_tests_logs_to_release:
+    environment: oidc_aws_s3_upload
     needs: create_release
     permissions:
       contents: write
       id-token: write
-    environment: oidc_aws_s3_upload
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
