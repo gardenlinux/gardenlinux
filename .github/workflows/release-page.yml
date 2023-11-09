@@ -1,4 +1,4 @@
-name: release
+name: release page
 on:
   workflow_dispatch:
     inputs:
@@ -50,13 +50,13 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
       - name: download build artifacts from S3
         run: |
-          commit="$(echo "${{ inputs.commit }}" | cut -c -7)"
+          commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
           .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$prefix"
           tar -cv "$prefix" | xz -9 > "$prefix.tar.xz"
       - name: upload to release
         run: |
-          commit="$(echo "${{ inputs.commit }}" | cut -c -7)"
+          commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
           release="$(cat .github_release)"
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
           echo "$release $prefix.tar.xz"
@@ -101,4 +101,4 @@ jobs:
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
           echo "$release $prefix.integration-tests-log"
           ls -lah "$prefix.integration-tests-log"
-          echo "$prefix.integration-tests-log" | .github/workflows/release.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          echo "$prefix.integration-tests-log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
