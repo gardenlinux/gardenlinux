@@ -13,22 +13,23 @@ function curl {
 
 function get {
 	[ $# = 1 ]
+	>&2 /usr/bin/echo curl -X GET "https://api.github.com/repos/$repo/$1"
 	curl -X GET "https://api.github.com/repos/$repo/$1"
 }
 
 function post {
 	[ $# = 2 ]
-	curl -X POST "https://api.github.com/repos/$repo/$1" --data "$2"
+	>&2 /usr/bin/echo curl -X POST "https://api.github.com/repos/$repo/$1" --data "$2"
 }
 
 function delete {
 	[ $# = 1 ]
-	curl -X DELETE "https://api.github.com/repos/$repo/$1"
+	>&2 /usr/bin/echo curl -X DELETE "https://api.github.com/repos/$repo/$1"
 }
 
 function upload {
 	[ $# = 1 ]
-	curl -X POST -H "Content-Type: application/octet-stream" "https://uploads.github.com/repos/$repo/$1" --data-binary @-
+	>&2 /usr/bin/echo curl -X POST -H "Content-Type: application/octet-stream" "https://uploads.github.com/repos/$repo/$1" --data-binary @-
 }
 
 action="$1"; shift
@@ -39,6 +40,10 @@ case "$action" in
 		commit="$1"; shift
 		name="$1"; shift
 		body="$(.github/workflows/generate_release_note.py generate --version "$name" --commitish "$commit")"
+		#body="Placeholder."
+		#>&2 /usr/bin/echo '---'
+		#>&2 /usr/bin/echo $body
+		#>&2 /usr/bin/echo '---'
 		release="$(get "releases/tags/$tag" | jq -r '.id' || true)"
 		[ ! "$release" ] || delete "releases/$release"
 
@@ -50,7 +55,7 @@ case "$action" in
 			"prerelease": true
 		}' | jq -r '.id')"
 
-		echo "$release"
+		>&2 echo "$release"
 
 		;;
 	"upload")
@@ -59,7 +64,7 @@ case "$action" in
 		while read asset_file; do
 			asset_name="$(basename "$asset_file")"
 			upload "releases/$release/assets?name=$asset_name" < "$asset_file" > /dev/null
-			echo "uploaded $asset_file to $release"
+			>&2 echo "uploaded $asset_file to $release"
 		done
 
 		;;
