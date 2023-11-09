@@ -279,13 +279,17 @@ def generate_publish_notes(manifests):
     print(output)
 
 def generate(version, commitish, manifests):
+    output = ""
+    
+    # Check if the version is a major release (ends with .0)
     if not version.endswith('.0'):
-        output = "## Package Updates\n"
+        output += "## Package Updates\n"
         output += generate_package_update_section(version)
         output += "\n"
     else:
-        print("Info: new Major release has no packages file in package pipeline.")
+        print("Info: new major release has no packages file in package pipeline")
         print("Info: not generating Package Update section")
+    
     output += "## Public cloud images\n"
     output += generate_publish_release_note_section(manifests)
     output += "\n"
