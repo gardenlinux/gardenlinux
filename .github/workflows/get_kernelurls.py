@@ -56,7 +56,6 @@ def get_kernel_urls(gardenlinux_version):
     # Ideally we would parse the version of the package linux-headers-${arch}, which specifies the actual version.
     # Here, it is safe enough for the release notes to take the highest version available.
     latest_version = get_pkg_attr("linux-headers-amd64", "Version", packages)
-    print(latest_version)
     package_urls = check_urls([latest_version], get_package_urls(packages, 'linux-headers'), architecture)
     return output_urls(package_urls)
 

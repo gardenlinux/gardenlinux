@@ -34,7 +34,7 @@ jobs:
       - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # pin@v3
         with:
           name: release
-          path: .github_release
+          path: .github_release_id
   upload_to_release:
     environment: oidc_aws_s3_upload
     needs: create_release
@@ -66,7 +66,7 @@ jobs:
       - name: upload to release
         run: |
           commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
-          release="$(cat .github_release)"
+          release="$(cat .github_release_id)"
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
           echo "$release $prefix.tar.xz"
           ls -lah "$prefix.tar.xz"
@@ -106,7 +106,7 @@ jobs:
       - name: upload to release
         run: |
           commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
-          release="$(cat .github_release)"
+          release="$(cat .github_release_id)"
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
           echo "$release $prefix.tests-log"
           ls -lah "$prefix.tests-log"
