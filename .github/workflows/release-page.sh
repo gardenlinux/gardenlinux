@@ -56,7 +56,6 @@ case "$action" in
 
 		echo "$release"
 
-		exit 1
 		;;
 	"upload")
 		release="$1"; shift
