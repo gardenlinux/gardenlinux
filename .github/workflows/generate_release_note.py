@@ -120,10 +120,11 @@ def download_all_singles(bucket, path, version, commitish):
             try:
                 manifests.append(download_meta_single_manifest(bucket, path, fname, "s3_downloads/"))
             except Exception as e:
-                # print(f"Failed to get manifest. Error: {e}")
-                # print(f"\tfname:{fname}")
-                # print(f"\tfname:{path}")
-                pass
+                print(f"Failed to get manifest. Error: {e}")
+                print(f"\tfname:{fname}")
+                print(f"\tfname:{path}")
+                # Abort generation of Release Notes - Let the CI fail
+                sys.exit(1)
 
     return manifests
 
@@ -291,32 +292,35 @@ def generate_publish_notes(manifests):
     return output
 
 def generate(version, commitish, manifests):
-    kernelurls = importlib.import_module("bin/gl-kernelurls")
+    
+
+    kernelurls = importlib.import_module("gl-kernelurls")
     args = argparse.Namespace(
+        gardenlinux=version,
         architecture=["arm64", "amd64"],
-        gardenlinux=version
+        output="yaml",
     )
-    kernelurls = kernelurls.main(args)
+    kernelurls = f"{kernelurls.main(args)}"
     output = ""
     
     # Check if the version is a major release (ends with .0)
     if not version.endswith('.0'):
-        output += "## Package Updates\n"
+        output += "## Package Updates"
         output += generate_package_update_section(version)
         output += "\n"
     
-    output += "## Public cloud images\n"
+    output += "## Public cloud images"
     output += generate_publish_release_note_section(manifests)
     output += "\n"
-    output += "## Pre-built images available for download\n"
+    output += "## Pre-built images available for download"
     output += generate_image_download_section(manifests, version, commitish)
     output += "\n"
     #output += generate_image_readme()
     #output += "\n"
-    output += "## Kernel URLs\n"
-    output += "```yaml\n"
+    output += "## Kernel URLs"
+    output += "```yaml"
     output += kernelurls
-    output += "```\n"
+    output += "```"
     return output 
 
 if __name__ == '__main__':
