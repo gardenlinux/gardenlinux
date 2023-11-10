@@ -1,13 +1,5 @@
 #!/usr/bin/env python3
 
-# This is currently not part of the automated pipeline. A garden linux maintainer must execute this locally
-# # install python dependencies 
-# python3 -m venv venv
-# source venv/bin/activate
-# pip install boto3 pyyaml
-# # Execute the command (example for 934.10):
-# .github/workflows/generate_release_note.py generate --version 934.10 --commitish f057c9b 
-
 import os
 import boto3
 import botocore
@@ -16,7 +8,7 @@ import urllib.request
 import sys
 from yaml.loader import SafeLoader
 import argparse
-import subprocess
+import importlib
 
 arches = [
     'amd64',
@@ -259,6 +251,9 @@ def main():
 
     args = parser.parse_args()
 
+    if len(args.commitish) > 8:
+        args.commitish = args.commitish[:8]
+
     singles_path = "meta/singles"
     bucket = "gardenlinux-github-releases"
     if args.cmd == "generate_package_notes":
@@ -296,6 +291,12 @@ def generate_publish_notes(manifests):
     return output
 
 def generate(version, commitish, manifests):
+    kernelurls = importlib.import_module("bin/gl-kernelurls")
+    args = argparse.Namespace(
+        architecture=["arm64", "amd64"],
+        gardenlinux=version
+    )
+    kernelurls = kernelurls.main(args)
     output = ""
     
     # Check if the version is a major release (ends with .0)
@@ -314,8 +315,7 @@ def generate(version, commitish, manifests):
     #output += "\n"
     output += "## Kernel URLs\n"
     output += "```yaml\n"
-    output += subprocess.run(["bin/gl-kernelurls", "-g", version, "-a", "arm64", "-a", "amd64"],
-                            capture_output=True).stdout.decode('UTF-8')
+    output += kernelurls
     output += "```\n"
     return output 
 

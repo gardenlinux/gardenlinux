@@ -13,7 +13,7 @@ import json
 import yaml
 import itertools
 
-def main():
+def main(args=None):
     parser = argparse.ArgumentParser(prog='gl-kernelurls', description='Output URLs to the kernel headers and its dependencies.')
     parser.add_argument('-a', '--arch', choices=['amd64', 'arm64'], action='append', default=[], dest='architecture',
                         help='Architecture of the Linux kernel. Default is the hosts architecture.')
@@ -29,7 +29,8 @@ def main():
                         help='Version of the Linux kernel to search for packages for, same syntax as output of `uname -r`. \
                         Default is all kernel versions found in /boot. If used with the -a option omitting the architecture is recommended.')
 
-    args = parser.parse_args()
+    if not args:
+        args = parser.parse_args()
 
     if not args.repository:
         repositories = get_repositories()
