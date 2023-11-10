@@ -1,13 +1,5 @@
 #!/usr/bin/env python3
 
-# This is currently not part of the automated pipeline. A garden linux maintainer must execute this locally
-# # install python dependencies 
-# python3 -m venv venv
-# source venv/bin/activate
-# pip install boto3 pyyaml
-# # Execute the command (example for 934.10):
-# .github/workflows/generate_release_note.py generate --version 934.10 --commitish f057c9b 
-
 import os
 import boto3
 import botocore
@@ -16,7 +8,7 @@ import urllib.request
 import sys
 from yaml.loader import SafeLoader
 import argparse
-import subprocess
+import importlib
 
 arches = [
     'amd64',
@@ -131,6 +123,8 @@ def download_all_singles(bucket, path, version, commitish):
                 print(f"Failed to get manifest. Error: {e}")
                 print(f"\tfname:{fname}")
                 print(f"\tfname:{path}")
+                # Abort generation of Release Notes - Let the CI fail
+                sys.exit(1)
 
     return manifests
 
@@ -235,6 +229,9 @@ def get_image_object_url(bucket, object, expiration=0):
     url = s3_client.generate_presigned_url('get_object', Params={'Bucket': bucket, 'Key': object}, ExpiresIn = expiration)
     return url
 
+def escape_string(s):
+    return s.replace('\n', '\\n').replace('"', '\\"')
+
 
 def main():
     parser = argparse.ArgumentParser(description="Command Line Interface", add_help=False)
@@ -246,66 +243,85 @@ def main():
     generate_publish_notes_parser = subparsers.add_parser('generate_publish_notes', help='Only generates publishing info section')
     generate_publish_notes_parser.add_argument('--version', required=True, help='Target Garden Linux Version')
     generate_publish_notes_parser.add_argument('--commitish', required=True, help='commitish used by publishing pipeline. required to download respective manifests')
+    generate_publish_notes_parser.add_argument('--escaped', action='store_true', help='escapes the generated code used for automation')
 
     generate_parser = subparsers.add_parser('generate', help='Generates full release notes')
     generate_parser.add_argument('--version', required=True, help='Target Garden Linux Version')
     generate_parser.add_argument('--commitish', required=True, help='commitish used by publishing pipeline. required to download respective manifests')
+    generate_parser.add_argument('--escaped', action='store_true', help='escapes the generated code used for automation')
 
     args = parser.parse_args()
+
+    if len(args.commitish) > 8:
+        args.commitish = args.commitish[:8]
 
     singles_path = "meta/singles"
     bucket = "gardenlinux-github-releases"
     if args.cmd == "generate_package_notes":
-        generate_package_notes(args.version)
-
+        output = generate_package_notes(args.version)
+        if args.escaped:
+            print(escape_string(output))
+        else:
+            print(output)
     elif args.cmd == "generate_publish_notes":
         manifests = download_all_singles(bucket, singles_path, args.version, args.commitish)
-        generate_publish_notes(manifests)
+        output = generate_publish_notes(manifests)
+        if args.escaped:
+            print(escape_string(output))
+        else:
+            print(output)
 
     elif args.cmd == "generate":
         manifests = download_all_singles(bucket, singles_path, args.version, args.commitish)
-        generate(args.version, args.commitish, manifests)
+        output = generate(args.version, args.commitish, manifests)
+        if args.escaped:
+            print(escape_string(output))
+        else:
+            print(output)
 
 def generate_package_notes(version):
     output = "## Package Updates\n"
     output += generate_package_update_section(version)
     output += "\n"
-    print(output)
+    return output
 
 def generate_publish_notes(manifests):
     output = "## Public cloud images\n"
     output += generate_publish_release_note_section(manifests)
     output += "\n"
-    print(output)
+    return output
 
 def generate(version, commitish, manifests):
+    
+
+    kernelurls = importlib.import_module("gl-kernelurls")
+    args = argparse.Namespace(
+        gardenlinux=version,
+        architecture=["arm64", "amd64"],
+        output="yaml",
+    )
+    kernelurls = f"{kernelurls.main(args)}"
     output = ""
     
     # Check if the version is a major release (ends with .0)
     if not version.endswith('.0'):
-        output += "## Package Updates\n"
+        output += "## Package Updates"
         output += generate_package_update_section(version)
         output += "\n"
-    else:
-        print("Info: new major release has no packages file in package pipeline")
-        print("Info: not generating Package Update section")
     
-    output += "## Public cloud images\n"
+    output += "## Public cloud images"
     output += generate_publish_release_note_section(manifests)
     output += "\n"
-    output += "## Pre-built images available for download\n"
+    output += "## Pre-built images available for download"
     output += generate_image_download_section(manifests, version, commitish)
     output += "\n"
-    output += generate_image_readme()
-    output += "\n"
-    output += "## Kernel URLs\n"
-    output += "```yaml\n"
-    output += subprocess.run(["bin/gl-kernelurls", "-g", version, "-a", "arm64", "-a", "amd64"], capture_output=True).stdout.decode('UTF-8')
+    #output += generate_image_readme()
+    #output += "\n"
+    output += "## Kernel URLs"
+    output += "```yaml"
+    output += kernelurls
     output += "```"
-    output += "\n"
-    print(output)
-
-
+    return output 
 
 if __name__ == '__main__':
     main()

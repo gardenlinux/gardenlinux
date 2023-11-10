@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -Eeufo pipefail
+set -x
 
 token="$1"; shift
 repo="$1"; shift
@@ -39,10 +40,12 @@ case "$action" in
 		commit="$1"; shift
 		name="$1"; shift
 		commit_short=${commit:0:8}
-		body="$(.github/workflows/generate_release_note.py generate --version "$name" --commitish "$commit_short")"
+		body="$(.github/workflows/generate_release_note.py generate --version "$name" --commitish "$commit_short" --escaped)"
+		# If release does not exist, this get request will return a 404
 		release="$(get "releases/tags/$tag" | jq -r '.id' || true)"
 		[ ! "$release" ] || delete "releases/$release"
 
+		# Only main branch can post requests, otherwise will return a 403
 		release="$(post "releases" '{
 			"tag_name": "'"$tag"'",
 			"target_commitish": "'"$commit"'",

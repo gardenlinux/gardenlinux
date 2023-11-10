@@ -13,56 +13,19 @@ import json
 import yaml
 import itertools
 
-def main():
+def main(args=None):
     parser = argparse.ArgumentParser(prog='gl-kernelurls', description='Output URLs to the kernel headers and its dependencies.')
-    parser.add_argument('-a', '--arch', choices=['amd64', 'arm64'], action='append', default=[], dest='architecture',
-                        help='Architecture of the Linux kernel. Default is the hosts architecture.')
-    parser.add_argument('-g', '--gardenlinux', default='',
-                        help='Get Linux kernel package urls for a specific Gardenlinux version. The -r and -v options are \
-                        ignored/overwritten by this option.')
+    parser.add_argument('-g', '--gardenlinux', default='today',
+                        help='Get Linux kernel package urls for a specific Gardenlinux version.')
     parser.add_argument('-o', '--output', choices=['yaml', 'json'], default='yaml', help='Select output format.')
-    parser.add_argument('-r', '--repository', action='append', default=[],
-                        help='Repository to search for kernel packages, format "uri suite component1 [component2] ..." for \
-                        more information see `man sources.list`. Default is all found repositories in /etc/apt/sources.list \
-                        and /etc/apt/sources.list.d.')
-    parser.add_argument('-v', '--version', action='append', default=[],
-                        help='Version of the Linux kernel to search for packages for, same syntax as output of `uname -r`. \
-                        Default is all kernel versions found in /boot. If used with the -a option omitting the architecture is recommended.')
 
-    args = parser.parse_args()
+    repositories = [f'http://repo.gardenlinux.io/gardenlinux {args.gardenlinux} main']
 
-    if not args.repository:
-        repositories = get_repositories()
-    else:
-        repositories = args.repository
+    if not args:
+        args = parser.parse_args()
 
-    if not args.version and not args.gardenlinux:
-        versions = get_linux_image_versions()
-    elif args.gardenlinux:
-        versions = []
-    else:
-        versions = args.version
-
-    architecture = args.architecture
-    if not architecture:
-        machine = platform.machine()
-        if machine == 'x86_64':
-            architecture = ['amd64']
-        elif machine == 'aarch64':
-            architecture = ['arm64']
-    # fix version if version is determined from installed kernels on the
-    # host, but given architecture does not match the host
-    elif not args.version:
-        new_versions = []
-        for ver in versions:
-            for arch in architecture:
-                new_ver = re.sub('amd64|arm64', arch, ver)
-                new_versions.append(new_ver)
-        versions = new_versions
-
-    if args.gardenlinux:
-        repositories = [f'http://repo.gardenlinux.io/gardenlinux {args.gardenlinux} main']
-
+    architecture = ["arm64", "amd64"]
+    versions = []
     packages = get_package_list(repositories, architecture)
 
     # find all Linux kernel versions available for the specified Gardenlinux version
@@ -77,7 +40,7 @@ def main():
         versions = list(dict.fromkeys(versions))
 
     package_urls = check_urls(versions, get_package_urls(packages, 'linux-headers'), architecture)
-    output_urls(package_urls, args.output)
+    return output_urls(package_urls, args.output)
 
 def get_repositories():
     '''Extract repositories url from /etc/apt/source.list and /etc/apt/source.list.d/*.
@@ -139,16 +102,6 @@ def get_package_urls(package_list, package_name, resolve_depends=True):
 
     return header_packages
 
-def get_linux_image_versions():
-    '''Returns a list of all found Linux image versions on the host in /boot.
-    '''
-    linux_image_versions = []
-    for file in os.listdir('/boot'):
-        if file.startswith('vmlinuz-'):
-            version = re.match("vmlinuz-(.*)", file).group(1)
-            linux_image_versions.append(version)
-
-    return linux_image_versions
 
 def check_urls(linux_versions, header_package_urls, architecture):
     '''Pick the package urls that match the Linux image versions.
@@ -180,9 +133,10 @@ def output_urls(package_urls, output):
     '''Output the urls in a usable format.
     '''
     if output == 'json':
-        print(json.dumps(package_urls))
+        return json.dumps(package_urls)
     elif output == 'yaml':
-        print(yaml.dump(package_urls))
+        yaml_output = yaml.dump(package_urls)
+        return yaml_output   
     else:
         print('Invalid output format, choose `json` or `yaml`.')
 
