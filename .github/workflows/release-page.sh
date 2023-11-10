@@ -2,9 +2,6 @@
 
 set -Eeufo pipefail
 set -x
-export AWS_ACCESS_KEY_ID
-export AWS_SECRET_ACCESS_KEY
-export AWS_DEFAULT_REGION
 
 token="$1"; shift
 repo="$1"; shift
