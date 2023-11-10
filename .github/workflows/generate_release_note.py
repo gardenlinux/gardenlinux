@@ -128,9 +128,10 @@ def download_all_singles(bucket, path, version, commitish):
             try:
                 manifests.append(download_meta_single_manifest(bucket, path, fname, "s3_downloads/"))
             except Exception as e:
-                print(f"Failed to get manifest. Error: {e}")
-                print(f"\tfname:{fname}")
-                print(f"\tfname:{path}")
+                # print(f"Failed to get manifest. Error: {e}")
+                # print(f"\tfname:{fname}")
+                # print(f"\tfname:{path}")
+                pass
 
     return manifests
 
@@ -235,6 +236,9 @@ def get_image_object_url(bucket, object, expiration=0):
     url = s3_client.generate_presigned_url('get_object', Params={'Bucket': bucket, 'Key': object}, ExpiresIn = expiration)
     return url
 
+def escape_string(s):
+    return s.replace('\n', '\\n').replace('"', '\\"')
+
 
 def main():
     parser = argparse.ArgumentParser(description="Command Line Interface", add_help=False)
@@ -246,37 +250,50 @@ def main():
     generate_publish_notes_parser = subparsers.add_parser('generate_publish_notes', help='Only generates publishing info section')
     generate_publish_notes_parser.add_argument('--version', required=True, help='Target Garden Linux Version')
     generate_publish_notes_parser.add_argument('--commitish', required=True, help='commitish used by publishing pipeline. required to download respective manifests')
+    generate_publish_notes_parser.add_argument('--escaped', action='store_true', help='escapes the generated code used for automation')
 
     generate_parser = subparsers.add_parser('generate', help='Generates full release notes')
     generate_parser.add_argument('--version', required=True, help='Target Garden Linux Version')
     generate_parser.add_argument('--commitish', required=True, help='commitish used by publishing pipeline. required to download respective manifests')
+    generate_parser.add_argument('--escaped', action='store_true', help='escapes the generated code used for automation')
 
     args = parser.parse_args()
 
     singles_path = "meta/singles"
     bucket = "gardenlinux-github-releases"
     if args.cmd == "generate_package_notes":
-        generate_package_notes(args.version)
-
+        output = generate_package_notes(args.version)
+        if args.escaped:
+            print(escape_string(output))
+        else:
+            print(output)
     elif args.cmd == "generate_publish_notes":
         manifests = download_all_singles(bucket, singles_path, args.version, args.commitish)
-        generate_publish_notes(manifests)
+        output = generate_publish_notes(manifests)
+        if args.escaped:
+            print(escape_string(output))
+        else:
+            print(output)
 
     elif args.cmd == "generate":
         manifests = download_all_singles(bucket, singles_path, args.version, args.commitish)
-        generate(args.version, args.commitish, manifests)
+        output = generate(args.version, args.commitish, manifests)
+        if args.escaped:
+            print(escape_string(output))
+        else:
+            print(output)
 
 def generate_package_notes(version):
     output = "## Package Updates\n"
     output += generate_package_update_section(version)
     output += "\n"
-    print(output)
+    return output
 
 def generate_publish_notes(manifests):
     output = "## Public cloud images\n"
     output += generate_publish_release_note_section(manifests)
     output += "\n"
-    print(output)
+    return output
 
 def generate(version, commitish, manifests):
     output = ""
@@ -286,9 +303,6 @@ def generate(version, commitish, manifests):
         output += "## Package Updates\n"
         output += generate_package_update_section(version)
         output += "\n"
-    else:
-        print("Info: new major release has no packages file in package pipeline")
-        print("Info: not generating Package Update section")
     
     output += "## Public cloud images\n"
     output += generate_publish_release_note_section(manifests)
@@ -296,16 +310,14 @@ def generate(version, commitish, manifests):
     output += "## Pre-built images available for download\n"
     output += generate_image_download_section(manifests, version, commitish)
     output += "\n"
-    output += generate_image_readme()
-    output += "\n"
+    #output += generate_image_readme()
+    #output += "\n"
     output += "## Kernel URLs\n"
     output += "```yaml\n"
-    output += subprocess.run(["bin/gl-kernelurls", "-g", version, "-a", "arm64", "-a", "amd64"], capture_output=True).stdout.decode('UTF-8')
-    output += "```"
-    output += "\n"
-    print(output)
-
-
+    output += subprocess.run(["bin/gl-kernelurls", "-g", version, "-a", "arm64", "-a", "amd64"],
+                            capture_output=True).stdout.decode('UTF-8')
+    output += "```\n"
+    return output 
 
 if __name__ == '__main__':
     main()
