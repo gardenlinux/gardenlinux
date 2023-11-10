@@ -29,7 +29,8 @@ jobs:
       - name: create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: .github/workflows/release_note.py 
+        run: |
+          .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}" | cut -c -8)"  
       - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # pin@v3
         with:
           name: release
