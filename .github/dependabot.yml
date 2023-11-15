@@ -8,3 +8,11 @@ updates:
       interval: "weekly"
     reviewers:
       - "gardenlinux/garden-linux-maintainers"
+
+  - package-ecosystem: "pip"
+    directory: "/tests"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "gardenlinux/garden-linux-maintainers"
+
