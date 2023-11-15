@@ -10,7 +10,7 @@ updates:
       - "gardenlinux/garden-linux-maintainers"
 
   - package-ecosystem: "pip"
-    directory: "/"
+    directory: "/tests"
     schedule:
       interval: "weekly"
     reviewers:
