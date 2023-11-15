@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import tempfile
+import json
 
 from bs4 import BeautifulSoup
 from urllib.request import urlopen, urlretrieve
@@ -48,8 +49,8 @@ provision:
       # On update, update both GH_CSUM and the download url
       ARCH=$(dpkg --print-architecture)
       declare -A GH_CSUM
-      GH_CSUM=( ["amd64"]="a6f20316b627ab924447a6c7069edf64e33be20cccdb9b56b1952c7eb47eec2b" ["arm64"]="06f3943f9a48ab344ca92dfa0c9c190ce95dd4076dd3cfaa718d99bf71ae49c0")
-      curl -fsSL https://github.com/cli/cli/releases/download/v2.36.0/gh_2.36.0_linux_$ARCH.deb --output gh.deb
+      GH_CSUM=( ["amd64"]="__GH_AMD64_CSUM__" ["arm64"]="__GH_ARM64_CSUM__")
+      curl -fsSL https://github.com/cli/cli/releases/download/v__GH_VERSION__/gh___GH_VERSION___linux_$ARCH.deb --output gh.deb
       calculated_checksum=$(sha256sum gh.deb | awk '{ print $1 }')
       if [ ${GH_CSUM[$ARCH]} == "$calculated_checksum" ]; then
           apt install -y ./gh.deb
@@ -141,14 +142,37 @@ def get_current_debian_images():
         raise f"Expected exactly one link in {debian_image_links}"
 
 
+def get_current_gh_cli():
+  gh_cli_releases_file = "gh.json"
+  temp_gh_cli_releases_file = f"{tempfile.gettempdir()}/{gh_cli_releases_file}"
+  tag = ""
+  assets_url = ""
+  urlretrieve("https://api.github.com/repos/cli/cli/releases/latest", temp_gh_cli_releases_file)
+  with open (temp_gh_cli_releases_file) as f:
+    releases = json.loads(str(f))
+    tag = releases["tag_name"]
+    assets_url = releases["assets_url"]
+    temp_assets_file, m = urlretrieve(assets_url)
+    with open (temp_assets_file) as ff:
+        assets = json.loads(str(ff))
+        
+  os.remove(temp_gh_cli_releases_file)
+  return dict(
+      tag = tag,
+    
+  )
 def main():
     current_images = get_current_debian_images()
+    current_gh_cli = get_current_gh_cli()
 
     lima_manifest = lima_manifest_template \
         .replace("__AMD64_IMAGE_URL__", current_images['amd_url']) \
         .replace("__AMD64_IMAGE_CSUM__", current_images['amd_sum']) \
         .replace("__ARM64_IMAGE_URL__", current_images['arm_url']) \
-        .replace("__ARM64_IMAGE_CSUM__", current_images['arm_sum'])
+        .replace("__ARM64_IMAGE_CSUM__", current_images['arm_sum']) \
+        .replace("__GH_AMD64_CSUM__", '') \
+        .replace("__GH_ARM64_CSUM__", '') \
+        .replace("__GH_VERSION__", '')
 
     with open("hack/lima-dev-env/gl-dev.yaml", "w+") as file:
         file.write(lima_manifest)
