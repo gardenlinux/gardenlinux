@@ -1,4 +1,4 @@
-name: release
+name: release page
 on:
   workflow_dispatch:
     inputs:
@@ -17,57 +17,63 @@ on:
         description: "Full commitish"
 jobs:
   create_release:
+    environment: oidc_aws_s3_upload
+    permissions:
+      id-token: write
+      contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - name: install dependencies for generate_release_note.py script
+        run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
       - name: create GitHub release
-        run: .github/workflows/release.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} create "${{ inputs.type == 'beta' && 'beta_' || '' }}${{ inputs.version }}" "${{ inputs.commit }}" "${{ inputs.version }}" > .github_release
-      - uses: actions/upload-artifact@v3
+        run: .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} create "${{ inputs.type == 'beta' && 'beta_' || '' }}${{ inputs.version }}" "${{ inputs.commit }}" "${{ inputs.version }}" > .github_release
+      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # pin@v3
         with:
           name: release
           path: .github_release
   upload_to_release:
+    environment: oidc_aws_s3_upload
     needs: create_release
     permissions:
       contents: write
       id-token: write
-    environment: oidc_aws_s3_upload
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
-        cname: [ kvm-gardener_prod, metal-gardener_prod, gcp-gardener_prod, aws-gardener_prod, azure-gardener_prod, ali-gardener_prod, openstack-gardener_prod, vmware-gardener_prod, metal-gardener_prod_pxe ]
+        cname: [ kvm-gardener_prod, metal-gardener_prod, gcp-gardener_prod, aws-gardener_prod, azure-gardener_prod, ali-gardener_prod, openstack-gardener_prod, openstackbaremetal-gardener_prod, vmware-gardener_prod, metal-gardener_prod_pxe ]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # pin@v3
         with:
           name: release
-      - uses: aws-actions/configure-aws-credentials@v2
+      - uses: aws-actions/configure-aws-credentials@010d0da01d0b5a38af31e9c3470dbfdabdecca3a # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_REGION }}
       - name: download build artifacts from S3
         run: |
-          commit="$(echo "${{ inputs.commit }}" | cut -c -7)"
+          commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
           .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$prefix"
           tar -cv "$prefix" | xz -9 > "$prefix.tar.xz"
       - name: upload to release
         run: |
-          commit="$(echo "${{ inputs.commit }}" | cut -c -7)"
+          commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
           release="$(cat .github_release)"
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
           echo "$release $prefix.tar.xz"
           ls -lah "$prefix.tar.xz"
-          echo "$prefix.tar.xz" | .github/workflows/release.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          echo "$prefix.tar.xz" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
   upload_integration_tests_logs_to_release:
+    environment: oidc_aws_s3_upload
     needs: create_release
     permissions:
       contents: write
       id-token: write
-    environment: oidc_aws_s3_upload
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -80,25 +86,25 @@ jobs:
           - architecture: arm64
             cname: azure-gardener_prod
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # pin@v3
         with:
           name: release
-      - uses: aws-actions/configure-aws-credentials@v2
+      - uses: aws-actions/configure-aws-credentials@010d0da01d0b5a38af31e9c3470dbfdabdecca3a # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_REGION }}
       - name: download build artifacts from S3
         run: |
-          commit="$(echo "${{ inputs.commit }}" | cut -c -7)"
+          commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
-          aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/$prefix/$prefix.integration-tests-log" ./
+          aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/$prefix/$prefix.tests-log" ./
       - name: upload to release
         run: |
-          commit="$(echo "${{ inputs.commit }}" | cut -c -7)"
+          commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
           release="$(cat .github_release)"
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
-          echo "$release $prefix.integration-tests-log"
-          ls -lah "$prefix.integration-tests-log"
-          echo "$prefix.integration-tests-log" | .github/workflows/release.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          echo "$release $prefix.tests-log"
+          ls -lah "$prefix.tests-log"
+          echo "$prefix.tests-log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"

@@ -1,0 +1,5 @@
+python3-cffi-backend
+python3-boto
+cloud-init
+dmidecode
+rng-tools5

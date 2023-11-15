@@ -1,0 +1,52 @@
+vmType: qemu
+os: Linux
+memory: 8GiB
+ssh:
+  loadDotSSHPubKeys: true
+containerd:
+  system: false
+  user: false
+
+images:
+  - location: "https://cloud.debian.org/images/cloud/trixie/daily/20231103-1553/debian-13-genericcloud-amd64-daily-20231103-1553.qcow2"
+    arch: "x86_64"
+    digest: "sha512:e944cbca479d09d984b70b6f1dd64e8a0168b057a9a611fb55bc36cd50d3f372da3470345f1f3e2207f66291e2e98908173abacd26b4bd9ccbb08f92b953a795"
+  - location: "https://cloud.debian.org/images/cloud/trixie/daily/20231103-1553/debian-13-genericcloud-arm64-daily-20231103-1553.qcow2"
+    arch: "aarch64"
+    digest: "sha512:2befd5bc7e45af40557d479b496a182b392df2788d1084067bc1629db08820fda7d683ef0d0705ae1f49a5a879bfa7908845aee4668987ebcb77a1194f86242f"
+
+provision:
+  - mode: system
+    script: |
+      #!/bin/bash
+      set -eux -o pipefail
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get update
+      command -v podman >/dev/null 2>&1 && exit 0
+      apt-get -y install podman git curl qemu-system-x86 qemu-system-arm qemu-efi-aarch64 qemu-user-static python3-bs4
+      # Install github cli gh, pin to version to allow checksum compare
+      # On update, update both GH_CSUM and the download url
+      ARCH=$(dpkg --print-architecture)
+      declare -A GH_CSUM
+      GH_CSUM=( ["amd64"]="a6f20316b627ab924447a6c7069edf64e33be20cccdb9b56b1952c7eb47eec2b" ["arm64"]="06f3943f9a48ab344ca92dfa0c9c190ce95dd4076dd3cfaa718d99bf71ae49c0")
+      curl -fsSL https://github.com/cli/cli/releases/download/v2.36.0/gh_2.36.0_linux_$ARCH.deb --output gh.deb
+      calculated_checksum=$(sha256sum gh.deb | awk '{ print $1 }')
+      if [ ${GH_CSUM[$ARCH]} == "$calculated_checksum" ]; then
+          apt install -y ./gh.deb
+          rm gh.deb
+      else
+          echo "Checksums do not match"
+          exit 1
+      fi
+  - mode: user
+    script: |
+      #!/bin/bash
+      set -eux -o pipefail
+      systemctl --user enable --now podman.socket
+
+      if [ ! -d ~/gardenlinux ]
+      then
+        git clone https://github.com/gardenlinux/gardenlinux ~/gardenlinux
+      else
+        echo Local checkout of Garden Linux already exists
+      fi
