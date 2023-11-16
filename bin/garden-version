@@ -53,7 +53,7 @@ function get_minor_from_repo {
   minor=0   # running index
   limit=100 # hard limit the search in case of unexpected curl results
   major=$1  # major to check the latest minor for
-  repo_url="http://repo.gardenlinux.io/gardenlinux/dists/$major.__MINOR__/Release"
+  repo_url="https://repo.gardenlinux.io/gardenlinux/dists/$major.__MINOR__/Release"
   while [ $minor -le $limit ]
   do
     check_url=${repo_url//__MINOR__/$minor}

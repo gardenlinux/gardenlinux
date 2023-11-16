@@ -11,10 +11,10 @@ GL_VERSION=${1:-today}
 GL_ARCH=${2:-"amd64"}
 GL_PKG_NAME=${3:-"linux*"}
 
-packages_url="http://repo.gardenlinux.io/gardenlinux/dists/${GL_VERSION}/main/binary-${GL_ARCH}/Packages"
+packages_url="https://repo.gardenlinux.io/gardenlinux/dists/${GL_VERSION}/main/binary-${GL_ARCH}/Packages"
 
 packages=$(curl -s "$packages_url" | grep "Filename: pool/main/.*/$GL_PKG_NAME" | cut -d':' -f 2)
 
 for p in $packages; do
-    echo "http://repo.gardenlinux.io/gardenlinux/$p"
+    echo "https://repo.gardenlinux.io/gardenlinux/$p"
 done

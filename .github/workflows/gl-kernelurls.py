@@ -19,7 +19,7 @@ def main(args=None):
                         help='Get Linux kernel package urls for a specific Gardenlinux version.')
     parser.add_argument('-o', '--output', choices=['yaml', 'json'], default='yaml', help='Select output format.')
 
-    repositories = [f'http://repo.gardenlinux.io/gardenlinux {args.gardenlinux} main']
+    repositories = [f'https://repo.gardenlinux.io/gardenlinux {args.gardenlinux} main']
 
     if not args:
         args = parser.parse_args()
