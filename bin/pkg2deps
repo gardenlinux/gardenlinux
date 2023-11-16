@@ -60,7 +60,7 @@ def parse_arguments():
 
 def fetch_repositories_metadata(arguments):
     """ Fetch repository metadata """
-    repositories = [arguments.repository, 'http://repo.gardenlinux.io/gardenlinux']
+    repositories = [arguments.repository, 'https://repo.gardenlinux.io/gardenlinux']
     repository_metadata = {}
     repository_metadata['foreign'] = {}
     repository_metadata['gardenlinux'] = {}
@@ -71,7 +71,7 @@ def fetch_repositories_metadata(arguments):
         for repository in repositories:
 
             # Overload vars to create a common base of remote url
-            if repository == 'http://repo.gardenlinux.io/gardenlinux':
+            if repository == 'https://repo.gardenlinux.io/gardenlinux':
                 dist = arguments.gardenlinux_version
                 metadata_key = 'gardenlinux'
             # Use cli defaults for foreign destination

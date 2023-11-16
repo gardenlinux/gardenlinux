@@ -10,8 +10,8 @@ Packages are built, signed and deployed via the Garden Linux gitlab pipelines.
 
 | Release  | Line for `/etc/apt/sources.list`  | Description  |
 |---|---|---|
-| dev  | `deb http://repo.gardenlinux.io/gardenlinux dev main`  | New package versions are publishes here first. |
-| `$major.$minor` | `deb http://repo.gardenlinux.io/gardenlinux major.minor main` | Packages for the the Garden Linux version `major.minor`  |
+| dev  | `deb https://repo.gardenlinux.io/gardenlinux dev main`  | New package versions are publishes here first. |
+| `$major.$minor` | `deb https://repo.gardenlinux.io/gardenlinux major.minor main` | Packages for the the Garden Linux version `major.minor`  |
 
 
 ## Versioning
@@ -43,7 +43,7 @@ Try running [bin/garden-version](../../bin/garden-version), to get the $days_sin
 
 The Source Line for this example should look like:
 
-    deb http://repo.gardenlinux.io/gardenlinux 730.0 main
+    deb https://repo.gardenlinux.io/gardenlinux 730.0 main
 	
 
 </details>
