@@ -71,7 +71,7 @@ jobs:
           echo "$release $prefix.tar.xz"
           ls -lah "$prefix.tar.xz"
           echo "$prefix.tar.xz" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
-  upload_integration_tests_logs_to_release:
+  upload_integration_test_logs_to_release:
     environment: oidc_aws_s3_upload
     needs: create_release
     permissions:
@@ -102,12 +102,12 @@ jobs:
         run: |
           commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
-          aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/$prefix/$prefix.tests-log" ./
+          aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/$prefix/$prefix.test-log" ./
       - name: upload to release
         run: |
           commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
           release="$(cat .github_release_id)"
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
-          echo "$release $prefix.tests-log"
-          ls -lah "$prefix.tests-log"
-          echo "$prefix.tests-log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          echo "$release $prefix.test-log"
+          ls -lah "$prefix.test-log"
+          echo "$prefix.test-log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
