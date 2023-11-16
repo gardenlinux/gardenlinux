@@ -8,12 +8,12 @@ containerd:
   user: false
 
 images:
-  - location: "https://cloud.debian.org/images/cloud/trixie/daily/20231103-1553/debian-13-genericcloud-amd64-daily-20231103-1553.qcow2"
+  - location: "https://cloud.debian.org/images/cloud/trixie/daily/20231116-1566/debian-13-genericcloud-amd64-daily-20231116-1566.qcow2"
     arch: "x86_64"
-    digest: "sha512:e944cbca479d09d984b70b6f1dd64e8a0168b057a9a611fb55bc36cd50d3f372da3470345f1f3e2207f66291e2e98908173abacd26b4bd9ccbb08f92b953a795"
-  - location: "https://cloud.debian.org/images/cloud/trixie/daily/20231103-1553/debian-13-genericcloud-arm64-daily-20231103-1553.qcow2"
+    digest: "sha512:9f51715d850f08b05d01758075eaa3d100799aad1bac6c1b6ab963093a5d25d7c173b7f946506ae3714ac076d1e222e55578c75e20e8a08389fded487af71104"
+  - location: "https://cloud.debian.org/images/cloud/trixie/daily/20231116-1566/debian-13-genericcloud-arm64-daily-20231116-1566.qcow2"
     arch: "aarch64"
-    digest: "sha512:2befd5bc7e45af40557d479b496a182b392df2788d1084067bc1629db08820fda7d683ef0d0705ae1f49a5a879bfa7908845aee4668987ebcb77a1194f86242f"
+    digest: "sha512:714f94559f38efeeddb0d11595e290814564aee3c3aa44553b9f378b28ab177eec01221feb0eef81e6c6542c182a85a077e82f6a61c10fef247ba0b038e04685"
 
 provision:
   - mode: system
@@ -28,8 +28,8 @@ provision:
       # On update, update both GH_CSUM and the download url
       ARCH=$(dpkg --print-architecture)
       declare -A GH_CSUM
-      GH_CSUM=( ["amd64"]="a6f20316b627ab924447a6c7069edf64e33be20cccdb9b56b1952c7eb47eec2b" ["arm64"]="06f3943f9a48ab344ca92dfa0c9c190ce95dd4076dd3cfaa718d99bf71ae49c0")
-      curl -fsSL https://github.com/cli/cli/releases/download/v2.36.0/gh_2.36.0_linux_$ARCH.deb --output gh.deb
+      GH_CSUM=( ["amd64"]="7cc755c2c24e351d18d517190e4313fac45beb399a04b736f198ce55012f8224" ["arm64"]="a01d11e4e387c4c4e2d499acd823b296a0126c56c3fc62b07d6edaf2bfc43a8c")
+      curl -fsSL https://github.com/cli/cli/releases/download/v2.39.1/gh_2.39.1_linux_$ARCH.deb --output gh.deb
       calculated_checksum=$(sha256sum gh.deb | awk '{ print $1 }')
       if [ ${GH_CSUM[$ARCH]} == "$calculated_checksum" ]; then
           apt install -y ./gh.deb
