@@ -136,7 +136,3 @@ def output_urls(package_urls):
     yaml_output += "```\n"
     yaml_output += ""
     return yaml_output   
-    
-
-if __name__ == "__main__":
-    main()
