@@ -246,5 +246,5 @@ jobs:
         run: ./build_bare_container_image --arch "${{ matrix.arch }}" "${{ matrix.config }}"
       - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # pin@v3
         with:
-          name: "bare-container-image-${{ matrix.config }}-${{ matrix.arch }}"
+          name: "bare-${{ matrix.config }}-${{ matrix.arch }}"
           path: ".build/bare_container_image/${{ matrix.config }}-${{ matrix.arch }}.oci"
