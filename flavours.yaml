@@ -9,7 +9,7 @@ targets:
   - name: azure
   - name: container
     modifiers:
-      - _distroless
+      - _bare_container_image
   - name: firecracker
   - name: gcp
   - name: kvm

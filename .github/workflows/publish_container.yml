@@ -43,8 +43,8 @@ jobs:
           podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:amd64-nightly
           podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:arm64-nightly
           podman push ghcr.io/${{ github.repository }}:nightly
-  publish_distroless:
-    name: publish distroless container images
+  publish_bare_container_image:
+    name: publish bare container images
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -57,21 +57,21 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # pin@v3
         with:
-          name: distroless-${{ matrix.config }}-amd64
+          name: bare-container-image-${{ matrix.config }}-amd64
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # pin@v3
         with:
-          name: distroless-${{ matrix.config }}-arm64
+          name: bare-container-image-${{ matrix.config }}-arm64
       - run: ls -lah
-      - name: publish distroless container image
+      - name: publish bare container image
         run: |
           podman login -u token -p ${{ github.token }} ghcr.io
           image="$(podman load < ${{ matrix.config }}-amd64.oci | awk '{ print $NF }')"
-          podman tag "$image" ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:amd64-nightly
-          podman push ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:amd64-nightly
+          podman tag "$image" ghcr.io/${{ github.repository }}/bare-container-image/${{ matrix.config }}:amd64-nightly
+          podman push ghcr.io/${{ github.repository }}/bare-container-image/${{ matrix.config }}:amd64-nightly
           image="$(podman load < ${{ matrix.config }}-arm64.oci | awk '{ print $NF }')"
-          podman tag "$image" ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:arm64-nightly
-          podman push ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:arm64-nightly
-          podman manifest create ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:nightly
-          podman manifest add ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:amd64-nightly
-          podman manifest add ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:arm64-nightly
-          podman push ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:nightly
+          podman tag "$image" ghcr.io/${{ github.repository }}/bare-container-image/${{ matrix.config }}:arm64-nightly
+          podman push ghcr.io/${{ github.repository }}/bare-container-image/${{ matrix.config }}:arm64-nightly
+          podman manifest create ghcr.io/${{ github.repository }}/bare-container-image/${{ matrix.config }}:nightly
+          podman manifest add ghcr.io/${{ github.repository }}/bare-container-image/${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-container-image/${{ matrix.config }}:amd64-nightly
+          podman manifest add ghcr.io/${{ github.repository }}/bare-container-image/${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-container-image/${{ matrix.config }}:arm64-nightly
+          podman push ghcr.io/${{ github.repository }}/bare-container-image/${{ matrix.config }}:nightly

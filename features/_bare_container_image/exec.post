@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo "Creating a distroless image"
+echo "Creating a bare container image image"
 
 # Remove packages
 garden-chroot rootfs bash -c "
