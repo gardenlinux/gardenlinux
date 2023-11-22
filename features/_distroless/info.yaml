@@ -1,6 +1,6 @@
 # This subfeature can only be used with
 # its parent feature: container
-description: "Distroless flavour for container"
+description: "bare container image flavour for container"
 type: flag
 features:
   depends:

@@ -30,7 +30,7 @@ if [ -z "$arch" ]; then
 	esac
 fi
 
-config="distroless/${1:-libc}"
+config="bare_container_images/${1:-libc}"
 
 base_cname="$(cat "$config/base")-$arch"
 target_cname="$(cat "$config/target")-$arch"
@@ -54,5 +54,5 @@ if [ -f "$config/dpkg_include" ]; then
 	args+=(--dpkg-include "$config/dpkg_include")
 fi
 
-mkdir -p .build/distroless
+mkdir -p .build/bare_container_images
 ./unbase_oci "${args[@]}" "$base_oci" "$target_oci" ".build/$config-$arch.oci"
