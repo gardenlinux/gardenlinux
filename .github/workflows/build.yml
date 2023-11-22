@@ -243,8 +243,8 @@ jobs:
           t="$(date '+%s')"
           find .build -exec touch -d "@$t" {} +
       - name: build
-        run: ./build_bare_container_image --arch "${{ matrix.arch }}" "${{ matrix.config }}"
+        run: ./build_bare_flavors --arch "${{ matrix.arch }}" "${{ matrix.config }}"
       - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # pin@v3
         with:
           name: "bare-${{ matrix.config }}-${{ matrix.arch }}"
-          path: ".build/bare_container_image/${{ matrix.config }}-${{ matrix.arch }}.oci"
+          path: ".build/bare_flavors/${{ matrix.config }}-${{ matrix.arch }}.oci"
