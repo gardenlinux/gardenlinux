@@ -208,7 +208,7 @@ jobs:
         with:
           name: "${{ env.cname }}"
           path: "${{ env.cname }}.tar.gz"
-  bare_container_image:
+  bare_flavors:
     needs: [ version, base ]
     runs-on: ubuntu-latest
     defaults:
