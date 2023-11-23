@@ -282,6 +282,8 @@ def main():
     upload_parser.add_argument('--release_id', required=True)
     upload_parser.add_argument('--file_path', required=True)
 
+    kernelurl_parser = subparsers.add_parser('kernelurls')
+    kernelurl_parser.add_argument('--version', required=True)
     args = parser.parse_args()
 
     if args.command == 'create':
@@ -291,6 +293,12 @@ def main():
     elif args.command == 'upload':
         # Implementation for 'upload' command
         pass
+    elif args.command == 'kernelurls':
+        # Implementation for 'upload' command
+        output =""
+        output += "## Kernel Package direct download links\n"
+        output += get_kernel_urls(args.version)
+        print(output)
     else:
         parser.print_help()
 
