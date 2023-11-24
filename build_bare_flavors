@@ -37,8 +37,8 @@ target_cname="$(cat "$config/target")-$arch"
 
 ./build "$base_cname" "$target_cname"
 
-base_oci=".build/$(cat ".build/$base_cname" | grep '\.oci$')"
-target_oci=".build/$(cat ".build/$target_cname" | grep '\.oci$')"
+base_oci=".build/$(grep '\.oci$' ".build/$base_cname")"
+target_oci=".build/$(grep '\.oci$' ".build/$target_cname")"
 
 args=(--print-tree "--$(cat "$config/mode")")
 
