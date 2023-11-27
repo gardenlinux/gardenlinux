@@ -4,7 +4,7 @@ on:
     inputs:
       version:
         type: string
-        default: today
+        default: now
 jobs:
   publish_container:
     name: publish gardenlinux container base image
@@ -30,21 +30,44 @@ jobs:
           name: ${{ env.cname_arm64 }}
       - name: publish gardenlinux container base image
         run: |
+          version=$(bin/garden-version "${{ inputs.version }}")
           podman login -u token -p ${{ github.token }} ghcr.io
           tar xzv < "${{ env.cname_amd64 }}.tar.gz"
           image="$(podman load < ${{ env.cname_amd64 }}.oci | awk '{ print $NF }')"
+
+          # Tagging for amd64 nightly
           podman tag "$image" ghcr.io/${{ github.repository }}:amd64-nightly
           podman push ghcr.io/${{ github.repository }}:amd64-nightly
+
+          # Tagging for amd64 with version
+          podman tag "$image" ghcr.io/${{ github.repository }}:amd64-${version}
+          podman push ghcr.io/${{ github.repository }}:amd64-${version}
+
           tar xzv < "${{ env.cname_arm64 }}.tar.gz"
           image="$(podman load < ${{ env.cname_arm64 }}.oci | awk '{ print $NF }')"
+
+          # Tagging for arm64 nightly
           podman tag "$image" ghcr.io/${{ github.repository }}:arm64-nightly
           podman push ghcr.io/${{ github.repository }}:arm64-nightly
+
+          # Tagging for arm64 with version
+          podman tag "$image" ghcr.io/${{ github.repository }}:arm64-${version}
+          podman push ghcr.io/${{ github.repository }}:arm64-${version}
+
+          # Creating and pushing manifest for nightly
           podman manifest create ghcr.io/${{ github.repository }}:nightly
           podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:amd64-nightly
           podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:arm64-nightly
           podman push ghcr.io/${{ github.repository }}:nightly
-  publish_distroless:
-    name: publish distroless container images
+
+          # Creating and pushing manifest for version tag
+          podman manifest create ghcr.io/${{ github.repository }}:${version}
+          podman manifest add ghcr.io/${{ github.repository }}:${version} ghcr.io/${{ github.repository }}:amd64-${version}
+          podman manifest add ghcr.io/${{ github.repository }}:${version} ghcr.io/${{ github.repository }}:arm64-${version}
+          podman push ghcr.io/${{ github.repository }}:${version}
+
+  publish_bare_flavors:
+    name: publish bare flavors
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -57,21 +80,46 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # pin@v3
         with:
-          name: distroless-${{ matrix.config }}-amd64
+          name: bare-${{ matrix.config }}-amd64
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # pin@v3
         with:
-          name: distroless-${{ matrix.config }}-arm64
+          name: bare-${{ matrix.config }}-arm64
       - run: ls -lah
-      - name: publish distroless container image
+      - name: publish bare container image
         run: |
+          version=$(bin/garden-version "${{ inputs.version }}")
           podman login -u token -p ${{ github.token }} ghcr.io
+
+          # Handling amd64 image
           image="$(podman load < ${{ matrix.config }}-amd64.oci | awk '{ print $NF }')"
-          podman tag "$image" ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:amd64-nightly
-          podman push ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:amd64-nightly
+
+          # Tagging and pushing amd64 with version
+          podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
+          podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
+
+          # Tagging and pushing amd64 with nightly
+          podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
+          podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
+
+          # Handling arm64 image
           image="$(podman load < ${{ matrix.config }}-arm64.oci | awk '{ print $NF }')"
-          podman tag "$image" ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:arm64-nightly
-          podman push ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:arm64-nightly
-          podman manifest create ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:nightly
-          podman manifest add ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:amd64-nightly
-          podman manifest add ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:arm64-nightly
-          podman push ghcr.io/${{ github.repository }}/distroless/${{ matrix.config }}:nightly
+
+          # Tagging and pushing arm64 with version
+          podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
+          podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
+
+          # Tagging and pushing arm64 with nightly
+          podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
+          podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
+
+          # Creating and pushing manifest for version tag
+          podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
+          podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
+          podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
+          podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
+
+          # Creating and pushing manifest for nightly tag
+          podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
+          podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
+          podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
+          podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly

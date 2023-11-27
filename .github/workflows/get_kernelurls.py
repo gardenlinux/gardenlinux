@@ -10,12 +10,6 @@ import json
 import yaml
 import itertools
 
-def find_latest_linux_version(packages):
-    latest_version = None
-
-
-    return latest_version
-
 def get_pkg_attr(package_name, attribute_key, packages_per_repo):
   
     current_package = {}

@@ -7,9 +7,6 @@ targets:
       - _secureboot,_readonly,_persistence
       - githubActionRunner
   - name: azure
-  - name: container
-    modifiers:
-      - _distroless
   - name: firecracker
   - name: gcp
   - name: kvm

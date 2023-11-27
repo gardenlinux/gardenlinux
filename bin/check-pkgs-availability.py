@@ -53,7 +53,7 @@ def get_unavailable_packages(available_packages, required_packages):
 
 
 def check_packages(arch, dist) -> list():
-    available_packages = get_available_pkgs_from_repo(f"http://repo.gardenlinux.io/gardenlinux/dists/{dist}/main/binary-{arch}/Packages")
+    available_packages = get_available_pkgs_from_repo(f"https://repo.gardenlinux.io/gardenlinux/dists/{dist}/main/binary-{arch}/Packages")
     required_packages = read_pkg_files(arch)
     missing_packages = get_unavailable_packages(available_packages, required_packages)
     return missing_packages
