@@ -2,62 +2,56 @@
 # -*- coding: utf-8 -*-
 
 import os
-import sys
 import re
 import requests
 import lzma
 import gzip
-import argparse
-import platform
 import json
 import yaml
 import itertools
 
-def main(args=None):
-    parser = argparse.ArgumentParser(prog='gl-kernelurls', description='Output URLs to the kernel headers and its dependencies.')
-    parser.add_argument('-g', '--gardenlinux', default='today',
-                        help='Get Linux kernel package urls for a specific Gardenlinux version.')
-    parser.add_argument('-o', '--output', choices=['yaml', 'json'], default='yaml', help='Select output format.')
+def get_pkg_attr(package_name, attribute_key, packages_per_repo):
+  
+    current_package = {}
+    found_package = False
+    for packages in packages_per_repo.values():
+       for line in packages.split('\n'):
+            # Check for new package section or end of file
+            if line.startswith("Package: ") or line.strip() == "":
+                if found_package:
+                    # Return the attribute if it exists
+                    return current_package.get(attribute_key)
+                current_package = {}
+                found_package = False
 
-    repositories = [f'https://repo.gardenlinux.io/gardenlinux {args.gardenlinux} main']
+            key_value = line.split(": ", 1)
+            if len(key_value) == 2:
+                key, value = key_value
+                current_package[key.strip()] = value.strip()
 
-    if not args:
-        args = parser.parse_args()
+            # Check if current section is the desired package
+            if current_package.get("Package") == package_name:
+                found_package = True
+
+
+def get_kernel_urls(gardenlinux_version):
+    if not gardenlinux_version:
+        print("You need to specify gardenlinux_version")
+    repositories = [f'http://repo.gardenlinux.io/gardenlinux {gardenlinux_version} main']
 
     architecture = ["arm64", "amd64"]
     versions = []
     packages = get_package_list(repositories, architecture)
 
     # find all Linux kernel versions available for the specified Gardenlinux version
-    if args.gardenlinux:
-        for package_list in packages.values():
-            for package in package_list.split('\n'):
-                if 'linux-headers' in package:
-                    ex_version = ''
-                    ex_version = re.match(".*/linux-headers-(\d.*-gardenlinux).*", package)
-                    if ex_version:
-                        versions.append(ex_version.group(1))
-        versions = list(dict.fromkeys(versions))
 
-    package_urls = check_urls(versions, get_package_urls(packages, 'linux-headers'), architecture)
-    return output_urls(package_urls, args.output)
-
-def get_repositories():
-    '''Extract repositories url from /etc/apt/source.list and /etc/apt/source.list.d/*.
-    '''
-    repository_files = ['/etc/apt/sources.list']
-    for file in os.listdir('/etc/apt/sources.list.d'):
-        repository_files.append(f'/etc/apt/sources.list.d/{file}')
-
-    repositories = []
-    for repository_file in repository_files:
-        with open(repository_file, 'r') as file:
-            for line in file:
-                if line.startswith('deb '):
-                    repo = re.match(".*(http.*|ftp.*|file.*)", line).group(1)
-                    repositories.append(repo)
-
-    return repositories
+    # We want to only list the packages for the specific kernel used for a given release
+    # GL uses always the latest available kernel in the given repo, even if older kernel versions would be available.
+    # Ideally we would parse the version of the package linux-headers-${arch}, which specifies the actual version.
+    # Here, it is safe enough for the release notes to take the highest version available.
+    latest_version = get_pkg_attr("linux-headers-amd64", "Version", packages)
+    package_urls = check_urls([latest_version], get_package_urls(packages, 'linux-headers'), architecture)
+    return output_urls(package_urls)
 
 def get_package_list(repositories, architecture):
     '''Get Packages lists from repository and return it as dictionary.
@@ -102,7 +96,6 @@ def get_package_urls(package_list, package_name, resolve_depends=True):
 
     return header_packages
 
-
 def check_urls(linux_versions, header_package_urls, architecture):
     '''Pick the package urls that match the Linux image versions.
     '''
@@ -129,16 +122,11 @@ def check_urls(linux_versions, header_package_urls, architecture):
 
     return result
 
-def output_urls(package_urls, output):
-    '''Output the urls in a usable format.
-    '''
-    if output == 'json':
-        return json.dumps(package_urls)
-    elif output == 'yaml':
-        yaml_output = yaml.dump(package_urls)
-        return yaml_output   
-    else:
-        print('Invalid output format, choose `json` or `yaml`.')
+def output_urls(package_urls):
 
-if __name__ == "__main__":
-    main()
+    yaml_output = "```yaml\n"
+    yaml_output += ""
+    yaml_output += yaml.dump(package_urls)
+    yaml_output += "```\n"
+    yaml_output += ""
+    return yaml_output   

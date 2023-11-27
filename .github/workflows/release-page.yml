@@ -20,18 +20,21 @@ jobs:
     environment: oidc_aws_s3_upload
     permissions:
       id-token: write
-      contents: read
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - name: install dependencies for generate_release_note.py script
         run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
       - name: create GitHub release
-        run: .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} create "${{ inputs.type == 'beta' && 'beta_' || '' }}${{ inputs.version }}" "${{ inputs.commit }}" "${{ inputs.version }}" > .github_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}" | cut -c -8)"  
       - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # pin@v3
         with:
           name: release
-          path: .github_release
+          path: .github_release_id
   upload_to_release:
     environment: oidc_aws_s3_upload
     needs: create_release
@@ -63,12 +66,12 @@ jobs:
       - name: upload to release
         run: |
           commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
-          release="$(cat .github_release)"
+          release="$(cat .github_release_id)"
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
           echo "$release $prefix.tar.xz"
           ls -lah "$prefix.tar.xz"
           echo "$prefix.tar.xz" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
-  upload_integration_tests_logs_to_release:
+  upload_integration_test_logs_to_release:
     environment: oidc_aws_s3_upload
     needs: create_release
     permissions:
@@ -99,12 +102,12 @@ jobs:
         run: |
           commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
-          aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/$prefix/$prefix.tests-log" ./
+          aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/$prefix/$prefix.test-log" ./
       - name: upload to release
         run: |
           commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
-          release="$(cat .github_release)"
+          release="$(cat .github_release_id)"
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
-          echo "$release $prefix.tests-log"
-          ls -lah "$prefix.tests-log"
-          echo "$prefix.tests-log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          echo "$release $prefix.test-log"
+          ls -lah "$prefix.test-log"
+          echo "$prefix.test-log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
