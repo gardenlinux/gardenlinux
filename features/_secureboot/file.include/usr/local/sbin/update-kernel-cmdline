@@ -10,5 +10,5 @@ for i in "${configDir}"/*-*.cfg; do
 	source $i
 done
 
-echo "root=${DEVICE} ${CMDLINE_LINUX}" > /etc/kernel/cmdline.new
+echo "root=gpt-auto ${CMDLINE_LINUX}" > /etc/kernel/cmdline.new
 mv /etc/kernel/cmdline.new /etc/kernel/cmdline
