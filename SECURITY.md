@@ -17,6 +17,7 @@ following volunteers:
 * Andre Russ, (**[@gehoern](https://github.com/gehoern)**)
 * Vincent Riesop (**[@vincinator](https://github.com/vincinator/)**)
 * Nikolas Kraetzschmar (**[@nkraetzschmar](https://github.com/nkraetzschmar/)**)
+* Florian Wilhelm (**[@fwilhe](https://github.com/fwilhe/)**)
 * Frederik Thormaehlen, (**[@ThormaehlenFred](https://github.com/ThormaehlenFred)**)
 * Dirk Marwinski, (**[@marwinski](https://github.com/marwinski)**)
 * Christian Cwienk, (**[@ccwienk](https://github.com/ccwienk)**)
