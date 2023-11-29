@@ -16,8 +16,6 @@
 
 </website-main>
 
-## Features Overview
-
 Garden Linux is a versatile and secure Debian-based Linux distribution, offering:
 
 - An intuitive and repeatable build system.
