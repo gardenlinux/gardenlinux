@@ -44,3 +44,7 @@ repo-key:
 
 checksums:
 - 'checksums.sha256'
+
+packages:
+- 'features/**/pkg.*'
+
