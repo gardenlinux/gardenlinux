@@ -1,0 +1,46 @@
+# GitHub Actions
+github-actions:
+- '.github/workflows/**'
+
+# Non workflow related changes
+github-settings:
+- any: ['.github/**']
+  all: ['!.github/workflows/**']
+
+test-env:
+- any: ['container/integration-test/*', 'tests/**', 'test']
+
+test:
+- 'features/*/test/**'
+
+build-env:
+- 'build'
+- 'get_repo'
+- 'get_timestamp'
+- 'get_version'
+- 'get_commit'
+- 'bin/**'
+
+docs:
+- '*.md'
+- 'docs/**'
+- 'CODEOWNERS'
+
+features:
+- 'features/**'
+
+tools:
+- 'hack/**'
+
+logo:
+- 'logo/*'
+
+certificates:
+- 'cert/**'
+
+# Explicit label to show changes on gardenlinux public repo key
+repo-key:
+- 'gardenlinux.asc'
+
+checksums:
+- 'checksums.sha256'
