@@ -49,3 +49,7 @@ checksums:
 packages:
 - 'features/**/pkg.*'
 
+
+bare-container:
+- 'bare_flavors/**'
+- 'unbase_oci'
