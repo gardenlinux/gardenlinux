@@ -25,6 +25,7 @@ docs:
 - '*.md'
 - 'docs/**'
 - 'CODEOWNERS'
+- 'examples/**'
 
 features:
 - 'features/**'
