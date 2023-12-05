@@ -21,6 +21,8 @@ parser.add_argument('-t', '--timeout', metavar='timeout', required=False, dest='
                     help='Time to wait for an operation to finish in seconds. Defaults to 300 seconds')
 parser.add_argument('-a', '--auth', metavar='service_account.json', required=False, dest='auth_path', default='',
                     help='Path to JSON file that holds the service account login credentials. Defaults to Google application default credentials (ADC).')
+parser.add_argument('--force-all', action='store_true', required=False, dest='force_all',
+                    help='force delete all resources')
 args = parser.parse_args()
 
 if os.path.exists(args.auth_path):
@@ -171,13 +173,15 @@ def main():
             print(f"\t{key}: {value}")
         print("")
 
-    pick = input("Choose the test resources to delete (digit, any other key quits): ")
-    try:
+    if not args.force_all:
+        pick = input("Choose the test resources to delete (digit, any other key quits): ")
         pick = int(pick)
-
         if not (pick >= 0 and pick < len(inventory_key_list)):
             return os.EX_DATAERR
+    else:
+        pick = 0
 
+    try:
         test_environment = inventory_key_list[pick]
 
         test_inventory_key_list = list(inventory[test_environment])
@@ -187,17 +191,20 @@ def main():
             for i in range(len(test_inventory_key_list)):
                 print(f"{i}: {test_inventory_key_list[i]}: {inventory[test_environment][test_inventory_key_list[i]]}")
             print("")
-            delete_pick = input("Which resource should be deleted (digit), type 'A' for all, any other key for back: ")
-            if (delete_pick == 'A'):
-                pass
-            elif delete_pick.strip().isdigit():
-                delete_pick = int(delete_pick)
-                if (delete_pick >= 0 and delete_pick < len(test_inventory_key_list)):
+            if not args.force_all:
+                delete_pick = input("Which resource should be deleted (digit), type 'A' for all, any other key for back: ")
+                if (delete_pick == 'A'):
                     pass
+                elif delete_pick.strip().isdigit():
+                    delete_pick = int(delete_pick)
+                    if (delete_pick >= 0 and delete_pick < len(test_inventory_key_list)):
+                        pass
+                    else:
+                        break
                 else:
                     break
             else:
-                break
+                delete_pick = 'A'
 
             # check if resource is deletable, delete resource if possible
             for i in range(len(test_inventory_key_list)):
