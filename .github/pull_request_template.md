@@ -2,5 +2,3 @@
 <!-- 
 Fixes #
 -->
-
-**Special notes for your reviewer**:
