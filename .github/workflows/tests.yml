@@ -59,8 +59,6 @@ jobs:
         modifier: [ "${{ inputs.default_modifier }}" ]
         exclude:
           - arch: arm64
-            target: gcp
-          - arch: arm64
             target: azure
           - arch: arm64
             target: ali

@@ -307,6 +307,12 @@ class GCP:
         return self._gcp_create_firewall_rules(rules)
 
 
+    def _gcp_delete_firewall_rules(self, firewall_rule_name):
+        self.logger.info(f"Deleting firewall rule {firewall_rule_name}...")
+        operation = self._compute_firewalls.delete(project=self.project, firewall=firewall_rule_name)
+        self._gcp_wait_for_operation(operation)
+
+
     def _ensure_bucket(self, name):
         bucket = self._storage.bucket(bucket_name=name)
         if bucket.exists():
