@@ -52,7 +52,7 @@ def setup_and_run_argparser():
     parser.add_argument(
         "--region",
         type=str,
-        help="only delete the AMI in the given region when using config profile",
+        help="only delete the image in the given region when using config profile",
     )
     parser.add_argument(
         "--no-dry-run",
@@ -132,8 +132,8 @@ def get_images_by_name(glance_proxy, name: str, visibility: str = "public"):
     return images
 
 
-def get_image_by_id(glance_proxy, id: str, visibility: str = "public"):
-    return [glance_proxy.find_image(name_or_id=id, visibility=visibility)]
+def get_image_by_id(glance_proxy, id: str):
+    return [glance_proxy.find_image(name_or_id=id)]
 
 
 def main():
@@ -156,14 +156,13 @@ def main():
         )
         glance = os_connection.image
 
-        images = None
         if args.image_name:
             images = get_images_by_name(
                 glance, name=args.image_id, visibility=args.visibility
             )
         else:
             images = get_image_by_id(
-                glance, id=args.image_id, visibility=args.visibility
+                glance, id=args.image_id
             )
 
         for i in images:
