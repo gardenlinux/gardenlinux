@@ -32,7 +32,7 @@ RUN echo "deb http://deb.debian.org/debian testing main contrib non-free" > /etc
           inetutils-ping \
           wget \
           iproute2 \
-          libguestfs-tools \
+          guestfish \
           qemu-system-x86 \
           qemu-system-arm \
           qemu-efi-aarch64 \
