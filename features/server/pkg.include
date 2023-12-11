@@ -28,5 +28,4 @@ systemd-cron
 systemd-timesyncd
 tcpdump
 traceroute
-vim-tiny
 wget
