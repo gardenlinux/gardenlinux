@@ -3,7 +3,7 @@
 set -euo pipefail
 shopt -s nullglob
 
-container_image=ghcr.io/gardenlinux/builder:002a2ff4d1dc6a39d04543b6a6e92a1465d9e226
+container_image=localhost/builder
 container_engine=podman
 target_dir=.build
 
@@ -75,7 +75,14 @@ done
 
 if [ "$container_image" = localhost/builder ]; then
 	dir="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")"
-	"$container_engine" build -t "$container_image" "$dir"
+	# Build from 'builder.dockerfile' if that exists, otherwise the default file name will be 'Dockerfile' or 'Containerfile'.
+	# It is recommended to call the file 'builder.dockerfile' to make it's intention clear.
+	# That file might only contain a single line 'FROM ghcr.io/gardenlinux/builder:...' which can be updated via dependabot.
+	if [[ -f builder.dockerfile ]]; then
+		"$container_engine" build -t "$container_image" -f builder.dockerfile "$dir"
+	else
+		"$container_engine" build -t "$container_image" "$dir"
+	fi
 fi
 
 repo="$(./get_repo)"
