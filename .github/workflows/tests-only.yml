@@ -30,6 +30,7 @@ jobs:
       gcp_region: ${{ secrets.GCP_REGION }}
       gcp_zone: ${{ secrets.GCP_ZONE }}
       AZURE_CONFIG_DIR: /tmp/azure_config_dir
+      TARGET_ARCHITECTURE: ${{ matrix.arch }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -44,8 +45,6 @@ jobs:
         target: [ gcp, aws, azure ]
         modifier: [ "${{ inputs.default_modifier }}" ]
         exclude:
-          - arch: arm64
-            target: gcp
           - arch: arm64
             target: azure
     steps:

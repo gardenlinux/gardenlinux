@@ -43,6 +43,7 @@ jobs:
       aws_region: ${{ secrets.aws_region }}
       azure_subscription_id: ${{ secrets.az_subscription_id }}
       AZURE_CONFIG_DIR: /tmp/azure_config_dir
+      TARGET_ARCHITECTURE: ${{ matrix.arch }}
     runs-on: ubuntu-latest
     defaults:
       run:

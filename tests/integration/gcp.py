@@ -55,12 +55,14 @@ class GCP:
     def set_config_defaults(cls, cfg: dict, test_name: str, credentials):
         if 'project' not in cfg:
             cfg['project'] = credentials.project_id
+        if 'architecture' not in cfg:
+            cfg['architecture'] = 'amd64'
         if 'image_project' not in cfg:
             cfg['image_project'] = cfg['project']
         if 'image_region' not in cfg:
             cfg['image_region'] = "eu-central-1"
         if 'image_name' not in cfg:
-            cfg['image_name'] = f"img-{test_name}"
+            cfg['image_name'] = f"img-{test_name}-{cfg['architecture']}"
         if 'bucket' not in cfg:
             cfg['bucket'] = f"gl-upload-{test_name}"
         if 'keep_running' not in cfg:

@@ -37,6 +37,12 @@ if [[ ! ${gcp_zone:-} ]]; then
     exit 1
 fi
 
+if [ "$TARGET_ARCHITECTURE" == "arm64" ]; then
+    machine_type="t2a-standard-2"
+else
+    machine_type="n1-standard-2"
+fi
+
 # Note: file is located in github runner within checked out repo.
 #        later, we mount the repo folder to /gardenlinux inside the container.
 #        google-githun-actions/auth cleans up credential file. We just take the name,
@@ -54,6 +60,8 @@ gcp:
     region: ${gcp_region}
     zone: ${gcp_zone}
     image: file:///artifacts/$(basename "$image_file")
+    machine_type: ${machine_type}
+    architecture: ${TARGET_ARCHITECTURE}
     ssh:
         user: gardenlinux
     features:
