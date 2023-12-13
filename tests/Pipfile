@@ -23,7 +23,7 @@ aliyun-python-sdk-ecs = "*"
 # OpenStack client packages
 python-openstackclient = "*"
 # Azure SDK/CLI packages
-azure-cli = "*"
+azure-cli = ">=2.44.0"   # https://github.com/Azure/azure-cli/issues/23015
 azure-core = "*"
 azure-identity = "*"
 azure-mgmt-subscription = "*"

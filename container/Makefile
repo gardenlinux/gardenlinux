@@ -21,6 +21,7 @@ build: needslim
 build-base-test: needslim
 	cp -p ../gardenlinux.asc base-test/gardenlinux.asc
 	cp ../tests/Pipfile base-test/
+	cp ../tests/Pipfile.lock base-test/
 	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/base-test:$(VERSION) base-test
 	rm base-test/gardenlinux.asc
 	rm base-test/Pipfile

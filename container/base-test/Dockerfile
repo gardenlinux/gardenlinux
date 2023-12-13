@@ -49,7 +49,7 @@ ENV VIRTUAL_ENV="$VIRTUAL_ENV_PARENT/.venv"
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-COPY Pipfile "$VIRTUAL_ENV_PARENT"
+COPY Pipfile Pipfile.lock "$VIRTUAL_ENV_PARENT/"
 # Do not use --system, we want the pip from the virtual env
 RUN cd "$VIRTUAL_ENV_PARENT" && pipenv install --dev 
 WORKDIR /gardenlinux/tests
