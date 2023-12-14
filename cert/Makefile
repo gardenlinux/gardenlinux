@@ -14,13 +14,14 @@ export CERT_C CERT_L CERT_O CERT_OU CERT_E GPG_KEY_TYPE GPG_KEY_LENGTH GPG_NAME 
 ifdef USE_KMS
 export AWS_DEFAULT_REGION AWS_REGION AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
 GENCERT_OPTS=--aws-kms-key-spec RSA_4096
+GENGPG_OPTS=--aws-kms-key-spec RSA_4096
 endif
 
 .PHONY: default clean distclean
 .PRECIOUS: %.crt
 
 ifndef CA
-default: $(PREFIX)kernel-sign.crt $(PREFIX)secureboot.pk.auth $(PREFIX)secureboot.null.pk.auth $(PREFIX)secureboot.kek.auth $(PREFIX)secureboot.db.auth $(PREFIX)secureboot.aws-efivars $(PREFIX)sign.pub
+default: $(PREFIX)kernel-sign.crt $(PREFIX)secureboot.pk.auth $(PREFIX)secureboot.null.pk.auth $(PREFIX)secureboot.kek.auth $(PREFIX)secureboot.db.auth $(PREFIX)secureboot.aws-efivars $(PREFIX)repo-sign.pub
 
 $(PREFIX)intermediate-ca.crt: $(PREFIX)root-ca.crt
 $(PREFIX)kernel-sign.crt: $(PREFIX)intermediate-ca.crt
@@ -58,7 +59,7 @@ GUID.txt:
 	@uefivars.py -i none -o aws -O '$@' -P '$*.pk.esl' -K '$*.kek.esl' -b '$*.db.esl'
 
 %.pub: gpg.conf
-	@./gengpg --conf '$<' '$@'
+	@./gengpg --conf '$<' $(GENGPG_OPTS) '$@'
 
 clean:
 	@echo "Removing *.pub *.crt *.csr *.key *.arn *.chain GUID.txt *.esl *.auth *.aws-efivars but nothing starting with gardenlinux-"

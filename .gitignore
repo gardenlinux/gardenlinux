@@ -24,6 +24,7 @@
 !/cert/gardenlinux-*.chain
 !/cert/gardenlinux-*.auth
 !/cert/gardenlinux-*.aws-efivars
+!/cert/gardenlinux-repo-sign.pub
 !/cert/gardenlinux.kernel.sign.crt
 !/cert/gardenlinux.sign.pub
 /features/metal/file.include/lib/firmware/
