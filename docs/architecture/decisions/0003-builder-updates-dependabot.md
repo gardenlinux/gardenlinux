@@ -12,7 +12,7 @@ The [Garden Linux Builder](https://github.com/gardenlinux/builder) is a containe
 It is used by the upstream Garden Linux project, but it is and can be used by any project needing custom Linux images.
 
 All projects that use the builder are encouraged to pin the builder to a specific build [as shown here in the Garden Linux repository](https://github.com/gardenlinux/gardenlinux/blob/f4a389e88feb15e78b5529831d3cf3cd8978fc20/build#L6).
-Pinning the builder to one specific version as opposed to using a `latest` tag is desirable so image builds are stable and predictable, but the current approach has the downside that manual effort is needed to update the used builder from time to time.
+Pinning the builder to one specific version as opposed to using a `latest` tag is desirable so image builds are stable and predictable. This pinning approach has the downside that manual effort is needed to update the used builder from time to time.
 
 Also, updating the builder only means changing one sha with another sha which does not satisfy the wish to understand what has changed in the builder during those two versions.
 
