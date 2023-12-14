@@ -28,7 +28,7 @@ Dependabot will be able to pick that up.
 
 ## Decision
 
-The Garden Linux builder supports using dependabot and we recommend users to make use of that.
+The Garden Linux builder versions can be bumped with dependabot and we recommend users to make use of that.
 
 We implement the needed changes to support this, like:
 
