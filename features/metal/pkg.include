@@ -5,6 +5,7 @@ dosfstools
 efibootmgr
 efitools
 ipmitool
+isc-dhcp-client
 pciutils
 usbutils
 numactl
