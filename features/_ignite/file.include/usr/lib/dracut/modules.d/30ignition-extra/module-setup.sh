@@ -1,7 +1,7 @@
 #!/bin/bash
 
 depends() {
-    echo "ignition"
+    echo "systemd-networkd ignition"
 }
 
 install() {

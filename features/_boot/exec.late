@@ -6,8 +6,7 @@ update-kernel-cmdline
 
 mkdir -p /efi/Default
 
-sed -i "s/    echo network/    echo systemd-networkd network/" /usr/lib/dracut/modules.d/45url-lib/module-setup.sh
-
+#sed -i "s/    echo network/    echo systemd-networkd network/" /usr/lib/dracut/modules.d/45url-lib/module-setup.sh
 
 for kernel in /boot/vmlinuz-*; do
 	unshare --mount bash -c 'mount -t tmpfs none /sys && mount --bind /usr/bin/false /usr/bin/systemd-detect-virt && "$@"' \
