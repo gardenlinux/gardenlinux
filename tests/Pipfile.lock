@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "cf57ff7c68afc5926e42c8d6efa88efb9e7fb6756ccc51cc397e2a50c8e338e7"
+            "sha256": "8fd4f4897170e45f31c9fefe471cf2fe65a8e2790afc8ae8fb2520e8a2d82e7f"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -826,20 +826,20 @@
         },
         "boto3": {
             "hashes": [
-                "sha256:1eb4c548118b5fc5e018dee956fd33e6fb249cd1f2def85f1bba816aef4d9f3e",
-                "sha256:96e9890ebe7cd823b5f4976dd676e112c000c6528c28e20a2f274590589dd18b"
+                "sha256:970fd9f9f522eb48f3cd5574e927b369279ebf5bcf0f2fae5ed9cc6306e58558",
+                "sha256:aad3f305fe3cd4f2bba545c9580cd460c366af56a8aabb6094528dd32317f8d2"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.7'",
-            "version": "==1.29.7"
+            "markers": "python_version >= '3.8'",
+            "version": "==1.34.2"
         },
         "botocore": {
             "hashes": [
-                "sha256:58b33d02cafa23461c8a9d211b30e8cded992380a84de409379fd02811fa3e11",
-                "sha256:c6795c731b04c8e3635588c44cfd1a4462fc5987859195522c96812cf3eceff9"
+                "sha256:655b1ea2a5d7b989a0eb6006c16137f785bc7334f31378115668c4be5d4b00eb",
+                "sha256:8a9f4ad438ba814b9b7a22b24de3004f8aa232e7ae86e0087aea4d7792dc3a2a"
             ],
-            "markers": "python_version >= '3.7'",
-            "version": "==1.32.7"
+            "markers": "python_version >= '3.8'",
+            "version": "==1.34.2"
         },
         "cachetools": {
             "hashes": [
@@ -2074,11 +2074,11 @@
         },
         "s3transfer": {
             "hashes": [
-                "sha256:baa479dc2e63e5c2ed51611b4d46cdf0295e2070d8d0b86b22f335ee5b954986",
-                "sha256:e8d6bd52ffd99841e3a57b34370a54841f12d3aab072af862cdcc50955288002"
+                "sha256:01d4d2c35a016db8cb14f9a4d5e84c1f8c96e7ffc211422555eed45c11fa7eb1",
+                "sha256:9e1b186ec8bb5907a1e82b51237091889a9973a2bb799a924bcd9f301ff79d3d"
             ],
-            "markers": "python_version >= '3.7'",
-            "version": "==0.8.0"
+            "markers": "python_version >= '3.8'",
+            "version": "==0.9.0"
         },
         "scp": {
             "hashes": [
