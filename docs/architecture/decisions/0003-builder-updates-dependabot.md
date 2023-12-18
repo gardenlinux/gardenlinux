@@ -42,7 +42,7 @@ We implement the needed changes to support this, like:
 - Tagged releases on GitHub for the builder will be published
   - The builder implements a versioning schema that is orianted at semantic versioning with a major and a minor version
     - The minor version will increase on updates that don't break compatibility between the `build` script and the `ghcr.io/gardenlinux/builder` container image
-    - The major versin will increase on updates taht do break compatibility between the `build` script and the `ghcr.io/gardenlinux/builder` container image
+    - The major versin will increase on updates that do break compatibility between the `build` script and the `ghcr.io/gardenlinux/builder` container image
 - The `build` script will look for a `builder.dockerfile` additionally to `Dockerfile`
 - The [`gardenlinux`](https://github.com/gardenlinux/gardenlinux) and [`builder_example`](https://github.com/gardenlinux/builder_example) implement our recommended solution of keeping the builder updated via dependabot
 - We recommend new users of the builder to bootstrap their project based on the [`builder_example` repo](https://github.com/gardenlinux/builder_example)
