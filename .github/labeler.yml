@@ -74,10 +74,6 @@ firecracker-platform:
 - 'features/firecracker/**'
 - 'tests/integration/firecracker.py'
 
-firecracker-platform:
-- 'features/firecracker/**'
-- 'tests/integration/firecracker.py'
-
 kvm-platform:
 - 'features/kvm/**'
 - 'tests/integration/kvm.py'
