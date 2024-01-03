@@ -1,82 +1,118 @@
 # GitHub Actions
 github-actions:
-- '.github/workflows/**'
+- changed-files:
+  - any-glob-to-any-file: '.github/workflows/**'
 
 # Non workflow related changes
 github-settings:
-- any: ['.github/**']
-  all: ['!.github/workflows/**']
+- all:
+  - changed-files:
+    - any-glob-to-any-file: '.github/**'
+    - all-globs-to-all-files: '!.github/workflows/**'
 
 test-env:
-- any: ['container/integration-test/*', 'tests/**', 'test']
+- changed-files:
+  - any-glob-to-any-file:
+    - 'container/integration-test/*'
+    - 'tests/**'
+    - 'test'
 
 test:
-- 'features/*/test/**'
+- changed-files:
+  - any-glob-to-any-file: 
+    - 'features/*/test/**'
 
 build-env:
-- 'build'
-- 'get_repo'
-- 'get_timestamp'
-- 'get_version'
-- 'get_commit'
-- 'bin/**'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'build'
+    - 'get_repo'
+    - 'get_timestamp'
+    - 'get_version'
+    - 'get_commit'
+    - 'bin/**'
 
 docs:
-- '*.md'
-- 'docs/**'
-- 'CODEOWNERS'
-- 'examples/**'
+- changed-files:
+  - any-glob-to-any-file:
+    - '*.md'
+    - 'docs/**'
+    - 'CODEOWNERS'
+    - 'examples/**'
 
 features:
-- 'features/**'
+- changed-files:
+  - any-glob-to-any-file: 'features/**'
 
 tools:
-- 'hack/**'
-- 'tools/**'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'hack/**'
+    - 'tools/**'
 
 logo:
-- 'logo/*'
+- changed-files:
+  - any-glob-to-any-file: 'logo/*'
 
 certificates:
-- 'cert/**'
+- changed-files:
+  - any-glob-to-any-file: 'cert/**'
 
 # Explicit label to show changes on gardenlinux public repo key
 repo-key:
-- 'gardenlinux.asc'
+- changed-files:
+  - any-glob-to-any-file: 'gardenlinux.asc'
 
 checksums:
-- 'checksums.sha256'
+- changed-files:
+  - any-glob-to-any-file: 'checksums.sha256'
 
 packages:
-- 'features/**/pkg.*'
+- changed-files:
+  - any-glob-to-any-file: 'features/**/pkg.*'
 
 bare-container:
-- 'bare_flavors/**'
-- 'unbase_oci'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'bare_flavors/**'
+    - 'unbase_oci'
 
 gcp-platform:
-- 'features/gcp/**'
-- 'tests/integration/gcp.py'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'features/gcp/**'
+    - 'tests/integration/gcp.py'
 
 azure-platform:
-- 'features/azure/**'
-- 'tests/integration/azure.py'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'features/azure/**'
+    - 'tests/integration/azure.py'
 
 aws-platform:
-- 'features/aws/**'
-- 'tests/integration/aws.py'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'features/aws/**'
+    - 'tests/integration/aws.py'
 
 ali-platform:
-- 'features/ali/**'
-- 'tests/integration/ali.py'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'features/ali/**'
+    - 'tests/integration/ali.py'
 
 firecracker-platform:
-- 'features/firecracker/**'
-- 'tests/integration/firecracker.py'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'features/firecracker/**'
+    - 'tests/integration/firecracker.py'
 
 kvm-platform:
-- 'features/kvm/**'
-- 'tests/integration/kvm.py'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'features/kvm/**'
+    - 'tests/integration/kvm.py'
 
 metal-platform:
-- 'features/metal/**'
+- changed-files:
+  - any-glob-to-any-file: 'features/metal/**'
