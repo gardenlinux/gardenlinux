@@ -13,7 +13,9 @@ github-settings:
 test-env:
 - changed-files:
   - any-glob-to-any-file:
-    ['container/integration-test/*', 'tests/**', 'test']
+    - 'container/integration-test/*'
+    - 'tests/**'
+    - 'test'
 
 test:
 - changed-files:
