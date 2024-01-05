@@ -16,7 +16,7 @@ limactl start gl-dev
 ```
 
 - Connect to host 'lima-gl-dev' in VS Code via the SSH Remote plugin
-- In the VS Code window connected ot the host 'lima-gl-dev', open the `~/gardenlinux` folder which contains a clone of the Garden Linux git repo
+- In the VS Code window connected to the host 'lima-gl-dev', open the `~/gardenlinux` folder which contains a clone of the Garden Linux git repo
 - In a terminal window inside this VS Code window, you can do additional configuration such as
     - Perform the required git configuration to be able to commit and push code
         - Configure your name and email
