@@ -1670,10 +1670,10 @@
         },
         "oss2": {
             "hashes": [
-                "sha256:4e61f546a17cc5c4a2efc0baee83e4b12a64fba87f13ff51166d269ab4629bea"
+                "sha256:be1e7a871a8cc267726367333017d78333ee8fae88c727ad61396f59c1c0e4d0"
             ],
             "index": "pypi",
-            "version": "==2.18.3"
+            "version": "==2.18.4"
         },
         "packaging": {
             "hashes": [
