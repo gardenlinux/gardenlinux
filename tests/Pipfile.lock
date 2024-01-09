@@ -1171,12 +1171,12 @@
         },
         "google-auth": {
             "hashes": [
-                "sha256:11f56129d30902cc9f4b93ed0c84ef7323f7328e6520eab1716740f3171afe35",
-                "sha256:5d8bf0a5143baa45368c3d08bf157babda468db1c5dd987cd2c824b788524196"
+                "sha256:2c8b55e3e564f298122a02ab7b97458ccfcc5617840beb5d0ac757ada92c9780",
+                "sha256:54385acca5c0fbdda510cd8585ba6f3fcb06eeecf8a6ecca39d3ee148b092590"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==2.26.0"
+            "version": "==2.26.1"
         },
         "google-cloud-compute": {
             "hashes": [
