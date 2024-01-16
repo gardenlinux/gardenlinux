@@ -112,7 +112,7 @@ jobs:
     - if: ${{ matrix.target == 'azure' }}
       id: 'auth_azure'
       name: 'Authenticate to Azure'
-      uses: azure/login@de95379fe4dadc2defb305917eaa7e5dde727294 # pin@v1
+      uses: azure/login@e15b166166a8746d1a47596803bd8c1b595455cf # pin@v1
       with:
         client-id: ${{ secrets.az_client_id }}
         tenant-id: ${{ secrets.az_tenant_id }}
