@@ -1,0 +1,6 @@
+# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238256
+-a always,exit -F path=/usr/bin/ssh-agent -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged-ssh
+
+# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238257
+-a always,exit -F path=/usr/lib/openssh/ssh-keysign -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged-ssh
+
