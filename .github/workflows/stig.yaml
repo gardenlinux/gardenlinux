@@ -10,12 +10,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ kvm, aws, azure, ali, gcp, metal ]
     steps:
       - uses: actions/checkout@v4
       - name: Build the image
-        run: ./build kvm-stig
+        run: ./build ${{ matrix.platform}}-stig
       - name: Upload build logs
         uses: actions/upload-artifact@v4
         with:
-          name: STIG-logs
+          name: STIG-${{ matrix.platform}}-logs
           path: .build/*log
