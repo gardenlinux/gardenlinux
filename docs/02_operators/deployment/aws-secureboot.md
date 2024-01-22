@@ -17,16 +17,10 @@ This article describes all steps needed to spawn a secure enabled Garden Linux i
 
 ## Create image
 
-Before spawning a secure boot enabled Garden Linux instance, we have to create the corresponding artifact for this. In order to create it, you must have the Garden Linux repo checked out and execute the following make target from within the root directory of the repository:
+Before spawning a secure boot enabled Garden Linux instance, we have to create the corresponding artifact for this. In order to create it, you must have the Garden Linux repo checked out and execute the following build script from within the root directory of the repository:
 
 ```
-make aws-secureboot-dev
-```
-
-For our test, we are creating a dev image, which will give us root access for further testing later on. If your build system doesn't have enough memory to build this image, you can add the following attribute to the `make` command:
-
-```
-make aws-secureboot-dev BUILD_OPTS="--lessram"
+./build aws_secureboot_dev
 ```
 
 ## Prepare spawning
