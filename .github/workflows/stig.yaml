@@ -1,0 +1,21 @@
+name: STIG compliance
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the image
+        run: ./build kvm-stig
+      - name: Upload build logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: STIG-logs
+          path: .build/*log
