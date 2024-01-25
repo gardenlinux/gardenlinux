@@ -31,3 +31,28 @@
 # https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238289
 -a always,exit -F path=/sbin/unix_update -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged-unix-update
 
+# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238297
+-a always,exit -F arch=b32 -S delete_module -F auid>=1000 -F auid!=4294967295 -k module_chng
+-a always,exit -F arch=b64 -S delete_module -F auid>=1000 -F auid!=4294967295 -k module_chng
+
+# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238295
+-a always,exit -F arch=b32 -S init_module,finit_module -F auid>=1000 -F auid!=4294967295 -k module_chng
+-a always,exit -F arch=b64 -S init_module,finit_module -F auid>=1000 -F auid!=4294967295 -k module_chng
+
+# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238294
+-a always,exit -F path=/usr/sbin/pam_timestamp_check -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged-pam_timestamp_check
+
+# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238293
+-a always,exit -F path=/usr/bin/crontab -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged-crontab
+
+# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238292
+-a always,exit -F path=/usr/sbin/usermod -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged-usermod
+
+# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238291
+-a always,exit -F path=/usr/bin/chage -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged-chage
+
+# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238290
+-a always,exit -F path=/usr/bin/gpasswd -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged-gpasswd
+
+# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238238
+-w /etc/passwd -p wa -k usergroup_modification
