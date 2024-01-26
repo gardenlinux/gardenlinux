@@ -1,0 +1,2 @@
+# https://www.stigviewer.com/stig/canonical_ubuntu_20.04_lts/2023-09-08/finding/V-238237
+auth required pam_faildelay.so delay=4000000
