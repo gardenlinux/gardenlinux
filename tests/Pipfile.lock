@@ -139,12 +139,12 @@
         },
         "azure-core": {
             "hashes": [
-                "sha256:13b485252ecd9384ae624894fe51cfa6220966207264c360beada239f88b738a",
-                "sha256:604a005bce6a49ba661bb7b2be84a9b169047e52fcfcd0a4e4770affab4178f7"
+                "sha256:2944faf1a7ff1558b1f457cabf60f279869cabaeef86b353bed8eb032c7d8c5e",
+                "sha256:95a7b41b4af102e5fcdfac9500fcc82ff86e936c7145a099b7848b9ac0501250"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==1.29.6"
+            "version": "==1.29.7"
         },
         "azure-cosmos": {
             "hashes": [
