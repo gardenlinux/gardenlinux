@@ -24,6 +24,7 @@ main () {
     qemu_opt_monitor
     qemu_opt_remote_control
     qemu_opt_network
+    qemu_opt_tpm
     qemu_opt_misc
     qemu_status
     qemu_execute
@@ -117,6 +118,7 @@ set_defaults () {
     port_dest=22
     port_base=2223
     vnc_base=5900
+    tpm2=
 
     # Evaluate free and usable ports
     if [ $os != "macos" ]; then
@@ -146,7 +148,7 @@ set_defaults () {
 # passed to this script
 get_opts () {
 source "${CURR_DIR}/.constants.sh" \
-    --flags 'daemonize,no-watchdog,uefi,legacy-bios,skipkp,vnc' \
+    --flags 'daemonize,no-watchdog,uefi,legacy-bios,skipkp,vnc,tpm2' \
     --flags 'cpu:,mem:,bridge:,port:,mac:,arch:' \
     --flags 'pxe:' \
     --flags 'ignfile:' \
@@ -175,6 +177,7 @@ source "${CURR_DIR}/.constants.sh" \
 --no-watchdog <bool>        Disables the watchdog qemu option. Used for kvm tests on podman
 --skipkp    <bool>        Skip the keypress to the verify status before execute.
 --vnc       <bool>        Sitches from serial console to vnc graphics console / enables vnc in --daemonize.
+--tpm2      <bool>        Enable TPM2 emulation and QEMU passthrough using swtpm.
 <image file>              A file containing the image to boot. Format is determined by the extension (raw, vdi, vpc, vhd, vhdx, vmdk, qcow2, iso)."
 
 eval "$dgetopt"
@@ -200,6 +203,7 @@ while true; do
         --port)         port="$1";      shift ;;
         --destport)     port_dest="$1"; shift ;;
         --skipkp)       keypress=;            ;;
+        --tpm2)         tpm2=1;               ;;
         --) break ;;
         *) eusage "Unknown flag '$flag'"      ;;
     esac
@@ -687,6 +691,29 @@ qemu_opt_network () {
 }
 
 
+# Setup TPM2 emulation support using swtpm
+qemu_opt_tpm () {
+    if [ $tpm2 = 1 ]; then
+        if [ ! "$(command -v swtpm)" ]; then
+            eusage "Error: Could not find swtpm on the system"
+        else
+            mkdir -p /tmp/emulated_tpm
+            swtpm socket --tpmstate dir=/tmp/emulated_tpm --ctrl type=unixio,path=/tmp/emulated_tpm/swtpm-sock --tpm2 --daemon --terminate
+        fi
+
+        QEMU_OPTS+=("-chardev socket,id=chrtpm,path=/tmp/emulated_tpm/swtpm-sock")
+
+        # 'tpm-tis-device' for aarch64 versus 'tpm-tis' for x86
+        # Reference: https://listman.redhat.com/archives/libvir-list/2021-February/msg00647.html
+        if [ $arch = "amd64" ]; then
+            QEMU_OPTS+=("-tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-tis,tpmdev=tpm0")
+        elif [ $arch = "arm64" ]; then
+            QEMU_OPTS+=("-tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-tis-device,tpmdev=tpm0")
+        fi
+    fi
+}
+
+
 qemu_opt_misc () {
     if [ "$arch" = "amd64" ]; then
         # Use minimal memory
@@ -726,6 +753,7 @@ qemu_status () {
     [ $bridge ]     || printf "  sshport: (host) tcp/%s -> (vm) tcp/%s  (unbridged)\n"  $port $port_dest
     [ $vnc ]        && printf "  vncport: %s\n" $(( vnc_port + 5900 ))
     [ $uefi ]       && printf "  uefi boot enabled. %s.vars stores efivars\n" $mac
+    [ $tpm2 ]       && printf "  tpm2 emulation enabled\n"
 
     # Print inflated disks
     for i in "${inflatelist[@]}"; do
