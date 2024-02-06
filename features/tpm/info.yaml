@@ -1,0 +1,5 @@
+description: 'TPM Feature - I569190'
+type: element
+features:
+  exclude:
+    - _ignite
