@@ -697,11 +697,10 @@ qemu_opt_tpm () {
         if [ ! "$(command -v swtpm)" ]; then
             eusage "Error: Could not find swtpm on the system"
         else
-            mkdir -p /tmp/emulated_tpm
-            swtpm socket --tpmstate dir=/tmp/emulated_tpm --ctrl type=unixio,path=/tmp/emulated_tpm/swtpm-sock --tpm2 --daemon --terminate
+            swtpm socket --tpmstate backend-uri=file://$CURR_DIR/$mac.permall --ctrl type=unixio,path=$CURR_DIR/swtpm-sock --tpm2 --daemon --terminate
         fi
 
-        QEMU_OPTS+=("-chardev socket,id=chrtpm,path=/tmp/emulated_tpm/swtpm-sock")
+        QEMU_OPTS+=("-chardev socket,id=chrtpm,path=$CURR_DIR/swtpm-sock")
 
         # 'tpm-tis-device' for aarch64 versus 'tpm-tis' for x86
         # Reference: https://listman.redhat.com/archives/libvir-list/2021-February/msg00647.html
