@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+mkdir -p "$HOME/.config/aws-kms-pkcs11"
+cat > "$HOME/.config/aws-kms-pkcs11/config.json" << EOF
+{
+	"slots": [
+		{
+			"kms_key_id": "$KMS_KEY_ID",
+			"certificate": "$KMS_KEY_CERT"
+		}
+	]
+}
+EOF
+
+gpg --card-status
+base64 -d <<< "$KMS_KEY_GPG" | gpg --import
+gpg --list-secret-keys
+
+"$@"

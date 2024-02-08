@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+set -exufo pipefail
+
+target="$(realpath "$1")"
+releases="$(realpath "$2")"
+import_list="$(realpath "$3")"
+
+dir="$(mktemp -d)"
+trap 'cd / && rm -rf "$dir"' EXIT
+cd "$dir"
+
+arch="$(dpkg --print-architecture)"
+
+mkdir download
+while read -r repo tag; do
+	gh release download --dir download --repo "$repo" "$tag"
+done < "$releases"
+
+truncate -s 0 pkgs depends
+
+find download -name "*_all.deb" -or -name "*_$arch.deb" | sort | while read -r pkg; do
+	control="$(dpkg-deb -I "$pkg" control)"
+	awk -F ': ' '$1 == "Package" { print $2 }' <<< "$control" >> pkgs
+	awk -F ': ' '$1 == "Depends" || $1 == "Pre-Depends" { print $2 }' <<< "$control" | tr ',' '\n' | awk '{ print $1 }' >> depends
+
+	hash="$(sha256sum < "$pkg" | head -c 64)"
+	mkdir -p "$target/pool/$hash"
+	cp --update=none "$pkg" "$target/pool/$hash/"
+done
+
+rm -rf download
+sort -o pkgs -u pkgs
+
+cat "$import_list" >> depends
+aptitude search '?priority(required)|?priority(important)' -F '%p' -q | cut -d : -f 1 >> depends
+
+sort -o depends -u depends
+join -v 1 depends pkgs > needed
+
+xargs apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances < needed | grep '^\w' | cut -d : -f 1 | sort | uniq > recursive_depends
+join -v 1 recursive_depends pkgs > recursive_needed
+
+mkdir apt_download
+(cd apt_download && xargs apt-get download) < recursive_needed
+
+find apt_download -name "*.deb" | while read -r pkg; do
+	hash="$(sha256sum < "$pkg" | head -c 64)"
+	mkdir -p "$target/pool/$hash"
+	cp --update=none "$pkg" "$target/pool/$hash/"
+done
+
+rm -rf apt_download

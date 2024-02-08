@@ -1,0 +1,125 @@
+name: build
+run-name: ${{ github.ref_type == 'tag' && github.ref_name || 'experimental' }}
+on:
+  push:
+    tags:
+      - '*'
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      today:
+        type: boolean
+        default: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: aws
+    permissions:
+      id-token: write
+    steps:
+      - name: setup binfmt
+        run: sudo podman run --privileged ghcr.io/gardenlinux/binfmt_container
+      - uses: actions/checkout@v4
+      - name: resolve container digest
+        if: github.ref_type != 'tag'
+        run: |
+          set -o noclobber
+          if [ ! -e .container ]; then
+            image="ghcr.io/gardenlinux/repo-debian-snapshot"
+            podman pull "$image"
+            digest="$(podman image inspect --format '{{ .Digest }}' "$image")"
+            echo "$image@$digest" > .container
+          fi
+      - name: fetch package repo releases
+        if: github.ref_type != 'tag'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          podman build -t build --build-arg base="$(cat .container)" .
+          podman run --rm -e GH_TOKEN build /fetch_releases > package-releases
+      - name: download amd64 packages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          container="$(cat .container)"
+          podman pull --arch amd64 "$container"
+          podman build -t build --build-arg base="$container" .
+          mkdir repo
+          podman run --rm -v "$PWD/repo:/repo" -v "$PWD/package-releases:/package-releases" -v "$PWD/package-imports:/package-imports" -e GH_TOKEN build /download_pkgs /repo /package-releases /package-imports
+      - name: download arm64 packages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          container="$(cat .container)"
+          podman pull --arch arm64 "$container"
+          podman build -t build --build-arg base="$container" .
+          mkdir repo_arm64
+          podman run --rm -v "$PWD/repo_arm64:/repo" -v "$PWD/package-releases:/package-releases" -v "$PWD/package-imports:/package-imports" -e GH_TOKEN build /download_pkgs /repo /package-releases /package-imports
+          cp -r --no-clobber repo_arm64/. repo/.
+          rm -rf repo_arm64
+      - name: build kms signing container
+        run: |
+          podman build -t kms kms
+          podman build -t build --build-arg base=kms .
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_OIDC_ROLE }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - run: aws sts get-caller-identity
+      - name: sync pool to S3
+        run: |
+          find repo/pool -type f -printf '%P\n' | sort > local_objects
+          aws s3api list-objects --bucket '${{ vars.S3_BUCKET }}' --prefix pool/ | jq -r '.Contents // [] | .[].Key' | sed 's#^pool/##' | sort > aws_objects
+          join -v 1 local_objects aws_objects > new_objects
+          rm local_objects aws_objects
+          num_objects="$(wc -l new_objects | awk '{ print $1 }')"
+          cntr=0
+          while read -r obj; do
+            aws s3 cp --quiet "repo/pool/$obj" "s3://${{ vars.S3_BUCKET }}/pool/$obj"
+            cntr="$(( cntr + 1 ))"
+            echo "[$cntr/$num_objects] $obj"
+          done < new_objects
+          rm new_objects
+      - name: check dist ${{ github.ref_name }}
+        if: github.ref_type == 'tag'
+        id: check
+        run: |
+          if ! aws s3api head-object --bucket '${{ vars.S3_BUCKET }}' --key 'gardenlinux/dists/${{ github.ref_name }}/InRelease' > /dev/null 2>&1; then
+            echo new_dist=true >> "$GITHUB_OUTPUT"
+          fi
+      - name: create dist ${{ github.ref_name }}
+        if: steps.check.outputs.new_dist == 'true'
+        run: |
+          podman run --rm \
+            -e 'AWS_*' \
+            -e 'KMS_KEY_ID=${{ secrets.KMS_KEY_ID }}' \
+            -e 'KMS_KEY_CERT=${{ secrets.KMS_KEY_CERT }}' \
+            -e 'KMS_KEY_GPG=${{ secrets.KMS_KEY_GPG }}' \
+            -v "$PWD/repo:/repo" \
+            build /create_dist /repo ${{ github.ref_name }} 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+          aws s3 cp --recursive 'repo/dists/${{ github.ref_name }}' 's3://${{ vars.S3_BUCKET }}/gardenlinux/dists/${{ github.ref_name }}'
+      - name: create dist experimental
+        if: github.ref_type != 'tag'
+        run: |
+          podman run --rm \
+            -e 'AWS_*' \
+            -e 'KMS_KEY_ID=${{ secrets.KMS_KEY_ID }}' \
+            -e 'KMS_KEY_CERT=${{ secrets.KMS_KEY_CERT }}' \
+            -e 'KMS_KEY_GPG=${{ secrets.KMS_KEY_GPG }}' \
+            -v "$PWD/repo:/repo" \
+            build /create_dist /repo experimental 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+          aws s3 cp --recursive 'repo/dists/experimental' 's3://${{ vars.S3_BUCKET }}/gardenlinux/dists/experimental'
+          aws cloudfront create-invalidation --distribution-id '${{ secrets.CLOUDFRONT_DISTRIBUTION }}' --paths '/gardenlinux/dists/experimental/*'
+      - name: create dist today
+        if: inputs.today
+        run: |
+          podman run --rm \
+            -e 'AWS_*' \
+            -e 'KMS_KEY_ID=${{ secrets.KMS_KEY_ID }}' \
+            -e 'KMS_KEY_CERT=${{ secrets.KMS_KEY_CERT }}' \
+            -e 'KMS_KEY_GPG=${{ secrets.KMS_KEY_GPG }}' \
+            -v "$PWD/repo:/repo" \
+            build /create_dist /repo today 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+          aws s3 cp --recursive 'repo/dists/today' 's3://${{ vars.S3_BUCKET }}/gardenlinux/dists/today'
+          aws cloudfront create-invalidation --distribution-id '${{ secrets.CLOUDFRONT_DISTRIBUTION }}' --paths '/gardenlinux/dists/today/*'

@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+set -exufo pipefail
+
+target="$(realpath "$1")"
+dist="$2"
+description="$3"
+
+index_files="$(mktemp)"
+
+for arch in all amd64 arm64; do
+	dir="$target/dists/$dist/main/binary-$arch"
+	mkdir -p "$dir"
+	(cd "$target" && dpkg-scanpackages --arch "$arch" pool) > "$dir/Packages"
+
+	size="$(wc -c "$dir/Packages" | awk '{ print $1 }')"
+	hash="$(sha256sum "$dir/Packages" | head -c 64)"
+	echo " $hash $size main/binary-$arch/Packages" >> "$index_files"
+	gzip < "$dir/Packages" > "$dir/Packages.gz"
+	rm "$dir/Packages"
+	size="$(wc -c "$dir/Packages.gz" | awk '{ print $1 }')"
+	hash="$(sha256sum "$dir/Packages.gz" | head -c 64)"
+	echo " $hash $size main/binary-$arch/Packages.gz" >> "$index_files"
+done
+
+date="$(date -R -u)"
+
+cat << EOF | gpg --clearsign > "$target/dists/$dist/InRelease"
+Codename: $dist
+Description: $description
+Components: main
+Architectures: all amd64 arm64
+Date: $(date -R -u -d "$date")
+Valid-Until: $(date -R -u -d "$date + 100 years")
+SHA256:
+$(cat "$index_files")
+
+EOF
+
+rm "$index_files"

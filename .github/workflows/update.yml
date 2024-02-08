@@ -1,0 +1,45 @@
+name: update
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: resolve GL version
+        id: version
+        run: |
+          gl_start=2020-03-31
+          currentdate="$(date -u '+%Y-%m-%d')"
+          datediff=$(( "$(date -u -d "$currentdate" '+%s')" - "$(date -u -d "$gl_start" '+%s')" ))
+          days_since_start=$(( datediff / 86400 ))
+          echo "version=$days_since_start.0" >> "$GITHUB_OUTPUT"
+      - name: resolve container digest
+        run: |
+          set -o noclobber
+          image="ghcr.io/gardenlinux/repo-debian-snapshot"
+          podman pull "$image"
+          digest="$(podman image inspect --format '{{ .Digest }}' "$image")"
+          echo "$image@$digest" > .container
+      - name: fetch package repo releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          podman build -t build --build-arg base="$(cat .container)" .
+          podman run --rm -e GH_TOKEN build /fetch_releases > package-releases
+      - name: commit
+        run: |
+          git checkout --detach HEAD
+          git add .
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git commit -m "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          git tag '${{ steps.version.outputs.version }}'
+          git push origin '${{ steps.version.outputs.version }}'
+      - name: dispatch build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run --ref '${{ steps.version.outputs.version }}' -F today=true build.yml

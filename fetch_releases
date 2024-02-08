@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+org=gardenlinux
+match_pattern='^package-.*'
+exclude_pattern='package-build'
+
+gh api --paginate "/orgs/$org/repos" | jq -r '.[] | .name' | grep -xE "$match_pattern" | grep -vxE "$exclude_pattern" | while read -r repo; do
+	tag="$(gh api "/repos/$org/$repo/releases/latest" 2> /dev/null | jq -r '.tag_name // ""' || true)"
+	[ -z "$tag" ] || echo "$org/$repo $tag"
+done
