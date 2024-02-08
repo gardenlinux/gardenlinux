@@ -5,6 +5,7 @@ set -exufo pipefail
 target="$(realpath "$1")"
 releases="$(realpath "$2")"
 import_list="$(realpath "$3")"
+exclude_patterns="$(realpath "$4")"
 
 dir="$(mktemp -d)"
 trap 'cd / && rm -rf "$dir"' EXIT
@@ -39,7 +40,7 @@ sort -o depends -u depends
 join -v 1 depends pkgs > needed
 
 xargs apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances < needed | grep '^\w' | cut -d : -f 1 | sort | uniq > recursive_depends
-join -v 1 recursive_depends pkgs > recursive_needed
+join -v 1 recursive_depends pkgs | { grep -v -x -f "$exclude_patterns" || true; } > recursive_needed
 
 mkdir apt_download
 (cd apt_download && xargs apt-get download) < recursive_needed
