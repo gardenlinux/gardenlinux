@@ -139,12 +139,12 @@
         },
         "azure-core": {
             "hashes": [
-                "sha256:2944faf1a7ff1558b1f457cabf60f279869cabaeef86b353bed8eb032c7d8c5e",
-                "sha256:95a7b41b4af102e5fcdfac9500fcc82ff86e936c7145a099b7848b9ac0501250"
+                "sha256:3dae7962aad109610e68c9a7abb31d79720e1d982ddf61363038d175a5025e89",
+                "sha256:6f3a7883ef184722f6bd997262eddaf80cfe7e5b3e0caaaf8db1695695893d35"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==1.29.7"
+            "version": "==1.30.0"
         },
         "azure-cosmos": {
             "hashes": [
@@ -177,12 +177,12 @@
         },
         "azure-identity": {
             "hashes": [
-                "sha256:153736db01345ef48afc9b77d0c80552d2059845a644ad1f1bdc62ca0b6659fe",
-                "sha256:94e593061d243342f18194a85bd27962d4530da212e0c6e1cbed8d0a932184d9"
+                "sha256:d488960f7c176ab90ab4a18041eb6321c90adea49f4626e11ee71e25fd73d044",
+                "sha256:d9d5af5b1c78755c771c4dbe17af0dccc7db7521a8da641e667ce3845f38e83d"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.7'",
-            "version": "==1.15.0b1"
+            "markers": "python_version >= '3.8'",
+            "version": "==1.16.0b1"
         },
         "azure-keyvault-administration": {
             "hashes": [
@@ -1483,11 +1483,11 @@
                 "broker"
             ],
             "hashes": [
-                "sha256:008d4bc3e456f6878ea1722ab6aa0a1ca3da77cc22bef324a261eafcffe8ddda",
-                "sha256:a0e6e3f1b099ed29a39e167e83a069ab84d9a7712627f72950030b56791b7cbc"
+                "sha256:224756079fe338be838737682b49f8ebc20a87c1c5eeaf590daae4532b83de15",
+                "sha256:be77ba6a8f49c9ff598bbcdc5dfcf1c9842f3044300109af738e8c3e371065b5"
             ],
             "markers": "python_version >= '2.7'",
-            "version": "==1.24.0b2"
+            "version": "==1.26.0"
         },
         "msal-extensions": {
             "hashes": [
