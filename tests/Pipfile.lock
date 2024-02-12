@@ -139,12 +139,12 @@
         },
         "azure-core": {
             "hashes": [
-                "sha256:2944faf1a7ff1558b1f457cabf60f279869cabaeef86b353bed8eb032c7d8c5e",
-                "sha256:95a7b41b4af102e5fcdfac9500fcc82ff86e936c7145a099b7848b9ac0501250"
+                "sha256:3dae7962aad109610e68c9a7abb31d79720e1d982ddf61363038d175a5025e89",
+                "sha256:6f3a7883ef184722f6bd997262eddaf80cfe7e5b3e0caaaf8db1695695893d35"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==1.29.7"
+            "version": "==1.30.0"
         },
         "azure-cosmos": {
             "hashes": [
@@ -554,12 +554,12 @@
         },
         "azure-mgmt-network": {
             "hashes": [
-                "sha256:94191ce8ae243ab6e9c489f21330b3908937e296d443fea4e5100d57d52e14c8",
-                "sha256:f939f75bf139e03d2c457a4f07a5ebadb5affdd70aa54be9a0af44b8e52132fc"
+                "sha256:114c4292d223b1d1e247b41af65b8d5a3793567e6adbfa230772055223f4182a",
+                "sha256:c76181e79d689df40b8160c4ffa8dd2bbf6ba064ed4d164fdefd8fb53b781641"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==25.1.0"
+            "version": "==25.2.0"
         },
         "azure-mgmt-nspkg": {
             "hashes": [
