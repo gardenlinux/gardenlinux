@@ -33,15 +33,15 @@ On your build system do:
 ```
 git clone https://github.com/gardenlinux/gardenlinux.git
 cd gardenlinux
-make metal-dev
+./build metal_dev
 ```
 
 > **WARNING**
  This is a dev build! It has autologin enabled! (It is easy to disable this afterwards, but without you will not be able to log into the box since you cannot provision any credentials, without cloud provider / ignition support)
 
 You will find the final file e.g. 
-`.build/metal/20210616/amd64/bullseye/rootfs.raw`
-(20210616 is the date when built REPLACE this with current date, amd64 the platform, metal the feature)
+`.build/metal_dev-$(dpkg --print-architecture)-today-$(./get_commit).raw`
+where the architecture will either be `amd64` or `arm64`, and the commit either the commit id or `local` if you made local changes.
 
 Boot the target system into your live system ... (as described in #Prerequisites)
 

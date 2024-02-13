@@ -49,9 +49,12 @@ if [ "$use_kms" = 1 ]; then
 fi
 
 if [ -z "$container_image" ]; then
-	base_image="$("$dir/../build" --print-container-image)"
+	OCI_IMAGE_TAG="$("$dir/../build" --print-container-image)"
+	if [[ -f builder.dockerfile ]]; then
+		podman build -t "$OCI_IMAGE_TAG" -f builder.dockerfile "$dir/.."
+	fi
 	image_file="$(mktemp)"
-	"$container_engine" build --iidfile "$image_file" --build-arg base="$base_image" "$dir"
+	"$container_engine" build --iidfile "$image_file" --build-arg base="$OCI_IMAGE_TAG" "$dir"
 	container_image="$(cat "$image_file")"
 	rm "$image_file"
 fi

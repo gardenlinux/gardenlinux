@@ -92,7 +92,7 @@ jobs:
     - if: ${{ matrix.target == 'gcp' }}
       id: 'auth_gcp'
       name: 'Authenticate to Google Cloud'
-      uses: google-github-actions/auth@f6de81663f7788d05bd15bcce18f0e57f23f0846 # pin@v1
+      uses: google-github-actions/auth@5a50e581162a13f4baa8916d01180d2acbc04363 # pin@v1
       with:
         workload_identity_provider: ${{ secrets.gcp_identity_provider }}
         service_account: ${{ secrets.gcp_service_account }}
@@ -103,7 +103,7 @@ jobs:
     - if: ${{ matrix.target == 'aws' }}
       id: 'auth_aws'
       name: 'Authenticate to AWS'
-      uses: aws-actions/configure-aws-credentials@010d0da01d0b5a38af31e9c3470dbfdabdecca3a # pin@v4
+      uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
       with:
         role-to-assume: ${{ secrets.aws_role }}
         role-session-name: ${{ secrets.aws_session }}
@@ -112,7 +112,7 @@ jobs:
     - if: ${{ matrix.target == 'azure' }}
       id: 'auth_azure'
       name: 'Authenticate to Azure'
-      uses: azure/login@e15b166166a8746d1a47596803bd8c1b595455cf # pin@v1
+      uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # pin@v1
       with:
         client-id: ${{ secrets.az_client_id }}
         tenant-id: ${{ secrets.az_tenant_id }}

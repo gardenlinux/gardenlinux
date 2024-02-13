@@ -38,4 +38,6 @@ __pycache__
 make_targets.cache
 /bin/*.vars
 /bin/*.ipxe
+/bin/*.permall
+/bin/swtpm-sock
 .DS_Store

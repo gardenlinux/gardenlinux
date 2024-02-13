@@ -45,7 +45,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@6f19ac2411a52a120abb74c812592b44f165d05c # pin@v1
+      - uses: gardenlinux/workflow-telemetry-action@9742ad16c70308bc8fa5f850d6ee6b22f2cce076 # pin@v2
         with:
           metric_frequency: 1
           proc_trace_min_duration: 10
@@ -79,7 +79,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@6f19ac2411a52a120abb74c812592b44f165d05c # pin@v1
+      - uses: gardenlinux/workflow-telemetry-action@9742ad16c70308bc8fa5f850d6ee6b22f2cce076 # pin@v2
         with:
           metric_frequency: 1
           proc_trace_min_duration: 10
@@ -104,7 +104,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@6f19ac2411a52a120abb74c812592b44f165d05c # pin@v1
+      - uses: gardenlinux/workflow-telemetry-action@9742ad16c70308bc8fa5f850d6ee6b22f2cce076 # pin@v2
         with:
           metric_frequency: 1
           proc_trace_min_duration: 10
@@ -114,7 +114,11 @@ jobs:
       - uses: ./.github/actions/setup
       - name: build test container
         run: |
-          podman build --squash --tag test --build-arg base="$(./build --print-container-image)" tests
+          OCI_IMAGE_TAG="$(./build --print-container-image)"
+          if [[ -f builder.dockerfile ]]; then
+            podman build -t "$OCI_IMAGE_TAG" -f builder.dockerfile .
+          fi
+          podman build --squash --tag test --build-arg base="$OCI_IMAGE_TAG" tests
           podman save --format oci-archive test > test.oci
       - name: upload test container
         uses: actions/cache/save@e12d46a63a90f2fae62d114769bbf2a179198b5c # pin@v3
@@ -144,7 +148,7 @@ jobs:
             arch: arm64
             modifier: ""
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@6f19ac2411a52a120abb74c812592b44f165d05c # pin@v1
+      - uses: gardenlinux/workflow-telemetry-action@9742ad16c70308bc8fa5f850d6ee6b22f2cce076 # pin@v2
         with:
           metric_frequency: 1
           proc_trace_min_duration: 10
@@ -167,7 +171,7 @@ jobs:
         run: echo "${{ secrets.secureboot_db_kms_arn }}" > cert/gardenlinux-secureboot.db.arn
       - name: configure aws credentials for kms signing
         if: ${{ inputs.use_kms }}
-        uses: aws-actions/configure-aws-credentials@010d0da01d0b5a38af31e9c3470dbfdabdecca3a # pin@v4
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_kms_role }}
           role-session-name: ${{ secrets.aws_oidc_session }}
@@ -196,7 +200,7 @@ jobs:
         run: ./build ${{ inputs.use_kms && '--kms' || '' }} ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
       - name: test
         run: ./test --container-image test ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
-      - uses: pmeier/pytest-results-action@4c22f3314dfc484aaad53353d3dd8dddf5de6b46 # pin@v0.5.0
+      - uses: pmeier/pytest-results-action@035bda205f160abee0b277db11ac6ca01175ca7d # pin@v0.6.0
         if: always()
         with:
           path: tests/test.xml
@@ -220,7 +224,7 @@ jobs:
         arch: [ amd64, arm64 ]
         config: [ libc, python, nodejs, sapmachine ]
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@6f19ac2411a52a120abb74c812592b44f165d05c # pin@v1
+      - uses: gardenlinux/workflow-telemetry-action@9742ad16c70308bc8fa5f850d6ee6b22f2cce076 # pin@v2
         with:
           metric_frequency: 1
           proc_trace_min_duration: 10
