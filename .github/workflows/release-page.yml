@@ -52,7 +52,7 @@ jobs:
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # pin@v3
         with:
           name: release
-      - uses: aws-actions/configure-aws-credentials@010d0da01d0b5a38af31e9c3470dbfdabdecca3a # pin@v4
+      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
@@ -93,7 +93,7 @@ jobs:
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # pin@v3
         with:
           name: release
-      - uses: aws-actions/configure-aws-credentials@010d0da01d0b5a38af31e9c3470dbfdabdecca3a # pin@v4
+      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
