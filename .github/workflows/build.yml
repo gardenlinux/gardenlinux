@@ -18,6 +18,10 @@ jobs:
     permissions:
       id-token: write
     steps:
+      - name: free up runner space
+        run: |
+          sudo rm -rf /{usr/{local/{lib/{android,heroku},.ghcup,share/{dotnet,powershell,miniconda,swift}},share/{dotnet,miniconda,swift}},opt/{hostedtoolcache,microsoft},imagegeneration}
+          sudo docker system prune -a -f
       - name: setup binfmt
         run: sudo podman run --privileged ghcr.io/gardenlinux/binfmt_container
       - uses: actions/checkout@v4

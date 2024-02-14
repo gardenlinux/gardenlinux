@@ -49,6 +49,7 @@ find apt_download -name "*.deb" | while read -r pkg; do
 	hash="$(sha256sum < "$pkg" | head -c 64)"
 	mkdir -p "$target/pool/$hash"
 	cp --update=none "$pkg" "$target/pool/$hash/"
+	rm "$pkg"
 done
 
 rm -rf apt_download
