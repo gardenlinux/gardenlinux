@@ -554,12 +554,12 @@
         },
         "azure-mgmt-network": {
             "hashes": [
-                "sha256:94191ce8ae243ab6e9c489f21330b3908937e296d443fea4e5100d57d52e14c8",
-                "sha256:f939f75bf139e03d2c457a4f07a5ebadb5affdd70aa54be9a0af44b8e52132fc"
+                "sha256:114c4292d223b1d1e247b41af65b8d5a3793567e6adbfa230772055223f4182a",
+                "sha256:c76181e79d689df40b8160c4ffa8dd2bbf6ba064ed4d164fdefd8fb53b781641"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==25.1.0"
+            "version": "==25.2.0"
         },
         "azure-mgmt-nspkg": {
             "hashes": [
