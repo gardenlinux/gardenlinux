@@ -103,7 +103,6 @@ set_defaults () {
     monitor=1
     bridge=
     daemonize=
-    no_watchdog=0
     pxe=
     pxe_binary=
     pxefile=${CURR_DIR}/../examples/ipxe/start-vm.ipxe
@@ -148,14 +147,14 @@ set_defaults () {
 # passed to this script
 get_opts () {
 source "${CURR_DIR}/.constants.sh" \
-    --flags 'daemonize,no-watchdog,uefi,legacy-bios,skipkp,vnc,tpm2' \
+    --flags 'daemonize,uefi,legacy-bios,skipkp,vnc,tpm2' \
     --flags 'cpu:,mem:,bridge:,port:,mac:,arch:' \
     --flags 'pxe:' \
     --flags 'ignfile:' \
     --flags 'pidfile:' \
     --flags 'ueficode:,uefivars:' \
     --flags 'destport:' \
-    --usage '[ --daemonize ] [--no-watchdog] [ --cpu:<#> ] [ --mem:<size> ] [ --pxe:<dir> ] [<image file>[,<size>]]*' \
+    --usage '[ --daemonize ] [ --cpu:<#> ] [ --mem:<size> ] [ --pxe:<dir> ] [<image file>[,<size>]]*' \
     --sample '.build/rootfs.raw' \
     --sample ',1G ubuntu-16.04.7-server-amd64.iso' \
     --help  "Starts a virtual machine with the most basic environment, needed. Perfect use for test cases and running samples of GardenLinux. This script can run unprivileged but it should have the possibility to use kvm (group kvm) otherwise it will be super slow. If not being root, the network will be slow and no ICMP (ping) capabilities are with the VM.
@@ -174,7 +173,6 @@ source "${CURR_DIR}/.constants.sh" \
 --ignfile   <path>        Provide an ignition file when pxe booting. Can be used standalone.
 --pidfile   <path>        Provide a file where to store the pid of the started qemu vm.
 --daemonize <bool>        Start the virtual machine in background, console deactivated (default: no).
---no-watchdog <bool>        Disables the watchdog qemu option. Used for kvm tests on podman
 --skipkp    <bool>        Skip the keypress to the verify status before execute.
 --vnc       <bool>        Sitches from serial console to vnc graphics console / enables vnc in --daemonize.
 --tpm2      <bool>        Enable TPM2 emulation and QEMU passthrough using swtpm.
@@ -189,7 +187,6 @@ while true; do
         --arch)         arch="$1";      shift ;;
         --mem)          memory="$1";    shift ;;
         --daemonize)    daemonize=1;    keypress=; ;;
-        --no-watchdog)  no_watchdog=1;        ;;
         --vnc)          vnc=1;                ;;
         --uefi)         uefi=1;               ;;
         --legacy-bios)  uefi=;                ;;
@@ -610,12 +607,6 @@ qemu_opt_monitor () {
     if [ $monitor ]; then
         [ -e $TMP_DIR/$mac.monitor ] && eusage "Error: Monitor to this MAC address already exists $CURR_DIR/$mac.monitor"
         QEMU_OPTS+=("-monitor unix:$TMP_DIR/$mac.monitor,server,nowait")
-    fi
-
-    # Add Watchdog
-    if [ $os = debian ] && [ "$no_watchdog" = 0 ] && [ $bin_qemu != qemu-system-aarch64 ]; then
-        # add a watchdog to maintain automatic reboots
-        QEMU_OPTS+=("-watchdog i6300esb")
     fi
 }
 
