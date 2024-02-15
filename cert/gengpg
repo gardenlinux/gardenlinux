@@ -57,7 +57,8 @@ tmp_home="$(mktemp -d)"
 		}
 		EOF
 
-		export PKCS11_MODULE_PATH="/usr/lib/$(uname -m)-linux-gnu/pkcs11/aws_kms_pkcs11.so"
+		PKCS11_MODULE_PATH="/usr/lib/$(uname -m)-linux-gnu/pkcs11/aws_kms_pkcs11.so"
+		export PKCS11_MODULE_PATH
 		openssl req -engine pkcs11 -keyform engine -key "pkcs11:token=${key_id:0:32}" -new -sha256 -x509 -days 3650 -subj "/CN=$GPG_NAME/" > "$base.crt"
 		cert_base64="$(openssl x509 -outform der < "$base.crt" | openssl enc -base64 -A)"
 
