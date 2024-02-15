@@ -127,7 +127,7 @@ jobs:
           key: test_container:${{ github.run_id }}
   images:
     needs: [ version, cert, base, test_container ]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
     defaults:
       run:
         shell: bash
@@ -155,7 +155,12 @@ jobs:
           proc_trace_chart_max_count: 50
           comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - uses: ./.github/actions/setup
+      - if: matrix.arch != 'arm64'
+        uses: ./.github/actions/setup
+      - if: matrix.arch == 'arm64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends podman uidmap slirp4netns
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
