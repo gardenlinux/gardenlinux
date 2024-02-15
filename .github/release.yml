@@ -1,0 +1,33 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+      - github-settings
+    authors:
+      - dependabot
+  categories:
+    - title: Breaking Changes ❗
+      labels:
+        - Semver-Major
+        - breaking-change
+    - title: Bug Fixes :bug:
+      labels:
+        - bug
+        - bug-fix
+    - title: Security :lock:
+      labels:
+        - security
+    - title: New Features :tada:
+      labels:
+        - Semver-Minor
+        - enhancement
+        - features
+        - packages
+    - title: Build and Test Environment 🏗️
+      labels:
+        - test-env
+        - build-env
+        - github-actions
+    - title: Other
+      labels:
+        - "*"
