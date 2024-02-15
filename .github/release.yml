@@ -8,7 +8,6 @@ changelog:
   categories:
     - title: Breaking Changes ❗
       labels:
-        - Semver-Major
         - breaking-change
     - title: Bug Fixes :bug:
       labels:
@@ -19,7 +18,6 @@ changelog:
         - security
     - title: New Features :tada:
       labels:
-        - Semver-Minor
         - enhancement
         - features
         - packages
