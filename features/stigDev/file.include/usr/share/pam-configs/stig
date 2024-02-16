@@ -1,0 +1,7 @@
+Name: Garden Linux pam policies STIG
+Default: yes
+Priority: 1024
+Auth-Type: Primary
+Password:
+    password requisite pam_pwquality.so retry=3
+    password [success=1 default=ignore] pam_unix.so obscure sha512 shadow remember=5 rounds=5000

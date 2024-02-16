@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+set -x
+
+# On purpose, create a user with a known password.
+useradd --user-group --create-home --shell=/usr/bin/bash --password="$(openssl passwd -6 user)" user
+
+chmod u+s /usr/bin/su
+chmod g+s /usr/bin/su
+chmod u+s /usr/bin/sudo
+chmod g+s /usr/bin/sudo
+
+systemctl enable ssh-keygen
+systemctl enable ssh
+
+chmod 0440 /etc/sudoers.d/user
+
+# SSH key to login for ansible
+mkdir -p /home/user/.ssh
+echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQC4OC9EXebOu9mOQHhnYFVGIZuEvAzAcOuePnPEtADwue0l4k+BV0+TWYIQRRtP/Lz7hoVB4+ujirmFdq933HtxVUP0Fy0/kzx3mHunZpUpq5JR4iRucQj0bNbYBpju47P5uRmCYjKOCajwBk1PXx88uLnoJm9Tq/2AR7znbwb2Gw==' >> /home/user/.ssh/authorized_keys
+chmod -R 700 /home/user/.ssh
+chown -R user:user /home/user/.ssh
+find /home/user -printf '%M %u:%g %p\n'
