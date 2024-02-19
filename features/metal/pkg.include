@@ -12,5 +12,5 @@ mdadm
 hdparm
 smartmontools
 frr
-linux-image-6.1-$arch
+linux-image-6.6-$arch
 tpm2-tools
