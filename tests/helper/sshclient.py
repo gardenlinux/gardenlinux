@@ -93,15 +93,14 @@ class RemoteClient:
         self.ssh_key_filepath = path.expanduser(sshconfig['ssh_key_filepath'])
 
 
-    def _increase_retry_count(self, wait: bool = True):
+    def _increase_retry_count_and_wait(self):
         if self.retry_count >= self.ssh_max_retries:
             max_timeout = self.retry_count * self.ssh_retry_timeout_seconds
             # FIXME: this should not be pytest.exit() as it will exit immediately without cleanup
             pytest.exit(f"Unable to establish an SSH connection after {max_timeout=} seconds. Aborting all tests.", returncode=5) 
         self.retry_count += 1
-        if wait:
-            logger.warning(f"Retrying in {self.ssh_retry_timeout_seconds} seconds...")
-            time.sleep(self.ssh_retry_timeout_seconds)
+        logger.warning(f"Retrying in {self.ssh_retry_timeout_seconds} seconds...")
+        time.sleep(self.ssh_retry_timeout_seconds)
 
 
     def __get_ssh_key(self):
@@ -169,13 +168,13 @@ class RemoteClient:
                     break
                 except NoValidConnectionsError as e:
                     logger.warning(f"Unable to connect")
-                    self._increase_retry_count(wait=True)
+                    self._increase_retry_count_and_wait()
                 except AuthenticationException as e:
                     auth_banner = self.client.get_transport().get_banner().decode()
                     logger.warning(f"Failed to login - {auth_banner=}")
                     if "pam_nologin(8)" in auth_banner:
                         # SSH is already accepting connections but PAM refuses to let anyone in ("System is booting up"), have to retry
-                        self._increase_retry_count(wait=True)
+                        self._increase_retry_count_and_wait()
                     else:
                         raise e
         except AuthenticationException as error:
