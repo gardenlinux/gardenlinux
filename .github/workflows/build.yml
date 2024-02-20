@@ -45,12 +45,12 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@9742ad16c70308bc8fa5f850d6ee6b22f2cce076 # pin@v2
-        with:
-          metric_frequency: 1
-          proc_trace_min_duration: 10
-          proc_trace_chart_max_count: 50
-          comment_on_pr: false
+      # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
+      #   with:
+      #     metric_frequency: 1
+      #     proc_trace_min_duration: 10
+      #     proc_trace_chart_max_count: 50
+      #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
       - name: set VERSION=${{ needs.version.outputs.version }}
@@ -74,44 +74,70 @@ jobs:
   base:
     name: bootstrap stage
     needs: version
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
     defaults:
       run:
         shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ amd64, arm64 ]
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@9742ad16c70308bc8fa5f850d6ee6b22f2cce076 # pin@v2
-        with:
-          metric_frequency: 1
-          proc_trace_min_duration: 10
-          proc_trace_chart_max_count: 50
-          comment_on_pr: false
+      # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
+      #   with:
+      #     metric_frequency: 1
+      #     proc_trace_min_duration: 10
+      #     proc_trace_chart_max_count: 50
+      #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - uses: ./.github/actions/setup
+      - if: matrix.arch != 'arm64'
+        uses: ./.github/actions/setup
+      - if: matrix.arch == 'arm64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends podman uidmap slirp4netns dbus-user-session
+          id="$(id -u)"
+          sudo systemctl start user@$id
+          export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$id/bus
+          systemctl --user start dbus
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
-      - name: build base-amd64 base-arm64
-        run: ./build base-amd64 base-arm64
+      - name: build base-${{ matrix.arch }}
+        run: ./build base-${{ matrix.arch }}
       - uses: actions/cache/save@e12d46a63a90f2fae62d114769bbf2a179198b5c # pin@v3
         with:
           path: .build
-          key: base-${{ github.run_id }}
+          key: base-${{ matrix.arch }}-${{ github.run_id }}
   test_container:
     name: container image for tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
     defaults:
       run:
         shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ amd64, arm64 ]
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@9742ad16c70308bc8fa5f850d6ee6b22f2cce076 # pin@v2
-        with:
-          metric_frequency: 1
-          proc_trace_min_duration: 10
-          proc_trace_chart_max_count: 50
-          comment_on_pr: false
+      # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
+      #   with:
+      #     metric_frequency: 1
+      #     proc_trace_min_duration: 10
+      #     proc_trace_chart_max_count: 50
+      #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - uses: ./.github/actions/setup
+      - if: matrix.arch != 'arm64'
+        uses: ./.github/actions/setup
+      - if: matrix.arch == 'arm64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends podman uidmap slirp4netns dbus-user-session
+          id="$(id -u)"
+          sudo systemctl start user@$id
+          export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$id/bus
+          systemctl --user start dbus
       - name: build test container
         run: |
           OCI_IMAGE_TAG="$(./build --print-container-image)"
@@ -124,7 +150,7 @@ jobs:
         uses: actions/cache/save@e12d46a63a90f2fae62d114769bbf2a179198b5c # pin@v3
         with:
           path: test.oci
-          key: test_container:${{ github.run_id }}
+          key: test_container:${{ matrix.arch }}-${{ github.run_id }}
   images:
     needs: [ version, cert, base, test_container ]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
@@ -148,12 +174,12 @@ jobs:
             arch: arm64
             modifier: ""
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@9742ad16c70308bc8fa5f850d6ee6b22f2cce076 # pin@v2
-        with:
-          metric_frequency: 1
-          proc_trace_min_duration: 10
-          proc_trace_chart_max_count: 50
-          comment_on_pr: false
+      # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
+      #   with:
+      #     metric_frequency: 1
+      #     proc_trace_min_duration: 10
+      #     proc_trace_chart_max_count: 50
+      #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - if: matrix.arch != 'arm64'
         uses: ./.github/actions/setup
@@ -161,6 +187,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends podman uidmap slirp4netns
+          sudo apt-get install -y --no-install-recommends podman uidmap slirp4netns dbus-user-session
+          id="$(id -u)"
+          sudo systemctl start user@$id
+          export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$id/bus
+          systemctl --user start dbus
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
@@ -185,13 +216,13 @@ jobs:
         uses: actions/cache/restore@e12d46a63a90f2fae62d114769bbf2a179198b5c # pin@v3
         with:
           path: .build
-          key: base-${{ github.run_id }}
+          key: base-${{ matrix.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: download test container cache
         uses: actions/cache/restore@e12d46a63a90f2fae62d114769bbf2a179198b5c # pin@v3
         with:
           path: test.oci
-          key: test_container:${{ github.run_id }}
+          key: test_container:${{ matrix.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: import test container image
         run: |
@@ -219,7 +250,7 @@ jobs:
           path: "${{ env.cname }}.tar.gz"
   bare_flavors:
     needs: [ version, base ]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
     defaults:
       run:
         shell: bash
@@ -229,14 +260,23 @@ jobs:
         arch: [ amd64, arm64 ]
         config: [ libc, python, nodejs, sapmachine ]
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@9742ad16c70308bc8fa5f850d6ee6b22f2cce076 # pin@v2
-        with:
-          metric_frequency: 1
-          proc_trace_min_duration: 10
-          proc_trace_chart_max_count: 50
-          comment_on_pr: false
+      # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
+      #   with:
+      #     metric_frequency: 1
+      #     proc_trace_min_duration: 10
+      #     proc_trace_chart_max_count: 50
+      #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - uses: ./.github/actions/setup
+      - if: matrix.arch != 'arm64'
+        uses: ./.github/actions/setup
+      - if: matrix.arch == 'arm64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends podman uidmap slirp4netns dbus-user-session
+          id="$(id -u)"
+          sudo systemctl start user@$id
+          export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$id/bus
+          systemctl --user start dbus
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
@@ -245,7 +285,7 @@ jobs:
         uses: actions/cache/restore@e12d46a63a90f2fae62d114769bbf2a179198b5c # pin@v3
         with:
           path: .build
-          key: base-${{ github.run_id }}
+          key: base-${{ matrix.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: update bootstrap stage build artifact timestamps
         run: |
