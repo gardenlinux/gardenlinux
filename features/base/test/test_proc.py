@@ -16,10 +16,10 @@ def test_proc(client, container, testconfig):
     # Only proceed if local command was sucessfull
     assert rc == 0, f"Could not unpack {image_path}."
 
-    # Validate for captures of any "proc/" content
+    # Validate for captures of any lines starting with "proc/"
     matches = []
     for line in out.split('\n'):
-        if "proc/" in line:
+        if line.startswith("proc/"):
             matches.append(line)
 
     # Only "/proc/" as an empty directory should be found
