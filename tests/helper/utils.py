@@ -72,6 +72,17 @@ def get_file_perm(client, fname):
     if not "cannot statx" in error:
         return int(output)
 
+def check_kernel_module_exists(client, module_name):
+    """Check if a kernel module exists in any subdirectory of /lib/modules, considering compression."""
+
+    for ext in ["ko", "ko.gz", "ko.xz", "ko.bz2", "ko.zst"]:
+        filename = f"{module_name}.{ext}"
+        command = f"find /lib/modules/ -type f -name {filename}"
+        (exit_code, output, error) = client.execute_command(command, quiet=True)
+        if exit_code == 0 and output:
+            return True 
+
+    return False
 
 def check_file(client, fname):
     """Return bool if file exists"""
