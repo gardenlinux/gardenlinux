@@ -1,5 +1,6 @@
 import uuid
 import os
+import sys
 import re
 import string
 import subprocess
@@ -72,17 +73,43 @@ def get_file_perm(client, fname):
     if not "cannot statx" in error:
         return int(output)
 
-def check_kernel_module_exists(client, module_name):
-    """Check if a kernel module exists in any subdirectory of /lib/modules, considering compression."""
+def get_installed_kernel_versions(client):
+    """Get a list of installed kernel versions using 'linux-version list'."""
+    command = "linux-version list"
+    (exit_code, output, error) = client.execute_command(command, quiet=True)
+    if exit_code == 0 and output:
+        kernel_versions = output.strip().split('\n')
+        return kernel_versions
+    else:
+        return []
 
+def check_kernel_module_exists_for_kernel_version(client, module_name, kernel_version):
+    """ Checks if a kernel module exists for a given kernel version """
+    
     for ext in ["ko", "ko.gz", "ko.xz", "ko.bz2", "ko.zst"]:
         filename = f"{module_name}.{ext}"
-        command = f"find /lib/modules/ -type f -name {filename}"
+        command = f"find /lib/modules/{kernel_version} -type f -name {filename}"
+        print(command, file=sys.stderr)
         (exit_code, output, error) = client.execute_command(command, quiet=True)
         if exit_code == 0 and output:
-            return True 
+            return True
 
     return False
+
+def check_module_exists_in_all_kernels(client, module_name):
+    """Check if a module exists for all installed kernel versions, considering all compression types."""
+    kernel_versions = get_installed_kernel_versions(client)
+    if not kernel_versions:
+        print("No kernel versions found or unable to determine kernel versions.")
+        return False
+
+    for kernel_version in kernel_versions:
+        if not check_kernel_module_exists_for_kernel_version(client, module_name, kernel_version):
+            print(f"Module {module_name} not found for kernel version {kernel_version}.")
+            return False  # Module not found for at least one kernel version
+
+    return True  
+
 
 def check_file(client, fname):
     """Return bool if file exists"""
