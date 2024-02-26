@@ -1,6 +1,5 @@
 import uuid
 import os
-import sys
 import re
 import string
 import subprocess
@@ -89,7 +88,6 @@ def check_kernel_module_exists_for_kernel_version(client, module_name, kernel_ve
     for ext in ["ko", "ko.gz", "ko.xz", "ko.bz2", "ko.zst"]:
         filename = f"{module_name}.{ext}"
         command = f"find /lib/modules/{kernel_version} -type f -name {filename}"
-        print(command, file=sys.stderr)
         (exit_code, output, error) = client.execute_command(command, quiet=True)
         if exit_code == 0 and output:
             return True
