@@ -238,13 +238,12 @@ def install_package_deb(client, pkg):
         f"apt-get install -y --no-install-recommends {pkg}", quiet=True)
     assert exit_code == 0, f"Could not install Debian Package: {error}"
 
-
-def check_kernel_config_enabled(client, kernel_config_path, kernel_config_item ):
+def check_kernel_config_exact(client, kernel_config_path, kernel_config_item ):
     """ Checks if the given kernel_config_item is set in kernel_config_path """
 
     assert check_file(client, kernel_config_path), f"Kernel config does not exist - {kernel_config_path}"
 
-    command = f"grep -qE '^{kernel_config_item}=(y|m)$' '{kernel_config_path}'"
+    command = f"grep -qE '^{kernel_config_item}$' '{kernel_config_path}'"
     (exit_code, output, error) = client.execute_command(command, quiet=True)
     return exit_code == 0
 
