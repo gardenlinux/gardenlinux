@@ -8,3 +8,4 @@ runs:
         sudo docker system prune -a -f
         sudo apt-get update
         sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qemu-user-static
+        crun --version
