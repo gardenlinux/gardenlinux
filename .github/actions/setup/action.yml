@@ -3,11 +3,13 @@ runs:
   steps:
 
     # Workaround for https://github.com/actions/runner-images/issues/9425, to be removed once the issue is resolved
-    - run: crun --version
+    - name: Show crun version before the patch
+      shell: bash
+      run: |
+        crun --version
     - name: patch crun (Workaround for https://github.com/actions/runner-images/issues/9425)
       shell: bash
       run: |
-        set -x
         curl -Lo ./crun https://github.com/containers/crun/releases/download/1.14.3/crun-1.14.3-linux-amd64
         GOOD_SHA=80c5ab9422d4672f650f2bad3da933568349b64117d055486abc3534517be2af
         sha256sum ./crun
@@ -18,7 +20,10 @@ runs:
             echo "Checksums do not match"
             exit 1
         fi
-    - run: crun --version
+    - name: Show crun version after the patch
+      shell: bash
+      run: |
+        crun --version
 
     - name: install required packages
       shell: bash
