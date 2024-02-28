@@ -21,7 +21,7 @@ This is ensures a very simple but effective level of immutability.
 If a node is 'rolled' in Gardener terms (means the node is recreated), Gardener always reimages the node over the cloud provider.
 This ensures a constant image quality and no local modifications.
 A node might reboot in rare circumstances (for example when a bug occurs), but this is never automatically done by Gardener.
-Automated image recreation is not needed.
+Automated image recreation is not needed, since binaries are protected in multiple ways (linux standard acl, read only).
 
 The typical network file system clients like `cifs` or `nfs` are extra hardened to circumvent the most common bugs.
 
