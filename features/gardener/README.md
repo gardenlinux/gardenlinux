@@ -25,6 +25,12 @@ Automated image recreation is not needed, since binaries are protected in multip
 
 The typical network file system clients like `cifs` or `nfs` are extra hardened to circumvent the most common bugs.
 
+Garden Linux activates the SSH daemon by default.
+This is needed for cloud providers.
+This is not any different in the Gardener feature, but Gardener disables the sshd systemd unit after installing Gardener.
+
+SSH access might be needed in rare cases for debugging Gardener nodes before Gardener is successfully installed on it.
+
 ### Unit testing
 Unit tests are supported for this feature and will ensure that the groups are correctly defined, dmesg can be accessed by every user (Gardener requirement), all required packages are installed and the active LSM is switched from SELinux to AppArmor.
 
