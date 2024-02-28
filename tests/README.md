@@ -691,6 +691,7 @@ These tests flavours will make use of chroot, KVM virtual machines or OpenStack 
 CHROOT tests are designed to run directly on your platform within a `chroot` environment and boosts up the time for the integration tests that do not need any target platform.
 
 Notes:
+ * A local SSH server is started inside the chroot environment. The tests communicate via ssh to execute cmds in the image under test. 
  * CHROOT will run inside your `integration-test` Docker container
  * Podman container needs `SYS_ADMIN`, `MKNOD`, `AUDIT_WRITE` and `NET_RAW` capability
  * Temporary SSH keys are auto generated and injected
