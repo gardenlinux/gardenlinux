@@ -36,6 +36,12 @@ done
 
 cname="$(basename "$(realpath "$dir/.build/$1")" .artifacts)"
 
+if [[ -z $cname ]]; then
+	echo "ERROR: Require $1 to be built before it can be tested."
+	echo "Run ./build $1 before running ./test $1"
+	exit 1
+fi
+
 container_mount_opts=(
 	-v "$(realpath "$dir")/tests:/gardenlinux/tests"
 	-v "$(realpath "$dir")/features:/gardenlinux/features:ro"
