@@ -34,6 +34,13 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
+if [[ ! -d $dir/.build/ ]]; then
+	echo "ERROR: .build directory does not exist."
+	echo "Require $1 to be built before it can be tested."
+	echo "Run ./build $1 before running ./test $1"
+	exit 1
+fi
+
 cname="$(basename "$(realpath "$dir/.build/$1")" .artifacts)"
 
 if [[ -z $cname ]]; then
