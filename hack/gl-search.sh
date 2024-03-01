@@ -19,7 +19,7 @@ source "${THIS_DIR}/.gl-search-functions.sh"
 gl_selected_os="$(echo -e "gardenlinux\ndebian\nfrom_env_var" | fzf --header 'Select OS or enter custom url (e.g. ftp.debian.org/debian)' --print-query | tail -1)"
 if [ "$gl_selected_os" == "gardenlinux" ]; then
   gls_gl_dist="$(echo "today" |fzf --header 'Enter the Garden Linux Version you are interested in, or select today' --print-query | tail -1)"
-  base_url="https://repo.gardenlinux.io/gardenlinux"
+  base_url="https://packages.gardenlinux.io/gardenlinux"
 elif [ "$gl_selected_os" == "debian" ]; then
   base_url="https://ftp.debian.org/debian"
   gls_gl_dist="$(echo -e "bookworm\nsid\nbullseye" |fzf --header 'Enter the Version you are interested in' --print-query | tail -1)"
@@ -46,7 +46,7 @@ if [ "$gls_gl_dist" != "today" ]; then
   fi
 fi  
 
-repo_url="$base_url/dists/${gls_gl_dist}/Release?ignoreCaching=1"
+repo_url="$base_url/dists/${gls_gl_dist}/InRelease?ignoreCaching=1"
 
 # Check if repo exists for user provided garden linux version string
 if curl -s "$repo_url" | grep -q "Error"; then

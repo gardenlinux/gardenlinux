@@ -12,4 +12,4 @@ jobs:
   build:
     uses: ./.github/workflows/build.yml
     with:
-      version: experimental
+      version: today
