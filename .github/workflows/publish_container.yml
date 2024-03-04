@@ -22,10 +22,10 @@ jobs:
         run: |
           echo "cname_amd64=$(./build --resolve-cname container-amd64)" | tee -a "$GITHUB_ENV"
           echo "cname_arm64=$(./build --resolve-cname container-arm64)" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@eaceaf801fd36c7dee90939fad912460b18a1ffe # pin@v3
+      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # pin@v3
         with:
           name: ${{ env.cname_amd64 }}
-      - uses: actions/download-artifact@eaceaf801fd36c7dee90939fad912460b18a1ffe # pin@v3
+      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # pin@v3
         with:
           name: ${{ env.cname_arm64 }}
       - name: publish gardenlinux container base image
@@ -78,10 +78,10 @@ jobs:
         config: [ libc, python, nodejs, sapmachine ]
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - uses: actions/download-artifact@eaceaf801fd36c7dee90939fad912460b18a1ffe # pin@v3
+      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # pin@v3
         with:
           name: bare-${{ matrix.config }}-amd64
-      - uses: actions/download-artifact@eaceaf801fd36c7dee90939fad912460b18a1ffe # pin@v3
+      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # pin@v3
         with:
           name: bare-${{ matrix.config }}-arm64
       - run: ls -lah

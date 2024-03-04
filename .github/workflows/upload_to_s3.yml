@@ -47,7 +47,7 @@ jobs:
           git update-index --assume-unchanged VERSION
       - name: get cname
         run: echo "cname=$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@eaceaf801fd36c7dee90939fad912460b18a1ffe # pin@v3
+      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # pin@v3
         with:
           name: ${{ env.cname }}
       - name: upload to S3 bucket ${{ secrets.bucket }}
@@ -86,7 +86,7 @@ jobs:
           git update-index --assume-unchanged VERSION
       - name: get cname
         run: echo "cname=$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@eaceaf801fd36c7dee90939fad912460b18a1ffe # pin@v3
+      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # pin@v3
         with:
           name: tests-${{ env.cname }}
       - name: upload to S3 bucket ${{ secrets.bucket }}
