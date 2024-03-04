@@ -10,10 +10,9 @@ runs:
       shell: bash
       run: |
         sudo rm -rf /{usr/{local/{lib/{android,heroku},.ghcup,share/{dotnet,powershell,miniconda,swift}},share/{dotnet,miniconda,swift}},opt/{hostedtoolcache,microsoft},imagegeneration}
-        sudo docker system prune -a -f
         sudo apt-get update
-
         if [ "${{ inputs.arch }}" = "amd64" ]; then
+          sudo docker system prune -a -f
           sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qemu-user-static
         elif [ "${{ inputs.arch }}" = "arm64" ]; then
           sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends podman uidmap slirp4netns dbus-user-session
