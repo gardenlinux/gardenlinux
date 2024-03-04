@@ -53,7 +53,6 @@ jobs:
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
-        with: arch: "${{ matrix.arch }}"
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
@@ -92,7 +91,8 @@ jobs:
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
-        with: arch: "${{ matrix.arch }}"
+        with:
+          arch: "${{ matrix.arch }}"
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
@@ -122,7 +122,8 @@ jobs:
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
-        with: arch: "${{ matrix.arch }}"
+        with: 
+          arch: "${{ matrix.arch }}"
       - name: build test container
         run: |
           OCI_IMAGE_TAG="$(./build --print-container-image)"
@@ -167,7 +168,8 @@ jobs:
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
-        with: arch: "${{ matrix.arch }}"
+        with: 
+          arch: "${{ matrix.arch }}"
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
@@ -244,7 +246,8 @@ jobs:
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
-        with: arch: "${{ matrix.arch }}"
+        with:
+          arch: "${{ matrix.arch }}"
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
