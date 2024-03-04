@@ -1,9 +1,9 @@
+inputs:
+  arch:
+    description: 'Runner Architecture'
+    required: false
+    default: "amd64"
 runs:
-  inputs:
-    arch:
-      description: 'Runner Architecture'
-      required: false
-      default: "amd64"
   using: composite
   steps:
     - name: Show crun version before the patch
