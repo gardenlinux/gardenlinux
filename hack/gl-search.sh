@@ -46,7 +46,7 @@ if [ "$gls_gl_dist" != "today" ]; then
   fi
 fi  
 
-repo_url="$base_url/dists/${gls_gl_dist}/InRelease?ignoreCaching=1"
+repo_url="$base_url/dists/${gls_gl_dist}/InRelease"
 
 # Check if repo exists for user provided garden linux version string
 if curl -s "$repo_url" | grep -q "Error"; then
@@ -65,10 +65,10 @@ packages_url_base="$base_url/dists/${gls_gl_dist}/main/binary-${gls_selected_arc
 
 # If packages raw exist, use it
 if curl -s -o /dev/null -w "%{http_code}" "$packages_url_base/Packages" | grep -q 200; then
-  curl -s "$packages_url_base/Packages?ignoreCaching=1" > "$packages_file"
+  curl -s "$packages_url_base/Packages" > "$packages_file"
 elif curl -s -o /dev/null -w "%{http_code}" "$packages_url_base/Packages.gz" | grep -q 200; then
   packages_file_compressed=$(mktemp)
-  curl -s "$packages_url_base/Packages.gz?ignoreCaching=1" > "$packages_file_compressed"
+  curl -s "$packages_url_base/Packages.gz" > "$packages_file_compressed"
   gunzip -c "$packages_file_compressed" > "$packages_file"
 else
   echo "No Packacges file found in $packages_url_base"
