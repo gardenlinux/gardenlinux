@@ -1,2 +1,5 @@
 # gardenlinux maintainers
 * @gardenlinux/garden-linux-maintainers
+
+# Gardener Responsibility for the Gardener Feature
+/features/gardener/* @gardenlinux/gardener-skipper-operating-system
