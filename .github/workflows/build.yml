@@ -53,6 +53,7 @@ jobs:
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
+        with: arch: "${{ matrix.arch }}"
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
@@ -90,16 +91,8 @@ jobs:
       #     proc_trace_chart_max_count: 50
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - if: matrix.arch != 'arm64'
-        uses: ./.github/actions/setup
-      - if: matrix.arch == 'arm64'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends podman uidmap slirp4netns dbus-user-session
-          id="$(id -u)"
-          sudo systemctl start user@$id
-          export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$id/bus
-          systemctl --user start dbus
+      - uses: ./.github/actions/setup
+        with: arch: "${{ matrix.arch }}"
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
@@ -128,16 +121,8 @@ jobs:
       #     proc_trace_chart_max_count: 50
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - if: matrix.arch != 'arm64'
-        uses: ./.github/actions/setup
-      - if: matrix.arch == 'arm64'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends podman uidmap slirp4netns dbus-user-session
-          id="$(id -u)"
-          sudo systemctl start user@$id
-          export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$id/bus
-          systemctl --user start dbus
+      - uses: ./.github/actions/setup
+        with: arch: "${{ matrix.arch }}"
       - name: build test container
         run: |
           OCI_IMAGE_TAG="$(./build --print-container-image)"
@@ -181,17 +166,8 @@ jobs:
       #     proc_trace_chart_max_count: 50
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - if: matrix.arch != 'arm64'
-        uses: ./.github/actions/setup
-      - if: matrix.arch == 'arm64'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends podman uidmap slirp4netns
-          sudo apt-get install -y --no-install-recommends podman uidmap slirp4netns dbus-user-session
-          id="$(id -u)"
-          sudo systemctl start user@$id
-          export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$id/bus
-          systemctl --user start dbus
+      - uses: ./.github/actions/setup
+        with: arch: "${{ matrix.arch }}"
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
@@ -267,16 +243,8 @@ jobs:
       #     proc_trace_chart_max_count: 50
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - if: matrix.arch != 'arm64'
-        uses: ./.github/actions/setup
-      - if: matrix.arch == 'arm64'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends podman uidmap slirp4netns dbus-user-session
-          id="$(id -u)"
-          sudo systemctl start user@$id
-          export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$id/bus
-          systemctl --user start dbus
+      - uses: ./.github/actions/setup
+        with: arch: "${{ matrix.arch }}"
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
