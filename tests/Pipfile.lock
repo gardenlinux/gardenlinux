@@ -139,12 +139,12 @@
         },
         "azure-core": {
             "hashes": [
-                "sha256:3dae7962aad109610e68c9a7abb31d79720e1d982ddf61363038d175a5025e89",
-                "sha256:6f3a7883ef184722f6bd997262eddaf80cfe7e5b3e0caaaf8db1695695893d35"
+                "sha256:26273a254131f84269e8ea4464f3560c731f29c0c1f69ac99010845f239c1a8f",
+                "sha256:7c5ee397e48f281ec4dd773d67a0a47a0962ed6fa833036057f9ea067f688e74"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==1.30.0"
+            "version": "==1.30.1"
         },
         "azure-cosmos": {
             "hashes": [
@@ -554,12 +554,12 @@
         },
         "azure-mgmt-network": {
             "hashes": [
-                "sha256:114c4292d223b1d1e247b41af65b8d5a3793567e6adbfa230772055223f4182a",
-                "sha256:c76181e79d689df40b8160c4ffa8dd2bbf6ba064ed4d164fdefd8fb53b781641"
+                "sha256:87b5338d14c957bd3a28a5ec85fb74043749d1a16a48cd5978ef51c4a1036af3",
+                "sha256:dce2cafb1ae0e563e0b5efc537dc98a7c0ad824d4261e64bed75f788196dd5c6"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.7'",
-            "version": "==25.2.0"
+            "markers": "python_version >= '3.8'",
+            "version": "==25.3.0"
         },
         "azure-mgmt-nspkg": {
             "hashes": [
@@ -2290,11 +2290,11 @@
         },
         "typing-extensions": {
             "hashes": [
-                "sha256:23478f88c37f27d76ac8aee6c905017a143b0b1b886c3c9f66bc2fd94f9f5783",
-                "sha256:af72aea155e91adfc61c3ae9e0e342dbc0cba726d6cba4b6c72c1f34e47291cd"
+                "sha256:69b1a937c3a517342112fb4c6df7e72fc39a38e7891a5730ed4985b5214b5475",
+                "sha256:b0abd7c89e8fb96f98db18d86106ff1d90ab692004eb746cf6eda2682f91b3cb"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==4.9.0"
+            "version": "==4.10.0"
         },
         "tzdata": {
             "hashes": [
