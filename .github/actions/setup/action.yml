@@ -6,10 +6,22 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Show crun version before the patch
+    - name: install required packages
       shell: bash
       run: |
-        crun --version
+        sudo rm -rf /{usr/{local/{lib/{android,heroku},.ghcup,share/{dotnet,powershell,miniconda,swift}},share/{dotnet,miniconda,swift}},opt/{hostedtoolcache,microsoft},imagegeneration}
+        sudo docker system prune -a -f
+        sudo apt-get update
+
+        if [ "${{ inputs.arch }}" = "amd64" ]; then
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qemu-user-static
+        elif [ "${{ inputs.arch }}" = "arm64" ]; then
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends podman uidmap slirp4netns dbus-user-session
+          id="$(id -u)"
+          sudo systemctl start user@$id
+          export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$id/bus
+          systemctl --user start dbus
+        fi
     # Workaround for https://github.com/actions/runner-images/issues/9425, to be removed once the issue is resolved
     - name: patch crun (Workaround for https://github.com/actions/runner-images/issues/9425)
       run: |
@@ -35,20 +47,3 @@ runs:
       shell: bash
       run: |
         crun --version
-    - name: install required packages
-      shell: bash
-      run: |
-        sudo rm -rf /{usr/{local/{lib/{android,heroku},.ghcup,share/{dotnet,powershell,miniconda,swift}},share/{dotnet,miniconda,swift}},opt/{hostedtoolcache,microsoft},imagegeneration}
-        sudo docker system prune -a -f
-        sudo apt-get update
-
-        if [ "${{ inputs.arch }}" = "amd64" ]; then
-          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qemu-user-static
-        elif [ "${{ inputs.arch }}" = "arm64" ]; then
-          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends podman uidmap slirp4netns dbus-user-session
-          id="$(id -u)"
-          sudo systemctl start user@$id
-          export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$id/bus
-          systemctl --user start dbus
-        fi
-
