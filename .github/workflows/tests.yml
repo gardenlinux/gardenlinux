@@ -65,6 +65,8 @@ jobs:
             target: ali
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      # Use crun workaround
+    - uses: ./.github/actions/setup
 
     - name: login to ghcr.io
       run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
