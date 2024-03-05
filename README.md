@@ -48,3 +48,20 @@ flowchart TD
 - policy: `github-repo-policy`
 	- gives read/write access to S3 bucket `gardenlinux-repo`
 	- gives access to gardenlinux repo signing key on KMS
+
+## Repo patch release workflow
+
+The `update.yml` GitHub action automatically creates daily releases of the form `<GL_VERSION>.0`.
+Each release corresponds to a tag of the same name in this repo.
+These tags contain a generated file called `package-releases` that pins the custom build package versions to include in this release.
+
+To create a patch release, simply checkout this tag, adjust the `package-release` and `package-imports` files as needed, commit and tag this commit as `<GL_VERSION>.X`
+
+```
+git fetch --tags
+git checkout <GL_VERSION>.0
+# modify package-releases and package-imports as needed
+git commit
+git tag <GL_VERSION>.1
+git push origin <GL_VERSION>.1
+```
