@@ -146,6 +146,8 @@ sssd
 strace
 sudo
 swtpm
+syslinux
+syslinux-common
 syslog-ng
 syslog-ng-core
 sysstat
