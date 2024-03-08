@@ -55,7 +55,7 @@ GUID.txt:
 	@./genefiauth --guid-file '$(word 1,$+)' --ca '$(word 2,$+)' --null '$@'
 
 %.aws-efivars: %.pk.auth %.kek.auth %.db.auth
-	@uefivars.py -i none -o aws -O '$@' -P '$*.pk.esl' -K '$*.kek.esl' -b '$*.db.esl'
+	@uefivars -i none -o aws -O '$@' -P '$*.pk.esl' -K '$*.kek.esl' -b '$*.db.esl'
 
 %.pub: gpg.conf
 	@./gengpg --conf '$<' '$@'
