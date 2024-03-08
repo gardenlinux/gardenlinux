@@ -87,7 +87,7 @@ class CHROOT:
 
 
     def _validate(self):
-        """ Validate basic settings befor running the tests """
+        """ Validate basic settings before running the tests """
         # Check if tar archive as image path is defined
         if not "image" in self.config:
             logger.error("No path to image archive defined.")
@@ -197,7 +197,7 @@ class CHROOT:
                 if rc != 0:
                     logger.error("Command failed.")
                 else:
-                    logger.info("Command sucessfully executed.")
+                    logger.info("Command successfully executed.")
         # Generate SSH hostkeys for chroot
         # (this way we do not need to execute this inside the 'chroot'
         #  environment and still support amd64 and arm64 architectures)
@@ -219,7 +219,7 @@ class CHROOT:
             if rc != 0:
                 logger.error("Command failed.")
             else:
-                logger.info("Command sucessfully executed.")
+                logger.info("Command successfully executed.")
         # Generate chroot sshd directory for run/pid
         chroot_sshd_run_dir = rootfs + "/run/sshd"
         try:
