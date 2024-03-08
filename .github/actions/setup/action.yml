@@ -10,6 +10,8 @@ runs:
     - name: patch crun (Workaround for https://github.com/actions/runner-images/issues/9425)
       shell: bash
       run: |
+        tmpdir="$(mktemp -d)"
+        pushd "$tmpdir"
         curl -Lo ./crun https://github.com/containers/crun/releases/download/1.14.3/crun-1.14.3-linux-amd64
         GOOD_SHA=80c5ab9422d4672f650f2bad3da933568349b64117d055486abc3534517be2af
         sha256sum ./crun
@@ -20,6 +22,8 @@ runs:
             echo "Checksums do not match"
             exit 1
         fi
+        popd
+        rm -rf "$tmpdir"
     - name: Show crun version after the patch
       shell: bash
       run: |
