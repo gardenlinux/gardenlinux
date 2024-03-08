@@ -3,11 +3,16 @@
 set -eufo pipefail
 
 conf=gpg.conf
+aws_kms_key_spec=
 
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--conf)
 			conf="$2"
+			shift 2
+			;;
+		--aws-kms-key-spec)
+			aws_kms_key_spec="$2"
 			shift 2
 			;;
 		*)
@@ -18,18 +23,73 @@ done
 
 base="${1%.*}"
 
-tmp_gnupg_home="$(mktemp -d)"
-chmod 700 "$tmp_gnupg_home"
+tmp_home="$(mktemp -d)"
+(
+	export HOME="$tmp_home"
+	mkdir "$HOME/.gnupg"
+	chmod 700 "$HOME/.gnupg"
 
-# using $tmp_gnupg_home as an ephemeral GNUPGHOME directory, since %secring parameter is a no-op in gpg >= 2.1
-export GNUPGHOME="$tmp_gnupg_home"
+	if [ -z "$aws_kms_key_spec" ]; then
+		echo "Generating GPG key ($GPG_EMAIL)"
+		envsubst < "$conf" | gpg --generate-key --batch
+		echo "Exporting GPG private key ($GPG_EMAIL) -> $base.key"
+		gpg --export-secret-key --armor "$GPG_EMAIL" > "$base.key"
+		echo "Exporting GPG public key ($GPG_EMAIL) -> $base.pub"
+		gpg --export --armor "$GPG_EMAIL" > "$base.pub"
+	else
+		echo "Generating AWS KMS backed $aws_kms_key_spec private key -> $base.arn"
+		aws kms create-key \
+			--description "GPG key $base: $GPG_NAME <$GPG_EMAIL>" \
+			--key-usage SIGN_VERIFY \
+			--customer-master-key-spec "$aws_kms_key_spec" \
+			--query "KeyMetadata.Arn" \
+			--output text > "$base.arn"
+		key_id="$(basename "$(cat "$base.arn")")"
 
-echo "Generating GPG key ($GPG_EMAIL)"
-envsubst < "$conf" | gpg --generate-key --batch
-echo "Exporting GPG private key ($GPG_EMAIL) -> $base.key"
-gpg --export-secret-key --armor "$GPG_EMAIL" > "$base.key"
-echo "Exporting GPG public key ($GPG_EMAIL) -> $base.pub"
-gpg --export --armor "$GPG_EMAIL" > "$base.pub"
+		mkdir -p "$HOME/.config/aws-kms-pkcs11"
+		cat > "$HOME/.config/aws-kms-pkcs11/config.json" <<-EOF
+		{
+			"slots": [
+				{
+					"kms_key_id": "$key_id"
+				}
+			]
+		}
+		EOF
 
-# using separate variable here instead of GNUPGHOME to ensure that under no circumstances (e.g. accidentally commenting out setting GNUPGHOME) the user GNUPGHOME gets deleted
-rm -rf "$tmp_gnupg_home"
+		PKCS11_MODULE_PATH="/usr/lib/$(uname -m)-linux-gnu/pkcs11/aws_kms_pkcs11.so"
+		export PKCS11_MODULE_PATH
+		openssl req -engine pkcs11 -keyform engine -key "pkcs11:token=${key_id:0:32}" -new -sha256 -x509 -days 3650 -subj "/CN=$GPG_NAME/" > "$base.crt"
+		cert_base64="$(openssl x509 -outform der < "$base.crt" | openssl enc -base64 -A)"
+
+		cat > "$HOME/.config/aws-kms-pkcs11/config.json" <<-EOF
+		{
+			"slots": [
+				{
+					"kms_key_id": "$key_id",
+					"certificate": "$cert_base64"
+				}
+			]
+		}
+		EOF
+
+		cat > "$HOME/.gnupg/gpg-agent.conf" <<-EOF
+		scdaemon-program /usr/bin/gnupg-pkcs11-scd
+		EOF
+
+		cat > "$HOME/.gnupg/gnupg-pkcs11-scd.conf" <<-EOF
+		providers kms
+		provider-kms-library $PKCS11_MODULE_PATH
+		EOF
+
+		gpg --card-status
+		key_grip="$(basename "$(find "$HOME/.gnupg/private-keys-v1.d" -name '*.key' | head -n 1)" .key)"
+
+		{ envsubst < "$conf" && echo "Key-Grip: $key_grip"; } | gpg --generate-key --batch
+		echo "Exporting GPG private key stub ($GPG_EMAIL) -> $base.key"
+		gpg --export-secret-key --armor "$GPG_EMAIL" > "$base.key"
+		echo "Exporting GPG public key ($GPG_EMAIL) -> $base.pub"
+		gpg --export --armor "$GPG_EMAIL" > "$base.pub"
+	fi
+)
+rm -rf "$tmp_home"

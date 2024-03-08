@@ -13,6 +13,7 @@ updates:
     directory: "/tests"
     schedule:
       interval: "weekly"
+    versioning-strategy: "increase-if-necessary"
     reviewers:
       - "gardenlinux/garden-linux-maintainers"
 

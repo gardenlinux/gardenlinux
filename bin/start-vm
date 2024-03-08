@@ -24,6 +24,7 @@ main () {
     qemu_opt_monitor
     qemu_opt_remote_control
     qemu_opt_network
+    qemu_opt_tpm
     qemu_opt_misc
     qemu_status
     qemu_execute
@@ -102,7 +103,6 @@ set_defaults () {
     monitor=1
     bridge=
     daemonize=
-    no_watchdog=0
     pxe=
     pxe_binary=
     pxefile=${CURR_DIR}/../examples/ipxe/start-vm.ipxe
@@ -117,6 +117,7 @@ set_defaults () {
     port_dest=22
     port_base=2223
     vnc_base=5900
+    tpm2=
 
     # Evaluate free and usable ports
     if [ $os != "macos" ]; then
@@ -146,14 +147,14 @@ set_defaults () {
 # passed to this script
 get_opts () {
 source "${CURR_DIR}/.constants.sh" \
-    --flags 'daemonize,no-watchdog,uefi,legacy-bios,skipkp,vnc' \
+    --flags 'daemonize,uefi,legacy-bios,skipkp,vnc,tpm2' \
     --flags 'cpu:,mem:,bridge:,port:,mac:,arch:' \
     --flags 'pxe:' \
     --flags 'ignfile:' \
     --flags 'pidfile:' \
     --flags 'ueficode:,uefivars:' \
     --flags 'destport:' \
-    --usage '[ --daemonize ] [--no-watchdog] [ --cpu:<#> ] [ --mem:<size> ] [ --pxe:<dir> ] [<image file>[,<size>]]*' \
+    --usage '[ --daemonize ] [ --cpu:<#> ] [ --mem:<size> ] [ --pxe:<dir> ] [<image file>[,<size>]]*' \
     --sample '.build/rootfs.raw' \
     --sample ',1G ubuntu-16.04.7-server-amd64.iso' \
     --help  "Starts a virtual machine with the most basic environment, needed. Perfect use for test cases and running samples of GardenLinux. This script can run unprivileged but it should have the possibility to use kvm (group kvm) otherwise it will be super slow. If not being root, the network will be slow and no ICMP (ping) capabilities are with the VM.
@@ -172,9 +173,9 @@ source "${CURR_DIR}/.constants.sh" \
 --ignfile   <path>        Provide an ignition file when pxe booting. Can be used standalone.
 --pidfile   <path>        Provide a file where to store the pid of the started qemu vm.
 --daemonize <bool>        Start the virtual machine in background, console deactivated (default: no).
---no-watchdog <bool>        Disables the watchdog qemu option. Used for kvm tests on podman
 --skipkp    <bool>        Skip the keypress to the verify status before execute.
 --vnc       <bool>        Sitches from serial console to vnc graphics console / enables vnc in --daemonize.
+--tpm2      <bool>        Enable TPM2 emulation and QEMU passthrough using swtpm.
 <image file>              A file containing the image to boot. Format is determined by the extension (raw, vdi, vpc, vhd, vhdx, vmdk, qcow2, iso)."
 
 eval "$dgetopt"
@@ -186,7 +187,6 @@ while true; do
         --arch)         arch="$1";      shift ;;
         --mem)          memory="$1";    shift ;;
         --daemonize)    daemonize=1;    keypress=; ;;
-        --no-watchdog)  no_watchdog=1;        ;;
         --vnc)          vnc=1;                ;;
         --uefi)         uefi=1;               ;;
         --legacy-bios)  uefi=;                ;;
@@ -200,6 +200,7 @@ while true; do
         --port)         port="$1";      shift ;;
         --destport)     port_dest="$1"; shift ;;
         --skipkp)       keypress=;            ;;
+        --tpm2)         tpm2=1;               ;;
         --) break ;;
         *) eusage "Unknown flag '$flag'"      ;;
     esac
@@ -607,12 +608,6 @@ qemu_opt_monitor () {
         [ -e $TMP_DIR/$mac.monitor ] && eusage "Error: Monitor to this MAC address already exists $CURR_DIR/$mac.monitor"
         QEMU_OPTS+=("-monitor unix:$TMP_DIR/$mac.monitor,server,nowait")
     fi
-
-    # Add Watchdog
-    if [ $os = debian ] && [ "$no_watchdog" = 0 ] && [ $bin_qemu != qemu-system-aarch64 ]; then
-        # add a watchdog to maintain automatic reboots
-        QEMU_OPTS+=("-watchdog i6300esb")
-    fi
 }
 
 # Validate and define commands for remote
@@ -687,6 +682,28 @@ qemu_opt_network () {
 }
 
 
+# Setup TPM2 emulation support using swtpm
+qemu_opt_tpm () {
+    if [ $tpm2 = 1 ]; then
+        if [ ! "$(command -v swtpm)" ]; then
+            eusage "Error: Could not find swtpm on the system"
+        else
+            swtpm socket --tpmstate backend-uri=file://$CURR_DIR/$mac.permall --ctrl type=unixio,path=$CURR_DIR/swtpm-sock --tpm2 --daemon --terminate
+        fi
+
+        QEMU_OPTS+=("-chardev socket,id=chrtpm,path=$CURR_DIR/swtpm-sock")
+
+        # 'tpm-tis-device' for aarch64 versus 'tpm-tis' for x86
+        # Reference: https://listman.redhat.com/archives/libvir-list/2021-February/msg00647.html
+        if [ $arch = "amd64" ]; then
+            QEMU_OPTS+=("-tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-tis,tpmdev=tpm0")
+        elif [ $arch = "arm64" ]; then
+            QEMU_OPTS+=("-tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-tis-device,tpmdev=tpm0")
+        fi
+    fi
+}
+
+
 qemu_opt_misc () {
     if [ "$arch" = "amd64" ]; then
         # Use minimal memory
@@ -726,6 +743,7 @@ qemu_status () {
     [ $bridge ]     || printf "  sshport: (host) tcp/%s -> (vm) tcp/%s  (unbridged)\n"  $port $port_dest
     [ $vnc ]        && printf "  vncport: %s\n" $(( vnc_port + 5900 ))
     [ $uefi ]       && printf "  uefi boot enabled. %s.vars stores efivars\n" $mac
+    [ $tpm2 ]       && printf "  tpm2 emulation enabled\n"
 
     # Print inflated disks
     for i in "${inflatelist[@]}"; do

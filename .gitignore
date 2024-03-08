@@ -24,6 +24,7 @@
 !/cert/gardenlinux-*.chain
 !/cert/gardenlinux-*.auth
 !/cert/gardenlinux-*.aws-efivars
+!/cert/gardenlinux-repo-sign.pub
 !/cert/gardenlinux.kernel.sign.crt
 !/cert/gardenlinux.sign.pub
 /features/metal/file.include/lib/firmware/
@@ -37,4 +38,7 @@ __pycache__
 /tests/*.xml
 make_targets.cache
 /bin/*.vars
+/bin/*.ipxe
+/bin/*.permall
+/bin/swtpm-sock
 .DS_Store
