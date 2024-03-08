@@ -97,6 +97,8 @@ jobs:
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
+          git status
+          false
       - name: build base-${{ matrix.arch }}
         run: ./build base-${{ matrix.arch }}
       - uses: actions/cache/save@ab5e6d0c87105b4c9c2047343972218f562e4319 # pin@v3
