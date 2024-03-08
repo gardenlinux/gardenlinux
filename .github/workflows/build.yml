@@ -57,7 +57,7 @@ jobs:
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
-      - name: bulid certificates
+      - name: build certificates
         if: ${{ ! inputs.use_kms }}
         run: ./cert/build
       - name: use kms backed certificates
