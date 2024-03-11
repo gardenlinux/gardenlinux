@@ -3,3 +3,4 @@ python3-boto
 cloud-init
 dmidecode
 rng-tools5
+netplan.io
