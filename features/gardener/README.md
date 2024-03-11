@@ -4,7 +4,6 @@ The gardener feature adjusts Garden Linux to fulfil the [gardener.cloud](https:/
 As Garden Linux is the Container Node OS for Gardener, that's also where the "Garden" part in the name originates.
 
 ### Features
-
 The `gardener` feature adjusts Garden Linux to fulfil the `gardener.cloud` requirements:
 - Installs package `docker.io`
   - Needed for handling the [hyperkube](https://github.com/gardener/hyperkube) downloads in Gardener
@@ -26,13 +25,11 @@ Automated image recreation is not needed, since binaries are protected in multip
 
 The typical network file system clients like `cifs` or `nfs` are extra hardened to circumvent the most common bugs.
 
-Garden Linux activates the f daemon by default.
+Garden Linux activates the SSH daemon by default.
 This is needed for cloud providers.
 This is not any different in the Gardener feature, but Gardener disables the sshd systemd unit after installing Gardener.
 
 SSH access might be needed in rare cases for debugging Gardener nodes before Gardener is successfully installed on it.
-
-For Gardener the ssh feature is installed (Gardener can activate/deactivate over cloud features - including the dropping of an admin public key) but by default the ssh daemon is not atarted and therefore not exposing any risk.
 
 ### Unit testing
 Unit tests are supported for this feature and will ensure that the groups are correctly defined, dmesg can be accessed by every user (Gardener requirement), all required packages are installed and the active LSM is switched from SELinux to AppArmor.
