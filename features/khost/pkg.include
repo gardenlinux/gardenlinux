@@ -3,3 +3,4 @@ conntrack
 ethtool
 ipvsadm
 socat
+gnupg

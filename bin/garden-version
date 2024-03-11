@@ -84,10 +84,10 @@ then	[ $(cut -d. -sf3 <<< ${input}) ] && eusage "invalid version format ${input}
 	fi
 	version="${major}.${minor}"
 else 
-  if	[[ ${input} = today ]];
+  if	[[ ${input} = today ]] || [[ ${input} = experimental ]];
 	then	indate=$($date_gnu --date "today" +%s 2>/dev/null)
 		major="$(( (${indate} - $($date_gnu --date "${startdate}" +%s)) / (60*60*24) ))"
-		version=today
+		version=${input}
 	else	indate=$($date_gnu --date "${input}" +%s 2>/dev/null) || eusage "invalid date ${input}"
 		major="$(( (${indate} - $($date_gnu --date "${startdate}" +%s)) / (60*60*24) ))"
 		version="${major}.${minor}"
@@ -103,4 +103,3 @@ case "${typeout}" in
 	--git)		echo "${version}-$(git -C "${scriptsDir}" rev-parse --short 'HEAD^{commit}')" ;;
         *)		echo "${version}" ;;
 esac
-
