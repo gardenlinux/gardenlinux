@@ -1,0 +1,5 @@
+description: "Google Distributed Cloud Hosted platform (cloud-init based guest environment)"
+type: platform
+features:
+  include:
+    - cloud
