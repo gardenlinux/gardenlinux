@@ -18,9 +18,6 @@ from botocore.exceptions import ClientError
 from helper.sshclient import RemoteClient
 from paramiko import RSAKey
 
-startup_script = """#!/bin/bash
-systemctl enable ssh
-"""
 
 
 logger = logging.getLogger(__name__)
@@ -697,6 +694,10 @@ class AWS:
 
         volume_tags = self._tags.copy()
         volume_tags.append({'Key': 'sec-by-def-ebs-encryption-exception', 'Value': 'enabled'})
+
+        startup_script = """#!/bin/bash
+        systemctl start ssh
+        """
 
         instance = self.ec2_resource.create_instances(
             UserData = startup_script,

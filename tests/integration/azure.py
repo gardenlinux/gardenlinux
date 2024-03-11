@@ -293,7 +293,7 @@ class AZURE:
         self.logger.info(f"Creating and booting virtual machine of size {vm_size} from image version {self._image.name}...")
 
         startup_script = """#!/bin/bash
-        systemctl enable ssh
+        systemctl start ssh
         """
 
         startup_script_encoded = base64.b64encode(startup_script.encode('utf-8')).decode('utf-8')
