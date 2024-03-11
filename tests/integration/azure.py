@@ -3,6 +3,7 @@ import os
 import re
 import pytest
 import uuid
+import base64
 
 from helper.utils import wait_systemd_boot
 from helper.sshclient import RemoteClient

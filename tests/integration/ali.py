@@ -5,6 +5,7 @@ import os
 import subprocess
 import tempfile
 import requests
+import base64
 
 from urllib.request import urlopen
 from urllib.parse import urlparse
