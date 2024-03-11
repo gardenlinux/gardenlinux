@@ -8,7 +8,6 @@ import pytest
         "/etc/cloud/ds-identify.cfg",
         "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg",
         "/etc/cloud/cloud.cfg.d/50-datasource.cfg",
-        "/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg"
     ]
 )
 
