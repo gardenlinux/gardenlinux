@@ -290,6 +290,13 @@ class AZURE:
         ).result()
 
         self.logger.info(f"Creating and booting virtual machine of size {vm_size} from image version {self._image.name}...")
+
+        startup_script = """#!/bin/bash
+        systemctl enable ssh
+        """
+
+        startup_script_encoded = base64.b64encode(startup_script.encode('utf-8')).decode('utf-8')
+
         self._instance = self.cclient.virtual_machines.begin_create_or_update(
             resource_group_name=self._resourcegroup.name,
             vm_name=name,
@@ -310,6 +317,7 @@ class AZURE:
                     'vm_size': vm_size,
                 },
                 'os_profile': {
+                    'custom_data' : startup_script_encoded,
                     'computer_name': name,
                     'admin_username': admin_username,
                     'linux_configuration': {
