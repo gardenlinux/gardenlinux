@@ -699,7 +699,7 @@ class AWS:
         volume_tags.append({'Key': 'sec-by-def-ebs-encryption-exception', 'Value': 'enabled'})
 
         instance = self.ec2_resource.create_instances(
-            userData = startup_script,
+            UserData = startup_script,
             BlockDeviceMappings=[
                 {
                     "DeviceName": "/dev/xvda",
