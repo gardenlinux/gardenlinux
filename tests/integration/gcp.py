@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 startup_script = """#!/bin/bash
 touch /tmp/startup-script-ok
+systemctl start ssh
 """
 
 class GCP:
