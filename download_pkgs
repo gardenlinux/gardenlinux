@@ -16,6 +16,9 @@ arch="$(dpkg --print-architecture)"
 mkdir download
 while read -r repo tag; do
 	gh release download --dir download --repo "$repo" "$tag"
+	if [ -e download/null ]; then
+		rm download/null
+	fi
 done < "$releases"
 
 truncate -s 0 pkgs depends
