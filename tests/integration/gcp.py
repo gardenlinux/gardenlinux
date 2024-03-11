@@ -409,10 +409,12 @@ class GCP:
                 'source': blob_url,
             },
             'labels': self._tags,
+            'guest_os_features': [
+                {'type_': 'VIRTIO_SCSI_MULTIQUEUE'},
+                {'type_': 'UEFI_COMPATIBLE'},
+                {'type_': 'GVNIC'},
+            ]
         }
-
-        if self.config['uefi'] or self.config['secureboot']:
-            config['guest_os_features'] = [{'type_': "UEFI_COMPATIBLE"}]
 
         if self.config['secureboot']:
             cert_file_type = self.config['secureboot_parameters']['cert_file_type']
