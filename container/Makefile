@@ -28,10 +28,8 @@ build-base-test: needslim
 .PHONY: build-integration-test
 build-integration-test: build-base-test
 	cp ../checksums.sha256 integration-test/checksums.sha256
-	cat integration-test/cloud.google.gpg.base64 | base64 -d > integration-test/cloud.google.gpg
 	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/integration-test:$(VERSION) integration-test
 	rm integration-test/checksums.sha256
-	rm integration-test/cloud.google.gpg
 
 .PHONY: clean
 clean:
