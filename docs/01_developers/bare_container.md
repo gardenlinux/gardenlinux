@@ -1,5 +1,15 @@
 # Garden Linux Bare Container Documentation
 
+TODO: 
+- alpine container images are not posix compliant (add link) comparision
+- distroless based on debian stable - we are based on gardenlinux, which is based on testing (add link)
+- better introduction
+    - explain that it is like GL based on minimal debian
+    - hardened agaisnt SAP security guidelines (including protecode scan)
+    - ldd-tree dependency minimization
+    - super extra small
+    - up to date
+
 ## Overview
 Garden Linux offers a range of specialized bare container images, each tailored for specific applications and designed for minimalism and security:
 
@@ -11,8 +21,10 @@ Garden Linux offers a range of specialized bare container images, each tailored 
 These containers are optimized as base images for Dockerfiles. 
 Their development is streamlined by the [unbase_oci](https://github.com/gardenlinux/unbase_oci) tool, which efficiently minimizes image size by removing unnecessary components from base container images.
 
+
 ### Unbase OCI Tool
-- **Description**: The `unbase_oci` tool is instrumental in the development of these "bare" container images. 
+The `unbase_oci` tool is instrumental in the development of these "bare" container images. 
+
 - **Functionality**:
   - Strips unnecessary components from base container images.
   - Reduces image size and potential security vulnerabilities.
@@ -21,7 +33,7 @@ Their development is streamlined by the [unbase_oci](https://github.com/gardenli
 - **Impact**: This tool is pivotal in creating streamlined, "distroless-like" images, ensuring that the resulting containers are lean and secure.
 
 ### Bare-libc
-- **Description**: A streamlined container image for applications that need only the basic C library.
+A streamlined container image for applications that need only the basic C library.
 - **Features**:
   - Includes essential C runtime libraries.
   - Suited for C/C++ applications with minimal dependencies.
@@ -29,7 +41,7 @@ Their development is streamlined by the [unbase_oci](https://github.com/gardenli
 - **Container Link**: [bare-libc](https://github.com/orgs/gardenlinux/packages/container/package/gardenlinux%2Fbare-libc)
 
 ### Bare-python
-- **Description**: Optimized for Python applications, this image provides the Python runtime.
+Optimized for Python applications, this image provides the Python runtime.
 - **Features**:
   - Contains the Python interpreter and necessary libraries.
   - Ideal for Python-based applications.
@@ -43,7 +55,7 @@ Their development is streamlined by the [unbase_oci](https://github.com/gardenli
   ```
 
 ### bare-sapmachine
-- **Description**: Customized for SAP applications, ensuring compatibility and optimized performance.
+Customized for SAP applications, ensuring compatibility and optimized performance.
 - **Features**:
   - Necessary libraries and binaries for SAP included.
   - Optimized for sapmachine.
@@ -51,7 +63,7 @@ Their development is streamlined by the [unbase_oci](https://github.com/gardenli
 - **Container Link**: [bare-sapmachine](https://github.com/orgs/gardenlinux/packages/container/package/gardenlinux%2Fbare-sapmachine)
 
 ### Bare-nodejs
-- **Description**: A container tailored for Node.js applications, providing the Node.js runtime.
+A container tailored for Node.js applications, providing the Node.js runtime.
 - **Features**:
   - Includes Node.js environment.
   - Suitable for server-side JavaScript applications.
