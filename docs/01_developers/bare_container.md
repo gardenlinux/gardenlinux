@@ -9,6 +9,16 @@ TODO:
     - ldd-tree dependency minimization
     - super extra small
     - up to date
+- workflow model
+    - start with a normal container
+    - develop like you would normaly
+    - install what you need (e.g. openssl, whatnot)
+    - build application (build dependencies may be installed by dev)
+    - debugging and testing
+    - if you are happy with all convinience ...(?)... then you can run unbase_oci
+    - all the dependencies you need are there (you propably need to include language specific code files (?) )
+    - static testing
+    - => result is a container similiar to distroless without maintaining versions of dependent libs, because implicitly done
 
 ## Overview
 Garden Linux offers a range of specialized bare container images, each tailored for specific applications and designed for minimalism and security:
