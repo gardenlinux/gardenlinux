@@ -13,8 +13,8 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: ./.github/actions/setup
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: ./.github/actions/setup
       - name: set VERSION=${{ inputs.version }}
         run: |
           bin/garden-version "${{ inputs.version }}" | tee VERSION
