@@ -37,7 +37,7 @@ def get_pkg_attr(package_name, attribute_key, packages_per_repo):
 def get_kernel_urls(gardenlinux_version):
     if not gardenlinux_version:
         print("You need to specify gardenlinux_version")
-    repositories = [f'http://repo.gardenlinux.io/gardenlinux {gardenlinux_version} main']
+    repositories = [f'http://packages.gardenlinux.io/gardenlinux {gardenlinux_version} main']
 
     architecture = ["arm64", "amd64"]
     versions = []
