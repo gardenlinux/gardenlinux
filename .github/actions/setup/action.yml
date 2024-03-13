@@ -1,7 +1,11 @@
 runs:
   using: composite
   steps:
-
+    - name: install required packages
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qemu-user-static
     # Workaround for https://github.com/actions/runner-images/issues/9425, to be removed once the issue is resolved
     - name: Show crun version before the patch
       shell: bash
@@ -28,9 +32,3 @@ runs:
       shell: bash
       run: |
         crun --version
-
-    - name: install required packages
-      shell: bash
-      run: |
-        sudo apt-get update
-        sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qemu-user-static
