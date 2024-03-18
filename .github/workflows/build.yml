@@ -159,6 +159,12 @@ jobs:
           - target: container
             arch: arm64
             modifier: ""
+          - target: driverbuild
+            arch: amd64
+            modifier: ""
+          - target: driverbuild
+            arch: arm64
+            modifier: ""
     steps:
       # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
       #   with:

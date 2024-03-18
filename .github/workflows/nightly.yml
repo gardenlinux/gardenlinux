@@ -67,3 +67,9 @@ jobs:
     uses: ./.github/workflows/publish_container.yml
     with:
       version: ${{ needs.build.outputs.version }}
+  publish_driverbuild_container:
+    name: publish gardenlinux driverbuild container image
+    needs: [ publish_container ]
+    uses: ./.github/workflows/publish_driverbuild_container.yml
+    with:
+      version: ${{ needs.build.outputs.version }}
