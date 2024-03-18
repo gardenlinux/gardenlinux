@@ -225,6 +225,12 @@ def create_github_release_notes(gardenlinux_version, commitish):
     output += "\n"
 
     output += generate_image_download_section(manifests, gardenlinux_version, commitish )
+
+    output += "\n"
+    output += "## Kernel Module Build Container (kmodbuild)"
+    output += "````"
+    output += f"ghcr.io/gardenlinux/kmodbuild:{gardenlinux_version}"
+    output += "```"
     return output
 
 def write_to_release_id_file(release_id):
