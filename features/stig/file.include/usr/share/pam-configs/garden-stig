@@ -1,0 +1,10 @@
+Name: Garden Linux STIG compliance
+Default: yes
+Priority: 1
+Auth-Type: Primary
+Auth:
+    required                            pam_faildelay.so delay=4000000
+Password:
+    [success=1 default=ignore]          pam_unix.so obscure sha512 shadow remember=5 rounds=5000
+Session:
+    required                            pam_lastlog.so showfailed

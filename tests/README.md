@@ -6,10 +6,11 @@
 - [General](#general)
 - [Chart](#chart)
 - [Unit Tests](#unit-tests)
-  - [Running Unit Tests](#running-unit-tests)
+  - [Running Unit tests](#running-unit-tests)
   - [Location of Unit Tests](#location-of-unit-tests)
+    - [Example Location](#example-location)
 - [Integration Tests](#integration-tests)
-  - [Prerequisites](#prerequisites-1)
+  - [Prerequisites](#prerequisites)
   - [Using the tests on supported platforms](#using-the-tests-on-supported-platforms)
     - [General](#general-1)
     - [Public cloud platforms](#public-cloud-platforms)
@@ -29,10 +30,10 @@
         - [Configuration options](#configuration-options-4)
         - [Running the tests](#running-the-tests-4)
     - [Local test environments](#local-test-environments)
-      - [CHROOT](#chroot-1)
+      - [CHROOT](#chroot)
         - [Configuration options](#configuration-options-5)
         - [Running the tests](#running-the-tests-5)
-      - [KVM](#kvm-1)
+      - [KVM](#kvm)
         - [Configuration options](#configuration-options-6)
         - [Running the tests](#running-the-tests-6)
       - [Manual Testing](#manual-testing)
@@ -41,6 +42,8 @@
         - [Configuration options](#configuration-options-7)
         - [Running the tests](#running-the-tests-8)
       - [Local tests in the integration container](#local-tests-in-the-integration-container)
+        - [Configuration options](#configuration-options-8)
+        - [Running the tests](#running-the-tests-9)
   - [Misc](#misc)
     - [Autoformat Using Black](#autoformat-using-black)
     - [Run Static Checks](#run-static-checks)
@@ -48,7 +51,7 @@
 
 # General
 
-Garden Linux supports integration testing on all major cloud platforms (Aliyun, AWS, Azur, GCP) as well as regular unit tests. To allow testing even without access to any cloud platform we created an universal `kvm` platform that may run locally and is accessed in the same way via a `ssh client object` as any other cloud platform. Therefore, you do not need to adjust tests to perform local integration tests. Next to this, the `KVM` and `chroot` platform are used for regular `unit tests`. All platforms share Pytest as a common base, are accessed in the same way (via a `RemoteClient` object) and are described in detail below. Beside this, you may also find additional tests that may be used for developing and contributing to fit the Garden Linux style guides.
+Garden Linux supports integration testing on all major cloud platforms (Aliyun, AWS, Azure, GCP) as well as regular unit tests. To allow testing even without access to any cloud platform we created an universal `kvm` platform that may run locally and is accessed in the same way via a `ssh client object` as any other cloud platform. Therefore, you do not need to adjust tests to perform local integration tests. Next to this, the `KVM` and `chroot` platform are used for regular `unit tests`. All platforms share Pytest as a common base, are accessed in the same way (via a `RemoteClient` object) and are described in detail below. Beside this, you may also find additional tests that may be used for developing and contributing to fit the Garden Linux style guides.
 
 # Chart
 This chart briefly describes the process of unit-, platform/integration tests.
