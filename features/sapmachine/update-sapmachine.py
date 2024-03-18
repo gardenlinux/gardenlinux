@@ -24,7 +24,7 @@ def loadChecksum(url):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--majorJreVersion', type=str)
+    parser.add_argument('--majorJreVersion', required=True, type=str)
     args = parser.parse_args()
     major_jre_version = args.majorJreVersion
     releases = loadReleases()
