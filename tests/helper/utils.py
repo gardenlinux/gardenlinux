@@ -201,6 +201,26 @@ def execute_remote_command(client, cmd, skip_error=False):
         return exit_code, output
 
 
+def get_installed_kernel_versions(client):
+    """Get a list of installed kernel versions using 'linux-version list'."""
+    command = "linux-version list"
+    (exit_code, output, error) = client.execute_command(command, quiet=True)
+    if exit_code == 0 and output:
+        kernel_versions = output.strip().split('\n')
+        return kernel_versions
+    else:
+        return []
+
+def get_kernel_config_paths(client):
+    kernel_versions = get_installed_kernel_versions(client)
+    paths = []
+    for k in kernel_versions:
+        config_path = f"/boot/config-{k}"
+        if check_file(client, config_path):
+            paths.append(config_path)
+    return paths
+
+
 def install_package_deb(client, pkg):
     """ Installs (a) Debian packagei(s) on a target platform """
     # Packages for testing may not be included within the Garden Linux
@@ -217,3 +237,15 @@ def install_package_deb(client, pkg):
     (exit_code, output, error) = client.execute_command(
         f"apt-get install -y --no-install-recommends {pkg}", quiet=True)
     assert exit_code == 0, f"Could not install Debian Package: {error}"
+
+def check_kernel_config_exact(client, kernel_config_path, kernel_config_item):
+    """ Checks if the given kernel_config_item is set in kernel_config_path """
+
+    assert check_file(client, kernel_config_path), f"Kernel config does not exist - {kernel_config_path}"
+
+    command = f"grep -qE '^{kernel_config_item}$' '{kernel_config_path}'"
+    (exit_code, output, error) = client.execute_command(command, quiet=True)
+    return exit_code == 0
+
+
+
