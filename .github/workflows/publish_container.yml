@@ -85,6 +85,8 @@ jobs:
           version="$(bin/garden-version "${{ inputs.version }}")"
           snapshot="$(gh api "/repos/gardenlinux/repo/contents/.container?ref=$version" | jq -r '.content' | base64 -d)"
           echo -e "base=ghcr.io/${{ github.repository }}:version\nsnapshot=$snapshot" | tee "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
       - name: publish gardenlinux kernel module build dev image
         run: |
           version=$(bin/garden-version "${{ inputs.version }}")
