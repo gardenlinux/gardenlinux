@@ -97,12 +97,12 @@ jobs:
 
           podman pull --arch amd64 "$base"
           podman pull --arch amd64 "$snapshot"
-          podman build --arch amd64 --build-arg base="$base" --build-arg snapshot="$snapshot" -t ghcr.io/${{ github.repository }}/kmodbuild:amd64-${version} .
+          podman build --arch amd64 --build-arg base="$base" --build-arg snapshot="$snapshot" -t ghcr.io/${{ github.repository }}/kmodbuild:amd64-${version} container/kmodbuild
           podman push ghcr.io/${{ github.repository }}/kmodbuild:amd64-${version}
 
           podman pull --arch arm64 "$base"
           podman pull --arch arm64 "$snapshot"
-          podman build --arch arm64 --build-arg base="$base" --build-arg snapshot="$snapshot" -t ghcr.io/${{ github.repository }}/kmodbuild:arm64-${version} .
+          podman build --arch arm64 --build-arg base="$base" --build-arg snapshot="$snapshot" -t ghcr.io/${{ github.repository }}/kmodbuild:arm64-${version} container/kmodbuild
           podman push ghcr.io/${{ github.repository }}/kmodbuild:arm64-${version}
 
           podman manifest create ghcr.io/${{ github.repository }}/kmodbuild:${version}
