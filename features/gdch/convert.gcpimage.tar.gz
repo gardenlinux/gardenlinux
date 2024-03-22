@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+tar --format=oldgnu -cSz --transform "s|$1|disk.raw|" "$1" > "$2"
