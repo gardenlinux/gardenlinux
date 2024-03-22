@@ -35,6 +35,7 @@ jobs:
         modifier: [ "${{ inputs.default_modifier }}" ]
     steps:
       - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.role }}
@@ -73,6 +74,7 @@ jobs:
             target: azure
     steps:
       - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.role }}
