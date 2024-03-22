@@ -1,0 +1,27 @@
+name: Lima-VM Images
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+        version: ["1312.3", "1443.0", "main"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.version }}
+      # Workaround for crun version, cf https://github.com/gardenlinux/gardenlinux/pull/1982
+      - uses: ./.github/actions/setup
+      # todo: version
+      - name: Build the image
+        run: ./build kvm_curl-lima-${{ matrix.arch }}
+      - run: find . -name *.qcow2
