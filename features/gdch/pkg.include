@@ -1,0 +1,6 @@
+#google-compute-engine-oslogin
+#google-guest-agent
+python3-cffi-backend
+nvme-cli
+chrony
+cloud-init
