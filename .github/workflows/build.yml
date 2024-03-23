@@ -266,6 +266,12 @@ jobs:
           find .build -exec touch -d "@$t" {} +
       - name: build
         run: ./build_bare_flavors --arch "${{ matrix.arch }}" "${{ matrix.config }}"
+      - name: test
+        run: |
+          image="$(podman load < .build/bare_flavors/${{ matrix.config }}-${{ matrix.arch }}.oci | awk '{ print $NF }')"
+          cd bare_flavors/${{ matrix.config }}/test
+          podman build -t test --build-arg image="$image" .
+          podman run --rm test
       - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # pin@v3
         with:
           name: "bare-${{ matrix.config }}-${{ matrix.arch }}"

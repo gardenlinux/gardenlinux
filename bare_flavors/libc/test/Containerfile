@@ -1,0 +1,9 @@
+ARG image
+
+FROM gcc AS compile
+COPY test.c /
+RUN gcc -O2 -o test test.c && ldd test
+
+FROM $image
+COPY --from=compile /test /
+CMD [ "/test" ]
