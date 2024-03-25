@@ -20,6 +20,8 @@ runs:
           sudo systemctl start user@$id
           export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$id/bus
           systemctl --user start dbus
+          mkdir -p "$HOME/.config/containers"
+          echo 'unqualified-search-registries = ["docker.io"]' > "$HOME/.config/containers/registries.conf"
         fi
     # Workaround for https://github.com/actions/runner-images/issues/9425, to be removed once the issue is resolved
     - name: patch crun (Workaround for https://github.com/actions/runner-images/issues/9425)
