@@ -6,7 +6,6 @@ apparmor
 arptables
 auditd
 awscli
-azure-cli
 binutils
 bird2
 bsdextrautils
@@ -33,7 +32,6 @@ dnsmasq
 dnsutils
 docker.io
 docker.io
-docker.iodmidecode
 dosfstools
 dracut
 dracut-live
@@ -43,7 +41,6 @@ ebtables
 efibootmgr
 efitools
 ethtool
-fail2ban
 flex
 gcc
 gdisk
@@ -80,22 +77,19 @@ lzop
 make
 man-db
 mdadm
-microsoft-authentication-library-for-python
 multipath-tools
 neofetch
 net-tools
 netplan.io
 netcat-openbsd
 nfs-common
-nftablesdracut-network
+nftables
 nodejs
 npm
 nullmailer
-nullmailerauditd
 numactl
 nvme-cli
 open-vm-tools
-open-vm-toolsselinux-basics
 openssh-server
 openssl
 openssl
@@ -108,9 +102,7 @@ podman-toolbox
 policykit-1
 pristine-lfs
 python3-apt
-python3-boto
 python3-cffi-backend
-python3-cffi-backendvim
 python3-click
 python3-debian
 python3-distutils
@@ -147,10 +139,8 @@ sssd
 strace
 sudo
 swtpm
-syslinux
-syslinux-common
-syslog-ng
-syslog-ng-core
+#amd64 syslinux
+#amd64 syslinux-common
 sysstat
 systemd-cron
 tcpd
