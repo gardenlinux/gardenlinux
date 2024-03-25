@@ -210,10 +210,6 @@ def generate_package_update_section(version):
 
 def create_github_release_notes(gardenlinux_version, commitish):
     output = ""
-    if not gardenlinux_version.endswith('.0'):
-        output += "## Package Updates\n"
-        output +=  generate_package_update_section(gardenlinux_version)
-        output += "\n"
   
     manifests = download_all_singles(gardenlinux_version, commitish)
 
