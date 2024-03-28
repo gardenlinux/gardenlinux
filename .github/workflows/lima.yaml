@@ -1,11 +1,11 @@
 name: Lima-VM Images
 
 on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
   workflow_dispatch:
+    inputs:
+      version:
+        description: Garden Linux version to build, for example '1443.1'
+        required: true
 
 jobs:
   build:
@@ -14,14 +14,70 @@ jobs:
       fail-fast: false
       matrix:
         arch: [amd64, arm64]
-        version: ["1312.3", "1443.0", "main"]
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ matrix.version }}
+          ref: ${{ inputs.version }}
       # Workaround for crun version, cf https://github.com/gardenlinux/gardenlinux/pull/1982
       - uses: ./.github/actions/setup
       # todo: version
       - name: Build the image
         run: ./build kvm_curl-lima-${{ matrix.arch }}
-      - run: find . -name *.qcow2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kvm_curl-lima-${{ matrix.arch }}
+          path: .build/kvm_curl-lima-${{ matrix.arch }}*qcow2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kvm_curl-lima-${{ matrix.arch }}-yaml
+          path: .build/kvm_curl-lima-${{ matrix.arch }}*yaml
+
+  lima-manifest:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: kvm_curl-lima-amd64-yaml
+      - uses: actions/download-artifact@v4
+        with:
+          name: kvm_curl-lima-arm64-yaml
+      - run: mv kvm*amd*yaml kvm-amd64.yaml
+      - run: mv kvm*arm*yaml kvm-arm64.yaml
+      - run: |
+          from pathlib import Path
+
+          template = """# Lima file for Garden Linux
+          # See https://gardenlinux.io/ for infos on Garden Linux
+          # See https://lima-vm.io/ for infos on Lima
+
+          # To create a new vm, run:
+          #  limactl create --name=gardenlinux-today https://images.gardenlinux.io/__BUILDER_CNAME__-__BUILDER_COMMIT__.yaml
+
+          vmType: qemu
+          os: Linux
+          images:
+          __IMAGE__AMD__
+          __IMAGE__ARM__
+
+          containerd:
+            system: false
+            user: false
+          """
+
+          manifest = template\
+            .replace("__IMAGE__AMD__", Path("kvm-amd64.yaml").read_text())\
+            .replace("__IMAGE__ARM__", Path("kvm-arm64.yaml").read_text())
+
+          with open("lima.yaml", "w+") as file:
+            file.write(manifest)
+
+        shell: python
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lima-manifest-${{ inputs.version }}
+          path: lima.yaml
