@@ -8,6 +8,8 @@ COMPRESSED_DISK_IMAGE=$2
 
 qemu-img convert -f raw -O qcow2 "$RAW_DISK_IMAGE" "$COMPRESSED_DISK_IMAGE"
 
+# FIXME this does not work in github actions using qemu?
+# use BUILDER_ARCH?
 case "$(uname -m)" in
 	"x86_64"|"amd64")
 		LIMA_ARCH=x86_64
@@ -21,9 +23,9 @@ case "$(uname -m)" in
 		;;
 esac
 
-SHA=$(sha256sum $COMPRESSED_DISK_IMAGE | cut -d " " -f 1)
+SHA=$(sha256sum "$COMPRESSED_DISK_IMAGE" | cut -d " " -f 1)
 
-tee .build/$BUILDER_CNAME-$BUILDER_COMMIT.yaml <<EOF
+tee .build/"$BUILDER_CNAME"-"$BUILDER_COMMIT".yaml <<EOF
   - location: "https://images.gardenlinux.io/$BUILDER_CNAME-$BUILDER_COMMIT.qcow2"
     arch: "$LIMA_ARCH"
     digest: "sha256:$SHA"
