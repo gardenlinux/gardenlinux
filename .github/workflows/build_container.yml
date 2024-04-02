@@ -20,9 +20,9 @@ jobs:
 
       - name: upload integration test container to ghcr.io
         run: |
-          echo "$IMAGE_NAME:$(bin/garden-version)"
+          echo "$IMAGE_NAME:today"
           podman image list
-          podman tag "$IMAGE_NAME:$(bin/garden-version)" "ghcr.io/gardenlinux/$IMAGE_NAME:$(bin/garden-version)"
-          podman tag "$IMAGE_NAME:$(bin/garden-version)" "ghcr.io/gardenlinux/$IMAGE_NAME:$GITHUB_SHA"
-          podman push "ghcr.io/gardenlinux/$IMAGE_NAME:$(bin/garden-version)"
+          podman tag "$IMAGE_NAME:today" "ghcr.io/gardenlinux/$IMAGE_NAME:today"
+          podman tag "$IMAGE_NAME:today" "ghcr.io/gardenlinux/$IMAGE_NAME:$GITHUB_SHA"
+          podman push "ghcr.io/gardenlinux/$IMAGE_NAME:today"
           podman push "ghcr.io/gardenlinux/$IMAGE_NAME:$GITHUB_SHA"

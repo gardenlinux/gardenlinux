@@ -1,4 +1,4 @@
-VERSION=`../bin/garden-version`
+VERSION=today
 ALTNAME=
 ALTNAME_INTERNAL=$(shell [ -n "$(ALTNAME)" ] && printf "%s %s" "-t" "$(ALTNAME)" )
 
