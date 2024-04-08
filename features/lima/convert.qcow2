@@ -8,13 +8,11 @@ COMPRESSED_DISK_IMAGE=$2
 
 qemu-img convert -f raw -O qcow2 "$RAW_DISK_IMAGE" "$COMPRESSED_DISK_IMAGE"
 
-# FIXME this does not work in github actions using qemu?
-# use BUILDER_ARCH?
-case "$(uname -m)" in
-	"x86_64"|"amd64")
+case "$BUILDER_ARCH" in
+	amd64)
 		LIMA_ARCH=x86_64
 		;;
-	"aarch64"|"arm64")
+	arm64)
 		LIMA_ARCH=aarch64
 		;;
 	*)
