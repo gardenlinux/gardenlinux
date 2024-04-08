@@ -48,8 +48,8 @@
 The build system utilises the [gardenlinux/builder](https://github.com/gardenlinux/builder) to create customized Linux distributions.
 [gardenlinux/gardenlinux](https://github.com/gardenlinux/gardenlinux) is maintained by the Garden Linux team, highlighting specialized "features" available for other projects.
 
-For further information about the build process, refer to [docs/01_developers/build_images.md](link_to_build_docs).
-
+> [!TIP]
+> For further information about the build process, and how to set it up on your machine, refer to [the Build Image documentation page](docs/01_developers/build_image.md).
 
 To initiate a build, use the command:
 ```shell
@@ -57,7 +57,7 @@ To initiate a build, use the command:
 ```
 
 Where:
-- `${platform}` denotes the desired platform (e.g., kvm, metal, aws).
+- `${platform}` denotes the desired platform (e.g., `kvm`, `metal`, `aws`).
 - `${feature}` represents a specific feature from the `features/` folder.
 - `${modifier}` is an optional modifier from the `features/` folder, prefixed with an underscore "_".
 
@@ -78,13 +78,13 @@ Further documentation about tests is located in [tests/README.md](tests/README.m
 
 # Download Releases 
 
-| Product                        | Release Frequency | Download                                               |
-|--------------------------------|-------------------|--------------------------------------------------------|
-| LTS cloud and baremetal images | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/releases) |
-| LTS base container images      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux) |
-| LTS bare python container     | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-python) |
-| LTS bare libc container       | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-libc) |
-| LTS bare nodejs container     | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-nodejs) |
+| Product                        | Release Frequency | Download                                                                                        |
+| ------------------------------ | ----------------- | ----------------------------------------------------------------------------------------------- |
+| LTS cloud and baremetal images | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/releases)                                 |
+| LTS base container images      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux)               |
+| LTS bare python container      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-python) |
+| LTS bare libc container        | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-libc)   |
+| LTS bare nodejs container      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-nodejs) |
 
 **Note:** For each artifact, there also exists a nightly version, which is built daily but is not considered LTS.
 
@@ -98,7 +98,7 @@ Please refer to [docs/README.md](https://github.com/gardenlinux/gardenlinux/tree
 
 # Contributing
 
-Contribitions to the Garden Linux open source projects are welcome. 
+Contributions to the Garden Linux open source projects are welcome. 
 More information are available in in <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> and our `docs/`.
 
 # Community
