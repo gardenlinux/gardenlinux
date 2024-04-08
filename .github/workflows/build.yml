@@ -159,6 +159,13 @@ jobs:
           - target: container
             arch: arm64
             modifier: ""
+        exclude:
+          - target: openstack
+            arch: arm64
+            modifier: "${{ inputs.default_modifier }}"
+          - target: vmware
+            arch: arm64
+            modifier: "${{ inputs.default_modifier }}"
     steps:
       # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
       #   with:
