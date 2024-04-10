@@ -36,8 +36,8 @@ user: false
 def disk_image_name(cname_base, arch, gardenlinux_version, commit_id):
     return f'{cname_base}-{arch}-{gardenlinux_version}-{commit_id}.qcow2'
 
-def output_file_name(cname_base, gardenlinux_version, commit_id):
-    return f'{cname_base}-{gardenlinux_version}-{commit_id}.yaml'
+def output_file_name(cname_base, gardenlinux_version):
+    return f'{cname_base}-{gardenlinux_version}.yaml'
 
 
 if __name__ == '__main__':
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     with open(build_dir / disk_image_name_arm64, 'rb', buffering=0) as f:
         sha_arm64 = hashlib.file_digest(f, 'sha256').hexdigest()
 
-    yaml_name = output_file_name(cname_base, gardenlinux_version, commit_id_short)
+    yaml_name = output_file_name(cname_base, gardenlinux_version)
 
     manifest = template\
         .replace("__DISK_IMAGE_NAME_AMD__", disk_image_name_amd64)\

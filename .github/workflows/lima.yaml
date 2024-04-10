@@ -78,5 +78,5 @@ jobs:
       - name: Upload lima yaml file
         uses: actions/upload-artifact@v4
         with:
-          name: lima-manifest-${{ needs.collect-metadata.outputs.CNAME }}-${{ needs.collect-metadata.outputs.VERSION }}-${{ needs.collect-metadata.outputs.COMMIT }}.yaml
-          path: ${{ needs.collect-metadata.outputs.CNAME }}-${{ needs.collect-metadata.outputs.VERSION }}-${{ needs.collect-metadata.outputs.COMMIT }}.yaml
+          name: lima-manifest-${{ needs.collect-metadata.outputs.CNAME }}-${{ needs.collect-metadata.outputs.VERSION }}.yaml
+          path: ${{ needs.collect-metadata.outputs.CNAME }}-${{ needs.collect-metadata.outputs.VERSION }}.yaml
