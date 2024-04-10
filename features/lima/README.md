@@ -4,24 +4,12 @@
 This feature flag produces an image suitable for using with [lima](https://lima-vm.io)
 </website-feature>
 
-Build the image with `./build kvm-lima`
-
-Example config (build image locally, adapt path, save config as `gardenlinux.yaml`):
+Example usage with a pre-built image:
 
 ```
-images:
-- location: "path/to/kvm-lima-amd64-today-local.qcow2"
-  arch: "x86_64"
-- location: "path/to/kvm-lima-arm64-today-local.qcow2"
-  arch: "aarch64"
-```
-
-Example usage:
-
-```
-$ cat gardenlinux.yaml | limactl create --name=gardenlinux -
-$ limactl start gardenlinux
-$ limactl shell gardenlinux
+$ limactl create --name=gardenlinux-today https://images.gardenlinux.io/kvm_curl-lima-arm64-today.yaml
+$ limactl start gardenlinux-today
+$ limactl shell gardenlinux-today
 ```
 
 Known limitations:
