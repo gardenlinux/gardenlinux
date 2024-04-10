@@ -7,24 +7,3 @@ RAW_DISK_IMAGE=$1
 COMPRESSED_DISK_IMAGE=$2
 
 qemu-img convert -f raw -O qcow2 "$RAW_DISK_IMAGE" "$COMPRESSED_DISK_IMAGE"
-
-case "$BUILDER_ARCH" in
-	amd64)
-		LIMA_ARCH=x86_64
-		;;
-	arm64)
-		LIMA_ARCH=aarch64
-		;;
-	*)
-		echo "unsupported architecture" >&2
-		exit 1
-		;;
-esac
-
-SHA=$(sha256sum "$COMPRESSED_DISK_IMAGE" | cut -d " " -f 1)
-
-tee .build/"$BUILDER_CNAME"-"$BUILDER_COMMIT".yaml <<EOF
-  - location: "https://images.gardenlinux.io/$BUILDER_CNAME-$BUILDER_COMMIT.qcow2"
-    arch: "$LIMA_ARCH"
-    digest: "sha256:$SHA"
-EOF
