@@ -74,7 +74,7 @@ jobs:
           name: ${{ needs.collect-metadata.outputs.CNAME }}-arm64
       - name: Generate lima yaml file
         run: |
-          python ./features/lima/generate-manifest.py --cname_base=${{ needs.collect-metadata.outputs.CNAME }} --gardenlinux_version=${{ needs.collect-metadata.outputs.VERSION }} --commit_id=${{ needs.collect-metadata.outputs.COMMIT }}
+          python ./features/lima/generate-manifest.py --build_dir=. --cname_base=${{ needs.collect-metadata.outputs.CNAME }} --gardenlinux_version=${{ needs.collect-metadata.outputs.VERSION }} --commit_id=${{ needs.collect-metadata.outputs.COMMIT }}
       - name: Upload lima yaml file
         uses: actions/upload-artifact@v4
         with:

@@ -1,5 +1,6 @@
 import argparse
 import hashlib
+from pathlib import Path
 
 # inputs:
 # - cname_base, sample value: kvm_curl-lima
@@ -12,9 +13,8 @@ template = """# Lima file for Garden Linux
 # See https://gardenlinux.io/ for infos on Garden Linux
 # See https://lima-vm.io/ for infos on Lima
 
-# To create a new vm, run one of the following based on your desired architecture:
-#  limactl create --name=gardenlinux-__VERSION__ https://images.gardenlinux.io/__YAML_NAME_AMD__
-#  limactl create --name=gardenlinux-__VERSION__ https://images.gardenlinux.io/__YAML_NAME_ARM__
+# To create a new vm:
+#  limactl create --name=gardenlinux-__VERSION__ https://images.gardenlinux.io/__YAML_NAME__
 
 vmType: qemu
 os: Linux
@@ -36,9 +36,6 @@ user: false
 def disk_image_name(cname_base, arch, gardenlinux_version, commit_id):
     return f'{cname_base}-{arch}-{gardenlinux_version}-{commit_id}.qcow2'
 
-def yaml_name(cname_base, arch, gardenlinux_version, commit_id):
-    return f'{cname_base}-{arch}-{gardenlinux_version}-{commit_id}.yaml'
-
 def output_file_name(cname_base, gardenlinux_version, commit_id):
     return f'{cname_base}-{gardenlinux_version}-{commit_id}.yaml'
 
@@ -51,35 +48,35 @@ if __name__ == '__main__':
     parser.add_argument('--cname_base')
     parser.add_argument('--gardenlinux_version')
     parser.add_argument('--commit_id')
+    parser.add_argument('--build_dir', default='.build')
 
     args = parser.parse_args()
 
     cname_base = args.cname_base
     gardenlinux_version = args.gardenlinux_version
     commit_id_short = args.commit_id[0:8]
+    build_dir = Path(args.build_dir)
 
     disk_image_name_amd64 = disk_image_name(cname_base, 'amd64', gardenlinux_version, commit_id_short)
     disk_image_name_arm64 = disk_image_name(cname_base, 'arm64', gardenlinux_version, commit_id_short)
 
     sha_amd64 = ""
     sha_arm64 = ""
-    with open(disk_image_name_amd64, 'rb', buffering=0) as f:
+    with open(build_dir / disk_image_name_amd64, 'rb', buffering=0) as f:
         sha_amd64 = hashlib.file_digest(f, 'sha256').hexdigest()
 
-    with open(disk_image_name_arm64, 'rb', buffering=0) as f:
+    with open(build_dir / disk_image_name_arm64, 'rb', buffering=0) as f:
         sha_arm64 = hashlib.file_digest(f, 'sha256').hexdigest()
 
-    yaml_name_amd64 = yaml_name(cname_base, 'amd64', gardenlinux_version, commit_id_short)
-    yaml_name_arm64 = yaml_name(cname_base, 'arm64', gardenlinux_version, commit_id_short)
+    yaml_name = output_file_name(cname_base, gardenlinux_version, commit_id_short)
 
     manifest = template\
         .replace("__DISK_IMAGE_NAME_AMD__", disk_image_name_amd64)\
         .replace("__DISK_IMAGE_NAME_ARM__", disk_image_name_arm64)\
-        .replace("__YAML_NAME_AMD__", yaml_name_amd64)\
-        .replace("__YAML_NAME_ARM__", yaml_name_arm64)\
         .replace("__SHA_AMD__", sha_amd64)\
         .replace("__SHA_ARM__", sha_arm64)\
+        .replace("__YAML_NAME__", yaml_name)\
         .replace("__VERSION__", gardenlinux_version)
 
-    with open(output_file_name(cname_base, gardenlinux_version, commit_id_short), "w+") as file:
+    with open(yaml_name, "w+") as file:
         file.write(manifest)
