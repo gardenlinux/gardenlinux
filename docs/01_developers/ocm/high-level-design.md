@@ -75,36 +75,7 @@ graph TD;
     BareContainer --> BareNodejs;
 ```
 
-
-## Reference by tag
-
-Each OCI artefact has a unique digest, which looks like `sha256:12340abcdef`. 
-Objects described in the sections and diagrams above also have digests. 
-This is not very practical if we want to automate or manually discover the Garden Linux ecosystem. 
-Therefore we assign tags to each object. 
-
-Every artifact within the OCI registry is identified by a unique digest (e.g. `sha256:12340abcdef`). 
-This applies to all objects described in the sections and diagrams described in chapter [OCI Artefact Overview](#oci-artefact-overview).
-To enable automation and discoverability, we also allocate tags to each object. 
-
-Using oras as client, one can download an artefact by referencing a tag
-```
-oras pull <registry>/release/1443.1/cloudimages/ali/kernel.tar.xz:v1
-```
-
-This can easily be integrated in automation, for example to always reference the latest LTS version of Garden Linux.
-
-
-## OCI Artefact structure
-
-An OCI artifact is described by a manifest,
-which is a JSON document detailing the artifact's components,
-including their digests and references to other OCI artefacts or URLs to foreign resources.
-
-
-
 # Implementations
-
 
 ## Pure OCI Implementation
 See [OCI Implementation specification](oci-implementation-specification.md) for details.
@@ -114,8 +85,10 @@ See [OCI Implementation specification](oci-implementation-specification.md) for 
 See [OCM Implementation specification](ocm-implementation-specification.md) for details.
 
 
-
 ## OCI+OCM hybrid Implementation 
 
+Easy to achieve, since OCM can reference artefacts from OCI. 
+If OCI Implementation is selected as first target, a follow up OCM implementation can reference those 
+OCI artefacts.
 
-See [Hyprid Implementation specification](hybrid-implementation-specification.md) for details.
+
