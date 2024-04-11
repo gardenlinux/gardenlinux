@@ -3,7 +3,7 @@
 ## Reference by tag
 
 Each OCI artefact has a unique digest, which looks like `sha256:12340abcdef`. 
-Objects described in the sections and diagrams above also have digests. 
+Objects described in the sections and diagrams from the [HLD](high-level-design.md) also have digests. 
 This is not very practical if we want to automate or manually discover the Garden Linux ecosystem. 
 Therefore we assign tags to each object. 
 
