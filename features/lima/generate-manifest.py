@@ -28,8 +28,8 @@ images:
     digest: "sha256:__SHA_ARM__"
 
 containerd:
-system: false
-user: false
+  system: false
+  user: false
 """
 
 

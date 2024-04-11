@@ -7,7 +7,7 @@ This feature flag produces an image suitable for using with [lima](https://lima-
 Example usage with a pre-built image:
 
 ```
-$ limactl create --name=gardenlinux-today https://images.gardenlinux.io/kvm_curl-lima-arm64-today.yaml
+$ limactl create --name=gardenlinux-today https://images.gardenlinux.io/kvm_curl-lima-today.yaml
 $ limactl start gardenlinux-today
 $ limactl shell gardenlinux-today
 ```
