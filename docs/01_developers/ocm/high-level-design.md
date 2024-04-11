@@ -1,19 +1,19 @@
-# Releases
+# High Level Design: Component Modelling of Garden Linux Ecosystem
 
 Garden Linux has a diverse ecosystem, comprising cloud and container images, apt repositories, and essential tools like the container toolbelt and NVIDIA driver installer. 
 
 Each release within the Garden Linux ecosystem is accompanied by multiple artifacts. 
-These artifacts are made easily discoverable and automatically consumable through an OCI registry. 
-This OCI registry contains self-referencing links to related artifacts and adheres to a defined general structure, which is detailed in the following section.
+These artifacts are made easily discoverable and automatically consumable through an registry.
+This registry contains self-referencing links to related artifacts and adheres to a defined general structure, which is detailed in the following section.
 
 
 
-## OCI Artefact Overview
+## Garden Linux Ecosystem Components
 
 The following sections and diagrams are an abstract representation of artefacts within the OCI registry,
 showing the relations between OCI Artefacts and URLs to foreign resources.
 
-### Release
+### Release Component
 Each release creates multiple products within the Garden Linux ecosystem. 
 ```mermaid
 
@@ -25,8 +25,6 @@ graph TD;
 
 
     MetaData[MetaData] --> Version;
-    MetaData[MetaData] --> Changelog;
-    MetaData[MetaData] --> Manifest;
     MetaData[MetaData] -->|Foreign Reference| GHReleasePage[GitHub Release Page];
     MetaData[MetaData] -->|Foreign Reference| GardenerToolbelt[Gardener Toolbelt Container];
     MetaData[MetaData] -->|Foreign Reference| NvidiaInstaller[NVIDIA Driver installer];
@@ -34,8 +32,8 @@ graph TD;
 ```
 
 
-### Cloud Images 
-`CloudImages` is an abstract object that references `CloudImage` objects for each supported cloud platform.
+### Cloud Image Component 
+`CloudImages` is an abstract entity that references `CloudImage` objects for each supported cloud platform.
 `CloudImages` does not necesarily have to be implemented as an object, it can also be a simple list.
 The `CloudImage` type defines data for a single cloud image.
 
@@ -45,37 +43,41 @@ graph TD;
 
     CloudImages[Cloud Images] -->|has many| CloudImage;
     CloudImage[Cloud Image] --> TestLog[Test Logs];
+    CloudImage[Cloud Image] --> Changelog[Changelog];
     CloudImage[Cloud Image] --> AuditLogs[Audit Logs];
     CloudImage[Cloud Image] --> LinuxKernel[Kernel];
     CloudImage[Cloud Image] --> KernelCmdLine[Kernel Cmdline];
     CloudImage[Cloud Image] --> rootfs[Rootfs tarball];
     CloudImage[Cloud Image] -->|Foreign Reference| AptRepository[Apt Repository];
-    CloudImage[Cloud Image] -->|Foregin Reference| ContainerImages[Container Images];
 
 ```
 
 
 
-### Container Images
+### Container Images Component
 
 Multiple container images for different purposes exist.
-The structure `ContainerImages` is the entry point to discover all available containers for a release.
+The structure `ContainerImages` is an abstract entity, that can also be implemented as a list of the Release object.
+
 
 ```mermaid
 graph TD;
-    ContainerImages[ContainerImages] --> BaseContainer;
-    ContainerImages --> BareContainer;
-    ContainerImages --> DriverBuildContainer;
-    ContainerImages --> PackageBuildContainer;
-    ContainerImages --> DebianSnapshotContainer;
+    ContainerImages[Container Images] -->|has many| ContainerImage;
+    ContainerImages[Container Images] -->|has many| BareContainer;
+    ContainerImage --> ChangelogContainer[Changelog];
+    ContainerImage --> versionContainer[version];
+    ContainerImage --> ociImage[oci image];
 
-    BareContainer[BareContainer] --> BarePython;
-    BareContainer --> BareSAPmachine;
-    BareContainer --> BareLibc;
-    BareContainer --> BareNodejs;
+    BareContainer --> ChangelogBare[Changelog];
+    BareContainer --> versionBare[version];
+    BareContainer --> unbaseOCIVersion[unbase_oci version];
+    BareContainer --> ociImageBare[oci image];
 ```
 
+
 # Implementations
+
+This high level design describes the general structure and corelation between Garden Linux components.
 
 ## Pure OCI Implementation
 See [OCI Implementation specification](oci-implementation-specification.md) for details.
@@ -87,7 +89,7 @@ See [OCM Implementation specification](ocm-implementation-specification.md) for 
 
 ## OCI+OCM hybrid Implementation 
 
-Easy to achieve, since OCM can reference artefacts from OCI. 
+Easy to achieve, since OCM can reference artefacts from any other OCI registry. 
 If OCI Implementation is selected as first target, a follow up OCM implementation can reference those 
 OCI artefacts.
 
