@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
 set -eufo pipefail
+set -o nounset
 
-qemu-img convert -f raw -O qcow2 "$1" "$2"
+RAW_DISK_IMAGE=$1
+COMPRESSED_DISK_IMAGE=$2
+
+qemu-img convert -f raw -O qcow2 "$RAW_DISK_IMAGE" "$COMPRESSED_DISK_IMAGE"
