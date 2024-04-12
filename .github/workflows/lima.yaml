@@ -80,3 +80,24 @@ jobs:
         with:
           name: lima-manifest-${{ needs.collect-metadata.outputs.CNAME }}-${{ needs.collect-metadata.outputs.VERSION }}.yaml
           path: ${{ needs.collect-metadata.outputs.CNAME }}-${{ needs.collect-metadata.outputs.VERSION }}.yaml
+
+  upload-artifacts:
+    runs-on: ubuntu-latest
+    needs: lima-manifest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+      - name: Download amd64 disk image, needed for upload
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.collect-metadata.outputs.CNAME }}-amd64
+      - name: Download arm64 disk image, needed for upload
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.collect-metadata.outputs.CNAME }}-arm64
+      - name: Download yaml manifest, needed for upload
+        uses: actions/download-artifact@v4
+        with:
+          name: lima-manifest-${{ needs.collect-metadata.outputs.CNAME }}-${{ needs.collect-metadata.outputs.VERSION }}.yaml
+      - run: ls -la
