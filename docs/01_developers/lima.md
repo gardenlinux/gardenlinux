@@ -2,9 +2,14 @@
 
 [Lima](https://lima-vm.io/) is a tool for running Linux virtual machines.
 Originally intended to allow running Linux containers on mac, it became a quite versatile tool for virtual machine life cycle management.
-It is open source and can be used on macOS and Linux hosts.
+It makes it convenient to open a shell via ssh in virtual machines and can mount local directories into the virtual machine.
+
+Lima is open source and can be used on macOS and Linux hosts.
 
 Garden Linux can be used as a guest operating system with Lima.
+For this, Garden Linux provides ready-built disk images and yaml manifest files.
+You may use the yaml manifest as provided, or [download](https://images.gardenlinux.io/kvm_curl-lima-today.yaml) and modify it according to your needs.
+See the [example configuration](https://github.com/lima-vm/lima/blob/master/examples/default.yaml) for available options.
 
 ## Using pre-built images
 
@@ -26,7 +31,7 @@ Let's assume you need the `nodejs` feature in your image in addition to the prov
 > [!IMPORTANT]
 > When building images for use with Lima, you should always at least include the `kvm` and the `lima` feature as they provide the base requirements.
 Adding additional features is fine as long as they don't conflict with any of them.
-You should never mix another platform feature like `vmware`, or the `_dev` feature with the `lima` feature as they are known to conflict.
+You should never mix another platform feature like `vmware`, or the `_dev` feature with the `lima` feature as they are known to be incompatible.
 
 Build the disk image for both `amd64` and `arm64` architecture using this command:
 
