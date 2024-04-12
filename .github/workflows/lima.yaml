@@ -85,7 +85,10 @@ jobs:
 
   upload-artifacts:
     runs-on: ubuntu-latest
-    needs: lima-manifest
+    needs:
+      - collect-metadata
+      - build
+      - lima-manifest
     steps:
       - uses: actions/checkout@v4
         with:
