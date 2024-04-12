@@ -1190,12 +1190,12 @@
         },
         "google-auth": {
             "hashes": [
-                "sha256:25141e2d7a14bfcba945f5e9827f98092716e99482562f15306e5b026e21aa72",
-                "sha256:34fc3046c257cedcf1622fc4b31fc2be7923d9b4d44973d481125ecc50d83885"
+                "sha256:672dff332d073227550ffc7457868ac4218d6c500b155fe6cc17d2b13602c360",
+                "sha256:d452ad095688cd52bae0ad6fafe027f6a6d6f560e810fec20914e17a09526415"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==2.28.1"
+            "version": "==2.29.0"
         },
         "google-cloud-compute": {
             "hashes": [
