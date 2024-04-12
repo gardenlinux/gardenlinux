@@ -68,7 +68,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.collect-metadata.outputs.CNAME }}-amd64
-      - name: Download arm64 disk image
+      - name: Download arm64 disk image. Requirement for later checksum creation step of generate-manifest.py
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.collect-metadata.outputs.CNAME }}-arm64
