@@ -18,6 +18,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: gardenlinux
+          ref: ${{ inputs.version }}
       - uses: actions/checkout@v4
         with:
           repository: 'gardenlinux/builder'
@@ -72,6 +73,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.collect-metadata.outputs.CNAME }}-arm64
+      - run: ls -la
       - name: Generate lima yaml file
         run: |
           python ./features/lima/generate-manifest.py --build_dir=. --cname_base=${{ needs.collect-metadata.outputs.CNAME }} --gardenlinux_version=${{ needs.collect-metadata.outputs.VERSION }} --commit_id=${{ needs.collect-metadata.outputs.COMMIT }}
