@@ -46,9 +46,9 @@ if __name__ == '__main__':
                         prog='LimaManifestGenerator',
                         description='Generates a Lima-VM yaml manifest for Garden Linux')
 
-    parser.add_argument('--cname_base')
-    parser.add_argument('--gardenlinux_version')
-    parser.add_argument('--commit_id')
+    parser.add_argument('--cname_base',help="Cname of target image. Example value: kvm_curl-lima", required=True)
+    parser.add_argument('--gardenlinux_version', help="Either today or full garden linux version. Example: 1443.3", required=True)
+    parser.add_argument('--commit_id', help="git commit hash of used image source.", required=True)
     parser.add_argument('--build_dir', default='.build')
 
     args = parser.parse_args()
