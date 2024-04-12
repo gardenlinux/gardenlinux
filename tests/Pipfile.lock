@@ -177,12 +177,12 @@
         },
         "azure-identity": {
             "hashes": [
-                "sha256:d488960f7c176ab90ab4a18041eb6321c90adea49f4626e11ee71e25fd73d044",
-                "sha256:d9d5af5b1c78755c771c4dbe17af0dccc7db7521a8da641e667ce3845f38e83d"
+                "sha256:a888764f16212daf1b7c64cb6b422ba04b348c2eeea3960f935f46a70b34c595",
+                "sha256:b73080e42624384d778b2e6daad4727188cd9d3f7d6639581f9b8fc598d17304"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==1.16.0b1"
+            "version": "==1.16.0b2"
         },
         "azure-keyvault-administration": {
             "hashes": [
