@@ -1,94 +1,66 @@
-# OCI Implementation 
-
-## Reference by tag
-
-Each OCI artefact has a unique digest, which looks like `sha256:12340abcdef`. 
-Objects described in the sections and diagrams from the [HLD](high-level-design.md) also have digests. 
-This is not very practical if we want to automate or manually discover the Garden Linux ecosystem. 
-Therefore we assign tags to each object. 
-
-Every artifact within the OCI registry is identified by a unique digest (e.g. `sha256:12340abcdef`). 
-This applies to all objects described in the sections and diagrams described in chapter [OCI Artefact Overview](#oci-artefact-overview).
-To enable automation and discoverability, we also allocate tags to each object. 
-
-Using oras as client, one can download an artefact by referencing a tag
-```
-oras pull <registry>/release/1443.1/cloudimages/ali/kernel.tar.xz:v1
-```
-
-This can easily be integrated in automation, for example to always reference the latest LTS version of Garden Linux.
+# OCI Implementation Specification
 
 
-## OCI Artefact structure
-
-An OCI artifact is described by a manifest,
-which is a JSON document detailing the artifact's components,
-including their digests and references to other OCI artefacts or URLs to foreign resources.
-
-
-
-### Upload
-Automated uploads are mandatory for the Garden Linux OCI framework. For this, we use re-usable github actions. 
+## Key Concepts
+* [Reference by tags](#concept%3A-reference-by-tag)
+* [Common artefact storage](#concept%3A-common-artefact-storage)
+* [Linking coherent components](#concept%3A-linking-coherent-components)
+* [Extensible with OCM](#concept%3A-extensible-with-ocm)
 
 
-```yaml
-name: Upload Artifact to OCI Registry
+### Concept: Reference by tag
 
-on:
-  workflow_call:
-    inputs:
-      artifact_path:
-        description: 'Path to the artifact file to upload'
-        required: true
-        type: string
-      tag_name:
-        description: 'Tag name to assign to the uploaded artifact'
-        required: true
-        type: string
-      registry_url:
-        description: 'OCI Registry URL (e.g., myregistry.io/myapp)'
-        required: true
-        type: string
+To make the OCI registry usable for automation and manual downloads, we assign tags to each object uploaded to the OCI registry.
+We make use of a hierarchical folder structure that implements the general structure described in the [High Level Design (HLD)](high-level-design.md).
 
-jobs:
-  upload:
-    runs-on: ubuntu-latest
-    name: Upload to OCI Registry
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
 
-      - name: Login to OCI Registry
-        run: echo ${{ secrets.REGISTRY_PASSWORD }} | oras login --username ${{ secrets.REGISTRY_USERNAME }} --password-stdin ${{ inputs.registry_url }}
-      
-      - name: Upload Artifact
-        run: oras push ${{ inputs.registry_url }}:${{ inputs.tag_name }} ${{ inputs.artifact_path }}
+### Concept: Common Artefact Storage 
 
-      - name: Logout from OCI Registry
-        run: oras logout ${{ inputs.registry_url }}
-```
+This OCI registry is the entry point to discover and download any artefacts from the Garden Linux ecosystem. 
 
-And it can be used like this:
-```yaml
-name: Example Usage Workflow
+### Concept: Linking coherent components
 
-on: [push]
+OCI artefacts can reference other OCI artefacts within or outside the OCI registry by tag, digest or foreign URL.
 
-jobs:
-  call-upload-workflow:
-    uses: ./.github/workflows/upload-to-oci.yml@main
-    with:
-      artifact_path: './path/to/your/artifact/file.tar.gz'
-      tag_name: 'v1.0.0'
-      registry_url: 'myregistry.io/myapp'
-    secrets:
-      REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
-      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
-```
+The structure described in the [HLD](high-level-design.md) defines the relations between the Garden Linux artefacts stored in the OCI registry.
+
+### Concept: Extensible with OCM
+
+OCM implementation is described in the [OCM Implementation Specification](ocm-implementation-specification.md).
+Objects from the OCI registry can be referenced via their respective container image reference (including tag or digest),
+for example `ghcr.io/gardenlinux/gardenlinux:1473.0` 
+
+
+## Implementation Details
+
+An OCI artifact consists of a manifest, which describes the artifact's layers and configuration, and optionally, annotations.
+The manifest points to the artifact's layers (the payload) and may reference other related OCI artifacts through descriptors.
+
+### Payload - the artifact layer
+
+### annotations
+[oci image spec: annotations](https://github.com/opencontainers/image-spec/blob/main/annotations.md)
 
 
 
-### Download 
+### descriptors
+[oci image spec: descriptors](https://github.com/opencontainers/image-spec/blob/main/descriptor.md)
+
+## Clients
+
+### ORAS cli 
+
+#### Upload 
+
+#### Download 
+
+#### Read references (Links to internal or external artefacts) 
+
+
+### GitHub Actions 
+We implement re-usable GitHub actions that can be used for automation in our GitHub Pipelines. 
+
+#### Download 
 
 It can be a helpful to be able to download artefacts from OCI in a GitHub actions step.
 This allows to easily discover and download the correct container image for a given task (e.g. test container). 
@@ -145,4 +117,62 @@ jobs:
           REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
           REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
 
+```
+
+#### Upload
+Automated uploads are mandatory for the Garden Linux OCI framework. For this, we use re-usable github actions. 
+
+```yaml
+name: Upload Artifact to OCI Registry
+
+on:
+  workflow_call:
+    inputs:
+      artifact_path:
+        description: 'Path to the artifact file to upload'
+        required: true
+        type: string
+      tag_name:
+        description: 'Tag name to assign to the uploaded artifact'
+        required: true
+        type: string
+      registry_url:
+        description: 'OCI Registry URL (e.g., myregistry.io/myapp)'
+        required: true
+        type: string
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    name: Upload to OCI Registry
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to OCI Registry
+        run: echo ${{ secrets.REGISTRY_PASSWORD }} | oras login --username ${{ secrets.REGISTRY_USERNAME }} --password-stdin ${{ inputs.registry_url }}
+      
+      - name: Upload Artifact
+        run: oras push ${{ inputs.registry_url }}:${{ inputs.tag_name }} ${{ inputs.artifact_path }}
+
+      - name: Logout from OCI Registry
+        run: oras logout ${{ inputs.registry_url }}
+```
+
+And it can be used like this:
+```yaml
+name: Example Usage Workflow
+
+on: [push]
+
+jobs:
+  call-upload-workflow:
+    uses: ./.github/workflows/upload-to-oci.yml@main
+    with:
+      artifact_path: './path/to/your/artifact/file.tar.gz'
+      tag_name: 'v1.0.0'
+      registry_url: 'myregistry.io/myapp'
+    secrets:
+      REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
 ```
