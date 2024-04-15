@@ -5,11 +5,25 @@ Originally intended to allow running Linux containers on mac, it became a quite 
 It makes it convenient to open a shell via ssh in virtual machines and can mount local directories into the virtual machine.
 
 Lima is open source and can be used on macOS and Linux hosts.
+For a general introduction to the Lima command line interface, see [the official docs page](https://lima-vm.io/docs/) or [the community-provided tl;dr page](https://github.com/tldr-pages/tldr/blob/main/pages/common/limactl.md).
 
 Garden Linux can be used as a guest operating system with Lima.
 For this, Garden Linux provides ready-built disk images and yaml manifest files.
 You may use the yaml manifest as provided, or [download](https://images.gardenlinux.io/kvm_curl-lima-today.yaml) and modify it according to your needs.
 See the [example configuration](https://github.com/lima-vm/lima/blob/master/examples/default.yaml) for available options.
+
+## Motivation
+
+> I use Garden Linux, why would I want to use it with Lima?
+
+This depends on what you are trying to do.
+If you are asking the question, you probably don't need Lima.
+Using the Garden Linux image with Lima might be useful for evaluating Garden Linux as it provides a simple way to boot an Garden Linux instance as a virtual machine without needing to take care of setting up SSH for remote login.
+Lima might also be useful to open a bug report in Garden Linux if you can reproduce an issue in a specific Garden Linux image.
+
+> I use Lima, why would I want to use Garden Linux as a guest instead of any other Linux distribution?
+
+If any of the [specific Garden Linux features](https://github.com/gardenlinux/gardenlinux?tab=readme-ov-file#features) are interesting to you, Garden Linux might be a useful guest OS for you.
 
 ## Using pre-built images
 
