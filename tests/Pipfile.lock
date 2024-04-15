@@ -1392,7 +1392,6 @@
                 "sha256:028ff3aadf0609c1fd278d8ea3089299412a7a8b9bd005dd08b9f8285bcb5cfc",
                 "sha256:82fee1fc78add43492d3a1898bfa6d8a904cc97d8427f683ed8e798d07761aa0"
             ],
-            "index": "pypi",
             "markers": "python_version >= '3.5'",
             "version": "==3.7"
         },
@@ -1517,7 +1516,6 @@
                 "sha256:1876b0b653a808fcd50123b953af170c535027bf1d053b59790eebb0aeb38950",
                 "sha256:1ab0bbcd4d1f7b6991ee7c753655b481c50084294218de69365f8f1970d4c151",
                 "sha256:1cce488457370ffd1f953846f82323cb6b2ad2190987cd4d70b2713e17268d24",
-                "sha256:24f727df1e20b9876fa6e95f840a2a2651e34c0ad147676356f4bf5fbb0206ca",
                 "sha256:26ee97a8261e6e35885c2ecd2fd4a6d38252246f94a2aec23665a4e66d066305",
                 "sha256:3528807cbbb7f315bb81959d5961855e7ba52aa60a3097151cb21956fbc7502b",
                 "sha256:374a8e88ddab84b9ada695d255679fb99c53513c0a51778796fcf0944d6c789c",
@@ -1941,11 +1939,11 @@
         },
         "pyparsing": {
             "hashes": [
-                "sha256:32c7c0b711493c72ff18a981d24f28aaf9c1fb7ed5e9667c9e84e3db623bdbfb",
-                "sha256:ede28a1a32462f5a9705e07aea48001a08f7cf81a021585011deba701581a0db"
+                "sha256:a1bac0ce561155ecc3ed78ca94d3c9378656ad4c94c1270de543f621420f94ad",
+                "sha256:f9db75911801ed778fe61bb643079ff86601aca99fcae6345aa67292038fb742"
             ],
             "markers": "python_full_version >= '3.6.8'",
-            "version": "==3.1.1"
+            "version": "==3.1.2"
         },
         "pyperclip": {
             "hashes": [
@@ -1996,12 +1994,12 @@
         },
         "python-novaclient": {
             "hashes": [
-                "sha256:463dc63b5f14e01ff0ef44b622f1cd0719000df2a721d2ede47219e5327a0dbd",
-                "sha256:e23ee440c0c8eae2b53afa881d30acaec0687fcebad246391ec29b96c543038d"
+                "sha256:573c10aa420b0898d35fb146edd8bb005806bfff0131ae2b5a30ca22ac89477b",
+                "sha256:ec88aa47a4cf9bc411eb65fb1623adcd68b02079386a644d6accb74e8349b529"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==18.5.0"
+            "version": "==18.6.0"
         },
         "python-openstackclient": {
             "hashes": [
