@@ -20,10 +20,13 @@ This depends on what you are trying to do.
 If you are asking the question, you probably don't need Lima.
 Using the Garden Linux image with Lima might be useful for evaluating Garden Linux as it provides a simple way to boot an Garden Linux instance as a virtual machine without needing to take care of setting up SSH for remote login.
 Lima might also be useful to open a bug report in Garden Linux if you can reproduce an issue in a specific Garden Linux image.
+It might be useful to track down a regression in a new Garden Linux version as it makes it easy to build identical virtual machines for different versions of Garden Linux.
+It might be useful to try out if third-party software is compatible with Garden Linux.
 
 > I use Lima, why would I want to use Garden Linux as a guest instead of any other Linux distribution?
 
 If any of the [specific Garden Linux features](https://github.com/gardenlinux/gardenlinux?tab=readme-ov-file#features) are interesting to you, Garden Linux might be a useful guest OS for you.
+It might be useful to get a small, container-focussed guest OS with a recent software stack.
 
 ## Using pre-built images
 
