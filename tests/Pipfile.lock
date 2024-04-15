@@ -25,10 +25,10 @@
         },
         "aliyun-python-sdk-core": {
             "hashes": [
-                "sha256:c806815a48ffdb894cc5bce15b8259b9a3012cc0cda01be2f3dfbb844f3f4f21"
+                "sha256:518550d07f537cd3afac3b6c93b5c997ce3440e4d0c054e3acbdaa8261e90adf"
             ],
             "index": "pypi",
-            "version": "==2.14.0"
+            "version": "==2.15.1"
         },
         "aliyun-python-sdk-ecs": {
             "hashes": [
