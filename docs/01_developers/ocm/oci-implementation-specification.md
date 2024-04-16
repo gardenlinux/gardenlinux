@@ -33,20 +33,26 @@ for example `ghcr.io/gardenlinux/gardenlinux:1473.0`
 
 ## Implementation Details
 
-An OCI artifact consists of a manifest, which describes the artifact's layers and configuration, and optionally, annotations.
-The manifest points to the artifact's layers (the payload) and may reference other related OCI artifacts through descriptors.
+The [oci image-spec](https://github.com/opencontainers/image-spec) describes the standardized oci image format. 
+We utilize this specification to upload any Garden Linux artefact as we design. 
 
-### Payload - the artifact layer
+The following sub-sections describe how we utilize the oci-image format to achieve the concepts mentioned above to implement the structure defined in the [HLD](high-level-design).
+
+### Layer 
+[oci image spec: layer](https://github.com/opencontainers/image-spec/blob/main/layer.md)
+
+### manifest
+[oci image spec: manifest](https://github.com/opencontainers/image-spec/blob/main/manifest.md)
 
 ### annotations
 [oci image spec: annotations](https://github.com/opencontainers/image-spec/blob/main/annotations.md)
-
-
 
 ### descriptors
 [oci image spec: descriptors](https://github.com/opencontainers/image-spec/blob/main/descriptor.md)
 
 ## Clients
+
+Above we described the OCI registry, how it is internally structured. This section is dedicated to define how the OCI registry can be accessed via clients.
 
 ### ORAS cli 
 
