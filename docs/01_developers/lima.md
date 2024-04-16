@@ -19,9 +19,16 @@ See the [example configuration](https://github.com/lima-vm/lima/blob/master/exam
 This depends on what you are trying to do.
 If you are asking the question, you probably don't need Lima.
 Using the Garden Linux image with Lima might be useful for evaluating Garden Linux as it provides a simple way to boot an Garden Linux instance as a virtual machine without needing to take care of setting up SSH for remote login.
-Lima might also be useful to open a bug report in Garden Linux if you can reproduce an issue in a specific Garden Linux image.
-It might be useful to track down a regression in a new Garden Linux version as it makes it easy to build identical virtual machines for different versions of Garden Linux.
-It might be useful to try out if third-party software is compatible with Garden Linux.
+Lima takes care of creating a local user account insise the guest OS and setting up SSH keys for convenient login.
+Creating such a setup manually is possible, but comes with a lot of effort.
+
+Some more potential use-cases where Lima might be helpful to:
+
+- Open a bug report in Garden Linux if you can reproduce an issue in a specific Garden Linux image
+  - Track down a regression in a new Garden Linux version as it makes it easy to build identical virtual machines for different versions of Garden Linux
+  - Look into [provisioning scripts](https://github.com/lima-vm/lima/blob/f8fbae426551b438101f0ed44a46d0d3256eb0d9/examples/default.yaml#L194) for creating re-producible bug examples
+- Try out if third-party software is compatible with Garden Linux
+- Explore the contents of the Garden Linux APT repo via the `apt` cli
 
 > I use Lima, why would I want to use Garden Linux as a guest instead of any other Linux distribution?
 
