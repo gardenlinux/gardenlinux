@@ -41,15 +41,46 @@ The following sub-sections describe how we utilize the oci-image format to achie
 ### Layer 
 [oci image spec: layer](https://github.com/opencontainers/image-spec/blob/main/layer.md)
 
+Binary artefacts are serialized into oci layers with.  
+
+
+> **Question:**
+>
+> ```
+> Layers can not be referenced by tag, right? 
+> what can be referenced by tag anyway? The descriptor of an artifact? A manifest?
+> ```
+
+
+
+
+
 ### manifest
 [oci image spec: manifest](https://github.com/opencontainers/image-spec/blob/main/manifest.md)
 
+> **Question:**
+>
+> ```
+> A manifest can reference different oci-images, right? So we could use a manifest to have a meta file that references all cloud images for example?
+> ```
 ### annotations
 [oci image spec: annotations](https://github.com/opencontainers/image-spec/blob/main/annotations.md)
+> **Question/Todo:**
+>
+> ```
+> What annotations do we need? What annotations do not exist as pre-defined annotation yet?
+> ```
 
 ### descriptors
 [oci image spec: descriptors](https://github.com/opencontainers/image-spec/blob/main/descriptor.md)
 
+> **Question:**
+>
+> ```
+> How do descriptors play a role in our setup? 
+> Descriptors are an oci-image meta file, that describe only where to find manifests or artifacts?
+> Is it part of the artifact?
+> ```
 ## Clients
 
 Above we described the OCI registry, how it is internally structured. This section is dedicated to define how the OCI registry can be accessed via clients.
