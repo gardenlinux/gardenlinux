@@ -19,7 +19,7 @@ See the [example configuration](https://github.com/lima-vm/lima/blob/master/exam
 This depends on what you are trying to do.
 If you are asking the question, you probably don't need Lima.
 Using the Garden Linux image with Lima might be useful for evaluating Garden Linux as it provides a simple way to boot an Garden Linux instance as a virtual machine without needing to take care of setting up SSH for remote login.
-Lima takes care of creating a local user account insise the guest OS and setting up SSH keys for convenient login.
+Lima takes care of creating a local user account inside the guest OS and setting up SSH keys for convenient login.
 Creating such a setup manually is possible, but comes with a lot of effort.
 
 Some more potential use-cases where Lima might be helpful to:
@@ -34,6 +34,10 @@ Some more potential use-cases where Lima might be helpful to:
 
 If any of the [specific Garden Linux features](https://github.com/gardenlinux/gardenlinux?tab=readme-ov-file#features) are interesting to you, Garden Linux might be a useful guest OS for you.
 It might be useful to get a small, container-focussed guest OS with a recent software stack.
+
+Note that the Garden Linux image does not (currently) pre-install any specific container runtime.
+Container runtimes are provided as part of the Garden Linux APT repo and may be setup via [provisioning scripts](https://github.com/lima-vm/lima/blob/f8fbae426551b438101f0ed44a46d0d3256eb0d9/examples/default.yaml#L194).
+This might change in the future depending on user demand.
 
 ## Using pre-built images
 
