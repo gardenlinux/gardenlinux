@@ -15,6 +15,8 @@ showing the relations between OCI Artefacts and URLs to foreign resources.
 
 ### Release Component
 Each release creates multiple products within the Garden Linux ecosystem. 
+In the following diagrams, we do not specify how the information is encoded (e.g. version as tags, or metadata as a json file),
+we only show what information is relevant and how it is related within the Garden Linux Ecosystem.
 ```mermaid
 
 graph TD;
