@@ -131,6 +131,7 @@ selinux-policy-default
 sg3-utils
 sgml-base
 smartmontools
+slirp4netns
 socat
 sosreport
 sssd
