@@ -25,7 +25,6 @@ containerd
 containernetworking-plugins
 cryptsetup
 curl
-deborphan
 devscripts
 dkms
 dnsmasq
