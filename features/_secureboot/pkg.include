@@ -1,3 +1,4 @@
 efitools
 dracut
 systemd-boot-efi
+tpm2-tools
