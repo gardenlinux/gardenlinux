@@ -56,25 +56,6 @@ This requires setting up [binfmt_misc](https://docs.kernel.org/admin-guide/binfm
 
 On most distributions, you can install QEMU user static to set up binfmt_misc handlers. For example, on Debian, use the command `apt install qemu-user-static`.
 
-### SELinux
-
-If you intend to build targets with the `_selinux` feature, some additional requirements apply to the build machine.
-
-
-Building the `_selinux` feature will not work on machines running in SELinux enforcing mode. Ideally, you should build on a machine with SELinux disabled. However, if you want to build with SELinux in permissive mode, this can be achieved by running the build as root with the `--privileged` flag.
-
-i.e.: `sudo ./build --privileged ${target}`
-
-**SELinux Workaround for Podman:**
-> :warning: **Note:** [Podman Desktop](https://podman-desktop.io) and [Podman on macOS](https://podman.io) have by default SELinux enabled in their VMs. This may cause issues when building the `_selinux` feature. See [issue #16](https://github.com/gardenlinux/builder/issues/16) for details.
-
-If you're using Podman on macOS, follow these steps to disable SELinux in the podman VM:
-
-1. SSH into the Podman VM: `podman machine ssh`
-2. Run the following command to disable SELinux: `echo SELINUX=disabled | sudo tee /etc/selinux/config`
-3. Exit the SSH connection.
-4. Restart the Podman VM: `podman machine stop && podman machine start`
-
 ### Secureboot
 
 If you intend to build targets with the `_secureboot` feature, you must first build the secureboot certificates.
