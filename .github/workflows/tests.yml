@@ -124,7 +124,10 @@ jobs:
 
     - if: ${{ matrix.target == 'ali' }}
       name: 'Create ali cloud credential file'
-      run: base64 -d <<< "${{ secrets.ccc_credentials }}" | .github/workflows/ali_credentials.jq > ali-service-account.json
+      run: |
+        base64 -d <<< "${{ secrets.ccc_credentials }}" | .github/workflows/ali_credentials.jq > ali-service-account.json
+        echo "::add-mask::$(jq -r '.profiles[0].access_key_id' < ali-service-account.json)"
+        echo "::add-mask::$(jq -r '.profiles[0].access_key_secret' < ali-service-account.json)"
 
     - name: start platform test for ${{ matrix.target }}
       run: |
