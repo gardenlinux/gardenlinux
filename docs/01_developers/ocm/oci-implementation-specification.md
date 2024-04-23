@@ -13,29 +13,35 @@ The following diagram shows the general hierachical structure of the OCI registr
 
 ```mermaid
 graph LR;
+    root_index[oci-index: root]--> platform_index_aws[oci-index: aws];
+    root_index--> platform_index_ali[oci-index: ali];
+    root_index--> platform_index_azure[oci-index: azure];
+    root_index--> platform_index_gcp[oci-index: gcp];
+    root_index--> platform_index_openstack[oci-index: openstack];
+    root_index--> platform_index_khost[oci-index: khost];
+    root_index--> base_container_manifest[oci-manifest: container base image];
 
-    Index[oci-index: gardenlinux/gardenlinux:version]--> ALI[Ali - OCI Manifest];
-    Index--> AWS[oci-manifest: platform aws];
-    Index--> Manifest;
-    Index--> AZURE[oci-manifest: platform azure];
-    Index--> GCP[oci-manifest: platform GCP];
-    Index--> OPENSTACK[oci-manifest: platform openstack];
-    Index--> OPENSTACK_BAREMETAL[oci-manifest: platform openstack bare metal];
-    Index--> CONTAINER[oci-manifest: container base image];
+    platform_index_aws--> aws_manifest_1[amd64 artefact];
+    platform_index_aws--> aws_manifest_2[amd64 artefact];
     
-    image_amd64[oci-image: cloud image]--> layer_rootfs[layer: rootfs];
-    image_amd64[oci-image: cloud image]--> layer_cmdline[layer: cmdline];
-    image_amd64[oci-image: cloud image]--> layer_kernel[layer: kernel];
-    image_amd64[oci-image: cloud image]--> layer_changelog[layer: changelog];
-    Manifest[oci-manifest: cloud image]--> image_amd64[amd64 artefact];
-    Manifest[oci-manifest: cloud image]--> image_arm64[arm64artefact];
+    aws_manifest_1[oci-manifest: featureset 1]--> aws_image_1_arm64;
+    aws_manifest_1--> aws_image_1_amd64[oci-image: AMD64];
+    aws_manifest_2[oci-manifest: featureset 2]--> aws_image_2_arm64[oci-image: ARM64];
+    aws_manifest_2--> aws_image_2_amd64[oci-image: ARM64];
+
+    aws_image_1_arm64[oci-image: AMD64]--> layer_rootfs[layer: rootfs];
+    aws_image_1_arm64--> layer_cmdline[layer: cmdline];
+    aws_image_1_arm64--> layer_kernel[layer: kernel];
 ```
 
-### Component: oci-index
+### Component: root oci-index
+The root oci-index holds a list of references to `oci-index: platform` and `oci-manifest` type objects.
+We specify the properties of the `oci-index: root` in the table below.
 
-We utilize the oci-index to reference all garden linux platforms, including various cloud platforms, metal and container images.
-Additionally to the list of manifests referencing all supported platforms, the oci-index can have annotations. 
+Conceptually, `oci-index: root` contains all platforms for an OS. 
+An OS has a defined release-cycle, but could contain multiple flavors for different user groups.
 
+For the sake of readability, we assume for the rest of this spec, that the OS is gardenlinux/gardenlinux, but this could be extended to other OS images build with the gardenlinux/builder, for example gardenlinux/gardenlinux-cc.
 
 | oci-index property Name  | Property Value                               | Property Description                                                                                       |
 |----------------|----------------------------------------------|-------------------------------------------------------------------------------------------------------------|
@@ -47,7 +53,7 @@ Additionally to the list of manifests referencing all supported platforms, the o
 
 #### oci-index property: manifest list
 
-The oci-index contains an array of manifests, where each manifest object in that array contains the following information described in the table below.
+The oci-index contains an array of manifests, where each manifest object in that array contains the information described in the table below.
 Please note that these properties are for the list object, not the oci-manifest properties. The oci-manifest properties are described later.
 
 | Manifest Object Property Name            | Property Value                           |
@@ -79,7 +85,12 @@ Please note that these properties are for the list object, not the oci-manifest 
 
 See also [oci image spec: image-index](https://github.com/opencontainers/image-spec/blob/main/image-index.md)
 
-### oci-manifest: Cloud Platform Manifest
+### oci-index: Platform
+A platform could contain multiple flavors, for example `khost-gardener`, `khost`, `khost_pxe` and `khost_dev`.
+As opposed to a flat `oci-index: root` containing all platform manifests, this spec defines that
+a child node called `oci-index: platform` is introduced, that is referenced by the `oci-index: root` and references all `oci-manifest: flavor`.
+
+### oci-manifest: flavor
 A Garden Linux image can come in different CPU architecture types.
 The platform manifest lists all architecture specific oci images for a given platform. 
 
