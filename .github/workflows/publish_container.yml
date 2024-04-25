@@ -69,6 +69,47 @@ jobs:
           podman manifest add ghcr.io/${{ github.repository }}:${version} ghcr.io/${{ github.repository }}:arm64-${version}
           podman push ghcr.io/${{ github.repository }}:${version}
 
+  publish_kmodbuild_container:
+    name: publish gardenlinux kernel module build dev image
+    runs-on: ubuntu-latest
+    needs: publish_container
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: ./.github/actions/setup
+      - name: get container versions
+        id: versions
+        run: |
+          version="$(bin/garden-version "${{ inputs.version }}")"
+          snapshot="$(gh api "/repos/gardenlinux/repo/contents/.container?ref=$version" | jq -r '.content' | base64 -d)"
+          echo -e "base=ghcr.io/${{ github.repository }}:$version\nsnapshot=$snapshot" | tee "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: publish gardenlinux kernel module build dev image
+        run: |
+          version=$(bin/garden-version "${{ inputs.version }}")
+          podman login -u token -p ${{ github.token }} ghcr.io
+          
+          base='${{ steps.versions.outputs.base }}'
+          snapshot='${{ steps.versions.outputs.snapshot }}'
+
+          podman pull --arch amd64 "$base"
+          podman pull --arch amd64 "$snapshot"
+          podman build --arch amd64 --build-arg base="$base" --build-arg snapshot="$snapshot" -t ghcr.io/${{ github.repository }}/kmodbuild:amd64-${version} container/kmodbuild
+          podman push ghcr.io/${{ github.repository }}/kmodbuild:amd64-${version}
+
+          podman pull --arch arm64 "$base"
+          podman pull --arch arm64 "$snapshot"
+          podman build --arch arm64 --build-arg base="$base" --build-arg snapshot="$snapshot" -t ghcr.io/${{ github.repository }}/kmodbuild:arm64-${version} container/kmodbuild
+          podman push ghcr.io/${{ github.repository }}/kmodbuild:arm64-${version}
+
+          podman manifest create ghcr.io/${{ github.repository }}/kmodbuild:${version}
+          podman manifest add ghcr.io/${{ github.repository }}/kmodbuild:${version} ghcr.io/${{ github.repository }}/kmodbuild:amd64-${version}
+          podman manifest add ghcr.io/${{ github.repository }}/kmodbuild:${version} ghcr.io/${{ github.repository }}/kmodbuild:arm64-${version}
+          podman push ghcr.io/${{ github.repository }}/kmodbuild:${version}
+
   publish_bare_flavors:
     name: publish bare flavors
     runs-on: ubuntu-latest
