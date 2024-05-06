@@ -26,6 +26,7 @@ done
 date="$(date -R -u)"
 
 cat << EOF | gpg --clearsign > "$target/dists/$dist/InRelease"
+Origin: GardenLinux
 Codename: $dist
 Description: $description
 Components: main
