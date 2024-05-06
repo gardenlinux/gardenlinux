@@ -3,10 +3,7 @@
 set -euo pipefail
 shopt -s nullglob
 
-exec 3>&1
-exec 1>&2
-
-container_image=localhost/builder
+container_image=ghcr.io/gardenlinux/builder:002a2ff4d1dc6a39d04543b6a6e92a1465d9e226
 container_engine=podman
 target_dir=.build
 
@@ -46,7 +43,7 @@ while [ $# -gt 0 ]; do
 			shift
 			;;
 		--print-container-image)
-			printf '%s\n' "$container_image" >&3
+			printf '%s\n' "$container_image"
 			exit 0
 			;;
 		--resolve-cname)
@@ -78,14 +75,7 @@ done
 
 if [ "$container_image" = localhost/builder ]; then
 	dir="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")"
-	# Build from 'builder.dockerfile' if that exists, otherwise the default file name will be 'Dockerfile' or 'Containerfile'.
-	# It is recommended to call the file 'builder.dockerfile' to make it's intention clear.
-	# That file might only contain a single line 'FROM ghcr.io/gardenlinux/builder:...' which can be updated via dependabot.
-	if [[ -f builder.dockerfile ]]; then
-		"$container_engine" build -t "$container_image" -f builder.dockerfile "$dir"
-	else 
-		"$container_engine" build -t "$container_image" "$dir"
-	fi
+	"$container_engine" build -t "$container_image" "$dir"
 fi
 
 repo="$(./get_repo)"
@@ -98,7 +88,7 @@ if [ "$resolve_cname" = 1 ]; then
 	arch="$("$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" dpkg --print-architecture)"
 	cname="$("$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" /builder/parse_features --feature-dir /builder/features --default-arch "$arch" --default-version "$default_version" --cname "$1")"
 	short_commit="$(head -c 8 <<< "$commit")"
-	echo "$cname-$short_commit" >&3
+	echo "$cname-$short_commit"
 	exit 0
 fi
 
@@ -117,17 +107,8 @@ if [ "$use_kms" = 1 ]; then
 	done
 fi
 
-# Default values which can be overriden via 'build.config' file
-tempfs_size=2G
-
-if [[ -f "$PWD"/build.config ]]; then
-	. "$PWD"/build.config
-fi
-
-make_opts+=("TEMPFS_SIZE=$tempfs_size")
-
 if [ -d cert ]; then
 	container_mount_opts+=(-v "$PWD/cert:/builder/cert:ro")
 fi
 
-"$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" ${container_cmd[@]+"${container_cmd[@]}"} make --no-print-directory -C /builder "${make_opts[@]}" "$@" >&3
+"$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" ${container_cmd[@]+"${container_cmd[@]}"} make --no-print-directory -C /builder "${make_opts[@]}" "$@"
