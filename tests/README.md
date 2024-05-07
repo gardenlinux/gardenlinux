@@ -1003,8 +1003,6 @@ local:
       image: /build/kvm_dev_oci-amd64-today-local.oci.tar.xz
       kernel: /build/kvm_dev_oci-amd64-today-local.vmlinuz
 
-    garden_feat:
-
 ```
 
 ##### Configuration options
@@ -1014,8 +1012,6 @@ local:
 - **oci** contains the configuration options for local test `test_oci`
     - **image** the build result image used within the tests
     - **kernel** the name for the builded kernel
-
-- **garden_feat** contains the configuration option for the `test_garden_feat` test. This is just an example since the `test_garden_feat` test does not have any configuration options
 
 Check the [readme](local/README.md) for detailed configuration options of all the local tests.
 </details>
