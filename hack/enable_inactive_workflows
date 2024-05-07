@@ -4,9 +4,9 @@ set -eufo pipefail
 
 org=gardenlinux
 
-gh api --paginate "/orgs/$org/repos" | jq -r '.[] | .name' | while read repo; do
+gh api --paginate "/orgs/$org/repos" | jq -r '.[] | .name' | while read -r repo; do
 	echo "$org/$repo"
-	gh api "/repos/$org/$repo/actions/workflows" | jq -r '.workflows[] | select(.state == "disabled_inactivity") | (.id | tostring) + " " + .path' | while read workflow_id workflow_path; do
+	gh api "/repos/$org/$repo/actions/workflows" | jq -r '.workflows[] | select(.state == "disabled_inactivity") | (.id | tostring) + " " + .path' | while read -r workflow_id workflow_path; do
 		gh api -X PUT "/repos/$org/$repo/actions/workflows/$workflow_id/enable" | jq
 		echo -e "\033[1;34menabled $org/$repo/$workflow_path\033[0m"
 	done
