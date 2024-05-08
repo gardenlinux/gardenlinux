@@ -65,7 +65,6 @@ libvirt-clients
 libvirt-daemon-system
 libxi6
 libxtst6
-libyang2
 linux-base
 lsb-release
 lsof
