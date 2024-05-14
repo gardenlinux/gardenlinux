@@ -5,4 +5,4 @@ def test_umask(client):
     (exit_code, output, error) = client.execute_command(
         cmd, quiet=True)
     assert exit_code == 0, f"Could not execute umask cmd: {error}"
-    assert output == "0027", "umask is not set to 0027 "
+    assert output == "0027\n", "umask is not set to 0027 "
