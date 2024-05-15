@@ -316,8 +316,8 @@ def aws(iaas):
 
 @pytest.fixture
 def non_gcp(iaas):
-    if iaas != 'gcp':
-        pytest.skip('test only supported on gcp')
+    if iaas == 'gcp':
+        pytest.skip('test not supported on gcp')
 
 @pytest.fixture
 def gcp(iaas):
