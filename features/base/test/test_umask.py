@@ -14,14 +14,15 @@ from helper.tests.file_content import file_content
 )
 
 
-# Run the test unit to perform the
-# final tests by the given artifact.
+# pam_umask reads the umask value from /etc/login.defs,
+# therefore we need to test the UMASK default value set via /etc/login.defs
 def test_umask(client, file, dict, non_gcp):
     # Check /etc/login.defs
     file_content(client, file, dict)
 
+# `/root/.bashrc`, `/root/.profile`, ... can overwrite default value from /etc/login.defs
+# therefore we need to check via the umask cmd in root bash environment
 def test_umask_cmd(client, non_container):
-    # Additionally check umask via cmd
     cmd = f"sudo su root -c umask"
     (exit_code, output, error) = client.execute_command(
         cmd, quiet=True)
