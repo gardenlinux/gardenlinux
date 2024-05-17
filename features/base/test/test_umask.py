@@ -16,7 +16,7 @@ from helper.tests.file_content import file_content
 
 # pam_umask reads the umask value from /etc/login.defs,
 # therefore we need to test the UMASK default value set via /etc/login.defs
-def test_umask(client, file, dict, non_gcp):
+def test_umask(client, file, dict):
     # Check /etc/login.defs
     file_content(client, file, dict)
 
