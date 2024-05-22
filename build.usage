@@ -1,8 +1,8 @@
 build [--container-image=(localhost/builder|<IMAGES>)]"The default container image that is used."
 [--container-engine=(docker| podman)]"The software solution to implement a kernel namespace for the
 process." [--resolve-cname] [--print-container-image] [--kms]
-[--privileged] [--target <PATH> ] "The folder in which the artifices will be safed to." <FEATURE>[-<FEATURE>|_<FEATURE>];
+[--privileged] [--target <PATH> ] "The folder in which the artifices will be safed to." <TARGET>;
 
 # We handle different features here, since we do should have base_feature first 
-<FEATURE> ::= {{{ ls -1 features|grep -ve \*.md |sort }}};
+<TARGET> ::= {{{ cat  flavours.yaml |yq -r .targets[].name }}};
 <IMAGES> ::= {{{ podman images -q }}};
