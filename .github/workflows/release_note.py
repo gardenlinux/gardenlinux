@@ -253,6 +253,7 @@ def create_github_release(owner, repo, tag, commitish):
 
     data = {
         'tag_name': tag,
+        'target_commitish': commitish,
         'name': tag,
         'body': body,
         'draft': False,
