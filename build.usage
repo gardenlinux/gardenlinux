@@ -1,4 +1,4 @@
-build [--container-image=(localhost/builder|<IMAGES>)] "The default container image that is used." [--container-engine=(docker| podman)] "The software solution to implement a kernel namespace for the process." [--resolve-cname] [--print-container-image] [--kms] "Set AWS environment variables to allow access to KMS." [--privileged] "Set the container to have higher privileges." [--target <PATH> ] "The folder in which the artifices will be safed to." <TARGET> [<MODIFIERS>];
+build [--container-image=(localhost/builder|<IMAGES>)] "The default container image that is used." [--container-engine=(docker| podman)] "The software solution to implement a kernel namespace for the process." [--resolve-cname] [--print-container-image] [--kms] "Set AWS environment variables to allow access to KMS." [--privileged] "Set the container to have higher privileges." [--target <PATH> ] "The folder in which the artifices will be safed to." <PLATFORM>[<ELEMENT>] [<MODIFIERS>][<ARCHITECTUR>][<TIME>] amd64-experimental ;
 
 # We handle different features here, since we do should have base_feature first 
 <TARGET> ::= {{{ cat  flavours.yaml |yq -r .targets[].name }}};
