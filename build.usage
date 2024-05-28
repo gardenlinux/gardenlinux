@@ -1,4 +1,4 @@
-build [<OPTION>]  <PLATFORM>[<FREATURES>]...;
+build [<OPTION>]  kvm;
 
 
 
@@ -12,10 +12,10 @@ build [<OPTION>]  <PLATFORM>[<FREATURES>]...;
            ;
 
 
-<PLATFORM>[<ELEMENT>] [<MODIFIERS>][<ARCHITECTUR>][<TIME>] amd64-experimental ;
+#<PLATFORM>[<ELEMENT>] [<MODIFIERS>][<ARCHITECTUR>][<TIME>] amd64-experimental ;
 
 # We handle different features here, since we do should have base_feature first 
-<TARGET> ::= {{{ cat  flavours.yaml |yq -r .targets[].name }}};
-<MODIFIERS> ::= {{{ cat  flavours.yaml | yq -r .modifiers[] }}}{{{ cat flavours.yaml | yq -r '.targets[] | select(.name=="<TARGET>") | .modifiers[]' }}};
+#<TARGET> ::= {{{ cat  flavours.yaml |yq -r .targets[].name }}};
+#<MODIFIERS> ::= {{{ cat  flavours.yaml | yq -r .modifiers[] }}}{{{ cat flavours.yaml | yq -r '.targets[] | select(.name=="<TARGET>") | .modifiers[]' }}};
 <IMAGES> ::= {{{ podman images -q }}};
-[<ELEMENT>] 
+#[<ELEMENT>] 
