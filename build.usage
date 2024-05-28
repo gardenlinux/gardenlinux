@@ -1,18 +1,20 @@
-build [<OPTION>]  kvm;
-
-
+build [<OPTION>] [<TARGET>];
 
 <OPTION> ::= [--container-image=(localhost/builder|<IMAGES>)]                               "The default container image that is used."
            | [--container-engine=(docker| podman)]                                          "The software solution to implement a kernel namespace for the process." 
            | [--resolve-cname]                                                              "The platfrom, element or flag that should resolved for"
-           | [--print-container-image]                                                      "Print the usage container image" 
+           | [--print-container-image]                                                      "Print the usaged container image."
            | [--kms]                                                                        "Set AWS environment variables to allow access to KMS." 
            | [--privileged]                                                                 "Set the container to have higher privileges." 
            | [--target <PATH> ]                                                             "The folder in which the artifices will be safed to." 
            ;
 
+<TARGET> ::= <PLATFORM>;
 
-#<PLATFORM>[<ELEMENT>] [<MODIFIERS>][<ARCHITECTUR>][<TIME>] amd64-experimental ;
+<PLATFORM> ::= {{{ for feature in (ls -1 features);grep -E 'platform' features/$feature/info.yaml > /dev/null 2> /dev/null   && echo $feature;end  }}};
+
+
+#<PLATFORM>[<ELEMENT>] [<MODIFIERS>][<ARCHITECTUR>][<TIME>];
 
 # We handle different features here, since we do should have base_feature first 
 #<TARGET> ::= {{{ cat  flavours.yaml |yq -r .targets[].name }}};
