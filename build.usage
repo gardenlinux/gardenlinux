@@ -1,4 +1,4 @@
-build [<OPTION>] [<TARGET>];
+build [<OPTION>] <TARGET>;
 
 <OPTION> ::= [--container-image=(localhost/builder|<IMAGES>)]                               "The default container image that is used."
            | [--container-engine=(docker| podman)]                                          "The software solution to implement a kernel namespace for the process." 
@@ -9,15 +9,78 @@ build [<OPTION>] [<TARGET>];
            | [--target <PATH> ]                                                             "The folder in which the artifices will be safed to." 
            ;
 
-<TARGET> ::= <PLATFORM>;
+<TARGET> ::= <PLATFORM>[-<ELEMENT>]...[<FLAG>]...[-<ARCHITECTUR>-<TIME>];
 
-<PLATFORM> ::= {{{ for feature in (ls -1 features);grep -E 'platform' features/$feature/info.yaml > /dev/null 2> /dev/null   && echo $feature;end  }}};
+<PLATFORM> ::= (ali
+           |aws
+           |azure
+           |container
+           |firecracker
+           |gcp
+           |gdch
+           |kvm
+           |metal
+           |openstack
+           |openstackbaremetal
+           |vmware
+           );
+
+<ELEMENT> ::= (aide
+           | base
+           | chost
+           | cis
+           | cisAudit
+           | cisModprobe
+           | cisOS
+           | cisPackages
+           | cisPartition
+           | cisSshd
+           | cisSysctl
+           | clamav
+           | cloud
+           | fedramp
+           | firewall
+           | gardener
+           | khost
+           | log
+           | nodejs
+           | python
+           | rootlessPodman
+           | sap
+           | sapmachine
+           | server
+           | ssh
+           | sssd
+           | stig
+           | stigDev
+           | vhost
+           );
+
+<FLAG>  ::= (_boot
+           |_build
+           |_curl
+           |_debug
+           |_dev
+           |_ignite
+           |_iso
+           |_lima
+           |_nopkg
+           |_oci
+           |_oras
+           |_persistence
+           |_prod
+           |_pxe
+           |_readonly
+           |_secureboot
+           |_selinux
+           |_slim
+           );
 
 
-#<PLATFORM>[<ELEMENT>] [<MODIFIERS>][<ARCHITECTUR>][<TIME>];
+<ARCHITECTUR> ::= (amd64|arm64);
+<TIME> ::= (now|today|experimental)
 
-# We handle different features here, since we do should have base_feature first 
-#<TARGET> ::= {{{ cat  flavours.yaml |yq -r .targets[].name }}};
-#<MODIFIERS> ::= {{{ cat  flavours.yaml | yq -r .modifiers[] }}}{{{ cat flavours.yaml | yq -r '.targets[] | select(.name=="<TARGET>") | .modifiers[]' }}};
+#<PLATFORM@fish> ::= {{{ for feature in (ls -1 features);grep -E 'platform' features/$feature/info.yaml > /dev/null 2> /dev/null   && echo $feature;end  }}};
+#<PLATFORM@bash> ::= {{{ for feature in $(ls -1 features);do grep -qE 'platform' features/$feature/info.yaml 2> /dev/null  && echo $feature;done }}};
 <IMAGES> ::= {{{ podman images -q }}};
-#[<ELEMENT>] 
+
