@@ -61,6 +61,20 @@ jobs:
       region: ${{ secrets.AWS_REGION }}
       role: ${{ secrets.AWS_IAM_ROLE }}
       session: ${{ secrets.AWS_OIDC_SESSION }}
+  upload_to_s3_cn:
+    name: upload to S3 china
+    needs: [ build, tests ]
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/upload_to_s3.yml
+    with:
+      version: ${{ needs.build.outputs.version }}
+      default_modifier: "-gardener_prod"
+    secrets:
+      bucket: ${{ secrets.AWS_CN_S3_BUCKET }}
+      region: ${{ secrets.AWS_CN_REGION }}
+      role: ${{ secrets.AWS_CN_IAM_ROLE }}
+      session: ${{ secrets.AWS_CN_OIDC_SESSION }}
   publish_container:
     name: publish gardenlinux container base image
     needs: [ build, tests ]
