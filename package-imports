@@ -96,7 +96,6 @@ ovmf
 patchelf
 pciutils
 podman
-podman-toolbox
 policykit-1
 pristine-lfs
 python3-apt
