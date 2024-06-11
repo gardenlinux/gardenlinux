@@ -37,15 +37,25 @@ EOF
 
 for file in "$name/$name"*; do
 suffix="$(basename "$file" | sed "s/^$name//")"
+md5sum=$(md5sum -b "$file" | cut -d " " -f 1)
+md5bin=$(openssl md5 -binary "$file" | base64 -w0)
+sha256sum=$(sha256sum -b "$file" | cut -d " " -f 1)
+sha256bin=$(openssl sha256 -binary "$file" | base64 -w0)
 cat << EOF >> "$meta_yml"
 - name: $file
   s3_bucket_name: $bucket
   s3_key: 'objects/$file'
   suffix: $suffix
+  md5sum: $md5sum
+  sha256sum: $sha256sum
 EOF
+object_key="objects/$file"
+
+aws s3api put-object --body "$file" --bucket "$bucket" --key "$object_key" \
+  --content-md5 "$md5bin" --checksum-algorithm sha256 --checksum-sha256 "$sha256bin" \
+  --tagging "md5sum=$md5sum&sha256sum=$sha256sum&platform=$platform&architecture=$arch&version=$GARDENLINUX_VERSION&committish=$GARDENLINUX_COMMIT_ID_LONG"
 done
 
 cat "$meta_yml"
 
-aws s3 cp --recursive "$name" "s3://$bucket/objects/$name"
 aws s3 cp --content-type "text/yaml" "$meta_yml" "s3://$bucket/meta/singles/$name"
