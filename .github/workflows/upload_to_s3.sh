@@ -37,8 +37,8 @@ EOF
 
 for file in "$name/$name"*; do
 suffix="$(basename "$file" | sed "s/^$name//")"
-md5sum=$(md5sum -b "$file" | cut -d " " -f 1)
-md5bin=$(openssl md5 -binary "$file" | base64 -w0)
+md5sum=$(md5sum -b "$file" | cut -d " " -f 1)         # human readable (hexlified) digest for tags
+md5bin=$(openssl md5 -binary "$file" | base64 -w0)    # base64 encoded binary digest for S3 api
 sha256sum=$(sha256sum -b "$file" | cut -d " " -f 1)
 sha256bin=$(openssl sha256 -binary "$file" | base64 -w0)
 cat << EOF >> "$meta_yml"
