@@ -75,11 +75,10 @@ def get_package_list(repositories, architecture):
                     packages = gzip.decompress(response.content).decode("UTF-8")
                 else:
                     packages = response.content.decode("UTF-8")
-            else:
-                raise(Exception(f"Failed to download package from {packages_url}"))
 
-            packages_dict.update({f'{uri}-{suite}-{component}-{arch}': packages})
+                packages_dict.update({f'{uri}-{suite}-{component}-{arch}': packages})
 
+    assert len(packages_dict) != 0, "Expected to find packages"
     return packages_dict
 
 def get_package_urls(package_list, package_name, resolve_depends=True):
