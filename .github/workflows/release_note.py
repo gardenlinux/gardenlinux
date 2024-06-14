@@ -209,6 +209,7 @@ def generate_package_update_section(version):
 
 
 def create_github_release_notes(gardenlinux_version, commitish):
+    commitish=commitish[:8]
     output = ""
   
     manifests = download_all_singles(gardenlinux_version, commitish)
