@@ -209,9 +209,10 @@ def generate_package_update_section(version):
 
 
 def create_github_release_notes(gardenlinux_version, commitish):
+    commitish_short=commitish[:8]
     output = ""
   
-    manifests = download_all_singles(gardenlinux_version, commitish)
+    manifests = download_all_singles(gardenlinux_version, commitish_short)
 
     output += generate_release_note_image_ids(manifests)
     
@@ -220,13 +221,17 @@ def create_github_release_notes(gardenlinux_version, commitish):
     output += get_kernel_urls(gardenlinux_version)
     output += "\n"
 
-    output += generate_image_download_section(manifests, gardenlinux_version, commitish )
+    output += generate_image_download_section(manifests, gardenlinux_version, commitish_short )
 
     output += "\n"
-    output += "## Kernel Module Build Container (kmodbuild)"
-    output += "````"
-    output += f"ghcr.io/gardenlinux/kmodbuild:{gardenlinux_version}"
+    output += "## Kernel Module Build Container (kmodbuild) "
+    output += "\n"
     output += "```"
+    output += "\n"
+    output += f"ghcr.io/gardenlinux/kmodbuild:{gardenlinux_version}"
+    output += "\n"
+    output += "```"
+    output += "\n"
     return output
 
 def write_to_release_id_file(release_id):
