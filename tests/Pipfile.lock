@@ -626,12 +626,12 @@
         },
         "azure-mgmt-resource": {
             "hashes": [
-                "sha256:1ee3f75d7c09ff5983deef907768090a50059df60e262343c4b04477673259b8",
-                "sha256:90c9a2295c233e09ac4c8c71c4344d5c4e358d24c991e9a72a13be3ff39c3d92"
+                "sha256:20b6b006b544fdb19607f3f6a381105625e0bb60fbf3036f39885c4646d3343e",
+                "sha256:fcaa4eca357d216f285b04e20b7f7bfaefda738ba6d30d956193090d3e325248"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.7'",
-            "version": "==23.1.0b2"
+            "markers": "python_version >= '3.8'",
+            "version": "==23.1.1"
         },
         "azure-mgmt-search": {
             "hashes": [
