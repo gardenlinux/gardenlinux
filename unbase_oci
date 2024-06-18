@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 set -eufo pipefail
-container_image=ghcr.io/gardenlinux/unbase_oci:33c5be10849472400667bf50a0e75d48f256019d
+
+container_image=ghcr.io/gardenlinux/unbase_oci:5eb999b96d0bee41b1821bba169bce6b64342d94
 container_engine=podman
 
 container_mount_opts=()
