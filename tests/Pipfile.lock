@@ -177,12 +177,12 @@
         },
         "azure-identity": {
             "hashes": [
-                "sha256:6ff1d667cdcd81da1ceab42f80a0be63ca846629f518a922f7317a7e3c844e1b",
-                "sha256:722fdb60b8fdd55fa44dc378b8072f4b419b56a5e54c0de391f644949f3a826f"
+                "sha256:32ecc67cc73f4bd0595e4f64b1ca65cd05186f4fe6f98ed2ae9f1aa32646efea",
+                "sha256:db8d59c183b680e763722bfe8ebc45930e6c57df510620985939f7f3191e0382"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==1.16.0"
+            "version": "==1.17.1"
         },
         "azure-keyvault-administration": {
             "hashes": [
@@ -1762,11 +1762,11 @@
         },
         "portalocker": {
             "hashes": [
-                "sha256:2b035aa7828e46c58e9b31390ee1f169b98e1066ab10b9a6a861fe7e25ee4f33",
-                "sha256:cfb86acc09b9aa7c3b43594e19be1345b9d16af3feb08bf92f23d4dce513a28e"
+                "sha256:48944147b2cd42520549bc1bb8fe44e220296e56f7c3d551bc6ecce69d9b0de1",
+                "sha256:49de8bc0a2f68ca98bf9e219c81a3e6b27097c7bf505a87c5a112ce1aaeb9b81"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==2.8.2"
+            "version": "==2.10.0"
         },
         "prettytable": {
             "hashes": [
