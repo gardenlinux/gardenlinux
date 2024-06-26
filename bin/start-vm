@@ -65,6 +65,8 @@ get_os () {
             os="ubuntu"
         elif [ $host_dist = "arch" ] || [ "$host_dist" = "manjaro" ]; then
             os="arch"
+        elif [ $host_dist = "nixos" ]; then
+            os="nixos"
         else
             echo "Error: Unsupported Linux distribution."
             exit 1
@@ -457,6 +459,11 @@ qemu_opt_uefi () {
             elif [ "$os" = arch ]; then
                 uefi_code="${uefi_code:-/usr/share/OVMF/x64/OVMF_CODE.fd}"
                 uefi_vars="${uefi_vars:-/usr/share/OVMF/x64/OVMF_VARS.fd}"
+            elif [ "$os" = nixos ]; then
+                # Requires the following NixOS configuration:
+                # virtualisation.libvirtd.enable = true;
+                uefi_code="${uefi_code:-/run/libvirt/nix-ovmf/OVMF_CODE.fd}"
+                uefi_vars="${uefi_vars:-/run/libvirt/nix-ovmf/OVMF_VARS.fd}"
             else
                 echo "Error: Could not find UEFI code and vars file."
                 exit 1
@@ -490,6 +497,15 @@ qemu_opt_uefi () {
             # package which is *present* in official repositories
             uefi_code="${uefi_code:-/usr/share/AAVMF/AAVMF_CODE.fd}"
             uefi_vars="${uefi_vars:-/usr/share/AAVMF/AAVMF_VARS.fd}"
+        elif [ "$os" = nixos ]; then
+            # Requires the following NixOS configuration to have AArch64 UEFI firmware on x86 hosts:
+            #
+            # virtualisation.libvirtd.qemu.ovmf.packages = [
+            #   pkgs.OVMFFull.fd
+            #   pkgs.pkgsCross.aarch64-multiplatform.OVMF.fd
+            # ];
+            uefi_code="${uefi_code:-/run/libvirt/nix-ovmf/AAVMF_CODE.fd}"
+            uefi_vars="${uefi_vars:-/run/libvirt/nix-ovmf/AAVMF_VARS.fd}"
         else
             echo "Error: Could not find UEFI code and vars file."
             exit 1
@@ -503,7 +519,8 @@ qemu_opt_uefi () {
         [ -r $uefi_code ] || eusage "Missing uefi code at $uefi_code.\n Run: apt-get install ovmf qemu-efi-aarch64"
         [ -r $uefi_vars ] || eusage "Missing uefi vars at $uefi_vars.\n Run: apt-get install ovmf qemu-efi-aarch64"
 
-        [ -e $CURR_DIR/$mac.vars ] || cp $uefi_vars $CURR_DIR/$mac.vars
+        # The source file might be read-only.
+        [ -e $CURR_DIR/$mac.vars ] || cp --no-preserve=mode,ownership $uefi_vars $CURR_DIR/$mac.vars
 
         # Add support for amd64 architecture
         if [ "$arch" = amd64 ]; then
