@@ -55,17 +55,17 @@ get_os () {
         fi
 
         # Evaluate Distribution
-        if [ $host_dist = "centos" ]; then
+        if [ "$host_dist" = "centos" ]; then
             os="centos"
-        elif [ $host_dist = "fedora" ]; then
+        elif [ "$host_dist" = "fedora" ]; then
             os="fedora"
-        elif [ $host_dist = "debian" ] || [ $host_dist = "garden" ]; then
+        elif [ "$host_dist" = "debian" ] || [ "$host_dist" = "garden" ]; then
             os="debian"
-        elif [ $host_dist = "ubuntu" ]; then
+        elif [ "$host_dist" = "ubuntu" ]; then
             os="ubuntu"
-        elif [ $host_dist = "arch" ] || [ "$host_dist" = "manjaro" ]; then
+        elif [ "$host_dist" = "arch" ] || [ "$host_dist" = "manjaro" ]; then
             os="arch"
-        elif [ $host_dist = "nixos" ]; then
+        elif [ "$host_dist" = "nixos" ]; then
             os="nixos"
         else
             echo "Error: Unsupported Linux distribution."
