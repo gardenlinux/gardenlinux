@@ -51,7 +51,7 @@ get_os () {
         if [ $init_system != "systemd" ]; then
             host_dist="debian"
         else
-            host_dist="$(hostnamectl | grep "Operating System:" | awk {'print tolower($3)}')"
+            host_dist="$(hostnamectl | grep "Operating System:" | awk '{print tolower($3)}')"
         fi
 
         # Evaluate Distribution
