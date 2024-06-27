@@ -5,7 +5,9 @@ from helper.sshclient import RemoteClient
 def test_metadata_connection(client, non_azure, non_ali, non_chroot, non_kvm):
     metadata_host = "169.254.169.254"
     (exit_code, output, error) = client.execute_command(
-        f"wget --header=\"X-aws-ec2-metadata-token: $(curl -sqX PUT 'http://169.254.169.254/latest/api/token' -H 'X-aws-ec2-metadata-token-ttl-seconds: 21600')\" 'http://169.254.169.254/'"
+        f"wget --timeout 5 \
+               --header=\"X-aws-ec2-metadata-token: $(curl -sqX PUT 'http://{metadata_host}/latest/api/token' -H 'X-aws-ec2-metadata-token-ttl-seconds: 21600')\" \
+               'http://{metadata_host}/'"
     )
     assert exit_code == 0, f"no {error=} expected"
     assert f"Connecting to {metadata_host}:80... connected." in error
