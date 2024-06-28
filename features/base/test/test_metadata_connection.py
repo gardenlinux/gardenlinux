@@ -12,7 +12,6 @@ def test_metadata_connection(client, non_azure, non_ali, non_chroot, non_kvm):
     (exit_code, output, error) = client.execute_command(
         f"wget --timeout 5 \
                --header='X-aws-ec2-metadata-token: {token}' \
-               -H 'X-aws-ec2-metadata-token-ttl-seconds:60' \
                'http://{metadata_host}/'"
     )
     assert exit_code == 0, f"no {error=} expected"
