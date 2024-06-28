@@ -2,7 +2,7 @@ import pytest
 from helper.sshclient import RemoteClient
 
 
-def test_metadata_connection(client, non_azure, non_ali, non_chroot, non_kvm):
+def test_metadata_connection(client, non_gcp, non_azure, non_ali, non_chroot, non_kvm):
     metadata_host = "169.254.169.254"
     # request the IMDSv2 token to allow access to the metadata_host on AWS.
     (exit_code, token, error) = client.execute_command(
