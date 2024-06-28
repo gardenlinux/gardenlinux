@@ -120,8 +120,8 @@ elif [[ "$url" == "http"* ]]; then
 	[Unit]
 	After=live-get-squashfs.service
 	Wants=live-get-squashfs.service
-	After=dracut-pre-mount.service
-	Before=initrd-root-fs.target
+	#After=dracut-pre-mount.service
+	#Before=initrd-root-fs.target
 	DefaultDependencies=no
 	[Mount]
 	What=/run/root.squashfs
@@ -129,4 +129,6 @@ elif [[ "$url" == "http"* ]]; then
 	Type=squashfs
 	Options=loop
 	EOF
+        mkdir -p "$GENERATOR_DIR"/initrd-root-fs.target.requires
+        ln -s ../live-get-squashfs.service "$GENERATOR_DIR"/initrd-root-fs.target.requires/live-get-squashfs.service
 fi
