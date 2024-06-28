@@ -10,7 +10,7 @@ def test_metadata_connection(client, non_aws, non_azure, non_ali, non_chroot, no
     assert f"Connecting to {metadata_host}:80... connected." in error
     assert "200 OK" in error
 
-def test_metadata_connection_aws(client, aws)
+def test_metadata_connection_aws(client, aws):
     metadata_host = "169.254.169.254"
     # request the IMDSv2 token to allow access to the metadata_host on AWS.
     (exit_code, token, error) = client.execute_command(
