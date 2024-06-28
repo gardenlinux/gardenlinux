@@ -520,14 +520,7 @@ qemu_opt_uefi () {
         [ -r $uefi_vars ] || eusage "Missing uefi vars at $uefi_vars.\n Run: apt-get install ovmf qemu-efi-aarch64"
 
         # The source file might be read-only.
-        # cp on macos does not preserve attributes by default
-        if [ ! -e "$CURR_DIR"/"$mac".vars ]; then
-            if [ "$os" = macos ]; then
-                cp "$uefi_vars" "$CURR_DIR"/"$mac".vars
-            else
-                cp --no-preserve=mode,ownership "$uefi_vars" "$CURR_DIR"/"$mac".vars
-            fi
-        fi
+        [ -e $CURR_DIR/$mac.vars ] || cat "$uefi_vars" > "$CURR_DIR"/"$mac".vars
 
         # Add support for amd64 architecture
         if [ "$arch" = amd64 ]; then
