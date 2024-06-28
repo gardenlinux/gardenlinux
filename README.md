@@ -27,13 +27,13 @@ flowchart TD
 ## GitHub
 
 - `gardenlinux/repo`
-	- collect packages from `package-*` repos, fetch all dependecies from debian snapshot and publish into a repo dist
-- `gardenlinux/repo-debian-snapshot`
+	- collect packages from `package-*` repos, fetch all dependecies from debian snapshot and publish into an APT repo distribution
+- [`gardenlinux/repo-debian-snapshot`](https://github.com/gardenlinux/repo-debian-snapshot)
 	- regularly snapshot debian testing (needed for reproducible package and repo builds)
-- `gardenlinux/package-build`
-	- tooling used by `package-*` repos to build binary artifacts
-- `gardenlinux/package-*`
-	- repos for custom build packages
+- [`gardenlinux/package-build`](https://github.com/gardenlinux/package-build)
+	- tooling used by `package-*` repos to build binary debian packages
+- [`gardenlinux/package-*`](https://github.com/gardenlinux?q=package-&type=all&language=&sort=)
+	- repos for custom-built packages
 
 ## AWS
 
