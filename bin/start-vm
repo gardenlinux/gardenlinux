@@ -67,8 +67,10 @@ get_os () {
             os="arch"
         elif [ "$host_dist" = "nixos" ]; then
             os="nixos"
+        elif [ "$host_dist" = "opensuse" ]; then
+            os="opensuse"
         else
-            echo "Error: Unsupported Linux distribution."
+            echo "Error: Unsupported Linux distribution [$host_dist]."
             exit 1
         fi
 
@@ -464,6 +466,9 @@ qemu_opt_uefi () {
                 # virtualisation.libvirtd.enable = true;
                 uefi_code="${uefi_code:-/run/libvirt/nix-ovmf/OVMF_CODE.fd}"
                 uefi_vars="${uefi_vars:-/run/libvirt/nix-ovmf/OVMF_VARS.fd}"
+            elif [ "$os" = opensuse ]; then
+                uefi_code="${uefi_code:-/usr/share/qemu/ovmf-x86_64.bin}"
+                uefi_vars="${uefi_vars:-/usr/share/qemu/ovmf-x86_64-vars.bin}"
             else
                 echo "Error: Could not find UEFI code and vars file."
                 exit 1
