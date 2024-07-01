@@ -7,14 +7,14 @@ This document aims to explain the decisions and tradeoffs made.
 ## The bigger picture
 
 Garden Linux release artifacts are disk images for various platforms such as kvm, cloud providers or bare metal hardware.
-To build those artifacts, Garden Linux makes use of an APT repository.
+To build those artifacts, Garden Linux makes use of an [APT repository](https://wiki.debian.org/DebianRepository).
 APT is the Debian package management tool.
 
 Unlike Debian, Garden Linux is focussed on containers.
 This means that for users of Garden Linux, the APT repo has much less direct importance.
 Typically, we don't expect our users to install packages from the APT repository.
 
-Still, for building our release artifacts (the disk images), we need the APT repo.
+The APT repo exists because it is needed for building our release artifacts (the disk images).
 
 ## Qualities of the Garden Linux package pipeline
 
@@ -25,6 +25,9 @@ Based on previous experience, the design goals of our package pipeline are the f
 - We want to be able to reproduce release artifacts (disk images) and patch individual packages as needed
 - We require updated packages (rebuilt from source, with patches applied) to be absolutely binary compatible with existing releases
   - This is a challenge because Garden Linux is based on Debian *Testing* where components such as libc or the go compiler might change in incompatible ways without notice
+- We want the pipeline to work with short-lived (ephemeral) runners, so no long-running "pet" vm is needed for the process
+- We require the APT repos to be consistent. For this reason, APT repo distributions (like `1443.8`) must be immutable.
+- We need to keep the required tooling providers low. In the past, complex setups lead to integration issues. Our new tooling is fully geared towards GitHub, allowing us to make use of the benefits GitHub's tooling provides.
 
 ## Package pipeline overview
 
