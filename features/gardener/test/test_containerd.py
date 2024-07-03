@@ -14,6 +14,6 @@ def test_containerd(client, non_chroot):
     (exit_code, output, error) = client.execute_command("sudo ctr image pull ghcr.io/gardenlinux/gardenlinux:nightly")
     assert exit_code == 0, f"no {error=} expected"
 
-    (exit_code, output, error) = client.execute_command("sudo ctr run --rm -t ghcr.io/gardenlinux/gardenlinux:nightly gardenlinux echo 'hello from container'")
+    (exit_code, output, error) = client.execute_command("sudo ctr run --rm -ti ghcr.io/gardenlinux/gardenlinux:nightly gardenlinux echo 'hello from container'")
     assert exit_code == 0, f"no {error=} expected"
     assert output == "hello from container", f"unexpected output: {output}"
