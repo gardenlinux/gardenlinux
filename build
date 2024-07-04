@@ -11,6 +11,7 @@ container_engine=podman
 target_dir=.build
 
 container_run_opts=(
+	--memory 4G
 	--security-opt seccomp=unconfined
 	--security-opt apparmor=unconfined
 	--security-opt label=disable
