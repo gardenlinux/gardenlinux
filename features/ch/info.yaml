@@ -1,0 +1,6 @@
+description: "cloud hypervisor platform"
+type: platform
+features:
+  include: 
+    - cloud
+    - _ignite
