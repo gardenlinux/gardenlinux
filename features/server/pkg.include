@@ -14,7 +14,8 @@ lsb-release
 net-tools
 netbase
 nvme-cli
-policykit-1
+pkexec
+polkitd
 procps
 quota
 sosreport
