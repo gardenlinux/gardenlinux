@@ -96,7 +96,8 @@ ovmf
 patchelf
 pciutils
 podman
-policykit-1
+pkexec
+polkitd
 pristine-lfs
 python3-apt
 python3-cffi-backend
