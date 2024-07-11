@@ -1,4 +1,5 @@
 efitools
 dracut
 systemd-boot-efi
+systemd-cryptsetup
 tpm2-tools
