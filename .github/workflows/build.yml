@@ -40,8 +40,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          podman build -t build --build-arg base="$(cat .container)" .
-          podman run --rm -e GH_TOKEN build /fetch_releases > package-releases
+          if [ ! -e package-releases ]; then
+            podman build -t build --build-arg base="$(cat .container)" .
+            podman run --rm -e GH_TOKEN build /fetch_releases > package-releases
+          fi
       - name: download amd64 packages
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
