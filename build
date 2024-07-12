@@ -6,6 +6,13 @@ shopt -s nullglob
 exec 3>&1
 exec 1>&2
 
+# ignore errexit with `&& true`
+getopt --test > /dev/null && true
+if [[ $? -ne 4 ]]; then
+    echo 'Needed version of "getopt" not found. On macos, ensure https://formulae.brew.sh/formula/gnu-getopt is installed and in the path.'
+    exit 1
+fi
+
 container_image=localhost/builder
 container_engine=podman
 target_dir=.build
@@ -22,29 +29,51 @@ container_cmd=()
 use_kms=0
 resolve_cname=0
 
-while [ $# -gt 0 ]; do
+# Argument parsing based on getopt-example.bash and https://stackoverflow.com/a/29754866
+# Note: On macos, this requires gnu-getopt https://formulae.brew.sh/formula/gnu-getopt#default
+
+# Note that we use "$@" to let each command-line parameter expand to a
+# separate word. The quotes around "$@" are essential!
+# We need TEMP as the 'eval set --' would nuke the return value of getopt.
+TEMP=$(getopt -o 'i:e:o:pk' --long 'container-image:,container-engine:,container-run-opts:,privileged,kms,print-container-image,resolve-cname,target:' -n 'example.bash' -- "$@")
+
+if [ $? -ne 0 ]; then
+	echo 'Terminating...' >&2
+	exit 1
+fi
+
+# Note the quotes around "$TEMP": they are essential!
+eval set -- "$TEMP"
+unset TEMP
+
+while true; do
 	case "$1" in
-		--container-image)
-			container_image="$2"
+		'-i'|'--container-image')
+			container_image=$2
 			shift 2
-			;;
-		--container-engine)
-			container_engine="$2"
+			continue
+		;;
+		'-e'|'--container-engine')
+			container_engine=$2
 			shift 2
-			;;
-		--container-run-opts)
+			continue
+		;;
+		'-o'|'--container-run-opts')
 			declare -a "container_run_opts=($2)"
 			shift 2
-			;;
-		--privileged)
+			continue
+		;;
+		'-p'|'--privileged')
 			container_run_opts+=(--privileged)
 			container_cmd=(--second-stage)
 			shift
-			;;
-		--kms)
+			continue
+		;;
+		'-k'|'--kms')
 			use_kms=1
 			shift
-			;;
+			continue
+		;;
 		--print-container-image)
 			printf '%s\n' "$container_image" >&3
 			exit 0
@@ -52,16 +81,24 @@ while [ $# -gt 0 ]; do
 		--resolve-cname)
 			resolve_cname=1
 			shift
-			;;
+			continue
+		;;
 		--target)
 			target_dir="$2"
 			shift 2
-			;;
-		*)
+			continue
+		;;
+		'--')
+			shift
 			break
-			;;
+		;;
+		*)
+			echo 'Internal error!' >&2
+			exit 1
+		;;
 	esac
 done
+
 
 [ -d "$target_dir" ] || mkdir "$target_dir"
 
@@ -130,4 +167,4 @@ if [ -d cert ]; then
 	container_mount_opts+=(-v "$PWD/cert:/builder/cert:ro")
 fi
 
-"$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" ${container_cmd[@]+"${container_cmd[@]}"} fake_xattr make --no-print-directory -C /builder "${make_opts[@]}" "$@" >&3
+echo "$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" ${container_cmd[@]+"${container_cmd[@]}"} fake_xattr make --no-print-directory -C /builder "${make_opts[@]}" "$@" >&3
