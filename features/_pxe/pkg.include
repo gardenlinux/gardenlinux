@@ -3,3 +3,4 @@ dosfstools
 btrfs-progs
 xfsprogs
 dracut-network
+ca-certificates
