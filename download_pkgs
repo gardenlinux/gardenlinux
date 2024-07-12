@@ -47,7 +47,8 @@ xargs apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts -
 join -v 1 <(cat arch_import_list recursive_depends | sort | uniq) pkgs | { grep -v -x -f "$exclude_patterns" || true; } > recursive_needed
 
 mkdir apt_download
-(cd apt_download && xargs apt-get download) < recursive_needed
+# Download the packages via apt-get download in parallel with n threads.
+(cd apt_download && xargs -n 1 -P $(nproc --all) apt-get download ) < recursive_needed
 
 find apt_download -name "*.deb" | while read -r pkg; do
 	hash="$(sha256sum < "$pkg" | head -c 64)"
