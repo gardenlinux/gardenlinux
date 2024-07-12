@@ -35,7 +35,7 @@ resolve_cname=0
 # Note that we use "$@" to let each command-line parameter expand to a
 # separate word. The quotes around "$@" are essential!
 # We need TEMP as the 'eval set --' would nuke the return value of getopt.
-TEMP=$(getopt -o 'i:e:o:pk' --long 'container-image:,container-engine:,container-run-opts:,privileged,kms,print-container-image,resolve-cname,target:' -n 'example.bash' -- "$@")
+TEMP=$(getopt -o 'i:e:o:pk' --long 'container-image:,container-engine:,container-run-opts:,privileged,kms,print-container-image,resolve-cname,target:' --name "$0" -- "$@")
 
 if [ $? -ne 0 ]; then
 	echo 'Terminating...' >&2
@@ -49,12 +49,12 @@ unset TEMP
 while true; do
 	case "$1" in
 		'-i'|'--container-image')
-			container_image=$2
+			container_image="$2"
 			shift 2
 			continue
 		;;
 		'-e'|'--container-engine')
-			container_engine=$2
+			container_engine="$2"
 			shift 2
 			continue
 		;;
@@ -167,4 +167,4 @@ if [ -d cert ]; then
 	container_mount_opts+=(-v "$PWD/cert:/builder/cert:ro")
 fi
 
-echo "$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" ${container_cmd[@]+"${container_cmd[@]}"} fake_xattr make --no-print-directory -C /builder "${make_opts[@]}" "$@" >&3
+"$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" ${container_cmd[@]+"${container_cmd[@]}"} fake_xattr make --no-print-directory -C /builder "${make_opts[@]}" "$@" >&3
