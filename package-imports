@@ -6,6 +6,7 @@ apparmor
 arptables
 auditd
 awscli
+azure-nvme-utils
 binutils
 bird2
 bsdextrautils
