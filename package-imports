@@ -41,6 +41,7 @@ ebtables
 efibootmgr
 efitools
 ethtool
+fatresize
 flex
 gcc
 gdisk
