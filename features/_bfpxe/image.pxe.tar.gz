@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+set -exuo pipefail
+
+input="$(realpath -- "$1")"
+output="$(realpath -- "$2")"
+
+dir="$(mktemp -d)"
+pushd "$dir" > /dev/null
+
+export PATH="/builder/image.d:$PATH"
+
+chroot_dir="$(mktemp -d)"
+mount -t tmpfs tmpfs "$chroot_dir"
+tar --extract --xattrs --xattrs-include '*' --directory "$chroot_dir" < "$input"
+
+cp "$chroot_dir/boot/"vmlinuz* vmlinuz
+cp "$chroot_dir/boot/"initrd* initrd
+
+mksquashfs "$chroot_dir" root.squashfs -noappend -comp xz -mkfs-time "$BUILDER_TIMESTAMP" -all-time "$BUILDER_TIMESTAMP"
+
+sha256sum root.squashfs | head -c 64 > root.squashfs.sha256sum
+echo root.squashfs.sha256sum | cpio -H newc -o | xz --check=crc32 >> initrd
+
+echo "console=ttyS0 gl.live=1 gl.ovl=/:tmpfs" > cmdline
+
+touch tmp_initrd
+[[ ! -e "$chroot_dir/initrd" ]]
+touch "$chroot_dir/initrd"
+mount --bind tmp_initrd "$chroot_dir/initrd"
+[[ ! -e "$chroot_dir/root.squashfs" ]]
+touch "$chroot_dir/root.squashfs"
+mount --bind root.squashfs "$chroot_dir/root.squashfs"
+
+[[ -d "$chroot_dir/proc" ]] && [[ -z "$(ls -A "$chroot_dir/proc")" ]]
+mount --rbind /proc "$chroot_dir/proc"
+
+kernel_file=$(find "$chroot_dir/boot/" -name 'vmlinuz-*')
+kernel_version="${kernel_file#*-}"
+
+umount -l "$chroot_dir/proc"
+
+umount "$chroot_dir/root.squashfs"
+rm "$chroot_dir/root.squashfs"
+
+case "$BUILDER_ARCH" in
+	amd64)
+		uefi_arch=x64
+		;;
+	arm64)
+		uefi_arch=aa64
+		;;
+esac
+
+umount -l "$chroot_dir"
+rmdir "$chroot_dir"
+
+tar --create --mtime="@$BUILDER_TIMESTAMP" --sort name --numeric-owner --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime vmlinuz initrd root.squashfs | gzip > "$output"
+
+popd > /dev/null
+rm -rf "$dir"
