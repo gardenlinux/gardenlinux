@@ -56,7 +56,7 @@ jobs:
       fail-fast: false
       matrix:
         arch: [ amd64, arm64 ]
-        target: [ gcp, aws, azure, ali ]
+        target: [ gcp, aws, aws_secureboot, azure, ali ]
         modifier: [ "${{ inputs.default_modifier }}" ]
         exclude:
           - arch: arm64
@@ -104,7 +104,7 @@ jobs:
         cleanup_credentials: true
         export_environment_variables: true
 
-    - if: ${{ matrix.target == 'aws' }}
+    - if: ${{ matrix.target == 'aws' || matrix.target == 'aws_secureboot' }}
       id: 'auth_aws'
       name: 'Authenticate to AWS'
       uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
