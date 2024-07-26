@@ -1,0 +1,67 @@
+name: dummy platform test run
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      version:
+        type: string
+        default: now
+      run-id:
+        type: string
+        required: true
+jobs:
+  build_container:
+    name: build container
+    uses: ./.github/workflows/build_container.yml
+  import:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ amd64, arm64 ]
+        target: [ gcp, aws, aws_secureboot, azure, ali ]
+        modifier: [ "${{ inputs.default_modifier }}" ]
+        exclude:
+          - arch: arm64
+            target: azure
+          - arch: arm64
+            target: ali
+    steps:
+    - uses: actions/checkout@v4
+    - name: set VERSION=${{ inputs.version }}
+      run: |
+        bin/garden-version "${{ inputs.version }}" | tee VERSION
+        git update-index --assume-unchanged VERSION
+    - name: get cname
+      run: |
+        cname="$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})"
+        echo "cname=$cname" | tee -a "$GITHUB_ENV"
+    - uses: actions/download-artifact@v4
+      with:
+        run-id: ${{ inputs.run-id }}
+        name: ${{ env.cname }}
+        path: /tmp/gardenlinux-build-artifacts
+    - run: ls -lah /tmp/gardenlinux-build-artifacts
+    - run: false
+  tests:
+    needs: [ import, build_container ]
+    permissions:
+      id-token: write
+      packages: write
+    uses: ./.github/workflows/tests.yml
+    with:
+      version: ${{ needs.build.outputs.version }}
+      default_modifier: "-gardener_prod"
+    secrets:
+      gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      gcp_project: ${{ secrets.GCP_PROJECT }}
+      gcp_region: ${{ secrets.GCP_REGION }}
+      gcp_zone: ${{ secrets.GCP_ZONE }}
+      aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
+      aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
+      aws_region: ${{ secrets.AWS_TESTS_REGION }}
+      az_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      az_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ccc_credentials: ${{ secrets.CCC_CREDENTIALS }}
