@@ -56,6 +56,7 @@ ipmitool
 iptables
 iputils-arping
 ipvsadm
+isolinux
 jq
 kernel-wedge
 kexec-tools
@@ -77,6 +78,7 @@ lzop
 make
 man-db
 mdadm
+mstflint
 multipath-tools
 neofetch
 net-tools
@@ -89,10 +91,11 @@ npm
 nullmailer
 numactl
 nvme-cli
+open-iscsi
 open-vm-tools
 openssh-server
 openssl
-openssl
+openvswitch-switch
 ostree
 ovmf
 patchelf
