@@ -65,3 +65,17 @@ git commit
 git tag <GL_VERSION>.1
 git push origin <GL_VERSION>.1
 ```
+
+## Remove GardenLinux packages from the repo
+
+If, for whatever reason, we need to switch back to debian mirrored packages, a null release (with no content/assets) should be created. !! DO NOT RENAME PACKAGE REPOS !! This is going to break future patch releases, if needed. Also, you might want to disable github actions, in order to prevent version updates from overwriting the null release.
+Create an empty branch, a null tag, push everything and then create a release.
+
+```
+git checkout --orphan nullbranch
+git reset
+git commit --allow-empty -m "null"
+git push origin nullbranch
+git tag null
+git push origin null
+```
