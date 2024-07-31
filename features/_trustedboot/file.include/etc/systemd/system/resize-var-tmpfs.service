@@ -1,0 +1,13 @@
+[Unit]
+Requires=var.mount
+After=var.mount
+After=swap.target
+Before=local-fs.target
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/resize-tmpfs /var
+
+[Install]
+WantedBy=local-fs.target

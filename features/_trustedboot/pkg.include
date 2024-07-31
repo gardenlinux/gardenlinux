@@ -1,0 +1,7 @@
+dracut
+efitools
+resizefat32
+systemd-boot-efi
+systemd-cryptsetup
+tpm2-tools
+htop

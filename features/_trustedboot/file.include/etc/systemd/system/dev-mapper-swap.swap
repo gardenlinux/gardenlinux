@@ -1,0 +1,11 @@
+[Unit]
+Requires=swap-cryptsetup.service
+After=swap-cryptsetup.service
+Before=swap.target
+DefaultDependencies=no
+
+[Swap]
+What=/dev/mapper/swap
+
+[Install]
+WantedBy=swap.target
