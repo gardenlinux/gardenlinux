@@ -40,6 +40,8 @@ dwarves
 ebtables
 efibootmgr
 efitools
+efi-shell-x64
+efi-shell-aa64
 ethtool
 fatresize
 flex
