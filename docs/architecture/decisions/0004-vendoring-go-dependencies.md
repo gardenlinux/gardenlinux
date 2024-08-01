@@ -57,9 +57,9 @@ Adding multiple new packages for dependencies of a new Go package might be a lot
 ## Decision
 
 We allow vendoring dependencies for Go applications in Garden Linux.
+We require vendored dependencies to be commited to version control to allow reproduce releases.
 
 ## Consequences
 
 - We are able to follow upstream projects of applications written in Go (like containerd) more closely
-- To keep the promise of being able to reproduce releases, we require the full source code of vendored dependencies in the project's SCM repository
-  - If dependencies are downloaded at build time, even with proper version locks and checksums, we depend on external repositories which defeat the purpose of our [debian snapshot](https://github.com/gardenlinux/repo?tab=readme-ov-file#gardenlinux-repo-infrastructure)
+- If dependencies are downloaded at build time, even with proper version locks and checksums, we depend on external repositories which defeats the purpose of our [debian snapshot](https://github.com/gardenlinux/repo?tab=readme-ov-file#gardenlinux-repo-infrastructure)
