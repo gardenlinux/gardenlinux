@@ -42,7 +42,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.version }}
-      # Workaround for crun version, cf https://github.com/gardenlinux/gardenlinux/pull/1982
       - uses: ./.github/actions/setup
       - name: Build the image
         run: ./build ${{ needs.collect-metadata.outputs.CNAME }}-${{ matrix.arch }}

@@ -16,7 +16,6 @@ jobs:
         platform: [ kvm, aws, azure, ali, gcp, metal ]
     steps:
       - uses: actions/checkout@v4
-      # Workaround for crun version, cf https://github.com/gardenlinux/gardenlinux/pull/1982
       - uses: ./.github/actions/setup
       - name: Build the image
         run: ./build ${{ matrix.platform}}-stig
