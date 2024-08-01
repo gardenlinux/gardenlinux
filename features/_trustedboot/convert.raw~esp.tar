@@ -2,8 +2,6 @@
 
 set -euo pipefail
 
-env
-
 input="$1"
 output="$2"
 
