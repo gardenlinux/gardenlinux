@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-
-set -eufo pipefail
-
-dir="$(realpath "$1")"
-cd "$dir"
-mount -t tmpfs -o mode=0755 none "$dir"
-cp -ax . "$dir/."
-cd "$dir"
