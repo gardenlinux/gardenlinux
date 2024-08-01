@@ -32,6 +32,10 @@ datefudge -s "@$BUILDER_TIMESTAMP" mformat -i "$efi_partition" -F -c 2 -N "$(ech
 readarray -t esp_files < <(find "$esp_dir" -mindepth 1 -maxdepth 1)
 datefudge -s "@$BUILDER_TIMESTAMP" mcopy -i "$efi_partition" -s "${esp_files[@]}" ::
 
+resizefat32 -s min -t "$efi_partition"
+size_fat="$(du -b "$efi_partition" | cut -f 1)"
+size_fat_mb="$(( ( size_fat + 1048575 ) / 1048576 ))"
+
 gpt_disk="$(mktemp -u)"
 echo -e "$(echo gardenlinux:$BUILDER_VERSION:efi | uuid_hash)\tuefi\t$size_fat_mb\t0\t$efi_partition\tEFI" | makedisk /dev/null "$gpt_disk"
 
