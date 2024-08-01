@@ -201,16 +201,18 @@ class CHROOT:
         # Generate SSH hostkeys for chroot
         # (this way we do not need to execute this inside the 'chroot'
         #  environment and still support amd64 and arm64 architectures)
-        chroot_ssh_dir = rootfs + "/etc/ssh/"
         cmd_ssh_keys = []
-        cmd_ssh_keys.append('ssh-keygen -q -N "" -t dsa -f {ssh_dir}/ssh_host_dsa_key'.format(
-          ssh_dir=chroot_ssh_dir))
-        cmd_ssh_keys.append('ssh-keygen -q -N "" -t rsa -b 4096 -f {ssh_dir}/ssh_host_rsa_key'.format(
-          ssh_dir=chroot_ssh_dir))
-        cmd_ssh_keys.append('ssh-keygen -q -N "" -t ecdsa -f {ssh_dir}/ssh_host_ecdsa_key'.format(
-          ssh_dir=chroot_ssh_dir))
-        cmd_ssh_keys.append('ssh-keygen -q -N "" -t ed25519 -f {ssh_dir}/ssh_host_ed25519_key'.format(
-          ssh_dir=chroot_ssh_dir))
+        for chroot_ssh_dir in [ rootfs + "/etc/ssh", rootfs + "/var/lib/ssh" ]:
+          cmd_ssh_keys.append('mkdir -p {ssh_dir}'.format(
+            ssh_dir=chroot_ssh_dir))
+          cmd_ssh_keys.append('ssh-keygen -q -N "" -t dsa -f {ssh_dir}/ssh_host_dsa_key'.format(
+            ssh_dir=chroot_ssh_dir))
+          cmd_ssh_keys.append('ssh-keygen -q -N "" -t rsa -b 4096 -f {ssh_dir}/ssh_host_rsa_key'.format(
+            ssh_dir=chroot_ssh_dir))
+          cmd_ssh_keys.append('ssh-keygen -q -N "" -t ecdsa -f {ssh_dir}/ssh_host_ecdsa_key'.format(
+            ssh_dir=chroot_ssh_dir))
+          cmd_ssh_keys.append('ssh-keygen -q -N "" -t ed25519 -f {ssh_dir}/ssh_host_ed25519_key'.format(
+            ssh_dir=chroot_ssh_dir))
         for i in cmd_ssh_keys:
             logger.info("Running command: {cmd}".format(
               cmd=i))

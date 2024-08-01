@@ -9,10 +9,13 @@ def sshd(client, expected):
 
     sshd_config = _create_list_of_tuples(output)
 
-    expected = _create_list_of_tuples(expected)
+    def check_option(option, config):
+        if isinstance(option, list):
+            return any(_normalize_line(opt.lower()) in config for opt in option)
+        else:
+            return _normalize_line(option.lower()) in config
 
-    assert all(option in sshd_config for option in expected), \
-            f"{expected} not found in sshd_config"
+    assert check_option(expected, sshd_config), f"{expected} not found in sshd_config"
 
 
 def _create_list_of_tuples(input):
@@ -21,12 +24,15 @@ def _create_list_of_tuples(input):
     value"""
     out = []
     for line in input.lower().splitlines():
-        l = line.split(' ', 1)
-        option = l[0]
-        value = l[1]
-        normalized_value = _normalize_value(value)
-        out.append((option, normalized_value))
+        out.append(_normalize_line(line))
     return out
+
+def _normalize_line(line):
+    l = line.split(' ', 1)
+    option = l[0]
+    value = l[1]
+    normalized_value = _normalize_value(value)
+    return (option, normalized_value)
 
 def _normalize_value(string):
     """Convert a given string.
