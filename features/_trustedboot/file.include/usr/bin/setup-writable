@@ -5,6 +5,7 @@ set -eufo pipefail
 locations=(
 	/opt
 	/etc/hostname
+	/etc/systemd/system
 	/etc/containerd
 )
 
