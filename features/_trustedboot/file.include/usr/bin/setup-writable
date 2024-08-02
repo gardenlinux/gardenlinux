@@ -6,12 +6,9 @@ locations=(
 	/etc/cdi
 	/etc/cni
 	/etc/containerd
-	/etc/group
-	/etc/gshadow
 	/etc/hostname
-	/etc/passwd
+	/etc/passwd.d
 	/etc/pki
-	/etc/shadow
 	/etc/sysctl.d
 	/etc/systemd
 	/opt
