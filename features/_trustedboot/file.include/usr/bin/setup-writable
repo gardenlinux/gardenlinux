@@ -4,8 +4,13 @@ set -eufo pipefail
 
 locations=(
 	/etc/containerd
+	/etc/group
+	/etc/gshadow
 	/etc/hostname
+	/etc/passwd
 	/etc/pki
+	/etc/shadow
+	/etc/sysctl.d
 	/etc/systemd
 	/opt
 )
