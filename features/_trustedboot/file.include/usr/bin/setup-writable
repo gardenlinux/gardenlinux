@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+locations=(
+	/opt
+	/etc/hostname
+	/etc/containerd
+)
+
+for location in "${locations[@]}"; do
+	[ -e "$location" ] || continue
+
+	if [ -e "/var$location" ]; then
+		echo "/var$location already exists!" >&2
+		exit 1
+	fi
+
+	mkdir -p "/var$(dirname "$location")"
+	cp -axT "$location" "/var$location"
+	mount --bind "/var$location" "$location"
+done
