@@ -6,9 +6,7 @@ locations=(
 	/etc/containerd
 	/etc/hostname
 	/etc/pki
-	/etc/systemd/containerd.conf
-	/etc/systemd/journald.conf
-	/etc/systemd/system
+	/etc/systemd
 	/opt
 )
 
