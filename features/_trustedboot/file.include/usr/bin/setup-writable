@@ -7,6 +7,7 @@ locations=(
 	/etc/hostname
 	/etc/systemd/system
 	/etc/containerd
+	/etc/pki
 )
 
 for location in "${locations[@]}"; do
