@@ -3,6 +3,8 @@
 set -eufo pipefail
 
 locations=(
+	/etc/cdi
+	/etc/cni
 	/etc/containerd
 	/etc/group
 	/etc/gshadow
