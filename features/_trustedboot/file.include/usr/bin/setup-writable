@@ -3,11 +3,13 @@
 set -eufo pipefail
 
 locations=(
-	/opt
-	/etc/hostname
-	/etc/systemd/system
 	/etc/containerd
+	/etc/hostname
 	/etc/pki
+	/etc/systemd/containerd.conf
+	/etc/systemd/journald.conf
+	/etc/systemd/system
+	/opt
 )
 
 for location in "${locations[@]}"; do
