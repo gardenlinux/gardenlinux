@@ -7,7 +7,6 @@ locations=(
 	/etc/cni
 	/etc/containerd
 	/etc/hostname
-	/etc/passwd.d
 	/etc/pki
 	/etc/sysctl.d
 	/etc/systemd
