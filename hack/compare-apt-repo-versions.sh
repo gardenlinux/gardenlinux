@@ -1,5 +1,4 @@
 #!/bin/bash
-set -o nounset
 set -o errexit
 
 SCRIPT_NAME="${0##*/}"
