@@ -23,32 +23,3 @@ runs:
           mkdir -p "$HOME/.config/containers"
           echo 'unqualified-search-registries = ["docker.io"]' > "$HOME/.config/containers/registries.conf"
         fi
-    # Workaround for https://github.com/actions/runner-images/issues/9425, to be removed once the issue is resolved
-    - name: patch crun (Workaround for https://github.com/actions/runner-images/issues/9425)
-      run: |
-        tmpdir="$(mktemp -d)"
-        pushd "$tmpdir"
-        if [ "${{ inputs.arch }}" = "amd64" ]; then
-          curl -Lo ./crun https://github.com/containers/crun/releases/download/1.14.3/crun-1.14.3-linux-amd64
-          GOOD_SHA=80c5ab9422d4672f650f2bad3da933568349b64117d055486abc3534517be2af
-        elif [ "${{ inputs.arch }}" = "arm64" ]; then
-          curl -Lo ./crun https://github.com/containers/crun/releases/download/1.14.3/crun-1.14.3-linux-arm64
-          GOOD_SHA=0486629e1599c3bccded279f6555ff22691958cde56203ceca099af6f2407263
-        fi
-
-        sha256sum ./crun
-        OUR_SHA=$(sha256sum ./crun | awk '{ print $1 }')
-
-        if [[ "$GOOD_SHA" == "$OUR_SHA" ]]; then
-            sudo install crun /usr/bin/crun
-        else
-            echo "Checksums do not match"
-            exit 1
-        fi
-        popd
-        rm -rf "$tmpdir"
-      shell: bash
-    - name: Show crun version after the patch
-      shell: bash
-      run: |
-        crun --version
