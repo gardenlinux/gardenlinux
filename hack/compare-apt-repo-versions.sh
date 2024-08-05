@@ -1,6 +1,7 @@
 #!/bin/bash
 set -o nounset
 set -o errexit
+set -o pipefail
 
 SCRIPT_NAME="${0##*/}"
 readonly SCRIPT_NAME
@@ -26,8 +27,14 @@ main() {
 
     trap 'rm -rf $TEMP_DIR' EXIT
 
-    curl -s https://packages.gardenlinux.io/gardenlinux/dists/"$VERSION_A"/main/binary-amd64/Packages.gz | gunzip > "$TEMP_DIR"/"$VERSION_A"
-    curl -s https://packages.gardenlinux.io/gardenlinux/dists/"$VERSION_B"/main/binary-amd64/Packages.gz | gunzip > "$TEMP_DIR"/"$VERSION_B"
+    if [[ -z "${GARDENLINUX_DEBUG}" ]]; then
+        trap 'rm -rf $TEMP_DIR' EXIT
+    else
+        trap 'echo find the package files in: $TEMP_DIR' EXIT
+    fi
+
+    curl --silent --fail https://packages.gardenlinux.io/gardenlinux/dists/"$VERSION_A"/main/binary-amd64/Packages.gz | gunzip > "$TEMP_DIR"/"$VERSION_A"
+    curl --silent --fail https://packages.gardenlinux.io/gardenlinux/dists/"$VERSION_B"/main/binary-amd64/Packages.gz | gunzip > "$TEMP_DIR"/"$VERSION_B"
 
     python3 "$SCRIPT_DIR"/parse-aptsource.py "$TEMP_DIR"/"$VERSION_A" > "$TEMP_DIR"/a
     python3 "$SCRIPT_DIR"/parse-aptsource.py "$TEMP_DIR"/"$VERSION_B" > "$TEMP_DIR"/b
