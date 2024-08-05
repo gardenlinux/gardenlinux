@@ -1,0 +1,11 @@
+[Unit]
+After=systemd-remount-fs.service
+
+[Mount]
+What=overlay
+Where=/etc
+Type=overlay
+Options=lowerdir=/etc,upperdir=/overlay/upperdir,workdir=/overlay/workdir
+
+[Install]
+WantedBy=local-fs.target
