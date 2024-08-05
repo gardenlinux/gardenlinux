@@ -16,7 +16,7 @@ Packages are built, signed and deployed via the Garden Linux package and repo bu
 
 
 ## Versioning
-`$major` is the number of days since `31.03.2020`.
+`$major` is the number of days since `2020-03-31`.
 
 For each day since we switched to an own package repository, 
 we offer a respective distribution in our repo.gardenlinux.io apt repository.
