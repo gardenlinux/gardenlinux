@@ -31,7 +31,7 @@ main() {
     python3 "$SCRIPT_DIR"/parse-aptsource.py "$TEMP_DIR"/"$VERSION_A" > "$TEMP_DIR"/a
     python3 "$SCRIPT_DIR"/parse-aptsource.py "$TEMP_DIR"/"$VERSION_B" > "$TEMP_DIR"/b
 
-    diff "$TEMP_DIR"/a "$TEMP_DIR"/b
+    diff -U 0 --minimal  "$TEMP_DIR"/a "$TEMP_DIR"/b | grep -v '^@'
 }
 
 main "${@}"
