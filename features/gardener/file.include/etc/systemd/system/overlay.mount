@@ -1,8 +1,0 @@
-[Mount]
-What=none
-Where=/overlay
-Type=tmpfs
-Options=mode=0755
-
-[Install]
-WantedBy=local-fs.target
