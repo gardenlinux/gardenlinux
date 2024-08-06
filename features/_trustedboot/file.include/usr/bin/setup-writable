@@ -8,6 +8,7 @@ locations=(
 	/etc/containerd
 	/etc/hostname
 	/etc/pki
+	/etc/sudoers.d
 	/etc/sysctl.d
 	/etc/systemd
 	/home/gardener
