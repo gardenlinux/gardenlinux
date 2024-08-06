@@ -1,5 +1,6 @@
 [Unit]
-After=systemd-remount-fs.service
+Requires=overlay-mkdir.service
+After=overlay-mkdir.service
 
 [Mount]
 What=overlay
