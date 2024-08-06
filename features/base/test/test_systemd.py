@@ -1,9 +1,15 @@
 import json
 import pytest
 from helper.sshclient import RemoteClient
+from helper.utils import wait_systemd_boot
+
 
 def test_systemctl_no_failed_units(client, non_chroot, non_kvm):
     """this test always fails on kvm therefore kvm has it's own, chroot does not use systemd"""
+
+    # Wait for the system to fully boot before we can check if any unit has failed
+    wait_systemd_boot(client)
+
     (exit_code, output, error) = client.execute_command("systemctl list-units --output=json --state=failed")
     assert exit_code == 0, f"no {error=} expected"
     out = (json.loads(output))
@@ -24,6 +30,10 @@ def test_systemctl_no_failed_units(client, non_chroot, non_kvm):
 
 def test_systemctl_no_failed_units_kvm(client, kvm):
     """rngd.service does not start in kvm due of missing /dev/tpm0"""
+
+    # Wait for the system to fully boot before we can check if any unit has failed
+    wait_systemd_boot(client)
+
     (exit_code, output, error) = client.execute_command("systemctl list-units --output=json --state=failed")
     assert exit_code == 0, f"no {error=} expected"
     out = (json.loads(output))
