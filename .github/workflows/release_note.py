@@ -11,8 +11,11 @@ import urllib.request
 from botocore import UNSIGNED
 from botocore.client import Config
 import argparse
+import gzip
+import re
 
 from get_kernelurls import get_kernel_urls
+from parse_aptsource import DebsrcFile
 
 GARDENLINUX_GITHUB_RELEASE_BUCKET_NAME="gardenlinux-github-releases"
 
@@ -215,7 +218,21 @@ def create_github_release_notes(gardenlinux_version, commitish):
     manifests = download_all_singles(gardenlinux_version, commitish_short)
 
     output += generate_release_note_image_ids(manifests)
-    
+
+    output += "\n"
+    output += "## Software Component Versions\n"
+    output += "```"
+    (path, headers) = urllib.request.urlretrieve(f'https://packages.gardenlinux.io/gardenlinux/dists/{gardenlinux_version}/main/binary-amd64/Packages.gz')
+    with gzip.open(path, 'rt') as f:
+        d = DebsrcFile()
+        d.read(f)
+        packages_regex = re.compile(r'^linux-image-amd64$|^systemd$|^containerd$|^runc$|^curl$|^openssl$|^openssh-server$|^libc-bin$')
+        for entry in d.values():
+            if packages_regex.match(entry.deb_source):
+                output += f'{entry!r}\n'
+    output += "```"
+    output += "\n"
+
     output += "\n"
     output += "## Kernel Package direct download links\n"
     output += get_kernel_urls(gardenlinux_version)
