@@ -136,10 +136,11 @@ selinux-basics
 selinux-policy-default
 sg3-utils
 sgml-base
-smartmontools
 slirp4netns
+smartmontools
 socat
 sosreport
+sshguard
 sssd
 strace
 sudo
