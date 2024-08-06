@@ -10,6 +10,7 @@ locations=(
 	/etc/pki
 	/etc/sysctl.d
 	/etc/systemd
+	/home/gardener
 	/opt
 )
 
