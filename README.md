@@ -27,7 +27,7 @@ flowchart TD
 ## GitHub
 
 - `gardenlinux/repo`
-	- collect packages from `package-*` repos, fetch all dependecies from debian snapshot and publish into an APT repo distribution
+	- collect packages from `package-*` repos, fetch all dependencies from debian snapshot and publish into an APT repo distribution
 - [`gardenlinux/repo-debian-snapshot`](https://github.com/gardenlinux/repo-debian-snapshot)
 	- regularly snapshot debian testing (needed for reproducible package and repo builds)
 - [`gardenlinux/package-build`](https://github.com/gardenlinux/package-build)
