@@ -25,7 +25,7 @@ main() {
 
     curl -s https://packages.gardenlinux.io/gardenlinux/dists/"$VERSION"/main/binary-amd64/Packages.gz | gunzip > "$TEMP_DIR"/"$VERSION"
     python3 "$SCRIPT_DIR"/parse-aptsource.py "$TEMP_DIR"/"$VERSION" > "$TEMP_DIR"/packages
-    grep -E '^linux-image-amd64 |^systemd |^containerd |^runc |^curl |^openssl |^libc-bin ' "$TEMP_DIR"/packages
+    grep -E '^linux-image-amd64 |^systemd |^containerd |^runc |^curl |^openssl |^openssh-server |^libc-bin ' "$TEMP_DIR"/packages
 }
 
 main "${@}"
