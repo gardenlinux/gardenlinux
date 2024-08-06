@@ -221,7 +221,7 @@ jobs:
         run: ./build ${{ inputs.use_kms && '--kms' || '' }} ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
       - name: test
         run: ./test --container-image test ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
-      - uses: pmeier/pytest-results-action@035bda205f160abee0b277db11ac6ca01175ca7d # pin@v0.6.0
+      - uses: pmeier/pytest-results-action@fc6576eced1f411ea48ab10e917d9cfce2960e29 # pin@v0.7.1
         if: always()
         with:
           path: tests/test.xml
