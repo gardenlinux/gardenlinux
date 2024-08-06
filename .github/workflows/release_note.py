@@ -228,7 +228,7 @@ def create_github_release_notes(gardenlinux_version, commitish):
         d.read(f)
         packages_regex = re.compile(r'^linux-image-amd64$|^systemd$|^containerd$|^runc$|^curl$|^openssl$|^openssh-server$|^libc-bin$')
         for entry in d.values():
-            if re.match(packages_regex, entry.deb_source):
+            if packages_regex.match(entry.deb_source):
                 output += f'{entry!r}\n'
     output += "```"
     output += "\n"
