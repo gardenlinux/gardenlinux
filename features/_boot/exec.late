@@ -12,7 +12,7 @@ for kernel in /boot/vmlinuz-*; do
 	--no-hostonly \
 	--force \
 	--kver "${kernel#*-}" \
-	--modules "bash dash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown etc-overlay" \
+	--modules "bash dash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown" \
 	--reproducible \
 	"/boot/initrd.img-${kernel#*-}"
 
