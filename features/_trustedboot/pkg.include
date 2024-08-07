@@ -1,7 +1,8 @@
+cryptsetup
 dracut
 efitools
+htop
 resizefat32
 systemd-boot-efi
 systemd-cryptsetup
 tpm2-tools
-htop

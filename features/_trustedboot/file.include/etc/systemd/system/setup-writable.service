@@ -1,7 +1,6 @@
 [Unit]
 Requires=var.mount
 After=var.mount
-After=resize-var-tmpfs.service
 Before=local-fs.target
 DefaultDependencies=no
 
