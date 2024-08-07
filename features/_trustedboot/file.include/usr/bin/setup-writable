@@ -10,6 +10,7 @@ locations=(
 	/etc/hosts
 	/etc/modules
 	/etc/pki
+	/etc/ssh
 	/etc/sudoers.d
 	/etc/sysctl.d
 	/etc/systemd
