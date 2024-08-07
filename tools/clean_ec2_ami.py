@@ -153,6 +153,12 @@ def setup_and_run_argparser():
         default=None,
         help="the name of the AWS profie to use (equivalent to AWS_PROFILE_NAME environment variable",
     )
+    parser.add_argument(
+        "--use-cc-config",
+        action="store_true",
+        default=False,
+        help="Use Gardener config mechanism to retrieve AWS credentials",
+    )
     parser.add_argument("--region", type=str, help="AWS region", required=True)
     parser.add_argument(
         "--single-region",
@@ -191,14 +197,24 @@ def setup_and_run_argparser():
     )
 
     args = parser.parse_args()
+
+    if not args.delete ^ args.un_publicise:
+        raise ValueError("must supply either --delete or --un-publicise")
+
     return args
 
 
 if __name__ == "__main__":
     args = setup_and_run_argparser()
-    session = boto3.Session(profile_name=args.profile_name, region_name=args.region)
+    if args.use_cc_config:
+        import ccc.aws
+        session = ccc.aws.session('gardenlinux')
+        mk_session = functools.partial(ccc.aws.session, aws_cfg='gardenlinux')
+    else:
+        session = boto3.Session(profile_name=args.profile_name, region_name=args.region)
+        mk_session = functools.partial(boto3.Session, profile_name=args.profile_name)
+
     client = session.client("ec2")
-    mk_session = functools.partial(boto3.Session, profile_name=args.profile_name)
 
     action_func = None
     if args.delete is True:
