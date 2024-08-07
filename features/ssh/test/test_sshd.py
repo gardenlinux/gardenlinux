@@ -5,8 +5,8 @@ import pytest
     "expected",
     [
         # Supported HostKey algorithms.
-        ["HostKey /etc/ssh/ssh_host_ed25519_key", "HostKey /var/lib/ssh/ssh_host_ed25519_key"],
-        ["HostKey /etc/ssh/ssh_host_rsa_key", "HostKey /var/lib/ssh/ssh_host_rsa_key"],
+        "HostKey /etc/ssh/ssh_host_ed25519_key",
+        "HostKey /etc/ssh/ssh_host_rsa_key",
         #"HostKey /etc/ssh/ssh_host_ecdsa_key",
         "KexAlgorithms sntrup761x25519-sha512@openssh.com,curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group14-sha256",
 
