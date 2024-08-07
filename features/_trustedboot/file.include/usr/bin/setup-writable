@@ -7,6 +7,8 @@ locations=(
 	/etc/cni
 	/etc/containerd
 	/etc/hostname
+	/etc/hosts
+	/etc/modules
 	/etc/pki
 	/etc/sudoers.d
 	/etc/sysctl.d
