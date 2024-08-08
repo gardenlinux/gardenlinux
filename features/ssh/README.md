@@ -6,7 +6,10 @@ This ssh layer adds the OpenSSH server with sshguard.
 
 ### Features
 This ssh layer adds the OpenSSH server with sshguard.
-Sshguard uses `nftables` which is installed and managed by the [firewall](../firewall/) feature.
+
+Sshguard uses `nftables` which is installed and managed by the [`firewall`](../firewall/) feature.
+If the `firewall` feature is excluded, but `iptables` is available, sshguard will use `iptables`.
+If neither are available, sshguard is disabled.
 
 #### Configs
 Services may be modified to the users need.
