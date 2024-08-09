@@ -1,3 +1,3 @@
 # Dependency management via Dependabot
 
-FROM ghcr.io/gardenlinux/builder:191279b0a54c227851413077283c69df29ce7335
+FROM ghcr.io/gardenlinux/builder:f41f92ea3517b5f0af3721701f4d4f0c7b295d4a
