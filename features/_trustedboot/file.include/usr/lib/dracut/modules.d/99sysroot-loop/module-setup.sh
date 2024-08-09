@@ -19,18 +19,6 @@ install() {
 
 	losetup /dev/loop0 /root.img
 	mount /dev/loop0 /sysroot
-
-	# cd /sysroot/etc
-	# mount -t tmpfs -o mode=0755,nr_inodes=0,size=32M tmpfs /sysroot/etc
-	# cp -a . /sysroot/etc/.
-
-	# cd /sysroot/var
-	# mount -t tmpfs -o mode=0755,nr_inodes=0,size=256M tmpfs /sysroot/var
-	# cp -a . /sysroot/var/.
-
-	# cd /sysroot/opt
-	# mount -t tmpfs -o mode=0755,nr_inodes=0,size=256M tmpfs /sysroot/opt
-	# cp -a . /sysroot/opt/.
 	EOF
 
 	cat > "$initdir/bin/cleanup-sysroot" <<-EOF
