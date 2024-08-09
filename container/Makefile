@@ -25,6 +25,7 @@ build-base-test: needslim
 	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/base-test:$(VERSION) base-test
 	rm base-test/keyring.gpg
 	rm base-test/Pipfile
+	rm base-test/Pipfile.lock
 
 .PHONY: build-integration-test
 build-integration-test: build-base-test
