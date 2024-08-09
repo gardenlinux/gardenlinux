@@ -1,4 +1,4 @@
-ARG DEBIAN_DIST=bookworm
+ARG DEBIAN_DIST=trixie
 FROM debian:${DEBIAN_DIST}-slim
 ARG DEBIAN_DIST
 
