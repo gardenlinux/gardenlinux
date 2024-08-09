@@ -19,11 +19,11 @@ build: needslim
 
 .PHONY: build-base-test
 build-base-test: needslim
-	cp -p ../gardenlinux.asc base-test/gardenlinux.asc
+	cp -p ../keyring.gpg base-test/keyring.gpg
 	cp ../tests/Pipfile base-test/
 	cp ../tests/Pipfile.lock base-test/
 	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/base-test:$(VERSION) base-test
-	rm base-test/gardenlinux.asc
+	rm base-test/keyring.gpg
 	rm base-test/Pipfile
 
 .PHONY: build-integration-test
