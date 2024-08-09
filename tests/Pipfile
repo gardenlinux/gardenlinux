@@ -24,14 +24,14 @@ aliyun-python-sdk-ecs = "*"
 python-openstackclient = "*"
 # Azure SDK/CLI packages
 # azure-cli = ">=2.44.0"   # https://github.com/Azure/azure-cli/issues/23015
-# azure-core = "*"
-# azure-identity = "*"
-# azure-mgmt-subscription = "*"
-# azure-mgmt-resource = "*"
-# azure-mgmt-compute = "*"
-# azure-mgmt-storage = "*"
-# azure-mgmt-network = "*"
-# azure-storage-blob = "*"
+azure-core = "*"
+azure-identity = "*"
+azure-mgmt-subscription = "*"
+azure-mgmt-resource = "*"
+azure-mgmt-compute = "*"
+azure-mgmt-storage = "*"
+azure-mgmt-network = "*"
+azure-storage-blob = "*"
 
 [dev-packages]
 pytest = "*"
