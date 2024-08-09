@@ -5,12 +5,12 @@ ARG DEBIAN_DIST
 ENV DEBIAN_FRONTEND noninteractive
 ENV SHELL /bin/bash
 ENV PYTHONPATH /gardenlinux/bin:/gardenlinux/ci:/gardenlinux/ci/glci:/gardenlinux/tests:/gardenlinux/features
-ARG GARDENLINUX_MIRROR_KEY=/etc/apt/trusted.gpg.d/gardenlinux.asc
+ARG GARDENLINUX_MIRROR_KEY=/etc/apt/trusted.gpg.d/keyring.gpg
 ARG VERSION
 
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 
-COPY gardenlinux.asc $GARDENLINUX_MIRROR_KEY
+COPY keyring.gpg $GARDENLINUX_MIRROR_KEY
 RUN  chown root:root $GARDENLINUX_MIRROR_KEY \
         && chmod 644 $GARDENLINUX_MIRROR_KEY
 
