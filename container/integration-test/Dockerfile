@@ -15,7 +15,8 @@ RUN : "Install GCP requirements" \
      && echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
      && apt-get update \
      && apt-get install -y google-cloud-sdk
-RUN : "Azure and OpenStack cli already installed in gardenlinux/base-test image" \
+RUN : "OpenStack cli already installed in gardenlinux/base-test image" \
+     && apt-get install -y azure-cli \
     : "Install AliCloud specific requirements" \
      && arch="$(uname -m)" \
      && [ $arch = "x86_64" ] && aliyun_arch=amd64 || aliyun_arch=arm64 \
