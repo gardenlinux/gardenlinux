@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+efi_part_uuid="$(cat /sys/firmware/efi/efivars/LoaderDevicePartUUID-4a67b082-0a4c-41cf-b6c7-440b29bb8c4f | tail -c +4 | tr -cd '[:print:]' | tr '[:upper:]' '[:lower:]')"
+efi_part_dev="/dev/disk/by-partuuid/$efi_part_uuid"
+efi_part_dev_unit="$(systemd-escape "${efi_part_dev#/}").device"
+
+mkdir -p "$1/systemd-repart.service.d"
+cat > "$1/systemd-repart.service.d/override.conf" << EOF
+[Unit]
+Requires=$efi_part_dev_unit
+After=$efi_part_dev_unit
+
+[Service]
+ExecStart=
+ExecStart=/usr/bin/repart-esp-disk $efi_part_dev
+EOF
+
+cat > "$1/resize-esp.service" << EOF
+[Unit]
+Requires=$efi_part_dev_unit
+After=$efi_part_dev_unit
+After=systemd-repart.service
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/resizefat32 $efi_part_dev
+EOF
+
+cat > "$1/efi.mount" << EOF
+[Unit]
+Requires=$efi_part_dev_unit
+After=$efi_part_dev_unit
+After=resize-esp.service
+
+[Mount]
+What=$efi_part_dev
+Where=/efi
+EOF
+
+mkdir -p "$1/local-fs.target.wants"
+ln -s ../resize-esp.service "$1/local-fs.target.wants/resize-esp.service"
+ln -s ../efi.mount "$1/local-fs.target.wants/efi.mount"

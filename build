@@ -82,7 +82,8 @@ if [ "$container_image" = localhost/builder ]; then
 	# It is recommended to call the file 'builder.dockerfile' to make it's intention clear.
 	# That file might only contain a single line 'FROM ghcr.io/gardenlinux/builder:...' which can be updated via dependabot.
 	if [[ -f "${dir}"/builder.dockerfile ]]; then
-		"$container_engine" build -t "$container_image" -f "${dir}"/builder.dockerfile "$dir"
+		mkdir -p "$dir/.empty_context"
+		"$container_engine" build -t "$container_image" -f "${dir}"/builder.dockerfile "$dir/.empty_context"
 	else 
 		"$container_engine" build -t "$container_image" "$dir"
 	fi
