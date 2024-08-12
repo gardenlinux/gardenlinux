@@ -72,12 +72,12 @@
         },
         "azure-identity": {
             "hashes": [
-                "sha256:73fdcfb058baa3c6591a7c71a7bacfffb9ea17bc8ec17dd46d0c785a339c262e",
-                "sha256:b90b79b5b36f3a4378e33cd1288d04c171e620ae20bf41aa5aeb4b900cb6bde2"
+                "sha256:6cb05cd089aff303f089b895f70299208770641a9977f6045a0b4faef606f5aa",
+                "sha256:dc523dac3c0c99c48678f298c6ddb0e019f1eaaac2f5995016d1c363e3bce865"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==1.18.0b1"
+            "version": "==1.18.0b2"
         },
         "azure-mgmt-compute": {
             "hashes": [
