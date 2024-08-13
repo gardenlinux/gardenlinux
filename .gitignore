@@ -42,3 +42,4 @@ make_targets.cache
 /bin/*.permall
 /bin/swtpm-sock
 .DS_Store
+venv
