@@ -6,7 +6,7 @@ from helper.utils import execute_remote_command
 @pytest.mark.parametrize(
     "file,args",
     [
-        ("/etc/sysctl.d/restric-dmesg.conf", {"kernel.dmesg_restrict": "1"}),
+        ("/etc/sysctl.d/40-restric-dmesg.conf", {"kernel.dmesg_restrict": "1"}),
         ("/tmp/sysctl.txt", {"kernel.dmesg_restrict": "1"})
     ]
 )
