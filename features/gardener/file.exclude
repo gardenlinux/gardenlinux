@@ -1,2 +1,2 @@
 /etc/containerd/config.toml
-/etc/sysctl.d/restric-dmesg.conf
+/etc/sysctl.d/40-restric-dmesg.conf

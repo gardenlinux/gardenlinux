@@ -6,7 +6,7 @@ from helper.utils import execute_remote_command
 @pytest.mark.parametrize(
     "file,args",
     [
-        ("/etc/sysctl.d/allow-nonroot-dmesg.conf", {"kernel.dmesg_restrict": "0"}),
+        ("/etc/sysctl.d/40-allow-nonroot-dmesg.conf", {"kernel.dmesg_restrict": "0"}),
         ("/tmp/sysctl.txt", {"kernel.dmesg_restrict": "0"})
     ]
 )
