@@ -1,0 +1,44 @@
+BUILDNAME="GardenLinux Maintainers"
+BUILDEMAIL="contact@gardenlinux.io"
+BUILDIMAGE="gardenlinuxbf:build"
+BUILDTARGET="$(readlink -f ./packages)"
+LOCALDIR="$(readlink -f .)"
+
+docker build -t $BUILDIMAGE .
+
+docker_run () {
+	bashcommand=$1
+
+	docker run --rm \
+	--volume $BUILDTARGET:/packages \
+	-e DEBFULLNAME="$BUILDNAME" \
+	-e DEBEMAIL="$BUILDEMAIL" \
+	-ti $BUILDIMAGE \
+        bash -c "
+		set -euo pipefail
+		
+		set -x
+		$bashcommand"
+}
+
+docker_run_patch () {
+	package=$1
+	bashcommand=$2
+	patchdir="$LOCALDIR/${package}.d"
+	if [ -d "$patchdir" ]; then
+		patch=true
+	else
+		patch=false
+	fi
+	docker run --rm \
+	--volume $BUILDTARGET:/packages \
+	$($patch && echo --volume ${patchdir}:/patches) \
+	-e DEBFULLNAME="$BUILDNAME" \
+	-e DEBEMAIL="$BUILDEMAIL" \
+	-ti $BUILDIMAGE \
+        bash -c "
+		set -euo pipefail
+		
+		set -x
+		$bashcommand"
+}

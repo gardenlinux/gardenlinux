@@ -1,0 +1,10 @@
+description: "BlueField smartnic"
+type: platform
+features:
+  include:
+    - server
+    - _boot
+    - _bfpxe
+  exclude:
+    - _selinux
+    - firewall

@@ -1,0 +1,9 @@
+#!/bin/sh
+
+bootdir=/boot
+
+[ -x /usr/sbin/iucode_tool ] || exit 0
+[ -x /lib/firmware/intel-ucode ] || exit 0
+
+rm -f ${bootdir}/intel-ucode.img
+/usr/sbin/iucode_tool --scan-system --write-earlyfw=${bootdir}/intel-ucode.img  /lib/firmware/intel-ucode

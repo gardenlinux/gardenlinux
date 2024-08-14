@@ -1,0 +1,9 @@
+ethtool
+fdisk
+dosfstools
+efibootmgr
+efitools
+pciutils
+linux-image-$arch
+perl
+libfuse2
