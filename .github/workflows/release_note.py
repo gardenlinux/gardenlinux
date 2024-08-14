@@ -222,6 +222,7 @@ def create_github_release_notes(gardenlinux_version, commitish):
     output += "\n"
     output += "## Software Component Versions\n"
     output += "```"
+    output += "\n"
     (path, headers) = urllib.request.urlretrieve(f'https://packages.gardenlinux.io/gardenlinux/dists/{gardenlinux_version}/main/binary-amd64/Packages.gz')
     with gzip.open(path, 'rt') as f:
         d = DebsrcFile()
@@ -260,7 +261,7 @@ def write_to_release_id_file(release_id):
         print(f"Could not create .github_release_id file: {e}")
         sys.exit(1)
 
-def create_github_release(owner, repo, tag, commitish):
+def create_github_release(owner, repo, tag, commitish, body):
 
     token = os.environ.get('GITHUB_TOKEN')
     if not token:
@@ -270,8 +271,6 @@ def create_github_release(owner, repo, tag, commitish):
         'Authorization': f'token {token}',
         'Accept': 'application/vnd.github.v3+json'
     }
-
-    body = create_github_release_notes(tag, commitish)
 
     data = {
         'tag_name': tag,
@@ -302,6 +301,7 @@ def main():
     create_parser.add_argument('--repo', default="gardenlinux")
     create_parser.add_argument('--tag', required=True)
     create_parser.add_argument('--commit', required=True)
+    create_parser.add_argument('--dry-run', action='store_true', default=False)
 
     upload_parser = subparsers.add_parser('upload')
     upload_parser.add_argument('--release_id', required=True)
@@ -312,9 +312,13 @@ def main():
     args = parser.parse_args()
 
     if args.command == 'create':
-        release_id = create_github_release(args.owner, args.repo, args.tag, args.commit)
-        write_to_release_id_file(f"{release_id}")
-        print(f"Release created with ID: {release_id}")
+        body = create_github_release_notes(args.tag, args.commit)
+        if not args.dry_run:
+            release_id = create_github_release(args.owner, args.repo, args.tag, args.commit, body)
+            write_to_release_id_file(f"{release_id}")
+            print(f"Release created with ID: {release_id}")
+        else:
+            print(body)
     elif args.command == 'upload':
         # Implementation for 'upload' command
         pass
