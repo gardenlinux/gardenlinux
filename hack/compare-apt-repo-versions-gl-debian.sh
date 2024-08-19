@@ -32,7 +32,6 @@ main() {
     sort "$TEMP_DIR"/gardenlinux-"$GL_VERSION"-oneline | uniq > "$TEMP_DIR"/gardenlinux-"$GL_VERSION"-oneline-sorted
     sort "$TEMP_DIR"/debian-testing-oneline | uniq > "$TEMP_DIR"/debian-testing-oneline-sorted
 
-    # Tested on macos, not sure if this works on linux too
     join -j 1 -o 0,1.2,2.2 "$TEMP_DIR"/gardenlinux-"$GL_VERSION"-oneline-sorted "$TEMP_DIR"/debian-testing-oneline-sorted | \
     awk '
     {
