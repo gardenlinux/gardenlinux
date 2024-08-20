@@ -228,6 +228,9 @@ jobs:
         with:
           name: "${{ env.cname }}"
           path: "${{ env.cname }}.tar.gz"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: create and push OCI image
         run: |
           # Install python-gardenlinux-cli and dependencies
