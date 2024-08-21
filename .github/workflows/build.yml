@@ -145,6 +145,7 @@ jobs:
         shell: bash
     permissions:
       id-token: write
+      packages: write
     environment: ${{ inputs.use_kms && 'oidc_aws_kms_secureboot_signing' || '' }}
     strategy:
       fail-fast: false
