@@ -236,7 +236,8 @@ jobs:
           python3 -m venv venv
           source venv/bin/activate
           pip install git+https://github.com/gardenlinux/python-gardenlinux-cli.git
-          git update-index --assume-unchanged venv
+          git ls-files --others --exclude-standard # debug, show if there are more untracked files. remove this before merging (TODO)
+          git update-index --assume-unchanged "${{ env.cname }}.tar.gz"
           GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} glcli oci push --container ghcr.io/${{ github.repository_owner }}/gardenlinux-oci-delivery --version $(cat VERSION) --architecture ${{ matrix.arch }} --cname "${{ matrix.target }}${{ matrix.modifier }}" --gardenlinux_root $PWD
           deactivate
 
