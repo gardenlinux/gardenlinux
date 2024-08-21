@@ -223,9 +223,51 @@ jobs:
         run: |
           cname=$(basename "$(realpath ".build/${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}")" .artifacts)
           echo "cname=$cname" | tee -a "$GITHUB_ENV"
+      - name: pack build artifacts for upload
+        run: tar -cSzvf "${{ env.cname }}.tar.gz" -C .build -T ".build/${{ env.cname }}.artifacts"
+      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # pin@v3
+        with:
+          name: "${{ env.cname }}"
+          path: "${{ env.cname }}.tar.gz"
+  oci_publish:
+    needs: [ version, cert, images ]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      id-token: write
+      packages: write
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        arch: [ amd64, arm64 ]
+        target: [ kvm, "kvm_secureboot", "kvm_secureboot_readonly", "kvm_secureboot_readonly_persistence", metal, "metal_secureboot", "metal_secureboot_readonly", "metal_secureboot_readonly_persistence", gcp, gdch, aws, "aws_secureboot", "aws_secureboot_readonly", "aws_secureboot_readonly_persistence", azure, ali, openstack, openstackbaremetal, vmware, "metal_pxe", firecracker, "metal-vhost" ]
+        modifier: [ "${{ inputs.default_modifier }}" ]
+        include:
+          - target: container
+            arch: amd64
+            modifier: ""
+          - target: container
+            arch: arm64
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: set VERSION=${{ needs.version.outputs.version }}
+        run: |
+          bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
+          git update-index --assume-unchanged VERSION
+      - name: get cname
+        run: |
+          cname="${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}-$(cat VERSION)-$(./get_commit)"
+          echo "cname=$cname" | tee -a "$GITHUB_ENV"
+      - uses: actions/download-artifact@v4
+        with:
+          name: "${{ env.cname }}"
+          path: "${{ env.cname }}.tar.gz"
       - name: create and push OCI image
         run: |
           python3 -m venv venv
@@ -234,12 +276,6 @@ jobs:
           ls .build/
           GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} glcli oci push --container ghcr.io/${{ github.repository_owner }}/gl-oci --version $(cat VERSION) --architecture ${{ matrix.arch }} --cname "${{ matrix.target }}${{ matrix.modifier }}" --gardenlinux_root $PWD
           deactivate
-      - name: pack build artifacts for upload
-        run: tar -cSzvf "${{ env.cname }}.tar.gz" -C .build -T ".build/${{ env.cname }}.artifacts"
-      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # pin@v3
-        with:
-          name: "${{ env.cname }}"
-          path: "${{ env.cname }}.tar.gz"
 
   bare_flavors:
     needs: [ version, base ]
