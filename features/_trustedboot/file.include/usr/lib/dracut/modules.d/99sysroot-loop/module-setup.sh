@@ -17,8 +17,8 @@ install() {
 
 	set -e
 
-	losetup /dev/loop0 /root.img
-	mount /dev/loop0 /sysroot
+	losetup /dev/loop65535 /root.img
+	mount /dev/loop65535 /sysroot
 	EOF
 
 	cat > "$initdir/bin/cleanup-sysroot" <<-EOF
@@ -27,7 +27,7 @@ install() {
 	set -e
 
 	umount -R /sysroot
-	losetup -d /dev/loop0
+	losetup -d /dev/loop65535
 	EOF
 
 	chmod +x "$initdir/bin/setup-sysroot"

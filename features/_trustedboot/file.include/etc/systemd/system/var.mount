@@ -1,9 +1,9 @@
 [Unit]
-Requires=ephemeral-cryptsetup.service
-After=ephemeral-cryptsetup.service
+Requires=systemd-cryptsetup@var.service
+After=systemd-cryptsetup@var.service
 
 [Mount]
-What=/dev/mapper/ephemeral
+What=/dev/mapper/var
 Where=/var
 Type=ext4
 

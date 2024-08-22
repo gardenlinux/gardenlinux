@@ -11,6 +11,7 @@ cat > "$1/systemd-repart.service.d/override.conf" << EOF
 [Unit]
 Requires=$efi_part_dev_unit
 After=$efi_part_dev_unit
+Before=cryptsetup-pre.target
 
 [Service]
 ExecStart=
