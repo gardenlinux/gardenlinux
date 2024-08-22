@@ -262,7 +262,7 @@ jobs:
           git update-index --assume-unchanged VERSION
       - name: get cname
         run: |
-          cname="${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}-$(cat VERSION)-$(./get_commit)"
+          cname="${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}-$(cat VERSION)-$(head -c 8 <<< $(./get_commit))"
           echo "cname=$cname" | tee -a "$GITHUB_ENV"
       - uses: actions/download-artifact@v4
         with:
