@@ -2,3 +2,4 @@
 /etc/dracut.conf.d/30-ignition.conf
 /etc/systemd/system/ignition-disable.service
 /etc/repart.d/root.conf
+/usr/lib/tmpfiles.d/home.conf
