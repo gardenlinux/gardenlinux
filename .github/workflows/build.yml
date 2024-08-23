@@ -267,7 +267,6 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: "${{ env.cname }}"
-          path: "${{ env.cname }}.tar.gz"
       - name: Unpack artifacts to .build
         run: |
           mkdir -p .build
