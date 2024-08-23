@@ -271,12 +271,12 @@ jobs:
         run: |
           mkdir -p .build
           tar -xzf "${{ env.cname }}.tar.gz" -C .build
+          rm ${{ env.cname }}.tar.gz 
       - name: create and push OCI image
         run: |
           python3 -m venv venv
           source venv/bin/activate
           pip install git+https://github.com/gardenlinux/python-gardenlinux-cli.git
-          ls .build
           GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} glcli oci push --container ghcr.io/${{ github.repository_owner }}/gl-oci --version $(cat VERSION) --architecture ${{ matrix.arch }} --cname "${{ matrix.target }}${{ matrix.modifier }}" --gardenlinux_root $PWD
           deactivate
 
