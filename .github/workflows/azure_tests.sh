@@ -5,7 +5,7 @@
 cname="${@: -1}"
 
 configFile="azure_test_config.yaml"
-containerName="ghcr.io/gardenlinux/gardenlinux/integration-test:today"
+containerName="ghcr.io/gardenlinux/gardenlinux/platform-test:today"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
 platform_test_log_dir="/tmp/gardenlinux-platform-test-logs"
 
@@ -46,7 +46,7 @@ azure:
       - _slim
 EOF
 
-echo "### Start Integration Tests for Azure"
+echo "### Start Platform Tests for Azure"
 podman run -it --rm -v "${AZURE_CONFIG_DIR}:/root/.azure" -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts"  -v "$platform_test_log_dir:/platform-test-logs" $containerName /bin/bash -s << EOF
 mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/

@@ -24,7 +24,7 @@ class FireCracker:
 
     @classmethod
     def fixture(cls, config):
-        logger.info('Starting Firecracker integration tests.')
+        logger.info('Starting Firecracker platform tests.')
         # IP and SSH port need to be pre evaluated for the RemoteClient object
         logger.info('Validation starting...')
         ip = config['network'].get('ip_vm', DEFAULT_IP)
@@ -182,13 +182,13 @@ class FireCracker:
 
 
     def _generate_ssh_key(self):
-        """ Generate new SSH key for integration test """
-        logger.info('Generating new SSH key for integration tests.')
+        """ Generate new SSH key for platform test """
+        logger.info('Generating new SSH key for platform tests.')
         ssh_key_path = self.config['ssh']['ssh_key_filepath']
         keyfp = RemoteClient.generate_key_pair(
             filename = ssh_key_path,
         )
-        logger.info('SSH key for integration tests generated.')
+        logger.info('SSH key for platform tests generated.')
 
 
     def _write_config(self):
@@ -294,7 +294,7 @@ class FireCracker:
 
 
     def _modify_image(self):
-        """ Modify filesystem image to fit all needs for running integration tests """
+        """ Modify filesystem image to fit all needs for running platform tests """
         self._mount_image()
         self._adjust_image()
         self._unmount_image()
@@ -332,10 +332,10 @@ class FireCracker:
         # Define additional vars
         authorized_keys_file = f'{ssh_key_path}.pub'
         systemd_dir = '/etc/systemd/system'
-        sshd_config_file = 'integration/misc/sshd_config_integration_tests'
-        sshd_systemd_file = 'integration/misc/sshd-integration.test.service'
-        nft_ssh_integration_test_config = 'integration/misc/nft_ssh_integration_test_ports.conf'
-        nft_config_name = 'nft_ssh_integration_test_ports.conf'
+        sshd_config_file = 'platformSetup/misc/sshd_config_platform_tests'
+        sshd_systemd_file = 'platformSetup/misc/sshd-platform.test.service'
+        nft_ssh_platform_test_config = 'platformSetup/misc/nft_ssh_platform_test_ports.conf'
+        nft_config_name = 'nft_ssh_platform_test_ports.conf'
         authorized_keys_dir = '/root/.ssh'
         sshd_config_dir = '/etc/ssh'
         systemd_dir = '/etc/systemd/system'
@@ -364,9 +364,9 @@ class FireCracker:
         # Dictionary: Including all source files and their destinations
         file_copy_dict = {
             authorized_keys_file: f'{mnt_dir}{authorized_keys_dir}/test_authorized_keys',
-            sshd_config_file: f'{mnt_dir}{sshd_config_dir}/sshd_config_integration_tests',
-            nft_ssh_integration_test_config: f'{mnt_dir}{nft_dropin_config_dir}/{nft_config_name}',
-            sshd_systemd_file: f'{mnt_dir}{systemd_dir}/sshd-integration.test.service'
+            sshd_config_file: f'{mnt_dir}{sshd_config_dir}/sshd_config_platform_tests',
+            nft_ssh_platform_test_config: f'{mnt_dir}{nft_dropin_config_dir}/{nft_config_name}',
+            sshd_systemd_file: f'{mnt_dir}{systemd_dir}/sshd-platform.test.service'
         }
 
         # Copy all files to their destination
@@ -383,8 +383,8 @@ class FireCracker:
         # List: Including all commands that needs to be executed
         cmds = []
         cmds.append(f'echo "ALL: ALL" >> {mnt_dir}/etc/hosts.allow')
-        cmds.append(f'ln -s {systemd_dir}/sshd-integration.test.service \
-            {mnt_dir}{systemd_dir}/multi-user.target.wants/sshd-integration.test.service')
+        cmds.append(f'ln -s {systemd_dir}/sshd-platform.test.service \
+            {mnt_dir}{systemd_dir}/multi-user.target.wants/sshd-platform.test.service')
 
         # Execute all commands
         for cmd in cmds:

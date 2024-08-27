@@ -79,7 +79,7 @@ Next to this, more specific prefixes (unlike only `feature/`) may be used.
 
 1. Commit messages must follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification so that we automatically produce meaningful release notes.
 
-1. Test your changes as thoroughly as possible before you commit them. Preferably, automate your test by unit and/or integration tests. If tested manually, provide information about the test scope in the PR description.
+1. Test your changes as thoroughly as possible before you commit them. Preferably, automate your test by unit and/or platform tests. If tested manually, provide information about the test scope in the PR description.
 
 1. Create Work In Progress [WIP] pull requests only if you need a clarification or an explicit review before you can continue your work item.
 

@@ -19,7 +19,7 @@ done
 cname=$1
 
 configFile="aws_test_config.yaml"
-containerName="ghcr.io/gardenlinux/gardenlinux/integration-test:today"
+containerName="ghcr.io/gardenlinux/gardenlinux/platform-test:today"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
 platform_test_log_dir="/tmp/gardenlinux-platform-test-logs"
 
@@ -63,7 +63,7 @@ aws:
       - _slim
 EOF
 
-echo "### Start Integration Tests for AWS"
+echo "### Start Platform Tests for AWS"
 podman run -it --rm -e 'AWS_*' -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" -v "$platform_test_log_dir:/platform-test-logs"  $containerName /bin/bash -s << EOF
 mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/

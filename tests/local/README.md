@@ -6,7 +6,7 @@
 
 # General
 
-Tests located in this folter `test/local` are local tests. Local tests are executed in the base-test container, the integration-test container will also work, but without spawning a `chroot` or `kvm` environment that needs to be accessed via `ssh`. The local tests are run directly in the container. The goal is to be able to write tests for the Garden Linux build pipeline.
+Tests located in this folter `test/local` are local tests. Local tests are executed in the base-test container, the platform-test container will also work, but without spawning a `chroot` or `kvm` environment that needs to be accessed via `ssh`. The local tests are run directly in the container. The goal is to be able to write tests for the Garden Linux build pipeline.
 
 The configuration file for this tests does not need the `features` to be set, if set it will be ignored. The configuration contains a dictionary, the key should be the name of the test and under the key the configuration options for this specific test are defined. If a test does not have any configuration options it can be left out of the configuration file.
 

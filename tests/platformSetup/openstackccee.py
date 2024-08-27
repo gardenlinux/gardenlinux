@@ -269,7 +269,7 @@ class OpenStackCCEE:
             "image",
             "set",
             "--tag",
-            "purpose=integration-test",
+            "purpose=platform-test",
             id
         ]
         logger.debug(json.dumps(doc, indent=4))

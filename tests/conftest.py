@@ -17,15 +17,15 @@ from os import path
 from dataclasses import dataclass
 from _pytest.config.argparsing import Parser
 
-from integration.aws import AWS
-from integration.azure import AZURE
-from integration.gcp import GCP
-from integration.ali import ALI
-from integration.openstackccee import OpenStackCCEE
-from integration.chroot import CHROOT
-from integration.firecracker import FireCracker
-from integration.kvm import KVM
-from integration.manual import Manual
+from platformSetup.aws import AWS
+from platformSetup.azure import AZURE
+from platformSetup.gcp import GCP
+from platformSetup.ali import ALI
+from platformSetup.openstackccee import OpenStackCCEE
+from platformSetup.chroot import CHROOT
+from platformSetup.firecracker import FireCracker
+from platformSetup.kvm import KVM
+from platformSetup.manual import Manual
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

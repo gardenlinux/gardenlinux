@@ -1,16 +1,16 @@
 # Shellcheck Tests
 
 Shellcheck tests must be executed explicitly via `pytest shellcheck` (see [Running the Tests](#running-the-tests)),
-and will **not** be executed as part of other pytests (e.g. the integration tests).
+and will **not** be executed as part of other pytests (e.g. the platform tests).
 The tests **do not** require a running Garden Linux instance. 
 Neither do the test require the repository to be in a buildable state. 
 
 ## Prerequisites
 
-The `gardenlinux/integration-test` container has all dependencies installed that are required to run the shellcheck tests.
+The `gardenlinux/platform-test` container has all dependencies installed that are required to run the shellcheck tests.
 Build the container image from the base directory of this repository by running: 
 ```
-make --directory=container build-integration-test
+make --directory=container build-platform-test
 ```
 
 ## Configuration Options
@@ -54,7 +54,7 @@ docker/build/install-cfssl.sh
 Start the container
 - mount Garden Linux repository to /gardenlinux
 ```
-docker run -it --rm -v `pwd`:/gardenlinux gardenlinux/integration-test:`bin/garden-version` /bin/bash
+docker run -it --rm -v `pwd`:/gardenlinux gardenlinux/platform-test:`bin/garden-version` /bin/bash
 ```
 
 Run the rests

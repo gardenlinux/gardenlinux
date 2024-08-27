@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-from integration.gcp import GCP
+from platformSetup.gcp import GCP
 
 logger = logging.getLogger(__name__)
 

@@ -71,7 +71,7 @@ jobs:
           echo "$release $prefix.tar.xz"
           ls -lah "$prefix.tar.xz"
           echo "$prefix.tar.xz" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
-  upload_integration_test_logs_to_release:
+  upload_platform_test_logs_to_release:
     environment: oidc_aws_s3_upload
     needs: create_release
     permissions:
