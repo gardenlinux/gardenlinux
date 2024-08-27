@@ -17,7 +17,7 @@ mkdir "$rootfs/var"
 echo "creating root EROFS disk"
 
 erofs="$(mktemp -u)"
-mkfs.erofs -z lz4 -E force-inode-compact -T "$BUILDER_TIMESTAMP" -U "$(echo gardenlinux:$BUILDER_VERSION:erofs:root | uuid_hash)" "$erofs" "$rootfs"
+mkfs.erofs --quiet -z lz4 -E force-inode-compact -T "$BUILDER_TIMESTAMP" -U "$(echo gardenlinux:$BUILDER_VERSION:erofs:root | uuid_hash)" "$erofs" "$rootfs"
 
 size_chroot="$(du -s "$rootfs" | cut -f 1)"
 size_erofs="$(du "$erofs" | cut -f 1)"

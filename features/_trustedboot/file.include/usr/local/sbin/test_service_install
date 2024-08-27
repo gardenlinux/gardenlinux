@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+cat > /etc/systemd/system/hello.service << EOF
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/echo hello
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl start hello.service
+systemctl enable hello.service

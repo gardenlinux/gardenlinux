@@ -11,6 +11,7 @@ RemainAfterExit=yes
 ExecStart=/usr/bin/mkdir -p /var/etc.overlay /var/etc.overlay.workdir
 ExecStart=/usr/bin/cp /etc/machine-id /var/etc.overlay/machine-id
 ExecStart=/usr/bin/mount -t overlay -o lowerdir=/etc,upperdir=/var/etc.overlay,workdir=/var/etc.overlay.workdir overlay /etc
+ExecStart=/usr/bin/systemctl daemon-reload
 ExecStop=/usr/bin/umount /etc
 
 [Install]
