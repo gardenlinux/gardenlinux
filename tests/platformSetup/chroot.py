@@ -31,7 +31,7 @@ class CHROOT:
     @classmethod
     def fixture(cls, config):
 
-        logger.info("Starting CHROOT integration tests.")
+        logger.info("Starting CHROOT platform tests.")
 
         # We need to validate basic information
         # for 'RemoteClient' object first. Afterwards
@@ -72,7 +72,7 @@ class CHROOT:
         self._validate()
         # Unarchive defined tar ball
         rootfs = self._unarchive_image()
-        # Generate temporary keys for integration testing
+        # Generate temporary keys for platform testing
         self._generate_ssh_key()
         # Adjust chroot to be able to connect
         self._adjust_chroot(rootfs)
@@ -159,13 +159,13 @@ class CHROOT:
 
 
     def _generate_ssh_key(self):
-        """ Generate new SSH key for integration test """
-        logger.info("Generating new SSH key for integration tests.")
+        """ Generate new SSH key for platform test """
+        logger.info("Generating new SSH key for platform tests.")
         ssh_key_path = self.config["ssh"]["ssh_key_filepath"]
         keyfp = RemoteClient.generate_key_pair(
             filename = ssh_key_path,
         )
-        logger.info("SSH key for integration tests generated.")
+        logger.info("SSH key for platform tests generated.")
 
 
     def _adjust_chroot(self, rootfs):
@@ -201,7 +201,7 @@ class CHROOT:
         # Generate SSH hostkeys for chroot
         # (this way we do not need to execute this inside the 'chroot'
         #  environment and still support amd64 and arm64 architectures)
-        chroot_ssh_dir = rootfs + "/etc/ssh/"
+        chroot_ssh_dir = rootfs + "/etc/ssh"
         cmd_ssh_keys = []
         cmd_ssh_keys.append('ssh-keygen -q -N "" -t dsa -f {ssh_dir}/ssh_host_dsa_key'.format(
           ssh_dir=chroot_ssh_dir))
@@ -230,14 +230,14 @@ class CHROOT:
             logger.error("Could not create directory: {dir}".format(
               dir=chroot_sshd_run_dir))
         # Copy dedicated sshd config to chroot
-        sshd_config_src_file = "integration/misc/sshd_config_integration_tests"
+        sshd_config_src_file = "platformSetup/misc/sshd_config_platform_tests"
         chroot_sshd_cfg_dir = rootfs + "/etc/ssh/"
         try:
             shutil.copy(sshd_config_src_file, chroot_sshd_cfg_dir)
-            logger.info("Copied sshd_config_integration_tests to: {dir}".format(
+            logger.info("Copied sshd_config_platform_tests to: {dir}".format(
               dir=chroot_sshd_cfg_dir))
         except OSError:
-            logger.error("Could not copy sshd_config_integration_tests to {dir}".format(
+            logger.error("Could not copy sshd_config_platform_tests to {dir}".format(
               dir=chroot_sshd_cfg_dir))
         # Copy ssh / authorized_keys file for root user
         local_ssh_key_path = self.config["ssh"]["ssh_key_filepath"] + ".pub"
@@ -257,9 +257,9 @@ class CHROOT:
         """ Start sshd inside the chroot """
         # Define vars to have it more readable
         gl_chroot_bin = "/gardenlinux/bin/garden-chroot"
-        chroot_cmd = "/usr/sbin/sshd -D -f /etc/ssh/sshd_config_integration_tests"
+        chroot_cmd = "/usr/sbin/sshd -D -f /etc/ssh/sshd_config_platform_tests"
         # Execute in Popen as background task
-        # while we may perform our integration tests
+        # while we may perform our platform tests
         proc_exec = "{chroot_bin} {chroot_env} {chroot_cmd}".format(
           chroot_bin=gl_chroot_bin,
           chroot_env=rootfs,

@@ -5,7 +5,7 @@ ALTNAME_INTERNAL=$(shell [ -n "$(ALTNAME)" ] && printf "%s %s" "-t" "$(ALTNAME)"
 PATH_KERNEL_PACKAGES="../.packages/main/l/linux"
 GARDENLINUX_BUILD_CRE ?= sudo podman
 
-all: build-integration-test
+all: build-platform-test
 
 .PHONY: needslim
 needslim:
@@ -27,15 +27,15 @@ build-base-test: needslim
 	rm base-test/Pipfile
 	rm base-test/Pipfile.lock
 
-.PHONY: build-integration-test
-build-integration-test: build-base-test
-	cp ../checksums.sha256 integration-test/checksums.sha256
-	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/integration-test:$(VERSION) integration-test
-	rm integration-test/checksums.sha256
+.PHONY: build-platform-test
+build-platform-test: build-base-test
+	cp ../checksums.sha256 platform-test/checksums.sha256
+	@$(GARDENLINUX_BUILD_CRE) build --build-arg VERSION=$(VERSION) -t gardenlinux/platform-test:$(VERSION) platform-test
+	rm platform-test/checksums.sha256
 
 .PHONY: clean
 clean:
-	rm -rf integration-test/_pipfiles
-	-@[ -n "$$($(GARDENLINUX_BUILD_CRE) image ls gardenlinux/integration-test --format "{{.ID}}")" ] && $(GARDENLINUX_BUILD_CRE) image rm --force $$($(GARDENLINUX_BUILD_CRE) image ls gardenlinux/integration-test --format "{{.Repository}}:{{.Tag}}"); true
+	rm -rf platform-test/_pipfiles
+	-@[ -n "$$($(GARDENLINUX_BUILD_CRE) image ls gardenlinux/platform-test --format "{{.ID}}")" ] && $(GARDENLINUX_BUILD_CRE) image rm --force $$($(GARDENLINUX_BUILD_CRE) image ls gardenlinux/platform-test --format "{{.Repository}}:{{.Tag}}"); true
 	-@[ -n "$$($(GARDENLINUX_BUILD_CRE) image ls gardenlinux/build --format "{{.ID}}")" ] && $(GARDENLINUX_BUILD_CRE) image rm --force $$($(GARDENLINUX_BUILD_CRE) image ls gardenlinux/build --format "{{.Repository}}:{{.Tag}}"); true
 	-@[ -n "$$($(GARDENLINUX_BUILD_CRE) image ls gardenlinux/slim --format "{{.ID}}")" ] && $(GARDENLINUX_BUILD_CRE) image rm --force $$($(GARDENLINUX_BUILD_CRE) image ls gardenlinux/slim --format "{{.Repository}}:{{.Tag}}"); true

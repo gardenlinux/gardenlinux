@@ -15,7 +15,7 @@ on:
         description: "Full commitish of the artifact that should be tested. Must be present in s3"
         type: string
         required: true
-      integration_test_container_version:
+      platform_test_container_version:
         description: "Full commitish or GL version in case of release. Must be present in ghcr."
         type: string
         required: true
@@ -108,8 +108,8 @@ jobs:
 
     - name: pull container image
       run: |
-        podman pull "ghcr.io/gardenlinux/gardenlinux/integration-test:${{ inputs.integration_test_container_version }}"
-        podman tag "ghcr.io/gardenlinux/gardenlinux/integration-test:${{ inputs.integration_test_container_version }}" ghcr.io/gardenlinux/gardenlinux/integration-test:today
+        podman pull "ghcr.io/gardenlinux/gardenlinux/platform-test:${{ inputs.platform_test_container_version }}"
+        podman tag "ghcr.io/gardenlinux/gardenlinux/platform-test:${{ inputs.platform_test_container_version }}" ghcr.io/gardenlinux/gardenlinux/platform-test:today
 
     - name: start platform test for ${{ matrix.target }}
       run: |

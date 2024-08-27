@@ -1,16 +1,16 @@
 # Enable secure boot for Garden Linux on AWS
 
-This article describes all steps needed to spawn a secure enabled Garden Linux image on AWS. Thereby, it uses the integration testing platform for spawning all required AWS resources. For more information about the integration testing platform used for Garden Linux, take a look [here](../../tests/README.md)
+This article describes all steps needed to spawn a secure enabled Garden Linux image on AWS. Thereby, it uses the platform testing platform for spawning all required AWS resources. For more information about the platform testing platform used for Garden Linux, take a look [here](../../tests/README.md)
 
 ## Table of Content
 
 - [Create image](#create-image)
 - [Prepare spawning](#prepare-spawning)
   - [Option A: Enable secure boot internally](#option-a-enable-secure-boot-internally)
-    - [Integration test configuration](#integration-test-configuration)
+    - [Platform test configuration](#platform-test-configuration)
   - [Option B: Enable secure boot externally](#option-b-enable-secure-boot-externally)
     - [UEFI variables](#uefi-variables)
-    - [Integration test configuration](#integration-test-configuration-1)
+    - [Platform test configuration](#platform-test-configuration-1)
 - [Spawn environment](#spawn-environment)
 - [Use secure boot enabled Garden Linux](#use-secure-boot-enabled-garden-linux)
 - [Cleanup everything](#cleanup-everything)
@@ -34,8 +34,8 @@ Besides of this, you can also enable secure boot externally. This way, you have 
 
 By creating a Garden Linux with the secure boot feature enabled and by using UEFI's setup mode, you can activate secure boot from within the AWS instance once the Garden Linux image has been spawned successfully. As long as you do not enable secure boot within the instance, the Garden Linux image will simply spawn without secure boot enabled. This must be kept in mind.
 
-#### Integration test configuration
-Before starting the required AWS environment, a configuration for the integration test platform is needed.
+#### Platform test configuration
+Before starting the required AWS environment, a configuration for the platform test platform is needed.
 
 The following example shows such a configuration. For test purposes, it uses the `eu-west-1` region, a small instance type (e.g. `t3.micro`), an image with `amd64` architecture and most importantly the `UEFI` boot mode.
 
@@ -65,7 +65,7 @@ aws:
 
 ```
 
-Finally, the content must be saved into a YAML file and it has to be mounted to the integration test container later on. For this case, create a folder in your home directory and place the YAML in there. This folder will be mounted to the integration test container afterwards. The configuration could be called `aws-secureboot.yaml` for example.
+Finally, the content must be saved into a YAML file and it has to be mounted to the platform test container later on. For this case, create a folder in your home directory and place the YAML in there. This folder will be mounted to the platform test container afterwards. The configuration could be called `aws-secureboot.yaml` for example.
 
 
 #### Enroll signature databases
@@ -112,15 +112,15 @@ Once downloaded, the signature databases must be converted to the secure boot fi
   -K cert/secureboot.kek.esl \
   --db cert/secureboot.pk.esl
 ```
-If the execution was successful, there should be a file called `secure_boot_blob.bin`. The content of the file can now be added to the created AWS instance. Since this documentation uses the integration test platform for spawning all required AWS resources and the integration test platform uses its own configuration, the content of the created file must be added to the integration test configuration. The configuration and its required values are described in the next chapter.
+If the execution was successful, there should be a file called `secure_boot_blob.bin`. The content of the file can now be added to the created AWS instance. Since this documentation uses the platform test platform for spawning all required AWS resources and the platform test platform uses its own configuration, the content of the created file must be added to the platform test configuration. The configuration and its required values are described in the next chapter.
 
-#### Integration test configuration
+#### Platform test configuration
 
-Similar to the configuration and explanation of chapter [Integration test configuration](#integration-test-configuration) from the previous option, you can use the same configuration from there also for this option, but it must be adjusted slightly to provide the UEFI variables that have been prepared previously.
+Similar to the configuration and explanation of chapter [Platform test configuration](#platform-test-configuration) from the previous option, you can use the same configuration from there also for this option, but it must be adjusted slightly to provide the UEFI variables that have been prepared previously.
 
 This way, you ensure that the Garden Linux instance will start with secure boot right from the beginning. No further tasks are then needed.
 
-The integration test configuration needs the following additional attribute configured:
+The platform test configuration needs the following additional attribute configured:
 ```
 aws:
     ...
@@ -133,11 +133,11 @@ As you can see, it has the `uefi_data` attribute set, which contains the content
 
 ## Spawn environment
 
-The environment can now be spawned by using the integration test platform. As described in the corresponding [documentation](../../tests/README.md#prerequisites-1), you must have the integration test container in place.
+The environment can now be spawned by using the platform test platform. As described in the corresponding [documentation](../../tests/README.md#prerequisites-1), you must have the platform test container in place.
 As described there, the following command is used:
 
 ```
-make --directory=container build-integration-test
+make --directory=container build-platform-test
 ```
 
 Then, make sure you have API access to AWS by having your credentials in your home directory. There should be a file called `~/.aws/credentials`. If it's not there, you need to login via the following command:
@@ -145,14 +145,14 @@ Then, make sure you have API access to AWS by having your credentials in your ho
 aws configure
 ```
 
-After that, the integration test container can be started like this. Make sure that you are in the Garden Linux repo while executing this command.
+After that, the platform test container can be started like this. Make sure that you are in the Garden Linux repo while executing this command.
 ```
-sudo podman run -it --rm -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.aws:/root/.aws -v $HOME/.ssh:/root/.ssh -v ~/config:/config gardenlinux/integration-test:`bin/garden-version` /bin/bash
+sudo podman run -it --rm -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.aws:/root/.aws -v $HOME/.ssh:/root/.ssh -v ~/config:/config gardenlinux/platform-test:`bin/garden-version` /bin/bash
 ```
 
 As you can see, the current Garden Linux repo is mounted into the container (`/gardenlinux`). Moreover, it also gets access to the AWS credentials, the SSH directory and the previously created configuration (`~/config`).
 
-Once you executed the command, you should have access to the bash terminal within the container. From there, you can execute the integration test, which will create all required AWS resources for you. Since we've set the `keep_running` parameter to `true`, the created resources will remain after the execution, so that we can access the instance via SSH for further testing afterwards.
+Once you executed the command, you should have access to the bash terminal within the container. From there, you can execute the platform test, which will create all required AWS resources for you. Since we've set the `keep_running` parameter to `true`, the created resources will remain after the execution, so that we can access the instance via SSH for further testing afterwards.
 
 ```
 pytest --iaas=aws --configfile=/config/aws-secureboot.yaml
@@ -160,11 +160,11 @@ pytest --iaas=aws --configfile=/config/aws-secureboot.yaml
 
 ## Use secure boot enabled Garden Linux
 
-After you have run the integration test from the previous chapter, you should still have the bash terminal open within the integration test container.
+After you have run the platform test from the previous chapter, you should still have the bash terminal open within the platform test container.
 
-From there, you can now use `ssh` to connect to the remote AWS instance running Garden Linux with secure boot enabled. The SSH key can be found in the `/tmp` directory of the integration test container. 
+From there, you can now use `ssh` to connect to the remote AWS instance running Garden Linux with secure boot enabled. The SSH key can be found in the `/tmp` directory of the platform test container. 
 
-During integration test (right at the beginning), the output shows the location of the used SSH key:
+During platform test (right at the beginning), the output shows the location of the used SSH key:
 
 ```
 INFO     helper.sshclient:sshclient.py:47 generated RSA key pair: /tmp/sshkey-gl-test-20221123084607-c6hhy6_k.key
@@ -198,13 +198,13 @@ If the output shows `SecureBoot enabled.`, the Garden Linux instance has success
 
 ## Cleanup everything
 
-Within the integration-test container, execute the following command. The integration container can be started as stated in the [Running the tests](../../tests/README.md#running-the-tests) documentation of AWS within the `tests/` directory or in the previous chapter [Spawn environment](#spawn-environment).
+Within the platform-test container, execute the following command. The platform container can be started as stated in the [Running the tests](../../tests/README.md#running-the-tests) documentation of AWS within the `tests/` directory or in the previous chapter [Spawn environment](#spawn-environment).
 ```
 /gardenlinux/tests/tools/clean_orphans_aws.py
 ```
 
 
-This command is an interactive tool for cleaning up your AWS environment. Thereby, it will only focus on resources which have been created by the integration test scripts before. This is achieved by using corresponding tags. 
+This command is an interactive tool for cleaning up your AWS environment. Thereby, it will only focus on resources which have been created by the platform test scripts before. This is achieved by using corresponding tags. 
 Once executed, the `clean_orphans_aws.py` script will ask for the following resources:
 * EC2 Instances
 * Security Groups
@@ -215,13 +215,13 @@ Once executed, the `clean_orphans_aws.py` script will ask for the following reso
 
 Each resource and the removal of it will only be executed by pressing the `y` button into the prompt. You can also skip some of the resources by pressing `N`.
 
-Since an environment can also run other integration test resources which may not be removed, you can identify each resource by corresponding tags and a created UUID for each test run. At the beginning of the integration test for example, the integration test prints the information about the used UUID which can then be used for identifying the proper AWS resources easily:
+Since an environment can also run other platform test resources which may not be removed, you can identify each resource by corresponding tags and a created UUID for each test run. At the beginning of the platform test for example, the platform test prints the information about the used UUID which can then be used for identifying the proper AWS resources easily:
 
 ```
 INFO     aws-testbed:aws.py:426 This test's tags are:
 INFO     aws-testbed:aws.py:428 	component: gardenlinux
-INFO     aws-testbed:aws.py:428 	test-type: integration-test
+INFO     aws-testbed:aws.py:428 	test-type: platform-test
 INFO     aws-testbed:aws.py:428 	test-name: gl-test-20221123084607
 INFO     aws-testbed:aws.py:428 	test-uuid: cc250a12-48d5-46e4-a1e7-a01fe74d837b
 ```
-The `clean_orphans_aws.py` script will always print the tags of AWS resources as well once it ask you to remove them, so it should be possible to identify the correct resources and skip them if they do not belong to the integration test of this documentation.
+The `clean_orphans_aws.py` script will always print the tags of AWS resources as well once it ask you to remove them, so it should be possible to identify the correct resources and skip them if they do not belong to the platform test of this documentation.

@@ -9,7 +9,7 @@
   - [Running Unit tests](#running-unit-tests)
   - [Location of Unit Tests](#location-of-unit-tests)
     - [Example Location](#example-location)
-- [Integration Tests](#integration-tests)
+- [Platform Tests](#platform-tests)
   - [Prerequisites](#prerequisites)
   - [Using the tests on supported platforms](#using-the-tests-on-supported-platforms)
     - [General](#general-1)
@@ -41,7 +41,7 @@
       - [OpenStack CC EE flavor](#openstack-cc-ee-flavor)
         - [Configuration options](#configuration-options-7)
         - [Running the tests](#running-the-tests-8)
-      - [Local tests in the integration container](#local-tests-in-the-integration-container)
+      - [Local tests in the platform container](#local-tests-in-the-platform-container)
         - [Configuration options](#configuration-options-8)
         - [Running the tests](#running-the-tests-9)
   - [Misc](#misc)
@@ -51,10 +51,10 @@
 
 # General
 
-Garden Linux supports integration testing on all major cloud platforms (Aliyun, AWS, Azure, GCP) as well as regular unit tests. To allow testing even without access to any cloud platform we created an universal `kvm` platform that may run locally and is accessed in the same way via a `ssh client object` as any other cloud platform. Therefore, you do not need to adjust tests to perform local integration tests. Next to this, the `KVM` and `chroot` platform are used for regular `unit tests`. All platforms share Pytest as a common base, are accessed in the same way (via a `RemoteClient` object) and are described in detail below. Beside this, you may also find additional tests that may be used for developing and contributing to fit the Garden Linux style guides.
+Garden Linux supports platform testing on all major cloud platforms (Aliyun, AWS, Azure, GCP) as well as regular unit tests. To allow testing even without access to any cloud platform we created an universal `kvm` platform that may run locally and is accessed in the same way via a `ssh client object` as any other cloud platform. Therefore, you do not need to adjust tests to perform local platform tests. Next to this, the `KVM` and `chroot` platform are used for regular `unit tests`. All platforms share Pytest as a common base, are accessed in the same way (via a `RemoteClient` object) and are described in detail below. Beside this, you may also find additional tests that may be used for developing and contributing to fit the Garden Linux style guides.
 
 # Chart
-This chart briefly describes the process of unit-, platform/integration tests.
+This chart briefly describes the process of unit-, platform/platform tests.
 
 ```mermaid
 graph TD;
@@ -63,7 +63,7 @@ graph TD;
     obj02[Built Artifact] -- The build pipeline automatically performs<br>unit tests on just created artifacts --> test01{Testing}
     obj03[External Artifact] -- An already present artifact can <br>be retested at any time --> test01{Testing}
 
-    test01{Testing} -. Optional platform specific tests .-> test02{Integration Tests}
+    test01{Testing} -. Optional platform specific tests .-> test02{Platform Tests}
     test01{Testing} -- Basic unit tests on<br>a given artifact --> test03{Unit Tests}
 
     AWS --> test05{Platform Tests}
@@ -71,10 +71,10 @@ graph TD;
     Aliyun --> test05{Platform Tests}
     GCP --> test05{Platform Tests}
 
-    test02{Integration Tests} -.-> AWS --> test04{Feature Tests}
-    test02{Integration Tests} -.-> Azure --> test04{Feature Tests}
-    test02{Integration Tests} -.-> Aliyun --> test04{Feature Tests}
-    test02{Integration Tests} -.-> GCP --> test04{Feature Tests}
+    test02{Platform Tests} -.-> AWS --> test04{Feature Tests}
+    test02{Platform Tests} -.-> Azure --> test04{Feature Tests}
+    test02{Platform Tests} -.-> Aliyun --> test04{Feature Tests}
+    test02{Platform Tests} -.-> GCP --> test04{Feature Tests}
     test03{Unit Tests} -- Runs always --> CHROOT --> test04{Feature Tests}
     test03{Unit Tests} -.-> KVM --> test04{Feature Tests}
 
@@ -103,18 +103,18 @@ These tests are located in a subfolder (`test`) within a feature's directory and
 | $FEATURE_NAME | test_$TEST_NAME.py | features/$FEATURE_NAME/test/test_$TEST_NAME.py |
 | CIS | test_cis.py | [features/cis/test/test_cis.py](../features/cis/test/test_debian_cis.py) |
 
-# Integration Tests
+# Platform Tests
 ## Prerequisites
-Build the integration test container with all necessary dependencies. This container image will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP). *Note: For `KVM` and `CHROOT` platforms the `gardenlinux/base-test` container can be used but will also work with the full-fledged testing container `gardenlinux/integration-test`.*
+Build the platform test container with all necessary dependencies. This container image will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP). *Note: For `KVM` and `CHROOT` platforms the `gardenlinux/base-test` container can be used but will also work with the full-fledged testing container `gardenlinux/platform-test`.*
 
-    make --directory=container build-integration-test
+    make --directory=container build-platform-test
 
-The resulting container image will be tagged as `gardenlinux/integration-test:<version>` with `<version>` being the version that is returned by `bin/garden-version` in this repository. All further tests run inside this container.
+The resulting container image will be tagged as `gardenlinux/platform-test:<version>` with `<version>` being the version that is returned by `bin/garden-version` in this repository. All further tests run inside this container.
 
 ## Using the tests on supported platforms
 ### General
 
-The integration tests require a config file containing vital information for interacting with the cloud providers. In the following sections, the configuration options are described in general and for each cloud provider individually.
+The platform tests require a config file containing vital information for interacting with the cloud providers. In the following sections, the configuration options are described in general and for each cloud provider individually.
 
 Since the configuration options are provided as a structured YAML with the cloud provider name as root elements, it is possible to have everything in just one file.
 
@@ -127,7 +127,7 @@ These tests test Garden Linux on public cloud providers like Amazons AWS, Google
 Notes for AWS credentials:
 - credentials must be supplied by having them ready in `~/.aws/config` and `~/.aws/credentials`
   - The `aws configure` command can be used to create these files.
-- `~/.aws` gets mounted into the container that executes the integration tests
+- `~/.aws` gets mounted into the container that executes the platform tests
 - While using MFA, a dedicated MFA session must be created.
   - This can be achieved by executing the following command (requires login)
     ```
@@ -229,7 +229,7 @@ Start Podman container with dependencies:
 - mount directory with config file to `/config`
 
 ```
-sudo podman run -it --rm -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.aws:/root/.aws -v $HOME/.ssh:/root/.ssh -v ~/config:/config gardenlinux/integration-test:`bin/garden-version` /bin/bash
+sudo podman run -it --rm -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.aws:/root/.aws -v $HOME/.ssh:/root/.ssh -v ~/config:/config gardenlinux/platform-test:`bin/garden-version` /bin/bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -238,7 +238,7 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 
 #### Azure
 
-Login using the following command on your local machine (i.e. not inside of the integration test container) to authenticate to Azure and set up the API access token:
+Login using the following command on your local machine (i.e. not inside of the platform test container) to authenticate to Azure and set up the API access token:
 
     az login
 
@@ -308,8 +308,8 @@ Only three parameters are required for the test: the Azure `subscription` or `su
 - **location** _(required)_: the Azure region in which all test relevant resources will be created
 - **subscription** _(required/optional)_: The Azure subscription (as in subscription name) which is used for creating all relevant resources and running the test. Either the subscription name or the `subscription_id` needs to be provided.
 - **subscription_id** _(required/optional)_: The Azure subscription (its ID) which is used for creating all relevant resources and running the test. Either the 'subscription' name or its needs to be provided.
-- **resource_group** _(optional)_: all relevant resources for the integration test will be assigned to an Azure resource group. If you want to reuse an existing resource group, you can specify it here. If left empty, a new resource group gets created for the duration of the test.
-- **nsg_name** _(optional)_: The integration tests need to create a new network security group, this is its name. If you want to reuse an existing security group, specify its name here. If left empty, a new network security group will be created for the duration of the test.
+- **resource_group** _(optional)_: all relevant resources for the platform test will be assigned to an Azure resource group. If you want to reuse an existing resource group, you can specify it here. If left empty, a new resource group gets created for the duration of the test.
+- **nsg_name** _(optional)_: The platform tests need to create a new network security group, this is its name. If you want to reuse an existing security group, specify its name here. If left empty, a new network security group will be created for the duration of the test.
 - **vm_size** _(optional)_: The given size will be used for the Azure virtual machine the test runs on. Check [this document](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes) for a list of possible VM sizes. Remember that the VM size will have an impact on test performance and startup times (which get tested and produce a failure should they exceed 30 seconds). The VM size also defines the CPU architecture. This setting defaults to `Standard_D4_v4` which matches the architecture `x64`, for running `Arm64` images the VM size `Standard_D4ps_v5` would be a good choice to start with.
 - **hyper_v_generation** _(optional)_: Choose the HyperV generation of the virtual machine created from the image. Possible values are 'V1' or 'V2'. If not set, 'V1' will be used as a default.
     - 'V1': Boot = PCAT, Disk controllers = IDE
@@ -347,7 +347,7 @@ Start Podman container with dependencies:
 - mount directory with config file to `/config`
 
 ```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.azure:/root/.azure -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.azure:/root/.azure -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -397,7 +397,7 @@ ali:
     bucket:  # my-test-upload-bucket
 
     # optional, path in bucket
-    bucket_path: integration-test
+    bucket_path: platform-test
 
     # list of features that is used to determine the tests to run
     features:
@@ -435,7 +435,7 @@ The URI can be:
 - **region_id**: eu-central-1
 - **zone_id**: eu-central-1a
 - **bucket**:  # my-test-upload-bucket
-- **bucket_path**: integration-test
+- **bucket_path**: platform-test
 
 - **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
 
@@ -459,7 +459,7 @@ Start Podman container with dependencies:
 - mount directory with config file to `/config`
 
 ```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -568,7 +568,7 @@ Start Podman container with dependencies:
 - mount directory with config file to `/config`
 
 ```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -677,7 +677,7 @@ Start Podman container with dependencies:
 - run in privileged mode for KVM device and network interface mappings
 
 ```
-sudo podman run -it --rm --privileged -v `pwd`:/gardenlinux gardenlinux/integration-test:`bin/garden-version` bash
+sudo podman run -it --rm --privileged -v `pwd`:/gardenlinux gardenlinux/platform-test:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -691,11 +691,11 @@ These tests flavours will make use of chroot, KVM virtual machines or OpenStack 
 
 #### CHROOT
 
-CHROOT tests are designed to run directly on your platform within a `chroot` environment and boosts up the time for the integration tests that do not need any target platform.
+CHROOT tests are designed to run directly on your platform within a `chroot` environment and boosts up the time for the platform tests that do not need any target platform.
 
 Notes:
  * A local SSH server is started inside the chroot environment. The tests communicate via ssh to execute cmds in the image under test. 
- * CHROOT will run inside your `integration-test` Docker container
+ * CHROOT will run inside your `platform-test` Docker container
  * Podman container needs `SYS_ADMIN`, `MKNOD`, `AUDIT_WRITE` and `NET_RAW` capability
  * Temporary SSH keys are auto generated and injected
 
@@ -761,7 +761,7 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 
 KVM tests are designed to run directly on your platform. Currently, AMD64 and ARM64 architectures are supported.
 Notes:
- * KVM/QEMU will run inside your `integration-test` Docker container
+ * KVM/QEMU will run inside your `platform-test` Docker container
  * (Default) New temporary SSH keys are auto generated and injected
  * (Default: amd64) AMD64 and ARM64 architectures are supported
 
@@ -891,7 +891,7 @@ Start Podman container with dependencies:
 - mount directory with configfile to `/config`
 
 ```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -920,7 +920,7 @@ openstack_ccee:
     image: <image-file.vmdk>
 
     # image name is optional, if not provided a name will be chosen
-    image_name: integration-test
+    image_name: platform-test
 
     # OpenStack flavor (`openstack flavor list`)
     flavor: g_c1_m2
@@ -940,7 +940,7 @@ openstack_ccee:
         # path to the ssh key file (required)
         ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
         # key name in OpenStack
-        key_name: gardenlinux_integration_test
+        key_name: gardenlinux_platform_test
         # passphrase for a secured SSH key (optional)
         passphrase:
         # username used to connect to the Azure instance (required)
@@ -981,7 +981,7 @@ Start Podman container with dependencies:
 - mount directory with configfile to `/config`
 
 ```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -989,7 +989,7 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
     pytest --iaas=openstack-ccee --configfile=/config/mygcpconfig.yaml
 
 
-#### Local tests in the integration container
+#### Local tests in the platform container
 
 Sometimes it is neccessary to run tests locally for build results and not in a chroot or kvm environment that is accessed via ssh. This can be achieved by using the build results in the base-test container with the `local` configuration for `pytest`.
 

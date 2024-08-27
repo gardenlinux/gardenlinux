@@ -542,7 +542,7 @@ class AWS:
 
         self._tags = [
             {"Key": "component", "Value": "gardenlinux"},
-            {"Key": "test-type", "Value": "integration-test"},
+            {"Key": "test-type", "Value": "platform-test"},
             {"Key": "test-name", "Value": self.test_name},
             {"Key": "test-uuid", "Value": self.test_uuid}
         ]

@@ -13,7 +13,7 @@ github-settings:
 test-env:
 - changed-files:
   - any-glob-to-any-file:
-    - 'container/integration-test/*'
+    - 'container/platform-test/*'
     - 'tests/**'
     - 'test'
 
@@ -81,37 +81,37 @@ gcp-platform:
 - changed-files:
   - any-glob-to-any-file:
     - 'features/gcp/**'
-    - 'tests/integration/gcp.py'
+    - 'tests/platform/gcp.py'
 
 azure-platform:
 - changed-files:
   - any-glob-to-any-file:
     - 'features/azure/**'
-    - 'tests/integration/azure.py'
+    - 'tests/platform/azure.py'
 
 aws-platform:
 - changed-files:
   - any-glob-to-any-file:
     - 'features/aws/**'
-    - 'tests/integration/aws.py'
+    - 'tests/platform/aws.py'
 
 ali-platform:
 - changed-files:
   - any-glob-to-any-file:
     - 'features/ali/**'
-    - 'tests/integration/ali.py'
+    - 'tests/platform/ali.py'
 
 firecracker-platform:
 - changed-files:
   - any-glob-to-any-file:
     - 'features/firecracker/**'
-    - 'tests/integration/firecracker.py'
+    - 'tests/platform/firecracker.py'
 
 kvm-platform:
 - changed-files:
   - any-glob-to-any-file:
     - 'features/kvm/**'
-    - 'tests/integration/kvm.py'
+    - 'tests/platform/kvm.py'
 
 metal-platform:
 - changed-files:

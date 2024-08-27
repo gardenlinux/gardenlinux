@@ -480,7 +480,7 @@ class AZURE:
 
         self._tags = {
             "component": "gardenlinux",
-            "test-type": "integration-test",
+            "test-type": "platform-test",
             "test-name": self.test_name,
             "test-uuid": str(uuid.uuid4()),
         }
