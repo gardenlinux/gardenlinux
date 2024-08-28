@@ -129,3 +129,13 @@ jobs:
             build /create_dist /repo today 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
           aws s3 cp --recursive 'repo/dists/today' 's3://${{ vars.S3_BUCKET }}/gardenlinux/dists/today'
           aws cloudfront create-invalidation --distribution-id '${{ secrets.CLOUDFRONT_DISTRIBUTION }}' --paths '/gardenlinux/dists/today/*'
+  # Attempt to make CI more resilient using retry logic https://github.com/gardenlinux/gardenlinux/issues/2288
+  re-run:
+    needs: [ build ]
+    if: failure() && fromJSON(github.run_attempt) < 3
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run rerun-build.yml -F run_id=${{ github.run_id }}
