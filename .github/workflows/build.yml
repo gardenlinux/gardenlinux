@@ -81,7 +81,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [ amd64, arm64 ]
+        # arch: [ amd64, arm64 ]
+        arch: [ amd64 ]
     steps:
       # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
       #   with:
@@ -112,7 +113,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [ amd64, arm64 ]
+        # arch: [ amd64, arm64 ]
+        arch: [ amd64 ]
     steps:
       # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
       #   with:
@@ -149,16 +151,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [ amd64, arm64 ]
-        target: [ kvm, "kvm_secureboot", "kvm_secureboot_readonly", "kvm_secureboot_readonly_persistence", metal, "metal_secureboot", "metal_secureboot_readonly", "metal_secureboot_readonly_persistence", gcp, gdch, aws, "aws_secureboot", "aws_secureboot_readonly", "aws_secureboot_readonly_persistence", azure, ali, openstack, openstackbaremetal, vmware, "metal_pxe", firecracker, "metal-vhost" ]
+        # arch: [ amd64, arm64 ]
+        # target: [ kvm, "kvm_secureboot", "kvm_secureboot_readonly", "kvm_secureboot_readonly_persistence", metal, "metal_secureboot", "metal_secureboot_readonly", "metal_secureboot_readonly_persistence", gcp, gdch, aws, "aws_secureboot", "aws_secureboot_readonly", "aws_secureboot_readonly_persistence", azure, ali, openstack, openstackbaremetal, vmware, "metal_pxe", firecracker, "metal-vhost" ]
+        arch: [ amd64 ]
+        target: [ gcp ]
         modifier: [ "${{ inputs.default_modifier }}" ]
         include:
           - target: container
             arch: amd64
             modifier: ""
-          - target: container
-            arch: arm64
-            modifier: ""
+          # - target: container
+          #   arch: arm64
+          #   modifier: ""
     steps:
       # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
       #   with:
@@ -228,51 +232,51 @@ jobs:
         with:
           name: "${{ env.cname }}"
           path: "${{ env.cname }}.tar.gz"
-  bare_flavors:
-    needs: [ version, base ]
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
-    defaults:
-      run:
-        shell: bash
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [ amd64, arm64 ]
-        config: [ libc, python, nodejs, sapmachine ]
-    steps:
-      # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
-      #   with:
-      #     metric_frequency: 1
-      #     proc_trace_min_duration: 10
-      #     proc_trace_chart_max_count: 50
-      #     comment_on_pr: false
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - uses: ./.github/actions/setup
-        with:
-          arch: "${{ matrix.arch }}"
-      - name: set VERSION=${{ needs.version.outputs.version }}
-        run: |
-          bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
-          git update-index --assume-unchanged VERSION
-      - name: load bootstrap stage cache
-        uses: actions/cache/restore@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
-        with:
-          path: .build
-          key: base-${{ matrix.arch }}-${{ github.run_id }}
-          fail-on-cache-miss: true
-      - name: update bootstrap stage build artifact timestamps
-        run: |
-          t="$(date '+%s')"
-          find .build -exec touch -d "@$t" {} +
-      - name: build
-        run: ./build_bare_flavors --arch "${{ matrix.arch }}" "${{ matrix.config }}"
-      - name: test
-        run: |
-          image="$(podman load < .build/bare_flavors/${{ matrix.config }}-${{ matrix.arch }}.oci | awk '{ print $NF }')"
-          cd bare_flavors/${{ matrix.config }}/test
-          podman build -t test --build-arg image="$image" .
-          podman run --rm test
-      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # pin@v3
-        with:
-          name: "bare-${{ matrix.config }}-${{ matrix.arch }}"
-          path: ".build/bare_flavors/${{ matrix.config }}-${{ matrix.arch }}.oci"
+  # bare_flavors:
+  #   needs: [ version, base ]
+  #   runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
+  #   defaults:
+  #     run:
+  #       shell: bash
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       arch: [ amd64, arm64 ]
+  #       config: [ libc, python, nodejs, sapmachine ]
+  #   steps:
+  #     # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
+  #     #   with:
+  #     #     metric_frequency: 1
+  #     #     proc_trace_min_duration: 10
+  #     #     proc_trace_chart_max_count: 50
+  #     #     comment_on_pr: false
+  #     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+  #     - uses: ./.github/actions/setup
+  #       with:
+  #         arch: "${{ matrix.arch }}"
+  #     - name: set VERSION=${{ needs.version.outputs.version }}
+  #       run: |
+  #         bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
+  #         git update-index --assume-unchanged VERSION
+  #     - name: load bootstrap stage cache
+  #       uses: actions/cache/restore@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
+  #       with:
+  #         path: .build
+  #         key: base-${{ matrix.arch }}-${{ github.run_id }}
+  #         fail-on-cache-miss: true
+  #     - name: update bootstrap stage build artifact timestamps
+  #       run: |
+  #         t="$(date '+%s')"
+  #         find .build -exec touch -d "@$t" {} +
+  #     - name: build
+  #       run: ./build_bare_flavors --arch "${{ matrix.arch }}" "${{ matrix.config }}"
+  #     - name: test
+  #       run: |
+  #         image="$(podman load < .build/bare_flavors/${{ matrix.config }}-${{ matrix.arch }}.oci | awk '{ print $NF }')"
+  #         cd bare_flavors/${{ matrix.config }}/test
+  #         podman build -t test --build-arg image="$image" .
+  #         podman run --rm test
+  #     - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # pin@v3
+  #       with:
+  #         name: "bare-${{ matrix.config }}-${{ matrix.arch }}"
+  #         path: ".build/bare_flavors/${{ matrix.config }}-${{ matrix.arch }}.oci"

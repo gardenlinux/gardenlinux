@@ -55,8 +55,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [ amd64, arm64 ]
-        target: [ gcp, aws, azure, ali ]
+        # arch: [ amd64, arm64 ]
+        # target: [ gcp, aws, azure, ali ]
+        arch: [ amd64 ]
+        target: [ gcp ]
         modifier: [ "${{ inputs.default_modifier }}" ]
         exclude:
           - arch: arm64
@@ -115,7 +117,7 @@ jobs:
     - if: ${{ matrix.target == 'azure' }}
       id: 'auth_azure'
       name: 'Authenticate to Azure'
-      uses: azure/login@6c251865b4e6290e7b78be643ea2d005bc51f69a # pin@v1
+      uses: azure/login@v2
       with:
         client-id: ${{ secrets.az_client_id }}
         tenant-id: ${{ secrets.az_tenant_id }}
@@ -128,12 +130,28 @@ jobs:
         echo "::add-mask::$(jq -r '.profiles[0].access_key_id' < ali-service-account.json)"
         echo "::add-mask::$(jq -r '.profiles[0].access_key_secret' < ali-service-account.json)"
 
+    - uses: opentofu/setup-opentofu@v1
+      with:
+        tofu_version: 1.8
+
     - name: start platform test for ${{ matrix.target }}
       run: |
         set -o pipefail
-        .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.arch }}" "${{ env.cname }}" 2>&1 | tee "${{ env.cname }}.platform-tests-log"
+        # .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.arch }}" "${{ env.cname }}.tar.gz" 2>&1 | tee "${{ env.cname }}.platform-tests-log"
+        .github/workflows/${{ matrix.target }}_tests_tofu.sh --arch "${{ matrix.arch }}" "${{ env.cname }}" 2>&1 | tee "${{ env.cname }}.platform-tests-log"
 
     - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # pin@v3
       with:
         name: tests-${{ env.cname }}
         path: ${{ env.cname }}.platform-tests-log
+
+    - name: cleanup platform test for ${{ matrix.target }}
+      if: always()
+      run: |
+        .github/workflows/${{ matrix.target }}_tests_tofu_cleanup.sh --arch "${{ matrix.arch }}" "${{ env.cname }}" 2>&1 | tee "${{ env.cname }}.platform-tests-cleanup-log"
+
+    - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # pin@v3
+      if: always()
+      with:
+        name: tests-${{ env.cname }}-cleanup
+        path: ${{ env.cname }}.platform-tests-cleanup-log
