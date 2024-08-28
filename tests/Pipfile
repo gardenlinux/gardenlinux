@@ -29,6 +29,9 @@ aliyun-python-sdk-ecs = "*"
 [openstack-packages]
 python-openstackclient = "*"
 
+[azure-cli]
+azure-cli = ">=2.44.0"   # https://github.com/Azure/azure-cli/issues/23015
+
 [azure-packages]
 azure-cli = ">=2.44.0"   # https://github.com/Azure/azure-cli/issues/23015
 azure-core = "*"
@@ -48,6 +51,7 @@ google-cloud-storage = "*"
 [firecracker-packages]
 
 [kvm-packages]
+libvirt-python = "*"
 
 [requires]
 python_version = "3.12"

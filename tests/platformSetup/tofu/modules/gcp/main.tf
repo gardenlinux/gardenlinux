@@ -1,0 +1,208 @@
+locals {
+  test_name            = var.test_name
+  test_name_safe       = replace(local.test_name, "_", "-")
+  test_name_safe_short = substr(local.test_name_safe, 0, 24)
+  feature_tpm2         = contains(var.features, "_tpm2")
+  feature_trustedboot  = contains(var.features, "_trustedboot")
+  bucket_name          = "images-${local.test_name_safe}"
+  tar_name             = "image-${local.test_name_safe}.tar.gz"
+  image_name           = "image-${local.test_name_safe}"
+  net_name             = "net-${local.test_name_safe}"
+  subnet_name          = "subnet-${local.test_name_safe}"
+  sa_name              = "sa-${local.test_name_safe_short}" # can max be 32 chars (now is 27)
+  instance_name        = "vm-${local.test_name_safe}"
+  fw_name              = "fw-${local.test_name_safe}"
+
+  ssh_private_key_file = split(".pub", var.ssh_public_key)[0]
+  ssh_parameters       = "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ${local.ssh_private_key_file} -l ${var.ssh_user}"
+
+  public_ip = google_compute_instance.instance.network_interface.0.access_config.0.nat_ip
+
+  image_source_type = split("://", var.image_path)[0]
+  image             = local.image_source_type == "file" ? "${split("file://", var.image_path)[1]}/${var.image_file}" : null
+
+  labels = {
+    component = "gardenlinux"
+    test-type = "platform-test"
+    test-name = local.test_name_safe
+  }
+}
+
+resource "google_storage_bucket" "images" {
+  name          = local.bucket_name
+  location      = var.region_storage
+  force_destroy = true
+
+  uniform_bucket_level_access = true
+  public_access_prevention    = "enforced"
+
+  labels = local.labels
+}
+
+resource "google_storage_bucket_object" "image" {
+  name   = local.tar_name
+  source = local.image
+  bucket = google_storage_bucket.images.name
+
+  content_type = "application/x-tar"
+}
+
+# resource "google_service_account" "sa" {
+#   account_id   = local.sa_name
+#   display_name = "SA for VM Instance"
+# }
+
+resource "google_compute_image" "image" {
+  name = local.image_name
+
+  raw_disk {
+    source = "https://storage.cloud.google.com/${google_storage_bucket.images.name}/${google_storage_bucket_object.image.name}"
+  }
+
+  guest_os_features {
+    type = "VIRTIO_SCSI_MULTIQUEUE"
+  }
+  guest_os_features {
+    type = "UEFI_COMPATIBLE"
+  }
+  guest_os_features {
+    type = "GVNIC"
+  }
+
+  dynamic "shielded_instance_initial_state" {
+    for_each = local.feature_trustedboot ? [true] : []
+    content {
+      pk {
+        file_type = "X509"
+        content   = filebase64("cert/gardenlinux-secureboot.pk.der")
+      }
+      dbs {
+        file_type = "X509"
+        content   = filebase64("cert/gardenlinux-secureboot.db.der")
+      }
+      keks {
+        file_type = "X509"
+        content   = filebase64("cert/gardenlinux-secureboot.kek.der")
+      }
+    }
+  }
+
+  labels = local.labels
+
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.image.crc32c
+    ]
+  }
+}
+
+resource "google_compute_network" "network" {
+  name                    = local.net_name
+  auto_create_subnetworks = false
+  mtu                     = 1460
+  routing_mode            = "REGIONAL"
+}
+
+resource "google_compute_subnetwork" "subnetwork" {
+  name                     = local.subnet_name
+  ip_cidr_range            = var.subnet_range
+  region                   = var.region
+  network                  = google_compute_network.network.id
+  private_ip_google_access = false
+}
+
+resource "google_compute_firewall" "firewall" {
+  name        = local.fw_name
+  description = "allow incoming SSH and ICMP for Garden Linux integration tests"
+  network     = google_compute_network.network.name
+
+  allow {
+    protocol = "icmp"
+  }
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = [var.my_ip]
+  target_tags   = [local.test_name_safe]
+}
+
+resource "google_compute_instance" "instance" {
+  name         = local.instance_name
+  machine_type = var.instance_type
+  zone         = "${var.region}-${var.zone}"
+
+  can_ip_forward = true
+
+  boot_disk {
+    initialize_params {
+      image = google_compute_image.image.name
+      type  = "pd-ssd"
+      size  = 7
+    }
+  }
+
+  network_interface {
+    subnetwork = google_compute_subnetwork.subnetwork.id
+
+    access_config {
+      // Ephemeral public IP
+    }
+  }
+
+  metadata = {
+    ssh-keys = "${var.ssh_user}:${file(var.ssh_public_key)}"
+  }
+
+  metadata_startup_script = file("vm-startup-script.sh")
+
+  ## TODO: evaluate if this is necessary
+  # service_account {
+  #   # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
+  #   email  = google_service_account.sa.email
+  #   scopes = ["cloud-platform"]
+  # }
+
+  dynamic "shielded_instance_config" {
+    for_each = local.feature_trustedboot ? [true] : []
+    content {
+      enable_secure_boot          = true
+      enable_integrity_monitoring = true
+      enable_vtpm                 = true
+    }
+  }
+
+  labels = local.labels
+
+  tags = [
+    local.test_name_safe
+  ]
+
+  lifecycle {
+    replace_triggered_by = [
+      google_compute_image.image.creation_timestamp
+    ]
+  }
+}
+
+resource "null_resource" "test_connect" {
+  depends_on = [google_compute_instance.instance]
+
+  provisioner "remote-exec" {
+    connection {
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file(split(".pub", var.ssh_public_key)[0])
+      host        = local.public_ip
+      # usually this is created in /tmp but we have it mounted noexec
+      script_path = "/home/${var.ssh_user}/terraform_%RAND%.sh"
+      timeout     = "10m"
+    }
+
+    inline = [
+      "cat /etc/os-release",
+    ]
+  }
+}

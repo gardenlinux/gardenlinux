@@ -1,0 +1,20 @@
+manual:
+  # iaas=manual, so we need a way to tell pytest on which platform we run
+  platform: ali
+  # mandatory, the hostname/ip-address of the host the tests should run on
+  host: MY_IP
+  # ssh related configuration for logging in to the VM (required)
+  ssh:
+    # path to the ssh private key file (required)
+    ssh_key_filepath: SSH_PRIVATE_KEY
+    # username
+    user: SSH_USER
+
+  # list of features that is used to determine the tests to run
+  features:
+    - ali
+    - gardener
+    - cloud
+    - server
+    - base
+    - _slim      
