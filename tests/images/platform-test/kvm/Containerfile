@@ -11,15 +11,20 @@ ENV VIRTUAL_ENV="/opt/python-test-env/.venv"
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 RUN : "Install KVM requirements" \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends \
-       guestfish \
-       qemu-system-x86 \
-       qemu-system-arm \
-       qemu-efi-aarch64 \
-       # virt-copy-in command needs kernel in /boot
-       linux-image-amd64 \
-       ovmf \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+     && apt-get update \
+     && apt-get install -y --no-install-recommends \
+        guestfish \
+        qemu-system-x86 \
+        qemu-system-arm \
+        qemu-efi-aarch64 \
+        # virt-copy-in command needs kernel in /boot
+        linux-image-amd64 \
+        ovmf \
+        # needed for OpenTofu provider dmacvicar/terraform-provider-libvirt
+        # libvirt-dev \ # needed for OpenTofu provider dmacvicar/terraform-provider-libvirt
+        # needed for cloud-init iso generation in OpenTofu
+        # genisoimage \ # needed for cloud-init iso generation in OpenTofu
+     && apt-get clean && rm -rf /var/lib/apt/lists/* \
+     && cd "$VIRTUAL_ENV_PARENT" && pipenv install --categories "kvm-packages"
 
 WORKDIR /gardenlinux/tests
