@@ -1,36 +1,61 @@
 # Tests artifacts already uploaded to S3
-name: test-only
+name: platform tests tofu
 on:
+  # triggered manually
   workflow_dispatch:
     inputs:
       version:
-        description: "Garden Linux Version"
+        description: "Garden Linux Version: version passed to garden-version-resolver"
         type: string
-        default: today
+        default: latest
       default_modifier:
         description: "gardenlinux feature modifier, if other than default, make sure it has the right format. e.g. use bin/garden-feature --features"
         type: string
         default: "-gardener_prod"
-      commitish:
-        description: "Full commitish of the artifact that should be tested. Must be present in s3"
+      platform_test_tag:
+        description: "Tag to run platform-test containers. 'latest', Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
         type: string
         required: true
-      platform_test_container_version:
-        description: "Full commitish or GL version in case of release. Must be present in ghcr."
-        type: string
+        default: "latest"
+      platforms_enabled:
+        description: 'Run on these platforms'
         required: true
+        default: '["ali", "aws", "azure", "gcp"]'
+        type: string
+      archs_enabled:
+        description: 'Run on these architectures'
+        required: true
+        default: '["amd64", "arm64"]'
+        type: string
+      flavors_enabled:
+        description: 'Run for these flavors'
+        required: true
+        default: '["default", "trustedboot", "trustedboot_tpm2"]'
+        type: string
 
 jobs:
+  platform_test_images:
+    name: platform test images
+    uses: ./.github/workflows/platform-test-images.yml
+    with:
+      gl_version: ${{ inputs.platform_test_tag }}
   platform_tests:
     name: platform test
+    needs: [ platform_test_images ]
     env:
-      gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-      gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
       gcp_project: ${{ secrets.GCP_PROJECT }}
       gcp_region: ${{ secrets.GCP_REGION }}
       gcp_zone: ${{ secrets.GCP_ZONE }}
+      aws_region: ${{ secrets.AWS_TESTS_REGION }}
+      azure_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }} # needed for tofu
       AZURE_CONFIG_DIR: /tmp/azure_config_dir
-      TARGET_ARCHITECTURE: ${{ matrix.arch }}
+      PLATFORM: ${{ matrix.platform }}
+      ARCH: ${{ matrix.arch }}
+      FLAVOR: ${{ matrix.flavor }}
+      MODIFIER: ${{ matrix.modifier }}
+      artifact_dir: /tmp/gardenlinux-build-artifacts
+      image_dir: .build # default directory in tofu
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -38,79 +63,167 @@ jobs:
     permissions:
       id-token: write
       packages: write
+    environment: oidc_platform_tests
     strategy:
       fail-fast: false
       matrix:
+        platform: ["ali", "aws", "azure", "gcp"] 
         arch: [ amd64, arm64 ]
-        target: [ gcp, aws, azure ]
+        flavor: ["default", "trustedboot", "trustedboot_tpm2"] 
         modifier: [ "${{ inputs.default_modifier }}" ]
         exclude:
-          - arch: arm64
-            target: azure
+          # parse input
+          - arch: ${{ ! contains(fromJSON(inputs.archs_enabled), 'amd64') && 'amd64' }}
+          - arch: ${{ ! contains(fromJSON(inputs.archs_enabled), 'arm64') && 'arm64' }}
+          - platform: ${{ ! contains(fromJSON(inputs.platforms_enabled), 'ali') && 'ali' }}
+          - platform: ${{ ! contains(fromJSON(inputs.platforms_enabled), 'aws') && 'aws' }}
+          - platform: ${{ ! contains(fromJSON(inputs.platforms_enabled), 'azure') && 'azure' }}
+          - platform: ${{ ! contains(fromJSON(inputs.platforms_enabled), 'gcp') && 'gcp' }}
+          - flavor: ${{ ! contains(fromJSON(inputs.flavors_enabled), 'default') && 'default' }}
+          - flavor: ${{ ! contains(fromJSON(inputs.flavors_enabled), 'trustedboot') && 'trustedboot' }}
+          - flavor: ${{ ! contains(fromJSON(inputs.flavors_enabled), 'trustedboot_tpm2') && 'trustedboot_tpm2' }}          
+          # global excludes
+          - platform: ali
+            arch: arm64
+          - platform: ali
+            flavor: trustedboot
+          - platform: ali
+            flavor: trustedboot_tpm2
+          - platform: azure
+            arch: arm64
+            flavor: trustedboot
+          - platform: azure
+            arch: arm64
+            flavor: trustedboot_tpm2
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
 
-    - name: login to ghcr.io
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
-
-
-    - name: set VERSION=${{ inputs.version }}
-      run: |
-        bin/garden-version "${{ inputs.version }}" | tee VERSION
-        git update-index --assume-unchanged VERSION
+      # - name: set VERSION=${{ inputs.version }}
+      #   run: |
+      #     bin/garden-version "${{ inputs.version }}" | tee VERSION
+      #     git update-index --assume-unchanged VERSION
 
     - name: get cname
       run: |
-        cname="$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})"
+        # cname="$(./build --resolve-cname ${{ matrix.platform }}${{ matrix.modifier }}-${{ matrix.arch }})"
+        # echo "cname=$cname" | tee -a "$GITHUB_ENV"
+        if [[ "${{ inputs.version }}" == "latest" ]]; then
+          VERSION="$(bin/glrd --latest --fields 'Version' --no-header --type patch)"
+          SHA="$(bin/glrd --latest --fields 'Git\ Commit' --no-header --type patch)"
+        else
+          VERSION="$(bin/glrd --fields 'Version' --no-header --type patch,nightly,dev --version ${{ inputs.version }})"
+          SHA="$(bin/glrd --fields 'Git\ Commit' --no-header --type patch,nightly,dev --version ${{ inputs.version }})"
+        fi
+        echo "${VERSION}" >VERSION
+        echo "${SHA}" >COMMIT
+        if [[ "${{ matrix.flavor }}" == "default" ]]; then
+          cname="$(./build --resolve-cname ${{ matrix.platform }}${{ matrix.modifier }}-${{ matrix.arch }})"
+        else
+          cname="$(./build --resolve-cname ${{ matrix.platform }}${{ matrix.modifier }}_${{ matrix.flavor }}-${{ matrix.arch }})"
+        fi
         echo "cname=$cname" | tee -a "$GITHUB_ENV"
 
-    - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
-      with:
-        role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-        role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
-        aws-region: ${{ secrets.AWS_REGION }}
-
-    - name: download artifact to test from S3 bucket
-      run: |
-        mkdir -p "${{ env.cname }}"
-        aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/${{ env.cname }}" "${{ env.cname }}" --recursive
-
-    - name: pack build artifacts for tests
-      run: |
-        mkdir -p /tmp/gardenlinux-build-artifacts
-        tar -czvf "/tmp/gardenlinux-build-artifacts/${{ env.cname }}.tar.gz" "${{ env.cname }}"
-
-    - if: ${{ matrix.target == 'gcp' }}
-      id: 'auth_gcp'
+    # always auth as we use account in tofu
+    - id: 'auth_gcp'
       name: 'Authenticate to Google Cloud'
-      uses: google-github-actions/auth@6fc4af4b145ae7821d527454aa9bd537d1f2dc5f # pin@v1
+      uses: google-github-actions/auth@62cf5bd3e4211a0a0b51f2c6d6a37129d828611d # pin@v1
       with:
         workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
         service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+        create_credentials_file: true
+        cleanup_credentials: true
+        export_environment_variables: true
 
-    - if: ${{ matrix.target == 'aws' }}
-      id: 'auth_aws'
+    # always auth as we download from S3
+    - id: 'auth_aws'
       name: 'Authenticate to AWS'
       uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
       with:
         role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
-        role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
-        aws-region: ${{ secrets.AWS_REGION}}
+        role-session-name: ${{ secrets.AWS_TEST_OIDC_SESSION }}
+        aws-region: ${{ secrets.AWS_TESTS_REGION }}
+        output-credentials: true
 
-    - if: ${{ matrix.target == 'azure' }}
-      id: 'auth_azure'
+    # always auth as we use subscription in tofu
+    - id: 'auth_azure'
       name: 'Authenticate to Azure'
-      uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # pin@v1
+      uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # pin@v2.2.0
       with:
         client-id: ${{ secrets.AZURE_CLIENT_ID }}
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    - name: pull container image
+    - id: 'auth_ali'
+      name: 'Create ali cloud credential file'
       run: |
-        podman pull "ghcr.io/gardenlinux/gardenlinux/platform-test:${{ inputs.platform_test_container_version }}"
-        podman tag "ghcr.io/gardenlinux/gardenlinux/platform-test:${{ inputs.platform_test_container_version }}" ghcr.io/gardenlinux/gardenlinux/platform-test:today
+        base64 -d <<< "${{ secrets.CCC_CREDENTIALS }}" | .github/workflows/ali_credentials.jq > ali-service-account.json
+        ALIBABA_CLOUD_ACCESS_KEY_ID="$(jq -r '.profiles[0].access_key_id' < ali-service-account.json)"
+        ALIBABA_CLOUD_ACCESS_KEY_SECRET="$(jq -r '.profiles[0].access_key_secret' < ali-service-account.json)"
+        echo "::add-mask::${ALIBABA_CLOUD_ACCESS_KEY_ID}"
+        echo "::add-mask::${ALIBABA_CLOUD_ACCESS_KEY_SECRET}"
+        echo "ALIBABA_CLOUD_ACCESS_KEY_ID=${ALIBABA_CLOUD_ACCESS_KEY_ID}" >> ${GITHUB_ENV}
+        echo "ALIBABA_CLOUD_ACCESS_KEY_SECRET=${ALIBABA_CLOUD_ACCESS_KEY_SECRET}" >> ${GITHUB_ENV}
 
-    - name: start platform test for ${{ matrix.target }}
+
+    - name: download artifact to test from S3 bucket
       run: |
-        set -o pipefail && .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.arch }}" "${{ env.cname }}.tar.gz" 2>&1 | tee "${{ env.cname }}.platform.test.log"
+        mkdir -p "${{ env.cname }}"
+        aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/${{ env.cname }}" "${{ env.artifact_dir }}" --recursive
+
+    # - name: pack build artifacts for tests
+    #   run: |
+    #     mkdir -p "${{ env.artifact_dir }}"
+    #     tar -cvf - -C "${{ env.cname }}" . | gzip -1 - > "${{ env.artifact_dir }}/${{ env.cname }}.tar.gz"
+
+    - name: deploy platform test resources for ${{ matrix.platform }} on ${{ matrix.arch }} ${{ matrix.flavor }}
+      run: |
+        export AWS_ACCESS_KEY_ID=${{ steps.auth_aws.outputs.aws-access-key-id }}
+        export AWS_SECRET_ACCESS_KEY=${{ steps.auth_aws.outputs.aws-secret-access-key }}
+        export AWS_SESSION_TOKEN=${{ steps.auth_aws.outputs.aws-session-token }}
+        export ARM_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}
+        export ARM_SUBSCRIPTION_ID=${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        export ARM_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}
+        export ARM_USE_OIDC=true
+        credentials_file_name="$(echo "$GOOGLE_APPLICATION_CREDENTIALS" | xargs basename)"
+        export GOOGLE_APPLICATION_CREDENTIALS="/gardenlinux/$credentials_file_name"
+        export CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE="/gardenlinux/$credentials_file_name"
+        export GOOGLE_GHA_CREDS_PATH="/gardenlinux/$credentials_file_name"
+        export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
+        # copy artifacts_dir to image_dir
+        cp -r ${{ env.artifact_dir }}/* ${{ env.image_dir }}
+        ls -la ${{ env.image_dir }}
+        # tf variables generation
+        tests/platformSetup/tofu/tf_variables_create.py --platforms "${PLATFORM}" --archs "${ARCH}" --flavors ${FLAVOR} --cname "${{ env.cname }}" gh-actions
+        # ssh key generation (if missing)
+        test -f ~/.ssh/id_ed25519 || ssh-keygen -t ed25519 -P "" -f ~/.ssh/id_ed25519
+        # enable S3 backend
+        cp "tests/platformSetup/tofu/backend.tf.github" "tests/platformSetup/tofu/backend.tf" 
+        make --directory="tests/platformSetup" ${PLATFORM}-${ARCH}-${FLAVOR}-apply 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.provisioning.log"
+
+    - name: run platform test for ${{ matrix.platform }} on ${{ matrix.arch }}
+      run: |
+        make --directory=tests ${PLATFORM}-${ARCH}-${FLAVOR}-test-platform 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.test.log"
+
+    # - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # pin@v4.4.0
+    #   with:
+    #     name: platform-test-${{ env.cname }}
+    #     path: |
+    #       ${{ env.artifact_dir }}/${{ env.cname }}.platform.test.log
+    #       ${{ env.artifact_dir }}/${{ env.cname }}.platform.test.xml
+    
+    - name: cleanup platform test for ${{ matrix.platform }} on ${{ matrix.arch }} ${{ matrix.flavor }}
+      if: always()
+      run: |
+        export AWS_ACCESS_KEY_ID=${{ steps.auth_aws.outputs.aws-access-key-id }}
+        export AWS_SECRET_ACCESS_KEY=${{ steps.auth_aws.outputs.aws-secret-access-key }}
+        export AWS_SESSION_TOKEN=${{ steps.auth_aws.outputs.aws-session-token }}
+        export ARM_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}
+        export ARM_SUBSCRIPTION_ID=${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        export ARM_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}
+        export ARM_USE_OIDC=true
+        credentials_file_name="$(echo "$GOOGLE_APPLICATION_CREDENTIALS" | xargs basename)"
+        export GOOGLE_APPLICATION_CREDENTIALS="/gardenlinux/$credentials_file_name"
+        export CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE="/gardenlinux/$credentials_file_name"
+        export GOOGLE_GHA_CREDS_PATH="/gardenlinux/$credentials_file_name"
+        export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
+        (make --directory="tests/platformSetup" ${PLATFORM}-${ARCH}-${FLAVOR}-destroy 2>&1 || make --directory="tests/platformSetup" ${PLATFORM}-${ARCH}-${FLAVOR}-destroy 2>&1 || make --directory="tests/platformSetup" ${PLATFORM}-${ARCH}-${FLAVOR}-destroy 2>&1) | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.destroy.log"

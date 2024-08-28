@@ -276,7 +276,7 @@ class RemoteClient:
 
         logger.info(f"disconnected from {self.host=}")
 
-    def wait_ssh(self, counter_max=20, sleep=5):
+    def wait_ssh(self, counter_max=40, sleep=5):
         """ Wait for defined SSH port to become ready in test environment """
         port = self.port
         ip = self.host

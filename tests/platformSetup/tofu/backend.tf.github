@@ -1,0 +1,9 @@
+# see README.md for details on how to create state in github
+terraform {
+  backend "s3" {
+    region  = "eu-central-1"
+    bucket  = "gardenlinux-dev-gh-actions-tfstate"
+    key     = "terraform.tfstate"
+    encrypt = "true"
+  }
+}

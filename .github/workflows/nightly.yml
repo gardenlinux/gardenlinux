@@ -53,6 +53,7 @@ jobs:
       az_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
       az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       ccc_credentials: ${{ secrets.CCC_CREDENTIALS }}
+      tf_encryption: ${{ secrets.TF_ENCRYPTION }}
   upload_to_s3:
     name: upload to S3
     needs: [ build, tests ]

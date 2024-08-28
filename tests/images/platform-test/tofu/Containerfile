@@ -1,0 +1,25 @@
+# overwrite with a stable gardenlinux version
+ARG GL_VERSION=latest
+# use platform-test-base image
+FROM gardenlinux/platform-test-base:${GL_VERSION}
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV SHELL /bin/bash
+
+#Virtual Env Created in platform-test-base
+ENV VIRTUAL_ENV="/opt/python-test-env/.venv"
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# install opentofu
+RUN install -m 0755 -d /etc/apt/keyrings \
+    && curl -fsSL https://get.opentofu.org/opentofu.gpg | tee /etc/apt/keyrings/opentofu.gpg >/dev/null \
+    && curl -fsSL https://packages.opentofu.org/opentofu/tofu/gpgkey | gpg --no-tty --batch --dearmor -o /etc/apt/keyrings/opentofu-repo.gpg >/dev/null \
+    && chmod a+r /etc/apt/keyrings/opentofu.gpg /etc/apt/keyrings/opentofu-repo.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" | tee /etc/apt/sources.list.d/opentofu.list > /dev/null \
+    && chmod a+r /etc/apt/sources.list.d/opentofu.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends tofu \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* \
+    && cd "$VIRTUAL_ENV_PARENT" && pipenv install --categories "azure-cli"
+
+WORKDIR /gardenlinux/tests

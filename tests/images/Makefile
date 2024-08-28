@@ -13,7 +13,7 @@ endif
 
 GARDENLINUX_BUILD_CRE ?= sudo podman
 
-PLATFORMS = ali aws azure firecracker gcp kvm openstack
+PLATFORMS = ali aws azure firecracker gcp kvm openstack tofu
 
 .PHONY: all
 .DEFAULT: help

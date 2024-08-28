@@ -23,6 +23,7 @@ RUN apt-get update \
        openssh-client \
        wget \
        iproute2 \
+       jq \
        # python from GL repos, all python packages are supposed to come from pip
        ${PYTHON}-venv \
        lib${PYTHON}-dev \
@@ -34,6 +35,9 @@ RUN apt-get update \
        inetutils-ping \
        shellcheck \
        psmisc \
+       git \
+       #### needed to install libvirt-python via pipenv
+       pkg-config \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Prepare virtual environment
