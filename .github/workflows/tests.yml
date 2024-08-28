@@ -131,10 +131,14 @@ jobs:
         echo "::add-mask::$(jq -r '.profiles[0].access_key_id' < ali-service-account.json)"
         echo "::add-mask::$(jq -r '.profiles[0].access_key_secret' < ali-service-account.json)"
 
+    - uses: opentofu/setup-opentofu@v1
+      with:
+        tofu_version: 1.8
+
     - name: start platform test for ${{ matrix.target }}
       run: |
         set -o pipefail
-        .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.arch }}" "${{ env.cname }}" 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.test.log"
+        .github/workflows/${{ matrix.target }}_tests_tofu.sh --arch "${{ matrix.arch }}" "${{ env.cname }}" 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.test.log"
 
     - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # pin@v4.4.0
       with:
@@ -142,3 +146,8 @@ jobs:
         path: |
           ${{ env.artifact_dir }}/${{ env.cname }}.platform.test.log
           ${{ env.artifact_dir }}/${{ env.cname }}.platform.test.xml
+
+    - name: cleanup platform test for ${{ matrix.target }}
+      if: always()
+      run: |
+        .github/workflows/${{ matrix.target }}_tests_tofu_cleanup.sh --arch "${{ matrix.arch }}" "${{ env.cname }}" 2>&1 | tee "${{ env.cname }}.platform.test-cleanup.log"

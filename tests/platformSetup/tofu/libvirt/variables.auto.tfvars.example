@@ -1,0 +1,4 @@
+test_name      = "my-gardenlinux-test"
+image_source   = "file:///gardenlinux/.build/gcp_dev-amd64-today-local.gcpimage.tar.gz"
+ssh_public_key = "~/.ssh/id_ed25519.pub"
+uefi_firmware = "/usr/share/qemu/ovmf-x86_64-code.bin"

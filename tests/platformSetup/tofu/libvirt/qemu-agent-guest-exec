@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+'''
+Kudos: https://github.com/rgl/terraform-libvirt-ubuntu-example
+Execute a command inside the guest.
+'''
+
+import base64
+import json
+import libvirt
+import libvirt_qemu
+import logging
+import sys
+import time
+
+connection = sys.argv[1]
+domain_name = sys.argv[2]
+command_path = sys.argv[3]
+command_args = sys.argv[4:]
+
+try:
+    connection = libvirt.open(connection)
+except libvirt.libvirtError:
+    logging.exception('Failed to open connection to the hypervisor')
+    exit(1)
+
+try:
+    domain = connection.lookupByName(domain_name)
+except libvirt.libvirtError:
+    logging.exception(f'Domain {domain_name} is not running')
+    exit(1)
+
+# execute a command inside the guest.
+# see https://libvirt.org/html/libvirt-libvirt-qemu.html#virDomainQemuAgentCommand
+command = json.dumps({
+    'execute': 'guest-exec',
+    'arguments': {
+        'path': command_path,
+        'arg': command_args,
+        'capture-output': True,
+    }
+})
+result = json.loads(libvirt_qemu.qemuAgentCommand(domain, command, -2, 0))
+command = json.dumps({
+    'execute': 'guest-exec-status',
+    'arguments': {
+        'pid': result['return']['pid'],
+    }
+})
+while True:
+    result = json.loads(libvirt_qemu.qemuAgentCommand(domain, command, -2, 0))
+    if result['return']['exited']:
+        if 'out-data' in result['return']:
+            print(base64.b64decode(result['return']['out-data']).decode('utf-8'))
+        elif 'err-data' in result['return']:
+            print("Error:", base64.b64decode(result['return']['err-data']).decode('utf-8'))
+        else:
+            print("No output data returned.")
+        break
+    time.sleep(0.1)

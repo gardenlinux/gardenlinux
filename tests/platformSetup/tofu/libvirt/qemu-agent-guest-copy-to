@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+'''
+Kudos: https://github.com/rgl/terraform-libvirt-ubuntu-example
+Execute a command inside the guest.
+'''
+
+import base64
+import json
+import libvirt
+import libvirt_qemu
+import logging
+import sys
+import time
+
+connection = sys.argv[1]
+domain_name = sys.argv[2]
+file_path_from = sys.argv[3]
+file_path_to = sys.argv[4]
+
+with open(file_path_from, "rb") as file:
+    encoded_string = base64.b64encode(file.read()).decode('utf-8')  # Decode to utf-8 string
+
+try:
+    connection = libvirt.open(connection)
+except libvirt.libvirtError:
+    logging.exception('Failed to open connection to the hypervisor')
+    exit(1)
+
+try:
+    domain = connection.lookupByName(domain_name)
+except libvirt.libvirtError:
+    logging.exception(f'Domain {domain_name} is not running')
+    exit(1)
+
+# Execute a command inside the guest to open the file
+command = json.dumps({
+    'execute': 'guest-file-open',
+    'arguments': {
+        'path': file_path_to,
+        'mode': 'w+'
+    }
+})
+result = json.loads(libvirt_qemu.qemuAgentCommand(domain, command, -2, 0))
+
+# Extract the handle from the result
+handle = result.get('return', None)
+if handle is None:
+    logging.error('Failed to open file inside the guest')
+    exit(1)
+
+# Execute a command inside the guest to write to the file
+command = json.dumps({
+    'execute': 'guest-file-write',
+    'arguments': {
+        'handle': handle,
+        'buf-b64': encoded_string
+    }
+})
+result = json.loads(libvirt_qemu.qemuAgentCommand(domain, command, -2, 0))
+
+# Execute a command inside the guest to close the file
+command = json.dumps({
+    'execute': 'guest-file-close',
+    'arguments': {
+        'handle': handle
+    }
+})
+result = json.loads(libvirt_qemu.qemuAgentCommand(domain, command, -2, 0))
+
