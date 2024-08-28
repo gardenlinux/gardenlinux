@@ -117,7 +117,7 @@ python3-pip
 python3-pip-whl
 python3-setuptools-whl
 python3-systemd
-python3.11
+python3.12
 qemu-block-extra
 qemu-efi-aarch64
 qemu-guest-agent
