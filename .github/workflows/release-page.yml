@@ -71,7 +71,7 @@ jobs:
           echo "$release $prefix.tar.xz"
           ls -lah "$prefix.tar.xz"
           echo "$prefix.tar.xz" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
-  upload_integration_test_logs_to_release:
+  upload_platform_test_logs_to_release:
     environment: oidc_aws_s3_upload
     needs: create_release
     permissions:
@@ -104,6 +104,8 @@ jobs:
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
           aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/$prefix/$prefix.chroot.test.log" ./
           aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/$prefix/$prefix.chroot.test.xml" ./
+          aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/$prefix/$prefix.platform.test.log" ./
+          aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/$prefix/$prefix.platform.test.xml" ./
       - name: upload to release
         run: |
           commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
@@ -111,7 +113,13 @@ jobs:
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
           echo "$release $prefix.chroot.test.log"
           echo "$release $prefix.chroot.test.xml"
+          echo "$release $prefix.platform.test.log"
+          echo "$release $prefix.platform.test.xml"
           ls -lah "$prefix.chroot.test.log"
           ls -lah "$prefix.chroot.test.xml"
+          ls -lah "$prefix.platform.test.log"
+          ls -lah "$prefix.platform.test.xml"
           echo "$prefix.chroot.test.log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
           echo "$prefix.chroot.test.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          echo "$prefix.platform.test.log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          echo "$prefix.platform.test.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"

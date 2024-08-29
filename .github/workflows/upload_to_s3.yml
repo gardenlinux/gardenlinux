@@ -54,8 +54,8 @@ jobs:
           name: build-${{ env.cname }}
       - name: upload to S3 bucket ${{ secrets.bucket }}
         run: .github/workflows/upload_to_s3.sh ${{ secrets.bucket }} ${{ env.cname }}.tar.gz
-  upload_test_logs_to_s3:
-    name: upload test logs to S3
+  upload_platform_test_logs_to_s3:
+    name: upload platform test logs to S3
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -93,6 +93,8 @@ jobs:
 
       - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v3
         with:
-          name: tests-${{ env.cname }}
+          name: platform-test-${{ env.cname }}
       - name: upload to S3 bucket ${{ secrets.bucket }}
-        run: aws s3 cp "${{ env.cname }}.integration-tests-log" "s3://${{ secrets.bucket }}/objects/${{ env.cname }}/"
+        run: |
+          aws s3 cp "${{ env.cname }}.platform.test.log" "s3://${{ secrets.bucket }}/objects/${{ env.cname }}/"
+          aws s3 cp "${{ env.cname }}.platform.test.xml" "s3://${{ secrets.bucket }}/objects/${{ env.cname }}/"
