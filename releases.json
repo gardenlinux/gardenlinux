@@ -1,0 +1,16 @@
+{
+    "releases": [
+        {
+            "version": "1592.1",
+            "iseol": false,
+        },
+        {
+            "version": "1592.0",
+            "iseol": true,
+        },
+        {
+            "version": "1443.10",
+            "iseol": false,
+        }
+  ]
+}
