@@ -103,11 +103,15 @@ jobs:
           commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
           aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/$prefix/$prefix.test-log" ./
+          aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/$prefix/$prefix.test-log-junit.xml" ./
       - name: upload to release
         run: |
           commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
           release="$(cat .github_release_id)"
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
           echo "$release $prefix.test-log"
+          echo "$release $prefix.test-log-junit.xml"
           ls -lah "$prefix.test-log"
+          ls -lah "$prefix.test-log-junit.xml"
           echo "$prefix.test-log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          echo "$prefix.test-log-junit.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"

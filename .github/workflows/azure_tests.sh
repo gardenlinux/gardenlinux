@@ -7,12 +7,9 @@ cname="${@: -1}"
 configFile="azure_test_config.yaml"
 containerName="ghcr.io/gardenlinux/gardenlinux/integration-test:today"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
-platform_test_log_dir="/tmp/gardenlinux-platform-test-logs"
 
 azure_hyper_v_generation="V1"
 azure_vm_size="Standard_D4_v4"
-
-mkdir -p "$platform_test_log_dir"
 
 pushd "$artifact_dir" || exit 1
 tar -xzf "$cname.tar.gz" "$cname.vhd"
@@ -47,10 +44,10 @@ azure:
 EOF
 
 echo "### Start Integration Tests for Azure"
-podman run -it --rm -v "${AZURE_CONFIG_DIR}:/root/.azure" -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts"  -v "$platform_test_log_dir:/platform-test-logs" $containerName /bin/bash -s << EOF
+podman run -it --rm -v "${AZURE_CONFIG_DIR}:/root/.azure" -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" $containerName /bin/bash -s << EOF
 mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/
 cd /gardenlinux/tests
-pytest --iaas=azure --configfile=/gardenlinux/$configFile --junit-xml=/platform-test-logs/test-$cname-azure_junit.xml || exit 1
+pytest --iaas=azure --configfile=/gardenlinux/$configFile --junit-xml=/artifacts/$cname.integration-tests-log-junit.xml || exit 1
 exit 0
 EOF

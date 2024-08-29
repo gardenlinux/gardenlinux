@@ -7,7 +7,6 @@ cname="${@: -1}"
 configFile="gcp_test_config.yaml"
 containerName="ghcr.io/gardenlinux/gardenlinux/integration-test:today"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
-platform_test_log_dir="/tmp/gardenlinux-platform-test-logs"
 
 mkdir -p "$platform_test_log_dir"
 
@@ -75,13 +74,13 @@ EOF
 
 
 echo "### Start Integration Tests for gcp"
-podman run -it --rm -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" -v "$platform_test_log_dir:/platform-test-logs" $containerName /bin/bash -s << EOF
+podman run -it --rm -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" $containerName /bin/bash -s << EOF
 mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/
 cd /gardenlinux/tests
 export GOOGLE_APPLICATION_CREDENTIALS="/gardenlinux/$credentials_file_name"
 export CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE="/gardenlinux/$credentials_file_name"
 export GOOGLE_GHA_CREDS_PATH="/gardenlinux/$credentials_file_name"
-pytest --iaas=gcp --configfile=/gardenlinux/$configFile --junit-xml=/platform-test-logs/test-$cname-gcp_junit.xml || exit 1
+pytest --iaas=gcp --configfile=/gardenlinux/$configFile --junit-xml=/artifacts/$cname.integration-tests-log-junit.xml || exit 1
 exit 0
 EOF

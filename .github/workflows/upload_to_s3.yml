@@ -95,4 +95,6 @@ jobs:
         with:
           name: tests-${{ env.cname }}
       - name: upload to S3 bucket ${{ secrets.bucket }}
-        run: aws s3 cp "${{ env.cname }}.integration-tests-log" "s3://${{ secrets.bucket }}/objects/${{ env.cname }}/"
+        run: |
+          aws s3 cp "${{ env.cname }}.integration-tests-log" "s3://${{ secrets.bucket }}/objects/${{ env.cname }}/"
+          aws s3 cp "${{ env.cname }}.integration-tests-log-junit.xml" "s3://${{ secrets.bucket }}/objects/${{ env.cname }}/"

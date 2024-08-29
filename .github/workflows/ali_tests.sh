@@ -7,9 +7,6 @@ cname="${@: -1}"
 configFile="ali_test_config.yaml"
 containerName="ghcr.io/gardenlinux/gardenlinux/integration-test:today"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
-platform_test_log_dir="/tmp/gardenlinux-platform-test-logs"
-
-mkdir -p "$platform_test_log_dir"
 
 pushd "$artifact_dir" || exit 1
 tar -xzf "$cname.tar.gz" "$cname.qcow2"
@@ -47,11 +44,11 @@ EOF
 
 
 echo "### Start Integration Tests for ali"
-podman run -it --rm -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" -v "$platform_test_log_dir:/platform-test-logs" $containerName /bin/bash -s << EOF
+podman run -it --rm -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" $containerName /bin/bash -s << EOF
 mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/
 ssh-keygen -t rsa -b 4096 -f /gardenlinux/tmp/id_rsa -N "" -q
 cd /gardenlinux/tests
-pytest --iaas=ali --configfile=/gardenlinux/$configFile --junit-xml=/platform-test-logs/test-$cname-ali_junit.xml || exit 1
+pytest --iaas=ali --configfile=/gardenlinux/$configFile --junit-xml=/artifacts/$cname.integration-tests-log-junit.xml || exit 1
 exit 0
 EOF
