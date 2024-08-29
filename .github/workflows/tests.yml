@@ -81,6 +81,11 @@ jobs:
         bin/garden-version "${{ inputs.version }}" | tee VERSION
         git update-index --assume-unchanged VERSION
 
+    - name: set test_name
+      run: |
+        test_name="${GITHUB_SHA::8}-${EPOCHSECONDS}"
+        echo "test_name=${test_name}" | tee -a "${GITHUB_ENV}"
+
     - name: get cname
       run: |
         cname="$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})"

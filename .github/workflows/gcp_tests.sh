@@ -55,6 +55,7 @@ credentials_file_name="$(echo "$GOOGLE_APPLICATION_CREDENTIALS" | xargs basename
 
 cat << EOF > "$configFile"
 gcp:
+    test_name: ${test_name}
     project: ${gcp_project}
     region: ${gcp_region}
     zone: ${gcp_zone}

@@ -21,6 +21,7 @@ fi
 
 cat << EOF > "$configFile"
 ali:
+    test_name: ${test_name}
     credential_file: /gardenlinux/ali-service-account.json
     image: file:///artifacts/$(basename "$image_file")
     instance_type: ecs.t6-c1m2.large

@@ -26,6 +26,7 @@ fi
 
 cat << EOF > "$configFile"
 azure:
+    test_name: ${test_name}
     location: westeurope
     subscription_id: ${azure_subscription_id}
     vm_size: ${azure_vm_size}

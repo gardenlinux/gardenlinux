@@ -44,6 +44,7 @@ esac
 
 cat << EOF > "$configFile"
 aws:
+    test_name: ${test_name}
     region: ${aws_region}
     instance_type: $instance_type
     architecture: $arch

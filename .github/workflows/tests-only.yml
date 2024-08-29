@@ -1,116 +1,49 @@
-# Tests artifacts already uploaded to S3
-name: test-only
+# Run Platform Tests manually
+name: tests-only
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Garden Linux Version"
         type: string
-        default: today
-      default_modifier:
-        description: "gardenlinux feature modifier, if other than default, make sure it has the right format. e.g. use bin/garden-feature --features"
-        type: string
-        default: "-gardener_prod"
-      commitish:
-        description: "Full commitish of the artifact that should be tested. Must be present in s3"
-        type: string
-        required: true
-      integration_test_container_version:
-        description: "Full commitish or GL version in case of release. Must be present in ghcr."
-        type: string
-        required: true
+        default: now
 
 jobs:
-  platform_tests:
-    name: platform test
-    env:
+  build:
+    uses: ./.github/workflows/build.yml
+    permissions:
+      id-token: write
+      packages: write
+    with:
+      version: ${{ inputs.version || 'now' }}
+      default_modifier: "-gardener_prod"
+      use_kms: false
+    secrets:
+      secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_kms_role: ${{ secrets.SECUREBOOT_DB_IAM_ROLE }}
+      aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
+  build_container:
+    name: build container
+    uses: ./.github/workflows/build_container.yml
+  tests:
+    needs: [ build, build_container ]
+    permissions:
+      id-token: write
+      packages: write
+    uses: ./.github/workflows/tests.yml
+    with:
+      version: ${{ needs.build.outputs.version }}
+      default_modifier: "-gardener_prod"
+    secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
       gcp_project: ${{ secrets.GCP_PROJECT }}
       gcp_region: ${{ secrets.GCP_REGION }}
       gcp_zone: ${{ secrets.GCP_ZONE }}
-      AZURE_CONFIG_DIR: /tmp/azure_config_dir
-      TARGET_ARCHITECTURE: ${{ matrix.arch }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-    permissions:
-      id-token: write
-      packages: write
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [ amd64, arm64 ]
-        target: [ gcp, aws, azure ]
-        modifier: [ "${{ inputs.default_modifier }}" ]
-        exclude:
-          - arch: arm64
-            target: azure
-    steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-
-    - name: login to ghcr.io
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
-
-
-    - name: set VERSION=${{ inputs.version }}
-      run: |
-        bin/garden-version "${{ inputs.version }}" | tee VERSION
-        git update-index --assume-unchanged VERSION
-
-    - name: get cname
-      run: |
-        cname="$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})"
-        echo "cname=$cname" | tee -a "$GITHUB_ENV"
-
-    - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
-      with:
-        role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-        role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
-        aws-region: ${{ secrets.AWS_REGION }}
-
-    - name: download artifact to test from S3 bucket
-      run: |
-        mkdir -p "${{ env.cname }}"
-        aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/${{ env.cname }}" "${{ env.cname }}" --recursive
-
-    - name: pack build artifacts for tests
-      run: |
-        mkdir -p /tmp/gardenlinux-build-artifacts
-        tar -czvf "/tmp/gardenlinux-build-artifacts/${{ env.cname }}.tar.gz" "${{ env.cname }}"
-
-    - if: ${{ matrix.target == 'gcp' }}
-      id: 'auth_gcp'
-      name: 'Authenticate to Google Cloud'
-      uses: google-github-actions/auth@f112390a2df9932162083945e46d439060d66ec2 # pin@v1
-      with:
-        workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-        service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-
-    - if: ${{ matrix.target == 'aws' }}
-      id: 'auth_aws'
-      name: 'Authenticate to AWS'
-      uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
-      with:
-        role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
-        role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
-        aws-region: ${{ secrets.AWS_REGION}}
-
-    - if: ${{ matrix.target == 'azure' }}
-      id: 'auth_azure'
-      name: 'Authenticate to Azure'
-      uses: azure/login@6c251865b4e6290e7b78be643ea2d005bc51f69a # pin@v1
-      with:
-        client-id: ${{ secrets.AZURE_CLIENT_ID }}
-        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-    - name: pull container image
-      run: |
-        podman pull "ghcr.io/gardenlinux/gardenlinux/integration-test:${{ inputs.integration_test_container_version }}"
-        podman tag "ghcr.io/gardenlinux/gardenlinux/integration-test:${{ inputs.integration_test_container_version }}" ghcr.io/gardenlinux/gardenlinux/integration-test:today
-
-    - name: start platform test for ${{ matrix.target }}
-      run: |
-        set -o pipefail && .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.arch }}" "${{ env.cname }}.tar.gz" 2>&1 | tee "${{ env.cname }}.integration-tests-log"
+      aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
+      aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
+      aws_region: ${{ secrets.AWS_TESTS_REGION }}
+      az_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      az_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ccc_credentials: ${{ secrets.CCC_CREDENTIALS }}
