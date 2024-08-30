@@ -518,6 +518,10 @@ class GCP:
                     {
                         "key": "startup-script",
                         "value" : startup_script
+                    },
+                    {
+                        "key": "block-project-ssh-keys",
+                        "value": "true"
                     }
                 ]
             },
