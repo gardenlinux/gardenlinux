@@ -1,0 +1,17 @@
+[Unit]
+Requires=var.mount
+After=var.mount
+Before=local-fs.target
+Before=network-pre.target
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/mkdir -p /var/etc.overlay /var/etc.overlay.workdir
+ExecStart=/usr/bin/bash -c '[ -s /var/etc.overlay/machine-id ] || cp /etc/machine-id /var/etc.overlay/machine-id'
+ExecStart=/usr/bin/mount -t overlay -o lowerdir=/etc,upperdir=/var/etc.overlay,workdir=/var/etc.overlay.workdir overlay /etc
+ExecStop=/usr/bin/umount /etc
+
+[Install]
+WantedBy=local-fs.target

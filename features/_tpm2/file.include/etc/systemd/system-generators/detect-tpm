@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -eu
+
+if [ -e /sys/firmware/acpi/tables/TPM2 ]; then
+	mkdir "$1/reload.target.wants"
+	ln -s ../tpm2.target "$1/reload.target.wants/tpm2.target"
+	ln -s ../systemd-tpm2-setup.service "$1/reload.target.wants/systemd-tpm2-setup.service"
+	ln -s ../systemd-tpm2-setup-early.service "$1/reload.target.wants/systemd-tpm2-setup-early.service"
+fi
