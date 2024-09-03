@@ -87,7 +87,7 @@ jobs:
 
     - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v3
       with:
-        name: ${{ env.cname }}
+        name: build-${{ env.cname }}
         path: /tmp/gardenlinux-build-artifacts
 
     - run: ls -lah /tmp/gardenlinux-build-artifacts

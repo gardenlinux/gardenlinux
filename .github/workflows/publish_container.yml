@@ -27,10 +27,10 @@ jobs:
           echo "cname_arm64=$cname_arm64" | tee -a "$GITHUB_ENV"
       - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v3
         with:
-          name: ${{ env.cname_amd64 }}
+          name: build-${{ env.cname_amd64 }}
       - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v3
         with:
-          name: ${{ env.cname_arm64 }}
+          name: build-${{ env.cname_arm64 }}
       - name: publish gardenlinux container base image
         run: |
           version=$(bin/garden-version "${{ inputs.version }}")
@@ -124,10 +124,10 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v3
         with:
-          name: bare-${{ matrix.config }}-amd64
+          name: build-bare-${{ matrix.config }}-amd64
       - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v3
         with:
-          name: bare-${{ matrix.config }}-arm64
+          name: build-bare-${{ matrix.config }}-arm64
       - run: ls -lah
       - name: publish bare container image
         run: |
