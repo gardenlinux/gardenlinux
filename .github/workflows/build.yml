@@ -212,16 +212,25 @@ jobs:
           find .build -exec touch -d "@$t" {} +
       - name: build
         run: ./build ${{ inputs.use_kms && '--kms' || '' }} ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
-      - name: test
-        run: ./test --container-image test ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
-      - uses: pmeier/pytest-results-action@fc6576eced1f411ea48ab10e917d9cfce2960e29 # pin@v0.7.1
-        if: always()
-        with:
-          path: tests/test.xml
       - name: get cname
         run: |
           cname=$(basename "$(realpath ".build/${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}")" .artifacts)
           echo "cname=$cname" | tee -a "$GITHUB_ENV"
+      # ./test writes ${{ env.cname }}.chroot.test.log and puts it into .build/${{ env.cname }}.artifacts
+      - name: test
+        run: |
+          ./test --container-image test ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
+      # chroot.test.xml is written in the entrypoint tests/init
+      - name: rename test results
+        if: always()
+        run: |
+          mv tests/chroot.test.xml .build/${{ env.cname }}.chroot.test.xml
+      - uses: pmeier/pytest-results-action@fc6576eced1f411ea48ab10e917d9cfce2960e29 # pin@v0.7.1
+        if: always()
+        with:
+          path: ".build/${{ env.cname }}.chroot.test.xml"
+      - name: add chroot.test.xml to build artifacts
+        run: echo "${{ env.cname }}.chroot.test.xml" >> ".build/${{ env.cname }}.artifacts"
       - name: pack build artifacts for upload
         run: tar -cSzvf "${{ env.cname }}.tar.gz" -C .build -T ".build/${{ env.cname }}.artifacts"
       - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # pin@v3
