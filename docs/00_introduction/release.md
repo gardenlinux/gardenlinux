@@ -1,4 +1,4 @@
-# Garden Linux Releases
+# Garden Linux Release Plan Overview
 
 ## Introduction
 
@@ -32,32 +32,29 @@ Garden Linux strives to balance providing cutting edge version of the relevant s
 gantt
     title Garden Linux active LTS releases
     axisFormat %m.%y
-    section '15xx*'
-        Release:                milestone, 2024-07-22, 0m
-        Standard maintenance:       task, 2024-07-22, 6M
-        Extended maintenance:       milestone, 2025-01-22, 0m
-        Extended maintenance:       task, 2025-01-22, 3M
-        End of maintenance:         milestone, 2025-04-22, 0m
+    section 'next' 
+        Standard maintenance:       task, 2024-12-13, 6M 
+        Extended maintenance:       task, 2025-06-13, 3M   
+    section '1592'
+        Release:                milestone, 2024-08-12, 0m
+        Standard maintenance:       task, 2024-08-12, 6M
+        Extended maintenance:       milestone, 2025-02-12, 0m
+        Extended maintenance:       task, 2025-02-12, 3M
+        End of maintenance:         milestone, 2025-05-12, 0m
     section '1443'
         Release:                milestone, 2024-03-13, 0m
         Standard maintenance:       task, 2024-03-13, 6M
         Extended maintenance:       milestone, 2024-09-13, 0m
         Extended maintenance:       task, 2024-09-13, 3M
         End of maintenance:         milestone, 2024-12-13, 0m
-    section '1312'
-        Release:                milestone, 2023-11-03, 0m
-        Standard maintenance:       task, 2023-11-03, 6M
-        Extended maintenance:       milestone, 2024-05-03, 0m
-        Extended maintenance:       task, 2024-05-03, 3M
-        End of maintenance:         milestone, 2024-08-03, 0m
+
 ```
 
 | Release                                                                   | Release date  | Extended maintenance  | End of maintenance    |
 | -                                                                         | -             | -                     | -                     |
 | next                                                                      | Dec 2024      | Jun 2025              | Sept 2025             |
-| 15xx*                                                                     | 22.07.2024    | 22.01.2025            | 22.04.2025            |
+| [1592](https://github.com/gardenlinux/gardenlinux/releases/tag/1592.0)    | 12.08.2024    | 12.08.2025            | 12.05.2025            |
 | [1443](https://github.com/gardenlinux/gardenlinux/releases/tag/1443.0)    | 13.03.2024    | 13.09.2024            | 13.03.2024            |
-| [1312](https://github.com/gardenlinux/gardenlinux/releases/tag/1312.0)    | 03.11.2023    | 03.05.2024            | 03.08.2024            |
 
 
 \* Release in progress.
@@ -68,6 +65,7 @@ In this section you can find more about the releases that are already out of mai
 
 | Release                                                                   | Release date  | Extended maintenance  | End of maintenance    |
 | -                                                                         | -             | -                     | -                     |
+| [1312](https://github.com/gardenlinux/gardenlinux/releases/tag/1312.0)    | 03.11.2023    | 03.05.2024            | 03.08.2024            |
 | [934](https://github.com/gardenlinux/gardenlinux/releases/tag/934.0)      | 05.06.2023    | 05.12.2023            | 05.03.2024            |
 | [576](https://github.com/gardenlinux/gardenlinux/releases/tag/576.0)      | 17.11.2021    | 17.05.2023            | 17.08.2023            |
 | [318](https://github.com/gardenlinux/gardenlinux/releases/tag/318.4)      | 28.04.2021    | 28.10.2021            | 28.01.2023            |
