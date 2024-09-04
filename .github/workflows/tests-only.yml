@@ -83,7 +83,7 @@ jobs:
     - if: ${{ matrix.target == 'gcp' }}
       id: 'auth_gcp'
       name: 'Authenticate to Google Cloud'
-      uses: google-github-actions/auth@f112390a2df9932162083945e46d439060d66ec2 # pin@v1
+      uses: google-github-actions/auth@62cf5bd3e4211a0a0b51f2c6d6a37129d828611d # pin@v1
       with:
         workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
         service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
