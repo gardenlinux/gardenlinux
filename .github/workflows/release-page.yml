@@ -73,8 +73,12 @@ jobs:
           ls -lah "$prefix.tar.xz"
           echo "$prefix.tar.xz" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
 
-          # upload test logs separately
-          echo "$prefix/$prefix.chroot.test.log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
-          echo "$prefix/$prefix.chroot.test.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
-          echo "$prefix/$prefix.platform.test.log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
-          echo "$prefix/$prefix.platform.test.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          # upload test logs separately (if they exist)
+          ls -la "$prefix/$prefix.chroot.test.log" || true
+          ls -la "$prefix/$prefix.chroot.test.xml" || true
+          ls -la "$prefix/$prefix.platform.test.log" || true
+          ls -la "$prefix/$prefix.platform.test.xml" || true
+          test -f "$prefix/$prefix.chroot.test.log" && echo "$prefix/$prefix.chroot.test.log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          test -f "$prefix/$prefix.chroot.test.xml" && echo "$prefix/$prefix.chroot.test.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          test -f ls -la "$prefix/$prefix.platform.test.log" && echo "$prefix/$prefix.platform.test.log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          test -f ls -la "$prefix/$prefix.platform.test.xml" && echo "$prefix/$prefix.platform.test.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"

@@ -57,7 +57,9 @@ jobs:
         with:
           name: platform-test-${{ env.cname }}
           path: platform-test-${{ env.cname }}
-      # repack tar.gz from build workflow to contain platform-test logs
+        # artifacts might not exist if no platform-test ran (e.g. excluded)
+        continue-on-error: true
+      # repack tar.gz from build workflow to contain platform-test logs (if they exist)
       - name: add platform-test logs to tar.gz
         run: |
           ls -l platform-test-${{ env.cname }}/${{ env.cname }}.platform.test.log || true
