@@ -5,6 +5,7 @@ import os
 import subprocess
 import tempfile
 import requests
+import base64
 
 from urllib.request import urlopen
 from urllib.parse import urlparse
@@ -274,7 +275,16 @@ class ALI:
         logger.info(response)
 
     def _boot_image(self, zone_id, image_id, instance_type, vswitch_id, instance_name, ssh_keyname, security_group_id):
+
+        startup_script = """#!/bin/bash
+        systemctl start ssh
+        """
+
+        startup_script_encoded = base64.b64encode(startup_script.encode('utf-8')).decode('utf-8')
+
+
         request = CreateInstanceRequest()
+        request.set_UserData(startup_script_encoded)
         request.set_ImageId(image_id)
         request.set_SecurityGroupId(security_group_id)
         request.set_InstanceType(instance_type)

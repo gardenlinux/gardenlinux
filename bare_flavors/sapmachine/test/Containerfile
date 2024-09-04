@@ -1,0 +1,9 @@
+ARG image
+
+FROM openjdk AS compile
+COPY Test.java /
+RUN javac Test.java && jar -c -f test.jar -e Test Test.class
+
+FROM $image
+COPY --from=compile /test.jar /
+CMD [ "java", "-jar", "/test.jar" ]

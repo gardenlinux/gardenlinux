@@ -6,7 +6,7 @@ check() {
 }
 
 depends() {
-    echo "fs-lib dracut-systemd systemd-networkd"
+    echo "fs-lib dracut-systemd systemd-networkd systemd-resolved"
 }
 
 install() {
@@ -34,4 +34,10 @@ install() {
 
     # clean up
     inst_hook cleanup 00 "$moddir/cleanup.sh"
+
+    # ca-certificates
+    if ! inst_simple /etc/ssl/certs/ca-certificates.crt; then
+	    dwarn "GL PXE module, can't install ca-certificates"
+	    exit 1
+    fi
 }

@@ -11,8 +11,11 @@ import urllib.request
 from botocore import UNSIGNED
 from botocore.client import Config
 import argparse
+import gzip
+import re
 
 from get_kernelurls import get_kernel_urls
+from parse_aptsource import DebsrcFile
 
 GARDENLINUX_GITHUB_RELEASE_BUCKET_NAME="gardenlinux-github-releases"
 
@@ -209,22 +212,44 @@ def generate_package_update_section(version):
 
 
 def create_github_release_notes(gardenlinux_version, commitish):
+    commitish_short=commitish[:8]
     output = ""
-    if not gardenlinux_version.endswith('.0'):
-        output += "## Package Updates\n"
-        output +=  generate_package_update_section(gardenlinux_version)
-        output += "\n"
   
-    manifests = download_all_singles(gardenlinux_version, commitish)
+    manifests = download_all_singles(gardenlinux_version, commitish_short)
 
     output += generate_release_note_image_ids(manifests)
-    
+
+    output += "\n"
+    output += "## Software Component Versions\n"
+    output += "```"
+    output += "\n"
+    (path, headers) = urllib.request.urlretrieve(f'https://packages.gardenlinux.io/gardenlinux/dists/{gardenlinux_version}/main/binary-amd64/Packages.gz')
+    with gzip.open(path, 'rt') as f:
+        d = DebsrcFile()
+        d.read(f)
+        packages_regex = re.compile(r'^linux-image-amd64$|^systemd$|^containerd$|^runc$|^curl$|^openssl$|^openssh-server$|^libc-bin$')
+        for entry in d.values():
+            if packages_regex.match(entry.deb_source):
+                output += f'{entry!r}\n'
+    output += "```"
+    output += "\n"
+
     output += "\n"
     output += "## Kernel Package direct download links\n"
     output += get_kernel_urls(gardenlinux_version)
     output += "\n"
 
-    output += generate_image_download_section(manifests, gardenlinux_version, commitish )
+    output += generate_image_download_section(manifests, gardenlinux_version, commitish_short )
+
+    output += "\n"
+    output += "## Kernel Module Build Container (kmodbuild) "
+    output += "\n"
+    output += "```"
+    output += "\n"
+    output += f"ghcr.io/gardenlinux/kmodbuild:{gardenlinux_version}"
+    output += "\n"
+    output += "```"
+    output += "\n"
     return output
 
 def write_to_release_id_file(release_id):
@@ -236,7 +261,7 @@ def write_to_release_id_file(release_id):
         print(f"Could not create .github_release_id file: {e}")
         sys.exit(1)
 
-def create_github_release(owner, repo, tag, commitish):
+def create_github_release(owner, repo, tag, commitish, body):
 
     token = os.environ.get('GITHUB_TOKEN')
     if not token:
@@ -247,10 +272,9 @@ def create_github_release(owner, repo, tag, commitish):
         'Accept': 'application/vnd.github.v3+json'
     }
 
-    body = create_github_release_notes(tag, commitish)
-
     data = {
         'tag_name': tag,
+        'target_commitish': commitish,
         'name': tag,
         'body': body,
         'draft': False,
@@ -277,6 +301,7 @@ def main():
     create_parser.add_argument('--repo', default="gardenlinux")
     create_parser.add_argument('--tag', required=True)
     create_parser.add_argument('--commit', required=True)
+    create_parser.add_argument('--dry-run', action='store_true', default=False)
 
     upload_parser = subparsers.add_parser('upload')
     upload_parser.add_argument('--release_id', required=True)
@@ -287,9 +312,13 @@ def main():
     args = parser.parse_args()
 
     if args.command == 'create':
-        release_id = create_github_release(args.owner, args.repo, args.tag, args.commit)
-        write_to_release_id_file(f"{release_id}")
-        print(f"Release created with ID: {release_id}")
+        body = create_github_release_notes(args.tag, args.commit)
+        if not args.dry_run:
+            release_id = create_github_release(args.owner, args.repo, args.tag, args.commit, body)
+            write_to_release_id_file(f"{release_id}")
+            print(f"Release created with ID: {release_id}")
+        else:
+            print(body)
     elif args.command == 'upload':
         # Implementation for 'upload' command
         pass

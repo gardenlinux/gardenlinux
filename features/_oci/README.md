@@ -15,7 +15,7 @@ This feature creates an archive containing the artifacts for an upload to an OCI
 Build a kernel, an initrd and the rootfs by generating the build for your target platform and add the *_oci* feature:
 
 ``` shell
-$ ./build.sh --features server,cloud,gardener,gcp,_oci .build/
+$ ./build gcp_oci
 ```
 
 After the build process has finished you*ll find an compressed archive in the destination directory of your build:

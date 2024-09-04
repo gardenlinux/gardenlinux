@@ -16,10 +16,3 @@ updates:
     versioning-strategy: "increase-if-necessary"
     reviewers:
       - "gardenlinux/garden-linux-maintainers"
-
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    reviewers:
-      - "gardenlinux/garden-linux-maintainers"

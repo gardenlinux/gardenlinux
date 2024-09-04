@@ -6,7 +6,7 @@ shopt -s nullglob
 exec 3>&1
 exec 1>&2
 
-container_image=localhost/builder
+container_image=ghcr.io/gardenlinux/builder:191279b0a54c227851413077283c69df29ce7335
 container_engine=podman
 target_dir=.build
 
@@ -78,14 +78,7 @@ done
 
 if [ "$container_image" = localhost/builder ]; then
 	dir="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")"
-	# Build from 'builder.dockerfile' if that exists, otherwise the default file name will be 'Dockerfile' or 'Containerfile'.
-	# It is recommended to call the file 'builder.dockerfile' to make it's intention clear.
-	# That file might only contain a single line 'FROM ghcr.io/gardenlinux/builder:...' which can be updated via dependabot.
-	if [[ -f builder.dockerfile ]]; then
-		"$container_engine" build -t "$container_image" -f builder.dockerfile "$dir"
-	else 
-		"$container_engine" build -t "$container_image" "$dir"
-	fi
+	"$container_engine" build -t "$container_image" "$dir"
 fi
 
 repo="$(./get_repo)"
@@ -130,4 +123,4 @@ if [ -d cert ]; then
 	container_mount_opts+=(-v "$PWD/cert:/builder/cert:ro")
 fi
 
-"$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" ${container_cmd[@]+"${container_cmd[@]}"} make --no-print-directory -C /builder "${make_opts[@]}" "$@" >&3
+"$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" ${container_cmd[@]+"${container_cmd[@]}"} fake_xattr make --no-print-directory -C /builder "${make_opts[@]}" "$@" >&3

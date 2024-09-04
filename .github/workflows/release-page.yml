@@ -30,8 +30,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}" | cut -c -8)"  
-      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # pin@v3
+          .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"  
+      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # pin@v3
         with:
           name: release
           path: .github_release_id
@@ -46,10 +46,10 @@ jobs:
       fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
-        cname: [ kvm-gardener_prod, metal-gardener_prod, gcp-gardener_prod, aws-gardener_prod, azure-gardener_prod, ali-gardener_prod, openstack-gardener_prod, openstackbaremetal-gardener_prod, vmware-gardener_prod, metal-gardener_prod_pxe ]
+        cname: [ kvm-gardener_prod, metal-gardener_prod, gcp-gardener_prod, gdch-gardener_prod, aws-gardener_prod, azure-gardener_prod, ali-gardener_prod, openstack-gardener_prod, openstackbaremetal-gardener_prod, vmware-gardener_prod, metal-gardener_prod_pxe ]
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # pin@v3
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v3
         with:
           name: release
       - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
@@ -90,7 +90,7 @@ jobs:
             cname: azure-gardener_prod
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # pin@v3
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v3
         with:
           name: release
       - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4

@@ -6,8 +6,7 @@ from helper.utils import validate_systemd_unit
 @pytest.mark.parametrize(
     "systemd_unit",
     [
-        "containerd",
-        "docker",
+        "containerd"
     ]
 )
 

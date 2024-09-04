@@ -6,3 +6,4 @@ Garden Linux is a customizable operating system designed with modularity in mind
 
 - [**Kernel**](./kernel.md) - Information about the Linux kernel used in Garden Linux.
 - [**Motivation**](./motivation.md) - The driving factors behind the creation of Garden Linux.
+- [**Package Pipeline**](./package-pipeline.md) - Design and Implementation of the Garden Linux Package Pipeline.

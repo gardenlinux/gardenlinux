@@ -1,0 +1,2 @@
+LABEL=ROOT      /               ext4            errors=remount-ro 0 1
+LABEL=EFI       /efi            vfat            umask=0077        0 1

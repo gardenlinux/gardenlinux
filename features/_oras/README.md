@@ -9,7 +9,7 @@ This flag feature shows how to push to an OCI compatible registry image using [o
 ### Usage
 
 ``` shell
-$ ./build.sh --features kvm,_oras .build/
+$ ./build kvm_oras
 ```
 
 The output of the build process shows the oras command to push the artifacts in the way they can be consumed by a `onmetal` image.

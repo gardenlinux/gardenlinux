@@ -1,0 +1,25 @@
+ARG snapshot
+ARG base
+
+FROM $snapshot AS snapshot
+
+FROM $base
+COPY --from=snapshot /etc/apt/sources.list /tmp/sources.list
+RUN grep '^deb ' /tmp/sources.list >> /etc/apt/sources.list && rm /tmp/sources.list
+RUN version="$(awk '$2 == "https://packages.gardenlinux.io/gardenlinux" { print $3 }' /etc/apt/sources.list)" && printf 'Package: *\nPin: release n=%s\nPin-Priority: 900\n' "$version" > /etc/apt/preferences.d/gardenlinux
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --install-recommends \
+	build-essential \
+	curl \
+	devscripts \
+	git \
+	linux-headers-$(dpkg --print-architecture) \
+	linux-headers-cloud-$(dpkg --print-architecture) \
+	linux-headers-firecracker-$(dpkg --print-architecture) \
+	linux-source \
+	libncurses-dev \
+	python3-jinja2 \
+	sudo \
+	vim \
+	wget
+COPY list_headers /opt/
+RUN /opt/list_headers

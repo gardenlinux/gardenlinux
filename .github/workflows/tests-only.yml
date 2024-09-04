@@ -60,7 +60,9 @@ jobs:
         git update-index --assume-unchanged VERSION
 
     - name: get cname
-      run: echo "cname=$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})" | tee -a "$GITHUB_ENV"
+      run: |
+        cname="$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})"
+        echo "cname=$cname" | tee -a "$GITHUB_ENV"
 
     - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
       with:
@@ -81,7 +83,7 @@ jobs:
     - if: ${{ matrix.target == 'gcp' }}
       id: 'auth_gcp'
       name: 'Authenticate to Google Cloud'
-      uses: google-github-actions/auth@55bd3a7c6e2ae7cf1877fd1ccb9d54c0503c457c # pin@v1
+      uses: google-github-actions/auth@62cf5bd3e4211a0a0b51f2c6d6a37129d828611d # pin@v1
       with:
         workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
         service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -98,7 +100,7 @@ jobs:
     - if: ${{ matrix.target == 'azure' }}
       id: 'auth_azure'
       name: 'Authenticate to Azure'
-      uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # pin@v1
+      uses: azure/login@6c251865b4e6290e7b78be643ea2d005bc51f69a # pin@v1
       with:
         client-id: ${{ secrets.AZURE_CLIENT_ID }}
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}

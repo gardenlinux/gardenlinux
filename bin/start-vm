@@ -51,22 +51,26 @@ get_os () {
         if [ $init_system != "systemd" ]; then
             host_dist="debian"
         else
-            host_dist="$(hostnamectl | grep "Operating System:" | awk {'print tolower($3)}')"
+            host_dist="$(hostnamectl | grep "Operating System:" | awk '{print tolower($3)}')"
         fi
 
         # Evaluate Distribution
-        if [ $host_dist = "centos" ]; then
+        if [ "$host_dist" = "centos" ]; then
             os="centos"
-        elif [ $host_dist = "fedora" ]; then
+        elif [ "$host_dist" = "fedora" ]; then
             os="fedora"
-        elif [ $host_dist = "debian" ] || [ $host_dist = "garden" ]; then
+        elif [ "$host_dist" = "debian" ] || [ "$host_dist" = "garden" ]; then
             os="debian"
-        elif [ $host_dist = "ubuntu" ]; then
+        elif [ "$host_dist" = "ubuntu" ]; then
             os="ubuntu"
-        elif [ $host_dist = "arch" ] || [ "$host_dist" = "manjaro" ]; then
+        elif [ "$host_dist" = "arch" ] || [ "$host_dist" = "manjaro" ]; then
             os="arch"
+        elif [ "$host_dist" = "nixos" ]; then
+            os="nixos"
+        elif [ "$host_dist" = "opensuse" ]; then
+            os="opensuse"
         else
-            echo "Error: Unsupported Linux distribution."
+            echo "Error: Unsupported Linux distribution [$host_dist]."
             exit 1
         fi
 
@@ -441,18 +445,30 @@ qemu_opt_uefi () {
         if [ $uefi ]; then
             if [ "$os" = macos ]; then
                 # Test for HomeBrew path
-                homebrew_prefix=$(brew info qemu | awk 'NR==4{print $1}')
+                homebrew_prefix=$(brew --prefix qemu)
                 uefi_code="${uefi_code:-$homebrew_prefix/share/qemu/edk2-x86_64-code.fd}"
                 uefi_vars="${uefi_vars:-$homebrew_prefix/share/qemu/edk2-i386-vars.fd}"
             elif [ "$os" = debian ] || [ "$os" = ubuntu ] ; then
-                uefi_code="${uefi_code:-/usr/share/OVMF/OVMF_CODE.fd}"
-                uefi_vars="${uefi_vars:-/usr/share/OVMF/OVMF_VARS.fd}"
+		local usz=""
+		if [ ! -f /usr/share/OVMF/OVMF_CODE.fd ] || [ ! -f /usr/share/OVMF/OVMF_VARS.fd ]; then
+                    usz="_4M"
+                fi
+                uefi_code="${uefi_code:-/usr/share/OVMF/OVMF_CODE${usz}.fd}"
+                uefi_vars="${uefi_vars:-/usr/share/OVMF/OVMF_VARS${usz}.fd}"
             elif [ "$os" = centos ] || [ "$os" = fedora ] ; then
                 uefi_code="${uefi_code:-/usr/share/OVMF/OVMF_CODE.secboot.fd}"
                 uefi_vars="${uefi_vars:-/usr/share/OVMF/OVMF_VARS.secboot.fd}"
             elif [ "$os" = arch ]; then
                 uefi_code="${uefi_code:-/usr/share/OVMF/x64/OVMF_CODE.fd}"
                 uefi_vars="${uefi_vars:-/usr/share/OVMF/x64/OVMF_VARS.fd}"
+            elif [ "$os" = nixos ]; then
+                # Requires the following NixOS configuration:
+                # virtualisation.libvirtd.enable = true;
+                uefi_code="${uefi_code:-/run/libvirt/nix-ovmf/OVMF_CODE.fd}"
+                uefi_vars="${uefi_vars:-/run/libvirt/nix-ovmf/OVMF_VARS.fd}"
+            elif [ "$os" = opensuse ]; then
+                uefi_code="${uefi_code:-/usr/share/qemu/ovmf-x86_64.bin}"
+                uefi_vars="${uefi_vars:-/usr/share/qemu/ovmf-x86_64-vars.bin}"
             else
                 echo "Error: Could not find UEFI code and vars file."
                 exit 1
@@ -470,7 +486,7 @@ qemu_opt_uefi () {
         # Homebrew path on macOS
         if [ "$os" = macos ]; then
             # Test for HomeBrew path
-            homebrew_prefix=$(brew info qemu | awk 'NR==4{print $1}')
+            homebrew_prefix=$(brew --prefix qemu)
             uefi_code="${uefi_code:-$homebrew_prefix/share/qemu/edk2-aarch64-code.fd}"
             uefi_vars="${uefi_vars:-$homebrew_prefix/share/qemu/edk2-arm-vars.fd}"
         elif [ "$os" = debian ] || [ "$os" = ubuntu ] ; then
@@ -486,6 +502,15 @@ qemu_opt_uefi () {
             # package which is *present* in official repositories
             uefi_code="${uefi_code:-/usr/share/AAVMF/AAVMF_CODE.fd}"
             uefi_vars="${uefi_vars:-/usr/share/AAVMF/AAVMF_VARS.fd}"
+        elif [ "$os" = nixos ]; then
+            # Requires the following NixOS configuration to have AArch64 UEFI firmware on x86 hosts:
+            #
+            # virtualisation.libvirtd.qemu.ovmf.packages = [
+            #   pkgs.OVMFFull.fd
+            #   pkgs.pkgsCross.aarch64-multiplatform.OVMF.fd
+            # ];
+            uefi_code="${uefi_code:-/run/libvirt/nix-ovmf/AAVMF_CODE.fd}"
+            uefi_vars="${uefi_vars:-/run/libvirt/nix-ovmf/AAVMF_VARS.fd}"
         else
             echo "Error: Could not find UEFI code and vars file."
             exit 1
@@ -499,7 +524,8 @@ qemu_opt_uefi () {
         [ -r $uefi_code ] || eusage "Missing uefi code at $uefi_code.\n Run: apt-get install ovmf qemu-efi-aarch64"
         [ -r $uefi_vars ] || eusage "Missing uefi vars at $uefi_vars.\n Run: apt-get install ovmf qemu-efi-aarch64"
 
-        [ -e $CURR_DIR/$mac.vars ] || cp $uefi_vars $CURR_DIR/$mac.vars
+        # The source file might be read-only.
+        [ -e $CURR_DIR/$mac.vars ] || cat "$uefi_vars" > "$CURR_DIR"/"$mac".vars
 
         # Add support for amd64 architecture
         if [ "$arch" = amd64 ]; then
@@ -684,7 +710,7 @@ qemu_opt_network () {
 
 # Setup TPM2 emulation support using swtpm
 qemu_opt_tpm () {
-    if [ $tpm2 = 1 ]; then
+    if [ "$tpm2" ]; then
         if [ ! "$(command -v swtpm)" ]; then
             eusage "Error: Could not find swtpm on the system"
         else

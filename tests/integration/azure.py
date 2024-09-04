@@ -3,6 +3,7 @@ import os
 import re
 import pytest
 import uuid
+import base64
 
 from helper.utils import wait_systemd_boot
 from helper.sshclient import RemoteClient
@@ -290,6 +291,13 @@ class AZURE:
         ).result()
 
         self.logger.info(f"Creating and booting virtual machine of size {vm_size} from image version {self._image.name}...")
+
+        startup_script = """#!/bin/bash
+        systemctl start ssh
+        """
+
+        startup_script_encoded = base64.b64encode(startup_script.encode('utf-8')).decode('utf-8')
+
         self._instance = self.cclient.virtual_machines.begin_create_or_update(
             resource_group_name=self._resourcegroup.name,
             vm_name=name,
@@ -310,6 +318,7 @@ class AZURE:
                     'vm_size': vm_size,
                 },
                 'os_profile': {
+                    'custom_data' : startup_script_encoded,
                     'computer_name': name,
                     'admin_username': admin_username,
                     'linux_configuration': {
@@ -454,7 +463,7 @@ class AZURE:
             if ssh is not None:
                 ssh.disconnect()
             if azure is not None:
-                azure.cleanup_test_resources()
+                azure.cleanup_test_resources(force_cleanup_resource_group=True)
 
 
     def __init__(self, credentials, config, imageurl, test_name):
@@ -491,29 +500,30 @@ class AZURE:
 
     def __del__(self):
         """Cleanup resources held by this object"""
-        self.cleanup_test_resources()
+        self.cleanup_test_resources(force_cleanup_resource_group=True)
 
-    def cleanup_test_resources(self):
+    def cleanup_test_resources(self, force_cleanup_resource_group: bool = False):
         if "keep_running" in self.config and self.config['keep_running'] == True:
             logger.info(f"Keeping resource group {self._resourcegroup.name} and all resources in it alive.")
             return
 
-        if self._instance:
-            self.az_terminate_vm(self._instance.name)
-            self._instance = None
-        if self._nsg:
-            self.az_delete_nsg(name=self._nsg.name)
-            self._nsg = None
-        if self._image:
-            self.az_delete_gallery()
-            self.az_delete_image(name=self.config["image_name"])
-            self._image = None
-        if self._storageaccount:
-            self.az_delete_storage_account(self._storageaccount.name)
-            self._storageaccount = None
-        if self._ssh_key:
-            self.az_delete_ssh_key(self._ssh_key.name)
-            self._ssh_key = None
+        if not force_cleanup_resource_group:
+            if self._instance:
+                self.az_terminate_vm(self._instance.name)
+                self._instance = None
+            if self._nsg:
+                self.az_delete_nsg(name=self._nsg.name)
+                self._nsg = None
+            if self._image:
+                self.az_delete_gallery()
+                self.az_delete_image(name=self.config["image_name"])
+                self._image = None
+            if self._storageaccount:
+                self.az_delete_storage_account(self._storageaccount.name)
+                self._storageaccount = None
+            if self._ssh_key:
+                self.az_delete_ssh_key(self._ssh_key.name)
+                self._ssh_key = None
         if self._resourcegroup:
             self.az_delete_resourcegroup(name=self._resourcegroup.name, wait_for_completion=True)
             self._resourcegroup = None
@@ -638,20 +648,23 @@ class AZURE:
             self.logger.info(f"Image {image_file} uploaded as {image_name}")
 
             gallery_name = self.config['gallery_name']
-            gallery_image_name = self.config['gallery_image_name']
-            gallery_image_version_name = self.config['gallery_image_version_name']
-            self.cclient.galleries.begin_create_or_update(
+            gallery_image_definition = self.config['gallery_image_name']
+            gallery_image_version = self.config['gallery_image_version_name']
+
+            self.logger.info(f"Creating image gallery {gallery_name}...")
+            _ = self.cclient.galleries.begin_create_or_update(
                 resource_group_name = self._resourcegroup.name,
                 gallery_name = gallery_name,
                 gallery = {
                     'location': self._resourcegroup.location,
                 }
-            )
+            ).result()
 
-            self.cclient.gallery_images.begin_create_or_update(
+            self.logger.info(f"Creating {gallery_image_definition=}...")
+            _ = self.cclient.gallery_images.begin_create_or_update(
                 resource_group_name = self._resourcegroup.name,
                 gallery_name = gallery_name,
-                gallery_image_name = gallery_image_name,
+                gallery_image_name = gallery_image_definition,
                 gallery_image = {
                     'location': self._resourcegroup.location,
                     'os_type': 'Linux',
@@ -664,15 +677,14 @@ class AZURE:
                         'sku': 'Gardenlinux'
                     }
                 }
-            )
+            ).result()
 
-            self.logger.info(f"Creating image version {gallery_image_version_name} from {image_name}...")
-
+            self.logger.info(f"Creating {gallery_image_version=} in {gallery_image_definition=} from {image_name=}...")
             result = self.cclient.gallery_image_versions.begin_create_or_update(
                 resource_group_name = self._resourcegroup.name,
                 gallery_name = gallery_name,
-                gallery_image_name = gallery_image_name,
-                gallery_image_version_name = gallery_image_version_name,
+                gallery_image_name = gallery_image_definition,
+                gallery_image_version_name = gallery_image_version,
                 gallery_image_version = {
                     'location': self._resourcegroup.location,
                     'publishing_profile': {
@@ -708,48 +720,29 @@ class AZURE:
 
     def az_delete_gallery(self):
         gallery_name = self.config['gallery_name']
-        gallery_image_name = self.config['gallery_image_name']
-        gallery_image_version_name = self.config['gallery_image_version_name']
+        gallery_image_definition = self.config['gallery_image_name']
+        gallery_image_version = self.config['gallery_image_version_name']
 
-        self.logger.info(f"Deleting gallery image version {gallery_image_version_name}")
-        poller = self.cclient.gallery_image_versions.begin_delete(
+        self.logger.info(f"Deleting {gallery_image_version=} for {gallery_image_definition=}...")
+        _ = self.cclient.gallery_image_versions.begin_delete(
             resource_group_name = self._resourcegroup.name,
             gallery_name = gallery_name,
-            gallery_image_name = gallery_image_name,
-            gallery_image_version_name = gallery_image_version_name
-        )
-        while not poller.done():
-            self.logger.info(f"Waiting for gallery image version {gallery_image_version_name} to disappear...")
-            poller.wait(5.0)
+            gallery_image_name = gallery_image_definition,
+            gallery_image_version_name = gallery_image_version
+        ).result()
+        self.logger.info(f"Deleted {gallery_image_version=} for {gallery_image_definition=}")
 
-        self.logger.info(f"Deleted gallery image version {gallery_image_version_name}")
+        self.logger.info(f"Deleting {gallery_image_definition=} in {gallery_name=}...")
+        _ = self.cclient.gallery_images.begin_delete(
+            resource_group_name = self._resourcegroup.name,
+            gallery_name = gallery_name,
+            gallery_image_name = gallery_image_definition
+        ).result()
+        self.logger.info(f"Deleted {gallery_image_definition=} in {gallery_name=}")
 
-        while True:
-            try:
-                self.logger.info(f"Deleting gallery image {gallery_image_name}")
-                poller = self.cclient.gallery_images.begin_delete(
-                    resource_group_name = self._resourcegroup.name,
-                    gallery_name = gallery_name,
-                    gallery_image_name = gallery_image_name
-                )
-                while not poller.done():
-                    self.logger.info(f"Waiting for {gallery_image_name} to disappear...")
-                    poller.wait(5.0)
-
-                self.logger.info(f"Deleted gallery image {gallery_image_name}")
-                break
-            except ResourceExistsError as error:
-                #self.logger.info(error)
-                self.logger.info(f"Failed to delete {gallery_image_name}, try again...")
-                continue
-
-        self.logger.info(f"Deleting gallery {gallery_name}")
-        poller = self.cclient.galleries.begin_delete(
+        self.logger.info(f"Deleting image gallery {gallery_name=}")
+        _ = self.cclient.galleries.begin_delete(
             resource_group_name = self._resourcegroup.name,
             gallery_name = gallery_name
-        )
-        while not poller.done():
-            self.logger.info(f"Waiting for {gallery_name} to disappear...")
-            poller.wait(5.0)
-
-        self.logger.info(f"Deleted gallery {gallery_name}")
+        ).result()
+        self.logger.info(f"Deleted image gallery {gallery_name=}")

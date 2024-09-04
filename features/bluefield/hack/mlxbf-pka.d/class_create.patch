@@ -1,0 +1,21 @@
+--- a/pka_drv_mlxbf.c 
++++ b/pka_drv_mlxbf.c
+@@ -721,7 +721,7 @@
+ 	return ring_dev;
+ }
+ 
+-static char *pka_drv_devnode(struct device *dev, umode_t *mode)
++static char *pka_drv_devnode(const struct device *dev, umode_t *mode)
+ {
+         if (mode != NULL)
+             *mode = PKA_DEVICE_ACCESS_MODE;
+@@ -734,7 +734,7 @@
+ 
+ 	idr_init(&pka.ring_idr);
+ 	/* /sys/class/pka/$RING */
+-	pka.class = class_create(THIS_MODULE, "pka");
++	pka.class = class_create("pka");
+ 	if (IS_ERR(pka.class))
+ 		return PTR_ERR(pka.class);
+ 
+

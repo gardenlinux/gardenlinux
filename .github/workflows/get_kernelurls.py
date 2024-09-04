@@ -37,7 +37,11 @@ def get_pkg_attr(package_name, attribute_key, packages_per_repo):
 def get_kernel_urls(gardenlinux_version):
     if not gardenlinux_version:
         print("You need to specify gardenlinux_version")
-    repositories = [f'http://repo.gardenlinux.io/gardenlinux {gardenlinux_version} main']
+    repositories = [f'http://packages.gardenlinux.io/gardenlinux {gardenlinux_version} main']
+
+    # Temporary for as long as we need to perform releases for versions < 1443
+    if "1312" in gardenlinux_version:
+        repositories = [f'http://repo.gardenlinux.io/gardenlinux {gardenlinux_version} main']
 
     architecture = ["arm64", "amd64"]
     versions = []
@@ -72,8 +76,9 @@ def get_package_list(repositories, architecture):
                 else:
                     packages = response.content.decode("UTF-8")
 
-            packages_dict.update({f'{uri}-{suite}-{component}-{arch}': packages})
+                packages_dict.update({f'{uri}-{suite}-{component}-{arch}': packages})
 
+    assert len(packages_dict) != 0, "Expected to find packages"
     return packages_dict
 
 def get_package_urls(package_list, package_name, resolve_depends=True):

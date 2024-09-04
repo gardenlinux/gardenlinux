@@ -1,34 +1,25 @@
+inputs:
+  arch:
+    description: 'Runner Architecture'
+    required: false
+    default: "amd64"
 runs:
   using: composite
   steps:
-
-    # Workaround for https://github.com/actions/runner-images/issues/9425, to be removed once the issue is resolved
-    - name: Show crun version before the patch
-      shell: bash
-      run: |
-        crun --version
-    - name: patch crun (Workaround for https://github.com/actions/runner-images/issues/9425)
-      shell: bash
-      run: |
-        curl -Lo ./crun https://github.com/containers/crun/releases/download/1.14.3/crun-1.14.3-linux-amd64
-        GOOD_SHA=80c5ab9422d4672f650f2bad3da933568349b64117d055486abc3534517be2af
-        sha256sum ./crun
-        OUR_SHA=$(sha256sum ./crun | awk '{ print $1 }')
-        if [[ "$GOOD_SHA" == "$OUR_SHA" ]]; then
-            sudo install crun /usr/bin/crun
-        else
-            echo "Checksums do not match"
-            exit 1
-        fi
-    - name: Show crun version after the patch
-      shell: bash
-      run: |
-        crun --version
-
     - name: install required packages
       shell: bash
       run: |
         sudo rm -rf /{usr/{local/{lib/{android,heroku},.ghcup,share/{dotnet,powershell,miniconda,swift}},share/{dotnet,miniconda,swift}},opt/{hostedtoolcache,microsoft},imagegeneration}
-        sudo docker system prune -a -f
         sudo apt-get update
-        sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qemu-user-static
+        if [ "${{ inputs.arch }}" = "amd64" ]; then
+          sudo docker system prune -a -f
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qemu-user-static
+        elif [ "${{ inputs.arch }}" = "arm64" ]; then
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends podman uidmap slirp4netns dbus-user-session
+          id="$(id -u)"
+          sudo systemctl start user@$id
+          export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$id/bus
+          systemctl --user start dbus
+          mkdir -p "$HOME/.config/containers"
+          echo 'unqualified-search-registries = ["docker.io"]' > "$HOME/.config/containers/registries.conf"
+        fi

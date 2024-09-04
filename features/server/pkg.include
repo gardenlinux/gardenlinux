@@ -14,7 +14,8 @@ lsb-release
 net-tools
 netbase
 nvme-cli
-policykit-1
+pkexec
+polkitd
 procps
 quota
 sosreport
@@ -25,6 +26,7 @@ systemd-boot
 systemd-boot-efi
 systemd-coredump
 systemd-cron
+systemd-repart
 systemd-timesyncd
 tcpdump
 traceroute

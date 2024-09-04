@@ -1,0 +1,6 @@
+description: |
+  STIG Development/Debugging Setup. Never enable for production images. Will set known passwords for users.
+type: element
+features:
+  include:
+    - stig

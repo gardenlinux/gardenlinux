@@ -45,19 +45,19 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@9742ad16c70308bc8fa5f850d6ee6b22f2cce076 # pin@v2
-        with:
-          metric_frequency: 1
-          proc_trace_min_duration: 10
-          proc_trace_chart_max_count: 50
-          comment_on_pr: false
+      # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
+      #   with:
+      #     metric_frequency: 1
+      #     proc_trace_min_duration: 10
+      #     proc_trace_chart_max_count: 50
+      #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
-      - name: bulid certificates
+      - name: build certificates
         if: ${{ ! inputs.use_kms }}
         run: ./cert/build
       - name: use kms backed certificates
@@ -67,51 +67,63 @@ jobs:
           for f in secureboot.{{pk,null.pk,kek,db}.auth,db.{crt,arn}}; do
             ln -sr "cert/gardenlinux-$f" "cert/$f"
           done
-      - uses: actions/cache/save@e12d46a63a90f2fae62d114769bbf2a179198b5c # pin@v3
+      - uses: actions/cache/save@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
         with:
           path: cert
           key: cert-${{ github.run_id }}
   base:
     name: bootstrap stage
     needs: version
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
     defaults:
       run:
         shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ amd64, arm64 ]
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@9742ad16c70308bc8fa5f850d6ee6b22f2cce076 # pin@v2
-        with:
-          metric_frequency: 1
-          proc_trace_min_duration: 10
-          proc_trace_chart_max_count: 50
-          comment_on_pr: false
+      # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
+      #   with:
+      #     metric_frequency: 1
+      #     proc_trace_min_duration: 10
+      #     proc_trace_chart_max_count: 50
+      #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
+        with:
+          arch: "${{ matrix.arch }}"
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
-      - name: build base-amd64 base-arm64
-        run: ./build base-amd64 base-arm64
-      - uses: actions/cache/save@e12d46a63a90f2fae62d114769bbf2a179198b5c # pin@v3
+      - name: build base-${{ matrix.arch }}
+        run: ./build base-${{ matrix.arch }}
+      - uses: actions/cache/save@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
         with:
           path: .build
-          key: base-${{ github.run_id }}
+          key: base-${{ matrix.arch }}-${{ github.run_id }}
   test_container:
     name: container image for tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
     defaults:
       run:
         shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ amd64, arm64 ]
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@9742ad16c70308bc8fa5f850d6ee6b22f2cce076 # pin@v2
-        with:
-          metric_frequency: 1
-          proc_trace_min_duration: 10
-          proc_trace_chart_max_count: 50
-          comment_on_pr: false
+      # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
+      #   with:
+      #     metric_frequency: 1
+      #     proc_trace_min_duration: 10
+      #     proc_trace_chart_max_count: 50
+      #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
+        with: 
+          arch: "${{ matrix.arch }}"
       - name: build test container
         run: |
           OCI_IMAGE_TAG="$(./build --print-container-image)"
@@ -121,13 +133,13 @@ jobs:
           podman build --squash --tag test --build-arg base="$OCI_IMAGE_TAG" tests
           podman save --format oci-archive test > test.oci
       - name: upload test container
-        uses: actions/cache/save@e12d46a63a90f2fae62d114769bbf2a179198b5c # pin@v3
+        uses: actions/cache/save@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
         with:
           path: test.oci
-          key: test_container:${{ github.run_id }}
+          key: test_container:${{ matrix.arch }}-${{ github.run_id }}
   images:
     needs: [ version, cert, base, test_container ]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
     defaults:
       run:
         shell: bash
@@ -138,7 +150,7 @@ jobs:
       fail-fast: false
       matrix:
         arch: [ amd64, arm64 ]
-        target: [ kvm, "kvm_secureboot", "kvm_secureboot_readonly", "kvm_secureboot_readonly_persistence", metal, "metal_secureboot", "metal_secureboot_readonly", "metal_secureboot_readonly_persistence", gcp, aws, "aws_secureboot", "aws_secureboot_readonly", "aws_secureboot_readonly_persistence", azure, ali, openstack, openstackbaremetal, vmware, "metal_pxe", firecracker, "metal-vhost" ]
+        target: [ kvm, "kvm_secureboot", "kvm_secureboot_readonly", "kvm_secureboot_readonly_persistence", metal, "metal_secureboot", "metal_secureboot_readonly", "metal_secureboot_readonly_persistence", gcp, gdch, aws, "aws_secureboot", "aws_secureboot_readonly", "aws_secureboot_readonly_persistence", azure, ali, openstack, openstackbaremetal, vmware, "metal_pxe", firecracker, "metal-vhost" ]
         modifier: [ "${{ inputs.default_modifier }}" ]
         include:
           - target: container
@@ -148,20 +160,22 @@ jobs:
             arch: arm64
             modifier: ""
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@9742ad16c70308bc8fa5f850d6ee6b22f2cce076 # pin@v2
-        with:
-          metric_frequency: 1
-          proc_trace_min_duration: 10
-          proc_trace_chart_max_count: 50
-          comment_on_pr: false
+      # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
+      #   with:
+      #     metric_frequency: 1
+      #     proc_trace_min_duration: 10
+      #     proc_trace_chart_max_count: 50
+      #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
+        with: 
+          arch: "${{ matrix.arch }}"
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
       - name: load cert cache
-        uses: actions/cache/restore@e12d46a63a90f2fae62d114769bbf2a179198b5c # pin@v3
+        uses: actions/cache/restore@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
         with:
           path: cert
           key: cert-${{ github.run_id }}
@@ -177,16 +191,16 @@ jobs:
           role-session-name: ${{ secrets.aws_oidc_session }}
           aws-region: ${{ secrets.aws_region }}
       - name: load bootstrap stage cache
-        uses: actions/cache/restore@e12d46a63a90f2fae62d114769bbf2a179198b5c # pin@v3
+        uses: actions/cache/restore@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
         with:
           path: .build
-          key: base-${{ github.run_id }}
+          key: base-${{ matrix.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: download test container cache
-        uses: actions/cache/restore@e12d46a63a90f2fae62d114769bbf2a179198b5c # pin@v3
+        uses: actions/cache/restore@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
         with:
           path: test.oci
-          key: test_container:${{ github.run_id }}
+          key: test_container:${{ matrix.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: import test container image
         run: |
@@ -200,21 +214,23 @@ jobs:
         run: ./build ${{ inputs.use_kms && '--kms' || '' }} ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
       - name: test
         run: ./test --container-image test ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
-      - uses: pmeier/pytest-results-action@035bda205f160abee0b277db11ac6ca01175ca7d # pin@v0.6.0
+      - uses: pmeier/pytest-results-action@fc6576eced1f411ea48ab10e917d9cfce2960e29 # pin@v0.7.1
         if: always()
         with:
           path: tests/test.xml
       - name: get cname
-        run: echo "cname=$(basename "$(realpath ".build/${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}")" .artifacts)" | tee -a "$GITHUB_ENV"
+        run: |
+          cname=$(basename "$(realpath ".build/${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}")" .artifacts)
+          echo "cname=$cname" | tee -a "$GITHUB_ENV"
       - name: pack build artifacts for upload
         run: tar -cSzvf "${{ env.cname }}.tar.gz" -C .build -T ".build/${{ env.cname }}.artifacts"
-      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # pin@v3
+      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # pin@v3
         with:
           name: "${{ env.cname }}"
           path: "${{ env.cname }}.tar.gz"
   bare_flavors:
     needs: [ version, base ]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
     defaults:
       run:
         shell: bash
@@ -224,23 +240,25 @@ jobs:
         arch: [ amd64, arm64 ]
         config: [ libc, python, nodejs, sapmachine ]
     steps:
-      - uses: gardenlinux/workflow-telemetry-action@9742ad16c70308bc8fa5f850d6ee6b22f2cce076 # pin@v2
-        with:
-          metric_frequency: 1
-          proc_trace_min_duration: 10
-          proc_trace_chart_max_count: 50
-          comment_on_pr: false
+      # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
+      #   with:
+      #     metric_frequency: 1
+      #     proc_trace_min_duration: 10
+      #     proc_trace_chart_max_count: 50
+      #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
+        with:
+          arch: "${{ matrix.arch }}"
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
       - name: load bootstrap stage cache
-        uses: actions/cache/restore@e12d46a63a90f2fae62d114769bbf2a179198b5c # pin@v3
+        uses: actions/cache/restore@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
         with:
           path: .build
-          key: base-${{ github.run_id }}
+          key: base-${{ matrix.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: update bootstrap stage build artifact timestamps
         run: |
@@ -248,7 +266,13 @@ jobs:
           find .build -exec touch -d "@$t" {} +
       - name: build
         run: ./build_bare_flavors --arch "${{ matrix.arch }}" "${{ matrix.config }}"
-      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # pin@v3
+      - name: test
+        run: |
+          image="$(podman load < .build/bare_flavors/${{ matrix.config }}-${{ matrix.arch }}.oci | awk '{ print $NF }')"
+          cd bare_flavors/${{ matrix.config }}/test
+          podman build -t test --build-arg image="$image" .
+          podman run --rm test
+      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # pin@v3
         with:
           name: "bare-${{ matrix.config }}-${{ matrix.arch }}"
           path: ".build/bare_flavors/${{ matrix.config }}-${{ matrix.arch }}.oci"

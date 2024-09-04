@@ -3,7 +3,6 @@
 # Table of Content
 - [General](#general)
 - [Test oci](#test-oci)
-- [Test garden_feat](#test-garden_feat)
 
 # General
 
@@ -21,7 +20,6 @@ local:
       image: /build/kvm_dev_oci-amd64-today-local.oci.tar.xz
       kernel: /build/kvm_dev_oci-amd64-today-local.vmlinuz
 
-    garden_feat:
 ```
 
 # Test oci
@@ -39,9 +37,3 @@ Configuration options:
 - **oci** contains the configuration options for local test `test_oci`
     - **image** the build result image used within the tests
     - **kernel** the name for the builded kernel
-
-# Test garden_feat
-
-This test checks if the script `bin/garden-feat` is working as expected. The script creates the Garden Linux features list during build, therefore it is important to resolve dependencies between the feature properly.
-
-This test does not have any configuration options.

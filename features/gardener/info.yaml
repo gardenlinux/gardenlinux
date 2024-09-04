@@ -1,4 +1,4 @@
-description: 'gardener.cloud requirements (e.g. docker, containerd)'
+description: 'gardener.cloud requirements (e.g. containerd)'
 type: element
 features:
   include:

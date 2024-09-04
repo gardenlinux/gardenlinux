@@ -1,0 +1,5 @@
+curl
+dosfstools
+btrfs-progs
+xfsprogs
+dracut-network

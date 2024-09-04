@@ -19,6 +19,7 @@ from helper.sshclient import RemoteClient
 from paramiko import RSAKey
 
 
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -694,7 +695,12 @@ class AWS:
         volume_tags = self._tags.copy()
         volume_tags.append({'Key': 'sec-by-def-ebs-encryption-exception', 'Value': 'enabled'})
 
+        startup_script = """#!/bin/bash
+        systemctl start ssh
+        """
+
         instance = self.ec2_resource.create_instances(
+            UserData = startup_script,
             BlockDeviceMappings=[
                 {
                     "DeviceName": "/dev/xvda",

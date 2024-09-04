@@ -1,21 +1,22 @@
 # Garden Linux Repositories
 
-The apt repository is exposed at `repo.gardenlinux.io`.
+The apt repository is exposed at `packages.gardenlinux.io`.
 If you have added the repository to the `/etc/apt/sources.list` or a file in the folder `/etc/apt/sources.list.d/`,
 you can search for packets via `apt search`. Searching by opening the url in a webbrowser is currently disabled.
 
-The `repo.gardenlinux.io` repository contains our own packages and a selected set of packages mirrored from `Debian testing`.
-Packages are built, signed and deployed via the Garden Linux gitlab pipelines.
+The `packages.gardenlinux.io` repository contains our own packages and a selected set of packages mirrored from `Debian testing`.
+Packages are built, signed and deployed via the Garden Linux package and repo build pipelines on GitHub see https://github.com/gardenlinux/repo.
 
 
 | Release  | Line for `/etc/apt/sources.list`  | Description  |
 |---|---|---|
-| dev  | `deb https://repo.gardenlinux.io/gardenlinux dev main`  | New package versions are publishes here first. |
-| `$major.$minor` | `deb https://repo.gardenlinux.io/gardenlinux major.minor main` | Packages for the the Garden Linux version `major.minor`  |
+| today | `deb https://packages.gardenlinux.io/gardenlinux today main`  | Link to the latest daily version of Garden Linux. |
+| `$major.$minor` | `deb https://packages.gardenlinux.io/gardenlinux $major.$minor main` | Packages for the the Garden Linux version `major.minor`  |
+| experimental | `deb https://packages.gardenlinux.io/gardenlinux experimental main` | Current experimental distribution. Contains manually selected packages, and not guarantee about stability. Packages from experimental do NOT necessarily transition into a `today` version  |
 
 
 ## Versioning
-`$major` is the number of days since `31.03.2020`.
+`$major` is the number of days since `2020-03-31`.
 
 For each day since we switched to an own package repository, 
 we offer a respective distribution in our repo.gardenlinux.io apt repository.
