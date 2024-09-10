@@ -35,7 +35,7 @@
   - CIS Framework *(optional)*
 - Testing
   - Unit tests (Created image testing)
-  - Integration tests (Image integration tests in all supported platforms)
+  - Platform tests (Image platform tests in all supported platforms)
   - License violations (Testing for any license violations)
   - Outdated software versions (Testing for outdated software)
 - Supporting major platforms out-of-the-box

@@ -29,6 +29,8 @@
 !/cert/gardenlinux.sign.pub
 /features/metal/file.include/lib/firmware/
 /container/*/_pipfiles
+.direnv
+.envrc
 .idea
 __pycache__
 /dev
@@ -43,3 +45,5 @@ make_targets.cache
 /bin/swtpm-sock
 .DS_Store
 venv
+config
+shell.nix

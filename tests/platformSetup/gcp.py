@@ -137,7 +137,7 @@ class GCP:
         self.logger.info(f"Creating VPC {network_name}...")
         vpc_rest_body = {
             "auto_create_subnetworks": False,
-            "description": "vpc for Garden Linux integration tests",
+            "description": "vpc for Garden Linux platform tests",
             "mtu": 1460,
             "name": network_name,
             "routing_config": {
@@ -150,7 +150,7 @@ class GCP:
 
         self.logger.info(f"Creating subnet with CIDR {subnet_cidr} in VPC {network_name} and region {self.region}...")
         subnet_rest_body = {
-            "description": "Subnet for Garden Linux integration tests",
+            "description": "Subnet for Garden Linux platform tests",
             "enable_flow_logs": False,
             "ip_cidr_range": subnet_cidr,
             "name": network_name,
@@ -187,7 +187,7 @@ class GCP:
 
         self._tags = {
             "component": "gardenlinux",
-            "test-type": "integration-test",
+            "test-type": "platform-test",
             "test-name": self.test_name,
             "test-uuid": str(uuid.uuid4()),
         }
@@ -295,7 +295,7 @@ class GCP:
                     "I_p_protocol": "icmp"
                 }
             ],
-            "description": "allow incoming SSH and ICMP for Garden Linux integration tests",
+            "description": "allow incoming SSH and ICMP for Garden Linux platform tests",
             "direction": "INGRESS",
             "kind": "compute#firewall",
             "log_config": {

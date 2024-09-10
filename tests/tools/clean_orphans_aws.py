@@ -8,7 +8,7 @@ def clean_keypairs(client, force: bool = False):
     keypairs = client.describe_key_pairs(
         Filters=[
             {'Name': 'tag:component', 'Values': ['gardenlinux']},
-            {'Name': 'tag:test-type', 'Values': ['integration-test']}
+            {'Name': 'tag:test-type', 'Values': ['platform-test']}
         ]
     )
 
@@ -33,7 +33,7 @@ def clean_images(client, force: bool = False):
     images = client.describe_images(
         Filters=[
             {'Name': 'tag:component', 'Values': ['gardenlinux']},
-            {'Name': 'tag:test-type', 'Values': ['integration-test']}
+            {'Name': 'tag:test-type', 'Values': ['platform-test']}
         ]
     )
 
@@ -59,7 +59,7 @@ def clean_security_groups(client, force: bool = False):
     secgroups = client.describe_security_groups(
         Filters=[
             {'Name': 'tag:component', 'Values': ['gardenlinux']},
-            {'Name': 'tag:test-type', 'Values': ['integration-test']}
+            {'Name': 'tag:test-type', 'Values': ['platform-test']}
         ]
     )
 
@@ -90,7 +90,7 @@ def clean_snapshot(client, force: bool = False):
     snapshots = client.describe_snapshots(
         Filters=[
             {'Name': 'tag:component', 'Values': ['gardenlinux']},
-            {'Name': 'tag:test-type', 'Values': ['integration-test']}
+            {'Name': 'tag:test-type', 'Values': ['platform-test']}
         ]
     )
 
@@ -114,7 +114,7 @@ def clean_instances(client, force: bool = False):
     instances = client.describe_instances(
         Filters=[
             {'Name': 'tag:component', 'Values': ['gardenlinux']},
-            {'Name': 'tag:test-type', 'Values': ['integration-test']}
+            {'Name': 'tag:test-type', 'Values': ['platform-test']}
         ]
     )
 
@@ -152,7 +152,7 @@ def clean_buckets(client, force: bool = False):
             tags = {tt['Key']:tt['Value'] for tt in client.get_bucket_tagging(Bucket=bckt['Name'])['TagSet']}
         except ClientError:
             continue
-        if 'component' in tags and tags['component'] == 'gardenlinux' and 'test-type' in tags and tags['test-type'] == 'integration-test':
+        if 'component' in tags and tags['component'] == 'gardenlinux' and 'test-type' in tags and tags['test-type'] == 'platform-test':
             bucket_count += 1
             print(f"Bucket name: {bckt['Name']}")
             print("Tags:")

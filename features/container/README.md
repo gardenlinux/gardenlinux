@@ -13,7 +13,7 @@ Custom Garden Linux artifacts created by this feature can be loaded by running e
 ### Unit testing
 This platform features supports unit testing and is based on the `chroot` fixture.
 
-To ensure that unit tests can be performed the package `openssh-server` gets installed within a `chroot` during the [unit testing](../../tests/integration/chroot.py#L188-L200).
+To ensure that unit tests can be performed the package `openssh-server` gets installed within a `chroot` during the [unit testing](../../tests/platform/chroot.py#L188-L200).
 
 Testing of specific units can be avoided by placing the `non_container` fixture.
 

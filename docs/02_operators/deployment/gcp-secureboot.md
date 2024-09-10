@@ -1,13 +1,13 @@
 # Enable secure boot for Garden Linux on GCP
 
-This article describes all steps needed to spawn a secure boot enabled Garden Linux image on GCP. Thereby, it uses the integration testing platform for spawning all required GCP resources. For more information about the integration testing platform used for Garden Linux, take a look [here](../../tests/README.md)
+This article describes all steps needed to spawn a secure boot enabled Garden Linux image on GCP. Thereby, it uses the platform testing platform for spawning all required GCP resources. For more information about the platform testing platform used for Garden Linux, take a look [here](../../tests/README.md)
 
 ## Table of Content
 
 - [Create image](#create-image)
 - [Prepare spawning](#prepare-spawning)
   - [UEFI variables](#uefi-variables)
-  - [Integration test configuration](#integration-test-configuration)
+  - [Platform test configuration](#platform-test-configuration)
 - [Spawn environment](#spawn-environment)
 - [Use secure boot enabled Garden Linux](#use-secure-boot-enabled-garden-linux)
 - [Cleanup everything](#cleanup-everything)
@@ -34,14 +34,14 @@ The keys and signature database are created in the [cert/](../../cert/) director
 
 These files are required during startup. Therefore, they must be added to the spawned GCP image. In order to achieve this, the files are added as metadata to the image upload.
 
-### Integration test configuration
-Before one can spawn the required GCP environment, a configuration for the integration test platform is needed.
+### Platform test configuration
+Before one can spawn the required GCP environment, a configuration for the platform test platform is needed.
 
 The following example shows such a configuration. For test purposes, it uses the `europe-west1` region and a small instance type.
 
 In general, there is no need to adjust this configuration, if you have created the Garden Linux image as described in this [chapter](#create-image).
 
-However, you may need to adjust the project name matching the name of the project you are planning to use for the integration tests. Also make sure the ssh_key_filepath points to the ssh private key, you want to use to access the running instance with, the SSH public key must be in the same directory and have the same file name as the SSH private key with a `.pub` suffix. Additionally you may need to adjust the path to your image artifact which should look like `gcp-gardener_dev_secureboot-amd64-today-<commit hash|local>.tar.gz`.
+However, you may need to adjust the project name matching the name of the project you are planning to use for the platform tests. Also make sure the ssh_key_filepath points to the ssh private key, you want to use to access the running instance with, the SSH public key must be in the same directory and have the same file name as the SSH private key with a `.pub` suffix. Additionally you may need to adjust the path to your image artifact which should look like `gcp-gardener_dev_secureboot-amd64-today-<commit hash|local>.tar.gz`.
 
 ```
 gcp:
@@ -104,19 +104,19 @@ gcp:
 
 ```
 
-The content must be saved into a YAML file and it must be mounted to the integration test container later on. For this, create a folder in your home directory and place the YAML in there. This folder will be mounted to the integration test container then. The configuration could be called `gcp-secureboot.yaml` for example.
+The content must be saved into a YAML file and it must be mounted to the platform test container later on. For this, create a folder in your home directory and place the YAML in there. This folder will be mounted to the platform test container then. The configuration could be called `gcp-secureboot.yaml` for example.
 
 ## Spawn environment
 
-The environment can now be spawned by using the integration test platform. As described in the corresponding [documentation](../../tests/README.md#prerequisites-1), you must have the integration test container in place.
+The environment can now be spawned by using the platform test platform. As described in the corresponding [documentation](../../tests/README.md#prerequisites-1), you must have the platform test container in place.
 As described there, the following command is used:
 
 ```
-make container-integration
+make container-platform
 ```
 Alternatively the following command will lead to the same result.
 ```
-make --directory=container build-integration-test
+make --directory=container build-platform-test
 ```
 
 Then, make sure you have API access to GCP by having your credentials in your home directory. There should be a file called `~/.config/gcloud/application_default_credentials.json`. If it's not there, you need to login via the following command:
@@ -124,14 +124,14 @@ Then, make sure you have API access to GCP by having your credentials in your ho
 gcloud auth application-default login
 ```
 
-After that, the integration test container can be started like this. Make sure that you are in the Garden Linux repo while executing this command.
+After that, the platform test container can be started like this. Make sure that you are in the Garden Linux repo while executing this command.
 ```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/integration-test:`bin/garden-version` bash
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test:`bin/garden-version` bash
 ```
 
 As you can see, the current Garden Linux repo is mounted into the container (`/gardenlinux`). Moreover, it also gets access to the GCP credentials, the SSH directory and the previously created configuration (`~/config`).
 
-Once you executed the command, you should have access to the bash terminal within the container. From there, you can execute the integration test, which will create all required GCP resources for you. Since we've set the `keep_running` parameter to `true`, the created resources will remain after the execution, so that we can access the instance via SSH for further testing afterwards.
+Once you executed the command, you should have access to the bash terminal within the container. From there, you can execute the platform test, which will create all required GCP resources for you. Since we've set the `keep_running` parameter to `true`, the created resources will remain after the execution, so that we can access the instance via SSH for further testing afterwards.
 
 ```
 pytest --iaas=gcp --configfile=/config/gcp-secureboot.yaml
@@ -139,7 +139,7 @@ pytest --iaas=gcp --configfile=/config/gcp-secureboot.yaml
 
 ## Use secure boot enabled Garden Linux
 
-After you have run the integration test from the previous chapter, you should still have the bash terminal open within the integration test container.
+After you have run the platform test from the previous chapter, you should still have the bash terminal open within the platform test container.
 
 From there, you can now use `ssh` to connect to the remote GCP instance running Garden Linux with secure boot enabled. Use the SSH private key you configured in the configuration yaml file.
 
@@ -169,12 +169,12 @@ System:
 
 ## Cleanup everything
 
-Since the we set `keep_running` in the configuration yaml to `true` the resources are not deleted automatically after the tests finished. Therefore the script `clean_orphans_gcp.py` exists to help remove the resources spawned by the integration tests. Within the integration-test container, execute the following command. The integration container can be started as stated in the [Running the tests](../../tests/README.md#running-the-tests) documentation of GCP within the `tests/` directory or in the previous chapter [Spawn environment](#spawn-environment).
+Since the we set `keep_running` in the configuration yaml to `true` the resources are not deleted automatically after the tests finished. Therefore the script `clean_orphans_gcp.py` exists to help remove the resources spawned by the platform tests. Within the platform-test container, execute the following command. The platform container can be started as stated in the [Running the tests](../../tests/README.md#running-the-tests) documentation of GCP within the `tests/` directory or in the previous chapter [Spawn environment](#spawn-environment).
 ```
 /gardenlinux/tests/tools/clean_orphans_gcp.py
 ```
 
-This command is an interactive tool for cleaning up your GCP environment. Thereby, it will only focus on resources which have been created by the integration test scripts before. This is achieved by using corresponding tags. 
+This command is an interactive tool for cleaning up your GCP environment. Thereby, it will only focus on resources which have been created by the platform test scripts before. This is achieved by using corresponding tags. 
 Once executed, the `clean_orphans_gcp.py` script will ask for the following resources:
 * Instances
 * Subnetworks
@@ -184,13 +184,13 @@ Once executed, the `clean_orphans_gcp.py` script will ask for the following reso
 
 Each resource and the removal of it will only be executed by pressing the `y` button into the prompt. You can also skip some of the resources by pressing `N`.
 
-Since an environment can also run other integration test resources which may not be removed, you can identify each resource by corresponding tags and a created UUID for each test run. At the beginning of the integration test for example, the integration test prints the information about the used UUID which can then be used for identifying the proper GCP resources easily:
+Since an environment can also run other platform test resources which may not be removed, you can identify each resource by corresponding tags and a created UUID for each test run. At the beginning of the platform test for example, the platform test prints the information about the used UUID which can then be used for identifying the proper GCP resources easily:
 
 ```
 INFO     gcp-testbed:gcp.py:204 This test's tags are:
 INFO     gcp-testbed:gcp.py:206         component: gardenlinux
-INFO     gcp-testbed:gcp.py:206         test-type: integration-test
+INFO     gcp-testbed:gcp.py:206         test-type: platform-test
 INFO     gcp-testbed:gcp.py:206         test-name: gl-test-20221130100632
 INFO     gcp-testbed:gcp.py:206         test-uuid: dc183e89-8f9e-454f-a080-80831d833f05
 ```
-The `clean_orphans_gcp.py` script will always print the tags of GCP resources as well once it ask you to remove them, so it should be possible to identify the correct resources and skip them if they do not belong to the integration test of this documentation.
+The `clean_orphans_gcp.py` script will always print the tags of GCP resources as well once it ask you to remove them, so it should be possible to identify the correct resources and skip them if they do not belong to the platform test of this documentation.

@@ -73,8 +73,8 @@ jobs:
 
     - name: pull container image
       run: |
-        podman pull "ghcr.io/gardenlinux/gardenlinux/integration-test:$GITHUB_SHA"
-        podman tag "ghcr.io/gardenlinux/gardenlinux/integration-test:$GITHUB_SHA" ghcr.io/gardenlinux/gardenlinux/integration-test:today
+        podman pull "ghcr.io/gardenlinux/gardenlinux/platform-test:$GITHUB_SHA"
+        podman tag "ghcr.io/gardenlinux/gardenlinux/platform-test:$GITHUB_SHA" ghcr.io/gardenlinux/gardenlinux/platform-test:today
 
     - name: set VERSION=${{ inputs.version }}
       run: |

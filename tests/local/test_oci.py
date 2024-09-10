@@ -49,7 +49,7 @@ def test_oci_feat(local, testconfig):
 
     # provide a config file for the registry
     # this will enable plain http serving without authentication
-    docker_registry_config_src = "integration/misc/docker_registry_config_integrations_tests"
+    docker_registry_config_src = "platformSetup/misc/docker_registry_config_platform_tests"
     docker_registry_config_dest = "/etc/docker/registry/config.yml"
 
     try:

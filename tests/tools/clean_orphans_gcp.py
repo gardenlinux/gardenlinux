@@ -10,7 +10,7 @@ import google.cloud.storage as storage
 import google.oauth2
 
 
-parser = argparse.ArgumentParser(description = 'Cleanup integration test resources in GCP')
+parser = argparse.ArgumentParser(description = 'Cleanup platform test resources in GCP')
 parser.add_argument('-p', '--project', metavar='project_id', required=False, dest='project', default='sap-cp-k8s-gdnlinux-gcp-test',
                     help='Default value is "sap-cp-k8s-gdnlinux-gcp-test"')
 parser.add_argument('-r', '--region', metavar='region', required=False, dest='region', default='europe-west1', 

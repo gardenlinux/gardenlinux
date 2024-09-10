@@ -1,5 +1,5 @@
 [Unit]
-Description=OpenBSD Secure Shell server for Integration Tests
+Description=OpenBSD Secure Shell server for Platform Tests
 Documentation=man:sshd(8) man:sshd_config(5)
 After=network.target auditd.service
 ConditionPathExists=!/etc/ssh/sshd_not_to_be_run
@@ -9,7 +9,7 @@ StartLimitBurst=20
 [Service]
 EnvironmentFile=-/etc/default/ssh
 ExecStartPre=/usr/sbin/sshd -t
-ExecStart=/usr/sbin/sshd -D $SSHD_OPTS -f /etc/ssh/sshd_config_integration_tests
+ExecStart=/usr/sbin/sshd -D $SSHD_OPTS -f /etc/ssh/sshd_config_platform_tests
 ExecReload=/usr/sbin/sshd -t
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
