@@ -208,13 +208,13 @@ def gcp_credentials(testconfig, pipeline, request):
 @pytest.fixture(scope="session")
 def local(iaas):
     logger.info(f"Testconfig for {iaas=} is {testconfig}")
-    test_name = testconfig.get('test_name', f"gl-test-{time.strftime('%Y%m%d%H%M%S')}")
+    test_name = testconfig.get('test_name', f"gl-test-{time.strftime('%Y%m%d')}-{os.urandom(2).hex()}")
 
 
 @pytest.fixture(scope="session")
 def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
     logger.info(f"Testconfig for {iaas=} is {testconfig}")
-    test_name = testconfig.get('test_name', f"gl-test-{time.strftime('%Y%m%d%H%M%S')}")
+    test_name = testconfig.get('test_name', f"gl-test-{time.strftime('%Y%m%d')}-{os.urandom(2).hex()}")
     if iaas == "aws":
         session = request.getfixturevalue('aws_session')
         yield from AWS.fixture(session, testconfig, imageurl, test_name)
