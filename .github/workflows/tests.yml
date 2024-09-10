@@ -56,13 +56,15 @@ jobs:
       fail-fast: false
       matrix:
         arch: [ amd64, arm64 ]
-        target: [ gcp, aws, azure, ali ]
+        target: [ gcp, aws, aws_trustedboot, aws_trustedboot_tpm2, azure, ali ]
         modifier: [ "${{ inputs.default_modifier }}" ]
         exclude:
           - arch: arm64
             target: azure
           - arch: arm64
             target: ali
+          - arch: arm64
+            target: aws_trustedboot_tpm2
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
     - uses: ./.github/actions/setup
@@ -103,7 +105,7 @@ jobs:
         cleanup_credentials: true
         export_environment_variables: true
 
-    - if: ${{ matrix.target == 'aws' }}
+    - if: ${{ matrix.target == 'aws' || matrix.target == 'aws_trustedboot' || matrix.target == 'aws_trustedboot_tpm2' }}
       id: 'auth_aws'
       name: 'Authenticate to AWS'
       uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4

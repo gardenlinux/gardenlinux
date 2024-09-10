@@ -150,7 +150,7 @@ jobs:
       fail-fast: false
       matrix:
         arch: [ amd64, arm64 ]
-        target: [ kvm, "kvm_trustedboot_tpm2", metal, "metal_trustedboot_tpm2", gcp, gdch, aws, "aws_trustedboot_tpm2", azure, ali, openstack, openstackbaremetal, vmware, "metal_pxe", firecracker, "metal-vhost" ]
+        target: [ kvm, "kvm_trustedboot", "kvm_trustedboot_tpm2", metal, "metal_trustedboot", "metal_trustedboot_tpm2", gcp, gdch, aws, "aws_trustedboot", "aws_trustedboot_tpm2", azure, ali, openstack, openstackbaremetal, vmware, "metal_pxe", firecracker, "metal-vhost" ]
         modifier: [ "${{ inputs.default_modifier }}" ]
         include:
           - target: container
