@@ -12,7 +12,7 @@ on:
 
 jobs:
   tag_container_as_latest:
-    uses: ./.github/workflows/tag_latest_container.yaml
+    uses: ./.github/workflows/tag_latest_container.yml
     with:
       version: ${{ inputs.version }}
       is_latest:  ${{ inputs.is_latest }}
