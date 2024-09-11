@@ -8,7 +8,7 @@ on:
         description: "Release to be tagged (<xxxx>.<x>)"
       is_latest:
         required: true
-        type: string
+        type: boolean
         description: "is tagging as gardenlinux:latest required"
 jobs:
   tag_version:
@@ -21,6 +21,8 @@ jobs:
       - name: tag latest and release container
         run: |
           # prepare the version names
+          version="${{ inputs.version }}"
+          is_latest="${{ inputs.is_latest }}"
           version_major=$(echo $version | cut -d'.' -f 1)
           version_patch=$(echo $version | cut -d'.' -f 2)
           container_image = ghcr.io/${{ github.repository }}:${version}
@@ -36,7 +38,7 @@ jobs:
           podman tag ${container_image} ${container_major}
           podman push h${container_major}
           # retag latest only if requested
-          if [ "${is_latest}" == "yes" ]; then
+          if [ "${is_latest}" == "true" ]; then
             podman tag ${container_image} ${container_latest}
             podman push h${container_latest}
           fi
