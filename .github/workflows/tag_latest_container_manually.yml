@@ -12,11 +12,7 @@ on:
 
 jobs:
   tag_container_as_latest:
-    name: tag container base image as latest
-    runs-on: ubuntu-latest
-    steps:
-      - name: tag container as latest
-        uses: ./.github/workflows/tag_latest_container.yaml
-        with:
-          version: ${{ inputs.version }}
-          is_latest:  ${{ inputs.is_latest }}
+    uses: ./.github/workflows/tag_latest_container.yaml
+    with:
+      version: ${{ inputs.version }}
+      is_latest:  ${{ inputs.is_latest }}
