@@ -25,9 +25,9 @@ jobs:
           is_latest="${{ inputs.is_latest }}"
           version_major=$(echo $version | cut -d'.' -f 1)
           version_patch=$(echo $version | cut -d'.' -f 2)
-          container_image = ghcr.io/${{ github.repository }}:${version}
-          container_major = ghcr.io/${{ github.repository }}:${version_major}
-          container_latest = ghcr.io/${{ github.repository }}:latest
+          container_image=ghcr.io/${{ github.repository }}:${version}
+          container_major=ghcr.io/${{ github.repository }}:${version_major}
+          container_latest=ghcr.io/${{ github.repository }}:latest
           
           # login
           podman login -u token -p ${{ github.token }} ghcr.io
