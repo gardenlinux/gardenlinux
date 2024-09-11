@@ -36,9 +36,9 @@ jobs:
           ## tag the release
           podman pull ${container_image}
           podman tag ${container_image} ${container_major}
-          podman push h${container_major}
+          podman push ${container_major}
           # retag latest only if requested
           if [ "${is_latest}" == "true" ]; then
             podman tag ${container_image} ${container_latest}
-            podman push h${container_latest}
+            podman push ${container_latest}
           fi
