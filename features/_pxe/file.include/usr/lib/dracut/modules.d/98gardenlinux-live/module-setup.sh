@@ -26,7 +26,7 @@ install() {
     #inst_simple "/usr/lib/file/magic.mgc" "/usr/lib/file/magic.mgc"
 
     mkdir -m 0755 -p ${initdir}/etc/systemd/system/systemd-networkd-wait-online.service.d
-    inst_simple "$moddir/any.conf" "/etc/systemd/system/systemd-networkd-wait-online.service.d/any.conf"
+    inst_simple "$moddir/99-any.conf" "/etc/systemd/system/systemd-networkd-wait-online.service.d/99-zany.conf"
 
     # ignition-fetch after resolved
     mkdir -m 0755 -p "${initdir}/etc/systemd/system/ignition-fetch.service.d"
