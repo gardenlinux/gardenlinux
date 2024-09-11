@@ -16,7 +16,7 @@ if [ -z "${url#gl.url=}" ]; then
 	exit 0
 fi
 
-if ! curl --globoff --location --retry 3 --fail --show-error "${url}" --output "${squashFile}"; then
+if ! curl --globoff --location --retry 10 --retry-delay 3 --retry-max-time 30 --fail --show-error "${url}" --output "${squashFile}"; then
        warn "can't fetch the squashfs from ${url#gl.url=}"
        exit 1
 fi       
