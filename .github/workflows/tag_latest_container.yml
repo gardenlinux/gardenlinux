@@ -1,0 +1,42 @@
+name: tag latest and release container
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+        description: "Release to be tagged (<xxxx>.<x>)"
+      is_latest:
+        required: true
+        type: string
+        description: "is tagging as gardenlinux:latest required"
+jobs:
+  tag_version:
+    name: tag latest and release container
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: tag latest and release container
+        run: |
+          # prepare the version names
+          version_major=$(echo $version | cut -d'.' -f 1)
+          version_patch=$(echo $version | cut -d'.' -f 2)
+          container_image = ghcr.io/${{ github.repository }}:${version}
+          container_major = ghcr.io/${{ github.repository }}:${version_major}
+          container_latest = ghcr.io/${{ github.repository }}:latest
+          
+          # login
+          podman login -u token -p ${{ github.token }} ghcr.io
+
+          # pull -> tag -> push
+          ## tag the release
+          podman pull ${container_image}
+          podman tag ${container_image} ${container_major}
+          podman push h${container_major}
+          # retag latest only if requested
+          if [ "${is_latest}" == "yes" ]; then
+            podman tag ${container_image} ${container_latest}
+            podman push h${container_latest}
+          fi

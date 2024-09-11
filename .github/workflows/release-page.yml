@@ -11,6 +11,13 @@ on:
       version:
         required: true
         type: string
+      is_latest:
+        required: true
+        type: choice
+        options:
+        - yes
+        - no
+        description: "Tag as gardenlinux:latest"
       commit:
         required: true
         type: string
@@ -82,3 +89,11 @@ jobs:
           test -f "$prefix/$prefix.chroot.test.xml" && echo "$prefix/$prefix.chroot.test.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
           test -f ls -la "$prefix/$prefix.platform.test.log" && echo "$prefix/$prefix.platform.test.log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
           test -f ls -la "$prefix/$prefix.platform.test.xml" && echo "$prefix/$prefix.platform.test.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+  tag_container_as_latest:
+    name: publish gardenlinux container base image
+    steps:
+      - name: tag container as latest
+        uses: ./.github/workflows/tag_latest_container.yaml
+        with:
+          version: ${{ inputs.version }}
+          is_latest:  ${{ inputs.is_latest }}
