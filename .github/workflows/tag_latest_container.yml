@@ -19,12 +19,7 @@ jobs:
         shell: bash
     steps:
       - name: tag release and latest
-        run: |
-          # Prepare skopelo (podman can't do multi arch copy)
-          sudo apt-get -y update
-          sudo apt-get -y install skopeo
-          skopeo login -u token -p ${{ github.token }} ghcr.io
-          
+        run: |        
           # Setup version tags for latest & release without patch
           version="${{ inputs.version }}"
           is_latest="${{ inputs.is_latest }}"
@@ -33,13 +28,17 @@ jobs:
           container_image=ghcr.io/${{ github.repository }}:${version}
           container_major=ghcr.io/${{ github.repository }}:${version_major}
           
+          # Prepare skopelo (podman can't do multi arch copy)
+          skopeo login -u token -p ${{ github.token }} ghcr.io
+          
           # Tag the major release version
-          echo "Tagging docker:${container_image} as docker:${container_major}"
-          skopeo copy -a docker:${container_image} docker:${container_major}
+          echo "Tagging ${container_image} as ${container_major}"
+          skopeo copy -a docker://${container_image} docker://${container_major}
           
           # Tag latest only if requested
           if [ "${is_latest}" == "true" ]; then
             container_latest=ghcr.io/${{ github.repository }}:latest
-            echo "Tagging docker:${container_image} as docker:${container_latest}"
-            skopeo copy -a docker:${container_image} docker:${container_latest}
+            echo "Tagging ${container_image} as docker:${container_latest}"
+            skopeo copy -a docker://${container_image} docker://${container_latest}
           fi
+          
