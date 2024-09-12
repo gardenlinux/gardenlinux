@@ -48,7 +48,7 @@ class OVAImageBuild:
             sys.exit("Error getting image info for " + filename + ": " + result.stdout)
 
         doc = json.loads(result.stdout)
-        fileSize = doc["actual-size"]
+        fileSize = os.stat(filename).st_size
         virtualSize = doc["format-specific"]["data"]["extents"][0]["virtual-size"]
         return (fileSize, virtualSize)
 

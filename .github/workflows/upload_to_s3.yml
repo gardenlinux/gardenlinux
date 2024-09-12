@@ -51,14 +51,8 @@ jobs:
           echo "cname=$cname" | tee -a "$GITHUB_ENV"
       - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
         with:
-          name: build-${{ env.cname }}
-          path: build-${{ env.cname }}
-      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
-        with:
-          name: platform-test-${{ env.cname }}
-          path: platform-test-${{ env.cname }}
-        # artifacts might not exist if no platform-test ran (e.g. excluded)
-        continue-on-error: true
+          # match build-${{ env.cname }} and  platform-test-${{ env.cname }}
+          pattern: "*-${{ env.cname }}"
       # repack tar.gz from build workflow to contain platform-test logs (if they exist)
       - name: add platform-test logs to tar.gz
         run: |
