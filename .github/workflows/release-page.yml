@@ -31,7 +31,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"  
-      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # pin@v3
+      - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # pin@v4.4.0
         with:
           name: release
           path: .github_release_id
@@ -49,7 +49,7 @@ jobs:
         cname: [ kvm-gardener_prod, metal-gardener_prod, gcp-gardener_prod, gdch-gardener_prod, aws-gardener_prod, azure-gardener_prod, ali-gardener_prod, openstack-gardener_prod, openstackbaremetal-gardener_prod, vmware-gardener_prod, metal-gardener_prod_pxe ]
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v3
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
         with:
           name: release
       - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4

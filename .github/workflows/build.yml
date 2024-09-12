@@ -233,7 +233,7 @@ jobs:
         run: echo "${{ env.cname }}.chroot.test.xml" >> ".build/${{ env.cname }}.artifacts"
       - name: pack build artifacts for upload
         run: tar -cSzvf "${{ env.cname }}.tar.gz" -C .build -T ".build/${{ env.cname }}.artifacts"
-      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # pin@v3
+      - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # pin@v4.4.0
         with:
           name: "build-${{ env.cname }}"
           path: "${{ env.cname }}.tar.gz"
@@ -281,7 +281,7 @@ jobs:
           cd bare_flavors/${{ matrix.config }}/test
           podman build -t test --build-arg image="$image" .
           podman run --rm test
-      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # pin@v3
+      - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # pin@v4.4.0
         with:
           name: "build-bare-${{ matrix.config }}-${{ matrix.arch }}"
           path: ".build/bare_flavors/${{ matrix.config }}-${{ matrix.arch }}.oci"
