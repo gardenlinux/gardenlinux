@@ -49,7 +49,7 @@ jobs:
         run: |
           cname="$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})"
           echo "cname=$cname" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v3
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
         with:
           # match build-${{ env.cname }} and  platform-test-${{ env.cname }}
           pattern: "*-${{ env.cname }}"

@@ -86,7 +86,7 @@ jobs:
         cname="$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})"
         echo "cname=$cname" | tee -a "$GITHUB_ENV"
 
-    - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v3
+    - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
       with:
         name: build-${{ env.cname }}
         path: ${{ env.artifact_dir }}
@@ -134,7 +134,7 @@ jobs:
         set -o pipefail
         .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.arch }}" "${{ env.cname }}" 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.test.log"
 
-    - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # pin@v3
+    - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # pin@v4.4.0
       with:
         name: platform-test-${{ env.cname }}
         path: |
