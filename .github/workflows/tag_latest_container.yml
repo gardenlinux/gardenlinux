@@ -1,0 +1,44 @@
+name: tag latest and release container
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+        description: "Release to be tagged (<xxxx>.<x>)"
+      is_latest:
+        required: true
+        type: boolean
+        description: "is tagging as gardenlinux:latest required"
+jobs:
+  tag_version:
+    name: tag latest and release container
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: tag release and latest
+        run: |        
+          # Setup version tags for latest & release without patch
+          version="${{ inputs.version }}"
+          is_latest="${{ inputs.is_latest }}"
+          version_major=$(echo $version | cut -d'.' -f 1)
+          version_patch=$(echo $version | cut -d'.' -f 2)
+          container_image=ghcr.io/${{ github.repository }}:${version}
+          container_major=ghcr.io/${{ github.repository }}:${version_major}
+          
+          # Prepare skopelo (podman can't do multi arch copy)
+          skopeo login -u token -p ${{ github.token }} ghcr.io
+          
+          # Tag the major release version
+          echo "Tagging ${container_image} as ${container_major}"
+          skopeo copy -a docker://${container_image} docker://${container_major}
+          
+          # Tag latest only if requested
+          if [ "${is_latest}" == "true" ]; then
+            container_latest=ghcr.io/${{ github.repository }}:latest
+            echo "Tagging ${container_image} as docker:${container_latest}"
+            skopeo copy -a docker://${container_image} docker://${container_latest}
+          fi
+          
