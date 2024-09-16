@@ -1,0 +1,20 @@
+[Unit]
+DefaultDependencies=no
+After=cryptsetup-pre.target systemd-udevd-kernel.socket systemd-tpm2-setup-early.service
+Before=blockdev@dev-mapper-var.target
+Wants=blockdev@dev-mapper-var.target
+IgnoreOnIsolate=true
+Conflicts=umount.target
+Before=umount.target
+Before=cryptsetup.target
+After=systemd-repart.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutSec=infinity
+KeyringMode=shared
+OOMScoreAdjust=500
+ImportCredential=cryptsetup.*
+ExecStart=/usr/bin/systemd-cryptsetup attach var /dev/disk/by-partlabel/VAR
+ExecStop=/usr/bin/systemd-cryptsetup detach var
