@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+efi_part_dev="$(realpath "$1")"
+efi_part_name="$(basename "$efi_part_dev")"
+
+disk_name="$(basename "$(realpath "/sys/class/block/$efi_part_name/..")")"
+disk_dev="/dev/$disk_name"
+
+echo | sfdisk "$disk_dev"
+systemd-repart --dry-run=no --tpm2-device=auto --tpm2-pcrs=7 "$disk_dev"
+udevadm settle

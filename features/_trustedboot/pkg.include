@@ -1,0 +1,5 @@
+cryptsetup
+dracut
+efitools
+resizefat32
+systemd-boot-efi
