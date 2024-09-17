@@ -3,7 +3,7 @@
 # List installed Garden Linux kernel headers in /usr/src/
 echo "Installed Kernel Headers:"
 for header in /usr/src/linux-headers-*; do
-	if [ -d "$header" ]; then
-		echo "$(basename $header)"
+	if [ -d "${header}" ]; then
+		basename "${header}"
 	fi
 done
