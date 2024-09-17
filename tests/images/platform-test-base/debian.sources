@@ -1,0 +1,11 @@
+Types: deb
+URIs: http://snapshot.debian.org/archive/debian/__DEBIAN_TESTING_VERSION__T090000Z
+Suites: testing testing-updates
+Components: main
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: http://snapshot.debian.org/archive/debian-security/__DEBIAN_TESTING_VERSION__T090000Z
+Suites: testing-security
+Components: main
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
