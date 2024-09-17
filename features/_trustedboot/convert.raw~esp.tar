@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+input="$1"
+output="$2"
+
+esp_dir="$(mktemp -d)"
+mount -t tmpfs -o size="$TEMPFS_SIZE" tmpfs "$esp_dir"
+tar --extract --xattrs --xattrs-include '*' --directory "$esp_dir" < "$input"
+
+export PATH="/builder/image.d:$PATH"
+
+case "$BUILDER_ARCH" in
+	amd64)
+		uefi_arch=X64
+		gnu_arch=x86_64
+		;;
+	arm64)
+		uefi_arch=AA64
+		gnu_arch=aarch64
+		;;
+esac
+
+size_uki="$(du -sb "$esp_dir" | cut -f 1)"
+size_fat_mb="$(( ( ( size_uki + 1048575 ) / 1048576 ) + 64 ))"
+
+efi_partition="$(mktemp)"
+truncate -s "$size_fat_mb"MiB "$efi_partition"
+
+datefudge -s "@$BUILDER_TIMESTAMP" mformat -i "$efi_partition" -F -c 2 -N "$(echo -n "gardenlinux:$BUILDER_VERSION:efi:vfat" | sha256sum | cut -c -8)" -v EFI ::
+readarray -t esp_files < <(find "$esp_dir" -mindepth 1 -maxdepth 1)
+datefudge -s "@$BUILDER_TIMESTAMP" mcopy -i "$efi_partition" -s "${esp_files[@]}" ::
+
+resizefat32 -s min -t "$efi_partition"
+size_fat="$(du -b "$efi_partition" | cut -f 1)"
+size_fat_mb="$(( ( size_fat + 1048575 ) / 1048576 ))"
+
+gpt_disk="$(mktemp -u)"
+echo -e "$(echo "gardenlinux:$BUILDER_VERSION:efi" | uuid_hash)\tuefi\t$size_fat_mb\t0\t$efi_partition\tEFI" | makedisk /dev/null "$gpt_disk"
+
+cp --sparse always "$gpt_disk" "$output"
+rm "$gpt_disk"
+
+sha256sum "$output"
