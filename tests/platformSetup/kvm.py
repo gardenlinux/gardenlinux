@@ -214,7 +214,7 @@ class KVM:
         nft_ssh_platform_test_config = os.path.basename(nft_ssh_platform_test_config)
         guestfish_cmd = (
             f"guestfish -a /tmp/{image_name}.snapshot.qcow2 -i "
-            f"mkdir {authorized_keys_dir} : "
+            f"mkdir-p {authorized_keys_dir} : "
             f"mkdir-p {nft_dropin_config_dir} : "
             f"chown 0 0 {authorized_keys_dir} : "
             f"chmod 0700 {authorized_keys_dir} : "
@@ -254,7 +254,6 @@ class KVM:
         if arch == "amd64":
             cmd = f"/gardenlinux/bin/start-vm \
               --daemonize \
-              --no-watchdog \
               --arch x86_64 \
               --port {port} \
               --destport 2222 \
@@ -264,7 +263,6 @@ class KVM:
         elif arch == "arm64":
             cmd = f"/gardenlinux/bin/start-vm \
               --daemonize \
-              --no-watchdog \
               --arch aarch64 \
               --port {port} \
               --destport 2222 \
