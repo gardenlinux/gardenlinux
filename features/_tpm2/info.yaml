@@ -1,0 +1,5 @@
+description: "TPM2.0 backed encrypted var partition"
+type: flag
+features:
+  exclude:
+    - _ephemeral
