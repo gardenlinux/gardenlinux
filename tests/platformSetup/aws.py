@@ -42,6 +42,7 @@ def register_image(
     architecture: str,
     boot_mode: str='',
     uefi_data: str='',
+    tpm_support: str='',
 ) -> str:
     '''
     @return: ami-id of registered image
@@ -76,6 +77,8 @@ def register_image(
         arguments['BootMode'] = boot_mode
     if len(uefi_data) > 0:
         arguments['UefiData'] = uefi_data
+    if len(tpm_support) > 0:
+        arguments['TpmSupport'] = tpm_support
 
     # Now, register image
     result = ec2_client.register_image(**arguments)
@@ -197,6 +200,8 @@ class AWS:
             cfg['boot_mode'] = ""
         if not 'uefi_data' in cfg:
             cfg['uefi_data'] = ""
+        if not 'tpm_support' in cfg:
+            cfg['tpm_support'] = ""
         if not 'bucket' in cfg:
             cfg['bucket'] = f"img-{test_name}-upload"
         if not 'securitygroup_name' in cfg:
@@ -671,7 +676,8 @@ class AWS:
             image_name = image_name,
             architecture = self.config["architecture"],
             boot_mode = self.config["boot_mode"],
-            uefi_data = self.config["uefi_data"]
+            uefi_data = self.config["uefi_data"],
+            tpm_support = self.config["tpm_support"],
         )
         self.ec2_client.create_tags(
             Resources = [self._ami_id],
