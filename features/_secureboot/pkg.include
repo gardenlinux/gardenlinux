@@ -1,6 +1,0 @@
-efitools
-dracut
-systemd-boot-efi
-systemd-cryptsetup
-systemd-repart
-tpm2-tools

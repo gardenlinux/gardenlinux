@@ -1,6 +1,0 @@
-#!/bin/bash
-set -Eeufo pipefail
-
-efi-updatevar -f /etc/gardenlinux/gardenlinux-secureboot.pk.auth PK
-efi-updatevar -f /etc/gardenlinux/gardenlinux-secureboot.kek.auth KEK
-efi-updatevar -f /etc/gardenlinux/gardenlinux-secureboot.db.auth db
