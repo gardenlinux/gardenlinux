@@ -3,3 +3,5 @@
 /logs/
 __pycache__/
 test.log
+images/platform-test/**/Pipfile
+images/platform-test/**/Pipfile.lock

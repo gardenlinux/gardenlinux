@@ -1,0 +1,24 @@
+# overwrite with a stable gardenlinux version
+ARG GL_VERSION=latest
+# use platform-test-base image
+FROM gardenlinux/platform-test-base:${GL_VERSION}
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV SHELL /bin/bash
+
+#Virtual Env Created in platform-test-base
+ENV VIRTUAL_ENV="/opt/python-test-env/.venv"
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN : "Install firecracker requirements" \
+     && arch="$(uname -m)" \
+     && firecracker_ver="v1.1.4" \
+     && release_url="https://github.com/firecracker-microvm/firecracker/releases" \
+     && cd /usr/local \
+     && wget ${release_url}/download/${firecracker_ver}/firecracker-${firecracker_ver}-${arch}.tgz \
+     && tar -xzv --no-same-owner -f firecracker-${firecracker_ver}-${arch}.tgz \
+     && mv release-${firecracker_ver}-${arch} firecracker \
+     && cd /usr/local/bin && ln -s ../firecracker/firecracker-${firecracker_ver}-${arch} firecracker \
+     && rm -f /usr/local/firecracker-${firecracker_ver}-${arch}.tgz
+
+WORKDIR /gardenlinux/tests
