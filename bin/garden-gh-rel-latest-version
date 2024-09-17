@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+
+import requests
+import subprocess
+from datetime import datetime
+
+def get_gh_cli_token():
+    """Fetch GitHub authentication token using the gh CLI."""
+    try:
+        # Use subprocess to call the gh cli and get the auth token
+        result = subprocess.run(['gh', 'auth', 'token'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode == 0:
+            return result.stdout.strip()
+        else:
+            raise Exception("Failed to retrieve token using 'gh auth token'. Please ensure you're logged in.")
+    except Exception as e:
+        raise Exception(f"Error getting token from gh CLI: {str(e)}")
+
+def get_latest_github_release(repo, token):
+    """Fetch the latest release info from GitHub API using OAuth token."""
+    url = f"https://api.github.com/repos/{repo}/releases/latest"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    response = requests.get(url, headers=headers)
+    
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise Exception(f"Failed to fetch data: {response.status_code}, {response.json().get('message')}")
+
+if __name__ == "__main__":
+    repo_name = "gardenlinux/gardenlinux"
+    
+    try:
+        # Fetch GitHub authentication token
+        token = get_gh_cli_token()        
+
+        latest_release = get_latest_github_release(repo_name, token)
+        latest_tag = latest_release['tag_name']
+        print(latest_tag)
+            
+    except Exception as e:
+        print(str(e))
