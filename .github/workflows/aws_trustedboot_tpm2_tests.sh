@@ -19,11 +19,8 @@ done
 cname=$1
 
 configFile="aws_test_config.yaml"
-containerName="ghcr.io/gardenlinux/gardenlinux/integration-test:today"
+containerName="ghcr.io/gardenlinux/gardenlinux/platform-test:today"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
-platform_test_log_dir="/tmp/gardenlinux-platform-test-logs"
-
-mkdir -p "$platform_test_log_dir"
 
 pushd "$artifact_dir" || exit 1
 tar -xzf "$cname.tar.gz" "$cname.raw"
@@ -69,10 +66,10 @@ aws:
 EOF
 
 echo "### Start Integration Tests for AWS"
-podman run -it --rm -e 'AWS_*' -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" -v "$platform_test_log_dir:/platform-test-logs"  $containerName /bin/bash -s << EOF
+podman run -it --rm -e 'AWS_*' -v "$(pwd):/gardenlinux" -v "$(dirname "$image_file"):/artifacts" $containerName /bin/bash -s << EOF
 mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/
 cd /gardenlinux/tests
-pytest --iaas=aws --configfile=/gardenlinux/$configFile --junit-xml=/platform-test-logs/test-$cname-aws_junit.xml || exit 1
+pytest --iaas=aws --configfile=/gardenlinux/$configFile --junit-xml=/artifacts/$cname.platform.test.xml || exit 1
 exit 0
 EOF
