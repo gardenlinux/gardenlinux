@@ -4,7 +4,7 @@ SHELL := /usr/bin/env bash
 ROOT_DIR=$(shell git rev-parse --show-toplevel)
 GIT_SHA=$(shell git rev-parse HEAD)
 GIT_SHA_SHORT=$(shell git rev-parse --short HEAD)
-GL_VERSION ?= $(shell $(ROOT_DIR)/bin/garden-gh-rel-latest-version)
+GL_VERSION ?= $(shell $(ROOT_DIR)/bin/garden-version-latest)
 GL_DATE ?= $(shell $(ROOT_DIR)/bin/garden-version --date $(GL_VERSION))
 GL_REGISTRY ?= ghcr.io/gardenlinux
 

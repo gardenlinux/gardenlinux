@@ -64,7 +64,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [[ "${{ inputs.gl_version }}" == "latest" ]]; then
-            echo "GL_VERSION=$(bin/garden-gh-rel-latest-version)" >> ${GITHUB_ENV}
+            echo "GL_VERSION=$(bin/garden-version-latest)" >> ${GITHUB_ENV}
           else 
             echo "GL_VERSION=${{ inputs.gl_version }}" >> ${GITHUB_ENV}
           fi
