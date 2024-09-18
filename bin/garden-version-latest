@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+
+import subprocess
+import json
+import re
+import sys
+
+def get_gardenlinux_tags():
+    """Fetch tags using podman inspect."""
+    image_name = "ghcr.io/gardenlinux/gardenlinux:latest"
+
+    # Use subprocess to call podman inspect and capture the output
+    try:
+        result = subprocess.run(
+            ['podman', 'inspect', image_name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+
+        if result.returncode != 0:
+            print(f"Error running podman inspect: {result.stderr}")
+            return []
+
+    except Exception as e:
+        print(f"Error executing podman inspect: {str(e)}")
+        return []
+
+    # Parse the JSON output from podman inspect
+    try:
+        image_data = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        print("Error parsing JSON output from podman inspect.")
+        return []
+
+    # Extract RepoTags
+    repo_tags = image_data[0].get("RepoTags", [])
+
+    # Filter tags matching the pattern x.x (e.g., 1592.1)
+    version_tags = [tag for tag in repo_tags if re.search(r'^\d+\.\d+$', tag.split(":")[1])]
+
+    return version_tags
+
+if __name__ == "__main__":
+    version_tags = get_gardenlinux_tags()
+
+    if len(version_tags) > 1:
+        print("Error: More than one version tag found.", file=sys.stderr)
+        sys.exit(1)  # Exit with a non-zero status code to indicate an error
+    elif version_tags:
+        # Output the single tag that matches the pattern
+        print(version_tags[0].split(":")[1])
+    else:
+        print("No version tags found.")
