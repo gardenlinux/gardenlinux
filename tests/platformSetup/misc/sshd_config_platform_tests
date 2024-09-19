@@ -1,7 +1,6 @@
 # Allow only without password root logins
 PermitRootLogin without-password
 PubkeyAuthentication yes
-PubkeyAcceptedKeyTypes=+ssh-rsa
 Port 2222
 # Only use the more secure SSHv2 protocol.
 Protocol 2
@@ -25,6 +24,7 @@ LogLevel VERBOSE
 UsePAM no
 
 # Use secure Ciphers
+# https://infosec.mozilla.org/guidelines/openssh#modern-openssh-67
 Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
 MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com
 KexAlgorithms curve25519-sha256@libssh.org,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256,diffie-hellman-group-exchange-sha256
@@ -47,6 +47,7 @@ AuthenticationMethods publickey
 # Supported HostKey algorithms by order of preference.
 HostKey /etc/ssh/ssh_host_ed25519_key
 HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
 
 # Authorized_keys file for testing
 AuthorizedKeysFile .ssh/test_authorized_keys
