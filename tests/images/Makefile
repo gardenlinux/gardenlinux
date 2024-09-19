@@ -1,12 +1,18 @@
 SHELL := /usr/bin/env bash
 .SHELLFLAGS := -euo pipefail -c
 
-ROOT_DIR=$(shell git rev-parse --show-toplevel)
-GIT_SHA=$(shell git rev-parse HEAD)
-GIT_SHA_SHORT=$(shell git rev-parse --short HEAD)
-GL_VERSION ?= $(shell $(ROOT_DIR)/bin/garden-version-latest)
-GL_DATE ?= $(shell $(ROOT_DIR)/bin/garden-version --date $(GL_VERSION))
-GL_REGISTRY ?= ghcr.io/gardenlinux
+ROOT_DIR := $(shell git rev-parse --show-toplevel)
+GIT_SHA:= $(shell git rev-parse HEAD)
+GIT_SHA_SHORT := $(shell git rev-parse --short HEAD)
+ifeq ($(origin GL_VERSION), undefined)
+GL_VERSION := $(shell $(ROOT_DIR)/bin/garden-version-latest)
+endif
+ifeq ($(origin GL_DATE), undefined)
+GL_DATE := $(shell $(ROOT_DIR)/bin/garden-version --date $(GL_VERSION))
+endif
+ifeq ($(origin GL_REGISTRY), undefined)
+GL_REGISTRY := ghcr.io/gardenlinux
+endif
 
 GARDENLINUX_BUILD_CRE ?= sudo podman
 
