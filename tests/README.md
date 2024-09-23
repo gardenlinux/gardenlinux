@@ -105,11 +105,63 @@ These tests are located in a subfolder (`test`) within a feature's directory and
 
 # Platform Tests
 ## Prerequisites
-Build the platform test container with all necessary dependencies. This container image will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP). *Note: For `KVM` and `CHROOT` platforms the `gardenlinux/base-test` container can be used but will also work with the full-fledged testing container `gardenlinux/platform-test`.*
+Build the platform test container images with all necessary dependencies. These container image will contain all necessary Python modules (split by platform) as well as the command line utilities for the Cloud providers (i.e. AWS, Azure and GCP).
 
-    make --directory=container build-platform-test
+To build all images, just run:
 
-The resulting container image will be tagged as `gardenlinux/platform-test:<version>` with `<version>` being the version that is returned by `bin/garden-version` in this repository. All further tests run inside this container.
+    make --directory=tests/images build-platform-test
+
+To get an overview of which images and options (e.g. pull/build/push) exist, run the `help` target.
+
+
+    make --directory=tests/images help
+
+    Usage: make [target]
+    
+    general targets:
+    help					List available tasks of the project 
+    all					Build all platform test images   
+    all-push				Build and push all platform test images 
+    pull-platform-test-base			Pull the platform test base image 
+    pull-platform-test			Pull all platform test images 
+    build-platform-test-base		Build the platform test base image 
+    build-platform-test			Build all platform test images 
+    push-platform-test-base			Push the platform test base image 
+    push-release-platform-test-base		Push the platform test base image with release tag 
+    push-platform-test			Push all platform test images 
+    push-release-platform-test		Push all platform test images with release tag 
+    
+    platform-specific targets:
+    pull-platform-test-ali                  Pull the platform test image for ali
+    pull-platform-test-aws                  Pull the platform test image for aws
+    pull-platform-test-azure                Pull the platform test image for azure
+    pull-platform-test-firecracker          Pull the platform test image for firecracker
+    pull-platform-test-gcp                  Pull the platform test image for gcp
+    pull-platform-test-kvm                  Pull the platform test image for kvm
+    pull-platform-test-openstack            Pull the platform test image for openstack
+    build-platform-test-ali                 Build the platform test image for ali
+    build-platform-test-aws                 Build the platform test image for aws
+    build-platform-test-azure               Build the platform test image for azure
+    build-platform-test-firecracker         Build the platform test image for firecracker
+    build-platform-test-gcp                 Build the platform test image for gcp
+    build-platform-test-kvm                 Build the platform test image for kvm
+    build-platform-test-openstack           Build the platform test image for openstack
+    push-platform-test-ali                  Push the platform test image for ali
+    push-platform-test-aws                  Push the platform test image for aws
+    push-platform-test-azure                Push the platform test image for azure
+    push-platform-test-firecracker          Push the platform test image for firecracker
+    push-platform-test-gcp                  Push the platform test image for gcp
+    push-platform-test-kvm                  Push the platform test image for kvm
+    push-platform-test-openstack            Push the platform test image for openstack
+    push-release-platform-test-ali          Push the platform test image for ali with release tag
+    push-release-platform-test-aws          Push the platform test image for aws with release tag
+    push-release-platform-test-azure        Push the platform test image for azure with release tag
+    push-release-platform-test-firecracker  Push the platform test image for firecracker with release tag
+    push-release-platform-test-gcp          Push the platform test image for gcp with release tag
+    push-release-platform-test-kvm          Push the platform test image for kvm with release tag
+    push-release-platform-test-openstack    Push the platform test image for openstack with release tag
+
+The resulting container images will be tagged as `gardenlinux/platform-test-<platform>:<version>` with `<version>` being the latest available Garden Linux release that is returned by `bin/garden-version-latest`. All further tests run inside these container images.
 
 ## Using the tests on supported platforms
 ### General
@@ -218,7 +270,27 @@ The URI can be:
 
 </details>
 
-##### Running the tests
+##### Running the tests via make target
+
+A ready-to use configuration file exists in `tests/config/aws.yaml.example`. This file can be copied over to `tests/config/aws.yaml` and edited to your setup. It is than picked by the make target.
+
+```
+## make sure an image (referenced in the config file) exists or reference an existing image on the cloud provider or s3 bucket
+# make build-aws
+
+## make sure ~/.aws has valid credentials (see above) and export your AWS_PROFILE if needed
+# export AWS_PROFILE=gardenlinux-test
+
+## make sure tests/config/aws.yaml exists and has correct content
+# vim tests/config/aws.yaml
+
+## run platform tests
+make --directory=tests test-platform-aws
+```
+
+##### Running the tests manually
+
+<details>
 
 Start Podman container with dependencies:
 
@@ -229,18 +301,25 @@ Start Podman container with dependencies:
 - mount directory with config file to `/config`
 
 ```
-sudo podman run -it --rm -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.aws:/root/.aws -v $HOME/.ssh:/root/.ssh -v ~/config:/config gardenlinux/platform-test:`bin/garden-version` /bin/bash
+sudo podman run -it --rm -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.aws:/root/.aws -v $HOME/.ssh:/root/.ssh -v ~/config:/config gardenlinux/platform-test-aws:`bin/garden-version` /bin/bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
     pytest --iaas=aws --configfile=/config/myawsconfig.yaml
 
+</details>
+
 #### Azure
 
 Login using the following command on your local machine (i.e. not inside of the platform test container) to authenticate to Azure and set up the API access token:
 
     az login
+
+If you have multiple azure tenants available for you account, you might want to choose a default one.
+
+    az account list --output table
+    az account set --subscription my-company-subscription
 
 **Note:** other means of authentication, e.g. usage of service accounts should be possible.
 
@@ -336,7 +415,29 @@ The URI can be:
 
 </details>
 
-##### Running the tests
+##### Running the tests via make target
+
+A ready-to use configuration file exists in `tests/config/azure.yaml.example`. This file can be copied over to `tests/config/azure.yaml` and edited to your setup. It is than picked by the make target.
+
+```
+## make sure an image (referenced in the config file) exists or reference an existing image on the cloud provider or s3 bucket
+# make build-azure
+
+## make sure ~/.azure has valid credentials (see above)
+# az login
+# az account list --output table
+# az account set --subscription my-company-subscription
+
+## make sure tests/config/azure.yaml exists and has correct content
+# vim tests/config/azure.yaml
+
+## run platform tests
+make --directory=tests test-platform-azure
+```
+
+##### Running the tests manually
+
+<details>
 
 Start Podman container with dependencies:
 
@@ -347,12 +448,14 @@ Start Podman container with dependencies:
 - mount directory with config file to `/config`
 
 ```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.azure:/root/.azure -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test:`bin/garden-version` bash
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.azure:/root/.azure -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test-azure:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
     pytest --iaas=azure --configfile=/config/myazconfig.yaml
+
+</details>
 
 
 #### Aliyun
@@ -459,7 +562,7 @@ Start Podman container with dependencies:
 - mount directory with config file to `/config`
 
 ```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test:`bin/garden-version` bash
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test-ali:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -471,6 +574,10 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 Obtain credentials by using the following command to authenticate to Google Cloud Platform and set up the API access token:
 
     gcloud auth application-default login
+
+Depending on your account, setting a quota project might also be required:
+
+    gcloud auth application-default set-quota-project my-company-project
 
 Use the following test configuration:
 
@@ -557,7 +664,28 @@ The URI can be:
 
 </details>
 
-##### Running the tests
+##### Running the tests via make target
+
+A ready-to use configuration file exists in `tests/config/gcp.yaml.example`. This file can be copied over to `tests/config/gcp.yaml` and edited to your setup. It is than picked by the make target.
+
+```
+## make sure an image (referenced in the config file) exists or reference an existing image on the cloud provider or s3 bucket
+# make build-gcp
+
+## make sure ~/.config/gcloud has valid credentials (see above)
+# gcloud auth application-default login
+# gcloud auth application-default set-quota-project my-company-project
+
+## make sure tests/config/gcp.yaml exists and has correct content
+# vim tests/config/gcp.yaml
+
+## run platform tests
+make --directory=tests test-platform-gcp
+```
+
+##### Running the tests manually
+
+<details>
 
 Start Podman container with dependencies:
 
@@ -568,12 +696,14 @@ Start Podman container with dependencies:
 - mount directory with config file to `/config`
 
 ```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test:`bin/garden-version` bash
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test-gcp:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
     pytest --iaas=gcp --configfile=/config/mygcpconfig.yaml
+
+</details>
 
 #### Firecracker (MicroVM)
 
@@ -677,7 +807,7 @@ Start Podman container with dependencies:
 - run in privileged mode for KVM device and network interface mappings
 
 ```
-sudo podman run -it --rm --privileged -v `pwd`:/gardenlinux gardenlinux/platform-test:`bin/garden-version` bash
+sudo podman run -it --rm --privileged -v `pwd`:/gardenlinux gardenlinux/platform-test-firecracker:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -699,7 +829,7 @@ Notes:
  * Podman container needs `SYS_ADMIN`, `MKNOD`, `AUDIT_WRITE` and `NET_RAW` capability
  * Temporary SSH keys are auto generated and injected
 
-Use the following configuration file to proceed; only the path to the TAR image needs to be adjusted:
+Use the following configuration file to proceed; only the path to the TAR image needs to be adjusted.
 
 ```yaml
 chroot:
@@ -739,13 +869,27 @@ chroot:
 - **user** _(required)_: The user that will be used for the connection.
 </details>
 
-##### Running the tests
+##### Running the tests via make target
+
+A ready-to use configuration file exists in `tests/config/chroot.yaml`. This file is picked by the make target, too.
+
+```
+## make sure an image (referenced in the config file) exists
+# make build-kvm
+
+## run platform tests
+make --directory=tests test-platform-chroot
+```
+
+##### Running the tests manually
+
+<details>
 
 Start Podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount build result directory to `/build` (if not part of the Garden Linux file tree)
-- mount directory with configfile to `/config`
+- mount directory with configfile to `/config` --> make sure the correct config file exists
 - NOTE: The testing SSHd expects the regular `authorized_keys` file to be named as `test_authorized_keys`
 
 ```
@@ -756,12 +900,13 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 
     pytest --iaas=chroot --configfile=/config/mychrootconfig.yaml
 
+</details>
 
 #### KVM
 
 KVM tests are designed to run directly on your platform. Currently, AMD64 and ARM64 architectures are supported.
 Notes:
- * KVM/QEMU will run inside your `platform-test` Docker container
+ * KVM/QEMU will run inside the `platform-test-kvm` Docker container
  * (Default) New temporary SSH keys are auto generated and injected
  * (Default: amd64) AMD64 and ARM64 architectures are supported
 
@@ -830,7 +975,21 @@ kvm:
 
 </details>
 
-##### Running the tests
+##### Running the tests via make target
+
+A ready-to use configuration file exists in `tests/config/kvm.yaml`. This file is picked by the make target, too.
+
+```
+## make sure an image (referenced in the config file) exists
+# make build-kvm
+
+## run platform tests
+make --directory=tests test-platform-kvm
+```
+
+##### Running the tests manually
+
+<details>
 
 Start Podman container with dependencies:
 
@@ -857,6 +1016,8 @@ sudo podman run -it --rm --device=/dev/kvm -v `pwd`:/gardenlinux -v /boot/:/boot
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
     pytest --iaas=kvm --configfile=/config/mykvmconfig.yaml
+
+</details>
 
 
 #### Manual Testing
@@ -891,7 +1052,7 @@ Start Podman container with dependencies:
 - mount directory with configfile to `/config`
 
 ```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test:`bin/garden-version` bash
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test-base:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
@@ -981,7 +1142,7 @@ Start Podman container with dependencies:
 - mount directory with configfile to `/config`
 
 ```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test:`bin/garden-version` bash
+sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test-openstack:`bin/garden-version` bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
