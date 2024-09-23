@@ -36,7 +36,6 @@ endef
 define build_image
 	$(GARDENLINUX_BUILD_CRE) build --build-arg GL_VERSION=$(GL_VERSION) --build-arg GL_DATE=$(GL_DATE) -t $1:$(GL_VERSION) -t $1:$(GIT_SHA) -t $1:$(GIT_SHA_SHORT) $2
 endef
-	# $(GARDENLINUX_BUILD_CRE) build --layers --cache-from $(GL_REGISTRY)/$(strip $1) --build-arg GL_VERSION=$(GL_VERSION) --build-arg GL_DATE=$(GL_DATE) -t $1:$(GL_VERSION) -t $1:$(GIT_SHA) -t $1:$(GIT_SHA_SHORT) $2
 
 define push_image
 	$(GARDENLINUX_BUILD_CRE) push $(strip $1):$(GL_VERSION) $(GL_REGISTRY)/$(strip $1):$(GIT_SHA)
@@ -90,6 +89,7 @@ pull-platform-test: pull-platform-test-base $(addprefix pull-platform-test-,$(PL
 build-platform-test-base: pull-platform-test-base
 	$(call copy_files, platform-test-base)
 	$(call build_image, gardenlinux/platform-test-base, platform-test-base)
+	$(call build_image, $(GL_REGISTRY)/gardenlinux/platform-test-base, platform-test-base)
 	$(call clean_files, platform-test-base)
 
 # help: build-platform-test			Build all platform test images
@@ -107,6 +107,7 @@ $(foreach platform,$(PLATFORMS),\
     build-platform-test-$(platform): build-platform-test-base pull-platform-test-$(platform); \
 		$(call copy_files, platform-test/$(platform)) ; \
 		$(call build_image, gardenlinux/platform-test-$(platform), platform-test/$(platform)) ; \
+		$(call build_image, $(GL_REGISTRY)/gardenlinux/platform-test-$(platform), platform-test/$(platform)) ; \
 		$(call clean_files, platform-test/$(platform)) \
   ) \
 )

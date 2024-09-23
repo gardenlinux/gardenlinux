@@ -176,6 +176,7 @@ def azure_credentials(testconfig, pipeline, request):
         subscription_id = testconfig['subscription_id']
     elif 'subscription' in testconfig:
         try:
+            from platformSetup.azure import AZURE
             subscription_id = AZURE.find_subscription_id(credential, testconfig['subscription'])
         except RuntimeError as err:
             pytest.exit(err, 1)
