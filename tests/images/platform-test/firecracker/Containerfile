@@ -15,10 +15,12 @@ RUN : "Install firecracker requirements" \
      && arch="$(uname -m)" \
      && firecracker_ver="v1.1.4" \
      && release_url="https://github.com/firecracker-microvm/firecracker/releases" \
-     && echo ${release_url}/download/${firecracker_ver}/firecracker-${firecracker_ver}-${arch}.tgz \
+     && cd /usr/local \
      && wget ${release_url}/download/${firecracker_ver}/firecracker-${firecracker_ver}-${arch}.tgz \
      && tar -xzv --no-same-owner -f firecracker-${firecracker_ver}-${arch}.tgz \
-     && ln -s /release-${firecracker_ver}-${arch}/firecracker-${firecracker_ver}-${arch} /bin/firecracker
+     && mv release-${firecracker_ver}-${arch} firecracker \
+     && cd /usr/local/bin && ln -s ../firecracker/firecracker-${firecracker_ver}-${arch} firecracker \
+     && rm -f /usr/local/firecracker-${firecracker_ver}-${arch}.tgz
      # && apt-get update \
      # && apt-get clean && rm -rf /var/lib/apt/lists/*
 
