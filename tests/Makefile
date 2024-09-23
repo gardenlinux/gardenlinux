@@ -18,15 +18,18 @@ GL_IMAGE := $(GL_REGISTRY)/gardenlinux/platform-test-kvm:$(GL_VERSION)
 GARDENLINUX_BUILD_CRE ?= sudo podman
 
 # PLATFORMS = ali aws azure firecracker gcp kvm openstack
-PLATFORMS = chroot kvm aws gcp
+PLATFORMS = chroot kvm aws azure gcp firecracker
 
 CRE_CMD_BASE = $(GARDENLINUX_BUILD_CRE) run -it --rm -v $(ROOT_DIR):/gardenlinux
 #CRE_CMD_BASE = $(GARDENLINUX_BUILD_CRE) run -it -p 2223:2223 -v $(ROOT_DIR):/gardenlinux
 CRE_CMD_security = --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW --security-opt apparmor=unconfined
+CRE_CMD_priviliged = --privileged
 CRE_CMD_chroot = $(CRE_CMD_BASE) $(CRE_CMD_security) $(GL_REGISTRY)/gardenlinux/platform-test-kvm:$(GL_VERSION)
 CRE_CMD_kvm = $(CRE_CMD_BASE) --device=/dev/kvm $(GL_REGISTRY)/gardenlinux/platform-test-kvm:$(GL_VERSION)
 CRE_CMD_aws = $(CRE_CMD_BASE) -v ~/.aws:/root/.aws -e AWS_PROFILE $(GL_REGISTRY)/gardenlinux/platform-test-aws:$(GL_VERSION)
+CRE_CMD_azure = $(CRE_CMD_BASE) -v ~/.azure:/root/.azure $(GL_REGISTRY)/gardenlinux/platform-test-azure:$(GL_VERSION)
 CRE_CMD_gcp = $(CRE_CMD_BASE) -v ~/.config/gcloud:/root/.config/gcloud $(GL_REGISTRY)/gardenlinux/platform-test-gcp:$(GL_VERSION)
+CRE_CMD_firecracker = $(CRE_CMD_BASE) $(CRE_CMD_priviliged) $(GL_REGISTRY)/gardenlinux/platform-test-firecracker:$(GL_VERSION)
 
 .PHONY: all
 .DEFAULT: help
