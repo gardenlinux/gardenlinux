@@ -17,11 +17,6 @@ from os import path
 from dataclasses import dataclass
 from _pytest.config.argparsing import Parser
 
-from platformSetup.aws import AWS
-from platformSetup.azure import AZURE
-from platformSetup.gcp import GCP
-from platformSetup.ali import ALI
-from platformSetup.openstackccee import OpenStackCCEE
 from platformSetup.chroot import CHROOT
 from platformSetup.firecracker import FireCracker
 from platformSetup.kvm import KVM
@@ -181,6 +176,7 @@ def azure_credentials(testconfig, pipeline, request):
         subscription_id = testconfig['subscription_id']
     elif 'subscription' in testconfig:
         try:
+            from platformSetup.azure import AZURE
             subscription_id = AZURE.find_subscription_id(credential, testconfig['subscription'])
         except RuntimeError as err:
             pytest.exit(err, 1)
@@ -216,16 +212,20 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
     logger.info(f"Testconfig for {iaas=} is {testconfig}")
     test_name = testconfig.get('test_name', f"gl-test-{time.strftime('%Y%m%d')}-{os.urandom(2).hex()}")
     if iaas == "aws":
+        from platformSetup.aws import AWS
         session = request.getfixturevalue('aws_session')
         yield from AWS.fixture(session, testconfig, imageurl, test_name)
     elif iaas == "gcp":
+        from platformSetup.gcp import GCP
         credentials = request.getfixturevalue('gcp_credentials')
         logger.info("Requesting GCP fixture")
         yield from GCP.fixture(credentials, testconfig, imageurl, test_name)
     elif iaas == "azure":
+        from platformSetup.azure import AZURE
         credentials = request.getfixturevalue('azure_credentials')
         yield from AZURE.fixture(credentials, testconfig, imageurl, test_name)
     elif iaas == "openstack-ccee":
+        from platformSetup.openstackccee import OpenStackCCEE
         yield from OpenStackCCEE.fixture(testconfig)
     elif iaas == "chroot":
         yield from CHROOT.fixture(testconfig)
@@ -234,6 +234,7 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
     elif iaas == "kvm":
         yield from KVM.fixture(testconfig)
     elif iaas == "ali":
+        from platformSetup.ali import ALI
         yield from ALI.fixture(testconfig, test_name)
     elif iaas == "manual":
         yield from Manual.fixture(testconfig)

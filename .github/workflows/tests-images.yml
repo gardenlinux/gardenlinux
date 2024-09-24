@@ -1,0 +1,91 @@
+name: build and push test images
+on:
+  # triggered by other workflows
+  workflow_call:
+    inputs:
+      gl_version:
+        type: string
+        default: latest
+      force_build:
+        type: boolean
+        default: false
+      release_tag:
+        type: boolean
+        default: false
+  # triggered manually
+  workflow_dispatch:
+    inputs:
+      gl_version:
+        type: string
+        default: latest
+      force_build:
+        type: boolean
+        default: false
+      release_tag:
+        type: boolean
+        default: false
+  # triggered force rebuild after merge to main if build deps were touched
+  pull_request:
+    branches: ['main']
+    paths:
+      - tests/Pipfile*
+      - tests/images/**
+    types:
+      - closed
+    inputs:
+      gl_version:
+        type: string
+        default: latest
+      force_build:
+        type: boolean
+        default: true
+      release_tag:
+        type: boolean
+        default: true
+env:
+  IMAGE_REGISTRY: ghcr.io/gardenlinux
+  IMAGE_BASENAME: gardenlinux/platform-test
+  IMAGE_PLATFORMS: ali aws azure firecracker gcp kvm openstack
+jobs:
+  platform_test_images:
+    name: pull/build/push platform-test images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      # - uses: ./.github/actions/setup # pre-clean up and setup tasks for action runner
+      #   with: 
+      #     arch: "amd64"
+      - name: login to ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
+
+      - name: Set GL_VERSION and FORCE_BUILD
+        env:
+          # needed to use github cli
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ "${{ inputs.gl_version }}" == "latest" ]]; then
+            echo "GL_VERSION=$(bin/garden-version-latest)" >> ${GITHUB_ENV}
+          else 
+            echo "GL_VERSION=${{ inputs.gl_version }}" >> ${GITHUB_ENV}
+          fi
+          echo "FORCE_BUILD=${{ inputs.force_build }}" >> ${GITHUB_ENV}
+
+      - name: make pull-platform-test
+        run: |
+          TAG_EXISTS=false >> ${GITHUB_ENV}
+          make -j $(nproc) --directory=tests/images GARDENLINUX_BUILD_CRE=podman pull-platform-test && TAG_EXISTS=true >> ${GITHUB_ENV}
+
+      - name: make build-platform-test
+        run: |
+          if [[ "${TAG_EXISTS}" == false ]] || [[ "${{ inputs.force_build }}" == true ]] || [[ "${{ inputs.release_tag }}" == true ]]; then
+            make -j $(nproc) --directory=tests/images GARDENLINUX_BUILD_CRE=podman build-platform-test
+          else
+            echo "Tag for ${GL_VERSION} already exists in ${IMAGE_REGISTRY}/${IMAGE_BASENAME}-* and FORCE_BUILD=false"
+          fi
+
+      - name: make push-platform-test
+        run: |
+          make -j $(nproc) --directory=tests/images GARDENLINUX_BUILD_CRE=podman push-platform-test
+          if [[ "${{ inputs.release_tag }}" == true ]]; then
+            make -j $(nproc) --directory=tests/images GARDENLINUX_BUILD_CRE=podman push-release-platform-test
+          fi

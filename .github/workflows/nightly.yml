@@ -27,11 +27,10 @@ jobs:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_kms_role: ${{ secrets.SECUREBOOT_DB_IAM_ROLE }}
       aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
-  build_container:
-    name: build container
-    uses: ./.github/workflows/build_container.yml
+  test_images:
+    uses: ./.github/workflows/tests-images.yml
   tests:
-    needs: [ build, build_container ]
+    needs: [ build, test_images ]
     permissions:
       id-token: write
       packages: write
