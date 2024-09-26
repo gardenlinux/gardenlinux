@@ -24,7 +24,7 @@ endif
 .PRECIOUS: %.crt
 
 ifndef CA
-default: $(PREFIX)kernel-sign.crt $(PREFIX)secureboot.pk.auth $(PREFIX)secureboot.null.pk.auth $(PREFIX)secureboot.kek.auth $(PREFIX)secureboot.db.auth $(PREFIX)secureboot.aws-efivars $(PREFIX)repo-sign.pub $(PREFIX)tpm-sign.crt
+default: $(PREFIX)kernel-sign.crt $(PREFIX)secureboot.pk.auth $(PREFIX)secureboot.null.pk.auth $(PREFIX)secureboot.kek.auth $(PREFIX)secureboot.db.auth $(PREFIX)secureboot.aws-efivars $(PREFIX)repo-sign.pub $(PREFIX)tpm-sign.crt $(PREFIX)convert_to_der
 
 $(PREFIX)intermediate-ca.crt: $(PREFIX)root-ca.crt
 $(PREFIX)kernel-sign.crt: $(PREFIX)intermediate-ca.crt
@@ -54,6 +54,12 @@ $(PREFIX)tpm-sign.crt: $(PREFIX)tpm-sign.conf $(PREFIX)intermediate-ca.crt
 
 %.crt: %.conf $(CA)
 	@./gencert --conf '$(word 1,$+)' --ca '$(word 2,$+)' $(GENCERT_OPTS) '$@'
+
+%.der: %.crt
+	@openssl x509 -in '$<' -outform der -out '$@'
+
+convert_to_der: $(patsubst %.crt,%.der,$(wildcard *.crt))
+	@echo "All .crt files have been converted to .der format."
 
 %.auth: %.crt GUID.txt $(CA)
 	@./genefiauth --guid-file '$(word 2,$+)' --ca '$(word 3,$+)' '$<' '$@'
