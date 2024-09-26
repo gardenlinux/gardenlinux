@@ -55,7 +55,7 @@ jobs:
         run: |
           .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$prefix"
           # pack tar.xz file for release
-          tar -cv "$prefix" | xz -9 > "$prefix.tar.xz"
+          tar -cv "$prefix" > "$prefix.tar.xz"
 #      - name: Get gardenlinux release tarball
 #        run: |
 #          wget https://github.com/gardenlinux/gardenlinux/releases/download/${{ inputs.version }}/$prefix.tar.xz
