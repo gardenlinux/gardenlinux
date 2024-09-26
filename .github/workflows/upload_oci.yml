@@ -1,16 +1,5 @@
 name: Upload builds to OCI
 on:
-  push:
-    inputs:
-      version:
-        required: true
-        default: "1592.1"
-        type: string
-      commit:
-        required: true
-        type: string
-        default: "ec945aa995d0f08d64303ff6045b313b40b665fb"
-        description: "Full commithash"
   workflow_dispatch:
     inputs:
       version:
