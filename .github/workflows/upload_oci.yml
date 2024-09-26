@@ -1,0 +1,54 @@
+name: Upload builds to OCI
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        type: string
+      commit:
+        required: true
+        type: string
+        description: "Full commithash"
+jobs:
+  push-to-oci:
+    runs-on: ubuntu-latest
+    environment: oidc_aws_s3_upload
+    permissions:
+      id-token: write
+      packages: write
+    strategy:
+      max-parallel: 1 # registry index is a shared resource among all assets
+      matrix:
+        architecture: [ arm64 ]
+        cname: [ metal-gardener_prod_pxe ]
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install glcli util
+        run: |
+          pip install git+https://github.com/gardenlinux/python-gardenlinux-cli@0.1.0
+      - name: Define prefix
+        run: |
+          commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
+          prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
+          echo "prefix=$prefix" >> "$GITHUB_ENV"
+      - name: download build artifacts from S3
+        run: |
+          .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$prefix"
+          # pack tar.xz file for release
+          tar -cv "$prefix" > "$prefix.tar.xz"
+#      - name: Get gardenlinux release tarball
+#        run: |
+#          wget https://github.com/gardenlinux/gardenlinux/releases/download/${{ inputs.version }}/$prefix.tar.xz
+      - name: push using the glcli util
+        run: |
+          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} glcli oci --insecure push-from-tarball --tar $prefix.tar.xz --container ghcr.io/${{ github.repository_owner }}/gl-oci --architecture ${{ matrix.architecture }} --version ${{ inputs.version }} --cname ${{ matrix.cname }}
+
