@@ -24,7 +24,7 @@ endif
 .PRECIOUS: %.crt
 
 ifndef CA
-default: $(PREFIX)kernel-sign.crt $(PREFIX)secureboot.pk.auth $(PREFIX)secureboot.null.pk.auth $(PREFIX)secureboot.kek.auth $(PREFIX)secureboot.db.auth $(PREFIX)secureboot.aws-efivars $(PREFIX)repo-sign.pub $(PREFIX)tpm-sign.crt $(PREFIX)convert_to_der
+default: $(PREFIX)kernel-sign.crt $(PREFIX)secureboot.pk.auth $(PREFIX)secureboot.null.pk.auth $(PREFIX)secureboot.kek.auth $(PREFIX)secureboot.db.auth $(PREFIX)secureboot.aws-efivars $(PREFIX)repo-sign.pub $(PREFIX)tpm-sign.crt $(PREFIX)secureboot.db.der $(PREFIX)secureboot.kek.der $(PREFIX)secureboot.pk.der $(PREFIX)secureboot.null.pk.der
 
 $(PREFIX)intermediate-ca.crt: $(PREFIX)root-ca.crt
 $(PREFIX)kernel-sign.crt: $(PREFIX)intermediate-ca.crt
@@ -40,6 +40,13 @@ $(PREFIX)secureboot.kek.auth: $(PREFIX)secureboot.pk.crt
 $(PREFIX)secureboot.db.auth: $(PREFIX)secureboot.kek.crt
 $(PREFIX)secureboot.key.auth: $(PREFIX)secureboot.pk.crt
 $(PREFIX)secureboot.null.pk.auth: $(PREFIX)secureboot.pk.crt
+
+$(PREFIX)secureboot.pk.der: $(PREFIX)secureboot.pk.crt
+$(PREFIX)secureboot.kek.der: $(PREFIX)secureboot.pk.crt
+$(PREFIX)secureboot.db.der: $(PREFIX)secureboot.kek.crt
+$(PREFIX)secureboot.key.der: $(PREFIX)secureboot.pk.crt
+$(PREFIX)secureboot.null.pk.der: $(PREFIX)secureboot.pk.crt
+
 else
 default:
 	@echo "Not building default targets when custom CA specified. Please build explicit certificate or omit CA argument." >&2
@@ -55,11 +62,8 @@ $(PREFIX)tpm-sign.crt: $(PREFIX)tpm-sign.conf $(PREFIX)intermediate-ca.crt
 %.crt: %.conf $(CA)
 	@./gencert --conf '$(word 1,$+)' --ca '$(word 2,$+)' $(GENCERT_OPTS) '$@'
 
-%.der: %.crt
+%.der: %.crt $(CA)
 	@openssl x509 -in '$<' -outform der -out '$@'
-
-convert_to_der: $(patsubst %.crt,%.der,$(wildcard *.crt))
-	@echo "All .crt files have been converted to .der format."
 
 %.auth: %.crt GUID.txt $(CA)
 	@./genefiauth --guid-file '$(word 2,$+)' --ca '$(word 3,$+)' '$<' '$@'
@@ -74,9 +78,9 @@ convert_to_der: $(patsubst %.crt,%.der,$(wildcard *.crt))
 	@./gengpg --conf '$<' $(GENGPG_OPTS) '$@'
 
 clean:
-	@echo "Removing *.pub *.crt *.csr *.key *.arn *.chain GUID.txt *.esl *.auth *.aws-efivars but nothing starting with gardenlinux-"
-	@find . \( -name '*.pub' -o -name '*.crt' -o -name '*.csr' -o -name '*.key' -o -name '*.arn' -o -name '*.chain' -o -name 'GUID.txt' -o -name '*.esl' -o -name '*.auth' -o -name '*.aws-efivars' \) -a -not -name 'gardenlinux-*' -delete
+	@echo "Removing *.pub *.crt *.der *.csr *.key *.arn *.chain GUID.txt *.esl *.auth *.aws-efivars but nothing starting with gardenlinux-"
+	@find . \( -name '*.pub' -o -name '*.crt' -o -name '*.der' -o -name '*.csr' -o -name '*.key' -o -name '*.arn' -o -name '*.chain' -o -name 'GUID.txt' -o -name '*.esl' -o -name '*.auth' -o -name '*.aws-efivars' \) -a -not -name 'gardenlinux-*' -delete
 
 distclean:
-	@echo "Removing *.pub *.crt *.csr *.key *.arn *.chain GUID.txt *.esl *.auth *.aws-efivars"
-	@find . \( -name '*.pub' -o -name '*.crt' -o -name '*.csr' -o -name '*.key' -o -name '*.arn' -o -name '*.chain' -o -name 'GUID.txt' -o -name '*.esl' -o -name '*.auth' -o -name '*.aws-efivars' \) -delete
+	@echo "Removing *.pub *.crt *.der *.csr *.key *.arn *.chain GUID.txt *.esl *.auth *.aws-efivars"
+	@find . \( -name '*.pub' -o -name '*.crt' -o -name '*.der' -o -name '*.csr' -o -name '*.key' -o -name '*.arn' -o -name '*.chain' -o -name 'GUID.txt' -o -name '*.esl' -o -name '*.auth' -o -name '*.aws-efivars' \) -delete
