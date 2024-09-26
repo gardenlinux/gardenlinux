@@ -91,11 +91,11 @@ class GCP:
         if 'secureboot_parameters' not in cfg:
             cfg['secureboot_parameters'] = {}
         if 'db_path' not in cfg['secureboot_parameters']:
-            cfg['secureboot_parameters']['db_path'] = "/gardenlinux/cert/secureboot.db.auth"
+            cfg['secureboot_parameters']['db_path'] = "/gardenlinux/cert/secureboot.db.der"
         if 'kek_path' not in cfg:
-            cfg['secureboot_parameters']['kek_path'] = "/gardenlinux/cert/secureboot.kek.auth"
+            cfg['secureboot_parameters']['kek_path'] = "/gardenlinux/cert/secureboot.kek.der"
         if 'pk_path' not in cfg:
-            cfg['secureboot_parameters']['pk_path'] = "/gardenlinux/cert/secureboot.pk.auth"
+            cfg['secureboot_parameters']['pk_path'] = "/gardenlinux/cert/secureboot.pk.der"
         if 'cert_file_type' not in cfg:
             cfg['secureboot_parameters']['cert_file_type'] = 'BIN'
 
