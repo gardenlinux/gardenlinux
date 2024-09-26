@@ -56,7 +56,7 @@ jobs:
       fail-fast: false
       matrix:
         arch: [ amd64, arm64 ]
-        target: [ gcp, aws, aws_trustedboot, aws_trustedboot_tpm2, azure, ali ]
+        target: [ gcp, gcp_trustedboot, gcp_trustedboot_tpm2, aws, aws_trustedboot, aws_trustedboot_tpm2, azure, ali ]
         modifier: [ "${{ inputs.default_modifier }}" ]
         exclude:
           - arch: arm64
@@ -65,6 +65,8 @@ jobs:
             target: ali
           - arch: arm64
             target: aws_trustedboot_tpm2
+          - arch: arm64
+            target: gcp_trustedboot_tpm2
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
     - uses: ./.github/actions/setup
@@ -94,7 +96,7 @@ jobs:
 
     - run: ls -lah /tmp/gardenlinux-build-artifacts
 
-    - if: ${{ matrix.target == 'gcp' }}
+    - if: ${{ matrix.target == 'gcp' || matrix.target == 'gcp_trustedboot' || matrix.target == 'gcp_trustedboot_tpm2' }}
       id: 'auth_gcp'
       name: 'Authenticate to Google Cloud'
       uses: google-github-actions/auth@f112390a2df9932162083945e46d439060d66ec2 # pin@v1
