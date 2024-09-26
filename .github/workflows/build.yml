@@ -65,7 +65,7 @@ jobs:
         run: |
           touch cert/gardenlinux-secureboot.db.arn
           for f in secureboot.{{pk,null.pk,kek,db}.auth,db.{crt,arn}}; do
-          ln -sr "cert/gardenlinux-$f" "cert/$f"
+            ln -sr "cert/gardenlinux-$f" "cert/$f"
           done
       - uses: actions/cache/save@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
         with:
@@ -128,7 +128,7 @@ jobs:
         run: |
           OCI_IMAGE_TAG="$(./build --print-container-image)"
           if [[ -f builder.dockerfile ]]; then
-          podman build -t "$OCI_IMAGE_TAG" -f builder.dockerfile .
+            podman build -t "$OCI_IMAGE_TAG" -f builder.dockerfile .
           fi
           podman build --squash --tag test --build-arg base="$OCI_IMAGE_TAG" tests
           podman save --format oci-archive test > test.oci
@@ -145,13 +145,12 @@ jobs:
         shell: bash
     permissions:
       id-token: write
-      packages: write
     environment: ${{ inputs.use_kms && 'oidc_aws_kms_secureboot_signing' || '' }}
     strategy:
       fail-fast: false
       matrix:
         arch: [ amd64, arm64 ]
-        target: [ kvm, "kvm_secureboot", "kvm_secureboot_readonly", "kvm_secureboot_readonly_persistence", metal, "metal_secureboot", "metal_secureboot_readonly", "metal_secureboot_readonly_persistence", gcp, gdch, aws, "aws_secureboot", "aws_secureboot_readonly", "aws_secureboot_readonly_persistence", azure, ali, openstack, openstackbaremetal, vmware, "metal_pxe", firecracker, "metal-vhost" ]
+        target: [ kvm, "kvm_trustedboot", "kvm_trustedboot_tpm2", metal, "metal_trustedboot", "metal_trustedboot_tpm2", gcp, gdch, aws, "aws_trustedboot", "aws_trustedboot_tpm2", azure, ali, openstack, openstackbaremetal, vmware, "metal_pxe", firecracker, "metal-vhost" ]
         modifier: [ "${{ inputs.default_modifier }}" ]
         include:
           - target: container
@@ -213,73 +212,31 @@ jobs:
           find .build -exec touch -d "@$t" {} +
       - name: build
         run: ./build ${{ inputs.use_kms && '--kms' || '' }} ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
-      - name: test
-        run: ./test --container-image test ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
-      - uses: pmeier/pytest-results-action@fc6576eced1f411ea48ab10e917d9cfce2960e29 # pin@v0.7.1
-        if: always()
-        with:
-          path: tests/test.xml
       - name: get cname
         run: |
           cname=$(basename "$(realpath ".build/${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}")" .artifacts)
           echo "cname=$cname" | tee -a "$GITHUB_ENV"
+      # ./test writes ${{ env.cname }}.chroot.test.log and puts it into .build/${{ env.cname }}.artifacts
+      - name: test
+        run: |
+          ./test --container-image test ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
+      # chroot.test.xml is written in the entrypoint tests/init
+      - name: rename test results
+        if: always()
+        run: |
+          mv tests/chroot.test.xml .build/${{ env.cname }}.chroot.test.xml
+      - uses: pmeier/pytest-results-action@fc6576eced1f411ea48ab10e917d9cfce2960e29 # pin@v0.7.1
+        if: always()
+        with:
+          path: ".build/${{ env.cname }}.chroot.test.xml"
+      - name: add chroot.test.xml to build artifacts
+        run: echo "${{ env.cname }}.chroot.test.xml" >> ".build/${{ env.cname }}.artifacts"
       - name: pack build artifacts for upload
         run: tar -cSzvf "${{ env.cname }}.tar.gz" -C .build -T ".build/${{ env.cname }}.artifacts"
-      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # pin@v3
+      - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # pin@v4.4.0
         with:
-          name: "${{ env.cname }}"
+          name: "build-${{ env.cname }}"
           path: "${{ env.cname }}.tar.gz"
-  oci_publish:
-    needs: [ version, cert, images ]
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-    permissions:
-      id-token: write
-      packages: write
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        arch: [ amd64, arm64 ]
-        target: [ kvm, "kvm_secureboot", "kvm_secureboot_readonly", "kvm_secureboot_readonly_persistence", metal, "metal_secureboot", "metal_secureboot_readonly", "metal_secureboot_readonly_persistence", gcp, gdch, aws, "aws_secureboot", "aws_secureboot_readonly", "aws_secureboot_readonly_persistence", azure, ali, openstack, openstackbaremetal, vmware, "metal_pxe", firecracker, "metal-vhost" ]
-        modifier: [ "${{ inputs.default_modifier }}" ]
-        include:
-          - target: container
-            arch: amd64
-            modifier: ""
-          - target: container
-            arch: arm64
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: set VERSION=${{ needs.version.outputs.version }}
-        run: |
-          bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
-          git update-index --assume-unchanged VERSION
-      - name: get cname
-        run: |
-          cname="${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}-$(cat VERSION)-$(head -c 8 <<< $(./get_commit))"
-          echo "cname=$cname" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@v4
-        with:
-          name: "${{ env.cname }}"
-      - name: Unpack artifacts to .build
-        run: |
-          mkdir -p .build
-          tar -xzf "${{ env.cname }}.tar.gz" -C .build
-          rm ${{ env.cname }}.tar.gz 
-      - name: create and push OCI image
-        run: |
-          python3 -m venv venv
-          source venv/bin/activate
-          pip install git+https://github.com/gardenlinux/python-gardenlinux-cli.git
-          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} glcli oci push --container ghcr.io/${{ github.repository_owner }}/gl-oci --version $(cat VERSION) --architecture ${{ matrix.arch }} --cname "${{ matrix.target }}${{ matrix.modifier }}" --gardenlinux_root $PWD
-          deactivate
-
   bare_flavors:
     needs: [ version, base ]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
@@ -324,7 +281,7 @@ jobs:
           cd bare_flavors/${{ matrix.config }}/test
           podman build -t test --build-arg image="$image" .
           podman run --rm test
-      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # pin@v3
+      - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # pin@v4.4.0
         with:
-          name: "bare-${{ matrix.config }}-${{ matrix.arch }}"
+          name: "build-bare-${{ matrix.config }}-${{ matrix.arch }}"
           path: ".build/bare_flavors/${{ matrix.config }}-${{ matrix.arch }}.oci"
