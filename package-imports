@@ -3,6 +3,7 @@ aide
 aide-common
 amazon-ec2-utils
 apparmor
+apt-transport-https
 arptables
 auditd
 awscli
@@ -50,8 +51,10 @@ git
 gnupg
 google-compute-engine-oslogin
 google-guest-agent
+guestfish
 haveged
 hdparm
+inetutils-ping
 ipmitool
 iptables
 iputils-arping
@@ -133,6 +136,7 @@ selinux-basics
 selinux-policy-default
 sg3-utils
 sgml-base
+shellcheck
 slirp4netns
 smartmontools
 socat
@@ -150,6 +154,7 @@ tcpd
 tcpdump
 tpm2-tools
 traceroute
+unzip
 usbutils
 usr-is-merged
 vim
