@@ -81,37 +81,37 @@ gcp-platform:
 - changed-files:
   - any-glob-to-any-file:
     - 'features/gcp/**'
-    - 'tests/platform/gcp.py'
+    - 'tests/platformSetup/gcp.py'
 
 azure-platform:
 - changed-files:
   - any-glob-to-any-file:
     - 'features/azure/**'
-    - 'tests/platform/azure.py'
+    - 'tests/platformSetup/azure.py'
 
 aws-platform:
 - changed-files:
   - any-glob-to-any-file:
     - 'features/aws/**'
-    - 'tests/platform/aws.py'
+    - 'tests/platformSetup/aws.py'
 
 ali-platform:
 - changed-files:
   - any-glob-to-any-file:
     - 'features/ali/**'
-    - 'tests/platform/ali.py'
+    - 'tests/platformSetup/ali.py'
 
 firecracker-platform:
 - changed-files:
   - any-glob-to-any-file:
     - 'features/firecracker/**'
-    - 'tests/platform/firecracker.py'
+    - 'tests/platformSetup/firecracker.py'
 
 kvm-platform:
 - changed-files:
   - any-glob-to-any-file:
     - 'features/kvm/**'
-    - 'tests/platform/kvm.py'
+    - 'tests/platformSetup/kvm.py'
 
 metal-platform:
 - changed-files:

@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+input="$1"
+output="$2"
+
+export PATH="/builder/image.d:$PATH"
+
+rootfs="$(mktemp -d)"
+mount -t tmpfs -o size="$TEMPFS_SIZE" tmpfs "$rootfs"
+tar --extract --xattrs --xattrs-include '*' --directory "$rootfs" < "$input"
+
+rm -rf "$rootfs/var"
+mkdir "$rootfs/var"
+
+echo "creating root EROFS disk"
+
+erofs="$(mktemp -u)"
+mkfs.erofs --quiet -z lz4 -E force-inode-compact -T "$BUILDER_TIMESTAMP" -U "$(echo "gardenlinux:$BUILDER_VERSION:erofs:root" | uuid_hash)" "$erofs" "$rootfs"
+
+size_chroot="$(du -s "$rootfs" | cut -f 1)"
+size_erofs="$(du "$erofs" | cut -f 1)"
+echo "root disk compressed by $(( ( ( size_chroot - size_erofs ) * 100 ) / size_chroot ))% ($(du -sh "$rootfs" | cut -f 1) -> $(du -h "$erofs" | cut -f 1))"
+
+echo
+echo "building initrd with embedded root disk"
+
+mount --rbind /proc "$rootfs/proc"
+
+mount -t tmpfs -o mode=0755,size=4k tmpfs "$rootfs/dev"
+for i in null zero random urandom; do
+	touch "$rootfs/dev/$i"
+	mount --bind "/dev/$i" "$rootfs/dev/$i"
+done
+cp --no-dereference /dev/{fd,stdin,stdout,stderr} "$rootfs/dev/"
+
+mount -t tmpfs -o size=1G tmpfs "$rootfs/tmp"
+
+touch "$rootfs/root.img"
+mount --bind "$erofs" "$rootfs/root.img"
+
+initrd="$(mktemp)"
+
+touch "$rootfs/initrd"
+mount --bind "$initrd" "$rootfs/initrd"
+
+kernel="$(find "$rootfs/boot/" -name 'vmlinuz-*' | sort -V | tail -n 1)"
+
+chroot "$rootfs" dracut \
+	--no-hostonly \
+	--force \
+	--tmpdir /tmp \
+	--kver "${kernel#*-}" \
+	--modules "bash dash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown sysroot-loop" \
+	--reproducible \
+	--install 'find findmnt grep lsblk' \
+	/initrd
+
+umount -l "$rootfs/proc"
+umount -R "$rootfs/dev"
+umount "$rootfs/tmp"
+
+umount "$rootfs/root.img"
+rm "$erofs"
+
+umount "$rootfs/initrd"
+
+case "$BUILDER_ARCH" in
+	amd64)
+		uefi_arch=X64
+		gnu_arch=x86_64
+		;;
+	arm64)
+		uefi_arch=AA64
+		gnu_arch=aarch64
+		;;
+esac
+
+uki="$(mktemp)"
+
+read -r _ cmdline < "$rootfs/etc/kernel/cmdline"
+
+/usr/lib/systemd/ukify build \
+	--stub "$rootfs/usr/lib/systemd/boot/efi/linux$(tr '[:upper:]' '[:lower:]' <<< "$uefi_arch").efi.stub" \
+	--linux "$kernel" \
+	--initrd "$initrd" \
+	--cmdline "$cmdline" \
+	--uname "${kernel#*-}" \
+	--os-release "@$rootfs/etc/os-release" \
+	--output "$uki"
+
+rm "$initrd"
+
+PKCS11_MODULE_PATH="/usr/lib/$(uname -m)-linux-gnu/pkcs11/aws_kms_pkcs11.so"
+export PKCS11_MODULE_PATH
+
+cert_base="/builder/cert/secureboot.db"
+
+if [ -f "$cert_base.key" ]; then
+	sbs_key_params=(--key "$cert_base.key")
+elif [ -f "$cert_base.arn" ]; then
+	sbs_key_params=(--engine pkcs11 --key "pkcs11:token=$(basename "$(cat "$cert_base.arn")" | cut -c -32)")
+else
+	echo "neither $cert_base.key nor $cert_base.arn exists, but at least one is required" >&2
+	exit 1
+fi
+
+esp_dir="$(mktemp -d)"
+
+mkdir -p "$esp_dir/EFI/BOOT"
+datefudge -s "@$BUILDER_TIMESTAMP" sbsign --cert "$cert_base.crt" "${sbs_key_params[@]}" --output "$esp_dir/EFI/BOOT/BOOT$uefi_arch.EFI" "$rootfs/usr/lib/systemd/boot/efi/systemd-boot$(tr '[:upper:]' '[:lower:]' <<< "$uefi_arch").efi"
+
+mkdir "$esp_dir/loader"
+
+cat > "$esp_dir/loader/loader.conf" << EOF
+timeout 0
+secure-boot-enroll if-safe
+EOF
+
+mkdir -p "$esp_dir/loader/keys/auto"
+for key in PK KEK db; do
+	cp "$rootfs/etc/gardenlinux/gardenlinux-secureboot.$(tr '[:upper:]' '[:lower:]' <<< "$key").auth" "$esp_dir/loader/keys/auto/$key.auth"
+done
+
+umount "$rootfs"
+rmdir "$rootfs"
+
+uki_signed="$(mktemp)"
+datefudge -s "@$BUILDER_TIMESTAMP" sbsign --cert "$cert_base.crt" "${sbs_key_params[@]}" --output "$uki_signed" "$uki"
+rm "$uki"
+
+mkdir "$esp_dir/EFI/Linux"
+mv "$uki_signed" "$esp_dir/EFI/Linux/$BUILDER_CNAME+3.efi"
+
+esp_tar="$(mktemp)"
+
+find "$esp_dir" -mindepth 1 -printf '%P\n' | tar --create --mtime="@$BUILDER_TIMESTAMP" --sort name --numeric-owner --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime --directory "$esp_dir" --no-recursion -T - > "$esp_tar"
+rm -rf "$esp_dir"
+
+cp --sparse always "$esp_tar" "$output"
+rm "$esp_tar"
+
+sha256sum "$output"

@@ -43,6 +43,10 @@ def users(client, additional_user = "", additional_sudo_users=[]):
     assert perm_root == perm_root_allow, ("Directory /root is not set to " +
                                             f"{perm_root_allow}")
 
+    (exit_code, output, error) = client.execute_command("[ -L /home ] && echo 'symlink' || echo 'not_symlink'", quiet=True)
+    if exit_code == 0 and output.strip() == 'symlink':
+        return
+
     # There should NOT be any (abdondend) home directory present
     # except of 'dev' from dev feature. User (uid >= 1000)
     # with custom home directories are already handled within

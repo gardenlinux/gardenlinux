@@ -2,6 +2,9 @@
 
 set -Eexuo pipefail
 
+ROOT_DIR=$(git rev-parse --show-toplevel)
+PATH="${ROOT_DIR}/bin:${PATH}"
+
 bucket="$1"
 name="$(sed 's/.tar.gz$//g' <<< "$2")"
 platform="$(cut -d - -f 1 <<< "$name")"
@@ -23,7 +26,7 @@ architecture: '$arch'
 base_image: null
 build_committish: '$GARDENLINUX_COMMIT_ID_LONG'
 build_timestamp: '$timestamp'
-gardenlinux_epoch: $(bin/garden-version --major "$GARDENLINUX_VERSION")
+gardenlinux_epoch: $(garden-version --major "$GARDENLINUX_VERSION")
 logs: null
 modifiers: [$GARDENLINUX_FEATURES]
 platform: '$platform'

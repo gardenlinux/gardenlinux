@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+secureboot_state=0
+efivars_path=/sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c
+
+if [ -f "$efivars_path" ]; then
+	secureboot_state="$(od -An -j4 -N1 -t u1 "$efivars_path" | tr -d ' ')"
+fi
+
+if [ "$secureboot_state" = 1 ]; then
+	printf 'secureboot: \e[32menabled\e[0m\n'
+else
+	printf '\n    \e[37;41m┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\e[0m\n    \e[37;41m┃                                    ┃\e[0m\n    \e[37;41m┃    !!! secureboot disabled !!!     ┃\e[0m\n    \e[37;41m┃                                    ┃\e[0m\n    \e[37;41m┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\e[0m\n\n'
+fi
