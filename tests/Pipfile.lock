@@ -25,11 +25,11 @@
         },
         "aliyun-python-sdk-ecs": {
             "hashes": [
-                "sha256:17f78b8ff9871779ad8d5ba2555ebdd62883cab1c73a90ddfc419029dbae997b",
-                "sha256:df591ac9e89be09a30bf616ca0f8fe34e93c352b0d4763fa879ec6e6d4a20aee"
+                "sha256:0596e4ffdba62b25e6cf67b1052947a3bb9705283d981793a7f75b3412a07a4d",
+                "sha256:d8d1dec99da46027580e8cdea3662aceacf7026ca3e64f6992d2d53a88cb1071"
             ],
             "index": "pypi",
-            "version": "==4.24.73"
+            "version": "==4.24.75"
         },
         "aliyun-python-sdk-kms": {
             "hashes": [
