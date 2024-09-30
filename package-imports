@@ -22,7 +22,6 @@ cloud-guest-utils
 cloud-init
 conntrack
 containerd
-containerd
 containernetworking-plugins
 cryptsetup
 curl
@@ -31,7 +30,6 @@ dkms
 dnsmasq
 dnsutils
 docker.io
-docker.io
 dosfstools
 dracut
 dracut-live
@@ -39,9 +37,9 @@ dracut-network
 dwarves
 ebtables
 efibootmgr
-efitools
-efi-shell-x64
 efi-shell-aa64
+efi-shell-x64
+efitools
 ethtool
 fatresize
 flex
@@ -83,9 +81,9 @@ mdadm
 mstflint
 multipath-tools
 neofetch
-net-tools
-netplan.io
 netcat-openbsd
+netplan.io
+net-tools
 nfs-common
 nftables
 nodejs
@@ -94,18 +92,19 @@ nullmailer
 numactl
 nvme-cli
 open-iscsi
-open-vm-tools
 openssh-server
 openssl
+open-vm-tools
 openvswitch-switch
 ostree
 ovmf
 patchelf
 pciutils
-podman
 pkexec
+podman
 polkitd
 pristine-lfs
+python3.12
 python3-apt
 python3-cffi-backend
 python3-click
@@ -117,7 +116,6 @@ python3-pip
 python3-pip-whl
 python3-setuptools-whl
 python3-systemd
-python3.12
 qemu-block-extra
 qemu-efi-aarch64
 qemu-guest-agent
@@ -128,7 +126,6 @@ quota
 rng-tools5
 rootlesskit
 rsync
-rsyslog-relp
 rsyslog-relp
 runc
 sbsigntool
