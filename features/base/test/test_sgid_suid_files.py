@@ -27,7 +27,8 @@ import pytest
                  "/usr/bin/sudo,root,root",
                  "/usr/bin/passwd,root,root",
                  "/usr/lib/polkit-1/polkit-agent-helper-1,root,root",
-                 "/usr/bin/pkexec,root,root"
+                 "/usr/bin/pkexec,root,root",
+                 "/usr/sbin/mount.nfs,root,root"
                  ]
         )
     ]
