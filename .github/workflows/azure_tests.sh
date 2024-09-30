@@ -5,14 +5,14 @@
 cname="${@: -1}"
 
 configFile="azure_test_config.yaml"
-containerName="ghcr.io/gardenlinux/gardenlinux/platform-test-azure:today"
+containerName="ghcr.io/gardenlinux/gardenlinux/platform-test-azure:latest"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
 
 azure_hyper_v_generation="V1"
 azure_vm_size="Standard_D4_v4"
 
 pushd "$artifact_dir" || exit 1
-tar -xzf "$cname.tar.gz" "$cname.vhd"
+test -f "$cname.raw" || tar -xzf "$cname.tar.gz" "$cname.vhd"
 du -bh "$cname.vhd"
 du -h "$cname.vhd"
 popd || exit 1

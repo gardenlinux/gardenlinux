@@ -5,11 +5,11 @@
 cname="${@: -1}"
 
 configFile="ali_test_config.yaml"
-containerName="ghcr.io/gardenlinux/gardenlinux/platform-test-ali:today"
+containerName="ghcr.io/gardenlinux/gardenlinux/platform-test-ali:latest"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
 
 pushd "$artifact_dir" || exit 1
-tar -xzf "$cname.tar.gz" "$cname.qcow2"
+test -f "$cname.raw" || tar -xzf "$cname.tar.gz" "$cname.qcow2"
 popd || exit 1
 
 image_file=$(realpath "$artifact_dir/$cname.qcow2")

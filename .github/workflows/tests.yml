@@ -1,13 +1,20 @@
 name: tests
 on:
+  # triggered by other workflows
   workflow_call:
     inputs:
       version:
+        description: "Garden Linux Version"
         type: string
         default: today
       default_modifier:
         type: string
         default: ""
+      platform_test_tag:
+        description: "Tag to run platform-test containers. 'latest', Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
+        type: string
+        required: true
+        default: "latest"
     secrets:
       gcp_identity_provider:
         required: true
@@ -34,8 +41,14 @@ on:
       ccc_credentials:
         required: true
 jobs:
+  platform_test_images:
+    name: platform test images
+    uses: ./.github/workflows/platform-test-images.yml
+    with:
+      gl_version: ${{ inputs.platform_test_tag }}
   platform_tests:
     name: platform test
+    needs: [ platform_test_images ]
     env:
       gcp_project: ${{ secrets.gcp_project }}
       gcp_region: ${{ secrets.gcp_region }}
@@ -69,15 +82,6 @@ jobs:
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
     - uses: ./.github/actions/setup
-
-    - name: login to ghcr.io
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
-
-    - name: pull container image
-      run: |
-        podman pull "ghcr.io/gardenlinux/gardenlinux/platform-test:$GITHUB_SHA"
-        podman tag "ghcr.io/gardenlinux/gardenlinux/platform-test:$GITHUB_SHA" ghcr.io/gardenlinux/gardenlinux/platform-test:today
-
     - name: set VERSION=${{ inputs.version }}
       run: |
         bin/garden-version "${{ inputs.version }}" | tee VERSION

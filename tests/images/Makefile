@@ -25,7 +25,7 @@ define copy_files
 endef
 
 define pull_image
-	$(GARDENLINUX_BUILD_CRE) pull $(GL_REGISTRY)/$(strip $1):$(GL_VERSION)
+	$(GARDENLINUX_BUILD_CRE) pull $(GL_REGISTRY)/$(strip $1):$(GL_VERSION) || true
 endef
 
 define build_image
@@ -39,6 +39,7 @@ endef
 
 define push_image_release
 	$(GARDENLINUX_BUILD_CRE) push $(strip $1):$(GL_VERSION) $(GL_REGISTRY)/$(strip $1):$(GL_VERSION)
+	$(GARDENLINUX_BUILD_CRE) push $(strip $1):$(GL_VERSION) $(GL_REGISTRY)/$(strip $1):latest
 endef
 
 define clean_files
