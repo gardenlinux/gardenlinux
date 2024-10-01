@@ -13,6 +13,21 @@ on:
         type: string
         description: "Full commithash"
 jobs:
+  cert:
+    name: certificates
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: ./.github/actions/setup
+      - name: build certificates
+        if: ${{ ! inputs.use_kms }}
+        run: ./cert/build
+      - uses: actions/cache/save@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
+        with:
+          path: cert
+          key: cert-${{ github.run_id }}
   push-to-oci:
     runs-on: ubuntu-latest
     environment: oidc_aws_s3_upload
@@ -22,13 +37,16 @@ jobs:
     strategy:
       max-parallel: 1 # registry index is a shared resource among all assets
       matrix:
-        architecture: [ arm64 ]
+        architecture: [ arm64, amd64 ]
         cname: [ metal-gardener_prod_pxe ]
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - name: build certificates
-        if: ${{ ! inputs.use_kms }}
-        run: ./cert/build
+      - name: load cert cache
+        uses: actions/cache/restore@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
+        with:
+          path: cert
+          key: cert-${{ github.run_id }}
+          fail-on-cache-miss: true
       - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
