@@ -1,5 +1,6 @@
 name: Upload builds to OCI
 on:
+  push:
   workflow_dispatch:
     inputs:
       version:
