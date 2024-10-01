@@ -27,6 +27,7 @@ jobs:
           path: cert
           key: cert-${{ github.run_id }}
   push-to-oci:
+    needs: cert
     runs-on: ubuntu-latest
     environment: oidc_aws_s3_upload
     permissions:
