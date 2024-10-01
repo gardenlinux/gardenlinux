@@ -1,6 +1,5 @@
 name: Upload builds to OCI
 on:
-  push:
   workflow_dispatch:
     inputs:
       version:
@@ -52,8 +51,6 @@ jobs:
           .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$prefix"
           # pack tar.xz file for release
           tar -cv "$prefix" > "$prefix.tar.xz"
-       cert:
-
       - name: push using the glcli util
         run: |
           GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} glcli oci --insecure push-from-tarball --tar $prefix.tar.xz --container ghcr.io/${{ github.repository_owner }}/gl-oci --architecture ${{ matrix.architecture }} --version ${{ inputs.version }} --cname ${{ matrix.cname }}
