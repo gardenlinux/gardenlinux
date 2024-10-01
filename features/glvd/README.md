@@ -12,7 +12,7 @@ If you included this feature, you can run `glvd check` to see which issues might
 
 Also, this feature enables a summary of potential issues in the Message of the Day.
 
-Note: This requires the glvd client to make an HTTP request to the glvd backend.
+Note: This requires the glvd client to make an HTTPS request to the glvd backend.
 If you don't want this to happen, don't use this feature.
 
 For more information on what the `glvd` cli can do and how to use it, see [its GitHub Repo](https://github.com/gardenlinux/package-glvd).
