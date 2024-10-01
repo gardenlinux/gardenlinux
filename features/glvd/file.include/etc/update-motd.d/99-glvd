@@ -1,0 +1,5 @@
+#!/bin/sh
+
+if [ -x /usr/bin/glvd ]; then
+    exec /usr/bin/glvd executive-summary
+fi
