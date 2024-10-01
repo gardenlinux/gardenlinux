@@ -24,10 +24,11 @@ endif
 .PRECIOUS: %.crt
 
 ifndef CA
-default: $(PREFIX)kernel-sign.crt $(PREFIX)secureboot.pk.auth $(PREFIX)secureboot.null.pk.auth $(PREFIX)secureboot.kek.auth $(PREFIX)secureboot.db.auth $(PREFIX)secureboot.aws-efivars $(PREFIX)repo-sign.pub $(PREFIX)tpm-sign.crt
+default: $(PREFIX)oci-sign.crt $(PREFIX)kernel-sign.crt $(PREFIX)secureboot.pk.auth $(PREFIX)secureboot.null.pk.auth $(PREFIX)secureboot.kek.auth $(PREFIX)secureboot.db.auth $(PREFIX)secureboot.aws-efivars $(PREFIX)repo-sign.pub $(PREFIX)tpm-sign.crt
 
 $(PREFIX)intermediate-ca.crt: $(PREFIX)root-ca.crt
 $(PREFIX)kernel-sign.crt: $(PREFIX)intermediate-ca.crt
+$(PREFIX)oci-sign.crt: $(PREFIX)intermediate-ca.crt
 
 gardenlinux.io.crt: $(PREFIX)intermediate-ca.crt
 

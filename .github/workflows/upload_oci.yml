@@ -5,6 +5,9 @@ on:
       version:
         required: true
         type: string
+      use_kms:
+        type: boolean
+        default: false
       commit:
         required: true
         type: string
@@ -23,6 +26,9 @@ jobs:
         cname: [ metal-gardener_prod_pxe ]
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - name: build certificates
+        if: ${{ ! inputs.use_kms }}
+        run: ./cert/build
       - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
@@ -45,9 +51,8 @@ jobs:
           .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$prefix"
           # pack tar.xz file for release
           tar -cv "$prefix" > "$prefix.tar.xz"
-#      - name: Get gardenlinux release tarball
-#        run: |
-#          wget https://github.com/gardenlinux/gardenlinux/releases/download/${{ inputs.version }}/$prefix.tar.xz
+       cert:
+
       - name: push using the glcli util
         run: |
           GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} glcli oci --insecure push-from-tarball --tar $prefix.tar.xz --container ghcr.io/${{ github.repository_owner }}/gl-oci --architecture ${{ matrix.architecture }} --version ${{ inputs.version }} --cname ${{ matrix.cname }}
