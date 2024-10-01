@@ -19,15 +19,16 @@ jobs:
     defaults:
       run:
         shell: bash
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - uses: ./.github/actions/setup
-      - name: build certificates
-        if: ${{ ! inputs.use_kms }}
-        run: ./cert/build
-      - uses: actions/cache/save@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
-        with:
-          path: cert
-          key: cert-${{ github.run_id }}
+      steps:
+        - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        - uses: ./.github/actions/setup
+        - name: build certificates
+          if: ${{ ! inputs.use_kms }}
+          run: ./cert/build
+        - uses: actions/cache/save@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
+          with:
+            path: cert
+            key: cert-${{ github.run_id }}
   push-to-oci:
     runs-on: ubuntu-latest
     environment: oidc_aws_s3_upload
