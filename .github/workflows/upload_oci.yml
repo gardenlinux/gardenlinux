@@ -36,8 +36,8 @@ jobs:
     strategy:
       max-parallel: 1 # registry index is a shared resource among all assets
       matrix:
+        cname: ["kvm-gardener_prod", "kvm-gardener_prod_trustedboot", "kvm-gardener_prod_tpm2_trustedboot", "metal-gardener_prod", "metal-gardener_prod_trustedboot", "metal-gardener_prod_tpm2_trustedboot", "gcp-gardener_prod", "gdch-gardener_prod", "aws-gardener_prod", "aws-gardener_prod_trustedboot", "aws-gardener_prod_tpm2_trustedboot", "azure-gardener_prod", "ali-gardener_prod", "openstack-gardener_prod", "openstackbaremetal-gardener_prod", "vmware-gardener_prod", "metal-gardener_prod_pxe", "firecracker-gardener_prod", "metal-gardener-vhost_prod", "container"]
         architecture: [ arm64, amd64 ]
-        cname: [ metal-gardener_prod_pxe ]
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - name: load cert cache
