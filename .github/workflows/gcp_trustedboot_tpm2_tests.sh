@@ -63,10 +63,10 @@ gcp:
     machine_type: ${machine_type}
     architecture: ${TARGET_ARCHITECTURE}
     secureboot: true
-    db_path: /gardenlinux/cert/secureboot.db.der
-    kek_path: /gardenlinux/certsecureboot.kek.der
-    pk_path: /gardenlinux/cert/secureboot.pk.der
-
+    secureboot_parameters:
+        db_path: /gardenlinux/cert/gardenlinux-secureboot.db.der
+        kek_path: /gardenlinux/cert/gardenlinux-secureboot.kek.der
+        pk_path: /gardenlinux/cert/gardenlinux-secureboot.pk.der
     ssh:
         user: gardenlinux
     features:

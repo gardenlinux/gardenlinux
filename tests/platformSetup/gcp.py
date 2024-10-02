@@ -92,11 +92,11 @@ class GCP:
             cfg['secureboot_parameters'] = {}
         if 'db_path' not in cfg['secureboot_parameters']:
             cfg['secureboot_parameters']['db_path'] = "/gardenlinux/cert/secureboot.db.der"
-        if 'kek_path' not in cfg:
+        if 'kek_path' not in cfg['secureboot_parameters']:
             cfg['secureboot_parameters']['kek_path'] = "/gardenlinux/cert/secureboot.kek.der"
-        if 'pk_path' not in cfg:
+        if 'pk_path' not in cfg['secureboot_parameters']:
             cfg['secureboot_parameters']['pk_path'] = "/gardenlinux/cert/secureboot.pk.der"
-        if 'cert_file_type' not in cfg:
+        if 'cert_file_type' not in cfg['secureboot_parameters']:
             cfg['secureboot_parameters']['cert_file_type'] = 'X509'
 
     @classmethod
