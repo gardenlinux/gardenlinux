@@ -62,6 +62,7 @@ gcp:
     image: file:///artifacts/$(basename "$image_file")
     machine_type: ${machine_type}
     architecture: ${TARGET_ARCHITECTURE}
+    secureboot: true
     db_path: /gardenlinux/cert/secureboot.db.der
     kek_path: /gardenlinux/certsecureboot.kek.der
     pk_path: /gardenlinux/cert/secureboot.pk.der
