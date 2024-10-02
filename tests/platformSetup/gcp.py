@@ -97,7 +97,7 @@ class GCP:
         if 'pk_path' not in cfg:
             cfg['secureboot_parameters']['pk_path'] = "/gardenlinux/cert/secureboot.pk.der"
         if 'cert_file_type' not in cfg:
-            cfg['secureboot_parameters']['cert_file_type'] = 'BIN'
+            cfg['secureboot_parameters']['cert_file_type'] = 'X509'
 
     @classmethod
     def validate_config(cls, cfg: dict, image: str, test_name: str, credentials):
@@ -459,7 +459,7 @@ class GCP:
     def _wait_until_reachable(self, hostname):
         self.logger.info(f"Waiting for {hostname} to respond...")
         i = 0
-        while i < 40:
+        while i < 80:
             response = os.system("timeout 1 bash -c \"</dev/tcp/" + hostname + "/22\"")
             if response == 0:
                 self.logger.info(f"Instance {hostname} is reachable...")
