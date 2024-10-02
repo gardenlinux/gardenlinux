@@ -8,6 +8,13 @@ versionfile="$(readlink -f "${thisDir}/../VERSION")"
 startdate="Mar 31 00:00:00 UTC 2020"
 build_os="$(uname -s)"
 
+function check_command() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "Error: The binary '$1' could not be found. Please make sure to install it." >&2
+    exit 1
+  fi
+}
+
 # Use "gdate" & sed (GNU) which must be installed by "Homebrew"
 # on macOS systems to have a normalized date interface
 if [ "Darwin" == $build_os ]; then
@@ -17,6 +24,8 @@ else
         date_gnu="date"
         sed_gnu="sed"
 fi
+check_command "$date_gnu"
+check_command "$sed_gnu"
 
 source "${thisDir}/.constants.sh" \
 	--flags 'major,minor,date,datefull,epoch,git' \

@@ -30,7 +30,7 @@ if [ "Darwin" == $build_os ]; then
 
     # Fail when we can not find any GNU getopt package
     if [ "unset" == $getopt_gnu ]; then
-        echo "No GNU getopt binary for macOS found. Please make sure to install it by Brew or MacPorts."
+        echo "No GNU getopt binary for macOS found. Please make sure to install it by Brew or MacPorts." >&2
         exit 1
     fi
 
@@ -67,13 +67,13 @@ __cgetopt() {
 					shift
 				;;
 			--) break ;;
-			*) echo >&2 "error: unexpected $BASH_SOURCE flag '$flag'"; exit 1 ;;
+			*) echo "error: unexpected $BASH_SOURCE flag '$flag'" >&2; exit 1 ;;
 		esac
 	done
 	local dup=$(sort <<< ${dFlags//,/$'\n'} | uniq -d)
-	[ -n "$dup" ] && { echo "error: duplicate in flags definition \"${dup//$'\n'/\" \"}\""; exit 1; }
+	[ -n "$dup" ] && { echo "error: duplicate in flags definition \"${dup//$'\n'/\" \"}\"" >&2; exit 1; }
 	dup=$(grep -o . <<< ${dFlagsShort} | sort | uniq -d)
-	[ -n "$dup" ] && { echo "error: duplicate in flags-short definition \"${dup//$'\n'/\" \"}\""; exit 1; }
+	[ -n "$dup" ] && { echo "error: duplicate in flags-short definition \"${dup//$'\n'/\" \"}\"" >&2; exit 1; }
 
 	return 0 
 }
