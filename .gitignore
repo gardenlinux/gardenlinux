@@ -11,6 +11,7 @@
 /cert/*.key
 /cert/*.arn
 /cert/*.crt
+/cert/*.der
 /cert/*.pub
 /cert/*.p12
 /cert/*.csr
