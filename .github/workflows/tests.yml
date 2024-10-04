@@ -70,7 +70,7 @@ jobs:
       fail-fast: false
       matrix:
         arch: [ amd64, arm64 ]
-        target: [ gcp, aws, aws_trustedboot, aws_trustedboot_tpm2, azure, ali ]
+        target: [ gcp, gcp_trustedboot, gcp_trustedboot_tpm2, aws, aws_trustedboot, aws_trustedboot_tpm2, azure, ali ]
         modifier: [ "${{ inputs.default_modifier }}" ]
         exclude:
           - arch: arm64
@@ -99,7 +99,7 @@ jobs:
 
     - run: ls -lah ${{ env.artifact_dir }}
 
-    - if: ${{ matrix.target == 'gcp' }}
+    - if: ${{ matrix.target == 'gcp' || matrix.target == 'gcp_trustedboot' || matrix.target == 'gcp_trustedboot_tpm2' }}
       id: 'auth_gcp'
       name: 'Authenticate to Google Cloud'
       uses: google-github-actions/auth@8254fb75a33b976a221574d287e93919e6a36f70 # pin@v1
