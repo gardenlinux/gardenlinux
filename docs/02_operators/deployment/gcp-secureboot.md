@@ -1,4 +1,4 @@
-# Enable secure boot for Garden Linux on GCP
+# Enable trusted boot and subsequently secure boot for Garden Linux on GCP
 
 This article describes all steps needed to spawn a secure boot enabled Garden Linux image on GCP. Thereby, it uses the platform testing platform for spawning all required GCP resources. For more information about the platform testing platform used for Garden Linux, take a look [here](../../tests/README.md)
 
@@ -17,7 +17,9 @@ This article describes all steps needed to spawn a secure boot enabled Garden Li
 Before spawning a secure boot enabled Garden Linux instance, we have to create the corresponding artifact for this. In order to create it, you must have the Garden Linux repo checked out and execute the following build script from within the root directory of the repository:
 
 ```
-./build gcp_secureboot_dev
+./build gcp_trustedboot
+- or -
+./build gcp_trustedboot_tpm2
 ```
 
 ## Prepare spawning
@@ -28,9 +30,11 @@ This chapter describes what steps are required to successfully spawn an GCP inst
 Once you have build a new Garden Linux image using the secure boot feature, there will also be keys and a signature database which are required for secure boot. These keys and signature database must be uploaded to GCP alongside with the image, so that UEFI can verify the integrity of the booted system during the startup process.
 
 The keys and signature database are created in the [cert/](../../cert/) directory during the build of the image. There, you will find the following files:
-* secureboot.db.auth
-* secureboot.kek.auth
-* secureboot.pk.auth
+* secureboot.db.der
+* secureboot.kek.der
+* secureboot.pk.der
+
+The "DER" (Distinguished Encoding Rules) format is currently the only supported certificate format with GCP.
 
 These files are required during startup. Therefore, they must be added to the spawned GCP image. In order to achieve this, the files are added as metadata to the image upload.
 
@@ -74,11 +78,9 @@ gcp:
     secureboot: true
     secureboot_parameters:
         # paths to the secureboot keys and database, needed for secureboot (optional)
-        #db_path: /gardenlinux/cert/secureboot.db.auth
-        #kek_path: /gardenlinux/cert/secureboot.kek.auth
-        #pk_path: /gardenlinux/cert/secureboot.pk.auth
-        # the certificate type for secureboot, possible values are `BIN`, `X509`. Default is `BIN`
-        #cert_file_type: BIN
+        #db_path: /gardenlinux/cert/secureboot.db.der
+        #kek_path: /gardenlinux/cert/secureboot.kek.der
+        #pk_path: /gardenlinux/cert/secureboot.pk.der
 
     # GCE machine type (optional)
     machine_type: n1-standard-2
@@ -104,7 +106,7 @@ gcp:
 
 ```
 
-The content must be saved into a YAML file and it must be mounted to the platform test container later on. For this, create a folder in your home directory and place the YAML in there. This folder will be mounted to the platform test container then. The configuration could be called `gcp-secureboot.yaml` for example.
+The content must be saved into a YAML file and it must be mounted to the platform test container later on. For this, create a folder in your home directory and place the YAML in there. This folder will be mounted to the platform test container then. The configuration could be called `gcp-trustedboot.yaml` for example.
 
 ## Spawn environment
 
@@ -134,10 +136,10 @@ As you can see, the current Garden Linux repo is mounted into the container (`/g
 Once you executed the command, you should have access to the bash terminal within the container. From there, you can execute the platform test, which will create all required GCP resources for you. Since we've set the `keep_running` parameter to `true`, the created resources will remain after the execution, so that we can access the instance via SSH for further testing afterwards.
 
 ```
-pytest --iaas=gcp --configfile=/config/gcp-secureboot.yaml
+pytest --iaas=gcp --configfile=/config/gcp-trustedboot.yaml
 ```
 
-## Use secure boot enabled Garden Linux
+## Use trusted boot / secure boot enabled Garden Linux
 
 After you have run the platform test from the previous chapter, you should still have the bash terminal open within the platform test container.
 
@@ -166,6 +168,17 @@ System:
  Boot into FW: supported
 ...
 ```
+
+## Troubleshooting
+
+If the instance is not coming up properly, you might want to have a look into the Google Cloud Console
+
+* Go to VM instances
+* Click on the newly created instance
+* Verfiy that Secure Boot, vTPM, Integrity Monitoring are enabled
+* Go up to "Logs" and click on Serial Port 1 (console)
+* If the machine shows a secure boot violation and does not boot, the machine got handed over the wrong certificates. For local builds the correct certifivates are "secureboot.*.der" and for the NIGHTLYs the correct certificates are "gardenlinux-secureboot.*.der"
+* If the machine boots, but shuts down immediately after loading the OS, this indicates to a problem with the TPM2 suppoprt. Make sure that vTPM is enabled for this instance
 
 ## Cleanup everything
 
