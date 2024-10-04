@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eufo pipefail
+set -efo pipefail
 
 dir="$(dirname "${BASH_SOURCE[0]}")"
 
@@ -21,6 +21,9 @@ while [ $# -gt 0 ]; do
 	case "$1" in
 		--container-engine)
 			container_engine="$2"
+			if [ "$container_engine" = "docker" ]; then
+				container_run_opts=()
+			fi
 			shift 2
 			;;
 		--container-run-opts)
@@ -50,7 +53,7 @@ fi
 
 if [ -z "$container_image" ]; then
 	image_file="$(mktemp)"
-	"$container_engine" build --iidfile "$image_file" "$dir"
+	"$container_engine" build --iidfile "$image_file" -f "$dir/Containerfile" "$dir"
 	container_image="$(cat "$image_file")"
 	rm "$image_file"
 fi
