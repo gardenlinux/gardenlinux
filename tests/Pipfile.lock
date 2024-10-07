@@ -98,12 +98,12 @@
         },
         "azure-mgmt-network": {
             "hashes": [
-                "sha256:15d6a77d7429bdcc76f8482158845d42f9d9434529e1ad2b6778269cc14627e9",
-                "sha256:4de676184195053fdb106a6ea1042a894e70c731a6d3c8a633d52f5229f4ee1b"
+                "sha256:5c1c61d8bb13ad40f788a26fd7569c1d9d60eb2e4cb19c2a1b5d9c02ae862316",
+                "sha256:67295fda351fdae79d14591487009e911346adea9578bb1b04636a15e3472598"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==26.0.0"
+            "version": "==27.0.0"
         },
         "azure-mgmt-resource": {
             "hashes": [
