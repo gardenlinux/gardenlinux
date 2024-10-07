@@ -101,6 +101,7 @@ open-vm-tools
 openvswitch-switch
 ostree
 ovmf
+passt
 patchelf
 pciutils
 pkexec
