@@ -51,7 +51,6 @@ git
 gnupg
 google-compute-engine-oslogin
 google-guest-agent
-guestfish
 haveged
 hdparm
 inetutils-ping
