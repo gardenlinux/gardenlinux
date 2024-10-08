@@ -136,7 +136,7 @@ jobs:
         set -o pipefail
         .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.arch }}" "${{ env.cname }}" 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.test.log"
 
-    - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # pin@v4.4.0
+    - uses: actions/upload-artifact@604373da6381bf24206979c74d06a550515601b9 # pin@v4.4.1
       with:
         name: platform-test-${{ env.cname }}
         path: |
