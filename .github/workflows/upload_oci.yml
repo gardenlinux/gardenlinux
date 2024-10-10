@@ -1,0 +1,75 @@
+name: Upload builds to OCI
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        type: string
+      use_kms:
+        type: boolean
+        default: false
+      commit:
+        required: true
+        type: string
+        description: "Full commithash"
+jobs:
+  cert:
+    name: certificates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: ./.github/actions/setup
+      - name: build certificates
+        if: ${{ ! inputs.use_kms }}
+        run: ./cert/build
+      - uses: actions/cache/save@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
+        with:
+          path: cert
+          key: cert-${{ github.run_id }}
+  push-to-oci:
+    needs: cert
+    runs-on: ubuntu-latest
+    environment: oidc_aws_s3_upload
+    permissions:
+      id-token: write
+      packages: write
+    strategy:
+      fail-fast: false
+      max-parallel: 1 # registry index is a shared resource among all assets
+      matrix:
+        cname: ["kvm-gardener_prod", "kvm-gardener_prod_tpm2_trustedboot", "metal-gardener_prod", "metal-gardener_prod_tpm2_trustedboot", "gcp-gardener_prod", "gdch-gardener_prod", "aws-gardener_prod", "aws-gardener_prod_tpm2_trustedboot", "azure-gardener_prod", "ali-gardener_prod", "openstack-gardener_prod", "openstackbaremetal-gardener_prod", "vmware-gardener_prod", "metal-gardener_prod_pxe"]
+        architecture: [ arm64, amd64 ]
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - name: load cert cache
+        uses: actions/cache/restore@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
+        with:
+          path: cert
+          key: cert-${{ github.run_id }}
+          fail-on-cache-miss: true
+      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install glcli util
+        run: |
+          pip install git+https://github.com/gardenlinux/python-gardenlinux-cli@0.1.0
+      - name: Define prefix
+        run: |
+          commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
+          prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
+          echo "prefix=$prefix" >> "$GITHUB_ENV"
+      - name: download build artifacts from S3
+        run: |
+          .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$prefix"
+          # pack tar.xz file for release
+          tar -cv "$prefix" > "$prefix.tar.xz"
+      - name: push using the glcli util
+        run: |
+          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} glcli oci --insecure push-from-tarball --tar $prefix.tar.xz --container ghcr.io/${{ github.repository_owner }}/gl-oci --architecture ${{ matrix.architecture }} --version ${{ inputs.version }} --cname ${{ matrix.cname }}
+
