@@ -1,0 +1,50 @@
+# overwrite with a stable gardenlinux version
+ARG GL_VERSION=latest
+ARG GL_BASE=ghcr.io/gardenlinux/gardenlinux:${GL_VERSION}
+
+FROM ${GL_BASE}
+
+ENV PYTHON=python3.12
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV SHELL /bin/bash
+ENV PYTHONPATH /gardenlinux/bin:/gardenlinux/ci:/gardenlinux/ci/glci:/gardenlinux/tests:/gardenlinux/features
+
+# install some basic tools
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       ca-certificates \
+       curl \
+       less \
+       apt-transport-https \
+       gnupg \
+       vim \
+       procps \
+       openssh-client \
+       wget \
+       iproute2 \
+       # python from GL repos, all python packages are supposed to come from pip
+       ${PYTHON}-venv \
+       lib${PYTHON}-dev \
+       # qemu-img is used in some scripts
+       qemu-utils \
+       build-essential \
+       onmetal-image \
+       unzip \
+       inetutils-ping \
+       shellcheck \
+       psmisc \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Prepare virtual environment
+# We need a virtual env to install packages via pip, and not via apt.
+# See: https://peps.python.org/pep-0668/
+ENV VIRTUAL_ENV_PARENT=/opt/python-test-env
+ENV VIRTUAL_ENV="$VIRTUAL_ENV_PARENT/.venv"
+RUN ${PYTHON} -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+COPY Pipfile Pipfile.lock "$VIRTUAL_ENV_PARENT/"
+# Do not use --system, we want the pip from the virtual env
+RUN cd "$VIRTUAL_ENV_PARENT" && pip install pipenv && pipenv install --categories "packages dev-packages"
+WORKDIR /gardenlinux/tests
