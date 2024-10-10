@@ -39,6 +39,8 @@ jobs:
         with:
           name: release
           path: .github_release_id
+          if-no-files-found: error
+          include-hidden-files: true
   upload_to_release:
     environment: oidc_aws_s3_upload
     needs: create_release
