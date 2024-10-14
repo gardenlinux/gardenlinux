@@ -1,0 +1,25 @@
+# overwrite with a stable gardenlinux version
+ARG GL_VERSION=latest
+# use platform-test-base image
+FROM gardenlinux/platform-test-base:${GL_VERSION}
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV SHELL /bin/bash
+
+#Virtual Env Created in platform-test-base
+ENV VIRTUAL_ENV="/opt/python-test-env/.venv"
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN : "Install KVM requirements" \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+       guestfish \
+       qemu-system-x86 \
+       qemu-system-arm \
+       qemu-efi-aarch64 \
+       # virt-copy-in command needs kernel in /boot
+       linux-image-amd64 \
+       ovmf \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /gardenlinux/tests

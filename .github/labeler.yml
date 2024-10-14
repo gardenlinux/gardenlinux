@@ -13,7 +13,6 @@ github-settings:
 test-env:
 - changed-files:
   - any-glob-to-any-file:
-    - 'container/platform-test/*'
     - 'tests/**'
     - 'test'
 

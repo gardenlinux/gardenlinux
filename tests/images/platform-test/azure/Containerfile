@@ -1,0 +1,16 @@
+# overwrite with a stable gardenlinux version
+ARG GL_VERSION=latest
+# use platform-test-base image
+FROM gardenlinux/platform-test-base:${GL_VERSION}
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV SHELL /bin/bash
+
+#Virtual Env Created in platform-test-base
+ENV VIRTUAL_ENV="/opt/python-test-env/.venv"
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN : "Install Azure requirements" \
+     && cd "$VIRTUAL_ENV_PARENT" && pipenv install --categories "azure-packages"
+
+WORKDIR /gardenlinux/tests

@@ -12,6 +12,11 @@ on:
         type: boolean
         required: false
         default: true
+      platform_test_tag:
+        description: "Tag to run platform-test containers. 'latest', Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
+        type: string
+        required: true
+        default: "latest"
 jobs:
   build:
     uses: ./.github/workflows/build.yml
@@ -27,11 +32,8 @@ jobs:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_kms_role: ${{ secrets.SECUREBOOT_DB_IAM_ROLE }}
       aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
-  build_container:
-    name: build container
-    uses: ./.github/workflows/build_container.yml
   tests:
-    needs: [ build, build_container ]
+    needs: [ build ]
     permissions:
       id-token: write
       packages: write
@@ -39,6 +41,7 @@ jobs:
     with:
       version: ${{ needs.build.outputs.version }}
       default_modifier: "-gardener_prod"
+      platform_test_tag: ${{ inputs.platform_test_tag || 'latest' }}
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
