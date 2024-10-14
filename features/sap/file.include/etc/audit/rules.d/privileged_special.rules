@@ -1,2 +1,2 @@
--a exit,always -F arch=b64 -S mount -S mount_setattr -S umount -S umount2 -S mknod -S mknodat -S chroot -F auid!=-1 -F key=privileged_special
+-a exit,always -F arch=b64 -S mount -S mount_setattr -S umount2 -S mknod -S mknodat -S chroot -F auid!=-1 -F key=privileged_special
 -a exit,always -F arch=b32 -S mount -S mount_setattr -S umount -S umount2 -S mknod -S mknodat -S chroot -F auid!=-1 -F key=privileged_special
