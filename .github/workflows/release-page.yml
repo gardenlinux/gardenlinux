@@ -80,5 +80,5 @@ jobs:
           ls -la "$prefix/$prefix.platform.test.xml" || true
           test -f "$prefix/$prefix.chroot.test.log" && echo "$prefix/$prefix.chroot.test.log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
           test -f "$prefix/$prefix.chroot.test.xml" && echo "$prefix/$prefix.chroot.test.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
-          test -f ls -la "$prefix/$prefix.platform.test.log" && echo "$prefix/$prefix.platform.test.log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
-          test -f ls -la "$prefix/$prefix.platform.test.xml" && echo "$prefix/$prefix.platform.test.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          test -f "$prefix/$prefix.platform.test.log" && echo "$prefix/$prefix.platform.test.log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          test -f "$prefix/$prefix.platform.test.xml" && echo "$prefix/$prefix.platform.test.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
