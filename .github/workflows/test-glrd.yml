@@ -1,0 +1,24 @@
+name: test GLRD GH action
+on:
+  workflow_dispatch:
+  push:
+jobs:
+  query:
+    name: query
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Get latest GL patch version
+        id: gl_version_latest
+        uses: gardenlinux/glrd@main
+        with:
+          cmd: glrd --no-header --type patch --latest --fields Version
+      - name: Use latest GL patch version
+        run: echo ${{ steps.gl_version_latest.outputs.result }}
+      - name: Get latest GL nightly version
+        id: gl_version_nightly
+        uses: gardenlinux/glrd@main
+        with:
+          cmd: glrd --no-header --type nightly --latest --fields Version
+      - name: Use latest GL nightly version
+        run: echo ${{ steps.gl_version_nightly.outputs.result }}      
+
