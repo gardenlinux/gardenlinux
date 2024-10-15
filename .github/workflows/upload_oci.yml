@@ -71,5 +71,5 @@ jobs:
           tar -cv "$prefix" > "$prefix.tar.xz"
       - name: push using the glcli util
         run: |
-          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} glcli oci --insecure push-from-tarball --tar $prefix.tar.xz --container ghcr.io/${{ github.repository_owner }}/gl-oci --architecture ${{ matrix.architecture }} --version ${{ inputs.version }} --cname ${{ matrix.cname }}
+          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} glcli oci --insecure push-from-tarball --tar $prefix.tar.xz --container ghcr.io/${{ github.repository_owner }}/gl-oci --architecture ${{ matrix.architecture }} --version ${{ inputs.version }} --cname ${{ matrix.cname }} --kms_arn ${{ secrets.OCI_KMS_ARN }}
 
