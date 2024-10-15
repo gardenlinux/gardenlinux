@@ -23,6 +23,19 @@ for arch in all amd64 arm64; do
 	echo " $hash $size main/binary-$arch/Packages.gz" >> "$index_files"
 done
 
+dir="$target/dists/$dist/main/source"
+mkdir -p "$dir"
+(cd "$target" && dpkg-scansources pool) > "$dir/Sources"
+
+size="$(wc -c "$dir/Sources" | awk '{ print $1 }')"
+hash="$(sha256sum "$dir/Sources" | head -c 64)"
+echo " $hash $size main/source/Sources" >> "$index_files"
+gzip < "$dir/Sources" > "$dir/Sources.gz"
+rm "$dir/Sources"
+size="$(wc -c "$dir/Sources.gz" | awk '{ print $1 }')"
+hash="$(sha256sum "$dir/Sources.gz" | head -c 64)"
+echo " $hash $size main/source/Sources.gz" >> "$index_files"
+
 date="$(date -R -u)"
 
 cat << EOF | gpg --clearsign > "$target/dists/$dist/InRelease"
