@@ -89,3 +89,17 @@ jobs:
     uses: ./.github/workflows/publish_container.yml
     with:
       version: ${{ needs.build.outputs.version }}
+  glrd:
+    name: create GLRD release
+    needs: [ upload_to_s3 ]
+    steps:
+      - name: Create GLRD nightly release
+        id: gl_version_latest
+        uses: gardenlinux/glrd@main
+        with:
+          cmd: glrd-create --s3-update --type nightly
+      - name: Get latest GL nightly
+        id: gl_version_nightly
+        uses: gardenlinux/glrd@main
+        with:
+          cmd: glrd --type nightly --latest
