@@ -93,3 +93,16 @@ jobs:
     with:
       version: ${{ inputs.version }}
       is_latest:  ${{ inputs.is_latest }}
+  glrd:
+    name: create GLRD release
+    needs: [ create_release ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GLRD release
+        uses: gardenlinux/glrd@main
+        with:
+          cmd: glrd-create --s3-update --type patch --version ${{ inputs.version }} --commit ${{ inputs.commit }}
+      - name: Get created GLRD release
+        uses: gardenlinux/glrd@main
+        with:
+          cmd: glrd --type patch --version ${{ inputs.version }}
