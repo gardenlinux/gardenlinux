@@ -582,14 +582,13 @@ gcp:
     # enable uefi boot, default is legacy boot (optional)
     #uefi: false
     # enable secureboot, implies uefi boot, default is off (optional)
+    # needs a build with gcp_trustedboot or gcp_trustedboot_tpm2 features
     #secureboot: false
     secureboot_parameters:
         # paths to the secureboot keys and database, needed for secureboot (optional)
-        #db_path: /gardenlinux/cert/secureboot.db.auth
-        #kek_path: /gardenlinux/cert/secureboot.kek.auth
-        #pk_path: /gardenlinux/cert/secureboot.pk.auth
-        # the certificate type for secureboot, possible values are `BIN`, `X509`. Default is `BIN`
-        #cert_file_type: BIN
+        #db_path: /gardenlinux/cert/secureboot.db.der
+        #kek_path: /gardenlinux/cert/secureboot.kek.der
+        #pk_path: /gardenlinux/cert/secureboot.pk.der
 
     # GCE machine type (optional)
     machine_type: n1-standard-2
