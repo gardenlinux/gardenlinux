@@ -2035,20 +2035,20 @@
         },
         "boto3": {
             "hashes": [
-                "sha256:9b96c210678cf430b16b49dee87db30f46044602bb9a605a465e1900f468a43f",
-                "sha256:9c5b0ce4a25bb78d659478d1c552f1dbb7ff275aab3263bb41cdbef8bca28693"
+                "sha256:9f4a081e1940846171b51d903000a04322f1356d53225ce1028fc1760a155a70",
+                "sha256:f16c7edfcbbeb0a0c22d67d6ebbfcb332fa78d3ea88275e082260ba04fe65347"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==1.35.16"
+            "version": "==1.35.45"
         },
         "botocore": {
             "hashes": [
-                "sha256:1b48c94e8a4bbe23143f3d1c21a32b9ffc7476b651ef42371ab45d678f6dbfbc",
-                "sha256:3564a980d95ff2861a6ca74313173d8778aa659125c63cf49c93ad23896c63b1"
+                "sha256:9a898bfdd6b0027fee2018711192c15c2716bf6a7096b1168bd8a896df3664a1",
+                "sha256:e07e170975721c94ec1e3bf71a484552ad63e2499f769dd14f9f37375b4993fd"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==1.35.16"
+            "version": "==1.35.45"
         },
         "certifi": {
             "hashes": [
@@ -2642,11 +2642,11 @@
         },
         "s3transfer": {
             "hashes": [
-                "sha256:0711534e9356d3cc692fdde846b4a1e4b0cb6519971860796e6bc4c7aea00ef6",
-                "sha256:eca1c20de70a39daee580aef4986996620f365c4e0fda6a86100231d62f1bf69"
+                "sha256:263ed587a5803c6c708d3ce44dc4dfedaab4c1a32e8329bab818933d79ddcf5d",
+                "sha256:4f50ed74ab84d474ce614475e0b8d5047ff080810aac5d01ea25231cfc944b0c"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==0.10.2"
+            "version": "==0.10.3"
         },
         "scp": {
             "hashes": [
@@ -2889,6 +2889,7 @@
             "version": "==0.13.2"
         }
     },
+    "firecracker-packages": {},
     "gcp-packages": {
         "cachetools": {
             "hashes": [
@@ -3230,6 +3231,7 @@
             "version": "==2.2.2"
         }
     },
+    "kvm-packages": {},
     "openstack-packages": {
         "attrs": {
             "hashes": [
