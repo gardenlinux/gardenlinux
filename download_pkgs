@@ -16,6 +16,12 @@ arch="$(dpkg --print-architecture)"
 mkdir download
 while read -r repo tag; do
 	gh release download --dir download --repo "$repo" "$tag"
+	if [ -e download/build.tar.xz.0000 ]; then
+		set +f
+		cat download/build.tar.xz.* | tar -C download -x
+		rm download/build.tar.xz.*
+		set -f
+	fi
 	if [ -e download/build.tar.xz ]; then
 		xz -d < download/build.tar.xz | tar -C download -x
 		rm download/build.tar.xz
