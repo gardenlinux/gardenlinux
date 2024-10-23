@@ -79,7 +79,7 @@ def register_image(
     if len(uefi_data) > 0:
         arguments['UefiData'] = uefi_data
     if len(tpm_support) > 0:
-        arguments['Tpmsupport'] = tpm_support
+        arguments['TpmSupport'] = tpm_support
 
     # check if we want to disable imds or not.
     if len(imds_support) > 0:
