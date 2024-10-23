@@ -89,3 +89,26 @@ jobs:
     uses: ./.github/workflows/publish_container.yml
     with:
       version: ${{ needs.build.outputs.version }}
+  glrd:
+    name: create GLRD release
+    needs: [ upload_to_s3 ]
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    # only create release on main branch
+    if: ${{ github.ref }} == 'refs/heads/main'
+    steps:
+      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Create GLRD nightly release
+        uses: gardenlinux/glrd@v1
+        with:
+          cmd: glrd-manage --s3-update --create nightly
+      - name: Get latest GL nightly
+        id: gl_version_nightly
+        uses: gardenlinux/glrd@v1
+        with:
+          cmd: glrd --type nightly --latest

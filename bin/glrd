@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+cmd=$(basename "${0}")
+args="$*"
+if [ -z "${GARDENLINUX_BUILD_CRE}" ]; then
+    GARDENLINUX_BUILD_CRE="sudo podman"
+fi
+${GARDENLINUX_BUILD_CRE} run -it --rm \
+    --pull always -q \
+    -e AWS_DEFAULT_REGION \
+    -e AWS_REGION \
+    -e AWS_ACCESS_KEY_ID \
+    -e AWS_SECRET_ACCESS_KEY \
+    -e AWS_SESSION_TOKEN \
+    ghcr.io/gardenlinux/glrd \
+    "${cmd} ${args}"
