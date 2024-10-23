@@ -13,6 +13,8 @@ from botocore.client import Config
 import argparse
 import gzip
 import re
+import subprocess
+import textwrap
 
 from get_kernelurls import get_kernel_urls
 from parse_aptsource import DebsrcFile
@@ -210,16 +212,15 @@ def generate_package_update_section(version):
                     output += _parse_match_section(s['matchBinaries'])
     return output
 
+def release_notes_changes_section():
+    return textwrap.dedent("""
+    ## Changes
+    The following packages have been upgraded, to address the mentioned CVEs:
+    **todo release facilitator: fill this in**
+    """)
 
-def create_github_release_notes(gardenlinux_version, commitish):
-    commitish_short=commitish[:8]
-    output = ""
-  
-    manifests = download_all_singles(gardenlinux_version, commitish_short)
-
-    output += generate_release_note_image_ids(manifests)
-
-    output += "\n"
+def release_notes_software_components_section(gardenlinux_version):
+    output = "\n"
     output += "## Software Component Versions\n"
     output += "```"
     output += "\n"
@@ -232,14 +233,58 @@ def create_github_release_notes(gardenlinux_version, commitish):
             if packages_regex.match(entry.deb_source):
                 output += f'{entry!r}\n'
     output += "```"
-    output += "\n"
+    output += "\n\n"
+    return output
+
+def release_notes_compare_package_versions_section(gardenlinux_version):
+    output = ""
+    version_components = gardenlinux_version.split('.')
+    # Assumes we always have version numbers like 1443.2
+    if (len(version_components) == 2):
+        try:
+            major = int(version_components[0])
+            patch = int(version_components[1])
+
+            if patch > 0:
+                previous_version = f"{major}.{patch - 1}"
+
+                output += f"## Changes in Package Versions Compared to {previous_version}\n"
+                output += "```diff\n"
+                output += subprocess.check_output(['/bin/bash','./hack/compare-apt-repo-versions.sh', previous_version, gardenlinux_version]).decode("utf-8")
+                output += "```\n\n"
+            elif patch == 0:
+                # todo: In this case, we want to compare to the previous major version
+                pass
+        except ValueError:
+            print(f"Could not parse {gardenlinux_version} as the Garden Linux version, skipping version compare section")
+    return output
+
+def create_github_release_notes(gardenlinux_version, commitish, dry_run = False):
+    commitish_short=commitish[:8]
+    output = ""
+
+    output += release_notes_changes_section()
+
+    output += release_notes_software_components_section(gardenlinux_version)
+
+    output += release_notes_compare_package_versions_section(gardenlinux_version)
+
+    # Ignore in dry run because this fails when called locally
+    # Run as usual in CI
+    if not dry_run:
+        manifests = download_all_singles(gardenlinux_version, commitish_short)
+
+        output += generate_release_note_image_ids(manifests)
 
     output += "\n"
     output += "## Kernel Package direct download links\n"
     output += get_kernel_urls(gardenlinux_version)
     output += "\n"
 
-    output += generate_image_download_section(manifests, gardenlinux_version, commitish_short )
+    # Ignore in dry run because this fails when called locally
+    # Run as usual in CI
+    if not dry_run:
+        output += generate_image_download_section(manifests, gardenlinux_version, commitish_short )
 
     output += "\n"
     output += "## Kernel Module Build Container (kmodbuild) "
@@ -312,7 +357,7 @@ def main():
     args = parser.parse_args()
 
     if args.command == 'create':
-        body = create_github_release_notes(args.tag, args.commit)
+        body = create_github_release_notes(args.tag, args.commit, args.dry_run)
         if not args.dry_run:
             release_id = create_github_release(args.owner, args.repo, args.tag, args.commit, body)
             write_to_release_id_file(f"{release_id}")
