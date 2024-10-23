@@ -65,5 +65,5 @@ if [ -z "$container_image" ]; then
 	rm "$image_file"
 fi
 
-"$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" 2>&1 | tee "$dir/.build/$cname.test-log"
-echo "$cname.test-log" >> "$dir/.build/$cname.artifacts"
+"$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" 2>&1 | tee "$dir/.build/$cname.chroot.test.log"
+echo "$cname.chroot.test.log" >> "$dir/.build/$cname.artifacts"
