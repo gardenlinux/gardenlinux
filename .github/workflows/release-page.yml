@@ -62,6 +62,7 @@ jobs:
           commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
           prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
           .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$prefix"
+          # pack tar.xz file for release
           tar -cv "$prefix" | xz -9 > "$prefix.tar.xz"
       - name: upload to release
         run: |
@@ -71,43 +72,13 @@ jobs:
           echo "$release $prefix.tar.xz"
           ls -lah "$prefix.tar.xz"
           echo "$prefix.tar.xz" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
-  upload_integration_test_logs_to_release:
-    environment: oidc_aws_s3_upload
-    needs: create_release
-    permissions:
-      contents: write
-      id-token: write
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        architecture: [ amd64, arm64 ]
-        cname: [ gcp-gardener_prod, aws-gardener_prod, azure-gardener_prod ]
-        exclude:
-          - architecture: arm64
-            cname: gcp-gardener_prod
-          - architecture: arm64
-            cname: azure-gardener_prod
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # pin@v3
-        with:
-          name: release
-      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      - name: download build artifacts from S3
-        run: |
-          commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
-          prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
-          aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/$prefix/$prefix.test-log" ./
-      - name: upload to release
-        run: |
-          commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
-          release="$(cat .github_release_id)"
-          prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
-          echo "$release $prefix.test-log"
-          ls -lah "$prefix.test-log"
-          echo "$prefix.test-log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+
+          # upload test logs separately (if they exist)
+          ls -la "$prefix/$prefix.chroot.test.log" || true
+          ls -la "$prefix/$prefix.chroot.test.xml" || true
+          ls -la "$prefix/$prefix.platform.test.log" || true
+          ls -la "$prefix/$prefix.platform.test.xml" || true
+          test -f "$prefix/$prefix.chroot.test.log" && echo "$prefix/$prefix.chroot.test.log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          test -f "$prefix/$prefix.chroot.test.xml" && echo "$prefix/$prefix.chroot.test.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          test -f "$prefix/$prefix.platform.test.log" && echo "$prefix/$prefix.platform.test.log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          test -f "$prefix/$prefix.platform.test.xml" && echo "$prefix/$prefix.platform.test.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
