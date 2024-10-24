@@ -43,6 +43,7 @@ def register_image(
     boot_mode: str='',
     uefi_data: str='',
     tpm_support: str='',
+    imds_support: str='',
 ) -> str:
     '''
     @return: ami-id of registered image
@@ -79,6 +80,10 @@ def register_image(
         arguments['UefiData'] = uefi_data
     if len(tpm_support) > 0:
         arguments['TpmSupport'] = tpm_support
+
+    # check if we want to disable imds or not.
+    if len(imds_support) > 0:
+        arguments['ImdsSupport'] = imds_support
 
     # Now, register image
     result = ec2_client.register_image(**arguments)
@@ -202,6 +207,8 @@ class AWS:
             cfg['uefi_data'] = ""
         if not 'tpm_support' in cfg:
             cfg['tpm_support'] = ""
+        if not 'imds_support' in cfg:
+            cfg['imds_support'] = "v2.0"
         if not 'bucket' in cfg:
             cfg['bucket'] = f"img-{test_name}-upload"
         if not 'securitygroup_name' in cfg:
@@ -678,6 +685,7 @@ class AWS:
             boot_mode = self.config["boot_mode"],
             uefi_data = self.config["uefi_data"],
             tpm_support = self.config["tpm_support"],
+            imds_support = self.config["imds_support"]
         )
         self.ec2_client.create_tags(
             Resources = [self._ami_id],
