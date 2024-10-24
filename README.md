@@ -1,10 +1,12 @@
 <p style="text-align: center;">
-    <img alt="GitHub Release" src="https://img.shields.io/github/v/release/gardenlinux/gardenlinux?label=LTS%20release">
+    <a href="https://github.com/gardenlinux/gardenlinux/releases" target="_blank">
+       <img src="https://img.shields.io/github/v/release/gardenlinux/gardenlinux?label=latest%20release" alt="latest release">
+    </a>
     <a href="https://github.com/gardenlinux/gardenlinux/actions/workflows/nightly.yml" target="_blank">
-        <img src="https://github.com/gardenlinux/gardenlinux/actions/workflows/nightly.yml/badge.svg?event=schedule" alt="Build">
+        <img src="https://github.com/gardenlinux/gardenlinux/actions/workflows/nightly.yml/badge.svg?event=schedule" alt="Nightly Build">
     </a>
     <a href="https://github.com/gardenlinux/gardenlinux/actions/workflows/dev.yml" target="_blank">
-        <img src="https://github.com/gardenlinux/gardenlinux/actions/workflows/dev.yml/badge.svg?branch=main" alt="Build">
+        <img src="https://github.com/gardenlinux/gardenlinux/actions/workflows/dev.yml/badge.svg?branch=main" alt="Dev Build">
     </a>
     <a href="https://bestpractices.coreinfrastructure.org/projects/3925" target="_blank">
         <img src="https://bestpractices.coreinfrastructure.org/projects/3925/badge" alt="CII Best Practices">
@@ -75,20 +77,57 @@ The build script fetches the required builder container and manages all internal
 To run unit tests for a specific target, use the command `./test ${target}`.
 Further documentation about tests is located in [tests/README.md](tests/README.md).
 
+# Releases
 
-# Download Releases 
+For more information about the release strategy and lifecycle, have a look at the [Release Plan Overview](docs/00_introduction/release.md).
+
+## Active and Next Releases
+
+```mermaid
+gantt
+    title Garden Linux active and next releases
+    axisFormat %m.%y
+    section 1443
+        Release:                milestone, 2024-03-13, 0m
+        Standard maintenance:       task, 2024-03-13, 6M
+        Extended maintenance:       milestone, 2024-09-13, 0m
+        Extended maintenance:       task, 2024-09-13, 4M
+        End of maintenance:         milestone, 2025-01-13, 0m
+    section 1592
+        Release:                milestone, 2024-08-12, 0m
+        Standard maintenance:       task, 2024-08-12, 9M
+        Extended maintenance:       milestone, 2025-05-12, 0m
+        Extended maintenance:       task, 2025-05-12, 3M
+        End of maintenance:         milestone, 2025-08-12, 0m
+    section next
+        Release:                milestone, 2024-12-01, 0m
+        Standard maintenance:       task, 2024-12-01, 6M
+        Extended maintenance:       milestone, 2025-06-01, 0m
+        Extended maintenance:       task, 2025-06-01, 3M
+        End of maintenance:         milestone, 2025-09-01, 0m        
+```
+
+## Download Stable and Patch Releases
+
+[Stable](docs/00_introduction/release.md#stable-releases) and [Patch](docs/00_introduction/release.md#patch-releases-patches) releases can be downloaded from the following sources:
 
 | Product                        | Release Frequency | Download                                                                                        |
 | ------------------------------ | ----------------- | ----------------------------------------------------------------------------------------------- |
-| LTS cloud and baremetal images | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/releases)                                 |
-| LTS base container images      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux)               |
-| LTS bare python container      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-python) |
-| LTS bare libc container        | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-libc)   |
-| LTS bare nodejs container      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-nodejs) |
+| cloud and baremetal images | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/releases)                                 |
+| base container images      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux)               |
+| bare python container      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-python) |
+| bare libc container        | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-libc)   |
+| bare nodejs container      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-nodejs) |
 
-**Note:** For each artifact, there also exists a nightly version, which is built daily but is not considered LTS.
+The cloud and baremetal images provided by Garden Linux are compatible with various cloud platforms, including Alibaba Cloud, AWS, Microsoft Azure and GCP.
 
-The LTS cloud and baremetal images provided by Garden Linux are compatible with various cloud platforms, including Alibaba Cloud, AWS, Microsoft Azure and GCP.
+## Download Nightly Releases 
+
+[Nightly](docs/00_introduction/release.md#nightly-releases) releases can be downloaded from the same sources and are either tagged or named `nightly`.
+
+> [!WARNING]  
+> Nightly releases do not include maintenance commitments and never receive updates.
+> Advanced users are invited to try them out and provide feedback, but it **is strongly discouraged** to use them in any sort of production environment.
 
 # Nvidia Driver Support
 An installer can be found in the [gardenlinux/gardenlinux-nvidia-installer](https://github.com/gardenlinux/gardenlinux-nvidia-installer) repository.

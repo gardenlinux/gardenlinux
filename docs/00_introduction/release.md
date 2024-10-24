@@ -44,22 +44,24 @@ Garden Linux strives to balance providing cutting edge version of the relevant s
 gantt
     title Garden Linux active and next releases
     axisFormat %m.%y
-    section 'next' 
-        Standard maintenance:       task, 2024-12-13, 6M 
-        Extended maintenance:       task, 2025-06-13, 3M   
-    section '1592'
-        Release:                milestone, 2024-08-12, 0m
-        Standard maintenance:       task, 2024-08-12, 6M
-        Extended maintenance:       milestone, 2025-02-12, 0m
-        Extended maintenance:       task, 2025-02-12, 3M
-        End of maintenance:         milestone, 2025-05-12, 0m
-    section '1443'
+    section 1443
         Release:                milestone, 2024-03-13, 0m
         Standard maintenance:       task, 2024-03-13, 6M
         Extended maintenance:       milestone, 2024-09-13, 0m
-        Extended maintenance:       task, 2024-09-13, 3M
-        End of maintenance:         milestone, 2024-12-13, 0m
-
+        Extended maintenance:       task, 2024-09-13, 4M
+        End of maintenance:         milestone, 2025-01-13, 0m
+    section 1592
+        Release:                milestone, 2024-08-12, 0m
+        Standard maintenance:       task, 2024-08-12, 9M
+        Extended maintenance:       milestone, 2025-05-12, 0m
+        Extended maintenance:       task, 2025-05-12, 3M
+        End of maintenance:         milestone, 2025-08-12, 0m
+    section next
+        Release:                milestone, 2024-12-01, 0m
+        Standard maintenance:       task, 2024-12-01, 6M
+        Extended maintenance:       milestone, 2025-06-01, 0m
+        Extended maintenance:       task, 2025-06-01, 3M
+        End of maintenance:         milestone, 2025-09-01, 0m        
 ```
 
 | Release                                                                   | Release date  | Extended maintenance  | End of maintenance    |
