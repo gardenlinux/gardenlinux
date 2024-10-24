@@ -250,12 +250,13 @@ def release_notes_compare_package_versions_section(gardenlinux_version, package_
                 output += "```\n\n"
             elif patch == 0:
                 output += f"## Full List of Packages in Garden Linux version {major}\n"
-                output += "```"
+                output += "<details><summary>Expand to see full list</summary>\n"
+                output += "<pre>"
                 output += "\n"
                 for entry in package_list.values():
                     output += f'{entry!r}\n'
-                output += "```"
-                output += "\n\n"
+                output += "</pre>"
+                output += "\n</details>\n\n"
 
         except ValueError:
             print(f"Could not parse {gardenlinux_version} as the Garden Linux version, skipping version compare section")
