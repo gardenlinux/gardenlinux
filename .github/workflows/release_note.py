@@ -219,24 +219,20 @@ def release_notes_changes_section():
     **todo release facilitator: fill this in**
     """)
 
-def release_notes_software_components_section(gardenlinux_version):
+def release_notes_software_components_section(package_list):
     output = "\n"
     output += "## Software Component Versions\n"
     output += "```"
     output += "\n"
-    (path, headers) = urllib.request.urlretrieve(f'https://packages.gardenlinux.io/gardenlinux/dists/{gardenlinux_version}/main/binary-amd64/Packages.gz')
-    with gzip.open(path, 'rt') as f:
-        d = DebsrcFile()
-        d.read(f)
-        packages_regex = re.compile(r'^linux-image-amd64$|^systemd$|^containerd$|^runc$|^curl$|^openssl$|^openssh-server$|^libc-bin$')
-        for entry in d.values():
-            if packages_regex.match(entry.deb_source):
-                output += f'{entry!r}\n'
+    packages_regex = re.compile(r'^linux-image-amd64$|^systemd$|^containerd$|^runc$|^curl$|^openssl$|^openssh-server$|^libc-bin$')
+    for entry in package_list.values():
+        if packages_regex.match(entry.deb_source):
+            output += f'{entry!r}\n'
     output += "```"
     output += "\n\n"
     return output
 
-def release_notes_compare_package_versions_section(gardenlinux_version):
+def release_notes_compare_package_versions_section(gardenlinux_version, package_list):
     output = ""
     version_components = gardenlinux_version.split('.')
     # Assumes we always have version numbers like 1443.2
@@ -253,21 +249,40 @@ def release_notes_compare_package_versions_section(gardenlinux_version):
                 output += subprocess.check_output(['/bin/bash','./hack/compare-apt-repo-versions.sh', previous_version, gardenlinux_version]).decode("utf-8")
                 output += "```\n\n"
             elif patch == 0:
-                # todo: In this case, we want to compare to the previous major version
-                pass
+                output += f"## Full List of Packages in Garden Linux version {major}\n"
+                output += "```"
+                output += "\n"
+                for entry in package_list.values():
+                    output += f'{entry!r}\n'
+                output += "```"
+                output += "\n\n"
+
         except ValueError:
             print(f"Could not parse {gardenlinux_version} as the Garden Linux version, skipping version compare section")
+    else:
+        print(f"Unexpected version number format {gardenlinux_version}, expected format (major is int).(patch is int)")
     return output
+
+
+def _get_package_list(gardenlinux_version):
+    (path, headers) = urllib.request.urlretrieve(f'https://packages.gardenlinux.io/gardenlinux/dists/{gardenlinux_version}/main/binary-amd64/Packages.gz')
+    with gzip.open(path, 'rt') as f:
+        d = DebsrcFile()
+        d.read(f)
+        return d
 
 def create_github_release_notes(gardenlinux_version, commitish, dry_run = False):
     commitish_short=commitish[:8]
+
+    package_list = _get_package_list(gardenlinux_version)
+
     output = ""
 
     output += release_notes_changes_section()
 
-    output += release_notes_software_components_section(gardenlinux_version)
+    output += release_notes_software_components_section(package_list)
 
-    output += release_notes_compare_package_versions_section(gardenlinux_version)
+    output += release_notes_compare_package_versions_section(gardenlinux_version, package_list)
 
     # Ignore in dry run because this fails when called locally
     # Run as usual in CI
