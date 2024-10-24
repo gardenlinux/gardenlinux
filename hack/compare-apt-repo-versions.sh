@@ -25,13 +25,17 @@ main() {
 
     trap 'rm -rf $TEMP_DIR' EXIT
 
-    curl -s https://packages.gardenlinux.io/gardenlinux/dists/"$VERSION_A"/main/binary-amd64/Packages.gz | gunzip > "$TEMP_DIR"/"$VERSION_A"
-    curl -s https://packages.gardenlinux.io/gardenlinux/dists/"$VERSION_B"/main/binary-amd64/Packages.gz | gunzip > "$TEMP_DIR"/"$VERSION_B"
+    curl -s https://packages.gardenlinux.io/gardenlinux/dists/"$VERSION_A"/main/binary-amd64/Packages.gz | gunzip > "$TEMP_DIR"/GardenLinux-"$VERSION_A"
+    curl -s https://packages.gardenlinux.io/gardenlinux/dists/"$VERSION_B"/main/binary-amd64/Packages.gz | gunzip > "$TEMP_DIR"/GardenLinux-"$VERSION_B"
 
-    python3 "$SCRIPT_DIR"/parse-aptsource.py "$TEMP_DIR"/"$VERSION_A" > "$TEMP_DIR"/a
-    python3 "$SCRIPT_DIR"/parse-aptsource.py "$TEMP_DIR"/"$VERSION_B" > "$TEMP_DIR"/b
+    python3 "$SCRIPT_DIR"/parse-aptsource.py "$TEMP_DIR"/GardenLinux-"$VERSION_A" > "$TEMP_DIR"/"$VERSION_A"
+    python3 "$SCRIPT_DIR"/parse-aptsource.py "$TEMP_DIR"/GardenLinux-"$VERSION_B" > "$TEMP_DIR"/"$VERSION_B"
 
-    diff -U 0 --minimal  "$TEMP_DIR"/a "$TEMP_DIR"/b | grep -v '^@'
+    pushd "$TEMP_DIR" > /dev/null
+
+    diff -U 0 --minimal  "$VERSION_A" "$VERSION_B" | grep -v '^@'
+
+    popd > /dev/null
 }
 
 main "${@}"
