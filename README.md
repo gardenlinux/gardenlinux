@@ -1,10 +1,12 @@
 <p style="text-align: center;">
-    <img alt="GitHub Release" src="https://img.shields.io/github/v/release/gardenlinux/gardenlinux?label=LTS%20release">
+    <a href="https://github.com/gardenlinux/gardenlinux/releases" target="_blank">
+       <img src="https://img.shields.io/github/v/release/gardenlinux/gardenlinux?label=latest%20release" alt="latest release">
+    </a>
     <a href="https://github.com/gardenlinux/gardenlinux/actions/workflows/nightly.yml" target="_blank">
-        <img src="https://github.com/gardenlinux/gardenlinux/actions/workflows/nightly.yml/badge.svg?event=schedule" alt="Build">
+        <img src="https://github.com/gardenlinux/gardenlinux/actions/workflows/nightly.yml/badge.svg?event=schedule" alt="Nightly Build">
     </a>
     <a href="https://github.com/gardenlinux/gardenlinux/actions/workflows/dev.yml" target="_blank">
-        <img src="https://github.com/gardenlinux/gardenlinux/actions/workflows/dev.yml/badge.svg?branch=main" alt="Build">
+        <img src="https://github.com/gardenlinux/gardenlinux/actions/workflows/dev.yml/badge.svg?branch=main" alt="Dev Build">
     </a>
     <a href="https://bestpractices.coreinfrastructure.org/projects/3925" target="_blank">
         <img src="https://bestpractices.coreinfrastructure.org/projects/3925/badge" alt="CII Best Practices">
@@ -75,20 +77,30 @@ The build script fetches the required builder container and manages all internal
 To run unit tests for a specific target, use the command `./test ${target}`.
 Further documentation about tests is located in [tests/README.md](tests/README.md).
 
+# Releases
 
-# Download Releases 
+For more information about the release strategy and lifecycle, have a look at the [Release Plan Overview](docs/00_introduction/release.md).
+
+## Download Stable and Patch Releases
+
+[Stable](docs/00_introduction/release.md#stable-releases) and [Patch](docs/00_introduction/release.md#patch-releases-patches) releases can be downloaded from the following sources:
 
 | Product                        | Release Frequency | Download                                                                                        |
 | ------------------------------ | ----------------- | ----------------------------------------------------------------------------------------------- |
-| LTS cloud and baremetal images | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/releases)                                 |
-| LTS base container images      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux)               |
-| LTS bare python container      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-python) |
-| LTS bare libc container        | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-libc)   |
-| LTS bare nodejs container      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-nodejs) |
+| cloud and baremetal images | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/releases)                                 |
+| base container images      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux)               |
+| bare python container      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-python) |
+| bare libc container        | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-libc)   |
+| bare nodejs container      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-nodejs) |
 
-**Note:** For each artifact, there also exists a nightly version, which is built daily but is not considered LTS.
+The cloud and baremetal images provided by Garden Linux are compatible with various cloud platforms, including Alibaba Cloud, AWS, Microsoft Azure and GCP.
 
-The LTS cloud and baremetal images provided by Garden Linux are compatible with various cloud platforms, including Alibaba Cloud, AWS, Microsoft Azure and GCP.
+## Download Nightly Releases 
+
+[Nightly](docs/00_introduction/release.md#nightly-releases) releases can be downloaded from the same sources and are either tagged or named `nightly`.
+
+> [!WARNING]  
+> Nightly releases do not include maintenance commitments and are therefore not recommended for production environments
 
 # Nvidia Driver Support
 An installer can be found in the [gardenlinux/gardenlinux-nvidia-installer](https://github.com/gardenlinux/gardenlinux-nvidia-installer) repository.
