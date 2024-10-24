@@ -81,6 +81,32 @@ Further documentation about tests is located in [tests/README.md](tests/README.m
 
 For more information about the release strategy and lifecycle, have a look at the [Release Plan Overview](docs/00_introduction/release.md).
 
+## Active and Next Releases
+
+```mermaid
+gantt
+    title Garden Linux active and next releases
+    axisFormat %m.%y
+    section 1443
+        Release:                milestone, 2024-03-13, 0m
+        Standard maintenance:       task, 2024-03-13, 6M
+        Extended maintenance:       milestone, 2024-09-13, 0m
+        Extended maintenance:       task, 2024-09-13, 4M
+        End of maintenance:         milestone, 2025-01-13, 0m
+    section 1592
+        Release:                milestone, 2024-08-12, 0m
+        Standard maintenance:       task, 2024-08-12, 9M
+        Extended maintenance:       milestone, 2025-05-12, 0m
+        Extended maintenance:       task, 2025-05-12, 3M
+        End of maintenance:         milestone, 2025-08-12, 0m
+    section next
+        Release:                milestone, 2024-12-01, 0m
+        Standard maintenance:       task, 2024-12-01, 6M
+        Extended maintenance:       milestone, 2025-06-01, 0m
+        Extended maintenance:       task, 2025-06-01, 3M
+        End of maintenance:         milestone, 2025-09-01, 0m        
+```
+
 ## Download Stable and Patch Releases
 
 [Stable](docs/00_introduction/release.md#stable-releases) and [Patch](docs/00_introduction/release.md#patch-releases-patches) releases can be downloaded from the following sources:
