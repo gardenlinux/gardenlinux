@@ -126,7 +126,8 @@ The cloud and baremetal images provided by Garden Linux are compatible with vari
 [Nightly](docs/00_introduction/release.md#nightly-releases) releases can be downloaded from the same sources and are either tagged or named `nightly`.
 
 > [!WARNING]  
-> Nightly releases do not include maintenance commitments and are therefore not recommended for production environments
+> Nightly releases do not include maintenance commitments and never receive updates.
+> Advanced users are invited to try them out and provide feedback, but it **is strongly discouraged** to use them in any sort of production environment.
 
 # Nvidia Driver Support
 An installer can be found in the [gardenlinux/gardenlinux-nvidia-installer](https://github.com/gardenlinux/gardenlinux-nvidia-installer) repository.
