@@ -7,7 +7,7 @@ Fixes #
 - [ ] The code is sufficiently documented
 - [ ] Shared the changes with the Team so everyone is aware
 - [ ] The code is appropriately tested
-- [ ] If needed, the code is backported to the release branches of all currently maintained releases
+- [ ] Checked if the code needs to be backportet to release branches of maintained versions (perform the actual backport after the merge to `main`)
 
 **Special notes for your reviewer**:
 
