@@ -53,9 +53,9 @@ jobs:
       - uses: ./.github/actions/setup
       - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
         with:
-          role-to-assume: ${{ secrets.role }}
-          role-session-name: ${{ secrets.session }}
-          aws-region: ${{ secrets.region }}
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_REGION }}
       - name: set VERSION=${{ inputs.version }}
         run: |
           bin/garden-version "${{ inputs.version }}" | tee VERSION
