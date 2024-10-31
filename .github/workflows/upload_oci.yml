@@ -93,9 +93,17 @@ jobs:
       - name: Install glcli util
         run: |
           pip install git+https://github.com/gardenlinux/python-gardenlinux-cli@0.2.0
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.7.0
+          with:
+            cosign-release: 'v2.4.1'
       - name: push using the glcli util
         run: |
           GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} glcli oci --insecure push-from-tarball --tar build-${{ env.cname }}/${{ env.cname }}.tar.xz --container ghcr.io/${{ github.repository_owner }}/gl-oci --architecture ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest
       - name: Output digest to be signed
         run: |
           cat digest
+      - name: Sign the manifest
+        run: |
+          cosign sign --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$(cat digest)
+
