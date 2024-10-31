@@ -1,75 +1,95 @@
-name: Upload builds to OCI
+name: upload to OCI
 on:
   workflow_dispatch:
     inputs:
       version:
-        required: true
         type: string
-      use_kms:
-        type: boolean
-        default: false
-      commit:
-        required: true
+        default: today
+      default_modifier:
         type: string
-        description: "Full commithash"
+        default: ""
+    secrets:
+      region:
+        required: true
+      role:
+        required: true
+      session:
+        required: true
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        default: today
+      default_modifier:
+        type: string
+        default: ""
+    secrets:
+      region:
+        required: true
+      role:
+        required: true
+      session:
+        required: true
 jobs:
-  cert:
-    name: certificates
+  upload_to_oci:
+    name: upload to OCI
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - uses: ./.github/actions/setup
-      - name: build certificates
-        if: ${{ ! inputs.use_kms }}
-        run: ./cert/build
-      - uses: actions/cache/save@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
-        with:
-          path: cert
-          key: cert-${{ github.run_id }}
-  push-to-oci:
-    needs: cert
-    runs-on: ubuntu-latest
-    environment: oidc_aws_s3_upload
+    defaults:
+      run:
+        shell: bash
     permissions:
       id-token: write
       packages: write
+    environment: oidc_aws_s3_upload
     strategy:
       fail-fast: false
       max-parallel: 1 # registry index is a shared resource among all assets
       matrix:
-        cname: ["kvm-gardener_prod", "kvm-gardener_prod_tpm2_trustedboot", "metal-gardener_prod", "metal-gardener_prod_tpm2_trustedboot", "gcp-gardener_prod", "gdch-gardener_prod", "aws-gardener_prod", "aws-gardener_prod_tpm2_trustedboot", "azure-gardener_prod", "ali-gardener_prod", "openstack-gardener_prod", "openstackbaremetal-gardener_prod", "vmware-gardener_prod", "metal-gardener_prod_pxe"]
-        architecture: [ arm64, amd64 ]
+        arch: [ arm64 ]
+        target: [ kvm ]
+        modifier: [ "${{ inputs.default_modifier }}" ]
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - name: load cert cache
-        uses: actions/cache/restore@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
-        with:
-          path: cert
-          key: cert-${{ github.run_id }}
-          fail-on-cache-miss: true
+      - uses: ./.github/actions/setup
       - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
         with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.role }}
+          role-session-name: ${{ secrets.session }}
+          aws-region: ${{ secrets.region }}
+      - name: set VERSION=${{ inputs.version }}
+        run: |
+          bin/garden-version "${{ inputs.version }}" | tee VERSION
+          git update-index --assume-unchanged VERSION
+      - name: get cname
+        run: |
+          cname="$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})"
+          echo "cname=$cname" | tee -a "$GITHUB_ENV"
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
+        with:
+          # match build-${{ env.cname }} and  platform-test-${{ env.cname }}
+          pattern: "*-${{ env.cname }}"
+      # repack tar.gz from build workflow to contain platform-test logs (if they exist)
+      - name: add platform-test logs to tar.gz
+        run: |
+          ls -l platform-test-${{ env.cname }}/${{ env.cname }}.platform.test.log || true
+          ls -l platform-test-${{ env.cname }}/${{ env.cname }}.platform.test.xml || true
+          if [ -f platform-test-${{ env.cname }}/${{ env.cname }}.platform.test.log ]; then
+            gunzip build-${{ env.cname }}/${{ env.cname }}.tar.gz
+            tar -rvf build-${{ env.cname }}/${{ env.cname }}.tar.xz -C platform-test-${{ env.cname }} ${{ env.cname }}.platform.test.log ${{ env.cname }}.platform.test.xml
+            # skipping compression, still named .xz
+          else
+            echo "no platform-test log files found"
+          fi
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - name: Install glcli util
         run: |
-          pip install git+https://github.com/gardenlinux/python-gardenlinux-cli@0.1.0
-      - name: Define prefix
-        run: |
-          commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
-          prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
-          echo "prefix=$prefix" >> "$GITHUB_ENV"
-      - name: download build artifacts from S3
-        run: |
-          .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$prefix"
-          # pack tar.xz file for release
-          tar -cv "$prefix" > "$prefix.tar.xz"
+          pip install git+https://github.com/gardenlinux/python-gardenlinux-cli@0.2.0
       - name: push using the glcli util
         run: |
-          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} glcli oci --insecure push-from-tarball --tar $prefix.tar.xz --container ghcr.io/${{ github.repository_owner }}/gl-oci --architecture ${{ matrix.architecture }} --version ${{ inputs.version }} --cname ${{ matrix.cname }} --kms_arn ${{ secrets.OCI_KMS_ARN }}
-
+          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} glcli oci --insecure push-from-tarball --tar build-${{ env.cname }}/${{ env.cname }}.tar.xz --container ghcr.io/${{ github.repository_owner }}/gl-oci --architecture ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest
+      - name: Output digest to be signed
+        run: |
+          cat digest
