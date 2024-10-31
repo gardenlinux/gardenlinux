@@ -104,5 +104,6 @@ jobs:
           cat digest
       - name: Sign the manifest
         run: |
-          cosign sign -d --registry-password --tlog-upload=false --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$(cat digest)
+          docker login ghcr.io -u token -p ${{ secrets.GITHUB_TOKEN }}
+          cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$(cat digest)
 
