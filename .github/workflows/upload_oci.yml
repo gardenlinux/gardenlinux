@@ -75,6 +75,7 @@ jobs:
           run-id: 11587877637 # also just for testing
           # match build-${{ env.cname }} and  platform-test-${{ env.cname }}
           pattern: "*-${{ env.cname }}"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       # repack tar.gz from build workflow to contain platform-test logs (if they exist)
       - name: add platform-test logs to tar.gz
         run: |
