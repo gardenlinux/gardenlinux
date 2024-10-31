@@ -43,7 +43,7 @@ jobs:
     permissions:
       id-token: write
       packages: write
-      actions: read
+      actions: read # required for testing, to download artifacts from other runs
     environment: oidc_aws_s3_upload
     strategy:
       fail-fast: false
@@ -79,15 +79,13 @@ jobs:
       # repack tar.gz from build workflow to contain platform-test logs (if they exist)
       - name: add platform-test logs to tar.gz
         run: |
-          ls -l platform-test-${{ env.cname }}/${{ env.cname }}.platform.test.log || true
-          ls -l platform-test-${{ env.cname }}/${{ env.cname }}.platform.test.xml || true
           if [ -f platform-test-${{ env.cname }}/${{ env.cname }}.platform.test.log ]; then
             gunzip build-${{ env.cname }}/${{ env.cname }}.tar.gz
-            tar -rvf build-${{ env.cname }}/${{ env.cname }}.tar.xz -C platform-test-${{ env.cname }} ${{ env.cname }}.platform.test.log ${{ env.cname }}.platform.test.xml
-            # skipping compression, still named .xz
+            tar -rvf build-${{ env.cname }}/${{ env.cname }}.tar.gz -C platform-test-${{ env.cname }} ${{ env.cname }}.platform.test.log ${{ env.cname }}.platform.test.xml
           else
             echo "no platform-test log files found"
           fi
+          mv build-${{ env.cname }}/${{ env.cname }}.tar.gz build-${{ env.cname }}/${{ env.cname }}.tar.xz # next step expects *.xz as name, compression is not relevant
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
