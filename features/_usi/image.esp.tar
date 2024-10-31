@@ -111,16 +111,12 @@ esp_dir="$(mktemp -d)"
 mkdir -p "$esp_dir/EFI/BOOT"
 datefudge -s "@$BUILDER_TIMESTAMP" sbsign --cert "$cert_base.crt" "${sbs_key_params[@]}" --output "$esp_dir/EFI/BOOT/BOOT$uefi_arch.EFI" "$rootfs/usr/lib/systemd/boot/efi/systemd-boot$(tr '[:upper:]' '[:lower:]' <<< "$uefi_arch").efi"
 
-mkdir "$esp_dir/loader"
+IFS=',' read -r -a features <<< "$BUILDER_FEATURES"
 
-cat > "$esp_dir/loader/loader.conf" << EOF
-timeout 0
-secure-boot-enroll if-safe
-EOF
-
-mkdir -p "$esp_dir/loader/keys/auto"
-for key in PK KEK db; do
-	cp "$rootfs/etc/gardenlinux/gardenlinux-secureboot.$(tr '[:upper:]' '[:lower:]' <<< "$key").auth" "$esp_dir/loader/keys/auto/$key.auth"
+for feature in "${features[@]}"; do
+	if [ -e "/builder/features/$feature/usi.config" ]; then
+		"/builder/features/$feature/usi.config" "$esp_dir" "$rootfs"
+	fi
 done
 
 umount "$rootfs"

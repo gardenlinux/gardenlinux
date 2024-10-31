@@ -1,7 +1,8 @@
-description: "fully trusted bootchain, use signed UKI with embedded EROFS root disk"
+description: "fully trusted bootchain"
 type: flag
 features:
   include:
+    - _usi
     - _ephemeral
-  exclude:
-    - _boot
+  # exclude:
+  #   - _nocrypt

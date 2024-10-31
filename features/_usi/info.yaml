@@ -1,0 +1,7 @@
+description: "boot using a UKI with embedded EROFS root disk"
+type: flag
+features:
+  include:
+    - _ephemeral
+  exclude:
+    - _boot
