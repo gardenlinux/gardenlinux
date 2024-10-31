@@ -111,6 +111,10 @@ esp_dir="$(mktemp -d)"
 mkdir -p "$esp_dir/EFI/BOOT"
 datefudge -s "@$BUILDER_TIMESTAMP" sbsign --cert "$cert_base.crt" "${sbs_key_params[@]}" --output "$esp_dir/EFI/BOOT/BOOT$uefi_arch.EFI" "$rootfs/usr/lib/systemd/boot/efi/systemd-boot$(tr '[:upper:]' '[:lower:]' <<< "$uefi_arch").efi"
 
+cat > "$esp_dir/loader/loader.conf" << EOF
+timeout 0
+EOF
+
 IFS=',' read -r -a features <<< "$BUILDER_FEATURES"
 
 for feature in "${features[@]}"; do

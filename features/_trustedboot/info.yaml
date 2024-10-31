@@ -4,5 +4,5 @@ features:
   include:
     - _usi
     - _ephemeral
-  # exclude:
-  #   - _nocrypt
+  exclude:
+    - _nocrypt
