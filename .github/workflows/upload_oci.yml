@@ -43,6 +43,7 @@ jobs:
     permissions:
       id-token: write
       packages: write
+      actions: read
     environment: oidc_aws_s3_upload
     strategy:
       fail-fast: false
