@@ -85,21 +85,20 @@ jobs:
           else
             echo "no platform-test log files found"
           fi
-          mv build-${{ env.cname }}/${{ env.cname }}.tar.gz build-${{ env.cname }}/${{ env.cname }}.tar.xz # next step expects *.xz as name, compression is not relevant
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - name: Install glcli util
         run: |
-          pip install git+https://github.com/gardenlinux/python-gardenlinux-cli@0.2.0
+          pip install git+https://github.com/gardenlinux/python-gardenlinux-cli@0.2.2
       - name: Install cosign
         uses: sigstore/cosign-installer@v3.7.0
         with:
           cosign-release: 'v2.4.1'
       - name: push using the glcli util
         run: |
-          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} glcli oci --insecure push-from-tarball --tar build-${{ env.cname }}/${{ env.cname }}.tar.xz --container ghcr.io/${{ github.repository_owner }}/gl-oci --architecture ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest
+          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} glcli oci --insecure push-from-tarball --tar build-${{ env.cname }}/${{ env.cname }}.tar.gz --container ghcr.io/${{ github.repository_owner }}/gl-oci --architecture ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest
       - name: Output digest to be signed
         run: |
           cat digest
