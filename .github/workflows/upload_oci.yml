@@ -104,5 +104,5 @@ jobs:
           cat digest
       - name: Sign the manifest
         run: |
-          cosign sign --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$(cat digest)
+          cosign sign --tlog-upload=false --registry-password ${{ secrets.GITHUB_TOKEN }} --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$(cat digest)
 
