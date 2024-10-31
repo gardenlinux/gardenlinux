@@ -8,6 +8,9 @@ on:
       default_modifier:
         type: string
         default: ""
+      commit:
+        type: string
+        default: "301e9e355acc9f921df64e03df6183ca126e66c3" # just for testing
     secrets:
       region:
         required: true
@@ -50,6 +53,8 @@ jobs:
         modifier: [ "${{ inputs.default_modifier }}" ]
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          ref: ${{ inputs.commit }}
       - uses: ./.github/actions/setup
       - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
         with:
