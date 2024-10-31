@@ -71,6 +71,7 @@ jobs:
           echo "cname=$cname" | tee -a "$GITHUB_ENV"
       - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
         with:
+          run-id: 11587877637 # also just for testing
           # match build-${{ env.cname }} and  platform-test-${{ env.cname }}
           pattern: "*-${{ env.cname }}"
       # repack tar.gz from build workflow to contain platform-test logs (if they exist)
