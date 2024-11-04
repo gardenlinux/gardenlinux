@@ -4,7 +4,8 @@ SHELL := /usr/bin/env bash
 ROOT_DIR := $(shell git rev-parse --show-toplevel)
 GIT_SHA:= $(shell git rev-parse HEAD)
 GIT_SHA_SHORT := $(shell git rev-parse --short HEAD)
-ifeq ($(strip $(GL_VERSION)),)
+# if GL_VERSION is empty or latest
+ifeq ($(or $(strip $(GL_VERSION)), $(GL_VERSION)), latest)
 GL_VERSION := $(shell $(ROOT_DIR)/bin/glrd --no-header --type patch --latest --fields Version)
 endif
 ifeq ($(strip $(GL_REGISTRY)),)
