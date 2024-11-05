@@ -7,7 +7,7 @@ apt-transport-https
 arptables
 auditd
 awscli
-azure-nvme-utils
+azure-vm-utils
 binutils
 bird2
 bsdextrautils
