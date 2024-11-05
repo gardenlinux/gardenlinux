@@ -51,8 +51,8 @@ jobs:
       fail-fast: false
       max-parallel: 1 # registry index is a shared resource among all assets
       matrix:
-        arch: [ arm64 ]
-        target: [ kvm ]
+        arch: [ amd64, arm64 ]
+        target: [ kvm, "kvm_trustedboot_tpm2", metal, "metal_trustedboot_tpm2", gcp, gdch, aws, "aws_trustedboot_tpm2", azure, ali, openstack, openstackbaremetal, vmware, "metal_pxe" ]
         modifier: [ "${{ inputs.default_modifier }}" ]
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
