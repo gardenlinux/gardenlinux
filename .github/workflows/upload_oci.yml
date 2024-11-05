@@ -108,4 +108,4 @@ jobs:
           cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$(cat digest)
       - name: Verify signature
         run: |
-          cosign verify --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$(cat digest)
+          cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$(cat digest)
