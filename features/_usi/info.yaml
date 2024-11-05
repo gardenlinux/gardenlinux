@@ -4,4 +4,4 @@ features:
   include:
     - _nocrypt
   exclude:
-    - _boot
+    - _legacy
