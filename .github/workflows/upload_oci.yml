@@ -91,8 +91,9 @@ jobs:
         run: |
           .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$cname"
           # pack tar.xz file for release
-          cd $cname
-          tar -cv . > "$cname.tar.gz"
+          mkdir "build-$cname"
+          cd "$cname"
+          tar -cv . > "../build-$cname/$cname.tar.gz"
           cd ..
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
