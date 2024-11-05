@@ -3,4 +3,4 @@ type: platform
 features:
   include:
     - server
-    - _legacy
+    - _usi

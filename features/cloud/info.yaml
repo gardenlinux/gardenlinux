@@ -3,4 +3,4 @@ type: element
 features:
   include:
     - server
-    - _legacy
+    - _usi

@@ -3,5 +3,3 @@ type: flag
 features:
   include:
     - _nocrypt
-  exclude:
-    - _legacy
