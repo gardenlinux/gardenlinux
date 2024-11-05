@@ -87,17 +87,13 @@ jobs:
     #      else
     #        echo "no platform-test log files found"
     #      fi
-      - name: Define prefix
-        run: |
-          commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
-          prefix="$cname-${{ inputs.version }}-$commit"
-          echo "prefix=$prefix" >> "$GITHUB_ENV"
       - name: download build artifacts from S3
         run: |
-          .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$prefix"
+          .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$cname"
           # pack tar.xz file for release
-          cd $prefix
-          tar -cv . > "$prefix.tar.xz"
+          cd $cname
+          tar -cv . > "$cname.tar.gz"
+          cd ..
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
