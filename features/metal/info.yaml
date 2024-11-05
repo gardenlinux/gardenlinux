@@ -4,3 +4,5 @@ features:
   include:
     - server
     - _boot
+  exclude:
+    - _selinux

@@ -1,0 +1,114 @@
+# this is still experimental
+variant: fcos
+version: 1.3.0
+storage:
+  files:
+    - path: /opt/persist/target
+      overwrite: yes
+      mode: 0644
+      contents:
+        inline: |
+          /dev/nvme0n1
+    - path: /etc/fstab 
+      overwrite: yes
+      mode: 0644
+      contents:
+        inline: |
+          LABEL=ROOT      /               ext4            errors=remount-ro 0     1
+          LABEL=ESP       /efi            vfat            umask=0077      0       1
+    - path: /opt/persist/00-esp.conf
+      overwrite: yes
+      mode: 0644
+      contents:
+        inline: |
+          [Partition]
+          Type=esp
+          Format=vfat
+          SizeMinBytes=512M
+          SizeMaxBytes=512M
+          Label=ESP
+          MountPoint=/efi
+    - path: /opt/persist/10-root.conf
+      overwrite: yes
+      mode: 0644
+      contents:
+        inline: |
+          [Partition]
+          Type=root
+          SizeMinBytes=20G
+          CopyFiles=/
+          CopyFiles=/boot
+          Label=ROOT
+          MountPoint=/
+    - path: /gardenlinux.dracut.end
+      overwrite: yes
+      mode: 0755
+      contents: 
+        inline: |
+          #!/usr/bin/env bash
+
+          set -e
+          
+          
+          ###############################
+          #                             #
+          # !!! THIS IS DESTRUCTIVE !!! #
+          #                             #
+          ###############################
+          
+          # check if we have config files
+          if [ -d /sysroot/opt/persist ]; then
+          	cp -r /sysroot/opt/persist /run/
+          else
+          	exit 0
+          fi
+          
+          pushd /run/persist
+          target=$(cat target)
+          
+          # make sure we have udev running
+          systemctl restart systemd-udevd
+          systemctl restart dbus
+          
+          # remove all HD related boot entries
+          for e in $(efibootmgr | awk '$NF ~ /^HD/ { print $1 }' | sed "s/Boot\([0-9A-F]*\)./\1/"); do
+          	echo "Removing entry $e"
+          	efibootmgr -B -b "$e" > /dev/null
+          done
+          
+          # prepare disk for repart
+          sgdisk -Z "$target"
+          sgdisk -o "$target"
+          
+          # prepare source of files
+          mkdir /run/src
+          mount --bind /sysroot /run/src
+          
+          # fstab
+          # TODO: investigate why DPS is not working correctly, / is always ro
+          # systemd-repart --definitions . --json=pretty --dry-run=on --copy-source=/run/src/ --generate-fstab=/etc/fstab "$target"
+          
+          # actually partition and populate with data
+          systemd-repart --definitions . --json=pretty --dry-run=off --copy-source=/run/src/ "$target"
+          
+          # wait for udev
+          # TODO: use udevadm for this
+          sleep 3
+          
+          # mount the ESP
+          mount /dev/disk/by-label/ESP /sysroot/efi
+          
+          # prepare chroot env
+          pushd /sysroot
+          mount -t proc proc proc
+          mount -t sysfs sys sys
+          mount --bind /dev dev
+          # efivars as well
+          mount --bind /sys/firmware/efi/efivars /sysroot/sys/firmware/efi/efivars
+          
+          # install bootloader and generate the entries
+          chroot /sysroot bootctl install
+          chroot /sysroot kernel-install add $(uname -r) /boot/vmlinuz-$(uname -r) /boot/initrd.img-$(uname -r)
+          
+          echo "ready to reboot"
+          systemctl reboot -f

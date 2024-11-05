@@ -6,12 +6,12 @@ check() {
 }
 
 depends() {
-    echo "fs-lib dracut-systemd systemd-networkd systemd-resolved"
+    echo "fs-lib dracut-systemd systemd-networkd systemd-resolved systemd-repart"
 }
 
 install() {
     #inst_multiple grep sfdisk growpart udevadm awk mawk sed rm readlink
-    inst_multiple curl grep sfdisk awk mawk sha256sum
+    inst_multiple curl grep sfdisk awk mawk sha256sum bootctl efibootmgr kernel-install vim mkfs.vfat chroot
 
     inst_simple "$moddir/gl-end.service" ${systemdsystemunitdir}/gl-end.service
     inst_script "$moddir/live-get-squashfs.sh" /sbin/live-get-squashfs
