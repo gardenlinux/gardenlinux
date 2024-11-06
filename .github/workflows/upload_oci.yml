@@ -101,7 +101,7 @@ jobs:
           python-version: "3.12"
       - name: Install glcli util
         run: |
-          pip install git+https://github.com/gardenlinux/python-gardenlinux-cli@0.2.2
+          pip install git+https://github.com/gardenlinux/python-gardenlinux-cli@0.2.3
       - name: Install cosign
         uses: sigstore/cosign-installer@v3.7.0
         with:
