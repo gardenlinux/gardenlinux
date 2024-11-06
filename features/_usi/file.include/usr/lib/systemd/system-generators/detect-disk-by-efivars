@@ -2,6 +2,7 @@
 
 set -eufo pipefail
 
+# shellcheck disable=SC2002
 efi_part_uuid="$(cat /sys/firmware/efi/efivars/LoaderDevicePartUUID-4a67b082-0a4c-41cf-b6c7-440b29bb8c4f | tail -c +4 | tr -cd '[:print:]' | tr '[:upper:]' '[:lower:]')"
 efi_part_dev="/dev/disk/by-partuuid/$efi_part_uuid"
 efi_part_dev_unit="$(systemd-escape "${efi_part_dev#/}").device"

@@ -9,6 +9,7 @@ mkdir -p "$rootfs/etc/gardenlinux"
 rm -rf "$rootfs/opt"
 ln -sT /var/opt "$rootfs/opt"
 
+# shellcheck disable=SC2115
 rm -rf "$rootfs/home"
 ln -sT /var/home "$rootfs/home"
 

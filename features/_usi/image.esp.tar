@@ -11,6 +11,7 @@ rootfs="$(mktemp -d)"
 mount -t tmpfs -o size="$TEMPFS_SIZE" tmpfs "$rootfs"
 tar --extract --xattrs --xattrs-include '*' --directory "$rootfs" < "$input"
 
+# shellcheck disable=SC2115
 rm -rf "$rootfs/var"
 mkdir "$rootfs/var"
 
@@ -69,11 +70,9 @@ umount "$rootfs/initrd"
 case "$BUILDER_ARCH" in
 	amd64)
 		uefi_arch=X64
-		gnu_arch=x86_64
 		;;
 	arm64)
 		uefi_arch=AA64
-		gnu_arch=aarch64
 		;;
 esac
 

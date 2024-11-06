@@ -11,17 +11,6 @@ tar --extract --xattrs --xattrs-include '*' --directory "$esp_dir" < "$input"
 
 export PATH="/builder/image.d:$PATH"
 
-case "$BUILDER_ARCH" in
-	amd64)
-		uefi_arch=X64
-		gnu_arch=x86_64
-		;;
-	arm64)
-		uefi_arch=AA64
-		gnu_arch=aarch64
-		;;
-esac
-
 size_uki="$(du -sb "$esp_dir" | cut -f 1)"
 size_fat_mb="$(( ( ( size_uki + 1048575 ) / 1048576 ) + 64 ))"
 

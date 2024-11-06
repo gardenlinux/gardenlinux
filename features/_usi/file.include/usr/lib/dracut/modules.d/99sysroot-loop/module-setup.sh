@@ -10,6 +10,7 @@ depends() {
 }
 
 install() {
+	# shellcheck disable=SC2154
 	mkdir -p "$initdir/etc/systemd/system"
 
 	cat > "$initdir/etc/systemd/system/sysroot.mount" <<-EOF
