@@ -2,4 +2,4 @@
 
 set -eufo pipefail
 
-tar --extract --to-stdout "EFI/Linux/$BUILDER_CNAME+3.efi" < "$1" > "$2"
+tar --extract --to-stdout "EFI/Linux/$BUILDER_CNAME.efi" < "$1" > "$2"

@@ -3,3 +3,4 @@ type: flag
 features:
   include:
     - _nocrypt
+    - _unsigned

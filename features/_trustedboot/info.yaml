@@ -7,3 +7,4 @@ features:
   exclude:
     - _legacy
     - _nocrypt
+    - _unsigned
