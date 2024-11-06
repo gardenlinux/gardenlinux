@@ -91,13 +91,13 @@ class GCP:
         if 'secureboot_parameters' not in cfg:
             cfg['secureboot_parameters'] = {}
         if 'db_path' not in cfg['secureboot_parameters']:
-            cfg['secureboot_parameters']['db_path'] = "/gardenlinux/cert/secureboot.db.auth"
-        if 'kek_path' not in cfg:
-            cfg['secureboot_parameters']['kek_path'] = "/gardenlinux/cert/secureboot.kek.auth"
-        if 'pk_path' not in cfg:
-            cfg['secureboot_parameters']['pk_path'] = "/gardenlinux/cert/secureboot.pk.auth"
-        if 'cert_file_type' not in cfg:
-            cfg['secureboot_parameters']['cert_file_type'] = 'BIN'
+            cfg['secureboot_parameters']['db_path'] = "/gardenlinux/cert/secureboot.db.der"
+        if 'kek_path' not in cfg['secureboot_parameters']:
+            cfg['secureboot_parameters']['kek_path'] = "/gardenlinux/cert/secureboot.kek.der"
+        if 'pk_path' not in cfg['secureboot_parameters']:
+            cfg['secureboot_parameters']['pk_path'] = "/gardenlinux/cert/secureboot.pk.der"
+        if 'cert_file_type' not in cfg['secureboot_parameters']:
+            cfg['secureboot_parameters']['cert_file_type'] = 'X509'
 
     @classmethod
     def validate_config(cls, cfg: dict, image: str, test_name: str, credentials):
@@ -459,7 +459,7 @@ class GCP:
     def _wait_until_reachable(self, hostname):
         self.logger.info(f"Waiting for {hostname} to respond...")
         i = 0
-        while i < 20:
+        while i < 40:
             response = os.system("timeout 1 bash -c \"</dev/tcp/" + hostname + "/22\"")
             if response == 0:
                 self.logger.info(f"Instance {hostname} is reachable...")

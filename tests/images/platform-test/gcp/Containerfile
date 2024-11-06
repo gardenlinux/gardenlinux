@@ -1,0 +1,22 @@
+# overwrite with a stable gardenlinux version
+ARG GL_VERSION=latest
+# use platform-test-base image
+FROM gardenlinux/platform-test-base:${GL_VERSION}
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV SHELL /bin/bash
+
+COPY cloud.google.gpg /usr/share/keyrings/cloud.google.gpg
+
+#Virtual Env Created in platform-test-base
+ENV VIRTUAL_ENV="/opt/python-test-env/.venv"
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN : "Install GCP requirements" \
+     && cd "$VIRTUAL_ENV_PARENT" && pipenv install --categories "gcp-packages" \
+     && echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
+     && apt-get update \
+     && apt-get install -y google-cloud-sdk \
+     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /gardenlinux/tests

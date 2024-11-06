@@ -4,10 +4,10 @@ on:
     inputs:
       type:
         type: choice
-        default: beta
+        default: patch
         options:
-        - beta
-        - stable
+        - patch
+        - dev
       version:
         required: true
         type: string
@@ -20,7 +20,8 @@ on:
         type: string
         description: "Full commitish"
 jobs:
-  create_release:
+  create_github_release:
+    if: ${{ inputs.type }} == 'patch'
     environment: oidc_aws_s3_upload
     permissions:
       id-token: write
@@ -35,13 +36,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"  
-      - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # pin@v4.4.0
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
         with:
           name: release
           path: .github_release_id
-  upload_to_release:
+          if-no-files-found: error
+          include-hidden-files: true
+  upload_to_github_release:
+    if: ${{ inputs.type }} == 'patch'
     environment: oidc_aws_s3_upload
-    needs: create_release
+    needs: create_github_release
     permissions:
       contents: write
       id-token: write
@@ -84,10 +88,51 @@ jobs:
           ls -la "$prefix/$prefix.platform.test.xml" || true
           test -f "$prefix/$prefix.chroot.test.log" && echo "$prefix/$prefix.chroot.test.log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
           test -f "$prefix/$prefix.chroot.test.xml" && echo "$prefix/$prefix.chroot.test.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
-          test -f ls -la "$prefix/$prefix.platform.test.log" && echo "$prefix/$prefix.platform.test.log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
-          test -f ls -la "$prefix/$prefix.platform.test.xml" && echo "$prefix/$prefix.platform.test.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          test -f "$prefix/$prefix.platform.test.log" && echo "$prefix/$prefix.platform.test.log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          test -f "$prefix/$prefix.platform.test.xml" && echo "$prefix/$prefix.platform.test.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
   tag_container_as_latest:
+    if: ${{ inputs.type }} == 'patch'
     uses: ./.github/workflows/tag_latest_container.yml
     with:
       version: ${{ inputs.version }}
       is_latest:  ${{ inputs.is_latest }}
+  glrd:
+    name: create GLRD release
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Create GLRD release
+        uses: gardenlinux/glrd@v1
+        with:
+          cmd: |
+            type=${{ inputs.type }}
+            commit=${{ inputs.commit }}
+            version=${{ inputs.version }}
+            major=$(echo ${version} | cut -d'.' -f1)
+            minor=$(echo ${version} | cut -d'.' -f2)
+            if [ ${type} = "patch" ]; then
+              # check for stable version and create if missing
+              if ! glrd --no-header --type stable --version ${major}; then
+                glrd-manage --s3-update --create stable --version ${major}
+              fi
+              glrd-manage --s3-update --create patch --version ${version} --commit ${commit}
+            elif [ ${type} = "dev" ]; then
+              glrd-manage --s3-update --create dev --version ${version} --commit ${commit}
+            fi
+      - name: Get created GLRD release
+        uses: gardenlinux/glrd@v1
+        with:
+          cmd: |
+            version=${{ inputs.version }}
+            major=$(echo ${version} | cut -d'.' -f1)
+            minor=$(echo ${version} | cut -d'.' -f2)
+            glrd --type stable,patch,dev --version ${major}

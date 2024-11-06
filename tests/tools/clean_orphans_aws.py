@@ -186,13 +186,14 @@ def clean_buckets(client, force: bool = False):
 
 
 if __name__ == "__main__":
-    session = boto3.Session()
-    ec2_client = session.client("ec2")
-    s3_client = session.client("s3")
-
     parser = argparse.ArgumentParser(description='AWS orphan cleaner.')
+    parser.add_argument('-r', '--region', dest='region', type=str, default=None, help="sets the AWS region to cleanup up in")
     parser.add_argument('--nuke-em', dest='force', action='store_true', default=False, help="DANGEROUS: deletes all resources without asking")
     args = parser.parse_args()
+
+    session = boto3.Session()
+    ec2_client = session.client("ec2", region_name=args.region)
+    s3_client = session.client("s3", region_name=args.region)
 
     print(f"Instances:")
     clean_instances(ec2_client, args.force)

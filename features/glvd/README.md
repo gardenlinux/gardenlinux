@@ -18,7 +18,7 @@ Also, this feature enables a summary of potential issues in the Message of the D
 
 > [!IMPORTANT]  
 > This requires the glvd client to make an HTTPS request to the glvd backend.
-> This might dalay your ssh login on the machine.
+> This might delay your ssh login on the machine.
 > If you don't want this to happen, don't use this feature.
 
 For more information on what the `glvd` cli can do and how to use it, see [its GitHub Repo](https://github.com/gardenlinux/package-glvd).

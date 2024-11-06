@@ -1,13 +1,20 @@
 name: tests
 on:
+  # triggered by other workflows
   workflow_call:
     inputs:
       version:
+        description: "Garden Linux Version"
         type: string
         default: today
       default_modifier:
         type: string
         default: ""
+      platform_test_tag:
+        description: "Tag to run platform-test containers. 'latest', Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
+        type: string
+        required: true
+        default: "latest"
     secrets:
       gcp_identity_provider:
         required: true
@@ -34,8 +41,14 @@ on:
       ccc_credentials:
         required: true
 jobs:
+  platform_test_images:
+    name: platform test images
+    uses: ./.github/workflows/platform-test-images.yml
+    with:
+      gl_version: ${{ inputs.platform_test_tag }}
   platform_tests:
     name: platform test
+    needs: [ platform_test_images ]
     env:
       gcp_project: ${{ secrets.gcp_project }}
       gcp_region: ${{ secrets.gcp_region }}
@@ -57,7 +70,7 @@ jobs:
       fail-fast: false
       matrix:
         arch: [ amd64, arm64 ]
-        target: [ gcp, aws, aws_trustedboot, aws_trustedboot_tpm2, azure, ali ]
+        target: [ gcp, gcp_trustedboot, gcp_trustedboot_tpm2, aws, aws_trustedboot, aws_trustedboot_tpm2, azure, ali ]
         modifier: [ "${{ inputs.default_modifier }}" ]
         exclude:
           - arch: arm64
@@ -69,15 +82,6 @@ jobs:
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
     - uses: ./.github/actions/setup
-
-    - name: login to ghcr.io
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
-
-    - name: pull container image
-      run: |
-        podman pull "ghcr.io/gardenlinux/gardenlinux/platform-test:$GITHUB_SHA"
-        podman tag "ghcr.io/gardenlinux/gardenlinux/platform-test:$GITHUB_SHA" ghcr.io/gardenlinux/gardenlinux/platform-test:today
-
     - name: set VERSION=${{ inputs.version }}
       run: |
         bin/garden-version "${{ inputs.version }}" | tee VERSION
@@ -95,10 +99,10 @@ jobs:
 
     - run: ls -lah ${{ env.artifact_dir }}
 
-    - if: ${{ matrix.target == 'gcp' }}
+    - if: ${{ matrix.target == 'gcp' || matrix.target == 'gcp_trustedboot' || matrix.target == 'gcp_trustedboot_tpm2' }}
       id: 'auth_gcp'
       name: 'Authenticate to Google Cloud'
-      uses: google-github-actions/auth@62cf5bd3e4211a0a0b51f2c6d6a37129d828611d # pin@v1
+      uses: google-github-actions/auth@6fc4af4b145ae7821d527454aa9bd537d1f2dc5f # pin@v1
       with:
         workload_identity_provider: ${{ secrets.gcp_identity_provider }}
         service_account: ${{ secrets.gcp_service_account }}
@@ -136,7 +140,7 @@ jobs:
         set -o pipefail
         .github/workflows/${{ matrix.target }}_tests.sh --arch "${{ matrix.arch }}" "${{ env.cname }}" 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.test.log"
 
-    - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # pin@v4.4.0
+    - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
       with:
         name: platform-test-${{ env.cname }}
         path: |

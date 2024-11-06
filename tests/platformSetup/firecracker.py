@@ -415,7 +415,7 @@ class FireCracker:
     def _start_microvm(self, firecracker_config):
         """ Start Firecracker image as microvm """
         logger.info(f'Firecracker microvm starting...')
-        binary = '/bin/firecracker --no-api --config-file'
+        binary = 'firecracker --no-api --config-file'
         cmd = f'{binary} {firecracker_config}'
 
         # We need to execute this cmd in background.

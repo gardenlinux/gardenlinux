@@ -105,11 +105,104 @@ These tests are located in a subfolder (`test`) within a feature's directory and
 
 # Platform Tests
 ## Prerequisites
-Build the platform test container with all necessary dependencies. This container image will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP). *Note: For `KVM` and `CHROOT` platforms the `gardenlinux/base-test` container can be used but will also work with the full-fledged testing container `gardenlinux/platform-test`.*
+Build the platform test container images with all necessary dependencies. These container images will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP). *Note: For `CHROOT` platform tests the `gardenlinux/platform-test-base` image can be used.
 
-    make --directory=container build-platform-test
+    make --directory=tests/images build-platform-test
 
-The resulting container image will be tagged as `gardenlinux/platform-test:<version>` with `<version>` being the version that is returned by `bin/garden-version` in this repository. All further tests run inside this container.
+Many more build targets are available, e.g. to build only for a certain platform.
+
+    ❯ make --directory=tests/images help
+    Usage: make [target]
+    
+    general targets:
+    help					List available tasks of the project 
+    all					Build all platform test images   
+    all-push				Build and push all platform test images 
+    pull-platform-test-base			Pull the platform test base image 
+    pull-platform-test			Pull all platform test images 
+    build-platform-test-base		Build the platform test base image 
+    build-platform-test			Build all platform test images 
+    push-platform-test-base			Push the platform test base image 
+    push-release-platform-test-base		Push the platform test base image with release tag 
+    push-platform-test			Push all platform test images 
+    push-release-platform-test		Push all platform test images with release tag 
+    
+    platform-specific targets:
+    pull-platform-test-ali                  Pull the platform test image for ali
+    pull-platform-test-aws                  Pull the platform test image for aws
+    pull-platform-test-azure                Pull the platform test image for azure
+    pull-platform-test-firecracker          Pull the platform test image for firecracker
+    pull-platform-test-gcp                  Pull the platform test image for gcp
+    pull-platform-test-kvm                  Pull the platform test image for kvm
+    pull-platform-test-openstack            Pull the platform test image for openstack
+    build-platform-test-ali                 Build the platform test image for ali
+    build-platform-test-aws                 Build the platform test image for aws
+    build-platform-test-azure               Build the platform test image for azure
+    build-platform-test-firecracker         Build the platform test image for firecracker
+    build-platform-test-gcp                 Build the platform test image for gcp
+    build-platform-test-kvm                 Build the platform test image for kvm
+    build-platform-test-openstack           Build the platform test image for openstack
+    push-platform-test-ali                  Push the platform test image for ali
+    push-platform-test-aws                  Push the platform test image for aws
+    push-platform-test-azure                Push the platform test image for azure
+    push-platform-test-firecracker          Push the platform test image for firecracker
+    push-platform-test-gcp                  Push the platform test image for gcp
+    push-platform-test-kvm                  Push the platform test image for kvm
+    push-platform-test-openstack            Push the platform test image for openstack
+    push-release-platform-test-ali          Push the platform test image for ali with release tag
+    push-release-platform-test-aws          Push the platform test image for aws with release tag
+    push-release-platform-test-azure        Push the platform test image for azure with release tag
+    push-release-platform-test-firecracker  Push the platform test image for firecracker with release tag
+    push-release-platform-test-gcp          Push the platform test image for gcp with release tag
+    push-release-platform-test-kvm          Push the platform test image for kvm with release tag
+    push-release-platform-test-openstack    Push the platform test image for openstack with release tag
+
+The resulting container images will be tagged as `gardenlinux/platform-test-<platform>:<version>` with `<version>` being the version that is passed as $GL_VERSION build argument. By default this is the version that has the `latest` tag in the [github image registry](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux). In addition to that, tags for the commit hashes also exist.
+
+All further tests run inside containers spawned from these images.
+
+    ❯ podman images | grep gardenlinux/platform-test | grep ghcr
+    ghcr.io/gardenlinux/gardenlinux/platform-test-base         1646.0                                    4f333ff23e99  23 hours ago   832 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-base         1e0d51fe54c6054240e3e0dbb81ce336f6e6ed39  a054fcb817f0  23 hours ago   832 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-base         1e0d51fe                                  a054fcb817f0  23 hours ago   832 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-base         32618be8186df52845a10e2c6ab06fd54f8b656a  4f333ff23e99  23 hours ago   832 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-base         32618be8                                  4f333ff23e99  23 hours ago   832 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-base         latest                                    0b6832e7a338  6 days ago     832 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-ali          1646.0                                    2d0ff9e51d4e  23 hours ago   887 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-ali          1e0d51fe54c6054240e3e0dbb81ce336f6e6ed39  c791a2b542a7  23 hours ago   885 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-ali          1e0d51fe                                  c791a2b542a7  23 hours ago   885 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-ali          32618be8186df52845a10e2c6ab06fd54f8b656a  2d0ff9e51d4e  23 hours ago   887 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-ali          32618be8                                  2d0ff9e51d4e  23 hours ago   887 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-aws          1646.0                                    a87e5fc901de  23 hours ago   1.07 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-aws          1e0d51fe                                  2bc1488dc563  23 hours ago   1.07 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-aws          1e0d51fe54c6054240e3e0dbb81ce336f6e6ed39  2bc1488dc563  23 hours ago   1.07 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-aws          32618be8186df52845a10e2c6ab06fd54f8b656a  a87e5fc901de  23 hours ago   1.07 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-aws          32618be8                                  a87e5fc901de  23 hours ago   1.07 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-azure        1646.0                                    2e9deedc1ab7  23 hours ago   2.11 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-azure        1e0d51fe54c6054240e3e0dbb81ce336f6e6ed39  ed50ef706b45  23 hours ago   2.11 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-azure        1e0d51fe                                  ed50ef706b45  23 hours ago   2.11 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-azure        32618be8186df52845a10e2c6ab06fd54f8b656a  2e9deedc1ab7  23 hours ago   2.11 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-azure        32618be8                                  2e9deedc1ab7  23 hours ago   2.11 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-firecracker  1646.0                                    ee89fac717f3  23 hours ago   837 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-firecracker  1e0d51fe54c6054240e3e0dbb81ce336f6e6ed39  7d371f89827c  23 hours ago   837 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-firecracker  1e0d51fe                                  7d371f89827c  23 hours ago   837 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-firecracker  32618be8186df52845a10e2c6ab06fd54f8b656a  ee89fac717f3  23 hours ago   837 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-firecracker  32618be8                                  ee89fac717f3  23 hours ago   837 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-gcp          1646.0                                    f737ec78fb0f  23 hours ago   1.68 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-gcp          1e0d51fe54c6054240e3e0dbb81ce336f6e6ed39  823b5dfb62ef  23 hours ago   1.68 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-gcp          1e0d51fe                                  823b5dfb62ef  23 hours ago   1.68 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-gcp          32618be8186df52845a10e2c6ab06fd54f8b656a  f737ec78fb0f  23 hours ago   1.68 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-gcp          32618be8                                  f737ec78fb0f  23 hours ago   1.68 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-kvm          1646.0                                    897a857b4150  23 hours ago   1.69 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-kvm          1e0d51fe                                  00c418132c38  23 hours ago   1.69 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-kvm          1e0d51fe54c6054240e3e0dbb81ce336f6e6ed39  00c418132c38  23 hours ago   1.69 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-kvm          32618be8186df52845a10e2c6ab06fd54f8b656a  897a857b4150  23 hours ago   1.69 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-kvm          32618be8                                  897a857b4150  23 hours ago   1.69 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-openstack    1646.0                                    802a233b9aeb  23 hours ago   883 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-openstack    1e0d51fe54c6054240e3e0dbb81ce336f6e6ed39  6a200988c08f  23 hours ago   879 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-openstack    1e0d51fe                                  6a200988c08f  23 hours ago   879 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-openstack    32618be8186df52845a10e2c6ab06fd54f8b656a  802a233b9aeb  23 hours ago   883 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-openstack    32618be8                                  802a233b9aeb  23 hours ago   883 MB
 
 ## Using the tests on supported platforms
 ### General
@@ -489,14 +582,13 @@ gcp:
     # enable uefi boot, default is legacy boot (optional)
     #uefi: false
     # enable secureboot, implies uefi boot, default is off (optional)
+    # needs a build with gcp_trustedboot or gcp_trustedboot_tpm2 features
     #secureboot: false
     secureboot_parameters:
         # paths to the secureboot keys and database, needed for secureboot (optional)
-        #db_path: /gardenlinux/cert/secureboot.db.auth
-        #kek_path: /gardenlinux/cert/secureboot.kek.auth
-        #pk_path: /gardenlinux/cert/secureboot.pk.auth
-        # the certificate type for secureboot, possible values are `BIN`, `X509`. Default is `BIN`
-        #cert_file_type: BIN
+        #db_path: /gardenlinux/cert/secureboot.db.der
+        #kek_path: /gardenlinux/cert/secureboot.kek.der
+        #pk_path: /gardenlinux/cert/secureboot.pk.der
 
     # GCE machine type (optional)
     machine_type: n1-standard-2

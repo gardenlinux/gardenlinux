@@ -1,0 +1,114 @@
+name: platform-test-images
+on:
+  push:
+    paths:
+      - '.github/workflows/platform-test-images.yml'
+      - 'tests/Pipfile*'
+      - 'tests/images/Makefile'
+      - 'tests/images/platform-test/**'
+      - 'tests/images/platform-test-base/**'
+  pull_request:
+    paths:
+      - '.github/workflows/platform-test-images.yml'
+      - 'tests/Pipfile*'
+      - 'tests/images/Makefile'
+      - 'tests/images/platform-test/**'
+      - 'tests/images/platform-test-base/**'
+  # triggered by other workflows
+  workflow_call:
+    inputs:
+      gl_version:
+        type: string
+        default: latest
+      force_build:
+        type: boolean
+        default: false
+      force_release:
+        type: boolean
+        default: false
+  # triggered manually
+  workflow_dispatch:
+    inputs:
+      gl_version:
+        type: string
+        default: latest
+      force_build:
+        type: boolean
+        default: false
+      force_release:
+        type: boolean
+        default: false
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: 
+          - ali
+          - aws
+          - azure
+          - firecracker
+          - gcp
+          - kvm
+          - openstack
+
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+
+      # - uses: ./.github/actions/setup # pre-clean up and setup tasks for action runner
+      #   with: 
+      #     arch: "amd64"
+
+      - name: login to ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
+
+      - name: Set GL_VERSION
+        run: |
+          if [[ -z "${{ inputs.gl_version }}" ]]; then
+            echo "GL_VERSION=latest" >> ${GITHUB_ENV}
+          else
+            echo "GL_VERSION=${{ inputs.gl_version }}" >> ${GITHUB_ENV}
+          fi
+      - name: make pull-platform-test-${{ matrix.platform }}
+        env:
+          # needed to use github cli in bin/garden-version-resolver
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "GL_VERSION set to ${GL_VERSION}"
+          echo "TAG_EXISTS=false" >> ${GITHUB_ENV}
+          make -j $(nproc) --directory=tests/images GARDENLINUX_BUILD_CRE=podman pull-platform-test-${{ matrix.platform }}
+          podman images | grep ghcr.io/gardenlinux/gardenlinux/platform-test-${{ matrix.platform }} && echo "TAG_EXISTS=true" >> ${GITHUB_ENV}
+        # it is okay if tag does not exists, the next step will build the image
+        continue-on-error: true
+
+      # build if tag does not exist, force_build or force_release is set
+      - name: make build-platform-test-${{ matrix.platform }}
+        env:
+          # needed to use github cli in bin/garden-version-resolver
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ "${TAG_EXISTS}" == false ]] || [[ "${{ inputs.force_build }}" == true ]] || [[ "${{ inputs.force_release }}" == true ]]; then
+            make -j $(nproc) --directory=tests/images GARDENLINUX_BUILD_CRE=podman build-platform-test-${{ matrix.platform }}
+          else
+            echo "Tag for ${GL_VERSION} already exists in ghcr.io/gardenlinux/platform-test-${{ matrix.platform }} and FORCE_BUILD=false"
+          fi
+      # after merge to main, run push-release-platform-test
+      - name: make push-release-platform-test-${{ matrix.platform }} (after merge to main)
+        if: github.event.pull_request.merged == true && github.ref_name == 'main'
+        env:
+          # needed to use github cli in bin/garden-version-resolver
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          make -j $(nproc) --directory=tests/images GARDENLINUX_BUILD_CRE=podman push-release-platform-test-${{ matrix.platform }}
+      # when forced, run push-release-platform-test
+      - name: make push-release-platform-test-${{ matrix.platform }} (when force_release is set)
+        if: inputs.force_release
+        env:
+          # needed to use github cli in bin/garden-version-resolver
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          make -j $(nproc) --directory=tests/images GARDENLINUX_BUILD_CRE=podman push-release-platform-test-${{ matrix.platform }}  

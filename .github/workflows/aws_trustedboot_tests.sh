@@ -23,7 +23,7 @@ containerName="ghcr.io/gardenlinux/gardenlinux/platform-test:today"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
 
 pushd "$artifact_dir" || exit 1
-tar -xzf "$cname.tar.gz" "$cname.raw"
+test -f "$cname.raw" || tar -xzf "$cname.tar.gz" "$cname.raw"
 popd || exit 1
 
 image_file=$(realpath "$artifact_dir/$cname.raw")
