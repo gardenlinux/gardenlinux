@@ -5,6 +5,5 @@ features:
     - _usi
     - _ephemeral
   exclude:
-    - _legacy
     - _nocrypt
     - _unsigned

@@ -4,3 +4,5 @@ features:
   include:
     - _nocrypt
     - _unsigned
+  exclude:
+    - _legacy

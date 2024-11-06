@@ -1,6 +1,4 @@
 description: "iso"
 type: flag
 features:
-  include:
-    - _legacy
   exclude: [ _selinux ]

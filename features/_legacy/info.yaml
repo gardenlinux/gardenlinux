@@ -1,5 +1,2 @@
 description: "UEFI (systemd-boot) and legacy BIOS (syslinux) bootloader"
 type: flag
-features:
-  exclude:
-    - _usi
