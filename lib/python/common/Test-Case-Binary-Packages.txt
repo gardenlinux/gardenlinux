@@ -1,0 +1,156 @@
+Package: libexpat1
+Source: expat
+Version: 2.6.2-1
+Architecture: amd64
+Maintainer: Laszlo Boszormenyi (GCS) <gcs@debian.org>
+Installed-Size: 389
+Depends: libc6 (>= 2.36)
+Filename: pool/c75f662f70f0b1eb5b3c5fef350f3e8f5a46fe8b1ebab62cd5c0115470b1d56e/libexpat1_2.6.2-1_amd64.deb
+Size: 102596
+MD5sum: 194a9cb388e559245c860a33ba4b7f85
+SHA1: 340f68757050d694978080b869b7167ef1fd7598
+SHA256: c75f662f70f0b1eb5b3c5fef350f3e8f5a46fe8b1ebab62cd5c0115470b1d56e
+Section: libs
+Priority: optional
+Multi-Arch: same
+Homepage: https://libexpat.github.io/
+Description: XML parsing C library - runtime library
+ This package contains the runtime, shared library of expat, the C
+ library for parsing XML. Expat is a stream-oriented parser in
+ which an application registers handlers for things the parser
+ might find in the XML document (like start tags).
+
+Package: libexpat1-dev
+Source: expat
+Version: 2.6.2-1
+Architecture: amd64
+Maintainer: Laszlo Boszormenyi (GCS) <gcs@debian.org>
+Installed-Size: 830
+Depends: libexpat1 (= 2.6.2-1), libc6-dev | libc-dev
+Conflicts: libexpat-dev
+Provides: libexpat-dev
+Filename: pool/3b6041e99c19663bf2f4f00e707e163d59116b3501bd1b44d4cba980d0681d25/libexpat1-dev_2.6.2-1_amd64.deb
+Size: 155324
+MD5sum: 68aae6f2ffea125ca205ae60c1393025
+SHA1: 1ff7ac1648684af8ea0fd8f605d4b3f0c2abc7eb
+SHA256: 3b6041e99c19663bf2f4f00e707e163d59116b3501bd1b44d4cba980d0681d25
+Section: libdevel
+Priority: optional
+Multi-Arch: same
+Homepage: https://libexpat.github.io/
+Description: XML parsing C library - development kit
+ This package contains the header file and development libraries of
+ expat, the C library for parsing XML.  Expat is a stream oriented XML
+ parser.  This means that you register handlers with the parser prior
+ to starting the parse.  These handlers are called when the parser
+ discovers the associated structures in the document being parsed.  A
+ start tag is an example of the kind of structures for which you may
+ register handlers.
+
+Package: vim
+Source: vim (2:9.1.0496-1)
+Version: 2:9.1.0496-1+b1
+Architecture: amd64
+Maintainer: Debian Vim Maintainers <team+vim@tracker.debian.org>
+Installed-Size: 3788
+Depends: vim-common (= 2:9.1.0496-1), vim-runtime (= 2:9.1.0496-1), libacl1 (>= 2.2.23), libc6 (>= 2.38), libgpm2 (>= 1.20.7), libselinux1 (>= 3.1~), libsodium23 (>= 1.0.14), libtinfo6 (>= 6)
+Suggests: ctags, vim-doc, vim-scripts
+Provides: editor
+Filename: pool/d4e0296c516812e2038ff3574f99af7c1a4810612598c3360cb99de61e047011/vim_2%3a9.1.0496-1+b1_amd64.deb
+Size: 1619492
+MD5sum: 65a0123a1fc76cf7695d90030f5e80d2
+SHA1: b0aebce641b3c708235d940f50b1627b5fd42f99
+SHA256: d4e0296c516812e2038ff3574f99af7c1a4810612598c3360cb99de61e047011
+Section: editors
+Priority: optional
+Homepage: https://www.vim.org/
+Description: Vi IMproved - enhanced vi editor
+ Vim is an almost compatible version of the UNIX editor Vi.
+ .
+ Many new features have been added: multi level undo, syntax
+ highlighting, command line history, on-line help, filename
+ completion, block operations, folding, Unicode support, etc.
+ .
+ This package contains a version of vim compiled with a rather
+ standard set of features.  This package does not provide a GUI
+ version of Vim.  See the other vim-* packages if you need more
+ (or less).
+
+Package: vim-common
+Source: vim
+Version: 2:9.1.0496-1
+Architecture: all
+Maintainer: Debian Vim Maintainers <team+vim@tracker.debian.org>
+Installed-Size: 1850
+Recommends: xxd, vim | vim-gtk3 | vim-motif | vim-nox | vim-tiny
+Breaks: vim-runtime (<< 2:9.0.1658-1~)
+Replaces: vim-runtime (<< 2:9.0.1658-1~)
+Filename: pool/3eb851c9789f075d9e1dbdd721d40e5c6d0e835776518f66fd4335e0bb6f1f61/vim-common_2%3a9.1.0496-1_all.deb
+Size: 411852
+MD5sum: 259c2baa838b5325829c88dbf583bf2b
+SHA1: 2b7252742fb40dff8ce3abbc6c54730a3e519b2f
+SHA256: 3eb851c9789f075d9e1dbdd721d40e5c6d0e835776518f66fd4335e0bb6f1f61
+Section: editors
+Priority: important
+Multi-Arch: foreign
+Homepage: https://www.vim.org/
+Description: Vi IMproved - Common files
+ Vim is an almost compatible version of the UNIX editor Vi.
+ .
+ This package contains files shared by all non GUI-enabled vim variants
+ available in Debian.  Examples of such shared files are: manpages and
+ configuration files.
+
+Package: vim-runtime
+Source: vim
+Version: 2:9.1.0496-1
+Architecture: all
+Maintainer: Debian Vim Maintainers <team+vim@tracker.debian.org>
+Installed-Size: 36945
+Recommends: vim | vim-gtk3 | vim-motif | vim-nox | vim-tiny
+Enhances: vim-tiny
+Breaks: vim-tiny (<< 2:9.1.0496-1)
+Filename: pool/488a128a939e430f681230ef9fd83b371585f0e0d3cf7649f135270133b5b162/vim-runtime_2%3a9.1.0496-1_all.deb
+Size: 7116680
+MD5sum: a2e9e7a7907644444b7555eb6b23ce59
+SHA1: 330bb657c0249504a3114f56cd70848bee5e7270
+SHA256: 488a128a939e430f681230ef9fd83b371585f0e0d3cf7649f135270133b5b162
+Section: editors
+Priority: optional
+Multi-Arch: foreign
+Homepage: https://www.vim.org/
+Description: Vi IMproved - Runtime files
+ Vim is an almost compatible version of the UNIX editor Vi.
+ .
+ This package contains vimtutor and the architecture independent runtime
+ files, used, if available, by all vim variants available in Debian.
+ Example of such runtime files are: online documentation, rules for
+ language-specific syntax highlighting and indentation, color schemes,
+ and standard plugins.
+
+Package: vim-tiny
+Source: vim (2:9.1.0496-1)
+Version: 2:9.1.0496-1+b1
+Architecture: amd64
+Maintainer: Debian Vim Maintainers <team+vim@tracker.debian.org>
+Installed-Size: 1750
+Depends: vim-common (= 2:9.1.0496-1), libacl1 (>= 2.2.23), libc6 (>= 2.34), libselinux1 (>= 3.1~), libtinfo6 (>= 6)
+Suggests: indent
+Provides: editor
+Filename: pool/a44d841ab0ba4dcea6da764126fbfa351642a913920ad15a10781239e4297e27/vim-tiny_2%3a9.1.0496-1+b1_amd64.deb
+Size: 743340
+MD5sum: 518f5bb267de52be4613a9eaac5325fb
+SHA1: 5bc3956b165fd36a7da185ed3962afc7d0957d53
+SHA256: a44d841ab0ba4dcea6da764126fbfa351642a913920ad15a10781239e4297e27
+Section: editors
+Priority: important
+Homepage: https://www.vim.org/
+Description: Vi IMproved - enhanced vi editor - compact version
+ Vim is an almost compatible version of the UNIX editor Vi.
+ .
+ This package contains a minimal version of Vim compiled with no GUI and
+ a small subset of features. This package's sole purpose is to provide
+ the vi binary for base installations.
+ .
+ If a vim binary is wanted, try one of the following more featureful
+ packages: vim, vim-nox, vim-motif, or vim-gtk3.
