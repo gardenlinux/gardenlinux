@@ -28,3 +28,4 @@ rules.
 Once you have the rules in the rules.d directory, you can load them by running
 augenrules --load
 
+Source: https://github.com/linux-audit/audit-userspace.git
