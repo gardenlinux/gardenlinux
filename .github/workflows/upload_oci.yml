@@ -62,6 +62,11 @@ jobs:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_REGION }}
+      # bin/garden-version reads and writes from and to ./VERSION which is read by ./build --resolve-cname 
+      - name: set VERSION=${{ inputs.version }}
+        run: |
+          bin/garden-version "${{ inputs.version }}" | tee VERSION
+          git update-index --assume-unchanged VERSION
       - name: get cname
         run: |
           cname="$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})"
