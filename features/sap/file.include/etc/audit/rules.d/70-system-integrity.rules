@@ -6,6 +6,4 @@
 -a exit,always -F dir=/opt -F perm=wa -F key=system_integrity
 -a exit,always -F dir=/root -F perm=wa -F key=system_integrity
 -a exit,always -F dir=/lib -F perm=wa -F key=system_integrity
--a exit,always -F dir=/libx32 -F perm=wa -F key=system_integrity
--a exit,always -F dir=/lib32 -F perm=wa -F key=system_integrity
 -a exit,always -F dir=/lib64 -F perm=wa -F key=system_integrity

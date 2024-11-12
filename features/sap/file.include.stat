@@ -1,3 +1,3 @@
-root	root	0640 /etc/audit/rules.d/privilege_escalation.rules
-root	root	0640 /etc/audit/rules.d/privileged_special.rules
-root	root	0640 /etc/audit/rules.d/system_integrity.rules
+root	root	0640 /etc/audit/rules.d/70-privilege-escalation.rules
+root	root	0640 /etc/audit/rules.d/70-privileged-special.rules
+root	root	0640 /etc/audit/rules.d/70-system-integrity.rules
