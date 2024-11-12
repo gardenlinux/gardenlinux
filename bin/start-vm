@@ -180,7 +180,8 @@ source "${CURR_DIR}/.constants.sh" \
 --skipkp    <bool>        Skip the keypress to the verify status before execute.
 --vnc       <bool>        Sitches from serial console to vnc graphics console / enables vnc in --daemonize.
 --tpm2      <bool>        Enable TPM2 emulation and QEMU passthrough using swtpm.
-<image file>              A file containing the image to boot. Format is determined by the extension (raw, vdi, vpc, vhd, vhdx, vmdk, qcow2, iso)."
+<image file>              A file containing the image to boot. Format is determined by the extension (raw, vdi, vpc, vhd, vhdx, vmdk, qcow2, iso).
+                          An optional suffix of the form <image file>,qcow=<size> can be specified to write changes to a copy-on-write device instead"
 
 eval "$dgetopt"
 while true; do
@@ -241,6 +242,7 @@ set_binaries () {
     bin_stat="stat"
     bin_sed="sed"
     bin_uuid="cat /proc/sys/kernel/random/uuid"
+    bin_realpath="realpath"
     bin_qemu="qemu-system-$qemu_arch"
 
     # CentOS specific binaries
@@ -255,6 +257,7 @@ set_binaries () {
         bin_stat="gstat"
         bin_sed="gsed"
         bin_uuid="/usr/bin/uuidgen"
+        bin_realpath="grealpath"
     fi
 }
 
@@ -393,9 +396,14 @@ qemu_opt_disk () {
         image_file=$i
         image_size=0
         image_direct=""
+        use_qcow=0
         if [[ $image_file == *","* ]]; then
             image_size=${image_file##*,}
             image_file=${image_file%%,$image_size}
+            if [[ "$image_size" == 'qcow='* ]]; then
+                image_size=${image_size#'qcow='}
+                use_qcow=1
+            fi
         fi
 
         # If no filename is left point to tmp
@@ -412,6 +420,16 @@ qemu_opt_disk () {
             QEMU_OPTS+=(	"-drive media=cdrom,file=$image_file,readonly" )
         elif [ -d $image_file ]; then
             targetDir=$image_file
+        elif [ "$use_qcow" = 1 ]; then
+            qcow_relative_path=$("$bin_realpath" --relative-to="$CURR_DIR" "$image_file")
+            qemu-img create -f qcow2 -F "$image_ext" -b "$qcow_relative_path" "$CURR_DIR/$mac.qcow2" "$image_size_bytes"
+            if [ "$arch" = amd64 ]; then
+                QEMU_OPTS+=("-device scsi-hd,drive=drive$disk_count,bus=scsi0.0"
+                            "-drive format=qcow2,if=none,id=drive$disk_count,file=$CURR_DIR/$mac.qcow2")
+            else
+                QEMU_OPTS+=("-drive if=virtio,format=qcow2,file=$CURR_DIR/$mac.qcow2")
+            fi
+            (( ++disk_count ))
         else
             # Test if direct access is possible and image is not already in use
             dd if=$image_file of=/dev/null count=1 iflag=direct 2> /dev/null && imagedirect="aio=native,cache.direct=on,"
