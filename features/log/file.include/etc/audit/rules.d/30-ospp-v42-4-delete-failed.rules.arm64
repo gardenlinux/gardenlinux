@@ -1,0 +1,5 @@
+## Unsuccessful file delete
+-a always,exit -F arch=b32 -S unlinkat,renameat,renameat2 -F exit=-EACCES -F auid>=1000 -F auid!=unset -F key=unsuccessful-delete
+-a always,exit -F arch=b64 -S unlinkat,renameat,renameat2 -F exit=-EACCES -F auid>=1000 -F auid!=unset -F key=unsuccessful-delete
+-a always,exit -F arch=b32 -S unlinkat,renameat,renameat2 -F exit=-EPERM -F auid>=1000 -F auid!=unset -F key=unsuccessful-delete
+-a always,exit -F arch=b64 -S unlinkat,renameat,renameat2 -F exit=-EPERM -F auid>=1000 -F auid!=unset -F key=unsuccessful-delete
