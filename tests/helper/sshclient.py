@@ -2,20 +2,18 @@
 import logging
 import time
 import pytest
+import hashlib
+import base64
 import subprocess
 from os import path
-from binascii import hexlify
-
-from paramiko import SSHClient, AutoAddPolicy, RSAKey
-from paramiko.ssh_exception import (
-    NoValidConnectionsError,
-    AuthenticationException,
-    SSHException
-)
+from cryptography.hazmat.primitives.asymmetric import rsa, ed25519, ec
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.backends import default_backend
+from paramiko import SSHClient, AutoAddPolicy, RSAKey, ECDSAKey, Ed25519Key
+from paramiko.ssh_exception import NoValidConnectionsError, AuthenticationException, SSHException
 from scp import SCPClient, SCPException
 
 logger = logging.getLogger(__name__)
-
 
 class RemoteClient:
     """Client to interact with a remote host via SSH & SCP."""
@@ -24,37 +22,80 @@ class RemoteClient:
     def generate_key_pair(
         cls,
         filename: str = None,
-        fileobj = None,
+        key_type: str = "ed25519",  # Default to ed25519
         bits: int = 2048,
         passphrase: str = None,
-        comment: str = None,
     ):
-        """Generate RSA key pair.
+        """Generate key pair (RSA, ECDSA, or Ed25519) compatible with OpenSSH.
 
         :param filename: name of private key file
-        :param bits: length of RSA key
-        :param passphrase: passphrase of the RSA key
-        :param comment: comment for RSA key
+        :param key_type: type of key (rsa, ecdsa, ed25519)
+        :param bits: length of RSA or ECDSA key (ignored for Ed25519)
+        :param passphrase: passphrase of the key
         """
-        if filename and path.exists(filename) and path.getsize(filename) > 0:
-            pub = RSAKey(filename=filename, password=passphrase)
-            logger.info("SSH key already exists, skipping generating SSH key")
+        if key_type == "rsa":
+            private_key = rsa.generate_private_key(
+                public_exponent=65537, key_size=bits, backend=default_backend()
+            )
+        elif key_type == "ecdsa":
+            private_key = ec.generate_private_key(ec.SECP256R1(), default_backend())
+        elif key_type == "ed25519":
+            private_key = ed25519.Ed25519PrivateKey.generate()
         else:
-            priv = RSAKey.generate(bits=bits)
-            if filename:
-                priv.write_private_key_file(filename, password=passphrase)
-            elif fileobj:
-                priv.write_private_key(file_obj=fileobj, password=passphrase)
-            pub = RSAKey(filename=filename, password=passphrase)
-            logger.info(f"generated RSA key pair: {filename}")
-            with open(f"{filename}.pub", "w") as f:
-                f.write(f"{pub.get_name()} {pub.get_base64()}")
-                if comment:
-                    f.write(f" {comment}")
-        hash = hexlify(pub.get_fingerprint()).decode(encoding="utf-8")
-        fingerprint = ":".join([hash[i : 2 + i] for i in range(0, len(hash), 2)])
-        logger.info(f"fingerprint: {bits} {fingerprint} {filename}.pub (RSA)")
-        return fingerprint
+            raise ValueError("Unsupported key type. Use 'rsa', 'ecdsa', or 'ed25519'.")
+
+        # Serialize private key
+        if key_type == "ed25519":
+            # Use OpenSSH format for Ed25519 keys to ensure compatibility with OpenSSH
+            private_key_bytes = private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.OpenSSH,
+                encryption_algorithm=serialization.BestAvailableEncryption(passphrase.encode()) if passphrase else serialization.NoEncryption(),
+            )
+        else:
+            # Use PEM format for RSA and ECDSA keys
+            private_key_bytes = private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=serialization.BestAvailableEncryption(passphrase.encode()) if passphrase else serialization.NoEncryption(),
+            )
+
+        # Write private key to file
+        with open(filename, "wb") as f:
+            f.write(private_key_bytes)
+
+        # Write public key to file
+        public_key = private_key.public_key()
+        public_key_bytes = public_key.public_bytes(
+            encoding=serialization.Encoding.OpenSSH,
+            format=serialization.PublicFormat.OpenSSH,
+        )
+        with open(f"{filename}.pub", "wb") as f:
+            f.write(public_key_bytes)
+
+        # Calculate fingerprint (SHA256 of the public key)
+        digest = hashlib.sha256(public_key_bytes).digest()
+        fingerprint = base64.b64encode(digest).decode('utf-8')
+
+        logger.info(f"Generated {key_type.upper()} key pair: {filename}")
+        logger.info(f"Fingerprint: {fingerprint}")
+
+        return fingerprint        
+
+
+    def _determine_key_type(self):
+        """Determine the key type by reading the key file."""
+        with open(self.ssh_key_filepath, "rb") as keyfile:
+            key_data = keyfile.read()
+            if b"BEGIN RSA PRIVATE KEY" in key_data:
+                return "rsa"
+            elif b"BEGIN EC PRIVATE KEY" in key_data:
+                return "ecdsa"
+            elif b"BEGIN OPENSSH PRIVATE KEY" in key_data:  # Ed25519 keys use this header
+                return "ed25519"
+            else:
+                raise ValueError("Unsupported or unknown key type")
+
 
     def __init__(
         self,
@@ -62,9 +103,9 @@ class RemoteClient:
         sshconfig,
         port="22",
         sudo=False,
-        ssh_connect_timeout: int=60,
-        ssh_max_retries: int=20,
-        ssh_retry_timeout_seconds: int=15,
+        ssh_connect_timeout: int = 60,
+        ssh_max_retries: int = 20,
+        ssh_retry_timeout_seconds: int = 15,
     ) -> None:
         self.host = host
         self.port = port
@@ -74,23 +115,45 @@ class RemoteClient:
         self.ssh_retry_timeout_seconds = ssh_retry_timeout_seconds
         self.client = None
         self.scp = None
-        self.conn = None
         self.retry_count = 0
 
         self.passphrase = None
         self.remote_path = "/"
 
-        if 'passphrase' in sshconfig:
-            self.passphrase = sshconfig['passphrase']
-        if 'remote_path' in sshconfig:
-            self.remote_path = sshconfig['remote_path']
+        if "passphrase" in sshconfig:
+            self.passphrase = sshconfig["passphrase"]
+        if "remote_path" in sshconfig:
+            self.remote_path = sshconfig["remote_path"]
 
-        if not "user" in sshconfig:
-            raise Exception('user not given in ssh config')
-        if not 'ssh_key_filepath' in sshconfig:
-            raise Exception('ssh_key_filepath not in sshconfig')
-        self.user = sshconfig['user']
-        self.ssh_key_filepath = path.expanduser(sshconfig['ssh_key_filepath'])
+        if "user" not in sshconfig:
+            raise Exception("user not given in ssh config")
+        if "ssh_key_filepath" not in sshconfig:
+            raise Exception("ssh_key_filepath not in sshconfig")
+
+        self.user = sshconfig["user"]
+        self.ssh_key_filepath = path.expanduser(sshconfig["ssh_key_filepath"])
+
+        # Check if the SSH key file exists
+        if not path.exists(self.ssh_key_filepath):
+            # If file does not exist, generate a new key pair with default to Ed25519
+            logger.info(
+                f"No SSH key found at {self.ssh_key_filepath}, generating a new key."
+            )
+            self.generate_key_pair(filename=self.ssh_key_filepath)
+            self.key_type = self._determine_key_type()
+        else:
+            # If file exists, determine the key type
+            self.key_type = self._determine_key_type()
+            logger.info(f"Found {self.key_type.upper()} key at {self.ssh_key_filepath}")
+        self.ssh_key_file_private = self.ssh_key_filepath
+        self.ssh_key_file_public = self.ssh_key_filepath + ".pub"
+        with open(self.ssh_key_filepath, "r") as keyfile:
+            if self.key_type == "rsa":
+                self.ssh_key_private = RSAKey.from_private_key(keyfile, password=self.passphrase)
+            elif self.key_type == "ecdsa":
+                self.ssh_key_private = ECDSAKey.from_private_key(keyfile, password=self.passphrase)
+            elif self.key_type == "ed25519":
+                self.ssh_key_private = Ed25519Key.from_private_key(keyfile, password=self.passphrase)
 
 
     def _increase_retry_count_and_wait(self):
@@ -102,15 +165,6 @@ class RemoteClient:
         logger.warning(f"Retrying in {self.ssh_retry_timeout_seconds} seconds...")
         time.sleep(self.ssh_retry_timeout_seconds)
 
-
-    def __get_ssh_key(self):
-        """Fetch locally stored SSH key."""
-        try:
-            self.ssh_key = RSAKey.from_private_key_file(self.ssh_key_filepath)
-            logger.info(f"Found SSH key at self {self.ssh_key_filepath}")
-        except SSHException as error:
-            logger.exception(error)
-        return self.ssh_key
 
     def __upload_ssh_key(self):
         try:
@@ -140,16 +194,13 @@ class RemoteClient:
         except FileNotFoundError as error:
             logger.exception(error)
 
+
     def __connect(self):
         """Open connection to remote host."""
         self.client = SSHClient()
         self.client.load_system_host_keys()
         self.client.set_missing_host_key_policy(AutoAddPolicy())
 
-        private_key = None
-        with open(self.ssh_key_filepath, "r") as keyfile:
-            private_key = RSAKey.from_private_key(keyfile, password=self.passphrase)
-             
         try:
             logger.info(f"Attempting to establish an SSH connection to {self.host}:{self.port}...")
             while self.retry_count < self.ssh_max_retries:
@@ -159,7 +210,7 @@ class RemoteClient:
                         port=self.port,
                         username=self.user,
                         passphrase=self.passphrase,
-                        pkey=private_key,
+                        pkey=self.ssh_key_private,
                         look_for_keys=True,
                         auth_timeout=30,
                         timeout=self.ssh_connect_timeout,
@@ -195,6 +246,7 @@ class RemoteClient:
             raise error
         finally:
             return self.client
+
 
     def disconnect(self):
         """Close ssh connection."""
