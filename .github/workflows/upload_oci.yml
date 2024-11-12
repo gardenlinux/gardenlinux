@@ -45,7 +45,6 @@ jobs:
     permissions:
       id-token: write
       packages: write
-      actions: read # required for testing, to download artifacts from other runs
     environment: oidc_aws_s3_upload
     strategy:
       fail-fast: false
@@ -63,10 +62,6 @@ jobs:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_REGION }}
-      - name: set VERSION=${{ inputs.version }}
-        run: |
-          bin/garden-version "${{ inputs.version }}" | tee VERSION
-          git update-index --assume-unchanged VERSION
       - name: get cname
         run: |
           cname="$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})"
