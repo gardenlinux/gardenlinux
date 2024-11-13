@@ -1,0 +1,8 @@
+-a exit,always -F dir=/boot -F perm=wa -F key=system_integrity
+-a exit,always -F dir=/etc -F perm=wa -F key=system_integrity
+-a exit,always -F dir=/bin -F perm=wa -F key=system_integrity
+-a exit,always -F dir=/sbin -F perm=wa -F key=system_integrity
+-a exit,always -F dir=/usr -F perm=wa -F key=system_integrity
+-a exit,always -F dir=/opt -F perm=wa -F key=system_integrity
+-a exit,always -F dir=/root -F perm=wa -F key=system_integrity
+-a exit,always -F dir=/lib -F perm=wa -F key=system_integrity
