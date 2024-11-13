@@ -57,7 +57,7 @@ def main():
         ssh_dir = raw_validate(image,path_home)
         raw_inject(image,path_home,user,key,ssh_dir,userid)
 
-    logging.info("SSH pubkey sucessfully injected.")
+    logging.info("SSH pubkey successfully injected.")
 
 def validate_user(user, pat=re.compile(r"^[a-z_][a-z0-9_-]*[$]?$")):
     if not pat.match(user):
