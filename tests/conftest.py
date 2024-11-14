@@ -261,15 +261,20 @@ def pytest_collection_modifyitems(config, items):
         features = []
     for item in items:
         item_path = str(item.fspath)
+        # check if a feature is in the enabled feature, if not skip it.
         if "features" in item_path:
             feature = item_path.split('/')[3]
             if not feature in features:
                 item.add_marker(skip)
-        plain_item_name = re.match(r"test_([\w_]+)\[?.*", item.name).group(1)
+        plain_item_name  = re.match(r"test_([\w_]+)\[?.*", item.name).group(1)
         disabled = disabled_by(features, plain_item_name)
         if len(disabled) != 0:
             item.add_marker(pytest.mark.skip(reason=f"test is disabled by feature " +
                                                     f"{', '.join(disabled)}"))
+        # Add security mark
+        for marker in item.iter_markers(name="security_id"):
+            security_id = marker.args[0]
+            item.user_properties.append(("security_id", security_id))
 
 
 @pytest.fixture
