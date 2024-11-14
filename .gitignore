@@ -43,6 +43,7 @@ make_targets.cache
 /bin/*.vars
 /bin/*.ipxe
 /bin/*.permall
+/bin/*.qcow2
 /bin/swtpm-sock
 .DS_Store
 venv
