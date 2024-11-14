@@ -53,6 +53,13 @@ jobs:
         arch: [ amd64, arm64 ]
         target: [ kvm, "kvm_trustedboot_tpm2", metal, "metal_trustedboot_tpm2", gcp, gdch, aws, "aws_trustedboot_tpm2", azure, ali, openstack, openstackbaremetal, vmware, "metal_pxe" ]
         modifier: [ "${{ inputs.default_modifier }}" ]
+        include:
+          - target: container
+            arch: amd64
+            modifier: ""
+          - target: container
+            arch: arm64
+            modifier: ""
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
@@ -85,21 +92,21 @@ jobs:
           python-version: "3.12"
       - name: Install glcli util
         run: |
-          pip install git+https://github.com/gardenlinux/python-gardenlinux-cli@0.2.3
+          pip install git+https://github.com/gardenlinux/python-gardenlinux-cli@0.2.4
       - name: Install cosign
         uses: sigstore/cosign-installer@v3.7.0
         with:
           cosign-release: 'v2.4.1'
       - name: push using the glcli util
         run: |
-          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} glcli oci --insecure push-from-tarball --tar build-${{ env.cname }}/${{ env.cname }}.tar.gz --container ghcr.io/${{ github.repository_owner }}/gl-oci --architecture ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest
+          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} glcli oci --insecure push-from-tarball --tar build-${{ env.cname }}/${{ env.cname }}.tar.gz --container ghcr.io/${{ github.repository }} --architecture ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest
       - name: Output digest to be signed
         run: |
           cat digest
       - name: Sign the manifest
         run: |
           docker login ghcr.io -u token -p ${{ secrets.GITHUB_TOKEN }}
-          cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$(cat digest)
+          cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository }}@$(cat digest)
       - name: Verify signature
         run: |
-          cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$(cat digest)
+          cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository }}@$(cat digest)
