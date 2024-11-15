@@ -13,6 +13,7 @@ pyyaml = "*"
 scp = "*"
 dacite = "*"
 cffi = "*"
+pytest-json-report = "*"
 
 [dev-packages]
 pytest = "*"
