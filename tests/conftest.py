@@ -267,7 +267,7 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         for marker in item.iter_markers(name="security_id"):
             # For the mapping of the necessary testing for our compliance, we define our own mark.
-            # We add this to the user_properties field. This way it shows up any report.
+            # We add this to the user_properties field. This way it shows up in any generated report.
             # https://docs.pytest.org/en/4.6.x/reference.html#item
             security_id = marker.args[0]
             item.user_properties.append(("security_id", security_id))
