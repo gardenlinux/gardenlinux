@@ -217,6 +217,7 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
         yield from AWS.fixture(session, testconfig, imageurl, test_name)
     elif iaas == "gcp":
         from platformSetup.gcp import GCP
+        
         credentials = request.getfixturevalue('gcp_credentials')
         logger.info("Requesting GCP fixture")
         yield from GCP.fixture(credentials, testconfig, imageurl, test_name)
@@ -244,32 +245,47 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
         raise ValueError(f"invalid {iaas=}")
 
 
+
 def pytest_collection_modifyitems(config, items):
     """Skip tests that belong to a feature that is not enabled in the test config"""
     skip = pytest.mark.skip(reason="test is not part of the enabled features")
     iaas = config.getoption("--iaas")
     config_file = config.getoption("--configfile")
+
     try:
         with open(config_file) as f:
             config_options = yaml.load(f, Loader=yaml.FullLoader)
     except OSError as err:
         logger.error(f"can not open config file {config_file}")
         pytest.exit(err, 1)
+
     if not iaas == 'local':
         features = config_options[iaas].get("features", [])
     else:
         features = []
+
     for item in items:
+        for marker in item.iter_markers(name="security_id"):
+            # For the mapping of the necessary testing for our compliance, we define our own mark.
+            # We add this to the user_properties field. This way it shows up in any generated report.
+            # https://docs.pytest.org/en/4.6.x/reference.html#item
+            security_id = marker.args[0]
+            item.user_properties.append(("security_id", security_id))
+
         item_path = str(item.fspath)
+        # check if a feature is in the enabled feature, if not skip it.
         if "features" in item_path:
             feature = item_path.split('/')[3]
             if not feature in features:
                 item.add_marker(skip)
+
         plain_item_name = re.match(r"test_([\w_]+)\[?.*", item.name).group(1)
         disabled = disabled_by(features, plain_item_name)
         if len(disabled) != 0:
             item.add_marker(pytest.mark.skip(reason=f"test is disabled by feature " +
                                                     f"{', '.join(disabled)}"))
+        
+
 
 
 @pytest.fixture
