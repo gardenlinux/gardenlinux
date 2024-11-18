@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+gpg --dearmor -o /etc/apt/keyrings/sapmachine-apt-keyring.gpg < /builder/features/sapmachine/sapmachine.key
+echo "deb [signed-by=/etc/apt/keyrings/sapmachine-apt-keyring.gpg] https://dist.sapmachine.io/debian/$(dpkg --print-architecture)/ ./" | tee /etc/apt/sources.list.d/sapmachine.list
+apt-get update -y
+apt-get install -y sapmachine-21-jre-headless
