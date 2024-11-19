@@ -96,6 +96,7 @@ jobs:
           podman manifest add ghcr.io/${{ github.repository_owner }}/gl-oci:${version} ghcr.io/${{ github.repository_owner }}/gl-oci:amd64-nightly
           podman manifest add ghcr.io/${{ github.repository_owner }}/gl-oci:${version} ghcr.io/${{ github.repository_owner }}/gl-oci:arm64-nightly
           podman push ghcr.io/${{ github.repository_owner }}/gl-oci:${version}
+          podman inspect manifest ghcr.io/${{ github.repository_owner }}/gl-oci:${version}
       - name: Sign manifests
         run: |
           docker login ghcr.io -u token -p ${{ secrets.GITHUB_TOKEN }}
