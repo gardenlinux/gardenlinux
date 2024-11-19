@@ -2,4 +2,4 @@ description: "SapMachine - An OpenJDK release maintained and supported by SAP"
 type: element
 features:
   include:
-    - _curl
+    - sapmachineApt
