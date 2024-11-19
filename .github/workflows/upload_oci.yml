@@ -96,8 +96,9 @@ jobs:
           podman manifest add ghcr.io/${{ github.repository_owner }}/gl-oci:${version} ghcr.io/${{ github.repository_owner }}/gl-oci:amd64-nightly
           podman manifest add ghcr.io/${{ github.repository_owner }}/gl-oci:${version} ghcr.io/${{ github.repository_owner }}/gl-oci:arm64-nightly
           podman push ghcr.io/${{ github.repository_owner }}/gl-oci:${version}
+          docker login ghcr.io -u token -p ${{ secrets.GITHUB_TOKEN }}
           for digest in $(podman manifest inspect ghcr.io/${{ github.repository_owner }}/gl-oci:${version} | jq -r '.manifests[].digest'); do
-            cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$digest
+            cosign sign --tlog-upload=false --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$digest
             cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$digest
           done
 
