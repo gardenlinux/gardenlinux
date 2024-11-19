@@ -1,6 +1,23 @@
 import pytest
-from helper.utils import get_architecture
+from helper.utils import get_architecture, AptUpdate, install_package_deb
 from helper.sshclient import RemoteClient
+
+
+@pytest.mark.security_id(161)
+def test_gl_is_support_distro(client):
+    """ Test that gardenlinux is a support vendor. """
+
+    AptUpdate(client)
+    install_package_deb(client, "dpkg-dev")
+
+    (exit_code, _, error) = client.execute_command("dpkg-vendor --is gardenlinux", disable_sudo=True)
+    assert exit_code == 0
+    (exit_code, _, error) = client.execute_command("dpkg-vendor  --derives-from debian", disable_sudo=True)
+    assert exit_code == 0
+
+    # Negative case:
+    (exit_code, _, error) = client.execute_command("dpkg-vendor --is debian", disable_sudo=True)
+    assert exit_code == 1
 
 
 def test_no_man(client):
