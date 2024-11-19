@@ -102,6 +102,7 @@ jobs:
             cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$digest
           done
   upload_gl_artifacts_to_oci:
+    needs: "publish_container"
     name: upload to OCI
     runs-on: ubuntu-latest
     defaults:
