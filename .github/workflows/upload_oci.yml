@@ -82,10 +82,10 @@ jobs:
           podman login -u token -p ${{ github.token }} ghcr.io
 
           # amd64
-          image_amd64="$(podman load < ${{ env.cname_amd64 }}.oci | awk '{ print $NF }')"
+          image_amd64="$(podman load < ${{ env.cname_amd64 }}/${{ env.cname_amd64 }}.oci | awk '{ print $NF }')"
 
           # arm64
-          image_arm64="$(podman load < ${{ env.cname_arm64 }}.oci | awk '{ print $NF }')"
+          image_arm64="$(podman load < ${{ env.cname_arm64 }}/${{ env.cname_arm64 }}.oci | awk '{ print $NF }')"
 
           # Creating and pushing manifest for version tag
           podman manifest create ghcr.io/${{ github.repository_owner }}/gl-oci:${version}
