@@ -89,11 +89,11 @@ jobs:
 
           # Creating and pushing manifest for version tag
           podman manifest create ghcr.io/${{ github.repository_owner }}/gl-oci:${version}
-          podman manifest add ghcr.io/${{ github.repository_owner }}/gl-oci:${version} $image_arm64
-          podman manifest add ghcr.io/${{ github.repository_owner }}/gl-oci:${version} $image_amd64
+          podman manifest add ghcr.io/${{ github.repository_owner }}/gl-oci:${version} ghcr.io/${{ github.repository_owner }}/gl-oci:@$image_arm64
+          podman manifest add ghcr.io/${{ github.repository_owner }}/gl-oci:${version} ghcr.io/${{ github.repository_owner }}/gl-oci:@$image_amd64
           podman push ghcr.io/${{ github.repository_owner }}/gl-oci:${version}
-
-          # Sign manifests
+      - name: Sign manifests
+        run: |
           for digest in $(podman manifest inspect ghcr.io/${{ github.repository_owner }}/gl-oci:${version} | jq -r '.manifests[].digest')
           do
             cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$digest
