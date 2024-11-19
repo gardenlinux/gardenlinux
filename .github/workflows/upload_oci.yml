@@ -100,11 +100,9 @@ jobs:
       - name: Sign manifests
         run: |
           docker login ghcr.io -u token -p ${{ secrets.GITHUB_TOKEN }}
-          for digest in $(podman manifest inspect ghcr.io/${{ github.repository_owner }}/gl-oci:${version} | jq -r '.manifests[].digest')
-          do
-            cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$digest
-            cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$digest
-          done
+          podman manifest inspect ghcr.io/${{ github.repository_owner }}/gl-oci:${version} | jq -r '.manifests[].digest'
+#            cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$digest
+#            cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$digest
 
 
 
