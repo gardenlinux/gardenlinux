@@ -33,6 +33,13 @@ jobs:
         arch: [ amd64, arm64 ]
         target: [ kvm, "kvm_trustedboot_tpm2", metal, "metal_trustedboot_tpm2", gcp, gdch, aws, "aws_trustedboot_tpm2", azure, ali, openstack, openstackbaremetal, vmware, "metal_pxe" ]
         modifier: [ "${{ inputs.default_modifier }}" ]
+        include:
+          - target: container
+            arch: amd64
+            modifier: ""
+          - target: container
+            arch: arm64
+            modifier: ""
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
