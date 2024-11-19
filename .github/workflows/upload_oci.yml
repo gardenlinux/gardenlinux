@@ -83,18 +83,18 @@ jobs:
 
           # amd64
           image_amd64="$(podman load < ${{ env.cname_amd64 }}/${{ env.cname_amd64 }}.oci | awk '{ print $NF }')"
-          podman tag "$image_amd64" ghcr.io/${{ github.repository }}:amd64-nightly
-          podman push ghcr.io/${{ github.repository }}:amd64-nightly
+          podman tag "$image_amd64" ghcr.io/${{ github.repository_owner }}/gl-oci:amd64-nightly
+          podman push ghcr.io/${{ github.repository_owner }}/gl-oci:amd64-nightly
 
           # arm64
           image_arm64="$(podman load < ${{ env.cname_arm64 }}/${{ env.cname_arm64 }}.oci | awk '{ print $NF }')"
-          podman tag "$image_arm64" ghcr.io/${{ github.repository }}:arm64-nightly
-          podman push ghcr.io/${{ github.repository }}:arm64-nightly
+          podman tag "$image_arm64" ghcr.io/${{ github.repository_owner }}/gl-oci:arm64-nightly
+          podman push ghcr.io/${{ github.repository_owner }}/gl-oci:arm64-nightly
 
           # Creating and pushing manifest for version tag
           podman manifest create ghcr.io/${{ github.repository_owner }}/gl-oci:${version}
-          podman manifest add ghcr.io/${{ github.repository_owner }}/gl-oci:${version} ghcr.io/${{ github.repository }}:amd64-nightly
-          podman manifest add ghcr.io/${{ github.repository_owner }}/gl-oci:${version} ghcr.io/${{ github.repository }}:arm64-nightly
+          podman manifest add ghcr.io/${{ github.repository_owner }}/gl-oci:${version} ghcr.io/${{ github.repository_owner }}/gl-oci:amd64-nightly
+          podman manifest add ghcr.io/${{ github.repository_owner }}/gl-oci:${version} ghcr.io/${{ github.repository_owner }}/gl-oci:arm64-nightly
           podman push ghcr.io/${{ github.repository_owner }}/gl-oci:${version}
       - name: Sign manifests
         run: |
