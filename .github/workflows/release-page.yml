@@ -82,14 +82,14 @@ jobs:
           echo "$prefix.tar.xz" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
 
           # upload test logs separately (if they exist)
-          ls -la "$prefix/$prefix.chroot.test.log" || true
-          ls -la "$prefix/$prefix.chroot.test.xml" || true
-          ls -la "$prefix/$prefix.platform.test.log" || true
-          ls -la "$prefix/$prefix.platform.test.xml" || true
-          test -f "$prefix/$prefix.chroot.test.log" && echo "$prefix/$prefix.chroot.test.log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
-          test -f "$prefix/$prefix.chroot.test.xml" && echo "$prefix/$prefix.chroot.test.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
-          test -f "$prefix/$prefix.platform.test.log" && echo "$prefix/$prefix.platform.test.log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
-          test -f "$prefix/$prefix.platform.test.xml" && echo "$prefix/$prefix.platform.test.xml" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          log_suffixes="chroot.test.log chroot.test.xml platform.test.log platform.test.xml"
+          for suffix in $log_suffixes; do
+            log="$prefix/$prefix.$suffix"
+            if [ -f "$log" ]; then
+              echo "$log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+            fi
+          done
+
   tag_container_as_latest:
     if: ${{ inputs.type }} == 'patch'
     uses: ./.github/workflows/tag_latest_container.yml
