@@ -116,16 +116,18 @@ jobs:
       fail-fast: false
       max-parallel: 1 # registry index is a shared resource among all assets
       matrix:
-        arch: [ amd64, arm64 ]
-        target: [ kvm, "kvm_trustedboot_tpm2", metal, "metal_trustedboot_tpm2", gcp, gdch, aws, "aws_trustedboot_tpm2", azure, ali, openstack, openstackbaremetal, vmware, "metal_pxe" ]
+        arch: [ amd64 ]
+        #arch: [ amd64, arm64 ]
+        target: [ kvm ]
+        #target: [ kvm, "kvm_trustedboot_tpm2", metal, "metal_trustedboot_tpm2", gcp, gdch, aws, "aws_trustedboot_tpm2", azure, ali, openstack, openstackbaremetal, vmware, "metal_pxe" ]
         modifier: [ "${{ inputs.default_modifier }}" ]
-        include:
-          - target: container
-            arch: amd64
-            modifier: ""
-          - target: container
-            arch: arm64
-            modifier: ""
+        #include:
+        #  - target: container
+        #    arch: amd64
+        #    modifier: ""
+        #  - target: container
+        #    arch: arm64
+        #    modifier: ""
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
@@ -153,14 +155,17 @@ jobs:
           python-version: "3.12"
       - name: Install glcli util
         run: |
-          pip install git+https://github.com/gardenlinux/python-gardenlinux-cli@0.2.6
+          git clone https://github.com/gardenlinux/python-gardenlinux-cli.git
+          mv python-gardenlinux-cli /opt/glcli
+          pip install -r /opt/glcli/requirements.txt
       - name: Install cosign
         uses: sigstore/cosign-installer@v3.7.0
         with:
           cosign-release: 'v2.4.1'
       - name: push using the glcli util
         run: |
-          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} glcli oci --insecure push-from-dir --dir ${{ env.cname }} --container ghcr.io/${{ github.repository_owner }}/gl-oci --architecture ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest
+          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir ${{ env.cname }} --container ghcr.io/${{ github.repository_owner }}/gl-oci --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest
+          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ghcr.io/${{ github.repository_owner }}/gl-oci --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }}
       - name: Output digest to be signed
         run: |
           cat digest
