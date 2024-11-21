@@ -36,73 +36,73 @@ on:
       session:
         required: true
 jobs:
-  publish_container:
-    name: publish gardenlinux container base image
-    permissions:
-      id-token: write
-      packages: write
-    environment: oidc_aws_s3_upload
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-        with: 
-          ref: ${{ inputs.commit }}
-      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      - uses: ./.github/actions/setup
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v3.7.0
-        with:
-          cosign-release: 'v2.4.1'
-      - name: set VERSION=${{ inputs.version }}
-        run: |
-          bin/garden-version "${{ inputs.version }}" | tee VERSION
-          git update-index --assume-unchanged VERSION
-      - name: get cname
-        run: |
-          cname_amd64="$(./build --resolve-cname container-amd64)"
-          cname_arm64="$(./build --resolve-cname container-arm64)"
-          echo "cname_amd64=$cname_amd64" | tee -a "$GITHUB_ENV"
-          echo "cname_arm64=$cname_arm64" | tee -a "$GITHUB_ENV"
-      - name: download build artifacts from S3
-        run: |
-          .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$cname_amd64"
-      - name: download build artifacts from S3
-        run: |
-          .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$cname_arm64"
-      - name: publish gardenlinux container base image
-        run: |
-          version=$(bin/garden-version "${{ inputs.version }}")
-          podman login -u token -p ${{ github.token }} ghcr.io
-
-          # amd64
-          image_amd64="$(podman load < ${{ env.cname_amd64 }}/${{ env.cname_amd64 }}.oci | awk '{ print $NF }')"
-          podman tag "$image_amd64" ghcr.io/${{ github.repository_owner }}/gl-oci:amd64-nightly
-          podman push ghcr.io/${{ github.repository_owner }}/gl-oci:amd64-nightly
-
-          # arm64
-          image_arm64="$(podman load < ${{ env.cname_arm64 }}/${{ env.cname_arm64 }}.oci | awk '{ print $NF }')"
-          podman tag "$image_arm64" ghcr.io/${{ github.repository_owner }}/gl-oci:arm64-nightly
-          podman push ghcr.io/${{ github.repository_owner }}/gl-oci:arm64-nightly
-
-          # Creating and pushing manifest for version tag
-          podman manifest create ghcr.io/${{ github.repository_owner }}/gl-oci:${version}
-          podman manifest add ghcr.io/${{ github.repository_owner }}/gl-oci:${version} ghcr.io/${{ github.repository_owner }}/gl-oci:amd64-nightly
-          podman manifest add ghcr.io/${{ github.repository_owner }}/gl-oci:${version} ghcr.io/${{ github.repository_owner }}/gl-oci:arm64-nightly
-          podman push ghcr.io/${{ github.repository_owner }}/gl-oci:${version}
-          docker login ghcr.io -u token -p ${{ secrets.GITHUB_TOKEN }}
-          for digest in $(podman manifest inspect ghcr.io/${{ github.repository_owner }}/gl-oci:${version} | jq -r '.manifests[].digest'); do
-            cosign sign --tlog-upload=false --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$digest
-            cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$digest
-          done
+#  publish_container:
+#    name: publish gardenlinux container base image
+#    permissions:
+#      id-token: write
+#      packages: write
+#    environment: oidc_aws_s3_upload
+#    runs-on: ubuntu-latest
+#    defaults:
+#      run:
+#        shell: bash
+#    steps:
+#      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+#        with: 
+#          ref: ${{ inputs.commit }}
+#      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
+#        with:
+#          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+#          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+#          aws-region: ${{ secrets.AWS_REGION }}
+#      - uses: ./.github/actions/setup
+#      - name: Install cosign
+#        uses: sigstore/cosign-installer@v3.7.0
+#        with:
+#          cosign-release: 'v2.4.1'
+#      - name: set VERSION=${{ inputs.version }}
+#        run: |
+#          bin/garden-version "${{ inputs.version }}" | tee VERSION
+#          git update-index --assume-unchanged VERSION
+#      - name: get cname
+#        run: |
+#          cname_amd64="$(./build --resolve-cname container-amd64)"
+#          cname_arm64="$(./build --resolve-cname container-arm64)"
+#          echo "cname_amd64=$cname_amd64" | tee -a "$GITHUB_ENV"
+#          echo "cname_arm64=$cname_arm64" | tee -a "$GITHUB_ENV"
+#      - name: download build artifacts from S3
+#        run: |
+#          .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$cname_amd64"
+#      - name: download build artifacts from S3
+#        run: |
+#          .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$cname_arm64"
+#      - name: publish gardenlinux container base image
+#        run: |
+#          version=$(bin/garden-version "${{ inputs.version }}")
+#          podman login -u token -p ${{ github.token }} ghcr.io
+#
+#          # amd64
+#          image_amd64="$(podman load < ${{ env.cname_amd64 }}/${{ env.cname_amd64 }}.oci | awk '{ print $NF }')"
+#          podman tag "$image_amd64" ghcr.io/${{ github.repository_owner }}/gl-oci:amd64-nightly
+#          podman push ghcr.io/${{ github.repository_owner }}/gl-oci:amd64-nightly
+#
+#          # arm64
+#          image_arm64="$(podman load < ${{ env.cname_arm64 }}/${{ env.cname_arm64 }}.oci | awk '{ print $NF }')"
+#          podman tag "$image_arm64" ghcr.io/${{ github.repository_owner }}/gl-oci:arm64-nightly
+#          podman push ghcr.io/${{ github.repository_owner }}/gl-oci:arm64-nightly
+#
+#          # Creating and pushing manifest for version tag
+#          podman manifest create ghcr.io/${{ github.repository_owner }}/gl-oci:${version}
+#          podman manifest add ghcr.io/${{ github.repository_owner }}/gl-oci:${version} ghcr.io/${{ github.repository_owner }}/gl-oci:amd64-nightly
+#          podman manifest add ghcr.io/${{ github.repository_owner }}/gl-oci:${version} ghcr.io/${{ github.repository_owner }}/gl-oci:arm64-nightly
+#          podman push ghcr.io/${{ github.repository_owner }}/gl-oci:${version}
+#          docker login ghcr.io -u token -p ${{ secrets.GITHUB_TOKEN }}
+#          for digest in $(podman manifest inspect ghcr.io/${{ github.repository_owner }}/gl-oci:${version} | jq -r '.manifests[].digest'); do
+#            cosign sign --tlog-upload=false --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$digest
+#            cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$digest
+#          done
   upload_gl_artifacts_to_oci:
-    needs: "publish_container"
+#    needs: "publish_container"
     name: upload to OCI
     runs-on: ubuntu-latest
     defaults:
@@ -114,7 +114,7 @@ jobs:
     environment: oidc_aws_s3_upload
     strategy:
       fail-fast: false
-      max-parallel: 1 # registry index is a shared resource among all assets
+#      max-parallel: 1 # registry index is a shared resource among all assets
       matrix:
         arch: [ amd64, arm64 ]
         target: [ kvm ]
@@ -163,9 +163,12 @@ jobs:
           cosign-release: 'v2.4.1'
       - name: push using the glcli util
         run: |
-          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir ${{ env.cname }} --container ghcr.io/${{ github.repository_owner }}/gl-oci --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest --manifest_file manifest_entry.json
-          echo "manifest_${cname}=$(cat manifest-entry.json)" >> "$GITHUB_OUTPUT"
-          # GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ghcr.io/${{ github.repository_owner }}/gl-oci --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }}
+          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir ${{ env.cname }} --container ghcr.io/${{ github.repository_owner }}/gl-oci --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest --manifest_file oci_manifest_entry_$cname.json
+      - name: Upload oci manifest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: oci_manifest_entry_$cname.json
+          path: oci_manifest_entry_$cname.json
       - name: Output digest to be signed
         run: |
           cat digest
@@ -205,14 +208,16 @@ jobs:
           git clone https://github.com/gardenlinux/python-gardenlinux-cli.git
           mv python-gardenlinux-cli /opt/glcli
           pip install -r /opt/glcli/requirements.txt
+      - name: Download OCI manifest artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: oci-manifests
+          pattern: oci_manifest_entry_*
+          merge-multiple: true
       - name: update index using glcli tool
         run: |
-          # first collect all output from previous runs:
-          #
-          echo '${{ toJSON(needs.upload_gl_artifacts_to_oci.outputs) }}' > all_manifests.json
-          cat all_manifests.json
-          for manifest in $(cat all_manifests.json |jq -r 'keys | map(select(startswith("manifest")))[]')
+          cd oci-manifests
+          for manifest in $(ls oci_manifest_entry*)
           do
-            cat all_manifests.json | jq -r ".$manifest" > $manifest.json
-            GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ghcr.io/${{ github.repository_owner }}/gl-oci --version ${{ inputs.version }} --manifest_file $manifest.json
+            GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ghcr.io/${{ github.repository_owner }}/gl-oci --version ${{ inputs.version }} --manifest_file $manifest
           done
