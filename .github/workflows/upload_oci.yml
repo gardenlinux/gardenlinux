@@ -163,12 +163,12 @@ jobs:
           cosign-release: 'v2.4.1'
       - name: push using the glcli util
         run: |
-          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir ${{ env.cname }} --container ghcr.io/${{ github.repository_owner }}/gl-oci --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest --manifest_file oci_manifest_entry_$cname.json
+          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir ${{ env.cname }} --container ghcr.io/${{ github.repository_owner }}/gl-oci --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest --manifest_file oci_manifest_entry_${{ env.cname }}.json
       - name: Upload oci manifest artifact
         uses: actions/upload-artifact@v4
         with:
-          name: oci_manifest_entry_$cname.json
-          path: oci_manifest_entry_$cname.json
+          name: oci_manifest_entry_${{ env.cname }}.json
+          path: oci_manifest_entry_${{ env.cname }}.json
       - name: Output digest to be signed
         run: |
           cat digest
