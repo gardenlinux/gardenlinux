@@ -163,7 +163,7 @@ jobs:
           cosign-release: 'v2.4.1'
       - name: push using the glcli util
         run: |
-          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir ${{ env.cname }} --container ghcr.io/${{ github.repository_owner }}/gl-oci --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest --manifest-file manifest_entry.json
+          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir ${{ env.cname }} --container ghcr.io/${{ github.repository_owner }}/gl-oci --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest --manifest_file manifest_entry.json
           echo "manifest_${cname}=$(cat manifest-entry.json)" >> "$GITHUB_OUTPUT"
           # GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ghcr.io/${{ github.repository_owner }}/gl-oci --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }}
       - name: Output digest to be signed
@@ -214,5 +214,5 @@ jobs:
           for manifest in $(cat all_manifests.json |jq -r 'keys | map(select(startswith("manifest")))[]')
           do
             cat all_manifests.json | jq -r ".$manifest" > $manifest.json
-            GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ghcr.io/${{ github.repository_owner }}/gl-oci --version ${{ inputs.version }} --manifest-file $manifest.json
+            GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ghcr.io/${{ github.repository_owner }}/gl-oci --version ${{ inputs.version }} --manifest_file $manifest.json
           done
