@@ -215,7 +215,7 @@ jobs:
       - name: update index using glcli tool
         run: |
           cd oci-manifests
-          for manifest in $(ls oci_manifest_entry*)
+          for manifest in oci_manifest_entry*
           do
             GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ghcr.io/${{ github.repository_owner }}/gl-oci --version ${{ inputs.version }} --manifest_file $manifest
           done
