@@ -1,0 +1,6 @@
+[Unit]
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/halt -f

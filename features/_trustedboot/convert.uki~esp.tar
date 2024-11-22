@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-set -eufo pipefail
-
-tar --extract --to-stdout "EFI/Linux/$BUILDER_CNAME+3.efi" < "$1" > "$2"

@@ -4,3 +4,4 @@ dracut-live
 binutils
 isolinux
 python3-pefile
+systemd-ukify

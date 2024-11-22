@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+rootfs="$1"
+
+mkdir -p "$rootfs/etc/gardenlinux"
+
+rm -rf "$rootfs/opt"
+ln -sT /var/opt "$rootfs/opt"
+
+# shellcheck disable=SC2115
+rm -rf "$rootfs/home"
+ln -sT /var/home "$rootfs/home"
+
+for key in pk null.pk kek db; do
+	cp "/builder/cert/secureboot.$key.auth" "$rootfs/etc/gardenlinux/gardenlinux-secureboot.$key.auth"
+done
