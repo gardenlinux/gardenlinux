@@ -60,7 +60,7 @@ def _azure_release_note(published_image_metadata):
     output = ""
     for pset in published_image_metadata:
         if pset == 'published_gallery_images':
-            if (len(published_image_metadata[pset]) > 1):
+            if (len(published_image_metadata[pset]) > 0):
                 output += "# all regions (community gallery image):\n"
             for gallery_image in published_image_metadata[pset]:
                 output += f"Hyper V: {gallery_image['hyper_v_generation']}, "
@@ -68,7 +68,7 @@ def _azure_release_note(published_image_metadata):
                 output += f"Image Id: {gallery_image['community_gallery_image_id']}\n"
 
         if pset == 'published_marketplace_images':
-            if (len(published_image_metadata[pset]) > 1):
+            if (len(published_image_metadata[pset]) > 0):
                 output += "# all regions (marketplace image):\n"
             for market_image in published_image_metadata[pset]:
                 output += f"Hyper V: {market_image['hyper_v_generation']}, "
@@ -302,8 +302,6 @@ def create_github_release_notes(gardenlinux_version, commitish, dry_run = False)
     output += "## Kernel Package direct download links\n"
     output += get_kernel_urls(gardenlinux_version)
     output += "\n"
-
-
 
     output += generate_image_download_section(manifests, gardenlinux_version, commitish_short )
 
