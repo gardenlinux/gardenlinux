@@ -2,8 +2,10 @@ SHELL := /usr/bin/env bash
 .SHELLFLAGS := -euo pipefail -c
 
 ROOT_DIR := $(shell git rev-parse --show-toplevel)
+
 GIT_SHA:= $(shell git rev-parse HEAD)
 GIT_SHA_SHORT := $(shell git rev-parse --short HEAD)
+
 ifeq ($(strip $(GL_VERSION)),)
 GL_VERSION := nightly
 endif

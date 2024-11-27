@@ -60,10 +60,8 @@ jobs:
       aws_region: ${{ secrets.aws_region }}
       azure_subscription_id: ${{ secrets.az_subscription_id }}
       AZURE_CONFIG_DIR: /tmp/azure_config_dir
-      PLATFORM: ${{ matrix.platform }}
       ARCH: ${{ matrix.arch }}
       FLAVOR: ${{ matrix.flavor }}
-      MODIFIER: ${{ matrix.modifier }}
       artifact_dir: /tmp/gardenlinux-build-artifacts
       image_dir: .build # default directory in tofu
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -159,16 +157,16 @@ jobs:
         # uncached/downloaded artifacts are compressed
         test -f "${{ env.image_dir }}/${{ env.cname }}.tar.gz" && tar xzvf "${{ env.image_dir }}/${{ env.cname }}.tar.gz" -C "${{ env.image_dir }}"
         # tf variables generation
-        tests/platformSetup/tofu/tf_variables_create.py --platforms "${PLATFORM}" --archs "${ARCH}" --flavors ${FLAVOR} --cname "${{ env.cname }}" gh-actions
+        tests/platformSetup/tofu/tf_variables_create.py --flavors ${FLAVOR} --cname "${{ env.cname }}" gh-actions
         # ssh key generation (if missing)
         test -f ~/.ssh/id_ed25519 || ssh-keygen -t ed25519 -P "" -f ~/.ssh/id_ed25519
         # enable S3 backend
         cp "tests/platformSetup/tofu/backend.tf.github" "tests/platformSetup/tofu/backend.tf" 
-        make --directory="tests/platformSetup" ${PLATFORM}-${ARCH}-${FLAVOR}-apply 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.provisioning.log"
+        make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-apply 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.provisioning.log"
 
-    - name: run platform test for ${{ matrix.platform }} on ${{ matrix.arch }}
+    - name: run platform test for ${{ matrix.flavor }} on ${{ matrix.arch }}
       run: |
-        make --directory=tests ${PLATFORM}-${ARCH}-${FLAVOR}-test-platform 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.test.log"
+        make --directory=tests ${FLAVOR}-${ARCH}-test-platform 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.test.log"
 
     - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
       with:
@@ -192,4 +190,4 @@ jobs:
         export CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE="/gardenlinux/$credentials_file_name"
         export GOOGLE_GHA_CREDS_PATH="/gardenlinux/$credentials_file_name"
         export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
-        (make --directory="tests/platformSetup" ${PLATFORM}-${ARCH}-${FLAVOR}-destroy 2>&1 || make --directory="tests/platformSetup" ${PLATFORM}-${ARCH}-${FLAVOR}-destroy 2>&1 || make --directory="tests/platformSetup" ${PLATFORM}-${ARCH}-${FLAVOR}-destroy 2>&1) | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.destroy.log"
+        (make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-destroy 2>&1 || make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-destroy 2>&1 || make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-destroy 2>&1) | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.destroy.log"
