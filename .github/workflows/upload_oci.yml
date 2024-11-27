@@ -24,7 +24,7 @@ on:
     inputs:
       version:
         type: string
-        default: today
+        default: now
       default_modifier:
         type: string
         default: ""
@@ -36,73 +36,7 @@ on:
       session:
         required: true
 jobs:
-  publish_container:
-    name: publish gardenlinux container base image
-    permissions:
-      id-token: write
-      packages: write
-    environment: oidc_aws_s3_upload
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-        with: 
-          ref: ${{ inputs.commit }}
-      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      - uses: ./.github/actions/setup
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v3.7.0
-        with:
-          cosign-release: 'v2.4.1'
-      - name: set VERSION=${{ inputs.version }}
-        run: |
-          bin/garden-version "${{ inputs.version }}" | tee VERSION
-          git update-index --assume-unchanged VERSION
-      - name: get cname
-        run: |
-          cname_amd64="$(./build --resolve-cname container-amd64)"
-          cname_arm64="$(./build --resolve-cname container-arm64)"
-          echo "cname_amd64=$cname_amd64" | tee -a "$GITHUB_ENV"
-          echo "cname_arm64=$cname_arm64" | tee -a "$GITHUB_ENV"
-      - name: download build artifacts from S3
-        run: |
-          .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$cname_amd64"
-      - name: download build artifacts from S3
-        run: |
-          .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$cname_arm64"
-      - name: publish gardenlinux container base image
-        run: |
-          version=$(bin/garden-version "${{ inputs.version }}")
-          podman login -u token -p ${{ github.token }} ghcr.io
-
-          # amd64
-          image_amd64="$(podman load < ${{ env.cname_amd64 }}/${{ env.cname_amd64 }}.oci | awk '{ print $NF }')"
-          podman tag "$image_amd64" ghcr.io/${{ github.repository_owner }}/gl-oci:amd64-nightly
-          podman push ghcr.io/${{ github.repository_owner }}/gl-oci:amd64-nightly
-
-          # arm64
-          image_arm64="$(podman load < ${{ env.cname_arm64 }}/${{ env.cname_arm64 }}.oci | awk '{ print $NF }')"
-          podman tag "$image_arm64" ghcr.io/${{ github.repository_owner }}/gl-oci:arm64-nightly
-          podman push ghcr.io/${{ github.repository_owner }}/gl-oci:arm64-nightly
-
-          # Creating and pushing manifest for version tag
-          podman manifest create ghcr.io/${{ github.repository_owner }}/gl-oci:${version}
-          podman manifest add ghcr.io/${{ github.repository_owner }}/gl-oci:${version} ghcr.io/${{ github.repository_owner }}/gl-oci:amd64-nightly
-          podman manifest add ghcr.io/${{ github.repository_owner }}/gl-oci:${version} ghcr.io/${{ github.repository_owner }}/gl-oci:arm64-nightly
-          podman push ghcr.io/${{ github.repository_owner }}/gl-oci:${version}
-          docker login ghcr.io -u token -p ${{ secrets.GITHUB_TOKEN }}
-          for digest in $(podman manifest inspect ghcr.io/${{ github.repository_owner }}/gl-oci:${version} | jq -r '.manifests[].digest'); do
-            cosign sign --tlog-upload=false --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$digest
-            cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository_owner }}/gl-oci@$digest
-          done
   upload_gl_artifacts_to_oci:
-    needs: "publish_container"
     name: upload to OCI
     runs-on: ubuntu-latest
     defaults:
@@ -143,9 +77,14 @@ jobs:
         run: |
           cname="$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})"
           echo "cname=$cname" | tee -a "$GITHUB_ENV"
-      - name: download build artifacts from S3
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
+        with:
+          name: build-${{ env.cname }}
+      - name: Untar workflow artifact
+
         run: |
-          .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$cname"
+          mkdir ${{ env.cname }}
+          tar -C ${{ env.cname }} xzv < "${{ env.cname }}.tar.gz"
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:

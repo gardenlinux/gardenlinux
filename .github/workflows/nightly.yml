@@ -89,6 +89,12 @@ jobs:
     uses: ./.github/workflows/publish_container.yml
     with:
       version: ${{ needs.build.outputs.version }}
+  upload_oci:
+    name: Run glcli to publish to OCI
+    needs: [ publish_container ]
+    uses: ./.github/workflows/upload_oci.yml
+    with:
+      version: ${{ needs.build.outputs.version }}
   glrd:
     name: create GLRD release
     needs: [ upload_to_s3 ]
