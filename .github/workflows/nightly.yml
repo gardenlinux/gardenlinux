@@ -95,6 +95,11 @@ jobs:
     uses: ./.github/workflows/upload_oci.yml
     with:
       version: ${{ needs.build.outputs.version }}
+      default_modifier: "-gardener_prod"
+    secrets:
+      region: ${{ secrets.AWS_REGION }}
+      role: ${{ secrets.AWS_IAM_ROLE }}
+      session: ${{ secrets.AWS_OIDC_SESSION }}
   glrd:
     name: create GLRD release
     needs: [ upload_to_s3 ]

@@ -28,6 +28,13 @@ on:
       default_modifier:
         type: string
         default: ""
+    secrets:
+      region:
+        required: true
+      role:
+        required: true
+      session:
+        required: true
 jobs:
   upload_gl_artifacts_to_oci:
     name: upload to OCI
@@ -58,9 +65,9 @@ jobs:
           ref: ${{ inputs.commit }}
       - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
         with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.role }}
+          role-session-name: ${{ secrets.session }}
+          aws-region: ${{ secrets.region }}
       # bin/garden-version reads and writes from and to ./VERSION which is read by ./build --resolve-cname 
       - name: set VERSION=${{ inputs.version }}
         run: |
