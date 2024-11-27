@@ -28,13 +28,6 @@ on:
       default_modifier:
         type: string
         default: ""
-    secrets:
-      region:
-        required: true
-      role:
-        required: true
-      session:
-        required: true
 jobs:
   upload_gl_artifacts_to_oci:
     name: upload to OCI
