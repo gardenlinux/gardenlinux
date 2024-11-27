@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import re
 import subprocess
 from pathlib import Path
 import sys
@@ -28,24 +29,10 @@ def parse_arguments():
         help="The test prefix to include in the variable files."
     )
     parser.add_argument(
-        '--platforms', 
-        type=str, 
-        # required=True, 
-        default="ali,aws,azure,gcp",
-        help="Comma-separated list of platforms (e.g., ali,aws,azure,gcp)."
-    )
-    parser.add_argument(
-        '--archs', 
-        type=str, 
-        # required=True, 
-        default="amd64,arm64",
-        help="Comma-separated list of archs (e.g., amd64,arm64)."
-    )
-    parser.add_argument(
         '--flavors', 
         type=str, 
-        default="default,trustedboot,trustedboot_tpm2",
-        help="Comma-separated list of flavors (default: 'default,trustedboot,trustedboot_tpm2')."
+        default="ali-gardener_prod-amd64,aws-gardener_prod-amd64,azure-gardener_prod-amd64,gcp-gardener_prod-amd64",
+        help="Comma-separated list of flavors (default: 'ali-gardener_prod-amd64,aws-gardener_prod-amd64,azure-gardener_prod-amd64,gcp-gardener_prod-amd64')."
     )
     parser.add_argument(
         '--root-dir', 
@@ -161,12 +148,9 @@ def write_platform_specific_config(f, args, platform, arch, flavor):
     f.write(f'gcp_project_id = "{gcp_project}"\n')
 
 
-def create_tfvars_files(args, platforms, archs, flavors, root_dir):
+def create_tfvars_file(args, platform, flavor, features, arch, root_dir):
     """Create .tfvars files for each combination of platform, architecture, and flavor."""
-    for platform in platforms:
-        for arch in archs:
-            for flavor in flavors:
-                var_file = Path(root_dir) / f"tests/platformSetup/tofu/variables.{platform}.{arch}.{flavor}.tfvars"
+    var_file = Path(root_dir) / f"tests/platformSetup/tofu/variables.{flavor}.tfvars"
 
     with open(var_file, 'w') as f:
         f.write(f'test_prefix = "{args.test_prefix}"\n')
@@ -179,15 +163,13 @@ def create_tfvars_files(args, platforms, archs, flavors, root_dir):
             f.write(f'features = []\n')
         write_platform_specific_config(f, args, platform, arch, flavor)
 
-                print(f"Created: {var_file}")
+    print(f"Created: {var_file}")
 
 
 def main():
     args = parse_arguments()
 
     # Split comma-separated values
-    platforms = args.platforms.split(',')
-    archs = args.archs.split(',')
     flavors = args.flavors.split(',')
     root_dir = Path(args.root_dir) if args.root_dir else get_git_root()
 
