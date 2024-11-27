@@ -79,10 +79,9 @@ jobs:
         with:
           name: build-${{ env.cname }}
       - name: Untar workflow artifact
-
         run: |
           mkdir ${{ env.cname }}
-          tar -C ${{ env.cname }} xzv < "${{ env.cname }}.tar.gz"
+          tar -C ${{ env.cname }} -xzv < "${{ env.cname }}.tar.gz"
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
