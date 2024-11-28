@@ -100,6 +100,7 @@ jobs:
       region: ${{ secrets.AWS_REGION }}
       role: ${{ secrets.AWS_IAM_ROLE }}
       session: ${{ secrets.AWS_OIDC_SESSION }}
+      oci-kms-arn: ${{ secrets.OCI_KMS_ARN }}
   glrd:
     name: create GLRD release
     needs: [ upload_to_s3 ]

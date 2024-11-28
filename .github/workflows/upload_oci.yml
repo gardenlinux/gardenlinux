@@ -15,6 +15,8 @@ on:
         required: true
       session:
         required: true
+      oci-kms-arn:
+        required: true
 jobs:
   upload_gl_artifacts_to_oci:
     name: upload to OCI
@@ -89,10 +91,10 @@ jobs:
       - name: Sign the manifest
         run: |
           docker login ghcr.io -u token -p ${{ secrets.GITHUB_TOKEN }}
-          cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository }}@$(cat digest)
+          cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.region }}.amazonaws.com/${{ secrets.oci-kms-arn }} ghcr.io/${{ github.repository }}@$(cat digest)
       - name: Verify signature
         run: |
-          cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.OCI_KMS_ARN }} ghcr.io/${{ github.repository }}@$(cat digest)
+          cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.region}}.amazonaws.com/${{ secrets.oci-kms-arn }} ghcr.io/${{ github.repository }}@$(cat digest)
   
   upload_manifests_entries:
     needs: "upload_gl_artifacts_to_oci"
