@@ -1,25 +1,5 @@
 name: upload to OCI
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        type: string
-        default: ""
-        required: true
-      default_modifier:
-        type: string
-        default: "-gardener_prod"
-      commit:
-        type: string
-        default: "" # just for testing
-        required: true
-    secrets:
-      region:
-        required: true
-      role:
-        required: true
-      session:
-        required: true
   workflow_call:
     inputs:
       version:
