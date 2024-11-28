@@ -107,14 +107,6 @@ jobs:
       id-token: write
       packages: write
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-        with:
-          ref: ${{ inputs.commit }}
-      # bin/garden-version reads and writes from and to ./VERSION which is read by ./build --resolve-cname 
-      - name: set VERSION=${{ inputs.version }}
-        run: |
-          bin/garden-version "${{ inputs.version }}" | tee VERSION
-          git update-index --assume-unchanged VERSION
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
