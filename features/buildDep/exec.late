@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+if [[ -d /usr/local/src/debbuild && $(ls -A /usr/local/src/debbuild) ]]; then
+    cd /usr/local/src/debbuild
+    dpkg-buildpackage
+
+    rm -fR /usr/local/src/debbuild
+fi
