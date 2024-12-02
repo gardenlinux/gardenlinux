@@ -26,7 +26,7 @@ logger.setLevel(logging.DEBUG)
 BIN_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "bin")
 
 class CHROOT:
-    """Handle CHROOT flavour"""
+    """Handle CHROOT flavor"""
 
     @classmethod
     def fixture(cls, config):

@@ -20,7 +20,7 @@ DEFAULT_IP = '169.254.0.21'
 DEFAULT_PORT = '2222'
 
 class FireCracker:
-    """ Handle Firecracker flavour """
+    """ Handle Firecracker flavor """
 
     @classmethod
     def fixture(cls, config):

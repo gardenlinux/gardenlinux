@@ -779,7 +779,7 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 
 ### Local test environments
 
-These tests flavours will make use of chroot, KVM virtual machines or OpenStack environments and thus can be used locally without a paid subscription to a public cloud provider.
+These tests flavors will make use of chroot, KVM virtual machines or OpenStack environments and thus can be used locally without a paid subscription to a public cloud provider.
 
 #### CHROOT
 

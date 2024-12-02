@@ -2,7 +2,7 @@
 
 [Gardener](https://gardener.cloud), one of the major consumers of Garden Linux, must be able to configure certain settings of the operating system before the [kubelet](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/) comes up. Some of these settings might require a reboot/restart of the kernel.
 
-This document describes the process how Gardener reconfigures kernel parameters that require a reboot/restart and how that restart is performed. It only applies to Garden Linux flavours with the `gardener` feature compiled in.
+This document describes the process how Gardener reconfigures kernel parameters that require a reboot/restart and how that restart is performed. It only applies to Garden Linux flavors with the `gardener` feature compiled in.
 
 ## Control files
 
