@@ -109,7 +109,7 @@ targets:
         build: true
         test: true
         test-platform: false
-        publish: false
+        publish: true
       - modifier: gardener_prod
         features:
           - _trustedboot
@@ -118,7 +118,7 @@ targets:
         build: true
         test: true
         test-platform: false
-        publish: false
+        publish: true
   - name: bare
     category: container
     flavors:
