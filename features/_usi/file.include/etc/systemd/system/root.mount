@@ -1,0 +1,12 @@
+[Unit]
+Requires=systemd-tmpfiles-setup.service
+After=systemd-tmpfiles-setup.service
+
+[Mount]
+What=/var/root
+Where=/root
+Type=none
+Options=bind
+
+[Install]
+WantedBy=local-fs.target

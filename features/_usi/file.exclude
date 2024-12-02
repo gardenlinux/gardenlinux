@@ -3,3 +3,6 @@
 /etc/systemd/system/ignition-disable.service
 /etc/repart.d/root.conf
 /usr/lib/tmpfiles.d/home.conf
+/opt/{,.}*
+/home/{,.}*
+/root/{,.}*
