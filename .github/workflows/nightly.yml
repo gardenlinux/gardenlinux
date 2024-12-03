@@ -89,6 +89,18 @@ jobs:
     uses: ./.github/workflows/publish_container.yml
     with:
       version: ${{ needs.build.outputs.version }}
+  upload_oci:
+    name: Run glcli to publish to OCI
+    needs: [ build, publish_container ]
+    uses: ./.github/workflows/upload_oci.yml
+    with:
+      version: ${{ needs.build.outputs.version }}
+      default_modifier: "-gardener_prod"
+    secrets:
+      region: ${{ secrets.AWS_REGION }}
+      role: ${{ secrets.AWS_IAM_ROLE }}
+      session: ${{ secrets.AWS_OIDC_SESSION }}
+      oci-kms-arn: ${{ secrets.OCI_KMS_ARN }}
   glrd:
     name: create GLRD release
     needs: [ upload_to_s3 ]

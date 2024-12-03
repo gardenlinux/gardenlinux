@@ -59,8 +59,17 @@ def _gcp_release_note(published_image_metadata):
 def _azure_release_note(published_image_metadata):
     output = ""
     for pset in published_image_metadata:
+        if pset == 'published_gallery_images':
+            if (len(published_image_metadata[pset]) > 0):
+                output += "# all regions (community gallery image):\n"
+            for gallery_image in published_image_metadata[pset]:
+                output += f"Hyper V: {gallery_image['hyper_v_generation']}, "
+                output += f"Azure Cloud: {gallery_image['azure_cloud']}, "
+                output += f"Image Id: {gallery_image['community_gallery_image_id']}\n"
+
         if pset == 'published_marketplace_images':
-            output += "# all regions:\n"
+            if (len(published_image_metadata[pset]) > 0):
+                output += "# all regions (marketplace image):\n"
             for market_image in published_image_metadata[pset]:
                 output += f"Hyper V: {market_image['hyper_v_generation']}, "
                 output += f"urn: {market_image['urn']}\n"
@@ -285,22 +294,16 @@ def create_github_release_notes(gardenlinux_version, commitish, dry_run = False)
 
     output += release_notes_compare_package_versions_section(gardenlinux_version, package_list)
 
-    # Ignore in dry run because this fails when called locally
-    # Run as usual in CI
-    if not dry_run:
-        manifests = download_all_singles(gardenlinux_version, commitish_short)
+    manifests = download_all_singles(gardenlinux_version, commitish_short)
 
-        output += generate_release_note_image_ids(manifests)
+    output += generate_release_note_image_ids(manifests)
 
     output += "\n"
     output += "## Kernel Package direct download links\n"
     output += get_kernel_urls(gardenlinux_version)
     output += "\n"
 
-    # Ignore in dry run because this fails when called locally
-    # Run as usual in CI
-    if not dry_run:
-        output += generate_image_download_section(manifests, gardenlinux_version, commitish_short )
+    output += generate_image_download_section(manifests, gardenlinux_version, commitish_short )
 
     output += "\n"
     output += "## Kernel Module Build Container (kmodbuild) "

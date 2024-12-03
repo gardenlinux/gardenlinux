@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+input="$1"
+output="$2"
+
+export PATH="/builder/image.d:$PATH"
+
+rootfs="$(mktemp -d)"
+mount -t tmpfs -o size="$TEMPFS_SIZE" tmpfs "$rootfs"
+tar --extract --xattrs --xattrs-include '*' --directory "$rootfs" < "$input"
+
+# shellcheck disable=SC2115
+rm -rf "$rootfs/var"
+mkdir "$rootfs/var"
+
+echo "creating root EROFS disk"
+
+erofs="$(mktemp -u)"
+mkfs.erofs --quiet -z lz4 -E force-inode-compact -T "$BUILDER_TIMESTAMP" -U "$(echo "gardenlinux:$BUILDER_VERSION:erofs:root" | uuid_hash)" "$erofs" "$rootfs"
+
+size_chroot="$(du -s "$rootfs" | cut -f 1)"
+size_erofs="$(du "$erofs" | cut -f 1)"
+echo "root disk compressed by $(( ( ( size_chroot - size_erofs ) * 100 ) / size_chroot ))% ($(du -sh "$rootfs" | cut -f 1) -> $(du -h "$erofs" | cut -f 1))"
+
+echo
+echo "building initrd with embedded root disk"
+
+mount --rbind /proc "$rootfs/proc"
+
+mount -t tmpfs -o mode=0755,size=4k tmpfs "$rootfs/dev"
+for i in null zero random urandom; do
+	touch "$rootfs/dev/$i"
+	mount --bind "/dev/$i" "$rootfs/dev/$i"
+done
+cp --no-dereference /dev/{fd,stdin,stdout,stderr} "$rootfs/dev/"
+
+mount -t tmpfs -o size=1G tmpfs "$rootfs/tmp"
+
+touch "$rootfs/root.img"
+mount --bind "$erofs" "$rootfs/root.img"
+
+initrd="$(mktemp)"
+
+touch "$rootfs/initrd"
+mount --bind "$initrd" "$rootfs/initrd"
+
+kernel="$(find "$rootfs/boot/" -name 'vmlinuz-*' | sort -V | tail -n 1)"
+
+chroot "$rootfs" dracut \
+	--no-hostonly \
+	--force \
+	--tmpdir /tmp \
+	--kver "${kernel#*-}" \
+	--modules "bash dash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown sysroot-loop" \
+	--reproducible \
+	--install 'find findmnt grep lsblk' \
+	/initrd
+
+umount -l "$rootfs/proc"
+umount -R "$rootfs/dev"
+umount "$rootfs/tmp"
+
+umount "$rootfs/root.img"
+rm "$erofs"
+
+umount "$rootfs/initrd"
+
+case "$BUILDER_ARCH" in
+	amd64)
+		uefi_arch=X64
+		;;
+	arm64)
+		uefi_arch=AA64
+		;;
+esac
+
+uki="$(mktemp)"
+
+read -r _ cmdline < "$rootfs/etc/kernel/cmdline"
+
+/usr/lib/systemd/ukify build \
+	--stub "$rootfs/usr/lib/systemd/boot/efi/linux$(tr '[:upper:]' '[:lower:]' <<< "$uefi_arch").efi.stub" \
+	--linux "$kernel" \
+	--initrd "$initrd" \
+	--cmdline "$cmdline" \
+	--uname "${kernel#*-}" \
+	--os-release "@$rootfs/etc/os-release" \
+	--output "$uki"
+
+rm "$initrd"
+
+esp_dir="$(mktemp -d)"
+
+IFS=',' read -r -a features <<< "$BUILDER_FEATURES"
+for feature in "${features[@]}"; do
+	if [ -e "/builder/features/$feature/usi.config" ]; then
+		"/builder/features/$feature/usi.config" "$uki" "$esp_dir" "$rootfs"
+	fi
+done
+
+rm "$uki"
+
+umount "$rootfs"
+rmdir "$rootfs"
+
+esp_tar="$(mktemp)"
+
+find "$esp_dir" -mindepth 1 -printf '%P\n' | tar --create --mtime="@$BUILDER_TIMESTAMP" --sort name --numeric-owner --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime --directory "$esp_dir" --no-recursion -T - > "$esp_tar"
+rm -rf "$esp_dir"
+
+cp --sparse always "$esp_tar" "$output"
+rm "$esp_tar"
+
+sha256sum "$output"

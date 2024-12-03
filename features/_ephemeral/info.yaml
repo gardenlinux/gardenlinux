@@ -1,2 +1,5 @@
 description: "ephemeral encrypted var partition"
 type: flag
+features:
+  exclude:
+    - _nocrypt

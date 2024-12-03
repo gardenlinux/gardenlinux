@@ -1,0 +1,8 @@
+description: "boot using a UKI with embedded EROFS root disk"
+type: flag
+features:
+  include:
+    - _nocrypt
+    - _unsigned
+  exclude:
+    - _legacy

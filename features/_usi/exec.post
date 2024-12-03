@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+rootfs="$1"
+
+mkdir -p "$rootfs/etc/gardenlinux"
+
+for key in pk null.pk kek db; do
+	cp "/builder/cert/secureboot.$key.auth" "$rootfs/etc/gardenlinux/gardenlinux-secureboot.$key.auth"
+done

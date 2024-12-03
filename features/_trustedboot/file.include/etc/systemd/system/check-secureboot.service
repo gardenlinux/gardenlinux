@@ -1,0 +1,13 @@
+[Unit]
+DefaultDependencies=no
+Before=local-fs-pre.target
+Before=systemd-repart.service
+OnFailure=emergency.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/check-secureboot
+RemainAfterExit=yes
+
+[Install]
+RequiredBy=local-fs.target
