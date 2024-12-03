@@ -3,15 +3,17 @@ targets:
   - name: ali
     category: public-cloud
     flavors:
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: amd64
         build: true
         test: true
         test-platform: true
         publish: true
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: arm64
         build: false
         test: false
@@ -20,38 +22,43 @@ targets:
   - name: aws
     category: public-cloud
     flavors:
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: amd64
         build: true
         test: true
         test-platform: true
         publish: true
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: arm64
         build: true
         test: true
         test-platform: true
         publish: true
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
         arch: amd64
         build: true
         test: true
         test-platform: true
         publish: false
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
         arch: arm64
         build: true
         test: true
         test-platform: true
         publish: false
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
           - _tpm2
         arch: amd64
@@ -59,8 +66,9 @@ targets:
         test: true
         test-platform: true
         publish: true
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
           - _tpm2
         arch: arm64
@@ -71,38 +79,43 @@ targets:
   - name: azure
     category: public-cloud
     flavors:
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: amd64
         build: true
         test: true
         test-platform: true
         publish: true
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: arm64
         build: true
         test: true
         test-platform: false
         publish: true
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: false
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
         arch: arm64
         build: true
         test: true
         test-platform: false
         publish: false
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
           - _tpm2
         arch: amd64
@@ -110,8 +123,9 @@ targets:
         test: true
         test-platform: false
         publish: true
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
           - _tpm2
         arch: arm64
@@ -122,64 +136,56 @@ targets:
   - name: bare
     category: container
     flavors:
-      - modifier: ""
-        features:
+      - features:
           - libc
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: false
-      - modifier: ""
-        features:
+      - features:
           - libc
         arch: arm64
         build: true
         test: true
         test-platform: false
         publish: false
-      - modifier: ""
-        features:
+      - features:
           - nodejs
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: false
-      - modifier: ""
-        features:
+      - features:
           - nodejs
         arch: arm64
         build: true
         test: true
         test-platform: false
         publish: false
-      - modifier: ""
-        features:
+      - features:
           - python
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: false
-      - modifier: ""
-        features:
+      - features:
           - python
         arch: arm64
         build: true
         test: true
         test-platform: false
         publish: false
-      - modifier: ""
-        features:
+      - features:
           - sapmachine
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: false
-      - modifier: ""
-        features:
+      - features:
           - sapmachine
         arch: arm64
         build: true
@@ -189,15 +195,17 @@ targets:
   - name: container
     category: container
     flavors:
-      - modifier: ""
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: true
-      - modifier: ""
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: arm64
         build: true
         test: true
@@ -206,15 +214,17 @@ targets:
   - name: firecracker
     category: hypervisor
     flavors:
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: false
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: arm64
         build: true
         test: true
@@ -223,38 +233,43 @@ targets:
   - name: gcp
     category: public-cloud
     flavors:
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: amd64
         build: true
         test: true
         test-platform: true
         publish: true
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: arm64
         build: true
         test: true
         test-platform: true
         publish: true
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
         arch: amd64
         build: true
         test: true
         test-platform: true
         publish: false
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
         arch: arm64
         build: true
         test: true
         test-platform: true
         publish: false
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
           - _tpm2
         arch: amd64
@@ -262,8 +277,9 @@ targets:
         test: true
         test-platform: true
         publish: true
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
           - _tpm2
         arch: arm64
@@ -274,15 +290,17 @@ targets:
   - name: gdch
     category: baremetal
     flavors:
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: true
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: arm64
         build: true
         test: true
@@ -291,38 +309,43 @@ targets:
   - name: kvm
     category: hypervisor
     flavors:
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: true
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: arm64
         build: true
         test: true
         test-platform: false
         publish: true
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: false
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
         arch: arm64
         build: true
         test: true
         test-platform: false
         publish: false
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
           - _tpm2
         arch: amd64
@@ -330,8 +353,9 @@ targets:
         test: true
         test-platform: false
         publish: true
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
           - _tpm2
         arch: arm64
@@ -342,38 +366,43 @@ targets:
   - name: metal
     category: baremetal
     flavors:
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: true
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: arm64
         build: true
         test: true
         test-platform: false
         publish: true
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: false
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
         arch: arm64
         build: true
         test: true
         test-platform: false
         publish: false
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
           - _tpm2
         arch: amd64
@@ -381,8 +410,9 @@ targets:
         test: true
         test-platform: false
         publish: true
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
           - _tpm2
         arch: arm64
@@ -390,32 +420,28 @@ targets:
         test: true
         test-platform: false
         publish: true
-      - modifier: gardener_prod
-        features:
+      - features:
           - _pxe
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: true
-      - modifier: gardener_prod
-        features:
+      - features:
           - _pxe
         arch: arm64
         build: true
         test: true
         test-platform: false
         publish: true
-      - modifier: gardener_prod
-        features:
+      - features:
           - vhost
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: true
-      - modifier: gardener_prod
-        features:
+      - features:
           - vhost
         arch: arm64
         build: true
@@ -425,15 +451,17 @@ targets:
   - name: openstack
     category: hypervisor
     flavors:
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: true
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: arm64
         build: true
         test: true
@@ -442,15 +470,17 @@ targets:
   - name: openstackbaremetal
     category: baremetal
     flavors:
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: true
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: arm64
         build: true
         test: true
@@ -459,15 +489,17 @@ targets:
   - name: vmware
     category: hypervisor
     flavors:
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: true
-      - modifier: gardener_prod
-        features: []
+      - features:
+          - gardener
+          - _prod
         arch: arm64
         build: true
         test: true

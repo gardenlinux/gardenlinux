@@ -25,7 +25,6 @@ SCHEMA = {
                         "items": {
                             "type": "object",
                             "properties": {
-                                "modifier": {"type": "string"},
                                 "features": {
                                     "type": "array",
                                     "items": {"type": "string"},
@@ -36,7 +35,7 @@ SCHEMA = {
                                 "test-platform": {"type": "boolean"},
                                 "publish": {"type": "boolean"},
                             },
-                            "required": ["modifier", "features", "arch", "build", "test", "test-platform", "publish"],
+                            "required": ["features", "arch", "build", "test", "test-platform", "publish"],
                         },
                     },
                 },
@@ -88,7 +87,6 @@ def should_include_only(combination, include_only_patterns):
 
 def parse_flavors(
     data,
-    include_modifiers=True,
     include_only_patterns=[],
     wildcard_excludes=[],
     only_build=False,
@@ -112,7 +110,6 @@ def parse_flavors(
             continue
 
         for flavor in target['flavors']:
-            modifier = flavor.get('modifier', '')
             features = flavor.get('features', [])
             arch = flavor.get('arch', 'amd64')
             build = flavor.get('build', False)
@@ -134,9 +131,7 @@ def parse_flavors(
             formatted_features = f"-{'-'.join(features)}" if features else ""
 
             # Construct the combination
-            combination = f"{name}-{modifier}{formatted_features}-{arch}"
-            if not include_modifiers:
-                combination = f"{name}{formatted_features}-{arch}"
+            combination = f"{name}-{formatted_features}-{arch}"
 
             # Format the combination to clean up "--" and "-_"
             combination = combination.replace("--", "-").replace("-_", "_")
@@ -183,7 +178,6 @@ def generate_markdown_table(combinations, no_arch):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parse flavors.yaml and generate combinations.")
-    parser.add_argument("--no-modifier", action="store_true", help="Exclude modifiers from the output.")
     parser.add_argument("--no-arch", action="store_true", help="Exclude architecture from the flavor output.")
     parser.add_argument(
         "--include-only",
@@ -249,7 +243,6 @@ if __name__ == "__main__":
 
     combinations = parse_flavors(
         flavors_data,
-        include_modifiers=not args.no_modifier,
         include_only_patterns=args.include_only or [],
         wildcard_excludes=args.exclude or [],
         only_build=args.build,
