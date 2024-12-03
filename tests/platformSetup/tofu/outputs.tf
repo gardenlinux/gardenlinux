@@ -46,7 +46,7 @@ output "ali_ssh_user" {
   value = var.ali_ssh_user
 }
 
-output "ali_amd64_default_public_ip" {
+output "ali_gardener_prod_amd64_public_ip" {
   value = length(module.ali_amd64_default) > 0 ? module.ali_amd64_default.0.public_ip : null
 }
 
