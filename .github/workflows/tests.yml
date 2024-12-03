@@ -38,31 +38,10 @@ on:
       ccc_credentials:
         required: true
 jobs:
-  matrix:
-    name: generate matrices
-    runs-on: 'ubuntu-latest'
-    defaults:
-      run:
-        shell: bash
-    outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - id: matrix
-        run: |
-          FLAVORS_AMD64=$(./bin/flavors_parse.py --no-arch --json-by-arch --test-platform | jq -r '.amd64')
-          FLAVORS_ARM64=$(./bin/flavors_parse.py --no-arch --json-by-arch --test-platform | jq -r '.arm64')
-          MATRIX=$(jq -nc \
-            --argjson amd64 "$FLAVORS_AMD64" \
-            --argjson arm64 "$FLAVORS_ARM64" \
-            '{
-              include: (
-                ($amd64 | map({arch: "amd64", flavor: .})) +
-                ($arm64 | map({arch: "arm64", flavor: .}))
-              )
-            }'
-          )
-          echo "matrix=$MATRIX" | tee -a $GITHUB_OUTPUT
+  generate_matrix_test_platform:
+    uses: ./.github/workflows/generate_matrix.yml
+    with: 
+      flags: '--no-arch --json-by-arch --test-platform'
   platform_test_images:
     name: platform test images
     uses: ./.github/workflows/platform-test-images.yml
@@ -70,7 +49,7 @@ jobs:
       gl_version: ${{ inputs.platform_test_tag }}
   platform_tests:
     name: platform test
-    needs: [ matrix, platform_test_images ]
+    needs: [ generate_matrix_test_platform, platform_test_images ]
     env:
       gcp_project: ${{ secrets.gcp_project }}
       gcp_region: ${{ secrets.gcp_region }}
@@ -90,7 +69,7 @@ jobs:
     environment: oidc_platform_tests
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.matrix.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.generate_matrix_test_platform.outputs.matrix) }}
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
     - uses: ./.github/actions/setup

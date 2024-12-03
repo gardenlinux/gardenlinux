@@ -134,49 +134,17 @@ jobs:
         with:
           path: test.oci
           key: test_container:${{ matrix.arch }}-${{ github.run_id }}
-  matrix:
-    name: generate matrices
-    runs-on: 'ubuntu-latest'
-    defaults:
-      run:
-        shell: bash
-    outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
-      matrix_bare: ${{ steps.matrix_bare.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - id: matrix
-        run: |
-          FLAVORS_AMD64=$(./bin/flavors_parse.py --exclude "bare-*" --no-arch --json-by-arch --build --test | jq -r '.amd64')
-          FLAVORS_ARM64=$(./bin/flavors_parse.py --exclude "bare-*" --no-arch --json-by-arch --build --test | jq -r '.arm64')
-          MATRIX=$(jq -nc \
-            --argjson amd64 "$FLAVORS_AMD64" \
-            --argjson arm64 "$FLAVORS_ARM64" \
-            '{
-              include: (
-                ($amd64 | map({arch: "amd64", flavor: .})) +
-                ($arm64 | map({arch: "arm64", flavor: .}))
-              )
-            }'
-          )
-          echo "matrix=$MATRIX" | tee -a $GITHUB_OUTPUT
-      - id: matrix_bare
-        run: |
-          FLAVORS_AMD64=$(./bin/flavors_parse.py --include-only "bare-*" --no-arch --json-by-arch --build --test | jq -r '.amd64')
-          FLAVORS_ARM64=$(./bin/flavors_parse.py --include-only "bare-*" --no-arch --json-by-arch --build --test | jq -r '.arm64')
-          MATRIX=$(jq -nc \
-            --argjson amd64 "$FLAVORS_AMD64" \
-            --argjson arm64 "$FLAVORS_ARM64" \
-            '{
-              include: (
-                ($amd64 | map({arch: "amd64", flavor: .})) +
-                ($arm64 | map({arch: "arm64", flavor: .}))
-              )
-            }'
-          )
-          echo "matrix=$MATRIX" | tee -a $GITHUB_OUTPUT
+          
+  generate_matrix_images:
+    uses: ./.github/workflows/generate_matrix.yml
+    with: 
+      flags: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
+  generate_matrix_bare:
+    uses: ./.github/workflows/generate_matrix.yml
+    with: 
+      flags: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
   images:
-    needs: [ version, cert, base, test_container, matrix ]
+    needs: [ version, cert, base, test_container, generate_matrix_images ]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
     defaults:
       run:
@@ -186,7 +154,7 @@ jobs:
     environment: ${{ inputs.use_kms && 'oidc_aws_kms_secureboot_signing' || '' }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.matrix.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.generate_matrix_images.outputs.matrix) }}
     steps:
       # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
       #   with:
@@ -266,14 +234,14 @@ jobs:
           name: "build-${{ env.cname }}"
           path: "${{ env.cname }}.tar.gz"
   bare_flavors:
-    needs: [ version, base, matrix ]
+    needs: [ version, base, generate_matrix_bare ]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
     defaults:
       run:
         shell: bash
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.matrix.outputs.matrix_bare) }}
+      matrix: ${{ fromJson(needs.generate_matrix_bare.outputs.matrix) }}
     steps:
       # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
       #   with:

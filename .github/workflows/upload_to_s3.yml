@@ -15,34 +15,13 @@ on:
       session:
         required: true
 jobs:
-  matrix:
-    name: generate matrices
-    runs-on: 'ubuntu-latest'
-    defaults:
-      run:
-        shell: bash
-    outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - id: matrix
-        run: |
-          FLAVORS_AMD64=$(./bin/flavors_parse.py --no-arch --json-by-arch --publish | jq -r '.amd64')
-          FLAVORS_ARM64=$(./bin/flavors_parse.py --no-arch --json-by-arch --publish | jq -r '.arm64')
-          MATRIX=$(jq -nc \
-            --argjson amd64 "$FLAVORS_AMD64" \
-            --argjson arm64 "$FLAVORS_ARM64" \
-            '{
-              include: (
-                ($amd64 | map({arch: "amd64", flavor: .})) +
-                ($arm64 | map({arch: "arm64", flavor: .}))
-              )
-            }'
-          )
-          echo "matrix=$MATRIX" | tee -a $GITHUB_OUTPUT
+  generate_matrix_publish:
+    uses: ./.github/workflows/generate_matrix.yml
+    with: 
+      flags: '--no-arch --json-by-arch --publish'
   upload_to_s3:
     name: upload to S3
-    needs: [ matrix ]
+    needs: [ generate_matrix_publish ]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -52,7 +31,7 @@ jobs:
     environment: oidc_aws_s3_upload
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.matrix.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.generate_matrix_publish.outputs.matrix) }}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
