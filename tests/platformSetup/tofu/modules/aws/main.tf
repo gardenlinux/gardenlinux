@@ -6,8 +6,9 @@ locals {
   feature_trustedboot  = contains(var.features, "_trustedboot")
   boot_mode            = local.feature_trustedboot ? "uefi" : "legacy-bios"
   arch                 = var.arch == "amd64" ? "x86_64" : var.arch
-  bucket_name          = substr("images-${local.test_name_safe}", 0, 64) # max 64
-  # bucket_name          = lower(replace(substr(base64encode(local.test_name), 0, 24), "=", "0"))
+  # https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
+  # max 63 chars
+  bucket_name          = substr("images-${local.test_name_safe}", 0, 63)
   tar_name             = "image-${local.test_name}.tar.gz"
   image_name           = "image-${local.test_name}"
   net_name             = "net-${local.test_name}"
