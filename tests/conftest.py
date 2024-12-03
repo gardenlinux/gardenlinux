@@ -64,6 +64,16 @@ def iaas(pytestconfig):
 
 
 @pytest.fixture(scope="session")
+def platform(pytestconfig, testconfig):
+    if 'platform' in testconfig:
+        return testconfig['platform']
+    elif pytestconfig.getoption('iaas'):
+        return pytestconfig.getoption('iaas')
+    else:
+        pytest.exit("Need to specify which platform (in configfile) or IaaS (via parameter) to test on.", 1)
+
+
+@pytest.fixture(scope="session")
 def image_suffix(iaas):
     image_suffixes = {
         "aws": "rootf.raw",
@@ -302,115 +312,123 @@ def features(client):
 
 
 @pytest.fixture
-def non_ali(iaas):
-    if iaas == 'ali':
+def non_ali(platform):
+    if platform == 'ali':
         pytest.skip('test not supported on ali')
 
 @pytest.fixture
-def ali(iaas):
-    if iaas != 'ali':
+def ali(platform):
+    if platform != 'ali':
         pytest.skip('test only supported on ali')
 
 @pytest.fixture
-def non_azure(iaas):
-    if iaas == 'azure':
+def non_azure(platform):
+    if platform == 'azure':
         pytest.skip('test not supported on azure')
 
 @pytest.fixture
-def azure(iaas):
-    if iaas != 'azure':
+def azure(platform):
+    if platform != 'azure':
         pytest.skip('test only supported on azure')
 
 @pytest.fixture
-def non_aws(iaas):
-    if iaas == 'aws':
+def non_aws(platform):
+    if platform == 'aws':
         pytest.skip('test not supported on aws')
 
 @pytest.fixture
-def aws(iaas):
-    if iaas != 'aws':
+def aws(platform):
+    if platform != 'aws':
         pytest.skip('test only supported on aws')
 
 @pytest.fixture
-def non_gcp(iaas):
-    if iaas == 'gcp':
+def non_gcp(platform):
+    if platform == 'gcp':
         pytest.skip('test not supported on gcp')
 
 @pytest.fixture
-def gcp(iaas):
-    if iaas != 'gcp':
+def gcp(platform):
+    if platform != 'gcp':
         pytest.skip('test only supported on gcp')
 
 @pytest.fixture
-def non_firecracker(iaas):
-    if iaas == 'firecracker':
+def non_firecracker(platform):
+    if platform == 'firecracker':
         pytest.skip('test not supported on firecracker')
 
 @pytest.fixture
-def firecracker(iaas):
-    if iaas != 'firecracker':
+def firecracker(platform):
+    if platform != 'firecracker':
         pytest.skip('test only supported on firecracker')
 
 @pytest.fixture
-def non_kvm(iaas):
-    if iaas == 'kvm':
+def non_kvm(platform):
+    if platform == 'kvm':
         pytest.skip('test not supported on kvm')
 
 @pytest.fixture
-def kvm(iaas):
-    if iaas != 'kvm':
+def kvm(platform):
+    if platform != 'kvm':
         pytest.skip('test only supported on kvm')
 
 @pytest.fixture
-def non_chroot(iaas):
-    if iaas == 'chroot':
+def non_chroot(platform):
+    if platform == 'chroot':
         pytest.skip('test not supported on chroot')
 
 @pytest.fixture
-def chroot(iaas):
-    if iaas != 'chroot':
+def chroot(platform):
+    if platform != 'chroot':
         pytest.skip('test only supported on chroot')
 
 @pytest.fixture
-def non_local(iaas):
-    if iaas == 'local':
+def non_local(platform):
+    if platform == 'local':
         pytest.skip('test not supported on local')
 
 @pytest.fixture
-def local(iaas):
-    if iaas != 'local':
+def local(platform):
+    if platform != 'local':
         pytest.skip('test only supported on local')
 
 @pytest.fixture
-def non_openstack(iaas):
-    if iaas == 'openstack-ccee':
+def non_openstack(platform):
+    if platform == 'openstack-ccee':
         pytest.skip('test not supported on openstack')
 
 @pytest.fixture
-def openstack(iaas):
-    if iaas != 'openstack-ccee':
+def openstack(platform):
+    if platform != 'openstack-ccee':
         pytest.skip('test only supported on openstack')
 
 @pytest.fixture
-def non_hyperscalers(iaas):
-    if iaas == 'aws' or iaas == 'gcp' or iaas == 'azure' or iaas == 'ali':
-        pytest.skip(f"test not supported on hyperscaler {iaas}")
+def non_hyperscalers(platform):
+    hyperscalers = {'aws', 'gcp', 'azure', 'ali'}
+    if platform in hyperscalers:
+        pytest.skip(f"test not supported on hyperscaler {platform}")    
 
 @pytest.fixture
-def ccee(iaas):
-    if iaas != 'openstack-ccee' and iaas != 'openstack-baremetal-ccee':
+def hyperscalers(platform):
+    hyperscalers = {'aws', 'gcp', 'azure', 'ali'}
+    if platform not in hyperscalers:
+        pytest.skip(f"test only supported on hyperscaler {platform}")    
+
+@pytest.fixture
+def ccee(platform):
+    if platform != 'openstack-ccee' and platform != 'openstack-baremetal-ccee':
         pytest.skip(f"test only supported on ccee")
 
 @pytest.fixture
-def non_ccee(iaas):
-    if iaas == 'openstack-ccee' or iaas == 'openstack-baremetal-ccee':
-        pytest.skip(f"test not supported on ccee")
+def non_ccee(platform):
+    ccee_platforms = {'openstack-ccee', 'openstack-baremetal-ccee'}
+    if platform in ccee_platforms:
+        pytest.skip("test not supported on ccee")
 
 # This fixture is an alias of "chroot" but does not use the "chroot" env.
 # However, it only needs the underlying container for its tests.
 @pytest.fixture
 def container(iaas):
-    if iaas != 'chroot':
+    if iaas == 'chroot' or iaas == 'manual':
         pytest.skip('test only supported on containers')
 
 @pytest.fixture
