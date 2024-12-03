@@ -4,11 +4,13 @@ locals {
   test_name_safe_short = substr(local.test_name_safe, 0, 24)
   feature_tpm2         = contains(var.features, "_tpm2")
   feature_trustedboot  = contains(var.features, "_trustedboot")
-  bucket_name          = "images-${local.test_name_safe}"
+  # max 63 chars
+  bucket_name          = substr("images-${local.test_name_safe}", 0, 63)
   tar_name             = "image-${local.test_name_safe}.tar.gz"
-  image_name           = "image-${local.test_name_safe}"
-  net_name             = "net-${local.test_name_safe}"
-  subnet_name          = "subnet-${local.test_name_safe}"
+  image_name           = substr("image-${local.test_name_safe}", 0, 61)
+  # max 61 chars
+  net_name             = substr("net-${local.test_name_safe}", 0, 61)
+  subnet_name          = substr("snet-${local.test_name_safe}", 0, 61)
   sa_name              = "sa-${local.test_name_safe_short}" # can max be 32 chars (now is 27)
   instance_name        = "vm-${local.test_name_safe}"
   fw_name              = "fw-${local.test_name_safe}"
