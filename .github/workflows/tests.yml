@@ -157,7 +157,7 @@ jobs:
         # uncached/downloaded artifacts are compressed
         test -f "${{ env.image_dir }}/${{ env.cname }}.tar.gz" && tar xzvf "${{ env.image_dir }}/${{ env.cname }}.tar.gz" -C "${{ env.image_dir }}"
         # tf variables generation
-        tests/platformSetup/tofu/tf_variables_create.py --flavors ${FLAVOR} --cname "${{ env.cname }}" gh-actions
+        tests/platformSetup/tofu/tf_variables_create.py --flavors ${FLAVOR}-${ARCH} --cname "${{ env.cname }}" gh-actions
         # ssh key generation (if missing)
         test -f ~/.ssh/id_ed25519 || ssh-keygen -t ed25519 -P "" -f ~/.ssh/id_ed25519
         # enable S3 backend

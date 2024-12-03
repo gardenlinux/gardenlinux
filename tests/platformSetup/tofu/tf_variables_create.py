@@ -176,6 +176,9 @@ def main():
     for flavor in flavors:
         platform = flavor.split('-')[0]
         arch = flavor.split('-')[-1]
+        if arch not in {"amd64", "arm64"}:
+            print(f"Error: Unsupported architecture '{arch}'. Valid options are 'amd64' or 'arm64'.", file=sys.stderr)
+            sys.exit(1)
 
         # Extract all parts after the platform and before the architecture
         parts = flavor.split('-')[1:-1]
