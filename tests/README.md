@@ -105,7 +105,13 @@ These tests are located in a subfolder (`test`) within a feature's directory and
 
 # Platform Tests
 ## Prerequisites
-Build the platform test container images with all necessary dependencies. These container images will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP). *Note: For `CHROOT` platform tests the `gardenlinux/platform-test-base` image can be used.
+Build the platform test container images with all necessary dependencies. These container images will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP) and the OpenTofu binaries.
+
+> [!NOTE]
+> For platform tests where the resources are build up with OpenTofu the `gardenlinux/platform-test-tofu` image can be used.
+
+> [!NOTE]
+> For `CHROOT` platform tests the `gardenlinux/platform-test-base` image can be used.
 
     make --directory=tests/images build-platform-test
 
@@ -135,6 +141,7 @@ Many more build targets are available, e.g. to build only for a certain platform
     pull-platform-test-gcp                  Pull the platform test image for gcp
     pull-platform-test-kvm                  Pull the platform test image for kvm
     pull-platform-test-openstack            Pull the platform test image for openstack
+    pull-platform-test-tofu                 Pull the platform test image for tofu
     build-platform-test-ali                 Build the platform test image for ali
     build-platform-test-aws                 Build the platform test image for aws
     build-platform-test-azure               Build the platform test image for azure
@@ -142,6 +149,7 @@ Many more build targets are available, e.g. to build only for a certain platform
     build-platform-test-gcp                 Build the platform test image for gcp
     build-platform-test-kvm                 Build the platform test image for kvm
     build-platform-test-openstack           Build the platform test image for openstack
+    build-platform-test-tofu                Build the platform test image for tofu
     push-platform-test-ali                  Push the platform test image for ali
     push-platform-test-aws                  Push the platform test image for aws
     push-platform-test-azure                Push the platform test image for azure
@@ -149,6 +157,7 @@ Many more build targets are available, e.g. to build only for a certain platform
     push-platform-test-gcp                  Push the platform test image for gcp
     push-platform-test-kvm                  Push the platform test image for kvm
     push-platform-test-openstack            Push the platform test image for openstack
+    push-platform-test-tofu                 Push the platform test image for tofu
     push-release-platform-test-ali          Push the platform test image for ali with release tag
     push-release-platform-test-aws          Push the platform test image for aws with release tag
     push-release-platform-test-azure        Push the platform test image for azure with release tag
@@ -156,6 +165,7 @@ Many more build targets are available, e.g. to build only for a certain platform
     push-release-platform-test-gcp          Push the platform test image for gcp with release tag
     push-release-platform-test-kvm          Push the platform test image for kvm with release tag
     push-release-platform-test-openstack    Push the platform test image for openstack with release tag
+    push-release-platform-test-tofu         Push the platform test image for tofu with release tag
 
 The resulting container images will be tagged as `gardenlinux/platform-test-<platform>:<version>` with `<version>` being the version that is passed as $GL_VERSION build argument. By default this is the version that has the `latest` tag in the [github image registry](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux). In addition to that, tags for the commit hashes also exist.
 
@@ -203,8 +213,13 @@ All further tests run inside containers spawned from these images.
     ghcr.io/gardenlinux/gardenlinux/platform-test-openstack    1e0d51fe                                  6a200988c08f  23 hours ago   879 MB
     ghcr.io/gardenlinux/gardenlinux/platform-test-openstack    32618be8186df52845a10e2c6ab06fd54f8b656a  802a233b9aeb  23 hours ago   883 MB
     ghcr.io/gardenlinux/gardenlinux/platform-test-openstack    32618be8                                  802a233b9aeb  23 hours ago   883 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-tofu         1679.0                                    c23ac2651b9e  13 days ago    3.64 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-tofu         80436df06a51f131a4993a2e6e34aabca1654138  c23ac2651b9e  13 days ago    3.64 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-tofu         80436df0                                  c23ac2651b9e  13 days ago    3.64 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-tofu         latest                                    c23ac2651b9e  13 days ago    3.64 GB    
 
 ## Using the tests on supported platforms
+
 ### General
 
 The platform tests require a config file containing vital information for interacting with the cloud providers. In the following sections, the configuration options are described in general and for each cloud provider individually.
@@ -213,7 +228,264 @@ Since the configuration options are provided as a structured YAML with the cloud
 
 ### Public cloud platforms
 
-These tests test Garden Linux on public cloud providers like Amazons AWS, Googles Cloud Platforms, Microsoft's Azure or Aliyun's Alibaba cloud. You need a valid subscription in these hyperscalers to run the tests.
+These tests test Garden Linux on public cloud providers like Amazons AWS, Googles Cloud Platforms, Microsoft's Azure or Aliyun's Alibaba cloud. You need a valid subscription in these hyperscalers to run the tests. The test's cloud resources are built up with OpenTofu.
+
+#### Generate OpenTofu Input Variables
+
+To define certain aspects of what is actually built up, we need to define [OpenTofu Input Variables](https://opentofu.org/docs/language/values/variables/). We do this by providing `*.tfvars` files and providing them via the `-var-file` commandline parameter when we run `tofu apply`.
+
+This is an example to deploy the flavor `gcp-gardener_prod_trustedboot_tpm2-amd64`:
+
+    ❯ cat tests/platformSetup/tofu/variables.gcp-gardener_prod_trustedboot_tpm2-amd64.tfvars
+    test_prefix = "bob"
+    platforms = ["gcp"]
+    archs = ["amd64"]
+    features = ["_trustedboot", "_tpm2"]
+    gcp_instance_type = "n1-standard-2"
+    gcp_image_file = "gcp-gardener_prod-amd64-today-local.tar.gz"
+    azure_subscription_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    gcp_project_id = "xxxxxxxx"
+
+> [!TIP]
+> Have a look at `tests/platformSetup/tofu/variables.tf` to get all available Input Variables.
+
+##### `tests/platformSetup/tofu/tf_variables_create.py`
+
+The script `tests/platformSetup/tofu/tf_variables_create.py` can be used to generate variables for a certain flavor or even for multiple flavors.
+
+    ❯ tests/platformSetup/tofu/tf_variables_create.py --help
+    usage: tf_variables_create.py [-h] [--flavors FLAVORS] [--root-dir ROOT_DIR] [--image-path IMAGE_PATH] [--cname CNAME] [--image-file-ali IMAGE_FILE_ALI] [--image-file-aws IMAGE_FILE_AWS] [--image-file-azure IMAGE_FILE_AZURE] [--image-file-gcp IMAGE_FILE_GCP] test_prefix
+    
+    Generate OpenTofu variable files based on provided test prefix, platforms, archs, and flavors.
+    
+    positional arguments:
+      test_prefix           The test prefix to include in the variable files.
+    
+    options:
+      -h, --help            show this help message and exit
+      --flavors FLAVORS     Comma-separated list of flavors (default: 'ali-gardener_prod-amd64,aws-gardener_prod-amd64,azure-gardener_prod-amd64,gcp-gardener_prod-amd64').
+      --root-dir ROOT_DIR   Root directory for the variable files. Defaults to the current Git repository's root.
+      --image-path IMAGE_PATH
+                            Base path for image files.
+      --cname CNAME         Basename of image file, e.g. 'gcp-gardener_prod-arm64-1592.2-76203a30'.
+      --image-file-ali IMAGE_FILE_ALI
+                            Specific ALI image file.
+      --image-file-aws IMAGE_FILE_AWS
+                            Specific AWS image file.
+      --image-file-azure IMAGE_FILE_AZURE
+                            Specific Azure image file.
+      --image-file-gcp IMAGE_FILE_GCP
+                            Specific GCP image file.
+
+To generate sane defaults for all default flavors, just run:
+
+    ❯ tests/platformSetup/tofu/tf_variables_create.py bobs
+    Platform: ali
+    Architecture: amd64
+    Flavor: ali-gardener_prod-amd64
+    Features: []
+    Created: ~/gardenlinux/tests/platformSetup/tofu/variables.ali-gardener_prod-amd64.tfvars
+    Platform: aws
+    Architecture: amd64
+    Flavor: aws-gardener_prod-amd64
+    Features: []
+    Created: ~/gardenlinux/tests/platformSetup/tofu/variables.aws-gardener_prod-amd64.tfvars
+    Platform: azure
+    Architecture: amd64
+    Flavor: azure-gardener_prod-amd64
+    Features: []
+    Created: ~/gardenlinux/tests/platformSetup/tofu/variables.azure-gardener_prod-amd64.tfvars
+    Platform: gcp
+    Architecture: amd64
+    Flavor: gcp-gardener_prod-amd64
+    Features: []
+    Created: ~/gardenlinux/tests/platformSetup/tofu/variables.gcp-gardener_prod-amd64.tfvars
+
+To generate for a specific flavor and image, run:
+
+    ❯ tests/platformSetup/tofu/tf_variables_create.py --flavor gcp-gardener_prod_trustedboot_tpm2-amd64 --image-path .build --image-file-gcp gcp-gardener_prod_tpm2_trustedboot-amd64-1695.0-30903f3a.gcpimage.tar.gz bobs
+    Platform: gcp
+    Architecture: amd64
+    Flavor: gcp-gardener_prod_trustedboot_tpm2-amd64
+    Features: ["_trustedboot", "_tpm2"]
+    Created: ~/gardenlinux/tests/platformSetup/tofu/variables.gcp-gardener_prod_trustedboot_tpm2-amd64.tfvars
+
+#### Create resouces with OpenTofu
+
+Much of the logic is abstracted by the `tests/platformSetup/Makefile`. You can just run:
+
+    ❯ make --directory=tests/platformSetup
+
+<details>
+
+    Usage: make [target]
+    
+    general targets:
+    help					List available tasks of the project 
+    
+    platform-specific targets:
+    ali-gardener_prod-amd64-plan        Run tofu plan for ali-gardener_prod-amd64
+    ali-gardener_prod-amd64-apply       Run tofu apply for ali-gardener_prod-amd64
+    ali-gardener_prod-amd64-show        Run tofu show for ali-gardener_prod-amd64
+    ali-gardener_prod-amd64-login       Run tofu login for ali-gardener_prod-amd64
+    ali-gardener_prod-amd64-destroy     Run tofu destroy for ali-gardener_prod-amd64
+    aws-gardener_prod-amd64-plan        Run tofu plan for aws-gardener_prod-amd64
+    aws-gardener_prod-amd64-apply       Run tofu apply for aws-gardener_prod-amd64
+    aws-gardener_prod-amd64-show        Run tofu show for aws-gardener_prod-amd64
+    aws-gardener_prod-amd64-login       Run tofu login for aws-gardener_prod-amd64
+    aws-gardener_prod-amd64-destroy     Run tofu destroy for aws-gardener_prod-amd64
+    aws-gardener_prod-arm64-plan        Run tofu plan for aws-gardener_prod-arm64
+    aws-gardener_prod-arm64-apply       Run tofu apply for aws-gardener_prod-arm64
+    aws-gardener_prod-arm64-show        Run tofu show for aws-gardener_prod-arm64
+    aws-gardener_prod-arm64-login       Run tofu login for aws-gardener_prod-arm64
+    aws-gardener_prod-arm64-destroy     Run tofu destroy for aws-gardener_prod-arm64
+    aws-gardener_prod_trustedboot-amd64-plan        Run tofu plan for aws-gardener_prod_trustedboot-amd64
+    aws-gardener_prod_trustedboot-amd64-apply       Run tofu apply for aws-gardener_prod_trustedboot-amd64
+    aws-gardener_prod_trustedboot-amd64-show        Run tofu show for aws-gardener_prod_trustedboot-amd64
+    aws-gardener_prod_trustedboot-amd64-login       Run tofu login for aws-gardener_prod_trustedboot-amd64
+    aws-gardener_prod_trustedboot-amd64-destroy     Run tofu destroy for aws-gardener_prod_trustedboot-amd64
+    aws-gardener_prod_trustedboot-arm64-plan        Run tofu plan for aws-gardener_prod_trustedboot-arm64
+    aws-gardener_prod_trustedboot-arm64-apply       Run tofu apply for aws-gardener_prod_trustedboot-arm64
+    aws-gardener_prod_trustedboot-arm64-show        Run tofu show for aws-gardener_prod_trustedboot-arm64
+    aws-gardener_prod_trustedboot-arm64-login       Run tofu login for aws-gardener_prod_trustedboot-arm64
+    aws-gardener_prod_trustedboot-arm64-destroy     Run tofu destroy for aws-gardener_prod_trustedboot-arm64
+    aws-gardener_prod_trustedboot_tpm2-amd64-plan        Run tofu plan for aws-gardener_prod_trustedboot_tpm2-amd64
+    aws-gardener_prod_trustedboot_tpm2-amd64-apply       Run tofu apply for aws-gardener_prod_trustedboot_tpm2-amd64
+    aws-gardener_prod_trustedboot_tpm2-amd64-show        Run tofu show for aws-gardener_prod_trustedboot_tpm2-amd64
+    aws-gardener_prod_trustedboot_tpm2-amd64-login       Run tofu login for aws-gardener_prod_trustedboot_tpm2-amd64
+    aws-gardener_prod_trustedboot_tpm2-amd64-destroy     Run tofu destroy for aws-gardener_prod_trustedboot_tpm2-amd64
+    aws-gardener_prod_trustedboot_tpm2-arm64-plan        Run tofu plan for aws-gardener_prod_trustedboot_tpm2-arm64
+    aws-gardener_prod_trustedboot_tpm2-arm64-apply       Run tofu apply for aws-gardener_prod_trustedboot_tpm2-arm64
+    aws-gardener_prod_trustedboot_tpm2-arm64-show        Run tofu show for aws-gardener_prod_trustedboot_tpm2-arm64
+    aws-gardener_prod_trustedboot_tpm2-arm64-login       Run tofu login for aws-gardener_prod_trustedboot_tpm2-arm64
+    aws-gardener_prod_trustedboot_tpm2-arm64-destroy     Run tofu destroy for aws-gardener_prod_trustedboot_tpm2-arm64
+    azure-gardener_prod-amd64-plan        Run tofu plan for azure-gardener_prod-amd64
+    azure-gardener_prod-amd64-apply       Run tofu apply for azure-gardener_prod-amd64
+    azure-gardener_prod-amd64-show        Run tofu show for azure-gardener_prod-amd64
+    azure-gardener_prod-amd64-login       Run tofu login for azure-gardener_prod-amd64
+    azure-gardener_prod-amd64-destroy     Run tofu destroy for azure-gardener_prod-amd64
+    gcp-gardener_prod-amd64-plan        Run tofu plan for gcp-gardener_prod-amd64
+    gcp-gardener_prod-amd64-apply       Run tofu apply for gcp-gardener_prod-amd64
+    gcp-gardener_prod-amd64-show        Run tofu show for gcp-gardener_prod-amd64
+    gcp-gardener_prod-amd64-login       Run tofu login for gcp-gardener_prod-amd64
+    gcp-gardener_prod-amd64-destroy     Run tofu destroy for gcp-gardener_prod-amd64
+    gcp-gardener_prod-arm64-plan        Run tofu plan for gcp-gardener_prod-arm64
+    gcp-gardener_prod-arm64-apply       Run tofu apply for gcp-gardener_prod-arm64
+    gcp-gardener_prod-arm64-show        Run tofu show for gcp-gardener_prod-arm64
+    gcp-gardener_prod-arm64-login       Run tofu login for gcp-gardener_prod-arm64
+    gcp-gardener_prod-arm64-destroy     Run tofu destroy for gcp-gardener_prod-arm64
+    gcp-gardener_prod_trustedboot-amd64-plan        Run tofu plan for gcp-gardener_prod_trustedboot-amd64
+    gcp-gardener_prod_trustedboot-amd64-apply       Run tofu apply for gcp-gardener_prod_trustedboot-amd64
+    gcp-gardener_prod_trustedboot-amd64-show        Run tofu show for gcp-gardener_prod_trustedboot-amd64
+    gcp-gardener_prod_trustedboot-amd64-login       Run tofu login for gcp-gardener_prod_trustedboot-amd64
+    gcp-gardener_prod_trustedboot-amd64-destroy     Run tofu destroy for gcp-gardener_prod_trustedboot-amd64
+    gcp-gardener_prod_trustedboot-arm64-plan        Run tofu plan for gcp-gardener_prod_trustedboot-arm64
+    gcp-gardener_prod_trustedboot-arm64-apply       Run tofu apply for gcp-gardener_prod_trustedboot-arm64
+    gcp-gardener_prod_trustedboot-arm64-show        Run tofu show for gcp-gardener_prod_trustedboot-arm64
+    gcp-gardener_prod_trustedboot-arm64-login       Run tofu login for gcp-gardener_prod_trustedboot-arm64
+    gcp-gardener_prod_trustedboot-arm64-destroy     Run tofu destroy for gcp-gardener_prod_trustedboot-arm64
+    gcp-gardener_prod_trustedboot_tpm2-amd64-plan        Run tofu plan for gcp-gardener_prod_trustedboot_tpm2-amd64
+    gcp-gardener_prod_trustedboot_tpm2-amd64-apply       Run tofu apply for gcp-gardener_prod_trustedboot_tpm2-amd64
+    gcp-gardener_prod_trustedboot_tpm2-amd64-show        Run tofu show for gcp-gardener_prod_trustedboot_tpm2-amd64
+    gcp-gardener_prod_trustedboot_tpm2-amd64-login       Run tofu login for gcp-gardener_prod_trustedboot_tpm2-amd64
+    gcp-gardener_prod_trustedboot_tpm2-amd64-destroy     Run tofu destroy for gcp-gardener_prod_trustedboot_tpm2-amd64
+    gcp-gardener_prod_trustedboot_tpm2-arm64-plan        Run tofu plan for gcp-gardener_prod_trustedboot_tpm2-arm64
+    gcp-gardener_prod_trustedboot_tpm2-arm64-apply       Run tofu apply for gcp-gardener_prod_trustedboot_tpm2-arm64
+    gcp-gardener_prod_trustedboot_tpm2-arm64-show        Run tofu show for gcp-gardener_prod_trustedboot_tpm2-arm64
+    gcp-gardener_prod_trustedboot_tpm2-arm64-login       Run tofu login for gcp-gardener_prod_trustedboot_tpm2-arm64
+    gcp-gardener_prod_trustedboot_tpm2-arm64-destroy     Run tofu destroy for gcp-gardener_prod_trustedboot_tpm2-arm64
+
+</details>
+
+Just choose any of the available targets that are based on the available flavors.
+
+> [!WARNING]
+> Before you choose a target, be sure that an Input Variables file exist with a matching name, e.g. `tests/platformSetup/tofu/variables.gcp-gardener_prod_trustedboot_tpm2-amd64.tfvars`
+
+Targets are organized in the usual [OpenTofu plan/apply/destroy](https://opentofu.org/docs/cli/run/) fashion and extended with a `show` option that displays the resources after you built them up and a conveniant `login` target to log you in via ssh.
+
+This means you can try out what would be deployed for your given input variables with the `*-plan` target and than `apply` and `destroy` it as you like.
+
+#### OpenTofu module structure
+
+`tests/platformSetup/tofu` is the [Root Module](https://opentofu.org/docs/language/modules/#the-root-module) which than hosts [Child Modules](https://opentofu.org/docs/language/modules/#child-modules) for every cloud provier in:
+
+- `tests/platformSetup/tofu/ali`
+- `tests/platformSetup/tofu/aws`
+- `tests/platformSetup/tofu/azure`
+- `tests/platformSetup/tofu/gcp`
+
+The root module abstracts [Input Variables](https://opentofu.org/docs/language/values/variables/) in the `variables.tf` and calls the cloud providers child modules via [Module Blocks](https://opentofu.org/docs/language/modules/syntax/) in `main.tf`. It also defines the [Providers](https://opentofu.org/docs/language/providers/) and their default settings which are the actual APIs to build cloud provider resoures.
+
+Each provider centric child module has a similar structure. It is in the nature of the cloud providers though, that they differ in the ways to build up resources.
+
+Currently, `main.tf` calls the child modules with different Input Variables for each flavor. This enables us to reuse the same module code to build up different scenarios for different flavors.
+
+
+#### Run Platform Tests
+
+Much of the logic is abstracted by the `tests/Makefile`. You can just run:
+
+    ❯ make --directory=tests
+    Usage: make [target]
+    
+    general targets:
+    help					List available tasks of the project                 
+    all					Run all platform tests                               
+    
+    platform-specific targets:
+    ali-gardener_prod-amd64-test-platform                       Run platform tests via opentofu for ali-gardener_prod-amd64
+    aws-gardener_prod-amd64-test-platform                       Run platform tests via opentofu for aws-gardener_prod-amd64
+    aws-gardener_prod-arm64-test-platform                       Run platform tests via opentofu for aws-gardener_prod-arm64
+    aws-gardener_prod_trustedboot-amd64-test-platform           Run platform tests via opentofu for aws-gardener_prod_trustedboot-amd64
+    aws-gardener_prod_trustedboot-arm64-test-platform           Run platform tests via opentofu for aws-gardener_prod_trustedboot-arm64
+    aws-gardener_prod_trustedboot_tpm2-amd64-test-platform      Run platform tests via opentofu for aws-gardener_prod_trustedboot_tpm2-amd64
+    aws-gardener_prod_trustedboot_tpm2-arm64-test-platform      Run platform tests via opentofu for aws-gardener_prod_trustedboot_tpm2-arm64
+    azure-gardener_prod-amd64-test-platform                     Run platform tests via opentofu for azure-gardener_prod-amd64
+    gcp-gardener_prod-amd64-test-platform                       Run platform tests via opentofu for gcp-gardener_prod-amd64
+    gcp-gardener_prod-arm64-test-platform                       Run platform tests via opentofu for gcp-gardener_prod-arm64
+    gcp-gardener_prod_trustedboot-amd64-test-platform           Run platform tests via opentofu for gcp-gardener_prod_trustedboot-amd64
+    gcp-gardener_prod_trustedboot-arm64-test-platform           Run platform tests via opentofu for gcp-gardener_prod_trustedboot-arm64
+    gcp-gardener_prod_trustedboot_tpm2-amd64-test-platform      Run platform tests via opentofu for gcp-gardener_prod_trustedboot_tpm2-amd64
+    gcp-gardener_prod_trustedboot_tpm2-arm64-test-platform      Run platform tests via opentofu for gcp-gardener_prod_trustedboot_tpm2-arm64
+
+To see all available targets that you can run tests on.
+
+The make target that provisioned the cloud resource already created a pytest configfile for a `--iaas=manual` run.
+
+The config files are created based on a flavor specific template:
+
+    ❯ cat tests/config/manual_aws-gardener_prod_trustedboot_tpm2-amd64.yaml.template
+    manual:
+      # iaas=manual, so we need a way to tell pytest on which platform we run
+      platform: aws
+      # mandatory, the hostname/ip-address of the host the tests should run on
+      host: MY_IP
+      # ssh related configuration for logging in to the VM (required)
+      ssh:
+        # path to the ssh private key file (required)
+        ssh_key_filepath: SSH_PRIVATE_KEY
+        # username
+        user: SSH_USER
+    
+      # list of features that is used to determine the tests to run
+      features:
+        - aws
+        - gardener
+        - cloud
+        - server
+        - base
+        - _slim      
+        - _trustedboot
+        - _tpm2
+
+After choosing a target, e.g. `pytest --iaas=manual --configfile=tests/config/manual_gcp-gardener_prod_trustedboot_tpm2-amd64.yaml` will be run for the flavor you chose.
+
+An ssh connection to the provided host will be created and the unit tests run as usual.
+
+#### Old pytest calls to cloud proviers.
+
+<details>
 
 #### AWS
 
@@ -335,7 +607,8 @@ Login using the following command on your local machine (i.e. not inside of the 
 
     az login
 
-**Note:** other means of authentication, e.g. usage of service accounts should be possible.
+> [!NOTE]
+> other means of authentication, e.g. usage of service accounts should be possible.
 
 Use the following test configuration:
 
@@ -671,8 +944,8 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 
 Firecracker tests are designed to run directly on your platform. Currently, AMD64 and ARM64 architectures are supported **without any further cross platform support**.
 
-**Notes**:
-Firecracker is currently limited to Linux base platforms only. Additionally, hardware acceleration is needed. Make sure, `/dev/kvm` is usable.
+> [!NOTE]
+> Firecracker is currently limited to Linux base platforms only. Additionally, hardware acceleration is needed. Make sure, `/dev/kvm` is usable.
 
 Use the following test configuration:
 
@@ -776,6 +1049,7 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 
     pytest --iaas=firecracker --configfile=/config/myfirecrackerconfig.yaml
 
+</details>
 
 ### Local test environments
 
@@ -785,11 +1059,11 @@ These tests flavors will make use of chroot, KVM virtual machines or OpenStack e
 
 CHROOT tests are designed to run directly on your platform within a `chroot` environment and boosts up the time for the platform tests that do not need any target platform.
 
-Notes:
- * A local SSH server is started inside the chroot environment. The tests communicate via ssh to execute cmds in the image under test. 
- * CHROOT will run inside your `platform-test` Docker container
- * Podman container needs `SYS_ADMIN`, `MKNOD`, `AUDIT_WRITE` and `NET_RAW` capability
- * Temporary SSH keys are auto generated and injected
+> [!NOTE]
+> * A local SSH server is started inside the chroot environment. The tests communicate via ssh to execute cmds in the image under test. 
+> * CHROOT will run inside your `platform-test` Docker container
+> * Podman container needs `SYS_ADMIN`, `MKNOD`, `AUDIT_WRITE` and `NET_RAW` capability
+> * Temporary SSH keys are auto generated and injected
 
 Use the following configuration file to proceed; only the path to the TAR image needs to be adjusted:
 
@@ -852,10 +1126,11 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 #### KVM
 
 KVM tests are designed to run directly on your platform. Currently, AMD64 and ARM64 architectures are supported.
-Notes:
- * KVM/QEMU will run inside your `platform-test` Docker container
- * (Default) New temporary SSH keys are auto generated and injected
- * (Default: amd64) AMD64 and ARM64 architectures are supported
+
+> [!NOTE]
+> * KVM/QEMU will run inside your `platform-test` Docker container
+> * (Default) New temporary SSH keys are auto generated and injected
+> * (Default: amd64) AMD64 and ARM64 architectures are supported
 
 Use the following configuration file to proceed; only the path to the image needs to be adjusted:
 
@@ -995,7 +1270,8 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 
 Obtain credentials by downloading an OpenStack RC file and source it after adding your password to it. Alternatively you could statically add the password to it (environment variable `OS_PASSWORD`) and specify that file in the configuration.
 
-**Note** that the test will not attempt to create networks, security groups, or attached floating IPs to the virtual machines. The security group and network must exist and most likely the test will have to be executed from a machine in the same network.
+> [!NOTE]
+> that the test will not attempt to create networks, security groups, or attached floating IPs to the virtual machines. The security group and network must exist and most likely the test will have to be executed from a machine in the same network.
 
 Use the following test configuration:
 
