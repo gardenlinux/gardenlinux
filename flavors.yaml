@@ -195,17 +195,13 @@ targets:
   - name: container
     category: container
     flavors:
-      - features:
-          - gardener
-          - _prod
+      - features: []
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: true
-      - features:
-          - gardener
-          - _prod
+      - features: []
         arch: arm64
         build: true
         test: true
