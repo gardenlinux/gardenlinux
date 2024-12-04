@@ -71,8 +71,7 @@ $(foreach flavor,$(FLAVORS), \
 			tofu init && \
 			tofu workspace select -or-create $(flavor)-$(SEED) && \
 			tofu apply --auto-approve -var-file variables.$(flavor).tfvars && \
-			./env_create.sh $(flavor) && \
-			./pytest_config_create.sh $(flavor) && \
+			./tf_pytest_ssh.py $(flavor) && \
 			tofu workspace select default" \
 	) \
 	$(eval \
@@ -92,7 +91,7 @@ $(foreach flavor,$(FLAVORS), \
 			cd platformSetup/tofu && \
 			tofu init && \
 			tofu workspace select -or-create $(flavor)-$(SEED) && \
-			./env_create.sh $(flavor) && \
+			./tf_pytest_ssh.py $(flavor) && \
 			tofu workspace select default && \
 			./login.$(flavor).sh" \
 	) \
