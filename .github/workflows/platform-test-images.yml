@@ -96,9 +96,9 @@ jobs:
           else
             echo "Tag for ${GL_VERSION} already exists in ghcr.io/gardenlinux/platform-test-${{ matrix.platform }} and FORCE_BUILD=false"
           fi
-      # after merge to main, run push-release-platform-test
-      - name: make push-release-platform-test-${{ matrix.platform }} (after merge to main)
-        if: github.event.pull_request.merged == true && github.ref_name == 'main'
+      # on main, run push-release-platform-test
+      - name: make push-release-platform-test-${{ matrix.platform }} (on main)
+        if: github.ref_name == 'main'
         env:
           # needed to use github cli in bin/garden-version-resolver
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
