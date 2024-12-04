@@ -5,9 +5,6 @@ on:
       version:
         type: string
         default: today
-      default_modifier:
-        type: string
-        default: ""
       use_kms:
         type: boolean
         default: false
@@ -137,8 +134,17 @@ jobs:
         with:
           path: test.oci
           key: test_container:${{ matrix.arch }}-${{ github.run_id }}
+          
+  generate_matrix_images:
+    uses: ./.github/workflows/generate_matrix.yml
+    with: 
+      flags: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
+  generate_matrix_bare:
+    uses: ./.github/workflows/generate_matrix.yml
+    with: 
+      flags: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
   images:
-    needs: [ version, cert, base, test_container ]
+    needs: [ version, cert, base, test_container, generate_matrix_images ]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
     defaults:
       run:
@@ -148,17 +154,7 @@ jobs:
     environment: ${{ inputs.use_kms && 'oidc_aws_kms_secureboot_signing' || '' }}
     strategy:
       fail-fast: false
-      matrix:
-        arch: [ amd64, arm64 ]
-        target: [ kvm, "kvm_trustedboot", "kvm_trustedboot_tpm2", metal, "metal_trustedboot", "metal_trustedboot_tpm2", gcp, "gcp_trustedboot", "gcp_trustedboot_tpm2", gdch, aws, "aws_trustedboot", "aws_trustedboot_tpm2", azure, ali, openstack, openstackbaremetal, vmware, "metal_pxe", firecracker, "metal-vhost" ]
-        modifier: [ "${{ inputs.default_modifier }}" ]
-        include:
-          - target: container
-            arch: amd64
-            modifier: ""
-          - target: container
-            arch: arm64
-            modifier: ""
+      matrix: ${{ fromJson(needs.generate_matrix_images.outputs.matrix) }}
     steps:
       # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
       #   with:
@@ -211,15 +207,15 @@ jobs:
           t="$(date '+%s')"
           find .build -exec touch -d "@$t" {} +
       - name: build
-        run: ./build ${{ inputs.use_kms && '--kms' || '' }} ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
+        run: ./build ${{ inputs.use_kms && '--kms' || '' }} ${{ matrix.flavor }}-${{ matrix.arch }}
       - name: get cname
         run: |
-          cname=$(basename "$(realpath ".build/${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}")" .artifacts)
+          cname=$(basename "$(realpath ".build/${{ matrix.flavor}}-${{ matrix.arch }}")" .artifacts)
           echo "cname=$cname" | tee -a "$GITHUB_ENV"
       # ./test writes ${{ env.cname }}.chroot.test.log and puts it into .build/${{ env.cname }}.artifacts
       - name: test
         run: |
-          ./test --container-image test ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }}
+          ./test --container-image test ${{ matrix.flavor }}-${{ matrix.arch }}
       # chroot.test.xml is written in the entrypoint tests/init
       - name: rename test results
         if: always()
@@ -238,16 +234,14 @@ jobs:
           name: "build-${{ env.cname }}"
           path: "${{ env.cname }}.tar.gz"
   bare_flavors:
-    needs: [ version, base ]
+    needs: [ version, base, generate_matrix_bare ]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
     defaults:
       run:
         shell: bash
     strategy:
       fail-fast: false
-      matrix:
-        arch: [ amd64, arm64 ]
-        config: [ libc, python, nodejs, sapmachine ]
+      matrix: ${{ fromJson(needs.generate_matrix_bare.outputs.matrix) }}
     steps:
       # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
       #   with:
@@ -274,14 +268,18 @@ jobs:
           t="$(date '+%s')"
           find .build -exec touch -d "@$t" {} +
       - name: build
-        run: ./build_bare_flavors --arch "${{ matrix.arch }}" "${{ matrix.config }}"
+        run: |
+          config=$(echo ${{ matrix.flavor }} | sed 's/^bare-//')
+          echo "config=$config" | tee -a "$GITHUB_ENV"
+          ./build_bare_flavors --arch "${{ matrix.arch }}" "${config}"
+          ls -la .build/bare_flavors
       - name: test
         run: |
-          image="$(podman load < .build/bare_flavors/${{ matrix.config }}-${{ matrix.arch }}.oci | awk '{ print $NF }')"
-          cd bare_flavors/${{ matrix.config }}/test
+          image="$(podman load < .build/bare_flavors/${{ env.config }}-${{ matrix.arch }}.oci | awk '{ print $NF }')"
+          cd bare_flavors/${{ env.config }}/test
           podman build -t test --build-arg image="$image" .
           podman run --rm test
       - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
         with:
-          name: "build-bare-${{ matrix.config }}-${{ matrix.arch }}"
-          path: ".build/bare_flavors/${{ matrix.config }}-${{ matrix.arch }}.oci"
+          name: "build-bare-${{ env.config }}-${{ matrix.arch }}"
+          path: ".build/bare_flavors/${{ env.config }}-${{ matrix.arch }}.oci"

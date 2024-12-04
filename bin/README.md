@@ -21,7 +21,7 @@ By the given directory, we distinguish between scripts that are mandatory for th
 | garden-slimify | Creates a slimifyed version of Garden Linux |
 | garden-tar | Creates a `.tar.xf` image of the build env from `chroot` env |
 | garden-version | Creates a version schema |
-| gen_make_targets | Generates `make` targets from the `flavour.yaml` |
+| gen_make_targets | Generates `make` targets from the `flavor.yaml` |
 | get-arch | Evaluates the base arch of the build host |
 | makedisk | Creates the disks during the build process in the `chroot` env |
 | makepart | Creates the partitions during the build process in the `chroot` env |
