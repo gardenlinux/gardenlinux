@@ -14,20 +14,22 @@ To ensure a successful build, please refer to the [Build Requirements section](h
 ##  Build
 
 To initiate a build, use the command:
-```shell
-./build ${platform}-${feature}_${modifier}
+```bash
+./build ${platform}-${feature1}-${feature2}-${feature3}-${arch}
 ```
 
 Where:
-- `${platform}` denotes the desired platform (e.g., kvm, metal, aws).
-- `${feature}` represents a specific feature from the `features/` folder.
-- `${modifier}` is an optional modifier from the `features/` folder, prefixed with an underscore "_".
 
-You can combine multiple platforms, features, and modifiers as needed.
+- `${platform}` denotes the desired platform (e.g., kvm, metal, aws). It should be the first part of the flavor that is built.
+- `${featureX}` represents one or more specific features from the `features/` folder. Features are appended and seperated by a hyphen `-` or (if the feature starts with an underscore `_`) by an underscore.
+- `${arch}` optinally you can reference a certain architecture `amd64` or `arm64`. It should be the last part of the flavor that is built.
 
-Example:
+You can combine multiple platforms and features as needed.
+
+Examples:
 ```shell
 ./build kvm-python_dev
+./build aws-gardener_prod-amd64
 ```
 
 The build script fetches the required builder container and manages all internal build steps. By default, it uses rootless podman, but you can switch to another container engine with the `--container-engine` flag.

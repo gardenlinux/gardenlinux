@@ -5,30 +5,29 @@ Each folder represents a usable Garden Linux `feature` that can be added to a fi
 
 | Feature Type | Feature Name |
 |---|---|
-| Platform | `ali`, `aws`, `azure`, `gcp`, `kvm`, `metal`, ... |
-| Feature | `firewall`, `gardener`, `ssh`, ... |
-| Modifier | `_slim`, `_readonly`, `_pxe`, `_iso`, ... |
+| platform | `ali`, `aws`, `azure`, `gcp`, `kvm`, `metal`, ... |
+| flag | `firewall`, `gardener`, `ssh`, `_prod`, `_slim`, `_readonly`, `_pxe`, `_iso`, ... |
 | Element | `cis`, `fedramp`, ... |
 
 *Keep in mind that `not all features` may be combined together. However, features may in-/exclude other features or block the build process by given exclusive/incompatible feature combinations.*
 
-## Building a custom set of features and modifiers
+## Building a custom set of features
 
-Garden Linux utilizes the [gardenlinux/builder](https://github.com/gardenlinux/builder) to create customized Linux distributions. The `gardenlinux/gardenlinux` repository is maintained by the Garden Linux team, highlighting specialized "features" that are also available for other projects.
+Garden Linux utilizes the [gardenlinux/builder](https://github.com/gardenlinux/builder) to create customized Linux distributions and their flavors. The `gardenlinux/gardenlinux` repository is maintained by the Garden Linux team, highlighting specialized "features" that are also available for other projects.
 
 To initiate a build, navigate to the root directory of the `gardenlinux/gardenlinux` repository and use the command:
 
 ```bash
-./build ${platform}-${feature}_${modifier}
+./build ${platform}-${feature1}-${feature2}-${feature3}-${arch}
 ```
 
 Where:
 
-- `${platform}` denotes the desired platform (e.g., kvm, metal, aws).
-- `${feature}` represents a specific feature from the `features/` folder.
-- `${modifier}` is an optional modifier from the `features/` folder, prefixed with an underscore "_".
+- `${platform}` denotes the desired platform (e.g., kvm, metal, aws). It should be the first part of the flavor that is built.
+- `${featureX}` represents one or more specific features from the `features/` folder. Features are appended and seperated by a hyphen `-` or (if the feature starts with an underscore `_`) by an underscore.
+- `${arch}` optinally you can reference a certain architecture `amd64` or `arm64`. It should be the last part of the flavor that is built.
 
-You can combine multiple platforms, features, and modifiers as needed.
+You can combine multiple platforms and features as needed.
 
 ## Official Published Flavors
 
@@ -90,7 +89,7 @@ The table can be created like this:
 
 The `flavors.yaml` file is used to define which flavors are to be build, tested and published.
 
-To e.g. build an the AWS image `aws-gardener_prod_trustedboot_tpm2-amd64`, you have to define the coresponding modifier name, features, architecture like this.
+To e.g. build an the AWS image `aws-gardener_prod_trustedboot_tpm2-amd64`, you have to define the coresponding features and architecture like this.
 
 ```
 ---
@@ -98,8 +97,9 @@ targets:
   - name: aws
     category: public-cloud
     flavors:
-      - modifier: gardener_prod
-        features:
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
           - _tpm2
         arch: amd64
