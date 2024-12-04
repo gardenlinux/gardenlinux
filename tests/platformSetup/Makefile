@@ -41,7 +41,8 @@ help:
 	@echo "general targets:"
 	@grep -E '^# help: ' $(MAKEFILE_LIST) | sed 's/^# help: //g' | awk 'BEGIN {FS = ": "}; {printf "%-40s %s\n", $$1, $$2}'
 	@echo ""
-	@echo "platform-specific targets:"
+	@echo "Available targets for Official Flavors:"
+	@echo ""
 	@$(foreach flavor,$(FLAVORS), \
 		echo "$(flavor)-plan        Run tofu plan for $(flavor)"; \
 		echo "$(flavor)-apply       Run tofu apply for $(flavor)"; \

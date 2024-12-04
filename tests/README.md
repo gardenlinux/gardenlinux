@@ -1,6 +1,7 @@
 # Tests
 
 # Table of Content
+
 - [Tests](#tests)
 - [Table of Content](#table-of-content)
 - [General](#general)
@@ -14,36 +15,29 @@
   - [Using the tests on supported platforms](#using-the-tests-on-supported-platforms)
     - [General](#general-1)
     - [Public cloud platforms](#public-cloud-platforms)
-      - [AWS](#aws)
-        - [Configuration options](#configuration-options)
-        - [Running the tests](#running-the-tests)
-      - [Azure](#azure)
-        - [Configuration options](#configuration-options-1)
-        - [Running the tests](#running-the-tests-1)
-      - [Aliyun](#aliyun)
-        - [Configuration options](#configuration-options-2)
-        - [Running the tests](#running-the-tests-2)
-      - [GCP](#gcp)
-        - [Configuration options](#configuration-options-3)
-        - [Running the tests](#running-the-tests-3)
-      - [Firecracker (MicroVM)](#firecracker-microvm)
-        - [Configuration options](#configuration-options-4)
-        - [Running the tests](#running-the-tests-4)
+      - [Generate OpenTofu Input Variables](#generate-opentofu-input-variables)
+      - [`tf_variables_create.py`](#tf_variables_createpy)
+      - [Create resources with OpenTofu](#create-resouces-with-opentofu)
+      - [OpenTofu module structure](#opentofu-module-structure)
+      - [Run Platform Tests](#run-platform-tests)
+    - [Firecracker (MicroVM)](#firecracker-microvm)
+      - [Configuration options](#configuration-options)
+      - [Running the tests](#running-the-tests)
     - [Local test environments](#local-test-environments)
       - [CHROOT](#chroot)
-        - [Configuration options](#configuration-options-5)
-        - [Running the tests](#running-the-tests-5)
+        - [Configuration options](#configuration-options-1)
+        - [Running the tests](#running-the-tests-1)
       - [KVM](#kvm)
-        - [Configuration options](#configuration-options-6)
-        - [Running the tests](#running-the-tests-6)
+        - [Configuration options](#configuration-options-2)
+        - [Running the tests](#running-the-tests-2)
       - [Manual Testing](#manual-testing)
-        - [Running the tests](#running-the-tests-7)
+        - [Running the tests](#running-the-tests-3)
       - [OpenStack CC EE flavor](#openstack-cc-ee-flavor)
-        - [Configuration options](#configuration-options-7)
-        - [Running the tests](#running-the-tests-8)
+        - [Configuration options](#configuration-options-3)
+        - [Running the tests](#running-the-tests-4)
       - [Local tests in the platform container](#local-tests-in-the-platform-container)
-        - [Configuration options](#configuration-options-8)
-        - [Running the tests](#running-the-tests-9)
+        - [Configuration options](#configuration-options-4)
+        - [Running the tests](#running-the-tests-5)
   - [Misc](#misc)
     - [Autoformat Using Black](#autoformat-using-black)
     - [Run Static Checks](#run-static-checks)
@@ -249,7 +243,7 @@ This is an example to deploy the flavor `gcp-gardener_prod_trustedboot_tpm2-amd6
 > [!TIP]
 > Have a look at `tests/platformSetup/tofu/variables.tf` to get all available Input Variables.
 
-##### `tests/platformSetup/tofu/tf_variables_create.py`
+##### `tf_variables_create.py`
 
 The script `tests/platformSetup/tofu/tf_variables_create.py` can be used to generate variables for a certain flavor or even for multiple flavors.
 
@@ -920,7 +914,6 @@ The URI can be:
 
 - **keep_running** _(optional)_: if set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow for debugging
 
-</details>
 
 ##### Running the tests
 
@@ -939,6 +932,8 @@ sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
     pytest --iaas=gcp --configfile=/config/mygcpconfig.yaml
+
+</details>
 
 #### Firecracker (MicroVM)
 

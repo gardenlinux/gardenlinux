@@ -36,7 +36,8 @@ help:
 	@echo "general targets:"
 	@grep -E '^# help: ' $(MAKEFILE_LIST) | sed 's/^# help: //g' | awk 'BEGIN {FS = ": "}; {printf "%-60s %s\n", $$1, $$2}'
 	@echo ""
-	@echo "platform-specific targets:"
+	@echo "Available targets for Official Flavors:"
+	@echo ""
 	@$(foreach flavor,$(FLAVORS_HYPERVISOR), \
 		printf "%-60s%s\n" "$(flavor)-test-platform" "Run platform tests via pytest --iaas for $(flavor)"; \
 	)

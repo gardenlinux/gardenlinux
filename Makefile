@@ -24,7 +24,10 @@ USE_KMS ?= false
 help:
 	@echo "Usage: make [target] [USE_KMS=true/false]"
 	@echo ""
-	@echo "Available targets:"
+	@echo "general targets:"
+	@grep -E '^# help: ' $(MAKEFILE_LIST) | sed 's/^# help: //g' | awk 'BEGIN {FS = ": "}; {printf "%-60s %s\n", $$1, $$2}'
+	@echo ""
+	@echo "Available targets for Official Flavors:"
 	@echo ""
 	@echo "all targets:"
 	@echo "  all                                Run build and test for all flavors"
