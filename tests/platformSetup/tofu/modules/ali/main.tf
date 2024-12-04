@@ -220,7 +220,7 @@ resource "null_resource" "test_connect" {
       host        = local.public_ip
       # usually this is created in /tmp but we have it mounted noexec
       script_path = "/home/${var.ssh_user}/terraform_%RAND%.sh"
-      timeout     = "10m"
+      timeout     = "20m"
     }
 
     inline = [
