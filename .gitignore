@@ -41,7 +41,6 @@ __pycache__
 /tests/*.log
 /tests/*.xml
 !tests/config/*.yaml.example
-!tests/config/*.yaml.template
 tests/config
 make_targets.cache
 /bin/*.vars
