@@ -13,9 +13,9 @@ module "terraform_state_backend" {
   force_destroy    = true
   bucket_enabled   = true
   dynamodb_enabled = false
-  name        = var.test_name
-  environment = var.test_environment
-  namespace   = "gardenlinux"
+  name             = var.test_name
+  environment      = var.test_environment
+  namespace        = "gardenlinux"
 }
 
 output "bucket_name" {

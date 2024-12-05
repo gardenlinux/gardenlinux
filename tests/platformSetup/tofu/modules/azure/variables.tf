@@ -50,12 +50,12 @@ variable "region" {
   description = "Azure region"
 }
 
-# variable "region_storage" {
-#   description = "Azure storage region"
+# variable "region_store" {
+#   description = "Azure region for storage. Not used."
 # }
-
+# 
 # variable "zone" {
-#   description = "Azure zone within a region"
+#   description = "Azure zone within a region. Not used."
 # }
 
 variable "instance_type" {

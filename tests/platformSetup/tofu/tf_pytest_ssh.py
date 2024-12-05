@@ -54,6 +54,7 @@ def parse_features(flavor):
     # Ensure features are resolved recursively
     feature_list = resolve_features_recursively(feature_list)
 
+    print(f"Flavor: {flavor}")
     print(f"Platform: {platform}")
     print(f"Features: {feature_list}")
     print(f"Architecture: {arch}")
@@ -107,24 +108,24 @@ def get_tofu_output_variables():
         sys.exit(1)
 
     # Convert the JSON into a dictionary of variables
-    env_vars = {}
+    tofu_out = {}
     if len(data.items()) != 0:
         for key, value in data.items():
             if "value" in value:
-                env_vars[key] = value["value"]
+                tofu_out[key] = value["value"]
     else:
         print(f"Error: No tofu output variables found")
         sys.exit(1)
 
-    return env_vars
+    return tofu_out
 
 
-def generate_login_script(flavor, platform, arch, feature_list, env_vars):
+def generate_login_script(flavor, platform, arch, feature_list, tofu_out):
     """Generate an SSH login script using the environment variables."""
     flavor_safe = flavor.replace("-", "_")
-    ssh_user = env_vars.get(f"{platform}_ssh_user")
-    public_ip = env_vars.get(f"{flavor_safe}_public_ip")
-    ssh_private_key = env_vars.get("ssh_private_key")
+    ssh_user = tofu_out.get('ssh_users', {}).get(flavor, None)
+    public_ip = tofu_out.get('public_ips', {}).get(flavor, None)
+    ssh_private_key = tofu_out.get("ssh_private_key")
 
     if not ssh_user or not public_ip or not ssh_private_key:
         print(f"Error: Missing required SSH details for {flavor}.")
@@ -177,8 +178,8 @@ def generate_pytest_configfile(flavor, config_data, feature_list):
 def main():
     args = parse_arguments()
     platform, feature_list, arch = parse_features(args.flavor)
-    env_vars = get_tofu_output_variables()
-    config_data = generate_login_script(args.flavor, platform, arch, feature_list, env_vars)
+    tofu_out = get_tofu_output_variables()
+    config_data = generate_login_script(args.flavor, platform, arch, feature_list, tofu_out)
     generate_pytest_configfile(args.flavor, config_data, feature_list)
 
 

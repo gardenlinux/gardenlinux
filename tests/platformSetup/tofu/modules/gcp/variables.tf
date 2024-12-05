@@ -20,6 +20,10 @@ variable "image_path" {
   description = "Source path for the uploaded image"
 }
 
+variable "net_range" {
+  description = "Subnet range for instance subnet. Not used."
+}
+
 variable "subnet_range" {
   description = "Subnet range for instance subnet"
 }
