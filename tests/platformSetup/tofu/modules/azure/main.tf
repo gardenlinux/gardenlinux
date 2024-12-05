@@ -152,7 +152,7 @@ resource "azurerm_shared_image_version" "shared_image_version" {
           certificate_data = replace(
             replace(
               replace(
-                join("", split("\n", file("cert/gardenlinux-secureboot.db.pem"))),
+                join("", split("\n", file("cert/gardenlinux-secureboot.db.crt"))),
                 "-----BEGIN CERTIFICATE-----",
                 ""
               ),
