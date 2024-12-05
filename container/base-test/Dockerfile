@@ -8,11 +8,13 @@ ENV PYTHONPATH /gardenlinux/bin:/gardenlinux/ci:/gardenlinux/ci/glci:/gardenlinu
 ARG GARDENLINUX_MIRROR_KEY=/etc/apt/trusted.gpg.d/keyring.gpg
 ARG VERSION
 
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates gnupg
 
 COPY keyring.gpg $GARDENLINUX_MIRROR_KEY
 RUN  chown root:root $GARDENLINUX_MIRROR_KEY \
         && chmod 644 $GARDENLINUX_MIRROR_KEY
+
+RUN gpg --no-default-keyring --keyring /etc/apt/trusted.gpg.d/keyring.gpg --export --armor > /etc/apt/trusted.gpg.d/keyring.asc && chmod 644 /etc/apt/trusted.gpg.d/keyring.asc && rm /etc/apt/trusted.gpg.d/keyring.gpg
 
 # Install packages from debian dist by default, only install packages from packages.gardenlinux.io if they are specified 
 # with higher pin prio than 900
