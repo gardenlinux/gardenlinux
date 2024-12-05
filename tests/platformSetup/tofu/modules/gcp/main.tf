@@ -5,15 +5,15 @@ locals {
   feature_tpm2         = contains(var.features, "_tpm2")
   feature_trustedboot  = contains(var.features, "_trustedboot")
   # max 63 chars
-  bucket_name          = substr("images-${local.test_name_safe}", 0, 63)
-  tar_name             = "image-${local.test_name_safe}.tar.gz"
-  image_name           = substr("image-${local.test_name_safe}", 0, 61)
+  bucket_name = substr("images-${local.test_name_safe}", 0, 63)
+  tar_name    = "image-${local.test_name_safe}.tar.gz"
+  image_name  = substr("image-${local.test_name_safe}", 0, 61)
   # max 61 chars
-  net_name             = substr("net-${local.test_name_safe}", 0, 61)
-  subnet_name          = substr("snet-${local.test_name_safe}", 0, 61)
-  sa_name              = "sa-${local.test_name_safe_short}" # can max be 32 chars (now is 27)
-  instance_name        = "vm-${local.test_name_safe}"
-  fw_name              = "fw-${local.test_name_safe}"
+  net_name      = substr("net-${local.test_name_safe}", 0, 61)
+  subnet_name   = substr("snet-${local.test_name_safe}", 0, 61)
+  sa_name       = "sa-${local.test_name_safe_short}" # can max be 32 chars (now is 27)
+  instance_name = "vm-${local.test_name_safe}"
+  fw_name       = "fw-${local.test_name_safe}"
 
   ssh_private_key_file = split(".pub", var.ssh_public_key)[0]
   ssh_parameters       = "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ${local.ssh_private_key_file} -l ${var.ssh_user}"

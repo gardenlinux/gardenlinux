@@ -32,34 +32,9 @@ variable "ssh_public_key" {
   default     = "~/.ssh/id_ed25519.pub"
 }
 
-variable "platforms" {
-  description = "Platforms to build."
-  type        = list(string)
-  default     = ["ali", "aws", "azure", "gcp"]
-  validation {
-    condition     = alltrue([for p in var.platforms : contains(["ali", "aws", "azure", "gcp"], p)])
-    error_message = "The platforms variable can only contain ali, aws, azure, or gcp."
-  }
-}
-
-variable "archs" {
-  description = "Architectures to build."
-  type        = list(string)
-  default     = ["amd64", "arm64"]
-  validation {
-    condition     = alltrue([for a in var.archs : contains(["amd64", "arm64"], a)])
-    error_message = "The archs variable can only contain amd64 or arm64."
-  }
-}
-
-variable "flavor" {
-  description = "Flavor to build (combination of features)."
+variable "flavors" {
+  description = "Flavors to build (combination of platform, features, arch)."
   default     = null
-}
-
-variable "features" {
-  description = "Features to build"
-  default     = []
 }
 
 # state_aws

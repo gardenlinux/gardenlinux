@@ -1,24 +1,81 @@
 locals {
-  workspace   = terraform.workspace != "default" ? terraform.workspace : local.test_suffix
-  test_suffix = var.flavor != null ? "${var.flavor}" : ""
-  test_name   = "${var.test_prefix}-${local.workspace}"
+  seed = terraform.workspace != "default" ? regex(".*-(.*)$", terraform.workspace)[0] : "00000000"
 
   my_ip = data.external.my_ip.result.ip
 
-  # platforms
-  platform_ali   = contains(var.platforms, "ali")
-  platform_aws   = contains(var.platforms, "aws")
-  platform_azure = contains(var.platforms, "azure")
-  platform_gcp   = contains(var.platforms, "gcp")
-
-  # archs
-  arch_amd64 = contains(var.archs, "amd64")
-  arch_arm64 = contains(var.archs, "arm64")
-
-  # features
-  feature_default     = var.features == []
-  feature_tpm2        = contains(var.features, "_tpm2")
-  feature_trustedboot = contains(var.features, "_trustedboot")
+  # Generate module_config based on flavors
+  module_config = [
+    for flavor in var.flavors : {
+      name        = flavor.name
+      name_unique = "${var.test_prefix}-${flavor.name}-${local.seed}"
+      platform    = flavor.platform
+      features    = flavor.features
+      arch        = flavor.arch
+      seed        = local.seed
+      instance_type = try(flavor.instance_type, lookup(
+        {
+          "ali"   = var.ali_instance_type,
+          "aws"   = var.aws_instance_type,
+          "azure" = var.azure_instance_type,
+          "gcp"   = var.gcp_instance_type
+        },
+        flavor.platform,
+        null
+      ))
+      image_file = try(flavor.image_file, lookup(
+        {
+          "ali"   = var.ali_image_file,
+          "aws"   = var.aws_image_file,
+          "azure" = var.azure_image_file,
+          "gcp"   = var.gcp_image_file
+        },
+        flavor.platform,
+        null
+      ))
+      ssh_user = try(flavor.ssh_user, lookup(
+        {
+          "ali"   = var.ali_ssh_user,
+          "aws"   = var.aws_ssh_user,
+          "azure" = var.azure_ssh_user,
+          "gcp"   = var.gcp_ssh_user
+        },
+        flavor.platform,
+        null
+      ))
+      region = try(flavor.region, lookup(
+        {
+          "ali"   = var.ali_region,
+          "aws"   = var.aws_region,
+          "azure" = var.azure_region,
+          "gcp"   = var.gcp_region
+        },
+        flavor.platform,
+        null
+      ))
+      # provider specific variables
+      region_storage = try(flavor.region_storage, lookup(
+        {
+          "gcp" = var.gcp_region_storage,
+        },
+        flavor.platform,
+        null
+      ))
+      account = lookup(
+        {
+          "gcp" = var.gcp_project_id
+        },
+        flavor.platform,
+        null
+      )
+      zone = try(flavor.zone, lookup(
+        {
+          "gcp" = var.gcp_zone,
+        },
+        flavor.platform,
+        null
+      ))
+    }
+  ]
 }
 
 provider "alicloud" {
@@ -39,436 +96,102 @@ provider "google" {
   region  = var.gcp_region
 }
 
-# data "external" "git_commit" {
-#   program = [
-#     "git",
-#     "log",
-#     "--pretty=format:{ \"sha\": \"%H\", \"sha_short\": \"%h\" }",
-#     "-1",
-#     "HEAD"
-#   ]
-# }
-
 data "external" "my_ip" {
   program = ["curl", "-q", "https://api.ipify.org?format=json"]
 }
 
-module "ali_amd64_default" {
+module "ali" {
+  for_each = { for config in local.module_config : config.name => config if config.platform == "ali" }
+
   source = "./modules/ali"
 
-  count = local.platform_ali && local.arch_amd64 && local.feature_default ? 1 : 0
-
-  arch           = "amd64"
-  features       = []
-  test_name      = local.test_name
+  arch           = each.value.arch
+  features       = each.value.features
+  test_name      = each.value.name_unique
   image_path     = var.image_path
   net_range      = var.net_range
   subnet_range   = var.subnet_range
   ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
+  my_ip          = data.external.my_ip.result.ip
 
-  image_file = var.ali_image_file
-  ssh_user   = var.ali_ssh_user
-
-  region        = var.ali_region
-  instance_type = var.ali_instance_type
+  image_file    = each.value.image_file
+  ssh_user      = each.value.ssh_user
+  region        = each.value.region
+  instance_type = each.value.instance_type
 }
 
-module "aws_amd64_default" {
+module "aws" {
+  for_each = { for config in local.module_config : config.name => config if config.platform == "aws" }
+
   source = "./modules/aws"
 
-  count = local.platform_aws && local.arch_amd64 && local.feature_default ? 1 : 0
-
-  arch           = "amd64"
-  features       = []
-  test_name      = local.test_name
+  arch           = each.value.arch
+  features       = each.value.features
+  test_name      = each.value.name_unique
   image_path     = var.image_path
   net_range      = var.net_range
   subnet_range   = var.subnet_range
   ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
+  my_ip          = data.external.my_ip.result.ip
 
-  image_file = var.aws_image_file
-  ssh_user   = var.aws_ssh_user
-
-  region        = var.aws_region
-  instance_type = var.aws_instance_type
+  image_file    = each.value.image_file
+  ssh_user      = each.value.ssh_user
+  region        = each.value.region
+  instance_type = each.value.instance_type
 }
 
-module "aws_amd64_trustedboot" {
-  source = "./modules/aws"
+module "azure" {
+  for_each = { for config in local.module_config : config.name => config if config.platform == "azure" }
 
-  count = local.platform_aws && local.arch_amd64 && local.feature_trustedboot && !local.feature_tpm2 ? 1 : 0
-
-  arch           = "amd64"
-  features       = var.features
-  test_name      = local.test_name
-  image_path     = var.image_path
-  net_range      = var.net_range
-  subnet_range   = var.subnet_range
-  ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
-
-  image_file = var.aws_image_file
-  ssh_user   = var.aws_ssh_user
-
-  region        = var.aws_region
-  instance_type = var.aws_instance_type
-}
-
-module "aws_amd64_trustedboot_tpm2" {
-  source = "./modules/aws"
-
-  count = local.platform_aws && local.arch_amd64 && local.feature_trustedboot && local.feature_tpm2 ? 1 : 0
-
-  arch           = "amd64"
-  features       = var.features
-  test_name      = local.test_name
-  image_path     = var.image_path
-  net_range      = var.net_range
-  subnet_range   = var.subnet_range
-  ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
-
-  image_file = var.aws_image_file
-  ssh_user   = var.aws_ssh_user
-
-  region        = var.aws_region
-  instance_type = var.aws_instance_type
-}
-
-module "aws_arm64_default" {
-  source = "./modules/aws"
-
-  count = local.platform_aws && local.arch_arm64 && local.feature_default ? 1 : 0
-
-  arch           = "arm64"
-  features       = var.features
-  test_name      = local.test_name
-  image_path     = var.image_path
-  net_range      = var.net_range
-  subnet_range   = var.subnet_range
-  ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
-
-  image_file = var.aws_image_file
-  ssh_user   = var.aws_ssh_user
-
-  region        = var.aws_region
-  instance_type = var.aws_instance_type
-}
-
-module "aws_arm64_trustedboot" {
-  source = "./modules/aws"
-
-  count = local.platform_aws && local.arch_arm64 && local.feature_trustedboot && !local.feature_tpm2 ? 1 : 0
-
-  arch           = "arm64"
-  features       = var.features
-  test_name      = local.test_name
-  image_path     = var.image_path
-  net_range      = var.net_range
-  subnet_range   = var.subnet_range
-  ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
-
-  image_file = var.aws_image_file
-  ssh_user   = var.aws_ssh_user
-
-  region        = var.aws_region
-  instance_type = var.aws_instance_type
-}
-
-module "aws_arm64_trustedboot_tpm2" {
-  source = "./modules/aws"
-
-  count = local.platform_aws && local.arch_arm64 && local.feature_trustedboot && local.feature_tpm2 ? 1 : 0
-
-  arch           = "arm64"
-  features       = var.features
-  test_name      = local.test_name
-  image_path     = var.image_path
-  net_range      = var.net_range
-  subnet_range   = var.subnet_range
-  ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
-
-  image_file = var.aws_image_file
-  ssh_user   = var.aws_ssh_user
-
-  region        = var.aws_region
-  instance_type = var.aws_instance_type
-}
-
-module "azure_amd64_default" {
   source = "./modules/azure"
 
-  count = local.platform_azure && local.arch_amd64 && local.feature_default ? 1 : 0
-
-  arch           = "amd64"
-  features       = var.features
-  test_name      = local.test_name
+  arch           = each.value.arch
+  features       = each.value.features
+  test_name      = each.value.name_unique
   image_path     = var.image_path
   net_range      = var.net_range
   subnet_range   = var.subnet_range
   ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
+  my_ip          = data.external.my_ip.result.ip
 
-  image_file = var.azure_image_file
-  ssh_user   = var.azure_ssh_user
-
-  region        = var.azure_region
-  instance_type = var.azure_instance_type
+  image_file    = each.value.image_file
+  ssh_user      = each.value.ssh_user
+  region        = each.value.region
+  instance_type = each.value.instance_type
 }
 
-module "azure_amd64_trustedboot" {
-  source = "./modules/azure"
+module "gcp" {
+  for_each = { for config in local.module_config : config.name => config if config.platform == "gcp" }
 
-  count = local.platform_azure && local.arch_amd64 && local.feature_trustedboot && !local.feature_tpm2 ? 1 : 0
+  source = "./modules/gcp"
 
-  arch           = "amd64"
-  features       = var.features
-  test_name      = local.test_name
+  arch           = each.value.arch
+  features       = each.value.features
+  test_name      = each.value.name_unique
   image_path     = var.image_path
   net_range      = var.net_range
   subnet_range   = var.subnet_range
   ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
+  my_ip          = data.external.my_ip.result.ip
 
-  image_file = var.azure_image_file
-  ssh_user   = var.azure_ssh_user
+  image_file    = each.value.image_file
+  ssh_user      = each.value.ssh_user
+  region        = each.value.region
+  instance_type = each.value.instance_type
 
-  region        = var.azure_region
-  instance_type = var.azure_instance_type
+  # provider specific
+  region_storage = each.value.region_storage
+  zone           = each.value.zone
+  project_id     = each.value.account
 }
 
-module "azure_amd64_trustedboot_tpm2" {
-  source = "./modules/azure"
 
-  count = local.platform_azure && local.arch_amd64 && local.feature_trustedboot && local.feature_tpm2 ? 1 : 0
-
-  arch           = "amd64"
-  features       = var.features
-  test_name      = local.test_name
-  image_path     = var.image_path
-  net_range      = var.net_range
-  subnet_range   = var.subnet_range
-  ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
-
-  image_file = var.azure_image_file
-  ssh_user   = var.azure_ssh_user
-
-  region        = var.azure_region
-  instance_type = var.azure_instance_type
-}
-
-module "azure_arm64_default" {
-  source = "./modules/azure"
-
-  count = local.platform_azure && local.arch_arm64 && local.feature_default ? 1 : 0
-
-  arch           = "arm64"
-  features       = var.features
-  test_name      = local.test_name
-  image_path     = var.image_path
-  net_range      = var.net_range
-  subnet_range   = var.subnet_range
-  ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
-
-  image_file = var.azure_image_file
-  ssh_user   = var.azure_ssh_user
-
-  region        = var.azure_region
-  instance_type = var.azure_instance_type
-}
-
-module "azure_arm64_trustedboot" {
-  source = "./modules/azure"
-
-  count = local.platform_azure && local.arch_arm64 && local.feature_trustedboot && !local.feature_tpm2 ? 1 : 0
-
-  arch           = "arm64"
-  features       = var.features
-  test_name      = local.test_name
-  image_path     = var.image_path
-  net_range      = var.net_range
-  subnet_range   = var.subnet_range
-  ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
-
-  image_file = var.azure_image_file
-  ssh_user   = var.azure_ssh_user
-
-  region        = var.azure_region
-  instance_type = var.azure_instance_type
-}
-
-module "azure_arm64_trustedboot_tpm2" {
-  source = "./modules/azure"
-
-  count = local.platform_azure && local.arch_arm64 && local.feature_trustedboot && local.feature_tpm2 ? 1 : 0
-
-  arch           = "arm64"
-  features       = var.features
-  test_name      = local.test_name
-  image_path     = var.image_path
-  net_range      = var.net_range
-  subnet_range   = var.subnet_range
-  ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
-
-  image_file = var.azure_image_file
-  ssh_user   = var.azure_ssh_user
-
-  region        = var.azure_region
-  instance_type = var.azure_instance_type
-}
-
-module "gcp_amd64_default" {
-  source = "./modules/gcp"
-
-  count = local.platform_gcp && local.arch_amd64 && local.feature_default ? 1 : 0
-
-  arch           = "amd64"
-  features       = var.features
-  test_name      = local.test_name
-  image_path     = var.image_path
-  subnet_range   = var.subnet_range
-  ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
-
-  image_file = var.gcp_image_file
-  ssh_user   = var.gcp_ssh_user
-
-  project_id     = var.gcp_project_id
-  region         = var.gcp_region
-  region_storage = var.gcp_region_storage
-  zone           = var.gcp_zone
-  instance_type  = var.gcp_instance_type
-}
-
-module "gcp_amd64_trustedboot" {
-  source = "./modules/gcp"
-
-  count = local.platform_gcp && local.arch_amd64 && local.feature_trustedboot && !local.feature_tpm2 ? 1 : 0
-
-  arch           = "amd64"
-  features       = var.features
-  test_name      = local.test_name
-  image_path     = var.image_path
-  subnet_range   = var.subnet_range
-  ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
-
-  image_file = var.gcp_image_file
-  ssh_user   = var.gcp_ssh_user
-
-  project_id     = var.gcp_project_id
-  region         = var.gcp_region
-  region_storage = var.gcp_region_storage
-  zone           = var.gcp_zone
-  instance_type  = var.gcp_instance_type
-}
-
-module "gcp_amd64_trustedboot_tpm2" {
-  source = "./modules/gcp"
-
-  count = local.platform_gcp && local.arch_amd64 && local.feature_trustedboot && local.feature_tpm2 ? 1 : 0
-
-  arch           = "amd64"
-  features       = var.features
-  test_name      = local.test_name
-  image_path     = var.image_path
-  subnet_range   = var.subnet_range
-  ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
-
-  image_file = var.gcp_image_file
-  ssh_user   = var.gcp_ssh_user
-
-  project_id     = var.gcp_project_id
-  region         = var.gcp_region
-  region_storage = var.gcp_region_storage
-  zone           = var.gcp_zone
-  instance_type  = var.gcp_instance_type
-}
-
-module "gcp_arm64_default" {
-  source = "./modules/gcp"
-
-  count = local.platform_gcp && local.arch_arm64 && local.feature_default ? 1 : 0
-
-  arch           = "arm64"
-  features       = var.features
-  test_name      = local.test_name
-  image_path     = var.image_path
-  subnet_range   = var.subnet_range
-  ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
-
-  image_file = var.gcp_image_file
-  ssh_user   = var.gcp_ssh_user
-
-  project_id     = var.gcp_project_id
-  region         = var.gcp_region
-  region_storage = var.gcp_region_storage
-  zone           = var.gcp_zone
-  instance_type  = var.gcp_instance_type
-}
-
-module "gcp_arm64_trustedboot" {
-  source = "./modules/gcp"
-
-  count = local.platform_gcp && local.arch_arm64 && local.feature_trustedboot && !local.feature_tpm2 ? 1 : 0
-
-  arch           = "arm64"
-  features       = var.features
-  test_name      = local.test_name
-  image_path     = var.image_path
-  subnet_range   = var.subnet_range
-  ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
-
-  image_file = var.gcp_image_file
-  ssh_user   = var.gcp_ssh_user
-
-  project_id     = var.gcp_project_id
-  region         = var.gcp_region
-  region_storage = var.gcp_region_storage
-  zone           = var.gcp_zone
-  instance_type  = var.gcp_instance_type
-}
-
-module "gcp_arm64_trustedboot_tpm2" {
-  source = "./modules/gcp"
-
-  count = local.platform_gcp && local.arch_arm64 && local.feature_trustedboot && local.feature_tpm2 ? 1 : 0
-
-  arch           = "arm64"
-  features       = var.features
-  test_name      = local.test_name
-  image_path     = var.image_path
-  subnet_range   = var.subnet_range
-  ssh_public_key = var.ssh_public_key
-  my_ip          = local.my_ip
-
-  image_file = var.gcp_image_file
-  ssh_user   = var.gcp_ssh_user
-
-  project_id     = var.gcp_project_id
-  region         = var.gcp_region
-  region_storage = var.gcp_region_storage
-  zone           = var.gcp_zone
-  instance_type  = var.gcp_instance_type
-}
 
 module "state_aws" {
   source = "./modules/state_aws"
 
   count            = var.deploy_state_aws ? 1 : 0
-  test_name        = local.test_name
+  test_name        = var.test_prefix
   test_environment = var.test_environment
 }
 

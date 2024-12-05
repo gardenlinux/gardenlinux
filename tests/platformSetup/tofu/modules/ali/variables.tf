@@ -49,6 +49,14 @@ variable "region" {
   description = "ALI region"
 }
 
+# variable "region_store" {
+#   description = "ALI region for storage. Not used."
+# }
+# 
+# variable "zone" {
+#   description = "ALI zone within a region. Not used."
+# }
+
 variable "instance_type" {
   description = "ALI machine_type for the instance"
 }
