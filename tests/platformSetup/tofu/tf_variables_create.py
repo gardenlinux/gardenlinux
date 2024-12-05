@@ -52,116 +52,78 @@ def parse_arguments():
         default=None, 
         help="Basename of image file, e.g. 'gcp-gardener_prod-arm64-1592.2-76203a30'."
     )
-    parser.add_argument(
-        '--image-file-ali', 
-        type=str, 
-        default=None, 
-        help="Specific ALI image file."
-    )
-    parser.add_argument(
-        '--image-file-aws', 
-        type=str, 
-        default=None, 
-        help="Specific AWS image file."
-    )
-    parser.add_argument(
-        '--image-file-azure', 
-        type=str, 
-        default=None, 
-        help="Specific Azure image file."
-    )
-    parser.add_argument(
-        '--image-file-gcp', 
-        type=str, 
-        default=None, 
-        help="Specific GCP image file."
-    )
     
     return parser.parse_args()
 
 
-def write_platform_specific_config(f, args, platform, arch, flavor):
-    """Write platform-specific configuration to the file."""
-    instance_types = {
-        "ali": {"amd64": "ecs.t6-c1m2.large", "arm64": "ecs.g8y.small"},
-        "aws": {"amd64": "m5.large", "arm64": "m6g.medium"},
-        "azure": {"amd64": "Standard_D4_v4", "arm64": "Standard_D4ps_v5"},
-        "gcp": {"amd64": "n1-standard-2", "arm64": "t2a-standard-2"},
-    }
-
-    if args.image_path:
-        f.write(f'image_path= "{args.image_path}"\n')
-
-    if platform == "ali":
-        # f.write('ali_enabled = true\n')
-        f.write(f'ali_instance_type = "{instance_types["ali"].get(arch)}"\n')
-        if args.image_file_ali:
-            f.write(f'ali_image_file = "{args.image_file_ali}"\n')
-        elif args.cname:
-            f.write(f'ali_image_file = "{args.cname}.qcow2"\n')
-        else:
-           image_file = f'ali-gardener_prod-{arch}-today-local.qcow2'
-           f.write(f'ali_image_file = "{image_file}"\n')
-
-    if platform == "aws":
-        # f.write('aws_enabled = true\n')
-        f.write(f'aws_instance_type = "{instance_types["aws"].get(arch)}"\n')
-        if args.image_file_aws:
-            f.write(f'aws_image_file = "{args.image_file_aws}"\n')
-        elif args.cname:
-            f.write(f'aws_image_file = "{args.cname}.raw"\n')
-        else:
-           image_file = f'aws-gardener_prod-{arch}-today-local.raw'
-           f.write(f'aws_image_file = "{image_file}"\n')
-
-    elif platform == "azure":
-        # f.write('azure_enabled = true\n')
-        f.write(f'azure_instance_type = "{instance_types["azure"].get(arch)}"\n')
-        if args.image_file_azure:
-            f.write(f'azure_image_file = "{args.image_file_azure}"\n')
-        elif args.cname:
-            f.write(f'azure_image_file = "{args.cname}.vhd"\n')
-        else:
-           image_file = f'azure-gardener_prod-{arch}-today-local.vhd'
-           f.write(f'azure_image_file = "{image_file}"\n')
-
-    elif platform == "gcp":
-        # f.write('gcp_enabled = true\n')
-        f.write(f'gcp_instance_type = "{instance_types["gcp"].get(arch)}"\n')
-        if args.image_file_gcp:
-            f.write(f'gcp_image_file = "{args.image_file_gcp}"\n')
-        elif args.cname:
-            f.write(f'gcp_image_file = "{args.cname}.gcpimage.tar.gz"\n')
-        else:
-           image_file = f'gcp-gardener_prod-{arch}-today-local.gcpimage.tar.gz'
-           f.write(f'gcp_image_file = "{image_file}"\n')
-
-    # is needed to query tf API
-    azure_subscription_id = os.getenv('azure_subscription_id')
-    if not azure_subscription_id:
-        sys.exit("Error: 'azure_subscription_id' environment variable is required for Azure.")
-    f.write(f'azure_subscription_id = "{azure_subscription_id}"\n')
-
-    gcp_project = os.getenv('gcp_project')
-    if not gcp_project:
-        sys.exit("Error: 'gcp_project' environment variable is required for GCP.")
-    f.write(f'gcp_project_id = "{gcp_project}"\n')
-
-
-def create_tfvars_file(args, platform, flavor, features, arch, root_dir):
+def create_tfvars_file(args, flavor, root_dir):
     """Create .tfvars files for each combination of platform, architecture, and flavor."""
     var_file = Path(root_dir) / f"tests/platformSetup/tofu/variables.{flavor}.tfvars"
 
     with open(var_file, 'w') as f:
         f.write(f'test_prefix = "{args.test_prefix}"\n')
-        f.write(f'platforms = ["{platform}"]\n')
-        f.write(f'archs = ["{arch}"]\n')
-        f.write(f'flavor = "{flavor}"\n')
-        if features:
-            f.write(f'features = {features}\n')
+
+        if args.image_path:
+            f.write(f'image_path= "{args.image_path}"\n')
+
+        azure_subscription_id = os.getenv('azure_subscription_id')
+        if not azure_subscription_id:
+            sys.exit("Error: 'azure_subscription_id' environment variable is required for Azure.")
+        f.write(f'azure_subscription_id = "{azure_subscription_id}"\n')
+
+        gcp_project = os.getenv('gcp_project')
+        if not gcp_project:
+            sys.exit("Error: 'gcp_project' environment variable is required for GCP.")
+        f.write(f'gcp_project_id = "{gcp_project}"\n')
+
+        parts = flavor.split('-')
+        # Extract platform (first part) and architecture (last part)
+        platform = parts[0]
+        arch = parts[-1]
+        if arch not in {"amd64", "arm64"}:
+            print(f"Error: Unsupported architecture '{arch}'. Valid options are 'amd64' or 'arm64'.", file=sys.stderr)
+            sys.exit(1)
+
+        # All middle parts are features, split them by '_' to expand multi-part features
+        features_string = "-".join(parts[1:-1])
+        raw_features = features_string.replace("_", "-_")  # Rejoin middle parts to handle mixed cases
+        feature_list = [feature for feature in raw_features.split("-")]
+
+        features = json.dumps(feature_list)  # Make sure to have double quotes
+
+        instance_types = {
+            "ali": {"amd64": "ecs.t6-c1m2.large", "arm64": "ecs.g8y.small"},
+            "aws": {"amd64": "m5.large", "arm64": "m6g.medium"},
+            "azure": {"amd64": "Standard_D4_v4", "arm64": "Standard_D4ps_v5"},
+            "gcp": {"amd64": "n1-standard-2", "arm64": "t2a-standard-2"},
+        }
+
+        if args.cname:
+            cname = args.cname
         else:
-            f.write(f'features = []\n')
-        write_platform_specific_config(f, args, platform, arch, flavor)
+            cname = f'{platform}-{features_string}-{arch}-today-local'
+
+        image_files = {
+            "ali": f'{cname}.qcow2',
+            "aws": f'{cname}.raw',
+            "azure": f'{cname}.vhd',
+            "gcp": f'{cname}.gcpimage.tar.gz',
+        }
+
+        flavor_item = {
+            "name": flavor,
+            "platform": platform,
+            "features": json.loads(features),
+            "arch": arch,
+            "instance_type":instance_types[platform][arch],
+            "image_file": image_files[platform]
+        }
+
+        flavors_list = [flavor_item]
+        formatted_flavors = json.dumps(flavors_list, indent=2)
+
+        f.write(f'flavors = {formatted_flavors}\n')        
+
 
     print(f"Created: {var_file}")
 
@@ -170,34 +132,11 @@ def main():
     args = parse_arguments()
 
     # Split comma-separated values
-    flavors = args.flavors.split(',')
+    input_flavors = args.flavors.split(',')
     root_dir = Path(args.root_dir) if args.root_dir else get_git_root()
 
-    for flavor in flavors:
-        platform = flavor.split('-')[0]
-        arch = flavor.split('-')[-1]
-        if arch not in {"amd64", "arm64"}:
-            print(f"Error: Unsupported architecture '{arch}'. Valid options are 'amd64' or 'arm64'.", file=sys.stderr)
-            sys.exit(1)
-
-        # Extract all parts after the platform and before the architecture
-        parts = flavor.split('-')[1:-1]
-
-        # Process features, removing specific prefixes and handling separators
-        features = []
-        for part in parts:
-            part = re.sub('^(dev|gardener_prod)', '', part)  # Remove specific prefixes
-            raw_features = part.replace("_", "-_").split("-")  # Handle mixed separators
-            for feature in raw_features:
-                if feature:  # Ignore empty strings
-                    features.append(feature)
-        features = json.dumps(features)  # Make sure to have double quotes
-        
-        print(f"Platform: {platform}")
-        print(f"Architecture: {arch}")
-        print(f"Flavor: {flavor}")        
-        print(f"Features: {features}")        
-        create_tfvars_file(args, platform, flavor, features, arch, root_dir)
+    for input_flavor in input_flavors:
+        create_tfvars_file(args, input_flavor, root_dir)
 
 if __name__ == "__main__":
     main()

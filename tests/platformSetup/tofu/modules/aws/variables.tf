@@ -49,6 +49,14 @@ variable "region" {
   description = "AWS region"
 }
 
+# variable "region_store" {
+#   description = "AWS region for storage. Not used."
+# }
+# 
+# variable "zone" {
+#   description = "AWS zone within a region. Not used."
+# }
+
 variable "instance_type" {
   description = "AWS machine_type for the instance"
 }
