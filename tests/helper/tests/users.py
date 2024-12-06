@@ -67,7 +67,7 @@ def users(client, additional_user = "", additional_sudo_users=[]):
             discovered_homes.append(line)
     assert len(discovered_homes) == 0, f"Found the following home directories: {discovered_homes}"
 
-    if additional_user: 
+    if additional_user and additional_user in output.split('\n'):
       _users_home(client, additional_user)
 
 
@@ -143,10 +143,6 @@ def _users_home(client, user):
       assert owner >= 6, f"{dot_file} has the wrong permssions for owner, needs to be u+rw-"
       assert group <= 5, f"{dot_file} has the wrong permssions for group, needs to remove wirte permissions g+r--"
       assert world <= 5, f"{dot_file} has the wrong permssions for world, needs to remove write permissions o+r--"
-      
-
-      
-
 
     # No .netrc, .rhost, .forward.
     blacklisted_files = ['.netrc', '.rhost', '.forward']
