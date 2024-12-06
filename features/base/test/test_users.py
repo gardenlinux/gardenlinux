@@ -3,7 +3,7 @@ from helper.utils import execute_remote_command
 import pytest
 
 @pytest.mark.security_id(171)
-def test_for_nis(client):
+def test_for_nis(client, non_container):
     """Check if we have no NIS related entries.
        A passwd will then have an entry like this:
        +::::::
@@ -25,7 +25,7 @@ def test_for_nis(client):
     assert 0 == len(list(filter(lambda x: 'compat' in x, nsswitch_content))), "compat found in /etc/nsswitch.conf!"
 
 @pytest.mark.security_id(164)
-def test_for_root(client):
+def test_for_root(client, non_container):
      (exit_code, output, error) = client.execute_command( "getent passwd", quiet=True)
      assert exit_code == 0, f"no {error=} expected"
 
