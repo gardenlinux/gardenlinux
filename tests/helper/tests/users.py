@@ -1,4 +1,3 @@
-import pdb
 import helper.utils as utils
 import helper.tests.groups as groups
 from helper.tests.mount import _parse_fstab
@@ -6,8 +5,6 @@ from helper.utils import check_file, get_file_perm
 
 
 def users(client, additional_user = "", additional_sudo_users=[]):
-
-    pdb.set_trace()
     # Get content from /etc/passwd
     (exit_code, output, error) = client.execute_command(
         "getent passwd", quiet=True)
