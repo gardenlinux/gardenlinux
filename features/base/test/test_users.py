@@ -1,10 +1,31 @@
 from helper.tests.users import users
+from helper.utils import execute_remote_command
 import pytest
 
+@pytest.mark.security_id(171)
+def test_for_nis(client):
+    """Check if we have no NIS related entries.
+       A passwd will then have an entry like this:
+       +::::::
+    """
+    for nssl_file in [ "passwd", "shadow", "group", "gshadow" ]:
+       #  Name Service Switch libraries
+       nssl =  execute_remote_command(client, f"getent {nssl_file}")
+       assert 1 == len(nssl.split("+")), f"NIS entry detected in {nssl_file}!"
+      
+    # ope /etc/nsswitch.conf
+    nssswitch =  execute_remote_command(client, "cat /etc/nsswitch.conf")
+    # filter out comments
+    nsswitch_content = [n for n in nssswitch.split("\n") if '#' not in n]
+    nsswitch_content.remove("")
+
+    # Filtering fileds for nis, nisplus, compat
+    assert 0 == len(list(filter(lambda x: 'nis' in x, nsswitch_content))), "nis found in /etc/nsswitch.conf!"
+    assert 0 == len(list(filter(lambda x: 'nisplus' in x, nsswitch_content))), "nisplus found in /etc/nsswitch.conf!"
+    assert 0 == len(list(filter(lambda x: 'compat' in x, nsswitch_content))), "compat found in /etc/nsswitch.conf!"
 
 @pytest.mark.security_id(164)
 def test_for_root(client):
-
      (exit_code, output, error) = client.execute_command( "getent passwd", quiet=True)
      assert exit_code == 0, f"no {error=} expected"
 
