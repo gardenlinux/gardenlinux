@@ -1,41 +1,5 @@
 from helper.tests.users import users
-from helper.utils import check_file, get_file_perm
-from helper.test.mount import _parse_fstab
 import pytest
-
-
-
-@pytest.mark.security_id(172)
-def test_users_home(client, username):
-    # Home must be not on nfs
-    # need to check if /home is a mount point
-    # if it's a mount point check that's is not nfsv3 or nfsv4
-    command = f"cat /etc/mtab"
-    (exit_code, output, error) = client.execute_command(command, quiet=True)
-    mtab =  _parse_fstab(output)
-    # This will not detect when we have /home/nfs_mount.
-    if '/home' in mtab.keys():
-        if 'nfs' in mtab['/home']['fs']:
-            nfs_version = filter(lambda x: 'vers' in x, mtab['/home']['opts'])[0]
-            assert 4.0 < float(nfs_version.split("=")[1])
-            
-    # Ownerships is of the users one and no one else
-    # Default vaule should be 755. Technically, we could have
-    # different permissions too, but that seems unreasoable.
-    home_perm =  get_file_perm(f"/home/{username}")
-    assert home_perm, 755 
-
-    # /home/user -> User:User
-    # /home/user -> 
-    # Check for the ownership of all dot files.
-    command = f"find /home/{username} -name \".[^.]*\""
-    (exit_code, output, error) = client.execute_command(command, quiet=True)
-    # No .netrc, .rhost, forward.
-    for file in backlisted_files:
-      assert False check_file(file) 
-    # Check for ACLs
-
-
 
 
 @pytest.mark.security_id(164)

@@ -1,7 +1,13 @@
+import pdb
 import helper.utils as utils
 import helper.tests.groups as groups
+from helper.tests.mount import _parse_fstab
+from helper.utils import check_file, get_file_perm
+
 
 def users(client, additional_user = "", additional_sudo_users=[]):
+
+    pdb.set_trace()
     # Get content from /etc/passwd
     (exit_code, output, error) = client.execute_command(
         "getent passwd", quiet=True)
@@ -56,12 +62,16 @@ def users(client, additional_user = "", additional_sudo_users=[]):
          "ls /home/", quiet=True)
     assert exit_code == 0, f"no {error=} expected"
 
+
     permitted_homes = [ '', additional_user ]
     discovered_homes = []
     for line in output.split('\n'):
         if line not in permitted_homes:
             discovered_homes.append(line)
     assert len(discovered_homes) == 0, f"Found the following home directories: {discovered_homes}"
+
+    
+    _users_home(client, additional_user)
 
 
 def _has_user_sudo_cmd(client, user):
@@ -84,3 +94,65 @@ def _has_user_sudo_cmd(client, user):
             sudo_cmd = output_lines[-1]
 
     assert not sudo_cmd, f"User: {user} has sudo permissions for: {sudo_cmd}"
+
+
+# @pytest.mark.security_id(172)
+def _users_home(client, user):
+    # Home must be not on nfs
+    # need to check if /home is a mount point
+    # if it's a mount point check that's is not nfsv3 or nfsv4
+    command = f"cat /etc/mtab"
+    (exit_code, output, error) = client.execute_command(command, quiet=True)
+    mtab =  _parse_fstab(output)
+    # This will not detect when we have /home/nfs_mount.
+    if '/home' in mtab.keys():
+        if 'nfs' in mtab['/home']['fs']:
+            nfs_version = filter(lambda x: 'vers' in x, mtab['/home']['opts'])[0]
+            assert 4.0 < float(nfs_version.split("=")[1]), "Invaild NFS version"
+            
+    # Ownerships is of the users one and no one else
+    # Default vaule should be 755. Technically, we could have
+    # different permissions too, but that seems unreasoable.
+    command = f"stat --format %U /home/{user}"
+    (exit_code, output, error) = client.execute_command(command, quiet=True)
+    assert output.split("\n")[0] == user, f"/home/{user} is not owned by the User!"
+
+    home_perm =  get_file_perm(client, f"/home/{user}")
+    postix1e = list(map(int, str(home_perm)))
+    owner = postix1e[0]
+    group = postix1e[1]
+    world = postix1e[2]
+    assert owner == 7, f"/home/{user} has the wrong permssions for owner, needs to be u+rwx"
+    assert group <= 5, f"/home/{user} has the wrong permssions for group, needs to remove write permissions g+r-x or write and execute permission g+r--"
+    assert world <= 5, f"/home/{user} has the wrong permssions for world, needs to remove write permissions o+r-x or write and execute permission o+r--"
+
+    # /home/user -> User:User
+    # /home/user -> 
+    # Check for the ownership of all dot files.
+    command = f"find /home/{user} -name \".[^.]*\""
+    (exit_code, output, error) = client.execute_command(command, quiet=True)
+
+    dot_files = output.split("\n")
+    dot_files.remove("")
+    for dot_file in dot_files:
+      command = f"stat --format %U {dot_file}"
+      (exit_code, output, error) = client.execute_command(command, quiet=True)
+      assert output.split("\n")[0] == user, f"{dot_file} is not owned by the User!"
+      file_perm = get_file_perm(client, dot_file)
+      postix1e = list(map(int, str(file_perm)))
+      owner = postix1e[0]
+      group = postix1e[1]
+      world = postix1e[2]
+      assert owner >= 6, f"{dot_file} has the wrong permssions for owner, needs to be u+rw-"
+      assert group <= 5, f"{dot_file} has the wrong permssions for group, needs to remove wirte permissions g+r--"
+      assert world <= 5, f"{dot_file} has the wrong permssions for world, needs to remove write permissions o+r--"
+      
+
+      
+
+
+    # No .netrc, .rhost, .forward.
+    blacklisted_files = ['.netrc', '.rhost', '.forward']
+    for file in blacklisted_files:
+      assert False == check_file(client, file), "blacklisted file found!"
+    # Check for ACLs
