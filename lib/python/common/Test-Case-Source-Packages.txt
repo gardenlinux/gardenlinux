@@ -1,0 +1,70 @@
+Format: 3.0 (quilt)
+Package: expat
+Binary: libexpat1-dev, libexpat1, libexpat1-udeb, expat
+Architecture: any
+Version: 2.6.3-1gl0
+Maintainer: Laszlo Boszormenyi (GCS) <gcs@debian.org>
+Homepage: https://libexpat.github.io/
+Standards-Version: 4.7.0
+Build-Depends: debhelper-compat (= 13), docbook-to-man, docbook2x <!stage1>, libbsd-dev [kfreebsd-any hurd-any]
+Package-List:
+ expat deb text optional arch=any
+ libexpat1 deb libs optional arch=any
+ libexpat1-dev deb libdevel optional arch=any
+ libexpat1-udeb udeb debian-installer optional arch=any profile=!noudeb
+Directory: pool/5f9dc866bd054084d96f21efe0cba932d06d05ed8c4049cc61d82fabdb0787fa
+Checksums-Sha1:
+ fc8d53a25f62c9ebb7be6088c47828bd2d33865a 1093 expat_2.6.3-1gl0.dsc
+ 14da5c63683e0daba4bca315eb056ac13c15ae90 5327116 expat_2.6.3.orig.tar.xz
+ 968413f5da67390c1831470b8b5dac228cef39ad 13124 expat_2.6.3-1gl0.debian.tar.xz
+Checksums-Sha256:
+ 5f9dc866bd054084d96f21efe0cba932d06d05ed8c4049cc61d82fabdb0787fa 1093 expat_2.6.3-1gl0.dsc
+ e4e67aba3ff473810b83144f994d37dbf8b92d3a197babc56ccf5d82a8b3f635 5327116 expat_2.6.3.orig.tar.xz
+ 610b5fc6f097ef5d8e1061e2ae66b3144403291bc62f59c43dcac9913dd1a8f5 13124 expat_2.6.3-1gl0.debian.tar.xz
+Files:
+ 73ba0897a205bff5106966e6cec0c209 1093 expat_2.6.3-1gl0.dsc
+ ac3b43a962d644f79923e48216a7f0ac 5327116 expat_2.6.3.orig.tar.xz
+ bf9f1b3d1762a9f22698d377b40eba52 13124 expat_2.6.3-1gl0.debian.tar.xz
+
+Format: 3.0 (quilt)
+Package: vim
+Binary: vim-common, vim-gui-common, vim-runtime, vim-doc, vim-tiny, vim, vim-gtk3, vim-nox, vim-motif, vim-athena, xxd
+Architecture: any all
+Version: 2:9.1.0709-2
+Maintainer: Debian Vim Maintainers <team+vim@tracker.debian.org>
+Uploaders: James McCoy <jamessan@debian.org>,
+Homepage: https://www.vim.org/
+Standards-Version: 4.6.2
+Vcs-Browser: https://salsa.debian.org/vim-team/vim
+Vcs-Git: https://salsa.debian.org/vim-team/vim.git
+Testsuite: autopkgtest
+Testsuite-Triggers: cscope, procps, python3
+Build-Depends: autoconf, cscope <!nocheck>, debhelper-compat (= 13), libacl1-dev, libcanberra-dev, libgpmg1-dev [linux-any], libgtk-3-dev, liblua5.1-dev, libmotif-dev, libperl-dev, libselinux1-dev [linux-any], libsodium-dev, libncurses-dev, libtool-bin <!nocheck>, locales-all <!nocheck>, lua5.1, ncurses-term <!nocheck>, procps <!nocheck>, python3-dev, ruby [!alpha !ia64] <!pkg.vim.noruby>, ruby-dev [!alpha !ia64] <!pkg.vim.noruby>, tcl-dev
+Build-Depends-Indep: docbook-utils, docbook-xml, ghostscript, lynx, pdf2svg
+Build-Conflicts: autoconf2.13
+Package-List:
+ vim deb editors optional arch=any
+ vim-athena deb oldlibs optional arch=all
+ vim-common deb editors important arch=all
+ vim-doc deb doc optional arch=all
+ vim-gtk3 deb editors optional arch=any
+ vim-gui-common deb editors optional arch=all
+ vim-motif deb editors optional arch=any
+ vim-nox deb editors optional arch=any
+ vim-runtime deb editors optional arch=all
+ vim-tiny deb editors important arch=any
+ xxd deb editors optional arch=any
+Directory: pool/f207f835811ebdf9b270a2c0eff4d66f5939d76ad7983c85f532a2c671b5a25c
+Checksums-Sha1:
+ 44d4c3d90b952f5e41ee3922731aa0186b5c4f68 3226 vim_9.1.0709-2.dsc
+ 6b50e267a02fc988aa332116f8c11697025e1f93 11962096 vim_9.1.0709.orig.tar.xz
+ bc0c2398e29033d4d4e529e0e074d23d5738c186 188852 vim_9.1.0709-2.debian.tar.xz
+Checksums-Sha256:
+ f207f835811ebdf9b270a2c0eff4d66f5939d76ad7983c85f532a2c671b5a25c 3226 vim_9.1.0709-2.dsc
+ eaa3f57808eba290a8fe77463310004233ad98495922569a0f7049663f310de1 11962096 vim_9.1.0709.orig.tar.xz
+ 7208e866e72e5ec50527dc4827c96f052e8043a9594d8f733caf22135cad7bd5 188852 vim_9.1.0709-2.debian.tar.xz
+Files:
+ 2bcbda33d4bfda63a40c3a1636039b25 3226 vim_9.1.0709-2.dsc
+ 14bbce0e1752f55189a0b98f41207cfd 11962096 vim_9.1.0709.orig.tar.xz
+ a2bf849ed9c16707a6cdc4af9ee3316c 188852 vim_9.1.0709-2.debian.tar.xz
+Dgit: ad533c88d30440f6fed14aeb2837886c593d7f14 debian archive/debian/2%9.1.0709-2 https://git.dgit.debian.org/vim
