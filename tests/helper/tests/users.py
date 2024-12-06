@@ -67,8 +67,8 @@ def users(client, additional_user = "", additional_sudo_users=[]):
             discovered_homes.append(line)
     assert len(discovered_homes) == 0, f"Found the following home directories: {discovered_homes}"
 
-    
-    _users_home(client, additional_user)
+    if additional_user: 
+      _users_home(client, additional_user)
 
 
 def _has_user_sudo_cmd(client, user):
