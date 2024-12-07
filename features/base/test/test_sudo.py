@@ -2,7 +2,7 @@ import pytest
 from helper.utils import read_file_remote, execute_remote_command
 
 @pytest.mark.security_id (165)
-def test_sudoers(client):
+def test_sudoers(client, non_container):
     """Validate that we have the necessary .
        Note: we do not use wheel, but instead the sudo group.
     """
