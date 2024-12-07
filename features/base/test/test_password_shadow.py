@@ -4,6 +4,7 @@ import pytest
 
 
 @pytest.mark.security_id(168)
+@pytest.mark.security_id(169)
 @pytest.mark.security_id(170)
 def test_password_shadow(client):
     password_shadow(client)
