@@ -1,5 +1,4 @@
 import pytest
-import pdb
 from helper.utils import read_file_remote
 
 @pytest.mark.security_id (166)
