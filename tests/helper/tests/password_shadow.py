@@ -23,6 +23,7 @@ def _check_format(input: str, expected: list):
             return False
     return True
 
+
 def _check_file_permssions(client):
     passwd_perm = get_file_perm(client, '/etc/passwd')
     assert 644 == passwd_perm, "/etc/passwd has the wrong permissions!"
