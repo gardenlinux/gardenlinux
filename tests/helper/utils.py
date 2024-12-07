@@ -200,6 +200,17 @@ def execute_remote_command(client, cmd, skip_error=False):
         output = output.strip()
         return exit_code, output
 
+def read_file_remote(client, file, remove_comments=False)-> list:
+    """ Read a file from the remote file system and returns it for 
+        proper processing trunecated.
+    """
+    status, output = execute_remote_command(client, f"cat {file}", skip_error=True)
+    assert status == 0, f"Error reading {file}" 
+    to_return = output.split("\n")
+    to_return.remove("")
+    if remove_comments: 
+        return [line for line in to_return if '#' not in line]
+    return to_return
 
 def get_installed_kernel_versions(client):
     """Get a list of installed kernel versions using 'linux-version list'."""
