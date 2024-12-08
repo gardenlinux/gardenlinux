@@ -93,7 +93,6 @@ def _has_user_sudo_cmd(client, user):
     assert not sudo_cmd, f"User: {user} has sudo permissions for: {sudo_cmd}"
 
 
-# @pytest.mark.security_id(172)
 def _users_home(client, user):
     # Home must be not on nfs
     # need to check if /home is a mount point

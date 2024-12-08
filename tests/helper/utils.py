@@ -207,7 +207,9 @@ def read_file_remote(client, file, remove_comments=False)-> list:
     status, output = execute_remote_command(client, f"cat {file}", skip_error=True)
     assert status == 0, f"Error reading {file}" 
     to_return = output.split("\n")
-    to_return.remove("")
+    # Check if we might have an emtory entry.
+    if "" in to_return:
+        to_return.remove("")
     if remove_comments: 
         return [line for line in to_return if '#' not in line]
     return to_return
