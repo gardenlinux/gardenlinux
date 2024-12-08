@@ -8,7 +8,10 @@ import pytest
 @pytest.mark.security_id(169)
 @pytest.mark.security_id(170)
 def test_password_shadow(client):
+    """This ensure that not only the passwd and shadow is as expected,
+       it also validates that it's entry are consistent. And that's the
+       necessary files are set correctly.
+    """
     password_shadow(client)
-    # We're missing some of the default users and that's why pwck will raises an error message?
     assert '' == execute_remote_command(client, "pwck")
     assert '' == execute_remote_command(client, "grpck")
