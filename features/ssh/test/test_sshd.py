@@ -1,6 +1,7 @@
 from helper.tests.sshd import sshd
 import pytest
 
+@pytest.mark.security_id(322)
 @pytest.mark.parametrize(
     "expected",
     [
