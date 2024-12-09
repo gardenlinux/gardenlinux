@@ -1,4 +1,5 @@
-from helper.tests.file_content import file_content
+from helper.tests.file_content import file_content 
+from helper.utils import read_file_remote 
 import pytest
 
 @pytest.mark.security_id(328)
@@ -17,7 +18,7 @@ def test_pam_faillock(client, file, args):
 
 
 @pytest.mark.security_id(327)
-def test_password_age(client)
+def test_password_age(client):
     """
        The NIST has change it's default policy onwards regarding setting default password age.
        Instead, it's considered an anti-pattern. NIST SP800-63b 3.1.1.2:
@@ -29,4 +30,5 @@ def test_password_age(client)
 
        We ensure that we *not* have a password age enabled.
     """
-    pass
+    content = read_file_remote(client, "/etc/login.defs", remove_comments=True)
+    assert "PASS_MAX_DAYS\t99999" in content, "Error password age was not set to max value."
