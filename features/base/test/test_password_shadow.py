@@ -7,6 +7,7 @@ import pytest
 @pytest.mark.security_id(168)
 @pytest.mark.security_id(169)
 @pytest.mark.security_id(170)
+@pytest.mark.security_id(324)
 def test_password_shadow(client):
     """This ensure that not only the passwd and shadow is as expected,
        it also validates that it's entry are consistent. And that's the
