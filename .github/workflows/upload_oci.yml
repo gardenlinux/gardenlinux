@@ -121,3 +121,7 @@ jobs:
           do
             GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ghcr.io/${{ github.repository }} --version ${{ inputs.version }} --manifest_file $manifest
           done
+      - name: Delete temporary OCI manifest entry files
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: oci_manifest_entry_*
