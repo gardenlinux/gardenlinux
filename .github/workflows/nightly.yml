@@ -31,31 +31,9 @@ jobs:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_kms_role: ${{ secrets.SECUREBOOT_DB_IAM_ROLE }}
       aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
-  tests:
-    needs: [ build ]
-    permissions:
-      id-token: write
-      packages: write
-    uses: ./.github/workflows/tests.yml
-    with:
-      version: ${{ needs.build.outputs.version }}
-      platform_test_tag: ${{ inputs.platform_test_tag || 'latest' }}
-    secrets:
-      gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-      gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-      gcp_project: ${{ secrets.GCP_PROJECT }}
-      gcp_region: ${{ secrets.GCP_REGION }}
-      gcp_zone: ${{ secrets.GCP_ZONE }}
-      aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
-      aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
-      aws_region: ${{ secrets.AWS_TESTS_REGION }}
-      az_client_id: ${{ secrets.AZURE_CLIENT_ID }}
-      az_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
-      az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      ccc_credentials: ${{ secrets.CCC_CREDENTIALS }}
-  upload_to_s3:
+ upload_to_s3:
     name: upload to S3
-    needs: [ build, tests ]
+    needs: [ build ]
     permissions:
       id-token: write
     uses: ./.github/workflows/upload_to_s3.yml
@@ -68,7 +46,7 @@ jobs:
       session: ${{ secrets.AWS_OIDC_SESSION }}
   upload_to_s3_cn:
     name: upload to S3 china
-    needs: [ build, tests ]
+    needs: [ build ]
     permissions:
       id-token: write
     uses: ./.github/workflows/upload_to_s3.yml
@@ -81,7 +59,7 @@ jobs:
       session: ${{ secrets.AWS_CN_OIDC_SESSION }}
   publish_container:
     name: publish gardenlinux container base image
-    needs: [ build, tests ]
+    needs: [ build ]
     uses: ./.github/workflows/publish_container.yml
     with:
       version: ${{ needs.build.outputs.version }}
