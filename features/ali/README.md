@@ -7,7 +7,7 @@ This platform feature creates an artifact for Alibaba cloud (Aliyun).
 ### Features
 This feature creates an Alibaba cloud compatible image artifact as an `.qcow2` file.
 
-To be platform complaint smaller adjustments like defining the platform related ntp systems, networking config etc. are done.
+To be platform compliant smaller adjustments like defining the platform related ntp systems, networking config etc. are done.
 The artifact includes `cloud-init` for orchestrating the image.
 
 ### Unit testing
