@@ -3,6 +3,7 @@ on:
   schedule:
     - cron: '0 6 * * *'
   # triggered manually
+  push:
   workflow_dispatch:
     inputs:
       version:
@@ -18,104 +19,108 @@ on:
         required: true
         default: "latest"
 jobs:
-  build:
-    uses: ./.github/workflows/build.yml
-    permissions:
-      id-token: write
-      packages: write
-    with:
-      version: ${{ inputs.version || 'now' }}
-      use_kms: ${{ inputs.use_kms != null && inputs.use_kms || true }}        
-    secrets:
-      secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
-      aws_region: ${{ secrets.AWS_REGION }}
-      aws_kms_role: ${{ secrets.SECUREBOOT_DB_IAM_ROLE }}
-      aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
-  tests:
-    needs: [ build ]
-    permissions:
-      id-token: write
-      packages: write
-    uses: ./.github/workflows/tests.yml
-    with:
-      version: ${{ needs.build.outputs.version }}
-      platform_test_tag: ${{ inputs.platform_test_tag || 'latest' }}
-    secrets:
-      gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-      gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-      gcp_project: ${{ secrets.GCP_PROJECT }}
-      gcp_region: ${{ secrets.GCP_REGION }}
-      gcp_zone: ${{ secrets.GCP_ZONE }}
-      aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
-      aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
-      aws_region: ${{ secrets.AWS_TESTS_REGION }}
-      az_client_id: ${{ secrets.AZURE_CLIENT_ID }}
-      az_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
-      az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      ccc_credentials: ${{ secrets.CCC_CREDENTIALS }}
-  upload_to_s3:
-    name: upload to S3
-    needs: [ build, tests ]
-    permissions:
-      id-token: write
-    uses: ./.github/workflows/upload_to_s3.yml
-    with:
-      version: ${{ needs.build.outputs.version }}
-    secrets:
-      bucket: ${{ secrets.AWS_S3_BUCKET }}
-      region: ${{ secrets.AWS_REGION }}
-      role: ${{ secrets.AWS_IAM_ROLE }}
-      session: ${{ secrets.AWS_OIDC_SESSION }}
-  upload_to_s3_cn:
-    name: upload to S3 china
-    needs: [ build, tests ]
-    permissions:
-      id-token: write
-    uses: ./.github/workflows/upload_to_s3.yml
-    with:
-      version: ${{ needs.build.outputs.version }}
-    secrets:
-      bucket: ${{ secrets.AWS_CN_S3_BUCKET }}
-      region: ${{ secrets.AWS_CN_REGION }}
-      role: ${{ secrets.AWS_CN_IAM_ROLE }}
-      session: ${{ secrets.AWS_CN_OIDC_SESSION }}
-  publish_container:
-    name: publish gardenlinux container base image
-    needs: [ build, tests ]
-    uses: ./.github/workflows/publish_container.yml
-    with:
-      version: ${{ needs.build.outputs.version }}
-  upload_oci:
-    name: Run glcli to publish to OCI
-    needs: [ build, publish_container ]
-    uses: ./.github/workflows/upload_oci.yml
-    with:
-      version: ${{ needs.build.outputs.version }}
-    secrets:
-      region: ${{ secrets.AWS_REGION }}
-      role: ${{ secrets.AWS_IAM_ROLE }}
-      session: ${{ secrets.AWS_OIDC_SESSION }}
-      oci-kms-arn: ${{ secrets.OCI_KMS_ARN }}
-  glrd:
-    name: create GLRD release
-    needs: [ upload_to_s3 ]
-    permissions:
-      id-token: write
+  test_inputs:
     runs-on: ubuntu-latest
-    # only create release on main branch
-    if: ${{ github.ref }} == 'refs/heads/main'
     steps:
-      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      - name: Create GLRD nightly release
-        uses: gardenlinux/glrd@v1
-        with:
-          cmd: glrd-manage --s3-update --create nightly
-      - name: Get latest GL nightly
-        id: gl_version_nightly
-        uses: gardenlinux/glrd@v1
-        with:
-          cmd: glrd --type nightly --latest
+      - run: echo "${{ inputs.use_kms }} -- ${{ inputs.use_kms != null }} -- ${{ inputs.use_kms != null && inputs.use_kms }}"
+  # build:
+  #   uses: ./.github/workflows/build.yml
+  #   permissions:
+  #     id-token: write
+  #     packages: write
+  #   with:
+  #     version: ${{ inputs.version || 'now' }}
+  #     use_kms: ${{ inputs.use_kms != null && inputs.use_kms || true }}
+  #   secrets:
+  #     secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
+  #     aws_region: ${{ secrets.AWS_REGION }}
+  #     aws_kms_role: ${{ secrets.SECUREBOOT_DB_IAM_ROLE }}
+  #     aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
+  # tests:
+  #   needs: [ build ]
+  #   permissions:
+  #     id-token: write
+  #     packages: write
+  #   uses: ./.github/workflows/tests.yml
+  #   with:
+  #     version: ${{ needs.build.outputs.version }}
+  #     platform_test_tag: ${{ inputs.platform_test_tag || 'latest' }}
+  #   secrets:
+  #     gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+  #     gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+  #     gcp_project: ${{ secrets.GCP_PROJECT }}
+  #     gcp_region: ${{ secrets.GCP_REGION }}
+  #     gcp_zone: ${{ secrets.GCP_ZONE }}
+  #     aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
+  #     aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
+  #     aws_region: ${{ secrets.AWS_TESTS_REGION }}
+  #     az_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+  #     az_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+  #     az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  #     ccc_credentials: ${{ secrets.CCC_CREDENTIALS }}
+  # upload_to_s3:
+  #   name: upload to S3
+  #   needs: [ build, tests ]
+  #   permissions:
+  #     id-token: write
+  #   uses: ./.github/workflows/upload_to_s3.yml
+  #   with:
+  #     version: ${{ needs.build.outputs.version }}
+  #   secrets:
+  #     bucket: ${{ secrets.AWS_S3_BUCKET }}
+  #     region: ${{ secrets.AWS_REGION }}
+  #     role: ${{ secrets.AWS_IAM_ROLE }}
+  #     session: ${{ secrets.AWS_OIDC_SESSION }}
+  # upload_to_s3_cn:
+  #   name: upload to S3 china
+  #   needs: [ build, tests ]
+  #   permissions:
+  #     id-token: write
+  #   uses: ./.github/workflows/upload_to_s3.yml
+  #   with:
+  #     version: ${{ needs.build.outputs.version }}
+  #   secrets:
+  #     bucket: ${{ secrets.AWS_CN_S3_BUCKET }}
+  #     region: ${{ secrets.AWS_CN_REGION }}
+  #     role: ${{ secrets.AWS_CN_IAM_ROLE }}
+  #     session: ${{ secrets.AWS_CN_OIDC_SESSION }}
+  # publish_container:
+  #   name: publish gardenlinux container base image
+  #   needs: [ build, tests ]
+  #   uses: ./.github/workflows/publish_container.yml
+  #   with:
+  #     version: ${{ needs.build.outputs.version }}
+  # upload_oci:
+  #   name: Run glcli to publish to OCI
+  #   needs: [ build, publish_container ]
+  #   uses: ./.github/workflows/upload_oci.yml
+  #   with:
+  #     version: ${{ needs.build.outputs.version }}
+  #   secrets:
+  #     region: ${{ secrets.AWS_REGION }}
+  #     role: ${{ secrets.AWS_IAM_ROLE }}
+  #     session: ${{ secrets.AWS_OIDC_SESSION }}
+  #     oci-kms-arn: ${{ secrets.OCI_KMS_ARN }}
+  # glrd:
+  #   name: create GLRD release
+  #   needs: [ upload_to_s3 ]
+  #   permissions:
+  #     id-token: write
+  #   runs-on: ubuntu-latest
+  #   # only create release on main branch
+  #   if: ${{ github.ref }} == 'refs/heads/main'
+  #   steps:
+  #     - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
+  #       with:
+  #         role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+  #         role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+  #         aws-region: ${{ secrets.AWS_REGION }}
+  #     - name: Create GLRD nightly release
+  #       uses: gardenlinux/glrd@v1
+  #       with:
+  #         cmd: glrd-manage --s3-update --create nightly
+  #     - name: Get latest GL nightly
+  #       id: gl_version_nightly
+  #       uses: gardenlinux/glrd@v1
+  #       with:
+  #         cmd: glrd --type nightly --latest
