@@ -1,7 +1,7 @@
 ## Feature: fedramp
 ### Description
 <website-feature>
-This features adjusts Garden Linux to be complaint to the requirements of Fedramp.
+This features adjusts Garden Linux to be compliant to the requirements of Fedramp.
 </website-feature>
 
 ### Features

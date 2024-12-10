@@ -7,7 +7,7 @@ This platform feature creates an artifact for Microsoft Azure.
 ### Features
 This feature creates a Microsoft Azure compatible image artifact as a `.vhd` file.
 
-To be platform complaint smaller adjustments like defining the platform related clocksource config, networking config etc. are done.
+To be platform compliant smaller adjustments like defining the platform related clocksource config, networking config etc. are done.
 The artifact includes `cloud-init` for orchestrating the image.
 
 ### Unit testing
