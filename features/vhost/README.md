@@ -8,7 +8,7 @@ The vhost feature adjusts Garden Linux to support running virtual workloads in K
 The vhost feature adjusts Garden Linux to support running virtual workloads in KVM/libvirt and installs and configures all related packages (regarding the used hardware architecture) and tools.
 
 ### Unit testing
-To be fully compliant these unit tests validate the extended capabilities on `ping` and `gstreamer`, the installed packages, correctly defined suids and sgids as well as the systemd unit files.
+To be fully compliant these unit tests validate the extended capabilities on `gstreamer`, the installed packages, correctly defined suids and sgids as well as the systemd unit files.
 
 ### Meta
 |||
