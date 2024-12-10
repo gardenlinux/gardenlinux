@@ -161,7 +161,7 @@ source "${CURR_DIR}/.constants.sh" \
     --usage '[ --daemonize ] [ --cpu:<#> ] [ --mem:<size> ] [ --pxe:<dir> ] [<image file>[,<size>]]*' \
     --sample '.build/rootfs.raw' \
     --sample ',1G ubuntu-16.04.7-server-amd64.iso' \
-    --help  "Starts a virtual machine with the most basic environment, needed. Perfect use for test cases and running samples of GardenLinux. This script can run unprivileged but it should have the possibility to use kvm (group kvm) otherwise it will be super slow. If not being root, the network will be slow and no ICMP (ping) capabilities are with the VM.
+    --help  "Starts a virtual machine using qemu. Made for running Garden Linux vms for testing. On Linux hosts, it should be able to use kvm if possible.
 
 --cpu       <int>         Number of vCPUs to start the VM. (default: $cpu)
 --arch      <platform>    Set the emulated platform. i386, x86_64, x86_64-microvm, arm, aarch64 are supported. (default: $arch)
@@ -169,7 +169,7 @@ source "${CURR_DIR}/.constants.sh" \
 --uefi      <bool>        Boot with uefi bios enabled, needs \`apt-get install ovmf\`. (default: yes)
 --legacy-bios <bool>        Boot with uefi bios disabled, can't be used with uefi. (default: no)
 --ueficode  <path>        Defines the uefi code used. The file is readonly. (default: $uefi_code)
---uefivars  <path>        Defines the uefi variables used. The file will be !modified! if vartiables are se. (default: $uefi_vars)
+--uefivars  <path>        Defines the uefi variables used. The file will be !modified! if variables are set. (default: $uefi_vars)
 --port      <int>         Specifies the local ssh port. This port is mounted to the running machine, not if --bridge is specified. (default: $port_base)
 --destport  <int>         Specifies the remote ssh port. This port is used to connect, to a specific sshd. (default: $port_dest)
 --mac       <macaddr>     The mac address is usually randomized. It is used to identify the monitoring port, the mac address of the machine and the UUID. Can be set to this value.
@@ -177,8 +177,8 @@ source "${CURR_DIR}/.constants.sh" \
 --ignfile   <path>        Provide an ignition file when pxe booting. Can be used standalone.
 --pidfile   <path>        Provide a file where to store the pid of the started qemu vm.
 --daemonize <bool>        Start the virtual machine in background, console deactivated (default: no).
---skipkp    <bool>        Skip the keypress to the verify status before execute.
---vnc       <bool>        Sitches from serial console to vnc graphics console / enables vnc in --daemonize.
+--skipkp    <bool>        Skip the key press to the verify status before execute.
+--vnc       <bool>        Switches from serial console to vnc graphics console / enables vnc in --daemonize.
 --tpm2      <bool>        Enable TPM2 emulation and QEMU passthrough using swtpm.
 <image file>              A file containing the image to boot. Format is determined by the extension (raw, vdi, vpc, vhd, vhdx, vmdk, qcow2, iso).
                           An optional suffix of the form <image file>,qcow=<size> can be specified to write changes to a copy-on-write device instead"
