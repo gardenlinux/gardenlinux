@@ -23,6 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "${{ inputs.use_kms == '' }} -- ${{ inputs.use_kms == null }} -- ${{ inputs.use_kms == '' || inputs.use_kms }} -- ${{ inputs.use_kms == null || inputs.use_kms }}"
+      - run: echo "${{ github.event_name }} -- ${{ github.even_name != 'workflow_dispatch' }} -- ${{ github.even_name != 'workflow_dispatch' || inputs.use_kms }}"
   # build:
   #   uses: ./.github/workflows/build.yml
   #   permissions:
