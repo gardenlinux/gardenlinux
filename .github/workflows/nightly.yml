@@ -22,7 +22,7 @@ jobs:
   test_inputs:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "${{ inputs.use_kms }} -- ${{ inputs.use_kms != null }} -- ${{ inputs.use_kms != null && inputs.use_kms }} -- ${{ inputs.use_kms != null && inputs.use_kms || true }}"
+      - run: echo "${{ inputs.use_kms == null || inputs.use_kms }}"
   # build:
   #   uses: ./.github/workflows/build.yml
   #   permissions:
