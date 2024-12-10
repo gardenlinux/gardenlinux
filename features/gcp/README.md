@@ -7,7 +7,7 @@ This platform feature creates an artifact for the Google Cloud Platform.
 ### Features
 This feature creates a GCP compatible image artifact as an `.raw` file.
 
-To be platform complaint smaller adjustments like defining the platform related clocksource config, networking config etc. are done.
+To be platform compliant smaller adjustments like defining the platform related clocksource config, networking config etc. are done.
 The artifact includes `cloud-init` and `amazon-ec2-utils` for orchestrating the image.
 
 ### Uploading Image to GCP
