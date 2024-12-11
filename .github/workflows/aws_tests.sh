@@ -19,7 +19,7 @@ done
 cname=$1
 
 configFile="aws_test_config.yaml"
-containerName="ghcr.io/gardenlinux/gardenlinux/platform-test-aws:latest"
+containerName="ghcr.io/gardenlinux/gardenlinux/platform-test-aws:nightly"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
 
 pushd "$artifact_dir" || exit 1

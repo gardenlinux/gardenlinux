@@ -13,10 +13,10 @@ on:
         required: false
         default: true
       platform_test_tag:
-        description: "Tag to run platform-test containers. 'latest', Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
+        description: "Tag to run platform-test containers. 'nightly', Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
         type: string
         required: true
-        default: "latest"
+        default: "nightly"
 jobs:
   build:
     uses: ./.github/workflows/build.yml
@@ -39,7 +39,7 @@ jobs:
     uses: ./.github/workflows/tests.yml
     with:
       version: ${{ needs.build.outputs.version }}
-      platform_test_tag: ${{ inputs.platform_test_tag || 'latest' }}
+      platform_test_tag: ${{ inputs.platform_test_tag || 'nightly' }}
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
