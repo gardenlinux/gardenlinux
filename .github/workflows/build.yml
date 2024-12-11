@@ -31,6 +31,8 @@ jobs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
       - name: resolve version "${{ inputs.version }}"
         id: version
         run: echo version="$(bin/garden-version "${{ inputs.version }}")" | tee -a "$GITHUB_OUTPUT"
@@ -49,6 +51,8 @@ jobs:
       #     proc_trace_chart_max_count: 50
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
       - uses: ./.github/actions/setup
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
@@ -87,6 +91,8 @@ jobs:
       #     proc_trace_chart_max_count: 50
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
       - uses: ./.github/actions/setup
         with:
           arch: "${{ matrix.arch }}"
@@ -118,6 +124,8 @@ jobs:
       #     proc_trace_chart_max_count: 50
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
       - uses: ./.github/actions/setup
         with: 
           arch: "${{ matrix.arch }}"
@@ -163,6 +171,8 @@ jobs:
       #     proc_trace_chart_max_count: 50
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
       - uses: ./.github/actions/setup
         with: 
           arch: "${{ matrix.arch }}"
@@ -250,6 +260,8 @@ jobs:
       #     proc_trace_chart_max_count: 50
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
       - uses: ./.github/actions/setup
         with:
           arch: "${{ matrix.arch }}"
