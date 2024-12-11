@@ -1,5 +1,5 @@
 import pytest
-from helper.utils import get_architecture, AptUpdate, install_package_deb, execute_remote_command
+from helper.utils import get_architecture, AptUpdate, install_package_deb, execute_remote_command, read_file_remote
 from helper.sshclient import RemoteClient
 
 
@@ -15,6 +15,39 @@ def test_gl_is_support_distro(client):
     # Negative case:
     status, output  = execute_remote_command(client, "dpkg-vendor --is debian", skip_error=True)
     assert status == 1
+
+
+@pytest.mark.security_id(483)
+def test_that_PATH_was_set(client):
+    """
+       Ensure that we have valide $PATH variable present.
+    """
+    bash_env = execute_remote_command(client, "env")
+    PATH = [n for n in bash_env.split("\n") if 'PATH' in n]
+    assert len(PATH) == 1, "Can't find PATH"
+    assert "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" == PATH[0], "PATH is not set correctly."
+
+    # Validate the we use PATH that are only located in the default part of the FHS.
+    entries = PATH[0].split("=")[1].split(":")
+    # trustworthy path
+    # /usr
+    # /usr/local
+    # /sbin
+    # /bin
+    # path_suffix = sbin / bin
+    from pathlib import Path
+    for path_entry in entries:
+        _path_obj = Path(path_entry)
+        assert _path_obj.root == "/", "PATH entry was detect that's located not on root."
+        assert _path_obj.is_absolute(), "Not an absolute path." 
+
+@pytest.mark.security_id(485)
+def test_bash_timeout_was_set(client, non_container):
+    """
+       Check that we have set the necessary timeout by default to 900.
+    """
+    autologout = read_file_remote(client,  "/etc/profile.d/50-autologout.sh", remove_comments=True)
+    assert ['TMOUT=900', 'readonly TMOUT', 'export TMOUT'] == autologout, "Timeout missing for bash"
 
 
 def test_no_man(client):
