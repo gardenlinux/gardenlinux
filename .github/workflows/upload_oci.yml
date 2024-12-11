@@ -98,6 +98,7 @@ jobs:
     permissions:
       id-token: write
       packages: write
+      actions: write
     steps:
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
