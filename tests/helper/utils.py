@@ -153,13 +153,33 @@ def get_kernel_version(client):
 
 
 def wait_systemd_boot(client):
-    """ Wait for systemd to finish booting """
+    """Wait for systemd to finish booting."""
+    """If there are failed units, show their Logs."""
+    systemd_status_cmd = "systemctl is-system-running --wait"
+    systemd_failed_cmd = (
+        "systemctl --failed --no-legend --no-pager | awk '{print $2}' | "
+        "xargs -rn1 journalctl --no-pager --lines 100 -u"
+    )
 
-    cmd = "systemctl is-system-running --wait || (systemctl --failed --no-legend --no-pager | awk '{print $2}' | xargs -rn1 journalctl --no-pager --lines 100 -u; exit 1)"
+    # Check if systemd has finished booting
+    exit_code, output, error = client.execute_command(systemd_status_cmd, quiet=False)
 
-    (exit_code, output, error) = client.execute_command(cmd, quiet=False)
-
-    assert exit_code == 0, f"Failed to wait for systemd: {error}, {output}"
+    if exit_code != 0:
+        # Fetch logs of failed units
+        failed_exit_code, failed_output, failed_error = client.execute_command(
+            systemd_failed_cmd, quiet=False
+        )
+        logs = (
+            failed_output if failed_exit_code == 0
+            else f"Failed to fetch logs: {failed_error}"
+        )
+        # Append logs to debug message
+        debug_message = (
+            f"Systemd did not finish booting.\nError: {error}\nOutput: {output}\n"
+            f"Failed unit logs:\n{logs}"
+        )
+        # Assert with detailed debug message
+        assert exit_code == 0, debug_message
 
 
 def validate_systemd_unit(client, systemd_unit, active=True):
