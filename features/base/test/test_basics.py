@@ -54,7 +54,7 @@ def test_bash_timeout_was_set(client, non_container):
 @pytest.mark.security_id(484)
 def test_bash_history_disabled(client, non_container):
     """
-       Check that we have set the necessary timeout by default to 900.
+       Check that we do not store any history entires.
     """
     autologout = read_file_remote(client,  "/etc/profile.d/50-nohistory.sh", remove_comments=True)
     assert ['HISTFILE=/dev/null', 'readonly HISTFILE', 'export HISTFILE'] == autologout, "bash history is set!" 
