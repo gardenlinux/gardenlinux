@@ -25,8 +25,8 @@ jobs:
           submodules: true
       - id: matrix
         run: |
-          FLAVORS_AMD64=$(./bin/flavors_parse.py ${{ inputs.flags }} | jq -r '.amd64')
-          FLAVORS_ARM64=$(./bin/flavors_parse.py ${{ inputs.flags }} | jq -r '.arm64')
+          FLAVORS_AMD64=$(./bin/flavors_parse.py ${{ inputs.flags }} | jq -r '.amd64' // [])
+          FLAVORS_ARM64=$(./bin/flavors_parse.py ${{ inputs.flags }} | jq -r '.arm64' // [])
           MATRIX=$(jq -nc \
             --argjson amd64 "$FLAVORS_AMD64" \
             --argjson arm64 "$FLAVORS_ARM64" \
