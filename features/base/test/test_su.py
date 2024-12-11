@@ -1,7 +1,7 @@
 import pytest
 from helper.utils import read_file_remote
 
-@pytest.mark.security_id (166)
+@pytest.mark.security_id(166)
 def test_su_restriction(client, non_container):
     """Validate that we have access to su restircted by default."""
     pam_configuration  = read_file_remote(client, "/etc/pam.d/su", remove_comments=True)
