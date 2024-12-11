@@ -19,7 +19,7 @@ on:
     inputs:
       gl_version:
         type: string
-        default: latest
+        default: nightly
       force_build:
         type: boolean
         default: false
@@ -31,7 +31,7 @@ on:
     inputs:
       gl_version:
         type: string
-        default: latest
+        default: nightly
       force_build:
         type: boolean
         default: false
@@ -69,14 +69,11 @@ jobs:
       - name: Set GL_VERSION
         run: |
           if [[ -z "${{ inputs.gl_version }}" ]]; then
-            echo "GL_VERSION=latest" >> ${GITHUB_ENV}
+            echo "GL_VERSION=nightly" >> ${GITHUB_ENV}
           else
             echo "GL_VERSION=${{ inputs.gl_version }}" >> ${GITHUB_ENV}
           fi
       - name: make pull-platform-test-${{ matrix.platform }}
-        env:
-          # needed to use github cli in bin/garden-version-resolver
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "GL_VERSION set to ${GL_VERSION}"
           echo "TAG_EXISTS=false" >> ${GITHUB_ENV}
@@ -87,9 +84,6 @@ jobs:
 
       # build if tag does not exist, force_build or force_release is set
       - name: make build-platform-test-${{ matrix.platform }}
-        env:
-          # needed to use github cli in bin/garden-version-resolver
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [[ "${TAG_EXISTS}" == false ]] || [[ "${{ inputs.force_build }}" == true ]] || [[ "${{ inputs.force_release }}" == true ]]; then
             make -j $(nproc) --directory=tests/images GARDENLINUX_BUILD_CRE=podman build-platform-test-${{ matrix.platform }}
@@ -99,16 +93,10 @@ jobs:
       # after merge to main, run push-release-platform-test
       - name: make push-release-platform-test-${{ matrix.platform }} (after merge to main)
         if: github.event.pull_request.merged == true && github.ref_name == 'main'
-        env:
-          # needed to use github cli in bin/garden-version-resolver
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           make -j $(nproc) --directory=tests/images GARDENLINUX_BUILD_CRE=podman push-release-platform-test-${{ matrix.platform }}
       # when forced, run push-release-platform-test
       - name: make push-release-platform-test-${{ matrix.platform }} (when force_release is set)
         if: inputs.force_release
-        env:
-          # needed to use github cli in bin/garden-version-resolver
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           make -j $(nproc) --directory=tests/images GARDENLINUX_BUILD_CRE=podman push-release-platform-test-${{ matrix.platform }}  
