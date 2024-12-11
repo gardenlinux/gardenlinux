@@ -155,11 +155,11 @@ def get_kernel_version(client):
 def wait_systemd_boot(client):
     """ Wait for systemd to finish booting """
 
-    cmd = "systemctl is-system-running --wait"
+    cmd = "systemctl is-system-running --wait || (systemctl --failed --no-legend --no-pager | awk '{print $2}' | xargs -rn1 journalctl --no-pager --lines 100 -u; exit 1)"
 
     (exit_code, output, error) = client.execute_command(cmd, quiet=False)
 
-    assert exit_code == 0, f"Failed to wait for systemd"
+    assert exit_code == 0, f"Failed to wait for systemd: {error}, {output}"
 
 
 def validate_systemd_unit(client, systemd_unit, active=True):
