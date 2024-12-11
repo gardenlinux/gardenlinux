@@ -117,5 +117,4 @@ jobs:
           merge-multiple: true
       - name: update index using glcli tool
         run: |
-          cd manifests
           GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ghcr.io/${{ github.repository }} --version ${{ inputs.version }} --manifest_folder manifests
