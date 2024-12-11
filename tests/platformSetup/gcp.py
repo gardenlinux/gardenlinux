@@ -459,13 +459,14 @@ class GCP:
     def _wait_until_reachable(self, hostname):
         self.logger.info(f"Waiting for {hostname} to respond...")
         i = 0
-        while i < 40:
+        # wait for 10 minutes
+        while i < 60:
             response = os.system("timeout 1 bash -c \"</dev/tcp/" + hostname + "/22\"")
             if response == 0:
                 self.logger.info(f"Instance {hostname} is reachable...")
                 return
             self.logger.info(f"Waiting for {hostname} to respond...")
-            time.sleep(2)
+            time.sleep(10)
             i += 1
         raise Exception("Remote host unreachable")
 
