@@ -62,7 +62,7 @@ jobs:
           python-version: "3.12"
       - name: Install glcli util
         run: |
-          git clone --depth 1 --branch 0.5.0 https://github.com/gardenlinux/python-gardenlinux-cli.git
+          git clone --depth 1 --branch 0.6.0 https://github.com/gardenlinux/python-gardenlinux-cli.git
           mv python-gardenlinux-cli /opt/glcli
           pip install -r /opt/glcli/requirements.txt
       - name: Install cosign
@@ -71,12 +71,13 @@ jobs:
           cosign-release: 'v2.4.1'
       - name: push using the glcli util
         run: |
-          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir ${{ env.cname }} --container ghcr.io/${{ github.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest --manifest_file oci_manifest_entry_${{ env.cname }}.json
+          mkdir -p manifests
+          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir ${{ env.cname }} --container ghcr.io/${{ github.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest --manifest_file manifests/oci_manifest_entry_${{ env.cname }}.json
       - name: Upload oci manifest artifact
         uses: actions/upload-artifact@v4
         with:
           name: oci_manifest_entry_${{ env.cname }}.json
-          path: oci_manifest_entry_${{ env.cname }}.json
+          path: manifests/
       - name: Output digest to be signed
         run: |
           cat digest
@@ -105,19 +106,16 @@ jobs:
           python-version: "3.12"
       - name: Install glcli util
         run: |
-          git clone --depth 1 --branch 0.5.0 https://github.com/gardenlinux/python-gardenlinux-cli.git
+          git clone --depth 1 --branch 0.6.0 https://github.com/gardenlinux/python-gardenlinux-cli.git
           mv python-gardenlinux-cli /opt/glcli
           pip install -r /opt/glcli/requirements.txt
       - name: Download OCI manifest artifacts
         uses: actions/download-artifact@v4
         with:
-          path: oci-manifests
+          path: manifests
           pattern: oci_manifest_entry_*
           merge-multiple: true
       - name: update index using glcli tool
         run: |
-          cd oci-manifests
-          for manifest in oci_manifest_entry*
-          do
-            GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ghcr.io/${{ github.repository }} --version ${{ inputs.version }} --manifest_file $manifest
-          done
+          cd manifests
+          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ghcr.io/${{ github.repository }} --version ${{ inputs.version }} --manifest_folder manifests
