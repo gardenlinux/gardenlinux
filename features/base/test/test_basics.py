@@ -41,6 +41,7 @@ def test_that_PATH_was_set(client):
         assert _path_obj.root == "/", "PATH entry was detect that's located not on root."
         assert _path_obj.is_absolute(), "Not an absolute path." 
 
+
 @pytest.mark.security_id(485)
 def test_bash_timeout_was_set(client, non_container):
     """
@@ -48,6 +49,15 @@ def test_bash_timeout_was_set(client, non_container):
     """
     autologout = read_file_remote(client,  "/etc/profile.d/50-autologout.sh", remove_comments=True)
     assert ['TMOUT=900', 'readonly TMOUT', 'export TMOUT'] == autologout, "Timeout missing for bash"
+
+
+@pytest.mark.security_id(484)
+def test_bash_history_disabled(client, non_container):
+    """
+       Check that we have set the necessary timeout by default to 900.
+    """
+    autologout = read_file_remote(client,  "/etc/profile.d/50-nohistory.sh", remove_comments=True)
+    assert ['HISTFILE=/dev/null', 'readonly HISTFILE', 'export HISTFILE'] == autologout, "bash history is set!" 
 
 
 def test_no_man(client):
