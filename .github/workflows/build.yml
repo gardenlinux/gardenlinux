@@ -252,6 +252,7 @@ jobs:
     defaults:
       run:
         shell: bash
+    if: needs.generate_matrix_bare.outputs.matrix != '{"include":[]}'
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.generate_matrix_bare.outputs.matrix) }}
