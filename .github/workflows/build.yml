@@ -56,8 +56,9 @@ jobs:
       - uses: ./.github/actions/setup
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
+          cd $(dirname $(realpath bin/garden-version))/..
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
-          [ -L VERSION ] || git update-index --assume-unchanged VERSION
+          git update-index --assume-unchanged VERSION
       - name: build certificates
         if: ${{ ! inputs.use_kms }}
         run: ./cert/build
@@ -98,8 +99,9 @@ jobs:
           arch: "${{ matrix.arch }}"
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
+          cd $(dirname $(realpath bin/garden-version))/..
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
-          [ -L VERSION ] || git update-index --assume-unchanged VERSION
+          git update-index --assume-unchanged VERSION
       - name: build base-${{ matrix.arch }}
         run: ./build base-${{ matrix.arch }}
       - uses: actions/cache/save@6849a6489940f00c2f30c0fb92c6274307ccb58a # pin@v3
@@ -178,8 +180,9 @@ jobs:
           arch: "${{ matrix.arch }}"
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
+          cd $(dirname $(realpath bin/garden-version))/..
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
-          [ -L VERSION ] || git update-index --assume-unchanged VERSION
+          git update-index --assume-unchanged VERSION
       - name: load cert cache
         uses: actions/cache/restore@6849a6489940f00c2f30c0fb92c6274307ccb58a # pin@v3
         with:
@@ -267,8 +270,9 @@ jobs:
           arch: "${{ matrix.arch }}"
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
+          cd $(dirname $(realpath bin/garden-version))/..
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
-          [ -L VERSION ] || git update-index --assume-unchanged VERSION
+          git update-index --assume-unchanged VERSION
       - name: load bootstrap stage cache
         uses: actions/cache/restore@6849a6489940f00c2f30c0fb92c6274307ccb58a # pin@v3
         with:
