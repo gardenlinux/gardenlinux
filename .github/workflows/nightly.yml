@@ -31,7 +31,7 @@ jobs:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_kms_role: ${{ secrets.SECUREBOOT_DB_IAM_ROLE }}
       aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
-  upload_to_s3:
+ upload_to_s3:
     name: upload to S3
   tests:
     needs: [ build ]
