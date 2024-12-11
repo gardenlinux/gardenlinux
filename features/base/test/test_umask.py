@@ -6,6 +6,7 @@ from helper.tests.file_content import file_content
 # First: File to process
 # Second: Key to search
 # Third: Value of Key
+@pytest.mark.security_id(486)
 @pytest.mark.parametrize(
     "file,dict",
     [
