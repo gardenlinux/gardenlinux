@@ -5,7 +5,7 @@
 cname="${@: -1}"
 
 configFile="azure_test_config.yaml"
-containerName="ghcr.io/gardenlinux/gardenlinux/platform-test-azure:latest"
+containerName="ghcr.io/gardenlinux/gardenlinux/platform-test-azure:nightly"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
 
 azure_hyper_v_generation="V1"
