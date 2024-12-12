@@ -2,7 +2,7 @@ import pytest
 from helper.utils import execute_remote_command, read_file_remote
 
 @pytest.mark.secrutiy_id(321)
-def test_pam(client):
+def test_pam(client, non_container):
     """
         This checks that the pre-requiements are set to operate with
         a OpenLDAP backend. Note this will *not* installed libpam-ldap
