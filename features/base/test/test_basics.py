@@ -43,7 +43,7 @@ def test_that_PATH_was_set(client):
 
 
 @pytest.mark.security_id(485)
-def test_bash_timeout_was_set(client, non_container):
+def test_bash_timeout_was_set(client, non_container, non_firecracker, non_metal):
     """
        Check that we have set the necessary timeout by default to 900.
     """
@@ -52,7 +52,7 @@ def test_bash_timeout_was_set(client, non_container):
 
 
 @pytest.mark.security_id(484)
-def test_bash_history_disabled(client, non_container):
+def test_bash_history_disabled(client, non_container, non_firecracker, non_metal):
     """
        Check that we do not store any history entires.
     """
