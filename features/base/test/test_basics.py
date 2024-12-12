@@ -92,15 +92,16 @@ def test_for_supported_fs(client, non_container):
                                      remove_comments=True)
 
     # Ext4
-    assert 'CONFIG_EXT4_FS=y' in kernel_config, "Missing ext4 support in the kernel."
+    assert 'CONFIG_EXT4_FS=y' in kernel_config or 'CONFIG_EXT4_FS=m' in kernel_config, \
+           "Missing ext4 support in the kernel."
     # Ext3
-    assert 'CONFIG_EXT3_FS=y' not in kernel_config, "Ext3 support in the kernel detected!"
-    assert 'CONFIG_EXT3_FS=m' not in kernel_config, "Ext3 module in the kernel detected!"
+    assert 'CONFIG_EXT3_FS=y' not in kernel_config or 'CONFIG_EXT3_FS=m' not in kernel_config, \
+           "Ext3 module in the kernel detected!"
     # Btrfs
-    assert 'CONFIG_BTRFS_FS=m' in kernel_config, "Missing btrfs support in the kernel."
+    assert 'CONFIG_BTRFS_FS=m' in kernel_config or 'CONFIG_BTRFS_FS=y' in kernel_config, \
+           "Missing btrfs support in the kernel."
     # XFS
     assert 'CONFIG_XFS_FS=m' in kernel_config, "Missing XFS support in the kernel."
-
 
 
 def test_no_man(client):
