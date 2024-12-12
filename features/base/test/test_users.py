@@ -52,5 +52,6 @@ def test_for_root(client, non_container):
 
 
 @pytest.mark.security_id(179)
+@pytest.mark.security_id(807)
 def test_users(client, non_dev, non_feature_githubActionRunner, non_vhost, non_hyperscalers, non_container, non_ccee):
      users(client)
