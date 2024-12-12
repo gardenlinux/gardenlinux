@@ -43,7 +43,7 @@ def test_that_PATH_was_set(client):
 
 
 @pytest.mark.security_id(485)
-def test_bash_timeout_was_set(client, non_container, non_firecracker, non_metal):
+def test_bash_timeout_was_set(client, non_container, non_metal, non_firecracker):
     """
        Check that we have set the necessary timeout by default to 900.
     """
