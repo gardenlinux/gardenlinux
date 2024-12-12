@@ -1,6 +1,7 @@
 # Tests
 
 # Table of Content
+
 - [Tests](#tests)
 - [Table of Content](#table-of-content)
 - [General](#general)
@@ -14,36 +15,24 @@
   - [Using the tests on supported platforms](#using-the-tests-on-supported-platforms)
     - [General](#general-1)
     - [Public cloud platforms](#public-cloud-platforms)
-      - [AWS](#aws)
-        - [Configuration options](#configuration-options)
-        - [Running the tests](#running-the-tests)
-      - [Azure](#azure)
-        - [Configuration options](#configuration-options-1)
-        - [Running the tests](#running-the-tests-1)
-      - [Aliyun](#aliyun)
-        - [Configuration options](#configuration-options-2)
-        - [Running the tests](#running-the-tests-2)
-      - [GCP](#gcp)
-        - [Configuration options](#configuration-options-3)
-        - [Running the tests](#running-the-tests-3)
-      - [Firecracker (MicroVM)](#firecracker-microvm)
-        - [Configuration options](#configuration-options-4)
-        - [Running the tests](#running-the-tests-4)
+    - [Firecracker (MicroVM)](#firecracker-microvm)
+      - [Configuration options](#configuration-options)
+      - [Running the tests](#running-the-tests)
     - [Local test environments](#local-test-environments)
       - [CHROOT](#chroot)
-        - [Configuration options](#configuration-options-5)
-        - [Running the tests](#running-the-tests-5)
+        - [Configuration options](#configuration-options-1)
+        - [Running the tests](#running-the-tests-1)
       - [KVM](#kvm)
-        - [Configuration options](#configuration-options-6)
-        - [Running the tests](#running-the-tests-6)
+        - [Configuration options](#configuration-options-2)
+        - [Running the tests](#running-the-tests-2)
       - [Manual Testing](#manual-testing)
-        - [Running the tests](#running-the-tests-7)
+        - [Running the tests](#running-the-tests-3)
       - [OpenStack CC EE flavor](#openstack-cc-ee-flavor)
-        - [Configuration options](#configuration-options-7)
-        - [Running the tests](#running-the-tests-8)
+        - [Configuration options](#configuration-options-3)
+        - [Running the tests](#running-the-tests-4)
       - [Local tests in the platform container](#local-tests-in-the-platform-container)
-        - [Configuration options](#configuration-options-8)
-        - [Running the tests](#running-the-tests-9)
+        - [Configuration options](#configuration-options-4)
+        - [Running the tests](#running-the-tests-5)
   - [Misc](#misc)
     - [Autoformat Using Black](#autoformat-using-black)
     - [Run Static Checks](#run-static-checks)
@@ -105,7 +94,13 @@ These tests are located in a subfolder (`test`) within a feature's directory and
 
 # Platform Tests
 ## Prerequisites
-Build the platform test container images with all necessary dependencies. These container images will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP). *Note: For `CHROOT` platform tests the `gardenlinux/platform-test-base` image can be used.
+Build the platform test container images with all necessary dependencies. These container images will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP) and the OpenTofu binaries.
+
+> [!NOTE]
+> For platform tests where the resources are build up with OpenTofu the `gardenlinux/platform-test-tofu` image can be used.
+
+> [!NOTE]
+> For `CHROOT` platform tests the `gardenlinux/platform-test-base` image can be used.
 
     make --directory=tests/images build-platform-test
 
@@ -135,6 +130,7 @@ Many more build targets are available, e.g. to build only for a certain platform
     pull-platform-test-gcp                  Pull the platform test image for gcp
     pull-platform-test-kvm                  Pull the platform test image for kvm
     pull-platform-test-openstack            Pull the platform test image for openstack
+    pull-platform-test-tofu                 Pull the platform test image for tofu
     build-platform-test-ali                 Build the platform test image for ali
     build-platform-test-aws                 Build the platform test image for aws
     build-platform-test-azure               Build the platform test image for azure
@@ -142,6 +138,7 @@ Many more build targets are available, e.g. to build only for a certain platform
     build-platform-test-gcp                 Build the platform test image for gcp
     build-platform-test-kvm                 Build the platform test image for kvm
     build-platform-test-openstack           Build the platform test image for openstack
+    build-platform-test-tofu                Build the platform test image for tofu
     push-platform-test-ali                  Push the platform test image for ali
     push-platform-test-aws                  Push the platform test image for aws
     push-platform-test-azure                Push the platform test image for azure
@@ -149,6 +146,7 @@ Many more build targets are available, e.g. to build only for a certain platform
     push-platform-test-gcp                  Push the platform test image for gcp
     push-platform-test-kvm                  Push the platform test image for kvm
     push-platform-test-openstack            Push the platform test image for openstack
+    push-platform-test-tofu                 Push the platform test image for tofu
     push-release-platform-test-ali          Push the platform test image for ali with release tag
     push-release-platform-test-aws          Push the platform test image for aws with release tag
     push-release-platform-test-azure        Push the platform test image for azure with release tag
@@ -156,6 +154,7 @@ Many more build targets are available, e.g. to build only for a certain platform
     push-release-platform-test-gcp          Push the platform test image for gcp with release tag
     push-release-platform-test-kvm          Push the platform test image for kvm with release tag
     push-release-platform-test-openstack    Push the platform test image for openstack with release tag
+    push-release-platform-test-tofu         Push the platform test image for tofu with release tag
 
 The resulting container images will be tagged as `gardenlinux/platform-test-<platform>:<version>` with `<version>` being the version that is passed as $GL_VERSION build argument. By default this is the version that has the `latest` tag in the [github image registry](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux). In addition to that, tags for the commit hashes also exist.
 
@@ -203,8 +202,13 @@ All further tests run inside containers spawned from these images.
     ghcr.io/gardenlinux/gardenlinux/platform-test-openstack    1e0d51fe                                  6a200988c08f  23 hours ago   879 MB
     ghcr.io/gardenlinux/gardenlinux/platform-test-openstack    32618be8186df52845a10e2c6ab06fd54f8b656a  802a233b9aeb  23 hours ago   883 MB
     ghcr.io/gardenlinux/gardenlinux/platform-test-openstack    32618be8                                  802a233b9aeb  23 hours ago   883 MB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-tofu         1679.0                                    c23ac2651b9e  13 days ago    3.64 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-tofu         80436df06a51f131a4993a2e6e34aabca1654138  c23ac2651b9e  13 days ago    3.64 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-tofu         80436df0                                  c23ac2651b9e  13 days ago    3.64 GB
+    ghcr.io/gardenlinux/gardenlinux/platform-test-tofu         latest                                    c23ac2651b9e  13 days ago    3.64 GB    
 
 ## Using the tests on supported platforms
+
 ### General
 
 The platform tests require a config file containing vital information for interacting with the cloud providers. In the following sections, the configuration options are described in general and for each cloud provider individually.
@@ -213,7 +217,15 @@ Since the configuration options are provided as a structured YAML with the cloud
 
 ### Public cloud platforms
 
-These tests test Garden Linux on public cloud providers like Amazons AWS, Googles Cloud Platforms, Microsoft's Azure or Aliyun's Alibaba cloud. You need a valid subscription in these hyperscalers to run the tests.
+These tests test Garden Linux on public cloud providers like Amazons AWS, Googles Cloud Platforms, Microsoft's Azure or Aliyun's Alibaba cloud. You need a valid subscription in these hyperscalers to run the tests. The test's cloud resources are built up with OpenTofu.
+
+Please look at the [OpenTofu Documentation in `tests/platformSetup/tofu`](platformSetup/tofu/README.md) for more details.
+
+#### Old pytest calls to cloud proviers.
+
+This is deprecated.
+
+<details>
 
 #### AWS
 
@@ -335,7 +347,8 @@ Login using the following command on your local machine (i.e. not inside of the 
 
     az login
 
-**Note:** other means of authentication, e.g. usage of service accounts should be possible.
+> [!NOTE]
+> other means of authentication, e.g. usage of service accounts should be possible.
 
 Use the following test configuration:
 
@@ -647,7 +660,6 @@ The URI can be:
 
 - **keep_running** _(optional)_: if set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow for debugging
 
-</details>
 
 ##### Running the tests
 
@@ -667,12 +679,14 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 
     pytest --iaas=gcp --configfile=/config/mygcpconfig.yaml
 
+</details>
+
 #### Firecracker (MicroVM)
 
 Firecracker tests are designed to run directly on your platform. Currently, AMD64 and ARM64 architectures are supported **without any further cross platform support**.
 
-**Notes**:
-Firecracker is currently limited to Linux base platforms only. Additionally, hardware acceleration is needed. Make sure, `/dev/kvm` is usable.
+> [!NOTE]
+> Firecracker is currently limited to Linux base platforms only. Additionally, hardware acceleration is needed. Make sure, `/dev/kvm` is usable.
 
 Use the following test configuration:
 
@@ -776,6 +790,7 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 
     pytest --iaas=firecracker --configfile=/config/myfirecrackerconfig.yaml
 
+</details>
 
 ### Local test environments
 
@@ -785,11 +800,11 @@ These tests flavors will make use of chroot, KVM virtual machines or OpenStack e
 
 CHROOT tests are designed to run directly on your platform within a `chroot` environment and boosts up the time for the platform tests that do not need any target platform.
 
-Notes:
- * A local SSH server is started inside the chroot environment. The tests communicate via ssh to execute cmds in the image under test. 
- * CHROOT will run inside your `platform-test` Docker container
- * Podman container needs `SYS_ADMIN`, `MKNOD`, `AUDIT_WRITE` and `NET_RAW` capability
- * Temporary SSH keys are auto generated and injected
+> [!NOTE]
+> * A local SSH server is started inside the chroot environment. The tests communicate via ssh to execute cmds in the image under test. 
+> * CHROOT will run inside your `platform-test` Docker container
+> * Podman container needs `SYS_ADMIN`, `MKNOD`, `AUDIT_WRITE` and `NET_RAW` capability
+> * Temporary SSH keys are auto generated and injected
 
 Use the following configuration file to proceed; only the path to the TAR image needs to be adjusted:
 
@@ -852,10 +867,11 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 #### KVM
 
 KVM tests are designed to run directly on your platform. Currently, AMD64 and ARM64 architectures are supported.
-Notes:
- * KVM/QEMU will run inside your `platform-test` Docker container
- * (Default) New temporary SSH keys are auto generated and injected
- * (Default: amd64) AMD64 and ARM64 architectures are supported
+
+> [!NOTE]
+> * KVM/QEMU will run inside your `platform-test` Docker container
+> * (Default) New temporary SSH keys are auto generated and injected
+> * (Default: amd64) AMD64 and ARM64 architectures are supported
 
 Use the following configuration file to proceed; only the path to the image needs to be adjusted:
 
@@ -995,7 +1011,8 @@ Run the tests (be sure you properly mounted the Garden Linux repository to the c
 
 Obtain credentials by downloading an OpenStack RC file and source it after adding your password to it. Alternatively you could statically add the password to it (environment variable `OS_PASSWORD`) and specify that file in the configuration.
 
-**Note** that the test will not attempt to create networks, security groups, or attached floating IPs to the virtual machines. The security group and network must exist and most likely the test will have to be executed from a machine in the same network.
+> [!NOTE]
+> that the test will not attempt to create networks, security groups, or attached floating IPs to the virtual machines. The security group and network must exist and most likely the test will have to be executed from a machine in the same network.
 
 Use the following test configuration:
 

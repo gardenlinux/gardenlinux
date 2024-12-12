@@ -1,0 +1,9 @@
+terraform {
+  backend "s3" {
+    region  = "eu-central-1"
+    bucket  = "gardenlinux-dev-my-gardenlinux-test-tfstate"
+    key     = "terraform.tfstate"
+    encrypt = "true"
+    # dynamodb_table = "gardenlinux-dev-tfstate"
+  }
+}
