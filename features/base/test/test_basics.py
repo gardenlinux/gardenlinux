@@ -60,6 +60,29 @@ def test_bash_history_disabled(client, non_container):
     assert ['HISTFILE=/dev/null', 'readonly HISTFILE', 'export HISTFILE'] == autologout, "bash history is set!" 
 
 
+@pytest.mark.security_id(643)
+def test_that_for_supported_fs(client, non_container):
+    """
+       Check that we do support only some of the fs.
+       We do not support ext3. But ext4, xfs and btfs.
+    """
+    arch = get_architecture(client)
+    kernel_config = read_file_remote(client,  
+                                     f"/boot/config-*-cloud-{arch}", 
+                                     remove_comments=True)
+
+    # Ext4
+    assert 'CONFIG_EXT4_FS=y' in kernel_config, "Missing ext4 support in the kernel."
+    # Ext3
+    assert 'CONFIG_EXT3_FS=y' not in kernel_config, "Ext3 support in the kernel detected!"
+    assert 'CONFIG_EXT3_FS=m' not in kernel_config, "Ext3 module in the kernel detected!"
+    # Btrfs
+    assert 'CONFIG_BTRFS_FS=m' in kernel_config, "Missing btrfs support in the kernel."
+    # XFS
+    assert 'CONFIG_XFS_FS=m' in kernel_config, "Missing XFS support in the kernel."
+
+
+
 def test_no_man(client):
     """ Test that no man files are present """
     (exit_code, _, error) = client.execute_command("man ls", disable_sudo=True)
