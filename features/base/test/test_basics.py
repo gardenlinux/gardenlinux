@@ -111,6 +111,39 @@ def test_no_man(client):
     assert "man: command not found" in error
 
 
+@pytest.mark.security_id(643)
+def test_for_nfs_and_smb(client, non_feature_gardener):
+    """
+       Ensure that we do not have any remote filesystem
+       installed. Unless you want to.
+    """
+    nfs_package_name = 'nfs-common'
+    nfs_package_status = None
+
+    smb_pacakge_name = 'samba-common'
+    smb_package_status = None
+
+    nfs_package = execute_remote_command(client, f"dpkg -l {nfs_package_name}", skip_error=True)
+    samba_package = execute_remote_command(client, f"dpkg -l {smb_pacakge_name}", skip_error=True)
+
+    if nfs_package[0] == 0:
+      for output in nfs_package[1].split("\n"):
+        if nfs_package_name in output:
+             nfs_package_status = output.split()[0]
+        nfs_package_name = 'un'
+
+    if samba_package[0] == 0:
+      for output in samba_package[1].split("\n"):
+        if smb_pacakge_name in output:
+             smb_package_status = output.split()[0]
+    else:
+        smb_package_status = 'un'
+
+    # we assumed that dpkg returned a (un)installed.
+    assert nfs_package_status == 'un', f"Error {nfs_package_name} is installed!"
+    assert smb_package_status == 'un', f"Error {smb_pacakge_name} is installed!"
+
+
 def test_ls(client):
     """ Test for regular linux folders/mounts """
     (exit_code, output, error) = client.execute_command("ls /")
