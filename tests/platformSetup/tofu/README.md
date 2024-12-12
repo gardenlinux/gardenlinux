@@ -26,14 +26,24 @@ For example, to deploy the flavor `gcp-gardener_prod_trustedboot_tpm2-amd64`:
 
 ```bash
 ❯ cat tests/platformSetup/tofu/variables.gcp-gardener_prod_trustedboot_tpm2-amd64.tfvars
-test_prefix = "bob"
-platforms = ["gcp"]
-archs = ["amd64"]
-features = ["_trustedboot", "_tpm2"]
-gcp_instance_type = "n1-standard-2"
-gcp_image_file = "gcp-gardener_prod-amd64-today-local.tar.gz"
+test_prefix = "bobs"
 azure_subscription_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 gcp_project_id = "xxxxxxxx"
+flavors = [
+  {
+    "name": "gcp-gardener_prod_trustedboot_tpm2-amd64",
+    "platform": "gcp",
+    "features": [
+      "gardener",
+      "_prod",
+      "_trustedboot",
+      "_tpm2"
+    ],
+    "arch": "amd64",
+    "instance_type": "n1-standard-2",
+    "image_file": "gcp-gardener_prod_trustedboot_tpm2-amd64-1708.0-2ed27597.gcpimage.tar.gz"
+  }
+]
 ```
 
 > [!TIP]
@@ -48,7 +58,7 @@ Usage:
 
 ```bash
 ❯ tests/platformSetup/tofu/tf_variables_create.py --help
-usage: tf_variables_create.py [-h] [--flavors FLAVORS] [--root-dir ROOT_DIR] [--image-path IMAGE_PATH] [--cname CNAME] [--image-file-ali IMAGE_FILE_ALI] [--image-file-aws IMAGE_FILE_AWS] [--image-file-azure IMAGE_FILE_AZURE] [--image-file-gcp IMAGE_FILE_GCP] test_prefix
+usage: tf_variables_create.py [-h] [--flavors FLAVORS] [--root-dir ROOT_DIR] [--image-path IMAGE_PATH] [--cname CNAME] test_prefix
 
 Generate OpenTofu variable files based on provided test prefix, platforms, archs, and flavors.
 
@@ -62,51 +72,33 @@ options:
   --image-path IMAGE_PATH
                         Base path for image files.
   --cname CNAME         Basename of image file, e.g. 'gcp-gardener_prod-arm64-1592.2-76203a30'.
-  --image-file-ali IMAGE_FILE_ALI
-                        Specific ALI image file.
-  --image-file-aws IMAGE_FILE_AWS
-                        Specific AWS image file.
-  --image-file-azure IMAGE_FILE_AZURE
-                        Specific Azure image file.
-  --image-file-gcp IMAGE_FILE_GCP
-                        Specific GCP image file.
 ```
 
 Example to generate sane defaults for all default flavors:
 
 ```bash
 ❯ tests/platformSetup/tofu/tf_variables_create.py bobs
-Platform: ali
-Architecture: amd64
-Flavor: ali-gardener_prod-amd64
-Features: []
 Created: ~/gardenlinux/tests/platformSetup/tofu/variables.ali-gardener_prod-amd64.tfvars
-Platform: aws
-Architecture: amd64
-Flavor: aws-gardener_prod-amd64
-Features: []
 Created: ~/gardenlinux/tests/platformSetup/tofu/variables.aws-gardener_prod-amd64.tfvars
-Platform: azure
-Architecture: amd64
-Flavor: azure-gardener_prod-amd64
-Features: []
 Created: ~/gardenlinux/tests/platformSetup/tofu/variables.azure-gardener_prod-amd64.tfvars
-Platform: gcp
-Architecture: amd64
-Flavor: gcp-gardener_prod-amd64
-Features: []
 Created: ~/gardenlinux/tests/platformSetup/tofu/variables.gcp-gardener_prod-amd64.tfvars
 ```
 
-Example to generate variables for a specific flavor and image:
+Example to generate variables for a specific flavor:
 
 ```bash
-❯ tests/platformSetup/tofu/tf_variables_create.py --flavor gcp-gardener_prod_trustedboot_tpm2-amd64 --image-path .build --image-file-gcp gcp-gardener_prod_tpm2_trustedboot-amd64-1695.0-30903f3a.gcpimage.tar.gz bobs
-Platform: gcp
-Architecture: amd64
-Flavor: gcp-gardener_prod_trustedboot_tpm2-amd64
-Features: ["_trustedboot", "_tpm2"]
+❯ tests/platformSetup/tofu/tf_variables_create.py --flavors gcp-gardener_prod_trustedboot_tpm2-amd64 bobs
 Created: ~/gardenlinux/tests/platformSetup/tofu/variables.gcp-gardener_prod_trustedboot_tpm2-amd64.tfvars
+```
+
+Example to generate variables for a specific flavor and cname:
+
+```bash
+❯ tests/platformSetup/tofu/tf_variables_create.py --flavors gcp-gardener_prod_trustedboot_tpm2-amd64 --cname gcp-gardener_prod_tpm2_trustedboot-amd64-1695.0-30903f3a bobs
+Created: /home/yeoldegrove/kunden/SAP/gardenlinux/gardenlinux.tofu/tests/platformSetup/tofu/variables.gcp-gardener_prod_trustedboot_tpm2-amd64.tfvars
+
+❯ grep image_file /home/yeoldegrove/kunden/SAP/gardenlinux/gardenlinux.tofu/tests/platformSetup/tofu/variables.gcp-gardener_prod_trustedboot_tpm2-amd64.tfvars
+    "image_file": "gcp-gardener_prod_tpm2_trustedboot-amd64-1695.0-30903f3a.gcpimage.tar.gz"
 ```
 
 ### Creating Cloud Resources with OpenTofu
