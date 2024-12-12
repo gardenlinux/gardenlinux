@@ -60,15 +60,35 @@ def test_bash_history_disabled(client, non_container, non_firecracker, non_metal
     assert ['HISTFILE=/dev/null', 'readonly HISTFILE', 'export HISTFILE'] == autologout, "bash history is set!" 
 
 
+@pytest.mark.security_id(646)
+def test_for_sysfs_and_procfs(client, non_container, non_firecracker):
+    """
+       Check that we do have /proc and /sys mounted correctly.
+    """
+    mount_table = execute_remote_command(client, 'mount')
+    proc_is_correct = False
+    sysfs_is_correct = False
+    for mount_point in mount_table.split("\n"):
+        parameters = mount_point.split()
+        fs = parameters[4]
+        fs_entry = parameters[2]
+        if fs == 'proc' and fs_entry == '/proc':
+            proc_is_correct = True 
+        if fs == 'sysfs' and fs_entry == '/sys':
+            sysfs_is_correct = True
+
+    assert sysfs_is_correct, "Problem with /sys"
+    assert proc_is_correct,  "Problem with /proc"
+
 @pytest.mark.security_id(643)
-def test_that_for_supported_fs(client, non_container):
+def test_for_supported_fs(client, non_container):
     """
        Check that we do support only some of the fs.
        We do not support ext3. But ext4, xfs and btfs.
     """
-    arch = get_architecture(client)
+    boot_config_file = execute_remote_command(client, 'ls /boot/config-*') 
     kernel_config = read_file_remote(client,  
-                                     f"/boot/config-*-cloud-{arch}", 
+                                     boot_config_file,
                                      remove_comments=True)
 
     # Ext4
