@@ -80,7 +80,7 @@ def test_for_sysfs_and_procfs(client, non_container, non_firecracker):
     assert sysfs_is_correct, "Problem with /sys"
     assert proc_is_correct,  "Problem with /proc"
 
-@pytest.mark.security_id(643)
+@pytest.mark.security_id(642)
 def test_for_supported_fs(client, non_container):
     """
        Check that we do support only some of the fs.
