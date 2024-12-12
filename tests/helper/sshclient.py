@@ -181,6 +181,9 @@ class RemoteClient:
                     # increase counter if banner is not yet decodable
                     except:
                         self._increase_retry_count_and_wait()
+                except SSHException as e:
+                    logger.warning(f"SSH exception: {e}")
+                    self._increase_retry_count_and_wait()
         except AuthenticationException as error:
             logger.exception("Authentication failed")
             raise error
