@@ -117,6 +117,14 @@ def test_for_block_devices_outside_of_virtual_fs(client):
     output = execute_remote_command(client, command) 
     assert '' == output, f"Error found block/character in {output}"
 
+    # Depning on our running enviornment we get either an emptry responses 
+    # or one with some entires.
+    command = "find /run -type b,c -exec stat -c '%n %t %T' {} +"
+    output = execute_remote_command(client, command) 
+    assert output == '' or \
+           output == "/run/systemd/inaccessible/chr 0 0\n/run/systemd/inaccessible/blk 0 0\n/run/user/0/systemd/inaccessible/chr 0 0\n/run/user/0/systemd/inaccessible/blk 0 0", \
+           "Error found more entries in /run"
+
 
 @pytest.mark.security_id(643)
 def test_for_nfs_and_smb(client, non_feature_gardener):
