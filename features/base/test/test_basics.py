@@ -111,6 +111,13 @@ def test_no_man(client):
     assert "man: command not found" in error
 
 
+@pytest.mark.security_id(802)
+def test_for_block_devices_outside_of_virtual_fs(client):
+    command = "find / \( -path /proc -o -path /sys -o -path /dev -o -path run \) -prune -o -type b,c -ls"
+    output = execute_remote_command(client, command) 
+    assert '' == output, f"Error found block/character in {output}"
+
+
 @pytest.mark.security_id(643)
 def test_for_nfs_and_smb(client, non_feature_gardener):
     """
