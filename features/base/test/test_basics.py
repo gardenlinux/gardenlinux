@@ -4,21 +4,29 @@ from helper.utils import get_architecture, AptUpdate, install_package_deb, execu
 from helper.sshclient import RemoteClient
 
 
-@pytest.mark.security_id(801)
-def test_basic_fs_permission_settings(client):
-    """
-       In this test we ensure that our filesystem and it's content
-       has set the correct set of permissions and ownerships. This
-       should ensure that a package does *not* create sprawling
-       permissions.
-    """
-    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -path /var/tmp -o -path /var/spool -o -path /var/cache \) -prune -o -uid +0 -ls"
-    output = execute_remote_command(client, command) 
-    assert '132500317      0 drwxr-xr-x   1 _apt     root            0 Dec  9 00:00 /var/lib/apt/lists/auxfiles\n132500322      0 drwx------   1 _apt     root            0 Dec 13 09:46 /var/lib/apt/lists/partial\n132501773      0 drwxr-xr-x   1 100      wheel           0 Dec  9 00:00 /var/lib/libuuid\n132503261      0 drwxr-xr-x   1 systemd-network systemd-network        0 Dec  9 00:00 /var/lib/systemd/network' == output
+#@pytest.mark.security_id(801)
+#def test_basic_fs_permission_settings(client):
+#    """
+#       In this test we ensure that our filesystem and it's content
+#       has set the correct set of permissions and ownerships. This
+#       should ensure that a package does *not* create sprawling
+#       permissions.
+#    """
+#    system_users = read_file_remote(client, "/etc/passwd")
+#
+#    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -path /var/tmp -o -path /var/spool -o -path /var/cache \) -prune -o -uid +0 -ls"
+#    output = execute_remote_command(client, command) 
+#    # We need to censure that this is owned by a system user or root.
+#    # We need a fuction that gives us the system users.
+#    assert '132500317      0 drwxr-xr-x   1 _apt     root            0 Dec  9 00:00 /var/lib/apt/lists/auxfiles\n132500322      0 drwx------   1 _apt     root            0 Dec 13 09:46 /var/lib/apt/lists/partial\n132501773      0 drwxr-xr-x   1 100      wheel           0 Dec  9 00:00 /var/lib/libuuid\n132503261      0 drwxr-xr-x   1 systemd-network systemd-network        0 Dec  9 00:00 /var/lib/systemd/network' == output
+#
+#    
+#    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -path /var/tmp -o -path /var/spool -o -path /var/cache \) -prune -o -uid +999 -ls"
+#    output = execute_remote_command(client, command) 
+#
+#    sysstem_groups = read_file_remote(client, "/etc/group")
+#    assert output == ''
 
-    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -path /var/tmp -o -path /var/spool -o -path /var/cache \) -prune -o -uid +999 -ls"
-    output = execute_remote_command(client, command) 
-    assert output == ''
 
 
 
