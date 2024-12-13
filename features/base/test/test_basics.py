@@ -20,7 +20,9 @@ def test_basic_fs_permission_settings(client):
             uid = int(user[2])
             gid = int(user[3])
             shell = user[6]
-            if uid < 1000:
+            # libvirt-qemu needs to be there, but it's much higher
+            # in the user id.
+            if uid < 1000 or name == 'libvirt-qemu':
                 system_users_list.append((name,uid))
 
     command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -path /var/tmp -o -path /var/spool -o -path /var/cache \) -prune -o -uid +0 -ls"
@@ -46,7 +48,7 @@ def test_basic_fs_permission_settings(client):
             group = group.split(":")
             name = group[0]
             gid = int(user[2])
-            if gid < 1000:
+            if gid < 1000 or name == 'libvirt-qemu':
                 system_group_list.append((name,gid))
 
     command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -path /var/tmp -o -path /var/spool -o -path /var/cache \) -prune -o -gid +0 -ls"
@@ -65,6 +67,17 @@ def test_basic_fs_permission_settings(client):
     command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -path /var/tmp -o -path /var/spool -o -path /var/cache \) -prune -o -gid +999 -ls"
     output = execute_remote_command(client, command) 
     assert output == ''
+
+    execute_remote_command(client, "ls -ln /dev/zero") 
+    output = execute_remote_command(client, command) 
+    print(output)
+    execute_remote_command(client, "ls -ln /dev/") 
+    output = execute_remote_command(client, command) 
+    print(output)
+
+    execute_remote_command(client, "getent passwd") 
+    output = execute_remote_command(client, command) 
+    print(output)
 
     # Ensure we do not have no worild-writable files.
     command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt /run \( -path /var/tmp -o -path /var/cache \) -prune -o \( -type f -o -type d \) -perm /0002 -ls"
