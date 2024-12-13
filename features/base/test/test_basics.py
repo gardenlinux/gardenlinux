@@ -1,5 +1,6 @@
 import pytest
-from helper.utils import get_architecture, AptUpdate, install_package_deb, execute_remote_command, read_file_remote
+from helper.utils import get_architecture, AptUpdate, install_package_deb, execute_remote_command, \
+ read_file_remote, get_installed_kernel_versions, get_package_list
 from helper.sshclient import RemoteClient
 
 
@@ -47,8 +48,17 @@ def test_bash_timeout_was_set(client, non_container, non_metal, non_firecracker)
     """
        Check that we have set the necessary timeout by default to 900.
     """
-    autologout = read_file_remote(client,  "/etc/profile.d/50-autologout.sh", remove_comments=True)
-    assert ['TMOUT=900', 'readonly TMOUT', 'export TMOUT'] == autologout, "Timeout missing for bash"
+    is_firecracker = False
+    # We have a bug that firecracker is tested in a chroot environment. 
+    package_list = get_package_list(client)
+    arch = get_architecture(client)
+    kernel = get_installed_kernel_versions(client)[0].split("-")[0]
+    if f"linux-image-{kernel}-firecracker-{arch}" in package_list:
+        is_firecracker = True
+
+    if not is_firecracker:
+      autologout = read_file_remote(client,  "/etc/profile.d/50-autologout.sh", remove_comments=True)
+      assert ['TMOUT=900', 'readonly TMOUT', 'export TMOUT'] == autologout, "Timeout missing for bash"
 
 
 @pytest.mark.security_id(484)
