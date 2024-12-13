@@ -4,6 +4,24 @@ from helper.utils import get_architecture, AptUpdate, install_package_deb, execu
 from helper.sshclient import RemoteClient
 
 
+@pytest.mark.security_id(801)
+def test_basic_fs_permission_settings(client):
+    """
+       In this test we ensure that our filesystem and it's content
+       has set the correct set of permissions and ownerships. This
+       should ensure that a package does *not* create sprawling
+       permissions.
+    """
+    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -path /var/tmp -o -path /var/spool -o -path /var/cache \) -prune -o -uid +0 -ls"
+    output = execute_remote_command(client, command) 
+    assert '132500317      0 drwxr-xr-x   1 _apt     root            0 Dec  9 00:00 /var/lib/apt/lists/auxfiles\n132500322      0 drwx------   1 _apt     root            0 Dec 13 09:46 /var/lib/apt/lists/partial\n132501773      0 drwxr-xr-x   1 100      wheel           0 Dec  9 00:00 /var/lib/libuuid\n132503261      0 drwxr-xr-x   1 systemd-network systemd-network        0 Dec  9 00:00 /var/lib/systemd/network' == output
+
+    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -path /var/tmp -o -path /var/spool -o -path /var/cache \) -prune -o -uid +999 -ls"
+    output = execute_remote_command(client, command) 
+    assert output == ''
+
+
+
 @pytest.mark.security_id(1)
 def test_gl_is_support_distro(client):
     """Test that gardenlinux is a support vendor. """
@@ -52,8 +70,7 @@ def test_bash_timeout_was_set(client, non_container, non_metal, non_firecracker)
     # We have a bug that firecracker is tested in a chroot environment. 
     package_list = get_package_list(client)
     arch = get_architecture(client)
-    kernel = get_installed_kernel_versions(client)[0].split("-")[0]
-    if f"linux-image-{kernel}-firecracker-{arch}" in package_list:
+    if f"linux-image-firecracker-{arch}" in package_list:
         is_firecracker = True
 
     if not is_firecracker:
