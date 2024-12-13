@@ -38,12 +38,54 @@ def test_basic_fs_permission_settings(client):
 
     command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -path /var/tmp -o -path /var/spool -o -path /var/cache \) -prune -o -uid +999 -ls"
     output = execute_remote_command(client, command) 
-
-    sysstem_groups = read_file_remote(client, "/etc/group")
     assert output == ''
 
+    system_group_list = []
+    system_groups = read_file_remote(client, "/etc/group")
+    for group in system_groups:
+            group = group.split(":")
+            name = group[0]
+            gid = int(user[2])
+            if gid < 1000:
+                system_group_list.append((name,gid))
 
+    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -path /var/tmp -o -path /var/spool -o -path /var/cache \) -prune -o -gid +0 -ls"
+    output = execute_remote_command(client, command) 
+    # We need to censure that this is owned by a system groyp or root.
+    # We need a fuction that gives us the system group .
+    for finding in output.split("\n"):
+        finding = finding.split()
+        finding_group = finding[5]
+        if finding_group.isdigit():
+          # This should not happen...
+          assert finding_group in [n[1] for n in system_group_list]
+        else:
+          assert finding_group in [n[0] for n in system_group_list]
 
+    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -path /var/tmp -o -path /var/spool -o -path /var/cache \) -prune -o -gid +999 -ls"
+    output = execute_remote_command(client, command) 
+    assert output == ''
+
+    # Ensure we do not have no worild-writable files.
+    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt /run \( -path /var/tmp -o -path /var/cache \) -prune -o \( -type f -o -type d \) -perm /0002 -ls"
+    output = execute_remote_command(client, command) 
+    assert output == ''
+
+    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -path /var/tmp -o -path /var/spool -o -path /var/cache \) -prune -o \( -type f -o -type d \) -perm /0020 -ls"
+    output = execute_remote_command(client, command) 
+    #assert output == ''
+    
+    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -nouser -o -nogroup \) -ls" 
+    output = execute_remote_command(client, command) 
+    assert output == ''
+
+    command = f"find /etc /dev /run /tmp /usr /var /opt -type f -perm -0002 \! \( -perm -1007 -uid 0 -gid 0 \) -ls"
+    output = execute_remote_command(client, command) 
+    assert output == ''
+
+    command = f"getfacl -sR /etc /boot /bin /sbin /lib* /usr /var /opt /run"
+    output = execute_remote_command(client, command) 
+    assert output == ''
 
 @pytest.mark.security_id(1)
 def test_gl_is_support_distro(client):
