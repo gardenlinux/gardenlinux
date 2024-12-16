@@ -156,7 +156,7 @@ def test_dynamic_linker_is_set(client):
 
     output = execute_remote_command(client, "ls /etc/ld.so.conf.d")
     for file in output.split("\n"):
-         read_file_remote(client, file)
+         read_file_remote(client,  "/etc/ld.so.conf.d/"+file)
     #assert False
 
 
