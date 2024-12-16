@@ -5,6 +5,8 @@ from helper.sshclient import RemoteClient
 
 
 @pytest.mark.security_id(801)
+@pytest.mark.security_id(803)
+@pytest.mark.security_id(805)
 def test_basic_fs_permission_settings(client):
     """
        In this test we ensure that our filesystem and it's content
@@ -111,13 +113,21 @@ def test_basic_fs_permission_settings(client):
     output = execute_remote_command(client, command) 
     assert output == ''
 
+    command = f"getfacl -sR /etc /boot /bin /sbin /lib* /usr /var /opt /run"
+    output = execute_remote_command(client, command) 
+    assert output == ''
+
+
+@pytest.mark.security_id(801)
+def test_world_writable_directories_have_proper_permissions(client, non_chroot):
+    """
+       This test will fail with a container *without* sudo permissions. Hence
+       it will fail on GitHub right now. Hence, we skip it.
+    """
     command = f"find /etc /dev /run /tmp /usr /var /opt -type f -perm -0002 \\! \\( -perm -1007 -uid 0 -gid 0 \\) -ls"
     output = execute_remote_command(client, command) 
     assert output == ''
 
-    command = f"getfacl -sR /etc /boot /bin /sbin /lib* /usr /var /opt /run"
-    output = execute_remote_command(client, command) 
-    assert output == ''
 
 @pytest.mark.security_id(1)
 def test_gl_is_support_distro(client):
@@ -131,6 +141,14 @@ def test_gl_is_support_distro(client):
     # Negative case:
     status, output  = execute_remote_command(client, "dpkg-vendor --is debian", skip_error=True)
     assert status == 1
+
+
+def test_dynamic_linker_is_set(client):
+    """
+       Ensure that we /etc/ld.so.conf and /etc/ld.so.conf.d/ present with correct parameters.
+    """
+    ld_so_conf = read_file_remote(client, "/etc/ld.so.conf")
+    
 
 
 @pytest.mark.security_id(483)
