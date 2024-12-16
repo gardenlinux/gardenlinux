@@ -113,6 +113,9 @@ def test_basic_fs_permission_settings(client):
     output = execute_remote_command(client, command) 
     assert output == ''
 
+
+@pytest.mark.security_id(801)
+def test_for_acls(client, non_container):
     command = f"getfacl -sR /etc /boot /bin /sbin /lib* /usr /var /opt /run"
     output = execute_remote_command(client, command) 
     assert output == ''
@@ -146,9 +149,16 @@ def test_gl_is_support_distro(client):
 def test_dynamic_linker_is_set(client):
     """
        Ensure that we /etc/ld.so.conf and /etc/ld.so.conf.d/ present with correct parameters.
+       By default does debian handle all the configuration within ld.so.conf.d
     """
     ld_so_conf = read_file_remote(client, "/etc/ld.so.conf")
-    
+    assert ld_so_conf == ['include /etc/ld.so.conf.d/*.conf'],  "ld.so.conf container unknown lines"
+
+    output = execute_remote_command(client, "ls /etc/ld.so.conf.d")
+    for file in output.split("\n"):
+         read_file_remote(client, file)
+    #assert False
+
 
 
 @pytest.mark.security_id(483)
