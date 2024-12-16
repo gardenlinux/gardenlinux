@@ -147,6 +147,7 @@ def test_gl_is_support_distro(client):
     assert status == 1
 
 
+@pytest.mark.security_id(804)
 def test_dynamic_linker_is_set(client):
     """
        Ensure that we /etc/ld.so.conf and /etc/ld.so.conf.d/ present with correct parameters.
