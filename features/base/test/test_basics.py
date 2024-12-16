@@ -1,4 +1,5 @@
 import pytest
+from pathlib import Path
 from helper.utils import get_architecture, AptUpdate, install_package_deb, execute_remote_command, \
  read_file_remote, get_installed_kernel_versions, get_package_list
 from helper.sshclient import RemoteClient
@@ -156,9 +157,11 @@ def test_dynamic_linker_is_set(client):
 
     output = execute_remote_command(client, "ls /etc/ld.so.conf.d")
     for file in output.split("\n"):
-         read_file_remote(client,  "/etc/ld.so.conf.d/"+file)
-    #assert False
-
+         ld_config_d_file = read_file_remote(client,  "/etc/ld.so.conf.d/"+file, remove_comments=True)
+         for entry in ld_config_d_file:
+             _ = Path(entry)
+             assert _.is_absolute(), "Pathing in {entry} file is incorrect placed!"
+             assert '/usr' or '/var' or '/lib/' in str(_.parent), "Error {entry} file is located outside of trusted folders!"
 
 
 @pytest.mark.security_id(483)
@@ -179,7 +182,7 @@ def test_that_PATH_was_set(client):
     # /sbin
     # /bin
     # path_suffix = sbin / bin
-    from pathlib import Path
+
     for path_entry in entries:
         _path_obj = Path(path_entry)
         assert _path_obj.root == "/", "PATH entry was detect that's located not on root."
