@@ -25,8 +25,11 @@ def test_basic_fs_permission_settings(client):
             if uid < 1000 or name == 'libvirt-qemu':
                 system_users_list.append((name,uid))
 
-    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -path /var/tmp -o -path /var/spool -o -path /var/cache \) -prune -o -uid +0 -ls"
-    output = execute_remote_command(client, command) 
+    command = "find "
+    parameter = "/boot /etc /bin /sbin /lib* /usr /var /opt "
+    exclude_parameter = "\\( -path /var/tmp -o -path /var/spool -o -path /var/cache \\) -prune -o "
+    user_id_target = "-uid +0 -ls"
+    output = execute_remote_command(client, command + parameter + exclude_parameter + user_id_target) 
     # We need to censure that this is owned by a system user or root.
     # We need a fuction that gives us the system users.
     for finding in output.split("\n"):
@@ -38,16 +41,21 @@ def test_basic_fs_permission_settings(client):
         else:
           assert findung_user in [n[0] for n in system_users_list]
 
-    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -path /var/tmp -o -path /var/spool -o -path /var/cache \) -prune -o -uid +999 -ls"
-    output = execute_remote_command(client, command) 
-    for finding in output.split("\n"):
-        finding = finding.split()
-        findung_user = finding[4]
-        if findung_user.isdigit():
-          # This should not happen...
-          assert findung_user in [n[1] for n in system_users_list]
-        else:
-          assert findung_user in [n[0] for n in system_users_list]
+
+    user_id_target_all = "-uid +999 -ls"
+    output = execute_remote_command(client, command + parameter + exclude_parameter +  user_id_target_all) 
+    # Seems like the code is broken :(
+    if output:
+      for finding in output.split("\n"):
+          finding = finding.split()
+          findung_user = finding[4]
+          if findung_user.isdigit():
+            # This should not happen...
+            assert findung_user in [n[1] for n in system_users_list]
+          else:
+            assert findung_user in [n[0] for n in system_users_list]
+    else:
+        assert output == ''
 
     system_group_list = []
     system_groups = read_file_remote(client, "/etc/group")
@@ -58,8 +66,10 @@ def test_basic_fs_permission_settings(client):
             if gid < 1000 or name == 'libvirt-qemu':
                 system_group_list.append((name,gid))
 
-    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -path /var/tmp -o -path /var/spool -o -path /var/cache \) -prune -o -gid +0 -ls"
-    output = execute_remote_command(client, command) 
+    group_id_target = "-gid +0 -ls"
+    output = execute_remote_command(client, 
+                                    command + parameter + exclude_parameter + group_id_target 
+                                    ) 
     # We need to censure that this is owned by a system groyp or root.
     # We need a fuction that gives us the system group .
     for finding in output.split("\n"):
@@ -71,32 +81,37 @@ def test_basic_fs_permission_settings(client):
         else:
           assert finding_group in [n[0] for n in system_group_list]
 
-    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -path /var/tmp -o -path /var/spool -o -path /var/cache \) -prune -o -gid +999 -ls"
-    output = execute_remote_command(client, command) 
-    for finding in output.split("\n"):
-        finding = finding.split()
-        finding_group = finding[5]
-        if finding_group.isdigit():
-          # This should not happen...
-          assert finding_group in [n[1] for n in system_group_list]
-        else:
-          assert finding_group in [n[0] for n in system_group_list]
+    group_id_target_all = "-gid +999 -ls"
+    output = execute_remote_command(client, 
+                                    command + parameter + exclude_parameter + group_id_target_all 
+                                    ) 
+    if output:
+      for finding in output.split("\n"):
+          finding = finding.split()
+          finding_group = finding[5]
+          if finding_group.isdigit():
+            # This should not happen...
+            assert finding_group in [n[1] for n in system_group_list]
+          else:
+            assert finding_group in [n[0] for n in system_group_list]
+    else:
+        assert '' == output
 
 
     # Ensure we do not have no worild-writable files.
-    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt /run \( -path /var/tmp -o -path /var/cache \) -prune -o \( -type f -o -type d \) -perm /0002 -ls"
+    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt /run \\( -path /var/tmp -o -path /var/cache \\) -prune -o \\( -type f -o -type d \\) -perm /0002 -ls"
     output = execute_remote_command(client, command) 
     assert output == ''
 
-    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -path /var/tmp -o -path /var/spool -o -path /var/cache \) -prune -o \( -type f -o -type d \) -perm /0020 -ls"
+    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \\( -path /var/tmp -o -path /var/spool -o -path /var/cache \\) -prune -o \\( -type f -o -type d \\) -perm /0020 -ls"
     output = execute_remote_command(client, command) 
     #assert output == ''
     
-    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \( -nouser -o -nogroup \) -ls" 
+    command = f"find /boot /etc /bin /sbin /lib* /usr /var /opt \\( -nouser -o -nogroup \\) -ls" 
     output = execute_remote_command(client, command) 
     assert output == ''
 
-    command = f"find /etc /dev /run /tmp /usr /var /opt -type f -perm -0002 \! \( -perm -1007 -uid 0 -gid 0 \) -ls"
+    command = f"find /etc /dev /run /tmp /usr /var /opt -type f -perm -0002 \\! \\( -perm -1007 -uid 0 -gid 0 \\) -ls"
     output = execute_remote_command(client, command) 
     assert output == ''
 
