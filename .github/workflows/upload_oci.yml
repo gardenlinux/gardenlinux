@@ -127,12 +127,11 @@ jobs:
         with:
           debug: true
           script: |
-            // Delay of 1 minute to ensure all artifacts are available
-            await new Promise(resolve => setTimeout(resolve, 60000));
             console.log('Starting artifact cleanup...');
             const artifacts = await github.rest.actions.listArtifactsForRepo({
               owner: context.repo.owner,
-              repo: context.repo.repo
+              repo: context.repo.repo,
+              per_page: 100
             });
             
             console.log(`Found ${artifacts.data.artifacts.length} total artifacts`);
