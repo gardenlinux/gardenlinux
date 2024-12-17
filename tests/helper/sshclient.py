@@ -3,8 +3,9 @@ import logging
 import time
 import pytest
 import subprocess
-from os import path
 from binascii import hexlify
+from os import environ, path
+from typing import Optional
 
 from paramiko import SSHClient, AutoAddPolicy, RSAKey
 from paramiko.ssh_exception import (
@@ -12,6 +13,7 @@ from paramiko.ssh_exception import (
     AuthenticationException,
     SSHException
 )
+
 from scp import SCPClient, SCPException
 
 logger = logging.getLogger(__name__)
@@ -63,19 +65,32 @@ class RemoteClient:
         port="22",
         sudo=False,
         ssh_connect_timeout: int=60,
-        ssh_max_retries: int=20,
-        ssh_retry_timeout_seconds: int=15,
+        ssh_max_retries: Optional[int]=None,
+        ssh_retry_wait_seconds: Optional[int]=None,
     ) -> None:
         self.host = host
         self.port = port
         self.sudo = sudo
-        self.ssh_connect_timeout = ssh_connect_timeout
-        self.ssh_max_retries = ssh_max_retries
-        self.ssh_retry_timeout_seconds = ssh_retry_timeout_seconds
-        self.client = None
-        self.scp = None
         self.conn = None
-        self.retry_count = 0
+        self._client = None
+        self._scp = None
+
+        if ssh_max_retries is None and "GL_REMOTE_CLIENT_SSH_MAX_RETRIES" in environ:
+            try: ssh_max_retries = int(environ["GL_REMOTE_CLIENT_SSH_MAX_RETRIES"])
+            except ValueError: pass
+        if ssh_max_retries is None:
+            ssh_max_retries = 20
+
+        if ssh_retry_wait_seconds is None and "GL_REMOTE_CLIENT_SSH_RETRY_WAIT_SECONDS" in environ:
+            try: ssh_retry_wait_seconds = int(environ["GL_REMOTE_CLIENT_SSH_RETRY_WAIT_SECONDS"])
+            except ValueError: pass
+        if ssh_retry_wait_seconds is None:
+            ssh_retry_wait_seconds = 15
+
+        self._ssh_connect_timeout = ssh_connect_timeout
+        self._ssh_retry_wait_seconds = ssh_retry_wait_seconds
+        self._ssh_max_retries = ssh_max_retries
+        self._ssh_retry_count = 0
 
         self.passphrase = None
         self.remote_path = "/"
@@ -92,16 +107,60 @@ class RemoteClient:
         self.user = sshconfig['user']
         self.ssh_key_filepath = path.expanduser(sshconfig['ssh_key_filepath'])
 
+    @property
+    def client(self):
+        if self._client is None:
+            """Open connection to remote host."""
+            self._client = SSHClient()
+            self._client.load_system_host_keys()
+            self._client.set_missing_host_key_policy(AutoAddPolicy())
 
-    def _increase_retry_count_and_wait(self):
-        if self.retry_count >= self.ssh_max_retries:
-            max_timeout = self.retry_count * self.ssh_retry_timeout_seconds
-            # FIXME: this should not be pytest.exit() as it will exit immediately without cleanup
-            pytest.exit(f"Unable to establish an SSH connection after {max_timeout=} seconds. Aborting all tests.", returncode=5) 
-        self.retry_count += 1
-        logger.warning(f"Retrying in {self.ssh_retry_timeout_seconds} seconds...")
-        time.sleep(self.ssh_retry_timeout_seconds)
+            private_key = None
+            with open(self.ssh_key_filepath, "r") as keyfile:
+                private_key = RSAKey.from_private_key(keyfile, password=self.passphrase)
 
+            logger.info(f"Attempting to establish an SSH connection to {self.host}:{self.port}...")
+            self._client_connect(
+                hostname=self.host,
+                port=self.port,
+                username=self.user,
+                passphrase=self.passphrase,
+                pkey=private_key,
+                look_for_keys=True,
+                banner_timeout=10,
+                auth_timeout=30,
+                timeout=self._ssh_connect_timeout,
+            )
+
+        return self._client
+
+    @property
+    def scp(self):
+        if self._scp is None:
+            self._scp = SCPClient(self.client.get_transport())
+
+        return self._scp
+
+    def _client_connect(self, *args, **kwargs):
+        while self._ssh_retry_count < self._ssh_max_retries:
+            try:
+                self._client.connect(*args, **kwargs)
+                break
+            except NoValidConnectionsError:
+                logger.warning(f"Unable to connect")
+                self._increase_retry_count_and_wait()
+            except AuthenticationException as exc:
+                auth_banner = self._client.get_transport().get_banner().decode()
+                logger.warning(f"Failed to login - {auth_banner=}")
+                if "pam_nologin(8)" in auth_banner:
+                    # SSH is already accepting connections but PAM refuses to let anyone in ("System is booting up"), have to retry
+                    self._increase_retry_count_and_wait()
+                else:
+                    logger.exception(exc)
+                    raise exc
+            except Exception as exc:
+                logger.exception(exc)
+                raise exc
 
     def __get_ssh_key(self):
         """Fetch locally stored SSH key."""
@@ -111,6 +170,16 @@ class RemoteClient:
         except SSHException as error:
             logger.exception(error)
         return self.ssh_key
+
+    def _increase_retry_count_and_wait(self):
+        if self._ssh_retry_count >= self._ssh_max_retries:
+            max_timeout = self._ssh_retry_count * self._ssh_retry_wait_seconds
+            # FIXME: this should not be pytest.exit() as it will exit immediately without cleanup
+            raise SSHException(f"Unable to establish an SSH connection after {max_timeout=} seconds.")
+
+        self._ssh_retry_count += 1
+        logger.warning(f"Retrying in {self._ssh_retry_wait_seconds} seconds...")
+        time.sleep(self._ssh_retry_wait_seconds)
 
     def __upload_ssh_key(self):
         try:
@@ -140,67 +209,16 @@ class RemoteClient:
         except FileNotFoundError as error:
             logger.exception(error)
 
-    def __connect(self):
-        """Open connection to remote host."""
-        self.client = SSHClient()
-        self.client.load_system_host_keys()
-        self.client.set_missing_host_key_policy(AutoAddPolicy())
-
-        private_key = None
-        with open(self.ssh_key_filepath, "r") as keyfile:
-            private_key = RSAKey.from_private_key(keyfile, password=self.passphrase)
-             
-        try:
-            logger.info(f"Attempting to establish an SSH connection to {self.host}:{self.port}...")
-            while self.retry_count < self.ssh_max_retries:
-                try:
-                    self.client.connect(
-                        hostname=self.host,
-                        port=self.port,
-                        username=self.user,
-                        passphrase=self.passphrase,
-                        pkey=private_key,
-                        look_for_keys=True,
-                        auth_timeout=30,
-                        timeout=self.ssh_connect_timeout,
-                    )
-                    self.scp = SCPClient(self.client.get_transport())
-                    break
-                except NoValidConnectionsError as e:
-                    logger.warning(f"Unable to connect")
-                    self._increase_retry_count_and_wait()
-                except AuthenticationException as e:
-                    try:
-                        auth_banner = self.client.get_transport().get_banner().decode()
-                        logger.warning(f"Failed to login - {auth_banner=}")
-                        if "pam_nologin(8)" in auth_banner:
-                            # SSH is already accepting connections but PAM refuses to let anyone in ("System is booting up"), have to retry
-                            self._increase_retry_count_and_wait()
-                        else:
-                            raise e
-                    # increase counter if banner is not yet decodable
-                    except:
-                        self._increase_retry_count_and_wait()
-        except AuthenticationException as error:
-            logger.exception("Authentication failed")
-            raise error
-        except SSHException as error:
-            logger.exception("SSH exception")
-            raise error
-        except Exception as error:
-            logging.exception("unexpected error")
-            raise error
-        finally:
-            return self.client
-
     def disconnect(self):
         """Close ssh connection."""
-        if self.client:
-            self.client.close()
-        if self.scp:
-            self.scp.close()
-        self.client = None
-        self.scp = None
+        if self._client is not None:
+            self._client.close()
+        if self._scp:
+            self._scp.close()
+
+        self._client = None
+        self._scp = None
+
         logger.info(f"disconnected from {self.host=}")
 
     def wait_ssh(self, counter_max=20, sleep=5):
@@ -238,8 +256,6 @@ class RemoteClient:
 
         :param files: List of strings representing file paths to local files.
         """
-        if self.client is None:
-            self.client = self.__connect()
         uploads = [self.__upload_single_file(file) for file in files]
         logger.info(
             f"Finished uploading {len(uploads)} files to {self.remote_path} on {self.host}"
@@ -257,8 +273,6 @@ class RemoteClient:
 
     def download_file(self, file):
         """Download file from remote host."""
-        if self.conn is None:
-            self.conn = self.__connect()
         self.scp.get(file)
 
     def execute_command(
@@ -276,8 +290,6 @@ class RemoteClient:
 
         :returns: the command's exit status, standard and error output
         """
-        if self.client is None:
-            self.client = self.__connect()
         if not quiet:
             logger.info(f"$ {command.rstrip()}")
         if self.sudo and not disable_sudo:

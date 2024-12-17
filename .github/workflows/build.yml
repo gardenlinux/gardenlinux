@@ -31,6 +31,8 @@ jobs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
       - name: resolve version "${{ inputs.version }}"
         id: version
         run: echo version="$(bin/garden-version "${{ inputs.version }}")" | tee -a "$GITHUB_OUTPUT"
@@ -49,9 +51,12 @@ jobs:
       #     proc_trace_chart_max_count: 50
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
       - uses: ./.github/actions/setup
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
+          cd $(dirname $(realpath bin/garden-version))/..
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
       - name: build certificates
@@ -87,11 +92,14 @@ jobs:
       #     proc_trace_chart_max_count: 50
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
       - uses: ./.github/actions/setup
         with:
           arch: "${{ matrix.arch }}"
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
+          cd $(dirname $(realpath bin/garden-version))/..
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
       - name: build base-${{ matrix.arch }}
@@ -118,6 +126,8 @@ jobs:
       #     proc_trace_chart_max_count: 50
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
       - uses: ./.github/actions/setup
         with: 
           arch: "${{ matrix.arch }}"
@@ -163,11 +173,14 @@ jobs:
       #     proc_trace_chart_max_count: 50
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
       - uses: ./.github/actions/setup
         with: 
           arch: "${{ matrix.arch }}"
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
+          cd $(dirname $(realpath bin/garden-version))/..
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
       - name: load cert cache
@@ -239,6 +252,7 @@ jobs:
     defaults:
       run:
         shell: bash
+    if: needs.generate_matrix_bare.outputs.matrix != '{"include":[]}'
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.generate_matrix_bare.outputs.matrix) }}
@@ -250,11 +264,14 @@ jobs:
       #     proc_trace_chart_max_count: 50
       #     comment_on_pr: false
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
       - uses: ./.github/actions/setup
         with:
           arch: "${{ matrix.arch }}"
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
+          cd $(dirname $(realpath bin/garden-version))/..
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
       - name: load bootstrap stage cache
