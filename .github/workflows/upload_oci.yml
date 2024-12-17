@@ -99,6 +99,7 @@ jobs:
     permissions:
       id-token: write
       packages: write
+      actions: write
     steps:
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
@@ -115,6 +116,26 @@ jobs:
           path: manifests
           pattern: oci_manifest_entry_*
           merge-multiple: true
-      - name: update index using glcli tool
+      - name: Update index using glcli tool
         run: |
           GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ghcr.io/${{ github.repository }} --version ${{ inputs.version }} --manifest_folder manifests
+      - name: Delete temporary OCI manifest entry files
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listArtifactsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100
+            });
+            for (const artifact of artifacts.data.artifacts) {
+              if (artifact.name.startsWith('oci_manifest_entry_')) {
+                console.log(`Deleting artifact: ${artifact.name}`);
+                await github.rest.actions.deleteArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  artifact_id: artifact.id
+                });
+                console.log(`Successfully deleted artifact: ${artifact.name}`);
+              }
+            }
