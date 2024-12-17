@@ -128,13 +128,14 @@ jobs:
               repo: context.repo.repo,
               per_page: 100
             });
-            
             for (const artifact of artifacts.data.artifacts) {
               if (artifact.name.startsWith('oci_manifest_entry_')) {
+                console.log(`Deleting artifact: ${artifact.name}`);
                 await github.rest.actions.deleteArtifact({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   artifact_id: artifact.id
                 });
+                console.log(`Successfully deleted artifact: ${artifact.name}`);
               }
             }
