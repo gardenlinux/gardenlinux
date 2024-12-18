@@ -11,12 +11,24 @@ def test_nvme_kernel_parameter(client, aws):
     assert output.rstrip() == "1", "Expected 'nvme_core.io_timeout=4294967295' kernel parameter"
 
 
+def test_for_restricted_access_to_dmesg(client):
+    dmesg_restrict = check_for_kernel_setting(client, "kernel.dmesg_restrict")
+    assert dmesg_restrict == "1", "dmesg wasn't restircted!"
+
+
+def test_for_restricted_soft_and_hardlinks(client):
+    symlinks = check_for_kernel_setting(client, "fs.protected_symlinks")
+    hardlinks = check_for_kernel_setting(client, "fs.protected_hardlinks")
+
+    assert symlinks == "1", " symlink arn't restricted!"
+    assert hardlinks == "1", "hardlinks arn't restricted!"
+
+
 def test_for_kernel_address_space_layout_randomization(client):
     """
-       We have to ensure that we have aslr enabled.
+       We have to ensure that we have ASLR enabled.
 
     """
-
     randomize_va_space = check_for_kernel_setting(client, "kernel.randomize_va_space")
     assert randomize_va_space == "2", "ASLR wasn't set!"
 
@@ -34,7 +46,7 @@ def test_for_regression_in_kernel_address_space_layout_randomization(client):
     arch = get_architecture(client)
     match arch:
         case "arm64":
-            expected_value = 0xffffffff0000
+            expected_value = 0xfffffffff000
         case "amd64":
             expected_value = 0x7ffffffff000
 
@@ -59,12 +71,13 @@ def test_for_regression_in_kernel_address_space_layout_randomization(client):
 
 def check_for_kernel_setting(client, sysctl_variable):
     """
-       This will first check for the running configuration and 
-       then for a written configuration. Only when there is 
-
-       1. check the running configuration for the given parameter
-       2. check for a sysctl related cofiguration file.
-
+       This will check for the running configuration.
     """
     output = execute_remote_command(client, f"sysctl {sysctl_variable}")
     return output.split("=")[1].strip()
+
+
+def check_for_sysctl_configurion_file(client, sysctl_variable):
+    """
+       This will check for the running configuration.
+    """
