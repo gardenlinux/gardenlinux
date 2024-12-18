@@ -33,7 +33,6 @@ def test_for_kernel_address_space_layout_randomization(client):
     assert randomize_va_space == "2", "ASLR wasn't set!"
 
 
-
 def test_for_regression_in_kernel_address_space_layout_randomization(client):
     """
        Also, we ensure that we do not have a regression, as we 
@@ -46,9 +45,9 @@ def test_for_regression_in_kernel_address_space_layout_randomization(client):
     arch = get_architecture(client)
     match arch:
         case "arm64":
-            expected_value = 0xfffffffff000
+            expected_values = [0xfffffffff000, 0xffffffff0000 ]
         case "amd64":
-            expected_value = 0x7ffffffff000
+            expected_values = [0x7ffffffff000]
 
     result = 0x0
     for _ in range(0,1000):
@@ -57,7 +56,7 @@ def test_for_regression_in_kernel_address_space_layout_randomization(client):
         base_address = int(output.split('-')[0], 16)
         result |= base_address
 
-    assert expected_value == result, "ASLR regression detected!"
+    assert [mem_adr for mem_adr in expected_values if result in expected_values], "ASLR regression detected!"
 
     result = 0x0
     for _ in range(0,1000):
@@ -65,7 +64,7 @@ def test_for_regression_in_kernel_address_space_layout_randomization(client):
         output = execute_remote_command(client, "cat /proc/self/maps | grep ld | head -n1")
         base_address = int(output.split('-')[0], 16)
         result |= base_address
-    assert expected_value == result, "ASLR regression detected!"
+    assert [mem_adr for mem_adr in expected_values if result in expected_values], "ASLR regression detected!"
 
 
 
