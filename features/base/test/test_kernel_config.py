@@ -50,20 +50,21 @@ def test_for_regression_in_kernel_address_space_layout_randomization(client):
             expected_values = [0x7ffffffff000]
 
     result = 0x0
-    for _ in range(0,1000):
-        # This can be optimzed.
-        output = execute_remote_command(client, "cat /proc/self/maps | grep libc | head -n1")
-        base_address = int(output.split('-')[0], 16)
+    # We had this in a seperate for loop, however, this will create thound ssh connections
+    # and that's very slow.
+    output = execute_remote_command(client, "for n in $(seq 0 1000); do cat /proc/self/maps | grep libc | head -n 1;done |awk '{print $1}'")
+    for _ in output.split("\n"):
+        base_address = int(_.split('-')[0], 16)
         result |= base_address
 
     assert [mem_adr for mem_adr in expected_values if result in expected_values], "ASLR regression detected!"
 
     result = 0x0
-    for _ in range(0,1000):
-        # This can be optimzed.
-        output = execute_remote_command(client, "cat /proc/self/maps | grep ld | head -n1")
-        base_address = int(output.split('-')[0], 16)
+    output = execute_remote_command(client, "for n in $(seq 0 1000); do cat /proc/self/maps | grep ld | head -n 1;done |awk '{print $1}'")
+    for _ in output.split("\n"):
+        base_address = int(_.split('-')[0], 16)
         result |= base_address
+
     assert [mem_adr for mem_adr in expected_values if result in expected_values], "ASLR regression detected!"
 
 
