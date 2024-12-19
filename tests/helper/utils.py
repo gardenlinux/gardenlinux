@@ -131,6 +131,14 @@ def create_remote_tmp_dir(client):
     return tmp_name
 
 
+def check_for_kernel_setting(client, sysctl_variable):
+    """
+       This will check for the running configuration.
+    """
+    output = execute_remote_command(client, f"sysctl {sysctl_variable}")
+    return output.split("=")[1].strip()
+
+
 def get_architecture(client):
     """Get the architecture of the environment to test"""
     (exit_code, output, error) = client.execute_command("dpkg --print-architecture", quiet=True)

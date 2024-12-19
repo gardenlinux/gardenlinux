@@ -1,5 +1,5 @@
 import pytest
-from helper.utils import execute_remote_command, get_architecture
+from helper.utils import execute_remote_command, get_architecture, check_for_kernel_setting
 from helper.sshclient import RemoteClient
 from helper.tests.file_content import file_content
 
@@ -69,13 +69,4 @@ def test_for_regression_in_kernel_address_space_layout_randomization(client):
         result |= base_address
 
     assert [mem_adr for mem_adr in expected_values if result in expected_values], "ASLR regression detected!"
-
-
-
-def check_for_kernel_setting(client, sysctl_variable):
-    """
-       This will check for the running configuration.
-    """
-    output = execute_remote_command(client, f"sysctl {sysctl_variable}")
-    return output.split("=")[1].strip()
 
