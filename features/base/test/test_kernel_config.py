@@ -69,12 +69,3 @@ def test_for_kernel_address_space_layout_randomization(client):
 #        result |= base_address
 #
 #    assert [mem_adr for mem_adr in expected_values if result in expected_values], "ASLR regression detected!"
-
-
-
-def check_for_kernel_setting(client, sysctl_variable):
-    """
-       This will check for the running configuration.
-    """
-    output = execute_remote_command(client, f"sysctl {sysctl_variable}")
-    return output.split("=")[1].strip()
