@@ -1,6 +1,7 @@
 from helper.tests.sgid_suid_files import sgid_suid_files
 import pytest
 
+@pytest.mark.security_id(182)
 # Parametrize the test unit with further
 # options to distinct 'sgid' and 'suid' tests.
 @pytest.mark.parametrize(
