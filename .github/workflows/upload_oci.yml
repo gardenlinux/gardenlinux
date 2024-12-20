@@ -62,7 +62,7 @@ jobs:
           python-version: "3.12"
       - name: Install glcli util
         run: |
-          git clone --depth 1 --branch 0.6.1 https://github.com/gardenlinux/python-gardenlinux-cli.git
+          git clone --depth 1 --branch 0.6.2 https://github.com/gardenlinux/python-gardenlinux-cli.git
           mv python-gardenlinux-cli /opt/glcli
           pip install -r /opt/glcli/requirements.txt
       - name: Install cosign
@@ -107,7 +107,7 @@ jobs:
           python-version: "3.12"
       - name: Install glcli util
         run: |
-          git clone --depth 1 --branch 0.6.1 https://github.com/gardenlinux/python-gardenlinux-cli.git
+          git clone --depth 1 --branch 0.6.2 https://github.com/gardenlinux/python-gardenlinux-cli.git
           mv python-gardenlinux-cli /opt/glcli
           pip install -r /opt/glcli/requirements.txt
       - name: Download OCI manifest artifacts
