@@ -64,7 +64,7 @@ def _azure_release_note(published_image_metadata):
                 output += "# all regions (community gallery image):\n"
             for gallery_image in published_image_metadata[pset]:
                 output += f"Hyper V: {gallery_image['hyper_v_generation']}, "
-                output += f"Azure Cloud: {gallery_image['azure_cloud']}, "
+                # output += f"Azure Cloud: {gallery_image['azure_cloud']}, "
                 output += f"Image Id: {gallery_image['community_gallery_image_id']}\n"
 
         if pset == 'published_marketplace_images':
@@ -405,4 +405,3 @@ if __name__ == "__main__":
 #     print(release_info)
 # except Exception as e:
 #     print(f"Error occurred: {e}")
-
