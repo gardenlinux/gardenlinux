@@ -1,1 +1,2 @@
+# Allow access for group _chrony to access symlinked /dev/ptp_hyperv
 SUBSYSTEM=="ptp", ATTR{clock_name}=="hyperv", SYMLINK += "ptp_hyperv", TAG+="systemd"
