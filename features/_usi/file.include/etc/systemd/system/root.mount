@@ -1,12 +1,8 @@
-[Unit]
-Requires=systemd-tmpfiles-setup.service
-After=systemd-tmpfiles-setup.service
-
 [Mount]
-What=/var/root
+What=none
 Where=/root
-Type=none
-Options=bind
+Type=tmpfs
+Options=size=128M
 
 [Install]
-WantedBy=local-fs.target
+WantedBy=reload.target

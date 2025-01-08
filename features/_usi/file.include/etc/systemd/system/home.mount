@@ -1,4 +1,6 @@
 [Unit]
+DefaultDependencies=no
+Before=reload.target
 Requires=systemd-tmpfiles-setup.service
 After=systemd-tmpfiles-setup.service
 
@@ -9,4 +11,4 @@ Type=none
 Options=bind
 
 [Install]
-WantedBy=local-fs.target
+WantedBy=reload.target
