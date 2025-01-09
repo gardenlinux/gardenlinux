@@ -11,9 +11,9 @@ rootfs="$(mktemp -d)"
 mount -t tmpfs -o size="$TEMPFS_SIZE" tmpfs "$rootfs"
 tar --extract --xattrs --xattrs-include '*' --directory "$rootfs" < "$input"
 
-# shellcheck disable=SC2115
-rm -rf "$rootfs/var"
-mkdir "$rootfs/var"
+# # shellcheck disable=SC2115
+# rm -rf "$rootfs/var"
+# mkdir "$rootfs/var"
 
 echo "creating root EROFS disk"
 
@@ -38,8 +38,16 @@ cp --no-dereference /dev/{fd,stdin,stdout,stderr} "$rootfs/dev/"
 
 mount -t tmpfs -o size=1G tmpfs "$rootfs/tmp"
 
-touch "$rootfs/root.img"
-mount --bind "$erofs" "$rootfs/root.img"
+mkdir "$rootfs/tmp/initrd.include"
+IFS=',' read -r -a features <<< "$BUILDER_FEATURES"
+for feature in "${features[@]}"; do
+	if [ -e "/builder/features/$feature/initrd.include" ]; then
+		cp -a "/builder/features/$feature/initrd.include/." "$rootfs/tmp/initrd.include"
+	fi
+done
+
+touch "$rootfs/tmp/initrd.include/root.img"
+mount --bind "$erofs" "$rootfs/tmp/initrd.include/root.img"
 
 initrd="$(mktemp)"
 
@@ -53,17 +61,19 @@ chroot "$rootfs" dracut \
 	--force \
 	--tmpdir /tmp \
 	--kver "${kernel#*-}" \
-	--modules "bash dash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown sysroot-loop" \
+	--modules "bash dash systemd systemd-initrd systemd-repart kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown" \
 	--reproducible \
-	--install 'find findmnt grep lsblk' \
+	--install 'find findmnt grep lsblk tail head realpath basename sfdisk mkfs.ext4 resizefat32' \
+	--include '/tmp/initrd.include' / \
+	--add-drivers erofs \
 	/initrd
+
+umount "$rootfs/tmp/initrd.include/root.img"
+rm "$erofs"
 
 umount -l "$rootfs/proc"
 umount -R "$rootfs/dev"
 umount "$rootfs/tmp"
-
-umount "$rootfs/root.img"
-rm "$erofs"
 
 umount "$rootfs/initrd"
 
@@ -84,7 +94,7 @@ read -r _ cmdline < "$rootfs/etc/kernel/cmdline"
 	--stub "$rootfs/usr/lib/systemd/boot/efi/linux$(tr '[:upper:]' '[:lower:]' <<< "$uefi_arch").efi.stub" \
 	--linux "$kernel" \
 	--initrd "$initrd" \
-	--cmdline "$cmdline" \
+	--cmdline "$cmdline rd.break" \
 	--uname "${kernel#*-}" \
 	--os-release "@$rootfs/etc/os-release" \
 	--output "$uki"

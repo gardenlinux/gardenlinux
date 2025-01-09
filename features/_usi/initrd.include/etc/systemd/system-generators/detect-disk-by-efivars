@@ -1,4 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
+exec 1> /dev/kmsg
+exec 2>&1
 
 set -eufo pipefail
 
@@ -12,6 +15,8 @@ cat > "$1/systemd-repart.service.d/override.conf" << EOF
 [Unit]
 Requires=$efi_part_dev_unit
 After=$efi_part_dev_unit
+Requires=sysroot.mount
+After=sysroot.mount
 
 [Service]
 ExecStart=
@@ -22,6 +27,7 @@ cat > "$1/resize-esp.service" << EOF
 [Unit]
 Requires=$efi_part_dev_unit
 After=$efi_part_dev_unit
+Requires=systemd-repart.service
 After=systemd-repart.service
 DefaultDependencies=no
 
@@ -30,17 +36,14 @@ Type=oneshot
 ExecStart=/usr/bin/resizefat32 $efi_part_dev
 EOF
 
-cat > "$1/efi.mount" << EOF
+cat > "$1/sysroot-efi.mount" << EOF
 [Unit]
 Requires=$efi_part_dev_unit
 After=$efi_part_dev_unit
+Requires=resize-esp.service
 After=resize-esp.service
 
 [Mount]
 What=$efi_part_dev
-Where=/efi
+Where=/sysroot/efi
 EOF
-
-mkdir -p "$1/local-fs.target.wants"
-ln -s ../resize-esp.service "$1/local-fs.target.wants/resize-esp.service"
-ln -s ../efi.mount "$1/local-fs.target.wants/efi.mount"

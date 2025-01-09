@@ -1,0 +1,5 @@
+[Mount]
+What=/sysroot/var/home
+Where=/sysroot/home
+Type=none
+Options=bind

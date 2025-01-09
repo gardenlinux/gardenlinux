@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -eufo pipefail
 
@@ -9,5 +9,5 @@ disk_name="$(basename "$(realpath "/sys/class/block/$efi_part_name/..")")"
 disk_dev="/dev/$disk_name"
 
 echo | sfdisk "$disk_dev" # fix secondary GPT partition table in case disk got resized
-systemd-repart --dry-run=no --tpm2-device=auto --tpm2-pcrs=7 "$disk_dev"
+systemd-repart --root=/ --dry-run=no --tpm2-device=auto --tpm2-pcrs=7 "$disk_dev"
 udevadm settle

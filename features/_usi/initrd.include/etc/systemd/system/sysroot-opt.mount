@@ -1,0 +1,5 @@
+[Mount]
+What=/sysroot/var/opt
+Where=/sysroot/opt
+Type=none
+Options=bind
