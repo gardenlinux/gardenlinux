@@ -12,3 +12,4 @@ Release day (as in Date) - April 1st 2020 (+1) = version number
      01.06.2020 - 01.04.2020 + 1 = 62
 
 All this calculation is done in `bin/garden-version`.
+
