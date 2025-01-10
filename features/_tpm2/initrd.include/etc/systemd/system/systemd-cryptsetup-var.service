@@ -7,4 +7,3 @@ After=systemd-repart.service
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/usr/bin/systemd-cryptsetup attach var /dev/disk/by-partlabel/VAR
-ExecStop=/usr/bin/systemd-cryptsetup detach var
