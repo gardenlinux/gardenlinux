@@ -63,7 +63,7 @@ chroot "$rootfs" dracut \
 	--kver "${kernel#*-}" \
 	--modules "bash dash systemd systemd-initrd systemd-repart kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown crypt" \
 	--reproducible \
-	--install 'find findmnt grep lsblk tail head realpath basename sfdisk mkfs.ext4 resizefat32 dd cryptsetup strace' \
+	--install 'find findmnt grep lsblk tail head realpath basename sfdisk mkfs.ext4 resizefat32 dd cryptsetup' \
 	--include '/tmp/initrd.include' / \
 	--add-drivers erofs \
 	/initrd
@@ -94,7 +94,7 @@ read -r _ cmdline < "$rootfs/etc/kernel/cmdline"
 	--stub "$rootfs/usr/lib/systemd/boot/efi/linux$(tr '[:upper:]' '[:lower:]' <<< "$uefi_arch").efi.stub" \
 	--linux "$kernel" \
 	--initrd "$initrd" \
-	--cmdline "$cmdline rd.break" \
+	--cmdline "$cmdline" \
 	--uname "${kernel#*-}" \
 	--os-release "@$rootfs/etc/os-release" \
 	--output "$uki"

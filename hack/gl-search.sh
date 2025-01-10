@@ -71,7 +71,7 @@ elif curl -s -o /dev/null -w "%{http_code}" "$packages_url_base/Packages.gz" | g
   curl -s "$packages_url_base/Packages.gz" > "$packages_file_compressed"
   gunzip -c "$packages_file_compressed" > "$packages_file"
 else
-  echo "No Packacges file found in $packages_url_base"
+  echo "No Packages file found in $packages_url_base"
   exit
 fi
 

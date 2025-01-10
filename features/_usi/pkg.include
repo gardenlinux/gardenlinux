@@ -3,7 +3,6 @@ dracut
 efitools
 gardenlinux-update
 resizefat32
-strace
 systemd-boot-efi
 systemd-cryptsetup
 tpm2-tools
