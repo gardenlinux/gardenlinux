@@ -1,14 +1,9 @@
 [Unit]
 DefaultDependencies=no
 After=tpm2.target
-Before=local-fs-pre.target
 Before=systemd-repart.service
-OnFailure=emergency.target
 
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/check-tpm
 RemainAfterExit=yes
-
-[Install]
-RequiredBy=local-fs.target
