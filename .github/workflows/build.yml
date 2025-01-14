@@ -199,6 +199,7 @@ jobs:
           role-to-assume: ${{ secrets.aws_kms_role }}
           role-session-name: ${{ secrets.aws_oidc_session }}
           aws-region: ${{ secrets.aws_region }}
+          role-duration-seconds: 14400
       - name: load bootstrap stage cache
         uses: actions/cache/restore@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v3
         with:
