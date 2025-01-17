@@ -21,7 +21,7 @@ BIN_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "bin")
 DEFAULT_PORT = "2223"
 
 class KVM:
-    """Handle KVM flavour"""
+    """Handle KVM flavor"""
 
     @classmethod
     def fixture(cls, config):

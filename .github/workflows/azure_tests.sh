@@ -5,7 +5,7 @@
 cname="${@: -1}"
 
 configFile="azure_test_config.yaml"
-containerName="ghcr.io/gardenlinux/gardenlinux/platform-test-azure:latest"
+containerName="ghcr.io/gardenlinux/gardenlinux/platform-test-azure:nightly"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
 
 azure_hyper_v_generation="V1"
@@ -48,6 +48,7 @@ podman run -it --rm -v "${AZURE_CONFIG_DIR}:/root/.azure" -v "$(pwd):/gardenlinu
 mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/
 cd /gardenlinux/tests
+export GL_REMOTE_CLIENT_SSH_RETRY_WAIT_SECONDS=30
 pytest --iaas=azure --configfile=/gardenlinux/$configFile --junit-xml=/artifacts/$cname.platform.test.xml || exit 1
 exit 0
 EOF

@@ -5,7 +5,7 @@
 cname="${@: -1}"
 
 configFile="gcp_test_config.yaml"
-containerName="ghcr.io/gardenlinux/gardenlinux/platform-test-gcp:latest"
+containerName="ghcr.io/gardenlinux/gardenlinux/platform-test-gcp:nightly"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
 
 pushd "$artifact_dir" || exit 1

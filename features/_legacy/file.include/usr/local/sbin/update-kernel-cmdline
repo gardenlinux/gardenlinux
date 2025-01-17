@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -uoeE pipefail
+
+configDir="/etc/kernel/cmdline.d"
+
+# load extra stuff
+for i in "${configDir}"/*-*.cfg; do
+	[ -e "$i" ] || continue
+	# shellcheck disable=SC1090
+	source "$i"
+done
+
+echo "root=${DEVICE} ${CMDLINE_LINUX}" > /etc/kernel/cmdline.new
+mv /etc/kernel/cmdline.new /etc/kernel/cmdline

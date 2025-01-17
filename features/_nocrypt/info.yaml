@@ -1,0 +1,2 @@
+description: "plain ext4 /var partition"
+type: flag

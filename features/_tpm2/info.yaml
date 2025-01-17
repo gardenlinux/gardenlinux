@@ -3,3 +3,4 @@ type: flag
 features:
   exclude:
     - _ephemeral
+    - _nocrypt

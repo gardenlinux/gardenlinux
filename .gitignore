@@ -49,3 +49,4 @@ make_targets.cache
 venv
 config
 shell.nix
+s3_downloads/

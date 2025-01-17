@@ -3,7 +3,7 @@ type: platform
 features:
   include:
     - server
-    - _boot
+    - _legacy
     - _bfpxe
   exclude:
     - _selinux
