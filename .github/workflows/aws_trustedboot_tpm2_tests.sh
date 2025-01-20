@@ -22,6 +22,8 @@ configFile="aws_test_config.yaml"
 containerName="ghcr.io/gardenlinux/gardenlinux/platform-test:today"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
 
+junit_suite_name="${0/.sh/}"
+
 pushd "$artifact_dir" || exit 1
 test -f "$cname.raw" || tar -xzf "$cname.tar.gz" "$cname.raw"
 popd || exit 1
@@ -70,6 +72,6 @@ podman run -it --rm -e 'AWS_*' -v "$(pwd):/gardenlinux" -v "$(dirname "$image_fi
 mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/
 cd /gardenlinux/tests
-pytest --iaas=aws --configfile=/gardenlinux/$configFile --junit-xml=/artifacts/$cname.platform.test.xml || exit 1
+pytest --iaas=aws --configfile=/gardenlinux/$configFile --junit-xml=/artifacts/$cname.platform.test.xml -o junit_suite_name=$junit_suite_name || exit 1
 exit 0
 EOF

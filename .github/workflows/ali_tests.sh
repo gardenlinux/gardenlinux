@@ -8,6 +8,8 @@ configFile="ali_test_config.yaml"
 containerName="ghcr.io/gardenlinux/gardenlinux/platform-test-ali:nightly"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
 
+junit_suite_name="${0/.sh/}"
+
 pushd "$artifact_dir" || exit 1
 test -f "$cname.raw" || tar -xzf "$cname.tar.gz" "$cname.qcow2"
 popd || exit 1
@@ -49,6 +51,6 @@ mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/
 ssh-keygen -t rsa -b 4096 -f /gardenlinux/tmp/id_rsa -N "" -q
 cd /gardenlinux/tests
-pytest --iaas=ali --configfile=/gardenlinux/$configFile --junit-xml=/artifacts/$cname.platform.test.xml || exit 1
+pytest --iaas=ali --configfile=/gardenlinux/$configFile --junit-xml=/artifacts/$cname.platform.test.xml -o junit_suite_name=$junit_suite_name || exit 1
 exit 0
 EOF

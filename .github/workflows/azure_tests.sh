@@ -11,6 +11,8 @@ artifact_dir="/tmp/gardenlinux-build-artifacts"
 azure_hyper_v_generation="V1"
 azure_vm_size="Standard_D4_v4"
 
+junit_suite_name="${0/.sh/}"
+
 pushd "$artifact_dir" || exit 1
 test -f "$cname.raw" || tar -xzf "$cname.tar.gz" "$cname.vhd"
 du -bh "$cname.vhd"
@@ -49,6 +51,6 @@ mkdir /gardenlinux/tmp
 TMPDIR=/gardenlinux/tmp/
 cd /gardenlinux/tests
 export GL_REMOTE_CLIENT_SSH_RETRY_WAIT_SECONDS=30
-pytest --iaas=azure --configfile=/gardenlinux/$configFile --junit-xml=/artifacts/$cname.platform.test.xml || exit 1
+pytest --iaas=azure --configfile=/gardenlinux/$configFile --junit-xml=/artifacts/$cname.platform.test.xml -o junit_suite_name=$junit_suite_name || exit 1
 exit 0
 EOF

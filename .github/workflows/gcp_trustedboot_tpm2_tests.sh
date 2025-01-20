@@ -7,6 +7,7 @@ cname="${@: -1}"
 configFile="gcp_test_config.yaml"
 containerName="ghcr.io/gardenlinux/gardenlinux/platform-test-gcp:nightly"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
+junit_suite_name="${0/.sh/}"
 
 pushd "$artifact_dir" || exit 1
 test -f "$cname.raw" || tar -xzf "$cname.tar.gz" "$cname.gcpimage.tar.gz"
@@ -86,6 +87,6 @@ cd /gardenlinux/tests
 export GOOGLE_APPLICATION_CREDENTIALS="/gardenlinux/$credentials_file_name"
 export CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE="/gardenlinux/$credentials_file_name"
 export GOOGLE_GHA_CREDS_PATH="/gardenlinux/$credentials_file_name"
-pytest --iaas=gcp --configfile=/gardenlinux/$configFile --junit-xml=/artifacts/$cname.platform.test.xml || exit 1
+pytest --iaas=gcp --configfile=/gardenlinux/$configFile --junit-xml=/artifacts/$cname.platform.test.xml -o junit_suite_name=$junit_suite_name || exit 1
 exit 0
 EOF
