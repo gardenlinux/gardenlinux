@@ -1,6 +1,7 @@
 from helper.tests.blacklisted_packages import blacklisted_packages
 import pytest
 
+@pytest.mark.security_id(1281)
 @pytest.mark.parametrize(
     "package",
     [
