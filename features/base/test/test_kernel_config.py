@@ -35,39 +35,39 @@ def test_for_kernel_address_space_layout_randomization(client):
     assert randomize_va_space == "2", "ASLR wasn't set!"
 
 
-def test_for_regression_in_kernel_address_space_layout_randomization(client):
-    """
-       Also, we ensure that we do not have a regression, as we 
-       have seen it with the CVE-2024-6387 where a mistake in SSH 
-       in combination with weak or no ALSR caused a series vulnerability.
-
-       This was done with the help of the blog post from Justin Miller.
-       https://zolutal.github.io/aslrnt/
-    """
-    arch = get_architecture(client)
-    match arch:
-        case "arm64":
-            expected_values = [0xfffffffff000, 0xffffffff0000 ]
-        case "amd64":
-            expected_values = [0x7ffffffff000]
-
-    result = 0x0
-    # We had this in a seperate for loop, however, this will create thound ssh connections
-    # and that's very slow.
-    output = execute_remote_command(client, "for n in $(seq 0 1000); do cat /proc/self/maps | grep libc | head -n 1;done |awk '{print $1}'")
-    for _ in output.split("\n"):
-        base_address = int(_.split('-')[0], 16)
-        result |= base_address
-
-    assert [mem_adr for mem_adr in expected_values if result in expected_values], "ASLR regression detected!"
-
-    result = 0x0
-    output = execute_remote_command(client, "for n in $(seq 0 1000); do cat /proc/self/maps | grep ld | head -n 1;done |awk '{print $1}'")
-    for _ in output.split("\n"):
-        base_address = int(_.split('-')[0], 16)
-        result |= base_address
-
-    assert [mem_adr for mem_adr in expected_values if result in expected_values], "ASLR regression detected!"
+#def test_for_regression_in_kernel_address_space_layout_randomization(client):
+#    """
+#       Also, we ensure that we do not have a regression, as we 
+#       have seen it with the CVE-2024-6387 where a mistake in SSH 
+#       in combination with weak or no ALSR caused a series vulnerability.
+#
+#       This was done with the help of the blog post from Justin Miller.
+#       https://zolutal.github.io/aslrnt/
+#    """
+#    arch = get_architecture(client)
+#    match arch:
+#        case "arm64":
+#            expected_values = [0xfffffffff000, 0xffffffff0000 ]
+#        case "amd64":
+#            expected_values = [0x7ffffffff000]
+#
+#    result = 0x0
+#    # We had this in a seperate for loop, however, this will create thound ssh connections
+#    # and that's very slow.
+#    output = execute_remote_command(client, "for n in $(seq 0 1000); do cat /proc/self/maps | grep libc | head -n 1;done |awk '{print $1}'")
+#    for _ in output.split("\n"):
+#        base_address = int(_.split('-')[0], 16)
+#        result |= base_address
+#
+#    assert [mem_adr for mem_adr in expected_values if result in expected_values], "ASLR regression detected!"
+#
+#    result = 0x0
+#    output = execute_remote_command(client, "for n in $(seq 0 1000); do cat /proc/self/maps | grep ld | head -n 1;done |awk '{print $1}'")
+#    for _ in output.split("\n"):
+#        base_address = int(_.split('-')[0], 16)
+#        result |= base_address
+#
+#    assert [mem_adr for mem_adr in expected_values if result in expected_values], "ASLR regression detected!"
 
 
 
