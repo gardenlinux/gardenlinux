@@ -1,5 +1,6 @@
 import pytest
 from helper.sshclient import RemoteClient
+from helper.utils import execute_remote_command, get_architecture, check_for_kernel_setting
 from helper.tests.file_content import file_content
 
 
