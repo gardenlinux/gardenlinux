@@ -14,7 +14,7 @@ COPY keyring.gpg $GARDENLINUX_MIRROR_KEY
 RUN  chown root:root $GARDENLINUX_MIRROR_KEY \
         && chmod 644 $GARDENLINUX_MIRROR_KEY
 
-#RUN gpg --no-default-keyring --keyring /etc/apt/trusted.gpg.d/keyring.gpg --export --armor > /etc/apt/trusted.gpg.d/keyring.asc && chmod 644 /etc/apt/trusted.gpg.d/keyring.asc && rm /etc/apt/trusted.gpg.d/keyring.gpg
+RUN gpg --no-default-keyring --keyring /etc/apt/trusted.gpg.d/keyring.gpg --export --armor > /etc/apt/trusted.gpg.d/keyring.asc && chmod 644 /etc/apt/trusted.gpg.d/keyring.asc && rm /etc/apt/trusted.gpg.d/keyring.gpg
 
 # Install packages from debian dist by default, only install packages from packages.gardenlinux.io if they are specified 
 # with higher pin prio than 900
@@ -22,7 +22,7 @@ RUN echo "Package: onmetal-image\nPin: origin packages.gardenlinux.io\nPin-Prior
     &&  echo "Package: *\nPin: release a=${DEBIAN_DIST}\nPin-Priority: 900" > /etc/apt/preferences.d/default
 
 RUN echo "deb http://deb.debian.org/debian ${DEBIAN_DIST} main contrib non-free" > /etc/apt/sources.list \
-     && echo "deb [signed-by=$GARDENLINUX_MIRROR_KEY] https://packages.gardenlinux.io/gardenlinux $VERSION main" >> /etc/apt/sources.list \
+     && echo "deb https://packages.gardenlinux.io/gardenlinux $VERSION main" >> /etc/apt/sources.list \
      && sed -i 's/deb.debian.org/cdn-aws.deb.debian.org/g' /etc/apt/sources.list \
      && if [ -f "/etc/apt/sources.list.d/debian.sources" ] ; then sed -i 's/deb.debian.org/cdn-aws.deb.debian.org/g' /etc/apt/sources.list.d/debian.sources ; else echo "file not present" ; fi \
      && apt-get update \
