@@ -1,3 +1,4 @@
+import pytest
 from helper.tests.users import users
 from helper.utils import execute_remote_command, read_file_remote
 
