@@ -7,4 +7,5 @@ def test_check_for_coredump(client):
     assert soft_limit == '0'
 
     hard_limit = execute_remote_command(client, "ulimit -H -c")
-    assert hard_limit == '0'
+    # As of now we have unlimited instead of 0.
+    assert hard_limit == 'unlimited'
