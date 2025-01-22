@@ -14,7 +14,7 @@ COPY keyring.gpg $GARDENLINUX_MIRROR_KEY
 RUN  chown root:root $GARDENLINUX_MIRROR_KEY \
         && chmod 644 $GARDENLINUX_MIRROR_KEY
 
-RUN gpg --no-default-keyring --keyring /etc/apt/trusted.gpg.d/keyring.gpg --export --armor > /etc/apt/trusted.gpg.d/keyring.asc && chmod 644 /etc/apt/trusted.gpg.d/keyring.asc && rm /etc/apt/trusted.gpg.d/keyring.gpg
+#RUN gpg --no-default-keyring --keyring /etc/apt/trusted.gpg.d/keyring.gpg --export --armor > /etc/apt/trusted.gpg.d/keyring.asc && chmod 644 /etc/apt/trusted.gpg.d/keyring.asc && rm /etc/apt/trusted.gpg.d/keyring.gpg
 
 # Install packages from debian dist by default, only install packages from packages.gardenlinux.io if they are specified 
 # with higher pin prio than 900
