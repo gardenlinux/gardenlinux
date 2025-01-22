@@ -3,6 +3,9 @@ locals {
 
   my_ip = data.external.my_ip.result.ip
 
+  has_ali_credentials = try(data.external.ali_env_check[0].result.has_credentials == "true", false)
+  has_aws_credentials = try(data.external.aws_env_check[0].result.has_credentials == "true", false)
+
   # Generate module_config based on flavors
   module_config = [
     for flavor in var.flavors : {
@@ -78,12 +81,45 @@ locals {
   ]
 }
 
-provider "alicloud" {
-  region = var.ali_region
+# Check for AWS credentials in environment without loading AWS provider
+data "external" "aws_env_check" {
+  count = contains([for f in var.flavors : f.platform], "aws") ? 1 : 0
+  program = ["sh", "-c", <<-EOT
+    if [ -n "$AWS_ACCESS_KEY_ID" ] || [ -n "$AWS_PROFILE" ] || [ -f ~/.aws/credentials ]; then
+      echo '{"has_credentials": "true"}'
+    else
+      echo '{"has_credentials": "false"}'
+    fi
+  EOT
+  ]
 }
 
+# Check for Alibaba Cloud credentials in environment
+data "external" "ali_env_check" {
+  count = contains([for f in var.flavors : f.platform], "ali") ? 1 : 0
+  program = ["sh", "-c", <<-EOT
+    if [ -n "$ALIBABA_CLOUD_ACCESS_KEY_ID" ] || [ -n "$ALIBABA_CLOUD_PROFILE" ] || [ -f ~/.aliyun/config.json ]; then
+      echo '{"has_credentials": "true"}'
+    else
+      echo '{"has_credentials": "false"}'
+    fi
+  EOT
+  ]
+}
+
+provider "alicloud" {
+  region     = var.ali_region
+  access_key = local.has_ali_credentials ? null : "mock_access_key"
+  secret_key = local.has_ali_credentials ? null : "mock_secret_key"
+}
+
+# Configure AWS provider based on credentials availability
 provider "aws" {
-  region = var.aws_region
+  region                      = var.aws_region
+  access_key                  = local.has_aws_credentials ? null : "mock_access_key"
+  secret_key                  = local.has_aws_credentials ? null : "mock_secret_key"
+  skip_credentials_validation = !local.has_aws_credentials
+  skip_requesting_account_id  = !local.has_aws_credentials
 }
 
 provider "azurerm" {
@@ -184,20 +220,3 @@ module "gcp" {
   zone           = each.value.zone
   project_id     = each.value.account
 }
-
-
-
-module "state_aws" {
-  source = "./modules/state_aws"
-
-  count            = var.deploy_state_aws ? 1 : 0
-  test_name        = var.test_prefix
-  test_environment = var.test_environment
-}
-
-# module "state_aws_kms" {
-#   source = "./modules/state_aws_kms"
-# 
-#   count = var.deploy_state_aws_kms ? 1 : 0
-#   test_name      = local.test_name
-# }
