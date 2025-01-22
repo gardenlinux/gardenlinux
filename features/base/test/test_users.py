@@ -3,6 +3,7 @@ from helper.utils import execute_remote_command, read_file_remote
 import pytest
 
 @pytest.mark.security_id(171)
+@pytest.mark.security_id(2401)
 def test_for_nis(client, non_container):
     """Check if we have no NIS related entries.
        A passwd will then have an entry like this:
