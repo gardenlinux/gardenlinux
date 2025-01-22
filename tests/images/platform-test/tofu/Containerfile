@@ -22,14 +22,12 @@ RUN install -m 0755 -d /etc/apt/keyrings \
     && apt-get clean && rm -rf /var/lib/apt/lists/* \
     && cd "$VIRTUAL_ENV_PARENT" && pipenv install --categories "azure-cli"
 
-# temporary get patched terraform providers from our S3 bucket
-## local
-# COPY providers /usr/local/tf/providers
+# terraform providers from development forks
 COPY .terraformrc /root/.terraformrc
-## from S3
-RUN curl -O https://gardenlinux-tofu.s3.eu-central-1.amazonaws.com/providers.tar.gz \
-    && tar xzf providers.tar.gz && rm providers.tar.gz \
-    && mkdir -p /usr/local/tf/providers \
-    && mv terraform-provider-* /usr/local/tf/providers
+RUN mkdir -p /usr/local/tf/providers \
+    && cd /usr/local/tf/providers \
+    && curl -O https://github.com/b1-systems/google-magic-modules/releases/download/v6.16.0-secureboot1/terraform-provider-google \
+    && curl -O https://github.com/b1-systems/terraform-provider-azurerm/releases/download/v4.16.1-alpha1-secureboot1/terraform-provider-azurerm \
+    && chmod +x terraform-provider-*
 
 WORKDIR /gardenlinux/tests
