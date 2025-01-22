@@ -211,23 +211,31 @@ def main():
         print("")
 
     if not args.force_all:
-        pick = input("Choose the test resources to delete (digit, any other key quits): ")
-        pick = int(pick)
-        if not (pick >= 0 and pick < len(inventory_key_list)):
+        pick = input("Choose the test resources to delete (digit or 'A' for all, any other key quits): ")
+        if pick == 'A':
+            pick = 0  # Start with first item
+            args.force_all = True  # Use existing force-all logic
+        elif pick.strip().isdigit():
+            pick = int(pick)
+            if not (pick >= 0 and pick < len(inventory_key_list)):
+                return os.EX_DATAERR
+        else:
             return os.EX_DATAERR
     else:
         pick = 0
 
     try:
         test_environment = inventory_key_list[pick]
-
         test_inventory_key_list = list(inventory[test_environment])
+        
         while len(test_inventory_key_list) > 0:
-            # output the resources of the chosen test, offer option to delete one resource or all at once
+            # output the resources of the chosen test
             print("")
+            print(f"Processing test environment: {test_environment}")
             for i in range(len(test_inventory_key_list)):
                 print(f"{i}: {test_inventory_key_list[i]}: {inventory[test_environment][test_inventory_key_list[i]]}")
             print("")
+
             if not args.force_all:
                 delete_pick = input("Which resource should be deleted (digit), type 'A' for all, any other key for back: ")
                 if (delete_pick == 'A'):
