@@ -24,7 +24,7 @@ RUN echo "Package: onmetal-image\nPin: origin packages.gardenlinux.io\nPin-Prior
 RUN echo "deb http://deb.debian.org/debian ${DEBIAN_DIST} main contrib non-free" > /etc/apt/sources.list \
      && echo "deb [signed-by=$GARDENLINUX_MIRROR_KEY] https://packages.gardenlinux.io/gardenlinux $VERSION main" >> /etc/apt/sources.list \
      && sed -i 's/deb.debian.org/cdn-aws.deb.debian.org/g' /etc/apt/sources.list \
-     && if [ -f "/etc/apt/sources.list.d/debian.sources"] ; then sed -i 's/deb.debian.org/cdn-aws.deb.debian.org/g' /etc/apt/sources.list.d/debian.sources ; else echo "file not present" ; fi \
+     && if [ -f "/etc/apt/sources.list.d/debian.sources" ] ; then sed -i 's/deb.debian.org/cdn-aws.deb.debian.org/g' /etc/apt/sources.list.d/debian.sources ; else echo "file not present" ; fi \
      && apt-get update \
      && apt-get install -y --no-install-recommends \
           curl \
