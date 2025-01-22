@@ -75,14 +75,44 @@ def delete_image(project, name):
     wait_for_operation(operation, name)
 
 
-def get_subnets(project, region):
-    subnet_list = subnet_client.list(project=project, region=region).items
-    return subnet_list
+def get_subnets(project, network_name):
+    # Only try to get network if it's a valid network name (not a region)
+    if not network_name.startswith('vpc-'):
+        return []
+        
+    network = network_client.get(project=project, network=network_name)
+    subnets = []
+    
+    # Get all regions
+    regions = [subnet_url.split('/')[-3] for subnet_url in network.subnetworks] if network.subnetworks else []
+    
+    # Get subnets from each region where we found subnet URLs
+    for region in regions:
+        try:
+            region_subnets = subnet_client.list(
+                project=project,
+                region=region
+            )
+            
+            for subnet in region_subnets:
+                if network.self_link in subnet.network:
+                    subnets.append(subnet)
+                    
+        except Exception as e:
+            continue
+            
+    return subnets
 
 
 def delete_subnet(project, region, name):
-    operation = subnet_client.delete(project=project, region=region, subnetwork=name)
+    print(f"Deleting subnet {name}...")
+    operation = subnet_client.delete(
+        project=project,
+        region=region,
+        subnetwork=name
+    )
     wait_for_operation(operation, name)
+    return True
 
 
 def get_firewalls(project):
@@ -101,8 +131,15 @@ def get_networks(project):
 
 
 def delete_network(project, name):
+    # Delete all subnets first
+    subnets = get_subnets(project, name)
+    if subnets:
+        for subnet in subnets:
+            region = subnet.region.split('/')[-1]
+            delete_subnet(project, region, subnet.name)
+    print(f"Deleting network {name}...")
     operation = network_client.delete(project=project, network=name)
-    wait_for_operation(operation, name)
+    return wait_for_operation(operation, name)
 
 
 def get_instances(project, zone):
