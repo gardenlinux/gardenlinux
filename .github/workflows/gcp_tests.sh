@@ -19,18 +19,18 @@ if [[ ! -e $image_file ]]; then
     exit 1
 fi
 
-if [[ ! ${gcp_project:-} ]]; then
-    echo "gcp_project variable not set"
+if [[ ! ${gcp_project_id:-} ]]; then
+    echo "gcp_project_id variable not set"
     exit 1
 fi
 
 if [[ ! ${gcp_region:-} ]]; then
-    echo "gcp_project variable not set"
+    echo "gcp_project_id variable not set"
     exit 1
 fi
 
 if [[ ! ${gcp_zone:-} ]]; then
-    echo "gcp_project variable not set"
+    echo "gcp_project_id variable not set"
     exit 1
 fi
 
@@ -53,7 +53,7 @@ credentials_file_name="$(echo "$GOOGLE_APPLICATION_CREDENTIALS" | xargs basename
 
 cat << EOF > "$configFile"
 gcp:
-    project: ${gcp_project}
+    project: ${gcp_project_id}
     region: ${gcp_region}
     zone: ${gcp_zone}
     image: file:///artifacts/$(basename "$image_file")

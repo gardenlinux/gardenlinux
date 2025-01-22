@@ -43,7 +43,7 @@ jobs:
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-      gcp_project: ${{ secrets.GCP_PROJECT }}
+      gcp_project_id: ${{ secrets.GCP_PROJECT }}
       gcp_region: ${{ secrets.GCP_REGION }}
       gcp_zone: ${{ secrets.GCP_ZONE }}
       aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}

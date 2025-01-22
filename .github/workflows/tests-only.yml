@@ -64,7 +64,7 @@ jobs:
     name: platform test
     needs: [ matrix, platform_test_images ]
     env:
-      gcp_project: ${{ secrets.GCP_PROJECT }}
+      gcp_project_id: ${{ secrets.GCP_PROJECT }}
       gcp_region: ${{ secrets.GCP_REGION }}
       gcp_zone: ${{ secrets.GCP_ZONE }}
       aws_region: ${{ secrets.AWS_TESTS_REGION }}

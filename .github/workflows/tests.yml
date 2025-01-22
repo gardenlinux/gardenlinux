@@ -17,7 +17,7 @@ on:
         required: true
       gcp_service_account:
         required: true
-      gcp_project:
+      gcp_project_id:
         required: true
       gcp_region:
         required: true
@@ -54,7 +54,7 @@ jobs:
     name: platform test
     needs: [ generate_matrix_test_platform, platform_test_images ]
     env:
-      gcp_project: ${{ secrets.gcp_project }}
+      gcp_project_id: ${{ secrets.gcp_project_id }}
       gcp_region: ${{ secrets.gcp_region }}
       gcp_zone: ${{ secrets.gcp_zone }}
       aws_region: ${{ secrets.aws_region }}
