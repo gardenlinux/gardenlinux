@@ -3,7 +3,7 @@ from helper.utils import check_for_kernel_setting
   
 
 @pytest.mark.security_id(1121)
-def test_ipv4(client, non_firecracker, non_chroot, non_container, non_gcp):
+def test_ipv4(client, non_firecracker, non_chroot, non_container):
   """
      Test that we have IPv4 network settings to best options..
 
@@ -75,9 +75,56 @@ def test_ipv4(client, non_firecracker, non_chroot, non_container, non_gcp):
     assert control[1] == control_value, f"Control {control[0]} does not have the right value. It's {control_value} and should be {control[1]}"
   
 
-#def test_ipv4_forward(client, gcp, non_firecracker, non_chroot, non_container):
-#  """
-#      Test that we have IPv4 forwardning disabled. This is only the case of GCP.
-#      Most likely this isn't necesary.
-#  """
-#  assert DISABLE == check_for_kernel_setting(client, "net.ipv4.ip_forward"), "IPv4 forward is enabled where it shoudn't."
+@pytest.mark.security_id(1122)
+def test_ipv6(client, non_firecracker, non_chroot, non_container):
+  """
+     Test that we have IPv6 network settings to best options.
+
+     disable_ipv6
+     Disabling IPv6 is for a cloud use-case no options and since it's 2025 and 50% of the world
+     speaks IPv6 this is out of the question.
+     Default value is 0.
+
+     default.disable_ipv6
+     This is like a wildcard. We might have IPv6 enabled, but for any newer devices disabled.
+     However, as of now this is always enabled.
+     Default value is 1.
+
+     net.ipv6.conf.all.forwarding
+     This is like a wildcard.
+     Default value is 1.
+
+     net.ipv6.conf.all.accept_ra
+     This option will set if we receive updates from the router regarind Router Advertisements, this
+     way the network inform us about update in the network.
+     Default value is 1.
+
+     net.ipv6.conf.all.accept_redirects
+     net.ipv6.conf.all.router_solicitations
+     net.ipv6.conf.all.autoconf
+     net.ipv6.conf.default.autoconf
+     net.ipv6.conf.all.accept_dad
+     net.ipv6.conf.all.dad_transmits
+     net.ipv6.conf.default.dad_transmits
+  """
+
+  list_of_ipv6_controls = [
+     ("net.ipv6.conf.all.disable_ipv6"             ,'0'),
+     ("net.ipv6.conf.default.disable_ipv6"         ,'0'),
+     ("net.ipv6.conf.all.forwarding"               ,'1'),
+     ("net.ipv6.conf.default.accept_ra"            ,'1'),
+     ("net.ipv6.conf.all.accept_redirects"         ,'1'),
+     ("net.ipv6.conf.all.router_solicitations"    ,'-1'),
+     ("net.ipv6.conf.all.autoconf"                 ,'1'),
+     ("net.ipv6.conf.default.autoconf"             ,'1'),
+     ("net.ipv6.conf.all.accept_dad"               ,'0'),
+     ("net.ipv6.conf.default.accept_dad"           ,'1'),
+     ("net.ipv6.conf.all.dad_transmits"            ,'1'),
+     ("net.ipv6.conf.default.dad_transmits"        ,'1')
+
+     ]
+
+
+  for control in list_of_ipv6_controls:
+    control_value = check_for_kernel_setting(client, control[0])
+    assert control[1] == control_value, f"Control {control[0]} does not have the right value. It's {control_value} and should be {control[1]}"
