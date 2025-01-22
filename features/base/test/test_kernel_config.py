@@ -14,7 +14,7 @@ def test_nvme_kernel_parameter(client, aws):
 @pytest.mark.security_id(963)
 def test_for_restricted_access_to_dmesg(client):
     dmesg_restrict = check_for_kernel_setting(client, "kernel.dmesg_restrict")
-    assert dmesg_restrict == "1", "dmesg wasn't restircted!"
+    assert dmesg_restrict == "1", "dmesg wasn't restricted!"
 
 
 @pytest.mark.security_id(964)
@@ -22,8 +22,8 @@ def test_for_restricted_soft_and_hardlinks(client):
     symlinks = check_for_kernel_setting(client, "fs.protected_symlinks")
     hardlinks = check_for_kernel_setting(client, "fs.protected_hardlinks")
 
-    assert symlinks == "1", " symlink arn't restricted!"
-    assert hardlinks == "1", "hardlinks arn't restricted!"
+    assert symlinks == "1", " symlink aren't restricted!"
+    assert hardlinks == "1", "hardlinks aren't restricted!"
 
 
 @pytest.mark.security_id(962)
