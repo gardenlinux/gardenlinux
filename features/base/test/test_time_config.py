@@ -24,6 +24,7 @@ def test_timesync(client, azure):
     assert exit_code == 0, f"Expected /dev/ptp_hyperv to be a symbolic link"
 
 
+@pytest.mark.security_id(1765)
 def test_clock(client):
     """ Test clock skew """
     (exit_code, output, error) = client.execute_command("date '+%s'")
