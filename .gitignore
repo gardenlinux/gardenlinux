@@ -52,6 +52,7 @@ make_targets.cache
 venv
 shell.nix
 s3_downloads/
+!**/.terraform.lock.hcl
 **/.terraform*
 **/terraform.tfstate*
 **/*.tfvars

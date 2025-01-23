@@ -8,26 +8,32 @@ ENV SHELL /bin/bash
 
 #Virtual Env Created in platform-test-base
 ENV VIRTUAL_ENV="/opt/python-test-env/.venv"
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+ENV TOFU_HOME="/root"
+ENV TOFUENV_INSTALL_DIR="${TOFU_HOME}/.tofuenv"
+ENV TOFU_PROVIDERS_CUSTOM="${TOFU_HOME}/.terraform/providers/custom"
+ENV PATH="${TOFUENV_INSTALL_DIR}/bin:${VIRTUAL_ENV}/bin:${PATH}"
 
-# install opentofu
-RUN install -m 0755 -d /etc/apt/keyrings \
-    && curl -fsSL https://get.opentofu.org/opentofu.gpg | tee /etc/apt/keyrings/opentofu.gpg >/dev/null \
-    && curl -fsSL https://packages.opentofu.org/opentofu/tofu/gpgkey | gpg --no-tty --batch --dearmor -o /etc/apt/keyrings/opentofu-repo.gpg >/dev/null \
-    && chmod a+r /etc/apt/keyrings/opentofu.gpg /etc/apt/keyrings/opentofu-repo.gpg \
-    && echo "deb [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" | tee /etc/apt/sources.list.d/opentofu.list > /dev/null \
-    && chmod a+r /etc/apt/sources.list.d/opentofu.list \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends tofu \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && cd "$VIRTUAL_ENV_PARENT" && pipenv install --categories "azure-cli"
+# dependent SDKs for OpenTofu providers
+RUN cd "$VIRTUAL_ENV_PARENT" && pipenv install --categories "azure-cli"
 
-# terraform providers from development forks
-COPY .terraformrc /root/.terraformrc
-RUN mkdir -p /usr/local/tf/providers \
-    && cd /usr/local/tf/providers \
-    && curl -O https://github.com/b1-systems/google-magic-modules/releases/download/v6.16.0-secureboot1/terraform-provider-google \
-    && curl -O https://github.com/b1-systems/terraform-provider-azurerm/releases/download/v4.16.1-alpha1-secureboot1/terraform-provider-azurerm \
-    && chmod +x terraform-provider-*
+# install opentofu and dependent SDKs
+RUN git clone --depth=1 https://github.com/tofuutils/tofuenv.git ${TOFUENV_INSTALL_DIR} \
+    && echo 'trust-tofuenv: yes' > ${TOFUENV_INSTALL_DIR}/use-gpgv
+
+# providers.tf contains OpenTofu version
+COPY providers.tf ${TOFU_HOME}/providers.tf
+# install pinned OpenTofu version
+RUN cd ${TOFU_HOME} && tofuenv install latest-allowed && tofuenv list | head -1 | xargs tofuenv use
+
+# install pinned providers (pinned in providers.tf and .terraform.lock.hcl)
+COPY .terraform.lock.hcl ${TOFU_HOME}/.terraform.lock.hcl
+RUN cd ${TOFU_HOME} && tofu providers mirror ${TOFU_HOME}/.terraform
+
+# install providers from development forks
+COPY .terraformrc ${TOFU_HOME}/.terraformrc
+RUN curl -LO --create-dirs --output-dir ${TOFU_PROVIDERS_CUSTOM} https://github.com/b1-systems/google-magic-modules/releases/download/v6.16.0-secureboot1/terraform-provider-google \
+    && curl -LO --create-dirs --output-dir ${TOFU_PROVIDERS_CUSTOM} https://github.com/b1-systems/terraform-provider-azurerm/releases/download/v4.16.1-alpha1-secureboot1/terraform-provider-azurerm \
+    && chmod +x ${TOFU_PROVIDERS_CUSTOM}/terraform-provider-*
+
 
 WORKDIR /gardenlinux/tests

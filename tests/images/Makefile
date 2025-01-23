@@ -24,6 +24,8 @@ PLATFORMS = ali aws azure firecracker gcp kvm openstack tofu
 define copy_files
 	cp $(ROOT_DIR)/tests/Pipfile $1/
 	cp $(ROOT_DIR)/tests/Pipfile.lock $1/
+	cp $(ROOT_DIR)/tests/platformSetup/tofu/providers.tf $1/
+	cp $(ROOT_DIR)/tests/platformSetup/tofu/.terraform.lock.hcl $1/
 endef
 
 define pull_image
@@ -47,6 +49,8 @@ endef
 define clean_files
 	rm $1/Pipfile
 	rm $1/Pipfile.lock
+	rm $1/providers.tf
+	rm $1/.terraform.lock.hcl
 endef
 
 # help: help					List available tasks of the project
