@@ -67,6 +67,7 @@ done
 
 container_mount_opts=(
 	-v "$PWD/keyring.gpg:/builder/keyring.gpg:ro"
+	-v "$PWD/key.asc:/builder/key/key.asc:ro"
 	-v "$(realpath "$target_dir"):/builder/.build"
 )
 
