@@ -17,7 +17,7 @@ logger.setLevel(logging.DEBUG)
 BIN_DIR=os.path.join(os.path.dirname(__file__), "..", "..", "bin")
 
 class OpenStackCCEE:
-    """Handle OpenStack CCEE flavour"""
+    """Handle OpenStack CCEE flavor"""
 
     @classmethod
     def fixture(cls, config):

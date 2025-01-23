@@ -1,4 +1,4 @@
-description: "metal features (standard kernel, starndard grub, physical components)"
+description: "metal features (standard kernel, physical components)"
 type: platform
 features:
   include:

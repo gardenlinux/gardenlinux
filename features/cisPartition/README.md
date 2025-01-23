@@ -20,7 +20,7 @@ LABEL=VARLOG       /var/log           ext4      defaults,nosuid,noexec,nodev    
 LABEL=VARLOGAUD    /var/log/audit     ext4      defaults,nosuid,noexec,nodev           size=64MiB
 ```
 
-`/tmp` will be handled by a systemd unit file and be created with `CIS`complaint options:
+`/tmp` will be handled by a systemd unit file and be created with `CIS`compliant options:
 
 ```
 Options=mode=1777,strictatime,nosuid,nodev,noexec

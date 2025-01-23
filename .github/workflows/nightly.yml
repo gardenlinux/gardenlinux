@@ -13,10 +13,10 @@ on:
         required: false
         default: true
       platform_test_tag:
-        description: "Tag to run platform-test containers. 'latest', Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
+        description: "Tag to run platform-test containers. 'nightly', Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
         type: string
         required: true
-        default: "latest"
+        default: "nightly"
 jobs:
   build:
     uses: ./.github/workflows/build.yml
@@ -25,8 +25,7 @@ jobs:
       packages: write
     with:
       version: ${{ inputs.version || 'now' }}
-      default_modifier: "-gardener_prod"
-      use_kms: ${{ inputs.use_kms != null && inputs.use_kms || true }}        
+      use_kms: ${{ github.event_name != 'workflow_dispatch' || inputs.use_kms }}
     secrets:
       secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
       aws_region: ${{ secrets.AWS_REGION }}
@@ -40,8 +39,7 @@ jobs:
     uses: ./.github/workflows/tests.yml
     with:
       version: ${{ needs.build.outputs.version }}
-      default_modifier: "-gardener_prod"
-      platform_test_tag: ${{ inputs.platform_test_tag || 'latest' }}
+      platform_test_tag: ${{ inputs.platform_test_tag || 'nightly' }}
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -63,7 +61,6 @@ jobs:
     uses: ./.github/workflows/upload_to_s3.yml
     with:
       version: ${{ needs.build.outputs.version }}
-      default_modifier: "-gardener_prod"
     secrets:
       bucket: ${{ secrets.AWS_S3_BUCKET }}
       region: ${{ secrets.AWS_REGION }}
@@ -77,7 +74,6 @@ jobs:
     uses: ./.github/workflows/upload_to_s3.yml
     with:
       version: ${{ needs.build.outputs.version }}
-      default_modifier: "-gardener_prod"
     secrets:
       bucket: ${{ secrets.AWS_CN_S3_BUCKET }}
       region: ${{ secrets.AWS_CN_REGION }}
@@ -95,7 +91,6 @@ jobs:
     uses: ./.github/workflows/upload_oci.yml
     with:
       version: ${{ needs.build.outputs.version }}
-      default_modifier: "-gardener_prod"
     secrets:
       region: ${{ secrets.AWS_REGION }}
       role: ${{ secrets.AWS_IAM_ROLE }}

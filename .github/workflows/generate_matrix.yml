@@ -1,0 +1,40 @@
+on:
+  workflow_call:
+    inputs:
+      flags:
+        description: 'Flags passed to bin/flavors_parse.py'
+        type: string
+        required: true
+    outputs:
+      matrix:
+        description: 'The generated matrix'
+        value: ${{ jobs.generate_matrix.outputs.matrix }}
+
+jobs:
+  generate_matrix:
+    name: Generate Matrix
+    runs-on: 'ubuntu-latest'
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - id: matrix
+        run: |
+          FLAVORS_AMD64=$(./bin/flavors_parse.py ${{ inputs.flags }} | jq -r '.amd64 // []')
+          FLAVORS_ARM64=$(./bin/flavors_parse.py ${{ inputs.flags }} | jq -r '.arm64 // []')
+          MATRIX=$(jq -nc \
+            --argjson amd64 "$FLAVORS_AMD64" \
+            --argjson arm64 "$FLAVORS_ARM64" \
+            '{
+              include: (
+                ($amd64 | map({arch: "amd64", flavor: .})) +
+                ($arm64 | map({arch: "arm64", flavor: .}))
+              )
+            }'
+          )
+          echo "matrix=$MATRIX" | tee -a $GITHUB_OUTPUT

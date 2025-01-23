@@ -1,5 +1,5 @@
-# overwrite with a stable gardenlinux version
-ARG GL_VERSION=latest
+# use latest nightly by default
+ARG GL_VERSION=nightly
 # use platform-test-base image
 FROM gardenlinux/platform-test-base:${GL_VERSION}
 

@@ -5,9 +5,6 @@ on:
       version:
         type: string
         default: today
-      default_modifier:
-        type: string
-        default: ""
     secrets:
       bucket:
         required: true
@@ -18,9 +15,14 @@ on:
       session:
         required: true
 jobs:
+  generate_matrix_publish:
+    uses: ./.github/workflows/generate_matrix.yml
+    with: 
+      flags: '--no-arch --json-by-arch --publish'
   upload_to_s3:
     name: upload to S3
-    runs-on: ubuntu-latest
+    needs: [ generate_matrix_publish ]
+    runs-on: ubuntu-latest-64core
     defaults:
       run:
         shell: bash
@@ -29,17 +31,7 @@ jobs:
     environment: oidc_aws_s3_upload
     strategy:
       fail-fast: false
-      matrix:
-        arch: [ amd64, arm64 ]
-        target: [ kvm, "kvm_trustedboot_tpm2", metal, "metal_trustedboot_tpm2", gcp, "gcp_trustedboot_tpm2", gdch, aws, "aws_trustedboot_tpm2", azure, ali, openstack, openstackbaremetal, vmware, "metal_pxe" ]
-        modifier: [ "${{ inputs.default_modifier }}" ]
-        include:
-          - target: container
-            arch: amd64
-            modifier: ""
-          - target: container
-            arch: arm64
-            modifier: ""
+      matrix: ${{ fromJson(needs.generate_matrix_publish.outputs.matrix) }}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
@@ -48,13 +40,14 @@ jobs:
           role-to-assume: ${{ secrets.role }}
           role-session-name: ${{ secrets.session }}
           aws-region: ${{ secrets.region }}
+          role-duration-seconds: 14400
       - name: set VERSION=${{ inputs.version }}
         run: |
           bin/garden-version "${{ inputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
       - name: get cname
         run: |
-          cname="$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})"
+          cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
           echo "cname=$cname" | tee -a "$GITHUB_ENV"
       - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
         with:
