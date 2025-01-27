@@ -4,6 +4,9 @@
 - [What is OpenTofu?](#what-is-opentofu)
 - [Module Structure](#module-structure)
 - [Getting Started](#getting-started)
+  - [Requirements](#requirements)
+    - [Tooling](#tooling)
+    - [Python virtual environment](#python-virtual-environment)
   - [Understanding the Test Process](#understanding-the-test-process)
     - [Quick Start - Typical Workflow](#quick-start---typical-workflow)
     - [What Happens Behind the Scenes](#what-happens-behind-the-scenes)
@@ -74,6 +77,25 @@ The root module:
 - Locks providers in `.terraform.lock.hcl`
 
 ## Getting Started
+
+### Requirements
+
+#### Tooling
+
+These tools are required on the local workstation and Github Actions.
+
+- Python 3.11
+- GNU Make
+- `uuidgen`
+
+#### Python virtual environment
+
+A virtual environment with minimum dependencies is required to run the make targets and the coresponding python scripts.
+
+```bash
+python -m venv venv
+pip install -r requirements.txt
+```
 
 ### Understanding the Test Process
 
