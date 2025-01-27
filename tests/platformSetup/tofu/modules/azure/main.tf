@@ -16,7 +16,7 @@ locals {
   subnet_name                    = substr("subnet-${local.test_name}", 0, 63)
   pip_name                       = substr("pip-${local.test_name}", 0, 63)
   nic_name                       = substr("nic-${local.test_name}", 0, 63)
-  instance_name                  = substr("vm-${local.test_name_safe}", 0, 64)
+  instance_name                  = substr("vm-${local.test_name_safe}", 0, 63)
   fw_name                        = substr("fw-${local.test_name}", 0, 63)
   disk_os_name                   = "disk-os-${local.test_name}"
   ssh_key_name                   = "ssh-${var.ssh_user}-${local.test_name}"
