@@ -104,6 +104,9 @@ pip install -r requirements.txt
 Here's the minimal sequence of commands to run a complete platform test. Please be aware that you have to configure cloud provider authentication and settings before running the tests. Have a look at the [Cloud Provider Authentication](#cloud-provider-authentication) section for more information.
 
 ```bash
+# 0. Build the image for the flavor you want to test
+make gcp-gardener_prod-amd64-build
+
 # 1. Generate variables for your flavor
 make --directory=tests/platformSetup gcp-gardener_prod-amd64-config
 
