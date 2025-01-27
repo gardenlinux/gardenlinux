@@ -66,16 +66,6 @@ def create_tfvars_file(args, flavor, root_dir):
         if args.image_path:
             f.write(f'image_path= "{args.image_path}"\n')
 
-        azure_subscription_id = os.getenv('azure_subscription_id')
-        if not azure_subscription_id:
-            sys.exit("Error: 'azure_subscription_id' environment variable is required for Azure.")
-        f.write(f'azure_subscription_id = "{azure_subscription_id}"\n')
-
-        gcp_project_id = os.getenv('gcp_project_id')
-        if not gcp_project_id:
-            sys.exit("Error: 'gcp_project_id' environment variable is required for GCP.")
-        f.write(f'gcp_project_id = "{gcp_project_id}"\n')
-
         parts = flavor.split('-')
         # Extract platform (first part) and architecture (last part)
         platform = parts[0]

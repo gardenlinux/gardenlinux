@@ -79,7 +79,7 @@ The root module:
 
 #### Quick Start - Typical Workflow
 
-Here's the minimal sequence of commands to run a complete platform test:
+Here's the minimal sequence of commands to run a complete platform test. Please be aware that you have to configure cloud provider authentication and settings before running the tests. Have a look at the [Cloud Provider Authentication](#cloud-provider-authentication) section for more information.
 
 ```bash
 # 1. Generate variables for your flavor
@@ -160,25 +160,29 @@ export AWS_SECRET_ACCESS_KEY=my-access-key
 ```
 
 > 💡 For AWS, you can also use SSO authentication if your organization supports it.
+> If you don't have AWS credentials, you can just leave those variables empty.
 
 #### Google Cloud Platform (GCP)
 
 GCP authentication requires both project setup and [user authentication via gcloud CLI](https://cloud.google.com/docs/authentication/gcloud):
 
 ```bash
-# 1. Set your project ID (needed for tooling)
-export gcp_project_id=my-gcp-project-id
+# 1. Set your project ID (needed for OpenTofu)
+export TF_VAR_gcp_project_id=my-gcp-project-id
 
 # 2. First-time setup (only needed once)
 gcloud init
-gcloud config set project ${gcp_project_id}
+gcloud config set project ${TF_VAR_gcp_project_id}
 
 # 3. Authenticate your user account
 gcloud auth application-default login
 
 # 4. Set up project quotas
-gcloud auth application-default set-quota-project ${gcp_project_id}
+gcloud auth application-default set-quota-project ${TF_VAR_gcp_project_id}
 ```
+
+> 💡 The Project ID can be found in the Google Cloud portal under Project info.
+> If you don't a Google Cloud project, you can supply any mocked up value.
 
 #### Microsoft Azure
 
@@ -188,11 +192,12 @@ You can set up [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/authentic
 # 1. Log in to Azure (opens a web browser)
 az login
 
-# 2. Set your subscription ID (needed for tooling)
-export azure_subscription_id="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+# 2. Set your subscription ID (needed for OpenTofu)
+export ARM_SUBSCRIPTION_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 ```
 
 > 💡 The subscription ID can be found in the Azure portal under Subscriptions.
+> If you don't have a subscription, you have to comment out the module "azure" in `tests/platformSetup/tofu/main.tf` and `tests/platformSetup/tofu/outputs.tf`.
 
 #### Alibaba Cloud (ALI)
 
@@ -208,6 +213,8 @@ export ALIBABA_CLOUD_ACCESS_KEY_ID=my-access-key-id
 export ALIBABA_CLOUD_ACCESS_KEY_SECRET=my-access-key-secret
 export ALIBABA_CLOUD_REGION_ID=my-region-id  # e.g., 'eu-central-1'
 ```
+
+> 💡 If you don't have Alibaba Cloud credentials, you can just leave those variables empty.
 
 ### Verifying Authentication
 
@@ -246,8 +253,6 @@ You can create these files manually. Here's an example for testing a GCP instanc
 ```bash
 ❯ cat tests/platformSetup/tofu/variables.gcp-gardener_prod_trustedboot_tpm2-amd64.tfvars
 test_prefix = "bobs"                    # Prefix for resource names
-azure_subscription_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"     # Required for Azure tests
-gcp_project_id = "my-project"          # Required for GCP tests
 flavors = [
   {
     "name": "gcp-gardener_prod_trustedboot_tpm2-amd64",  # Test configuration name

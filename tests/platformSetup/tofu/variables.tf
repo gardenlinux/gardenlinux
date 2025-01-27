@@ -94,11 +94,6 @@ variable "aws_instance_type" {
 }
 
 # Azure
-variable "azure_subscription_id" {
-  description = "Azure subscription ID"
-  default     = "0000000-0000-00000-000000"
-}
-
 variable "azure_image_file" {
   description = "Source file for the uploaded image"
   default     = "azure-gardener_prod-amd64-today-local.vhd"

@@ -58,7 +58,6 @@ jobs:
       gcp_region: ${{ secrets.gcp_region }}
       gcp_zone: ${{ secrets.gcp_zone }}
       aws_region: ${{ secrets.aws_region }}
-      azure_subscription_id: ${{ secrets.az_subscription_id }}
       AZURE_CONFIG_DIR: /tmp/azure_config_dir
       ARCH: ${{ matrix.arch }}
       FLAVOR: ${{ matrix.flavor }}
@@ -151,6 +150,7 @@ jobs:
         export CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE="/gardenlinux/$credentials_file_name"
         export GOOGLE_GHA_CREDS_PATH="/gardenlinux/$credentials_file_name"
         export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
+        export TF_VAR_gcp_project_id=${{ secrets.gcp_project_id }}
         # copy artifacts_dir to image_dir
         cp -r ${{ env.artifact_dir }}/* ${{ env.image_dir }}
         ls -la ${{ env.image_dir }}
@@ -190,4 +190,5 @@ jobs:
         export CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE="/gardenlinux/$credentials_file_name"
         export GOOGLE_GHA_CREDS_PATH="/gardenlinux/$credentials_file_name"
         export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
+        export TF_VAR_gcp_project_id=${{ secrets.gcp_project_id }}
         (make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-destroy 2>&1 || make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-destroy 2>&1 || make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-destroy 2>&1) | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.destroy.log"
