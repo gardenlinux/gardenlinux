@@ -1,4 +1,4 @@
-ARG DEBIAN_DIST=trixie
+ARG DEBIAN_DIST=stable
 FROM debian:${DEBIAN_DIST}-slim
 ARG DEBIAN_DIST
 
