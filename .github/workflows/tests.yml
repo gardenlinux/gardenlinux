@@ -156,10 +156,10 @@ jobs:
         ls -la ${{ env.image_dir }}
         # uncached/downloaded artifacts are compressed
         test -f "${{ env.image_dir }}/${{ env.cname }}.tar.gz" && tar xzvf "${{ env.image_dir }}/${{ env.cname }}.tar.gz" -C "${{ env.image_dir }}"
-        # tf variables generation
-        TEST_PREFIX="gh-actions" CNAME="${{ env.cname }}" make --directory=tests/platformSetup ${FLAVOR}-${ARCH}-config
         # ssh key generation (if missing)
         test -f ~/.ssh/id_ed25519 || ssh-keygen -t ed25519 -P "" -f ~/.ssh/id_ed25519
+        # tf variables generation
+        TEST_PREFIX="gh-actions" CNAME="${{ env.cname }}" make --directory=tests/platformSetup ${FLAVOR}-${ARCH}-config
         # enable S3 backend
         cp "tests/platformSetup/tofu/backend.tf.github" "tests/platformSetup/tofu/backend.tf" 
         make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-apply 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.provisioning.log"
