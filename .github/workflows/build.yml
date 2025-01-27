@@ -126,11 +126,7 @@ jobs:
           arch: "${{ matrix.arch }}"
       - name: build test container
         run: |
-          OCI_IMAGE_TAG="$(./build --print-container-image)"
-          if [[ -f builder.dockerfile ]]; then
-            podman build -t "$OCI_IMAGE_TAG" -f builder.dockerfile .
-          fi
-          podman build --squash --tag test --build-arg base="$OCI_IMAGE_TAG" tests
+          podman build --squash --tag test --build-arg base=debian:stable tests
           podman save --format oci-archive test > test.oci
       - name: upload test container
         uses: actions/cache/save@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # pin@v3
