@@ -241,7 +241,7 @@ set_binaries () {
     bin_head="head"
     bin_stat="stat"
     bin_sed="sed"
-    bin_uuid="cat /proc/sys/kernel/random/uuid"
+    bin_uuid="uuidgen"
     bin_realpath="realpath"
     bin_qemu="qemu-system-$qemu_arch"
 
