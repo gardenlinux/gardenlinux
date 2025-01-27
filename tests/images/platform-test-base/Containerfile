@@ -18,6 +18,7 @@ RUN apt-get update \
        less \
        apt-transport-https \
        gnupg \
+       gpgv \
        vim \
        procps \
        openssh-client \
