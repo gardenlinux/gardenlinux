@@ -1,6 +1,6 @@
 ARG base=debian:bookworm
 FROM $base
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates build-essential libpython3-dev openssh-client python3 python3-venv
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates build-essential libpython3-dev openssh-client python3 python3-venv uidmap
 
 # Prepare virtual environment
 ENV VIRTUAL_ENV=/opt/venv
@@ -11,6 +11,8 @@ RUN pip install pipenv
 COPY Pipfile Pipfile
 COPY Pipfile.lock Pipfile.lock
 RUN pipenv install --system --dev --verbose
+
+RUN echo 'root:1:65535' | tee /etc/subuid /etc/subgid > /dev/null
 
 COPY init /init
 CMD /init
