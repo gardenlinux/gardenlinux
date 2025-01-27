@@ -64,6 +64,7 @@ help:
 $(foreach flavor,$(FLAVORS), \
 	$(eval \
 		$(flavor)-config: ; \
+		mkdir -p $(MKDIRS) && \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
 			./tf_variables_create.py --flavors $(flavor) $(CNAME_CMD) $(TEST_PREFIX)" \
