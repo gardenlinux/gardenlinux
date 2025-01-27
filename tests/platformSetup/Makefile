@@ -5,7 +5,7 @@ ROOT_DIR := $(shell git rev-parse --show-toplevel)
 UUID_FILE := $(ROOT_DIR)/tests/platformSetup/.uuid
 # Check if the .uuid file exists. If it does, read from it, otherwise generate a new uuid/seed
 ifeq ($(wildcard $(UUID_FILE)),)
-	UUID := $(shell cat /proc/sys/kernel/random/uuid)
+	UUID := $(shell uuidgen)
     $(shell echo $(UUID) > $(UUID_FILE))
 else
     UUID := $(shell cat $(UUID_FILE))
