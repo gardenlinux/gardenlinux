@@ -17,6 +17,14 @@ endif
 ifeq ($(origin GL_REGISTRY), undefined)
 GL_REGISTRY := ghcr.io/gardenlinux
 endif
+ifeq ($(origin TEST_PREFIX), undefined)
+TEST_PREFIX := $(USER)
+endif
+ifeq ($(origin CNAME), undefined)
+CNAME_CMD :=
+else
+CNAME_CMD := --cname $(CNAME)
+endif
 
 GARDENLINUX_BUILD_CRE ?= podman
 
@@ -44,6 +52,7 @@ help:
 	@echo "Available targets for Official Flavors:"
 	@echo ""
 	@$(foreach flavor,$(FLAVORS), \
+		echo "$(flavor)-config      Create tofu config for $(flavor)"; \
 		echo "$(flavor)-plan        Run tofu plan for $(flavor)"; \
 		echo "$(flavor)-apply       Run tofu apply for $(flavor)"; \
 		echo "$(flavor)-show        Run tofu show for $(flavor)"; \
@@ -53,6 +62,12 @@ help:
 
 # flavor-specific targets
 $(foreach flavor,$(FLAVORS), \
+	$(eval \
+		$(flavor)-config: ; \
+		$(CRE_CMD_tofu) bash -c "\
+			cd platformSetup/tofu && \
+			./tf_variables_create.py --flavors $(flavor) $(CNAME_CMD) $(TEST_PREFIX)" \
+	) \
 	$(eval \
 		$(flavor)-plan: ; \
 		mkdir -p $(MKDIRS) && \

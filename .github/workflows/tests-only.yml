@@ -204,12 +204,11 @@ jobs:
         cp -r ${{ env.artifact_dir }}/* ${{ env.image_dir }}
         ls -la ${{ env.image_dir }}
         # tf variables generation
-        tests/platformSetup/tofu/tf_variables_create.py --flavors ${FLAVOR}-${ARCH} --cname "${{ env.cname }}" gh-actions
+        TEST_PREFIX="gh-actions" CNAME="${{ env.cname }}" make --directory=tests/platformSetup ${FLAVOR}-${ARCH}-config
         # ssh key generation (if missing)
         test -f ~/.ssh/id_ed25519 || ssh-keygen -t ed25519 -P "" -f ~/.ssh/id_ed25519
         # enable S3 backend
         cp "tests/platformSetup/tofu/backend.tf.github" "tests/platformSetup/tofu/backend.tf" 
-        # make --directory="tests/platformSetup" ${PLATFORM}-${ARCH}-${FLAVOR}-apply 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.provisioning.log"
         make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-apply 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.provisioning.log"
 
     - name: run platform test for ${{ matrix.platform }} on ${{ matrix.arch }}

@@ -105,7 +105,7 @@ Here's the minimal sequence of commands to run a complete platform test. Please 
 
 ```bash
 # 1. Generate variables for your flavor
-./tests/platformSetup/tofu/tf_variables_create.py --flavors gcp-gardener_prod-amd64 myprefix
+make --directory=tests/platformSetup gcp-gardener_prod-amd64-config
 
 # 2. Create cloud resources
 make --directory=tests/platformSetup gcp-gardener_prod-amd64-apply
@@ -127,12 +127,12 @@ make --directory=tests/platformSetup gcp-gardener_prod-amd64-destroy
 
 When you run a platform test, this sequence occurs:
 
-0. **Generate Input Variables** (`tests/platformSetup/tofu/tf_variables_create.py`):
+1. **Generate Input Variables** (make target calls `tests/platformSetup/tofu/tf_variables_create.py`):
    - Creates OpenTofu configuration files
    - Defines cloud resources to create
    - Sets up test parameters
 
-1a. **Infrastructure Setup** (OpenTofu):
+2a. **Infrastructure Setup** (OpenTofu):
    - Configures networking
    - Sets up security groups/firewall rules
    - Uploads Garden Linux images
@@ -140,23 +140,24 @@ When you run a platform test, this sequence occurs:
    - Uploads SSH keys
    - Waits for SSH port to become available
 
-1b. **Test Configuration** (`tests/platformSetup/tofu/tf_pytest_ssh.py`):
+2b. **Test Configuration** (make target calls `tests/platformSetup/tofu/tf_pytest_ssh.py`):
     - Generates pytest configuration from OpenTofu output
     - Creates SSH connection script
 
-2a. **Test Execution** (`pytest` via `tests/platformSetup/manual.py`):
+3a. **Test Execution** (make target calls `pytest` via `tests/platformSetup/manual.py`):
    - Runs test suite
    - Collects test results
    - Reports success/failure
 
-2b. **SSH Connection** (`tests/helper/sshclient.py`):
+3b. **SSH Connection** (`tests/helper/sshclient.py`):
    - Establishes SSH connection
    - Handles connection retries if needed
 
-3. **Infrastructure Cleanup** (OpenTofu):
+4. **Infrastructure Cleanup** (OpenTofu):
    - Destroys all cloud resources
 
 ## Detailed Component Documentation
+
 
 ### Cloud Provider Authentication
 
@@ -297,7 +298,17 @@ flavors = [
 
 #### Automated Generation
 
-We provide a helper script `tf_variables_create.py` to generate these files automatically:
+We provide a helper script `tf_variables_create.py` to generate these files automatically.
+It is called by the "-config" make targets but can also be called manually.
+
+```bash
+# use default settings
+make --directory=tests/platformSetup gcp-gardener_prod-amd64-config
+
+# write a custom test prefix and image via cname
+TEST_PREFIX=myprefix CNAME=gcp-gardener_prod_tpm2_trustedboot-amd64-1695.0-30903f3a make --directory=tests/platformSetup gcp-gardener_prod_tpm2_trustedboot-amd64-config
+```
+or
 
 ```bash
 # Generate for a single flavor
@@ -470,8 +481,6 @@ gcp-gardener_prod_trustedboot_tpm2-arm64-destroy     Run tofu destroy for gcp-ga
 ```
 </details>
 
-> [!IMPORTANT]
-> Each command requires a matching variables file. For example, to run `gcp-gardener_prod-amd64-apply`, you need `tests/platformSetup/tofu/variables.gcp-gardener_prod-amd64.tfvars`.
 
 #### Typical Workflow
 
