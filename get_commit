@@ -3,10 +3,8 @@
 set -eufo pipefail
 
 dir="$(dirname "${BASH_SOURCE[0]}")"
-commitfile="$(readlink -f "${dir}/COMMIT")"
-cd "$dir"
-if [ -f "$commitfile" ]; then
-    cat "$commitfile"
+if [ -f "$dir/COMMIT" ]; then
+    cat "$dir/COMMIT"
     exit 0
 else
     [ -z "$(git status --porcelain 2> /dev/null)" ] && git rev-parse HEAD 2> /dev/null || echo local
