@@ -6,6 +6,7 @@ This directory contains the infrastructure code used to automatically set up tes
 
 - [What is OpenTofu?](#what-is-opentofu)
 - [OpenTofu Module Structure](#opentofu-module-structure)
+- [OpenTofu in a Nutshell](#opentofu-in-a-nutshell)
 - [Getting Started](#getting-started)
   - [Requirements](#requirements)
     - [Tooling](#tooling)
@@ -13,32 +14,52 @@ This directory contains the infrastructure code used to automatically set up tes
   - [Understanding the Test Process](#understanding-the-test-process)
     - [Quick Start - Typical Workflow](#quick-start---typical-workflow)
     - [What Happens Behind the Scenes](#what-happens-behind-the-scenes)
+
+- [Getting Started](#getting-started)
   - [Cloud Provider Authentication](#cloud-provider-authentication)
     - [Amazon Web Services (AWS)](#amazon-web-services-aws)
     - [Google Cloud Platform (GCP)](#google-cloud-platform-gcp)
     - [Microsoft Azure](#microsoft-azure)
     - [Alibaba Cloud (ALI)](#alibaba-cloud-ali)
     - [Verifying Authentication](#verifying-authentication)
+
+- [Getting Started](#getting-started)
   - [Generate OpenTofu Input Variables](#generate-opentofu-input-variables)
     - [Manual Creation](#manual-creation)
     - [Automated Generation](#automated-generation)
   - [Creating Cloud Resources with OpenTofu](#creating-cloud-resources-with-opentofu)
     - [Available Commands](#available-commands)
     - [Full Command List](#full-command-list)
+
+- [Getting Started](#getting-started)
   - [Run Platform Tests](#run-platform-tests)
     - [Available Test Commands](#available-test-commands)
     - [Full Test Command List](#full-test-command-list)
     - [Debugging Failed Tests](#debugging-failed-tests)
+
+- [Getting Started](#getting-started)
   - [Workspaces and State Management](#workspaces-and-state-management)
     - [Understanding State](#understanding-state)
     - [Using Workspaces](#using-workspaces)
     - [How We Use Workspaces](#how-we-use-workspaces)
     - [State Storage](#state-storage)
+
 - [Advanced Settings](#advanced-settings)
   - [Enhanced State Management](#enhanced-state-management)
     - [Using Encrypted Local State](#using-encrypted-local-state)
     - [Setting Up Remote State in S3](#setting-up-remote-state-in-s3)
     - [Recover GitHub Action's OpenTofu State Locally](#recover-github-actions-opentofu-state-locally)
+
+- [Appendix](#appendix)
+  - [OpenTofu in a Nutshell](#opentofu-in-a-nutshell)
+    - [OpenTofu Configuration Language (HCL)](#opentofu-configuration-language-hcl)
+    - [Basic HCL Syntax](#basic-hcl-syntax)
+    - [Providers](#providers)
+    - [Resource Types](#resource-types)
+    - [Input and Output Values](#input-and-output-values)
+    - [Data Sources](#data-sources)
+    - [File Extensions and Organization](#file-extensions-and-organization)
+    - [OpenTofu Commands](#opentofu-commands)
 
 ## What is OpenTofu?
 
@@ -63,11 +84,14 @@ Our OpenTofu test infrastructure is organized into modules:
   ├── outputs.tf            # Output definitions
   ├── providers.tf          # Provider definitions
   ├── variables.tf          # Variable definitions
-  ├── modules/
-      ├─  ali/              # Alibaba Cloud-specific resources
-      ├─  aws/              # AWS-specific resources
-      ├─  azure/            # Azure-specific resources
-      ├─  gcp/              # Google Cloud-specific resources
+  └── modules/              # Reusable modules
+      ├── ali/              # Alibaba Cloud-specific resources
+      ├── aws/              # AWS-specific resources
+      ├── azure/            # Azure-specific resources
+      └── gcp/              # Google Cloud-specific resources
+          ├── main.tf       # GCP Main configuration file
+          ├── variables.tf  # GCP Variable definitions
+          └── outputs.tf    # GCP Output definitions
   ```
 
 The root module:
@@ -77,6 +101,12 @@ The root module:
 - Defines output variables in `outputs.tf`
 - Defines providers in `providers.tf`
 - Locks providers in `.terraform.lock.hcl`
+
+## OpenTofu in a nutshell
+
+Have a look at the [OpenTofu in a nutshell](./opentofu_in_a_nutshell.md) to get a general understanding of OpenTofu.
+
+
 
 ## Getting Started
 
@@ -95,8 +125,8 @@ These tools are required on the local workstation and Github Actions.
 A virtual environment with minimum dependencies is required to run the make targets and the coresponding python scripts.
 
 ```bash
-python -m venv venv
-pip install -r requirements.txt
+$ python -m venv venv
+$ pip install -r requirements.txt
 ```
 
 ### Understanding the Test Process
@@ -109,19 +139,19 @@ Please be aware that you have to configure cloud provider authentication and set
 
 ```bash
 # 0. Build the image for the flavor you want to test
-make gcp-gardener_prod-amd64-build
+$ make gcp-gardener_prod-amd64-build
 
 # 1. Generate variables for your flavor
-make --directory=tests/platformSetup gcp-gardener_prod-amd64-config
+$ make --directory=tests/platformSetup gcp-gardener_prod-amd64-config
 
 # 2. Create cloud resources
-make --directory=tests/platformSetup gcp-gardener_prod-amd64-apply
+$ make --directory=tests/platformSetup gcp-gardener_prod-amd64-apply
 
 # 3. Run the tests
-make --directory=tests gcp-gardener_prod-amd64-test-platform
+$ make --directory=tests gcp-gardener_prod-amd64-test-platform
 
 # 4. Clean up when done
-make --directory=tests/platformSetup gcp-gardener_prod-amd64-destroy
+$ make --directory=tests/platformSetup gcp-gardener_prod-amd64-destroy
   ```
 
 > [!TIP]
@@ -175,7 +205,7 @@ You can set up [IAM user credentials](https://docs.aws.amazon.com/cli/latest/use
 
 ```bash
 # Option 1: Interactive setup (Recommended for beginners)
-aws configure
+$ aws configure
 # This will prompt you for:
 # - AWS Access Key ID
 # - AWS Secret Access Key
@@ -183,9 +213,8 @@ aws configure
 # - Default output format
 
 # Option 2: Direct environment variables
-# See: https://docs.aws.amazon.com/cli/v1/userguide/cli-configure-envvars.html
-export AWS_ACCESS_KEY_ID=my-access-key-id
-export AWS_SECRET_ACCESS_KEY=my-access-key
+$ export AWS_ACCESS_KEY_ID=my-access-key-id
+$ export AWS_SECRET_ACCESS_KEY=my-access-key
 ```
 
 > [!NOTE]
@@ -198,17 +227,17 @@ GCP authentication requires both project setup and [user authentication via gclo
 
 ```bash
 # 1. Set your project ID (needed for OpenTofu)
-export TF_VAR_gcp_project_id=my-gcp-project-id
+$ export TF_VAR_gcp_project_id=my-gcp-project-id
 
 # 2. First-time setup (only needed once)
-gcloud init
-gcloud config set project ${TF_VAR_gcp_project_id}
+$ gcloud init
+$ gcloud config set project ${TF_VAR_gcp_project_id}
 
 # 3. Authenticate your user account
-gcloud auth application-default login
+$ gcloud auth application-default login
 
 # 4. Set up project quotas
-gcloud auth application-default \
+$ gcloud auth application-default \
   set-quota-project ${TF_VAR_gcp_project_id}
 ```
 
@@ -222,10 +251,10 @@ You can set up [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/authentic
 
 ```bash
 # 1. Log in to Azure (opens a web browser)
-az login
+$ az login
 
 # 2. Set your subscription ID (needed for OpenTofu)
-export ARM_SUBSCRIPTION_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+$ export ARM_SUBSCRIPTION_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 ```
 
 > [!NOTE]
@@ -238,13 +267,13 @@ You can set up a [AccessKey pair](https://www.alibabacloud.com/help/en/cli/confi
 
 ```bash
 # Option 1: Interactive setup
-aliyun configure
+$ aliyun configure
 # This will prompt you for your access key details
 
 # Option 2: Direct environment variables
-export ALIBABA_CLOUD_ACCESS_KEY_ID=my-access-key-id
-export ALIBABA_CLOUD_ACCESS_KEY_SECRET=my-access-key-secret
-export ALIBABA_CLOUD_REGION_ID=my-region-id  # e.g., 'eu-central-1'
+$ export ALIBABA_CLOUD_ACCESS_KEY_ID=my-access-key-id
+$ export ALIBABA_CLOUD_ACCESS_KEY_SECRET=my-access-key-secret
+$ export ALIBABA_CLOUD_REGION_ID=my-region-id  # e.g., 'eu-central-1'
 ```
 
 > [!NOTE]
@@ -256,16 +285,16 @@ After setting up authentication, you can verify it works:
 
 ```bash
 # AWS
-aws sts get-caller-identity
+$ aws sts get-caller-identity
 
 # GCP
-gcloud auth list
+$ gcloud auth list
 
 # Azure
-az account show
+$ az account show
 
 # Alibaba Cloud
-aliyun sts GetCallerIdentity
+$ aliyun sts GetCallerIdentity
 ```
 
 If any of these commands fail, double-check your credentials and ensure you have the necessary permissions in your cloud account.
@@ -717,10 +746,10 @@ Configure encryption and initialize:
 
 ```bash
 # Set up encryption configuration
-export TF_ENCRYPTION='''{..}'''
+$ export TF_ENCRYPTION='''{..}'''
 
 # Initialize OpenTofu with encryption
-tofu init
+$ tofu init
 ```
 
 <details>
@@ -728,7 +757,7 @@ tofu init
 
 ```bash
 # Set up encryption configuration
-export TF_ENCRYPTION='''{
+$ export TF_ENCRYPTION='''{
   "key_provider": {
     "pbkdf2": {
       "passphrase": {
@@ -754,7 +783,7 @@ export TF_ENCRYPTION='''{
 }'''
 
 # Initialize OpenTofu with encryption
-tofu init
+$ tofu init
 ```
 
 </details>
@@ -767,10 +796,10 @@ For team environments (like our GitHub Actions), we use Amazon S3 with encryptio
 
 ```bash
 # Set up encryption configuration
-export TF_ENCRYPTION='''{..}'''
+$ export TF_ENCRYPTION='''{..}'''
 
 # Initialize OpenTofu with encryption
-tofu init
+$ tofu init
 ```
 
 <details>
@@ -778,7 +807,7 @@ tofu init
 
 ```bash
 # Set up encryption configuration
-export TF_ENCRYPTION='''{
+$ export TF_ENCRYPTION='''{
   "key_provider": {
     "pbkdf2": {
       "passphrase": {
@@ -802,9 +831,6 @@ export TF_ENCRYPTION='''{
     "enforced": true
   }
 }'''
-
-# Initialize OpenTofu with encryption
-tofu init
 ```
 
 </details>
@@ -812,30 +838,30 @@ tofu init
 2. Create S3 resources:
 ```bash
 # Create a workspace for state management
-tofu workspace select -or-create tfstate
+$ tofu workspace select -or-create tfstate
 
 # Create the S3 bucket and related resources
-tofu apply -var deploy_state_aws=true
+$ tofu apply -var deploy_state_aws=true
 
 # Get the bucket name
-tofu output -raw state_aws_bucket_name
+$ tofu output -raw state_aws_bucket_name
 ```
 
 3. Switch to S3 backend:
 ```bash
 # Copy the GitHub Actions backend configuration
-cp backend.tf.github backend.tf
+$ cp backend.tf.github backend.tf
 
 # Edit backend.tf to use your bucket and region
-vim backend.tf
+$ vim backend.tf
 
 # Migrate your state to S3
-tofu init -migrate-state
+$ tofu init -migrate-state
 ```
 
 4. Return to default workspace:
 ```bash
-tofu workspace select default
+$ tofu workspace select default
 ```
 
 > [!NOTE]
@@ -865,10 +891,10 @@ Here's how to access the remote state:
 
 ```bash
 # Set up encryption configuration
-export TF_ENCRYPTION='''{..}'''
+$ export TF_ENCRYPTION='''{..}'''
 
 # Initialize OpenTofu with encryption
-tofu init
+$ tofu init
 ```
 
 <details>
@@ -908,23 +934,23 @@ export TF_ENCRYPTION='''{
 
 ```bash
 # Copy the GitHub Actions backend configuration
-cp backend.tf.github backend.tf
+$ cp backend.tf.github backend.tf
 
 # Initialize OpenTofu with the S3 backend
-tofu init
+$ tofu init
 ```
 
 3. Access the remote state:
 
 ```bash
 # List all available workspaces
-tofu workspace list
+$ tofu workspace list
 
 # Switch to a specific workspace (example)
-tofu workspace select gcp-gardener_prod-amd64-5040a670
+$ tofu workspace select gcp-gardener_prod-amd64-5040a670
 
 # View the state
-tofu show
+$ tofu show
 ```
 
 ##### Cleaning Up Remote Resources
@@ -936,17 +962,230 @@ If you need to clean up resources from failed tests:
 
 ```bash
 # Clean up a single workspace
-tofu workspace select my-workspace
-tofu destroy
-tofu workspace select default
-tofu workspace delete my-workspace
+$ tofu workspace select my-workspace
+$ tofu destroy
+$ tofu workspace select default
+$ tofu workspace delete my-workspace
 
 # Clean up all workspaces (USE WITH CAUTION!)
-for i in $(tofu workspace list | grep 'ali|aws|azure|gcp' | sed 's#*##g'); do
+$ for i in $(tofu workspace list | grep 'ali|aws|azure|gcp' | sed 's#*##g'); do
     echo "Cleaning up workspace: $i"
     tofu workspace select $i && \
     tofu destroy -auto-approve && \
     tofu workspace select default && \
     tofu workspace delete $i
-done
+  done
 ```
+
+## Appendix
+
+### OpenTofu in a Nutshell
+
+#### OpenTofu Configuration Language (HCL)
+
+OpenTofu uses HashiCorp Configuration Language (HCL) to define infrastructure. Here's how it works:
+
+##### Basic HCL Syntax
+
+Resources are defined using blocks:
+
+```hcl
+# Define a Google Cloud VM instance
+resource "google_compute_instance" "test_instance" {
+  name         = "test-instance"
+  machine_type = "n1-standard-2"
+  zone         = "europe-west3-a"
+
+  boot_disk {
+    initialize_params {
+      image = "garden-linux-image"
+    }
+  }
+
+  network_interface {
+    network = "default"
+  }
+}
+```
+
+Official documentation: [Resources](https://opentofu.org/docs/language/resources/syntax)
+
+##### Providers
+
+Providers are plugins that allow OpenTofu to interact with cloud platforms and other services:
+
+```hcl
+# Configure the AWS Provider
+provider "aws" {
+  region = "eu-central-1"
+}
+
+# Configure the Google Cloud Provider
+provider "google" {
+  project = "my-project"
+  region  = "europe-west3"
+}
+
+# Configure multiple provider instances
+provider "aws" {
+  alias  = "us_east"
+  region = "us-east-1"
+}
+
+provider "aws" {
+  alias  = "eu_west"
+  region = "eu-west-1"
+}
+```
+
+Official documentation: [Providers](https://opentofu.org/docs/language/providers)
+
+##### Resource Types
+
+Each cloud provider has its own resource types:
+
+```hcl
+# AWS EC2 Instance
+resource "aws_instance" "test_instance" {
+  ami           = "ami-12345678"
+  instance_type = "t2.micro"
+}
+
+# Azure Virtual Machine
+resource "azurerm_virtual_machine" "test_instance" {
+  name                  = "test-instance"
+  location              = "westeurope"
+  resource_group_name   = "test-group"
+  vm_size               = "Standard_DS1_v2"
+}
+
+# Alibaba Cloud ECS Instance
+resource "alicloud_instance" "test_instance" {
+  instance_name = "test-instance"
+  instance_type = "ecs.t5-lc1m1.small"
+}
+```
+
+Official documentation: [Resource Types](https://opentofu.org/docs/language/resources/syntax#resource-types)
+
+##### Input and Output Values
+
+Input Variables and Output Values make configurations reusable:
+
+```hcl
+# Define input variables
+variable "instance_type" {
+  description = "The type of instance to create"
+  type        = string
+  default     = "t2.micro"
+}
+
+# Use variables in resources
+resource "aws_instance" "test_instance" {
+  instance_type = var.instance_type
+}
+
+# Define outputs
+output "instance_ip" {
+  description = "The public IP of the instance"
+  value       = aws_instance.test_instance.public_ip
+}
+```
+
+Official documentation: [Input Variables](https://opentofu.org/docs/language/values/variables/) and [Output Values](https://opentofu.org/docs/language/values/outputs/)
+
+##### Data Sources
+
+Data sources let you query existing resources:
+
+```hcl
+# Look up an existing VPC
+data "aws_vpc" "default" {
+  default = true
+}
+
+# Use the VPC ID in a resource
+resource "aws_instance" "test_instance" {
+  subnet_id = data.aws_vpc.default.id
+}
+```
+
+Official documentation: [Data Sources](https://opentofu.org/docs/language/data-sources)
+
+##### File Extensions and Organization
+
+OpenTofu files use specific extensions and naming conventions:
+
+- `.tf` - Main OpenTofu configuration files
+- `.tfvars` - Variable definition files
+- `.tfstate` - State files (generated)
+- `.tfplan` - Plan files (generated)
+- `.hcl` - HashiCorp Configuration Language files (like `.terraform.lock.hcl`)
+
+Official documentation: [Files and Directories](https://opentofu.org/docs/language/files)
+
+##### OpenTofu Commands
+
+OpenTofu has several core commands for managing infrastructure:
+
+###### `tofu plan`
+
+Shows what changes will be made:
+
+```bash
+$ tofu plan
+Terraform will perform the following actions:
+
+  # google_compute_instance.test_instance will be created
+  + resource "google_compute_instance" "test_instance" {
+      + name         = "test-vm"
+      + machine_type = "n1-standard-2"
+      ...
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+```
+
+###### `tofu apply`
+
+Creates or updates resources:
+
+```bash
+$ tofu apply
+google_compute_instance.test_instance: Creating...
+google_compute_instance.test_instance: Creation complete after 45s
+
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+
+Outputs:
+instance_ip = "35.198.142.123"
+```
+
+###### `tofu show`
+
+Displays the current state:
+
+```bash
+$ tofu show
+# google_compute_instance.test_instance:
+resource "google_compute_instance" "test_instance" {
+    id           = "projects/my-project/zones/europe-west3-a/instances/test-vm"
+    name         = "test-vm"
+    machine_type = "n1-standard-2"
+    ...
+}
+```
+
+###### `tofu destroy`
+
+Removes all resources:
+
+```bash
+$ tofu destroy
+google_compute_instance.test_instance: Destroying...
+google_compute_instance.test_instance: Destruction complete after 32s
+
+Destroy complete! Resources: 1 destroyed.
+```
+
+Official documentation: [Command Line Interface](https://opentofu.org/docs/cli/run)
