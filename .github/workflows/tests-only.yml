@@ -1,5 +1,5 @@
 # Tests artifacts already uploaded to S3
-name: platform tests tofu
+name: platform tests only
 on:
   # triggered manually
   workflow_dispatch:
@@ -9,52 +9,21 @@ on:
         type: string
         default: latest
       platform_test_tag:
-        description: "Tag to run platform-test containers. 'latest', Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
+        description: "Tag to run platform-test containers. 'nightly', Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
         type: string
         required: true
         default: "latest"
-      platforms_enabled:
-        description: 'Run on these platforms'
+      flavors_parse_params:
+        description: 'Run bin/parse_flavors.py with these parameters'
         required: true
-        default: '["ali", "aws", "azure", "gcp"]'
-        type: string
-      archs_enabled:
-        description: 'Run on these architectures'
-        required: true
-        default: '["amd64", "arm64"]'
-        type: string
-      flavors_enabled:
-        description: 'Run for these flavors'
-        required: true
-        default: '["default", "trustedboot", "trustedboot_tpm2"]'
+        default: '--no-arch --json-by-arch --publish --test-platform'
         type: string
 
 jobs:
-  matrix:
-    name: generate matrices
-    runs-on: 'ubuntu-latest'
-    defaults:
-      run:
-        shell: bash
-    outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - id: matrix
-        run: |
-          FLAVORS_AMD64=$(./bin/flavors_parse.py --no-arch --json-by-arch --test-platform | jq -r '.amd64')
-          FLAVORS_ARM64=$(./bin/flavors_parse.py --no-arch --json-by-arch --test-platform | jq -r '.arm64')
-          MATRIX=$(jq -nc \
-            --argjson amd64 "$FLAVORS_AMD64" \
-            --argjson arm64 "$FLAVORS_ARM64" \
-            '{
-              include: (
-                ($amd64 | map({arch: "amd64", flavor: .})) +
-                ($arm64 | map({arch: "arm64", flavor: .})) +
-              )
-            }'
-          )
-          echo "matrix=$MATRIX" | tee -a $GITHUB_OUTPUT
+  generate_matrix_test_platform:
+    uses: ./.github/workflows/generate_matrix.yml
+    with: 
+      flags: '--no-arch --json-by-arch --test-platform ${{ inputs.flavors_parse_params }}'
   platform_test_images:
     name: platform test images
     uses: ./.github/workflows/platform-test-images.yml
@@ -62,17 +31,15 @@ jobs:
       gl_version: ${{ inputs.platform_test_tag }}
   platform_tests:
     name: platform test
-    needs: [ matrix, platform_test_images ]
+    needs: [ generate_matrix_test_platform, platform_test_images ]
     env:
       gcp_project_id: ${{ secrets.GCP_PROJECT }}
       gcp_region: ${{ secrets.GCP_REGION }}
       gcp_zone: ${{ secrets.GCP_ZONE }}
       aws_region: ${{ secrets.AWS_TESTS_REGION }}
       AZURE_CONFIG_DIR: /tmp/azure_config_dir
-      # PLATFORM: ${{ matrix.platform }}
       ARCH: ${{ matrix.arch }}
       FLAVOR: ${{ matrix.flavor }}
-      # MODIFIER: ${{ matrix.modifier }}
       artifact_dir: /tmp/gardenlinux-build-artifacts
       image_dir: .build # default directory in tofu
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -86,31 +53,7 @@ jobs:
     environment: oidc_platform_tests
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.matrix.outputs.matrix) }}
-        # exclude:
-        #   # parse input
-        #   - arch: ${{ ! contains(fromJSON(inputs.archs_enabled), 'amd64') && 'amd64' }}
-        #   - arch: ${{ ! contains(fromJSON(inputs.archs_enabled), 'arm64') && 'arm64' }}
-        #   - platform: ${{ ! contains(fromJSON(inputs.platforms_enabled), 'ali') && 'ali' }}
-        #   - platform: ${{ ! contains(fromJSON(inputs.platforms_enabled), 'aws') && 'aws' }}
-        #   - platform: ${{ ! contains(fromJSON(inputs.platforms_enabled), 'azure') && 'azure' }}
-        #   - platform: ${{ ! contains(fromJSON(inputs.platforms_enabled), 'gcp') && 'gcp' }}
-        #   - flavor: ${{ ! contains(fromJSON(inputs.flavors_enabled), 'default') && 'default' }}
-        #   - flavor: ${{ ! contains(fromJSON(inputs.flavors_enabled), 'trustedboot') && 'trustedboot' }}
-        #   - flavor: ${{ ! contains(fromJSON(inputs.flavors_enabled), 'trustedboot_tpm2') && 'trustedboot_tpm2' }}          
-        #   # global excludes
-        #   - platform: ali
-        #     arch: arm64
-        #   - platform: ali
-        #     flavor: trustedboot
-        #   - platform: ali
-        #     flavor: trustedboot_tpm2
-        #   - platform: azure
-        #     arch: arm64
-        #     flavor: trustedboot
-        #   - platform: azure
-        #     arch: arm64
-        #     flavor: trustedboot_tpm2
+      matrix: ${{ fromJson(needs.generate_matrix_test_platform.outputs.matrix) }}
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
 
@@ -125,8 +68,8 @@ jobs:
           VERSION="$(bin/glrd --latest --fields 'Version' --no-header --type patch)"
           SHA="$(bin/glrd --latest --fields 'Git\ Commit' --no-header --type patch)"
         else
-          VERSION="$(bin/glrd --fields 'Version' --no-header --type patch,nightly,dev --version ${{ inputs.version }})"
-          SHA="$(bin/glrd --fields 'Git\ Commit' --no-header --type patch,nightly,dev --version ${{ inputs.version }})"
+          VERSION="$(bin/glrd --fields 'Version' --no-header --type patch,nightly,dev --version ${{ inputs.version }} | tail -1)"
+          SHA="$(bin/glrd --fields 'Git\ Commit' --no-header --type patch,nightly,dev --version ${{ inputs.version }} | tail -1)"
         fi
         echo "${VERSION}" >VERSION
         echo "${SHA}" >COMMIT
