@@ -1,8 +1,11 @@
 # Platform Testing Infrastructure
 
+This directory contains the infrastructure code used to automatically set up test environments across different cloud providers (AWS, Google Cloud, Azure, and Alibaba Cloud).
+
 ## Table of Contents
+
 - [What is OpenTofu?](#what-is-opentofu)
-- [Module Structure](#module-structure)
+- [OpenTofu Module Structure](#opentofu-module-structure)
 - [Getting Started](#getting-started)
   - [Requirements](#requirements)
     - [Tooling](#tooling)
@@ -37,8 +40,6 @@
     - [Setting Up Remote State in S3](#setting-up-remote-state-in-s3)
     - [Recover GitHub Action's OpenTofu State Locally](#recover-github-actions-opentofu-state-locally)
 
-This directory contains the infrastructure code used to automatically set up test environments across different cloud providers (AWS, Google Cloud, Azure, and Alibaba Cloud).
-
 ## What is OpenTofu?
 
 OpenTofu is an infrastructure-as-code tool that allows us to define cloud resources (like virtual machines, networks, etc.) in code rather than clicking through web interfaces. When we run OpenTofu, it:
@@ -49,9 +50,9 @@ OpenTofu is an infrastructure-as-code tool that allows us to define cloud resour
 
 This automation makes our testing process reliable and reproducible.
 
-## Module Structure
+## OpenTofu Module Structure
 
-Our test infrastructure is organized into modules:
+Our OpenTofu test infrastructure is organized into modules:
 
 - `tests/platformSetup/tofu` is the [Root Module](https://opentofu.org/docs/language/modules/#the-root-module)
 - Inside this are [Child Modules](https://opentofu.org/docs/language/modules/#child-modules) for each cloud provider:
@@ -70,6 +71,7 @@ Our test infrastructure is organized into modules:
   ```
 
 The root module:
+
 - Configures boilerplate code and calls the cloud provider child modules in `main.tf`
 - Defines common input variables in `variables.tf`
 - Defines output variables in `outputs.tf`
@@ -101,7 +103,9 @@ pip install -r requirements.txt
 
 #### Quick Start - Typical Workflow
 
-Here's the minimal sequence of commands to run a complete platform test. Please be aware that you have to configure cloud provider authentication and settings before running the tests. Have a look at the [Cloud Provider Authentication](#cloud-provider-authentication) section for more information.
+Here's the minimal sequence of commands to run a complete platform test.
+
+Please be aware that you have to configure cloud provider authentication and settings before running the tests. Have a look at the [Cloud Provider Authentication](#cloud-provider-authentication) section for more information.
 
 ```bash
 # 0. Build the image for the flavor you want to test
@@ -118,7 +122,7 @@ make --directory=tests gcp-gardener_prod-amd64-test-platform
 
 # 4. Clean up when done
 make --directory=tests/platformSetup gcp-gardener_prod-amd64-destroy
-```
+  ```
 
 > [!TIP]
 > You can preview changes before applying them with the `plan` command:
@@ -161,7 +165,6 @@ When you run a platform test, this sequence occurs:
 
 ## Detailed Component Documentation
 
-
 ### Cloud Provider Authentication
 
 Before running tests, you need to authenticate with the cloud providers you want to test against. Each provider has its own authentication method.
@@ -185,7 +188,8 @@ export AWS_ACCESS_KEY_ID=my-access-key-id
 export AWS_SECRET_ACCESS_KEY=my-access-key
 ```
 
-> 💡 For AWS, you can also use SSO authentication if your organization supports it.
+> [!NOTE]
+> For AWS, you can also use SSO authentication if your organization supports it.
 > If you don't have AWS credentials, you can just leave those variables empty.
 
 #### Google Cloud Platform (GCP)
@@ -204,10 +208,12 @@ gcloud config set project ${TF_VAR_gcp_project_id}
 gcloud auth application-default login
 
 # 4. Set up project quotas
-gcloud auth application-default set-quota-project ${TF_VAR_gcp_project_id}
+gcloud auth application-default \
+  set-quota-project ${TF_VAR_gcp_project_id}
 ```
 
-> 💡 The Project ID can be found in the Google Cloud portal under Project info.
+> [!NOTE]
+> The Project ID can be found in the Google Cloud portal under Project info.
 > If you don't a Google Cloud project, you can supply any mocked up value.
 
 #### Microsoft Azure
@@ -222,7 +228,8 @@ az login
 export ARM_SUBSCRIPTION_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 ```
 
-> 💡 The subscription ID can be found in the Azure portal under Subscriptions.
+> [!NOTE]
+> The subscription ID can be found in the Azure portal under Subscriptions.
 > If you don't have a subscription, you have to comment out the module "azure" in `tests/platformSetup/tofu/main.tf` and `tests/platformSetup/tofu/outputs.tf`.
 
 #### Alibaba Cloud (ALI)
@@ -240,7 +247,8 @@ export ALIBABA_CLOUD_ACCESS_KEY_SECRET=my-access-key-secret
 export ALIBABA_CLOUD_REGION_ID=my-region-id  # e.g., 'eu-central-1'
 ```
 
-> 💡 If you don't have Alibaba Cloud credentials, you can just leave those variables empty.
+> [!NOTE]
+> If you don't have Alibaba Cloud credentials, you can just leave those variables empty.
 
 ### Verifying Authentication
 
@@ -277,7 +285,7 @@ OpenTofu needs to know what resources to create. We define this using [Input Var
 You can create these files manually. Here's an example for testing a GCP instance with TPM and Trusted Boot:
 
 ```bash
-❯ cat tests/platformSetup/tofu/variables.gcp-gardener_prod_trustedboot_tpm2-amd64.tfvars
+cat tests/platformSetup/tofu/variables.gcp-gardener_prod_trustedboot_tpm2-amd64.tfvars
 test_prefix = "bobs"                    # Prefix for resource names
 flavors = [
   {
@@ -309,9 +317,14 @@ It is called by the "-config" make targets but can also be called manually.
 make --directory=tests/platformSetup gcp-gardener_prod-amd64-config
 
 # write a custom test prefix and image via cname
-TEST_PREFIX=myprefix CNAME=gcp-gardener_prod_tpm2_trustedboot-amd64-1695.0-30903f3a make --directory=tests/platformSetup gcp-gardener_prod_tpm2_trustedboot-amd64-config
+TEST_PREFIX=myprefix \
+  CNAME=gcp-gardener_prod_tpm2_trustedboot-amd64-1695.0-30903f3a \
+  make --directory=tests/platformSetup \
+  gcp-gardener_prod_tpm2_trustedboot-amd64-config
 ```
+
 or
+
 
 ```bash
 # Generate for a single flavor
@@ -330,8 +343,12 @@ or
 ```
 
 The script supports these options:
+
+<details>
+<summary>Click to see all available options</summary>
+
 ```bash
-❯ ./tests/platformSetup/tofu/tf_variables_create.py --help
+./tests/platformSetup/tofu/tf_variables_create.py --help
 usage: tf_variables_create.py [-h] [--flavors FLAVORS] [--root-dir ROOT_DIR] [--image-path IMAGE_PATH] [--cname CNAME] test_prefix
 
 Generate OpenTofu variable files based on provided test prefix, platforms, archs, and flavors.
@@ -348,6 +365,8 @@ options:
   --cname CNAME         Basename of image file, e.g. 'gcp-gardener_prod-arm64-1592.2-76203a30'.
 ```
 
+</details>
+
 > [!WARNING]
 > Before running tests, ensure the variables file exists with the correct name, matching your test flavor (e.g., `variables.gcp-gardener_prod_trustedboot_tpm2-amd64.tfvars`)
 
@@ -360,10 +379,11 @@ Once you have your authentication and variables set up, you can create the cloud
 View all available flavors and targets with:
 
 ```bash
-❯ make --directory=tests/platformSetup help
+make --directory=tests/platformSetup help
 ```
 
 Each flavor has five basic commands:
+
 - `plan` - Preview what OpenTofu will create/change
 - `apply` - Create/update the resources
 - `show` - Display current resources
@@ -484,12 +504,11 @@ gcp-gardener_prod_trustedboot_tpm2-arm64-destroy     Run tofu destroy for gcp-ga
 ```
 </details>
 
-
 #### Typical Workflow
 
 1. Generate OpenTofu Input Variables for your flavor:
 ```bash
-./tests/platformSetup/tofu/tf_variables_create.py --flavors gcp-gardener_prod-amd64 myprefix
+make --directory=tests/platformSetup gcp-gardener_prod-amd64-config
 ```
 
 2. Preview the changes:
@@ -531,6 +550,7 @@ Targets follow the typical [OpenTofu plan/apply/destroy](https://opentofu.org/do
 #### Understanding State
 
 OpenTofu keeps track of all resources it creates in what's called a "state". This state includes:
+
 - What resources exist
 - Their current settings
 - Dependencies between resources
@@ -541,12 +561,14 @@ Think of state as OpenTofu's record of what it has built in the cloud. Without t
 #### Using Workspaces
 
 [OpenTofu Workspaces](https://opentofu.org/docs/cli/workspaces/) allow you to maintain multiple states for the same configuration. In our case, we use workspaces to:
+
 - Test different Garden Linux flavors simultaneously
 - Keep track of resources for each flavor separately
 - Allow parallel testing without resource naming conflicts
 - Allow safe and consistent cleanup of resources
 
 For example, you might have:
+
 - One workspace testing AMD64 on GCP
 - Another workspace testing ARM64 on AWS
 - A third workspace testing the `tpm` and `trustedboot` features on Azure
@@ -556,6 +578,7 @@ Each workspace maintains its own state, so the resources don't interfere with ea
 #### How We Use Workspaces
 
 Our make targets automatically create and manage workspaces. Each workspace name combines:
+
 1. The flavor being tested (e.g., `gcp-gardener_prod-amd64`)
 2. A random seed from `tests/platformSetup/.uuid` which is generated by the `Makefile`
 
@@ -564,16 +587,16 @@ This combination ensures unique resource names when multiple tests run in parall
 To work with workspaces manually:
 ```bash
 # List all workspaces
-❯ tofu workspace list
+tofu workspace list
   default
 * gcp-gardener_prod-amd64-2e22801c
   aws-gardener_prod-arm64-2e22801c
 
 # Switch to a specific workspace
-❯ tofu workspace select gcp-gardener_prod-amd64-2e22801c
+tofu workspace select gcp-gardener_prod-amd64-2e22801c
 
 # See what resources exist in current workspace
-❯ tofu show
+tofu show
 ```
 
 > [!TIP]
@@ -582,6 +605,7 @@ To work with workspaces manually:
 #### State Storage
 
 By default, OpenTofu stores state locally in your project directory. This works well for individual development but has limitations:
+
 - State files might contain sensitive data
 - Local files can be lost or corrupted
 - Team members can't share state easily
@@ -605,6 +629,7 @@ For these reasons, we use different state storage methods:
 ### Run Platform Tests
 
 Once the cloud resources are created with OpenTofu, we use pytest to run automated tests on the instances. The `tests/Makefile` handles this process by:
+
 1. Using the instance created by OpenTofu to run the tests
 2. Establishing SSH connections to the instances
 3. Running the Garden Linux pytest test suite
@@ -612,10 +637,11 @@ Once the cloud resources are created with OpenTofu, we use pytest to run automat
 #### Available Test Commands
 
 ```bash
-❯ make --directory=tests help
+make --directory=tests help
 ```
 
 Each flavor has a test target that:
+
 - Connects to the instance using `tests/helper/sshclient.py`
 - Runs the test suite via pytest by calling `tests/platformSetup/manual.py`
 - Reports test results
@@ -662,7 +688,6 @@ gcp-gardener_prod_trustedboot_tpm2-arm64-test-platform      Run platform tests v
 ```
 </details>
 
-
 #### Debugging Failed Tests
 
 If tests fail, you can:
@@ -672,10 +697,11 @@ If tests fail, you can:
 3. SSH into the instance manually: `make --directory=tests/platformSetup <flavor>-login`
 4. Check cloud provider logs in their respective web consoles
 
-Remember to clean up resources after debugging:
-```bash
-make --directory=tests/platformSetup <flavor>-destroy
-```
+> [!WARNING]
+> Remember to clean up resources after debugging:
+> ```bash
+> make --directory=tests/platformSetup <flavor>-destroy
+> ```
 
 ## Advanced Settings
 
@@ -687,6 +713,19 @@ As discussed in the [State Management section](#understanding-state), OpenTofu u
 
 For better security when using local state, you can enable encryption:
 
+Configure encryption and initialize:
+
+```bash
+# Set up encryption configuration
+export TF_ENCRYPTION='''{..}'''
+
+# Initialize OpenTofu with encryption
+tofu init
+```
+
+<details>
+<summary>Click to see complete command</summary>
+
 ```bash
 # Set up encryption configuration
 export TF_ENCRYPTION='''{
@@ -717,12 +756,26 @@ export TF_ENCRYPTION='''{
 # Initialize OpenTofu with encryption
 tofu init
 ```
+
+</details>
 
 #### Setting Up Remote State in S3
 
 For team environments (like our GitHub Actions), we use Amazon S3 with encryption. Here's how to set it up:
 
 1. Configure encryption and initialize:
+
+```bash
+# Set up encryption configuration
+export TF_ENCRYPTION='''{..}'''
+
+# Initialize OpenTofu with encryption
+tofu init
+```
+
+<details>
+<summary>Click to see complete command</summary>
+
 ```bash
 # Set up encryption configuration
 export TF_ENCRYPTION='''{
@@ -753,6 +806,8 @@ export TF_ENCRYPTION='''{
 # Initialize OpenTofu with encryption
 tofu init
 ```
+
+</details>
 
 2. Create S3 resources:
 ```bash
@@ -785,27 +840,43 @@ tofu workspace select default
 
 > [!NOTE]
 > The S3 backend provides:
+>
 > - Encrypted state storage using [AES-GCM](https://opentofu.org/docs/language/state/encryption/#aes-gcm)
 > - State recovery for failed tests
 > - Support for parallel testing
 > - Team collaboration capabilities
+>
 > For more details on state encryption and backends, see:
+>
 > - [State and Plan Encryption](https://opentofu.org/docs/language/state/encryption/)
 > - [S3 Backend Configuration](https://opentofu.org/docs/language/settings/backends/s3/)
-
 
 #### Recover GitHub Action's OpenTofu State Locally
 
 Sometimes you might need to access or recover the state from our GitHub Actions pipeline, for example:
+
 - To debug failed tests
 - To clean up stuck resources
 - To investigate test environments
 
 Here's how to access the remote state:
 
+1. Configure encryption and initialize:
+
+```bash
+# Set up encryption configuration
+export TF_ENCRYPTION='''{..}'''
+
+# Initialize OpenTofu with encryption
+tofu init
+```
+
+<details>
+<summary>Click to see complete command</summary>
+
 1. Set up encryption (using the same configuration as GitHub Actions):
 ```bash
-❯ export TF_ENCRYPTION='''{
+export TF_ENCRYPTION='''{
   "key_provider": {
     "pbkdf2": {
       "passphrase": {
@@ -831,25 +902,29 @@ Here's how to access the remote state:
 }'''
 ```
 
+</details>
+
 2. Configure S3 backend access:
+
 ```bash
 # Copy the GitHub Actions backend configuration
-❯ cp backend.tf.github backend.tf
+cp backend.tf.github backend.tf
 
 # Initialize OpenTofu with the S3 backend
-❯ tofu init
+tofu init
 ```
 
 3. Access the remote state:
+
 ```bash
 # List all available workspaces
-❯ tofu workspace list
+tofu workspace list
 
 # Switch to a specific workspace (example)
-❯ tofu workspace select gcp-gardener_prod-amd64-5040a670
+tofu workspace select gcp-gardener_prod-amd64-5040a670
 
 # View the state
-❯ tofu show
+tofu show
 ```
 
 ##### Cleaning Up Remote Resources
@@ -861,17 +936,17 @@ If you need to clean up resources from failed tests:
 
 ```bash
 # Clean up a single workspace
-❯ tofu workspace select my-workspace
-❯ tofu destroy
-❯ tofu workspace select default
-❯ tofu workspace delete my-workspace
+tofu workspace select my-workspace
+tofu destroy
+tofu workspace select default
+tofu workspace delete my-workspace
 
 # Clean up all workspaces (USE WITH CAUTION!)
-❯ for i in $(tofu workspace list | grep 'ali|aws|azure|gcp' | sed 's#*##g'); do
+for i in $(tofu workspace list | grep 'ali|aws|azure|gcp' | sed 's#*##g'); do
     echo "Cleaning up workspace: $i"
     tofu workspace select $i && \
     tofu destroy -auto-approve && \
     tofu workspace select default && \
     tofu workspace delete $i
-  done
+done
 ```
