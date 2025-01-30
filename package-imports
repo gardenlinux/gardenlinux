@@ -107,7 +107,7 @@ pkexec
 podman
 polkitd
 pristine-lfs
-python3.12
+python3.13
 python3-apt
 python3-cffi-backend
 python3-click
