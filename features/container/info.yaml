@@ -1,5 +1,6 @@
 description: "Container platform"
 type: platform
 features:
-  include: 
+  include:
     - base
+    - _oci
