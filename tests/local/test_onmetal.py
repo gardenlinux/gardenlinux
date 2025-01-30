@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 def test_oci_feat(local, testconfig):
-    """ This test does several steps using the results of a build with _oci feature:
+    """ This test does several steps using the results of a build with _onmetal feature:
     - verify neccessary testconfig options are present (image, kernel)
     - install the docker-registry into the container, provide a config, start the registry
     - extracts the testconfig["image"] file to retrieve the OCI fs layout
@@ -23,15 +23,15 @@ def test_oci_feat(local, testconfig):
     """
 
     # check for neccessary configuration options
-    if not "image" in testconfig["oci"]:
+    if not "image" in testconfig["onmetal"]:
         logger.error("No path to image archive defined.")
     else:
-        image = testconfig["oci"]["image"]
+        image = testconfig["onmetal"]["image"]
         logger.info(f"Path to image archive defined: {image}")
-    if not "kernel" in testconfig["oci"]:
+    if not "kernel" in testconfig["onmetal"]:
         logger.error("No kernel to compare defined.")
     else:
-        kernelcmp = testconfig["oci"]["kernel"]
+        kernelcmp = testconfig["onmetal"]["kernel"]
         logger.info(f"Kernel to compare is defined: {kernelcmp}")
 
     # update package index files

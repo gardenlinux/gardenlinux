@@ -1,44 +1,44 @@
-## Feature: _oci
+## Feature: _onmetal
 ### Description
 <website-feature>
-This flag feature creates an artifact for Open Container Image (OCI) compatible platforms.
+This flag feature creates an artifact for Onmetal compatible platforms.
 </website-feature>
 
 ### Features
-This feature creates an archive containing the artifacts for an upload to an OCI compatible registry. This does *not* create a bootable container image. Instead the build artifacts are bundled into an OCI compatible image.
+This feature creates an archive containing the artifacts for an upload to an Onmetal compatible registry. This does *not* create a bootable container image. Instead the build artifacts are bundled into an Onmetal compatible image.
 
 
 ### Usage
 
 *The following steps have to be adopted to your build configuration.*
 
-Build a kernel, an initrd and the rootfs by generating the build for your target platform and add the *_oci* feature:
+Build a kernel, an initrd and the rootfs by generating the build for your target platform and add the *_onmetal* feature:
 
 ``` shell
-$ ./build gcp_oci
+$ ./build gcp_onmetal
 ```
 
 After the build process has finished you*ll find an compressed archive in the destination directory of your build:
 
 ``` shell
 $ ls -lsah .build/*.oci.*
-.build/gcp-gardener_oci-amd64-today-local.initrd
-.build/gcp-gardener_oci-amd64-today-local.log
-.build/gcp-gardener_oci-amd64-today-local.manifest
-.build/gcp-gardener_oci-amd64-today-local.oci.tar.xz
-.build/gcp-gardener_oci-amd64-today-local.os-release
-.build/gcp-gardener_oci-amd64-today-local.raw
-.build/gcp-gardener_oci-amd64-today-local.tar.gz
-.build/gcp-gardener_oci-amd64-today-local.tar.xz
-.build/gcp-gardener_oci-amd64-today-local.tar.xz.sha256
-.build/gcp-gardener_oci-amd64-today-local.vmlinuz
+.build/gcp-gardener_onmetal-amd64-today-local.initrd
+.build/gcp-gardener_onmetal-amd64-today-local.log
+.build/gcp-gardener_onmetal-amd64-today-local.manifest
+.build/gcp-gardener_onmetal-amd64-today-local.oci.tar.xz
+.build/gcp-gardener_onmetal-amd64-today-local.os-release
+.build/gcp-gardener_onmetal-amd64-today-local.raw
+.build/gcp-gardener_onmetal-amd64-today-local.tar.gz
+.build/gcp-gardener_onmetal-amd64-today-local.tar.xz
+.build/gcp-gardener_onmetal-amd64-today-local.tar.xz.sha256
+.build/gcp-gardener_onmetal-amd64-today-local.vmlinuz
 ```
 
-`.build/gcp-gardener_oci-amd64-today-local.oci.tar.xz` is the archive containing the created output of *onmetal-image* and can be used for uploading the contents to an OCI compatible registry after extracting and using *onmetal-image* itself:
+`.build/gcp-gardener_onmetal-amd64-today-local.oci.tar.xz` is the archive containing the created output of *onmetal-image* and can be used for uploading the contents to an OCI compatible registry after extracting and using *onmetal-image* itself:
 
 ``` shell
 $ cd .build
-$ tar xJvf .build/gcp-gardener_oci-amd64-today-local.oci.tar.xz
+$ tar xJvf .build/gcp-gardener_onmetal-amd64-today-local.oci.tar.xz
 ```
 
 The files are extracted to the directory *onmetal*.
@@ -64,7 +64,7 @@ REPOSITORY  TAG         IMAGE ID
 Go and grep your full ID out of the directory:
 
 ``` shell
-$ jq '.' onmetal/index.json 
+$ jq '.' onmetal/index.json
 {
     "schemaVersion":2,
     "manifests": [
@@ -217,9 +217,9 @@ The build process creates additional files like the buildlog. These file can be 
 The following example shows how to attach these files files to an Azure registry using *oras*:
 
 ``` shell
-$ oras attach <registry>/<project>:<version> azure-gardener_dev_oci-amd64-today-local.os-release --artifact-type build/os-release
-$ oras attach <registry>/<project>:<version> azure-gardener_dev_oci-amd64-today-local.manifest --artifact-type build/manifest
-$ oras attach <registry>/<project>:<version> azure-gardener_dev_oci-amd64-today-local.log --artifact-type build/log
+$ oras attach <registry>/<project>:<version> azure-gardener_dev_onmetal-amd64-today-local.os-release --artifact-type build/os-release
+$ oras attach <registry>/<project>:<version> azure-gardener_dev_onmetal-amd64-today-local.manifest --artifact-type build/manifest
+$ oras attach <registry>/<project>:<version> azure-gardener_dev_onmetal-amd64-today-local.log --artifact-type build/log
 ```
 
 #### docker / podman pull
