@@ -1,0 +1,11 @@
+description: 'cluster-api'
+type: platform 
+features:
+  include:
+    - server
+    - khost 
+    - metal
+    - _pxe
+  exclude:
+    - _selinux
+    - firewall
