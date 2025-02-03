@@ -8,6 +8,14 @@ on:
       use_kms:
         type: boolean
         default: false
+      flavors_parse_params_images:
+        description: 'Run bin/parse_flavors.py with these parameters'
+        default: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
+        type: string
+      flavors_parse_params_bare:
+        description: 'Run bin/parse_flavors.py with these parameters'
+        default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
+        type: string
     secrets:
       secureboot_db_kms_arn:
         required: false
@@ -148,11 +156,11 @@ jobs:
   generate_matrix_images:
     uses: ./.github/workflows/generate_matrix.yml
     with: 
-      flags: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
+      flags: '${{ inputs.flavors_parse_params_images }}'
   generate_matrix_bare:
     uses: ./.github/workflows/generate_matrix.yml
     with: 
-      flags: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
+      flags: '${{ inputs.flavors_parse_params_bare }}'
   images:
     needs: [ version, cert, base, test_container, generate_matrix_images ]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}

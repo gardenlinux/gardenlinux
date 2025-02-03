@@ -5,25 +5,42 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Garden Linux Version: version passed to garden-version-resolver"
+        description: "Garden Linux Version: version passed to glrd"
         type: string
         default: latest
+      build:
+        description: "Build for version 'today' instead of downloading version from S3"
+        type: boolean
+        default: false
       platform_test_tag:
         description: "Tag to run platform-test containers. 'nightly', Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
         type: string
         required: true
-        default: "latest"
+        default: "nightly"
       flavors_parse_params:
         description: 'Run bin/parse_flavors.py with these parameters'
-        required: true
         default: '--no-arch --json-by-arch --publish --test-platform'
         type: string
 
 jobs:
+  build:
+    if: ${{ inputs.build == true }}
+    uses: ./.github/workflows/build.yml
+    permissions:
+      id-token: write
+      packages: write
+    with:
+      version: 'today'
+      use_kms: false
+      flavors_parse_params_images: '${{ inputs.flavors_parse_params }}'
+      flavors_parse_params_bare: '--exclude "*" --no-arch --json-by-arch'
+    secrets:
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
   generate_matrix_test_platform:
     uses: ./.github/workflows/generate_matrix.yml
     with: 
-      flags: '--no-arch --json-by-arch --test-platform ${{ inputs.flavors_parse_params }}'
+      flags: '${{ inputs.flavors_parse_params }}'
   platform_test_images:
     name: platform test images
     uses: ./.github/workflows/platform-test-images.yml
@@ -31,7 +48,7 @@ jobs:
       gl_version: ${{ inputs.platform_test_tag }}
   platform_tests:
     name: platform test
-    needs: [ generate_matrix_test_platform, platform_test_images ]
+    needs: [ build, generate_matrix_test_platform, platform_test_images ]
     env:
       gcp_project_id: ${{ secrets.GCP_PROJECT }}
       gcp_region: ${{ secrets.GCP_REGION }}
@@ -64,15 +81,20 @@ jobs:
 
     - name: get cname
       run: |
-        if [[ "${{ inputs.version }}" == "latest" ]]; then
-          VERSION="$(bin/glrd --latest --fields 'Version' --no-header --type patch)"
-          SHA="$(bin/glrd --latest --fields 'Git\ Commit' --no-header --type patch)"
+        if [[ "${{ inputs.build }}" == "true" ]]; then
+          if [[ "${{ inputs.version }}" == "latest" ]]; then
+            VERSION="$(bin/glrd --latest --fields 'Version' --no-header --type patch)"
+            SHA="$(bin/glrd --latest --fields 'Git\ Commit' --no-header --type patch)"
+          else
+            VERSION="$(bin/glrd --fields 'Version' --no-header --type patch,nightly,dev --version ${{ inputs.version }} | tail -1)"
+            SHA="$(bin/glrd --fields 'Git\ Commit' --no-header --type patch,nightly,dev --version ${{ inputs.version }} | tail -1)"
+          fi
+          echo "${VERSION}" >VERSION
+          echo "${SHA}" >COMMIT
         else
-          VERSION="$(bin/glrd --fields 'Version' --no-header --type patch,nightly,dev --version ${{ inputs.version }} | tail -1)"
-          SHA="$(bin/glrd --fields 'Git\ Commit' --no-header --type patch,nightly,dev --version ${{ inputs.version }} | tail -1)"
+          echo today >VERSION
+          echo $(git rev-parse --short HEAD) >COMMIT
         fi
-        echo "${VERSION}" >VERSION
-        echo "${SHA}" >COMMIT
         cname="$(./build --resolve-cname ${FLAVOR}-${ARCH})"
         echo "cname=$cname" | tee -a "$GITHUB_ENV"
 
@@ -119,9 +141,16 @@ jobs:
 
 
     - name: download artifact to test from S3 bucket
+      if: ${{ inputs.build == false }}
       run: |
         mkdir -p "${{ env.cname }}"
         aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/${{ env.cname }}" "${{ env.artifact_dir }}" --recursive
+
+    - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
+      if: ${{ inputs.build == true }}
+      with:
+        name: build-${{ env.cname }}
+        path: ${{ env.artifact_dir }}
 
     # - name: pack build artifacts for tests
     #   run: |
