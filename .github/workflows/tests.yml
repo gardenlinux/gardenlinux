@@ -11,7 +11,15 @@ on:
         description: "Tag to run platform-test containers. 'latest', Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
         type: string
         required: true
-        default: "latest"
+        default: "nightly"
+      download_s3:
+        description: "Download images from S3"
+        type: boolean
+        default: false
+      flavors_parse_params:
+        description: 'Run bin/parse_flavors.py with these parameters'
+        default: '--no-arch --json-by-arch --test-platform'
+        type: string
     secrets:
       gcp_identity_provider:
         required: true
@@ -29,6 +37,8 @@ on:
         required: true
       aws_region:
         required: true
+      aws_s3_bucket:
+        required: true
       az_client_id:
         required: true
       az_tenant_id:
@@ -43,7 +53,7 @@ jobs:
   generate_matrix_test_platform:
     uses: ./.github/workflows/generate_matrix.yml
     with: 
-      flags: '--no-arch --json-by-arch --test-platform'
+      flags: '${{ inputs.flavors_parse_params }}'
   platform_test_images:
     name: platform test images
     uses: ./.github/workflows/platform-test-images.yml
@@ -78,25 +88,31 @@ jobs:
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
     - uses: ./.github/actions/setup
-    - name: set VERSION=${{ inputs.version }}
-      run: |
-        bin/garden-version "${{ inputs.version }}" | tee VERSION
-        git update-index --assume-unchanged VERSION
+    # - name: set VERSION=${{ inputs.version }}
+    #   run: |
+    #     bin/garden-version "${{ inputs.version }}" | tee VERSION
+    #     git update-index --assume-unchanged VERSION
 
-    - name: get cname and platform
+    - name: get cname
       run: |
+        # download images from S3 bucket
+        if [[ "${{ inputs.download_s3 }}" == "true" ]]; then
+          if [[ "${{ inputs.version }}" == "latest" ]]; then
+            VERSION="$(bin/glrd --latest --fields 'Version' --no-header --type patch)"
+            SHA="$(bin/glrd --latest --fields 'Git\ Commit' --no-header --type patch)"
+          else
+            VERSION="$(bin/glrd --fields 'Version' --no-header --type patch,nightly,dev --version ${{ inputs.version }} | tail -1)"
+            SHA="$(bin/glrd --fields 'Git\ Commit' --no-header --type patch,nightly,dev --version ${{ inputs.version }} | tail -1)"
+          fi
+          echo "${VERSION}" >VERSION
+          echo "${SHA}" >COMMIT
+        # download images from GitHub cache
+        else
+          echo today >VERSION
+          git rev-parse HEAD | cut -c1-8 >COMMIT
+        fi
         cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
-        echo "cname=${cname}" | tee -a "$GITHUB_ENV"
-        flavor="${{ matrix.flavor }}"
-        platform="${flavor%%-*}"
-        echo "platform=${platform}" | tee -a "$GITHUB_ENV"
-
-    - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
-      with:
-        name: build-${{ env.cname }}
-        path: ${{ env.artifact_dir }}
-
-    - run: ls -lah ${{ env.artifact_dir }}
+        echo "cname=$cname" | tee -a "$GITHUB_ENV"
 
     - id: 'auth_gcp'
       name: 'Authenticate to Google Cloud'
@@ -136,7 +152,22 @@ jobs:
         echo "ALIBABA_CLOUD_ACCESS_KEY_ID=${ALIBABA_CLOUD_ACCESS_KEY_ID}" >> ${GITHUB_ENV}
         echo "ALIBABA_CLOUD_ACCESS_KEY_SECRET=${ALIBABA_CLOUD_ACCESS_KEY_SECRET}" >> ${GITHUB_ENV}
 
-    - name: deploy platform test resources for ${{ matrix.platform }} on ${{ matrix.arch }} ${{ matrix.flavor }}
+    - name: download images from GitHub cache
+      uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
+      if: ${{ inputs.download_s3 == false }}
+      with:
+        name: build-${{ env.cname }}
+        path: ${{ env.artifact_dir }}
+
+    - name: download images from S3 bucket
+      if: ${{ inputs.download_s3 == true }}
+      run: |
+        mkdir -p "${{ env.cname }}"
+        aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/${{ env.cname }}" "${{ env.artifact_dir }}" --recursive
+
+    - run: ls -lah ${{ env.artifact_dir }}
+
+    - name: deploy platform test resources for ${{ matrix.flavor }} on ${{ matrix.arch }}
       run: |
         export AWS_ACCESS_KEY_ID=${{ steps.auth_aws.outputs.aws-access-key-id }}
         export AWS_SECRET_ACCESS_KEY=${{ steps.auth_aws.outputs.aws-secret-access-key }}
@@ -175,7 +206,7 @@ jobs:
           ${{ env.artifact_dir }}/${{ env.cname }}.platform.test.log
           ${{ env.artifact_dir }}/${{ env.cname }}.platform.test.xml
 
-    - name: cleanup platform test for ${{ matrix.platform }} on ${{ matrix.arch }} ${{ matrix.flavor }}
+    - name: cleanup platform test for ${{ matrix.flavor }} on ${{ matrix.arch }}
       if: always()
       run: |
         export AWS_ACCESS_KEY_ID=${{ steps.auth_aws.outputs.aws-access-key-id }}
