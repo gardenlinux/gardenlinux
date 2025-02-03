@@ -444,6 +444,22 @@ targets:
         test: true
         test-platform: false
         publish: true
+      - features:
+          - gardener
+          - _pxe
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - gardener
+          - _pxe
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
   - name: openstack
     category: hypervisor
     flavors:
