@@ -64,7 +64,7 @@ jobs:
         cname="$(./build --resolve-cname ${{ matrix.target }}${{ matrix.modifier }}-${{ matrix.arch }})"
         echo "cname=$cname" | tee -a "$GITHUB_ENV"
 
-    - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
+    - uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
       with:
         role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
         role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
@@ -91,7 +91,7 @@ jobs:
     - if: ${{ matrix.target == 'aws' }}
       id: 'auth_aws'
       name: 'Authenticate to AWS'
-      uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
+      uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
       with:
         role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
         role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
