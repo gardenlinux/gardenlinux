@@ -14,42 +14,36 @@ This directory contains the infrastructure code used to automatically set up tes
   - [Understanding the Test Process](#understanding-the-test-process)
     - [Quick Start - Typical Workflow](#quick-start---typical-workflow)
     - [What Happens Behind the Scenes](#what-happens-behind-the-scenes)
-
-- [Getting Started](#getting-started)
   - [Cloud Provider Authentication](#cloud-provider-authentication)
     - [Amazon Web Services (AWS)](#amazon-web-services-aws)
     - [Google Cloud Platform (GCP)](#google-cloud-platform-gcp)
     - [Microsoft Azure](#microsoft-azure)
     - [Alibaba Cloud (ALI)](#alibaba-cloud-ali)
     - [Verifying Authentication](#verifying-authentication)
-
-- [Getting Started](#getting-started)
   - [Generate OpenTofu Input Variables](#generate-opentofu-input-variables)
     - [Manual Creation](#manual-creation)
     - [Automated Generation](#automated-generation)
   - [Creating Cloud Resources with OpenTofu](#creating-cloud-resources-with-opentofu)
     - [Available Commands](#available-commands)
     - [Full Command List](#full-command-list)
-
-- [Getting Started](#getting-started)
   - [Run Platform Tests](#run-platform-tests)
     - [Available Test Commands](#available-test-commands)
     - [Full Test Command List](#full-test-command-list)
     - [Debugging Failed Tests](#debugging-failed-tests)
-
-- [Getting Started](#getting-started)
   - [Workspaces and State Management](#workspaces-and-state-management)
     - [Understanding State](#understanding-state)
     - [Using Workspaces](#using-workspaces)
     - [How We Use Workspaces](#how-we-use-workspaces)
     - [State Storage](#state-storage)
-
 - [Advanced Settings](#advanced-settings)
   - [Enhanced State Management](#enhanced-state-management)
     - [Using Encrypted Local State](#using-encrypted-local-state)
     - [Setting Up Remote State in S3](#setting-up-remote-state-in-s3)
     - [Recover GitHub Action's OpenTofu State Locally](#recover-github-actions-opentofu-state-locally)
-
+- [GitHub Actions](#github-actions)
+  - [Available Workflows](#available-workflows)
+    - [nightly.yml - Automated Nightly Tests](#nightlyyml---automated-nightly-tests)
+    - [tests-only.yml - On-Demand Testing](#tests-onlyyml---on-demand-testing)
 - [Appendix](#appendix)
   - [OpenTofu in a Nutshell](#opentofu-in-a-nutshell)
     - [OpenTofu Configuration Language (HCL)](#opentofu-configuration-language-hcl)
@@ -105,8 +99,6 @@ The root module:
 ## OpenTofu in a nutshell
 
 Have a look at the [OpenTofu in a nutshell](./opentofu_in_a_nutshell.md) to get a general understanding of OpenTofu.
-
-
 
 ## Getting Started
 
@@ -976,6 +968,89 @@ $ for i in $(tofu workspace list | grep 'ali|aws|azure|gcp' | sed 's#*##g'); do
     tofu workspace delete $i
   done
 ```
+
+## GitHub Actions
+
+Our GitHub Actions workflows use the same make targets as manual testing, providing a consistent interface across local development and CI/CD. This makes debugging and reproducing issues much simpler.
+
+### Available Workflows
+
+We have two main workflows for platform testing:
+
+#### nightly.yml - Automated Nightly Tests
+
+This workflow automatically tests all Garden Linux flavors that have platform testing enabled:
+
+- Runs every night
+- Tests all flavors with `test-platform: true` in `flavors.yaml`
+- Uses remote state in S3 for reliability
+- Runs tests in parallel across multiple runners
+
+
+#### tests-only.yml - On-Demand Testing
+
+This workflow enables testing specific Garden Linux flavors and versions on demand. It's particularly useful for:
+
+- Testing specific branches during development
+- Validating changes before merging
+- Testing individual flavors or cloud providers
+- Testing old versions of Garden Linux
+
+The workflow supports two main testing paths:
+
+1. Testing existing images from S3:
+```bash
+# Test specific version and flavor using existing S3 image
+gh workflow run "platform tests only" \
+  # directly passed to bin/glrd to commit and fetch image from S3
+  -f version=1312 \
+  # directly passed to bin/parse_flavors.py
+  -f flavors_parse_params='--no-arch --json-by-arch --test-platform --include-only gcp-gardener_prod-amd64'
+```
+
+2. Building and testing new images:
+```bash
+# Build and test from current branch
+gh workflow run "platform tests only" \
+  # build images from current commit
+  -f build=true \
+  # build from specific branch
+  --ref feat/my-feature \
+
+# Build and test specific cloud provider
+gh workflow run "platform tests only" \
+  # build images from current commit
+  -f build=true \
+  # build from specific branch
+  --ref feat/my-feature \
+  # run tests for all GCP flavors and architectures
+  -f flavors_parse_params='--no-arch --json-by-arch --test-platform --include-only "gcp-*"'
+```
+
+Common workflow parameters:
+
+| Parameter | Description | Example Value |
+|-----------|-------------|---------------|
+| `--ref` | Git reference to test (branch/tag/SHA) | `feat/my-feature`, `main`, `abc123de` |
+| `-f build` | Whether to build images from source | `true`, `false` |
+| `-f flavors_parse_params` | Filter which flavors to test | `--no-arch --json-by-arch --test-platform --include-only "gcp-*"` |
+| `-f version` | Version to test | `1312`, `latest` |
+
+> [!NOTE]
+> The `version` input is passed directly to `bin/glrd` to fetch image from S3. It supports every version string that `bin/glrd` supports.
+
+> [!NOTE]
+> The `flavors_parse_params` input is passed directly to `bin/parse_flavors.py` for flavor selection. It supports every parameter that `bin/parse_flavors.py` supports.
+
+> [!TIP]
+> To monitor the workflow:
+> ```bash
+> # View workflow status
+> gh run list --workflow="platform tests only"
+> 
+> # Watch specific run
+> gh run watch
+> ```
 
 ## Appendix
 
