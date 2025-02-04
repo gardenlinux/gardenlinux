@@ -2274,11 +2274,12 @@
         },
         "dacite": {
             "hashes": [
-                "sha256:cc31ad6fdea1f49962ea42db9421772afe01ac5442380d9a99fcf3d188c61afe"
+                "sha256:50e97b408f9fdc5619f341c5415c4ad1cf771a3dbd85626cda44db78ee45df8c",
+                "sha256:55a5ac04207d34a92d7951d2d1ccaa642bf340b29db6399848a1e41ff6e0f48f"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.6'",
-            "version": "==1.8.1"
+            "markers": "python_version >= '3.7'",
+            "version": "==1.9.1"
         },
         "debtcollector": {
             "hashes": [
