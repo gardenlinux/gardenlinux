@@ -108,9 +108,10 @@ jobs:
           echo "${SHA}" >COMMIT
         # download images from GitHub cache
         else
-          echo today >VERSION
+          echo "${{ inputs.version }}" >VERSION
           git rev-parse HEAD | cut -c1-8 >COMMIT
         fi
+        git update-index --assume-unchanged VERSION
         cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
         echo "cname=$cname" | tee -a "$GITHUB_ENV"
 
