@@ -109,6 +109,7 @@ class RemoteClient:
         ssh_connect_timeout: int=60,
         ssh_max_retries: Optional[int]=None,
         ssh_retry_wait_seconds: Optional[int]=None,
+        wait_for_systemd: Optional[bool]=False,
     ) -> None:
         self.host = host
         self.port = port
@@ -150,6 +151,8 @@ class RemoteClient:
         self.ssh_key_filepath = path.expanduser(sshconfig['ssh_key_filepath'])
         self.ssh_key_private = self.__get_ssh_key()
 
+        self.wait_for_systemd = wait_for_systemd
+
     @property
     def client(self):
         if self._client is None:
@@ -170,6 +173,19 @@ class RemoteClient:
                 auth_timeout=30,
                 timeout=self._ssh_connect_timeout,
             )
+
+            # After establishing connection, optionally wait for systemd
+            if self.wait_for_systemd:
+                logger.info("Waiting for systemd to complete system initialization...")
+                exit_status, output, error = self.execute_command(
+                    "systemctl is-system-running --wait",
+                    timeout=600,  # 10 minute timeout
+                    quiet=True
+                )
+                if exit_status == 0:
+                    logger.info("System initialization complete")
+                else:
+                    logger.warning(f"System initialization status: {output.strip() or error.strip()}")
 
         return self._client
 
