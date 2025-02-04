@@ -9,10 +9,8 @@ auditd
 awscli
 azure-vm-utils
 binutils
-bird2
 bsdextrautils
 btrfs-progs
-bubblewrap
 build-essential
 ca-certificates
 ceph
@@ -106,7 +104,6 @@ pciutils
 pkexec
 podman
 polkitd
-pristine-lfs
 python3-apt
 python3-cffi-backend
 python3-click
