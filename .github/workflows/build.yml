@@ -76,7 +76,7 @@ jobs:
   base:
     name: bootstrap stage
     needs: version
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
     defaults:
       run:
         shell: bash
@@ -110,7 +110,7 @@ jobs:
           key: base-${{ matrix.arch }}-${{ github.run_id }}
   test_container:
     name: container image for tests
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
     defaults:
       run:
         shell: bash
@@ -155,7 +155,7 @@ jobs:
       flags: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
   images:
     needs: [ version, cert, base, test_container, generate_matrix_images ]
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
     defaults:
       run:
         shell: bash
@@ -249,7 +249,7 @@ jobs:
           path: "${{ env.cname }}.tar.gz"
   bare_flavors:
     needs: [ version, base, generate_matrix_bare ]
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
     defaults:
       run:
         shell: bash
