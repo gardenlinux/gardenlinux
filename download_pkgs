@@ -11,8 +11,6 @@ dir="$(mktemp -d)"
 trap 'cd / && rm -rf "$dir"' EXIT
 cd "$dir"
 
-arch="$(dpkg --print-architecture)"
-
 mkdir download
 while read -r repo tag; do
 	gh release download --dir download --repo "$repo" "$tag"
@@ -33,10 +31,10 @@ done < "$releases"
 
 truncate -s 0 pkgs depends
 
-find download -name "*_all.deb" -or -name "*_$arch.deb" | sort | while read -r pkg; do
+find download -name "*.deb" | sort | while read -r pkg; do
 	control="$(dpkg-deb -I "$pkg" control)"
-	awk -F ': ' '$1 == "Package" { print $2 }' <<< "$control" >> pkgs
-	awk -F ': ' '$1 == "Depends" || $1 == "Pre-Depends" { print $2 }' <<< "$control" | tr ',' '\n' | awk '{ print $1 }' >> depends
+	awk -F ': ' '$1 == "Package" { print $2 }' <<< "$control" | awk '{ print $1; print $1 ":amd64"; print $1 ":arm64" }' >> pkgs
+	awk -F ': ' '$1 == "Depends" || $1 == "Pre-Depends" { print $2 }' <<< "$control" | tr ',' '\n' | awk '{ print $1; print $1 ":amd64"; print $1 ":arm64" }' >> depends
 
 	hash="$(sha256sum < "$pkg" | head -c 64)"
 	mkdir -p "$target/pool/$hash"
@@ -55,15 +53,14 @@ done
 rm -rf download
 sort -o pkgs -u pkgs
 
-sed 's/^#'"$(dpkg --print-architecture)"' //;/^#/d' < "$import_list" > arch_import_list
-cat arch_import_list >> depends
+awk '{ print $1; print $1 ":amd64"; print $1 ":arm64" }' < "$import_list" >> depends
 aptitude search '?priority(required)|?priority(important)' -F '%p' -q | cut -d : -f 1 >> depends
 
 sort -o depends -u depends
 join -v 1 depends pkgs > needed
 
-xargs apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances < needed | grep '^\w' | cut -d : -f 1 | sort | uniq > recursive_depends
-join -v 1 <(cat arch_import_list recursive_depends | sort | uniq) pkgs | { grep -v -x -f "$exclude_patterns" || true; } > recursive_needed
+xargs apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances < needed | grep '^\w' | sort | uniq > recursive_depends
+join -v 1 <(sort < recursive_depends | uniq) pkgs | { grep -v -x -f "$exclude_patterns" || true; } > recursive_needed
 
 mkdir apt_download
 (cd apt_download && xargs apt-get download) < recursive_needed
