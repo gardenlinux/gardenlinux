@@ -57,10 +57,15 @@ awk '{ print $1; print $1 ":amd64"; print $1 ":arm64" }' < "$import_list" >> dep
 aptitude search '?priority(required)|?priority(important)' -F '%p' -q | cut -d : -f 1 >> depends
 
 sort -o depends -u depends
-join -v 1 depends pkgs > needed
+comm -23 depends pkgs > needed
 
 xargs apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances < needed | grep '^\w' | sort | uniq > recursive_depends
-join -v 1 <(sort < recursive_depends | uniq) pkgs | { grep -v -x -f "$exclude_patterns" || true; } > recursive_needed
+
+# double evaluation needed to work around broken dependency definitions in Debian lacking proper :any specifiers in _all packages
+awk '{ print $1; print $1 ":amd64"; print $1 ":arm64" }' < recursive_depends > recursive_depends_extended
+xargs apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances < recursive_depends_extended | grep '^\w' | sort | uniq > recursive_depends_real
+
+comm -23 recursive_depends_real pkgs | { grep -v -x -f "$exclude_patterns" || true; } > recursive_needed
 
 mkdir apt_download
 (cd apt_download && xargs apt-get download) < recursive_needed
