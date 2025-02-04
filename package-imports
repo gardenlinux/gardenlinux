@@ -11,7 +11,6 @@ azure-vm-utils
 binutils
 bsdextrautils
 btrfs-progs
-bubblewrap
 build-essential
 ca-certificates
 ceph
