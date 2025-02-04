@@ -9,7 +9,6 @@ auditd
 awscli
 azure-vm-utils
 binutils
-bird2
 bsdextrautils
 btrfs-progs
 bubblewrap
