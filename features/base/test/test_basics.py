@@ -1,5 +1,5 @@
 import pytest
-from helper.utils import get_architecture
+from helper.utils import get_architecture, AptUpdate
 from helper.sshclient import RemoteClient
 
 @pytest.mark.security_id(1)
