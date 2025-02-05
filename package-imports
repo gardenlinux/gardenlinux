@@ -142,8 +142,8 @@ sssd
 strace
 sudo
 swtpm
-#amd64 syslinux
-#amd64 syslinux-common
+syslinux
+syslinux-common
 sysstat
 systemd-cron
 tcpd

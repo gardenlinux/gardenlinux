@@ -44,26 +44,15 @@ jobs:
             podman build -t build --build-arg base="$(cat .container)" .
             podman run --rm -e GH_TOKEN build /fetch_releases > package-releases
           fi
-      - name: download amd64 packages
+      - name: download packages
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           container="$(cat .container)"
-          podman pull --arch amd64 "$container"
+          podman pull "$container"
           podman build -t build --build-arg base="$container" .
           mkdir repo
           podman run --rm -v "$PWD/repo:/repo" -v "$PWD/package-releases:/package-releases" -v "$PWD/package-imports:/package-imports" -v "$PWD/package-exclude:/package-exclude" -e GH_TOKEN build /download_pkgs /repo /package-releases /package-imports /package-exclude
-      - name: download arm64 packages
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          container="$(cat .container)"
-          podman pull --arch arm64 "$container"
-          podman build -t build --build-arg base="$container" .
-          mkdir repo_arm64
-          podman run --rm -v "$PWD/repo_arm64:/repo" -v "$PWD/package-releases:/package-releases" -v "$PWD/package-imports:/package-imports" -v "$PWD/package-exclude:/package-exclude" -e GH_TOKEN build /download_pkgs /repo /package-releases /package-imports /package-exclude
-          cp -r --no-clobber repo_arm64/. repo/.
-          rm -rf repo_arm64
       - name: build kms signing container
         run: |
           podman build -t kms kms
