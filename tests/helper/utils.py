@@ -5,6 +5,21 @@ import string
 import subprocess
 
 
+def read_file_remote(client, file, remove_comments=False)-> list:
+    """ Read a file from the remote file system and returns it for 
+        proper processing trunecated.
+    """
+    status, output = execute_remote_command(client, f"cat {file}", skip_error=True)
+    assert status == 0, f"Error reading {file}" 
+    to_return = output.split("\n")
+    # Check if we might have an emtory entry.
+    if "" in to_return:
+        to_return.remove("")
+    if remove_comments: 
+        return [line for line in to_return if '#' not in line]
+    return to_return
+
+
 def get_package_list(client):
     """Return list with the installed packages.
     Needs the fixture client to connect into the image"""
