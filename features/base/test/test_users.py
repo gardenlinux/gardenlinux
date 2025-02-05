@@ -23,6 +23,7 @@ def test_for_nis(client, non_container):
     assert 0 == len(list(filter(lambda x: 'nisplus' in x, nsswitch))), "nisplus found in /etc/nsswitch.conf!"
     assert 0 == len(list(filter(lambda x: 'compat' in x, nsswitch))), "compat found in /etc/nsswitch.conf!"
 
+@pytest.mark.security_id(162)
 @pytest.mark.security_id(164)
 def test_for_root(client, non_container):
     """
