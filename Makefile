@@ -124,19 +124,15 @@ $(1)-test:
 	fi
 endef
 
-
-$(eval $(call build, base-amd64))
-$(eval $(call build, base-arm64))
-$(eval $(call build, container-amd64))
-$(eval $(call build, container-arm64))
-$(eval $(call test, base-amd64))
-$(eval $(call test, base-arm64))
-$(eval $(call test, container-amd64))
-$(eval $(call test, container-arm64))
-
 # Generate rules dynamically for all bare flavors
 $(foreach flavor, $(FLAVORS_BARE), $(eval $(call build_bare, $(flavor))))
 $(foreach flavor, $(FLAVORS_BARE), $(eval $(call test_bare, $(flavor))))
+
+# Generate rules for base targets only
+$(eval $(call build, base-amd64))
+$(eval $(call build, base-arm64))
+$(eval $(call test, base-amd64))
+$(eval $(call test, base-arm64))
 
 # Generate rules dynamically for all flavors
 $(foreach flavor, $(FLAVORS), $(eval $(call build_kms, $(flavor))))
