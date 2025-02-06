@@ -1,5 +1,5 @@
 import pytest
-from helper.utils import get_architecture, AptUpdate, install_package_deb
+from helper.utils import get_architecture, AptUpdate, install_package_deb, execute_remote_command
 from helper.sshclient import RemoteClient
 
 @pytest.mark.security_id(1)
