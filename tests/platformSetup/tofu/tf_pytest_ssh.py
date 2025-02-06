@@ -140,7 +140,8 @@ def generate_login_script(flavor, platform, arch, feature_list, tofu_out):
         )
 
     login_script_file.chmod(0o755)
-    print(f"Login script '{login_script_file.resolve()}' created and made executable.")
+    relative_path = Path("tests/platformSetup/tofu") / login_script_file.name
+    print(f"Login script '{relative_path}' created and made executable.")
 
     return {
         "platform": platform,
@@ -172,7 +173,8 @@ def generate_pytest_configfile(flavor, config_data, feature_list):
     with config_file.open("w") as yaml_file:
         yaml.dump(yaml_data, yaml_file, default_flow_style=False)
 
-    print(f"pytest configfile '{config_file.resolve()}' created.")
+    relative_path = Path("tests/config") / config_file.name
+    print(f"pytest configfile '{relative_path}' created.")
 
 
 def main():
