@@ -1,0 +1,9 @@
+[Unit]
+DefaultDependencies=no
+After=tpm2.target
+Before=systemd-repart.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/check-tpm
+RemainAfterExit=yes

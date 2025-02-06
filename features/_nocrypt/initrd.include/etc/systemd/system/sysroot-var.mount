@@ -1,0 +1,8 @@
+[Unit]
+Requires=systemd-repart.service
+After=systemd-repart.service
+
+[Mount]
+What=/dev/disk/by-partlabel/VAR
+Where=/sysroot/var
+Type=ext4

@@ -1,0 +1,8 @@
+[Unit]
+Requires=ephemeral-cryptsetup.service
+After=ephemeral-cryptsetup.service
+
+[Mount]
+What=/dev/mapper/ephemeral
+Where=/sysroot/var
+Type=ext4

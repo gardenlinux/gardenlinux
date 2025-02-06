@@ -10,3 +10,8 @@ openssl x509 -in /builder/cert/gardenlinux-oci-sign.crt -pubkey -noout > "$rootf
 for key in pk null.pk kek db; do
 	cp "/builder/cert/secureboot.$key.auth" "$rootfs/etc/gardenlinux/gardenlinux-secureboot.$key.auth"
 done
+
+for i in opt home; do
+	mv "$rootfs/$i" "$rootfs/var/"
+	mkdir "$rootfs/$i"
+done
