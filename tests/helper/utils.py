@@ -19,7 +19,7 @@ def read_file_remote(client, file, remove_comments=False)-> list:
         # Ensure that we only skip lines when the comment start with.
         if remove_comments and line.startswith('#'):
             continue
-       to_return.append(line) 
+        to_return.append(line)
        
     return to_return
 
