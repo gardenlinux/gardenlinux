@@ -11,13 +11,16 @@ def read_file_remote(client, file, remove_comments=False)-> list:
     """
     status, output = execute_remote_command(client, f"cat {file}", skip_error=True)
     #assert status == 0, f"Error reading {file}"
-    to_return = output.split("\n")
-    ## Check if we might have an emtory entry.
-    if "" in to_return:
-        to_return.remove("")
-    if remove_comments:
+    to_return = []
+    for line in output.split("\n"):
+        ## Check if we might have an empty entry.
+        if not line:
+            continue
         # Ensure that we only skip lines when the comment start with.
-        return [line for line in output.split("\n") if line and not line.startswith("#")]
+        if remove_comments and line.startswith('#'):
+            continue
+       to_return.append(line) 
+       
     return to_return
 
 
