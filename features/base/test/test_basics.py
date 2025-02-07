@@ -5,7 +5,7 @@ from helper.sshclient import RemoteClient
 @pytest.mark.security_id(1)
 def test_gl_is_support_distro(client):
     """
-    This tests will validate the gardenlinux si considered the vendor. 
+    This tests ensures that the vendor field is set to 'gardenlinux'.
     """
 
     AptUpdate(client)
