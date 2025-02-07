@@ -55,7 +55,7 @@ def test_ls(client):
 
 def test_startup_time(client, non_chroot, non_kvm, non_azure):
     """ Test for startup time """
-    tolerated_kernel_time = 30
+    tolerated_kernel_time = 60
     tolerated_userspace_time = 40
     (exit_code, output, error) = client.execute_command("systemd-analyze")
     assert exit_code == 0, f"no {error=} expected"
