@@ -5,6 +5,14 @@ import string
 import subprocess
 
 
+def check_for_kernel_setting(client, sysctl_variable):
+    """
+       This will check for the running configuration.
+    """
+    output = execute_remote_command(client, f"sysctl {sysctl_variable}")
+    return output.split("=")[1].strip()
+
+
 def get_package_list(client):
     """Return list with the installed packages.
     Needs the fixture client to connect into the image"""
