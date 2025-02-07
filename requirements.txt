@@ -3,3 +3,4 @@
 # Note: You should always prefer your local package manager.
 PyYAML
 networkx
+requests

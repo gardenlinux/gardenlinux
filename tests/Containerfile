@@ -10,7 +10,7 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN pip install pipenv
 COPY Pipfile Pipfile
 COPY Pipfile.lock Pipfile.lock
-RUN pipenv install --system --dev --verbose
+RUN pipenv sync --system --dev --verbose
 
 COPY init /init
 CMD /init

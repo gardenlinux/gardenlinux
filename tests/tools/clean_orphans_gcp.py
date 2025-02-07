@@ -75,14 +75,44 @@ def delete_image(project, name):
     wait_for_operation(operation, name)
 
 
-def get_subnets(project, region):
-    subnet_list = subnet_client.list(project=project, region=region).items
-    return subnet_list
+def get_subnets(project, network_name):
+    # Only try to get network if it's a valid network name (not a region)
+    if not network_name.startswith('vpc-'):
+        return []
+        
+    network = network_client.get(project=project, network=network_name)
+    subnets = []
+    
+    # Get all regions
+    regions = [subnet_url.split('/')[-3] for subnet_url in network.subnetworks] if network.subnetworks else []
+    
+    # Get subnets from each region where we found subnet URLs
+    for region in regions:
+        try:
+            region_subnets = subnet_client.list(
+                project=project,
+                region=region
+            )
+            
+            for subnet in region_subnets:
+                if network.self_link in subnet.network:
+                    subnets.append(subnet)
+                    
+        except Exception as e:
+            continue
+            
+    return subnets
 
 
 def delete_subnet(project, region, name):
-    operation = subnet_client.delete(project=project, region=region, subnetwork=name)
+    print(f"Deleting subnet {name}...")
+    operation = subnet_client.delete(
+        project=project,
+        region=region,
+        subnetwork=name
+    )
     wait_for_operation(operation, name)
+    return True
 
 
 def get_firewalls(project):
@@ -101,8 +131,15 @@ def get_networks(project):
 
 
 def delete_network(project, name):
+    # Delete all subnets first
+    subnets = get_subnets(project, name)
+    if subnets:
+        for subnet in subnets:
+            region = subnet.region.split('/')[-1]
+            delete_subnet(project, region, subnet.name)
+    print(f"Deleting network {name}...")
     operation = network_client.delete(project=project, network=name)
-    wait_for_operation(operation, name)
+    return wait_for_operation(operation, name)
 
 
 def get_instances(project, zone):
@@ -174,23 +211,31 @@ def main():
         print("")
 
     if not args.force_all:
-        pick = input("Choose the test resources to delete (digit, any other key quits): ")
-        pick = int(pick)
-        if not (pick >= 0 and pick < len(inventory_key_list)):
+        pick = input("Choose the test resources to delete (digit or 'A' for all, any other key quits): ")
+        if pick == 'A':
+            pick = 0  # Start with first item
+            args.force_all = True  # Use existing force-all logic
+        elif pick.strip().isdigit():
+            pick = int(pick)
+            if not (pick >= 0 and pick < len(inventory_key_list)):
+                return os.EX_DATAERR
+        else:
             return os.EX_DATAERR
     else:
         pick = 0
 
     try:
         test_environment = inventory_key_list[pick]
-
         test_inventory_key_list = list(inventory[test_environment])
+        
         while len(test_inventory_key_list) > 0:
-            # output the resources of the chosen test, offer option to delete one resource or all at once
+            # output the resources of the chosen test
             print("")
+            print(f"Processing test environment: {test_environment}")
             for i in range(len(test_inventory_key_list)):
                 print(f"{i}: {test_inventory_key_list[i]}: {inventory[test_environment][test_inventory_key_list[i]]}")
             print("")
+
             if not args.force_all:
                 delete_pick = input("Which resource should be deleted (digit), type 'A' for all, any other key for back: ")
                 if (delete_pick == 'A'):
