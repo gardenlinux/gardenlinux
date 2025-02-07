@@ -14,5 +14,7 @@ def test_password_shadow(client):
        necessary files are set correctly.
     """
     password_shadow(client)
-    assert '' == execute_remote_command(client, "pwck")
-    assert '' == execute_remote_command(client, "grpck")
+    # Check with -r for read-only. Ensure that we get the output back from
+    # both tools.
+    assert '' == execute_remote_command(client, "pwck -r", skip_error=True)
+    assert '' == execute_remote_command(client, "grpck -r", skip_error=True)
