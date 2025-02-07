@@ -10,7 +10,7 @@ def read_file_remote(client, file, remove_comments=False)-> list:
         proper processing trunecated.
     """
     status, output = execute_remote_command(client, f"cat {file}", skip_error=True)
-    #assert status == 0, f"Error reading {file}"
+    assert status == 0, f"Error reading {file}"
     to_return = []
     for line in output.split("\n"):
         ## Check if we might have an empty entry.
