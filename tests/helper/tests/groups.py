@@ -6,6 +6,7 @@ def groups(client, test_group, test_user):
     # Get group info from remote platform
     cmd = "getent group"
     out = execute_remote_command(client, cmd)
+    users = []
 
     # Process output
     for line in out.split("\n"):
@@ -15,8 +16,7 @@ def groups(client, test_group, test_user):
         group = line_split[0]
         if group == test_group:
             # Get user(s) of group
-            users = line_split[3]
-            users = users.split(",")
+            users = line_split[3].split(",")
 
     # Check if user is legitimated for the group
     for user in users:
