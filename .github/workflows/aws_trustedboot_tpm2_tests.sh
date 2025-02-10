@@ -53,7 +53,7 @@ aws:
     boot_mode: uefi
     uefi_data: '$(cat cert/gardenlinux-secureboot.aws-efivars)'
     tpm_support: v2.0
-    keep_running: false
+    keep_running: true
     features:
       - aws
       - gardener

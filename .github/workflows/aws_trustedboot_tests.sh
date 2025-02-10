@@ -52,7 +52,7 @@ aws:
       user: admin
     boot_mode: uefi
     uefi_data: '$(cat cert/gardenlinux-secureboot.aws-efivars)'
-    keep_running: false
+    keep_running: true
     features:
       - aws
       - gardener
