@@ -1,5 +1,5 @@
 [Unit]
-Requires=systemd-cryptsetup-var.service
+Wants=systemd-cryptsetup-var.service
 After=systemd-cryptsetup-var.service
 
 [Mount]
