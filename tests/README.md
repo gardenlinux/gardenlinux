@@ -86,7 +86,7 @@ graph TD;
 ```
 
 # Unit Tests
-Unit testing are used to validate and test the functionality of Garden Linux sources and its whole feature sets. When adding a Garden Linux specific feature like `CIS`, all related `CIS` unit tests are executed. Each feature is represented by unit tests to ensure its conformity. 
+Unit testing are used to validate and test the functionality of Garden Linux sources and its whole feature sets. When adding a Garden Linux specific feature like `CIS`, all related `CIS` unit tests are executed. Each feature is represented by unit tests to ensure its conformity.
 
 ## Running Unit tests
 
@@ -113,20 +113,20 @@ Many more build targets are available, e.g. to build only for a certain platform
 
     ❯ make --directory=tests/images help
     Usage: make [target]
-    
+
     general targets:
-    help					List available tasks of the project 
-    all					Build all platform test images   
-    all-push				Build and push all platform test images 
-    pull-platform-test-base			Pull the platform test base image 
-    pull-platform-test			Pull all platform test images 
-    build-platform-test-base		Build the platform test base image 
-    build-platform-test			Build all platform test images 
-    push-platform-test-base			Push the platform test base image 
-    push-release-platform-test-base		Push the platform test base image with release tag 
-    push-platform-test			Push all platform test images 
-    push-release-platform-test		Push all platform test images with release tag 
-    
+    help					List available tasks of the project
+    all					Build all platform test images
+    all-push				Build and push all platform test images
+    pull-platform-test-base			Pull the platform test base image
+    pull-platform-test			Pull all platform test images
+    build-platform-test-base		Build the platform test base image
+    build-platform-test			Build all platform test images
+    push-platform-test-base			Push the platform test base image
+    push-release-platform-test-base		Push the platform test base image with release tag
+    push-platform-test			Push all platform test images
+    push-release-platform-test		Push all platform test images with release tag
+
     platform-specific targets:
     pull-platform-test-ali                  Pull the platform test image for ali
     pull-platform-test-aws                  Pull the platform test image for aws
@@ -633,7 +633,7 @@ The URI can be:
 
 - **uefi** _(optional)_: To enable UEFI boot, by default legacy boot is used. Default is `false`
 
-- **secureboot** _(optional)_: To enable secureboot, if secureboot is enabled UEFI boot will be used, no matter how the `uefi` option is set. For secureboot it is important that the path options to the keys and database are set properly. Default is `false`. 
+- **secureboot** _(optional)_: To enable secureboot, if secureboot is enabled UEFI boot will be used, no matter how the `uefi` option is set. For secureboot it is important that the path options to the keys and database are set properly. Default is `false`.
 - **db_path** _(optional)_: The path to the signature database for secureboot. Default is `/gardenlinux/cert/secureboot.db.auth`
 - **kek_path** _(optional)_: The path to the key exchange key for secureboot. Default is `/gardenlinux/cert/secureboot.kek.auth`
 - **pk_path** _(optional)_: The path to the platform key for secureboot. Default is `/gardenlinux/cert/secureboot.pk.auth`
@@ -786,7 +786,7 @@ These tests flavors will make use of chroot, KVM virtual machines or OpenStack e
 CHROOT tests are designed to run directly on your platform within a `chroot` environment and boosts up the time for the platform tests that do not need any target platform.
 
 Notes:
- * A local SSH server is started inside the chroot environment. The tests communicate via ssh to execute cmds in the image under test. 
+ * A local SSH server is started inside the chroot environment. The tests communicate via ssh to execute cmds in the image under test.
  * CHROOT will run inside your `platform-test` Docker container
  * Podman container needs `SYS_ADMIN`, `MKNOD`, `AUDIT_WRITE` and `NET_RAW` capability
  * Temporary SSH keys are auto generated and injected
@@ -1090,10 +1090,10 @@ The following describes the configuration needed to run local tests.
 ```yaml
 local:
     # configuration parameters for tests separated by features
-    oci:
+    onmetal:
       # Path to a final artifact. Represents the .tar.xz archive image file (required)
-      image: /build/kvm_dev_oci-amd64-today-local.oci.tar.xz
-      kernel: /build/kvm_dev_oci-amd64-today-local.vmlinuz
+      image: /build/kvm_dev_onmetal-amd64-today-local.oci.tar.xz
+      kernel: /build/kvm_dev_onmetal-amd64-today-local.vmlinuz
 
 ```
 
@@ -1101,7 +1101,7 @@ local:
 
 <details>
 
-- **oci** contains the configuration options for local test `test_oci`
+- **onmetal** contains the configuration options for local test `test_onmetal`
     - **image** the build result image used within the tests
     - **kernel** the name for the builded kernel
 

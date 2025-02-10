@@ -15,15 +15,15 @@ To select a specific test to be executed instead of running all local tests, the
 ```yaml
 local:
     # configuration parameters for tests separated by test names
-    oci:
+    onmetal:
       # Path to a final artifact. Represents the .tar.xz archive image file (required)
-      image: /build/kvm_dev_oci-amd64-today-local.oci.tar.xz
-      kernel: /build/kvm_dev_oci-amd64-today-local.vmlinuz
+      image: /build/kvm_dev_onmetal-amd64-today-local.oci.tar.xz
+      kernel: /build/kvm_dev_onmetal-amd64-today-local.vmlinuz
 
 ```
 
 # Test oci
-This test does several steps using the results of a build with _oci feature:
+This test does several steps using the results of a build with _onmetal feature:
 - verify neccessary testconfig options are present (image, kernel)
 - install the docker-registry into the container, provide a config, start the registry
 - extracts the testconfig["image"] file to retrieve the OCI fs layout
@@ -34,6 +34,6 @@ This test does several steps using the results of a build with _oci feature:
 - compare the downloaded kernel with the testconfig["kernel"]
 
 Configuration options:
-- **oci** contains the configuration options for local test `test_oci`
+- **onmetal** contains the configuration options for local test `test_onmetal`
     - **image** the build result image used within the tests
     - **kernel** the name for the builded kernel

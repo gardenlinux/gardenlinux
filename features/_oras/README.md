@@ -153,19 +153,19 @@ jq . orasconfig.json
 ##### Push / Create
 
 ```sh
-$ /config/oras push localhost:5000/oras-gardenlinux:v1 kvm_oci-amd64-today-dc5ce3cd.oci.tar.xz:application/vnd.onmetal.image.rootfs.v1alpha1.rootfs  kvm_oci-amd64-today-dc5ce3cd.vmlinuz:application/vnd.onmetal.image.vmlinuz.v1alpha1.vmlinuz  kvm_oci-amd64-today-dc5ce3cd.initrd:application/vnd.onmetal.image.initramfs.v1alpha1.initramfs --config orasconfig.json:application/vnd.onmetal.image.config.v1alpha1+json
+$ /config/oras push localhost:5000/oras-gardenlinux:v1 kvm_onmetal-amd64-today-dc5ce3cd.oci.tar.xz:application/vnd.onmetal.image.rootfs.v1alpha1.rootfs  kvm_onmetal-amd64-today-dc5ce3cd.vmlinuz:application/vnd.onmetal.image.vmlinuz.v1alpha1.vmlinuz  kvm_onmetal-amd64-today-dc5ce3cd.initrd:application/vnd.onmetal.image.initramfs.v1alpha1.initramfs --config orasconfig.json:application/vnd.onmetal.image.config.v1alpha1+json
 ```
 
 The build flags using onmetal-image are the following:
 
 ```sh
-$ onmetal-image build --rootfs-file output/kvm_oci-amd64-today-dc5ce3cd/rootfs.raw --kernel-file output/kvm_oci-amd64-today-dc5ce3cd/rootfs.vmlinuz --initramfs-file output/kvm_oci-amd64-today-dc5ce3cd/rootfs.initrd --command-line 'root=LABEL=ROOT ro console=tty0 console=ttyS0,115200 earlyprintk=ttyS0,115200 consoleblank=0 cgroup_enable=memory swapaccount=1 ignition.firstboot=1 ignition.platform.id=qemu security=selinux' --store-path output/kvm_oci-amd64-today-dc5ce3cd/onmetal
+$ onmetal-image build --rootfs-file output/kvm_onmetal-amd64-today-dc5ce3cd/rootfs.raw --kernel-file output/kvm_onmetal-amd64-today-dc5ce3cd/rootfs.vmlinuz --initramfs-file output/kvm_onmetal-amd64-today-dc5ce3cd/rootfs.initrd --command-line 'root=LABEL=ROOT ro console=tty0 console=ttyS0,115200 earlyprintk=ttyS0,115200 consoleblank=0 cgroup_enable=memory swapaccount=1 ignition.firstboot=1 ignition.platform.id=qemu security=selinux' --store-path output/kvm_onmetal-amd64-today-dc5ce3cd/onmetal
 ```
 
 To add additional artifacts during creation they can simply be appended:
 
 ```sh
-$ oras push localhost:5000/oras-gardenlinux:v4 kvm_oci-amd64-today-dc5ce3cd.raw:application/vnd.onmetal.image.rootfs.v1alpha1.rootfs kvm_oci-amd64-today-dc5ce3cd.vmlinuz:application/vnd.onmetal.image.vmlinuz.v1alpha1.vmlinuz kvm_oci-amd64-today-dc5ce3cd.initrd:application/vnd.onmetal.image.initramfs.v1alpha1.initramfs kvm_oci-amd64-today-dc5ce3cd.os-release:application/vnd.gardenlinux.os.release kvm_oci-amd64-today-dc5ce3cd.log:application/vnd.gardenlinux.log kvm_oci-amd64-today-dc5ce3cd.manifest:application/vnd.gardenlinux.manifest --config orasconfig.json:application/vnd.onmetal.image.config.v1alpha1+json
+$ oras push localhost:5000/oras-gardenlinux:v4 kvm_onmetal-amd64-today-dc5ce3cd.raw:application/vnd.onmetal.image.rootfs.v1alpha1.rootfs kvm_onmetal-amd64-today-dc5ce3cd.vmlinuz:application/vnd.onmetal.image.vmlinuz.v1alpha1.vmlinuz kvm_onmetal-amd64-today-dc5ce3cd.initrd:application/vnd.onmetal.image.initramfs.v1alpha1.initramfs kvm_onmetal-amd64-today-dc5ce3cd.os-release:application/vnd.gardenlinux.os.release kvm_onmetal-amd64-today-dc5ce3cd.log:application/vnd.gardenlinux.log kvm_onmetal-amd64-today-dc5ce3cd.manifest:application/vnd.gardenlinux.manifest --config orasconfig.json:application/vnd.onmetal.image.config.v1alpha1+json
 ```
 
 This will give us the following structure:
@@ -195,7 +195,7 @@ $ onmetal-image inspect localhost:5000/oras-gardenlinux:v4
         "digest": "sha256:a6baf04f08ae108f23eb76d8ccf3704f4d52bc10fa5645657f55a5185a52cfb5",
         "size": 721420288,
         "annotations": {
-          "org.opencontainers.image.title": "kvm_oci-amd64-today-dc5ce3cd.raw"
+          "org.opencontainers.image.title": "kvm_onmetal-amd64-today-dc5ce3cd.raw"
         }
       },
       {
@@ -203,7 +203,7 @@ $ onmetal-image inspect localhost:5000/oras-gardenlinux:v4
         "digest": "sha256:046ff03c1918ef70f7526d4820b66ac04b06415a5f0d5153d5f08d1b45dc87ca",
         "size": 13230144,
         "annotations": {
-          "org.opencontainers.image.title": "kvm_oci-amd64-today-dc5ce3cd.vmlinuz"
+          "org.opencontainers.image.title": "kvm_onmetal-amd64-today-dc5ce3cd.vmlinuz"
         }
       },
       {
@@ -211,7 +211,7 @@ $ onmetal-image inspect localhost:5000/oras-gardenlinux:v4
         "digest": "sha256:ad1e195f8d7874a6cbf6a972a0badf8e7de03ccac54f4ae920c4ed9398bf7110",
         "size": 27363804,
         "annotations": {
-          "org.opencontainers.image.title": "kvm_oci-amd64-today-dc5ce3cd.initrd"
+          "org.opencontainers.image.title": "kvm_onmetal-amd64-today-dc5ce3cd.initrd"
         }
       },
       {
@@ -219,7 +219,7 @@ $ onmetal-image inspect localhost:5000/oras-gardenlinux:v4
         "digest": "sha256:9664cc6fb8ab048760c776064f0391a5949459986fed2e3ed0189e3aa6376c7d",
         "size": 510,
         "annotations": {
-          "org.opencontainers.image.title": "kvm_oci-amd64-today-dc5ce3cd.os-release"
+          "org.opencontainers.image.title": "kvm_onmetal-amd64-today-dc5ce3cd.os-release"
         }
       },
       {
@@ -227,7 +227,7 @@ $ onmetal-image inspect localhost:5000/oras-gardenlinux:v4
         "digest": "sha256:bda2276cbf5fc37d411883ef9d441a19482c7a4363782da108ac17e6130eff47",
         "size": 108288,
         "annotations": {
-          "org.opencontainers.image.title": "kvm_oci-amd64-today-dc5ce3cd.log"
+          "org.opencontainers.image.title": "kvm_onmetal-amd64-today-dc5ce3cd.log"
         }
       },
       {
@@ -235,7 +235,7 @@ $ onmetal-image inspect localhost:5000/oras-gardenlinux:v4
         "digest": "sha256:7977d5a6cd277d0241c23320069d6a91902643cd6c8f8865181d8b1c15512fe2",
         "size": 6802,
         "annotations": {
-          "org.opencontainers.image.title": "kvm_oci-amd64-today-dc5ce3cd.manifest"
+          "org.opencontainers.image.title": "kvm_onmetal-amd64-today-dc5ce3cd.manifest"
         }
       }
     ],
@@ -268,7 +268,7 @@ $  /config/oras manifest fetch localhost:5000/oras-gardenlinux:v2 | jq '.'
       "digest": "sha256:cbde236614f165c30cb716ed335f829264a59672b19533119cb28e4da354806f",
       "size": 199673068,
       "annotations": {
-        "org.opencontainers.image.title": "kvm_oci-amd64-today-dc5ce3cd.oci.tar.xz"
+        "org.opencontainers.image.title": "kvm_onmetal-amd64-today-dc5ce3cd.oci.tar.xz"
       }
     },
     {
@@ -276,7 +276,7 @@ $  /config/oras manifest fetch localhost:5000/oras-gardenlinux:v2 | jq '.'
       "digest": "sha256:046ff03c1918ef70f7526d4820b66ac04b06415a5f0d5153d5f08d1b45dc87ca",
       "size": 13230144,
       "annotations": {
-        "org.opencontainers.image.title": "kvm_oci-amd64-today-dc5ce3cd.vmlinuz"
+        "org.opencontainers.image.title": "kvm_onmetal-amd64-today-dc5ce3cd.vmlinuz"
       }
     },
     {
@@ -284,7 +284,7 @@ $  /config/oras manifest fetch localhost:5000/oras-gardenlinux:v2 | jq '.'
       "digest": "sha256:a45c40c17c93fb1cb1275126f82bc5383a3f53fb7bf42e7d335deb263eab3e8b",
       "size": 27363208,
       "annotations": {
-        "org.opencontainers.image.title": "kvm_oci-amd64-today-dc5ce3cd.initrd"
+        "org.opencontainers.image.title": "kvm_onmetal-amd64-today-dc5ce3cd.initrd"
       }
     }
   ],
@@ -337,7 +337,7 @@ $ /config/onmetal-image --store-path /git/.build/onmetal inspect localhost:5000/
         "digest": "sha256:cbde236614f165c30cb716ed335f829264a59672b19533119cb28e4da354806f",
         "size": 199673068,
         "annotations": {
-          "org.opencontainers.image.title": "kvm_oci-amd64-today-dc5ce3cd.oci.tar.xz"
+          "org.opencontainers.image.title": "kvm_onmetal-amd64-today-dc5ce3cd.oci.tar.xz"
         }
       },
       {
@@ -345,7 +345,7 @@ $ /config/onmetal-image --store-path /git/.build/onmetal inspect localhost:5000/
         "digest": "sha256:046ff03c1918ef70f7526d4820b66ac04b06415a5f0d5153d5f08d1b45dc87ca",
         "size": 13230144,
         "annotations": {
-          "org.opencontainers.image.title": "kvm_oci-amd64-today-dc5ce3cd.vmlinuz"
+          "org.opencontainers.image.title": "kvm_onmetal-amd64-today-dc5ce3cd.vmlinuz"
         }
       },
       {
@@ -353,7 +353,7 @@ $ /config/onmetal-image --store-path /git/.build/onmetal inspect localhost:5000/
         "digest": "sha256:a45c40c17c93fb1cb1275126f82bc5383a3f53fb7bf42e7d335deb263eab3e8b",
         "size": 27363208,
         "annotations": {
-          "org.opencontainers.image.title": "kvm_oci-amd64-today-dc5ce3cd.initrd"
+          "org.opencontainers.image.title": "kvm_onmetal-amd64-today-dc5ce3cd.initrd"
         }
       }
     ],
@@ -391,7 +391,7 @@ $ /config/onmetal-image --store-path /git/.build/onmetal url --layer initramfs l
 }
 $ curl -s -L http://localhost:5000/v2/oras-gardenlinux/blobs/sha256:a45c40c17c93fb1cb1275126f82bc5383a3f53fb7bf42e7d335deb263eab3e8b  -o oras_initrd
 
-$ cmp oras_initrd kvm_oci-amd64-today-dc5ce3cd.initrd
+$ cmp oras_initrd kvm_onmetal-amd64-today-dc5ce3cd.initrd
 ```
 
 ##### Root filesystem
