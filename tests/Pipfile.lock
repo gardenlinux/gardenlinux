@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "67603cee6dab7fd56b56b638588bc9428e9131742de24b30d11d89ecc73efa85"
+            "sha256": "9bf7502dc6276f35c04fd241663cb0631969a9070d531e6128d00243ef4e2a61"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -3727,12 +3727,12 @@
         },
         "dacite": {
             "hashes": [
-                "sha256:50e97b408f9fdc5619f341c5415c4ad1cf771a3dbd85626cda44db78ee45df8c",
-                "sha256:55a5ac04207d34a92d7951d2d1ccaa642bf340b29db6399848a1e41ff6e0f48f"
+                "sha256:053f7c3f5128ca2e9aceb66892b1a3c8936d02c686e707bee96e19deef4bc4a0",
+                "sha256:6ccc3b299727c7aa17582f0021f6ae14d5de47c7227932c47fec4cdfefd26f09"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==1.9.1"
+            "version": "==1.9.2"
         },
         "debtcollector": {
             "hashes": [
@@ -4743,16 +4743,6 @@
             ],
             "markers": "python_version >= '3.10'",
             "version": "==2.2.3"
-        }
-    },
-    "kvm-packages": {
-        "libvirt-python": {
-            "hashes": [
-                "sha256:8fd4edcb3f3c23cadb4053096c941e026456b5a7b5a635c1cebad044143aba53"
-            ],
-            "index": "pypi",
-            "markers": "python_version >= '3.6'",
-            "version": "==10.7.0"
         }
     },
     "kvm-packages": {},
