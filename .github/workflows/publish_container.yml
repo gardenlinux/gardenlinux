@@ -39,8 +39,8 @@ jobs:
           image="$(podman load < ${{ env.cname_amd64 }}.oci | awk '{ print $NF }')"
 
           # Tagging for amd64 nightly
-          podman tag "$image" ghcr.io/${{ github.repository }}:amd64-nightly
-          podman push ghcr.io/${{ github.repository }}:amd64-nightly
+          #podman tag "$image" ghcr.io/${{ github.repository }}:amd64-nightly
+          #podman push ghcr.io/${{ github.repository }}:amd64-nightly
 
           # Tagging for amd64 with version
           podman tag "$image" ghcr.io/${{ github.repository }}:amd64-${version}
@@ -50,18 +50,18 @@ jobs:
           image="$(podman load < ${{ env.cname_arm64 }}.oci | awk '{ print $NF }')"
 
           # Tagging for arm64 nightly
-          podman tag "$image" ghcr.io/${{ github.repository }}:arm64-nightly
-          podman push ghcr.io/${{ github.repository }}:arm64-nightly
+          #podman tag "$image" ghcr.io/${{ github.repository }}:arm64-nightly
+          #podman push ghcr.io/${{ github.repository }}:arm64-nightly
 
           # Tagging for arm64 with version
           podman tag "$image" ghcr.io/${{ github.repository }}:arm64-${version}
           podman push ghcr.io/${{ github.repository }}:arm64-${version}
 
           # Creating and pushing manifest for nightly
-          podman manifest create ghcr.io/${{ github.repository }}:nightly
-          podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:amd64-nightly
-          podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:arm64-nightly
-          podman push ghcr.io/${{ github.repository }}:nightly
+          #podman manifest create ghcr.io/${{ github.repository }}:nightly
+          #podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:amd64-nightly
+          #podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:arm64-nightly
+          #podman push ghcr.io/${{ github.repository }}:nightly
 
           # Creating and pushing manifest for version tag
           podman manifest create ghcr.io/${{ github.repository }}:${version}
