@@ -1,5 +1,5 @@
 [Unit]
-Requires=systemd-repart.service
+Wants=systemd-repart.service
 After=systemd-repart.service
 
 [Mount]
