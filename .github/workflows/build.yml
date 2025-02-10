@@ -8,6 +8,14 @@ on:
       use_kms:
         type: boolean
         default: false
+      flavors_parse_params_images:
+        description: 'Run bin/parse_flavors.py with these parameters'
+        default: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
+        type: string
+      flavors_parse_params_bare:
+        description: 'Run bin/parse_flavors.py with these parameters'
+        default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
+        type: string
     secrets:
       secureboot_db_kms_arn:
         required: false
@@ -103,8 +111,8 @@ jobs:
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
       - name: build base-${{ matrix.arch }}
-        run: ./build base-${{ matrix.arch }}
-      - uses: actions/cache/save@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v3
+        run: make base-${{ matrix.arch }}-build
+      - uses: actions/cache/save@6849a6489940f00c2f30c0fb92c6274307ccb58a # pin@v3
         with:
           path: .build
           key: base-${{ matrix.arch }}-${{ github.run_id }}
@@ -148,11 +156,11 @@ jobs:
   generate_matrix_images:
     uses: ./.github/workflows/generate_matrix.yml
     with: 
-      flags: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
+      flags: '${{ inputs.flavors_parse_params_images }}'
   generate_matrix_bare:
     uses: ./.github/workflows/generate_matrix.yml
     with: 
-      flags: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
+      flags: '${{ inputs.flavors_parse_params_bare }}'
   images:
     needs: [ version, cert, base, test_container, generate_matrix_images ]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
@@ -221,15 +229,15 @@ jobs:
           t="$(date '+%s')"
           find .build -exec touch -d "@$t" {} +
       - name: build
-        run: ./build ${{ inputs.use_kms && '--kms' || '' }} ${{ matrix.flavor }}-${{ matrix.arch }}
+        run: USE_KMS=${{ inputs.use_kms }} make ${{ matrix.flavor }}-${{ matrix.arch }}-build
       - name: get cname
         run: |
-          cname=$(basename "$(realpath ".build/${{ matrix.flavor}}-${{ matrix.arch }}")" .artifacts)
+          cname=$(basename "$(realpath ".build/${{ matrix.flavor }}-${{ matrix.arch }}")" .artifacts)
           echo "cname=$cname" | tee -a "$GITHUB_ENV"
       # ./test writes ${{ env.cname }}.chroot.test.log and puts it into .build/${{ env.cname }}.artifacts
       - name: test
         run: |
-          ./test --container-image test ${{ matrix.flavor }}-${{ matrix.arch }}
+          make ${{ matrix.flavor }}-${{ matrix.arch }}-test
       # chroot.test.xml is written in the entrypoint tests/init
       - name: rename test results
         if: always()
@@ -286,17 +294,12 @@ jobs:
           t="$(date '+%s')"
           find .build -exec touch -d "@$t" {} +
       - name: build
+        run: make ${{ matrix.flavor }}-${{ matrix.arch }}-build
+      - name: test
         run: |
           config=$(echo ${{ matrix.flavor }} | sed 's/^bare-//')
           echo "config=$config" | tee -a "$GITHUB_ENV"
-          ./build_bare_flavors --arch "${{ matrix.arch }}" "${config}"
-          ls -la .build/bare_flavors
-      - name: test
-        run: |
-          image="$(podman load < .build/bare_flavors/${{ env.config }}-${{ matrix.arch }}.oci | awk '{ print $NF }')"
-          cd bare_flavors/${{ env.config }}/test
-          podman build -t test --build-arg image="$image" .
-          podman run --rm test
+          make ${{ matrix.flavor }}-${{ matrix.arch }}-test
       - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
         with:
           name: "build-bare-${{ env.config }}-${{ matrix.arch }}"

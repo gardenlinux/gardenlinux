@@ -2,8 +2,10 @@ SHELL := /usr/bin/env bash
 .SHELLFLAGS := -euo pipefail -c
 
 ROOT_DIR := $(shell git rev-parse --show-toplevel)
+
 GIT_SHA:= $(shell git rev-parse HEAD)
 GIT_SHA_SHORT := $(shell git rev-parse --short HEAD)
+
 ifeq ($(strip $(GL_VERSION)),)
 GL_VERSION := nightly
 endif
@@ -13,7 +15,7 @@ endif
 
 GARDENLINUX_BUILD_CRE ?= sudo podman
 
-PLATFORMS = ali aws azure firecracker gcp kvm openstack
+PLATFORMS = firecracker kvm openstack tofu
 
 .PHONY: all
 .DEFAULT: help
@@ -22,6 +24,8 @@ PLATFORMS = ali aws azure firecracker gcp kvm openstack
 define copy_files
 	cp $(ROOT_DIR)/tests/Pipfile $1/
 	cp $(ROOT_DIR)/tests/Pipfile.lock $1/
+	cp $(ROOT_DIR)/tests/platformSetup/tofu/providers.tf $1/
+	cp $(ROOT_DIR)/tests/platformSetup/tofu/.terraform.lock.hcl $1/
 endef
 
 define pull_image
@@ -45,6 +49,8 @@ endef
 define clean_files
 	rm $1/Pipfile
 	rm $1/Pipfile.lock
+	rm $1/providers.tf
+	rm $1/.terraform.lock.hcl
 endef
 
 # help: help					List available tasks of the project
