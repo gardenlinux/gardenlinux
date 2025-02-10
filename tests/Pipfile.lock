@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "67603cee6dab7fd56b56b638588bc9428e9131742de24b30d11d89ecc73efa85"
+            "sha256": "9bf7502dc6276f35c04fd241663cb0631969a9070d531e6128d00243ef4e2a61"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -4743,16 +4743,6 @@
             ],
             "markers": "python_version >= '3.10'",
             "version": "==2.2.3"
-        }
-    },
-    "kvm-packages": {
-        "libvirt-python": {
-            "hashes": [
-                "sha256:8fd4edcb3f3c23cadb4053096c941e026456b5a7b5a635c1cebad044143aba53"
-            ],
-            "index": "pypi",
-            "markers": "python_version >= '3.6'",
-            "version": "==10.7.0"
         }
     },
     "kvm-packages": {},
