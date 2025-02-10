@@ -1,8 +1,0 @@
-[Mount]
-What=none
-Where=/root
-Type=tmpfs
-Options=size=128M,mode=0700
-
-[Install]
-WantedBy=reload.target

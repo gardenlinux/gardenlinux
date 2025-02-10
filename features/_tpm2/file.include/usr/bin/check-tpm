@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-set -eufo pipefail
-
-if [ ! -c /dev/tpmrm0 ]; then
-	printf '\e[1;31mNo TPM2.0 device found!\e[0m\n' > /dev/kmsg
-	exit 1
-fi
