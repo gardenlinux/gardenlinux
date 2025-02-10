@@ -198,7 +198,7 @@ class AWS:
         if not image and not 'ami_id' in cfg and not 'image' in cfg:
             pytest.exit("Neither 'image' nor 'ami_id' specified, cannot continue.", 2)
         if not 'instance_type' in cfg:
-            cfg['instance_type'] = "t3.micro"
+            cfg['instance_type'] = "t3.small"
         if not 'architecture' in cfg or cfg['architecture'] == "amd64":
             cfg['architecture'] = "x86_64"
         if not 'boot_mode' in cfg:

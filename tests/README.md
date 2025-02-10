@@ -244,7 +244,7 @@ aws:
     # region in which all test resources will be created (required)
     region: eu-central-1
     # machine/instance type of the test VM - not all machines are available in all regions (optional)
-    instance_type: t3.micro
+    instance_type: t3.small
     # architecture of the image and VM to be used (optional)
     architecture: amd64
     # boot mode of the VM. One can choose between "uefi" and "legacy-bios" (optional)
@@ -287,7 +287,7 @@ aws:
 <details>
 
 - **region** _(required)_: the AWS region in which all test relevant resources will be created
-- **instance-type** _(optional)_: the instance type that will be used for the EC2 instance used for testing, defaults to `t3.micro` if not specified
+- **instance-type** _(optional)_: the instance type that will be used for the EC2 instance used for testing, defaults to `t3.small` if not specified
 - **architecture** _(optional)_: the architecture under which the AMI of the image to test should be registered (`amd64` or `arm64`), must match the instance type, defaults to `amd64` if not specified
 - **boot_mode** _(optional)_: the boot mode that the AMI of the image should be started with. Keep in mind that Graviton (`arm64`) can only use UEFI. Choose between `uefi` and `legacy-bios`.
 - **uefi_data** _(optional)_: Base64 representation of the non-volatile UEFI variable store. You can inspect and modify the UEFI data by using the python-uefivars tool on GitHub.
