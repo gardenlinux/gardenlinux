@@ -1,6 +1,22 @@
 import pytest
-from helper.utils import get_architecture
+from helper.utils import get_architecture, AptUpdate, install_package_deb, execute_remote_command
 from helper.sshclient import RemoteClient
+
+
+@pytest.mark.security_id(1)
+def test_gl_is_support_distro(client):
+    """
+    This tests ensures that the vendor field is set to 'gardenlinux'.
+    """
+
+    AptUpdate(client)
+    install_package_deb(client, "dpkg-dev")
+    assert '' ==  execute_remote_command(client, "dpkg-vendor --is gardenlinux")
+    assert '' ==  execute_remote_command(client, "dpkg-vendor  --derives-from debian")
+
+    # Negative case:
+    status, output  = execute_remote_command(client, "dpkg-vendor --is debian", skip_error=True)
+    assert status == 1
 
 
 def test_no_man(client):
