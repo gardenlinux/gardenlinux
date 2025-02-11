@@ -1,0 +1,39 @@
+# overwrite with a stable gardenlinux version
+ARG GL_VERSION=latest
+# use platform-test-base image
+FROM gardenlinux/platform-test-base:${GL_VERSION}
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV SHELL /bin/bash
+
+#Virtual Env Created in platform-test-base
+ENV VIRTUAL_ENV="/opt/python-test-env/.venv"
+ENV TOFU_HOME="/root"
+ENV TOFUENV_INSTALL_DIR="${TOFU_HOME}/.tofuenv"
+ENV TOFU_PROVIDERS_CUSTOM="${TOFU_HOME}/.terraform/providers/custom"
+ENV PATH="${TOFUENV_INSTALL_DIR}/bin:${VIRTUAL_ENV}/bin:${PATH}"
+
+# dependent SDKs for OpenTofu providers
+RUN cd "$VIRTUAL_ENV_PARENT" && pipenv install --categories "azure-cli"
+
+# install opentofu and dependent SDKs
+RUN git clone --depth=1 https://github.com/tofuutils/tofuenv.git ${TOFUENV_INSTALL_DIR} \
+    && echo 'trust-tofuenv: yes' > ${TOFUENV_INSTALL_DIR}/use-gpgv
+
+# providers.tf contains OpenTofu version
+COPY providers.tf ${TOFU_HOME}/providers.tf
+# install pinned OpenTofu version
+RUN cd ${TOFU_HOME} && tofuenv install latest-allowed && tofuenv list | head -1 | xargs tofuenv use
+
+# install pinned providers (pinned in providers.tf and .terraform.lock.hcl)
+COPY .terraform.lock.hcl ${TOFU_HOME}/.terraform.lock.hcl
+RUN cd ${TOFU_HOME} && tofu providers mirror ${TOFU_HOME}/.terraform
+
+# install providers from development forks
+COPY .terraformrc ${TOFU_HOME}/.terraformrc
+RUN curl -LO --create-dirs --output-dir ${TOFU_PROVIDERS_CUSTOM} https://github.com/b1-systems/google-magic-modules/releases/download/v6.16.0-secureboot1/terraform-provider-google \
+    && curl -LO --create-dirs --output-dir ${TOFU_PROVIDERS_CUSTOM} https://github.com/b1-systems/terraform-provider-azurerm/releases/download/v4.16.1-alpha1-secureboot1/terraform-provider-azurerm \
+    && chmod +x ${TOFU_PROVIDERS_CUSTOM}/terraform-provider-*
+
+
+WORKDIR /gardenlinux/tests

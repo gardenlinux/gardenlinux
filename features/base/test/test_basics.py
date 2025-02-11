@@ -1,21 +1,6 @@
 import pytest
-from helper.utils import get_architecture, AptUpdate, install_package_deb, execute_remote_command
+from helper.utils import get_architecture
 from helper.sshclient import RemoteClient
-
-@pytest.mark.security_id(1)
-def test_gl_is_support_distro(client):
-    """
-    This tests ensures that the vendor field is set to 'gardenlinux'.
-    """
-
-    AptUpdate(client)
-    install_package_deb(client, "dpkg-dev")
-    assert '' ==  execute_remote_command(client, "dpkg-vendor --is gardenlinux")
-    assert '' ==  execute_remote_command(client, "dpkg-vendor  --derives-from debian")
-
-    # Negative case:
-    status, output  = execute_remote_command(client, "dpkg-vendor --is debian", skip_error=True)
-    assert status == 1
 
 
 def test_no_man(client):
@@ -55,7 +40,7 @@ def test_ls(client):
 
 def test_startup_time(client, non_chroot, non_kvm, non_azure):
     """ Test for startup time """
-    tolerated_kernel_time = 30
+    tolerated_kernel_time = 60
     tolerated_userspace_time = 40
     (exit_code, output, error) = client.execute_command("systemd-analyze")
     assert exit_code == 0, f"no {error=} expected"

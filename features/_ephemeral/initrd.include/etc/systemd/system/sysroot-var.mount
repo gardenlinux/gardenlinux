@@ -1,5 +1,5 @@
 [Unit]
-Requires=ephemeral-cryptsetup.service
+Wants=ephemeral-cryptsetup.service
 After=ephemeral-cryptsetup.service
 
 [Mount]

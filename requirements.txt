@@ -1,6 +1,6 @@
 # Basic Python requirements for Garden Linux
 # that can be installed by Python pip.
 # Note: You should always prefer your local package manager.
-PyYAML
 networkx
+PyYAML
 requests

@@ -1,0 +1,24 @@
+terraform {
+  backend "s3" {
+    region  = "eu-central-1"
+    bucket  = "gardenlinux-dev-my-gardenlinux-test-tfstate"
+    key     = "terraform.tfstate"
+    encrypt = "true"
+    # dynamodb_table = "gardenlinux-dev-tfstate"
+  }
+}
+
+module "state_aws" {
+  source = "./modules/state_aws"
+
+  count            = var.deploy_state_aws ? 1 : 0
+  test_name        = var.test_prefix
+  test_environment = var.test_environment
+}
+
+# module "state_aws_kms" {
+#   source = "./modules/state_aws_kms"
+# 
+#   count = var.deploy_state_aws_kms ? 1 : 0
+#   test_name      = local.test_name
+# }
