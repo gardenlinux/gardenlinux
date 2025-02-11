@@ -113,11 +113,11 @@ jobs:
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_REGION }}
       - name: Create GLRD nightly release
-        uses: gardenlinux/glrd@v1
+        uses: gardenlinux/glrd@v2
         with:
           cmd: glrd-manage --s3-update --create nightly
       - name: Get latest GL nightly
         id: gl_version_nightly
-        uses: gardenlinux/glrd@v1
+        uses: gardenlinux/glrd@v2
         with:
           cmd: glrd --type nightly --latest
