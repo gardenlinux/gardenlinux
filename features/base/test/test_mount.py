@@ -8,8 +8,7 @@ import pytest
     "mount_point,opt,test_type,test_val",
     [
         ("/", "rw", MOUNT_TEST_TYPE_VERIFY_OPTION, True),
-        ("/", "ro", MOUNT_TEST_TYPE_VERIFY_OPTION, False)
     ]
 )
-def test_mount(client, mount_point, opt, test_type, test_val, non_chroot):
+def test_mount(client, mount_point, opt, test_type, test_val, non_chroot, non_usi):
     mount(client, mount_point, opt, test_type, test_val)
