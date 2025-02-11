@@ -8,13 +8,19 @@ import pytest
 @pytest.mark.security_id(169)
 @pytest.mark.security_id(170)
 @pytest.mark.security_id(324)
-def test_password_shadow(client):
+@pytest.mark.parametrize(
+    "command, expected_exit_code, expected_output",
+    [("pwck -r", 0, ""), ("grpck -r", 0, "")],
+)
+def test_password_shadow(client, command, expected_exit_code, expected_output):
     """This ensure that not only the passwd and shadow is as expected,
-       it also validates that it's entry are consistent. And that's the
-       necessary files are set correctly.
+    it also validates that it's entry are consistent. And that's the
+    necessary files are set correctly.
+
+    We execute this via the parametrize feature with the -r option. This will
+    imply we execute read-only.
     """
     password_shadow(client)
-    # Check with -r for read-only. Ensure that we get the output back from
-    # both tools.
-    assert '' == execute_remote_command(client, "pwck -r", skip_error=True)
-    assert '' == execute_remote_command(client, "grpck -r", skip_error=True)
+    exit_code, output = execute_remote_command(client, command, skip_error=True)
+    assert exit_code == expected_exit_code
+    assert output == expected_output
