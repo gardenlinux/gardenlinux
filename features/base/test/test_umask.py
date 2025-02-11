@@ -23,9 +23,12 @@ def test_umask(client, file, dict):
 # `/root/.bashrc`, `/root/.profile`, ... can overwrite default value from /etc/login.defs
 # therefore we need to check via the umask cmd in root bash environment
 def test_umask_cmd(client, non_container):
-    cmd = f"sudo su root -c umask"
-    (exit_code, output, error) = client.execute_command(
-        cmd, quiet=True)
+    cmd = "sudo -s umask"
+    (exit_code, output, error) = client.execute_command(cmd, quiet=True)
+
+    # Command not found
+    if exit_code == 127:
+        pytest.skip(f"Test returned code 127: {error}")
 
     assert exit_code == 0, f"Could not execute umask cmd: {error}"
     assert output == "0027\n", "umask is not set to 0027 "
