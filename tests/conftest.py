@@ -419,26 +419,6 @@ def ccee(platform):
         pytest.skip(f"test only supported on ccee")
 
 @pytest.fixture
-def ephemeral(platform):
-    if platform != 'ephemeral':
-        pytest.skip(f"test only supported on ephemeral")
-
-@pytest.fixture
-def non_ephemeral(platform):
-    if platform == 'ephemeral':
-        pytest.skip(f"test not supported on ephemeral")
-
-@pytest.fixture
-def trustedboot(platform):
-    if platform != 'trustedboot':
-        pytest.skip(f"test only supported on trustedboot")
-
-@pytest.fixture
-def non_trustedboot(platform):
-    if platform == 'trustedboot':
-        pytest.skip(f"test not supported on trustedboot")
-
-@pytest.fixture
 def non_ccee(platform):
     ccee_platforms = {'openstack-ccee', 'openstack-baremetal-ccee'}
     if platform in ccee_platforms:
