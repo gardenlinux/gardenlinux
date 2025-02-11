@@ -7,7 +7,7 @@ import pytest
 @pytest.mark.parametrize(
     "mount_point,opt,test_type,test_val",
     [
-        ("/", "rw", MOUNT_TEST_TYPE_VERIFY_OPTION, True)
+        ("/", "rw", MOUNT_TEST_TYPE_VERIFY_OPTION, True),
         ("/", "ro", MOUNT_TEST_TYPE_VERIFY_OPTION, False)
     ]
 )
