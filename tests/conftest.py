@@ -496,3 +496,11 @@ def non_container(testconfig):
     features = testconfig.get("features", [])
     if "container" in features:
         pytest.skip('test is not supported on container')
+
+@pytest.fixture
+def non_usi(testconfig):
+    features = testconfig.get("features", [])
+    usi = { 'trustedboot', 'ephemera'}
+    if platform in usi:
+        pytest.skip(f"test not supported on usi")    
+
