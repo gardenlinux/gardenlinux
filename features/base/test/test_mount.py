@@ -7,8 +7,9 @@ import pytest
 @pytest.mark.parametrize(
     "mount_point,opt,test_type,test_val",
     [
-        ("/", "rw", MOUNT_TEST_TYPE_VERIFY_OPTION, True)
+        ("/", "rw", MOUNT_TEST_TYPE_VERIFY_OPTION, True),
+        ("/", "ro", MOUNT_TEST_TYPE_VERIFY_OPTION, False)
     ]
 )
 def test_mount(client, mount_point, opt, test_type, test_val, non_chroot):
-     mount(client, mount_point, opt, test_type, test_val)
+    mount(client, mount_point, opt, test_type, test_val)
