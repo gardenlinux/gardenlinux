@@ -60,6 +60,7 @@ jobs:
     with:
       gl_version: ${{ inputs.platform_test_tag }}
       force_release: ${{ inputs.platform_test_tag == 'nightly' || false }}
+      platforms: '["tofu"]'
   platform_tests:
     name: platform test
     needs: [ generate_matrix_test_platform, platform_test_images ]
