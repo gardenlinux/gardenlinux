@@ -4,7 +4,7 @@ ARG GL_BASE=ghcr.io/gardenlinux/gardenlinux:${GL_VERSION}
 
 FROM ${GL_BASE}
 
-ENV PYTHON=python3.12
+ENV PYTHON=python3.13
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV SHELL /bin/bash

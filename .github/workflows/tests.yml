@@ -60,6 +60,7 @@ jobs:
     with:
       gl_version: ${{ inputs.platform_test_tag }}
       force_release: ${{ inputs.platform_test_tag == 'nightly' || false }}
+      platforms: '["tofu"]'
   platform_tests:
     name: platform test
     needs: [ generate_matrix_test_platform, platform_test_images ]
@@ -99,10 +100,10 @@ jobs:
         if [[ "${{ inputs.download_s3 }}" == "true" ]]; then
           if [[ "${{ inputs.version }}" == "latest" ]]; then
             VERSION="$(bin/glrd --latest --fields 'Version' --no-header --type patch)"
-            SHA="$(bin/glrd --latest --fields 'Git\ Commit' --no-header --type patch)"
+            SHA="$(bin/glrd --latest --fields 'GitCommitShort' --no-header --type patch)"
           else
             VERSION="$(bin/glrd --fields 'Version' --no-header --type patch,nightly,dev --version ${{ inputs.version }} | tail -1)"
-            SHA="$(bin/glrd --fields 'Git\ Commit' --no-header --type patch,nightly,dev --version ${{ inputs.version }} | tail -1)"
+            SHA="$(bin/glrd --fields 'GitCommitShort' --no-header --type patch,nightly,dev --version ${{ inputs.version }} | tail -1)"
           fi
           echo "${VERSION}" >VERSION
           echo "${SHA}" >COMMIT

@@ -26,6 +26,10 @@ on:
       force_release:
         type: boolean
         default: false
+      platforms:
+        type: string
+        default: '["firecracker", "kvm", "openstack", "tofu"]'
+        description: 'JSON array of platforms to build'
   # triggered manually
   workflow_dispatch:
     inputs:
@@ -38,6 +42,10 @@ on:
       force_release:
         type: boolean
         default: false
+      platforms:
+        type: string
+        default: '["firecracker", "kvm", "openstack", "tofu"]'
+        description: 'JSON array of platforms to build'
 jobs:
   images:
     runs-on: ubuntu-latest
@@ -47,11 +55,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: 
-          - firecracker
-          - kvm
-          - openstack
-          - tofu
+        platform: ${{ fromJSON(inputs.platforms) }}
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
