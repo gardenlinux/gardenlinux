@@ -201,7 +201,7 @@ jobs:
       run: |
         make --directory=tests ${FLAVOR}-${ARCH}-test-platform 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.test.log"
 
-    - name: copy platform test log for ${{ matrix.flavor }} on ${{ matrix.arch }}
+    - name: copy platform test junit xml file for ${{ matrix.flavor }} on ${{ matrix.arch }}
       if: always()
       run: |
         cp "tests/${FLAVOR}-${ARCH}.platform.test.xml" "${{ env.artifact_dir }}/${{ env.cname }}.platform.test.xml" || true
