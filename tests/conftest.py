@@ -22,8 +22,6 @@ from platformSetup.firecracker import FireCracker
 from platformSetup.kvm import KVM
 from platformSetup.manual import Manual
 
-from conftest.architecture import *
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
