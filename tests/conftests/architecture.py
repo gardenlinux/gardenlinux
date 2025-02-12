@@ -2,7 +2,7 @@
 
 
 from sys import exit as sys_exit
-from loggering import error as log_error
+from logging import error as log_error
 
 import pytest
 
