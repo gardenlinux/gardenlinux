@@ -308,50 +308,14 @@ def features(client):
     yield features.split(','), current[0]
 
 
-
-##
-# Features Elements.
-## 
-
-@pytest.fixture
-def non_vhost(testconfig):
-    features = testconfig.get("features", [])
-    if "vhost" in features:
-        pytest.skip('test not supported with vhost feature enabled')
-
-@pytest.fixture
-def non_feature_gardener(testconfig):
-    features = testconfig.get("features", [])
-    if "gardener" in features:
-        pytest.skip('test is not supported on gardener')
-
-##
-# Features Flags.
-# Please note: Feauter flags have always a _ present. 
-# When missed, you wont't able to find it.
-## 
-
-@pytest.fixture
-def non_dev(testconfig):
-    features = testconfig.get("features", [])
-    if "_dev" in features:
-        pytest.skip('test not supported on dev')
-
-@pytest.fixture
-def non_usi(testconfig):
-    features = testconfig.get("features", [])
-    usi = { '_trustedboot', '_ephemera'}
-    if platform in usi:
-        pytest.skip(f"test not supported on usi")    
-
-
-
+# all configuration for our test has been split into smaller parts.  
 pytest_plugins = [
      "conftests.platforms",
+     "conftests.elements",
+     "conftests.features",
      "conftests.architecture",
      "conftests.miscellaneous",
   ]
-
 
 # THis is a helper function some tests invoke.
 @pytest.fixture
