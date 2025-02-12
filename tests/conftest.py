@@ -294,9 +294,6 @@ def pytest_collection_modifyitems(config, items):
         if len(disabled) != 0:
             item.add_marker(pytest.mark.skip(reason=f"test is disabled by feature " +
                                                     f"{', '.join(disabled)}"))
-        
-
-
 
 @pytest.fixture
 def features(client):
@@ -311,25 +308,82 @@ def features(client):
     yield features.split(','), current[0]
 
 
-@pytest.fixture
-def non_ali(platform):
-    if platform == 'ali':
-        pytest.skip('test not supported on ali')
+####
+# Platform specify test configuration.
+# Here we define the platform configuration for our tests.
+###
 
 @pytest.fixture
 def ali(platform):
     if platform != 'ali':
-        pytest.skip('test only supported on ali')
+        pytest.skip('test only supported on ali platform')
 
 @pytest.fixture
-def non_azure(platform):
-    if platform == 'azure':
-        pytest.skip('test not supported on azure')
+def aws(platform):
+    if platform != 'aws':
+        pytest.skip('test only supported on aws platform')
 
 @pytest.fixture
 def azure(platform):
     if platform != 'azure':
-        pytest.skip('test only supported on azure')
+        pytest.skip('test only supported on azure platform')
+
+@pytest.fixture
+def chroot(platform):
+    if platform != 'chroot':
+        pytest.skip('test only supported on chroot platform')
+
+# This fixture is an alias of "chroot" but does not use the "chroot" env.
+# However, it only needs the underlying container for its tests.
+@pytest.fixture
+def container(iaas):
+    if iaas == 'chroot' or iaas == 'manual':
+        pytest.skip('test only supported on containers platform')
+
+@pytest.fixture
+def container(platform):
+    if platform != 'container':
+        pytest.skip('test only supported on container platform')
+
+@pytest.fixture
+def firecracker(platform):
+    if platform != 'firecracker':
+        pytest.skip('test only supported on firecracker platform')
+
+@pytest.fixture
+def gcp(platform):
+    if platform != 'gcp':
+        pytest.skip('test only supported on gcp platform')
+
+@pytest.fixture
+def kvm(platform):
+    if platform != 'kvm':
+        pytest.skip('test only supported on kvm platform')
+
+@pytest.fixture
+def local(platform):
+    if platform != 'local':
+        pytest.skip('test only supported on local platform')
+
+@pytest.fixture
+def metal(platform):
+    if platform != 'metal':
+        pytest.skip('test only supported on metal platform')
+
+@pytest.fixture
+def openstack(platform):
+    if platform != 'openstack-ccee':
+        pytest.skip('test only supported on openstack')
+
+
+####
+# Platform blacklist
+###
+
+@pytest.fixture
+def non_ali(platform):
+    if platform == 'ali':
+        pytest.skip('test not supported on ali')
 
 @pytest.fixture
 def non_aws(platform):
@@ -337,39 +391,9 @@ def non_aws(platform):
         pytest.skip('test not supported on aws')
 
 @pytest.fixture
-def aws(platform):
-    if platform != 'aws':
-        pytest.skip('test only supported on aws')
-
-@pytest.fixture
-def non_gcp(platform):
-    if platform == 'gcp':
-        pytest.skip('test not supported on gcp')
-
-@pytest.fixture
-def gcp(platform):
-    if platform != 'gcp':
-        pytest.skip('test only supported on gcp')
-
-@pytest.fixture
-def non_firecracker(platform):
-    if platform == 'firecracker':
-        pytest.skip('test not supported on firecracker')
-
-@pytest.fixture
-def firecracker(platform):
-    if platform != 'firecracker':
-        pytest.skip('test only supported on firecracker')
-
-@pytest.fixture
-def non_kvm(platform):
-    if platform == 'kvm':
-        pytest.skip('test not supported on kvm')
-
-@pytest.fixture
-def kvm(platform):
-    if platform != 'kvm':
-        pytest.skip('test only supported on kvm')
+def non_azure(platform):
+    if platform == 'azure':
+        pytest.skip('test not supported on azure')
 
 @pytest.fixture
 def non_chroot(platform):
@@ -377,9 +401,25 @@ def non_chroot(platform):
         pytest.skip('test not supported on chroot')
 
 @pytest.fixture
-def chroot(platform):
-    if platform != 'chroot':
-        pytest.skip('test only supported on chroot')
+def non_container(testconfig):
+    features = testconfig.get("features", [])
+    if "container" in features:
+        pytest.skip('test is not supported on container')
+
+@pytest.fixture
+def non_firecracker(platform):
+    if platform == 'firecracker':
+        pytest.skip('test not supported on firecracker')
+
+@pytest.fixture
+def non_gcp(platform):
+    if platform == 'gcp':
+        pytest.skip('test not supported on gcp')
+
+@pytest.fixture
+def non_kvm(platform):
+    if platform == 'kvm':
+        pytest.skip('test not supported on kvm')
 
 @pytest.fixture
 def non_local(platform):
@@ -387,53 +427,88 @@ def non_local(platform):
         pytest.skip('test not supported on local')
 
 @pytest.fixture
-def local(platform):
-    if platform != 'local':
-        pytest.skip('test only supported on local')
+def non_metal(testconfig):
+    features = testconfig.get("features", [])
+    if "metal" in features:
+        pytest.skip('test not supported on metal')
 
 @pytest.fixture
 def non_openstack(platform):
     if platform == 'openstack-ccee':
         pytest.skip('test not supported on openstack')
 
-@pytest.fixture
-def openstack(platform):
-    if platform != 'openstack-ccee':
-        pytest.skip('test only supported on openstack')
+
+##
+# Pooled Platforms
+##
 
 @pytest.fixture
-def non_hyperscalers(platform):
-    hyperscalers = {'aws', 'gcp', 'azure', 'ali'}
-    if platform in hyperscalers:
-        pytest.skip(f"test not supported on hyperscaler {platform}")    
+def ccee(platform):
+    if platform != 'openstack-ccee' and platform != 'openstack-baremetal-ccee':
+        pytest.skip(f"test only supported on ccee platform")
 
 @pytest.fixture
 def hyperscalers(platform):
     hyperscalers = {'aws', 'gcp', 'azure', 'ali'}
     if platform not in hyperscalers:
-        pytest.skip(f"test only supported on hyperscaler {platform}")    
+        pytest.skip(f"test only supported on hyperscaler {platform} platform")    
+
+##
+# Pooled Platforms blackedlist
+##
 
 @pytest.fixture
-def ccee(platform):
-    if platform != 'openstack-ccee' and platform != 'openstack-baremetal-ccee':
-        pytest.skip(f"test only supported on ccee")
+def non_hyperscalers(platform):
+    hyperscalers = {'aws', 'gcp', 'azure', 'ali'}
+    if platform in hyperscalers:
+        pytest.skip(f"test not supported on hyperscaler {platform} platform")
 
 @pytest.fixture
 def non_ccee(platform):
     ccee_platforms = {'openstack-ccee', 'openstack-baremetal-ccee'}
     if platform in ccee_platforms:
-        pytest.skip("test not supported on ccee")
+        pytest.skip("test not supported on ccee platform")
 
-# This fixture is an alias of "chroot" but does not use the "chroot" env.
-# However, it only needs the underlying container for its tests.
-@pytest.fixture
-def container(iaas):
-    if iaas == 'chroot' or iaas == 'manual':
-        pytest.skip('test only supported on containers')
+
+##
+# Features Elements.
+## 
 
 @pytest.fixture
-def openstack_flavor():
-    return OpenStackCCEE.instance().flavor
+def non_vhost(testconfig):
+    features = testconfig.get("features", [])
+    if "vhost" in features:
+        pytest.skip('test not supported with vhost feature enabled')
+
+@pytest.fixture
+def non_feature_gardener(testconfig):
+    features = testconfig.get("features", [])
+    if "gardener" in features:
+        pytest.skip('test is not supported on gardener')
+
+##
+# Features Flags.
+# Please note: Feauter flags have always a _ present. 
+# When missed, you wont't able to find it.
+## 
+
+@pytest.fixture
+def non_dev(testconfig):
+    features = testconfig.get("features", [])
+    if "_dev" in features:
+        pytest.skip('test not supported on dev')
+
+@pytest.fixture
+def non_usi(testconfig):
+    features = testconfig.get("features", [])
+    usi = { '_trustedboot', '_ephemera'}
+    if platform in usi:
+        pytest.skip(f"test not supported on usi")    
+
+
+####
+# Feature ARCHITECTUR
+####
 
 @pytest.fixture
 def non_amd64(client):
@@ -453,54 +528,19 @@ def non_arm64(client):
     if "arm64" in output:
         pytest.skip('test not supported on arm64 architecture')
 
-@pytest.fixture
-def non_metal(testconfig):
-    features = testconfig.get("features", [])
-    if "metal" in features:
-        pytest.skip('test not supported on metal')
 
+#######
+# Miscellaneous 
+#######
+
+# THis is a helper function some tests invoke.
 @pytest.fixture
-def non_feature_gardener(testconfig):
-    features = testconfig.get("features", [])
-    if "gardener" in features:
-        pytest.skip('test is not supported on gardener')
+def openstack_flavor():
+    return OpenStackCCEE.instance().flavor
 
 @pytest.fixture
 def non_feature_githubActionRunner(testconfig):
     features = testconfig.get("features", [])
     if "githubActionRunner" in features:
         pytest.skip('test is not supported on githubActionRunner')
-
-@pytest.fixture
-def non_dev(testconfig):
-    features = testconfig.get("features", [])
-    if "_dev" in features:
-        pytest.skip('test not supported on dev')
-
-@pytest.fixture
-def non_vhost(testconfig):
-    features = testconfig.get("features", [])
-    if "vhost" in features:
-        pytest.skip('test not supported with vhost feature enabled')
-
-@pytest.fixture
-# After solving #1240 define "firecracker" as IAAS
-def firecracker(testconfig):
-    features = testconfig.get("features", [])
-    if "firecracker" in features:
-        skip_msg = "Currently unsupported. Please see: https://github.com/gardenlinux/gardenlinux/issues/1240"
-        pytest.skip(skip_msg)
-
-@pytest.fixture
-def non_container(testconfig):
-    features = testconfig.get("features", [])
-    if "container" in features:
-        pytest.skip('test is not supported on container')
-
-@pytest.fixture
-def non_usi(testconfig):
-    features = testconfig.get("features", [])
-    usi = { 'trustedboot', 'ephemera'}
-    if platform in usi:
-        pytest.skip(f"test not supported on usi")    
 
