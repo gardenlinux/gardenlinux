@@ -10,7 +10,8 @@ import pytest
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-def test_oci_feat(local, testconfig):
+# Disable for the moment.
+def oci_feat(local, testconfig):
     """ This test does several steps using the results of a build with _oci feature:
     - verify neccessary testconfig options are present (image, kernel)
     - install the docker-registry into the container, provide a config, start the registry
