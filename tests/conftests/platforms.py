@@ -1,8 +1,17 @@
 """
 In this we keep the platforms specify test configuration.
+The file has been strucutred as fllows:
+    - platform
+    - non_platform
+    - pool platform
+    - pool non_platform
 """
 
 import pytest
+
+##########
+# Platform
+##########
 
 @pytest.fixture
 def ali(platform):
@@ -62,3 +71,96 @@ def metal(platform):
 def openstack(platform):
     if platform != 'openstack-ccee':
         pytest.skip('test only supported on openstack')
+
+####################
+# Platform blacklist
+####################
+
+@pytest.fixture
+def non_ali(platform):
+    if platform == 'ali':
+        pytest.skip('test not supported on ali platform')
+
+@pytest.fixture
+def non_aws(platform):
+    if platform == 'aws':
+        pytest.skip('test not supported on aws platform')
+
+@pytest.fixture
+def non_azure(platform):
+    if platform == 'azure':
+        pytest.skip('test not supported on azure')
+
+@pytest.fixture
+def non_chroot(platform):
+    if platform == 'chroot':
+        pytest.skip('test not supported on chroot')
+
+@pytest.fixture
+def non_container(testconfig):
+    features = testconfig.get("features", [])
+    if "container" in features:
+        pytest.skip('test is not supported on container')
+
+@pytest.fixture
+def non_firecracker(platform):
+    if platform == 'firecracker':
+        pytest.skip('test not supported on firecracker')
+
+@pytest.fixture
+def non_gcp(platform):
+    if platform == 'gcp':
+        pytest.skip('test not supported on gcp')
+
+@pytest.fixture
+def non_kvm(platform):
+    if platform == 'kvm':
+        pytest.skip('test not supported on kvm')
+
+@pytest.fixture
+def non_local(platform):
+    if platform == 'local':
+        pytest.skip('test not supported on local')
+
+@pytest.fixture
+def non_metal(testconfig):
+    features = testconfig.get("features", [])
+    if "metal" in features:
+        pytest.skip('test not supported on metal')
+
+@pytest.fixture
+def non_openstack(platform):
+    if platform == 'openstack-ccee':
+        pytest.skip('test not supported on openstack')
+
+
+##################
+# Pooled Platforms
+##################
+
+@pytest.fixture
+def ccee(platform):
+    if 'openstack-ccee' not in platform and 'openstack-baremetal-ccee' not in platform:
+        pytest.skip("test only supported on ccee platform")
+
+@pytest.fixture
+def hyperscalers(platform):
+    list_of_platforms = {'aws', 'gcp', 'azure', 'ali'}
+    if platform not in list_of_platforms:
+        pytest.skip(f"test only supported on hyperscaler {platform} platform")
+
+##############################
+# Pooled Platforms blackedlist
+##############################
+
+@pytest.fixture
+def non_hyperscalers(platform):
+    list_of_platforms = {'aws', 'gcp', 'azure', 'ali'}
+    if platform in  list_of_platforms:
+        pytest.skip(f"test not supported on hyperscaler {platform} platform")
+
+@pytest.fixture
+def non_ccee(platform):
+    ccee_platforms = {'openstack-ccee', 'openstack-baremetal-ccee'}
+    if platform in ccee_platforms:
+        pytest.skip("test not supported on ccee platform")
