@@ -10,7 +10,7 @@ import pytest
 @pytest.mark.security_id(324)
 @pytest.mark.parametrize(
     "command, expected_exit_code, expected_output",
-    [("pwck -r", 0, ""), ("grpck -r", 0, "")],
+    [("/usr/sbin/pwck -r", 0, ""), ("/usr/sbin/grpck -r", 0, "")],
 )
 def test_password_shadow(client, command, expected_exit_code, expected_output):
     """This ensure that not only the passwd and shadow is as expected,
