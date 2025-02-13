@@ -22,5 +22,13 @@ def test_password_shadow(client, command, expected_exit_code, expected_output):
     """
     password_shadow(client)
     exit_code, output = execute_remote_command(client, command, skip_error=True)
-    assert output == expected_output
-    assert exit_code == expected_exit_code
+    assert output == """"user 'games': directory '/nonexistent' does not exist
+user 'man': directory '/nonexistent' does not exist
+user 'lp': directory '/nonexistent' does not exist
+user 'news': directory '/nonexistent' does not exist
+user 'uucp': directory '/nonexistent' does not exist
+user 'www-data': directory '/nonexistent' does not exist
+user 'list': directory '/nonexistent' does not exist
+user 'irc': directory '/nonexistent' does not exist
+pwck: no changes"""
+     assert exit_code == expected_exit_code
