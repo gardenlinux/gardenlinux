@@ -22,5 +22,5 @@ def test_password_shadow(client, command, expected_exit_code, expected_output):
     """
     password_shadow(client)
     exit_code, output = execute_remote_command(client, command, skip_error=True)
-    assert exit_code == expected_exit_code
     assert output == expected_output
+    assert exit_code == expected_exit_code
