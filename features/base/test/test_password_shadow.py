@@ -10,7 +10,7 @@ import pytest
 @pytest.mark.security_id(324)
 @pytest.mark.parametrize(
     "command, expected_exit_code, expected_output",
-    [("/usr/sbin/pwck -r", 0, ""), ("/usr/sbin/grpck -r", 0, "")],
+    [("sudo -S /usr/sbin/pwck -r", 0, ""), ("sudo -S /usr/sbin/grpck -r", 0, "")],
 )
 def test_password_shadow(client, command, expected_exit_code, expected_output):
     """This ensure that not only the passwd and shadow is as expected,
@@ -21,12 +21,6 @@ def test_password_shadow(client, command, expected_exit_code, expected_output):
     imply we execute read-only.
     """
     password_shadow(client)
-    outputs = []
-    exit_code, output = execute_remote_command(client, "whoami", skip_error=True)
-    outputs.append(output)
-    exit_code, output = execute_remote_command(client, "ls -la /etc/shadow", skip_error=True)
-    outputs.append(output)
-    assert outputs == []
     exit_code, output = execute_remote_command(client, command, skip_error=True)
     assert output == expected_output
     assert exit_code == expected_exit_code
