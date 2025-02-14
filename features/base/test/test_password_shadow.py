@@ -21,11 +21,10 @@ def test_password_shadow(client, command, expected_exit_code, expected_output):
     imply we execute read-only.
     """
     password_shadow(client)
-    exit_code, _ = execute_remote_command(client, "ls /usr/bin/sudo", skip_error=True)
-    if exit_code == 0:
-        exit_code, output = execute_remote_command(client, f"sudo -S {command}", skip_error=True)
-    else:
-        exit_code, output = execute_remote_command(client, command, skip_error=True)
-
-    assert output == "" 
+    exit_code, output = execute_remote_command(
+        client,
+        f"if [ $(id -u) = 0 ]; then {command}; else sudo -S {command}; fi",
+        skip_error=True,
+    )
+    assert output == ""
     assert exit_code == expected_exit_code
