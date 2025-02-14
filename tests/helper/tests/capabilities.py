@@ -17,7 +17,7 @@ def capabilities(client, testconfig):
     cap_notfound = []
 
     for line in output.splitlines():
-        line.strip()
+        line = line.strip()
         if line in depublicated_capabilities:
             cap_found.append(line)
         cap_notfound.append(line)
