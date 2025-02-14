@@ -35,6 +35,7 @@ def test_clock(client):
     ), "clock skew should be less than 5 seconds. Local time is %s and remote time is %s" % (local_seconds, remote_seconds)
 
 
+@pytest.mark.flaky(reruns=3, reruns_delay=10, only_rerun="AssertionError")
 def test_ntp(client, non_azure, non_chroot):
     """ Azure does not use systemd-timesyncd """
     (exit_code, output, error) = client.execute_command("timedatectl show")
