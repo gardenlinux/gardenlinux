@@ -20,7 +20,8 @@ def capabilities(client, testconfig):
         line = line.strip()
         if line in depublicated_capabilities:
             cap_found.append(line)
-        cap_notfound.append(line)
+        else:
+            cap_notfound.append(line)
 
     assert len(cap_found) == len(depublicated_capabilities), (
         "Found capabilities "
