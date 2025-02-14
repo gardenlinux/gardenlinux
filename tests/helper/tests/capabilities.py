@@ -1,9 +1,7 @@
-import string
-
 from helper.utils import read_test_config
 
 
-def capabilities(client, testconfig):
+def capabilities(client, testconfig, non_chroot):
     """Test if only the defined capabilities are set"""
     (exit_code, output, error) = client.execute_command(
         "sudo -u root find /boot /etc /usr /var -type f -exec /usr/sbin/getcap {} \\;",
@@ -13,22 +11,21 @@ def capabilities(client, testconfig):
 
     # get capabilities.list config from enabled features
     features = testconfig["features"]
-    depublicated_capabilities = set(read_test_config(features, "capabilities"))
+    deduplicated_capabilities = set(read_test_config(features, "capabilities"))
 
     cap_found = []
     cap_notfound = []
 
-    for line in output.splitlines():
-        line = line.strip(string.whitespace)
-        if line in depublicated_capabilities:
+    for line in output.split():
+        if line in deduplicated_capabilities:
             cap_found.append(line)
         else:
             cap_notfound.append(line)
 
-    assert len(cap_found) == len(depublicated_capabilities), (
+    assert len(cap_found) == len(capabilities), (
         "Found capabilities "
         + "do not match expected capabilities. Found: "
-        + f"{', '.join(cap_found)} Expected: {', '.join(depublicated_capabilities)}"
+        + f"{', '.join(cap_found)} Expected: {', '.join(capabilities)}"
     )
 
     assert len(cap_notfound) == 0, (
