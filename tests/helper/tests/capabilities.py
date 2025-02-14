@@ -1,3 +1,5 @@
+import string
+
 from helper.utils import read_test_config
 
 
@@ -17,7 +19,7 @@ def capabilities(client, testconfig):
     cap_notfound = []
 
     for line in output.splitlines():
-        line = line.strip()
+        line = line.strip(string.whitespace)
         if line in depublicated_capabilities:
             cap_found.append(line)
         else:
