@@ -22,10 +22,10 @@ def capabilities(client, testconfig, non_chroot):
         else:
             cap_notfound.append(line)
 
-    assert len(cap_found) == len(capabilities), (
+    assert len(cap_found) == len(deduplicated_capabilities), (
         "Found capabilities "
         + "do not match expected capabilities. Found: "
-        + f"{', '.join(cap_found)} Expected: {', '.join(capabilities)}"
+        + f"{', '.join(cap_found)} Expected: {', '.join(deduplicated_capabilities)}"
     )
 
     assert len(cap_notfound) == 0, (
