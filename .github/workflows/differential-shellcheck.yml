@@ -32,6 +32,6 @@ jobs:
 
       - id: ShellCheck
         name: Differential ShellCheck
-        uses: redhat-plumbers-in-action/differential-shellcheck@5fa026e4797665181a0f7c6fa4a73c09348ae78c # pin@aa647ec4466543e8555c2c3b648124a9813cee44
+        uses: redhat-plumbers-in-action/differential-shellcheck@dd551ce780d8af741f8cd8bab6982667b906b457 # pin@aa647ec4466543e8555c2c3b648124a9813cee44
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
