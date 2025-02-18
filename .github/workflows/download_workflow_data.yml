@@ -1,0 +1,46 @@
+name: download_workflow_data
+on:
+  workflow_call:
+    inputs:
+      run_id:
+        type: string
+        required: true
+    outputs:
+      commit_id:
+        value: ${{ jobs.workflow_data.outputs.commit_id }}
+      flavors_matrix:
+        value: ${{ jobs.workflow_data.outputs.flavors_matrix }}
+      version:
+        value: ${{ jobs.workflow_data.outputs.version }}
+jobs:
+  workflow_data:
+    name: Download workflow JSON data from trigger
+    runs-on: ubuntu-latest
+    outputs:
+      commit_id: ${{ steps.data.outputs.commit_id }}
+      flavors_matrix: ${{ steps.data.outputs.flavors_matrix }}
+      version: ${{ steps.data.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
+        with:
+          name: flavor-version-data
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
+        with:
+          name: workflow-data
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - name: Set referenced workflow data
+        id: data
+        run: |
+          workflow_trigger_run_id="$(cat workflow_data.json | jq -r '.id')"
+
+          if [ "${{ inputs.run_id }}" != "${workflow_trigger_run_id}" ]; then
+            echo "Failed validating workflow_run.id"
+            exit 1
+          fi
+
+          echo "commit_id=$(cat flavor_version_data.json | jq -r '.commit_id')" | tee -a $GITHUB_OUTPUT
+          echo "flavors_matrix=$(cat workflow_data.json | jq -r '.flavors_matrix')" | tee -a $GITHUB_OUTPUT
+          echo "version=$(cat flavor_version_data.json | jq -r '.version')" | tee -a $GITHUB_OUTPUT

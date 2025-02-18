@@ -1,0 +1,44 @@
+name: publish
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Workflow run ID
+        type: number
+        required: true
+  workflow_run:
+    workflows: [ nightly ]
+    types: [ completed ]
+jobs:
+  workflow_data:
+    if: ${{ github.event.workflow_run.conclusion == "success" }}
+    name: Download workflow JSON data from trigger
+    uses: ./.github/workflows/download_workflow_data.yml
+    with:
+      run_id: ${{ github.event.workflow_run.id }}
+  publish_oci_containers:
+    needs: [ workflow_data ]
+    name: Publish container base image
+    uses: ./.github/workflows/publish_oci_containers.yml
+    # @TODO: Replace with safe OCI manifast handling variant
+    #strategy:
+    #  fail-fast: false
+    #  matrix:
+    #    cnames: [ container-amd64, container-arm64 ]
+    with:
+      commit_id: ${{ needs.workflow_data.outputs.commit_id }}
+      version: ${{ needs.workflow_data.outputs.version }}
+      flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
+      run_id: ${{ github.event.workflow_run.id }}
+    secrets:
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_role: ${{ secrets.AWS_IAM_ROLE }}
+      aws_session: ${{ secrets.AWS_OIDC_SESSION }}
+      oci_kms_arn: ${{ secrets.OCI_KMS_ARN }}
+  publish_kmodbuild_container:
+    needs: [ workflow_data ]
+    name: Publish kernel module build dev container
+    uses: ./.github/workflows/publish_kmodbuild_container.yml
+    with:
+      version: ${{ needs.workflow_data.outputs.version }}
+      run_id: ${{ github.event.workflow_run.id }}
