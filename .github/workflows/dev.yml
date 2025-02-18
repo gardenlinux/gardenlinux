@@ -1,27 +1,42 @@
 name: dev
 on:
-  push:
-    paths-ignore:
-      - 'docs/**'
-      - '**/README.md'
-  pull_request:
-    paths-ignore:
-      - 'docs/**'
-      - '**/README.md'
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Workflow run ID
+        type: number
+        required: true
+  workflow_run:
+    workflows: [ Tests ]
+    types: [ completed ]
 jobs:
-  set_version:
-    runs-on: ubuntu-latest
-    outputs:
-      VERSION: ${{ steps.version.outputs.VERSION }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: use VERSION file to support dev build on rel-branch
-        id: version
-        run: echo "VERSION=$(cat VERSION)" >> $GITHUB_OUTPUT
-  build:
-    needs: [ set_version ]
-    uses: ./.github/workflows/build.yml
+  workflow_data:
+    name: Download workflow JSON data from trigger
+    uses: ./.github/workflows/download_workflow_data.yml
     with:
-      version: ${{ needs.set_version.outputs.VERSION }}
+      run_id: ${{ inputs.run_id }}
+  publish_oci_containers:
+    needs: [ workflow_data ]
+    name: Publish container base image
+    uses: ./.github/workflows/publish_oci_containers.yml
+    # @TODO: Replace with safe OCI manifast handling variant
+    #strategy:
+    #  fail-fast: false
+    #  matrix:
+    #    cnames: [ container-amd64, container-arm64 ]
+    with:
+      flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
+      version: ${{ needs.workflow_data.outputs.version }}
+      run_id: ${{ inputs.run_id }}
+    secrets:
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_role: ${{ secrets.AWS_IAM_ROLE }}
+      aws_session: ${{ secrets.AWS_OIDC_SESSION }}
+      oci_kms_arn: ${{ secrets.OCI_KMS_ARN }}
+  #publish_kmodbuild_container:
+  #  needs: [ workflow_data ]
+  #  name: Publish kernel module build dev container
+  #  uses: ./.github/workflows/publish_kmodbuild_container.yml
+  #  with:
+  #    version: ${{ needs.workflow_data.outputs.version }}
+  #    run_id: ${{ inputs.run_id }}

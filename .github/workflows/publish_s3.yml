@@ -1,0 +1,60 @@
+name: publish_s3
+on:
+  workflow_run:
+    workflows: [ nightly ]
+    types: [ completed ]
+jobs:
+  workflow_data:
+    if: ${{ github.event.workflow_run.conclusion == "success" }}
+    name: Download workflow JSON data from trigger
+    uses: ./.github/workflows/download_workflow_data.yml
+    with:
+      run_id: ${{ github.event.workflow_run.id }}
+  upload_to_s3:
+    needs: workflow_data
+    name: upload to S3
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/upload_to_s3.yml
+    with:
+      version: ${{ needs.workflow_data.outputs.version }}
+    secrets:
+      bucket: ${{ secrets.AWS_S3_BUCKET }}
+      region: ${{ secrets.AWS_REGION }}
+      role: ${{ secrets.AWS_IAM_ROLE }}
+      session: ${{ secrets.AWS_OIDC_SESSION }}
+  upload_to_s3_cn:
+    needs: workflow_data
+    name: upload to S3 china
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/upload_to_s3.yml
+    with:
+      version: ${{ needs.workflow_data.outputs.version }}
+    secrets:
+      bucket: ${{ secrets.AWS_CN_S3_BUCKET }}
+      region: ${{ secrets.AWS_CN_REGION }}
+      role: ${{ secrets.AWS_CN_IAM_ROLE }}
+      session: ${{ secrets.AWS_CN_OIDC_SESSION }}
+  glrd:
+    needs: [ workflow_data, upload_to_s3 ]
+    if: ${{ github.ref == "refs/heads/main" }}
+    name: create GLRD release
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Create GLRD nightly release
+        uses: gardenlinux/glrd@v2
+        with:
+          cmd: glrd-manage --s3-update --create nightly
+      - name: Get latest GL nightly
+        id: gl_version_nightly
+        uses: gardenlinux/glrd@v2
+        with:
+          cmd: glrd --type nightly --latest

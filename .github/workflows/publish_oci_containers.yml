@@ -1,0 +1,172 @@
+# @TODO: Replace with safe OCI manifast handling variant
+name: publish_oci_containers
+on:
+  workflow_call:
+    inputs:
+      commit_id:
+        type: string
+        required: true
+      version:
+        type: string
+        required: true
+      flavors_matrix:
+        type: string
+        required: true
+      run_id:
+        type: string
+        required: true
+    secrets:
+      aws_role:
+        required: true
+      aws_session:
+        required: true
+      aws_region:
+        required: true
+      oci_kms_arn:
+        required: true
+env:
+  GLCLI_VERSION: 0.6.3
+jobs:
+  flavors:
+    name: Publish flavors
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      CNAME: ''
+    permissions:
+      id-token: write
+      packages: write
+    environment: oidc_platform_tests
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(inputs.flavors_matrix) }}
+      max-parallel: 1
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.aws_role }}
+          role-session-name: ${{ secrets.aws_session }}
+          aws-region: ${{ secrets.aws_region }}
+      - name: Set flavor version reference
+        run: |
+          echo "${{ inputs.commit_id }}" | tee COMMIT
+          echo "${{ inputs.version }}" | tee VERSION
+      - name: Set CNAME
+        run: |
+          cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
+          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
+        with:
+          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - name: Untar ${{ matrix.flavor }} (${{ matrix.arch }})
+        run: |
+          mkdir "$CNAME"
+          tar -C "$CNAME" -xvf "$CNAME.tar"
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install glcli util
+        run: |
+          # @TODO: Add pyproject.toml for pip install git+https://github.com/gardenlinux/python-gardenlinux-cli.git@${{ env.GLCLI_VERSION }}
+          git clone --depth 1 --branch ${{ env.GLCLI_VERSION }} https://github.com/gardenlinux/python-gardenlinux-cli.git
+          mv python-gardenlinux-cli /opt/glcli
+          pip install -r /opt/glcli/requirements.txt
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.8.0
+        with:
+          cosign-release: 'v2.4.1'
+      - name: Cache OCI manifests
+        uses: actions/cache@v4
+        with:
+          path: manifests
+          key: oci-manifests-${{ github.run_id }}-${{ matrix.flavor }}-${{ matrix.arch }}
+          restore-keys: |
+            oci-manifests-${{ github.run_id }}
+      - name: Push using the glcli util
+        id: glcli
+        run: |
+          mkdir -p manifests
+
+          echo "[{\"cname\": \"$CNAME\"}]" > manifests/oci_manifest_entry_$CNAME.json
+
+          exit 0
+
+          max_retries=3
+          retry_count=0
+          exit_code=0
+          until [ $retry_count -ge $max_retries ]; do
+            output=$(GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir $CNAME --container ghcr.io/${{ github.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname $CNAME --cosign_file digest --manifest_file manifests/oci_manifest_entry_$CNAME.json 2>&1)
+            exit_code=$?
+            if echo "$output" | grep -q "Bad Gateway"; then
+              retry_count=$((retry_count+1))
+              exit_code=1
+              echo "Bad Gateway detected, retry $retry_count/$max_retries"
+              sleep 10
+            elif [ $exit_code -eq 0 ]; then
+              echo $output
+              break
+            else
+              echo "Fatal error: $output"
+              exit $exit_code
+            fi
+          done
+          if [ $exit_code -ne 0 ]; then
+            echo "Failed after $max_retries retries"
+            exit 1
+          fi
+
+          manifests_list = $(echo $MANIFESTS_LIST | jq -r ". += [$(cat manifests/oci_manifest_entry_$CNAME.json)]")
+          echo "manifests_list=$manifests_list" | tee -a "$GITHUB_OUTPUT"
+      #- name: Output digest to be signed
+      #  run: |
+      #    cat digest
+      #- name: Sign the manifest
+      #  run: |
+      #    docker login ghcr.io -u token -p ${{ github.token }}
+      #    cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }} ghcr.io/${{ github.repository }}@$(cat digest)
+      #- name: Verify signature
+      #  run: |
+      #    cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.aws_region}}.amazonaws.com/${{ secrets.oci_kms_arn }} ghcr.io/${{ github.repository }}@$(cat digest)
+  update_manifest_index:
+    needs: flavors
+    name: Update OCI manifest index
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      id-token: write
+      packages: write
+      actions: write
+    steps:
+      - name: Restore OCI manifests
+        uses: actions/cache/restore@v4
+        with:
+          path: manifests
+          key: oci-manifests-${{ github.run_id }}
+          fail-on-cache-miss: true
+      - name: Check JSON manifest files
+        run: |
+          ls -al manifests
+          cat manifests/*.json
+      #- name: Set up Python 3.12
+      #  uses: actions/setup-python@v5
+      #  with:
+      #    python-version: "3.12"
+      #- name: Install glcli util
+      #  run: |
+      #    # @TODO: Add pyproject.toml for pip install git+https://github.com/gardenlinux/python-gardenlinux-cli.git@${{ env.GLCLI_VERSION }}
+      #    git clone --depth 1 --branch ${{ env.GLCLI_VERSION }} https://github.com/gardenlinux/python-gardenlinux-cli.git
+      #    mv python-gardenlinux-cli /opt/glcli
+      #    pip install -r /opt/glcli/requirements.txt
+      #- name: Update index using glcli tool
+      #  run: |
+      #    GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ghcr.io/${{ github.repository }} --version ${{ inputs.version }} --manifest_folder manifests
