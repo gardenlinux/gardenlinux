@@ -21,7 +21,15 @@ jobs:
         id: version
         run: echo "VERSION=$(cat VERSION)" >> $GITHUB_OUTPUT
   build:
-    needs: [ set_version ]
+    needs: set_version
     uses: ./.github/workflows/build.yml
     with:
+      flavors_matrix: '{"arch":["amd64"],"flavor":["firecracker-gardener_prod"]}'
       version: ${{ needs.set_version.outputs.VERSION }}
+  test:
+    needs: build
+    if: ${{ success() || failure() }}
+    uses: ./.github/workflows/tests.yml
+    with:
+      flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
+      version: ${{ needs.build.outputs.version }}
