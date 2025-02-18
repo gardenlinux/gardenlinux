@@ -35,7 +35,7 @@ jobs:
       matrix: ${{ fromJson(needs.generate_matrix_publish.outputs.matrix) }}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
+      - uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 # pin@v4
         with:
           role-to-assume: ${{ secrets.role }}
           role-session-name: ${{ secrets.session }}
