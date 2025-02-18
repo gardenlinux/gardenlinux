@@ -1,0 +1,155 @@
+# Tests artifacts
+name: manual_tests
+on:
+  # triggered manually
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Garden Linux Version"
+        type: string
+        default: now
+      build:
+        description: "Build for version 'today' instead of downloading version from S3"
+        type: boolean
+        default: false
+      platform_test_tag:
+        description: "Tag to run platform-test containers. 'latest' or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
+        type: string
+        default: latest
+      flavors_parse_params:
+        description: 'Run bin/flavors_parse.py with these parameters'
+        default: '--no-arch --json-by-arch --publish --test-platform'
+        type: string
+      chroot_test:
+        description: "Execute chrooted tests"
+        type: boolean
+        default: true
+      platform_test:
+        description: "Execute platform tests"
+        type: boolean
+        default: true
+jobs:
+  build:
+    name: Build
+    if: ${{ inputs.build == true }}
+    uses: ./.github/workflows/build.yml
+    with:
+      version: ${{ inputs.version }}
+      flavors_parse_params: '${{ inputs.flavors_parse_params }}'
+  test_build:
+    needs: build
+    name: Test flavors built
+    uses: ./.github/workflows/tests.yml
+    with:
+      version: ${{ needs.build.outputs.version }}
+      flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
+      chroot_test: ${{ inputs.chroot_test }}
+      platform_test: ${{ inputs.platform_test }}
+    permissions:
+      id-token: write
+    secrets:
+      gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      gcp_project_id: ${{ secrets.GCP_PROJECT }}
+      gcp_region: ${{ secrets.GCP_REGION }}
+      gcp_zone: ${{ secrets.GCP_ZONE }}
+      aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
+      aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
+      aws_region: ${{ secrets.AWS_TESTS_REGION }}
+      aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
+      az_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      az_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ccc_credentials: ${{ secrets.CCC_CREDENTIALS }}
+      tf_encryption: ${{ secrets.TF_ENCRYPTION }}
+  download_build_requirements:
+    if: ${{ inputs.build != true }}
+    name: Build requirements for downloaded flavors
+    uses: ./.github/workflows/build_requirements.yml
+    with:
+      version: ${{ inputs.version }}
+      use_glrd: true
+  download_store_flavor_version_data:
+    name: Store flavor version data
+    needs: download_build_requirements
+    defaults:
+      run:
+        shell: bash
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare flavor version reference
+        run: |
+          jq -r -n '{ "commit_id": "${{ needs.download_build_requirements.outputs.commit_id }}", "version": "${{ needs.download_build_requirements.outputs.version }}" }' '.' > flavor_version_data.json
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
+        with:
+          name: flavor-version-data
+          path: flavor_version_data.json
+          if-no-files-found: error
+  download_platform_test:
+    needs: download_build_requirements
+    name: Download platform-test image
+    uses: ./.github/workflows/build_platform_test_images.yml
+    with:
+      version: ${{ needs.download_build_requirements.outputs.version }}
+      build: false
+      platforms: '["tofu"]'
+      platform_test_tag: ${{ inputs.platform_test_tag || 'nightly' }}
+  download_build_test_containers:
+    needs: download_build_requirements
+    name: Build test containers
+    uses: ./.github/workflows/build_test_containers.yml
+    with:
+      version: ${{ needs.download_build_requirements.outputs.version }}
+  download_platform_test_flavors_matrix:
+    needs: download_build_requirements
+    name: Generate flavors matrix to test
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: ${{ inputs.flavors_parse_params }}
+  download_platform_test_flavors:
+    needs: [ download_build_requirements, download_platform_test_flavors_matrix ]
+    name: Download flavors to test
+    uses: ./.github/workflows/download_flavors_images.yml
+    with:
+      commit_id: ${{ needs.download_build_requirements.outputs.commit_id }}
+      version: ${{ needs.download_build_requirements.outputs.version }}
+      flavors_matrix: ${{ needs.download_platform_test_flavors_matrix.outputs.matrix }}
+    permissions:
+      id-token: write
+    secrets:
+      aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
+      aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
+      aws_region: ${{ secrets.AWS_TESTS_REGION }}
+      aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
+  test_download_platform_test:
+    needs: [
+      download_build_requirements,
+      download_build_test_containers,
+      download_platform_test,
+      download_platform_test_flavors_matrix,
+      download_platform_test_flavors
+    ]
+    name: Test flavors downloaded
+    uses: ./.github/workflows/tests.yml
+    with:
+      version: ${{ needs.download_build_requirements.outputs.version }}
+      flavors_matrix: ${{ needs.download_platform_test_flavors_matrix.outputs.matrix }}
+      chroot_test: ${{ inputs.chroot_test }}
+      platform_test: ${{ inputs.platform_test }}
+    permissions:
+      id-token: write
+    secrets:
+      gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      gcp_project_id: ${{ secrets.GCP_PROJECT }}
+      gcp_region: ${{ secrets.GCP_REGION }}
+      gcp_zone: ${{ secrets.GCP_ZONE }}
+      aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
+      aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
+      aws_region: ${{ secrets.AWS_TESTS_REGION }}
+      aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
+      az_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      az_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ccc_credentials: ${{ secrets.CCC_CREDENTIALS }}
+      tf_encryption: ${{ secrets.TF_ENCRYPTION }}

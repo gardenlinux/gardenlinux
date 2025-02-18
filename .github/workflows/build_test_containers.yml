@@ -1,0 +1,46 @@
+name: build_test_containers
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-build-test-containers
+  cancel-in-progress: true
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
+jobs:
+  test_containers:
+    name: Build test containers
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ amd64, arm64 ]
+        include:
+          - arch: amd64
+            os: ubuntu-latest
+          - arch: arm64
+            os: ubuntu-latest-arm
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - uses: ./.github/actions/setup
+        with:
+          arch: "${{ matrix.arch }}"
+      - name: Build test container ${{ matrix.arch }}
+        run: |
+          OCI_IMAGE_TAG="$(./build --print-container-image)"
+          if [[ -f builder.dockerfile ]]; then
+            podman build -t "$OCI_IMAGE_TAG" -f builder.dockerfile .
+          fi
+          podman build --squash --tag test --build-arg base="$OCI_IMAGE_TAG" tests
+          podman save --format oci-archive test > test.oci
+      - name: Upload test container
+        uses: actions/cache/save@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v4.2.2
+        with:
+          path: test.oci
+          key: test_container:${{ matrix.arch }}-${{ github.run_id }}
