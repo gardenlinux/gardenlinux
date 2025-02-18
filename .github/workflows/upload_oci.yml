@@ -80,6 +80,7 @@ jobs:
             exit_code=$?
             if echo "$output" | grep -q "Bad Gateway"; then
               retry_count=$((retry_count+1))
+              exit_code=1
               echo "Bad Gateway detected, retry $retry_count/$max_retries"
               sleep 10
             elif [ $exit_code -eq 0 ]; then
