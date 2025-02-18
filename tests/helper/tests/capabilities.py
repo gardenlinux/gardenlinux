@@ -16,7 +16,9 @@ def capabilities(client, testconfig, non_chroot):
 
     cap_found = []
     cap_notfound = []
+
     for line in output.splitlines():
+        match = None
         line.strip(string.whitespace)
         for cap in capabilities:
             match = re.fullmatch(cap, line)
