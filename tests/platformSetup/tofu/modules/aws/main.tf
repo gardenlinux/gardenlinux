@@ -247,7 +247,7 @@ resource "aws_ami" "ami" {
   }
 
   tpm_support = local.feature_trustedboot ? "v2.0" : null
-  uefi_data   = local.feature_trustedboot ? file("cert/gardenlinux-secureboot.aws-efivars") : null
+  uefi_data   = local.feature_trustedboot ? file("cert/secureboot.aws-efivars") : null
 
   tags = merge(
     local.labels,

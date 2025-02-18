@@ -76,15 +76,15 @@ resource "google_compute_image" "image" {
     content {
       pk {
         file_type = "X509"
-        content   = filebase64("cert/gardenlinux-secureboot.pk.der")
+        content   = filebase64("cert/secureboot.pk.der")
       }
       dbs {
         file_type = "X509"
-        content   = filebase64("cert/gardenlinux-secureboot.db.der")
+        content   = filebase64("cert/secureboot.db.der")
       }
       keks {
         file_type = "X509"
-        content   = filebase64("cert/gardenlinux-secureboot.kek.der")
+        content   = filebase64("cert/secureboot.kek.der")
       }
     }
   }
