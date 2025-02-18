@@ -10,18 +10,27 @@ on:
       - '**/README.md'
 jobs:
   set_version:
+    name: Set VERSION
     runs-on: ubuntu-latest
     outputs:
       VERSION: ${{ steps.version.outputs.VERSION }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: use VERSION file to support dev build on rel-branch
         id: version
         run: echo "VERSION=$(cat VERSION)" >> $GITHUB_OUTPUT
   build:
-    needs: [ set_version ]
+    needs: set_version
+    name: Build
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ needs.set_version.outputs.VERSION }}
+  test:
+    needs: build
+    name: Test
+    if: ${{ success() || failure() }}
+    uses: ./.github/workflows/tests.yml
+    with:
+      version: ${{ needs.build.outputs.version }}
+      flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
