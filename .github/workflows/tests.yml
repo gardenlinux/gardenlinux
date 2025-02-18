@@ -4,240 +4,67 @@ on:
   workflow_call:
     inputs:
       version:
-        description: "Garden Linux Version"
-        type: string
-        default: today
-      platform_test_tag:
-        description: "Tag to run platform-test containers. 'latest'  'nightly' Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
         type: string
         required: true
-        default: "latest"
-      download_s3:
-        description: "Download images from S3"
+      flavors_matrix:
+        type: string
+        required: true
+      chroot_test:
+        type: boolean
+        default: true
+      platform_test:
         type: boolean
         default: false
-      flavors_parse_params:
-        description: 'Run bin/parse_flavors.py with these parameters'
-        default: '--no-arch --json-by-arch --test-platform'
-        type: string
     secrets:
       gcp_identity_provider:
-        required: true
+        required: false
       gcp_service_account:
-        required: true
+        required: false
       gcp_project_id:
-        required: true
+        required: false
       gcp_region:
-        required: true
+        required: false
       gcp_zone:
-        required: true
+        required: false
       aws_role:
-        required: true
+        required: false
       aws_session:
-        required: true
+        required: false
       aws_region:
-        required: true
+        required: false
       aws_s3_bucket:
-        required: true
+        required: false
       az_client_id:
-        required: true
+        required: false
       az_tenant_id:
-        required: true
+        required: false
       az_subscription_id:
-        required: true
+        required: false
       ccc_credentials:
-        required: true
+        required: false
       tf_encryption:
-        required: true
+        required: false
 jobs:
-  generate_matrix_test_platform:
-    name: Generate Matrix for Platform Test
-    uses: ./.github/workflows/generate_matrix.yml
-    with:
-      flags: '${{ inputs.flavors_parse_params }}'
-  platform_test_images:
-    name: platform test images
-    uses: ./.github/workflows/platform-test-images.yml
-    with:
-      gl_version: ${{ inputs.platform_test_tag }}
-      build: ${{ inputs.platform_test_tag == 'nightly' && true || false }}
-      push: ${{ inputs.platform_test_tag == 'nightly' && true || false }}
-      push_latest: ${{ inputs.platform_test_tag == 'nightly' && true || false }}
-      platforms: '["tofu"]'
-  platform_tests:
-    name: platform test
-    needs: [ generate_matrix_test_platform, platform_test_images ]
-    env:
-      gcp_project_id: ${{ secrets.gcp_project_id }}
-      gcp_region: ${{ secrets.gcp_region }}
-      gcp_zone: ${{ secrets.gcp_zone }}
-      aws_region: ${{ secrets.aws_region }}
-      AZURE_CONFIG_DIR: /tmp/azure_config_dir
-      ARCH: ${{ matrix.arch }}
-      FLAVOR: ${{ matrix.flavor }}
-      artifact_dir: /tmp/gardenlinux-build-artifacts
-      image_dir: .build # default directory in tofu
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-    permissions:
-      id-token: write
-      packages: write
-    environment: oidc_platform_tests
+  test_flavors_chrooted:
+    name: Test flavors chrooted
+    uses: ./.github/workflows/test_flavor_chrooted.yml
+    if: ${{ inputs.chroot_test == true }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.generate_matrix_test_platform.outputs.matrix) }}
-    steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-    - uses: ./.github/actions/setup
-    # - name: set VERSION=${{ inputs.version }}
-    #   run: |
-    #     bin/garden-version "${{ inputs.version }}" | tee VERSION
-    #     git update-index --assume-unchanged VERSION
-
-    - name: load cert cache
-      uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
-      with:
-        path: cert/*.*
-        key: cert-${{ github.run_id }}
-        fail-on-cache-miss: true
-
-    - name: get cname
-      run: |
-        # download images from S3 bucket
-        if [[ "${{ inputs.download_s3 }}" == "true" ]]; then
-          if [[ "${{ inputs.version }}" == "latest" ]]; then
-            VERSION="$(bin/glrd --latest --fields 'Version' --no-header --type patch)"
-            SHA="$(bin/glrd --latest --fields 'GitCommitShort' --no-header --type patch)"
-          else
-            VERSION="$(bin/glrd --fields 'Version' --no-header --type patch,nightly,dev --version ${{ inputs.version }} | tail -1)"
-            SHA="$(bin/glrd --fields 'GitCommitShort' --no-header --type patch,nightly,dev --version ${{ inputs.version }} | tail -1)"
-          fi
-          echo "${VERSION}" >VERSION
-          echo "${SHA}" >COMMIT
-        # download images from GitHub cache
-        else
-          echo "${{ inputs.version }}" >VERSION
-          git rev-parse HEAD | cut -c1-8 >COMMIT
-        fi
-        git update-index --assume-unchanged VERSION
-        cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
-        echo "cname=$cname" | tee -a "$GITHUB_ENV"
-
-    - id: 'auth_gcp'
-      name: 'Authenticate to Google Cloud'
-      uses: google-github-actions/auth@71f986410dfbc7added4569d411d040a91dc6935 # pin@v1
-      with:
-        workload_identity_provider: ${{ secrets.gcp_identity_provider }}
-        service_account: ${{ secrets.gcp_service_account }}
-        create_credentials_file: true
-        cleanup_credentials: true
-        export_environment_variables: true
-
-    - id: 'auth_aws'
-      name: 'Authenticate to AWS'
-      uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
-      with:
-        role-to-assume: ${{ secrets.aws_role }}
-        role-session-name: ${{ secrets.aws_session }}
-        aws-region: ${{ secrets.aws_region }}
-        output-credentials: true
-
-    - id: 'auth_azure'
-      name: 'Authenticate to Azure'
-      uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # pin@v1
-      with:
-        client-id: ${{ secrets.az_client_id }}
-        tenant-id: ${{ secrets.az_tenant_id }}
-        subscription-id: ${{ secrets.az_subscription_id }}
-
-    - id: 'auth_ali'
-      name: 'Create ali cloud credential file'
-      run: |
-        base64 -d <<< "${{ secrets.ccc_credentials }}" | .github/workflows/ali_credentials.jq > ali-service-account.json
-        ALIBABA_CLOUD_ACCESS_KEY_ID="$(jq -r '.profiles[0].access_key_id' < ali-service-account.json)"
-        ALIBABA_CLOUD_ACCESS_KEY_SECRET="$(jq -r '.profiles[0].access_key_secret' < ali-service-account.json)"
-        echo "::add-mask::${ALIBABA_CLOUD_ACCESS_KEY_ID}"
-        echo "::add-mask::${ALIBABA_CLOUD_ACCESS_KEY_SECRET}"
-        echo "ALIBABA_CLOUD_ACCESS_KEY_ID=${ALIBABA_CLOUD_ACCESS_KEY_ID}" >> ${GITHUB_ENV}
-        echo "ALIBABA_CLOUD_ACCESS_KEY_SECRET=${ALIBABA_CLOUD_ACCESS_KEY_SECRET}" >> ${GITHUB_ENV}
-
-    - name: download images from GitHub cache
-      uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
-      if: ${{ inputs.download_s3 == false }}
-      with:
-        name: build-${{ env.cname }}
-        path: ${{ env.artifact_dir }}
-
-    - name: download images from S3 bucket
-      if: ${{ inputs.download_s3 == true }}
-      run: |
-        mkdir -p "${{ env.cname }}"
-        aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/objects/${{ env.cname }}" "${{ env.artifact_dir }}" --recursive
-
-    - run: ls -lah ${{ env.artifact_dir }}
-
-    - name: deploy platform test resources for ${{ matrix.flavor }} on ${{ matrix.arch }}
-      run: |
-        export AWS_ACCESS_KEY_ID=${{ steps.auth_aws.outputs.aws-access-key-id }}
-        export AWS_SECRET_ACCESS_KEY=${{ steps.auth_aws.outputs.aws-secret-access-key }}
-        export AWS_SESSION_TOKEN=${{ steps.auth_aws.outputs.aws-session-token }}
-        export ARM_CLIENT_ID=${{ secrets.az_client_id }}
-        export ARM_SUBSCRIPTION_ID=${{ secrets.az_subscription_id }}
-        export ARM_TENANT_ID=${{ secrets.az_tenant_id }}
-        export ARM_USE_OIDC=true
-        credentials_file_name="$(echo "$GOOGLE_APPLICATION_CREDENTIALS" | xargs basename)"
-        export GOOGLE_APPLICATION_CREDENTIALS="/gardenlinux/$credentials_file_name"
-        export CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE="/gardenlinux/$credentials_file_name"
-        export GOOGLE_GHA_CREDS_PATH="/gardenlinux/$credentials_file_name"
-        export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
-        export TF_VAR_gcp_project_id=${{ secrets.gcp_project_id }}
-        # copy artifacts_dir to image_dir
-        cp -r ${{ env.artifact_dir }}/* ${{ env.image_dir }}
-        ls -la ${{ env.image_dir }}
-        # uncached/downloaded artifacts are compressed
-        test -f "${{ env.image_dir }}/${{ env.cname }}.tar.gz" && tar xzvf "${{ env.image_dir }}/${{ env.cname }}.tar.gz" -C "${{ env.image_dir }}"
-        # ssh key generation (if missing)
-        test -f ~/.ssh/id_ed25519 || ssh-keygen -t ed25519 -P "" -f ~/.ssh/id_ed25519
-        # tf variables generation
-        TEST_PREFIX="gh-actions" CNAME="${{ env.cname }}" make --directory=tests/platformSetup ${FLAVOR}-${ARCH}-tofu-config
-        # enable S3 backend
-        cp "tests/platformSetup/tofu/backend.tf.github" "tests/platformSetup/tofu/backend.tf"
-        make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-apply 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.provisioning.log"
-    - name: run platform test for ${{ matrix.flavor }} on ${{ matrix.arch }}
-      run: |
-        make --directory=tests ${FLAVOR}-${ARCH}-tofu-test-platform 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.test.log"
-
-    - name: copy platform test junit xml file for ${{ matrix.flavor }} on ${{ matrix.arch }}
-      if: always()
-      run: |
-        cp "tests/${FLAVOR}-${ARCH}.platform.test.xml" "${{ env.artifact_dir }}/${{ env.cname }}.platform.test.xml" || true
-
-    - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
-      if: always()
-      with:
-        if-no-files-found: ignore
-        name: platform-test-${{ env.cname }}
-        path: |
-          ${{ env.artifact_dir }}/${{ env.cname }}.platform.test.log
-          ${{ env.artifact_dir }}/${{ env.cname }}.platform.test.xml
-
-    - name: cleanup platform test for ${{ matrix.flavor }} on ${{ matrix.arch }}
-      if: always()
-      run: |
-        export AWS_ACCESS_KEY_ID=${{ steps.auth_aws.outputs.aws-access-key-id }}
-        export AWS_SECRET_ACCESS_KEY=${{ steps.auth_aws.outputs.aws-secret-access-key }}
-        export AWS_SESSION_TOKEN=${{ steps.auth_aws.outputs.aws-session-token }}
-        export ARM_CLIENT_ID=${{ secrets.az_client_id }}
-        export ARM_SUBSCRIPTION_ID=${{ secrets.az_subscription_id }}
-        export ARM_TENANT_ID=${{ secrets.az_tenant_id }}
-        export ARM_USE_OIDC=true
-        credentials_file_name="$(echo "$GOOGLE_APPLICATION_CREDENTIALS" | xargs basename)"
-        export GOOGLE_APPLICATION_CREDENTIALS="/gardenlinux/$credentials_file_name"
-        export CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE="/gardenlinux/$credentials_file_name"
-        export GOOGLE_GHA_CREDS_PATH="/gardenlinux/$credentials_file_name"
-        export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
-        export TF_VAR_gcp_project_id=${{ secrets.gcp_project_id }}
-        (make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-destroy 2>&1 || make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-destroy 2>&1 || make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-destroy 2>&1) | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.destroy.log"
+      matrix: ${{ fromJson(inputs.flavors_matrix )}}
+    with:
+      version: ${{ inputs.version }}
+      arch: ${{ matrix.arch }}
+      flavor: ${{ matrix.flavor }}
+  test_platform_flavors:
+    name: Test platform flavors
+    uses: ./.github/workflows/test_platform_flavor.yml
+    if: ${{ inputs.platform_test == true }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(inputs.flavors_matrix )}}
+    with:
+      version: ${{ inputs.version }}
+      arch: ${{ matrix.arch }}
+      flavor: ${{ matrix.flavor }}
+    secrets: inherit

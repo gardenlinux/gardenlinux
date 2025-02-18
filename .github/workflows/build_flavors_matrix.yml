@@ -5,14 +5,15 @@ on:
         description: 'Flags passed to bin/flavors_parse.py'
         type: string
         required: true
+      flavors_matrix:
+        type: string
     outputs:
       matrix:
-        description: 'The generated matrix'
+        description: 'Flavors matrix'
         value: ${{ jobs.generate_matrix.outputs.matrix }}
-
 jobs:
   generate_matrix:
-    name: Generate Matrix
+    name: Build flavors matrix
     runs-on: 'ubuntu-latest'
     defaults:
       run:
@@ -25,16 +26,18 @@ jobs:
           submodules: true
       - id: matrix
         run: |
-          FLAVORS_AMD64=$(./bin/flavors_parse.py ${{ inputs.flags }} | jq -r '.amd64 // []')
-          FLAVORS_ARM64=$(./bin/flavors_parse.py ${{ inputs.flags }} | jq -r '.arm64 // []')
-          MATRIX=$(jq -nc \
-            --argjson amd64 "$FLAVORS_AMD64" \
-            --argjson arm64 "$FLAVORS_ARM64" \
-            '{
-              include: (
-                ($amd64 | map({arch: "amd64", flavor: .})) +
-                ($arm64 | map({arch: "arm64", flavor: .}))
-              )
-            }'
-          )
+          MATRIX='${{ inputs.flavors_matrix }}'
+
+          if [[ $(echo "${MATRIX}" | jq -r 'type') != 'object' ]]; then
+            FLAVORS=$(./bin/flavors_parse.py ${{ inputs.flags }})
+            MATRIX=$(jq -nc \
+              --argjson flavors "$(echo $FLAVORS)" \
+              '{
+                include: (
+                  $flavors | reduce (to_entries[]) as $item ([]; . + ($item.value | map({"arch": $item.key, "flavor": .})))
+                )
+              }'
+            )
+          fi
+
           echo "matrix=$MATRIX" | tee -a $GITHUB_OUTPUT

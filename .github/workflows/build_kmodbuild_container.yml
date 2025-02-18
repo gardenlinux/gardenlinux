@@ -1,0 +1,54 @@
+name: build_kmodbuild_container
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
+jobs:
+  kmodbuild_container:
+    name: Build kernel module build dev container (${{ matrix.arch }})
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ amd64, arm64 ]
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - uses: ./.github/actions/setup
+        with:
+          arch: ${{ matrix.arch }}
+      - name: Get container versions
+        id: versions
+        run: |
+          version="$(bin/garden-version "${{ inputs.version }}")"
+          snapshot="$(gh api "/repos/gardenlinux/repo/contents/.container?ref=$version" | jq -r '.content' | base64 -d)"
+
+          echo -e "base=ghcr.io/${{ github.repository }}:$version" | tee "$GITHUB_OUTPUT"
+          echo -e "snapshot=$snapshot" | tee "$GITHUB_OUTPUT"
+          echo -e "version=$version" | tee "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Build kernel module build dev container (${{ matrix.arch }})
+        run: |
+          podman login -u token -p ${{ github.token }} ghcr.io
+
+          base='${{ steps.versions.outputs.base }}'
+          snapshot='${{ steps.versions.outputs.snapshot }}'
+          version='${{ steps.versions.outputs.version }}'
+
+          podman pull --arch ${{ matrix.arch }} "$base"
+          podman pull --arch ${{ matrix.arch }} "$snapshot"
+          podman build --arch ${{ matrix.arch }} --build-arg base="$base" --build-arg snapshot="$snapshot" -t ghcr.io/${{ github.repository }}/kmodbuild:${{ matrix.arch }}-${version} images/kmodbuild
+
+          podman save --format oci-archive ghcr.io/${{ github.repository }}/kmodbuild:${{ matrix.arch }}-${version} > kmodbuild_container_${{ matrix.arch }}.oci
+      - name: Upload kernel module build dev container (${{ matrix.arch }})
+        uses: actions/cache/save@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v4.2.2
+        with:
+          key: kmodbuild-container-${{ matrix.arch }}
+          path: kmodbuild_container_${{ matrix.arch }}.oci

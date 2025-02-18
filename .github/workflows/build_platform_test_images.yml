@@ -1,0 +1,154 @@
+name: build_platform_test_images
+on:
+  push:
+    paths:
+      #- '.github/workflows/build_platform_test_images.yml'
+      - 'tests/Pipfile*'
+      - 'tests/images/Makefile'
+      - 'tests/images/platform-test/**'
+      - 'tests/images/platform-test-base/**'
+  pull_request:
+    paths:
+      #- '.github/workflows/build_platform_test_images.yml'
+      - 'tests/Pipfile*'
+      - 'tests/images/Makefile'
+      - 'tests/images/platform-test/**'
+      - 'tests/images/platform-test-base/**'
+  # triggered by other workflows
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
+      build:
+        type: boolean
+        default: true
+      force_build:
+        type: boolean
+        default: false
+      force_release:
+        type: boolean
+        default: false
+      platforms:
+        type: string
+        description: 'JSON array of platforms to build'
+      platform_test_tag:
+        description: "Tag to run platform-test containers. 'latest', Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
+        type: string
+        default: "latest"
+  # triggered manually
+  workflow_dispatch:
+    inputs:
+      version:
+        type: string
+        default: nightly
+      build:
+        description: "Download images from S3"
+        type: boolean
+        default: false
+      force_build:
+        type: boolean
+        default: false
+      force_release:
+        type: boolean
+        default: false
+      platforms:
+        type: string
+        description: 'JSON array of platforms to build'
+      platform_test_tag:
+        description: "Tag to run platform-test containers. 'latest' or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
+        type: string
+        default: "latest"
+env:
+  DEFAULT_PLATFORMS: '["firecracker", "kvm", "openstack", "tofu"]'
+jobs:
+  generate_matrix:
+    name: Build platforms matrix
+    runs-on: 'ubuntu-latest'
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - id: matrix
+        run: |
+          MATRIX='${{ inputs.platforms }}'
+
+          if [[ $(echo "${MATRIX}" | jq -r 'type') != 'array' ]]; then
+            MATRIX='${{ env.DEFAULT_PLATFORMS }}'
+          fi
+
+          echo "matrix=$MATRIX" | tee -a $GITHUB_OUTPUT
+  images:
+    name: Provide platform-test image (${{ matrix.platform }})
+    needs: generate_matrix
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      GARDENLINUX_BUILD_CRE: podman
+      VERSION: ${{ inputs.version }}
+      TAG_EXISTS: false
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ${{ fromJSON(needs.generate_matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - name: Prepare platform-test reference from GitHub
+        if: ${{ inputs.platform_test_tag }} == '' || inputs.build }}
+        run: |
+          git rev-parse HEAD | cut -c1-8 | tee COMMIT
+          echo "${{ inputs.version }}" | tee VERSION
+      - name: Prepare platform-test reference from GLRD
+        if: ${{ inputs.platform_test_tag }} != '' && ! inputs.build }}
+        run: |
+          if [[ "${{ inputs.platform_test_tag }}" == "latest" ]]; then
+            glrd_data="$(./bin/glrd --type stable,patch,nightly,dev --output-format=json --latest)"
+          else
+            glrd_data="$(./bin/glrd --type stable,patch,nightly,dev --output-format=json --version ${{ inputs.platform_test_tag }})"
+          fi
+
+          echo $glrd_data | jq -r '.releases[0].git.commit_short' | tee COMMIT
+          echo $glrd_data | jq -r '(.releases[0].version.major | tostring) + "." + (.releases[0].version.minor | tostring)' | tee VERSION
+      - name: Set VERSION to platform-test reference
+        run: echo "VERSION=$(cat VERSION)" >> ${GITHUB_ENV}
+      - name: Login to ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
+      - name: Make pull-platform-test-${{ matrix.platform }}
+        run: |
+          make -j $(nproc) --directory=tests/images GARDENLINUX_BUILD_CRE=podman pull-platform-test-${{ matrix.platform }}
+          LIST_CONTAINER_JSON=$(podman image ls --filter reference=ghcr.io/gardenlinux/gardenlinux/platform-test-${{ matrix.platform }} --format=json)
+
+          if [[ $(echo $LIST_CONTAINER_JSON | jq -r 'length') != "0" ]]; then
+            echo "TAG_EXISTS=true" >> ${GITHUB_ENV}
+          fi
+      # build if tag does not exist, force_build or force_release is set
+      - name: Make build-platform-test-${{ matrix.platform }}
+        run: |
+          if [[ "${TAG_EXISTS}" == false ]] || [[ "${{ inputs.force_build }}" == true ]] || [[ "${{ inputs.force_release }}" == true ]]; then
+            make -j $(nproc) --directory=tests/images GARDENLINUX_BUILD_CRE=podman build-platform-test-${{ matrix.platform }}
+          else
+            echo "Tag for ${VERSION} already exists in ghcr.io/gardenlinux/gardenlinux/platform-test-${{ matrix.platform }} and FORCE_BUILD=false"
+          fi
+      - name: Prepare local platform-test OCI metadata (${{ matrix.platform }})
+        id: platform-test-oci-tag
+        run: |
+          PLATFORM_TEST_IMAGE_TAG="$(podman image ls --filter reference=ghcr.io/gardenlinux/gardenlinux/platform-test-${{ matrix.platform }} --format=json | jq -r '.[0].Names[0]')"
+
+          echo "$VERSION" | tee -a "platform-test.oci-version.txt"
+          echo "${PLATFORM_TEST_IMAGE_TAG}" | tee -a "platform-test.oci-tag.txt"
+      - name: Upload local platform-test OCI metadata (${{ matrix.platform }})
+        uses: actions/cache/save@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v4.2.2
+        with:
+          key: platform_test_container:${{ matrix.platform }}-${{ github.run_id }}
+          path: |
+            platform-test.oci-version.txt
+            platform-test.oci-tag.txt
+      - name: Make push-release-platform-test-${{ matrix.platform }}
+        if: (github.event.pull_request.merged == true && github.ref_name == 'main') || inputs.force_release
+        run:  Make -j $(nproc) --directory=tests/images GARDENLINUX_BUILD_CRE=podman push-release-platform-test-${{ matrix.platform }}
