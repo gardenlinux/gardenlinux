@@ -1,0 +1,62 @@
+name: build_requirements
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-build-requirements
+  cancel-in-progress: true
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        default: today
+      use_kms:
+        type: boolean
+        default: false
+    outputs:
+      version:
+        value: ${{ jobs.calculate_version.outputs.version }}
+      use_kms:
+        value: ${{ inputs.use_kms }}
+jobs:
+  calculate_version:
+    name: Build version
+    defaults:
+      run:
+        shell: bash
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.run_garden_version.outputs.version }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - name: garden-version ${{ inputs.version }}
+        id: run_garden_version
+        run: echo "version=$(./bin/garden-version "${{ inputs.version }}")" | tee -a "$GITHUB_OUTPUT"
+  cert:
+    name: Provide secure boot certificates
+    needs: calculate_version
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - uses: ./.github/actions/setup
+      - name: Set VERSION=${{ needs.calculate_version.outputs.version }}
+        run: echo "${{ needs.calculate_version.outputs.version }}" | tee VERSION
+      - name: Build certificates
+        if: ${{ ! inputs.use_kms }}
+        run: ./cert/build
+      - name: Use kms backed certificates
+        if: ${{ inputs.use_kms }}
+        run: |
+          touch cert/gardenlinux-secureboot.db.arn
+          for f in secureboot.{{pk,null.pk,kek,db}.{crt,der,auth},db.arn,aws-efivars}; do
+            ln -sr "cert/gardenlinux-$f" "cert/$f"
+          done
+      - uses: actions/cache/save@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v3
+        with:
+          path: cert
+          key: cert-${{ github.run_id }}

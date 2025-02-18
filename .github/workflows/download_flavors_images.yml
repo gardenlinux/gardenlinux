@@ -1,0 +1,41 @@
+name: download_images
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
+      flavors_matrix:
+        type: string
+        required: true
+    secrets:
+      aws_s3_bucket:
+        required: true
+jobs:
+  images:
+    name: Provide image ${{ matrix.flavor }} (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      CNAME: ''
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ${{ fromJSON(inputs.flavors_matrix) }}
+    steps:
+      - name: Set VERSION=${{ inputs.version }}
+        run: echo "${{ inputs.version }}" | tee VERSION
+      - name: Set CNAME
+        run: |
+          cname="$(./build --resolve-cname ${{ inputs.flavor }}-${{ inputs.arch }})"
+          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
+      - name: Prepare image from S3
+        run: |
+          aws s3 cp "s3://${{ secrets.aws_s3_bucket }}/objects/${{ env.CNAME }}" . --recursive
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
+        with:
+          name: build-${{ inputs.flavor }}-${{ inputs.arch }}
+          path: ${{ env.CNAME }}*
+          if-no-files-found: error

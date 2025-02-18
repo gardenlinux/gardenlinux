@@ -1,4 +1,7 @@
 name: build
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-build
+  cancel-in-progress: true
 on:
   workflow_call:
     inputs:
@@ -8,13 +11,11 @@ on:
       use_kms:
         type: boolean
         default: false
-      flavors_parse_params_images:
+      flavors_parse_params:
         description: 'Run bin/parse_flavors.py with these parameters'
-        default: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
+        default: '--no-arch --json-by-arch --build --test'
         type: string
-      flavors_parse_params_bare:
-        description: 'Run bin/parse_flavors.py with these parameters'
-        default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
+      flavors_matrix:
         type: string
     secrets:
       secureboot_db_kms_arn:
@@ -26,287 +27,51 @@ on:
       aws_oidc_session:
         required: false
     outputs:
+      flavors_matrix:
+        value: ${{ jobs.flavors_matrix.outputs.matrix }}
       version:
-        value: ${{ jobs.version.outputs.version }}
+        value: ${{ jobs.requirements.outputs.version }}
 jobs:
-  version:
-    name: resolve version
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-        with:
-          submodules: true
-      - name: resolve version "${{ inputs.version }}"
-        id: version
-        run: echo version="$(bin/garden-version "${{ inputs.version }}")" | tee -a "$GITHUB_OUTPUT"
-  cert:
-    name: certificates
-    needs: version
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-    steps:
-      # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
-      #   with:
-      #     metric_frequency: 1
-      #     proc_trace_min_duration: 10
-      #     proc_trace_chart_max_count: 50
-      #     comment_on_pr: false
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-        with:
-          submodules: true
-      - uses: ./.github/actions/setup
-      - name: set VERSION=${{ needs.version.outputs.version }}
-        run: |
-          cd $(dirname $(realpath bin/garden-version))/..
-          bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
-          git update-index --assume-unchanged VERSION
-      - name: build certificates
-        if: ${{ ! inputs.use_kms }}
-        run: ./cert/build
-      - name: use kms backed certificates
-        if: ${{ inputs.use_kms }}
-        run: |
-          touch cert/gardenlinux-secureboot.db.arn
-          for f in secureboot.{{pk,null.pk,kek,db}.{crt,der,auth},db.arn,aws-efivars}; do
-            ln -sr "cert/gardenlinux-$f" "cert/$f"
-          done
-      - uses: actions/cache/save@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v3
-        with:
-          path: cert
-          key: cert-${{ github.run_id }}
-  base:
-    name: bootstrap stage
-    needs: version
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
-    defaults:
-      run:
-        shell: bash
+  requirements:
+    uses: ./.github/workflows/build_requirements.yml
+    with:
+      version: ${{ inputs.version || 'now' }}
+      use_kms: ${{ github.event_name == 'workflow_dispatch' && inputs.use_kms || false }}
+  bootstrap:
+    needs: requirements
+    uses: ./.github/workflows/build_bootstrap.yml
+    with:
+      version: ${{ needs.requirements.outputs.version }}
+  test_containers:
+    needs: requirements
+    uses: ./.github/workflows/build_test_containers.yml
+    with:
+      version: ${{ needs.requirements.outputs.version }}
+  platform_test_image:
+    needs: requirements
+    uses: ./.github/workflows/build_platform_test_images.yml
+    with:
+      version: ${{ needs.requirements.outputs.version }}
+      platforms: '["tofu"]'
+  flavors_matrix:
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: ${{ inputs.flavors_parse_params }}
+      flavors_matrix: ${{ inputs.flavors_matrix }}
+  flavors:
+    needs: [ bootstrap, flavors_matrix, requirements ]
     strategy:
       fail-fast: false
-      matrix:
-        arch: [ amd64, arm64 ]
-    steps:
-      # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
-      #   with:
-      #     metric_frequency: 1
-      #     proc_trace_min_duration: 10
-      #     proc_trace_chart_max_count: 50
-      #     comment_on_pr: false
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-        with:
-          submodules: true
-      - uses: ./.github/actions/setup
-        with:
-          arch: "${{ matrix.arch }}"
-      - name: set VERSION=${{ needs.version.outputs.version }}
-        run: |
-          cd $(dirname $(realpath bin/garden-version))/..
-          bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
-          git update-index --assume-unchanged VERSION
-      - name: build base-${{ matrix.arch }}
-        run: make base-${{ matrix.arch }}-build
-      - uses: actions/cache/save@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v3
-        with:
-          path: .build
-          key: base-${{ matrix.arch }}-${{ github.run_id }}
-  test_container:
-    name: container image for tests
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
-    defaults:
-      run:
-        shell: bash
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [ amd64, arm64 ]
-    steps:
-      # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
-      #   with:
-      #     metric_frequency: 1
-      #     proc_trace_min_duration: 10
-      #     proc_trace_chart_max_count: 50
-      #     comment_on_pr: false
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-        with:
-          submodules: true
-      - uses: ./.github/actions/setup
-        with: 
-          arch: "${{ matrix.arch }}"
-      - name: build test container
-        run: |
-          OCI_IMAGE_TAG="$(./build --print-container-image)"
-          if [[ -f builder.dockerfile ]]; then
-            podman build -t "$OCI_IMAGE_TAG" -f builder.dockerfile .
-          fi
-          podman build --squash --tag test --build-arg base="$OCI_IMAGE_TAG" tests
-          podman save --format oci-archive test > test.oci
-      - name: upload test container
-        uses: actions/cache/save@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v3
-        with:
-          path: test.oci
-          key: test_container:${{ matrix.arch }}-${{ github.run_id }}
-          
-  generate_matrix_images:
-    uses: ./.github/workflows/generate_matrix.yml
-    with: 
-      flags: '${{ inputs.flavors_parse_params_images }}'
-  generate_matrix_bare:
-    uses: ./.github/workflows/generate_matrix.yml
-    with: 
-      flags: '${{ inputs.flavors_parse_params_bare }}'
-  images:
-    needs: [ version, cert, base, test_container, generate_matrix_images ]
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
-    defaults:
-      run:
-        shell: bash
-    permissions:
-      id-token: write
-    environment: ${{ inputs.use_kms && 'oidc_aws_kms_secureboot_signing' || '' }}
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.generate_matrix_images.outputs.matrix) }}
-    steps:
-      # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
-      #   with:
-      #     metric_frequency: 1
-      #     proc_trace_min_duration: 10
-      #     proc_trace_chart_max_count: 50
-      #     comment_on_pr: false
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-        with:
-          submodules: true
-      - uses: ./.github/actions/setup
-        with: 
-          arch: "${{ matrix.arch }}"
-      - name: set VERSION=${{ needs.version.outputs.version }}
-        run: |
-          cd $(dirname $(realpath bin/garden-version))/..
-          bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
-          git update-index --assume-unchanged VERSION
-      - name: load cert cache
-        uses: actions/cache/restore@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v3
-        with:
-          path: cert
-          key: cert-${{ github.run_id }}
-          fail-on-cache-miss: true
-      - name: write secureboot db arn for kms backed certificates
-        if: ${{ inputs.use_kms }}
-        run: echo "${{ secrets.secureboot_db_kms_arn }}" > cert/gardenlinux-secureboot.db.arn
-      - name: configure aws credentials for kms signing
-        if: ${{ inputs.use_kms }}
-        uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
-        with:
-          role-to-assume: ${{ secrets.aws_kms_role }}
-          role-session-name: ${{ secrets.aws_oidc_session }}
-          aws-region: ${{ secrets.aws_region }}
-          role-duration-seconds: 14400
-      - name: load bootstrap stage cache
-        uses: actions/cache/restore@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v3
-        with:
-          path: .build
-          key: base-${{ matrix.arch }}-${{ github.run_id }}
-          fail-on-cache-miss: true
-      - name: download test container cache
-        uses: actions/cache/restore@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v3
-        with:
-          path: test.oci
-          key: test_container:${{ matrix.arch }}-${{ github.run_id }}
-          fail-on-cache-miss: true
-      - name: import test container image
-        run: |
-          podman load < test.oci
-          rm test.oci
-      - name: update bootstrap stage build artifact timestamps
-        run: |
-          t="$(date '+%s')"
-          find .build -exec touch -d "@$t" {} +
-      - name: build
-        run: USE_KMS=${{ inputs.use_kms }} make ${{ matrix.flavor }}-${{ matrix.arch }}-build
-      - name: get cname
-        run: |
-          cname=$(basename "$(realpath ".build/${{ matrix.flavor }}-${{ matrix.arch }}")" .artifacts)
-          echo "cname=$cname" | tee -a "$GITHUB_ENV"
-      # ./test writes ${{ env.cname }}.chroot.test.log and puts it into .build/${{ env.cname }}.artifacts
-      - name: test
-        run: |
-          make ${{ matrix.flavor }}-${{ matrix.arch }}-test
-      # chroot.test.xml is written in the entrypoint tests/init
-      - name: rename test results
-        if: always()
-        run: |
-          mv tests/chroot.test.xml .build/${{ env.cname }}.chroot.test.xml
-      - uses: pmeier/pytest-results-action@fc6576eced1f411ea48ab10e917d9cfce2960e29 # pin@v0.7.1
-        if: always()
-        with:
-          path: ".build/${{ env.cname }}.chroot.test.xml"
-      - name: add chroot.test.xml to build artifacts
-        run: echo "${{ env.cname }}.chroot.test.xml" >> ".build/${{ env.cname }}.artifacts"
-      - name: add certs to build artifacts
-        run: |
-          for f in secureboot.{{pk,kek,db}.{crt,der,auth},aws-efivars}; do
-            cp "cert/$f" ".build/${{ env.cname }}.$f"
-            echo "${{ env.cname }}.$f" >> ".build/${{ env.cname }}.artifacts"
-          done
-      - name: pack build artifacts for upload
-        run: tar -cSzvf "${{ env.cname }}.tar.gz" -C .build -T ".build/${{ env.cname }}.artifacts"
-      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
-        with:
-          name: "build-${{ env.cname }}"
-          path: "${{ env.cname }}.tar.gz"
-  bare_flavors:
-    needs: [ version, base, generate_matrix_bare ]
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
-    defaults:
-      run:
-        shell: bash
-    if: needs.generate_matrix_bare.outputs.matrix != '{"include":[]}'
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.generate_matrix_bare.outputs.matrix) }}
-    steps:
-      # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
-      #   with:
-      #     metric_frequency: 1
-      #     proc_trace_min_duration: 10
-      #     proc_trace_chart_max_count: 50
-      #     comment_on_pr: false
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-        with:
-          submodules: true
-      - uses: ./.github/actions/setup
-        with:
-          arch: "${{ matrix.arch }}"
-      - name: set VERSION=${{ needs.version.outputs.version }}
-        run: |
-          cd $(dirname $(realpath bin/garden-version))/..
-          bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
-          git update-index --assume-unchanged VERSION
-      - name: load bootstrap stage cache
-        uses: actions/cache/restore@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v3
-        with:
-          path: .build
-          key: base-${{ matrix.arch }}-${{ github.run_id }}
-          fail-on-cache-miss: true
-      - name: update bootstrap stage build artifact timestamps
-        run: |
-          t="$(date '+%s')"
-          find .build -exec touch -d "@$t" {} +
-      - name: build
-        run: make ${{ matrix.flavor }}-${{ matrix.arch }}-build
-      - name: test
-        run: |
-          config=$(echo ${{ matrix.flavor }} | sed 's/^bare-//')
-          echo "config=$config" | tee -a "$GITHUB_ENV"
-          make ${{ matrix.flavor }}-${{ matrix.arch }}-test
-      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
-        with:
-          name: "build-bare-${{ env.config }}-${{ matrix.arch }}"
-          path: ".build/bare_flavors/${{ env.config }}-${{ matrix.arch }}.oci"
+      matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix )}}
+    with:
+      arch: ${{ matrix.arch }}
+      flavor: ${{ matrix.flavor }}
+      version: ${{ needs.requirements.outputs.version }}
+      # GitHub workflow workaround for bool
+      use_kms: ${{ needs.requirements.outputs.use_kms == true }}
+    uses: ./.github/workflows/build_flavor.yml
+    secrets:
+      secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_kms_role: ${{ secrets.SECUREBOOT_DB_IAM_ROLE }}
+      aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
