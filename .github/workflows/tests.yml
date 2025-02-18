@@ -61,8 +61,6 @@ jobs:
         modifier: [ "${{ inputs.default_modifier }}" ]
         exclude:
           - arch: arm64
-            target: azure
-          - arch: arm64
             target: ali
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
