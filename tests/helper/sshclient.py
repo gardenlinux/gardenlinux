@@ -113,7 +113,7 @@ class RemoteClient:
     ) -> None:
         self.host = host
         self.port = port
-        self.sudo = sudo
+        self._default_to_sudo = sudo
         self.conn = None
         self._client = None
         self._scp = None
@@ -363,7 +363,7 @@ class RemoteClient:
         """
         if not quiet:
             logger.info(f"$ {command.rstrip()}")
-        if self.sudo and not disable_sudo:
+        if self._default_to_sudo and not disable_sudo:
             command = f"sudo {command}"
 
         _, stdout, stderr = self.client.exec_command(command=command, timeout=timeout)

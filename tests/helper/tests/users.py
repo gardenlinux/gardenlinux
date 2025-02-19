@@ -30,7 +30,7 @@ def users(client, additional_user = "", additional_sudo_users=[]):
                         or gid in [0, 65534], ("Unexpected shell found in " +
                                     f"/etc/passwd for user/service: {user}")
 
-            # Test for sudo priviledges for each user 
+            # Test for sudo priviledges for each user
             # (additional users may have sudo access)
             additional_sudo_users.append("root")
             if user not in additional_sudo_users:
@@ -69,7 +69,11 @@ def _has_user_sudo_cmd(client, user):
 
     # Execute command on remote platform
     cmd = f"sudo -s sudo -l -U {user}"
-    out = utils.execute_remote_command(client, cmd)
+    rc, out = utils.execute_remote_command(client, cmd, skip_error=True)
+    if rc == 127:
+        return False
+    elif rc != 0:
+        raise OSError(out)
 
     # Write each line as output in list
     output_lines = []
@@ -84,3 +88,4 @@ def _has_user_sudo_cmd(client, user):
             sudo_cmd = output_lines[-1]
 
     assert not sudo_cmd, f"User: {user} has sudo permissions for: {sudo_cmd}"
+    return False

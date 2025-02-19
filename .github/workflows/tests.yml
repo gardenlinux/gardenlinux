@@ -94,6 +94,13 @@ jobs:
     #     bin/garden-version "${{ inputs.version }}" | tee VERSION
     #     git update-index --assume-unchanged VERSION
 
+    - name: load cert cache
+      uses: actions/cache/restore@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v3
+      with:
+        path: cert
+        key: cert-${{ github.run_id }}
+        fail-on-cache-miss: true
+
     - name: get cname
       run: |
         # download images from S3 bucket
@@ -201,8 +208,15 @@ jobs:
       run: |
         make --directory=tests ${FLAVOR}-${ARCH}-test-platform 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.test.log"
 
+    - name: copy platform test junit xml file for ${{ matrix.flavor }} on ${{ matrix.arch }}
+      if: always()
+      run: |
+        cp "tests/${FLAVOR}-${ARCH}.platform.test.xml" "${{ env.artifact_dir }}/${{ env.cname }}.platform.test.xml" || true
+
     - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
+      if: always()
       with:
+        if-no-files-found: ignore
         name: platform-test-${{ env.cname }}
         path: |
           ${{ env.artifact_dir }}/${{ env.cname }}.platform.test.log

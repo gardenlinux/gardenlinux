@@ -93,7 +93,7 @@ targets:
         arch: arm64
         build: true
         test: true
-        test-platform: false
+        test-platform: true
         publish: true
       - features:
           - gardener
