@@ -1,5 +1,5 @@
 """
-In this we keep the platforms specify test configuration.
+In this we keep the platform specific test configuration.
 The file has been strucutred as fllows:
     - platform
     - non_platform
