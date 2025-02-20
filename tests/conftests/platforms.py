@@ -3,8 +3,8 @@ In this we keep the platforms specify test configuration.
 The file is structured as follows:
     - platform
     - non_platform
-    - pool platform
-    - pool non_platform
+    - platform set
+    - non_platform set
 """
 
 import pytest
