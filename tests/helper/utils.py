@@ -58,10 +58,6 @@ class AptUpdate():
         if not hasattr(cls, 'instance'):
             cls.instance = super(AptUpdate, cls).__new__(cls)
 
-        # Check if we have a apt lock.
-        (exit_code, output, error) = client.execute_command("apt-get update")
-        assert exit_code == 0, f"no {error=} expected"
-
         (exit_code, output, error) = client.execute_command("apt-get update")
         assert exit_code == 0, f"no {error=} expected"
 
