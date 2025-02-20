@@ -1,5 +1,5 @@
 """
-Features Flags.  
+Feature Flags.  
 Please note: Feature flags must be prefixed with a "_", for example "_prod". 
 """
 
