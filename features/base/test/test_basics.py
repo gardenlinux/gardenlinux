@@ -4,14 +4,31 @@ from helper.sshclient import RemoteClient
 
 
 @pytest.mark.security_id(1)
-def test_gl_is_support_distro(client, container, non_container):
+def test_gl_is_support_distro(client, non_container):
     """
     This tests ensures that the vendor field is set to 'gardenlinux'.
     """
 
     # We have to enable sudo to allow.
-    if non_container:
-      client._default_to_sudo = True
+    client._default_to_sudo = True
+    AptUpdate(client)
+
+    install_package_deb(client, "dpkg-dev")
+    assert '' ==  execute_remote_command(client, "dpkg-vendor --is gardenlinux")
+    assert '' ==  execute_remote_command(client, "dpkg-vendor  --derives-from debian")
+
+    status, output  = execute_remote_command(client, "dpkg-vendor --is debian", skip_error=True)
+    assert status == 1
+
+    # Disable sudo again.
+    client._default_to_sudo = False
+
+
+def test_gl_is_support_distro_container(client, container):
+    """
+    This tests ensures that the vendor field is set to 'gardenlinux'.
+    Within the container we do not have sudo and do not need it.
+    """
 
     AptUpdate(client)
     install_package_deb(client, "dpkg-dev")
@@ -23,9 +40,6 @@ def test_gl_is_support_distro(client, container, non_container):
     status, output  = execute_remote_command(client, "dpkg-vendor --is debian", skip_error=True)
     assert status == 1
 
-    # Disable sudo again.
-    if non_container:
-      client._default_to_sudo = False
 
 
 def test_no_man(client):
