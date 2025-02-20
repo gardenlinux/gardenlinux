@@ -1,7 +1,6 @@
 """
 Features Flags.  
-Please note: Feature flags have always a _ present.  When missed, you wont't able
-to find it.
+Please note: Feature flags must be prefixed with a "_", for example "_prod". 
 """
 
 import pytest
