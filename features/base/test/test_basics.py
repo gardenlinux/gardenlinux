@@ -9,14 +9,20 @@ def test_gl_is_support_distro(client):
     This tests ensures that the vendor field is set to 'gardenlinux'.
     """
 
+    # We have to enable sudo to allow.
+    client._default_to_sudo = True
     AptUpdate(client)
     install_package_deb(client, "dpkg-dev")
+
     assert '' ==  execute_remote_command(client, "dpkg-vendor --is gardenlinux")
     assert '' ==  execute_remote_command(client, "dpkg-vendor  --derives-from debian")
 
     # Negative case:
     status, output  = execute_remote_command(client, "dpkg-vendor --is debian", skip_error=True)
     assert status == 1
+
+    # Disable sudo again.
+    client._default_to_sudo = False
 
 
 def test_no_man(client):
