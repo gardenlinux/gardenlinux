@@ -1,6 +1,6 @@
 """
 In this we keep the platforms specify test configuration.
-The file has been strucutred as fllows:
+The file is structured as follows:
     - platform
     - non_platform
     - pool platform
