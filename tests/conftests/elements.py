@@ -1,5 +1,5 @@
 """
-Features Elements.
+Feature Elements.
 """
 
 import pytest

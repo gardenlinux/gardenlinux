@@ -1,4 +1,4 @@
-"""In here we keep the architecture we support or not"""
+"""We define the fixtures here, that we can use to turn off tests for architectures."""
 
 
 from sys import exit as sys_exit
