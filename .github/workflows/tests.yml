@@ -53,7 +53,7 @@ jobs:
   generate_matrix_test_platform:
     name: Generate Matrix for Platform Test
     uses: ./.github/workflows/generate_matrix.yml
-    with: 
+    with:
       flags: '${{ inputs.flavors_parse_params }}'
   platform_test_images:
     name: platform test images
@@ -98,9 +98,9 @@ jobs:
     #     git update-index --assume-unchanged VERSION
 
     - name: load cert cache
-      uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v3
+      uses: actions/cache/restore@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v4.2.0
       with:
-        path: cert
+        path: cert/*.*
         key: cert-${{ github.run_id }}
         fail-on-cache-miss: true
 
@@ -204,9 +204,8 @@ jobs:
         # tf variables generation
         TEST_PREFIX="gh-actions" CNAME="${{ env.cname }}" make --directory=tests/platformSetup ${FLAVOR}-${ARCH}-tofu-config
         # enable S3 backend
-        cp "tests/platformSetup/tofu/backend.tf.github" "tests/platformSetup/tofu/backend.tf" 
+        cp "tests/platformSetup/tofu/backend.tf.github" "tests/platformSetup/tofu/backend.tf"
         make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-apply 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.provisioning.log"
-
     - name: run platform test for ${{ matrix.flavor }} on ${{ matrix.arch }}
       run: |
         make --directory=tests ${FLAVOR}-${ARCH}-tofu-test-platform 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.test.log"

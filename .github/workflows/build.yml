@@ -77,9 +77,9 @@ jobs:
           for f in secureboot.{{pk,null.pk,kek,db}.{crt,der,auth},db.arn,aws-efivars}; do
             ln -sr "cert/gardenlinux-$f" "cert/$f"
           done
-      - uses: actions/cache/save@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v3
+      - uses: actions/cache/save@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v4.2.0
         with:
-          path: cert
+          path: cert/*.*
           key: cert-${{ github.run_id }}
   base:
     name: bootstrap stage
@@ -112,7 +112,7 @@ jobs:
           git update-index --assume-unchanged VERSION
       - name: build base-${{ matrix.arch }}
         run: make base-${{ matrix.arch }}-build
-      - uses: actions/cache/save@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v3
+      - uses: actions/cache/save@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v4.2.0
         with:
           path: .build
           key: base-${{ matrix.arch }}-${{ github.run_id }}
@@ -137,7 +137,7 @@ jobs:
         with:
           submodules: true
       - uses: ./.github/actions/setup
-        with: 
+        with:
           arch: "${{ matrix.arch }}"
       - name: build test container
         run: |
@@ -148,18 +148,18 @@ jobs:
           podman build --squash --tag test --build-arg base="$OCI_IMAGE_TAG" tests
           podman save --format oci-archive test > test.oci
       - name: upload test container
-        uses: actions/cache/save@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v3
+        uses: actions/cache/save@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v4.2.0
         with:
           path: test.oci
           key: test_container:${{ matrix.arch }}-${{ github.run_id }}
-          
+
   generate_matrix_images:
     uses: ./.github/workflows/generate_matrix.yml
-    with: 
+    with:
       flags: '${{ inputs.flavors_parse_params_images }}'
   generate_matrix_bare:
     uses: ./.github/workflows/generate_matrix.yml
-    with: 
+    with:
       flags: '${{ inputs.flavors_parse_params_bare }}'
   images:
     needs: [ version, cert, base, test_container, generate_matrix_images ]
@@ -184,7 +184,7 @@ jobs:
         with:
           submodules: true
       - uses: ./.github/actions/setup
-        with: 
+        with:
           arch: "${{ matrix.arch }}"
       - name: set VERSION=${{ needs.version.outputs.version }}
         run: |
@@ -192,9 +192,9 @@ jobs:
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
       - name: load cert cache
-        uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v3
+        uses: actions/cache/restore@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v4.2.0
         with:
-          path: cert
+          path: cert/*.*
           key: cert-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: write secureboot db arn for kms backed certificates
@@ -209,13 +209,13 @@ jobs:
           aws-region: ${{ secrets.aws_region }}
           role-duration-seconds: 14400
       - name: load bootstrap stage cache
-        uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v3
+        uses: actions/cache/restore@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v4.2.0
         with:
           path: .build
           key: base-${{ matrix.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: download test container cache
-        uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v3
+        uses: actions/cache/restore@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v4.2.0
         with:
           path: test.oci
           key: test_container:${{ matrix.arch }}-${{ github.run_id }}
@@ -290,7 +290,7 @@ jobs:
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
       - name: load bootstrap stage cache
-        uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v3
+        uses: actions/cache/restore@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v4.2.0
         with:
           path: .build
           key: base-${{ matrix.arch }}-${{ github.run_id }}
