@@ -250,23 +250,26 @@ class QEMU:
         image = self.config["image"]
         image_name = os.path.basename(image)
 
-        if arch == "amd64":
-            cmd = f"/gardenlinux/bin/start-vm \
+        # Base command parts
+        base_cmd = f"/gardenlinux/bin/start-vm \
               --daemonize \
-              --arch x86_64 \
               --port {port} \
               --destport 2222 \
               --pidfile /tmp/qemu.pid"
+
+        # Add TPM2 flag if enabled
+        if self.config.get("tpm2", False):
+            base_cmd += " --tpm2"
+
+        if arch == "amd64":
+            cmd = f"{base_cmd} \
+              --arch x86_64 \
               /tmp/{image_name}.snapshot.qcow2"
             logger.info(cmd)
 
         elif arch == "arm64":
-            cmd = f"/gardenlinux/bin/start-vm \
-              --daemonize \
+            cmd = f"{base_cmd} \
               --arch aarch64 \
-              --port {port} \
-              --destport 2222 \
-              --pidfile /tmp/qemu.pid"
               /tmp/{image_name}.snapshot.qcow2"
             logger.info(cmd)
         else:
