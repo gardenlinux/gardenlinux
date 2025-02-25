@@ -29,17 +29,12 @@ def azure(platform):
         pytest.skip('test only supported on azure platform')
 
 @pytest.fixture
-def chroot(platform):
-    if platform != 'chroot':
-        pytest.skip('test only supported on chroot platform')
-
-@pytest.fixture
 def container(platform):
     """
-    This fixture is an alias of "chroot" but does not use the "chroot" env.  However, it only needs
-    the underlying container for its tests.
+    This fixture is for the container platform and require a Container Runtime Environment. 
+    We do not sepcify what runtime environment this targets.
     """
-    if platform != 'container' or platform != 'chroot':
+    if platform != 'container': 
         pytest.skip('test only supported on container platform')
 
 @pytest.fixture
@@ -56,11 +51,6 @@ def gcp(platform):
 def kvm(platform):
     if platform != 'kvm':
         pytest.skip('test only supported on kvm platform')
-
-@pytest.fixture
-def local(platform):
-    if platform != 'local':
-        pytest.skip('test only supported on local platform')
 
 @pytest.fixture
 def metal(platform):
@@ -92,11 +82,6 @@ def non_azure(platform):
         pytest.skip('test not supported on azure')
 
 @pytest.fixture
-def non_chroot(platform):
-    if platform == 'chroot':
-        pytest.skip('test not supported on chroot')
-
-@pytest.fixture
 def non_container(testconfig):
     features = testconfig.get("features", [])
     if "container" in features:
@@ -116,11 +101,6 @@ def non_gcp(platform):
 def non_kvm(platform):
     if platform == 'kvm':
         pytest.skip('test not supported on kvm')
-
-@pytest.fixture
-def non_local(platform):
-    if platform == 'local':
-        pytest.skip('test not supported on local')
 
 @pytest.fixture
 def non_metal(testconfig):

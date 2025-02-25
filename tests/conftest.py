@@ -19,7 +19,7 @@ from _pytest.config.argparsing import Parser
 
 from platformSetup.chroot import CHROOT
 from platformSetup.firecracker import FireCracker
-from platformSetup.kvm import KVM
+from platformSetup.qemu import QEMU
 from platformSetup.manual import Manual
 
 logger = logging.getLogger(__name__)
@@ -55,7 +55,6 @@ def pipeline(pytestconfig):
         return True
     return False
 
-
 @pytest.fixture(scope="session")
 def iaas(pytestconfig):
     if pytestconfig.getoption('iaas'):
@@ -83,7 +82,6 @@ def image_suffix(iaas):
         "openstack-ccee": "rootfs.vmdk"
     }
     return image_suffixes[iaas]
-
 
 
 @pytest.fixture(scope="session")
@@ -150,7 +148,7 @@ def testconfig(pipeline, iaas, pytestconfig):
             pass
         elif iaas == 'firecracker':
             pass
-        elif iaas == 'kvm':
+        elif iaas == 'qemu':
             pass
         elif iaas == 'manual':
             pass
@@ -236,8 +234,8 @@ def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
         yield from CHROOT.fixture(testconfig)
     elif iaas == "firecracker":
         yield from FireCracker.fixture(testconfig)
-    elif iaas == "kvm":
-        yield from KVM.fixture(testconfig)
+    elif iaas == "qemu":
+        yield from QEMU.fixture(testconfig)
     elif iaas == "ali":
         from platformSetup.ali import ALI
         yield from ALI.fixture(testconfig, test_name)
@@ -304,11 +302,12 @@ def features(client):
 
 # all configuration for our test has been split into smaller parts.  
 pytest_plugins = [
-     "conftests.platforms",
-     "conftests.elements",
-     "conftests.features",
      "conftests.architecture",
+     "conftests.elements",
+     "conftests.iaas",
+     "conftests.features",
      "conftests.miscellaneous",
+     "conftests.platforms",
   ]
 
 # THis is a helper function some tests invoke.
