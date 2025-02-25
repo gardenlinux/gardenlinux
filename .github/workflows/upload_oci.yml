@@ -66,7 +66,7 @@ jobs:
           mv python-gardenlinux-cli /opt/glcli
           pip install -r /opt/glcli/requirements.txt
       - name: Install cosign
-        uses: sigstore/cosign-installer@v3.8.0
+        uses: sigstore/cosign-installer@v3.8.1
         with:
           cosign-release: 'v2.4.1'
       - name: push using the glcli util
