@@ -8,10 +8,10 @@ import subprocess
 from cryptography.hazmat.primitives.asymmetric import rsa, ed25519, ec
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
-from os import environ, path
+from os import environ, path, makedirs
 from typing import Optional
 
-from paramiko import SSHClient, AutoAddPolicy, RSAKey, ECDSAKey, Ed25519Key
+from paramiko import SSHClient, AutoAddPolicy, RSAKey, ECDSAKey, Ed25519Key, PKey
 from paramiko.ssh_exception import NoValidConnectionsError, AuthenticationException, SSHException
 
 from scp import SCPClient, SCPException
@@ -21,83 +21,116 @@ logger = logging.getLogger(__name__)
 class RemoteClient:
     """Client to interact with a remote host via SSH & SCP."""
 
-    @classmethod
+    @staticmethod
     def generate_key_pair(
-        cls,
         filename: str = None,
         key_type: str = "ed25519",  # Default to ed25519
         bits: int = 2048,
         passphrase: str = None,
     ):
-        """Generate key pair (RSA, ECDSA, or Ed25519) compatible with OpenSSH.
-
-        :param filename: name of private key file
-        :param key_type: type of key (rsa, ecdsa, ed25519)
-        :param bits: length of RSA or ECDSA key (ignored for Ed25519)
-        :param passphrase: passphrase of the key
+        """Generate a key pair for SSH authentication.
+        
+        Args:
+            filename: Path where the private key should be saved
+            key_type: Type of key to generate ('rsa', 'ed25519', or 'ecdsa')
+            bits: Key size in bits (for RSA keys)
+            passphrase: Optional passphrase for the private key
+            
+        Returns:
+            str: The key fingerprint
         """
-        if key_type == "rsa":
-            private_key = rsa.generate_private_key(
-                public_exponent=65537, key_size=bits, backend=default_backend()
-            )
-        elif key_type == "ecdsa":
-            private_key = ec.generate_private_key(ec.SECP256R1(), default_backend())
-        elif key_type == "ed25519":
-            private_key = ed25519.Ed25519PrivateKey.generate()
-        else:
-            raise ValueError("Unsupported key type. Use 'rsa', 'ecdsa', or 'ed25519'.")
+        if filename is None:
+            filename = path.expanduser("~/.ssh/id_ed25519_gardenlinux")
 
-        # Serialize private key
-        if key_type == "ed25519":
-            # Use OpenSSH format for Ed25519 keys to ensure compatibility with OpenSSH
-            private_key_bytes = private_key.private_bytes(
+        # Create ~/.ssh directory if it doesn't exist
+        ssh_dir = path.dirname(filename)
+        makedirs(ssh_dir, mode=0o700, exist_ok=True)
+        logger.info(f"Ensuring SSH directory exists: {ssh_dir}")
+
+        if not path.exists(filename):
+            if key_type == "ed25519":
+                private_key = ed25519.Ed25519PrivateKey.generate()
+            elif key_type == "rsa":
+                private_key = rsa.generate_private_key(
+                    public_exponent=65537,
+                    key_size=bits,
+                    backend=default_backend()
+                )
+            elif key_type == "ecdsa":
+                private_key = ec.generate_private_key(
+                    curve=ec.SECP256R1(),
+                    backend=default_backend()
+                )
+            else:
+                raise ValueError(f"Unsupported key type: {key_type}")
+
+            # Serialize private key in OpenSSH format
+            private_bytes = private_key.private_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.OpenSSH,
-                encryption_algorithm=serialization.BestAvailableEncryption(passphrase.encode()) if passphrase else serialization.NoEncryption(),
+                encryption_algorithm=serialization.NoEncryption() if passphrase is None
+                else serialization.BestAvailableEncryption(passphrase.encode())
             )
+
+            # Get public key and serialize in OpenSSH format
+            public_key = private_key.public_key()
+            public_bytes = public_key.public_bytes(
+                encoding=serialization.Encoding.OpenSSH,
+                format=serialization.PublicFormat.OpenSSH
+            )
+
+            # Save private key
+            with open(filename, 'wb') as f:
+                f.write(private_bytes)
+            
+            # Save public key
+            with open(f"{filename}.pub", 'wb') as f:
+                f.write(public_bytes)
+
+            # Set correct permissions
+            subprocess.run(['chmod', '600', filename])
+            subprocess.run(['chmod', '644', f"{filename}.pub"])
+
+            # Calculate fingerprint
+            key_hash = hashlib.sha256(public_bytes).digest()
+            fingerprint = base64.b64encode(key_hash).decode('utf-8')
+            
+            logger.info(f"Generated {key_type.upper()} key pair at {filename}")
+            logger.debug(f"Key fingerprint: SHA256:{fingerprint}")
+            
+            return f"SHA256:{fingerprint}"
         else:
-            # Use PEM format for RSA and ECDSA keys
-            private_key_bytes = private_key.private_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PrivateFormat.TraditionalOpenSSL,
-                encryption_algorithm=serialization.BestAvailableEncryption(passphrase.encode()) if passphrase else serialization.NoEncryption(),
-            )
-
-        # Write private key to file
-        with open(filename, "wb") as f:
-            f.write(private_key_bytes)
-
-        # Write public key to file
-        public_key = private_key.public_key()
-        public_key_bytes = public_key.public_bytes(
-            encoding=serialization.Encoding.OpenSSH,
-            format=serialization.PublicFormat.OpenSSH,
-        )
-        with open(f"{filename}.pub", "wb") as f:
-            f.write(public_key_bytes)
-
-        # Calculate fingerprint (SHA256 of the public key)
-        digest = hashlib.sha256(public_key_bytes).digest()
-        fingerprint = base64.b64encode(digest).decode('utf-8')
-
-        logger.info(f"Generated {key_type.upper()} key pair: {filename}")
-        logger.info(f"Fingerprint: {fingerprint}")
-
-        return fingerprint        
-
+            logger.info(f"Using existing key at {filename}")
+            return filename
 
     def _determine_key_type(self):
         """Determine the key type by reading the key file."""
         with open(self.ssh_key_filepath, "rb") as keyfile:
             key_data = keyfile.read()
-            if b"BEGIN RSA PRIVATE KEY" in key_data:
+            
+            # First check for OpenSSH format keys
+            if b"BEGIN OPENSSH PRIVATE KEY" in key_data:
+                # Need to parse the actual key type from the OpenSSH format
+                if b"ssh-rsa" in key_data:
+                    return "rsa"
+                elif b"ssh-ed25519" in key_data:
+                    return "ed25519"
+                elif b"ecdsa-sha2" in key_data:
+                    return "ecdsa"
+                else:
+                    # If we can't determine the type but it's OpenSSH format, assume RSA
+                    logger.warning(f"Could not determine specific key type for OpenSSH key at {self.ssh_key_filepath}, assuming RSA")
+                    return "rsa"
+                
+            # Check for traditional PEM format keys
+            elif b"BEGIN RSA PRIVATE KEY" in key_data:
                 return "rsa"
             elif b"BEGIN EC PRIVATE KEY" in key_data:
                 return "ecdsa"
-            elif b"BEGIN OPENSSH PRIVATE KEY" in key_data:  # Ed25519 keys use this header
-                return "ed25519"
-            else:
-                raise ValueError("Unsupported or unknown key type")
+            
+            # If we get here, we couldn't identify the key type
+            raise ValueError(f"Could not determine key type for {self.ssh_key_filepath}. " +
+                            "File may be corrupted or in an unsupported format.")
 
 
     def __init__(
@@ -113,10 +146,14 @@ class RemoteClient:
     ) -> None:
         self.host = host
         self.port = port
+        self.sshconfig = sshconfig  # Store the SSH config
         self._default_to_sudo = sudo
         self.conn = None
         self._client = None
         self._scp = None
+
+        # For this test environment, it is ok to ignore host key checking
+        self._ignore_host_keys = sshconfig.get("ignore_host_keys", True)
 
         if ssh_max_retries is None and "GL_REMOTE_CLIENT_SSH_MAX_RETRIES" in environ:
             try: ssh_max_retries = int(environ["GL_REMOTE_CLIENT_SSH_MAX_RETRIES"])
@@ -158,8 +195,23 @@ class RemoteClient:
         if self._client is None:
             """Open connection to remote host."""
             self._client = SSHClient()
-            self._client.load_system_host_keys()
-            self._client.set_missing_host_key_policy(AutoAddPolicy())
+            
+            if self._ignore_host_keys:
+                # For test environments, ignore host keys
+                self._client.set_missing_host_key_policy(AutoAddPolicy())
+                # Also remove any existing host key to prevent mismatches
+                known_hosts = path.expanduser('~/.ssh/known_hosts')
+                if path.exists(known_hosts):
+                    try:
+                        subprocess.run(["ssh-keygen", "-R", f"[{self.host}]:{self.port}"], 
+                                     stdout=subprocess.PIPE, 
+                                     stderr=subprocess.PIPE)
+                    except Exception as e:
+                        logger.warning(f"Failed to remove host key: {e}")
+            else:
+                # For production environments, use system host keys
+                self._client.load_system_host_keys()
+                self._client.set_missing_host_key_policy(AutoAddPolicy())
 
             logger.info(f"Attempting to establish an SSH connection to {self.host}:{self.port}...")
             self._client_connect(
@@ -219,28 +271,42 @@ class RemoteClient:
 
     def __get_ssh_key(self):
         """Fetch locally stored SSH key or generate a new one."""
-        # Check if the SSH key file exists
+        # Check if we should generate a new key
+        should_generate = self.sshconfig.get("ssh_key_generate", True)
+        
+        # Generate key if it doesn't exist and generation is enabled
         if not path.exists(self.ssh_key_filepath):
-            # If file does not exist, generate a new key pair with default to Ed25519
-            logger.info(
-                f"No SSH key found at {self.ssh_key_filepath}, generating a new key."
-            )
-            self.generate_key_pair(filename=self.ssh_key_filepath)
-            self.key_type = self._determine_key_type()
-        else:
-            # If file exists, determine the key type
-            self.key_type = self._determine_key_type()
-            logger.info(f"Found {self.key_type.upper()} SSH key at {self.ssh_key_filepath}")
-        self.ssh_key_file_private = self.ssh_key_filepath
-        self.ssh_key_file_public = self.ssh_key_filepath + ".pub"
+            if should_generate:
+                logger.info(f"No SSH key found at {self.ssh_key_filepath}, generating a new key.")
+                self.generate_key_pair(filename=self.ssh_key_filepath)
+            else:
+                raise FileNotFoundError(f"SSH key file not found: {self.ssh_key_filepath} and key generation is disabled")
+
+        # Read first line of key file to determine type
         with open(self.ssh_key_filepath, "r") as keyfile:
-            if self.key_type == "rsa":
-                self.ssh_key_private = RSAKey.from_private_key(keyfile, password=self.passphrase)
-            elif self.key_type == "ecdsa":
-                self.ssh_key_private = ECDSAKey.from_private_key(keyfile, password=self.passphrase)
-            elif self.key_type == "ed25519":
-                self.ssh_key_private = Ed25519Key.from_private_key(keyfile, password=self.passphrase)
-        return self.ssh_key_private
+            first_line = keyfile.readline().strip()
+            keyfile.seek(0)  # Reset file pointer for key loading
+            
+            if "OPENSSH PRIVATE KEY" in first_line:
+                # For OpenSSH format, try each key type
+                try:
+                    return Ed25519Key.from_private_key(keyfile, password=self.passphrase)
+                except Exception:
+                    keyfile.seek(0)
+                    try:
+                        return RSAKey.from_private_key(keyfile, password=self.passphrase)
+                    except Exception:
+                        keyfile.seek(0)
+                        try:
+                            return ECDSAKey.from_private_key(keyfile, password=self.passphrase)
+                        except Exception as e:
+                            raise ValueError(f"Could not load OpenSSH key: {str(e)}")
+            elif "RSA PRIVATE KEY" in first_line:
+                return RSAKey.from_private_key(keyfile, password=self.passphrase)
+            elif "EC PRIVATE KEY" in first_line:
+                return ECDSAKey.from_private_key(keyfile, password=self.passphrase)
+            else:
+                raise ValueError(f"Unrecognized key format in {self.ssh_key_filepath}")
 
     def _increase_retry_count_and_wait(self):
         if self._ssh_retry_count >= self._ssh_max_retries:
