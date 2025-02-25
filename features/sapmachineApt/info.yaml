@@ -1,0 +1,5 @@
+description: "SapMachine - An OpenJDK release maintained and supported by SAP. This feature does not install SapMachine, but adds its apt repo so you can install it."
+type: element
+features:
+  include:
+    - _curl
