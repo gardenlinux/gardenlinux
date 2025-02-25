@@ -148,20 +148,22 @@ resource "azurerm_shared_image_version" "shared_image_version" {
       ]
       additional_signatures {
         db {
-          key_type = "x509"
-          certificate_data = replace(
+          type = "x509"
+          certificate_base64 = [
             replace(
               replace(
-                join("", split("\n", file("cert/secureboot.db.crt"))),
-                "-----BEGIN CERTIFICATE-----",
+                replace(
+                  join("", split("\n", file("cert/secureboot.db.crt"))),
+                  "-----BEGIN CERTIFICATE-----",
+                  ""
+                ),
+                "-----END CERTIFICATE-----",
                 ""
               ),
-              "-----END CERTIFICATE-----",
+              "\n",
               ""
-            ),
-            "\n",
-            ""
-          )
+            )
+          ]
         }
       }
     }

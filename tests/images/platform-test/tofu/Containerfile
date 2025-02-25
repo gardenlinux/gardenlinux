@@ -31,8 +31,8 @@ RUN cd ${TOFU_HOME} && tofu providers mirror ${TOFU_HOME}/.terraform
 
 # install providers from development forks
 COPY .terraformrc ${TOFU_HOME}/.terraformrc
-RUN curl -LO --create-dirs --output-dir ${TOFU_PROVIDERS_CUSTOM} https://github.com/b1-systems/google-magic-modules/releases/download/v6.16.0-secureboot1/terraform-provider-google \
-    && curl -LO --create-dirs --output-dir ${TOFU_PROVIDERS_CUSTOM} https://github.com/b1-systems/terraform-provider-azurerm/releases/download/v4.16.1-alpha1-secureboot1/terraform-provider-azurerm \
+RUN curl -LO --create-dirs --output-dir ${TOFU_PROVIDERS_CUSTOM} https://github.com/b1-systems/google-magic-modules/releases/download/v6.16.0-secureboot2/terraform-provider-google \
+    && curl -LO --create-dirs --output-dir ${TOFU_PROVIDERS_CUSTOM} https://github.com/b1-systems/terraform-provider-azurerm/releases/download/v4.20.1-alpha1-secureboot1/terraform-provider-azurerm \
     && chmod +x ${TOFU_PROVIDERS_CUSTOM}/terraform-provider-*
 
 
