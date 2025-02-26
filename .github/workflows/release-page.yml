@@ -111,7 +111,7 @@ jobs:
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_REGION }}
       - name: Create GLRD release
-        uses: gardenlinux/glrd@v2
+        uses: gardenlinux/glrd@v3
         with:
           cmd: |
             type=${{ inputs.type }}
@@ -129,7 +129,7 @@ jobs:
               glrd-manage --s3-update --create dev --version ${version} --commit ${commit}
             fi
       - name: Get created GLRD release
-        uses: gardenlinux/glrd@v2
+        uses: gardenlinux/glrd@v3
         with:
           cmd: |
             version=${{ inputs.version }}

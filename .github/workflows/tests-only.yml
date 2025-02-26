@@ -7,7 +7,7 @@ on:
       version:
         description: "Garden Linux Version: version passed to glrd"
         type: string
-        default: latest
+        default: now
       build:
         description: "Build for version 'today' instead of downloading version from S3"
         type: boolean
@@ -30,7 +30,7 @@ jobs:
       id-token: write
       packages: write
     with:
-      version: 'today'
+      version: '${{ inputs.version }}'
       use_kms: false
       flavors_parse_params_images: '${{ inputs.flavors_parse_params }}'
       flavors_parse_params_bare: '--exclude "*" --no-arch --json-by-arch'

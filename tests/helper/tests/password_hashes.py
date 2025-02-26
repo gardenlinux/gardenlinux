@@ -26,5 +26,8 @@ def password_hashes(client):
         "Redundant options defined in /etc/pam.d/common-password"
 
     # Validate the entry for 'sha512' or 'yescrypt'
+    # We're using YESCRYPT instead of sha512 because it offers more
+    # resistanc to offline attacks.
+    # https://www.openwall.com/yescrypt/
     assert 'yescrypt' in test_line or 'sha512' in test_line, \
-        f"No yescrypt or sha512 found in /etc/pam.d/common-password"
+        "No yescrypt or sha512 found in /etc/pam.d/common-password"
