@@ -62,16 +62,14 @@ def pipeline(pytestconfig):
 
 @pytest.fixture(scope="session")
 def iaas(pytestconfig):
-    """Fetch the value form the --provisioner parameter. Depreated in favor of --provisioner. """
     if pytestconfig.getoption('iaas'):
-        warnings.warn(UserWarning("pytest was invoke with the --iaas flag that is marked as deprecated! Use --provisioner instead!"))
+        warnings.warn(UserWarning("--iasas is deprecated, use --provisioner instead!"))
         return pytestconfig.getoption('iaas')
     pytest.exit("Need to specify which provisioner (former IaaS) to test on.", 1)
 
 @pytest.fixture(scope="session")
 def provisioner(pytestconfig):
-    """Fetch the value form the --provisioner parameter."""
-    if pytestconfig.getoption('provisioner'):
+    if pytestconfig.getoption('iaas'):
         return pytestconfig.getoption('provisioner')
     pytest.exit("Need to specify which provisioner to test on.", 1)
 
@@ -110,7 +108,7 @@ def imageurl(pipeline, testconfig, pytestconfig, request):
 
 
 @pytest.fixture(scope="session")
-def testconfig(pipeline, provisioner, pytestconfig):
+def testconfig(pipeline, iaas, pytestconfig):
     if not pipeline:
         configfile = pytestconfig.getoption("configfile")
         try:
@@ -123,7 +121,7 @@ def testconfig(pipeline, provisioner, pytestconfig):
         else:
             pytest.exit(f"Configuration section for {iaas} not found in {configfile}.", 1)
     else:
-        if provisioner == 'aws':
+        if iaas == 'aws':
             ssh_config = {
                 'user': 'admin'
             }
@@ -133,7 +131,7 @@ def testconfig(pipeline, provisioner, pytestconfig):
                 'keep_running': 'false',
                 'ssh': ssh_config
             }
-        elif provisioner == 'azure':
+        elif iaas == 'azure':
             ssh_config = {
                 'user': 'azureuser'
             }
@@ -142,7 +140,7 @@ def testconfig(pipeline, provisioner, pytestconfig):
                 'keep_running': 'false',
                 'ssh': ssh_config
             }
-        elif provisioner == 'gcp':
+        elif iaas == 'gcp':
             ssh_config = {
                 'user': 'gardenlinux'
             }
@@ -153,19 +151,19 @@ def testconfig(pipeline, provisioner, pytestconfig):
                 'keep_running': 'false',
                 'ssh': ssh_config
             }
-        elif provisioner == 'ali':
+        elif iaas == 'ali':
             pass
-        elif provisioner == 'openstack-ccee':
+        elif iaas == 'openstack-ccee':
             pass
-        elif provisioner == 'chroot':
+        elif iaas == 'chroot':
             pass
-        elif provisioner == 'firecracker':
+        elif iaas == 'firecracker':
             pass
-        elif provisioner == 'qemu':
+        elif iaas == 'qemu':
             pass
-        elif provisioner == 'manual':
+        elif iaas == 'manual':
             pass
-        elif provisioner == 'local':
+        elif iaas == 'local':
             pass
         return config
 
@@ -223,49 +221,48 @@ def gcp_credentials(testconfig, pipeline, request):
 
 
 @pytest.fixture(scope="session")
-def client(testconfig, provisioner, imageurl, request) -> Iterator[RemoteClient]:
-    logger.info(f"Testconfig for {provisioner=} is {testconfig}")
+def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
+    logger.info(f"Testconfig for {iaas=} is {testconfig}")
     test_name = testconfig.get('test_name', f"gl-test-{time.strftime('%Y%m%d')}-{os.urandom(2).hex()}")
-    if provisioner == "aws":
+    if iaas == "aws":
         from platformSetup.aws import AWS
         session = request.getfixturevalue('aws_session')
         yield from AWS.fixture(session, testconfig, imageurl, test_name)
-    elif provisioner == "gcp":
+    elif iaas == "gcp":
         from platformSetup.gcp import GCP
         
         credentials = request.getfixturevalue('gcp_credentials')
         logger.info("Requesting GCP fixture")
         yield from GCP.fixture(credentials, testconfig, imageurl, test_name)
-    elif provisioner == "azure":
+    elif iaas == "azure":
         from platformSetup.azure import AZURE
         credentials = request.getfixturevalue('azure_credentials')
         yield from AZURE.fixture(credentials, testconfig, imageurl, test_name)
-    elif provisioner == "openstack-ccee":
+    elif iaas == "openstack-ccee":
         from platformSetup.openstackccee import OpenStackCCEE
         yield from OpenStackCCEE.fixture(testconfig)
-    elif provisioner == "chroot":
+    elif iaas == "chroot":
         yield from CHROOT.fixture(testconfig)
-    elif provisioner == "firecracker":
+    elif iaas == "firecracker":
         yield from FireCracker.fixture(testconfig)
-    elif provisioner == "qemu":
+    elif iaas == "qemu":
         yield from QEMU.fixture(testconfig)
-    elif provisioner == "ali":
+    elif iaas == "ali":
         from platformSetup.ali import ALI
         yield from ALI.fixture(testconfig, test_name)
-    elif provisioner == "manual":
+    elif iaas == "manual":
         yield from Manual.fixture(testconfig)
-    elif provisioner == "local":
+    elif iaas == "local":
         yield testconfig
     else:
-        raise ValueError(f"invalid {provisioner=}")
+        raise ValueError(f"invalid {iaas=}")
 
 
 
 def pytest_collection_modifyitems(config, items):
     """Skip tests that belong to a feature that is not enabled in the test config"""
     skip = pytest.mark.skip(reason="test is not part of the enabled features")
-    provisioner= config.getoption("--iaas")
-    provisioner = config.getoption("--provisioner")
+    iaas = config.getoption("--iaas")
     config_file = config.getoption("--configfile")
 
     try:
@@ -275,8 +272,8 @@ def pytest_collection_modifyitems(config, items):
         logger.error(f"can not open config file {config_file}")
         pytest.exit(err, 1)
 
-    if not provisioner == 'local':
-        features = config_options[provisioner].get("features", [])
+    if not iaas == 'local':
+        features = config_options[iaas].get("features", [])
     else:
         features = []
 
