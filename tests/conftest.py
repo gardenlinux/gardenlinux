@@ -81,6 +81,8 @@ def platform(pytestconfig, testconfig):
         return testconfig['platform']
     elif pytestconfig.getoption('iaas'):
         return pytestconfig.getoption('iaas')
+    elif pytestconfig.getoption('provisioner'):
+        return pytestconfig.getoption('provisioner')
     else:
         pytest.exit("Need to specify which platform (in configfile) or IaaS (via parameter) to test on.", 1)
 
@@ -120,6 +122,8 @@ def testconfig(pipeline, provisioner, pytestconfig):
             pytest.exit(err, 1)
         if iaas in configoptions:
             return configoptions[iaas]
+        elif provisioner in configoptions:
+            return configoptions[provisioner]
         else:
             pytest.exit(f"Configuration section for {iaas} not found in {configfile}.", 1)
     else:
