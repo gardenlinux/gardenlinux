@@ -5,7 +5,7 @@ import string
 import subprocess
 
 
-def read_file_remote(client, file, remove_comments=False)-> list:
+def read_file_remote(client, file, remove_comments=False, remove_newlines=False)-> list:
     """ Read a file from the remote file system and returns it for
         proper processing trunecated.
     """
@@ -14,7 +14,7 @@ def read_file_remote(client, file, remove_comments=False)-> list:
     to_return = []
     for line in output.split("\n"):
         ## Check if we might have an empty entry.
-        if not line:
+        if remove_newlines and not line:
             continue
         # Ensure that we only skip lines when the comment start with.
         if remove_comments and line.startswith('#'):
