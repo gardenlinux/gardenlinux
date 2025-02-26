@@ -23,6 +23,8 @@ jobs:
   create_github_release:
     if: ${{ inputs.type }} == 'patch'
     environment: oidc_aws_s3_upload
+    needs:
+      - glvd
     permissions:
       id-token: write
       contents: write
@@ -96,6 +98,7 @@ jobs:
     with:
       version: ${{ inputs.version }}
       is_latest:  ${{ inputs.is_latest }}
+
   glrd:
     name: create GLRD release
     permissions:
@@ -136,3 +139,28 @@ jobs:
             major=$(echo ${version} | cut -d'.' -f1)
             minor=$(echo ${version} | cut -d'.' -f2)
             glrd --type stable,patch,dev --version ${major}
+
+  # Run glvd ingestion *after* glrd release was triggered, but *before* release page is generated
+  # This is needed for the automatic changelog generation
+  glvd:
+    if: ${{ inputs.type }} == 'patch'
+    name: Update GLVD distro list
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # This is required for requesting the JWT
+      id-token: write
+    needs:
+      - glrd
+    steps:
+      - name: Get OIDC token
+        id: get-token
+        run: |
+          IDTOKEN=$(curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=glvd" | jq -r '.value')
+          echo "idToken=${IDTOKEN}" >> $GITHUB_OUTPUT
+      - uses: azure/k8s-set-context@v4
+        with:
+           method: kubeconfig
+           kubeconfig: "${{ secrets.KUBECONFIG }}"
+      - run: kubectl create job --from=cj/glvd-ingestion ingest$RANDOM
+      - run: echo "give it some time to run the ingestion job" && sleep 60
