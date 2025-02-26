@@ -245,8 +245,8 @@ def release_notes_changes_section(gardenlinux_version):
             output.append(upgrade_line)
 
             if package["fixedCves"]:
-                cve_line = "  - " + ", ".join(package["fixedCves"])
-                output.append(cve_line)
+                for fixedCve in package["fixedCves"]:
+                    output.append(f'  - {fixedCve}')
 
         return "\n".join(output) + "\n"
     except:
