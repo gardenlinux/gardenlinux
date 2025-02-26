@@ -202,7 +202,7 @@ jobs:
         run: echo "${{ secrets.secureboot_db_kms_arn }}" > cert/gardenlinux-secureboot.db.arn
       - name: configure aws credentials for kms signing
         if: ${{ inputs.use_kms }}
-        uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_kms_role }}
           role-session-name: ${{ secrets.aws_oidc_session }}
