@@ -279,16 +279,12 @@ def pytest_collection_modifyitems(config, items):
         logger.error(f"can not open config file {config_file}")
         pytest.exit(err, 1)
 
-    # Depreated, will be removed soon.
-    if not iaas == 'local':
+    if not iaas == 'local' or  provisioner == 'local':
         features = config_options[iaas].get("features", [])
-    else:
-        features = []
-
-    if not provisioner == 'local':
         features = config_options[provisioner].get("features", [])
     else:
         features = []
+
 
     for item in items:
         for marker in item.iter_markers(name="security_id"):
