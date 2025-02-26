@@ -1,12 +1,12 @@
-import re
-import os
-import sys
+import pytest
+import logging
 import json
 import time
 import yaml
-import pytest
-import logging
-import warnings
+import sys
+import os
+import sys
+import re
 
 
 from typing import Iterator
@@ -63,15 +63,9 @@ def pipeline(pytestconfig):
 @pytest.fixture(scope="session")
 def iaas(pytestconfig):
     if pytestconfig.getoption('iaas'):
-        warnings.warn(UserWarning("--iasas is deprecated, use --provisioner instead!"))
         return pytestconfig.getoption('iaas')
-    pytest.exit("Need to specify which provisioner (former IaaS) to test on.", 1)
+    pytest.exit("Need to specify which IaaS to test on.", 1)
 
-@pytest.fixture(scope="session")
-def provisioner(pytestconfig):
-    if pytestconfig.getoption('iaas'):
-        return pytestconfig.getoption('provisioner')
-    pytest.exit("Need to specify which provisioner to test on.", 1)
 
 @pytest.fixture(scope="session")
 def platform(pytestconfig, testconfig):
