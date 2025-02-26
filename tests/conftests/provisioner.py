@@ -8,6 +8,8 @@ The parameter will be not be define by the feauter, but by a execution flag
 that we run during pytest
 
 pytest --iaas
+pytest --provisioner
+
 """
 
 import pytest

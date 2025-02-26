@@ -29,7 +29,12 @@ def pytest_addoption(parser: Parser):
     parser.addoption(
         "--iaas",
         action="store",
-        help="Infrastructure the tests should run on",
+        help="What Infrastructure the tests should be provisioned on to run.",
+    )
+    parser.addoption(
+        "--provisioner",
+        action="store",
+        help="What Infrastructure the tests should be provisioned on to run.",
     )
     parser.addoption(
         "--configfile",
@@ -304,10 +309,10 @@ def features(client):
 pytest_plugins = [
      "conftests.architecture",
      "conftests.elements",
-     "conftests.iaas",
      "conftests.features",
      "conftests.miscellaneous",
      "conftests.platforms",
+     "conftests.provisioner",
   ]
 
 # THis is a helper function some tests invoke.
