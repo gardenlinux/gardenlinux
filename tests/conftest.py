@@ -88,7 +88,7 @@ def platform(pytestconfig, testconfig):
 
 
 @pytest.fixture(scope="session")
-def image_suffix(provisioner):
+def image_suffix(iaas):
     image_suffixes = {
         "aws": "rootf.raw",
         "azure": "rootfs.vhd",
@@ -96,7 +96,7 @@ def image_suffix(provisioner):
         "ali": "rootfs.qcow2",
         "openstack-ccee": "rootfs.vmdk"
     }
-    return image_suffixes[provisioner]
+    return image_suffixes[iaas]
 
 
 @pytest.fixture(scope="session")
@@ -268,7 +268,7 @@ def client(testconfig, provisioner, imageurl, request) -> Iterator[RemoteClient]
 def pytest_collection_modifyitems(config, items):
     """Skip tests that belong to a feature that is not enabled in the test config"""
     skip = pytest.mark.skip(reason="test is not part of the enabled features")
-    provisioner = config.getoption("--iaas")
+    provisioner= config.getoption("--iaas")
     provisioner = config.getoption("--provisioner")
     config_file = config.getoption("--configfile")
 
@@ -279,7 +279,7 @@ def pytest_collection_modifyitems(config, items):
         logger.error(f"can not open config file {config_file}")
         pytest.exit(err, 1)
 
-    if not provisioner == 'local':
+    if not iaas == 'local' or  provisioner == 'local':
         features = config_options[iaas].get("features", [])
         features = config_options[provisioner].get("features", [])
     else:
