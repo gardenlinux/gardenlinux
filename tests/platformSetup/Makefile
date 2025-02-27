@@ -29,12 +29,15 @@ endif
 GARDENLINUX_BUILD_CRE ?= podman
 
 # Generate FLAVORS variable by running the flavor parser
-FLAVORS := $(shell $(ROOT_DIR)/bin/flavors_parse.py --category "public-cloud" --test-platform)
+FLAVORS_IMAGE := $(shell $(ROOT_DIR)/bin/flavors_parse.py --exclude "bare-*" --build)
+FLAVORS_PUBLIC_CLOUD := $(shell $(ROOT_DIR)/bin/flavors_parse.py --category "public-cloud" --test-platform)
 
-CRE_CMD_BASE = $(GARDENLINUX_BUILD_CRE) run -it --rm -v $(ROOT_DIR):/gardenlinux -e TF_* -v ~/.aliyun:/root/.aliyun -e ALIBABA_* -v ~/.aws:/root/.aws -e AWS_* -v ~/.azure:/root/.azure -e azure_* -e ARM_* -e ACTIONS_* -v ~/.config/gcloud:/root/.config/gcloud -e GOOGLE_* -e CLOUDSDK_* 
+CRE_CMD_BASE = $(GARDENLINUX_BUILD_CRE) run -it -v $(ROOT_DIR):/gardenlinux -e TF_* -v ~/.aliyun:/root/.aliyun -e ALIBABA_* -v ~/.aws:/root/.aws -e AWS_* -v ~/.azure:/root/.azure -e azure_* -e ARM_* -e ACTIONS_* -v ~/.config/gcloud:/root/.config/gcloud -e GOOGLE_* -e CLOUDSDK_* 
 CRE_CMD_security = --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW --security-opt apparmor=unconfined
-#CRE_CMD_priviliged = --privileged
-CRE_CMD_tofu = $(CRE_CMD_BASE) -v ~/.ssh:/root/.ssh:ro $(GL_REGISTRY)/gardenlinux/platform-test-tofu:$(GL_VERSION)
+CRE_CMD_priviliged = --privileged
+CRE_CMD_kvm = $(CRE_CMD_BASE) --device=/dev/kvm
+CRE_CMD_kvm_image = $(GL_REGISTRY)/gardenlinux/platform-test-kvm:$(GL_VERSION)
+CRE_CMD_tofu = $(CRE_CMD_BASE) --rm -v ~/.ssh:/root/.ssh:ro $(GL_REGISTRY)/gardenlinux/platform-test-tofu:$(GL_VERSION)
 MKDIRS = ~/.aliyun ~/.aws ~/.azure ~/.config/gcloud
 
 .PHONY: all
@@ -47,30 +50,38 @@ help:
 	@echo "Usage: make [target]"
 	@echo ""
 	@echo "general targets:"
-	@grep -E '^# help: ' $(MAKEFILE_LIST) | sed 's/^# help: //g' | awk 'BEGIN {FS = ": "}; {printf "%-40s %s\n", $$1, $$2}'
+	@grep -E '^# help: ' $(MAKEFILE_LIST) | sed 's/^# help: //g' | awk 'BEGIN {FS = ": "}; {printf "%-80s %s\n", $$1, $$2}'
 	@echo ""
-	@echo "Available targets for Official Flavors:"
+	@echo "Available Resource Provisioning targets for Official Flavors:"
 	@echo ""
-	@$(foreach flavor,$(FLAVORS), \
-		echo "$(flavor)-config      Create tofu config for $(flavor)"; \
-		echo "$(flavor)-plan        Run tofu plan for $(flavor)"; \
-		echo "$(flavor)-apply       Run tofu apply for $(flavor)"; \
-		echo "$(flavor)-show        Run tofu show for $(flavor)"; \
-		echo "$(flavor)-login       Run tofu login for $(flavor)"; \
-		echo "$(flavor)-destroy     Run tofu destroy for $(flavor)"; \
+	@echo "Qemu Provisioner Provisioning targets:"
+	@$(foreach flavor,$(FLAVORS_IMAGE), \
+		printf "%-80s%s\n" "  $(flavor)-qemu-apply" "Create qemu resources for $(flavor)"; \
+		printf "%-80s%s\n" "  $(flavor)-qemu-login" "Login to qemu $(flavor)"; \
+		printf "%-80s%s\n" "  $(flavor)-qemu-destroy" "Destroy qemu resources for $(flavor)"; \
+	)
+	@echo ""
+	@echo "Tofu Provisioner Provisioning targets:"
+	@$(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
+		printf "%-80s%s\n" "  $(flavor)-tofu-config" "Create tofu config for $(flavor)"; \
+		printf "%-80s%s\n" "  $(flavor)-tofu-plan" "Run tofu plan for $(flavor)"; \
+		printf "%-80s%s\n" "  $(flavor)-tofu-apply" "Run tofu apply for $(flavor)"; \
+		printf "%-80s%s\n" "  $(flavor)-tofu-show" "Run tofu show for $(flavor)"; \
+		printf "%-80s%s\n" "  $(flavor)-tofu-login" "Run tofu login for $(flavor)"; \
+		printf "%-80s%s\n" "  $(flavor)-tofu-destroy" "Run tofu destroy for $(flavor)"; \
 	)
 
-# flavor-specific targets
-$(foreach flavor,$(FLAVORS), \
+# flavor-specific targets - public cloud
+$(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 	$(eval \
-		$(flavor)-config: ; \
+		$(flavor)-tofu-config: ; \
 		mkdir -p $(MKDIRS) && \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
-			./tf_variables_create.py --flavors $(flavor) $(CNAME_CMD) $(TEST_PREFIX)" \
+			../platformSetup.py --provisioner tofu --flavor $(flavor) $(CNAME_CMD) --test-prefix $(TEST_PREFIX) --create-tfvars" \
 	) \
 	$(eval \
-		$(flavor)-plan: ; \
+		$(flavor)-tofu-plan: ; \
 		mkdir -p $(MKDIRS) && \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
@@ -80,18 +91,18 @@ $(foreach flavor,$(FLAVORS), \
 			tofu workspace select default" \
 	) \
 	$(eval \
-		$(flavor)-apply: ; \
+		$(flavor)-tofu-apply: ; \
 		mkdir -p $(MKDIRS) && \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
 			tofu init && \
 			tofu workspace select -or-create $(flavor)-$(SEED) && \
 			tofu apply --auto-approve -var-file variables.$(flavor).tfvars && \
-			./tf_pytest_ssh.py $(flavor) && \
+			../platformSetup.py --provisioner tofu --flavor $(flavor) && \
 			tofu workspace select default" \
 	) \
 	$(eval \
-		$(flavor)-show: ; \
+		$(flavor)-tofu-show: ; \
 		mkdir -p $(MKDIRS) && \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
@@ -101,18 +112,18 @@ $(foreach flavor,$(FLAVORS), \
 			tofu workspace select default" \
 	) \
 	$(eval \
-		$(flavor)-login: ; \
+		$(flavor)-tofu-login: ; \
 		mkdir -p $(MKDIRS) && \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
 			tofu init && \
 			tofu workspace select -or-create $(flavor)-$(SEED) && \
-			./tf_pytest_ssh.py $(flavor) && \
+			../platformSetup.py --provisioner tofu --flavor $(flavor) && \
 			tofu workspace select default && \
-			./login.$(flavor).sh" \
+			../login.tofu.$(flavor).sh" \
 	) \
 	$(eval \
-		$(flavor)-destroy: ; \
+		$(flavor)-tofu-destroy: ; \
 		mkdir -p $(MKDIRS) && \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
@@ -121,5 +132,32 @@ $(foreach flavor,$(FLAVORS), \
 			tofu destroy --auto-approve -var-file variables.$(flavor).tfvars && \
 			tofu workspace select default && \
 			tofu workspace delete $(flavor)-$(SEED)" \
+	) \
+)
+
+# flavor-specific targets - local
+$(foreach flavor,$(FLAVORS_IMAGE), \
+	$(eval \
+		$(flavor)-qemu-apply: ; \
+		mkdir -p $(MKDIRS) && \
+		$(CRE_CMD_kvm) --name qemu-$(flavor) -d --rm --replace $(CRE_CMD_kvm_image) bash -c "\
+			platformSetup/platformSetup.py --provisioner qemu --flavor $(flavor) $(CNAME_CMD) && \
+			./pytest.qemu.$(flavor).apply.sh && \
+			sleep 86400 \
+		" && \
+		$(GARDENLINUX_BUILD_CRE) exec -it qemu-$(flavor) bash -c "\
+			until test -f /tmp/qemu.pid; do echo 'Waiting for qemu to start...'; sleep 1; done && \
+			./pytest.qemu.$(flavor).apply.sh \
+		" \
+	) \
+	$(eval \
+		$(flavor)-qemu-login: ; \
+		$(GARDENLINUX_BUILD_CRE) exec -it qemu-$(flavor) bash -c "\
+			./login.qemu.$(flavor).sh \
+		" \
+	) \
+	$(eval \
+		$(flavor)-qemu-destroy: ; \
+		$(GARDENLINUX_BUILD_CRE) rm -f qemu-$(flavor) \
 	) \
 )
