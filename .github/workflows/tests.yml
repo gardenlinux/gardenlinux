@@ -199,14 +199,14 @@ jobs:
         # ssh key generation (if missing)
         test -f ~/.ssh/id_ed25519 || ssh-keygen -t ed25519 -P "" -f ~/.ssh/id_ed25519
         # tf variables generation
-        TEST_PREFIX="gh-actions" CNAME="${{ env.cname }}" make --directory=tests/platformSetup ${FLAVOR}-${ARCH}-config
+        TEST_PREFIX="gh-actions" CNAME="${{ env.cname }}" make --directory=tests/platformSetup ${FLAVOR}-${ARCH}-tofu-config
         # enable S3 backend
         cp "tests/platformSetup/tofu/backend.tf.github" "tests/platformSetup/tofu/backend.tf" 
-        make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-apply 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.provisioning.log"
+        make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-apply 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.provisioning.log"
 
     - name: run platform test for ${{ matrix.flavor }} on ${{ matrix.arch }}
       run: |
-        make --directory=tests ${FLAVOR}-${ARCH}-test-platform 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.test.log"
+        make --directory=tests ${FLAVOR}-${ARCH}-tofu-test-platform 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.test.log"
 
     - name: copy platform test junit xml file for ${{ matrix.flavor }} on ${{ matrix.arch }}
       if: always()
@@ -238,4 +238,4 @@ jobs:
         export GOOGLE_GHA_CREDS_PATH="/gardenlinux/$credentials_file_name"
         export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
         export TF_VAR_gcp_project_id=${{ secrets.gcp_project_id }}
-        (make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-destroy 2>&1 || make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-destroy 2>&1 || make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-destroy 2>&1) | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.destroy.log"
+        (make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-destroy 2>&1 || make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-destroy 2>&1 || make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-destroy 2>&1) | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.destroy.log"
