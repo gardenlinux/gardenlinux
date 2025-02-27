@@ -131,32 +131,32 @@ Please be aware that you have to configure cloud provider authentication and set
 
 ```bash
 # 0. Build the image for the flavor you want to test
-$ make gcp-gardener_prod-amd64-build
+$ make gcp-gardener_prod-amd64-tofu-build
 
 # 1. Generate variables for your flavor
-$ make --directory=tests/platformSetup gcp-gardener_prod-amd64-config
+$ make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-config
 
 # 2. Create cloud resources
-$ make --directory=tests/platformSetup gcp-gardener_prod-amd64-apply
+$ make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-apply
 
 # 3. Run the tests
-$ make --directory=tests gcp-gardener_prod-amd64-test-platform
+$ make --directory=tests gcp-gardener_prod-amd64-tofu-test-platform
 
 # 4. Clean up when done
-$ make --directory=tests/platformSetup gcp-gardener_prod-amd64-destroy
+$ make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-destroy
   ```
 
 > [!TIP]
 > You can preview changes before applying them with the `plan` command:
 > ```bash
-> make --directory=tests/platformSetup gcp-gardener_prod-amd64-plan
+> make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-plan
 > ```
 
 #### What Happens Behind the Scenes
 
 When you run a platform test, this sequence occurs:
 
-1. **Generate Input Variables** (make target calls `tests/platformSetup/tofu/tf_variables_create.py`):
+1. **Generate Input Variables** (make target calls `tests/platformSetup/platformSetup.py`):
    - Creates OpenTofu configuration files
    - Defines cloud resources to create
    - Sets up test parameters
@@ -169,7 +169,7 @@ When you run a platform test, this sequence occurs:
    - Uploads SSH keys
    - Waits for SSH port to become available
 
-2b. **Test Configuration** (make target calls `tests/platformSetup/tofu/tf_pytest_ssh.py`):
+2b. **Test Configuration** (make target calls `tests/platformSetup/platformSetup.py`):
     - Generates pytest configuration from OpenTofu output
     - Creates SSH connection script
 
@@ -330,18 +330,17 @@ flavors = [
 
 #### Automated Generation
 
-We provide a helper script `tf_variables_create.py` to generate these files automatically.
-It is called by the "-config" make targets but can also be called manually.
+We provide a helper script `platformSetup.py` to generate these files automatically.
+It is called by the "-tofu-config" make targets but can also be called manually.
 
 ```bash
 # use default settings
-make --directory=tests/platformSetup gcp-gardener_prod-amd64-config
+make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-config
 
 # write a custom test prefix and image via cname
-TEST_PREFIX=myprefix \
-  CNAME=gcp-gardener_prod_tpm2_trustedboot-amd64-1695.0-30903f3a \
+TEST_PREFIX=myprefix CNAME=gcp-gardener_prod_tpm2_trustedboot-amd64-1695.0-30903f3a \
   make --directory=tests/platformSetup \
-  gcp-gardener_prod_tpm2_trustedboot-amd64-config
+  gcp-gardener_prod_tpm2_trustedboot-amd64-tofu-config
 ```
 
 or
@@ -349,18 +348,19 @@ or
 
 ```bash
 # Generate for a single flavor
-./tests/platformSetup/tofu/tf_variables_create.py \
+./tests/platformSetup/platformSetup.py \
     --flavors gcp-gardener_prod_trustedboot_tpm2-amd64 \
-    myprefix
+    --provisioner tofu \
+    --test-prefix myprefix \
+    --create-tfvars
 
 # Generate for a specific image version
-./tests/platformSetup/tofu/tf_variables_create.py \
+./tests/platformSetup/platformSetup.py \
     --flavors gcp-gardener_prod_trustedboot_tpm2-amd64 \
     --cname gcp-gardener_prod_tpm2_trustedboot-amd64-1695.0-30903f3a \
-    myprefix
-
-# Generate for multiple flavors (default set)
-./tests/platformSetup/tofu/tf_variables_create.py myprefix
+    --provisioner tofu \
+    --test-prefix myprefix \
+    --create-tfvars
 ```
 
 The script supports these options:
@@ -369,21 +369,22 @@ The script supports these options:
 <summary>Click to see all available options</summary>
 
 ```bash
-./tests/platformSetup/tofu/tf_variables_create.py --help
-usage: tf_variables_create.py [-h] [--flavors FLAVORS] [--root-dir ROOT_DIR] [--image-path IMAGE_PATH] [--cname CNAME] test_prefix
+tests/platformSetup/platformSetup.py --help
+usage: platformSetup.py [-h] --flavor FLAVOR --provisioner {qemu,tofu} [--image-path IMAGE_PATH] [--cname CNAME] [--test-prefix TEST_PREFIX] [--create-tfvars]
 
-Generate OpenTofu variable files based on provided test prefix, platforms, archs, and flavors.
-
-positional arguments:
-  test_prefix           The test prefix to include in the variable files.
+Generate pytest config files and SSH login scripts for platform tests.
 
 options:
   -h, --help            show this help message and exit
-  --flavors FLAVORS     Comma-separated list of flavors (default: 'ali-gardener_prod-amd64,aws-gardener_prod-amd64,azure-gardener_prod-amd64,gcp-gardener_prod-amd64').
-  --root-dir ROOT_DIR   Root directory for the variable files. Defaults to the current Git repository's root.
+  --flavor FLAVOR       The flavor to be tested (e.g., 'kvm-gardener_prod-amd64').
+  --provisioner {qemu,tofu}
+                        Provisioner to use: 'qemu' for local testing or 'tofu' for Cloud Provider testing.
   --image-path IMAGE_PATH
                         Base path for image files.
-  --cname CNAME         Basename of image file, e.g. 'gcp-gardener_prod-arm64-1592.2-76203a30'.
+  --cname CNAME         Basename of image file (e.g., 'kvm-gardener_prod-amd64-1312.0-80ffcc87').
+  --test-prefix TEST_PREFIX
+                        Test prefix for OpenTofu variable files.
+  --create-tfvars       Create OpenTofu variables file.
 ```
 
 </details>
@@ -414,19 +415,19 @@ Each flavor has five basic commands:
 For example, for `gcp-gardener_prod-amd64`:
 ```bash
 # Preview changes
-make --directory=tests/platformSetup gcp-gardener_prod-amd64-plan
+make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-plan
 
 # Create resources
-make --directory=tests/platformSetup gcp-gardener_prod-amd64-apply
+make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-apply
 
 # Show current state
-make --directory=tests/platformSetup gcp-gardener_prod-amd64-show
+make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-show
 
 # SSH into instance
-make --directory=tests/platformSetup gcp-gardener_prod-amd64-login
+make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-login
 
 # Clean up resources
-make --directory=tests/platformSetup gcp-gardener_prod-amd64-destroy
+make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-destroy
 ```
 
 #### Full Command List
@@ -435,93 +436,189 @@ make --directory=tests/platformSetup gcp-gardener_prod-amd64-destroy
 <summary>Click to see all available commands</summary>
 
 ```plaintext
+make --directory=tests/platformSetup
+
 Usage: make [target]
 
 general targets:
-help					List available tasks of the project 
+help					List available tasks of the project                                     
 
-Available targets for Official Flavors:
+Available Resource Provisioning targets for Official Flavors:
 
-ali-gardener_prod-amd64-plan        Run tofu plan for ali-gardener_prod-amd64
-ali-gardener_prod-amd64-apply       Run tofu apply for ali-gardener_prod-amd64
-ali-gardener_prod-amd64-show        Run tofu show for ali-gardener_prod-amd64
-ali-gardener_prod-amd64-login       Run tofu login for ali-gardener_prod-amd64
-ali-gardener_prod-amd64-destroy     Run tofu destroy for ali-gardener_prod-amd64
-aws-gardener_prod-amd64-plan        Run tofu plan for aws-gardener_prod-amd64
-aws-gardener_prod-amd64-apply       Run tofu apply for aws-gardener_prod-amd64
-aws-gardener_prod-amd64-show        Run tofu show for aws-gardener_prod-amd64
-aws-gardener_prod-amd64-login       Run tofu login for aws-gardener_prod-amd64
-aws-gardener_prod-amd64-destroy     Run tofu destroy for aws-gardener_prod-amd64
-aws-gardener_prod-arm64-plan        Run tofu plan for aws-gardener_prod-arm64
-aws-gardener_prod-arm64-apply       Run tofu apply for aws-gardener_prod-arm64
-aws-gardener_prod-arm64-show        Run tofu show for aws-gardener_prod-arm64
-aws-gardener_prod-arm64-login       Run tofu login for aws-gardener_prod-arm64
-aws-gardener_prod-arm64-destroy     Run tofu destroy for aws-gardener_prod-arm64
-aws-gardener_prod_trustedboot-amd64-plan        Run tofu plan for aws-gardener_prod_trustedboot-amd64
-aws-gardener_prod_trustedboot-amd64-apply       Run tofu apply for aws-gardener_prod_trustedboot-amd64
-aws-gardener_prod_trustedboot-amd64-show        Run tofu show for aws-gardener_prod_trustedboot-amd64
-aws-gardener_prod_trustedboot-amd64-login       Run tofu login for aws-gardener_prod_trustedboot-amd64
-aws-gardener_prod_trustedboot-amd64-destroy     Run tofu destroy for aws-gardener_prod_trustedboot-amd64
-aws-gardener_prod_trustedboot-arm64-plan        Run tofu plan for aws-gardener_prod_trustedboot-arm64
-aws-gardener_prod_trustedboot-arm64-apply       Run tofu apply for aws-gardener_prod_trustedboot-arm64
-aws-gardener_prod_trustedboot-arm64-show        Run tofu show for aws-gardener_prod_trustedboot-arm64
-aws-gardener_prod_trustedboot-arm64-login       Run tofu login for aws-gardener_prod_trustedboot-arm64
-aws-gardener_prod_trustedboot-arm64-destroy     Run tofu destroy for aws-gardener_prod_trustedboot-arm64
-aws-gardener_prod_trustedboot_tpm2-amd64-plan        Run tofu plan for aws-gardener_prod_trustedboot_tpm2-amd64
-aws-gardener_prod_trustedboot_tpm2-amd64-apply       Run tofu apply for aws-gardener_prod_trustedboot_tpm2-amd64
-aws-gardener_prod_trustedboot_tpm2-amd64-show        Run tofu show for aws-gardener_prod_trustedboot_tpm2-amd64
-aws-gardener_prod_trustedboot_tpm2-amd64-login       Run tofu login for aws-gardener_prod_trustedboot_tpm2-amd64
-aws-gardener_prod_trustedboot_tpm2-amd64-destroy     Run tofu destroy for aws-gardener_prod_trustedboot_tpm2-amd64
-aws-gardener_prod_trustedboot_tpm2-arm64-plan        Run tofu plan for aws-gardener_prod_trustedboot_tpm2-arm64
-aws-gardener_prod_trustedboot_tpm2-arm64-apply       Run tofu apply for aws-gardener_prod_trustedboot_tpm2-arm64
-aws-gardener_prod_trustedboot_tpm2-arm64-show        Run tofu show for aws-gardener_prod_trustedboot_tpm2-arm64
-aws-gardener_prod_trustedboot_tpm2-arm64-login       Run tofu login for aws-gardener_prod_trustedboot_tpm2-arm64
-aws-gardener_prod_trustedboot_tpm2-arm64-destroy     Run tofu destroy for aws-gardener_prod_trustedboot_tpm2-arm64
-azure-gardener_prod-amd64-plan        Run tofu plan for azure-gardener_prod-amd64
-azure-gardener_prod-amd64-apply       Run tofu apply for azure-gardener_prod-amd64
-azure-gardener_prod-amd64-show        Run tofu show for azure-gardener_prod-amd64
-azure-gardener_prod-amd64-login       Run tofu login for azure-gardener_prod-amd64
-azure-gardener_prod-amd64-destroy     Run tofu destroy for azure-gardener_prod-amd64
-azure-gardener_prod_trustedboot-amd64-plan        Run tofu plan for azure-gardener_prod_trustedboot-amd64
-azure-gardener_prod_trustedboot-amd64-apply       Run tofu apply for azure-gardener_prod_trustedboot-amd64
-azure-gardener_prod_trustedboot-amd64-show        Run tofu show for azure-gardener_prod_trustedboot-amd64
-azure-gardener_prod_trustedboot-amd64-login       Run tofu login for azure-gardener_prod_trustedboot-amd64
-azure-gardener_prod_trustedboot-amd64-destroy     Run tofu destroy for azure-gardener_prod_trustedboot-amd64
-azure-gardener_prod_trustedboot_tpm2-amd64-plan        Run tofu plan for azure-gardener_prod_trustedboot_tpm2-amd64
-azure-gardener_prod_trustedboot_tpm2-amd64-apply       Run tofu apply for azure-gardener_prod_trustedboot_tpm2-amd64
-azure-gardener_prod_trustedboot_tpm2-amd64-show        Run tofu show for azure-gardener_prod_trustedboot_tpm2-amd64
-azure-gardener_prod_trustedboot_tpm2-amd64-login       Run tofu login for azure-gardener_prod_trustedboot_tpm2-amd64
-azure-gardener_prod_trustedboot_tpm2-amd64-destroy     Run tofu destroy for azure-gardener_prod_trustedboot_tpm2-amd64
-gcp-gardener_prod-amd64-plan        Run tofu plan for gcp-gardener_prod-amd64
-gcp-gardener_prod-amd64-apply       Run tofu apply for gcp-gardener_prod-amd64
-gcp-gardener_prod-amd64-show        Run tofu show for gcp-gardener_prod-amd64
-gcp-gardener_prod-amd64-login       Run tofu login for gcp-gardener_prod-amd64
-gcp-gardener_prod-amd64-destroy     Run tofu destroy for gcp-gardener_prod-amd64
-gcp-gardener_prod-arm64-plan        Run tofu plan for gcp-gardener_prod-arm64
-gcp-gardener_prod-arm64-apply       Run tofu apply for gcp-gardener_prod-arm64
-gcp-gardener_prod-arm64-show        Run tofu show for gcp-gardener_prod-arm64
-gcp-gardener_prod-arm64-login       Run tofu login for gcp-gardener_prod-arm64
-gcp-gardener_prod-arm64-destroy     Run tofu destroy for gcp-gardener_prod-arm64
-gcp-gardener_prod_trustedboot-amd64-plan        Run tofu plan for gcp-gardener_prod_trustedboot-amd64
-gcp-gardener_prod_trustedboot-amd64-apply       Run tofu apply for gcp-gardener_prod_trustedboot-amd64
-gcp-gardener_prod_trustedboot-amd64-show        Run tofu show for gcp-gardener_prod_trustedboot-amd64
-gcp-gardener_prod_trustedboot-amd64-login       Run tofu login for gcp-gardener_prod_trustedboot-amd64
-gcp-gardener_prod_trustedboot-amd64-destroy     Run tofu destroy for gcp-gardener_prod_trustedboot-amd64
-gcp-gardener_prod_trustedboot-arm64-plan        Run tofu plan for gcp-gardener_prod_trustedboot-arm64
-gcp-gardener_prod_trustedboot-arm64-apply       Run tofu apply for gcp-gardener_prod_trustedboot-arm64
-gcp-gardener_prod_trustedboot-arm64-show        Run tofu show for gcp-gardener_prod_trustedboot-arm64
-gcp-gardener_prod_trustedboot-arm64-login       Run tofu login for gcp-gardener_prod_trustedboot-arm64
-gcp-gardener_prod_trustedboot-arm64-destroy     Run tofu destroy for gcp-gardener_prod_trustedboot-arm64
-gcp-gardener_prod_trustedboot_tpm2-amd64-plan        Run tofu plan for gcp-gardener_prod_trustedboot_tpm2-amd64
-gcp-gardener_prod_trustedboot_tpm2-amd64-apply       Run tofu apply for gcp-gardener_prod_trustedboot_tpm2-amd64
-gcp-gardener_prod_trustedboot_tpm2-amd64-show        Run tofu show for gcp-gardener_prod_trustedboot_tpm2-amd64
-gcp-gardener_prod_trustedboot_tpm2-amd64-login       Run tofu login for gcp-gardener_prod_trustedboot_tpm2-amd64
-gcp-gardener_prod_trustedboot_tpm2-amd64-destroy     Run tofu destroy for gcp-gardener_prod_trustedboot_tpm2-amd64
-gcp-gardener_prod_trustedboot_tpm2-arm64-plan        Run tofu plan for gcp-gardener_prod_trustedboot_tpm2-arm64
-gcp-gardener_prod_trustedboot_tpm2-arm64-apply       Run tofu apply for gcp-gardener_prod_trustedboot_tpm2-arm64
-gcp-gardener_prod_trustedboot_tpm2-arm64-show        Run tofu show for gcp-gardener_prod_trustedboot_tpm2-arm64
-gcp-gardener_prod_trustedboot_tpm2-arm64-login       Run tofu login for gcp-gardener_prod_trustedboot_tpm2-arm64
-gcp-gardener_prod_trustedboot_tpm2-arm64-destroy     Run tofu destroy for gcp-gardener_prod_trustedboot_tpm2-arm64
+Qemu Provisioner Provisioning targets:
+  ali-gardener_prod-amd64-qemu-apply                                            Create qemu resources for ali-gardener_prod-amd64
+  ali-gardener_prod-amd64-qemu-login                                            Login to qemu ali-gardener_prod-amd64
+  ali-gardener_prod-amd64-qemu-destroy                                          Destroy qemu resources for ali-gardener_prod-amd64
+  aws-gardener_prod-amd64-qemu-apply                                            Create qemu resources for aws-gardener_prod-amd64
+  aws-gardener_prod-amd64-qemu-login                                            Login to qemu aws-gardener_prod-amd64
+  aws-gardener_prod-amd64-qemu-destroy                                          Destroy qemu resources for aws-gardener_prod-amd64
+  aws-gardener_prod-arm64-qemu-apply                                            Create qemu resources for aws-gardener_prod-arm64
+  aws-gardener_prod-arm64-qemu-login                                            Login to qemu aws-gardener_prod-arm64
+  aws-gardener_prod-arm64-qemu-destroy                                          Destroy qemu resources for aws-gardener_prod-arm64
+  aws-gardener_prod_tpm2_trustedboot-amd64-qemu-apply                           Create qemu resources for aws-gardener_prod_tpm2_trustedboot-amd64
+  aws-gardener_prod_tpm2_trustedboot-amd64-qemu-login                           Login to qemu aws-gardener_prod_tpm2_trustedboot-amd64
+  aws-gardener_prod_tpm2_trustedboot-amd64-qemu-destroy                         Destroy qemu resources for aws-gardener_prod_tpm2_trustedboot-amd64
+  aws-gardener_prod_tpm2_trustedboot-arm64-qemu-apply                           Create qemu resources for aws-gardener_prod_tpm2_trustedboot-arm64
+  aws-gardener_prod_tpm2_trustedboot-arm64-qemu-login                           Login to qemu aws-gardener_prod_tpm2_trustedboot-arm64
+  aws-gardener_prod_tpm2_trustedboot-arm64-qemu-destroy                         Destroy qemu resources for aws-gardener_prod_tpm2_trustedboot-arm64
+  aws-gardener_prod_trustedboot-amd64-qemu-apply                                Create qemu resources for aws-gardener_prod_trustedboot-amd64
+  aws-gardener_prod_trustedboot-amd64-qemu-login                                Login to qemu aws-gardener_prod_trustedboot-amd64
+  aws-gardener_prod_trustedboot-amd64-qemu-destroy                              Destroy qemu resources for aws-gardener_prod_trustedboot-amd64
+  aws-gardener_prod_trustedboot-arm64-qemu-apply                                Create qemu resources for aws-gardener_prod_trustedboot-arm64
+  aws-gardener_prod_trustedboot-arm64-qemu-login                                Login to qemu aws-gardener_prod_trustedboot-arm64
+  aws-gardener_prod_trustedboot-arm64-qemu-destroy                              Destroy qemu resources for aws-gardener_prod_trustedboot-arm64
+  azure-gardener_prod-amd64-qemu-apply                                          Create qemu resources for azure-gardener_prod-amd64
+  azure-gardener_prod-amd64-qemu-login                                          Login to qemu azure-gardener_prod-amd64
+  azure-gardener_prod-amd64-qemu-destroy                                        Destroy qemu resources for azure-gardener_prod-amd64
+  azure-gardener_prod-arm64-qemu-apply                                          Create qemu resources for azure-gardener_prod-arm64
+  azure-gardener_prod-arm64-qemu-login                                          Login to qemu azure-gardener_prod-arm64
+  azure-gardener_prod-arm64-qemu-destroy                                        Destroy qemu resources for azure-gardener_prod-arm64
+  azure-gardener_prod_tpm2_trustedboot-amd64-qemu-apply                         Create qemu resources for azure-gardener_prod_tpm2_trustedboot-amd64
+  azure-gardener_prod_tpm2_trustedboot-amd64-qemu-login                         Login to qemu azure-gardener_prod_tpm2_trustedboot-amd64
+  azure-gardener_prod_tpm2_trustedboot-amd64-qemu-destroy                       Destroy qemu resources for azure-gardener_prod_tpm2_trustedboot-amd64
+  azure-gardener_prod_trustedboot-amd64-qemu-apply                              Create qemu resources for azure-gardener_prod_trustedboot-amd64
+  azure-gardener_prod_trustedboot-amd64-qemu-login                              Login to qemu azure-gardener_prod_trustedboot-amd64
+  azure-gardener_prod_trustedboot-amd64-qemu-destroy                            Destroy qemu resources for azure-gardener_prod_trustedboot-amd64
+  gcp-gardener_prod-amd64-qemu-apply                                            Create qemu resources for gcp-gardener_prod-amd64
+  gcp-gardener_prod-amd64-qemu-login                                            Login to qemu gcp-gardener_prod-amd64
+  gcp-gardener_prod-amd64-qemu-destroy                                          Destroy qemu resources for gcp-gardener_prod-amd64
+  gcp-gardener_prod-arm64-qemu-apply                                            Create qemu resources for gcp-gardener_prod-arm64
+  gcp-gardener_prod-arm64-qemu-login                                            Login to qemu gcp-gardener_prod-arm64
+  gcp-gardener_prod-arm64-qemu-destroy                                          Destroy qemu resources for gcp-gardener_prod-arm64
+  gcp-gardener_prod_tpm2_trustedboot-amd64-qemu-apply                           Create qemu resources for gcp-gardener_prod_tpm2_trustedboot-amd64
+  gcp-gardener_prod_tpm2_trustedboot-amd64-qemu-login                           Login to qemu gcp-gardener_prod_tpm2_trustedboot-amd64
+  gcp-gardener_prod_tpm2_trustedboot-amd64-qemu-destroy                         Destroy qemu resources for gcp-gardener_prod_tpm2_trustedboot-amd64
+  gcp-gardener_prod_tpm2_trustedboot-arm64-qemu-apply                           Create qemu resources for gcp-gardener_prod_tpm2_trustedboot-arm64
+  gcp-gardener_prod_tpm2_trustedboot-arm64-qemu-login                           Login to qemu gcp-gardener_prod_tpm2_trustedboot-arm64
+  gcp-gardener_prod_tpm2_trustedboot-arm64-qemu-destroy                         Destroy qemu resources for gcp-gardener_prod_tpm2_trustedboot-arm64
+  gcp-gardener_prod_trustedboot-amd64-qemu-apply                                Create qemu resources for gcp-gardener_prod_trustedboot-amd64
+  gcp-gardener_prod_trustedboot-amd64-qemu-login                                Login to qemu gcp-gardener_prod_trustedboot-amd64
+  gcp-gardener_prod_trustedboot-amd64-qemu-destroy                              Destroy qemu resources for gcp-gardener_prod_trustedboot-amd64
+  gcp-gardener_prod_trustedboot-arm64-qemu-apply                                Create qemu resources for gcp-gardener_prod_trustedboot-arm64
+  gcp-gardener_prod_trustedboot-arm64-qemu-login                                Login to qemu gcp-gardener_prod_trustedboot-arm64
+  gcp-gardener_prod_trustedboot-arm64-qemu-destroy                              Destroy qemu resources for gcp-gardener_prod_trustedboot-arm64
+  kvm-gardener_prod-amd64-qemu-apply                                            Create qemu resources for kvm-gardener_prod-amd64
+  kvm-gardener_prod-amd64-qemu-login                                            Login to qemu kvm-gardener_prod-amd64
+  kvm-gardener_prod-amd64-qemu-destroy                                          Destroy qemu resources for kvm-gardener_prod-amd64
+  kvm-gardener_prod-arm64-qemu-apply                                            Create qemu resources for kvm-gardener_prod-arm64
+  kvm-gardener_prod-arm64-qemu-login                                            Login to qemu kvm-gardener_prod-arm64
+  kvm-gardener_prod-arm64-qemu-destroy                                          Destroy qemu resources for kvm-gardener_prod-arm64
+  kvm-gardener_prod_tpm2_trustedboot-amd64-qemu-apply                           Create qemu resources for kvm-gardener_prod_tpm2_trustedboot-amd64
+  kvm-gardener_prod_tpm2_trustedboot-amd64-qemu-login                           Login to qemu kvm-gardener_prod_tpm2_trustedboot-amd64
+  kvm-gardener_prod_tpm2_trustedboot-amd64-qemu-destroy                         Destroy qemu resources for kvm-gardener_prod_tpm2_trustedboot-amd64
+  kvm-gardener_prod_tpm2_trustedboot-arm64-qemu-apply                           Create qemu resources for kvm-gardener_prod_tpm2_trustedboot-arm64
+  kvm-gardener_prod_tpm2_trustedboot-arm64-qemu-login                           Login to qemu kvm-gardener_prod_tpm2_trustedboot-arm64
+  kvm-gardener_prod_tpm2_trustedboot-arm64-qemu-destroy                         Destroy qemu resources for kvm-gardener_prod_tpm2_trustedboot-arm64
+  kvm-gardener_prod_trustedboot-amd64-qemu-apply                                Create qemu resources for kvm-gardener_prod_trustedboot-amd64
+  kvm-gardener_prod_trustedboot-amd64-qemu-login                                Login to qemu kvm-gardener_prod_trustedboot-amd64
+  kvm-gardener_prod_trustedboot-amd64-qemu-destroy                              Destroy qemu resources for kvm-gardener_prod_trustedboot-amd64
+  kvm-gardener_prod_trustedboot-arm64-qemu-apply                                Create qemu resources for kvm-gardener_prod_trustedboot-arm64
+  kvm-gardener_prod_trustedboot-arm64-qemu-login                                Login to qemu kvm-gardener_prod_trustedboot-arm64
+  kvm-gardener_prod_trustedboot-arm64-qemu-destroy                              Destroy qemu resources for kvm-gardener_prod_trustedboot-arm64
+
+Tofu Provisioner Provisioning targets:
+  ali-gardener_prod-amd64-tofu-config                                           Create tofu config for ali-gardener_prod-amd64
+  ali-gardener_prod-amd64-tofu-plan                                             Run tofu plan for ali-gardener_prod-amd64
+  ali-gardener_prod-amd64-tofu-apply                                            Run tofu apply for ali-gardener_prod-amd64
+  ali-gardener_prod-amd64-tofu-show                                             Run tofu show for ali-gardener_prod-amd64
+  ali-gardener_prod-amd64-tofu-login                                            Run tofu login for ali-gardener_prod-amd64
+  ali-gardener_prod-amd64-tofu-destroy                                          Run tofu destroy for ali-gardener_prod-amd64
+  aws-gardener_prod-amd64-tofu-config                                           Create tofu config for aws-gardener_prod-amd64
+  aws-gardener_prod-amd64-tofu-plan                                             Run tofu plan for aws-gardener_prod-amd64
+  aws-gardener_prod-amd64-tofu-apply                                            Run tofu apply for aws-gardener_prod-amd64
+  aws-gardener_prod-amd64-tofu-show                                             Run tofu show for aws-gardener_prod-amd64
+  aws-gardener_prod-amd64-tofu-login                                            Run tofu login for aws-gardener_prod-amd64
+  aws-gardener_prod-amd64-tofu-destroy                                          Run tofu destroy for aws-gardener_prod-amd64
+  aws-gardener_prod-arm64-tofu-config                                           Create tofu config for aws-gardener_prod-arm64
+  aws-gardener_prod-arm64-tofu-plan                                             Run tofu plan for aws-gardener_prod-arm64
+  aws-gardener_prod-arm64-tofu-apply                                            Run tofu apply for aws-gardener_prod-arm64
+  aws-gardener_prod-arm64-tofu-show                                             Run tofu show for aws-gardener_prod-arm64
+  aws-gardener_prod-arm64-tofu-login                                            Run tofu login for aws-gardener_prod-arm64
+  aws-gardener_prod-arm64-tofu-destroy                                          Run tofu destroy for aws-gardener_prod-arm64
+  aws-gardener_prod_tpm2_trustedboot-amd64-tofu-config                          Create tofu config for aws-gardener_prod_tpm2_trustedboot-amd64
+  aws-gardener_prod_tpm2_trustedboot-amd64-tofu-plan                            Run tofu plan for aws-gardener_prod_tpm2_trustedboot-amd64
+  aws-gardener_prod_tpm2_trustedboot-amd64-tofu-apply                           Run tofu apply for aws-gardener_prod_tpm2_trustedboot-amd64
+  aws-gardener_prod_tpm2_trustedboot-amd64-tofu-show                            Run tofu show for aws-gardener_prod_tpm2_trustedboot-amd64
+  aws-gardener_prod_tpm2_trustedboot-amd64-tofu-login                           Run tofu login for aws-gardener_prod_tpm2_trustedboot-amd64
+  aws-gardener_prod_tpm2_trustedboot-amd64-tofu-destroy                         Run tofu destroy for aws-gardener_prod_tpm2_trustedboot-amd64
+  aws-gardener_prod_tpm2_trustedboot-arm64-tofu-config                          Create tofu config for aws-gardener_prod_tpm2_trustedboot-arm64
+  aws-gardener_prod_tpm2_trustedboot-arm64-tofu-plan                            Run tofu plan for aws-gardener_prod_tpm2_trustedboot-arm64
+  aws-gardener_prod_tpm2_trustedboot-arm64-tofu-apply                           Run tofu apply for aws-gardener_prod_tpm2_trustedboot-arm64
+  aws-gardener_prod_tpm2_trustedboot-arm64-tofu-show                            Run tofu show for aws-gardener_prod_tpm2_trustedboot-arm64
+  aws-gardener_prod_tpm2_trustedboot-arm64-tofu-login                           Run tofu login for aws-gardener_prod_tpm2_trustedboot-arm64
+  aws-gardener_prod_tpm2_trustedboot-arm64-tofu-destroy                         Run tofu destroy for aws-gardener_prod_tpm2_trustedboot-arm64
+  aws-gardener_prod_trustedboot-amd64-tofu-config                               Create tofu config for aws-gardener_prod_trustedboot-amd64
+  aws-gardener_prod_trustedboot-amd64-tofu-plan                                 Run tofu plan for aws-gardener_prod_trustedboot-amd64
+  aws-gardener_prod_trustedboot-amd64-tofu-apply                                Run tofu apply for aws-gardener_prod_trustedboot-amd64
+  aws-gardener_prod_trustedboot-amd64-tofu-show                                 Run tofu show for aws-gardener_prod_trustedboot-amd64
+  aws-gardener_prod_trustedboot-amd64-tofu-login                                Run tofu login for aws-gardener_prod_trustedboot-amd64
+  aws-gardener_prod_trustedboot-amd64-tofu-destroy                              Run tofu destroy for aws-gardener_prod_trustedboot-amd64
+  aws-gardener_prod_trustedboot-arm64-tofu-config                               Create tofu config for aws-gardener_prod_trustedboot-arm64
+  aws-gardener_prod_trustedboot-arm64-tofu-plan                                 Run tofu plan for aws-gardener_prod_trustedboot-arm64
+  aws-gardener_prod_trustedboot-arm64-tofu-apply                                Run tofu apply for aws-gardener_prod_trustedboot-arm64
+  aws-gardener_prod_trustedboot-arm64-tofu-show                                 Run tofu show for aws-gardener_prod_trustedboot-arm64
+  aws-gardener_prod_trustedboot-arm64-tofu-login                                Run tofu login for aws-gardener_prod_trustedboot-arm64
+  aws-gardener_prod_trustedboot-arm64-tofu-destroy                              Run tofu destroy for aws-gardener_prod_trustedboot-arm64
+  azure-gardener_prod-amd64-tofu-config                                         Create tofu config for azure-gardener_prod-amd64
+  azure-gardener_prod-amd64-tofu-plan                                           Run tofu plan for azure-gardener_prod-amd64
+  azure-gardener_prod-amd64-tofu-apply                                          Run tofu apply for azure-gardener_prod-amd64
+  azure-gardener_prod-amd64-tofu-show                                           Run tofu show for azure-gardener_prod-amd64
+  azure-gardener_prod-amd64-tofu-login                                          Run tofu login for azure-gardener_prod-amd64
+  azure-gardener_prod-amd64-tofu-destroy                                        Run tofu destroy for azure-gardener_prod-amd64
+  azure-gardener_prod-arm64-tofu-config                                         Create tofu config for azure-gardener_prod-arm64
+  azure-gardener_prod-arm64-tofu-plan                                           Run tofu plan for azure-gardener_prod-arm64
+  azure-gardener_prod-arm64-tofu-apply                                          Run tofu apply for azure-gardener_prod-arm64
+  azure-gardener_prod-arm64-tofu-show                                           Run tofu show for azure-gardener_prod-arm64
+  azure-gardener_prod-arm64-tofu-login                                          Run tofu login for azure-gardener_prod-arm64
+  azure-gardener_prod-arm64-tofu-destroy                                        Run tofu destroy for azure-gardener_prod-arm64
+  azure-gardener_prod_tpm2_trustedboot-amd64-tofu-config                        Create tofu config for azure-gardener_prod_tpm2_trustedboot-amd64
+  azure-gardener_prod_tpm2_trustedboot-amd64-tofu-plan                          Run tofu plan for azure-gardener_prod_tpm2_trustedboot-amd64
+  azure-gardener_prod_tpm2_trustedboot-amd64-tofu-apply                         Run tofu apply for azure-gardener_prod_tpm2_trustedboot-amd64
+  azure-gardener_prod_tpm2_trustedboot-amd64-tofu-show                          Run tofu show for azure-gardener_prod_tpm2_trustedboot-amd64
+  azure-gardener_prod_tpm2_trustedboot-amd64-tofu-login                         Run tofu login for azure-gardener_prod_tpm2_trustedboot-amd64
+  azure-gardener_prod_tpm2_trustedboot-amd64-tofu-destroy                       Run tofu destroy for azure-gardener_prod_tpm2_trustedboot-amd64
+  azure-gardener_prod_trustedboot-amd64-tofu-config                             Create tofu config for azure-gardener_prod_trustedboot-amd64
+  azure-gardener_prod_trustedboot-amd64-tofu-plan                               Run tofu plan for azure-gardener_prod_trustedboot-amd64
+  azure-gardener_prod_trustedboot-amd64-tofu-apply                              Run tofu apply for azure-gardener_prod_trustedboot-amd64
+  azure-gardener_prod_trustedboot-amd64-tofu-show                               Run tofu show for azure-gardener_prod_trustedboot-amd64
+  azure-gardener_prod_trustedboot-amd64-tofu-login                              Run tofu login for azure-gardener_prod_trustedboot-amd64
+  azure-gardener_prod_trustedboot-amd64-tofu-destroy                            Run tofu destroy for azure-gardener_prod_trustedboot-amd64
+  gcp-gardener_prod-amd64-tofu-config                                           Create tofu config for gcp-gardener_prod-amd64
+  gcp-gardener_prod-amd64-tofu-plan                                             Run tofu plan for gcp-gardener_prod-amd64
+  gcp-gardener_prod-amd64-tofu-apply                                            Run tofu apply for gcp-gardener_prod-amd64
+  gcp-gardener_prod-amd64-tofu-show                                             Run tofu show for gcp-gardener_prod-amd64
+  gcp-gardener_prod-amd64-tofu-login                                            Run tofu login for gcp-gardener_prod-amd64
+  gcp-gardener_prod-amd64-tofu-destroy                                          Run tofu destroy for gcp-gardener_prod-amd64
+  gcp-gardener_prod-arm64-tofu-config                                           Create tofu config for gcp-gardener_prod-arm64
+  gcp-gardener_prod-arm64-tofu-plan                                             Run tofu plan for gcp-gardener_prod-arm64
+  gcp-gardener_prod-arm64-tofu-apply                                            Run tofu apply for gcp-gardener_prod-arm64
+  gcp-gardener_prod-arm64-tofu-show                                             Run tofu show for gcp-gardener_prod-arm64
+  gcp-gardener_prod-arm64-tofu-login                                            Run tofu login for gcp-gardener_prod-arm64
+  gcp-gardener_prod-arm64-tofu-destroy                                          Run tofu destroy for gcp-gardener_prod-arm64
+  gcp-gardener_prod_tpm2_trustedboot-amd64-tofu-config                          Create tofu config for gcp-gardener_prod_tpm2_trustedboot-amd64
+  gcp-gardener_prod_tpm2_trustedboot-amd64-tofu-plan                            Run tofu plan for gcp-gardener_prod_tpm2_trustedboot-amd64
+  gcp-gardener_prod_tpm2_trustedboot-amd64-tofu-apply                           Run tofu apply for gcp-gardener_prod_tpm2_trustedboot-amd64
+  gcp-gardener_prod_tpm2_trustedboot-amd64-tofu-show                            Run tofu show for gcp-gardener_prod_tpm2_trustedboot-amd64
+  gcp-gardener_prod_tpm2_trustedboot-amd64-tofu-login                           Run tofu login for gcp-gardener_prod_tpm2_trustedboot-amd64
+  gcp-gardener_prod_tpm2_trustedboot-amd64-tofu-destroy                         Run tofu destroy for gcp-gardener_prod_tpm2_trustedboot-amd64
+  gcp-gardener_prod_tpm2_trustedboot-arm64-tofu-config                          Create tofu config for gcp-gardener_prod_tpm2_trustedboot-arm64
+  gcp-gardener_prod_tpm2_trustedboot-arm64-tofu-plan                            Run tofu plan for gcp-gardener_prod_tpm2_trustedboot-arm64
+  gcp-gardener_prod_tpm2_trustedboot-arm64-tofu-apply                           Run tofu apply for gcp-gardener_prod_tpm2_trustedboot-arm64
+  gcp-gardener_prod_tpm2_trustedboot-arm64-tofu-show                            Run tofu show for gcp-gardener_prod_tpm2_trustedboot-arm64
+  gcp-gardener_prod_tpm2_trustedboot-arm64-tofu-login                           Run tofu login for gcp-gardener_prod_tpm2_trustedboot-arm64
+  gcp-gardener_prod_tpm2_trustedboot-arm64-tofu-destroy                         Run tofu destroy for gcp-gardener_prod_tpm2_trustedboot-arm64
+  gcp-gardener_prod_trustedboot-amd64-tofu-config                               Create tofu config for gcp-gardener_prod_trustedboot-amd64
+  gcp-gardener_prod_trustedboot-amd64-tofu-plan                                 Run tofu plan for gcp-gardener_prod_trustedboot-amd64
+  gcp-gardener_prod_trustedboot-amd64-tofu-apply                                Run tofu apply for gcp-gardener_prod_trustedboot-amd64
+  gcp-gardener_prod_trustedboot-amd64-tofu-show                                 Run tofu show for gcp-gardener_prod_trustedboot-amd64
+  gcp-gardener_prod_trustedboot-amd64-tofu-login                                Run tofu login for gcp-gardener_prod_trustedboot-amd64
+  gcp-gardener_prod_trustedboot-amd64-tofu-destroy                              Run tofu destroy for gcp-gardener_prod_trustedboot-amd64
+  gcp-gardener_prod_trustedboot-arm64-tofu-config                               Create tofu config for gcp-gardener_prod_trustedboot-arm64
+  gcp-gardener_prod_trustedboot-arm64-tofu-plan                                 Run tofu plan for gcp-gardener_prod_trustedboot-arm64
+  gcp-gardener_prod_trustedboot-arm64-tofu-apply                                Run tofu apply for gcp-gardener_prod_trustedboot-arm64
+  gcp-gardener_prod_trustedboot-arm64-tofu-show                                 Run tofu show for gcp-gardener_prod_trustedboot-arm64
+  gcp-gardener_prod_trustedboot-arm64-tofu-login                                Run tofu login for gcp-gardener_prod_trustedboot-arm64
+  gcp-gardener_prod_trustedboot-arm64-tofu-destroy                              Run tofu destroy for gcp-gardener_prod_trustedboot-arm64
 ```
 </details>
 
@@ -529,33 +626,33 @@ gcp-gardener_prod_trustedboot_tpm2-arm64-destroy     Run tofu destroy for gcp-ga
 
 1. Generate OpenTofu Input Variables for your flavor:
 ```bash
-make --directory=tests/platformSetup gcp-gardener_prod-amd64-config
+make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-config
 ```
 
 2. Preview the changes:
 ```bash
-make --directory=tests/platformSetup gcp-gardener_prod-amd64-plan
+make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-plan
 ```
 
 3. Create the resources:
 ```bash
-make --directory=tests/platformSetup gcp-gardener_prod-amd64-apply
+make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-apply
 ```
 
 4. Run your tests or log in:
 ```bash
-make --directory=tests gcp-gardener_prod-amd64-test-platform
+make --directory=tests gcp-gardener_prod-amd64-tofu-test-platform
 ```
 
 or
 
 ```bash
-make --directory=tests/platformSetup gcp-gardener_prod-amd64-login
+make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-login
 ```
 
 5. Clean up when done:
 ```bash
-make --directory=tests/platformSetup gcp-gardener_prod-amd64-destroy
+make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-destroy
 ```
 
 > [!TIP]
@@ -670,7 +767,7 @@ Each flavor has a test target that:
 For example:
 ```bash
 # Run tests for a single flavor
-make --directory=tests gcp-gardener_prod-amd64-test-platform
+make --directory=tests gcp-gardener_prod-amd64-tofu-test-platform
 
 # Run all platform tests
 make --directory=tests all
@@ -682,30 +779,59 @@ make --directory=tests all
 <summary>Click to see all available test commands</summary>
 
 ```plaintext
+make --directory=tests
+
 Usage: make [target]
 
 general targets:
-help					List available tasks of the project                 
-all					Run all platform tests                               
+help					List available tasks of the project                                     
+all					Run all platform tests                                                   
 
-Available targets for Official Flavors:
+Available Platform Test targets for Official Flavors:
 
-ali-gardener_prod-amd64-test-platform                       Run platform tests via opentofu for ali-gardener_prod-amd64
-aws-gardener_prod-amd64-test-platform                       Run platform tests via opentofu for aws-gardener_prod-amd64
-aws-gardener_prod-arm64-test-platform                       Run platform tests via opentofu for aws-gardener_prod-arm64
-aws-gardener_prod_trustedboot-amd64-test-platform           Run platform tests via opentofu for aws-gardener_prod_trustedboot-amd64
-aws-gardener_prod_trustedboot-arm64-test-platform           Run platform tests via opentofu for aws-gardener_prod_trustedboot-arm64
-aws-gardener_prod_trustedboot_tpm2-amd64-test-platform      Run platform tests via opentofu for aws-gardener_prod_trustedboot_tpm2-amd64
-aws-gardener_prod_trustedboot_tpm2-arm64-test-platform      Run platform tests via opentofu for aws-gardener_prod_trustedboot_tpm2-arm64
-azure-gardener_prod-amd64-test-platform                     Run platform tests via opentofu for azure-gardener_prod-amd64
-azure-gardener_prod_trustedboot-amd64-test-platform         Run platform tests via opentofu for azure-gardener_prod_trustedboot-amd64
-azure-gardener_prod_trustedboot_tpm2-amd64-test-platform    Run platform tests via opentofu for azure-gardener_prod_trustedboot_tpm2-amd64
-gcp-gardener_prod-amd64-test-platform                       Run platform tests via opentofu for gcp-gardener_prod-amd64
-gcp-gardener_prod-arm64-test-platform                       Run platform tests via opentofu for gcp-gardener_prod-arm64
-gcp-gardener_prod_trustedboot-amd64-test-platform           Run platform tests via opentofu for gcp-gardener_prod_trustedboot-amd64
-gcp-gardener_prod_trustedboot-arm64-test-platform           Run platform tests via opentofu for gcp-gardener_prod_trustedboot-arm64
-gcp-gardener_prod_trustedboot_tpm2-amd64-test-platform      Run platform tests via opentofu for gcp-gardener_prod_trustedboot_tpm2-amd64
-gcp-gardener_prod_trustedboot_tpm2-arm64-test-platform      Run platform tests via opentofu for gcp-gardener_prod_trustedboot_tpm2-arm64
+Qemu Provisioner Platform Tests targets:
+  ali-gardener_prod-amd64-qemu-test-platform                                    Run platform tests build with Qemu for ali-gardener_prod-amd64
+  aws-gardener_prod-amd64-qemu-test-platform                                    Run platform tests build with Qemu for aws-gardener_prod-amd64
+  aws-gardener_prod-arm64-qemu-test-platform                                    Run platform tests build with Qemu for aws-gardener_prod-arm64
+  aws-gardener_prod_tpm2_trustedboot-amd64-qemu-test-platform                   Run platform tests build with Qemu for aws-gardener_prod_tpm2_trustedboot-amd64
+  aws-gardener_prod_tpm2_trustedboot-arm64-qemu-test-platform                   Run platform tests build with Qemu for aws-gardener_prod_tpm2_trustedboot-arm64
+  aws-gardener_prod_trustedboot-amd64-qemu-test-platform                        Run platform tests build with Qemu for aws-gardener_prod_trustedboot-amd64
+  aws-gardener_prod_trustedboot-arm64-qemu-test-platform                        Run platform tests build with Qemu for aws-gardener_prod_trustedboot-arm64
+  azure-gardener_prod-amd64-qemu-test-platform                                  Run platform tests build with Qemu for azure-gardener_prod-amd64
+  azure-gardener_prod-arm64-qemu-test-platform                                  Run platform tests build with Qemu for azure-gardener_prod-arm64
+  azure-gardener_prod_tpm2_trustedboot-amd64-qemu-test-platform                 Run platform tests build with Qemu for azure-gardener_prod_tpm2_trustedboot-amd64
+  azure-gardener_prod_trustedboot-amd64-qemu-test-platform                      Run platform tests build with Qemu for azure-gardener_prod_trustedboot-amd64
+  gcp-gardener_prod-amd64-qemu-test-platform                                    Run platform tests build with Qemu for gcp-gardener_prod-amd64
+  gcp-gardener_prod-arm64-qemu-test-platform                                    Run platform tests build with Qemu for gcp-gardener_prod-arm64
+  gcp-gardener_prod_tpm2_trustedboot-amd64-qemu-test-platform                   Run platform tests build with Qemu for gcp-gardener_prod_tpm2_trustedboot-amd64
+  gcp-gardener_prod_tpm2_trustedboot-arm64-qemu-test-platform                   Run platform tests build with Qemu for gcp-gardener_prod_tpm2_trustedboot-arm64
+  gcp-gardener_prod_trustedboot-amd64-qemu-test-platform                        Run platform tests build with Qemu for gcp-gardener_prod_trustedboot-amd64
+  gcp-gardener_prod_trustedboot-arm64-qemu-test-platform                        Run platform tests build with Qemu for gcp-gardener_prod_trustedboot-arm64
+  kvm-gardener_prod-amd64-qemu-test-platform                                    Run platform tests build with Qemu for kvm-gardener_prod-amd64
+  kvm-gardener_prod-arm64-qemu-test-platform                                    Run platform tests build with Qemu for kvm-gardener_prod-arm64
+  kvm-gardener_prod_tpm2_trustedboot-amd64-qemu-test-platform                   Run platform tests build with Qemu for kvm-gardener_prod_tpm2_trustedboot-amd64
+  kvm-gardener_prod_tpm2_trustedboot-arm64-qemu-test-platform                   Run platform tests build with Qemu for kvm-gardener_prod_tpm2_trustedboot-arm64
+  kvm-gardener_prod_trustedboot-amd64-qemu-test-platform                        Run platform tests build with Qemu for kvm-gardener_prod_trustedboot-amd64
+  kvm-gardener_prod_trustedboot-arm64-qemu-test-platform                        Run platform tests build with Qemu for kvm-gardener_prod_trustedboot-arm64
+
+Tofu Provisioner Platform Tests targets:
+  ali-gardener_prod-amd64-tofu-test-platform                                    Run platform tests build with OpenTofu for ali-gardener_prod-amd64
+  aws-gardener_prod-amd64-tofu-test-platform                                    Run platform tests build with OpenTofu for aws-gardener_prod-amd64
+  aws-gardener_prod-arm64-tofu-test-platform                                    Run platform tests build with OpenTofu for aws-gardener_prod-arm64
+  aws-gardener_prod_tpm2_trustedboot-amd64-tofu-test-platform                   Run platform tests build with OpenTofu for aws-gardener_prod_tpm2_trustedboot-amd64
+  aws-gardener_prod_tpm2_trustedboot-arm64-tofu-test-platform                   Run platform tests build with OpenTofu for aws-gardener_prod_tpm2_trustedboot-arm64
+  aws-gardener_prod_trustedboot-amd64-tofu-test-platform                        Run platform tests build with OpenTofu for aws-gardener_prod_trustedboot-amd64
+  aws-gardener_prod_trustedboot-arm64-tofu-test-platform                        Run platform tests build with OpenTofu for aws-gardener_prod_trustedboot-arm64
+  azure-gardener_prod-amd64-tofu-test-platform                                  Run platform tests build with OpenTofu for azure-gardener_prod-amd64
+  azure-gardener_prod-arm64-tofu-test-platform                                  Run platform tests build with OpenTofu for azure-gardener_prod-arm64
+  azure-gardener_prod_tpm2_trustedboot-amd64-tofu-test-platform                 Run platform tests build with OpenTofu for azure-gardener_prod_tpm2_trustedboot-amd64
+  azure-gardener_prod_trustedboot-amd64-tofu-test-platform                      Run platform tests build with OpenTofu for azure-gardener_prod_trustedboot-amd64
+  gcp-gardener_prod-amd64-tofu-test-platform                                    Run platform tests build with OpenTofu for gcp-gardener_prod-amd64
+  gcp-gardener_prod-arm64-tofu-test-platform                                    Run platform tests build with OpenTofu for gcp-gardener_prod-arm64
+  gcp-gardener_prod_tpm2_trustedboot-amd64-tofu-test-platform                   Run platform tests build with OpenTofu for gcp-gardener_prod_tpm2_trustedboot-amd64
+  gcp-gardener_prod_tpm2_trustedboot-arm64-tofu-test-platform                   Run platform tests build with OpenTofu for gcp-gardener_prod_tpm2_trustedboot-arm64
+  gcp-gardener_prod_trustedboot-amd64-tofu-test-platform                        Run platform tests build with OpenTofu for gcp-gardener_prod_trustedboot-amd64
+  gcp-gardener_prod_trustedboot-arm64-tofu-test-platform                        Run platform tests build with OpenTofu for gcp-gardener_prod_trustedboot-arm64
 ```
 </details>
 
@@ -714,14 +840,14 @@ gcp-gardener_prod_trustedboot_tpm2-arm64-test-platform      Run platform tests v
 If tests fail, you can:
 
 1. Check the pytest output for error messages
-2. Look at the OpenTofu state: `make --directory=tests/platformSetup <flavor>-show`
-3. SSH into the instance manually: `make --directory=tests/platformSetup <flavor>-login`
+2. Look at the OpenTofu state: `make --directory=tests/platformSetup <flavor>-tofu-show`
+3. SSH into the instance manually: `make --directory=tests/platformSetup <flavor>-tofu-login`
 4. Check cloud provider logs in their respective web consoles
 
 > [!WARNING]
 > Remember to clean up resources after debugging:
 > ```bash
-> make --directory=tests/platformSetup <flavor>-destroy
+> make --directory=tests/platformSetup <flavor>-tofu-destroy
 > ```
 
 ## Advanced Settings
