@@ -17,7 +17,6 @@ from dataclasses import dataclass
 from _pytest.config.argparsing import Parser
 
 from platformSetup.chroot import CHROOT
-from platformSetup.firecracker import FireCracker
 from platformSetup.kvm import KVM
 from platformSetup.manual import Manual
 
