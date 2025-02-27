@@ -15,7 +15,7 @@ endif
 
 GARDENLINUX_BUILD_CRE ?= sudo podman
 
-PLATFORMS = firecracker kvm openstack tofu
+PLATFORMS = kvm openstack tofu
 
 .PHONY: all
 .DEFAULT: help
