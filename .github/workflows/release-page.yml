@@ -20,6 +20,79 @@ on:
         type: string
         description: "Full commitish"
 jobs:
+  # Those jobs can't all run concurrently because there are dependencies
+  # To get release note information from glvd, the release must be created in glrd first
+  # Next, the ingestion process needs to be run in glvd to update the available Garden Linux patch releases
+  # After that we can finally create the github release page, which benefits from glvd being up-to-date
+  # See https://github.com/gardenlinux/glvd/issues/147 for more details
+  glrd:
+    name: create GLRD release
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Create GLRD release
+        uses: gardenlinux/glrd@v3
+        with:
+          cmd: |
+            type=${{ inputs.type }}
+            commit=${{ inputs.commit }}
+            version=${{ inputs.version }}
+            major=$(echo ${version} | cut -d'.' -f1)
+            minor=$(echo ${version} | cut -d'.' -f2)
+            if [ ${type} = "patch" ]; then
+              # check for stable version and create if missing
+              if ! glrd --no-header --type stable --version ${major}; then
+                glrd-manage --s3-update --create stable --version ${major}
+              fi
+              glrd-manage --s3-update --create patch --version ${version} --commit ${commit}
+            elif [ ${type} = "dev" ]; then
+              glrd-manage --s3-update --create dev --version ${version} --commit ${commit}
+            fi
+      - name: Get created GLRD release
+        uses: gardenlinux/glrd@v3
+        with:
+          cmd: |
+            version=${{ inputs.version }}
+            major=$(echo ${version} | cut -d'.' -f1)
+            minor=$(echo ${version} | cut -d'.' -f2)
+            glrd --type stable,patch,dev --version ${major}
+
+  # Run glvd ingestion *after* glrd release was triggered, but *before* release page is generated
+  # This is needed for the automatic changelog generation
+  glvd:
+    if: ${{ inputs.type }} == 'patch'
+    name: Update GLVD distro list
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # This is required for requesting the JWT
+      id-token: write
+    needs:
+      - glrd
+    steps:
+      - name: Get OIDC token
+        id: get-token
+        run: |
+          IDTOKEN=$(curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=glvd" | jq -r '.value')
+          echo "idToken=${IDTOKEN}" >> $GITHUB_OUTPUT
+      - uses: azure/k8s-set-context@v4
+        with:
+           method: kubeconfig
+           kubeconfig: "${{ secrets.KUBECONFIG }}"
+      - run: kubectl create job --from=cj/glvd-ingestion ingest$RANDOM
+      - run: echo "give it some time to run the ingestion job" && sleep 60
+
+  
+  
   create_github_release:
     if: ${{ inputs.type }} == 'patch'
     environment: oidc_aws_s3_upload
@@ -98,69 +171,3 @@ jobs:
     with:
       version: ${{ inputs.version }}
       is_latest:  ${{ inputs.is_latest }}
-
-  glrd:
-    name: create GLRD release
-    permissions:
-      id-token: write
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      - name: Create GLRD release
-        uses: gardenlinux/glrd@v3
-        with:
-          cmd: |
-            type=${{ inputs.type }}
-            commit=${{ inputs.commit }}
-            version=${{ inputs.version }}
-            major=$(echo ${version} | cut -d'.' -f1)
-            minor=$(echo ${version} | cut -d'.' -f2)
-            if [ ${type} = "patch" ]; then
-              # check for stable version and create if missing
-              if ! glrd --no-header --type stable --version ${major}; then
-                glrd-manage --s3-update --create stable --version ${major}
-              fi
-              glrd-manage --s3-update --create patch --version ${version} --commit ${commit}
-            elif [ ${type} = "dev" ]; then
-              glrd-manage --s3-update --create dev --version ${version} --commit ${commit}
-            fi
-      - name: Get created GLRD release
-        uses: gardenlinux/glrd@v3
-        with:
-          cmd: |
-            version=${{ inputs.version }}
-            major=$(echo ${version} | cut -d'.' -f1)
-            minor=$(echo ${version} | cut -d'.' -f2)
-            glrd --type stable,patch,dev --version ${major}
-
-  # Run glvd ingestion *after* glrd release was triggered, but *before* release page is generated
-  # This is needed for the automatic changelog generation
-  glvd:
-    if: ${{ inputs.type }} == 'patch'
-    name: Update GLVD distro list
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      # This is required for requesting the JWT
-      id-token: write
-    needs:
-      - glrd
-    steps:
-      - name: Get OIDC token
-        id: get-token
-        run: |
-          IDTOKEN=$(curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=glvd" | jq -r '.value')
-          echo "idToken=${IDTOKEN}" >> $GITHUB_OUTPUT
-      - uses: azure/k8s-set-context@v4
-        with:
-           method: kubeconfig
-           kubeconfig: "${{ secrets.KUBECONFIG }}"
-      - run: kubectl create job --from=cj/glvd-ingestion ingest$RANDOM
-      - run: echo "give it some time to run the ingestion job" && sleep 60
