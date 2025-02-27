@@ -40,6 +40,8 @@ __pycache__
 /test_results.json
 /tests/*.log
 /tests/*.xml
+/tests/login.*.sh
+/tests/pytest.*.sh
 !tests/config/*.yaml.example
 tests/config
 make_targets.cache
@@ -60,7 +62,5 @@ s3_downloads/
 **/.uuid
 **/backend.tf
 **/encryption.tf
-**/env.*.sh
-**/login.*.sh
 COMMIT
 VERSION
