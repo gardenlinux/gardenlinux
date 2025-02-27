@@ -30,30 +30,41 @@ help:
 	@echo "Available targets for Official Flavors:"
 	@echo ""
 	@echo "all targets:"
-	@echo "  all                                Run build and test for all flavors"
-	@echo "  all-build                          Run build for all flavors"
-	@echo "  all-test                           Run build for all flavors"
+	@printf "%-80s%s\n" "  all" "Run build and Chroot tests for all flavors"
+	@printf "%-80s%s\n" "  all-build" "Run build for all flavors"
+	@printf "%-80s%s\n" "  all-test" "Run Chroot tests for all flavors"
 	@echo ""
-	@echo "build targets:"
-	@echo "  base-amd64-build                   Run bootstrap/base build for adm64"
-	@echo "  base-arm64-build                   Run bootstrap/base build for arm64"
-	@echo "  container-amd64-build              Run container build for adm64"
-	@echo "  container-arm64-build              Run container build for arm64"
+	@echo "base build targets:"
+	@printf "%-80s%s\n" "  base-amd64-build" "Run bootstrap/base build for amd64"
+	@printf "%-80s%s\n" "  base-arm64-build" "Run bootstrap/base build for arm64"
+	@printf "%-80s%s\n" "  container-amd64-build" "Run base container build for amd64"
+	@printf "%-80s%s\n" "  container-arm64-build" "Run base container build for arm64"
 	@echo ""
-	@echo $(FLAVORS_BARE) | tr " " "\n" | sed 's/$$/-build/' | awk '{printf "  %s\n", $$1}'
+	@echo "bare container flavor build targets:"
+	@$(foreach flavor,$(FLAVORS_BARE), \
+		printf "%-80s%s\n" "  $(flavor)-build" "Run build $(flavor)"; \
+	)
 	@echo ""
-	@echo $(FLAVORS) | tr " " "\n" | sed 's/$$/-build/' | awk '{printf "  %s\n", $$1}'
+	@echo "image flavor build targets:"
+	@$(foreach flavor,$(FLAVORS), \
+		printf "%-80s%s\n" "  $(flavor)-build" "Run build $(flavor)"; \
+	)
 	@echo ""
-	@echo "test targets:"
-	@echo "  base-amd64-test                   Run bootstrap/base test for adm64"
-	@echo "  base-arm64-test                   Run bootstrap/base test for arm64"
-	@echo "  container-amd64-test              Run container test for adm64"
-	@echo "  container-arm64-test              Run container test for arm64"
+	@echo "base Chroot tests targets:"
+	@printf "%-80s%s\n" "  base-amd64-test" "Run bootstrap/base Chroot tests for amd64"
+	@printf "%-80s%s\n" "  base-arm64-test" "Run bootstrap/base Chroot tests for arm64"
+	@printf "%-80s%s\n" "  container-amd64-test" "Run base container Chroot tests for amd64"
+	@printf "%-80s%s\n" "  container-arm64-test" "Run base container Chroot tests for arm64"
 	@echo ""
-	@echo $(FLAVORS_BARE) | tr " " "\n" | sed 's/$$/-test/' | awk '{printf "  %s\n", $$1}'
+	@echo "bare container flavor Chroot tests targets:"
+	@$(foreach flavor,$(FLAVORS_BARE), \
+		printf "%-80s%s\n" "  $(flavor)-test" "Run Chroot tests $(flavor)"; \
+	)
 	@echo ""
-	@echo $(FLAVORS) | tr " " "\n" | sed 's/$$/-test/' | awk '{printf "  %s\n", $$1}'
-	@echo ""
+	@echo "image flavor Chroot tests targets:"
+	@$(foreach flavor,$(FLAVORS), \
+		printf "%-80s%s\n" "  $(flavor)-test" "Run Chroot tests $(flavor)"; \
+	)
 
 # all: Run build and test for all flavors
 all: all-build
