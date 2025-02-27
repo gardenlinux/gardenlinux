@@ -207,25 +207,6 @@ targets:
         test: true
         test-platform: false
         publish: true
-  - name: firecracker
-    category: hypervisor
-    flavors:
-      - features:
-          - gardener
-          - _prod
-        arch: amd64
-        build: true
-        test: true
-        test-platform: false
-        publish: false
-      - features:
-          - gardener
-          - _prod
-        arch: arm64
-        build: true
-        test: true
-        test-platform: false
-        publish: false
   - name: gcp
     category: public-cloud
     flavors:
