@@ -18,7 +18,7 @@ ifeq ($(origin GL_REGISTRY), undefined)
 GL_REGISTRY := ghcr.io/gardenlinux
 endif
 ifeq ($(origin TEST_PREFIX), undefined)
-TEST_PREFIX := $(USER)
+TEST_PREFIX := $(shell echo $(USER) | cut -c1-10)
 endif
 ifeq ($(origin CNAME), undefined)
 CNAME_CMD :=
