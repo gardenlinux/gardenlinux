@@ -4,6 +4,7 @@ import pytest
 additional_user = "azureuser"
 
 
+@pytest.mark.security_id(172)
 def test_users(client, azure):
     """
     AZR injects via cloud-init a user. The default username is azureuser and we
