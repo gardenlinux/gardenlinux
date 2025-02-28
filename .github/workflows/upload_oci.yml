@@ -62,17 +62,39 @@ jobs:
           python-version: "3.12"
       - name: Install glcli util
         run: |
-          git clone --depth 1 --branch 0.6.2 https://github.com/gardenlinux/python-gardenlinux-cli.git
+          git clone --depth 1 --branch 0.6.3 https://github.com/gardenlinux/python-gardenlinux-cli.git
           mv python-gardenlinux-cli /opt/glcli
           pip install -r /opt/glcli/requirements.txt
       - name: Install cosign
-        uses: sigstore/cosign-installer@v3.8.0
+        uses: sigstore/cosign-installer@v3.8.1
         with:
           cosign-release: 'v2.4.1'
       - name: push using the glcli util
         run: |
           mkdir -p manifests
-          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir ${{ env.cname }} --container ghcr.io/${{ github.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest --manifest_file manifests/oci_manifest_entry_${{ env.cname }}.json
+          max_retries=3
+          retry_count=0
+          exit_code=0
+          until [ $retry_count -ge $max_retries ]; do
+            output=$(GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir ${{ env.cname }} --container ghcr.io/${{ github.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest --manifest_file manifests/oci_manifest_entry_${{ env.cname }}.json 2>&1)
+            exit_code=$?
+            if echo "$output" | grep -q "Bad Gateway"; then
+              retry_count=$((retry_count+1))
+              exit_code=1
+              echo "Bad Gateway detected, retry $retry_count/$max_retries"
+              sleep 10
+            elif [ $exit_code -eq 0 ]; then
+              echo $output
+              break
+            else
+              echo "Fatal error: $output"
+              exit $exit_code
+            fi
+          done
+          if [ $exit_code -ne 0 ]; then
+            echo "Failed after $max_retries retries"
+            exit 1
+          fi
       - name: Upload oci manifest artifact
         uses: actions/upload-artifact@v4
         with:

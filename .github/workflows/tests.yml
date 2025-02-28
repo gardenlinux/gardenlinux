@@ -94,6 +94,13 @@ jobs:
     #     bin/garden-version "${{ inputs.version }}" | tee VERSION
     #     git update-index --assume-unchanged VERSION
 
+    - name: load cert cache
+      uses: actions/cache/restore@0c907a75c2c80ebcb7f088228285e798b750cf8f # pin@v3
+      with:
+        path: cert
+        key: cert-${{ github.run_id }}
+        fail-on-cache-miss: true
+
     - name: get cname
       run: |
         # download images from S3 bucket

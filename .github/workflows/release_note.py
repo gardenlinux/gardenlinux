@@ -245,8 +245,8 @@ def release_notes_changes_section(gardenlinux_version):
             output.append(upgrade_line)
 
             if package["fixedCves"]:
-                cve_line = "  - " + ", ".join(package["fixedCves"])
-                output.append(cve_line)
+                for fixedCve in package["fixedCves"]:
+                    output.append(f'  - {fixedCve}')
 
         return "\n".join(output) + "\n"
     except:
@@ -340,7 +340,7 @@ def create_github_release_notes(gardenlinux_version, commitish, dry_run = False)
     output += "\n"
     output += "```"
     output += "\n"
-    output += f"ghcr.io/gardenlinux/kmodbuild:{gardenlinux_version}"
+    output += f"ghcr.io/gardenlinux/gardenlinux/kmodbuild:{gardenlinux_version}"
     output += "\n"
     output += "```"
     output += "\n"
