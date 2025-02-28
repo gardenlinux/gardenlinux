@@ -15,6 +15,6 @@ def test_sudoers(client, non_container):
     sudoers = read_file_remote(client,
                                file="/etc/sudoers",
                                remove_comments=True,
-                               remove_newline=True)
+                               remove_newlines=True)
     _ = [config for config in sudoers if '%sudo' in config]
     assert len(_) == 1, "Missing sudo configuration in '/etc/sudoers'!"
