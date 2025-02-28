@@ -19,11 +19,11 @@ def test_gl_is_support_distro(client, features):
 
     AptUpdate(client)
 
-    install_package_deb(client, "dpkg-dev")
-    assert '' == run(client, "dpkg-vendor --is gardenlinux")
-    assert '' == run(client, "dpkg-vendor  --derives-from debian")
+    install_package_deb(client, pkg="dpkg-dev")
+    assert '' == run(client, cmd="dpkg-vendor --is gardenlinux")
+    assert '' == run(client, cmd="dpkg-vendor  --derives-from debian")
 
-    status, output = run(client, "dpkg-vendor --is debian", skip_error=True)
+    status, _ = run(client, cmd="dpkg-vendor --is debian", skip_error=True)
     assert status == 1
 
     # Disable sudo again.
