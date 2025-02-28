@@ -1,31 +1,34 @@
 import pytest
-from helper.utils import get_architecture, AptUpdate, install_package_deb, execute_remote_command
+from helper.utils import get_architecture, AptUpdate, install_package_deb
+from helper.utils import execute_remote_command as run
 from helper.sshclient import RemoteClient
 
 
 @pytest.mark.security_id(1)
-def test_gl_is_support_distro(client, container, non_container):
+def test_gl_is_support_distro(client, features):
     """
     This tests ensures that the vendor field is set to 'gardenlinux'.
+
+    We need the features parameter to check if we need sudo or not.
+    Containers do not ship sudo by default.
     """
 
     # We have to enable sudo to allow.
-    if non_container:
-      client._default_to_sudo = True
+    if 'container' not in features:
+        client._default_to_sudo = True
 
     AptUpdate(client)
-    install_package_deb(client, "dpkg-dev")
 
-    assert '' ==  execute_remote_command(client, "dpkg-vendor --is gardenlinux")
-    assert '' ==  execute_remote_command(client, "dpkg-vendor  --derives-from debian")
+    install_package_deb(client, pkg="dpkg-dev")
+    assert '' == run(client, cmd="dpkg-vendor --is gardenlinux")
+    assert '' == run(client, cmd="dpkg-vendor  --derives-from debian")
 
-    # Negative case:
-    status, output  = execute_remote_command(client, "dpkg-vendor --is debian", skip_error=True)
+    status, _ = run(client, cmd="dpkg-vendor --is debian", skip_error=True)
     assert status == 1
 
     # Disable sudo again.
-    if non_container:
-      client._default_to_sudo = False
+    if 'container' not in features:
+        client._default_to_sudo = False
 
 
 def test_no_man(client):
