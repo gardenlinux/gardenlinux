@@ -20,13 +20,13 @@ logger.setLevel(logging.DEBUG)
 BIN_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "bin")
 DEFAULT_PORT = "2223"
 
-class KVM:
-    """Handle KVM flavor"""
+class QEMU:
+    """Handle QEMU flavor"""
 
     @classmethod
     def fixture(cls, config):
 
-        logger.info("Starting KVM platform tests.")
+        logger.info("Starting QEMU platform tests.")
 
         # We need to validate basic information
         # for 'RemoteClient' object first. Afterwards
@@ -37,8 +37,8 @@ class KVM:
         port = config.get("port", DEFAULT_PORT)
         logger.info(f"Using port tcp/{port} to connect to VM.")
 
-        kvm = KVM(config)
-        cls.kvm = kvm 
+        qemu = QEMU(config)
+        cls.qemu = qemu 
 
         try:
             ssh = RemoteClient(
@@ -52,12 +52,12 @@ class KVM:
         finally:
             if ssh is not None:
                 ssh.disconnect()
-            if kvm is not None:
-                kvm.__del__()
+            if qemu is not None:
+                qemu.__del__()
 
     @classmethod
     def instance(cls):
-        return cls.kvm
+        return cls.qemu
 
     def __init__(self, config):
 
@@ -70,10 +70,10 @@ class KVM:
             self._generate_ssh_key()
         else:
             logger.info("Using defined SSH key for platform tests.")
-        # Adjust KVM image 
-        self._adjust_kvm()
-        # Start KVM
-        self._start_kvm(arch, port)
+        # Adjust QEMU image 
+        self._adjust_qemu()
+        # Start QEMU
+        self._start_qemu(arch, port)
 
 
     def __del__(self):
@@ -81,7 +81,7 @@ class KVM:
         if "keep_running" in self.config and self.config["keep_running"] == True:
             logger.info("Keeping all resources")
         else:
-            self._stop_kvm()
+            self._stop_qemu()
             logger.info("Done.")
 
     def _validate(self):
@@ -172,9 +172,9 @@ class KVM:
         )
         logger.info("SSH key for platform tests generated.")
 
-    def _adjust_kvm(self):
-        """ Adjust KVM image and inject needed files """
-        logger.info("Adjusting KVM image. This will take some time for each command...")
+    def _adjust_qemu(self):
+        """ Adjust QEMU image and inject needed files """
+        logger.info("Adjusting QEMU image. This will take some time for each command...")
         image = self.config["image"]
         image_name = os.path.basename(image)
         ssh_key_path = self.config["ssh"]["ssh_key_filepath"]
@@ -244,9 +244,9 @@ class KVM:
                 error = p.stdout
                 logger.error(f"Failed: {cmd}: {error}")
 
-    def _start_kvm(self, arch, port):
-        """ Start VM in KVM for defined arch """
-        logger.info("Starting VM in KVM.")
+    def _start_qemu(self, arch, port):
+        """ Start VM in QEMU for defined arch """
+        logger.info("Starting VM in QEMU.")
 
         image = self.config["image"]
         image_name = os.path.basename(image)
@@ -271,10 +271,10 @@ class KVM:
         else:
             logger.error("Unsupported architecture.")
 
-        logger.info(f"VM starting as {arch} in KVM.")
+        logger.info(f"VM starting as {arch} in QEMU.")
         p = subprocess.Popen([cmd], shell=True)
 
-    def _stop_kvm(self):
+    def _stop_qemu(self):
         """ Stop VM and remove injected file """
         logger.info("Stopping VM and cleaning up")
         image = self.config["image"]
