@@ -88,11 +88,23 @@ jobs:
         with:
            method: kubeconfig
            kubeconfig: "${{ secrets.KUBECONFIG }}"
-      - run: kubectl create job --from=cj/glvd-ingestion ingest$RANDOM
-      - run: echo "give it some time to run the ingestion job" && sleep 60
+      - name: Start a new ingestion job in GLVD to import package list for new version
+        run: |
+          kubectl create job --from=cj/glvd-ingestion ingest$RANDOM
+      - name: Wait for GLVD to ingest the package list of the new version
+        run: |
+          VERSION=${{ inputs.version }}
+          URL="https://glvd.ingress.glvd.gardnlinux.shoot.canary.k8s-hana.ondemand.com/v1/distro/$VERSION"
+          for i in {1..30}; do
+              RESPONSE=$(curl -s $URL)
+              if [[ $RESPONSE != "[]" ]]; then
+                  echo "Non-empty list received: $RESPONSE"
+                  break
+              fi
+              echo "Attempt $i returned an empty list, retrying in 10 seconds..."
+              sleep 10
+          done
 
-  
-  
   create_github_release:
     if: ${{ inputs.type }} == 'patch'
     environment: oidc_aws_s3_upload
