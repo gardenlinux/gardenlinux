@@ -14,12 +14,13 @@ disclosure but will need help from relevant developers and release managers
 to successfully run this process. The Garden Linux Security Team consists of the
 following volunteers:
 
+* Akendo (**[@Akendo](https://github.com/Akendo)**)
 * Andre Russ, (**[@gehoern](https://github.com/gehoern)**)
 * Vincent Riesop (**[@vincinator](https://github.com/vincinator/)**)
 * Nikolas Kraetzschmar (**[@nkraetzschmar](https://github.com/nkraetzschmar/)**)
 * Stefan Catargiu (**[@5kt](https://github.com/5kt/)**)
 * Florian Wilhelm (**[@fwilhe](https://github.com/fwilhe/)**)
-* Frederik Thormaehlen, (**[@ThormaehlenFred](https://github.com/ThormaehlenFred)**)
+
 
 ## Disclosures
 
