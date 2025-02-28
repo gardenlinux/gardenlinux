@@ -1,4 +1,5 @@
-from helper.utils import read_file_remote, run
+from helper.utils import read_file_remote
+from helper.utils import execute_remote_command as run
 import pytest
 
 
