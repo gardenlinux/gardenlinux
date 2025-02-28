@@ -1,4 +1,4 @@
-from helper.utils import read_file_remote, execute_remote_command
+from helper.utils import read_file_remote, run
 import pytest
 
 
@@ -10,7 +10,7 @@ def test_sudoers(client, non_container):
     """
     # Ensure we have sudo permissions.
     client._default_to_sudo = True
-    output = execute_remote_command(client, "getent group sudo")
+    output = run(client, cmd="getent group sudo")
     assert output.split(":")[0] == 'sudo', "Group 'sudo' is missing!"
 
     sudoers = read_file_remote(client,
