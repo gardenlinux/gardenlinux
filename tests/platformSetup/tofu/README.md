@@ -131,7 +131,7 @@ Please be aware that you have to configure cloud provider authentication and set
 
 ```bash
 # 0. Build the image for the flavor you want to test
-$ make gcp-gardener_prod-amd64-tofu-build
+$ make gcp-gardener_prod-amd64-build
 
 # 1. Generate variables for your flavor
 $ make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-config
