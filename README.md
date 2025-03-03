@@ -74,6 +74,12 @@ Examples:
 
 The build script fetches the required builder container and manages all internal build steps. By default, it uses rootless podman, but you can switch to another container engine with the `--container-engine` flag.
 
+> [!NOTE]  
+> If you need to generate dummy certificates for building features like `_trustedboot` or `_tpm2` for testing and development, you can generate them using:  
+> ```bash  
+> ./cert/build  
+> ```
+
 # Test
 
 To run unit tests for a specific target, use the command `./test ${target}`.
