@@ -27,7 +27,7 @@ def pytest_addoption(parser: Parser):
     parser.addoption(
         "--iaas",
         action="store",
-        help="What Infrastructure the tests should be provisioned on to run.",
+        help="(DEPRECATED: use --provisioner instead) What Infrastructure the tests should be provisioned on to run.",
     )
     parser.addoption(
         "--provisioner",
@@ -64,20 +64,34 @@ def pipeline(pytestconfig):
     return False
 
 @pytest.fixture(scope="session")
-def iaas(pytestconfig):
-    if pytestconfig.getoption('iaas'):
+def provisioner(pytestconfig):
+    """Get the provisioner to use, with backwards compatibility for --iaas."""
+    if pytestconfig.getoption('provisioner'):
+        return pytestconfig.getoption('provisioner')
+    elif pytestconfig.getoption('iaas'):
+        logger.warning("The --iaas option is deprecated. Please use --provisioner instead.")
         return pytestconfig.getoption('iaas')
-    pytest.exit("Need to specify which IaaS to test on.", 1)
+    pytest.exit("Need to specify which provisioner to use (--provisioner).", 1)
 
+@pytest.fixture(scope="session")
+def iaas(pytestconfig):
+    """Deprecated: Use provisioner fixture instead."""
+    if pytestconfig.getoption('iaas'):
+        logger.warning("The --iaas option is deprecated. Please use --provisioner instead.")
+        return pytestconfig.getoption('iaas')
+    return pytestconfig.getoption('provisioner')
 
 @pytest.fixture(scope="session")
 def platform(pytestconfig, testconfig):
+    """Get the platform to test on."""
     if 'platform' in testconfig:
         return testconfig['platform']
+    elif pytestconfig.getoption('provisioner'):
+        return pytestconfig.getoption('provisioner')
     elif pytestconfig.getoption('iaas'):
+        logger.warning("The --iaas option is deprecated. Please use --provisioner instead.")
         return pytestconfig.getoption('iaas')
-    else:
-        pytest.exit("Need to specify which platform (in configfile) or IaaS (via parameter) to test on.", 1)
+    pytest.exit("Need to specify which platform (in configfile) or provisioner (via --provisioner) to test on.", 1)
 
 
 @pytest.fixture(scope="session")
@@ -218,28 +232,26 @@ def gcp_credentials(testconfig, pipeline, request):
 
 
 @pytest.fixture(scope="session")
-def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
+def client(testconfig, provisioner, imageurl, request) -> Iterator[RemoteClient]:
     """Create and manage the test client resources"""
-    logger.info(f"Testconfig for {iaas=} is {testconfig}")
+    logger.info(f"Testconfig for {provisioner=} is {testconfig}")
     test_name = testconfig.get('test_name', f"gl-test-{time.strftime('%Y%m%d')}-{os.urandom(2).hex()}")
     create_only = request.config.getoption("--create-only")
     
     try:
-       if iaas == "openstack-ccee":
+       if provisioner == "openstack-ccee":
            from platformSetup.openstackccee import OpenStackCCEE
            yield from OpenStackCCEE.fixture(testconfig)
-       elif iaas == "chroot":
+       elif provisioner == "chroot":
            yield from CHROOT.fixture(testconfig)
-       elif iaas == "firecracker":
-           yield from FireCracker.fixture(testconfig)
-       elif iaas == "qemu":
+       elif provisioner == "qemu":
            yield from QEMU.fixture(testconfig)
-       elif iaas == "manual":
+       elif provisioner == "manual":
            yield from Manual.fixture(testconfig)
-       elif iaas == "local":
+       elif provisioner == "local":
            yield testconfig
        else:
-           raise ValueError(f"invalid {iaas=}")
+           raise ValueError(f"invalid {provisioner=}")
     finally:
        if create_only:
            logger.info("Resource creation complete")
@@ -273,7 +285,7 @@ def pytest_collection_modifyitems(config, items):
         return
 
     skip = pytest.mark.skip(reason="test is not part of the enabled features")
-    iaas = config.getoption("--iaas")
+    provisioner = config.getoption("--provisioner") or config.getoption("--iaas")
     config_file = config.getoption("--configfile")
 
     try:
@@ -283,8 +295,8 @@ def pytest_collection_modifyitems(config, items):
         logger.error(f"can not open config file {config_file}")
         pytest.exit(err, 1)
 
-    if not iaas == 'local':
-        features = config_options[iaas].get("features", [])
+    if not provisioner == 'local':
+        features = config_options[provisioner].get("features", [])
     else:
         features = []
 
