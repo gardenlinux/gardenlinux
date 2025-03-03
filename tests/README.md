@@ -420,7 +420,7 @@ podman run -it --rm  -v `pwd`:/gardenlinux -v $HOME/.ssh:/root/.ssh -v ~/config:
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
-    pytest --iaas=manual --configfile=/config/myconfig.yaml
+    pytest --provisioner=manual --configfile=/config/myconfig.yaml
 
 
 #### OpenStack CC EE flavor
@@ -508,7 +508,7 @@ podman run -it --rm  -v `pwd`:/gardenlinux -v $HOME/.config:/root/.config ghcr.i
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
-    pytest --iaas=openstack-ccee --configfile=/config/mygcpconfig.yaml
+    pytest --provisioner=openstack-ccee --configfile=/config/mygcpconfig.yaml
 
 
 #### Local tests in the platform container
@@ -550,7 +550,7 @@ podman run -it --rm  -v `pwd`:/gardenlinux ghcr.io/gardenlinux/gardenlinux/platf
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
-    pytest --iaas=local --configfile=/config/mylocalconfig.yaml
+    pytest --provisioner=local --configfile=/config/mylocalconfig.yaml
 
 NOTE: With the `-k EXPRESSION` you can filter the tests by name to only run the tests you want, instead of all local tests. See `pytest --help` for more information.
 

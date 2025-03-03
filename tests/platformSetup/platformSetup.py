@@ -21,7 +21,7 @@ logger.addHandler(handler)
 
 # Global constants
 PROVISIONER_PYTEST_MAP = {
-    "qemu": "kvm",
+    "qemu": "qemu",
     "tofu": "manual"
 }
 
@@ -160,7 +160,7 @@ class PytestConfig:
         if provisioner == "qemu":
             config_file = self.paths.config_dir / f"pytest.{provisioner_pytest}.{flavor}.yaml"
             yaml_data = {
-                "kvm": {
+                "qemu": {
                     "image": f"{image_path}/{cname}.raw" if image_path else None,
                     "ip": "127.0.0.1",
                     "port": 2223,
@@ -271,7 +271,7 @@ class Scripts:
             f.write("#!/usr/bin/env bash\n")
             f.write(
                 f"cd {self.paths.tests_dir} && "
-                f"pytest -v --iaas={provisioner_pytest} --configfile config/pytest.{provisioner_pytest}.{flavor}.yaml --create-only\n"
+                f"pytest -v --provisioner={provisioner_pytest} --configfile config/pytest.{provisioner_pytest}.{flavor}.yaml --create-only\n"
             )
         apply_script.chmod(0o755)
 
@@ -280,7 +280,7 @@ class Scripts:
             f.write("#!/usr/bin/env bash\n")
             f.write(
                 f"cd {self.paths.tests_dir} && "
-                f"pytest -v --iaas={provisioner_pytest} --configfile config/pytest.{provisioner_pytest}.{flavor}.yaml\n"
+                f"pytest -v --provisioner={provisioner_pytest} --configfile config/pytest.{provisioner_pytest}.{flavor}.yaml\n"
             )
         test_script.chmod(0o755)
 
