@@ -9,7 +9,7 @@ Virtualization Environment like KVM/VMWare or a simple wrapper program like
 chroot. Since this file defines the environment we want to conduct our tests
 on. We're using in the future the word: provisioner
 
-pytest --iaas=chroot 
+pytest --provisioner=chroot 
 """
 
 import pytest
