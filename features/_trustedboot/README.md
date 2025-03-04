@@ -44,17 +44,14 @@ In both of these modes of operation, the creation of the `/var` partition is han
 
 1. make sure you have build the secureboot certificate chain (`./cert/build`)
 2. build an image with the `_trustedboot` flag enabled and optionally the `_tpm2` flag, e.g. `./build kvm_dev_trustedboot_tpm2`
-3. create a larger disk from the build disk image, either just grow the image or create a qemu copy on write disk.
-   - **Option A:** grow the disk image: `truncate -s 4G .build/kvm_dev_tpm2_trustedboot-arm64-today-local.raw`
-   - **Option B:** create a CoW disk: `qemu-img create -f qcow2 -b .build/kvm_dev_tpm2_trustedboot-arm64-today-local.raw -F raw disk.qcow2 4G`
-4. get a version of edk2 with secureboot support:
+3. get a version of edk2 with secureboot support:
    ```
    mkdir edk2
    podman run --rm -v "$PWD/edk2:/mnt" debian:testing bash -c 'apt update && apt install -y qemu-efi-aarch64 && cp /usr/share/AAVMF/AAVMF_CODE.secboot.fd /usr/share/AAVMF/AAVMF_VARS.fd /mnt/'
    ```
-5. boot with `start-vm` (assuming using a CoW disk, otherwise adapt disk path as needed):
+4. boot with `start-vm` (be sure to add the `,qcow=4G` part which is vital to make the disk large enough for the repartition):
    ```
-   ./bin/start-vm --ueficode edk2/AAVMF_CODE.secboot.fd --uefivars edk2/AAVMF_VARS.fd --tpm2 disk.qcow2
+   ./bin/start-vm --ueficode edk2/AAVMF_CODE.secboot.fd --uefivars edk2/AAVMF_VARS.fd --tpm2 disk.qcow2,qcow=4G
    ```
 
 

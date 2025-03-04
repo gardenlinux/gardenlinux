@@ -64,3 +64,4 @@ s3_downloads/
 **/login.*.sh
 COMMIT
 VERSION
+edk2/
