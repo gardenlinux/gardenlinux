@@ -20,5 +20,6 @@ def test_sudoers(client, non_container):
                                remove_newlines=True)
     # Drop sudo permissions.
     client._default_to_sudo = False
-    _ = [config for config in sudoers if '%sudo' in config]
-    assert len(_) == 1, "Missing sudo configuration in '/etc/sudoers'!"
+    assert len(
+        [config for config in sudoers if '%sudo' in config]
+    ) == 1, "Missing sudo configuration in '/etc/sudoers'!"
