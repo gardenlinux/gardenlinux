@@ -61,7 +61,7 @@ chroot "$rootfs" dracut \
 	--force \
 	--tmpdir /tmp \
 	--kver "${kernel#*-}" \
-	--modules "bash dash systemd systemd-initrd systemd-repart kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown crypt" \
+	--modules "bash dash systemd systemd-initrd systemd-repart systemd-cryptsetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown crypt" \
 	--reproducible \
 	--install 'find findmnt grep lsblk tail head realpath basename sfdisk mkfs.ext4 resizefat32 dd cryptsetup' \
 	--include '/tmp/initrd.include' / \
