@@ -1,0 +1,1 @@
+See [Secureboot / Trustedboot / TPM2](../docs/01_developers/build_image.md) in the image build docs for information on how to build your own certificates for development purposes.

@@ -74,11 +74,7 @@ Examples:
 
 The build script fetches the required builder container and manages all internal build steps. By default, it uses rootless podman, but you can switch to another container engine with the `--container-engine` flag.
 
-> [!NOTE]  
-> If you need to generate dummy certificates for building features like `_trustedboot` or `_tpm2` for testing and development, you can generate them using:  
-> ```bash  
-> ./cert/build  
-> ```
+If you plan to build images with Trustedboot, see [Secureboot / Trustedboot / TPM2](docs/01_developers/build_image.md) in the image build docs for information on how to build your own certificates for development purposes.
 
 # Test
 
