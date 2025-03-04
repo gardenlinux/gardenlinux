@@ -62,7 +62,8 @@ variable "ali_ssh_user" {
 
 variable "ali_region" {
   description = "AWS region"
-  default     = "eu-central-1"
+  # default     = "eu-central-1" # Frankfurt
+  default     = "eu-west-1" # London
 }
 
 variable "ali_instance_type" {
