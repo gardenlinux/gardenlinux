@@ -5,18 +5,13 @@ from helper.sshclient import RemoteClient
 
 
 @pytest.mark.security_id(1)
-def test_gl_is_support_distro(client, features):
+def test_gl_is_support_distro(client, non_container):
     """
     This tests ensures that the vendor field is set to 'gardenlinux'.
-
-    We need the features parameter to check if we need sudo or not.
-    Containers do not ship sudo by default.
     """
 
-    client._default_to_sudo = False
     # We have to enable sudo to allow.
-    if 'container' not in features:
-        client._default_to_sudo = True
+    client._default_to_sudo = True
 
     AptUpdate(client)
     install_package_deb(client, pkg="dpkg-dev")
@@ -27,8 +22,7 @@ def test_gl_is_support_distro(client, features):
     assert status == 1
 
     # Disable sudo again.
-    if 'container' not in features:
-        client._default_to_sudo = False
+    client._default_to_sudo = False
 
 
 def test_no_man(client):
@@ -66,7 +60,7 @@ def test_ls(client):
     assert "var" in lines
 
 
-def test_startup_time(client, non_chroot, non_kvm, non_azure, non_container):
+def test_startup_time(client, non_chroot, non_kvm, non_azure):
     """ Test for startup time """
     tolerated_kernel_time = 60
     tolerated_userspace_time = 40
