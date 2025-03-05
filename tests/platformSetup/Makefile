@@ -141,19 +141,19 @@ $(foreach flavor,$(FLAVORS_IMAGE), \
 		$(flavor)-qemu-apply: ; \
 		mkdir -p $(MKDIRS) && \
 		$(CRE_CMD_kvm) --name qemu-$(flavor) -d --rm --replace $(CRE_CMD_kvm_image) bash -c "\
-			platformSetup/platformSetup.py --provisioner qemu --flavor $(flavor) $(CNAME_CMD) && \
-			./pytest.qemu.$(flavor).apply.sh && \
+			/gardenlinux/tests/platformSetup/platformSetup.py --provisioner qemu --flavor $(flavor) $(CNAME_CMD) && \
+			/gardenlinux/tests/pytest.qemu.$(flavor).apply.sh && \
 			sleep 86400 \
 		" && \
 		$(GARDENLINUX_BUILD_CRE) exec -it qemu-$(flavor) bash -c "\
 			until test -f /tmp/qemu.pid; do echo 'Waiting for qemu to start...'; sleep 1; done && \
-			./pytest.qemu.$(flavor).apply.sh \
+			/gardenlinux/tests/pytest.qemu.$(flavor).apply.sh \
 		" \
 	) \
 	$(eval \
 		$(flavor)-qemu-login: ; \
 		$(GARDENLINUX_BUILD_CRE) exec -it qemu-$(flavor) bash -c "\
-			./login.qemu.$(flavor).sh \
+			/gardenlinux/tests/login.qemu.$(flavor).sh \
 		" \
 	) \
 	$(eval \
