@@ -19,11 +19,10 @@ def test_gl_is_support_distro(client, features):
         client._default_to_sudo = True
 
     AptUpdate(client)
-
     install_package_deb(client, pkg="dpkg-dev")
+
     assert '' == run(client, cmd="dpkg-vendor --is gardenlinux")
     assert '' == run(client, cmd="dpkg-vendor  --derives-from debian")
-
     status, _ = run(client, cmd="dpkg-vendor --is debian", skip_error=True)
     assert status == 1
 
@@ -67,7 +66,7 @@ def test_ls(client):
     assert "var" in lines
 
 
-def test_startup_time(client, non_chroot, non_kvm, non_azure):
+def test_startup_time(client, non_chroot, non_kvm, non_azure, non_container):
     """ Test for startup time """
     tolerated_kernel_time = 60
     tolerated_userspace_time = 40
