@@ -13,13 +13,7 @@ def test_su_restriction(client, non_container):
                                          file="/etc/pam.d/su",
                                          remove_comments=True)
 
-    client._default_to_sudo = False
-    auth_config = [config for config in pam_configuration if 'auth' in config]
-    for entry in auth_config:
-        if 'pam_wheel.so' in entry:
-            assert 'required pam_wheel.so' in entry, \
-              "Error configuration for the pam_wheel.so"
-            test_successfully = True
-
-    if not test_successfully:
-        assert False, "Error pam_wheel.so not found!"
+    assert any(
+            'auth' in entry and 'pam_wheel.so' in entry
+            for entry in pam_configuration), \
+        "Control value of PAM Module pam_wheel.so must be set to required"
