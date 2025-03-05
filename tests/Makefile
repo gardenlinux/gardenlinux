@@ -143,6 +143,6 @@ $(foreach flavor,$(FLAVORS_IMAGE), \
 $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 	$(eval \
 	  $(flavor)-tofu-test-platform: ; \
-	  	$(CRE_CMD_tofu) pytest --provisioner=manual --configfile=tests/config/pytest.manual.$(flavor).yaml --junit-xml=tests/$(flavor).platform.test.xml ; \
+	  	$(CRE_CMD_tofu) pytest --provisioner=manual --configfile=/gardenlinux/tests/config/pytest.manual.$(flavor).yaml --junit-xml=/gardenlinux/tests/$(flavor).platform.test.xml ; \
 	) \
 )
