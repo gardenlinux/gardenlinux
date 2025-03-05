@@ -19,6 +19,5 @@ def test_su_restriction(client, non_container):
     client._default_to_sudo = False
 
     assert any(
-            'auth' in entry and 'pam_wheel.so' in entry
-            for entry in pam_file), \
-        "Control value of PAM Module pam_wheel.so must be set to required"
+        "auth" in entry and "pam_wheel.so" in entry for entry in pam_file
+    ), "Control value of PAM Module pam_wheel.so must be set to required"
