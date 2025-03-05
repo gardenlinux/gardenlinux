@@ -13,6 +13,7 @@ def test_gl_is_support_distro(client, features):
     Containers do not ship sudo by default.
     """
 
+    client._default_to_sudo = False
     # We have to enable sudo to allow.
     if 'container' not in features:
         client._default_to_sudo = True
