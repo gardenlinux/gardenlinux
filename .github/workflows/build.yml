@@ -235,9 +235,9 @@ jobs:
           cname=$(basename "$(realpath ".build/${{ matrix.flavor }}-${{ matrix.arch }}")" .artifacts)
           echo "cname=$cname" | tee -a "$GITHUB_ENV"
       # ./test writes ${{ env.cname }}.chroot.test.log and puts it into .build/${{ env.cname }}.artifacts
-      - name: test
+      - name: chroot test
         run: |
-          make ${{ matrix.flavor }}-${{ matrix.arch }}-test
+          make --directory=tests ${{ matrix.flavor }}-${{ matrix.arch }}-chroot-test
       # chroot.test.xml is written in the entrypoint tests/init
       - name: rename test results
         if: always()
@@ -301,11 +301,11 @@ jobs:
           find .build -exec touch -d "@$t" {} +
       - name: build
         run: make ${{ matrix.flavor }}-${{ matrix.arch }}-build
-      - name: test
+      - name: container test
         run: |
           config=$(echo ${{ matrix.flavor }} | sed 's/^bare-//')
           echo "config=$config" | tee -a "$GITHUB_ENV"
-          make ${{ matrix.flavor }}-${{ matrix.arch }}-test
+          make --directory=tests ${{ matrix.flavor }}-${{ matrix.arch }}-container-test
       - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
         with:
           name: "build-bare-${{ env.config }}-${{ matrix.arch }}"

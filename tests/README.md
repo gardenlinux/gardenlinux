@@ -15,24 +15,12 @@
   - [Using the tests on supported platforms](#using-the-tests-on-supported-platforms)
     - [General](#general-1)
     - [Public cloud platforms](#public-cloud-platforms)
-    - [Firecracker (MicroVM)](#firecracker-microvm)
-      - [Configuration options](#configuration-options)
-      - [Running the tests](#running-the-tests)
     - [Local test environments](#local-test-environments)
       - [CHROOT](#chroot)
-        - [Configuration options](#configuration-options-1)
-        - [Running the tests](#running-the-tests-1)
-      - [KVM](#kvm)
-        - [Configuration options](#configuration-options-2)
-        - [Running the tests](#running-the-tests-2)
+      - [QEMU](#qemu)
       - [Manual Testing](#manual-testing)
-        - [Running the tests](#running-the-tests-3)
       - [OpenStack CC EE flavor](#openstack-cc-ee-flavor)
-        - [Configuration options](#configuration-options-3)
-        - [Running the tests](#running-the-tests-4)
       - [Local tests in the platform container](#local-tests-in-the-platform-container)
-        - [Configuration options](#configuration-options-4)
-        - [Running the tests](#running-the-tests-5)
   - [Misc](#misc)
     - [Autoformat Using Black](#autoformat-using-black)
     - [Run Static Checks](#run-static-checks)
@@ -93,7 +81,75 @@ These tests are located in a subfolder (`test`) within a feature's directory and
 | CIS | test_cis.py | [features/cis/test/test_cis.py](../features/cis/test/test_debian_cis.py) |
 
 # Platform Tests
+
 ## Prerequisites
+
+#### Tooling
+
+These tools are required on the local workstation and Github Actions.
+
+- Python 3.11
+- GNU Make
+- `uuidgen`
+- podman
+
+##### Installation on debian based systems
+
+```bash
+$ sudo apt-get update
+$ sudo apt-get install python3 python-is-python3 python3-venv make uuid-runtime podman
+```
+
+##### Installation on macOS
+
+```bash
+$ brew install python git make coreutils gnu-sed gnu-getopt podman vfkit
+```
+
+#### Python virtual environment
+
+A virtual environment with minimum dependencies is required to run the make targets and the coresponding python scripts.
+
+##### manual installation
+
+```bash
+# create virtual environment
+$ python -m venv venv
+
+# activate virtual environment
+$ source venv/bin/activate
+
+# install dependencies
+$ pip install -r requirements.txt
+```
+
+##### use direnv
+
+Direnv is a tool for managing environment variables for your project. It can be used to automatically load the virtual environment.
+
+```bash
+# Installation on debian based systems
+$ sudo apt-get update
+$ sudo apt-get install direnv
+
+# Installation on macOS
+$ brew install direnv
+
+# add hook to bashrc
+$ echo "eval \"\$(direnv hook bash)\"" >> ~/.bashrc
+
+# add hook to zshrc
+$ echo "eval \"\$(direnv hook zsh)\"" >> ~/.zshrc
+
+# create .envrc file to load the virtual environment
+$ echo "layout python3" > .envrc
+
+# allow the .envrc file
+$ direnv allow
+```
+
+### Platform Test Images
+
 Build the platform test container images with all necessary dependencies. These container images will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP) and the OpenTofu binaries.
 
 > [!NOTE]
@@ -108,53 +164,37 @@ Many more build targets are available, e.g. to build only for a certain platform
 
     ❯ make --directory=tests/images help
     Usage: make [target]
-    
+
     general targets:
-    help					List available tasks of the project 
-    all					Build all platform test images   
-    all-push				Build and push all platform test images 
-    pull-platform-test-base			Pull the platform test base image 
-    pull-platform-test			Pull all platform test images 
-    build-platform-test-base		Build the platform test base image 
-    build-platform-test			Build all platform test images 
-    push-platform-test-base			Push the platform test base image 
-    push-release-platform-test-base		Push the platform test base image with release tag 
-    push-platform-test			Push all platform test images 
-    push-release-platform-test		Push all platform test images with release tag 
+    help					List available tasks of the project                                     
+    
+    Available targets for Platform Test Images:
+    
+    all targets:
+      pull-platform-test                                                            Pull all platform test images
+      build-platform-test                                                           Build all platform test images
+      push-platform-test                                                            Push all platform test images
+      push-release-platform-test                                                    Push all platform test images with release tag
+    
+    base targets:
+      pull-platform-test-base                                                       Pull the platform test base image
+      build-platform-test-base                                                      Build the platform test base image
+      push-platform-test-base                                                       Push the platform test base image
+      push-release-platform-test-base                                               Push the platform test base image with release tag
     
     platform-specific targets:
-    pull-platform-test-ali                  Pull the platform test image for ali
-    pull-platform-test-aws                  Pull the platform test image for aws
-    pull-platform-test-azure                Pull the platform test image for azure
-    pull-platform-test-firecracker          Pull the platform test image for firecracker
-    pull-platform-test-gcp                  Pull the platform test image for gcp
-    pull-platform-test-kvm                  Pull the platform test image for kvm
-    pull-platform-test-openstack            Pull the platform test image for openstack
-    pull-platform-test-tofu                 Pull the platform test image for tofu
-    build-platform-test-ali                 Build the platform test image for ali
-    build-platform-test-aws                 Build the platform test image for aws
-    build-platform-test-azure               Build the platform test image for azure
-    build-platform-test-firecracker         Build the platform test image for firecracker
-    build-platform-test-gcp                 Build the platform test image for gcp
-    build-platform-test-kvm                 Build the platform test image for kvm
-    build-platform-test-openstack           Build the platform test image for openstack
-    build-platform-test-tofu                Build the platform test image for tofu
-    push-platform-test-ali                  Push the platform test image for ali
-    push-platform-test-aws                  Push the platform test image for aws
-    push-platform-test-azure                Push the platform test image for azure
-    push-platform-test-firecracker          Push the platform test image for firecracker
-    push-platform-test-gcp                  Push the platform test image for gcp
-    push-platform-test-kvm                  Push the platform test image for kvm
-    push-platform-test-openstack            Push the platform test image for openstack
-    push-platform-test-tofu                 Push the platform test image for tofu
-    push-release-platform-test-ali          Push the platform test image for ali with release tag
-    push-release-platform-test-aws          Push the platform test image for aws with release tag
-    push-release-platform-test-azure        Push the platform test image for azure with release tag
-    push-release-platform-test-firecracker  Push the platform test image for firecracker with release tag
-    push-release-platform-test-gcp          Push the platform test image for gcp with release tag
-    push-release-platform-test-kvm          Push the platform test image for kvm with release tag
-    push-release-platform-test-openstack    Push the platform test image for openstack with release tag
-    push-release-platform-test-tofu         Push the platform test image for tofu with release tag
+      pull-platform-test-kvm                                                        Pull the platform test image for kvm
+      pull-platform-test-openstack                                                  Pull the platform test image for openstack
+      pull-platform-test-tofu                                                       Pull the platform test image for tofu
+      build-platform-test-kvm                                                       Build the platform test image for kvm
+      build-platform-test-openstack                                                 Build the platform test image for openstack
+      build-platform-test-tofu                                                      Build the platform test image for tofu
+      push-platform-test-kvm                                                        Push the platform test image for kvm
+      push-platform-test-openstack                                                  Push the platform test image for openstack
+      push-platform-test-tofu                                                       Push the platform test image for tofu
+      push-release-platform-test-kvm                                                Push the platform test image for kvm with release tag
+      push-release-platform-test-openstack                                          Push the platform test image for openstack with release tag
+      push-release-platform-test-tofu                                               Push the platform test image for tofu with release tag
 
 The resulting container images will be tagged as `gardenlinux/platform-test-<platform>:<version>` with `<version>` being the version that is passed as $GL_VERSION build argument. By default this is the version that has the `latest` tag in the [github image registry](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux). In addition to that, tags for the commit hashes also exist.
 
@@ -167,31 +207,6 @@ All further tests run inside containers spawned from these images.
     ghcr.io/gardenlinux/gardenlinux/platform-test-base         32618be8186df52845a10e2c6ab06fd54f8b656a  4f333ff23e99  23 hours ago   832 MB
     ghcr.io/gardenlinux/gardenlinux/platform-test-base         32618be8                                  4f333ff23e99  23 hours ago   832 MB
     ghcr.io/gardenlinux/gardenlinux/platform-test-base         latest                                    0b6832e7a338  6 days ago     832 MB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-ali          1646.0                                    2d0ff9e51d4e  23 hours ago   887 MB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-ali          1e0d51fe54c6054240e3e0dbb81ce336f6e6ed39  c791a2b542a7  23 hours ago   885 MB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-ali          1e0d51fe                                  c791a2b542a7  23 hours ago   885 MB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-ali          32618be8186df52845a10e2c6ab06fd54f8b656a  2d0ff9e51d4e  23 hours ago   887 MB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-ali          32618be8                                  2d0ff9e51d4e  23 hours ago   887 MB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-aws          1646.0                                    a87e5fc901de  23 hours ago   1.07 GB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-aws          1e0d51fe                                  2bc1488dc563  23 hours ago   1.07 GB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-aws          1e0d51fe54c6054240e3e0dbb81ce336f6e6ed39  2bc1488dc563  23 hours ago   1.07 GB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-aws          32618be8186df52845a10e2c6ab06fd54f8b656a  a87e5fc901de  23 hours ago   1.07 GB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-aws          32618be8                                  a87e5fc901de  23 hours ago   1.07 GB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-azure        1646.0                                    2e9deedc1ab7  23 hours ago   2.11 GB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-azure        1e0d51fe54c6054240e3e0dbb81ce336f6e6ed39  ed50ef706b45  23 hours ago   2.11 GB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-azure        1e0d51fe                                  ed50ef706b45  23 hours ago   2.11 GB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-azure        32618be8186df52845a10e2c6ab06fd54f8b656a  2e9deedc1ab7  23 hours ago   2.11 GB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-azure        32618be8                                  2e9deedc1ab7  23 hours ago   2.11 GB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-firecracker  1646.0                                    ee89fac717f3  23 hours ago   837 MB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-firecracker  1e0d51fe54c6054240e3e0dbb81ce336f6e6ed39  7d371f89827c  23 hours ago   837 MB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-firecracker  1e0d51fe                                  7d371f89827c  23 hours ago   837 MB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-firecracker  32618be8186df52845a10e2c6ab06fd54f8b656a  ee89fac717f3  23 hours ago   837 MB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-firecracker  32618be8                                  ee89fac717f3  23 hours ago   837 MB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-gcp          1646.0                                    f737ec78fb0f  23 hours ago   1.68 GB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-gcp          1e0d51fe54c6054240e3e0dbb81ce336f6e6ed39  823b5dfb62ef  23 hours ago   1.68 GB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-gcp          1e0d51fe                                  823b5dfb62ef  23 hours ago   1.68 GB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-gcp          32618be8186df52845a10e2c6ab06fd54f8b656a  f737ec78fb0f  23 hours ago   1.68 GB
-    ghcr.io/gardenlinux/gardenlinux/platform-test-gcp          32618be8                                  f737ec78fb0f  23 hours ago   1.68 GB
     ghcr.io/gardenlinux/gardenlinux/platform-test-kvm          1646.0                                    897a857b4150  23 hours ago   1.69 GB
     ghcr.io/gardenlinux/gardenlinux/platform-test-kvm          1e0d51fe                                  00c418132c38  23 hours ago   1.69 GB
     ghcr.io/gardenlinux/gardenlinux/platform-test-kvm          1e0d51fe54c6054240e3e0dbb81ce336f6e6ed39  00c418132c38  23 hours ago   1.69 GB
@@ -221,577 +236,6 @@ These tests test Garden Linux on public cloud providers like Amazons AWS, Google
 
 Please look at the [OpenTofu Documentation in `tests/platformSetup/tofu`](platformSetup/tofu/README.md) for more details.
 
-#### Old pytest calls to cloud proviers.
-
-This is deprecated.
-
-<details>
-
-#### AWS
-
-Notes for AWS credentials:
-- credentials must be supplied by having them ready in `~/.aws/config` and `~/.aws/credentials`
-  - The `aws configure` command can be used to create these files.
-- `~/.aws` gets mounted into the container that executes the platform tests
-- While using MFA, a dedicated MFA session must be created.
-  - This can be achieved by executing the following command (requires login)
-    ```
-    aws sts get-session-token --serial-number <MFA Device ID> --token-code <Token>
-    ```
-  - The returned `AccessKeyID`, `SecretAccessKey` and `SessionToken` must be stored in the `~/.aws/credentials` file.
-  - It is useful to use a dedicated profile for the MFA session, which could look like this:
-    ```
-    [mfa]
-    aws_access_key_id = <Access Key ID>
-    aws_secret_access_key = <Secret Access Key>
-    aws_session_token = <Session Token>
-    region = <Region>
-    ```
-  - In order to let pytest use the correct profile, it must be assigned via the `AWS_PROFILE` environment variable during execution.
-
-Use the following configuration file:
-
-```yaml
-aws:
-    # region in which all test resources will be created (required)
-    region: eu-central-1
-    # machine/instance type of the test VM - not all machines are available in all regions (optional)
-    instance_type: t3.micro
-    # architecture of the image and VM to be used (optional)
-    architecture: amd64
-    # boot mode of the VM. One can choose between "uefi" and "legacy-bios" (optional)
-    boot_mode: legacy-bios
-    # UEFI data which is a base64 representation of the UEFI variable store
-    # uefi_data: "dGVzdAo=..."
-
-    # test name to be used for naming and/or tagging resources (optional)
-    test_name: my_gardenlinux_test
-
-    # list of features that is used to determine the tests to run
-    features:
-      - "base"
-
-    # ssh related configuration for logging in to the VM (optional)
-    ssh:
-        # path to the ssh key file (optional)
-        ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
-        # passphrase for a secured SSH key (optional)
-        passphrase:
-        # name of the public ssh key object as it gets imported into EC2 (optional)
-        key_name: gardenlinux-test-2
-        # username used to connect to the EC2 instance (optional, must be admin on AWS)
-        user: admin
-
-    # if specified this already existing AMI will be used and no image uploaded (optional/alternatively required)
-    #ami_id: ami-xxx
-    # local/S3 image file to be uploaded for the test (optional/alternatively required)
-    image: file:/build/aws/20210714/amd64/bullseye/rootfs.raw
-    #image: s3://gardenlinux/objects/078f440a76024ccd1679481708ebfc32f5431569
-    # bucket where the image will be uploaded to (optional)
-    bucket: import-to-ec2-gardenlinux-validation
-
-    # keep instance running after tests finishes (optional)
-    keep_running: false
-```
-
-##### Configuration options
-
-<details>
-
-- **region** _(required)_: the AWS region in which all test relevant resources will be created
-- **instance-type** _(optional)_: the instance type that will be used for the EC2 instance used for testing, defaults to `t3.micro` if not specified
-- **architecture** _(optional)_: the architecture under which the AMI of the image to test should be registered (`amd64` or `arm64`), must match the instance type, defaults to `amd64` if not specified
-- **boot_mode** _(optional)_: the boot mode that the AMI of the image should be started with. Keep in mind that Graviton (`arm64`) can only use UEFI. Choose between `uefi` and `legacy-bios`.
-- **uefi_data** _(optional)_: Base64 representation of the non-volatile UEFI variable store. You can inspect and modify the UEFI data by using the python-uefivars tool on GitHub.
-
-- **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
-
-- **ssh_key_filepath** _(optional)_: The SSH key that will be deployed to the EC2 instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand. If not provided, a new SSH key with 2048 bits will be generated just for the test.
-- **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
-- **key_name** _(optional)_: The SSH key gets uploaded to EC2, this is the name of the key object resource.
-- **user** _(optional)_: The user that will be provisioned to the EC2 instance, which the SSH key gets assigned to and that is used by the test framework to log on the EC2 instance. Defaults to `admin`.
-
-- **ami_id** _(optional/alternatively required)_: If the tests should get executed against an already existing AMI, this is its ID. It must exist in the region given above. Either **ami_id** or **image** must be supplied but not both.
-- **image** _(optional/alternatively required)_: If the tests should be executed against a Garden Linux filesystem snapshot that resulted from (local) build, this option is the URI that points to it. The file must be of type `.raw`. Either **ami_id** or **image** must be supplied but not both.
-The URI can be:
-    - `file:/path/to/my/rootfs.raw`: for local files
-    - `s3://mybucketname/objects/objectkey`: for files in S3
-
-- **bucket** _(optional)_: To create an AMI/EC2 instance from a local filesystem snapshot, it needs to be uploaded to an S3 bucket first. The bucket needs to exist in the given region and its name must be provided here. If not provided, a bucket will be created in the given region.
-
-- **keep_running** _(optional)_: if set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow for debugging. Defaults to `False`.
-
-</details>
-
-##### Running the tests
-
-Start Podman container with dependencies:
-
-- mount Garden Linux repository to `/gardenlinux`
-- mount AWS credential folder (usually `~/.aws`) to `/root/.aws`
-- mount SSH keys that are used to log in to the virtual machine to `/root/.ssh`
-- mount build result directory to `/build` (if not part of the Garden Linux file tree)
-- mount directory with config file to `/config`
-
-```
-sudo podman run -it --rm -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.aws:/root/.aws -v $HOME/.ssh:/root/.ssh -v ~/config:/config gardenlinux/platform-test:`bin/garden-version` /bin/bash
-```
-
-Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
-
-    pytest --iaas=aws --configfile=/config/myawsconfig.yaml
-
-#### Azure
-
-Login using the following command on your local machine (i.e. not inside of the platform test container) to authenticate to Azure and set up the API access token:
-
-    az login
-
-> [!NOTE]
-> other means of authentication, e.g. usage of service accounts should be possible.
-
-Use the following test configuration:
-
-```yaml
-azure:
-    # region/zone/location in Azure where the test resources will get created (required)
-    location:
-    # the Azure subscription name to be used (required/alternatively optional)
-    subscription: my-subscription-id
-    # the Azure subscription ID to be used (required/alternatively optional)
-    subscription_id: 00123456-abcd-1234-5678-1234abcdef78
-    # resource group if omitted a new group will be created (optional)
-    resource_group: rg-gardenlinux-test-01
-    # network security group (optional)
-    nsg_name: nsg-gardenlinux-test-42
-    # vm_size specifies the Azure vm size to be used for the test (optional)
-    vm_size: Standard_D4_v4
-    # hyperV generation to use. Possible values are 'V1' and 'V2'. Default is 'V1'
-    hyper_v_generation: V1
-    # architecture to use. Possible values are 'x64' and 'Arm64'. Default is 'x64'
-    architecture: x64
-    # enable accelerated networking for the VM on which the test runs (optional)
-    accelerated_networking: false
-
-    # test name to be used for naming and/or tagging resources (optional)
-    test_name: my_gardenlinux_test
-
-    # storage account to be used for image upload (optional)
-    storage_account_name: stggardenlinuxtest01
-    # local image file to be uploaded and to be tested (required/alternatively optional)
-    image: file:/build/azure/20210915/amd64/bullseye/rootfs.vhd
-    #image: s3://gardenlinux/objects/078f440a76024ccd1679481708ebfc32f5431569
-    # region of the S3 bucket from where the image should be downloaded from (optional)
-    #image_region: eu-central-1
-    # already existing image in Azure to be used for testing (required/alternatively optional)
-    image_name: <image name>
-
-    # list of features that is used to determine the tests to run
-    features:
-      - "base"
-
-    # ssh related configuration for logging in to the VM (optional)
-    ssh:
-        # path to the ssh key file (optional)
-        ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
-        # passphrase for a secured SSH key (optional)
-        passphrase:
-        # name of the public ssh key object as it gets imported into Azure (optional)
-        ssh_key_name: gardenlinux-test-2
-        # username used to connect to the Azure instance (optional)
-        user: azureuser
-
-    # keep instance running after tests finishes (optional)
-    keep_running: false
-```
-
-##### Configuration options
-
-Only three parameters are required for the test: the Azure `subscription` or `subscription_id`, the Azure `location` and the image to be tested. All other parameters are optional and can be generated at runtime.
-
-<details>
-
-- **location** _(required)_: the Azure region in which all test relevant resources will be created
-- **subscription** _(required/optional)_: The Azure subscription (as in subscription name) which is used for creating all relevant resources and running the test. Either the subscription name or the `subscription_id` needs to be provided.
-- **subscription_id** _(required/optional)_: The Azure subscription (its ID) which is used for creating all relevant resources and running the test. Either the 'subscription' name or its needs to be provided.
-- **resource_group** _(optional)_: all relevant resources for the platform test will be assigned to an Azure resource group. If you want to reuse an existing resource group, you can specify it here. If left empty, a new resource group gets created for the duration of the test.
-- **nsg_name** _(optional)_: The platform tests need to create a new network security group, this is its name. If you want to reuse an existing security group, specify its name here. If left empty, a new network security group will be created for the duration of the test.
-- **vm_size** _(optional)_: The given size will be used for the Azure virtual machine the test runs on. Check [this document](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes) for a list of possible VM sizes. Remember that the VM size will have an impact on test performance and startup times (which get tested and produce a failure should they exceed 30 seconds). The VM size also defines the CPU architecture. This setting defaults to `Standard_D4_v4` which matches the architecture `x64`, for running `Arm64` images the VM size `Standard_D4ps_v5` would be a good choice to start with.
-- **hyper_v_generation** _(optional)_: Choose the HyperV generation of the virtual machine created from the image. Possible values are 'V1' or 'V2'. If not set, 'V1' will be used as a default.
-    - 'V1': Boot = PCAT, Disk controllers = IDE
-    - 'V2': Boot = UEFI, Disk controllers = SCSI
-- **architecture** _(optional)_: Choose the architecture. Azure offers x86_64 (x64) and Arm64. Make sure to also choose a VM size that matches the architecture. When running an Arm64 image the HyperV generation needs to be 'V2'. Defaults to `x64`.
-- **accelerated_networking** _(optional)_: Enables [Azure Accelerated Networking](https://docs.microsoft.com/en-us/azure/virtual-network/accelerated-networking-overview) for the VM on which the test is going to run. Defaults to `false`, thus accelerated networking disabled.
-
-- **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
-
-- **storage_account_name** _(optional)_: the storage account to which the image gets uploaded
-- **image_name** _(optional/required)_: If the tests should get executed against an already existing Image, this is its name. Either **image_name** or **image** must be supplied but not both.
-- **image** _(optional/required)_: If the tests should be executed against a Garden Linux filesystem snapshot that resulted from a local build, this option is the path that points to it. The file must be of type `.vhd`. The image will be removed from Azure once the test finishes. Either **image_name** or **image** must be supplied but not both.
-The URI can be:
-    - `file:/path/to/my/rootfs.vhd`: for local files
-    - `s3://mybucketname/objects/objectkey`: for files in S3
-- **image_region** _(optional)_: If the image comes from an S3 bucket, the bucket location to download from can be specified here. Defaults to `eu-central-1` if omitted.
-
-- **ssh_key_filepath** _(optional)_: The SSH key that will be deployed to the Azure instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand. If left empty, a temporary key with 2048 bits will be generated by the test.
-- **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
-- **ssh_key_name** _(optional)_: The SSH key gets uploaded to Azure, this is the name of the key object resource.
-- **user** _(optional)_: The user that will be provisioned to the Azure instance, which the SSH key gets assigned to and that is used by the test framework to log on the Azure instance. If not provided, the user defaults to `azureuser`.
-
-- **keep_running** _(optional)_: if set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow for debugging
-
-</details>
-
-##### Running the tests
-
-Start Podman container with dependencies:
-
-- mount Garden Linux repository to `/gardenlinux`
-- mount Azure credentials to `/root/.azure`
-- mount SSH keys to `/root/.ssh`
-- mount build result directory to `/build` (if not part of the Garden Linux file tree)
-- mount directory with config file to `/config`
-
-```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.azure:/root/.azure -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test:`bin/garden-version` bash
-```
-
-Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
-
-    pytest --iaas=azure --configfile=/config/myazconfig.yaml
-
-
-#### Aliyun
-
-You need credentials as used for the aliyun command line client, e.g. a `config.json` document. Prior to running the tests the following objects must be created in the account:
-
-- A vSwitch with a cidr range (e.g. 192.168.0.0/24)
-- A security group which allows ingress traffic on TCP for SSH (default: 22) from source IP address of the test run
-- a bucket for uploading the disk image files
-
-Use the following test configuration:
-
-```yaml
-ali:
-    # mandatory, aliyun credential file location (config.json)
-    credential_file:
-
-    # optional, if an image id is provided the test will not attempt
-    # to upload an image
-    image_id:   # m-....
-
-    # image file (qcow2)
-    image:  # image.qcow2
-
-    # region of the S3 bucket from where the image should be downloaded from (optional)
-    #image_region: eu-central-1
-
-    # a valid instance type for the selected region
-    instance_type: ecs.t5-lc1m2.large
-
-    # mandatory, the security group id
-    security_group_id:  # sg-...
-
-    # mandatory, the vswitch id
-    vswitch_id:  # vsw-...
-
-    # mandatory, region and zone
-    region_id: eu-central-1
-    zone_id: eu-central-1a
-
-    # mandatory: bucket name
-    bucket:  # my-test-upload-bucket
-
-    # optional, path in bucket
-    bucket_path: platform-test
-
-    # list of features that is used to determine the tests to run
-    features:
-      - "base"
-
-    # ssh related configuration for logging in to the VM (required)
-    ssh:
-        # path to the ssh key file (required)
-        ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
-        # key name
-        key_name: gardenlinux-test
-        # passphrase for a secured SSH key (optional)
-        passphrase:
-        # username
-        user: admin
-
-    # keep instance running after tests finishes if set to true (optional)
-    keep_running: false
-```
-
-##### Configuration options
-
-<details>
-
-- **credential_file**:
-- **image_id**:
-- **image** _(optional/required)_: If the tests should be executed against a Garden Linux filesystem snapshot that resulted from a local build, this option is the path that points to it. The file must be of type `.qcow2`. The image will be removed from Ali-Cloud once the test finishes. Either **image_id** or **image** must be supplied but not both.
-The URI can be:
-    - `file:/path/to/my/rootfs.qcow2`: for local files
-    - `s3://mybucketname/objects/objectkey`: for files in S3
-- **image_region** _(optional)_: If the image comes from an S3 bucket, the bucket location to download from can be specified here. Defaults to `eu-central-1` if omitted.
-- **instance_type**: ecs.t5-lc1m2.large
-- **security_group_id**:  # sg-...
-- **vswitch_id**:  # vsw-...
-- **region_id**: eu-central-1
-- **zone_id**: eu-central-1a
-- **bucket**:  # my-test-upload-bucket
-- **bucket_path**: platform-test
-
-- **test_name** _(optional)_: a name that will be used as a prefix or tag for the resources that get created in the hyperscaler environment. Defaults to `gl-test-YYYYmmDDHHMMSS` with _YYYYmmDDHHMMSS_ being the date and time the test was started.
-
-- **ssh_key_filepath** _(required)_: The SSH key that will be deployed to the ECS instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand.
-- **key_name** _(required)_: The SSH key gets uploaded to ECS, this is the name of the key object resource.
-- **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
-- **user** _(required)_: The user that will be provisioned to the ECS instance, which the SSH key gets assigned to and that is used by the test framework to log on the ECS instance.
-
-- **keep_running** _(optional)_: if set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow for debugging
-
-</details>
-
-##### Running the tests
-
-Start Podman container with dependencies:
-
-- mount Garden Linux repository to `/gardenlinux`
-- mount GCP credentials to `/root/.config`
-- mount SSH keys to `/root/.ssh`
-- mount build result directory to `/build` (if not part of the Garden Linux file tree)
-- mount directory with config file to `/config`
-
-```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test:`bin/garden-version` bash
-```
-
-Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
-
-    pytest --iaas=ali --configfile=/config/mygcpconfig.yaml
-
-#### GCP
-
-Obtain credentials by using the following command to authenticate to Google Cloud Platform and set up the API access token:
-
-    gcloud auth application-default login
-
-Use the following test configuration:
-
-```yaml
-gcp:
-    # project id (required)
-    project:
-    # GCP region where the test resources should be created (required)
-    region: europe-west1
-    # zone where the VM should be created (required)
-    zone: europe-west1-d
-
-    # upload this local image to GCE and use it for testing (optional/required)
-    image: file:/build/gcp-dev/20210915/amd64/bullseye/rootfs-gcpimage.tar.gz
-
-    # enable uefi boot, default is legacy boot (optional)
-    #uefi: false
-    # enable secureboot, implies uefi boot, default is off (optional)
-    # needs a build with gcp_trustedboot or gcp_trustedboot_tpm2 features
-    #secureboot: false
-    secureboot_parameters:
-        # paths to the secureboot keys and database, needed for secureboot (optional)
-        #db_path: /gardenlinux/cert/secureboot.db.der
-        #kek_path: /gardenlinux/cert/secureboot.kek.der
-        #pk_path: /gardenlinux/cert/secureboot.pk.der
-
-    # GCE machine type (optional)
-    machine_type: n1-standard-2
-
-    # test name to be used for naming and/or tagging resources (optional)
-    test_name: my_gardenlinux_test
-
-    # list of features that is used to determine the tests to run
-    features:
-      - "base"
-
-    # ssh related configuration for logging in to the VM (required)
-    ssh:
-        # path to the ssh key file (required)
-        ssh_key_filepath: ~/.ssh/id_rsa_gardenlinux_test
-        # passphrase for a secured SSH key (optional)
-        passphrase:
-        # username used to connect to the Azure instance (required)
-        user: gardenlinux
-
-    # keep instance running after tests finishes (optional)
-    keep_running: false
-```
-
-##### Configuration options
-
-<details>
-
-- **project** _(required)_: the GCP project which is used for creating all relevant resources and running the tests
-- **zone** _(required)_: the GCP zone in which all test relevant resources will be created
-
-- **service_account_json_path** _(optional)_: If a service account JSON file is provided, it will be used to authenticate to GCP instead of using an access token.
-
-- **image_name** _(optional/required)_: If the tests should get executed against an already existing Image, this is its name. Either **image_name** or **image** must be supplied but not both.
-- **image** _(optional/required)_: If the tests should be executed against a Garden Linux filesystem snapshot that resulted from a local build, this option is the path that points to it. The file must be of type `.tar.gz`. Either **image_name** or **image** must be supplied but not both.
-The URI can be:
-    - `file:/path/to/my/rootfs.tar.gz`: for local files
-    - `s3://mybucketname/objects/objectkey`: for files in S3
-- **image_region** _(optional)_: If the image comes from an S3 bucket, the bucket location to download from can be specified here. Defaults to `eu-central-1` if omitted.
-
-- **bucket** _(optional)_: To create a GCE machine image from a local filesystem snapshot, it needs to be uploaded to a GCS bucket first. The will be created on the fly and a name will be generated if this field is left empty.
-
-- **uefi** _(optional)_: To enable UEFI boot, by default legacy boot is used. Default is `false`
-
-- **secureboot** _(optional)_: To enable secureboot, if secureboot is enabled UEFI boot will be used, no matter how the `uefi` option is set. For secureboot it is important that the path options to the keys and database are set properly. Default is `false`. 
-- **db_path** _(optional)_: The path to the signature database for secureboot. Default is `/gardenlinux/cert/secureboot.db.auth`
-- **kek_path** _(optional)_: The path to the key exchange key for secureboot. Default is `/gardenlinux/cert/secureboot.kek.auth`
-- **pk_path** _(optional)_: The path to the platform key for secureboot. Default is `/gardenlinux/cert/secureboot.pk.auth`
-- **cert_file_type** _(optional)_: The type of the certificate, allowed values are `BIN` or `X509`. Default is `BIN`
-
-- **machine_type** _(optional)_: The GCE machine type to be used to create the GCE instance for the test. Defaults to `n1-standard-2` if not given.
-
-- **ssh_key_filepath** _(required)_: The SSH key that will be deployed to the GCE instance and that will be used by the test framework to log on to it. Must be the file containing the private part of an SSH keypair which needs to be generated with `openssh-keygen` beforehand.
-- **passphrase** _(optional)_: If the given SSH key is protected with a passphrase, it needs to be provided here.
-- **user** _(required)_: The user that will be provisioned to the GCE instance, which the SSH key gets assigned to and that is used by the test framework to log on the Azure instance.
-
-- **keep_running** _(optional)_: if set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow for debugging
-
-
-##### Running the tests
-
-Start Podman container with dependencies:
-
-- mount Garden Linux repository to `/gardenlinux`
-- mount GCP credentials to `/root/.config`
-- mount SSH keys to `/root/.ssh`
-- mount build result directory to `/build` (if not part of the Garden Linux file tree)
-- mount directory with config file to `/config`
-
-```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test:`bin/garden-version` bash
-```
-
-Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
-
-    pytest --iaas=gcp --configfile=/config/mygcpconfig.yaml
-
-</details>
-
-#### Firecracker (MicroVM)
-
-Firecracker tests are designed to run directly on your platform. Currently, AMD64 and ARM64 architectures are supported **without any further cross platform support**.
-
-> [!NOTE]
-> Firecracker is currently limited to Linux base platforms only. Additionally, hardware acceleration is needed. Make sure, `/dev/kvm` is usable.
-
-Use the following test configuration:
-
-```yaml
-firecracker:
-    # Path to a final artifacts. This includes the Kernel
-    # and a filesystem image
-    kernel: /gardenlinux/.build/firecracker.vmlinux
-    image: /gardenlinux/.build/firecracker.ext4
-    # The filesystem image can optionally turned to readonly
-    # if necessary (optional)
-    # Default: False
-    readonly: False
-    # Filesystem mount path to mount filesystem image for further
-    # includes and adjustments (optional)
-    # Default: tmpdir
-    image_mount: /tmp/image_mount
-
-    # Network configurations for microvm and host system
-    # including additional bridge interface definitions. In default,
-    # this runs within a container. Therefore, these options can mostly
-    # be used as defaults and do not need any further adjustments
-    network:
-        # Firecracker / microvm
-        ip_vm: 169.254.0.21           # Optional (Default: 169.254.0.21)
-        port_ssh_vm: 2222             # Optional (Default: 2222)
-        netmask_vm: 255.255.255.252   # Optional (Default: 255.255.255.252)
-        if_vm: eth0                   # Optional (Default: eth0)
-        mac_vm: 02:FC:00:00:00:05     # Optional (Default: 02:FC:00:00:00:05)
-
-        # Hostsystem
-        ip_host: 169.254.0.22         # Optional: (Default: 169.254.0.22)
-        netmask_host: 255.255.255.252 # Optional (Default: 255.255.255.252)
-        if_host: eth0                 # Optional (Default: eth0)
-        if_tap_host: tap0             # Optional (Default: tap0)
-        if_bridge_host: br0           # Optional (Default: br0)
-
-    # Keep machine running after performing tests
-    # for further debugging (optional)
-    # Default: false
-    #keep_running: false
-
-    # List of features that is used to determine the tests to run
-    features:
-      - "base"
-
-    # SSH configuration (required)
-    ssh:
-        # Defines if a new SSH key should be generated (optional)
-        # Default: true
-        ssh_key_generate: true
-
-        # Defines path where to look for a given key
-        # or to save the new generated one. Take care
-        # that you do NOT overwrite your key. (required)
-        ssh_key_filepath: /tmp/ssh_priv_key
-
-        # Defines if a passphrase for a given key is needed (optional)
-        #passphrase: xxyyzz
-
-        # Defines the user for SSH login (required)
-        # Default: root
-        user: root
-```
-
-##### Configuration options
-
-<details>
-
-- **kernel** _(required)_: If the tests should get executed against an already existing image, this is its kernel name.
-- **image** _(required)_: If the tests should get executed against an already existing image, this is its filesystem image name.
-- **readonly** _(optional)_: Defines if the filesystem image should be mounted as readonly.
-- **image_mount** _(optional)_: Defines the path where the image should be mounted (and where it can be modified).
-- **ip_vm** _(optional)_: Defines the used IP address within the Firecracker/microvm instance.
-- **port_ssh_vm** _(optional)_: Defines the used SSH port within the Firecracker/microvm instance.
-- **netmask_vm** _(optional)_: Defines the used netmask (mostly /30) within the Firecracker/microvm instance.
-- **if_vm** _(optional)_: Defines the local interface within the Firecracker/microvm instance.
-- **mac_vm** _(optional)_: Defines the MAC address for the local interface within the Firecracker/microvm instance.
-- **ip_host** _(optional)_: Defines the IP address on the host system.
-- **netmask_host** _(optional)_: Defines the netmask (mostly /30) on the host system.
-- **if_host** _(optional)_: Defines the regular uplink interface on the host system.
-- **if_tap_host** _(optional)_: Defines the tap device on the host system to create.
-- **if_bridge_host** _(optional)_: Defines the bridge device on the host system to create.
-- **keep_running** _(optional)_: if set to `true`, all tests resources, especially the VM will not get removed after the test (independent of the test result) to allow for debugging
-
-</details>
-
-##### Running the tests
-
-Start Podman container with dependencies:
-
-- mount Garden Linux repository to `/gardenlinux`
-- add `/dev/kvm` device to Container (or run privileged mode)
-- run in privileged mode for KVM device and network interface mappings
-
-```
-sudo podman run -it --rm --privileged -v `pwd`:/gardenlinux gardenlinux/platform-test:`bin/garden-version` bash
-```
-
-Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
-
-    pytest --iaas=firecracker --configfile=/config/myfirecrackerconfig.yaml
-
-</details>
-
 ### Local test environments
 
 These tests flavors will make use of chroot, KVM virtual machines or OpenStack environments and thus can be used locally without a paid subscription to a public cloud provider.
@@ -799,6 +243,9 @@ These tests flavors will make use of chroot, KVM virtual machines or OpenStack e
 #### CHROOT
 
 CHROOT tests are designed to run directly on your platform within a `chroot` environment and boosts up the time for the platform tests that do not need any target platform.
+
+<details>
+<summary>Click to see the implemenation details of the Pytest configuration.</summary>
 
 > [!NOTE]
 > * A local SSH server is started inside the chroot environment. The tests communicate via ssh to execute cmds in the image under test. 
@@ -811,7 +258,7 @@ Use the following configuration file to proceed; only the path to the TAR image 
 ```yaml
 chroot:
     # Path to a final artifact. Represents the .tar.xz archive image file (required)
-    image: /gardenlinux/.build/kvm_dev-amd64-dev-local.tar.xz
+    image: /gardenlinux/.build/kvm-gardener_prod-amd64-today-local.raw
 
     # IP or hostname of target machine (required)
     # Default: 127.0.0.1
@@ -839,46 +286,47 @@ chroot:
 
 ##### Configuration options
 
-<details>
-
 - **features** _(optional)_: If not set, the feature tests will be skipped, if set it must contain a list of features. The tests defined in the listed features will be used. The features used to build the image can be found in the _image\_name_.os-release file in the output directory.
 - **ssh_key_filepath** _(required)_: The SSH key that will be injected to the *chroot* and that will be used by the test framework to log on to it. In default, you do **not** need to provide or mount your real SSH key; a new one will be generated and injected by every new run. However, if you really want, a present one can be defined - take care that this will not be overwritten and set `ssh_key_generate` to false.
 - **user** _(required)_: The user that will be used for the connection.
+
 </details>
 
-##### Running the tests
+##### Running Chroot tests via make targets
 
-Start Podman container with dependencies:
+```bash
+# list all available build targets
+$ make
 
-- mount Garden Linux repository to `/gardenlinux`
-- mount build result directory to `/build` (if not part of the Garden Linux file tree)
-- mount directory with configfile to `/config`
-- NOTE: The testing SSHd expects the regular `authorized_keys` file to be named as `test_authorized_keys`
+# Build the image for the flavor you want to test
+$ make gcp-gardener_prod-amd64-build
 
+# list all available test targets
+$ make --directory=tests
+
+# Run Chroot tests for the flavor you want to test
+$ make --directory=tests gcp-gardener_prod-amd64-chroot-test
 ```
-sudo podman run --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW --security-opt apparmor=unconfined -it --rm -v `pwd`:/gardenlinux gardenlinux/base-test:`bin/garden-version` /bin/bash
+
+##### Running Chroot tests manually
+
+```bash
+./test gcp-gardener_prod-amd64
 ```
-
-Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
-
-    pytest --iaas=chroot --configfile=/config/mychrootconfig.yaml
-
 
 #### QEMU
 
-QEMU tests are designed to run directly on your platform. Currently, AMD64 and ARM64 architectures are supported.
+QEMU tests are designed to run directly on your platform via QEMU/KVM. Currently, AMD64 and ARM64 architectures are supported.
 
-> [!NOTE]
-> * QEMU/KVM will run inside your `platform-test` Docker container
-> * (Default) New temporary SSH keys are auto generated and injected
-> * (Default: amd64) AMD64 and ARM64 architectures are supported
+<details>
+<summary>Click to see the implemenation details of the Pytest configuration.</summary>
 
 Use the following configuration file to proceed; only the path to the image needs to be adjusted:
 
 ```yaml
 qemu:
     # Path to a final artifact. Represents the .raw image file (required)
-    image: /gardenlinux/.build/kvm_dev-amd64-dev-local.raw
+    image: /gardenlinux/.build/kvm-gardener_prod-amd64-today-local.raw
 
     # IP or hostname of target machine (optional)
     # Default: 127.0.0.1
@@ -926,8 +374,6 @@ qemu:
 
 ##### Configuration options
 
-<details>
-
 - **features** _(optional)_: If not set, the feature tests will be skipped, if set it must contain a list of features. The tests defined in the listed features will be used. The features used to build the image can be found in the _image\_name_.os-release file in the output directory.
 - **ssh_key_filepath** _(required)_: The SSH key that will be injected to the .raw image file and that will be used by the test framework to log on to it. In default, you do **not** need to provide or mount your real SSH key; a new one will be generated and injected by every new run. However, if you really want, a present one can be defined - take care that this will not be overwritten and set `ssh_key_generate` to false.
 - **arch** _(optional)_: The architecture under which the AMI of the image to test should be registered (`amd64` or `arm64`), must match the instance type, defaults to `amd64` if not specified.
@@ -938,40 +384,69 @@ qemu:
 
 </details>
 
-##### Running the tests
+##### Running QEMU tests via make targets
 
-Start Podman container with dependencies:
+```bash
+# list all available build targets
+$ make
 
-- mount Garden Linux repository to `/gardenlinux`
-- mount /boot and /lib/modules for guestfish support (required for KVM tools)
-- mount build result directory to `/build` (if not part of the Garden Linux file tree)
-- mount directory with configfile to `/config`
-- mount SSH keys that are used to log in to the virtual machine to `/root/.ssh` (Optional: only needed when no SSH keys should be autogenerated)
-- QEMU: For `KVM` accel we need to run `podman` with `--device=/dev/kvm` option
-- NOTE: The testing SSHd expects the regular `authorized_keys` file to be named as `test_authorized_keys`
+# Build the image for the flavor you want to test
+$ make gcp-gardener_prod-amd64-build
 
-**With SSH autogeneration**
-This is the default and recommended way.
+# list all available test targets
+$ make --directory=tests
+
+# Create the QEMU resources for the flavor you want to test
+$ make --directory=tests/platformSetup gcp-gardener_prod-amd64-qemu-apply
+
+# Run QEMU platform tests for the flavor you want to test
+$ make --directory=tests gcp-gardener_prod-amd64-qemu-platform-test
+
+# Optionally: Login to the QEMU VM
+$ make --directory=tests/platformSetup gcp-gardener_prod-amd64-qemu-login
+
+# Remove the QEMU resources for the flavor you want to test
+$ make --directory=tests/platformSetup gcp-gardener_prod-amd64-qemu-destroy
 ```
-sudo podman run -it --rm --device=/dev/kvm -v /boot/:/boot -v /lib/modules:/lib/modules -v `pwd`:/gardenlinux gardenlinux/base-test:`bin/garden-version` /bin/bash
+
+##### Running QEMU tests manually
+
 ```
+# Start a container with needed credentials and tools
+podman run -it \
+    -v ${PWD}:/gardenlinux \
+    -e TF_* \
+    -v ~/.aliyun:/root/.aliyun \
+    -e ALIBABA_* \
+    -v ~/.aws:/root/.aws \
+    -e AWS_* \
+    -v ~/.azure:/root/.azure \
+    -e azure_* \
+    -e ARM_* \
+    -e ACTIONS_* \
+    -v ~/.config/gcloud:/root/.config/gcloud \
+    -e GOOGLE_* \
+    -e CLOUDSDK_* \
+    --device=/dev/kvm \
+    --name qemu-kvm-gardener_prod-amd64 \
+    -d --rm --replace \
+    ghcr.io/gardenlinux/gardenlinux/platform-test-kvm:latest \
+    bash
 
-**Without SSH autogeneration**
-Use this only when really needed.
+# Create pytest resources (run inside container)
+pytest --provisioner=kvm --configfile=/gardenlinux/tests/config/pytest.qemu.kvm-gardener_prod-amd64.yaml --create-only
+
+# Run tests (run inside container)
+pytest --provisioner=kvm --configfile=/gardenlinux/tests/config/pytest.qemu.kvm-gardener_prod-amd64.yaml
 ```
-sudo podman run -it --rm --device=/dev/kvm -v `pwd`:/gardenlinux -v /boot/:/boot -v /lib/modules:/lib/modules -v `pwd`/.build/:/build -v $HOME/.ssh:/root/.ssh -v ~/config:/config gardenlinux/base-test:`bin/garden-version` /bin/bash
-```
-
-Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
-
-    pytest --iaas=kvm --configfile=/config/mykvmconfig.yaml
-
 
 #### Manual Testing
 
 So for some reason, you do not want to test Garden Linux by using a tool that automatically sets up the testbed in a cloud environment for you.
 
 You rather want to set up a host running Garden Linux yourself, create a user in it, somehow slip in an SSH public key and have a hostname/ip-address you can use to connect. Now all you want is to have the tests run on that host. This section about _Manual testing_ is for you then.
+
+This setup is also used under the hood for the OpenTofu tests.
 
 Use the following (very simple) test configuration:
 
@@ -999,12 +474,12 @@ Start Podman container with dependencies:
 - mount directory with configfile to `/config`
 
 ```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test:`bin/garden-version` bash
+podman run -it --rm  -v `pwd`:/gardenlinux -v $HOME/.ssh:/root/.ssh -v ~/config:/config  ghcr.io/gardenlinux/gardenlinux/platform-test-kvm bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
-    pytest --iaas=manual --configfile=/config/myconfig.yaml
+    pytest --provisioner=manual --configfile=/config/myconfig.yaml
 
 
 #### OpenStack CC EE flavor
@@ -1085,17 +560,14 @@ Start Podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
 - mount GCP credentials to `/root/.config`
-- mount SSH keys to `/root/.ssh`
-- mount build result directory to `/build` (if not part of the Garden Linux file tree)
-- mount directory with configfile to `/config`
 
 ```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v $HOME/.config:/root/.config -v $HOME/.ssh:/root/.ssh -v ~/config:/config  gardenlinux/platform-test:`bin/garden-version` bash
+podman run -it --rm  -v `pwd`:/gardenlinux -v $HOME/.config:/root/.config ghcr.io/gardenlinux/gardenlinux/platform-test-openstack bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
-    pytest --iaas=openstack-ccee --configfile=/config/mygcpconfig.yaml
+    pytest --provisioner=openstack-ccee --configfile=/config/mygcpconfig.yaml
 
 
 #### Local tests in the platform container
@@ -1130,16 +602,14 @@ Check the [readme](local/README.md) for detailed configuration options of all th
 Start Podman container with dependencies:
 
 - mount Garden Linux repository to `/gardenlinux`
-- mount build result directory to `/build` (if not part of the Garden Linux file tree)
-- mount directory with configfile to `/config`
 
 ```
-sudo podman run -it --rm  -v `pwd`:/gardenlinux -v `pwd`/.build/:/build -v ~/config:/config  gardenlinux/base-test:`bin/garden-version` bash
+podman run -it --rm  -v `pwd`:/gardenlinux ghcr.io/gardenlinux/gardenlinux/platform-test-kvm bash
 ```
 
 Run the tests (be sure you properly mounted the Garden Linux repository to the container and you are in `/gardenlinux/tests`):
 
-    pytest --iaas=local --configfile=/config/mylocalconfig.yaml
+    pytest --provisioner=local --configfile=/config/mylocalconfig.yaml
 
 NOTE: With the `-k EXPRESSION` you can filter the tests by name to only run the tests you want, instead of all local tests. See `pytest --help` for more information.
 
