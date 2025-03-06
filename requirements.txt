@@ -4,3 +4,4 @@
 networkx
 PyYAML
 requests
+jsonschema

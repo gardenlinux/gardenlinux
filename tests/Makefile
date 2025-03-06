@@ -12,6 +12,7 @@ endif
 GL_IMAGE := $(GL_REGISTRY)/gardenlinux/platform-test-kvm:$(GL_VERSION)
 
 GARDENLINUX_BUILD_CRE ?= podman
+KVM_DEVICE := $(shell if [ -e /dev/kvm ] && [ -w /dev/kvm ]; then echo "--device=/dev/kvm"; else echo ""; fi)
 
 # Generate FLAVORS variable by running the flavor parser
 FLAVORS_BARE := $(shell $(ROOT_DIR)/bin/flavors_parse.py --include-only "bare-*" --build --test)
@@ -21,10 +22,8 @@ FLAVORS_PUBLIC_CLOUD := $(shell $(ROOT_DIR)/bin/flavors_parse.py --category "pub
 
 CRE_CMD_BASE = $(GARDENLINUX_BUILD_CRE) run -it --rm -v $(ROOT_DIR):/gardenlinux
 CRE_CMD_security = --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW --security-opt apparmor=unconfined
-CRE_CMD_priviliged = --privileged
+CRE_CMD_privileged = --privileged
 CRE_CMD_tofu = $(CRE_CMD_BASE) -v ~/.ssh:/root/.ssh:ro $(GL_REGISTRY)/gardenlinux/platform-test-tofu:$(GL_VERSION)
-CRE_CMD_firecracker = sudo $(CRE_CMD_BASE) $(CRE_CMD_security) $(CRE_CMD_priviliged) --device=/dev/kvm $(GL_REGISTRY)/gardenlinux/platform-test-firecracker:$(GL_VERSION)
-CRE_CMD_kvm = $(CRE_CMD_BASE) $(CRE_CMD_security) --device=/dev/kvm $(GL_REGISTRY)/gardenlinux/platform-test-kvm:$(GL_VERSION)
 
 .PHONY: all
 .DEFAULT: help

@@ -111,14 +111,61 @@ These tools are required on the local workstation and Github Actions.
 - Python 3.11
 - GNU Make
 - `uuidgen`
+- podman
+
+##### Installation on debian based systems
+
+```bash
+$ sudo apt-get update
+$ sudo apt-get install python3 python-is-python3 python3-venv make uuid-runtime podman
+```
+
+##### Installation on macOS
+
+```bash
+$ brew install python git make coreutils gnu-sed gnu-getopt podman vfkit
+```
 
 #### Python virtual environment
 
 A virtual environment with minimum dependencies is required to run the make targets and the coresponding python scripts.
 
+##### manual installation
+
 ```bash
+# create virtual environment
 $ python -m venv venv
+
+# activate virtual environment
+$ source venv/bin/activate
+
+# install dependencies
 $ pip install -r requirements.txt
+```
+
+##### use direnv
+
+Direnv is a tool for managing environment variables for your project. It can be used to automatically load the virtual environment.
+
+```bash
+# Installation on debian based systems
+$ sudo apt-get update
+$ sudo apt-get install direnv
+
+# Installation on macOS
+$ brew install direnv
+
+# add hook to bashrc
+$ echo "eval \"\$(direnv hook bash)\"" >> ~/.bashrc
+
+# add hook to zshrc
+$ echo "eval \"\$(direnv hook zsh)\"" >> ~/.zshrc
+
+# create .envrc file to load the virtual environment
+$ echo "layout python3" > .envrc
+
+# allow the .envrc file
+$ direnv allow
 ```
 
 ### Understanding the Test Process
