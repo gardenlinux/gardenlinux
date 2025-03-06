@@ -17,19 +17,10 @@
     - [Public cloud platforms](#public-cloud-platforms)
     - [Local test environments](#local-test-environments)
       - [CHROOT](#chroot)
-        - [Configuration options](#configuration-options-1)
-        - [Running the tests](#running-the-tests-1)
-      - [KVM](#kvm)
-        - [Configuration options](#configuration-options-2)
-        - [Running the tests](#running-the-tests-2)
+      - [QEMU](#qemu)
       - [Manual Testing](#manual-testing)
-        - [Running the tests](#running-the-tests-3)
       - [OpenStack CC EE flavor](#openstack-cc-ee-flavor)
-        - [Configuration options](#configuration-options-3)
-        - [Running the tests](#running-the-tests-4)
       - [Local tests in the platform container](#local-tests-in-the-platform-container)
-        - [Configuration options](#configuration-options-4)
-        - [Running the tests](#running-the-tests-5)
   - [Misc](#misc)
     - [Autoformat Using Black](#autoformat-using-black)
     - [Run Static Checks](#run-static-checks)
@@ -90,7 +81,75 @@ These tests are located in a subfolder (`test`) within a feature's directory and
 | CIS | test_cis.py | [features/cis/test/test_cis.py](../features/cis/test/test_debian_cis.py) |
 
 # Platform Tests
+
 ## Prerequisites
+
+#### Tooling
+
+These tools are required on the local workstation and Github Actions.
+
+- Python 3.11
+- GNU Make
+- `uuidgen`
+- podman
+
+##### Installation on debian based systems
+
+```bash
+$ sudo apt-get update
+$ sudo apt-get install python3 python-is-python3 python3-venv make uuid-runtime podman
+```
+
+##### Installation on macOS
+
+```bash
+$ brew install python git make coreutils gnu-sed gnu-getopt podman vfkit
+```
+
+#### Python virtual environment
+
+A virtual environment with minimum dependencies is required to run the make targets and the coresponding python scripts.
+
+##### manual installation
+
+```bash
+# create virtual environment
+$ python -m venv venv
+
+# activate virtual environment
+$ source venv/bin/activate
+
+# install dependencies
+$ pip install -r requirements.txt
+```
+
+##### use direnv
+
+Direnv is a tool for managing environment variables for your project. It can be used to automatically load the virtual environment.
+
+```bash
+# Installation on debian based systems
+$ sudo apt-get update
+$ sudo apt-get install direnv
+
+# Installation on macOS
+$ brew install direnv
+
+# add hook to bashrc
+$ echo "eval \"\$(direnv hook bash)\"" >> ~/.bashrc
+
+# add hook to zshrc
+$ echo "eval \"\$(direnv hook zsh)\"" >> ~/.zshrc
+
+# create .envrc file to load the virtual environment
+$ echo "layout python3" > .envrc
+
+# allow the .envrc file
+$ direnv allow
+```
+
+### Platform Test Images
+
 Build the platform test container images with all necessary dependencies. These container images will contain all necessary Python modules as well as the command line utilities by the Cloud providers (i.e. AWS, Azure and GCP) and the OpenTofu binaries.
 
 > [!NOTE]
