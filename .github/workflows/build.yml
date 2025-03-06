@@ -99,7 +99,7 @@ jobs:
           git update-index --assume-unchanged VERSION
       - name: build base-${{ matrix.arch }}
         run: ./build base-${{ matrix.arch }}
-      - uses: actions/cache/save@ab5e6d0c87105b4c9c2047343972218f562e4319 # pin@v3
+      - uses: actions/cache/save@0c907a75c2c80ebcb7f088228285e798b750cf8f # pin@v3
         with:
           path: .build
           key: base-${{ matrix.arch }}-${{ github.run_id }}
