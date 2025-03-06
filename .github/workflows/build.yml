@@ -67,7 +67,7 @@ jobs:
           for f in secureboot.{{pk,null.pk,kek,db}.auth,db.{crt,arn}}; do
             ln -sr "cert/gardenlinux-$f" "cert/$f"
           done
-      - uses: actions/cache/save@ab5e6d0c87105b4c9c2047343972218f562e4319 # pin@v3
+      - uses: actions/cache/save@0c907a75c2c80ebcb7f088228285e798b750cf8f # pin@v3
         with:
           path: cert
           key: cert-${{ github.run_id }}
@@ -129,7 +129,7 @@ jobs:
           podman build --squash --tag test --build-arg base=debian:stable tests
           podman save --format oci-archive test > test.oci
       - name: upload test container
-        uses: actions/cache/save@ab5e6d0c87105b4c9c2047343972218f562e4319 # pin@v3
+        uses: actions/cache/save@0c907a75c2c80ebcb7f088228285e798b750cf8f # pin@v3
         with:
           path: test.oci
           key: test_container:${{ matrix.arch }}-${{ github.run_id }}
@@ -171,7 +171,7 @@ jobs:
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
       - name: load cert cache
-        uses: actions/cache/restore@ab5e6d0c87105b4c9c2047343972218f562e4319 # pin@v3
+        uses: actions/cache/restore@0c907a75c2c80ebcb7f088228285e798b750cf8f # pin@v3
         with:
           path: cert
           key: cert-${{ github.run_id }}
@@ -187,13 +187,13 @@ jobs:
           role-session-name: ${{ secrets.aws_oidc_session }}
           aws-region: ${{ secrets.aws_region }}
       - name: load bootstrap stage cache
-        uses: actions/cache/restore@ab5e6d0c87105b4c9c2047343972218f562e4319 # pin@v3
+        uses: actions/cache/restore@0c907a75c2c80ebcb7f088228285e798b750cf8f # pin@v3
         with:
           path: .build
           key: base-${{ matrix.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: download test container cache
-        uses: actions/cache/restore@ab5e6d0c87105b4c9c2047343972218f562e4319 # pin@v3
+        uses: actions/cache/restore@0c907a75c2c80ebcb7f088228285e798b750cf8f # pin@v3
         with:
           path: test.oci
           key: test_container:${{ matrix.arch }}-${{ github.run_id }}
@@ -260,7 +260,7 @@ jobs:
           bin/garden-version "${{ needs.version.outputs.version }}" | tee VERSION
           git update-index --assume-unchanged VERSION
       - name: load bootstrap stage cache
-        uses: actions/cache/restore@ab5e6d0c87105b4c9c2047343972218f562e4319 # pin@v3
+        uses: actions/cache/restore@0c907a75c2c80ebcb7f088228285e798b750cf8f # pin@v3
         with:
           path: .build
           key: base-${{ matrix.arch }}-${{ github.run_id }}
