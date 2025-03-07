@@ -7,5 +7,5 @@ K8S_VERSION_REPO="${K8S_VERSION%.*}"
 gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg < /builder/features/khost/release.key
 echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/${K8S_VERSION_REPO}/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list
 apt update -y
-apt install -y --no-install-recommends "kubelet=${K8S_VERSION#v}*" "kubectl=${K8S_VERSION#v}*" "kubeadm=${K8S_VERSION#v}*"
+apt install -y --no-install-recommends "kubelet=${K8S_VERSION#v}*" "kubectl=${K8S_VERSION#v}*" "kubeadm=${K8S_VERSION#v}*" "cri-tools=${K8S_VERSION_REPO#v}*"
 
