@@ -11,6 +11,13 @@ import tempfile
 import shutil
 import uuid
 import os.path
+import re
+from datetime import datetime, timezone
+import requests
+from glob import glob
+
+from python_gardenlinux_lib.features.parse_features import get_features
+from python_gardenlinux_lib import Git, Version
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -28,7 +35,7 @@ PROVISIONER_PYTEST_MAP = {
 class PathManager:
     """Manages paths used throughout the application."""
     def __init__(self):
-        self.git_root = self.get_git_root()
+        self.git_root = Git().get_root()
         self.tests_dir = self.git_root / "tests"
         self.config_dir = self.tests_dir / "config"
         self.platform_setup_dir = self.tests_dir / "platformSetup"
@@ -42,16 +49,6 @@ class PathManager:
         # Set up UUID
         self.uuid = self.get_or_create_uuid()
         self.seed = self.uuid.split('-')[0]
-
-    @staticmethod
-    def get_git_root():
-        """Get the root directory of the current Git repository."""
-        try:
-            root_dir = subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip()
-            return Path(root_dir)
-        except subprocess.CalledProcessError:
-            logger.error("Not a git repository or unable to determine root directory.")
-            sys.exit(1)
 
     def get_or_create_uuid(self):
         """Get existing UUID from file or create a new one."""
@@ -75,11 +72,12 @@ class PathManager:
 
 class Flavors:
     """Handles parsing and processing of flavor information."""
-    def __init__(self, args):
+    def __init__(self, args, paths):
         self.args = args
+        self.paths = paths
         self.flavor = args.flavor
         self.provisioner = args.provisioner
-        self.platform, self.feature_list, self.arch = self.parse_features()
+        self.platform, self.feature_list, self.cname_features, self.arch = self.parse_features()
 
     def parse_features(self):
         """Parse features from the flavor name."""
@@ -90,62 +88,40 @@ class Flavors:
             sys.exit(1)
 
         platform = parts[0]
+        features_cname = "-".join(parts[1:-1])
         arch = parts[-1]
         
         if arch not in {"amd64", "arm64"}:
             logger.error(f"Unsupported architecture '{arch}'. Valid options are 'amd64' or 'arm64'.")
             sys.exit(1)
+
+        print(f"features_cname: {features_cname}")
         
-        raw_features = "-".join(parts[1:-1]).replace("_", "-_")
-        feature_list = [feature for feature in raw_features.split("-")]
-        feature_list.extend(["base", platform])
-        
-        feature_list = self.resolve_features_recursively(feature_list)
-        
+        # Create flavor string without architecture
+        flavor_without_arch = "-".join(parts[:-1])
+
+        # Use gardenlinux library to resolve features
+        features_dir = str(self.paths.git_root)
+        feature_string_comma = get_features(flavor_without_arch, features_dir)
+
+        # Convert comma-separated string to list
+        feature_list = feature_string_comma.split(",")
+
         logger.info(f"Flavor: {self.flavor}")
         logger.info(f"Platform: {platform}")
         logger.info(f"Provisioner: {self.provisioner}")
         logger.info(f"Features: {feature_list}")
         logger.info(f"Architecture: {arch}")
         
-        return platform, feature_list, arch
-
-    def resolve_features_recursively(self, features):
-        """Recursively resolve feature includes using info.yaml files."""
-        base_directory = PathManager.get_git_root() / "features"
-        features_recursive = set(features)
-
-        for feature in features:
-            feature_path = base_directory / feature
-            if feature_path.is_dir():
-                info_file_path = feature_path / "info.yaml"
-                if info_file_path.is_file():
-                    includes = self.get_includes_from_yaml(info_file_path)
-                    features_recursive.update(includes)
-                else:
-                    logger.warning(f"info.yaml not found in {feature_path}")
-            else:
-                logger.warning(f"Feature folder {feature} not found in {base_directory}")
-
-        return list(features_recursive)
-
-    @staticmethod
-    def get_includes_from_yaml(file_path):
-        """Extract includes from a YAML file."""
-        try:
-            with open(file_path, "r") as yaml_file:
-                data = yaml.safe_load(yaml_file)
-                return data.get("features", {}).get("include", [])
-        except Exception as e:
-            logger.error(f"Error reading {file_path}: {e}")
-            return []
+        return platform, feature_list, features_cname, arch
 
 class PytestConfig:
-    """Generates configuration files and scripts."""
-    def __init__(self, args, paths, flavors):
+    """Generates pytest configuration files."""
+    def __init__(self, args, paths, flavors, script):
         self.args = args
         self.paths = paths
         self.flavors = flavors
+        self.script = script
 
     def generate_pytest_configfile(self, config_data, image_path=None, cname=None):
         """Generate a pytest configuration file."""
@@ -155,7 +131,7 @@ class PytestConfig:
         provisioner_pytest = PROVISIONER_PYTEST_MAP[provisioner]
         
         if cname is None:
-            cname = f'{flavor}-today-local'
+            cname = self.script.get_cname()
             
         if provisioner == "qemu":
             config_file = self.paths.config_dir / f"pytest.{provisioner_pytest}.{flavor}.yaml"
@@ -199,6 +175,18 @@ class Scripts:
         self.args = args
         self.paths = paths
         self.flavors = flavors
+        self.version = Version(self.paths.git_root)
+
+    def get_cname(self):
+        """Get cname if not provided."""
+        if self.args.cname:
+            return self.args.cname
+            
+        platform = self.flavors.platform
+        features = self.flavors.cname_features
+        arch = self.flavors.arch
+
+        return self.version.get_cname(platform, features, arch)
 
     def generate_config_data(self, tofu_out=None):
         """Generate config data for pytest and login script."""
@@ -293,6 +281,7 @@ class Tofu:
         self.paths = paths
         self.flavor_parser = flavor_parser
         self.tofu_dir = self.paths.tofu_dir
+        self.scripts = Scripts(None, paths, flavor_parser)
 
     def get_tofu_output(self, flavor):
         """Get OpenTofu output after ensuring correct workspace and directory."""
@@ -332,7 +321,7 @@ class Tofu:
         flavor = self.flavor_parser.flavor
         platform = self.flavor_parser.platform
         arch = self.flavor_parser.arch
-        
+
         var_file = self.tofu_dir / f"variables.{flavor}.tfvars"
         var_file.parent.mkdir(exist_ok=True)
 
@@ -354,8 +343,7 @@ class Tofu:
 
         # Generate cname if not provided
         if not cname:
-            features_string = "-".join(self.flavor_parser.flavor.split('-')[1:-1])
-            cname = f'{platform}-{features_string}-{arch}-today-local'
+            cname = self.scripts.get_cname()
 
         # Create flavor configuration
         flavor_item = {
@@ -426,20 +414,20 @@ def main():
     
     # Initialize core components
     path = PathManager()
-    flavor = Flavors(args)
-    pytest = PytestConfig(args, path, flavor)
-    script = Scripts(args, path, flavor)
+    flavor = Flavors(args, path)
+    scripts = Scripts(args, path, flavor)
+    pytest = PytestConfig(args, path, flavor, scripts)
     tofu = Tofu(path, flavor)
 
     if args.provisioner == 'qemu':
-        config_data = script.generate_config_data()
-        script.generate_login_script(config_data)
+        config_data = scripts.generate_config_data()
+        scripts.generate_login_script(config_data)
         pytest.generate_pytest_configfile(
             config_data,
             image_path=args.image_path,
             cname=args.cname
         )
-        script.generate_pytest_scripts()
+        scripts.generate_pytest_scripts()
     
     elif args.provisioner == 'tofu':
         try:
@@ -454,8 +442,8 @@ def main():
                 )
             else:
                 tofu_data = tofu.get_tofu_output(args.flavor)
-                config_data = script.generate_config_data(tofu_data)
-                script.generate_login_script(config_data)
+                config_data = scripts.generate_config_data(tofu_data)
+                scripts.generate_login_script(config_data)
                 pytest.generate_pytest_configfile(config_data)
             
         except Exception as e:

@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 pytest = "*"
+python-gardenlinux-lib = { git = 'https://github.com/gardenlinux/python-gardenlinux-lib.git', ref = '0.6.0', editable = true }
 boto3 = "*"
 paramiko = "*"
 python-novaclient = "*"

@@ -1,7 +1,11 @@
 # Basic Python requirements for Garden Linux
 # that can be installed by Python pip.
 # Note: You should always prefer your local package manager.
+#
+# `tests/Pipfile` holds dependencies backed into the platform-test images
+#
 networkx
 PyYAML
 requests
 jsonschema
+python-gardenlinux-lib @ git+https://github.com/gardenlinux/python-gardenlinux-lib.git@0.6.0
