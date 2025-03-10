@@ -33,13 +33,13 @@ KVM_DEVICE := $(shell if [ -e /dev/kvm ] && [ -w /dev/kvm ]; then echo "--device
 FLAVORS_IMAGE := $(shell $(ROOT_DIR)/bin/flavors_parse.py --exclude "bare-*" --build)
 FLAVORS_PUBLIC_CLOUD := $(shell $(ROOT_DIR)/bin/flavors_parse.py --category "public-cloud" --test-platform)
 
-CRE_CMD_BASE = $(GARDENLINUX_BUILD_CRE) run -it -v $(ROOT_DIR):/gardenlinux -e TF_* -v ~/.aliyun:/root/.aliyun -e ALIBABA_* -v ~/.aws:/root/.aws -e AWS_* -v ~/.azure:/root/.azure -e azure_* -e ARM_* -e ACTIONS_* -v ~/.config/gcloud:/root/.config/gcloud -e GOOGLE_* -e CLOUDSDK_* 
+CRE_CMD_BASE = $(GARDENLINUX_BUILD_CRE) run -it -v $(ROOT_DIR):/gardenlinux
 CRE_CMD_security = --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW --security-opt apparmor=unconfined
 CRE_CMD_privileged = --privileged
 # privileged is required for virt-copy-in/guestfish
 CRE_CMD_kvm = $(CRE_CMD_BASE) $(CRE_CMD_privileged) $(KVM_DEVICE)
 CRE_CMD_kvm_image = $(GL_REGISTRY)/gardenlinux/platform-test-kvm:$(GL_VERSION)
-CRE_CMD_tofu = $(CRE_CMD_BASE) --rm -v ~/.ssh:/root/.ssh:ro $(GL_REGISTRY)/gardenlinux/platform-test-tofu:$(GL_VERSION)
+CRE_CMD_tofu = $(CRE_CMD_BASE) -e TF_* -v ~/.aliyun:/root/.aliyun -e ALIBABA_* -v ~/.aws:/root/.aws -e AWS_* -v ~/.azure:/root/.azure -e azure_* -e ARM_* -e ACTIONS_* -v ~/.config/gcloud:/root/.config/gcloud -e GOOGLE_* -e CLOUDSDK_* --rm -v ~/.ssh:/root/.ssh:ro $(GL_REGISTRY)/gardenlinux/platform-test-tofu:$(GL_VERSION)
 MKDIRS = ~/.aliyun ~/.aws ~/.azure ~/.config/gcloud
 
 .PHONY: all
