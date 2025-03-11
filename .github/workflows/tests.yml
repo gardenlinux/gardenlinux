@@ -8,10 +8,10 @@ on:
         type: string
         default: today
       platform_test_tag:
-        description: "Tag to run platform-test containers. 'latest', Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
+        description: "Tag to run platform-test containers. 'latest'  'nightly' Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
         type: string
         required: true
-        default: "nightly"
+        default: "latest"
       download_s3:
         description: "Download images from S3"
         type: boolean
@@ -51,6 +51,7 @@ on:
         required: true
 jobs:
   generate_matrix_test_platform:
+    name: Generate Matrix for Platform Test
     uses: ./.github/workflows/generate_matrix.yml
     with: 
       flags: '${{ inputs.flavors_parse_params }}'
@@ -59,7 +60,6 @@ jobs:
     uses: ./.github/workflows/platform-test-images.yml
     with:
       gl_version: ${{ inputs.platform_test_tag }}
-      force_release: ${{ inputs.platform_test_tag == 'nightly' || false }}
       platforms: '["tofu"]'
   platform_tests:
     name: platform test
