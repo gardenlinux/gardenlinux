@@ -7,6 +7,7 @@ output "public_ips" {
         config.platform == "azure" ? module.azure[config.name].public_ip :
         config.platform == "aws" ? module.aws[config.name].public_ip :
         config.platform == "ali" ? module.ali[config.name].public_ip :
+        config.platform == "openstack" ? module.openstack[config.name].public_ip :
         null
       ),
       null
