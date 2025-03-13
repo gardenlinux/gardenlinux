@@ -59,8 +59,8 @@ targets:
       - features:
           - gardener
           - _prod
-          - _trustedboot
           - _tpm2
+          - _trustedboot
         arch: amd64
         build: true
         test: true
@@ -69,8 +69,8 @@ targets:
       - features:
           - gardener
           - _prod
-          - _trustedboot
           - _tpm2
+          - _trustedboot
         arch: arm64
         build: true
         test: true
@@ -116,8 +116,8 @@ targets:
       - features:
           - gardener
           - _prod
-          - _trustedboot
           - _tpm2
+          - _trustedboot
         arch: amd64
         build: true
         test: true
@@ -126,8 +126,8 @@ targets:
       - features:
           - gardener
           - _prod
-          - _trustedboot
           - _tpm2
+          - _trustedboot
         arch: arm64
         build: true
         test: true
@@ -207,25 +207,6 @@ targets:
         test: true
         test-platform: false
         publish: true
-  - name: firecracker
-    category: hypervisor
-    flavors:
-      - features:
-          - gardener
-          - _prod
-        arch: amd64
-        build: true
-        test: true
-        test-platform: false
-        publish: false
-      - features:
-          - gardener
-          - _prod
-        arch: arm64
-        build: true
-        test: true
-        test-platform: false
-        publish: false
   - name: gcp
     category: public-cloud
     flavors:
@@ -266,8 +247,8 @@ targets:
       - features:
           - gardener
           - _prod
-          - _trustedboot
           - _tpm2
+          - _trustedboot
         arch: amd64
         build: true
         test: true
@@ -276,8 +257,8 @@ targets:
       - features:
           - gardener
           - _prod
-          - _trustedboot
           - _tpm2
+          - _trustedboot
         arch: arm64
         build: true
         test: true
@@ -342,8 +323,8 @@ targets:
       - features:
           - gardener
           - _prod
-          - _trustedboot
           - _tpm2
+          - _trustedboot
         arch: amd64
         build: true
         test: true
@@ -352,8 +333,8 @@ targets:
       - features:
           - gardener
           - _prod
-          - _trustedboot
           - _tpm2
+          - _trustedboot
         arch: arm64
         build: true
         test: true
@@ -399,8 +380,8 @@ targets:
       - features:
           - gardener
           - _prod
-          - _trustedboot
           - _tpm2
+          - _trustedboot
         arch: amd64
         build: true
         test: true
@@ -409,8 +390,8 @@ targets:
       - features:
           - gardener
           - _prod
-          - _trustedboot
           - _tpm2
+          - _trustedboot
         arch: arm64
         build: true
         test: true

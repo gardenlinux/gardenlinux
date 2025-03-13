@@ -232,6 +232,9 @@ resource "azurerm_network_interface" "nic" {
   }
 
   tags = local.labels
+
+  # Add explicit dependency to ensure VM is destroyed first
+  depends_on = [azurerm_linux_virtual_machine.instance]
 }
 
 resource "azurerm_network_interface_security_group_association" "nsg_nic" {
