@@ -277,11 +277,11 @@ class Scripts:
 
 class Tofu:
     """Generates configuration files and scripts."""
-    def __init__(self, paths, flavor_parser):
+    def __init__(self, args, paths, flavor_parser):
         self.paths = paths
         self.flavor_parser = flavor_parser
         self.tofu_dir = self.paths.tofu_dir
-        self.scripts = Scripts(None, paths, flavor_parser)
+        self.scripts = Scripts(args, paths, flavor_parser)
 
     def get_tofu_output(self, flavor):
         """Get OpenTofu output after ensuring correct workspace and directory."""
@@ -417,7 +417,7 @@ def main():
     flavor = Flavors(args, path)
     scripts = Scripts(args, path, flavor)
     pytest = PytestConfig(args, path, flavor, scripts)
-    tofu = Tofu(path, flavor)
+    tofu = Tofu(args, path, flavor)
 
     if args.provisioner == 'qemu':
         config_data = scripts.generate_config_data()
