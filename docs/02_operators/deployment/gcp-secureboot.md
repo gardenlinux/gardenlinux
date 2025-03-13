@@ -136,7 +136,7 @@ As you can see, the current Garden Linux repo is mounted into the container (`/g
 Once you executed the command, you should have access to the bash terminal within the container. From there, you can execute the platform test, which will create all required GCP resources for you. Since we've set the `keep_running` parameter to `true`, the created resources will remain after the execution, so that we can access the instance via SSH for further testing afterwards.
 
 ```
-pytest --iaas=gcp --configfile=/config/gcp-trustedboot.yaml
+pytest --provisioner=gcp --configfile=/config/gcp-trustedboot.yaml
 ```
 
 ## Use trusted boot / secure boot enabled Garden Linux

@@ -16,7 +16,7 @@ on:
         description: "Tag to run platform-test containers. 'nightly', Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
         type: string
         required: true
-        default: "nightly"
+        default: "latest"
       flavors_parse_params:
         description: 'Run bin/parse_flavors.py with these parameters'
         default: '--no-arch --json-by-arch --publish --test-platform'
@@ -47,7 +47,7 @@ jobs:
     uses: ./.github/workflows/tests.yml
     with:
       version: ${{ inputs.version }}
-      platform_test_tag: ${{ inputs.platform_test_tag || 'nightly' }}
+      platform_test_tag: ${{ inputs.platform_test_tag || 'latest' }}
       flavors_parse_params: '${{ inputs.flavors_parse_params }}'
       download_s3: ${{ inputs.build == false }}
     secrets:
