@@ -1,0 +1,121 @@
+name: publish_s3
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Workflow run ID
+        type: number
+        required: true
+  workflow_run:
+    workflows: [ nightly ]
+    types: [ completed ]
+jobs:
+  workflow_data:
+    if: ${{ github.event.workflow_run.conclusion == "success" }}
+    name: Download workflow JSON data from trigger
+    uses: ./.github/workflows/download_workflow_data.yml
+    with:
+      run_id: ${{ github.event.workflow_run.id }}
+  prepare_certs:
+    name: Add certs to S3 artifacts
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      CNAME: ''
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(inputs.flavors_matrix) }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - uses: ./.github/actions/setup
+      - uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v4.2.2
+        with:
+          path: |
+            COMMIT
+            VERSION
+          key: build-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
+          fail-on-cache-miss: true
+      - name: Set CNAME
+        run: |
+          cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
+          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
+      - name: Load flavor build artifact
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
+        with:
+          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+      - name: Load cert cache
+        uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v4.2.2
+        with:
+          path: cert
+          key: cert-${{ github.run_id }}
+          fail-on-cache-miss: true
+      - name: Add certs to build artifacts
+        run: |
+          tar -C "$CNAME/" -xzf "$CNAME.tar.gz"
+          rm "$CNAME.tar.gz"
+
+          for f in secureboot.{{pk,kek,db}.{crt,der,auth},aws-efivars}; do
+            cp "cert/$f" "$CNAME/$CNAME.$f"
+          done
+
+          tar -cSzvf "$CNAME.tar.gz" -C $CNAME .
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
+        with:
+          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+          overwrite: true
+          path: ${{ env.CNAME }}.tar.gz
+  upload_to_s3:
+    needs: workflow_data
+    name: Upload to S3
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/upload_to_s3.yml
+    with:
+      commit_id: ${{ needs.workflow_data.outputs.commit_id }}
+      version: ${{ needs.workflow_data.outputs.version }}
+      flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
+      run_id: ${{ github.event.workflow_run.id }}
+    secrets:
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_role: ${{ secrets.AWS_IAM_ROLE }}
+      aws_session: ${{ secrets.AWS_OIDC_SESSION }}
+      aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
+  upload_to_s3_cn:
+    needs: workflow_data
+    name: Upload to S3 (China)
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/upload_to_s3.yml
+    with:
+      version: ${{ needs.workflow_data.outputs.version }}
+    secrets:
+      aws_region: ${{ secrets.AWS_CN_REGION }}
+      aws_role: ${{ secrets.AWS_CN_IAM_ROLE }}
+      aws_session: ${{ secrets.AWS_CN_OIDC_SESSION }}
+      aws_s3_bucket: ${{ secrets.AWS_CN_S3_BUCKET }}
+  glrd:
+    needs: [ workflow_data, upload_to_s3 ]
+    if: ${{ github.ref == "refs/heads/main" }}
+    name: create GLRD release
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Create GLRD nightly release
+        uses: gardenlinux/glrd@v2
+        with:
+          cmd: glrd-manage --s3-update --create nightly
+      - name: Get latest GL nightly
+        id: gl_version_nightly
+        uses: gardenlinux/glrd@v2
+        with:
+          cmd: glrd --type nightly --latest
