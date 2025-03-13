@@ -151,3 +151,34 @@ variable "gcp_instance_type" {
   default     = "n1-standard-2" # amd64
   # default     = "t2a-standard-2" # arm64
 }
+
+# OpenStack
+variable "openstack_image_file" {
+  description = "Source file for the uploaded image"
+  default     = "openstack-gardener_prod-amd64-today-local.qcow2"
+}
+
+variable "openstack_ssh_user" {
+  description = "ssh user to connect to instance"
+  default     = "gardenlinux"
+}
+
+variable "openstack_region" {
+  description = "OpenStack region"
+  default     = "RegionOne"
+}
+
+variable "openstack_instance_type" {
+  description = "OpenStack machine_type for the instance"
+  default     = "SCS-2V-4-20s" # amd64
+}
+
+variable "openstack_floatingip_pool" {
+  description = "OpenStack floatingip pool"
+  default     = "public"
+}
+
+variable "openstack_public_network_name" {
+  description = "OpenStack public network name"
+  default     = "public"
+}
