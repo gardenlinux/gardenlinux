@@ -21,6 +21,11 @@ endif
 ifeq ($(origin TEST_PREFIX), undefined)
 TEST_PREFIX := $(shell echo $(USER) | cut -c1-10)
 endif
+ifeq ($(origin IMAGE_PATH), undefined)
+IMAGE_PATH_CMD :=
+else
+IMAGE_PATH_CMD := --image-path $(IMAGE_PATH)
+endif
 ifeq ($(origin CNAME), undefined)
 CNAME_CMD :=
 else
@@ -95,7 +100,7 @@ $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 		mkdir -p $(MKDIRS) && \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
-			../platformSetup.py --provisioner tofu --flavor $(flavor) $(CNAME_CMD) --test-prefix $(TEST_PREFIX) --create-tfvars" \
+			../platformSetup.py --provisioner tofu --flavor $(flavor) $(IMAGE_PATH_CMD) $(CNAME_CMD) --test-prefix $(TEST_PREFIX) --create-tfvars" \
 	) \
 	$(eval \
 		$(flavor)-tofu-plan: ; \

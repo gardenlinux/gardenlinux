@@ -348,6 +348,13 @@ class Tofu:
         if not cname:
             cname = self.scripts.get_cname()
 
+        # Determine if we should add extension based on image_path
+        image_source_type = image_path.split("://")[0] if image_path else "file"
+        image_file = (
+            cname if image_source_type == "cloud"
+            else f"{cname}.{image_files.get(platform, 'raw')}"
+        )
+
         # Create flavor configuration
         flavor_item = {
             "name": flavor,
@@ -355,7 +362,7 @@ class Tofu:
             "features": self.flavor_parser.feature_list,
             "arch": arch,
             "instance_type": instance_types.get(platform, {}).get(arch),
-            "image_file": f"{cname}.{image_files.get(platform, 'raw')}"
+            "image_file": image_file
         }
 
         # Write the tfvars file
