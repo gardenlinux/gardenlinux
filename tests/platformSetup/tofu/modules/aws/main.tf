@@ -225,7 +225,6 @@ resource "aws_s3_object" "image" {
 
   bucket = aws_s3_bucket.images.0.id
   key    = local.image_name
-  source = local.image
 
   tags = merge(
     local.labels,

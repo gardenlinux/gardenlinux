@@ -26,6 +26,11 @@ IMAGE_PATH_CMD :=
 else
 IMAGE_PATH_CMD := --image-path $(IMAGE_PATH)
 endif
+ifeq ($(origin CNAME), undefined)
+CNAME_CMD :=
+else
+IMAGE_PATH_CMD := --image-path $(IMAGE_PATH)
+endif
 ifeq ($(origin IMAGE_NAME), undefined)
 IMAGE_NAME_CMD :=
 else
