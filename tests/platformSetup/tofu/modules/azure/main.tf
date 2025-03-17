@@ -150,12 +150,10 @@ resource "azurerm_shared_image_version" "shared_image_version" {
         db {
           key_type = "x509"
           certificate_data = filebase64("cert/secureboot.db.der")
-          )
         }
         kek {
           key_type = "x509"
           certificate_data = filebase64("cert/secureboot.kek.der")
-          )
         }
       }
     }
