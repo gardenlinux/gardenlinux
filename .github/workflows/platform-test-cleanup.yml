@@ -1,0 +1,146 @@
+name: Platform Test Cleanup
+on:
+  schedule:
+    - cron: '0 4 * * *'  # Run daily at 4 AM UTC
+  # manual trigger
+  workflow_dispatch:
+
+jobs:
+  collect_workspaces:
+    name: Collect Workspaces to Cleanup
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    environment: oidc_platform_tests
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    
+    steps:
+      - id: 'auth_aws'
+        name: 'Authenticate to AWS'
+        uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_TESTS_REGION }}
+
+      - name: Find Old OpenTofu Workspaces
+        id: set-matrix
+        run: |
+          # List objects older than 1 day and extract workspace names
+          WORKSPACES=$(aws s3api list-objects-v2 \
+            --bucket gardenlinux-dev-gh-actions-tfstate \
+            --query "Contents[?LastModified<='`date -d '1 day ago' --iso-8601=seconds`'].Key" \
+            --output json | jq -r '.[]' | grep "^env:/" | \
+            sed -E 's|env:/([^/]+)/terraform.tfstate|\1|' | grep -v ^tfstate | sort -u | jq -R -s -c 'split("\n")[:-1]')
+          echo "matrix=${WORKSPACES}" >> $GITHUB_OUTPUT
+
+  cleanup:
+    needs: collect_workspaces
+    if: ${{ needs.collect_workspaces.outputs.matrix != '[]' && needs.collect_workspaces.outputs.matrix != '' }}
+    name: Cleanup Workspace
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    environment: oidc_platform_tests
+    env:
+      IMAGE: ghcr.io/gardenlinux/gardenlinux/platform-test-tofu:latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        workspace: ${{ fromJson(needs.collect_workspaces.outputs.matrix) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - id: 'auth_gcp'
+        name: 'Authenticate to Google Cloud'
+        uses: google-github-actions/auth@71f986410dfbc7added4569d411d040a91dc6935 # pin@v1
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+          cleanup_credentials: true
+          export_environment_variables: true
+
+      - id: 'auth_aws'
+        name: 'Authenticate to AWS'
+        uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_TESTS_REGION }}
+          output-credentials: true
+
+      - id: 'auth_azure'
+        name: 'Authenticate to Azure'
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # pin@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - id: 'auth_ali'
+        name: 'Create ali cloud credential file'
+        run: |
+          base64 -d <<< "${{ secrets.CCC_CREDENTIALS }}" | .github/workflows/ali_credentials.jq > ali-service-account.json
+          ALIBABA_CLOUD_ACCESS_KEY_ID="$(jq -r '.profiles[0].access_key_id' < ali-service-account.json)"
+          ALIBABA_CLOUD_ACCESS_KEY_SECRET="$(jq -r '.profiles[0].access_key_secret' < ali-service-account.json)"
+          echo "::add-mask::${ALIBABA_CLOUD_ACCESS_KEY_ID}"
+          echo "::add-mask::${ALIBABA_CLOUD_ACCESS_KEY_SECRET}"
+          echo "ALIBABA_CLOUD_ACCESS_KEY_ID=${ALIBABA_CLOUD_ACCESS_KEY_ID}" >> ${GITHUB_ENV}
+          echo "ALIBABA_CLOUD_ACCESS_KEY_SECRET=${ALIBABA_CLOUD_ACCESS_KEY_SECRET}" >> ${GITHUB_ENV}
+
+      - name: Setup Environment
+        run: |
+          # ssh key generation (if missing)
+          test -f ~/.ssh/id_ed25519 || ssh-keygen -t ed25519 -P "" -f ~/.ssh/id_ed25519
+          # secureboot certificate files
+          mkdir -p cert
+          touch cert/secureboot.db.crt cert/secureboot.pk.der cert/secureboot.db.der cert/secureboot.kek.der cert/secureboot.aws-efivars
+          # create directories for credentials
+          mkdir -p ~/.aws ~/.azure ~/.aliyun ~/.config/gcloud
+
+      - name: Destroy OpenTofu Resources and delete workspaces
+        run: |
+          export AWS_ACCESS_KEY_ID=${{ steps.auth_aws.outputs.aws-access-key-id }}
+          export AWS_SECRET_ACCESS_KEY=${{ steps.auth_aws.outputs.aws-secret-access-key }}
+          export AWS_SESSION_TOKEN=${{ steps.auth_aws.outputs.aws-session-token }}
+          export ARM_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}
+          export ARM_SUBSCRIPTION_ID=${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          export ARM_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}
+          export ARM_USE_OIDC=true
+          credentials_file_name="$(echo "$GOOGLE_APPLICATION_CREDENTIALS" | xargs basename)"
+          export GOOGLE_APPLICATION_CREDENTIALS="/gardenlinux/$credentials_file_name"
+          export CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE="/gardenlinux/$credentials_file_name"
+          export GOOGLE_GHA_CREDS_PATH="/gardenlinux/$credentials_file_name"
+          export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.TF_ENCRYPTION }})"
+          export TF_VAR_gcp_project_id=${{ secrets.GCP_PROJECT }}
+
+          workspace="${{ matrix.workspace }}"
+          flavor="${workspace%-????????}"
+          echo "Processing workspace: $workspace"
+          echo "flavor: $flavor"
+          
+          podman run --rm \
+            -v ${PWD}:/gardenlinux \
+            -v ~/.ssh:/root/.ssh:ro \
+            -e "TF_*" \
+            -v ~/.aliyun:/root/.aliyun -e "ALIBABA_*" \
+            -v ~/.aws:/root/.aws -e "AWS_*" \
+            -v ~/.azure:/root/.azure -e "azure_*" -e "ARM_*" -e "ACTIONS_*" \
+            -v ~/.config/gcloud:/root/.config/gcloud -e "GOOGLE_*" -e "CLOUDSDK_*" \
+            ${IMAGE} \
+            bash -c "
+              cd /gardenlinux/tests/platformSetup/tofu && \
+              if [ ! -f backend.tf ]; then cp backend.tf.github backend.tf; tofu init; fi && \
+              ../platformSetup.py --provisioner tofu --test-prefix gh-actions --flavor ${flavor} --create-tfvars && \
+              tofu workspace select ${workspace} && \
+              tofu destroy -var-file variables.${flavor}.tfvars -auto-approve && \
+              tofu workspace select default && \
+              tofu workspace delete ${workspace}
+            "
