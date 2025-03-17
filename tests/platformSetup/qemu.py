@@ -25,7 +25,7 @@ class QEMU:
 
     @classmethod
     def fixture(cls, config):
-
+        """Create and manage QEMU instance"""
         logger.info("Starting QEMU platform tests.")
 
         # We need to validate basic information
@@ -37,9 +37,17 @@ class QEMU:
         port = config.get("port", DEFAULT_PORT)
         logger.info(f"Using port tcp/{port} to connect to VM.")
 
-        qemu = QEMU(config)
-        cls.qemu = qemu 
+        # Check if VM is already running
+        if os.path.exists("/tmp/qemu.pid"):
+            logger.info("Found existing qemu.pid - skipping VM customization and startup")
+            qemu = None
+        else:
+            qemu = QEMU(config)
+        cls.qemu = qemu
 
+        # Initialize ssh as None before try block
+        ssh = None
+        
         try:
             ssh = RemoteClient(
                 host=ip,
@@ -49,11 +57,24 @@ class QEMU:
             ssh.wait_ssh()
             yield ssh
 
-        finally:
-            if ssh is not None:
-                ssh.disconnect()
+        except Exception as e:
+            logger.error(f"Failed to establish SSH connection: {str(e)}")
             if qemu is not None:
                 qemu.__del__()
+            raise
+
+        finally:
+            if ssh is not None:
+                try:
+                    ssh.disconnect()
+                except Exception as e:
+                    logger.warning(f"Error disconnecting SSH: {str(e)}")
+            
+            if qemu is not None:
+                try:
+                    qemu.__del__()
+                except Exception as e:
+                    logger.warning(f"Error cleaning up QEMU: {str(e)}")
 
     @classmethod
     def instance(cls):
@@ -106,14 +127,6 @@ class QEMU:
             logger.error(msg_err)
             pytest.exit(msg_err, 1)
 
-        # Validate if image is already running
-        pid = os.path.exists("/tmp/qemu.pid")
-        if pid:
-            logger.warning(("PID file is present. Probably a VM for platformtest "+
-                           "is already running. This may cause issues for SSH key injection."))
-        else:
-            logger.info("No PID file found. We can adjust and start the VM.")
-
         # Validate target arch
         if "arch" in self.config:
             arch = self.config["arch"]
@@ -122,7 +135,6 @@ class QEMU:
             # Setting amd64 as default if not defined
             arch = "amd64"
             logger.info("'arch' is not defined. Executing for amd64")
-
 
         # Validate if VM should remain after tests
         if "keep_running" in self.config:
@@ -133,33 +145,20 @@ class QEMU:
         else:
             logger.info("'keep_running' not defined. VM will be terminated after tests.")
 
-        # Validate if SSH key should be generated (default)
-        if self.config["ssh"]["ssh_key_generate"]:
-            logger.info("'ssh_key_generate' is true. New random SSH keys will be generated.")
-            # Validate if key files are present on filesystem
-            # to avoid overwriting them
-            ssh_keys = os.path.exists(self.config["ssh"]["ssh_key_filepath"])
-            if ssh_keys:
-                ssh_generate = False
-                logger.error(("'ssh_key_filepath' is defined and private key is present. " +
-                              "We can NOT safely generate keys without overwriting them."))
-            else:
-                logger.info("'ssh_key_filepath' is not defined. We can safely generate keys.")
-                ssh_generate = True
-        else:
-            logger.info("'ssh_key_generate' is false. No SSH keys will be generated.")
-            ssh_generate = False
-
-        # Validate if a SSH user is defined
-        if not "user" in self.config["ssh"]:
-            user = "root"
-            logger.info("'user' is not defined. Default user root will be used.")
-        else:
-            user = self.config["ssh"]["user"]
-            logger.info(f"'user' is defined. Using user {user}.")
-
-        # Validate port
+        # Get port
         port = self.config.get("port", DEFAULT_PORT)
+
+        # Validate SSH configuration
+        if "ssh" not in self.config:
+            logger.error("'ssh' configuration not defined")
+            pytest.exit("Missing SSH configuration", 1)
+
+        # Check if we should generate SSH keys (default to True if not specified)
+        ssh_generate = self.config["ssh"].get("ssh_key_generate", True)
+        if ssh_generate:
+            logger.info("Will generate new SSH keys")
+        else:
+            logger.info("Using existing SSH keys")
 
         return ssh_generate, arch, port
 
@@ -251,21 +250,26 @@ class QEMU:
         image = self.config["image"]
         image_name = os.path.basename(image)
 
-        if arch == "amd64":
-            cmd = f"/gardenlinux/bin/start-vm \
+        # Base command parts
+        base_cmd = f"/gardenlinux/bin/start-vm \
               --daemonize \
-              --arch x86_64 \
               --port {port} \
               --destport 2222 \
+              --pidfile /tmp/qemu.pid"
+
+        # Add TPM2 flag if enabled
+        if self.config.get("tpm2", False):
+            base_cmd += " --tpm2"
+
+        if arch == "amd64":
+            cmd = f"{base_cmd} \
+              --arch x86_64 \
               /tmp/{image_name}.snapshot.qcow2"
             logger.info(cmd)
 
         elif arch == "arm64":
-            cmd = f"/gardenlinux/bin/start-vm \
-              --daemonize \
+            cmd = f"{base_cmd} \
               --arch aarch64 \
-              --port {port} \
-              --destport 2222 \
               /tmp/{image_name}.snapshot.qcow2"
             logger.info(cmd)
         else:
