@@ -98,7 +98,7 @@ jobs:
           echo "push_matrix=${PUSH_MATRIX}" >> $GITHUB_OUTPUT
           echo "archs=${ARCHS}" >> $GITHUB_OUTPUT
   build_base:
-    # build if gl_version is not latest and requested (build=true) or triggered by push
+    # only build if requested (build=true) or triggered by push/PR and if latest version (use already built image) is not wanted (default to nightly image as source)
     if: ${{ ( inputs.build == true || github.event_name == 'push' ) && inputs.gl_version != 'latest' }}
     needs: [generate_matrix]
     name: Build Platform Test Base Image
@@ -141,7 +141,7 @@ jobs:
           if-no-files-found: error
 
   build:
-    # build if gl_version is not latest and requested (build=true) or triggered by push
+    # only build if requested (build=true) or triggered by push/PR and if latest version (use already built image) is not wanted (default to nightly image as source)
     if: ${{ ( inputs.build == true || github.event_name == 'push' ) && inputs.gl_version != 'latest' }}
     needs: [generate_matrix, build_base]
     name: Build Platform Test Image
@@ -199,7 +199,7 @@ jobs:
           if-no-files-found: error
 
   push:
-    # push if gl_version is not latest and requested (push=true or push_latest=true) or running on main branch
+    # only push if requested (push=true or push_latest=true) or running on main branch and if latest version (use already built image) is not wanted (default to nightly image as source)
     if: ${{ ( inputs.push == true || inputs.push_latest == true || github.ref_name == 'main' ) && inputs.gl_version != 'latest' }}
     needs: [generate_matrix, build]
     name: Push Platform Test Image
