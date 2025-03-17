@@ -60,6 +60,9 @@ jobs:
     uses: ./.github/workflows/platform-test-images.yml
     with:
       gl_version: ${{ inputs.platform_test_tag }}
+      build: ${{ inputs.platform_test_tag == 'nightly' && true || false }}
+      push: ${{ inputs.platform_test_tag == 'nightly' && true || false }}
+      push_latest: ${{ inputs.platform_test_tag == 'nightly' && true || false }}
       platforms: '["tofu"]'
   platform_tests:
     name: platform test

@@ -13,6 +13,18 @@ on:
       gl_version:
         type: string
         default: nightly
+      build:
+        type: boolean
+        default: false
+        description: 'Build images'
+      push:
+        type: boolean
+        default: false
+        description: 'Push images'
+      push_latest:
+        type: boolean
+        default: false
+        description: 'Push latest tag'
       archs:
         type: string
         default: '["arm64", "amd64"]'
