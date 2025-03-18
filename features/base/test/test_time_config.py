@@ -18,7 +18,7 @@ def test_correct_ntp(client, gcp):
     assert output.rstrip() == "1", "Expected NTP server to be configured to metadata.google.internal"
 
 
-def test_timesync(client, azure):
+def test_timesync(client, azure, non_provisioner_chroot, non_provisioner_qemu):
     """ Ensure symbolic link has been created """
     (exit_code, output, error) = client.execute_command("test -L /dev/ptp_hyperv")
     assert exit_code == 0, f"Expected /dev/ptp_hyperv to be a symbolic link"
