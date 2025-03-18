@@ -174,7 +174,7 @@ class QEMU:
     def _adjust_qemu(self):
         """ Adjust QEMU image and inject needed files """
         logger.info("Adjusting QEMU image. This will take some time for each command...")
-        image = self.config["image"]
+        image = self.config["image"].replace("file://", "")
         image_name = os.path.basename(image)
         ssh_key_path = self.config["ssh"]["ssh_key_filepath"]
         ssh_key = os.path.basename(ssh_key_path)

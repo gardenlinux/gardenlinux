@@ -269,7 +269,7 @@ class Scripts:
             f.write("#!/usr/bin/env bash\n")
             f.write(
                 f"cd {self.paths.tests_dir} && "
-                f"pytest -v --provisioner={provisioner_pytest} --configfile config/pytest.{provisioner_pytest}.{flavor}.yaml\n"
+                f"pytest -v --provisioner={provisioner_pytest} --configfile config/pytest.{provisioner_pytest}.{flavor}.yaml --junit-xml={flavor}.{provisioner_pytest}.test.xml\n"
             )
         test_script.chmod(0o755)
 

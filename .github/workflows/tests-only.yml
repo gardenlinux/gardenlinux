@@ -37,31 +37,52 @@ jobs:
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
-  tests:
-    needs: [ build ]
-    # also run if build is skipped
-    if: always()
-    permissions:
-      id-token: write
-      packages: write
-    uses: ./.github/workflows/tests.yml
-    with:
-      version: ${{ inputs.version }}
-      platform_test_tag: ${{ inputs.platform_test_tag || 'latest' }}
-      flavors_parse_params: '${{ inputs.flavors_parse_params }}'
-      download_s3: ${{ inputs.build == false }}
-    secrets:
-      gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-      gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-      gcp_project_id: ${{ secrets.GCP_PROJECT }}
-      gcp_region: ${{ secrets.GCP_REGION }}
-      gcp_zone: ${{ secrets.GCP_ZONE }}
-      aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
-      aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
-      aws_region: ${{ secrets.AWS_TESTS_REGION }}
-      aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
-      az_client_id: ${{ secrets.AZURE_CLIENT_ID }}
-      az_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
-      az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      ccc_credentials: ${{ secrets.CCC_CREDENTIALS }}
-      tf_encryption: ${{ secrets.TF_ENCRYPTION }}
+  # tests-qemu:
+  #   needs:
+  #     - build
+  #   # also run if build is skipped
+  #   if: always()
+  #   permissions:
+  #     id-token: write
+  #     packages: write
+  #   uses: ./.github/workflows/tests-qemu.yml
+  #   with:
+  #     version: ${{ inputs.version }}
+  #     platform_test_tag: ${{ inputs.platform_test_tag || 'latest' }}
+  #     flavors_parse_params: '${{ inputs.flavors_parse_params }}'
+  #     download_s3: ${{ inputs.build == false }}
+  #   secrets:
+  #     aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
+  #     aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
+  #     aws_region: ${{ secrets.AWS_TESTS_REGION }}
+  #     aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
+  # tests-tofu:
+  #   needs:
+  #     - build
+  #     - tests-qemu
+  #   # also run if build is skipped
+  #   if: always()
+  #   permissions:
+  #     id-token: write
+  #     packages: write
+  #   uses: ./.github/workflows/tests.yml
+  #   with:
+  #     version: ${{ inputs.version }}
+  #     platform_test_tag: ${{ inputs.platform_test_tag || 'latest' }}
+  #     flavors_parse_params: '${{ inputs.flavors_parse_params }}'
+  #     download_s3: ${{ inputs.build == false }}
+  #   secrets:
+  #     gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+  #     gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+  #     gcp_project_id: ${{ secrets.GCP_PROJECT }}
+  #     gcp_region: ${{ secrets.GCP_REGION }}
+  #     gcp_zone: ${{ secrets.GCP_ZONE }}
+  #     aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
+  #     aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
+  #     aws_region: ${{ secrets.AWS_TESTS_REGION }}
+  #     aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
+  #     az_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+  #     az_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+  #     az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  #     ccc_credentials: ${{ secrets.CCC_CREDENTIALS }}
+  #     tf_encryption: ${{ secrets.TF_ENCRYPTION }}

@@ -249,15 +249,50 @@ jobs:
           path: ".build/${{ env.cname }}.chroot.test.xml"
       - name: add chroot.test.xml to build artifacts
         run: echo "${{ env.cname }}.chroot.test.xml" >> ".build/${{ env.cname }}.artifacts"
+      ### - name: add certs to build artifacts
+      ###   run: |
+      ###     for f in secureboot.{{pk,kek,db}.{crt,der,auth},aws-efivars}; do
+      ###       cp "cert/$f" ".build/${{ env.cname }}.$f"
+      ###       echo "${{ env.cname }}.$f" >> ".build/${{ env.cname }}.artifacts"
+      ###     done
+      ### - name: pack build artifacts for upload
+      ###   run: tar -cSzvf "${{ env.cname }}.tar.gz" -C .build -T ".build/${{ env.cname }}.artifacts"
+      ### - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
+      ###   with:
+      ###     name: "build-${{ env.cname }}"
+      ###     path: "${{ env.cname }}.tar.gz"
+      # ./test writes ${{ env.cname }}.qemu.test.log and puts it into .build/${{ env.cname }}.artifacts
+      - name: qemu test
+        run: |
+          CNAME=${{ env.cname }} make --directory="tests/platformSetup" ${{ matrix.flavor }}-${{ matrix.arch }}-qemu-apply 2>&1 | tee .build/${{ env.cname }}.qemu.provisioning.log
+          make --directory=tests ${{matrix.flavor }}-${{ matrix.arch }}-qemu-test-platform 2>&1 | tee .build/${{ env.cname }}.qemu.test.log
+      # qemu.test.xml is written in the entrypoint tests/init
+      - name: rename test results
+        if: always()
+        run: |
+          mv tests/${{ matrix.flavor }}-${{ matrix.arch }}.qemu.test.xml .build/${{ env.cname }}.qemu.test.xml
+      - uses: pmeier/pytest-results-action@fc6576eced1f411ea48ab10e917d9cfce2960e29 # pin@v0.7.1
+        if: always()
+        with:
+          path: ".build/${{ env.cname }}.qemu.test.xml"
+      - name: add qemu.test.xml to build artifacts
+        if: always()
+        run: |
+          echo "${{ env.cname }}.qemu.test.xml" >> ".build/${{ env.cname }}.artifacts"
+          echo "${{ env.cname }}.qemu.provisioning.log" >> ".build/${{ env.cname }}.artifacts"
+          echo "${{ env.cname }}.qemu.test.log" >> ".build/${{ env.cname }}.artifacts"
       - name: add certs to build artifacts
+        if: always()
         run: |
           for f in secureboot.{{pk,kek,db}.{crt,der,auth},aws-efivars}; do
             cp "cert/$f" ".build/${{ env.cname }}.$f"
             echo "${{ env.cname }}.$f" >> ".build/${{ env.cname }}.artifacts"
           done
       - name: pack build artifacts for upload
+        if: always()
         run: tar -cSzvf "${{ env.cname }}.tar.gz" -C .build -T ".build/${{ env.cname }}.artifacts"
       - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
+        if: always()
         with:
           name: "build-${{ env.cname }}"
           path: "${{ env.cname }}.tar.gz"

@@ -147,10 +147,11 @@ $(foreach flavor,$(FLAVORS_IMAGE), \
 			/gardenlinux/tests/pytest.qemu.$(flavor).apply.sh && \
 			sleep 86400 \
 		" && \
-		$(GARDENLINUX_BUILD_CRE) exec -it qemu-$(flavor) bash -c "\
+		$(GARDENLINUX_BUILD_CRE) exec -it qemu-$(flavor) timeout 300 bash -c "\
 			until test -f /tmp/qemu.pid; do echo 'Waiting for qemu to start...'; sleep 1; done && \
 			/gardenlinux/tests/pytest.qemu.$(flavor).apply.sh \
-		" \
+		" || \
+		$(GARDENLINUX_BUILD_CRE) logs qemu-$(flavor) \
 	) \
 	$(eval \
 		$(flavor)-qemu-login: ; \
