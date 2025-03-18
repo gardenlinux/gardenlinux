@@ -36,8 +36,29 @@ def test_clock(client):
 
 
 @pytest.mark.flaky(reruns=3, reruns_delay=10, only_rerun="AssertionError")
-def test_ntp(client, non_azure, non_chroot):
+def test_ntp(client, non_azure, non_aws, non_gcp, non_provisioner_chroot):
     """ Azure does not use systemd-timesyncd """
+    """ AWS does use hyperscaler related NTP server which is not reachable in chroot/qemu """
+    """ GCP does use hyperscaler related NTP server which is not reachable in chroot/qemu """
+    (exit_code, output, error) = client.execute_command("timedatectl show")
+    assert exit_code == 0, f"no {error=} expected"
+    lines = output.splitlines()
+    ntp_ok=False
+    ntp_synchronised_ok=False
+    for l in lines:
+        nv = l.split("=")
+        if nv[0] == "NTP" and nv[1] == "yes":
+            ntp_ok = True
+        if nv[0] == "NTPSynchronized" and nv[1] == "yes":
+            ntp_synchronised_ok = True
+    assert ntp_ok, "NTP not activated"
+    assert ntp_synchronised_ok, "NTP not synchronized"
+
+
+@pytest.mark.flaky(reruns=3, reruns_delay=10, only_rerun="AssertionError")
+def test_ntp_hyperscaler(client, aws, gcp, non_provisioner_chroot, non_provisioner_qemu):
+    """ AWS does use hyperscaler related NTP server which is not reachable in chroot/qemu """
+    """ GCP does use hyperscaler related NTP server which is not reachable in chroot/qemu """
     (exit_code, output, error) = client.execute_command("timedatectl show")
     assert exit_code == 0, f"no {error=} expected"
     lines = output.splitlines()
