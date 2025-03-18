@@ -137,6 +137,7 @@ class PytestConfig:
             config_file = self.paths.config_dir / f"pytest.{provisioner_pytest}.{flavor}.yaml"
             yaml_data = {
                 "qemu": {
+                    "platform": platform,
                     "image": f"{image_path}/{cname}.raw" if image_path else None,
                     "ip": "127.0.0.1",
                     "port": 2223,
