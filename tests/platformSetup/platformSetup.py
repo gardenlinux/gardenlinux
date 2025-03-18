@@ -15,6 +15,7 @@ import re
 from datetime import datetime, timezone
 import requests
 from glob import glob
+from urllib.parse import urlparse
 
 from python_gardenlinux_lib.features.parse_features import get_features
 from python_gardenlinux_lib import Git, Version
@@ -41,7 +42,7 @@ class PathManager:
         self.platform_setup_dir = self.tests_dir / "platformSetup"
         self.tofu_dir = self.platform_setup_dir / "tofu"
         self.uuid_file = self.platform_setup_dir / ".uuid"
-        
+
         # Ensure directories exist
         self.config_dir.mkdir(exist_ok=True)
         self.platform_setup_dir.mkdir(exist_ok=True)
@@ -77,26 +78,26 @@ class Flavors:
         self.paths = paths
         self.flavor = args.flavor
         self.provisioner = args.provisioner
-        self.platform, self.feature_list, self.cname_features, self.arch = self.parse_features()
+        self.platform, self.feature_list, self.image_features, self.arch = self.parse_features()
 
     def parse_features(self):
         """Parse features from the flavor name."""
         parts = self.flavor.split("-")
-        
+
         if len(parts) < 3:
             logger.error("Flavor name must be in the format 'platform-features-arch'")
             sys.exit(1)
 
         platform = parts[0]
-        features_cname = "-".join(parts[1:-1])
+        features_image_name = "-".join(parts[1:-1])
         arch = parts[-1]
-        
+
         if arch not in {"amd64", "arm64"}:
             logger.error(f"Unsupported architecture '{arch}'. Valid options are 'amd64' or 'arm64'.")
             sys.exit(1)
 
-        print(f"features_cname: {features_cname}")
-        
+        print(f"features_image_name: {features_image_name}")
+
         # Create flavor string without architecture
         flavor_without_arch = "-".join(parts[:-1])
 
@@ -112,8 +113,8 @@ class Flavors:
         logger.info(f"Provisioner: {self.provisioner}")
         logger.info(f"Features: {feature_list}")
         logger.info(f"Architecture: {arch}")
-        
-        return platform, feature_list, features_cname, arch
+
+        return platform, feature_list, features_image_name, arch
 
 class PytestConfig:
     """Generates pytest configuration files."""
@@ -123,16 +124,16 @@ class PytestConfig:
         self.flavors = flavors
         self.script = script
 
-    def generate_pytest_configfile(self, config_data, image_path=None, cname=None):
+    def generate_pytest_configfile(self, config_data, image_path=None, image_name=None):
         """Generate a pytest configuration file."""
         flavor = self.flavors.flavor
         platform = config_data["platform"]
         provisioner = self.args.provisioner
         provisioner_pytest = PROVISIONER_PYTEST_MAP[provisioner]
-        
-        if cname is None:
-            cname = self.script.get_cname()
-            
+
+        if image_name is None:
+            image_name = self.script.get_image_name()
+
         if provisioner == "qemu":
             config_file = self.paths.config_dir / f"pytest.{provisioner_pytest}.{flavor}.yaml"
             yaml_data = {
@@ -178,13 +179,13 @@ class Scripts:
         self.flavors = flavors
         self.version = Version(self.paths.git_root)
 
-    def get_cname(self):
-        """Get cname if not provided."""
-        if self.args.cname:
-            return self.args.cname
-            
+    def get_image_name(self):
+        """Get image_name if not provided."""
+        if self.args.image_name:
+            return self.args.image_name
+
         platform = self.flavors.platform
-        features = self.flavors.cname_features
+        features = self.flavors.image_features
         arch = self.flavors.arch
 
         return self.version.get_cname(platform, features, arch)
@@ -194,7 +195,7 @@ class Scripts:
         flavor = self.flavors.flavor
         platform = self.flavors.platform
         provisioner = self.args.provisioner
-        
+
         if provisioner == "qemu":
             ssh_config = {
                 "ssh_user": "root",
@@ -234,7 +235,7 @@ class Scripts:
         """Generate an SSH login script."""
         flavor = self.flavors.flavor
         provisioner = self.args.provisioner
-        
+
         login_script_file = self.paths.tests_dir / f"login.{provisioner}.{flavor}.sh"
         with login_script_file.open("w") as login_script:
             login_script.write("#!/usr/bin/env bash\n")
@@ -246,7 +247,7 @@ class Scripts:
 
         login_script_file.chmod(0o755)
         logger.info(f"Login script '{login_script_file.relative_to(self.paths.git_root)}' created.")
-        
+
         return config_data
 
     def generate_pytest_scripts(self):
@@ -254,7 +255,7 @@ class Scripts:
         flavor = self.flavors.flavor
         provisioner = self.args.provisioner
         provisioner_pytest = PROVISIONER_PYTEST_MAP[provisioner]
-        
+
         apply_script = self.paths.tests_dir / f"pytest.{provisioner}.{flavor}.apply.sh"
         with apply_script.open("w") as f:
             f.write("#!/usr/bin/env bash\n")
@@ -290,23 +291,23 @@ class Tofu:
             # Ensure we're in the correct directory
             original_dir = Path.cwd()
             os.chdir(self.tofu_dir)
-            
+
             # Select the correct workspace
             workspace = f"{flavor}-{self.paths.seed}"
             logger.info(f"Workspace: {workspace}")
             workspace_cmd = ["tofu", "workspace", "select", workspace]
             subprocess.run(workspace_cmd, check=True, capture_output=True, text=True)
-            
+
             # Get the output
             tofu_output = subprocess.check_output(["tofu", "output", "-json"], text=True)
             tofu_data = json.loads(tofu_output)
             logger.debug(f"tofu_data: {tofu_data}")
-            
+
             if not tofu_data:
                 raise ValueError("No OpenTofu output variables found")
-                
+
             return tofu_data
-            
+
         except subprocess.CalledProcessError as e:
             logger.error(f"OpenTofu command failed: {e.stderr}")
             raise
@@ -317,7 +318,7 @@ class Tofu:
             # Always return to original directory
             os.chdir(original_dir)
 
-    def create_tfvars_file(self, test_prefix, image_path=None, cname=None):
+    def create_tfvars_file(self, test_prefix, image_path=None, image_name=None):
         """Create .tfvars files for OpenTofu configuration."""
         flavor = self.flavor_parser.flavor
         platform = self.flavor_parser.platform
@@ -344,15 +345,15 @@ class Tofu:
             "openstack": "raw",
         }
 
-        # Generate cname if not provided
-        if not cname:
-            cname = self.scripts.get_cname()
+        # Generate image_name if not provided
+        if not image_name:
+            image_name = self.scripts.get_image_name()
 
         # Determine if we should add extension based on image_path
-        image_source_type = image_path.split("://")[0] if image_path else "file"
+        image_source_type = urlparse(image_path).scheme if image_path else "file"
         image_file = (
-            cname if image_source_type == "cloud"
-            else f"{cname}.{image_files.get(platform, 'raw')}"
+            image_name if image_source_type == "cloud"
+            else f"{image_name}.{image_files.get(platform, 'raw')}"
         )
 
         # Create flavor configuration
@@ -368,10 +369,10 @@ class Tofu:
         # Write the tfvars file
         with var_file.open('w') as f:
             f.write(f'test_prefix = "{test_prefix}"\n')
-            
+
             if image_path:
                 f.write(f'image_path = "{image_path}"\n')
-            
+
             flavors_list = [flavor_item]
             formatted_flavors = json.dumps(flavors_list, indent=2)
             f.write(f'flavors = {formatted_flavors}\n')
@@ -384,8 +385,8 @@ def parse_arguments():
         description="Generate pytest config files and SSH login scripts for platform tests."
     )
     parser.add_argument(
-        '--flavor', 
-        type=str, 
+        '--flavor',
+        type=str,
         required=True,
         help="The flavor to be tested (e.g., 'kvm-gardener_prod-amd64')."
     )
@@ -396,15 +397,22 @@ def parse_arguments():
         help="Provisioner to use: 'qemu' for local testing or 'tofu' for Cloud Provider testing."
     )
     parser.add_argument(
-        '--image-path', 
-        type=str, 
-        help="Base path for image files.",
+        '--image-path',
+        type=str,
+        help="Uri and base path for image files (e.g., 'file:///gardenlinux/.build' or 'cloud://').",
         default='file:///gardenlinux/.build'
     )
     parser.add_argument(
-        '--cname', 
-        type=str, 
-        help="Basename of image file (e.g., 'kvm-gardener_prod-amd64-1312.0-80ffcc87')."
+        '--image-name',
+        type=str,
+        help="""
+                Image name or image_name style image reference:
+                (e.g., image_name: 'kvm-gardener_prod-amd64-1312.0-80ffcc87',
+                ali image: 'm-01234567890123456',
+                aws ami: 'ami-01234567890123456',
+                azure community gallery version: '/communityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/images/gardenlinux-gen2/versions/1443.18.0',
+                gcp image: 'projects/sap-se-gcp-gardenlinux/global/images/gardenlinux-gcp-gardener-prod-arm64-1443-18-97fd20ac'.
+            """
     )
     parser.add_argument(
         '--test-prefix',
@@ -421,7 +429,7 @@ def parse_arguments():
 
 def main():
     args = parse_arguments()
-    
+
     # Initialize core components
     path = PathManager()
     flavor = Flavors(args, path)
@@ -435,10 +443,10 @@ def main():
         pytest.generate_pytest_configfile(
             config_data,
             image_path=args.image_path,
-            cname=args.cname
+            image_name=args.image_name,
         )
         scripts.generate_pytest_scripts()
-    
+
     elif args.provisioner == 'tofu':
         try:
             if args.create_tfvars:
@@ -448,17 +456,17 @@ def main():
                 tofu.create_tfvars_file(
                     args.test_prefix,
                     image_path=args.image_path,
-                    cname=args.cname
+                    image_name=args.image_name,
                 )
             else:
                 tofu_data = tofu.get_tofu_output(args.flavor)
                 config_data = scripts.generate_config_data(tofu_data)
                 scripts.generate_login_script(config_data)
                 pytest.generate_pytest_configfile(config_data)
-            
+
         except Exception as e:
             logger.error(f"OpenTofu error: {e}")
             sys.exit(1)
 
 if __name__ == "__main__":
-    main() 
+    main()
