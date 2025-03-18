@@ -399,8 +399,8 @@ class Tofu:
         # Determine if we should add extension based on image_path
         image_source_type = image_path.split("://")[0] if image_path else "file"
         image_file = (
-            cname if image_source_type == "cloud"
-            else f"{cname}.{image_files.get(platform, 'raw')}"
+            image_name if image_source_type == "cloud"
+            else f"{image_name}.{image_files.get(platform, 'raw')}"
         )
 
         # Create flavor configuration
@@ -465,6 +465,18 @@ def parse_arguments():
         '--cname',
         type=str,
         help="Basename of image file (e.g., 'kvm-gardener_prod-amd64-1312.0-80ffcc87')."
+    )
+    parser.add_argument(
+        '--image-name',
+        type=str,
+        help="""
+                Image name or image_name style image reference:
+                (e.g., image_name: 'kvm-gardener_prod-amd64-1312.0-80ffcc87',
+                ali image: 'm-01234567890123456',
+                aws ami: 'ami-01234567890123456',
+                azure community gallery version: '/communityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/images/gardenlinux-gen2/versions/1443.18.0',
+                gcp image: 'projects/sap-se-gcp-gardenlinux/global/images/gardenlinux-gcp-gardener-prod-arm64-1443-18-97fd20ac'.
+            """
     )
     parser.add_argument(
         '--test-prefix',
