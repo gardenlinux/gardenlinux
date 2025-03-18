@@ -11,7 +11,7 @@ def test_gl_is_support_distro(client):
     This tests ensures that the vendor field is set to 'gardenlinux'.
     """
     os_releases = read(client, file="/etc/os-release")
-    assert os_releases[0] == "ID=gardenlinux"
+    assert "ID=gardenlinux" in os_releases
 
 
 def test_no_man(client):
