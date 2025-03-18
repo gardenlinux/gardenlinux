@@ -122,7 +122,7 @@ $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 			tofu workspace select -or-create $(flavor)-$(SEED) && \
 			../platformSetup.py --provisioner tofu --flavor $(flavor) && \
 			tofu workspace select default && \
-			../login.tofu.$(flavor).sh" \
+			../../login.tofu.$(flavor).sh" \
 	) \
 	$(eval \
 		$(flavor)-tofu-destroy: ; \
