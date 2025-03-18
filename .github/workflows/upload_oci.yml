@@ -31,6 +31,7 @@ jobs:
       packages: write
     environment: oidc_aws_s3_upload
     strategy:
+      max-parallel: 5
       fail-fast: false
       matrix: ${{ fromJson(needs.generate_matrix_publish.outputs.matrix) }}
     steps:
@@ -76,16 +77,14 @@ jobs:
           retry_count=0
           exit_code=0
           until [ $retry_count -ge $max_retries ]; do
-            output=$(GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir ${{ env.cname }} --container ghcr.io/${{ github.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest --manifest_file manifests/oci_manifest_entry_${{ env.cname }}.json 2>&1)
-            exit_code=$?
-            if echo "$output" | grep -q "Bad Gateway"; then
+            if output=$(GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir ${{ env.cname }} --container ghcr.io/${{ github.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest --manifest_file manifests/oci_manifest_entry_${{ env.cname }}.json 2>&1); then
+              echo "$output"
+              exit 0
+            elif echo "$output" | grep -q "Bad Gateway"; then
               retry_count=$((retry_count+1))
               exit_code=1
               echo "Bad Gateway detected, retry $retry_count/$max_retries"
               sleep 10
-            elif [ $exit_code -eq 0 ]; then
-              echo $output
-              break
             else
               echo "Fatal error: $output"
               exit $exit_code

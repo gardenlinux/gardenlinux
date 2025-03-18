@@ -5,9 +5,8 @@ import time
 import yaml
 import sys
 import os
-import sys
 import re
-
+from pathlib import Path
 
 from typing import Iterator
 from helper.sshclient import RemoteClient
@@ -18,7 +17,6 @@ from dataclasses import dataclass
 from _pytest.config.argparsing import Parser
 
 from platformSetup.chroot import CHROOT
-from platformSetup.firecracker import FireCracker
 from platformSetup.qemu import QEMU
 from platformSetup.manual import Manual
 
@@ -29,7 +27,7 @@ def pytest_addoption(parser: Parser):
     parser.addoption(
         "--iaas",
         action="store",
-        help="What Infrastructure the tests should be provisioned on to run.",
+        help="(DEPRECATED: use --provisioner instead) What Infrastructure the tests should be provisioned on to run.",
     )
     parser.addoption(
         "--provisioner",
@@ -52,7 +50,12 @@ def pytest_addoption(parser: Parser):
         nargs="?",
         help="URI for the image to be tested (overwrites value in config.yaml)"
     )
-
+    parser.addoption(
+        "--create-only",
+        action="store_true", 
+        default=False,
+        help="Only create and set up the test resources without running tests (default: False)"
+    )
 
 @pytest.fixture(scope="session")
 def pipeline(pytestconfig):
@@ -61,20 +64,34 @@ def pipeline(pytestconfig):
     return False
 
 @pytest.fixture(scope="session")
-def iaas(pytestconfig):
-    if pytestconfig.getoption('iaas'):
+def provisioner(pytestconfig):
+    """Get the provisioner to use, with backwards compatibility for --iaas."""
+    if pytestconfig.getoption('provisioner'):
+        return pytestconfig.getoption('provisioner')
+    elif pytestconfig.getoption('iaas'):
+        logger.warning("The --iaas option is deprecated. Please use --provisioner instead.")
         return pytestconfig.getoption('iaas')
-    pytest.exit("Need to specify which IaaS to test on.", 1)
+    pytest.exit("Need to specify which provisioner to use (--provisioner).", 1)
 
+@pytest.fixture(scope="session")
+def iaas(pytestconfig):
+    """Deprecated: Use provisioner fixture instead."""
+    if pytestconfig.getoption('iaas'):
+        logger.warning("The --iaas option is deprecated. Please use --provisioner instead.")
+        return pytestconfig.getoption('iaas')
+    return pytestconfig.getoption('provisioner')
 
 @pytest.fixture(scope="session")
 def platform(pytestconfig, testconfig):
+    """Get the platform to test on."""
     if 'platform' in testconfig:
         return testconfig['platform']
+    elif pytestconfig.getoption('provisioner'):
+        return pytestconfig.getoption('provisioner')
     elif pytestconfig.getoption('iaas'):
+        logger.warning("The --iaas option is deprecated. Please use --provisioner instead.")
         return pytestconfig.getoption('iaas')
-    else:
-        pytest.exit("Need to specify which platform (in configfile) or IaaS (via parameter) to test on.", 1)
+    pytest.exit("Need to specify which platform (in configfile) or provisioner (via --provisioner) to test on.", 1)
 
 
 @pytest.fixture(scope="session")
@@ -215,48 +232,60 @@ def gcp_credentials(testconfig, pipeline, request):
 
 
 @pytest.fixture(scope="session")
-def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
-    logger.info(f"Testconfig for {iaas=} is {testconfig}")
+def client(testconfig, provisioner, imageurl, request) -> Iterator[RemoteClient]:
+    """Create and manage the test client resources"""
+    logger.info(f"Testconfig for {provisioner=} is {testconfig}")
     test_name = testconfig.get('test_name', f"gl-test-{time.strftime('%Y%m%d')}-{os.urandom(2).hex()}")
-    if iaas == "aws":
-        from platformSetup.aws import AWS
-        session = request.getfixturevalue('aws_session')
-        yield from AWS.fixture(session, testconfig, imageurl, test_name)
-    elif iaas == "gcp":
-        from platformSetup.gcp import GCP
-        
-        credentials = request.getfixturevalue('gcp_credentials')
-        logger.info("Requesting GCP fixture")
-        yield from GCP.fixture(credentials, testconfig, imageurl, test_name)
-    elif iaas == "azure":
-        from platformSetup.azure import AZURE
-        credentials = request.getfixturevalue('azure_credentials')
-        yield from AZURE.fixture(credentials, testconfig, imageurl, test_name)
-    elif iaas == "openstack-ccee":
-        from platformSetup.openstackccee import OpenStackCCEE
-        yield from OpenStackCCEE.fixture(testconfig)
-    elif iaas == "chroot":
-        yield from CHROOT.fixture(testconfig)
-    elif iaas == "firecracker":
-        yield from FireCracker.fixture(testconfig)
-    elif iaas == "qemu":
-        yield from QEMU.fixture(testconfig)
-    elif iaas == "ali":
-        from platformSetup.ali import ALI
-        yield from ALI.fixture(testconfig, test_name)
-    elif iaas == "manual":
-        yield from Manual.fixture(testconfig)
-    elif iaas == "local":
-        yield testconfig
-    else:
-        raise ValueError(f"invalid {iaas=}")
+    create_only = request.config.getoption("--create-only")
+    
+    try:
+       if provisioner == "openstack-ccee":
+           from platformSetup.openstackccee import OpenStackCCEE
+           yield from OpenStackCCEE.fixture(testconfig)
+       elif provisioner == "chroot":
+           yield from CHROOT.fixture(testconfig)
+       elif provisioner == "qemu":
+           yield from QEMU.fixture(testconfig)
+       elif provisioner == "manual":
+           yield from Manual.fixture(testconfig)
+       elif provisioner == "local":
+           yield testconfig
+       else:
+           raise ValueError(f"invalid {provisioner=}")
+    finally:
+       if create_only:
+           logger.info("Resource creation complete")
+           pytest.exit("Resource creation complete", 0)
 
+def create_resource_test(client):
+    """Test that ensures the client fixture runs for resource creation"""
+    pass
 
+def create_resource_module(session):
+    """Module and test for resource creation"""
+    import _pytest.python
+    
+    module = _pytest.python.Module.from_parent(
+        parent=session,
+        path=Path("resource_creation_test.py")
+    )
+    
+    return _pytest.python.Function.from_parent(
+        name="test_resource_creation",
+        parent=module,
+        callobj=create_resource_test
+    )
 
 def pytest_collection_modifyitems(config, items):
     """Skip tests that belong to a feature that is not enabled in the test config"""
+    if config.getoption("--create-only"):
+        # Replace all items with our resource creation test
+        session = items[0].session if items else config.pluginmanager.get_plugin("session")
+        items[:] = [create_resource_module(session)]
+        return
+
     skip = pytest.mark.skip(reason="test is not part of the enabled features")
-    iaas = config.getoption("--iaas")
+    provisioner = config.getoption("--provisioner") or config.getoption("--iaas")
     config_file = config.getoption("--configfile")
 
     try:
@@ -266,8 +295,8 @@ def pytest_collection_modifyitems(config, items):
         logger.error(f"can not open config file {config_file}")
         pytest.exit(err, 1)
 
-    if not iaas == 'local':
-        features = config_options[iaas].get("features", [])
+    if not provisioner == 'local':
+        features = config_options[provisioner].get("features", [])
     else:
         features = []
 

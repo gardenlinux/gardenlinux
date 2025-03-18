@@ -74,6 +74,7 @@ Examples:
 
 The build script fetches the required builder container and manages all internal build steps. By default, it uses rootless podman, but you can switch to another container engine with the `--container-engine` flag.
 
+Garden Linux images can be built with the *trustedboot* feature—an extension to *secureboot*—for enhanced system integrity; see the [trustedboot documentation](features/_trustedboot/README.md) for build instructions.
 # Test
 
 To run unit tests for a specific target, use the command `./test ${target}`.

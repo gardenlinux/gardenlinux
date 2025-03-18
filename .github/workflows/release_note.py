@@ -221,42 +221,12 @@ def generate_package_update_section(version):
                     output += _parse_match_section(s['matchBinaries'])
     return output
 
-def release_notes_changes_section(gardenlinux_version):
-    """
-        Get list of fixed CVEs, grouped by upgraded package.
-        Note: This result is not perfect, feel free to edit the generated release notes and
-        file issues in glvd for improvement suggestions https://github.com/gardenlinux/glvd/issues
-    """
-    try:
-        url = f"https://glvd.ingress.glvd.gardnlinux.shoot.canary.k8s-hana.ondemand.com/v1/patchReleaseNotes/{gardenlinux_version}"
-        response = requests.get(url)
-        response.raise_for_status()  # Will raise an error for bad responses
-        data = response.json()
-
-        output = [
-            "## Changes",
-            "The following packages have been upgraded, to address the mentioned CVEs:"
-        ]
-        for package in data["packageList"]:
-            upgrade_line = (
-                f"- upgrade '{package['sourcePackageName']}' from `{package['oldVersion']}` "
-                f"to `{package['newVersion']}`"
-            )
-            output.append(upgrade_line)
-
-            if package["fixedCves"]:
-                for fixedCve in package["fixedCves"]:
-                    output.append(f'  - {fixedCve}')
-
-        return "\n".join(output) + "\n"
-    except:
-        # There are expected error cases, for example with versions not supported by glvd (1443.x) or when the api is not available
-        # Fail gracefully by adding the placeholder we previously used, so that the release note generation does not fail.
-        return textwrap.dedent("""
-        ## Changes
-        The following packages have been upgraded, to address the mentioned CVEs:
-        **todo release facilitator: fill this in**
-        """)
+def release_notes_changes_section():
+    return textwrap.dedent("""
+    ## Changes
+    The following packages have been upgraded, to address the mentioned CVEs:
+    **todo release facilitator: fill this in**
+    """)
 
 def release_notes_software_components_section(package_list):
     output = "\n"
@@ -318,7 +288,7 @@ def create_github_release_notes(gardenlinux_version, commitish, dry_run = False)
 
     output = ""
 
-    output += release_notes_changes_section(gardenlinux_version)
+    output += release_notes_changes_section()
 
     output += release_notes_software_components_section(package_list)
 
