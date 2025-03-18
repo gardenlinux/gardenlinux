@@ -77,7 +77,7 @@ class Flavors:
         self.paths = paths
         self.flavor = args.flavor
         self.provisioner = args.provisioner
-        self.platform, self.feature_list, self.cname_features, self.arch = self.parse_features()
+        self.platform, self.feature_list, self.image_features, self.arch = self.parse_features()
 
     def parse_features(self):
         """Parse features from the flavor name."""
@@ -88,14 +88,14 @@ class Flavors:
             sys.exit(1)
 
         platform = parts[0]
-        features_cname = "-".join(parts[1:-1])
+        features_image_name = "-".join(parts[1:-1])
         arch = parts[-1]
         
         if arch not in {"amd64", "arm64"}:
             logger.error(f"Unsupported architecture '{arch}'. Valid options are 'amd64' or 'arm64'.")
             sys.exit(1)
 
-        print(f"features_cname: {features_cname}")
+        print(f"features_image_name: {features_image_name}")
         
         # Create flavor string without architecture
         flavor_without_arch = "-".join(parts[:-1])
@@ -113,7 +113,7 @@ class Flavors:
         logger.info(f"Features: {feature_list}")
         logger.info(f"Architecture: {arch}")
         
-        return platform, feature_list, features_cname, arch
+        return platform, feature_list, features_image_name, arch
 
 class PytestConfig:
     """Generates pytest configuration files."""
@@ -123,15 +123,15 @@ class PytestConfig:
         self.flavors = flavors
         self.script = script
 
-    def generate_pytest_configfile(self, config_data, image_path=None, cname=None):
+    def generate_pytest_configfile(self, config_data, image_path=None, image_name=None):
         """Generate a pytest configuration file."""
         flavor = self.flavors.flavor
         platform = config_data["platform"]
         provisioner = self.args.provisioner
         provisioner_pytest = PROVISIONER_PYTEST_MAP[provisioner]
         
-        if cname is None:
-            cname = self.script.get_cname()
+        if image_name is None:
+            image_name = self.script.get_image_name()
             
         if provisioner == "qemu":
             config_file = self.paths.config_dir / f"pytest.{provisioner_pytest}.{flavor}.yaml"
@@ -178,16 +178,16 @@ class Scripts:
         self.flavors = flavors
         self.version = Version(self.paths.git_root)
 
-    def get_cname(self):
-        """Get cname if not provided."""
-        if self.args.cname:
-            return self.args.cname
+    def get_image_name(self):
+        """Get image_name if not provided."""
+        if self.args.image_name:
+            return self.args.image_name
             
         platform = self.flavors.platform
-        features = self.flavors.cname_features
+        features = self.flavors.tures
         arch = self.flavors.arch
 
-        return self.version.get_cname(platform, features, arch)
+        return self.version.get_image_name(platform, features, arch)
 
     def generate_config_data(self, tofu_out=None):
         """Generate config data for pytest and login script."""
@@ -317,7 +317,7 @@ class Tofu:
             # Always return to original directory
             os.chdir(original_dir)
 
-    def create_tfvars_file(self, test_prefix, image_path=None, cname=None):
+    def create_tfvars_file(self, test_prefix, image_path=None, image_name=None):
         """Create .tfvars files for OpenTofu configuration."""
         flavor = self.flavor_parser.flavor
         platform = self.flavor_parser.platform
@@ -342,15 +342,15 @@ class Tofu:
             "gcp": "gcpimage.tar.gz",
         }
 
-        # Generate cname if not provided
-        if not cname:
-            cname = self.scripts.get_cname()
+        # Generate image_name if not provided
+        if not image_name:
+            image_name = self.scripts.get_image_name()
 
         # Determine if we should add extension based on image_path
         image_source_type = image_path.split("://")[0] if image_path else "file"
         image_file = (
-            cname if image_source_type == "cloud"
-            else f"{cname}.{image_files.get(platform, 'raw')}"
+            image_name if image_source_type == "cloud"
+            else f"{image_name}.{image_files.get(platform, 'raw')}"
         )
 
         # Create flavor configuration
@@ -396,13 +396,20 @@ def parse_arguments():
     parser.add_argument(
         '--image-path', 
         type=str, 
-        help="Base path for image files.",
+        help="Uri and base path for image files (e.g., 'file:///gardenlinux/.build' or 'cloud://').",
         default='file:///gardenlinux/.build'
     )
     parser.add_argument(
-        '--cname', 
+        '--image-name', 
         type=str, 
-        help="Basename of image file (e.g., 'kvm-gardener_prod-amd64-1312.0-80ffcc87')."
+        help="""
+                Image name or image_name style image reference:
+                (e.g., image_name: 'kvm-gardener_prod-amd64-1312.0-80ffcc87',
+                ali image: 'm-01234567890123456',
+                aws ami: 'ami-01234567890123456',
+                azure community gallery version: '/communityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/images/gardenlinux-gen2/versions/1443.18.0',
+                gcp image: 'projects/sap-se-gcp-gardenlinux/global/images/gardenlinux-gcp-gardener-prod-arm64-1443-18-97fd20ac'.
+            """
     )
     parser.add_argument(
         '--test-prefix',
@@ -433,7 +440,7 @@ def main():
         pytest.generate_pytest_configfile(
             config_data,
             image_path=args.image_path,
-            cname=args.cname
+            image_name=args.image_name,
         )
         scripts.generate_pytest_scripts()
     
@@ -446,7 +453,7 @@ def main():
                 tofu.create_tfvars_file(
                     args.test_prefix,
                     image_path=args.image_path,
-                    cname=args.cname
+                    image_name=args.image_name,
                 )
             else:
                 tofu_data = tofu.get_tofu_output(args.flavor)
