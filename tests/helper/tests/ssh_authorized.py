@@ -1,6 +1,6 @@
 import hashlib
 
-def ssh_authorized(client, testconfig, chroot):
+def ssh_authorized(client, testconfig, provisioner_chroot):
     """Test to that not user has an authorized_keys file and also check
     that the test_authorized_keys file injected for testing wasn't modified"""
     # get passwd

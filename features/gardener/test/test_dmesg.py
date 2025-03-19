@@ -12,7 +12,7 @@ from helper.utils import execute_remote_command
 )
 
 
-def test_dmesg(client, file, args, non_chroot):
+def test_dmesg(client, file, args, non_provisioner_chroot):
     cmd = "/usr/sbin/sysctl -a > /tmp/sysctl.txt"
     execute_remote_command(client, cmd)
     file_content(client, file, args)

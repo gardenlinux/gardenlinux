@@ -228,7 +228,11 @@ class QEMU:
             f"write-append /etc/hosts.allow 'ALL: 10.\n' : "
             f"ln-s "
             f"  {systemd_dir}/{sshd_systemd_file} "
-            f"  {systemd_dir}/multi-user.target.wants/{sshd_systemd_file}")
+            f"  {systemd_dir}/multi-user.target.wants/{sshd_systemd_file} : "
+            # Remove google services as they cannot reach their APIs
+            f"rm-f /usr/lib/systemd/system/google-guest-agent.service : "
+            f"rm-f /usr/lib/systemd/system/gce-workload-cert-refresh.service : "
+            f"rm-f /usr/lib/systemd/system/google-startup-scripts.service")
 
         cmds.append(guestfish_cmd)
 

@@ -16,50 +16,50 @@ import pytest
 
 
 @pytest.fixture
-def chroot(iaas):
+def provisioner_chroot(iaas):
     """This is the target infrastructure process we consume"""
     if iaas != 'chroot':
         pytest.skip('test only supported on chroot')
 
 
 @pytest.fixture
-def local(iaas):
+def provisioner_local(iaas):
     if iaas != 'local':
         pytest.skip('test only supported on local')
 
 
 @pytest.fixture
-def manual(iaas):
+def provisioner_manual(iaas):
     if iaas != 'local':
         pytest.skip('test only supported on local')
 
 
 @pytest.fixture
-def qemu(iaas):
+def provisioner_qemu(iaas):
     """This is the target infrastructure process we consume"""
     if iaas != 'qemu':
         pytest.skip('test only supported on qemu')
 
 
 @pytest.fixture
-def non_chroot(iaas):
+def non_provisioner_chroot(iaas):
     if iaas == 'chroot':
         pytest.skip('test not supported on chroot')
 
 
 @pytest.fixture
-def non_local(iaas):
+def non_provisioner_local(iaas):
     if iaas == 'local':
         pytest.skip('test not supported on local')
 
 
 @pytest.fixture
-def non_manual(iaas):
+def non_provisioner_manual(iaas):
     if iaas == 'manual':
         pytest.skip('test not supported on manual')
 
 
 @pytest.fixture
-def non_qemu(iaas):
+def non_provisioner_qemu(iaas):
     if iaas == 'qemu':
         pytest.skip('test not supported on qemu')

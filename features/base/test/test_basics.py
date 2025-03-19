@@ -38,7 +38,7 @@ def test_ls(client):
     assert "var" in lines
 
 
-def test_startup_time(client, non_chroot, non_kvm, non_azure):
+def test_startup_time(client, non_provisioner_chroot, non_kvm, non_azure):
     """ Test for startup time """
     tolerated_kernel_time = 60
     tolerated_userspace_time = 40
@@ -64,7 +64,7 @@ def test_startup_time(client, non_chroot, non_kvm, non_azure):
     assert tf_userspace < tolerated_userspace_time, f"startup time in user space too long: {tf_userspace}seconds but only {tolerated_userspace_time} tolerated."
 
 
-def test_startup_script(client, gcp):
-    """ Test for validity of startup script on gcp """
+def test_startup_script(client, non_provisioner_chroot, non_provisioner_qemu):
+    """ Test for validity of startup script on tofu provisioned platforms """
     (exit_code, output, error) = client.execute_command("test -f /tmp/startup-script-ok")
     assert exit_code == 0, f"no {error=} expected. Startup script did not run"
