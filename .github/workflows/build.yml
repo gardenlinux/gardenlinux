@@ -116,43 +116,6 @@ jobs:
         with:
           path: .build
           key: base-${{ matrix.arch }}-${{ github.run_id }}
-  test_container:
-    name: container image for tests
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
-    defaults:
-      run:
-        shell: bash
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [ amd64, arm64 ]
-    steps:
-      # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
-      #   with:
-      #     metric_frequency: 1
-      #     proc_trace_min_duration: 10
-      #     proc_trace_chart_max_count: 50
-      #     comment_on_pr: false
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-        with:
-          submodules: true
-      - uses: ./.github/actions/setup
-        with:
-          arch: "${{ matrix.arch }}"
-      - name: build test container
-        run: |
-          OCI_IMAGE_TAG="$(./build --print-container-image)"
-          if [[ -f builder.dockerfile ]]; then
-            podman build -t "$OCI_IMAGE_TAG" -f builder.dockerfile .
-          fi
-          podman build --squash --tag test --build-arg base="$OCI_IMAGE_TAG" tests
-          podman save --format oci-archive test > test.oci
-      - name: upload test container
-        uses: actions/cache/save@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v4.2.0
-        with:
-          path: test.oci
-          key: test_container:${{ matrix.arch }}-${{ github.run_id }}
-
   generate_matrix_images:
     uses: ./.github/workflows/generate_matrix.yml
     with:
@@ -162,7 +125,7 @@ jobs:
     with:
       flags: '${{ inputs.flavors_parse_params_bare }}'
   images:
-    needs: [ version, cert, base, test_container, generate_matrix_images ]
+    needs: [ version, cert, base, generate_matrix_images ]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
     defaults:
       run:
@@ -214,16 +177,6 @@ jobs:
           path: .build
           key: base-${{ matrix.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
-      - name: download test container cache
-        uses: actions/cache/restore@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v4.2.0
-        with:
-          path: test.oci
-          key: test_container:${{ matrix.arch }}-${{ github.run_id }}
-          fail-on-cache-miss: true
-      - name: import test container image
-        run: |
-          podman load < test.oci
-          rm test.oci
       - name: update bootstrap stage build artifact timestamps
         run: |
           t="$(date '+%s')"

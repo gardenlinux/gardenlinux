@@ -60,7 +60,7 @@ container_mount_opts=(
 if [ -z "$container_image" ]; then
 	base_image="$("$dir/build" --print-container-image)"
 	image_file="$(mktemp)"
-	"$container_engine" build --ignorefile tests/.containerignore-chroot-tests --iidfile "$image_file" --build-arg base="$base_image" "$dir/tests"
+	"$container_engine" build -f Containerfile.chroot --ignorefile tests/.containerignore-chroot-tests --iidfile "$image_file" --build-arg base="$base_image" "$dir/tests"
 	container_image="$(cat "$image_file")"
 	rm "$image_file"
 fi
