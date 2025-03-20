@@ -1,4 +1,4 @@
 chrony
 cloud-init
 python3-cffi-backend
-azure-nvme-utils
+azure-vm-utils
