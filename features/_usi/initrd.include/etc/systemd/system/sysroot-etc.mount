@@ -1,0 +1,8 @@
+[Unit]
+After=sysroot-var.mount
+
+[Mount]
+What=overlay
+Where=/sysroot/etc
+Type=overlay
+Options=lowerdir=/sysroot/etc,upperdir=/sysroot/var/etc.overlay,workdir=/sysroot/var/etc.overlay.workdir

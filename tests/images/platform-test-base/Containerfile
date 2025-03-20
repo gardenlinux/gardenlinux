@@ -4,7 +4,7 @@ ARG GL_BASE=ghcr.io/gardenlinux/gardenlinux:${GL_VERSION}
 
 FROM ${GL_BASE}
 
-ENV PYTHON=python3.12
+ENV PYTHON=python3.13
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV SHELL /bin/bash
@@ -18,11 +18,13 @@ RUN apt-get update \
        less \
        apt-transport-https \
        gnupg \
+       gpgv \
        vim \
        procps \
        openssh-client \
        wget \
        iproute2 \
+       jq \
        # python from GL repos, all python packages are supposed to come from pip
        ${PYTHON}-venv \
        lib${PYTHON}-dev \
@@ -34,6 +36,9 @@ RUN apt-get update \
        inetutils-ping \
        shellcheck \
        psmisc \
+       git \
+       #### needed to install libvirt-python via pipenv
+       pkg-config \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Prepare virtual environment

@@ -17,6 +17,9 @@ on:
         type: string
         required: true
         default: "nightly"
+      skip_upload:
+        type: boolean
+        default: false
 jobs:
   build:
     uses: ./.github/workflows/build.yml
@@ -43,18 +46,21 @@ jobs:
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-      gcp_project: ${{ secrets.GCP_PROJECT }}
+      gcp_project_id: ${{ secrets.GCP_PROJECT }}
       gcp_region: ${{ secrets.GCP_REGION }}
       gcp_zone: ${{ secrets.GCP_ZONE }}
       aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
       aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
       aws_region: ${{ secrets.AWS_TESTS_REGION }}
+      aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
       az_client_id: ${{ secrets.AZURE_CLIENT_ID }}
       az_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
       az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       ccc_credentials: ${{ secrets.CCC_CREDENTIALS }}
+      tf_encryption: ${{ secrets.TF_ENCRYPTION }}
   upload_to_s3:
     name: upload to S3
+    if: ${{ ! inputs.skip_upload }}
     needs: [ build, tests ]
     permissions:
       id-token: write
@@ -68,6 +74,7 @@ jobs:
       session: ${{ secrets.AWS_OIDC_SESSION }}
   upload_to_s3_cn:
     name: upload to S3 china
+    if: ${{ ! inputs.skip_upload }}
     needs: [ build, tests ]
     permissions:
       id-token: write
@@ -81,12 +88,14 @@ jobs:
       session: ${{ secrets.AWS_CN_OIDC_SESSION }}
   publish_container:
     name: publish gardenlinux container base image
+    if: ${{ ! inputs.skip_upload }}
     needs: [ build, tests ]
     uses: ./.github/workflows/publish_container.yml
     with:
       version: ${{ needs.build.outputs.version }}
   upload_oci:
     name: Run glcli to publish to OCI
+    if: ${{ ! inputs.skip_upload }}
     needs: [ build, publish_container ]
     uses: ./.github/workflows/upload_oci.yml
     with:
@@ -98,24 +107,24 @@ jobs:
       oci-kms-arn: ${{ secrets.OCI_KMS_ARN }}
   glrd:
     name: create GLRD release
+    # only create release on main branch
+    if: ${{ ! inputs.skip_upload && github.ref == 'refs/heads/main'}}
     needs: [ upload_to_s3 ]
     permissions:
       id-token: write
     runs-on: ubuntu-latest
-    # only create release on main branch
-    if: ${{ github.ref }} == 'refs/heads/main'
     steps:
-      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
+      - uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_REGION }}
       - name: Create GLRD nightly release
-        uses: gardenlinux/glrd@v1
+        uses: gardenlinux/glrd@v3
         with:
           cmd: glrd-manage --s3-update --create nightly
       - name: Get latest GL nightly
         id: gl_version_nightly
-        uses: gardenlinux/glrd@v1
+        uses: gardenlinux/glrd@v3
         with:
           cmd: glrd --type nightly --latest

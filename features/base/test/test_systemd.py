@@ -2,7 +2,7 @@ import json
 import pytest
 from helper.sshclient import RemoteClient
 
-def test_systemctl_no_failed_units(client, non_chroot, non_kvm):
+def test_systemctl_no_failed_units(client, non_provisioner_chroot, non_kvm):
     """this test always fails on kvm therefore kvm has it's own, chroot does not use systemd"""
     (exit_code, output, error) = client.execute_command("systemctl list-units --output=json --state=failed")
     assert exit_code == 0, f"no {error=} expected"

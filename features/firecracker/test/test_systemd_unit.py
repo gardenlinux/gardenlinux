@@ -12,7 +12,7 @@ from helper.utils import get_architecture
 )
 
 
-def test_systemd_unit(client, systemd_unit, non_chroot):
+def test_systemd_unit(client, systemd_unit, non_provisioner_chroot):
     arch = get_architecture(client)
     active = True
 

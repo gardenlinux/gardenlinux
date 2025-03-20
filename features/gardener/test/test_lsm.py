@@ -11,7 +11,7 @@ from helper.utils import execute_remote_command
 )
 
 
-def test_lsm(client, lsm, active, non_chroot):
+def test_lsm(client, lsm, active, non_provisioner_chroot):
     out = execute_remote_command(client, "cat /sys/kernel/security/lsm")
 
     if active:

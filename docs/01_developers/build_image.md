@@ -1,4 +1,4 @@
-The build system utilises the [gardenlinux/builder](https://github.com/gardenlinux/builder) to create customized Linux distributions. 
+The build system utilizes the [gardenlinux/builder](https://github.com/gardenlinux/builder) to create customized Linux distributions. 
 [gardenlinux/gardenlinux](https://github.com/gardenlinux/gardenlinux) is maintained by the Garden Linux team, highlighting specialized "features" available for other projects.
 
 ## Build Requirements
@@ -21,8 +21,8 @@ To initiate a build, use the command:
 Where:
 
 - `${platform}` denotes the desired platform (e.g., kvm, metal, aws). It should be the first part of the flavor that is built.
-- `${featureX}` represents one or more specific features from the `features/` folder. Features are appended and seperated by a hyphen `-` or (if the feature starts with an underscore `_`) by an underscore.
-- `${arch}` optinally you can reference a certain architecture `amd64` or `arm64`. It should be the last part of the flavor that is built.
+- `${featureX}` represents one or more specific features from the `features/` folder. Features are appended and separated by a hyphen `-` or (if the feature starts with an underscore `_`) by an underscore.
+- `${arch}` optionally you can reference a certain architecture `amd64` or `arm64`. It should be the last part of the flavor that is built.
 
 You can combine multiple platforms and features as needed.
 
@@ -58,10 +58,17 @@ This requires setting up [binfmt_misc](https://docs.kernel.org/admin-guide/binfm
 
 On most distributions, you can install QEMU user static to set up binfmt_misc handlers. For example, on Debian, use the command `apt install qemu-user-static`.
 
-### Secureboot
+### Secureboot / Trustedboot / TPM2
 
-If you intend to build targets with the `_secureboot` feature, you must first build the secureboot certificates.
-Run the command `./cert/build` to generate the secureboot certificates.
+If you intend to build targets with the `_tpm2` and/or `_trustedboot` feature, you must first build the certificates.
+Run the command `./cert/build` to generate the certificates.
+
+This will build the certificates in a container and should work regardless of your host operating system, with the only requirement being a suitable container runtime.
+
+> [!TIP]
+> Don't use the `Makefile` in `cert` directly.
+> Always use the `./cert/build` script instead.
+> If you have issues with running `./cert/build`, try running `./cert/build clean` first.
 
 By default, the command uses local files as the private key storage. However, you can configure it to use the AWS KMS key store by using the `--kms` flag. Note that valid AWS credentials need to be configured using the standard AWS environment variables.
 

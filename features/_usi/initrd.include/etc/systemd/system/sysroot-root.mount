@@ -1,0 +1,5 @@
+[Mount]
+What=tmpfs
+Where=/sysroot/root
+Type=tmpfs
+Options=size=128M,mode=0700

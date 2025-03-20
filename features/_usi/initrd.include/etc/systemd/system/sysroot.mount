@@ -1,0 +1,4 @@
+[Mount]
+What=/root.img
+Where=/sysroot
+Type=erofs

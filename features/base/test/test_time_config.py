@@ -18,7 +18,7 @@ def test_correct_ntp(client, gcp):
     assert output.rstrip() == "1", "Expected NTP server to be configured to metadata.google.internal"
 
 
-def test_timesync(client, azure):
+def test_timesync(client, azure, non_provisioner_chroot, non_provisioner_qemu):
     """ Ensure symbolic link has been created """
     (exit_code, output, error) = client.execute_command("test -L /dev/ptp_hyperv")
     assert exit_code == 0, f"Expected /dev/ptp_hyperv to be a symbolic link"
@@ -35,8 +35,30 @@ def test_clock(client):
     ), "clock skew should be less than 5 seconds. Local time is %s and remote time is %s" % (local_seconds, remote_seconds)
 
 
-def test_ntp(client, non_azure, non_chroot):
+@pytest.mark.flaky(reruns=3, reruns_delay=10, only_rerun="AssertionError")
+def test_ntp(client, non_azure, non_aws, non_gcp, non_provisioner_chroot):
     """ Azure does not use systemd-timesyncd """
+    """ AWS does use hyperscaler related NTP server which is not reachable in chroot/qemu """
+    """ GCP does use hyperscaler related NTP server which is not reachable in chroot/qemu """
+    (exit_code, output, error) = client.execute_command("timedatectl show")
+    assert exit_code == 0, f"no {error=} expected"
+    lines = output.splitlines()
+    ntp_ok=False
+    ntp_synchronised_ok=False
+    for l in lines:
+        nv = l.split("=")
+        if nv[0] == "NTP" and nv[1] == "yes":
+            ntp_ok = True
+        if nv[0] == "NTPSynchronized" and nv[1] == "yes":
+            ntp_synchronised_ok = True
+    assert ntp_ok, "NTP not activated"
+    assert ntp_synchronised_ok, "NTP not synchronized"
+
+
+@pytest.mark.flaky(reruns=3, reruns_delay=10, only_rerun="AssertionError")
+def test_ntp_hyperscaler(client, aws, gcp, non_provisioner_chroot, non_provisioner_qemu):
+    """ AWS does use hyperscaler related NTP server which is not reachable in chroot/qemu """
+    """ GCP does use hyperscaler related NTP server which is not reachable in chroot/qemu """
     (exit_code, output, error) = client.execute_command("timedatectl show")
     assert exit_code == 0, f"no {error=} expected"
     lines = output.splitlines()

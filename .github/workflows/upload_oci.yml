@@ -31,11 +31,12 @@ jobs:
       packages: write
     environment: oidc_aws_s3_upload
     strategy:
+      max-parallel: 5
       fail-fast: false
       matrix: ${{ fromJson(needs.generate_matrix_publish.outputs.matrix) }}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # pin@v4
+      - uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
         with:
           role-to-assume: ${{ secrets.role }}
           role-session-name: ${{ secrets.session }}
@@ -62,17 +63,37 @@ jobs:
           python-version: "3.12"
       - name: Install glcli util
         run: |
-          git clone --depth 1 --branch 0.6.2 https://github.com/gardenlinux/python-gardenlinux-cli.git
+          git clone --depth 1 --branch 0.6.3 https://github.com/gardenlinux/python-gardenlinux-cli.git
           mv python-gardenlinux-cli /opt/glcli
           pip install -r /opt/glcli/requirements.txt
       - name: Install cosign
-        uses: sigstore/cosign-installer@v3.7.0
+        uses: sigstore/cosign-installer@v3.8.1
         with:
           cosign-release: 'v2.4.1'
       - name: push using the glcli util
         run: |
           mkdir -p manifests
-          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir ${{ env.cname }} --container ghcr.io/${{ github.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest --manifest_file manifests/oci_manifest_entry_${{ env.cname }}.json
+          max_retries=3
+          retry_count=0
+          exit_code=0
+          until [ $retry_count -ge $max_retries ]; do
+            if output=$(GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir ${{ env.cname }} --container ghcr.io/${{ github.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest --manifest_file manifests/oci_manifest_entry_${{ env.cname }}.json 2>&1); then
+              echo "$output"
+              exit 0
+            elif echo "$output" | grep -q "Bad Gateway"; then
+              retry_count=$((retry_count+1))
+              exit_code=1
+              echo "Bad Gateway detected, retry $retry_count/$max_retries"
+              sleep 10
+            else
+              echo "Fatal error: $output"
+              exit $exit_code
+            fi
+          done
+          if [ $exit_code -ne 0 ]; then
+            echo "Failed after $max_retries retries"
+            exit 1
+          fi
       - name: Upload oci manifest artifact
         uses: actions/upload-artifact@v4
         with:

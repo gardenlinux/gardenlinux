@@ -1,0 +1,12 @@
+[Unit]
+Requires=systemd-repart.service
+After=systemd-repart.service
+After=sysroot.mount
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/cryptsetup open --type plain --cipher aes-xts-plain64 --key-size 512 --key-file /dev/random /dev/disk/by-partlabel/EPHEMERAL ephemeral
+ExecStart=/usr/bin/dd if=/dev/zero of=/dev/mapper/ephemeral bs=1M count=1
+ExecStart=/usr/sbin/mkfs.ext4 -O '^has_journal' -d /sysroot/var /dev/mapper/ephemeral

@@ -16,5 +16,5 @@ from helper.tests.debian_cis import DebianCIS
     ]
 )
 
-def test_debian_cis(client, args, non_chroot):
+def test_debian_cis(client, args, non_provisioner_chroot):
     DebianCIS(client, args)

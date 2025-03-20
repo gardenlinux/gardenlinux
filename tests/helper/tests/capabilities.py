@@ -2,7 +2,7 @@ from helper.utils import read_test_config
 import string
 import re
 
-def capabilities(client, testconfig, non_chroot):
+def capabilities(client, testconfig, non_provisioner_chroot):
     """ Test if only the defined capabilities are set"""
     (exit_code, output, error) = client.execute_command(
         "sudo -u root find /boot /etc /usr /var -type f -exec /usr/sbin/getcap {} \\;", quiet=True)
@@ -16,7 +16,9 @@ def capabilities(client, testconfig, non_chroot):
 
     cap_found = []
     cap_notfound = []
+
     for line in output.splitlines():
+        match = None
         line.strip(string.whitespace)
         for cap in capabilities:
             match = re.fullmatch(cap, line)

@@ -21,6 +21,12 @@ done < "$name/$name.release"
 
 meta_yml="$(mktemp --suffix=.yaml)"
 
+if grep _trustedboot <<< "$GARDENLINUX_FEATURES" &> /dev/null; then
+	secboot_feature=true
+else
+	secboot_feature=false
+fi
+
 cat << EOF >> "$meta_yml"
 architecture: '$arch'
 base_image: null
@@ -30,6 +36,7 @@ gardenlinux_epoch: $(garden-version --major "$GARDENLINUX_VERSION")
 logs: null
 modifiers: [$GARDENLINUX_FEATURES]
 platform: '$platform'
+secureboot: $secboot_feature
 published_image_metadata: null
 s3_bucket: '$bucket'
 s3_key: 'meta/singles/$name'

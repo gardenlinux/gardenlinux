@@ -1,0 +1,8 @@
+[Unit]
+Wants=systemd-cryptsetup-var.service
+After=systemd-cryptsetup-var.service
+
+[Mount]
+What=/dev/mapper/var
+Where=/sysroot/var
+Type=ext4

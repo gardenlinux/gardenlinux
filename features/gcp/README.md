@@ -10,6 +10,8 @@ This feature creates a GCP compatible image artifact as an `.raw` file.
 To be platform compliant smaller adjustments like defining the platform related clocksource config, networking config etc. are done.
 The artifact includes `cloud-init` and `amazon-ec2-utils` for orchestrating the image.
 
+This feature installs google cloud configurations via the https://github.com/GoogleCloudPlatform/guest-configs package.
+
 ### Uploading Image to GCP
 
 - create compressed tar image (disk must be called disk.raw)

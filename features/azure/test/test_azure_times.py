@@ -3,7 +3,7 @@ from helper.utils import get_architecture
 from helper.sshclient import RemoteClient
 
 
-def test_startup_time(client, non_chroot, non_kvm):
+def test_startup_time(client, non_provisioner_chroot, non_kvm):
     """ Test for startup time """
     tolerated_kernel_time = 30
     tolerated_userspace_time = 60

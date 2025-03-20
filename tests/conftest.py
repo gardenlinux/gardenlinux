@@ -5,9 +5,8 @@ import time
 import yaml
 import sys
 import os
-import sys
 import re
-
+from pathlib import Path
 
 from typing import Iterator
 from helper.sshclient import RemoteClient
@@ -18,8 +17,7 @@ from dataclasses import dataclass
 from _pytest.config.argparsing import Parser
 
 from platformSetup.chroot import CHROOT
-from platformSetup.firecracker import FireCracker
-from platformSetup.kvm import KVM
+from platformSetup.qemu import QEMU
 from platformSetup.manual import Manual
 
 logger = logging.getLogger(__name__)
@@ -29,7 +27,12 @@ def pytest_addoption(parser: Parser):
     parser.addoption(
         "--iaas",
         action="store",
-        help="Infrastructure the tests should run on",
+        help="(DEPRECATED: use --provisioner instead) What Infrastructure the tests should be provisioned on to run.",
+    )
+    parser.addoption(
+        "--provisioner",
+        action="store",
+        help="What Infrastructure the tests should be provisioned on to run.",
     )
     parser.addoption(
         "--configfile",
@@ -47,7 +50,12 @@ def pytest_addoption(parser: Parser):
         nargs="?",
         help="URI for the image to be tested (overwrites value in config.yaml)"
     )
-
+    parser.addoption(
+        "--create-only",
+        action="store_true", 
+        default=False,
+        help="Only create and set up the test resources without running tests (default: False)"
+    )
 
 @pytest.fixture(scope="session")
 def pipeline(pytestconfig):
@@ -55,12 +63,35 @@ def pipeline(pytestconfig):
         return True
     return False
 
+@pytest.fixture(scope="session")
+def provisioner(pytestconfig):
+    """Get the provisioner to use, with backwards compatibility for --iaas."""
+    if pytestconfig.getoption('provisioner'):
+        return pytestconfig.getoption('provisioner')
+    elif pytestconfig.getoption('iaas'):
+        logger.warning("The --iaas option is deprecated. Please use --provisioner instead.")
+        return pytestconfig.getoption('iaas')
+    pytest.exit("Need to specify which provisioner to use (--provisioner).", 1)
 
 @pytest.fixture(scope="session")
 def iaas(pytestconfig):
+    """Deprecated: Use provisioner fixture instead."""
     if pytestconfig.getoption('iaas'):
+        logger.warning("The --iaas option is deprecated. Please use --provisioner instead.")
         return pytestconfig.getoption('iaas')
-    pytest.exit("Need to specify which IaaS to test on.", 1)
+    return pytestconfig.getoption('provisioner')
+
+@pytest.fixture(scope="session")
+def platform(pytestconfig, testconfig):
+    """Get the platform to test on."""
+    if 'platform' in testconfig:
+        return testconfig['platform']
+    elif pytestconfig.getoption('provisioner'):
+        return pytestconfig.getoption('provisioner')
+    elif pytestconfig.getoption('iaas'):
+        logger.warning("The --iaas option is deprecated. Please use --provisioner instead.")
+        return pytestconfig.getoption('iaas')
+    pytest.exit("Need to specify which platform (in configfile) or provisioner (via --provisioner) to test on.", 1)
 
 
 @pytest.fixture(scope="session")
@@ -73,7 +104,6 @@ def image_suffix(iaas):
         "openstack-ccee": "rootfs.vmdk"
     }
     return image_suffixes[iaas]
-
 
 
 @pytest.fixture(scope="session")
@@ -140,7 +170,7 @@ def testconfig(pipeline, iaas, pytestconfig):
             pass
         elif iaas == 'firecracker':
             pass
-        elif iaas == 'kvm':
+        elif iaas == 'qemu':
             pass
         elif iaas == 'manual':
             pass
@@ -202,54 +232,60 @@ def gcp_credentials(testconfig, pipeline, request):
 
 
 @pytest.fixture(scope="session")
-def local(iaas):
-    logger.info(f"Testconfig for {iaas=} is {testconfig}")
+def client(testconfig, provisioner, imageurl, request) -> Iterator[RemoteClient]:
+    """Create and manage the test client resources"""
+    logger.info(f"Testconfig for {provisioner=} is {testconfig}")
     test_name = testconfig.get('test_name', f"gl-test-{time.strftime('%Y%m%d')}-{os.urandom(2).hex()}")
+    create_only = request.config.getoption("--create-only")
+    
+    try:
+       if provisioner == "openstack-ccee":
+           from platformSetup.openstackccee import OpenStackCCEE
+           yield from OpenStackCCEE.fixture(testconfig)
+       elif provisioner == "chroot":
+           yield from CHROOT.fixture(testconfig)
+       elif provisioner == "qemu":
+           yield from QEMU.fixture(testconfig)
+       elif provisioner == "manual":
+           yield from Manual.fixture(testconfig)
+       elif provisioner == "local":
+           yield testconfig
+       else:
+           raise ValueError(f"invalid {provisioner=}")
+    finally:
+       if create_only:
+           logger.info("Resource creation complete")
+           pytest.exit("Resource creation complete", 0)
 
+def create_resource_test(client):
+    """Test that ensures the client fixture runs for resource creation"""
+    pass
 
-@pytest.fixture(scope="session")
-def client(testconfig, iaas, imageurl, request) -> Iterator[RemoteClient]:
-    logger.info(f"Testconfig for {iaas=} is {testconfig}")
-    test_name = testconfig.get('test_name', f"gl-test-{time.strftime('%Y%m%d')}-{os.urandom(2).hex()}")
-    if iaas == "aws":
-        from platformSetup.aws import AWS
-        session = request.getfixturevalue('aws_session')
-        yield from AWS.fixture(session, testconfig, imageurl, test_name)
-    elif iaas == "gcp":
-        from platformSetup.gcp import GCP
-        
-        credentials = request.getfixturevalue('gcp_credentials')
-        logger.info("Requesting GCP fixture")
-        yield from GCP.fixture(credentials, testconfig, imageurl, test_name)
-    elif iaas == "azure":
-        from platformSetup.azure import AZURE
-        credentials = request.getfixturevalue('azure_credentials')
-        yield from AZURE.fixture(credentials, testconfig, imageurl, test_name)
-    elif iaas == "openstack-ccee":
-        from platformSetup.openstackccee import OpenStackCCEE
-        yield from OpenStackCCEE.fixture(testconfig)
-    elif iaas == "chroot":
-        yield from CHROOT.fixture(testconfig)
-    elif iaas == "firecracker":
-        yield from FireCracker.fixture(testconfig)
-    elif iaas == "kvm":
-        yield from KVM.fixture(testconfig)
-    elif iaas == "ali":
-        from platformSetup.ali import ALI
-        yield from ALI.fixture(testconfig, test_name)
-    elif iaas == "manual":
-        yield from Manual.fixture(testconfig)
-    elif iaas == "local":
-        yield testconfig
-    else:
-        raise ValueError(f"invalid {iaas=}")
-
-
+def create_resource_module(session):
+    """Module and test for resource creation"""
+    import _pytest.python
+    
+    module = _pytest.python.Module.from_parent(
+        parent=session,
+        path=Path("resource_creation_test.py")
+    )
+    
+    return _pytest.python.Function.from_parent(
+        name="test_resource_creation",
+        parent=module,
+        callobj=create_resource_test
+    )
 
 def pytest_collection_modifyitems(config, items):
     """Skip tests that belong to a feature that is not enabled in the test config"""
+    if config.getoption("--create-only"):
+        # Replace all items with our resource creation test
+        session = items[0].session if items else config.pluginmanager.get_plugin("session")
+        items[:] = [create_resource_module(session)]
+        return
+
     skip = pytest.mark.skip(reason="test is not part of the enabled features")
-    iaas = config.getoption("--iaas")
+    provisioner = config.getoption("--provisioner") or config.getoption("--iaas")
     config_file = config.getoption("--configfile")
 
     try:
@@ -259,8 +295,8 @@ def pytest_collection_modifyitems(config, items):
         logger.error(f"can not open config file {config_file}")
         pytest.exit(err, 1)
 
-    if not iaas == 'local':
-        features = config_options[iaas].get("features", [])
+    if not provisioner == 'local':
+        features = config_options[provisioner].get("features", [])
     else:
         features = []
 
@@ -284,9 +320,6 @@ def pytest_collection_modifyitems(config, items):
         if len(disabled) != 0:
             item.add_marker(pytest.mark.skip(reason=f"test is disabled by feature " +
                                                     f"{', '.join(disabled)}"))
-        
-
-
 
 @pytest.fixture
 def features(client):
@@ -301,180 +334,17 @@ def features(client):
     yield features.split(','), current[0]
 
 
-@pytest.fixture
-def non_ali(iaas):
-    if iaas == 'ali':
-        pytest.skip('test not supported on ali')
+# all configuration for our test has been split into smaller parts.  
+pytest_plugins = [
+     "conftests.architecture",
+     "conftests.elements",
+     "conftests.features",
+     "conftests.miscellaneous",
+     "conftests.platforms",
+     "conftests.provisioner",
+  ]
 
-@pytest.fixture
-def ali(iaas):
-    if iaas != 'ali':
-        pytest.skip('test only supported on ali')
-
-@pytest.fixture
-def non_azure(iaas):
-    if iaas == 'azure':
-        pytest.skip('test not supported on azure')
-
-@pytest.fixture
-def azure(iaas):
-    if iaas != 'azure':
-        pytest.skip('test only supported on azure')
-
-@pytest.fixture
-def non_aws(iaas):
-    if iaas == 'aws':
-        pytest.skip('test not supported on aws')
-
-@pytest.fixture
-def aws(iaas):
-    if iaas != 'aws':
-        pytest.skip('test only supported on aws')
-
-@pytest.fixture
-def non_gcp(iaas):
-    if iaas == 'gcp':
-        pytest.skip('test not supported on gcp')
-
-@pytest.fixture
-def gcp(iaas):
-    if iaas != 'gcp':
-        pytest.skip('test only supported on gcp')
-
-@pytest.fixture
-def non_firecracker(iaas):
-    if iaas == 'firecracker':
-        pytest.skip('test not supported on firecracker')
-
-@pytest.fixture
-def firecracker(iaas):
-    if iaas != 'firecracker':
-        pytest.skip('test only supported on firecracker')
-
-@pytest.fixture
-def non_kvm(iaas):
-    if iaas == 'kvm':
-        pytest.skip('test not supported on kvm')
-
-@pytest.fixture
-def kvm(iaas):
-    if iaas != 'kvm':
-        pytest.skip('test only supported on kvm')
-
-@pytest.fixture
-def non_chroot(iaas):
-    if iaas == 'chroot':
-        pytest.skip('test not supported on chroot')
-
-@pytest.fixture
-def chroot(iaas):
-    if iaas != 'chroot':
-        pytest.skip('test only supported on chroot')
-
-@pytest.fixture
-def non_local(iaas):
-    if iaas == 'local':
-        pytest.skip('test not supported on local')
-
-@pytest.fixture
-def local(iaas):
-    if iaas != 'local':
-        pytest.skip('test only supported on local')
-
-@pytest.fixture
-def non_openstack(iaas):
-    if iaas == 'openstack-ccee':
-        pytest.skip('test not supported on openstack')
-
-@pytest.fixture
-def openstack(iaas):
-    if iaas != 'openstack-ccee':
-        pytest.skip('test only supported on openstack')
-
-@pytest.fixture
-def non_hyperscalers(iaas):
-    if iaas == 'aws' or iaas == 'gcp' or iaas == 'azure' or iaas == 'ali':
-        pytest.skip(f"test not supported on hyperscaler {iaas}")
-
-@pytest.fixture
-def ccee(iaas):
-    if iaas != 'openstack-ccee' and iaas != 'openstack-baremetal-ccee':
-        pytest.skip(f"test only supported on ccee")
-
-@pytest.fixture
-def non_ccee(iaas):
-    if iaas == 'openstack-ccee' or iaas == 'openstack-baremetal-ccee':
-        pytest.skip(f"test not supported on ccee")
-
-# This fixture is an alias of "chroot" but does not use the "chroot" env.
-# However, it only needs the underlying container for its tests.
-@pytest.fixture
-def container(iaas):
-    if iaas != 'chroot':
-        pytest.skip('test only supported on containers')
-
+# THis is a helper function some tests invoke.
 @pytest.fixture
 def openstack_flavor():
     return OpenStackCCEE.instance().flavor
-
-@pytest.fixture
-def non_amd64(client):
-    (exit_code, output, error) = client.execute_command("dpkg --print-architecture", quiet=True)
-    if exit_code != 0:
-        logger.error(error)
-        sys.exit(exit_code)
-    if "amd64" in output:
-        pytest.skip('test not supported on amd64 architecture')
-
-@pytest.fixture
-def non_arm64(client):
-    (exit_code, output, error) = client.execute_command("dpkg --print-architecture", quiet=True)
-    if exit_code != 0:
-        logger.error(error)
-        sys.exit(exit_code)
-    if "arm64" in output:
-        pytest.skip('test not supported on arm64 architecture')
-
-@pytest.fixture
-def non_metal(testconfig):
-    features = testconfig.get("features", [])
-    if "metal" in features:
-        pytest.skip('test not supported on metal')
-
-@pytest.fixture
-def non_feature_gardener(testconfig):
-    features = testconfig.get("features", [])
-    if "gardener" in features:
-        pytest.skip('test is not supported on gardener')
-
-@pytest.fixture
-def non_feature_githubActionRunner(testconfig):
-    features = testconfig.get("features", [])
-    if "githubActionRunner" in features:
-        pytest.skip('test is not supported on githubActionRunner')
-
-@pytest.fixture
-def non_dev(testconfig):
-    features = testconfig.get("features", [])
-    if "_dev" in features:
-        pytest.skip('test not supported on dev')
-
-@pytest.fixture
-def non_vhost(testconfig):
-    features = testconfig.get("features", [])
-    if "vhost" in features:
-        pytest.skip('test not supported with vhost feature enabled')
-
-@pytest.fixture
-# After solving #1240 define "firecracker" as IAAS
-def firecracker(testconfig):
-    features = testconfig.get("features", [])
-    if "firecracker" in features:
-        skip_msg = "Currently unsupported. Please see: https://github.com/gardenlinux/gardenlinux/issues/1240"
-        pytest.skip(skip_msg)
-
-@pytest.fixture
-def non_container(testconfig):
-    features = testconfig.get("features", [])
-    if "container" in features:
-        pytest.skip('test is not supported on container')
