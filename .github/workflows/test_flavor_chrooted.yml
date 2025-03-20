@@ -28,8 +28,8 @@ jobs:
           submodules: true
       - uses: ./.github/actions/setup
         with:
-          arch: "${{ inputs.arch }}"
-      - uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v4.2.2
+          arch: ${{ inputs.arch }}
+      - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
           path: |
             COMMIT
@@ -44,23 +44,12 @@ jobs:
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
         with:
           name: build-${{ inputs.flavor }}-${{ inputs.arch }}
-      - name: Download test container cache
-        uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v4.2.2
-        with:
-          path: test.oci
-          key: test_container:${{ inputs.arch }}-${{ github.run_id }}
-          fail-on-cache-miss: true
-      - name: Prepare test environment
-        run: |
-          tar -C ".build/" -xzf "$CNAME.tar.gz"
-          rm "$CNAME.tar.gz"
-
-          podman load < test.oci
-          rm test.oci
       - name: Test
         run: |
-          make ${{ inputs.flavor }}-${{ inputs.arch }}-test
-          cd ${{ github.workspace }}
+          tar -C .build -xzf $CNAME.tar.gz
+          rm "$CNAME.tar.gz"
+
+          make --directory=tests ${{ inputs.flavor }}-${{ inputs.arch }}-chroot-test
       # chroot.test.xml is written in the entrypoint tests/init
       - name: Rename test results
         if: always()
@@ -77,10 +66,3 @@ jobs:
           path: |
             .build/${{ env.CNAME }}.chroot.test.log
             .build/${{ env.CNAME }}.chroot.test.xml
-      - name: Pack build artifacts for upload
-        run: tar -cSzvf "$CNAME.tar.gz" -C .build .
-      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
-        with:
-          name: build-${{ inputs.flavor }}-${{ inputs.arch }}
-          overwrite: true
-          path: ${{ env.CNAME }}.tar.gz

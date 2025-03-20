@@ -1,4 +1,7 @@
 name: build_kmodbuild_container
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-build-kmodbuild-container
+  cancel-in-progress: true
 on:
   workflow_call:
     inputs:
@@ -27,11 +30,16 @@ jobs:
         id: versions
         run: |
           version="$(bin/garden-version "${{ inputs.version }}")"
+
+          if [ "$version" == "today" ]; then
+            version="$(bin/garden-version now)"
+          fi
+
           snapshot="$(gh api "/repos/gardenlinux/repo/contents/.container?ref=$version" | jq -r '.content' | base64 -d)"
 
-          echo -e "base=ghcr.io/${{ github.repository }}:$version" | tee "$GITHUB_OUTPUT"
-          echo -e "snapshot=$snapshot" | tee "$GITHUB_OUTPUT"
-          echo -e "version=$version" | tee "$GITHUB_OUTPUT"
+          echo -e "base=ghcr.io/${{ github.repository }}:$version" | tee -a "$GITHUB_OUTPUT"
+          echo -e "snapshot=$snapshot" | tee -a "$GITHUB_OUTPUT"
+          echo -e "version=$version" | tee -a "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Build kernel module build dev container (${{ matrix.arch }})
@@ -47,8 +55,8 @@ jobs:
           podman build --arch ${{ matrix.arch }} --build-arg base="$base" --build-arg snapshot="$snapshot" -t ghcr.io/${{ github.repository }}/kmodbuild:${{ matrix.arch }}-${version} images/kmodbuild
 
           podman save --format oci-archive ghcr.io/${{ github.repository }}/kmodbuild:${{ matrix.arch }}-${version} > kmodbuild_container_${{ matrix.arch }}.oci
-      - name: Upload kernel module build dev container (${{ matrix.arch }})
-        uses: actions/cache/save@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v4.2.2
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
         with:
-          key: kmodbuild-container-${{ matrix.arch }}
+          name: kmodbuild-container-${{ matrix.arch }}
           path: kmodbuild_container_${{ matrix.arch }}.oci
+          if-no-files-found: error

@@ -15,7 +15,7 @@ jobs:
     environment: oidc_platform_tests
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-    
+
     steps:
       - id: 'auth_aws'
         name: 'Authenticate to AWS'
@@ -47,7 +47,7 @@ jobs:
     environment: oidc_platform_tests
     env:
       IMAGE: ghcr.io/gardenlinux/gardenlinux/platform-test-tofu:latest
-    
+
     strategy:
       fail-fast: false
       matrix:
@@ -125,7 +125,7 @@ jobs:
           flavor="${workspace%-????????}"
           echo "Processing workspace: $workspace"
           echo "flavor: $flavor"
-          
+
           podman run --rm \
             -v ${PWD}:/gardenlinux \
             -v ~/.ssh:/root/.ssh:ro \

@@ -1,15 +1,11 @@
 name: build_platform_test_images
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-build-platform-test-images
+  cancel-in-progress: true
 on:
   push:
     paths:
-      #- '.github/workflows/build_platform_test_images.yml'
-      - 'tests/Pipfile*'
-      - 'tests/images/Makefile'
-      - 'tests/images/platform-test/**'
-      - 'tests/images/platform-test-base/**'
-  pull_request:
-    paths:
-      #- '.github/workflows/build_platform_test_images.yml'
+      - '.github/workflows/build_platform_test_images.yml'
       - 'tests/Pipfile*'
       - 'tests/images/Makefile'
       - 'tests/images/platform-test/**'
@@ -23,15 +19,16 @@ on:
       build:
         type: boolean
         default: true
-      force_build:
+      push:
         type: boolean
         default: false
-      force_release:
+      push_latest:
         type: boolean
         default: false
       platforms:
         type: string
-        description: 'JSON array of platforms to build'
+      archs:
+        type: string
       platform_test_tag:
         description: "Tag to run platform-test containers. 'latest', Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
         type: string
@@ -43,24 +40,34 @@ on:
         type: string
         default: nightly
       build:
-        description: "Download images from S3"
         type: boolean
         default: false
-      force_build:
+        description: 'Build images'
+      push:
         type: boolean
         default: false
-      force_release:
+        description: 'Push images'
+      push_latest:
         type: boolean
         default: false
+        description: 'Push latest tag'
       platforms:
         type: string
         description: 'JSON array of platforms to build'
+      archs:
+        type: string
+        description: 'JSON array of architectures to build'
       platform_test_tag:
         description: "Tag to run platform-test containers. 'latest' or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
         type: string
         default: "latest"
 env:
-  DEFAULT_PLATFORMS: '["firecracker", "kvm", "openstack", "tofu"]'
+  DEFAULT_ARCHS: '["amd64", "arm64"]'
+  DEFAULT_PLATFORMS: '["kvm", "openstack", "tofu"]'
+  GARDENLINUX_BUILD_CRE: podman
+  IMAGE_BASE: platform-test
+  IMAGE_REGISTRY: ghcr.io/gardenlinux/gardenlinux
+  PLATFORM_TEST_TAG: ${{ github.event_name == 'push' && 'nightly' || inputs.platform_test_tag }}
 jobs:
   generate_matrix:
     name: Build platforms matrix
@@ -69,86 +76,251 @@ jobs:
       run:
         shell: bash
     outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
+      arch_matrix: ${{ steps.matrix.outputs.arch_matrix }}
+      platforms_matrix: ${{ steps.matrix.outputs.platforms_matrix }}
     steps:
       - id: matrix
         run: |
+          MATRIX='${{ inputs.archs }}'
+
+          if [[ $(echo "${MATRIX}" | jq -r 'type') != 'array' ]]; then
+            MATRIX='${{ env.DEFAULT_ARCHS }}'
+          fi
+
+          echo "arch_matrix=$MATRIX" | tee -a $GITHUB_OUTPUT
+
           MATRIX='${{ inputs.platforms }}'
 
           if [[ $(echo "${MATRIX}" | jq -r 'type') != 'array' ]]; then
             MATRIX='${{ env.DEFAULT_PLATFORMS }}'
           fi
 
-          echo "matrix=$MATRIX" | tee -a $GITHUB_OUTPUT
-  images:
-    name: Provide platform-test image (${{ matrix.platform }})
+          echo "platforms_matrix=$MATRIX" | tee -a $GITHUB_OUTPUT
+  build_base_images:
+    if: ${{ github.event_name == 'push' || inputs.build }}
+    name: Build platform-test base image
     needs: generate_matrix
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
     defaults:
       run:
         shell: bash
     env:
-      GARDENLINUX_BUILD_CRE: podman
-      VERSION: ${{ inputs.version }}
-      TAG_EXISTS: false
+      GL_VERSION: ${{ github.event_name == 'push' && 'nightly' || inputs.version }}
+      ARCH: ${{ matrix.arch }}
     strategy:
-      fail-fast: false
       matrix:
-        platform: ${{ fromJSON(needs.generate_matrix.outputs.matrix) }}
+        arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
-      - name: Prepare platform-test reference from GitHub
-        if: ${{ inputs.platform_test_tag }} == '' || inputs.build }}
+      - uses: ./.github/actions/setup
+        with:
+          arch: ${{ matrix.arch }}
+      - name: Set build reference
         run: |
-          git rev-parse HEAD | cut -c1-8 | tee COMMIT
-          echo "${{ inputs.version }}" | tee VERSION
-      - name: Prepare platform-test reference from GLRD
-        if: ${{ inputs.platform_test_tag }} != '' && ! inputs.build }}
+          version="$(./bin/garden-version "$version")"
+          echo "$version" | tee VERSION
+          echo "GL_VERSION=$version" >> ${GITHUB_ENV}
+      - name: Build base image (${{ matrix.arch }})
         run: |
-          if [[ "${{ inputs.platform_test_tag }}" == "latest" ]]; then
+          make --directory=tests/images build-platform-test-base
+          podman tag "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${GL_VERSION}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${ARCH}-${PLATFORM_TEST_TAG}"
+      - name: Save base image (${{ matrix.arch }})
+        run: podman save "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${ARCH}-${PLATFORM_TEST_TAG}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${GL_VERSION}" -o "${IMAGE_BASE}-base-${ARCH}.tar"
+      - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        with:
+          path: ${{ env.IMAGE_BASE }}-base-${{ matrix.arch }}.tar
+          key: platform_test_base_${{ matrix.arch }}-${{ github.run_id }}
+  build_images:
+    name: Build platform-test image
+    needs: [ generate_matrix, build_base_images ]
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      GL_VERSION: ${{ github.event_name == 'push' && 'nightly' || inputs.version }}
+      ARCH: ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
+        platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - uses: ./.github/actions/setup
+        with:
+          arch: ${{ matrix.arch }}
+      - name: Set build reference
+        run: |
+          version="$(./bin/garden-version "$version")"
+          echo "$version" | tee VERSION
+          echo "GL_VERSION=$version" >> ${GITHUB_ENV}
+      - name: Load base image (${{ matrix.arch }})
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        with:
+          key: platform_test_base_${{ matrix.arch }}-${{ github.run_id }}
+          path: ${{ env.IMAGE_BASE }}-base-${{ matrix.arch }}.tar
+          fail-on-cache-miss: true
+      - name: Prepare base image (${{ matrix.arch }})
+        run: podman load -i "${IMAGE_BASE}-base-${ARCH}.tar"
+      - name: Make build-platform-test-${{ matrix.platform }} (${{ matrix.arch }})
+        run: |
+          make --directory=tests/images build-platform-test-${{ matrix.platform }}
+          podman tag "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${GL_VERSION}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${ARCH}-${PLATFORM_TEST_TAG}"
+      - name: Save image ${{ matrix.platform }} (${{ matrix.arch }})
+        run: |
+          podman save "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${ARCH}-${PLATFORM_TEST_TAG}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${GL_VERSION}" -o "${IMAGE_BASE}-${{ matrix.platform }}-${ARCH}.tar"
+
+          echo "$GL_VERSION" | tee -a "platform-test.oci-version.txt"
+          echo "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${ARCH}-${PLATFORM_TEST_TAG}" | tee -a "platform-test.oci-tag.txt"
+      - name: Upload image artifact for ${{ matrix.platform }} (${{ matrix.arch }})
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
+        with:
+          name: platform-test-${{ matrix.platform }}-${{ matrix.arch }}
+          path: ${{ env.IMAGE_BASE }}-${{ matrix.platform }}-${{ matrix.arch }}.tar
+          if-no-files-found: error
+      - name: Upload local OCI metadata for ${{ matrix.platform }} (${{ matrix.arch }})
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        with:
+          key: platform_test_container:${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
+          path: |
+            platform-test.oci-version.txt
+            platform-test.oci-tag.txt
+  push_images:
+    if: ${{ github.event_name == 'push' && ( github.ref_name == 'main' || ( inputs.push == true && ( inputs.platform_test_tag != 'latest' || inputs.push_latest == true ) ) ) }}
+    name: Push platform-test images
+    needs: [ generate_matrix, build_images ]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - uses: ./.github/actions/setup
+      - name: Load images (${{ matrix.platform }})
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
+        with:
+          pattern: platform-test-*
+          merge-multiple: true
+      - name: Login to ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
+      - name: Load and push images for ${{ matrix.platform }}
+        run: |
+          # Get architectures from matrix
+          # convert to space separated string
+          ARCH_LIST='${{ needs.generate_matrix.outputs.archs }}'
+          ARCHS=$(echo $ARCH_LIST | tr -d '[]"' | tr ',' ' ')
+
+          # Create manifest list
+          echo podman manifest create "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}"
+          podman manifest create "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}"
+
+          for arch in $ARCHS; do
+            # Load arch arch image
+            if [ -f "${IMAGE_BASE}-${{ matrix.platform }}-${arch}.tar" ]; then
+              podman load -i "${IMAGE_BASE}-${{ matrix.platform }}-${arch}.tar"
+            else
+              echo "Error: Image for ${arch} not found"
+              exit 1
+            fi
+
+            # Push arch images if requested (push=true) or running on main branch
+            if [[ "${{ inputs.push }}" == "true" || "${{ github.ref_name }}" == "main" ]]; then
+              echo podman push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-${PLATFORM_TEST_TAG}"
+              podman push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-${PLATFORM_TEST_TAG}"
+            fi
+            # Push latest arch images if requested (push_latest=true) or running on main branch
+            if [[ "${{ inputs.push_latest }}" == "true" ]]; then
+              echo podman push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-${PLATFORM_TEST_TAG}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-latest"
+              podman push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-${PLATFORM_TEST_TAG}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-latest"
+            fi
+
+            echo podman manifest add "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-${PLATFORM_TEST_TAG}"
+            podman manifest add "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-${PLATFORM_TEST_TAG}"
+          done
+
+          # Push manifest if requested (push=true) or running on main branch
+          if [[ "${{ inputs.push }}" == "true" || "${{ github.ref_name }}" == "main" ]]; then
+            echo podman manifest push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}"
+            podman manifest push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}"
+          fi
+
+          # Push latest manifest if requested (push_latest=true) or running on main branch
+          if [[ "${{ inputs.push_latest }}" == "true" ]]; then
+            echo podman manifest push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:latest"
+            podman manifest push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:latest"
+          fi
+  pull_images_version:
+    if: ${{ github.event_name != 'push' && ! inputs.build }}
+    name: Provide platform-test image reference
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      commit_id: ${{ steps.version_reference.outputs.commit_id }}
+      version: ${{ steps.version_reference.outputs.version }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - name: Prepare reference from GLRD
+        id: version_reference
+        run: |
+          if [[ "${{ env.PLATFORM_TEST_TAG }}" == "latest" ]]; then
             glrd_data="$(./bin/glrd --type stable,patch,nightly,dev --output-format=json --latest)"
           else
             glrd_data="$(./bin/glrd --type stable,patch,nightly,dev --output-format=json --version ${{ inputs.platform_test_tag }})"
           fi
 
-          echo $glrd_data | jq -r '.releases[0].git.commit_short' | tee COMMIT
-          echo $glrd_data | jq -r '(.releases[0].version.major | tostring) + "." + (.releases[0].version.minor | tostring)' | tee VERSION
-      - name: Set VERSION to platform-test reference
-        run: echo "VERSION=$(cat VERSION)" >> ${GITHUB_ENV}
+          COMMIT_ID="$(echo $glrd_data | jq -r '.releases[0].git.commit_short')"
+          VERSION="$(echo $glrd_data | jq -r '(.releases[0].version.major | tostring) + "." + (.releases[0].version.minor | tostring)')"
+
+          echo "commit_id=$COMMIT_ID" | tee -a "$GITHUB_OUTPUT"
+          echo "version=$VERSION" | tee -a "$GITHUB_OUTPUT"
+  pull_images:
+    name: Provide platform-test image
+    needs: [ generate_matrix, pull_images_version ]
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      GL_VERSION: ${{ needs.pull_images_version.outputs.version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
+        platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
       - name: Login to ghcr.io
         run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
       - name: Make pull-platform-test-${{ matrix.platform }}
-        run: |
-          make -j $(nproc) --directory=tests/images GARDENLINUX_BUILD_CRE=podman pull-platform-test-${{ matrix.platform }}
-          LIST_CONTAINER_JSON=$(podman image ls --filter reference=ghcr.io/gardenlinux/gardenlinux/platform-test-${{ matrix.platform }} --format=json)
-
-          if [[ $(echo $LIST_CONTAINER_JSON | jq -r 'length') != "0" ]]; then
-            echo "TAG_EXISTS=true" >> ${GITHUB_ENV}
-          fi
-      # build if tag does not exist, force_build or force_release is set
-      - name: Make build-platform-test-${{ matrix.platform }}
-        run: |
-          if [[ "${TAG_EXISTS}" == false ]] || [[ "${{ inputs.force_build }}" == true ]] || [[ "${{ inputs.force_release }}" == true ]]; then
-            make -j $(nproc) --directory=tests/images GARDENLINUX_BUILD_CRE=podman build-platform-test-${{ matrix.platform }}
-          else
-            echo "Tag for ${VERSION} already exists in ghcr.io/gardenlinux/gardenlinux/platform-test-${{ matrix.platform }} and FORCE_BUILD=false"
-          fi
-      - name: Prepare local platform-test OCI metadata (${{ matrix.platform }})
+        run: make --directory=tests/images pull-platform-test-${{ matrix.platform }}
+      - name: Prepare local OCI metadata for ${{ matrix.platform }} (${{ matrix.arch }})
         id: platform-test-oci-tag
         run: |
-          PLATFORM_TEST_IMAGE_TAG="$(podman image ls --filter reference=ghcr.io/gardenlinux/gardenlinux/platform-test-${{ matrix.platform }} --format=json | jq -r '.[0].Names[0]')"
+          PLATFORM_TEST_IMAGE_TAG="$(podman image ls --filter reference=${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }} --format=json | jq -r '.[0].Names[0]')"
 
-          echo "$VERSION" | tee -a "platform-test.oci-version.txt"
+          echo "$GL_VERSION" | tee -a "platform-test.oci-version.txt"
           echo "${PLATFORM_TEST_IMAGE_TAG}" | tee -a "platform-test.oci-tag.txt"
-      - name: Upload local platform-test OCI metadata (${{ matrix.platform }})
-        uses: actions/cache/save@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v4.2.2
+      - name: Upload local OCI metadata for ${{ matrix.platform }} (${{ matrix.arch }})
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
-          key: platform_test_container:${{ matrix.platform }}-${{ github.run_id }}
+          key: platform_test_container:${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
           path: |
             platform-test.oci-version.txt
             platform-test.oci-tag.txt
-      - name: Make push-release-platform-test-${{ matrix.platform }}
-        if: (github.event.pull_request.merged == true && github.ref_name == 'main') || inputs.force_release
-        run:  Make -j $(nproc) --directory=tests/images GARDENLINUX_BUILD_CRE=podman push-release-platform-test-${{ matrix.platform }}

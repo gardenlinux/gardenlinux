@@ -48,21 +48,21 @@ jobs:
           submodules: true
       - uses: ./.github/actions/setup
         with:
-          arch: "${{ inputs.arch }}"
+          arch: ${{ inputs.arch }}
       - name: Set build reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
       - name: Load bootstrap stage cache
-        uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v4.2.2
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
           path: .build
           key: base-${{ inputs.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: Load cert cache
-        uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v4.2.2
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
-          path: cert
+          path: cert/*.*
           key: cert-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: Write secureboot db arn for kms backed certificates
@@ -93,7 +93,7 @@ jobs:
           name: build-${{ inputs.flavor }}-${{ inputs.arch }}
           path: ${{ env.CNAME }}.tar.gz
           if-no-files-found: error
-      - uses: actions/cache/save@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v4.2.2
+      - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
           path: |
             COMMIT

@@ -32,7 +32,7 @@ jobs:
         with:
           submodules: true
       - uses: ./.github/actions/setup
-      - uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v4.2.2
+      - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
           path: |
             COMMIT
@@ -48,9 +48,9 @@ jobs:
         with:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
       - name: Load cert cache
-        uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v4.2.2
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
-          path: cert
+          path: cert/*.*
           key: cert-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: Add certs to build artifacts
