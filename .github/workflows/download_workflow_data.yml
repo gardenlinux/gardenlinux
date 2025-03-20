@@ -6,6 +6,8 @@ on:
         type: string
         required: true
     outputs:
+      run_id:
+        value: ${{ inputs.run_id }}
       commit_id:
         value: ${{ jobs.workflow_data.outputs.commit_id }}
       flavors_matrix:
