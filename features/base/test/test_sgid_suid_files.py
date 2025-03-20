@@ -28,9 +28,7 @@ import pytest
                  "/usr/bin/passwd,root,root",
                  "/usr/lib/polkit-1/polkit-agent-helper-1,root,root",
                  "/usr/bin/pkexec,root,root",
-                 "/usr/sbin/mount.nfs,root,root",
-                 "/usr/bin/newuidmap,root,root",
-                 "/usr/bin/newgidmap,root,root"
+                 "/usr/sbin/mount.nfs,root,root"
                  ]
         )
     ]
