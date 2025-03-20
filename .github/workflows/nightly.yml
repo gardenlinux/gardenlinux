@@ -26,6 +26,7 @@ jobs:
       flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
       version: ${{ needs.build.outputs.version }}
       platform_test: true
+      bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
     permissions:
       id-token: write
     secrets:
