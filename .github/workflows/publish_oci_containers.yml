@@ -3,6 +3,9 @@ name: publish_oci_containers
 on:
   workflow_call:
     inputs:
+      run_id:
+        type: string
+        required: true
       commit_id:
         type: string
         required: true
@@ -12,7 +15,10 @@ on:
       flavors_matrix:
         type: string
         required: true
-      run_id:
+      bare_flavors_matrix:
+        type: string
+        default: '{"include": []}'
+      original_workflow_name:
         type: string
         required: true
     secrets:
@@ -28,7 +34,7 @@ env:
   GLCLI_VERSION: 0.6.3
 jobs:
   container:
-    name: publish gardenlinux container base image
+    name: Publish container base image
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -107,6 +113,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # @TODO: Replace with input matrix once OCI manifest tooling is ready to update existing ones
         config: [ libc, python, nodejs, sapmachine ]
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
@@ -114,15 +121,11 @@ jobs:
           submodules: true
       - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
         with:
-          name: build-bare-${{ matrix.config }}-amd64
+          pattern: build-bare-${{ matrix.config }}-*
+          merge-multiple: true
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
-        with:
-          name: build-bare-${{ matrix.config }}-arm64
-          github-token: ${{ github.token }}
-          run-id: ${{ inputs.run_id }}
-      - name: Publish bare container image
+      - name: Publish bare flavor image ${{ matrix.config }}
         run: |
           version=$(bin/garden-version "${{ inputs.version }}")
           podman login -u token -p ${{ github.token }} ghcr.io

@@ -1,0 +1,69 @@
+name: build_flavor
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-build-flavor-${{ inputs.bare_flavor }}-${{ inputs.arch }}
+  cancel-in-progress: true
+on:
+  workflow_call:
+    inputs:
+      arch:
+        type: string
+        default: "amd64"
+      bare_flavor:
+        type: string
+        required: true
+      commit_id:
+        type: string
+        required: true
+      version:
+        type: string
+        required: true
+jobs:
+  build:
+    name: Build bare flavor ${{ inputs.bare_flavor }} (${{ inputs.arch }})
+    runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      id-token: write
+    env:
+      CNAME: ''
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - uses: ./.github/actions/setup
+        with:
+          arch: ${{ inputs.arch }}
+      - name: Set build reference
+        run: |
+          echo "${{ inputs.commit_id }}" | tee COMMIT
+          echo "${{ inputs.version }}" | tee VERSION
+      - name: Load bootstrap stage cache
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        with:
+          path: .build
+          key: base-${{ inputs.arch }}-${{ github.run_id }}
+          fail-on-cache-miss: true
+      - name: Update bootstrap stage build artifact timestamps
+        run: |
+          t="$(date '+%s')"
+          find .build -exec touch -d "@$t" {} +
+      - name: Build
+        run: |
+          flavor="${{ inputs.bare_flavor }}"
+          bare_flavor="${flavor//bare-/}"
+
+          ./build_bare_flavors "${bare_flavor}"
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
+        with:
+          name: build-${{ inputs.bare_flavor }}-${{ inputs.arch }}
+          path: .build/bare_flavors/*.oci
+          include-hidden-files: true
+          if-no-files-found: error
+      - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        with:
+          path: |
+            COMMIT
+            VERSION
+          key: build-${{ inputs.bare_flavor }}-${{ inputs.arch }}-${{ github.run_id }}

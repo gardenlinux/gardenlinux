@@ -1,6 +1,8 @@
 name: dev
 on:
   push:
+    branches:
+      - main
     paths-ignore:
       - 'docs/**'
       - '**/README.md'
@@ -34,3 +36,4 @@ jobs:
     with:
       version: ${{ needs.build.outputs.version }}
       flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
+      bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}

@@ -1,4 +1,4 @@
-name: publish_s3
+name: 'Publish to S3'
 on:
   workflow_dispatch:
     inputs:
@@ -7,15 +7,15 @@ on:
         type: number
         required: true
   workflow_run:
-    workflows: [ nightly ]
-    types: [ completed ]
+    workflows: [ 'Build and publish a release', 'nightly' ]
+    types: [ 'completed' ]
 jobs:
   workflow_data:
-    if: ${{ github.event.workflow_run.conclusion == "success" }}
+    if: ${{ github.event.workflow_run.conclusion == "success" || inputs.run_id != "" }}
     name: Download workflow JSON data from trigger
     uses: ./.github/workflows/download_workflow_data.yml
     with:
-      run_id: ${{ github.event.workflow_run.id }}
+      run_id: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
   prepare_certs:
     name: Add certs to S3 artifacts
     runs-on: ubuntu-latest
@@ -78,7 +78,7 @@ jobs:
       commit_id: ${{ needs.workflow_data.outputs.commit_id }}
       version: ${{ needs.workflow_data.outputs.version }}
       flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
-      run_id: ${{ github.event.workflow_run.id }}
+      run_id: ${{ needs.workflow_data.outputs.run_id }}
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_role: ${{ secrets.AWS_IAM_ROLE }}

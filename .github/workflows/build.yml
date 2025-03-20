@@ -13,7 +13,7 @@ on:
         default: false
       flavors_parse_params:
         description: 'Run bin/parse_flavors.py with these parameters'
-        default: '--no-arch --json-by-arch --build --test'
+        default: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
         type: string
       flavors_matrix:
         type: string
@@ -21,6 +21,10 @@ on:
         description: "Tag to run platform-test containers. 'latest' or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
         type: string
         default: "latest"
+      bare_flavors_parse_params:
+        description: 'Run bin/parse_flavors.py with these parameters'
+        default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
+        type: string
     secrets:
       aws_region:
         required: false
@@ -35,6 +39,8 @@ on:
         value: ${{ jobs.flavors_matrix.outputs.matrix }}
       version:
         value: ${{ jobs.requirements.outputs.version }}
+      bare_flavors_matrix:
+        value: ${{ jobs.bare_flavors_matrix.outputs.matrix }}
 jobs:
   requirements:
     name: Prepare build requirements
@@ -84,6 +90,24 @@ jobs:
     uses: ./.github/workflows/build_kmodbuild_container.yml
     with:
       version: ${{ needs.requirements.outputs.version }}
+  bare_flavors_matrix:
+    name: Generate bare flavors matrix to build
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: ${{ inputs.bare_flavors_parse_params }}
+  bare_flavors:
+    needs: [ bootstrap, bare_flavors_matrix, requirements ]
+    name: Build bare flavors
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.bare_flavors_matrix.outputs.matrix )}}
+    with:
+      arch: ${{ matrix.arch }}
+      bare_flavor: ${{ matrix.flavor }}
+      commit_id: ${{ needs.requirements.outputs.commit_id }}
+      version: ${{ needs.requirements.outputs.version }}
+    uses: ./.github/workflows/build_bare_flavor.yml
+    secrets: inherit
   upload_flavor_version_data:
     needs: [ requirements, flavors ]
     name: Store flavor version data
