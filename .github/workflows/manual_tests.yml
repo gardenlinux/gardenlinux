@@ -1,5 +1,5 @@
 # Tests artifacts
-name: manual_tests
+name: Execute tests
 on:
   # triggered manually
   workflow_dispatch:
@@ -94,12 +94,6 @@ jobs:
       build: false
       platforms: '["tofu"]'
       platform_test_tag: ${{ inputs.platform_test_tag || 'nightly' }}
-  download_build_test_containers:
-    needs: download_build_requirements
-    name: Build test containers
-    uses: ./.github/workflows/build_test_containers.yml
-    with:
-      version: ${{ needs.download_build_requirements.outputs.version }}
   download_platform_test_flavors_matrix:
     needs: download_build_requirements
     name: Generate flavors matrix to test
@@ -124,7 +118,6 @@ jobs:
   test_download_platform_test:
     needs: [
       download_build_requirements,
-      download_build_test_containers,
       download_platform_test,
       download_platform_test_flavors_matrix,
       download_platform_test_flavors

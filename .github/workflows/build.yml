@@ -40,20 +40,14 @@ jobs:
     name: Prepare build requirements
     uses: ./.github/workflows/build_requirements.yml
     with:
-      version: ${{ inputs.version || 'now' }}
-      use_kms: ${{ github.event_name == 'workflow_dispatch' && inputs.use_kms || false }}
+      version: ${{ inputs.version == '' && 'now' || inputs.version }}
+      use_kms: ${{ inputs.use_kms }}
   bootstrap:
     needs: requirements
     name: Bootstrap build
     uses: ./.github/workflows/build_bootstrap.yml
     with:
       commit_id: ${{ needs.requirements.outputs.commit_id }}
-      version: ${{ needs.requirements.outputs.version }}
-  test_containers:
-    needs: requirements
-    name: Build test containers
-    uses: ./.github/workflows/build_test_containers.yml
-    with:
       version: ${{ needs.requirements.outputs.version }}
   platform_test_image:
     needs: requirements

@@ -16,6 +16,8 @@ jobs:
     defaults:
       run:
         shell: bash
+    env:
+      VERSION: ${{ inputs.version }}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
@@ -29,8 +31,6 @@ jobs:
           run-id: ${{ inputs.run_id }}
       - name: Publish kernel module build dev container
         run: |
-          version=$(bin/garden-version "${{ inputs.version }}")
-
           for oci_archive in *.oci; do
             podman load < ${oci_archive}
             rm ${oci_archive}
@@ -38,7 +38,7 @@ jobs:
 
           podman login -u token -p ${{ github.token }} ghcr.io
 
-          podman manifest create ghcr.io/${{ github.repository }}/kmodbuild:${version}
-          podman manifest add ghcr.io/${{ github.repository }}/kmodbuild:${version} ghcr.io/${{ github.repository }}/kmodbuild:amd64-${version}
-          podman manifest add ghcr.io/${{ github.repository }}/kmodbuild:${version} ghcr.io/${{ github.repository }}/kmodbuild:arm64-${version}
-          podman push ghcr.io/${{ github.repository }}/kmodbuild:${version}
+          podman manifest create ghcr.io/${{ github.repository }}/kmodbuild:$VERSION
+          podman manifest add ghcr.io/${{ github.repository }}/kmodbuild:$VERSION ghcr.io/${{ github.repository }}/kmodbuild:amd64-$VERSION
+          podman manifest add ghcr.io/${{ github.repository }}/kmodbuild:$VERSION ghcr.io/${{ github.repository }}/kmodbuild:arm64-$VERSION
+          podman push ghcr.io/${{ github.repository }}/kmodbuild:$VERSION
