@@ -1,0 +1,10 @@
+description: 'cluster-api'
+type: element 
+features:
+  include:
+    - server
+    - khost 
+    - _pxe
+  exclude:
+    - _selinux
+    - firewall
