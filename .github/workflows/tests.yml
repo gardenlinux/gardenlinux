@@ -15,6 +15,12 @@ on:
       platform_test:
         type: boolean
         default: false
+      bare_flavors_matrix:
+        type: string
+        required: true
+      bare_flavors_test:
+        type: boolean
+        default: true
     secrets:
       gcp_identity_provider:
         required: false
@@ -68,3 +74,14 @@ jobs:
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
     secrets: inherit
+  test_bare_flavors:
+    name: Test bare flavors
+    uses: ./.github/workflows/test_bare_flavor.yml
+    if: ${{ inputs.bare_flavors_test == true }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(inputs.bare_flavors_matrix )}}
+    with:
+      version: ${{ inputs.version }}
+      arch: ${{ matrix.arch }}
+      flavor: ${{ matrix.flavor }}
