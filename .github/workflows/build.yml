@@ -49,12 +49,6 @@ jobs:
     with:
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
-  test_containers:
-    needs: requirements
-    name: Build test containers
-    uses: ./.github/workflows/build_test_containers.yml
-    with:
-      version: ${{ needs.requirements.outputs.version }}
   platform_test_image:
     needs: requirements
     name: Build platform-test image
