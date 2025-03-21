@@ -88,7 +88,7 @@ jobs:
             '{
               "arch": ($archs | fromjson)
             }' | jq -c)
-          
+
           # Create build matrix (arch x platform)
           BUILD_MATRIX=$(jq -n \
             --arg archs "$ARCHS" \
@@ -97,14 +97,14 @@ jobs:
               "arch": ($archs | fromjson),
               "platform": ($platforms | fromjson)
             }' | jq -c)
-          
+
           # Create push matrix (platforms only)
           PUSH_MATRIX=$(jq -n \
             --arg platforms "$PLATFORMS" \
             '{
               "platform": ($platforms | fromjson)
             }' | jq -c)
-          
+
           echo "build_base_matrix=${BUILD_BASE_MATRIX}" >> $GITHUB_OUTPUT
           echo "build_matrix=${BUILD_MATRIX}" >> $GITHUB_OUTPUT
           echo "push_matrix=${PUSH_MATRIX}" >> $GITHUB_OUTPUT
@@ -122,7 +122,7 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
 
       - uses: ./.github/actions/setup
-        with: 
+        with:
           arch: ${{ matrix.arch }}
 
       - name: Set environment variables for ${{ matrix.platform }} on ${{ matrix.arch }}
@@ -165,7 +165,7 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
 
       - uses: ./.github/actions/setup
-        with: 
+        with:
           arch: ${{ matrix.arch }}
 
       - name: Set environment variables for ${{ matrix.platform }} on ${{ matrix.arch }}
@@ -181,9 +181,10 @@ jobs:
           echo "IMAGE_URL=${IMAGE_URL}" >> ${GITHUB_ENV}
           echo "ARCH=${ARCH}" >> ${GITHUB_ENV}
 
-      - name: Download Base Platform Test Image artifacts
+      - name: Download base image artifact for ${{ matrix.arch }}
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
         with:
+          name: platform-test-base-${{ matrix.arch }}
           path: /tmp
           merge-multiple: true
 
@@ -253,7 +254,7 @@ jobs:
           # Create manifest list
           echo podman manifest create "${IMAGE_URL}:${GL_VERSION}"
           podman manifest create "${IMAGE_URL}:${GL_VERSION}"
-          
+
           for arch in $ARCHS; do
             # Load arch arch image
             if [ -f "/tmp/${IMAGE_NAME}-${arch}.tar" ]; then
@@ -276,15 +277,15 @@ jobs:
 
             # Push latest arch images if requested (push_latest=true) or running on main branch
             if [[ "${{ inputs.push_latest }}" == "true" || "${{ github.ref_name }}" == "main" ]]; then
-              echo podman push "${IMAGE_URL}:${arch}-${GL_VERSION}" "${IMAGE_URL}:${arch}-latest" 
-              podman push "${IMAGE_URL}:${arch}-${GL_VERSION}" "${IMAGE_URL}:${arch}-latest" 
+              echo podman push "${IMAGE_URL}:${arch}-${GL_VERSION}" "${IMAGE_URL}:${arch}-latest"
+              podman push "${IMAGE_URL}:${arch}-${GL_VERSION}" "${IMAGE_URL}:${arch}-latest"
             fi
 
             # Add each arch image to manifest
             echo podman manifest add "${IMAGE_URL}:${GL_VERSION}" "${IMAGE_URL}:${arch}-${GL_VERSION}"
             podman manifest add "${IMAGE_URL}:${GL_VERSION}" "${IMAGE_URL}:${arch}-${GL_VERSION}"
           done
-          
+
           # Push manifest if requested (push=true) or running on main branch
           if [[ "${{ inputs.push }}" == "true" || "${{ github.ref_name }}" == "main" ]]; then
             echo podman manifest push "${IMAGE_URL}:${GL_VERSION}"
