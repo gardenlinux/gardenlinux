@@ -65,7 +65,7 @@ xargs apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts -
 awk '{ print $1; print $1 ":amd64"; print $1 ":arm64" }' < recursive_depends > recursive_depends_extended
 xargs apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances < recursive_depends_extended | grep '^\w' | sort | uniq > recursive_depends_real
 
-sed 's/$/:.*/' < "$exclude_patterns" > exclude_extended
+sed 'p;s/$/:.*/' < "$exclude_patterns" > exclude_extended
 comm -23 recursive_depends_real pkgs | { grep -v -x -f exclude_extended || true; } > recursive_needed
 
 mkdir apt_download
