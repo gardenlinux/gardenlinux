@@ -98,7 +98,7 @@ jobs:
     #     git update-index --assume-unchanged VERSION
 
     - name: load cert cache
-      uses: actions/cache/restore@1bd1e32a3bdc45362d1e726936510720a7c30a57 # pin@v4.2.0
+      uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf # pin@v4.2.2
       with:
         path: cert/*.*
         key: cert-${{ github.run_id }}
