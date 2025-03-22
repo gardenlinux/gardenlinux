@@ -2,70 +2,65 @@ name: upload to S3
 on:
   workflow_call:
     inputs:
+      commit_id:
+        type: string
+        required: true
       version:
         type: string
-        default: today
+        required: true
+      flavors_matrix:
+        type: string
+        required: true
+      run_id:
+        type: string
+        required: true
     secrets:
-      bucket:
+      aws_role:
         required: true
-      region:
+      aws_session:
         required: true
-      role:
+      aws_region:
         required: true
-      session:
+      aws_s3_bucket:
         required: true
 jobs:
-  generate_matrix_publish:
-    uses: ./.github/workflows/generate_matrix.yml
-    with: 
-      flags: '--no-arch --json-by-arch --publish'
   upload_to_s3:
     name: upload to S3
-    needs: [ generate_matrix_publish ]
     runs-on: upload
     defaults:
       run:
         shell: bash
+    env:
+      CNAME: ''
     permissions:
       id-token: write
     environment: oidc_aws_s3_upload
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.generate_matrix_publish.outputs.matrix) }}
+      matrix: ${{ fromJson(inputs.flavors_matrix) }}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
       - uses: ./.github/actions/setup
       - uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
         with:
-          role-to-assume: ${{ secrets.role }}
-          role-session-name: ${{ secrets.session }}
-          aws-region: ${{ secrets.region }}
+          role-to-assume: ${{ secrets.aws_role }}
+          role-session-name: ${{ secrets.aws_session }}
+          aws-region: ${{ secrets.aws_region }}
           role-duration-seconds: 14400
-      - name: set VERSION=${{ inputs.version }}
+      - name: Set flavor version reference
         run: |
-          bin/garden-version "${{ inputs.version }}" | tee VERSION
-          git update-index --assume-unchanged VERSION
-      - name: get cname
+          echo "${{ inputs.commit_id }}" | tee COMMIT
+          echo "${{ inputs.version }}" | tee VERSION
+      - name: Set CNAME
         run: |
           cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
-          echo "cname=$cname" | tee -a "$GITHUB_ENV"
+          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
       - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
         with:
-          # match build-${{ env.cname }} and  platform-test-${{ env.cname }}
-          pattern: "*-${{ env.cname }}"
-      # repack tar.gz from build workflow to contain platform-test logs (if they exist)
-      - name: add platform-test logs to tar.gz
-        run: |
-          ls -l platform-test-${{ env.cname }}/${{ env.cname }}.platform.test.log || true
-          ls -l platform-test-${{ env.cname }}/${{ env.cname }}.platform.test.xml || true
-          if [ -f platform-test-${{ env.cname }}/${{ env.cname }}.platform.test.log ]; then
-            gunzip build-${{ env.cname }}/${{ env.cname }}.tar.gz
-            tar -rvf build-${{ env.cname }}/${{ env.cname }}.tar -C platform-test-${{ env.cname }} ${{ env.cname }}.platform.test.log ${{ env.cname }}.platform.test.xml
-            gzip build-${{ env.cname }}/${{ env.cname }}.tar
-          else
-            echo "no platform-test log files found"
-          fi
-      - name: upload to S3 bucket ${{ secrets.bucket }}
-        run: |
-          cd build-${{ env.cname }}
-          ${{ github.workspace }}/.github/workflows/upload_to_s3.sh ${{ secrets.bucket }} ${{ env.cname }}.tar.gz
+          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - name: Upload to S3 bucket ${{ secrets.aws_s3_bucket }}
+        run: ${{ github.workspace }}/.github/workflows/upload_to_s3.sh ${{ secrets.aws_s3_bucket }} $CNAME.tar.gz

@@ -1,7 +1,20 @@
-name: nightly
+name: manual_release
 on:
-  schedule:
-    - cron: '0 6 * * *'
+  # triggered manually
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Garden Linux Version"
+        type: string
+        required: true
+      platform_test_tag:
+        description: "Tag to run platform-test containers. 'latest' or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
+        type: string
+        default: latest
+      flavors_parse_params:
+        description: 'Run bin/flavors_parse.py with these parameters'
+        default: '--no-arch --json-by-arch --publish --test-platform'
+        type: string
 jobs:
   build:
     name: Build
@@ -9,9 +22,9 @@ jobs:
     permissions:
       id-token: write
     with:
-      version: now
+      version: ${{ inputs.version }}
       use_kms: true
-      platform_test_tag: latest
+      platform_test_tag: ${{ inputs.platform_test_tag }}
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_kms_role: ${{ secrets.SECUREBOOT_DB_IAM_ROLE }}
