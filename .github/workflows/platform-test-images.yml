@@ -226,7 +226,7 @@ jobs:
 
       - name: Set environment variables for ${{ matrix.platform }}
         run: |
-          GL_VERSION="${{ inputs.gl_version }}"
+          GL_VERSION="${{ inputs.gl_version || 'nightly' }}"
           IMAGE_BASE_URL="${IMAGE_REGISTRY}/${IMAGE_BASE}"
           IMAGE_NAME="${IMAGE_BASE}-${{ matrix.platform }}"
           IMAGE_URL="${IMAGE_BASE_URL}-${{ matrix.platform }}"
