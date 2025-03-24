@@ -20,7 +20,7 @@ on:
 jobs:
   build:
     name: Build bare flavor ${{ inputs.bare_flavor }} (${{ inputs.arch }})
-    runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     defaults:
       run:
         shell: bash
@@ -32,9 +32,6 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
-      - uses: ./.github/actions/setup
-        with:
-          arch: ${{ inputs.arch }}
       - name: Set build reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT

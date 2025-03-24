@@ -18,7 +18,7 @@ jobs:
       run_id: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
   prepare_certs:
     name: Add certs to S3 artifacts
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash
@@ -31,7 +31,6 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
-      - uses: ./.github/actions/setup
       - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
           path: |
@@ -103,7 +102,7 @@ jobs:
     name: create GLRD release
     permissions:
       id-token: write
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
         with:

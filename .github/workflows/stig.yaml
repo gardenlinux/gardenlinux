@@ -9,14 +9,13 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         platform: [ kvm, aws, azure, ali, gcp, metal ]
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
       - name: Build the image
         run: ./build ${{ matrix.platform}}-stig
       - name: Upload build logs
