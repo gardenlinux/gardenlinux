@@ -14,7 +14,7 @@ on:
 jobs:
   test:
     name: Test bare flavor ${{ inputs.flavor }} (${{ inputs.arch }})
-    runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     defaults:
       run:
         shell: bash
@@ -26,9 +26,6 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
-      - uses: ./.github/actions/setup
-        with:
-          arch: ${{ inputs.arch }}
       - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
           path: |

@@ -21,7 +21,7 @@ on:
 jobs:
   workflow_data:
     name: Download workflow JSON data from trigger
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       commit_id: ${{ steps.data.outputs.commit_id }}
       version: ${{ steps.data.outputs.version }}

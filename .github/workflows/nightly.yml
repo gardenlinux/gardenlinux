@@ -47,7 +47,7 @@ jobs:
   upload_workflow_data:
     needs: [ build, test ]
     name: Store workflow data
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Store data in JSON file
         run: |

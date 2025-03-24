@@ -73,7 +73,7 @@ env:
 jobs:
   generate_matrix:
     name: Build platforms matrix
-    runs-on: 'ubuntu-latest'
+    runs-on: 'ubuntu-24.04'
     defaults:
       run:
         shell: bash
@@ -102,7 +102,7 @@ jobs:
     if: ${{ github.event_name == 'push' || inputs.build }}
     name: Build platform-test base image
     needs: generate_matrix
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     defaults:
       run:
         shell: bash
@@ -116,9 +116,6 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
-      - uses: ./.github/actions/setup
-        with:
-          arch: ${{ matrix.arch }}
       - name: Set build reference
         run: |
           version="$(./bin/garden-version "$version")"
@@ -137,7 +134,7 @@ jobs:
   build_images:
     name: Build platform-test image
     needs: [ generate_matrix, build_base_images ]
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     defaults:
       run:
         shell: bash
@@ -153,9 +150,6 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
-      - uses: ./.github/actions/setup
-        with:
-          arch: ${{ matrix.arch }}
       - name: Set build reference
         run: |
           version="$(./bin/garden-version "$version")"
@@ -196,7 +190,7 @@ jobs:
     if: ${{ github.event_name == 'push' && ( github.ref_name == 'main' || ( inputs.push == true && ( inputs.platform_test_tag != 'latest' || inputs.push_latest == true ) ) ) }}
     name: Push platform-test images
     needs: [ generate_matrix, build_images ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash
@@ -208,7 +202,6 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
-      - uses: ./.github/actions/setup
       - name: Load images (${{ matrix.platform }})
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
         with:
@@ -265,7 +258,7 @@ jobs:
   pull_images_version:
     if: ${{ github.event_name != 'push' && ! inputs.build }}
     name: Provide platform-test image reference
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash
@@ -293,7 +286,7 @@ jobs:
   pull_images:
     name: Provide platform-test image
     needs: [ generate_matrix, pull_images_version ]
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-latest-arm' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     defaults:
       run:
         shell: bash

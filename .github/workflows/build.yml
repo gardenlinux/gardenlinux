@@ -111,7 +111,7 @@ jobs:
   upload_flavor_version_data:
     needs: [ requirements, flavors ]
     name: Store flavor version data
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Store data in JSON file
         run: |

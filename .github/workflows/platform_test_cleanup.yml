@@ -8,7 +8,7 @@ on:
 jobs:
   collect_workspaces:
     name: Collect Workspaces to Cleanup
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       id-token: write
       contents: read
@@ -40,7 +40,7 @@ jobs:
     needs: collect_workspaces
     if: ${{ needs.collect_workspaces.outputs.matrix != '[]' && needs.collect_workspaces.outputs.matrix != '' }}
     name: Cleanup Workspace
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       id-token: write
       contents: read

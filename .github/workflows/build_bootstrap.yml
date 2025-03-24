@@ -22,17 +22,14 @@ jobs:
       matrix:
         include:
           - arch: amd64
-            os: ubuntu-latest
+            os: ubuntu-24.04
           - arch: arm64
-            os: ubuntu-latest-arm
+            os: ubuntu-24.04-arm
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
-      - uses: ./.github/actions/setup
-        with:
-          arch: ${{ matrix.arch }}
       - name: Set build reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT

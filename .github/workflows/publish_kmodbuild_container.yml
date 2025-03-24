@@ -12,7 +12,7 @@ on:
 jobs:
   kmodbuild_container:
     name: Publish kernel module build dev container
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash
@@ -22,7 +22,6 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
-      - uses: ./.github/actions/setup
       - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
         with:
           pattern: kmodbuild-container-*

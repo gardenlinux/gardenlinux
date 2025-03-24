@@ -30,7 +30,7 @@ jobs:
     env:
       COMMIT_ID: ''
       VERSION: ''
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       commit_id: ${{ steps.version_reference.outputs.commit_id }}
       version: ${{ steps.version_reference.outputs.version }}
@@ -73,7 +73,7 @@ jobs:
   cert:
     name: Provide secure boot certificates
     needs: calculate_version
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash
