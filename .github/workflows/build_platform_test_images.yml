@@ -1,9 +1,11 @@
-name: build_platform_test_images
+name: Build platform-test images
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-build-platform-test-images
   cancel-in-progress: true
 on:
   push:
+    branches:
+      - main
     paths:
       - '.github/workflows/build_platform_test_images.yml'
       - 'tests/Pipfile*'
