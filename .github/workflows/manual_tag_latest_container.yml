@@ -1,14 +1,15 @@
 name: Tag a container as latest manually
 on:
   workflow_dispatch:
-    inputs: 
+    inputs:
       version:
+        description: 'Garden Linux version'
         required: true
         type: string
       is_latest:
+        description: 'Tag as gardenlinux:latest'
         default: false
         type: boolean
-        description: "Tag as gardenlinux:latest"
 
 jobs:
   tag_container_as_latest:
