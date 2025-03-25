@@ -4,21 +4,27 @@ on:
   workflow_call:
     inputs:
       version:
+        description: 'Garden Linux version'
         type: string
         required: true
       flavors_matrix:
+        description: 'Generated GitHub workflow flavors matrix'
         type: string
         required: true
       chroot_test:
+        description: 'Execute chrooted tests'
         type: boolean
         default: true
       platform_test:
+        description: 'Execute platform tests'
         type: boolean
         default: false
       bare_flavors_matrix:
+        description: 'Generated GitHub workflow flavors matrix for bare flavors'
         type: string
         required: true
       bare_flavors_test:
+        description: 'Execute bare flavors container tests'
         type: boolean
         default: true
     secrets:

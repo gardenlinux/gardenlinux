@@ -6,9 +6,11 @@ on:
   workflow_call:
     inputs:
       version:
+        description: 'Garden Linux version'
         type: string
         default: today
       use_kms:
+        description: 'Use Garden Linux KMS'
         type: boolean
         default: false
       flavors_parse_params:
@@ -16,13 +18,14 @@ on:
         default: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
         type: string
       flavors_matrix:
+        description: 'Already generated GitHub workflow flavors matrix'
         type: string
       platform_test_tag:
-        description: "Tag to run platform-test containers. 'latest' or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
+        description: 'Tag to run platform-test containers. "latest" or GL version. Tag must be available in `ghcr.io/gardenlinux/gardenlinux/platform-test-*`'
         type: string
-        default: "latest"
+        default: latest
       bare_flavors_parse_params:
-        description: 'Run bin/parse_flavors.py with these parameters'
+        description: 'Run bin/parse_flavors.py with these parameters for bare flavors'
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
         type: string
     secrets:

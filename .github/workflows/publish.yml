@@ -11,7 +11,7 @@ on:
     types: [ 'completed' ]
 jobs:
   workflow_data:
-    if: ${{ github.event.workflow_run.conclusion == "success" || inputs.run_id != "" }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.conclusion == "success" }}
     name: Download workflow JSON data from trigger
     uses: ./.github/workflows/download_workflow_data.yml
     with:
