@@ -5,15 +5,15 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Garden Linux Version"
+        description: 'Garden Linux version'
         type: string
         default: now
       build:
-        description: "Build for version 'today' instead of downloading version from S3"
+        description: 'Build for version specified in version input parameter instead of downloading it from S3.'
         type: boolean
         default: false
       platform_test_tag:
-        description: "Tag to run platform-test containers. 'latest' or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
+        description: 'Tag to run platform-test containers. "latest" or GL version. Tag must be available in `ghcr.io/gardenlinux/gardenlinux/platform-test-*`'
         type: string
         default: latest
       flavors_parse_params:
@@ -25,11 +25,11 @@ on:
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
         type: string
       chroot_test:
-        description: "Execute chrooted tests"
+        description: 'Execute chrooted tests'
         type: boolean
         default: true
       platform_test:
-        description: "Execute platform tests"
+        description: 'Execute platform tests'
         type: boolean
         default: true
 jobs:
