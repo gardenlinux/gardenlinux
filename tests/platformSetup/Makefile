@@ -1,7 +1,8 @@
 SHELL := /usr/bin/env bash
 .SHELLFLAGS := -euo pipefail -c
 
-ROOT_DIR := $(shell git rev-parse --show-toplevel)
+# get git root - if running as git submodule, return parent project root
+ROOT_DIR := $(shell git rev-parse --show-toplevel --show-superproject-working-tree | tail -n1)
 UUID_FILE := $(ROOT_DIR)/tests/platformSetup/.uuid
 # Check if the .uuid file exists. If it does, read from it, otherwise generate a new uuid/seed
 ifeq ($(wildcard $(UUID_FILE)),)

@@ -1,7 +1,8 @@
 SHELL := /usr/bin/env bash
 .SHELLFLAGS := -euo pipefail -c
 
-ROOT_DIR := $(shell git rev-parse --show-toplevel)
+# get git root - if running as git submodule, return parent project root
+ROOT_DIR := $(shell git rev-parse --show-toplevel --show-superproject-working-tree | tail -n1)
 
 # Generate FLAVORS variable by running the flavor parser
 FLAVORS := $(shell $(ROOT_DIR)/bin/flavors_parse.py --exclude "bare-*" --build --test)
