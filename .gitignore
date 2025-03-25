@@ -20,12 +20,14 @@
 /cert/*.esl
 /cert/*.auth
 /cert/*.aws-efivars
+/cert/*.edk2-efivars
 /cert/GUID.txt
 !/cert/gardenlinux-*-*.crt
 !/cert/gardenlinux-*-*.der
 !/cert/gardenlinux-*-*.chain
 !/cert/gardenlinux-*-*.auth
 !/cert/gardenlinux-*-*.aws-efivars
+!/cert/gardenlinux-*-*.edk2-efivars
 !/cert/gardenlinux-*-repo-sign.pub
 !/cert/gardenlinux.kernel.sign.crt
 !/cert/gardenlinux.sign.pub
