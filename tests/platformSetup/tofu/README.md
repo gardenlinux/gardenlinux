@@ -384,8 +384,8 @@ It is called by the "-tofu-config" make targets but can also be called manually.
 # use default settings
 make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-config
 
-# write a custom test prefix and image via cname
-TEST_PREFIX=myprefix CNAME=gcp-gardener_prod_tpm2_trustedboot-amd64-1695.0-30903f3a \
+# write a custom test prefix and image via IMAGE_NAME (cname)
+TEST_PREFIX=myprefix IMAGE_NAME=gcp-gardener_prod_tpm2_trustedboot-amd64-1695.0-30903f3a \
   make --directory=tests/platformSetup \
   gcp-gardener_prod_tpm2_trustedboot-amd64-tofu-config
 ```
@@ -401,10 +401,10 @@ or
     --test-prefix myprefix \
     --create-tfvars
 
-# Generate for a specific image version
+# Generate for a specific image version via providing the image cname
 ./tests/platformSetup/platformSetup.py \
     --flavors gcp-gardener_prod_trustedboot_tpm2-amd64 \
-    --cname gcp-gardener_prod_tpm2_trustedboot-amd64-1695.0-30903f3a \
+    --image-name gcp-gardener_prod_tpm2_trustedboot-amd64-1695.0-30903f3a \
     --provisioner tofu \
     --test-prefix myprefix \
     --create-tfvars
@@ -417,7 +417,7 @@ The script supports these options:
 
 ```bash
 tests/platformSetup/platformSetup.py --help
-usage: platformSetup.py [-h] --flavor FLAVOR --provisioner {qemu,tofu} [--image-path IMAGE_PATH] [--cname CNAME] [--test-prefix TEST_PREFIX] [--create-tfvars]
+usage: platformSetup.py [-h] --flavor FLAVOR --provisioner {qemu,tofu} [--image-path IMAGE_PATH] [--image_name IMAGE_NAME] [--test-prefix TEST_PREFIX] [--create-tfvars]
 
 Generate pytest config files and SSH login scripts for platform tests.
 
@@ -428,7 +428,13 @@ options:
                         Provisioner to use: 'qemu' for local testing or 'tofu' for Cloud Provider testing.
   --image-path IMAGE_PATH
                         Base path for image files.
-  --cname CNAME         Basename of image file (e.g., 'kvm-gardener_prod-amd64-1312.0-80ffcc87').
+  --image-name IMAGE_NAME
+                        Image name or cname style image reference: (e.g.,
+                        cname: 'kvm-gardener_prod-amd64-1312.0-80ffcc87',
+                        ali image: 'm-01234567890123456',
+                        aws ami: 'ami-01234567890123456',
+                        azure community gallery version: '/communityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/images/gardenlinux-gen2/versions/1443.18.0',
+                        gcp image: 'projects/sap-se-gcp-gardenlinux/global/images/gardenlinux-gcp-gardener-prod-arm64-1443-18-97fd20ac'.  
   --test-prefix TEST_PREFIX
                         Test prefix for OpenTofu variable files.
   --create-tfvars       Create OpenTofu variables file.
@@ -438,6 +444,34 @@ options:
 
 > [!WARNING]
 > Before running tests, ensure the variables file exists with the correct name, matching your test flavor (e.g., `variables.gcp-gardener_prod_trustedboot_tpm2-amd64.tfvars`)
+
+#### Use existing published cloud images from the official gardenlinux releases
+
+You can boot published cloud images from the official gardenlinux releases like e.g. [Release 1592.6](https://github.com/gardenlinux/gardenlinux/releases/tag/1592.6) by referencing the image path and image name in the `IMAGE_PATH` and `IMAGE_NAME` variables.
+
+```bash
+# use an existing image for ali
+IMAGE_PATH=cloud:// IMAGE_NAME=m-d7oaobmhtxwjsw07e3as \
+  make --directory=tests/platformSetup \
+  ali-gardener_prod-amd64-tofu-config
+
+# use an existing image for aws
+IMAGE_PATH=cloud:// IMAGE_NAME=ami-073c0d4753f70877d \
+  make --directory=tests/platformSetup \
+  aws-gardener_prod-amd64-tofu-config
+
+# use an existing image for azure
+IMAGE_PATH=cloud:// IMAGE_NAME=/communityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/images/gardenlinux-gen2/versions/1592.6.0 \
+  make --directory=tests/platformSetup \
+  azure-gardener_prod-amd64-tofu-config
+
+# use an existing image for gcp
+IMAGE_PATH=cloud:// IMAGE_NAME=projects/sap-se-gcp-gardenlinux/global/images/gardenlinux-gcp-gardener-prod-amd64-1592-6-cb05e11f \
+  make --directory=tests/platformSetup \
+  gcp-gardener_prod-amd64-tofu-config
+```
+
+After creating the OpenTofu variables file, you can create the cloud resources with the `tofu-apply` make targets as usual.
 
 ### Creating Cloud Resources with OpenTofu
 

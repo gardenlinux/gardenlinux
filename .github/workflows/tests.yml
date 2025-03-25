@@ -202,7 +202,7 @@ jobs:
         # ssh key generation (if missing)
         test -f ~/.ssh/id_ed25519 || ssh-keygen -t ed25519 -P "" -f ~/.ssh/id_ed25519
         # tf variables generation
-        TEST_PREFIX="gh-actions" CNAME="${{ env.cname }}" make --directory=tests/platformSetup ${FLAVOR}-${ARCH}-tofu-config
+        TEST_PREFIX="gh-actions" IMAGE_NAME="${{ env.cname }}" make --directory=tests/platformSetup ${FLAVOR}-${ARCH}-tofu-config
         # enable S3 backend
         cp "tests/platformSetup/tofu/backend.tf.github" "tests/platformSetup/tofu/backend.tf"
         make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-apply 2>&1 | tee "${{ env.artifact_dir}}/${{ env.cname }}.platform.provisioning.log"
