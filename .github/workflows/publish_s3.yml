@@ -98,7 +98,7 @@ jobs:
       aws_s3_bucket: ${{ secrets.AWS_CN_S3_BUCKET }}
   glrd:
     needs: [ workflow_data, upload_to_s3 ]
-    if: ${{ github.ref == "refs/heads/main" }}
+    if: ${{ github.ref_name == "main" }}
     name: create GLRD release
     permissions:
       id-token: write
