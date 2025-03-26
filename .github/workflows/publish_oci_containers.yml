@@ -68,6 +68,7 @@ jobs:
           run-id: ${{ inputs.run_id }}
       - name: Publish container base image
         run: |
+          is_main=$(! [ "${{ github.ref_name }}" = "main" ]; echo $?)
           version=$(cat VERSION)
 
           podman login -u token -p ${{ github.token }} ghcr.io
@@ -75,8 +76,10 @@ jobs:
           image="$(podman load < ${{ env.CNAME_AMD64 }}.oci | awk '{ print $NF }')"
 
           # Tagging for amd64 nightly
-          echo podman tag "$image" ghcr.io/${{ github.repository }}:amd64-nightly
-          echo podman push ghcr.io/${{ github.repository }}:amd64-nightly
+          if [ $is_main = true ]; then
+            echo podman tag "$image" ghcr.io/${{ github.repository }}:amd64-nightly
+            echo podman push ghcr.io/${{ github.repository }}:amd64-nightly
+          fi
 
           # Tagging for amd64 with version
           echo podman tag "$image" ghcr.io/${{ github.repository }}:amd64-${version}
@@ -86,18 +89,22 @@ jobs:
           image="$(podman load < ${{ env.CNAME_ARM64 }}.oci | awk '{ print $NF }')"
 
           # Tagging for arm64 nightly
-          echo podman tag "$image" ghcr.io/${{ github.repository }}:arm64-nightly
-          echo podman push ghcr.io/${{ github.repository }}:arm64-nightly
+          if [ $is_main = true ]; then
+            echo podman tag "$image" ghcr.io/${{ github.repository }}:arm64-nightly
+            echo podman push ghcr.io/${{ github.repository }}:arm64-nightly
+          fi
 
           # Tagging for arm64 with version
           echo podman tag "$image" ghcr.io/${{ github.repository }}:arm64-${version}
           echo podman push ghcr.io/${{ github.repository }}:arm64-${version}
 
           # Creating and pushing manifest for nightly
-          echo podman manifest create ghcr.io/${{ github.repository }}:nightly
-          echo podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:amd64-nightly
-          echo podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:arm64-nightly
-          echo podman push ghcr.io/${{ github.repository }}:nightly
+          if [ $is_main = true ]; then
+            echo podman manifest create ghcr.io/${{ github.repository }}:nightly
+            echo podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:amd64-nightly
+            echo podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:arm64-nightly
+            echo podman push ghcr.io/${{ github.repository }}:nightly
+          fi
 
           # Creating and pushing manifest for version tag
           echo podman manifest create ghcr.io/${{ github.repository }}:${version}
@@ -127,7 +134,9 @@ jobs:
           run-id: ${{ inputs.run_id }}
       - name: Publish bare flavor image ${{ matrix.config }}
         run: |
+          is_main=$(! [ "${{ github.ref_name }}" = "main" ]; echo $?)
           version=$(bin/garden-version "${{ inputs.version }}")
+
           podman login -u token -p ${{ github.token }} ghcr.io
 
           # Handling amd64 image
@@ -138,8 +147,10 @@ jobs:
           echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
 
           # Tagging and pushing amd64 with nightly
-          echo podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
-          echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
+          if [ $is_main = true ]; then
+            echo podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
+            echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
+          fi
 
           # Handling arm64 image
           image="$(podman load < ${{ matrix.config }}-arm64.oci | awk '{ print $NF }')"
@@ -149,8 +160,10 @@ jobs:
           echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
 
           # Tagging and pushing arm64 with nightly
-          echo podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
-          echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
+          if [ $is_main = true ]; then
+            echo podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
+            echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
+          fi
 
           # Creating and pushing manifest for version tag
           echo podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
@@ -159,10 +172,12 @@ jobs:
           echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
 
           # Creating and pushing manifest for nightly tag
-          echo podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
-          echo podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
-          echo podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
-          echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
+          if [ $is_main = true ]; then
+            echo podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
+            echo podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
+            echo podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
+            echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
+          fi
   flavors:
     name: Publish flavors
     runs-on: ubuntu-24.04
