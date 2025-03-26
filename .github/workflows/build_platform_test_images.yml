@@ -142,7 +142,6 @@ jobs:
       GL_VERSION: ${{ github.event_name == 'push' && 'nightly' || inputs.version }}
       ARCH: ${{ matrix.arch }}
     strategy:
-      fail-fast: false
       matrix:
         arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
@@ -195,7 +194,6 @@ jobs:
       run:
         shell: bash
     strategy:
-      fail-fast: false
       matrix:
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
     steps:
@@ -293,7 +291,6 @@ jobs:
     env:
       GL_VERSION: ${{ needs.pull_images_version.outputs.version }}
     strategy:
-      fail-fast: false
       matrix:
         arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}

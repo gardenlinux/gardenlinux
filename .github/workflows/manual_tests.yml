@@ -44,6 +44,7 @@ jobs:
       bare_flavors_parse_params: ${{ inputs.bare_flavors_parse_params }}
   test:
     needs: build
+    if: ${{ success() || failure() }}
     name: Test flavors built
     uses: ./.github/workflows/tests.yml
     with:

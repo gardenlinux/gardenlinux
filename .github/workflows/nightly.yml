@@ -17,10 +17,22 @@ jobs:
       aws_kms_role: ${{ secrets.SECUREBOOT_DB_IAM_ROLE }}
       aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
       secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
+  build_retry:
+    needs: build
+    if: ${{ always() && needs.build.result == 'failure' }}
+    name: 'Retry checkpoint: Build'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - name: Retry failed build
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
+            return await gitHubLib.dispatchRetryWorkflow(core, github.rest.actions, context, "${{ github.head_ref }}", 5);
   test:
     needs: build
     name: Test
-    if: ${{ success() || failure() }}
     uses: ./.github/workflows/tests.yml
     with:
       flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
@@ -44,6 +56,19 @@ jobs:
       az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       ccc_credentials: ${{ secrets.CCC_CREDENTIALS }}
       tf_encryption: ${{ secrets.TF_ENCRYPTION }}
+  test_retry:
+    needs: test
+    if: ${{ always() && needs.test.result == 'failure' }}
+    name: 'Retry checkpoint: Test'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - name: Retry failed test
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
+            return await gitHubLib.dispatchRetryWorkflow(core, github.rest.actions, context, "${{ github.head_ref }}", 8);
   upload_workflow_data:
     needs: [ build, test ]
     name: Store workflow data
