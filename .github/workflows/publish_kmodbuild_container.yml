@@ -3,10 +3,10 @@ name: Publish container images
 on:
   workflow_call:
     inputs:
-      version:
+      run_id:
         type: string
         required: true
-      run_id:
+      version:
         type: string
         required: true
 jobs:

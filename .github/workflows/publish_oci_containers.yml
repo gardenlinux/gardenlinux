@@ -20,7 +20,7 @@ on:
         default: '{"include": []}'
       original_workflow_name:
         type: string
-        required: true
+        default: ''
     secrets:
       aws_role:
         required: true
@@ -68,7 +68,7 @@ jobs:
           run-id: ${{ inputs.run_id }}
       - name: Publish container base image
         run: |
-          is_main=$(! [ "${{ github.ref_name }}" = "main" ]; echo $?)
+          is_nightly=$(! [ "${{ inputs.original_workflow_name }}" = "nightly" ]; echo $?)
           version=$(cat VERSION)
 
           podman login -u token -p ${{ github.token }} ghcr.io
@@ -76,7 +76,7 @@ jobs:
           image="$(podman load < ${{ env.CNAME_AMD64 }}.oci | awk '{ print $NF }')"
 
           # Tagging for amd64 nightly
-          if [ $is_main = true ]; then
+          if [ $is_nightly = true ]; then
             echo podman tag "$image" ghcr.io/${{ github.repository }}:amd64-nightly
             echo podman push ghcr.io/${{ github.repository }}:amd64-nightly
           fi
@@ -89,7 +89,7 @@ jobs:
           image="$(podman load < ${{ env.CNAME_ARM64 }}.oci | awk '{ print $NF }')"
 
           # Tagging for arm64 nightly
-          if [ $is_main = true ]; then
+          if [ $is_nightly = true ]; then
             echo podman tag "$image" ghcr.io/${{ github.repository }}:arm64-nightly
             echo podman push ghcr.io/${{ github.repository }}:arm64-nightly
           fi
@@ -99,7 +99,7 @@ jobs:
           echo podman push ghcr.io/${{ github.repository }}:arm64-${version}
 
           # Creating and pushing manifest for nightly
-          if [ $is_main = true ]; then
+          if [ $is_nightly = true ]; then
             echo podman manifest create ghcr.io/${{ github.repository }}:nightly
             echo podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:amd64-nightly
             echo podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:arm64-nightly
@@ -134,7 +134,7 @@ jobs:
           run-id: ${{ inputs.run_id }}
       - name: Publish bare flavor image ${{ matrix.config }}
         run: |
-          is_main=$(! [ "${{ github.ref_name }}" = "main" ]; echo $?)
+          is_nightly=$(! [ "${{ inputs.original_workflow_name }}" = "nightly" ]; echo $?)
           version=$(bin/garden-version "${{ inputs.version }}")
 
           podman login -u token -p ${{ github.token }} ghcr.io
@@ -147,7 +147,7 @@ jobs:
           echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
 
           # Tagging and pushing amd64 with nightly
-          if [ $is_main = true ]; then
+          if [ $is_nightly = true ]; then
             echo podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
             echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
           fi
@@ -160,7 +160,7 @@ jobs:
           echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
 
           # Tagging and pushing arm64 with nightly
-          if [ $is_main = true ]; then
+          if [ $is_nightly = true ]; then
             echo podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
             echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
           fi
@@ -172,7 +172,7 @@ jobs:
           echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
 
           # Creating and pushing manifest for nightly tag
-          if [ $is_main = true ]; then
+          if [ $is_nightly = true ]; then
             echo podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
             echo podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
             echo podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
