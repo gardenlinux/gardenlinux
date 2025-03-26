@@ -30,8 +30,8 @@ jobs:
       version: ${{ needs.set_version.outputs.VERSION }}
   test:
     needs: build
-    name: Test
     if: ${{ success() || failure() }}
+    name: Test
     uses: ./.github/workflows/tests.yml
     with:
       version: ${{ needs.build.outputs.version }}

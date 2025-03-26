@@ -34,7 +34,6 @@ jobs:
     env:
       CNAME: ''
     strategy:
-      fail-fast: false
       matrix: ${{ fromJSON(inputs.flavors_matrix) }}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1

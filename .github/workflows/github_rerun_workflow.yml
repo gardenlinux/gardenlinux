@@ -1,0 +1,32 @@
+name: Re-run workflow run
+on:
+  # triggered manually
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Workflow run ID'
+        type: string
+        required: true
+      retries:
+        description: 'Workflow run retries'
+        type: string
+        default: '1'
+jobs:
+  trigger:
+    name: Retry workflow run ${{ inputs.run_id }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - name: Retry failed build
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const githubEvent = ${{ toJson(github.event) }};
+
+            if (githubEvent.sender.type != "Bot") {
+              core.setFailed("Workflow run request is not supported for sender.type: " + githubEvent.sender.type);
+              return false;
+            }
+
+            const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
+            return await gitHubLib.retryWorkflow(core, github.rest.actions, context, ${{ inputs.run_id }}, parseInt("${{ inputs.retries }}"));

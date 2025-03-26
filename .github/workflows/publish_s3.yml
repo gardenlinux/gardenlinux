@@ -118,3 +118,16 @@ jobs:
         uses: gardenlinux/glrd@v2
         with:
           cmd: glrd --type nightly --latest
+  publish_retry:
+    needs: [ upload_to_s3, upload_to_s3_cn, glrd ]
+    if: ${{ always() && ( needs.upload_to_s3.result == 'failure' || needs.glrd.result == 'failure' ) }}
+    name: 'Retry checkpoint: Publish to S3'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - name: Retry failed publishing
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
+            return await gitHubLib.dispatchRetryWorkflow(core, github.rest.actions, context, "${{ github.head_ref }}", 5);
