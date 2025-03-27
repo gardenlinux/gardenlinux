@@ -105,7 +105,7 @@ jobs:
       - name: Download platform-test OCI metadata (tofu)
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
-          key: platform_test_container:tofu-${{ github.run_id }}
+          key: platform_test_container:tofu-${{ inputs.arch }}-${{ github.run_id }}
           path: |
             platform-test.oci-version.txt
             platform-test.oci-tag.txt
