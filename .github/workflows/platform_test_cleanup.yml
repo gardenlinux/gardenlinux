@@ -58,28 +58,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
-      - name: Get platform from workspace
-        uses: actions/github-script@v7
-        id: platform_from_cname
-        with:
-          script: |
-            const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
-
-            const workspace = "${{ matrix.workspace }}";
-            return gitHubLib.getPlatformForCName(workspace.slice(0, workspace.lastIndexOf("-")));
-          result-encoding: string
-      - if: ${{ steps.platform_from_cname.outputs.result == 'gcp' }}
-        id: auth_gcp
+      - id: 'auth_gcp'
         name: 'Authenticate to Google Cloud'
         uses: google-github-actions/auth@71f986410dfbc7added4569d411d040a91dc6935 # pin@v1
         with:
-          workload_identity_provider: ${{ secrets.gcp_identity_provider }}
-          service_account: ${{ secrets.gcp_service_account }}
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
           create_credentials_file: true
           cleanup_credentials: true
           export_environment_variables: true
-      - if: ${{ steps.platform_from_cname.outputs.result == 'gcp' }}
-        name: Set GCP platform-test environment
+      - name: Set GCP platform-test environment
         uses: actions/github-script@v7
         with:
           script: |
@@ -89,17 +77,15 @@ jobs:
             core.exportVariable("GOOGLE_APPLICATION_CREDENTIALS", basePath + credentialsFileName);
             core.exportVariable("CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE", basePath + credentialsFileName);
             core.exportVariable("GOOGLE_GHA_CREDS_PATH", basePath + credentialsFileName);
-      - if: ${{ steps.platform_from_cname.outputs.result == 'aws' }}
-        id: auth_aws
+      - id: 'auth_aws'
         name: 'Authenticate to AWS'
         uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
         with:
-          role-to-assume: ${{ secrets.aws_role }}
-          role-session-name: ${{ secrets.aws_session }}
-          aws-region: ${{ secrets.aws_region }}
+          role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_TESTS_REGION }}
           output-credentials: true
-      - if: ${{ steps.platform_from_cname.outputs.result == 'aws' }}
-        name: Set AWS platform-test environment
+      - name: Set AWS platform-test environment
         uses: actions/github-script@v7
         with:
           script: |
@@ -109,16 +95,14 @@ jobs:
             core.exportVariable("AWS_SECRET_ACCESS_KEY", "${{ steps.auth_aws.outputs.aws-secret-access-key }}");
             core.setSecret("AWS_SESSION_TOKEN");
             core.exportVariable("AWS_SESSION_TOKEN", "${{ steps.auth_aws.outputs.aws-session-token }}");
-      - if: ${{ steps.platform_from_cname.outputs.result == 'azure' }}
-        id: auth_azure
+      - id: 'auth_azure'
         name: 'Authenticate to Azure'
         uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # pin@v1
         with:
-          client-id: ${{ secrets.az_client_id }}
-          tenant-id: ${{ secrets.az_tenant_id }}
-          subscription-id: ${{ secrets.az_subscription_id }}
-      - if: ${{ steps.platform_from_cname.outputs.result == 'azure' }}
-        name: Set Azure platform-test environment
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Set Azure platform-test environment
         uses: actions/github-script@v7
         with:
           script: |
@@ -130,13 +114,12 @@ jobs:
             core.exportVariable("ARM_SUBSCRIPTION_ID", "${{ secrets.az_subscription_id }}");
             core.setSecret("ARM_TENANT_ID");
             core.exportVariable("ARM_TENANT_ID", "${{ secrets.az_tenant_id }}");
-      - if: ${{ steps.platform_from_cname.outputs.result == 'ali' }}
-        id: auth_ali
+      - id: 'auth_ali'
         name: 'Create ali cloud credential file'
         uses: actions/github-script@v7
         with:
           script: |
-            const aliCredentials = JSON.parse(atob("${{ secrets.ccc_credentials }}"));
+            const aliCredentials = JSON.parse(atob("${{ secrets.CCC_CREDENTIALS }}"));
 
             core.exportVariable("ALIBABA_CLOUD_REGION", aliCredentials["gardenlinux-platform-test"].region;
 
@@ -153,7 +136,6 @@ jobs:
           touch cert/secureboot.db.crt cert/secureboot.pk.der cert/secureboot.db.der cert/secureboot.kek.der cert/secureboot.aws-efivars
           # create directories for credentials
           mkdir -p ~/.aws ~/.azure ~/.aliyun ~/.config/gcloud
-
       - name: Destroy OpenTofu Resources and delete workspaces
         run: |
           export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.TF_ENCRYPTION }})"
