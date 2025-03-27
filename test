@@ -41,7 +41,7 @@ if [[ ! -d $dir/.build/ ]]; then
 	exit 1
 fi
 
-cname="$(./build --resolve-cname "$1")"
+cname="$("$dir/build" --resolve-cname "$1")"
 
 if [[ ! -f $(realpath "$dir")/.build/$cname.tar ]]; then
 	echo "ERROR: Require .build/$cname.tar to be built before it can be tested."
