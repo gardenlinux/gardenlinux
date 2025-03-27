@@ -23,11 +23,6 @@ export async function dispatchRetryWorkflow(core, githubActions, context, refNam
     return true;
 }
 
-export function getPlatformForCName(cname) {
-    const platform = cname.split("-", 1)[0];
-    return platform;
-}
-
 export async function retryWorkflow(core, githubActions, context, runID, retries) {
     if (isNaN(retries)) {
         core.setFailed("Workflow run retry requested retries are invalid");
