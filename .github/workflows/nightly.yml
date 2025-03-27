@@ -12,6 +12,7 @@ jobs:
       version: now
       use_kms: true
       platform_test_tag: latest
+      fail_fast: true
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_kms_role: ${{ secrets.SECUREBOOT_DB_IAM_ROLE }}

@@ -28,6 +28,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ needs.set_version.outputs.VERSION }}
+      fail_fast: true
   test:
     needs: build
     if: ${{ success() || failure() }}
