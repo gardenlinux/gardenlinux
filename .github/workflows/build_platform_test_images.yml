@@ -211,7 +211,7 @@ jobs:
         run: |
           # Get architectures from matrix
           # convert to space separated string
-          ARCH_LIST='${{ needs.generate_matrix.outputs.archs }}'
+          ARCH_LIST='${{ needs.generate_matrix.outputs.arch_matrix }}'
           ARCHS=$(echo $ARCH_LIST | tr -d '[]"' | tr ',' ' ')
 
           # Create manifest list
