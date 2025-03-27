@@ -108,21 +108,14 @@ jobs:
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
       flags: ${{ inputs.flavors_parse_params }}
-  download_platform_test_bare_flavors_matrix:
-    needs: download_build_requirements
-    name: Generate bare flavors matrix to test
-    uses: ./.github/workflows/build_flavors_matrix.yml
-    with:
-      flags: ${{ inputs.bare_flavors_parse_params }}
   download_platform_test_flavors:
-    needs: [ download_build_requirements, download_platform_test_flavors_matrix, download_platform_test_bare_flavors_matrix ]
+    needs: [ download_build_requirements, download_platform_test_flavors_matrix ]
     name: Download flavors to test
     uses: ./.github/workflows/download_flavors_images.yml
     with:
       commit_id: ${{ needs.download_build_requirements.outputs.commit_id }}
       version: ${{ needs.download_build_requirements.outputs.version }}
       flavors_matrix: ${{ needs.download_platform_test_flavors_matrix.outputs.matrix }}
-      bare_flavors_matrix: ${{ needs.download_platform_test_bare_flavors_matrix.outputs.matrix }}
     permissions:
       id-token: write
     secrets:
@@ -135,7 +128,6 @@ jobs:
       download_build_requirements,
       download_platform_test,
       download_platform_test_flavors_matrix,
-      download_platform_test_bare_flavors_matrix,
       download_platform_test_flavors
     ]
     name: Test flavors downloaded
@@ -143,7 +135,6 @@ jobs:
     with:
       version: ${{ needs.download_build_requirements.outputs.version }}
       flavors_matrix: ${{ needs.download_platform_test_flavors_matrix.outputs.matrix }}
-      bare_flavors_matrix: ${{ needs.download_platform_test_bare_flavors_matrix.outputs.matrix }}
       chroot_test: ${{ inputs.chroot_test }}
       platform_test: ${{ inputs.platform_test }}
     permissions:
