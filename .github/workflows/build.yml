@@ -28,6 +28,10 @@ on:
         description: 'Run bin/parse_flavors.py with these parameters for bare flavors'
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
         type: string
+      fail_fast:
+        description: 'Cancel workflow run on first error'
+        type: boolean
+        default: false
     secrets:
       aws_region:
         required: false
@@ -77,7 +81,7 @@ jobs:
     name: Build flavors
     strategy:
       matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix )}}
-      fail-fast: false
+      fail-fast: ${{ inputs.fail_fast }}
     with:
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
@@ -103,7 +107,7 @@ jobs:
     name: Build bare flavors
     strategy:
       matrix: ${{ fromJson(needs.bare_flavors_matrix.outputs.matrix )}}
-      fail-fast: false
+      fail-fast: ${{ inputs.fail_fast }}
     with:
       arch: ${{ matrix.arch }}
       bare_flavor: ${{ matrix.flavor }}
