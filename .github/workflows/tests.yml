@@ -22,7 +22,7 @@ on:
       bare_flavors_matrix:
         description: 'Generated GitHub workflow flavors matrix for bare flavors'
         type: string
-        required: true
+        default: '{"include": []}'
       bare_flavors_test:
         description: 'Execute bare flavors container tests'
         type: boolean
