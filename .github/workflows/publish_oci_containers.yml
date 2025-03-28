@@ -77,40 +77,40 @@ jobs:
 
           # Tagging for amd64 nightly
           if [ $is_nightly = true ]; then
-            echo podman tag "$image" ghcr.io/${{ github.repository }}:amd64-nightly
-            echo podman push ghcr.io/${{ github.repository }}:amd64-nightly
+            podman tag "$image" ghcr.io/${{ github.repository }}:amd64-nightly
+            podman push ghcr.io/${{ github.repository }}:amd64-nightly
           fi
 
           # Tagging for amd64 with version
-          echo podman tag "$image" ghcr.io/${{ github.repository }}:amd64-${version}
-          echo podman push ghcr.io/${{ github.repository }}:amd64-${version}
+          podman tag "$image" ghcr.io/${{ github.repository }}:amd64-${version}
+          podman push ghcr.io/${{ github.repository }}:amd64-${version}
 
           tar xzv < "${{ env.CNAME_ARM64 }}.tar.gz"
           image="$(podman load < ${{ env.CNAME_ARM64 }}.oci | awk '{ print $NF }')"
 
           # Tagging for arm64 nightly
           if [ $is_nightly = true ]; then
-            echo podman tag "$image" ghcr.io/${{ github.repository }}:arm64-nightly
-            echo podman push ghcr.io/${{ github.repository }}:arm64-nightly
+            podman tag "$image" ghcr.io/${{ github.repository }}:arm64-nightly
+            podman push ghcr.io/${{ github.repository }}:arm64-nightly
           fi
 
           # Tagging for arm64 with version
-          echo podman tag "$image" ghcr.io/${{ github.repository }}:arm64-${version}
-          echo podman push ghcr.io/${{ github.repository }}:arm64-${version}
+          podman tag "$image" ghcr.io/${{ github.repository }}:arm64-${version}
+          podman push ghcr.io/${{ github.repository }}:arm64-${version}
 
           # Creating and pushing manifest for nightly
           if [ $is_nightly = true ]; then
-            echo podman manifest create ghcr.io/${{ github.repository }}:nightly
-            echo podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:amd64-nightly
-            echo podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:arm64-nightly
-            echo podman push ghcr.io/${{ github.repository }}:nightly
+            podman manifest create ghcr.io/${{ github.repository }}:nightly
+            podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:amd64-nightly
+            podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:arm64-nightly
+            podman push ghcr.io/${{ github.repository }}:nightly
           fi
 
           # Creating and pushing manifest for version tag
-          echo podman manifest create ghcr.io/${{ github.repository }}:${version}
-          echo podman manifest add ghcr.io/${{ github.repository }}:${version} ghcr.io/${{ github.repository }}:amd64-${version}
-          echo podman manifest add ghcr.io/${{ github.repository }}:${version} ghcr.io/${{ github.repository }}:arm64-${version}
-          echo podman push ghcr.io/${{ github.repository }}:${version}
+          podman manifest create ghcr.io/${{ github.repository }}:${version}
+          podman manifest add ghcr.io/${{ github.repository }}:${version} ghcr.io/${{ github.repository }}:amd64-${version}
+          podman manifest add ghcr.io/${{ github.repository }}:${version} ghcr.io/${{ github.repository }}:arm64-${version}
+          podman push ghcr.io/${{ github.repository }}:${version}
   bare_flavors:
     name: Publish bare flavors
     runs-on: ubuntu-24.04
@@ -143,40 +143,40 @@ jobs:
           image="$(podman load < ${{ matrix.config }}-amd64.oci | awk '{ print $NF }')"
 
           # Tagging and pushing amd64 with version
-          echo podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
-          echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
+          podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
+          podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
 
           # Tagging and pushing amd64 with nightly
           if [ $is_nightly = true ]; then
-            echo podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
-            echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
+            podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
+            podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
           fi
 
           # Handling arm64 image
           image="$(podman load < ${{ matrix.config }}-arm64.oci | awk '{ print $NF }')"
 
           # Tagging and pushing arm64 with version
-          echo podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
-          echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
+          podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
+          podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
 
           # Tagging and pushing arm64 with nightly
           if [ $is_nightly = true ]; then
-            echo podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
-            echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
+            podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
+            podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
           fi
 
           # Creating and pushing manifest for version tag
-          echo podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
-          echo podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
-          echo podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
-          echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
+          podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
+          podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
+          podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
+          podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
 
           # Creating and pushing manifest for nightly tag
           if [ $is_nightly = true ]; then
-            echo podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
-            echo podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
-            echo podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
-            echo podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
+            podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
+            podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
+            podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
+            podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
           fi
   flavors:
     name: Publish flavors
