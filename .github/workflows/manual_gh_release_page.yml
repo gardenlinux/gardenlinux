@@ -20,9 +20,55 @@ on:
         type: string
         description: "Full commitish"
 jobs:
+  # Create new version in GLVD so it has the package list of the new release
+  # This is needed for the automatic changelog generation
+  glvd:
+    if: ${{ inputs.type }} == 'patch'
+    name: Update GLVD distro list
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # This is required for requesting the JWT
+      id-token: write
+    needs:
+      - glrd
+    steps:
+      - name: Get OIDC token
+        id: get-token
+        run: |
+          IDTOKEN=$(curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=glvd" | jq -r '.value')
+          echo "idToken=${IDTOKEN}" >> $GITHUB_OUTPUT
+      - uses: azure/k8s-set-context@v4
+        with:
+           method: kubeconfig
+           kubeconfig: "${{ secrets.KUBECONFIG }}"
+      - name: Start a new ingestion job in GLVD to import package list for new version
+        run: |
+          kubectl run ingest-new-gl-version-$RANDOM \
+              --image=ghcr.io/gardenlinux/glvd-data-ingestion:latest \
+              --env=PGDATABASE=glvd \
+              --env=PGUSER=$(kubectl get secret/postgres-credentials --template="{{.data.username}}" | base64 -d) \
+              --env=PGHOST=glvd-database-0.glvd-database \
+              --env=PGPORT=5432 \
+              --env=PGPASSWORD=$(kubectl get secret/postgres-credentials --template="{{.data.password}}" | base64 -d) -- /usr/local/src/ingest-single-gl-release.sh ${{ inputs.version }}
+      - name: Wait for GLVD to ingest the package list of the new version
+        run: |
+          VERSION=${{ inputs.version }}
+          URL="https://glvd.ingress.glvd.gardnlinux.shoot.canary.k8s-hana.ondemand.com/v1/distro/$VERSION"
+          for i in {1..30}; do
+              RESPONSE=$(curl -s $URL)
+              if [[ $RESPONSE != "[]" ]]; then
+                  echo "Non-empty list received: $RESPONSE"
+                  break
+              fi
+              echo "Attempt $i returned an empty list, retrying in 10 seconds..."
+              sleep 10
+          done
+
   create_github_release:
     if: ${{ inputs.type }} == 'patch'
     environment: oidc_aws_s3_upload
+    needs: glvd
     permissions:
       id-token: write
       contents: write
