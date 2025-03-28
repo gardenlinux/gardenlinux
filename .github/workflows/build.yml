@@ -92,7 +92,7 @@ jobs:
     uses: ./.github/workflows/build_flavor.yml
     secrets: inherit
   kmodbuild_container:
-    needs: requirements
+    needs: [ flavors, requirements ]
     name: Build kernel module build dev container
     uses: ./.github/workflows/build_kmodbuild_container.yml
     with:

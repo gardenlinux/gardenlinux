@@ -15,19 +15,19 @@ jobs:
     name: Set VERSION
     runs-on: ubuntu-24.04
     outputs:
-      VERSION: ${{ steps.version.outputs.VERSION }}
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: use VERSION file to support dev build on rel-branch
         id: version
-        run: echo "VERSION=$(cat VERSION)" >> $GITHUB_OUTPUT
+        run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
   build:
     needs: set_version
     name: Build
     uses: ./.github/workflows/build.yml
     with:
-      version: ${{ needs.set_version.outputs.VERSION }}
+      version: ${{ needs.set_version.outputs.version }}
       fail_fast: true
   test:
     needs: build

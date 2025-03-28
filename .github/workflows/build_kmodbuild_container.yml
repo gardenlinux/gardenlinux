@@ -15,6 +15,8 @@ jobs:
     defaults:
       run:
         shell: bash
+    env:
+      CNAME: ''
     strategy:
       matrix:
         arch: [ amd64, arm64 ]
@@ -22,8 +24,28 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
-      - name: Get container versions
-        id: versions
+      - id: build_container_cache
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        with:
+          path: |
+            COMMIT
+            VERSION
+          key: build-container-${{ matrix.arch }}-${{ github.run_id }}
+          fail-on-cache-miss: true
+      - if: ${{ steps.build_container_cache.outputs.cache-hit }}}}
+        name: Set CNAME
+        run: |
+          cname="$(./build --resolve-cname container-${{ matrix.arch }})"
+          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
+      - if: ${{ steps.build_container_cache.outputs.cache-hit }}}}
+        name: Load container build artifact (${{ matrix.arch }})
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
+        with:
+          name: build-container-${{ matrix.arch }}
+      - if: ${{ steps.build_container_cache.outputs.cache-hit }}}}
+        name: Build kernel module build dev container (${{ matrix.arch }})
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           version="$(bin/garden-version "${{ inputs.version }}")"
 
@@ -31,27 +53,22 @@ jobs:
             version="$(bin/garden-version now)"
           fi
 
+          tar -C ".build/" -xzf "$CNAME.tar.gz"
+          rm "$CNAME.tar.gz"
+
+          base="ghcr.io/${{ github.repository }}:$version"
+          image="$(podman load -i .build/container-${{ matrix.arch }}-$(cat VERSION)-$(cat COMMIT).oci | awk '{ print $NF }')"
+          podman tag "$image" "$base"
+
           snapshot="$(gh api "/repos/gardenlinux/repo/contents/.container?ref=$version" | jq -r '.content' | base64 -d)"
 
-          echo -e "base=ghcr.io/${{ github.repository }}:$version" | tee -a "$GITHUB_OUTPUT"
-          echo -e "snapshot=$snapshot" | tee -a "$GITHUB_OUTPUT"
-          echo -e "version=$version" | tee -a "$GITHUB_OUTPUT"
-        env:
-          GH_TOKEN: ${{ github.token }}
-      - name: Build kernel module build dev container (${{ matrix.arch }})
-        run: |
-          podman login -u token -p ${{ github.token }} ghcr.io
-
-          base='${{ steps.versions.outputs.base }}'
-          snapshot='${{ steps.versions.outputs.snapshot }}'
-          version='${{ steps.versions.outputs.version }}'
-
-          podman pull --arch ${{ matrix.arch }} "$base"
+          podman login -u token -p "${GH_TOKEN}" ghcr.io
           podman pull --arch ${{ matrix.arch }} "$snapshot"
-          podman build --arch ${{ matrix.arch }} --build-arg base="$base" --build-arg snapshot="$snapshot" -t ghcr.io/${{ github.repository }}/kmodbuild:${{ matrix.arch }}-${version} images/kmodbuild
 
+          podman build --arch ${{ matrix.arch }} --build-arg base="$base" --build-arg snapshot="$snapshot" -t ghcr.io/${{ github.repository }}/kmodbuild:${{ matrix.arch }}-${version} images/kmodbuild
           podman save --format oci-archive ghcr.io/${{ github.repository }}/kmodbuild:${{ matrix.arch }}-${version} > kmodbuild_container_${{ matrix.arch }}.oci
-      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
+      - if: ${{ steps.build_container_cache.outputs.cache-hit }}}}
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
         with:
           name: kmodbuild-container-${{ matrix.arch }}
           path: kmodbuild_container_${{ matrix.arch }}.oci
