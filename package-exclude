@@ -1,4 +1,5 @@
 apt-utils
 db-util
+db5.3-util
 libdb-dev
 libdb5\.3.*
