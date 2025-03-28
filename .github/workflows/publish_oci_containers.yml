@@ -17,7 +17,7 @@ on:
         required: true
       bare_flavors_matrix:
         type: string
-        default: '{"include": []}'
+        default: '{"include":[]}'
       original_workflow_name:
         type: string
         default: ''
@@ -113,6 +113,7 @@ jobs:
           echo podman push ghcr.io/${{ github.repository }}:${version}
   bare_flavors:
     name: Publish bare flavors
+    if: ${{ inputs.bare_flavors_matrix != '{"include":[]}' }}
     runs-on: ubuntu-24.04
     defaults:
       run:

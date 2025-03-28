@@ -80,7 +80,7 @@ jobs:
     needs: [ bootstrap, flavors_matrix, requirements ]
     name: Build flavors
     strategy:
-      matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix )}}
+      matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix ) }}
       fail-fast: ${{ inputs.fail_fast }}
     with:
       arch: ${{ matrix.arch }}
@@ -106,7 +106,7 @@ jobs:
     needs: [ bootstrap, bare_flavors_matrix, requirements ]
     name: Build bare flavors
     strategy:
-      matrix: ${{ fromJson(needs.bare_flavors_matrix.outputs.matrix )}}
+      matrix: ${{ fromJson(needs.bare_flavors_matrix.outputs.matrix) }}
       fail-fast: ${{ inputs.fail_fast }}
     with:
       arch: ${{ matrix.arch }}
