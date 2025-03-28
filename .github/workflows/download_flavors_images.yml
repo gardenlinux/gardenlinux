@@ -23,6 +23,7 @@ on:
 jobs:
   images:
     name: Provide image ${{ matrix.flavor }} (${{ matrix.arch }})
+    if: ${{ inputs.flavors_matrix != '{"include":[]}' }}
     runs-on: ubuntu-24.04
     defaults:
       run:

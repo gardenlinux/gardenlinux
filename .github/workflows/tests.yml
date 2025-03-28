@@ -22,7 +22,7 @@ on:
       bare_flavors_matrix:
         description: 'Generated GitHub workflow flavors matrix for bare flavors'
         type: string
-        default: '{"include": []}'
+        default: '{"include":[]}'
       bare_flavors_test:
         description: 'Execute bare flavors container tests'
         type: boolean
@@ -60,10 +60,10 @@ jobs:
   test_flavors_chrooted:
     name: Test flavors chrooted
     uses: ./.github/workflows/test_flavor_chrooted.yml
-    if: ${{ inputs.chroot_test == true }}
+    if: ${{ inputs.flavors_matrix != '{"include":[]}' && inputs.chroot_test == true }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(inputs.flavors_matrix )}}
+      matrix: ${{ fromJson(inputs.flavors_matrix) }}
     with:
       version: ${{ inputs.version }}
       arch: ${{ matrix.arch }}
@@ -71,10 +71,10 @@ jobs:
   test_platform_flavors:
     name: Test platform flavors
     uses: ./.github/workflows/test_platform_flavor.yml
-    if: ${{ inputs.platform_test == true }}
+    if: ${{ inputs.flavors_matrix != '{"include":[]}' && inputs.platform_test == true }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(inputs.flavors_matrix )}}
+      matrix: ${{ fromJson(inputs.flavors_matrix) }}
     with:
       version: ${{ inputs.version }}
       arch: ${{ matrix.arch }}
@@ -83,10 +83,10 @@ jobs:
   test_bare_flavors:
     name: Test bare flavors
     uses: ./.github/workflows/test_bare_flavor.yml
-    if: ${{ inputs.bare_flavors_test == true }}
+    if: ${{ inputs.bare_flavors_matrix != '{"include":[]}' && inputs.bare_flavors_test == true }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(inputs.bare_flavors_matrix )}}
+      matrix: ${{ fromJson(inputs.bare_flavors_matrix) }}
     with:
       version: ${{ inputs.version }}
       arch: ${{ matrix.arch }}
