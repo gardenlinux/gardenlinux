@@ -128,7 +128,7 @@ jobs:
             core.setSecret("ALIBABA_CLOUD_ACCESS_KEY_ID");
             core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_ID", aliCredentials["gardenlinux-platform-test"].access_key_id);
             core.setSecret("ALIBABA_CLOUD_ACCESS_KEY_SECRET");
-            core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_SECRET", aliCredentials["gardenlinux-platform-test"].access_key_secret;
+            core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_SECRET", aliCredentials["gardenlinux-platform-test"].access_key_secret);
       - name: Setup Environment
         run: |
           # ssh key generation (if missing)
