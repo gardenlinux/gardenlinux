@@ -31,7 +31,7 @@ jobs:
       - name: Publish kernel module build dev container
         run: |
           for oci_archive in *.oci; do
-            podman load < ${oci_archive}
+            podman load -i ${oci_archive}
             rm ${oci_archive}
           done
 
