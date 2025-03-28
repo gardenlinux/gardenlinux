@@ -90,7 +90,10 @@ jobs:
       id-token: write
     uses: ./.github/workflows/upload_to_s3.yml
     with:
+      commit_id: ${{ needs.workflow_data.outputs.commit_id }}
       version: ${{ needs.workflow_data.outputs.version }}
+      flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
+      run_id: ${{ needs.workflow_data.outputs.run_id }}
     secrets:
       aws_region: ${{ secrets.AWS_CN_REGION }}
       aws_role: ${{ secrets.AWS_CN_IAM_ROLE }}
