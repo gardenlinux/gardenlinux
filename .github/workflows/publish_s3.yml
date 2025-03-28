@@ -98,7 +98,6 @@ jobs:
       aws_s3_bucket: ${{ secrets.AWS_CN_S3_BUCKET }}
   glrd:
     needs: [ workflow_data, upload_to_s3 ]
-    if: ${{ github.ref_name == "main" }}
     name: create GLRD release
     permissions:
       id-token: write
@@ -109,7 +108,8 @@ jobs:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_REGION }}
-      - name: Create GLRD nightly release
+      - if: ${{ github.ref_name == 'main' }}
+        name: Create GLRD nightly release
         uses: gardenlinux/glrd@v2
         with:
           cmd: glrd-manage --s3-update --create nightly
