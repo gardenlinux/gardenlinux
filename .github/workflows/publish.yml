@@ -11,7 +11,7 @@ on:
     types: [ 'completed' ]
 jobs:
   workflow_data:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.conclusion == "success" }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.conclusion == 'success' }}
     name: Download workflow JSON data from trigger
     uses: ./.github/workflows/download_workflow_data.yml
     with:
@@ -56,4 +56,6 @@ jobs:
         with:
           script: |
             const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
-            return await gitHubLib.dispatchRetryWorkflow(core, github.rest.actions, context, "${{ github.head_ref }}", 3);
+
+            const gitHubRef = "${{ github.head_ref == '' && github.ref_name || github.head_ref }}";
+            return await gitHubLib.dispatchRetryWorkflow(core, github.rest.actions, context, gitHubRef, 3);

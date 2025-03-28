@@ -30,7 +30,9 @@ jobs:
         with:
           script: |
             const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
-            return await gitHubLib.dispatchRetryWorkflow(core, github.rest.actions, context, "${{ github.head_ref }}", 5);
+
+            const gitHubRef = "${{ github.head_ref == '' && github.ref_name || github.head_ref }}";
+            return await gitHubLib.dispatchRetryWorkflow(core, github.rest.actions, context, gitHubRef, 5);
   test:
     needs: build
     name: Test
@@ -69,7 +71,9 @@ jobs:
         with:
           script: |
             const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
-            return await gitHubLib.dispatchRetryWorkflow(core, github.rest.actions, context, "${{ github.head_ref }}", 8);
+
+            const gitHubRef = "${{ github.head_ref == '' && github.ref_name || github.head_ref }}";
+            return await gitHubLib.dispatchRetryWorkflow(core, github.rest.actions, context, gitHubRef, 8);
   upload_workflow_data:
     needs: [ build, test ]
     name: Store workflow data
