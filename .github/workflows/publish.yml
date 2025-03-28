@@ -46,7 +46,7 @@ jobs:
       version: ${{ needs.workflow_data.outputs.version }}
   publish_retry:
     needs: [ publish_oci_containers, publish_kmodbuild_container ]
-    if: ${{ always() && ( needs.publish_oci_containers.result == 'failure' || needs.publish_kmodbuild_container.result == 'failure' ) }}
+    if: ${{ needs.publish_oci_containers.result == 'failure' || needs.publish_kmodbuild_container.result == 'failure' }}
     name: 'Retry checkpoint: Publish to GitHub'
     runs-on: ubuntu-24.04
     steps:

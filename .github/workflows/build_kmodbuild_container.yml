@@ -31,7 +31,6 @@ jobs:
             COMMIT
             VERSION
           key: build-container-${{ matrix.arch }}-${{ github.run_id }}
-          fail-on-cache-miss: true
       - if: ${{ steps.build_container_cache.outputs.cache-hit }}}}
         name: Set CNAME
         run: |
