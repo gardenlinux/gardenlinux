@@ -88,7 +88,7 @@ jobs:
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
       # GitHub workflow workaround for bool
-      use_kms: ${{ needs.requirements.outputs.use_kms == true }}
+      use_kms: ${{ needs.requirements.outputs.use_kms == 'true' }}
     uses: ./.github/workflows/build_flavor.yml
     secrets: inherit
   kmodbuild_container:
