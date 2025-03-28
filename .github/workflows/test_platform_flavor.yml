@@ -181,7 +181,7 @@ jobs:
           script: |
             const aliCredentials = JSON.parse(atob("${{ secrets.ccc_credentials }}"));
 
-            core.exportVariable("ALIBABA_CLOUD_REGION", aliCredentials["gardenlinux-platform-test"].region;
+            core.exportVariable("ALIBABA_CLOUD_REGION", aliCredentials["gardenlinux-platform-test"].region);
 
             core.setSecret("ALIBABA_CLOUD_ACCESS_KEY_ID");
             core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_ID", aliCredentials["gardenlinux-platform-test"].access_key_id);
