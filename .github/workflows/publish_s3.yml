@@ -17,6 +17,7 @@ jobs:
     with:
       run_id: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
   prepare_certs:
+    needs: workflow_data
     name: Add certs to S3 artifacts
     runs-on: ubuntu-24.04
     defaults:
