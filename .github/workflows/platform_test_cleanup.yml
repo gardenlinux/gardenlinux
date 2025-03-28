@@ -121,14 +121,15 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const aliCredentials = JSON.parse(atob("${{ secrets.CCC_CREDENTIALS }}"));
+            const credentials = JSON.parse(atob("${{ secrets.CCC_CREDENTIALS }}"));
+            const aliCredentials = credentials.alicloud["gardenlinux-platform-test"];
 
-            core.exportVariable("ALIBABA_CLOUD_REGION", aliCredentials["gardenlinux-platform-test"].region);
+            core.exportVariable("ALIBABA_CLOUD_REGION", aliCredentials.region);
 
             core.setSecret("ALIBABA_CLOUD_ACCESS_KEY_ID");
-            core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_ID", aliCredentials["gardenlinux-platform-test"].access_key_id);
+            core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_ID", aliCredentials.access_key_id);
             core.setSecret("ALIBABA_CLOUD_ACCESS_KEY_SECRET");
-            core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_SECRET", aliCredentials["gardenlinux-platform-test"].access_key_secret);
+            core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_SECRET", aliCredentials.access_key_secret);
       - name: Setup Environment
         run: |
           # ssh key generation (if missing)
