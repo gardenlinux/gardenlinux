@@ -58,12 +58,12 @@ jobs:
           echo "CNAME_ARM64=$cname_arm64" | tee -a "$GITHUB_ENV"
       - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
         with:
-          name: build-${{ env.CNAME_AMD64 }}
+          name: build-container-amd64
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
       - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
         with:
-          name: build-${{ env.CNAME_ARM64 }}
+          name: build-container-arm64
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
       - name: Publish container base image
