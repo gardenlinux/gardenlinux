@@ -57,36 +57,103 @@ on:
       tf_encryption:
         required: false
 jobs:
+  chroot_test_flavors_supported_matrix:
+    name: Generate flavors matrix for chroot test
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: '--no-arch --json-by-arch --test'
+  platform_test_flavors_supported_matrix:
+    name: Generate flavors matrix for platform-test
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: '--no-arch --json-by-arch --test-platform'
+  test_bare_flavors_supported_matrix:
+    name: Generate flavors matrix for bare flavors test
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: '--include-only "bare-*" --no-arch --json-by-arch --test'
+  intersect_matrices:
+    needs: [
+      chroot_test_flavors_supported_matrix,
+      platform_test_flavors_supported_matrix,
+      test_bare_flavors_supported_matrix
+    ]
+    name: Intersect test matrices
+    runs-on: 'ubuntu-24.04'
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      chroot_test_flavors_matrix: ${{ steps.matrices.outputs.chroot_test_flavors_matrix }}
+      platform_test_flavors_matrix: ${{ steps.matrices.outputs.platform_test_flavors_matrix }}
+      test_bare_flavors_matrix: ${{ steps.matrices.outputs.test_bare_flavors_matrix }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - id: matrices
+        name: Calculate matrices
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
+
+            // chroot_test_flavors_matrix
+            let matrix = gitHubLib.intersectFlavorsMatrix(
+              ${{ inputs.flavors_matrix }},
+              ${{ needs.chroot_test_flavors_supported_matrix.outputs.matrix }}
+            );
+
+            core.setOutput("chroot_test_flavors_matrix", matrix);
+
+            // platform_test_flavors_matrix
+            matrix = gitHubLib.intersectFlavorsMatrix(
+              ${{ inputs.flavors_matrix }},
+              ${{ needs.platform_test_flavors_supported_matrix.outputs.matrix }}
+            );
+
+            core.setOutput("platform_test_flavors_matrix", matrix);
+
+            // test_bare_flavors_matrix
+            matrix = gitHubLib.intersectFlavorsMatrix(
+              ${{ inputs.bare_flavors_matrix }},
+              ${{ needs.test_bare_flavors_supported_matrix.outputs.matrix }}
+            );
+
+            core.setOutput("test_bare_flavors_matrix", matrix);
   test_flavors_chrooted:
+    needs: intersect_matrices
     name: Test flavors chrooted
     uses: ./.github/workflows/test_flavor_chrooted.yml
-    if: ${{ inputs.flavors_matrix != '{"include":[]}' && inputs.chroot_test == true }}
+    if: ${{ needs.intersect_matrices.outputs.chroot_test_flavors_matrix != '{"include":[]}' && inputs.chroot_test == true }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(inputs.flavors_matrix) }}
+      matrix: ${{ fromJson(needs.intersect_matrices.outputs.chroot_test_flavors_matrix) }}
     with:
       version: ${{ inputs.version }}
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
   test_platform_flavors:
+    needs: intersect_matrices
     name: Test platform flavors
     uses: ./.github/workflows/test_platform_flavor.yml
-    if: ${{ inputs.flavors_matrix != '{"include":[]}' && inputs.platform_test == true }}
+    if: ${{ needs.intersect_matrices.outputs.platform_test_flavors_matrix != '{"include":[]}' && inputs.platform_test == true }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(inputs.flavors_matrix) }}
+      matrix: ${{ fromJson(needs.intersect_matrices.outputs.platform_test_flavors_matrix) }}
     with:
       version: ${{ inputs.version }}
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
     secrets: inherit
   test_bare_flavors:
+    needs: intersect_matrices
     name: Test bare flavors
     uses: ./.github/workflows/test_bare_flavor.yml
-    if: ${{ inputs.bare_flavors_matrix != '{"include":[]}' && inputs.bare_flavors_test == true }}
+    if: ${{ needs.intersect_matrices.outputs.test_bare_flavors_matrix != '{"include":[]}' && inputs.bare_flavors_test == true }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(inputs.bare_flavors_matrix) }}
+      matrix: ${{ fromJson(needs.intersect_matrices.outputs.test_bare_flavors_matrix) }}
     with:
       version: ${{ inputs.version }}
       arch: ${{ matrix.arch }}

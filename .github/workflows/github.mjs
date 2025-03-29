@@ -23,6 +23,40 @@ export async function dispatchRetryWorkflow(core, githubActions, context, refNam
     return true;
 }
 
+export function flattenFlavorsMatrixByArch(matrix) {
+    let matrixByArch = {};
+
+    for (const flavor of matrix.include) {
+        if (!(flavor["arch"] in matrixByArch)) {
+            matrixByArch[flavor["arch"]] = [];
+        }
+
+        matrixByArch[flavor["arch"]].push(flavor["flavor"]);
+    }
+
+    return matrixByArch;
+}
+
+export function intersectFlavorsMatrix(matrixA, matrixB) {
+    matrixA = flattenFlavorsMatrixByArch(matrixA);
+    matrixB = flattenFlavorsMatrixByArch(matrixB);
+    let intersectMatrix = [];
+
+    for (const arch in matrixA) {
+        if (!matrixB.hasOwnProperty(arch)) {
+            continue;
+        }
+
+        for (const flavor of matrixA[arch]) {
+            if (matrixB[arch].includes(flavor)) {
+                intersectMatrix.push({ "arch": arch, "flavor": flavor });
+            }
+        }
+    }
+
+    return { "include": intersectMatrix };
+}
+
 export async function retryWorkflow(core, githubActions, context, runID, retries) {
     if (isNaN(retries)) {
         core.setFailed("Workflow run retry requested retries are invalid");
