@@ -16,9 +16,87 @@ jobs:
     uses: ./.github/workflows/download_workflow_data.yml
     with:
       run_id: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
+  trustedboot_flavors_supported_matrix:
+    name: Generate flavors matrix for trustedboot
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: '--include-only "*trustedboot*" --no-arch --json-by-arch'
+  trustedboot_flavors_matrix:
+    needs: [ trustedboot_flavors_supported_matrix, workflow_data ]
+    name: Intersect matrix supporting trustedboot
+    runs-on: 'ubuntu-24.04'
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      flavors_matrix: ${{ steps.matrix.outputs.flavors_matrix }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - id: matrix
+        name: Calculate matrix
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
+
+            // chroot_test_flavors_matrix
+            let matrix = gitHubLib.intersectFlavorsMatrix(
+              ${{ needs.workflow_data.outputs.flavors_matrix }},
+              ${{ needs.trustedboot_flavors_supported_matrix.outputs.matrix }}
+            );
+
+            core.setOutput("flavors_matrix", matrix);
+  non_trustedboot_flavors_matrix:
+    needs: [ trustedboot_flavors_supported_matrix, workflow_data ]
+    name: Exclude matrix of flavors supporting trustedboot
+    runs-on: 'ubuntu-24.04'
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      flavors_matrix: ${{ steps.matrix.outputs.flavors_matrix }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - id: matrix
+        name: Calculate matrix
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
+
+            // chroot_test_flavors_matrix
+            let matrix = gitHubLib.excludeFlavorsMatrix(
+              ${{ needs.workflow_data.outputs.flavors_matrix }},
+              ${{ needs.trustedboot_flavors_supported_matrix.outputs.matrix }}
+            );
+
+            core.setOutput("flavors_matrix", matrix);
+  copy_artifacts:
+    needs: [ non_trustedboot_flavors_matrix, workflow_data ]
+    name: Copy without adding certs
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.non_trustedboot_flavors_matrix.outputs.flavors_matrix) }}
+    steps:
+      - name: Load flavor build artifact
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
+        with:
+          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+          github-token: ${{ github.token }}
+          run-id: ${{ needs.workflow_data.outputs.run_id }}
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
+        with:
+          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+          overwrite: true
+          path: '*.tar.gz'
   prepare_certs:
-    needs: workflow_data
-    name: Add certs to S3 artifacts
+    needs: [ trustedboot_flavors_matrix, workflow_data ]
+    name: Add certs
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -27,7 +105,7 @@ jobs:
       CNAME: ''
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.workflow_data.outputs.flavors_matrix) }}
+      matrix: ${{ fromJson(needs.trustedboot_flavors_matrix.outputs.flavors_matrix) }}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
@@ -44,19 +122,17 @@ jobs:
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
         with:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
-      - name: Load cert cache
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
-        with:
-          path: cert/*.*
-          key: cert-${{ github.run_id }}
-          fail-on-cache-miss: true
+          github-token: ${{ github.token }}
+          run-id: ${{ needs.workflow_data.outputs.run_id }}
       - name: Add certs to build artifacts
         run: |
+          mkdir "$CNAME/"
           tar -C "$CNAME/" -xzf "$CNAME.tar.gz"
           rm "$CNAME.tar.gz"
 
+          # USE_KMS in build_requirements.yml
           for f in secureboot.{{pk,kek,db}.{crt,der,auth},aws-efivars}; do
-            cp "cert/$f" "$CNAME/$CNAME.$f"
+            cp "cert/gardenlinux-$f" "$CNAME/$CNAME.$f"
           done
 
           tar -cSzvf "$CNAME.tar.gz" -C $CNAME .
@@ -66,7 +142,7 @@ jobs:
           overwrite: true
           path: ${{ env.CNAME }}.tar.gz
   upload_to_s3:
-    needs: [ prepare_certs, workflow_data ]
+    needs: [ copy_artifacts, prepare_certs, workflow_data ]
     name: Upload to S3
     permissions:
       id-token: write
@@ -75,14 +151,14 @@ jobs:
       commit_id: ${{ needs.workflow_data.outputs.commit_id }}
       version: ${{ needs.workflow_data.outputs.version }}
       flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
-      run_id: ${{ needs.workflow_data.outputs.run_id }}
+      run_id: ${{ github.run_id }}
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_role: ${{ secrets.AWS_IAM_ROLE }}
       aws_session: ${{ secrets.AWS_OIDC_SESSION }}
       aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
   upload_to_s3_cn:
-    needs: [ prepare_certs, workflow_data ]
+    needs: [ copy_artifacts, prepare_certs, workflow_data ]
     name: Upload to S3 (China)
     permissions:
       id-token: write
@@ -91,7 +167,7 @@ jobs:
       commit_id: ${{ needs.workflow_data.outputs.commit_id }}
       version: ${{ needs.workflow_data.outputs.version }}
       flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
-      run_id: ${{ needs.workflow_data.outputs.run_id }}
+      run_id: ${{ github.run_id }}
     secrets:
       aws_region: ${{ secrets.AWS_CN_REGION }}
       aws_role: ${{ secrets.AWS_CN_IAM_ROLE }}
