@@ -32,13 +32,10 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
-      - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
-        with:
-          path: |
-            COMMIT
-            VERSION
-          key: build-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
-          fail-on-cache-miss: true
+      - name: Set flavor version reference
+        run: |
+          echo "${{ needs.workflow_data.outputs.commit_id }}" | tee COMMIT
+          echo "${{ needs.workflow_data.outputs.version }}" | tee VERSION
       - name: Set CNAME
         run: |
           cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
@@ -69,7 +66,7 @@ jobs:
           overwrite: true
           path: ${{ env.CNAME }}.tar.gz
   upload_to_s3:
-    needs: workflow_data
+    needs: [ prepare_certs, workflow_data ]
     name: Upload to S3
     permissions:
       id-token: write
@@ -85,7 +82,7 @@ jobs:
       aws_session: ${{ secrets.AWS_OIDC_SESSION }}
       aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
   upload_to_s3_cn:
-    needs: workflow_data
+    needs: [ prepare_certs, workflow_data ]
     name: Upload to S3 (China)
     permissions:
       id-token: write
