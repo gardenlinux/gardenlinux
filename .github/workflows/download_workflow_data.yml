@@ -54,8 +54,11 @@ jobs:
               return false;
             }
 
-            core.setOutput("commit_id", workflowData.id);
-            core.setOutput("version", workflowData.version);
+            fs.accessSync("flavor_version_data.json", (fs.constants.F_OK | fs.constants.R_OK));
+            flavorVersionData = JSON.parse(fs.readFileSync("flavor_version_data.json"));
+
+            core.setOutput("commit_id", flavorVersionData.commit_id);
+            core.setOutput("version", flavorVersionData.version);
             core.setOutput("flavors_matrix", workflowData.flavors_matrix);
             core.setOutput("bare_flavors_matrix", workflowData.bare_flavors_matrix);
             core.setOutput("original_workflow_name", workflowData.original_workflow_name);
