@@ -43,4 +43,4 @@ jobs:
           podman manifest create ghcr.io/${{ github.repository }}/kmodbuild:$VERSION
           podman manifest add ghcr.io/${{ github.repository }}/kmodbuild:$VERSION ghcr.io/${{ github.repository }}/kmodbuild:amd64-$VERSION
           podman manifest add ghcr.io/${{ github.repository }}/kmodbuild:$VERSION ghcr.io/${{ github.repository }}/kmodbuild:arm64-$VERSION
-          podman push ghcr.io/${{ github.repository }}/kmodbuild:$VERSION
+          podman manifest push ghcr.io/${{ github.repository }}/kmodbuild:$VERSION

@@ -103,14 +103,14 @@ jobs:
             podman manifest create ghcr.io/${{ github.repository }}:nightly
             podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:amd64-nightly
             podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:arm64-nightly
-            podman push ghcr.io/${{ github.repository }}:nightly
+            podman manifest push ghcr.io/${{ github.repository }}:nightly
           fi
 
           # Creating and pushing manifest for version tag
           podman manifest create ghcr.io/${{ github.repository }}:${version}
           podman manifest add ghcr.io/${{ github.repository }}:${version} ghcr.io/${{ github.repository }}:amd64-${version}
           podman manifest add ghcr.io/${{ github.repository }}:${version} ghcr.io/${{ github.repository }}:arm64-${version}
-          podman push ghcr.io/${{ github.repository }}:${version}
+          podman manifest push ghcr.io/${{ github.repository }}:${version}
   bare_flavors:
     name: Publish bare flavors
     if: ${{ inputs.bare_flavors_matrix != '{"include":[]}' }}
@@ -170,14 +170,14 @@ jobs:
           podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
           podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
           podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
-          podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
+          podman manifest push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
 
           # Creating and pushing manifest for nightly tag
           if [ $is_nightly = true ]; then
             podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
             podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
             podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
-            podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
+            podman manifest push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
           fi
   flavors:
     name: Publish flavors
