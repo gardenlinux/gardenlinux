@@ -72,8 +72,8 @@ jobs:
           version=$(cat VERSION)
 
           podman login -u token -p ${{ github.token }} ghcr.io
-          tar xzv < "${{ env.CNAME_AMD64 }}.tar.gz"
-          image="$(podman load < ${{ env.CNAME_AMD64 }}.oci | awk '{ print $NF }')"
+          tar xzv < "${CNAME_AMD64}.tar.gz"
+          image="$(podman load < ${CNAME_AMD64}.oci | awk '{ print $NF }')"
 
           # Tagging for amd64 nightly
           if [ $is_nightly = true ]; then
@@ -85,8 +85,8 @@ jobs:
           podman tag "$image" ghcr.io/${{ github.repository }}:amd64-${version}
           podman push ghcr.io/${{ github.repository }}:amd64-${version}
 
-          tar xzv < "${{ env.CNAME_ARM64 }}.tar.gz"
-          image="$(podman load < ${{ env.CNAME_ARM64 }}.oci | awk '{ print $NF }')"
+          tar xzv < "${CNAME_ARM64}.tar.gz"
+          image="$(podman load < ${CNAME_ARM64}.oci | awk '{ print $NF }')"
 
           # Tagging for arm64 nightly
           if [ $is_nightly = true ]; then
@@ -251,8 +251,8 @@ jobs:
           retry_count=0
           exit_code=0
           until [ $retry_count -ge $max_retries ]; do
-            if output=$(GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir ${{ env.cname }} --container ghcr.io/${{ github.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname ${{ env.cname }} --cosign_file digest --manifest_file manifests/oci_manifest_entry_${{ env.cname }}.json 2>&1); then
-              echo "$output"
+            if output=$(GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir "$CNAME" --container ghcr.io/${{ github.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname "$CNAME" --cosign_file digest --manifest_file "manifests/oci_manifest_entry_$CNAME.json" 2>&1); then
+              cat digest
               exit 0
             elif echo "$output" | grep -q "Bad Gateway"; then
               retry_count=$((retry_count+1))
@@ -268,9 +268,6 @@ jobs:
             echo "Failed after $max_retries retries"
             exit 1
           fi
-      - name: Output digest to be signed
-        run: |
-          cat digest
       - name: Sign the manifest
         run: |
           docker login ghcr.io -u token -p ${{ github.token }}
