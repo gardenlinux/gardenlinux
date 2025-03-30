@@ -23,6 +23,22 @@ export async function dispatchRetryWorkflow(core, githubActions, context, refNam
     return true;
 }
 
+export function excludeFlavorsMatrix(matrixA, matrixB) {
+    matrixA = flattenFlavorsMatrixByArch(matrixA);
+    matrixB = flattenFlavorsMatrixByArch(matrixB);
+    let resultMatrix = [];
+
+    for (const arch in matrixA) {
+        for (const flavor of matrixA[arch]) {
+            if (!matrixB.hasOwnProperty(arch) || !matrixB[arch].includes(flavor)) {
+                resultMatrix.push({ "arch": arch, "flavor": flavor });
+            }
+        }
+    }
+
+    return { "include": resultMatrix };
+}
+
 export function flattenFlavorsMatrixByArch(matrix) {
     let matrixByArch = {};
 
