@@ -53,17 +53,8 @@ jobs:
               --env=PGPASSWORD=$(kubectl get secret/postgres-credentials --template="{{.data.password}}" | base64 -d) -- /usr/local/src/ingest-single-gl-release.sh ${{ inputs.version }}
       - name: Wait for GLVD to ingest the package list of the new version
         run: |
-          VERSION=${{ inputs.version }}
-          URL="https://glvd.ingress.glvd.gardnlinux.shoot.canary.k8s-hana.ondemand.com/v1/distro/$VERSION"
-          for i in {1..30}; do
-              RESPONSE=$(curl -s $URL)
-              if [[ $RESPONSE != "[]" ]]; then
-                  echo "Non-empty list received: $RESPONSE"
-                  break
-              fi
-              echo "Attempt $i returned an empty list, retrying in 10 seconds..."
-              sleep 10
-          done
+          echo "Give GLVD some time to ingest the data. It is not clear how long this takes exactly, and there is no single indicator for when it was done."
+          sleep 180
 
   create_github_release:
     if: ${{ inputs.type }} == 'patch'
