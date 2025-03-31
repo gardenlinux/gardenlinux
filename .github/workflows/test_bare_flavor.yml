@@ -34,7 +34,7 @@ jobs:
           key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: Load bare flavor build artifact
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
         with:
           name: build-${{ inputs.flavor }}-${{ inputs.arch }}
           path: .build/bare_flavors
