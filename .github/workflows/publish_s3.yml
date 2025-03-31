@@ -189,7 +189,7 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
       - id: git_hash
         name: Get Git hash for "${{ needs.workflow_data.outputs.commit_id }}"
-        run: echo "hash=$(git log -1 --pretty=format:"%H" "${{ needs.workflow_data.outputs.commit_id }}")" | tee -a $GITHUB_OUTPUT
+        run: echo "hash=$(git log -1 --pretty=format:"%H" "${{ needs.workflow_data.outputs.commit_id }}" -- .)" | tee -a $GITHUB_OUTPUT
       - if: ${{ github.ref_name == 'main' }}
         name: Create GLRD nightly release
         uses: gardenlinux/glrd@v3
