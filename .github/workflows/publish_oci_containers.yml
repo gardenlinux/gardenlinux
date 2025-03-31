@@ -179,7 +179,7 @@ jobs:
             podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
             podman manifest push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
           fi
-  flavors:
+  push_flavors:
     name: Publish flavors
     runs-on: ubuntu-24.04
     defaults:
@@ -195,7 +195,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
-      max-parallel: 1
+      max-parallel: 8
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
@@ -213,13 +213,6 @@ jobs:
         run: |
           cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
           echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
-      - name: Cache OCI manifests
-        uses: actions/cache@v4
-        with:
-          path: manifests
-          key: oci-manifests-${{ github.run_id }}-${{ matrix.flavor }}-${{ matrix.arch }}
-          restore-keys: |
-            oci-manifests-${{ github.run_id }}
       - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
         with:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
@@ -245,14 +238,12 @@ jobs:
           cosign-release: 'v2.4.1'
       - name: Push using the glcli util
         run: |
-          mkdir -p manifests
-
           max_retries=3
           retry_count=0
           exit_code=0
           until [ $retry_count -ge $max_retries ]; do
-            if output=$(GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir "$CNAME" --container ghcr.io/${{ github.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname "$CNAME" --cosign_file digest --manifest_file "manifests/oci_manifest_entry_$CNAME.json" 2>&1); then
-              cat digest
+            if output=$(GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir "$CNAME" --container ghcr.io/${{ github.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname "$CNAME" --cosign_file digest.txt --manifest_file "oci_manifest_entry_$CNAME.json" 2>&1); then
+              cat digest.txt
               exit 0
             elif echo "$output" | grep -q "Bad Gateway"; then
               retry_count=$((retry_count+1))
@@ -271,12 +262,55 @@ jobs:
       - name: Sign the manifest
         run: |
           docker login ghcr.io -u token -p ${{ github.token }}
-          cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }} ghcr.io/${{ github.repository }}@$(cat digest)
+          cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }} ghcr.io/${{ github.repository }}@$(cat digest.txt)
       - name: Verify signature
         run: |
-          cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.aws_region}}.amazonaws.com/${{ secrets.oci_kms_arn }} ghcr.io/${{ github.repository }}@$(cat digest)
+          cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.aws_region}}.amazonaws.com/${{ secrets.oci_kms_arn }} ghcr.io/${{ github.repository }}@$(cat digest.txt)
+      - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        with:
+          path: oci_manifest_entry_${{ env.CNAME }}.json
+          key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
+  aggregate_oci_manifests:
+    needs: push_flavors
+    name: Aggregate OCI image flavor manifests
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    env:
+      CNAME: ''
+    strategy:
+      matrix: ${{ fromJson(inputs.flavors_matrix) }}
+      max-parallel: 1
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - name: Set flavor version reference
+        run: |
+          echo "${{ inputs.commit_id }}" | tee COMMIT
+          echo "${{ inputs.version }}" | tee VERSION
+      - name: Set CNAME
+        run: |
+          cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
+          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
+      - name: Cache OCI manifests
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        with:
+          path: manifests
+          key: oci-manifests-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
+          restore-keys: |
+            oci-manifests-${{ github.run_id }}
+      - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        with:
+          path: oci_manifest_entry_${{ env.CNAME }}.json
+          key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
+      - name: Store OCI manifest ${{ matrix.flavor }} (${{ matrix.arch }})
+        run: |
+          mkdir -p "manifests"
+          mv "oci_manifest_entry_$CNAME.json" "manifests/"
   update_manifest_index:
-    needs: flavors
+    needs: aggregate_oci_manifests
     name: Update OCI manifest index
     runs-on: ubuntu-24.04
     defaults:
