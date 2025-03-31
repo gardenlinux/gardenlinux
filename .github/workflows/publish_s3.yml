@@ -17,6 +17,7 @@ jobs:
     with:
       run_id: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
   trustedboot_flavors_supported_matrix:
+    needs: workflow_data
     name: Generate flavors matrix for trustedboot
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
@@ -189,7 +190,12 @@ jobs:
         name: Create GLRD nightly release
         uses: gardenlinux/glrd@v2
         with:
-          cmd: glrd-manage --s3-update --create nightly
+          cmd: glrd-manage --s3-update --create nightly --version "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}"
+      - if: ${{ github.ref_name != 'main' }}
+        name: Create GLRD patch release
+        uses: gardenlinux/glrd@v2
+        with:
+          cmd: glrd-manage --s3-update --create patch --version "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}"
       - name: Get latest GL nightly
         id: gl_version_nightly
         uses: gardenlinux/glrd@v2
