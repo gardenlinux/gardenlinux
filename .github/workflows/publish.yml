@@ -1,4 +1,4 @@
-name: 'Publish to GitHub'
+name: 'Publish to ghcr.io'
 on:
   workflow_dispatch:
     inputs:
