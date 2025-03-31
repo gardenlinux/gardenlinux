@@ -188,17 +188,17 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
       - if: ${{ github.ref_name == 'main' }}
         name: Create GLRD nightly release
-        uses: gardenlinux/glrd@v2
+        uses: gardenlinux/glrd@v3
         with:
           cmd: glrd-manage --s3-update --create nightly --version "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}"
       - if: ${{ github.ref_name != 'main' }}
         name: Create GLRD patch release
-        uses: gardenlinux/glrd@v2
+        uses: gardenlinux/glrd@v3
         with:
           cmd: glrd-manage --s3-update --create patch --version "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}"
       - name: Get latest GL nightly
         id: gl_version_nightly
-        uses: gardenlinux/glrd@v2
+        uses: gardenlinux/glrd@v3
         with:
           cmd: glrd --type nightly --latest
   publish_retry:
