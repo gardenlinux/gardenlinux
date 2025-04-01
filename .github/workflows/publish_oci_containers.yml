@@ -298,9 +298,9 @@ jobs:
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
           path: manifests
-          key: oci-manifests-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
+          key: oci-manifests-${{ github.run_id }}-${{ matrix.flavor }}-${{ matrix.arch }}
           restore-keys: |
-            oci-manifests-${{ github.run_id }}
+            oci-manifests-${{ github.run_id }}-
       - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
           path: oci_manifest_entry_${{ env.CNAME }}.json
@@ -326,6 +326,8 @@ jobs:
         with:
           path: manifests
           key: oci-manifests-${{ github.run_id }}
+          restore-keys: |
+            oci-manifests-${{ github.run_id }}-
           fail-on-cache-miss: true
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
