@@ -18,8 +18,8 @@ jobs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: use VERSION file to support dev build on rel-branch
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - name: Use VERSION file to support dev build on rel-branch
         id: version
         run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
   build:
