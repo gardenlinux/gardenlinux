@@ -31,29 +31,30 @@ jobs:
       # This is required for requesting the JWT
       id-token: write
     steps:
-      - run: echo fixme fwilhe
-      # - name: Get OIDC token
-      #   id: get-token
-      #   run: |
-      #     IDTOKEN=$(curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=glvd" | jq -r '.value')
-      #     echo "idToken=${IDTOKEN}" >> $GITHUB_OUTPUT
-      # - uses: azure/k8s-set-context@v4
-      #   with:
-      #      method: kubeconfig
-      #      kubeconfig: "${{ secrets.KUBECONFIG }}"
-      # - name: Start a new ingestion job in GLVD to import package list for new version
-      #   run: |
-      #     kubectl run ingest-new-gl-version-$RANDOM \
-      #         --image=ghcr.io/gardenlinux/glvd-data-ingestion:latest \
-      #         --env=PGDATABASE=glvd \
-      #         --env=PGUSER="${{ secrets.GLVD_DB_USERNAME }}" \
-      #         --env=PGHOST=glvd-database-0.glvd-database \
-      #         --env=PGPORT=5432 \
-      #         --env=PGPASSWORD="${{ secrets.GLVD_DB_PASSWORD }}" -- /usr/local/src/ingest-single-gl-release.sh ${{ inputs.version }}
-      # - name: Wait for GLVD to ingest the package list of the new version
-      #   run: |
-      #     echo "Give GLVD some time to ingest the data. It is not clear how long this takes exactly, and there is no single indicator for when it was done."
-      #     sleep 180
+      - name: Get OIDC token
+        id: get-token
+        run: |
+          IDTOKEN=$(curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=glvd" | jq -r '.value')
+          echo "idToken=${IDTOKEN}" >> $GITHUB_OUTPUT
+      - uses: azure/k8s-set-context@v4
+        with:
+           method: kubeconfig
+           kubeconfig: "${{ secrets.KUBECONFIG }}"
+      - name: Start a new ingestion job in GLVD to import package list for new version
+        run: |
+          kubectl run ingest-new-gl-version-$RANDOM \
+              --namespace default --token "${{ steps.get-token.outputs.idToken }}" \
+              --image=ghcr.io/gardenlinux/glvd-data-ingestion:latest \
+              --restart=Never \
+              --env=PGDATABASE=glvd \
+              --env=PGUSER="${{ secrets.GLVD_DB_USERNAME }}" \
+              --env=PGHOST=glvd-database-0.glvd-database \
+              --env=PGPORT=5432 \
+              --env=PGPASSWORD="${{ secrets.GLVD_DB_PASSWORD }}" -- /usr/local/src/ingest-single-gl-release.sh ${{ inputs.version }}
+      - name: Wait for GLVD to ingest the package list of the new version
+        run: |
+          echo "Give GLVD some time to ingest the data. It is not clear how long this takes exactly, and there is no single indicator for when it was done."
+          sleep 180
 
   create_github_release:
     if: ${{ inputs.type }} == 'patch'
