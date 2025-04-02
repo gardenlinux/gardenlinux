@@ -15,6 +15,8 @@ endif
 ifeq ($(strip $(TARGETARCH)),)
 ifeq ($(shell uname -m), aarch64)	
 TARGETARCH := arm64
+else ifeq ($(shell uname -m), arm64)
+TARGETARCH := arm64
 else ifeq ($(shell uname -m), x86_64)
 TARGETARCH := amd64
 endif
