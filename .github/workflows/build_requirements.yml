@@ -47,7 +47,7 @@ jobs:
             version="now"
           fi
 
-          echo "COMMIT_ID=$(git rev-parse HEAD | cut -c1-8)" | tee -a "$GITHUB_ENV"
+          echo "COMMIT_ID=$(git rev-parse HEAD)" | tee -a "$GITHUB_ENV"
           echo "VERSION=$(./bin/garden-version "$version")" | tee -a "$GITHUB_ENV"
       - name: Prepare build reference from GLRD
         if: ${{ steps.prepare_github_reference.conclusion == 'skipped' }}
@@ -60,7 +60,7 @@ jobs:
             glrd_data="$(./bin/glrd --type stable,patch,nightly,dev --output-format=json --version ${{ inputs.version }})"
           fi
 
-          commit_id=$(echo $glrd_data | jq -r '.releases[0].git.commit_short')
+          commit_id=$(echo $glrd_data | jq -r '.releases[0].git.commit')
           version=$(echo $glrd_data | jq -r '(.releases[0].version.major | tostring) + "." + (.releases[0].version.minor | tostring)')
 
           echo "COMMIT_ID=$commit_id" | tee -a "$GITHUB_ENV"
