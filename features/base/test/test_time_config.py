@@ -100,7 +100,7 @@ __EOF
     assert "FAIL" not in output
 
 
-def test_clocksource(client, aws, non_qemu):
+def test_clocksource(client, aws):
     """ Test for clocksource """
     # refer to https://aws.amazon.com/premiumsupport/knowledge-center/manage-ec2-linux-clock-source/
     # detect hypervisor type kvm or xen
