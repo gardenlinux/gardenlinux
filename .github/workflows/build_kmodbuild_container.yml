@@ -46,6 +46,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          commit="$(./get_commit)"
+          commit_short="${commit:0:8}"
+
           version="$(bin/garden-version "${{ inputs.version }}")"
 
           if [ "$version" == "today" ]; then
@@ -56,7 +59,7 @@ jobs:
           rm "$CNAME.tar.gz"
 
           base="ghcr.io/${{ github.repository }}:$version"
-          image="$(podman load -i .build/container-${{ matrix.arch }}-$(cat VERSION)-$(cat COMMIT).oci | awk '{ print $NF }')"
+          image="$(podman load -i .build/container-${{ matrix.arch }}-$(cat VERSION)-${commit_short}.oci | awk '{ print $NF }')"
           podman tag "$image" "$base"
 
           snapshot="$(gh api "/repos/gardenlinux/repo/contents/.container?ref=$version" | jq -r '.content' | base64 -d)"
