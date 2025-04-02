@@ -29,12 +29,12 @@ jobs:
       bare_flavors_matrix: ${{ steps.data.outputs.bare_flavors_matrix }}
       original_workflow_name: ${{ steps.data.outputs.original_workflow_name }}
     steps:
-      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
+      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
         with:
           name: flavor-version-data
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
+      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
         with:
           name: workflow-data
           github-token: ${{ github.token }}
