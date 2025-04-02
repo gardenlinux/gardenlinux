@@ -15,7 +15,9 @@ jobs:
       matrix:
         platform: [ kvm, aws, azure, ali, gcp, metal ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
       - name: Build the image
         run: ./build ${{ matrix.platform}}-stig
       - name: Upload build logs
@@ -23,3 +25,4 @@ jobs:
         with:
           name: STIG-${{ matrix.platform}}-logs
           path: .build/*log
+          include-hidden-files: true
