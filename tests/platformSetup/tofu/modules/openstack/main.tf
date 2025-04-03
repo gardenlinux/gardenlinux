@@ -139,23 +139,7 @@ resource "openstack_compute_instance_v2" "instance" {
   }
 
   config_drive      = true
-  # user_data = filebase64("vm-startup-script.sh")
-
-  user_data = <<-EOT
-#cloud-config
-users:
-  - name: ${var.ssh_user}
-    lock_passwd: false
-    passwd: $6$saltsalt$8659GkBs0jVaaGWWSWwC3tFAFJmSs7706M2bi0rUR2DE0rF8ypszUoAghSTcdvZz3r0hVg4882tKMLwMUogdD.
-    ssh_authorized_keys:
-      - ${file(var.ssh_public_key)}
-    sudo: ALL=(ALL) NOPASSWD:ALL
-    shell: /bin/bash
-ssh_pwauth: true
-runcmd:
-  - touch /tmp/startup-script-ok
-  - systemctl enable --now ssh
-EOT  
+  user_data = file("vm-startup-script.sh")
 
   depends_on = [
     openstack_networking_floatingip_v2.pip
