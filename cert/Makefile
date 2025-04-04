@@ -75,13 +75,16 @@ $(PREFIX)tpm-sign.crt: $(PREFIX)tpm-sign.conf $(PREFIX)intermediate-ca.crt
 %.aws-efivars: %.pk.auth %.kek.auth %.db.auth
 	@uefivars -i none -o aws -O '$@' -P '$*.pk.esl' -K '$*.kek.esl' -b '$*.db.esl'
 
+%.edk2-efivars: %.pk.auth %.kek.auth %.db.auth
+	@uefivars -i none -o edk2 -O '$@' -P '$*.pk.esl' -K '$*.kek.esl' -b '$*.db.esl'
+
 %.pub: gpg.conf
 	@./gengpg --conf '$<' $(GENGPG_OPTS) '$@'
 
 clean:
-	@echo "Removing *.pub *.crt *.der *.csr *.key *.arn *.chain GUID.txt *.esl *.auth *.aws-efivars but nothing starting with gardenlinux-"
-	@find . \( -name '*.pub' -o -name '*.crt' -o -name '*.der' -o -name '*.csr' -o -name '*.key' -o -name '*.arn' -o -name '*.chain' -o -name 'GUID.txt' -o -name '*.esl' -o -name '*.auth' -o -name '*.aws-efivars' \) -a -not -name 'gardenlinux-*' -delete
+	@echo "Removing *.pub *.crt *.der *.csr *.key *.arn *.chain GUID.txt *.esl *.auth *.aws-efivars *.edk2-efivars but nothing starting with gardenlinux-"
+	@find . \( -name '*.pub' -o -name '*.crt' -o -name '*.der' -o -name '*.csr' -o -name '*.key' -o -name '*.arn' -o -name '*.chain' -o -name 'GUID.txt' -o -name '*.esl' -o -name '*.auth' -o -name '*.aws-efivars' -o -name '*.edk2-efivars' \) -a -not -name 'gardenlinux-*' -delete
 
 distclean:
 	@echo "Removing *.pub *.crt *.der *.csr *.key *.arn *.chain GUID.txt *.esl *.auth *.aws-efivars"
-	@find . \( -name '*.pub' -o -name '*.crt' -o -name '*.der' -o -name '*.csr' -o -name '*.key' -o -name '*.arn' -o -name '*.chain' -o -name 'GUID.txt' -o -name '*.esl' -o -name '*.auth' -o -name '*.aws-efivars' \) -delete
+	@find . \( -name '*.pub' -o -name '*.crt' -o -name '*.der' -o -name '*.csr' -o -name '*.key' -o -name '*.arn' -o -name '*.chain' -o -name 'GUID.txt' -o -name '*.esl' -o -name '*.auth' -o -name '*.aws-efivars' -o -name '*.edk2-efivars' \) -delete
