@@ -31,7 +31,7 @@ on:
       oci_kms_arn:
         required: true
 env:
-  GLCLI_VERSION: 0.6.3
+  GLCLI_VERSION: 0.6.4
 jobs:
   container:
     name: Publish container base image
