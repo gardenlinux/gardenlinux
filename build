@@ -6,7 +6,7 @@ shopt -s nullglob
 exec 3>&1
 exec 1>&2
 
-container_image=ghcr.io/gardenlinux/builder:491a8db6dc2c393eb79fa4c9148b84b080ab6b02 
+container_image=ghcr.io/gardenlinux/builder:70b8f1f7cb627a67b1076eeec7e288110cce0fc8
 container_engine=podman
 target_dir=.build
 
@@ -125,3 +125,6 @@ if [ -d cert ]; then
 fi
 
 "$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" ${container_cmd[@]+"${container_cmd[@]}"} fake_xattr make --no-print-directory -C /builder "${make_opts[@]}" "$@" >&3
+
+# Handle new .build/*unbase.sh files created by builder
+find "$target_dir" -type f -cnewer "$target_dir/features.sentinel" -regex ".*\.unbase.sh$" -exec bash {} \;
