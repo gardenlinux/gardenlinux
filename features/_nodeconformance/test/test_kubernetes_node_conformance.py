@@ -1,10 +1,11 @@
 import pytest
+import re
 from helper.utils import execute_remote_command
 from helper.utils import get_package_list
 import logging
 
 
-PACKAGES_GARDEN_LINUX = "podman"
+PACKAGES_GARDEN_LINUX = "docker-cli docker.io"
 PACKAGES_KUBERNETES = "kubelet kubectl"
 K8S_PGP_APT_KEY = """-----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: GnuPG v1.4.5 (GNU/Linux)
@@ -38,33 +39,50 @@ oyA0MELL0JQzEinixqxpZ1taOmVR/8pQVrqstqwqsp3RABaeZ80JbigUC29zJUVf
 -----END PGP PUBLIC KEY BLOCK-----"""
 
 
+def create_overlay_fs(client, logger):
+    logger.info("Creating overlay fs")
+    execute_remote_command(
+        client, "sudo mkdir -p /overlay/usr_work /overlay/usr_merged /overlay/usr_upper"
+    )
+
+    execute_remote_command(
+        "mount -t overlay overlay -o lowerdir=/usr,upperdir=/overlay/usr_upper,workdir=/overlay/usr_merged /overlay/user_merged"
+    )
+    logger.info("after mount overlay fs")
+
+
+def cleanup_overlay_fs(client, logger):
+    logger.info("Cleaning up overlay fs")
+    execute_remote_command(client, "sudo umount /overlay/usr_merged")
+    execute_remote_command(
+        client,
+        "sudo rm -rf /overlay/usr_work /overlay/usr_merged /overlay/usr_upper",
+    )
+
+
+def setup_node_conformance(client, logger):
+    logger.info("Setting up node conformance test")
+    create_overlay_fs(client, logger)
+    install_test_dependencies(client, logger)
+    install_kubernetes_tools(client, logger)
+
+
 def cleanup_node_conformance(client, logger):
     logger.info("Cleaning up node conformance test")
-    remount_usr_readonly(client, logger)
 
     # remove the K8s PGP key
     execute_remote_command(
         client, "sudo rm -f /etc/apt/keyrings/kubernetes-apt-keyring.gpg"
     )
 
-
-def remount_usr_write(client, logger):
-    logger.info("Remounting /usr")
-    command = "sudo mount -o remount,rw /usr"
-    execute_remote_command(client, command)
-    logger.info("after remount_usr")
-
-
-def remount_usr_readonly(client, logger):
-    logger.info("Restoring /usr")
-    command = "sudo mount -o remount,ro /usr"
-    execute_remote_command(client, command)
-    logger.info("after restore_usr")
+    # remove installed packages
+    execute_remote_command(client, f"sudo apt-get remove -y {PACKAGES_KUBERNETES}")
+    execute_remote_command(client, f"sudo apt-get remove -y {PACKAGES_GARDEN_LINUX}")
+    cleanup_overlay_fs(client, logger)
 
 
 def install_test_dependencies(client, logger):
     logger.info("Installing test dependencies")
-    remount_usr_write(client, logger)
 
     execute_remote_command(client, "apt-get update")
     logger.info("after apt-get update")
@@ -91,7 +109,7 @@ def install_kubernetes_tools(client, logger):
     add_sources_list_command = f"echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list"
     execute_remote_command(client, add_sources_list_command)
     logger.info("after add_sources_list_command")
-    command = f"DEBIAN_FRONTEND=noninteractive sudo apt-get update && sudo apt-get install --no-install-recommends -y {PACKAGES_KUBERNETES}"
+    command = f"export DEBIAN_FRONTEND=noninteractive; sudo apt-get update && sudo apt-get install --no-install-recommends -y {PACKAGES_KUBERNETES}"
     output = execute_remote_command(client, command)
     logger.info("after install_kubernetes_tools")
     assert "kubelet" in get_package_list(client), "kubelet is not installed"
@@ -106,23 +124,12 @@ def test_node_conformance(client, non_provisioner_chroot):
         # get list of packages installed before running the test
         before_packages = get_package_list(client)
 
-        # get file system hashsum before running the test
-
-        # command = "sudo find / -type f -exec sha256sum {} + | sort -k 2 "
-        # hashsum_before = execute_remote_command(client, command)
-
-        install_test_dependencies(client, logger)
-        logger.info("after install_test_dependencies")
-        # get container images installed before running the test
-        before_images = execute_remote_command(client, "podman images")
-
-        install_kubernetes_tools(client, logger)
-        logger.info("after install_kubernetes_tools")
+        setup_node_conformance(client, logger)
 
         # Make sure kubelet is installed.
         assert "kubelet" in get_package_list(client), "kubelet is not installed"
         # Make sure podman or docker runtime is available
-        assert "podman" in get_package_list(client) or "docker" in get_package_list(
+        assert "docker" in get_package_list(client) or "docker" in get_package_list(
             client
         ), "podman or docker is not installed"
         # Start node conformance tests
@@ -135,9 +142,16 @@ def test_node_conformance(client, non_provisioner_chroot):
         config_dir = "/etc/kubernetes"
         log_dir = "/tmp"
         container_image = "registry.k8s.io/node-test:0.2"
-        command = f"sudo podman run --rm --privileged --net=host -v /:/rootfs -v {config_dir}:{config_dir} -v {log_dir}:/var/result {container_image}"
+        command = f"sudo docker run --rm --privileged --net=host -v /:/rootfs -v {config_dir}:{config_dir} -v {log_dir}:/var/result {container_image}"
 
-        output = execute_remote_command(client, command, skip_error=True)
+        code, output = execute_remote_command(client, command, skip_error=True)
+
+        # present output without ansi
+        print(re.sub(r"\x1b\[[0-9;]*m", "", output))
+        # show logdir
+        execute_remote_command(client, f"ls -l {log_dir}")
+        assert False, "Node conformance test failed. Check the logs in /tmp"
+
         logger.info(f"{output}")
         logger.info("after node conformance test")
 
@@ -152,7 +166,7 @@ def test_node_conformance(client, non_provisioner_chroot):
         )
 
         # get container images installed after running the test
-        after_images = execute_remote_command(client, "podman images")
+        after_images = execute_remote_command(client, "docker images")
         assert (
             after_images == before_images
         ), "Test has side effects on the system. Images installed after running the test: {}".format(
