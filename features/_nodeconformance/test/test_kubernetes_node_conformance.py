@@ -38,10 +38,14 @@ oyA0MELL0JQzEinixqxpZ1taOmVR/8pQVrqstqwqsp3RABaeZ80JbigUC29zJUVf
 -----END PGP PUBLIC KEY BLOCK-----"""
 
 
-@pytest.fixture
-def cleanup():
-    yield  # Test runs here
-    print("Cleanup function executed!")  # Runs after the test
+def cleanup_node_conformance(client, logger):
+    logger.info("Cleaning up node conformance test")
+    remount_usr_readonly(client, logger)
+
+    # remove the K8s PGP key
+    execute_remote_command(
+        client, "sudo rm -f /etc/apt/keyrings/kubernetes-apt-keyring.gpg"
+    )
 
 
 def remount_usr_write(client, logger):
@@ -95,62 +99,68 @@ def install_kubernetes_tools(client, logger):
 
 
 def test_node_conformance(client, non_provisioner_chroot):
-    logging.basicConfig(level=logging.INFO)  # Set logging level
-    logger = logging.getLogger(__name__)
-    logger.info("Running node conformance test")
-    # get list of packages installed before running the test
-    before_packages = get_package_list(client)
+    try:
+        logging.basicConfig(level=logging.INFO)  # Set logging level
+        logger = logging.getLogger(__name__)
+        logger.info("Running node conformance test")
+        # get list of packages installed before running the test
+        before_packages = get_package_list(client)
 
-    # get file system hashsum before running the test
+        # get file system hashsum before running the test
 
-    # command = "sudo find / -type f -exec sha256sum {} + | sort -k 2 "
-    # hashsum_before = execute_remote_command(client, command)
+        # command = "sudo find / -type f -exec sha256sum {} + | sort -k 2 "
+        # hashsum_before = execute_remote_command(client, command)
 
-    install_test_dependencies(client, logger)
-    logger.info("after install_test_dependencies")
-    # get container images installed before running the test
-    before_images = execute_remote_command(client, "podman images")
+        install_test_dependencies(client, logger)
+        logger.info("after install_test_dependencies")
+        # get container images installed before running the test
+        before_images = execute_remote_command(client, "podman images")
 
-    install_kubernetes_tools(client, logger)
-    logger.info("after install_kubernetes_tools")
+        install_kubernetes_tools(client, logger)
+        logger.info("after install_kubernetes_tools")
 
-    # Make sure kubelet is installed.
-    assert "kubelet" in get_package_list(client), "kubelet is not installed"
-    # Make sure podman or docker runtime is available
-    assert "podman" in get_package_list(client) or "docker" in get_package_list(
-        client
-    ), "podman or docker is not installed"
-    # Start node conformance tests
-    # Execute the node conformance testsLOG_DIR is the test output path.
-    # sudo docker run -it --rm --privileged --net=host \
-    #  -v /:/rootfs -v $CONFIG_DIR:$CONFIG_DIR -v $LOG_DIR:/var/result \
-    #  registry.k8s.io/node-test:0.2
+        # Make sure kubelet is installed.
+        assert "kubelet" in get_package_list(client), "kubelet is not installed"
+        # Make sure podman or docker runtime is available
+        assert "podman" in get_package_list(client) or "docker" in get_package_list(
+            client
+        ), "podman or docker is not installed"
+        # Start node conformance tests
+        # Execute the node conformance testsLOG_DIR is the test output path.
+        # sudo docker run -it --rm --privileged --net=host \
+        #  -v /:/rootfs -v $CONFIG_DIR:$CONFIG_DIR -v $LOG_DIR:/var/result \
+        #  registry.k8s.io/node-test:0.2
 
-    config_dir = "/etc/kubernetes"
-    log_dir = "/tmp"
-    container_image = "registry.k8s.io/node-test:0.2"
-    command = f"sudo podman run --rm --privileged --net=host -v /:/rootfs -v {config_dir}:{config_dir} -v {log_dir}:/var/result {container_image}"
+        logger.info("before node confortmance test")
+        config_dir = "/etc/kubernetes"
+        log_dir = "/tmp"
+        container_image = "registry.k8s.io/node-test:0.2"
+        command = f"sudo podman run --rm --privileged --net=host -v /:/rootfs -v {config_dir}:{config_dir} -v {log_dir}:/var/result {container_image}"
 
-    execute_remote_command(client, command)
-    logger.info("after node conformance test")
+        output = execute_remote_command(client, command, skip_error=True)
+        logger.info(f"{output}")
+        logger.info("after node conformance test")
 
-    remount_usr_readonly(client, logger)
+        remount_usr_readonly(client, logger)
 
-    # get list of packages installed after running the test
-    after_packages = get_package_list(client)
-    assert (
-        after_packages == before_packages
-    ), "Test has side effects on the system. Packages installed after running the test: {}".format(
-        set(after_packages) - set(before_packages)
-    )
+        # get list of packages installed after running the test
+        after_packages = get_package_list(client)
+        assert (
+            after_packages == before_packages
+        ), "Test has side effects on the system. Packages installed after running the test: {}".format(
+            set(after_packages) - set(before_packages)
+        )
 
-    # get container images installed after running the test
-    after_images = execute_remote_command(client, "podman images")
-    assert (
-        after_images == before_images
-    ), "Test has side effects on the system. Images installed after running the test: {}".format(
-        set(after_images) - set(before_images)
-    )
+        # get container images installed after running the test
+        after_images = execute_remote_command(client, "podman images")
+        assert (
+            after_images == before_images
+        ), "Test has side effects on the system. Images installed after running the test: {}".format(
+            set(after_images) - set(before_images)
+        )
+    finally:
+        logger.info("Cleaning up node conformance test")
+        cleanup_node_conformance(client, logger)
 
 
 # Check results
