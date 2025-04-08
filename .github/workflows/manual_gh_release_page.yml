@@ -20,13 +20,50 @@ on:
         type: string
         description: "Full commitish"
 jobs:
+  # Create new version in GLVD so it has the package list of the new release
+  # This is needed for the automatic changelog generation
+  glvd:
+    if: ${{ inputs.type }} == 'patch'
+    name: Update GLVD distro list
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # This is required for requesting the JWT
+      id-token: write
+    steps:
+      - name: Get OIDC token
+        id: get-token
+        run: |
+          IDTOKEN=$(curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=glvd" | jq -r '.value')
+          echo "idToken=${IDTOKEN}" >> $GITHUB_OUTPUT
+      - uses: azure/k8s-set-context@v4
+        with:
+           method: kubeconfig
+           kubeconfig: "${{ secrets.KUBECONFIG }}"
+      - name: Start a new ingestion job in GLVD to import package list for new version
+        run: |
+          kubectl run ingest-new-gl-version-$RANDOM \
+              --namespace default --token "${{ steps.get-token.outputs.idToken }}" \
+              --image=ghcr.io/gardenlinux/glvd-data-ingestion:latest \
+              --restart=Never \
+              --env=PGDATABASE=glvd \
+              --env=PGUSER="${{ secrets.GLVD_DB_USERNAME }}" \
+              --env=PGHOST=glvd-database-0.glvd-database \
+              --env=PGPORT=5432 \
+              --env=PGPASSWORD="${{ secrets.GLVD_DB_PASSWORD }}" -- /usr/local/src/ingest-single-gl-release.sh ${{ inputs.version }}
+      - name: Wait for GLVD to ingest the package list of the new version
+        run: |
+          echo "Give GLVD some time to ingest the data. It is not clear how long this takes exactly, and there is no single indicator for when it was done."
+          sleep 180
+
   create_github_release:
     if: ${{ inputs.type }} == 'patch'
     environment: oidc_aws_s3_upload
+    needs: glvd
     permissions:
       id-token: write
       contents: write
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - name: install dependencies for generate_release_note.py script
@@ -35,8 +72,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"  
-      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # pin@v4.4.3
+          .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         with:
           name: release
           path: .github_release_id
@@ -49,7 +86,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -57,7 +94,7 @@ jobs:
         cname: [ kvm-gardener_prod, metal-gardener_prod, gcp-gardener_prod, gdch-gardener_prod, aws-gardener_prod, azure-gardener_prod, ali-gardener_prod, openstack-gardener_prod, openstackbaremetal-gardener_prod, vmware-gardener_prod, metal-gardener_prod_pxe ]
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # pin@v4.1.8
+      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
         with:
           name: release
       - uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
@@ -100,7 +137,7 @@ jobs:
     name: create GLRD release
     permissions:
       id-token: write
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash

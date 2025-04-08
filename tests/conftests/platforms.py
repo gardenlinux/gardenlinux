@@ -53,6 +53,11 @@ def kvm(platform):
         pytest.skip('test only supported on kvm platform')
 
 @pytest.fixture
+def qemu(platform):
+    if platform != 'qemu':
+        pytest.skip('test only supported on qemu platform')
+
+@pytest.fixture
 def metal(platform):
     if platform != 'metal':
         pytest.skip('test only supported on metal platform')
@@ -101,6 +106,11 @@ def non_gcp(platform):
 def non_kvm(platform):
     if platform == 'kvm':
         pytest.skip('test not supported on kvm')
+
+@pytest.fixture
+def non_qemu(platform):
+    if platform == 'qemu':
+        pytest.skip('test not supported on qemu')
 
 @pytest.fixture
 def non_metal(testconfig):

@@ -41,10 +41,10 @@ if [[ ! -d $dir/.build/ ]]; then
 	exit 1
 fi
 
-cname="$(basename "$(realpath "$dir/.build/$1")" .artifacts)"
+cname="$("$dir/build" --resolve-cname "$1")"
 
 if [[ ! -f $(realpath "$dir")/.build/$cname.tar ]]; then
-	echo "ERROR: Require $1 to be built before it can be tested."
+	echo "ERROR: Require .build/$cname.tar to be built before it can be tested."
 	echo "Run ./build $1 before running ./test $1"
 	exit 1
 fi
@@ -66,4 +66,3 @@ if [ -z "$container_image" ]; then
 fi
 
 "$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" 2>&1 | tee "$dir/.build/$cname.chroot.test.log"
-echo "$cname.chroot.test.log" >> "$dir/.build/$cname.artifacts"

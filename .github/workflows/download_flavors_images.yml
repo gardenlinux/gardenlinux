@@ -1,0 +1,73 @@
+name: download_flavor_images
+on:
+  workflow_call:
+    inputs:
+      commit_id:
+        type: string
+        required: true
+      version:
+        type: string
+        required: true
+      flavors_matrix:
+        type: string
+        required: true
+    secrets:
+      aws_role:
+        required: true
+      aws_session:
+        required: true
+      aws_region:
+        required: true
+      aws_s3_bucket:
+        required: true
+jobs:
+  images:
+    name: Provide image ${{ matrix.flavor }} (${{ matrix.arch }})
+    if: ${{ inputs.flavors_matrix != '{"include":[]}' }}
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      id-token: write
+    # @TODO: We could use a better name for the required environment
+    environment: oidc_platform_tests
+    env:
+      CNAME: ''
+    strategy:
+      matrix: ${{ fromJSON(inputs.flavors_matrix) }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - name: Set image reference for S3
+        run: |
+          echo "${{ inputs.commit_id }}" | tee COMMIT
+          echo "${{ inputs.version }}" | tee VERSION
+      - name: Set CNAME
+        run: |
+          cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
+          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
+      - name: 'Authenticate to AWS'
+        uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.aws_role }}
+          role-session-name: ${{ secrets.aws_session }}
+          aws-region: ${{ secrets.aws_region }}
+      - name: Prepare image from S3
+        run: |
+          mkdir "$CNAME"
+          aws s3 cp "s3://${{ secrets.aws_s3_bucket }}/objects/$CNAME" "$CNAME/" --recursive
+
+          tar -cSzvf "$CNAME.tar.gz" -C "$CNAME/" .
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+        with:
+          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+          path: ${{ env.CNAME }}.tar.gz
+          if-no-files-found: error
+      - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        with:
+          path: |
+            COMMIT
+            VERSION
+          key: build-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}

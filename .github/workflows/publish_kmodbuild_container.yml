@@ -1,0 +1,46 @@
+# @TODO: Replace with safe OCI manifast handling variant
+name: Publish container images
+on:
+  workflow_call:
+    inputs:
+      run_id:
+        type: string
+        required: true
+      version:
+        type: string
+        required: true
+jobs:
+  kmodbuild_container:
+    name: Publish kernel module build dev container
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    env:
+      VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+        with:
+          pattern: kmodbuild-container-*
+          merge-multiple: true
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - name: Publish kernel module build dev container
+        run: |
+          for oci_archive in *.oci; do
+            podman load -i ${oci_archive}
+            rm ${oci_archive}
+          done
+
+          podman login -u token -p ${{ github.token }} ghcr.io
+
+          podman push ghcr.io/${{ github.repository }}/kmodbuild:amd64-$VERSION
+          podman push ghcr.io/${{ github.repository }}/kmodbuild:arm64-$VERSION
+
+          podman manifest create ghcr.io/${{ github.repository }}/kmodbuild:$VERSION
+          podman manifest add ghcr.io/${{ github.repository }}/kmodbuild:$VERSION ghcr.io/${{ github.repository }}/kmodbuild:amd64-$VERSION
+          podman manifest add ghcr.io/${{ github.repository }}/kmodbuild:$VERSION ghcr.io/${{ github.repository }}/kmodbuild:arm64-$VERSION
+          podman manifest push ghcr.io/${{ github.repository }}/kmodbuild:$VERSION

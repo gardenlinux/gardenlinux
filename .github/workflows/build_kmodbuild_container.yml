@@ -1,0 +1,77 @@
+name: build_kmodbuild_container
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-build-kmodbuild-container
+  cancel-in-progress: true
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
+jobs:
+  kmodbuild_container:
+    name: Build kernel module build dev container (${{ matrix.arch }})
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      CNAME: ''
+    strategy:
+      matrix:
+        arch: [ amd64, arm64 ]
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - id: build_container_cache
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        with:
+          path: |
+            COMMIT
+            VERSION
+          key: build-container-${{ matrix.arch }}-${{ github.run_id }}
+      - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
+        name: Set CNAME
+        run: |
+          cname="$(./build --resolve-cname container-${{ matrix.arch }})"
+          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
+      - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
+        name: Load container build artifact (${{ matrix.arch }})
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+        with:
+          name: build-container-${{ matrix.arch }}
+      - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
+        name: Build kernel module build dev container (${{ matrix.arch }})
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          commit="$(./get_commit)"
+          commit_short="${commit:0:8}"
+
+          version="$(bin/garden-version "${{ inputs.version }}")"
+
+          if [ "$version" == "today" ]; then
+            version="$(bin/garden-version now)"
+          fi
+
+          tar -C ".build/" -xzf "$CNAME.tar.gz"
+          rm "$CNAME.tar.gz"
+
+          base="ghcr.io/${{ github.repository }}:$version"
+          image="$(podman load -i .build/container-${{ matrix.arch }}-$(cat VERSION)-${commit_short}.oci | awk '{ print $NF }')"
+          podman tag "$image" "$base"
+
+          snapshot="$(gh api "/repos/gardenlinux/repo/contents/.container?ref=$version" | jq -r '.content' | base64 -d)"
+
+          podman login -u token -p "${GH_TOKEN}" ghcr.io
+          podman pull --arch ${{ matrix.arch }} "$snapshot"
+
+          podman build --arch ${{ matrix.arch }} --build-arg base="$base" --build-arg snapshot="$snapshot" -t ghcr.io/${{ github.repository }}/kmodbuild:${{ matrix.arch }}-${version} images/kmodbuild
+          podman save --format oci-archive ghcr.io/${{ github.repository }}/kmodbuild:${{ matrix.arch }}-${version} > kmodbuild_container_${{ matrix.arch }}.oci
+      - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+        with:
+          name: kmodbuild-container-${{ matrix.arch }}
+          path: kmodbuild_container_${{ matrix.arch }}.oci
+          if-no-files-found: error

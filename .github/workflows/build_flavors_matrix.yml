@@ -1,0 +1,43 @@
+on:
+  workflow_call:
+    inputs:
+      flags:
+        description: 'Flags passed to bin/flavors_parse.py'
+        type: string
+        required: true
+      flavors_matrix:
+        type: string
+    outputs:
+      matrix:
+        description: 'Flavors matrix'
+        value: ${{ jobs.generate_matrix.outputs.matrix }}
+jobs:
+  generate_matrix:
+    name: Build flavors matrix
+    runs-on: 'ubuntu-24.04'
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - id: matrix
+        run: |
+          MATRIX='${{ inputs.flavors_matrix }}'
+
+          if [[ $(echo "${MATRIX}" | jq -r 'type') != 'object' ]]; then
+            FLAVORS=$(./bin/flavors_parse.py ${{ inputs.flags }})
+            MATRIX=$(jq -nc \
+              --argjson flavors "$(echo $FLAVORS)" \
+              '{
+                include: (
+                  $flavors | reduce (to_entries[]) as $item ([]; . + ($item.value | map({"arch": $item.key, "flavor": .})))
+                )
+              }'
+            )
+          fi
+
+          echo "matrix=$MATRIX" | tee -a $GITHUB_OUTPUT

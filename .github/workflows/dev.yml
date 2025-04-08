@@ -1,6 +1,8 @@
 name: dev
 on:
   push:
+    branches:
+      - main
     paths-ignore:
       - 'docs/**'
       - '**/README.md'
@@ -10,18 +12,29 @@ on:
       - '**/README.md'
 jobs:
   set_version:
-    runs-on: ubuntu-latest
+    name: Set VERSION
+    runs-on: ubuntu-24.04
     outputs:
-      VERSION: ${{ steps.version.outputs.VERSION }}
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: use VERSION file to support dev build on rel-branch
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - name: Use VERSION file to support dev build on rel-branch
         id: version
-        run: echo "VERSION=$(cat VERSION)" >> $GITHUB_OUTPUT
+        run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
   build:
-    needs: [ set_version ]
+    needs: set_version
+    name: Build
     uses: ./.github/workflows/build.yml
     with:
-      version: ${{ needs.set_version.outputs.VERSION }}
+      version: ${{ needs.set_version.outputs.version }}
+      fail_fast: true
+  test:
+    needs: build
+    if: ${{ success() || failure() }}
+    name: Test
+    uses: ./.github/workflows/tests.yml
+    with:
+      version: ${{ needs.build.outputs.version }}
+      flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
+      bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}

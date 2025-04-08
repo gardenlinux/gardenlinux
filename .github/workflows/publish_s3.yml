@@ -1,0 +1,218 @@
+name: 'Publish to S3'
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Workflow run ID
+        type: number
+        required: true
+  workflow_run:
+    workflows: [ 'Build and publish a release', 'nightly' ]
+    types: [ 'completed' ]
+jobs:
+  workflow_data:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.conclusion == 'success' }}
+    name: Download workflow JSON data from trigger
+    uses: ./.github/workflows/download_workflow_data.yml
+    with:
+      run_id: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
+  trustedboot_flavors_supported_matrix:
+    needs: workflow_data
+    name: Generate flavors matrix for trustedboot
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: '--include-only "*trustedboot*" --no-arch --json-by-arch'
+  trustedboot_flavors_matrix:
+    needs: [ trustedboot_flavors_supported_matrix, workflow_data ]
+    name: Intersect matrix supporting trustedboot
+    runs-on: 'ubuntu-24.04'
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      flavors_matrix: ${{ steps.matrix.outputs.flavors_matrix }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - id: matrix
+        name: Calculate matrix
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
+
+            // chroot_test_flavors_matrix
+            let matrix = gitHubLib.intersectFlavorsMatrix(
+              ${{ needs.workflow_data.outputs.flavors_matrix }},
+              ${{ needs.trustedboot_flavors_supported_matrix.outputs.matrix }}
+            );
+
+            core.setOutput("flavors_matrix", matrix);
+  non_trustedboot_flavors_matrix:
+    needs: [ trustedboot_flavors_supported_matrix, workflow_data ]
+    name: Exclude matrix of flavors supporting trustedboot
+    runs-on: 'ubuntu-24.04'
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      flavors_matrix: ${{ steps.matrix.outputs.flavors_matrix }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - id: matrix
+        name: Calculate matrix
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
+
+            // chroot_test_flavors_matrix
+            let matrix = gitHubLib.excludeFlavorsMatrix(
+              ${{ needs.workflow_data.outputs.flavors_matrix }},
+              ${{ needs.trustedboot_flavors_supported_matrix.outputs.matrix }}
+            );
+
+            core.setOutput("flavors_matrix", matrix);
+  copy_artifacts:
+    needs: [ non_trustedboot_flavors_matrix, workflow_data ]
+    name: Copy without adding certs
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.non_trustedboot_flavors_matrix.outputs.flavors_matrix) }}
+    steps:
+      - name: Load flavor build artifact
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+        with:
+          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+          github-token: ${{ github.token }}
+          run-id: ${{ needs.workflow_data.outputs.run_id }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+        with:
+          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+          overwrite: true
+          path: '*.tar.gz'
+  prepare_certs:
+    needs: [ trustedboot_flavors_matrix, workflow_data ]
+    name: Add certs
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    env:
+      CNAME: ''
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.trustedboot_flavors_matrix.outputs.flavors_matrix) }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - name: Set flavor version reference
+        run: |
+          echo "${{ needs.workflow_data.outputs.commit_id }}" | tee COMMIT
+          echo "${{ needs.workflow_data.outputs.version }}" | tee VERSION
+      - name: Set CNAME
+        run: |
+          cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
+          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
+      - name: Load flavor build artifact
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+        with:
+          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+          github-token: ${{ github.token }}
+          run-id: ${{ needs.workflow_data.outputs.run_id }}
+      - name: Add certs to build artifacts
+        run: |
+          mkdir "$CNAME/"
+          tar -C "$CNAME/" -xzf "$CNAME.tar.gz"
+          rm "$CNAME.tar.gz"
+
+          # USE_KMS in build_requirements.yml
+          for f in secureboot.{{pk,kek,db}.{crt,der,auth},aws-efivars}; do
+            cp "cert/gardenlinux-$f" "$CNAME/$CNAME.$f"
+          done
+
+          tar -cSzvf "$CNAME.tar.gz" -C $CNAME .
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+        with:
+          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+          overwrite: true
+          path: ${{ env.CNAME }}.tar.gz
+  upload_to_s3:
+    needs: [ copy_artifacts, prepare_certs, workflow_data ]
+    name: Upload to S3
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/upload_to_s3.yml
+    with:
+      commit_id: ${{ needs.workflow_data.outputs.commit_id }}
+      version: ${{ needs.workflow_data.outputs.version }}
+      flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
+      run_id: ${{ github.run_id }}
+    secrets:
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_role: ${{ secrets.AWS_IAM_ROLE }}
+      aws_session: ${{ secrets.AWS_OIDC_SESSION }}
+      aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
+  upload_to_s3_cn:
+    needs: [ copy_artifacts, prepare_certs, workflow_data ]
+    name: Upload to S3 (China)
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/upload_to_s3.yml
+    with:
+      commit_id: ${{ needs.workflow_data.outputs.commit_id }}
+      version: ${{ needs.workflow_data.outputs.version }}
+      flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
+      run_id: ${{ github.run_id }}
+    secrets:
+      aws_region: ${{ secrets.AWS_CN_REGION }}
+      aws_role: ${{ secrets.AWS_CN_IAM_ROLE }}
+      aws_session: ${{ secrets.AWS_CN_OIDC_SESSION }}
+      aws_s3_bucket: ${{ secrets.AWS_CN_S3_BUCKET }}
+  glrd:
+    needs: [ workflow_data, upload_to_s3 ]
+    name: create GLRD release
+    permissions:
+      id-token: write
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - if: ${{ github.ref_name == 'main' }}
+        name: Create GLRD nightly release
+        uses: gardenlinux/glrd@v3
+        with:
+          cmd: glrd-manage --s3-update --create nightly --version "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}"
+      - if: ${{ github.ref_name != 'main' }}
+        name: Create GLRD patch release
+        uses: gardenlinux/glrd@v3
+        with:
+          cmd: glrd-manage --s3-update --create patch --version "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}"
+      - name: Get latest GL nightly
+        id: gl_version_nightly
+        uses: gardenlinux/glrd@v3
+        with:
+          cmd: glrd --type nightly --latest
+  publish_retry:
+    needs: [ upload_to_s3, upload_to_s3_cn, glrd ]
+    if: ${{ failure() && ( needs.upload_to_s3.result == 'failure' || needs.upload_to_s3_cn.result == 'failure' || needs.glrd.result == 'failure' ) }}
+    name: 'Retry checkpoint: Publish to S3'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - name: Retry failed publishing
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
+
+            const gitHubRef = "${{ github.head_ref == '' && github.ref_name || github.head_ref }}";
+            return await gitHubLib.dispatchRetryWorkflow(core, github.rest.actions, context, gitHubRef, 5);

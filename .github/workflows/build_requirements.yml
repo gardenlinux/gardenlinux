@@ -1,0 +1,99 @@
+name: build_requirements
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-build-requirements
+  cancel-in-progress: true
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        default: today
+      use_glrd:
+        type: boolean
+        default: false
+      use_kms:
+        type: boolean
+        default: false
+    outputs:
+      commit_id:
+        value: ${{ jobs.calculate_version.outputs.commit_id }}
+      version:
+        value: ${{ jobs.calculate_version.outputs.version }}
+      use_kms:
+        value: ${{ inputs.use_kms }}
+jobs:
+  calculate_version:
+    name: Build version
+    defaults:
+      run:
+        shell: bash
+    env:
+      COMMIT_ID: ''
+      VERSION: ''
+    runs-on: ubuntu-24.04
+    outputs:
+      commit_id: ${{ steps.version_reference.outputs.commit_id }}
+      version: ${{ steps.version_reference.outputs.version }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - name: Prepare build reference from GitHub
+        if: ${{ inputs.version == '' || ! inputs.use_glrd }}
+        id: prepare_github_reference
+        run: |
+          version="${{ inputs.version }}"
+          if [ -z "$version" ]; then
+            version="now"
+          fi
+
+          echo "COMMIT_ID=$(git rev-parse HEAD)" | tee -a "$GITHUB_ENV"
+          echo "VERSION=$(./bin/garden-version "$version")" | tee -a "$GITHUB_ENV"
+      - name: Prepare build reference from GLRD
+        if: ${{ steps.prepare_github_reference.conclusion == 'skipped' }}
+        run: |
+          version=$(./bin/garden-version "${{ inputs.version }}")
+
+          if [[ "${{ inputs.version }}" == "today" ]]; then
+            glrd_data="$(./bin/glrd --type stable,patch,nightly,dev --output-format=json --latest)"
+          else
+            glrd_data="$(./bin/glrd --type stable,patch,nightly,dev --output-format=json --version ${{ inputs.version }})"
+          fi
+
+          commit_id=$(echo $glrd_data | jq -r '.releases[0].git.commit')
+          version=$(echo $glrd_data | jq -r '(.releases[0].version.major | tostring) + "." + (.releases[0].version.minor | tostring)')
+
+          echo "COMMIT_ID=$commit_id" | tee -a "$GITHUB_ENV"
+          echo "VERSION=$version" | tee -a "$GITHUB_ENV"
+      - name: Set build reference
+        id: version_reference
+        run: |
+          echo "commit_id=$COMMIT_ID" | tee -a "$GITHUB_OUTPUT"
+          echo "version=$VERSION" | tee -a "$GITHUB_OUTPUT"
+  cert:
+    name: Provide secure boot certificates
+    needs: calculate_version
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - name: Set VERSION=${{ needs.calculate_version.outputs.version }}
+        run: echo "${{ needs.calculate_version.outputs.version }}" | tee VERSION
+      - name: Build certificates
+        if: ${{ ! inputs.use_kms }}
+        run: ./cert/build
+      - name: Use kms backed certificates
+        if: ${{ inputs.use_kms }}
+        run: |
+          touch cert/gardenlinux-secureboot.db.arn
+          for f in secureboot.{{pk,null.pk,kek,db}.{crt,der,auth},db.arn,aws-efivars}; do
+            ln -sr "cert/gardenlinux-$f" "cert/$f"
+          done
+      - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        with:
+          path: cert/*.*
+          key: cert-${{ github.run_id }}

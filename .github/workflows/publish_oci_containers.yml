@@ -1,0 +1,344 @@
+# @TODO: Replace with safe OCI manifast handling variant
+name: publish_oci_containers
+on:
+  workflow_call:
+    inputs:
+      run_id:
+        type: string
+        required: true
+      commit_id:
+        type: string
+        required: true
+      version:
+        type: string
+        required: true
+      flavors_matrix:
+        type: string
+        required: true
+      bare_flavors_matrix:
+        type: string
+        default: '{"include":[]}'
+      original_workflow_name:
+        type: string
+        default: ''
+    secrets:
+      aws_role:
+        required: true
+      aws_session:
+        required: true
+      aws_region:
+        required: true
+      oci_kms_arn:
+        required: true
+env:
+  GLCLI_VERSION: 0.6.4
+jobs:
+  container:
+    name: Publish container base image
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    env:
+      CNAME_AMD64: ''
+      CNAME_ARM64: ''
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - name: Set flavor version reference
+        run: |
+          echo "${{ inputs.commit_id }}" | tee COMMIT
+          echo "${{ inputs.version }}" | tee VERSION
+      - name: Set CNAME
+        run: |
+          cname_amd64="$(./build --resolve-cname container-amd64)"
+          cname_arm64="$(./build --resolve-cname container-arm64)"
+          echo "CNAME_AMD64=$cname_amd64" | tee -a "$GITHUB_ENV"
+          echo "CNAME_ARM64=$cname_arm64" | tee -a "$GITHUB_ENV"
+      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+        with:
+          name: build-container-amd64
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+        with:
+          name: build-container-arm64
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - name: Publish container base image
+        run: |
+          is_nightly=$(! [ "${{ inputs.original_workflow_name }}" = "nightly" ]; echo $?)
+          version=$(cat VERSION)
+
+          podman login -u token -p ${{ github.token }} ghcr.io
+          tar xzv < "${CNAME_AMD64}.tar.gz"
+          image="$(podman load < ${CNAME_AMD64}.oci | awk '{ print $NF }')"
+
+          # Tagging for amd64 nightly
+          if [ $is_nightly = true ]; then
+            podman tag "$image" ghcr.io/${{ github.repository }}:amd64-nightly
+            podman push ghcr.io/${{ github.repository }}:amd64-nightly
+          fi
+
+          # Tagging for amd64 with version
+          podman tag "$image" ghcr.io/${{ github.repository }}:amd64-${version}
+          podman push ghcr.io/${{ github.repository }}:amd64-${version}
+
+          tar xzv < "${CNAME_ARM64}.tar.gz"
+          image="$(podman load < ${CNAME_ARM64}.oci | awk '{ print $NF }')"
+
+          # Tagging for arm64 nightly
+          if [ $is_nightly = true ]; then
+            podman tag "$image" ghcr.io/${{ github.repository }}:arm64-nightly
+            podman push ghcr.io/${{ github.repository }}:arm64-nightly
+          fi
+
+          # Tagging for arm64 with version
+          podman tag "$image" ghcr.io/${{ github.repository }}:arm64-${version}
+          podman push ghcr.io/${{ github.repository }}:arm64-${version}
+
+          # Creating and pushing manifest for nightly
+          if [ $is_nightly = true ]; then
+            podman manifest create ghcr.io/${{ github.repository }}:nightly
+            podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:amd64-nightly
+            podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:arm64-nightly
+            podman manifest push ghcr.io/${{ github.repository }}:nightly
+          fi
+
+          # Creating and pushing manifest for version tag
+          podman manifest create ghcr.io/${{ github.repository }}:${version}
+          podman manifest add ghcr.io/${{ github.repository }}:${version} ghcr.io/${{ github.repository }}:amd64-${version}
+          podman manifest add ghcr.io/${{ github.repository }}:${version} ghcr.io/${{ github.repository }}:arm64-${version}
+          podman manifest push ghcr.io/${{ github.repository }}:${version}
+  bare_flavors:
+    name: Publish bare flavors
+    if: ${{ inputs.bare_flavors_matrix != '{"include":[]}' }}
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        # @TODO: Replace with input matrix once OCI manifest tooling is ready to update existing ones
+        config: [ libc, python, nodejs, sapmachine ]
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+        with:
+          pattern: build-bare-${{ matrix.config }}-*
+          merge-multiple: true
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - name: Publish bare flavor image ${{ matrix.config }}
+        run: |
+          is_nightly=$(! [ "${{ inputs.original_workflow_name }}" = "nightly" ]; echo $?)
+          version=$(bin/garden-version "${{ inputs.version }}")
+
+          podman login -u token -p ${{ github.token }} ghcr.io
+
+          # Handling amd64 image
+          image="$(podman load < ${{ matrix.config }}-amd64.oci | awk '{ print $NF }')"
+
+          # Tagging and pushing amd64 with version
+          podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
+          podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
+
+          # Tagging and pushing amd64 with nightly
+          if [ $is_nightly = true ]; then
+            podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
+            podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
+          fi
+
+          # Handling arm64 image
+          image="$(podman load < ${{ matrix.config }}-arm64.oci | awk '{ print $NF }')"
+
+          # Tagging and pushing arm64 with version
+          podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
+          podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
+
+          # Tagging and pushing arm64 with nightly
+          if [ $is_nightly = true ]; then
+            podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
+            podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
+          fi
+
+          # Creating and pushing manifest for version tag
+          podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
+          podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
+          podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
+          podman manifest push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
+
+          # Creating and pushing manifest for nightly tag
+          if [ $is_nightly = true ]; then
+            podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
+            podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
+            podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
+            podman manifest push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
+          fi
+  push_flavors:
+    name: Publish flavors
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    env:
+      CNAME: ''
+    permissions:
+      id-token: write
+      packages: write
+    # @TODO: Find more suitable environment name
+    environment: oidc_aws_s3_upload
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(inputs.flavors_matrix) }}
+      max-parallel: 8
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.aws_role }}
+          role-session-name: ${{ secrets.aws_session }}
+          aws-region: ${{ secrets.aws_region }}
+      - name: Set flavor version reference
+        run: |
+          echo "${{ inputs.commit_id }}" | tee COMMIT
+          echo "${{ inputs.version }}" | tee VERSION
+      - name: Set CNAME
+        run: |
+          cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
+          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
+      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+        with:
+          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - name: Unpack ${{ matrix.flavor }} (${{ matrix.arch }})
+        run: |
+          mkdir "$CNAME"
+          tar -C "$CNAME" -xzf "$CNAME.tar.gz"
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install glcli util
+        run: |
+          # @TODO: Add pyproject.toml for pip install git+https://github.com/gardenlinux/python-gardenlinux-cli.git@${{ env.GLCLI_VERSION }}
+          git clone --depth 1 --branch ${{ env.GLCLI_VERSION }} https://github.com/gardenlinux/python-gardenlinux-cli.git
+          mv python-gardenlinux-cli /opt/glcli
+          pip install -r /opt/glcli/requirements.txt
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.8.1
+        with:
+          cosign-release: 'v2.4.1'
+      - name: Push using the glcli util
+        run: |
+          max_retries=3
+          retry_count=0
+          exit_code=0
+          until [ $retry_count -ge $max_retries ]; do
+            if output=$(GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir "$CNAME" --container ghcr.io/${{ github.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname "$CNAME" --cosign_file digest.txt --manifest_file "oci_manifest_entry_$CNAME.json" 2>&1); then
+              cat digest.txt
+              exit 0
+            elif echo "$output" | grep -q "Bad Gateway"; then
+              retry_count=$((retry_count+1))
+              exit_code=1
+              echo "Bad Gateway detected, retry $retry_count/$max_retries"
+              sleep 10
+            else
+              echo "Fatal error: $output"
+              exit $exit_code
+            fi
+          done
+          if [ $exit_code -ne 0 ]; then
+            echo "Failed after $max_retries retries"
+            exit 1
+          fi
+      - name: Sign the manifest
+        run: |
+          docker login ghcr.io -u token -p ${{ github.token }}
+          cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }} ghcr.io/${{ github.repository }}@$(cat digest.txt)
+      - name: Verify signature
+        run: |
+          cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.aws_region}}.amazonaws.com/${{ secrets.oci_kms_arn }} ghcr.io/${{ github.repository }}@$(cat digest.txt)
+      - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        with:
+          path: oci_manifest_entry_${{ env.CNAME }}.json
+          key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
+  aggregate_oci_manifests:
+    needs: push_flavors
+    name: Aggregate OCI image flavor manifests
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    env:
+      CNAME: ''
+    strategy:
+      matrix: ${{ fromJson(inputs.flavors_matrix) }}
+      max-parallel: 1
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - name: Set flavor version reference
+        run: |
+          echo "${{ inputs.commit_id }}" | tee COMMIT
+          echo "${{ inputs.version }}" | tee VERSION
+      - name: Set CNAME
+        run: |
+          cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
+          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
+      - name: Cache OCI manifests
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        with:
+          path: manifests
+          key: oci-manifests-${{ github.run_id }}-${{ matrix.flavor }}-${{ matrix.arch }}
+          restore-keys: |
+            oci-manifests-${{ github.run_id }}-
+      - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        with:
+          path: oci_manifest_entry_${{ env.CNAME }}.json
+          key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
+      - name: Store OCI manifest ${{ matrix.flavor }} (${{ matrix.arch }})
+        run: |
+          mkdir -p "manifests"
+          mv "oci_manifest_entry_$CNAME.json" "manifests/"
+  update_manifest_index:
+    needs: aggregate_oci_manifests
+    name: Update OCI manifest index
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      id-token: write
+      packages: write
+      actions: write
+    steps:
+      - name: Restore OCI manifests
+        uses: actions/cache/restore@v4
+        with:
+          path: manifests
+          key: oci-manifests-${{ github.run_id }}
+          restore-keys: |
+            oci-manifests-${{ github.run_id }}-
+          fail-on-cache-miss: true
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install glcli util
+        run: |
+          # @TODO: Add pyproject.toml for pip install git+https://github.com/gardenlinux/python-gardenlinux-cli.git@${{ env.GLCLI_VERSION }}
+          git clone --depth 1 --branch ${{ env.GLCLI_VERSION }} https://github.com/gardenlinux/python-gardenlinux-cli.git
+          mv python-gardenlinux-cli /opt/glcli
+          pip install -r /opt/glcli/requirements.txt
+      - name: Update index using glcli tool
+        run: |
+          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ghcr.io/${{ github.repository }} --version ${{ inputs.version }} --manifest_folder manifests

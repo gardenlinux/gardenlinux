@@ -1,0 +1,42 @@
+name: test_bare_flavor
+on:
+  workflow_call:
+    inputs:
+      arch:
+        type: string
+        default: "amd64"
+      flavor:
+        type: string
+        required: true
+      version:
+        type: string
+        required: true
+jobs:
+  test:
+    name: Test bare flavor ${{ inputs.flavor }} (${{ inputs.arch }})
+    runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      CNAME: ''
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        with:
+          path: |
+            COMMIT
+            VERSION
+          key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
+          fail-on-cache-miss: true
+      - name: Load bare flavor build artifact
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+        with:
+          name: build-${{ inputs.flavor }}-${{ inputs.arch }}
+          path: .build/bare_flavors
+      - name: Test
+        run: make --directory=tests ${{ inputs.flavor }}-${{ inputs.arch }}-container-test

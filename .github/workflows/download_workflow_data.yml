@@ -1,0 +1,66 @@
+name: download_workflow_data
+on:
+  workflow_call:
+    inputs:
+      run_id:
+        type: string
+        required: true
+    outputs:
+      run_id:
+        value: ${{ inputs.run_id }}
+      commit_id:
+        value: ${{ jobs.workflow_data.outputs.commit_id }}
+      version:
+        value: ${{ jobs.workflow_data.outputs.version }}
+      flavors_matrix:
+        value: ${{ jobs.workflow_data.outputs.flavors_matrix }}
+      bare_flavors_matrix:
+        value: ${{ jobs.workflow_data.outputs.bare_flavors_matrix }}
+      original_workflow_name:
+        value: ${{ jobs.workflow_data.outputs.original_workflow_name }}
+jobs:
+  workflow_data:
+    name: Download workflow JSON data from trigger
+    runs-on: ubuntu-24.04
+    outputs:
+      commit_id: ${{ steps.data.outputs.commit_id }}
+      version: ${{ steps.data.outputs.version }}
+      flavors_matrix: ${{ steps.data.outputs.flavors_matrix }}
+      bare_flavors_matrix: ${{ steps.data.outputs.bare_flavors_matrix }}
+      original_workflow_name: ${{ steps.data.outputs.original_workflow_name }}
+    steps:
+      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+        with:
+          name: flavor-version-data
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+        with:
+          name: workflow-data
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - name: Set referenced workflow data
+        uses: actions/github-script@v7
+        id: data
+        with:
+          script: |
+            const fs = await import("fs");
+
+            fs.accessSync("workflow_data.json", (fs.constants.F_OK | fs.constants.R_OK));
+            workflowData = JSON.parse(fs.readFileSync("workflow_data.json"));
+
+            if ("${{ inputs.run_id }}" != workflowData.id) {
+              core.setFailed("Failed validating workflow_run.id");
+              return false;
+            }
+
+            fs.accessSync("flavor_version_data.json", (fs.constants.F_OK | fs.constants.R_OK));
+            flavorVersionData = JSON.parse(fs.readFileSync("flavor_version_data.json"));
+
+            core.setOutput("commit_id", flavorVersionData.commit_id);
+            core.setOutput("version", flavorVersionData.version);
+            core.setOutput("flavors_matrix", workflowData.flavors_matrix);
+            core.setOutput("bare_flavors_matrix", workflowData.bare_flavors_matrix);
+            core.setOutput("original_workflow_name", workflowData.original_workflow_name);
+
+            return true;

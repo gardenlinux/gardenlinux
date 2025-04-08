@@ -48,9 +48,15 @@ SCHEMA = {
 
 
 def find_repo_root():
-    """Finds the root directory of the Git repository."""
+    """
+    Finds the root directory of the Git repository
+    If running in submodule, return root of parent project.
+    """
     try:
-        root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip()
+        root = subprocess.check_output(
+            ["git", "rev-parse", "--show-toplevel", "--show-superproject-working-tree"],
+            text=True
+        ).strip().split('\n')[-1]
         return root
     except subprocess.CalledProcessError:
         sys.exit("Error: Unable to determine Git repository root.")
