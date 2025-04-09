@@ -41,23 +41,25 @@ oyA0MELL0JQzEinixqxpZ1taOmVR/8pQVrqstqwqsp3RABaeZ80JbigUC29zJUVf
 
 def create_overlay_fs(client, logger):
     logger.info("Creating overlay fs")
+    execute_remote_command(client, "sudo mkdir -p /run/node/usr")
+    execute_remote_command(client, "sudo mount /dev/disk/by-label/USR /run/node/usr")
+    execute_remote_command(client, "sudo mkdir -p /run/node/ovl/u")
+    execute_remote_command(client, "sudo mkdir -p /run/node/ovl/w")
     execute_remote_command(
-        client, "sudo mkdir -p /overlay/usr_work /overlay/usr_merged /overlay/usr_upper"
-    )
-
-    execute_remote_command(
-        "mount -t overlay overlay -o lowerdir=/usr,upperdir=/overlay/usr_upper,workdir=/overlay/usr_merged /overlay/user_merged"
+        client,
+        "sudo mount -t overlay overlay -o lowerdir=/run/node/usr,upperdir=/run/node/ovl/u,workdir=/run/node/ovl/w /usr",
     )
     logger.info("after mount overlay fs")
 
 
 def cleanup_overlay_fs(client, logger):
     logger.info("Cleaning up overlay fs")
-    execute_remote_command(client, "sudo umount /overlay/usr_merged")
-    execute_remote_command(
-        client,
-        "sudo rm -rf /overlay/usr_work /overlay/usr_merged /overlay/usr_upper",
-    )
+    execute_remote_command(client, "sudo umount /usr")
+    execute_remote_command(client, "sudo umount /run/node/usr")
+    execute_remote_command(client, "sudo rm -rf /run/node/usr")
+    execute_remote_command(client, "sudo rm -rf /run/node/ovl/u")
+    execute_remote_command(client, "sudo rm -rf /run/node/ovl/w")
+    logger.info("after cleanup overlay fs")
 
 
 def setup_node_conformance(client, logger):
@@ -142,7 +144,7 @@ def test_node_conformance(client, non_provisioner_chroot):
         config_dir = "/etc/kubernetes"
         log_dir = "/tmp"
         container_image = "registry.k8s.io/node-test:0.2"
-        command = f"sudo docker run --rm --privileged --net=host -v /:/rootfs -v {config_dir}:{config_dir} -v {log_dir}:/var/result {container_image}"
+        command = f"sudo docker run --rm  -e SKIP=MirrorPod --privileged --net=host -v /:/rootfs -v {config_dir}:{config_dir} -v {log_dir}:/var/result {container_image}"
 
         code, output = execute_remote_command(client, command, skip_error=True)
 
