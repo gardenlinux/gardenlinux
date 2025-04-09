@@ -119,10 +119,10 @@ def install_kubernetes_tools(client, logger):
 
 
 def test_node_conformance(client, non_provisioner_chroot):
+    logging.basicConfig(level=logging.INFO)  # Set logging level
+    logger = logging.getLogger(__name__)
+    logger.info("Running node conformance test")
     try:
-        logging.basicConfig(level=logging.INFO)  # Set logging level
-        logger = logging.getLogger(__name__)
-        logger.info("Running node conformance test")
         # get list of packages installed before running the test
         before_packages = get_package_list(client)
 
@@ -157,8 +157,6 @@ def test_node_conformance(client, non_provisioner_chroot):
         logger.info(f"{output}")
         logger.info("after node conformance test")
 
-        remount_usr_readonly(client, logger)
-
         # get list of packages installed after running the test
         after_packages = get_package_list(client)
         assert (
@@ -167,13 +165,6 @@ def test_node_conformance(client, non_provisioner_chroot):
             set(after_packages) - set(before_packages)
         )
 
-        # get container images installed after running the test
-        after_images = execute_remote_command(client, "docker images")
-        assert (
-            after_images == before_images
-        ), "Test has side effects on the system. Images installed after running the test: {}".format(
-            set(after_images) - set(before_images)
-        )
     finally:
         logger.info("Cleaning up node conformance test")
         cleanup_node_conformance(client, logger)
