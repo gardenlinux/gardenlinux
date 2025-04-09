@@ -146,6 +146,7 @@ syslinux
 syslinux-common
 sysstat
 systemd-cron
+targetcli-fb
 tcpd
 tcpdump
 tpm2-tools
