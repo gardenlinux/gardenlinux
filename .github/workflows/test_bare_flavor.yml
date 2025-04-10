@@ -11,6 +11,9 @@ on:
       version:
         type: string
         required: true
+      ref:
+        type: string
+        required: true
 jobs:
   test:
     name: Test bare flavor ${{ inputs.flavor }} (${{ inputs.arch }})
@@ -25,6 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
+          ref: ${{ inputs.ref }}
           submodules: true
       - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:

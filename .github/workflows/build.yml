@@ -9,6 +9,10 @@ on:
         description: 'Garden Linux version'
         type: string
         default: today
+      ref:
+        description: 'The branch, tag or SHA to checkout.'
+        type: string
+        default: main
       use_kms:
         description: 'Use Garden Linux KMS'
         type: boolean
@@ -46,6 +50,8 @@ on:
         value: ${{ jobs.flavors_matrix.outputs.matrix }}
       version:
         value: ${{ jobs.requirements.outputs.version }}
+      ref:
+        value: ${{ jobs.requirements.outputs.ref }}
       bare_flavors_matrix:
         value: ${{ jobs.bare_flavors_matrix.outputs.matrix }}
 jobs:
@@ -54,6 +60,7 @@ jobs:
     uses: ./.github/workflows/build_requirements.yml
     with:
       version: ${{ inputs.version == '' && 'now' || inputs.version }}
+      ref: ${{ inputs.ref }}
       use_kms: ${{ inputs.use_kms }}
   bootstrap:
     needs: requirements
@@ -62,6 +69,7 @@ jobs:
     with:
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
+      ref: ${{ needs.requirements.outputs.ref }}
   platform_test_image:
     needs: requirements
     name: Build platform-test image
@@ -87,6 +95,7 @@ jobs:
       flavor: ${{ matrix.flavor }}
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
+      ref: ${{ needs.requirements.outputs.ref }}
       # GitHub workflow workaround for bool
       use_kms: ${{ needs.requirements.outputs.use_kms == 'true' }}
     uses: ./.github/workflows/build_flavor.yml
@@ -97,6 +106,7 @@ jobs:
     uses: ./.github/workflows/build_kmodbuild_container.yml
     with:
       version: ${{ needs.requirements.outputs.version }}
+      ref: ${{ needs.requirements.outputs.ref }}
   bare_flavors_matrix:
     name: Generate bare flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml
@@ -113,6 +123,7 @@ jobs:
       bare_flavor: ${{ matrix.flavor }}
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
+      ref: ${{ needs.requirements.outputs.ref }}
     uses: ./.github/workflows/build_bare_flavor.yml
     secrets: inherit
   upload_flavor_version_data:
@@ -122,7 +133,11 @@ jobs:
     steps:
       - name: Store data in JSON file
         run: |
-          jq -r -n '{ "commit_id": "${{ needs.requirements.outputs.commit_id }}", "version": "${{ needs.requirements.outputs.version }}" }' '.' > flavor_version_data.json
+          jq -r -n '{
+            "commit_id": "${{ needs.requirements.outputs.commit_id }}",
+            "version": "${{ needs.requirements.outputs.version }}",
+            "ref": "${{ needs.requirements.outputs.ref }}"
+          }' '.' > flavor_version_data.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         with:
           name: flavor-version-data
