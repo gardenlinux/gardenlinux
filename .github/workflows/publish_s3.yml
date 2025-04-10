@@ -147,11 +147,15 @@ jobs:
     name: Upload to S3
     permissions:
       id-token: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.workflow_data.outputs.flavors_matrix) }}
     uses: ./.github/workflows/upload_to_s3.yml
     with:
       commit_id: ${{ needs.workflow_data.outputs.commit_id }}
       version: ${{ needs.workflow_data.outputs.version }}
-      flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
+      flavor: ${{ matrix.flavor }}
+      arch: ${{ matrix.arch }}
       run_id: ${{ github.run_id }}
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
@@ -163,11 +167,15 @@ jobs:
     name: Upload to S3 (China)
     permissions:
       id-token: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.workflow_data.outputs.flavors_matrix) }}
     uses: ./.github/workflows/upload_to_s3.yml
     with:
       commit_id: ${{ needs.workflow_data.outputs.commit_id }}
       version: ${{ needs.workflow_data.outputs.version }}
-      flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
+      flavor: ${{ matrix.flavor }}
+      arch: ${{ matrix.arch }}
       run_id: ${{ github.run_id }}
     secrets:
       aws_region: ${{ secrets.AWS_CN_REGION }}

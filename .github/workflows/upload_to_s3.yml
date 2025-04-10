@@ -8,7 +8,10 @@ on:
       version:
         type: string
         required: true
-      flavors_matrix:
+      flavor:
+        type: string
+        required: true
+      arch:
         type: string
         required: true
       run_id:
@@ -26,18 +29,15 @@ on:
 jobs:
   upload_to_s3:
     name: upload to S3
-    runs-on: upload
+    runs-on: "ubuntu-24.04"
     defaults:
       run:
         shell: bash
     env:
-      CNAME: ''
+      CNAME: ""
     permissions:
       id-token: write
     environment: oidc_aws_s3_upload
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(inputs.flavors_matrix) }}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
@@ -54,11 +54,50 @@ jobs:
           echo "${{ inputs.version }}" | tee VERSION
       - name: Set CNAME
         run: |
-          cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
+          cname="$(./build --resolve-cname ${{ inputs.flavor }}-${{ inputs.arch }})"
           echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
       - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
         with:
-          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+          name: build-${{ inputs.flavor }}-${{ inputs.arch }}
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - name: Upload to S3 bucket ${{ secrets.aws_s3_bucket }}
+        run: ${{ github.workspace }}/.github/workflows/upload_to_s3.sh ${{ secrets.aws_s3_bucket }} $CNAME.tar.gz
+
+  # Fallback job to upload to S3 using a custom runner if the main upload job fails
+  upload_to_s3_fallback_runner:
+    needs: [ upload_to_s3 ]
+    if: failure() && needs.upload_to_s3.result == 'failure'
+    runs-on: upload
+    defaults:
+      run:
+        shell: bash
+    env:
+      CNAME: ""
+    permissions:
+      id-token: write
+    environment: oidc_aws_s3_upload
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
+      - uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.aws_role }}
+          role-session-name: ${{ secrets.aws_session }}
+          aws-region: ${{ secrets.aws_region }}
+          role-duration-seconds: 14400
+      - name: Set flavor version reference
+        run: |
+          echo "${{ inputs.commit_id }}" | tee COMMIT
+          echo "${{ inputs.version }}" | tee VERSION
+      - name: Set CNAME
+        run: |
+          cname="$(./build --resolve-cname ${{ inputs.flavor }}-${{ inputs.arch }})"
+          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
+      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+        with:
+          name: build-${{ inputs.flavor }}-${{ inputs.arch }}
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
       - name: Upload to S3 bucket ${{ secrets.aws_s3_bucket }}
