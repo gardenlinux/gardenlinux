@@ -3,7 +3,11 @@ The build system utilizes the [gardenlinux/builder](https://github.com/gardenlin
 
 ## Build Requirements
 
-- **Memory:** The build process may require up to 8GiB of memory, depending on the selected targets. If your system has insufficient RAM, configure swap space accordingly.
+
+> [!WARNING]
+> Be sure to provide enough **memory** (at least 8GiB) to your container runtime or the VM that hosts your container runtime (in Podman or Docker Desktop).
+> Otherwise your build may fail silently.
+
 - **Container Engine:** The Builder has minimal dependencies and only requires a working container engine. You have two options:
   - **Rootless Podman:** It's recommended to use rootless Podman. Please refer to the [Podman rootless setup guide](https://github.com/containers/podman/blob/main/docs/tutorials/rootless_tutorial.md) for instructions on setting it up.
   - **Sudo Podman:** Alternatively, you can use Podman with sudo for elevated privileges.
