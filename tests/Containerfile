@@ -1,6 +1,6 @@
 ARG base=debian:bookworm
 FROM $base
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates build-essential libpython3-dev openssh-client python3 python3-venv uidmap
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates build-essential libffi-dev libpython3-dev openssh-client python3 python3-venv uidmap
 
 # Prepare virtual environment
 ENV VIRTUAL_ENV=/opt/venv
