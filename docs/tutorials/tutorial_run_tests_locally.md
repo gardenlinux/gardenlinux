@@ -5,8 +5,8 @@ We will walk through the local test process, and assume you are already familiar
 
 TODO: insert link to tutorial to build images here
 
-First, we need to know the flavour of Garden Linux that we want to test.
-We will use `kvm-gardener_prod` flavour in this tutorial, but feel free to divert here and play with other flavours. In a later bonus lesson we will test a custom image not defined in flavour.yaml (yet).  
+First, we need to know the flavour of Garden Linux that we want to test. (for example `kvm-gardener_prod-amd64`) 
+In a later bonus lesson we will test a custom image not defined in flavour.yaml (yet).  
 
 Typically, when you have the task to test something locally you already know the target, but if you need to pick a target, you can get a list of all officially supported test targets by running
 
@@ -171,7 +171,7 @@ which will read the flavours.yaml and parse it to generate the list of Make targ
 
 Great. You see a lot of test potential test targets now. You know the name of the image you want to test(we continue with `kvm-gardener_prod`), and you know the architecture of the image you want to test (we continue with `amd64`).
 
-We have the full name of the Garden Linux image: `kvm-gardener_prod-amd64`
+We have the full name of the Garden Linux image, for example `kvm-gardener_prod-amd64`
 
 But the make targets list a lot more than just the flavours? which one to pick? This is easy once you understand the different methods to run the Garden Linux VM we want to test. 
 
@@ -217,4 +217,26 @@ Now you are able to run tests locally with qemu. Key take aways of this tutorial
 - You can manually login to the started VM
 
 
+
+
+## Bonus exercise: Running local tests of a non-official flavour
+Your task is to run pytests against a local qemu VM for the `kvm_dev-<CPU arch of your choice>`
+flavour.
+As you have learned in this tutorial, you can spawn a qemu VM with a given Garden Linux flavour like this
+```bash
+make --directory=tests/platformSetup kvm-dev-<CPU arch of your choise>-qemu-apply
+```
+But this will fail. You know why?
+
+<details>
+  <summary>Why it fails</summary>
+  Make targets parse the flavours.yaml. Only make targets exist for targets defined in the flavours.yaml
+</details>
+
+Can you make minimal changes to also run `kvm_dev` on your local machine? 
+
+<details>
+  <summary>Hint</summary>
+  Edit flavours.yaml
+</details>
 
