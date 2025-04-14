@@ -183,7 +183,10 @@ Since we want to run tests locally, we focus here on the two local options:
 
 We use the qemu target in this tutorial, but please feel free to try out chroot also! 
 
-For the full picture, you can go to the [test README](../../tests/README.md), there you can see all the test platforms and find a how to guide for each platform. 
+<details>
+<summary>📘 More on Test Platforms</summary>
+  For the full picture, you can go to the [test README](../../tests/README.md), there you can see all the test platforms and find a how to guide for each platform. 
+</details>
 
 We know what we want to test and how we want to test it, now the rest is very easy.
 
