@@ -169,14 +169,12 @@ which will read the flavours.yaml and parse it to generate the list of Make targ
 </details>
 
 
-Great. You see a lot of test potential test targets now. You know the name of the image you want to test(we continue with `kvm-gardener_prod`), and you know the architecture of the image you want to test (we continue with `amd64`).
+Great. You see a lot of potential test targets now. You know the name of the image you want to test (you can continue with `kvm-gardener_prod`), and you know the architecture of the image you want to test (you can continue with your local CPU arch, as long as it is arm64 or amd64).
 
 We have the full name of the Garden Linux image, for example `kvm-gardener_prod-amd64`
 
-But the make targets list a lot more than just the flavours? which one to pick? This is easy once you understand the different methods to run the Garden Linux VM we want to test. 
-
-[Go to test README for a technical reference](../../tests/README.md)
-
+But the make targets list a lot more than just the flavours, which one to pick? 
+This is easy once you understand the different methods to run the Garden Linux VM we want to test. 
 
 Since we want to run tests locally, we focus here on the two local options:
 
@@ -185,8 +183,10 @@ Since we want to run tests locally, we focus here on the two local options:
 
 We use the qemu target in this tutorial, but please feel free to try out chroot also! 
 
+For the full picture, you can go to the [test README](../../tests/README.md), there you can see all the test platforms and find a how to guide for each platform. 
 
-Since we know what we want to test and how we want to test it, the rest is very easy.
+We know what we want to test and how we want to test it, now the rest is very easy.
+
 Starting a local VM with qemu:
 
 ```bash
