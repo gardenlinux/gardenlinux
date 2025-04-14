@@ -3,7 +3,7 @@
 You want to test a specific Garden Linux flavour locally? This tutorial is for you. 
 We will walk through the local test process, and assume you are already familiar with building Garden Linux images.
 
-TODO: insert link to tutorial to build images here
+TODO: Write tutorial for building images and insert link here.
 
 First, we need to know the flavour of Garden Linux that we want to test. (for example `kvm-gardener_prod-amd64`) 
 In a later bonus lesson we will test a custom image not defined in flavour.yaml (yet).  
@@ -175,7 +175,8 @@ We have the full name of the Garden Linux image, for example `kvm-gardener_prod-
 
 But the make targets list a lot more than just the flavours? which one to pick? This is easy once you understand the different methods to run the Garden Linux VM we want to test. 
 
-TODO: insert link to tests/README.md
+[Go to test README for a technical reference](../../tests/README.md)
+
 
 Since we want to run tests locally, we focus here on the two local options:
 
