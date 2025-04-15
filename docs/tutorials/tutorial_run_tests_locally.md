@@ -1,12 +1,21 @@
 # Tutorial: Run tests locally 
 
-You want to test a specific Garden Linux flavour locally? This tutorial is for you. 
-We will walk through the local test process, and assume you are already familiar with building Garden Linux images.
+You want to test Garden Linux locally? This tutorial is for you. 
+We will walk through the local test process, and assume you are already familiar with building Garden Linux images. 
 
 TODO: Write tutorial for building images and insert link here.
 
-First, we need to know the flavour of Garden Linux that we want to test. (for example `kvm-gardener_prod-amd64`) 
-In a later bonus lesson we will test a custom image not defined in flavour.yaml (yet).  
+First, we need to know the flavour of Garden Linux that we want to test (for example `kvm-gardener_prod-amd64`). 
+
+
+> [!NOTE]
+> But wait, what is a Garden Linux flavour? 
+> Garden Linux is constructed based on building blocks called "features". A feature can be of type "platform", "element" or "flag". And a combination of features will result in a Garden Linux flavour. For this tutorial we will not dive deeper into feature system, but if you like, you can read the [features/README.md](../../features/README.md) for more.
+
+> [!TIP]
+> For this tutorial we need to know that the offically maintained and published Garden Linux images are defined in the [flavours.yaml](../../flavors.yaml).
+
+In a later bonus lesson we will test a custom image not defined in [flavour.yaml](../../flavors.yaml) (yet).  
 
 Typically, when you have the task to test something locally you already know the target, but if you need to pick a target, you can get a list of all officially supported test targets by running
 
