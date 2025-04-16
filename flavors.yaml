@@ -1,0 +1,303 @@
+---
+targets:
+  - name: ali
+    category: public-cloud
+    flavors:
+      - features:
+          - gardener
+          - _prod
+        arch: amd64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _prod
+        arch: arm64
+        build: true
+        test: false
+        test-platform: false
+        publish: true
+  - name: aws
+    category: public-cloud
+    flavors:
+      - features:
+          - gardener
+          - _prod
+        arch: amd64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+  - name: azure
+    category: public-cloud
+    flavors:
+      - features:
+          - gardener
+          - _prod
+        arch: amd64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+  - name: bare
+    category: container
+    flavors:
+      - features:
+          - libc
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: false
+      - features:
+          - libc
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: false
+      - features:
+          - nodejs
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: false
+      - features:
+          - nodejs
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: false
+      - features:
+          - python
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: false
+      - features:
+          - python
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: false
+      - features:
+          - sapmachine
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: false
+      - features:
+          - sapmachine
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: false
+  - name: container
+    category: container
+    flavors:
+      - features: []
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features: []
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+  - name: firecracker
+    category: hypervisor
+    flavors:
+      - features:
+          - gardener
+          - _prod
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: false
+      - features:
+          - gardener
+          - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: false
+  - name: gcp
+    category: public-cloud
+    flavors:
+      - features:
+          - gardener
+          - _prod
+        arch: amd64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+  - name: gdch
+    category: baremetal
+    flavors:
+      - features:
+          - gardener
+          - _prod
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - gardener
+          - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+  - name: kvm
+    category: hypervisor
+    flavors:
+      - features:
+          - gardener
+          - _prod
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - gardener
+          - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+  - name: metal
+    category: baremetal
+    flavors:
+      - features:
+          - gardener
+          - _prod
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - gardener
+          - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - gardener
+          - vhost
+          - _prod
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: false
+      - features:
+          - gardener
+          - vhost
+          - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: false
+  - name: openstack
+    category: hypervisor
+    flavors:
+      - features:
+          - gardener
+          - _prod
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - gardener
+          - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+  - name: openstackbaremetal
+    category: baremetal
+    flavors:
+      - features:
+          - gardener
+          - _prod
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - gardener
+          - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+  - name: vmware
+    category: hypervisor
+    flavors:
+      - features:
+          - gardener
+          - _prod
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - gardener
+          - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
