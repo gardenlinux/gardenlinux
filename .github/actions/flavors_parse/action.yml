@@ -1,0 +1,34 @@
+name: flavors_parse
+description: Parses the given GardenLinux flavors parameters
+inputs:
+  flags:
+    description: 'Flags passed to bin/flavors_parse.py'
+    required: true
+  flavors_matrix:
+    description: 'Generated GitHub workflow flavors matrix'
+outputs:
+  matrix:
+    description: 'Flavors matrix'
+    value: ${{ steps.matrix.outputs.matrix }}
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/python_lib
+    - id: matrix
+      shell: bash
+      run: |
+        MATRIX='${{ inputs.flavors_matrix }}'
+
+        if [[ $(echo "${MATRIX}" | jq -r 'type') != 'object' ]]; then
+          FLAVORS=$(gl-flavors-parse ${{ inputs.flags }})
+          MATRIX=$(jq -nc \
+            --argjson flavors "$(echo $FLAVORS)" \
+            '{
+              include: (
+                $flavors | reduce (to_entries[]) as $item ([]; . + ($item.value | map({"arch": $item.key, "flavor": .})))
+              )
+            }'
+          )
+        fi
+
+        echo "matrix=$MATRIX" | tee -a $GITHUB_OUTPUT

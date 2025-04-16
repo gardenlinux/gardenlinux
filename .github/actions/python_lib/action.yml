@@ -1,0 +1,17 @@
+name: python_lib
+description: Installs the given GardenLinux Python library
+inputs:
+  version:
+    description: GardenLinux Python library version
+    default: "feature/support-cname-parser"
+runs:
+  using: composite
+  steps:
+    - name: Set up Python 3.13
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+    - name: Install GardenLinux Python library
+      shell: bash
+      run: |
+        pip install git+https://github.com/gardenlinux/python-gardenlinux-lib.git@${{ inputs.version }}
