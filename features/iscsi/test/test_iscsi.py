@@ -1,5 +1,11 @@
 import pytest
 from helper.utils import execute_remote_command
+from helper.dependencies import (
+    install_test_dependencies,
+    uninstall_test_dependencies,
+    create_overlay_fs,
+    cleanup_overlay_fs,
+)
 from helper.utils import validate_systemd_unit
 import logging
 import time
@@ -42,10 +48,14 @@ def cleanup_iscsi(client):
     time.sleep(1)
 
     logger.info("iSCSI cleanup completed.")
+    uninstall_test_dependencies(client, ["tgt"])
+    # cleanup_overlay_fs(client)
 
 
 def test_iscsi_setup(client, cleanup_iscsi, non_provisioner_chroot):
-    logger.info("Ensuring tgt service is running...")
+    create_overlay_fs(client)
+    install_test_dependencies(client, ["tgt"])
+    execute_remote_command(client, "systemctl start tgt")
     validate_systemd_unit(client, "tgt", "running")
 
     output = execute_remote_command(
