@@ -4,6 +4,7 @@ features:
   include:
     - server
     - sap
+    - iscsi
   exclude:
     - _selinux
     - firewall

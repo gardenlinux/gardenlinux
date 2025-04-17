@@ -1,0 +1,5 @@
+description: 'iscsi packages'
+type: element
+features:
+  include:
+    - server
