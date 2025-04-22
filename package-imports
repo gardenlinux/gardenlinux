@@ -138,6 +138,7 @@ slirp4netns
 smartmontools
 socat
 sosreport
+sshfs
 sshguard
 sssd
 strace
