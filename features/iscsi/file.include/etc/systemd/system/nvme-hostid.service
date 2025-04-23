@@ -1,0 +1,13 @@
+[Unit]
+Description=NVME HostID Generation
+ConditionPathExists=|!/etc/nvme/hostnqn
+ConditionPathExists=|!/etc/nvme/hostid
+Before=iscsid.service
+
+[Service]
+ExecStart=/bin/sh -c '/usr/sbin/nvme gen-hostnqn > /etc/nvme/hostnqn ; /usr/bin/uuidgen > /etc/nvme/hostid'
+Type=oneshot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
