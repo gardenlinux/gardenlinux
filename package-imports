@@ -109,6 +109,7 @@ python3-apt
 python3-cffi-backend
 python3-click
 python3-debian
+python3-netifaces
 python3-networkx
 python3-novaclient
 python3-pefile
