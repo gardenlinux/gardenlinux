@@ -12,5 +12,5 @@ The `iscsi` feature allows the usage of iscsi target and initiator within Garden
 |---|---|
 |type|element|
 |artifact|None|
-|included_features|server|
+|included_features|multipath|
 |excluded_features|None|

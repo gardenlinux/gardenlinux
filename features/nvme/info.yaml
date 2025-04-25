@@ -1,4 +1,4 @@
-description: 'iscsi feature'
+description: 'nvme feature'
 type: element
 features:
   include:

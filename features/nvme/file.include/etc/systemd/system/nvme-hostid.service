@@ -2,7 +2,7 @@
 Description=NVME HostID Generation
 ConditionPathExists=|!/etc/nvme/hostnqn
 ConditionPathExists=|!/etc/nvme/hostid
-Before=iscsid.service
+After=multi-user.service
 
 [Service]
 ExecStart=/bin/sh -c '/usr/sbin/nvme gen-hostnqn > /etc/nvme/hostnqn ; /usr/bin/uuidgen > /etc/nvme/hostid'

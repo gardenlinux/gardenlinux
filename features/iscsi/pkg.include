@@ -1,6 +1,3 @@
-cryptsetup
 lsscsi
-multipath-tools
-nvme-cli
 open-iscsi
 tgt
