@@ -1,3 +1,3 @@
 # Troubleshooting docs
 
-- [package-linux](./kernel/README.md)
+- [package-linux](./package-linux/README.md)
