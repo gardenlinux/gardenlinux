@@ -13,3 +13,7 @@ This section provides comprehensive documentation tailored for developers who ar
 ### Platform-Specific Development
 - [**Building for OpenStack**](./build_image_openstack.md) - Specific guidelines for building a Garden Linux image tailored for OpenStack.
 - [**VMware OVA**](./vmware-ova.md) - Details on building and using the VMware OVA format for Garden Linux.
+
+### Troubleshooting
+
+- [**Troubleshooting**](./troubleshooting/README.md)
