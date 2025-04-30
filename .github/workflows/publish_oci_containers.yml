@@ -56,12 +56,12 @@ jobs:
           cname_arm64="$(./build --resolve-cname container-arm64)"
           echo "CNAME_AMD64=$cname_amd64" | tee -a "$GITHUB_ENV"
           echo "CNAME_ARM64=$cname_arm64" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
           name: build-container-amd64
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
           name: build-container-arm64
           github-token: ${{ github.token }}
@@ -127,7 +127,7 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
-      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
           pattern: build-bare-${{ matrix.config }}-*
           merge-multiple: true
@@ -213,7 +213,7 @@ jobs:
         run: |
           cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
           echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
           github-token: ${{ github.token }}
