@@ -1,6 +1,6 @@
 name: build_bootstrap
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-build-bootstrap
+  group: ${{ github.workflow }}-${{ inputs.ref }}-build-bootstrap
   cancel-in-progress: true
 on:
   workflow_call:
@@ -9,6 +9,9 @@ on:
         type: string
         required: true
       version:
+        type: string
+        required: true
+      ref:
         type: string
         required: true
 jobs:
@@ -28,13 +31,15 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
+          ref: ${{ inputs.ref }}
           submodules: true
       - name: Set build reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
       - name: Build base-${{ matrix.arch }}
-        run: make base-${{ matrix.arch }}-build
+        # @TODO: run: make base-${{ matrix.arch }}-build
+        run: ./build base-${{ matrix.arch }}
       - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
           path: .build

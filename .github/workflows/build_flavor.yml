@@ -1,6 +1,6 @@
 name: build_flavor
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-build-flavor-${{ inputs.flavor }}-${{ inputs.arch }}
+  group: ${{ github.workflow }}-${{ inputs.ref }}-build-flavor-${{ inputs.flavor }}-${{ inputs.arch }}
   cancel-in-progress: true
 on:
   workflow_call:
@@ -15,6 +15,9 @@ on:
         type: string
         required: true
       version:
+        type: string
+        required: true
+      ref:
         type: string
         required: true
       signing_env:
@@ -45,6 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
+          ref: ${{ inputs.ref }}
           submodules: true
       - name: Set build reference
         run: |
@@ -78,7 +82,8 @@ jobs:
           t="$(date '+%s')"
           find .build -exec touch -d "@$t" {} +
       - name: Build
-        run: make ${{ inputs.flavor }}-${{ inputs.arch }}-build
+        # @TODO: run: make ${{ inputs.flavor }}-${{ inputs.arch }}-build
+        run: ./build ${{ inputs.flavor }}-${{ inputs.arch }}
       - name: Set CNAME
         run: |
           cname="$(./build --resolve-cname ${{ inputs.flavor }}-${{ inputs.arch }})"

@@ -1,6 +1,6 @@
 name: build_requirements
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-build-requirements
+  group: ${{ github.workflow }}-${{ inputs.ref }}-build-requirements
   cancel-in-progress: true
 on:
   workflow_call:
@@ -8,6 +8,9 @@ on:
       version:
         type: string
         default: today
+      ref:
+        type: string
+        default: main
       use_glrd:
         type: boolean
         default: false
@@ -19,6 +22,8 @@ on:
         value: ${{ jobs.calculate_version.outputs.commit_id }}
       version:
         value: ${{ jobs.calculate_version.outputs.version }}
+      ref:
+        value: ${{ inputs.ref }}
       signing_env:
         value: ${{ jobs.determine_environment.outputs.environment }}
       target:
@@ -58,13 +63,16 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
+          ref: ${{ inputs.use_glrd && 'main' || inputs.ref }}
           submodules: true
       - name: Prepare build reference from GitHub
         if: ${{ inputs.version == '' || ! inputs.use_glrd }}
         id: prepare_github_reference
         run: |
           version="${{ inputs.version }}"
-          if [ -z "$version" ]; then
+          if [[ "${{ inputs.ref }}" != "main" ]]; then
+            version="$(cat VERSION)"
+          elif [ -z "$version" ]; then
             version="now"
           fi
 
@@ -101,6 +109,7 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
+          ref: ${{ inputs.ref }}
           submodules: true
       - name: Set VERSION=${{ needs.calculate_version.outputs.version }}
         run: echo "${{ needs.calculate_version.outputs.version }}" | tee VERSION

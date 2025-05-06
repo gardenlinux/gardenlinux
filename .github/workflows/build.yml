@@ -1,6 +1,6 @@
 name: build
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-build
+  group: ${{ github.workflow }}-${{ inputs.ref }}-build
   cancel-in-progress: true
 on:
   workflow_call:
@@ -9,6 +9,10 @@ on:
         description: 'Garden Linux version'
         type: string
         default: today
+      ref:
+        description: 'The branch, tag or SHA to checkout.'
+        type: string
+        default: ${{ github.ref }}
       target:
         type: string
         default: dev
@@ -45,6 +49,8 @@ on:
         value: ${{ jobs.flavors_matrix.outputs.matrix }}
       version:
         value: ${{ jobs.requirements.outputs.version }}
+      ref:
+        value: ${{ jobs.requirements.outputs.ref }}
       bare_flavors_matrix:
         value: ${{ jobs.bare_flavors_matrix.outputs.matrix }}
 jobs:
@@ -53,6 +59,7 @@ jobs:
     uses: ./.github/workflows/build_requirements.yml
     with:
       version: ${{ inputs.version == '' && 'now' || inputs.version }}
+      ref: ${{ inputs.ref }}
       target: ${{ inputs.target }}
   bootstrap:
     needs: requirements
@@ -61,18 +68,22 @@ jobs:
     with:
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
+      ref: ${{ needs.requirements.outputs.ref }}
   platform_test_image:
     needs: requirements
     name: Build platform-test image
     uses: ./.github/workflows/build_platform_test_images.yml
     with:
       version: ${{ needs.requirements.outputs.version }}
+      ref: ${{ needs.requirements.outputs.ref }}
       platforms: '["tofu"]'
       platform_test_tag: ${{ inputs.platform_test_tag }}
   flavors_matrix:
+    needs: requirements
     name: Generate flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
+      ref: ${{ needs.requirements.outputs.ref }}
       flags: ${{ inputs.flavors_parse_params }}
       flavors_matrix: ${{ inputs.flavors_matrix }}
   flavors:
@@ -86,6 +97,7 @@ jobs:
       flavor: ${{ matrix.flavor }}
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
+      ref: ${{ needs.requirements.outputs.ref }}
       signing_env: ${{ needs.requirements.outputs.signing_env }}
     uses: ./.github/workflows/build_flavor.yml
     secrets: inherit
@@ -95,10 +107,12 @@ jobs:
     uses: ./.github/workflows/build_kmodbuild_container.yml
     with:
       version: ${{ needs.requirements.outputs.version }}
+      ref: ${{ needs.requirements.outputs.ref }}
   bare_flavors_matrix:
     name: Generate bare flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
+      ref: ${{ needs.requirements.outputs.ref }}
       flags: ${{ inputs.bare_flavors_parse_params }}
   bare_flavors:
     needs: [ bootstrap, bare_flavors_matrix, requirements ]
@@ -111,6 +125,7 @@ jobs:
       bare_flavor: ${{ matrix.flavor }}
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
+      ref: ${{ needs.requirements.outputs.ref }}
     uses: ./.github/workflows/build_bare_flavor.yml
     secrets: inherit
   upload_flavor_version_data:
@@ -123,6 +138,7 @@ jobs:
           jq -r -n '{
             "commit_id": "${{ needs.requirements.outputs.commit_id }}",
             "version": "${{ needs.requirements.outputs.version }}",
+            "ref": "${{ needs.requirements.outputs.ref }}",
             "target": "${{ needs.requirements.outputs.target }}"
           }' '.' > flavor_version_data.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2

@@ -8,6 +8,14 @@ on:
         description: 'Garden Linux version'
         type: string
         default: now
+      ref:
+        description: 'The branch, tag or SHA to checkout.'
+        type: string
+        default: main
+      build:
+        description: 'Build for version specified in version input parameter instead of downloading it from S3.'
+        type: boolean
+        default: false
       target:
         description: 'Garden Linux release target'
         type: choice
@@ -16,10 +24,6 @@ on:
           - release
           - nightly
           - dev
-      build:
-        description: 'Build for version specified in version input parameter instead of downloading it from S3.'
-        type: boolean
-        default: false
       platform_test_tag:
         description: 'Tag to run platform-test containers. "latest" or GL version. Tag must be available in `ghcr.io/gardenlinux/gardenlinux/platform-test-*`'
         type: string
@@ -47,6 +51,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ inputs.version }}
+      ref: ${{ inputs.ref }}
       flavors_parse_params: ${{ inputs.flavors_parse_params }}
       platform_test_tag: ${{ inputs.platform_test_tag }}
       bare_flavors_parse_params: ${{ inputs.bare_flavors_parse_params }}
@@ -57,12 +62,14 @@ jobs:
     uses: ./.github/workflows/tests.yml
     with:
       version: ${{ needs.build.outputs.version }}
+      ref: ${{ needs.build.outputs.ref }}
       flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
       chroot_test: ${{ inputs.chroot_test }}
       platform_test: ${{ inputs.platform_test }}
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
     permissions:
       id-token: write
+      packages: write
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -84,6 +91,7 @@ jobs:
     uses: ./.github/workflows/build_requirements.yml
     with:
       version: ${{ inputs.version }}
+      ref: ${{ inputs.ref }}
       use_glrd: true
       target: ${{ inputs.target }}
   download_store_flavor_version_data:
@@ -96,7 +104,11 @@ jobs:
     steps:
       - name: Prepare flavor version reference
         run: |
-          jq -r -n '{ "commit_id": "${{ needs.download_build_requirements.outputs.commit_id }}", "version": "${{ needs.download_build_requirements.outputs.version }}" }' '.' > flavor_version_data.json
+          jq -r -n '{
+            "commit_id": "${{ needs.download_build_requirements.outputs.commit_id }}",
+            "version": "${{ needs.download_build_requirements.outputs.version }}",
+            "ref": "${{ needs.download_build_requirements.outputs.ref }}"
+          }' '.' > flavor_version_data.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         with:
           name: flavor-version-data
@@ -116,6 +128,7 @@ jobs:
     name: Generate flavors matrix to test
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
+      ref: ${{ needs.download_build_requirements.outputs.ref }}
       flags: ${{ inputs.flavors_parse_params }}
   download_platform_test_flavors:
     needs: [ download_build_requirements, download_platform_test_flavors_matrix ]
@@ -143,11 +156,13 @@ jobs:
     uses: ./.github/workflows/tests.yml
     with:
       version: ${{ needs.download_build_requirements.outputs.version }}
+      ref: ${{ needs.download_build_requirements.outputs.ref }}
       flavors_matrix: ${{ needs.download_platform_test_flavors_matrix.outputs.matrix }}
       chroot_test: ${{ inputs.chroot_test }}
       platform_test: ${{ inputs.platform_test }}
     permissions:
       id-token: write
+      packages: write
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
