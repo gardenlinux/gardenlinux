@@ -20,7 +20,8 @@ locals {
           "ali"   = var.ali_instance_type,
           "aws"   = var.aws_instance_type,
           "azure" = var.azure_instance_type,
-          "gcp"   = var.gcp_instance_type
+          "gcp"   = var.gcp_instance_type,
+          "openstack" = var.openstack_instance_type
         },
         flavor.platform,
         null
@@ -30,7 +31,8 @@ locals {
           "ali"   = var.ali_image_file,
           "aws"   = var.aws_image_file,
           "azure" = var.azure_image_file,
-          "gcp"   = var.gcp_image_file
+          "gcp"   = var.gcp_image_file,
+          "openstack" = var.openstack_image_file
         },
         flavor.platform,
         null
@@ -40,7 +42,8 @@ locals {
           "ali"   = var.ali_ssh_user,
           "aws"   = var.aws_ssh_user,
           "azure" = var.azure_ssh_user,
-          "gcp"   = var.gcp_ssh_user
+          "gcp"   = var.gcp_ssh_user,
+          "openstack" = var.openstack_ssh_user
         },
         flavor.platform,
         null
@@ -50,7 +53,8 @@ locals {
           "ali"   = var.ali_region,
           "aws"   = var.aws_region,
           "azure" = var.azure_region,
-          "gcp"   = var.gcp_region
+          "gcp"   = var.gcp_region,
+          "openstack" = var.openstack_region
         },
         flavor.platform,
         null
@@ -73,6 +77,20 @@ locals {
       zone = try(flavor.zone, lookup(
         {
           "gcp" = var.gcp_zone,
+        },
+        flavor.platform,
+        null
+      ))
+      floatingip_pool = try(flavor.floatingip_pool, lookup(
+        {
+          "openstack" = var.openstack_floatingip_pool,
+        },
+        flavor.platform,
+        null
+      ))
+      public_network_name = try(flavor.public_network_name, lookup(
+        {
+          "openstack" = var.openstack_public_network_name,
         },
         flavor.platform,
         null
@@ -129,6 +147,9 @@ provider "azurerm" {
 provider "google" {
   project = var.gcp_project_id
   region  = var.gcp_region
+}
+
+provider "openstack" {
 }
 
 data "external" "my_ip" {
@@ -218,4 +239,26 @@ module "gcp" {
   region_storage = each.value.region_storage
   zone           = each.value.zone
   project_id     = each.value.account
+}
+
+module "openstack" {
+  for_each = { for config in local.module_config : config.name => config if config.platform == "openstack" }
+
+  source = "./modules/openstack"
+
+  arch           = each.value.arch
+  features       = each.value.features
+  test_name      = each.value.name_unique
+  image_path     = var.image_path
+  net_range      = var.net_range
+  subnet_range   = var.subnet_range
+  ssh_public_key = var.ssh_public_key
+  my_ip          = data.external.my_ip.result.ip
+
+  image_file    = each.value.image_file
+  ssh_user      = each.value.ssh_user
+  region        = each.value.region
+  instance_type = each.value.instance_type
+  floatingip_pool = each.value.floatingip_pool
+  public_network_name = each.value.public_network_name
 }
