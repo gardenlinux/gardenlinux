@@ -22,9 +22,14 @@ configFile="aws_test_config.yaml"
 containerName="ghcr.io/gardenlinux/gardenlinux/integration-test:today"
 artifact_dir="/tmp/gardenlinux-build-artifacts"
 
-pushd "$artifact_dir" || exit 1
-tar -xzf "$cname.tar.gz" "$cname.raw"
-popd || exit 1
+if [ -f ".build/${cname}.gcpimage.tar.gz" ]; then
+    mkdir -p "${artifact_dir}"
+    cp .build/* "${artifact_dir}"
+else
+    pushd "$artifact_dir" || exit 1
+    tar -xzf "$cname.tar.gz" "$cname.raw"
+    popd || exit 1
+fi
 
 image_file=$(realpath "$artifact_dir/$cname.raw")
 echo "Image file that will be used for the tests is $image_file"
