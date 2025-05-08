@@ -25,8 +25,12 @@ if [[ ! -e $image_file ]]; then
 fi
 
 if [[ ! ${gcp_project:-} ]]; then
-    echo "gcp_project variable not set"
-    exit 1
+    if [[ ! ${gcp_project_id:-} ]]; then
+        echo "gcp_project variable not set"
+        exit 1
+    else
+        gcp_project=${gcp_project_id}
+    fi
 fi
 
 if [[ ! ${gcp_region:-} ]]; then
