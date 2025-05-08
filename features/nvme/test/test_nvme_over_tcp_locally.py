@@ -48,7 +48,9 @@ echo "NVMe over Fabrics configuration is set up." """
     utils.execute_remote_command(client, "truncate -s 512M /tmp/nvme.img")
     utils.execute_remote_command(client, "losetup -fP /tmp/nvme.img")
     utils.execute_remote_command(client, f"{test_file}")
-    utils.execute_remote_command(client, "nvme connect -t tcp -n testnqn -a 127.0.0.1 -s 4420")
+    utils.execute_remote_command(
+        client, "nvme connect -t tcp -n testnqn -a 127.0.0.1 -s 4420"
+    )
     utils.execute_remote_command(client, "mkfs.ext4 /dev/nvme0n1")
     utils.execute_remote_command(client, "mount /dev/nvme0n1 /mnt")
     utils.execute_remote_command(client, "echo 'foo' > /mnt/bar")
@@ -59,9 +61,10 @@ echo "NVMe over Fabrics configuration is set up." """
     utils.execute_remote_command(client, "nvme disconnect-all")
     utils.execute_remote_command(client, "rm /tmp/nvme.img")
 
+
 def test_nvme_locally(client, nvme_device):
-    """Check if nvme via tcp works with localhost """
-    
+    """Check if nvme via tcp works with localhost"""
+
     device, mount_point, size = nvme_device
     output = utils.execute_remote_command(client, f"df -m | grep {mount_point}")
     split_output = [x.strip() for x in output.split(" ") if x]
@@ -69,5 +72,3 @@ def test_nvme_locally(client, nvme_device):
     assert split_output[1] == size
     output = utils.execute_remote_command(client, f"cat /mnt/bar")
     assert output == "foo"
-    
-
