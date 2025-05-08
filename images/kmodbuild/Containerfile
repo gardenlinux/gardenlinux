@@ -20,6 +20,9 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --instal
 	python3-jinja2 \
 	sudo \
 	vim \
-	wget
+	wget && \
+	# Automatically purge all packages defined in package-exclude of gardenlinux/repo.
+	curl -s https://raw.githubusercontent.com/gardenlinux/repo/refs/heads/main/package-exclude | xargs -I {} bash -c 'apt-get purge -y {}'
+
 COPY list_headers /opt/
 RUN /opt/list_headers
