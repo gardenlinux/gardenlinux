@@ -1,4 +1,4 @@
-## Feature: aide
+## Feature: nvme
 ### Description
 <website-feature>
 This feature installs nvme cli
