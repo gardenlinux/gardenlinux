@@ -47,20 +47,20 @@ echo "NVMe over Fabrics configuration is set up." """
     print("Setup nvme device")
     utils.execute_remote_command(client, "truncate -s 512M /tmp/nvme.img")
     utils.execute_remote_command(client, "DEBIAN_FRONTEND=noninteractive sudo apt-get install -y mount")
-    utils.execute_remote_command(client, "losetup -fP /tmp/nvme.img")
-    utils.execute_remote_command(client, f"{test_file}")
+    utils.execute_remote_command(client, "sudo losetup -fP /tmp/nvme.img")
+    utils.execute_remote_command(client, f"sudo bash -c \"{test_file}\"")
     utils.execute_remote_command(
-        client, "nvme connect -t tcp -n testnqn -a 127.0.0.1 -s 4420"
+        client, "sudo nvme connect -t tcp -n testnqn -a 127.0.0.1 -s 4420"
     )
-    utils.execute_remote_command(client, "mkfs.ext4 /dev/nvme0n1")
-    utils.execute_remote_command(client, "mount /dev/nvme0n1 /mnt")
+    utils.execute_remote_command(client, "sudo mkfs.ext4 /dev/nvme0n1")
+    utils.execute_remote_command(client, "sudo mount /dev/nvme0n1 /mnt")
     utils.execute_remote_command(client, "echo 'foo' > /mnt/bar")
     yield "/dev/nvme0n1", "/mnt", "488"
 
     print("Teardown nvme device and clean up")
-    utils.execute_remote_command(client, "umount /mnt")
-    utils.execute_remote_command(client, "nvme disconnect-all")
-    utils.execute_remote_command(client, "rm /tmp/nvme.img")
+    utils.execute_remote_command(client, "sudo umount /mnt")
+    utils.execute_remote_command(client, "sudo nvme disconnect-all")
+    utils.execute_remote_command(client, "sudo rm /tmp/nvme.img")
 
 
 def test_nvme_locally(client, non_provisioner_chroot, nvme_device):
