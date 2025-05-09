@@ -21,6 +21,12 @@ on:
       original_workflow_name:
         type: string
         default: ''
+      repository:
+        type: string
+        required: true
+      signing_env:
+        type: string
+        required: true
     secrets:
       aws_role:
         required: true
@@ -77,40 +83,40 @@ jobs:
 
           # Tagging for amd64 nightly
           if [ $is_nightly = true ]; then
-            podman tag "$image" ghcr.io/${{ github.repository }}:amd64-nightly
-            podman push ghcr.io/${{ github.repository }}:amd64-nightly
+            podman tag "$image" ${{ inputs.repository }}:amd64-nightly
+            podman push ${{ inputs.repository }}:amd64-nightly
           fi
 
           # Tagging for amd64 with version
-          podman tag "$image" ghcr.io/${{ github.repository }}:amd64-${version}
-          podman push ghcr.io/${{ github.repository }}:amd64-${version}
+          podman tag "$image" ${{ inputs.repository }}:amd64-${version}
+          podman push ${{ inputs.repository }}:amd64-${version}
 
           tar xzv < "${CNAME_ARM64}.tar.gz"
           image="$(podman load < ${CNAME_ARM64}.oci | awk '{ print $NF }')"
 
           # Tagging for arm64 nightly
           if [ $is_nightly = true ]; then
-            podman tag "$image" ghcr.io/${{ github.repository }}:arm64-nightly
-            podman push ghcr.io/${{ github.repository }}:arm64-nightly
+            podman tag "$image" ${{ inputs.repository }}:arm64-nightly
+            podman push ${{ inputs.repository }}:arm64-nightly
           fi
 
           # Tagging for arm64 with version
-          podman tag "$image" ghcr.io/${{ github.repository }}:arm64-${version}
-          podman push ghcr.io/${{ github.repository }}:arm64-${version}
+          podman tag "$image" ${{ inputs.repository }}:arm64-${version}
+          podman push ${{ inputs.repository }}:arm64-${version}
 
           # Creating and pushing manifest for nightly
           if [ $is_nightly = true ]; then
-            podman manifest create ghcr.io/${{ github.repository }}:nightly
-            podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:amd64-nightly
-            podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:arm64-nightly
-            podman manifest push ghcr.io/${{ github.repository }}:nightly
+            podman manifest create ${{ inputs.repository }}:nightly
+            podman manifest add ${{ inputs.repository }}:nightly ${{ inputs.repository }}:amd64-nightly
+            podman manifest add ${{ inputs.repository }}:nightly ${{ inputs.repository }}:arm64-nightly
+            podman manifest push ${{ inputs.repository }}:nightly
           fi
 
           # Creating and pushing manifest for version tag
-          podman manifest create ghcr.io/${{ github.repository }}:${version}
-          podman manifest add ghcr.io/${{ github.repository }}:${version} ghcr.io/${{ github.repository }}:amd64-${version}
-          podman manifest add ghcr.io/${{ github.repository }}:${version} ghcr.io/${{ github.repository }}:arm64-${version}
-          podman manifest push ghcr.io/${{ github.repository }}:${version}
+          podman manifest create ${{ inputs.repository }}:${version}
+          podman manifest add ${{ inputs.repository }}:${version} ${{ inputs.repository }}:amd64-${version}
+          podman manifest add ${{ inputs.repository }}:${version} ${{ inputs.repository }}:arm64-${version}
+          podman manifest push ${{ inputs.repository }}:${version}
   bare_flavors:
     name: Publish bare flavors
     if: ${{ inputs.bare_flavors_matrix != '{"include":[]}' }}
@@ -144,40 +150,40 @@ jobs:
           image="$(podman load < ${{ matrix.config }}-amd64.oci | awk '{ print $NF }')"
 
           # Tagging and pushing amd64 with version
-          podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
-          podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
+          podman tag "$image" ${{ inputs.repository }}/bare-${{ matrix.config }}:amd64-$version
+          podman push ${{ inputs.repository }}/bare-${{ matrix.config }}:amd64-$version
 
           # Tagging and pushing amd64 with nightly
           if [ $is_nightly = true ]; then
-            podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
-            podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
+            podman tag "$image" ${{ inputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
+            podman push ${{ inputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
           fi
 
           # Handling arm64 image
           image="$(podman load < ${{ matrix.config }}-arm64.oci | awk '{ print $NF }')"
 
           # Tagging and pushing arm64 with version
-          podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
-          podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
+          podman tag "$image" ${{ inputs.repository }}/bare-${{ matrix.config }}:arm64-$version
+          podman push ${{ inputs.repository }}/bare-${{ matrix.config }}:arm64-$version
 
           # Tagging and pushing arm64 with nightly
           if [ $is_nightly = true ]; then
-            podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
-            podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
+            podman tag "$image" ${{ inputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
+            podman push ${{ inputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
           fi
 
           # Creating and pushing manifest for version tag
-          podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
-          podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
-          podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
-          podman manifest push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
+          podman manifest create ${{ inputs.repository }}/bare-${{ matrix.config }}:$version
+          podman manifest add ${{ inputs.repository }}/bare-${{ matrix.config }}:$version ${{ inputs.repository }}/bare-${{ matrix.config }}:amd64-$version
+          podman manifest add ${{ inputs.repository }}/bare-${{ matrix.config }}:$version ${{ inputs.repository }}/bare-${{ matrix.config }}:arm64-$version
+          podman manifest push ${{ inputs.repository }}/bare-${{ matrix.config }}:$version
 
           # Creating and pushing manifest for nightly tag
           if [ $is_nightly = true ]; then
-            podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
-            podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
-            podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
-            podman manifest push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
+            podman manifest create ${{ inputs.repository }}/bare-${{ matrix.config }}:nightly
+            podman manifest add ${{ inputs.repository }}/bare-${{ matrix.config }}:nightly ${{ inputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
+            podman manifest add ${{ inputs.repository }}/bare-${{ matrix.config }}:nightly ${{ inputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
+            podman manifest push ${{ inputs.repository }}/bare-${{ matrix.config }}:nightly
           fi
   push_flavors:
     name: Publish flavors
@@ -190,8 +196,7 @@ jobs:
     permissions:
       id-token: write
       packages: write
-    # @TODO: Find more suitable environment name
-    environment: oidc_aws_s3_upload
+    environment: ${{ inputs.signing_env }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
@@ -242,7 +247,7 @@ jobs:
           retry_count=0
           exit_code=0
           until [ $retry_count -ge $max_retries ]; do
-            if output=$(GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir "$CNAME" --container ghcr.io/${{ github.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname "$CNAME" --cosign_file digest.txt --manifest_file "oci_manifest_entry_$CNAME.json" 2>&1); then
+            if output=$(GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir "$CNAME" --container ${{ inputs.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname "$CNAME" --cosign_file digest.txt --manifest_file "oci_manifest_entry_$CNAME.json" 2>&1); then
               cat digest.txt
               exit 0
             elif echo "$output" | grep -q "Bad Gateway"; then
@@ -262,10 +267,10 @@ jobs:
       - name: Sign the manifest
         run: |
           docker login ghcr.io -u token -p ${{ github.token }}
-          cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }} ghcr.io/${{ github.repository }}@$(cat digest.txt)
+          cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }} ${{ inputs.repository }}@$(cat digest.txt)
       - name: Verify signature
         run: |
-          cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.aws_region}}.amazonaws.com/${{ secrets.oci_kms_arn }} ghcr.io/${{ github.repository }}@$(cat digest.txt)
+          cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.aws_region}}.amazonaws.com/${{ secrets.oci_kms_arn }} ${{ inputs.repository }}@$(cat digest.txt)
       - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
           path: oci_manifest_entry_${{ env.CNAME }}.json
@@ -341,4 +346,4 @@ jobs:
           pip install -r /opt/glcli/requirements.txt
       - name: Update index using glcli tool
         run: |
-          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ghcr.io/${{ github.repository }} --version ${{ inputs.version }} --manifest_folder manifests
+          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ${{ inputs.repository }} --version ${{ inputs.version }} --manifest_folder manifests

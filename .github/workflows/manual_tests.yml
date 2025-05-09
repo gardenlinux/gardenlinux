@@ -32,6 +32,12 @@ on:
         description: 'Execute platform tests'
         type: boolean
         default: true
+      channel:
+        required: true
+        type: choice
+        options:
+          - release
+          - nightly
 jobs:
   build:
     name: Build
@@ -77,6 +83,7 @@ jobs:
     with:
       version: ${{ inputs.version }}
       use_glrd: true
+      channel: ${{ inputs.channel }}
   download_store_flavor_version_data:
     name: Store flavor version data
     needs: download_build_requirements
