@@ -21,11 +21,12 @@
 /cert/*.auth
 /cert/*.aws-efivars
 /cert/GUID.txt
-!/cert/gardenlinux-*.crt
-!/cert/gardenlinux-*.chain
-!/cert/gardenlinux-*.auth
-!/cert/gardenlinux-*.aws-efivars
-!/cert/gardenlinux-repo-sign.pub
+!/cert/gardenlinux-*-*.crt
+!/cert/gardenlinux-*-*.der
+!/cert/gardenlinux-*-*.chain
+!/cert/gardenlinux-*-*.auth
+!/cert/gardenlinux-*-*.aws-efivars
+!/cert/gardenlinux-*-repo-sign.pub
 !/cert/gardenlinux.kernel.sign.crt
 !/cert/gardenlinux.sign.pub
 /features/metal/file.include/lib/firmware/
