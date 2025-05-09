@@ -1,0 +1,5 @@
+description: 'iscsi feature'
+type: element
+features:
+  include:
+    - multipath

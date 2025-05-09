@@ -1,0 +1,5 @@
+description: 'multipath feature'
+type: element
+features:
+  include:
+    - server
