@@ -2,4 +2,6 @@
 #set -Eeuo pipefail
 
 cname="${@: -1}"
-./test "${cname}"
+
+podman build --squash --tag test --build-arg base=debian:stable tests
+./test --container-image test "${cname}"
