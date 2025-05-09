@@ -20,14 +20,13 @@ cname=$1
 
 configFile="aws_test_config.yaml"
 containerName="ghcr.io/gardenlinux/gardenlinux/integration-test:today"
-artifact_dir="/tmp/gardenlinux-build-artifacts"
+artifact_dir=".build"
 
-if [ -f ".build/${cname}.raw" ]; then
-    mkdir -p "${artifact_dir}"
-    cp .build/* "${artifact_dir}"
-else
+mkdir -p "${artifact_dir}"
+
+if [ -d "/tmp/gardenlinux-build-artifacts" ]; then
     pushd "$artifact_dir" || exit 1
-    tar -xzf "$cname.tar.gz" "$cname.raw"
+    tar -xzf "/tmp/gardenlinux-build-artifacts/$cname.tar.gz" "$cname.raw"
     popd || exit 1
 fi
 
