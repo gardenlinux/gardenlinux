@@ -16,7 +16,7 @@ if [ -d "/tmp/gardenlinux-build-artifacts" ]; then
     popd || exit 1
 fi
 
-if [ ! -f "/gardenlinux/ali-service-account.json" ]; then
+if [ ! -f "ali-service-account.json" ]; then
     jq -r --arg 'access_key_id' "${ALIBABA_CLOUD_ACCESS_KEY_ID}" --arg 'access_key_secret' "${ALIBABA_CLOUD_ACCESS_KEY_SECRET}" --arg 'region' "${ALIBABA_CLOUD_REGION}" -n '{
         "current": "gardenlinux",
         "profiles": [
@@ -44,7 +44,7 @@ if [ ! -f "/gardenlinux/ali-service-account.json" ]; then
             }
         ],
         "meta_path": ""
-    }' '.' > /gardenlinux/ali-service-account.json
+    }' '.' > ali-service-account.json
 fi
 
 image_file=$(realpath "$artifact_dir/$cname.qcow2")
