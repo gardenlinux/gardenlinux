@@ -28,6 +28,9 @@ on:
         description: 'Run bin/parse_flavors.py with these parameters for bare flavors'
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
         type: string
+      bare_flavors_matrix:
+        description: 'Already generated GitHub workflow bare flavors matrix'
+        type: string
       fail_fast:
         description: 'Cancel workflow run on first error'
         type: boolean
@@ -102,8 +105,10 @@ jobs:
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
       flags: ${{ inputs.bare_flavors_parse_params }}
+      flavors_matrix: ${{ inputs.bare_flavors_matrix }}
   bare_flavors:
     needs: [ bootstrap, bare_flavors_matrix, requirements ]
+    if: ${{ needs.bare_flavors_matrix.outputs.matrix != '{"include":[]}' }}
     name: Build bare flavors
     strategy:
       matrix: ${{ fromJson(needs.bare_flavors_matrix.outputs.matrix) }}
