@@ -46,7 +46,7 @@ echo "NVMe over Fabrics configuration is set up." """
 
     print("Setup nvme device")
     utils.execute_remote_command(client, "truncate -s 512M /tmp/nvme.img")
-    utils.execute_remote_command(client, "DEBIAN_FRONTEND=noninteractive apt-get install -y mount")
+    utils.execute_remote_command(client, "DEBIAN_FRONTEND=noninteractive sudo apt-get install -y mount")
     utils.execute_remote_command(client, "losetup -fP /tmp/nvme.img")
     utils.execute_remote_command(client, f"{test_file}")
     utils.execute_remote_command(

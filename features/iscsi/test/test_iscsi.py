@@ -22,7 +22,7 @@ def iscsi_device(client):
             initiator-address 127.0.0.1
         </target>"""
     execute_remote_command(
-        client, f"echo '{iscsi_config}' > /etc/tgt/conf.d/iscsi_target.conf"
+        client, f"sudo bash -c \"echo '{iscsi_config}' > /etc/tgt/conf.d/iscsi_target.conf\""
     )
     execute_remote_command(client, "/usr/sbin/tgt-admin --update ALL")
     execute_remote_command(client, "tgtadm --mode target --op show")
