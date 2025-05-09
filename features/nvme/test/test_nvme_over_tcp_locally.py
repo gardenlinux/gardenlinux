@@ -62,7 +62,7 @@ echo "NVMe over Fabrics configuration is set up." """
     utils.execute_remote_command(client, "rm /tmp/nvme.img")
 
 
-def test_nvme_locally(client, nvme_device, non_provisioner_chroot):
+def test_nvme_locally(client, non_provisioner_chroot, nvme_device):
     """Check if nvme via tcp works with localhost"""
 
     device, mount_point, size = nvme_device
