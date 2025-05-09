@@ -6,7 +6,7 @@ import os
 
 
 @pytest.mark.parametrize("module_name", ["nvme-tcp"])
-def test_kernel_modules(client, module_name):
+def test_kernel_modules(client, module_name, non_provisioner_chroot):
     """Check if the module_name kernel module is available as loadable module"""
     # NOTE: check all kernel versions, in case multiple kernels are installed
     assert utils.check_module_exists_in_all_kernels(
