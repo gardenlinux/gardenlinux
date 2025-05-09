@@ -14,11 +14,11 @@ def iscsi_device(client):
     )
 
     execute_remote_command(
-        client, "dd if=/dev/zero of=/srv/iscsi_disk.img bs=1 count=0 seek=1G"
+        client, "dd if=/dev/zero of=/tmp/iscsi_disk.img bs=1 count=0 seek=1G"
     )
 
     iscsi_config = """<target iqn.2025-04.localhost:storage.disk1>
-            backing-store /srv/iscsi_disk.img
+            backing-store /tmp/iscsi_disk.img
             initiator-address 127.0.0.1
         </target>"""
     execute_remote_command(
