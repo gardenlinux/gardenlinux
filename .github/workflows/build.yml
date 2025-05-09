@@ -9,10 +9,12 @@ on:
         description: 'Garden Linux version'
         type: string
         default: today
-      use_kms:
-        description: 'Use Garden Linux KMS'
-        type: boolean
-        default: false
+      signing_env:
+        type: string
+        default: ""
+      channel:
+        type: string
+        default: nightly
       flavors_parse_params:
         description: 'Run bin/parse_flavors.py with these parameters'
         default: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
@@ -54,7 +56,8 @@ jobs:
     uses: ./.github/workflows/build_requirements.yml
     with:
       version: ${{ inputs.version == '' && 'now' || inputs.version }}
-      use_kms: ${{ inputs.use_kms }}
+      use_kms: ${{ inputs.signing_env != '' }}
+      channel: ${{ inputs.channel }}
   bootstrap:
     needs: requirements
     name: Bootstrap build
@@ -87,8 +90,8 @@ jobs:
       flavor: ${{ matrix.flavor }}
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
-      # GitHub workflow workaround for bool
-      use_kms: ${{ needs.requirements.outputs.use_kms == 'true' }}
+      signing_env: ${{ inputs.signing_env }}
+      channel: ${{ inputs.channel }}
     uses: ./.github/workflows/build_flavor.yml
     secrets: inherit
   kmodbuild_container:
