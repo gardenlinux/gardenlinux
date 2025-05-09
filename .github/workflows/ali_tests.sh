@@ -16,6 +16,37 @@ if [ -d "/tmp/gardenlinux-build-artifacts" ]; then
     popd || exit 1
 fi
 
+if [ ! -f "ali-service-account.json" ]; then
+    jq -r --arg 'access_key_id' "${ALIBABA_CLOUD_ACCESS_KEY_ID}" --arg 'access_key_secret' "${ALIBABA_CLOUD_ACCESS_KEY_SECRET}" --arg 'region' "${ALIBABA_CLOUD_REGION}" -n '{
+        "current": "gardenlinux",
+        "profiles": [
+            {
+                "name": "gardenlinux",
+                "mode": "AK",
+                "access_key_id": $access_key_id,
+                "access_key_secret": $access_key_secret,
+                "sts_token": "",
+                "ram_role_name": "",
+                "ram_role_arn": "",
+                "ram_session_name": "",
+                "private_key": "",
+                "key_pair_name": "",
+                "expired_seconds": 0,
+                "verified": "",
+                "region_id": $region,
+                "output_format": "json",
+                "language": "en",
+                "site": "",
+                "retry_timeout": 0,
+                "connect_timeout": 0,
+                "retry_count": 0,
+                "process_command": ""
+            }
+        ],
+        "meta_path": ""
+    }' '.' > ali-service-account.json
+fi
+
 image_file=$(realpath "$artifact_dir/$cname.qcow2")
 echo "Image file that will be used for the tests is $image_file"
 if [[ ! -e $image_file ]]; then
