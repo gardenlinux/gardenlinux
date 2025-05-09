@@ -133,7 +133,7 @@ jobs:
 
           # USE_KMS in build_requirements.yml
           for f in secureboot.{{pk,kek,db}.{crt,der,auth},aws-efivars}; do
-            cp "cert/gardenlinux-$f" "$CNAME/$CNAME.$f"
+            cp "cert/gardenlinux-nightly-$f" "$CNAME/$CNAME.$f"
           done
 
           tar -cSzvf "$CNAME.tar.gz" -C $CNAME .
