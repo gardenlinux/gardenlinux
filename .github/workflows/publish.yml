@@ -16,8 +16,24 @@ jobs:
     uses: ./.github/workflows/download_workflow_data.yml
     with:
       run_id: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
+  determine_repository:
+    needs: workflow_data
+    runs-on: ubuntu-latest
+    outputs:
+      repository: ${{ steps.set_repository.outputs.repository }}
+    steps:
+      - id: set_repository
+        run: |
+          if [[ "${{ needs.workflow_data.outputs.channel }}" == "release" ]]; then
+            echo "repository=ghcr.io/gardenlinux/gardenlinux" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ needs.workflow_data.outputs.channel }}" == "nightly" ]]; then
+            echo "repository=ghcr.io/gardenlinux/nightly" >> "$GITHUB_OUTPUT"
+          else
+            echo "invalid channel ${{ needs.workflow_data.outputs.channel }}" >&2
+            exit 1
+          fi
   publish_oci_containers:
-    needs: [ workflow_data ]
+    needs: [ workflow_data, determine_repository ]
     name: Publish container base image
     uses: ./.github/workflows/publish_oci_containers.yml
     # @TODO: Replace with safe OCI manifast handling variant
@@ -32,9 +48,11 @@ jobs:
       flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
       bare_flavors_matrix: ${{ needs.workflow_data.outputs.bare_flavors_matrix }}
       original_workflow_name: ${{ needs.workflow_data.outputs.original_workflow_name }}
+      repository: ${{ needs.determine_repository.outputs.repository }}
+      signing_env: ${{ needs.workflow_data.outputs.channel == 'release' && 'oidc_aws_kms_release' || 'oidc_aws_kms_nightly' }}
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
-      aws_role: ${{ secrets.AWS_IAM_ROLE }}
+      aws_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
       aws_session: ${{ secrets.AWS_OIDC_SESSION }}
       oci_kms_arn: ${{ secrets.OCI_KMS_ARN }}
   publish_kmodbuild_container:

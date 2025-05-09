@@ -19,6 +19,12 @@ on:
         description: 'Run bin/parse_flavors.py with these parameters for bare flavors'
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
         type: string
+      channel:
+        required: true
+        type: choice
+        options:
+          - release
+          - nightly
 jobs:
   build:
     name: Build
@@ -27,14 +33,15 @@ jobs:
       id-token: write
     with:
       version: ${{ inputs.version }}
-      use_kms: true
+      signing_env: ${{ inputs.channel == 'release' && 'oidc_aws_kms_release' || 'oidc_aws_kms_nightly' }}
+      channel: ${{ inputs.channel }}
       flavors_parse_params: ${{ inputs.flavors_parse_params }}
       platform_test_tag: ${{ inputs.platform_test_tag }}
       bare_flavors_parse_params: ${{ inputs.bare_flavors_parse_params }}
       fail_fast: true
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
-      aws_kms_role: ${{ secrets.SECUREBOOT_DB_IAM_ROLE }}
+      aws_kms_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
       aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
       secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
   build_retry:
@@ -105,7 +112,8 @@ jobs:
             "flavors_matrix": $matrix,
             "bare_flavors_matrix": $bare_matrix,
             "version": "${{ needs.build.outputs.version }}",
-            "original_workflow_name": "${{ github.workflow }}"
+            "original_workflow_name": "${{ github.workflow }}",
+            "channel": "${{ inputs.channel }}"
           }' '.' > workflow_data.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         with:
