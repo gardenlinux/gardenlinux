@@ -6,7 +6,7 @@ import os
 
 
 @pytest.fixture
-def nvme_device(client):
+def nvme_device(client, non_provisioner_chroot):
     test_file = """#!/bin/bash
 # Define variables for the IP address, NVMe device, and subsystem name
 IP_ADDRESS="127.0.0.1"
