@@ -89,9 +89,9 @@ jobs:
       - name: Use kms backed certificates
         if: ${{ inputs.use_kms }}
         run: |
-          touch cert/gardenlinux-secureboot.db.arn
+          touch cert/gardenlinux-nightly-secureboot.db.arn
           for f in secureboot.{{pk,null.pk,kek,db}.{crt,der,auth},db.arn,aws-efivars}; do
-            ln -sr "cert/gardenlinux-$f" "cert/$f"
+            ln -sr "cert/gardenlinux-nightly-$f" "cert/$f"
           done
       - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
