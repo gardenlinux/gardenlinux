@@ -42,6 +42,10 @@ if [[ ! ${gcp_zone:-} ]]; then
     exit 1
 fi
 
+if [[ ! ${TARGET_ARCHITECTURE:-} ]]; then
+    TARGET_ARCHITECTURE=$ARCH
+fi
+
 if [ "$TARGET_ARCHITECTURE" == "arm64" ]; then
     machine_type="t2a-standard-2"
 else
