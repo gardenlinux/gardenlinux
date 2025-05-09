@@ -37,6 +37,10 @@ if [[ ! -e $image_file ]]; then
     exit 1
 fi
 
+if [[ ! ${azure_subscription_id:-} ]]; then
+    azure_subscription_id=$ARM_SUBSCRIPTION_ID
+fi
+
 case "$arch" in
   amd64)
     azure_hyper_v_generation="V1"
