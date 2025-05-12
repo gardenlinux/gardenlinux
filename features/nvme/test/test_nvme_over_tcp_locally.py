@@ -3,6 +3,10 @@ import helper.utils as utils
 import glob
 import sys
 import os
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger()
 
 
 @pytest.fixture
@@ -49,6 +53,8 @@ echo "NVMe over Fabrics configuration is set up." """
     utils.execute_remote_command(client, "DEBIAN_FRONTEND=noninteractive sudo apt-get install -y mount")
     utils.execute_remote_command(client, "sudo losetup -fP /tmp/nvme.img")
     utils.execute_remote_command(client, f"sudo bash -c \"{test_file}\"")
+    output = utils.execute_remote_command(client, f"sudo nvme list")
+    logger.info(f"Nvme devices: %s", output)
     utils.execute_remote_command(
         client, "sudo nvme connect -t tcp -n testnqn -a 127.0.0.1 -s 4420"
     )
