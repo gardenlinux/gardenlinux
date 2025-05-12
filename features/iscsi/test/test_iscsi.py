@@ -39,7 +39,7 @@ def iscsi_device(client):
         client, "/usr/sbin/start-stop-daemon --stop --quiet --oknodo --exec /usr/sbin/tgtd"
     )
     execute_remote_command(
-        client, f"sudo rm -f /etc/tgt/conf.d"
+        client, f"sudo rm -rf /etc/tgt/conf.d"
     )
 
 
