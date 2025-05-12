@@ -17,27 +17,27 @@ TRTYPE="tcp"
 ADRFAM="ipv4"
 
 # Load necessary kernel modules
-modprobe nvme_tcp
-modprobe nvmet
-modprobe nvmet-tcp
+sudo modprobe nvme_tcp
+sudo modprobe nvmet
+sudo modprobe nvmet-tcp
 
 # Create the NVMe subsystem directory
-mkdir -p /sys/kernel/config/nvmet/subsystems/$SUBSYSTEM_NAME
+sudo mkdir -p /sys/kernel/config/nvmet/subsystems/$SUBSYSTEM_NAME
 
 # Set the subsystem to accept any host
-echo 1 > /sys/kernel/config/nvmet/subsystems/$SUBSYSTEM_NAME/attr_allow_any_host
+echo 1 | sudo tee /sys/kernel/config/nvmet/subsystems/$SUBSYSTEM_NAME/attr_allow_any_host
 
 # Create and configure the namespace
  mkdir -p /sys/kernel/config/nvmet/subsystems/$SUBSYSTEM_NAME/namespaces/1
-echo -n $NVME_DEVICE |  tee /sys/kernel/config/nvmet/subsystems/$SUBSYSTEM_NAME/namespaces/1/device_path
-echo 1 > /sys/kernel/config/nvmet/subsystems/$SUBSYSTEM_NAME/namespaces/1/enable
+echo -n $NVME_DEVICE | sudo tee /sys/kernel/config/nvmet/subsystems/$SUBSYSTEM_NAME/namespaces/1/device_path
+echo 1 | sudo tee /sys/kernel/config/nvmet/subsystems/$SUBSYSTEM_NAME/namespaces/1/enable
 
 # Configure the NVMe-oF TCP port
  mkdir -p /sys/kernel/config/nvmet/ports/1
-echo $IP_ADDRESS > /sys/kernel/config/nvmet/ports/1/addr_traddr
-echo $TRTYPE > /sys/kernel/config/nvmet/ports/1/addr_trtype
-echo $PORT_NUMBER > /sys/kernel/config/nvmet/ports/1/addr_trsvcid
-echo $ADRFAM > /sys/kernel/config/nvmet/ports/1/addr_adrfam
+echo $IP_ADDRESS | sudo tee /sys/kernel/config/nvmet/ports/1/addr_traddr
+echo $TRTYPE | sudo tee /sys/kernel/config/nvmet/ports/1/addr_trtype
+echo $PORT_NUMBER | sudo tee /sys/kernel/config/nvmet/ports/1/addr_trsvcid
+echo $ADRFAM | sudo tee /sys/kernel/config/nvmet/ports/1/addr_adrfam
 
 # Link the subsystem to the port
  ln -s /sys/kernel/config/nvmet/subsystems/$SUBSYSTEM_NAME /sys/kernel/config/nvmet/ports/1/subsystems/$SUBSYSTEM_NAME
@@ -55,6 +55,7 @@ echo "NVMe over Fabrics configuration is set up." """
     utils.execute_remote_command(client, "sudo mkfs.ext4 /dev/nvme0n1")
     utils.execute_remote_command(client, "sudo mount /dev/nvme0n1 /mnt")
     utils.execute_remote_command(client, "echo 'foo' > /mnt/bar")
+
     yield "/dev/nvme0n1", "/mnt", "488"
 
     print("Teardown nvme device and clean up")
