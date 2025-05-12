@@ -56,7 +56,7 @@ echo "NVMe over Fabrics configuration is set up." """
     output = utils.execute_remote_command(client, f"sudo nvme list")
     logger.info(f"Nvme devices: %s", output)
     utils.execute_remote_command(
-        client, "sudo nvme connect -t tcp -n testnqn -a 127.0.0.1 -s 4420"
+        client, "sudo nvme connect -t tcp -n testnqn -a 127.0.0.1 -s 4420 || /bin/true"
     )
     utils.execute_remote_command(client, "sudo mkfs.ext4 /dev/nvme0n1")
     utils.execute_remote_command(client, "sudo mount /dev/nvme0n1 /mnt")
@@ -68,6 +68,8 @@ echo "NVMe over Fabrics configuration is set up." """
     utils.execute_remote_command(client, "sudo umount /mnt")
     utils.execute_remote_command(client, "sudo nvme disconnect-all")
     utils.execute_remote_command(client, "sudo rm /tmp/nvme.img")
+    utils.execute_remote_command(client, "sudo rmmod nvme_tcp")
+    utils.execute_remote_command(client, "sudo rmmod nvmet")
 
 
 def test_nvme_locally(client, non_provisioner_chroot, nvme_device):
