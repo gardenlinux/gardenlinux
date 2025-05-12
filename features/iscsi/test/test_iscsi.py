@@ -36,7 +36,7 @@ def iscsi_device(client):
 
     execute_remote_command(client, "sudo iscsiadm --mode node --logout")
     execute_remote_command(
-        client, "/usr/sbin/start-stop-daemon --stop --quiet --exec /usr/sbin/tgtd"
+        client, "/usr/sbin/start-stop-daemon --stop --quiet --oknodo --exec /usr/sbin/tgtd"
     )
     execute_remote_command(
         client, f"sudo rm -f /etc/tgt/conf.d"
