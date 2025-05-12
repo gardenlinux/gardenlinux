@@ -22,6 +22,9 @@ def iscsi_device(client):
             initiator-address 127.0.0.1
         </target>"""
     execute_remote_command(
+        client, f"sudo mkdir -p /etc/tgt/conf.d"
+    )
+    execute_remote_command(
         client, f"sudo bash -c \"echo '{iscsi_config}' > /etc/tgt/conf.d/iscsi_target.conf\""
     )
     execute_remote_command(client, "sudo /usr/sbin/tgt-admin --update ALL")
@@ -34,6 +37,9 @@ def iscsi_device(client):
     execute_remote_command(client, "sudo iscsiadm --mode node --logout")
     execute_remote_command(
         client, "/usr/sbin/start-stop-daemon --stop --quiet --exec /usr/sbin/tgtd"
+    )
+    execute_remote_command(
+        client, f"sudo rm -f /etc/tgt/conf.d"
     )
 
 
