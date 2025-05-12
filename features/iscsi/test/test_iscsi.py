@@ -60,5 +60,5 @@ def test_iscsi_setup(client, non_provisioner_chroot, iscsi_device):
     logger.info(f"Rescan output: {output}")
 
     output_after = execute_remote_command(client, "ls -la /dev/disk/by-path/")
-    logger.info(f"Block devices after rescan: {output}")
+    logger.info(f"Block devices after rescan: {output_after}")
     assert "sdb" in output_after, "Expected /dev/sdb after rescan"
