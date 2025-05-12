@@ -46,7 +46,7 @@ def iscsi_device(client):
 def test_iscsi_setup(client, non_provisioner_chroot, iscsi_device):
     output_before = execute_remote_command(client, "ls -la /dev/disk/by-path/")
     logger.info(f"Block devices before rescan: {output_before}")
-    assert "sdb" not in output_before, "Unexpected /dev/sdb before rescan"
+    assert "iscsi-iqn" not in output_before, "Unexpected iscsi-iqn before rescan"
 
     session_id = execute_remote_command(
         client, "sudo iscsiadm -m session | awk '{print $2}'"
@@ -61,4 +61,4 @@ def test_iscsi_setup(client, non_provisioner_chroot, iscsi_device):
 
     output_after = execute_remote_command(client, "ls -la /dev/disk/by-path/")
     logger.info(f"Block devices after rescan: {output_after}")
-    assert "sdb" in output_after, "Expected /dev/sdb after rescan"
+    assert "iscsi-iqn" in output_after, "Expected iscsi-iqn after rescan"
