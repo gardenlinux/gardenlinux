@@ -10,7 +10,7 @@ logger = logging.getLogger()
 def iscsi_device(client):
     logger.info("Starting iSCSI setup test")
     execute_remote_command(
-        client, "start-stop-daemon --start --exec /usr/sbin/tgtd || /bin/true"
+        client, "/usr/sbin/start-stop-daemon --start --exec /usr/sbin/tgtd || /bin/true"
     )
 
     execute_remote_command(
@@ -33,13 +33,13 @@ def iscsi_device(client):
 
     execute_remote_command(client, "sudo iscsiadm --mode node --logout")
     execute_remote_command(
-        client, "start-stop-daemon --stop --quiet --exec /usr/sbin/tgtd"
+        client, "/usr/sbin/start-stop-daemon --stop --quiet --exec /usr/sbin/tgtd"
     )
 
 
 def test_iscsi_setup(client, non_provisioner_chroot, iscsi_device):
-    output = execute_remote_command(client, "lsblk")
-    logger.info(f"Block devices before rescan: {output}")
+    output_before = execute_remote_command(client, "ls -la /dev/disk/by-path/")
+    logger.info(f"Block devices before rescan: {output_before}")
     assert "sdb" not in output, "Unexpected /dev/sdb before rescan"
 
     session_id = execute_remote_command(
@@ -53,6 +53,6 @@ def test_iscsi_setup(client, non_provisioner_chroot, iscsi_device):
     )
     logger.info(f"Rescan output: {output}")
 
-    output = execute_remote_command(client, "lsblk")
+    output_after = execute_remote_command(client, "ls -la /dev/disk/by-path/")
     logger.info(f"Block devices after rescan: {output}")
     assert "sdb" in output, "Expected /dev/sdb after rescan"
