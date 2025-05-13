@@ -60,7 +60,7 @@ echo "NVMe over Fabrics configuration is set up." """
         client, "sudo nvme connect -t tcp -n testnqn -a 127.0.0.1 -s 4420 || /bin/true"
     )
     output = utils.execute_remote_command(client, "sudo mkfs.ext4 /dev/nvme0n1 || sudo nvme list -o json")
-    logger.info("MKFS failed, nvme device list: %s", outputp)
+    logger.info("MKFS failed, nvme device list: %s", output)
     utils.execute_remote_command(client, "sudo mount /dev/nvme0n1 /mnt")
     utils.execute_remote_command(client, "echo 'foo' > /mnt/bar")
 
