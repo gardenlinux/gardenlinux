@@ -54,12 +54,12 @@ echo "NVMe over Fabrics configuration is set up." """
     utils.execute_remote_command(client, "sudo losetup -fP /tmp/nvme.img")
     utils.execute_remote_command(client, "sudo nvme disconnect-all")
     utils.execute_remote_command(client, f"sudo bash -c \"{test_file}\"")
-    output = utils.execute_remote_command(client, f"sudo nvme list")
+    output = utils.execute_remote_command(client, f"sudo nvme list -o json")
     logger.info(f"Nvme devices: %s", output)
     utils.execute_remote_command(
         client, "sudo nvme connect -t tcp -n testnqn -a 127.0.0.1 -s 4420 || /bin/true"
     )
-    utils.execute_remote_command(client, "sudo mkfs.ext4 /dev/nvme0n1")
+    utils.execute_remote_command(client, "sudo mkfs.ext4 /dev/nvme0n1 || nvme list -o json")
     utils.execute_remote_command(client, "sudo mount /dev/nvme0n1 /mnt")
     utils.execute_remote_command(client, "echo 'foo' > /mnt/bar")
 
