@@ -52,7 +52,7 @@ echo "NVMe over Fabrics configuration is set up." """
     utils.execute_remote_command(client, "truncate -s 512M /tmp/nvme.img")
     utils.execute_remote_command(client, "DEBIAN_FRONTEND=noninteractive sudo apt-get install -y mount")
     utils.execute_remote_command(client, "sudo losetup -fP /tmp/nvme.img")
-    utils.execute_remote_command(client, "sudo nvme-disconnect-all")
+    utils.execute_remote_command(client, "sudo nvme disconnect-all")
     utils.execute_remote_command(client, f"sudo bash -c \"{test_file}\"")
     output = utils.execute_remote_command(client, f"sudo nvme list")
     logger.info(f"Nvme devices: %s", output)
