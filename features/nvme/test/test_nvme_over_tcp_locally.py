@@ -11,7 +11,8 @@ logger = logging.getLogger()
 
 @pytest.fixture
 def nvme_device(client, non_provisioner_chroot):
-    test_file = """#!/bin/bash
+    with open('nvme_test_setup.sh', "w") as test_file:
+        test_file.write("""#!/bin/bash
 # Define variables for the IP address, NVMe device, and subsystem name
 IP_ADDRESS="127.0.0.1"
 NVME_DEVICE="/tmp/nvme.img"
@@ -46,14 +47,16 @@ echo $ADRFAM | sudo tee /sys/kernel/config/nvmet/ports/1/addr_adrfam
 # Link the subsystem to the port
  ln -s /sys/kernel/config/nvmet/subsystems/$SUBSYSTEM_NAME /sys/kernel/config/nvmet/ports/1/subsystems/$SUBSYSTEM_NAME
 
-echo "NVMe over Fabrics configuration is set up." """
+echo "NVMe over Fabrics configuration is set up." """)
+    client.bulk_upload(["/tmp/nvme_test_setup.sh"])
 
     print("Setup nvme device")
+    output = utils.execute_remote_command(client, "sudo /bin/bash /nvme_test_setup.sh ")
+    logger.info(output)
     utils.execute_remote_command(client, "truncate -s 512M /tmp/nvme.img")
     utils.execute_remote_command(client, "DEBIAN_FRONTEND=noninteractive sudo apt-get install -y mount")
     utils.execute_remote_command(client, "sudo losetup -fP /tmp/nvme.img")
     utils.execute_remote_command(client, "sudo nvme disconnect-all")
-    utils.execute_remote_command(client, f"sudo bash -c \"{test_file}\"")
     output = utils.execute_remote_command(client, f"sudo nvme list -o json")
     logger.info(f"Nvme devices: %s", output)
     utils.execute_remote_command(
@@ -71,7 +74,6 @@ echo "NVMe over Fabrics configuration is set up." """
     utils.execute_remote_command(client, "sudo nvme disconnect-all")
     utils.execute_remote_command(client, "sudo rm /tmp/nvme.img")
     utils.execute_remote_command(client, "sudo rmmod nvme_tcp")
-    utils.execute_remote_command(client, "sudo rmmod nvmet")
 
 
 def test_nvme_locally(client, non_provisioner_chroot, nvme_device):
