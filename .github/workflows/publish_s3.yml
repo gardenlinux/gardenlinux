@@ -7,7 +7,7 @@ on:
         type: number
         required: true
   workflow_run:
-    workflows: [ 'Build and publish a release', 'nightly' ]
+    workflows: [ 'Build and publish a release' ]
     types: [ 'completed' ]
 jobs:
   workflow_data:
@@ -18,14 +18,13 @@ jobs:
       run_id: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
   trustedboot_flavors_supported_matrix:
     needs: workflow_data
-    if: ${{ needs.workflow_data.outputs.channel == 'release' }}
+    if: ${{ needs.workflow_data.outputs.target == 'release' }}
     name: Generate flavors matrix for trustedboot
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
       flags: '--include-only "*trustedboot*" --no-arch --json-by-arch'
   trustedboot_flavors_matrix:
     needs: [ trustedboot_flavors_supported_matrix, workflow_data ]
-    if: ${{ needs.workflow_data.outputs.channel == 'release' }}
     name: Intersect matrix supporting trustedboot
     runs-on: 'ubuntu-24.04'
     defaults:
@@ -53,7 +52,6 @@ jobs:
             core.setOutput("flavors_matrix", matrix);
   non_trustedboot_flavors_matrix:
     needs: [ trustedboot_flavors_supported_matrix, workflow_data ]
-    if: ${{ needs.workflow_data.outputs.channel == 'release' }}
     name: Exclude matrix of flavors supporting trustedboot
     runs-on: 'ubuntu-24.04'
     defaults:
@@ -81,7 +79,7 @@ jobs:
             core.setOutput("flavors_matrix", matrix);
   copy_artifacts:
     needs: [ non_trustedboot_flavors_matrix, workflow_data ]
-    if: ${{ needs.workflow_data.outputs.channel == 'release' }}
+    if: ${{ needs.workflow_data.outputs.target == 'release' }}
     name: Copy without adding certs
     runs-on: ubuntu-24.04
     strategy:
@@ -101,7 +99,7 @@ jobs:
           path: '*.tar.gz'
   prepare_certs:
     needs: [ trustedboot_flavors_matrix, workflow_data ]
-    if: ${{ needs.workflow_data.outputs.channel == 'release' }}
+    if: ${{ needs.workflow_data.outputs.target == 'release' }}
     name: Add certs
     runs-on: ubuntu-24.04
     defaults:
@@ -130,16 +128,17 @@ jobs:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
           github-token: ${{ github.token }}
           run-id: ${{ needs.workflow_data.outputs.run_id }}
+      - name: Load certs artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+        with:
+          name: certs
+          github-token: ${{ github.token }}
+          run-id: ${{ needs.workflow_data.outputs.run_id }}
+          path: ${{ env.CNAME }}/
       - name: Add certs to build artifacts
         run: |
-          mkdir "$CNAME/"
           tar -C "$CNAME/" -xzf "$CNAME.tar.gz"
           rm "$CNAME.tar.gz"
-
-          # USE_KMS in build_requirements.yml
-          for f in secureboot.{{pk,kek,db}.{crt,der,auth},aws-efivars} oci-sign.crt; do
-            cp "cert/gardenlinux-${{ needs.workflow_data.outputs.channel }}-$f" "$CNAME/$CNAME.$f"
-          done
 
           tar -cSzvf "$CNAME.tar.gz" -C $CNAME .
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
@@ -149,7 +148,6 @@ jobs:
           path: ${{ env.CNAME }}.tar.gz
   upload_to_s3:
     needs: [ copy_artifacts, prepare_certs, workflow_data ]
-    if: ${{ needs.workflow_data.outputs.channel == 'release' }}
     name: Upload to S3
     permissions:
       id-token: write
@@ -166,7 +164,6 @@ jobs:
       aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
   upload_to_s3_cn:
     needs: [ copy_artifacts, prepare_certs, workflow_data ]
-    if: ${{ needs.workflow_data.outputs.channel == 'release' }}
     name: Upload to S3 (China)
     permissions:
       id-token: write
@@ -183,7 +180,6 @@ jobs:
       aws_s3_bucket: ${{ secrets.AWS_CN_S3_BUCKET }}
   glrd:
     needs: [ workflow_data, upload_to_s3 ]
-    if: ${{ needs.workflow_data.outputs.channel == 'release' }}
     name: create GLRD release
     permissions:
       id-token: write

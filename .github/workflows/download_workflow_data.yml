@@ -18,8 +18,8 @@ on:
         value: ${{ jobs.workflow_data.outputs.bare_flavors_matrix }}
       original_workflow_name:
         value: ${{ jobs.workflow_data.outputs.original_workflow_name }}
-      channel:
-        value: ${{ jobs.workflow_data.outputs.channel }}
+      target:
+        value: ${{ jobs.workflow_data.outputs.target }}
 jobs:
   workflow_data:
     name: Download workflow JSON data from trigger
@@ -30,7 +30,7 @@ jobs:
       flavors_matrix: ${{ steps.data.outputs.flavors_matrix }}
       bare_flavors_matrix: ${{ steps.data.outputs.bare_flavors_matrix }}
       original_workflow_name: ${{ steps.data.outputs.original_workflow_name }}
-      channel: ${{ steps.data.outputs.channel }}
+      target: ${{ steps.data.outputs.target }}
     steps:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
@@ -65,6 +65,6 @@ jobs:
             core.setOutput("flavors_matrix", workflowData.flavors_matrix);
             core.setOutput("bare_flavors_matrix", workflowData.bare_flavors_matrix);
             core.setOutput("original_workflow_name", workflowData.original_workflow_name);
-            core.setOutput("channel", workflowData.channel);
+            core.setOutput("target", flavorVersionData.target);
 
             return true;
