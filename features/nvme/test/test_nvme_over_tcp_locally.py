@@ -11,7 +11,7 @@ logger = logging.getLogger()
 
 @pytest.fixture
 def nvme_device(client, non_provisioner_chroot):
-    with open('nvme_test_setup.sh', "w") as test_file:
+    with open('/tmp/nvme_test_setup.sh', "w") as test_file:
         test_file.write("""#!/bin/bash
 # Define variables for the IP address, NVMe device, and subsystem name
 IP_ADDRESS="127.0.0.1"
