@@ -10,7 +10,7 @@ jobs:
       id-token: write
     with:
       version: now
-      signing_env: oidc_aws_kms_nightly
+      target: nightly
       platform_test_tag: latest
       fail_fast: true
     secrets:
@@ -86,8 +86,7 @@ jobs:
             "flavors_matrix": $matrix,
             "bare_flavors_matrix": $bare_matrix,
             "version": "${{ needs.build.outputs.version }}",
-            "original_workflow_name": "${{ github.workflow }}",
-            "channel": "nightly"
+            "original_workflow_name": "${{ github.workflow }}"
           }' '.' > workflow_data.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         with:

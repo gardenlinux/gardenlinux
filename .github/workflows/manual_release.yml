@@ -7,6 +7,13 @@ on:
         description: 'Garden Linux version'
         type: string
         required: true
+      target:
+        description: 'Garden Linux release target'
+        required: true
+        type: choice
+        options:
+          - release
+          - nightly
       platform_test_tag:
         description: 'Tag to run platform-test containers. "latest" or GL version. Tag must be available in `ghcr.io/gardenlinux/gardenlinux/platform-test-*`'
         type: string
@@ -19,12 +26,6 @@ on:
         description: 'Run bin/parse_flavors.py with these parameters for bare flavors'
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
         type: string
-      channel:
-        required: true
-        type: choice
-        options:
-          - release
-          - nightly
 jobs:
   build:
     name: Build
@@ -33,8 +34,7 @@ jobs:
       id-token: write
     with:
       version: ${{ inputs.version }}
-      signing_env: ${{ inputs.channel == 'release' && 'oidc_aws_kms_release' || 'oidc_aws_kms_nightly' }}
-      channel: ${{ inputs.channel }}
+      target: ${{ inputs.target }}
       flavors_parse_params: ${{ inputs.flavors_parse_params }}
       platform_test_tag: ${{ inputs.platform_test_tag }}
       bare_flavors_parse_params: ${{ inputs.bare_flavors_parse_params }}
@@ -112,8 +112,7 @@ jobs:
             "flavors_matrix": $matrix,
             "bare_flavors_matrix": $bare_matrix,
             "version": "${{ needs.build.outputs.version }}",
-            "original_workflow_name": "${{ github.workflow }}",
-            "channel": "${{ inputs.channel }}"
+            "original_workflow_name": "${{ github.workflow }}"
           }' '.' > workflow_data.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         with:
