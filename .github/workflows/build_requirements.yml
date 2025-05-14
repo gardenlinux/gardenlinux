@@ -30,16 +30,16 @@ jobs:
     outputs:
       environment: ${{ steps.signing_environment.outputs.environment }}
     steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          submodules: true
       - name: Set signing environment
         id: signing_environment
-        run: |
-          if [[ "${{ inputs.target }}" == "release" ]]; then
-            echo "environment=oidc_aws_kms_release" | tee -a "$GITHUB_OUTPUT"
-          elif [[ "${{ inputs.target }}" == "nightly" ]]; then
-            echo "environment=oidc_aws_kms_nightly" | tee -a "$GITHUB_OUTPUT"
-          else
-            echo "environment=" | tee -a "$GITHUB_OUTPUT"
-          fi
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
+            core.setOutput("environment", gitHubLib.getGitHubSigningEnvironmentFromTarget("${{ inputs.target }}"));
   calculate_version:
     name: Build version
     defaults:
