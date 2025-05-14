@@ -71,7 +71,7 @@ echo "NVMe over Fabrics configuration is set up."' """)
     output = utils.execute_remote_command(client, f"sudo mkfs.ext4 {local_device} || sudo nvme list -o json")
     logger.info("MKFS failed, nvme device list: %s", output)
     utils.execute_remote_command(client, f"sudo mount {local_device} /mnt")
-    utils.execute_remote_command(client, "echo 'foo' > /mnt/bar")
+    utils.execute_remote_command(client, "echo 'foo' | sudo tee /mnt/bar")
 
     yield local_device, "/mnt", "488"
 
@@ -90,5 +90,5 @@ def test_nvme_locally(client, non_provisioner_chroot, nvme_device):
     split_output = [x.strip() for x in output.split(" ") if x]
     assert split_output[0] == device
     assert split_output[1] == size
-    output = utils.execute_remote_command(client, f"cat /mnt/bar")
+    output = utils.execute_remote_command(client, f"sudo cat /mnt/bar")
     assert output == "foo"
