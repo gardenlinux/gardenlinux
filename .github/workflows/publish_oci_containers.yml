@@ -52,19 +52,16 @@ jobs:
         with:
           script: |
             const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
-            core.setOutput("environment", gitHubLib.getGitHubSigningEnvironmentFromTarget("${{ inputs.target }}"));
 
-            switch("${{ inputs.target }}") {
-              case "release":
-                core.setOutput("repository", "ghcr.io/gardenlinux/gardenlinux");
-                break;
-              case "nightly":
-                core.setOutput("repository", "ghcr.io/gardenlinux/nightly");
-                break;
-              default:
-                core.setFailed("Invalid release target ${{ inputs.target }}");
-                return false;
+            core.setOutput("environment", gitHubLib.getGitHubSigningEnvironmentFromTarget("${{ inputs.target }}"));
+            const repository = gitHubLib.getGHCRRepositoryFromTarget("${{ inputs.target }}"));
+
+            if (repository == "") {
+              core.setFailed("Invalid release target ${{ inputs.target }}");
+              return false;
             }
+
+            core.setOutput("repository", repository);
 
             return true;
   container:
