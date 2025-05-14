@@ -5,6 +5,7 @@ import sys
 import os
 import logging
 import tempfile
+import json
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
@@ -15,7 +16,7 @@ def nvme_device(client, non_provisioner_chroot):
     utils.execute_remote_command(client, "sudo truncate -s 512M /tmp/nvme.img")
     utils.execute_remote_command(client, "DEBIAN_FRONTEND=noninteractive sudo apt-get install -y mount")
     utils.execute_remote_command(client, "sudo losetup -fP /tmp/nvme.img")
-    output = utils.execute_remote_command(client, """#!/bin/bash
+    output = utils.execute_remote_command(client,  """sudo /bin/bash -c '#!/bin/bash
 # Define variables for the IP address, NVMe device, and subsystem name
 IP_ADDRESS="127.0.0.1"
 NVME_DEVICE="/tmp/nvme.img"
@@ -50,12 +51,13 @@ echo $ADRFAM | sudo tee /sys/kernel/config/nvmet/ports/1/addr_adrfam
 # Link the subsystem to the port
  ln -s /sys/kernel/config/nvmet/subsystems/$SUBSYSTEM_NAME /sys/kernel/config/nvmet/ports/1/subsystems/$SUBSYSTEM_NAME
 
-echo "NVMe over Fabrics configuration is set up." """)
+echo "NVMe over Fabrics configuration is set up."' """)
 
     print("Setup nvme device")
     logger.info(output)
     output = utils.execute_remote_command(client, f"sudo nvme list -o json")
-    logger.info(f"Nvme devices: %s", output)
+    json_devices = json.loads(output)
+    logger.info(f"Nvme devices: %s", json_devices['Devices'])
     output = utils.execute_remote_command(
         client, "sudo nvme connect -t tcp -n testnqn -a 127.0.0.1 -s 4420",
         skip_error=True
