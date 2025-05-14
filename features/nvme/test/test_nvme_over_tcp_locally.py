@@ -58,7 +58,7 @@ echo "NVMe over Fabrics configuration is set up." """)
     output = utils.execute_remote_command(client, f"sudo nvme list -o json")
     logger.info(f"Nvme devices: %s", output)
     output = utils.execute_remote_command(
-        client, "sudo nvme connect -t tcp -n testnqn -a 127.0.0.1 -s 4420"
+        client, "sudo nvme connect -t tcp -n testnqn -a 127.0.0.1 -s 4420",
         skip_error=True
     )
     logger.info(output)
