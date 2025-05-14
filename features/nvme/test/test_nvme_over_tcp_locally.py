@@ -58,17 +58,22 @@ echo "NVMe over Fabrics configuration is set up."' """)
     output = utils.execute_remote_command(client, f"sudo nvme list -o json")
     json_devices = json.loads(output)
     logger.info(f"Nvme devices: %s", json_devices['Devices'])
+    devices_before = [device['DevicePath'] for device in json_devices['Devices']]
     output = utils.execute_remote_command(
         client, "sudo nvme connect -t tcp -n testnqn -a 127.0.0.1 -s 4420",
         skip_error=True
     )
+    output = utils.execute_remote_command(client, f"sudo nvme list -o json")
+    json_devices = json.loads(output)
+    devices_after = [device['DevicePath'] for device in json_devices['Devices']]
+    local_device = [device['DevicePath'] for device in json_devices['Devices'] if device["ModelNumber"] == "Linux"]
     logger.info(output)
     output = utils.execute_remote_command(client, "sudo mkfs.ext4 /dev/nvme0n1 || sudo nvme list -o json")
     logger.info("MKFS failed, nvme device list: %s", output)
     utils.execute_remote_command(client, "sudo mount /dev/nvme0n1 /mnt")
     utils.execute_remote_command(client, "echo 'foo' > /mnt/bar")
 
-    yield "/dev/nvme0n1", "/mnt", "488"
+    yield local_device, "/mnt", "488"
 
     print("Teardown nvme device and clean up")
     utils.execute_remote_command(client, "sudo umount /mnt")
