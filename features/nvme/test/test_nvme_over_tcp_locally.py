@@ -12,7 +12,7 @@ logger = logging.getLogger()
 
 @pytest.fixture
 def nvme_device(client, non_provisioner_chroot):
-    utils.execute_remote_command(client, "truncate -s 512M /tmp/nvme.img")
+    utils.execute_remote_command(client, "sudo truncate -s 512M /tmp/nvme.img")
     utils.execute_remote_command(client, "DEBIAN_FRONTEND=noninteractive sudo apt-get install -y mount")
     utils.execute_remote_command(client, "sudo losetup -fP /tmp/nvme.img")
     output = utils.execute_remote_command(client, """#!/bin/bash
@@ -54,7 +54,6 @@ echo "NVMe over Fabrics configuration is set up." """)
 
     print("Setup nvme device")
     logger.info(output)
-    utils.execute_remote_command(client, "sudo nvme disconnect-all")
     output = utils.execute_remote_command(client, f"sudo nvme list -o json")
     logger.info(f"Nvme devices: %s", output)
     output = utils.execute_remote_command(
