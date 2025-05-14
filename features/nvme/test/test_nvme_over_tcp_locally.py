@@ -12,8 +12,10 @@ logger = logging.getLogger()
 
 @pytest.fixture
 def nvme_device(client, non_provisioner_chroot):
-    with tempfile.NamedTemporaryFile(delete_on_close=False) as test_file:
-        test_file.write("""#!/bin/bash
+    utils.execute_remote_command(client, "truncate -s 512M /tmp/nvme.img")
+    utils.execute_remote_command(client, "DEBIAN_FRONTEND=noninteractive sudo apt-get install -y mount")
+    utils.execute_remote_command(client, "sudo losetup -fP /tmp/nvme.img")
+    output = utils.execute_remote_command(client, """#!/bin/bash
 # Define variables for the IP address, NVMe device, and subsystem name
 IP_ADDRESS="127.0.0.1"
 NVME_DEVICE="/tmp/nvme.img"
@@ -49,15 +51,9 @@ echo $ADRFAM | sudo tee /sys/kernel/config/nvmet/ports/1/addr_adrfam
  ln -s /sys/kernel/config/nvmet/subsystems/$SUBSYSTEM_NAME /sys/kernel/config/nvmet/ports/1/subsystems/$SUBSYSTEM_NAME
 
 echo "NVMe over Fabrics configuration is set up." """)
-    client.remote_path = '/tmp'
-    client.bulk_upload([fp.name])
 
     print("Setup nvme device")
-    output = utils.execute_remote_command(client, f"sudo /bin/bash /tmp/{fp.name}")
     logger.info(output)
-    utils.execute_remote_command(client, "truncate -s 512M /tmp/nvme.img")
-    utils.execute_remote_command(client, "DEBIAN_FRONTEND=noninteractive sudo apt-get install -y mount")
-    utils.execute_remote_command(client, "sudo losetup -fP /tmp/nvme.img")
     utils.execute_remote_command(client, "sudo nvme disconnect-all")
     output = utils.execute_remote_command(client, f"sudo nvme list -o json")
     logger.info(f"Nvme devices: %s", output)
