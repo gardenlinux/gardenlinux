@@ -68,9 +68,9 @@ echo "NVMe over Fabrics configuration is set up."' """)
     devices_after = [device['DevicePath'] for device in json_devices['Devices']]
     local_device = [device['DevicePath'] for device in json_devices['Devices'] if device["ModelNumber"] == "Linux"]
     logger.info(output)
-    output = utils.execute_remote_command(client, "sudo mkfs.ext4 /dev/nvme0n1 || sudo nvme list -o json")
+    output = utils.execute_remote_command(client, f"sudo mkfs.ext4 {local_device} || sudo nvme list -o json")
     logger.info("MKFS failed, nvme device list: %s", output)
-    utils.execute_remote_command(client, "sudo mount /dev/nvme0n1 /mnt")
+    utils.execute_remote_command(client, f"sudo mount {local_device} /mnt")
     utils.execute_remote_command(client, "echo 'foo' > /mnt/bar")
 
     yield local_device, "/mnt", "488"
