@@ -31,7 +31,9 @@ on:
       oci_kms_arn:
         required: true
 env:
-  GLCLI_VERSION: 0.6.4
+  PYTHON_GARDENLINUX_LIB_VERSION: 18dc546f013070ad5fbccdc59605a9017ca282a7
+  # repository: ghcr.io/${{ github.repository }}
+  REPOSITORY: ghcr.io/gardenlinux/gardenlinux-test-new-tagging
 jobs:
   container:
     name: Publish container base image
@@ -77,108 +79,108 @@ jobs:
 
           # Tagging for amd64 nightly
           if [ $is_nightly = true ]; then
-            podman tag "$image" ghcr.io/${{ github.repository }}:amd64-nightly
-            podman push ghcr.io/${{ github.repository }}:amd64-nightly
+            podman tag "$image" ghcr.io/${{ env.REPOSITORY }}:amd64-nightly
+            podman push ghcr.io/${{ env.REPOSITORY }}:amd64-nightly
           fi
 
           # Tagging for amd64 with version
-          podman tag "$image" ghcr.io/${{ github.repository }}:amd64-${version}
-          podman push ghcr.io/${{ github.repository }}:amd64-${version}
+          podman tag "$image" ghcr.io/${{ env.REPOSITORY }}:amd64-${version}
+          podman push ghcr.io/${{ env.REPOSITORY }}:amd64-${version}
 
           tar xzv < "${CNAME_ARM64}.tar.gz"
           image="$(podman load < ${CNAME_ARM64}.oci | awk '{ print $NF }')"
 
           # Tagging for arm64 nightly
           if [ $is_nightly = true ]; then
-            podman tag "$image" ghcr.io/${{ github.repository }}:arm64-nightly
-            podman push ghcr.io/${{ github.repository }}:arm64-nightly
+            podman tag "$image" ghcr.io/${{ env.REPOSITORY }}:arm64-nightly
+            podman push ghcr.io/${{ env.REPOSITORY }}:arm64-nightly
           fi
 
           # Tagging for arm64 with version
-          podman tag "$image" ghcr.io/${{ github.repository }}:arm64-${version}
-          podman push ghcr.io/${{ github.repository }}:arm64-${version}
+          podman tag "$image" ghcr.io/${{ env.REPOSITORY }}:arm64-${version}
+          podman push ghcr.io/${{ env.REPOSITORY }}:arm64-${version}
 
           # Creating and pushing manifest for nightly
           if [ $is_nightly = true ]; then
-            podman manifest create ghcr.io/${{ github.repository }}:nightly
-            podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:amd64-nightly
-            podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:arm64-nightly
-            podman manifest push ghcr.io/${{ github.repository }}:nightly
+            podman manifest create ghcr.io/${{ env.REPOSITORY }}:nightly
+            podman manifest add ghcr.io/${{ env.REPOSITORY }}:nightly ghcr.io/${{ env.REPOSITORY }}:amd64-nightly
+            podman manifest add ghcr.io/${{ env.REPOSITORY }}:nightly ghcr.io/${{ env.REPOSITORY }}:arm64-nightly
+            podman manifest push ghcr.io/${{ env.REPOSITORY }}:nightly
           fi
 
           # Creating and pushing manifest for version tag
-          podman manifest create ghcr.io/${{ github.repository }}:${version}
-          podman manifest add ghcr.io/${{ github.repository }}:${version} ghcr.io/${{ github.repository }}:amd64-${version}
-          podman manifest add ghcr.io/${{ github.repository }}:${version} ghcr.io/${{ github.repository }}:arm64-${version}
-          podman manifest push ghcr.io/${{ github.repository }}:${version}
-  bare_flavors:
-    name: Publish bare flavors
-    if: ${{ inputs.bare_flavors_matrix != '{"include":[]}' }}
-    runs-on: ubuntu-24.04
-    defaults:
-      run:
-        shell: bash
-    strategy:
-      fail-fast: false
-      matrix:
-        # @TODO: Replace with input matrix once OCI manifest tooling is ready to update existing ones
-        config: [ libc, python, nodejs, sapmachine ]
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-        with:
-          submodules: true
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
-        with:
-          pattern: build-bare-${{ matrix.config }}-*
-          merge-multiple: true
-          github-token: ${{ github.token }}
-          run-id: ${{ inputs.run_id }}
-      - name: Publish bare flavor image ${{ matrix.config }}
-        run: |
-          is_nightly=$(! [ "${{ inputs.original_workflow_name }}" = "nightly" ]; echo $?)
-          version=$(bin/garden-version "${{ inputs.version }}")
+          podman manifest create ghcr.io/${{ env.REPOSITORY }}:${version}
+          podman manifest add ghcr.io/${{ env.REPOSITORY }}:${version} ghcr.io/${{ env.REPOSITORY }}:amd64-${version}
+          podman manifest add ghcr.io/${{ env.REPOSITORY }}:${version} ghcr.io/${{ env.REPOSITORY }}:arm64-${version}
+          podman manifest push ghcr.io/${{ env.REPOSITORY }}:${version}
+  # bare_flavors:
+  #   name: Publish bare flavors
+  #   if: ${{ inputs.bare_flavors_matrix != '{"include":[]}' }}
+  #   runs-on: ubuntu-24.04
+  #   defaults:
+  #     run:
+  #       shell: bash
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       # @TODO: Replace with input matrix once OCI manifest tooling is ready to update existing ones
+  #       config: [ libc, python, nodejs, sapmachine ]
+  #   steps:
+  #     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+  #       with:
+  #         submodules: true
+  #     - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+  #       with:
+  #         pattern: build-bare-${{ matrix.config }}-*
+  #         merge-multiple: true
+  #         github-token: ${{ github.token }}
+  #         run-id: ${{ inputs.run_id }}
+  #     - name: Publish bare flavor image ${{ matrix.config }}
+  #       run: |
+  #         is_nightly=$(! [ "${{ inputs.original_workflow_name }}" = "nightly" ]; echo $?)
+  #         version=$(bin/garden-version "${{ inputs.version }}")
 
-          podman login -u token -p ${{ github.token }} ghcr.io
+  #         podman login -u token -p ${{ github.token }} ghcr.io
 
-          # Handling amd64 image
-          image="$(podman load < ${{ matrix.config }}-amd64.oci | awk '{ print $NF }')"
+  #         # Handling amd64 image
+  #         image="$(podman load < ${{ matrix.config }}-amd64.oci | awk '{ print $NF }')"
 
-          # Tagging and pushing amd64 with version
-          podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
-          podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
+  #         # Tagging and pushing amd64 with version
+  #         podman tag "$image" ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:amd64-$version
+  #         podman push ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:amd64-$version
 
-          # Tagging and pushing amd64 with nightly
-          if [ $is_nightly = true ]; then
-            podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
-            podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
-          fi
+  #         # Tagging and pushing amd64 with nightly
+  #         if [ $is_nightly = true ]; then
+  #           podman tag "$image" ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:amd64-nightly
+  #           podman push ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:amd64-nightly
+  #         fi
 
-          # Handling arm64 image
-          image="$(podman load < ${{ matrix.config }}-arm64.oci | awk '{ print $NF }')"
+  #         # Handling arm64 image
+  #         image="$(podman load < ${{ matrix.config }}-arm64.oci | awk '{ print $NF }')"
 
-          # Tagging and pushing arm64 with version
-          podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
-          podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
+  #         # Tagging and pushing arm64 with version
+  #         podman tag "$image" ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:arm64-$version
+  #         podman push ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:arm64-$version
 
-          # Tagging and pushing arm64 with nightly
-          if [ $is_nightly = true ]; then
-            podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
-            podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
-          fi
+  #         # Tagging and pushing arm64 with nightly
+  #         if [ $is_nightly = true ]; then
+  #           podman tag "$image" ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:arm64-nightly
+  #           podman push ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:arm64-nightly
+  #         fi
 
-          # Creating and pushing manifest for version tag
-          podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
-          podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
-          podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
-          podman manifest push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
+  #         # Creating and pushing manifest for version tag
+  #         podman manifest create ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:$version
+  #         podman manifest add ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:$version ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:amd64-$version
+  #         podman manifest add ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:$version ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:arm64-$version
+  #         podman manifest push ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:$version
 
-          # Creating and pushing manifest for nightly tag
-          if [ $is_nightly = true ]; then
-            podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
-            podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
-            podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
-            podman manifest push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
-          fi
+  #         # Creating and pushing manifest for nightly tag
+  #         if [ $is_nightly = true ]; then
+  #           podman manifest create ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:nightly
+  #           podman manifest add ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:amd64-nightly
+  #           podman manifest add ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:arm64-nightly
+  #           podman manifest push ghcr.io/${{ env.REPOSITORY }}/bare-${{ matrix.config }}:nightly
+  #         fi
   push_flavors:
     name: Publish flavors
     runs-on: ubuntu-24.04
@@ -195,7 +197,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
-      max-parallel: 8
+      # max-parallel: 8
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
@@ -226,46 +228,90 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install glcli util
+      - name: Install gl-oci util
         run: |
-          # @TODO: Add pyproject.toml for pip install git+https://github.com/gardenlinux/python-gardenlinux-cli.git@${{ env.GLCLI_VERSION }}
-          git clone --depth 1 --branch ${{ env.GLCLI_VERSION }} https://github.com/gardenlinux/python-gardenlinux-cli.git
-          mv python-gardenlinux-cli /opt/glcli
-          pip install -r /opt/glcli/requirements.txt
+          python -m pip install --upgrade pip
+          pip install poetry
+          pip install git+https://github.com/gardenlinux/python-gardenlinux-lib.git@${{ env.PYTHON_GARDENLINUX_LIB_VERSION }}
       - name: Install cosign
         uses: sigstore/cosign-installer@v3.8.2
         with:
           cosign-release: 'v2.4.1'
-      - name: Push using the glcli util
+      - if: ${{ github.ref_name != 'main' && ! startsWith(github.ref_name, 'rel-') }}
+        name: gl-oci push-manifest - dev
         run: |
-          max_retries=3
-          retry_count=0
-          exit_code=0
-          until [ $retry_count -ge $max_retries ]; do
-            if output=$(GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir "$CNAME" --container ghcr.io/${{ github.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname "$CNAME" --cosign_file digest.txt --manifest_file "oci_manifest_entry_$CNAME.json" 2>&1); then
-              cat digest.txt
-              exit 0
-            elif echo "$output" | grep -q "Bad Gateway"; then
-              retry_count=$((retry_count+1))
-              exit_code=1
-              echo "Bad Gateway detected, retry $retry_count/$max_retries"
-              sleep 10
-            else
-              echo "Fatal error: $output"
-              exit $exit_code
-            fi
-          done
-          if [ $exit_code -ne 0 ]; then
-            echo "Failed after $max_retries retries"
-            exit 1
-          fi
-      - name: Sign the manifest
+          VERSION=${{ inputs.version }}
+          FLAVOR=${{ matrix.flavor }}
+          ARCH=${{ matrix.arch }}
+          COMMIT=$(echo "${{ inputs.commit_id }}" | cut -c1-8)
+          TYPE=dev
+
+          GL_CLI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} \
+            gl-oci push-manifest \
+            --dir "$CNAME" \
+            --container ghcr.io/${{ env.REPOSITORY }} \
+            --arch $ARCH \
+            --version $VERSION \
+            --cname "$CNAME" \
+            --cosign_file digest.txt \
+            --manifest_file "oci_manifest_entry_$CNAME.json" \
+            --additional_tag $VERSION-$COMMIT-$FLAVOR-$ARCH \
+            --additional_tag $VERSION-$COMMIT-$TYPE-$FLAVOR-$ARCH \
+            --additional_tag $FLAVOR-$VERSION-$COMMIT-$ARCH
+          cat digest.txt
+      - if: ${{ github.ref_name == 'main' }}
+        name: gl-oci push-manifest - nightly
         run: |
-          docker login ghcr.io -u token -p ${{ github.token }}
-          cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }} ghcr.io/${{ github.repository }}@$(cat digest.txt)
-      - name: Verify signature
+          VERSION=${{ inputs.version }}
+          FLAVOR=${{ matrix.flavor }}
+          ARCH=${{ matrix.arch }}
+          COMMIT=$(echo "${{ inputs.commit_id }}" | cut -c1-8)
+          TYPE=nightly
+
+          GL_CLI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} \
+            gl-oci push-manifest \
+            --dir "$CNAME" \
+            --container ghcr.io/${{ env.REPOSITORY }} \
+            --arch $ARCH \
+            --version $VERSION \
+            --cname "$CNAME" \
+            --cosign_file digest.txt \
+            --manifest_file "oci_manifest_entry_$CNAME.json" \
+            --additional_tag $VERSION-$FLAVOR-$ARCH \
+            --additional_tag $VERSION-$COMMIT-$FLAVOR-$ARCH \
+            --additional_tag $VERSION-$COMMIT-$TYPE-$FLAVOR-$ARCH \
+            --additional_tag $FLAVOR-$VERSION-$COMMIT-$ARCH
+          cat digest.txt
+      - if: ${{ startsWith(github.ref_name, 'rel-') }}
+        name: gl-oci push-manifest - patch
         run: |
-          cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.aws_region}}.amazonaws.com/${{ secrets.oci_kms_arn }} ghcr.io/${{ github.repository }}@$(cat digest.txt)
+          VERSION=${{ inputs.version }}
+          FLAVOR=${{ matrix.flavor }}
+          ARCH=${{ matrix.arch }}
+          COMMIT=$(echo "${{ inputs.commit_id }}" | cut -c1-8)
+          TYPE=patch
+
+          GL_CLI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} \
+            gl-oci push-manifest \
+            --dir "$CNAME" \
+            --container ghcr.io/${{ env.REPOSITORY }} \
+            --arch $ARCH \
+            --version $VERSION \
+            --cname "$CNAME" \
+            --cosign_file digest.txt \
+            --manifest_file "oci_manifest_entry_$CNAME.json" \
+            --additional_tag $VERSION-$FLAVOR-$ARCH \
+            --additional_tag $VERSION-$TYPE-$FLAVOR-$ARCH \
+            --additional_tag $VERSION-$COMMIT-$TYPE-$FLAVOR-$ARCH \
+            --additional_tag $FLAVOR-$VERSION-$COMMIT-$ARCH
+          cat digest.txt
+      # - name: Sign the manifest
+      #   run: |
+      #     docker login ghcr.io -u token -p ${{ github.token }}
+      #     cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }} ghcr.io/${{ env.REPOSITORY }}@$(cat digest.txt)
+      # - name: Verify signature
+      #   run: |
+      #     cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.aws_region}}.amazonaws.com/${{ secrets.oci_kms_arn }} ghcr.io/${{ env.REPOSITORY }}@$(cat digest.txt)
       - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
           path: oci_manifest_entry_${{ env.CNAME }}.json
@@ -281,7 +327,7 @@ jobs:
       CNAME: ''
     strategy:
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
-      max-parallel: 1
+      # max-parallel: 8
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
@@ -333,12 +379,55 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install glcli util
+      - name: Install gl-oci util
         run: |
-          # @TODO: Add pyproject.toml for pip install git+https://github.com/gardenlinux/python-gardenlinux-cli.git@${{ env.GLCLI_VERSION }}
-          git clone --depth 1 --branch ${{ env.GLCLI_VERSION }} https://github.com/gardenlinux/python-gardenlinux-cli.git
-          mv python-gardenlinux-cli /opt/glcli
-          pip install -r /opt/glcli/requirements.txt
-      - name: Update index using glcli tool
+          python -m pip install --upgrade pip
+          pip install poetry
+          pip install git+https://github.com/gardenlinux/python-gardenlinux-lib.git@${{ env.PYTHON_GARDENLINUX_LIB_VERSION }}
+      - if: ${{ github.ref_name != 'main' && ! startsWith(github.ref_name, 'rel-') }}
+        name: gl-oci update-index - dev
         run: |
-          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ghcr.io/${{ github.repository }} --version ${{ inputs.version }} --manifest_folder manifests
+          VERSION=${{ inputs.version }}
+          COMMIT=$(echo "${{ inputs.commit_id }}" | cut -c1-8)
+          TYPE=dev
+
+          GL_CLI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} gl-oci update-index \
+            --container ghcr.io/${{ env.REPOSITORY }} \
+            --version $VERSION \
+            --manifest_folder manifests \
+            --additional_tag $VERSION-$TYPE \
+            --additional_tag $VERSION-$TYPE-$COMMIT
+      - if: ${{ github.ref_name == 'main' }}
+        name: gl-oci update-index - nightly
+        run: |
+          VERSION=${{ inputs.version }}
+          COMMIT=$(echo "${{ inputs.commit_id }}" | cut -c1-8)
+          TYPE=nightly
+
+          GL_CLI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} gl-oci update-index \
+            --container ghcr.io/${{ env.REPOSITORY }} \
+            --version $VERSION \
+            --manifest_folder manifests \
+            --additional_tag $VERSION \
+            --additional_tag $VERSION-$TYPE \
+            --additional_tag $VERSION-$TYPE-$COMMIT \
+            --additional_tag $TYPE
+      - if: ${{ startsWith(github.ref_name, 'rel-') }}
+        name: gl-oci update-index - patch
+        run: |
+          VERSION=${{ inputs.version }}
+          VERSION_STABLE=$( echo $VERSION | cut -d '.' -f 1 )
+          COMMIT=$(echo "${{ inputs.commit_id }}" | cut -c1-8)
+          TYPE=patch
+
+          GL_CLI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} gl-oci update-index \
+            --container ghcr.io/${{ env.REPOSITORY }} \
+            --version $VERSION \
+            --manifest_folder manifests \
+            --additional_tag $VERSION \
+            --additional_tag $VERSION-$TYPE \
+            --additional_tag $VERSION-$TYPE-$COMMIT \
+            --additional_tag $VERSION_STABLE \
+            --additional_tag $VERSION_STABLE-$TYPE \
+            --additional_tag $TYPE \
+            --additional_tag latest

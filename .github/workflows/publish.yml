@@ -37,16 +37,18 @@ jobs:
       aws_role: ${{ secrets.AWS_IAM_ROLE }}
       aws_session: ${{ secrets.AWS_OIDC_SESSION }}
       oci_kms_arn: ${{ secrets.OCI_KMS_ARN }}
-  publish_kmodbuild_container:
-    needs: [ workflow_data ]
-    name: Publish kernel module build dev container
-    uses: ./.github/workflows/publish_kmodbuild_container.yml
-    with:
-      run_id: ${{ needs.workflow_data.outputs.run_id }}
-      version: ${{ needs.workflow_data.outputs.version }}
+  # publish_kmodbuild_container:
+  #   needs: [ workflow_data ]
+  #   name: Publish kernel module build dev container
+  #   uses: ./.github/workflows/publish_kmodbuild_container.yml
+  #   with:
+  #     run_id: ${{ needs.workflow_data.outputs.run_id }}
+  #     version: ${{ needs.workflow_data.outputs.version }}
   publish_retry:
-    needs: [ publish_oci_containers, publish_kmodbuild_container ]
-    if: ${{ failure() && ( needs.publish_oci_containers.result == 'failure' || needs.publish_kmodbuild_container.result == 'failure' ) }}
+    # needs: [ publish_oci_containers, publish_kmodbuild_container ]
+    needs: [ publish_oci_containers ]
+    # if: ${{ failure() && ( needs.publish_oci_containers.result == 'failure' || needs.publish_kmodbuild_container.result == 'failure' ) }}
+    if: ${{ failure() && ( needs.publish_oci_containers.result == 'failure' ) }}
     name: 'Retry checkpoint: Publish to GitHub'
     runs-on: ubuntu-24.04
     steps:
