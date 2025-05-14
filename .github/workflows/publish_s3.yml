@@ -133,7 +133,7 @@ jobs:
 
           # USE_KMS in build_requirements.yml
           for f in secureboot.{{pk,kek,db}.{crt,der,auth},aws-efivars}; do
-            cp "cert/gardenlinux-$f" "$CNAME/$CNAME.$f"
+            cp "cert/gardenlinux-nightly-$f" "$CNAME/$CNAME.$f"
           done
 
           tar -cSzvf "$CNAME.tar.gz" -C $CNAME .
@@ -181,7 +181,7 @@ jobs:
       id-token: write
     runs-on: ubuntu-24.04
     steps:
-      - uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
+      - uses: aws-actions/configure-aws-credentials@f24d7193d98baebaeacc7e2227925dd47cc267f5 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}

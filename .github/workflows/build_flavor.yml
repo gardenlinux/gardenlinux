@@ -64,10 +64,10 @@ jobs:
           fail-on-cache-miss: true
       - name: Write secureboot db arn for kms backed certificates
         if: ${{ inputs.use_kms }}
-        run: echo "${{ secrets.secureboot_db_kms_arn }}" > cert/gardenlinux-secureboot.db.arn
+        run: echo "${{ secrets.secureboot_db_kms_arn }}" > cert/gardenlinux-nightly-secureboot.db.arn
       - name: Configure aws credentials for kms signing
         if: ${{ inputs.use_kms }}
-        uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
+        uses: aws-actions/configure-aws-credentials@f24d7193d98baebaeacc7e2227925dd47cc267f5 # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_kms_role }}
           role-session-name: ${{ secrets.aws_oidc_session }}
