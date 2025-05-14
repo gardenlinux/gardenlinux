@@ -39,6 +39,21 @@ export function excludeFlavorsMatrix(matrixA, matrixB) {
     return { "include": resultMatrix };
 }
 
+export function getGitHubSigningEnvironmentFromTarget(target) {
+    let environment = "";
+
+    switch(target) {
+        case "release":
+            environment = "oidc_aws_kms_release";
+            break;
+        case "nightly":
+            environment = "oidc_aws_kms_nightly";
+            break;
+    }
+
+    return environment;
+}
+
 export function flattenFlavorsMatrixByArch(matrix) {
     let matrixByArch = {};
 
