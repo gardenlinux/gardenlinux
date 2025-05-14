@@ -283,10 +283,10 @@ jobs:
       - name: Sign the manifest
         run: |
           docker login ghcr.io -u token -p ${{ github.token }}
-          cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }} ${{ needs.determine_repository.outputs.repository }}@$(cat digest.txt)
+          cosign sign -tlog-upload=false --key "awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }}" "${{ needs.determine_repository.outputs.repository }}@$(cat digest.txt)"
       - name: Verify signature
         run: |
-          cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.aws_region}}.amazonaws.com/${{ secrets.oci_kms_arn }} ${{ needs.determine_repository.outputs.repository }}@$(cat digest.txt)
+          cosign verify --insecure-ignore-tlog=true --key "awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }}" "${{ needs.determine_repository.outputs.repository }}@$(cat digest.txt)"
       - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
           path: oci_manifest_entry_${{ env.CNAME }}.json
