@@ -17,7 +17,7 @@ jobs:
     with:
       run_id: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
   publish_oci_containers:
-    needs: [ workflow_data, determine_repository ]
+    needs: workflow_data
     name: Publish container base image
     uses: ./.github/workflows/publish_oci_containers.yml
     # @TODO: Replace with safe OCI manifast handling variant
