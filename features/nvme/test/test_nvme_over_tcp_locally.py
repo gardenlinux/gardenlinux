@@ -68,7 +68,7 @@ echo "NVMe over Fabrics configuration is set up."' """)
     devices_after = [device['DevicePath'] for device in json_devices['Devices']]
     local_device = [device['DevicePath'] for device in json_devices['Devices'] if device["ModelNumber"] == "Linux"][0]
     logger.info(output)
-    utils.execute_remote_command(client, f"sudo mkfs.ext4 {local_device}"
+    utils.execute_remote_command(client, f"sudo mkfs.ext4 {local_device}")
     utils.execute_remote_command(client, f"sudo mount {local_device} /mnt")
     utils.execute_remote_command(client, "echo 'foo' | sudo tee /mnt/bar")
 
