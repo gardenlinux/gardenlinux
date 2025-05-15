@@ -11,17 +11,38 @@ on:
       use_glrd:
         type: boolean
         default: false
-      use_kms:
-        type: boolean
-        default: false
+      target:
+        type: string
+        required: true
     outputs:
       commit_id:
         value: ${{ jobs.calculate_version.outputs.commit_id }}
       version:
         value: ${{ jobs.calculate_version.outputs.version }}
-      use_kms:
-        value: ${{ inputs.use_kms }}
+      signing_env:
+        value: ${{ jobs.determine_environment.outputs.environment }}
+      target:
+        value: ${{ inputs.target }}
 jobs:
+  determine_environment:
+    name: Determine signing environment
+    defaults:
+      run:
+        shell: bash
+    runs-on: ubuntu-24.04
+    outputs:
+      environment: ${{ steps.signing_environment.outputs.environment }}
+    steps:
+      - name: Set signing environment
+        id: signing_environment
+        run: |
+          if [[ "${{ inputs.target }}" == "release" ]]; then
+            echo "environment=oidc_aws_kms_release" | tee -a "$GITHUB_OUTPUT"
+          elif [[ "${{ inputs.target }}" == "nightly" ]]; then
+            echo "environment=oidc_aws_kms_nightly" | tee -a "$GITHUB_OUTPUT"
+          else
+            echo "environment=" | tee -a "$GITHUB_OUTPUT"
+          fi
   calculate_version:
     name: Build version
     defaults:
@@ -84,16 +105,17 @@ jobs:
       - name: Set VERSION=${{ needs.calculate_version.outputs.version }}
         run: echo "${{ needs.calculate_version.outputs.version }}" | tee VERSION
       - name: Build certificates
-        if: ${{ ! inputs.use_kms }}
+        if: ${{ inputs.target == 'dev' }}
         run: ./cert/build
       - name: Use kms backed certificates
-        if: ${{ inputs.use_kms }}
+        if: ${{ inputs.target != 'dev' }}
         run: |
-          touch cert/gardenlinux-nightly-secureboot.db.arn
-          for f in secureboot.{{pk,null.pk,kek,db}.{crt,der,auth},db.arn,aws-efivars}; do
-            ln -sr "cert/gardenlinux-nightly-$f" "cert/$f"
+          touch cert/gardenlinux-${{ inputs.target }}-secureboot.db.arn
+          for f in secureboot.{{pk,null.pk,kek,db}.{crt,der,auth},db.arn,aws-efivars} oci-sign.crt; do
+            ln -sr "cert/gardenlinux-${{ inputs.target }}-$f" "cert/$f"
           done
-      - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         with:
+          name: certs
           path: cert/*.*
-          key: cert-${{ github.run_id }}
+          if-no-files-found: error
