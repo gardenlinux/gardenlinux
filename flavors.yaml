@@ -45,7 +45,7 @@ targets:
         arch: amd64
         build: true
         test: true
-        test-platform: false
+        test-platform: true
         publish: true
       - features:
           - gardener
@@ -54,7 +54,7 @@ targets:
         arch: arm64
         build: true
         test: true
-        test-platform: false
+        test-platform: true
         publish: true
       - features:
           - gardener
@@ -120,7 +120,7 @@ targets:
         arch: amd64
         build: true
         test: true
-        test-platform: false
+        test-platform: true
         publish: true
       - features:
           - gardener
@@ -269,7 +269,7 @@ targets:
         arch: amd64
         build: true
         test: true
-        test-platform: false
+        test-platform: true
         publish: true
       - features:
           - gardener
@@ -278,7 +278,7 @@ targets:
         arch: arm64
         build: true
         test: true
-        test-platform: false
+        test-platform: true
         publish: true
       - features:
           - gardener
