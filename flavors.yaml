@@ -124,56 +124,56 @@ targets:
           - libc
         arch: amd64
         build: true
-        test: false
+        test: true
         test-platform: false
         publish: false
       - features:
           - libc
         arch: arm64
         build: true
-        test: false
+        test: true
         test-platform: false
         publish: false
       - features:
           - nodejs
         arch: amd64
         build: true
-        test: false
+        test: true
         test-platform: false
         publish: false
       - features:
           - nodejs
         arch: arm64
         build: true
-        test: false
+        test: true
         test-platform: false
         publish: false
       - features:
           - python
         arch: amd64
         build: true
-        test: false
+        test: true
         test-platform: false
         publish: false
       - features:
           - python
         arch: arm64
         build: true
-        test: false
+        test: true
         test-platform: false
         publish: false
       - features:
           - sapmachine
         arch: amd64
         build: true
-        test: false
+        test: true
         test-platform: false
         publish: false
       - features:
           - sapmachine
         arch: arm64
         build: true
-        test: false
+        test: true
         test-platform: false
         publish: false
   - name: container
