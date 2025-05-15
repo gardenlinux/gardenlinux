@@ -7,7 +7,7 @@ on:
         type: number
         required: true
   workflow_run:
-    workflows: [ 'Build and publish a release' ]
+    workflows: [ 'Build and publish a release', 'nightly' ]
     types: [ 'completed' ]
 jobs:
   workflow_data:
@@ -18,7 +18,6 @@ jobs:
       run_id: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
   trustedboot_flavors_supported_matrix:
     needs: workflow_data
-    if: ${{ needs.workflow_data.outputs.target == 'release' }}
     name: Generate flavors matrix for trustedboot
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
@@ -79,7 +78,6 @@ jobs:
             core.setOutput("flavors_matrix", matrix);
   copy_artifacts:
     needs: [ non_trustedboot_flavors_matrix, workflow_data ]
-    if: ${{ needs.workflow_data.outputs.target == 'release' }}
     name: Copy without adding certs
     runs-on: ubuntu-24.04
     strategy:
@@ -99,7 +97,6 @@ jobs:
           path: '*.tar.gz'
   prepare_certs:
     needs: [ trustedboot_flavors_matrix, workflow_data ]
-    if: ${{ needs.workflow_data.outputs.target == 'release' }}
     name: Add certs
     runs-on: ubuntu-24.04
     defaults:
