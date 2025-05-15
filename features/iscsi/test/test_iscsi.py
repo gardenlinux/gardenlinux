@@ -61,7 +61,7 @@ def test_iscsi_setup(client, non_provisioner_chroot, iscsi_device):
         client, f"sudo iscsiadm -m session -r {session_id} --rescan"
     )
     logger.info(f"Rescan output: {output}")
-    time.sleep(1)
+    time.sleep(5)
     output_after = execute_remote_command(client, "ls -la /dev/disk/by-path/")
     logger.info(f"Block devices after rescan: {output_after}")
     assert "iscsi-iqn" in output_after, "Expected iscsi-iqn after rescan"
