@@ -1,6 +1,8 @@
+import logging
+import time
+
 import pytest
 from helper.utils import execute_remote_command
-import logging
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
@@ -21,26 +23,27 @@ def iscsi_device(client):
             backing-store /tmp/iscsi_disk.img
             initiator-address 127.0.0.1
         </target>"""
+    execute_remote_command(client, f"sudo mkdir -p /etc/tgt/conf.d")
     execute_remote_command(
-        client, f"sudo mkdir -p /etc/tgt/conf.d"
-    )
-    execute_remote_command(
-        client, f"sudo bash -c \"echo '{iscsi_config}' > /etc/tgt/conf.d/iscsi_target.conf\""
+        client, f"echo '{iscsi_config}' | sudo tee /etc/tgt/conf.d/iscsi_target.conf"
     )
     execute_remote_command(client, "sudo /usr/sbin/tgt-admin --update ALL")
     execute_remote_command(client, "sudo tgtadm --mode target --op show")
-    execute_remote_command(client, "sudo iscsiadm -m discovery -t sendtargets -p 127.0.0.1")
-    output = execute_remote_command(client, "sudo iscsiadm -m node --login || /bin/true")
+    execute_remote_command(
+        client, "sudo iscsiadm -m discovery -t sendtargets -p 127.0.0.1"
+    )
+    output = execute_remote_command(client, "sudo iscsiadm -m node --login")
+    logger.info(f"iscsiadm login: {output}")
+    execute_remote_command(client, "sleep 10")
 
     yield
 
     execute_remote_command(client, "sudo iscsiadm --mode node --logout")
     execute_remote_command(
-        client, "/usr/sbin/start-stop-daemon --stop --quiet --oknodo --exec /usr/sbin/tgtd"
+        client,
+        "/usr/sbin/start-stop-daemon --stop --quiet --oknodo --exec /usr/sbin/tgtd",
     )
-    execute_remote_command(
-        client, f"sudo rm -rf /etc/tgt/conf.d"
-    )
+    execute_remote_command(client, f"sudo rm -rf /etc/tgt/conf.d")
 
 
 def test_iscsi_setup(client, non_provisioner_chroot, iscsi_device):
@@ -58,7 +61,7 @@ def test_iscsi_setup(client, non_provisioner_chroot, iscsi_device):
         client, f"sudo iscsiadm -m session -r {session_id} --rescan"
     )
     logger.info(f"Rescan output: {output}")
-
+    time.sleep(1)
     output_after = execute_remote_command(client, "ls -la /dev/disk/by-path/")
     logger.info(f"Block devices after rescan: {output_after}")
     assert "iscsi-iqn" in output_after, "Expected iscsi-iqn after rescan"
