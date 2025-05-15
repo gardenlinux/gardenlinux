@@ -38,7 +38,7 @@ jobs:
             VERSION
           key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
-      - uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@feature/gardenlinux-restructure
+      - uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@main
       - name: Set CNAME
         run: |
           cname="$(gl-cname --arch "${{ inputs.arch }}" ${{ inputs.flavor }})"

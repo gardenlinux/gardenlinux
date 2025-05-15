@@ -29,7 +29,7 @@ jobs:
           ref: ${{ inputs.ref }}
           submodules: true
       - id: matrix
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@feature/gardenlinux-restructure
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@main
         with:
           flags: ${{ inputs.flags }}
           flavors_matrix: ${{ inputs.flavors_matrix }}

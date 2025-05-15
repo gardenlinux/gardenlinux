@@ -80,7 +80,7 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
           submodules: true
-      - uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@feature/gardenlinux-restructure
+      - uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@main
       - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
           path: |
