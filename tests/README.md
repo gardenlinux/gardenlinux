@@ -427,9 +427,9 @@ podman run -it \
     -v ~/.config/gcloud:/root/.config/gcloud \
     -e 'GOOGLE_*' \
     -e 'CLOUDSDK_*' \
+    --device=/dev/kvm \
     --name qemu-kvm-gardener_prod-amd64 \
     -d --rm --replace \
-    --device=/dev/kvm \
     ghcr.io/gardenlinux/gardenlinux/platform-test-kvm:latest \
     bash
 
