@@ -400,7 +400,7 @@ $ make --directory=tests
 $ make --directory=tests/platformSetup gcp-gardener_prod-amd64-qemu-apply
 
 # Run QEMU platform tests for the flavor you want to test
-$ make --directory=tests gcp-gardener_prod-amd64-qemu-platform-test
+$ make --directory=tests gcp-gardener_prod-amd64-qemu-test-platform
 
 # Optionally: Login to the QEMU VM
 $ make --directory=tests/platformSetup gcp-gardener_prod-amd64-qemu-login
@@ -415,19 +415,18 @@ $ make --directory=tests/platformSetup gcp-gardener_prod-amd64-qemu-destroy
 # Start a container with needed credentials and tools
 podman run -it \
     -v ${PWD}:/gardenlinux \
-    -e TF_* \
+    -e 'TF_*' \
     -v ~/.aliyun:/root/.aliyun \
-    -e ALIBABA_* \
+    -e 'ALIBABA_*' \
     -v ~/.aws:/root/.aws \
-    -e AWS_* \
+    -e 'AWS_*' \
     -v ~/.azure:/root/.azure \
-    -e azure_* \
-    -e ARM_* \
-    -e ACTIONS_* \
+    -e 'azure_*' \
+    -e 'ARM_*' \
+    -e 'ACTIONS_*' \
     -v ~/.config/gcloud:/root/.config/gcloud \
-    -e GOOGLE_* \
-    -e CLOUDSDK_* \
-    --device=/dev/kvm \
+    -e 'GOOGLE_*' \
+    -e 'CLOUDSDK_*' \
     --name qemu-kvm-gardener_prod-amd64 \
     -d --rm --replace \
     ghcr.io/gardenlinux/gardenlinux/platform-test-kvm:latest \
