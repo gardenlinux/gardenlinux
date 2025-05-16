@@ -138,7 +138,7 @@ jobs:
           rm "$CNAME.tar.gz"
 
           for file in "$CNAME/secureboot."*; do
-            echo mv "$CNAME/$file" "$CNAME/$CNAME.$file"
+            mv "$CNAME/$file" "$CNAME/$CNAME.$file"
           done
 
           tar -cSzvf "$CNAME.tar.gz" -C $CNAME .
