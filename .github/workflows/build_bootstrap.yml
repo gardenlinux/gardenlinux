@@ -1,7 +1,4 @@
 name: build_bootstrap
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-build-bootstrap
-  cancel-in-progress: true
 on:
   workflow_call:
     inputs:
