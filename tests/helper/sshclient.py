@@ -103,6 +103,45 @@ class RemoteClient:
             logger.info(f"Using existing key at {filename}")
             return filename
 
+
+    class File:
+        """
+            This File class is designed to allow using the RemoteClient as a Context Manager. By
+            now, we're using execute to invoke utilzing the exec_command method. With this subclass
+            we add a way to utizing python’s built-in python:file to return a file object.
+
+            It can be used: 
+                with client.open("/etc/sudoers") as file:
+                    for line in file.readlines():
+                    ...
+
+        """
+        def __init__(self, client, file):
+            self.file = file
+            self.client = client
+            self.sftp = self.client.open_sftp()
+            self.file_descriptor = None
+
+        def __enter__(self):
+            self.file_descriptor = self.sftp.file(self.file, 'r')
+            return self.file_descriptor
+
+        def __exit__(self, exc_type, exc_value, traceback):
+           self.file_descriptor.close()
+
+    def open(self, file):
+        return self.File(self.client, file)
+
+
+    def ls(self, path):
+        listdir(self, path)
+
+
+    def listdir(self, path):
+        fp = self.File(self.client, path)
+        return fp.sftp.listdir(path=path)
+
+
     def _determine_key_type(self):
         """Determine the key type by reading the key file."""
         with open(self.ssh_key_filepath, "rb") as keyfile:
