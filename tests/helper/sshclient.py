@@ -109,6 +109,12 @@ class RemoteClient:
             This File class is designed to allow using the RemoteClient as a Context Manager. By
             now, we're using execute to invoke utilzing the exec_command method. With this subclass
             we add a way to utizing python’s built-in python:file to return a file object.
+
+            It can be used: 
+                with client.open("/etc/sudoers") as file:
+                    for line in file.readlines():
+                    ...
+
 		"""
         def __init__(self, client, file):
             self.file = file
