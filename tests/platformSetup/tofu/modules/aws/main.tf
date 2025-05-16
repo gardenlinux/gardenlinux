@@ -280,7 +280,7 @@ resource "aws_instance" "instance" {
   root_block_device {
     delete_on_termination = true
     volume_type           = "gp3"
-    volume_size           = 7
+    volume_size           = 16
     encrypted             = false
 
     tags = merge(

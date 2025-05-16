@@ -257,6 +257,7 @@ resource "azurerm_linux_virtual_machine" "instance" {
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "StandardSSD_LRS"
+    disk_size_gb         = 16
   }
 
   computer_name = local.instance_name
