@@ -34,7 +34,7 @@ on:
       oci_kms_arn:
         required: true
 env:
-  GLCLI_VERSION: 0.6.4
+  GLCLI_VERSION: 0.6.5
 jobs:
   determine_repository:
     name: Determine release repository to use for target ${{ inputs.target }}
