@@ -137,6 +137,10 @@ jobs:
           tar -C "$CNAME/" -xzf "$CNAME.tar.gz"
           rm "$CNAME.tar.gz"
 
+          for file in "$CNAME/secureboot."*; do
+            echo mv "$CNAME/$file" "$CNAME/$CNAME.$file"
+          done
+
           tar -cSzvf "$CNAME.tar.gz" -C $CNAME .
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         with:
