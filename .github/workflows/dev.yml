@@ -1,4 +1,7 @@
 name: dev
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-dev
+  cancel-in-progress: true
 on:
   push:
     branches:

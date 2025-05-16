@@ -1,7 +1,4 @@
 name: build_flavor
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-build-flavor-${{ inputs.flavor }}-${{ inputs.arch }}
-  cancel-in-progress: true
 on:
   workflow_call:
     inputs:
