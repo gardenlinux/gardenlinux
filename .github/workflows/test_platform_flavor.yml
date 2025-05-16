@@ -212,10 +212,10 @@ jobs:
           path: |
             .build/${{ env.CNAME }}.platform.test.log
             .build/${{ env.CNAME }}.platform.test.xml
-      - name: Cleanup platform-test for ${{ inputs.flavor }} (${{ inputs.arch }})
-        if: always()
-        run: |
-          export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
-          export TF_VAR_gcp_project_id=${{ secrets.gcp_project_id }}
+      # - name: Cleanup platform-test for ${{ inputs.flavor }} (${{ inputs.arch }})
+      #   if: always()
+      #   run: |
+      #     export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
+      #     export TF_VAR_gcp_project_id=${{ secrets.gcp_project_id }}
 
-          (make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-destroy 2>&1 || make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-destroy 2>&1 || make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-destroy 2>&1) | tee ".build/${{ env.CNAME }}.platform.destroy.log"
+      #     (make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-destroy 2>&1 || make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-destroy 2>&1 || make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-destroy 2>&1) | tee ".build/${{ env.CNAME }}.platform.destroy.log"

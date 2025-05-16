@@ -2,6 +2,9 @@
 
 set -eufo pipefail
 
+exec 1> /dev/kmsg
+exec 2>&1
+
 efi_part_dev="$(realpath "$1")"
 efi_part_name="$(basename "$efi_part_dev")"
 
