@@ -1,6 +1,6 @@
 name: Build platform-test images
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-build-platform-test-images
+  group: ${{ github.workflow }}-${{ inputs.ref }}-build-platform-test-images
   cancel-in-progress: true
 on:
   push:
@@ -18,6 +18,9 @@ on:
       version:
         type: string
         required: true
+      ref:
+        type: string
+        default: ${{ github.ref }}
       build:
         type: boolean
         default: true

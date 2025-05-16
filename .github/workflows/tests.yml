@@ -7,6 +7,10 @@ on:
         description: 'Garden Linux version'
         type: string
         required: true
+      ref:
+        description: 'The branch, tag or SHA to checkout.'
+        type: string
+        default: main
       flavors_matrix:
         description: 'Generated GitHub workflow flavors matrix'
         type: string
@@ -61,16 +65,19 @@ jobs:
     name: Generate flavors matrix for chroot test
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
+      ref: ${{ inputs.ref }}
       flags: '--no-arch --json-by-arch --test'
   platform_test_flavors_supported_matrix:
     name: Generate flavors matrix for platform-test
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
+      ref: ${{ inputs.ref }}
       flags: '--no-arch --json-by-arch --test-platform'
   test_bare_flavors_supported_matrix:
     name: Generate flavors matrix for bare flavors test
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
+      ref: ${{ inputs.ref }}
       flags: '--include-only "bare-*" --no-arch --json-by-arch --test'
   intersect_matrices:
     needs: [
@@ -131,6 +138,7 @@ jobs:
       matrix: ${{ fromJson(needs.intersect_matrices.outputs.chroot_test_flavors_matrix) }}
     with:
       version: ${{ inputs.version }}
+      ref: ${{ inputs.ref }}
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
   test_platform_flavors:
@@ -143,6 +151,7 @@ jobs:
       matrix: ${{ fromJson(needs.intersect_matrices.outputs.platform_test_flavors_matrix) }}
     with:
       version: ${{ inputs.version }}
+      ref: ${{ inputs.ref }}
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
     secrets: inherit
@@ -156,5 +165,6 @@ jobs:
       matrix: ${{ fromJson(needs.intersect_matrices.outputs.test_bare_flavors_matrix) }}
     with:
       version: ${{ inputs.version }}
+      ref: ${{ inputs.ref }}
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}

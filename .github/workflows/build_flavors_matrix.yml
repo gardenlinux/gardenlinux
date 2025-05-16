@@ -7,6 +7,9 @@ on:
         required: true
       flavors_matrix:
         type: string
+      ref:
+        type: string
+        required: true
     outputs:
       matrix:
         description: 'Flavors matrix'
@@ -23,21 +26,10 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
+          ref: ${{ inputs.ref }}
           submodules: true
       - id: matrix
-        run: |
-          MATRIX='${{ inputs.flavors_matrix }}'
-
-          if [[ $(echo "${MATRIX}" | jq -r 'type') != 'object' ]]; then
-            FLAVORS=$(./bin/flavors_parse.py ${{ inputs.flags }})
-            MATRIX=$(jq -nc \
-              --argjson flavors "$(echo $FLAVORS)" \
-              '{
-                include: (
-                  $flavors | reduce (to_entries[]) as $item ([]; . + ($item.value | map({"arch": $item.key, "flavor": .})))
-                )
-              }'
-            )
-          fi
-
-          echo "matrix=$MATRIX" | tee -a $GITHUB_OUTPUT
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@main
+        with:
+          flags: ${{ inputs.flags }}
+          flavors_matrix: ${{ inputs.flavors_matrix }}

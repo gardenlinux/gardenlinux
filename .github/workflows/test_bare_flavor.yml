@@ -11,6 +11,9 @@ on:
       version:
         type: string
         required: true
+      ref:
+        type: string
+        required: true
 jobs:
   test:
     name: Test bare flavor ${{ inputs.flavor }} (${{ inputs.arch }})
@@ -19,12 +22,14 @@ jobs:
       run:
         shell: bash
     env:
+      BARE_FLAVOR_TESTS_EXECUTED_BY_SCRIPT: 'false'
       CNAME: ''
     permissions:
       id-token: write
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
+          ref: ${{ inputs.ref }}
           submodules: true
       - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
@@ -33,10 +38,21 @@ jobs:
             VERSION
           key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
+      - uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@main
+      - name: Set CNAME
+        run: |
+          cname="$(gl-cname --arch "${{ inputs.arch }}" ${{ inputs.flavor }})"
+          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
       - name: Load bare flavor build artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
           name: build-${{ inputs.flavor }}-${{ inputs.arch }}
           path: .build/bare_flavors
       - name: Test
-        run: make --directory=tests ${{ inputs.flavor }}-${{ inputs.arch }}-container-test
+        run: |
+          if [ -f ".github/workflows/bare_flavor_tests.sh" ]; then
+            echo "BARE_FLAVOR_TESTS_EXECUTED_BY_SCRIPT=true" | tee -a "$GITHUB_ENV"
+            .github/workflows/bare_flavor_tests.sh "${CNAME}"
+          else
+            make --directory=tests ${{ inputs.flavor }}-${{ inputs.arch }}-container-test
+          fi

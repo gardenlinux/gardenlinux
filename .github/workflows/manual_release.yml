@@ -7,6 +7,10 @@ on:
         description: 'Garden Linux version'
         type: string
         required: true
+      ref:
+        description: 'The branch, tag or SHA to checkout.'
+        type: string
+        default: main
       target:
         description: 'Garden Linux release target'
         required: true
@@ -27,18 +31,30 @@ on:
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
         type: string
 jobs:
+  environment_validation:
+    if: ${{ github.ref_name != 'main' }}
+    name: 'Validate execution environment'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Output helpful error message
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.setFailed("Execution of `manual_release.yml` is permitted in `main` only");
+            return false;
   build:
+    needs: environment_validation
     name: Build
     uses: ./.github/workflows/build.yml
     permissions:
       id-token: write
     with:
       version: ${{ inputs.version }}
+      ref: ${{ inputs.ref }}
       target: ${{ inputs.target }}
       flavors_parse_params: ${{ inputs.flavors_parse_params }}
       platform_test_tag: ${{ inputs.platform_test_tag }}
       bare_flavors_parse_params: ${{ inputs.bare_flavors_parse_params }}
-      fail_fast: true
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_kms_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
@@ -66,10 +82,12 @@ jobs:
     with:
       flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
       version: ${{ needs.build.outputs.version }}
+      ref: ${{ needs.build.outputs.ref }}
       platform_test: true
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
     permissions:
       id-token: write
+      packages: write
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -109,9 +127,9 @@ jobs:
         run: |
           jq -r --arg 'matrix' '${{ needs.build.outputs.flavors_matrix }}' --arg 'bare_matrix' '${{ needs.build.outputs.bare_flavors_matrix }}' -n '{
             "id": ${{ github.run_id }},
+            "ref": "${{ needs.build.outputs.ref }}",
             "flavors_matrix": $matrix,
             "bare_flavors_matrix": $bare_matrix,
-            "version": "${{ needs.build.outputs.version }}",
             "original_workflow_name": "${{ github.workflow }}"
           }' '.' > workflow_data.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2

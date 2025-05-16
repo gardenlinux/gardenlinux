@@ -12,7 +12,6 @@ jobs:
       version: now
       target: nightly
       platform_test_tag: latest
-      fail_fast: true
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_kms_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
@@ -44,6 +43,7 @@ jobs:
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
     permissions:
       id-token: write
+      packages: write
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -83,9 +83,9 @@ jobs:
         run: |
           jq -r --arg 'matrix' '${{ needs.build.outputs.flavors_matrix }}' --arg 'bare_matrix' '${{ needs.build.outputs.bare_flavors_matrix }}' -n '{
             "id": ${{ github.run_id }},
+            "ref": "${{ needs.build.outputs.ref }}",
             "flavors_matrix": $matrix,
             "bare_flavors_matrix": $bare_matrix,
-            "version": "${{ needs.build.outputs.version }}",
             "original_workflow_name": "${{ github.workflow }}"
           }' '.' > workflow_data.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
