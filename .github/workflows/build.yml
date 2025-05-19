@@ -69,6 +69,7 @@ jobs:
       version: ${{ needs.requirements.outputs.version }}
       platforms: '["tofu"]'
       platform_test_tag: ${{ inputs.platform_test_tag }}
+      build: false
   flavors_matrix:
     name: Generate flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml

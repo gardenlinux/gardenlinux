@@ -1,0 +1,62 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pytest = "*"
+python-gardenlinux-lib = { git = 'https://github.com/gardenlinux/python-gardenlinux-lib.git', ref = '0.6.0', editable = true }
+boto3 = "*"
+paramiko = "*"
+python-novaclient = "*"
+click = "*"
+pyyaml = "*"
+scp = "*"
+dacite = "*"
+cffi = "*"
+pytest-json-report = "*"
+pytest-rerunfailures = "*"
+
+[dev-packages]
+pytest = "*"
+flake8 = "*"
+# black = "*"
+pylint = "*"
+
+[ali-packages]
+oss2 = "*"
+aliyun-python-sdk-core = "*"
+aliyun-python-sdk-ecs = "*"
+
+[openstack-packages]
+python-openstackclient = "*"
+
+[azure-cli]
+azure-cli = ">=2.44.0"   # https://github.com/Azure/azure-cli/issues/23015
+
+[azure-packages]
+azure-cli = ">=2.44.0"   # https://github.com/Azure/azure-cli/issues/23015
+azure-core = "*"
+azure-identity = "*"
+azure-mgmt-subscription = "*"
+azure-mgmt-resource = "*"
+azure-mgmt-compute = "*"
+azure-mgmt-storage = "*"
+azure-mgmt-network = "*"
+azure-storage-blob = "*"
+
+[gcp-packages]
+google-auth = "*"
+google-cloud-compute = "*"
+google-cloud-storage = "*"
+
+[firecracker-packages]
+
+[kvm-packages]
+# libvirt-python = "*" # needed to run OpenTofu provider dmacvicar/terraform-provider-libvirt
+
+[requires]
+python_version = "3.13"
+
+[pipenv]
+allow_prereleases = true
