@@ -86,14 +86,14 @@ jobs:
           cname="$(./build --resolve-cname ${{ inputs.flavor }}-${{ inputs.arch }})"
           echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
       - name: Load flavor build artifact
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
           name: build-${{ inputs.flavor }}-${{ inputs.arch }}
-      - name: Load cert cache
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      - name: Load certs artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
-          path: cert/*.*
-          key: cert-${{ github.run_id }}
+          name: certs
+          path: cert/
       - name: Download platform-test OCI metadata (tofu)
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
@@ -116,9 +116,8 @@ jobs:
         run: echo $PLATFORM_TEST_IMAGE_TAG | sed 's#.*:##' > ./COMMIT
       - name: Set platform-test VERSION
         run: echo $PLATFORM_TEST_VERSION > ./VERSION
-      - id: 'auth_gcp'
-        name: 'Authenticate to Google Cloud'
-        uses: google-github-actions/auth@71f986410dfbc7added4569d411d040a91dc6935 # pin@v1
+      - name: 'Authenticate to Google Cloud'
+        uses: google-github-actions/auth@ba79af03959ebeac9769e648f473a284504d9193 # pin@v1
         with:
           workload_identity_provider: ${{ secrets.gcp_identity_provider }}
           service_account: ${{ secrets.gcp_service_account }}
@@ -139,7 +138,7 @@ jobs:
             core.exportVariable("GOOGLE_GHA_CREDS_PATH", basePath + credentialsFileName);
       - id: 'auth_aws'
         name: 'Authenticate to AWS'
-        uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
+        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
           role-session-name: ${{ secrets.aws_session }}
@@ -149,11 +148,11 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            core.setSecret("AWS_ACCESS_KEY_ID");
+            core.setSecret("${{ steps.auth_aws.outputs.aws-access-key-id }}");
             core.exportVariable("AWS_ACCESS_KEY_ID", "${{ steps.auth_aws.outputs.aws-access-key-id }}");
-            core.setSecret("AWS_SECRET_ACCESS_KEY");
+            core.setSecret("${{ steps.auth_aws.outputs.aws-secret-access-key }}");
             core.exportVariable("AWS_SECRET_ACCESS_KEY", "${{ steps.auth_aws.outputs.aws-secret-access-key }}");
-            core.setSecret("AWS_SESSION_TOKEN");
+            core.setSecret("${{ steps.auth_aws.outputs.aws-session-token }}");
             core.exportVariable("AWS_SESSION_TOKEN", "${{ steps.auth_aws.outputs.aws-session-token }}");
       - id: 'auth_azure'
         name: 'Authenticate to Azure'
@@ -168,14 +167,13 @@ jobs:
           script: |
             core.exportVariable("ARM_USE_OIDC", "true");
 
-            core.setSecret("ARM_CLIENT_ID");
+            core.setSecret("${{ secrets.az_client_id }}");
             core.exportVariable("ARM_CLIENT_ID", "${{ secrets.az_client_id }}");
-            core.setSecret("ARM_SUBSCRIPTION_ID");
+            core.setSecret("${{ secrets.az_subscription_id }}");
             core.exportVariable("ARM_SUBSCRIPTION_ID", "${{ secrets.az_subscription_id }}");
-            core.setSecret("ARM_TENANT_ID");
+            core.setSecret("${{ secrets.az_tenant_id }}");
             core.exportVariable("ARM_TENANT_ID", "${{ secrets.az_tenant_id }}");
-      - id: 'auth_ali'
-        name: 'Create ali cloud credential file'
+      - name: 'Create ali cloud credential file'
         uses: actions/github-script@v7
         with:
           script: |
@@ -184,9 +182,9 @@ jobs:
 
             core.exportVariable("ALIBABA_CLOUD_REGION", aliCredentials.region);
 
-            core.setSecret("ALIBABA_CLOUD_ACCESS_KEY_ID");
+            core.setSecret(aliCredentials.access_key_id);
             core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_ID", aliCredentials.access_key_id);
-            core.setSecret("ALIBABA_CLOUD_ACCESS_KEY_SECRET");
+            core.setSecret(aliCredentials.access_key_secret);
             core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_SECRET", aliCredentials.access_key_secret);
       - name: Deploy platform-test resources for ${{ inputs.flavor }} (${{ inputs.arch }})
         run: |

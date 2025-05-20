@@ -49,7 +49,7 @@ jobs:
           cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
           echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
       - name: 'Authenticate to AWS'
-        uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
+        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
           role-session-name: ${{ secrets.aws_session }}

@@ -8,6 +8,14 @@ on:
         description: 'Garden Linux version'
         type: string
         default: now
+      target:
+        description: 'Garden Linux release target'
+        type: choice
+        default: dev
+        options:
+          - release
+          - nightly
+          - dev
       build:
         description: 'Build for version specified in version input parameter instead of downloading it from S3.'
         type: boolean
@@ -77,6 +85,7 @@ jobs:
     with:
       version: ${{ inputs.version }}
       use_glrd: true
+      target: ${{ inputs.target }}
   download_store_flavor_version_data:
     name: Store flavor version data
     needs: download_build_requirements

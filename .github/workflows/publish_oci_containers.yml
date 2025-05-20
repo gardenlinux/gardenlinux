@@ -12,6 +12,9 @@ on:
       version:
         type: string
         required: true
+      target:
+        type: string
+        required: true
       flavors_matrix:
         type: string
         required: true
@@ -33,7 +36,24 @@ on:
 env:
   GLCLI_VERSION: 0.6.4
 jobs:
+  determine_repository:
+    name: Determine release repository to use for target ${{ inputs.target }}
+    runs-on: ubuntu-latest
+    outputs:
+      repository: ${{ steps.set_repository.outputs.repository }}
+    steps:
+      - id: set_repository
+        run: |
+          if [[ "${{ inputs.target }}" == "release" ]]; then
+            echo "repository=ghcr.io/gardenlinux/gardenlinux" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ inputs.target }}" == "nightly" ]]; then
+            echo "repository=ghcr.io/gardenlinux/nightly" >> "$GITHUB_OUTPUT"
+          else
+            echo "invalid release target ${{ inputs.target }}" >&2
+            exit 1
+          fi
   container:
+    needs: determine_repository
     name: Publish container base image
     runs-on: ubuntu-24.04
     defaults:
@@ -56,12 +76,12 @@ jobs:
           cname_arm64="$(./build --resolve-cname container-arm64)"
           echo "CNAME_AMD64=$cname_amd64" | tee -a "$GITHUB_ENV"
           echo "CNAME_ARM64=$cname_arm64" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
           name: build-container-amd64
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
           name: build-container-arm64
           github-token: ${{ github.token }}
@@ -77,41 +97,42 @@ jobs:
 
           # Tagging for amd64 nightly
           if [ $is_nightly = true ]; then
-            podman tag "$image" ghcr.io/${{ github.repository }}:amd64-nightly
-            podman push ghcr.io/${{ github.repository }}:amd64-nightly
+            podman tag "$image" ${{ needs.determine_repository.outputs.repository }}:amd64-nightly
+            podman push ${{ needs.determine_repository.outputs.repository }}:amd64-nightly
           fi
 
           # Tagging for amd64 with version
-          podman tag "$image" ghcr.io/${{ github.repository }}:amd64-${version}
-          podman push ghcr.io/${{ github.repository }}:amd64-${version}
+          podman tag "$image" ${{ needs.determine_repository.outputs.repository }}:amd64-${version}
+          podman push ${{ needs.determine_repository.outputs.repository }}:amd64-${version}
 
           tar xzv < "${CNAME_ARM64}.tar.gz"
           image="$(podman load < ${CNAME_ARM64}.oci | awk '{ print $NF }')"
 
           # Tagging for arm64 nightly
           if [ $is_nightly = true ]; then
-            podman tag "$image" ghcr.io/${{ github.repository }}:arm64-nightly
-            podman push ghcr.io/${{ github.repository }}:arm64-nightly
+            podman tag "$image" ${{ needs.determine_repository.outputs.repository }}:arm64-nightly
+            podman push ${{ needs.determine_repository.outputs.repository }}:arm64-nightly
           fi
 
           # Tagging for arm64 with version
-          podman tag "$image" ghcr.io/${{ github.repository }}:arm64-${version}
-          podman push ghcr.io/${{ github.repository }}:arm64-${version}
+          podman tag "$image" ${{ needs.determine_repository.outputs.repository }}:arm64-${version}
+          podman push ${{ needs.determine_repository.outputs.repository }}:arm64-${version}
 
           # Creating and pushing manifest for nightly
           if [ $is_nightly = true ]; then
-            podman manifest create ghcr.io/${{ github.repository }}:nightly
-            podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:amd64-nightly
-            podman manifest add ghcr.io/${{ github.repository }}:nightly ghcr.io/${{ github.repository }}:arm64-nightly
-            podman manifest push ghcr.io/${{ github.repository }}:nightly
+            podman manifest create ${{ needs.determine_repository.outputs.repository }}:nightly
+            podman manifest add ${{ needs.determine_repository.outputs.repository }}:nightly ${{ needs.determine_repository.outputs.repository }}:amd64-nightly
+            podman manifest add ${{ needs.determine_repository.outputs.repository }}:nightly ${{ needs.determine_repository.outputs.repository }}:arm64-nightly
+            podman manifest push ${{ needs.determine_repository.outputs.repository }}:nightly
           fi
 
           # Creating and pushing manifest for version tag
-          podman manifest create ghcr.io/${{ github.repository }}:${version}
-          podman manifest add ghcr.io/${{ github.repository }}:${version} ghcr.io/${{ github.repository }}:amd64-${version}
-          podman manifest add ghcr.io/${{ github.repository }}:${version} ghcr.io/${{ github.repository }}:arm64-${version}
-          podman manifest push ghcr.io/${{ github.repository }}:${version}
+          podman manifest create ${{ needs.determine_repository.outputs.repository }}:${version}
+          podman manifest add ${{ needs.determine_repository.outputs.repository }}:${version} ${{ needs.determine_repository.outputs.repository }}:amd64-${version}
+          podman manifest add ${{ needs.determine_repository.outputs.repository }}:${version} ${{ needs.determine_repository.outputs.repository }}:arm64-${version}
+          podman manifest push ${{ needs.determine_repository.outputs.repository }}:${version}
   bare_flavors:
+    needs: determine_repository
     name: Publish bare flavors
     if: ${{ inputs.bare_flavors_matrix != '{"include":[]}' }}
     runs-on: ubuntu-24.04
@@ -127,7 +148,7 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
-      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
           pattern: build-bare-${{ matrix.config }}-*
           merge-multiple: true
@@ -144,42 +165,43 @@ jobs:
           image="$(podman load < ${{ matrix.config }}-amd64.oci | awk '{ print $NF }')"
 
           # Tagging and pushing amd64 with version
-          podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
-          podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
+          podman tag "$image" ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version
+          podman push ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version
 
           # Tagging and pushing amd64 with nightly
           if [ $is_nightly = true ]; then
-            podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
-            podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
+            podman tag "$image" ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
+            podman push ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
           fi
 
           # Handling arm64 image
           image="$(podman load < ${{ matrix.config }}-arm64.oci | awk '{ print $NF }')"
 
           # Tagging and pushing arm64 with version
-          podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
-          podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
+          podman tag "$image" ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version
+          podman push ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version
 
           # Tagging and pushing arm64 with nightly
           if [ $is_nightly = true ]; then
-            podman tag "$image" ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
-            podman push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
+            podman tag "$image" ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
+            podman push ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
           fi
 
           # Creating and pushing manifest for version tag
-          podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
-          podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-$version
-          podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-$version
-          podman manifest push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:$version
+          podman manifest create ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:$version
+          podman manifest add ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:$version ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version
+          podman manifest add ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:$version ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version
+          podman manifest push ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:$version
 
           # Creating and pushing manifest for nightly tag
           if [ $is_nightly = true ]; then
-            podman manifest create ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
-            podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:amd64-nightly
-            podman manifest add ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:arm64-nightly
-            podman manifest push ghcr.io/${{ github.repository }}/bare-${{ matrix.config }}:nightly
+            podman manifest create ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:nightly
+            podman manifest add ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:nightly ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
+            podman manifest add ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:nightly ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
+            podman manifest push ${{ needs.determine_repository.outputs.repository }}/bare-${{ matrix.config }}:nightly
           fi
   push_flavors:
+    needs: determine_repository
     name: Publish flavors
     runs-on: ubuntu-24.04
     defaults:
@@ -190,8 +212,7 @@ jobs:
     permissions:
       id-token: write
       packages: write
-    # @TODO: Find more suitable environment name
-    environment: oidc_aws_s3_upload
+    environment: ${{ inputs.target == 'release' && 'oidc_aws_kms_release' || 'oidc_aws_kms_nightly' }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
@@ -200,7 +221,7 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
-      - uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
+      - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
           role-session-name: ${{ secrets.aws_session }}
@@ -213,7 +234,7 @@ jobs:
         run: |
           cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
           echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # pin@v4.2.1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
           github-token: ${{ github.token }}
@@ -233,7 +254,7 @@ jobs:
           mv python-gardenlinux-cli /opt/glcli
           pip install -r /opt/glcli/requirements.txt
       - name: Install cosign
-        uses: sigstore/cosign-installer@v3.8.1
+        uses: sigstore/cosign-installer@v3.8.2
         with:
           cosign-release: 'v2.4.1'
       - name: Push using the glcli util
@@ -242,7 +263,7 @@ jobs:
           retry_count=0
           exit_code=0
           until [ $retry_count -ge $max_retries ]; do
-            if output=$(GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir "$CNAME" --container ghcr.io/${{ github.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname "$CNAME" --cosign_file digest.txt --manifest_file "oci_manifest_entry_$CNAME.json" 2>&1); then
+            if output=$(GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir "$CNAME" --container ${{ needs.determine_repository.outputs.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname "$CNAME" --cosign_file digest.txt --manifest_file "oci_manifest_entry_$CNAME.json" 2>&1); then
               cat digest.txt
               exit 0
             elif echo "$output" | grep -q "Bad Gateway"; then
@@ -262,10 +283,10 @@ jobs:
       - name: Sign the manifest
         run: |
           docker login ghcr.io -u token -p ${{ github.token }}
-          cosign sign -tlog-upload=false --key awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }} ghcr.io/${{ github.repository }}@$(cat digest.txt)
+          cosign sign -tlog-upload=false --key "awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }}" "${{ needs.determine_repository.outputs.repository }}@$(cat digest.txt)"
       - name: Verify signature
         run: |
-          cosign verify --insecure-ignore-tlog=true --key awskms://kms.${{ secrets.aws_region}}.amazonaws.com/${{ secrets.oci_kms_arn }} ghcr.io/${{ github.repository }}@$(cat digest.txt)
+          cosign verify --insecure-ignore-tlog=true --key "awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }}" "${{ needs.determine_repository.outputs.repository }}@$(cat digest.txt)"
       - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
           path: oci_manifest_entry_${{ env.CNAME }}.json
@@ -310,7 +331,7 @@ jobs:
           mkdir -p "manifests"
           mv "oci_manifest_entry_$CNAME.json" "manifests/"
   update_manifest_index:
-    needs: aggregate_oci_manifests
+    needs: [ determine_repository, aggregate_oci_manifests ]
     name: Update OCI manifest index
     runs-on: ubuntu-24.04
     defaults:
@@ -341,4 +362,4 @@ jobs:
           pip install -r /opt/glcli/requirements.txt
       - name: Update index using glcli tool
         run: |
-          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ghcr.io/${{ github.repository }} --version ${{ inputs.version }} --manifest_folder manifests
+          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ${{ needs.determine_repository.outputs.repository }} --version ${{ inputs.version }} --manifest_folder manifests

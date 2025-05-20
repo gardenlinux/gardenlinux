@@ -10,12 +10,12 @@ jobs:
       id-token: write
     with:
       version: now
-      use_kms: true
+      target: nightly
       platform_test_tag: latest
       fail_fast: true
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
-      aws_kms_role: ${{ secrets.SECUREBOOT_DB_IAM_ROLE }}
+      aws_kms_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
       aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
       secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
   build_retry:

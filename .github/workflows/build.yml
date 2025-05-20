@@ -9,10 +9,9 @@ on:
         description: 'Garden Linux version'
         type: string
         default: today
-      use_kms:
-        description: 'Use Garden Linux KMS'
-        type: boolean
-        default: false
+      target:
+        type: string
+        default: dev
       flavors_parse_params:
         description: 'Run bin/parse_flavors.py with these parameters'
         default: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
@@ -54,7 +53,7 @@ jobs:
     uses: ./.github/workflows/build_requirements.yml
     with:
       version: ${{ inputs.version == '' && 'now' || inputs.version }}
-      use_kms: ${{ inputs.use_kms }}
+      target: ${{ inputs.target }}
   bootstrap:
     needs: requirements
     name: Bootstrap build
@@ -87,8 +86,7 @@ jobs:
       flavor: ${{ matrix.flavor }}
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
-      # GitHub workflow workaround for bool
-      use_kms: ${{ needs.requirements.outputs.use_kms == 'true' }}
+      signing_env: ${{ needs.requirements.outputs.signing_env }}
     uses: ./.github/workflows/build_flavor.yml
     secrets: inherit
   kmodbuild_container:
@@ -122,7 +120,11 @@ jobs:
     steps:
       - name: Store data in JSON file
         run: |
-          jq -r -n '{ "commit_id": "${{ needs.requirements.outputs.commit_id }}", "version": "${{ needs.requirements.outputs.version }}" }' '.' > flavor_version_data.json
+          jq -r -n '{
+            "commit_id": "${{ needs.requirements.outputs.commit_id }}",
+            "version": "${{ needs.requirements.outputs.version }}",
+            "target": "${{ needs.requirements.outputs.target }}"
+          }' '.' > flavor_version_data.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         with:
           name: flavor-version-data

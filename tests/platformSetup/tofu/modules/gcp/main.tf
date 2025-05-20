@@ -142,7 +142,7 @@ resource "google_compute_instance" "instance" {
     initialize_params {
       image = google_compute_image.image.name
       type  = "pd-ssd"
-      size  = 7
+      size  = 16
     }
   }
 

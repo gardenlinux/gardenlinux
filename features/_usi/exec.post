@@ -6,7 +6,7 @@ rootfs="$1"
 
 mkdir -p "$rootfs/etc/gardenlinux"
 
-openssl x509 -in /builder/cert/gardenlinux-oci-sign.crt -pubkey -noout > "$rootfs/etc/gardenlinux/oci_signing_key.pem"
+openssl x509 -in /builder/cert/oci-sign.crt -pubkey -noout > "$rootfs/etc/gardenlinux/oci_signing_key.pem"
 for key in pk null.pk kek db; do
 	cp "/builder/cert/secureboot.$key.auth" "$rootfs/etc/gardenlinux/gardenlinux-secureboot.$key.auth"
 done

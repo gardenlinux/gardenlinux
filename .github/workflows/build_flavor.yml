@@ -17,9 +17,9 @@ on:
       version:
         type: string
         required: true
-      use_kms:
-        type: boolean
-        default: false
+      signing_env:
+        type: string
+        default: ''
     secrets:
       secureboot_db_kms_arn:
         required: false
@@ -40,8 +40,8 @@ jobs:
       id-token: write
     env:
       CNAME: ''
-      USE_KMS: ${{ inputs.use_kms }}
-    environment: ${{ inputs.use_kms && 'oidc_aws_kms_secureboot_signing' || '' }}
+      USE_KMS: ${{ inputs.signing_env == '' && 'false' || 'true' }}
+    environment: ${{ inputs.signing_env }}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
@@ -56,23 +56,23 @@ jobs:
           path: .build
           key: base-${{ inputs.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
-      - name: Load cert cache
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      - name: Load certs artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
-          path: cert/*.*
-          key: cert-${{ github.run_id }}
-          fail-on-cache-miss: true
-      - name: Write secureboot db arn for kms backed certificates
-        if: ${{ inputs.use_kms }}
-        run: echo "${{ secrets.secureboot_db_kms_arn }}" > cert/gardenlinux-secureboot.db.arn
+          name: certs
+          path: cert/
       - name: Configure aws credentials for kms signing
-        if: ${{ inputs.use_kms }}
-        uses: aws-actions/configure-aws-credentials@4fc4975a852c8cd99761e2de1f4ba73402e44dd9 # pin@v4
+        id: aws_auth
+        if: ${{ env.USE_KMS == 'true' }}
+        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_kms_role }}
           role-session-name: ${{ secrets.aws_oidc_session }}
           aws-region: ${{ secrets.aws_region }}
           role-duration-seconds: 14400
+      - name: Write secureboot db arn for kms backed certificates
+        if: ${{ steps.aws_auth.conclusion == 'success' }}
+        run: echo "${{ secrets.secureboot_db_kms_arn }}" > cert/secureboot.db.arn
       - name: Update bootstrap stage build artifact timestamps
         run: |
           t="$(date '+%s')"
