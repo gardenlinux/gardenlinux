@@ -86,7 +86,7 @@ def generate_release_note_image_ids(manifests):
 
 def generate_release_note_image_id_single(manifest_path):
     """
-    Outputs a markdown formated string for github release notes,
+    Outputs a markdown formatted string for github release notes,
     containing the image-ids for the respective cloud regions
     """
     output = ""
