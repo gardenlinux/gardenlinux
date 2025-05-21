@@ -33,6 +33,9 @@ cloud_fullname_dict = {
     'azure': 'Microsoft Azure'
 }
 
+# https://github.com/gardenlinux/gardenlinux/issues/3044
+# Empty string is the 'legacy' variant with traditional root fs and still needed/supported
+image_variants = ['', '_usi', '_tpm2_trustedboot']
 
 def _ali_release_note(published_image_metadata):
     output = ""
@@ -142,14 +145,15 @@ def download_all_singles(version, commitish):
     manifests = list()
     for a in arches:
         for p in cloud_fullname_dict:
-            fname = construct_full_image_name(p, "gardener_prod", a, version, commitish)
-            try:
-                manifests.append(download_meta_single_manifest(GARDENLINUX_GITHUB_RELEASE_BUCKET_NAME, "meta/singles", fname, "s3_downloads/"))
-            except Exception as e:
-                print(f"Failed to get manifest. Error: {e}")
-                print(f"\tfname: meta/singles/{fname}")
-                # Abort generation of Release Notes - Let the CI fail
-                sys.exit(1)
+            for v in image_variants:
+                fname = construct_full_image_name(p, f"gardener_prod{v}", a, version, commitish)
+                try:
+                    manifests.append(download_meta_single_manifest(GARDENLINUX_GITHUB_RELEASE_BUCKET_NAME, "meta/singles", fname, "s3_downloads/"))
+                except Exception as e:
+                    print(f"Failed to get manifest. Error: {e}")
+                    print(f"\tfname: meta/singles/{fname}")
+                    # Abort generation of Release Notes - Let the CI fail
+                    sys.exit(1)
 
     return manifests
 
