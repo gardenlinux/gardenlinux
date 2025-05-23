@@ -241,9 +241,11 @@ class CHROOT:
               dir=chroot_sshd_cfg_dir))
         # Copy ssh / authorized_keys file for root user
         local_ssh_key_path = self.config["ssh"]["ssh_key_filepath"] + ".pub"
-        chroot_root_dir = rootfs + "/root/"
-        chroot_ssh_authorized_keys = chroot_root_dir + ".ssh/test_authorized_keys"
-        self._create_dir(chroot_root_dir+".ssh", 0o600)
+        username = self.config["ssh"]["user"]
+        chroot_home_dir = self._create_user_and_home(username, rootfs)
+        user_id = self._get_user_id(username, rootfs)
+        chroot_ssh_authorized_keys = chroot_home_dir + ".ssh/test_authorized_keys"
+        self._create_dir(chroot_home_dir+".ssh", 0o700)
         try:
             shutil.copyfile(local_ssh_key_path, chroot_ssh_authorized_keys)
             logger.info("Copied authorized_keys to: {dir}".format(
@@ -251,6 +253,12 @@ class CHROOT:
         except OSError:
             logger.error("Could not copy authorized_keys to {dir}".format(
               dir=chroot_ssh_authorized_keys))
+        p = subprocess.run("chmod 600 {home}/.ssh/test_authorized_keys".format(home=chroot_home_dir), shell=True)
+        if p.returncode != 0:
+            logger.error("Could not change permission for test_authorized_keys file")
+        p = subprocess.run("chown -R {id}:{id} {home}/.ssh".format(home=chroot_home_dir, id=user_id), shell=True)
+        if p.returncode != 0:
+            logger.error("Could not change ownership for test_authorized_keys file")
 
 
     def _start_sshd_chroot(self, rootfs):
@@ -296,3 +304,33 @@ class CHROOT:
             logger.info("Port {port} on {host} can be used.".format(
               host=host, port=port))
             return False
+
+    def _create_user_and_home(self, username, rootfs):
+      """ Helper func: Create a new user and it's home directory """
+      if username == "root":
+        logger.warning("Running chroot tests as root")
+        return rootfs + "/root/"
+      logger.info(f"Creating user {username}")
+      p = subprocess.run("useradd -R {root} -G sudo --create-home --comment \"User executing the tests\" --shell /bin/bash {name}".format(
+        root=rootfs, name=username), shell=True)
+      if p.returncode != 0:
+        logger.error("Couldn't create user")
+      #Set password to unlock the user
+      p = subprocess.run("usermod --password '*' -R {root} {name}".format(root=rootfs, name=username), shell=True)
+      if p.returncode != 0:
+        logger.error("Couldn't set password")
+      # Disable password for sudo
+      p = subprocess.run("echo '{name} ALL=(ALL) NOPASSWD: ALL' >> {root}/etc/sudoers".format(name=username, root=rootfs), shell=True)
+      if p.returncode != 0:
+        logger.error("Couldn't disable sudo password request")
+      return rootfs + f"/home/{username}/"
+
+    def _get_user_id(self, username, rootfs):
+      """ Helper func: Extract uid from chroot usernames """
+      p = subprocess.run("cut -d: -f1,3 {root}/etc/passwd | grep {name}".format(
+        root=rootfs, name=username), shell=True, stdout=subprocess.PIPE)
+      value = p.stdout.decode()
+      if p.returncode != 0 or value == "":
+        logger.error("Couldn't find UID of user {name}".format(name=username))
+      # remove \n from the end
+      return value.split(":")[1][:-1]

@@ -77,7 +77,7 @@ class AptUpdate():
         if not hasattr(cls, 'instance'):
             cls.instance = super(AptUpdate, cls).__new__(cls)
 
-        (exit_code, output, error) = client.execute_command("apt-get update")
+        (exit_code, output, error) = client.execute_command("sudo apt-get update")
         assert exit_code == 0, f"no {error=} expected"
 
         return cls.instance
@@ -266,15 +266,15 @@ def install_package_deb(client, pkg):
     # repository. We may add a native Debian repo to the temp chroot for
     # further unit testing
     (exit_code, output, error) = client.execute_command(
-        "grep 'https://cdn-aws.deb.debian.org/debian bookworm main' /etc/apt/sources.list", quiet=True)
+        "sudo grep 'https://cdn-aws.deb.debian.org/debian bookworm main' /etc/apt/sources.list", quiet=True)
     if exit_code > 0:
        (exit_code, output, error) = client.execute_command(
-           "echo 'deb https://cdn-aws.deb.debian.org/debian bookworm main' >> /etc/apt/sources.list && apt-get update", quiet=True)
+           "echo 'deb https://cdn-aws.deb.debian.org/debian bookworm main' | sudo tee -a /etc/apt/sources.list && sudo apt-get update", quiet=True)
        assert exit_code == 0, f"Could not add native Debian repository."
 
     # Finally, install the package
     (exit_code, output, error) = client.execute_command(
-        f"apt-get install -y --no-install-recommends {pkg}", quiet=True)
+        f"sudo apt-get install -y --no-install-recommends {pkg}", quiet=True)
     assert exit_code == 0, f"Could not install Debian Package: {error}"
 
 def check_kernel_config_exact(client, kernel_config_path, kernel_config_item):

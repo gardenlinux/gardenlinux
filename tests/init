@@ -15,7 +15,7 @@ chroot:
 $(for feature in "${features[@]}"; do echo "    - $feature"; done)
   ssh:
     ssh_key_filepath: /tmp/ssh_priv_key
-    user: root
+    user: test
 EOF
 
 cd /gardenlinux/tests
