@@ -89,11 +89,11 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
           name: build-${{ inputs.flavor }}-${{ inputs.arch }}
-      - name: Load cert cache
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      - name: Load certs artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
-          path: cert/*.*
-          key: cert-${{ github.run_id }}
+          name: certs
+          path: cert/
       - name: Download platform-test OCI metadata (tofu)
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
@@ -138,7 +138,7 @@ jobs:
             core.exportVariable("GOOGLE_GHA_CREDS_PATH", basePath + credentialsFileName);
       - id: 'auth_aws'
         name: 'Authenticate to AWS'
-        uses: aws-actions/configure-aws-credentials@f24d7193d98baebaeacc7e2227925dd47cc267f5 # pin@v4
+        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
           role-session-name: ${{ secrets.aws_session }}

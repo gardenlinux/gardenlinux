@@ -41,6 +41,24 @@ targets:
       - features:
           - gardener
           - _prod
+          - _usi
+        arch: amd64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _prod
+          - _usi
+        arch: arm64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
         arch: amd64
         build: true
@@ -94,6 +112,24 @@ targets:
         build: true
         test: true
         test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _prod
+          - _usi
+        arch: amd64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _prod
+          - _usi
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
         publish: true
       - features:
           - gardener
@@ -229,6 +265,24 @@ targets:
       - features:
           - gardener
           - _prod
+          - _usi
+        arch: amd64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _prod
+          - _usi
+        arch: arm64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
         arch: amd64
         build: true
@@ -305,6 +359,24 @@ targets:
       - features:
           - gardener
           - _prod
+          - _usi
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - gardener
+          - _prod
+          - _usi
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - gardener
+          - _prod
           - _trustedboot
         arch: amd64
         build: true
@@ -368,6 +440,24 @@ targets:
         publish: true
       - features:
           - capi 
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - gardener
+          - _prod
+          - _usi
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - gardener
+          - _prod
+          - _usi
         arch: arm64
         build: true
         test: true

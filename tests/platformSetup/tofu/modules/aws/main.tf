@@ -4,7 +4,8 @@ locals {
   test_name_safe_short = substr(local.test_name_safe, 0, 24)
   feature_tpm2         = contains(var.features, "_tpm2")
   feature_trustedboot  = contains(var.features, "_trustedboot")
-  boot_mode            = local.feature_trustedboot ? "uefi" : "legacy-bios"
+  uefi_required        = contains(var.features, "_usi")
+  boot_mode            = local.uefi_required ? "uefi" : "legacy-bios"
   arch                 = var.arch == "amd64" ? "x86_64" : var.arch
   # https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
   # max 63 chars
@@ -279,7 +280,7 @@ resource "aws_instance" "instance" {
   root_block_device {
     delete_on_termination = true
     volume_type           = "gp3"
-    volume_size           = 7
+    volume_size           = 16
     encrypted             = false
 
     tags = merge(

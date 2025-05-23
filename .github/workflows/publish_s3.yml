@@ -125,16 +125,23 @@ jobs:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
           github-token: ${{ github.token }}
           run-id: ${{ needs.workflow_data.outputs.run_id }}
+      - name: Load certs artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+        with:
+          name: certs
+          github-token: ${{ github.token }}
+          run-id: ${{ needs.workflow_data.outputs.run_id }}
+          path: ${{ env.CNAME }}/
       - name: Add certs to build artifacts
         run: |
-          mkdir "$CNAME/"
           tar -C "$CNAME/" -xzf "$CNAME.tar.gz"
           rm "$CNAME.tar.gz"
 
-          # USE_KMS in build_requirements.yml
-          for f in secureboot.{{pk,kek,db}.{crt,der,auth},aws-efivars}; do
-            cp "cert/gardenlinux-nightly-$f" "$CNAME/$CNAME.$f"
+          pushd $CNAME
+          for file in "secureboot."*; do
+            mv "$file" "$CNAME.$file"
           done
+          popd
 
           tar -cSzvf "$CNAME.tar.gz" -C $CNAME .
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
@@ -179,9 +186,10 @@ jobs:
     name: create GLRD release
     permissions:
       id-token: write
+    environment: oidc_aws_s3_upload
     runs-on: ubuntu-24.04
     steps:
-      - uses: aws-actions/configure-aws-credentials@f24d7193d98baebaeacc7e2227925dd47cc267f5 # pin@v4
+      - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}

@@ -1,0 +1,5 @@
+description: 'nvme feature'
+type: element
+features:
+  include:
+    - multipath

@@ -91,13 +91,47 @@ jobs:
       fail-fast: false
       matrix:
         architecture: [ amd64, arm64 ]
-        cname: [ kvm-gardener_prod, metal-gardener_prod, gcp-gardener_prod, gdch-gardener_prod, aws-gardener_prod, azure-gardener_prod, ali-gardener_prod, openstack-gardener_prod, openstackbaremetal-gardener_prod, vmware-gardener_prod, metal-gardener_prod_pxe ]
+        cname:
+          - kvm-gardener_prod
+          - metal-gardener_prod
+          - gcp-gardener_prod
+          - gdch-gardener_prod
+          - aws-gardener_prod
+          - azure-gardener_prod
+          - ali-gardener_prod
+          - openstack-gardener_prod
+          - openstackbaremetal-gardener_prod
+          - vmware-gardener_prod
+          - metal-gardener_prod_pxe
+          - kvm-gardener_prod_usi
+          - metal-gardener_prod_usi
+          - gcp-gardener_prod_usi
+          - gdch-gardener_prod_usi
+          - aws-gardener_prod_usi
+          - azure-gardener_prod_usi
+          - ali-gardener_prod_usi
+          - openstack-gardener_prod_usi
+          - openstackbaremetal-gardener_prod_usi
+          - vmware-gardener_prod_usi
+          - metal-gardener_prod_pxe_usi
+          - kvm-gardener_prod_tpm2_trustedboot
+          - metal-gardener_prod_tpm2_trustedboot
+          - gcp-gardener_prod_tpm2_trustedboot
+          - gdch-gardener_prod_tpm2_trustedboot
+          - aws-gardener_prod_tpm2_trustedboot
+          - azure-gardener_prod_tpm2_trustedboot
+          - ali-gardener_prod_tpm2_trustedboot
+          - openstack-gardener_prod_tpm2_trustedboot
+          - openstackbaremetal-gardener_prod_tpm2_trustedboot
+          - vmware-gardener_prod_tpm2_trustedboot
+          - metal-gardener_prod_pxe_tpm2_trustedboot
+
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
           name: release
-      - uses: aws-actions/configure-aws-credentials@f24d7193d98baebaeacc7e2227925dd47cc267f5 # pin@v4
+      - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
@@ -142,7 +176,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: aws-actions/configure-aws-credentials@f24d7193d98baebaeacc7e2227925dd47cc267f5 # pin@v4
+      - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}

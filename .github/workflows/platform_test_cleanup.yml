@@ -19,7 +19,7 @@ jobs:
     steps:
       - id: 'auth_aws'
         name: 'Authenticate to AWS'
-        uses: aws-actions/configure-aws-credentials@f24d7193d98baebaeacc7e2227925dd47cc267f5 # pin@v4
+        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
@@ -80,7 +80,7 @@ jobs:
             core.exportVariable("GOOGLE_GHA_CREDS_PATH", basePath + credentialsFileName);
       - id: 'auth_aws'
         name: 'Authenticate to AWS'
-        uses: aws-actions/configure-aws-credentials@f24d7193d98baebaeacc7e2227925dd47cc267f5 # pin@v4
+        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}

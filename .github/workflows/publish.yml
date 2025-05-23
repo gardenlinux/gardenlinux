@@ -17,7 +17,7 @@ jobs:
     with:
       run_id: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
   publish_oci_containers:
-    needs: [ workflow_data ]
+    needs: workflow_data
     name: Publish container base image
     uses: ./.github/workflows/publish_oci_containers.yml
     # @TODO: Replace with safe OCI manifast handling variant
@@ -29,12 +29,13 @@ jobs:
       run_id: ${{ needs.workflow_data.outputs.run_id }}
       commit_id: ${{ needs.workflow_data.outputs.commit_id }}
       version: ${{ needs.workflow_data.outputs.version }}
+      target: ${{ needs.workflow_data.outputs.target }}
       flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
       bare_flavors_matrix: ${{ needs.workflow_data.outputs.bare_flavors_matrix }}
       original_workflow_name: ${{ needs.workflow_data.outputs.original_workflow_name }}
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
-      aws_role: ${{ secrets.AWS_IAM_ROLE }}
+      aws_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
       aws_session: ${{ secrets.AWS_OIDC_SESSION }}
       oci_kms_arn: ${{ secrets.OCI_KMS_ARN }}
   publish_kmodbuild_container:
