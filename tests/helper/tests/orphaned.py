@@ -10,7 +10,7 @@ def orphaned(client):
     install_package_deb(client, "deborphan")
 
     # Add manual installed packages to keep
-    cmd = "DEBIAN_FRONTEND=noninteractive apt-mark showmanual > /var/lib/deborphan/keep"
+    cmd = "DEBIAN_FRONTEND=noninteractive sudo apt-mark showmanual | sudo tee /var/lib/deborphan/keep"
     out = execute_remote_command(client, cmd)
 
     # Run deborphan on remote platform
