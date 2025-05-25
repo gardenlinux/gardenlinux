@@ -108,6 +108,7 @@ jobs:
           fail-on-cache-miss: true
       - name: Prepare platform-test environment
         run: |
+          mkdir ".build"
           tar -C ".build/" -xzf "$CNAME.tar.gz"
           rm "$CNAME.tar.gz"
 

@@ -57,6 +57,7 @@ jobs:
             version="$(bin/garden-version now)"
           fi
 
+          mkdir ".build"
           tar -C ".build/" -xzf "$CNAME.tar.gz"
           rm "$CNAME.tar.gz"
 
