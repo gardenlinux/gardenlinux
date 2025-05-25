@@ -47,6 +47,7 @@ jobs:
           name: build-${{ inputs.flavor }}-${{ inputs.arch }}
       - name: Test
         run: |
+          mkdir ".build"
           tar -C .build -xzf $CNAME.tar.gz
           rm "$CNAME.tar.gz"
 
