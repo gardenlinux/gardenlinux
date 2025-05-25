@@ -1,7 +1,4 @@
 name: build_requirements
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-build-requirements
-  cancel-in-progress: true
 on:
   workflow_call:
     inputs:

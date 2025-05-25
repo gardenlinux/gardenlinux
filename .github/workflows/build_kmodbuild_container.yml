@@ -1,7 +1,4 @@
 name: build_kmodbuild_container
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-build-kmodbuild-container
-  cancel-in-progress: true
 on:
   workflow_call:
     inputs:

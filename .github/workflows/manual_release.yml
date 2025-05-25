@@ -1,4 +1,8 @@
+# Build and publish
 name: Build and publish a release
+concurrency:
+  group: ${{ inputs.ignore_workflow_concurrency && github.run_id || format('{0}-{1}-manual-release', github.workflow, github.ref) }}
+  cancel-in-progress: true
 on:
   # triggered manually
   workflow_dispatch:
@@ -26,6 +30,10 @@ on:
         description: 'Run bin/parse_flavors.py with these parameters for bare flavors'
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
         type: string
+      ignore_workflow_concurrency:
+        description: 'Execute workflows concurrently'
+        type: boolean
+        default: false
 jobs:
   build:
     name: Build

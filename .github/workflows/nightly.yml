@@ -1,4 +1,7 @@
 name: nightly
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-nightly
+  cancel-in-progress: true
 on:
   schedule:
     - cron: '0 6 * * *'

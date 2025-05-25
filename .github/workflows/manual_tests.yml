@@ -1,5 +1,8 @@
 # Tests artifacts
 name: Execute tests
+concurrency:
+  group: ${{ inputs.ignore_workflow_concurrency && github.run_id || format('{0}-{1}-manual-tests', github.workflow, github.ref) }}
+  cancel-in-progress: true
 on:
   # triggered manually
   workflow_dispatch:
@@ -40,6 +43,10 @@ on:
         description: 'Execute platform tests'
         type: boolean
         default: true
+      ignore_workflow_concurrency:
+        description: 'Execute workflows concurrently'
+        type: boolean
+        default: false
 jobs:
   build:
     name: Build
