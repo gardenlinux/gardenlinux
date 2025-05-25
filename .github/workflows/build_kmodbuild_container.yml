@@ -29,10 +29,15 @@ jobs:
             VERSION
           key: build-container-${{ matrix.arch }}-${{ github.run_id }}
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
+        name: Determine CNAME
+        id: cname
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@main
+        with:
+          flags: --cname container-${{ matrix.arch }} cname
+      - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Set CNAME
         run: |
-          cname="$(./build --resolve-cname container-${{ matrix.arch }})"
-          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
+          echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Load container build artifact (${{ matrix.arch }})
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0

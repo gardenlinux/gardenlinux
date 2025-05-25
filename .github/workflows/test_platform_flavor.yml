@@ -81,10 +81,14 @@ jobs:
             VERSION
           key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
+      - name: Determine CNAME
+        id: cname
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@main
+        with:
+          flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
       - name: Set CNAME
         run: |
-          cname="$(./build --resolve-cname ${{ inputs.flavor }}-${{ inputs.arch }})"
-          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
+          echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
       - name: Load flavor build artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
