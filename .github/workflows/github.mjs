@@ -39,6 +39,36 @@ export function excludeFlavorsMatrix(matrixA, matrixB) {
     return { "include": resultMatrix };
 }
 
+export function getGHCRRepositoryFromTarget(target) {
+    let repository = "";
+
+    switch(target) {
+        case "release":
+            repository = "ghcr.io/gardenlinux/gardenlinux";
+            break;
+        case "nightly":
+            repository = "ghcr.io/gardenlinux/nightly";
+            break;
+    }
+
+    return repository;
+}
+
+export function getGitHubSigningEnvironmentFromTarget(target) {
+    let environment = "";
+
+    switch(target) {
+        case "release":
+            environment = "oidc_aws_kms_release";
+            break;
+        case "nightly":
+            environment = "oidc_aws_kms_nightly";
+            break;
+    }
+
+    return environment;
+}
+
 export function flattenFlavorsMatrixByArch(matrix) {
     let matrixByArch = {};
 
