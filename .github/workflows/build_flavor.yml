@@ -79,10 +79,14 @@ jobs:
           find .build -exec touch -d "@$t" {} +
       - name: Build
         run: make ${{ inputs.flavor }}-${{ inputs.arch }}-build
+      - name: Determine CNAME
+        id: cname
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@main
+        with:
+          flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
       - name: Set CNAME
         run: |
-          cname="$(./build --resolve-cname ${{ inputs.flavor }}-${{ inputs.arch }})"
-          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
+          echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
       - name: Pack build artifacts for upload
         run: tar -cSzvf "$CNAME.tar.gz" -C .build -T ".build/$CNAME.artifacts"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
