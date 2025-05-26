@@ -192,7 +192,7 @@ jobs:
             minor=$(echo ${version} | cut -d'.' -f2)
             if [ ${type} = "patch" ]; then
               # check for stable version and create if missing
-              if ! glrd --no-header --type stable --version ${major}; then
+              if ! glrd --no-header --type stable --version ${major} | grep ${major}; then
                 glrd-manage --s3-update --create stable --version ${major}
               fi
               glrd-manage --s3-update --create patch --version ${version} --commit ${commit}
