@@ -265,8 +265,9 @@ def install_package_deb(client, pkg):
     # Packages for testing may not be included within the Garden Linux
     # repository. We may add a native Debian repo to the temp chroot for
     # further unit testing
+    client._default_to_sudo = True
     (exit_code, output, error) = client.execute_command(
-        "sudo grep 'https://cdn-aws.deb.debian.org/debian bookworm main' /etc/apt/sources.list", quiet=True)
+        "grep 'https://cdn-aws.deb.debian.org/debian bookworm main' /etc/apt/sources.list", quiet=True)
     if exit_code > 0:
        (exit_code, output, error) = client.execute_command(
            "echo 'deb https://cdn-aws.deb.debian.org/debian bookworm main' | sudo tee -a /etc/apt/sources.list && sudo apt-get update", quiet=True)
@@ -274,8 +275,9 @@ def install_package_deb(client, pkg):
 
     # Finally, install the package
     (exit_code, output, error) = client.execute_command(
-        f"sudo apt-get install -y --no-install-recommends {pkg}", quiet=True)
+        f"apt-get install -y --no-install-recommends {pkg}", quiet=True)
     assert exit_code == 0, f"Could not install Debian Package: {error}"
+    client._default_to_sudo = False
 
 def check_kernel_config_exact(client, kernel_config_path, kernel_config_item):
     """ Checks if the given kernel_config_item is set in kernel_config_path """

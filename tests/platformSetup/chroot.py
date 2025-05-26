@@ -323,6 +323,10 @@ class CHROOT:
       p = subprocess.run("echo '{name} ALL=(ALL) NOPASSWD: ALL' >> {root}/etc/sudoers".format(name=username, root=rootfs), shell=True)
       if p.returncode != 0:
         logger.error("Couldn't disable sudo password request")
+      # Delete password of root to allow the use of su
+      p = subprocess.run("passwd -R {root} -d root".format(root=rootfs), shell=True)
+      if p.returncode != 0:
+          logger.error("could not delete root password")
       return rootfs + f"/home/{username}/"
 
     def _get_user_id(self, username, rootfs):

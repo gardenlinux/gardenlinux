@@ -23,7 +23,7 @@ def test_password_shadow(client, command, expected_exit_code, expected_output):
     password_shadow(client)
     exit_code, output = execute_remote_command(
         client,
-        f"if [ $(id -u) = 0 ]; then {command}; else sudo --stdin {command}; fi",
+        f"if [ $(id -u) = 0 ]; then {command}; else if [ $(which sudo) ]; then sudo --stdin {command}; else su -c 'PATH=$PATH:/usr/sbin; {command}'; fi; fi",
         skip_error=True,
     )
     assert output == ""
