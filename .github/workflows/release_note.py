@@ -137,6 +137,13 @@ def download_meta_single_manifest(bucket, bucket_path, image_name, dest_path):
     return f"{dest_path}/{image_name}"
 
 
+def is_unsupported_ali_combination(platform, architecture, variant):
+    """
+    Determines if the given combination of platform, architecture, and variant
+    is unsupported for the 'ali' platform.
+    """
+    return platform == "ali" and (architecture == "arm64" or variant != "")
+
 def download_all_singles(version, commitish):
     if commitish == None:
         raise Exception("Commitish is not set")
@@ -148,8 +155,8 @@ def download_all_singles(version, commitish):
             for v in image_variants:
                 # Skip "ali" platform for architectures other than "amd64" as it is currently not supported
                 # https://github.com/gardenlinux/gardenlinux/issues/3050
-                if p == "ali" and a != "amd64":
-                    print(f"Skipping {p} on {a} because it is currently not supported")
+                if is_unsupported_ali_combination(p, a, v):
+                    print(f"Skipping {p} {v} on {a} because it is currently not supported")
                 else:
                     fname = construct_full_image_name(p, f"gardener_prod{v}", a, version, commitish)
                     try:
