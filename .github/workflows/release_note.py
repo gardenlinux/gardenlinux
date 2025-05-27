@@ -146,14 +146,19 @@ def download_all_singles(version, commitish):
     for a in arches:
         for p in cloud_fullname_dict:
             for v in image_variants:
-                fname = construct_full_image_name(p, f"gardener_prod{v}", a, version, commitish)
-                try:
-                    manifests.append(download_meta_single_manifest(GARDENLINUX_GITHUB_RELEASE_BUCKET_NAME, "meta/singles", fname, "s3_downloads/"))
-                except Exception as e:
-                    print(f"Failed to get manifest. Error: {e}")
-                    print(f"\tfname: meta/singles/{fname}")
-                    # Abort generation of Release Notes - Let the CI fail
-                    sys.exit(1)
+                # Skip "ali" platform for architectures other than "amd64" as it is currently not supported
+                # https://github.com/gardenlinux/gardenlinux/issues/3050
+                if p == "ali" and a != "amd64":
+                    print(f"Skipping {p} on {a} because it is currently not supported")
+                else:
+                    fname = construct_full_image_name(p, f"gardener_prod{v}", a, version, commitish)
+                    try:
+                        manifests.append(download_meta_single_manifest(GARDENLINUX_GITHUB_RELEASE_BUCKET_NAME, "meta/singles", fname, "s3_downloads/"))
+                    except Exception as e:
+                        print(f"Failed to get manifest. Error: {e}")
+                        print(f"\tfname: meta/singles/{fname}")
+                        # Abort generation of Release Notes - Let the CI fail
+                        sys.exit(1)
 
     return manifests
 
