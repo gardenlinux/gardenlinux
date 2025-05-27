@@ -28,8 +28,8 @@ function delete {
 }
 
 function upload {
-	[ $# = 1 ]
-	curl -X POST -H "Content-Type: application/octet-stream" "https://uploads.github.com/repos/$repo/$1" --data-binary @-
+	[ $# = 2 ]
+	curl -X POST -H "Content-Type: application/octet-stream" "https://uploads.github.com/repos/$repo/$1" --data-binary "$2"
 }
 
 action="$1"; shift
@@ -62,7 +62,7 @@ case "$action" in
 
 		while read asset_file; do
 			asset_name="$(basename "$asset_file")"
-			upload "releases/$release/assets?name=$asset_name" < "$asset_file" > /dev/null
+			upload "releases/$release/assets?name=$asset_name" "$asset_file" > /dev/null
 			echo "uploaded $asset_file to $release"
 		done
 
