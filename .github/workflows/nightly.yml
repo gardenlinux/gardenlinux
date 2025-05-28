@@ -23,10 +23,10 @@ jobs:
       default_modifier: "-gardener_prod"
       use_kms: ${{ inputs.use_kms != null && inputs.use_kms || true }}        
     secrets:
-      secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
       aws_region: ${{ secrets.AWS_REGION }}
-      aws_kms_role: ${{ secrets.SECUREBOOT_DB_IAM_ROLE }}
+      aws_kms_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
       aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
+      secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
   build_container:
     name: build container
     uses: ./.github/workflows/build_container.yml
