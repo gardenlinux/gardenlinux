@@ -43,6 +43,8 @@ jobs:
       aws_region: ${{ secrets.aws_region }}
       azure_subscription_id: ${{ secrets.az_subscription_id }}
       AZURE_CONFIG_DIR: /tmp/azure_config_dir
+      # https://github.com/Azure/azure-cli/issues/31419
+      AZURE_CORE_USE_MSAL_HTTP_CACHE: false
       TARGET_ARCHITECTURE: ${{ matrix.arch }}
       artifact_dir: /tmp/gardenlinux-build-artifacts
     runs-on: ubuntu-latest
