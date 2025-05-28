@@ -16,7 +16,7 @@ def test_gl_is_support_distro(client):
 
 def test_no_man(client):
     """Test that no man files are present"""
-    (exit_code, _, error) = client.execute_command("man ls", disable_sudo=True)
+    (exit_code, _, error) = client.execute_command("man ls")
     assert exit_code == 127, '"man" should not be installed'
     assert "man: command not found" in error
 

@@ -456,8 +456,7 @@ class RemoteClient:
         command: str,
         timeout: int = 30,
         quiet: bool = False,
-        disable_sudo: bool = False,
-        force_sudo: bool = False
+        sudo: bool = False
     ) -> tuple[int, str, str]:
         """
         Execute commands on remote host
@@ -469,8 +468,8 @@ class RemoteClient:
         """
         if not quiet:
             logger.info(f"$ {command.rstrip()}")
-        if (self._default_to_sudo and not disable_sudo) or force_sudo:
-            command = f'sudo /bin/bash -c "{command.replace('"', '\"')}"'
+        if self._default_to_sudo or sudo:
+            command = f"sudo /bin/bash -c '{command.replace("'", "'\"'\"'")}'"
 
         _, stdout, stderr = self.client.exec_command(command=command, timeout=timeout)
         exit_status = stdout.channel.recv_exit_status()

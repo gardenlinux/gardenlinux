@@ -21,6 +21,6 @@ def test_password_shadow(client, command, expected_exit_code, expected_output):
     imply we execute read-only.
     """
     password_shadow(client)
-    exit_code, output = execute_remote_command(client, command, skip_error=True, force_sudo=True)
+    exit_code, output = execute_remote_command(client, command, skip_error=True, sudo=True)
     assert output == ""
     assert exit_code == expected_exit_code
