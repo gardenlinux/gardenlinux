@@ -137,6 +137,13 @@ def download_meta_single_manifest(bucket, bucket_path, image_name, dest_path):
     return f"{dest_path}/{image_name}"
 
 
+def is_unsupported_ali_combination(platform, architecture, variant):
+    """
+    Determines if the given combination of platform, architecture, and variant
+    is unsupported for the 'ali' platform.
+    """
+    return platform == "ali" and (architecture == "arm64" or variant != "")
+
 def download_all_singles(version, commitish):
     if commitish == None:
         raise Exception("Commitish is not set")
@@ -146,14 +153,19 @@ def download_all_singles(version, commitish):
     for a in arches:
         for p in cloud_fullname_dict:
             for v in image_variants:
-                fname = construct_full_image_name(p, f"gardener_prod{v}", a, version, commitish)
-                try:
-                    manifests.append(download_meta_single_manifest(GARDENLINUX_GITHUB_RELEASE_BUCKET_NAME, "meta/singles", fname, "s3_downloads/"))
-                except Exception as e:
-                    print(f"Failed to get manifest. Error: {e}")
-                    print(f"\tfname: meta/singles/{fname}")
-                    # Abort generation of Release Notes - Let the CI fail
-                    sys.exit(1)
+                # Skip "ali" platform for architectures other than "amd64" as it is currently not supported
+                # https://github.com/gardenlinux/gardenlinux/issues/3050
+                if is_unsupported_ali_combination(p, a, v):
+                    print(f"Skipping {p} {v} on {a} because it is currently not supported")
+                else:
+                    fname = construct_full_image_name(p, f"gardener_prod{v}", a, version, commitish)
+                    try:
+                        manifests.append(download_meta_single_manifest(GARDENLINUX_GITHUB_RELEASE_BUCKET_NAME, "meta/singles", fname, "s3_downloads/"))
+                    except Exception as e:
+                        print(f"Failed to get manifest. Error: {e}")
+                        print(f"\tfname: meta/singles/{fname}")
+                        # Abort generation of Release Notes - Let the CI fail
+                        sys.exit(1)
 
     return manifests
 

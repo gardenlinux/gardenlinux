@@ -109,7 +109,6 @@ jobs:
           - gdch-gardener_prod_usi
           - aws-gardener_prod_usi
           - azure-gardener_prod_usi
-          - ali-gardener_prod_usi
           - openstack-gardener_prod_usi
           - openstackbaremetal-gardener_prod_usi
           - vmware-gardener_prod_usi
@@ -120,7 +119,6 @@ jobs:
           - gdch-gardener_prod_tpm2_trustedboot
           - aws-gardener_prod_tpm2_trustedboot
           - azure-gardener_prod_tpm2_trustedboot
-          - ali-gardener_prod_tpm2_trustedboot
           - openstack-gardener_prod_tpm2_trustedboot
           - openstackbaremetal-gardener_prod_tpm2_trustedboot
           - vmware-gardener_prod_tpm2_trustedboot
