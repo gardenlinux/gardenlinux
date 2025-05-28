@@ -6,13 +6,14 @@ cname="${@: -1}"
 
 configFile="gcp_test_config.yaml"
 containerName="ghcr.io/gardenlinux/gardenlinux/integration-test:today"
-artifact_dir=".build"
+artifact_dir="/tmp/gardenlinux-build-artifacts"
 
-mkdir -p "${artifact_dir}"
-
-if [ -d "/tmp/gardenlinux-build-artifacts" ]; then
+if [ -f ".build/${cname}.gcpimage.tar.gz" ]; then
+    mkdir -p "${artifact_dir}"
+    cp .build/* "${artifact_dir}"
+else
     pushd "$artifact_dir" || exit 1
-    tar -xzf "/tmp/gardenlinux-build-artifacts/$cname.tar.gz" "$cname.gcpimage.tar.gz"
+    tar -xzf "$cname.tar.gz" "$cname.gcpimage.tar.gz"
     popd || exit 1
 fi
 
