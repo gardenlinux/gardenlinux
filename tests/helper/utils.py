@@ -77,7 +77,7 @@ class AptUpdate():
         if not hasattr(cls, 'instance'):
             cls.instance = super(AptUpdate, cls).__new__(cls)
 
-        (exit_code, output, error) = client.execute_command("apt-get update")
+        (exit_code, output, error) = client.execute_command("apt-get update", sudo=True)
         assert exit_code == 0, f"no {error=} expected"
 
         return cls.instance
@@ -227,8 +227,10 @@ def execute_local_command(cmd):
     return rc, out
 
 
-def execute_remote_command(client, cmd, skip_error=False):
+def execute_remote_command(client, cmd, skip_error=False, sudo=False):
     """ Run remote command on test platform """
+    if sudo:
+        cmd = f"if [ $(id -u) = 0 ]; then {cmd}; elif [ $(which sudo) ]; then sudo /bin/bash -c '{cmd.replace("'", "'\"'\"'")}'; else su -l -c '{cmd.replace("'", "'\"'\"'")}'; fi"
     (exit_code, output, error) = client.execute_command(
         cmd, quiet=True)
     if not skip_error:
@@ -266,16 +268,17 @@ def install_package_deb(client, pkg):
     # repository. We may add a native Debian repo to the temp chroot for
     # further unit testing
     (exit_code, output, error) = client.execute_command(
-        "grep 'https://cdn-aws.deb.debian.org/debian bookworm main' /etc/apt/sources.list", quiet=True)
+        "grep 'https://cdn-aws.deb.debian.org/debian bookworm main' /etc/apt/sources.list", quiet=True, sudo=True)
     if exit_code > 0:
        (exit_code, output, error) = client.execute_command(
-           "echo 'deb https://cdn-aws.deb.debian.org/debian bookworm main' >> /etc/apt/sources.list && apt-get update", quiet=True)
+           "echo 'deb https://cdn-aws.deb.debian.org/debian bookworm main' >> /etc/apt/sources.list && apt-get update", quiet=True, sudo=True)
        assert exit_code == 0, f"Could not add native Debian repository."
 
     # Finally, install the package
     (exit_code, output, error) = client.execute_command(
-        f"apt-get install -y --no-install-recommends {pkg}", quiet=True)
+        f"apt-get install -y --no-install-recommends {pkg}", quiet=True, sudo=True)
     assert exit_code == 0, f"Could not install Debian Package: {error}"
+
 
 def check_kernel_config_exact(client, kernel_config_path, kernel_config_item):
     """ Checks if the given kernel_config_item is set in kernel_config_path """

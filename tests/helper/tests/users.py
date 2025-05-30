@@ -2,6 +2,13 @@ import helper.utils as utils
 import helper.tests.groups as groups
 
 def users(client, additional_user = "", additional_sudo_users=[]):
+    # Add the user running the tests to the allowed users
+    (exit_code, output, error) = client.execute_command(
+        "whoami", quiet=True)
+    assert exit_code == 0, f"no {error=} expected"
+    test_user = output[:-1]
+    additional_sudo_users.append(test_user)
+
     # Get content from /etc/passwd
     (exit_code, output, error) = client.execute_command(
         "getent passwd", quiet=True)
@@ -16,10 +23,10 @@ def users(client, additional_user = "", additional_sudo_users=[]):
             gid = int(line[3])
             shell = line[6]
             # There should NOT be any user present
-            # except of 'dev' from dev feature or 'nobody' from nfs
+            # except of 'dev' from dev feature, 'nobody' from nfs or the user running the tests
             # https://github.com/gardenlinux/gardenlinux/issues/854
             if uid >= 1000:
-                assert user in ["dev", "nobody", additional_user], \
+                assert user in ["dev", "nobody", test_user, additional_user], \
                     f"Unexpected user account found in /etc/passwd: {user}"
 
             # Serviceaccounts should NOT have a valid shell
@@ -56,7 +63,7 @@ def users(client, additional_user = "", additional_sudo_users=[]):
          "ls /home/", quiet=True)
     assert exit_code == 0, f"no {error=} expected"
 
-    permitted_homes = [ '', additional_user ]
+    permitted_homes = [ '', test_user, additional_user ]
     discovered_homes = []
     for line in output.split('\n'):
         if line not in permitted_homes:

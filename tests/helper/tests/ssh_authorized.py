@@ -29,7 +29,7 @@ def ssh_authorized(client, testconfig, provisioner_chroot):
                         authorized_keys_file.read()).hexdigest()
 
     (exit_code, output, _) = client.execute_command(
-        f"sha256sum /root/.ssh/test_authorized_keys", quiet=True)
+        f"sha256sum $HOME/.ssh/test_authorized_keys", quiet=True)
     assert exit_code == 0, f"no {error=} expected"
     
     assert sha256_local == output.split(' ', 1)[0], ("the authorized_keys " +

@@ -3,7 +3,7 @@ import re
 from helper.sshclient import RemoteClient
 
 def test_random(client, non_metal):
-    (exit_code, output, error) = client.execute_command("time dd if=/dev/random of=/dev/null bs=8k count=1000 iflag=fullblock", disable_sudo=True)
+    (exit_code, output, error) = client.execute_command("time dd if=/dev/random of=/dev/null bs=8k count=1000 iflag=fullblock")
     """ Output should be like this:
 # time dd if=/dev/random of=/dev/null bs=8k count=1000 iflag=fullblock
 1000+0 records in
@@ -25,7 +25,7 @@ sys     0m0.042s
     duration = (int(m.group(1)) * 60) + int(m.group(2))
     assert duration == 0, "runtime of test expected to be below one second %s" % m.group(1)
 
-    (exit_code, output, error) = client.execute_command("time rngtest --blockcount=9000  < /dev/random", disable_sudo=True)
+    (exit_code, output, error) = client.execute_command("time rngtest --blockcount=9000  < /dev/random")
     """ Output should be like this:
 # time rngtest --blockcount=9000  < /dev/random
 rngtest 5
