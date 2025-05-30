@@ -70,12 +70,20 @@ jobs:
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
-      - name: Set CNAME
+      - name: Determine CNAME (amd64)
+        id: cname_amd64
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@main
+        with:
+          flags: --cname container-amd64 cname
+      - name: Determine CNAME (ard64)
+        id: cname_arm64
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@main
+        with:
+          flags: --cname container-arm64 cname
+      - name: Set CNAMEs
         run: |
-          cname_amd64="$(./build --resolve-cname container-amd64)"
-          cname_arm64="$(./build --resolve-cname container-arm64)"
-          echo "CNAME_AMD64=$cname_amd64" | tee -a "$GITHUB_ENV"
-          echo "CNAME_ARM64=$cname_arm64" | tee -a "$GITHUB_ENV"
+          echo "CNAME_AMD64=${{ steps.cname_amd64.outputs.result }}" | tee -a "$GITHUB_ENV"
+          echo "CNAME_ARM64=${{ steps.cname_arm64.outputs.result }}" | tee -a "$GITHUB_ENV"
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
           name: build-container-amd64
@@ -230,10 +238,14 @@ jobs:
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
+      - name: Determine CNAME
+        id: cname
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@main
+        with:
+          flags: --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname
       - name: Set CNAME
         run: |
-          cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
-          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
+          echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
@@ -311,10 +323,14 @@ jobs:
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
+      - name: Determine CNAME
+        id: cname
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@main
+        with:
+          flags: --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname
       - name: Set CNAME
         run: |
-          cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
-          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
+          echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
       - name: Cache OCI manifests
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:

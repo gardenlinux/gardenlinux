@@ -115,10 +115,14 @@ jobs:
         run: |
           echo "${{ needs.workflow_data.outputs.commit_id }}" | tee COMMIT
           echo "${{ needs.workflow_data.outputs.version }}" | tee VERSION
+      - name: Determine CNAME
+        id: cname
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@main
+        with:
+          flags: --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname
       - name: Set CNAME
         run: |
-          cname="$(./build --resolve-cname ${{ matrix.flavor }}-${{ matrix.arch }})"
-          echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
+          echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
       - name: Load flavor build artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:

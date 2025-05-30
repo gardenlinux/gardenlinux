@@ -18,8 +18,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    env:
-      CNAME: ''
     permissions:
       id-token: write
     steps:
