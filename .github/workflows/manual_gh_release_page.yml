@@ -19,6 +19,8 @@ on:
         required: true
         type: string
         description: "Full commitish"
+      image_variants:
+        default: "_usi _tpm2_trustedboot"
 jobs:
   # Create new version in GLVD so it has the package list of the new release
   # This is needed for the automatic changelog generation
@@ -72,7 +74,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
+          .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")" --image-variants "${{ inputs.image_variants }}"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         with:
           name: release
