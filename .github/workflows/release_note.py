@@ -35,7 +35,7 @@ cloud_fullname_dict = {
 
 # https://github.com/gardenlinux/gardenlinux/issues/3044
 # Empty string is the 'legacy' variant with traditional root fs and still needed/supported
-image_variants = ['', '_usi', '_tpm2_trustedboot']
+image_variants = ['']
 
 def _ali_release_note(published_image_metadata):
     output = ""
@@ -412,6 +412,7 @@ def main():
     create_parser.add_argument('--tag', required=True)
     create_parser.add_argument('--commit', required=True)
     create_parser.add_argument('--dry-run', action='store_true', default=False)
+    create_parser.add_argument('--image-variants', default="_usi _tpm2_trustedboot")
 
     upload_parser = subparsers.add_parser('upload')
     upload_parser.add_argument('--release_id', required=True)
@@ -422,6 +423,7 @@ def main():
     args = parser.parse_args()
 
     if args.command == 'create':
+        image_variants.extend(args.image_variants.split())
         body = create_github_release_notes(args.tag, args.commit, args.dry_run)
         if not args.dry_run:
             release_id = create_github_release(args.owner, args.repo, args.tag, args.commit, body)
@@ -451,4 +453,3 @@ if __name__ == "__main__":
 #     print(release_info)
 # except Exception as e:
 #     print(f"Error occurred: {e}")
-
