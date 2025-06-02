@@ -332,6 +332,7 @@ class Tofu:
             "aws": {"amd64": "m5.large", "arm64": "m6g.medium"},
             "azure": {"amd64": "Standard_D4_v4", "arm64": "Standard_D4ps_v5"},
             "gcp": {"amd64": "n1-standard-2", "arm64": "t2a-standard-2"},
+            "openstack": {"amd64": "SCS-2V-4-20s", "arm64": "SCS-2V-4-20s"},
         }
 
         # Define image file extensions for different platforms
@@ -340,6 +341,7 @@ class Tofu:
             "aws": "raw",
             "azure": "vhd",
             "gcp": "gcpimage.tar.gz",
+            "openstack": "raw",
         }
 
         # Generate cname if not provided
