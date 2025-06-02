@@ -29,7 +29,7 @@ function delete {
 
 function upload {
 	[ $# = 2 ]
-	curl -X POST -H "Content-Type: application/octet-stream" "https://uploads.github.com/repos/$repo/$1" --data-binary @"$2"
+	curl -X POST -H "Content-Type: application/octet-stream" "https://uploads.github.com/repos/$repo/$1" --upload-file "$2"
 }
 
 action="$1"; shift

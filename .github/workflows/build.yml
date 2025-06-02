@@ -1,7 +1,4 @@
 name: build
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-build
-  cancel-in-progress: true
 on:
   workflow_call:
     inputs:

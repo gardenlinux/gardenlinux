@@ -154,24 +154,25 @@ jobs:
             core.exportVariable("AWS_SECRET_ACCESS_KEY", "${{ steps.auth_aws.outputs.aws-secret-access-key }}");
             core.setSecret("${{ steps.auth_aws.outputs.aws-session-token }}");
             core.exportVariable("AWS_SESSION_TOKEN", "${{ steps.auth_aws.outputs.aws-session-token }}");
-      - name: 'Authenticate to Azure'
-        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # pin@v1
+      - id: 'auth_azure'
+        name: 'Authenticate to Azure'
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # pin@v1
         with:
-          client-id: ${{ secrets.az_client_id }}
-          tenant-id: ${{ secrets.az_tenant_id }}
-          subscription-id: ${{ secrets.az_subscription_id }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Set Azure platform-test environment
         uses: actions/github-script@v7
         with:
           script: |
             core.exportVariable("ARM_USE_OIDC", "true");
 
-            core.setSecret("${{ secrets.az_client_id }}");
-            core.exportVariable("ARM_CLIENT_ID", "${{ secrets.az_client_id }}");
-            core.setSecret("${{ secrets.az_subscription_id }}");
-            core.exportVariable("ARM_SUBSCRIPTION_ID", "${{ secrets.az_subscription_id }}");
-            core.setSecret("${{ secrets.az_tenant_id }}");
-            core.exportVariable("ARM_TENANT_ID", "${{ secrets.az_tenant_id }}");
+            core.setSecret("${{ secrets.AZURE_CLIENT_ID }}");
+            core.exportVariable("ARM_CLIENT_ID", "${{ secrets.AZURE_CLIENT_ID }}");
+            core.setSecret("${{ secrets.AZURE_SUBSCRIPTION_ID }}");
+            core.exportVariable("ARM_SUBSCRIPTION_ID", "${{ secrets.AZURE_SUBSCRIPTION_ID }}");
+            core.setSecret("${{ secrets.AZURE_TENANT_ID }}");
+            core.exportVariable("ARM_TENANT_ID", "${{ secrets.AZURE_TENANT_ID }}");
       - name: 'Create ali cloud credential file'
         uses: actions/github-script@v7
         with:
