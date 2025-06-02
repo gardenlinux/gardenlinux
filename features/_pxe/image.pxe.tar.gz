@@ -89,7 +89,8 @@ datefudge -s "@$BUILDER_TIMESTAMP" sbsign --cert "$cert_base.crt" "${key_params[
 umount "$chroot_dir"
 rmdir "$chroot_dir"
 
-tar --create --mtime="@$BUILDER_TIMESTAMP" --sort name --numeric-owner --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime vmlinuz initrd root.squashfs boot.efi | gzip > "$output"
+mv tmp_initrd initrd.unified
+tar --create --mtime="@$BUILDER_TIMESTAMP" --sort name --numeric-owner --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime vmlinuz initrd root.squashfs boot.efi initrd.unified | gzip > "$output"
 
 popd > /dev/null
 rm -rf "$dir"
