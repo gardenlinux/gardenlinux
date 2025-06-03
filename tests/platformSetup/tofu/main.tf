@@ -199,7 +199,9 @@ module "aws" {
 module "azure" {
   for_each = { for config in local.module_config : config.name => config if config.platform == "azure" }
 
+  # to disable azure, switch to disabled module
   source = "./modules/azure"
+  # source = "./modules/azure_disabled"
 
   arch           = each.value.arch
   features       = each.value.features
