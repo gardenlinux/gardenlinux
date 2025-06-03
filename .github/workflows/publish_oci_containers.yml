@@ -54,7 +54,7 @@ jobs:
             const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
 
             core.setOutput("environment", gitHubLib.getGitHubSigningEnvironmentFromTarget("${{ inputs.target }}"));
-            const repository = gitHubLib.getGHCRRepositoryFromTarget("${{ inputs.target }}"));
+            const repository = gitHubLib.getGHCRRepositoryFromTarget("${{ inputs.target }}");
 
             if (repository == "") {
               core.setFailed("Invalid release target ${{ inputs.target }}");
