@@ -30,6 +30,19 @@ endif
 GARDENLINUX_BUILD_CRE ?= podman
 KVM_DEVICE := $(shell if [ -e /dev/kvm ] && [ -w /dev/kvm ]; then echo "--device=/dev/kvm"; else echo ""; fi)
 
+# OpenTofu provider dummy variable initialization
+ifeq ($(origin OS_CLOUD), undefined)
+ifeq ($(origin OS_AUTH_URL), undefined)
+OS_AUTH_URL := http://localhost:3000
+endif
+endif
+ifeq ($(origin TF_VAR_gcp_project_id), undefined)
+TF_VAR_gcp_project_id := dummy-gcp-project-id
+endif
+ifeq ($(origin ARM_SUBSCRIPTION_ID), undefined)
+ARM_SUBSCRIPTION_ID := xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+endif
+
 # Generate FLAVORS variable by running the flavor parser
 FLAVORS_IMAGE := $(shell $(ROOT_DIR)/bin/flavors_parse.py --exclude "bare-*" --build)
 FLAVORS_PUBLIC_CLOUD := $(shell $(ROOT_DIR)/bin/flavors_parse.py --include-only "ali-*" --include-only "aws-*" --include-only "azure-*" --include-only "gcp-*" --include-only "openstack-*")
@@ -40,7 +53,7 @@ CRE_CMD_privileged = --privileged
 # privileged is required for virt-copy-in/guestfish
 CRE_CMD_kvm = $(CRE_CMD_BASE) $(CRE_CMD_privileged) $(KVM_DEVICE)
 CRE_CMD_kvm_image = $(GL_REGISTRY)/gardenlinux/platform-test-kvm:$(GL_VERSION)
-CRE_CMD_tofu = $(CRE_CMD_BASE) -e TF_* -v ~/.aliyun:/root/.aliyun -e ALIBABA_* -v ~/.aws:/root/.aws -e AWS_* -v ~/.azure:/root/.azure -e azure_* -e ARM_* -e ACTIONS_* -v ~/.config/gcloud:/root/.config/gcloud -e GOOGLE_* -e CLOUDSDK_* --rm -v ~/.ssh:/root/.ssh:ro $(GL_REGISTRY)/gardenlinux/platform-test-tofu:$(GL_VERSION)
+CRE_CMD_tofu = $(CRE_CMD_BASE) -e TF_* -v ~/.aliyun:/root/.aliyun -e ALIBABA_* -v ~/.aws:/root/.aws -e AWS_* -v ~/.azure:/root/.azure -e azure_* -e ARM_* -e ACTIONS_* -v ~/.config/gcloud:/root/.config/gcloud -e GOOGLE_* -e CLOUDSDK_* -e OS_* --rm -v ~/.ssh:/root/.ssh:ro $(GL_REGISTRY)/gardenlinux/platform-test-tofu:$(GL_VERSION)
 MKDIRS = ~/.aliyun ~/.aws ~/.azure ~/.config/gcloud
 
 .PHONY: all
@@ -78,6 +91,7 @@ help:
 $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 	$(eval \
 		$(flavor)-tofu-config: ; \
+		export OS_AUTH_URL=$(OS_AUTH_URL) TF_VAR_gcp_project_id=$(TF_VAR_gcp_project_id) ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID) && \
 		mkdir -p $(MKDIRS) && \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
@@ -85,6 +99,7 @@ $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 	) \
 	$(eval \
 		$(flavor)-tofu-plan: ; \
+		export OS_AUTH_URL=$(OS_AUTH_URL) TF_VAR_gcp_project_id=$(TF_VAR_gcp_project_id) ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID) && \
 		mkdir -p $(MKDIRS) && \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
@@ -95,6 +110,7 @@ $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 	) \
 	$(eval \
 		$(flavor)-tofu-apply: ; \
+		export OS_AUTH_URL=$(OS_AUTH_URL) TF_VAR_gcp_project_id=$(TF_VAR_gcp_project_id) ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID) && \
 		mkdir -p $(MKDIRS) && \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
@@ -106,6 +122,7 @@ $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 	) \
 	$(eval \
 		$(flavor)-tofu-show: ; \
+		export OS_AUTH_URL=$(OS_AUTH_URL) TF_VAR_gcp_project_id=$(TF_VAR_gcp_project_id) ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID) && \
 		mkdir -p $(MKDIRS) && \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
@@ -116,6 +133,7 @@ $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 	) \
 	$(eval \
 		$(flavor)-tofu-login: ; \
+		export OS_AUTH_URL=$(OS_AUTH_URL) TF_VAR_gcp_project_id=$(TF_VAR_gcp_project_id) ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID) && \
 		mkdir -p $(MKDIRS) && \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
@@ -127,6 +145,7 @@ $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 	) \
 	$(eval \
 		$(flavor)-tofu-destroy: ; \
+		export OS_AUTH_URL=$(OS_AUTH_URL) TF_VAR_gcp_project_id=$(TF_VAR_gcp_project_id) ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID) && \
 		mkdir -p $(MKDIRS) && \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
