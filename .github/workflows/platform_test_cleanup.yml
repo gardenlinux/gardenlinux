@@ -127,6 +127,21 @@ jobs:
             core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_ID", aliCredentials.access_key_id);
             core.setSecret(aliCredentials.access_key_secret);
             core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_SECRET", aliCredentials.access_key_secret);
+      - name: Set additional OpenTofu platform-test variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tfEncryption = Buffer.from("${{ secrets.TF_ENCRYPTION }}", 'base64').toString('utf-8');
+            core.setSecret(tfEncryption);
+            core.exportVariable("TF_ENCRYPTION", tfEncryption);
+
+            core.setSecret("${{ secrets.GCP_PROJECT }}");
+            core.exportVariable("TF_VAR_gcp_project_id", "${{ secrets.GCP_PROJECT }}");
+
+            core.exportVariable("OS_AUTH_URL", "http://localhost:3000");
+
+            core.exportVariable("WORKSPACE", "${{ matrix.workspace }}");
+            core.exportVariable("FLAVOR", "${{ matrix.workspace }}".replace(/-........$/, ""));
       - name: Setup Environment
         run: |
           # ssh key generation (if missing)
@@ -138,13 +153,8 @@ jobs:
           mkdir -p ~/.aws ~/.azure ~/.aliyun ~/.config/gcloud
       - name: Destroy OpenTofu Resources and delete workspaces
         run: |
-          export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.TF_ENCRYPTION }})"
-          export TF_VAR_gcp_project_id=${{ secrets.GCP_PROJECT }}
-
-          workspace="${{ matrix.workspace }}"
-          flavor="${workspace%-????????}"
-          echo "Processing workspace: $workspace"
-          echo "flavor: $flavor"
+          echo "Processing workspace: ${WORKSPACE}"
+          echo "Processing flavor: ${FLAVOR}"
 
           podman run --rm \
             -v ${PWD}:/gardenlinux \
@@ -154,13 +164,14 @@ jobs:
             -v ~/.aws:/root/.aws -e "AWS_*" \
             -v ~/.azure:/root/.azure -e "azure_*" -e "ARM_*" -e "ACTIONS_*" \
             -v ~/.config/gcloud:/root/.config/gcloud -e "GOOGLE_*" -e "CLOUDSDK_*" \
+            -e "OS_*" \
             ${IMAGE} \
             bash -c "
               cd /gardenlinux/tests/platformSetup/tofu && \
               if [ ! -f backend.tf ]; then cp backend.tf.github backend.tf; tofu init; fi && \
-              ../platformSetup.py --provisioner tofu --test-prefix gh-actions --flavor ${flavor} --create-tfvars && \
-              tofu workspace select ${workspace} && \
-              tofu destroy -var-file variables.${flavor}.tfvars -auto-approve && \
+              ../platformSetup.py --provisioner tofu --test-prefix gh-actions --flavor ${FLAVOR} --create-tfvars && \
+              tofu workspace select ${WORKSPACE} && \
+              tofu destroy -var-file variables.${FLAVOR}.tfvars -auto-approve && \
               tofu workspace select default && \
-              tofu workspace delete ${workspace}
-            "
+              tofu workspace delete ${WORKSPACE}
+            "            
