@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+networkx = "*"
+pyyaml = "*"
+requests = "*"
+jsonschema = "*"
+python-gardenlinux-lib = {ref = "0.7.0", git = "https://github.com/gardenlinux/python-gardenlinux-lib.git"}
+
+[dev-packages]
+
+[requires]
+python_version = "3.13"

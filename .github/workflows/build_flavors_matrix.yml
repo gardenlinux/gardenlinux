@@ -24,12 +24,14 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@efcd121f279ce00996821f2aaba615ab79c2ced8 # pin@0.7.0
       - id: matrix
         run: |
           MATRIX='${{ inputs.flavors_matrix }}'
 
           if [[ $(echo "${MATRIX}" | jq -r 'type') != 'object' ]]; then
-            FLAVORS=$(./bin/flavors_parse.py ${{ inputs.flags }})
+            FLAVORS=$(gl-flavors-parse ${{ inputs.flags }})
             MATRIX=$(jq -nc \
               --argjson flavors "$(echo $FLAVORS)" \
               '{
