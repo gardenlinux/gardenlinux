@@ -47,7 +47,7 @@ jobs:
           role-to-assume: ${{ secrets.aws_role }}
           role-session-name: ${{ secrets.aws_session }}
           aws-region: ${{ secrets.aws_region }}
-          role-duration-seconds: 14400
+          role-duration-seconds: 14400 # 4 hours
       - name: Set flavor version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
