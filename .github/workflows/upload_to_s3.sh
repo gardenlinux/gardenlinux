@@ -68,6 +68,10 @@ cat << EOF >> "$meta_yml"
 EOF
 object_key="objects/$file"
 
+aws configure set default.s3.multipart_threshold 100MB
+aws configure set default.s3.multipart_chunksize 100MB
+aws configure set default.s3.max_concurrent_requests 16
+
 aws s3api put-object --body "$file" --bucket "$bucket" --key "$object_key" \
   --content-md5 "$md5bin" --checksum-algorithm sha256 --checksum-sha256 "$sha256bin" \
   --tagging "md5sum=$md5sum&sha256sum=$sha256sum&platform=$platform&architecture=$arch&version=$GARDENLINUX_VERSION&committish=$GARDENLINUX_COMMIT_ID_LONG"
