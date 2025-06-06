@@ -78,7 +78,7 @@ jobs:
         run: make ${{ inputs.flavor }}-${{ inputs.arch }}-build
       - name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@main
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@efcd121f279ce00996821f2aaba615ab79c2ced8 # pin@0.7.0
         with:
           flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
       - name: Set CNAME
