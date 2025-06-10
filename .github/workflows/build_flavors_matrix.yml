@@ -25,19 +25,8 @@ jobs:
         with:
           submodules: true
       - id: matrix
-        run: |
-          MATRIX='${{ inputs.flavors_matrix }}'
-
-          if [[ $(echo "${MATRIX}" | jq -r 'type') != 'object' ]]; then
-            FLAVORS=$(./bin/flavors_parse.py ${{ inputs.flags }})
-            MATRIX=$(jq -nc \
-              --argjson flavors "$(echo $FLAVORS)" \
-              '{
-                include: (
-                  $flavors | reduce (to_entries[]) as $item ([]; . + ($item.value | map({"arch": $item.key, "flavor": .})))
-                )
-              }'
-            )
-          fi
-
-          echo "matrix=$MATRIX" | tee -a $GITHUB_OUTPUT
+        name: Generate flavors matrix
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@269fcc4e7c7cd2e1995b02c1646673d030e496e6 # pin@0.7.0
+        with:
+          flags: ${{ inputs.flags }}
+          flavors_matrix: ${{ inputs.flavors_matrix }}

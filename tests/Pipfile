@@ -5,7 +5,6 @@ name = "pypi"
 
 [packages]
 pytest = "*"
-python-gardenlinux-lib = { git = 'https://github.com/gardenlinux/python-gardenlinux-lib.git', ref = '0.6.0', editable = true }
 boto3 = "*"
 paramiko = "*"
 python-novaclient = "*"
@@ -16,11 +15,11 @@ dacite = "*"
 cffi = "*"
 pytest-json-report = "*"
 pytest-rerunfailures = "*"
+gardenlinux = {editable = true, ref = "0.7.0", git = "https://github.com/gardenlinux/python-gardenlinux-lib.git"}
 
 [dev-packages]
 pytest = "*"
 flake8 = "*"
-# black = "*"
 pylint = "*"
 
 [ali-packages]
@@ -53,7 +52,6 @@ google-cloud-storage = "*"
 [firecracker-packages]
 
 [kvm-packages]
-# libvirt-python = "*" # needed to run OpenTofu provider dmacvicar/terraform-provider-libvirt
 
 [requires]
 python_version = "3.13"
