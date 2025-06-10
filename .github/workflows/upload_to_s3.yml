@@ -54,7 +54,7 @@ jobs:
           echo "${{ inputs.version }}" | tee VERSION
       - name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@main
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@269fcc4e7c7cd2e1995b02c1646673d030e496e6 # pin@0.7.0
         with:
           flags: --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname
       - name: Set CNAME

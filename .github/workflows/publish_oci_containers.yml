@@ -33,8 +33,6 @@ on:
         required: true
       oci_kms_arn:
         required: true
-env:
-  GLCLI_VERSION: 0.6.5
 jobs:
   determine_environment:
     name: Determine release environment and repository for ${{ inputs.target }}
@@ -84,12 +82,12 @@ jobs:
           echo "${{ inputs.version }}" | tee VERSION
       - name: Determine CNAME (amd64)
         id: cname_amd64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@main
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@269fcc4e7c7cd2e1995b02c1646673d030e496e6 # pin@0.7.0
         with:
           flags: --cname container-amd64 cname
       - name: Determine CNAME (ard64)
         id: cname_arm64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@main
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@269fcc4e7c7cd2e1995b02c1646673d030e496e6 # pin@0.7.0
         with:
           flags: --cname container-arm64 cname
       - name: Set CNAMEs
@@ -252,7 +250,7 @@ jobs:
           echo "${{ inputs.version }}" | tee VERSION
       - name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@main
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@269fcc4e7c7cd2e1995b02c1646673d030e496e6 # pin@0.7.0
         with:
           flags: --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname
       - name: Set CNAME
@@ -267,45 +265,27 @@ jobs:
         run: |
           mkdir "$CNAME"
           tar -C "$CNAME" -xzf "$CNAME.tar.gz"
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Install glcli util
-        run: |
-          # @TODO: Add pyproject.toml for pip install git+https://github.com/gardenlinux/python-gardenlinux-cli.git@${{ env.GLCLI_VERSION }}
-          git clone --depth 1 --branch ${{ env.GLCLI_VERSION }} https://github.com/gardenlinux/python-gardenlinux-cli.git
-          mv python-gardenlinux-cli /opt/glcli
-          pip install -r /opt/glcli/requirements.txt
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@269fcc4e7c7cd2e1995b02c1646673d030e496e6 # pin@0.7.0
       - name: Install cosign
         uses: sigstore/cosign-installer@v3.8.2
         with:
           cosign-release: 'v2.4.1'
       - name: Push using the glcli util
         run: |
-          max_retries=3
-          retry_count=0
-          exit_code=0
-          until [ $retry_count -ge $max_retries ]; do
-            if output=$(GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py push-manifest --dir "$CNAME" --container ${{ needs.determine_environment.outputs.repository }} --arch ${{ matrix.arch }} --version ${{ inputs.version }} --cname "$CNAME" --cosign_file digest.txt --manifest_file "oci_manifest_entry_$CNAME.json" 2>&1); then
-              cat digest.txt
-              exit 0
-            elif echo "$output" | grep -q "Bad Gateway"; then
-              retry_count=$((retry_count+1))
-              exit_code=1
-              echo "Bad Gateway detected, retry $retry_count/$max_retries"
-              sleep 10
-            else
-              echo "Fatal error: $output"
-              exit $exit_code
-            fi
-          done
-          if [ $exit_code -ne 0 ]; then
-            echo "Failed after $max_retries retries"
-            exit 1
-          fi
+          export GL_CLI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          export GL_CLI_REGISTRY_USERNAME=${{ github.repository_owner }}
+          gl-oci push-manifest \
+            --dir "${CNAME}" \
+            --container ${{ needs.determine_environment.outputs.repository }} \
+            --arch ${{ matrix.arch }} \
+            --version ${{ inputs.version }} \
+            --cname "${CNAME}" \
+            --cosign_file digest.txt \
+            --manifest_file "oci_manifest_entry_${CNAME}.json"
       - name: Sign the manifest
         run: |
+          cat digest.txt
           docker login ghcr.io -u token -p ${{ github.token }}
           cosign sign -tlog-upload=false --key "awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }}" "${{ needs.determine_environment.outputs.repository }}@$(cat digest.txt)"
       - name: Verify signature
@@ -337,7 +317,7 @@ jobs:
           echo "${{ inputs.version }}" | tee VERSION
       - name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@main
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@269fcc4e7c7cd2e1995b02c1646673d030e496e6 # pin@0.7.0
         with:
           flags: --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname
       - name: Set CNAME
@@ -378,16 +358,13 @@ jobs:
           restore-keys: |
             oci-manifests-${{ github.run_id }}-
           fail-on-cache-miss: true
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Install glcli util
-        run: |
-          # @TODO: Add pyproject.toml for pip install git+https://github.com/gardenlinux/python-gardenlinux-cli.git@${{ env.GLCLI_VERSION }}
-          git clone --depth 1 --branch ${{ env.GLCLI_VERSION }} https://github.com/gardenlinux/python-gardenlinux-cli.git
-          mv python-gardenlinux-cli /opt/glcli
-          pip install -r /opt/glcli/requirements.txt
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@269fcc4e7c7cd2e1995b02c1646673d030e496e6 # pin@0.7.0
       - name: Update index using glcli tool
         run: |
-          GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ${{ needs.determine_environment.outputs.repository }} --version ${{ inputs.version }} --manifest_folder manifests
+          export GL_CLI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          export GL_CLI_REGISTRY_USERNAME=${{ github.repository_owner }}
+          gl-oci update-index \
+            --container ${{ needs.determine_environment.outputs.repository }} \
+            --version ${{ inputs.version }} \
+            --manifest_folder manifests
