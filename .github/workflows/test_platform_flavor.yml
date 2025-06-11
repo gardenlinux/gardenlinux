@@ -83,7 +83,7 @@ jobs:
           fail-on-cache-miss: true
       - name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@269fcc4e7c7cd2e1995b02c1646673d030e496e6 # pin@0.7.0
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@095332c92d0d3ed83be59db6f1d3e44f63fbc46d # pin@0.7.1
         with:
           flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
       - name: Set CNAME
