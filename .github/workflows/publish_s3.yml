@@ -10,6 +10,24 @@ on:
     workflows: [ 'Build and publish a release', 'nightly' ]
     types: [ 'completed' ]
 jobs:
+  parent_workflow:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.conclusion == 'success' }}
+    name: Create parent workflow artifact
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Create parent workflow JSON
+        run: |
+          mkdir -p artifacts
+          cat > artifacts/parent-workflow.json << EOF
+          {
+            "run_id": "${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}"
+          }
+          EOF
+      - name: Upload parent workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: parent-workflow
+          path: artifacts/parent-workflow.json
   workflow_data:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.conclusion == 'success' }}
     name: Download workflow JSON data from trigger
