@@ -117,7 +117,7 @@ jobs:
           echo "${{ needs.workflow_data.outputs.version }}" | tee VERSION
       - name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@6278da3783e41a1e781fd709bd91e35e64edd070 # pin@0.7.3
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@a7545af15d3a1fa96675b24807eace643483da96 # pin@0.8.0
         with:
           flags: --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname
       - name: Set CNAME
@@ -163,7 +163,7 @@ jobs:
       commit_id: ${{ needs.workflow_data.outputs.commit_id }}
       version: ${{ needs.workflow_data.outputs.version }}
       flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
-      run_id: ${{ github.run_id }}
+      run_id: ${{ needs.workflow_data.outputs.run_id }}
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_role: ${{ secrets.AWS_IAM_ROLE }}
@@ -179,7 +179,7 @@ jobs:
       commit_id: ${{ needs.workflow_data.outputs.commit_id }}
       version: ${{ needs.workflow_data.outputs.version }}
       flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
-      run_id: ${{ github.run_id }}
+      run_id: ${{ needs.workflow_data.outputs.run_id }}
     secrets:
       aws_region: ${{ secrets.AWS_CN_REGION }}
       aws_role: ${{ secrets.AWS_CN_IAM_ROLE }}
