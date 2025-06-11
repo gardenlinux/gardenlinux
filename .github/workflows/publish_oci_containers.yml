@@ -82,12 +82,12 @@ jobs:
           echo "${{ inputs.version }}" | tee VERSION
       - name: Determine CNAME (amd64)
         id: cname_amd64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@269fcc4e7c7cd2e1995b02c1646673d030e496e6 # pin@0.7.0
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@095332c92d0d3ed83be59db6f1d3e44f63fbc46d # pin@0.7.1
         with:
           flags: --cname container-amd64 cname
       - name: Determine CNAME (ard64)
         id: cname_arm64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@269fcc4e7c7cd2e1995b02c1646673d030e496e6 # pin@0.7.0
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@095332c92d0d3ed83be59db6f1d3e44f63fbc46d # pin@0.7.1
         with:
           flags: --cname container-arm64 cname
       - name: Set CNAMEs
@@ -250,7 +250,7 @@ jobs:
           echo "${{ inputs.version }}" | tee VERSION
       - name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@269fcc4e7c7cd2e1995b02c1646673d030e496e6 # pin@0.7.0
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@095332c92d0d3ed83be59db6f1d3e44f63fbc46d # pin@0.7.1
         with:
           flags: --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname
       - name: Set CNAME
@@ -266,7 +266,7 @@ jobs:
           mkdir "$CNAME"
           tar -C "$CNAME" -xzf "$CNAME.tar.gz"
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@269fcc4e7c7cd2e1995b02c1646673d030e496e6 # pin@0.7.0
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@095332c92d0d3ed83be59db6f1d3e44f63fbc46d # pin@0.7.1
       - name: Install cosign
         uses: sigstore/cosign-installer@v3.8.2
         with:
@@ -317,7 +317,7 @@ jobs:
           echo "${{ inputs.version }}" | tee VERSION
       - name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@269fcc4e7c7cd2e1995b02c1646673d030e496e6 # pin@0.7.0
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@095332c92d0d3ed83be59db6f1d3e44f63fbc46d # pin@0.7.1
         with:
           flags: --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname
       - name: Set CNAME
@@ -359,7 +359,7 @@ jobs:
             oci-manifests-${{ github.run_id }}-
           fail-on-cache-miss: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@269fcc4e7c7cd2e1995b02c1646673d030e496e6 # pin@0.7.0
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@095332c92d0d3ed83be59db6f1d3e44f63fbc46d # pin@0.7.1
       - name: Update index using glcli tool
         run: |
           export GL_CLI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }}
