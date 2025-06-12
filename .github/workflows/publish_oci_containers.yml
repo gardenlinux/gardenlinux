@@ -246,6 +246,10 @@ jobs:
           aws-region: ${{ secrets.aws_region }}
       - name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@a7545af15d3a1fa96675b24807eace643483da96 # pin@0.8.0
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.8.2
+        with:
+          cosign-release: 'v2.4.1'
       - name: Set flavor version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -258,18 +262,15 @@ jobs:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - name: Unpack ${{ matrix.flavor }} (${{ matrix.arch }})
+      - name: Push using the glcli util
+        env:
+          GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GL_CLI_REGISTRY_USERNAME: ${{ github.repository_owner }}
         run: |
           mkdir "$CNAME"
+
           tar -C "$CNAME" -xzf "$CNAME.tar.gz"
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v3.8.2
-        with:
-          cosign-release: 'v2.4.1'
-      - name: Push using the glcli util
-        run: |
-          export GL_CLI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }}
-          export GL_CLI_REGISTRY_USERNAME=${{ github.repository_owner }}
+
           gl-oci push-manifest \
             --dir "${CNAME}" \
             --container ${{ needs.determine_environment.outputs.repository }} \
@@ -290,75 +291,44 @@ jobs:
         with:
           path: oci_manifest_entry_${{ env.CNAME }}.json
           key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
-  aggregate_oci_manifests:
-    needs: push_flavors
-    name: Aggregate OCI image flavor manifests
+  update_manifest_index:
+    needs: [ determine_environment, push_flavors ]
+    name: Update OCI manifest index
     runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash
     env:
       CNAME: ''
+    permissions:
+      id-token: write
+      packages: write
+      actions: write
     strategy:
+      fail-fast: false
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
       max-parallel: 1
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@a7545af15d3a1fa96675b24807eace643483da96 # pin@0.8.0
       - name: Set flavor version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
-      - name: Determine CNAME
-        id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@a7545af15d3a1fa96675b24807eace643483da96 # pin@0.8.0
-        with:
-          flags: --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname
       - name: Set CNAME
         run: |
-          echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
-      - name: Cache OCI manifests
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
-        with:
-          path: manifests
-          key: oci-manifests-${{ github.run_id }}-${{ matrix.flavor }}-${{ matrix.arch }}
-          restore-keys: |
-            oci-manifests-${{ github.run_id }}-
-      - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
-        with:
-          path: oci_manifest_entry_${{ env.CNAME }}.json
-          key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
-      - name: Store OCI manifest ${{ matrix.flavor }} (${{ matrix.arch }})
-        run: |
-          mkdir -p "manifests"
-          mv "oci_manifest_entry_$CNAME.json" "manifests/"
-  update_manifest_index:
-    needs: [ determine_environment, aggregate_oci_manifests ]
-    name: Update OCI manifest index
-    runs-on: ubuntu-24.04
-    defaults:
-      run:
-        shell: bash
-    permissions:
-      id-token: write
-      packages: write
-      actions: write
-    steps:
-      - name: Restore OCI manifests
-        uses: actions/cache/restore@v4
-        with:
-          path: manifests
-          key: oci-manifests-${{ github.run_id }}
-          restore-keys: |
-            oci-manifests-${{ github.run_id }}-
-          fail-on-cache-miss: true
-      - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@a7545af15d3a1fa96675b24807eace643483da96 # pin@0.8.0
+          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
       - name: Update index using glcli tool
+        env:
+          GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GL_CLI_REGISTRY_USERNAME: ${{ github.repository_owner }}
         run: |
-          export GL_CLI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }}
-          export GL_CLI_REGISTRY_USERNAME=${{ github.repository_owner }}
+          mkdir manifests
+          mv oci_manifest_entry_${CNAME}.json manifests/
+
           gl-oci update-index \
             --container ${{ needs.determine_environment.outputs.repository }} \
             --version ${{ inputs.version }} \
