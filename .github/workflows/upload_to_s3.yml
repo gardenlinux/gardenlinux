@@ -42,6 +42,8 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@a7545af15d3a1fa96675b24807eace643483da96 # pin@0.8.0
       - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
@@ -52,18 +54,32 @@ jobs:
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
-      - name: Determine CNAME
-        id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@6278da3783e41a1e781fd709bd91e35e64edd070 # pin@0.7.3
-        with:
-          flags: --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname
       - name: Set CNAME
         run: |
-          echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
+          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
           github-token: ${{ github.token }}
+          run-id: ${{ github.run_id }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+        with:
+          name: chroot-test-${{ env.CNAME }}
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+        with:
+          name: platform-test-${{ env.CNAME }}
+          github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
       - name: Upload to S3 bucket ${{ secrets.aws_s3_bucket }}
-        run: ${{ github.workspace }}/.github/workflows/upload_to_s3.sh ${{ secrets.aws_s3_bucket }} $CNAME.tar.gz
+        run: |
+          mkdir "$CNAME"
+          tar -C "$CNAME" -xzf "$CNAME.tar.gz"
+
+          mv $CNAME.chroot.test.log "$CNAME"
+          mv $CNAME.chroot.test.xml "$CNAME"
+          mv $CNAME.platform.test.log "$CNAME"
+          mv $CNAME.platform.test.xml "$CNAME"
+
+          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --cname "$CNAME" --path "$CNAME" upload-artifacts-to-bucket
