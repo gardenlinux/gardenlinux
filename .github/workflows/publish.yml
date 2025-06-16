@@ -16,6 +16,22 @@ jobs:
     uses: ./.github/workflows/download_workflow_data.yml
     with:
       run_id: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
+  workflow_data_artifact:
+    name: Publish parent workflow-data artifact
+    needs: [ workflow_data ]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+        with:
+          name: workflow-data
+          github-token: ${{ github.token }}
+          run-id: ${{ needs.workflow_data.outputs.run_id }}
+      - name: Upload parent workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: parent-workflow-data
+          overwrite: true
+          path: 'workflow_data.json'
   publish_oci_containers:
     needs: workflow_data
     name: Publish container base image
