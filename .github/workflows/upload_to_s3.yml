@@ -14,6 +14,9 @@ on:
       run_id:
         type: string
         required: true
+      with_certs:
+        type: boolean
+        default: false
     secrets:
       aws_role:
         required: true
@@ -61,25 +64,45 @@ jobs:
         with:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
           github-token: ${{ github.token }}
-          run-id: ${{ github.run_id }}
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+          run-id: ${{ inputs.run_id }}
+      - name: Load test artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
-          name: chroot-test-${{ env.CNAME }}
+          pattern: "*-test-${{ env.CNAME }}"
+          merge-multiple: true
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+      - if: ${{ inputs.with_certs }}
+        name: Load certs artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
-          name: platform-test-${{ env.CNAME }}
+          name: certs
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - name: Upload to S3 bucket ${{ secrets.aws_s3_bucket }}
+          path: ${{ env.CNAME }}/
+      - name: Prepare S3 upload artifacts
         run: |
           mkdir "$CNAME"
-          tar -C "$CNAME" -xzf "$CNAME.tar.gz"
+          tar -cSzvf "$CNAME.tar.gz" -C $CNAME .
+          rm "$CNAME.tar.gz"
 
-          mv $CNAME.chroot.test.log "$CNAME"
-          mv $CNAME.chroot.test.xml "$CNAME"
-          mv $CNAME.platform.test.log "$CNAME"
-          mv $CNAME.platform.test.xml "$CNAME"
+          if [ -f "$CNAME.chroot.test.log" ]; then
+            mv $CNAME.chroot.test.log "$CNAME"
+            mv $CNAME.chroot.test.xml "$CNAME"
+          fi
 
+          if [ -f "$CNAME.platform.test.log" ]; then
+            mv $CNAME.platform.test.log "$CNAME"
+            mv $CNAME.platform.test.xml "$CNAME"
+          fi
+      - if: ${{ inputs.with_certs }}
+        name: Add certs to build artifacts
+        run: |
+          pushd $CNAME
+          for file in "secureboot."*; do
+            mv "$file" "$CNAME.$file"
+          done
+          popd
+      - name: Upload to S3 bucket ${{ secrets.aws_s3_bucket }}
+        run: |
           gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --cname "$CNAME" --path "$CNAME" upload-artifacts-to-bucket
