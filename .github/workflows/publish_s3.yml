@@ -76,85 +76,8 @@ jobs:
             );
 
             core.setOutput("flavors_matrix", matrix);
-  copy_artifacts:
-    needs: [ non_trustedboot_flavors_matrix, workflow_data ]
-    name: Copy without adding certs
-    runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.non_trustedboot_flavors_matrix.outputs.flavors_matrix) }}
-    steps:
-      - name: Load flavor build artifact
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
-        with:
-          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
-          github-token: ${{ github.token }}
-          run-id: ${{ needs.workflow_data.outputs.run_id }}
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
-        with:
-          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
-          overwrite: true
-          path: '*.tar.gz'
-  prepare_certs:
+  upload_trustedboot_flavors_to_s3:
     needs: [ trustedboot_flavors_matrix, workflow_data ]
-    name: Add certs
-    runs-on: ubuntu-24.04
-    defaults:
-      run:
-        shell: bash
-    env:
-      CNAME: ''
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.trustedboot_flavors_matrix.outputs.flavors_matrix) }}
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
-        with:
-          submodules: true
-      - name: Set flavor version reference
-        run: |
-          echo "${{ needs.workflow_data.outputs.commit_id }}" | tee COMMIT
-          echo "${{ needs.workflow_data.outputs.version }}" | tee VERSION
-      - name: Determine CNAME
-        id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@a7545af15d3a1fa96675b24807eace643483da96 # pin@0.8.0
-        with:
-          flags: --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname
-      - name: Set CNAME
-        run: |
-          echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
-      - name: Load flavor build artifact
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
-        with:
-          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
-          github-token: ${{ github.token }}
-          run-id: ${{ needs.workflow_data.outputs.run_id }}
-      - name: Load certs artifact
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
-        with:
-          name: certs
-          github-token: ${{ github.token }}
-          run-id: ${{ needs.workflow_data.outputs.run_id }}
-          path: ${{ env.CNAME }}/
-      - name: Add certs to build artifacts
-        run: |
-          tar -C "$CNAME/" -xzf "$CNAME.tar.gz"
-          rm "$CNAME.tar.gz"
-
-          pushd $CNAME
-          for file in "secureboot."*; do
-            mv "$file" "$CNAME.$file"
-          done
-          popd
-
-          tar -cSzvf "$CNAME.tar.gz" -C $CNAME .
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
-        with:
-          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
-          overwrite: true
-          path: ${{ env.CNAME }}.tar.gz
-  upload_to_s3:
-    needs: [ copy_artifacts, prepare_certs, workflow_data ]
     name: Upload to S3
     permissions:
       id-token: write
@@ -162,15 +85,16 @@ jobs:
     with:
       commit_id: ${{ needs.workflow_data.outputs.commit_id }}
       version: ${{ needs.workflow_data.outputs.version }}
-      flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
+      flavors_matrix: ${{ needs.trustedboot_flavors_matrix.outputs.flavors_matrix }}
       run_id: ${{ needs.workflow_data.outputs.run_id }}
+      with_certs: true
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_role: ${{ secrets.AWS_IAM_ROLE }}
       aws_session: ${{ secrets.AWS_OIDC_SESSION }}
       aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
-  upload_to_s3_cn:
-    needs: [ copy_artifacts, prepare_certs, workflow_data ]
+  upload_trustedboot_flavors_to_s3_china:
+    needs: [ trustedboot_flavors_matrix, workflow_data ]
     name: Upload to S3 (China)
     permissions:
       id-token: write
@@ -178,7 +102,40 @@ jobs:
     with:
       commit_id: ${{ needs.workflow_data.outputs.commit_id }}
       version: ${{ needs.workflow_data.outputs.version }}
-      flavors_matrix: ${{ needs.workflow_data.outputs.flavors_matrix }}
+      flavors_matrix: ${{ needs.trustedboot_flavors_matrix.outputs.flavors_matrix }}
+      run_id: ${{ needs.workflow_data.outputs.run_id }}
+      with_certs: true
+    secrets:
+      aws_region: ${{ secrets.AWS_CN_REGION }}
+      aws_role: ${{ secrets.AWS_CN_IAM_ROLE }}
+      aws_session: ${{ secrets.AWS_CN_OIDC_SESSION }}
+      aws_s3_bucket: ${{ secrets.AWS_CN_S3_BUCKET }}
+  upload_non_trustedboot_flavors_to_s3:
+    needs: [ non_trustedboot_flavors_matrix, workflow_data ]
+    name: Upload to S3
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/upload_to_s3.yml
+    with:
+      commit_id: ${{ needs.workflow_data.outputs.commit_id }}
+      version: ${{ needs.workflow_data.outputs.version }}
+      flavors_matrix: ${{ needs.non_trustedboot_flavors_matrix.outputs.flavors_matrix }}
+      run_id: ${{ needs.workflow_data.outputs.run_id }}
+    secrets:
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_role: ${{ secrets.AWS_IAM_ROLE }}
+      aws_session: ${{ secrets.AWS_OIDC_SESSION }}
+      aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
+  upload_non_trustedboot_flavors_to_s3_china:
+    needs: [ non_trustedboot_flavors_matrix, workflow_data ]
+    name: Upload to S3 (China)
+    permissions:
+      id-token: write
+    uses: ./.github/workflows/upload_to_s3.yml
+    with:
+      commit_id: ${{ needs.workflow_data.outputs.commit_id }}
+      version: ${{ needs.workflow_data.outputs.version }}
+      flavors_matrix: ${{ needs.non_trustedboot_flavors_matrix.outputs.flavors_matrix }}
       run_id: ${{ needs.workflow_data.outputs.run_id }}
     secrets:
       aws_region: ${{ secrets.AWS_CN_REGION }}
@@ -186,7 +143,7 @@ jobs:
       aws_session: ${{ secrets.AWS_CN_OIDC_SESSION }}
       aws_s3_bucket: ${{ secrets.AWS_CN_S3_BUCKET }}
   glrd:
-    needs: [ workflow_data, upload_to_s3 ]
+    needs: [ workflow_data, upload_trustedboot_flavors_to_s3, upload_non_trustedboot_flavors_to_s3 ]
     name: create GLRD release
     permissions:
       id-token: write
@@ -214,7 +171,7 @@ jobs:
         with:
           cmd: glrd --type nightly --latest
   publish_retry:
-    needs: [ upload_to_s3, upload_to_s3_cn, glrd ]
+    needs: [ upload_trustedboot_flavors_to_s3, upload_trustedboot_flavors_to_s3_china, upload_non_trustedboot_flavors_to_s3, upload_non_trustedboot_flavors_to_s3_china, glrd ]
     if: ${{ failure() && ( needs.upload_to_s3.result == 'failure' || needs.upload_to_s3_cn.result == 'failure' || needs.glrd.result == 'failure' ) }}
     name: 'Retry checkpoint: Publish to S3'
     runs-on: ubuntu-24.04
