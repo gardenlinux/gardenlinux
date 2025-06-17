@@ -94,7 +94,7 @@ jobs:
             core.setOutput("flavors_matrix", matrix);
   upload_trustedboot_flavors_to_s3:
     needs: [ trustedboot_flavors_matrix, workflow_data ]
-    name: Upload to S3
+    name: Upload flavors supporting trustedboot to S3
     permissions:
       id-token: write
     uses: ./.github/workflows/upload_to_s3.yml
@@ -111,7 +111,7 @@ jobs:
       aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
   upload_trustedboot_flavors_to_s3_china:
     needs: [ trustedboot_flavors_matrix, workflow_data ]
-    name: Upload to S3 (China)
+    name: Upload flavors supporting trustedboot to S3 (China)
     permissions:
       id-token: write
     uses: ./.github/workflows/upload_to_s3.yml
@@ -128,7 +128,7 @@ jobs:
       aws_s3_bucket: ${{ secrets.AWS_CN_S3_BUCKET }}
   upload_non_trustedboot_flavors_to_s3:
     needs: [ non_trustedboot_flavors_matrix, workflow_data ]
-    name: Upload to S3
+    name: Upload flavors not supporting trustedboot to S3
     permissions:
       id-token: write
     uses: ./.github/workflows/upload_to_s3.yml
@@ -144,7 +144,7 @@ jobs:
       aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
   upload_non_trustedboot_flavors_to_s3_china:
     needs: [ non_trustedboot_flavors_matrix, workflow_data ]
-    name: Upload to S3 (China)
+    name: Upload flavors not supporting trustedboot to S3 (China)
     permissions:
       id-token: write
     uses: ./.github/workflows/upload_to_s3.yml
