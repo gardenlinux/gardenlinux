@@ -82,8 +82,8 @@ jobs:
           path: ${{ env.CNAME }}/
       - name: Prepare S3 upload artifacts
         run: |
-          mkdir "$CNAME"
-          tar -cSzvf "$CNAME.tar.gz" -C $CNAME .
+          mkdir -p "$CNAME"
+          tar -C $CNAME -xzvf "$CNAME.tar.gz"
           rm "$CNAME.tar.gz"
 
           if [ -f "$CNAME.chroot.test.log" ]; then
