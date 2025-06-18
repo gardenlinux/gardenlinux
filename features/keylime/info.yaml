@@ -1,0 +1,6 @@
+description: "Keylime agent"
+type: element
+features:
+  include:
+    - _trustedboot
+    - _tpm2

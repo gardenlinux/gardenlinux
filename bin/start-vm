@@ -732,7 +732,8 @@ qemu_opt_tpm () {
         if [ ! "$(command -v swtpm)" ]; then
             eusage "Error: Could not find swtpm on the system"
         else
-            swtpm socket --tpmstate backend-uri=file://$CURR_DIR/$mac.permall --ctrl type=unixio,path=$CURR_DIR/swtpm-sock --tpm2 --daemon --terminate
+            swtpm_setup --tpm2 --tpmstate file://$CURR_DIR/$mac.permall --createek --decryption --create-ek-cert --create-platform-cert --display
+            swtpm socket --tpmstate backend-uri=file://$CURR_DIR/$mac.permall --ctrl type=unixio,path=$CURR_DIR/swtpm-sock --tpm2 --flags startup-clear --daemon --terminate
         fi
 
         QEMU_OPTS+=("-chardev socket,id=chrtpm,path=$CURR_DIR/swtpm-sock")

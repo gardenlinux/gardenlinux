@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+useradd -s /sbin/nologin -r -G tss keylime
+
+mkdir /var/lib/keylime
+chown keylime /var/lib/keylime
