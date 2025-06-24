@@ -86,47 +86,14 @@ Further documentation about tests is located in [tests/README.md](tests/README.m
 
 # Releases
 
-For more information about the release strategy and lifecycle, have a look at the [Release Plan Overview](docs/00_introduction/release.md).
+For more information about the release strategy and lifecycle, have a look at the [Release Plan Overview](docs/00_introduction/release.md). List of releases is available in the [Public Roadmap, Theme:"Release Plan"](https://github.com/orgs/gardenlinux/projects/15/views/1?filterQuery=theme%3A%22Release+Plan%22).
 
-## Active and Next Releases
-
-```mermaid
-gantt
-    title Garden Linux active and next releases
-    axisFormat %m.%y
-    section 1443
-        Release:                milestone, 2024-03-13, 0m
-        Standard maintenance:       task, 2024-03-13, 6M
-        Extended maintenance:       milestone, 2024-09-13, 0m
-        Extended maintenance:       task, 2024-09-13, 4M
-        End of maintenance:         milestone, 2025-01-13, 0m
-    section 1592
-        Release:                milestone, 2024-08-12, 0m
-        Standard maintenance:       task, 2024-08-12, 9M
-        Extended maintenance:       milestone, 2025-05-12, 0m
-        Extended maintenance:       task, 2025-05-12, 3M
-        End of maintenance:         milestone, 2025-08-12, 0m
-    section next
-        Release:                milestone, 2024-12-01, 0m
-        Standard maintenance:       task, 2024-12-01, 6M
-        Extended maintenance:       milestone, 2025-06-01, 0m
-        Extended maintenance:       task, 2025-06-01, 3M
-        End of maintenance:         milestone, 2025-09-01, 0m        
-```
 
 ## Download Stable and Patch Releases
 
-[Stable](docs/00_introduction/release.md#stable-releases) and [Patch](docs/00_introduction/release.md#patch-releases-patches) releases can be downloaded from the following sources:
-
-| Product                        | Release Frequency | Download                                                                                        |
-| ------------------------------ | ----------------- | ----------------------------------------------------------------------------------------------- |
-| cloud and baremetal images | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/releases)                                 |
-| base container images      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux)               |
-| bare python container      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-python) |
-| bare libc container        | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-libc)   |
-| bare nodejs container      | Quarterly         | [Download](https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux%2Fbare-nodejs) |
-
-The cloud and baremetal images provided by Garden Linux are compatible with various cloud platforms, including Alibaba Cloud, AWS, Microsoft Azure and GCP.
+Images are published as:
+- GitHub Releses in https://github.com/gardenlinux/gardenlinux/releases
+- GitHub Packages https://github.com/gardenlinux/gardenlinux/pkgs/container/gardenlinux
 
 ## Download Nightly Releases 
 
