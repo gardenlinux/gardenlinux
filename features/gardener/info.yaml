@@ -6,6 +6,7 @@ features:
     - sap
     - iscsi
     - nvme
+    - nvidia
   exclude:
     - _selinux
     - firewall
