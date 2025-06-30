@@ -16,7 +16,7 @@ Options:
     --help    Show this help message and exit.
 
 Environment variables:
-    GLVD_URL  Set the URL to fetch CVE data (default: https://glvd.ingress.glvd.gardnlinux.shoot.canary.k8s-hana.ondemand.com/v1/cves/<version>)
+    GLVD_URL  Set the GLVD endpoint (default: https://glvd.ingress.glvd.gardnlinux.shoot.canary.k8s-hana.ondemand.com/)
 EOF
 }
 
