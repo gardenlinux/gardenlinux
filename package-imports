@@ -86,6 +86,7 @@ net-tools
 netcat-openbsd
 netplan.io
 nfs-common
+nfs-kernel-server
 nftables
 nodejs
 npm
