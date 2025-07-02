@@ -137,18 +137,18 @@ def download_meta_single_manifest(bucket, bucket_path, image_name, dest_path):
     return f"{dest_path}/{image_name}"
 
 
-def parse_published_flavors(version, commitish):
+def parse_published_flavors():
     with open("flavors.yaml", "r") as f:
         flavors = yaml.safe_load(f.read())
 
-    available = []
+    available_flavors = []
     for target in flavors["targets"]:
         cloud = target["name"]
         if cloud in cloud_fullname_dict:
             for flavor in target["flavors"]:
                 if flavor["publish"]:
-                    available.append([cloud, flavor["arch"], "".join(flavor["features"][2:])])
-    return available
+                    available_flavors.append([cloud, flavor["arch"], "".join(flavor["features"][2:])])
+    return available_flavors
 
 def is_unsupported_ali_combination(platform, architecture, variant):
     """
@@ -160,7 +160,7 @@ def is_unsupported_ali_combination(platform, architecture, variant):
 def download_all_singles(version, commitish):
     if commitish == None:
         raise Exception("Commitish is not set")
-    available = parse_published_flavors(version, commitish)
+    available_flavors = parse_published_flavors()
 
     local_dest_path = "s3_downloads"
     os.makedirs(local_dest_path, exist_ok=True)
@@ -170,7 +170,7 @@ def download_all_singles(version, commitish):
             for v in image_variants:
                 # Skip "ali" platform for architectures other than "amd64" as it is currently not supported
                 # https://github.com/gardenlinux/gardenlinux/issues/3050
-                if is_unsupported_ali_combination(p, a, v) or [p, a, v] not in available:
+                if is_unsupported_ali_combination(p, a, v) or [p, a, v] not in available_flavors:
                     print(f"Skipping {p} {v} on {a} because it is currently not supported")
                 else:
                     fname = construct_full_image_name(p, f"gardener_prod{v}", a, version, commitish)
