@@ -17,7 +17,8 @@ You can expect up to two Garden Linux stable releases per year, published up to 
 
 ### Patch releases _("patches")_
 
-During the maintenance period, updates are provided as patch releases (e.g., "1443.1" or "patch-1443.1" or "patch 1 of release 1443"). "Patches" are considered stable, and adopters are encouraged to always use the latest patch release of the latest stable release. Patch releases can be expected to adhere to following rules:
+During the maintenance period, updates are provided as patch releases (e.g., "1592.1" or "patch-1592.1" or "patch 1 of release 1592"). "Patches" are considered stable, and adopters are encouraged to always use the latest patch release of the latest stable release. Patch releases can be expected to adhere to following rules:
+
 
 - Can include higher minor versions of software packages or libraries already included in the stable release.
 - Can include security enhancements related to vulnerabilities identified after the release of the previous patch.
