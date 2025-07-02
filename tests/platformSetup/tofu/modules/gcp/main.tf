@@ -154,11 +154,23 @@ resource "google_compute_instance" "instance" {
     }
   }
 
-  metadata = {
-    ssh-keys = "${var.ssh_user}:${file(var.ssh_public_key)}"
-  }
+  ## currently broken in our google-guest-agent
+  ## https://github.com/gardenlinux/gardenlinux/issues/3149
+  # metadata = {
+  #   ssh-keys = "${var.ssh_user}:${file(var.ssh_public_key)}"
+  # }
 
-  metadata_startup_script = file("vm-startup-script.sh")
+  ## workaround for https://github.com/gardenlinux/gardenlinux/issues/3149
+  # metadata_startup_script = file("vm-startup-script.sh")
+  metadata_startup_script = <<EOF
+    #!/usr/bin/env bash
+    touch /tmp/startup-script-ok
+    systemctl enable --now ssh
+    useradd -m -s /usr/bin/bash ${var.ssh_user}
+    echo "${var.ssh_user} ALL=(ALL:ALL) NOPASSWD: ALL" >>/etc/sudoers
+    mkdir -p /home/${var.ssh_user}/.ssh
+    echo "${file(var.ssh_public_key)}" | tee -a /home/${var.ssh_user}/.ssh/authorized_keys
+  EOF
 
   ## TODO: evaluate if this is necessary
   # service_account {
