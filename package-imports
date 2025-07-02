@@ -113,6 +113,7 @@ python3-debian
 python3-netifaces
 python3-networkx
 python3-novaclient
+python3-passlib
 python3-pefile
 python3-pip
 python3-pip-whl
