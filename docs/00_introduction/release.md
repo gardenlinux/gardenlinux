@@ -6,7 +6,8 @@ On this page you will learn about the Garden Linux releases and their lifecycle.
 
 ### Stable releases
 
-You can expect up to two Garden Linux stable releases per year, published up to once per six months. Each new stable release (e.g., "1443" or "stable-1443" or "release 1443") introduces major changes like updated versions of software packages or libraries. The initial stable release is designated as "patch 0" (e.g., "1443.0" or "patch-1443.0" or "initial release 1443"), establishing the initial frozen codebase. During the one year maintenance period, updates are provided as release patches (e.g., "1443.1" or "patch-1443.1" or "patch 1 of release 1443"). Each stable release progresses through the following maintenance phases:
+You can expect up to two Garden Linux stable releases per year, published up to once per six months. Each new stable release (e.g., "1592" or "stable-1592" or "release 1592") introduces major changes like updated versions of software packages or libraries. The initial stable release is designated as "patch 0" (e.g., "1592.0" or "patch-1592.0" or "initial release 1592"), establishing the initial frozen codebase. During the one year maintenance period, updates are provided as release patches (e.g., "1592.1" or "patch-1592.1" or "patch 1 of release 1592"). Each stable release progresses through the following maintenance phases:
+
 
 - **Standard maintenance** starts with the publishing of a new stable release and continues for six months. In this phase active maintenance is performed on the stable release. You can expect regular patch releases including _(but not limited to)_ fixes for issues, updates to higher minor release of selected software packages and libraries included, proactive monitoring & assessment of security vulnerabilities, performance corrections and enhancements and more. General best practice is to always use the latest patch of the latest release.
 
