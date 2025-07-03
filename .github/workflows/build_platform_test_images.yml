@@ -65,7 +65,7 @@ env:
   DEFAULT_PLATFORMS: '["kvm", "openstack", "tofu"]'
   GARDENLINUX_BUILD_CRE: podman
   IMAGE_BASE: platform-test
-  IMAGE_REGISTRY: ghcr.io/gardenlinux/gardenlinux
+  IMAGE_REGISTRY: ghcr.io/${{ github.repository }}
   PLATFORM_TEST_TAG: ${{ github.event_name == 'push' && 'nightly' || inputs.platform_test_tag }}
 jobs:
   generate_matrix:
