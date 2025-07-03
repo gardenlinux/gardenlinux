@@ -65,7 +65,7 @@ env:
   DEFAULT_PLATFORMS: '["kvm", "openstack", "tofu"]'
   GARDENLINUX_BUILD_CRE: podman
   IMAGE_BASE: platform-test
-  IMAGE_REGISTRY: ghcr.io/${{ github.repository }}
+  IMAGE_REGISTRY: ghcr.io/gardenlinux/gardenlinux
   PLATFORM_TEST_TAG: ${{ github.event_name == 'push' && 'nightly' || inputs.platform_test_tag }}
 jobs:
   generate_matrix:
@@ -96,7 +96,7 @@ jobs:
 
           echo "platforms_matrix=$MATRIX" | tee -a $GITHUB_OUTPUT
   build_base_images:
-    if: ${{ github.event_name == 'push' || inputs.build }}
+    if: ${{ inputs.build }}
     name: Build platform-test base image
     needs: generate_matrix
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
@@ -129,6 +129,7 @@ jobs:
           path: ${{ env.IMAGE_BASE }}-base-${{ matrix.arch }}.tar
           key: platform_test_base_${{ matrix.arch }}-${{ github.run_id }}
   build_images:
+    if: ${{ inputs.build }}
     name: Build platform-test image
     needs: [ generate_matrix, build_base_images ]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
@@ -183,7 +184,7 @@ jobs:
             platform-test.oci-version.txt
             platform-test.oci-tag.txt
   push_images:
-    if: ${{ github.event_name == 'push' && ( github.ref_name == 'main' || ( inputs.push == true && ( inputs.platform_test_tag != 'latest' || inputs.push_latest == true ) ) ) }}
+    if: ${{ inputs.build && github.event_name == 'push' && ( github.ref_name == 'main' || ( inputs.push == true && ( inputs.platform_test_tag != 'latest' || inputs.push_latest == true ) ) ) }}
     name: Push platform-test images
     needs: [ generate_matrix, build_images ]
     runs-on: ubuntu-24.04
