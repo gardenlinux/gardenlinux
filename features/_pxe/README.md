@@ -5,7 +5,7 @@ This flag feature creates an artifact for supporting PXE network boot of Garden 
 </website-feature>
 
 ### Features
-This feature creates files meant to be booted via PXE network boot: `.squashfs`, `.vmlinuz` and `.initrd`.
+This feature creates files meant to be booted via PXE network boot: `squashfs`, `kernel`, `initrd`, `initrd.unified` - initrd including squashfs, `boot.efi` - UKI.
 
 #### Hint
 Ignition Files can be used with PXE to inject information into the system at the first boot of Garden Linux. This includes creating users, groups, ssh keys, files, permissions and network configuration. This way machines can be defined in a declarative way.
@@ -23,6 +23,6 @@ This feature does not support unit tests.
 |||
 |---|---|
 |type|flag|
-|artifact|`.squashfs`, `.vmlinuz`, `.initrd`|
+|artifact|`squashfs`, `vmlinuz`, `initrd`, `initrd.unified`, `boot.efi`|
 |included_features|`_ignite`|
 |excluded_features|None|
