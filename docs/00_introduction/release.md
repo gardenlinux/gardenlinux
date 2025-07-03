@@ -38,7 +38,8 @@ The "next" release is a projection of the upcoming stable release. It exists pri
 
 In this section you can find more about the releases that are currently actively maintained and receive maintenance by the Garden Linux Maintainers team.
 
-Information about each active release can be found in the [Public Roadmap, Theme:"Release Plan"](https://github.com/orgs/gardenlinux/projects/15/views/1?filterQuery=theme%3A%22Release+Plan%22+is%3Aopen). The issues in status open with title follwing the "Release and maintain <release number> (YEAR,HALF1/2)" contain the information about releases that are actively maintained by the Garden Linux Maintainers team.
+Information about each active release can be found in the [Public Roadmap, Theme:"Release Plan"](https://github.com/orgs/gardenlinux/projects/15/views/1?filterQuery=theme%3A%22Release+Plan%22+is%3Aopen). The issues in status open with title following the "Release and maintain <release number> (YEAR,HALF1/2)" contain the information about releases that are actively maintained by the Garden Linux Maintainers team.
+
 
 
 ### Out of maintenance releases (closed)
