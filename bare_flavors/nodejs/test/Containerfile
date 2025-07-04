@@ -1,5 +1,0 @@
-ARG image
-
-FROM $image
-COPY test.js /
-CMD [ "node", "/test.js" ]
