@@ -15,14 +15,13 @@ get_list_of_gh_repositories() {
     gh api --paginate "/orgs/$org/repos" \
                    | jq -r '.[] | .name' \
                    | grep -xE "$match_pattern" \
-                   | grep -vxE "$exclude_pattern" \
-    > gh_repository_list
+                   | grep -vxE "$exclude_pattern"
 }
 
 
 print_repository_with_tag(){
     # Search for the given tag for a given repository.
-    cat gh_repository_list | while read -r repo; do
+    get_list_of_gh_repositories | while read -r repo; do
         # We're looping through the repositories and try to fetch the respected tag.
         # the result.
 
@@ -37,20 +36,12 @@ print_repository_with_tag(){
 }
 
 
-clean_up(){
-    # Clean up
-    [ -e gh_repository_list ] && rm gh_repository_list
-}
-
-
 
 
 main() {
     # This function is invoked by the github actions build.yml and used to update the necessary 
     # package-releases file in the local folder. 
-    get_list_of_gh_repositories
     print_repository_with_tag
-    clean_up
 }
 
 
