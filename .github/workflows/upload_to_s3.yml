@@ -41,6 +41,7 @@ jobs:
           role-to-assume: ${{ secrets.role }}
           role-session-name: ${{ secrets.session }}
           aws-region: ${{ secrets.region }}
+          role-duration-seconds: 14400
       - name: set VERSION=${{ inputs.version }}
         run: |
           bin/garden-version "${{ inputs.version }}" | tee VERSION
