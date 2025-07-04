@@ -23,7 +23,7 @@ aliyun-python-sdk-ecs = "*"
 # OpenStack client packages
 python-openstackclient = "*"
 # Azure SDK/CLI packages
-# azure-cli = ">=2.44.0"   # https://github.com/Azure/azure-cli/issues/23015
+azure-cli = ">=2.44.0"   # https://github.com/Azure/azure-cli/issues/23015
 azure-core = "*"
 azure-identity = "*"
 azure-mgmt-subscription = "*"
@@ -40,7 +40,7 @@ flake8 = "*"
 pylint = "*"
 
 [requires]
-python_version = "3.11"
+python_version = "3.13"
 
 [pipenv]
 allow_prereleases = true

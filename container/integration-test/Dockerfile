@@ -16,7 +16,6 @@ RUN : "Install GCP requirements" \
      && apt-get update \
      && apt-get install -y google-cloud-sdk
 RUN : "OpenStack cli already installed in gardenlinux/base-test image" \
-     && apt-get install -y azure-cli \
      && arch="$(uname -m)" \
      && [ $arch = "x86_64" ] && aliyun_arch=amd64 || aliyun_arch=arm64 \
      && [ $arch = "x86_64" ] && ossutil_arch=64 || ossutil_arch=arm64 \
