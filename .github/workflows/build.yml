@@ -20,6 +20,10 @@ on:
         description: 'Tag to run platform-test containers. "latest" or GL version. Tag must be available in `ghcr.io/gardenlinux/gardenlinux/platform-test-*`'
         type: string
         default: latest
+      platform_test_build:
+        description: 'Run platform-test image build.'
+        type: boolean
+        default: true
       bare_flavors_parse_params:
         description: 'Run bin/parse_flavors.py with these parameters for bare flavors'
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
@@ -66,6 +70,7 @@ jobs:
       version: ${{ needs.requirements.outputs.version }}
       platforms: '["tofu"]'
       platform_test_tag: ${{ inputs.platform_test_tag }}
+      build: ${{ inputs.platform_test_build }}
   flavors_matrix:
     name: Generate flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml

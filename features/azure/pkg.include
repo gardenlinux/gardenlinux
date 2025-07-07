@@ -1,4 +1,5 @@
 chrony
 cloud-init
 python3-cffi-backend
+python3-passlib
 azure-vm-utils
