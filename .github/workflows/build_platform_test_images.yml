@@ -184,7 +184,7 @@ jobs:
             platform-test.oci-version.txt
             platform-test.oci-tag.txt
   push_images:
-    if: ${{ inputs.build && github.event_name == 'push' && ( github.ref_name == 'main' || ( inputs.push == true && ( inputs.platform_test_tag != 'latest' || inputs.push_latest == true ) ) ) }}
+    if: ${{ inputs.build && ( (github.event_name == 'push' && github.ref_name == 'main') || (github.event_name != 'push' && inputs.push == true) ) }}
     name: Push platform-test images
     needs: [ generate_matrix, build_images ]
     runs-on: ubuntu-24.04
@@ -225,13 +225,12 @@ jobs:
               exit 1
             fi
 
-            # Push arch images if requested (push=true) or running on main branch
-            if [[ "${{ inputs.push }}" == "true" || "${{ github.ref_name }}" == "main" ]]; then
-              echo podman push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-${PLATFORM_TEST_TAG}"
-              podman push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-${PLATFORM_TEST_TAG}"
-            fi
-            # Push latest arch images if requested (push_latest=true) or running on main branch
-            if [[ "${{ inputs.push_latest }}" == "true" ]]; then
+            # Push arch images
+            echo podman push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-${PLATFORM_TEST_TAG}"
+            podman push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-${PLATFORM_TEST_TAG}"
+
+            # Push latest arch images if requested or running on main branch
+            if [[ "${{ inputs.push_latest }}" == "true" || "${{ github.ref_name }}" == "main" ]]; then
               echo podman push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-${PLATFORM_TEST_TAG}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-latest"
               podman push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-${PLATFORM_TEST_TAG}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-latest"
             fi
@@ -240,14 +239,12 @@ jobs:
             podman manifest add "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-${PLATFORM_TEST_TAG}"
           done
 
-          # Push manifest if requested (push=true) or running on main branch
-          if [[ "${{ inputs.push }}" == "true" || "${{ github.ref_name }}" == "main" ]]; then
-            echo podman manifest push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}"
-            podman manifest push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}"
-          fi
+          # Push manifest
+          echo podman manifest push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}"
+          podman manifest push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}"
 
-          # Push latest manifest if requested (push_latest=true) or running on main branch
-          if [[ "${{ inputs.push_latest }}" == "true" ]]; then
+          # Push latest manifest if requested or running on main branch
+          if [[ "${{ inputs.push_latest }}" == "true" || "${{ github.ref_name }}" == "main" ]]; then
             echo podman manifest push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:latest"
             podman manifest push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:latest"
           fi
