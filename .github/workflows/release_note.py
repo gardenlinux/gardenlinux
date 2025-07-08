@@ -174,7 +174,7 @@ def download_all_singles(version, commitish):
             for v in image_variants:
                 # Skip "ali" platform for architectures other than "amd64" as it is currently not supported
                 # https://github.com/gardenlinux/gardenlinux/issues/3050
-                if is_unsupported_ali_combination(p, a, v) or ([p, a, v] not in available_flavors or len(available_flavors) == 0):
+                if is_unsupported_ali_combination(p, a, v) or ([p, a, v] not in available_flavors and len(available_flavors) != 0):
                     print(f"Skipping {p} {v} on {a} because it is currently not supported")
                 else:
                     fname = construct_full_image_name(p, f"gardener_prod{v}", a, version, commitish)
