@@ -27,13 +27,13 @@ RUN cd ${TOFU_HOME} && tofuenv install latest-allowed && tofuenv list | head -1 
 
 # install pinned providers (pinned in providers.tf and .terraform.lock.hcl)
 COPY .terraform.lock.hcl ${TOFU_HOME}/.terraform.lock.hcl
-RUN cd ${TOFU_HOME} && tofu providers mirror ${TOFU_HOME}/.terraform
+RUN cd ${TOFU_HOME} && tofu init -upgrade && tofu providers mirror ${TOFU_HOME}/.terraform
 
 # install providers from development forks
 COPY .terraformrc ${TOFU_HOME}/.terraformrc
-RUN curl -LO --create-dirs --output-dir ${TOFU_PROVIDERS_CUSTOM} https://github.com/b1-systems/google-magic-modules/releases/download/v6.16.0-secureboot1/terraform-provider-google \
-    && curl -LO --create-dirs --output-dir ${TOFU_PROVIDERS_CUSTOM} https://github.com/b1-systems/terraform-provider-azurerm/releases/download/v4.16.1-alpha1-secureboot1/terraform-provider-azurerm \
+RUN curl -LO --create-dirs --output-dir ${TOFU_PROVIDERS_CUSTOM} https://github.com/gardenlinux/terraform-provider-azurerm/releases/download/v4.20.1-alpha1-secureboot1/terraform-provider-azurerm \
+    && echo "526ae7f43ead2895b037f460f4d0e1f3b66d77f4ff436b3a5a68fad2e5cb3b30 ${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" >${TOFU_PROVIDERS_CUSTOM}/checksum.txt \
+    && sha256sum -c ${TOFU_PROVIDERS_CUSTOM}/checksum.txt \
     && chmod +x ${TOFU_PROVIDERS_CUSTOM}/terraform-provider-*
-
 
 WORKDIR /gardenlinux/tests
