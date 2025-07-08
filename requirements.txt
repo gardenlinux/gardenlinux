@@ -8,4 +8,4 @@ networkx
 PyYAML
 requests
 jsonschema
-python-gardenlinux-lib @ git+https://github.com/gardenlinux/python-gardenlinux-lib.git@0.8.0
+python-gardenlinux-lib @ git+https://github.com/gardenlinux/python-gardenlinux-lib.git@0.8.1

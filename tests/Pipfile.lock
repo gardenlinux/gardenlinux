@@ -3773,7 +3773,7 @@
             "editable": true,
             "git": "https://github.com/gardenlinux/python-gardenlinux-lib.git",
             "markers": "python_version >= '3.9'",
-            "ref": "a7545af15d3a1fa96675b24807eace643483da96"
+            "ref": "f4f5887ddf8b39b57a3b63341456bf78fa88a208"
         },
         "gitdb": {
             "hashes": [
