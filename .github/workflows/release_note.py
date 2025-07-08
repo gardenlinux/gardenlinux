@@ -137,9 +137,13 @@ def download_meta_single_manifest(bucket, bucket_path, image_name, dest_path):
     return f"{dest_path}/{image_name}"
 
 
-def parse_published_flavors():
-    with open("flavors.yaml", "r") as f:
-        flavors = yaml.safe_load(f.read())
+def parse_published_flavors(commitish):
+    response = requests.get(f"https://raw.githubusercontent.com/gardenlinux/gardenlinux/{commitish}/flavors.yaml")
+    if response.status_code != 200:
+        print(f"Warning: Failed to fetch flavors from https://raw.githubusercontent.com/gardenlinux/gardenlinux/{commitish}/flavors.yaml, continuing without flavor check")
+        return []
+        
+    flavors = yaml.safe_load(response.content.decode())
 
     available_flavors = []
     for target in flavors["targets"]:
@@ -160,7 +164,7 @@ def is_unsupported_ali_combination(platform, architecture, variant):
 def download_all_singles(version, commitish):
     if commitish == None:
         raise Exception("Commitish is not set")
-    available_flavors = parse_published_flavors()
+    available_flavors = parse_published_flavors(commitish)
 
     local_dest_path = "s3_downloads"
     os.makedirs(local_dest_path, exist_ok=True)
@@ -170,7 +174,7 @@ def download_all_singles(version, commitish):
             for v in image_variants:
                 # Skip "ali" platform for architectures other than "amd64" as it is currently not supported
                 # https://github.com/gardenlinux/gardenlinux/issues/3050
-                if is_unsupported_ali_combination(p, a, v) or [p, a, v] not in available_flavors:
+                if is_unsupported_ali_combination(p, a, v) or ([p, a, v] not in available_flavors or len(available_flavors) == 0):
                     print(f"Skipping {p} {v} on {a} because it is currently not supported")
                 else:
                     fname = construct_full_image_name(p, f"gardener_prod{v}", a, version, commitish)
