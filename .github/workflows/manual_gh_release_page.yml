@@ -68,6 +68,14 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - name: install dependencies for generate_release_note.py script
         run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
+      - name: Checkout flavors of the release commit
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        with:
+          ref: ${{ inputs.commit }}
+          sparse-checkout: |
+            flavors.yaml
+          sparse-checkout-cone-mode: false
+          path: release_checkout
       - name: create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
