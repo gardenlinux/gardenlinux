@@ -1,6 +1,9 @@
 name: build and publish images for use with lima-vm
 
 on:
+  push:
+    branches:
+      - lima-upload  
   schedule:
     - cron: '0 11 * * 2'
     
