@@ -40,7 +40,6 @@ jobs:
 
     - name: Build image with feature:lima for arm64
       run: |
-        ./build kvm-lima-amd64
         sudo apt-get update
         sudo apt-get install -y ovmf qemu-efi-aarch64 qemu-user-static binfmt-support
         sudo update-binfmts --enable qemu-aarch64
