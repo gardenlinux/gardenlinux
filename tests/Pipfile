@@ -15,7 +15,7 @@ dacite = "*"
 cffi = "*"
 pytest-json-report = "*"
 pytest-rerunfailures = "*"
-gardenlinux = {editable = true, ref = "0.8.1", git = "https://github.com/gardenlinux/python-gardenlinux-lib.git"}
+python-gardenlinux-lib = {editable = true, ref = "0.6.0", git = "https://github.com/gardenlinux/python-gardenlinux-lib.git"}
 
 [dev-packages]
 pytest = "*"
