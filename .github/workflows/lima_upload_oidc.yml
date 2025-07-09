@@ -37,10 +37,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y ovmf qemu-efi-aarch64 qemu-user-static binfmt-support
         sudo update-binfmts --enable qemu-aarch64
-        ./build kvm-lima-arm64
-
-    - name: Upload to GCP Storage bucket
-      run: |       
+        ./build kvm-lima-arm64      
         cd ./.build
         IMAGE_AMD=$(find . -mmin -20 -maxdepth 1 -type f -name "*amd*.qcow2" -exec basename {} \;)
         IMAGE_ARM=$(find . -mmin -20 -maxdepth 1 -type f -name "*arm*.qcow2" -exec basename {} \;)
