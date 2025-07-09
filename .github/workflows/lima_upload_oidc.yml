@@ -2,7 +2,7 @@ name: build and publish images for use with lima-vm
 
 on:
   schedule:
-    - cron: '* * * * 2'
+    - cron: '0 11 * * 2'
 
 jobs:
   build-upload:
