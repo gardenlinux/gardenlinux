@@ -1,9 +1,8 @@
-name: LIMA Qcow2
+name: build and publish images for use with lima-vm
 
 on:
-  push:
-    branches:
-      - lima-upload
+  schedule:
+    - cron: '* * * * 2'
 
 jobs:
   build-upload:
@@ -16,7 +15,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    # Step 1: Authenticate to GCP
     - name: Authenticate to GCloud via OIDC
       uses: google-github-actions/auth@v2
       with:
@@ -25,25 +23,26 @@ jobs:
         create_credentials_file: true
         export_environment_variables: true
 
-    ## Step 2: Set up gcloud SDK  
     - name: Set up gcloud SDK
       uses: google-github-actions/setup-gcloud@v1
       with:
         project_id: '${{ secrets.GCP_PROJECT }}'
         install_components: 'gsutil'
 
-    # Step 3: Confirm authenticated identity
-    - name: Check myself once
-      run: gcloud auth list
-
-    # Step 4: Upload QCOW2 after image creation
-    - name: Run QCOW2 creation script
+    - name: Build image with feature:lima for amd64/arm64
       run: |
         ./build kvm-lima-amd64
+        ./build kvm-lima-arm64
+
+     - name: Upload
+      run: |       
         cd ./.build
-        IMAGE_QCOW2=$(find . -mmin -20 -maxdepth 1 -type f -name "*.qcow2" -exec basename {} \;)
-        gsutil cp "${IMAGE_QCOW2}" gs://${{ secrets.GCP_LIMA_BUCKET }}/${{ secrets.LIMA_IMAGE_NAME }}
-    
-    # Step 5: Confirmation with URL
+        IMAGE_AMD=$(find . -mmin -20 -maxdepth 1 -type f -name "*amd*.qcow2" -exec basename {} \;)
+        IMAGE_ARM=$(find . -mmin -20 -maxdepth 1 -type f -name "*arm*.qcow2" -exec basename {} \;)
+        gsutil cp "${IMAGE_AMD}" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-amd64-today.qcow2
+        gsutil cp "${IMAGE_ARM}" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-arm64-today.qcow2
+        
     - name: Output public URL
-      run: echo "QCOW2 uploaded to https://images.gardenlinux.io/garden-lima-today.qcow2"
+      run: | 
+        echo "amd64 image uploaded to https://images.gardenlinux.io/gardenlinux-amd64today.qcow2"
+        echo "arm64 image uploaded to https://images.gardenlinux.io/gardenlinux-arm64today.qcow2"
