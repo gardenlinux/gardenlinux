@@ -30,11 +30,6 @@ jobs:
       with:
         project_id: '${{ secrets.GCP_PROJECT }}'
         install_components: 'gsutil'
-
-    - name: Set up QEMU for arm64
-      uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
           
     - name: Build image with feature:lima for amd64/arm64
       run: |
