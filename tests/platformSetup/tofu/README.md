@@ -282,7 +282,7 @@ $ gcloud auth application-default \
 
 > [!NOTE]
 > The Project ID can be found in the Google Cloud portal under Project info.
-> If you don't a Google Cloud project, you can supply any mocked up value.
+> If you don't have a Google Cloud project, the `Makefile` will set up a mocked value for you.
 
 #### Microsoft Azure
 
@@ -298,7 +298,7 @@ $ export ARM_SUBSCRIPTION_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 > [!NOTE]
 > The subscription ID can be found in the Azure portal under Subscriptions.
-> If you don't have a subscription, you have to comment out the module "azure" in `tests/platformSetup/tofu/main.tf` and `tests/platformSetup/tofu/outputs.tf`.
+> If you don't have a subscription, you have to switch to the `azure_disabled` module in `tests/platformSetup/tofu/main.tf`.
 
 #### Alibaba Cloud (ALI)
 
