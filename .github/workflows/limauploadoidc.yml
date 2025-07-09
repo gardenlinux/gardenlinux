@@ -1,0 +1,49 @@
+name: LIMA Qcow2
+
+on:
+  push:
+    branches:
+      - lima-upload
+
+jobs:
+  build-upload:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    # Step 1: Authenticate to GCP
+    - name: Authenticate to GCloud via OIDC
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: '${{ secrets.GCP_LIMA_WORKLOAD_IDENTITY_PROVIDER }}'
+        service_account: '${{ secrets.GCP_LIMA_SERVICE_ACCOUNT }}'
+        create_credentials_file: true
+        export_environment_variables: true
+
+    ## Step 2: Set up gcloud SDK  
+    - name: Set up gcloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: '${{ secrets.GCP_PROJECT }}'
+        install_components: 'gsutil'
+
+    # Step 3: Confirm authenticated identity
+    - name: Check myself once
+      run: gcloud auth list
+
+    # Step 4: Upload QCOW2 after image creation
+    - name: Run QCOW2 creation script
+      run: |
+        ./build kvm-lima-amd64
+        cd ./.build
+        IMAGE_QCOW2=$(find . -mmin -20 -maxdepth 1 -type f -name "*.qcow2" -exec basename {} \;)
+        gsutil cp "${IMAGE_QCOW2}" gs://${{ secrets.GCP_LIMA_BUCKET }}/${{ secrets.LIMA_IMAGE_NAME }}
+    
+    # Step 5: Confirmation with URL
+    - name: Output public URL
+      run: echo "QCOW2 uploaded to https://storage.googleapis.com/lima-images-qcow2/garden-lima-today.qcow2"
