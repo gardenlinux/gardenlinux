@@ -46,4 +46,4 @@ jobs:
     
     # Step 5: Confirmation with URL
     - name: Output public URL
-      run: echo "QCOW2 uploaded to https://storage.googleapis.com/lima-images-qcow2/garden-lima-today.qcow2"
+      run: echo "QCOW2 uploaded to https://images.gardenlinux.io/garden-lima-today.qcow2"
