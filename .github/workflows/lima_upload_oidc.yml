@@ -3,14 +3,13 @@ name: build and publish images for use with lima-vm
 on:
   schedule:
     - cron: '0 11 * * 2'
-
+    
 jobs:
   build-upload:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -34,7 +33,7 @@ jobs:
         ./build kvm-lima-amd64
         ./build kvm-lima-arm64
 
-     - name: Upload
+    - name: Upload to GCP Storage bucket
       run: |       
         cd ./.build
         IMAGE_AMD=$(find . -mmin -20 -maxdepth 1 -type f -name "*amd*.qcow2" -exec basename {} \;)
