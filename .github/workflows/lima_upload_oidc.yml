@@ -38,7 +38,7 @@ jobs:
         cp "$IMAGE_ARM" ../output/
         sha512sum "$IMAGE_ARM" > "../output/$(basename $IMAGE_ARM).sha512"
 
-    - name: Create lima.yaml for better VM start
+    - name: Create gardenlinux.yaml for limactl create config 
       run: |
         mkdir -p output
         cd output
