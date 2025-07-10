@@ -9,7 +9,7 @@ class ShellRunner:
 	def __init__(self, user):
 		self.user = user
 	
-	def __call__(self, cmd, capture_output=False):
+	def __call__(self, cmd, capture_output=False, ignore_exit_code=False):
 		def _setuid():
 			if self.user != None:
 				os.setgid(self.user[1])
@@ -17,7 +17,7 @@ class ShellRunner:
 
 		result = subprocess.run(['/bin/sh', '-e', '-c', cmd], shell=False, capture_output=capture_output, text=True, check=False, preexec_fn=_setuid)
 
-		if result.returncode != 0:
+		if result.returncode != 0 and not ignore_exit_code:
 			raise RuntimeError(f"command {cmd} failed with exit code {result.returncode}")
 
 		return result
