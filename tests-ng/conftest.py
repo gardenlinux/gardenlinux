@@ -27,4 +27,4 @@ def pytest_configure(config):
 def pytest_collection_modifyitems(config, items):
 	for item in items:
 		if item.get_closest_marker("booted") and not system_booted:
-			pytest.mark.skip(reason="not running on a booted system")
+			item.add_marker(pytest.mark.skip(reason="not running on a booted system"))
