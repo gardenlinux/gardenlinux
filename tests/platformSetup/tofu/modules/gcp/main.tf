@@ -21,7 +21,11 @@ locals {
   public_ip = google_compute_instance.instance.network_interface.0.access_config.0.nat_ip
 
   image_source_type = split("://", var.image_path)[0]
-  image             = local.image_source_type == "file" ? "${split("file://", var.image_path)[1]}/${var.image_file}" : null
+  image = (
+    local.image_source_type == "file" ? "${split("file://", var.image_path)[1]}/${var.image_file}" :
+    local.image_source_type == "cloud" ? var.image_file :
+    null
+  )
 
   labels = {
     component = "gardenlinux"
@@ -31,6 +35,8 @@ locals {
 }
 
 resource "google_storage_bucket" "images" {
+  count = local.image_source_type == "file" ? 1 : 0
+
   name          = local.bucket_name
   location      = var.region_storage
   force_destroy = true
@@ -42,9 +48,11 @@ resource "google_storage_bucket" "images" {
 }
 
 resource "google_storage_bucket_object" "image" {
+  count = local.image_source_type == "file" ? 1 : 0
+
   name   = local.tar_name
   source = local.image
-  bucket = google_storage_bucket.images.name
+  bucket = google_storage_bucket.images.0.name
 
   content_type = "application/x-tar"
 }
@@ -55,10 +63,12 @@ resource "google_storage_bucket_object" "image" {
 # }
 
 resource "google_compute_image" "image" {
+  count = local.image_source_type == "file" ? 1 : 0
+
   name = local.image_name
 
   raw_disk {
-    source = "https://storage.cloud.google.com/${google_storage_bucket.images.name}/${google_storage_bucket_object.image.name}"
+    source = "https://storage.cloud.google.com/${google_storage_bucket.images.0.name}/${google_storage_bucket_object.image.0.name}"
   }
 
   guest_os_features {
@@ -93,7 +103,7 @@ resource "google_compute_image" "image" {
 
   lifecycle {
     replace_triggered_by = [
-      google_storage_bucket_object.image.crc32c
+      google_storage_bucket_object.image.0.crc32c
     ]
   }
 }
@@ -140,7 +150,11 @@ resource "google_compute_instance" "instance" {
 
   boot_disk {
     initialize_params {
-      image = google_compute_image.image.name
+      image = (
+        local.image_source_type == "file" ? google_compute_image.image.0.name :
+        local.image_source_type == "cloud" ? "projects/sap-se-gcp-gardenlinux/global/images/${local.image}" :
+        null
+      )
       type  = "pd-ssd"
       size  = 16
     }
@@ -184,7 +198,7 @@ resource "google_compute_instance" "instance" {
 
   lifecycle {
     replace_triggered_by = [
-      google_compute_image.image.creation_timestamp
+      google_compute_image.image.0.creation_timestamp
     ]
   }
 }
