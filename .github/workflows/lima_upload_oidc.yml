@@ -50,5 +50,5 @@ jobs:
  
     - name: Output public URL
       run: | 
-        echo "amd64 image uploaded to https://images.gardenlinux.io/gardenlinux-amd64today.qcow2"
-        echo "arm64 image uploaded to https://images.gardenlinux.io/gardenlinux-arm64today.qcow2"
+        echo "amd64 image uploaded to https://images.gardenlinux.io/gardenlinux-amd64-today.qcow2"
+        echo "arm64 image uploaded to https://images.gardenlinux.io/gardenlinux-arm64-today.qcow2"
