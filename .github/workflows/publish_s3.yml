@@ -188,7 +188,7 @@ jobs:
           cmd: glrd --type nightly --latest
   publish_retry:
     needs: [ upload_trustedboot_flavors_to_s3, upload_trustedboot_flavors_to_s3_china, upload_non_trustedboot_flavors_to_s3, upload_non_trustedboot_flavors_to_s3_china, glrd ]
-    if: ${{ failure() && ( needs.upload_to_s3.result == 'failure' || needs.upload_to_s3_cn.result == 'failure' || needs.glrd.result == 'failure' ) }}
+    if: ${{ failure() && ( needs.upload_trustedboot_flavors_to_s3.result == 'failure' || needs.upload_trustedboot_flavors_to_s3_china.result == 'failure' || needs.upload_non_trustedboot_flavors_to_s3.result == 'failure' || needs.upload_non_trustedboot_flavors_to_s3_china.result == 'failure' || needs.glrd.result == 'failure' ) }}
     name: 'Retry checkpoint: Publish to S3'
     runs-on: ubuntu-24.04
     steps:
