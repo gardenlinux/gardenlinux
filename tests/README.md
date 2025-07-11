@@ -222,6 +222,46 @@ All further tests run inside containers spawned from these images.
     ghcr.io/gardenlinux/gardenlinux/platform-test-tofu         80436df0                                  c23ac2651b9e  13 days ago    3.64 GB
     ghcr.io/gardenlinux/gardenlinux/platform-test-tofu         latest                                    c23ac2651b9e  13 days ago    3.64 GB    
 
+#### Platform Test Image – GitHub Action Workflows
+
+##### Base Image
+
+The `platform-test-base` image is always based on:
+
+* `ghcr.io/gardenlinux/nightly:latest`
+
+###### Motivation
+
+Using the nightly build as the base for the `platform-test-base` image enables rapid feedback and faster testing of changes without waiting for the full release cycle. Since the test-related software versions in `platform-test-*` are locked down, relying on the nightly build is not only acceptable but also beneficial. For more details, see [Image Stability](#image-stability).
+
+###### Image Build and Push
+
+The [build and push workflow for the `platform-test-*` images](.github/workflows/build_platform_test_images.yml) is triggered:
+
+**Manually**
+
+- Triggered directly by a user
+
+**Automatically**
+
+- When the `build.yml` ("Image Build") workflow runs
+- When a push to `main` includes changes to test-related files  
+  - In this case, the `latest` tag is automatically pushed
+- *(Planned — not yet implemented)*:  
+  Triggered by another workflow with `inputs.push == true`
+
+##### Image Stability
+
+The `platform-test-*` images are considered "stable" because:
+
+* All version-dependent tools are **locked down**, including:
+  * Python and its modules
+  * OpenTofu and Providers
+* It is based on a **nightly image that has passed all platform tests**
+* It is **rebuilt on `main` only** when test-related code changes
+* It is **rebuilt in all branches** when invoked (e.g. by `build.yml`) to catch issues early
+* It is **only pushed** for code on `main` (or manually)
+
 ## Using the tests on supported platforms
 
 ### General
