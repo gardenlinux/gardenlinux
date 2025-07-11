@@ -72,3 +72,49 @@ Simply invoke this `podman` command:
 podman run --rm -v "$PWD/.build/tests-ng-dist.tar.gz:/mnt/tests-ng-dist.tar.gz:ro" --read-only --tmpfs /opt/tests -w /opt/tests ghcr.io/gardenlinux/gardenlinux /bin/bash -c 'gzip -d < /mnt/tests-ng-dist.tar.gz | tar -x && ./run_tests'
 ```
 
+### QEMU Platform Tests
+
+Complete workflow for testing with QEMU:
+
+```bash
+# 1. Build the Garden Linux image
+make kvm-gardener_prod-amd64-build
+
+# 2. Start QEMU VM with the image
+make --directory=tests/platformSetup kvm-gardener_prod-amd64-qemu-apply
+
+# 3. Run tests-ng platform tests
+make --directory=tests kvm-gardener_prod-amd64-qemu-test-ng-platform
+```
+
+### Cloud Platform Tests
+
+#### Option 1: Build Your Own Image
+
+```bash
+# 1. Build the Garden Linux image for GCP
+make gcp-gardener_prod-amd64-build
+
+# 2. Configure cloud infrastructure
+make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-config
+
+# 3. Deploy to cloud platform
+make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-apply
+
+# 4. Run tests-ng platform tests
+make --directory=tests gcp-gardener_prod-amd64-tofu-test-ng-platform
+```
+
+#### Option 2: Use Existing Cloud Image
+
+```bash
+# 1. Configure with existing image for GCP
+IMAGE_PATH=cloud:// IMAGE_NAME=projects/sap-se-gcp-gardenlinux/global/images/gardenlinux-gcp-ff804026cbe7b5f2d6f729e4-1592-11-9ce205a2 \
+  make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-config
+
+# 2. Deploy to cloud platform
+make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-apply
+
+# 3. Run tests-ng platform tests
+make --directory=tests gcp-gardener_prod-amd64-tofu-test-ng-platform
+```
