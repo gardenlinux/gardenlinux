@@ -1,0 +1,10 @@
+[Unit]
+Description=Execute QEMU fw_cfg script
+ConditionPathExists=/sys/firmware/qemu_fw_cfg/by_name/opt/gardenlinux/config_script/raw
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/run-qemu-fw_cfg-script
+
+[Install]
+WantedBy=multi-user.target
