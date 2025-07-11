@@ -1,0 +1,12 @@
+[Unit]
+Description=Execute QEMU fw_cfg script
+ConditionPathExists=/sys/firmware/qemu_fw_cfg/by_name/opt/gardenlinux/config_script/raw
+After=default.target
+Requires=default.target
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/run-qemu-fw_cfg-script
+
+[Install]
+WantedBy=default.target
