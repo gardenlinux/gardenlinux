@@ -1,0 +1,2 @@
+description: "enable support for QEMU fw_cfg based user config scripts"
+type: flag
