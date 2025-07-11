@@ -3,12 +3,11 @@ import pytest
 
 def test_gl_is_support_distro():
 	with open("/etc/os-release", "r") as f:
-		assert "ID=gardenlinux" in [ line.strip() for line in f]
+		assert "ID=gardenlinux" in [ line.strip() for line in f], "/etc/os-release does not contain gardenlinux vendor field"
 
 def test_no_man(shell):
 	result = shell("man ls", capture_output=True, ignore_exit_code=True)
-	assert result.returncode == 127
-	assert "not found" in result.stderr
+	assert result.returncode == 127 and "not found" in result.stderr, "man ls, did not fail with 'not found' as expected"
 
 def test_fhs(shell):
 	expected_dirs = {
@@ -35,7 +34,7 @@ def test_fhs(shell):
 		expected_dirs.add("lib64")
 
 	for dir in sorted(expected_dirs):
-		assert os.path.isdir(f"/{dir}")
+		assert os.path.isdir(f"/{dir}"), f"expected FHS directory /{dir} does not exist"
 
 @pytest.mark.booted
 @pytest.mark.feature("server and not azure") # server installs systemd and azure has notoriously bad startup times
