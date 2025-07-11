@@ -106,7 +106,11 @@ jobs:
           run-id: ${{ inputs.run_id }}
       - name: Publish container base image
         run: |
-          is_nightly=$(! [ "${{ inputs.original_workflow_name }}" = "nightly" ]; echo $?)
+          if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
+            is_nightly=true
+          else
+            is_nightly=false
+          fi
           version=$(cat VERSION)
 
           podman login -u token -p ${{ github.token }} ghcr.io
@@ -174,7 +178,11 @@ jobs:
           run-id: ${{ inputs.run_id }}
       - name: Publish bare flavor image ${{ matrix.config }}
         run: |
-          is_nightly=$(! [ "${{ inputs.original_workflow_name }}" = "nightly" ]; echo $?)
+          if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
+            is_nightly=true
+          else
+            is_nightly=false
+          fi
           version=$(bin/garden-version "${{ inputs.version }}")
 
           podman login -u token -p ${{ github.token }} ghcr.io
