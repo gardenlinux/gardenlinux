@@ -2,6 +2,8 @@
 
 set -eufo pipefail
 
+set -x
+
 tmpdir=
 
 cleanup () {
@@ -48,6 +50,8 @@ export PYTHONPATH="$tmpdir/runtime/lib/python3.14/site-packages"
 # Create site-packages directory in target runtime
 mkdir -p "$tmpdir/runtime/lib/python3.14/site-packages"
 
+echo "which pip?"
+which pip
 pip install --target "$tmpdir/runtime/lib/python3.14/site-packages" -r "$requirements"
 
 # Create the final runtime archive
