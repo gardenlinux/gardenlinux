@@ -1,10 +1,6 @@
 import pytest
 
-system_booted = False
-
-def pytest_configure(config):
-	global system_booted
-	system_booted = config.getoption("--system-booted")
+from plugins.booted import system_booted
 
 class SysctlWrapper:
 	def __getitem__(self, key):
