@@ -40,6 +40,7 @@ This directory contains the infrastructure code used to automatically set up tes
     - [Using Encrypted Local State](#using-encrypted-local-state)
     - [Setting Up Remote State in S3](#setting-up-remote-state-in-s3)
     - [Recover GitHub Action's OpenTofu State Locally](#recover-github-actions-opentofu-state-locally)
+- [Updating OpenTofu or Provider Versions](#updating-opentofu-or-providerversions)
 - [GitHub Actions](#github-actions)
   - [Available Workflows](#available-workflows)
     - [nightly.yml - Automated Nightly Tests](#nightlyyml---automated-nightly-tests)
@@ -1141,6 +1142,55 @@ $ for i in $(tofu workspace list | grep 'ali|aws|azure|gcp' | sed 's#*##g'); do
     tofu workspace delete $i
   done
 ```
+
+## Updating OpenTofu or Provider Versions
+
+To upgrade to a newer OpenTofu version or update a provider, follow these steps carefully.
+
+1. **If the provider is forked:**
+
+   * Update the version in
+     `tests/images/platform-test/tofu/Containerfile`
+   * Check and adjust settings in
+     `tests/images/platform-test/tofu/.terraformrc`
+
+2. **Update version constraints:**
+
+   * Edit `tests/platformSetup/tofu/providers.tf` to pin the new OpenTofu and provider versions
+     * Look at [OpenTofu - Providers - Version Constraints](https://opentofu.org/docs/language/providers/requirements/#version-constraints) for the correct syntax.
+
+3. **Upgrade the lockfile:**
+
+   ```bash
+   $ cd tests/platformSetup/tofu/
+   $ tofu init [-upgrade]
+   ```
+
+   This will update `tests/platformSetup/tofu/.terraform.lock.hcl`
+
+### Local Testing
+
+You can test your changes locally by building the image and running the relevant make targets:
+
+```bash
+# Build and tag the updated tofu image
+$ make --directory=tests/images build-platform-test-tofu
+$ podman tag ghcr.io/gardenlinux/gardenlinux/platform-test-tofu:nightly \
+            ghcr.io/gardenlinux/gardenlinux/platform-test-tofu:latest
+
+# Run the usual platform setup make targets
+$ make --directory=tests/platformSetup azure-gardener_prod-amd64-tofu-config
+$ make --directory=tests/platformSetup azure-gardener_prod-amd64-tofu-plan
+```
+
+### Final Steps
+
+If your local tests pass:
+
+* Commit your changes
+* Open a pull request
+
+Once your PR is merged into `main`, the `ghcr.io/gardenlinux/gardenlinux/platform-test-tofu:latest` image will be **automatically built and pushed**.
 
 ## GitHub Actions
 
