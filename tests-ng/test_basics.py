@@ -1,8 +1,6 @@
 import os
 import pytest
 
-import helper.systemd_analyze
-
 def test_gl_is_support_distro():
 	with open("/etc/os-release", "r") as f:
 		assert "ID=gardenlinux" in [ line.strip() for line in f]
@@ -41,11 +39,11 @@ def test_fhs(shell):
 
 @pytest.mark.booted
 @pytest.mark.feature("server and not azure") # server installs systemd and azure has notoriously bad startup times
-def test_startup_time(shell):
+def test_startup_time(systemd):
 	tolerated_kernel = 60.0
 	tolerated_userspace = 40.0
 
-	kernel, initrd, userspace = systemd_analyze.get_startup_durations(shell)
+	kernel, initrd, userspace = systemd.analyze()
 	kernel_total = kernel + initrd
 
 	assert kernel_total < tolerated_kernel, (
