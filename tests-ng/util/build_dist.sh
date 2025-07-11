@@ -30,7 +30,7 @@ done
 set +f
 
 mkdir -p "$tmpdir/dist/tests"
-cp -r -t "$tmpdir/dist/tests" conftest.py features.py shell.py sysctl.py helper test_*.py
+cp -r -t "$tmpdir/dist/tests" conftest.py plugins test_*.py
 
 cat > "$tmpdir/dist/run_tests" <<'EOF'
 #!/bin/sh
