@@ -37,7 +37,7 @@ endef
 
 # # Extract ARCH from the flavor string (e.g., "bare-python-amd64" -> "amd64")
 bare_get_arch = $(shell echo $(1) | grep -oE '(amd64|arm64)')
-# 
+#
 # # Extract CONFIG from the flavor string (e.g., "bare-python-amd64" -> "python")
 bare_get_config = $(shell echo $(1) | sed 's/^bare-//' | sed 's/-amd64//' | sed 's/-arm64//')
 
@@ -97,11 +97,13 @@ help:
 	@echo "Qemu Provisioner Platform Tests targets:"
 	@$(foreach flavor,$(FLAVORS_IMAGE), \
 		printf "%-80s%s\n" "  $(flavor)-qemu-test-platform" "Run platform tests build with Qemu for $(flavor)"; \
+		printf "%-80s%s\n" "  $(flavor)-qemu-test-ng-platform" "Run platform tests-ng build with Qemu for $(flavor)"; \
 	)
 	@echo ""
 	@echo "Tofu Provisioner Platform Tests targets:"
 	@$(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 		printf "%-80s%s\n" "  $(flavor)-tofu-test-platform" "Run platform tests build with OpenTofu for $(flavor)"; \
+		printf "%-80s%s\n" "  $(flavor)-tofu-test-ng-platform" "Run platform tests-ng build with OpenTofu for $(flavor)"; \
 	)
 
 # help: all					Run all platform tests
@@ -139,10 +141,31 @@ $(foreach flavor,$(FLAVORS_IMAGE), \
 		" \
 	) \
 )
+$(foreach flavor,$(FLAVORS_IMAGE), \
+	$(eval \
+	  $(flavor)-qemu-test-ng-platform: ; \
+	    make --directory=$(ROOT_DIR)/tests-ng && \
+		$(GARDENLINUX_BUILD_CRE) exec -it qemu-$(flavor) bash -c "\
+			until test -f /tmp/qemu.pid; do echo 'Waiting for qemu to start...'; sleep 1; done \
+		" && \
+		CMD='rm -rf /var/tmp/tests-ng && mkdir -p /var/tmp/tests-ng' make --directory=platformSetup $(flavor)-qemu-login && \
+		SCP_PATH_LOCAL='/gardenlinux/tests-ng/.build/dist.tar.gz' SCP_PATH_REMOTE='/var/tmp/tests-ng' make --directory=platformSetup $(flavor)-qemu-scp-local-remote && \
+		CMD='gzip -d < /var/tmp/tests-ng/dist.tar.gz | tar -x && ./run_tests' make --directory=platformSetup $(flavor)-qemu-login \
+	) \
+)
 
 $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 	$(eval \
 	  $(flavor)-tofu-test-platform: ; \
 	  	$(CRE_CMD_tofu) pytest --provisioner=manual --configfile=/gardenlinux/tests/config/pytest.manual.$(flavor).yaml --junit-xml=/gardenlinux/tests/$(flavor).platform.test.xml ; \
+	) \
+)
+$(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
+	$(eval \
+	  $(flavor)-tofu-test-ng-platform: ; \
+		make --directory=$(ROOT_DIR)/tests-ng && \
+		CMD='rm -rf /var/tmp/tests-ng && mkdir -p /var/tmp/tests-ng' make --directory=platformSetup $(flavor)-tofu-login && \
+		SCP_PATH_LOCAL='/gardenlinux/tests-ng/.build/dist.tar.gz' SCP_PATH_REMOTE='/var/tmp/tests-ng' make --directory=platformSetup $(flavor)-tofu-scp-local-remote && \
+		CMD='gzip -d < /var/tmp/tests-ng/dist.tar.gz | tar -x && ./run_tests' make --directory=platformSetup $(flavor)-tofu-login \
 	) \
 )

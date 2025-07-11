@@ -41,7 +41,7 @@ class PathManager:
         self.platform_setup_dir = self.tests_dir / "platformSetup"
         self.tofu_dir = self.platform_setup_dir / "tofu"
         self.uuid_file = self.platform_setup_dir / ".uuid"
-        
+
         # Ensure directories exist
         self.config_dir.mkdir(exist_ok=True)
         self.platform_setup_dir.mkdir(exist_ok=True)
@@ -82,7 +82,7 @@ class Flavors:
     def parse_features(self):
         """Parse features from the flavor name."""
         parts = self.flavor.split("-")
-        
+
         if len(parts) < 3:
             logger.error("Flavor name must be in the format 'platform-features-arch'")
             sys.exit(1)
@@ -90,13 +90,13 @@ class Flavors:
         platform = parts[0]
         features_cname = "-".join(parts[1:-1])
         arch = parts[-1]
-        
+
         if arch not in {"amd64", "arm64"}:
             logger.error(f"Unsupported architecture '{arch}'. Valid options are 'amd64' or 'arm64'.")
             sys.exit(1)
 
         print(f"features_cname: {features_cname}")
-        
+
         # Create flavor string without architecture
         flavor_without_arch = "-".join(parts[:-1])
 
@@ -112,7 +112,7 @@ class Flavors:
         logger.info(f"Provisioner: {self.provisioner}")
         logger.info(f"Features: {feature_list}")
         logger.info(f"Architecture: {arch}")
-        
+
         return platform, feature_list, features_cname, arch
 
 class PytestConfig:
@@ -129,10 +129,10 @@ class PytestConfig:
         platform = config_data["platform"]
         provisioner = self.args.provisioner
         provisioner_pytest = PROVISIONER_PYTEST_MAP[provisioner]
-        
+
         if cname is None:
             cname = self.script.get_cname()
-            
+
         if provisioner == "qemu":
             config_file = self.paths.config_dir / f"pytest.{provisioner_pytest}.{flavor}.yaml"
             yaml_data = {
@@ -182,7 +182,7 @@ class Scripts:
         """Get cname if not provided."""
         if self.args.cname:
             return self.args.cname
-            
+
         platform = self.flavors.platform
         features = self.flavors.cname_features
         arch = self.flavors.arch
@@ -194,7 +194,7 @@ class Scripts:
         flavor = self.flavors.flavor
         platform = self.flavors.platform
         provisioner = self.args.provisioner
-        
+
         if provisioner == "qemu":
             ssh_config = {
                 "ssh_user": "root",
@@ -234,19 +234,59 @@ class Scripts:
         """Generate an SSH login script."""
         flavor = self.flavors.flavor
         provisioner = self.args.provisioner
-        
+
         login_script_file = self.paths.tests_dir / f"login.{provisioner}.{flavor}.sh"
         with login_script_file.open("w") as login_script:
             login_script.write("#!/usr/bin/env bash\n")
             login_script.write(
+                f"CMD=\"${{1}}\"\n"
                 f"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "
                 f"-l {config_data['ssh_user']} -i {config_data['ssh_key_filepath']} "
-                f"-p {config_data['ssh_port']} {config_data['host']}\n"
+                f"-p {config_data['ssh_port']} {config_data['host']} "
+                f"\"${{CMD}}\"\n"
             )
 
         login_script_file.chmod(0o755)
         logger.info(f"Login script '{login_script_file.relative_to(self.paths.git_root)}' created.")
-        
+
+        return config_data
+
+    def generate_scp_local_remote_script(self, config_data):
+        """Generate an scp local to remote script."""
+        flavor = self.flavors.flavor
+        provisioner = self.args.provisioner
+
+        scp_script_file = self.paths.tests_dir / f"scp-local-remote.{provisioner}.{flavor}.sh"
+        with scp_script_file.open("w") as scp_script:
+            scp_script.write("#!/usr/bin/env bash\n")
+            scp_script.write("PATH_LOCAL=${1}\n")
+            scp_script.write("PATH_REMOTE=${2:-/var/tmp/gardenlinux}\n")
+            scp_script.write(
+                f"scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r -P {config_data['ssh_port']} -i {config_data['ssh_key_filepath']} \"${{PATH_LOCAL}}\" \"{config_data['ssh_user']}@{config_data['host']}:${{PATH_REMOTE}}\"\n"
+            )
+
+        scp_script_file.chmod(0o755)
+        logger.info(f"scp script '{scp_script_file.relative_to(self.paths.git_root)}' created.")
+
+        return config_data
+
+    def generate_scp_remote_local_script(self, config_data):
+        """Generate an scp remote to local script."""
+        flavor = self.flavors.flavor
+        provisioner = self.args.provisioner
+
+        scp_script_file = self.paths.tests_dir / f"scp-remote-local.{provisioner}.{flavor}.sh"
+        with scp_script_file.open("w") as scp_script:
+            scp_script.write("#!/usr/bin/env bash\n")
+            scp_script.write("PATH_LOCAL=${1}\n")
+            scp_script.write("PATH_REMOTE=${2:-/var/tmp/gardenlinux}\n")
+            scp_script.write(
+                f"scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r -P {config_data['ssh_port']} -i {config_data['ssh_key_filepath']} \"{config_data['ssh_user']}@{config_data['host']}:${{PATH_REMOTE}}\" \"${{PATH_LOCAL}}\"\n"
+            )
+
+        scp_script_file.chmod(0o755)
+        logger.info(f"scp script '{scp_script_file.relative_to(self.paths.git_root)}' created.")
+
         return config_data
 
     def generate_pytest_scripts(self):
@@ -254,7 +294,7 @@ class Scripts:
         flavor = self.flavors.flavor
         provisioner = self.args.provisioner
         provisioner_pytest = PROVISIONER_PYTEST_MAP[provisioner]
-        
+
         apply_script = self.paths.tests_dir / f"pytest.{provisioner}.{flavor}.apply.sh"
         with apply_script.open("w") as f:
             f.write("#!/usr/bin/env bash\n")
@@ -290,23 +330,23 @@ class Tofu:
             # Ensure we're in the correct directory
             original_dir = Path.cwd()
             os.chdir(self.tofu_dir)
-            
+
             # Select the correct workspace
             workspace = f"{flavor}-{self.paths.seed}"
             logger.info(f"Workspace: {workspace}")
             workspace_cmd = ["tofu", "workspace", "select", workspace]
             subprocess.run(workspace_cmd, check=True, capture_output=True, text=True)
-            
+
             # Get the output
             tofu_output = subprocess.check_output(["tofu", "output", "-json"], text=True)
             tofu_data = json.loads(tofu_output)
             logger.debug(f"tofu_data: {tofu_data}")
-            
+
             if not tofu_data:
                 raise ValueError("No OpenTofu output variables found")
-                
+
             return tofu_data
-            
+
         except subprocess.CalledProcessError as e:
             logger.error(f"OpenTofu command failed: {e.stderr}")
             raise
@@ -361,10 +401,10 @@ class Tofu:
         # Write the tfvars file
         with var_file.open('w') as f:
             f.write(f'test_prefix = "{test_prefix}"\n')
-            
+
             if image_path:
                 f.write(f'image_path = "{image_path}"\n')
-            
+
             flavors_list = [flavor_item]
             formatted_flavors = json.dumps(flavors_list, indent=2)
             f.write(f'flavors = {formatted_flavors}\n')
@@ -377,8 +417,8 @@ def parse_arguments():
         description="Generate pytest config files and SSH login scripts for platform tests."
     )
     parser.add_argument(
-        '--flavor', 
-        type=str, 
+        '--flavor',
+        type=str,
         required=True,
         help="The flavor to be tested (e.g., 'kvm-gardener_prod-amd64')."
     )
@@ -389,14 +429,14 @@ def parse_arguments():
         help="Provisioner to use: 'qemu' for local testing or 'tofu' for Cloud Provider testing."
     )
     parser.add_argument(
-        '--image-path', 
-        type=str, 
+        '--image-path',
+        type=str,
         help="Base path for image files.",
         default='file:///gardenlinux/.build'
     )
     parser.add_argument(
-        '--cname', 
-        type=str, 
+        '--cname',
+        type=str,
         help="Basename of image file (e.g., 'kvm-gardener_prod-amd64-1312.0-80ffcc87')."
     )
     parser.add_argument(
@@ -414,7 +454,7 @@ def parse_arguments():
 
 def main():
     args = parse_arguments()
-    
+
     # Initialize core components
     path = PathManager()
     flavor = Flavors(args, path)
@@ -425,13 +465,14 @@ def main():
     if args.provisioner == 'qemu':
         config_data = scripts.generate_config_data()
         scripts.generate_login_script(config_data)
+        scripts.generate_scp_local_remote_script(config_data)
         pytest.generate_pytest_configfile(
             config_data,
             image_path=args.image_path,
             cname=args.cname
         )
         scripts.generate_pytest_scripts()
-    
+
     elif args.provisioner == 'tofu':
         try:
             if args.create_tfvars:
@@ -447,11 +488,12 @@ def main():
                 tofu_data = tofu.get_tofu_output(args.flavor)
                 config_data = scripts.generate_config_data(tofu_data)
                 scripts.generate_login_script(config_data)
+                scripts.generate_scp_local_remote_script(config_data)
                 pytest.generate_pytest_configfile(config_data)
-            
+
         except Exception as e:
             logger.error(f"OpenTofu error: {e}")
             sys.exit(1)
 
 if __name__ == "__main__":
-    main() 
+    main()

@@ -47,7 +47,7 @@ class QEMU:
 
         # Initialize ssh as None before try block
         ssh = None
-        
+
         try:
             ssh = RemoteClient(
                 host=ip,
@@ -69,7 +69,7 @@ class QEMU:
                     ssh.disconnect()
                 except Exception as e:
                     logger.warning(f"Error disconnecting SSH: {str(e)}")
-            
+
             if qemu is not None:
                 try:
                     qemu.__del__()
@@ -91,7 +91,7 @@ class QEMU:
             self._generate_ssh_key()
         else:
             logger.info("Using defined SSH key for platform tests.")
-        # Adjust QEMU image 
+        # Adjust QEMU image
         self._adjust_qemu()
         # Start QEMU
         self._start_qemu(arch, port)
