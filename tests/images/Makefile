@@ -6,14 +6,11 @@ ROOT_DIR := $(shell git rev-parse --show-toplevel)
 GIT_SHA:= $(shell git rev-parse HEAD)
 GIT_SHA_SHORT := $(shell git rev-parse --short HEAD)
 
-ifeq ($(strip $(GL_VERSION)),)
-GL_VERSION := nightly
-endif
-ifeq ($(strip $(GL_REGISTRY)),)
+ifeq ($(origin GL_REGISTRY), undefined)
 GL_REGISTRY := ghcr.io/gardenlinux
 endif
 ifeq ($(strip $(TARGETARCH)),)
-ifeq ($(shell uname -m), aarch64)	
+ifeq ($(shell uname -m), aarch64)
 TARGETARCH := arm64
 else ifeq ($(shell uname -m), arm64)
 TARGETARCH := arm64
@@ -38,14 +35,17 @@ define copy_files
 endef
 
 define pull_image
-	$(GARDENLINUX_BUILD_CRE) pull $(GL_REGISTRY)/$(strip $1):$(GL_VERSION) || true
-	$(GARDENLINUX_BUILD_CRE) pull $(GL_REGISTRY)/$(strip $1):latest || true
-	$(GARDENLINUX_BUILD_CRE) pull $(GL_REGISTRY)/gardenlinux:$(GL_VERSION) || true
-	$(GARDENLINUX_BUILD_CRE) pull $(GL_REGISTRY)/gardenlinux:latest || true
+	$(GARDENLINUX_BUILD_CRE) pull $(GL_REGISTRY)/$(strip $1):$(strip $2) || true
 endef
 
+# build an image:
+# $1 to_registry
+# $2 to_image
+# $3 to_tag
+# $4 directory with Containerfile
+# $5 additional options (optional)
 define build_image
-	$(GARDENLINUX_BUILD_CRE) build --build-arg GL_VERSION=$(GL_VERSION) --build-arg TARGETARCH=$(TARGETARCH) --platform linux/$(TARGETARCH) -t $1:$(GL_VERSION) -t $1:$(GIT_SHA) -t $1:$(GIT_SHA_SHORT) $2
+	$(GARDENLINUX_BUILD_CRE) build --build-arg TARGETARCH=$(TARGETARCH) --platform linux/$(TARGETARCH) $(strip $5) -t $(strip $1)/$(strip $2):$(strip $3) -t $(strip $1)/$(strip $2):$(GIT_SHA) -t $(strip $1)/$(strip $2):$(GIT_SHA_SHORT) $(strip $4)
 endef
 
 define clean_files
@@ -85,16 +85,15 @@ all: build-platform-test
 
 # pull-platform-test-base			Pull the platform test base image
 pull-platform-test-base:
-	$(call pull_image, gardenlinux/platform-test-base)
+	$(call pull_image, gardenlinux/platform-test-base, latest)
 
 # pull-platform-test			Pull all platform test images
 pull-platform-test: pull-platform-test-base $(addprefix pull-platform-test-,$(PLATFORMS))
 
 # build-platform-test-base		Build the platform test base image
-build-platform-test-base: pull-platform-test-base
+build-platform-test-base:
 	$(call copy_files, platform-test-base)
-	$(call build_image, gardenlinux/platform-test-base, platform-test-base)
-	$(call build_image, $(GL_REGISTRY)/gardenlinux/platform-test-base, platform-test-base)
+	$(call build_image, $(GL_REGISTRY), gardenlinux/platform-test-base, latest, platform-test-base, --build-arg GL_VERSION=nightly --pull=missing )
 	$(call clean_files, platform-test-base)
 
 # build-platform-test			Build all platform test images
@@ -104,13 +103,13 @@ build-platform-test: $(addprefix build-platform-test-,$(PLATFORMS))
 $(foreach platform,$(PLATFORMS),\
   $(eval \
     pull-platform-test-$(platform): ; \
-		$(call pull_image, gardenlinux/platform-test-$(platform)) ; \
+		$(call pull_image, gardenlinux/platform-test-$(platform), latest) ; \
   ) \
   $(eval \
-    build-platform-test-$(platform): build-platform-test-base pull-platform-test-$(platform); \
+    build-platform-test-$(platform): ; \
 		$(call copy_files, platform-test/$(platform)) ; \
-		$(call build_image, gardenlinux/platform-test-$(platform), platform-test/$(platform)) ; \
-		$(call build_image, $(GL_REGISTRY)/gardenlinux/platform-test-$(platform), platform-test/$(platform)) ; \
+		$(call pull_image, nightly, nightly) ; \
+		$(call build_image, $(GL_REGISTRY), gardenlinux/platform-test-$(platform), latest, platform-test/$(platform), --build-arg GL_VERSION=latest --pull=never ) ; \
 		$(call clean_files, platform-test/$(platform)) \
   ) \
 )

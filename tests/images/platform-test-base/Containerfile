@@ -1,8 +1,8 @@
 # use latest nightly by default
+ARG GL_REGISTRY=ghcr.io/gardenlinux
+ARG GL_IMAGE=nightly
 ARG GL_VERSION=nightly
-ARG GL_BASE=ghcr.io/gardenlinux/gardenlinux:${GL_VERSION}
-
-FROM ${GL_BASE}
+FROM ${GL_REGISTRY}/${GL_IMAGE}:${GL_VERSION}
 
 ENV PYTHON=python3.13
 
