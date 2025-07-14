@@ -114,6 +114,7 @@ $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 		mkdir -p $(MKDIRS) && \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
+			test -f cert/secureboot.db.der || CERT_CN=OpenTofu make --directory=cert && \
 			tofu init && \
 			tofu workspace select -or-create $(flavor)-$(SEED) && \
 			tofu apply --auto-approve -var-file variables.$(flavor).tfvars && \

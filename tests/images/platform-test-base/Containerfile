@@ -39,6 +39,10 @@ RUN apt-get update \
        git \
        #### needed to install libvirt-python via pipenv
        pkg-config \
+       #### beeded by cert Makefile
+       efitools \
+       gettext \
+       uuid-runtime \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Prepare virtual environment
