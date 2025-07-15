@@ -13,8 +13,8 @@ CACHE_DIR=".cache"
 
 tmpdir=
 
-cleanup () {
-	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
+cleanup() {
+	[ -n "$tmpdir" ] || rm -rf "$tmpdir"
 	tmpdir=
 }
 
@@ -66,17 +66,17 @@ trap cleanup EXIT
 tmpdir="$(mktemp -d)"
 
 if [ "$0" != /init ]; then
-	cat > "$tmpdir/Containerfile" <<-'EOF'
-	FROM debian:stable
-	RUN dpkg --add-architecture amd64 \
-	&& dpkg --add-architecture arm64 \
-	&& apt-get update \
-	&& apt-get install -y --no-install-recommends ca-certificates curl libc6:amd64 libc6:arm64 make
+	cat >"$tmpdir/Containerfile" <<-'EOF'
+		FROM debian:stable
+		RUN dpkg --add-architecture amd64 \
+		&& dpkg --add-architecture arm64 \
+		&& apt-get update \
+		&& apt-get install -y --no-install-recommends ca-certificates curl libc6:amd64 libc6:arm64 make
 	EOF
 
 	podman build --iidfile "$tmpdir/image_id" "$tmpdir"
 	image_id="$(<"$tmpdir/image_id")"
-	
+
 	cleanup
 	exec podman run --rm -v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro" -v "$PWD:/mnt" -w /mnt "$image_id" /init "$@"
 fi
