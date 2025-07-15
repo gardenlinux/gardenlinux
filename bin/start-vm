@@ -137,7 +137,7 @@ set_defaults () {
     # Set QEMU defaults
     # Run as user "nobody" when started as root user
     if [ $(id -u) == 0 ]; then
-        QEMU_OPTS+=("-runas nobody")
+        QEMU_OPTS+=("-run-with user=nobody")
     fi
 
     # Do not use defaults on QEMU
