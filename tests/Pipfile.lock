@@ -3506,11 +3506,11 @@
         },
         "certifi": {
             "hashes": [
-                "sha256:2e0c7ce7cb5d8f8634ca55d2ba7e6ec2689a2fd6537d8dec1296a477a4910057",
-                "sha256:d747aa5a8b9bbbb1bb8c22bb13e22bd1f18e9796defa16bab421f7f7a317323b"
+                "sha256:6b31f564a415d79ee77df69d757bb49a5bb53bd9f756cbbe24394ffd6fc1f4b2",
+                "sha256:8ea99dbdfaaf2ba2f9bac77b9249ef62ec5218e7c2b2e903378ed5fccf765995"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==2025.6.15"
+            "version": "==2025.7.14"
         },
         "cffi": {
             "hashes": [
@@ -4187,12 +4187,12 @@
         },
         "python-novaclient": {
             "hashes": [
-                "sha256:351fefdaaafad7a5522b57183f1d5e1b077a4a6169e19470943f7218d7c79018",
-                "sha256:cf6a4b8f01ec543d5a75c01c218474ba9b063bd9fd3743821fedc68a845cab4e"
+                "sha256:2f066a01061eeadd1ce86fbfe0267a1d0d188b64c1641361f725c4277f67a96b",
+                "sha256:e3a0f3c6c811e4b9bcf348e2d797856679b3504d50cd20069d78e55954b9114a"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.9'",
-            "version": "==18.9.0"
+            "version": "==18.10.0"
         },
         "pyyaml": {
             "hashes": [
@@ -4790,6 +4790,7 @@
             "version": "==0.13.3"
         }
     },
+    "firecracker-packages": {},
     "gcp-packages": {
         "cachetools": {
             "hashes": [
@@ -5144,6 +5145,7 @@
             "version": "==2.5.0"
         }
     },
+    "kvm-packages": {},
     "openstack-packages": {
         "autopage": {
             "hashes": [
