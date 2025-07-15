@@ -1,0 +1,13 @@
+[Unit]
+Description=iSCSI InitiatorName Generator
+ConditionPathExists=|!/etc/iscsi/initiatorname.iscsi
+After=multi-user.service
+
+[Service]
+ExecStart=/bin/sh -c 'echo "## DO NOT EDIT OR REMOVE THIS FILE!\n## If you remove this file, the iSCSI daemon will not start.\n## If you change the InitiatorName, existing access control lists\n## may reject this initiator.  The InitiatorName must be unique\n## for each iSCSI initiator.  Do NOT duplicate iSCSI InitiatorNames." > /etc/iscsi/initiatorname.iscsi; \
+                      iscsi-iname -g >> /etc/iscsi/initiatorname.iscsi'
+Type=oneshot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
