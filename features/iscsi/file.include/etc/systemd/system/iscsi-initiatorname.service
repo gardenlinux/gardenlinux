@@ -2,7 +2,7 @@
 Description=iSCSI InitiatorName Generator
 ConditionPathExists=|!/etc/iscsi/initiatorname.iscsi
 After=multi-user.service
-Before=iscsi.service
+Before=iscsid.service
 
 [Service]
 ExecStart=/bin/mv /etc/iscsi/initiatorname.iscsi.template /etc/iscsi/initiatorname.iscsi
