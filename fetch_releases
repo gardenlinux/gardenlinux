@@ -2,11 +2,51 @@
 
 set -eufo pipefail
 
+# Parameter for grep.
 org=gardenlinux
 match_pattern='^package-.*'
 exclude_pattern='package-build'
 
-gh api --paginate "/orgs/$org/repos" | jq -r '.[] | .name' | grep -xE "$match_pattern" | grep -vxE "$exclude_pattern" | while read -r repo; do
-	tag="$(gh api "/repos/$org/$repo/releases/latest" 2> /dev/null | jq -r '.tag_name // ""' || true)"
-	[ -z "$tag" ] || echo "$org/$repo $tag"
-done
+
+get_list_of_gh_repositories() {
+    # This API call is used to list all repositories within our organization. It will only search
+    # for repositories containg a package keyword.
+    # https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-organization-repositories
+    gh api --paginate "/orgs/$org/repos" \
+                   | jq -r '.[] | .name' \
+                   | grep -xE "$match_pattern" \
+                   | grep -vxE "$exclude_pattern"
+}
+
+
+print_repository_with_tag(){
+    # Search for the given tag for a given repository.
+    get_list_of_gh_repositories | while read -r repo; do
+        # We're looping through the repositories and try to fetch the respected tag.
+        # the result.
+
+        # We fetch the tags or else we'll return true.
+        tag="$(\
+            gh api "/repos/$org/$repo/releases/latest" 2> /dev/null \
+                    | jq -r '.tag_name // ""' || true\
+                  )"
+        # This will print either the tag or null.
+        [ -z "$tag" ] || echo "$org/$repo $tag"
+    done
+}
+
+
+
+
+main() {
+    # This function is invoked by the github actions build.yml and used to update the necessary 
+    # package-releases file in the local folder. 
+    print_repository_with_tag
+}
+
+
+
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+        main "$@"
+fi
