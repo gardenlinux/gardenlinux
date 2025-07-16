@@ -97,6 +97,7 @@ open-iscsi
 open-vm-tools
 openssh-server
 openssl
+openssl-provider-fips
 openvswitch-switch
 ostree
 ovmf
