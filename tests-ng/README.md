@@ -10,6 +10,7 @@ Tests-NG is a lightweight, portable testing framework that:
 - **Provides cross-architecture support** (x86_64 and aarch64)
 - **Offers platform-agnostic testing** that works on chroot, containers, QEMU, cloud platforms, and bare metal
 - **Uses pytest** as the underlying test framework for familiar syntax and powerful features
+- **Implements content-based checksums** for reproducible builds and caching
 
 ## Directory Structure
 
@@ -49,7 +50,21 @@ This creates `.build/tests-ng-dist.tar.gz` containing:
 - All test files and plugins
 - Self-contained `run_tests` script
 
-### Container Platform Tests
+### Content-Based Checksums
+
+The build system calculates a checksum based on all source files:
+
+- Test files (`test_*.py`)
+- Configuration (`conftest.py`, `Makefile`)
+- Build utilities (`util/build_*.sh`, `util/requirements.txt`)
+- Plugin files (`plugins/*.py`)
+
+When source files change, a new checksum is generated and the distribution is rebuilt. This ensures:
+
+- **Reproducible builds** - Same source always produces same checksum
+- **Efficient caching** - Unchanged sources reuse existing distributions
+- **Version tracking** - Each unique version has a unique identifier
+
 
 Simply invoke this `podman` command:
 
