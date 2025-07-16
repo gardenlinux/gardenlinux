@@ -149,8 +149,8 @@ $(foreach flavor,$(FLAVORS_IMAGE), \
 			until test -f /tmp/qemu.pid; do echo 'Waiting for qemu to start...'; sleep 1; done \
 		" && \
 		CMD='rm -rf /var/tmp/tests-ng && mkdir -p /var/tmp/tests-ng' make --directory=platformSetup $(flavor)-qemu-login && \
-		SCP_PATH_LOCAL='/gardenlinux/tests-ng/.build/dist.tar.gz' SCP_PATH_REMOTE='/var/tmp/tests-ng' make --directory=platformSetup $(flavor)-qemu-scp-local-remote && \
-		CMD='gzip -d < /var/tmp/tests-ng/dist.tar.gz | tar -x && ./run_tests' make --directory=platformSetup $(flavor)-qemu-login \
+		SCP_PATH_LOCAL='/gardenlinux/tests-ng/util/run_dist_oci.sh' SCP_PATH_REMOTE='/var/tmp/run_dist_oci.sh' make --directory=platformSetup $(flavor)-qemu-scp-local-remote && \
+		CMD='/var/tmp/run_dist_oci.sh' make --directory=platformSetup $(flavor)-qemu-login \
 	) \
 )
 
@@ -165,7 +165,7 @@ $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 	  $(flavor)-tofu-test-ng-platform: ; \
 		make --directory=$(ROOT_DIR)/tests-ng && \
 		CMD='rm -rf /var/tmp/tests-ng && mkdir -p /var/tmp/tests-ng' make --directory=platformSetup $(flavor)-tofu-login && \
-		SCP_PATH_LOCAL='/gardenlinux/tests-ng/.build/dist.tar.gz' SCP_PATH_REMOTE='/var/tmp/tests-ng' make --directory=platformSetup $(flavor)-tofu-scp-local-remote && \
-		CMD='gzip -d < /var/tmp/tests-ng/dist.tar.gz | tar -x && ./run_tests' make --directory=platformSetup $(flavor)-tofu-login \
+		SCP_PATH_LOCAL='/gardenlinux/tests-ng/util/run_dist_oci.sh' SCP_PATH_REMOTE='/var/tmp/run_dist_oci.sh' make --directory=platformSetup $(flavor)-tofu-scp-local-remote && \
+		CMD='/var/tmp/run_dist_oci.sh' make --directory=platformSetup $(flavor)-tofu-login \
 	) \
 )

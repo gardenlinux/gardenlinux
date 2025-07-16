@@ -11,6 +11,7 @@ Tests-NG is a lightweight, portable testing framework that:
 - **Offers platform-agnostic testing** that works on chroot, containers, QEMU, cloud platforms, and bare metal
 - **Uses pytest** as the underlying test framework for familiar syntax and powerful features
 - **Implements content-based checksums** for reproducible builds and caching
+- **Supports OCI artifact distribution** for easy sharing and deployment
 
 ## Directory Structure
 
@@ -24,6 +25,7 @@ tests-ng/
 ├── util/                 # Build utilities
 │   ├── build_runtime.sh  # Runtime builder with caching
 │   ├── build_dist.sh     # Distribution packager
+│   ├── upload_oci.sh     # OCI artifact uploader
 │   └── requirements.txt  # Python dependencies
 ├── .build                # Built runtimes and distributables (gitignored)
 │   ├── tests-ng-dist.tar.gz        # Symlink to checksummed distribution
@@ -65,11 +67,36 @@ When source files change, a new checksum is generated and the distribution is re
 - **Efficient caching** - Unchanged sources reuse existing distributions
 - **Version tracking** - Each unique version has a unique identifier
 
+### OCI Artifact Distribution
 
-Simply invoke this `podman` command:
+Upload the distribution to GitHub Container Registry:
 
 ```bash
-podman run --rm -v "$PWD/.build/tests-ng-dist.tar.gz:/mnt/tests-ng-dist.tar.gz:ro" --read-only --tmpfs /opt/tests -w /opt/tests ghcr.io/gardenlinux/gardenlinux /bin/bash -c 'gzip -d < /mnt/tests-ng-dist.tar.gz | tar -x && ./run_tests'
+# Upload with GitHub token
+GITHUB_TOKEN=your_token util/upload_oci.sh -t latest -t $(cat .build/checksum) -f .build/tests-ng-dist.tar.gz -c $(cat .build/checksum)
+```
+
+This creates two tags:
+
+- `ghcr.io/gardenlinux/test-ng:latest` - Always points to most recent upload
+- `ghcr.io/gardenlinux/test-ng:{checksum}` - Immutable reference to specific version
+
+### Downloading from OCI Registry
+
+#### Using ORAS (if available)
+
+```bash
+# Download latest version
+oras pull ghcr.io/gardenlinux/test-ng:latest
+
+# Run
+gzip -d < tests-ng-dist.tar.gz | tar -x && ./run_tests
+```
+
+#### Using helper script in plain bash + openssl
+
+```bash
+util/run_dist_oci.sh
 ```
 
 ### QEMU Platform Tests
