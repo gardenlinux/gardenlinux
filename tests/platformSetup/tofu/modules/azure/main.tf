@@ -26,7 +26,11 @@ locals {
   public_ip = azurerm_public_ip.pip.ip_address
 
   image_source_type = split("://", var.image_path)[0]
-  image             = local.image_source_type == "file" ? "${split("file://", var.image_path)[1]}/${var.image_file}" : null
+  image = (
+    local.image_source_type == "file" ? "${split("file://", var.image_path)[1]}/${var.image_file}" :
+    local.image_source_type == "cloud" ? replace(lower(var.image_file), "communitygalleries", "communityGalleries") :
+    null
+  )
 
   labels = {
     component = "gardenlinux"
@@ -76,15 +80,19 @@ resource "azurerm_storage_account" "storage_account" {
 }
 
 resource "azurerm_storage_container" "blob" {
+  count = local.image_source_type == "file" ? 1 : 0
+
   name                  = local.vhds_name
   storage_account_id    = azurerm_storage_account.storage_account.id
   container_access_type = "private"
 }
 
 resource "azurerm_storage_blob" "image" {
+  count = local.image_source_type == "file" ? 1 : 0
+
   name                   = local.image_name
   storage_account_name   = azurerm_storage_account.storage_account.name
-  storage_container_name = azurerm_storage_container.blob.name
+  storage_container_name = azurerm_storage_container.blob.0.name
   type                   = "Page"
   source                 = local.image
 
@@ -95,6 +103,8 @@ resource "azurerm_storage_blob" "image" {
 }
 
 resource "azurerm_shared_image_gallery" "gallery" {
+  count = local.image_source_type == "file" ? 1 : 0
+
   name                = local.image_gallery_name
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
@@ -103,8 +113,10 @@ resource "azurerm_shared_image_gallery" "gallery" {
 }
 
 resource "azurerm_shared_image" "shared_image" {
+  count = local.image_source_type == "file" ? 1 : 0
+
   name                = "gardenlinux"
-  gallery_name        = azurerm_shared_image_gallery.gallery.name
+  gallery_name        = azurerm_shared_image_gallery.gallery.0.name
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   os_type             = "Linux"
@@ -123,13 +135,15 @@ resource "azurerm_shared_image" "shared_image" {
 }
 
 resource "azurerm_shared_image_version" "shared_image_version" {
+  count = local.image_source_type == "file" ? 1 : 0
+
   name                = "0.0.0"
-  gallery_name        = azurerm_shared_image_gallery.gallery.name
+  gallery_name        = azurerm_shared_image_gallery.gallery.0.name
   resource_group_name = azurerm_resource_group.rg.name
-  image_name          = azurerm_shared_image.shared_image.name
+  image_name          = azurerm_shared_image.shared_image.0.name
   location            = azurerm_resource_group.rg.location
   storage_account_id  = azurerm_storage_account.storage_account.id
-  blob_uri            = azurerm_storage_blob.image.url
+  blob_uri            = azurerm_storage_blob.image.0.url
   replication_mode    = "Shallow"
 
   target_region {
@@ -252,7 +266,11 @@ resource "azurerm_linux_virtual_machine" "instance" {
   network_interface_ids = [azurerm_network_interface.nic.id]
   size                  = var.instance_type
 
-  source_image_id = azurerm_shared_image_version.shared_image_version.id
+  source_image_id = (
+    local.image_source_type == "file" ? azurerm_shared_image_version.shared_image_version.0.id :
+    local.image_source_type == "cloud" ? local.image :
+    null
+  )
 
   os_disk {
     caching              = "ReadWrite"
@@ -281,14 +299,14 @@ resource "azurerm_linux_virtual_machine" "instance" {
 
   # wait until image version and nic are available
   depends_on = [
-    azurerm_shared_image_version.shared_image_version,
+    azurerm_shared_image_version.shared_image_version.0,
     azurerm_network_interface.nic
   ]
 
   # replace if image source changes
   lifecycle {
     replace_triggered_by = [
-      azurerm_storage_blob.image.metadata
+      azurerm_storage_blob.image.0.metadata
     ]
   }
 }
