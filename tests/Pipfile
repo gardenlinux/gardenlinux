@@ -15,12 +15,13 @@ dacite = "*"
 cffi = "*"
 pytest-json-report = "*"
 pytest-rerunfailures = "*"
-python-gardenlinux-lib = {editable = true, ref = "0.6.0", git = "https://github.com/gardenlinux/python-gardenlinux-lib.git"}
+python-gardenlinux-lib = {editable = true, ref = "0.6.0", git = "git+https://github.com/gardenlinux/python-gardenlinux-lib.git"}
 
 [dev-packages]
 pytest = "*"
 flake8 = "*"
 pylint = "*"
+uefivars = {editable = true, ref = "v1.2", git = "git+https://github.com/awslabs/python-uefivars.git"}
 
 [ali-packages]
 oss2 = "*"
