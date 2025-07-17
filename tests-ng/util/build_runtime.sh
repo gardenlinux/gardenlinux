@@ -33,13 +33,17 @@ arch_target="$1"
 requirements="$2"
 output="$3"
 
-# Download host architecture Python runtime for package installation
-mkdir "$tmpdir/host_runtime"
-curl -sSLf "https://github.com/astral-sh/python-build-standalone/releases/download/20250626/cpython-3.14.0b3%2B20250626-$arch_host-unknown-linux-gnu-install_only.tar.gz" | gzip -d | tar -x -C "$tmpdir/host_runtime" --strip-components 1
-
 # Download target architecture Python runtime
 mkdir "$tmpdir/runtime"
 curl -sSLf "https://github.com/astral-sh/python-build-standalone/releases/download/20250712/cpython-3.13.5%2B20250712-$arch_target-unknown-linux-gnu-install_only.tar.gz" | gzip -d | tar -x -C "$tmpdir/runtime" --strip-components 1
+
+# Download host architecture Python runtime for package installation
+mkdir "$tmpdir/host_runtime"
+if [ "$arch_host" != "$arch_target" ]; then
+    curl -sSLf "https://github.com/astral-sh/python-build-standalone/releases/download/20250712/cpython-3.13.5%2B20250712-$arch_host-unknown-linux-gnu-install_only.tar.gz" | gzip -d | tar -x -C "$tmpdir/host_runtime" --strip-components 1
+else
+    (cd "$tmpdir/runtime" && cp -r . "$tmpdir/host_runtime/")
+fi
 
 # Use host Python to install packages into target runtime
 export PATH="$tmpdir/host_runtime/bin:$PATH"
