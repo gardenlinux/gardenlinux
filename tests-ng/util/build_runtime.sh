@@ -48,7 +48,10 @@ export PYTHONPATH="$tmpdir/runtime/lib/python3.14/site-packages"
 # Create site-packages directory in target runtime
 mkdir -p "$tmpdir/runtime/lib/python3.14/site-packages"
 
-pip install --target "$tmpdir/runtime/lib/python3.14/site-packages" -r "$requirements"
+pip install \
+    --only-binary=:all: \
+    --target "$tmpdir/runtime/lib/python3.14/site-packages" \
+    -r "$requirements"
 
 # Create the final runtime archive
 tar -c -C "$tmpdir/runtime" . | gzip >"$output"
