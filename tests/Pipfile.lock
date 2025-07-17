@@ -3489,20 +3489,20 @@
         },
         "boto3": {
             "hashes": [
-                "sha256:6c955729a1d70181bc8368e02a7d3f350884290def63815ebca8408ee6d47571",
-                "sha256:f8e9534b429121aa5c5b7c685c6a94dd33edf14f87926e9a182d5b50220ba284"
+                "sha256:28daeb005e3381808e0e12995056ee8951056ddd43506c07482a15b40ae785b0",
+                "sha256:c8c0e11fff7bb85f903b860b6bfd4f509a4d749decf38bb6a409ffe5d6eb0c91"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.9'",
-            "version": "==1.39.4"
+            "version": "==1.39.7"
         },
         "botocore": {
             "hashes": [
-                "sha256:c41e167ce01cfd1973c3fa9856ef5244a51ddf9c82cb131120d8617913b6812a",
-                "sha256:e662ac35c681f7942a93f2ec7b4cde8f8b56dd399da47a79fa3e370338521a56"
+                "sha256:1d11ba9f3cb46856bb541ed010db160093201a224d21ef854249513ae3af7e77",
+                "sha256:431e342ef97ecb387cea9df1ae8c4e0edc1b0c9c50d2e121cca77699f24f8dc1"
             ],
             "markers": "python_version >= '3.9'",
-            "version": "==1.39.4"
+            "version": "==1.39.7"
         },
         "certifi": {
             "hashes": [
@@ -4848,6 +4848,7 @@
             "ref": "ec1eab1717c65ea36ca7160c96fe0e10e071fb66"
         }
     },
+    "firecracker-packages": {},
     "gcp-packages": {
         "cachetools": {
             "hashes": [
@@ -5202,6 +5203,7 @@
             "version": "==2.5.0"
         }
     },
+    "kvm-packages": {},
     "openstack-packages": {
         "autopage": {
             "hashes": [
