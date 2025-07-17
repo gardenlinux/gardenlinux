@@ -222,6 +222,49 @@ All further tests run inside containers spawned from these images.
     ghcr.io/gardenlinux/gardenlinux/platform-test-tofu         80436df0                                  c23ac2651b9e  13 days ago    3.64 GB
     ghcr.io/gardenlinux/gardenlinux/platform-test-tofu         latest                                    c23ac2651b9e  13 days ago    3.64 GB    
 
+#### Platform Test Image – GitHub Action Workflows
+
+##### Base Image
+
+The `platform-test-base` image is always based on:
+
+* `ghcr.io/gardenlinux/nightly:latest`
+
+**Why?**
+Sometimes a certain feature (e.g. an additional or updated package) is needed in the image `platform-test-base` is based on. Creating a patch release takes time — adding the package, syncing repositories, building the release, and publishing — and this overhead is often not justified for just making a package available in the test suite.
+Using the nightly as a base for the `platform-test-base` image significantly shortens this cycle, as new nightlies can be built and published much faster than official patch releases. This allows for quicker testing of changes without blocking on formal release processes. Since `platform-test-*`'s test related software versions are locked down, using the nightly is acceptable and even beneficial. Also see [Image Stability](#image-stability) for why this is fine.
+
+###### When Is the Image Built?
+
+The build workflow for the `platform-test-*` images is triggered:
+
+* **Manually**
+* **Automatically**, when:
+
+  * The `build.yml` (“Image Build”) workflow runs
+  * A push to `main` occurs **and** test-related files have changed
+
+##### When Is the Image Pushed?
+
+The `platform-test-*` images are pushed:
+
+* **Manually**, if specified
+* **Automatically**, on push to `main` **if test-related files have changed**
+* **Future possibility (not yet implemented)**:
+  If another workflow triggers it with `inputs.push == true`
+
+##### Image Stability
+
+The `platform-test-*` images are considered "stable" because:
+
+* All version-dependent tools are **locked down**, including:
+  * Python and its modules
+  * OpenTofu and Providers
+* It is based on a **nightly image that has passed all platform tests**
+* It is **rebuilt on `main` only** when test-related code changes
+* It is **rebuilt in all branches** when invoked (e.g. by `build.yml`) to catch issues early
+* It is **only pushed** for code on `main` (or manually)
+
 ## Using the tests on supported platforms
 
 ### General
