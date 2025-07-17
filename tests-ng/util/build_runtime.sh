@@ -28,14 +28,34 @@ if [ "$0" != /init ]; then
 	exec podman run --rm -v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro" -v "$PWD:/mnt" -w /mnt "$image_id" /init "$@"
 fi
 
-arch="$1"
+arch_host="$(uname -m)"
+arch_target="$1"
 requirements="$2"
 output="$3"
 
+# Download target architecture Python runtime
 mkdir "$tmpdir/runtime"
-curl -sSLf "https://github.com/astral-sh/python-build-standalone/releases/download/20250626/cpython-3.14.0b3%2B20250626-$arch-unknown-linux-gnu-install_only.tar.gz" | gzip -d | tar -x -C "$tmpdir/runtime" --strip-components 1
+curl -sSLf "https://github.com/astral-sh/python-build-standalone/releases/download/20250712/cpython-3.13.5%2B20250712-$arch_target-unknown-linux-gnu-install_only.tar.gz" | gzip -d | tar -x -C "$tmpdir/runtime" --strip-components 1
 
-export PATH="$tmpdir/runtime/bin:$PATH"
-pip install --upgrade pip
-pip install -r "$requirements"
-tar -c -C "$tmpdir/runtime" . | gzip > "$output"
+# Download host architecture Python runtime for package installation
+mkdir "$tmpdir/host_runtime"
+if [ "$arch_host" != "$arch_target" ]; then
+    curl -sSLf "https://github.com/astral-sh/python-build-standalone/releases/download/20250712/cpython-3.13.5%2B20250712-$arch_host-unknown-linux-gnu-install_only.tar.gz" | gzip -d | tar -x -C "$tmpdir/host_runtime" --strip-components 1
+else
+    (cd "$tmpdir/runtime" && cp -r . "$tmpdir/host_runtime/")
+fi
+
+# Use host Python to install packages into target runtime
+export PATH="$tmpdir/host_runtime/bin:$PATH"
+export PYTHONPATH="$tmpdir/runtime/lib/python3.13/site-packages"
+
+# Create site-packages directory in target runtime
+mkdir -p "$tmpdir/runtime/lib/python3.13/site-packages"
+
+pip install \
+    --only-binary=:all: \
+    --target "$tmpdir/runtime/lib/python3.13/site-packages" \
+    -r "$requirements"
+
+# Create the final runtime archive
+tar -c -C "$tmpdir/runtime" . | gzip >"$output"
