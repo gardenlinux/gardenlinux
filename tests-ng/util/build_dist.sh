@@ -43,7 +43,7 @@ script_dir="$(dirname -- "$script_path")"
 
 export PATH="$script_dir/runtime/$arch/bin:$PATH"
 cd "$script_dir/tests"
-COLUMNS=120 python -m pytest -rA --tb=short --color=yes
+COLUMNS=120 python -m pytest -rA --tb=short --color=yes "$@"
 EOF
 chmod +x "$tmpdir/dist/run_tests"
 
