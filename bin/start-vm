@@ -332,13 +332,6 @@ qemu_opt_fw_cfg () {
     QEMU_OPTS+=(
         -fw_cfg name=opt/gardenlinux/config_script,file="$fw_cfg_script"
     )
-
-    sock_path="$CURR_DIR/virtio-serial.sock"
-    QEMU_OPTS+=(
-        -chardev socket,id=hostio,path="$sock_path",server,nowait
-        -device virtio-serial
-        -device virtserialport,chardev=hostio,name=host
-    )
 }
 
 
