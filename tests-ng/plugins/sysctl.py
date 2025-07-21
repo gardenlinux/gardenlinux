@@ -1,6 +1,6 @@
 import pytest
 
-from plugins.booted import system_booted
+from plugins.booted import is_system_booted
 
 class SysctlWrapper:
 	def __getitem__(self, key):
@@ -11,6 +11,6 @@ class SysctlWrapper:
 
 @pytest.fixture
 def sysctl(request):
-	if not system_booted:
+	if not is_system_booted():
 		pytest.skip("sysctl only available when running on booted system")
 	return SysctlWrapper()

@@ -2,6 +2,9 @@ import pytest
 
 system_booted = False
 
+def is_system_booted():
+	return system_booted
+
 def pytest_addoption(parser):
 	parser.addoption(
 		"--system-booted",

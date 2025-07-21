@@ -15,7 +15,10 @@ class Systemd:
 	# TODO: we should probably add functionality to check for failed units etc. in here as well
 
 	def analyze(self):
-		output = self._shell("systemd-analyze", capture_output=True).stdout
+		result = self._shell("systemd-analyze", capture_output=True, ignore_exit_code=True)
+		if result.returncode != 0:
+			raise ValueError(f"systemd-analyze failed: {result.stderr}")
+		output = result.stdout
 		summary = output.splitlines()[0]
 
 		m = re.search(
