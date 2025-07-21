@@ -5,7 +5,7 @@ set -eufo pipefail
 tmpdir=
 
 cleanup () {
-	[ -n "$tmpdir" ] || rm -rf "$tmpdir"
+	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
 	tmpdir=
 }
 
