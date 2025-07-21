@@ -1,6 +1,5 @@
 MAKEFLAGS += --no-builtin-rules
 
-.SILENT:
 .DELETE_ON_ERROR:
 
 .PHONY: dist clean
