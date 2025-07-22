@@ -45,6 +45,7 @@ __pycache__
 /tests/*.xml
 /tests/login.*.sh
 /tests/pytest.*.sh
+/tests/scp-*.*.sh
 !tests/config/*.yaml.example
 tests/config
 make_targets.cache

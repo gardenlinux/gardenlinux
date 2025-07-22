@@ -47,7 +47,7 @@ class QEMU:
 
         # Initialize ssh as None before try block
         ssh = None
-        
+
         try:
             ssh = RemoteClient(
                 host=ip,
@@ -69,7 +69,7 @@ class QEMU:
                     ssh.disconnect()
                 except Exception as e:
                     logger.warning(f"Error disconnecting SSH: {str(e)}")
-            
+
             if qemu is not None:
                 try:
                     qemu.__del__()
@@ -91,7 +91,7 @@ class QEMU:
             self._generate_ssh_key()
         else:
             logger.info("Using defined SSH key for platform tests.")
-        # Adjust QEMU image 
+        # Adjust QEMU image
         self._adjust_qemu()
         # Start QEMU
         self._start_qemu(arch, port)
@@ -111,6 +111,7 @@ class QEMU:
         image=None
         if not "image" in self.config:
             logger.error("'image' not defined. Please define path to image.")
+            raise ValueError("'image' not defined. Please define path to image.")
         else:
             image = self.config["image"]
             logger.info(f"'image' defined. Using: {image}")
@@ -246,6 +247,7 @@ class QEMU:
             else:
                 error = p.stdout
                 logger.error(f"Failed: {cmd}: {error}")
+                raise RuntimeError(f"Failed: {cmd}: {error}")
 
     def _start_qemu(self, arch, port):
         """ Start VM in QEMU for defined arch """
@@ -278,9 +280,30 @@ class QEMU:
             logger.info(cmd)
         else:
             logger.error("Unsupported architecture.")
+            raise ValueError(f"Unsupported architecture: {arch}")
 
         logger.info(f"VM starting as {arch} in QEMU.")
-        p = subprocess.Popen([cmd], shell=True)
+
+        # Execute the command and wait for completion to catch errors
+        try:
+            result = subprocess.run([cmd], shell=True, stdout=subprocess.PIPE,
+                                  stderr=subprocess.STDOUT, text=True, timeout=60)
+
+            if result.returncode != 0:
+                error_msg = f"Failed to start QEMU VM. Command: {cmd}\nOutput: {result.stdout}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
+            else:
+                logger.info("QEMU VM started successfully")
+
+        except subprocess.TimeoutExpired:
+            error_msg = f"Timeout starting QEMU VM. Command: {cmd}"
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
+        except Exception as e:
+            error_msg = f"Error starting QEMU VM: {str(e)}"
+            logger.error(error_msg)
+            raise
 
     def _stop_qemu(self):
         """ Stop VM and remove injected file """
