@@ -1,7 +1,8 @@
-# overwrite with a stable gardenlinux version
-ARG GL_VERSION=latest
 # use platform-test-base image
-FROM ghcr.io/gardenlinux/gardenlinux/platform-test-base:${GL_VERSION}
+ARG GL_REGISTRY=ghcr.io/gardenlinux
+ARG GL_IMAGE=gardenlinux/platform-test-base
+ARG GL_VERSION=latest
+FROM ${GL_REGISTRY}/${GL_IMAGE}:${GL_VERSION}
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV SHELL /bin/bash
