@@ -21,7 +21,7 @@ if [ "$0" != /init ]; then
 	&& apt-get install -y --no-install-recommends ca-certificates curl libc6:amd64 libc6:arm64 make
 	EOF
 
-	podman build --iidfile "$tmpdir/image_id" "$tmpdir"
+	podman build -q --iidfile "$tmpdir/image_id" "$tmpdir" > /dev/null
 	image_id="$(<"$tmpdir/image_id")"
 	
 	cleanup
@@ -36,6 +36,6 @@ mkdir "$tmpdir/runtime"
 curl -sSLf "https://github.com/astral-sh/python-build-standalone/releases/download/20250626/cpython-3.14.0b3%2B20250626-$arch-unknown-linux-gnu-install_only.tar.gz" | gzip -d | tar -x -C "$tmpdir/runtime" --strip-components 1
 
 export PATH="$tmpdir/runtime/bin:$PATH"
-pip install --upgrade pip
-pip install -r "$requirements"
+pip install -q --root-user-action ignore --upgrade pip
+pip install -q --root-user-action ignore -r "$requirements"
 tar -c -C "$tmpdir/runtime" . | gzip > "$output"
