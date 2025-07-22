@@ -198,7 +198,7 @@ jobs:
 
           test -f ~/.ssh/id_ed25519 || ssh-keygen -t ed25519 -P "" -f ~/.ssh/id_ed25519
           # tf variables generation
-          TEST_PREFIX="gh-actions" CNAME="$CNAME" make --directory=tests/platformSetup ${FLAVOR}-${ARCH}-tofu-config
+          TEST_PREFIX="gh-actions" IMAGE_NAME="$CNAME" make --directory=tests/platformSetup ${FLAVOR}-${ARCH}-tofu-config
           # enable S3 backend
           if [ ! -f "tests/platformSetup/tofu/backend.tf" ]; then
             cp "tests/platformSetup/tofu/backend.tf.github" "tests/platformSetup/tofu/backend.tf"

@@ -27,7 +27,11 @@ locals {
   }
 
   image_source_type = split("://", var.image_path)[0]
-  image             = local.image_source_type == "file" ? "${split("file://", var.image_path)[1]}/${var.image_file}" : null
+  image = (
+    local.image_source_type == "file" ? "${split("file://", var.image_path)[1]}/${var.image_file}" :
+    local.image_source_type == "cloud" ? var.image_file :
+    null
+  )
 }
 
 data "alicloud_account" "current" {
@@ -41,6 +45,8 @@ data "alicloud_zones" "zones" {
 }
 
 resource "alicloud_oss_bucket" "images" {
+  count = local.image_source_type == "file" ? 1 : 0
+
   bucket = local.bucket_name
 
   tags = merge(
@@ -50,13 +56,17 @@ resource "alicloud_oss_bucket" "images" {
 }
 
 resource "alicloud_oss_bucket_acl" "images_acl" {
-  # depends_on = [alicloud_oss_bucket_ownership_controls.images_owner]
+  count = local.image_source_type == "file" ? 1 : 0
 
-  bucket = alicloud_oss_bucket.images.id
+  # depends_on = [alicloud_oss_bucket_ownership_controls.images_owner.0]
+
+  bucket = alicloud_oss_bucket.images.0.id
   acl    = "private"
 }
 
 # resource "alicloud_oss_bucket_policy" "images_policy" {
+#   count = local.image_source_type == "file" ? 1 : 0
+#
 #   bucket = alicloud_oss_bucket.images.id
 #   policy    = <<POLICY
 # {
@@ -71,25 +81,29 @@ resource "alicloud_oss_bucket_acl" "images_acl" {
 #         "oss:*"
 #       ],
 #       "Resource": [
-#         "acs:oss:*:${data.alicloud_account.current.id}:${alicloud_oss_bucket.images.bucket}",
-#         "acs:oss:*:${data.alicloud_account.current.id}:${alicloud_oss_bucket.images.bucket}/*"
+#         "acs:oss:*:${data.alicloud_account.current.id}:${alicloud_oss_bucket.images.0.bucket}",
+#         "acs:oss:*:${data.alicloud_account.current.id}:${alicloud_oss_bucket.images.0.bucket}/*"
 #       ]
 #     }
 #   ]
 # }
 # POLICY
 #
-#   depends_on = [alicloud_oss_bucket.images]
+#   depends_on = [alicloud_oss_bucket.images.0]
 # }
 
 resource "alicloud_oss_bucket_public_access_block" "no_public_access" {
-  bucket = alicloud_oss_bucket.images.id
+  count = local.image_source_type == "file" ? 1 : 0
+
+  bucket = alicloud_oss_bucket.images.0.id
 
   block_public_access = true
 }
 
 resource "alicloud_oss_bucket_server_side_encryption" "images_encryption" {
-  bucket        = alicloud_oss_bucket.images.id
+  count = local.image_source_type == "file" ? 1 : 0
+
+  bucket        = alicloud_oss_bucket.images.0.id
   sse_algorithm = "AES256"
 }
 
@@ -149,12 +163,16 @@ resource "alicloud_security_group_rule" "sg-rule" {
 }
 
 resource "alicloud_oss_bucket_object" "image" {
-  bucket = alicloud_oss_bucket.images.id
+  count = local.image_source_type == "file" ? 1 : 0
+
+  bucket = alicloud_oss_bucket.images.0.id
   key    = local.image_name
   source = local.image
 }
 
 resource "alicloud_image_import" "import" {
+  count = local.image_source_type == "file" ? 1 : 0
+
   architecture = local.arch
   os_type      = "linux"
   platform     = "Others Linux"
@@ -163,8 +181,8 @@ resource "alicloud_image_import" "import" {
   description  = local.image_name
   disk_device_mapping {
     # format = "qcow2"
-    oss_bucket      = alicloud_oss_bucket.images.bucket
-    oss_object      = alicloud_oss_bucket_object.image.key
+    oss_bucket      = alicloud_oss_bucket.images.0.bucket
+    oss_object      = alicloud_oss_bucket_object.image.0.key
     disk_image_size = 5
   }
 }
@@ -189,7 +207,11 @@ resource "alicloud_instance" "instance" {
   availability_zone          = data.alicloud_zones.zones.zones.0.id
   security_groups            = [alicloud_security_group.sg.id]
   instance_type              = var.instance_type
-  image_id                   = alicloud_image_import.import.id
+  image_id = (
+    local.image_source_type == "file" ? alicloud_image_import.import.0.id :
+    local.image_source_type == "cloud" ? var.image_file :
+    null
+  )
   instance_name              = local.instance_name
   vswitch_id                 = alicloud_vswitch.subnet.id
   internet_max_bandwidth_out = 1
