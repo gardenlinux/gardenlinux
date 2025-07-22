@@ -97,13 +97,14 @@ help:
 	@echo "Qemu Provisioner Platform Tests targets:"
 	@$(foreach flavor,$(FLAVORS_IMAGE), \
 		printf "%-80s%s\n" "  $(flavor)-qemu-test-platform" "Run platform tests build with Qemu for $(flavor)"; \
-		printf "%-80s%s\n" "  $(flavor)-qemu-test-ng-platform" "Run platform tests-ng build with Qemu for $(flavor)"; \
+		printf "%-80s%s\n" "  $(flavor)-qemu-test-ng-platform-scp" "Run platform tests-ng build with Qemu and scp for $(flavor)"; \
+		printf "%-80s%s\n" "  $(flavor)-qemu-test-ng-platform-disk" "Run platform tests-ng build with Qemu and disk for $(flavor)"; \
 	)
 	@echo ""
 	@echo "Tofu Provisioner Platform Tests targets:"
 	@$(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 		printf "%-80s%s\n" "  $(flavor)-tofu-test-platform" "Run platform tests build with OpenTofu for $(flavor)"; \
-		printf "%-80s%s\n" "  $(flavor)-tofu-test-ng-platform" "Run platform tests-ng build with OpenTofu for $(flavor)"; \
+		printf "%-80s%s\n" "  $(flavor)-tofu-test-ng-platform-scp" "Run platform tests-ng build with OpenTofu and scp for $(flavor)"; \
 	)
 
 # help: all					Run all platform tests
@@ -143,7 +144,7 @@ $(foreach flavor,$(FLAVORS_IMAGE), \
 )
 $(foreach flavor,$(FLAVORS_IMAGE), \
 	$(eval \
-	  $(flavor)-qemu-test-ng-platform: ; \
+	  $(flavor)-qemu-test-ng-platform-scp: ; \
 	    make --directory=$(ROOT_DIR)/tests-ng && \
 		$(GARDENLINUX_BUILD_CRE) exec -it qemu-$(flavor) bash -c "\
 			until test -f /tmp/qemu.pid; do echo 'Waiting for qemu to start...'; sleep 1; done \
@@ -151,6 +152,16 @@ $(foreach flavor,$(FLAVORS_IMAGE), \
 		CMD='rm -rf /var/tmp/tests-ng && mkdir -p /var/tmp/tests-ng' make --directory=platformSetup $(flavor)-qemu-login && \
 		SCP_PATH_LOCAL='/gardenlinux/tests-ng/.build/dist.tar.gz' SCP_PATH_REMOTE='/var/tmp/tests-ng' make --directory=platformSetup $(flavor)-qemu-scp-local-remote && \
 		CMD='gzip -d < /var/tmp/tests-ng/dist.tar.gz | tar -x && ./run_tests' make --directory=platformSetup $(flavor)-qemu-login \
+	) \
+)
+$(foreach flavor,$(FLAVORS_IMAGE), \
+	$(eval \
+	  $(flavor)-qemu-test-ng-platform-disk: ; \
+	    make --directory=$(ROOT_DIR)/tests-ng && \
+		$(GARDENLINUX_BUILD_CRE) exec -it qemu-$(flavor) bash -c "\
+			until test -f /tmp/qemu.pid; do echo 'Waiting for qemu to start...'; sleep 1; done \
+		" && \
+		CMD='/mnt/run_tests' make --directory=platformSetup $(flavor)-qemu-login \
 	) \
 )
 
@@ -162,10 +173,15 @@ $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 )
 $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 	$(eval \
-	  $(flavor)-tofu-test-ng-platform: ; \
-		make --directory=$(ROOT_DIR)/tests-ng && \
+	  $(flavor)-tofu-test-ng-platform-scp: ; \
 		CMD='rm -rf /var/tmp/tests-ng && mkdir -p /var/tmp/tests-ng' make --directory=platformSetup $(flavor)-tofu-login && \
 		SCP_PATH_LOCAL='/gardenlinux/tests-ng/.build/dist.tar.gz' SCP_PATH_REMOTE='/var/tmp/tests-ng' make --directory=platformSetup $(flavor)-tofu-scp-local-remote && \
 		CMD='gzip -d < /var/tmp/tests-ng/dist.tar.gz | tar -x && ./run_tests' make --directory=platformSetup $(flavor)-tofu-login \
+	) \
+)
+$(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
+	$(eval \
+	  $(flavor)-tofu-test-ng-platform-disk: ; \
+		CMD='/mnt/run_tests' make --directory=platformSetup $(flavor)-tofu-login \
 	) \
 )

@@ -26,7 +26,13 @@ dist: .build/dist.tar.gz
 	@checksum=$$(cat .build/checksum); \
 	checksummed_file=".build/tests-ng-dist-$$checksum.tar.gz"; \
 	util/build_dist.sh "$$checksummed_file" x86_64:.build/runtime-x86_64.tar.gz aarch64:.build/runtime-aarch64.tar.gz; \
-	ln -sf "tests-ng-dist-$$checksum.tar.gz" .build/tests-ng-dist.tar.gz
+	ln -sf "tests-ng-dist-$$checksum.tar.gz" .build/tests-ng-dist.tar.gz; \
+	ln -sf "tests-ng-dist-$$checksum.disk.raw" .build/tests-ng-dist.disk.raw; \
+	ln -sf "tests-ng-dist-$$checksum.disk.raw.tar.gz" .build/tests-ng-dist.disk.raw.tar.gz; \
+	ln -sf "tests-ng-dist-$$checksum.disk.vhd" .build/tests-ng-dist.disk.vhd; \
+	ln -sf "tests-ng-dist-$$checksum.disk.vhd.tar.gz" .build/tests-ng-dist.disk.vhd.tar.gz; \
+	ln -sf "tests-ng-dist-$$checksum.disk.qcow2" .build/tests-ng-dist.disk.qcow2; \
+	ln -sf "tests-ng-dist-$$checksum.disk.qcow2.tar.gz" .build/tests-ng-dist.disk.qcow2.tar.gz
 
 .build/runtime-%.tar.gz: util/build_runtime.sh util/requirements.txt | .build
 	./$< $* $(word 2,$^) $@
@@ -34,4 +40,3 @@ dist: .build/dist.tar.gz
 clean:
 	@echo "Cleaning build artifacts..."
 	rm -rf .build
-

@@ -6,8 +6,9 @@ locals {
   # feature_trustedboot = contains(var.features, "trustedboot")
   # boot_mode            = local.feature_tpm2 ? "uefi" : "legacy-bios"
   arch                 = var.arch == "amd64" ? "x86_64" : var.arch
-  bucket_name          = substr("images-${local.test_name_safe}", 0, 64) # max 64
+  bucket_name          = lower(replace(substr(strrev(base64encode(local.test_name)), 0, 64), "=", "0")) # be unique max 64 chars
   image_name           = "image-${local.test_name}"
+  image_name_test      = "image-test-${local.test_name}"
   net_name             = "net-${local.test_name}"
   subnet_name          = "subnet-${local.test_name}"
   instance_name        = "instance-${local.test_name}"
@@ -32,6 +33,7 @@ locals {
     local.image_source_type == "cloud" ? var.image_file :
     null
   )
+  image_test = "/gardenlinux/tests-ng/.build/tests-ng-dist.disk.raw"
 }
 
 data "alicloud_account" "current" {
@@ -45,7 +47,7 @@ data "alicloud_zones" "zones" {
 }
 
 resource "alicloud_oss_bucket" "images" {
-  count = local.image_source_type == "file" ? 1 : 0
+  count = 1
 
   bucket = local.bucket_name
 
@@ -56,7 +58,7 @@ resource "alicloud_oss_bucket" "images" {
 }
 
 resource "alicloud_oss_bucket_acl" "images_acl" {
-  count = local.image_source_type == "file" ? 1 : 0
+  count = 1
 
   # depends_on = [alicloud_oss_bucket_ownership_controls.images_owner.0]
 
@@ -93,7 +95,7 @@ resource "alicloud_oss_bucket_acl" "images_acl" {
 # }
 
 resource "alicloud_oss_bucket_public_access_block" "no_public_access" {
-  count = local.image_source_type == "file" ? 1 : 0
+  count = 1
 
   bucket = alicloud_oss_bucket.images.0.id
 
@@ -101,7 +103,7 @@ resource "alicloud_oss_bucket_public_access_block" "no_public_access" {
 }
 
 resource "alicloud_oss_bucket_server_side_encryption" "images_encryption" {
-  count = local.image_source_type == "file" ? 1 : 0
+  count = 1
 
   bucket        = alicloud_oss_bucket.images.0.id
   sse_algorithm = "AES256"
@@ -170,6 +172,14 @@ resource "alicloud_oss_bucket_object" "image" {
   source = local.image
 }
 
+resource "alicloud_oss_bucket_object" "image_test" {
+  count = 1
+
+  bucket = alicloud_oss_bucket.images.0.id
+  key    = local.image_name_test
+  source = local.image_test
+}
+
 resource "alicloud_image_import" "import" {
   count = local.image_source_type == "file" ? 1 : 0
 
@@ -185,6 +195,47 @@ resource "alicloud_image_import" "import" {
     oss_object      = alicloud_oss_bucket_object.image.0.key
     disk_image_size = 5
   }
+}
+
+resource "alicloud_image_import" "import_test" {
+  count = 1
+
+  # architecture = local.arch
+  # os_type      = "linux"
+  # platform     = "Others Linux"
+  license_type = "Auto"
+  image_name   = local.image_name_test
+  description  = local.image_name_test
+  disk_device_mapping {
+    # format = "qcow2"
+    oss_bucket      = alicloud_oss_bucket.images.0.bucket
+    oss_object      = alicloud_oss_bucket_object.image_test.0.key
+    disk_image_size = 5
+  }
+
+}
+data "alicloud_ecs_snapshots" "snapshots" {
+  name_regex = "SnapshotForImage-${local.image_name_test}"
+}
+
+resource "alicloud_disk" "test_disk" {
+  count = 1
+
+  snapshot_id = data.alicloud_ecs_snapshots.snapshots.snapshots.0.id
+  availability_zone = data.alicloud_zones.zones.zones.0.id
+  size = 20
+  category = "cloud_efficiency"
+
+  depends_on = [
+    alicloud_image_import.import_test
+  ]
+}
+
+resource "alicloud_disk_attachment" "disk_attachment_test" {
+  count = 1
+
+  disk_id     = alicloud_disk.test_disk.0.id
+  instance_id = alicloud_instance.instance.id
 }
 
 resource "alicloud_ecs_key_pair" "ssh_key" {
@@ -229,6 +280,26 @@ resource "alicloud_instance" "instance" {
     local.labels,
     { Name = local.instance_name }
   )
+}
+
+resource "null_resource" "test_disk_mount" {
+  depends_on = [alicloud_disk_attachment.disk_attachment_test]
+
+  provisioner "remote-exec" {
+    connection {
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file(split(".pub", var.ssh_public_key)[0])
+      host        = local.public_ip
+      # usually this is created in /tmp but we have it mounted noexec
+      script_path = "/home/${var.ssh_user}/terraform_%RAND%.sh"
+      timeout     = "20m"
+    }
+
+    inline = [
+      "sudo mount /dev/vdb /mnt",
+    ]
+  }
 }
 
 resource "null_resource" "test_connect" {

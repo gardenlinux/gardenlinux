@@ -206,7 +206,10 @@ jobs:
 
           make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-apply 2>&1 | tee ".build/$CNAME.platform.provisioning.log"
       - name: Run platform-test for ${{ inputs.flavor }} (${{ inputs.arch }})
-        run:  make --directory=tests ${FLAVOR}-${ARCH}-tofu-test-platform 2>&1 | tee ".build/$CNAME.platform.test.log"
+        run: |
+          export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
+
+          make --directory=tests ${FLAVOR}-${ARCH}-tofu-test-ng-platform-disk 2>&1 | tee ".build/$CNAME.platform.test.log"
       - name: Copy platform-test junit xml file for ${{ inputs.flavor }} (${{ inputs.arch }})
         if: always()
         run: cp "tests/${FLAVOR}-${ARCH}.platform.test.xml" ".build/$CNAME.platform.test.xml" || true
