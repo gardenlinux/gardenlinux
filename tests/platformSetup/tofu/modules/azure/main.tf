@@ -9,6 +9,7 @@ locals {
   resource_group_name            = "rg-${local.test_name}"
   storage_account_name           = lower(replace(substr(strrev(base64encode(local.test_name)), 0, 24), "=", "0")) # only lowercase and max 24 chars
   image_name                     = "image-${local.test_name}.vhd"
+  image_name_test                = "image-test-${local.test_name}.vhd"
   image_gallery_name             = local.test_name_very_safe
   image_gallery_application_name = "gallery-app-${local.test_name}"
   vhds_name                      = substr("vhds-${local.test_name_safe}", 0, 63)
@@ -31,6 +32,7 @@ locals {
     local.image_source_type == "cloud" ? replace(lower(var.image_file), "communitygalleries", "communityGalleries") :
     null
   )
+  image_test = "/gardenlinux/tests-ng/.build/tests-ng-dist.disk.vhd"
 
   labels = {
     component = "gardenlinux"
@@ -80,7 +82,7 @@ resource "azurerm_storage_account" "storage_account" {
 }
 
 resource "azurerm_storage_container" "blob" {
-  count = local.image_source_type == "file" ? 1 : 0
+  count = 1
 
   name                  = local.vhds_name
   storage_account_id    = azurerm_storage_account.storage_account.id
@@ -100,6 +102,34 @@ resource "azurerm_storage_blob" "image" {
     create = "4h"
     delete = "30m"
   }
+}
+
+resource "azurerm_storage_blob" "image_test" {
+  count = 1
+
+  name                   = local.image_name_test
+  storage_account_name   = azurerm_storage_account.storage_account.name
+  storage_container_name = azurerm_storage_container.blob.0.name
+  type                   = "Page"
+  source                 = local.image_test
+
+  timeouts {
+    create = "4h"
+    delete = "30m"
+  }
+}
+
+resource "azurerm_managed_disk" "test_disk" {
+  name                 = "${local.disk_os_name}-test"
+  location             = azurerm_resource_group.rg.location
+  resource_group_name  = azurerm_resource_group.rg.name
+  storage_account_type = "StandardSSD_LRS"
+  create_option        = "Import"
+  disk_size_gb         = 1
+  source_uri           = azurerm_storage_blob.image_test.0.url
+  storage_account_id   = azurerm_storage_account.storage_account.id
+
+  tags = local.labels
 }
 
 resource "azurerm_shared_image_gallery" "gallery" {
@@ -302,11 +332,31 @@ resource "azurerm_linux_virtual_machine" "instance" {
     azurerm_shared_image_version.shared_image_version.0,
     azurerm_network_interface.nic
   ]
+}
 
-  # replace if image source changes
-  lifecycle {
-    replace_triggered_by = [
-      azurerm_storage_blob.image.0.metadata
+resource "azurerm_virtual_machine_data_disk_attachment" "test_disk_attachment" {
+  managed_disk_id    = azurerm_managed_disk.test_disk.id
+  virtual_machine_id = azurerm_linux_virtual_machine.instance.id
+  lun                = "10"
+  caching            = "ReadWrite"
+}
+
+resource "null_resource" "test_disk_mount" {
+  depends_on = [azurerm_virtual_machine_data_disk_attachment.test_disk_attachment]
+
+  provisioner "remote-exec" {
+    connection {
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file(split(".pub", var.ssh_public_key)[0])
+      host        = local.public_ip
+      # usually this is created in /tmp but we have it mounted noexec
+      script_path = "/home/${var.ssh_user}/terraform_%RAND%.sh"
+      timeout     = "10m"
+    }
+
+    inline = [
+      "sudo mount /dev/disk/azure/scsi1/lun10 /mnt",
     ]
   }
 }

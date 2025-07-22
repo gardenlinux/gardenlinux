@@ -2,19 +2,35 @@
 
 set -eufo pipefail
 
-if [ "$0" != /init ]; then
-	exec podman run --rm -v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro" -v "$PWD:/mnt" -w /mnt debian:stable /init "$@"
-fi
+set -x
+
+# if [ "$0" != /init ]; then
+# 	exec podman run --privileged -v /dev:/dev --device /dev/loop-control --rm -v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro" -v "$PWD:/mnt" -w /mnt debian:stable /bin/bash -c 'apt-get update && apt-get install -y qemu-utils && /init "$@"' -- "$@"
+# fi
 
 tmpdir=
 
 cleanup() {
-	[ -n "$tmpdir" ] || rm -rf "$tmpdir"
+	[ -n "$tmpdir" ] && rm -rf "$tmpdir"
 	tmpdir=
 }
 
 trap cleanup EXIT
 tmpdir="$(mktemp -d)"
+
+if [ "$0" != /init ]; then
+	cat >"$tmpdir/Containerfile" <<-'EOF'
+		FROM debian:stable
+		RUN apt-get update \
+		&& apt-get install -y --no-install-recommends ca-certificates curl libc6 make qemu-utils
+	EOF
+
+	podman build --iidfile "$tmpdir/image_id" "$tmpdir"
+	image_id="$(<"$tmpdir/image_id")"
+
+	cleanup
+	exec podman run --privileged -v /dev:/dev --device /dev/loop-control --rm -v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro" -v "$PWD:/mnt" -w /mnt "$image_id" /init "$@"
+fi
 
 output="$1"
 shift
@@ -52,9 +68,45 @@ script_path="$(realpath -- "$0")"
 script_dir="$(dirname -- "$script_path")"
 
 export PATH="$script_dir/runtime/$arch/bin:$PATH"
+PYTHON_LIB_DIR="$(find $script_dir/runtime/$(uname -m)/lib -type d -name python*)"
+export PYTHONPATH="$PYTHON_LIB_DIR/site-packages"
 cd "$script_dir/tests"
 COLUMNS=120 python -m pytest -rA --tb=short --color=yes "$@"
 EOF
 chmod +x "$tmpdir/dist/run_tests"
 
 tar -c -C "$tmpdir/dist" . | gzip >"$output"
+
+# Create raw ext4 formated disk image containing the distribution
+output_dir="$(dirname "$output")"
+output_basename="$(basename "$output")"
+disk_basename="${output_basename%.tar.gz}.disk.raw.tar.gz"
+disk_output="$output_dir/$disk_basename"
+checksummed_disk_basename="${output_basename%.tar.gz}.disk.raw"
+checksummed_vhd_basename="${output_basename%.tar.gz}.disk.vhd"
+checksummed_qcow2_basename="${output_basename%.tar.gz}.disk.qcow2"
+disk_raw="$tmpdir/$checksummed_disk_basename"
+disk_vhd="$tmpdir/$checksummed_vhd_basename"
+disk_qcow2="$tmpdir/$checksummed_qcow2_basename"
+mount_point="$tmpdir/mount"
+
+qemu-img create -f raw "$disk_raw" 1G
+# Use mkfs.ext4 with -d option to populate filesystem directly (avoids loop mounting)
+mkfs.ext4 -F -d "$tmpdir/dist" "$disk_raw"
+cp "$disk_raw" "$output_dir/$checksummed_disk_basename"
+# Create VHD version for Azure (fixed format required)
+qemu-img convert -f raw -O vpc -o subformat=fixed,force_size "$disk_raw" "$disk_vhd"
+cp "$disk_vhd" "$output_dir/$checksummed_vhd_basename"
+# Create QCOW2 version for OpenStack
+qemu-img convert -f raw -O qcow2 "$disk_raw" "$disk_qcow2"
+cp "$disk_qcow2" "$output_dir/$checksummed_qcow2_basename"
+
+tar -c -C "$tmpdir" "$checksummed_disk_basename" | gzip >"$disk_output"
+
+vhd_tar_basename="${output_basename%.tar.gz}.disk.vhd.tar.gz"
+vhd_tar_output="$output_dir/$vhd_tar_basename"
+tar -c -C "$tmpdir" "$checksummed_vhd_basename" | gzip >"$vhd_tar_output"
+
+qcow2_tar_basename="${output_basename%.tar.gz}.disk.qcow2.tar.gz"
+qcow2_tar_output="$output_dir/$qcow2_tar_basename"
+tar -c -C "$tmpdir" "$checksummed_qcow2_basename" | gzip >"$qcow2_tar_output"

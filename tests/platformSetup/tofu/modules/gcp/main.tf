@@ -7,7 +7,9 @@ locals {
   # max 63 chars
   bucket_name = substr("images-${local.test_name_safe}", 0, 63)
   tar_name    = "image-${local.test_name_safe}.tar.gz"
+  tar_name_test = "image-test-${local.test_name_safe}.tar.gz"
   image_name  = substr("image-${local.test_name_safe}", 0, 61)
+  image_name_test  = substr("image-test-${local.test_name_safe}", 0, 61)
   # max 61 chars
   net_name      = substr("net-${local.test_name_safe}", 0, 61)
   subnet_name   = substr("snet-${local.test_name_safe}", 0, 61)
@@ -26,6 +28,7 @@ locals {
     local.image_source_type == "cloud" ? var.image_file :
     null
   )
+  image_test = "/gardenlinux/tests-ng/.build/tests-ng-dist.disk.raw.tar.gz"
 
   labels = {
     component = "gardenlinux"
@@ -35,7 +38,7 @@ locals {
 }
 
 resource "google_storage_bucket" "images" {
-  count = local.image_source_type == "file" ? 1 : 0
+  count = 1
 
   name          = local.bucket_name
   location      = var.region_storage
@@ -52,6 +55,16 @@ resource "google_storage_bucket_object" "image" {
 
   name   = local.tar_name
   source = local.image
+  bucket = google_storage_bucket.images.0.name
+
+  content_type = "application/x-tar"
+}
+
+resource "google_storage_bucket_object" "image_test" {
+  count = 1
+
+  name   = local.tar_name_test
+  source = local.image_test
   bucket = google_storage_bucket.images.0.name
 
   content_type = "application/x-tar"
@@ -103,7 +116,25 @@ resource "google_compute_image" "image" {
 
   lifecycle {
     replace_triggered_by = [
-      google_storage_bucket_object.image.0.crc32c
+      google_storage_bucket_object.image
+    ]
+  }
+}
+
+resource "google_compute_image" "image_test" {
+  count = 1
+
+  name = local.image_name_test
+
+  raw_disk {
+    source = "https://storage.cloud.google.com/${google_storage_bucket.images.0.name}/${google_storage_bucket_object.image_test.0.name}"
+  }
+
+  labels = local.labels
+
+  lifecycle {
+    replace_triggered_by = [
+      google_storage_bucket_object.image_test
     ]
   }
 }
@@ -141,6 +172,14 @@ resource "google_compute_firewall" "firewall" {
   target_tags   = [local.test_name_safe]
 }
 
+resource "google_compute_disk" "test_disk" {
+  name = local.image_name_test
+  size = 1
+  type = "pd-ssd"
+  zone = "${var.region}-${var.zone}"
+  image = google_compute_image.image_test.0.self_link
+}
+
 resource "google_compute_instance" "instance" {
   name         = local.instance_name
   machine_type = var.instance_type
@@ -158,6 +197,12 @@ resource "google_compute_instance" "instance" {
       type  = "pd-ssd"
       size  = 16
     }
+  }
+
+  attached_disk {
+    source = google_compute_disk.test_disk.self_link
+    device_name = "test-disk"
+    mode = "READ_WRITE"
   }
 
   network_interface {
@@ -195,12 +240,6 @@ resource "google_compute_instance" "instance" {
   tags = [
     local.test_name_safe
   ]
-
-  lifecycle {
-    replace_triggered_by = [
-      google_compute_image.image.0.creation_timestamp
-    ]
-  }
 }
 
 resource "null_resource" "test_connect" {
@@ -219,6 +258,26 @@ resource "null_resource" "test_connect" {
 
     inline = [
       "cat /etc/os-release",
+    ]
+  }
+}
+
+resource "null_resource" "test_disk_mount" {
+  depends_on = [google_compute_instance.instance]
+
+  provisioner "remote-exec" {
+    connection {
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file(split(".pub", var.ssh_public_key)[0])
+      host        = local.public_ip
+      # usually this is created in /tmp but we have it mounted noexec
+      script_path = "/home/${var.ssh_user}/terraform_%RAND%.sh"
+      timeout     = "10m"
+    }
+
+    inline = [
+      "sudo mount /dev/disk/by-id/google-test-disk /mnt",
     ]
   }
 }
