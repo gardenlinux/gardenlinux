@@ -5,7 +5,8 @@ set -eufo pipefail
 set -x
 
 PYTHON_SOURCE="https://github.com/astral-sh/python-build-standalone/releases/download"
-PYTHON_VERSION="3.13.5"
+PYTHON_VERSION_SHORT="3.13"
+PYTHON_VERSION="$PYTHON_VERSION_SHORT.5"
 RELEASE_DATE="20250712"
 PYTHON_ARCHIVE_CHECKSUM_AMD64="9af1a2a3a3c06ee7fd264e677a551c399fa534f92ecdafbbb3e8b4af34adcb84"
 PYTHON_ARCHIVE_CHECKSUM_ARM64="d3b6805d8a12610d45917aa5cac69f53f8dd1ee3faef86fc8d2d1488825edd9a"
@@ -110,9 +111,11 @@ else
 fi
 
 PATH="$tmpdir/host_runtime/bin:$PATH"
-PYTHONPATH="$tmpdir/runtime/lib/python3.13/site-packages"
-mkdir -p "$tmpdir/runtime/lib/python3.13/site-packages"
-pip install --only-binary=:all: --target "$tmpdir/runtime/lib/python3.13/site-packages" -r "$requirements"
+PYTHONPATH="$tmpdir/runtime/lib/python${PYTHON_VERSION_SHORT}/site-packages"
+mkdir -p "$tmpdir/runtime/lib/python${PYTHON_VERSION_SHORT}/site-packages"
+# NOTE: as for now, we should not depend on any binary packages
+pip install --only-binary=:none: --target "$tmpdir/runtime/lib/python${PYTHON_VERSION_SHORT}/site-packages" -r "$requirements"
+find "$tmpdir/runtime/lib/python${PYTHON_VERSION_SHORT}/site-packages" -type d -name __pycache__ -exec rm -rf {} +
 
 tar -c -C "$tmpdir/runtime" . | gzip >"$output"
 cp "$output" "$cache_path"
