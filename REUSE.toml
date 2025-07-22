@@ -16,6 +16,12 @@ SPDX-FileCopyrightText = "2024 SAP SE or an SAP affiliate company and Gardenlinu
 SPDX-License-Identifier = "CC-BY-4.0"
 
 [[annotations]]
+path = ["tests/.constants.sh", "bin/.constants.sh", "bin/.dpkg-arch.sh", "bin/garden-debian-sources-list", "bin/garden-chroot", "bin/.tar-exclude", "bin/garden-version", "bin/.fix-apt-comments.sh"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright 2017 Tianon Gravi <tianon@debian.org>"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
 path = ["features/sap/file.include/etc/tmpfiles.d/legacy.conf", "features/cisPartition/file.include/etc/systemd/system/tmp.mount", "features/server/file.include/etc/systemd/system/tmp.mount", "features/cisOS/file.include/usr/lib/tmpfiles.d/var.conf"]
 precedence = "override"
 SPDX-FileCopyrightText = "Copyright (C) 1989, 1991 Free Software Foundation, Inc."
