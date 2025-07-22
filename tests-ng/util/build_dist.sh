@@ -50,7 +50,7 @@ for runtime in "${runtimes[@]}"; do
 	else
 		rm -rf "$PYTHON_LIB_DIR/site-packages"
 	fi
-	(cd "$PYTHON_LIB_DIR" && ln -s ../../site-packages)
+	(cd "$PYTHON_LIB_DIR" && ln -s ../../../site-packages)
 done
 
 set +f
