@@ -101,12 +101,15 @@ cp "$disk_vhd" "$output_dir/$checksummed_vhd_basename"
 qemu-img convert -f raw -O qcow2 "$disk_raw" "$disk_qcow2"
 cp "$disk_qcow2" "$output_dir/$checksummed_qcow2_basename"
 
-tar -c -C "$tmpdir" "$checksummed_disk_basename" | gzip >"$disk_output"
+# GCP expects the disk to be named disk.raw
+tar -c -C "$tmpdir" --transform "s|$checksummed_disk_basename|disk.raw|" "$checksummed_disk_basename" | gzip >"$disk_output"
 
 vhd_tar_basename="${output_basename%.tar.gz}.disk.vhd.tar.gz"
 vhd_tar_output="$output_dir/$vhd_tar_basename"
-tar -c -C "$tmpdir" "$checksummed_vhd_basename" | gzip >"$vhd_tar_output"
+# Rename to disk.vhd to be consistent with the other formats
+tar -c -C "$tmpdir" --transform "s|$checksummed_vhd_basename|disk.vhd|" "$checksummed_vhd_basename" | gzip >"$vhd_tar_output"
 
 qcow2_tar_basename="${output_basename%.tar.gz}.disk.qcow2.tar.gz"
 qcow2_tar_output="$output_dir/$qcow2_tar_basename"
-tar -c -C "$tmpdir" "$checksummed_qcow2_basename" | gzip >"$qcow2_tar_output"
+# Rename to disk.qcow2 to be consistent with the other formats
+tar -c -C "$tmpdir" --transform "s|$checksummed_qcow2_basename|disk.qcow2|" "$checksummed_qcow2_basename" | gzip >"$qcow2_tar_output"
