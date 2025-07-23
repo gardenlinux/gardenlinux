@@ -13,7 +13,7 @@ on:
         required: true
 jobs:
   test:
-    name: Test flavor in chroot ${{ inputs.flavor }} (${{ inputs.arch }})
+    name: Test flavor in QEMU ${{ inputs.flavor }} (${{ inputs.arch }})
     runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     defaults:
       run:
@@ -39,7 +39,7 @@ jobs:
           fail-on-cache-miss: true
       - name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@97e65f61273bd5d84cc2316ce78d15af880c0022 # pin@0.8.8
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@a7545af15d3a1fa96675b24807eace643483da96 # pin@0.8.0
         with:
           flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
       - name: Set CNAME
@@ -49,28 +49,10 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
           name: build-${{ inputs.flavor }}-${{ inputs.arch }}
-      - name: Test
+      - name: unpack build artifacts
         run: |
           mkdir ".build"
           tar -C .build -xzf $CNAME.tar.gz
           rm "$CNAME.tar.gz"
-
-          make --directory=tests ${{ inputs.flavor }}-${{ inputs.arch }}-chroot-test
-      # chroot.test.xml is written in the entrypoint tests/init
       - name: New Test Framework
-        run: ./test-ng ".build/$CNAME.tar"
-      - name: Rename test results
-        if: always()
-        run: mv tests/chroot.test.xml .build/$CNAME.chroot.test.xml
-      - uses: pmeier/pytest-results-action@20b595761ba9bf89e115e875f8bc863f913bc8ad # pin@v0.7.2
-        if: always()
-        with:
-          path: ".build/${{ env.CNAME }}.chroot.test.xml"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
-        if: always()
-        with:
-          if-no-files-found: ignore
-          name: chroot-test-${{ env.CNAME }}
-          path: |
-            .build/${{ env.CNAME }}.chroot.test.log
-            .build/${{ env.CNAME }}.chroot.test.xml
+        run: ./test-ng ".build/$CNAME.raw"
