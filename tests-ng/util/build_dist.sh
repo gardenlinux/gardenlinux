@@ -34,9 +34,27 @@ fi
 
 output="$1"
 shift
+
+# Parse optional formats parameter
+formats_arg=""
+if [[ "$1" == "--formats" ]]; then
+	formats_arg="$2"
+	shift 2
+fi
+
+# If no formats specified, build all formats
+if [[ -z "$formats_arg" ]]; then
+	formats=("raw" "vhd" "qcow2")
+else
+	IFS=',' read -ra formats <<<"$formats_arg"
+fi
+
 runtimes=("$@")
 
 mkdir -p "$tmpdir/dist/runtime"
+
+num_runtimes=${#runtimes[@]}
+
 for runtime in "${runtimes[@]}"; do
 	IFS=: read runtime_arch runtime_tar <<<"$runtime"
 	mkdir "$tmpdir/dist/runtime/$runtime_arch"
@@ -45,12 +63,15 @@ for runtime in "${runtimes[@]}"; do
 	# therefore, we only need to keep the site-packages directory in the root of the runtime
 	# and symlink it to the other architectures
 	PYTHON_LIB_DIR="$(find $tmpdir/dist/runtime/$runtime_arch/lib -type d -name python*)"
-	if [ "$runtime_arch" = "x86_64" ]; then
-		mv "$PYTHON_LIB_DIR/site-packages" "$tmpdir/dist/runtime/site-packages"
-	else
-		rm -rf "$PYTHON_LIB_DIR/site-packages"
+
+	if [ "$num_runtimes" -gt 1 ]; then
+		if [ "$runtime_arch" = "x86_64" ]; then
+			mv "$PYTHON_LIB_DIR/site-packages" "$tmpdir/dist/runtime/site-packages"
+		else
+			rm -rf "$PYTHON_LIB_DIR/site-packages"
+		fi
+		(cd "$PYTHON_LIB_DIR" && ln -s ../../../site-packages)
 	fi
-	(cd "$PYTHON_LIB_DIR" && ln -s ../../../site-packages)
 done
 
 set +f
@@ -78,6 +99,7 @@ chmod +x "$tmpdir/dist/run_tests"
 tar -c -C "$tmpdir/dist" . | gzip >"$output"
 
 # Create raw ext4 formated disk image containing the distribution
+# These disks will be attached to the instances in the platform-tests
 output_dir="$(dirname "$output")"
 output_basename="$(basename "$output")"
 disk_basename="${output_basename%.tar.gz}.disk.raw.tar.gz"
@@ -93,23 +115,36 @@ mount_point="$tmpdir/mount"
 qemu-img create -f raw "$disk_raw" 1G
 # Use mkfs.ext4 with -d option to populate filesystem directly (avoids loop mounting)
 mkfs.ext4 -F -d "$tmpdir/dist" "$disk_raw"
-cp "$disk_raw" "$output_dir/$checksummed_disk_basename"
-# Create VHD version for Azure (fixed format required)
-qemu-img convert -f raw -O vpc -o subformat=fixed,force_size "$disk_raw" "$disk_vhd"
-cp "$disk_vhd" "$output_dir/$checksummed_vhd_basename"
-# Create QCOW2 version for OpenStack
-qemu-img convert -f raw -O qcow2 "$disk_raw" "$disk_qcow2"
-cp "$disk_qcow2" "$output_dir/$checksummed_qcow2_basename"
 
-# GCP expects the disk to be named disk.raw
-tar -c -C "$tmpdir" --transform "s|$checksummed_disk_basename|disk.raw|" "$checksummed_disk_basename" | gzip >"$disk_output"
-
-vhd_tar_basename="${output_basename%.tar.gz}.disk.vhd.tar.gz"
-vhd_tar_output="$output_dir/$vhd_tar_basename"
-# Rename to disk.vhd to be consistent with the other formats
-tar -c -C "$tmpdir" --transform "s|$checksummed_vhd_basename|disk.vhd|" "$checksummed_vhd_basename" | gzip >"$vhd_tar_output"
-
-qcow2_tar_basename="${output_basename%.tar.gz}.disk.qcow2.tar.gz"
-qcow2_tar_output="$output_dir/$qcow2_tar_basename"
-# Rename to disk.qcow2 to be consistent with the other formats
-tar -c -C "$tmpdir" --transform "s|$checksummed_qcow2_basename|disk.qcow2|" "$checksummed_qcow2_basename" | gzip >"$qcow2_tar_output"
+# Create the requested disk formats
+for format in "${formats[@]}"; do
+	case "$format" in
+	"raw")
+		cp "$disk_raw" "$output_dir/$checksummed_disk_basename"
+		# GCP expects the disk to be named disk.raw
+		tar -c -C "$tmpdir" --transform "s|$checksummed_disk_basename|disk.raw|" "$checksummed_disk_basename" | gzip >"$disk_output"
+		;;
+	"vhd")
+		# Create VHD version for Azure (fixed format required)
+		qemu-img convert -f raw -O vpc -o subformat=fixed,force_size "$disk_raw" "$disk_vhd"
+		cp "$disk_vhd" "$output_dir/$checksummed_vhd_basename"
+		vhd_tar_basename="${output_basename%.tar.gz}.disk.vhd.tar.gz"
+		vhd_tar_output="$output_dir/$vhd_tar_basename"
+		# Rename to disk.vhd to be consistent with the other formats
+		tar -c -C "$tmpdir" --transform "s|$checksummed_vhd_basename|disk.vhd|" "$checksummed_vhd_basename" | gzip >"$vhd_tar_output"
+		;;
+	"qcow2")
+		# Create QCOW2 version for OpenStack
+		qemu-img convert -f raw -O qcow2 "$disk_raw" "$disk_qcow2"
+		cp "$disk_qcow2" "$output_dir/$checksummed_qcow2_basename"
+		qcow2_tar_basename="${output_basename%.tar.gz}.disk.qcow2.tar.gz"
+		qcow2_tar_output="$output_dir/$qcow2_tar_basename"
+		# Rename to disk.qcow2 to be consistent with the other formats
+		tar -c -C "$tmpdir" --transform "s|$checksummed_qcow2_basename|disk.qcow2|" "$checksummed_qcow2_basename" | gzip >"$qcow2_tar_output"
+		;;
+	*)
+		echo "Unknown format: $format" >&2
+		exit 1
+		;;
+	esac
+done
