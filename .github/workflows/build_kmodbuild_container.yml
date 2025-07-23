@@ -31,7 +31,7 @@ jobs:
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@a8ad209601539ab30b727872cc4089a91df8d648 # pin@0.8.5
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@fa53a1e9845e14ddc4986af6748260dc6dd6129c # pin@0.8.6
         with:
           flags: --cname container-${{ matrix.arch }} cname
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
