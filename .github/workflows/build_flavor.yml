@@ -17,6 +17,9 @@ on:
       signing_env:
         type: string
         default: ''
+      prefix:
+        type: string
+        default: ''
     secrets:
       secureboot_db_kms_arn:
         required: false
@@ -88,7 +91,7 @@ jobs:
         run: tar -cSzvf "$CNAME.tar.gz" -C .build -T ".build/$CNAME.artifacts"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         with:
-          name: build-${{ inputs.flavor }}-${{ inputs.arch }}
+          name: ${{ inputs.prefix }}build-${{ inputs.flavor }}-${{ inputs.arch }}
           path: ${{ env.CNAME }}.tar.gz
           if-no-files-found: error
       - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
@@ -96,4 +99,4 @@ jobs:
           path: |
             COMMIT
             VERSION
-          key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
+          key: ${{ inputs.prefix }}build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}

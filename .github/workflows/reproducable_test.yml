@@ -1,0 +1,101 @@
+name: Check build reproducibility
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-reproducibility
+  cancel-in-progress: true
+
+# To be able to test actions on a different branch, change to workflow_dispatch after debugging is done
+on:
+  push:
+    branches:
+      - "feat/check-reproducibility"
+jobs:
+  build_a:
+    name: Build A
+    uses: ./.github/workflows/build.yml
+    permissions:
+      id-token: write
+    with:
+      version: now
+      target: nightly
+      platform_test_tag: latest
+      fail_fast: true
+      prefix: a-
+    secrets:
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_kms_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
+      aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
+      secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
+  
+  build_b:
+    name: Build B
+    uses: ./.github/workflows/build.yml
+    permissions:
+      id-token: write
+    with:
+      version: now
+      target: nightly
+      platform_test_tag: latest
+      fail_fast: true
+      prefix: b-
+    secrets:
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_kms_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
+      aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
+      secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
+
+  difference_check:
+    needs: [ build_a, build_b ]
+    name: Difference check
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix: ${{ fromJson(needs.build_a.outputs.flavors_matrix) }}
+    steps:
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      with:
+        submodules: true
+    - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      with:
+        path: |
+          COMMIT
+          VERSION
+        key: a-build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
+        fail-on-cache-miss: true
+    - name: Determine CNAME
+      id: cname
+      uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@e812bf7b0ea86574b5f0f4941734b53cd9b66fdb # pin@0.8.3
+      with:
+        flags: --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname
+    - name: Set CNAME
+      run: |
+        echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
+    - name: Load flavor A build artifact
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+      with:
+        name: a-build-${{ matrix.flavor }}-${{ matrix.arch }}
+        path: A
+    - name: Load flavor B build artifact
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+      with:
+        name: b-build-${{ matrix.flavor }}-${{ matrix.arch }}
+        path: B
+    - name: Compare builds
+      run: |
+        tar -C A -xzf A/$CNAME.tar.gz
+        rm "A/$CNAME.tar.gz"
+        mkdir "A/unpacked"
+        tar -C A/unpacked -xzf A/$CNAME.tar
+
+        tar -C B -xzf B/$CNAME.tar.gz
+        rm "B/$CNAME.tar.gz"
+        mkdir "B/unpacked"
+        tar -C B/unpacked -xzf B/$CNAME.tar
+
+        ./.github/workflows/generate_diff.sh ${{ matrix.flavor }}-${{ matrix.arch }} $CNAME
+    - name: Upload diff data
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+      if: always()
+      with:
+        if-no-files-found: error
+        name: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
+        path: differ_files
