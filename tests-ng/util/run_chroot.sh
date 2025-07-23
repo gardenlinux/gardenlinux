@@ -24,7 +24,7 @@ rootfs_tar="$2"
 if (( containerize )); then
 	dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")"/../..)"
 	container_image="$("$dir/build" --print-container-image)"
-	exec podman run --rm \
+	exec podman run -q --rm \
 		-v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro" \
 		-v "$(realpath -- "$test_dist_dir/dist.tar.gz"):/mnt/test_dist/dist.tar.gz:ro" \
 		-v "$(realpath -- "$rootfs_tar"):/mnt/rootfs.tar:ro" \
