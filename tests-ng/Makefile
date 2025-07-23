@@ -15,7 +15,7 @@ ARCH_RUNTIME_amd64 := x86_64
 ARCH_RUNTIME_arm64 := aarch64
 
 # Platform to format mapping
-PLATFORM_FORMAT_ali := qcow2
+PLATFORM_FORMAT_ali := raw
 PLATFORM_FORMAT_azure := vhd
 PLATFORM_FORMAT_aws := raw
 PLATFORM_FORMAT_openstack := qcow2
@@ -124,9 +124,9 @@ help:
 	@echo "  dist-arm64        - Build distribution for arm64 only"
 	@echo ""
 	@echo "Format-specific builds:"
-	@echo "  dist-raw           - Build raw disk format (for GCP, AWS)"
+	@echo "  dist-raw           - Build raw disk format (for GCP, AWS, ALI)"
 	@echo "  dist-vhd           - Build VHD disk format (for Azure)"
-	@echo "  dist-qcow2         - Build QCOW2 disk format (for ALI, OpenStack)"
+	@echo "  dist-qcow2         - Build QCOW2 disk format (for OpenStack)"
 	@echo ""
 	@echo "Platform-specific builds:"
 	@echo "  dist-ali           - Build for Alibaba Cloud (qcow2 format)"
