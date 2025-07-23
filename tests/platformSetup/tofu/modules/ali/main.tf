@@ -216,6 +216,10 @@ resource "alicloud_image_import" "import_test" {
 }
 data "alicloud_ecs_snapshots" "snapshots" {
   name_regex = "SnapshotForImage-${local.image_name_test}"
+
+  depends_on = [
+    alicloud_image_import.import_test
+  ]
 }
 
 resource "alicloud_disk" "test_disk" {
