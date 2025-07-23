@@ -16,16 +16,11 @@ cleanup () {
 trap cleanup EXIT
 tmpdir="$(mktemp -d)"
 
-output="$1"
-shift
-runtimes=("$@")
+runtime="$1"
+output="$2"
 
 mkdir -p "$tmpdir/dist/runtime"
-for runtime in "${runtimes[@]}"; do
-	IFS=: read runtime_arch runtime_tar <<< "$runtime"
-	mkdir "$tmpdir/dist/runtime/$runtime_arch"
-	gzip -d < "$runtime_tar" | tar -x -C "$tmpdir/dist/runtime/$runtime_arch"
-done
+gzip -d < "$runtime" | tar -x -C "$tmpdir/dist/runtime"
 
 set +f
 
