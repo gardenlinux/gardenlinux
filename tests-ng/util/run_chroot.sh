@@ -6,6 +6,8 @@ containerize=0
 
 if [ "$(uname -s)" != Linux ]; then
 	containerize=1
+elif [ "$(id -u)" != 0 ]; then
+	containerize=1
 fi
 
 while [ $# -gt 0 ]; do
