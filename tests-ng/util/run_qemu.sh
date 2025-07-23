@@ -32,8 +32,11 @@ qemu-img create -q -f qcow2 -F raw -b "$(realpath -- "$image")" "$tmpdir/disk.qc
 
 cp "$test_dist_dir/edk2-qemu-$arch-code" "$tmpdir/edk2-qemu-code"
 cp "$test_dist_dir/edk2-qemu-$arch-vars" "$tmpdir/edk2-qemu-vars"
-truncate -s 64M "$tmpdir/edk2-qemu-code"
-truncate -s 64M "$tmpdir/edk2-qemu-vars"
+
+if [ "$arch" = aarch64 ]; then
+	truncate -s 64M "$tmpdir/edk2-qemu-code"
+	truncate -s 64M "$tmpdir/edk2-qemu-vars"
+fi
 
 cat > "$tmpdir/fw_cfg-script.sh" << 'EOF'
 #!/usr/bin/env bash
