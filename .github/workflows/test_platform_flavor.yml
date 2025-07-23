@@ -204,6 +204,8 @@ jobs:
             cp "tests/platformSetup/tofu/backend.tf.github" "tests/platformSetup/tofu/backend.tf"
           fi
 
+          export PLATFORM=$(echo $FLAVOR | cut -d'-' -f1)
+          make --directory=tests-ng dist-${ARCH}-${PLATFORM}
           make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-apply 2>&1 | tee ".build/$CNAME.platform.provisioning.log"
       - name: Run platform-test for ${{ inputs.flavor }} (${{ inputs.arch }})
         run: |
