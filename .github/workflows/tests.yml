@@ -133,6 +133,18 @@ jobs:
       version: ${{ inputs.version }}
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
+  test_flavors_qemu:
+    needs: intersect_matrices
+    name: Test flavors QEMU
+    uses: ./.github/workflows/test_flavor_qemu.yml
+    if: ${{ needs.intersect_matrices.outputs.chroot_test_flavors_matrix != '{"include":[]}' && inputs.chroot_test == true }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.intersect_matrices.outputs.chroot_test_flavors_matrix) }}
+    with:
+      version: ${{ inputs.version }}
+      arch: ${{ matrix.arch }}
+      flavor: ${{ matrix.flavor }}
   test_platform_flavors:
     needs: intersect_matrices
     name: Test platform flavors
