@@ -16,10 +16,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build local container 
-        run: docker pull ghcr.io/gardenlinux/cpe:latest
+        run: podman pull ghcr.io/gardenlinux/cpe:latest
 
       - name: Generate CPE 
-        run: docker run -i ghcr.io/gardenlinux/cpe:latest -p "${{ inputs.version }}" | tail -n1 > gardenlinux-cpe.json
+        run: podman run -i ghcr.io/gardenlinux/cpe:latest -p "${{ inputs.version }}" | tail -n1 > gardenlinux-cpe.json
 
       - name: Upload asset to release
         uses: softprops/action-gh-release@v2
