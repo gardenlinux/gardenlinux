@@ -139,7 +139,7 @@ class PytestConfig:
             yaml_data = {
                 "qemu": {
                     "platform": platform,
-                    "image": f"{image_path}/{cname}.raw" if image_path else None,
+                    "image": f"{image_path}/{image_name}.raw" if image_path else None,
                     "ip": "127.0.0.1",
                     "port": 2223,
                     "keep_running": True,
