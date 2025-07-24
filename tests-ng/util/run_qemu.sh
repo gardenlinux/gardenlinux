@@ -49,7 +49,6 @@ mkdir /run/gardenlinux_tests
 mount /dev/disk/by-label/GL_TESTS /run/gardenlinux_tests
 
 cd /run/gardenlinux_tests
-./run_tests --system-booted > /dev/virtio-ports/test_output
 EOF
 
 echo "🚀  starting test VM"
@@ -75,6 +74,12 @@ if [ "$arch" = "$native_arch" ]; then
 	elif [ "$(uname -s)" = Darwin ]; then
 		qemu_accel=hvf
 	fi
+fi
+
+if [ "$qemu_accel" != tcg ]; then
+	echo './run_tests --system-booted > /dev/virtio-ports/test_output' >> "$tmpdir/fw_cfg-script.sh"
+else
+	echo './run_tests --system-booted --skip-performance-metrics > /dev/virtio-ports/test_output' >> "$tmpdir/fw_cfg-script.sh"
 fi
 
 qemu_opts=(
