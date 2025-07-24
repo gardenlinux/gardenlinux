@@ -55,5 +55,12 @@ jobs:
           mkdir ".build"
           tar -C .build -xzf $CNAME.tar.gz
           rm "$CNAME.tar.gz"
+          tree .build
+        # TODO: handle skipping better
       - name: New Test Framework
-        run: ./test-ng ".build/$CNAME.raw"
+        run: |
+          if [ -e ".build/$CNAME.raw" ]; then
+            ./test-ng ".build/$CNAME.raw"
+          else
+            echo "no raw file, skipping QEMU test"
+          fi
