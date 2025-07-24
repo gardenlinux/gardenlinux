@@ -37,6 +37,7 @@ def test_fhs(shell):
 		assert os.path.isdir(f"/{dir}"), f"expected FHS directory /{dir} does not exist"
 
 @pytest.mark.booted
+@pytest.mark.performance_metric
 @pytest.mark.feature("server and not azure") # server installs systemd and azure has notoriously bad startup times
 def test_startup_time(systemd):
 	tolerated_kernel = 60.0
