@@ -57,11 +57,13 @@ echo "🚀  starting test VM"
 if [ "$arch" = x86_64 ]; then
 	qemu_machine=q35
 	qemu_cpu=qemu64
+	qemu_tpm_dev=tpm-tis
 fi
 
 if [ "$arch" = aarch64 ]; then
 	qemu_machine=virt
 	qemu_cpu=cortex-a57
+	qemu_tpm_dev=tpm-tis-device
 fi
 
 native_arch="$(map_arch "$(uname -m)")"
@@ -90,8 +92,12 @@ qemu_opts=(
 	-chardev file,id=test_output,path="$tmpdir/serial.log"
 	-device virtio-serial
 	-device virtserialport,chardev=test_output,name=test_output
+	-chardev socket,id=chrtpm,path="$tmpdir/swtpm.sock"
+	-tpmdev emulator,id=tpm0,chardev=chrtpm
+	-device "$qemu_tpm_dev",tpmdev=tpm0
 )
 
+swtpm socket --tpmstate backend-uri="file://$tmpdir/swtpm.permall" --ctrl type=unixio,path="$tmpdir/swtpm.sock" --tpm2 --daemon --terminate
 "qemu-system-$arch" "${qemu_opts[@]}" | stdbuf -i0 -o0 sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g'
 cat "$tmpdir/serial.log"
 ! ( tail -n1 "$tmpdir/serial.log" | grep failed > /dev/null )
