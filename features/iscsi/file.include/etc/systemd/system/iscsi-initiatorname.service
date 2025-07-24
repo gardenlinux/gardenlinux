@@ -1,0 +1,14 @@
+[Unit]
+Description=iSCSI InitiatorName Generator
+ConditionPathExists=|!/etc/iscsi/initiatorname.iscsi
+After=multi-user.service
+Before=iscsid.service
+
+[Service]
+ExecStart=/bin/mv /etc/iscsi/initiatorname.iscsi.template /etc/iscsi/initiatorname.iscsi
+ExecStart=/bin/sh -c 'iscsi-iname -g >> /etc/iscsi/initiatorname.iscsi'
+Type=oneshot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
