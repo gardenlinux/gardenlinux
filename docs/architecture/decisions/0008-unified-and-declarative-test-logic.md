@@ -8,6 +8,8 @@ Accepted
 
 ## Context
 
+See [6. New Test Framework to enable In-Place, Self-Contained Test Execution](./0006-new-test-framework-in-place-self-contained-test-execution.md) for additional context on this decision.
+
 The current Garden Linux test framework uses fragmented and inconsistent mechanisms for conditional test execution and privilege handling. Tests are skipped or included based on a combination of feature directories, `.disable` files, and ad-hoc fixtures with inconsistent naming conventions. Privilege escalation is handled manually via `sudo` calls in test code, which is error-prone and difficult to maintain. Test logic is often split between thin wrappers and global helper functions, making it hard to understand what a test actually verifies.
 
 Key limitations:

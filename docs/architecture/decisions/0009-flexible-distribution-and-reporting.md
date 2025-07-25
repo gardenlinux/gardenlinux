@@ -8,6 +8,8 @@ Accepted
 
 ## Context
 
+See [6. New Test Framework to enable In-Place, Self-Contained Test Execution](./0006-new-test-framework-in-place-self-contained-test-execution.md) for additional context on this decision.
+
 The Garden Linux test framework must support a wide variety of environments, including cloud providers, VMs, containers, chroots, and bare metal. The current approach relies heavily on SSH and manual deployment, which is slow, error-prone, and not always feasible. Additionally, previous frameworks lacked robust mechanisms for exporting and reporting test results in a standardized, machine-readable format.
 
 Key limitations:
