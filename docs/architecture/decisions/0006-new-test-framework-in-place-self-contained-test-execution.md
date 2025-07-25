@@ -1,4 +1,4 @@
-# ADR 0006: In-Place, Self-Contained Test Execution
+# 6. New Test Framework to enable In-Place, Self-Contained Test Execution
 
 **Date:** 2025-07-25
 

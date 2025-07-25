@@ -8,6 +8,8 @@ Accepted
 
 ## Context
 
+See [6. New Test Framework to enable In-Place, Self-Contained Test Execution](./0006-new-test-framework-in-place-self-contained-test-execution.md) for additional context on this decision.
+
 The Garden Linux test framework is undergoing a major redesign to improve safety, portability, and maintainability. However, the existing framework is deeply integrated into current workflows and contains a large number of tests and helper functions. A complete, immediate rewrite ("big bang" migration) would be risky, disruptive, and could block ongoing development and validation work. There is a need to balance progress on the new framework with continuity for existing users and processes.
 
 Key considerations:
