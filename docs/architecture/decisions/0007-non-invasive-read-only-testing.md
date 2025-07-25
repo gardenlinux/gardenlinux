@@ -8,6 +8,8 @@ Accepted
 
 ## Context
 
+See [6. New Test Framework to enable In-Place, Self-Contained Test Execution](./0006-new-test-framework-in-place-self-contained-test-execution.md) for additional context on this decision.
+
 The current Garden Linux test framework modifies the system under test by enabling SSH, installing packages, and making other system-level changes. This approach is suitable for disposable, ephemeral systems but is unsafe for production or long-lived environments, where any mutation can introduce risk, instability, or compliance issues.
 
 Key limitations:
