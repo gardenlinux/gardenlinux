@@ -35,3 +35,11 @@ Running tests on a developer machine will not require multiple invocations of `m
 - **Maintainability:** The framework is easier to reason about and maintain, as tests run in a predictable, local context.
 - **Reporting:** Output can be collected via stdout/stderr, persisted as JUnit XML, or exported in other formats.
 - **Migration:** Enables incremental migration; old and new frameworks can coexist during transition.
+
+## Alternatives Considered
+
+We evaluated packaging the test suite as an [OCI container](https://opencontainers.org) and leveraging [systemd system extensions](https://www.freedesktop.org/software/systemd/man/latest/systemd-sysext.html) for deployment.
+
+These approaches were not adopted due to the following limitations:
+- **Software Availability:** Container runtimes and systemd are not present in all target environments.
+- **Permission Requirements:** Both methods require elevated privileges, which may not be feasible or desirable in production or restricted systems.
