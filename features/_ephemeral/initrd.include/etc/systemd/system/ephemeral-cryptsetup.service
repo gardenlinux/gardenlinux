@@ -1,7 +1,6 @@
 [Unit]
 Requires=systemd-repart.service
 After=systemd-repart.service
-After=sysroot.mount
 DefaultDependencies=no
 
 [Service]
