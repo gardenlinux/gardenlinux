@@ -27,38 +27,10 @@ jobs:
         cp "$IMAGE_AMD" ../output/
         sha512sum "$IMAGE_AMD" > "../output/$(basename $IMAGE_AMD).sha512"        
 
-    - name: Build image with feature:lima for arm64
+    - name: Dump OIDC Token claims
       run: |
-        sudo apt-get update
-        sudo apt-get install -y ovmf qemu-efi-aarch64 qemu-user-static binfmt-support
-        sudo update-binfmts --enable qemu-aarch64
-        ./build kvm-lima-arm64
-        mkdir -p output
-        cd ./.build
-        IMAGE_ARM=$(find . -mmin -30 -maxdepth 1 -type f -name "*arm*.qcow2" -exec basename {} \;)
-        cp "$IMAGE_ARM" ../output/
-        sha512sum "$IMAGE_ARM" > "../output/$(basename $IMAGE_ARM).sha512"
-
-    - name: Create gardenlinux.yaml for limactl create config 
-      run: |
-        mkdir -p output
-        cd output
-        SHA_AMD=$(cat *amd*.sha512|cut -d' ' -f1)
-        SHA_ARM=$(cat *arm*.sha512|cut -d' ' -f1)
-        cat <<EOF > gardenlinux.yaml
-        vmType: qemu
-        os: Linux
-        images:
-        - location: "https://images.gardenlinux.io/gardenlinux-amd64-today.qcow2"
-          arch: "x86_64"
-          digest: "sha512:${SHA_AMD}"
-        - location: "https://images.gardenlinux.io/gardenlinux-arm64-today.qcow2"
-          arch: "aarch64"
-          digest: "sha512:${SHA_ARM}"
-        containerd:
-          system: false
-          user: false
-        EOF
+        curl -s "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.googleapis.com" \
+        -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" | jq .
 
     - name: Authenticate to GCloud via OIDC
       uses: google-github-actions/auth@v2
@@ -78,16 +50,9 @@ jobs:
       run: |
         cd output
         IMAGE_AMD=$(ls *amd*.qcow2)
-        IMAGE_ARM=$(ls *arm*.qcow2)
         SHA_AMD=$(ls *amd*.sha512)
-        SHA_ARM=$(ls *arm*.sha512)
         gsutil cp "gardenlinux.yaml" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux.yaml
         gsutil cp "$IMAGE_AMD" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-amd64-today.qcow2
         gsutil cp "$SHA_AMD" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-amd64-today.qcow2.sha512
-        gsutil cp "$IMAGE_ARM" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-arm64-today.qcow2
-        gsutil cp "$SHA_ARM" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-arm64-today.qcow2.sha512
+
  
-    - name: Output public URL
-      run: | 
-        echo "amd64 image uploaded to https://images.gardenlinux.io/gardenlinux-amd64-today.qcow2"
-        echo "arm64 image uploaded to https://images.gardenlinux.io/gardenlinux-arm64-today.qcow2"
