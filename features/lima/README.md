@@ -9,23 +9,17 @@ Using `vz` is not supported.
 
 How to use:
 
-1. Build an image: `./build kvm-lima`
+1. A gardenlinux image for LIMA is actioned to be built and uploaded weekly for arch AMD64 and ARM64
 
-2. Create the manifest.yaml file
+2. Create a LIMA VM with GardenLinux image:
+  - No extra setup/download needed, if you have lima set up you can just use it as below 
 
-```yaml
-vmType: qemu
-os: Linux
-images:
-  - location: /path/to/your/gardenlinux/.build/kvm-lima-[ARCH]-[VERSION]-[COMMIT_SHA].qcow2
-
-containerd:
-  system: false
-  user: false
+```bash
+  limactl create --name gardenlinux https://images.gardenlinux.io/gardenlinux.yaml
 ```
 
-3. Create the VM: `cat manifest.yaml | limactl create --name=gardenlinux -`
+3. Start the VM: `limactl start gardenlinux`
 
-4. Start the VM: `limactl start gardenlinux`
+4. Open a shell inside the VM: `limactl shell gardenlinux`
 
-5. Open a shell inside the VM: `limactl shell gardenlinux`
+
