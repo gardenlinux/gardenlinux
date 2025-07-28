@@ -51,7 +51,6 @@ jobs:
         cd output
         IMAGE_AMD=$(ls *amd*.qcow2)
         SHA_AMD=$(ls *amd*.sha512)
-        gsutil cp "gardenlinux.yaml" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux.yaml
         gsutil cp "$IMAGE_AMD" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-amd64-today.qcow2
         gsutil cp "$SHA_AMD" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-amd64-today.qcow2.sha512
 
