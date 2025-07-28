@@ -58,6 +58,7 @@ jobs:
     with:
       version: ${{ inputs.version == '' && 'now' || inputs.version }}
       target: ${{ inputs.target }}
+      prefix: ${{ inputs.prefix }}
   bootstrap:
     needs: requirements
     name: Bootstrap build
@@ -65,6 +66,7 @@ jobs:
     with:
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
+      prefix: ${{ inputs.prefix }}
   platform_test_image:
     needs: requirements
     name: Build platform-test image
@@ -74,6 +76,7 @@ jobs:
       platforms: '["tofu"]'
       platform_test_tag: ${{ inputs.platform_test_tag }}
       build: ${{ inputs.platform_test_build }}
+      prefix: ${{ inputs.prefix }}
   flavors_matrix:
     name: Generate flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml
@@ -101,6 +104,7 @@ jobs:
     uses: ./.github/workflows/build_kmodbuild_container.yml
     with:
       version: ${{ needs.requirements.outputs.version }}
+      prefix: ${{ inputs.prefix }}
   bare_flavors_matrix:
     name: Generate bare flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml

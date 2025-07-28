@@ -38,7 +38,7 @@ jobs:
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
           path: .build
-          key: base-${{ inputs.arch }}-${{ github.run_id }}
+          key: ${{ inputs.prefix }}base-${{ inputs.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: Update bootstrap stage build artifact timestamps
         run: |

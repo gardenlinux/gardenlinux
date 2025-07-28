@@ -5,6 +5,9 @@ on:
       version:
         type: string
         required: true
+      prefix:
+        type: string
+        default: ''
 jobs:
   kmodbuild_container:
     name: Build kernel module build dev container (${{ matrix.arch }})
@@ -27,7 +30,7 @@ jobs:
           path: |
             COMMIT
             VERSION
-          key: build-container-${{ matrix.arch }}-${{ github.run_id }}
+          key: ${{ inputs.prefix }}build-container-${{ matrix.arch }}-${{ github.run_id }}
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Determine CNAME
         id: cname
@@ -75,6 +78,6 @@ jobs:
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         with:
-          name: kmodbuild-container-${{ matrix.arch }}
+          name: ${{ inputs.prefix }}kmodbuild-container-${{ matrix.arch }}
           path: kmodbuild_container_${{ matrix.arch }}.oci
           if-no-files-found: error

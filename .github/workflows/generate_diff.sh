@@ -19,7 +19,7 @@ for file in "${whitelist[@]}"; do
     sedcommands+=("\|$file|d")
 done
 
-if ! cmp A/$basefile B/$basefile > /dev/null; then
+if ! cmp "A/$basefile" "B/$basefile" > /dev/null; then
     # Difference detected
 
     files=$(diff -qrN ./A/unpacked ./B/unpacked 2> /dev/null \
