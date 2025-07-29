@@ -9,6 +9,8 @@ on:
       version:
         type: string
         required: true
+permissions:
+  packages: write
 jobs:
   kmodbuild_container:
     name: Publish kernel module build dev container

@@ -40,6 +40,7 @@ This directory contains the infrastructure code used to automatically set up tes
     - [Using Encrypted Local State](#using-encrypted-local-state)
     - [Setting Up Remote State in S3](#setting-up-remote-state-in-s3)
     - [Recover GitHub Action's OpenTofu State Locally](#recover-github-actions-opentofu-state-locally)
+- [Updating OpenTofu or Provider Versions](#updating-opentofu-or-providerversions)
 - [GitHub Actions](#github-actions)
   - [Available Workflows](#available-workflows)
     - [nightly.yml - Automated Nightly Tests](#nightlyyml---automated-nightly-tests)
@@ -384,8 +385,8 @@ It is called by the "-tofu-config" make targets but can also be called manually.
 # use default settings
 make --directory=tests/platformSetup gcp-gardener_prod-amd64-tofu-config
 
-# write a custom test prefix and image via cname
-TEST_PREFIX=myprefix CNAME=gcp-gardener_prod_tpm2_trustedboot-amd64-1695.0-30903f3a \
+# write a custom test prefix and image via IMAGE_NAME (cname)
+TEST_PREFIX=myprefix IMAGE_NAME=gcp-gardener_prod_tpm2_trustedboot-amd64-1695.0-30903f3a \
   make --directory=tests/platformSetup \
   gcp-gardener_prod_tpm2_trustedboot-amd64-tofu-config
 ```
@@ -401,10 +402,10 @@ or
     --test-prefix myprefix \
     --create-tfvars
 
-# Generate for a specific image version
+# Generate for a specific image version via providing the image cname
 ./tests/platformSetup/platformSetup.py \
     --flavors gcp-gardener_prod_trustedboot_tpm2-amd64 \
-    --cname gcp-gardener_prod_tpm2_trustedboot-amd64-1695.0-30903f3a \
+    --image-name gcp-gardener_prod_tpm2_trustedboot-amd64-1695.0-30903f3a \
     --provisioner tofu \
     --test-prefix myprefix \
     --create-tfvars
@@ -417,7 +418,7 @@ The script supports these options:
 
 ```bash
 tests/platformSetup/platformSetup.py --help
-usage: platformSetup.py [-h] --flavor FLAVOR --provisioner {qemu,tofu} [--image-path IMAGE_PATH] [--cname CNAME] [--test-prefix TEST_PREFIX] [--create-tfvars]
+usage: platformSetup.py [-h] --flavor FLAVOR --provisioner {qemu,tofu} [--image-path IMAGE_PATH] [--image_name IMAGE_NAME] [--test-prefix TEST_PREFIX] [--create-tfvars]
 
 Generate pytest config files and SSH login scripts for platform tests.
 
@@ -428,7 +429,13 @@ options:
                         Provisioner to use: 'qemu' for local testing or 'tofu' for Cloud Provider testing.
   --image-path IMAGE_PATH
                         Base path for image files.
-  --cname CNAME         Basename of image file (e.g., 'kvm-gardener_prod-amd64-1312.0-80ffcc87').
+  --image-name IMAGE_NAME
+                        Image name or cname style image reference: (e.g.,
+                        cname: 'kvm-gardener_prod-amd64-1312.0-80ffcc87',
+                        ali image: 'm-01234567890123456',
+                        aws ami: 'ami-01234567890123456',
+                        azure community gallery version: '/communityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/images/gardenlinux-gen2/versions/1443.18.0',
+                        gcp image: 'projects/sap-se-gcp-gardenlinux/global/images/gardenlinux-gcp-gardener-prod-arm64-1443-18-97fd20ac'.  
   --test-prefix TEST_PREFIX
                         Test prefix for OpenTofu variable files.
   --create-tfvars       Create OpenTofu variables file.
@@ -438,6 +445,186 @@ options:
 
 > [!WARNING]
 > Before running tests, ensure the variables file exists with the correct name, matching your test flavor (e.g., `variables.gcp-gardener_prod_trustedboot_tpm2-amd64.tfvars`)
+
+#### Use existing published cloud images from the official gardenlinux releases
+
+You can boot published cloud images from the official gardenlinux releases like e.g. [Release 1592.11](https://github.com/gardenlinux/gardenlinux/releases/tag/1592.11) by referencing the image path and image name in the `IMAGE_PATH` and `IMAGE_NAME` variables.
+
+<details>
+<summary>Click to see examples from the 1592.11 release page</summary>
+
+### Alibaba Cloud (amd64)
+```
+- Region: cn-qingdao, Image-Id: m-m5egu859pen1zirm4oq7
+- Region: cn-beijing, Image-Id: m-2zebu8dwbdsd6ljfjbt7
+- Region: cn-zhangjiakou, Image-Id: m-8vb18b30std75xs4e63k
+- Region: cn-huhehaote, Image-Id: m-hp3hpzgj2jg5nqy5sllx
+- Region: cn-wulanchabu, Image-Id: m-0jl3o5dikabfhps47mg0
+- Region: cn-hangzhou, Image-Id: m-bp1ffh0bkq6i7bdhe11n
+- Region: cn-shanghai, Image-Id: m-uf64proklduqsghxhkc4
+- Region: cn-nanjing, Image-Id: m-gc7718hb45i4xytz886l
+- Region: cn-shenzhen, Image-Id: m-wz9hu13t40i0ih2igs81
+- Region: cn-heyuan, Image-Id: m-f8z3fvro5mv6gewgovou
+- Region: cn-guangzhou, Image-Id: m-7xvhd1sqjby03cycevu2
+- Region: cn-fuzhou, Image-Id: m-gw03srokeh5268byc50w
+- Region: cn-wuhan-lr, Image-Id: m-n4a7547miqvtbjpgxsg7
+- Region: cn-chengdu, Image-Id: m-2vc6nu46u6yabe5s96do
+- Region: cn-hongkong, Image-Id: m-j6c366a8ihn8e72g16l5
+- Region: ap-northeast-1, Image-Id: m-6we41a4lp5x4gl2eg2rd
+- Region: ap-northeast-2, Image-Id: m-mj7bb6u3hj4v60hyxpqb
+- Region: ap-southeast-1, Image-Id: m-t4nexdp6lmgor0763h81
+- Region: ap-southeast-3, Image-Id: m-8psf3khbhzofwz2hl9ea
+- Region: ap-southeast-6, Image-Id: m-5ts9qtdazm1czjgadfk9
+- Region: ap-southeast-5, Image-Id: m-k1a6j280bbsyxsnqlh5o
+- Region: ap-southeast-7, Image-Id: m-0jo6wvx6k0etq17hhw0i
+- Region: us-east-1, Image-Id: m-0xi876dy339wiuwvjnr0
+- Region: us-west-1, Image-Id: m-rj9e925ny58dp11v5vcr
+- Region: na-south-1, Image-Id: m-4hfj619kkh88ezi5qzqj
+- Region: eu-west-1, Image-Id: m-d7oa2wbjsbs0jdlokq30
+- Region: me-east-1, Image-Id: m-eb3iftxj7q49q54sw8l4
+- Region: eu-central-1, Image-Id: m-gw82i8237f8c6sav1trn
+```
+### Amazon Web Services (amd64)
+```
+- Region: ap-south-1, Image-Id: ami-08a5221cfb4df1b32
+- Region: eu-north-1, Image-Id: ami-04e0ffde54151d623
+- Region: eu-west-3, Image-Id: ami-04ba476445b7dff9e
+- Region: eu-south-1, Image-Id: ami-043de2b173e7e1056
+- Region: eu-west-2, Image-Id: ami-098765bac39f081a5
+- Region: eu-west-1, Image-Id: ami-0bac327257f5cae45
+- Region: ap-northeast-3, Image-Id: ami-047be2850a852d279
+- Region: ap-northeast-2, Image-Id: ami-0ed22e4e328986fd6
+- Region: ap-northeast-1, Image-Id: ami-0fb1d5ee7cd03245c
+- Region: me-central-1, Image-Id: ami-021b692bec37efee7
+- Region: ca-central-1, Image-Id: ami-0dfb434faa3c0e9d6
+- Region: sa-east-1, Image-Id: ami-0c918cc893cb42347
+- Region: ap-southeast-1, Image-Id: ami-0fdc0feff84bbd1a2
+- Region: ap-southeast-2, Image-Id: ami-0dccb41da9a560d1d
+- Region: us-east-1, Image-Id: ami-0244a702c2f6284ff
+- Region: us-east-2, Image-Id: ami-01280f1c3598309cc
+- Region: us-west-1, Image-Id: ami-05323ef910f11c78b
+- Region: us-west-2, Image-Id: ami-03489819870ecd18d
+- Region: eu-central-1, Image-Id: ami-07f977508ed36098e
+- Region: cn-north-1, Image-Id: ami-02f50bda7856ad7b1
+- Region: cn-northwest-1, Image-Id: ami-0f292fde668b1b237
+```
+### Google Cloud Platform (amd64)
+```
+gcp_image_name: gardenlinux-gcp-ff804026cbe7b5f2d6f729e4-1592-11-9ce205a2
+```
+### Microsoft Azure (amd64)
+```
+# all regions (community gallery image):
+Hyper V: V1, Azure Cloud: public, Image Id: /CommunityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/Images/gardenlinux-nvme/Versions/1592.11.0
+Hyper V: V2, Azure Cloud: public, Image Id: /CommunityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/Images/gardenlinux-nvme-gen2/Versions/1592.11.0
+Hyper V: V1, Azure Cloud: china, Image Id: /CommunityGalleries/gardenlinux-8e6518fb-9ae0-4f66-abfd-9a06997e2492/Images/gardenlinux-nvme/Versions/1592.11.0
+Hyper V: V2, Azure Cloud: china, Image Id: /CommunityGalleries/gardenlinux-8e6518fb-9ae0-4f66-abfd-9a06997e2492/Images/gardenlinux-nvme-gen2/Versions/1592.11.0
+```
+### Amazon Web Services (arm64)
+```
+- Region: ap-south-1, Image-Id: ami-0a4928d6e1fdb8669
+- Region: eu-north-1, Image-Id: ami-0aa3bbb0314892ec9
+- Region: eu-west-3, Image-Id: ami-02af249755256a978
+- Region: eu-south-1, Image-Id: ami-0026defa7f91d9a42
+- Region: eu-west-2, Image-Id: ami-0fc5a594766b2bf87
+- Region: eu-west-1, Image-Id: ami-02ce5251e5a389f35
+- Region: ap-northeast-3, Image-Id: ami-0028602988ff70085
+- Region: ap-northeast-2, Image-Id: ami-09afb8d0e27b713fa
+- Region: ap-northeast-1, Image-Id: ami-05d9471d212d827f6
+- Region: me-central-1, Image-Id: ami-0db4179b239b607bd
+- Region: ca-central-1, Image-Id: ami-07156beeeb52ce0d4
+- Region: sa-east-1, Image-Id: ami-007450dc4d9a06247
+- Region: ap-southeast-1, Image-Id: ami-07694a33c7f0729df
+- Region: ap-southeast-2, Image-Id: ami-0d52079a549e9c94b
+- Region: us-east-1, Image-Id: ami-0ceb70de5ee6ccfd5
+- Region: us-east-2, Image-Id: ami-01d5dde0ebb8e35a8
+- Region: us-west-1, Image-Id: ami-0f153f506de6df9b6
+- Region: us-west-2, Image-Id: ami-01b674933e46a45b3
+- Region: eu-central-1, Image-Id: ami-06a9ce5920796430b
+- Region: cn-north-1, Image-Id: ami-0cf609af2a62a3b15
+- Region: cn-northwest-1, Image-Id: ami-02ba2049f549e0d91
+```
+### Google Cloud Platform (arm64)
+```
+gcp_image_name: gardenlinux-gcp-c8504d3c3e67cf2fc7c3408c-1592-11-9ce205a2
+```
+### Microsoft Azure (arm64)
+```
+# all regions (community gallery image):
+Hyper V: V2, Azure Cloud: public, Image Id: /CommunityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/Images/gardenlinux-nvme-arm64-gen2/Versions/1592.11.0
+Hyper V: V2, Azure Cloud: china, Image Id: /CommunityGalleries/gardenlinux-8e6518fb-9ae0-4f66-abfd-9a06997e2492/Images/gardenlinux-nvme-arm64-gen2/Versions/1592.11.0
+```
+
+</details>
+
+To get the default regions OpenTofu deploys instances to, you can run:
+
+```bash
+grep -A3 _region tests/platformSetup/tofu/variables.tf
+```
+
+<details>
+<summary>Click to see output</summary>
+
+```bash
+variable "ali_region" {
+  description = "AWS region"
+  default     = "eu-west-1" # London
+}
+--
+variable "aws_region" {
+  description = "AWS region"
+  default     = "eu-central-1"
+}
+--
+variable "azure_region" {
+  description = "Azure region"
+  default     = "westeurope"
+}
+--
+variable "gcp_region" {
+  description = "GCP region"
+  default     = "europe-west4"
+}
+--
+variable "gcp_region_storage" {
+  description = "GCP storage region"
+  default     = "europe-west4"
+}
+--
+variable "openstack_region" {
+  description = "OpenStack region"
+  default     = "RegionOne"
+}
+```
+
+</details>
+
+Now reference the image path and image name in the `IMAGE_PATH` and `IMAGE_NAME` variables when calling the `tofu-config` make targets.
+
+```bash
+# use an existing image for ali
+IMAGE_PATH=cloud:// IMAGE_NAME=m-d7oa2wbjsbs0jdlokq30 \
+  make --directory=tests/platformSetup \
+  ali-gardener_prod-amd64-tofu-config
+
+# use an existing image for aws
+IMAGE_PATH=cloud:// IMAGE_NAME=ami-07f977508ed36098e \
+  make --directory=tests/platformSetup \
+  aws-gardener_prod-amd64-tofu-config
+
+# use an existing image for azure
+IMAGE_PATH=cloud:// IMAGE_NAME=/communityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/images/gardenlinux-gen2/versions/1592.11.0 \
+  make --directory=tests/platformSetup \
+  azure-gardener_prod-amd64-tofu-config
+
+# use an existing image for gcp
+IMAGE_PATH=cloud:// IMAGE_NAME=projects/sap-se-gcp-gardenlinux/global/images/gardenlinux-gcp-ff804026cbe7b5f2d6f729e4-1592-11-9ce205a2 \
+  make --directory=tests/platformSetup \
+  gcp-gardener_prod-amd64-tofu-config
+```
+
+After creating the OpenTofu variables file, you can create the cloud resources with the `tofu-apply` make targets as usual.
 
 ### Creating Cloud Resources with OpenTofu
 
@@ -1141,6 +1328,55 @@ $ for i in $(tofu workspace list | grep 'ali|aws|azure|gcp' | sed 's#*##g'); do
     tofu workspace delete $i
   done
 ```
+
+## Updating OpenTofu or Provider Versions
+
+To upgrade to a newer OpenTofu version or update a provider, follow these steps carefully.
+
+1. **If the provider is forked:**
+
+   * Update the version in
+     `tests/images/platform-test/tofu/Containerfile`
+   * Check and adjust settings in
+     `tests/images/platform-test/tofu/.terraformrc`
+
+2. **Update version constraints:**
+
+   * Edit `tests/platformSetup/tofu/providers.tf` to pin the new OpenTofu and provider versions
+     * Look at [OpenTofu - Providers - Version Constraints](https://opentofu.org/docs/language/providers/requirements/#version-constraints) for the correct syntax.
+
+3. **Upgrade the lockfile:**
+
+   ```bash
+   $ cd tests/platformSetup/tofu/
+   $ tofu init [-upgrade]
+   ```
+
+   This will update `tests/platformSetup/tofu/.terraform.lock.hcl`
+
+### Local Testing
+
+You can test your changes locally by building the image and running the relevant make targets:
+
+```bash
+# Build and tag the updated tofu image
+$ make --directory=tests/images build-platform-test-tofu
+$ podman tag ghcr.io/gardenlinux/gardenlinux/platform-test-tofu:nightly \
+            ghcr.io/gardenlinux/gardenlinux/platform-test-tofu:latest
+
+# Run the usual platform setup make targets
+$ make --directory=tests/platformSetup azure-gardener_prod-amd64-tofu-config
+$ make --directory=tests/platformSetup azure-gardener_prod-amd64-tofu-plan
+```
+
+### Final Steps
+
+If your local tests pass:
+
+* Commit your changes
+* Open a pull request
+
+Once your PR is merged into `main`, the `ghcr.io/gardenlinux/gardenlinux/platform-test-tofu:latest` image will be **automatically built and pushed**.
 
 ## GitHub Actions
 

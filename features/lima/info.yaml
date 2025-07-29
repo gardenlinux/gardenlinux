@@ -1,2 +1,12 @@
 description: "image suitable for using with [lima](https://lima-vm.io)"
 type: flag
+features:
+  include:
+    - kvm
+  exclude:
+    - sap
+    - firewall
+    - log
+    - ssh
+    - _ignite
+    - _selinux
