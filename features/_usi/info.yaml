@@ -6,3 +6,4 @@ features:
     - _unsigned
   exclude:
     - _legacy
+    - _ignite

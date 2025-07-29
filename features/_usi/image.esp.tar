@@ -11,14 +11,11 @@ rootfs="$(mktemp -d)"
 mount -t tmpfs -o size="$TEMPFS_SIZE" tmpfs "$rootfs"
 tar --extract --xattrs --xattrs-include '*' --directory "$rootfs" < "$input"
 
-# # shellcheck disable=SC2115
-# rm -rf "$rootfs/var"
-# mkdir "$rootfs/var"
-
 echo "creating root EROFS disk"
 
-erofs="$(mktemp -u)"
-mkfs.erofs --quiet -z lz4 -E force-inode-compact -T "$BUILDER_TIMESTAMP" -U "$(echo "gardenlinux:$BUILDER_VERSION:erofs:root" | uuid_hash)" "$erofs" "$rootfs"
+erofs_cpio_dir="$(mktemp -d)"
+erofs="$erofs_cpio_dir/root.img"
+mkfs.erofs --quiet -z zstd,12 -E force-inode-compact -T "$BUILDER_TIMESTAMP" -U "$(echo "gardenlinux:$BUILDER_VERSION:erofs:root" | uuid_hash)" "$erofs" "$rootfs"
 
 size_chroot="$(du -s "$rootfs" | cut -f 1)"
 size_erofs="$(du "$erofs" | cut -f 1)"
@@ -27,65 +24,49 @@ echo "root disk compressed by $(( ( ( size_chroot - size_erofs ) * 100 ) / size_
 echo
 echo "building initrd with embedded root disk"
 
-mount --rbind /proc "$rootfs/proc"
+mkdir -p "$erofs_cpio_dir/"{proc,sys,dev,run,tmp,etc/systemd/system,sysroot,usr,modules}
 
-mount -t tmpfs -o mode=0755,size=4k tmpfs "$rootfs/dev"
-for i in null zero random urandom; do
-	touch "$rootfs/dev/$i"
-	mount --bind "/dev/$i" "$rootfs/dev/$i"
-done
-cp --no-dereference /dev/{fd,stdin,stdout,stderr} "$rootfs/dev/"
+touch "$erofs_cpio_dir/etc/initrd-release"
+touch "$erofs_cpio_dir/etc/machine-id"
+ln -s initrd.target "$erofs_cpio_dir/etc/systemd/system/default.target"
 
-mount -t tmpfs -o size=1G tmpfs "$rootfs/tmp"
-
-mkdir "$rootfs/tmp/initrd.include"
 IFS=',' read -r -a features <<< "$BUILDER_FEATURES"
 for feature in "${features[@]}"; do
-	if [ -e "/builder/features/$feature/initrd.include" ]; then
-		cp -a "/builder/features/$feature/initrd.include/." "$rootfs/tmp/initrd.include"
+	if [ -e "/builder/features/$feature/initrd.include/etc" ]; then
+		cp -a "/builder/features/$feature/initrd.include/etc/." "$erofs_cpio_dir/etc/"
 	fi
 done
 
-touch "$rootfs/tmp/initrd.include/root.img"
-mount --bind "$erofs" "$rootfs/tmp/initrd.include/root.img"
+for i in bin sbin lib lib64; do
+	[ -e "$rootfs/usr/$i" ] || continue
+	ln -s "usr/$i" "$erofs_cpio_dir/$i"
+done
 
-initrd="$(mktemp)"
-
-touch "$rootfs/initrd"
-mount --bind "$initrd" "$rootfs/initrd"
-
-kernel="$(find "$rootfs/boot/" -name 'vmlinuz-*' | sort -V | tail -n 1)"
-
-chroot "$rootfs" dracut \
-	--no-hostonly \
-	--force \
-	--tmpdir /tmp \
-	--kver "${kernel#*-}" \
-	--modules "bash dash systemd systemd-initrd systemd-repart systemd-cryptsetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown crypt" \
-	--reproducible \
-	--install 'find findmnt grep lsblk tail head realpath basename sfdisk mkfs.ext4 resizefat32 dd cryptsetup' \
-	--include '/tmp/initrd.include' / \
-	--add-drivers erofs \
-	/initrd
-
-umount "$rootfs/tmp/initrd.include/root.img"
-rm "$erofs"
-
-umount -l "$rootfs/proc"
-umount -R "$rootfs/dev"
-umount "$rootfs/tmp"
-
-umount "$rootfs/initrd"
+for i in drivers/block/loop.ko lib/libcrc32c.ko fs/erofs/erofs.ko; do
+	set +f
+	basename "$i" >> "$erofs_cpio_dir/modules/list"
+	cp "$rootfs/usr/lib/modules/"*"/kernel/$i" "$erofs_cpio_dir/modules/"
+	set -f
+done
 
 case "$BUILDER_ARCH" in
 	amd64)
+		gnu_arch=x86_64
 		uefi_arch=X64
 		;;
 	arm64)
+		gnu_arch=aarch64
 		uefi_arch=AA64
 		;;
 esac
 
+cp "$rootfs/usr/libexec/zero-copy-initrd/init-$gnu_arch" "$erofs_cpio_dir/init"
+
+initrd="$(mktemp)"
+(cd "$erofs_cpio_dir" && find . | cpio -o -H newc) > "$initrd"
+rm -rf "$erofs_cpio_dir"
+
+kernel="$(find "$rootfs/boot/" -name 'vmlinuz-*' | sort -V | tail -n 1)"
 uki="$(mktemp)"
 
 read -r _ cmdline < "$rootfs/etc/kernel/cmdline"
