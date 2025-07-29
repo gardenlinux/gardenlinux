@@ -83,8 +83,3 @@ jobs:
         gsutil cp "$SHA_AMD" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-amd64-today.qcow2.sha512
         gsutil cp "$IMAGE_ARM" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-arm64-today.qcow2
         gsutil cp "$SHA_ARM" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-arm64-today.qcow2.sha512
- 
-    - name: Output public URL
-      run: | 
-        echo "amd64 image uploaded to https://images.gardenlinux.io/gardenlinux-amd64-today.qcow2"
-        echo "arm64 image uploaded to https://images.gardenlinux.io/gardenlinux-arm64-today.qcow2"
