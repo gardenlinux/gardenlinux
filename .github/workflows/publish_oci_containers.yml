@@ -255,7 +255,7 @@ jobs:
       - name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@8901e3679feb077060f4b33769efe071133f3199 # pin@0.8.7
       - name: Install cosign
-        uses: sigstore/cosign-installer@v3.9.1
+        uses: sigstore/cosign-installer@v3.9.2
         with:
           cosign-release: 'v2.4.1'
       - name: Set flavor version reference
