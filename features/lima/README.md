@@ -7,19 +7,39 @@ This feature flag produces an image suitable for using with [lima](https://lima-
 For the time being, this only supports `qemu` virtual machines.
 Using `vz` is not supported.
 
-How to use:
+Garden Linux images for Lima are published at https://images.gardenlinux.io
 
-1. A gardenlinux image for LIMA is actioned to be built and uploaded weekly for arch AMD64 and ARM64
+How to use the pre-built image:
 
-2. Create a LIMA VM with GardenLinux image:
-  - No extra setup/download needed, if you have lima set up you can just use it as below 
+1. Create the VM
 
-```bash
-  limactl create --name gardenlinux https://images.gardenlinux.io/gardenlinux.yaml
+```
+limactl create --name gardenlinux https://images.gardenlinux.io/gardenlinux.yaml
 ```
 
-3. Start the VM: `limactl start gardenlinux`
+2. Start the VM: `limactl start gardenlinux`
 
-4. Open a shell inside the VM: `limactl shell gardenlinux`
+3. Open a shell inside the VM: `limactl shell gardenlinux`
 
+How to build your own image:
 
+1. Build an image: `./build kvm-lima`
+
+2. Create the manifest.yaml file
+
+```yaml
+vmType: qemu
+os: Linux
+images:
+  - location: /path/to/your/gardenlinux/.build/kvm-lima-[ARCH]-[VERSION]-[COMMIT_SHA].qcow2
+
+containerd:
+  system: false
+  user: false
+```
+
+3. Create the VM: `cat manifest.yaml | limactl create --name=gardenlinux -`
+
+4. Start the VM: `limactl start gardenlinux`
+
+5. Open a shell inside the VM: `limactl shell gardenlinux`
