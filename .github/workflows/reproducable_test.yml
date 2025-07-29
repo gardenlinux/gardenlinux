@@ -59,7 +59,7 @@ jobs:
         path: |
           COMMIT
           VERSION
-        key: a-build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
+        key: a-build-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
         fail-on-cache-miss: true
     - name: Determine CNAME
       id: cname
