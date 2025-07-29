@@ -7,6 +7,7 @@ locals {
   feature_tpm2                   = contains(var.features, "_tpm2")
   feature_trustedboot            = contains(var.features, "_trustedboot")
   image_name                     = "image-${local.test_name}.vhd"
+  image_name_test                = "image-test-${local.test_name}.vhd"
   net_name                       = substr("net-${local.test_name}", 0, 63)
   subnet_name                    = substr("subnet-${local.test_name}", 0, 63)
   pip_name                       = substr("pip-${local.test_name}", 0, 63)
@@ -22,6 +23,7 @@ locals {
 
   image_source_type = split("://", var.image_path)[0]
   image             = local.image_source_type == "file" ? "${split("file://", var.image_path)[1]}/${var.image_file}" : null
+  image_test = "/gardenlinux/tests-ng/.build/tests-ng-dist.disk.qcow2"
 }
 
 # Get Public Network
@@ -128,6 +130,21 @@ resource "openstack_images_image_v2" "image" {
   }
 }
 
+resource "openstack_images_image_v2" "image_test" {
+  name = local.image_name_test
+  local_file_path = local.image_test
+  container_format = "bare"
+  disk_format = "qcow2"
+  min_disk_gb = 1
+  min_ram_mb = 512
+}
+
+resource "openstack_blockstorage_volume_v3" "volume_test" {
+  name = local.image_name_test
+  size = 1
+  image_id = openstack_images_image_v2.image_test.id
+}
+
 resource "openstack_compute_instance_v2" "instance" {
   name              = local.instance_name
   flavor_name       = var.instance_type
@@ -136,6 +153,13 @@ resource "openstack_compute_instance_v2" "instance" {
   key_pair          = openstack_compute_keypair_v2.key.name
   network {
     port = openstack_networking_port_v2.nic.id
+  }
+  block_device {
+    uuid = openstack_blockstorage_volume_v3.volume_test.id
+    source_type = "image"
+    destination_type = "volume"
+    boot_index = 1
+    delete_on_termination = true
   }
 
   config_drive      = true
@@ -155,7 +179,7 @@ ssh_pwauth: true
 runcmd:
   - touch /tmp/startup-script-ok
   - systemctl enable --now ssh
-EOT  
+EOT
 
   depends_on = [
     openstack_networking_floatingip_v2.pip

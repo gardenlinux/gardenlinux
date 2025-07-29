@@ -240,13 +240,53 @@ class Scripts:
         with login_script_file.open("w") as login_script:
             login_script.write("#!/usr/bin/env bash\n")
             login_script.write(
+                f"CMD=\"${{1}}\"\n"
                 f"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "
                 f"-l {config_data['ssh_user']} -i {config_data['ssh_key_filepath']} "
-                f"-p {config_data['ssh_port']} {config_data['host']}\n"
+                f"-p {config_data['ssh_port']} {config_data['host']} "
+                f"\"${{CMD}}\"\n"
             )
 
         login_script_file.chmod(0o755)
         logger.info(f"Login script '{login_script_file.relative_to(self.paths.git_root)}' created.")
+
+        return config_data
+
+    def generate_scp_local_remote_script(self, config_data):
+        """Generate an scp local to remote script."""
+        flavor = self.flavors.flavor
+        provisioner = self.args.provisioner
+
+        scp_script_file = self.paths.tests_dir / f"scp-local-remote.{provisioner}.{flavor}.sh"
+        with scp_script_file.open("w") as scp_script:
+            scp_script.write("#!/usr/bin/env bash\n")
+            scp_script.write("PATH_LOCAL=${1}\n")
+            scp_script.write("PATH_REMOTE=${2:-/var/tmp/gardenlinux}\n")
+            scp_script.write(
+                f"scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r -P {config_data['ssh_port']} -i {config_data['ssh_key_filepath']} \"${{PATH_LOCAL}}\" \"{config_data['ssh_user']}@{config_data['host']}:${{PATH_REMOTE}}\"\n"
+            )
+
+        scp_script_file.chmod(0o755)
+        logger.info(f"scp script '{scp_script_file.relative_to(self.paths.git_root)}' created.")
+
+        return config_data
+
+    def generate_scp_remote_local_script(self, config_data):
+        """Generate an scp remote to local script."""
+        flavor = self.flavors.flavor
+        provisioner = self.args.provisioner
+
+        scp_script_file = self.paths.tests_dir / f"scp-remote-local.{provisioner}.{flavor}.sh"
+        with scp_script_file.open("w") as scp_script:
+            scp_script.write("#!/usr/bin/env bash\n")
+            scp_script.write("PATH_LOCAL=${1}\n")
+            scp_script.write("PATH_REMOTE=${2:-/var/tmp/gardenlinux}\n")
+            scp_script.write(
+                f"scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r -P {config_data['ssh_port']} -i {config_data['ssh_key_filepath']} \"{config_data['ssh_user']}@{config_data['host']}:${{PATH_REMOTE}}\" \"${{PATH_LOCAL}}\"\n"
+            )
+
+        scp_script_file.chmod(0o755)
+        logger.info(f"scp script '{scp_script_file.relative_to(self.paths.git_root)}' created.")
 
         return config_data
 
@@ -356,6 +396,13 @@ class Tofu:
             else f"{image_name}.{image_files.get(platform, 'raw')}"
         )
 
+        # Determine if we should add extension based on image_path
+        image_source_type = image_path.split("://")[0] if image_path else "file"
+        image_file = (
+            image_name if image_source_type == "cloud"
+            else f"{image_name}.{image_files.get(platform, 'raw')}"
+        )
+
         # Create flavor configuration
         flavor_item = {
             "name": flavor,
@@ -415,6 +462,23 @@ def parse_arguments():
             """
     )
     parser.add_argument(
+        '--cname',
+        type=str,
+        help="Basename of image file (e.g., 'kvm-gardener_prod-amd64-1312.0-80ffcc87')."
+    )
+    parser.add_argument(
+        '--image-name',
+        type=str,
+        help="""
+                Image name or image_name style image reference:
+                (e.g., image_name: 'kvm-gardener_prod-amd64-1312.0-80ffcc87',
+                ali image: 'm-01234567890123456',
+                aws ami: 'ami-01234567890123456',
+                azure community gallery version: '/communityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/images/gardenlinux-gen2/versions/1443.18.0',
+                gcp image: 'projects/sap-se-gcp-gardenlinux/global/images/gardenlinux-gcp-gardener-prod-arm64-1443-18-97fd20ac'.
+            """
+    )
+    parser.add_argument(
         '--test-prefix',
         type=str,
         help="Test prefix for OpenTofu variable files."
@@ -440,6 +504,7 @@ def main():
     if args.provisioner == 'qemu':
         config_data = scripts.generate_config_data()
         scripts.generate_login_script(config_data)
+        scripts.generate_scp_local_remote_script(config_data)
         pytest.generate_pytest_configfile(
             config_data,
             image_path=args.image_path,
@@ -462,6 +527,7 @@ def main():
                 tofu_data = tofu.get_tofu_output(args.flavor)
                 config_data = scripts.generate_config_data(tofu_data)
                 scripts.generate_login_script(config_data)
+                scripts.generate_scp_local_remote_script(config_data)
                 pytest.generate_pytest_configfile(config_data)
 
         except Exception as e:

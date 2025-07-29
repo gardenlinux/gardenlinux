@@ -29,6 +29,11 @@ endif
 ifeq ($(origin IMAGE_NAME), undefined)
 IMAGE_NAME_CMD :=
 else
+IMAGE_PATH_CMD := --image-path $(IMAGE_PATH)
+endif
+ifeq ($(origin IMAGE_NAME), undefined)
+IMAGE_NAME_CMD :=
+else
 IMAGE_NAME_CMD := --image-name $(IMAGE_NAME)
 endif
 
@@ -147,7 +152,31 @@ $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 			tofu workspace select -or-create $(flavor)-$(SEED) && \
 			../platformSetup.py --provisioner tofu --flavor $(flavor) && \
 			tofu workspace select default && \
-			../../login.tofu.$(flavor).sh" \
+			../../login.tofu.$(flavor).sh \"$(CMD)\"" \
+	) \
+	$(eval \
+		$(flavor)-tofu-scp-local-remote: ; \
+		export OS_AUTH_URL=$(OS_AUTH_URL) TF_VAR_gcp_project_id=$(TF_VAR_gcp_project_id) ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID) && \
+		mkdir -p $(MKDIRS) && \
+		$(CRE_CMD_tofu) bash -c "\
+			cd platformSetup/tofu && \
+			tofu init && \
+			tofu workspace select -or-create $(flavor)-$(SEED) && \
+			../platformSetup.py --provisioner tofu --flavor $(flavor) && \
+			tofu workspace select default && \
+			../../scp-local-remote.tofu.$(flavor).sh \"$(SCP_PATH_LOCAL)\" \"$(SCP_PATH_REMOTE)\"" \
+	) \
+	$(eval \
+		$(flavor)-tofu-scp-remote-local: ; \
+		export OS_AUTH_URL=$(OS_AUTH_URL) TF_VAR_gcp_project_id=$(TF_VAR_gcp_project_id) ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID) && \
+		mkdir -p $(MKDIRS) && \
+		$(CRE_CMD_tofu) bash -c "\
+			cd platformSetup/tofu && \
+			tofu init && \
+			tofu workspace select -or-create $(flavor)-$(SEED) && \
+			../platformSetup.py --provisioner tofu --flavor $(flavor) && \
+			tofu workspace select default && \
+			../../scp-remote-local.tofu.$(flavor).sh \"$(SCP_PATH_REMOTE)\" \"$(SCP_PATH_LOCAL)\"" \
 	) \
 	$(eval \
 		$(flavor)-tofu-destroy: ; \
@@ -181,7 +210,21 @@ $(foreach flavor,$(FLAVORS_IMAGE), \
 	$(eval \
 		$(flavor)-qemu-login: ; \
 		$(GARDENLINUX_BUILD_CRE) exec -it qemu-$(flavor) bash -c "\
-			/gardenlinux/tests/login.qemu.$(flavor).sh \
+			/gardenlinux/tests/login.qemu.$(flavor).sh \"$(CMD)\" \
+		" \
+	) \
+	$(eval \
+		$(flavor)-qemu-scp-local-remote: ; \
+		mkdir -p $(MKDIRS) && \
+		$(GARDENLINUX_BUILD_CRE) exec -it qemu-$(flavor) bash -c "\
+			/gardenlinux/tests/scp-local-remote.qemu.$(flavor).sh \"$(SCP_PATH_LOCAL)\" \"$(SCP_PATH_REMOTE)\" \
+		" \
+	) \
+	$(eval \
+		$(flavor)-qemu-scp-remote-local: ; \
+		mkdir -p $(MKDIRS) && \
+		$(GARDENLINUX_BUILD_CRE) exec -it qemu-$(flavor) bash -c "\
+			/gardenlinux/tests/scp-remote-local.qemu.$(flavor).sh \"$(SCP_PATH_REMOTE)\" \"$(SCP_PATH_LOCAL)\" \
 		" \
 	) \
 	$(eval \

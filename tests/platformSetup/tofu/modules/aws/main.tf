@@ -12,6 +12,7 @@ locals {
   bucket_name          = substr("images-${local.test_name_safe}", 0, 63)
   tar_name             = "image-${local.test_name}.tar.gz"
   image_name           = "image-${local.test_name}"
+  image_name_test      = "image-test-${local.test_name}"
   net_name             = "net-${local.test_name}"
   subnet_name          = "subnet-${local.test_name}"
   instance_name        = "instance-${local.test_name}"
@@ -41,10 +42,11 @@ locals {
     local.image_source_type == "cloud" ? var.image_file :
     null
   )
+  image_test = "/gardenlinux/tests-ng/.build/tests-ng-dist.disk.raw"
 }
 
 resource "aws_s3_bucket" "images" {
-  count = local.image_source_type == "file" ? 1 : 0
+  count = 1
 
   bucket = local.bucket_name
 
@@ -55,7 +57,7 @@ resource "aws_s3_bucket" "images" {
 }
 
 resource "aws_s3_bucket_ownership_controls" "images_owner" {
-  count = local.image_source_type == "file" ? 1 : 0
+  count = 1
 
   bucket = aws_s3_bucket.images.0.id
   rule {
@@ -64,7 +66,7 @@ resource "aws_s3_bucket_ownership_controls" "images_owner" {
 }
 
 resource "aws_s3_bucket_acl" "images_acl" {
-  count = local.image_source_type == "file" ? 1 : 0
+  count = 1
 
   depends_on = [aws_s3_bucket_ownership_controls.images_owner.0]
 
@@ -73,7 +75,7 @@ resource "aws_s3_bucket_acl" "images_acl" {
 }
 
 data "aws_iam_policy_document" "policy_document" {
-  count = local.image_source_type == "file" ? 1 : 0
+  count = 1
 
   statement {
     # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document#principals-and-not_principals
@@ -104,14 +106,14 @@ data "aws_iam_policy_document" "policy_document" {
 }
 
 resource "aws_s3_bucket_policy" "images_policy" {
-  count = local.image_source_type == "file" ? 1 : 0
+  count = 1
 
   bucket = aws_s3_bucket.images.0.id
   policy = data.aws_iam_policy_document.policy_document.0.json
 }
 
 resource "aws_s3_bucket_public_access_block" "no_public_access" {
-  count = local.image_source_type == "file" ? 1 : 0
+  count = 1
 
   bucket = aws_s3_bucket.images.0.id
 
@@ -122,7 +124,7 @@ resource "aws_s3_bucket_public_access_block" "no_public_access" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "images_encryption" {
-  count = local.image_source_type == "file" ? 1 : 0
+  count = 1
 
   bucket = aws_s3_bucket.images.0.id
 
@@ -233,6 +235,19 @@ resource "aws_s3_object" "image" {
   )
 }
 
+resource "aws_s3_object" "image_test" {
+  count = 1
+
+  bucket = aws_s3_bucket.images.0.id
+  key    = local.image_name_test
+  source = local.image_test
+
+  tags = merge(
+    local.labels,
+    { Name = local.image_name_test }
+  )
+}
+
 resource "aws_ebs_snapshot_import" "snapshot_import" {
   count = local.image_source_type == "file" ? 1 : 0
 
@@ -251,6 +266,27 @@ resource "aws_ebs_snapshot_import" "snapshot_import" {
   tags = merge(
     local.labels,
     { Name = local.image_name }
+  )
+}
+
+resource "aws_ebs_snapshot_import" "snapshot_import_test" {
+  count = 1
+
+  disk_container {
+    # format = "VHD"
+    format = "RAW"
+    user_bucket {
+      s3_bucket = aws_s3_bucket.images.0.bucket
+      s3_key    = aws_s3_object.image_test.0.key
+    }
+  }
+
+  # forces replacement
+  # description = "uploaded by gardenlinux-cicd"
+
+  tags = merge(
+    local.labels,
+    { Name = local.image_name_test }
   )
 }
 
@@ -317,12 +353,37 @@ resource "aws_instance" "instance" {
     )
   }
 
+  ebs_block_device {
+    device_name = "/dev/xvdb"
+    snapshot_id = aws_ebs_snapshot_import.snapshot_import_test.0.id
+  }
+
   depends_on = [aws_internet_gateway.igw]
 
   tags = merge(
     local.labels,
     { Name = local.instance_name }
   )
+}
+
+resource "null_resource" "test_disk_mount" {
+  depends_on = [aws_instance.instance]
+
+  provisioner "remote-exec" {
+    connection {
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file(split(".pub", var.ssh_public_key)[0])
+      host        = local.public_ip
+      # usually this is created in /tmp but we have it mounted noexec
+      script_path = "/home/${var.ssh_user}/terraform_%RAND%.sh"
+      timeout     = "10m"
+    }
+
+    inline = [
+      "sudo mount /dev/xvdb /mnt",
+    ]
+  }
 }
 
 resource "null_resource" "test_connect" {
