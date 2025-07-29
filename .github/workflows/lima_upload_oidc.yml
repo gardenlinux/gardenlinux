@@ -1,12 +1,10 @@
 name: build and publish images for use with lima-vm
 
 on:
-  push:
-    branches:
-      - lima-upload  
   schedule:
     - cron: '0 11 * * 2'
-    
+  workflow_on_dispatch:
+
 jobs:
   build-upload:
     runs-on: ubuntu-latest
