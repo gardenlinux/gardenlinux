@@ -26,7 +26,7 @@ jobs:
           submodules: true
       - id: matrix
         name: Generate flavors matrix
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@8901e3679feb077060f4b33769efe071133f3199 # pin@0.8.7
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@97e65f61273bd5d84cc2316ce78d15af880c0022 # pin@0.8.8
         with:
           flags: ${{ inputs.flags }}
           flavors_matrix: ${{ inputs.flavors_matrix }}
