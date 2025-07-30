@@ -125,3 +125,6 @@ if [ -d cert ]; then
 fi
 
 "$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" ${container_cmd[@]+"${container_cmd[@]}"} fake_xattr make --no-print-directory -C /builder "${make_opts[@]}" "$@" >&3
+
+# Handle new .build/*unbase.sh files created by builder
+find "$target_dir" -type f -cnewer "$target_dir/features.sentinel" -regex ".*\.unbase.sh$" -exec bash {} \;
