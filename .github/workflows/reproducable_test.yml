@@ -81,23 +81,15 @@ jobs:
         path: B
     - name: Compare builds
       run: |
-        ls -la A
-        file A/*
-        tar --version
-        gzip --version
-        sha256sum A/$CNAME.tar.gz
-        head -c 64 < A/$CNAME.tar.gz | hexdump -vC
-        gzip -t A/$CNAME.tar.gz
-        
         tar -C A -xzf A/$CNAME.tar.gz
         rm "A/$CNAME.tar.gz"
         mkdir "A/unpacked"
-        tar -C A/unpacked -xzf A/$CNAME.tar
+        tar -C A/unpacked -xf A/$CNAME.tar
 
         tar -C B -xzf B/$CNAME.tar.gz
         rm "B/$CNAME.tar.gz"
         mkdir "B/unpacked"
-        tar -C B/unpacked -xzf B/$CNAME.tar
+        tar -C B/unpacked -xf B/$CNAME.tar
 
         ./.github/workflows/generate_diff.sh ${{ matrix.flavor }}-${{ matrix.arch }} $CNAME
     - name: Upload diff data
