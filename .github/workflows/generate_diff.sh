@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-whitelist=()
+whitelist=("dummypath_abcd...")
 
 if [ -z ${2+x} ]; then
     # $2 is unset
