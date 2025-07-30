@@ -87,6 +87,7 @@ jobs:
         gzip --version
         sha256sum A/$CNAME.tar.gz
         head -c 64 < A/$CNAME.tar.gz | hexdump -vC
+        gzip -t A/$CNAME.tar.gz
         
         tar -C A -xzf A/$CNAME.tar.gz
         rm "A/$CNAME.tar.gz"
