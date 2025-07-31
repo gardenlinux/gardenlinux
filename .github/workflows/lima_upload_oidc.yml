@@ -21,8 +21,11 @@ jobs:
         mkdir -p output
         cd ./.build
         IMAGE_AMD=$(find . -maxdepth 1 -type f -name "*amd*.qcow2" -exec basename {} \;)
+        ls -lah
+        echo -e "Reading IMAGE_AMD" $IMAGE_AMD
         cp "$IMAGE_AMD" ../output/
-        sha512sum "$IMAGE_AMD" > "../output/$(basename $IMAGE_AMD).sha512"        
+        sha512sum "$IMAGE_AMD" > "../output/$(basename $IMAGE_AMD).sha512"
+        ls -lah ../output
 
     - name: Build image with feature:lima for arm64
       run: |
@@ -33,8 +36,11 @@ jobs:
         mkdir -p output
         cd ./.build
         IMAGE_ARM=$(find . -maxdepth 1 -type f -name "*arm*.qcow2" -exec basename {} \;)
+        ls -lah
+        echo -e "Reading IMAGE_ARM" $IMAGE_ARM
         cp "$IMAGE_ARM" ../output/
         sha512sum "$IMAGE_ARM" > "../output/$(basename $IMAGE_ARM).sha512"
+        ls -lah ../output/
 
     - name: Create gardenlinux.yaml for limactl create config 
       run: |
