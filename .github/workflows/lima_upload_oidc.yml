@@ -20,9 +20,12 @@ jobs:
         ./build kvm-lima-amd64
         mkdir -p output
         cd ./.build
-        IMAGE_AMD=$(find . -mmin -30 -maxdepth 1 -type f -name "*amd*.qcow2" -exec basename {} \;)
+        IMAGE_AMD=$(find . -maxdepth 1 -type f -name "*amd*.qcow2" -exec basename {} \;)
+        ls -lah
+        echo -e "Reading IMAGE_AMD" $IMAGE_AMD
         cp "$IMAGE_AMD" ../output/
-        sha512sum "$IMAGE_AMD" > "../output/$(basename $IMAGE_AMD).sha512"        
+        sha512sum "$IMAGE_AMD" > "../output/$(basename $IMAGE_AMD).sha512"
+        ls -lah ../output
 
     - name: Build image with feature:lima for arm64
       run: |
@@ -32,26 +35,30 @@ jobs:
         ./build kvm-lima-arm64
         mkdir -p output
         cd ./.build
-        IMAGE_ARM=$(find . -mmin -30 -maxdepth 1 -type f -name "*arm*.qcow2" -exec basename {} \;)
+        IMAGE_ARM=$(find . -maxdepth 1 -type f -name "*arm*.qcow2" -exec basename {} \;)
+        ls -lah
+        echo -e "Reading IMAGE_ARM" $IMAGE_ARM
         cp "$IMAGE_ARM" ../output/
         sha512sum "$IMAGE_ARM" > "../output/$(basename $IMAGE_ARM).sha512"
+        ls -lah ../output/
 
     - name: Create gardenlinux.yaml for limactl create config 
       run: |
         mkdir -p output
         cd output
+        ls -lah 
         SHA_AMD=$(cat *amd*.sha512|cut -d' ' -f1)
         SHA_ARM=$(cat *arm*.sha512|cut -d' ' -f1)
+        echo "Reading SHA_AMD" $SHA_AMD
+        echo "Reading SHA_ARM" $SHA_ARM
         cat <<EOF > gardenlinux.yaml
         vmType: qemu
         os: Linux
         images:
         - location: "https://images.gardenlinux.io/gardenlinux-amd64-today.qcow2"
           arch: "x86_64"
-          digest: "sha512:${SHA_AMD}"
         - location: "https://images.gardenlinux.io/gardenlinux-arm64-today.qcow2"
           arch: "aarch64"
-          digest: "sha512:${SHA_ARM}"
         containerd:
           system: false
           user: false
@@ -78,6 +85,8 @@ jobs:
         IMAGE_ARM=$(ls *arm*.qcow2)
         SHA_AMD=$(ls *amd*.sha512)
         SHA_ARM=$(ls *arm*.sha512)
+        ls -lah
+        echo $IMAGE_AMD $IMAGE_ARM $SHA_AMD $SHA_ARM
         gsutil cp "gardenlinux.yaml" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux.yaml
         gsutil cp "$IMAGE_AMD" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-amd64-today.qcow2
         gsutil cp "$SHA_AMD" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-amd64-today.qcow2.sha512
