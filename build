@@ -6,7 +6,7 @@ shopt -s nullglob
 exec 3>&1
 exec 1>&2
 
-container_image=ghcr.io/gardenlinux/builder:70b8f1f7cb627a67b1076eeec7e288110cce0fc8
+container_image=ghcr.io/gardenlinux/builder:33391d8821ac62794512753879942fc2155f1965
 container_engine=podman
 target_dir=.build
 
@@ -22,6 +22,7 @@ container_cmd=()
 
 use_kms=0
 resolve_cname=0
+apparmor_profile=
 
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -56,6 +57,10 @@ while [ $# -gt 0 ]; do
 			;;
 		--target)
 			target_dir="$2"
+			shift 2
+			;;
+		--apparmor-profile)
+			apparmor_profile="$2"
 			shift 2
 			;;
 		*)
@@ -101,6 +106,7 @@ make_opts=(
 	COMMIT="$commit"
 	TIMESTAMP="$timestamp"
 	DEFAULT_VERSION="$default_version"
+	LOG_WITH_TIMESTAMP="${LOG_WITH_TIMESTAMP:-true}"
 )
 
 if [ "$use_kms" = 1 ]; then
@@ -122,6 +128,45 @@ make_opts+=("TEMPFS_SIZE=$tempfs_size")
 
 if [ -d cert ]; then
 	container_mount_opts+=(-v "$PWD/cert:/builder/cert:ro")
+fi
+
+# Check if builder apparmor profile has to be created or selected
+if [ "$container_engine" = "docker" ] \
+	&& [ ! "$apparmor_profile" ] \
+	&& out=$(sysctl kernel.apparmor_restrict_unprivileged_userns 2> /dev/null) \
+	&& [[ $out = "kernel.apparmor_restrict_unprivileged_userns = 1" ]]; then
+	if [ ! -f /etc/apparmor.d/builder ]; then
+		echo "You are using Docker on a system restricting unprivileged user namespaces with apparmor, which prevents a successful build. For more information please refer to the #Usage section in the README."
+		read -r -p "Do you want to permanently create a new apparmor profile at /etc/apparmor.d/builder to solve the issue? [Y/n] " response
+		response=${response,,}
+		if [[ "$response" =~ ^(yes|y)$ ]]; then
+			if [ ! -f /etc/apparmor.d/builder ]; then
+				profile="abi <abi/4.0>, include <tunables/global> profile builder flags=(unconfined) {userns, }"
+				echo "$profile" | sudo tee /etc/apparmor.d/builder > /dev/null
+				sudo apparmor_parser -r -W /etc/apparmor.d/builder
+			fi
+			echo "Created profile builder at /etc/apparmor.d/builder"
+		else
+			echo Abort.
+			exit 1
+		fi
+	fi
+	apparmor_profile=builder
+fi
+
+# Apply apparmor profile if seleceted
+if [ "$apparmor_profile" ]; then
+	replaced=false
+	for i in "${!container_run_opts[@]}"; do
+			if [ "${container_run_opts[$i]}" = "apparmor=unconfined" ]; then
+					container_run_opts["$i"]="apparmor=$apparmor_profile"
+					replaced=true
+			fi
+	done
+
+	if ! $replaced; then
+			container_run_opts+=(--security-opt "apparmor=$apparmor_profile")
+	fi
 fi
 
 "$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" ${container_cmd[@]+"${container_cmd[@]}"} fake_xattr make --no-print-directory -C /builder "${make_opts[@]}" "$@" >&3
