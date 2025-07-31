@@ -20,7 +20,7 @@ jobs:
         ./build kvm-lima-amd64
         mkdir -p output
         cd ./.build
-        IMAGE_AMD=$(find . -mmin -30 -maxdepth 1 -type f -name "*amd*.qcow2" -exec basename {} \;)
+        IMAGE_AMD=$(find . -maxdepth 1 -type f -name "*amd*.qcow2" -exec basename {} \;)
         cp "$IMAGE_AMD" ../output/
         sha512sum "$IMAGE_AMD" > "../output/$(basename $IMAGE_AMD).sha512"        
 
@@ -32,7 +32,7 @@ jobs:
         ./build kvm-lima-arm64
         mkdir -p output
         cd ./.build
-        IMAGE_ARM=$(find . -mmin -30 -maxdepth 1 -type f -name "*arm*.qcow2" -exec basename {} \;)
+        IMAGE_ARM=$(find . -maxdepth 1 -type f -name "*arm*.qcow2" -exec basename {} \;)
         cp "$IMAGE_ARM" ../output/
         sha512sum "$IMAGE_ARM" > "../output/$(basename $IMAGE_ARM).sha512"
 
