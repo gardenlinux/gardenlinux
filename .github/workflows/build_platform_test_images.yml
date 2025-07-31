@@ -32,6 +32,9 @@ on:
         description: "Tag to run platform-test containers. 'latest', Full commitish or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
         type: string
         default: "latest"
+      prefix:
+        type: string
+        default: ''
   # triggered manually
   workflow_dispatch:
     inputs:
@@ -60,6 +63,10 @@ on:
         description: "Tag to run platform-test containers. 'latest' or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
         type: string
         default: "latest"
+      prefix:
+        description: "Put a prefix in front of the artifacts"
+        type: string
+        default: ''
 env:
   DEFAULT_ARCHS: '["amd64", "arm64"]'
   DEFAULT_PLATFORMS: '["kvm", "openstack", "tofu"]'
@@ -133,7 +140,7 @@ jobs:
       - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
           path: ${{ env.IMAGE_BASE }}-base-${{ matrix.arch }}.tar
-          key: platform_test_base_${{ matrix.arch }}-${{ github.run_id }}
+          key: ${{ inputs.prefix }}platform_test_base_${{ matrix.arch }}-${{ github.run_id }}
   build_images:
     if: ${{ inputs.build }}
     name: Build platform-test image
@@ -160,7 +167,7 @@ jobs:
       - name: Load base image (${{ matrix.arch }})
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
-          key: platform_test_base_${{ matrix.arch }}-${{ github.run_id }}
+          key: ${{ inputs.prefix }}platform_test_base_${{ matrix.arch }}-${{ github.run_id }}
           path: ${{ env.IMAGE_BASE }}-base-${{ matrix.arch }}.tar
           fail-on-cache-miss: true
       - name: Prepare base image (${{ matrix.arch }})
@@ -184,13 +191,13 @@ jobs:
       - name: Upload image artifact for ${{ matrix.platform }} (${{ matrix.arch }})
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         with:
-          name: platform-test-${{ matrix.platform }}-${{ matrix.arch }}
+          name: ${{ inputs.prefix }}platform-test-${{ matrix.platform }}-${{ matrix.arch }}
           path: ${{ env.IMAGE_BASE }}-${{ matrix.platform }}-${{ matrix.arch }}.tar
           if-no-files-found: error
       - name: Upload local OCI metadata for ${{ matrix.platform }} (${{ matrix.arch }})
         uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
-          key: platform_test_container:${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
+          key: ${{ inputs.prefix }}platform_test_container:${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
           path: |
             platform-test.oci-version.txt
             platform-test.oci-tag.txt
@@ -212,7 +219,7 @@ jobs:
       - name: Load images (${{ matrix.platform }})
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
         with:
-          pattern: platform-test-*
+          pattern: ${{ inputs.prefix }}platform-test-*
           merge-multiple: true
       - name: Login to ghcr.io
         run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
@@ -322,7 +329,7 @@ jobs:
       - name: Upload local OCI metadata for ${{ matrix.platform }} (${{ matrix.arch }})
         uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
-          key: platform_test_container:${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
+          key: ${{ inputs.prefix }}platform_test_container:${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
           path: |
             platform-test.oci-version.txt
             platform-test.oci-tag.txt
