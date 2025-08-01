@@ -59,13 +59,14 @@ jobs:
 
     - name: Calculate sha sums
       run: |
-        IMAGE_AMD=$(find images -maxdepth 1 -type f -name "*amd*.qcow2" -exec basename {} \;)
+        IMAGE_AMD=$(find . -maxdepth 1 -type f -name "*amd*.qcow2" -exec basename {} \;)
         echo -e "Reading IMAGE_AMD" $IMAGE_AMD
-        sha512sum "$IMAGE_AMD" > "images/$(basename $IMAGE_AMD).sha512"
+        sha512sum "$IMAGE_AMD" > "$(basename $IMAGE_AMD).sha512"
 
-        IMAGE_ARM=$(find images -maxdepth 1 -type f -name "*arm*.qcow2" -exec basename {} \;)
+        IMAGE_ARM=$(find . -maxdepth 1 -type f -name "*arm*.qcow2" -exec basename {} \;)
         echo -e "Reading IMAGE_ARM" $IMAGE_ARM
-        sha512sum "$IMAGE_ARM" > "images/$(basename $IMAGE_ARM).sha512"
+        sha512sum "$IMAGE_ARM" > "$(basename $IMAGE_ARM).sha512"
+      working-directory: images
 
     - run: ls -la images
 
