@@ -42,4 +42,4 @@ We evaluated packaging the test suite as an [OCI container](https://opencontaine
 
 These approaches were not adopted due to the following limitations:
 - **Software Availability:** Container runtimes and systemd are not present in all target environments.
-- **Permission Requirements:** Both methods require elevated privileges, which may not be feasible or desirable in production or restricted systems.
+- **Permission Requirements:** Both methods require elevated privileges, which limits in which setups the tests can be run. A developer should be able to run the tests with no more privileges needed to build the image.
