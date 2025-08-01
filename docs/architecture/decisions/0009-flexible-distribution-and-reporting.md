@@ -23,7 +23,6 @@ We will support multiple mechanisms for distributing the test suite and collecti
 
 - **Distribution Mechanisms:** The test suite may be delivered via scp, cloud-init/user_data, OCI registry/artifact, image attach, or other platform-specific methods. The suite will be packaged as a relocatable tarball or directory, and may be built on demand or pulled as a build artifact.
 - **Cloud Provider Support:** Image formats and deployment workflows will be adapted for each provider (e.g., raw, vhd, qcow2), with research into automation and API integration for disk/image attachment.
-- **Reporting:** Test results will be exported in a [diki](https://github.com/gardener/diki)-compatible format as part of the MVP, enabling integration with external systems and dashboards. Additional formats (e.g., JUnit XML) may be supported as needed.
 - **Backchannel for Logs:** Mechanisms such as scp, custom APIs, or direct S3 uploads will be explored for retrieving logs and results from the system under test.
 
 ## Consequences

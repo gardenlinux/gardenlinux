@@ -18,14 +18,13 @@ Key limitations:
 - **Limited Applicability:** The framework cannot be safely used on systems that must remain unchanged, such as production servers or persistent VMs.
 
 ## Decision
-
-The redesigned test framework will treat the system under test as strictly read-only. Tests must not modify system state, install packages, enable services, or change configuration. The framework itself will not require SSH setup or any other mutation of the target system. All test logic must operate without side effects, ensuring that the system remains unchanged before, during, and after test execution.
+The redesigned test framework will treat the system under test as read-only by default. Tests must not modify system state, install packages, enable services, or change configuration unless explicitly permitted. Tests that require modification of global system state (such as loading kernel modules) **MUST** be clearly marked using a dedicated pytest marker. These tests will be skipped unless the test framework is run with an explicit argument to allow modifications. As a result, mutating tests will only be executed on ephemeral targets, such as local test VMs or during platform tests, ensuring production and persistent systems remain unaffected.
 
 ## Consequences
 
 - **Safety:** Tests can be run on production, long-lived, or critical systems without risk of mutation or disruption.
 - **Compliance:** The framework supports environments with strict change control or audit requirements.
 - **Broader Applicability:** Enables validation of systems in a wider range of scenarios, including live production, cloud, and edge environments.
-- **Test Design:** All tests must be written to avoid side effects; destructive or mutating tests are prohibited.
-- **Migration:** Existing tests must be audited and refactored to ensure compliance with the read-only requirement.
+- **Test Design:** All tests must either avoid mutating the system, or declare that they need to mutate the system state.
+- **Migration:** Existing tests must be audited and refactored to ensure compliance with the requirement.
 
