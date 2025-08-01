@@ -12,9 +12,24 @@ map_arch () {
 	echo "$arg"
 }
 
+arch=
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		--arch)
+			arch="$(map_arch "$2")"
+			shift 2
+			;;
+		*)
+			break
+			;;
+	esac
+done
+
+[ -n "$arch" ]
+
 test_dist_dir="$1"
-arch="$(map_arch "$2")"
-image="$3"
+image="$2"
 
 tmpdir=
 
