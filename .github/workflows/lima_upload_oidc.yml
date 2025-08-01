@@ -18,7 +18,8 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: gardenlinux-lima-today-amd64
-        path: .build/*qcow2
+        path: .build/lima-amd64-today*.qcow2
+        include-hidden-files: true
 
   build-arm:
     runs-on: ubuntu-24.04-arm
@@ -31,7 +32,8 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: gardenlinux-lima-today-arm64
-        path: .build/*qcow2
+        path: .build/lima-arm64-today*.qcow2
+        include-hidden-files: true
 
 
   upload:
