@@ -6,8 +6,39 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-upload:
+
+  build-amd:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Build image with feature:lima for amd64
+      run: |
+        ./build kvm-lima-amd64
+    - uses: actions/upload-artifact@v4
+      with:
+        name: gardenlinux-lima-today-amd64
+        path: .build/*qcow2
+
+  build-arm:
+    runs-on: ubuntu-24.04-arm
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Build image with feature:lima for arm64
+      run: |
+        ./build kvm-lima-arm64
+    - uses: actions/upload-artifact@v4
+      with:
+        name: gardenlinux-lima-today-arm64
+        path: .build/*qcow2
+
+
+  upload:
     runs-on: ubuntu-latest
+    needs:
+      - build-amd
+      - build-arm
     permissions:
       contents: read
       id-token: write
@@ -15,80 +46,65 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Build image with feature:lima for amd64
-      run: |
-        ./build kvm-lima-amd64
-        mkdir -p output
-        cd ./.build
-        IMAGE_AMD=$(find . -maxdepth 1 -type f -name "*amd*.qcow2" -exec basename {} \;)
-        ls -lah
-        echo -e "Reading IMAGE_AMD" $IMAGE_AMD
-        cp "$IMAGE_AMD" ../output/
-        sha512sum "$IMAGE_AMD" > "../output/$(basename $IMAGE_AMD).sha512"
-        ls -lah ../output
-
-    - name: Build image with feature:lima for arm64
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ovmf qemu-efi-aarch64 qemu-user-static binfmt-support
-        sudo update-binfmts --enable qemu-aarch64
-        ./build kvm-lima-arm64
-        mkdir -p output
-        cd ./.build
-        IMAGE_ARM=$(find . -maxdepth 1 -type f -name "*arm*.qcow2" -exec basename {} \;)
-        ls -lah
-        echo -e "Reading IMAGE_ARM" $IMAGE_ARM
-        cp "$IMAGE_ARM" ../output/
-        sha512sum "$IMAGE_ARM" > "../output/$(basename $IMAGE_ARM).sha512"
-        ls -lah ../output/
-
-    - name: Create gardenlinux.yaml for limactl create config 
-      run: |
-        mkdir -p output
-        cd output
-        ls -lah 
-        SHA_AMD=$(cat *amd*.sha512|cut -d' ' -f1)
-        SHA_ARM=$(cat *arm*.sha512|cut -d' ' -f1)
-        echo "Reading SHA_AMD" $SHA_AMD
-        echo "Reading SHA_ARM" $SHA_ARM
-        cat <<EOF > gardenlinux.yaml
-        vmType: qemu
-        os: Linux
-        images:
-        - location: "https://images.gardenlinux.io/gardenlinux-amd64-today.qcow2"
-          arch: "x86_64"
-        - location: "https://images.gardenlinux.io/gardenlinux-arm64-today.qcow2"
-          arch: "aarch64"
-        containerd:
-          system: false
-          user: false
-        EOF
-
-    - name: Authenticate to GCloud via OIDC
-      uses: google-github-actions/auth@v2
+    - uses: actions/download-artifact@v4
       with:
-        workload_identity_provider: '${{ secrets.GCP_LIMA_WORKLOAD_IDENTITY_PROVIDER }}'
-        service_account: '${{ secrets.GCP_LIMA_SERVICE_ACCOUNT }}'
-        create_credentials_file: true
-        export_environment_variables: true
+        name: gardenlinux-lima-today-amd64
 
-    - name: Set up gcloud SDK
-      uses: google-github-actions/setup-gcloud@v1
+    - uses: actions/download-artifact@v4
       with:
-        project_id: '${{ secrets.GCP_PROJECT }}'
-        install_components: 'gsutil'
+        name: gardenlinux-lima-today-arm64
+
+    - run: ls -la
+    - run: ls -laR
+    
+
+    # - name: Create gardenlinux.yaml for limactl create config 
+    #   run: |
+    #     mkdir -p output
+    #     cd output
+    #     ls -lah 
+    #     SHA_AMD=$(cat *amd*.sha512|cut -d' ' -f1)
+    #     SHA_ARM=$(cat *arm*.sha512|cut -d' ' -f1)
+    #     echo "Reading SHA_AMD" $SHA_AMD
+    #     echo "Reading SHA_ARM" $SHA_ARM
+    #     cat <<EOF > gardenlinux.yaml
+    #     vmType: qemu
+    #     os: Linux
+    #     images:
+    #     - location: "https://images.gardenlinux.io/gardenlinux-amd64-today.qcow2"
+    #       arch: "x86_64"
+    #     - location: "https://images.gardenlinux.io/gardenlinux-arm64-today.qcow2"
+    #       arch: "aarch64"
+    #     containerd:
+    #       system: false
+    #       user: false
+    #     EOF
+
+    # - name: Authenticate to GCloud via OIDC
+    #   uses: google-github-actions/auth@v2
+    #   with:
+    #     workload_identity_provider: '${{ secrets.GCP_LIMA_WORKLOAD_IDENTITY_PROVIDER }}'
+    #     service_account: '${{ secrets.GCP_LIMA_SERVICE_ACCOUNT }}'
+    #     create_credentials_file: true
+    #     export_environment_variables: true
+
+    # - name: Set up gcloud SDK
+    #   uses: google-github-actions/setup-gcloud@v1
+    #   with:
+    #     project_id: '${{ secrets.GCP_PROJECT }}'
+    #     install_components: 'gsutil'
           
-    - name: Upload image and checksum to GCS
-      run: |
-        cd output
-        IMAGE_AMD=$(ls *amd*.qcow2)
-        IMAGE_ARM=$(ls *arm*.qcow2)
-        SHA_AMD=$(ls *amd*.sha512)
-        SHA_ARM=$(ls *arm*.sha512)
-        ls -lah
-        echo $IMAGE_AMD $IMAGE_ARM $SHA_AMD $SHA_ARM
-        gsutil cp "gardenlinux.yaml" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux.yaml
-        gsutil cp "$IMAGE_AMD" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-amd64-today.qcow2
-        gsutil cp "$SHA_AMD" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-amd64-today.qcow2.sha512
-        gsutil cp "$IMAGE_ARM" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-arm64-today.qcow2
-        gsutil cp "$SHA_ARM" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-arm64-today.qcow2.sha512
+    # - name: Upload image and checksum to GCS
+    #   run: |
+    #     cd output
+    #     IMAGE_AMD=$(ls *amd*.qcow2)
+    #     IMAGE_ARM=$(ls *arm*.qcow2)
+    #     SHA_AMD=$(ls *amd*.sha512)
+    #     SHA_ARM=$(ls *arm*.sha512)
+    #     ls -lah
+    #     echo $IMAGE_AMD $IMAGE_ARM $SHA_AMD $SHA_ARM
+    #     gsutil cp "gardenlinux.yaml" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux.yaml
+    #     gsutil cp "$IMAGE_AMD" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-amd64-today.qcow2
+    #     gsutil cp "$SHA_AMD" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-amd64-today.qcow2.sha512
+    #     gsutil cp "$IMAGE_ARM" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-arm64-today.qcow2
+    #     gsutil cp "$SHA_ARM" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-arm64-today.qcow2.sha512
