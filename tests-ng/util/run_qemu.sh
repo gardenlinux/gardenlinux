@@ -58,10 +58,13 @@ cat > "$tmpdir/fw_cfg-script.sh" << 'EOF'
 
 set -eufo pipefail
 
+exec 1>/dev/virtio-ports/test_output
+exec 2>&1
+
 trap 'poweroff -f > /dev/null 2>&1' EXIT
 
 mkdir /run/gardenlinux_tests
-mount /dev/disk/by-label/GL_TESTS /run/gardenlinux_tests
+mount -o ro /dev/disk/by-label/GL_TESTS /run/gardenlinux_tests
 
 cd /run/gardenlinux_tests
 EOF
@@ -92,9 +95,9 @@ if [ "$arch" = "$native_arch" ]; then
 fi
 
 if [ "$qemu_accel" != tcg ]; then
-	echo './run_tests --system-booted > /dev/virtio-ports/test_output' >> "$tmpdir/fw_cfg-script.sh"
+	echo './run_tests --system-booted' >> "$tmpdir/fw_cfg-script.sh"
 else
-	echo './run_tests --system-booted --skip-performance-metrics > /dev/virtio-ports/test_output' >> "$tmpdir/fw_cfg-script.sh"
+	echo './run_tests --system-booted --skip-performance-metrics' >> "$tmpdir/fw_cfg-script.sh"
 fi
 
 qemu_opts=(
