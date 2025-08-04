@@ -8,7 +8,7 @@ networkx = "*"
 pyyaml = "*"
 requests = "*"
 jsonschema = "*"
-gardenlinux = {ref = "0.8.8", git = "https://github.com/gardenlinux/python-gardenlinux-lib.git"}
+gardenlinux = {ref = "0.8.9", git = "https://github.com/gardenlinux/python-gardenlinux-lib.git"}
 
 [dev-packages]
 
