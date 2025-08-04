@@ -46,7 +46,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@97e65f61273bd5d84cc2316ce78d15af880c0022 # pin@0.8.8
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@bf448cc2172a8248030a73f96304810543e6c1ed # pin@0.8.8
       - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
