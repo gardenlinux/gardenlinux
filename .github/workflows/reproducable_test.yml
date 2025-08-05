@@ -113,6 +113,7 @@ jobs:
       with:
         pattern: "*-diff"
         path: diffs/
+        merge-multiple: true
     - name: generate Result.md
       run: |
         ./.github/workflows/format_diff.py
