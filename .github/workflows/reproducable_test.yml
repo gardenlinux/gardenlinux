@@ -111,7 +111,7 @@ jobs:
     - name: download result data
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
-        pattern: "*-diffs"
+        pattern: "*-diff"
         path: diffs/
     - name: generate Result.md
       run: |
