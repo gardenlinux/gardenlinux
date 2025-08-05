@@ -41,6 +41,7 @@ efi-shell-x64
 efibootmgr
 efitools
 ethtool
+execline
 fatresize
 flex
 gcc
@@ -133,6 +134,7 @@ rootlesskit
 rsync
 rsyslog-relp
 runc
+s6
 sbsigntool
 selinux-basics
 selinux-policy-default
