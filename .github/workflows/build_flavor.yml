@@ -64,7 +64,7 @@ jobs:
       - name: Configure aws credentials for kms signing
         id: aws_auth
         if: ${{ env.USE_KMS == 'true' }}
-        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
+        uses: aws-actions/configure-aws-credentials@59b441846ad109fa4a1549b73ef4e149c4bfb53b # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_kms_role }}
           role-session-name: ${{ secrets.aws_oidc_session }}
@@ -81,7 +81,7 @@ jobs:
         run: make ${{ inputs.flavor }}-${{ inputs.arch }}-build
       - name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@e812bf7b0ea86574b5f0f4941734b53cd9b66fdb # pin@0.8.3
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
         with:
           flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
       - name: Set CNAME

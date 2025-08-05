@@ -82,12 +82,12 @@ jobs:
           echo "${{ inputs.version }}" | tee VERSION
       - name: Determine CNAME (amd64)
         id: cname_amd64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@e812bf7b0ea86574b5f0f4941734b53cd9b66fdb # pin@0.8.3
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
         with:
           flags: --cname container-amd64 cname
       - name: Determine CNAME (ard64)
         id: cname_arm64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@e812bf7b0ea86574b5f0f4941734b53cd9b66fdb # pin@0.8.3
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
         with:
           flags: --cname container-arm64 cname
       - name: Set CNAMEs
@@ -247,15 +247,15 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
-      - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
+      - uses: aws-actions/configure-aws-credentials@59b441846ad109fa4a1549b73ef4e149c4bfb53b # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
           role-session-name: ${{ secrets.aws_session }}
           aws-region: ${{ secrets.aws_region }}
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@e812bf7b0ea86574b5f0f4941734b53cd9b66fdb # pin@0.8.3
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
       - name: Install cosign
-        uses: sigstore/cosign-installer@v3.9.1
+        uses: sigstore/cosign-installer@v3.9.2
         with:
           cosign-release: 'v2.4.1'
       - name: Set flavor version reference
@@ -321,7 +321,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@e812bf7b0ea86574b5f0f4941734b53cd9b66fdb # pin@0.8.3
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
       - name: Set flavor version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT

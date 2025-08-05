@@ -21,10 +21,15 @@ endif
 ifeq ($(origin TEST_PREFIX), undefined)
 TEST_PREFIX := $(shell echo $(USER) | cut -c1-10)
 endif
-ifeq ($(origin CNAME), undefined)
-CNAME_CMD :=
+ifeq ($(origin IMAGE_PATH), undefined)
+IMAGE_PATH_CMD :=
 else
-CNAME_CMD := --cname $(CNAME)
+IMAGE_PATH_CMD := --image-path $(IMAGE_PATH)
+endif
+ifeq ($(origin IMAGE_NAME), undefined)
+IMAGE_NAME_CMD :=
+else
+IMAGE_NAME_CMD := --image-name $(IMAGE_NAME)
 endif
 
 GARDENLINUX_BUILD_CRE ?= podman
@@ -95,7 +100,7 @@ $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 		mkdir -p $(MKDIRS) && \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
-			../platformSetup.py --provisioner tofu --flavor $(flavor) $(CNAME_CMD) --test-prefix $(TEST_PREFIX) --create-tfvars" \
+			../platformSetup.py --provisioner tofu --flavor $(flavor) $(IMAGE_PATH_CMD) $(IMAGE_NAME_CMD) --test-prefix $(TEST_PREFIX) --create-tfvars" \
 	) \
 	$(eval \
 		$(flavor)-tofu-plan: ; \
@@ -164,7 +169,7 @@ $(foreach flavor,$(FLAVORS_IMAGE), \
 		$(flavor)-qemu-apply: ; \
 		mkdir -p $(MKDIRS) && \
 		$(CRE_CMD_kvm) --name qemu-$(flavor) -d --replace $(CRE_CMD_kvm_image) bash -c "\
-			/gardenlinux/tests/platformSetup/platformSetup.py --provisioner qemu --flavor $(flavor) $(CNAME_CMD) && \
+			/gardenlinux/tests/platformSetup/platformSetup.py --provisioner qemu --flavor $(flavor) $(IMAGE_NAME_CMD) && \
 			/gardenlinux/tests/pytest.qemu.$(flavor).apply.sh && \
 			sleep 86400 \
 		" && \
