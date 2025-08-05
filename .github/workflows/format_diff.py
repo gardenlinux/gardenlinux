@@ -181,4 +181,4 @@ with open("Result.md", "w") as f:
     f.write(result.format(emoji=emoji, successrate=successrate, total_count=total_count, 
                           problem_count=problem_count, explanation=explanation, rows=rows))
     
-os.environ["EXITCODE"] = "1" if len(successful) != len(all) else "0"
+os.environ["EXITCODE"] = "0" if len(successful) == len(all) else "1"
