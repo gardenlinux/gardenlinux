@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+# @TODO: Workaround aws_kms_pkcs11.so SSL issue by disabling datafudge
+
 input="$(realpath -- "$1")"
 output="$(realpath -- "$2")"
 
@@ -84,7 +86,7 @@ else
 fi
 
 # sign unified image
-datefudge -s "@$BUILDER_TIMESTAMP" sbsign --cert "$cert_base.crt" "${key_params[@]}" --output boot.efi unified_image
+sbsign --cert "$cert_base.crt" "${key_params[@]}" --output boot.efi unified_image
 
 umount "$chroot_dir"
 rmdir "$chroot_dir"
