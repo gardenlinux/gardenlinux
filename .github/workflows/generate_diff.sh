@@ -28,10 +28,16 @@ if ! cmp "A/$basefile" "B/$basefile" > /dev/null; then
     | sed -E "${sedcommands[@]}" || true)
 
     echo "$files" > "$1-diff"
+
+    if [[ $files = '' ]]; then
+         # All differences are whitelisted
+         exit 0
+     fi
+
+ 	exit 1
 else
     # Builds are the same
     echo "" > "$1-diff"
-fi
 
-# Always exit with 0 so the other jobs can finish, workflow fail on differences is initiaded in the next step
-exit 0
+    exit 0
+fi

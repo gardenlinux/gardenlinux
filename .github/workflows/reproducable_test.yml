@@ -50,6 +50,7 @@ jobs:
     
     strategy:
       matrix: ${{ fromJson(needs.build_a.outputs.flavors_matrix) }}
+      fail-fast: false
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       with:
@@ -93,6 +94,7 @@ jobs:
 
         ./.github/workflows/generate_diff.sh ${{ matrix.flavor }}-${{ matrix.arch }} $CNAME
     - name: Upload diff data
+      if: always()
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
       with:
         if-no-files-found: error
@@ -101,6 +103,7 @@ jobs:
   
   format_result:
     needs: difference_check
+    if: always()
     name: Format result
     runs-on: ubuntu-latest
 
@@ -119,5 +122,3 @@ jobs:
         ./.github/workflows/format_diff.py
 
         cat Result.md >> $GITHUB_STEP_SUMMARY
-
-        exit "$EXITCODE"
