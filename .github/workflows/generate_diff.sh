@@ -27,10 +27,10 @@ if ! cmp "A/$basefile" "B/$basefile" > /dev/null; then
     | perl -0777 -pe "s/(?:[^\/\n]*\/){3}([^\s]*)[^\n]*/\1/g" \
     | sed -E "${sedcommands[@]}" || true)
 
-    echo "$files" > differ_files
+    echo "$files" > "$1-diff"
 else
     # Builds are the same
-    echo "" > differ_files
+    echo "" > "$1-diff"
 fi
 
 # Always exit with 0 so the other jobs can finish, workflow fail on differences is initiaded in the next step

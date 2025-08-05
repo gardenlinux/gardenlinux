@@ -94,8 +94,23 @@ jobs:
         ./.github/workflows/generate_diff.sh ${{ matrix.flavor }}-${{ matrix.arch }} $CNAME
     - name: Upload diff data
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
-      if: always()
       with:
         if-no-files-found: error
         name: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
-        path: differ_files
+        path: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
+  
+  format_result:
+    needs: difference_check
+    name: Format result
+    runs-on: ubuntu-latest
+    steps:
+      - name: download result data
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+          with:
+            pattern: "*-diffs"
+            path: diffs/
+      - name: generate Result.md
+        run: |
+          ./.github/workflows/format_diff.sh
+
+          cat Result.md >> $GITHUB_STEP_SUMMARY
