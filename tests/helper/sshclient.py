@@ -170,7 +170,9 @@ class RemoteClient:
                     logger.warning(f"Unable to connect")
                     self._increase_retry_count_and_wait()
                 except AuthenticationException as e:
-                    auth_banner = self.client.get_transport().get_banner().decode()
+                    transport = self.client.get_transport()
+                    banner = transport.get_banner() if transport else None
+                    auth_banner = banner.decode() if banner else ""
                     logger.warning(f"Failed to login - {auth_banner=}")
                     if "pam_nologin(8)" in auth_banner:
                         # SSH is already accepting connections but PAM refuses to let anyone in ("System is booting up"), have to retry
