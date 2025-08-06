@@ -21,7 +21,7 @@ jobs:
         ref: ${{ github.event.inputs.version || 'main' }}
     - name: Build image with feature:lima for amd64
       run: |
-        ./build kvm-lima-amd64
+        ./build lima-amd64
     - uses: actions/upload-artifact@v4
       with:
         name: gardenlinux-lima-${{ github.event.inputs.version || 'today' }}-amd64
@@ -37,7 +37,7 @@ jobs:
         ref: ${{ github.event.inputs.version || 'main' }}
     - name: Build image with feature:lima for arm64
       run: |
-        ./build kvm-lima-arm64
+        ./build lima-arm64
     - uses: actions/upload-artifact@v4
       with:
         name: gardenlinux-lima-${{ github.event.inputs.version || 'today' }}-arm64
