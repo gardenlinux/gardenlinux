@@ -18,7 +18,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        ref: ${{ github.event.inputs.version || 'main' }}
+        ref: ${{ github.event.inputs.version == 'today' && 'main' || github.event.inputs.version }}
     - name: Build image with feature:lima for amd64
       run: |
         ./build kvm-lima-amd64
@@ -34,7 +34,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        ref: ${{ github.event.inputs.version || 'main' }}
+        ref: ${{ github.event.inputs.version == 'today' && 'main' || github.event.inputs.version }}
     - name: Build image with feature:lima for arm64
       run: |
         ./build kvm-lima-arm64
