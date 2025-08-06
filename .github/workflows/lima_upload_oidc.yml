@@ -139,7 +139,11 @@ jobs:
         SHA_AMD=$(ls images/*amd*.sha512)
         SHA_ARM=$(ls images/*arm*.sha512)
         echo $IMAGE_AMD $IMAGE_ARM $SHA_AMD $SHA_ARM
-        gsutil cp "gardenlinux.yaml" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux.yaml
+        if [ "$VERSION" = "today" ]; then
+          gsutil cp "gardenlinux.yaml" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux.yaml
+        else
+          gsutil cp "gardenlinux-${VERSION}.yaml" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-${VERSION}.yaml
+        fi
         gsutil cp "$IMAGE_AMD" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-amd64-${VERSION}.qcow2
         gsutil cp "$SHA_AMD" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-amd64-${VERSION}.qcow2.sha512
         gsutil cp "$IMAGE_ARM" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-arm64-${VERSION}.qcow2
