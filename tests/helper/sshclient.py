@@ -62,9 +62,9 @@ class RemoteClient:
         sshconfig,
         port="22",
         sudo=False,
-        ssh_connect_timeout: int=60,
-        ssh_max_retries: int=20,
-        ssh_retry_timeout_seconds: int=15,
+        ssh_connect_timeout: int=100,
+        ssh_max_retries: int=50,
+        ssh_retry_timeout_seconds: int=30,
     ) -> None:
         self.host = host
         self.port = port
