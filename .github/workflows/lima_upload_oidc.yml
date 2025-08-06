@@ -25,7 +25,7 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: gardenlinux-lima-${{ github.event.inputs.version || 'today' }}-amd64
-        path: .build/kvm-lima-amd64-${{ github.event.inputs.version || 'today' }}*.qcow2
+        path: .build/*lima-amd64-${{ github.event.inputs.version || 'today' }}*.qcow2
         include-hidden-files: true
 
   build-arm:
@@ -41,7 +41,7 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: gardenlinux-lima-${{ github.event.inputs.version || 'today' }}-arm64
-        path: .build/kvm-lima-arm64-${{ github.event.inputs.version || 'today' }}*.qcow2
+        path: .build/*lima-arm64-${{ github.event.inputs.version || 'today' }}*.qcow2
         include-hidden-files: true
 
   upload:

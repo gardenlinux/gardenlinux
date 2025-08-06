@@ -14,7 +14,10 @@ How to use the pre-built image:
 1. Create and start the VM
 
 ```
+# for the latest nightly build, use:
 limactl start --name gardenlinux https://images.gardenlinux.io/gardenlinux.yaml
+# for a released version, use this (see released versions at https://github.com/gardenlinux/gardenlinux/releases):
+limactl start --name gardenlinux https://images.gardenlinux.io/gardenlinux-$VERSION.yaml
 ```
 
 2. Open a shell inside the VM: `limactl shell gardenlinux`
