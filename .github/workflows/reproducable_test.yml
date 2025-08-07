@@ -126,10 +126,10 @@ jobs:
     - name: Compare builds
       run: |
         mkdir "A/unpacked"
-        tar -C A/unpacked -xf A/{{ matrix.flavor }}-${{ matrix.arch }}.oci
+        tar -C A/unpacked -xf A/${{ matrix.flavor }}-${{ matrix.arch }}.oci
 
         mkdir "B/unpacked"
-        tar -C B/unpacked -xf B/{{ matrix.flavor }}-${{ matrix.arch }}.oci
+        tar -C B/unpacked -xf B/${{ matrix.flavor }}-${{ matrix.arch }}.oci
 
         ./.github/workflows/generate_diff.sh ${{ matrix.flavor }}-${{ matrix.arch }}
     - name: Upload diff data
