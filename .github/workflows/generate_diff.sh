@@ -6,7 +6,7 @@ whitelist=("dummypath_abcd...")
 
 if [ -z ${2+x} ]; then
     # $2 is unset
-    basefile="$1.oci"
+    basefile="${1/bare-/}.oci"
 else
     # $2 is set
     basefile="$2.tar"
