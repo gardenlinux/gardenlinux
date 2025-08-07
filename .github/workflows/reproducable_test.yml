@@ -100,9 +100,48 @@ jobs:
         if-no-files-found: error
         name: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
         path: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
+
+  bare_difference_check:
+    needs: [ build_a, build_b ]
+    name: Difference check for bare flavors
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix: ${{ fromJson(needs.build_a.outputs.bare_flavors_matrix) }}
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      with:
+        submodules: true
+    - name: Load flavor A build artifact
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+      with:
+        name: a-build-bare-${{ matrix.flavor }}-${{ matrix.arch }}
+        path: A
+    - name: Load flavor B build artifact
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+      with:
+        name: b-build-bare-${{ matrix.flavor }}-${{ matrix.arch }}
+        path: B
+    - name: Compare builds
+      run: |
+        mkdir "A/unpacked"
+        tar -C A/unpacked -xf A/{{ matrix.flavor }}-${{ matrix.arch }}.oci
+
+        mkdir "B/unpacked"
+        tar -C B/unpacked -xf B/{{ matrix.flavor }}-${{ matrix.arch }}.tar
+
+        ./.github/workflows/generate_diff.sh ${{ matrix.flavor }}-${{ matrix.arch }}
+    - name: Upload diff data
+      if: always()
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+      with:
+        if-no-files-found: error
+        name: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
+        path: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
   
   format_result:
-    needs: difference_check
+    needs: [ difference_check, bare_difference_check ]
     if: always()
     name: Format result
     runs-on: ubuntu-latest

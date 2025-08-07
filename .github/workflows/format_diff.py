@@ -158,7 +158,7 @@ for files in trees:
     if tree == {}:
         row += "No analysis available"
     else:
-        row += "`" + treeStr(tree).replace("\n", "`<br>`") + "`"
+        row += "<pre>" + treeStr(tree).replace("\n", "<br>") + "</pre>"
     row += "|\n"
     rows += row
 
