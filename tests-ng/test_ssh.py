@@ -6,9 +6,9 @@ required_sshd_config = [
     "HostKey /etc/ssh/ssh_host_ed25519_key",
     "HostKey /etc/ssh/ssh_host_rsa_key",
     # "HostKey /etc/ssh/ssh_host_ecdsa_key",
-    # "KexAlgorithms sntrup761x25519-sha512,sntrup761x25519-sha512@openssh.com,mlkem768x25519-sha256,curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521",
-    # "Ciphers chacha20-poly1305@openssh.com,aes128-ctr,aes192-ctr,aes256-ctr,aes128-gcm@openssh.com,aes256-gcm@openssh.com",
-    # "MACs umac-64-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha1-etm@openssh.com,umac-64@openssh.com,umac-128@openssh.com,hmac-sha2-256,hmac-sha2-512,hmac-sha1",
+    "KexAlgorithms sntrup761x25519-sha512,sntrup761x25519-sha512@openssh.com,mlkem768x25519-sha256,curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521",
+    "Ciphers chacha20-poly1305@openssh.com,aes128-ctr,aes192-ctr,aes256-ctr,aes128-gcm@openssh.com,aes256-gcm@openssh.com",
+    "MACs umac-64-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha1-etm@openssh.com,umac-64@openssh.com,umac-128@openssh.com,hmac-sha2-256,hmac-sha2-512,hmac-sha1",
     # Password based logins are disabled - only public key based logins are allowed.
     "AuthenticationMethods publickey",
     # LogLevel VERBOSE logs user's key fingerprint on login. Needed to have a clear audit track of which key was using to log in.
@@ -31,9 +31,6 @@ required_sshd_config = [
     # use PAM
     "UsePAM yes",
 ]
-
-def trim_and_lower(s):
-    return str.lower(str.lstrip(s))
 
 
 def _create_list_of_tuples(input):
@@ -61,13 +58,10 @@ def _normalize_value(string):
     return value_as_set
 
 
+@pytest.mark.root
 @pytest.mark.feature("ssh")
 @pytest.mark.parametrize("sshd_config_item", required_sshd_config)
 def test_sshd_has_required_config(sshd_config_item: str, shell: ShellRunner):
-
-    shell('ssh-keygen -A')
-    shell('systemctl daemon-reload')
-
     result = shell(
         "/usr/sbin/sshd -T", capture_output=True, ignore_exit_code=True
     )
@@ -77,18 +71,5 @@ def test_sshd_has_required_config(sshd_config_item: str, shell: ShellRunner):
 
     expected = _create_list_of_tuples(sshd_config_item)
 
-
     assert all(option in sshd_config for option in expected), \
             f"{expected} not found in sshd_config"
-
-
-    # found = any(trim_and_lower(sshd_config_item) in trim_and_lower(line) for line in config_content)
-    # assert found, f"Expected {sshd_config_item} in sshd config, but did not find it"
-
-
-# @pytest.mark.feature("ssh")
-# def test_sshd_parse_config(shell: ShellRunner):
-#     result = shell(
-#         "sudo -u root /usr/sbin/sshd -T", capture_output=True, ignore_exit_code=True
-#     )
-#     assert result.returncode == 0
