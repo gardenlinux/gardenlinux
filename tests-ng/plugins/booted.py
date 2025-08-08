@@ -23,7 +23,7 @@ def pytest_configure(config: pytest.Config):
     config.addinivalue_line("markers", "booted: mark test to run only on a booted target, i.e. not in a container or chroot")
 
 
-def pytest_collection_modifyitems(config: pytest.Config, items):
+def pytest_collection_modifyitems(config: pytest.Config, items: List[pytest.Item]):
     for item in items:
         if item.get_closest_marker("booted") and not system_booted:
             item.add_marker(pytest.mark.skip(reason="not running on a booted system"))
