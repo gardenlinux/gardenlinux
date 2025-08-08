@@ -12,6 +12,9 @@ else
     basefile="$2.tar"
 fi
 
+echo $basefile
+exit 0
+
 sedcommands=()
 
 for file in "${whitelist[@]}"; do
