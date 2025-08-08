@@ -59,12 +59,12 @@ def _normalize_value(string: str) -> set[str]:
         value_as_set = set(normalized)
     return value_as_set
 
-
+@pytest.mark.booted
 @pytest.mark.feature("ssh")
 def test_sshd_is_running(systemd: Systemd):
     assert systemd.is_running("sshd")
 
-
+@pytest.mark.booted
 @pytest.mark.root
 @pytest.mark.feature("ssh")
 @pytest.mark.parametrize("sshd_config_item", required_sshd_config)
