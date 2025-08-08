@@ -11,6 +11,9 @@ on:
       target:
         type: string
         required: true
+      prefix:
+        type: string
+        default: ''
     outputs:
       commit_id:
         value: ${{ jobs.calculate_version.outputs.commit_id }}
@@ -113,6 +116,6 @@ jobs:
           done
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         with:
-          name: certs
+          name: ${{ inputs.prefix }}certs
           path: cert/*.*
           if-no-files-found: error
