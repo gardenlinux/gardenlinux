@@ -34,6 +34,11 @@ class Systemd:
 
         return tuple(_seconds(v) for v in m.groups())
 
+    def is_running(self, unit_name: str) -> bool:
+        result = self._shell(f"systemctl is-active {unit_name}", capture_output=True, ignore_exit_code=True)
+        return result.stdout.strip() == "active"
+
+
 @pytest.fixture
 def systemd(shell: ShellRunner):
     return Systemd(shell)

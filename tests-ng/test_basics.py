@@ -1,6 +1,7 @@
 import os
 import pytest
 from plugins.shell import ShellRunner
+from plugins.systemd import Systemd
 
 
 def test_gl_is_support_distro():
@@ -41,7 +42,7 @@ def test_fhs(shell: ShellRunner):
 @pytest.mark.booted
 @pytest.mark.performance_metric
 @pytest.mark.feature("server and not azure") # server installs systemd and azure has notoriously bad startup times
-def test_startup_time(systemd):
+def test_startup_time(systemd: Systemd):
     tolerated_kernel = 60.0
     tolerated_userspace = 40.0
 
