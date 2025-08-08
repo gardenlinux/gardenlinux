@@ -1,5 +1,6 @@
 import pytest
 from plugins.shell import ShellRunner
+from plugins.systemd import Systemd
 
 required_sshd_config = [
     # Supported HostKey algorithms.
@@ -33,43 +34,48 @@ required_sshd_config = [
 ]
 
 
-def _create_list_of_tuples(input):
-    """Takes a multiline string and returns a list containing every line 
+def _create_list_of_tuples(input: str) -> list[tuple[str, set[str]]]:
+    """Takes a multiline string and returns a list containing every line
     as a tuple. The 1st value of the tuple is the ssh option, the 2nd is
     value"""
     out = []
     for line in input.lower().splitlines():
-        l = line.split(' ', 1)
+        l = line.split(" ", 1)
         option = l[0]
         value = l[1]
         normalized_value = _normalize_value(value)
         out.append((option, normalized_value))
     return out
 
-def _normalize_value(string):
+
+def _normalize_value(string: str) -> set[str]:
     """Convert a given string.
     The string will be returned as a set. If the element contains a comma
     separated string, it will be split into a list first."""
     normalized = string.split(" ")
     if len(normalized) == 1 and "," in normalized[0]:
-        value_as_set = set(normalized[0].split(','))
+        value_as_set = set(normalized[0].split(","))
     else:
         value_as_set = set(normalized)
     return value_as_set
+
+
+@pytest.mark.feature("ssh")
+def test_sshd_is_running(systemd: Systemd):
+    assert systemd.is_running("sshd")
 
 
 @pytest.mark.root
 @pytest.mark.feature("ssh")
 @pytest.mark.parametrize("sshd_config_item", required_sshd_config)
 def test_sshd_has_required_config(sshd_config_item: str, shell: ShellRunner):
-    result = shell(
-        "/usr/sbin/sshd -T", capture_output=True, ignore_exit_code=True
-    )
+    result = shell("/usr/sbin/sshd -T", capture_output=True, ignore_exit_code=True)
     assert result.returncode == 0, f"Expected return code 0, got {result.returncode}"
 
     sshd_config = _create_list_of_tuples(result.stdout)
 
     expected = _create_list_of_tuples(sshd_config_item)
 
-    assert all(option in sshd_config for option in expected), \
-            f"{expected} not found in sshd_config"
+    assert all(
+        option in sshd_config for option in expected
+    ), f"{expected} not found in sshd_config"
