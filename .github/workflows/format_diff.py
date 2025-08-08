@@ -41,6 +41,8 @@ for file in affected:
 
 # Helper for build_feature_tree() to recursively build the tree
 def dependencies(feature, excludes):
+    if not os.path.isfile(f"features/{feature}/info.yaml"):
+        return {}, excludes
     with open(f"features/{feature}/info.yaml") as f:
         data = yaml.safe_load(f)
     includes = {}
