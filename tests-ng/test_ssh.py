@@ -2,6 +2,7 @@ import pytest
 from plugins.shell import ShellRunner
 from plugins.systemd import Systemd
 from plugins.sshd import Sshd
+from plugins.utils import equals_ignore_case, get_normalized_sets, is_set
 
 required_sshd_config = {
     "HostKey": {
@@ -46,26 +47,20 @@ required_sshd_config = {
     "UsePAM": "yes",
 }
 
-
-@pytest.mark.booted
-@pytest.mark.feature("ssh")
-def test_sshd_is_running(systemd: Systemd):
-    assert systemd.is_running("sshd")
-
-
+@pytest.fixture
 @pytest.mark.booted
 @pytest.mark.root
 @pytest.mark.feature("ssh")
 @pytest.mark.parametrize("sshd_config_item", required_sshd_config)
 def test_sshd_has_required_config(sshd_config_item: str, shell: ShellRunner):
     sshd = Sshd(shell)
+    yield sshd
     actual_value = sshd.get_config_section(sshd_config_item)
     expected_value = required_sshd_config[sshd_config_item]
-    if isinstance(expected_value, set):
-        actual_set, expected_set = sshd.get_normalized_sets(sshd_config_item, actual_value, expected_value)
+    if is_set(expected_value):
+        assert is_set(actual_value), f"{actual_value} should be a set"
+        actual_set, expected_set = get_normalized_sets(actual_value, expected_value)
         missing_sshd_configuration = expected_set - actual_set
         assert not missing_sshd_configuration, f"{sshd_config_item}: missing values {missing_sshd_configuration}"
     else:
-        actual_str = str(actual_value).lower()
-        expected_str = str(expected_value).lower()
-        assert actual_str == expected_str, f"{sshd_config_item}: expected {expected_str}, got {actual_str}"
+        assert equals_ignore_case(actual_value, expected_value), f"{sshd_config_item}: expected {expected_value}, got {actual_value}"

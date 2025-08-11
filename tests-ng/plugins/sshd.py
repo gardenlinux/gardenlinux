@@ -42,17 +42,6 @@ class Sshd:
         self._sshd_config = config
         return config
 
-    def get_config_section(self, key: str) -> str:
+    def get_config_section(self, key: str) -> str|set:
         config = self.read_config()
-        return config.get(str.lower(key))
-
-    def get_normalized_sets(
-        self,
-        sshd_config_item: str,
-        actual_value: set,
-        expected_value: set,
-    ) -> tuple[set, set]:
-        assert isinstance(actual_value, set), f"{sshd_config_item} should be a set"
-        actual_set = {str(v).lower() for v in actual_value}
-        expected_set = {str(v).lower() for v in expected_value}
-        return actual_set, expected_set
+        return config.get(str.casefold(key))
