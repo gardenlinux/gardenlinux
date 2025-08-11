@@ -47,14 +47,12 @@ required_sshd_config = {
     "UsePAM": "yes",
 }
 
-@pytest.fixture
 @pytest.mark.booted
 @pytest.mark.root
 @pytest.mark.feature("ssh")
 @pytest.mark.parametrize("sshd_config_item", required_sshd_config)
 def test_sshd_has_required_config(sshd_config_item: str, shell: ShellRunner):
     sshd = Sshd(shell)
-    yield sshd
     actual_value = sshd.get_config_section(sshd_config_item)
     expected_value = required_sshd_config[sshd_config_item]
     if is_set(expected_value):
