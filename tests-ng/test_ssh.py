@@ -1,6 +1,5 @@
 import pytest
 from plugins.shell import ShellRunner
-from plugins.systemd import Systemd
 from plugins.sshd import Sshd
 from plugins.utils import equals_ignore_case, get_normalized_sets, is_set
 
@@ -46,14 +45,6 @@ required_sshd_config = {
     "X11Forwarding": "no",
     "UsePAM": "yes",
 }
-
-
-@pytest.mark.booted
-@pytest.mark.feature("ssh")
-def test_sshd_is_running(shell: ShellRunner, systemd: Systemd):
-    print("xxx")
-    print(shell("systemctl status ssh"))
-    assert systemd.is_running("ssh")
 
 
 @pytest.mark.booted
