@@ -47,6 +47,15 @@ required_sshd_config = {
     "UsePAM": "yes",
 }
 
+
+@pytest.mark.booted
+@pytest.mark.feature("ssh")
+def test_sshd_is_running(shell: ShellRunner, systemd: Systemd):
+    print("xxx")
+    print(shell("systemctl status ssh"))
+    assert systemd.is_running("ssh")
+
+
 @pytest.mark.booted
 @pytest.mark.root
 @pytest.mark.feature("ssh")
