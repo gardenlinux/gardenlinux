@@ -1,0 +1,37 @@
+vmType: qemu
+os: Linux
+images:
+- location: "https://images.gardenlinux.io/gardenlinux-amd64-today.qcow2"
+  arch: "x86_64"
+- location: "https://images.gardenlinux.io/gardenlinux-arm64-today.qcow2"
+  arch: "aarch64"
+containerd:
+  system: false
+  user: false
+
+provision:
+- mode: system
+  script: |
+    #!/bin/bash
+    set -eux -o pipefail
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get -y install git python3-pip
+    apt-get -y install crun iptables podman slirp4netns uidmap dbus-user-session systemd-container passt
+
+    chmod go+r /etc/nsswitch.conf
+    sed -Ei 's/^#cgroup_manager = "systemd"/cgroup_manager = "cgroupfs"/' /usr/share/containers/containers.conf
+    chmod --recursive go+r /usr/share/containers/
+
+- mode: user
+  script: |
+    #!/bin/bash
+    set -eux -o pipefail
+    mkdir -p "$HOME"/.config/containers
+    echo 'unqualified-search-registries=["docker.io"]' > "$HOME"/.config/containers/registries.conf
+
+    git clone https://github.com/gardenlinux/gardenlinux
+    pip install --break-system-packages boolean.py pytest
+
+    echo 'cd $HOME/gardenlinux/tests-ng; COLUMNS=120 python3 -m pytest -rA --tb=short --color=yes --system-booted --expected-users $(whoami)' > $HOME/run-tests.sh
+    chmod +x $HOME/run-tests.sh

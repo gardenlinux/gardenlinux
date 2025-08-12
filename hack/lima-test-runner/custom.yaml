@@ -1,0 +1,9 @@
+vmType: qemu
+os: Linux
+images:
+  # CHANGE THIS TO THE REAL PATH OF YOUR IMAGE
+  - location: /path/to/your/gardenlinux/.build/kvm-lima-[ARCH]-[VERSION]-[COMMIT_SHA].qcow2
+
+containerd:
+  system: false
+  user: false
