@@ -24,6 +24,7 @@ containerd
 containernetworking-plugins
 cryptsetup
 curl
+debuginfod
 devscripts
 dkms
 dnsmasq
@@ -31,7 +32,6 @@ dnsutils
 docker-cli
 docker.io
 dosfstools
-debuginfod
 dracut
 dracut-live
 dracut-network
@@ -66,15 +66,8 @@ kernel-wedge
 kexec-tools
 keyutils
 libengine-pkcs11-openssl
-libbabeltrace1
-libdebuginfod-common
-libdebuginfod1t64
-libdw1t64
 libpam-passwdqc
 libpam-pwquality
-libpython3.13
-libsource-highlight-common
-libsource-highlight4t64
 libvirt-clients
 libvirt-daemon-system
 libxi6
