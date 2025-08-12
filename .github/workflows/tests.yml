@@ -88,7 +88,7 @@ jobs:
       platform_test_flavors_matrix: ${{ steps.matrices.outputs.platform_test_flavors_matrix }}
       test_bare_flavors_matrix: ${{ steps.matrices.outputs.test_bare_flavors_matrix }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
       - id: matrices
