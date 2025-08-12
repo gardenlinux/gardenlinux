@@ -56,12 +56,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
 
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v5
       with:
         name: gardenlinux-lima-${{ github.event.inputs.version || 'today' }}-amd64
         path: images
 
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v5
       with:
         name: gardenlinux-lima-${{ github.event.inputs.version || 'today' }}-arm64
         path: images
