@@ -32,7 +32,7 @@ jobs:
           echo "${{ inputs.version }}" | tee VERSION
       - name: Build base-${{ matrix.arch }}
         run: make base-${{ matrix.arch }}-build
-      - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      - uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           path: .build
           key: base-${{ matrix.arch }}-${{ github.run_id }}
