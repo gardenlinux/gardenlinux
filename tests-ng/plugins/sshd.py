@@ -22,13 +22,7 @@ class Sshd:
                     else:
                         self._sshd_config[key] = {self._sshd_config[key], value}
                 else:
-                    # fixme: this is not ideal. what we want here is to have comma separated string values
-                    # as a set to make comparing them easier because the order of entries does not matter
-                    # the 3 is an arbitrary number to allow for real string values with commas
-                    if value.count(",") >= 3:
-                        self._sshd_config[key] = set(value.split(","))
-                    else:
-                        self._sshd_config[key] = value
+                    self._sshd_config[key] = value
             elif len(parts) == 1:
                 key = parts[0]
                 self._sshd_config[key] = None

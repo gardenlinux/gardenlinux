@@ -56,9 +56,9 @@ def test_sshd_has_required_config(sshd_config_item: str, shell: ShellRunner):
     actual_value = sshd.get_config_section(sshd_config_item)
     expected_value = required_sshd_config[sshd_config_item]
     if is_set(expected_value):
-        assert is_set(actual_value), f"{actual_value} should be a set"
+        if not is_set(actual_value):
+            actual_value = set(str(actual_value).split(','))
         actual_set, expected_set = get_normalized_sets(actual_value, expected_value)
-        missing_sshd_configuration = expected_set - actual_set
-        assert not missing_sshd_configuration, f"{sshd_config_item}: missing values {missing_sshd_configuration}"
+        assert expected_set.issubset(actual_value), f"{sshd_config_item}: missing values {expected_set - actual_set}"
     else:
         assert equals_ignore_case(actual_value, expected_value), f"{sshd_config_item}: expected {expected_value}, got {actual_value}"
