@@ -130,7 +130,7 @@ jobs:
             "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${GIT_SHA}" \
             "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${GIT_SHA_SHORT}" \
             -o "${IMAGE_BASE}-base-${ARCH}.tar"
-      - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      - uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           path: ${{ env.IMAGE_BASE }}-base-${{ matrix.arch }}.tar
           key: platform_test_base_${{ matrix.arch }}-${{ github.run_id }}
@@ -158,7 +158,7 @@ jobs:
           version="$(./bin/garden-version "$version")"
           echo "$version" | tee VERSION
       - name: Load base image (${{ matrix.arch }})
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           key: platform_test_base_${{ matrix.arch }}-${{ github.run_id }}
           path: ${{ env.IMAGE_BASE }}-base-${{ matrix.arch }}.tar
@@ -188,7 +188,7 @@ jobs:
           path: ${{ env.IMAGE_BASE }}-${{ matrix.platform }}-${{ matrix.arch }}.tar
           if-no-files-found: error
       - name: Upload local OCI metadata for ${{ matrix.platform }} (${{ matrix.arch }})
-        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           key: platform_test_container:${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
           path: |
@@ -320,7 +320,7 @@ jobs:
           echo "$version" | tee -a "platform-test.oci-version.txt"
           echo "${PLATFORM_TEST_IMAGE_TAG}" | tee -a "platform-test.oci-tag.txt"
       - name: Upload local OCI metadata for ${{ matrix.platform }} (${{ matrix.arch }})
-        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           key: platform_test_container:${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
           path: |

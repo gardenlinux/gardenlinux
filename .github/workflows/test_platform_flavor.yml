@@ -74,7 +74,7 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
           submodules: true
-      - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      - uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           path: |
             COMMIT
@@ -99,7 +99,7 @@ jobs:
           name: certs
           path: cert/
       - name: Download platform-test OCI metadata (tofu)
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           key: platform_test_container:tofu-${{ inputs.arch }}-${{ github.run_id }}
           path: |
