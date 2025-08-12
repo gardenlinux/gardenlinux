@@ -1,5 +1,6 @@
 import pytest
 from plugins.shell import ShellRunner
+from plugins.systemd import Systemd
 from plugins.sshd import Sshd
 from plugins.utils import equals_ignore_case, get_normalized_sets, is_set
 
@@ -62,3 +63,8 @@ def test_sshd_has_required_config(sshd_config_item: str, shell: ShellRunner):
         assert expected_set.issubset(actual_value), f"{sshd_config_item}: missing values {expected_set - actual_set}"
     else:
         assert equals_ignore_case(actual_value, expected_value), f"{sshd_config_item}: expected {expected_value}, got {actual_value}"
+
+@pytest.mark.booted
+@pytest.mark.feature("ssh")
+def test_ssh_unit_exists(systemd: Systemd):
+    assert systemd.unit_exists('ssh'), f"Required systemd unit for ssh.service does not exist"

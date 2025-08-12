@@ -38,6 +38,10 @@ class Systemd:
         result = self._shell(f"systemctl is-active {unit_name}", capture_output=True, ignore_exit_code=True)
         return result.stdout.strip() == "active"
 
+    def unit_exists(self, unit_name: str) -> bool:
+        result = self._shell(f"systemctl status --no-pager {unit_name}", capture_output=True, ignore_exit_code=True)
+        return result.returncode == 0
+
 
 @pytest.fixture
 def systemd(shell: ShellRunner):
