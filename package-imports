@@ -41,6 +41,7 @@ efi-shell-aa64
 efi-shell-x64
 efibootmgr
 efitools
+elftools
 ethtool
 execline
 fatresize
