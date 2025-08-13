@@ -23,4 +23,4 @@ mkdir "$tmpdir/dist"
 gzip -d < "$input" | tar -x -C "$tmpdir/dist"
 
 truncate -s 1G "$output"
-mkfs.ext2 -q -d "$tmpdir/dist" -L GL_TESTS "$output"
+/usr/sbin/mkfs.ext2 -q -d "$tmpdir/dist" -L GL_TESTS "$output"
