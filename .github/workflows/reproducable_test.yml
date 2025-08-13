@@ -59,16 +59,27 @@ jobs:
     with:
       run_number: "#2315"
 
+  flavors_matrix:
+    name: Generate flavors matrix to build
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
+
+  bare_flavors_matrix:
+    name: Generate bare flavors matrix to build
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
+
   difference_check:
-    needs: [ build_a, build_b, run_number_a, run_number_b ]
+    needs: [ flavors_matrix, build_a, build_b, run_number_a, run_number_b ]
     name: Difference check
     runs-on: ubuntu-latest
-    if: always()
     permissions:
       actions: read
     
     strategy:
-      matrix: ${{ fromJson(needs.build_a.outputs.flavors_matrix) }}
+      matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix) }}
       fail-fast: false
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
@@ -145,15 +156,14 @@ jobs:
         path: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
 
   bare_difference_check:
-    needs: [ build_a, build_b, run_number_a, run_number_b ]
+    needs: [ bare_flavors_matrix, build_a, build_b, run_number_a, run_number_b ]
     name: Difference check for bare flavors
     runs-on: ubuntu-latest
-    if: always()
     permissions:
       actions: read
     
     strategy:
-      matrix: ${{ fromJson(needs.build_a.outputs.bare_flavors_matrix) }}
+      matrix: ${{ fromJson(needs.bare_flavors_matrix.outputs.matrix) }}
       fail-fast: false
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
