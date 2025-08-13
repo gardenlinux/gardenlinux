@@ -1,0 +1,41 @@
+name: Get nightly run id by run number
+
+on:
+  workflow_call:
+    inputs:
+      run_number:
+        type: string
+        required: true
+    outputs:
+      id:
+        description: "The corrosponding workflow id"
+        value: ${{ jobs.parse_id.outputs.id }}
+
+jobs:
+  parse_id:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      id: ${{ steps.api_fetch.outputs.id }}
+    steps:
+      - name: Filter workflow runs
+        id: api_fetch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          i=1
+
+          run_number=$(echo "${{ inputs.run_number }}" | sed -E "s/^#//")
+
+          while ! result=$(gh api "/repos/gardenlinux/gardenlinux/actions/runs?page=$i" \
+          | jq -r '.workflow_runs .[] | [.name, .run_number, .id] | join(",")' \
+          | grep "nightly,$run_number"); do
+              i=$(($i +1))
+              if [ "$i" = 101 ]; then
+                  # Stop search after 100 pages
+                  exit 1
+              fi
+          done;
+
+          echo id=$(echo "$result" | cut -d "," -f 3) >> "$GITHUB_OUTPUT"

@@ -12,6 +12,7 @@ jobs:
   build_a:
     name: Build A
     uses: ./.github/workflows/build.yml
+    if: always() && false
     permissions:
       id-token: write
     with:
@@ -29,6 +30,7 @@ jobs:
   build_b:
     name: Build B
     uses: ./.github/workflows/build.yml
+    if: always() && false
     permissions:
       id-token: write
     with:
@@ -43,10 +45,26 @@ jobs:
       aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
       secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
 
+  run_number_a:
+    uses: ./.github/workflows/nightly_id_by_run_number.yml
+    permissions:
+      actions: read
+    with:
+      run_number: "#2316"
+
+  run_number_b:
+    uses: ./.github/workflows/nightly_id_by_run_number.yml
+    permissions:
+      actions: read
+    with:
+      run_number: "#2315"
+
   difference_check:
-    needs: [ build_a, build_b ]
+    needs: [ build_a, build_b, run_number_a, run_number_b ]
     name: Difference check
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
     
     strategy:
       matrix: ${{ fromJson(needs.build_a.outputs.flavors_matrix) }}
@@ -56,11 +74,19 @@ jobs:
       with:
         submodules: true
     - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      if: always() && false
       with:
         path: |
           COMMIT
           VERSION
         key: a-build-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
+        fail-on-cache-miss: true
+    - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      with:
+        path: |
+          COMMIT
+          VERSION
+        key: build-${{ matrix.flavor }}-${{ matrix.arch }}-${{ needs.run_number_a.outputs.id }}
         fail-on-cache-miss: true
     - name: Determine CNAME
       id: cname
@@ -71,15 +97,31 @@ jobs:
       run: |
         echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
     - name: Load flavor A build artifact
+      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: a-build-${{ matrix.flavor }}-${{ matrix.arch }}
         path: A
+    - name: Load flavor A build artifact from first nightly
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+      with:
+        name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+        path: A
+        run-id: ${{ needs.run_number_a.outputs.id }}
+        github-token: ${{ github.token }}
     - name: Load flavor B build artifact
+      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: b-build-${{ matrix.flavor }}-${{ matrix.arch }}
         path: B
+    - name: Load flavor B build artifact from second nightly
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+      with:
+        name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+        path: B
+        run-id: ${{ needs.run_number_b.outputs.id }}
+        github-token: ${{ github.token }}
     - name: Compare builds
       run: |
         tar -C A -xzf A/$CNAME.tar.gz
@@ -102,9 +144,11 @@ jobs:
         path: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
 
   bare_difference_check:
-    needs: [ build_a, build_b ]
+    needs: [ build_a, build_b, run_number_a, run_number_b ]
     name: Difference check for bare flavors
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
     
     strategy:
       matrix: ${{ fromJson(needs.build_a.outputs.bare_flavors_matrix) }}
@@ -114,15 +158,31 @@ jobs:
       with:
         submodules: true
     - name: Load flavor A build artifact
+      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: a-build-${{ matrix.flavor }}-${{ matrix.arch }}
         path: A
+    - name: Load flavor A build artifact from first nightly
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+      with:
+        name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+        path: A
+        run-id: ${{ needs.run_number_a.outputs.id }}
+        github-token: ${{ github.token }}
     - name: Load flavor B build artifact
+      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: b-build-${{ matrix.flavor }}-${{ matrix.arch }}
         path: B
+    - name: Load flavor B build artifact from second nightly
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+      with:
+        name: build-${{ matrix.flavor }}-${{ matrix.arch }}
+        path: B
+        run-id: ${{ needs.run_number_b.outputs.id }}
+        github-token: ${{ github.token }}
     - name: Compare builds
       run: |
         FILENAME=$(echo "${{ matrix.flavor }}-${{ matrix.arch }}.oci" | sed -E "s/bare-//")
