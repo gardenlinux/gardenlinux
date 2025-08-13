@@ -112,24 +112,22 @@ jobs:
         path: B
         run-id: ${{ needs.run_number_b.outputs.id }}
         github-token: ${{ github.token }}
-    - name: Set CNAME
-      run: |
-        cname=$(ls A | sed -E "s/.tar.gz$//")
-
-        echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
     - name: Compare builds
       run: |
-        tar -C A -xzf A/$CNAME.tar.gz
-        rm "A/$CNAME.tar.gz"
+        cname_a=$(ls A | sed -E "s/.tar.gz$//")
+        cname_b=$(ls B | sed -E "s/.tar.gz$//")
+
+        tar -C A -xzf A/$cname_a.tar.gz
+        rm "A/$cname_a.tar.gz"
         mkdir "A/unpacked"
-        tar -C A/unpacked -xf A/$CNAME.tar
+        tar -C A/unpacked -xf A/$cname_a.tar
 
-        tar -C B -xzf B/$CNAME.tar.gz
-        rm "B/$CNAME.tar.gz"
+        tar -C B -xzf B/$cname_b.tar.gz
+        rm "B/$cname_b.tar.gz"
         mkdir "B/unpacked"
-        tar -C B/unpacked -xf B/$CNAME.tar
+        tar -C B/unpacked -xf B/$cname_b.tar
 
-        ./.github/workflows/generate_diff.sh ${{ matrix.flavor }}-${{ matrix.arch }} $CNAME
+        ./.github/workflows/generate_diff.sh ${{ matrix.flavor }}-${{ matrix.arch }} $cname_a $cname_b
     - name: Upload diff data
       if: always()
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
