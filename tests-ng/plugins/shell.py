@@ -2,14 +2,21 @@ import os
 import pwd
 import pytest
 import subprocess
+from typing import Optional, Tuple
 
-default_user = None
+
+default_user: Optional[Tuple[int, int]] = None
 
 class ShellRunner:
-    def __init__(self, user):
+    def __init__(self, user: Optional[Tuple[int, int]]):
         self.user = user
 
-    def __call__(self, cmd, capture_output=False, ignore_exit_code=False):
+    def __call__(
+        self,
+        cmd: str,
+        capture_output: bool = False,
+        ignore_exit_code: bool = False
+    ) -> subprocess.CompletedProcess:
         def _setuid():
             if self.user != None:
                 os.setgid(self.user[1])
@@ -22,7 +29,8 @@ class ShellRunner:
 
         return result
 
-def pytest_addoption(parser):
+
+def pytest_addoption(parser: pytest.Parser):
     parser.addoption(
         "--default-user",
         action="store",
@@ -30,7 +38,8 @@ def pytest_addoption(parser):
         help="User to switch to before executing shell commands"
     )
 
-def pytest_configure(config):
+
+def pytest_configure(config: pytest.Config):
     global default_user
 
     default_user_name = config.getoption("--default-user")
@@ -42,8 +51,9 @@ def pytest_configure(config):
 
     config.addinivalue_line("markers", "root: mark test to run as root user")
 
+
 @pytest.fixture
-def shell(request):
+def shell(request: pytest.FixtureRequest) -> ShellRunner:
     root_marker = bool(request.node.get_closest_marker("root"))
     if root_marker:
         if os.geteuid() != 0:

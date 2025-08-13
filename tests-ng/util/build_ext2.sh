@@ -2,8 +2,29 @@
 
 set -eufo pipefail
 
+tmpdir=
+
+cleanup () {
+	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
+	tmpdir=
+}
+
+trap cleanup EXIT
+tmpdir="$(mktemp -d)"
+
+
 if [ "$0" != /init ]; then
-	exec podman run --rm -v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro" -v "$PWD:/mnt" -w /mnt debian:stable /init "$@"
+	cat > "$tmpdir/Containerfile" <<-'EOF'
+	FROM debian:stable
+	RUN apt-get update \
+	&& DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl e2fsprogs
+	EOF
+
+	podman build -q --iidfile "$tmpdir/image_id" "$tmpdir" > /dev/null
+	image_id="$(<"$tmpdir/image_id")"
+	
+	cleanup
+	exec podman run --rm -v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro" -v "$PWD:/mnt" -w /mnt "$image_id" /init "$@"
 fi
 
 tmpdir=

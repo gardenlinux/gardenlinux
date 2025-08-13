@@ -41,7 +41,7 @@ jobs:
       environment: ${{ steps.set_values.outputs.environment }}
       repository: ${{ steps.set_values.outputs.repository }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
       - name: Set environment and repository
@@ -73,7 +73,7 @@ jobs:
       CNAME_AMD64: ''
       CNAME_ARM64: ''
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
       - name: Set flavor version reference
@@ -94,12 +94,12 @@ jobs:
         run: |
           echo "CNAME_AMD64=${{ steps.cname_amd64.outputs.result }}" | tee -a "$GITHUB_ENV"
           echo "CNAME_ARM64=${{ steps.cname_arm64.outputs.result }}" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
         with:
           name: build-container-amd64
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
         with:
           name: build-container-arm64
           github-token: ${{ github.token }}
@@ -167,10 +167,10 @@ jobs:
         # @TODO: Replace with input matrix once OCI manifest tooling is ready to update existing ones
         config: [ libc, python, nodejs, sapmachine ]
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
         with:
           pattern: build-bare-${{ matrix.config }}-*
           merge-multiple: true
@@ -244,10 +244,10 @@ jobs:
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
       max-parallel: 8
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
-      - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
+      - uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
           role-session-name: ${{ secrets.aws_session }}
@@ -265,7 +265,7 @@ jobs:
       - name: Set CNAME
         run: |
           echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
         with:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
           github-token: ${{ github.token }}
@@ -295,7 +295,7 @@ jobs:
       - name: Verify signature
         run: |
           cosign verify --insecure-ignore-tlog=true --key "awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }}" "${{ needs.determine_environment.outputs.repository }}@$(cat digest.txt)"
-      - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      - uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           path: oci_manifest_entry_${{ env.CNAME }}.json
           key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
@@ -317,7 +317,7 @@ jobs:
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
       max-parallel: 1
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
@@ -329,7 +329,7 @@ jobs:
       - name: Set CNAME
         run: |
           echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
-      - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      - uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           path: oci_manifest_entry_${{ env.CNAME }}.json
           key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}

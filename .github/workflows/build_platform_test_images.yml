@@ -117,7 +117,7 @@ jobs:
       matrix:
         arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
       - name: Set build reference
@@ -137,7 +137,7 @@ jobs:
             "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${GIT_SHA}" \
             "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${GIT_SHA_SHORT}" \
             -o "${IMAGE_BASE}-base-${ARCH}.tar"
-      - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      - uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           path: ${{ env.IMAGE_BASE }}-base-${{ matrix.arch }}.tar
           key: ${{ inputs.prefix }}platform_test_base_${{ matrix.arch }}-${{ github.run_id }}
@@ -157,7 +157,7 @@ jobs:
         arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
       - name: Set build reference
@@ -165,7 +165,7 @@ jobs:
           version="$(./bin/garden-version "$version")"
           echo "$version" | tee VERSION
       - name: Load base image (${{ matrix.arch }})
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           key: ${{ inputs.prefix }}platform_test_base_${{ matrix.arch }}-${{ github.run_id }}
           path: ${{ env.IMAGE_BASE }}-base-${{ matrix.arch }}.tar
@@ -195,7 +195,7 @@ jobs:
           path: ${{ env.IMAGE_BASE }}-${{ matrix.platform }}-${{ matrix.arch }}.tar
           if-no-files-found: error
       - name: Upload local OCI metadata for ${{ matrix.platform }} (${{ matrix.arch }})
-        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           key: ${{ inputs.prefix }}platform_test_container:${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
           path: |
@@ -213,11 +213,11 @@ jobs:
       matrix:
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
       - name: Load images (${{ matrix.platform }})
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
         with:
           pattern: ${{ inputs.prefix }}platform-test-*
           merge-multiple: true
@@ -281,7 +281,7 @@ jobs:
       commit_id: ${{ steps.version_reference.outputs.commit_id }}
       version: ${{ steps.version_reference.outputs.version }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
       - name: Prepare reference from GLRD
@@ -312,7 +312,7 @@ jobs:
         arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
       - name: Login to ghcr.io
@@ -327,7 +327,7 @@ jobs:
           echo "$version" | tee -a "platform-test.oci-version.txt"
           echo "${PLATFORM_TEST_IMAGE_TAG}" | tee -a "platform-test.oci-tag.txt"
       - name: Upload local OCI metadata for ${{ matrix.platform }} (${{ matrix.arch }})
-        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           key: ${{ inputs.prefix }}platform_test_container:${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
           path: |

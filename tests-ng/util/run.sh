@@ -26,8 +26,9 @@ cd "$(realpath -- "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/../")"
 
 basename="$(basename "$artifact")"
 
-cname="${basename%%.*}"
-type="${basename#*.}"
+extension="$(grep -E -o '(\.[a-z][a-zA-Z0-9_\-]*)*$' <<< "$basename")"
+cname="${basename%"$extension"}"
+type="${extension#.}"
 arch="$(awk -F '-' '{ print $(NF-2) }' <<< "$cname")"
 
 [ -n "$cname" ] && [ -n "$type" ] && [ -n "$arch" ]

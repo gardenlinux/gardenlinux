@@ -71,7 +71,7 @@ image_requirements = {
 cloud_provider = "$cloud"
 EOF
 
-echo "⚙️  seting up cloud resources via OpenTofu"
+echo "⚙️  setting up cloud resources via OpenTofu"
 (
 	cd "$tf_dir"
 	tofu apply --auto-approve
