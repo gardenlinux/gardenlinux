@@ -153,6 +153,7 @@ jobs:
           podman manifest add ${{ needs.determine_environment.outputs.repository }}:${version} ${{ needs.determine_environment.outputs.repository }}:amd64-${version}
           podman manifest add ${{ needs.determine_environment.outputs.repository }}:${version} ${{ needs.determine_environment.outputs.repository }}:arm64-${version}
           podman manifest push ${{ needs.determine_environment.outputs.repository }}:${version}
+
   bare_flavors:
     needs: determine_environment
     name: Publish bare flavors
@@ -345,3 +346,43 @@ jobs:
             --container ${{ needs.determine_environment.outputs.repository }} \
             --version ${{ inputs.version }} \
             --manifest_folder manifests
+  add_semver_tag_to_manifest:
+    needs: [ determine_environment, update_manifest_index ]
+    name: Add additonal .0 suffixed tag to OCI manifest for semver compliance
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      id-token: write
+      packages: write
+      actions: write
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+        with:
+          submodules: true
+
+      - name: Install ORAS CLI
+        uses: oras-project/setup-oras@8d34698a59f5ffe24821f0b48ab62a3de8b64b20 # pin@v1.2.3
+
+      - name: Add semver tag to manifest (major.minor -> major.minor.0)
+        run: |
+          set -euo pipefail
+
+          version=$(bin/garden-version "${{ inputs.version }}")
+
+          if [[ "$version" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            repo='${{ needs.determine_environment.outputs.repository }}'
+            echo '${{ secrets.GITHUB_TOKEN }}' | oras login ghcr.io -u '${{ github.actor }}' --password-stdin
+
+            # Skip if tag already exists
+            if oras repo tags "${repo}" | grep -Fx "${version}.0" >/dev/null 2>&1; then
+              echo "Tag ${version}.0 already exists; nothing to do."
+              exit 0
+            fi
+
+            # Create new remote tag pointing to the same manifest digest
+            oras tag "${repo}:${version}" "${version}.0"
+          else
+            echo "Version '${version}' is not major.minor; skipping."
+          fi
