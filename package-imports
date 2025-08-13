@@ -65,6 +65,7 @@ jq
 kernel-wedge
 kexec-tools
 keyutils
+libarchive-tools
 libengine-pkcs11-openssl
 libpam-passwdqc
 libpam-pwquality
