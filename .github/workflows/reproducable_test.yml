@@ -94,13 +94,6 @@ jobs:
           VERSION
         key: a-build-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
         fail-on-cache-miss: true
-    - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
-      with:
-        path: |
-          COMMIT
-          VERSION
-        key: build-${{ matrix.flavor }}-${{ matrix.arch }}-${{ needs.run_number_a.outputs.id }}
-        fail-on-cache-miss: true
     - name: Determine CNAME
       id: cname
       uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@e812bf7b0ea86574b5f0f4941734b53cd9b66fdb # pin@0.8.3
