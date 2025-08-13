@@ -86,22 +86,6 @@ jobs:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       with:
         submodules: true
-    - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
-      if: always() && false
-      with:
-        path: |
-          COMMIT
-          VERSION
-        key: a-build-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
-        fail-on-cache-miss: true
-    - name: Determine CNAME
-      id: cname
-      uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@e812bf7b0ea86574b5f0f4941734b53cd9b66fdb # pin@0.8.3
-      with:
-        flags: --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname
-    - name: Set CNAME
-      run: |
-        echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
     - name: Load flavor A build artifact
       if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
@@ -128,6 +112,11 @@ jobs:
         path: B
         run-id: ${{ needs.run_number_b.outputs.id }}
         github-token: ${{ github.token }}
+    - name: Set CNAME
+      run: |
+        cname=$(ls A | sed -E "s/.tar.gz$//")
+
+        echo "CNAME=$cname" | tee -a "$GITHUB_ENV"
     - name: Compare builds
       run: |
         tar -C A -xzf A/$CNAME.tar.gz
