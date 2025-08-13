@@ -75,6 +75,7 @@ jobs:
     needs: [ flavors_matrix, build_a, build_b, run_number_a, run_number_b ]
     name: Difference check
     runs-on: ubuntu-latest
+    if: always()
     permissions:
       actions: read
     
@@ -159,6 +160,7 @@ jobs:
     needs: [ bare_flavors_matrix, build_a, build_b, run_number_a, run_number_b ]
     name: Difference check for bare flavors
     runs-on: ubuntu-latest
+    if: always()
     permissions:
       actions: read
     
