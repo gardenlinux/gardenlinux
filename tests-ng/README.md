@@ -71,11 +71,18 @@ The main entry point is `./test-ng` in the gardenlinux root directory (symlink t
   - QEMU VM: Ignores this flag.
 - `--ssh`: Enable SSH access to QEMU VM (`gardenlinux@127.0.01:2222`).
   - cloud: SSHD is always enabled via `cloud-init`.
-- `--skip-tests`: Skip running the actual test suite
 - `--skip-cleanup`: Skip cleanup of cloud resources after testing.
   - QEMU VM: After running/skipping the tests, you can stop/cleanup the VM with `ctrl + c`.
   - cloud: To cleanup up cloud resources after passing the flag, just re-run without the flag.
+- `--skip-tests`: Skip running the actual test suite
 - `--test-args`: Pass any commandline argument to `pytest`. Put multiple arguments inside `""`.
+- `--cloud-image`: Use an existing cloud image.
+  - possible images are listed on official releases, e.g. [1592.12](https://github.com/gardenlinux/gardenlinux/releases/tag/1592.12)
+    - ali: `m-d7o7skltl4qe9anmwdp4` (eu-west-1 amd64)
+    - aws: `ami-0d8d06eb3a44ae794` (eu-central-1 amd64)
+    - gcp: `gardenlinux-gcp-ff804026cbe7b5f2d6f729e4-1592-12-c6d7f9a9` (amd64)
+    - azure: `/CommunityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/Images/gardenlinux-nvme-gen2/Versions/1592.12.0` (amd64)
+- `--image-requirements-file` Only needed with `--cloud-image`. Needs to point to a valid `*.requirements` file.
 
 ### Examples
 
@@ -97,6 +104,9 @@ The main entry point is `./test-ng` in the gardenlinux root directory (symlink t
 
 # Run cloud tests skip cleanup and only run the tests test_ssh.py and test_aws.py in verbose mode
 ./test-ng --cloud aws --skip-cleanup --test-args "test_ssh.py test_aws.py -v" .build/aws-gardener_prod-amd64-today-13371337.raw
+
+# Spin up an existing cloud image using image requirements file
+./test-ng --cloud aws --skip-cleanup --skip-tests --cloud-image --image-requirements-file .build/aws-gardener_prod-amd64-today-local.requirements ami-07f977508ed36098e
 ```
 
 ## Login Scripts
