@@ -14,6 +14,11 @@ resource "terraform_data" "test_disk_hash" {
 
 resource "aws_s3_bucket" "upload" {
   bucket = local.bucket_name
+
+  tags = merge(
+    local.labels,
+    { Name = local.bucket_name }
+  )
 }
 
 resource "aws_s3_bucket_ownership_controls" "owner" {

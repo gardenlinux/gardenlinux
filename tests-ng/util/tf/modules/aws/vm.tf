@@ -3,15 +3,30 @@ resource "aws_vpc" "net" {
   enable_dns_support   = true
   enable_dns_hostnames = true
 
+  tags = merge(
+    local.labels,
+    { Name = local.vpc_name }
+  )
+
 }
 
 resource "aws_subnet" "subnet" {
   vpc_id     = aws_vpc.net.id
   cidr_block = var.provider_vars.public_subnet_cidr
+
+  tags = merge(
+    local.labels,
+    { Name = local.subnet_name }
+  )
 }
 
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.net.id
+
+  tags = merge(
+    local.labels,
+    { Name = local.igw_name }
+  )
 }
 
 resource "aws_route_table" "igw" {
@@ -21,6 +36,11 @@ resource "aws_route_table" "igw" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.igw.id
   }
+
+  tags = merge(
+    local.labels,
+    { Name = local.rt_name }
+  )
 }
 
 resource "aws_route_table_association" "igw_vm" {
@@ -91,6 +111,11 @@ resource "aws_instance" "vm" {
       snapshot_id = aws_ebs_snapshot_import.test_disk[0].id
     }
   }
+
+  tags = merge(
+    local.labels,
+    { Name = local.test_name }
+  )
 }
 
 output "vm_ip" {
