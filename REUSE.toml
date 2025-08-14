@@ -1,18 +1,18 @@
 version = 1
-SPDX-PackageName = "Gardenlinux gardenlinux"
-SPDX-PackageSupplier = "SAP SE <gardenlinux@gardenlinux.io>"
+SPDX-PackageName = "gardenlinux"
+SPDX-PackageSupplier = "GardenLinux authors <gardenlinux@gardenlinux.io>"
 SPDX-PackageDownloadLocation = "https://github.com/gardenlinux/gardenlinux"
 
 [[annotations]]
 path = "**"
 precedence = "aggregate"
-SPDX-FileCopyrightText = "2024 SAP SE or an SAP affiliate company and Gardenlinux contributors"
+SPDX-FileCopyrightText = "2020-2025 SAP SE or an SAP affiliate company and Gardenlinux contributors"
 SPDX-License-Identifier = "MIT"
 
 [[annotations]]
 path = "**.md"
 precedence = "aggregate"
-SPDX-FileCopyrightText = "2024 SAP SE or an SAP affiliate company and Gardenlinux contributors"
+SPDX-FileCopyrightText = "2020-2025 SAP SE or an SAP affiliate company and Gardenlinux contributors"
 SPDX-License-Identifier = "CC-BY-4.0"
 
 [[annotations]]
