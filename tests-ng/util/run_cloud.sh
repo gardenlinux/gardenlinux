@@ -48,7 +48,6 @@ user_data_script=
 tf_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/tf")"
 
 cleanup() {
-	[ -z "$user_data_script" ] || rm "$user_data_script"
 	if ! ((skip_cleanup)); then
 		echo "⚙️  cleaning up cloud resources"
 		(
