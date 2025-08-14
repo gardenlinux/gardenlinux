@@ -2,47 +2,101 @@
 
 set -eufo pipefail
 
+mntdir="/mnt"
+
 tmpdir=
 
-cleanup () {
+cleanup() {
 	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
 	tmpdir=
+}
+
+verify_checksum() {
+	# $1: expected sha256, $2: file
+	printf '%s  %s\n' "$1" "$2" | sha256sum -c --status -
 }
 
 trap cleanup EXIT
 tmpdir="$(mktemp -d)"
 
 if [ "$0" != /init ]; then
-	cat > "$tmpdir/Containerfile" <<-'EOF'
-	FROM debian:stable
-	RUN apt-get update \
-	&& DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl
+	cat >"$tmpdir/Containerfile" <<-'EOF'
+		FROM debian:stable
+		RUN apt-get update \
+		&& DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl
 	EOF
 
-	podman build -q --iidfile "$tmpdir/image_id" "$tmpdir" > /dev/null
+	podman build -q --iidfile "$tmpdir/image_id" "$tmpdir" >/dev/null
 	image_id="$(<"$tmpdir/image_id")"
-	
+
 	cleanup
-	exec podman run --rm -v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro" -v "$PWD:/mnt" -w /mnt "$image_id" /init "$@"
+	exec podman run --rm -v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro" -v "$PWD:$mntdir" -w "$mntdir" "$image_id" /init "$@"
 fi
 
 requirements="$1"
 output="$2"
 
+python_lock_file="$mntdir/util/.python.lock"
+if [ -f "$python_lock_file" ]; then
+	# shellcheck source=tests-ng/util/.python.lock disable=SC1091
+	. "$python_lock_file"
+else
+	echo ".python.lock not found in test-ng directory" >&2
+	exit 1
+fi
+
+python_lib_dir="lib/python${PYTHON_VERSION_SHORT}/site-packages"
+
 mkdir "$tmpdir/runtime"
 mkdir "$tmpdir/site-packages"
 
+cache_dir="$mntdir/tests-ng/.cache"
+mkdir -p "$cache_dir"
+
 for arch in x86_64 aarch64; do
 	mkdir "$tmpdir/runtime/$arch"
-	curl -sSLf "https://github.com/astral-sh/python-build-standalone/releases/download/20250626/cpython-3.14.0b3%2B20250626-$arch-unknown-linux-gnu-install_only.tar.gz" | gzip -d | tar -x -C "$tmpdir/runtime/$arch" --strip-components 1
-	if [ ! -e "$tmpdir/runtime/site-packages" ]; then
-		mv "$tmpdir/runtime/$arch/lib/python3.14/site-packages" "$tmpdir/runtime/site-packages"
-	else
-		rm -rf "$tmpdir/runtime/$arch/lib/python3.14/site-packages"
+	archive_url="${PYTHON_SOURCE}/${RELEASE_DATE}/cpython-${PYTHON_VERSION}%2B${RELEASE_DATE}-${arch}-unknown-linux-gnu-install_only.tar.gz"
+	archive_name="cpython-${PYTHON_VERSION}+${RELEASE_DATE}-${arch}-unknown-linux-gnu-install_only.tar.gz"
+	archive_file_cached="$cache_dir/$archive_name"
+
+	case "$arch" in
+	x86_64)
+		expected_checksum="$PYTHON_ARCHIVE_CHECKSUM_AMD64"
+		;;
+	aarch64)
+		expected_checksum="$PYTHON_ARCHIVE_CHECKSUM_ARM64"
+		;;
+	*)
+		echo "Unsupported arch: $arch" >&2
+		exit 1
+		;;
+	esac
+
+	if ! [ -f "$archive_file_cached" ] || ! verify_checksum "$expected_checksum" "$archive_file_cached" 2>/dev/null; then
+		tmp_download="$archive_file_cached.partial"
+		curl -sSLf "$archive_url" -o "$tmp_download"
+		if ! verify_checksum "$expected_checksum" "$tmp_download"; then
+			echo "Checksum mismatch for $arch after download" >&2
+			rm -f "$tmp_download"
+			exit 1
+		fi
+		mv -f "$tmp_download" "$archive_file_cached"
 	fi
-	ln -s ../../../site-packages "$tmpdir/runtime/$arch/lib/python3.14/site-packages"
+
+	archive_file="$archive_file_cached"
+
+	tar -x -z -f "$archive_file" -C "$tmpdir/runtime/$arch" --strip-components 1
+
+	if [ ! -e "$tmpdir/runtime/site-packages" ]; then
+		mv "$tmpdir/runtime/$arch/$python_lib_dir" "$tmpdir/runtime/site-packages"
+	else
+		rm -rf "$tmpdir/runtime/$arch/$python_lib_dir"
+	fi
+	ln -s ../../../site-packages "$tmpdir/runtime/$arch/$python_lib_dir"
 done
 
-export PATH="$tmpdir/runtime/$(uname -m)/bin:$PATH"
+arch="$(uname -m)"
+PATH="$tmpdir/runtime/$arch/bin:$PATH"
+export PATH
 pip install -q --root-user-action ignore --disable-pip-version-check --only-binary=:none: -r "$requirements"
-tar -c -C "$tmpdir/runtime" . | gzip > "$output"
+tar -c -C "$tmpdir/runtime" . | gzip >"$output"
