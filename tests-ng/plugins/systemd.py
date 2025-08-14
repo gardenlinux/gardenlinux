@@ -13,6 +13,7 @@ def _seconds(token: str) -> float:
 class Systemd:
     def __init__(self, shell: ShellRunner):
         self._shell = shell
+        self._systemctl = 'systemctl --plain --no-legend --no-pager'
 
     # TODO: we should probably add functionality to check for failed units etc. in here as well
 
@@ -34,8 +35,8 @@ class Systemd:
 
         return tuple(_seconds(v) for v in m.groups())
 
-    def is_running(self, unit_name: str) -> bool:
-        result = self._shell(f"systemctl is-active {unit_name}", capture_output=True, ignore_exit_code=True)
+    def is_active(self, unit_name: str) -> bool:
+        result = self._shell(f"{self._systemctl} is-active {unit_name}", capture_output=True, ignore_exit_code=True)
         return result.stdout.strip() == "active"
 
 
