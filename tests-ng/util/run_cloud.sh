@@ -54,6 +54,7 @@ cleanup() {
 			cd "${tf_dir}"
 			tofu workspace select "$image_basename"
 			tofu destroy --auto-approve
+			tofu workspace select default
 			tofu workspace delete "$image_basename"
 		)
 	fi
