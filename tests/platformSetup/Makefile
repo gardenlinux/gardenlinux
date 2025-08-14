@@ -49,8 +49,8 @@ ARM_SUBSCRIPTION_ID := xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 endif
 
 # Generate FLAVORS variable by running the flavor parser
-FLAVORS_IMAGE := $(shell $(ROOT_DIR)/bin/flavors_parse.py --exclude "bare-*" --build)
-FLAVORS_PUBLIC_CLOUD := $(shell $(ROOT_DIR)/bin/flavors_parse.py --include-only "ali-*" --include-only "aws-*" --include-only "azure-*" --include-only "gcp-*" --include-only "openstack-*")
+FLAVORS_IMAGE := $(shell $(ROOT_DIR)/bin/gl-flavors-parse --exclude "bare-*" --build)
+FLAVORS_PUBLIC_CLOUD := $(shell $(ROOT_DIR)/bin/gl-flavors-parse --include-only "ali-*" --include-only "aws-*" --include-only "azure-*" --include-only "gcp-*" --include-only "openstack-*")
 
 CRE_CMD_BASE = $(GARDENLINUX_BUILD_CRE) run -it -v $(ROOT_DIR):/gardenlinux
 CRE_CMD_security = --cap-add SYS_ADMIN,MKNOD,AUDIT_WRITE,NET_RAW --security-opt apparmor=unconfined
