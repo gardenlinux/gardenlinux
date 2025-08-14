@@ -1,13 +1,13 @@
 locals {
   test_name   = replace(var.prefix, "_", "-")
-  bucket_name = "${local.test_name}-disk-upload"
-  ami_name    = "${local.test_name}-image"
-  vpc_name    = "${local.test_name}-vpc"
+  bucket_name = "${local.test_name}-images"
+  image_name    = "${local.test_name}-image"
+  net_name    = "${local.test_name}-net"
   subnet_name = "${local.test_name}-subnet"
   igw_name    = "${local.test_name}-igw"
-  rt_name     = "${local.test_name}-rt"
-  sg_name     = "${local.test_name}-sg"
-  key_name    = "${local.test_name}-ssh-key"
+  route_table_name     = "${local.test_name}-rt"
+  fw_name     = "${local.test_name}-fw"
+  ssh_key_name    = "${local.test_name}-ssh"
   labels = {
     component = "gardenlinux"
     test-type = "platform-test"
