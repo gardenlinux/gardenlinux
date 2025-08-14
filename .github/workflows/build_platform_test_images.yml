@@ -166,6 +166,8 @@ jobs:
       - name: Prepare base image (${{ matrix.arch }})
         run: podman load -i "${IMAGE_BASE}-base-${ARCH}.tar"
       - name: Make build-platform-test-${{ matrix.platform }} (${{ matrix.arch }})
+        env:
+          TOFUENV_GITHUB_TOKEN: ${{ github.token }}
         run: |
           make --directory=tests/images build-platform-test-${{ matrix.platform }}
           podman tag "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:latest" "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${ARCH}-${PLATFORM_TEST_TAG}"
