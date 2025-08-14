@@ -46,7 +46,6 @@ source "$image_requirements"
 [ -n "$cloud" ]
 
 cleanup() {
-	[ -z "$user_data_script" ] || rm "$user_data_script"
 	if ! ((skip_cleanup)); then
 		echo "⚙️  cleaning up cloud resources"
 		(
