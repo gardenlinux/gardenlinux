@@ -12,7 +12,6 @@ jobs:
   build_a:
     name: Build A
     uses: ./.github/workflows/build.yml
-    if: always() && false
     permissions:
       id-token: write
     with:
@@ -30,7 +29,6 @@ jobs:
   build_b:
     name: Build B
     uses: ./.github/workflows/build.yml
-    if: always() && false
     permissions:
       id-token: write
     with:
@@ -47,6 +45,7 @@ jobs:
 
   run_number_a:
     uses: ./.github/workflows/nightly_id_by_run_number.yml
+    if: always() && false
     permissions:
       actions: read
     with:
@@ -54,6 +53,7 @@ jobs:
 
   run_number_b:
     uses: ./.github/workflows/nightly_id_by_run_number.yml
+    if: always() && false
     permissions:
       actions: read
     with:
@@ -87,12 +87,12 @@ jobs:
       with:
         submodules: true
     - name: Load flavor A build artifact
-      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: a-build-${{ matrix.flavor }}-${{ matrix.arch }}
         path: A
     - name: Load flavor A build artifact from first nightly
+      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: build-${{ matrix.flavor }}-${{ matrix.arch }}
@@ -100,12 +100,12 @@ jobs:
         run-id: ${{ needs.run_number_a.outputs.id }}
         github-token: ${{ github.token }}
     - name: Load flavor B build artifact
-      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: b-build-${{ matrix.flavor }}-${{ matrix.arch }}
         path: B
     - name: Load flavor B build artifact from second nightly
+      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: build-${{ matrix.flavor }}-${{ matrix.arch }}
@@ -152,12 +152,12 @@ jobs:
       with:
         submodules: true
     - name: Load flavor A build artifact
-      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: a-build-${{ matrix.flavor }}-${{ matrix.arch }}
         path: A
     - name: Load flavor A build artifact from first nightly
+      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: build-${{ matrix.flavor }}-${{ matrix.arch }}
@@ -165,12 +165,12 @@ jobs:
         run-id: ${{ needs.run_number_a.outputs.id }}
         github-token: ${{ github.token }}
     - name: Load flavor B build artifact
-      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: b-build-${{ matrix.flavor }}-${{ matrix.arch }}
         path: B
     - name: Load flavor B build artifact from second nightly
+      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: build-${{ matrix.flavor }}-${{ matrix.arch }}
