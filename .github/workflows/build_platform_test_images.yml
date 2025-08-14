@@ -67,6 +67,7 @@ env:
   IMAGE_BASE: platform-test
   IMAGE_REGISTRY: ghcr.io/gardenlinux/gardenlinux
   PLATFORM_TEST_TAG: ${{ github.event_name == 'push' && 'nightly' || inputs.platform_test_tag }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
   generate_matrix:
     name: Build platforms matrix
