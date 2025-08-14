@@ -5,6 +5,7 @@ set -x
 
 cloud=
 cloud_image=0
+arch=
 cloud_args=()
 
 while [ $# -gt 0 ]; do
