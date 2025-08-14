@@ -2,6 +2,7 @@ import pwd
 import pytest
 from plugins.shell import ShellRunner
 from plugins.sshd import Sshd
+from plugins.systemd import Systemd
 from plugins.utils import equals_ignore_case, get_normalized_sets, is_set
 import os
 
@@ -81,3 +82,11 @@ def test_users_have_no_authorized_keys():
             assert not os.path.exists(key_path), (
                 f"user '{entry.pw_name}' should not have an authorized_keys file: {key_path}"
             )
+
+@pytest.mark.booted
+@pytest.mark.mutating_test
+@pytest.mark.root
+@pytest.mark.feature("ssh")
+def test_ssh_unit_running(systemd: Systemd):
+    systemd.start_unit('ssh')
+    assert systemd.is_running('ssh'), f"Required systemd unit for ssh.service does is not running"
