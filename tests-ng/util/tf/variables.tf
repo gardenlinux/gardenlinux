@@ -14,6 +14,12 @@ variable "test_disk_path" {
   type        = string
 }
 
+variable "existing_root_disk" {
+  description = "Optional: Existing AMI to launch instead of importing root disk"
+  type        = string
+  default     = ""
+}
+
 variable "ssh_public_key_path" {
   description = "Path to your ssh public key"
   type        = string
