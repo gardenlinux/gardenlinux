@@ -9,7 +9,7 @@ resource "aws_key_pair" "ssh" {
 }
 
 resource "aws_instance" "vm" {
-  ami           = aws_ami.image.id
+  ami           = var.existing_root_disk != "" ? var.existing_root_disk : aws_ami.image[0].id
   instance_type = local.instance_type
 
   subnet_id                   = aws_subnet.subnet.id
