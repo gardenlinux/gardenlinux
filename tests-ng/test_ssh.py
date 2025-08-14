@@ -89,4 +89,4 @@ def test_users_have_no_authorized_keys():
 @pytest.mark.feature("ssh")
 def test_ssh_unit_running(systemd: Systemd):
     systemd.start_unit('ssh')
-    assert systemd.is_running('ssh'), f"Required systemd unit for ssh.service does is not running"
+    assert systemd.is_running('ssh'), f"Required systemd unit for ssh.service is not running"
