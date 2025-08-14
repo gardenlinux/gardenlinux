@@ -36,10 +36,16 @@ locals {
   }
 
   image_source_type = split("://", var.image_path)[0]
-  image             = local.image_source_type == "file" ? "${split("file://", var.image_path)[1]}/${var.image_file}" : null
+  image = (
+    local.image_source_type == "file" ? "${split("file://", var.image_path)[1]}/${var.image_file}" :
+    local.image_source_type == "cloud" ? var.image_file :
+    null
+  )
 }
 
 resource "aws_s3_bucket" "images" {
+  count = local.image_source_type == "file" ? 1 : 0
+
   bucket = local.bucket_name
 
   tags = merge(
@@ -49,20 +55,26 @@ resource "aws_s3_bucket" "images" {
 }
 
 resource "aws_s3_bucket_ownership_controls" "images_owner" {
-  bucket = aws_s3_bucket.images.id
+  count = local.image_source_type == "file" ? 1 : 0
+
+  bucket = aws_s3_bucket.images.0.id
   rule {
     object_ownership = "BucketOwnerPreferred"
   }
 }
 
 resource "aws_s3_bucket_acl" "images_acl" {
-  depends_on = [aws_s3_bucket_ownership_controls.images_owner]
+  count = local.image_source_type == "file" ? 1 : 0
 
-  bucket = aws_s3_bucket.images.id
+  depends_on = [aws_s3_bucket_ownership_controls.images_owner.0]
+
+  bucket = aws_s3_bucket.images.0.id
   acl    = "private"
 }
 
 data "aws_iam_policy_document" "policy_document" {
+  count = local.image_source_type == "file" ? 1 : 0
+
   statement {
     # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document#principals-and-not_principals
     # principal = "*"
@@ -75,8 +87,8 @@ data "aws_iam_policy_document" "policy_document" {
       "s3:*"
     ]
     resources = [
-      aws_s3_bucket.images.arn,
-      "${aws_s3_bucket.images.arn}/*"
+      aws_s3_bucket.images.0.arn,
+      "${aws_s3_bucket.images.0.arn}/*"
     ]
     condition {
       test     = "Bool"
@@ -92,12 +104,16 @@ data "aws_iam_policy_document" "policy_document" {
 }
 
 resource "aws_s3_bucket_policy" "images_policy" {
-  bucket = aws_s3_bucket.images.id
-  policy = data.aws_iam_policy_document.policy_document.json
+  count = local.image_source_type == "file" ? 1 : 0
+
+  bucket = aws_s3_bucket.images.0.id
+  policy = data.aws_iam_policy_document.policy_document.0.json
 }
 
 resource "aws_s3_bucket_public_access_block" "no_public_access" {
-  bucket = aws_s3_bucket.images.id
+  count = local.image_source_type == "file" ? 1 : 0
+
+  bucket = aws_s3_bucket.images.0.id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -106,7 +122,9 @@ resource "aws_s3_bucket_public_access_block" "no_public_access" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "images_encryption" {
-  bucket = aws_s3_bucket.images.id
+  count = local.image_source_type == "file" ? 1 : 0
+
+  bucket = aws_s3_bucket.images.0.id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -203,7 +221,9 @@ resource "aws_security_group" "sg" {
 }
 
 resource "aws_s3_object" "image" {
-  bucket = aws_s3_bucket.images.id
+  count = local.image_source_type == "file" ? 1 : 0
+
+  bucket = aws_s3_bucket.images.0.id
   key    = local.image_name
   source = local.image
 
@@ -214,12 +234,14 @@ resource "aws_s3_object" "image" {
 }
 
 resource "aws_ebs_snapshot_import" "snapshot_import" {
+  count = local.image_source_type == "file" ? 1 : 0
+
   disk_container {
     # format = "VHD"
     format = "RAW"
     user_bucket {
-      s3_bucket = aws_s3_bucket.images.bucket
-      s3_key    = aws_s3_object.image.key
+      s3_bucket = aws_s3_bucket.images.0.bucket
+      s3_key    = aws_s3_object.image.0.key
     }
   }
 
@@ -233,6 +255,8 @@ resource "aws_ebs_snapshot_import" "snapshot_import" {
 }
 
 resource "aws_ami" "ami" {
+  count = local.image_source_type == "file" ? 1 : 0
+
   name                = local.image_name
   description         = "gardenlinux"
   ena_support         = true
@@ -244,7 +268,7 @@ resource "aws_ami" "ami" {
   root_device_name = "/dev/xvda"
   ebs_block_device {
     device_name = "/dev/xvda"
-    snapshot_id = aws_ebs_snapshot_import.snapshot_import.id
+    snapshot_id = aws_ebs_snapshot_import.snapshot_import.0.id
   }
 
   tpm_support = local.feature_trustedboot ? "v2.0" : null
@@ -267,7 +291,11 @@ resource "aws_key_pair" "ssh_key" {
 }
 
 resource "aws_instance" "instance" {
-  ami           = aws_ami.ami.id
+  ami = (
+    local.image_source_type == "file" ? aws_ami.ami.0.id :
+    local.image_source_type == "cloud" ? var.image_file :
+    null
+  )
   instance_type = var.instance_type
   subnet_id     = aws_subnet.subnet.id
 

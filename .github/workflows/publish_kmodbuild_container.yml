@@ -9,6 +9,8 @@ on:
       version:
         type: string
         required: true
+permissions:
+  packages: write
 jobs:
   kmodbuild_container:
     name: Publish kernel module build dev container
@@ -19,10 +21,10 @@ jobs:
     env:
       VERSION: ${{ inputs.version }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
         with:
           pattern: kmodbuild-container-*
           merge-multiple: true

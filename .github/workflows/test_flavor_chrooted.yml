@@ -15,6 +15,7 @@ jobs:
   test:
     name: Test flavor in chroot ${{ inputs.flavor }} (${{ inputs.arch }})
     runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: 30
     defaults:
       run:
         shell: bash
@@ -23,10 +24,10 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
-      - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      - uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           path: |
             COMMIT
@@ -35,14 +36,14 @@ jobs:
           fail-on-cache-miss: true
       - name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@e812bf7b0ea86574b5f0f4941734b53cd9b66fdb # pin@0.8.3
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
         with:
           flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
       - name: Set CNAME
         run: |
           echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
       - name: Load flavor build artifact
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
         with:
           name: build-${{ inputs.flavor }}-${{ inputs.arch }}
       - name: Test
@@ -53,6 +54,8 @@ jobs:
 
           make --directory=tests ${{ inputs.flavor }}-${{ inputs.arch }}-chroot-test
       # chroot.test.xml is written in the entrypoint tests/init
+      - name: New Test Framework
+        run: ./test-ng ".build/$CNAME.tar"
       - name: Rename test results
         if: always()
         run: mv tests/chroot.test.xml .build/$CNAME.chroot.test.xml
