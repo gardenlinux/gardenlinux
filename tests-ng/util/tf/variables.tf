@@ -1,7 +1,7 @@
 variable "prefix" {
   description = "Prefix to use for resource names"
   type        = string
-  default     = "gardenlinux-test"
+  default     = "gl-tests-ng"
 }
 
 variable "root_disk_path" {
