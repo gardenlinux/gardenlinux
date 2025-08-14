@@ -6,6 +6,8 @@ FROM ${GL_REGISTRY}/${GL_IMAGE}:${GL_VERSION}
 
 ENV PYTHON=python3.13
 
+# optionally authenticate to github because of rate limiting
+ARG GITHUB_TOKEN
 ENV DEBIAN_FRONTEND noninteractive
 ENV SHELL /bin/bash
 ENV PYTHONPATH /gardenlinux/bin:/gardenlinux/ci:/gardenlinux/ci/glci:/gardenlinux/tests:/gardenlinux/features
