@@ -29,6 +29,10 @@ def capabilities(client, testconfig, non_provisioner_chroot):
         else:
             cap_notfound.append(line)
 
+    print('>> debug')
+    print('>>cap_found', cap_found)
+    print('>>capabilities', capabilities)
+    print('>>cap_notfound', cap_notfound)
     assert len(cap_found) == len(capabilities), ("Found capabilities " +
         "do not match expected capabilities. Found: " +
         f"{', '.join(cap_found)} Expected: {', '.join(capabilities)}")
