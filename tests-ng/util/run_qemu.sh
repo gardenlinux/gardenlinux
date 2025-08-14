@@ -63,10 +63,10 @@ exec 2>&1
 
 trap 'poweroff -f > /dev/null 2>&1' EXIT
 
-mkdir /run/gardenlinux_tests
-mount -o ro /dev/disk/by-label/GL_TESTS /run/gardenlinux_tests
+mkdir /var/tmp/gardenlinux-tests
+mount -o ro /dev/disk/by-label/GL_TESTS /var/tmp/gardenlinux-tests
 
-cd /run/gardenlinux_tests
+cd /var/tmp/gardenlinux-tests
 EOF
 
 echo "🚀  starting test VM"

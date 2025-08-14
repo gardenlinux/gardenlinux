@@ -55,7 +55,7 @@ mount --rbind --make-rprivate /dev "$tmpdir/chroot/dev"
 
 echo "⚙️  setting up test framework"
 
-mkdir "$tmpdir/chroot/run/gardenlinux_tests"
-gzip -d < "$test_dist_dir/dist.tar.gz" | tar --extract --directory "$tmpdir/chroot/run/gardenlinux_tests"
+mkdir "$tmpdir/chroot/var/tmp/gardenlinux-tests"
+gzip -d < "$test_dist_dir/dist.tar.gz" | tar --extract --directory "$tmpdir/chroot/var/tmp/gardenlinux-tests"
 
-env -i /sbin/chroot "$tmpdir/chroot" /bin/sh -c 'cd /run/gardenlinux_tests && ./run_tests'
+env -i /sbin/chroot "$tmpdir/chroot" /bin/sh -c 'cd /var/tmp/gardenlinux-tests && ./run_tests'

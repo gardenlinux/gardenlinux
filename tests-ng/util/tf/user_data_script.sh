@@ -2,5 +2,5 @@
 
 systemctl enable --now ssh
 
-mkdir /run/gardenlinux-tests
-mount /dev/disk/by-label/GL_TESTS /run/gardenlinux-tests
+mkdir /var/tmp/gardenlinux-tests
+mount /dev/disk/by-label/GL_TESTS /var/tmp/gardenlinux-tests
