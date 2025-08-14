@@ -31,17 +31,22 @@ done
 
 test_dist_dir="$1"
 image="$2"
+image_basename="$(basename -- "$image")"
+image_name=${image_basename/.*/}
 
 user_data_script=
 tf_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/tf")"
 
-cleanup () {
+cleanup() {
 	[ -z "$user_data_script" ] || rm "$user_data_script"
-	if ! (( skip_cleanup )); then
+	if ! ((skip_cleanup)); then
 		echo "⚙️  cleaning up cloud resources"
 		(
-			cd "$tf_dir"
+			cd "${tf_dir}"
+			tofu workspace select "$image_basename"
 			tofu destroy --auto-approve
+			tofu workspace select default
+			tofu workspace delete "$image_basename"
 		)
 	fi
 }
@@ -73,7 +78,9 @@ EOF
 
 echo "⚙️  setting up cloud resources via OpenTofu"
 (
-	cd "$tf_dir"
+	cd "${tf_dir}"
+	tofu init
+	tofu workspace select -or-create "$image_basename"
 	tofu apply --auto-approve
 )
 
