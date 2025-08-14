@@ -57,3 +57,7 @@ def test_startup_time(systemd: Systemd):
         f"Userspace startup too slow: {userspace:.1f}s "
         f"(tolerated {tolerated_userspace}s)"
     )
+
+
+def test_foo(systemd: Systemd):
+    print(systemd.list_units())

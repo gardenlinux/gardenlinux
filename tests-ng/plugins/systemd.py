@@ -2,6 +2,14 @@ import re
 import pytest
 from typing import Tuple, Callable, Any
 from .shell import ShellRunner
+from dataclasses import dataclass
+
+@dataclass
+class SystemdUnit:
+    unit: str
+    load: str
+    active: str
+    sub: str
 
 def _seconds(token: str) -> float:
     if token.endswith("ms"):
@@ -39,6 +47,14 @@ class Systemd:
         result = self._shell(f"{self._systemctl} is-active {unit_name}", capture_output=True, ignore_exit_code=True)
         return result.stdout.strip() == "active"
 
+
+    def list_units(self) -> list[SystemdUnit]:
+        result = self._shell(f"{self._systemctl}", capture_output=True, ignore_exit_code=True)
+        units = []
+        for line in result.stdout.splitlines():
+            parts = line.split()
+            units.append(SystemdUnit(parts[0], parts[1], parts[2], parts[3]))
+        return units
 
 @pytest.fixture
 def systemd(shell: ShellRunner):
