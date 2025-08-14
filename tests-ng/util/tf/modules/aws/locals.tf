@@ -19,15 +19,14 @@ locals {
   }
 
   # resource values
-  arch                  = var.image_requirements.arch == "amd64" ? "x86_64" : var.image_requirements.arch == "arm64" ? "arm64" : null
+  arch = var.image_requirements.arch == "amd64" ? "x86_64" : var.image_requirements.arch == "arm64" ? "arm64" : null
   root_disk_object_key  = basename(var.root_disk_path)
   test_disk_object_key  = basename(var.test_disk_path)
-  default_boot_mode     = var.image_requirements.uefi ? "uefi" : "uefi-preferred"
-  boot_mode             = coalesce(var.provider_vars.boot_mode, local.default_boot_mode)
-  instance_type         = coalesce(
-                            var.provider_vars.instance_type,
+  instance_type         = coalesce(var.provider_vars.instance_type,
                             var.image_requirements.arch == "amd64" ? var.instance_type_amd64 :
                             var.image_requirements.arch == "arm64" ? var.instance_type_arm64 :
-                            null
-                          )
+                            null)
+  default_boot_mode     = var.image_requirements.uefi ? "uefi" : "uefi-preferred"
+  boot_mode             = coalesce(var.provider_vars.boot_mode, local.default_boot_mode)
+  use_existing_root_disk      = var.existing_root_disk != ""
 }
