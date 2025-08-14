@@ -74,9 +74,12 @@ resource "aws_instance" "vm" {
     encrypted             = false
   }
 
-  ebs_block_device {
-    device_name = "/dev/xvdb"
-    snapshot_id = aws_ebs_snapshot_import.test_disk.id
+  dynamic "ebs_block_device" {
+    for_each = var.use_scp ? [] : [1]
+    content {
+      device_name = "/dev/xvdb"
+      snapshot_id = aws_ebs_snapshot_import.test_disk[0].id
+    }
   }
 }
 

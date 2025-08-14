@@ -7,17 +7,21 @@ cloud_args=()
 
 while [ $# -gt 0 ]; do
 	case "$1" in
-		--cloud)
-			cloud="$2"
-			shift 2
-			;;
-		--skip-cleanup)
-			cloud_args+=("$1")
-			shift
-			;;
-		*)
-			break
-			;;
+	--cloud)
+		cloud="$2"
+		shift 2
+		;;
+	--skip-cleanup)
+		cloud_args+=("$1")
+		shift
+		;;
+	--scp)
+		cloud_args+=("$1")
+		shift
+		;;
+	*)
+		break
+		;;
 	esac
 done
 
@@ -26,7 +30,7 @@ cd "$(realpath -- "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/../")"
 
 basename="$(basename "$artifact")"
 
-extension="$(grep -E -o '(\.[a-z][a-zA-Z0-9_\-]*)*$' <<< "$basename")"
+extension="$(grep -E -o '(\.[a-z][a-zA-Z0-9_\-]*)*$' <<<"$basename")"
 cname="${basename%"$extension"}"
 type="${extension#.}"
 arch="$(awk -F '-' '{ print $(NF-2) }' <<< "$cname")"
@@ -44,15 +48,15 @@ if [ -n "$cloud" ]; then
 	./util/run_cloud.sh --cloud "$cloud" --arch "$arch" "${cloud_args[@]}" .build "$artifact"
 else
 	case "$type" in
-		tar)
-			./util/run_chroot.sh .build "$artifact"
-			;;
-		raw)
-			./util/run_qemu.sh --arch "$arch" .build "$artifact"
-			;;
-		*)
-			echo "artifact type $type not supported" >&2
-			exit 1
-			;;
+	tar)
+		./util/run_chroot.sh .build "$artifact"
+		;;
+	raw)
+		./util/run_qemu.sh --arch "$arch" .build "$artifact"
+		;;
+	*)
+		echo "artifact type $type not supported" >&2
+		exit 1
+		;;
 	esac
 fi

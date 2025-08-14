@@ -54,3 +54,9 @@ variable "provider_vars" {
   type        = map(any)
   default     = {}
 }
+
+variable "use_scp" {
+  description = "If true, do not attach test disk; scp dist.tar.gz to instance instead"
+  type        = bool
+  default     = false
+}

@@ -56,3 +56,8 @@ variable "provider_vars" {
     public_subnet_cidr = optional(string, "10.0.1.0/24")
   })
 }
+
+variable "use_scp" {
+  description = "If true, do not attach test disk; scp dist.tar.gz to instance instead"
+  type        = bool
+}

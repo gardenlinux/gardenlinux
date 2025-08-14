@@ -5,6 +5,7 @@ resource "terraform_data" "root_disk_hash" {
 }
 
 resource "terraform_data" "test_disk_hash" {
+  count = var.use_scp ? 0 : 1
   input = {
     sha256 = filesha256(var.test_disk_path)
   }
@@ -90,6 +91,7 @@ resource "aws_s3_object" "root_disk" {
 }
 
 resource "aws_s3_object" "test_disk" {
+  count  = var.use_scp ? 0 : 1
   bucket = aws_s3_bucket.upload.id
   key    = local.test_disk_object_key
   source = var.test_disk_path
@@ -114,11 +116,12 @@ resource "aws_ebs_snapshot_import" "root_disk" {
 }
 
 resource "aws_ebs_snapshot_import" "test_disk" {
+  count = var.use_scp ? 0 : 1
   disk_container {
     format = "RAW"
     user_bucket {
       s3_bucket = aws_s3_bucket.upload.bucket
-      s3_key    = aws_s3_object.test_disk.key
+      s3_key    = aws_s3_object.test_disk[0].key
     }
   }
 
