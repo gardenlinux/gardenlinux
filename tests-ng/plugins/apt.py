@@ -18,3 +18,7 @@ class Apt:
                 if 'https' in line:
                     repos.add(line.split()[1])
         return list(repos)
+
+@pytest.fixture
+def apt(shell: ShellRunner) -> Apt:
+    return Apt(shell)
