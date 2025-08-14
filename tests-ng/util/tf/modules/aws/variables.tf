@@ -58,7 +58,7 @@ variable "provider_vars" {
     region             = optional(string, "eu-central-1")
     instance_type      = optional(string)
     boot_mode          = optional(string)
-    vpc_cidr           = optional(string, "10.0.0.0/16")
+    net_cidr           = optional(string, "10.0.0.0/16")
     public_subnet_cidr = optional(string, "10.0.1.0/24")
   })
 }

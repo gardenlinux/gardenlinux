@@ -140,7 +140,7 @@ resource "aws_ebs_snapshot_import" "test_disk" {
 
 resource "aws_ami" "image" {
   count               = var.existing_root_disk != "" ? 0 : 1
-  name                = local.ami_name
+  name                = local.image_name
   virtualization_type = "hvm"
   ena_support         = true
   architecture        = var.image_requirements.arch
@@ -154,4 +154,9 @@ resource "aws_ami" "image" {
     volume_type           = "gp3"
     delete_on_termination = true
   }
+
+  tags = merge(
+    local.labels,
+    { Name = local.image_name }
+  )
 }
