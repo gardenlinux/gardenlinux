@@ -5,6 +5,7 @@ set -eufo pipefail
 skip_cleanup=0
 arch=
 cloud=
+cloud_image=0
 use_scp=0
 
 while [ $# -gt 0 ]; do
@@ -16,6 +17,10 @@ while [ $# -gt 0 ]; do
 	--cloud)
 		cloud="$2"
 		shift 2
+		;;
+	--cloud-image)
+		cloud_image=1
+		shift
 		;;
 	--skip-cleanup)
 		skip_cleanup=1
@@ -73,8 +78,13 @@ mount /dev/disk/by-label/GL_TESTS /var/tmp/gardenlinux-tests
 EOF
 fi
 
-root_disk_path_var=""
-existing_root_disk_var="$image"
+if ((cloud_image)); then
+	root_disk_path_var=""
+	existing_root_disk_var="$image"
+else
+	root_disk_path_var="$(realpath -- "$image")"
+	existing_root_disk_var=""
+fi
 
 if ((use_scp)); then
 	use_scp_tf=true
@@ -86,6 +96,7 @@ cat >"${tf_dir}/terraform.tfvars" <<EOF
 root_disk_path        = "$root_disk_path_var"
 test_disk_path        = "$(realpath -- "$test_dist_dir/dist.ext2")"
 user_data_script_path = "$user_data_script"
+existing_root_disk    = "$existing_root_disk_var"
 use_scp             = ${use_scp_tf}
 
 image_requirements = {

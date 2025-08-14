@@ -14,4 +14,5 @@ locals {
   instance_type         = coalesce(var.provider_vars.instance_type, local.default_instance_type)
   default_boot_mode     = var.image_requirements.uefi ? "uefi" : "uefi-preferred"
   boot_mode             = coalesce(var.provider_vars.boot_mode, local.default_boot_mode)
+  use_existing_root_disk      = var.existing_root_disk != ""
 }

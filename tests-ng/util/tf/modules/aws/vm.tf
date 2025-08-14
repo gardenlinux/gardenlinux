@@ -47,15 +47,25 @@ resource "aws_security_group" "default" {
     protocol    = -1
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = merge(
+    local.labels,
+    { Name = local.sg_name }
+  )
 }
 
 resource "aws_key_pair" "ssh" {
   key_name   = local.key_name
   public_key = file(var.ssh_public_key_path)
+
+  tags = merge(
+    local.labels,
+    { Name = local.key_name }
+  )
 }
 
 resource "aws_instance" "vm" {
-  ami           = aws_ami.image.id
+  ami           = var.existing_root_disk != "" ? var.existing_root_disk : aws_ami.image[0].id
   instance_type = local.instance_type
 
   subnet_id                   = aws_subnet.subnet.id

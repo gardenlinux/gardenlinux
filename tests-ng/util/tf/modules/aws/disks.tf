@@ -1,4 +1,5 @@
 resource "terraform_data" "root_disk_hash" {
+  count = var.existing_root_disk != "" ? 0 : 1
   input = {
     sha256 = filesha256(var.root_disk_path)
   }
@@ -81,6 +82,7 @@ resource "aws_s3_bucket_policy" "secure_transport" {
 }
 
 resource "aws_s3_object" "root_disk" {
+  count  = var.existing_root_disk != "" ? 0 : 1
   bucket = aws_s3_bucket.upload.id
   key    = local.root_disk_object_key
   source = var.root_disk_path
@@ -102,11 +104,12 @@ resource "aws_s3_object" "test_disk" {
 }
 
 resource "aws_ebs_snapshot_import" "root_disk" {
+  count = var.existing_root_disk != "" ? 0 : 1
   disk_container {
     format = "RAW"
     user_bucket {
       s3_bucket = aws_s3_bucket.upload.bucket
-      s3_key    = aws_s3_object.root_disk.key
+      s3_key    = aws_s3_object.root_disk[0].key
     }
   }
 
@@ -131,6 +134,7 @@ resource "aws_ebs_snapshot_import" "test_disk" {
 }
 
 resource "aws_ami" "image" {
+  count               = var.existing_root_disk != "" ? 0 : 1
   name                = local.ami_name
   virtualization_type = "hvm"
   ena_support         = true
@@ -141,7 +145,7 @@ resource "aws_ami" "image" {
 
   ebs_block_device {
     device_name           = "/dev/xvda"
-    snapshot_id           = aws_ebs_snapshot_import.root_disk.id
+    snapshot_id           = aws_ebs_snapshot_import.root_disk[0].id
     volume_type           = "gp3"
     delete_on_termination = true
   }

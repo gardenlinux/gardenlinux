@@ -1,14 +1,24 @@
 #!/usr/bin/env bash
 
 set -eufo pipefail
+set -x
 
 cloud=
+cloud_image=0
 cloud_args=()
 
 while [ $# -gt 0 ]; do
 	case "$1" in
 	--cloud)
 		cloud="$2"
+		shift 2
+		;;
+	--cloud-image)
+		cloud_image=1
+		shift
+		;;
+	--arch)
+		arch="$2"
 		shift 2
 		;;
 	--skip-cleanup)
@@ -25,7 +35,11 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
-artifact="$(realpath "$1")"
+if ((cloud_image)); then
+	artifact="$1"
+else
+	artifact="$(realpath "$1")"
+fi
 cd "$(realpath -- "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/../")"
 
 basename="$(basename "$artifact")"
@@ -33,19 +47,26 @@ basename="$(basename "$artifact")"
 extension="$(grep -E -o '(\.[a-z][a-zA-Z0-9_\-]*)*$' <<<"$basename")"
 cname="${basename%"$extension"}"
 type="${extension#.}"
-arch="$(awk -F '-' '{ print $(NF-2) }' <<< "$cname")"
+[ -n "$arch" ] || arch="$(awk -F '-' '{ print $(NF-2) }' <<<"$cname")"
+
+if [ "$arch" = "amd64" ]; then
+	arch="x86_64"
+fi
 
 [ -n "$cname" ] && [ -n "$type" ] && [ -n "$arch" ]
 
 ./util/build.makefile
 
 if [ -n "$cloud" ]; then
-	if [ $type != raw ]; then
-		echo "cloud run only supported with raw file" >&2
-		exit 1
+	if ((cloud_image)); then
+		./util/run_cloud.sh --cloud "$cloud" --cloud-image --arch "$arch" "${cloud_args[@]}" .build "$artifact"
+	else
+		if [ "$type" != raw ]; then
+			echo "cloud run only supported with raw file" >&2
+			exit 1
+		fi
+		./util/run_cloud.sh --cloud "$cloud" --arch "$arch" "${cloud_args[@]}" .build "$artifact"
 	fi
-
-	./util/run_cloud.sh --cloud "$cloud" --arch "$arch" "${cloud_args[@]}" .build "$artifact"
 else
 	case "$type" in
 	tar)

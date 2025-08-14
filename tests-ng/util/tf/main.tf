@@ -31,6 +31,7 @@ module "cloud" {
   image_requirements    = var.image_requirements
   my_ip                 = chomp(data.http.my_ip.response_body)
   provider_vars         = try(var.provider_vars[var.cloud_provider], {})
+  existing_root_disk    = var.existing_root_disk
   use_scp               = var.use_scp
 }
 
