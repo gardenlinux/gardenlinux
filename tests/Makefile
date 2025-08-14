@@ -16,9 +16,9 @@ GARDENLINUX_BUILD_CRE ?= podman
 KVM_DEVICE := $(shell if [ -e /dev/kvm ] && [ -w /dev/kvm ]; then echo "--device=/dev/kvm"; else echo ""; fi)
 
 # Generate FLAVORS variable by running the flavor parser
-FLAVORS_BARE := $(shell $(ROOT_DIR)/bin/flavors_parse.py --include-only "bare-*" --build --test)
-FLAVORS_IMAGE := $(shell $(ROOT_DIR)/bin/flavors_parse.py --exclude "bare-*" --build --test)
-FLAVORS_PUBLIC_CLOUD := $(shell $(ROOT_DIR)/bin/flavors_parse.py --category "public-cloud" --test)
+FLAVORS_BARE := $(shell $(ROOT_DIR)/bin/gl-flavors-parse --include-only "bare-*" --build --test)
+FLAVORS_IMAGE := $(shell $(ROOT_DIR)/bin/gl-flavors-parse --exclude "bare-*" --build --test)
+FLAVORS_PUBLIC_CLOUD := $(shell $(ROOT_DIR)/bin/gl-flavors-parse --category "public-cloud" --test)
 
 
 CRE_CMD_BASE = $(GARDENLINUX_BUILD_CRE) run -it --rm -v $(ROOT_DIR):/gardenlinux
@@ -37,7 +37,7 @@ endef
 
 # # Extract ARCH from the flavor string (e.g., "bare-python-amd64" -> "amd64")
 bare_get_arch = $(shell echo $(1) | grep -oE '(amd64|arm64)')
-# 
+#
 # # Extract CONFIG from the flavor string (e.g., "bare-python-amd64" -> "python")
 bare_get_config = $(shell echo $(1) | sed 's/^bare-//' | sed 's/-amd64//' | sed 's/-arm64//')
 
