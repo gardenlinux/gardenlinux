@@ -1,25 +1,25 @@
 import pytest
 from typing import List
 
-skip_mutating_tests = False
+run_mutating_tests = False
 
 
 def pytest_addoption(parser: pytest.Parser):
     parser.addoption(
-        "--skip-mutating-tests",
+        "--allow-system-modifications",
         action="store_true",
-        help="Skip tests that mutate system state. Useful if running tests on a long-running system."
+        help="Run tests that mutate system state. Disabling this is useful if running tests on a long-running system."
     )
 
 
 def pytest_configure(config: pytest.Config):
-    global skip_mutating_tests
-    skip_mutating_tests = config.getoption("--skip-mutating-tests")
+    global run_mutating_tests
+    run_mutating_tests = config.getoption("--allow-system-modifications")
 
     config.addinivalue_line("markers", "mutating_test: this test mutates system state")
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: List[pytest.Item]):
     for item in items:
-        if item.get_closest_marker("mutating_test") and skip_mutating_tests:
+        if item.get_closest_marker("mutating_test") and not run_mutating_tests:
             item.add_marker(pytest.mark.skip(reason="skipping tests that mutate system state"))

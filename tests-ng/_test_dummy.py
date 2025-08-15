@@ -27,8 +27,8 @@ def test_shell_print(shell):
     shell("echo abc")
     shell("echo abc >&2")
 
-def test_shell_fail(shell):
-    shell("echo hello; false; echo abc")
+# def test_shell_fail(shell):
+#     shell("echo hello; false; echo abc")
 
 def test_print():
     print("hello")
@@ -40,3 +40,8 @@ def test_only_if_booted():
 def test_sysctl(sysctl):
     assert sysctl["net.ipv4.conf.all.rp_filter"] != 1
     assert sysctl["net.ipv4.conf.default.rp_filter"] != 1
+
+@pytest.mark.mutating_test
+def test_modify_state(shell):
+    shell("echo hello > /tmp/hello.txt")
+    print(shell("ls -l /tmp/hello.txt", capture_output=True))

@@ -95,9 +95,9 @@ if [ "$arch" = "$native_arch" ]; then
 fi
 
 if [ "$qemu_accel" != tcg ]; then
-	echo './run_tests --system-booted' >> "$tmpdir/fw_cfg-script.sh"
+	echo './run_tests --allow-system-modifications --system-booted' >> "$tmpdir/fw_cfg-script.sh"
 else
-	echo './run_tests --system-booted --skip-performance-metrics' >> "$tmpdir/fw_cfg-script.sh"
+	echo './run_tests --allow-system-modifications --system-booted --skip-performance-metrics' >> "$tmpdir/fw_cfg-script.sh"
 fi
 
 qemu_opts=(
