@@ -38,6 +38,9 @@ class Systemd:
         result = self._shell(f"systemctl is-active {unit_name}", capture_output=True, ignore_exit_code=True)
         return result.stdout.strip() == "active"
 
+    def start_unit(self, unit_name: str):
+        self._shell(f"systemctl start {unit_name}")
+
 
 @pytest.fixture
 def systemd(shell: ShellRunner):

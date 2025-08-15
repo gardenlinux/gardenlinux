@@ -58,4 +58,4 @@ echo "⚙️  setting up test framework"
 mkdir "$tmpdir/chroot/run/gardenlinux_tests"
 gzip -d < "$test_dist_dir/dist.tar.gz" | tar --extract --directory "$tmpdir/chroot/run/gardenlinux_tests"
 
-env -i /sbin/chroot "$tmpdir/chroot" /bin/sh -c 'cd /run/gardenlinux_tests && ./run_tests'
+env -i /sbin/chroot "$tmpdir/chroot" /bin/sh -c 'cd /run/gardenlinux_tests && ./run_tests --allow-system-modifications'
