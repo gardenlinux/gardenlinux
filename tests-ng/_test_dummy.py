@@ -27,8 +27,8 @@ def test_shell_print(shell):
     shell("echo abc")
     shell("echo abc >&2")
 
-# def test_shell_fail(shell):
-#     shell("echo hello; false; echo abc")
+ def test_shell_fail(shell):
+     shell("echo hello; false; echo abc")
 
 def test_print():
     print("hello")
