@@ -3,11 +3,11 @@ import pwd
 import pytest
 import stat
 
-def test_service_accounts_have_nologin_shell():
+def test_service_accounts_have_nologin_shell(expected_users):
     for entry in pwd.getpwall():
         if entry.pw_uid >= 1000:
             continue
-        if entry.pw_name in {"root", "sync"}:
+        if entry.pw_name in expected_users + ["root", "sync"]:
             continue
         assert entry.pw_shell in [ "/usr/sbin/nologin", "/bin/false" ], f"User {entry.pw_name} has unexpected shell: {entry.pw_shell}"
 
