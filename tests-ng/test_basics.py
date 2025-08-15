@@ -57,3 +57,12 @@ def test_startup_time(systemd: Systemd):
         f"Userspace startup too slow: {userspace:.1f}s "
         f"(tolerated {tolerated_userspace}s)"
     )
+
+@pytest.mark.booted
+def test_no_failed_units(systemd: Systemd):
+    units = systemd.list_units()
+    assert len(units) > 1, f"Failed to load systemd units: {units}"
+    failed_units = [u for u in units if u.load == 'loaded' and u.active != 'active']
+    for u in failed_units:
+        print(f'FAILED UNIT: {u}')
+    assert not failed_units, f"{len(failed_units)} systemd units failed to load"
