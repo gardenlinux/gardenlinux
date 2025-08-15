@@ -56,16 +56,22 @@ jobs:
           echo "Give GLVD some time to ingest the data. It is not clear how long this takes exactly, and there is no single indicator for when it was done."
           sleep 180
 
-  create_github_release:
-    if: ${{ inputs.type }} == 'patch'
-    environment: oidc_aws_s3_upload
+  github_release:
     needs: glvd
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
     permissions:
       id-token: write
       contents: write
-    runs-on: ubuntu-24.04
+    environment: oidc_aws_s3_upload
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+        with:
+          submodules: true
       - name: install dependencies for generate_release_note.py script
         run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
       - name: Checkout flavors of the release commit
@@ -75,93 +81,72 @@ jobs:
           sparse-checkout: |
             flavors.yaml
           sparse-checkout-cone-mode: false
-          path: release_checkout
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
+      - id: matrix
+        name: Generate flavors matrix
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
+        with:
+          flags: '--no-arch --json-by-arch --publish'
       - name: create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+      - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
-          name: release
+          key: release-${{ github.run_id }}
           path: .github_release_id
-          if-no-files-found: error
-          include-hidden-files: true
-  upload_to_github_release:
-    if: ${{ inputs.type }} == 'patch'
-    environment: oidc_aws_s3_upload
-    needs: create_github_release
+
+  github_release_artifacts_upload:
+    needs: github_release
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
       id-token: write
-    runs-on: ubuntu-24.04
+    environment: oidc_aws_s3_upload
+    env:
+      CNAME: ''
     strategy:
       fail-fast: false
-      matrix:
-        architecture: [ amd64, arm64 ]
-        cname:
-          - kvm-gardener_prod
-          - metal-gardener_prod
-          - gcp-gardener_prod
-          - gdch-gardener_prod
-          - aws-gardener_prod
-          - azure-gardener_prod
-          - ali-gardener_prod
-          - openstack-gardener_prod
-          - openstackbaremetal-gardener_prod
-          - vmware-gardener_prod
-          - metal-gardener_prod_pxe
-          - kvm-gardener_prod_usi
-          - metal-gardener_prod_usi
-          - gcp-gardener_prod_usi
-          - gdch-gardener_prod_usi
-          - aws-gardener_prod_usi
-          - azure-gardener_prod_usi
-          - openstack-gardener_prod_usi
-          - openstackbaremetal-gardener_prod_usi
-          - vmware-gardener_prod_usi
-          - metal-gardener_prod_pxe_usi
-          - kvm-gardener_prod_tpm2_trustedboot
-          - metal-gardener_prod_tpm2_trustedboot
-          - gcp-gardener_prod_tpm2_trustedboot
-          - gdch-gardener_prod_tpm2_trustedboot
-          - aws-gardener_prod_tpm2_trustedboot
-          - azure-gardener_prod_tpm2_trustedboot
-          - openstack-gardener_prod_tpm2_trustedboot
-          - openstackbaremetal-gardener_prod_tpm2_trustedboot
-          - vmware-gardener_prod_tpm2_trustedboot
-          - metal-gardener_prod_pxe_tpm2_trustedboot
-
+      matrix: ${{ fromJson(needs.github_release.outputs.matrix ) }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
-      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
         with:
-          name: release
-      - uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # pin@v4
+          submodules: true
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
+      - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_REGION }}
-      - name: download build artifacts from S3
+      - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        with:
+          key: release-${{ github.run_id }}
+          path: .github_release_id
+          fail-on-cache-miss: true
+      - name: Download from S3 bucket ${{ secrets.aws_s3_bucket }} for ${{ matrix.flavor }} (${{ matrix.arch }})
         run: |
           commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
-          prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
-          .github/workflows/download_from_s3.sh "${{ secrets.AWS_S3_BUCKET }}" "$prefix"
-          # pack tar.xz file for release
-          tar -cv "$prefix" | xz -9 > "$prefix.tar.xz"
-      - name: upload to release
+          CNAME="${{ matrix.flavor }}-${{ matrix.arch }}-${{ inputs.version }}-$commit"
+
+          echo "CNAME=$CNAME" | tee -a "$GITHUB_ENV"
+
+          mkdir "$CNAME"
+          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --cname "$CNAME" --path "$CNAME" download-artifacts-from-bucket
+          tar -cJf "$CNAME.tar.xz" -C "$CNAME" .
+      - name: Upload to release
         run: |
-          commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
           release="$(cat .github_release_id)"
-          prefix="${{ matrix.cname }}-${{ matrix.architecture }}-${{ inputs.version }}-$commit"
-          echo "$release $prefix.tar.xz"
-          ls -lah "$prefix.tar.xz"
-          echo "$prefix.tar.xz" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+
+          echo "$release $CNAME.tar.xz"
+          echo "$CNAME.tar.xz" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
 
           # upload test logs separately (if they exist)
           log_suffixes="chroot.test.log chroot.test.xml platform.test.log platform.test.xml"
           for suffix in $log_suffixes; do
-            log="$prefix/$prefix.$suffix"
+            log="$CNAME/$CNAME.$suffix"
             if [ -f "$log" ]; then
               echo "$log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
             fi
