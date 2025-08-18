@@ -182,9 +182,9 @@ jobs:
         FILENAME=$(echo "${{ matrix.flavor }}-${{ matrix.arch }}.oci" | sed -E "s/bare-//")
 
         cp ./.github/workflows/diff_containerfile Containerfile
+        podman unshare # To allow mounting
 
         a_sha=$(podman load -qi A/$FILENAME 2>/dev/null | awk '{ print $NF }')
-        echo "$a_sha"
         podman build -t a --build-arg "image=$a_sha" .
         a_mount=$(podman image mount a)
 
