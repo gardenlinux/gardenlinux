@@ -138,7 +138,21 @@ total_count = len(all)
 
 problem_count = "" if len(trees) == 0 else ("\n**1** Problem detected." if len(trees) == 1 else f"\n**{len(trees)}** Problems detected.")
 
-explanation = "" if len(all) == len(successful) else "\n\n*The mentioned features are included in every affected flavor and not included in every unaffected flavor.*"
+
+explanation = ""
+
+if os.path.isfile("nightly_stats"):
+    with open("nightly_stats", "r") as f:
+        nightlys = f.read().split(";")
+    nightlys[0] = nightlys[0].split(",")
+    nightlys[1] = nightlys[1].split(",")
+    explanation += f"\n\nComparison of nightly **[#{nightlys[0][0]}](https://github.com/gardenlinux/gardenlinux/actions/runs/{nightlys[0][1]})** \
+                        and **[#{nightlys[1][0]}](https://github.com/gardenlinux/gardenlinux/actions/runs/{nightlys[1][1]})**"
+    if nightlys[0][2] != nightlys[1][2]:
+        explanation += f"\n\n⚠️ The nightlys used different commits: `{nightlys[0][2][:8]}` (#{nightlys[0][0]}) != `{nightlys[1][2][:8]}` (#{nightlys[1][0]})"
+
+
+explanation += "" if len(all) == len(successful) else "\n\n*The mentioned features are included in every affected flavor and not included in every unaffected flavor.*"
 
 rows = ""
 

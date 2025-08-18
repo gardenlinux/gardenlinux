@@ -50,14 +50,14 @@ jobs:
     permissions:
       actions: read
     with:
-      run_number: "#2316"
+      run_number: "#2323"
 
   run_number_b:
     uses: ./.github/workflows/nightly_id_by_run_number.yml
     permissions:
       actions: read
     with:
-      run_number: "#2315"
+      run_number: "#2322"
 
   flavors_matrix:
     name: Generate flavors matrix to build
@@ -87,12 +87,13 @@ jobs:
       with:
         submodules: true
     - name: Load flavor A build artifact
-      if: always() && false
+      if: always() && needs.build_a.result == 'success'
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: a-build-${{ matrix.flavor }}-${{ matrix.arch }}
         path: A
     - name: Load flavor A build artifact from first nightly
+      if: always() && needs.run_number_a.result == 'success'
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: build-${{ matrix.flavor }}-${{ matrix.arch }}
@@ -100,12 +101,13 @@ jobs:
         run-id: ${{ needs.run_number_a.outputs.id }}
         github-token: ${{ github.token }}
     - name: Load flavor B build artifact
-      if: always() && false
+      if: always() && needs.build_b.result == 'success'
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: b-build-${{ matrix.flavor }}-${{ matrix.arch }}
         path: B
     - name: Load flavor B build artifact from second nightly
+      if: always() && needs.run_number_b.result == 'success'
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: build-${{ matrix.flavor }}-${{ matrix.arch }}
@@ -152,12 +154,13 @@ jobs:
       with:
         submodules: true
     - name: Load flavor A build artifact
-      if: always() && false
+      if: always() && needs.build_a.result == 'success'
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: a-build-${{ matrix.flavor }}-${{ matrix.arch }}
         path: A
     - name: Load flavor A build artifact from first nightly
+      if: always() && needs.run_number_a.result == 'success'
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: build-${{ matrix.flavor }}-${{ matrix.arch }}
@@ -165,12 +168,13 @@ jobs:
         run-id: ${{ needs.run_number_a.outputs.id }}
         github-token: ${{ github.token }}
     - name: Load flavor B build artifact
-      if: always() && false
+      if: always() && needs.build_b.result == 'success'
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: b-build-${{ matrix.flavor }}-${{ matrix.arch }}
         path: B
     - name: Load flavor B build artifact from second nightly
+      if: always() && needs.run_number_b.result == 'success'
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: build-${{ matrix.flavor }}-${{ matrix.arch }}
@@ -201,7 +205,7 @@ jobs:
         path: ${{ matrix.flavor }}-${{ matrix.arch }}-diff
   
   format_result:
-    needs: [ difference_check, bare_difference_check ]
+    needs: [ difference_check, bare_difference_check, run_number_a, run_number_b ]
     if: always()
     name: Format result
     runs-on: ubuntu-latest
@@ -216,6 +220,15 @@ jobs:
         pattern: "*-diff"
         path: diffs/
         merge-multiple: true
+    - name: Compare commit hashes if two nightly builds were used
+      if: always() && needs.run_number_a.result == 'success' && needs.run_number_b.result == 'success'
+      run: |
+        run_number_a=$(echo "#2323" | sed -E "s/^#//")
+        run_number_b=$(echo "#2322" | sed -E "s/^#//")
+        echo -e "$run_number_a,${{ needs.run_number_a.outputs.id }},${{ needs.run_number_a.outputs.commit }};\
+        $run_number_b,${{ needs.run_number_b.outputs.id }},${{ needs.run_number_b.outputs.commit }}"\
+        > nightly_stats
+
     - name: generate Result.md
       run: |
         ./.github/workflows/format_diff.py

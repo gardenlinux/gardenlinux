@@ -10,6 +10,9 @@ on:
       id:
         description: "The corrosponding workflow id"
         value: ${{ jobs.parse_id.outputs.id }}
+      commit:
+        description: "The corrosponding workflow head commit"
+        value: ${{ jobs.parse_id.outputs.commit }}
 
 jobs:
   parse_id:
@@ -18,6 +21,7 @@ jobs:
       actions: read
     outputs:
       id: ${{ steps.api_fetch.outputs.id }}
+      commit: ${{ steps.api_fetch.outputs.commit }}
     steps:
       - name: Filter workflow runs
         id: api_fetch
@@ -29,7 +33,7 @@ jobs:
           run_number=$(echo "${{ inputs.run_number }}" | sed -E "s/^#//")
 
           while ! result=$(gh api "/repos/gardenlinux/gardenlinux/actions/runs?page=$i" \
-          | jq -r '.workflow_runs .[] | [.name, .run_number, .id] | join(",")' \
+          | jq -r '.workflow_runs .[] | [.name, .run_number, .id, .head_commit.id] | join(",")' \
           | grep "nightly,$run_number"); do
               i=$(($i +1))
               if [ "$i" = 101 ]; then
@@ -39,3 +43,4 @@ jobs:
           done;
 
           echo id=$(echo "$result" | cut -d "," -f 3) >> "$GITHUB_OUTPUT"
+          echo commit=$(echo "$result" | cut -d "," -f 4) >> "$GITHUB_OUTPUT"
