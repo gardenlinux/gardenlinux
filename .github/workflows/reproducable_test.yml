@@ -183,11 +183,12 @@ jobs:
 
         cp ./.github/workflows/diff_containerfile Containerfile
 
-        a_sha=$(podman load -qi A/$FILENAME 2>/dev/null | awk '{ print $$NF }')
+        a_sha=$(podman load -qi A/$FILENAME 2>/dev/null | awk '{ print $NF }')
+        echo "$a_sha"
         podman build -t a --build-arg "image=$a_sha" .
         a_mount=$(podman image mount a)
 
-        b_sha=$(podman load -qi B/$FILENAME 2>/dev/null | awk '{ print $$NF }')
+        b_sha=$(podman load -qi B/$FILENAME 2>/dev/null | awk '{ print $NF }')
         podman build -t b --build-arg "image=$b_sha" .
         b_mount=$(podman image mount b)
 
