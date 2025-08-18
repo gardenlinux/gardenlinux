@@ -179,9 +179,8 @@ jobs:
         github-token: ${{ github.token }}
     - name: Compare builds
       run: |
-        FILENAME=$(echo "${{ matrix.flavor }}-${{ matrix.arch }}.oci" | sed -E "s/bare-//")
-
         podman unshare /bin/bash -c '\
+        FILENAME=$(echo "${{ matrix.flavor }}-${{ matrix.arch }}.oci" | sed -E "s/bare-//");\
         a_sha=$(podman load -qi A/$FILENAME 2>/dev/null | awk '\''{ print $NF }'\'');\
         a_mount=$(podman image mount "$a_sha");\
         b_sha=$(podman load -qi B/$FILENAME 2>/dev/null | awk '\''{ print $NF }'\'');\
