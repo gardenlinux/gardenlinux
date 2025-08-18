@@ -1,6 +1,6 @@
 version = 1
 SPDX-PackageName = "gardenlinux"
-SPDX-PackageSupplier = "GardenLinux authors <gardenlinux@gardenlinux.io>"
+SPDX-PackageSupplier = "GardenLinux authors <gardenlinux-admin@lists.neonephos.org>"
 SPDX-PackageDownloadLocation = "https://github.com/gardenlinux/gardenlinux"
 
 [[annotations]]
