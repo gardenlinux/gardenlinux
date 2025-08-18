@@ -2,19 +2,30 @@
 
 set -euo pipefail
 
-whitelist=("dummypath_abcd...")
+whitelist=()
 
-if [ -z ${2+x} ]; then
-    # $2 is unset
-    basefile_a="${1/bare-/}.oci"
-    basefile_b="${1/bare-/}.oci"
+if [ "$1" = "-oci" ]; then
+    basefile_a="${2/bare-/}.oci"
+    basefile_b="${2/bare-/}.oci"
+    unpacked_a="$3"
+    unpacked_b="$4"
+    depth=$5
+    result="$2-diff"
 else
-    # $2 is set
     basefile_a="$2.tar"
     basefile_b="$3.tar"
+    unpacked_a="./A/unpacked"
+    unpacked_b="./B/unpacked"
+    depth="3"
+    result="$1-diff"
 fi
 
 sedcommands=()
+
+if [ ! ${#whitelist[@]} -eq 0 ]; then
+    # Add -E flag for regex only if whitelist is not empty, as 'sed' is a NOP while 'sed -E' fails
+    sedcommands+=("-E")
+fi
 
 for file in "${whitelist[@]}"; do
     sedcommands+=("-e")
@@ -24,12 +35,12 @@ done
 if ! cmp "A/$basefile_a" "B/$basefile_b" > /dev/null; then
     # Difference detected
 
-    files=$(diff -qrN ./A/unpacked ./B/unpacked 2> /dev/null \
+    files=$(diff -qrN "$unpacked_a" "$unpacked_b" 2> /dev/null \
     | grep differ \
-    | perl -0777 -pe "s/(?:[^\/\n]*\/){3}([^\s]*)[^\n]*/\1/g" \
-    | sed -E "${sedcommands[@]}" || true)
+    | perl -0777 -pe "s/(?:[^\/\n]*\/){$depth}([^\s]*)[^\n]*/\1/g" \
+    | sed "${sedcommands[@]}" || true)
 
-    echo "$files" > "$1-diff"
+    echo "$files" > "$result"
 
     if [[ $files = '' ]]; then
          # All differences are whitelisted
@@ -39,7 +50,7 @@ if ! cmp "A/$basefile_a" "B/$basefile_b" > /dev/null; then
  	exit 1
 else
     # Builds are the same
-    echo "" > "$1-diff"
+    echo "" > "$result"
 
     exit 0
 fi

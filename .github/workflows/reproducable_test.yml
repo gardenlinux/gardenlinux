@@ -11,6 +11,7 @@ on:
 jobs:
   build_a:
     name: Build A
+    if: always() && false
     uses: ./.github/workflows/build.yml
     permissions:
       id-token: write
@@ -28,6 +29,7 @@ jobs:
   
   build_b:
     name: Build B
+    if: always() && false
     uses: ./.github/workflows/build.yml
     permissions:
       id-token: write
@@ -45,7 +47,6 @@ jobs:
 
   run_number_a:
     uses: ./.github/workflows/nightly_id_by_run_number.yml
-    if: always() && false
     permissions:
       actions: read
     with:
@@ -53,7 +54,6 @@ jobs:
 
   run_number_b:
     uses: ./.github/workflows/nightly_id_by_run_number.yml
-    if: always() && false
     permissions:
       actions: read
     with:
@@ -87,12 +87,12 @@ jobs:
       with:
         submodules: true
     - name: Load flavor A build artifact
+      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: a-build-${{ matrix.flavor }}-${{ matrix.arch }}
         path: A
     - name: Load flavor A build artifact from first nightly
-      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: build-${{ matrix.flavor }}-${{ matrix.arch }}
@@ -100,12 +100,12 @@ jobs:
         run-id: ${{ needs.run_number_a.outputs.id }}
         github-token: ${{ github.token }}
     - name: Load flavor B build artifact
+      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: b-build-${{ matrix.flavor }}-${{ matrix.arch }}
         path: B
     - name: Load flavor B build artifact from second nightly
-      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: build-${{ matrix.flavor }}-${{ matrix.arch }}
@@ -152,12 +152,12 @@ jobs:
       with:
         submodules: true
     - name: Load flavor A build artifact
+      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: a-build-${{ matrix.flavor }}-${{ matrix.arch }}
         path: A
     - name: Load flavor A build artifact from first nightly
-      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: build-${{ matrix.flavor }}-${{ matrix.arch }}
@@ -165,12 +165,12 @@ jobs:
         run-id: ${{ needs.run_number_a.outputs.id }}
         github-token: ${{ github.token }}
     - name: Load flavor B build artifact
+      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: b-build-${{ matrix.flavor }}-${{ matrix.arch }}
         path: B
     - name: Load flavor B build artifact from second nightly
-      if: always() && false
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
       with:
         name: build-${{ matrix.flavor }}-${{ matrix.arch }}
@@ -181,13 +181,19 @@ jobs:
       run: |
         FILENAME=$(echo "${{ matrix.flavor }}-${{ matrix.arch }}.oci" | sed -E "s/bare-//")
 
-        mkdir "A/unpacked"
-        tar -C A/unpacked -xf A/$FILENAME
+        cp ./.github/workflows/diff_containerfile Containerfile
 
-        mkdir "B/unpacked"
-        tar -C B/unpacked -xf B/$FILENAME
+        a_sha=$(podman load -qi A/$FILENAME 2>/dev/null | awk '{ print $$NF }')
+        podman build -t a --build-arg "image=$a_sha" .
+        a_mount=$(podman image mount a)
 
-        ./.github/workflows/generate_diff.sh ${{ matrix.flavor }}-${{ matrix.arch }}
+        b_sha=$(podman load -qi B/$FILENAME 2>/dev/null | awk '{ print $$NF }')
+        podman build -t b --build-arg "image=$b_sha" .
+        b_mount=$(podman image mount b)
+
+        depth=$(echo "$a_mount" | tr -cd '/' | wc -c)
+
+        ./.github/workflows/generate_diff.sh -oci ${{ matrix.flavor }}-${{ matrix.arch }} "$a_mount" "$b_mount" "$depth"
     - name: Upload diff data
       if: always()
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2

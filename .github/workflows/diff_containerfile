@@ -1,0 +1,4 @@
+ARG image
+
+FROM $image
+CMD [ "" ]
