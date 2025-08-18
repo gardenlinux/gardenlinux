@@ -1,6 +1,5 @@
 import pytest
 import os
-from plugins.file_content import is_line_in_file
 
 forbidden_config_values = [ ("/etc/cloud/cloud.cfg", "ntp"),
              ("/etc/cloud/cloud.cfg", "resizefs"),
@@ -18,8 +17,9 @@ vmware_required_files = [
 @pytest.mark.parametrize("filename,content", forbidden_config_values)
 def test_config_for_forbidden_value(filename: str, content: str):
     assert os.path.isfile(filename), "File does not exist"
-    assert not is_line_in_file(filename, content), (
-            f"Found {content} in {filename} which is not expected." )
+    with open(filename, 'r') as file:
+        assert not content in file.read(), (
+                f"Found {content} in {filename} which is not expected." )
 
 @pytest.mark.feature("vmware")
 @pytest.mark.parametrize("file_to_check", vmware_required_files)
