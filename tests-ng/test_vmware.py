@@ -1,6 +1,6 @@
 import pytest
 import os
-from plugins.file_content import file_content
+from plugins.file_content import check_val_in_file
 
 val_to_check = [ ("/etc/cloud/cloud.cfg", "ntp"),
              ("/etc/cloud/cloud.cfg", "resizefs"),
