@@ -2,11 +2,10 @@ import pytest
 import os
 from plugins.file_content import file_content
 
-file = [ "/etc/cloud/cloud.cfg" ] 
-args = [ "ntp",
-         "resizefs",
-         "growpart",
-        ]
+val_to_check = [ ("/etc/cloud/cloud.cfg", "ntp"),
+             ("/etc/cloud/cloud.cfg", "resizefs"),
+             ("/etc/cloud/cloud.cfg", "growpart") ] 
+
 vmware_files = [
         "/usr/bin/dscheck_VMwareGuestInfo",
         "/usr/lib/python3/dist-packages/cloudinit/sources/DataSourceVMwareGuestInfo.py",
@@ -16,17 +15,15 @@ vmware_files = [
     ]
 
 @pytest.mark.feature("vmware")
-@pytest.mark.parametrize("filename", file)
-@pytest.mark.parametrize("content", args)
+@pytest.mark.parametrize("filename,content", val_to_check)
 
 def test_file_content(filename: str, content: str):
-    if os.path.isfile(filename):
-        if (file_content(filename, content)):
-            assert False, f"Found {content} in {filename} which is not expected."
-    else:
-        assert False, "File does not exist"
+    assert os.path.isfile(filename), "File does not exist"
+    assert not check_val_in_file(filename, content), (
+            f"Found {content} in {filename} which is not expected." )
 
-@pytest.mark.parametrize("files_to_check", vmware_files)
+@pytest.mark.parametrize("file_to_check", vmware_files)
 
-def test_check_file(files_to_check: str):
-    assert os.path.exists(files_to_check), (f"File {files_to_check} could not be found.")
+def test_check_file(file_to_check: str):
+    assert os.path.exists(file_to_check), (
+            f"File {file_to_check} could not be found." )
