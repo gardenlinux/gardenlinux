@@ -181,21 +181,13 @@ jobs:
       run: |
         FILENAME=$(echo "${{ matrix.flavor }}-${{ matrix.arch }}.oci" | sed -E "s/bare-//")
 
-        cp ./.github/workflows/diff_containerfile Containerfile
-        
-
-        a_sha=$(podman load -qi A/$FILENAME 2>/dev/null | awk '{ print $NF }')
-        podman build -t a --build-arg "image=$a_sha" .
-        podman unshare
-        a_mount=$(podman image mount a)
-
-        b_sha=$(podman load -qi B/$FILENAME 2>/dev/null | awk '{ print $NF }')
-        podman build -t b --build-arg "image=$b_sha" .
-        b_mount=$(podman image mount b)
-
-        depth=$(echo "$a_mount" | tr -cd '/' | wc -c)
-
-        ./.github/workflows/generate_diff.sh -oci ${{ matrix.flavor }}-${{ matrix.arch }} "$a_mount" "$b_mount" "$depth"
+        podman unshare /bin/bash -c '\
+        a_sha=$(podman load -qi A/$FILENAME 2>/dev/null | awk '\''{ print $NF }'\'');\
+        a_mount=$(podman image mount "$a_sha");\
+        b_sha=$(podman load -qi B/$FILENAME 2>/dev/null | awk '\''{ print $NF }'\'');\
+        b_mount=$(podman image mount "$b_sha");\
+        depth=$(echo "$a_mount" | tr -cd '\''/'\'' | wc -c);\
+        ./.github/workflows/generate_diff.sh -oci ${{ matrix.flavor }}-${{ matrix.arch }} "$a_mount" "$b_mount" "$depth"'
     - name: Upload diff data
       if: always()
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2

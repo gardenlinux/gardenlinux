@@ -23,8 +23,9 @@ fi
 sedcommands=()
 
 if [ ! ${#whitelist[@]} -eq 0 ]; then
-    # Add -E flag for regex only if whitelist is not empty, as 'sed' is a NOP while 'sed -E' fails
-    sedcommands+=("-E")
+    sedcommands+=("sed -E")
+else 
+    sedcommands+=("cat")
 fi
 
 for file in "${whitelist[@]}"; do
@@ -38,7 +39,7 @@ if ! cmp "A/$basefile_a" "B/$basefile_b" > /dev/null; then
     files=$(diff -qrN "$unpacked_a" "$unpacked_b" 2> /dev/null \
     | grep differ \
     | perl -0777 -pe "s/(?:[^\/\n]*\/){$depth}([^\s]*)[^\n]*/\1/g" \
-    | sed "${sedcommands[@]}" || true)
+    | "${sedcommands[@]}" || true)
 
     echo "$files" > "$result"
 
