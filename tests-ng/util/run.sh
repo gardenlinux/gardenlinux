@@ -3,7 +3,9 @@
 set -eufo pipefail
 
 cloud=
+
 cloud_args=()
+qemu_args=()
 
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -11,8 +13,18 @@ while [ $# -gt 0 ]; do
 		cloud="$2"
 		shift 2
 		;;
+    --ssh)
+		qemu_args+=("$1")
+		shift
+		;;        
 	--skip-cleanup)
 		cloud_args+=("$1")
+		qemu_args+=("$1")
+		shift
+		;;
+	--skip-tests)
+		cloud_args+=("$1")
+		qemu_args+=("$1")
 		shift
 		;;
 	*)
@@ -46,7 +58,7 @@ else
 		./util/run_chroot.sh .build "$artifact"
 		;;
 	raw)
-		./util/run_qemu.sh .build "$artifact"
+		./util/run_qemu.sh "${qemu_args[@]}" .build "$artifact"
 		;;
 	*)
 		echo "artifact type $type not supported" >&2
