@@ -180,7 +180,9 @@ The build system creates several artifacts:
 
 - **`.build/runtime.tar.gz`**: Python runtime environment with dependencies
 - **`.build/dist.tar.gz`**: Test framework and test files
-- **`.build/dist.ext2`**: Ext2 filesystem image for mounting in VMs
+- **`.build/dist.ext2.raw`**: Raw ext2 filesystem image for mounting in VMs
+- **`.build/dist.ext2.raw.tar.gz`**: Compressed tar file including [`disk.raw`](https://cloud.google.com/compute/docs/import/import-existing-image) Raw ext2 filesystem image to import to GCP
+- **`.build/dist.vhd`**: VHD filesystem image for import in Azure
 - **`.build/edk2-*`**: EDK2 firmware files for QEMU boot
 
 ### Build Process
