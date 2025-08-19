@@ -52,3 +52,6 @@ rm "${output/dist.ext2.raw/disk.raw}"
 
 # Azure needs a vhd file with specific parameters and with a specific aligned size
 qemu-img convert -f raw -O vpc -o subformat=fixed,force_size "$output" "${output/.raw/.vhd}"
+
+# Ali needs a qcow2 file
+qemu-img convert -f raw -O qcow "$output" "${output/.raw/.qcow2}"
