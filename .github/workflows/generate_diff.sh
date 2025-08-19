@@ -6,6 +6,7 @@ whitelist=()
 
 nightly_whitelist=("etc/apt/sources\.list\.d/gardenlinux\.sources"
                    "etc/os-release"
+                   "etc/shadow"
                    "etc/update-motd\.d/05-logo"
                    "var/lib/apt/lists/packages\.gardenlinux\.io_gardenlinux_dists_[0-9]*\.[0-9]*_.*"
                    "var/lib/apt/lists/packages\.gardenlinux\.io_gardenlinux_dists_[0-9]*\.[0-9]*_main_binary-(arm64|amd64)_Packages"
