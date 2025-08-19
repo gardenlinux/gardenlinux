@@ -12,16 +12,22 @@ fi
 
 while [ $# -gt 0 ]; do
 	case "$1" in
-		--containerize) containerize=1; shift ;;
-		--no-containerize) containerize=0; shift ;;
-		*) break ;;
+	--containerize)
+		containerize=1
+		shift
+		;;
+	--no-containerize)
+		containerize=0
+		shift
+		;;
+	*) break ;;
 	esac
 done
 
 test_dist_dir="$1"
 rootfs_tar="$2"
 
-if (( containerize )); then
+if ((containerize)); then
 	dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")"/../..)"
 	container_image="$("$dir/build" --print-container-image)"
 	exec podman run -q --rm \
@@ -33,7 +39,7 @@ fi
 
 tmpdir=
 
-cleanup () {
+cleanup() {
 	[ -z "$tmpdir" ] || [ ! -e "$tmpdir/chroot" ] || umount -l "$tmpdir/chroot" || rmdir "$tmpdir/chroot"
 	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
 	tmpdir=
@@ -47,7 +53,7 @@ echo "⚙️  creating chroot for test run"
 mkdir "$tmpdir/chroot"
 mount -t tmpfs -o mode=0755 none "$tmpdir/chroot"
 
-tar --extract --xattrs --xattrs-include 'security.*' --directory "$tmpdir/chroot" < "$rootfs_tar"
+tar --extract --xattrs --xattrs-include 'security.*' --directory "$tmpdir/chroot" <"$rootfs_tar"
 
 mount --rbind --make-rprivate /proc "$tmpdir/chroot/proc"
 mount --rbind --make-rprivate /sys "$tmpdir/chroot/sys"
@@ -55,7 +61,7 @@ mount --rbind --make-rprivate /dev "$tmpdir/chroot/dev"
 
 echo "⚙️  setting up test framework"
 
-mkdir "$tmpdir/chroot/run/gardenlinux_tests"
-gzip -d < "$test_dist_dir/dist.tar.gz" | tar --extract --directory "$tmpdir/chroot/run/gardenlinux_tests"
+mkdir "$tmpdir/chroot/run/gardenlinux-tests"
+gzip -d <"$test_dist_dir/dist.tar.gz" | tar --extract --directory "$tmpdir/chroot/run/gardenlinux-tests"
 
-env -i /sbin/chroot "$tmpdir/chroot" /bin/sh -c 'cd /run/gardenlinux_tests && ./run_tests --allow-system-modifications'
+env -i /sbin/chroot "$tmpdir/chroot" /bin/sh -c 'cd /run/gardenlinux-tests && ./run_tests --allow-system-modifications'

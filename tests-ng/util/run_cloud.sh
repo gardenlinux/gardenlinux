@@ -2,8 +2,9 @@
 
 set -eufo pipefail
 
-skip_cleanup=0
 cloud=
+skip_cleanup=0
+skip_tests=0
 
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -15,6 +16,10 @@ while [ $# -gt 0 ]; do
 		skip_cleanup=1
 		shift
 		;;
+    --skip-tests)
+		skip_tests=1
+		shift
+		;;        
 	*)
 		break
 		;;
@@ -80,6 +85,12 @@ image_requirements = {
 }
 
 cloud_provider = "$cloud"
+
+provider_vars = {
+    aws = {
+        ssh_user = "admin"
+    }
+}
 EOF
 
 echo "⚙️  setting up cloud resources via OpenTofu"
@@ -100,4 +111,7 @@ until "$login_cloud_sh" "$image_basename" true 2>/dev/null; do
 	sleep 1
 done
 
-"$login_cloud_sh" "$image_basename" sudo /var/tmp/gardenlinux-tests/run_tests --system-booted --expected-users $ssh_user
+if ! ((skip_tests)); then
+	test_args=
+	"$login_cloud_sh" "$image_basename" sudo /run/gardenlinux-tests/run_tests --system-booted --expected-users "$ssh_user" "$test_args"
+fi
