@@ -83,8 +83,9 @@ def test_users_have_no_authorized_keys():
                 f"user '{entry.pw_name}' should not have an authorized_keys file: {key_path}"
             )
 
+
 @pytest.mark.booted
-@pytest.mark.mutating_test
+@pytest.mark.modify
 @pytest.mark.root
 @pytest.mark.feature("ssh")
 def test_ssh_unit_running(systemd: Systemd):

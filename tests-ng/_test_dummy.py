@@ -41,7 +41,8 @@ def test_sysctl(sysctl):
     assert sysctl["net.ipv4.conf.all.rp_filter"] != 1
     assert sysctl["net.ipv4.conf.default.rp_filter"] != 1
 
-@pytest.mark.mutating_test
+
+@pytest.mark.modify
 def test_modify_state(shell):
     shell("echo hello > /tmp/hello.txt")
     print(shell("ls -l /tmp/hello.txt", capture_output=True))
