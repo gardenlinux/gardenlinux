@@ -1,6 +1,6 @@
 name: Call check build reproducibility
 
-# To be able to test actions on a different branch, change to workflow_dispatch after debugging is done
+# To be able to test actions on a different branch than main
 on:
   push:
     branches:

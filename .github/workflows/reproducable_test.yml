@@ -13,10 +13,10 @@ on:
         required: true
         default: false
       run_number1:
-        desciption: "First run number (#..., only required if checkbox is set)"
+        description: "First run number (#..., only required if checkbox is set)"
         type: string
       run_number2:
-        desciption: "Second run number (#..., only required if checkbox is set)"
+        description: "Second run number (#..., only required if checkbox is set)"
         type: string
 
 jobs:
