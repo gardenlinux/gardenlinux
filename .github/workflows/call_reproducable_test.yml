@@ -11,6 +11,7 @@ jobs:
     uses: ./.github/workflows/reproducable_test.yml
     permissions:
       actions: read
+      id-token: write
     with:
       nightly: true
       run_number1: "2315"
