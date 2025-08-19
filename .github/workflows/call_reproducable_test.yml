@@ -1,0 +1,17 @@
+name: Call check build reproducibility
+
+# To be able to test actions on a different branch, change to workflow_dispatch after debugging is done
+on:
+  push:
+    branches:
+      - "feat/check-reproducibility"
+
+jobs:
+  call:
+    uses: ./.github/workflows/reproducable_test.yml
+    permissions:
+      actions: read
+    with:
+      nightly: true
+      run_number1: "2315"
+      run_number2: "2316"
