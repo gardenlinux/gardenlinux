@@ -93,7 +93,7 @@ pull-platform-test: pull-platform-test-base $(addprefix pull-platform-test-,$(PL
 # build-platform-test-base		Build the platform test base image
 build-platform-test-base:
 	$(call copy_files, platform-test-base)
-	$(call build_image, $(GL_REGISTRY), gardenlinux/platform-test-base, latest, platform-test-base, --build-arg GL_VERSION=nightly --pull=missing )
+	$(call build_image, $(GL_REGISTRY), gardenlinux/platform-test-base, latest, platform-test-base, --build-arg GITHUB_TOKEN=$(GITHUB_TOKEN) --build-arg GL_VERSION=nightly --pull=missing )
 	$(call clean_files, platform-test-base)
 
 # build-platform-test			Build all platform test images
@@ -109,7 +109,7 @@ $(foreach platform,$(PLATFORMS),\
     build-platform-test-$(platform): ; \
 		$(call copy_files, platform-test/$(platform)) ; \
 		$(call pull_image, nightly, nightly) ; \
-		$(call build_image, $(GL_REGISTRY), gardenlinux/platform-test-$(platform), latest, platform-test/$(platform), --build-arg GL_VERSION=latest --pull=never ) ; \
+		$(call build_image, $(GL_REGISTRY), gardenlinux/platform-test-$(platform), latest, platform-test/$(platform), --build-arg GITHUB_TOKEN=$(GITHUB_TOKEN) --build-arg GL_VERSION=latest --pull=never ) ; \
 		$(call clean_files, platform-test/$(platform)) \
   ) \
 )

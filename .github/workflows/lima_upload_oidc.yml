@@ -99,6 +99,7 @@ jobs:
         containerd:
           system: false
           user: false
+        mountTypesUnsupported: [9p]
         EOF
         else
           cat <<EOF > gardenlinux-${VERSION}.yaml
@@ -114,6 +115,7 @@ jobs:
         containerd:
           system: false
           user: false
+        mountTypesUnsupported: [9p]
         EOF
         fi
 
