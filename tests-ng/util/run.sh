@@ -5,7 +5,6 @@ set -x
 
 cloud=
 cloud_image=0
-arch=
 cloud_args=()
 
 while [ $# -gt 0 ]; do
@@ -18,9 +17,6 @@ while [ $# -gt 0 ]; do
 		cloud_image=1
 		shift
 		;;
-	--arch)
-		arch="$2"
-		shift 2
 		;;
 	--skip-cleanup)
 		cloud_args+=("$1")
@@ -48,25 +44,20 @@ basename="$(basename "$artifact")"
 extension="$(grep -E -o '(\.[a-z][a-zA-Z0-9_\-]*)*$' <<<"$basename")"
 cname="${basename%"$extension"}"
 type="${extension#.}"
-[ -n "$arch" ] || arch="$(awk -F '-' '{ print $(NF-2) }' <<<"$cname")"
 
-if [ "$arch" = "amd64" ]; then
-	arch="x86_64"
-fi
-
-[ -n "$cname" ] && [ -n "$type" ] && [ -n "$arch" ]
+[ -n "$cname" ] && [ -n "$type" ]
 
 ./util/build.makefile
 
 if [ -n "$cloud" ]; then
 	if ((cloud_image)); then
-		./util/run_cloud.sh --cloud "$cloud" --cloud-image --arch "$arch" "${cloud_args[@]}" .build "$artifact"
+		./util/run_cloud.sh --cloud "$cloud" --cloud-image "${cloud_args[@]}" .build "$artifact"
 	else
 		if [ "$type" != raw ]; then
 			echo "cloud run only supported with raw file" >&2
 			exit 1
 		fi
-		./util/run_cloud.sh --cloud "$cloud" --arch "$arch" "${cloud_args[@]}" .build "$artifact"
+		./util/run_cloud.sh --cloud "$cloud" "${cloud_args[@]}" .build "$artifact"
 	fi
 else
 	case "$type" in
@@ -74,7 +65,7 @@ else
 		./util/run_chroot.sh .build "$artifact"
 		;;
 	raw)
-		./util/run_qemu.sh --arch "$arch" .build "$artifact"
+		./util/run_qemu.sh "${qemu_args[@]}" .build "$artifact"
 		;;
 	*)
 		echo "artifact type $type not supported" >&2

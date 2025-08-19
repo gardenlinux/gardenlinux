@@ -12,28 +12,28 @@ map_arch () {
 	echo "$arg"
 }
 
-arch=
 
 while [ $# -gt 0 ]; do
 	case "$1" in
-		--arch)
-			arch="$(map_arch "$2")"
-			shift 2
-			;;
 		*)
 			break
 			;;
 	esac
 done
 
-[ -n "$arch" ]
-
 test_dist_dir="$1"
 image="$2"
 
+# arch, uefi, secureboot, tpm2 are set in $image.requirements
+image_requirements=${image//.raw/.requirements}
+source "$image_requirements"
+
+[ -n "$arch" ]
+arch="$(map_arch "$arch")"
+
 tmpdir=
 
-cleanup () {
+cleanup() {
 	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
 	tmpdir=
 }

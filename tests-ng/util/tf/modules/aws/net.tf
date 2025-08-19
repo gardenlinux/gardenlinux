@@ -12,7 +12,7 @@ resource "aws_vpc" "net" {
 
 resource "aws_subnet" "subnet" {
   vpc_id     = aws_vpc.net.id
-  cidr_block = var.provider_vars.public_subnet_cidr
+  cidr_block = var.provider_vars.subnet_cidr
 
   tags = merge(
     local.labels,

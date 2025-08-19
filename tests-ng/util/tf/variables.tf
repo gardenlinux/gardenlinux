@@ -41,8 +41,8 @@ variable "image_requirements" {
   })
 
   validation {
-    condition     = contains(["x86_64", "arm64"], var.image_requirements.arch)
-    error_message = "arch must be x86_64 or arm64"
+    condition     = contains(["amd64", "arm64"], var.image_requirements.arch)
+    error_message = "arch must be amd64 or arm64"
   }
 }
 
@@ -50,8 +50,8 @@ variable "cloud_provider" {
   description = "Which cloud provider to target"
   type        = string
   validation {
-    condition     = contains(["aws", "gcp", "azure"], var.cloud_provider)
-    error_message = "Must be one of aws, gcp, or azure."
+    condition     = contains(["aws", "gcp", "azure", "ali"], var.cloud_provider)
+    error_message = "Must be one of aws, gcp, azure, or ali."
   }
 }
 
