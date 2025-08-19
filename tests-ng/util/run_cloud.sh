@@ -133,6 +133,9 @@ provider_vars = {
     aws = {
         ssh_user = "admin"
     }
+    gcp = {
+      gcp_project_id = "$GCP_PROJECT_ID"
+    }
 }
 EOF
 
