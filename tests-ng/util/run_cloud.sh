@@ -98,7 +98,7 @@ fi
 
 cat >"${tf_dir}/terraform.tfvars" <<EOF
 root_disk_path        = "$root_disk_path_var"
-test_disk_path        = "$(realpath -- "$test_dist_dir/dist.ext2")"
+test_disk_path        = "$(realpath -- "$test_dist_dir/dist.raw")"
 user_data_script_path = "$user_data_script"
 existing_root_disk    = "$existing_root_disk_var"
 use_scp             = ${use_scp_tf}

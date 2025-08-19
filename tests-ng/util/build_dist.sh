@@ -8,7 +8,7 @@ fi
 
 tmpdir=
 
-cleanup () {
+cleanup() {
 	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
 	tmpdir=
 }
@@ -20,14 +20,14 @@ runtime="$1"
 output="$2"
 
 mkdir -p "$tmpdir/dist/runtime"
-gzip -d < "$runtime" | tar -x -C "$tmpdir/dist/runtime"
+gzip -d <"$runtime" | tar -x -C "$tmpdir/dist/runtime"
 
 set +f
 
 mkdir -p "$tmpdir/dist/tests"
 cp -r -t "$tmpdir/dist/tests" conftest.py plugins test_*.py
 
-cat > "$tmpdir/dist/run_tests" <<'EOF'
+cat >"$tmpdir/dist/run_tests" <<'EOF'
 #!/bin/sh
 
 set -e
@@ -43,4 +43,4 @@ COLUMNS=120 python -m pytest -rA --tb=short --color=yes "$@"
 EOF
 chmod +x "$tmpdir/dist/run_tests"
 
-tar -c -C "$tmpdir/dist" . | gzip > "$output"
+tar -c -C "$tmpdir/dist" . | gzip >"$output"

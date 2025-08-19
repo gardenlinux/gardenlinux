@@ -110,7 +110,7 @@ qemu_opts=(
 	-drive if=pflash,unit=0,format=raw,readonly=on,file="$tmpdir/edk2-qemu-code"
 	-drive if=pflash,unit=1,format=raw,file="$tmpdir/edk2-qemu-vars"
 	-drive if=virtio,format=qcow2,file="$tmpdir/disk.qcow"
-	-drive if=virtio,format=raw,readonly=on,file="$test_dist_dir/dist.ext2"
+	-drive if=virtio,format=raw,readonly=on,file="$test_dist_dir/dist.raw"
 	-fw_cfg name=opt/gardenlinux/config_script,file="$tmpdir/fw_cfg-script.sh"
 	-chardev file,id=test_output,path="$tmpdir/serial.log"
 	-device virtio-serial
