@@ -9,6 +9,14 @@ containerd:
   system: false
   user: false
 
+# Configure user for predictable username and uid (>= 1000)
+user:
+  name: user
+  comment: user
+  uid: 1001
+  home: /home/user
+  shell: /bin/bash
+
 provision:
 - mode: system
   script: |
