@@ -3,6 +3,7 @@ locals {
     aws   = "./modules/aws"
     gcp   = "./modules/gcp"
     azure = "./modules/azure"
+    ali   = "./modules/ali"
   }
 }
 
