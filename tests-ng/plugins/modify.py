@@ -3,6 +3,9 @@ from typing import List
 
 run_mutating_tests = False
 
+def allow_system_modifications() -> bool:
+    return run_mutating_tests
+
 
 def pytest_addoption(parser: pytest.Parser):
     parser.addoption(

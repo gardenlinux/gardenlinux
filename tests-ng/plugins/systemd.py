@@ -2,6 +2,7 @@ import re
 import pytest
 from typing import Tuple, Callable, Any
 from .shell import ShellRunner
+from .modify import allow_system_modifications
 
 def _seconds(token: str) -> float:
     if token.endswith("ms"):
@@ -39,6 +40,8 @@ class Systemd:
         return result.stdout.strip() == "active"
 
     def start_unit(self, unit_name: str):
+        if not allow_system_modifications():
+            pytest.skip("starting units is only supported when system state modifications are allowed")
         self._shell(f"systemctl start {unit_name}")
 
 
