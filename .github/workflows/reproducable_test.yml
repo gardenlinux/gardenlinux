@@ -50,14 +50,14 @@ jobs:
     permissions:
       actions: read
     with:
-      run_number: "#2322"
+      run_number: "#2316"
 
   run_number_b:
     uses: ./.github/workflows/nightly_id_by_run_number.yml
     permissions:
       actions: read
     with:
-      run_number: "#2321"
+      run_number: "#2315"
 
   flavors_matrix:
     name: Generate flavors matrix to build
@@ -223,8 +223,8 @@ jobs:
     - name: Compare commit hashes if two nightly builds were used
       if: always() && needs.run_number_a.result == 'success' && needs.run_number_b.result == 'success'
       run: |
-        run_number_a=$(echo "#2322" | sed -E "s/^#//")
-        run_number_b=$(echo "#2321" | sed -E "s/^#//")
+        run_number_a=$(echo "#2316" | sed -E "s/^#//")
+        run_number_b=$(echo "#2315" | sed -E "s/^#//")
         echo -e "$run_number_a,${{ needs.run_number_a.outputs.id }},${{ needs.run_number_a.outputs.commit }};\
         $run_number_b,${{ needs.run_number_b.outputs.id }},${{ needs.run_number_b.outputs.commit }}"\
         > nightly_stats
