@@ -116,6 +116,9 @@ image_requirements = {
 cloud_provider = "$cloud"
 
 provider_vars = {
+  gcp = {
+    gcp_project_id = "$GCP_PROJECT_ID"
+  }
   ali = {
     ssh_user = "admin"
   }
