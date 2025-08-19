@@ -4,14 +4,14 @@ set -euo pipefail
 
 whitelist=()
 
-nightly_whitelist=("etc/apt/sources.list.d/gardenlinux.sources"
+nightly_whitelist=("etc/apt/sources\.list\.d/gardenlinux\.sources"
                    "etc/os-release"
-                   "etc/update-motd.d/05-logo"
-                   "var/lib/apt/lists/packages.gardenlinux.io_gardenlinux_dists_[0-9]*.[0-9]*_.*"
-                   "var/lib/apt/lists/packages.gardenlinux.io_gardenlinux_dists_[0-9]*.[0-9]*_main_binary-(arm64|amd64)_Packages"
-                   "efi/loader/entries/Default-[0-9]*.[0-9]*.[0-9]*-(cloud-)?(arm64|amd64).conf"
-                   "efi/Default/[0-9]*.[0-9]*.[0-9]*-(cloud-)?(arm64|amd64)/initrd"
-                   "boot/initrd.img-[0-9]*.[0-9]*.[0-9]*-(cloud-)?(arm64|amd64)")
+                   "etc/update-motd\.d/05-logo"
+                   "var/lib/apt/lists/packages\.gardenlinux\.io_gardenlinux_dists_[0-9]*\.[0-9]*_.*"
+                   "var/lib/apt/lists/packages\.gardenlinux\.io_gardenlinux_dists_[0-9]*\.[0-9]*_main_binary-(arm64|amd64)_Packages"
+                   "efi/loader/entries/Default-[0-9]*\.[0-9]*\.[0-9]*-(cloud-)?(arm64|amd64)\.conf"
+                   "efi/Default/[0-9]*\.[0-9]*\.[0-9]*-(cloud-)?(arm64|amd64)/initrd"
+                   "boot/initrd\.img-[0-9]*\.[0-9]*\.[0-9]*-(cloud-)?(arm64|amd64)")
 
 nightly=false
 oci=false
@@ -32,7 +32,7 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
-if oci; then
+if $oci; then
     basefile_a="${1/bare-/}.oci"
     basefile_b="${1/bare-/}.oci"
     unpacked_a="$2"
@@ -60,7 +60,7 @@ fi
 
 for file in "${whitelist[@]}"; do
     sedcommands+=("-e")
-    sedcommands+=("\|$file|d")
+    sedcommands+=("\;$file;d")
 done
 
 if ! cmp "A/$basefile_a" "B/$basefile_b" > /dev/null; then
@@ -69,7 +69,7 @@ if ! cmp "A/$basefile_a" "B/$basefile_b" > /dev/null; then
     files=$(diff -qrN "$unpacked_a" "$unpacked_b" 2> /dev/null \
     | grep differ \
     | perl -0777 -pe "s/(?:[^\/\n]*\/){$depth}([^\s]*)[^\n]*/\1/g" \
-    | "${sedcommands[@]}" || true)
+    | ${sedcommands[@]} || true)
 
     echo "$files" > "$1-diff"
 
