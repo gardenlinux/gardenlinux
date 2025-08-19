@@ -116,7 +116,7 @@ fi
 
 cat >"${tf_dir}/$image_name.tfvars" <<EOF
 root_disk_path        = "$root_disk_path_var"
-test_disk_path        = "$(realpath -- "$test_dist_dir/dist.raw")"
+test_disk_path        = "$(realpath -- "$test_dist_dir/dist.ext2.raw")"
 user_data_script_path = "$user_data_script"
 existing_root_disk    = "$existing_root_disk_var"
 
