@@ -8,7 +8,7 @@ MAKEFLAGS += --no-builtin-rules
 .PHONY: dist clean
 
 all: dist edk2
-dist: .build/dist.tar.gz .build/dist.ext2
+dist: .build/dist.tar.gz .build/dist.raw
 edk2: .build/edk2-qemu-x86_64-code .build/edk2-qemu-x86_64-vars .build/edk2-qemu-aarch64-code .build/edk2-qemu-aarch64-vars
 
 clean:
@@ -21,7 +21,7 @@ clean:
 	echo '🛠️  building test framework distribution'
 	./$< $(word 2,$^) $@
 
-.build/dist.ext2: util/build_ext2.sh .build/dist.tar.gz | .build
+.build/dist.raw: util/build_raw.sh .build/dist.tar.gz | .build
 	echo '🛠️  bundling test framework as disk image'
 	./$^ $@
 
