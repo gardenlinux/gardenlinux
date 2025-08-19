@@ -3,39 +3,42 @@
 set -eufo pipefail
 
 skip_cleanup=0
-arch=
 cloud=
 
 while [ $# -gt 0 ]; do
 	case "$1" in
-		--arch)
-			arch="$2"
-			shift 2
-			;;
-		--cloud)
-			cloud="$2"
-			shift 2
-			;;
-		--skip-cleanup)
-			skip_cleanup=1
-			shift
-			;;
-		*)
-			break
-			;;
+	--cloud)
+		cloud="$2"
+		shift 2
+		;;
+	--skip-cleanup)
+		skip_cleanup=1
+		shift
+		;;
+	*)
+		break
+		;;
 	esac
 done
-
-[ -n "$arch" ]
-[ -n "$cloud" ]
 
 test_dist_dir="$1"
 image="$2"
 image_basename="$(basename -- "$image")"
 image_name=${image_basename/.*/}
-
 user_data_script=
 tf_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/tf")"
+
+# arch, uefi, secureboot, tpm2 are set in $image.requirements
+arch=
+uefi=
+secureboot=
+tpm2=
+image_requirements=${image//.raw/.requirements}
+# shellcheck source=/dev/null
+source "$image_requirements"
+
+[ -n "$arch" ]
+[ -n "$cloud" ]
 
 cleanup() {
 	[ -z "$user_data_script" ] || rm "$user_data_script"
@@ -71,6 +74,9 @@ user_data_script_path = "$user_data_script"
 
 image_requirements = {
   arch = "$arch"
+  uefi = "$uefi"
+  secureboot = "$secureboot"
+  tpm2 = "$tpm2"
 }
 
 cloud_provider = "$cloud"
@@ -84,13 +90,14 @@ echo "⚙️  setting up cloud resources via OpenTofu"
 	tofu apply -var-file "$image_name.tfvars" --auto-approve
 )
 
-vm_ip="$(cd "$tf_dir" && tofu output --raw vm_ip)"
+vm_ip="$(cd "${tf_dir}" && tofu output --raw vm_ip)"
+ssh_user="$(cd "${tf_dir}" && tofu output --raw ssh_user)"
+login_cloud_sh="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/login_cloud.sh")"
 
 echo -n "⚙️  waiting for VM ($vm_ip) to accept ssh connections"
-until ssh -o ConnectTimeout=3 -o BatchMode=yes -o StrictHostKeyChecking=no "admin@$vm_ip" true 2>/dev/null; do
+until "$login_cloud_sh" "$image_basename" true 2>/dev/null; do
 	echo -n .
 	sleep 1
 done
 
-echo
-ssh -o ConnectTimeout=3 -o BatchMode=yes -o StrictHostKeyChecking=no "admin@$vm_ip" sudo /run/gardenlinux-tests/run_tests --system-booted --expected-users admin
+"$login_cloud_sh" "$image_basename" sudo /var/tmp/gardenlinux-tests/run_tests --system-booted --expected-users $ssh_user

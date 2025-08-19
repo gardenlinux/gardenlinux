@@ -43,3 +43,7 @@ output "vm_ip" {
   value       = aws_instance.vm.public_ip
   description = "Public IPv4 of the VM"
 }
+
+output "ssh_user" {
+  value       = var.provider_vars.ssh_user
+}
