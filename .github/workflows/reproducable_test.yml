@@ -11,6 +11,7 @@ on:
 jobs:
   build_a:
     name: Build A
+    if: always() && false
     uses: ./.github/workflows/build.yml
     permissions:
       id-token: write
@@ -28,6 +29,7 @@ jobs:
   
   build_b:
     name: Build B
+    if: always() && false
     uses: ./.github/workflows/build.yml
     permissions:
       id-token: write
@@ -45,7 +47,6 @@ jobs:
 
   run_number_a:
     uses: ./.github/workflows/nightly_id_by_run_number.yml
-    if: always() && false
     permissions:
       actions: read
     with:
@@ -53,7 +54,6 @@ jobs:
 
   run_number_b:
     uses: ./.github/workflows/nightly_id_by_run_number.yml
-    if: always() && false
     permissions:
       actions: read
     with:
