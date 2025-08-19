@@ -18,6 +18,15 @@ on:
       run_number2:
         description: "Second run number (#..., only required if checkbox is set)"
         type: string
+    secrets:
+      aws_region:
+        required: false
+      aws_kms_role:
+        required: false
+      aws_oidc_session:
+        required: false
+      secureboot_db_kms_arn:
+        required: false
 
 jobs:
   build_a:
@@ -32,6 +41,7 @@ jobs:
       platform_test_tag: latest
       fail_fast: true
       prefix: a-
+    secrets: inherit
   
   build_b:
     name: Build B
@@ -45,6 +55,7 @@ jobs:
       platform_test_tag: latest
       fail_fast: true
       prefix: b-
+    secrets: inherit
 
   run_number_a:
     uses: ./.github/workflows/nightly_id_by_run_number.yml
