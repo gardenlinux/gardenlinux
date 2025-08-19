@@ -129,7 +129,7 @@ jobs:
         mkdir "B/unpacked"
         tar -C B/unpacked -xf B/$cname_b.tar
 
-        ./.github/workflows/generate_diff.sh ${{ matrix.flavor }}-${{ matrix.arch }} $cname_a $cname_b
+        ./.github/workflows/generate_diff.sh --nightly ${{ matrix.flavor }}-${{ matrix.arch }} $cname_a $cname_b
     - name: Upload diff data
       if: always()
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
@@ -195,7 +195,7 @@ jobs:
         depth=$(echo "$a_mount" | tr -cd '\''/'\'' | wc -c);\
         depth=$(($depth + 1))
 
-        ./.github/workflows/generate_diff.sh -oci ${{ matrix.flavor }}-${{ matrix.arch }} "$a_mount" "$b_mount" "$depth"'
+        ./.github/workflows/generate_diff.sh --oci --nightly ${{ matrix.flavor }}-${{ matrix.arch }} "$a_mount" "$b_mount" "$depth"'
     - name: Upload diff data
       if: always()
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2

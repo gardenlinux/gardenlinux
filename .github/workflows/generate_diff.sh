@@ -4,20 +4,50 @@ set -euo pipefail
 
 whitelist=()
 
-if [ "$1" = "-oci" ]; then
-    basefile_a="${2/bare-/}.oci"
-    basefile_b="${2/bare-/}.oci"
-    unpacked_a="$3"
-    unpacked_b="$4"
-    depth=$5
-    result="$2-diff"
+nightly_whitelist=("etc/apt/sources.list.d/gardenlinux.sources"
+                   "etc/os-release"
+                   "etc/update-motd.d/05-logo"
+                   "var/lib/apt/lists/packages.gardenlinux.io_gardenlinux_dists_[0-9]*.[0-9]*_.*"
+                   "var/lib/apt/lists/packages.gardenlinux.io_gardenlinux_dists_[0-9]*.[0-9]*_main_binary-(arm64|amd64)_Packages"
+                   "efi/loader/entries/Default-[0-9]*.[0-9]*.[0-9]*-(cloud-)?(arm64|amd64).conf"
+                   "efi/Default/[0-9]*.[0-9]*.[0-9]*-(cloud-)?(arm64|amd64)/initrd"
+                   "boot/initrd.img-[0-9]*.[0-9]*.[0-9]*-(cloud-)?(arm64|amd64)")
+
+nightly=false
+oci=false
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		--oci)
+			oci=true
+			shift
+			;;
+		--nightly)
+			nightly=true
+			shift
+			;;
+		*)
+			break
+			;;
+	esac
+done
+
+if oci; then
+    basefile_a="${1/bare-/}.oci"
+    basefile_b="${1/bare-/}.oci"
+    unpacked_a="$2"
+    unpacked_b="$3"
+    depth=$4
 else
     basefile_a="$2.tar"
     basefile_b="$3.tar"
     unpacked_a="./A/unpacked"
     unpacked_b="./B/unpacked"
     depth="3"
-    result="$1-diff"
+fi
+
+if $nightly; then
+        whitelist=("${whitelist[@]}" "${nightly_whitelist[@]}")
 fi
 
 sedcommands=()
@@ -41,7 +71,7 @@ if ! cmp "A/$basefile_a" "B/$basefile_b" > /dev/null; then
     | perl -0777 -pe "s/(?:[^\/\n]*\/){$depth}([^\s]*)[^\n]*/\1/g" \
     | "${sedcommands[@]}" || true)
 
-    echo "$files" > "$result"
+    echo "$files" > "$1-diff"
 
     if [[ $files = '' ]]; then
          # All differences are whitelisted
@@ -51,7 +81,7 @@ if ! cmp "A/$basefile_a" "B/$basefile_b" > /dev/null; then
  	exit 1
 else
     # Builds are the same
-    echo "" > "$result"
+    echo "" > "$1-diff"
 
     exit 0
 fi
