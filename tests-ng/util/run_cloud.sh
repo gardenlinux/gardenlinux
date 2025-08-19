@@ -130,6 +130,9 @@ image_requirements = {
 cloud_provider = "$cloud"
 
 provider_vars = {
+    ali = {
+      ssh_user = "admin"
+    }
     aws = {
         ssh_user = "admin"
     }
