@@ -18,6 +18,15 @@ on:
       run_number2:
         description: "Second run number (#..., only required if checkbox is set)"
         type: string
+    secrets:
+      aws_region:
+        required: false
+      aws_kms_role:
+        required: false
+      aws_oidc_session:
+        required: false
+      secureboot_db_kms_arn:
+        required: false
 
 jobs:
   build_a:
