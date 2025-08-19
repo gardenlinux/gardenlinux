@@ -23,6 +23,10 @@ while [ $# -gt 0 ]; do
 		skip_cleanup=1
 		shift
 		;;
+	--skip-tests)
+		skip_tests=1
+		shift
+		;;
 	--scp)
 		use_scp=1
 		shift
@@ -140,4 +144,7 @@ if ((use_scp)); then
 		$login_cloud_sh "$image_basename" 'cd /var/tmp/gardenlinux-tests && tar -xzf dist.tar.gz'
 	fi
 fi
-"$login_cloud_sh" "$image_basename" sudo /var/tmp/gardenlinux-tests/run_tests --system-booted --expected-users $ssh_user
+if ! ((skip_tests)); then
+	test_args=
+	"$login_cloud_sh" "$image_basename" sudo /var/tmp/gardenlinux-tests/run_tests --system-booted --expected-users $ssh_user "$test_args"
+fi

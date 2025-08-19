@@ -6,6 +6,7 @@ set -x
 cloud=
 cloud_image=0
 cloud_args=()
+qemu_args=()
 
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -17,9 +18,18 @@ while [ $# -gt 0 ]; do
 		cloud_image=1
 		shift
 		;;
+	--ssh)
+		qemu_args+=("$1")
+		shift
 		;;
 	--skip-cleanup)
 		cloud_args+=("$1")
+		qemu_args+=("$1")
+		shift
+		;;
+	--skip-tests)
+		cloud_args+=("$1")
+		qemu_args+=("$1")
 		shift
 		;;
 	--scp)

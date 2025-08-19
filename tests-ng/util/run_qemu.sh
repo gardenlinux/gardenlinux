@@ -2,7 +2,7 @@
 
 set -eufo pipefail
 
-map_arch () {
+map_arch() {
 	local arg="$1"
 	if [ "$arg" = amd64 ]; then
 		arg=x86_64
@@ -12,12 +12,27 @@ map_arch () {
 	echo "$arg"
 }
 
+ssh=0
+skip_cleanup=0
+skip_tests=0
 
 while [ $# -gt 0 ]; do
 	case "$1" in
-		*)
-			break
-			;;
+	--ssh)
+		ssh=1
+		shift
+		;;
+	--skip-cleanup)
+		skip_cleanup=1
+		shift
+		;;
+	--skip-tests)
+		skip_tests=1
+		shift
+		;;
+	*)
+		break
+		;;
 	esac
 done
 
@@ -53,23 +68,41 @@ if [ "$arch" = aarch64 ]; then
 	truncate -s 64M "$tmpdir/edk2-qemu-vars"
 fi
 
-cat > "$tmpdir/fw_cfg-script.sh" << 'EOF'
+cat >"$tmpdir/fw_cfg-script.sh" <<EOF
 #!/usr/bin/env bash
 
 set -eufo pipefail
 
 exec 1>/dev/virtio-ports/test_output
 exec 2>&1
+EOF
 
-trap 'poweroff -f > /dev/null 2>&1' EXIT
+if ((ssh)); then
+	ssh_public_key="$(cat ~/.ssh/id_ed25519.pub)"
+	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
+systemctl stop sshguard
+systemctl enable --now ssh
+useradd -U -m -G wheel -s /bin/bash gardenlinux
+mkdir -p /home/gardenlinux/.ssh
+chmod 700 /home/gardenlinux/.ssh
+echo "$ssh_public_key" >> /home/gardenlinux/.ssh/authorized_keys
+chown -R gardenlinux:gardenlinux /home/gardenlinux/.ssh
+chmod 600 /home/gardenlinux/.ssh/authorized_keys
+EOF
+fi
 
+if !((skip_cleanup)); then
+	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
+trap "poweroff -f > /dev/null 2>&1" EXIT
+EOF
+fi
+
+cat >>"$tmpdir/fw_cfg-script.sh" <<'EOF'
 mkdir /var/tmp/gardenlinux-tests
 mount -o ro /dev/disk/by-label/GL_TESTS /var/tmp/gardenlinux-tests
 
 cd /var/tmp/gardenlinux-tests
 EOF
-
-echo "🚀  starting test VM"
 
 if [ "$arch" = x86_64 ]; then
 	qemu_machine=q35
@@ -94,10 +127,14 @@ if [ "$arch" = "$native_arch" ]; then
 	fi
 fi
 
-if [ "$qemu_accel" != tcg ]; then
-	echo './run_tests --system-booted' >> "$tmpdir/fw_cfg-script.sh"
-else
-	echo './run_tests --system-booted --skip-performance-metrics' >> "$tmpdir/fw_cfg-script.sh"
+if !((skip_tests)); then
+	test_args=
+	if [ "$qemu_accel" == tcg ]; then
+		test_args+=" --skip-performance-metrics"
+	fi
+	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
+./run_tests --system-booted "$test_args"
+EOF
 fi
 
 qemu_opts=(
@@ -118,9 +155,28 @@ qemu_opts=(
 	-chardev socket,id=chrtpm,path="$tmpdir/swtpm.sock"
 	-tpmdev emulator,id=tpm0,chardev=chrtpm
 	-device "$qemu_tpm_dev",tpmdev=tpm0
+	-device virtio-net-pci,netdev=net0
 )
 
+if ((ssh)); then
+	qemu_opts+=(
+		-netdev user,id=net0,hostfwd=tcp::5678-:5678,hostfwd=tcp::2222-:22
+	)
+else
+	qemu_opts+=(
+		-netdev user,id=net0,hostfwd=tcp::5678-:5678
+	)
+fi
+
+echo "🚀  starting test VM"
+
 swtpm socket --tpmstate backend-uri="file://$tmpdir/swtpm.permall" --ctrl type=unixio,path="$tmpdir/swtpm.sock" --tpm2 --daemon --terminate
-"qemu-system-$arch" "${qemu_opts[@]}" | stdbuf -i0 -o0 sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g'
-cat "$tmpdir/serial.log"
-! ( tail -n1 "$tmpdir/serial.log" | grep failed > /dev/null )
+if [ "$skip_cleanup" = true ]; then
+	"qemu-system-$arch" "${qemu_opts[@]}" | stdbuf -i0 -o0 sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g' &
+	sleep 5
+	tail -f "$tmpdir/serial.log"
+else
+	"qemu-system-$arch" "${qemu_opts[@]}" | stdbuf -i0 -o0 sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g'
+	cat "$tmpdir/serial.log"
+fi
+! (tail -n1 "$tmpdir/serial.log" | grep failed >/dev/null)
