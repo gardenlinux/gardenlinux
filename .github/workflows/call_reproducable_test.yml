@@ -13,6 +13,4 @@ jobs:
       actions: read
       id-token: write
     with:
-      nightly: true
-      run_number1: "2315"
-      run_number2: "2316"
+      nightly: false
