@@ -34,3 +34,7 @@ class Sshd:
 
     def get_config_section(self, key: str) -> str|set:
         return self._sshd_config.get(str.casefold(key))
+
+@pytest.fixture
+def sshd(shell: ShellRunner):
+    return Sshd(shell)
