@@ -136,7 +136,7 @@ resource "aws_ami" "image" {
   name                = local.image_name
   virtualization_type = "hvm"
   ena_support         = true
-  architecture        = var.image_requirements.arch
+  architecture        = local.arch
   boot_mode           = local.boot_mode
 
   root_device_name = "/dev/xvda"

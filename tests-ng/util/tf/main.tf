@@ -31,3 +31,8 @@ output "vm_ip" {
   value       = module.cloud.vm_ip
   description = "Public IPv4 of the VM"
 }
+
+output "ssh_user" {
+  value       = module.cloud.ssh_user
+  description = "SSH user for the VM"
+}
