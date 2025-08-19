@@ -58,11 +58,13 @@ def test_startup_time(systemd: Systemd):
         f"(tolerated {tolerated_userspace}s)"
     )
 
+@pytest.mark.root # for journalctl
 @pytest.mark.booted
-def test_no_failed_units(systemd: Systemd):
+def test_no_failed_units(systemd: Systemd, shell: ShellRunner):
     units = systemd.list_units()
     assert len(units) > 1, f"Failed to load systemd units: {units}"
     failed_units = [u for u in units if u.load == 'loaded' and u.active != 'active']
     for u in failed_units:
         print(f'FAILED UNIT: {u}')
+        shell(f"journalctl --unit {u}")
     assert not failed_units, f"{len(failed_units)} systemd units failed to load"
