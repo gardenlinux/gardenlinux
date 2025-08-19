@@ -66,5 +66,5 @@ def test_no_failed_units(systemd: Systemd, shell: ShellRunner):
     failed_units = [u for u in units if u.load == 'loaded' and u.active != 'active']
     for u in failed_units:
         print(f'FAILED UNIT: {u}')
-        shell(f"journalctl --unit {u}")
+        shell(f"journalctl --unit {u.unit}")
     assert not failed_units, f"{len(failed_units)} systemd units failed to load"
