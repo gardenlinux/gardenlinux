@@ -58,9 +58,9 @@ def test_startup_time(systemd: Systemd):
         f"(tolerated {tolerated_userspace}s)"
     )
 
-@pytest.mark.skip(reason="fails in multiple ci runs, but we need the example for how to use systemd units")
-@pytest.mark.root # for journalctl
-@pytest.mark.booted
+@pytest.mark.skip(reason="Fails in multiple cloud images with network-online service missing, needs fixing")
+@pytest.mark.root(reason="Needed for journalctl which is only needed when the test fails, but still very useful for understanding test failures")
+@pytest.mark.booted(reason="Systemctl needs a booted system")
 def test_no_failed_units(systemd: Systemd, shell: ShellRunner):
     units = systemd.list_units()
     assert len(units) > 1, f"Failed to load systemd units: {units}"
