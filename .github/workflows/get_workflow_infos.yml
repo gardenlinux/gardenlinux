@@ -1,27 +1,34 @@
-name: Get nightly run id by run number
+name: Get workflow infos by run number
 
 on:
   workflow_call:
     inputs:
+      workflow_name:
+        type: string
+        required: true
       run_number:
         type: string
         required: true
     outputs:
       id:
-        description: "The corrosponding workflow id"
-        value: ${{ jobs.parse_id.outputs.id }}
+        description: "The workflow id"
+        value: ${{ jobs.parse_infos.outputs.id }}
       commit:
-        description: "The corrosponding workflow head commit"
-        value: ${{ jobs.parse_id.outputs.commit }}
+        description: "The workflow head commit"
+        value: ${{ jobs.parse_infos.outputs.commit }}
+      run_number:
+        description: "The workflow run number"
+        value: ${{ jobs.parse_infos.outputs.run_number }}
 
 jobs:
-  parse_id:
+  parse_infos:
     runs-on: ubuntu-latest
     permissions:
       actions: read
     outputs:
       id: ${{ steps.api_fetch.outputs.id }}
       commit: ${{ steps.api_fetch.outputs.commit }}
+      run_number: ${{ steps.api_fetch.outputs.run_number }}
     steps:
       - name: Filter workflow runs
         id: api_fetch
@@ -32,9 +39,15 @@ jobs:
 
           run_number=$(echo "${{ inputs.run_number }}" | sed -E "s/^#//")
 
+          if [ "$run_number" = "latest" ];then
+              search="${{ inputs.workflow_name }},"
+          else
+              search="${{ inputs.workflow_name }},$run_number"
+          fi
+
           while ! result=$(gh api "/repos/gardenlinux/gardenlinux/actions/runs?page=$i" \
           | jq -r '.workflow_runs .[] | [.name, .run_number, .id, .head_commit.id] | join(",")' \
-          | grep "nightly,$run_number"); do
+          | grep "$search"); do
               i=$(($i +1))
               if [ "$i" = 101 ]; then
                   # Stop search after 100 pages
@@ -42,5 +55,8 @@ jobs:
               fi
           done;
 
+          result=$(echo "$result" | head -n 1)
+
+          echo run_number=$(echo "$result" | cut -d "," -f 2) >> "$GITHUB_OUTPUT"
           echo id=$(echo "$result" | cut -d "," -f 3) >> "$GITHUB_OUTPUT"
           echo commit=$(echo "$result" | cut -d "," -f 4) >> "$GITHUB_OUTPUT"

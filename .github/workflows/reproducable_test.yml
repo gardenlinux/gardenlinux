@@ -8,15 +8,19 @@ on:
   workflow_call:
     inputs:
       nightly:
-        description: "Use two nightly builds to check for differences"
-        type: boolean
+        description: "Compared builds"
+        type: choice
         required: true
-        default: false
+        default: "One new build with latest nightly"
+        options: 
+        - "Two new builds"
+        - "One new build with latest nightly"
+        - "Two nightly builds"
       run_number1:
-        description: "First run number (#..., only required if checkbox is set)"
+        description: "First run number (#..., only required if comparing two nightly builds)"
         type: string
       run_number2:
-        description: "Second run number (#..., only required if checkbox is set)"
+        description: "Second run number (#..., only required if comparing two nightly builds)"
         type: string
     secrets:
       aws_region:
@@ -31,7 +35,7 @@ on:
 jobs:
   build_a:
     name: Build A
-    if: ${{ !inputs.nightly }}
+    if: ${{ inputs.nightly != 'Two nightly builds' }}
     uses: ./.github/workflows/build.yml
     permissions:
       id-token: write
@@ -42,10 +46,19 @@ jobs:
       fail_fast: true
       prefix: a-
     secrets: inherit
+
+  run_number_a:
+    uses: ./.github/workflows/get_workflow_infos.yml
+    if: ${{ inputs.nightly == 'Two nightly builds' }}
+    permissions:
+      actions: read
+    with:
+      workflow_name: "nightly"
+      run_number: ${{ inputs.run_number1 }}
   
   build_b:
     name: Build B
-    if: ${{ !inputs.nightly }}
+    if: ${{ inputs.nightly != 'Two new builds' }}
     uses: ./.github/workflows/build.yml
     permissions:
       id-token: write
@@ -57,21 +70,14 @@ jobs:
       prefix: b-
     secrets: inherit
 
-  run_number_a:
-    uses: ./.github/workflows/nightly_id_by_run_number.yml
-    if: ${{ inputs.nightly }}
-    permissions:
-      actions: read
-    with:
-      run_number: ${{ inputs.run_number1 }}
-
   run_number_b:
-    uses: ./.github/workflows/nightly_id_by_run_number.yml
-    if: ${{ inputs.nightly }}
+    uses: ./.github/workflows/get_workflow_infos.yml
+    if: ${{ inputs.nightly == 'One new build with latest nightly' || inputs.nightly == 'Two nightly builds' }}
     permissions:
       actions: read
     with:
-      run_number: ${{ inputs.run_number2 }}
+      workflow_name: "nightly"
+      run_number: ${{ inputs.nightly == 'Two nightly builds' && inputs.run_number2 || 'latest' }}
 
   flavors_matrix:
     name: Generate flavors matrix to build
@@ -143,7 +149,7 @@ jobs:
         mkdir "B/unpacked"
         tar -C B/unpacked -xf B/$cname_b.tar
 
-        ./.github/workflows/generate_diff.sh ${{ inputs.nightly && '--nightly' || '' }} ${{ matrix.flavor }}-${{ matrix.arch }} $cname_a $cname_b
+        ./.github/workflows/generate_diff.sh ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} ${{ matrix.flavor }}-${{ matrix.arch }} $cname_a $cname_b
     - name: Upload diff data
       if: always()
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
@@ -209,7 +215,7 @@ jobs:
         depth=$(echo "$a_mount" | tr -cd '\''/'\'' | wc -c);\
         depth=$(($depth + 1))
 
-        ./.github/workflows/generate_diff.sh --oci ${{ inputs.nightly && '--nightly' || '' }} ${{ matrix.flavor }}-${{ matrix.arch }} "$a_mount" "$b_mount" "$depth"'
+        ./.github/workflows/generate_diff.sh --oci ${{ inputs.nightly == 'Two nightly builds' && '--nightly' || '' }} ${{ matrix.flavor }}-${{ matrix.arch }} "$a_mount" "$b_mount" "$depth"'
     - name: Upload diff data
       if: always()
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
@@ -237,12 +243,18 @@ jobs:
     - name: Compare commit hashes if two nightly builds were used
       if: always() && needs.run_number_a.result == 'success' && needs.run_number_b.result == 'success'
       run: |
-        run_number_a=$(echo "${{ inputs.run_number1 }}" | sed -E "s/^#//")
-        run_number_b=$(echo "${{ inputs.run_number2 }}" | sed -E "s/^#//")
+        run_number_a=$(echo "${{ needs.run_number_a.outputs.run_number }}" | sed -E "s/^#//")
+        run_number_b=$(echo "${{ needs.run_number_a.outputs.run_number }}" | sed -E "s/^#//")
         echo -e "$run_number_a,${{ needs.run_number_a.outputs.id }},${{ needs.run_number_a.outputs.commit }};\
         $run_number_b,${{ needs.run_number_b.outputs.id }},${{ needs.run_number_b.outputs.commit }}"\
         > nightly_stats
-
+    - name: Compare commit hashes if one nightly build was used
+      if: always() && needs.build_a.result == 'success' && needs.run_number_b.result == 'success'
+      run: |
+        run_number_b=$(echo "${{ needs.run_number_a.outputs.run_number }}" | sed -E "s/^#//")
+        echo -e ",,${{ github.sha }};\
+        $run_number_b,${{ needs.run_number_b.outputs.id }},${{ needs.run_number_b.outputs.commit }}"\
+        > nightly_stats
     - name: generate Result.md
       run: |
         ./.github/workflows/format_diff.py

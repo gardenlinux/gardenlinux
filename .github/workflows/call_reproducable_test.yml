@@ -13,7 +13,7 @@ jobs:
       actions: read
       id-token: write
     with:
-      nightly: false
+      nightly: "One new build with latest nightly"
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_kms_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}

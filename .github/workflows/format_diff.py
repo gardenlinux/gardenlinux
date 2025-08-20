@@ -146,10 +146,19 @@ if os.path.isfile("nightly_stats"):
         nightlys = f.read().replace("\n", "").split(";")
     nightlys[0] = nightlys[0].split(",")
     nightlys[1] = nightlys[1].split(",")
-    explanation += f"\n\nComparison of nightly **[#{nightlys[0][0]}](https://github.com/gardenlinux/gardenlinux/actions/runs/{nightlys[0][1]})** \
+    if nightlys[0][0] != "":
+        explanation += f"\n\nComparison of nightly **[#{nightlys[0][0]}](https://github.com/gardenlinux/gardenlinux/actions/runs/{nightlys[0][1]})** \
 and **[#{nightlys[1][0]}](https://github.com/gardenlinux/gardenlinux/actions/runs/{nightlys[1][1]})**"
-    if nightlys[0][2] != nightlys[1][2]:
-        explanation += f"\n\n⚠️ The nightlys used different commits: `{nightlys[0][2][:7]}` (#{nightlys[0][0]}) != `{nightlys[1][2][:7]}` (#{nightlys[1][0]})"
+        if nightlys[0][2] != nightlys[1][2]:
+            explanation += f"\n\n⚠️ The nightlys used different commits: `{nightlys[0][2][:7]}` (#{nightlys[0][0]}) != `{nightlys[1][2][:7]}` (#{nightlys[1][0]})"
+        if nightlys[0][0] == nightlys[1][0]:
+            explanation += f"\n\n⚠️ Comparing the nightly **[#{nightlys[0][0]}](https://github.com/gardenlinux/gardenlinux/actions/runs/{nightlys[0][1]})** to itself can not reveal any issues"
+    else:
+        explanation += f"\n\nComparison of the latest nightly **[#{nightlys[1][0]}](https://github.com/gardenlinux/gardenlinux/actions/runs/{nightlys[1][1]})** \
+with a new build"
+        if nightlys[0][2] != nightlys[1][2]:
+            explanation += f"\n\n⚠️ The build used different commits: `{nightlys[1][2][:7]}` (#{nightlys[1][0]}) != `{nightlys[0][2][:7]}` (new build)"
+
 
 
 explanation += "" if len(all) == len(successful) else "\n\n*The mentioned features are included in every affected flavor and not included in every unaffected flavor.*"
