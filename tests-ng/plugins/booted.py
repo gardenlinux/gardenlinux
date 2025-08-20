@@ -20,10 +20,16 @@ def pytest_configure(config: pytest.Config):
     global system_booted
     system_booted = config.getoption("--system-booted")
 
-    config.addinivalue_line("markers", "booted: mark test to run only on a booted target, i.e. not in a container or chroot")
+    config.addinivalue_line("markers", "booted(reason=None): mark test to run only on a booted target, i.e. not in a container or chroot. Optionally provide a reason why mutation is required.")
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: List[pytest.Item]):
     for item in items:
-        if item.get_closest_marker("booted") and not system_booted:
-            item.add_marker(pytest.mark.skip(reason="not running on a booted system"))
+        booted_marker = item.get_closest_marker("booted")
+        if booted_marker and not system_booted:
+
+            reason = booted_marker.kwargs.get("reason")
+            skip_msg = "not running on a booted system"
+            if reason:
+                skip_msg += f" (reason: {reason})"
+            item.add_marker(pytest.mark.skip(skip_msg))
