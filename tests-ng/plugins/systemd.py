@@ -2,6 +2,7 @@ import re
 import pytest
 from typing import Tuple, Callable, Any
 from .shell import ShellRunner
+from .modify import allow_system_modifications
 from dataclasses import dataclass
 
 @dataclass
@@ -46,6 +47,11 @@ class Systemd:
     def is_active(self, unit_name: str) -> bool:
         result = self._shell(f"{self._systemctl} is-active {unit_name}", capture_output=True, ignore_exit_code=True)
         return result.stdout.strip() == "active"
+
+    def start_unit(self, unit_name: str):
+        if not allow_system_modifications():
+            pytest.skip("starting units is only supported when system state modifications are allowed")
+        self._shell(f"systemctl start {unit_name}")
 
 
     def list_units(self) -> list[SystemdUnit]:
