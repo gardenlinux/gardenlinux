@@ -39,7 +39,7 @@ def test_fhs(shell: ShellRunner):
     for dir in sorted(expected_dirs):
         assert os.path.isdir(f"/{dir}"), f"expected FHS directory /{dir} does not exist"
 
-@pytest.mark.booted(reason="Only useful in a booted system because chroot does not 'boot'")
+@pytest.mark.booted(reason="We can only measure startup time if we actually boot the system")
 @pytest.mark.performance_metric
 @pytest.mark.feature("server and not azure") # server installs systemd and azure has notoriously bad startup times
 def test_startup_time(systemd: Systemd):
