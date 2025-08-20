@@ -3,6 +3,8 @@ ARG GL_VERSION=nightly
 # use platform-test-base image
 FROM ghcr.io/gardenlinux/gardenlinux/platform-test-base:${GL_VERSION}
 
+# optionally authenticate to github because of rate limiting
+ARG GITHUB_TOKEN
 ENV DEBIAN_FRONTEND noninteractive
 ENV SHELL /bin/bash
 

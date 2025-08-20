@@ -8,3 +8,7 @@ class Dpkg:
     def package_is_installed(self, package: str) -> bool:
         result = self._shell(f'dpkg --status {package}', capture_output=True, ignore_exit_code=True)
         return result.returncode == 0
+
+@pytest.fixture
+def dpkg(shell: ShellRunner) -> Dpkg:
+    return Dpkg(shell)

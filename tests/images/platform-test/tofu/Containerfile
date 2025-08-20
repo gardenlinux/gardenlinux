@@ -4,6 +4,8 @@ ARG GL_IMAGE=gardenlinux/platform-test-base
 ARG GL_VERSION=latest
 FROM ${GL_REGISTRY}/${GL_IMAGE}:${GL_VERSION}
 
+# optionally authenticate to github because of rate limiting
+ARG GITHUB_TOKEN
 ENV DEBIAN_FRONTEND noninteractive
 ENV SHELL /bin/bash
 
@@ -24,7 +26,7 @@ RUN git clone --depth=1 https://github.com/tofuutils/tofuenv.git ${TOFUENV_INSTA
 # providers.tf contains OpenTofu version
 COPY providers.tf ${TOFU_HOME}/providers.tf
 # install pinned OpenTofu version
-RUN cd ${TOFU_HOME} && tofuenv install latest-allowed && tofuenv list | head -1 | xargs tofuenv use
+RUN export TOFUENV_GITHUB_TOKEN="$GITHUB_TOKEN" && cd ${TOFU_HOME} && tofuenv install latest-allowed && tofuenv list | head -1 | xargs tofuenv use
 
 # install pinned providers (pinned in providers.tf and .terraform.lock.hcl)
 COPY .terraform.lock.hcl ${TOFU_HOME}/.terraform.lock.hcl

@@ -82,7 +82,7 @@ Flavors are combinations of features. Garden Linux is built via the [nightly Git
 The table can be created like this:
 
 ```
-❯ bin/flavors_parse.py --markdown-table-by-platform --publish
+❯ bin/gl-flavors-parse --markdown-table-by-platform --publish
 ```
 
 ### `flavors.yaml`
@@ -118,7 +118,7 @@ This script is used to generate input for github actions.
 ```
 # get all flavors for the publishing related workflows
 
-❯ bin/flavors_parse.py --no-arch --json-by-arch --publish
+❯ bin/gl-flavors-parse --no-arch --json-by-arch --publish
 {
   "amd64": [
     "ali-gardener_prod-amd64",
