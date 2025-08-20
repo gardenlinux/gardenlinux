@@ -13,9 +13,7 @@ jobs:
       actions: read
       id-token: write
     with:
-      nightly: "Two nightly builds"
-      run_number1: "#2316"
-      run_number2: "#2315"
+      nightly: "Two new builds"
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_kms_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
