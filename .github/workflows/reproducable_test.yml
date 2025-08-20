@@ -9,13 +9,9 @@ on:
     inputs:
       nightly:
         description: "Compared builds"
-        type: choice
+        type: string
         required: true
         default: "One new build with latest nightly"
-        options: 
-        - "Two new builds"
-        - "One new build with latest nightly"
-        - "Two nightly builds"
       run_number1:
         description: "First run number (#..., only required if comparing two nightly builds)"
         type: string
