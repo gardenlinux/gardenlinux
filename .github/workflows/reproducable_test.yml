@@ -54,7 +54,7 @@ jobs:
   
   build_b:
     name: Build B
-    if: ${{ inputs.nightly != 'Two new builds' }}
+    if: ${{ inputs.nightly == 'Two new builds' }}
     uses: ./.github/workflows/build.yml
     permissions:
       id-token: write
