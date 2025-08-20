@@ -240,14 +240,14 @@ jobs:
       if: always() && needs.run_number_a.result == 'success' && needs.run_number_b.result == 'success'
       run: |
         run_number_a=$(echo "${{ needs.run_number_a.outputs.run_number }}" | sed -E "s/^#//")
-        run_number_b=$(echo "${{ needs.run_number_a.outputs.run_number }}" | sed -E "s/^#//")
+        run_number_b=$(echo "${{ needs.run_number_b.outputs.run_number }}" | sed -E "s/^#//")
         echo -e "$run_number_a,${{ needs.run_number_a.outputs.id }},${{ needs.run_number_a.outputs.commit }};\
         $run_number_b,${{ needs.run_number_b.outputs.id }},${{ needs.run_number_b.outputs.commit }}"\
         > nightly_stats
     - name: Compare commit hashes if one nightly build was used
-      if: always() && needs.build_a.result == 'success' && needs.run_number_b.result == 'success'
+      if: always() && needs.run_number_a.result == 'skipped' && needs.run_number_b.result == 'success'
       run: |
-        run_number_b=$(echo "${{ needs.run_number_a.outputs.run_number }}" | sed -E "s/^#//")
+        run_number_b=$(echo "${{ needs.run_number_b.outputs.run_number }}" | sed -E "s/^#//")
         echo -e ",,${{ github.sha }};\
         $run_number_b,${{ needs.run_number_b.outputs.id }},${{ needs.run_number_b.outputs.commit }}"\
         > nightly_stats

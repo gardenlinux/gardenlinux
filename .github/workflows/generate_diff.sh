@@ -69,7 +69,7 @@ if ! cmp "A/$basefile_a" "B/$basefile_b" > /dev/null; then
 
     files=$(diff -qrN "$unpacked_a" "$unpacked_b" 2> /dev/null \
     | grep differ \
-    | perl -0777 -pe "s/(?:[^\/\n]*\/){$depth}([^\s]*)[^\n]*/\1/g" \
+    | perl -0777 -pe "s/(?:[^\/\n]*\/){$depth}([^\s]*)[^\n]*/\/\1/g" \
     | ${sedcommands[@]} || true)
 
     echo "$files" > "$1-diff"
