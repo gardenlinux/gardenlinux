@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+thisDir="$(dirname "$(readlink -fn "$BASH_SOURCE")")"
+rootDir="$(dirname "${thisDir}")"
+
+if ! [ -x "$(type -P gl-flavors-parse)" ]; then
+  if [ ! -d "${rootDir}/venv" ]; then
+    python -m venv "${rootDir}/venv"
+    . "${rootDir}/venv/bin/activate"
+    pip install -r "${rootDir}/requirements.txt"
+  else
+    . "${rootDir}/venv/bin/activate"
+  fi
+fi
+
+pushd "${rootDir}" &> /dev/null
+gl-flavors-parse "$@"
+popd &> /dev/null
