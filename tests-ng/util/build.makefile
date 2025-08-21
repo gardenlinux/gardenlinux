@@ -25,7 +25,7 @@ clean:
 	echo '🛠️  bundling test framework as disk image'
 	./$^ $@
 
-.build/runtime.tar.gz: util/build_runtime.sh util/requirements.txt | .build
+.build/runtime.tar.gz: util/build_runtime.sh util/requirements.txt util/python.env.sh | .build
 	echo '🛠️  building python runtime'
 	./$^ $@
 
