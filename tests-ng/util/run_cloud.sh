@@ -139,6 +139,9 @@ provider_vars = {
     gcp = {
       gcp_project_id = "$GCP_PROJECT_ID"
     }
+    openstack = {
+        ssh_user = "admin"
+    }
 }
 EOF
 
