@@ -2,6 +2,7 @@
 /.buildlogs
 /.packages
 /.repository
+/.tofuenv
 /repository/reprepro/db
 /repository/reprepro/logs
 /features/_dev/id_dev
@@ -57,8 +58,8 @@ make_targets.cache
 venv
 shell.nix
 s3_downloads/
-!**/.terraform.lock.hcl
 **/.terraform*
+!**/.terraform.lock.hcl
 **/terraform.tfstate*
 **/*.tfvars
 **/*.auto.tfvars
