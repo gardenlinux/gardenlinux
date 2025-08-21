@@ -39,7 +39,7 @@ Their development is streamlined by the [unbase_oci](https://github.com/gardenli
   ```Dockerfile
   FROM ghcr.io/gardenlinux/gardenlinux/bare-python:nightly
   COPY hello.py /
-  CMD ["python", "/hello.py"]
+  CMD ["python3", "/hello.py"]
   ```
 
 ### bare-sapmachine
