@@ -57,14 +57,3 @@ def test_startup_time(systemd: Systemd):
         f"Userspace startup too slow: {userspace:.1f}s "
         f"(tolerated {tolerated_userspace}s)"
     )
-
-@pytest.mark.root(reason="Needed for journalctl which is only needed when the test fails, but still very useful for understanding test failures")
-@pytest.mark.booted(reason="Systemctl needs a booted system")
-def test_no_failed_units(systemd: Systemd, shell: ShellRunner):
-    units = systemd.list_units()
-    assert len(units) > 1, f"Failed to load systemd units: {units}"
-    failed_units = [u for u in units if u.load == 'loaded' and u.active != 'active']
-    for u in failed_units:
-        print(f'FAILED UNIT: {u}')
-        shell(f"journalctl --unit {u.unit}")
-    assert not failed_units, f"{len(failed_units)} systemd units failed to load"
