@@ -58,7 +58,7 @@ def test_startup_time(systemd: Systemd):
         f"(tolerated {tolerated_userspace}s)"
     )
 
-@pytest.mark.feature("not gcp and not metal and not openstack", reason='Does not work on gcp, metal and openstack features for various reasons, for example because it cannot communicate with external backends.')
+@pytest.mark.feature("not gcp and not metal and not openstack", reason='Not working on various features, for example because the vm cannot communicate with external backends.')
 @pytest.mark.root(reason="Needed for journalctl which is only needed when the test fails, but still very useful for understanding test failures")
 @pytest.mark.booted(reason="Systemctl needs a booted system")
 def test_no_failed_units(systemd: Systemd, shell: ShellRunner):
