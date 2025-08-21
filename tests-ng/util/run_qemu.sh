@@ -118,6 +118,8 @@ qemu_opts=(
 	-chardev socket,id=chrtpm,path="$tmpdir/swtpm.sock"
 	-tpmdev emulator,id=tpm0,chardev=chrtpm
 	-device "$qemu_tpm_dev",tpmdev=tpm0
+	-netdev user,id=net0
+	-device virtio-net-pci,netdev=net0
 )
 
 swtpm socket --tpmstate backend-uri="file://$tmpdir/swtpm.permall" --ctrl type=unixio,path="$tmpdir/swtpm.sock" --tpm2 --daemon --terminate
