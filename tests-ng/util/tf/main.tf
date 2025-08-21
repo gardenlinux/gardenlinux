@@ -4,6 +4,7 @@ locals {
     gcp   = "./modules/gcp"
     azure = "./modules/azure"
     ali   = "./modules/ali"
+    openstack = "./modules/openstack"
   }
 }
 
