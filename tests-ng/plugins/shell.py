@@ -4,7 +4,6 @@ import pytest
 import subprocess
 from typing import Optional, Tuple
 
-
 default_user: Optional[Tuple[int, int]] = None
 
 class ShellRunner:
@@ -29,7 +28,6 @@ class ShellRunner:
 
         return result
 
-
 def pytest_addoption(parser: pytest.Parser):
     parser.addoption(
         "--default-user",
@@ -38,7 +36,6 @@ def pytest_addoption(parser: pytest.Parser):
         help="User to switch to before executing shell commands"
     )
 
-
 def pytest_configure(config: pytest.Config):
     global default_user
 
@@ -46,18 +43,24 @@ def pytest_configure(config: pytest.Config):
     if default_user_name != "":
         passwd_entry = pwd.getpwnam(default_user_name)
         default_user = (passwd_entry.pw_uid, passwd_entry.pw_gid)
-    if default_user == None and os.geteuid() == 0:
+    if default_user is None and os.geteuid() == 0:
         default_user = (65534, 65534)
 
-    config.addinivalue_line("markers", "root: mark test to run as root user")
-
+    config.addinivalue_line(
+        "markers",
+        "root(reason=None): mark test to run as root user, with optional reason"
+    )
 
 @pytest.fixture
 def shell(request: pytest.FixtureRequest) -> ShellRunner:
-    root_marker = bool(request.node.get_closest_marker("root"))
+    root_marker = request.node.get_closest_marker("root")
     if root_marker:
+        reason = root_marker.kwargs.get("reason") if root_marker.kwargs else None
         if os.geteuid() != 0:
-            pytest.skip("tests marked as root but running as unprivileged user")
+            skip_msg = "tests marked as root but running as unprivileged user"
+            if reason:
+                skip_msg += f" (reason: {reason})"
+            pytest.skip(skip_msg)
         return ShellRunner((0, 0))
     else:
         return ShellRunner(default_user)
