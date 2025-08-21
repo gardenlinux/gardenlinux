@@ -57,3 +57,9 @@ def test_startup_time(systemd: Systemd):
         f"Userspace startup too slow: {userspace:.1f}s "
         f"(tolerated {tolerated_userspace}s)"
     )
+
+@pytest.mark.booted(reason="Kernel test makes sense only on booted system")
+def test_kernel_not_tainted():
+    with open("/proc/sys/kernel/tainted", "r") as f:
+        tainted = f.read().strip()
+    assert tainted == "0", f"Kernel is tainted (value: {tainted})"
