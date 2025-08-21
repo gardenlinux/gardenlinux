@@ -61,7 +61,7 @@ cleanup() {
 trap cleanup EXIT
 
 user_data_script="$(mktemp)"
-cat > "$user_data_script" << EOF
+cat >"$user_data_script" <<EOF
 #!/usr/bin/env bash
 
 systemctl stop sshguard
@@ -71,7 +71,7 @@ mkdir /run/gardenlinux-tests
 mount /dev/disk/by-label/GL_TESTS /run/gardenlinux-tests
 EOF
 
-cat > "$tf_dir/$image_name.tfvars" << EOF
+cat >"$tf_dir/$image_name.tfvars" <<EOF
 root_disk_path        = "$(realpath -- "$image")"
 test_disk_path        = "$(realpath -- "$test_dist_dir/dist.ext2")"
 user_data_script_path = "$user_data_script"

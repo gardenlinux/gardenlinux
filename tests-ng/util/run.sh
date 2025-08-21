@@ -38,7 +38,7 @@ cd "$(realpath -- "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/../")"
 
 basename="$(basename "$artifact")"
 
-extension="$(grep -E -o '(\.[a-z][a-zA-Z0-9_\-]*)*$' <<< "$basename")"
+extension="$(grep -E -o '(\.[a-z][a-zA-Z0-9_\-]*)*$' <<<"$basename")"
 cname="${basename%"$extension"}"
 type="${extension#.}"
 

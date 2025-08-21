@@ -141,7 +141,7 @@ if ! ((skip_tests)); then
 		test_args+=("--expected-users" "$ssh_user")
 	fi    
 	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
-./run_tests "${test_args[@]}"
+./run_tests ${test_args[@]}
 EOF
 fi
 
