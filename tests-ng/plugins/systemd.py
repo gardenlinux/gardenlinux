@@ -3,6 +3,14 @@ import pytest
 from typing import Tuple, Callable, Any
 from .shell import ShellRunner
 from .modify import allow_system_modifications
+from dataclasses import dataclass
+
+@dataclass
+class SystemdUnit:
+    unit: str
+    load: str
+    active: str
+    sub: str
 
 def _seconds(token: str) -> float:
     if token.endswith("ms"):
@@ -14,6 +22,7 @@ def _seconds(token: str) -> float:
 class Systemd:
     def __init__(self, shell: ShellRunner):
         self._shell = shell
+        self._systemctl = 'systemctl --plain --no-legend --no-pager'
 
     # TODO: we should probably add functionality to check for failed units etc. in here as well
 
@@ -35,8 +44,8 @@ class Systemd:
 
         return tuple(_seconds(v) for v in m.groups())
 
-    def is_running(self, unit_name: str) -> bool:
-        result = self._shell(f"systemctl is-active {unit_name}", capture_output=True, ignore_exit_code=True)
+    def is_active(self, unit_name: str) -> bool:
+        result = self._shell(f"{self._systemctl} is-active {unit_name}", capture_output=True, ignore_exit_code=True)
         return result.stdout.strip() == "active"
 
     def start_unit(self, unit_name: str):
@@ -44,6 +53,14 @@ class Systemd:
             pytest.skip("starting units is only supported when system state modifications are allowed")
         self._shell(f"systemctl start {unit_name}")
 
+
+    def list_units(self) -> list[SystemdUnit]:
+        result = self._shell(f"{self._systemctl}", capture_output=True, ignore_exit_code=True)
+        units = []
+        for line in result.stdout.splitlines():
+            parts = line.split()
+            units.append(SystemdUnit(parts[0], parts[1], parts[2], parts[3]))
+        return units
 
 @pytest.fixture
 def systemd(shell: ShellRunner):
