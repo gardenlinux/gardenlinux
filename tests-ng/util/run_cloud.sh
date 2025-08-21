@@ -31,17 +31,22 @@ done
 
 test_dist_dir="$1"
 image="$2"
+image_basename="$(basename -- "$image")"
+image_name=${image_basename/.*/}
 
 user_data_script=
 tf_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/tf")"
 
-cleanup () {
+cleanup() {
 	[ -z "$user_data_script" ] || rm "$user_data_script"
-	if ! (( skip_cleanup )); then
+	if ! ((skip_cleanup)); then
 		echo "⚙️  cleaning up cloud resources"
 		(
-			cd "$tf_dir"
-			tofu destroy --auto-approve
+			cd "${tf_dir}"
+			tofu workspace select "$image_name"
+			tofu destroy -var-file "$image_name.tfvars" --auto-approve
+			tofu workspace select default
+			tofu workspace delete "$image_name"
 		)
 	fi
 }
@@ -59,7 +64,7 @@ mkdir /run/gardenlinux-tests
 mount /dev/disk/by-label/GL_TESTS /run/gardenlinux-tests
 EOF
 
-cat > "$tf_dir/terraform.tfvars" << EOF
+cat > "$tf_dir/$image_name.tfvars" << EOF
 root_disk_path        = "$(realpath -- "$image")"
 test_disk_path        = "$(realpath -- "$test_dist_dir/dist.ext2")"
 user_data_script_path = "$user_data_script"
@@ -73,8 +78,10 @@ EOF
 
 echo "⚙️  setting up cloud resources via OpenTofu"
 (
-	cd "$tf_dir"
-	tofu apply --auto-approve
+	cd "${tf_dir}"
+	tofu init
+	tofu workspace select -or-create "$image_name"
+	tofu apply -var-file "$image_name.tfvars" --auto-approve
 )
 
 vm_ip="$(cd "$tf_dir" && tofu output --raw vm_ip)"
