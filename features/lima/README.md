@@ -7,7 +7,22 @@ This feature flag produces an image suitable for using with [lima](https://lima-
 For the time being, this only supports `qemu` virtual machines.
 Using `vz` is not supported.
 
-How to use:
+Garden Linux images for Lima are published at https://images.gardenlinux.io
+
+How to use the pre-built image:
+
+1. Create and start the VM
+
+```
+# for the latest nightly build, use:
+limactl start --name gardenlinux https://images.gardenlinux.io/gardenlinux.yaml
+# for a released version, use this (see released versions at https://github.com/gardenlinux/gardenlinux/releases):
+limactl start --name gardenlinux https://images.gardenlinux.io/gardenlinux-$VERSION.yaml
+```
+
+2. Open a shell inside the VM: `limactl shell gardenlinux`
+
+How to build your own image:
 
 1. Build an image: `./build kvm-lima`
 
@@ -24,8 +39,13 @@ containerd:
   user: false
 ```
 
-3. Create the VM: `cat manifest.yaml | limactl create --name=gardenlinux -`
+3. Create and start the VM: `cat manifest.yaml | limactl start --name=gardenlinux -`
 
-4. Start the VM: `limactl start gardenlinux`
+4. Open a shell inside the VM: `limactl shell gardenlinux`
 
-5. Open a shell inside the VM: `limactl shell gardenlinux`
+## Sample manifests
+
+Lima allows to configure provisioning shell scripts in manifest files.
+
+In [samples](./samples/), you can find example scripts that might be useful depending on your use-case.
+Depending on what you're planning to do, building a custom image might be better than using provisioning shell scripts.

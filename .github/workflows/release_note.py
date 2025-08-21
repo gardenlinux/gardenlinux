@@ -1,23 +1,28 @@
 #!/usr/bin/env python3
-import os
-import requests
-import json
-import boto3
-import botocore
-import yaml
-from yaml.loader import SafeLoader
-import sys
-import urllib.request
+
 from botocore import UNSIGNED
 from botocore.client import Config
+from gardenlinux.apt import DebsrcFile
+from gardenlinux.features import CName
+from gardenlinux.flavors import Parser as FlavorsParser
+from gardenlinux.s3 import S3Artifacts
+from pathlib import Path
+from yaml.loader import SafeLoader
 import argparse
+import boto3
 import gzip
+import json
+import os
 import re
+import requests
 import subprocess
+import sys
 import textwrap
+import yaml
+import urllib.request
 
-from get_kernelurls import get_kernel_urls
-from parse_aptsource import DebsrcFile
+from .get_kernelurls import get_kernel_urls
+
 
 GARDENLINUX_GITHUB_RELEASE_BUCKET_NAME="gardenlinux-github-releases"
 
@@ -35,7 +40,7 @@ cloud_fullname_dict = {
 
 # https://github.com/gardenlinux/gardenlinux/issues/3044
 # Empty string is the 'legacy' variant with traditional root fs and still needed/supported
-image_variants = ['']
+image_variants = ['', '_usi', '_tpm2_trustedboot']
 
 def _ali_release_note(published_image_metadata):
     output = ""
@@ -121,56 +126,23 @@ def generate_release_note_image_id_single(manifest_path):
     return output
 
 
-def construct_full_image_name(platform, features, arch, version, commitish):
-    return f"{platform}-{features}-{arch}-{version}-{commitish}"
-
-
-def download_s3_file(bucket, remote_filename, local_filename):
-    # Note: No need to sign the request. Features that would require the client to authenticate itself are not used.
-    #       Use case here is to simply download public data.
-    s3_client = boto3.client('s3', config=Config(signature_version=UNSIGNED))
-    s3_client.download_file(bucket, remote_filename, local_filename)
-
-
-def download_meta_single_manifest(bucket, bucket_path, image_name, dest_path):
-    download_s3_file(bucket, f"{bucket_path}/{image_name}", f"{dest_path}/{image_name}")
-    return f"{dest_path}/{image_name}"
-
-
-def is_unsupported_ali_combination(platform, architecture, variant):
-    """
-    Determines if the given combination of platform, architecture, and variant
-    is unsupported for the 'ali' platform.
-    """
-    return platform == "ali" and (architecture == "arm64" or variant != "")
-
 def download_all_singles(version, commitish):
-    if commitish == None:
-        raise Exception("Commitish is not set")
-    local_dest_path = "s3_downloads"
-    os.makedirs(local_dest_path, exist_ok=True)
-    manifests = list()
-    for a in arches:
-        for p in cloud_fullname_dict:
-            for v in image_variants:
-                # Skip "ali" platform for architectures other than "amd64" as it is currently not supported
-                # https://github.com/gardenlinux/gardenlinux/issues/3050
-                if is_unsupported_ali_combination(p, a, v):
-                    print(f"Skipping {p} {v} on {a} because it is currently not supported")
-                else:
-                    fname = construct_full_image_name(p, f"gardener_prod{v}", a, version, commitish)
-                    try:
-                        manifests.append(download_meta_single_manifest(GARDENLINUX_GITHUB_RELEASE_BUCKET_NAME, "meta/singles", fname, "s3_downloads/"))
-                    except Exception as e:
-                        print(f"Failed to get manifest. Error: {e}")
-                        print(f"\tfname: meta/singles/{fname}")
-                        # Abort generation of Release Notes - Let the CI fail
-                        sys.exit(1)
+    with open("./flavors.yaml", "r") as f:
+        flavors_data = f.read()
+    flavors = FlavorsParser(flavors_data).filter(only_publish=True)
 
-    return manifests
+    local_dest_path = Path("s3_downloads")
+    local_dest_path.makedir(mode=0o755, exist_ok=True)
+
+    for flavor in flavors:
+        cname = CName(flavor[1], flavor[0], "{0}-{1}".format(version, commitish))
+        S3Artifacts(GARDENLINUX_GITHUB_RELEASE_BUCKET_NAME).download_to_directory(cname.cname, local_dest_path)
+
+    return [ str(artifact) for artifact in local_dest_path.iterdir() ]
+
 
 def get_image_object_url(bucket, object, expiration=0):
-    s3_config = botocore.config.Config(signature_version=botocore.UNSIGNED)
+    s3_config = Config(signature_version=UNSIGNED)
     s3_client = boto3.client('s3', config=s3_config)
     url = s3_client.generate_presigned_url('get_object', Params={'Bucket': bucket, 'Key': object}, ExpiresIn = expiration)
     return url
@@ -212,31 +184,6 @@ def _parse_match_section(pkg_list: list):
                     output += f"  * {k}: {v}\n"
     return output
 
-def generate_package_update_section(version):
-    repo_definition_url =\
-    f"https://gitlab.com/gardenlinux/gardenlinux-package-build/-/raw/main/packages/{version}.yaml"
-
-    output = ""
-    with urllib.request.urlopen(repo_definition_url) as f:
-        data = yaml.load(f.read().decode('utf-8'), Loader=SafeLoader)
-        if data['version'] != version:
-            print(f"ERROR: version string in {repo_definition_url} does not match {version}")
-            sys.exit(1)
-        for source in data['publish']['sources']:
-            # excluded section does not contain release note information 
-            if source['type'] == 'exclude':
-                continue
-            # base mirror does not contain packages specification
-            if 'packages' not in source:
-                continue
-            # Only check packages lists if it contains a list of either matchSources or matchBinaries
-            for s in source['packages']:
-                if 'matchSources' in s:
-                    output += _parse_match_section(s['matchSources'])
-                if 'matchBinaries' in source['packages']:
-                    output += _parse_match_section(s['matchBinaries'])
-    return output
-
 def release_notes_changes_section(gardenlinux_version):
     """
         Get list of fixed CVEs, grouped by upgraded package.
@@ -248,6 +195,9 @@ def release_notes_changes_section(gardenlinux_version):
         response = requests.get(url)
         response.raise_for_status()  # Will raise an error for bad responses
         data = response.json()
+
+        if len(data["packageList"]) == 0:
+            return ""
 
         output = [
             "## Changes",
@@ -264,7 +214,7 @@ def release_notes_changes_section(gardenlinux_version):
                 for fixedCve in package["fixedCves"]:
                     output.append(f'  - {fixedCve}')
 
-        return "\n".join(output) + "\n"
+        return "\n".join(output) + "\n\n"
     except:
         # There are expected error cases, for example with versions not supported by glvd (1443.x) or when the api is not available
         # Fail gracefully by adding the placeholder we previously used, so that the release note generation does not fail.
@@ -275,8 +225,7 @@ def release_notes_changes_section(gardenlinux_version):
         """)
 
 def release_notes_software_components_section(package_list):
-    output = "\n"
-    output += "## Software Component Versions\n"
+    output = "## Software Component Versions\n"
     output += "```"
     output += "\n"
     packages_regex = re.compile(r'^linux-image-amd64$|^systemd$|^containerd$|^runc$|^curl$|^openssl$|^openssh-server$|^libc-bin$')
@@ -412,7 +361,6 @@ def main():
     create_parser.add_argument('--tag', required=True)
     create_parser.add_argument('--commit', required=True)
     create_parser.add_argument('--dry-run', action='store_true', default=False)
-    create_parser.add_argument('--image-variants', default="_usi _tpm2_trustedboot")
 
     upload_parser = subparsers.add_parser('upload')
     upload_parser.add_argument('--release_id', required=True)
@@ -423,7 +371,6 @@ def main():
     args = parser.parse_args()
 
     if args.command == 'create':
-        image_variants.extend(args.image_variants.split())
         body = create_github_release_notes(args.tag, args.commit, args.dry_run)
         if not args.dry_run:
             release_id = create_github_release(args.owner, args.repo, args.tag, args.commit, body)

@@ -4,8 +4,6 @@
 #
 # `tests/Pipfile` holds dependencies backed into the platform-test images
 #
-networkx
-PyYAML
+
 requests
-jsonschema
-gardenlinux @ git+https://github.com/gardenlinux/python-gardenlinux-lib.git@0.8.7
+gardenlinux @ git+https://github.com/gardenlinux/python-gardenlinux-lib.git@0.8.9

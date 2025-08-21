@@ -11,14 +11,11 @@ rootfs="$(mktemp -d)"
 mount -t tmpfs -o size="$TEMPFS_SIZE" tmpfs "$rootfs"
 tar --extract --xattrs --xattrs-include '*' --directory "$rootfs" < "$input"
 
-# # shellcheck disable=SC2115
-# rm -rf "$rootfs/var"
-# mkdir "$rootfs/var"
-
 echo "creating root EROFS disk"
 
-erofs="$(mktemp -u)"
-mkfs.erofs --quiet -z lz4 -E force-inode-compact -T "$BUILDER_TIMESTAMP" -U "$(echo "gardenlinux:$BUILDER_VERSION:erofs:root" | uuid_hash)" "$erofs" "$rootfs"
+erofs_cpio_dir="$(mktemp -d)"
+erofs="$erofs_cpio_dir/root.img"
+mkfs.erofs --quiet -z zstd,12 -E force-inode-compact -T "$BUILDER_TIMESTAMP" -U "$(echo "gardenlinux:$BUILDER_VERSION:erofs:root" | uuid_hash)" "$erofs" "$rootfs"
 
 size_chroot="$(du -s "$rootfs" | cut -f 1)"
 size_erofs="$(du "$erofs" | cut -f 1)"
@@ -26,6 +23,10 @@ echo "root disk compressed by $(( ( ( size_chroot - size_erofs ) * 100 ) / size_
 
 echo
 echo "building initrd with embedded root disk"
+
+erofs_cpio="$(mktemp)"
+(cd "$erofs_cpio_dir" && echo root.img | cpio -o -H newc) > "$erofs_cpio"
+rm -rf "$erofs_cpio_dir"
 
 mount --rbind /proc "$rootfs/proc"
 
@@ -46,13 +47,9 @@ for feature in "${features[@]}"; do
 	fi
 done
 
-touch "$rootfs/tmp/initrd.include/root.img"
-mount --bind "$erofs" "$rootfs/tmp/initrd.include/root.img"
-
 initrd="$(mktemp)"
 
 touch "$rootfs/initrd"
-mount --bind "$initrd" "$rootfs/initrd"
 
 kernel="$(find "$rootfs/boot/" -name 'vmlinuz-*' | sort -V | tail -n 1)"
 
@@ -68,14 +65,11 @@ chroot "$rootfs" dracut \
 	--add-drivers erofs \
 	/initrd
 
-umount "$rootfs/tmp/initrd.include/root.img"
-rm "$erofs"
-
 umount -l "$rootfs/proc"
 umount -R "$rootfs/dev"
 umount "$rootfs/tmp"
 
-umount "$rootfs/initrd"
+mv "$rootfs/initrd" "$initrd"
 
 case "$BUILDER_ARCH" in
 	amd64)
@@ -89,6 +83,12 @@ esac
 uki="$(mktemp)"
 
 read -r _ cmdline < "$rootfs/etc/kernel/cmdline"
+
+size_initrd="$(du -h "$initrd" | cut -f 1)"
+size_erofs_cpio="$(du -h "$erofs_cpio" | cut -f 1)"
+cat "$erofs_cpio" >> "$initrd"
+size_initrd_total="$(du -h "$initrd" | cut -f 1)"
+echo "initrd size: $size_initrd (dracut) + $size_erofs_cpio (EROFS) = $size_initrd_total"
 
 /usr/lib/systemd/ukify build \
 	--stub "$rootfs/usr/lib/systemd/boot/efi/linux$(tr '[:upper:]' '[:lower:]' <<< "$uefi_arch").efi.stub" \

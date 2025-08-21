@@ -1,0 +1,46 @@
+version = 1
+SPDX-PackageName = "gardenlinux"
+SPDX-PackageSupplier = "GardenLinux authors <gardenlinux-admin@lists.neonephos.org>"
+SPDX-PackageDownloadLocation = "https://github.com/gardenlinux/gardenlinux"
+
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2020-2025 SAP SE or an SAP affiliate company and Gardenlinux contributors"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = "**.md"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2020-2025 SAP SE or an SAP affiliate company and Gardenlinux contributors"
+SPDX-License-Identifier = "CC-BY-4.0"
+
+[[annotations]]
+path = ["tests/.constants.sh", "bin/.constants.sh", "bin/.dpkg-arch.sh", "bin/garden-debian-sources-list", "bin/garden-chroot", "bin/.tar-exclude", "bin/garden-version", "bin/.fix-apt-comments.sh"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright 2017 Tianon Gravi <tianon@debian.org>"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = ["features/sap/file.include/etc/tmpfiles.d/legacy.conf", "features/cisPartition/file.include/etc/systemd/system/tmp.mount", "features/server/file.include/etc/systemd/system/tmp.mount", "features/cisOS/file.include/usr/lib/tmpfiles.d/var.conf"]
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright (C) 1989, 1991 Free Software Foundation, Inc."
+SPDX-License-Identifier = "LGPL-2.1-or-later"
+
+[[annotations]]
+path = "features/gcp/file.include/usr/lib/udev/rules.d/64-gce-disk-removal.rules"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright 2016 Google Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "features/vmware/file.include/usr/bin/dscheck_VMwareGuestInfo"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright (c) 2019 VMware, Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ["features/vmware/file.include/usr/lib/python3/dist-packages/cloudinit/sources/DataSourceVMwareGuestInfo.py", "features/vmware/file.include/etc/cloud/cloud.cfg.d/99_enabled-datasources.cfg"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright (c) 2018 VMware, Inc."
+SPDX-License-Identifier = "Apache-2.0"

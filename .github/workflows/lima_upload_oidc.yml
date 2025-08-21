@@ -1,0 +1,152 @@
+name: build and publish images for use with lima-vm
+
+on:
+  schedule:
+    - cron: '0 11 * * 2'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Image version (default: today)'
+        required: false
+        default: 'today'
+
+jobs:
+
+  build-amd:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        ref: ${{ github.event.inputs.version == 'today' && 'main' || github.event.inputs.version }}
+    - name: Build image with feature:lima for amd64
+      run: |
+        ./build kvm-lima-amd64
+    - uses: actions/upload-artifact@v4
+      with:
+        name: gardenlinux-lima-${{ github.event.inputs.version || 'today' }}-amd64
+        path: .build/*lima-amd64-${{ github.event.inputs.version || 'today' }}*.qcow2
+        include-hidden-files: true
+
+  build-arm:
+    runs-on: ubuntu-24.04-arm
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        ref: ${{ github.event.inputs.version == 'today' && 'main' || github.event.inputs.version }}
+    - name: Build image with feature:lima for arm64
+      run: |
+        ./build kvm-lima-arm64
+    - uses: actions/upload-artifact@v4
+      with:
+        name: gardenlinux-lima-${{ github.event.inputs.version || 'today' }}-arm64
+        path: .build/*lima-arm64-${{ github.event.inputs.version || 'today' }}*.qcow2
+        include-hidden-files: true
+
+  upload:
+    runs-on: ubuntu-latest
+    needs:
+      - build-amd
+      - build-arm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - uses: actions/download-artifact@v5
+      with:
+        name: gardenlinux-lima-${{ github.event.inputs.version || 'today' }}-amd64
+        path: images
+
+    - uses: actions/download-artifact@v5
+      with:
+        name: gardenlinux-lima-${{ github.event.inputs.version || 'today' }}-arm64
+        path: images
+
+    - name: Calculate sha sums
+      run: |
+        IMAGE_AMD=$(find . -maxdepth 1 -type f -name "*amd*.qcow2" -exec basename {} \;)
+        echo -e "Reading IMAGE_AMD" $IMAGE_AMD
+        sha512sum "$IMAGE_AMD" > "$(basename $IMAGE_AMD).sha512"
+
+        IMAGE_ARM=$(find . -maxdepth 1 -type f -name "*arm*.qcow2" -exec basename {} \;)
+        echo -e "Reading IMAGE_ARM" $IMAGE_ARM
+        sha512sum "$IMAGE_ARM" > "$(basename $IMAGE_ARM).sha512"
+      working-directory: images
+
+    - run: ls -la images
+
+    - name: Create gardenlinux.yaml for limactl create config 
+      run: |
+        VERSION="${{ github.event.inputs.version || 'today' }}"
+        SHA_AMD=$(cat images/*amd*.sha512|cut -d' ' -f1)
+        SHA_ARM=$(cat images/*arm*.sha512|cut -d' ' -f1)
+        echo "Reading SHA_AMD" $SHA_AMD
+        echo "Reading SHA_ARM" $SHA_ARM
+
+        if [ "$VERSION" = "today" ]; then
+          cat <<EOF > gardenlinux.yaml
+        vmType: qemu
+        os: Linux
+        images:
+        - location: "https://images.gardenlinux.io/gardenlinux-amd64-${VERSION}.qcow2"
+          arch: "x86_64"
+        - location: "https://images.gardenlinux.io/gardenlinux-arm64-${VERSION}.qcow2"
+          arch: "aarch64"
+        containerd:
+          system: false
+          user: false
+        mountTypesUnsupported: [9p]
+        EOF
+        else
+          cat <<EOF > gardenlinux-${VERSION}.yaml
+        vmType: qemu
+        os: Linux
+        images:
+        - location: "https://images.gardenlinux.io/gardenlinux-amd64-${VERSION}.qcow2"
+          arch: "x86_64"
+          digest: "sha512:$SHA_AMD"
+        - location: "https://images.gardenlinux.io/gardenlinux-arm64-${VERSION}.qcow2"
+          arch: "aarch64"
+          digest: "sha512:$SHA_ARM"
+        containerd:
+          system: false
+          user: false
+        mountTypesUnsupported: [9p]
+        EOF
+        fi
+
+    - name: Authenticate to GCloud via OIDC
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: '${{ secrets.GCP_LIMA_WORKLOAD_IDENTITY_PROVIDER }}'
+        service_account: '${{ secrets.GCP_LIMA_SERVICE_ACCOUNT }}'
+        create_credentials_file: true
+        export_environment_variables: true
+
+    - name: Set up gcloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: '${{ secrets.GCP_PROJECT }}'
+        install_components: 'gsutil'
+          
+    - name: Upload image and checksum to GCS
+      run: |
+        VERSION="${{ github.event.inputs.version || 'today' }}"
+        IMAGE_AMD=$(ls images/*amd*.qcow2)
+        IMAGE_ARM=$(ls images/*arm*.qcow2)
+        SHA_AMD=$(ls images/*amd*.sha512)
+        SHA_ARM=$(ls images/*arm*.sha512)
+        echo $IMAGE_AMD $IMAGE_ARM $SHA_AMD $SHA_ARM
+        if [ "$VERSION" = "today" ]; then
+          gsutil cp "gardenlinux.yaml" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux.yaml
+        else
+          gsutil cp "gardenlinux-${VERSION}.yaml" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-${VERSION}.yaml
+        fi
+        gsutil cp "$IMAGE_AMD" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-amd64-${VERSION}.qcow2
+        gsutil cp "$SHA_AMD" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-amd64-${VERSION}.qcow2.sha512
+        gsutil cp "$IMAGE_ARM" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-arm64-${VERSION}.qcow2
+        gsutil cp "$SHA_ARM" gs://${{ secrets.GCP_LIMA_BUCKET }}/gardenlinux-arm64-${VERSION}.qcow2.sha512
