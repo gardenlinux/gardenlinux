@@ -54,7 +54,8 @@ fi
 sedcommands=()
 
 if [ ! ${#whitelist[@]} -eq 0 ]; then
-    sedcommands+=("sed -E")
+    sedcommands+=("sed")
+    sedcommands+=("-E")
 else 
     sedcommands+=("cat")
 fi
@@ -70,7 +71,7 @@ if ! cmp "A/$basefile_a" "B/$basefile_b" > /dev/null; then
     files=$(diff -qrN "$unpacked_a" "$unpacked_b" 2> /dev/null \
     | grep differ \
     | perl -0777 -pe "s/(?:[^\/\n]*\/){$depth}([^\s]*)[^\n]*/\/\1/g" \
-    | ${sedcommands[@]} || true)
+    | "${sedcommands[@]}" || true)
 
     echo "$files" > "$1-diff"
 
