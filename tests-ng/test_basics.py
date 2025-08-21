@@ -58,7 +58,6 @@ def test_startup_time(systemd: Systemd):
         f"(tolerated {tolerated_userspace}s)"
     )
 
-@pytest.mark.skip(reason="Fails in multiple cloud images with network-online service missing, needs fixing")
 @pytest.mark.root(reason="Needed for journalctl which is only needed when the test fails, but still very useful for understanding test failures")
 @pytest.mark.booted(reason="Systemctl needs a booted system")
 def test_no_failed_units(systemd: Systemd, shell: ShellRunner):
