@@ -1,6 +1,6 @@
 {
     "python.testing.pytestArgs": [
-        "tests-ng"
+        "tests-ng", "--system-booted", "--expected-users=user", "--allow-system-modifications"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true
