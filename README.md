@@ -33,7 +33,7 @@
 - [MIT](https://github.com/gardenlinux/gardenlinux/blob/master/LICENSE.md) license
 - Security
   - Fully immutable image(s) *(optional)*
-  - OpenSSL 3.0 *(default)*
+  - OpenSSL 3.5 *(default)*
   - CIS Framework *(optional)*
 - Testing
   - Unit tests (Created image testing)
