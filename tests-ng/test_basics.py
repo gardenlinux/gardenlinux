@@ -58,6 +58,12 @@ def test_startup_time(systemd: Systemd):
         f"(tolerated {tolerated_userspace}s)"
     )
 
+@pytest.mark.booted(reason="Kernel test makes sense only on booted system")
+def test_kernel_not_tainted():
+    with open("/proc/sys/kernel/tainted", "r") as f:
+        tainted = f.read().strip()
+    assert tainted == "0", f"Kernel is tainted (value: {tainted})"
+
 @pytest.mark.feature("not gcp and not metal and not openstack", reason='Not compatible, usually because of missing external backends')
 @pytest.mark.root(reason="Required for journalctl in case of errors")
 @pytest.mark.booted(reason="Systemctl needs a booted system")
