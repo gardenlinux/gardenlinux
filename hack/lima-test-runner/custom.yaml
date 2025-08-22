@@ -1,0 +1,41 @@
+vmType: qemu
+os: Linux
+images:
+  # CHANGE THIS TO THE REAL PATH OF YOUR IMAGE
+  - location: /path/to/your/gardenlinux/.build/kvm-lima-[ARCH]-[VERSION]-[COMMIT_SHA].qcow2
+
+containerd:
+  system: false
+  user: false
+
+# Configure user for predictable username and uid (>= 1000)
+user:
+  name: user
+  comment: user
+  uid: 1001
+  home: /home/user
+  shell: /bin/bash
+
+provision:
+- mode: system
+  script: |
+    #!/bin/bash
+    set -eux -o pipefail
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get -y install git python3-pip
+
+- mode: user
+  script: |
+    #!/bin/bash
+    set -eux -o pipefail
+    pip install --break-system-packages boolean.py pytest
+
+mounts:
+- location: "~"
+
+- location: "{{.GlobalTempDir}}/lima"
+  mountPoint: /tmp/lima
+  writable: true
+
+mountTypesUnsupported: [9p]
