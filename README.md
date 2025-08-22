@@ -118,3 +118,9 @@ More information are available in in <a href="CONTRIBUTING.md">CONTRIBUTING.md</
 If you need further assistance, have any issues or just want to get in touch with other Garden Linux users feel free to join our public chat room on Gitter.
 
 Link: <a href="https://gitter.im/gardenlinux/community">https://gitter.im/gardenlinux/community</a>
+
+## Licensing
+
+Copyright 2025 SAP SE or an SAP affiliate company and GardenLinux contributors. Please see our [LICENSE](LICENSE.md) for
+copyright and license information. Detailed information including third-party components and their licensing/copyright
+information is available [via the REUSE tool](https://reuse.software).
