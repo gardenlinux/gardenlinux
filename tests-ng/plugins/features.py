@@ -20,12 +20,18 @@ def check_feature_condition(condition: str):
 
 
 def pytest_configure(config: pytest.Config):
-    config.addinivalue_line("markers", "feature(condition): mark test to run only if feature set condition is met")
-
+    config.addinivalue_line(
+        "markers",
+        "feature(condition, reason=None): mark test to run only if feature set condition is met. Optionally provide a reason."
+    )
 
 def pytest_collection_modifyitems(config: pytest.Config, items: List[pytest.Item]):
     for item in items:
         for mark in item.iter_markers(name="feature"):
             condition = mark.args[0]
+            reason = mark.kwargs.get("reason")
+            skip_msg = f"excluded by feature condition: {condition}"
+            if reason:
+                skip_msg += f" (reason: {reason})"
             if not check_feature_condition(condition):
-                item.add_marker(pytest.mark.skip(reason=f"excluded by feature condition: {condition}"))
+                item.add_marker(pytest.mark.skip(reason=skip_msg))
