@@ -4,7 +4,7 @@
 Garden Linux offers a range of specialized bare container images, each tailored for specific applications and designed for minimalism and security:
 
 - **Bare-libc**: Ideal for C/C++ applications requiring only essential C runtime libraries.
-- **Bare-python**: Equipped with Python runtime, perfect for Python-based applications.
+- **Bare-Python3**: Equipped with Python3 runtime, perfect for Python3-based applications.
 - **Bare-sapmachine**: Customized for sapmachine with necessary libraries and binaries.
 - **Bare-nodejs**: Includes Node.js environment, suitable for server-side JavaScript applications.
 
@@ -28,19 +28,29 @@ Their development is streamlined by the [unbase_oci](https://github.com/gardenli
   - Enhanced security through a minimal attack surface.
 - **Container Link**: [bare-libc](https://github.com/orgs/gardenlinux/packages/container/package/gardenlinux%2Fbare-libc)
 
-### Bare-python
-- **Description**: Optimized for Python applications, this image provides the Python runtime.
+### Bare-Python3
+- **Description**: Optimized for Python3 applications, this image provides the Python3 runtime.
 - **Features**:
-  - Contains the Python interpreter and necessary libraries.
-  - Ideal for Python-based applications.
+  - Contains the Python3 interpreter and necessary libraries.
+  - Ideal for Python3-based applications.
   - Designed for improved security and efficiency.
-- **Container Link**: [bare-python](https://github.com/orgs/gardenlinux/packages/container/package/gardenlinux%2Fbare-python)
+  - Note: The bare-Python3 container does not include pip or other Python3 package managers by default. You may need to install dependencies in a builder container and copy them into this bare container for runtime usage. This ensures Python3 scripts can run with required packages while keeping the container minimal.
+
+- **Container Link**: [bare-Python3](https://github.com/orgs/gardenlinux/packages/container/package/gardenlinux%2Fbare-Python3)
 - **Usage in Dockerfile**:
   ```Dockerfile
   FROM ghcr.io/gardenlinux/gardenlinux/bare-python:nightly
   COPY hello.py /
   CMD ["python3", "/hello.py"]
   ```
+  If your application needs additional Python packages, you can install them like this:
+```Dockerfile
+FROM ghcr.io/gardenlinux/gardenlinux/bare-python:nightly
+COPY requirements.txt /
+RUN python3 -m pip install --no-cache-dir -r requirements.txt
+COPY hello.py /
+CMD ["python3", "/hello.py"]
+ ```
 
 ### bare-sapmachine
 - **Description**: Customized for SAP applications, ensuring compatibility and optimized performance.
