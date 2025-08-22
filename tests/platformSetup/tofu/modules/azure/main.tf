@@ -162,12 +162,12 @@ resource "azurerm_shared_image_version" "shared_image_version" {
       ]
       additional_signatures {
         db {
-          type = "x509"
-          certificate_base64 = filebase64("cert/secureboot.db.der")
+          key_type = "x509"
+          certificate_data = filebase64("cert/secureboot.db.der")
         }
         kek {
-          type = "x509"
-          certificate_base64 = filebase64("cert/secureboot.kek.der")
+          key_type = "x509"
+          certificate_data = filebase64("cert/secureboot.kek.der")
         }
       }
     }

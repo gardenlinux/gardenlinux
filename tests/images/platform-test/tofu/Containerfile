@@ -32,10 +32,10 @@ RUN export TOFUENV_GITHUB_TOKEN="$GITHUB_TOKEN" && cd ${TOFU_HOME} && tofuenv in
 COPY .terraform.lock.hcl ${TOFU_HOME}/.terraform.lock.hcl
 RUN cd ${TOFU_HOME} && tofu init -upgrade && tofu providers mirror ${TOFU_HOME}/.terraform
 
-# install provider from development fork
+# install providers from development forks
 COPY .terraformrc ${TOFU_HOME}/.terraformrc
-RUN curl -LO --create-dirs --output-dir ${TOFU_PROVIDERS_CUSTOM} https://github.com/gardenlinux/terraform-provider-azurerm/releases/download/v4.41.0-post1-secureboot1/terraform-provider-azurerm \
-    && echo "d0724b2b33270dbb0e7946a4c125e78b5dd0f34697b74a08c04a1c455764262e ${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" >${TOFU_PROVIDERS_CUSTOM}/checksum.txt \
+RUN curl -LO --create-dirs --output-dir ${TOFU_PROVIDERS_CUSTOM} https://github.com/gardenlinux/terraform-provider-azurerm/releases/download/v4.20.1-alpha1-secureboot1/terraform-provider-azurerm \
+    && echo "526ae7f43ead2895b037f460f4d0e1f3b66d77f4ff436b3a5a68fad2e5cb3b30 ${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" >${TOFU_PROVIDERS_CUSTOM}/checksum.txt \
     && sha256sum -c ${TOFU_PROVIDERS_CUSTOM}/checksum.txt \
     && chmod +x ${TOFU_PROVIDERS_CUSTOM}/terraform-provider-*
 
