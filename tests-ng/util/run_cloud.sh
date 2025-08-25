@@ -4,6 +4,7 @@ set -eufo pipefail
 
 cloud=
 cloud_image=0
+cloud_plan=0
 skip_cleanup=0
 skip_tests=0
 test_args=()
@@ -17,6 +18,10 @@ while [ $# -gt 0 ]; do
 		;;
 	--cloud-image)
 		cloud_image=1
+		shift
+		;;
+	--cloud-plan)
+		cloud_plan=1
 		shift
 		;;
 	--skip-cleanup)
@@ -159,33 +164,37 @@ EOF
 
 echo "⚙️  setting up cloud resources via OpenTofu"
 if ((cloud_plan)); then
-	tf_cmd="plan"
+	tf_cmd=("plan")
 else
-	tf_cmd="apply --auto-approve"
+	tf_cmd=("apply" "--auto-approve")
 fi
+
+set -x
 
 (
 	cd "${tf_dir}"
 	tofu init -var-file "$image_name.tfvars"
 	tofu workspace select -or-create "$image_name"
-	tofu "$tf_cmd" -var-file "$image_name.tfvars"
+	tofu "${tf_cmd[@]}" -var-file "$image_name.tfvars"
 )
 
-vm_ip="$(cd "${tf_dir}" && tofu output --raw vm_ip)"
-ssh_user="$(cd "${tf_dir}" && tofu output --raw ssh_user)"
-login_cloud_sh="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/login_cloud.sh")"
+if ! ((cloud_plan)); then
+	vm_ip="$(cd "${tf_dir}" && tofu output --raw vm_ip)"
+	ssh_user="$(cd "${tf_dir}" && tofu output --raw ssh_user)"
+	login_cloud_sh="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/login_cloud.sh")"
 
-echo -n "⚙️  waiting for VM ($vm_ip) to accept ssh connections"
-until "$login_cloud_sh" "$image_basename" true 2>/dev/null; do
-	echo -n .
-	sleep 1
-done
+	echo -n "⚙️  waiting for VM ($vm_ip) to accept ssh connections"
+	until "$login_cloud_sh" "$image_basename" true 2>/dev/null; do
+		echo -n .
+		sleep 1
+	done
 
-if ! ((skip_tests)); then
-	test_args+=(
-		"--system-booted"
-		"--allow-system-modifications"
-		"--expected-users" "$ssh_user"
-	)
-	"$login_cloud_sh" "$image_basename" sudo /run/gardenlinux-tests/run_tests "${test_args[*]@Q}"
+	if ! ((skip_tests)); then
+		test_args+=(
+			"--system-booted"
+			"--allow-system-modifications"
+			"--expected-users" "$ssh_user"
+		)
+		"$login_cloud_sh" "$image_basename" sudo /run/gardenlinux-tests/run_tests "${test_args[*]@Q}"
+	fi
 fi
