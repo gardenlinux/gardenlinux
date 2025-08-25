@@ -179,7 +179,7 @@ The build process runs automatically when you execute `./test-ng`:
 
 # Or build manually
 cd tests-ng
-make dist
+make -f util/build.makefile
 ```
 
 ### Test Distribution Structure
