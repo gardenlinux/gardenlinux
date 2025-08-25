@@ -89,6 +89,18 @@ cleanup() {
 
 trap cleanup EXIT
 
+tofuenv_dir="$tf_dir/.tofuenv"
+PATH="$tofuenv_dir/bin:$PATH"
+command -v tofuenv >/dev/null || {
+	git clone --depth=1 https://github.com/tofuutils/tofuenv.git "$tofuenv_dir"
+	echo 'trust-tofuenv: yes' >"$tofuenv_dir/use-gpgv"
+}
+pushd "$tf_dir"
+tofuenv install latest-allowed
+popd
+tofu_version="$(tofuenv list | head -1 | cut -d' ' -f2)"
+tofuenv use "$tofu_version"
+
 ssh_private_key_path="$HOME/.ssh/id_ed25519_gl"
 if [ ! -f "$ssh_private_key_path" ]; then
 	mkdir -p "$(dirname "$ssh_private_key_path")"
@@ -146,11 +158,17 @@ provider_vars = {
 EOF
 
 echo "⚙️  setting up cloud resources via OpenTofu"
+if ((cloud_plan)); then
+	tf_cmd="plan"
+else
+	tf_cmd="apply --auto-approve"
+fi
+
 (
 	cd "${tf_dir}"
 	tofu init -var-file "$image_name.tfvars"
 	tofu workspace select -or-create "$image_name"
-	tofu apply -var-file "$image_name.tfvars" --auto-approve
+	tofu "$tf_cmd" -var-file "$image_name.tfvars"
 )
 
 vm_ip="$(cd "${tf_dir}" && tofu output --raw vm_ip)"
