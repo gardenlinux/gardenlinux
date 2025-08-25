@@ -37,6 +37,13 @@ resource "aws_instance" "vm" {
     local.labels,
     { Name = local.test_name }
   )
+
+  lifecycle {
+    replace_triggered_by = [
+      terraform_data.root_disk_hash,
+      terraform_data.test_disk_hash,
+    ]
+  }
 }
 
 output "vm_ip" {
