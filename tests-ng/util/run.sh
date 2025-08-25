@@ -19,6 +19,10 @@ while [ $# -gt 0 ]; do
 		cloud_image=1
 		shift
 		;;
+	--cloud-plan)
+		cloud_args+=("$1")
+		shift
+		;;
 	--image-requirements-file)
 		cloud_args+=("$1")
 		cloud_args+=("$2")
