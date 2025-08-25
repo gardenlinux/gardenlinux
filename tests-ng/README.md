@@ -21,6 +21,32 @@ tests-ng/
 
 ## Running Tests
 
+### Prerequisites
+
+Before running the test framework, make sure the following dependencies are installed:
+
+- `podman`
+- `make`
+- `curl`
+- `jq`
+- `unzip`
+- `qemu`
+- `qemu-utils`
+
+#### Install on Debian based systems
+
+```
+apt-get update
+apt-get install podman make curl jq unzip
+
+```
+
+#### Install on MacOS
+
+```
+brew install podman make curl jq unzip
+```
+
 ### Basic Usage
 
 The main entry point is `./test-ng` in the gardenlinux root directory (symlink to )`tests-ng/util/run.sh`). It automatically detects the image type and runs appropriate tests:
