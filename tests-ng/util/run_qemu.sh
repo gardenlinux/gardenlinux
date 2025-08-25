@@ -79,8 +79,14 @@ exec 2>&1
 EOF
 
 if ((ssh)); then
-	ssh_public_key="$(cat ~/.ssh/id_ed25519.pub)"
-    ssh_user="gardenlinux"
+	ssh_private_key_path="$HOME/.ssh/id_ed25519_gl"
+	ssh_public_key_path="${ssh_private_key_path}.pub"
+	if [ ! -f "$ssh_private_key_path" ]; then
+		mkdir -p "$(dirname "$ssh_private_key_path")"
+		ssh-keygen -t ed25519 -f "$ssh_private_key_path" -N "" >/dev/null
+	fi
+	ssh_public_key=$(cat "$ssh_public_key_path")
+	ssh_user="gardenlinux"
 	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
 systemctl stop sshguard
 systemctl enable --now ssh
@@ -88,7 +94,7 @@ useradd -U -m -G wheel -s /bin/bash $ssh_user
 mkdir -p /home/$ssh_user/.ssh
 chmod 700 /home/$ssh_user/.ssh
 echo "$ssh_public_key" >> /home/$ssh_user/.ssh/authorized_keys
-chown -R $ssh_user:$ssh_user/home/$ssh_user/.ssh
+chown -R $ssh_user:$ssh_user /home/$ssh_user/.ssh
 chmod 600 /home/$ssh_user/.ssh/authorized_keys
 EOF
 fi
@@ -139,7 +145,7 @@ if ! ((skip_tests)); then
 	fi
 	if ((ssh)); then
 		test_args+=("--expected-users" "$ssh_user")
-	fi    
+	fi
 	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
 ./run_tests ${test_args[@]}
 EOF
