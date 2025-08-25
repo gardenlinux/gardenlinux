@@ -17,6 +17,6 @@ while [ $# -gt 0 ]; do
 done
 
 vm_ip="127.0.0.1"
-ssh_opts=(-p 2222 -o ConnectTimeout=5 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no)
+ssh_opts=(-p 2222 -o ConnectTimeout=5 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519_gl)
 
 exec ssh "${ssh_opts[@]}" "$ssh_user@$vm_ip" "$@"
