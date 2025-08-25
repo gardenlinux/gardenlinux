@@ -260,6 +260,9 @@ resource "azurerm_ssh_public_key" "ssh_public_key" {
 }
 
 resource "azurerm_linux_virtual_machine" "instance" {
+  # Ensure we mark NIC as dependency for VM
+  depends_on = [azurerm_network_interface.nic]
+
   name                  = local.instance_name
   location              = azurerm_resource_group.rg.location
   resource_group_name   = azurerm_resource_group.rg.name
