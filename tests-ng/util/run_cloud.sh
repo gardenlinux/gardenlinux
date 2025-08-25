@@ -60,6 +60,13 @@ cleanup() {
 
 trap cleanup EXIT
 
+ssh_private_key_path="$HOME/.ssh/id_ed25519_gl"
+ssh_public_key_path="${ssh_private_key_path}.pub"
+if [ ! -f "$ssh_private_key_path" ]; then
+	mkdir -p "$(dirname "$ssh_private_key_path")"
+	ssh-keygen -t ed25519 -f "$ssh_private_key_path" -N "" >/dev/null
+fi
+
 user_data_script="$(mktemp)"
 cat >"$user_data_script" <<EOF
 #!/usr/bin/env bash
