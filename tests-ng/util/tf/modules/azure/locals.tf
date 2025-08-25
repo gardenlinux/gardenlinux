@@ -1,6 +1,6 @@
 locals {
   test_name   = replace(var.prefix, "_", "-")
-  bucket_name = "${local.test_name}-images"
+  bucket_name = lower(replace(replace("${local.test_name}-images", "-", ""), "/[^a-z0-9]/", ""))
   image_name    = "${local.test_name}-image"
   net_name    = "${local.test_name}-net"
   subnet_name = "${local.test_name}-subnet"
@@ -14,7 +14,7 @@ locals {
     test-name = local.test_name
   }
 
-  arch = var.image_requirements.arch == "amd64" ? "x86_64" : var.image_requirements.arch == "arm64" ? "arm64" : null
+  arch = var.image_requirements.arch == "amd64" ? "x64" : var.image_requirements.arch == "arm64" ? "Arm64" : null
   root_disk_object_key  = basename(var.root_disk_path)
   test_disk_object_key  = basename(var.test_disk_path)
   instance_type         = coalesce(var.provider_vars.instance_type,

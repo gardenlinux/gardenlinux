@@ -3,6 +3,8 @@ locals {
     aws   = "./modules/aws"
     gcp   = "./modules/gcp"
     azure = "./modules/azure"
+    ali   = "./modules/ali"
+    openstack = "./modules/openstack"
   }
 }
 
@@ -17,6 +19,7 @@ module "cloud" {
   image_requirements    = var.image_requirements
   my_ip                 = chomp(data.http.my_ip.response_body)
   provider_vars         = try(var.provider_vars[var.cloud_provider], {})
+  existing_root_disk    = var.existing_root_disk
 }
 
 resource "random_id" "suffix" {
@@ -30,4 +33,9 @@ data "http" "my_ip" {
 output "vm_ip" {
   value       = module.cloud.vm_ip
   description = "Public IPv4 of the VM"
+}
+
+output "ssh_user" {
+  value       = module.cloud.ssh_user
+  description = "SSH user for the VM"
 }
