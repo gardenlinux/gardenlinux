@@ -22,7 +22,7 @@ provider "registry.opentofu.org/aliyun/alicloud" {
 
 provider "registry.opentofu.org/hashicorp/aws" {
   version     = "6.2.0"
-  constraints = "~> 6.0, ~> 6.2.0"
+  constraints = "~> 6.2.0"
   hashes = [
     "h1:UcBl0SyNxOTHOa3Ske3ClmzA7V1S7e/I4+29DLGe85A=",
     "zh:26072ed06da98bfeff0a9ef54edd215c7af005658a670e098dc6445c10bf2b55",
