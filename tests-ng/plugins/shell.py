@@ -14,15 +14,16 @@ class ShellRunner:
     def __call__(
         self,
         cmd: str,
+        shell: bool = False,
         capture_output: bool = False,
-        ignore_exit_code: bool = False
+        ignore_exit_code: bool = False,
     ) -> subprocess.CompletedProcess:
         def _setuid():
             if self.user != None:
                 os.setgid(self.user[1])
                 os.setuid(self.user[0])
 
-        result = subprocess.run(['/bin/sh', '-e', '-c', cmd], shell=False, capture_output=capture_output, text=True, check=False, preexec_fn=_setuid)
+        result = subprocess.run(['/bin/sh', '-e', '-c', cmd], shell=shell, capture_output=capture_output, text=True, check=False, preexec_fn=_setuid)
 
         if result.returncode != 0 and not ignore_exit_code:
             raise RuntimeError(f"command {cmd} failed with exit code {result.returncode}")

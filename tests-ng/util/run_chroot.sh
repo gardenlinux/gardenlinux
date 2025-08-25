@@ -49,7 +49,7 @@ mount -t tmpfs -o mode=0755 none "$tmpdir/chroot"
 
 tar --extract --xattrs --xattrs-include 'security.*' --directory "$tmpdir/chroot" < "$rootfs_tar"
 
-mount --rbind --make-rprivate /proc "$tmpdir/chroot/proc"
+#mount --rbind --make-rprivate /proc "$tmpdir/chroot/proc"
 mount --rbind --make-rprivate /sys "$tmpdir/chroot/sys"
 mount --rbind --make-rprivate /dev "$tmpdir/chroot/dev"
 
