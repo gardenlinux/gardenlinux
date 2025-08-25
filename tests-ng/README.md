@@ -42,9 +42,9 @@ The main entry point is `./test-ng` in the gardenlinux root directory (symlink t
 ### Command Line Flags
 
 - `--cloud <provider>`: Specify cloud provider (aws, gcp, azure, ali). Leave empty to run locally in QEMU VM.
-- `--ssh`: Enable SSH access to QEMU VM (port 2222). For cloud providers, this is always enabled.
+- `--ssh`: Enable SSH access to QEMU VM (`gardenlinux@127.0.01:2222`). For cloud providers, SSHD is always enabled via `cloud-init`.
 - `--skip-tests`: Skip running the actual test suite
-- `--skip-cleanup`: Skip cleanup of cloud resources after testing
+- `--skip-cleanup`: Skip cleanup of cloud resources after testing. To cleanup up cloud resources after passing the flag, just re-run without the flag.
 
 ### Examples
 
@@ -77,9 +77,12 @@ To connect to a running QEMU VM:
 
 # Execute a command directly
 ./util/login_qemu.sh "uname -a"
+
+# Run tests manually after login
+cd /run/gardenlinux-tests && ./run_tests --system-booted --allow-system-modifications --expected-users gardenlinux
 ```
 
-**Note**: QEMU VMs run on localhost port 2222 and have the user "gardenlinux" provisioned.
+**Note**: Login to QEMU VMs is only possible if `--ssh --skip-cleanup` is passed. SSHD is reachable on `127.0.0.1:2222` with the user `gardenlinux`.
 
 ### Cloud Environment
 
@@ -91,6 +94,9 @@ To connect to a cloud VM:
 
 # Execute a command directly
 ./util/login_cloud.sh .build/aws-gardener_prod-amd64-today-13371337.raw "uname -a"
+
+# Run tests manually after login
+cd /run/gardenlinux-tests && ./run_tests --system-booted --allow-system-modifications --expected-users gardenlinux
 ```
 
 **Note**: Cloud VMs use the SSH user and IP address from the OpenTofu output.
