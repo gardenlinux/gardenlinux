@@ -12,6 +12,11 @@ resource "terraform_data" "test_disk_hash" {
 
 resource "aws_s3_bucket" "upload" {
   bucket = local.bucket_name
+
+  tags = merge(
+    local.labels,
+    { Name = local.bucket_name }
+  )
 }
 
 resource "aws_s3_bucket_ownership_controls" "owner" {
@@ -128,10 +133,10 @@ resource "aws_ebs_snapshot_import" "test_disk" {
 }
 
 resource "aws_ami" "image" {
-  name                = local.ami_name
+  name                = local.image_name
   virtualization_type = "hvm"
   ena_support         = true
-  architecture        = var.image_requirements.arch
+  architecture        = local.arch
   boot_mode           = local.boot_mode
 
   root_device_name = "/dev/xvda"
@@ -142,4 +147,9 @@ resource "aws_ami" "image" {
     volume_type           = "gp3"
     delete_on_termination = true
   }
+
+  tags = merge(
+    local.labels,
+    { Name = local.image_name }
+  )
 }
