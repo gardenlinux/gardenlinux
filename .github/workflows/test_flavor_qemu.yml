@@ -62,8 +62,25 @@ jobs:
         # TODO: handle skipping better
       - name: New Test Framework
         run: |
+          if [ ! -e ".build/$CNAME.raw" ]; then
+            if [ -e ".build/$CNAME.vhd" ]; then
+              echo "converting vhd to raw"
+              qemu-img convert -f vpc -O raw ".build/$CNAME.vhd" ".build/$CNAME.raw"
+            elif [ -e ".build/$CNAME.qcow2" ]; then
+              echo "converting qcow2 to raw"
+              qemu-img convert -f qcow2 -O raw ".build/$CNAME.qcow2" ".build/$CNAME.raw"
+            elif [ -e ".build/$CNAME.vmdk" ]; then
+              echo "converting vmdk to raw"
+              qemu-img convert -f vmdk -O raw ".build/$CNAME.vmdk" ".build/$CNAME.raw"
+            elif [ -e ".build/$CNAME.gcpimage.tar.gz" ]; then
+              echo "converting gcpimage to raw"
+              tar -C .build -xzf ".build/$CNAME.gcpimage.tar.gz"
+              mv ".build/disk.raw" ".build/$CNAME.raw"
+            fi
+          fi
           if [ -e ".build/$CNAME.raw" ]; then
             ./test-ng ".build/$CNAME.raw"
           else
-            echo "no raw file, skipping QEMU test"
+            echo "no raw file, QEMU test failed"
+            exit 1
           fi
