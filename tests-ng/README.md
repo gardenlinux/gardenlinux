@@ -83,6 +83,8 @@ The main entry point is `./test-ng` in the gardenlinux root directory (symlink t
     - gcp: `gardenlinux-gcp-ff804026cbe7b5f2d6f729e4-1592-12-c6d7f9a9` (amd64)
     - azure: `/CommunityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/Images/gardenlinux-nvme-gen2/Versions/1592.12.0` (amd64)
 - `--image-requirements-file` Only needed with `--cloud-image`. Needs to point to a valid `*.requirements` file.
+- `--cloud-plan`: Only run `tofu plan` for cloud setups.
+  - QEMU VM: Ignores this flag.
 
 ### Examples
 

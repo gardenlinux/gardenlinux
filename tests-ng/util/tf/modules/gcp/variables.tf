@@ -74,7 +74,6 @@ variable "provider_vars" {
     net_cidr           = optional(string, "10.0.0.0/16")
     subnet_cidr = optional(string, "10.0.1.0/24")
     ssh_user = optional(string, "gardenlinux")
-    gcp_project_id         = string
     zone = optional(string, "a")
     # feature_tpm2      = optional(bool, false)
     # feature_trustedboot = optional(bool, false)
