@@ -8,11 +8,11 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Garden Linux version'
+        description: "Garden Linux version"
         type: string
         default: now
       target:
-        description: 'Garden Linux release target'
+        description: "Garden Linux release target"
         type: choice
         default: dev
         options:
@@ -20,7 +20,7 @@ on:
           - nightly
           - dev
       build:
-        description: 'Build for version specified in version input parameter instead of downloading it from S3.'
+        description: "Build for version specified in version input parameter instead of downloading it from S3."
         type: boolean
         default: false
       platform_test_tag:
@@ -28,23 +28,35 @@ on:
         type: string
         default: latest
       flavors_parse_params:
-        description: 'Run bin/flavors_parse.py with these parameters'
-        default: '--no-arch --json-by-arch --publish --test-platform'
+        description: "Run bin/flavors_parse.py with these parameters"
+        default: "--no-arch --json-by-arch --publish --test-platform"
         type: string
       bare_flavors_parse_params:
-        description: 'Run bin/parse_flavors.py with these parameters for bare flavors'
+        description: "Run bin/parse_flavors.py with these parameters for bare flavors"
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
         type: string
       chroot_test:
-        description: 'Execute chrooted tests'
+        description: "Execute chrooted tests"
         type: boolean
         default: true
-      platform_test:
-        description: 'Execute platform tests'
+      qemu_test:
+        description: "Execute qemu tests"
         type: boolean
         default: true
+      cloud_test:
+        description: "Execute cloud tests"
+        type: boolean
+        default: true
+      # platform_test:
+      #   description: "Execute platform tests"
+      #   type: boolean
+      #   default: true
+      # bare_test:
+      #   description: "Execute bare flavors tests"
+      #   type: boolean
+      #   default: true
       ignore_workflow_concurrency:
-        description: 'Execute workflows concurrently'
+        description: "Execute workflows concurrently"
         type: boolean
         default: false
 jobs:
@@ -70,7 +82,10 @@ jobs:
       version: ${{ needs.build.outputs.version }}
       flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
       chroot_test: ${{ inputs.chroot_test }}
-      platform_test: ${{ inputs.platform_test }}
+      qemu_test: ${{ inputs.qemu_test }}
+      cloud_test: ${{ inputs.cloud_test }}
+      # platform_test: ${{ inputs.platform_test }}
+      # bare_test: ${{ inputs.bare_test }}
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
     permissions:
       id-token: write # TODO: 3215 elevated permissions for included workflow
@@ -137,7 +152,7 @@ jobs:
     with:
       flags: ${{ inputs.flavors_parse_params }}
   download_platform_test_flavors:
-    needs: [ download_build_requirements, download_platform_test_flavors_matrix ]
+    needs: [download_build_requirements, download_platform_test_flavors_matrix]
     name: Download flavors to test
     uses: ./.github/workflows/download_flavors_images.yml
     with:
@@ -153,19 +168,23 @@ jobs:
       aws_region: ${{ secrets.AWS_TESTS_REGION }}
       aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
   test_download_platform_test:
-    needs: [
-      download_build_requirements,
-      download_platform_test,
-      download_platform_test_flavors_matrix,
-      download_platform_test_flavors
-    ]
+    needs:
+      [
+        download_build_requirements,
+        download_platform_test,
+        download_platform_test_flavors_matrix,
+        download_platform_test_flavors,
+      ]
     name: Test flavors downloaded
     uses: ./.github/workflows/tests.yml
     with:
       version: ${{ needs.download_build_requirements.outputs.version }}
       flavors_matrix: ${{ needs.download_platform_test_flavors_matrix.outputs.matrix }}
       chroot_test: ${{ inputs.chroot_test }}
-      platform_test: ${{ inputs.platform_test }}
+      qemu_test: ${{ inputs.qemu_test }}
+      cloud_test: ${{ inputs.cloud_test }}
+      # platform_test: ${{ inputs.platform_test }}
+      # bare_test: ${{ inputs.bare_test }}
     permissions:
       id-token: write # TODO: 3215 elevated permissions for included workflow
       actions: write  # TODO: 3215 elevated permissions for included workflow
