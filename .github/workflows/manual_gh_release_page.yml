@@ -82,10 +82,10 @@ jobs:
             flavors.yaml
           sparse-checkout-cone-mode: false
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@4d385538d6957bb41603dd09e43314f72ccb64ac # pin@0.9.1
       - id: matrix
         name: Generate flavors matrix
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@4d385538d6957bb41603dd09e43314f72ccb64ac # pin@0.9.1
         with:
           flags: '--no-arch --json-by-arch --publish'
       - name: create GitHub release
@@ -115,7 +115,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@4d385538d6957bb41603dd09e43314f72ccb64ac # pin@0.9.1
       - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
