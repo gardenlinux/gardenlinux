@@ -185,20 +185,18 @@ image_requirements = {
 
 cloud_provider = "$cloud"
 
-provider_vars = {
-    ali = {
-      ssh_user = "admin"
-    }
-    aws = {
-        ssh_user = "admin"
-    }
-    gcp = {
-      gcp_project_id = "$GCP_PROJECT_ID"
-    }
-    openstack = {
-        ssh_user = "admin"
-    }
-}
+# provider_vars = {
+#     ali = {
+#     }
+#     aws = {
+#     }
+# 	azure = {
+# 	}
+# 	gcp = {
+# 	}
+#     openstack = {
+#     }
+# }
 EOF
 
 echo "⚙️  setting up cloud resources via OpenTofu"
