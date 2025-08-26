@@ -4,6 +4,7 @@ set -eufo pipefail
 
 cloud=
 
+chroot_args=()
 cloud_args=()
 qemu_args=()
 
@@ -13,10 +14,10 @@ while [ $# -gt 0 ]; do
 		cloud="$2"
 		shift 2
 		;;
-    --ssh)
+	--ssh)
 		qemu_args+=("$1")
 		shift
-		;;        
+		;;
 	--skip-cleanup)
 		cloud_args+=("$1")
 		qemu_args+=("$1")
@@ -26,6 +27,12 @@ while [ $# -gt 0 ]; do
 		cloud_args+=("$1")
 		qemu_args+=("$1")
 		shift
+		;;
+	--test-args)
+		chroot_args+=("$1" "$2")
+		cloud_args+=("$1" "$2")
+		qemu_args+=("$1" "$2")
+		shift 2
 		;;
 	*)
 		break
@@ -55,7 +62,7 @@ if [ -n "$cloud" ]; then
 else
 	case "$type" in
 	tar)
-		./util/run_chroot.sh .build "$artifact"
+		./util/run_chroot.sh "${chroot_args[@]}" .build "$artifact"
 		;;
 	raw)
 		./util/run_qemu.sh "${qemu_args[@]}" .build "$artifact"

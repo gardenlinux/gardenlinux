@@ -75,6 +75,7 @@ The main entry point is `./test-ng` in the gardenlinux root directory (symlink t
 - `--skip-cleanup`: Skip cleanup of cloud resources after testing.
   - QEMU VM: After running/skipping the tests, you can stop/cleanup the VM with `ctrl + c`.
   - cloud: To cleanup up cloud resources after passing the flag, just re-run without the flag.
+- `--test-args`: Pass any commandline argument to `pytest`. Put multiple arguments inside `""`.
 
 ### Examples
 
@@ -82,7 +83,7 @@ The main entry point is `./test-ng` in the gardenlinux root directory (symlink t
 # Run chroot tests on a tar image
 ./test-ng .build/aws-gardener_prod-amd64-today-13371337.tar
 
-# Run QEMU tests on a raw image with SSH access and skip cleanup
+# Run QEMU tests with SSH access and skip cleanup
 ./test-ng --ssh --skip-cleanup .build/aws-gardener_prod-amd64-today-13371337.raw
 
 # Run cloud tests on AWS, skipping cleanup
@@ -90,6 +91,12 @@ The main entry point is `./test-ng` in the gardenlinux root directory (symlink t
 
 # Run cloud tests but skip the test execution and cleanup
 ./test-ng --cloud aws --skip-tests --skip-cleanup .build/aws-gardener_prod-amd64-today-13371337.raw
+
+# Run QEMU tests and only run the test test_ssh.py in verbose mode
+./test-ng --test-args "test_ssh.py -v" aws-gardener_prod-amd64-today-13371337.raw
+
+# Run cloud tests skip cleanup and only run the tests test_ssh.py and test_aws.py in verbose mode
+./test-ng --cloud aws --skip-cleanup --test-args "test_ssh.py test_aws.py -v" .build/aws-gardener_prod-amd64-today-13371337.raw
 ```
 
 ## Login Scripts

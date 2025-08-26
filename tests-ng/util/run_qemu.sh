@@ -15,6 +15,7 @@ map_arch() {
 ssh=0
 skip_cleanup=0
 skip_tests=0
+test_args=()
 
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -26,10 +27,16 @@ while [ $# -gt 0 ]; do
 		skip_cleanup=1
 		shift
 		;;
-    --skip-tests)
+	--skip-tests)
 		skip_tests=1
 		shift
-		;;        
+		;;
+	--test-args)
+		# Split the second argument on spaces to handle multiple test arguments
+		IFS=' ' read -ra args <<<"$2"
+		test_args+=("${args[@]}")
+		shift 2
+		;;
 	*)
 		break
 		;;
@@ -136,7 +143,7 @@ if [ "$arch" = "$native_arch" ]; then
 fi
 
 if ! ((skip_tests)); then
-	test_args=(
+	test_args+=(
 		"--system-booted"
 		"--allow-system-modifications"
 	)
@@ -146,8 +153,9 @@ if ! ((skip_tests)); then
 	if ((ssh)); then
 		test_args+=("--expected-users" "$ssh_user")
 	fi
+
 	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
-./run_tests ${test_args[@]}
+./run_tests ${test_args[*]@Q}
 EOF
 fi
 

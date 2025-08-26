@@ -5,6 +5,7 @@ set -eufo pipefail
 cloud=
 skip_cleanup=0
 skip_tests=0
+test_args=()
 
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -16,10 +17,16 @@ while [ $# -gt 0 ]; do
 		skip_cleanup=1
 		shift
 		;;
-    --skip-tests)
+	--skip-tests)
 		skip_tests=1
 		shift
-		;;        
+		;;
+	--test-args)
+		# Split the second argument on spaces to handle multiple test arguments
+		IFS=' ' read -ra args <<<"$2"
+		test_args+=("${args[@]}")
+		shift 2
+		;;
 	*)
 		break
 		;;
@@ -117,6 +124,10 @@ until "$login_cloud_sh" "$image_basename" true 2>/dev/null; do
 done
 
 if ! ((skip_tests)); then
-	test_args=
-	"$login_cloud_sh" "$image_basename" sudo /run/gardenlinux-tests/run_tests --system-booted --expected-users "$ssh_user" "$test_args"
+	test_args+=(
+		"--system-booted"
+		"--allow-system-modifications"
+		"--expected-users" "$ssh_user"
+	)
+	"$login_cloud_sh" "$image_basename" sudo /run/gardenlinux-tests/run_tests "${test_args[*]@Q}"
 fi

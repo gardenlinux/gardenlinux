@@ -3,6 +3,7 @@
 set -eufo pipefail
 
 containerize=0
+test_args=()
 
 if [ "$(uname -s)" != Linux ]; then
 	containerize=1
@@ -20,7 +21,15 @@ while [ $# -gt 0 ]; do
 		containerize=0
 		shift
 		;;
-	*) break ;;
+	--test-args)
+		# Split the second argument on spaces to handle multiple test arguments
+		IFS=' ' read -ra args <<<"$2"
+		test_args+=("${args[@]}")
+		shift 2
+		;;
+	*)
+		break
+		;;
 	esac
 done
 
@@ -30,11 +39,14 @@ rootfs_tar="$2"
 if ((containerize)); then
 	dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")"/../..)"
 	container_image="$("$dir/build" --print-container-image)"
+
+	test_args_str="${test_args[*]}"
+
 	exec podman run -q --rm \
 		-v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro" \
 		-v "$(realpath -- "$test_dist_dir/dist.tar.gz"):/mnt/test_dist/dist.tar.gz:ro" \
 		-v "$(realpath -- "$rootfs_tar"):/mnt/rootfs.tar:ro" \
-		"$container_image" fake_xattr /init --no-containerize /mnt/test_dist /mnt/rootfs.tar
+		"$container_image" fake_xattr /init --no-containerize --test-args "$test_args_str" /mnt/test_dist /mnt/rootfs.tar
 fi
 
 tmpdir=
@@ -64,4 +76,6 @@ echo "⚙️  setting up test framework"
 mkdir "$tmpdir/chroot/run/gardenlinux-tests"
 gzip -d <"$test_dist_dir/dist.tar.gz" | tar --extract --directory "$tmpdir/chroot/run/gardenlinux-tests"
 
-env -i /sbin/chroot "$tmpdir/chroot" /bin/sh -c 'cd /run/gardenlinux-tests && ./run_tests --allow-system-modifications'
+test_args+=("--allow-system-modifications")
+
+env -i /sbin/chroot "$tmpdir/chroot" /bin/sh -c "cd /run/gardenlinux-tests && ./run_tests ${test_args[*]@Q}"
