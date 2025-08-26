@@ -194,6 +194,11 @@ echo "🚀  starting test VM"
 
 swtpm socket --tpmstate backend-uri="file://$tmpdir/swtpm.permall" --ctrl type=unixio,path="$tmpdir/swtpm.sock" --tpm2 --daemon --terminate
 if ((skip_cleanup)); then
+	# The following command starts the QEMU VM and pipes its output through sed to clean up the console output:
+	# - s/\x1b\][0-9]*\x07//g      : Removes OSC (Operating System Command) escape sequences (e.g., title changes).
+	# - s/\x1b[\[0-9;!?=]*[a-zA-Z]//g : Removes CSI (Control Sequence Introducer) ANSI escape codes (e.g., colors, cursor moves).
+	# - s/\t/    /g                : Replaces tabs with four spaces for better readability.
+	# - s/[^[:print:]]//g          : Removes any remaining non-printable characters.
 	"qemu-system-$arch" "${qemu_opts[@]}" | stdbuf -i0 -o0 sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g' &
 	sleep 5
 	tail -f "$tmpdir/serial.log"
