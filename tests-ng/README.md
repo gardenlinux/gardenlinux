@@ -67,10 +67,14 @@ The main entry point is `./test-ng` in the gardenlinux root directory (symlink t
 
 ### Command Line Flags
 
-- `--cloud <provider>`: Specify cloud provider (aws, gcp, azure, ali). Leave empty to run locally in QEMU VM.
-- `--ssh`: Enable SSH access to QEMU VM (`gardenlinux@127.0.01:2222`). For cloud providers, SSHD is always enabled via `cloud-init`.
+- `--cloud <provider>`: Specify cloud provider (aws, gcp, azure, ali).
+  - QEMU VM: Ignores this flag.
+- `--ssh`: Enable SSH access to QEMU VM (`gardenlinux@127.0.01:2222`).
+  - cloud: SSHD is always enabled via `cloud-init`.
 - `--skip-tests`: Skip running the actual test suite
-- `--skip-cleanup`: Skip cleanup of cloud resources after testing. To cleanup up cloud resources after passing the flag, just re-run without the flag.
+- `--skip-cleanup`: Skip cleanup of cloud resources after testing.
+  - QEMU VM: After running/skipping the tests, you can stop/cleanup the VM with `ctrl + c`.
+  - cloud: To cleanup up cloud resources after passing the flag, just re-run without the flag.
 
 ### Examples
 
@@ -108,7 +112,7 @@ To connect to a running QEMU VM:
 cd /run/gardenlinux-tests && ./run_tests --system-booted --allow-system-modifications --expected-users gardenlinux
 ```
 
-**Note**: Login to QEMU VMs is only possible if `--ssh --skip-cleanup` is passed. SSHD is reachable on `127.0.0.1:2222` with the user `gardenlinux`.
+**Note**: Login to QEMU VMs (on a second shell) is only possible if `--ssh --skip-cleanup` is passed. SSHD is reachable on `127.0.0.1:2222` with the user `gardenlinux`. The QEMU VM will stay open in the shell that started and can be stopped with `ctrl + c`.
 
 ### Cloud Environment
 
