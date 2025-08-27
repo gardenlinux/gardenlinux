@@ -90,6 +90,5 @@ done
 
 arch="$(uname -m)"
 PATH="$tmpdir/runtime/$arch/bin:$PATH"
-export PATH
 pip install -q --root-user-action ignore --disable-pip-version-check --only-binary=:none: -r "$requirements"
 tar -c -C "$tmpdir/runtime" . | gzip >"$output"
