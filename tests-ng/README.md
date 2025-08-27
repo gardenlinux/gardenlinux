@@ -111,6 +111,93 @@ The main entry point is `./test-ng` in the gardenlinux root directory (symlink t
 ./test-ng --cloud aws --skip-cleanup --skip-tests --cloud-image --image-requirements-file .build/aws-gardener_prod-amd64-today-local.requirements ami-07f977508ed36098e
 ```
 
+### Cloud Provider Authentication and Configuration
+
+Before running tests, you need to authenticate with the cloud providers you want to test against. Each provider has its own authentication method.
+
+#### ALI
+
+ALI reuqires you to set up an [AccessKey pair](https://www.alibabacloud.com/help/en/cli/configure-credentials#0da5d08f581wn):
+
+```
+# select profile
+export ALIBABA_CLOUD_PROFILE=gardenlinux-test
+
+# configure your existing ALI credentials (only needed once)
+aliyun configure --profile $ALIBABA_CLOUD_PROFILE
+
+# check access
+aliyun sts GetCallerIdentity
+```
+
+#### AWS
+
+AWS requires [IAM user credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-authentication-user.html):
+
+```
+# select profile
+export AWS_PROFILE=gardenlinux-test
+
+# configure your existing AWS credentials (only needed once)
+aws configure
+
+# check access
+aws sts get-caller-identity
+```
+
+> [!NOTE]
+> For AWS, you can also use SSO authentication if your organization supports it.
+
+#### Azure
+
+Azure requires [user authentication via Azure CLI](https://learn.microsoft.com/en-us/cli/azure/authenticate-azure-cli):
+
+```
+# configure your existing Azure Subscription
+export ARM_SUBSCRIPTION_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# login
+az login
+
+# check access
+az account show
+```
+
+> [!NOTE]
+> The subscription ID can be found in the Azure portal under Subscriptions.
+
+#### GCP
+
+GCP requires [user authentication via gcloud CLI](https://cloud.google.com/docs/authentication/gcloud):
+
+```
+# configure your existing Google Cloud Project
+export GOOGLE_PROJECT="gardenlinux-test"
+
+# configure your existing GCP credentials (only needed once)
+gcloud config set project ${GOOGLE_PROJECT}
+
+# login
+gcloud auth login
+
+# check access
+gcloud auth list
+```
+
+> [!NOTE]
+> The Project ID can be found in the Google Cloud portal under Project info.
+
+#### Openstack
+
+```
+# download or configure ~/.config/openstack/clouds.yaml
+# select profile
+export OS_CLOUD=gardenlinux-test
+```
+
+> [!NOTE]
+> You can download the `clouds.yaml` from your OpenStack dashboard.
+
 ## Login Scripts
 
 ### QEMU Environment
