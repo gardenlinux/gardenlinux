@@ -2,7 +2,6 @@ from helper.utils import AptUpdate
 from helper.utils import execute_remote_command
 from helper.utils import install_package_deb
 
-
 def orphaned(client):
     """ Test for orphaned files """
     # Update repo info and install package(s)

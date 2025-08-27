@@ -52,6 +52,7 @@ tar --extract --xattrs --xattrs-include 'security.*' --directory "$tmpdir/chroot
 mount --rbind --make-rprivate /proc "$tmpdir/chroot/proc"
 mount --rbind --make-rprivate /sys "$tmpdir/chroot/sys"
 mount --rbind --make-rprivate /dev "$tmpdir/chroot/dev"
+mount --rbind --make-rprivate /etc/resolv.conf "$tmpdir/chroot/etc/resolv.conf"
 
 echo "⚙️  setting up test framework"
 
