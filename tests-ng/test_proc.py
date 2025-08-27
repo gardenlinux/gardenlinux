@@ -4,13 +4,12 @@ import os
 from plugins.booted import is_system_booted
 
 @pytest.mark.root
-@pytest.mark.skipif(is_system_booted(), reason="Check on proc only in chroot")
+@pytest.mark.booted
 def test_image_proc_is_empty(remounted_root):
     """
     Test for an empty /proc within the given rootfs tarball. Since /proc is mounted 
-    from the container into the chrooted /proc, the transfer_proc_mount fixture moves
-    the proc-mountpoint temporarily to another directory. This allows to check if 
-    the tarball comes with an empty proc directory.
+    we remount / temporarily. This allows to check if the image comes with an empty 
+    proc directory.
     """
     temp_proc = os.path.join(remounted_root, "proc")
 
@@ -26,12 +25,12 @@ def test_image_proc_is_empty(remounted_root):
     assert len(proc_files) == 0, f"{temp_proc} is not empty."
 
 @pytest.mark.root
-@pytest.mark.skipif(is_system_booted(), reason="Check on proc only in chroot")
-def test_container_proc_is_not_empty():
+@pytest.mark.booted
+def test_running_proc_is_not_empty():
     """
     negative test as mounted proc should contain expected files
     """
-    root_proc = os.path.join("/", "proc")    
+    root_proc = "/proc"
     root_proc_files: list[str] = os.listdir(root_proc)
     assert len(root_proc_files) >= 0, f"{root_proc} should contain files."
     assert all(expected_procfile in root_proc_files for expected_procfile in ["version", "uptime"]), f"{root_proc} does not contain the usual files."
