@@ -187,6 +187,15 @@ jobs:
             fi
           fi
           if [ -e ".build/$CNAME.raw" ]; then
+            # enable remote state S3 backend
+            if [ ! -f "tests/platformSetup/tofu/backend.tf" ]; then
+              cp "tests/platformSetup/tofu/backend.tf.github" "tests/platformSetup/tofu/backend.tf"
+            fi
+
+            # enable state encryption
+            export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
+
+            # run test
             ./test-ng --cloud $CLOUD ".build/$CNAME.raw"
 
           else
