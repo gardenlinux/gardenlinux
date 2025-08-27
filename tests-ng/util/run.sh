@@ -3,21 +3,40 @@
 set -eufo pipefail
 
 cloud=
+
+chroot_args=()
 cloud_args=()
+qemu_args=()
 
 while [ $# -gt 0 ]; do
 	case "$1" in
-		--cloud)
-			cloud="$2"
-			shift 2
-			;;
-		--skip-cleanup)
-			cloud_args+=("$1")
-			shift
-			;;
-		*)
-			break
-			;;
+	--cloud)
+		cloud="$2"
+		shift 2
+		;;
+	--ssh)
+		qemu_args+=("$1")
+		shift
+		;;
+	--skip-cleanup)
+		cloud_args+=("$1")
+		qemu_args+=("$1")
+		shift
+		;;
+	--skip-tests)
+		cloud_args+=("$1")
+		qemu_args+=("$1")
+		shift
+		;;
+	--test-args)
+		chroot_args+=("$1" "$2")
+		cloud_args+=("$1" "$2")
+		qemu_args+=("$1" "$2")
+		shift 2
+		;;
+	*)
+		break
+		;;
 	esac
 done
 
@@ -26,33 +45,31 @@ cd "$(realpath -- "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/../")"
 
 basename="$(basename "$artifact")"
 
-extension="$(grep -E -o '(\.[a-z][a-zA-Z0-9_\-]*)*$' <<< "$basename")"
+extension="$(grep -E -o '(\.[a-z][a-zA-Z0-9_\-]*)*$' <<<"$basename")"
 cname="${basename%"$extension"}"
 type="${extension#.}"
-arch="$(awk -F '-' '{ print $(NF-2) }' <<< "$cname")"
 
-[ -n "$cname" ] && [ -n "$type" ] && [ -n "$arch" ]
+[ -n "$cname" ] && [ -n "$type" ]
 
 ./util/build.makefile
 
 if [ -n "$cloud" ]; then
-	if [ $type != raw ]; then
+	if [ "$type" != raw ]; then
 		echo "cloud run only supported with raw file" >&2
 		exit 1
 	fi
-
-	./util/run_cloud.sh --cloud "$cloud" --arch "$arch" "${cloud_args[@]}" .build "$artifact"
+	./util/run_cloud.sh --cloud "$cloud" "${cloud_args[@]}" .build "$artifact"
 else
 	case "$type" in
-		tar)
-			./util/run_chroot.sh .build "$artifact"
-			;;
-		raw)
-			./util/run_qemu.sh --arch "$arch" .build "$artifact"
-			;;
-		*)
-			echo "artifact type $type not supported" >&2
-			exit 1
-			;;
+	tar)
+		./util/run_chroot.sh "${chroot_args[@]}" .build "$artifact"
+		;;
+	raw)
+		./util/run_qemu.sh "${qemu_args[@]}" .build "$artifact"
+		;;
+	*)
+		echo "artifact type $type not supported" >&2
+		exit 1
+		;;
 	esac
 fi
