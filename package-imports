@@ -91,7 +91,7 @@ make
 man-db
 mdadm
 mstflint
-mtr
+mtr-tiny
 multipath-tools
 net-tools
 netcat-openbsd
