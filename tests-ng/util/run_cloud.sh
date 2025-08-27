@@ -57,6 +57,7 @@ cleanup() {
 		echo "⚙️  cleaning up cloud resources"
 		(
 			cd "${tf_dir}"
+			tofu init -var-file "$image_name.tfvars"
 			tofu workspace select "$image_name"
 			tofu destroy -var-file "$image_name.tfvars" --auto-approve
 			tofu workspace select default
@@ -108,7 +109,7 @@ EOF
 echo "⚙️  setting up cloud resources via OpenTofu"
 (
 	cd "${tf_dir}"
-	tofu init
+	tofu init -var-file "$image_name.tfvars"
 	tofu workspace select -or-create "$image_name"
 	tofu apply -var-file "$image_name.tfvars" --auto-approve
 )
