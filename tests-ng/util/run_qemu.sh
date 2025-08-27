@@ -138,7 +138,9 @@ if [ "$arch" = "$native_arch" ]; then
 	if [ -w /dev/kvm ]; then
 		qemu_accel=kvm
 	elif [ "$(uname -s)" = Darwin ]; then
-		qemu_accel=hvf
+		if [ "$(sysctl -n kern.hv_support)" = 1 ]; then
+			qemu_accel=hvf
+		fi
 	fi
 fi
 
