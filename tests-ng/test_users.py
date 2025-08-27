@@ -17,7 +17,7 @@ def test_root_home_permissions():
     assert perm == 0o700, f"/root has incorrect permissions: {oct(perm)}"
 
 @pytest.mark.feature("not _dev")
-def test_no_extra_home_directories(expected_users):
+def test_no_extra_home_directories(expected_users=[]):
     if os.path.islink("/home"):
         return
     entries = os.listdir("/home")
