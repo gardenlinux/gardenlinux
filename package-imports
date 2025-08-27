@@ -9,6 +9,7 @@ auditd
 awscli
 azure-vm-utils
 binutils
+bridge-utils
 bsdextrautils
 btrfs-progs
 build-essential
@@ -45,6 +46,7 @@ elfutils
 ethtool
 execline
 fatresize
+fio
 flex
 gcc
 gdb
@@ -57,8 +59,11 @@ google-guest-agent
 haveged
 hdparm
 inetutils-ping
+iperf
+iperf3
 ipmitool
 iptables
+iptraf-ng
 iputils-arping
 ipvsadm
 isolinux
@@ -86,6 +91,7 @@ make
 man-db
 mdadm
 mstflint
+mtr-tiny
 multipath-tools
 net-tools
 netcat-openbsd
