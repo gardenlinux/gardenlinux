@@ -174,8 +174,6 @@ else
 	tf_cmd=("apply" "--auto-approve")
 fi
 
-set -x
-
 (
 	cd "${tf_dir}"
 	tofu init -var-file "$image_name.tfvars"
@@ -201,7 +199,7 @@ if ! ((cloud_plan)); then
 			"--expected-users" "$ssh_user"
 		)
 		# wait for cloud-init to finish
-		"$login_cloud_sh" "$image_basename" sudo systemctl is-system-running --wait
+		"$login_cloud_sh" "$image_basename" sudo systemctl is-system-running --wait || true
 		"$login_cloud_sh" "$image_basename" sudo /run/gardenlinux-tests/run_tests "${test_args[*]@Q}"
 	fi
 fi
