@@ -2,6 +2,43 @@
 
 This directory contains the next generation testing framework for Garden Linux images. The framework supports testing Garden Linux images in various environments including chroot, QEMU virtual machines, and cloud providers.
 
+## Table of Contents
+
+- [Garden Linux Tests Next Generation (tests-ng)](#garden-linux-tests-next-generation-tests-ng)
+  - [Table of Contents](#table-of-contents)
+  - [Structure](#structure)
+  - [Running Tests](#running-tests)
+    - [Prerequisites](#prerequisites)
+      - [Install on Debian based systems](#install-on-debian-based-systems)
+      - [Install on MacOS](#install-on-macos)
+    - [Basic Usage](#basic-usage)
+    - [Command Line Flags](#command-line-flags)
+      - [Common Options](#common-options)
+      - [Cloud Specific Options](#cloud-specific-options)
+      - [QEMU Specific Options](#qemu-specific-options)
+    - [Examples](#examples)
+    - [Cloud Provider Authentication and Configuration](#cloud-provider-authentication-and-configuration)
+      - [ALI](#ali)
+      - [AWS](#aws)
+      - [Azure](#azure)
+      - [GCP](#gcp)
+      - [Openstack](#openstack)
+  - [Debugging Tests](#debugging-tests)
+    - [Login Scripts](#login-scripts)
+      - [QEMU Environment](#qemu-environment)
+      - [Cloud Environment](#cloud-environment)
+  - [Test Environment Details](#test-environment-details)
+    - [Chroot Testing](#chroot-testing)
+    - [QEMU Testing](#qemu-testing)
+    - [Cloud Testing](#cloud-testing)
+  - [Test Distribution Build Process](#test-distribution-build-process)
+    - [Build Components](#build-components)
+    - [Build Process](#build-process)
+    - [Automatic Building](#automatic-building)
+    - [Test Distribution Structure](#test-distribution-structure)
+  - [Test Development](#test-development)
+    - [Markers](#markers)
+
 ## Structure
 
 ```
@@ -210,9 +247,11 @@ export OS_CLOUD=gardenlinux-test
 > [!NOTE]
 > You can download the `clouds.yaml` from your OpenStack dashboard.
 
-## Login Scripts
+## Debugging Tests
 
-### QEMU Environment
+### Login Scripts
+
+#### QEMU Environment
 
 To connect to a running QEMU VM:
 
@@ -232,7 +271,7 @@ cd /run/gardenlinux-tests && ./run_tests --system-booted --allow-system-modifica
 
 **Note**: Login to QEMU VMs (on a second shell) is only possible if `--ssh --skip-cleanup` is passed. SSHD is reachable on `127.0.0.1:2222` with the user `gardenlinux`. The QEMU VM will stay open in the shell that started and can be stopped with `ctrl + c`.
 
-### Cloud Environment
+#### Cloud Environment
 
 To connect to a cloud VM:
 
