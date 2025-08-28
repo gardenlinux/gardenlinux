@@ -151,7 +151,15 @@ cat >"$user_data_script" <<EOF
 systemctl enable --now ssh
 
 mkdir /run/gardenlinux-tests
-mount /dev/disk/by-label/GL_TESTS /run/gardenlinux-tests
+# disk attachment might take a while
+for i in \$(seq 1 12); do
+	mount /dev/disk/by-label/GL_TESTS /run/gardenlinux-tests && break
+	sleep 10
+done
+
+if ! mountpoint /run/gardenlinux-tests; then
+	exit 1
+fi
 EOF
 
 if ((cloud_image)); then
@@ -200,8 +208,6 @@ else
 	tf_cmd=("apply" "--auto-approve")
 fi
 
-set -x
-
 (
 	cd "${tf_dir}"
 	tofu init -var-file "$image_name.tfvars"
@@ -226,6 +232,8 @@ if ! ((cloud_plan)); then
 			"--allow-system-modifications"
 			"--expected-users" "$ssh_user"
 		)
+		# wait for cloud-init to finish
+		"$login_cloud_sh" "$image_basename" sudo systemctl is-system-running --wait || true
 		"$login_cloud_sh" "$image_basename" sudo /run/gardenlinux-tests/run_tests "${test_args[*]@Q}"
 	fi
 fi
