@@ -65,7 +65,7 @@ def test_sshd_has_required_config(sshd_config_item: str, sshd: Sshd):
         assert equals_ignore_case(actual_value, expected_value), f"{sshd_config_item}: expected {expected_value}, got {actual_value}"
 
 @pytest.mark.feature("ssh")
-def test_users_have_no_authorized_keys(expected_users=[]):
+def test_users_have_no_authorized_keys(expected_users):
     skip_users = {"nologin", "sync"}
     skip_shells = {"/bin/false"}
     files_to_check = ["authorized_keys", "authorized_keys2"]
