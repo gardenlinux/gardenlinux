@@ -95,7 +95,6 @@ if ((ssh)); then
 	ssh_public_key=$(cat "$ssh_public_key_path")
 	ssh_user="gardenlinux"
 	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
-systemctl stop sshguard
 systemctl enable --now ssh
 useradd -U -m -G wheel -s /bin/bash $ssh_user
 mkdir -p /home/$ssh_user/.ssh
