@@ -8,11 +8,11 @@ resource "alicloud_ecs_key_pair" "ssh_key" {
   )
 }
 
-resource "alicloud_ecs_key_pair_attachment" "ssh_key" {
-  key_pair_name = alicloud_ecs_key_pair.ssh_key.key_pair_name
-  instance_ids  = [alicloud_instance.instance.id]
-  force         = true
-}
+# resource "alicloud_ecs_key_pair_attachment" "ssh_key" {
+#   key_pair_name = alicloud_ecs_key_pair.ssh_key.key_pair_name
+#   instance_ids  = [alicloud_instance.instance.id]
+#   force         = true
+# }
 
 resource "alicloud_instance" "instance" {
   availability_zone          = data.alicloud_zones.zones.zones.0.id
@@ -34,6 +34,7 @@ resource "alicloud_instance" "instance" {
 
   instance_charge_type = "PostPaid"
 
+  key_name = alicloud_ecs_key_pair.ssh_key.key_pair_name
   user_data = file(var.user_data_script_path)
 
   tags = merge(
