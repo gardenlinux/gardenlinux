@@ -88,6 +88,9 @@ brew install coreutils bash gnu-sed gnu-getopt podman make curl jq unzip swtpm
 
 The main entry point is `./test-ng` in the gardenlinux root directory (symlink to )`tests-ng/util/run.sh`). It automatically detects the image type and runs appropriate tests:
 
+> [!TIP]
+> Use `./test-ng --help` to see all available options and examples.
+
 ```bash
 # For chroot testing (tar files)
 ./test-ng .build/$image.tar
@@ -104,15 +107,19 @@ The main entry point is `./test-ng` in the gardenlinux root directory (symlink t
 
 ### Command Line Flags
 
-- `--cloud <provider>`: Specify cloud provider (aws, gcp, azure, ali).
-  - QEMU VM: Ignores this flag.
-- `--ssh`: Enable SSH access to QEMU VM (`gardenlinux@127.0.01:2222`).
-  - cloud: SSHD is always enabled via `cloud-init`.
+#### Common Options
+
+- `--help`: Show help message and exit.
 - `--skip-cleanup`: Skip cleanup of cloud resources after testing.
   - QEMU VM: After running/skipping the tests, you can stop/cleanup the VM with `ctrl + c`.
   - cloud: To cleanup up cloud resources after passing the flag, just re-run without the flag or use `--only-cleanup`.
 - `--skip-tests`: Skip running the actual test suite
 - `--test-args`: Pass any commandline argument to `pytest`. Put multiple arguments inside `""`.
+
+#### Cloud Specific Options
+
+- `--cloud <provider>`: Specify cloud provider (aws, gcp, azure, ali).
+  - QEMU VM: Ignores this flag.
 - `--cloud-image`: Use an existing cloud image.
   - possible images are listed on official releases, e.g. [1592.12](https://github.com/gardenlinux/gardenlinux/releases/tag/1592.12)
     - ali: `m-d7o7skltl4qe9anmwdp4` (eu-west-1 amd64)
@@ -121,6 +128,11 @@ The main entry point is `./test-ng` in the gardenlinux root directory (symlink t
     - azure: `/CommunityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/Images/gardenlinux-nvme-gen2/Versions/1592.12.0` (amd64)
 - `--only-cleanup` Only run `tofu destroy` for cloud setups.
 - `--image-requirements-file` Only needed with `--cloud-image`. Needs to point to a valid `*.requirements` file.
+
+#### QEMU Specific Options
+
+- `--ssh`: Enable SSH access to QEMU VM (`gardenlinux@127.0.01:2222`).
+  - cloud: SSHD is always enabled via `cloud-init`.
 
 ### Examples
 
