@@ -190,7 +190,7 @@ export GOOGLE_PROJECT="gardenlinux-test"
 gcloud config set project ${GOOGLE_PROJECT}
 
 # login
-gcloud auth login
+gcloud auth application-default login
 
 # check access
 gcloud auth list
