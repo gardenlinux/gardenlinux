@@ -131,8 +131,11 @@ jobs:
 
             core.setOutput("test_bare_flavors_matrix", matrix);
   ## test-ng start
+  test_distribution_build:
+    name: Build and Cache Test Distribution
+    uses: ./.github/workflows/build_test_dist.yml
   test_flavors_chrooted:
-    needs: intersect_matrices
+    needs: [intersect_matrices, test_distribution_build]
     name: Test flavors chrooted
     uses: ./.github/workflows/test_flavor_chrooted.yml
     if: ${{ needs.intersect_matrices.outputs.chroot_test_flavors_matrix != '{"include":[]}' && inputs.chroot_test == true }}
@@ -146,7 +149,7 @@ jobs:
     permissions:
       actions: write      
   test_flavors_qemu:
-    needs: intersect_matrices
+    needs: [intersect_matrices, test_distribution_build]
     name: Test flavors QEMU
     uses: ./.github/workflows/test_flavor_qemu.yml
     if: ${{ needs.intersect_matrices.outputs.platform_test_flavors_matrix != '{"include":[]}' && inputs.qemu_test == true }}
@@ -158,7 +161,7 @@ jobs:
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
   test_flavors_cloud:
-    needs: intersect_matrices
+    needs: [intersect_matrices, test_distribution_build]
     name: Test flavors Cloud
     uses: ./.github/workflows/test_flavor_cloud.yml
     if: ${{ needs.intersect_matrices.outputs.platform_test_flavors_matrix != '{"include":[]}' && inputs.cloud_test == true }}

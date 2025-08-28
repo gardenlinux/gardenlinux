@@ -1,0 +1,32 @@
+name: test_flavor
+on:
+  workflow_call:
+jobs:
+  test:
+    name: Build and Cache Test Distribution
+    runs-on: "ubuntu-24.04"
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends podman make curl jq unzip qemu-utils
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+        with:
+          submodules: true
+      - name: Build Test Distribution
+        run: |
+          cd tests-ng
+          make -f util/build.makefile
+          touch .build/.gh_artifact
+      - name: Upload test distribution artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+        with:
+          name: test-distribution
+          path: tests-ng/.build
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
