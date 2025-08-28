@@ -148,7 +148,6 @@ user_data_script="$(mktemp)"
 cat >"$user_data_script" <<EOF
 #!/usr/bin/env bash
 
-systemctl stop sshguard
 systemctl enable --now ssh
 
 mkdir /run/gardenlinux-tests
