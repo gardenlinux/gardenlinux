@@ -19,6 +19,26 @@ class Apt:
                     repos.add(line.split()[1])
         return list(repos)
 
+    def update(self) -> bool:
+        """
+        Updates the repository cache
+        """
+        result = self._shell(f"apt-get update", capture_output=True, ignore_exit_code=True)
+        if result.returncode != 0:
+            print(result.stderr)
+
+        return result.returncode == 0
+
+    def install(self, package_name: str) -> bool:
+        """
+        Installs the designated package package_name
+        """
+        result = self._shell(f"DEBIAN_FRONTEND=noninteractive apt-get install -y {package_name}", capture_output=True, ignore_exit_code=True)
+        if result.returncode != 0:
+            print(result.stderr)
+
+        return result.returncode == 0
+
 @pytest.fixture
 def apt(shell: ShellRunner) -> Apt:
     return Apt(shell)
