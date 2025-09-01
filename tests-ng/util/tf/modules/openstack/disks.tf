@@ -28,14 +28,14 @@ resource "openstack_images_image_v2" "image" {
     os_distro = "gardenlinux"
     os_admin_user = var.provider_vars.ssh_user
     # setting this to "required" will give us "nova.exception.SecureBootNotSupported: Secure Boot is not supported by host"
-    # os_secure_boot = local.feature_trustedboot ? "optional" : null
+    os_secure_boot = var.image_requirements.secureboot ? "optional" : null
     # setting a NVRAM template could be an option to boot with different OVMF_VARS.fd with PK/DB/DBX/KEK
     # this is undocumented and not working as of OpenStack 2024.1
     # the OVMF_VARS.fd and template would have to exist on the nova compute node
     # os_nvram_template = local.feature_trustedboot ? "/usr/share/qemu/firmware/99-edk2-x86_64-secure-enrolled-gl.json" : null
     hw_firmware_type = "uefi"
-    # hw_tpm_version = local.feature_tpm2 ? "2.0" : null
-    # hw_tpm_model= local.feature_tpm2 ? "tpm-tis" : null
+    hw_tpm_version = var.image_requirements.tpm2 ? "2.0" : null
+    hw_tpm_model= var.image_requirements.tpm2 ? "tpm-tis" : null
   }
 
   timeouts {

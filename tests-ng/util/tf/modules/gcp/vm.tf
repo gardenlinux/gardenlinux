@@ -32,15 +32,14 @@ resource "google_compute_instance" "instance" {
 
   metadata_startup_script = file(var.user_data_script_path)
 
-  ## TODO: secure boot
-  # dynamic "shielded_instance_config" {
-  #   for_each = local.feature_trustedboot ? [true] : []
-  #   content {
-  #     enable_secure_boot          = true
-  #     enable_integrity_monitoring = true
-  #     enable_vtpm                 = true
-  #   }
-  # }
+  dynamic "shielded_instance_config" {
+    for_each = var.image_requirements.secureboot ? [true] : []
+    content {
+      enable_secure_boot          = true
+      enable_integrity_monitoring = true
+      enable_vtpm                 = true
+    }
+  }
 
   attached_disk {
     source = google_compute_disk.test_disk.self_link
@@ -69,4 +68,9 @@ output "vm_ip" {
 
 output "ssh_user" {
   value       = var.provider_vars.ssh_user
+}
+
+output "image_requirements" {
+  value       = var.image_requirements
+  description = "Image requirements"
 }

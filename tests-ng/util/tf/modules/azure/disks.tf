@@ -91,7 +91,7 @@ resource "azurerm_shared_image" "shared_image" {
   hyper_v_generation  = "V2"
   architecture        = local.arch
 
-  # trusted_launch_supported = local.feature_trustedboot
+  trusted_launch_supported = var.image_requirements.secureboot
 
   identifier {
     publisher = "Gardenlinux"
@@ -123,25 +123,24 @@ resource "azurerm_shared_image_version" "shared_image_version" {
   tags = local.labels
 
 
-  ## TODO: secure boot
-  # dynamic "uefi_settings" {
-  #   for_each = local.feature_trustedboot ? [true] : []
-  #   content {
-  #     signature_template_names = [
-  #       "MicrosoftUefiCertificateAuthorityTemplate"
-  #     ]
-  #     additional_signatures {
-  #       db {
-  #         key_type = "x509"
-  #         certificate_data = filebase64("cert/secureboot.db.der")
-  #       }
-  #       kek {
-  #         key_type = "x509"
-  #         certificate_data = filebase64("cert/secureboot.kek.der")
-  #       }
-  #     }
-  #   }
-  # }
+  dynamic "uefi_settings" {
+    for_each = var.image_requirements.secureboot ? [true] : []
+    content {
+      signature_template_names = [
+        "MicrosoftUefiCertificateAuthorityTemplate"
+      ]
+      additional_signatures {
+        db {
+          type = "x509"
+          certificate_base64 = [ filebase64("cert/secureboot.db.der") ]
+        }
+        kek {
+          type = "x509"
+          certificate_base64 = [ filebase64("cert/secureboot.kek.der") ]
+        }
+      }
+    }
+  }
 }
 resource "azurerm_storage_blob" "image_test" {
   name = "${local.image_name}-test"
