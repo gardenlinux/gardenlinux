@@ -73,7 +73,7 @@ The main entry point is `./test-ng` in the gardenlinux root directory (symlink t
   - cloud: SSHD is always enabled via `cloud-init`.
 - `--skip-cleanup`: Skip cleanup of cloud resources after testing.
   - QEMU VM: After running/skipping the tests, you can stop/cleanup the VM with `ctrl + c`.
-  - cloud: To cleanup up cloud resources after passing the flag, just re-run without the flag.
+  - cloud: To cleanup up cloud resources after passing the flag, just re-run without the flag or use `--only-cleanup`.
 - `--skip-tests`: Skip running the actual test suite
 - `--test-args`: Pass any commandline argument to `pytest`. Put multiple arguments inside `""`.
 - `--cloud-image`: Use an existing cloud image.
@@ -82,6 +82,7 @@ The main entry point is `./test-ng` in the gardenlinux root directory (symlink t
     - aws: `ami-0d8d06eb3a44ae794` (eu-central-1 amd64)
     - gcp: `gardenlinux-gcp-ff804026cbe7b5f2d6f729e4-1592-12-c6d7f9a9` (amd64)
     - azure: `/CommunityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/Images/gardenlinux-nvme-gen2/Versions/1592.12.0` (amd64)
+- `--only-cleanup` Only run `tofu destroy` for cloud setups.
 - `--image-requirements-file` Only needed with `--cloud-image`. Needs to point to a valid `*.requirements` file.
 
 ### Examples

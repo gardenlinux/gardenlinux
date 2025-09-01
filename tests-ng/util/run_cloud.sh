@@ -5,6 +5,7 @@ set -eufo pipefail
 cloud=
 cloud_image=0
 cloud_plan=0
+only_cleanup=0
 skip_cleanup=0
 skip_tests=0
 test_args=()
@@ -22,6 +23,10 @@ while [ $# -gt 0 ]; do
 		;;
 	--cloud-plan)
 		cloud_plan=1
+		shift
+		;;
+	--only-cleanup)
+		only_cleanup=1
 		shift
 		;;
 	--skip-cleanup)
@@ -105,6 +110,33 @@ tofuenv install latest-allowed
 popd
 tofu_version="$(tofuenv list | head -1 | cut -d' ' -f2)"
 tofuenv use "$tofu_version"
+
+TF_CLI_CONFIG_FILE="$tf_dir/.terraformrc"
+export TF_CLI_CONFIG_FILE
+TOFU_PROVIDERS_CUSTOM="$tf_dir/.terraform/providers/custom"
+TOFU_PROVIDER_AZURERM_URL="https://github.com/gardenlinux/terraform-provider-azurerm/releases/download/v4.41.0-post1-secureboot1/terraform-provider-azurerm"
+TOFU_PROVIDER_AZURERM_CHECKSUM="d0724b2b33270dbb0e7946a4c125e78b5dd0f34697b74a08c04a1c455764262e"
+
+cat >"$TF_CLI_CONFIG_FILE" <<EOF
+provider_installation {
+  dev_overrides {
+    "hashicorp/azurerm" = "$TOFU_PROVIDERS_CUSTOM"
+  }
+  direct {}
+}
+EOF
+if [ ! -f "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" ] || ! sha256sum -c "${TOFU_PROVIDERS_CUSTOM}/checksum.txt" >/dev/null 2>&1; then
+	echo "Downloading terraform-provider-azurerm"
+	mkdir -p "${TOFU_PROVIDERS_CUSTOM}"
+	curl -LO --create-dirs --output-dir "${TOFU_PROVIDERS_CUSTOM}" "${TOFU_PROVIDER_AZURERM_URL}"
+	echo "$TOFU_PROVIDER_AZURERM_CHECKSUM ${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" >"${TOFU_PROVIDERS_CUSTOM}/checksum.txt"
+	sha256sum -c "${TOFU_PROVIDERS_CUSTOM}/checksum.txt"
+	chmod +x "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm"
+fi
+
+if ((only_cleanup)); then
+	exit 0 # triggers trap
+fi
 
 ssh_private_key_path="$HOME/.ssh/id_ed25519_gl"
 if [ ! -f "$ssh_private_key_path" ]; then

@@ -32,6 +32,10 @@ while [ $# -gt 0 ]; do
 		qemu_args+=("$1")
 		shift
 		;;
+	--only-cleanup)
+		cloud_args+=("$1")
+		shift
+		;;
 	--skip-cleanup)
 		cloud_args+=("$1")
 		qemu_args+=("$1")
