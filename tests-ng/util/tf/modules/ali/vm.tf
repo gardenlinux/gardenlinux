@@ -70,3 +70,8 @@ output "vm_ip" {
 output "ssh_user" {
   value       = var.provider_vars.ssh_user
 }
+
+output "image_requirements" {
+  value       = var.image_requirements
+  description = "Image requirements"
+}

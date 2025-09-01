@@ -153,6 +153,9 @@ resource "aws_ami" "image" {
     delete_on_termination = true
   }
 
+  tpm_support = var.image_requirements.tpm2 ? "v2.0" : null
+  uefi_data   = var.image_requirements.secureboot ? file("cert/secureboot.aws-efivars") : null
+
   tags = merge(
     local.labels,
     { Name = local.image_name }

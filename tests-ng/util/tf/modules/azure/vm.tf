@@ -40,8 +40,8 @@ resource "azurerm_linux_virtual_machine" "instance" {
     storage_account_uri = azurerm_storage_account.storage_account.primary_blob_endpoint
   }
 
-  # secure_boot_enabled = local.feature_trustedboot
-  # vtpm_enabled        = local.feature_trustedboot
+  secure_boot_enabled = var.image_requirements.secureboot
+  vtpm_enabled        = var.image_requirements.tpm2
 
   tags = local.labels
 
@@ -67,4 +67,9 @@ output "vm_ip" {
 
 output "ssh_user" {
   value       = var.provider_vars.ssh_user
+}
+
+output "image_requirements" {
+  value       = var.image_requirements
+  description = "Image requirements"
 }
