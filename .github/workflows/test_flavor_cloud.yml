@@ -74,6 +74,11 @@ jobs:
         with:
           name: test-distribution
           path: tests-ng/.build
+      - name: Load certs artifact
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        with:
+          name: certs
+          path: cert/
       - name: Determine CNAME
         id: cname
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@97d6e1c28eb4565446563ed04bcbf3c4cb5d1bde # pin@0.9.0
