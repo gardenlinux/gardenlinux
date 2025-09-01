@@ -54,23 +54,23 @@ resource "google_compute_image" "image" {
     type = "GVNIC"
   }
 
-  # dynamic "shielded_instance_initial_state" {
-  #   for_each = local.feature_trustedboot ? [true] : []
-  #   content {
-  #     pk {
-  #       file_type = "X509"
-  #       content   = filebase64("cert/secureboot.pk.der")
-  #     }
-  #     dbs {
-  #       file_type = "X509"
-  #       content   = filebase64("cert/secureboot.db.der")
-  #     }
-  #     keks {
-  #       file_type = "X509"
-  #       content   = filebase64("cert/secureboot.kek.der")
-  #     }
-  #   }
-  # }
+  dynamic "shielded_instance_initial_state" {
+    for_each = var.image_requirements.secureboot ? [true] : []
+    content {
+      pk {
+        file_type = "X509"
+        content   = filebase64("cert/secureboot.pk.der")
+      }
+      dbs {
+        file_type = "X509"
+        content   = filebase64("cert/secureboot.db.der")
+      }
+      keks {
+        file_type = "X509"
+        content   = filebase64("cert/secureboot.kek.der")
+      }
+    }
+  }
 
   labels = local.labels
 

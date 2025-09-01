@@ -178,9 +178,9 @@ existing_root_disk    = "$existing_root_disk_var"
 
 image_requirements = {
   arch = "$arch"
-  uefi = "$uefi"
-  secureboot = "$secureboot"
-  tpm2 = "$tpm2"
+  uefi = $uefi
+  secureboot = $secureboot
+  tpm2 = $tpm2
 }
 
 cloud_provider = "$cloud"

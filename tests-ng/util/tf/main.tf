@@ -39,3 +39,8 @@ output "ssh_user" {
   value       = module.cloud.ssh_user
   description = "SSH user for the VM"
 }
+
+output "image_requirements" {
+  value       = module.cloud.image_requirements
+  description = "Image requirements"
+}
