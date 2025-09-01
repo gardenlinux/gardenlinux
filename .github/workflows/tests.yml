@@ -129,7 +129,12 @@ jobs:
     needs: intersect_matrices
     name: Test flavors chrooted
     uses: ./.github/workflows/test_flavor_chrooted.yml
-    if: ${{ needs.intersect_matrices.outputs.chroot_test_flavors_matrix != '{"include":[]}' && inputs.chroot_test == true }}
+    if: |
+      ${{
+        needs.intersect_matrices.outputs.chroot_test_flavors_matrix != ''
+        && needs.intersect_matrices.outputs.chroot_test_flavors_matrix != '{"include":[]}'
+        && inputs.chroot_test == true
+      }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.intersect_matrices.outputs.chroot_test_flavors_matrix) }}
@@ -141,7 +146,14 @@ jobs:
     needs: [ intersect_matrices, test_flavors_chrooted ]
     name: Test flavors QEMU
     uses: ./.github/workflows/test_flavor_qemu.yml
-    if: ${{ always() && needs.intersect_matrices.outputs.chroot_test_flavors_matrix != '{"include":[]}' && inputs.qemu_test == true }}
+    if: |
+      ${{
+        always()
+        && (needs.test_flavors_chrooted.result == 'success' || needs.test_flavors_chrooted.result == 'skipped')
+        && needs.intersect_matrices.outputs.chroot_test_flavors_matrix != ''
+        && needs.intersect_matrices.outputs.chroot_test_flavors_matrix != '{"include":[]}'
+        && inputs.qemu_test == true
+      }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.intersect_matrices.outputs.chroot_test_flavors_matrix) }}
@@ -153,7 +165,14 @@ jobs:
     needs: [ intersect_matrices, test_flavors_chrooted ]
     name: Test platform flavors
     uses: ./.github/workflows/test_platform_flavor.yml
-    if: ${{ always() && needs.intersect_matrices.outputs.platform_test_flavors_matrix != '{"include":[]}' && inputs.platform_test == true }}
+    if: |
+      ${{
+        always()
+        && (needs.test_flavors_chrooted.result == 'success' || needs.test_flavors_chrooted.result == 'skipped')
+        && needs.intersect_matrices.outputs.platform_test_flavors_matrix != ''
+        && needs.intersect_matrices.outputs.platform_test_flavors_matrix != '{"include":[]}'
+        && inputs.platform_test == true
+      }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.intersect_matrices.outputs.platform_test_flavors_matrix) }}
@@ -166,7 +185,13 @@ jobs:
     needs: intersect_matrices
     name: Test bare flavors
     uses: ./.github/workflows/test_bare_flavor.yml
-    if: ${{ always() && needs.intersect_matrices.outputs.test_bare_flavors_matrix != '{"include":[]}' && inputs.bare_flavors_test == true }}
+    if: |
+      ${{
+        always()
+        && needs.intersect_matrices.outputs.test_bare_flavors_matrix != ''
+        && needs.intersect_matrices.outputs.test_bare_flavors_matrix != '{"include":[]}'
+        && inputs.bare_flavors_test == true
+      }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.intersect_matrices.outputs.test_bare_flavors_matrix) }}
