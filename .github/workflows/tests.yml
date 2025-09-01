@@ -27,6 +27,10 @@ on:
         description: 'Execute bare flavors container tests'
         type: boolean
         default: true
+      qemu_test:
+        description: 'Execute QEMU tests'
+        type: boolean
+        default: true
     secrets:
       gcp_identity_provider:
         required: false
@@ -134,10 +138,10 @@ jobs:
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
   test_flavors_qemu:
-    needs: intersect_matrices
+    needs: [ intersect_matrices, test_flavors_chrooted ]
     name: Test flavors QEMU
     uses: ./.github/workflows/test_flavor_qemu.yml
-    if: ${{ needs.intersect_matrices.outputs.chroot_test_flavors_matrix != '{"include":[]}' && inputs.chroot_test == true }}
+    if: ${{ always() && (needs.test_flavors_chrooted.result == 'success' || needs.test_flavors_chrooted.result == 'skipped') && needs.intersect_matrices.outputs.chroot_test_flavors_matrix != '{"include":[]}' && inputs.qemu_test == true }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.intersect_matrices.outputs.chroot_test_flavors_matrix) }}
@@ -146,10 +150,10 @@ jobs:
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
   test_platform_flavors:
-    needs: intersect_matrices
+    needs: [ intersect_matrices, test_flavors_chrooted ]
     name: Test platform flavors
     uses: ./.github/workflows/test_platform_flavor.yml
-    if: ${{ needs.intersect_matrices.outputs.platform_test_flavors_matrix != '{"include":[]}' && inputs.platform_test == true }}
+    if: ${{ always() && (needs.test_flavors_chrooted.result == 'success' || needs.test_flavors_chrooted.result == 'skipped') && needs.intersect_matrices.outputs.platform_test_flavors_matrix != '{"include":[]}' && inputs.platform_test == true }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.intersect_matrices.outputs.platform_test_flavors_matrix) }}
