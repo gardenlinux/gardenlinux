@@ -53,6 +53,9 @@ source "$image_requirements"
 
 [ -n "$arch" ]
 arch="$(map_arch "$arch")"
+[ -n "$uefi" ]
+[ -n "$secureboot" ]
+[ -n "$tpm2" ]
 
 tmpdir=
 
@@ -167,19 +170,30 @@ qemu_opts=(
 	-accel "$qemu_accel"
 	-display none
 	-serial stdio
-	-drive "if=pflash,unit=0,format=raw,readonly=on,file=$tmpdir/edk2-qemu-code"
-	-drive "if=pflash,unit=1,format=raw,file=$tmpdir/edk2-qemu-vars"
 	-drive "if=virtio,format=qcow2,file=$tmpdir/disk.qcow"
 	-drive "if=virtio,format=raw,readonly=on,file=$test_dist_dir/dist.ext2.raw"
 	-fw_cfg "name=opt/gardenlinux/config_script,file=$tmpdir/fw_cfg-script.sh"
 	-chardev "file,id=test_output,path=$tmpdir/serial.log"
 	-device virtio-serial
 	-device "virtserialport,chardev=test_output,name=test_output"
-	-chardev "socket,id=chrtpm,path=$tmpdir/swtpm.sock"
-	-tpmdev "emulator,id=tpm0,chardev=chrtpm"
-	-device "$qemu_tpm_dev,tpmdev=tpm0"
 	-device "virtio-net-pci,netdev=net0"
 )
+
+if [ "$secureboot" = "true" ]; then
+	qemu_opts+=(
+		-drive "if=pflash,unit=0,format=raw,readonly=on,file=$tmpdir/edk2-qemu-code"
+		-drive "if=pflash,unit=1,format=raw,file=$tmpdir/edk2-qemu-vars"
+	)
+fi
+
+if [ "$tpm2" = "true" ]; then
+	qemu_opts+=(
+		-chardev "socket,id=chrtpm,path=$tmpdir/swtpm.sock"
+		-tpmdev "emulator,id=tpm0,chardev=chrtpm"
+		-device "$qemu_tpm_dev,tpmdev=tpm0"
+	)
+	swtpm socket --tpmstate backend-uri="file://$tmpdir/swtpm.permall" --ctrl type=unixio,path="$tmpdir/swtpm.sock" --tpm2 --daemon --terminate
+fi
 
 if ((ssh)); then
 	qemu_opts+=(
@@ -193,7 +207,6 @@ fi
 
 echo "🚀  starting test VM"
 
-swtpm socket --tpmstate backend-uri="file://$tmpdir/swtpm.permall" --ctrl type=unixio,path="$tmpdir/swtpm.sock" --tpm2 --daemon --terminate
 if ((skip_cleanup)); then
 	# The following command starts the QEMU VM and pipes its output through sed to clean up the console output:
 	# - s/\x1b\][0-9]*\x07//g      : Removes OSC (Operating System Command) escape sequences (e.g., title changes).
