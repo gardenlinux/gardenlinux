@@ -47,11 +47,21 @@ for feature in "${features[@]}"; do
 	fi
 done
 
-initrd="$(mktemp)"
+case "$BUILDER_ARCH" in
+	amd64)
+		uefi_arch=X64
+		;;
+	arm64)
+		uefi_arch=AA64
+		;;
+esac
 
+uki="$(mktemp)"
 touch "$rootfs/initrd"
+touch "$rootfs/uki"
+mount --bind "$uki" "$rootfs/uki"
 
-kernel="$(find "$rootfs/boot/" -name 'vmlinuz-*' | sort -V | tail -n 1)"
+kernel="$(find "$rootfs/boot/" -name 'vmlinuz-*' -printf '%P\n' | sort -V | tail -n 1)"
 
 chroot "$rootfs" dracut \
 	--no-hostonly \
@@ -65,41 +75,29 @@ chroot "$rootfs" dracut \
 	--add-drivers erofs \
 	/initrd
 
+read -r _ cmdline < "$rootfs/etc/kernel/cmdline"
+
+size_initrd="$(du -h "$rootfs/initrd" | cut -f 1)"
+size_erofs_cpio="$(du -h "$erofs_cpio" | cut -f 1)"
+cat "$erofs_cpio" >> "$rootfs/initrd"
+size_initrd_total="$(du -h "$rootfs/initrd" | cut -f 1)"
+echo "initrd size: $size_initrd (dracut) + $size_erofs_cpio (EROFS) = $size_initrd_total"
+
+chroot "$rootfs" ukify build \
+	--stub "/usr/lib/systemd/boot/efi/linux$(tr '[:upper:]' '[:lower:]' <<< "$uefi_arch").efi.stub" \
+	--linux "/boot/$kernel" \
+	--initrd "/initrd" \
+	--cmdline "$cmdline" \
+	--uname "${kernel#*-}" \
+	--os-release "@/etc/os-release" \
+	--output /uki
+
+rm "$rootfs/initrd"
+
+umount "$rootfs/uki"
 umount -l "$rootfs/proc"
 umount -R "$rootfs/dev"
 umount "$rootfs/tmp"
-
-mv "$rootfs/initrd" "$initrd"
-
-case "$BUILDER_ARCH" in
-	amd64)
-		uefi_arch=X64
-		;;
-	arm64)
-		uefi_arch=AA64
-		;;
-esac
-
-uki="$(mktemp)"
-
-read -r _ cmdline < "$rootfs/etc/kernel/cmdline"
-
-size_initrd="$(du -h "$initrd" | cut -f 1)"
-size_erofs_cpio="$(du -h "$erofs_cpio" | cut -f 1)"
-cat "$erofs_cpio" >> "$initrd"
-size_initrd_total="$(du -h "$initrd" | cut -f 1)"
-echo "initrd size: $size_initrd (dracut) + $size_erofs_cpio (EROFS) = $size_initrd_total"
-
-/usr/lib/systemd/ukify build \
-	--stub "$rootfs/usr/lib/systemd/boot/efi/linux$(tr '[:upper:]' '[:lower:]' <<< "$uefi_arch").efi.stub" \
-	--linux "$kernel" \
-	--initrd "$initrd" \
-	--cmdline "$cmdline" \
-	--uname "${kernel#*-}" \
-	--os-release "@$rootfs/etc/os-release" \
-	--output "$uki"
-
-rm "$initrd"
 
 esp_dir="$(mktemp -d)"
 
