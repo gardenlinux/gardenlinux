@@ -8,11 +8,11 @@ TEST_IMAGES = [
 ]
 
 
-def test_basic_container_functionality(ctr: CtrRunner):
-    for uri in TEST_IMAGES:
-        ctr.pull(uri)
+@pytest.mark.parametrize("uri", TEST_IMAGES)
+def test_basic_container_functionality(uri: str, ctr: CtrRunner):
+    ctr.pull(uri)
 
-        container_name = uri.split("/")[0].replace(".", "-")
-        out = ctr.run(uri, container_name, "uname", capture_output=True, ignore_exit_code=True)
+    container_name = uri.split("/")[0].replace(".", "-")
+    out = ctr.run(uri, container_name, "uname", capture_output=True, ignore_exit_code=True)
 
-        assert "Linux" in out.stdout, f"Command failed: {out.stderr}"
+    assert "Linux" in out.stdout, f"Command failed: {out.stderr}"
