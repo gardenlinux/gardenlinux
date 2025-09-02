@@ -5,6 +5,11 @@ from .systemd import Systemd
 
 
 class CtrRunner:
+    """
+    Simple wrapper for 'ctr' shell calls.
+    Container image uris are validated before use. Expect an exception if a malformed URI is passed.
+    """
+
     def __init__(self, shell: ShellRunner, systemd: Systemd):
         self.shell = shell
         systemd.start_unit("containerd")
