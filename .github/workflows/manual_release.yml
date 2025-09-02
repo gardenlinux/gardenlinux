@@ -8,11 +8,11 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Garden Linux version'
+        description: "Garden Linux version"
         type: string
         required: true
       target:
-        description: 'Garden Linux release target'
+        description: "Garden Linux release target"
         required: true
         type: choice
         options:
@@ -23,15 +23,19 @@ on:
         type: string
         default: latest
       flavors_parse_params:
-        description: 'Run bin/flavors_parse.py with these parameters'
+        description: "Run bin/flavors_parse.py with these parameters"
         default: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
         type: string
       bare_flavors_parse_params:
-        description: 'Run bin/parse_flavors.py with these parameters for bare flavors'
+        description: "Run bin/parse_flavors.py with these parameters for bare flavors"
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
         type: string
+      test_types:
+        description: "Types of tests to execute (comma-separated: chroot,qemu,cloud,cloud_old,oci)"
+        type: string
+        default: "chroot,qemu,cloud,cloud_old,oci"
       ignore_workflow_concurrency:
-        description: 'Execute workflows concurrently'
+        description: "Execute workflows concurrently"
         type: boolean
         default: false
 jobs:
@@ -57,7 +61,7 @@ jobs:
   build_retry:
     needs: build
     if: ${{ failure() && needs.build.result == 'failure' }}
-    name: 'Retry checkpoint: Build'
+    name: "Retry checkpoint: Build"
     runs-on: ubuntu-24.04
     permissions:
       actions: write
@@ -78,7 +82,7 @@ jobs:
     with:
       flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
       version: ${{ needs.build.outputs.version }}
-      platform_test: true
+      test_types: ${{ inputs.test_types }}
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
     permissions:
       id-token: write # TODO: 3215 elevated permissions for included workflow
@@ -101,7 +105,7 @@ jobs:
   test_retry:
     needs: test
     if: ${{ failure() && needs.test.result == 'failure' }}
-    name: 'Retry checkpoint: Test'
+    name: "Retry checkpoint: Test"
     runs-on: ubuntu-24.04
     permissions:
       actions: write
@@ -116,7 +120,7 @@ jobs:
             const gitHubRef = "${{ github.head_ref == '' && github.ref_name || github.head_ref }}";
             return await gitHubLib.dispatchRetryWorkflow(core, github.rest.actions, context, gitHubRef, 5);
   upload_workflow_data:
-    needs: [ build, test ]
+    needs: [build, test]
     name: Store workflow data
     runs-on: ubuntu-24.04
     permissions:

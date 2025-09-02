@@ -42,7 +42,7 @@ on:
         required: true
 jobs:
   test:
-    name: Test flavor in Cloud ${{ inputs.flavor }}
+    name: Test flavor in Cloud ${{ inputs.flavor }} (${{ inputs.arch }})
     runs-on: "ubuntu-24.04"
     # timeout-minutes: 30
     environment: oidc_platform_tests

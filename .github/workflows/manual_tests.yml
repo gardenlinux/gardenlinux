@@ -35,26 +35,10 @@ on:
         description: "Run bin/parse_flavors.py with these parameters for bare flavors"
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
         type: string
-      chroot_test:
-        description: "Execute chrooted tests"
-        type: boolean
-        default: true
-      qemu_test:
-        description: "Execute qemu tests"
-        type: boolean
-        default: true
-      cloud_test:
-        description: "Execute cloud tests"
-        type: boolean
-        default: true
-      # platform_test:
-      #   description: "Execute platform tests"
-      #   type: boolean
-      #   default: true
-      # bare_test:
-      #   description: "Execute bare flavors tests"
-      #   type: boolean
-      #   default: true
+      test_types:
+        description: "Types of tests to execute (comma-separated: chroot,qemu,cloud,cloud_old,oci). Note: oci tests only work when build=true"
+        type: string
+        default: "chroot,qemu,cloud,cloud_old"
       ignore_workflow_concurrency:
         description: "Execute workflows concurrently"
         type: boolean
@@ -81,11 +65,7 @@ jobs:
     with:
       version: ${{ needs.build.outputs.version }}
       flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
-      chroot_test: ${{ inputs.chroot_test }}
-      qemu_test: ${{ inputs.qemu_test }}
-      cloud_test: ${{ inputs.cloud_test }}
-      # platform_test: ${{ inputs.platform_test }}
-      # bare_test: ${{ inputs.bare_test }}
+      test_types: ${{ inputs.test_types }}
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
     permissions:
       id-token: write # TODO: 3215 elevated permissions for included workflow
@@ -133,7 +113,7 @@ jobs:
           name: flavor-version-data
           path: flavor_version_data.json
           if-no-files-found: error
-  download_platform_test:
+  download_platform_test_images:
     needs: download_build_requirements
     name: Download platform-test image
     uses: ./.github/workflows/build_platform_test_images.yml
@@ -171,7 +151,7 @@ jobs:
     needs:
       [
         download_build_requirements,
-        download_platform_test,
+        download_platform_test_images,
         download_platform_test_flavors_matrix,
         download_platform_test_flavors,
       ]
@@ -180,11 +160,8 @@ jobs:
     with:
       version: ${{ needs.download_build_requirements.outputs.version }}
       flavors_matrix: ${{ needs.download_platform_test_flavors_matrix.outputs.matrix }}
-      chroot_test: ${{ inputs.chroot_test }}
-      qemu_test: ${{ inputs.qemu_test }}
-      cloud_test: ${{ inputs.cloud_test }}
-      # platform_test: ${{ inputs.platform_test }}
-      # bare_test: ${{ inputs.bare_test }}
+      test_types: ${{ inputs.test_types }}
+      bare_flavors_matrix: '{"include":[]}'
     permissions:
       id-token: write # TODO: 3215 elevated permissions for included workflow
       actions: write  # TODO: 3215 elevated permissions for included workflow
