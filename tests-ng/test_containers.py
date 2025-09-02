@@ -12,7 +12,6 @@ TEST_IMAGES = [
 def test_basic_container_functionality(uri: str, ctr: CtrRunner):
     ctr.pull(uri)
 
-    container_name = uri.split("/")[0].replace(".", "-")
-    out = ctr.run(uri, container_name, "uname", capture_output=True, ignore_exit_code=True)
+    out = ctr.run(uri, "uname", capture_output=True, ignore_exit_code=True)
 
     assert "Linux" in out.stdout, f"Command failed: {out.stderr}"
