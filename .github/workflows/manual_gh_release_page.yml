@@ -6,8 +6,8 @@ on:
         type: choice
         default: patch
         options:
-        - patch
-        - dev
+          - patch
+          - dev
       version:
         required: true
         type: string
@@ -38,8 +38,8 @@ jobs:
           echo "idToken=${IDTOKEN}" >> $GITHUB_OUTPUT
       - uses: azure/k8s-set-context@v4
         with:
-           method: kubeconfig
-           kubeconfig: "${{ secrets.KUBECONFIG }}"
+          method: kubeconfig
+          kubeconfig: "${{ secrets.KUBECONFIG }}"
       - name: Start a new ingestion job in GLVD to import package list for new version
         run: |
           kubectl run ingest-new-gl-version-$RANDOM \
@@ -87,12 +87,12 @@ jobs:
         name: Generate flavors matrix
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
         with:
-          flags: '--no-arch --json-by-arch --publish'
+          flags: "--no-arch --json-by-arch --publish"
       - name: create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
+          python3 -m gardenlinux.release_note create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
       - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
           key: release-${{ github.run_id }}
@@ -106,7 +106,7 @@ jobs:
       id-token: write
     environment: oidc_aws_s3_upload
     env:
-      CNAME: ''
+      CNAME: ""
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.github_release.outputs.matrix ) }}
@@ -157,7 +157,7 @@ jobs:
     uses: ./.github/workflows/tag_latest_container.yml
     with:
       version: ${{ inputs.version }}
-      is_latest:  ${{ inputs.is_latest }}
+      is_latest: ${{ inputs.is_latest }}
   glrd:
     name: create GLRD release
     permissions:

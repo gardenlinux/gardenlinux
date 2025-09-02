@@ -40,7 +40,7 @@ case "$action" in
 		commit="$1"; shift
 		name="$1"; shift
 		commit_short=${commit:0:8}
-		body="$(.github/workflows/release_note.py generate --version "$name" --commitish "$commit_short" --escaped)"
+		body="$(python3 -m gardenlinux.release_note generate --version "$name" --commitish "$commit_short" --escaped)"
 		# If release does not exist, this get request will return a 404
 		release="$(get "releases/tags/$tag" | jq -r '.id' || true)"
 		[ ! "$release" ] || delete "releases/$release"
