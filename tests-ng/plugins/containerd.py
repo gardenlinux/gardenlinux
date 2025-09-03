@@ -17,7 +17,12 @@ class CtrRunner:
     def pull(self, uri, capture_output=False, ignore_exit_code=False):
         validators.url(uri)
         command = f"ctr image pull {uri}"
-        self.shell(command, capture_output=capture_output, ignore_exit_code=ignore_exit_code)
+        return self.shell(command, capture_output=capture_output, ignore_exit_code=ignore_exit_code)
+
+    def remove_image(self, uri, capture_output=False, ignore_exit_code=False):
+        validators.url(uri)
+        command = f"ctr image rm {uri}"
+        return self.shell(command, capture_output=capture_output, ignore_exit_code=ignore_exit_code)
 
     def run(self, uri, cmd, capture_output=False, ignore_exit_code=False):
         validators.url(uri)
