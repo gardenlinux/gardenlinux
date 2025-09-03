@@ -20,7 +20,7 @@ jobs:
       run:
         shell: bash
     env:
-      CNAME: ''
+      CNAME: ""
     permissions:
       id-token: write
     steps:
@@ -55,7 +55,7 @@ jobs:
           make --directory=tests ${{ inputs.flavor }}-${{ inputs.arch }}-chroot-test
       # chroot.test.xml is written in the entrypoint tests/init
       - name: New Test Framework
-        run: ./test-ng ".build/$CNAME.tar"
+        run: ./test-ng --test-args --default-user=root ".build/$CNAME.tar"
       - name: Rename test results
         if: always()
         run: mv tests/chroot.test.xml .build/$CNAME.chroot.test.xml
