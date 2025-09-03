@@ -20,7 +20,7 @@ jobs:
       run:
         shell: bash
     env:
-      CNAME: ''
+      CNAME: ""
     permissions:
       id-token: write
     steps:
@@ -60,7 +60,7 @@ jobs:
       - name: New Test Framework
         run: |
           if [ -e ".build/$CNAME.raw" ]; then
-            ./test-ng ".build/$CNAME.raw"
+            ./test-ng --test-args --default-user=root ".build/$CNAME.raw"
           else
             echo "no raw file, skipping QEMU test"
           fi
