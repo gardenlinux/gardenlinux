@@ -10,7 +10,7 @@ TEST_IMAGES = [
 
 @pytest.fixture
 def container_image_setup(uri: str, ctr: CtrRunner):
-    ctr.pull(uri)
+    ctr.pull_image(uri)
     yield
     ctr.remove_image(uri)
 
