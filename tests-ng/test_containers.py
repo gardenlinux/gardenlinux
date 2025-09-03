@@ -8,7 +8,7 @@ TEST_IMAGES = [
 ]
 
 
-@pytest.mark.feature("server") # server installs systemd and azure has notoriously bad startup times
+@pytest.mark.booted(reason="Container tests require systemd")
 @pytest.mark.parametrize("uri", TEST_IMAGES)
 def test_basic_container_functionality(uri: str, ctr: CtrRunner):
     ctr.pull(uri)
