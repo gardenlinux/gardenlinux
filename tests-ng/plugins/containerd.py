@@ -14,10 +14,10 @@ class CtrRunner:
         self.shell = shell
         systemd.start_unit("containerd")
 
-    def pull(self, uri):
+    def pull(self, uri, capture_output=False, ignore_exit_code=False):
         validators.url(uri)
         command = f"ctr image pull {uri}"
-        self.shell(command, capture_output=False)
+        self.shell(command, capture_output=capture_output, ignore_exit_code=ignore_exit_code)
 
     def run(self, uri, cmd, capture_output=False, ignore_exit_code=False):
         validators.url(uri)
