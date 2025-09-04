@@ -4,7 +4,6 @@ import os
 from plugins.booted import is_system_booted
 
 @pytest.mark.root
-@pytest.mark.booted
 def test_image_proc_is_empty(remounted_root):
     """
     Test for an empty /proc within the given rootfs tarball. Since /proc is mounted 
