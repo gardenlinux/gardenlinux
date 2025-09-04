@@ -38,6 +38,16 @@ jobs:
             VERSION
           key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
+      - name: Download test distribution artifact
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        with:
+          name: test-distribution
+          path: tests-ng/.build
+      - name: Load certs artifact
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        with:
+          name: certs
+          path: cert/
       - name: Determine CNAME
         id: cname
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@97d6e1c28eb4565446563ed04bcbf3c4cb5d1bde # pin@0.9.0
@@ -59,8 +69,25 @@ jobs:
         # TODO: handle skipping better
       - name: New Test Framework
         run: |
+          if [ ! -e ".build/$CNAME.raw" ]; then
+            if [ -e ".build/$CNAME.vhd" ]; then
+              echo "converting vhd to raw"
+              qemu-img convert -f vpc -O raw ".build/$CNAME.vhd" ".build/$CNAME.raw"
+            elif [ -e ".build/$CNAME.qcow2" ]; then
+              echo "converting qcow2 to raw"
+              qemu-img convert -f qcow2 -O raw ".build/$CNAME.qcow2" ".build/$CNAME.raw"
+            elif [ -e ".build/$CNAME.vmdk" ]; then
+              echo "converting vmdk to raw"
+              qemu-img convert -f vmdk -O raw ".build/$CNAME.vmdk" ".build/$CNAME.raw"
+            elif [ -e ".build/$CNAME.gcpimage.tar.gz" ]; then
+              echo "converting gcpimage to raw"
+              tar -C .build -xzf ".build/$CNAME.gcpimage.tar.gz"
+              mv ".build/disk.raw" ".build/$CNAME.raw"
+            fi
+          fi
           if [ -e ".build/$CNAME.raw" ]; then
-            ./test-ng --test-args --default-user=root ".build/$CNAME.raw"
+            ./test-ng ".build/$CNAME.raw"
           else
-            echo "no raw file, skipping QEMU test"
+            echo "no raw file, QEMU test failed"
+            exit 1
           fi
