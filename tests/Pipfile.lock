@@ -4698,11 +4698,12 @@
         },
         "deepdiff": {
             "hashes": [
-                "sha256:a4dd3529fa8d4cd5b9cbb6e3ea9c95997eaa919ba37dac3966c1b8f872dc1cd1",
-                "sha256:d4599db637f36a1c285f5fdfc2cd8d38bde8d8be8636b65ab5e425b67c54df26"
+                "sha256:ec56d7a769ca80891b5200ec7bd41eec300ced91ebcc7797b41eb2b3f3ff643a",
+                "sha256:ee8708a7f7d37fb273a541fa24ad010ed484192cd0c4ffc0fa0ed5e2d4b9e78b"
             ],
+            "index": "pypi",
             "markers": "python_version >= '3.9'",
-            "version": "==8.5.0"
+            "version": "==8.6.1"
         },
         "dill": {
             "hashes": [
