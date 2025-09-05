@@ -597,6 +597,7 @@ qemu_opt_cpu () {
                 if [ -w "/dev/kvm" ]; then
                     QEMU_OPTS+=("-enable-kvm" "-cpu host" "-machine q35,smm=on")
                 else
+                    QEMU_OPTS+=("-machine q35,smm=on")
                     echo -e "WARNING: Can not use KVM acceleration. Please see:\n https://github.com/gardenlinux/gardenlinux/tree/main/bin#start-vm \n\n"
                 fi
 
