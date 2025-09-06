@@ -34,7 +34,7 @@ Their development is streamlined by the [unbase_oci](https://github.com/gardenli
   - Contains the Python3 interpreter and necessary libraries.
   - Ideal for Python3-based applications.
   - Designed for improved security and efficiency.
-  - Note: The bare-Python3 container does not include pip or other Python3 package managers by default. You may need to install dependencies in a builder container and copy them into this bare container for runtime usage. This ensures Python3 scripts can run with required packages while keeping the container minimal.
+
 
 - **Container Link**: [bare-Python3](https://github.com/orgs/gardenlinux/packages/container/package/gardenlinux%2Fbare-Python3)
 - **Usage in Dockerfile**:
