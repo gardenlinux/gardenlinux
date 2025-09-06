@@ -8,6 +8,9 @@ on:
       version:
         type: string
         required: true
+      prefix:
+        type: string
+        default: ''
 jobs:
   bootstrap:
     name: Build bootstrap
@@ -37,4 +40,4 @@ jobs:
       - uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           path: .build
-          key: base-${{ matrix.arch }}-${{ github.run_id }}
+          key: ${{ inputs.prefix }}base-${{ matrix.arch }}-${{ github.run_id }}
