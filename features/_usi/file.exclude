@@ -6,3 +6,4 @@
 #/opt/{,.}*
 #/home/{,.}*
 /root/{,.}*
+/usr/lib/udev/rules.d/90-image-dissect.rules
