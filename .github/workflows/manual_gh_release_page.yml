@@ -107,7 +107,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
-      - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      - uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           key: release-${{ github.run_id }}
           path: .github_release_id
@@ -135,7 +135,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_REGION }}
-      - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      - uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           key: release-${{ github.run_id }}
           path: .github_release_id
