@@ -15,8 +15,10 @@ import json
 import os
 import re
 import requests
+import shutil
 import subprocess
 import sys
+from git import Repo
 import textwrap
 import yaml
 import urllib.request
@@ -83,28 +85,28 @@ def _azure_release_note(published_image_metadata):
                 output += f"urn: {market_image['urn']}\n"
     return output
 
-def generate_release_note_image_ids(manifests):
+def generate_release_note_image_ids(metadata_files):
     out = ""
-    for m in manifests:
+    for m in metadata_files:
         out += generate_release_note_image_id_single(m)
     return out
 
-def generate_release_note_image_id_single(manifest_path):
+def generate_release_note_image_id_single(metadata_file_path):
     """
     Outputs a markdown formatted string for github release notes,
     containing the image-ids for the respective cloud regions
     """
     output = ""
-    with open(manifest_path) as f:
-        manifest_data = yaml.load(f, Loader=SafeLoader)
-    published_image_metadata = manifest_data['published_image_metadata']
+    with open(metadata_file_path) as f:
+        metadata = yaml.load(f, Loader=SafeLoader)
+    published_image_metadata = metadata['published_image_metadata']
 
-    # No publishing metadata found in manifest, assume it was not published
+    # No publishing metadata found in metadata file, assume it was not published
     if published_image_metadata is None:
         return ""
 
-    platform_short_name = manifest_data['platform']
-    arch = manifest_data['architecture']
+    platform_short_name = metadata['platform']
+    arch = metadata['architecture']
     if platform_short_name in cloud_fullname_dict:
         platform_long_name = cloud_fullname_dict[platform_short_name]
         output = output + f"### {platform_long_name} ({arch})\n"
@@ -126,17 +128,38 @@ def generate_release_note_image_id_single(manifest_path):
     return output
 
 
-def download_all_singles(version, commitish):
-    with open("./flavors.yaml", "r") as f:
-        flavors_data = f.read()
+def download_metadata_file(s3_artifacts, cname, artifacts_dir):
+    """
+    Download metadata file (s3_metadata.yaml)
+    """
+    release_object = list(
+        s3_artifacts._bucket.objects.filter(Prefix=f"meta/singles/{cname}")
+    )[0]
+    s3_artifacts._bucket.download_file(
+        release_object.key, artifacts_dir.joinpath(f"{cname}.s3_metadata.yaml")
+    )
+
+
+def download_all_metadata_files(version, commitish):
+    repo = Repo(".")
+    commit = repo.commit(commitish)
+    flavors_data = commit.tree["flavors.yaml"].data_stream.read().decode('utf-8')
     flavors = FlavorsParser(flavors_data).filter(only_publish=True)
 
     local_dest_path = Path("s3_downloads")
-    local_dest_path.mkdir(mode=0o755, exist_ok=True)
+    if local_dest_path.exists():
+        shutil.rmtree(local_dest_path)
+    local_dest_path.mkdir(mode=0o755, exist_ok=False)
+
+    s3_artifacts = S3Artifacts(GARDENLINUX_GITHUB_RELEASE_BUCKET_NAME)
 
     for flavor in flavors:
         cname = CName(flavor[1], flavor[0], "{0}-{1}".format(version, commitish))
-        S3Artifacts(GARDENLINUX_GITHUB_RELEASE_BUCKET_NAME).download_to_directory(cname.cname, local_dest_path)
+        try:
+            download_metadata_file(s3_artifacts, cname.cname, local_dest_path)
+        except IndexError:
+            print(f"WARNING: No artifacts found for flavor {cname.cname}, skipping...")
+            continue
 
     return [ str(artifact) for artifact in local_dest_path.iterdir() ]
 
@@ -148,14 +171,14 @@ def get_image_object_url(bucket, object, expiration=0):
     return url
 
 
-def generate_image_download_section(manifests, version, commitish):
+def generate_image_download_section(metadata_files, version, commitish):
     output = ""
-    for manifest_path in manifests:
-        with open(manifest_path) as f:
-            manifest_data = yaml.load(f, Loader=SafeLoader)
-        arch = manifest_data['architecture'].upper()
-        platform = manifest_data['platform']
-        paths = manifest_data['paths']
+    for metadata_file_path in metadata_files:
+        with open(metadata_file_path) as f:
+            metadata = yaml.load(f, Loader=SafeLoader)
+        arch = metadata['architecture'].upper()
+        platform = metadata['platform']
+        paths = metadata['paths']
 
         for path in paths:
             if platform == 'ali' and '.qcow2' == path['suffix']:
@@ -276,7 +299,7 @@ def _get_package_list(gardenlinux_version):
         d.read(f)
         return d
 
-def create_github_release_notes(gardenlinux_version, commitish, dry_run = False):
+def create_github_release_notes(gardenlinux_version, commitish):
     commitish_short=commitish[:8]
 
     package_list = _get_package_list(gardenlinux_version)
@@ -289,16 +312,16 @@ def create_github_release_notes(gardenlinux_version, commitish, dry_run = False)
 
     output += release_notes_compare_package_versions_section(gardenlinux_version, package_list)
 
-    manifests = download_all_singles(gardenlinux_version, commitish_short)
+    metadata_files = download_all_metadata_files(gardenlinux_version, commitish_short)
 
-    output += generate_release_note_image_ids(manifests)
+    output += generate_release_note_image_ids(metadata_files)
 
     output += "\n"
     output += "## Kernel Package direct download links\n"
     output += get_kernel_urls(gardenlinux_version)
     output += "\n"
 
-    output += generate_image_download_section(manifests, gardenlinux_version, commitish_short )
+    output += generate_image_download_section(metadata_files, gardenlinux_version, commitish_short )
 
     output += "\n"
     output += "## Kernel Module Build Container (kmodbuild) "
@@ -371,7 +394,7 @@ def main():
     args = parser.parse_args()
 
     if args.command == 'create':
-        body = create_github_release_notes(args.tag, args.commit, args.dry_run)
+        body = create_github_release_notes(args.tag, args.commit)
         if not args.dry_run:
             release_id = create_github_release(args.owner, args.repo, args.tag, args.commit, body)
             write_to_release_id_file(f"{release_id}")
