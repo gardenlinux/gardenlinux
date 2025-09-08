@@ -20,6 +20,7 @@ on:
         value: ${{ jobs.workflow_data.outputs.original_workflow_name }}
       target:
         value: ${{ jobs.workflow_data.outputs.target }}
+permissions: read-all # default for workflow
 jobs:
   workflow_data:
     name: Download workflow JSON data from trigger (${{ inputs.run_id }})

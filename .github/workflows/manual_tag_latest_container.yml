@@ -11,6 +11,8 @@ on:
         default: false
         type: boolean
 
+permissions: read-all # default for workflow
+
 jobs:
   tag_container_as_latest:
     uses: ./.github/workflows/tag_latest_container.yml

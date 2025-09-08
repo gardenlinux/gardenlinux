@@ -33,6 +33,7 @@ on:
         required: true
       oci_kms_arn:
         required: true
+permissions: read-all # default for workspace
 jobs:
   determine_environment:
     name: Determine release environment and repository for ${{ inputs.target }}
@@ -72,6 +73,8 @@ jobs:
     env:
       CNAME_AMD64: ''
       CNAME_ARM64: ''
+    permissions:
+      packages: write
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
@@ -166,6 +169,8 @@ jobs:
       matrix:
         # @TODO: Replace with input matrix once OCI manifest tooling is ready to update existing ones
         config: [ libc, python, nodejs, sapmachine ]
+    permissions:
+      packages: write
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:

@@ -47,6 +47,7 @@ on:
         description: 'Execute workflows concurrently'
         type: boolean
         default: false
+permissions: read-all # default for workflows
 jobs:
   build:
     name: Build
@@ -100,6 +101,8 @@ jobs:
       run:
         shell: bash
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
       - name: Prepare flavor version reference
         run: |

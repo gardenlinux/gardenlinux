@@ -20,6 +20,7 @@ on:
         required: true
       aws_s3_bucket:
         required: true
+permissions: read-all # default for workflow
 jobs:
   images:
     name: Provide image ${{ matrix.flavor }} (${{ matrix.arch }})
@@ -30,6 +31,7 @@ jobs:
         shell: bash
     permissions:
       id-token: write
+      actions: write
     # @TODO: We could use a better name for the required environment
     environment: oidc_platform_tests
     env:
