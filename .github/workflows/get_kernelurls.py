@@ -11,7 +11,7 @@ import yaml
 import itertools
 
 def get_pkg_attr(package_name, attribute_key, packages_per_repo):
-  
+
     current_package = {}
     found_package = False
     for packages in packages_per_repo.values():
@@ -91,7 +91,7 @@ def get_package_urls(package_list, package_name, resolve_depends=True):
         uri = re.match('(.*?)-.*', repo).group(1)
         for line in packages.split('\n'):
             if resolve_depends and line.startswith('Depends:'):
-                dependencies = re.sub(' ?\(.*?\),?|,', '', re.match("Depends: (.*)", line).group(1)).split(' ')
+                dependencies = re.sub(r' ?\(.*?\),?|,', '', re.match("Depends: (.*)", line).group(1)).split(' ')
             if line.startswith('Filename:') and f'/{package_name}' in line:
                 filename = re.match("Filename: (.*)", line).group(1)
                 header_packages.append(f'{uri}/{filename}')
@@ -113,14 +113,14 @@ def check_urls(linux_versions, header_package_urls, architecture):
     for version, arch, package in itertools.product(linux_versions, architecture, header_package_urls):
         if version in package and arch in package:
             result[arch][version].append(package)
-            versions[version] = re.match(".*?(_.*)\.deb", package).group(1)
+            versions[version] = re.match(r".*?(_.*)\.deb", package).group(1)
         # Workaround for linux compiler package name on arm64 architecture
-        if 'arm64' in package and arch == 'arm64' and re.match('.*/gcc-\d\d_.*', package):
+        if 'arm64' in package and arch == 'arm64' and re.match(r'.*/gcc-\d\d_.*', package):
             result[arch][version].append(package)
     for version, arch, package in itertools.product(versions, architecture, header_package_urls):
         if versions[version] in package and arch in package and not 'linux-headers' in package:
             result[arch][version].append(package)
-    
+
     for key, value in result.items():
         for nested_key, nested_value in value.items():
             result[key][nested_key] = list(dict.fromkeys(nested_value))
@@ -134,4 +134,4 @@ def output_urls(package_urls):
     yaml_output += yaml.dump(package_urls)
     yaml_output += "```\n"
     yaml_output += ""
-    return yaml_output   
+    return yaml_output
