@@ -55,8 +55,7 @@ jobs:
         run: |
           echo "Give GLVD some time to ingest the data. It is not clear how long this takes exactly, and there is no single indicator for when it was done."
           sleep 180
-
-  github_release:
+  flavors_matrix:
     needs: glvd
     runs-on: ubuntu-24.04
     defaults:
@@ -64,16 +63,7 @@ jobs:
         shell: bash
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
-    permissions:
-      id-token: write
-      contents: write
-    environment: oidc_aws_s3_upload
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
-        with:
-          submodules: true
-      - name: install dependencies for generate_release_note.py script
-        run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
       - name: Checkout flavors of the release commit
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
@@ -88,6 +78,23 @@ jobs:
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
         with:
           flags: '--no-arch --json-by-arch --publish'
+  github_release:
+    needs: glvd
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      id-token: write
+      contents: write
+    environment: oidc_aws_s3_upload
+    steps:
+      - name: Checkout full repository (current branch)
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+        with:
+          submodules: true
+      - name: install dependencies for generate_release_note.py script
+        run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
       - name: create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -99,7 +106,7 @@ jobs:
           path: .github_release_id
 
   github_release_artifacts_upload:
-    needs: github_release
+    needs: [github_release, flavors_matrix]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -109,7 +116,7 @@ jobs:
       CNAME: ''
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.github_release.outputs.matrix ) }}
+      matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix ) }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
