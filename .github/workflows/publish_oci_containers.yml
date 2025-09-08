@@ -46,7 +46,7 @@ jobs:
           submodules: true
       - name: Set environment and repository
         id: set_values
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");

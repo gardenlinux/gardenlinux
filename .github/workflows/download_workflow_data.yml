@@ -43,7 +43,7 @@ jobs:
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
       - name: Set referenced workflow data
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         id: data
         with:
           script: |
