@@ -53,7 +53,6 @@ class Systemd:
             pytest.skip("starting units is only supported when system state modifications are allowed")
         self._shell(f"systemctl start {unit_name}")
 
-
     def list_units(self) -> list[SystemdUnit]:
         result = self._shell(f"{self._systemctl}", capture_output=True, ignore_exit_code=True)
         units = []
@@ -61,6 +60,19 @@ class Systemd:
             parts = line.split()
             units.append(SystemdUnit(parts[0], parts[1], parts[2], parts[3]))
         return units
+
+    def list_failed_units(self) -> list[SystemdUnit]:
+        result = self._shell(f"{self._systemctl} --failed", capture_output=True, ignore_exit_code=True)
+        units = []
+        for line in result.stdout.splitlines():
+            parts = line.split()
+            units.append(SystemdUnit(parts[0], parts[1], parts[2], parts[3]))
+        return units
+
+    def wait_is_system_running(self) -> bool:
+        result = self._shell("{self._systemctl} is-system-running --wait", capture_output=True, ignore_exit_code=True)
+        return result.stdout.strip() == "running"
+
 
 @pytest.fixture
 def systemd(shell: ShellRunner):
