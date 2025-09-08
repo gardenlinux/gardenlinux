@@ -130,7 +130,7 @@ jobs:
           cleanup_credentials: true
           export_environment_variables: true
       - name: Set GCP platform-test environment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const path = await import("path");
@@ -150,7 +150,7 @@ jobs:
           aws-region: ${{ secrets.aws_region }}
           output-credentials: true
       - name: Set AWS platform-test environment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             core.setSecret("${{ steps.auth_aws.outputs.aws-access-key-id }}");
@@ -167,7 +167,7 @@ jobs:
           tenant-id: ${{ secrets.az_tenant_id }}
           subscription-id: ${{ secrets.az_subscription_id }}
       - name: Set Azure platform-test environment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             core.exportVariable("ARM_USE_OIDC", "true");
@@ -179,7 +179,7 @@ jobs:
             core.setSecret("${{ secrets.az_tenant_id }}");
             core.exportVariable("ARM_TENANT_ID", "${{ secrets.az_tenant_id }}");
       - name: 'Create ali cloud credential file'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const credentials = JSON.parse(atob("${{ secrets.ccc_credentials }}"));

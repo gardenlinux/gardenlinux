@@ -67,7 +67,7 @@ jobs:
           cleanup_credentials: true
           export_environment_variables: true
       - name: Set GCP platform-test environment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const path = await import("path");
@@ -87,7 +87,7 @@ jobs:
           aws-region: ${{ secrets.AWS_TESTS_REGION }}
           output-credentials: true
       - name: Set AWS platform-test environment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             core.setSecret("${{ steps.auth_aws.outputs.aws-access-key-id }}");
@@ -103,7 +103,7 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Set Azure platform-test environment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             core.exportVariable("ARM_USE_OIDC", "true");
@@ -115,7 +115,7 @@ jobs:
             core.setSecret("${{ secrets.AZURE_TENANT_ID }}");
             core.exportVariable("ARM_TENANT_ID", "${{ secrets.AZURE_TENANT_ID }}");
       - name: 'Create ali cloud credential file'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const credentials = JSON.parse(atob("${{ secrets.CCC_CREDENTIALS }}"));
@@ -128,7 +128,7 @@ jobs:
             core.setSecret(aliCredentials.access_key_secret);
             core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_SECRET", aliCredentials.access_key_secret);
       - name: Set additional OpenTofu platform-test variables
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const tfEncryption = Buffer.from("${{ secrets.TF_ENCRYPTION }}", 'base64').toString('utf-8');
