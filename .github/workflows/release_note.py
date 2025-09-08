@@ -21,7 +21,7 @@ import textwrap
 import yaml
 import urllib.request
 
-from .get_kernelurls import get_kernel_urls
+from get_kernelurls import get_kernel_urls
 
 
 GARDENLINUX_GITHUB_RELEASE_BUCKET_NAME="gardenlinux-github-releases"
@@ -132,7 +132,7 @@ def download_all_singles(version, commitish):
     flavors = FlavorsParser(flavors_data).filter(only_publish=True)
 
     local_dest_path = Path("s3_downloads")
-    local_dest_path.makedir(mode=0o755, exist_ok=True)
+    local_dest_path.mkdir(mode=0o755, exist_ok=True)
 
     for flavor in flavors:
         cname = CName(flavor[1], flavor[0], "{0}-{1}".format(version, commitish))
@@ -250,7 +250,7 @@ def release_notes_compare_package_versions_section(gardenlinux_version, package_
 
                 output += f"## Changes in Package Versions Compared to {previous_version}\n"
                 output += "```diff\n"
-                output += subprocess.check_output(['/bin/bash','./hack/compare-apt-repo-versions.sh', previous_version, gardenlinux_version]).decode("utf-8")
+                output += subprocess.check_output(['/usr/bin/env', 'bash','./hack/compare-apt-repo-versions.sh', previous_version, gardenlinux_version]).decode("utf-8")
                 output += "```\n\n"
             elif patch == 0:
                 output += f"## Full List of Packages in Garden Linux version {major}\n"
