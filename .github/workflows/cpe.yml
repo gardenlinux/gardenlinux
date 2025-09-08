@@ -8,9 +8,13 @@ on:
         type: string
         required: true
 
+permissions: read-all # default for workflow
+
 jobs:
   build-and-upload:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v5

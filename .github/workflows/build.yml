@@ -48,6 +48,9 @@ on:
         value: ${{ jobs.requirements.outputs.version }}
       bare_flavors_matrix:
         value: ${{ jobs.bare_flavors_matrix.outputs.matrix }}
+
+permissions: read-all # default for workflow
+
 jobs:
   requirements:
     name: Prepare build requirements
@@ -119,6 +122,8 @@ jobs:
     needs: [ requirements, flavors ]
     name: Store flavor version data
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
       - name: Store data in JSON file
         run: |

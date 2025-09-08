@@ -9,6 +9,7 @@ on:
   workflow_run:
     workflows: [ 'Build and publish a release', 'nightly' ]
     types: [ 'completed' ]
+permissions: read-all # default for workflow
 jobs:
   workflow_data:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.conclusion == 'success' }}
@@ -20,6 +21,8 @@ jobs:
     name: Publish parent workflow-data artifact
     needs: [ workflow_data ]
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
       - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
         with:
@@ -191,6 +194,8 @@ jobs:
     if: ${{ failure() && ( needs.upload_trustedboot_flavors_to_s3.result == 'failure' || needs.upload_trustedboot_flavors_to_s3_china.result == 'failure' || needs.upload_non_trustedboot_flavors_to_s3.result == 'failure' || needs.upload_non_trustedboot_flavors_to_s3_china.result == 'failure' || needs.glrd.result == 'failure' ) }}
     name: 'Retry checkpoint: Publish to S3'
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
       - name: Retry failed publishing

@@ -11,6 +11,9 @@ on:
       matrix:
         description: 'Flavors matrix'
         value: ${{ jobs.generate_matrix.outputs.matrix }}
+
+permissions: read-all # default for workflow
+
 jobs:
   generate_matrix:
     name: Build flavors matrix

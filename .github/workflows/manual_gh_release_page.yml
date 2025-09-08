@@ -5,12 +5,14 @@ on:
       type:
         type: choice
         default: patch
+        description: 'Patch'
         options:
         - patch
         - dev
       version:
         required: true
         type: string
+        description: 'Version'
       is_latest:
         default: false
         type: boolean
@@ -19,6 +21,7 @@ on:
         required: true
         type: string
         description: "Full commitish"
+permissions: read-all # default for workflow
 jobs:
   # Create new version in GLVD so it has the package list of the new release
   # This is needed for the automatic changelog generation
@@ -27,7 +30,6 @@ jobs:
     name: Update GLVD distro list
     runs-on: ubuntu-latest
     permissions:
-      contents: read
       # This is required for requesting the JWT
       id-token: write
     steps:
@@ -85,6 +87,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
+      actions: write
     environment: oidc_aws_s3_upload
     steps:
       - name: Checkout full repository (current branch)

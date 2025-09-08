@@ -11,6 +11,7 @@ on:
       version:
         type: string
         required: true
+permissions: read-all # default for workflow
 jobs:
   test:
     name: Test flavor in chroot ${{ inputs.flavor }} (${{ inputs.arch }})
@@ -22,7 +23,7 @@ jobs:
     env:
       CNAME: ""
     permissions:
-      id-token: write
+      actions: write
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:

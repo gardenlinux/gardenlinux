@@ -5,6 +5,7 @@ concurrency:
 on:
   schedule:
     - cron: '0 6 * * *'
+permissions: read-all # default for workflow
 jobs:
   build:
     name: Build
@@ -26,6 +27,8 @@ jobs:
     if: ${{ failure() && needs.build.result == 'failure' }}
     name: 'Retry checkpoint: Build'
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
       - name: Retry failed build
