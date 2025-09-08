@@ -71,8 +71,6 @@ jobs:
           sparse-checkout: |
             flavors.yaml
           sparse-checkout-cone-mode: false
-      - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
       - id: matrix
         name: Generate flavors matrix
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
@@ -95,6 +93,8 @@ jobs:
           submodules: true
       - name: install dependencies for generate_release_note.py script
         run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
       - name: create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
