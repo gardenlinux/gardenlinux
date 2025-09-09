@@ -1,9 +1,10 @@
 import re
 import pytest
-from typing import Tuple, Callable, Any
+from typing import Tuple
 from .shell import ShellRunner
 from .modify import allow_system_modifications
 from dataclasses import dataclass
+import time
 
 @dataclass
 class SystemdUnit:
@@ -19,12 +20,18 @@ def _seconds(token: str) -> float:
         return float(token[:-1])
     raise ValueError(f"Unknown time unit in '{token}'")
 
+def _parse_units(systemctl_stdout: str) -> list[SystemdUnit]:
+    units = []
+    for line in systemctl_stdout.splitlines():
+        parts = line.split()
+        if len(parts) >= 4:
+            units.append(SystemdUnit(parts[0], parts[1], parts[2], parts[3]))
+    return units
+
 class Systemd:
     def __init__(self, shell: ShellRunner):
         self._shell = shell
         self._systemctl = 'systemctl --plain --no-legend --no-pager'
-
-    # TODO: we should probably add functionality to check for failed units etc. in here as well
 
     def analyze(self) -> Tuple[float, ...]:
         result = self._shell("systemd-analyze", capture_output=True, ignore_exit_code=True)
@@ -55,23 +62,17 @@ class Systemd:
 
     def list_units(self) -> list[SystemdUnit]:
         result = self._shell(f"{self._systemctl}", capture_output=True, ignore_exit_code=True)
-        units = []
-        for line in result.stdout.splitlines():
-            parts = line.split()
-            units.append(SystemdUnit(parts[0], parts[1], parts[2], parts[3]))
-        return units
+        return _parse_units(result.stdout)
 
     def list_failed_units(self) -> list[SystemdUnit]:
         result = self._shell(f"{self._systemctl} --failed", capture_output=True, ignore_exit_code=True)
-        units = []
-        for line in result.stdout.splitlines():
-            parts = line.split()
-            units.append(SystemdUnit(parts[0], parts[1], parts[2], parts[3]))
-        return units
+        return _parse_units(result.stdout)
 
-    def wait_is_system_running(self) -> bool:
+    def wait_is_system_running(self) -> Tuple[str, float]:
+        start_time = time.time()
         result = self._shell("{self._systemctl} is-system-running --wait", capture_output=True, ignore_exit_code=True)
-        return result.stdout.strip() == "running"
+        elapsed = time.time() - start_time
+        return result.stdout.strip(), elapsed
 
 
 @pytest.fixture
