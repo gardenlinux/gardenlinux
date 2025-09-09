@@ -76,9 +76,6 @@ jobs:
         with:
           submodules: true
 
-      - name: Install dependencies for generate_release_note.py script
-        run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
-
       - name: Checkout flavors of the release commit
         uses: actions/checkout@v5.0.0
         with:
@@ -86,6 +83,9 @@ jobs:
           sparse-checkout: |
             flavors.yaml
           sparse-checkout-cone-mode: false
+
+      - name: Install dependencies for generate_release_note.py script
+        run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
 
       - name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@3054-move-github-workflows-py-to-python-gardenlinux-lib
@@ -104,7 +104,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_RELEASE_BUCKET_NAME: ${{ inputs.github_release_bucket_name }}
         run: |
-          python3 -m gardenlinux.github create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")" --dry-run
+          python3 -m gardenlinux.github create --tag ${{ inputs.version }} --commit ${{ inputs.commit }} --dry-run
 
       - uses: actions/cache/save@v4.2.4
         with:
