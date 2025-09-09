@@ -19,9 +19,6 @@ on:
         required: true
         type: string
         description: "Full commitish"
-      github_release_bucket_name:
-        type: string
-        default: "gardenlinux-github-releases"
 jobs:
   # Create new version in GLVD so it has the package list of the new release
   # This is needed for the automatic changelog generation
@@ -41,8 +38,8 @@ jobs:
   #         echo "idToken=${IDTOKEN}" >> $GITHUB_OUTPUT
   #     - uses: azure/k8s-set-context@v4
   #       with:
-  #         method: kubeconfig
-  #         kubeconfig: "${{ secrets.KUBECONFIG }}"
+  #          method: kubeconfig
+  #          kubeconfig: "${{ secrets.KUBECONFIG }}"
   #     - name: Start a new ingestion job in GLVD to import package list for new version
   #       run: |
   #         kubectl run ingest-new-gl-version-$RANDOM \
@@ -58,8 +55,7 @@ jobs:
   #       run: |
   #         echo "Give GLVD some time to ingest the data. It is not clear how long this takes exactly, and there is no single indicator for when it was done."
   #         sleep 180
-
-  github_release:
+  flavors_matrix:
     # needs: glvd
     runs-on: ubuntu-24.04
     defaults:
@@ -67,10 +63,6 @@ jobs:
         shell: bash
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
-    permissions:
-      id-token: write
-      contents: write
-    environment: oidc_aws_s3_upload
     steps:
       - uses: actions/checkout@v5.0.0
         with:
@@ -83,26 +75,41 @@ jobs:
           sparse-checkout: |
             flavors.yaml
           sparse-checkout-cone-mode: false
-
-      - name: Install dependencies for generate_release_note.py script
+      - id: matrix
+        name: Generate flavors matrix
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@3054-move-github-workflows-py-to-python-gardenlinux-lib
+        with:
+          flags: "--no-arch --json-by-arch --publish"
+  github_release:
+    # needs: glvd
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      id-token: write
+      contents: write
+    environment: oidc_aws_s3_upload
+    steps:
+      - name: Checkout full repository (current branch)
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+        with:
+          submodules: true
+          fetch-depth: 0
+      - name: install dependencies for generate_release_note.py script
         run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
 
       - name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@3054-move-github-workflows-py-to-python-gardenlinux-lib
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
-          version: 3054-move-github-workflows-py-to-python-gardenlinux-lib
-
-      - name: Generate flavors matrix
-        id: matrix
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@3054-move-github-workflows-py-to-python-gardenlinux-lib
-        with:
-          version: 3054-move-github-workflows-py-to-python-gardenlinux-lib
-          flags: "--no-arch --json-by-arch --publish"
-
-      - name: Create GitHub release
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_RELEASE_BUCKET_NAME: ${{ inputs.github_release_bucket_name }}
         run: |
           python3 -m gardenlinux.github create --tag ${{ inputs.version }} --commit ${{ inputs.commit }} --dry-run
 
@@ -112,7 +119,7 @@ jobs:
           path: .github_release_id
 
   # github_release_artifacts_upload:
-  #   needs: github_release
+  #   needs: [github_release, flavors_matrix]
   #   runs-on: ubuntu-24.04
   #   permissions:
   #     contents: write
@@ -122,7 +129,7 @@ jobs:
   #     CNAME: ""
   #   strategy:
   #     fail-fast: false
-  #     matrix: ${{ fromJson(needs.github_release.outputs.matrix ) }}
+  #     matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix ) }}
   #   steps:
   #     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
   #       with:
@@ -134,7 +141,7 @@ jobs:
   #         role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
   #         role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
   #         aws-region: ${{ secrets.AWS_REGION }}
-  #     - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+  #     - uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
   #       with:
   #         key: release-${{ github.run_id }}
   #         path: .github_release_id

@@ -93,7 +93,7 @@ jobs:
           submodules: true
       - id: matrices
         name: Calculate matrices
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");

@@ -5,4 +5,5 @@ gardenlinux-update
 resizefat32
 systemd-boot-efi
 systemd-cryptsetup
+systemd-ukify
 tpm2-tools

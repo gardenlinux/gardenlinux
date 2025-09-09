@@ -35,7 +35,7 @@ jobs:
           submodules: true
       - name: Set signing environment
         id: signing_environment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
