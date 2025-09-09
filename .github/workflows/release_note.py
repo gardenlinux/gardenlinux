@@ -63,7 +63,13 @@ def _aws_release_note(published_image_metadata):
 
 
 def _gcp_release_note(published_image_metadata):
-    return f"gcp_image_name: {published_image_metadata['gcp_image_name']}\n"
+    output = ""
+    if 'gcp_image_name' in published_image_metadata:
+        output += f"Image Name: {published_image_metadata['gcp_image_name']}\n"
+    if 'gcp_project_name' in published_image_metadata:
+        output += f"Project: {published_image_metadata['gcp_project_name']}\n"
+    output += "Availability: Global (all regions)\n"
+    return output
 
 
 def _azure_release_note(published_image_metadata):
