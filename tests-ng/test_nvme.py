@@ -47,12 +47,16 @@ def test_nvme_locally(nvme_device, shell: ShellRunner):
 =======
 @pytest.mark.feature("nvme")
 def test_nvme_locally(shell: ShellRunner):
-    configure_nvme_out = (shell("/bin/bash ./configure_nvme.sh connect", capture_output=True, ignore_exit_code=False)).stdout.strip() 
+    configure_nvme_out = (shell("./helper/configure_nvme.sh connect", capture_output=True, ignore_exit_code=False)).stdout.strip() 
     device, mount_point, size = [x.strip().strip(',') for x in configure_nvme_out.split(",")]
     mount_info_line = shell(f"df -m | grep {mount_point}", capture_output=True, ignore_exit_code=False)
     mount_info = [x.strip() for x in mount_info_line.stdout.split(" ") if x]
     assert mount_info[0] == device, ("Nvme Mount Failed")
     assert mount_info[1] == size, ("Nvme Mount failed")
     assert ((shell(f"cat /mnt/bar", capture_output=True, ignore_exit_code=False)).stdout.strip() == 'foo')
+<<<<<<< HEAD
     shell("./configure_nvme.sh disconnect", capture_output=True, ignore_exit_code=False)
 >>>>>>> c3b66280 (Port nvme test to new test framework)
+=======
+    shell("./helper/configure_nvme.sh disconnect", capture_output=True, ignore_exit_code=False)
+>>>>>>> ead5ef4f (Move configure script to helper folder)
