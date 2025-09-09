@@ -25,7 +25,7 @@ gzip -d < "$runtime" | tar -x -C "$tmpdir/dist/runtime"
 set +f
 
 mkdir -p "$tmpdir/dist/tests"
-cp -r -t "$tmpdir/dist/tests" conftest.py configure_nvme.sh plugins test_*.py
+cp -r -t "$tmpdir/dist/tests" conftest.py helper plugins test_*.py
 
 cat > "$tmpdir/dist/run_tests" <<'EOF'
 #!/bin/sh
