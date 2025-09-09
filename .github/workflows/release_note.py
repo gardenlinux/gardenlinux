@@ -69,50 +69,61 @@ def get_variant_from_flavor(flavor_name):
     Determine the variant from a flavor name by checking for variant suffixes.
     Returns the variant key (e.g., 'legacy', 'usi', 'tpm2_trustedboot').
     """
-    for suffix, variant in VARIANT_SUFFIX_MAP.items():
-        if suffix == '':
-            # Legacy variant: no specific suffix and no other variant suffixes present
-            if '_usi' not in flavor_name and '_tpm2_trustedboot' not in flavor_name:
-                return variant
-        elif suffix in flavor_name:
-            return variant
-
-    # Default to legacy if no match found
-    return 'legacy'
+    match flavor_name:
+        case name if '_usi' in name:
+            return 'usi'
+        case name if '_tpm2_trustedboot' in name:
+            return 'tpm2_trustedboot'
+        case _:
+            return 'legacy'
 
 def get_platform_release_note_data(metadata, platform):
     """
     Get the appropriate cloud release note data based on platform.
     Returns the structured data dictionary.
     """
-    if platform == 'ali':
-        return _ali_release_note(metadata)
-    elif platform == 'aws':
-        return _aws_release_note(metadata)
-    elif platform == 'gcp':
-        return _gcp_release_note(metadata)
-    elif platform == 'azure':
-        return _azure_release_note(metadata)
-    elif platform == 'openstack':
-        return _openstack_release_note(metadata)
-    elif platform == 'openstackbaremetal':
-        return _openstackbaremetal_release_note(metadata)
-    else:
-        print(f"unknown platform {platform}")
-        return None
+    match platform:
+        case 'ali':
+            return _ali_release_note(metadata)
+        case 'aws':
+            return _aws_release_note(metadata)
+        case 'gcp':
+            return _gcp_release_note(metadata)
+        case 'azure':
+            return _azure_release_note(metadata)
+        case 'openstack':
+            return _openstack_release_note(metadata)
+        case 'openstackbaremetal':
+            return _openstackbaremetal_release_note(metadata)
+        case _:
+            print(f"unknown platform {platform}")
+            return None
 
 def get_file_extension_for_platform(platform):
     """
     Get the correct file extension for a given platform.
     """
-    if platform == 'ali':
-        return '.qcow2'
-    elif platform == 'gcp':
-        return '.gcpimage.tar.gz'
-    elif platform == 'azure':
-        return '.vhd'
-    else:  # aws, openstack, openstackbaremetal
-        return '.raw'
+    match platform:
+        case 'ali':
+            return '.qcow2'
+        case 'gcp':
+            return '.gcpimage.tar.gz'
+        case 'azure':
+            return '.vhd'
+        case 'aws' | 'openstack' | 'openstackbaremetal':
+            return '.raw'
+        case _:
+            return '.raw'  # Default fallback
+
+def get_platform_display_name(platform):
+    """
+    Get the display name for a platform.
+    """
+    match platform:
+        case 'ali' | 'openstackbaremetal' | 'openstack' | 'azure' | 'gcp' | 'aws':
+            return cloud_fullname_dict[platform]
+        case _:
+            return platform.upper()
 
 def _ali_release_note(metadata):
     published_image_metadata = metadata['published_image_metadata']
@@ -293,19 +304,7 @@ def generate_table_format(grouped_data):
             continue
 
         for platform in sorted(grouped_data[variant].keys()):
-            platform_display = platform.upper()
-            if platform == 'ali':
-                platform_display = cloud_fullname_dict['ali']
-            elif platform == 'openstackbaremetal':
-                platform_display = cloud_fullname_dict['openstackbaremetal']
-            elif platform == 'openstack':
-                platform_display = cloud_fullname_dict['openstack']
-            elif platform == 'azure':
-                platform_display = cloud_fullname_dict['azure']
-            elif platform == 'gcp':
-                platform_display = cloud_fullname_dict['gcp']
-            elif platform == 'aws':
-                platform_display = cloud_fullname_dict['aws']
+            platform_display = get_platform_display_name(platform)
 
             for arch in sorted(grouped_data[variant][platform].keys()):
                 # Process all metadata for this variant/platform/architecture
@@ -333,23 +332,33 @@ def generate_region_details(data, platform):
     """
     details = ""
 
-    if 'regions' in data:
-        for region in data['regions']:
-            if 'image_name' in region:
-                details += f"**{region['region']}:** {region['image_id']} ({region['image_name']})<br>"
-            else:
-                details += f"**{region['region']}:** {region['image_id']}<br>"
-    elif 'details' in data:
-        for key, value in data['details'].items():
-            details += f"**{key.replace('_', ' ').title()}:** {value}<br>"
-    elif 'gallery_images' in data or 'marketplace_images' in data:
-        if data.get('gallery_images'):
+    match data:
+        case {'regions': regions}:
+            for region in regions:
+                match region:
+                    case {'region': region_name, 'image_id': image_id, 'image_name': image_name}:
+                        details += f"**{region_name}:** {image_id} ({image_name})<br>"
+                    case {'region': region_name, 'image_id': image_id}:
+                        details += f"**{region_name}:** {image_id}<br>"
+        case {'details': details_dict}:
+            for key, value in details_dict.items():
+                details += f"**{key.replace('_', ' ').title()}:** {value}<br>"
+        case {'gallery_images': gallery_images, 'marketplace_images': marketplace_images}:
+            if gallery_images:
+                details += "**Gallery Images:**<br>"
+                for img in gallery_images:
+                    details += f"• {img['hyper_v_generation']} ({img['azure_cloud']}): {img['image_id']}<br>"
+            if marketplace_images:
+                details += "**Marketplace Images:**<br>"
+                for img in marketplace_images:
+                    details += f"• {img['hyper_v_generation']}: {img['urn']}<br>"
+        case {'gallery_images': gallery_images}:
             details += "**Gallery Images:**<br>"
-            for img in data['gallery_images']:
+            for img in gallery_images:
                 details += f"• {img['hyper_v_generation']} ({img['azure_cloud']}): {img['image_id']}<br>"
-        if data.get('marketplace_images'):
+        case {'marketplace_images': marketplace_images}:
             details += "**Marketplace Images:**<br>"
-            for img in data['marketplace_images']:
+            for img in marketplace_images:
                 details += f"• {img['hyper_v_generation']}: {img['urn']}<br>"
 
     return details
@@ -358,23 +367,24 @@ def generate_summary_text(data, platform):
     """
     Generate the summary text for the collapsible section
     """
-    if 'regions' in data:
-        count = len(data['regions'])
-        return f"{count} regions"
-    elif 'details' in data:
-        return "Global availability"
-    elif 'gallery_images' in data or 'marketplace_images' in data:
-        gallery_count = len(data.get('gallery_images', []))
-        marketplace_count = len(data.get('marketplace_images', []))
-        total = gallery_count + marketplace_count
-        if gallery_count > 0 and marketplace_count > 0:
+    match data:
+        case {'regions': regions}:
+            count = len(regions)
+            return f"{count} regions"
+        case {'details': _}:
+            return "Global availability"
+        case {'gallery_images': gallery_images, 'marketplace_images': marketplace_images}:
+            gallery_count = len(gallery_images)
+            marketplace_count = len(marketplace_images)
             return f"{gallery_count} gallery + {marketplace_count} marketplace images"
-        elif gallery_count > 0:
+        case {'gallery_images': gallery_images}:
+            gallery_count = len(gallery_images)
             return f"{gallery_count} gallery images"
-        else:
+        case {'marketplace_images': marketplace_images}:
+            marketplace_count = len(marketplace_images)
             return f"{marketplace_count} marketplace images"
-    else:
-        return "Details available"
+        case _:
+            return "Details available"
 
 def generate_download_links(flavor, platform):
     """
