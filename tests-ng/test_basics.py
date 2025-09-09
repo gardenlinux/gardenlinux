@@ -68,8 +68,8 @@ def test_kernel_not_tainted():
 @pytest.mark.root(reason="Required for journalctl in case of errors")
 @pytest.mark.booted(reason="Systemctl needs a booted system")
 def test_no_failed_units(systemd: Systemd, shell: ShellRunner):
-    system_running, elapsed = systemd.wait_is_system_running()
-    print(f"Waiting for systemd to report the system is running took {elapsed:.2f} seconds, with result '{system_running}'.")
+    system_running, return_code, elapsed = systemd.wait_is_system_running()
+    print(f"Waiting for systemd to report the system is running took {elapsed:.2f} seconds, with state '{system_running}' and return code '{return_code}'.")
     failed_systemd_units = systemd.list_failed_units()
     for u in failed_systemd_units:
         print(f'FAILED UNIT: {u}')

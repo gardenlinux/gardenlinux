@@ -68,11 +68,11 @@ class Systemd:
         result = self._shell(f"{self._systemctl} --failed", capture_output=True, ignore_exit_code=True)
         return _parse_units(result.stdout)
 
-    def wait_is_system_running(self) -> Tuple[str, float]:
+    def wait_is_system_running(self) -> Tuple[str, int, float]:
         start_time = time.time()
         result = self._shell("{self._systemctl} is-system-running --wait", capture_output=True, ignore_exit_code=True)
         elapsed = time.time() - start_time
-        return result.stdout.strip(), elapsed
+        return result.stdout.strip(), result.returncode, elapsed
 
 
 @pytest.fixture
