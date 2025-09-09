@@ -72,6 +72,22 @@ def _gcp_release_note(published_image_metadata):
     return output
 
 
+def _openstack_release_note(published_image_metadata):
+    output = ""
+    if 'published_openstack_images' in published_image_metadata:
+        for image in published_image_metadata['published_openstack_images']:
+            output += f"Region: {image['region_name']}, Image-Id: {image['image_id']}, Image-Name: {image['image_name']}\n"
+    return output
+
+
+def _openstackbaremetal_release_note(published_image_metadata):
+    output = ""
+    if 'published_openstack_images' in published_image_metadata:
+        for image in published_image_metadata['published_openstack_images']:
+            output += f"Region: {image['region_name']}, Image-Id: {image['image_id']}, Image-Name: {image['image_name']}\n"
+    return output
+
+
 def _azure_release_note(published_image_metadata):
     output = ""
     for pset in published_image_metadata:
@@ -128,6 +144,10 @@ def generate_release_note_image_id_single(metadata_file_path):
         output += _gcp_release_note(published_image_metadata)
     elif platform_short_name == 'azure':
         output += _azure_release_note(published_image_metadata)
+    elif platform_short_name == 'openstack':
+        output += _openstack_release_note(published_image_metadata)
+    elif platform_short_name == 'openstackbaremetal':
+        output += _openstackbaremetal_release_note(published_image_metadata)
     else:
         print(f"unknown platform {platform_short_name}")
     output += "```\n"
