@@ -28,131 +28,442 @@ from get_kernelurls import get_kernel_urls
 
 GARDENLINUX_GITHUB_RELEASE_BUCKET_NAME="gardenlinux-github-releases"
 
-arches = [
-    'amd64',
-    'arm64'
-]
 
 cloud_fullname_dict = {
     'ali': 'Alibaba Cloud',
     'aws': 'Amazon Web Services',
     'gcp': 'Google Cloud Platform',
-    'azure': 'Microsoft Azure'
+    'azure': 'Microsoft Azure',
+    'openstack': 'OpenStack',
+    'openstackbaremetal': 'OpenStack Baremetal'
 }
 
 # https://github.com/gardenlinux/gardenlinux/issues/3044
 # Empty string is the 'legacy' variant with traditional root fs and still needed/supported
-image_variants = ['', '_usi', '_tpm2_trustedboot']
+IMAGE_VARIANTS = ['', '_usi', '_tpm2_trustedboot']
 
-def _ali_release_note(published_image_metadata):
-    output = ""
+# Variant display names and order for consistent use across functions
+VARIANT_ORDER = ['legacy', 'usi', 'tpm2_trustedboot']
+VARIANT_NAMES = {
+    'legacy': 'Default',
+    'usi': 'USI (Unified System Image)',
+    'tpm2_trustedboot': 'TPM2 Trusted Boot'
+}
+
+# Mapping from image variant suffixes to variant keys
+VARIANT_SUFFIX_MAP = {
+    '': 'legacy',
+    '_usi': 'usi',
+    '_tpm2_trustedboot': 'tpm2_trustedboot'
+}
+
+# Short display names for table view
+VARIANT_TABLE_NAMES = {
+    'legacy': 'Default',
+    'usi': 'USI',
+    'tpm2_trustedboot': 'TPM2'
+}
+
+def get_variant_from_flavor(flavor_name):
+    """
+    Determine the variant from a flavor name by checking for variant suffixes.
+    Returns the variant key (e.g., 'legacy', 'usi', 'tpm2_trustedboot').
+    """
+    for suffix, variant in VARIANT_SUFFIX_MAP.items():
+        if suffix == '':
+            # Legacy variant: no specific suffix and no other variant suffixes present
+            if '_usi' not in flavor_name and '_tpm2_trustedboot' not in flavor_name:
+                return variant
+        elif suffix in flavor_name:
+            return variant
+
+    # Default to legacy if no match found
+    return 'legacy'
+
+def get_platform_release_note_data(metadata, platform):
+    """
+    Get the appropriate cloud release note data based on platform.
+    Returns the structured data dictionary.
+    """
+    if platform == 'ali':
+        return _ali_release_note(metadata)
+    elif platform == 'aws':
+        return _aws_release_note(metadata)
+    elif platform == 'gcp':
+        return _gcp_release_note(metadata)
+    elif platform == 'azure':
+        return _azure_release_note(metadata)
+    elif platform == 'openstack':
+        return _openstack_release_note(metadata)
+    elif platform == 'openstackbaremetal':
+        return _openstackbaremetal_release_note(metadata)
+    else:
+        print(f"unknown platform {platform}")
+        return None
+
+def get_file_extension_for_platform(platform):
+    """
+    Get the correct file extension for a given platform.
+    """
+    if platform == 'ali':
+        return '.qcow2'
+    elif platform == 'gcp':
+        return '.gcpimage.tar.gz'
+    elif platform == 'azure':
+        return '.vhd'
+    else:  # aws, openstack, openstackbaremetal
+        return '.raw'
+
+def _ali_release_note(metadata):
+    published_image_metadata = metadata['published_image_metadata']
+    flavor_name = metadata['s3_key'].split('/')[-1]  # Extract flavor from s3_key
+
+    regions = []
     for pset in published_image_metadata:
         for p in published_image_metadata[pset]:
-            for image in published_image_metadata:
-                output += f"- Region: {p['region_id']}, Image-Id: {p['image_id']}\n"
-    return output
+            regions.append({
+                'region': p['region_id'],
+                'image_id': p['image_id']
+            })
+
+    return {
+        'flavor': flavor_name,
+        'regions': regions
+    }
 
 
-def _aws_release_note(published_image_metadata):
-    output = ""
+def _aws_release_note(metadata):
+    published_image_metadata = metadata['published_image_metadata']
+    flavor_name = metadata['s3_key'].split('/')[-1]  # Extract flavor from s3_key
+
+    regions = []
     for pset in published_image_metadata:
         for p in published_image_metadata[pset]:
-            for image in published_image_metadata:
-                output += f"- Region: {p['aws_region_id']}, Image-Id: {p['ami_id']}\n"
-    return output
+            regions.append({
+                'region': p['aws_region_id'],
+                'image_id': p['ami_id']
+            })
+
+    return {
+        'flavor': flavor_name,
+        'regions': regions
+    }
 
 
-def _gcp_release_note(published_image_metadata):
-    output = ""
+def _gcp_release_note(metadata):
+    published_image_metadata = metadata['published_image_metadata']
+    flavor_name = metadata['s3_key'].split('/')[-1]  # Extract flavor from s3_key
+
+    details = {}
     if 'gcp_image_name' in published_image_metadata:
-        output += f"Image Name: {published_image_metadata['gcp_image_name']}\n"
+        details['image_name'] = published_image_metadata['gcp_image_name']
     if 'gcp_project_name' in published_image_metadata:
-        output += f"Project: {published_image_metadata['gcp_project_name']}\n"
-    output += "Availability: Global (all regions)\n"
-    return output
+        details['project'] = published_image_metadata['gcp_project_name']
+    details['availability'] = "Global (all regions)"
+
+    return {
+        'flavor': flavor_name,
+        'details': details
+    }
 
 
-def _openstack_release_note(published_image_metadata):
-    output = ""
+def _openstack_release_note(metadata):
+    published_image_metadata = metadata['published_image_metadata']
+    flavor_name = metadata['s3_key'].split('/')[-1]  # Extract flavor from s3_key
+
+    regions = []
     if 'published_openstack_images' in published_image_metadata:
         for image in published_image_metadata['published_openstack_images']:
-            output += f"Region: {image['region_name']}, Image-Id: {image['image_id']}, Image-Name: {image['image_name']}\n"
-    return output
+            regions.append({
+                'region': image['region_name'],
+                'image_id': image['image_id'],
+                'image_name': image['image_name']
+            })
+
+    return {
+        'flavor': flavor_name,
+        'regions': regions
+    }
 
 
-def _openstackbaremetal_release_note(published_image_metadata):
-    output = ""
+def _openstackbaremetal_release_note(metadata):
+    published_image_metadata = metadata['published_image_metadata']
+    flavor_name = metadata['s3_key'].split('/')[-1]  # Extract flavor from s3_key
+
+    regions = []
     if 'published_openstack_images' in published_image_metadata:
         for image in published_image_metadata['published_openstack_images']:
-            output += f"Region: {image['region_name']}, Image-Id: {image['image_id']}, Image-Name: {image['image_name']}\n"
-    return output
+            regions.append({
+                'region': image['region_name'],
+                'image_id': image['image_id'],
+                'image_name': image['image_name']
+            })
+
+    return {
+        'flavor': flavor_name,
+        'regions': regions
+    }
 
 
-def _azure_release_note(published_image_metadata):
-    output = ""
+def _azure_release_note(metadata):
+    published_image_metadata = metadata['published_image_metadata']
+    flavor_name = metadata['s3_key'].split('/')[-1]  # Extract flavor from s3_key
+
+    gallery_images = []
+    marketplace_images = []
+
     for pset in published_image_metadata:
         if pset == 'published_gallery_images':
-            if (len(published_image_metadata[pset]) > 0):
-                output += "# all regions (community gallery image):\n"
             for gallery_image in published_image_metadata[pset]:
-                output += f"Hyper V: {gallery_image['hyper_v_generation']}, "
-                output += f"Azure Cloud: {gallery_image['azure_cloud']}, "
-                output += f"Image Id: {gallery_image['community_gallery_image_id']}\n"
+                gallery_images.append({
+                    'hyper_v_generation': gallery_image['hyper_v_generation'],
+                    'azure_cloud': gallery_image['azure_cloud'],
+                    'image_id': gallery_image['community_gallery_image_id']
+                })
 
         if pset == 'published_marketplace_images':
-            if (len(published_image_metadata[pset]) > 0):
-                output += "# all regions (marketplace image):\n"
             for market_image in published_image_metadata[pset]:
-                output += f"Hyper V: {market_image['hyper_v_generation']}, "
-                output += f"urn: {market_image['urn']}\n"
-    return output
+                marketplace_images.append({
+                    'hyper_v_generation': market_image['hyper_v_generation'],
+                    'urn': market_image['urn']
+                })
+
+    return {
+        'flavor': flavor_name,
+        'gallery_images': gallery_images,
+        'marketplace_images': marketplace_images
+    }
 
 def generate_release_note_image_ids(metadata_files):
-    out = ""
-    for m in metadata_files:
-        out += generate_release_note_image_id_single(m)
-    return out
-
-def generate_release_note_image_id_single(metadata_file_path):
     """
-    Outputs a markdown formatted string for github release notes,
-    containing the image-ids for the respective cloud regions
+    Groups metadata files by image variant, then platform, then architecture
     """
-    output = ""
-    with open(metadata_file_path) as f:
-        metadata = yaml.load(f, Loader=SafeLoader)
-    published_image_metadata = metadata['published_image_metadata']
+    # Group metadata by variant, platform, and architecture
+    grouped_data = {}
 
-    # No publishing metadata found in metadata file, assume it was not published
-    if published_image_metadata is None:
-        return ""
+    for metadata_file_path in metadata_files:
+        with open(metadata_file_path) as f:
+            metadata = yaml.load(f, Loader=SafeLoader)
 
-    platform_short_name = metadata['platform']
-    arch = metadata['architecture']
-    if platform_short_name in cloud_fullname_dict:
-        platform_long_name = cloud_fullname_dict[platform_short_name]
-        output = output + f"### {platform_long_name} ({arch})\n"
-    else:
-        output = output + f"### {platform_short_name} ({arch})\n"
+        published_image_metadata = metadata['published_image_metadata']
+        # Skip if no publishing metadata found
+        if published_image_metadata is None:
+            continue
 
-    output += "```\n"
-    if platform_short_name == 'ali':
-        output += _ali_release_note(published_image_metadata)
-    elif platform_short_name == 'aws':
-        output += _aws_release_note(published_image_metadata)
-    elif platform_short_name == 'gcp':
-        output += _gcp_release_note(published_image_metadata)
-    elif platform_short_name == 'azure':
-        output += _azure_release_note(published_image_metadata)
-    elif platform_short_name == 'openstack':
-        output += _openstack_release_note(published_image_metadata)
-    elif platform_short_name == 'openstackbaremetal':
-        output += _openstackbaremetal_release_note(published_image_metadata)
-    else:
-        print(f"unknown platform {platform_short_name}")
-    output += "```\n"
+        platform = metadata['platform']
+        arch = metadata['architecture']
+
+        # Determine variant from flavor name
+        flavor_name = metadata['s3_key'].split('/')[-1]
+        variant = get_variant_from_flavor(flavor_name)
+
+        if variant not in grouped_data:
+            grouped_data[variant] = {}
+        if platform not in grouped_data[variant]:
+            grouped_data[variant][platform] = {}
+        if arch not in grouped_data[variant][platform]:
+            grouped_data[variant][platform][arch] = []
+
+        grouped_data[variant][platform][arch].append(metadata)
+
+    # Generate both table and old format
+    output = "## Published Images\n\n"
+
+    # Add table format (collapsed by default)
+    output += "<details>\n<summary>📊 Table View</summary>\n\n"
+    output += generate_table_format(grouped_data)
+    output += "\n</details>\n\n"
+
+    # Add old format (collapsed by default)
+    output += "<details>\n<summary>📝 Detailed View</summary>\n\n"
+    output += generate_detailed_format(grouped_data)
+    output += "\n</details>\n\n"
+
     return output
 
+def generate_table_format(grouped_data):
+    """
+    Generate the table format with collapsible region details
+    """
+    output = "| Variant | Platform | Architecture | Flavor | Regions & Image IDs | Download Links |\n"
+    output += "|---------|----------|--------------|--------|---------------------|----------------|\n"
+
+    for variant in VARIANT_ORDER:
+        if variant not in grouped_data:
+            continue
+
+        for platform in sorted(grouped_data[variant].keys()):
+            platform_display = platform.upper()
+            if platform == 'ali':
+                platform_display = cloud_fullname_dict['ali']
+            elif platform == 'openstackbaremetal':
+                platform_display = cloud_fullname_dict['openstackbaremetal']
+            elif platform == 'openstack':
+                platform_display = cloud_fullname_dict['openstack']
+            elif platform == 'azure':
+                platform_display = cloud_fullname_dict['azure']
+            elif platform == 'gcp':
+                platform_display = cloud_fullname_dict['gcp']
+            elif platform == 'aws':
+                platform_display = cloud_fullname_dict['aws']
+
+            for arch in sorted(grouped_data[variant][platform].keys()):
+                # Process all metadata for this variant/platform/architecture
+                for metadata in grouped_data[variant][platform][arch]:
+                    data = get_platform_release_note_data(metadata, platform)
+                    if data is None:
+                        continue
+
+                    # Generate collapsible details for regions
+                    details_content = generate_region_details(data, platform)
+                    summary_text = generate_summary_text(data, platform)
+
+                    # Generate download links
+                    download_links = generate_download_links(data['flavor'], platform)
+
+                    # Use shorter names for table display
+                    variant_display = VARIANT_TABLE_NAMES[variant]
+                    output += f"| {variant_display} | {platform_display} | {arch} | `{data['flavor']}` | <details><summary>{summary_text}</summary><br>{details_content}</details> | <details><summary>Download</summary><br>{download_links}</details> |\n"
+
+    return output
+
+def generate_region_details(data, platform):
+    """
+    Generate the detailed region information for the collapsible section
+    """
+    details = ""
+
+    if 'regions' in data:
+        for region in data['regions']:
+            if 'image_name' in region:
+                details += f"**{region['region']}:** {region['image_id']} ({region['image_name']})<br>"
+            else:
+                details += f"**{region['region']}:** {region['image_id']}<br>"
+    elif 'details' in data:
+        for key, value in data['details'].items():
+            details += f"**{key.replace('_', ' ').title()}:** {value}<br>"
+    elif 'gallery_images' in data or 'marketplace_images' in data:
+        if data.get('gallery_images'):
+            details += "**Gallery Images:**<br>"
+            for img in data['gallery_images']:
+                details += f"• {img['hyper_v_generation']} ({img['azure_cloud']}): {img['image_id']}<br>"
+        if data.get('marketplace_images'):
+            details += "**Marketplace Images:**<br>"
+            for img in data['marketplace_images']:
+                details += f"• {img['hyper_v_generation']}: {img['urn']}<br>"
+
+    return details
+
+def generate_summary_text(data, platform):
+    """
+    Generate the summary text for the collapsible section
+    """
+    if 'regions' in data:
+        count = len(data['regions'])
+        return f"{count} regions"
+    elif 'details' in data:
+        return "Global availability"
+    elif 'gallery_images' in data or 'marketplace_images' in data:
+        gallery_count = len(data.get('gallery_images', []))
+        marketplace_count = len(data.get('marketplace_images', []))
+        total = gallery_count + marketplace_count
+        if gallery_count > 0 and marketplace_count > 0:
+            return f"{gallery_count} gallery + {marketplace_count} marketplace images"
+        elif gallery_count > 0:
+            return f"{gallery_count} gallery images"
+        else:
+            return f"{marketplace_count} marketplace images"
+    else:
+        return "Details available"
+
+def generate_download_links(flavor, platform):
+    """
+    Generate download links for the flavor with correct file extension based on platform
+    """
+    base_url = "https://gardenlinux-github-releases.s3.amazonaws.com/objects"
+    file_ext = get_file_extension_for_platform(platform)
+    filename = f"{flavor}{file_ext}"
+    download_url = f"{base_url}/{flavor}/{filename}"
+    return f"[{filename}]({download_url})"
+
+def generate_detailed_format(grouped_data):
+    """
+    Generate the old detailed format with YAML
+    """
+    output = ""
+
+    for variant in VARIANT_ORDER:
+        if variant not in grouped_data:
+            continue
+
+        output += f"<details>\n<summary>Variant - {VARIANT_NAMES[variant]}</summary>\n\n"
+        output += f"### Variant - {VARIANT_NAMES[variant]}\n\n"
+
+        for platform in sorted(grouped_data[variant].keys()):
+            platform_long_name = cloud_fullname_dict.get(platform, platform)
+            output += f"<details>\n<summary>{platform.upper()} - {platform_long_name}</summary>\n\n"
+            output += f"#### {platform.upper()} - {platform_long_name}\n\n"
+
+            for arch in sorted(grouped_data[variant][platform].keys()):
+                output += f"<details>\n<summary>{arch}</summary>\n\n"
+                output += f"##### {arch}\n\n"
+                output += "```\n"
+
+                # Process all metadata for this variant/platform/architecture
+                for metadata in grouped_data[variant][platform][arch]:
+                    data = get_platform_release_note_data(metadata, platform)
+                    if data is None:
+                        continue
+
+                    # Format the data according to the new structure as YAML
+                    output += f"- flavor: {data['flavor']}\n"
+
+                    # Add download link with correct file extension
+                    file_ext = get_file_extension_for_platform(platform)
+
+                    filename = f"{data['flavor']}{file_ext}"
+                    download_url = f"https://gardenlinux-github-releases.s3.amazonaws.com/objects/{data['flavor']}/{filename}"
+                    output += f"  download_url: {download_url}\n"
+
+                    if 'regions' in data:
+                        output += "  regions:\n"
+                        for region in data['regions']:
+                            if 'image_name' in region:
+                                output += f"    - region: {region['region']}\n"
+                                output += f"      image_id: {region['image_id']}\n"
+                                output += f"      image_name: {region['image_name']}\n"
+                            else:
+                                output += f"    - region: {region['region']}\n"
+                                output += f"      image_id: {region['image_id']}\n"
+                    elif 'details' in data and platform != 'gcp':
+                        output += "  details:\n"
+                        for key, value in data['details'].items():
+                            output += f"    {key}: {value}\n"
+                    elif platform == 'gcp' and 'details' in data:
+                        # For GCP, move details up to same level as flavor
+                        for key, value in data['details'].items():
+                            output += f"  {key}: {value}\n"
+                    elif 'gallery_images' in data or 'marketplace_images' in data:
+                        if data.get('gallery_images'):
+                            output += "  gallery_images:\n"
+                            for img in data['gallery_images']:
+                                output += f"    - hyper_v_generation: {img['hyper_v_generation']}\n"
+                                output += f"      azure_cloud: {img['azure_cloud']}\n"
+                                output += f"      image_id: {img['image_id']}\n"
+                        if data.get('marketplace_images'):
+                            output += "  marketplace_images:\n"
+                            for img in data['marketplace_images']:
+                                output += f"    - hyper_v_generation: {img['hyper_v_generation']}\n"
+                                output += f"      urn: {img['urn']}\n"
+
+                output += "```\n\n"
+                output += "</details>\n\n"
+
+            output += "</details>\n\n"
+
+        output += "</details>\n\n"
+
+    return output
 
 def download_metadata_file(s3_artifacts, cname, artifacts_dir):
     """
@@ -181,6 +492,23 @@ def download_all_metadata_files(version, commitish):
 
     for flavor in flavors:
         cname = CName(flavor[1], flavor[0], "{0}-{1}".format(version, commitish))
+        # Filter by image variants - only download if the flavor matches one of the variants
+        flavor_matches_variant = False
+        for variant_suffix in IMAGE_VARIANTS:
+            if variant_suffix == '':
+                last_part = cname.cname.split("-")[-1]
+                if "_" not in last_part:
+                    flavor_matches_variant = True
+                    break
+            elif variant_suffix in cname.cname:
+                # Specific variant (any non-empty string in IMAGE_VARIANTS)
+                flavor_matches_variant = True
+                break
+
+        if not flavor_matches_variant:
+            print(f"INFO: Skipping flavor {cname.cname} - not matching image variants filter")
+            continue
+
         try:
             download_metadata_file(s3_artifacts, cname.cname, local_dest_path)
         except IndexError:
@@ -190,36 +518,8 @@ def download_all_metadata_files(version, commitish):
     return [ str(artifact) for artifact in local_dest_path.iterdir() ]
 
 
-def get_image_object_url(bucket, object, expiration=0):
-    s3_config = Config(signature_version=UNSIGNED)
-    s3_client = boto3.client('s3', config=s3_config)
-    url = s3_client.generate_presigned_url('get_object', Params={'Bucket': bucket, 'Key': object}, ExpiresIn = expiration)
-    return url
 
 
-def generate_image_download_section(metadata_files, version, commitish):
-    output = ""
-    for metadata_file_path in metadata_files:
-        with open(metadata_file_path) as f:
-            metadata = yaml.load(f, Loader=SafeLoader)
-        arch = metadata['architecture'].upper()
-        platform = metadata['platform']
-        paths = metadata['paths']
-
-        for path in paths:
-            if platform == 'ali' and '.qcow2' == path['suffix']:
-                output += f"### {cloud_fullname_dict['ali']} ({arch})\n"
-                output += f"* [{version}-{commitish}-rootfs.qcow2]({get_image_object_url(path['s3_bucket_name'], path['s3_key'])})\n"
-            elif platform == 'aws' and '.raw' == path['suffix']:
-                output += f"### {cloud_fullname_dict['aws']} ({arch})\n"
-                output += f"* [{version}-{commitish}-rootfs.raw]({get_image_object_url(path['s3_bucket_name'], path['s3_key'])})\n"
-            elif platform == 'gcp' and '.tar.gz' == path['suffix']:
-                output += f"### {cloud_fullname_dict['gcp']} ({arch})\n"
-                output += f"* [{version}-{commitish}-rootfs-gcpimage.tar.gz]({get_image_object_url(path['s3_bucket_name'], path['s3_key'])})\n"
-            elif platform == 'azure' and '.vhd' == path['suffix']:
-                output += f"### {cloud_fullname_dict['azure']} ({arch})\n"
-                output += f"* [{version}-{commitish}-rootfs.vhd]({get_image_object_url(path['s3_bucket_name'], path['s3_key'])})\n"
-    return output
 
 def _parse_match_section(pkg_list: list):
     output = ""
@@ -346,10 +646,6 @@ def create_github_release_notes(gardenlinux_version, commitish):
     output += "## Kernel Package direct download links\n"
     output += get_kernel_urls(gardenlinux_version)
     output += "\n"
-
-    output += generate_image_download_section(metadata_files, gardenlinux_version, commitish_short )
-
-    output += "\n"
     output += "## Kernel Module Build Container (kmodbuild) "
     output += "\n"
     output += "```"
@@ -441,11 +737,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-# # Example usage
-# try:
-#     release_info = create_github_release('gardenlinux', 'gardenlinux', "1312.0", "40b9db2c")
-#     print(release_info)
-# except Exception as e:
-#     print(f"Error occurred: {e}")
