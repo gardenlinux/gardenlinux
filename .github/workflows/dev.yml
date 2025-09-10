@@ -7,13 +7,13 @@ on:
     branches:
       - main
     paths-ignore:
-      - 'docs/**'
-      - '**/README.md'
+      - "docs/**"
+      - "**/README.md"
   pull_request:
     paths-ignore:
-      - '.github/**'
-      - 'docs/**'
-      - '**/README.md'
+      - ".github/**"
+      - "docs/**"
+      - "**/README.md"
 jobs:
   set_version:
     name: Set VERSION
@@ -42,3 +42,4 @@ jobs:
       version: ${{ needs.build.outputs.version }}
       flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
+      test_types: "chroot,qemu,oci"

@@ -23,7 +23,7 @@ on:
         default: '{"include":[]}'
       original_workflow_name:
         type: string
-        default: ''
+        default: ""
     secrets:
       aws_role:
         required: true
@@ -70,8 +70,8 @@ jobs:
       run:
         shell: bash
     env:
-      CNAME_AMD64: ''
-      CNAME_ARM64: ''
+      CNAME_AMD64: ""
+      CNAME_ARM64: ""
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
@@ -165,7 +165,7 @@ jobs:
       fail-fast: false
       matrix:
         # @TODO: Replace with input matrix once OCI manifest tooling is ready to update existing ones
-        config: [ libc, python, nodejs, sapmachine ]
+        config: [libc, python, nodejs, sapmachine]
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
@@ -234,7 +234,7 @@ jobs:
       run:
         shell: bash
     env:
-      CNAME: ''
+      CNAME: ""
     permissions:
       id-token: write
       packages: write
@@ -257,7 +257,7 @@ jobs:
       - name: Install cosign
         uses: sigstore/cosign-installer@v3.9.2
         with:
-          cosign-release: 'v2.4.1'
+          cosign-release: "v2.4.1"
       - name: Set flavor version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -300,14 +300,14 @@ jobs:
           path: oci_manifest_entry_${{ env.CNAME }}.json
           key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
   update_manifest_index:
-    needs: [ determine_environment, push_flavors ]
+    needs: [determine_environment, push_flavors]
     name: Update OCI manifest index
     runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash
     env:
-      CNAME: ''
+      CNAME: ""
     permissions:
       id-token: write
       packages: write

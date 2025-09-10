@@ -42,8 +42,8 @@ jobs:
     uses: ./.github/workflows/tests.yml
     with:
       flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
-      test_types: "chroot,qemu,cloud,cloud_old,oci"
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
+      test_types: "chroot,qemu,cloud,oci"
     permissions:
       id-token: write
     secrets:
