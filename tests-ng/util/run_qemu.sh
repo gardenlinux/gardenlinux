@@ -76,11 +76,6 @@ echo "⚙️  preparing test VM"
 
 qemu-img create -q -f qcow2 -F raw -b "$(realpath -- "$image")" "$tmpdir/disk.qcow" 4G
 
-if [ "$arch" = aarch64 ]; then
-	truncate -s 64M "$tmpdir/edk2-qemu-code"
-	truncate -s 64M "$tmpdir/edk2-qemu-vars"
-fi
-
 cat >"$tmpdir/fw_cfg-script.sh" <<EOF
 #!/usr/bin/env bash
 
@@ -191,9 +186,13 @@ else
 	)
 fi
 
-if [ "$uefi" = "true" ]; then
+if [ "$uefi" = "true" ] || [ "$arch" = "aarch64" ]; then
 	cp "$test_dist_dir/edk2-qemu-$arch-code" "$tmpdir/edk2-qemu-code"
 	cp "$test_dist_dir/edk2-qemu-$arch-vars" "$tmpdir/edk2-qemu-vars"
+	if [ "$arch" = aarch64 ]; then
+		truncate -s 64M "$tmpdir/edk2-qemu-code"
+		truncate -s 64M "$tmpdir/edk2-qemu-vars"
+	fi
 	qemu_opts+=(
 		-drive "if=pflash,unit=0,format=raw,readonly=on,file=$tmpdir/edk2-qemu-code"
 		-drive "if=pflash,unit=1,format=raw,file=$tmpdir/edk2-qemu-vars"
