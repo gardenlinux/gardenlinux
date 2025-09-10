@@ -37,7 +37,8 @@ on:
     inputs:
       version:
         type: string
-        default: nightly
+        default: 'nightly'
+        description: 'Version'
       build:
         type: boolean
         default: false
@@ -68,6 +69,9 @@ env:
   IMAGE_REGISTRY: ghcr.io/gardenlinux/gardenlinux
   PLATFORM_TEST_TAG: ${{ github.event_name == 'push' && 'nightly' || inputs.platform_test_tag }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+permissions: read-all # default for workflow  
+
 jobs:
   generate_matrix:
     name: Build platforms matrix
@@ -110,6 +114,8 @@ jobs:
     strategy:
       matrix:
         arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
@@ -152,6 +158,8 @@ jobs:
       matrix:
         arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
+    permissions:
+      actions: write      
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
@@ -208,6 +216,8 @@ jobs:
     strategy:
       matrix:
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
+    permissions:
+      packages: write
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
@@ -307,6 +317,8 @@ jobs:
       matrix:
         arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:

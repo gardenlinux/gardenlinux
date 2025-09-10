@@ -34,12 +34,15 @@ on:
         description: 'Execute workflows concurrently'
         type: boolean
         default: false
+permissions: read-all # default for workflow
 jobs:
   build:
     name: Build
     uses: ./.github/workflows/build.yml
     permissions:
-      id-token: write
+      id-token: write # TODO: 3215 elevated permissions for included workflow
+      actions: write  # TODO: 3215 elevated permissions for included workflow
+      packages: write # TODO: 3215 elevated permissions for included workflow
     with:
       version: ${{ inputs.version }}
       target: ${{ inputs.target }}
@@ -57,6 +60,8 @@ jobs:
     if: ${{ failure() && needs.build.result == 'failure' }}
     name: 'Retry checkpoint: Build'
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
       - name: Retry failed build
@@ -77,7 +82,8 @@ jobs:
       platform_test: true
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
     permissions:
-      id-token: write
+      id-token: write # TODO: 3215 elevated permissions for included workflow
+      actions: write  # TODO: 3215 elevated permissions for included workflow
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -98,6 +104,8 @@ jobs:
     if: ${{ failure() && needs.test.result == 'failure' }}
     name: 'Retry checkpoint: Test'
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
       - name: Retry failed test
@@ -112,6 +120,8 @@ jobs:
     needs: [ build, test ]
     name: Store workflow data
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
       - name: Store data in JSON file
         run: |

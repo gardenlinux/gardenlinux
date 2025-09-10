@@ -5,17 +5,17 @@ on:
   # manual trigger
   workflow_dispatch:
 
+permissions: read-all # default for workspace
+
 jobs:
   collect_workspaces:
     name: Collect Workspaces to Cleanup
     runs-on: ubuntu-24.04
     permissions:
       id-token: write
-      contents: read
     environment: oidc_platform_tests
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-
     steps:
       - id: 'auth_aws'
         name: 'Authenticate to AWS'
@@ -43,7 +43,6 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       id-token: write
-      contents: read
     environment: oidc_platform_tests
     env:
       IMAGE: ghcr.io/gardenlinux/gardenlinux/platform-test-tofu:latest
