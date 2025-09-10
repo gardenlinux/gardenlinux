@@ -43,6 +43,7 @@ CLOUD SPECIFIC OPTIONS
 QEMU SPECIFIC OPTIONS
   --ssh                           Enable SSH access to QEMU VM (gardenlinux@127.0.0.1:2222)
                                    Cloud: SSHD is always enabled via cloud-init
+  --debug                         Enable debug mode (display window) for QEMU VM
 
 ARTIFACT TYPES
   tar                             For chroot testing (extracted image filesystem)
@@ -133,6 +134,10 @@ while [ $# -gt 0 ]; do
 		;;
 	# qemu specific
 	--ssh)
+		qemu_args+=("$1")
+		shift
+		;;
+	--debug)
 		qemu_args+=("$1")
 		shift
 		;;
