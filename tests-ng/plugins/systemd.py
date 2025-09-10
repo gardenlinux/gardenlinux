@@ -5,6 +5,7 @@ from .shell import ShellRunner
 from .modify import allow_system_modifications
 from dataclasses import dataclass
 import time
+import json
 
 @dataclass
 class SystemdUnit:
@@ -12,6 +13,12 @@ class SystemdUnit:
     load: str
     active: str
     sub: str
+
+@dataclass
+class SystemRunningState:
+    state: str
+    returncode: int
+    elapsed_time: float
 
 def _seconds(token: str) -> float:
     if token.endswith("ms"):
@@ -22,16 +29,23 @@ def _seconds(token: str) -> float:
 
 def _parse_units(systemctl_stdout: str) -> list[SystemdUnit]:
     units = []
-    for line in systemctl_stdout.splitlines():
-        parts = line.split()
-        if len(parts) >= 4:
-            units.append(SystemdUnit(parts[0], parts[1], parts[2], parts[3]))
+    try:
+        unit_entries = json.loads(systemctl_stdout)
+        for entry in unit_entries:
+            units.append(SystemdUnit(
+                unit=entry.get("unit", ""),
+                load=entry.get("load", ""),
+                active=entry.get("active", ""),
+                sub=entry.get("sub", "")
+            ))
+    except json.JSONDecodeError:
+        pass
     return units
 
 class Systemd:
     def __init__(self, shell: ShellRunner):
         self._shell = shell
-        self._systemctl = 'systemctl --plain --no-legend --no-pager'
+        self._systemctl = 'systemctl --plain --no-legend --no-pager --output=json'
 
     def analyze(self) -> Tuple[float, ...]:
         result = self._shell("systemd-analyze", capture_output=True, ignore_exit_code=True)
@@ -58,7 +72,7 @@ class Systemd:
     def start_unit(self, unit_name: str):
         if not allow_system_modifications():
             pytest.skip("starting units is only supported when system state modifications are allowed")
-        self._shell(f"systemctl start {unit_name}")
+        self._shell(f"{self._systemctl} start {unit_name}")
 
     def list_units(self) -> list[SystemdUnit]:
         result = self._shell(f"{self._systemctl}", capture_output=True, ignore_exit_code=True)
@@ -68,11 +82,11 @@ class Systemd:
         result = self._shell(f"{self._systemctl} --failed", capture_output=True, ignore_exit_code=True)
         return _parse_units(result.stdout)
 
-    def wait_is_system_running(self) -> Tuple[str, int, float]:
+    def wait_is_system_running(self) -> SystemRunningState:
         start_time = time.time()
-        result = self._shell("{self._systemctl} is-system-running --wait", capture_output=True, ignore_exit_code=True)
+        result = self._shell(f"{self._systemctl} is-system-running --wait", capture_output=True, ignore_exit_code=True)
         elapsed = time.time() - start_time
-        return result.stdout.strip(), result.returncode, elapsed
+        return SystemRunningState(result.stdout.strip(), result.returncode, elapsed)
 
 
 @pytest.fixture
