@@ -3,16 +3,12 @@ on:
   # triggered by other workflows
   workflow_call:
     inputs:
-      version:
-        description: "Garden Linux version"
-        type: string
-        required: true
       flavors_matrix:
         description: "Generated GitHub workflow flavors matrix"
         type: string
         required: true
       test_types:
-        description: "Types of tests to execute (comma-separated: chroot,qemu,cloud,cloud_old,oci)"
+        description: "Types of tests to execute (comma-separated: chroot,qemu,cloud,oci)"
         type: string
         default: "chroot,qemu"
       bare_flavors_matrix:
@@ -54,12 +50,17 @@ jobs:
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
       flags: "--no-arch --json-by-arch --test"
+  qemu_test_flavors_supported_matrix:
+    name: Generate flavors matrix for qemu test
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: "--no-arch --json-by-arch --test"
   platform_test_flavors_supported_matrix:
     name: Generate flavors matrix for platform-test
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
       flags: "--no-arch --json-by-arch --test-platform"
-  test_bare_flavors_supported_matrix:
+  bare_flavors_supported_matrix:
     name: Generate flavors matrix for bare flavors test
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
@@ -68,8 +69,9 @@ jobs:
     needs:
       [
         chroot_test_flavors_supported_matrix,
+        qemu_test_flavors_supported_matrix,
         platform_test_flavors_supported_matrix,
-        test_bare_flavors_supported_matrix,
+        bare_flavors_supported_matrix,
       ]
     name: Intersect test matrices
     runs-on: "ubuntu-24.04"
@@ -78,8 +80,9 @@ jobs:
         shell: bash
     outputs:
       chroot_test_flavors_matrix: ${{ steps.matrices.outputs.chroot_test_flavors_matrix }}
+      qemu_test_flavors_matrix: ${{ steps.matrices.outputs.qemu_test_flavors_matrix }}
       platform_test_flavors_matrix: ${{ steps.matrices.outputs.platform_test_flavors_matrix }}
-      test_bare_flavors_matrix: ${{ steps.matrices.outputs.test_bare_flavors_matrix }}
+      bare_flavors_matrix: ${{ steps.matrices.outputs.bare_flavors_matrix }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
@@ -99,6 +102,14 @@ jobs:
 
             core.setOutput("chroot_test_flavors_matrix", matrix);
 
+            // qemu_test_flavors_matrix
+            matrix = gitHubLib.intersectFlavorsMatrix(
+              ${{ inputs.flavors_matrix }},
+              ${{ needs.qemu_test_flavors_supported_matrix.outputs.matrix }}
+            );
+
+            core.setOutput("qemu_test_flavors_matrix", matrix);
+
             // platform_test_flavors_matrix
             matrix = gitHubLib.intersectFlavorsMatrix(
               ${{ inputs.flavors_matrix }},
@@ -107,93 +118,110 @@ jobs:
 
             core.setOutput("platform_test_flavors_matrix", matrix);
 
-            // test_bare_flavors_matrix
+            // bare_flavors_matrix
             matrix = gitHubLib.intersectFlavorsMatrix(
               ${{ inputs.bare_flavors_matrix }},
-              ${{ needs.test_bare_flavors_supported_matrix.outputs.matrix }}
+              ${{ needs.bare_flavors_supported_matrix.outputs.matrix }}
             );
 
-            core.setOutput("test_bare_flavors_matrix", matrix);
+            core.setOutput("bare_flavors_matrix", matrix);
   ## test-ng start
   test_distribution_build:
     name: Build and Cache Test Distribution
     uses: ./.github/workflows/build_test_dist.yml
-  test_flavors_chrooted:
+  test_flavors_chroot_ng:
     needs: [intersect_matrices, test_distribution_build]
-    name: Test flavors chrooted
-    uses: ./.github/workflows/test_flavor_chrooted.yml
+    name: Test-NG flavors chroot
+    uses: ./.github/workflows/test_flavor_chroot_ng.yml
     if: ${{ needs.intersect_matrices.outputs.chroot_test_flavors_matrix != '{"include":[]}' && contains(inputs.test_types, 'chroot') }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.intersect_matrices.outputs.chroot_test_flavors_matrix) }}
     with:
-      version: ${{ inputs.version }}
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
     permissions:
-      actions: write      
+      actions: write
   test_flavors_qemu:
     needs: [intersect_matrices, test_distribution_build]
-    name: Test flavors QEMU
+    name: Test-NG flavors QEMU
     uses: ./.github/workflows/test_flavor_qemu.yml
-    if: ${{ needs.intersect_matrices.outputs.platform_test_flavors_matrix != '{"include":[]}' && contains(inputs.test_types, 'qemu') }}
+    if: ${{ needs.intersect_matrices.outputs.qemu_test_flavors_matrix != '{"include":[]}' && contains(inputs.test_types, 'qemu') }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.intersect_matrices.outputs.platform_test_flavors_matrix) }}
+      matrix: ${{ fromJson(needs.intersect_matrices.outputs.qemu_test_flavors_matrix) }}
     with:
-      version: ${{ inputs.version }}
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
-  test_flavors_cloud:
-    needs: [intersect_matrices, test_distribution_build]
-    name: Test flavors Cloud
-    uses: ./.github/workflows/test_flavor_cloud.yml
+    permissions:
+      actions: write
+  test_flavors_cloud_ng:
+    needs: [intersect_matrices, test_distribution_build, test_flavors_qemu]
+    name: Test-NG flavors Cloud
+    uses: ./.github/workflows/test_flavor_cloud_ng.yml
     if: ${{ needs.intersect_matrices.outputs.platform_test_flavors_matrix != '{"include":[]}' && contains(inputs.test_types, 'cloud') }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.intersect_matrices.outputs.platform_test_flavors_matrix) }}
     with:
-      version: ${{ inputs.version }}
-      arch: ${{ matrix.arch }}
-      flavor: ${{ matrix.flavor }}
-    secrets: inherit
-  test_flavors_oci:
-    needs: [intersect_matrices]
-    name: Test flavors OCI
-    uses: ./.github/workflows/test_flavor_oci.yml
-    if: ${{ needs.intersect_matrices.outputs.test_bare_flavors_matrix != '{"include":[]}' && contains(inputs.test_types, 'oci') }}
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.intersect_matrices.outputs.test_bare_flavors_matrix) }}
-    with:
-      arch: ${{ matrix.arch }}
-      flavor: ${{ matrix.flavor }}
-  ## test-ng end
-  test_flavors_cloud_old:
-    needs: intersect_matrices
-    name: Test flavors cloud old
-    uses: ./.github/workflows/test_flavor_cloud_old.yml
-    if: ${{ needs.intersect_matrices.outputs.platform_test_flavors_matrix != '{"include":[]}' && contains(inputs.test_types, 'cloud_old') }}
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.intersect_matrices.outputs.platform_test_flavors_matrix) }}
-    with:
-      version: ${{ inputs.version }}
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
     secrets: inherit
     permissions:
       id-token: write
       actions: write
-  test_flavors_oci_old:
-    needs: intersect_matrices
-    name: Test flavors OCI
-    uses: ./.github/workflows/test_flavor_oci_old.yml
-    if: ${{ needs.intersect_matrices.outputs.test_bare_flavors_matrix != '{"include":[]}' && contains(inputs.test_types, 'oci') }}
+  test_flavors_oci_ng:
+    needs: [intersect_matrices]
+    name: Test-NG flavors OCI
+    uses: ./.github/workflows/test_flavor_oci_ng.yml
+    if: ${{ needs.intersect_matrices.outputs.bare_flavors_matrix != '{"include":[]}' && contains(inputs.test_types, 'oci') }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.intersect_matrices.outputs.test_bare_flavors_matrix) }}
+      matrix: ${{ fromJson(needs.intersect_matrices.outputs.bare_flavors_matrix) }}
     with:
-      version: ${{ inputs.version }}
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
+    permissions:
+      actions: write
+  ## test-ng end
+  test_flavors_chroot:
+    needs: [intersect_matrices]
+    name: Test-NG flavors chroot
+    uses: ./.github/workflows/test_flavor_chroot.yml
+    if: ${{ needs.intersect_matrices.outputs.chroot_test_flavors_matrix != '{"include":[]}' && contains(inputs.test_types, 'chroot') }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.intersect_matrices.outputs.chroot_test_flavors_matrix) }}
+    with:
+      arch: ${{ matrix.arch }}
+      flavor: ${{ matrix.flavor }}
+    permissions:
+      actions: write
+  test_flavors_cloud:
+    needs: [intersect_matrices, test_flavors_qemu]
+    name: Test flavors cloud
+    uses: ./.github/workflows/test_flavor_cloud.yml
+    if: ${{ needs.intersect_matrices.outputs.platform_test_flavors_matrix != '{"include":[]}' && contains(inputs.test_types, 'cloud') }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.intersect_matrices.outputs.platform_test_flavors_matrix) }}
+    with:
+      arch: ${{ matrix.arch }}
+      flavor: ${{ matrix.flavor }}
+    secrets: inherit
+    permissions:
+      id-token: write
+      actions: write
+  test_flavors_oci:
+    needs: intersect_matrices
+    name: Test flavors OCI
+    uses: ./.github/workflows/test_flavor_oci.yml
+    if: ${{ needs.intersect_matrices.outputs.bare_flavors_matrix != '{"include":[]}' && contains(inputs.test_types, 'oci') }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.intersect_matrices.outputs.bare_flavors_matrix) }}
+    with:
+      arch: ${{ matrix.arch }}
+      flavor: ${{ matrix.flavor }}
+    permissions:
+      actions: write

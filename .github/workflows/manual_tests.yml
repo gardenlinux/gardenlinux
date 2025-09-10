@@ -27,18 +27,22 @@ on:
         description: 'Tag to run platform-test containers. "latest" or GL version. Tag must be available in `ghcr.io/gardenlinux/gardenlinux/platform-test-*`'
         type: string
         default: latest
-      flavors_parse_params:
+      flavors_parse_params_test:
         description: "Run bin/flavors_parse.py with these parameters"
-        default: "--no-arch --json-by-arch --publish --test-platform"
+        default: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
         type: string
-      bare_flavors_parse_params:
+      flavors_parse_params_test_platform:
+        description: "Run bin/flavors_parse.py with these parameters"
+        default: '--exclude "bare-*" --no-arch --json-by-arch --build --test-platform'
+        type: string
+      flavors_parse_params_test_bare:
         description: "Run bin/parse_flavors.py with these parameters for bare flavors"
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
         type: string
       test_types:
-        description: "Types of tests to execute (comma-separated: chroot,qemu,cloud,cloud_old,oci). Note: oci tests only work when build=true"
+        description: "Types of tests to execute (comma-separated: chroot,qemu,cloud,oci). Note: oci tests only work when build=true"
         type: string
-        default: "chroot,qemu,cloud,cloud_old"
+        default: "chroot,qemu,cloud,oci"
       ignore_workflow_concurrency:
         description: "Execute workflows concurrently"
         type: boolean
@@ -50,9 +54,9 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ inputs.version }}
-      flavors_parse_params: ${{ inputs.flavors_parse_params }}
+      flavors_parse_params_test: ${{ inputs.flavors_parse_params_test }}
       platform_test_tag: ${{ inputs.platform_test_tag }}
-      bare_flavors_parse_params: ${{ inputs.bare_flavors_parse_params }}
+      flavors_parse_params_test_bare: ${{ inputs.flavors_parse_params_test_bare }}
     permissions:
       actions: write  # TODO: 3215 elevated permissions for included workflow
       packages: write # TODO: 3215 elevated permissions for included workflow
@@ -63,10 +67,9 @@ jobs:
     name: Test flavors built
     uses: ./.github/workflows/tests.yml
     with:
-      version: ${{ needs.build.outputs.version }}
       flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
-      test_types: ${{ inputs.test_types }}
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
+      test_types: ${{ inputs.test_types }}
     permissions:
       id-token: write # TODO: 3215 elevated permissions for included workflow
       actions: write  # TODO: 3215 elevated permissions for included workflow
@@ -130,7 +133,7 @@ jobs:
     name: Generate flavors matrix to test
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
-      flags: ${{ inputs.flavors_parse_params }}
+      flags: ${{ inputs.flavors_parse_params_test }}
   download_platform_test_flavors:
     needs: [download_build_requirements, download_platform_test_flavors_matrix]
     name: Download flavors to test
@@ -158,7 +161,6 @@ jobs:
     name: Test flavors downloaded
     uses: ./.github/workflows/tests.yml
     with:
-      version: ${{ needs.download_build_requirements.outputs.version }}
       flavors_matrix: ${{ needs.download_platform_test_flavors_matrix.outputs.matrix }}
       test_types: ${{ inputs.test_types }}
       bare_flavors_matrix: '{"include":[]}'
