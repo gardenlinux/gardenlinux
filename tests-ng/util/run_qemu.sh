@@ -12,6 +12,7 @@ map_arch() {
 	echo "$arg"
 }
 
+debug=0
 ssh=0
 skip_cleanup=0
 skip_tests=0
@@ -19,6 +20,10 @@ test_args=()
 
 while [ $# -gt 0 ]; do
 	case "$1" in
+	--debug)
+		debug=1
+		shift
+		;;
 	--ssh)
 		ssh=1
 		shift
@@ -178,6 +183,16 @@ qemu_opts=(
 	-device "virtserialport,chardev=test_output,name=test_output"
 	-device "virtio-net-pci,netdev=net0"
 )
+
+if ((debug)); then
+	qemu_opts+=(
+		-display gtk
+	)
+else
+	qemu_opts+=(
+		-display none
+	)
+fi
 
 if [ "$secureboot" = "true" ]; then
 	qemu_opts+=(

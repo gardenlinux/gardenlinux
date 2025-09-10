@@ -133,6 +133,7 @@ The main entry point is `./test-ng` in the gardenlinux root directory (symlink t
 
 - `--ssh`: Enable SSH access to QEMU VM (`gardenlinux@127.0.01:2222`).
   - cloud: SSHD is always enabled via `cloud-init`.
+- `--debug`: Enable debug mode (display window) for QEMU VM.
 
 ### Examples
 
