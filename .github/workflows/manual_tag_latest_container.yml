@@ -19,3 +19,5 @@ jobs:
     with:
       version: ${{ inputs.version }}
       is_latest:  ${{ inputs.is_latest }}
+    permissions:
+      packages: write

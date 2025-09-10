@@ -40,7 +40,9 @@ jobs:
     name: Build
     uses: ./.github/workflows/build.yml
     permissions:
-      id-token: write
+      id-token: write # TODO: 3215 elevated permissions for included workflow
+      actions: write  # TODO: 3215 elevated permissions for included workflow
+      packages: write # TODO: 3215 elevated permissions for included workflow
     with:
       version: ${{ inputs.version }}
       target: ${{ inputs.target }}
@@ -80,7 +82,8 @@ jobs:
       platform_test: true
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
     permissions:
-      id-token: write
+      id-token: write # TODO: 3215 elevated permissions for included workflow
+      actions: write  # TODO: 3215 elevated permissions for included workflow
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}

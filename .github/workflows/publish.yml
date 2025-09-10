@@ -57,6 +57,10 @@ jobs:
       aws_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
       aws_session: ${{ secrets.AWS_OIDC_SESSION }}
       oci_kms_arn: ${{ secrets.OCI_KMS_ARN }}
+    permissions:
+      packages: write # TODO: 3215 elevated permissions for included workflow
+      id-token: write # TODO: 3215 elevated permissions for included workflow
+      actions: write  # TODO: 3215 elevated permissions for included workflow
   publish_kmodbuild_container:
     needs: [ workflow_data ]
     name: Publish kernel module build dev container
@@ -64,6 +68,8 @@ jobs:
     with:
       run_id: ${{ needs.workflow_data.outputs.run_id }}
       version: ${{ needs.workflow_data.outputs.version }}
+    permissions:
+      packages: write
   publish_retry:
     needs: [ publish_oci_containers, publish_kmodbuild_container ]
     if: ${{ failure() && ( needs.publish_oci_containers.result == 'failure' || needs.publish_kmodbuild_container.result == 'failure' ) }}
