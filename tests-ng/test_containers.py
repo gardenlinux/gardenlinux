@@ -16,6 +16,7 @@ def container_image_setup(uri: str, ctr: CtrRunner):
 
 
 @pytest.mark.booted(reason="Container tests require systemd")
+@pytest.mark.root(reason="Needs to start containerd")
 @pytest.mark.parametrize("uri", TEST_IMAGES)
 def test_basic_container_functionality(container_image_setup, uri: str, ctr: CtrRunner):
     out = ctr.run(uri, "uname", capture_output=True, ignore_exit_code=True)
