@@ -50,6 +50,12 @@ done
 
 test_dist_dir="$1"
 image="$2"
+log_dir="$test_dist_dir/../log"
+log_file_log="qemu.test-ng.log"
+log_file_junit="qemu.test-ng.xml"
+
+mkdir -p "$log_dir"
+test_args+=("--junit-xml=/dev/virtio-ports/test_junit")
 
 # arch, uefi, secureboot, tpm2 are set in $image.requirements
 image_requirements=${image//.raw/.requirements}
@@ -65,8 +71,14 @@ arch="$(map_arch "$arch")"
 tmpdir=
 
 cleanup() {
+	get_logs
 	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
 	tmpdir=
+}
+
+get_logs() {
+	cp "$tmpdir/serial.log" "$log_dir/$log_file_log" || true
+	cp "$tmpdir/junit.xml" "$log_dir/$log_file_junit" || true
 }
 
 trap cleanup EXIT
@@ -156,7 +168,7 @@ if ! ((skip_tests)); then
 	fi
 
 	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
-./run_tests ${test_args[*]@Q}
+./run_tests ${test_args[*]@Q} 2>&1
 EOF
 fi
 
@@ -171,8 +183,10 @@ qemu_opts=(
 	-drive "if=virtio,format=raw,readonly=on,file=$test_dist_dir/dist.ext2.raw"
 	-fw_cfg "name=opt/gardenlinux/config_script,file=$tmpdir/fw_cfg-script.sh"
 	-chardev "file,id=test_output,path=$tmpdir/serial.log"
+	-chardev "file,id=test_junit,path=$tmpdir/junit.xml"
 	-device virtio-serial
 	-device "virtserialport,chardev=test_output,name=test_output"
+	-device "virtserialport,chardev=test_junit,name=test_junit"
 	-device "virtio-net-pci,netdev=net0"
 )
 
@@ -233,4 +247,6 @@ else
 	"qemu-system-$arch" "${qemu_opts[@]}" | stdbuf -i0 -o0 sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g'
 	cat "$tmpdir/serial.log"
 fi
+
+# TODO: find a better way to check if the tests failed
 ! (tail -n1 "$tmpdir/serial.log" | grep failed >/dev/null)

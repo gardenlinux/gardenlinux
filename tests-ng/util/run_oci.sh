@@ -22,6 +22,10 @@ image="$2"
 image_basename="$(basename -- "$image")"
 image_name=${image_basename/.*/}
 root_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/../..")"
+log_dir="$root_dir/tests-ng/log"
+log_file_log="oci.test-ng.log"
+
+mkdir -p "$log_dir"
 
 if [ -z "$image" ]; then
     echo "Usage: $0 <bare-image>" >&2
@@ -60,4 +64,4 @@ cd "$root_dir/bare_flavors/$config/test"
 podman build -t test-run-oci --build-arg image="$image_sha" .
 
 echo "🚀  running test container $image_name"
-podman run --rm test-run-oci "${test_args[@]}"
+podman run --rm test-run-oci "${test_args[@]}" 2>&1 | tee "$log_dir/$log_file_log"

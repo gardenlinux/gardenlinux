@@ -60,6 +60,13 @@ image_name=${image_basename/.*/}
 user_data_script=
 tf_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/tf")"
 
+log_dir="$test_dist_dir/../log"
+log_file_log="cloud.test-ng.log"
+log_file_junit="cloud.test-ng.xml"
+
+mkdir -p "$log_dir"
+test_args+=("--junit-xml=/run/gardenlinux-tests/tests/log/$log_file_junit")
+
 # arch, uefi, secureboot, tpm2 are set in $image.requirements
 arch=
 uefi=
@@ -83,6 +90,7 @@ source "$image_requirements"
 [ -n "$cloud" ]
 
 cleanup() {
+	get_logs
 	if ! ((skip_cleanup)); then
 		echo "⚙️  cleaning up cloud resources"
 		(
@@ -95,6 +103,10 @@ cleanup() {
 			tofu workspace delete "$image_name"
 		)
 	fi
+}
+
+get_logs() {
+	"$login_cloud_sh" "$image_basename" "sudo cat /run/gardenlinux-tests/tests/log/$log_file_junit" >"$log_dir/$log_file_junit"
 }
 
 trap cleanup EXIT
@@ -160,6 +172,7 @@ done
 if ! mountpoint /run/gardenlinux-tests; then
 	exit 1
 fi
+mkdir -p /run/gardenlinux-tests/tests/log
 EOF
 
 if ((cloud_image)); then
@@ -230,8 +243,10 @@ if ! ((cloud_plan)); then
 			"--allow-system-modifications"
 			"--expected-users" "$ssh_user"
 		)
-		# wait for cloud-init to finish
-		"$login_cloud_sh" "$image_basename" sudo systemctl is-system-running --wait || true
-		"$login_cloud_sh" "$image_basename" sudo /run/gardenlinux-tests/run_tests "${test_args[*]@Q}"
+		(
+			# wait for cloud-init to finish
+			"$login_cloud_sh" "$image_basename" "sudo systemctl is-system-running --wait || true"
+			"$login_cloud_sh" "$image_basename" "sudo /run/gardenlinux-tests/run_tests ${test_args[*]@Q} 2>&1"
+		) | tee "$log_dir/$log_file_log"
 	fi
 fi
