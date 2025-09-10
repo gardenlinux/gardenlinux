@@ -1414,7 +1414,7 @@ gh workflow run "platform tests only" \
   # directly passed to bin/glrd to commit and fetch image from S3
   -f version=1312 \
   # directly passed to bin/parse_flavors.py
-  -f flavors_parse_params='--no-arch --json-by-arch --test-platform --include-only gcp-gardener_prod-amd64'
+  -f flavors_parse_params_test='--no-arch --json-by-arch --test-platform --include-only gcp-gardener_prod-amd64'
 ```
 
 2. Building and testing new images:
@@ -1433,7 +1433,7 @@ gh workflow run "platform tests only" \
   # build from specific branch
   --ref feat/my-feature \
   # run tests for all GCP flavors and architectures
-  -f flavors_parse_params='--no-arch --json-by-arch --test-platform --include-only "gcp-*"'
+  -f flavors_parse_params_test='--no-arch --json-by-arch --test-platform --include-only "gcp-*"'
 ```
 
 Common workflow parameters:
@@ -1442,14 +1442,14 @@ Common workflow parameters:
 |-----------|-------------|---------------|
 | `--ref` | Git reference to test (branch/tag/SHA) | `feat/my-feature`, `main`, `abc123de` |
 | `-f build` | Whether to build images from source | `true`, `false` |
-| `-f flavors_parse_params` | Filter which flavors to test | `--no-arch --json-by-arch --test-platform --include-only "gcp-*"` |
+| `-f flavors_parse_params_test` | Filter which flavors to test | `--no-arch --json-by-arch --test-platform --include-only "gcp-*"` |
 | `-f version` | Version to test | `1312`, `latest` |
 
 > [!NOTE]
 > The `version` input is passed directly to `bin/glrd` to fetch image from S3. It supports every version string that `bin/glrd` supports.
 
 > [!NOTE]
-> The `flavors_parse_params` input is passed directly to `bin/parse_flavors.py` for flavor selection. It supports every parameter that `bin/parse_flavors.py` supports.
+> The `flavors_parse_params_test` input is passed directly to `bin/parse_flavors.py` for flavor selection. It supports every parameter that `bin/parse_flavors.py` supports.
 
 > [!TIP]
 > To monitor the workflow:

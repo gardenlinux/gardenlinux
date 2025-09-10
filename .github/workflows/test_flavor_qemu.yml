@@ -8,19 +8,18 @@ on:
       flavor:
         type: string
         required: true
-      version:
-        type: string
-        required: true
 jobs:
   test:
-    name: Test flavor in QEMU ${{ inputs.flavor }} (${{ inputs.arch }})
+    name: Test-NG flavor in QEMU ${{ inputs.flavor }} (${{ inputs.arch }})
     runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
-    timeout-minutes: 30
+    timeout-minutes: 20
     defaults:
       run:
         shell: bash
     env:
       CNAME: ""
+    permissions:
+      actions: write
     steps:
       - name: install qemu
         run: |
@@ -36,6 +35,11 @@ jobs:
             VERSION
           key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
+      - name: Download test distribution artifact
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        with:
+          name: test-distribution
+          path: tests-ng/.build
       - name: Load certs artifact
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
         with:
@@ -63,6 +67,11 @@ jobs:
       - name: New Test Framework
         run: |
           if [ ! -e ".build/$CNAME.raw" ]; then
+            if [ -e ".build/$CNAME.ova" ]; then
+              echo "extracting ova"
+              tar xvf ".build/$CNAME.ova" -C .build
+              ls -la .build
+            fi
             if [ -e ".build/$CNAME.vhd" ]; then
               echo "converting vhd to raw"
               qemu-img convert -f vpc -O raw ".build/$CNAME.vhd" ".build/$CNAME.raw"
@@ -80,7 +89,29 @@ jobs:
           fi
           if [ -e ".build/$CNAME.raw" ]; then
             ./test-ng ".build/$CNAME.raw"
+          elif [ -e ".build/$CNAME.pxe.tar.gz" ]; then
+            ./test-ng ".build/$CNAME.pxe.tar.gz"
+          elif [ -e ".build/$CNAME.oci" ]; then
+            echo "skipping oci test"
+            exit 0
           else
             echo "no raw file, QEMU test failed"
             exit 1
           fi
+      - name: Copy test results to build directory
+        if: always()
+        run: |
+          cp tests-ng/log/qemu.test-ng.log .build/${CNAME}.qemu.test-ng.log || true
+          cp tests-ng/log/qemu.test-ng.xml .build/${CNAME}.qemu.test-ng.xml || true
+      - uses: pmeier/pytest-results-action@20b595761ba9bf89e115e875f8bc863f913bc8ad # pin@v0.7.2
+        if: always()
+        with:
+          path: ".build/${{ env.CNAME }}.qemu.test-ng.xml"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+        if: always()
+        with:
+          if-no-files-found: ignore
+          name: qemu-test-ng-${{ env.CNAME }}
+          path: |
+            .build/${{ env.CNAME }}.qemu.test-ng.log
+            .build/${{ env.CNAME }}.qemu.test-ng.xml
