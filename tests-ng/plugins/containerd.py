@@ -35,3 +35,11 @@ class CtrRunner:
 @pytest.fixture
 def ctr(shell: ShellRunner, systemd: Systemd):
     return CtrRunner(shell, systemd)
+
+@pytest.fixture
+def container_image_setup(uri: str, ctr: CtrRunner):
+    # capture output to avoid it cluttering the test logs
+    # ctr is very verbose when pulling an image
+    ctr.pull_image(uri, capture_output=True)
+    yield
+    ctr.remove_image(uri, capture_output=True)
