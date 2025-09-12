@@ -7,14 +7,6 @@ TEST_IMAGES = [
     "public.ecr.aws/debian/debian:latest",    # AWS ECR, https://gallery.ecr.aws/debian/debian
 ]
 
-
-@pytest.fixture
-def container_image_setup(uri: str, ctr: CtrRunner):
-    ctr.pull_image(uri)
-    yield
-    ctr.remove_image(uri)
-
-
 @pytest.mark.booted(reason="Container tests require systemd")
 @pytest.mark.root(reason="Needs to start containerd")
 @pytest.mark.feature("gardener or chost or _debug", reason="containerd is not installed")
