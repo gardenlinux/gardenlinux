@@ -75,11 +75,14 @@ jobs:
           sparse-checkout: |
             flavors.yaml
           sparse-checkout-cone-mode: false
+
       - id: matrix
         name: Generate flavors matrix
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@3054-move-github-workflows-py-to-python-gardenlinux-lib
         with:
           flags: "--no-arch --json-by-arch --publish"
+          version: 3054-move-github-workflows-py-to-python-gardenlinux-lib
+
   github_release:
     # needs: glvd
     runs-on: ubuntu-24.04
@@ -96,82 +99,90 @@ jobs:
         with:
           submodules: true
           fetch-depth: 0
-      - name: install dependencies for generate_release_note.py script
-        run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
 
       - name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@3054-move-github-workflows-py-to-python-gardenlinux-lib
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          version: 3054-move-github-workflows-py-to-python-gardenlinux-lib
+
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
+      #   with:
+      #     role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+      #     role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+      #     aws-region: ${{ secrets.AWS_REGION }}
+
       - name: create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_RELEASE_BUCKET_NAME: gardenlinux-github-releases
         run: |
-          python3 -m gardenlinux.github create --tag ${{ inputs.version }} --commit ${{ inputs.commit }} --dry-run
+          python3 -m gardenlinux.github create --tag ${{ inputs.version }} --commit ${{ inputs.commit }} --owner vivus-ignis --repo gardenlinux-dev
 
       - uses: actions/cache/save@v4.2.4
         with:
           key: release-${{ github.run_id }}
           path: .github_release_id
 
-  # github_release_artifacts_upload:
-  #   needs: [github_release, flavors_matrix]
-  #   runs-on: ubuntu-24.04
-  #   permissions:
-  #     contents: write
-  #     id-token: write
-  #   environment: oidc_aws_s3_upload
-  #   env:
-  #     CNAME: ""
-  #   strategy:
-  #     fail-fast: false
-  #     matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix ) }}
-  #   steps:
-  #     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
-  #       with:
-  #         submodules: true
-  #     - name: Install python-gardenlinux-lib
-  #       uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
-  #     - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
-  #       with:
-  #         role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-  #         role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
-  #         aws-region: ${{ secrets.AWS_REGION }}
-  #     - uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
-  #       with:
-  #         key: release-${{ github.run_id }}
-  #         path: .github_release_id
-  #         fail-on-cache-miss: true
-  #     - name: Download from S3 bucket ${{ secrets.aws_s3_bucket }} for ${{ matrix.flavor }} (${{ matrix.arch }})
-  #       run: |
-  #         commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
-  #         CNAME="${{ matrix.flavor }}-${{ matrix.arch }}-${{ inputs.version }}-$commit"
-  #
-  #         echo "CNAME=$CNAME" | tee -a "$GITHUB_ENV"
-  #
-  #         mkdir "$CNAME"
-  #         gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --cname "$CNAME" --path "$CNAME" download-artifacts-from-bucket
-  #         tar -cJf "$CNAME.tar.xz" -C "$CNAME" .
-  #     - name: Upload to release
-  #       run: |
-  #         release="$(cat .github_release_id)"
-  #
-  #         echo "$release $CNAME.tar.xz"
-  #         echo "$CNAME.tar.xz" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
-  #
-  #         # upload test logs separately (if they exist)
-  #         log_suffixes="chroot.test.log chroot.test.xml platform.test.log platform.test.xml"
-  #         for suffix in $log_suffixes; do
-  #           log="$CNAME/$CNAME.$suffix"
-  #           if [ -f "$log" ]; then
-  #             echo "$log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
-  #           fi
-  #         done
-  #
+  github_release_artifacts_upload:
+    needs: [github_release, flavors_matrix]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      id-token: write
+    environment: oidc_aws_s3_upload
+    env:
+      CNAME: ""
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix ) }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+        with:
+          submodules: true
+
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@3054-move-github-workflows-py-to-python-gardenlinux-lib
+
+      - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
+        with:
+          key: release-${{ github.run_id }}
+          path: .github_release_id
+          fail-on-cache-miss: true
+
+      - name: Download from S3 bucket ${{ secrets.aws_s3_bucket }} for ${{ matrix.flavor }} (${{ matrix.arch }})
+        run: |
+          commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
+          CNAME="${{ matrix.flavor }}-${{ matrix.arch }}-${{ inputs.version }}-$commit"
+
+          echo "CNAME=$CNAME" | tee -a "$GITHUB_ENV"
+
+          mkdir "$CNAME"
+          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --cname "$CNAME" --path "$CNAME" download-artifacts-from-bucket
+          tar -cJf "$CNAME.tar.xz" -C "$CNAME" .
+
+      - name: Upload to release
+        run: |
+          release="$(cat .github_release_id)"
+
+          echo "$release $CNAME.tar.xz"
+          echo "$CNAME.tar.xz" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+
+          # upload test logs separately (if they exist)
+          log_suffixes="chroot.test.log chroot.test.xml platform.test.log platform.test.xml"
+          for suffix in $log_suffixes; do
+            log="$CNAME/$CNAME.$suffix"
+            if [ -f "$log" ]; then
+              echo "$log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+            fi
+          done
+
   # tag_container_as_latest:
   #   if: ${{ inputs.type }} == 'patch'
   #   uses: ./.github/workflows/tag_latest_container.yml
