@@ -172,14 +172,14 @@ jobs:
           release="$(cat .github_release_id)"
 
           echo "$release $CNAME.tar.xz"
-          echo "$CNAME.tar.xz" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          gl-gh upload --owner vivus-ignis --repo gardenlinux-dev --release_id $release --file_path $CNAME.tar.xz
 
           # upload test logs separately (if they exist)
           log_suffixes="chroot.test.log chroot.test.xml platform.test.log platform.test.xml"
           for suffix in $log_suffixes; do
             log="$CNAME/$CNAME.$suffix"
             if [ -f "$log" ]; then
-              echo "$log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+              gl-gh upload --owner vivus-ignis --repo gardenlinux-dev --release_id $release --file_path $log
             fi
           done
 
