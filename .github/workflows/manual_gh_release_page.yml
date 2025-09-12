@@ -143,12 +143,14 @@ jobs:
 
       - name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@3054-move-github-workflows-py-to-python-gardenlinux-lib
-
-      - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          version: 3054-move-github-workflows-py-to-python-gardenlinux-lib
+
+      # - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
+      #   with:
+      #     role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+      #     role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+      #     aws-region: ${{ secrets.AWS_REGION }}
 
       - uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
@@ -157,6 +159,8 @@ jobs:
           fail-on-cache-miss: true
 
       - name: Download from S3 bucket ${{ secrets.aws_s3_bucket }} for ${{ matrix.flavor }} (${{ matrix.arch }})
+        env:
+          GITHUB_RELEASE_BUCKET_NAME: gardenlinux-github-releases
         run: |
           commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
           CNAME="${{ matrix.flavor }}-${{ matrix.arch }}-${{ inputs.version }}-$commit"
@@ -164,7 +168,8 @@ jobs:
           echo "CNAME=$CNAME" | tee -a "$GITHUB_ENV"
 
           mkdir "$CNAME"
-          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --cname "$CNAME" --path "$CNAME" download-artifacts-from-bucket
+          #gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --cname "$CNAME" --path "$CNAME" download-artifacts-from-bucket
+          gl-s3 --bucket ${{ env.GITHUB_RELEASE_BUCKET_NAME }} --cname "$CNAME" --path "$CNAME" download-artifacts-from-bucket
           tar -cJf "$CNAME.tar.xz" -C "$CNAME" .
 
       - name: Upload to release
