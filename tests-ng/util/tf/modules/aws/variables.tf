@@ -14,6 +14,12 @@ variable "test_disk_path" {
   type        = string
 }
 
+variable "existing_root_disk" {
+  description = "Optional: Existing AMI to launch instead of importing root disk"
+  type        = string
+  default     = ""
+}
+
 variable "ssh_public_key_path" {
   description = "Path to your ssh public key"
   type        = string
@@ -42,7 +48,7 @@ variable "image_requirements" {
   type = object({
     arch        = string
     uefi        = optional(bool, false)
-    secure_boot = optional(bool, false)
+    secureboot = optional(bool, false)
     tpm2        = optional(bool, false)
   })
 
