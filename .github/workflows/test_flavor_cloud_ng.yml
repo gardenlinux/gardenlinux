@@ -213,11 +213,10 @@ jobs:
         run: |
           cp tests-ng/log/cloud.test-ng.log .build/${CNAME}.cloud.test-ng.log || true
           cp tests-ng/log/cloud.test-ng.xml .build/${CNAME}.cloud.test-ng.xml || true
-      # enabled for chroot tests currently
-      # - uses: pmeier/pytest-results-action@20b595761ba9bf89e115e875f8bc863f913bc8ad # pin@v0.7.2
-      #   if: always()
-      #   with:
-      #     path: ".build/${{ env.CNAME }}.cloud.test-ng.xml"
+      - uses: pmeier/pytest-results-action@20b595761ba9bf89e115e875f8bc863f913bc8ad # pin@v0.7.2
+        if: always()
+        with:
+          path: ".build/${{ env.CNAME }}.cloud.test-ng.xml"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         if: always()
         with:
