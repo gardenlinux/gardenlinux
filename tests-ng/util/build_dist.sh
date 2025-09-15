@@ -31,6 +31,25 @@ if [ -n "$test_dirs" ]; then
 	echo "$test_dirs" | xargs -I {} cp -r {} "$tmpdir/dist/tests/"
 fi
 
+mkdir -p "$tmpdir/dist/.vscode"
+cat >"$tmpdir/dist/.vscode/extensions.json" <<'EOF'
+{
+    "recommendations": [
+        "ms-python.debugpy"
+    ]
+}
+EOF
+
+cat >"$tmpdir/dist/.vscode/settings.json" <<'EOF'
+{
+    "python.testing.pytestArgs": [
+        "/run/gardenlinux-tests/", "--system-booted", "--expected-users=gardenlinux", "--allow-system-modifications"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}
+EOF
+
 cat >"$tmpdir/dist/run_tests" <<'EOF'
 #!/bin/sh
 
