@@ -9,7 +9,7 @@ resource "aws_key_pair" "ssh" {
 }
 
 resource "aws_instance" "vm" {
-  ami           = aws_ami.image.id
+  ami           = var.existing_root_disk != "" ? var.existing_root_disk : aws_ami.image[0].id
   instance_type = local.instance_type
 
   subnet_id                   = aws_subnet.subnet.id
@@ -37,6 +37,13 @@ resource "aws_instance" "vm" {
     local.labels,
     { Name = local.test_name }
   )
+
+  lifecycle {
+    replace_triggered_by = [
+      terraform_data.root_disk_hash,
+      terraform_data.test_disk_hash,
+    ]
+  }
 }
 
 output "vm_ip" {
@@ -46,4 +53,9 @@ output "vm_ip" {
 
 output "ssh_user" {
   value       = var.provider_vars.ssh_user
+}
+
+output "image_requirements" {
+  value       = var.image_requirements
+  description = "Image requirements"
 }

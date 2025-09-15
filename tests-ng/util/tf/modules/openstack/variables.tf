@@ -1,7 +1,7 @@
 variable "prefix" {
   description = "Prefix to use for resource names"
   type        = string
-  default     = "gl-tests-ng"
+  default     = "gardenlinux-test"
 }
 
 variable "root_disk_path" {
@@ -23,12 +23,18 @@ variable "existing_root_disk" {
 variable "ssh_public_key_path" {
   description = "Path to your ssh public key"
   type        = string
-  default     = "~/.ssh/id_ed25519_gl.pub"
+  default     = "~/.ssh/id_ed25519.pub"
 }
 
 variable "user_data_script_path" {
   description = "Script to run on VM boot"
   type        = string
+}
+
+variable "instance_type_amd64" {
+  description = "Default instance type for amd64"
+  type        = string
+  default     = "SCS-2V-4-20s"
 }
 
 variable "image_requirements" {
@@ -41,22 +47,29 @@ variable "image_requirements" {
   })
 
   validation {
-    condition     = contains(["amd64", "arm64"], var.image_requirements.arch)
-    error_message = "arch must be amd64 or arm64"
+    condition     = contains(["amd64"], var.image_requirements.arch)
+    error_message = "arch must be amd64"
   }
 }
 
-variable "cloud_provider" {
-  description = "Which cloud provider to target"
+variable "my_ip" {
+  description = "Public IPv4 address of machine we're running on"
   type        = string
-  validation {
-    condition     = contains(["aws", "gcp", "azure", "ali", "openstack"], var.cloud_provider)
-    error_message = "Must be one of aws, gcp, azure, ali, or openstack."
-  }
 }
 
 variable "provider_vars" {
-  description = "Cloud provider specific settings"
-  type        = map(any)
-  default     = {}
+  description = "OpenStack specific settings"
+
+  type = object({
+    region             = optional(string, "RegionOne")
+    instance_type      = optional(string)
+    boot_mode          = optional(string)
+    net_cidr           = optional(string, "10.0.0.0/16")
+    subnet_cidr = optional(string, "10.0.1.0/24")
+    ssh_user = optional(string, "gardenlinux")
+    floatingip_pool = optional(string, "public")
+    public_net_name = optional(string, "public")
+    # feature_tpm2      = optional(bool, false)
+    # feature_trustedboot = optional(bool, false)
+  })
 }
