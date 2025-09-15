@@ -48,9 +48,6 @@ on:
         value: ${{ jobs.requirements.outputs.version }}
       bare_flavors_matrix:
         value: ${{ jobs.bare_flavors_matrix.outputs.matrix }}
-
-permissions: read-all # default for workflow
-
 jobs:
   requirements:
     name: Prepare build requirements
