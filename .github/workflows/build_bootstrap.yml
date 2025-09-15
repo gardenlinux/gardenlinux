@@ -8,9 +8,6 @@ on:
       version:
         type: string
         required: true
-
-permissions: read-all # default for workflow
-
 jobs:
   bootstrap:
     name: Build bootstrap

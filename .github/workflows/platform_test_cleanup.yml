@@ -4,9 +4,6 @@ on:
     - cron: '0 4 * * *'  # Run daily at 4 AM UTC
   # manual trigger
   workflow_dispatch:
-
-permissions: read-all # default for workspace
-
 jobs:
   collect_workspaces:
     name: Collect Workspaces to Cleanup

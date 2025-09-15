@@ -14,9 +14,6 @@ on:
       version:
         type: string
         required: true
-
-permissions: read-all # default for workflow
-
 jobs:
   build:
     name: Build bare flavor ${{ inputs.bare_flavor }} (${{ inputs.arch }})

@@ -56,7 +56,6 @@ on:
         required: false
       tf_encryption:
         required: false
-permissions: read-all # default for workflow
 jobs:
   chroot_test_flavors_supported_matrix:
     name: Generate flavors matrix for chroot test

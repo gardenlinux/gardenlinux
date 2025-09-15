@@ -9,7 +9,6 @@ on:
   workflow_run:
     workflows: [ 'Build and publish a release', 'nightly' ]
     types: [ 'completed' ]
-permissions: read-all # default for workflow
 jobs:
   workflow_data:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.conclusion == 'success' }}

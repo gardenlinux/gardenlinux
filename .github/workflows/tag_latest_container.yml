@@ -10,7 +10,6 @@ on:
         required: true
         type: boolean
         description: "is tagging as gardenlinux:latest required"
-permissions: read-all # default for workflow
 jobs:
   tag_version:
     name: tag latest and release container

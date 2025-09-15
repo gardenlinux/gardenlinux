@@ -26,9 +26,6 @@ on:
         required: false
       aws_oidc_session:
         required: false
-
-permissions: read-all # default for workflow
-
 jobs:
   build:
     name: Build flavor ${{ inputs.flavor }} (${{ inputs.arch }})
