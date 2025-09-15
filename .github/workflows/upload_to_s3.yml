@@ -26,6 +26,7 @@ on:
         required: true
       aws_s3_bucket:
         required: true
+permissions: read-all # default for workflow
 jobs:
   upload_to_s3:
     name: upload to S3
