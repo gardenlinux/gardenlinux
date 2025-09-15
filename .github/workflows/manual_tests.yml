@@ -47,6 +47,7 @@ on:
         description: 'Execute workflows concurrently'
         type: boolean
         default: false
+permissions: read-all # default for workflows
 jobs:
   build:
     name: Build
@@ -57,6 +58,10 @@ jobs:
       flavors_parse_params: ${{ inputs.flavors_parse_params }}
       platform_test_tag: ${{ inputs.platform_test_tag }}
       bare_flavors_parse_params: ${{ inputs.bare_flavors_parse_params }}
+    permissions:
+      actions: write  # TODO: 3215 elevated permissions for included workflow
+      packages: write # TODO: 3215 elevated permissions for included workflow
+      id-token: write # TODO: 3215 elevated permissions for included workflow
   test:
     needs: build
     if: ${{ success() || failure() }}
@@ -69,7 +74,8 @@ jobs:
       platform_test: ${{ inputs.platform_test }}
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
     permissions:
-      id-token: write
+      id-token: write # TODO: 3215 elevated permissions for included workflow
+      actions: write  # TODO: 3215 elevated permissions for included workflow
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -93,6 +99,8 @@ jobs:
       version: ${{ inputs.version }}
       use_glrd: true
       target: ${{ inputs.target }}
+    permissions:
+      actions: write # TODO: 3215 elevated permissions for included workflow
   download_store_flavor_version_data:
     name: Store flavor version data
     needs: download_build_requirements
@@ -100,6 +108,8 @@ jobs:
       run:
         shell: bash
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
       - name: Prepare flavor version reference
         run: |
@@ -118,6 +128,9 @@ jobs:
       build: false
       platforms: '["tofu"]'
       platform_test_tag: ${{ inputs.platform_test_tag || 'nightly' }}
+    permissions:
+      actions: write  # TODO: 3215 elevated permissions for included workflow
+      packages: write # TODO: 3215 elevated permissions for included workflow
   download_platform_test_flavors_matrix:
     needs: download_build_requirements
     name: Generate flavors matrix to test
@@ -134,6 +147,7 @@ jobs:
       flavors_matrix: ${{ needs.download_platform_test_flavors_matrix.outputs.matrix }}
     permissions:
       id-token: write
+      actions: write      
     secrets:
       aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
       aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
@@ -154,7 +168,8 @@ jobs:
       chroot_test: ${{ inputs.chroot_test }}
       platform_test: ${{ inputs.platform_test }}
     permissions:
-      id-token: write
+      id-token: write # TODO: 3215 elevated permissions for included workflow
+      actions: write  # TODO: 3215 elevated permissions for included workflow
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}

@@ -10,10 +10,14 @@ on:
         required: false
         default: 'today'
 
+permissions: read-all # default for workflow
+
 jobs:
 
   build-amd:
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
@@ -29,6 +33,8 @@ jobs:
         include-hidden-files: true
 
   build-arm:
+    permissions:
+      actions: write
     runs-on: ubuntu-24.04-arm
     steps:
     - name: Checkout code
@@ -50,7 +56,6 @@ jobs:
       - build-amd
       - build-arm
     permissions:
-      contents: read
       id-token: write
     steps:
     - name: Checkout code
