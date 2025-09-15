@@ -1,0 +1,7 @@
+{
+    "python.testing.pytestArgs": [
+        "tests-ng", "--system-booted", "--expected-users=gardenlinux", "--allow-system-modifications"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}
