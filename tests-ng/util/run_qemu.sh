@@ -245,9 +245,19 @@ else
 fi
 
 if ((is_pxe_archive)); then
-	qemu_opts+=(
-		-boot order=nc
-	)
+	if [ "$arch" = aarch64 ]; then
+		# For ARM64, try direct kernel boot instead of network boot
+		# This bypasses the UEFI network boot issue
+		qemu_opts+=(
+			-kernel "$pxe_extract_dir/vmlinuz"
+			-initrd "$pxe_extract_dir/initrd"
+			-append "gl.ovl=/:tmpfs gl.url=http://10.0.2.2:8080/root.squashfs gl.live=1 ip=dhcp console=ttyS0 console=tty0 earlyprintk=ttyS0 consoleblank=0"
+		)
+	else
+		qemu_opts+=(
+			-boot order=nc
+		)
+	fi
 fi
 
 if [ "$uefi" = "true" ] || [ "$arch" = aarch64 ]; then
