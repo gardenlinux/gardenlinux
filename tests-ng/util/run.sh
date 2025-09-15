@@ -48,6 +48,7 @@ QEMU SPECIFIC OPTIONS
 ARTIFACT TYPES
   tar                             For chroot testing (extracted image filesystem)
   raw                             For QEMU VM testing or cloud provider testing
+  pxe.tar.gz                      For QEMU VM with PXE boot testing (extracted PXE archive)
   oci                             For OCI image testing
 
 EXAMPLES
@@ -75,10 +76,14 @@ EXAMPLES
   # Run OCI tests
   ./test-ng .build/bare_flavors/python-amd64.oci
 
+  # Run QEMU VM with PXE boot testing
+  ./test-ng .build/metal_pxe-amd64-today-local.pxe.tar.gz
+
 ENVIRONMENTS
   Chroot Testing: Runs tests directly in extracted image filesystem (fastest, filesystem-level only)
   QEMU Testing: Boots image in local QEMU virtual machine (full system testing, SSH on localhost:2222)
   Cloud Testing: Deploys image to cloud infrastructure using OpenTofu (real-world environment)
+  PXE Testing: Boots PXE archive via QEMU network boot (full system testing)
 
 For more information, see tests-ng/README.md
 EOF
@@ -233,6 +238,9 @@ else
 		;;
 	oci)
 		./util/run_oci.sh "${oci_args[@]}" .build "$artifact"
+		;;
+	pxe.tar.gz)
+		./util/run_qemu.sh "${qemu_args[@]}" .build "$artifact"
 		;;
 	*)
 		echo "artifact type $type not supported" >&2
