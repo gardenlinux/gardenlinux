@@ -20,9 +20,6 @@ on:
         value: ${{ jobs.determine_environment.outputs.environment }}
       target:
         value: ${{ inputs.target }}
-
-permissions: read-all # default for workflow 
-
 jobs:
   determine_environment:
     name: Determine signing environment

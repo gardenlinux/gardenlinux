@@ -14,9 +14,6 @@ on:
       - '.github/**'
       - 'docs/**'
       - '**/README.md'
-
-permissions: read-all # default for workflow
-
 jobs:
   set_version:
     name: Set VERSION

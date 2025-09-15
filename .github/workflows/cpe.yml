@@ -7,9 +7,6 @@ on:
         description: Version
         type: string
         required: true
-
-permissions: read-all # default for workflow
-
 jobs:
   build-and-upload:
     runs-on: ubuntu-24.04

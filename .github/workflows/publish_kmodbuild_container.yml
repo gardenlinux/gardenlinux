@@ -9,7 +9,6 @@ on:
       version:
         type: string
         required: true
-permissions: read-all # default for workspace
 jobs:
   kmodbuild_container:
     name: Publish kernel module build dev container

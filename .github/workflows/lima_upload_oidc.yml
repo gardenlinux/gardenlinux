@@ -9,9 +9,6 @@ on:
         description: 'Image version (default: today)'
         required: false
         default: 'today'
-
-permissions: read-all # default for workflow
-
 jobs:
 
   build-amd:

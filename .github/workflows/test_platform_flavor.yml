@@ -46,7 +46,6 @@ on:
         required: true
       tf_encryption:
         required: true
-permissions: read-all # default for workflow
 jobs:
   test:
     name: Platform-test flavor ${{ inputs.flavor }} (${{ inputs.arch }})

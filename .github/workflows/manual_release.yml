@@ -34,7 +34,6 @@ on:
         description: 'Execute workflows concurrently'
         type: boolean
         default: false
-permissions: read-all # default for workflow
 jobs:
   build:
     name: Build

@@ -11,7 +11,6 @@ on:
       version:
         type: string
         required: true
-permissions: read-all # default for workflow
 jobs:
   test:
     name: Test flavor in QEMU ${{ inputs.flavor }} (${{ inputs.arch }})

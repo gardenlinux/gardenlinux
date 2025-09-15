@@ -33,7 +33,6 @@ on:
         required: true
       oci_kms_arn:
         required: true
-permissions: read-all # default for workspace
 jobs:
   determine_environment:
     name: Determine release environment and repository for ${{ inputs.target }}
