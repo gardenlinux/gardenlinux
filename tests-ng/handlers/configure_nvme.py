@@ -12,9 +12,15 @@ ADRFAM="ipv4"
 
 @pytest.fixture
 def nvme_device(shell: ShellRunner):
+<<<<<<< HEAD
     shell(f"truncate -s 512M {NVME_DEVICE}", capture_output=True, ignore_exit_code=False)
     shell("DEBIAN_FRONTEND=noninteractive apt-get install -y mount", capture_output=True, ignore_exit_code=False)
     shell(f"losetup -fP {NVME_DEVICE}", capture_output=True, ignore_exit_code=False)
+=======
+    shell("truncate -s 512M /tmp/nvme.img", capture_output=True, ignore_exit_code=False)
+    shell("DEBIAN_FRONTEND=noninteractive apt-get install -y mount", capture_output=True, ignore_exit_code=False)
+    shell("losetup -fP /tmp/nvme.img", capture_output=True, ignore_exit_code=False)
+>>>>>>> 63fdc9df (Add python file to have proper teardown without failure)
 
     # Load necessary kernel modules
     shell("modprobe nvme_tcp", capture_output=True, ignore_exit_code=False)
@@ -47,6 +53,7 @@ def nvme_device(shell: ShellRunner):
     json_devices = json.loads(output.stdout)
     local_device = [device['DevicePath'] for device in json_devices['Devices'] if device["ModelNumber"] == "Linux"][0]
     shell(f"mkfs.ext4 {local_device}", capture_output=True, ignore_exit_code=False)
+<<<<<<< HEAD
     shell(f"mount {local_device} /mnt/nvme", capture_output=True, ignore_exit_code=False)
     shell("echo 'foo' | tee /mnt/nvme/bar", capture_output=True, ignore_exit_code=False)
 
@@ -56,4 +63,15 @@ def nvme_device(shell: ShellRunner):
     shell("umount /mnt/nvme")
     shell("nvme disconnect-all")
     shell(f"rm {NVME_DEVICE}")
+=======
+    shell(f"mount {local_device} /mnt", capture_output=True, ignore_exit_code=False)
+    shell("echo 'foo' | tee /mnt/bar", capture_output=True, ignore_exit_code=False)
+
+    yield local_device, "/mnt", "488"
+
+    print("Teardown nvme device and clean up")
+    shell("umount /mnt")
+    shell("nvme disconnect-all")
+    shell("rm /tmp/nvme.img")
+>>>>>>> 63fdc9df (Add python file to have proper teardown without failure)
     shell("rmmod nvme_tcp")

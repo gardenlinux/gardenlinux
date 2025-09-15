@@ -26,6 +26,7 @@ set +f
 
 mkdir -p "$tmpdir/dist/tests"
 <<<<<<< HEAD
+<<<<<<< HEAD
 test_dirs=$(find . -mindepth 2 -maxdepth 2 -name "test_*.py" -print0 | xargs -0 -r -I {} dirname {} | sort -u)
 cp -r -t "$tmpdir/dist/tests" conftest.py handlers plugins test_*.py
 if [ -n "$test_dirs" ]; then
@@ -34,6 +35,9 @@ fi
 =======
 cp -r -t "$tmpdir/dist/tests" conftest.py helper plugins test_*.py
 >>>>>>> a0e6ce9f (Move configure script to helper folder)
+=======
+cp -r -t "$tmpdir/dist/tests" conftest.py handlers plugins test_*.py
+>>>>>>> b49f2b71 (Add python file to have proper teardown without failure)
 
 cat >"$tmpdir/dist/run_tests" <<'EOF'
 #!/bin/sh
