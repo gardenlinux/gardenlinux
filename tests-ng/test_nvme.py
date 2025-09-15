@@ -1,20 +1,13 @@
 import pytest
 import subprocess
 from plugins.shell import ShellRunner
+from handlers.configure_nvme import nvme_device
 import os
 import json
 
 module = [ 
     "nvme-tcp" 
     ]
-
-# Define variables for the IP address, NVMe device, and subsystem name
-IP_ADDRESS="127.0.0.1"
-NVME_DEVICE="/tmp/nvme.img"
-SUBSYSTEM_NAME="testnqn"
-PORT_NUMBER="4420"
-TRTYPE="tcp"
-ADRFAM="ipv4"
 
 @pytest.mark.booted
 @pytest.mark.root
@@ -27,13 +20,12 @@ def test_kernel_module_availability(module_name, shell: ShellRunner):
 
 @pytest.mark.booted
 @pytest.mark.root
+@pytest.mark.modify
 @pytest.mark.feature("nvme")
-def test_nvme_locally(shell: ShellRunner):
-    configure_nvme_out = (shell("./helper/configure_nvme.sh connect", capture_output=True, ignore_exit_code=False)).stdout.strip() 
-    device, mount_point, size = [x.strip().strip(',') for x in configure_nvme_out.split(",")]
+def test_nvme_locally(nvme_device, shell: ShellRunner):
+    device, mount_point, size = nvme_device
     mount_info_line = shell(f"df -m | grep {mount_point}", capture_output=True, ignore_exit_code=False)
     mount_info = [x.strip() for x in mount_info_line.stdout.split(" ") if x]
-    assert mount_info[0] == device, ("Nvme Mount Failed")
-    assert mount_info[1] == size, ("Nvme Mount failed")
+    assert mount_info[0] == device
+    assert mount_info[1] == size
     assert ((shell(f"cat /mnt/bar", capture_output=True, ignore_exit_code=False)).stdout.strip() == 'foo')
-    shell("./helper/configure_nvme.sh disconnect", capture_output=True, ignore_exit_code=False)
