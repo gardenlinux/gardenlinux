@@ -95,7 +95,7 @@ jobs:
             echo "skipping oci test"
             exit 0
           else
-            echo "no raw file, QEMU test failed"
+            echo "no raw or pxe file, QEMU test failed"
             exit 1
           fi
       - name: Copy test results to build directory
