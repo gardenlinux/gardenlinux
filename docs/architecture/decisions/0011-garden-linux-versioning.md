@@ -1,4 +1,4 @@
-# 6. Garden Linux versioning
+# 11. Garden Linux versioning
 
 Date: 2025-08-25
 
@@ -48,6 +48,7 @@ In order to align with the requests, the decision has been made to:
 - IronCore will need to adjust their workflows when creating their custom images
 - The CCloud GL version will need adjusting, but it will benefit SCI overall as their custom images are used in Gardener/IronCore environments
 - GLRD requires changes as the tool needs to be backward compatible with all the old releases using the major.minor versions
+- GLVD requires adaptions to the new versioning schema
 
 ## Notes
 
