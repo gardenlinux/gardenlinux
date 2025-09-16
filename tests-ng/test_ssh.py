@@ -64,7 +64,7 @@ def test_sshd_has_required_config(sshd_config_item: str, sshd: Sshd):
     else:
         assert equals_ignore_case(actual_value, expected_value), f"{sshd_config_item}: expected {expected_value}, got {actual_value}"
 
-@pytest.mark.feature("ssh and not (ali or aws or azure)", reason="We want no authorized_keys for unmanaged users")
+@pytest.mark.feature("ssh and not (ali or aws or azure or openstack)", reason="We want no authorized_keys for unmanaged users")
 def test_users_have_no_authorized_keys(expected_users):
     skip_users = {"nologin", "sync"}
     skip_shells = {"/bin/false"}
@@ -83,7 +83,7 @@ def test_users_have_no_authorized_keys(expected_users):
                 f"user '{entry.pw_name}' should not have an authorized_keys file: {key_path}"
             )
 
-@pytest.mark.feature("ssh and (ali or aws or azure)", reason="ALI, AWS and Azure auto generate authorized_keys for root with a hint to use another user")
+@pytest.mark.feature("ssh and (ali or aws or azure or openstack)", reason="ALI, AWS, Azure and OpenStack auto generate authorized_keys for root with a hint to use another user")
 def test_users_have_only_root_authorized_keys_cloud(expected_users):
     skip_users = {"nologin", "sync"}
     skip_shells = {"/bin/false"}
