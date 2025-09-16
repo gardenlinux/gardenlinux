@@ -34,7 +34,7 @@ def test_local_tcp_stack(ip_version, loopback, tcp_echo_server):
     """
     # Arrange
     msg = b"Hello, TCP!"
-    result = tcp_echo_server(ip_version, loopback, msg)
+    result, done = tcp_echo_server(ip_version, loopback, msg)
 
     # Wait until the server bound to a port
     while "port" not in result:
@@ -45,6 +45,7 @@ def test_local_tcp_stack(ip_version, loopback, tcp_echo_server):
         conn.sendall(msg)
 
     # Assert
+    done.wait(timeout=2)
     assert result.get("data") == msg
 
 

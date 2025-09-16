@@ -24,26 +24,37 @@ def tcp_echo_server():
 
     def _start(ip_version, loopback, msg=b"Hello, TCP!"):
         result = {}
+        server_ready = threading.Event()
+        done = threading.Event()
 
         def server():
-            with socket.socket(ip_version, socket.SOCK_STREAM) as s:
-                s.bind((loopback, 0))
-                port = s.getsockname()[1]
-                result["port"] = port
-                s.listen(1)
-                conn, _ = s.accept()
-                data = conn.recv(1024)
-                result["data"] = data
+            try:
+                with socket.socket(ip_version, socket.SOCK_STREAM) as s:
+                    s.bind((loopback, 0))
+                    port = s.getsockname()[1]
+                    result["port"] = port
+                    s.listen(1)
+                    server_ready.set()  # signal that server is now listening
+                    conn, _ = s.accept()
+                    with conn:
+                        data = conn.recv(1024)
+                        result["data"] = data
+            finally:
+                done.set()  # signal test that server finished receiving
 
         thread = threading.Thread(target=server, daemon=True)
         thread.start()
-        servers.append((thread, result, msg))
-        return result
+        servers.append((thread, result, msg, done))
+
+        # Wait until server signals it is ready
+        server_ready.wait(timeout=2)
+        return result, done
 
     yield _start
 
     # Teardown: join all threads
-    for thread, result, _ in servers:
+    for thread, _, _, done in servers:
+        done.wait(timeout=2)
         thread.join(timeout=2)
 
 
