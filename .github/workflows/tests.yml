@@ -54,7 +54,7 @@ jobs:
     name: Generate flavors matrix for qemu test
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
-      flags: "--no-arch --json-by-arch --test"
+      flags: "--no-arch --json-by-arch --test --exclude vmware-*"
   platform_test_flavors_supported_matrix:
     name: Generate flavors matrix for platform-test
     uses: ./.github/workflows/build_flavors_matrix.yml
