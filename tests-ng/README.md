@@ -74,14 +74,14 @@ Before running the test framework, make sure the following dependencies are inst
 
 ```
 apt-get update
-apt-get install podman make curl jq unzip qemu swtpm
+apt-get install podman make curl jq unzip qemu swtpm socat
 
 ```
 
 #### Install on MacOS
 
 ```
-brew install coreutils bash gnu-sed gnu-getopt podman make curl jq unzip swtpm
+brew install coreutils bash gnu-sed gnu-getopt podman make curl jq unzip swtpm socat
 ```
 
 ### Basic Usage
