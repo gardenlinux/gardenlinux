@@ -1,17 +1,10 @@
+import os
 import datetime
 import socket
 import threading
 import pytest
 
-
-def has_ipv6():
-    """Helper function to detect IPv6 availability."""
-    try:
-        s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-        s.close()
-        return True
-    except OSError:
-        return False
+from plugins.network import has_ipv6
 
 
 # Test parameters. IPv6 skipped if not supported.
@@ -33,74 +26,61 @@ def test_loopback_interface(shell):
     assert "1 received" in result.stdout
 
 
-@pytest.mark.parametrize("family,loopback", LOCAL_TEST_PARAMS)
-def test_local_tcp_stack(family, loopback):
+@pytest.mark.parametrize("ip_version, loopback", LOCAL_TEST_PARAMS)
+def test_local_tcp_stack(ip_version, loopback, tcp_echo_server):
     """
     Test if local TCP stack is functional by creating a new
     listening socket on the loopback device and connecting to it.
     """
     # Arrange
-    msg = b"hello"
-    result = {}
+    msg = b"Hello, TCP!"
+    result = tcp_echo_server(ip_version, loopback, msg)
 
-    def server():
-        with socket.socket(family, socket.SOCK_STREAM) as s:
-            s.bind((loopback, 0))
-            port = s.getsockname()[1]  # Get automatically chosen port
-            result["port"] = port
-            s.listen(1)
-            conn, _ = s.accept()
-            data = conn.recv(1024)
-            result["data"] = data
-
-    thread = threading.Thread(target=server, daemon=True)
-    thread.start()
-
-    # Wait for server port to be ready
+    # Wait until the server bound to a port
     while "port" not in result:
         pass
 
     # Act
-    with socket.create_connection((loopback, result["port"]), timeout=2) as c:
-        c.sendall(msg)
+    with socket.create_connection((loopback, result["port"]), timeout=2) as conn:
+        conn.sendall(msg)
 
-    thread.join(timeout=2)
     # Assert
     assert result.get("data") == msg
 
 
-@pytest.mark.parametrize("family,loopback", LOCAL_TEST_PARAMS)
-def test_local_udp_stack(family, loopback):
+@pytest.mark.parametrize("ip_version,loopback", LOCAL_TEST_PARAMS)
+def test_local_udp_stack(ip_version, loopback, udp_echo_server):
     """
     Test if local UDP stack is functional by creating a new listening
     socket on the loopback device and sending data to it.
     """
     # Arrange
-    server = socket.socket(family, socket.SOCK_DGRAM)
-    server.bind((loopback, 0))
-    addr, port = server.getsockname()[:2]
+    msg = b"ping"
+    result = udp_echo_server(ip_version, loopback)
 
-    client = socket.socket(family, socket.SOCK_DGRAM)
+    # Wait until the server bound to a port
+    while "port" not in result:
+        pass
 
-    # Act / Assert
-    client.sendto(b"ping", (addr, port))
-    data, src = server.recvfrom(1024)
-    assert data == b"ping"
+    # Act
+    with socket.socket(ip_version, socket.SOCK_DGRAM) as client:
+        client.sendto(msg, (result["addr"], result["port"]))
+        reply_data, _ = client.recvfrom(1024)
 
-    server.sendto(b"pong", src)
-    data, _ = client.recvfrom(1024)
-    assert data == b"pong"
-
-    # Clean
-    client.close()
-    server.close()
+        # Assert
+        assert result.get("data") == msg
+        assert reply_data == b"pong"
 
 
 @pytest.mark.booted
-def test_resolv_conf_exists(shell):
+def test_resolv_conf_exists():
     """Test if local DNS config is available."""
-    result = shell("test -s /etc/resolv.conf", ignore_exit_code=True)
-    assert result.returncode == 0, "/etc/resolv.conf is missing or empty."
+    # Arrange
+    path = "/etc/resolv.conf"
+
+    # Act / Assert
+    assert os.path.isfile(path), f"'{path}' does not exist or is not a file"
+    assert os.path.getsize(path) > 0, f"'{path}' is empty"
 
 
 @pytest.mark.booted
