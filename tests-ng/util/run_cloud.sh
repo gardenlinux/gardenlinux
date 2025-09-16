@@ -59,6 +59,7 @@ image_basename="$(basename -- "$image")"
 image_name=${image_basename/.*/}
 user_data_script=
 tf_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/tf")"
+login_cloud_sh="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/login_cloud.sh")"
 
 log_dir="$test_dist_dir/../log"
 log_file_log="cloud.test-ng.log"
@@ -229,7 +230,6 @@ fi
 if ! ((cloud_plan)); then
 	vm_ip="$(cd "${tf_dir}" && tofu output --raw vm_ip)"
 	ssh_user="$(cd "${tf_dir}" && tofu output --raw ssh_user)"
-	login_cloud_sh="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/login_cloud.sh")"
 
 	echo -n "⚙️  waiting for VM ($vm_ip) to accept ssh connections"
 	until "$login_cloud_sh" "$image_basename" true 2>/dev/null; do
