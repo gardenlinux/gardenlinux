@@ -20,6 +20,10 @@ jobs:
     needs: workflow_data
     name: Publish container base image
     uses: ./.github/workflows/publish_oci_containers.yml
+    permissions:
+      id-token: write
+      packages: write
+      actions: write    
     # @TODO: Replace with safe OCI manifast handling variant
     #strategy:
     #  fail-fast: false
@@ -45,11 +49,15 @@ jobs:
     with:
       run_id: ${{ needs.workflow_data.outputs.run_id }}
       version: ${{ needs.workflow_data.outputs.version }}
+    permissions:
+      packages: write      
   publish_retry:
     needs: [ publish_oci_containers, publish_kmodbuild_container ]
     if: ${{ failure() && ( needs.publish_oci_containers.result == 'failure' || needs.publish_kmodbuild_container.result == 'failure' ) }}
     name: 'Retry checkpoint: Publish to GitHub'
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - name: Retry failed publishing

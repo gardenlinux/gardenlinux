@@ -32,6 +32,8 @@ jobs:
     uses: ./.github/workflows/build.yml
     permissions:
       id-token: write
+      actions: write
+      packages: write
     with:
       version: ${{ inputs.version }}
       target: ${{ inputs.target }}
@@ -49,6 +51,8 @@ jobs:
     if: ${{ failure() && needs.build.result == 'failure' }}
     name: 'Retry checkpoint: Build'
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - name: Retry failed build
@@ -70,6 +74,7 @@ jobs:
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
     permissions:
       id-token: write
+      actions: write
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -90,6 +95,8 @@ jobs:
     if: ${{ failure() && needs.test.result == 'failure' }}
     name: 'Retry checkpoint: Test'
     runs-on: ubuntu-24.04
+    permissions: 
+      actions: write
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - name: Retry failed test
@@ -104,6 +111,8 @@ jobs:
     needs: [ build, test ]
     name: Store workflow data
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
       - name: Store data in JSON file
         run: |

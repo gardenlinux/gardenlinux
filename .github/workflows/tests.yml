@@ -133,6 +133,9 @@ jobs:
       version: ${{ inputs.version }}
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
+    permissions:
+      id-token: write
+      actions: write      
   test_platform_flavors:
     needs: intersect_matrices
     name: Test platform flavors
@@ -146,6 +149,9 @@ jobs:
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
     secrets: inherit
+    permissions:
+      id-token: write
+      actions: write    
   test_bare_flavors:
     needs: intersect_matrices
     name: Test bare flavors
@@ -158,3 +164,5 @@ jobs:
       version: ${{ inputs.version }}
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
+    permissions:
+      id-token: write

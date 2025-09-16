@@ -38,6 +38,7 @@ jobs:
         shell: bash
     permissions:
       id-token: write
+      actions: write
     env:
       CNAME: ''
       USE_KMS: ${{ inputs.signing_env == '' && 'false' || 'true' }}

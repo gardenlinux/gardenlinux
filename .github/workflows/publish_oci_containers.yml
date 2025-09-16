@@ -62,6 +62,8 @@ jobs:
     env:
       CNAME_AMD64: ''
       CNAME_ARM64: ''
+    permissions:
+      packages: write
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
@@ -144,6 +146,8 @@ jobs:
       matrix:
         # @TODO: Replace with input matrix once OCI manifest tooling is ready to update existing ones
         config: [ libc, python, nodejs, sapmachine ]
+    permissions:
+      packages: write
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:

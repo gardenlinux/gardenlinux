@@ -70,6 +70,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     permissions:
       id-token: write
+      actions: write
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:

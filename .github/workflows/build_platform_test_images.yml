@@ -112,6 +112,8 @@ jobs:
     strategy:
       matrix:
         arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
@@ -145,6 +147,8 @@ jobs:
       matrix:
         arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
@@ -196,6 +200,8 @@ jobs:
     strategy:
       matrix:
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
+    permissions:
+      packages: write
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
@@ -294,6 +300,8 @@ jobs:
       matrix:
         arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:

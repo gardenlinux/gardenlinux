@@ -54,6 +54,8 @@ jobs:
     with:
       version: ${{ inputs.version == '' && 'now' || inputs.version }}
       target: ${{ inputs.target }}
+    permissions:
+      actions: write
   bootstrap:
     needs: requirements
     name: Bootstrap build
@@ -61,6 +63,8 @@ jobs:
     with:
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
+    permissions:
+      actions: write
   platform_test_image:
     needs: requirements
     name: Build platform-test image
@@ -70,6 +74,9 @@ jobs:
       platforms: '["tofu"]'
       platform_test_tag: ${{ inputs.platform_test_tag }}
       build: false
+    permissions:
+      actions: write
+      packages: write
   flavors_matrix:
     name: Generate flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml
@@ -90,12 +97,17 @@ jobs:
       signing_env: ${{ needs.requirements.outputs.signing_env }}
     uses: ./.github/workflows/build_flavor.yml
     secrets: inherit
+    permissions:
+      id-token: write
+      actions: write    
   kmodbuild_container:
     needs: [ flavors, requirements ]
     name: Build kernel module build dev container
     uses: ./.github/workflows/build_kmodbuild_container.yml
     with:
       version: ${{ needs.requirements.outputs.version }}
+    permissions:
+      actions: write
   bare_flavors_matrix:
     name: Generate bare flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml
@@ -114,10 +126,15 @@ jobs:
       version: ${{ needs.requirements.outputs.version }}
     uses: ./.github/workflows/build_bare_flavor.yml
     secrets: inherit
+    permissions:
+      id-token: write
+      actions: write    
   upload_flavor_version_data:
     needs: [ requirements, flavors ]
     name: Store flavor version data
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
       - name: Store data in JSON file
         run: |

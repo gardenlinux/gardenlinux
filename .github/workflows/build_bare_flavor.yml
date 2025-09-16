@@ -26,6 +26,7 @@ jobs:
         shell: bash
     permissions:
       id-token: write
+      actions: write
     env:
       CNAME: ''
     steps:

@@ -30,6 +30,7 @@ jobs:
         shell: bash
     permissions:
       id-token: write
+      actions: write
     # @TODO: We could use a better name for the required environment
     environment: oidc_platform_tests
     env:

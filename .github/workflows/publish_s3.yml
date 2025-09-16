@@ -83,6 +83,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.non_trustedboot_flavors_matrix.outputs.flavors_matrix) }}
+    permissions:
+      actions: write
     steps:
       - name: Load flavor build artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
@@ -107,6 +109,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.trustedboot_flavors_matrix.outputs.flavors_matrix) }}
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
         with:
@@ -214,6 +218,8 @@ jobs:
     if: ${{ failure() && ( needs.upload_to_s3.result == 'failure' || needs.upload_to_s3_cn.result == 'failure' || needs.glrd.result == 'failure' ) }}
     name: 'Retry checkpoint: Publish to S3'
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - name: Retry failed publishing
