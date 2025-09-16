@@ -1,11 +1,7 @@
 cloud-init
-sshfs
-openssh-server
 dosfstools
-qemu-guest-agent
 efibootmgr
 efitools
-linux-image-$arch
-tpm2-tools
-ipmitool
-ethtool
+openssh-server
+qemu-guest-agent
+sshfs
