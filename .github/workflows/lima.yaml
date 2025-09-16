@@ -38,6 +38,8 @@ jobs:
       fail-fast: false
       matrix:
         arch: [amd64, arm64]
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -56,6 +58,8 @@ jobs:
     needs:
       - collect-metadata
       - build
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@v4
         with:

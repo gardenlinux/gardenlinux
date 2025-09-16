@@ -12,6 +12,8 @@ jobs:
     defaults:
       run:
         shell: bash
+    permissions:
+      packages: write
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
@@ -76,6 +78,8 @@ jobs:
     defaults:
       run:
         shell: bash
+    permissions:
+      packages: write
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: ./.github/actions/setup
@@ -120,6 +124,8 @@ jobs:
       fail-fast: false
       matrix:
         config: [ libc, python, nodejs, sapmachine ]
+    permissions:
+      packages: write
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
       - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # pin@v3

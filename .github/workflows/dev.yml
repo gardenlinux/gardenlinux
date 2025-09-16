@@ -25,3 +25,6 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ needs.set_version.outputs.VERSION }}
+    permissions:
+      id-token: write
+      actions: write

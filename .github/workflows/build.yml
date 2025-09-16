@@ -44,6 +44,8 @@ jobs:
     defaults:
       run:
         shell: bash
+    permissions:
+      actions: write
     steps:
       # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
       #   with:
@@ -82,6 +84,8 @@ jobs:
       fail-fast: false
       matrix:
         arch: [ amd64, arm64 ]
+    permissions:
+      actions: write
     steps:
       # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
       #   with:
@@ -113,6 +117,8 @@ jobs:
       fail-fast: false
       matrix:
         arch: [ amd64, arm64 ]
+    permissions:
+      actions: write
     steps:
       # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
       #   with:
@@ -141,6 +147,7 @@ jobs:
         shell: bash
     permissions:
       id-token: write
+      actions: write
     # hard code dev (nightly) credentials here as prod (release) keys are to be used starting with the 1877 release
     environment: ${{ inputs.use_kms && 'oidc_aws_kms_nightly' || '' }}
     strategy:
@@ -246,6 +253,8 @@ jobs:
       matrix:
         arch: [ amd64, arm64 ]
         config: [ libc, python, nodejs, sapmachine ]
+    permissions:
+      actions: write
     steps:
       # - uses: gardenlinux/workflow-telemetry-action@c75b594f552d305ffd5f9074637137bc343ba35e # pin@v2
       #   with:

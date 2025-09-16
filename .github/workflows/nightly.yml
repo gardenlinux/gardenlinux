@@ -30,6 +30,8 @@ jobs:
   build_container:
     name: build container
     uses: ./.github/workflows/build_container.yml
+    permissions:
+      packages: write
   tests:
     needs: [ build, build_container ]
     permissions:
@@ -86,3 +88,5 @@ jobs:
     uses: ./.github/workflows/publish_container.yml
     with:
       version: ${{ needs.build.outputs.version }}
+    permissions:
+      packages: write
