@@ -59,6 +59,11 @@ if [[ "$image" == *.pxe.tar.gz ]]; then
 	is_pxe_archive=1
 fi
 
+is_openstack=0
+if [[ "$image" =~ ^.*openstack-.*$ ]]; then
+	is_openstack=1
+fi
+
 mkdir -p "$log_dir"
 test_args+=("--junit-xml=/dev/virtio-ports/test_junit")
 
@@ -82,6 +87,9 @@ tmpdir=
 cleanup() {
 	if [ -n "${pxe_http_pid:-}" ]; then
 		kill "$pxe_http_pid" 2>/dev/null || true
+	fi
+	if [ -n "${metadata_server_pid:-}" ]; then
+		kill "$metadata_server_pid" 2>/dev/null || true
 	fi
 	get_logs
 	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
@@ -122,6 +130,13 @@ if ((is_pxe_archive)); then
 fi
 
 echo "⚙️  preparing test VM"
+
+if ((is_openstack)); then
+	./util/metadata-server.py >/dev/null 2>&1 &
+	metadata_server_pid=$!
+	echo "✅ Started metadata server on 127.0.0.1:8181 (PID: $metadata_server_pid)"
+	echo "$metadata_server_pid" >"$tmpdir/metadata_server.pid"
+fi
 
 if ((is_pxe_archive)); then
 	# For PXE testing, we'll use network boot instead of a disk image
@@ -344,13 +359,25 @@ EOF
 	fi
 
 elif ((ssh)); then
-	qemu_opts+=(
-		-netdev "user,id=net0,hostfwd=tcp::2222-:22"
-	)
+	if ((is_openstack)); then
+		qemu_opts+=(
+			-netdev "user,id=net0,net=169.254.169.0/24,dhcpstart=169.254.169.9,hostfwd=tcp::2222-:22,guestfwd=tcp:169.254.169.254:80-cmd:socat - TCP:127.0.0.1:8181"
+		)
+	else
+		qemu_opts+=(
+			-netdev "user,id=net0,hostfwd=tcp::2222-:22"
+		)
+	fi
 else
-	qemu_opts+=(
-		-netdev "user,id=net0"
-	)
+	if ((is_openstack)); then
+		qemu_opts+=(
+			-netdev "user,id=net0,net=169.254.169.0/24,dhcpstart=169.254.169.9,guestfwd=tcp:169.254.169.254:80-cmd:socat - TCP:127.0.0.1:8181"
+		)
+	else
+		qemu_opts+=(
+			-netdev "user,id=net0"
+		)
+	fi
 fi
 
 echo "🚀  starting test VM"
