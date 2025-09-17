@@ -193,9 +193,7 @@ jobs:
           fi
           if [ -e ".build/$CNAME.raw" ]; then
             # enable remote state S3 backend
-            if [ ! -f "tests/platformSetup/tofu/backend.tf" ]; then
-              cp "tests/platformSetup/tofu/backend.tf.github" "tests/platformSetup/tofu/backend.tf"
-            fi
+            cp "tests-ng/util/tf/backend.tf.github" "tests-ng/util/tf/backend.tf"
 
             # enable state encryption
             export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
@@ -228,6 +226,9 @@ jobs:
       - name: Cleanup cloud test for ${{ inputs.flavor }} (${{ inputs.arch }})
         if: always()
         run: |
+          # enable remote state S3 backend
+          cp "tests-ng/util/tf/backend.tf.github" "tests-ng/util/tf/backend.tf"
+
           # enable state encryption
           export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
 
