@@ -91,7 +91,7 @@ source "$image_requirements"
 [ -n "$cloud" ]
 
 cleanup() {
-	get_logs
+	get_logs || true
 	if ! ((skip_cleanup)); then
 		echo "⚙️  cleaning up cloud resources"
 		(
@@ -145,10 +145,6 @@ if [ ! -f "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" ] || ! sha256sum
 	echo "$TOFU_PROVIDER_AZURERM_CHECKSUM ${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" >"${TOFU_PROVIDERS_CUSTOM}/checksum.txt"
 	sha256sum -c "${TOFU_PROVIDERS_CUSTOM}/checksum.txt"
 	chmod +x "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm"
-fi
-
-if ((only_cleanup)); then
-	exit 0 # triggers trap
 fi
 
 ssh_private_key_path="$HOME/.ssh/id_ed25519_gl"
@@ -212,6 +208,10 @@ cloud_provider = "$cloud"
 #     }
 # }
 EOF
+
+if ((only_cleanup)); then
+	exit 0 # triggers trap
+fi
 
 echo "⚙️  setting up cloud resources via OpenTofu"
 if ((cloud_plan)); then
