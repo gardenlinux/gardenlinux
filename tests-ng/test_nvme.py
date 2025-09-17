@@ -28,4 +28,4 @@ def test_nvme_locally(nvme_device, shell: ShellRunner):
     mount_info = [x.strip() for x in mount_info_line.stdout.split(" ") if x]
     assert mount_info[0] == device
     assert mount_info[1] == size
-    assert ((shell(f"cat /mnt/bar", capture_output=True, ignore_exit_code=False)).stdout.strip() == 'foo')
+    assert ((shell(f"cat /mnt/nvme/bar", capture_output=True, ignore_exit_code=False)).stdout.strip() == 'foo')

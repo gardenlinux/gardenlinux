@@ -47,6 +47,7 @@ def nvme_device(shell: ShellRunner):
     json_devices = json.loads(output.stdout)
     local_device = [device['DevicePath'] for device in json_devices['Devices'] if device["ModelNumber"] == "Linux"][0]
     shell(f"mkfs.ext4 {local_device}")
+    shell("mkdir -p /mnt/nvme")
     shell(f"mount {local_device} /mnt/nvme")
     shell("echo 'foo' | tee /mnt/nvme/bar")
 
@@ -54,6 +55,14 @@ def nvme_device(shell: ShellRunner):
 
     print("Teardown nvme device and clean up")
     shell("umount /mnt/nvme", ignore_exit_code=True)
+    shell("rmdir /mnt/nvme", ignore_exit_code=True)
     shell("nvme disconnect-all", ignore_exit_code=True)
     shell(f"rm {NVME_DEVICE}", ignore_exit_code=True)
-    shell("rmmod nvme_tcp", ignore_exit_code=True)
+    shell(f"echo 0 | sudo tee /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/namespaces/1/enable")
+    shell(f"echo 0 | sudo tee /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/attr_allow_any_host")
+    shell(f"rmdir /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/namespaces/1")
+    shell("rm -r /sys/kernel/config/nvmet/ports/1", ignore_exit_code=True)
+    shell(f"rmdir /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}")
+    shell("rmdir /sys/kernel/config/nvmet/ports/1", ignore_exit_code=True)
+    shell("rmmod nvmet_tcp", ignore_exit_code=True)
+    shell("rmmod nvmet", ignore_exit_code=True)
