@@ -233,4 +233,4 @@ jobs:
 
           # run cleanup
           export TF_VAR_prefix="gh-${{ github.run_id }}"
-          ./test-ng --cloud $CLOUD --only-cleanup ".build/$CNAME.raw"
+          ./test-ng --cloud $CLOUD --only-cleanup ".build/$CNAME.raw" || true
