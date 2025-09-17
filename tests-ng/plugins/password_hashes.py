@@ -1,41 +1,75 @@
+from dataclasses import dataclass
 from pathlib import Path
+from typing import List, Optional
 
 import pytest
 
+SUPPORTED_HASH_ALGORITHMS = ["yescrypt", "sha512"]
+
+
+@dataclass
+class PamEntry:
+    type_: str
+    control: str
+    module: str
+    options: List[str]
+
+    @property
+    def hash_algo(self) -> Optional[str]:
+        """Return the hash algorithm specified in the options, if any."""
+        for arg in self.args:
+            if arg in SUPPORTED_HASH_ALGORITHMS:
+                return arg
+        return None
+
+
+class PamConfig:
+    def __init__(self, path: Path):
+        if not path.exists():
+            raise FileNotFoundError(f"PAM config file at '{path}' not found!")
+        self.path = path
+        self.lines = [
+            line.rstrip()
+            for line in path.read_text(encoding="utf-8", errors="ignore").splitlines()
+        ]
+        self.entries: List[PamEntry] = self._parse_entries()
+
+    def _parse_entries(self) -> List[PamEntry]:
+        entries = []
+        for line in self.lines:
+            stripped = line.lstrip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            # Split into tokens: tpye, control, module, args
+            tokens = stripped.split()
+            if len(tokens) < 3:
+                continue  # skip malformed line
+            type_, control, module, *args = tokens
+            entries.append(PamEntry(type_, control, module, args))
+        return entries
+
+    def find_entries(
+        self,
+        type_: Optional[str] = None,
+        module_contains: Optional[str] = None,
+        arg_contains: Optional[List[str]] = None,
+    ) -> List[PamEntry]:
+        results = self.entries
+        if type_:
+            results = [e for e in results if e.type_.lower() == type_.lower()]
+        if module_contains:
+            results = [e for e in results if module_contains in e.module]
+        if arg_contains:
+            results = [
+                e for e in results if all(token in e.args for token in arg_contains)
+            ]
+        return results
+
 
 @pytest.fixture
-def pam_common_password_text():
+def pam_config():
     """
-    Read the raw text from /etc/pam.d/common-password file.
+    Return a PamConfig object for /etc/pam.d/common-password.
     """
     path = Path("/etc/pam.d/common-password")
-    assert path.exists(), f"'{path}' is missing"
-    return path.read_text(encoding="utf-8", errors="ignore")
-
-
-@pytest.fixture
-def pam_candidates(pam_common_password_text):
-    """
-    Parse /etc/pam.d/common-password and return all relevant
-    'password ... [success=... default=ignore] ...' entries.
-    """
-    text = pam_common_password_text
-    # Exclude comments and blank lines
-    lines = [
-        ln
-        for ln in (l.rstrip() for l in text.splitlines())
-        if ln and not ln.lstrip().startswith("#")
-    ]
-
-    # Find candidate lines: start with 'password' and contain success= and default=ignore
-    candidates = []
-    for line in lines:
-        # check start token is 'password' (allow leading whitespace)
-        if (
-            line.lstrip().lower().startswith("password")
-            and "success=" in line
-            and "default=ignore" in line
-        ):
-            candidates.append(line)
-
-    return candidates
+    return PamConfig(path)
