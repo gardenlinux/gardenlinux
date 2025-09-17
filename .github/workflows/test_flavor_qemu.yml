@@ -11,8 +11,9 @@ on:
 jobs:
   test:
     name: Test-NG flavor in QEMU ${{ inputs.flavor }} (${{ inputs.arch }})
-    runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
-    timeout-minutes: 20
+    # runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    runs-on: "ubuntu-24.04"
+    timeout-minutes: 30
     defaults:
       run:
         shell: bash
