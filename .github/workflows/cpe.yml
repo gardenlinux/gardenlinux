@@ -7,10 +7,11 @@ on:
         description: Version
         type: string
         required: true
-
 jobs:
   build-and-upload:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v5

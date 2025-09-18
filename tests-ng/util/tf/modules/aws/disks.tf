@@ -1,4 +1,5 @@
 resource "terraform_data" "root_disk_hash" {
+  count = var.existing_root_disk != "" ? 0 : 1
   input = {
     sha256 = filesha256(var.root_disk_path)
   }
@@ -12,6 +13,11 @@ resource "terraform_data" "test_disk_hash" {
 
 resource "aws_s3_bucket" "upload" {
   bucket = local.bucket_name
+
+  tags = merge(
+    local.labels,
+    { Name = local.bucket_name }
+  )
 }
 
 resource "aws_s3_bucket_ownership_controls" "owner" {
@@ -80,6 +86,7 @@ resource "aws_s3_bucket_policy" "secure_transport" {
 }
 
 resource "aws_s3_object" "root_disk" {
+  count  = var.existing_root_disk != "" ? 0 : 1
   bucket = aws_s3_bucket.upload.id
   key    = local.root_disk_object_key
   source = var.root_disk_path
@@ -100,11 +107,12 @@ resource "aws_s3_object" "test_disk" {
 }
 
 resource "aws_ebs_snapshot_import" "root_disk" {
+  count = var.existing_root_disk != "" ? 0 : 1
   disk_container {
     format = "RAW"
     user_bucket {
       s3_bucket = aws_s3_bucket.upload.bucket
-      s3_key    = aws_s3_object.root_disk.key
+      s3_key    = aws_s3_object.root_disk[0].key
     }
   }
 
@@ -128,18 +136,28 @@ resource "aws_ebs_snapshot_import" "test_disk" {
 }
 
 resource "aws_ami" "image" {
-  name                = local.ami_name
+  count               = var.existing_root_disk != "" ? 0 : 1
+
+  name                = local.image_name
   virtualization_type = "hvm"
   ena_support         = true
-  architecture        = var.image_requirements.arch
+  architecture        = local.arch
   boot_mode           = local.boot_mode
 
   root_device_name = "/dev/xvda"
 
   ebs_block_device {
     device_name           = "/dev/xvda"
-    snapshot_id           = aws_ebs_snapshot_import.root_disk.id
+    snapshot_id           = aws_ebs_snapshot_import.root_disk[0].id
     volume_type           = "gp3"
     delete_on_termination = true
   }
+
+  tpm_support = var.image_requirements.tpm2 ? "v2.0" : null
+  uefi_data   = var.image_requirements.secureboot ? file("cert/secureboot.aws-efivars") : null
+
+  tags = merge(
+    local.labels,
+    { Name = local.image_name }
+  )
 }

@@ -59,6 +59,8 @@ jobs:
       version: ${{ inputs.version == '' && 'now' || inputs.version }}
       target: ${{ inputs.target }}
       prefix: ${{ inputs.prefix }}
+    permissions:
+      actions: write # TODO: 3215 elevated permissions for included workflow
   bootstrap:
     needs: requirements
     name: Bootstrap build
@@ -67,6 +69,8 @@ jobs:
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
       prefix: ${{ inputs.prefix }}
+    permissions:
+      actions: write
   platform_test_image:
     needs: requirements
     name: Build platform-test image
@@ -77,6 +81,9 @@ jobs:
       platform_test_tag: ${{ inputs.platform_test_tag }}
       build: ${{ inputs.platform_test_build }}
       prefix: ${{ inputs.prefix }}
+    permissions:
+      packages: write # TODO: 3215 elevated permissions for included workflow
+      actions: write  # TODO: 3215 elevated permissions for included workflow
   flavors_matrix:
     name: Generate flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml
@@ -98,6 +105,9 @@ jobs:
       prefix: ${{ inputs.prefix }}
     uses: ./.github/workflows/build_flavor.yml
     secrets: inherit
+    permissions:
+      id-token: write
+      actions: write    
   kmodbuild_container:
     needs: [ flavors, requirements ]
     name: Build kernel module build dev container
@@ -105,6 +115,8 @@ jobs:
     with:
       version: ${{ needs.requirements.outputs.version }}
       prefix: ${{ inputs.prefix }}
+    permissions:
+      actions: write      
   bare_flavors_matrix:
     name: Generate bare flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml
@@ -124,10 +136,14 @@ jobs:
       prefix: ${{ inputs.prefix }}
     uses: ./.github/workflows/build_bare_flavor.yml
     secrets: inherit
+    permissions:
+      actions: write    
   upload_flavor_version_data:
     needs: [ requirements, flavors ]
     name: Store flavor version data
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
       - name: Store data in JSON file
         run: |

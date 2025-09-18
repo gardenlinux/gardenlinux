@@ -17,6 +17,8 @@ jobs:
     defaults:
       run:
         shell: bash
+    permissions:
+      packages: write
     steps:
       - name: tag release and latest
         run: |

@@ -93,7 +93,7 @@ jobs:
           submodules: true
       - id: matrices
         name: Calculate matrices
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
@@ -133,6 +133,8 @@ jobs:
       version: ${{ inputs.version }}
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
+    permissions:
+      actions: write      
   test_flavors_qemu:
     needs: intersect_matrices
     name: Test flavors QEMU
@@ -158,6 +160,9 @@ jobs:
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
     secrets: inherit
+    permissions:
+      id-token: write
+      actions: write
   test_bare_flavors:
     needs: intersect_matrices
     name: Test bare flavors

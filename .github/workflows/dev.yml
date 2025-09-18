@@ -11,6 +11,7 @@ on:
       - '**/README.md'
   pull_request:
     paths-ignore:
+      - '.github/**'
       - 'docs/**'
       - '**/README.md'
 jobs:
@@ -32,6 +33,10 @@ jobs:
     with:
       version: ${{ needs.set_version.outputs.version }}
       fail_fast: true
+    permissions:
+      id-token: write # TODO: 3215 elevated permissions for included workflow
+      actions: write  # TODO: 3215 elevated permissions for included workflow
+      packages: write # TODO: 3215 elevated permissions for included workflow    
   test:
     needs: build
     if: ${{ success() || failure() }}
@@ -41,3 +46,6 @@ jobs:
       version: ${{ needs.build.outputs.version }}
       flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
+    permissions:
+      id-token: write # TODO: 3215 elevated permissions for included workflow
+      actions: write  # TODO: 3215 elevated permissions for included workflow

@@ -14,6 +14,12 @@ variable "test_disk_path" {
   type        = string
 }
 
+variable "existing_root_disk" {
+  description = "Optional: Existing AMI to launch instead of importing root disk"
+  type        = string
+  default     = ""
+}
+
 variable "ssh_public_key_path" {
   description = "Path to your ssh public key"
   type        = string
@@ -25,18 +31,30 @@ variable "user_data_script_path" {
   type        = string
 }
 
+variable "instance_type_amd64" {
+  description = "Default instance type for amd64"
+  type        = string
+  default     = "m5.large"
+}
+
+variable "instance_type_arm64" {
+  description = "Default instance type for arm64"
+  type        = string
+  default     = "m6g.medium"
+}
+
 variable "image_requirements" {
   description = "Runtime requirements to boot the image"
   type = object({
     arch        = string
     uefi        = optional(bool, false)
-    secure_boot = optional(bool, false)
+    secureboot = optional(bool, false)
     tpm2        = optional(bool, false)
   })
 
   validation {
-    condition     = contains(["x86_64", "arm64"], var.image_requirements.arch)
-    error_message = "arch must be x86_64 or arm64"
+    condition     = contains(["amd64", "arm64"], var.image_requirements.arch)
+    error_message = "arch must be amd64 or arm64"
   }
 }
 
@@ -52,7 +70,8 @@ variable "provider_vars" {
     region             = optional(string, "eu-central-1")
     instance_type      = optional(string)
     boot_mode          = optional(string)
-    vpc_cidr           = optional(string, "10.0.0.0/16")
-    public_subnet_cidr = optional(string, "10.0.1.0/24")
+    net_cidr           = optional(string, "10.0.0.0/16")
+    subnet_cidr = optional(string, "10.0.1.0/24")
+    ssh_user = optional(string, "gardenlinux")
   })
 }
