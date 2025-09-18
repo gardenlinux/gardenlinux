@@ -12,8 +12,8 @@ module "state_aws" {
   source = "./modules/state_aws"
 
   count            = var.deploy_state_aws ? 1 : 0
-  test_name        = var.test_prefix
-  test_environment = var.test_environment
+  test_name        = var.prefix
+  test_environment = "dev"
 }
 
 # module "state_aws_kms" {
