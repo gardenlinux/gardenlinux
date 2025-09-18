@@ -114,6 +114,7 @@ trap cleanup EXIT
 
 tofuenv_dir="$tf_dir/.tofuenv"
 PATH="$tofuenv_dir/bin:$PATH"
+export TOFUENV_GITHUB_TOKEN="$GITHUB_TOKEN"
 command -v tofuenv >/dev/null || {
 	git clone --depth=1 https://github.com/tofuutils/tofuenv.git "$tofuenv_dir"
 	echo 'trust-tofuenv: yes' >"$tofuenv_dir/use-gpgv"
