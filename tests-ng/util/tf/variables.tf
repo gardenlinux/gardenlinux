@@ -60,3 +60,9 @@ variable "provider_vars" {
   type        = map(any)
   default     = {}
 }
+
+# state_aws
+variable "deploy_state_aws" {
+  description = "Deploy resources needed to manage remote state in AWS"
+  default     = false
+}
