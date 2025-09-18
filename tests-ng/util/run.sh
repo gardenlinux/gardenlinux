@@ -10,7 +10,7 @@ Usage: ${0} [OPTIONS] ARTIFACT
 
 DESCRIPTION
   This script automatically detects the image type and runs appropriate tests for Garden Linux images.
-  It supports testing in various environments including chroot, QEMU virtual machines, and cloud providers.
+  It supports testing in various environments including chroot, QEMU virtual machines, cloud providers and OCI images.
 
 COMMON OPTIONS
   --help                           Show this help message and exit
@@ -48,6 +48,8 @@ QEMU SPECIFIC OPTIONS
 ARTIFACT TYPES
   tar                             For chroot testing (extracted image filesystem)
   raw                             For QEMU VM testing or cloud provider testing
+  pxe.tar.gz                      For QEMU VM with PXE boot testing (extracted PXE archive)
+  oci                             For OCI image testing
 
 EXAMPLES
   # Run chroot tests on a tar image
@@ -71,10 +73,17 @@ EXAMPLES
   # Spin up an existing cloud image using image requirements file
   ./test-ng --cloud aws --skip-cleanup --skip-tests --cloud-image --image-requirements-file .build/aws-gardener_prod-amd64-today-local.requirements ami-07f977508ed36098e
 
+  # Run OCI tests
+  ./test-ng .build/bare_flavors/python-amd64.oci
+
+  # Run QEMU VM with PXE boot testing
+  ./test-ng .build/metal_pxe-amd64-today-local.pxe.tar.gz
+
 ENVIRONMENTS
   Chroot Testing: Runs tests directly in extracted image filesystem (fastest, filesystem-level only)
   QEMU Testing: Boots image in local QEMU virtual machine (full system testing, SSH on localhost:2222)
   Cloud Testing: Deploys image to cloud infrastructure using OpenTofu (real-world environment)
+  PXE Testing: Boots PXE archive via QEMU network boot (full system testing)
 
 For more information, see tests-ng/README.md
 EOF
@@ -86,6 +95,7 @@ cloud_image=0
 chroot_args=()
 cloud_args=()
 qemu_args=()
+oci_args=()
 
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -112,6 +122,7 @@ while [ $# -gt 0 ]; do
 		chroot_args+=("$1" "$2")
 		cloud_args+=("$1" "$2")
 		qemu_args+=("$1" "$2")
+		oci_args+=("$1" "$2")
 		shift 2
 		;;
 	# cloud specific
@@ -198,7 +209,14 @@ if [ -z "$cloud" ] && ! ((cloud_image)); then
 	[ -n "$type" ]
 fi
 
-./util/build.makefile
+if [ "$type" != oci ]; then
+	if [ ! -f ".build/.gh_artifact" ]; then
+		echo "Building test distribution..."
+		./util/build.makefile
+	else
+		echo "Using cached test distribution from github artifact"
+	fi
+fi
 
 if [ -n "$cloud" ]; then
 	if ((cloud_image)); then
@@ -216,6 +234,12 @@ else
 		./util/run_chroot.sh "${chroot_args[@]}" .build "$artifact"
 		;;
 	raw)
+		./util/run_qemu.sh "${qemu_args[@]}" .build "$artifact"
+		;;
+	oci)
+		./util/run_oci.sh "${oci_args[@]}" .build "$artifact"
+		;;
+	pxe.tar.gz)
 		./util/run_qemu.sh "${qemu_args[@]}" .build "$artifact"
 		;;
 	*)

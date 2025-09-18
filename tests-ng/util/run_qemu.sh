@@ -50,9 +50,29 @@ done
 
 test_dist_dir="$1"
 image="$2"
+log_dir="$test_dist_dir/../log"
+log_file_log="qemu.test-ng.log"
+log_file_junit="qemu.test-ng.xml"
+
+is_pxe_archive=0
+if [[ "$image" == *.pxe.tar.gz ]]; then
+	is_pxe_archive=1
+fi
+
+is_openstack=0
+if [[ "$image" =~ ^.*openstack-.*$ ]]; then
+	is_openstack=1
+fi
+
+mkdir -p "$log_dir"
+test_args+=("--junit-xml=/dev/virtio-ports/test_junit")
 
 # arch, uefi, secureboot, tpm2 are set in $image.requirements
-image_requirements=${image//.raw/.requirements}
+if ((is_pxe_archive)); then
+	image_requirements=${image//.pxe.tar.gz/.requirements}
+else
+	image_requirements=${image//.raw/.requirements}
+fi
 # shellcheck source=/dev/null
 source "$image_requirements"
 
@@ -65,16 +85,67 @@ arch="$(map_arch "$arch")"
 tmpdir=
 
 cleanup() {
+	if [ -n "${pxe_http_pid:-}" ]; then
+		kill "$pxe_http_pid" 2>/dev/null || true
+	fi
+	if [ -n "${metadata_server_pid:-}" ]; then
+		kill "$metadata_server_pid" 2>/dev/null || true
+	fi
+	get_logs
 	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
 	tmpdir=
+}
+
+get_logs() {
+	cp "$tmpdir/serial.log" "$log_dir/$log_file_log" || true
+	cp "$tmpdir/junit.xml" "$log_dir/$log_file_junit" || true
 }
 
 trap cleanup EXIT
 tmpdir="$(mktemp -d)"
 
+if ((is_pxe_archive)); then
+	echo "⚙️  detected PXE archive, preparing for PXE boot testing"
+	pxe_extract_dir="$tmpdir/pxe_extracted"
+	mkdir -p "$pxe_extract_dir"
+	tar -xzf "$image" -C "$pxe_extract_dir"
+
+	# TODO: get UKI to work
+	# Verify required PXE components
+	# if [ -f "$pxe_extract_dir/boot.efi" ]; then
+	# 	# UKI case - boot.efi contains everything
+	# 	echo "✅ Found UKI (boot.efi), will boot via iPXE"
+	# 	required_files=("boot.efi")
+	# else
+	# Traditional case - require vmlinuz, initrd, root.squashfs
+	required_files=("vmlinuz" "initrd" "root.squashfs")
+	for file in "${required_files[@]}"; do
+		if [ ! -f "$pxe_extract_dir/$file" ]; then
+			echo "Error: Required PXE file '$file' not found in archive" >&2
+			exit 1
+		fi
+	done
+	echo "✅ PXE archive contains required files: ${required_files[*]}"
+	# fi
+fi
+
 echo "⚙️  preparing test VM"
 
-qemu-img create -q -f qcow2 -F raw -b "$(realpath -- "$image")" "$tmpdir/disk.qcow" 4G
+if ((is_openstack)); then
+	./util/metadata-server.py >/dev/null 2>&1 &
+	metadata_server_pid=$!
+	echo "✅ Started metadata server on 127.0.0.1:8181 (PID: $metadata_server_pid)"
+	echo "$metadata_server_pid" >"$tmpdir/metadata_server.pid"
+fi
+
+if ((is_pxe_archive)); then
+	# For PXE testing, we'll use network boot instead of a disk image
+	# Create a small empty disk for the test framework
+	qemu-img create -q -f qcow2 "$tmpdir/disk.qcow" 1G
+	echo "✅ PXE archive extracted, will use network boot"
+else
+	qemu-img create -q -f qcow2 -F raw -b "$(realpath -- "$image")" "$tmpdir/disk.qcow" 4G
+fi
 
 cat >"$tmpdir/fw_cfg-script.sh" <<EOF
 #!/usr/bin/env bash
@@ -156,7 +227,7 @@ if ! ((skip_tests)); then
 	fi
 
 	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
-./run_tests ${test_args[*]@Q}
+./run_tests ${test_args[*]@Q} 2>&1
 EOF
 fi
 
@@ -171,8 +242,10 @@ qemu_opts=(
 	-drive "if=virtio,format=raw,readonly=on,file=$test_dist_dir/dist.ext2.raw"
 	-fw_cfg "name=opt/gardenlinux/config_script,file=$tmpdir/fw_cfg-script.sh"
 	-chardev "file,id=test_output,path=$tmpdir/serial.log"
+	-chardev "file,id=test_junit,path=$tmpdir/junit.xml"
 	-device virtio-serial
 	-device "virtserialport,chardev=test_output,name=test_output"
+	-device "virtserialport,chardev=test_junit,name=test_junit"
 	-device "virtio-net-pci,netdev=net0"
 )
 
@@ -186,7 +259,23 @@ else
 	)
 fi
 
-if [ "$uefi" = "true" ] || [ "$arch" = "aarch64" ]; then
+if ((is_pxe_archive)); then
+	if [ "$arch" = aarch64 ]; then
+		# For ARM64, try direct kernel boot instead of network boot
+		# This bypasses the UEFI network boot issue
+		qemu_opts+=(
+			-kernel "$pxe_extract_dir/vmlinuz"
+			-initrd "$pxe_extract_dir/initrd"
+			-append "gl.ovl=/:tmpfs gl.url=http://10.0.2.2:8080/root.squashfs gl.live=1 ip=dhcp console=ttyS0 console=tty0 earlyprintk=ttyS0 consoleblank=0"
+		)
+	else
+		qemu_opts+=(
+			-boot order=nc
+		)
+	fi
+fi
+
+if [ "$uefi" = "true" ] || [ "$arch" = aarch64 ]; then
 	cp "$test_dist_dir/edk2-qemu-$arch-code" "$tmpdir/edk2-qemu-code"
 	cp "$test_dist_dir/edk2-qemu-$arch-vars" "$tmpdir/edk2-qemu-vars"
 	if [ "$arch" = aarch64 ]; then
@@ -208,14 +297,87 @@ if [ "$tpm2" = "true" ]; then
 	swtpm socket --tpmstate backend-uri="file://$tmpdir/swtpm.permall" --ctrl type=unixio,path="$tmpdir/swtpm.sock" --tpm2 --daemon --terminate
 fi
 
-if ((ssh)); then
-	qemu_opts+=(
-		-netdev "user,id=net0,hostfwd=tcp::2222-:22"
-	)
+if ((is_pxe_archive)); then
+	# Set up HTTP server for PXE boot
+	http_dir="$tmpdir/http"
+	mkdir -p "$http_dir"
+
+	# TODO: get UKI to work
+	# Copy PXE files to HTTP directory
+	# if [ -f "$pxe_extract_dir/initrd.unified" ]; then
+	#	# UKI case - copy initrd.unified and vmlinuz
+	#	cp "$pxe_extract_dir/initrd.unified" "$http_dir/"
+	#	cp "$pxe_extract_dir/vmlinuz" "$http_dir/"
+	# else
+	# Traditional case - copy vmlinuz, initrd, root.squashfs
+	cp "$pxe_extract_dir/vmlinuz" "$http_dir/"
+	cp "$pxe_extract_dir/initrd" "$http_dir/"
+	cp "$pxe_extract_dir/root.squashfs" "$http_dir/"
+	# fi
+
+	# TODO: get UKI to work
+	# Create iPXE script for booting
+	# if [ -f "$pxe_extract_dir/initrd.unified" ]; then
+	# 	echo "✅ Found initrd.unified (UKI), will boot via iPXE"
+	# 	# Create iPXE script to boot boot.efi directly
+	# 	cat >"$http_dir/boot.ipxe" <<'EOF'
+	# #!ipxe
+	# dhcp
+	# set base-url http://10.0.2.2:8080
+	# kernel ${base-url}/vmlinuz gl.ovl=/:tmpfs gl.live=1 ip=dhcp console=ttyS0 console=tty0 earlyprintk=ttyS0 consoleblank=0
+	# initrd ${base-url}/initrd.unified
+	# boot
+	# EOF
+	# else
+	echo "✅ Using traditional vmlinuz/initrd boot via iPXE"
+	# Create iPXE script for traditional vmlinuz/initrd boot
+	cat >"$http_dir/boot.ipxe" <<'EOF'
+#!ipxe
+dhcp
+set base-url http://10.0.2.2:8080
+kernel ${base-url}/vmlinuz gl.ovl=/:tmpfs gl.url=${base-url}/root.squashfs gl.live=1 ip=dhcp console=ttyS0 console=tty0 earlyprintk=ttyS0 consoleblank=0
+initrd ${base-url}/initrd
+boot
+EOF
+	# fi
+
+	# Start HTTP server for serving the files
+	python3 -m http.server 8080 --directory "$http_dir" >/dev/null 2>&1 &
+	http_pid=$!
+
+	# Store HTTP server PID for cleanup
+	pxe_http_pid=$http_pid
+
+	if ((ssh)); then
+		qemu_opts+=(
+			-netdev "user,id=net0,hostfwd=tcp::2222-:22,tftp=$http_dir,bootfile=boot.ipxe"
+		)
+	else
+		qemu_opts+=(
+			-netdev "user,id=net0,tftp=$http_dir,bootfile=boot.ipxe"
+		)
+	fi
+
+elif ((ssh)); then
+	if ((is_openstack)); then
+		qemu_opts+=(
+			-netdev "user,id=net0,net=169.254.169.0/24,dhcpstart=169.254.169.9,hostfwd=tcp::2222-:22,guestfwd=tcp:169.254.169.254:80-cmd:socat - TCP:127.0.0.1:8181"
+		)
+	else
+		qemu_opts+=(
+			-netdev "user,id=net0,hostfwd=tcp::2222-:22"
+		)
+	fi
 else
-	qemu_opts+=(
-		-netdev "user,id=net0"
-	)
+	if ((is_openstack)); then
+		qemu_opts+=(
+			-netdev "user,id=net0,net=169.254.169.0/24,dhcpstart=169.254.169.9,guestfwd=tcp:169.254.169.254:80-cmd:socat - TCP:127.0.0.1:8181"
+		)
+	else
+		qemu_opts+=(
+			-netdev "user,id=net0"
+		)
+	fi
 fi
 
 echo "🚀  starting test VM"
@@ -233,4 +395,6 @@ else
 	"qemu-system-$arch" "${qemu_opts[@]}" | stdbuf -i0 -o0 sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g'
 	cat "$tmpdir/serial.log"
 fi
+
+# TODO: find a better way to check if the tests failed
 ! (tail -n1 "$tmpdir/serial.log" | grep failed >/dev/null)

@@ -72,6 +72,6 @@ variable "provider_vars" {
     boot_mode          = optional(string)
     net_cidr           = optional(string, "10.0.0.0/16")
     subnet_cidr = optional(string, "10.0.1.0/24")
-    ssh_user = optional(string, "gardenlinux")
+    ssh_user = optional(string, "admin")
   })
 }

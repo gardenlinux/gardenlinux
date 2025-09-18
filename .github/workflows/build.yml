@@ -3,33 +3,33 @@ on:
   workflow_call:
     inputs:
       version:
-        description: 'Garden Linux version'
+        description: "Garden Linux version"
         type: string
         default: today
       target:
         type: string
         default: dev
-      flavors_parse_params:
-        description: 'Run bin/parse_flavors.py with these parameters'
+      flavors_parse_params_test:
+        description: "Run bin/parse_flavors.py with these parameters"
         default: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
         type: string
       flavors_matrix:
-        description: 'Already generated GitHub workflow flavors matrix'
+        description: "Already generated GitHub workflow flavors matrix"
         type: string
       platform_test_tag:
         description: 'Tag to run platform-test containers. "latest" or GL version. Tag must be available in `ghcr.io/gardenlinux/gardenlinux/platform-test-*`'
         type: string
         default: latest
       platform_test_build:
-        description: 'Run platform-test image build.'
+        description: "Run platform-test image build."
         type: boolean
         default: true
-      bare_flavors_parse_params:
-        description: 'Run bin/parse_flavors.py with these parameters for bare flavors'
+      flavors_parse_params_test_bare:
+        description: "Run bin/parse_flavors.py with these parameters for bare flavors"
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
         type: string
       fail_fast:
-        description: 'Cancel workflow run on first error'
+        description: "Cancel workflow run on first error"
         type: boolean
         default: false
     secrets:
@@ -82,10 +82,10 @@ jobs:
     name: Generate flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
-      flags: ${{ inputs.flavors_parse_params }}
+      flags: ${{ inputs.flavors_parse_params_test }}
       flavors_matrix: ${{ inputs.flavors_matrix }}
   flavors:
-    needs: [ bootstrap, flavors_matrix, requirements ]
+    needs: [bootstrap, flavors_matrix, requirements]
     name: Build flavors
     strategy:
       matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix ) }}
@@ -102,7 +102,7 @@ jobs:
       id-token: write
       actions: write    
   kmodbuild_container:
-    needs: [ flavors, requirements ]
+    needs: [flavors, requirements]
     name: Build kernel module build dev container
     uses: ./.github/workflows/build_kmodbuild_container.yml
     with:
@@ -113,9 +113,9 @@ jobs:
     name: Generate bare flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
-      flags: ${{ inputs.bare_flavors_parse_params }}
+      flags: ${{ inputs.flavors_parse_params_test_bare }}
   bare_flavors:
-    needs: [ bootstrap, bare_flavors_matrix, requirements ]
+    needs: [bootstrap, bare_flavors_matrix, requirements]
     name: Build bare flavors
     strategy:
       matrix: ${{ fromJson(needs.bare_flavors_matrix.outputs.matrix) }}
@@ -130,7 +130,7 @@ jobs:
     permissions:
       actions: write    
   upload_flavor_version_data:
-    needs: [ requirements, flavors ]
+    needs: [requirements, flavors]
     name: Store flavor version data
     runs-on: ubuntu-24.04
     permissions:

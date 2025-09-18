@@ -1,4 +1,4 @@
-name: 'Publish to S3'
+name: "Publish to S3"
 on:
   workflow_dispatch:
     inputs:
@@ -7,8 +7,8 @@ on:
         type: number
         required: true
   workflow_run:
-    workflows: [ 'Build and publish a release', 'nightly' ]
-    types: [ 'completed' ]
+    workflows: ["Build and publish a release", "nightly"]
+    types: ["completed"]
 jobs:
   workflow_data:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.conclusion == 'success' }}
@@ -18,7 +18,7 @@ jobs:
       run_id: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id || github.event.workflow_run.id }}
   workflow_data_artifact:
     name: Publish parent workflow-data artifact
-    needs: [ workflow_data ]
+    needs: [workflow_data]
     runs-on: ubuntu-24.04
     permissions:
       actions: write
@@ -33,7 +33,7 @@ jobs:
         with:
           name: parent-workflow-data
           overwrite: true
-          path: 'workflow_data.json'
+          path: "workflow_data.json"
   trustedboot_flavors_supported_matrix:
     needs: workflow_data
     name: Generate flavors matrix for trustedboot
@@ -41,9 +41,9 @@ jobs:
     with:
       flags: '--include-only "*trustedboot*" --no-arch --json-by-arch'
   trustedboot_flavors_matrix:
-    needs: [ trustedboot_flavors_supported_matrix, workflow_data ]
+    needs: [trustedboot_flavors_supported_matrix, workflow_data]
     name: Intersect matrix supporting trustedboot
-    runs-on: 'ubuntu-24.04'
+    runs-on: "ubuntu-24.04"
     defaults:
       run:
         shell: bash
@@ -68,9 +68,9 @@ jobs:
 
             core.setOutput("flavors_matrix", matrix);
   non_trustedboot_flavors_matrix:
-    needs: [ trustedboot_flavors_supported_matrix, workflow_data ]
+    needs: [trustedboot_flavors_supported_matrix, workflow_data]
     name: Exclude matrix of flavors supporting trustedboot
-    runs-on: 'ubuntu-24.04'
+    runs-on: "ubuntu-24.04"
     defaults:
       run:
         shell: bash
@@ -95,7 +95,7 @@ jobs:
 
             core.setOutput("flavors_matrix", matrix);
   upload_trustedboot_flavors_to_s3:
-    needs: [ trustedboot_flavors_matrix, workflow_data ]
+    needs: [trustedboot_flavors_matrix, workflow_data]
     name: Upload flavors supporting trustedboot to S3
     permissions:
       id-token: write
@@ -112,7 +112,7 @@ jobs:
       aws_session: ${{ secrets.AWS_OIDC_SESSION }}
       aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
   upload_trustedboot_flavors_to_s3_china:
-    needs: [ trustedboot_flavors_matrix, workflow_data ]
+    needs: [trustedboot_flavors_matrix, workflow_data]
     name: Upload flavors supporting trustedboot to S3 (China)
     permissions:
       id-token: write
@@ -129,7 +129,7 @@ jobs:
       aws_session: ${{ secrets.AWS_CN_OIDC_SESSION }}
       aws_s3_bucket: ${{ secrets.AWS_CN_S3_BUCKET }}
   upload_non_trustedboot_flavors_to_s3:
-    needs: [ non_trustedboot_flavors_matrix, workflow_data ]
+    needs: [non_trustedboot_flavors_matrix, workflow_data]
     name: Upload flavors not supporting trustedboot to S3
     permissions:
       id-token: write
@@ -145,7 +145,7 @@ jobs:
       aws_session: ${{ secrets.AWS_OIDC_SESSION }}
       aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
   upload_non_trustedboot_flavors_to_s3_china:
-    needs: [ non_trustedboot_flavors_matrix, workflow_data ]
+    needs: [non_trustedboot_flavors_matrix, workflow_data]
     name: Upload flavors not supporting trustedboot to S3 (China)
     permissions:
       id-token: write
@@ -161,7 +161,12 @@ jobs:
       aws_session: ${{ secrets.AWS_CN_OIDC_SESSION }}
       aws_s3_bucket: ${{ secrets.AWS_CN_S3_BUCKET }}
   glrd:
-    needs: [ workflow_data, upload_trustedboot_flavors_to_s3, upload_non_trustedboot_flavors_to_s3 ]
+    needs:
+      [
+        workflow_data,
+        upload_trustedboot_flavors_to_s3,
+        upload_non_trustedboot_flavors_to_s3,
+      ]
     name: create GLRD release
     permissions:
       id-token: write
@@ -189,9 +194,16 @@ jobs:
         with:
           cmd: glrd --type nightly --latest
   publish_retry:
-    needs: [ upload_trustedboot_flavors_to_s3, upload_trustedboot_flavors_to_s3_china, upload_non_trustedboot_flavors_to_s3, upload_non_trustedboot_flavors_to_s3_china, glrd ]
+    needs:
+      [
+        upload_trustedboot_flavors_to_s3,
+        upload_trustedboot_flavors_to_s3_china,
+        upload_non_trustedboot_flavors_to_s3,
+        upload_non_trustedboot_flavors_to_s3_china,
+        glrd,
+      ]
     if: ${{ failure() && ( needs.upload_trustedboot_flavors_to_s3.result == 'failure' || needs.upload_trustedboot_flavors_to_s3_china.result == 'failure' || needs.upload_non_trustedboot_flavors_to_s3.result == 'failure' || needs.upload_non_trustedboot_flavors_to_s3_china.result == 'failure' || needs.glrd.result == 'failure' ) }}
-    name: 'Retry checkpoint: Publish to S3'
+    name: "Retry checkpoint: Publish to S3"
     runs-on: ubuntu-24.04
     permissions:
       actions: write
