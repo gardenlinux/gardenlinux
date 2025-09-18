@@ -1,8 +1,8 @@
 description: "image suitable for using with [lima](https://lima-vm.io)"
-type: flag
+type: platform
 features:
   include:
-    - kvm
+    - cloud
   exclude:
     - sap
     - firewall
