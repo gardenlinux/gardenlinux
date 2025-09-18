@@ -2,9 +2,8 @@ import pytest
 from plugins.containerd import CtrRunner
 
 TEST_IMAGES = [
-    "ghcr.io/gardenlinux/gardenlinux:latest", # Github Container Registry, https://github.com/orgs/gardenlinux/packages?ecosystem=container
-    "docker.io/library/debian:latest",        # Docker Hub, https://hub.docker.com/_/debian
-    "public.ecr.aws/debian/debian:latest",    # AWS ECR, https://gallery.ecr.aws/debian/debian
+    "docker.io/library/busybox:latest",                       # Docker Hub, https://hub.docker.com/_/busybox
+    "public.ecr.aws/docker/library/busybox:unstable-uclibc",  # AWS ECR, https://gallery.ecr.aws/docker/library/busybox
 ]
 
 @pytest.mark.booted(reason="Container tests require systemd")
