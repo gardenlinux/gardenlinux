@@ -1,6 +1,9 @@
 import pytest
 from plugins.shell import ShellRunner
+from plugins.dpkg import Dpkg
+from plugins.module import Module
 import json
+import os
 
 # Define variables for the IP address, NVMe device, and subsystem name
 IP_ADDRESS="127.0.0.1"
@@ -10,17 +13,28 @@ PORT_NUMBER="4420"
 TRTYPE="tcp"
 ADRFAM="ipv4"
 
+REQUIRED_NVME_MODULE = [
+            {"nvme_module": "nvme_tcp", "status": None},
+            {"nvme_module": "nvmet-tcp", "status": None},
+            {"nvme_module": "nvmet", "status": None},
+            ]
 @pytest.fixture
-def nvme_device(shell: ShellRunner):
+def nvme_device(shell: ShellRunner, dpkg: Dpkg, module: Module):
+    mount_package_installed = False
     shell(f"truncate -s 512M {NVME_DEVICE}")
-    shell("DEBIAN_FRONTEND=noninteractive apt-get install -y mount")
+    if not dpkg.package_is_installed("mount"):
+        mount_package_installed = True;
+        shell("DEBIAN_FRONTEND=noninteractive apt-get install -y mount")
     shell(f"losetup -fP {NVME_DEVICE}")
 
-    # Load necessary kernel modules
-    shell("modprobe nvme_tcp")
-    shell("modprobe nvmet")
-    shell("modprobe nvmet-tcp")
-
+    for entry in REQUIRED_NVME_MODULE:
+        mod_name = entry["nvme_module"]
+        if not module.is_module_loaded(mod_name):
+            module.load_module(mod_name)
+            entry["status"] = "Loaded"
+    port = 1
+    while os.path.exists(os.path.join("/sys/kernel/config/nvmet/ports", str(port))):
+        port += 1
     # Create the NVMe subsystem directory
     shell(f"mkdir -p /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}")
 
@@ -28,19 +42,19 @@ def nvme_device(shell: ShellRunner):
     shell(f"echo 1 | sudo tee /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/attr_allow_any_host")
 
     # Create and configure the namespace
-    shell(f"mkdir -p /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/namespaces/1")
-    shell(f"echo -n {NVME_DEVICE} | tee /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/namespaces/1/device_path")
-    shell(f"echo 1 | tee /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/namespaces/1/enable")
+    shell(f"mkdir -p /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/namespaces/{port}")
+    shell(f"echo -n {NVME_DEVICE} | tee /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/namespaces/{port}/device_path")
+    shell(f"echo 1 | tee /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/namespaces/{port}/enable")
 
     # Configure the NVMe-oF TCP port
-    shell("mkdir -p /sys/kernel/config/nvmet/ports/1")
-    shell(f"echo {IP_ADDRESS} | tee /sys/kernel/config/nvmet/ports/1/addr_traddr")
-    shell(f"echo {TRTYPE} | tee /sys/kernel/config/nvmet/ports/1/addr_trtype")
-    shell(f"echo {PORT_NUMBER} | tee /sys/kernel/config/nvmet/ports/1/addr_trsvcid")
-    shell(f"echo {ADRFAM} | tee /sys/kernel/config/nvmet/ports/1/addr_adrfam")
+    shell(f"mkdir -p /sys/kernel/config/nvmet/ports/{port}")
+    shell(f"echo {IP_ADDRESS} | tee /sys/kernel/config/nvmet/ports/{port}/addr_traddr")
+    shell(f"echo {TRTYPE} | tee /sys/kernel/config/nvmet/ports/{port}/addr_trtype")
+    shell(f"echo {PORT_NUMBER} | tee /sys/kernel/config/nvmet/ports/{port}/addr_trsvcid")
+    shell(f"echo {ADRFAM} | tee /sys/kernel/config/nvmet/ports/{port}/addr_adrfam")
 
     # Link the subsystem to the port
-    shell(f"ln -s /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME} /sys/kernel/config/nvmet/ports/1/subsystems/{SUBSYSTEM_NAME}")
+    shell(f"ln -s /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME} /sys/kernel/config/nvmet/ports/{port}/subsystems/{SUBSYSTEM_NAME}")
 
     shell("nvme connect -t tcp -n testnqn -a 127.0.0.1 -s 4420")
     output = shell("nvme list -o json", capture_output=True)
@@ -56,13 +70,18 @@ def nvme_device(shell: ShellRunner):
     print("Teardown nvme device and clean up")
     shell("umount /mnt/nvme", ignore_exit_code=True)
     shell("rmdir /mnt/nvme", ignore_exit_code=True)
-    shell("nvme disconnect-all", ignore_exit_code=True)
+    shell(f"nvme disconnect -n {SUBSYSTEM_NAME}", ignore_exit_code=True)
     shell(f"rm {NVME_DEVICE}", ignore_exit_code=True)
-    shell(f"echo 0 | sudo tee /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/namespaces/1/enable")
+    shell(f"echo 0 | sudo tee /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/namespaces/{port}/enable")
     shell(f"echo 0 | sudo tee /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/attr_allow_any_host")
-    shell(f"rmdir /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/namespaces/1")
-    shell("rm -r /sys/kernel/config/nvmet/ports/1", ignore_exit_code=True)
+    shell(f"rmdir /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/namespaces/{port}")
+    shell(f"unlink /sys/kernel/config/nvmet/ports/{port}/subsystems/{SUBSYSTEM_NAME}", ignore_exit_code=True)
     shell(f"rmdir /sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}")
-    shell("rmdir /sys/kernel/config/nvmet/ports/1", ignore_exit_code=True)
-    shell("rmmod nvmet_tcp", ignore_exit_code=True)
-    shell("rmmod nvmet", ignore_exit_code=True)
+    shell(f"rmdir /sys/kernel/config/nvmet/ports/{port}", ignore_exit_code=True)
+    for entry in REQUIRED_NVME_MODULE:
+        mod_name = entry["nvme_module"]
+        if entry["status"] == "Loaded":
+            module.unload_module(mod_name)
+            entry["status"] = "None"
+    if mount_package_installed == True:
+        shell("DEBIAN_FRONTEND=noninteractive apt remove mount")
