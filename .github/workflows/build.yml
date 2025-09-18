@@ -32,6 +32,9 @@ on:
         description: 'Cancel workflow run on first error'
         type: boolean
         default: false
+      prefix:
+        type: string
+        default: ''
     secrets:
       aws_region:
         required: false
@@ -55,6 +58,7 @@ jobs:
     with:
       version: ${{ inputs.version == '' && 'now' || inputs.version }}
       target: ${{ inputs.target }}
+      prefix: ${{ inputs.prefix }}
     permissions:
       actions: write # TODO: 3215 elevated permissions for included workflow
   bootstrap:
@@ -64,6 +68,7 @@ jobs:
     with:
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
+      prefix: ${{ inputs.prefix }}
     permissions:
       actions: write
   platform_test_image:
@@ -75,6 +80,7 @@ jobs:
       platforms: '["tofu"]'
       platform_test_tag: ${{ inputs.platform_test_tag }}
       build: ${{ inputs.platform_test_build }}
+      prefix: ${{ inputs.prefix }}
     permissions:
       packages: write # TODO: 3215 elevated permissions for included workflow
       actions: write  # TODO: 3215 elevated permissions for included workflow
@@ -96,6 +102,7 @@ jobs:
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
       signing_env: ${{ needs.requirements.outputs.signing_env }}
+      prefix: ${{ inputs.prefix }}
     uses: ./.github/workflows/build_flavor.yml
     secrets: inherit
     permissions:
@@ -107,6 +114,7 @@ jobs:
     uses: ./.github/workflows/build_kmodbuild_container.yml
     with:
       version: ${{ needs.requirements.outputs.version }}
+      prefix: ${{ inputs.prefix }}
     permissions:
       actions: write      
   bare_flavors_matrix:
@@ -125,6 +133,7 @@ jobs:
       bare_flavor: ${{ matrix.flavor }}
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
+      prefix: ${{ inputs.prefix }}
     uses: ./.github/workflows/build_bare_flavor.yml
     secrets: inherit
     permissions:
@@ -145,6 +154,6 @@ jobs:
           }' '.' > flavor_version_data.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         with:
-          name: flavor-version-data
+          name: ${{ inputs.prefix }}flavor-version-data
           path: flavor_version_data.json
           if-no-files-found: error
