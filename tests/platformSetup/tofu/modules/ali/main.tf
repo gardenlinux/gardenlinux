@@ -141,7 +141,7 @@ resource "alicloud_vswitch" "subnet" {
 }
 
 resource "alicloud_security_group" "sg" {
-  name   = local.fw_name
+  security_group_name = local.fw_name
   vpc_id = alicloud_vpc.net.id
 
   tags = merge(
