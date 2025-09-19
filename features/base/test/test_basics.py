@@ -58,8 +58,6 @@ def test_startup_time(client, non_chroot, non_kvm, non_azure):
         time_kernel = str(float(time_kernel[:-2]) / 1000.0) + "s"
     if len(time_initrd) >2 and time_initrd[-2:] == "ms":
         time_initrd = str(float(time_initrd[:-2]) / 1000.0) + "s"
-    if len(time_userspace) >2 and time_userspace[-2:] == "ms":
-        time_userspace = str(float(time_userspace[:-2]) / 1000.0) + "s"
     tf_kernel = float(time_kernel[:-1]) + float(time_initrd[:-1])
     tf_userspace = float(time_userspace[:-1])
     assert tf_kernel < tolerated_kernel_time, f"startup time in kernel space too long: {tf_kernel} seconds =  but only {tolerated_kernel_time} tolerated."
