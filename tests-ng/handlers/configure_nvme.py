@@ -15,7 +15,7 @@ ADRFAM="ipv4"
 
 REQUIRED_NVME_MODULE = [
             {"nvme_module": "nvme_tcp", "status": None},
-            {"nvme_module": "nvmet-tcp", "status": None},
+            {"nvme_module": "nvmet_tcp", "status": None},
             {"nvme_module": "nvmet", "status": None},
             ]
 @pytest.fixture

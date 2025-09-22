@@ -6,7 +6,7 @@ class Module:
         self._shell = shell
 
     def is_module_loaded(self, module: str) -> bool:
-        result = self._shell(f"lsmod | grep {module}", capture_output=True, ignore_exit_code=True)
+        result = self._shell(f"lsmod | grep ^{module}", capture_output=True, ignore_exit_code=True)
         return result.returncode == 0
     def load_module(self, module: str) -> bool:
         result = self._shell(f"modprobe {module}", capture_output=True, ignore_exit_code=False)
