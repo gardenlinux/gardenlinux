@@ -675,7 +675,7 @@ def write_to_release_id_file(release_id):
         print(f"Could not create .github_release_id file: {e}")
         sys.exit(1)
 
-def create_github_release(owner, repo, tag, commitish, body):
+def create_github_release(owner, repo, tag, commitish, latest, body):
 
     token = os.environ.get('GITHUB_TOKEN')
     if not token:
@@ -692,7 +692,8 @@ def create_github_release(owner, repo, tag, commitish, body):
         'name': tag,
         'body': body,
         'draft': False,
-        'prerelease': False
+        'prerelease': False,
+        'make_latest': latest
     }
 
     response = requests.post(f'https://api.github.com/repos/{owner}/{repo}/releases', headers=headers, data=json.dumps(data))
@@ -715,6 +716,7 @@ def main():
     create_parser.add_argument('--repo', default="gardenlinux")
     create_parser.add_argument('--tag', required=True)
     create_parser.add_argument('--commit', required=True)
+    create_parser.add_argument('--latest', action='store_true', default=False)
     create_parser.add_argument('--dry-run', action='store_true', default=False)
 
     upload_parser = subparsers.add_parser('upload')
@@ -728,10 +730,12 @@ def main():
     if args.command == 'create':
         body = create_github_release_notes(args.tag, args.commit)
         if not args.dry_run:
-            release_id = create_github_release(args.owner, args.repo, args.tag, args.commit, body)
+            release_id = create_github_release(args.owner, args.repo, args.tag, args.commit, args.latest, body)
             write_to_release_id_file(f"{release_id}")
             print(f"Release created with ID: {release_id}")
         else:
+            print("Dry Run ...")
+            print("This release would be created:")
             print(body)
     elif args.command == 'upload':
         # Implementation for 'upload' command

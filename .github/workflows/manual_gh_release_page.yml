@@ -16,7 +16,7 @@ on:
       is_latest:
         default: false
         type: boolean
-        description: "Tag as gardenlinux:latest"
+        description: "Tag Github Release and OCI image as latest"
       commit:
         required: true
         type: string
@@ -108,7 +108,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
+          if [[ "${{ inputs.is_latest }}" == "true" ]]; then
+            .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")" --latest
+          else
+            .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
+          fi
       - uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           key: release-${{ github.run_id }}
