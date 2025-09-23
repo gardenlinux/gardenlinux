@@ -1,2 +1,8 @@
 cloud-init
+dosfstools
+dmidecode
+efibootmgr
+efitools
+openssh-server
+qemu-guest-agent
 sshfs
