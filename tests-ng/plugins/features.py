@@ -1,3 +1,4 @@
+import platform
 from typing import List
 
 import boolean
@@ -7,11 +8,25 @@ booleanAlgebra = boolean.BooleanAlgebra()
 
 features = set()
 
-with open("/etc/os-release") as os_release:
-    for line in os_release:
-        (key, value) = line.split("=", 1)
-        if key == "GARDENLINUX_FEATURES":
-            features = set([feature.strip() for feature in value.split(",")])
+
+def setup_gardenlinux_features() -> set[str]:
+    """
+    Collects Garden Linux features and architecture information.
+    """
+    features = set[str]()
+    with open("/etc/os-release") as os_release:
+        for line in os_release:
+            (key, value) = line.split("=", 1)
+            if key == "GARDENLINUX_FEATURES":
+                features = set([feature.strip() for feature in value.split(",")])
+
+    # add architecture features
+    features.add(platform.machine())
+
+    return features
+
+
+features = setup_gardenlinux_features()
 
 
 def check_feature_condition(condition: str):
