@@ -16,6 +16,8 @@ class PamEntry:
     password [success=1 default=ignore] pam_unix.so obscure sha512
     ^type^   ^control^^^^^^^^^^^^^^^^^^ ^module^^^^ ^options^^^^^^
 
+    @include    common-password
+    ^directive^ ^include_target^^^
 
     :param type_: PAM type (auth/account/password/session)
     :type type_: str
@@ -26,12 +28,16 @@ class PamEntry:
     :type module: str
     :param options: list of module arguments (tokens after the module name)
     :type options: List[str]
+    :param include_target: target of an @include directive, e.g 'common-password'
+                           None if this is a regular entry.
+    :type include_target: Optional[str]
     """
 
     type_: str
     control: str
     module: str
     options: List[str]
+    include_target: Optional[str] = None
 
     @property
     def control_dict(self) -> Dict[str, str]:
@@ -69,6 +75,10 @@ class PamEntry:
 
 
 class PamConfig:
+    """
+    Represents the entire PAM config.
+    """
+
     def __init__(self, path: Path):
         if not path.exists():
             raise FileNotFoundError(f"PAM config file at '{path}' not found!")
@@ -91,6 +101,19 @@ class PamConfig:
         for line in self.lines:
             stripped = line.lstrip()
             if not stripped or stripped.startswith("#"):
+                continue
+
+            if stripped.startswith("@include"):
+                _, target = stripped.split(maxsplit=1)
+                entries.append(
+                    PamEntry(
+                        type_="",
+                        control="",
+                        module="",
+                        options=[],
+                        include_target=target,
+                    )
+                )
                 continue
 
             # Split into tokens: type, control, module, args
@@ -145,6 +168,7 @@ class PamConfig:
         arg_contains: Optional[List[str]] = None,
         success: Optional[str] = None,
         default: Optional[str] = None,
+        include_target: Optional[str] = None,
     ) -> List[PamEntry]:
         """
         Return entries filtered by the provided criteria.
@@ -163,6 +187,8 @@ class PamConfig:
         :type success: Optional[str]
         :param default: match control_dict.get('default') provided value
         :type default: Optional[str]
+        :param include_target: filter by exact match for the @include target.
+        :type include_target: Optional[str]
         """
         results = self.entries
 
@@ -198,6 +224,11 @@ class PamConfig:
                 entry
                 for entry in results
                 if entry.control_dict.get("default") == default
+            ]
+
+        if include_target is not None:
+            results = [
+                entry for entry in results if entry.include_target == include_target
             ]
 
         return results
