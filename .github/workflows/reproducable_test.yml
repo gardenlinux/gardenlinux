@@ -52,6 +52,7 @@ jobs:
     permissions:
       id-token: write
       actions: write
+      packages: write
     with:
       version: now
       target: nightly
@@ -76,6 +77,7 @@ jobs:
     permissions:
       id-token: write
       actions: write
+      packages: write
     with:
       version: now
       target: nightly

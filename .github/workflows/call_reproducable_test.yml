@@ -12,6 +12,7 @@ jobs:
     permissions:
       actions: write
       id-token: write
+      packages: write
     with:
       nightly: "Two nightly builds"
       run_number1: "#2363"
