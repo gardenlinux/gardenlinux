@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -45,22 +46,39 @@ class PamEntry:
         Parse bracketed control expressions into a dict.
         Example:
             '[success=1 default=ignore]' -> {'success': '1', 'default': 'ignore'}
+
+        Multiple bracketed expressions are folded into the same dict.
+        Example:
+            '[success=1 default=ignore] [user_unknown=ignore]' -> {'success': '1', 'default': 'ignore', 'user_unknown': 'ignore'}
+
+        Handles escaped brackets (\]) as literals.
         If control is a simple token (e.g. 'required'), return {}
         """
         control_line = self.control.strip()
-        if control_line.startswith("[") and control_line.endswith("]"):
-            inner = control_line[1:-1].strip()
+        result: Dict[str, str] = {}
+
+        # Find all bracketed control expressions like [success=1 default=ignore]
+        # PAM allows multiple such expressions, and `]` can be escaped as `\]`.
+        # Example: "[success=1 default=ignore] [some\]thing=ok]"
+        #
+        # Regex structure:
+        #   \[           -> match literal '['
+        #   (.*?)        -> capture everything inside until...
+        #   (?<!\\)\]    -> a ']' that is NOT preceded by a backslash
+        for match in re.finditer(r"\[(.*?)(?<!\\)\]", control_line):
+            # Extract content between brackets and replace any escaped brackets
+            inner = match.group(1).replace(r"\]", "]").strip()
             if not inner:
-                return {}  # If expression empty, return empty dict
-            result: Dict[str, str] = {}
+                continue  # Skip empty bracketed groups like '[]'
+
+            # Split into tokens
             for token in inner.split():
                 if "=" in token:
                     key, value = token.split("=", 1)
                     result[key] = value
                 else:
                     result[token] = ""  # presence-only token
-            return result
-        return {}
+        return result
 
     @property
     def hash_algo(self) -> Optional[str]:
