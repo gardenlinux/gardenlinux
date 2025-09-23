@@ -83,7 +83,8 @@ if ! cmp "A/$basefile_a" "B/$basefile_b" > /dev/null; then
 
     echo "$filtered_files" > "$1-diff"
 
- 	exit 1
+    [[ $filtered_files = '' ]]
+ 	exit $?
 else
     # Builds are the same
     echo "" > "$1-diff"
