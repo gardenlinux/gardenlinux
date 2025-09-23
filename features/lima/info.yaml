@@ -3,11 +3,8 @@ type: platform
 features:
   include:
     - cloud
-    - _ignite
   exclude:
     - sap
     - firewall
     - log
-    - ssh
-    - _ignite
     - _selinux

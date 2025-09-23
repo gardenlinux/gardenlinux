@@ -1,5 +1,6 @@
 cloud-init
 dosfstools
+dmidecode
 efibootmgr
 efitools
 openssh-server
