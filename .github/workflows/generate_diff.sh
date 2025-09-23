@@ -70,19 +70,18 @@ if ! cmp "A/$basefile_a" "B/$basefile_b" > /dev/null; then
 
     files=$(diff -qrN "$unpacked_a" "$unpacked_b" 2> /dev/null \
     | grep differ \
-    | perl -0777 -pe "s/(?:[^\/\n]*\/){$depth}([^\s]*)[^\n]*/\/\1/g" \
-    | "${sedcommands[@]}" || true)
+    | perl -0777 -pe "s/(?:[^\/\n]*\/){$depth}([^\s]*)[^\n]*/\/\1/g" || true)
 
-    
+    filtered_files=$(echo "$files" | "${sedcommands[@]}")
 
-    if [[ $files = '' ]]; then
+    if [[ $files != '' && $filtered_files = '' ]]; then
          # All differences are whitelisted
          echo "whitelist" > "$1-diff"
 
          exit 0
     fi
 
-    echo "$files" > "$1-diff"
+    echo "$filtered_files" > "$1-diff"
 
  	exit 1
 else
