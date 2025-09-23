@@ -95,6 +95,33 @@ class PamEntry:
 class PamConfig:
     """
     Represents the entire PAM config.
+
+    Reads the file and parses all non-comment and non-empty lines into
+    `PamEntry` objects and provides helper methods to filter and query
+    entries.
+
+    Example PAM line:
+        password [success=1 default=ignore] pam_unix.so obscure sha512
+        ^type^   ^control^^^^^^^^^^^^^^^^^^ ^module^^^^ ^options^^^^^^
+
+    Supports regular PAM entries, bracketed control expressions,
+    simple control tokens like 'required' or 'sufficient' and
+    include directives via '@include <file>' lines.
+
+    :param path: Path to the PAM configuration file
+    :type path: Path
+    :raises FileNotFoundError: if the provided path does not exist
+
+    Attributes:
+        path (Path): Path to the PAM config
+        lines (List[str]): Raw lines read from the file
+        entries (List[PamEntries]): Parsed PAM Entries
+
+    Example usage:
+        pam = PamConfig(Path("/etc/pam.d/common-password"))
+        password_entries = pam.find_entries(type_="password")
+        for entry in password_entries:
+            print(entry.hash_algo)
     """
 
     def __init__(self, path: Path):
@@ -116,6 +143,7 @@ class PamConfig:
         e.g. '[success=1 default=ignore]'.
         """
         entries: List[PamEntry] = []
+
         for line in self.lines:
             stripped = line.lstrip()
             if not stripped or stripped.startswith("#"):
