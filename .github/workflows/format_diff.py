@@ -192,7 +192,7 @@ def dropdown(items):
     if len(items) <= 10:
         return "<br>".join([f"`{item}`" for item in sorted(items)])
     else:
-        for first in items:
+        for first in sorted(items):
             return f"<details><summary>{first}...</summary>" + "<br>".join([f"`{item}`" for item in sorted(items)]) + "</details>"
 
 if len(missing_flavors) > 0:

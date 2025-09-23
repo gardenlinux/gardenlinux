@@ -14,9 +14,7 @@ jobs:
       id-token: write
       packages: write
     with:
-      nightly: "Two nightly builds"
-      run_number1: "#2363"
-      run_number2: "#2364"
+      nightly: "One new build with latest nightly"
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_kms_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
