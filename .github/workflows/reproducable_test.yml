@@ -51,6 +51,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     permissions:
       id-token: write
+      actions: write
     with:
       version: now
       target: nightly
@@ -74,6 +75,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     permissions:
       id-token: write
+      actions: write
     with:
       version: now
       target: nightly

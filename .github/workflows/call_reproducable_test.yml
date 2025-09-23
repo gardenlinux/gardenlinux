@@ -10,7 +10,7 @@ jobs:
   call:
     uses: ./.github/workflows/reproducable_test.yml
     permissions:
-      actions: read
+      actions: write
       id-token: write
     with:
       nightly: "Two nightly builds"
