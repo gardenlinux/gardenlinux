@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-set -euoE pipefail
-
-which syslinux &> /dev/null || exit 0
-
-/usr/local/sbin/update-syslinux
