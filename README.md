@@ -59,9 +59,12 @@ To create a patch release, simply checkout this tag, adjust the `package-release
 
 ```
 git fetch --tags
-git checkout <GL_VERSION>.0
+git checkout [-b] rel-<GL_VERSION>
 # modify package-releases and package-imports as needed
 git commit
+# push to release branch
+git push origin rel-<GL_VERSION>
+# tag and push tag
 git tag <GL_VERSION>.1
 git push origin <GL_VERSION>.1
 ```

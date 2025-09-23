@@ -9,6 +9,7 @@ auditd
 awscli
 azure-vm-utils
 binutils
+bridge-utils
 bsdextrautils
 btrfs-progs
 build-essential
@@ -45,6 +46,7 @@ elfutils
 ethtool
 execline
 fatresize
+fio
 flex
 gcc
 gdb
@@ -57,13 +59,17 @@ google-guest-agent
 haveged
 hdparm
 inetutils-ping
+iperf
+iperf3
 ipmitool
 iptables
+iptraf-ng
 iputils-arping
 ipvsadm
 isolinux
 jq
 kernel-wedge
+kdump-tools
 kexec-tools
 keyutils
 libarchive-tools
@@ -83,9 +89,11 @@ lz4
 lzip
 lzop
 make
+makedumpfile
 man-db
 mdadm
 mstflint
+mtr-tiny
 multipath-tools
 net-tools
 netcat-openbsd
@@ -113,6 +121,7 @@ pciutils
 pkexec
 podman
 polkitd
+python-is-python3
 python3-apt
 python3-cffi-backend
 python3-click
