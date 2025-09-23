@@ -1,0 +1,23 @@
+name: Call check build reproducibility
+
+# To be able to test actions on a different branch than main
+on:
+  push:
+    branches:
+      - "feat/check-reproducibility"
+
+jobs:
+  call:
+    uses: ./.github/workflows/reproducable_test.yml
+    permissions:
+      actions: read
+      id-token: write
+    with:
+      nightly: "Two nightly builds"
+      run_number1: "#2363"
+      run_number2: "#2364"
+    secrets:
+      aws_region: ${{ secrets.AWS_REGION }}
+      aws_kms_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
+      aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
+      secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}

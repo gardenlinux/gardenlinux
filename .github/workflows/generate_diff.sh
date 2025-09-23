@@ -73,12 +73,16 @@ if ! cmp "A/$basefile_a" "B/$basefile_b" > /dev/null; then
     | perl -0777 -pe "s/(?:[^\/\n]*\/){$depth}([^\s]*)[^\n]*/\/\1/g" \
     | "${sedcommands[@]}" || true)
 
-    echo "$files" > "$1-diff"
+    
 
     if [[ $files = '' ]]; then
          # All differences are whitelisted
+         echo "whitelist" > "$1-diff"
+
          exit 0
-     fi
+    fi
+
+    echo "$files" > "$1-diff"
 
  	exit 1
 else

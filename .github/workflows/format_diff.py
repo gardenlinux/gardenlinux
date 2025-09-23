@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import os
+import sys
 import yaml
+import json
 
 # This script takes the differ_files results from the reproducibility check and generates a Result.md
 # The differ_files contain paths of files which were different when building the flavor two times 
@@ -9,7 +11,12 @@ flavors = os.listdir("diffs")
 
 all = set()
 successful = []
+whitelist = []
 failed = {} # {flavor: [files...]}
+
+flavors_matrix = json.loads(sys.argv[1])
+bare_flavors_matrix = json.loads(sys.argv[2])
+expected_falvors = set([f'{variant["flavor"]}-{variant["arch"]}' for variant in (flavors_matrix["include"] + bare_flavors_matrix["include"])])
 
 for flavor in flavors:
     if flavor.endswith("-diff"):
@@ -19,8 +26,14 @@ for flavor in flavors:
         all.add(flavor[:-5])
         if content == "\n":
             successful.append(flavor[:-5])
+        elif content == "whitelist\n":
+            successful.append(flavor[:-5])
+            whitelist.append(flavor[:-5])
         else:
             failed[flavor[:-5]] = content.split("\n")[:-1]
+
+missing_flavors = expected_falvors - all
+unexpected_falvors = all - expected_falvors
 
 # Map files to flavors
 affected = {} # {file: {flavors...}}
@@ -133,11 +146,11 @@ result = """# Reproducibility Test Results
 {rows}
 """
 
-successrate = round(100 * (len(successful) / len(all)), 1)
+successrate = round(100 * (len(successful) / len(expected_falvors)), 1)
 
-emoji = "✅" if len(all) == len(successful) else ("⚠️" if successrate >= 50.0 else "❌")
+emoji = "✅" if len(expected_falvors) == len(successful) else ("⚠️" if successrate >= 50.0 else "❌")
 
-total_count = len(all)
+total_count = len(expected_falvors)
 
 problem_count = "" if len(trees) == 0 else ("\n**1** Problem detected." if len(trees) == 1 else f"\n**{len(trees)}** Problems detected.")
 
@@ -162,25 +175,39 @@ with a new build"
         if nightlys[0][2] != nightlys[1][2]:
             explanation += f"\n\n⚠️ The build used different commits: `{nightlys[1][2][:7]}` (#{nightlys[1][0]}) != `{nightlys[0][2][:7]}` (new build)"
 
+if len(whitelist) > 0:
+    explanation += "\n\n<details><summary>📃 These flavors only passed due to the nightly whitelist</summary><pre>" + "<br>".join(sorted(whitelist)) + "</pre></details>"
+
+if len(unexpected_falvors) > 0:
+    # This should never happen, but print a warning if it somehow does
+    explanation += "\n\n<details><summary>⁉️ These flavors were not expected to appear in the results, please check for errors in the workflow\
+</summary><pre>" + "<br>".join(sorted(unexpected_falvors)) + "</pre></details>"
 
 
-explanation += "" if len(all) == len(successful) else "\n\n*The mentioned features are included in every affected flavor and not included in every unaffected flavor.*"
+explanation += "" if len(expected_falvors) == len(successful) else "\n\n*The mentioned features are included in every affected flavor and not included in every unaffected flavor.*"
 
 rows = ""
 
 def dropdown(items):
     if len(items) <= 10:
-        return "<br>".join([f"`{item}`" for item in items])
+        return "<br>".join([f"`{item}`" for item in sorted(items)])
     else:
         for first in items:
-            return f"<details><summary>{first}...</summary>" + "<br>".join([f"`{item}`" for item in items]) + "</summary>"
+            return f"<details><summary>{first}...</summary>" + "<br>".join([f"`{item}`" for item in sorted(items)]) + "</details>"
+
+if len(missing_flavors) > 0:
+    row = "|❌ Workflow run did not produce any results|"
+    row += f"**{round(100 * (len(missing_flavors) / len(expected_falvors)), 1)}%** affected<br>"
+    row += dropdown(missing_flavors)
+    row += "|No analysis available|\n"
+    rows += row
 
 for files in trees:
     flavors, tree = trees[files]
     row = "|"
     row += dropdown(files)
     row += "|"
-    row += f"**{round(100 * (len(flavors) / len(all)), 1)}%** affected<br>"
+    row += f"**{round(100 * (len(flavors) / len(expected_falvors)), 1)}%** affected<br>"
     row += dropdown(flavors)
     row += "|"
     if tree == {}:
@@ -195,14 +222,14 @@ if len(successful) > 0:
     row = "|"
     row += "✅ No problems found"
     row += "|"
-    row += f"**{round(100 * (len(successful) / len(all)), 1)}%**<br>"
+    row += f"**{round(100 * (len(successful) / len(expected_falvors)), 1)}%**<br>"
     row += dropdown(successful)
     row += "|"
     row += "-"
     row += "|\n"
     rows += row
 
-if len(successful) != len(all):
+if len(successful) != len(expected_falvors):
     rows += "\n*To add affected files to the whitelist, edit the `whitelist` variable in `.github/workflows/generate_diff.sh`*"
 
 with open("Result.md", "w") as f:
