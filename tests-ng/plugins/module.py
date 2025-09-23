@@ -1,7 +1,8 @@
 import pytest
 from .shell import ShellRunner
 
-class Module:
+# This Class is used to load, unload or check the Kernel module status
+class Kernel_Module:
     def __init__(self, shell: ShellRunner):
         self._shell = shell
 
@@ -16,5 +17,5 @@ class Module:
         return result.returncode == 0
 
 @pytest.fixture
-def module(shell: ShellRunner) -> Module:
-        return Module(shell)
+def kernel_module(shell: ShellRunner) -> Kernel_Module:
+        return Kernel_Module(shell)
