@@ -1,7 +1,7 @@
 import pytest
 from plugins.shell import ShellRunner
 from plugins.dpkg import Dpkg
-from plugins.module import KernelModule
+from plugins.kernel_module import KernelModule
 import json
 import os
 from pathlib import Path
