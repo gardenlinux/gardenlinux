@@ -26,6 +26,7 @@ This directory contains the next generation testing framework for Garden Linux i
   - [Debugging Tests](#debugging-tests)
     - [Login Scripts](#login-scripts)
       - [QEMU Environment](#qemu-environment)
+        - [Debug Tests in QEMU using VS Code](#debug-tests-in-qemu-using-vs-code)
       - [Cloud Environment](#cloud-environment)
   - [Test Environment Details](#test-environment-details)
     - [Chroot Testing](#chroot-testing)
@@ -270,6 +271,32 @@ cd /run/gardenlinux-tests && ./run_tests --system-booted --allow-system-modifica
 ```
 
 **Note**: Login to QEMU VMs (on a second shell) is only possible if `--ssh --skip-cleanup` is passed. SSHD is reachable on `127.0.0.1:2222` with the user `gardenlinux`. The QEMU VM will stay open in the shell that started and can be stopped with `ctrl + c`.
+
+
+##### Debug Tests in QEMU using VS Code
+
+1. Start the vm as described in the previous section
+
+2. Configure the ssh connection for example by adding this block to `~/.ssh/config` (be sure to check if any parameter needs to be changed)
+
+```
+Host gardenlinux-qemu
+    HostName 127.0.0.1
+    Port 2222
+    User gardenlinux
+    IdentityFile ~/.ssh/id_ed25519_gl
+    UserKnownHostsFile /dev/null
+    StrictHostKeyChecking no
+    ConnectTimeout 5
+```
+
+3. Connect VS Code to the VM [as documented here](https://code.visualstudio.com/docs/remote/ssh#_connect-to-a-remote-host)
+
+4. In the connected VS Code window, open the directory `/run/gardenlinux-tests`
+
+5. Ensure the `ms-python.debugpy` extension is installed
+
+
 
 #### Cloud Environment
 
