@@ -24,7 +24,7 @@ limactl start --name gardenlinux https://images.gardenlinux.io/gardenlinux-$VERS
 
 How to build your own image:
 
-1. Build an image: `./build kvm-lima`
+1. Build an image: `./build lima`
 
 2. Create the manifest.yaml file
 
@@ -32,7 +32,7 @@ How to build your own image:
 vmType: qemu
 os: Linux
 images:
-  - location: /path/to/your/gardenlinux/.build/kvm-lima-[ARCH]-[VERSION]-[COMMIT_SHA].qcow2
+  - location: /path/to/your/gardenlinux/.build/lima-[ARCH]-[VERSION]-[COMMIT_SHA].qcow2
 
 containerd:
   system: false
