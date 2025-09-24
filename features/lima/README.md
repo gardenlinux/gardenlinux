@@ -4,9 +4,6 @@
 This feature flag produces an image suitable for using with [lima](https://lima-vm.io)
 </website-feature>
 
-For the time being, this only supports `qemu` virtual machines.
-Using `vz` is not supported.
-
 Garden Linux images for Lima are published at https://images.gardenlinux.io
 
 How to use the pre-built image:
@@ -29,7 +26,6 @@ How to build your own image:
 2. Create the manifest.yaml file
 
 ```yaml
-vmType: qemu
 os: Linux
 images:
   - location: /path/to/your/gardenlinux/.build/lima-[ARCH]-[VERSION]-[COMMIT_SHA].qcow2
