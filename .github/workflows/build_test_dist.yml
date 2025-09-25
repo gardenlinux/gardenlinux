@@ -3,7 +3,7 @@ on:
   workflow_call:
 jobs:
   test:
-    name: Build and Cache Test Distribution
+    name: Build and cache test distribution
     runs-on: "ubuntu-24.04"
     timeout-minutes: 30
     defaults:
@@ -17,7 +17,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends make curl jq unzip qemu-utils
-      - name: Build Test Distribution
+      - name: Build test distribution
         run: |
           cd tests-ng
           make -f util/build.makefile
