@@ -28,11 +28,11 @@ on:
         type: string
         default: latest
       flavors_parse_params_test:
-        description: "Run bin/flavors_parse.py with these parameters"
+        description: "Run bin/flavors_parse.py with these parameters for tests"
         default: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
         type: string
       flavors_parse_params_test_platform:
-        description: "Run bin/flavors_parse.py with these parameters"
+        description: "Run bin/flavors_parse.py with these parameters for platform tests"
         default: '--exclude "bare-*" --no-arch --json-by-arch --build --test-platform'
         type: string
       flavors_parse_params_test_bare:
@@ -144,7 +144,7 @@ jobs:
       flavors_matrix: ${{ needs.download_platform_test_flavors_matrix.outputs.matrix }}
     permissions:
       id-token: write
-      actions: write      
+      actions: write
     secrets:
       aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
       aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}

@@ -10,13 +10,13 @@ jobs:
       run:
         shell: bash
     steps:
-      - name: install dependencies
-        run: |
-          sudo apt-get update
-          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends podman make curl jq unzip qemu-utils
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends make curl jq unzip qemu-utils
       - name: Build Test Distribution
         run: |
           cd tests-ng

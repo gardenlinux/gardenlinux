@@ -66,6 +66,10 @@ jobs:
       version: ${{ needs.requirements.outputs.version }}
     permissions:
       actions: write
+  test_distribution_build:
+    needs: requirements
+    name: Build and Cache Test Distribution
+    uses: ./.github/workflows/build_test_dist.yml
   platform_test_image:
     needs: requirements
     name: Build platform-test image
@@ -100,7 +104,7 @@ jobs:
     secrets: inherit
     permissions:
       id-token: write
-      actions: write    
+      actions: write
   kmodbuild_container:
     needs: [flavors, requirements]
     name: Build kernel module build dev container
@@ -108,7 +112,7 @@ jobs:
     with:
       version: ${{ needs.requirements.outputs.version }}
     permissions:
-      actions: write      
+      actions: write
   bare_flavors_matrix:
     name: Generate bare flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml
@@ -128,7 +132,7 @@ jobs:
     uses: ./.github/workflows/build_bare_flavor.yml
     secrets: inherit
     permissions:
-      actions: write    
+      actions: write
   upload_flavor_version_data:
     needs: [requirements, flavors]
     name: Store flavor version data
