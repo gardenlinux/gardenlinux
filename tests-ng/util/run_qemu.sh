@@ -396,5 +396,7 @@ else
 	cat "$tmpdir/serial.log"
 fi
 
-# TODO: find a better way to check if the tests failed
-! (tail -n1 "$tmpdir/serial.log" | grep failed >/dev/null)
+num_errors=$(xmllint --xpath 'string(/testsuites/testsuite/@errors)' "$tmpdir/junit.xml")
+if [ "${num_errors}" -gt 0 ]; then
+    exit 1
+fi
