@@ -67,7 +67,7 @@ for arch in x86_64 aarch64; do
 
 	if ! [ -f "$archive_file_cached" ] || ! verify_checksum "$expected_checksum" "$archive_file_cached" 2>/dev/null; then
 		tmp_download="$archive_file_cached.partial"
-		curl -sSLf "$archive_url" -o "$tmp_download"
+		retry -d "1,2,5,10,30" curl -sSLf "$archive_url" -o "$tmp_download"
 		if ! verify_checksum "$expected_checksum" "$tmp_download"; then
 			echo "Checksum mismatch for $arch after download" >&2
 			rm -f "$tmp_download"

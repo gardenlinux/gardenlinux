@@ -128,7 +128,7 @@ EOF
 if [ ! -f "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" ] || ! sha256sum -c "${TOFU_PROVIDERS_CUSTOM}/checksum.txt" >/dev/null 2>&1; then
 	echo "Downloading terraform-provider-azurerm"
 	mkdir -p "${TOFU_PROVIDERS_CUSTOM}"
-	curl -LO --create-dirs --output-dir "${TOFU_PROVIDERS_CUSTOM}" "${TOFU_PROVIDER_AZURERM_URL}"
+	retry -d "1,2,5,10,30" curl -LO --create-dirs --output-dir "${TOFU_PROVIDERS_CUSTOM}" "${TOFU_PROVIDER_AZURERM_URL}"
 	echo "$TOFU_PROVIDER_AZURERM_CHECKSUM ${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" >"${TOFU_PROVIDERS_CUSTOM}/checksum.txt"
 	sha256sum -c "${TOFU_PROVIDERS_CUSTOM}/checksum.txt"
 	chmod +x "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm"

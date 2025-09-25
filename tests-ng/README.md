@@ -69,19 +69,20 @@ Before running the test framework, make sure the following dependencies are inst
 - `unzip`
 - `qemu`
 - `qemu-utils`
+- `retry`
 
 #### Install on Debian based systems
 
 ```
 apt-get update
-apt-get install podman make curl jq unzip qemu swtpm
+apt-get install podman make curl jq unzip qemu swtpm retry
 
 ```
 
 #### Install on MacOS
 
 ```
-brew install coreutils bash gnu-sed gnu-getopt podman make curl jq unzip swtpm
+brew install coreutils bash gnu-sed gnu-getopt podman make curl jq unzip swtpm retry
 ```
 
 ### Basic Usage
