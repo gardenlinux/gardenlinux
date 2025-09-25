@@ -58,23 +58,21 @@ def nvme_device(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
 
     os.symlink(f"/sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}", f"/sys/kernel/config/nvmet/ports/{port}/subsystems/{SUBSYSTEM_NAME}")
 
-    shell("nvme connect -t tcp -n testnqn -a 127.0.0.1 -s 4420")
+    shell("nvme connect -t tcp -n testnqn -a 127.0.0.1 -s 4420", capture_output=True)
     output = shell("nvme list -o json", capture_output=True)
-    json_devices = json.loads(output.stdout)
+    json_devices = json.loads(output.stdout.strip())
     local_device = [device['DevicePath'] for device in json_devices['Devices'] if device["ModelNumber"] == "Linux"][0]
     mount_dir = "/tmp/nvme"
-    shell(f"mkfs.ext4 {local_device}")
+    shell(f"mkfs.ext4 -q {local_device}")
     os.makedirs(mount_dir)
     shell(f"mount {local_device} {mount_dir}")
     Path(f"{mount_dir}/bar").write_text("foo\n")
 
     yield local_device, mount_dir, "488"
 
-    print("Teardown nvme device and clean up")
     shell(f"umount {mount_dir}", ignore_exit_code=True)
     os.rmdir(mount_dir)
-    shell(f"nvme disconnect -n {SUBSYSTEM_NAME}", ignore_exit_code=True)
-    os.remove(NVME_DEVICE)
+    shell(f"nvme disconnect -n {SUBSYSTEM_NAME}", capture_output=True, ignore_exit_code=True)
     Path(f"/sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/namespaces/{port}/enable").write_text("0")
     Path(f"/sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/attr_allow_any_host").write_text("0")
     os.rmdir(f"/sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/namespaces/{port}")
