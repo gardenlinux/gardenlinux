@@ -1,3 +1,4 @@
 pytest
+pytest-order
 boolean.py
 validators==0.35.0
