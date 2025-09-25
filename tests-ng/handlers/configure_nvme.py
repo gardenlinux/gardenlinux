@@ -24,7 +24,7 @@ REQUIRED_NVME_MODULE = [
 
 # This fixture executes NVME configuration, yield to complete the test and then do bring back real system state after test
 @pytest.fixture
-def nvme_device(shell: ShellRunner, dpkg: Dpkg, module: KernelModule):
+def nvme_device(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
     mount_package_installed = False
     shell(f"truncate -s 512M {NVME_DEVICE}")
     if not dpkg.package_is_installed("mount"):
@@ -34,8 +34,8 @@ def nvme_device(shell: ShellRunner, dpkg: Dpkg, module: KernelModule):
 
     for entry in REQUIRED_NVME_MODULE:
         mod_name = entry["nvme_module"]
-        if not module.is_module_loaded(mod_name):
-            module.load_module(mod_name)
+        if not kernel_module.is_module_loaded(mod_name):
+            kernel_module.load_module(mod_name)
             entry["status"] = "Loaded"
     port = 1
     while os.path.exists(os.path.join("/sys/kernel/config/nvmet/ports", str(port))):
@@ -106,7 +106,7 @@ def nvme_device(shell: ShellRunner, dpkg: Dpkg, module: KernelModule):
     for entry in REQUIRED_NVME_MODULE:
         mod_name = entry["nvme_module"]
         if entry["status"] == "Loaded":
-            module.unload_module(mod_name)
+            kernel_module.unload_module(mod_name)
             entry["status"] = "None"
     if mount_package_installed == True:
         shell("DEBIAN_FRONTEND=noninteractive apt remove mount")
