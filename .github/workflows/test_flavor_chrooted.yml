@@ -53,6 +53,10 @@ jobs:
           rm "$CNAME.tar.gz"
 
           make --directory=tests ${{ inputs.flavor }}-${{ inputs.arch }}-chroot-test
+      - name: install required packages
+        run: |
+          sudo apt-get update
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends retry
       # chroot.test.xml is written in the entrypoint tests/init
       - name: New Test Framework
         run: ./test-ng ".build/$CNAME.tar"
