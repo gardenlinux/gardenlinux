@@ -126,11 +126,8 @@ jobs:
 
             core.setOutput("bare_flavors_matrix", matrix);
   ## test-ng start
-  test_distribution_build:
-    name: Build and Cache Test Distribution
-    uses: ./.github/workflows/build_test_dist.yml
   test_flavors_chroot_ng:
-    needs: [intersect_matrices, test_distribution_build]
+    needs: intersect_matrices
     name: Test-NG flavors chroot
     uses: ./.github/workflows/test_flavor_chroot_ng.yml
     if: ${{ needs.intersect_matrices.outputs.chroot_test_flavors_matrix != '{"include":[]}' && contains(inputs.test_types, 'chroot') }}
@@ -143,7 +140,7 @@ jobs:
     permissions:
       actions: write
   test_flavors_qemu:
-    needs: [intersect_matrices, test_distribution_build]
+    needs: intersect_matrices
     name: Test-NG flavors QEMU
     uses: ./.github/workflows/test_flavor_qemu.yml
     if: ${{ needs.intersect_matrices.outputs.qemu_test_flavors_matrix != '{"include":[]}' && contains(inputs.test_types, 'qemu') }}
@@ -156,7 +153,7 @@ jobs:
     permissions:
       actions: write
   test_flavors_cloud_ng:
-    needs: [intersect_matrices, test_distribution_build, test_flavors_qemu]
+    needs: [intersect_matrices, test_flavors_qemu]
     name: Test-NG flavors Cloud
     uses: ./.github/workflows/test_flavor_cloud_ng.yml
     if: ${{ needs.intersect_matrices.outputs.platform_test_flavors_matrix != '{"include":[]}' && contains(inputs.test_types, 'cloud') }}
@@ -171,7 +168,7 @@ jobs:
       id-token: write
       actions: write
   test_flavors_oci_ng:
-    needs: [intersect_matrices]
+    needs: intersect_matrices
     name: Test-NG flavors OCI
     uses: ./.github/workflows/test_flavor_oci_ng.yml
     if: ${{ needs.intersect_matrices.outputs.bare_flavors_matrix != '{"include":[]}' && contains(inputs.test_types, 'oci') }}
@@ -185,7 +182,7 @@ jobs:
       actions: write
   ## test-ng end
   test_flavors_chroot:
-    needs: [intersect_matrices]
+    needs: intersect_matrices
     name: Test-NG flavors chroot
     uses: ./.github/workflows/test_flavor_chroot.yml
     if: ${{ needs.intersect_matrices.outputs.chroot_test_flavors_matrix != '{"include":[]}' && contains(inputs.test_types, 'chroot') }}
