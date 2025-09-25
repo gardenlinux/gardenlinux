@@ -397,6 +397,7 @@ else
 fi
 
 num_errors=$(xmllint --xpath 'string(/testsuites/testsuite/@errors)' "$tmpdir/junit.xml")
-if [ "${num_errors}" -gt 0 ]; then
-    exit 1
+num_failures=$(xmllint --xpath 'string(/testsuites/testsuite/@failures)' "$tmpdir/junit.xml")
+if [ "${num_errors}" -gt 0 ] || [ "${num_failures}" -gt 0 ]; then
+	exit 1
 fi
