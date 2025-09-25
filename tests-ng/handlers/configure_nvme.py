@@ -14,10 +14,10 @@ PORT_NUMBER="4420"
 TRTYPE="tcp"
 ADRFAM="ipv4"
 
-REQUIRED_NVME_MODULE = [
-            {"nvme_module": "nvme_tcp", "status": None},
-            {"nvme_module": "nvmet_tcp", "status": None},
-            {"nvme_module": "nvmet", "status": None},
+REQUIRED_NVME_MODULES = [
+            {"name": "nvmet", "status": None},
+            {"name": "nvmet_tcp", "status": None},
+            {"name": "nvme_tcp", "status": None},
             ]
 #This fixture executes NVME configuration, yield to complete the test and then do bring back real system state after test
 @pytest.fixture
@@ -27,12 +27,12 @@ def nvme_device(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
     if not dpkg.package_is_installed("mount"):
         mount_package_installed = True;
         shell("DEBIAN_FRONTEND=noninteractive apt-get install -y mount")
-    shell(f"losetup -fP {NVME_DEVICE}")
+    loop_device = shell(f"losetup -fP --show {NVME_DEVICE}", capture_output=True).stdout.strip()
 
-    for entry in REQUIRED_NVME_MODULE:
-        mod_name = entry["nvme_module"]
-        if not kernel_module.is_module_loaded(mod_name):
-            kernel_module.load_module(mod_name)
+    for entry in REQUIRED_NVME_MODULES:
+        name = entry["name"]
+        if not kernel_module.is_module_loaded(name):
+            kernel_module.load_module(name)
             entry["status"] = "Loaded"
     port = 1
     while os.path.exists(os.path.join("/sys/kernel/config/nvmet/ports", str(port))):
@@ -81,10 +81,13 @@ def nvme_device(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
     os.unlink(f"/sys/kernel/config/nvmet/ports/{port}/subsystems/{SUBSYSTEM_NAME}")
     os.rmdir(f"/sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}")
     os.rmdir(f"/sys/kernel/config/nvmet/ports/{port}")
-    for entry in REQUIRED_NVME_MODULE:
-        mod_name = entry["nvme_module"]
+    os.remove(NVME_DEVICE)
+    shell(f"losetup -d {loop_device}")
+    # reorder the modules to unload in the reverse order of loading
+    for entry in reversed(REQUIRED_NVME_MODULES):
+        name = entry["name"]
         if entry["status"] == "Loaded":
-            kernel_module.unload_module(mod_name)
-            entry["status"] = "None"
+            kernel_module.unload_module(name)
+            entry["status"] = None
     if mount_package_installed == True:
         shell("DEBIAN_FRONTEND=noninteractive apt remove mount")
