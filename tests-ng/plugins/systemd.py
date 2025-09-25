@@ -1,11 +1,13 @@
+import json
 import re
-import pytest
+import time
+from dataclasses import dataclass
 from typing import Tuple
+
+import pytest
+
 from .shell import ShellRunner
 from .modify import allow_system_modifications
-from dataclasses import dataclass
-import time
-import json
 
 @dataclass
 class SystemdUnit:
@@ -73,6 +75,11 @@ class Systemd:
         if not allow_system_modifications():
             pytest.skip("starting units is only supported when system state modifications are allowed")
         self._shell(f"{self._systemctl} start {unit_name}")
+
+    def stop_unit(self, unit_name: str):
+        if not allow_system_modifications():
+            pytest.skip("stopping units is only supported when system state modifications are allowed")
+        self._shell(f"{self._systemctl} stop {unit_name}")
 
     def list_units(self) -> list[SystemdUnit]:
         result = self._shell(f"{self._systemctl}", capture_output=True, ignore_exit_code=True)
