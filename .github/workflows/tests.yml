@@ -98,9 +98,10 @@ jobs:
           script: |
             const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
 
-            testsEnvsEnabled = gitHubLib.getTestEnvironmentsEnabled("${{ inputs.test_types }}");
+            const testsEnvsEnabled = gitHubLib.getTestEnvironmentsEnabled("${{ inputs.test_types }}");
 
             // chroot_test_flavors_matrix
+            core.info(testsEnvsEnabled.includes("chroot"));
             if (testsEnvsEnabled.includes("chroot")) {
               const matrix = gitHubLib.intersectFlavorsMatrix(
                 ${{ inputs.flavors_matrix }},
@@ -108,11 +109,13 @@ jobs:
               );
 
               const isEnabled = !gitHubLib.isMatrixEmpty(matrix);
+              core.info(`chroot_tests ${isEnabled}`);
               core.setOutput("chroot_tests", isEnabled);
 
               if (isEnabled) {
                 core.setOutput("chroot_test_flavors_matrix", matrix);
               }
+              core.info(`chroot_test_flavors_matrix ${matrix}`);
             }
 
             // qemu_test_flavors_matrix
@@ -164,7 +167,7 @@ jobs:
     needs: determine_test_settings
     name: Test-NG flavors chroot
     uses: ./.github/workflows/test_flavor_chroot_ng.yml
-    if: ${{ needs.determine_test_settings.outputs.chroot_tests }}
+    if: ${{ needs.determine_test_settings.outputs.chroot_tests == 'true' }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.chroot_test_flavors_matrix) }}
@@ -177,7 +180,7 @@ jobs:
     needs: determine_test_settings
     name: Test-NG flavors QEMU
     uses: ./.github/workflows/test_flavor_qemu.yml
-    if: ${{ needs.determine_test_settings.outputs.qemu_tests }}
+    if: ${{ needs.determine_test_settings.outputs.qemu_tests == 'true' }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.qemu_test_flavors_matrix) }}
@@ -190,7 +193,7 @@ jobs:
     needs: [determine_test_settings, test_flavors_qemu]
     name: Test-NG flavors Cloud
     uses: ./.github/workflows/test_flavor_cloud_ng.yml
-    if: ${{ needs.determine_test_settings.outputs.platform_tests }}
+    if: ${{ needs.determine_test_settings.outputs.platform_tests == 'true' }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.platform_test_flavors_matrix) }}
@@ -205,7 +208,7 @@ jobs:
     needs: determine_test_settings
     name: Test-NG flavors OCI
     uses: ./.github/workflows/test_flavor_oci_ng.yml
-    if: ${{ needs.determine_test_settings.outputs.bare_flavors_tests }}
+    if: ${{ needs.determine_test_settings.outputs.bare_flavors_tests == 'true' }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.bare_flavors_matrix) }}
@@ -219,7 +222,7 @@ jobs:
     needs: determine_test_settings
     name: Test-NG flavors chroot
     uses: ./.github/workflows/test_flavor_chroot.yml
-    if: ${{ needs.determine_test_settings.outputs.chroot_tests }}
+    if: ${{ needs.determine_test_settings.outputs.chroot_tests == 'true' }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.chroot_test_flavors_matrix) }}
@@ -232,7 +235,7 @@ jobs:
     needs: [determine_test_settings, test_flavors_qemu]
     name: Test flavors cloud
     uses: ./.github/workflows/test_flavor_cloud.yml
-    if: ${{ needs.determine_test_settings.outputs.platform_tests }}
+    if: ${{ needs.determine_test_settings.outputs.platform_tests == 'true' }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.platform_test_flavors_matrix) }}
@@ -247,7 +250,7 @@ jobs:
     needs: determine_test_settings
     name: Test flavors OCI
     uses: ./.github/workflows/test_flavor_oci.yml
-    if: ${{ needs.determine_test_settings.outputs.bare_flavors_tests }}
+    if: ${{ needs.determine_test_settings.outputs.bare_flavors_tests == 'true' }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.bare_flavors_matrix) }}
