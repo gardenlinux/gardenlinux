@@ -66,6 +66,7 @@ Before running the test framework, make sure the following dependencies are inst
 - `make`
 - `curl`
 - `jq`
+- `libxml2-utils`
 - `unzip`
 - `qemu`
 - `qemu-utils`
@@ -74,14 +75,14 @@ Before running the test framework, make sure the following dependencies are inst
 
 ```
 apt-get update
-apt-get install podman make curl jq unzip qemu swtpm socat
+apt-get install podman make curl jq libxml2-utils unzip qemu swtpm socat
 
 ```
 
 #### Install on MacOS
 
 ```
-brew install coreutils bash gnu-sed gnu-getopt podman make curl jq unzip swtpm socat
+brew install coreutils bash gnu-sed gnu-getopt podman make curl jq libxml2 unzip swtpm socat
 ```
 
 ### Basic Usage
