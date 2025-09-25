@@ -21,7 +21,7 @@ if [ "$0" != /init ]; then
 	cat >"$tmpdir/Containerfile" <<-'EOF'
 		FROM debian:stable
 		RUN apt-get update \
-		&& DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl
+		&& DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl retry
 	EOF
 
 	podman build -q --iidfile "$tmpdir/image_id" "$tmpdir" >/dev/null
