@@ -62,16 +62,17 @@ def nvme_device(shell: ShellRunner, dpkg: Dpkg, module: KernelModule):
     output = shell("nvme list -o json", capture_output=True)
     json_devices = json.loads(output.stdout)
     local_device = [device['DevicePath'] for device in json_devices['Devices'] if device["ModelNumber"] == "Linux"][0]
+    mount_dir = "/tmp/nvme"
     shell(f"mkfs.ext4 {local_device}")
-    os.makedirs("/mnt/nvme")
-    shell(f"mount {local_device} /mnt/nvme")
-    shell("echo 'foo' | tee /mnt/nvme/bar")
+    os.makedirs(mount_dir)
+    shell(f"mount {local_device} {mount_dir}")
+    shell(f"echo 'foo' | tee {mount_dir}/bar")
 
-    yield local_device, "/mnt/nvme", "488"
+    yield local_device, mount_dir, "488"
 
     print("Teardown nvme device and clean up")
-    shell("umount /mnt/nvme", ignore_exit_code=True)
-    os.rmdir("/mnt/nvme")
+    shell(f"umount {mount_dir}", ignore_exit_code=True)
+    os.rmdir(mount_dir)
     shell(f"nvme disconnect -n {SUBSYSTEM_NAME}", ignore_exit_code=True)
     os.remove(NVME_DEVICE)
     Path(f"/sys/kernel/config/nvmet/subsystems/{SUBSYSTEM_NAME}/namespaces/{port}/enable").write_text("0")
