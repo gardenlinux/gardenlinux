@@ -8,10 +8,6 @@ on:
     branches:
     - main
     - rel-*
-
-permissions:
-  contents: read
-
 jobs:
   lint:
     runs-on: ubuntu-24.04
@@ -19,10 +15,6 @@ jobs:
     permissions:
       # required for all workflows
       security-events: write
-
-      # only required for workflows in private repositories
-      actions: read
-      contents: read
 
     steps:
       - name: Repository checkout

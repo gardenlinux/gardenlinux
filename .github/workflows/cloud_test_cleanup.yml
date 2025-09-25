@@ -4,22 +4,19 @@ on:
     - cron: '0 4 * * *'  # Run daily at 4 AM UTC
   # manual trigger
   workflow_dispatch:
-
 jobs:
   collect_workspaces:
     name: Collect Workspaces to Cleanup
     runs-on: ubuntu-24.04
     permissions:
       id-token: write
-      contents: read
     environment: oidc_platform_tests
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-
     steps:
       - id: 'auth_aws'
         name: 'Authenticate to AWS'
-        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # pin@v4
+        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
@@ -43,7 +40,6 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       id-token: write
-      contents: read
     environment: oidc_platform_tests
     env:
       IMAGE: ghcr.io/gardenlinux/gardenlinux/platform-test-tofu:latest
@@ -80,7 +76,7 @@ jobs:
             core.exportVariable("GOOGLE_GHA_CREDS_PATH", basePath + credentialsFileName);
       - id: 'auth_aws'
         name: 'Authenticate to AWS'
-        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # pin@v4
+        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}

@@ -27,14 +27,14 @@ resource "alicloud_oss_bucket_acl" "images_acl" {
 
   # depends_on = [alicloud_oss_bucket_ownership_controls.images_owner.0]
 
-  bucket = alicloud_oss_bucket.images.0.id
+  bucket = alicloud_oss_bucket.images.0.bucket
   acl    = "private"
 }
 
 resource "alicloud_oss_bucket_public_access_block" "no_public_access" {
   count = var.existing_root_disk != "" ? 0 : 1
 
-  bucket = alicloud_oss_bucket.images.0.id
+  bucket = alicloud_oss_bucket.images.0.bucket
 
   block_public_access = true
 }
@@ -42,14 +42,14 @@ resource "alicloud_oss_bucket_public_access_block" "no_public_access" {
 resource "alicloud_oss_bucket_server_side_encryption" "images_encryption" {
   count = var.existing_root_disk != "" ? 0 : 1
 
-  bucket        = alicloud_oss_bucket.images.0.id
+  bucket        = alicloud_oss_bucket.images.0.bucket
   sse_algorithm = "AES256"
 }
 
 resource "alicloud_oss_bucket_object" "image" {
   count = var.existing_root_disk != "" ? 0 : 1
 
-  bucket = alicloud_oss_bucket.images.0.id
+  bucket = alicloud_oss_bucket.images.0.bucket
   key    = local.image_name
   source = replace(var.root_disk_path, ".raw", ".qcow2")
 }
@@ -78,7 +78,7 @@ resource "alicloud_image_import" "import" {
 }
 
 resource "alicloud_oss_bucket_object" "image_test" {
-  bucket = alicloud_oss_bucket.images.0.id
+  bucket = alicloud_oss_bucket.images.0.bucket
   key    = "${local.image_name}-test"
   ## somehow qcow2 does not work
   # source = replace(var.test_disk_path, ".raw", ".qcow2")

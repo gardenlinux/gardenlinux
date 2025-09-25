@@ -9,5 +9,16 @@ disk_name="$(basename "$(realpath "/sys/class/block/$efi_part_name/..")")"
 disk_dev="/dev/$disk_name"
 
 echo | sfdisk "$disk_dev" # fix secondary GPT partition table in case disk got resized
-systemd-repart --root=/ --dry-run=no --tpm2-device=auto --tpm2-pcrs=7 "$disk_dev"
+
+# FIXME: can we do this in a nicer way?
+# because systemd-repart uses loopdevices in the background and the loop devices report that they support
+# discard, using repart with discard true on real block devices that don't support discard will make mkfs extremely slow
+
+# when discard_max_hw_bytes is 0 then the disk doesn't support discard, so disable it for repart
+if [ "$(cat "/sys/block/$disk_name/queue/discard_max_hw_bytes")" -eq 0 ]; then
+    discard="false"
+  else
+    discard="true"
+fi
+systemd-repart --root=/ --dry-run=no --tpm2-device=auto --tpm2-pcrs=7 --discard="${discard}" "$disk_dev"
 udevadm settle

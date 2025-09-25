@@ -7,8 +7,8 @@ from plugins.shell import ShellRunner
 @pytest.mark.feature("sapmachine")
 def test_sapmachine_is_installed(dpkg: Dpkg):
     assert dpkg.package_is_installed(
-        "sapmachine-21-jre-headless"
-    ), "sapmachine-21-jre-headless package is not installed"
+        "sapmachine-25-jre-headless"
+    ), "sapmachine-25-jre-headless package is not installed"
 
 
 @pytest.mark.feature("sapmachine")

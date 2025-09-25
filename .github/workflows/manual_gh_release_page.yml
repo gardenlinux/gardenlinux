@@ -5,16 +5,18 @@ on:
       type:
         type: choice
         default: patch
+        description: 'Patch'
         options:
         - patch
         - dev
       version:
         required: true
         type: string
+        description: 'Version'
       is_latest:
         default: false
         type: boolean
-        description: "Tag as gardenlinux:latest"
+        description: "Tag Github Release and OCI image as latest"
       commit:
         required: true
         type: string
@@ -27,7 +29,6 @@ jobs:
     name: Update GLVD distro list
     runs-on: ubuntu-latest
     permissions:
-      contents: read
       # This is required for requesting the JWT
       id-token: write
     steps:
@@ -73,7 +74,7 @@ jobs:
           sparse-checkout-cone-mode: false
       - id: matrix
         name: Generate flavors matrix
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@02879bd567ed39b5610332afcc6e46197073db0c # pin@0.10.0
         with:
           flags: '--no-arch --json-by-arch --publish'
   github_release:
@@ -85,6 +86,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
+      actions: write
     environment: oidc_aws_s3_upload
     steps:
       - name: Checkout full repository (current branch)
@@ -95,9 +97,9 @@ jobs:
       - name: install dependencies for generate_release_note.py script
         run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@02879bd567ed39b5610332afcc6e46197073db0c # pin@0.10.0
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
+        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
@@ -106,7 +108,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
+          if [[ "${{ inputs.is_latest }}" == "true" ]]; then
+            .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")" --latest
+          else
+            .github/workflows/release_note.py create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
+          fi
       - uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
         with:
           key: release-${{ github.run_id }}
@@ -129,8 +135,8 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
-      - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@02879bd567ed39b5610332afcc6e46197073db0c # pin@0.10.0
+      - uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
@@ -172,6 +178,8 @@ jobs:
     with:
       version: ${{ inputs.version }}
       is_latest:  ${{ inputs.is_latest }}
+    permissions:
+      packages: write
   glrd:
     name: create GLRD release
     permissions:
@@ -181,7 +189,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # pin@v4
+      - uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}

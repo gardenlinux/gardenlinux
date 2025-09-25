@@ -37,7 +37,8 @@ on:
     inputs:
       version:
         type: string
-        default: nightly
+        default: 'nightly'
+        description: 'Version'
       build:
         type: boolean
         default: false
@@ -110,12 +111,14 @@ jobs:
     strategy:
       matrix:
         arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@97d6e1c28eb4565446563ed04bcbf3c4cb5d1bde # pin@0.9.0
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@02879bd567ed39b5610332afcc6e46197073db0c # pin@0.10.0
       - name: Set build reference
         run: |
           version="$(./bin/garden-version "$version")"
@@ -152,6 +155,8 @@ jobs:
       matrix:
         arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
+    permissions:
+      actions: write      
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
@@ -208,6 +213,8 @@ jobs:
     strategy:
       matrix:
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
+    permissions:
+      packages: write
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
@@ -307,6 +314,8 @@ jobs:
       matrix:
         arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:

@@ -17,6 +17,8 @@ jobs:
     strategy:
       matrix:
         arch: [ amd64, arm64 ]
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
@@ -31,7 +33,7 @@ jobs:
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@97d6e1c28eb4565446563ed04bcbf3c4cb5d1bde # pin@0.9.0
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@02879bd567ed39b5610332afcc6e46197073db0c # pin@0.10.0
         with:
           flags: --cname container-${{ matrix.arch }} cname
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}

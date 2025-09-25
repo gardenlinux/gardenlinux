@@ -1,0 +1,74 @@
+name: test_flavor
+on:
+  workflow_call:
+    inputs:
+      arch:
+        type: string
+        default: "amd64"
+      flavor:
+        type: string
+        required: true
+jobs:
+  test:
+    name: Test flavor in chroot ${{ inputs.flavor }} (${{ inputs.arch }})
+    runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    env:
+      CNAME: ""
+    permissions:
+      actions: write
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+        with:
+          submodules: true
+      - uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
+        with:
+          path: |
+            COMMIT
+            VERSION
+          key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
+          fail-on-cache-miss: true
+      - name: Determine CNAME
+        id: cname
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@02879bd567ed39b5610332afcc6e46197073db0c # pin@0.10.0
+        with:
+          flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
+      - name: Set CNAME
+        run: |
+          echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
+      - name: Load flavor build artifact
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        with:
+          name: build-${{ inputs.flavor }}-${{ inputs.arch }}
+      - name: Test
+        run: |
+          mkdir ".build"
+          tar -C .build -xzf $CNAME.tar.gz
+          rm "$CNAME.tar.gz"
+
+          make --directory=tests ${{ inputs.flavor }}-${{ inputs.arch }}-chroot-test
+      - name: install required packages
+        run: |
+          sudo apt-get update
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends retry
+      # chroot.test.xml is written in the entrypoint tests/init
+      - name: New Test Framework
+        run: ./test-ng ".build/$CNAME.tar"
+      - name: Rename test results
+        if: always()
+        run: mv tests/chroot.test.xml .build/$CNAME.chroot.test.xml
+      - uses: pmeier/pytest-results-action@20b595761ba9bf89e115e875f8bc863f913bc8ad # pin@v0.7.2
+        if: always()
+        with:
+          path: ".build/${{ env.CNAME }}.chroot.test.xml"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+        if: always()
+        with:
+          if-no-files-found: ignore
+          name: chroot-test-${{ env.CNAME }}
+          path: |
+            .build/${{ env.CNAME }}.chroot.test.log
+            .build/${{ env.CNAME }}.chroot.test.xml
