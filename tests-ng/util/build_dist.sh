@@ -26,7 +26,7 @@ set +f
 
 mkdir -p "$tmpdir/dist/tests"
 test_dirs=$(find . -mindepth 2 -maxdepth 2 -name "test_*.py" -print0 | xargs -0 -r -I {} dirname {} | sort -u)
-cp -r -t "$tmpdir/dist/tests" conftest.py plugins test_*.py
+cp -r -t "$tmpdir/dist/tests" conftest.py plugins handlers test_*.py
 if [ -n "$test_dirs" ]; then
 	echo "$test_dirs" | xargs -I {} cp -r {} "$tmpdir/dist/tests/"
 fi

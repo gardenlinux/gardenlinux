@@ -23,7 +23,7 @@ on:
         default: '{"include":[]}'
       original_workflow_name:
         type: string
-        default: ''
+        default: ""
     secrets:
       aws_role:
         required: true
@@ -70,8 +70,8 @@ jobs:
       run:
         shell: bash
     env:
-      CNAME_AMD64: ''
-      CNAME_ARM64: ''
+      CNAME_AMD64: ""
+      CNAME_ARM64: ""
     permissions:
       packages: write
     steps:
@@ -84,12 +84,12 @@ jobs:
           echo "${{ inputs.version }}" | tee VERSION
       - name: Determine CNAME (amd64)
         id: cname_amd64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@97d6e1c28eb4565446563ed04bcbf3c4cb5d1bde # pin@0.9.0
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@02879bd567ed39b5610332afcc6e46197073db0c # pin@0.10.0
         with:
           flags: --cname container-amd64 cname
       - name: Determine CNAME (ard64)
         id: cname_arm64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@97d6e1c28eb4565446563ed04bcbf3c4cb5d1bde # pin@0.9.0
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@02879bd567ed39b5610332afcc6e46197073db0c # pin@0.10.0
         with:
           flags: --cname container-arm64 cname
       - name: Set CNAMEs
@@ -167,7 +167,7 @@ jobs:
       fail-fast: false
       matrix:
         # @TODO: Replace with input matrix once OCI manifest tooling is ready to update existing ones
-        config: [ libc, python, nodejs, sapmachine ]
+        config: [libc, python, nodejs, sapmachine]
     permissions:
       packages: write
     steps:
@@ -238,7 +238,7 @@ jobs:
       run:
         shell: bash
     env:
-      CNAME: ''
+      CNAME: ""
     permissions:
       id-token: write
       packages: write
@@ -257,11 +257,11 @@ jobs:
           role-session-name: ${{ secrets.aws_session }}
           aws-region: ${{ secrets.aws_region }}
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@97d6e1c28eb4565446563ed04bcbf3c4cb5d1bde # pin@0.9.0
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@02879bd567ed39b5610332afcc6e46197073db0c # pin@0.10.0
       - name: Install cosign
         uses: sigstore/cosign-installer@v3.10.0
         with:
-          cosign-release: 'v2.4.1'
+          cosign-release: "v2.4.1"
       - name: Set flavor version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -304,14 +304,14 @@ jobs:
           path: oci_manifest_entry_${{ env.CNAME }}.json
           key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
   update_manifest_index:
-    needs: [ determine_environment, push_flavors ]
+    needs: [determine_environment, push_flavors]
     name: Update OCI manifest index
     runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash
     env:
-      CNAME: ''
+      CNAME: ""
     permissions:
       id-token: write
       packages: write
@@ -325,7 +325,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@97d6e1c28eb4565446563ed04bcbf3c4cb5d1bde # pin@0.9.0
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@02879bd567ed39b5610332afcc6e46197073db0c # pin@0.10.0
       - name: Set flavor version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT

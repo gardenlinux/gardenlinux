@@ -66,6 +66,7 @@ Before running the test framework, make sure the following dependencies are inst
 - `make`
 - `curl`
 - `jq`
+- `libxml2-utils`
 - `unzip`
 - `qemu`
 - `qemu-utils`
@@ -74,14 +75,14 @@ Before running the test framework, make sure the following dependencies are inst
 
 ```
 apt-get update
-apt-get install podman make curl jq unzip qemu swtpm
+apt-get install podman make curl jq libxml2-utils unzip qemu swtpm socat
 
 ```
 
 #### Install on MacOS
 
 ```
-brew install coreutils bash gnu-sed gnu-getopt podman make curl jq unzip swtpm
+brew install coreutils bash gnu-sed gnu-getopt podman make curl jq libxml2 unzip swtpm socat
 ```
 
 ### Basic Usage
@@ -128,6 +129,8 @@ The main entry point is `./test-ng` in the gardenlinux root directory (symlink t
     - azure: `/CommunityGalleries/gardenlinux-13e998fe-534d-4b0a-8a27-f16a73aef620/Images/gardenlinux-nvme-gen2/Versions/1592.12.0` (amd64)
 - `--only-cleanup` Only run `tofu destroy` for cloud setups.
 - `--image-requirements-file` Only needed with `--cloud-image`. Needs to point to a valid `*.requirements` file.
+- `--cloud-plan`: Only run `tofu plan` for cloud setups.
+  - QEMU VM: Ignores this flag.
 
 #### QEMU Specific Options
 

@@ -7,8 +7,8 @@ on:
     branches:
       - main
     paths-ignore:
-      - 'docs/**'
-      - '**/README.md'
+      - "docs/**"
+      - "**/README.md"
   pull_request:
     paths-ignore:
       - '.github/**'
@@ -43,9 +43,9 @@ jobs:
     name: Test
     uses: ./.github/workflows/tests.yml
     with:
-      version: ${{ needs.build.outputs.version }}
       flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
+      test_types: "chroot,qemu,oci"
     permissions:
       id-token: write # TODO: 3215 elevated permissions for included workflow
       actions: write  # TODO: 3215 elevated permissions for included workflow
