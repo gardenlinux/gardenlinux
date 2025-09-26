@@ -39,6 +39,10 @@ export function excludeFlavorsMatrix(matrixA, matrixB) {
     return { "include": resultMatrix };
 }
 
+export function isMatrixEmpty(matrix) {
+    return (matrix == "" || matrix == `{"include":[]}`);
+}
+
 export function getGHCRRepositoryFromTarget(target) {
     let repository = "";
 
@@ -69,10 +73,24 @@ export function getGitHubSigningEnvironmentFromTarget(target) {
     return environment;
 }
 
+export function getTestEnvironmentsEnabled(commaSeparatedTestsRequested) {
+    const knownTests = [ "chroot", "cloud", "oci", "qemu" ];
+    const testsRequested = commaSeparatedTestsRequested.split(",");
+    let tests = [];
+
+    for (const test in knownTests) {
+        if (testsRequested.includes(test)) {
+            tests.push(test);
+        }
+    }
+
+    return tests;
+}
+
 export function flattenFlavorsMatrixByArch(matrix) {
     let matrixByArch = {};
 
-    for (const flavor of matrix.include) {
+    for (const flavor of matrix.includes(flavor)) {
         if (!(flavor["arch"] in matrixByArch)) {
             matrixByArch[flavor["arch"]] = [];
         }

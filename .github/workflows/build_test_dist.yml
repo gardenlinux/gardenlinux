@@ -3,7 +3,7 @@ on:
   workflow_call:
 jobs:
   test:
-    name: Build and Cache Test Distribution
+    name: Build and cache test distribution
     runs-on: "ubuntu-24.04"
     timeout-minutes: 30
     defaults:
