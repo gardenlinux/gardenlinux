@@ -54,7 +54,6 @@ gdisk
 gettext
 git
 gnupg
-gnutls-bin
 google-compute-engine-oslogin
 google-guest-agent
 haveged
