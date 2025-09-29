@@ -22,7 +22,7 @@ class TimeDateCtl:
             self._shell = shell
             self._systemd = systemd
 
-            assert systemd.is_active("systemd-timesyncd.service"), f"systemd-timesyncd must be active"
+            assert self._systemd.is_active("systemd-timesyncd.service"), f"systemd-timesyncd must be active"
 
         def get_ntpserver(self) -> NtpServer:
             """
