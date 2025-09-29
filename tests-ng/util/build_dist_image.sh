@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eufo pipefail
+set -euxfo pipefail
 
 tmpdir=
 
