@@ -7,7 +7,7 @@ from plugins.shell import ShellRunner
 from plugins.timedatectl import TimeDateCtl, TimeSyncStatus
 from plugins.timeconf import clocksource_file, chrony_config_file
 
-@pytest.mark.booted
+@pytest.mark.booted(reason="NTP server configuration is read at runtime")
 def test_clock(shell: ShellRunner):
     """ Test clock skew """
     local_seconds = int(time())
@@ -18,17 +18,19 @@ def test_clock(shell: ShellRunner):
         abs(local_seconds - remote_seconds) < 5
     ), f"clock skew should be less than 5 seconds. Local time is {local_seconds} and remote time is {remote_seconds}"
 
+@pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("aws")
 @pytest.mark.parametrize("expected_ntp_server", ["169.254.169.123"])
 def test_correct_ntp_on_aws(timedatectl: TimeDateCtl, expected_ntp_server: str):
     assert expected_ntp_server == timedatectl.get_ntpserver().ip, f"ntp server is invalid. Expected {expected_ntp_server}."
 
+@pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("gcp")
 @pytest.mark.parametrize("expected_ntp_server", ["metadata.google.internal"])
 def test_correct_ntp_on_gcp(timedatectl: TimeDateCtl, expected_ntp_server: str):
     assert expected_ntp_server == timedatectl.get_ntpserver().hostname, f"ntp server is invalid. Expected {expected_ntp_server}."
 
-@pytest.mark.booted(reason="NTP server configuration is not available in chroot")
+@pytest.mark.booted(reason="NTP server configuration is read at runtime")
 def test_ntp(timedatectl: TimeDateCtl):
     timesyncstatus: TimeSyncStatus = timedatectl.get_timesync_status()
     assert timesyncstatus.ntp, f"NTP not activated"
@@ -43,6 +45,7 @@ def test_clocksource_xen(clocksource_file: str, expected_clock_source: str):
     """
     _cmp_clksrc(clocksource_file=clocksource_file, expected=expected_clock_source)
 
+@pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("x86_64 and (kvm or aws)")
 @pytest.mark.parametrize("expected_clock_source", ["tsc"])
 def test_clocksource_kvm_aws_amd64(clocksource_file: str, expected_clock_source: str):
@@ -52,6 +55,7 @@ def test_clocksource_kvm_aws_amd64(clocksource_file: str, expected_clock_source:
     """
     _cmp_clksrc(clocksource_file=clocksource_file, expected=expected_clock_source)
 
+@pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("(kvm or aws) and (aarch64 or arm64)")
 @pytest.mark.parametrize("expected_clock_source", ["arch_sys_counter"])
 def test_clocksource_kvm_aws_aarch64(clocksource_file: str, expected_clock_source: str):
@@ -61,6 +65,7 @@ def test_clocksource_kvm_aws_aarch64(clocksource_file: str, expected_clock_sourc
     """
     _cmp_clksrc(clocksource_file=clocksource_file, expected=expected_clock_source)
 
+@pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure")
 def test_chrony_azure(chrony_config_file: str):
     """
