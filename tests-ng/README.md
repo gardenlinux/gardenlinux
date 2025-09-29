@@ -271,6 +271,9 @@ To connect to a running QEMU VM:
 
 # Run tests manually after login
 cd /run/gardenlinux-tests && ./run_tests --system-booted --allow-system-modifications --expected-users gardenlinux
+
+# Run tests with sudo if you wish to run tests that require root privileges
+cd /run/gardenlinux-tests && sudo ./run_tests --system-booted --allow-system-modifications --expected-users gardenlinux
 ```
 
 **Note**: Login to QEMU VMs (on a second shell) is only possible if `--ssh --skip-cleanup` is passed. SSHD is reachable on `127.0.0.1:2222` with the user `gardenlinux`. The QEMU VM will stay open in the shell that started and can be stopped with `ctrl + c`.
@@ -288,6 +291,9 @@ To connect to a cloud VM:
 
 # Run tests manually after login
 cd /run/gardenlinux-tests && ./run_tests --system-booted --allow-system-modifications --expected-users gardenlinux
+
+# Run tests with sudo if you wish to run tests that require root privileges
+cd /run/gardenlinux-tests && sudo ./run_tests --system-booted --allow-system-modifications --expected-users gardenlinux
 ```
 
 **Note**: Cloud VMs use the SSH user and IP address from the OpenTofu output.
