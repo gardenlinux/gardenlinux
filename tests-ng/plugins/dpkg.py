@@ -1,5 +1,17 @@
 import pytest
+from dataclasses import dataclass
 from .shell import ShellRunner
+
+
+@dataclass
+class Package:
+    """Represents an installed package"""
+    name: str
+    version: str
+
+    def __str__(self) -> str:
+        return f"{self.name}\t{self.version}"
+
 
 class Dpkg:
     def __init__(self, shell: ShellRunner):
