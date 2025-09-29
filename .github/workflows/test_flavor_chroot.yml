@@ -51,8 +51,16 @@ jobs:
 
           make --directory=tests ${{ inputs.flavor }}-${{ inputs.arch }}-chroot-test
       # chroot.test.xml is written in the entrypoint tests/init
+      - name: Load test distribution artifact
+        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
+        with:
+          path: tests-ng/.build
+          key: test-distribution
+          fail-on-cache-miss: true
       - name: New Test Framework
-        run: ./test-ng ".build/$CNAME.tar"
+        run: |
+          ls -la .build/
+          ./test-ng ".build/$CNAME.tar"
       - name: Rename test results
         if: always()
         run: mv tests/chroot.test.xml .build/$CNAME.chroot.test.xml
