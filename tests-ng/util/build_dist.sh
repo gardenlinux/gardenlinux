@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euxfo pipefail
+set -eufo pipefail
 
 if [ "$0" != /init ]; then
 	exec podman run --rm -v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro" -v "$PWD:/mnt" -w /mnt debian:stable /init "$@"
