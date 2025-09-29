@@ -41,7 +41,7 @@ def parse_etc_file(
         }
 
     :param path: Path to the file (e.g. /etc/passwd, /etc/shadow).
-    :param field_names: Names for the leading fields you care about.
+    :param field_names: Names for the desired relevant fields.
     :param min_fields: Minimum required number of colon-separated fields per line.
                        Defaults to len(field_names).
     :return: List of dicts with the given field_names plus "rest" for extra fields.

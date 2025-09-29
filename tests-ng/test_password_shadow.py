@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 
@@ -18,9 +20,14 @@ def test_passwd_password_field_is_valid(passwd_entries):
         assert pw in ["*", "x"], f"Malformed passwd entry for {entry['user']}: {pw}"
 
 
+@pytest.mark.root
 @pytest.mark.parametrize("command", ["pwck -r", "grpck -r"])
 def test_system_integrity_tools(shell, command):
     """System tools must confirm consistency of passwd and group files."""
+    # Skip test if unable to access the files (e.g. running without root permissions)
+    if not os.access("/etc/shadow", os.R_OK) or not os.access("/etc/gshadow", os.R_OK):
+        pytest.skip(f"{command} requires read access to /etc/shadow and /etc/gshadow")
+
     result = shell(command, capture_output=True, ignore_exit_code=True)
     assert result.returncode == 0, f"{command} failed: {result.stderr}"
     assert result.stdout.strip() == "", f"{command} produced unexpected output"
