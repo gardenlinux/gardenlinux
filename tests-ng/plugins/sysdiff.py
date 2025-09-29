@@ -10,10 +10,11 @@ Provides snapshot and comparison capabilities for:
 """
 
 import difflib
+import gzip
 import json
 import os
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -257,14 +258,18 @@ class SnapshotManager:
         if paths is None:
             paths = DEFAULT_PATHS
 
+        # Generate timestamp-based snapshot name
+        now = datetime.now()
+        timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
+
         if name is None:
-            name = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            snapshot_name = timestamp
+        else:
+            snapshot_name = f"{timestamp}-{name}"
 
-        snapdir = self.state_dir / name
-        if snapdir.exists():
-            raise ValueError(f"Snapshot '{name}' already exists at {snapdir}")
-
-        snapdir.mkdir(parents=True)
+        snapshot_file = self.state_dir / f"{snapshot_name}.json.gz"
+        if snapshot_file.exists():
+            raise ValueError(f"Snapshot '{snapshot_name}' already exists at {snapshot_file}")
 
         shell = ShellRunner(None)
         dpkg = Dpkg(shell)
@@ -296,112 +301,43 @@ class SnapshotManager:
             ignore_file=bool(ignore_file and ignore_file.exists())
         )
 
-        snapshot = Snapshot(name, metadata, packages, systemd_units, files, sysctl_params, kernel_modules)
-        self._save_snapshot(snapshot, snapdir)
+        snapshot = Snapshot(snapshot_name, metadata, packages, systemd_units, files, sysctl_params, kernel_modules)
+        self._save_snapshot(snapshot, snapshot_file)
 
         return snapshot
 
-    def _save_snapshot(self, snapshot: Snapshot, snapdir: Path):
-        """Save snapshot to disk"""
+    def _save_snapshot(self, snapshot: Snapshot, snapshot_file: Path):
+        """Save snapshot to disk as compressed JSON"""
+        self.state_dir.mkdir(parents=True, exist_ok=True)
 
-        with open(snapdir / "packages.txt", 'w') as f:
-            for package in snapshot.packages:
-                f.write(f"{package.name}\t{package.version}\n")
+        snapshot_data = {
+            "name": snapshot.name,
+            "metadata": asdict(snapshot.metadata),
+            "packages": [asdict(pkg) for pkg in snapshot.packages],
+            "systemd_units": [asdict(unit) for unit in snapshot.systemd_units],
+            "files": [asdict(file_entry) for file_entry in snapshot.files],
+            "sysctl_params": [asdict(param) for param in snapshot.sysctl_params],
+            "kernel_modules": [asdict(module) for module in snapshot.kernel_modules]
+        }
 
-        with open(snapdir / "systemd_units.txt", 'w') as f:
-            for unit in snapshot.systemd_units:
-                f.write(f"{unit.unit}\t{unit.load}\t{unit.active}\t{unit.sub}\n")
-
-        with open(snapdir / "files.txt", 'w') as f:
-            for file_entry in sorted(snapshot.files, key=lambda f: f.path):
-                f.write(f"{file_entry.sha256}  {file_entry.path}\n")
-
-        with open(snapdir / "sysctl.txt", 'w') as f:
-            for param in snapshot.sysctl_params:
-                f.write(f"{param.name}={param.value}\n")
-
-        with open(snapdir / "kernel_modules.txt", 'w') as f:
-            for module in snapshot.kernel_modules:
-                f.write(f"{module.name}\n")
-
-        with open(snapdir / "meta", 'w') as f:
-            f.write(f"created_at={snapshot.metadata.created_at}\n")
-            f.write(f"paths={' '.join(snapshot.metadata.paths)}\n")
-            f.write(f"ignore_file={'present' if snapshot.metadata.ignore_file else ''}\n")
+        with gzip.open(snapshot_file, 'wt', encoding='utf-8') as f:
+            json.dump(snapshot_data, f, separators=(',', ':'), sort_keys=True)
 
     def load_snapshot(self, name: str) -> Snapshot:
         """Load snapshot from disk"""
-        snapdir = self.state_dir / name
-        if not snapdir.exists():
+        snapshot_file = self.state_dir / f"{name}.json.gz"
+        if not snapshot_file.exists():
             raise ValueError(f"Snapshot '{name}' not found")
 
-        packages = []
-        packages_file = snapdir / "packages.txt"
-        if packages_file.exists():
-            with open(packages_file, 'r') as f:
-                for line in f:
-                    if '\t' in line:
-                        package, version = line.strip().split('\t', 1)
-                        packages.append(Package(name=package, version=version))
+        with gzip.open(snapshot_file, 'rt', encoding='utf-8') as f:
+            snapshot_data = json.load(f)
 
-        systemd_units = []
-        systemd_file = snapdir / "systemd_units.txt"
-        if systemd_file.exists():
-            with open(systemd_file, 'r') as f:
-                for line in f:
-                    parts = line.strip().split('\t')
-                    if len(parts) >= 4:
-                        systemd_units.append(SystemdUnit(
-                            unit=parts[0],
-                            load=parts[1],
-                            active=parts[2],
-                            sub=parts[3]
-                        ))
-
-        files = []
-        files_file = snapdir / "files.txt"
-        if files_file.exists():
-            with open(files_file, 'r') as f:
-                for line in f:
-                    parts = line.strip().split('  ', 1)
-                    if len(parts) == 2:
-                        files.append(FileEntry(path=parts[1], sha256=parts[0]))
-
-        sysctl_params = []
-        sysctl_file = snapdir / "sysctl.txt"
-        if sysctl_file.exists():
-            with open(sysctl_file, 'r') as f:
-                for line in f:
-                    if '=' in line:
-                        param, value = line.strip().split('=', 1)
-                        sysctl_params.append(SysctlParam(name=param, value=value))
-
-        kernel_modules = []
-        kernel_modules_file = snapdir / "kernel_modules.txt"
-        if kernel_modules_file.exists():
-            with open(kernel_modules_file, 'r') as f:
-                for line in f:
-                    module = line.strip()
-                    if module:
-                        kernel_modules.append(LoadedKernelModule(name=module))
-
-        metadata = SnapshotMetadata(
-            created_at="",
-            paths=[],
-            ignore_file=False,
-        )
-        meta_file = snapdir / "meta"
-        if meta_file.exists():
-            with open(meta_file, 'r') as f:
-                for line in f:
-                    if '=' in line:
-                        key, value = line.strip().split('=', 1)
-                        if key == "created_at":
-                            metadata.created_at = value
-                        elif key == "paths":
-                            metadata.paths = value.split() if value else []
-                        elif key == "ignore_file":
-                            metadata.ignore_file = value == "present"
+        metadata = SnapshotMetadata(**snapshot_data["metadata"])
+        packages = [Package(**pkg_data) for pkg_data in snapshot_data["packages"]]
+        systemd_units = [SystemdUnit(**unit_data) for unit_data in snapshot_data["systemd_units"]]
+        files = [FileEntry(**file_data) for file_data in snapshot_data["files"]]
+        sysctl_params = [SysctlParam(**param_data) for param_data in snapshot_data["sysctl_params"]]
+        kernel_modules = [LoadedKernelModule(**module_data) for module_data in snapshot_data["kernel_modules"]]
 
         return Snapshot(name, metadata, packages, systemd_units, files, sysctl_params, kernel_modules)
 
@@ -412,8 +348,9 @@ class SnapshotManager:
 
         snapshots = []
         for item in self.state_dir.iterdir():
-            if item.is_dir():
-                snapshots.append(item.name)
+            if item.is_file() and item.name.endswith('.json.gz'):
+                snapshot_name = item.name[:-8]  # Remove '.json.gz'
+                snapshots.append(snapshot_name)
 
         return sorted(snapshots)
 
@@ -539,10 +476,14 @@ class Sysdiff:
         self.manager = SnapshotManager()
         self.diff_engine = DiffEngine()
 
-    def create_snapshot(self, name: str, paths: List[str] = None,
+    def create_snapshot(self, name: str = None, paths: List[str] = None,
                        ignore_file: Path = None, verbose: bool = False) -> Snapshot:
         """Create a snapshot using the shell context"""
         return self.manager.create_snapshot(name, paths, ignore_file, verbose)
+
+    def load_snapshot(self, name: str) -> Snapshot:
+        """Load a snapshot"""
+        return self.manager.load_snapshot(name)
 
     def compare_snapshots(self, name_a: str, name_b: str) -> DiffResult:
         """Compare two snapshots"""
@@ -553,10 +494,9 @@ class Sysdiff:
     def cleanup_snapshots(self, names: List[str]):
         """Cleanup snapshots"""
         for name in names:
-            snapdir = self.manager.state_dir / name
-            if snapdir.exists():
-                import shutil
-                shutil.rmtree(snapdir)
+            snapshot_file = self.manager.state_dir / f"{name}.json.gz"
+            if snapshot_file.exists():
+                snapshot_file.unlink()
 
 
 @pytest.fixture
