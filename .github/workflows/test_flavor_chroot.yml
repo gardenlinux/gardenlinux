@@ -50,13 +50,12 @@ jobs:
           rm "$CNAME.tar.gz"
 
           make --directory=tests ${{ inputs.flavor }}-${{ inputs.arch }}-chroot-test
+       - name: Download test distribution artifact
+         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+         with:
+           name: test-distribution
+           path: tests-ng/.build
       # chroot.test.xml is written in the entrypoint tests/init
-      - name: Load test distribution artifact
-        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
-        with:
-          path: tests-ng/.build
-          key: test-distribution
-          fail-on-cache-miss: true
       - name: New Test Framework
         run: |
           ls -la .build/
