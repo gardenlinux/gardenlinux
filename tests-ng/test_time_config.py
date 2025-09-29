@@ -5,7 +5,7 @@ from datetime import datetime
 
 from plugins.shell import ShellRunner
 from plugins.timedatectl import TimeDateCtl, TimeSyncStatus
-from plugins.timeconf import clocksource_file, chrony_config_file
+from plugins.timeconf import clocksource_file, chrony_config_file, ptp_hyperv_dev
 from plugins.systemd import Systemd
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
@@ -91,6 +91,11 @@ def test_chrony_azure(chrony_config_file: str):
     with open(chrony_config_file, "r") as f:
         actual_config = f.read()
         assert actual_config.find(expected_config) != -1, f"chrony config for ptp expected but not found"
+
+@pytest.mark.booted(reason="NTP server configuration is read at runtime")
+@pytest.mark.feature("azure")
+def test_azure_ptp_symlink(ptp_hyperv_dev: str):
+    assert os.path.islink(ptp_hyperv_dev), f"ptp-dev should always be a symlink."
 
 @pytest.mark.parametrize("dir", ["/bin","/etc/ssh"])
 def test_files_not_in_future(dir: str):
