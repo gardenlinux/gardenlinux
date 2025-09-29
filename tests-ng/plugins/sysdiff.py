@@ -84,8 +84,7 @@ class FileCollector:
         for path in paths:
             if path and path not in seen:
                 try:
-                    result = self.shell(f'[ -e "{path}" ]', capture_output=True, ignore_exit_code=True)
-                    if result.returncode == 0:
+                    if os.path.exists(path):
                         existing_paths.append(path)
                         seen.add(path)
                 except Exception as e:
@@ -122,47 +121,114 @@ class FileCollector:
                     return True
         return False
 
-    def collect_file_hashes(self, paths: List[str], ignore_patterns: List[str] = None) -> Dict[str, str]:
-        """Collect SHA256 hashes for files in given paths"""
+    def _walk_files_recursive(self, root: str):
+        """Yield all files under root, recursively, without crossing filesystem boundaries."""
+        if os.path.isfile(root):
+            yield root
+            return
+
+        if not os.path.isdir(root):
+            return
+
+        try:
+            root_dev = os.stat(root).st_dev
+        except (OSError, IOError) as e:
+            print(f"Warning: Cannot access {root}: {e}")
+            return
+
+        for dirpath, dirnames, filenames in os.walk(root, topdown=True, followlinks=False):
+            # Prevent crossing filesystem boundaries
+            try:
+                dir_dev = os.stat(dirpath).st_dev
+                if dir_dev != root_dev:
+                    dirnames[:] = []  # Don't descend into subdirectories
+                    continue
+            except (OSError, IOError):
+                dirnames[:] = []  # Skip inaccessible directories
+                continue
+
+            for filename in filenames:
+                filepath = os.path.join(dirpath, filename)
+                yield filepath
+
+    def _calculate_file_hash(self, filepath: str, verbose: bool = False) -> Optional[str]:
+        """Calculate SHA256 hash for a single file"""
+        import hashlib
+
+        # Check if file exists before trying to read it
+        try:
+            if not os.path.exists(filepath):
+                if verbose:
+                    print(f"Warning: File not found: {filepath}")
+                return None
+        except (OSError, IOError):
+            # If we can't even check existence, skip silently
+            return None
+
+        try:
+            with open(filepath, "rb") as fileobj:
+                sha256 = hashlib.sha256()
+                # Read file in chunks for memory efficiency
+                while True:
+                    chunk = fileobj.read(8192)
+                    if not chunk:
+                        break
+                    sha256.update(chunk)
+                return sha256.hexdigest()
+        except FileNotFoundError:
+            # This shouldn't happen after the exists check, but handle it gracefully
+            if verbose:
+                print(f"Warning: File disappeared: {filepath}")
+            return None
+        except (OSError, IOError, PermissionError) as e:
+            # Less common errors - always warn
+            print(f"Warning: Cannot read {filepath}: {e}")
+            return None
+
+    def collect_file_hashes(self, paths: List[str], ignore_patterns: Optional[List[str]] = None,
+                          verbose: bool = False) -> Dict[str, str]:
+        """
+        Collect SHA256 hashes for files in given paths, recursively.
+
+        Args:
+            paths: List of file/directory paths to scan
+            ignore_patterns: List of regex patterns for files to ignore
+            verbose: If True, show warnings for missing files (broken symlinks)
+
+        Returns:
+            Dictionary mapping file paths to their SHA256 hashes
+        """
+        import hashlib
+
         if ignore_patterns is None:
             ignore_patterns = []
 
-        file_hashes = {}
+        file_hashes: Dict[str, str] = {}
+
+        if not paths:
+            return file_hashes
 
         try:
-            with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
-                for path in paths:
-                    f.write(f"{path}\n")
-                paths_file = f.name
+            all_files = []
+            for path in paths:
+                try:
+                    files_in_path = list(self._walk_files_recursive(path))
+                    all_files.extend(files_in_path)
+                except Exception as e:
+                    print(f"Warning: Error scanning {path}: {e}")
+                    continue
 
-            try:
-                find_command = f"""
-                while IFS= read -r root; do
-                    [ -z "$root" ] && continue
-                    if [ -d "$root" ]; then
-                        find "$root" -xdev -type f -readable 2>/dev/null
-                    elif [ -f "$root" ]; then
-                        printf '%s\\n' "$root"
-                    fi
-                done < "{paths_file}"
-                """
+            filtered_files = [
+                f for f in all_files
+                if not self.should_ignore_file(f, ignore_patterns)
+            ]
 
-                result = self.shell(find_command, capture_output=True, ignore_exit_code=True)
-                files = [f.strip() for f in result.stdout.strip().split('\n') if f.strip()]
+            filtered_files.sort()
 
-                filtered_files = sorted([
-                    f for f in files
-                    if not self.should_ignore_file(f, ignore_patterns)
-                ])
-
-                for filepath in filtered_files:
-                    result = self.shell(f'sha256sum -- "{filepath}" 2>/dev/null', capture_output=True, ignore_exit_code=True)
-                    if result.stdout.strip():
-                        hash_part = result.stdout.strip().split()[0]
-                        file_hashes[filepath] = hash_part
-
-            finally:
-                os.unlink(paths_file)
+            for filepath in filtered_files:
+                hash_value = self._calculate_file_hash(filepath, verbose)
+                if hash_value is not None:
+                    file_hashes[filepath] = hash_value
 
         except Exception as e:
             print(f"Error collecting file hashes: {e}")
@@ -178,7 +244,7 @@ class SnapshotManager:
         self.state_dir.mkdir(parents=True, exist_ok=True)
 
     def create_snapshot(self, name: str = None, paths: List[str] = None,
-                       ignore_file: Path = None) -> Snapshot:
+                       ignore_file: Path = None, verbose: bool = False) -> Snapshot:
         """Create a new system snapshot"""
         if paths is None:
             paths = DEFAULT_PATHS
@@ -205,7 +271,7 @@ class SnapshotManager:
         kernel_modules = kernel_module.collect_loaded_modules()
         ignore_patterns = file_collector.load_ignore_patterns(ignore_file)
         normalized_paths = file_collector.normalize_paths(paths)
-        files = file_collector.collect_file_hashes(normalized_paths, ignore_patterns)
+        files = file_collector.collect_file_hashes(normalized_paths, ignore_patterns, verbose)
 
         metadata = SnapshotMetadata(
             created_at=datetime.now().isoformat(),
@@ -457,9 +523,9 @@ class Sysdiff:
         self.diff_engine = DiffEngine()
 
     def create_snapshot(self, name: str, paths: List[str] = None,
-                       ignore_file: Path = None) -> Snapshot:
+                       ignore_file: Path = None, verbose: bool = False) -> Snapshot:
         """Create a snapshot using the shell context"""
-        return self.manager.create_snapshot(name, paths, ignore_file)
+        return self.manager.create_snapshot(name, paths, ignore_file, verbose)
 
     def compare_snapshots(self, name_a: str, name_b: str) -> DiffResult:
         """Compare two snapshots"""
