@@ -1,6 +1,15 @@
 import pytest
-
+from dataclasses import dataclass
 from .shell import ShellRunner
+
+
+@dataclass
+class LoadedKernelModule:
+    """Represents a loaded kernel module"""
+    name: str
+
+    def __str__(self) -> str:
+        return self.name
 
 
 # This Class is used to load, unload or check the Kernel module status
