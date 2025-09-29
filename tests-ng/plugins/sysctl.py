@@ -1,5 +1,17 @@
 import pytest
+from dataclasses import dataclass
 from .shell import ShellRunner
+
+
+@dataclass
+class SysctlParam:
+    """Represents a sysctl parameter"""
+    name: str
+    value: str
+
+    def __str__(self) -> str:
+        return f"{self.name}={self.value}"
+
 
 class SysctlWrapper:
     def __getitem__(self, key: str):

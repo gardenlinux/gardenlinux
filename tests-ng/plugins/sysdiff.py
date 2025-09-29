@@ -22,10 +22,10 @@ from typing import Dict, List, Optional, Tuple
 import pytest
 
 from .shell import ShellRunner
-from .dpkg import Dpkg
+from .dpkg import Dpkg, Package
 from .systemd import Systemd, SystemdUnit
-from .kernel_module import KernelModule
-from .sysctl import Sysctl
+from .kernel_module import KernelModule, LoadedKernelModule
+from .sysctl import Sysctl, SysctlParam
 
 
 DEFAULT_PATHS = [
@@ -37,6 +37,16 @@ STATE_DIR = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state"))
 
 IGNORED_SYSTEMD_PATTERNS = []
 IGNORED_KERNEL_MODULES = []
+
+
+@dataclass
+class FileEntry:
+    """Represents a file with its hash"""
+    path: str
+    sha256: str
+
+    def __str__(self) -> str:
+        return f"{self.sha256}  {self.path}"
 
 
 @dataclass
@@ -52,11 +62,11 @@ class Snapshot:
     """Complete system snapshot"""
     name: str
     metadata: SnapshotMetadata
-    packages: Dict[str, str]  # package -> version
+    packages: List[Package]
     systemd_units: List[SystemdUnit]
-    files: Dict[str, str]  # path -> sha256
-    sysctl_params: Dict[str, str]  # parameter -> value
-    kernel_modules: List[str]  # loaded kernel modules
+    files: List[FileEntry]
+    sysctl_params: List[SysctlParam]
+    kernel_modules: List[LoadedKernelModule]  # loaded kernel modules
 
 
 @dataclass
@@ -265,13 +275,22 @@ class SnapshotManager:
         sysctl_collector = Sysctl(shell)
         kernel_module = KernelModule(shell)
 
-        packages = dpkg.collect_packages()
+        packages_dict = dpkg.collect_packages()
+        packages = [Package(name=pkg, version=ver) for pkg, ver in packages_dict.items()]
+
         systemd_units = systemd.list_units()
-        sysctl_params = sysctl_collector.collect_sysctl_parameters()
-        kernel_modules = kernel_module.collect_loaded_modules()
+
+        sysctl_params_dict = sysctl_collector.collect_sysctl_parameters()
+        sysctl_params = [SysctlParam(name=param, value=val) for param, val in sysctl_params_dict.items()]
+
+        kernel_modules_list = kernel_module.collect_loaded_modules()
+        kernel_modules = [LoadedKernelModule(name=module) for module in kernel_modules_list]
+
         ignore_patterns = file_collector.load_ignore_patterns(ignore_file)
         normalized_paths = file_collector.normalize_paths(paths)
-        files = file_collector.collect_file_hashes(normalized_paths, ignore_patterns, verbose)
+
+        files_dict = file_collector.collect_file_hashes(normalized_paths, ignore_patterns, verbose)
+        files = [FileEntry(path=path, sha256=hash_val) for path, hash_val in files_dict.items()]
 
         metadata = SnapshotMetadata(
             created_at=datetime.now().isoformat(),
@@ -288,24 +307,24 @@ class SnapshotManager:
         """Save snapshot to disk"""
 
         with open(snapdir / "packages.txt", 'w') as f:
-            for package, version in snapshot.packages.items():
-                f.write(f"{package}\t{version}\n")
+            for package in snapshot.packages:
+                f.write(f"{package.name}\t{package.version}\n")
 
         with open(snapdir / "systemd_units.txt", 'w') as f:
             for unit in snapshot.systemd_units:
                 f.write(f"{unit.unit}\t{unit.load}\t{unit.active}\t{unit.sub}\n")
 
         with open(snapdir / "files.txt", 'w') as f:
-            for path, hash_val in sorted(snapshot.files.items()):
-                f.write(f"{hash_val}  {path}\n")
+            for file_entry in sorted(snapshot.files, key=lambda f: f.path):
+                f.write(f"{file_entry.sha256}  {file_entry.path}\n")
 
         with open(snapdir / "sysctl.txt", 'w') as f:
-            for param, value in snapshot.sysctl_params.items():
-                f.write(f"{param}={value}\n")
+            for param in snapshot.sysctl_params:
+                f.write(f"{param.name}={param.value}\n")
 
         with open(snapdir / "kernel_modules.txt", 'w') as f:
             for module in snapshot.kernel_modules:
-                f.write(f"{module}\n")
+                f.write(f"{module.name}\n")
 
         with open(snapdir / "meta", 'w') as f:
             f.write(f"created_at={snapshot.metadata.created_at}\n")
@@ -318,14 +337,14 @@ class SnapshotManager:
         if not snapdir.exists():
             raise ValueError(f"Snapshot '{name}' not found")
 
-        packages = {}
+        packages = []
         packages_file = snapdir / "packages.txt"
         if packages_file.exists():
             with open(packages_file, 'r') as f:
                 for line in f:
                     if '\t' in line:
                         package, version = line.strip().split('\t', 1)
-                        packages[package] = version
+                        packages.append(Package(name=package, version=version))
 
         systemd_units = []
         systemd_file = snapdir / "systemd_units.txt"
@@ -341,23 +360,23 @@ class SnapshotManager:
                             sub=parts[3]
                         ))
 
-        files = {}
+        files = []
         files_file = snapdir / "files.txt"
         if files_file.exists():
             with open(files_file, 'r') as f:
                 for line in f:
                     parts = line.strip().split('  ', 1)
                     if len(parts) == 2:
-                        files[parts[1]] = parts[0]
+                        files.append(FileEntry(path=parts[1], sha256=parts[0]))
 
-        sysctl_params = {}
+        sysctl_params = []
         sysctl_file = snapdir / "sysctl.txt"
         if sysctl_file.exists():
             with open(sysctl_file, 'r') as f:
                 for line in f:
                     if '=' in line:
                         param, value = line.strip().split('=', 1)
-                        sysctl_params[param] = value
+                        sysctl_params.append(SysctlParam(name=param, value=value))
 
         kernel_modules = []
         kernel_modules_file = snapdir / "kernel_modules.txt"
@@ -366,7 +385,7 @@ class SnapshotManager:
                 for line in f:
                     module = line.strip()
                     if module:
-                        kernel_modules.append(module)
+                        kernel_modules.append(LoadedKernelModule(name=module))
 
         metadata = SnapshotMetadata(
             created_at="",
@@ -430,10 +449,10 @@ class DiffEngine:
             lineterm=""
         ))
 
-    def _compare_packages(self, packages_a: Dict[str, str], packages_b: Dict[str, str]) -> List[str]:
+    def _compare_packages(self, packages_a: List[Package], packages_b: List[Package]) -> List[str]:
         """Compare package lists and return diff lines"""
-        lines_a = [f"{pkg}\t{ver}" for pkg, ver in packages_a.items()]
-        lines_b = [f"{pkg}\t{ver}" for pkg, ver in packages_b.items()]
+        lines_a = [str(pkg) for pkg in packages_a]
+        lines_b = [str(pkg) for pkg in packages_b]
 
         return self._generate_diff(
             lines_a, lines_b,
@@ -458,33 +477,33 @@ class DiffEngine:
             "systemd_units@snapshot_a", "systemd_units@snapshot_b"
         )
 
-    def _compare_files(self, files_a: Dict[str, str], files_b: Dict[str, str]) -> List[str]:
+    def _compare_files(self, files_a: List[FileEntry], files_b: List[FileEntry]) -> List[str]:
         """Compare file lists and return diff lines"""
-        lines_a = [f"{hash_val}  {path}" for path, hash_val in sorted(files_a.items())]
-        lines_b = [f"{hash_val}  {path}" for path, hash_val in sorted(files_b.items())]
+        lines_a = [str(file_entry) for file_entry in sorted(files_a, key=lambda f: f.path)]
+        lines_b = [str(file_entry) for file_entry in sorted(files_b, key=lambda f: f.path)]
 
         return self._generate_diff(
             lines_a, lines_b,
             "files@snapshot_a", "files@snapshot_b"
         )
 
-    def _compare_sysctl_params(self, params_a: Dict[str, str], params_b: Dict[str, str]) -> List[str]:
+    def _compare_sysctl_params(self, params_a: List[SysctlParam], params_b: List[SysctlParam]) -> List[str]:
         """Compare sysctl parameter lists and return diff lines"""
-        lines_a = [f"{param}={value}" for param, value in params_a.items()]
-        lines_b = [f"{param}={value}" for param, value in params_b.items()]
+        lines_a = [str(param) for param in params_a]
+        lines_b = [str(param) for param in params_b]
 
         return self._generate_diff(
             lines_a, lines_b,
             "sysctl@snapshot_a", "sysctl@snapshot_b"
         )
 
-    def _compare_kernel_modules(self, modules_a: List[str], modules_b: List[str]) -> List[str]:
+    def _compare_kernel_modules(self, modules_a: List[LoadedKernelModule], modules_b: List[LoadedKernelModule]) -> List[str]:
         """Compare kernel module lists and return diff lines"""
-        filtered_modules_a = [m for m in modules_a if m not in self._ignored_kernel_modules]
-        filtered_modules_b = [m for m in modules_b if m not in self._ignored_kernel_modules]
+        filtered_modules_a = [m for m in modules_a if m.name not in self._ignored_kernel_modules]
+        filtered_modules_b = [m for m in modules_b if m.name not in self._ignored_kernel_modules]
 
-        lines_a = sorted(filtered_modules_a)
-        lines_b = sorted(filtered_modules_b)
+        lines_a = sorted([str(module) for module in filtered_modules_a])
+        lines_b = sorted([str(module) for module in filtered_modules_b])
 
         return self._generate_diff(
             lines_a, lines_b,
