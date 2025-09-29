@@ -58,7 +58,6 @@ jobs:
       # chroot.test.xml is written in the entrypoint tests/init
       - name: New Test Framework
         run: |
-          ls -la .build/
           ./test-ng ".build/$CNAME.tar"
       - name: Rename test results
         if: always()
