@@ -109,7 +109,7 @@ jobs:
           export_environment_variables: true
       - name: Set GCP platform-test environment
         if: ${{ startsWith(inputs.flavor, 'gcp-') }}
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             // tf provider vars
@@ -126,7 +126,7 @@ jobs:
           output-credentials: true
       - name: Set AWS platform-test environment
         if: ${{ startsWith(inputs.flavor, 'aws-') }}
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             // tf provider auth
@@ -148,7 +148,7 @@ jobs:
           subscription-id: ${{ secrets.az_subscription_id }}
       - name: Set Azure platform-test environment
         if: ${{ startsWith(inputs.flavor, 'azure-') }}
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             // tf provider auth
@@ -163,7 +163,7 @@ jobs:
             core.exportVariable("ARM_TENANT_ID", "${{ secrets.az_tenant_id }}");
       - name: "Create ali cloud credential file"
         if: ${{ startsWith(inputs.flavor, 'ali-') }}
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             // tf provider auth
