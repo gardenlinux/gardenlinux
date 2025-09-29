@@ -19,7 +19,7 @@ if [ "$0" != /init ]; then
 		&& DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl e2fsprogs qemu-utils gawk retry
 	EOF
 
-	podman build -q --iidfile "$tmpdir/image_id" "$tmpdir" >/dev/null
+	podman build -q --iidfile "$tmpdir/image_id" "$tmpdir" # >/dev/null
 	image_id="$(<"$tmpdir/image_id")"
 
 	cleanup
