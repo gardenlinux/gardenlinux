@@ -101,7 +101,6 @@ jobs:
             const testsEnvsEnabled = gitHubLib.getTestEnvironmentsEnabled("${{ inputs.test_types }}");
 
             // chroot_test_flavors_matrix
-            core.info(testsEnvsEnabled.includes("chroot"));
             if (testsEnvsEnabled.includes("chroot")) {
               const matrix = gitHubLib.intersectFlavorsMatrix(
                 ${{ inputs.flavors_matrix }},
@@ -109,13 +108,11 @@ jobs:
               );
 
               const isEnabled = !gitHubLib.isMatrixEmpty(matrix);
-              core.info(`chroot_tests ${isEnabled}`);
               core.setOutput("chroot_tests", isEnabled);
 
               if (isEnabled) {
                 core.setOutput("chroot_test_flavors_matrix", matrix);
               }
-              core.info(`chroot_test_flavors_matrix ${matrix}`);
             }
 
             // qemu_test_flavors_matrix
