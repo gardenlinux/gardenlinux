@@ -41,16 +41,16 @@ def test_ntp(timedatectl: TimeDateCtl):
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure")
 def test_systemd_timesyncd_disabled(systemd: Systemd):
-    assert systemd.is_active("systemd-timesyncd") == False, f"Chronyd instead of systemd-timesyncd should be active on Azure."
+    assert systemd.is_active("systemd-timesyncd") == False, f"Chrony instead of systemd-timesyncd should be active on Azure."
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure")
 def test_chrony_on_azure(systemd: Systemd):
     """
-    Test for chronyd as active time sync service on Azure.
+    Test for chrony as active time sync service on Azure.
     See: https://learn.microsoft.com/en-us/azure/virtual-machines/linux/time-sync#chrony
     """
-    assert systemd.is_active("chronyd"), f"Chronyd should be active on Azure."
+    assert systemd.is_active("chrony"), f"Chrony should be active on Azure."
 
 @pytest.mark.skip(reason="xen is no longer activly used")
 @pytest.mark.feature("xen")
