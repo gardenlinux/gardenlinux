@@ -75,10 +75,8 @@ class TimeDateCtl:
             if result.returncode != 0:
                 raise ValueError(f"timedatectl failed: {result.stderr}")
 
-            lexer = shlex.shlex(result.stdout, posix=True)
-            line = [line.strip() for line in result.stdout.split("\n") if result.stdout.strip().startswith("Server:")]
-
-            return TimeSyncStatus(ntp=False, ntp_synchronized=False)
+            output = dict([line.strip().split("=") for line in result.stdout.splitlines() if len(line.strip()) > 0])
+            return TimeSyncStatus(ntp=(output["NTP"] == "yes"), ntp_synchronized=(output["NTPSynchronized"] == "yes"))
 
 @pytest.fixture
 def timedatectl(systemd: Systemd, shell: ShellRunner):
