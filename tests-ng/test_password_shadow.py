@@ -2,13 +2,18 @@ import pytest
 
 
 def test_shadow_passwords_are_locked(shadow_entries):
-    """No user in shadow should have a valid password hash."""
+    """No user in shadow should have a valid password entry and all users are locked."""
     for entry in shadow_entries:
         pw = entry["passwd"]
-        assert pw and pw[0] in [
-            "*",
+
+        # Assert that the password field for the given entry is not empty (not invalid)
+        assert pw, f"Empty password field in shadow for {entry['user']}"
+
+        # Assert whether the first character is a '!' or '*' marking the user as locked.
+        assert pw[0] in [
             "!",
-        ], f"Unexpected password hash in shadow for {entry['user']}: {pw}"
+            "*",
+        ], f"Unexpected password hash in shadow for {entry['user']: {pw}}"
 
 
 def test_passwd_password_field_is_valid(passwd_entries):
