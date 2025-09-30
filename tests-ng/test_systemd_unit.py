@@ -42,7 +42,7 @@ def test_systemd_unit(shell: ShellRunner, systemd_unit):
 @pytest.mark.modify(reason="Starts systemd service")
 @pytest.mark.feature("firecracker", reason="rngd required for firecracker")
 def test_systemd_rngd(shell: ShellRunner, dpkg: Dpkg):
-    arch = dpkg.get_architecture()
+    arch = dpkg.architecture()
     active = True
 
     # We assume that on arm64, the systemd
