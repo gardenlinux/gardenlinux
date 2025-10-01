@@ -1,0 +1,104 @@
+name: test_report
+on:
+  workflow_call:
+    inputs:
+      test_jobs:
+        description: "Comma-separated list of test job names to wait for"
+        type: string
+        required: true
+jobs:
+  test_report:
+    name: Generate Test Report
+    runs-on: ubuntu-24.04
+    needs: []
+    if: always()
+    permissions:
+      actions: write
+      checks: write
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+        with:
+          submodules: true
+
+      - name: Download all test artifacts
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        with:
+          pattern: "*-test-*"
+          path: test-artifacts
+          merge-multiple: true
+        continue-on-error: true
+
+      - name: List downloaded artifacts
+        run: |
+          echo "Downloaded test artifacts:"
+          find test-artifacts -name "*.test.xml" -type f
+          echo "Total XML files found: $(find test-artifacts -name "*.test.xml" -type f | wc -l)"
+
+      - name: Generate Test Report
+        uses: yeoldegrove/pytest-multi-results-action@main
+        if: always()
+        with:
+          files: |
+            test-artifacts/**/*.test.xml
+          title: "GardenLinux Test Results"
+          summary: true
+          display-options: "fEX"
+          fail-on-empty: false
+          metadata-fields: "Namespace,Type,Artifact"
+          metadata-field-mapping: '{"Namespace": "Namespace", "Type": "Type", "Artifact": "Artifact"}'
+
+      - name: Upload report artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+        if: always()
+        with:
+          name: test-report
+          path: test-artifacts
+          retention-days: 30
+
+  test_ng_report:
+    name: Generate Test-NG Report
+    runs-on: ubuntu-24.04
+    needs: []
+    if: always()
+    permissions:
+      actions: write
+      checks: write
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+        with:
+          submodules: true
+
+      - name: Download all test artifacts
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        with:
+          pattern: "*-test-ng-*"
+          path: test-artifacts
+          merge-multiple: true
+        continue-on-error: true
+
+      - name: List downloaded artifacts
+        run: |
+          echo "Downloaded test artifacts:"
+          find test-artifacts -name "*.test-ng.xml" -type f
+          echo "Total XML files found: $(find test-artifacts -name "*.test-ng.xml" -type f | wc -l)"
+
+      - name: Generate Test Report
+        uses: yeoldegrove/pytest-multi-results-action@main
+        if: always()
+        with:
+          files: |
+            test-artifacts/**/*.test-ng.xml
+          title: "GardenLinux Test-NG Results"
+          summary: true
+          display-options: "fEX"
+          fail-on-empty: false
+          metadata-fields: "Namespace,Type,Artifact"
+          metadata-field-mapping: '{"Namespace": "Namespace", "Type": "Type", "Artifact": "Artifact"}'
+
+      - name: Upload report artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+        if: always()
+        with:
+          name: test-ng-report
+          path: test-artifacts
+          retention-days: 30

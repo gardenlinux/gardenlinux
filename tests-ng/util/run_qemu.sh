@@ -67,6 +67,22 @@ fi
 mkdir -p "$log_dir"
 test_args+=("--junit-xml=/dev/virtio-ports/test_junit")
 
+# Extract test artifact name from image filename
+if ((is_pxe_archive)); then
+	test_artifact="$(basename "$image" | sed 's/-[0-9].*\.pxe\.tar\.gz$//')"
+else
+	test_artifact="$(basename "$image" | sed 's/-[0-9].*\.raw$//')"
+fi
+test_type="qemu"
+test_namespace="test-ng"
+
+# Add pytest-metadata arguments
+test_args+=("--metadata" "Artifact" "$test_artifact")
+test_args+=("--metadata" "Type" "$test_type")
+test_args+=("--metadata" "Namespace" "$test_namespace")
+
+echo "📊  metadata: Artifact=$test_artifact, Type=$test_type, Namespace=$test_namespace"
+
 # arch, uefi, secureboot, tpm2 are set in $image.requirements
 if ((is_pxe_archive)); then
 	image_requirements=${image//.pxe.tar.gz/.requirements}

@@ -52,7 +52,7 @@ def pytest_addoption(parser: Parser):
     )
     parser.addoption(
         "--create-only",
-        action="store_true", 
+        action="store_true",
         default=False,
         help="Only create and set up the test resources without running tests (default: False)"
     )
@@ -235,7 +235,7 @@ def client(testconfig, provisioner, imageurl, request) -> Iterator[RemoteClient]
     logger.info(f"Testconfig for {provisioner=} is {testconfig}")
     test_name = testconfig.get('test_name', f"gl-test-{time.strftime('%Y%m%d')}-{os.urandom(2).hex()}")
     create_only = request.config.getoption("--create-only")
-    
+
     try:
        if provisioner == "openstack-ccee":
            from platformSetup.openstackccee import OpenStackCCEE
@@ -262,12 +262,12 @@ def create_resource_test(client):
 def create_resource_module(session):
     """Module and test for resource creation"""
     import _pytest.python
-    
+
     module = _pytest.python.Module.from_parent(
         parent=session,
         path=Path("resource_creation_test.py")
     )
-    
+
     return _pytest.python.Function.from_parent(
         name="test_resource_creation",
         parent=module,
@@ -332,7 +332,7 @@ def features(client):
     yield features.split(','), current[0]
 
 
-# all configuration for our test has been split into smaller parts.  
+# all configuration for our test has been split into smaller parts.
 pytest_plugins = [
      "conftests.architecture",
      "conftests.elements",
@@ -346,3 +346,8 @@ pytest_plugins = [
 @pytest.fixture
 def openstack_flavor():
     return OpenStackCCEE.instance().flavor
+
+@pytest.fixture(scope="session", autouse=True)
+def include_metadata_in_junit_xml_session(include_metadata_in_junit_xml):
+    """Session-scoped fixture that uses pytest-metadata's include_metadata_in_junit_xml fixture."""
+    return include_metadata_in_junit_xml
