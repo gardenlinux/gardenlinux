@@ -11,7 +11,7 @@ def test_password_entry_present(pam_config):
     exists in PAM config.
     """
     candidates = pam_config.find_entries(
-        type_="password", control_contains={"success": "*"}, default="ignore"
+        type_="password", control_contains={"success": "*", "default": "ignore"}
     )
     assert (
         len(candidates) == 1
@@ -27,7 +27,7 @@ def test_password_entry_uses_strong_hash(pam_config):
     Ensure that the password entry uses a strong hash algorithm (yescrypt or sha512).
     """
     candidates = pam_config.find_entries(
-        type_="password", control_contains={"success": "*"}, default="ignore"
+        type_="password", control_contains={"success": "*", "default": "ignore"}
     )
 
     # Validate that this is only defined a single time
@@ -35,7 +35,7 @@ def test_password_entry_uses_strong_hash(pam_config):
     # multiple times
     assert (
         len(candidates) == 1
-    ), "Expected exactly one 'password ... [success=... default=ignore] ...' entry"
+    ), f"Expected exactly one 'password ... [success=... default=ignore] ...' entry, found {len(candidates)}: {candidates}"
     entry = candidates[0]
 
     # Validate the entry for 'sha512' or 'yescrypt'

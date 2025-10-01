@@ -218,7 +218,6 @@ class PamConfig:
         arg_contains: Optional[List[str]] = None,
         control_contains: Optional[str | Dict[str, str] | List[str]] = None,
         match_all: Optional[bool] = False,
-        default: Optional[str] = None,
         include_target: Optional[str] = None,
     ) -> List[PamEntry]:
         """
@@ -240,8 +239,6 @@ class PamConfig:
         :type control_contains: Optional[str | Dict[str, str] | List[str]]
         :param match_all: requires all parameters in arg_contains and control_contains must match for returned entries
         :type match_all: bool
-        :param default: match control_dict.get('default') provided value
-        :type default: Optional[str]
         :param include_target: filter by exact match for the @include target.
         :type include_target: Optional[str]
         """
@@ -290,32 +287,25 @@ class PamConfig:
                         if any(tok in entry.control for tok in control_contains)
                     ]
 
-            elif isinstance(control_contains, dict):
-                if match_all:
-                    results = [
-                        entry
-                        for entry in results
-                        if all(
-                            entry.control_dict.get(key) == value
-                            for key, value in control_contains.items()
-                        )
-                    ]
-                else:
-                    results = [
-                        entry
-                        for entry in results
-                        if any(
-                            entry.control_dict.get(key) == value
-                            for key, value in control_contains.items()
-                        )
-                    ]
-
-        if default is not None:
-            results = [
-                entry
-                for entry in results
-                if entry.control_dict.get("default") == default
-            ]
+        if isinstance(control_contains, dict):
+            if match_all:
+                results = [
+                    entry
+                    for entry in results
+                    if all(
+                        value == "*" or entry.control_dict.get(key) == value
+                        for key, value in control_contains.items()
+                    )
+                ]
+            else:
+                results = [
+                    entry
+                    for entry in results
+                    if any(
+                        value == "*" or entry.control_dict.get(key) == value
+                        for key, value in control_contains.items()
+                    )
+                ]
 
         if include_target is not None:
             results = [
