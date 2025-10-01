@@ -168,8 +168,6 @@ def testconfig(pipeline, iaas, pytestconfig):
             pass
         elif iaas == 'chroot':
             pass
-        elif iaas == 'firecracker':
-            pass
         elif iaas == 'qemu':
             pass
         elif iaas == 'manual':
