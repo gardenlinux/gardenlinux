@@ -1,5 +1,8 @@
 import pytest
 import logging
+import os
+import shutil
+import time
 from .shell import ShellRunner
 
 logging.basicConfig(level=logging.DEBUG)
@@ -17,16 +20,19 @@ def iscsi_device(shell: ShellRunner):
             initiator-address 127.0.0.1
         </target>"""
     shell("sudo mkdir -p /etc/tgt/conf.d")
-    shell(f"echo '{iscsi_config}' | sudo tee /etc/tgt/conf.d/iscsi_target.conf")
+    os.makedirs("/etc/tgt/conf.d", exist_ok=True)
+    with open("/etc/tgt/conf.d/iscsi_target.conf", "w") as f:
+        f.write(iscsi_config)
+    
     shell("sudo /usr/sbin/tgt-admin --update ALL")
     shell("sudo tgtadm --mode target --op show")
     shell("sudo iscsiadm -m discovery -t sendtargets -p 127.0.0.1")
     output = shell("sudo iscsiadm -m node --login", capture_output=True)
     logger.info(f"iscsiadm login: {output.stdout}")
-    shell("sleep 10")
+    time.sleep(10)
 
     yield
 
     shell("sudo iscsiadm --mode node --logout")
     shell("/usr/sbin/start-stop-daemon --stop --quiet --oknodo --exec /usr/sbin/tgtd")
-    shell("sudo rm -rf /etc/tgt/conf.d")
+    shutil.rmtree("/etc/tgt/conf.d")
