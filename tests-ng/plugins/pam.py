@@ -217,7 +217,7 @@ class PamConfig:
         module_contains: Optional[str] = None,
         arg_contains: Optional[List[str]] = None,
         control_contains: Optional[str | Dict[str, str] | List[str]] = None,
-        match_all_containing: Optional[bool] = False,
+        match_all: Optional[bool] = False,
         default: Optional[str] = None,
         include_target: Optional[str] = None,
     ) -> List[PamEntry]:
@@ -228,7 +228,7 @@ class PamConfig:
             - control_contains="required" → match entries whose raw control string contains 'required'
             - control_contains={"success": "1"} → match entries where control_dict['success'] == '1'
             - control_contains=["required", "sufficient"] → match entries where raw control string contains one/all of them
-              (depending on match_all_containing)
+              (depending on match_all)
 
         :param type_: exact PAM type (case-insensitive)
         :type type_: Optional[str]
@@ -238,8 +238,8 @@ class PamConfig:
         :type arg_contains: Optional[List[str]]
         :param control_contains: expected string, list of strings or set of fields that must be present in entry.control
         :type control_contains: Optional[str | Dict[str, str] | List[str]]
-        :param match_all_containing: requires all parameters in arg_contains and control_contains must match for returned entries
-        :type match_all_containing: bool
+        :param match_all: requires all parameters in arg_contains and control_contains must match for returned entries
+        :type match_all: bool
         :param default: match control_dict.get('default') provided value
         :type default: Optional[str]
         :param include_target: filter by exact match for the @include target.
@@ -256,11 +256,18 @@ class PamConfig:
             results = [entry for entry in results if module_contains in entry.module]
 
         if arg_contains:
-            results = [
-                entry
-                for entry in results
-                if all(token in entry.options for token in arg_contains)
-            ]
+            if match_all:
+                results = [
+                    entry
+                    for entry in results
+                    if all(token in entry.options for token in arg_contains)
+                ]
+            else:
+                results = [
+                    entry
+                    for entry in results
+                    if any(token in entry.options for token in arg_contains)
+                ]
 
         if control_contains is not None:
             if isinstance(control_contains, str):
@@ -270,7 +277,7 @@ class PamConfig:
                 ]
 
             elif isinstance(control_contains, list):
-                if match_all_containing:
+                if match_all:
                     results = [
                         entry
                         for entry in results
@@ -284,7 +291,7 @@ class PamConfig:
                     ]
 
             elif isinstance(control_contains, dict):
-                if match_all_containing:
+                if match_all:
                     results = [
                         entry
                         for entry in results
