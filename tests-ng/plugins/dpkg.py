@@ -41,7 +41,7 @@ class Dpkg:
     def collect_packages(self) -> dict[str, str]:
         """Collect all installed packages and their versions"""
         result = self._shell(
-            "dpkg-query -W -f='${binary:Package}\t${Version}\n'",
+            "dpkg-query --show --showformat='${binary:Package}\t${Version}\n'",
             capture_output=True,
             ignore_exit_code=True
         )
