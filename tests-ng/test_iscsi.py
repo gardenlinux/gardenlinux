@@ -4,6 +4,7 @@ import os
 
 import pytest
 from plugins.shell import ShellRunner
+from plugins.block_devices import BlockDevices
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
@@ -12,10 +13,8 @@ logger = logging.getLogger()
 @pytest.mark.root(reason="Needs to run iscsiadm")
 @pytest.mark.modify(reason="Deletes /etc/tgt/conf.d")
 @pytest.mark.feature("iscsi", reason="Feature test for iscsi")
-def test_iscsi_setup(shell: ShellRunner, iscsi_device):
-    devices_before = os.listdir("/dev/disk/by-path")
-    logger.info(f"Block devices before rescan: {", ".join(devices_before)}")
-    assert not any(["iscsi-iqn" in device for device in devices_before]), "Unexpected iscsi-iqn before rescan"
+def test_iscsi_setup(shell: ShellRunner, block_devices: BlockDevices, iscsi_device):
+    assert not block_devices.contains("iscsi-iqn", substring=True), "Unexpected iscsi-iqn before rescan"
 
     session_id = shell("sudo iscsiadm -m session | awk '{print $2}'", capture_output=True)
     session_id = session_id.stdout.strip("[]\n")
@@ -24,6 +23,5 @@ def test_iscsi_setup(shell: ShellRunner, iscsi_device):
     output = shell(f"sudo iscsiadm -m session -r {session_id} --rescan", capture_output=True)
     logger.info(f"Rescan output: {output.stdout}")
     time.sleep(5)
-    devices_after = os.listdir("/dev/disk/by-path")
-    logger.info(f"Block devices after rescan: {", ".join(devices_after)}")
-    assert any(["iscsi-iqn" in device for device in devices_after]), "Expected iscsi-iqn after rescan"
+
+    assert block_devices.contains("iscsi-iqn", substring=True), "Expected iscsi-iqn after rescan"
