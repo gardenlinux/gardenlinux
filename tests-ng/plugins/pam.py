@@ -24,7 +24,7 @@ class PamEntry:
     :type type_: str
     :param control: raw control token (either a single token like 'required'
                     or bracketed expression like '[success=1 default=ignore]')
-    :type control: str
+    :type control: Optional[str]
     :param module: module name, e.g. 'pam_unix.so'
     :type module: str
     :param options: list of module arguments (tokens after the module name)
@@ -54,8 +54,12 @@ class PamEntry:
         Handles escaped brackets (\]) as literals.
         If control is a simple token (e.g. 'required'), return {}
         """
-        control_line = self.control.strip()
         result: Dict[str, str] = {}
+
+        if not self.control:
+            return result
+
+        control_line = self.control.strip()
 
         # Find all bracketed control expressions like [success=1 default=ignore]
         # PAM allows multiple such expressions, and `]` can be escaped as `\]`.
@@ -315,9 +319,8 @@ class PamConfig:
 
 
 @pytest.fixture
-def pam_config():
+def pam_config(request: pytest.FixtureRequest):
     """
     Return a PamConfig object for /etc/pam.d/common-password.
     """
-    path = Path("/etc/pam.d/common-password")
-    return PamConfig(path)
+    return PamConfig(Path(request.param))
