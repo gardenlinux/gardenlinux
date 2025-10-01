@@ -2,7 +2,7 @@ import pytest
 from plugins.systemd import Systemd
 
 
-# The key is the feature conidition of the test which checks if the systemd unit (value) is working
+# The key is the feature condition of the test which checks if the systemd unit (value) is working
 units = {
     "chost or khost": "kubelet",
     "firewall": "nftables",
