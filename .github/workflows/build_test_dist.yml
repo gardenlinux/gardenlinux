@@ -16,8 +16,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends make curl jq unzip qemu-utils
-      - name: Build test distribution
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends make curl jq unzip qemu-utils retry
+      - name: Build Test Distribution
         run: |
           cd tests-ng
           make -f util/build.makefile
