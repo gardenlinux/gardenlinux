@@ -212,16 +212,19 @@ class PamConfig:
         type_: Optional[str] = None,
         module_contains: Optional[str] = None,
         arg_contains: Optional[List[str]] = None,
-        success: Optional[str] = None,
+        control_contains: Optional[str | Dict[str, str] | List[str]] = None,
+        match_all_containing: Optional[bool] = False,
         default: Optional[str] = None,
         include_target: Optional[str] = None,
     ) -> List[PamEntry]:
         """
-        Return entries filtered by the provided criteria.
+            Return entries filtered by the provided criteria.
 
-        If success is provided:
-            * "*"  -> match any bracketed control that contains a 'success' key
-            * "N"  -> match only entries where control_dict.get('success') == 'N'
+        Examples:
+            - control_contains="required" → match entries whose raw control string contains 'required'
+            - control_contains={"success": "1"} → match entries where control_dict['success'] == '1'
+            - control_contains=["required", "sufficient"] → match entries where raw control string contains one/all of them
+              (depending on match_all_containing)
 
         :param type_: exact PAM type (case-insensitive)
         :type type_: Optional[str]
@@ -229,8 +232,10 @@ class PamConfig:
         :type module_contains: Optional[str]
         :param arg_contains: list of option tokens that mus all be present in entry.options
         :type arg_contains: Optional[List[str]]
-        :param success: match any entries where the success key has a given value, or where it exists.
-        :type success: Optional[str]
+        :param control_contains: expected string, list of strings or set of fields that must be present in entry.control
+        :type control_contains: Optional[str | Dict[str, str] | List[str]]
+        :param match_all_containing: requires all parameters in arg_contains and control_contains must match for returned entries
+        :type match_all_containing: bool
         :param default: match control_dict.get('default') provided value
         :type default: Optional[str]
         :param include_target: filter by exact match for the @include target.
@@ -253,17 +258,46 @@ class PamConfig:
                 if all(token in entry.options for token in arg_contains)
             ]
 
-        if success is not None:
-            if success == "*":
+        if control_contains is not None:
+            if isinstance(control_contains, str):
+                # simple substring matching in raw control statement
                 results = [
-                    entry for entry in results if "success" in entry.control_dict
+                    entry for entry in results if control_contains in entry.control
                 ]
-            else:
-                results = [
-                    entry
-                    for entry in results
-                    if entry.control_dict.get("success") == success
-                ]
+
+            elif isinstance(control_contains, list):
+                if match_all_containing:
+                    results = [
+                        entry
+                        for entry in results
+                        if all(token in entry.control for token in control_contains)
+                    ]
+                else:
+                    results = [
+                        entry
+                        for entry in results
+                        if any(tok in entry.control for tok in control_contains)
+                    ]
+
+            elif isinstance(control_contains, dict):
+                if match_all_containing:
+                    results = [
+                        entry
+                        for entry in results
+                        if all(
+                            entry.control_dict.get(key) == value
+                            for key, value in control_contains.items()
+                        )
+                    ]
+                else:
+                    results = [
+                        entry
+                        for entry in results
+                        if any(
+                            entry.control_dict.get(key) == value
+                            for key, value in control_contains.items()
+                        )
+                    ]
 
         if default is not None:
             results = [
