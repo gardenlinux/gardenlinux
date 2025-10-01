@@ -14,7 +14,6 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --instal
 	git \
 	linux-headers-$(dpkg --print-architecture) \
 	linux-headers-cloud-$(dpkg --print-architecture) \
-	linux-headers-firecracker-$(dpkg --print-architecture) \
 	linux-source \
 	libncurses-dev \
 	python3-jinja2 \

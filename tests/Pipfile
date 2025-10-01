@@ -50,8 +50,6 @@ google-auth = "*"
 google-cloud-compute = "*"
 google-cloud-storage = "*"
 
-[firecracker-packages]
-
 [kvm-packages]
 
 [requires]

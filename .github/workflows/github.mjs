@@ -78,7 +78,7 @@ export function getTestEnvironmentsEnabled(commaSeparatedTestsRequested) {
     const testsRequested = commaSeparatedTestsRequested.split(",");
     let tests = [];
 
-    for (const test in knownTests) {
+    for (const test of knownTests) {
         if (testsRequested.includes(test)) {
             tests.push(test);
         }
@@ -90,7 +90,7 @@ export function getTestEnvironmentsEnabled(commaSeparatedTestsRequested) {
 export function flattenFlavorsMatrixByArch(matrix) {
     let matrixByArch = {};
 
-    for (const flavor of matrix.includes(flavor)) {
+    for (const flavor of matrix.include) {
         if (!(flavor["arch"] in matrixByArch)) {
             matrixByArch[flavor["arch"]] = [];
         }
