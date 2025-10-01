@@ -128,6 +128,10 @@ jobs:
     permissions:
       actions: write  # TODO: 3215 elevated permissions for included workflow
       packages: write # TODO: 3215 elevated permissions for included workflow
+  test_distribution_build:
+    needs: download_build_requirements
+    name: Build and Cache Test Distribution
+    uses: ./.github/workflows/build_test_dist.yml
   download_platform_test_flavors_matrix:
     needs: download_build_requirements
     name: Generate flavors matrix to test
@@ -155,6 +159,7 @@ jobs:
       [
         download_build_requirements,
         download_platform_test_images,
+        test_distribution_build,
         download_platform_test_flavors_matrix,
         download_platform_test_flavors,
       ]
