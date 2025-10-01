@@ -2,6 +2,9 @@ import pytest
 
 
 @pytest.mark.security_id(325)
+@pytest.mark.parametrize(
+    "pam_config", ["/etc/pam.d/common-password"], indirect=["pam_config"]
+)
 def test_password_entry_present(pam_config):
     """
     Ensure that exactly one password entry with [success=... default=ignore]
@@ -16,6 +19,9 @@ def test_password_entry_present(pam_config):
 
 
 @pytest.mark.security_id(325)
+@pytest.mark.parametrize(
+    "pam_config", ["/etc/pam.d/common-password"], indirect=["pam_config"]
+)
 def test_password_entry_uses_strong_hash(pam_config):
     """
     Ensure that the password entry uses a strong hash algorithm (yescrypt or sha512).
