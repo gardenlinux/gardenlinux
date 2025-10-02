@@ -4,7 +4,7 @@ from plugins.systemd import Systemd
 
 # The key is the feature condition of the test which checks if the systemd unit (value) is working
 units = {
-    "chost or khost": "kubelet",
+    "khost": "kubelet",
     "firewall": "nftables",
     "gardener": "containerd",
     "vhost": "libvirtd"
