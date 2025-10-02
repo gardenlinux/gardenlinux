@@ -66,7 +66,7 @@ def nvme_device(shell: ShellRunner, dpkg: Dpkg, module: KernelModule):
     shell(f"mkfs.ext4 {local_device}")
     os.makedirs(mount_dir)
     shell(f"mount {local_device} {mount_dir}")
-    shell(f"echo 'foo' | tee {mount_dir}/bar")
+    Path(f"{mount_dir}/bar").write_text("foo\n")
 
     yield local_device, mount_dir, "488"
 
