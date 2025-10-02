@@ -1,5 +1,17 @@
 import pytest
+from dataclasses import dataclass
 from .shell import ShellRunner
+
+
+@dataclass
+class Package:
+    """Represents an installed package"""
+    name: str
+    version: str
+
+    def __str__(self) -> str:
+        return f"{self.name}\t{self.version}"
+
 
 class Dpkg:
     def __init__(self, shell: ShellRunner):
@@ -25,6 +37,22 @@ class Dpkg:
         architectures = self.foreign_architectures()
         architectures.append(self.architecture())
         return architectures
+
+    def collect_packages(self) -> dict[str, str]:
+        """Collect all installed packages and their versions"""
+        result = self._shell(
+            "dpkg-query -W -f='${binary:Package}\t${Version}\n'",
+            capture_output=True,
+            ignore_exit_code=True
+        )
+
+        packages = {}
+        for line in result.stdout.strip().split('\n'):
+            if '\t' in line:
+                package, version = line.split('\t', 1)
+                packages[package] = version
+
+        return dict(sorted(packages.items()))
 
 @pytest.fixture
 def dpkg(shell: ShellRunner) -> Dpkg:
