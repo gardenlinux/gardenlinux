@@ -209,13 +209,9 @@ if [ -z "$cloud" ] && ! ((cloud_image)); then
 	[ -n "$type" ]
 fi
 
-if [ "$type" != oci ]; then
-	if [ ! -f ".build/.gh_artifact" ]; then
-		echo "Building test distribution..."
-		./util/build.makefile
-	else
-		echo "Using cached test distribution from github artifact"
-	fi
+if [ ! -f ".build/.gh_artifact" ]; then
+	echo "Building test distribution..."
+	./util/build.makefile
 fi
 
 if [ -n "$cloud" ]; then

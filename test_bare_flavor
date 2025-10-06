@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+set -eufo pipefail
+
+tests-ng/util/run_oci.sh --bare .build "$1"
