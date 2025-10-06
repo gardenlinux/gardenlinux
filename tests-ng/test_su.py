@@ -4,7 +4,7 @@ from plugins.pam import PamConfig
 
 @pytest.mark.security_id(166)
 @pytest.mark.root
-@pytest.mark.features("not container")
+@pytest.mark.feature("not container")
 @pytest.mark.parametrize("pam_config", [("/etc/pam.d/su")], indirect=["pam_config"])
 def test_pam_wheel_is_required(pam_config: PamConfig):
     """
