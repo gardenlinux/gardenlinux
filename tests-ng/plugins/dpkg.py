@@ -1,73 +1,135 @@
+import json
 import pytest
 
 from .shell import ShellRunner
 
-
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Dict, List
 from .shell import ShellRunner
 
 
 @dataclass
 class Package:
     """Represents an installed package"""
-    name: str
+    package: str
     version: str
+    status: str = ""
+    priority: str = ""
+    section: str = ""
+    installed_size: str = ""
+    maintainer: str = ""
+    architecture: str = ""
+    multi_arch: str = ""
+    source: str = ""
+    provides: str = ""
+    depends: str = ""
+    breaks: str = ""
+    conflicts: str = ""
+    description: str = ""
+    homepage: str = ""
+    suggests: str = ""
+    recommends: str = ""
+    replaces: str = ""
+    pre_depends: str = ""
+    essential: str = ""
 
     def __str__(self) -> str:
-        return f"{self.name}\t{self.version}"
+        return f"{self.package}\t{self.version}"
+
+
+@dataclass
+class InstalledPackages:
+    """Collection of installed packages"""
+    packages: List[Package]
+
+    def __len__(self) -> int:
+        return len(self.packages)
+
+    def __iter__(self):
+        return iter(self.packages)
+
+    def __getitem__(self, key):
+        return self.packages[key]
+
+    def get_package(self, name: str):
+        """Get package by name"""
+        return next((p for p in self.packages if p.package == name), None)
 
 
 class Dpkg:
-    def __init__(self, shell: ShellRunner):
-        self._shell = shell
+    def __init__(self, shell=None):
+        pass
+
+    def collect_installed_packages(self) -> InstalledPackages:
+        """Convert /var/lib/dpkg/status to JSON and return installed packages"""
+        try:
+            with open("/var/lib/dpkg/status", "r", encoding="utf-8") as f:
+                content = f.read()
+        except (FileNotFoundError, PermissionError):
+            return InstalledPackages([])
+
+        packages = []
+        current_package = {}
+
+        def add_package():
+            if current_package.get('Status', '').startswith('install ok installed'):
+                packages.append(Package(
+                    package=current_package.get('Package', ''),
+                    version=current_package.get('Version', ''),
+                    status=current_package.get('Status', ''),
+                    priority=current_package.get('Priority', ''),
+                    section=current_package.get('Section', ''),
+                    installed_size=current_package.get('Installed-Size', ''),
+                    maintainer=current_package.get('Maintainer', ''),
+                    architecture=current_package.get('Architecture', ''),
+                    multi_arch=current_package.get('Multi-Arch', ''),
+                    source=current_package.get('Source', ''),
+                    provides=current_package.get('Provides', ''),
+                    depends=current_package.get('Depends', ''),
+                    breaks=current_package.get('Breaks', ''),
+                    conflicts=current_package.get('Conflicts', ''),
+                    description=current_package.get('Description', ''),
+                    homepage=current_package.get('Homepage', ''),
+                    suggests=current_package.get('Suggests', ''),
+                    recommends=current_package.get('Recommends', ''),
+                    replaces=current_package.get('Replaces', ''),
+                    pre_depends=current_package.get('Pre-Depends', ''),
+                    essential=current_package.get('Essential', ''),
+                ))
+
+        for line in content.split('\n'):
+            if line.strip() == "":
+                add_package()
+                current_package = {}
+            elif ':' in line:
+                key, value = line.split(':', 1)
+                current_package[key.strip()] = value.strip()
+
+        add_package()  # Handle last package
+        packages.sort(key=lambda p: p.package)
+        return InstalledPackages(packages)
 
     def package_is_installed(self, package: str) -> bool:
-        arches = self.own_and_foreign_architectures()
-        is_installed = True
-        for arch in arches:
-            result = self._shell(
-                f"dpkg --status {package}:{arch}",
-                capture_output=True,
-                ignore_exit_code=True,
-            )
-            is_installed = is_installed and result.returncode == 0
-        return is_installed
+        """Check if package is installed"""
+        return self.collect_installed_packages().get_package(package) is not None
 
-    def architecture(self) -> str:
-        result = self._shell(
-            "dpkg --print-architecture", capture_output=True, ignore_exit_code=True
-        )
-        return result.stdout.strip()
+    def architecture_native(self) -> str:
+        """Get the native architecture of the system"""
+        with open('/var/lib/dpkg/arch-native') as f:
+            return f.read().strip()
 
-    def foreign_architectures(self) -> list[str]:
-        result = self._shell(
-            "dpkg --print-foreign-architectures",
-            capture_output=True,
-            ignore_exit_code=True,
-        )
-        return list(filter(None, result.stdout.split("\n")))
+    def architectures_foreign(self) -> list[str]:
+        """Get the foreign architectures of the system"""
+        with open('/var/lib/dpkg/arch') as f:
+            native = self.architecture_native()
+            return list(filter(lambda x: x != native, f.read().split('\n')))
 
-    def own_and_foreign_architectures(self) -> list[str]:
-        architectures = self.foreign_architectures()
-        architectures.append(self.architecture())
-        return architectures
+    def architectures(self) -> list[str]:
+        """Get the native and foreign architectures of the system"""
+        with open('/var/lib/dpkg/arch') as f:
+            return list(filter(None, f.read().split('\n')))
 
-    def collect_packages(self) -> dict[str, str]:
-        """Collect all installed packages and their versions"""
-        result = self._shell(
-            "dpkg-query --show --showformat='${binary:Package}\t${Version}\n'",
-            capture_output=True,
-            ignore_exit_code=True
-        )
-
-        packages = {}
-        for line in result.stdout.strip().split('\n'):
-            if '\t' in line:
-                package, version = line.split('\t', 1)
-                packages[package] = version
-
-        return dict(sorted(packages.items()))
 
 @pytest.fixture
-def dpkg(shell: ShellRunner) -> Dpkg:
+def dpkg(shell=None) -> Dpkg:
     return Dpkg(shell)
