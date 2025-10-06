@@ -38,6 +38,50 @@ STATE_DIR = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state"))
 
 IGNORED_SYSTEMD_PATTERNS = []
 IGNORED_KERNEL_MODULES = []
+IGNORED_SYSCTL_PARAMS = {
+    # File system dynamic parameters
+    'fs.dentry-state',
+    'fs.file-nr',
+    'fs.inode-nr',
+    'fs.inode-state',
+    'fs.quota.allocated_dquots',
+    'fs.quota.cache_hits',
+    'fs.quota.drops',
+    'fs.quota.free_dquots',
+    'fs.quota.lookups',
+    'fs.quota.reads',
+    'fs.quota.syncs',
+    'fs.quota.writes',
+
+    # Kernel dynamic parameters
+    'kernel.ns_last_pid',
+    'kernel.random.uuid',
+
+    # Network dynamic parameters
+    'net.netfilter.nf_conntrack_count',
+
+    # Memory dynamic parameters
+    'vm.nr_pdflush_threads',
+    'vm.stat.nr_dirty',
+    'vm.stat.nr_writeback',
+    'vm.stat.nr_unstable',
+    'vm.stat.nr_page_table_pages',
+    'vm.stat.nr_mapped',
+    'vm.stat.nr_slab',
+    'vm.stat.nr_pagecache',
+    'vm.stat.nr_reverse_maps',
+    'vm.stat.nr_dirty_background_threshold',
+    'vm.stat.nr_dirty_threshold',
+    'vm.stat.nr_dirty_background',
+    'vm.stat.nr_dirty',
+    'vm.stat.nr_writeback',
+    'vm.stat.nr_unstable',
+    'vm.stat.nr_page_table_pages',
+    'vm.stat.nr_mapped',
+    'vm.stat.nr_slab',
+    'vm.stat.nr_pagecache',
+    'vm.stat.nr_reverse_maps',
+}
 
 
 @dataclass
@@ -360,8 +404,9 @@ class DiffEngine:
     """Handles comparison between snapshots"""
 
     def __init__(self):
-        self._compiled_patterns = [re.compile(pattern) for pattern in IGNORED_SYSTEMD_PATTERNS]
+        self._ignored_systemd_units = set(IGNORED_SYSTEMD_PATTERNS)
         self._ignored_kernel_modules = set(IGNORED_KERNEL_MODULES)
+        self._ignored_sysctl_params = set(IGNORED_SYSCTL_PARAMS)
 
     def compare_snapshots(self, snapshot_a: Snapshot, snapshot_b: Snapshot) -> DiffResult:
         """Compare two snapshots and return differences"""
@@ -397,16 +442,12 @@ class DiffEngine:
 
     def _compare_systemd_units(self, units_a: List[SystemdUnit], units_b: List[SystemdUnit]) -> List[str]:
         """Compare systemd unit lists and return diff lines"""
-        def should_ignore_unit(unit: SystemdUnit) -> bool:
-            """Check if unit should be ignored based on filtering patterns"""
-            return any(pattern.search(unit.unit) for pattern in self._compiled_patterns)
-
         def format_unit(unit: SystemdUnit) -> str:
             """Format unit for comparison"""
             return f"{unit.unit}\t{unit.load}\t{unit.active}\t{unit.sub}"
 
-        filtered_units_a = [format_unit(u) for u in units_a if not should_ignore_unit(u)]
-        filtered_units_b = [format_unit(u) for u in units_b if not should_ignore_unit(u)]
+        filtered_units_a = [format_unit(u) for u in units_a if not self._ignored_systemd_units]
+        filtered_units_b = [format_unit(u) for u in units_b if not self._ignored_systemd_units]
 
         return self._generate_diff(
             filtered_units_a, filtered_units_b,
@@ -425,8 +466,11 @@ class DiffEngine:
 
     def _compare_sysctl_params(self, params_a: List[SysctlParam], params_b: List[SysctlParam]) -> List[str]:
         """Compare sysctl parameter lists and return diff lines"""
-        lines_a = [str(param) for param in params_a]
-        lines_b = [str(param) for param in params_b]
+        filtered_params_a = [param for param in params_a if param.name not in self._ignored_sysctl_params]
+        filtered_params_b = [param for param in params_b if param.name not in self._ignored_sysctl_params]
+
+        lines_a = [str(param) for param in filtered_params_a]
+        lines_b = [str(param) for param in filtered_params_b]
 
         return self._generate_diff(
             lines_a, lines_b,
