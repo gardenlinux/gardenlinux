@@ -27,7 +27,6 @@ echo "console=ttyS0 gl.live=1 gl.ovl=/:tmpfs" > cmdline
 touch tmp_initrd
 [[ ! -e "$chroot_dir/initrd" ]]
 touch "$chroot_dir/initrd"
-mount --bind tmp_initrd "$chroot_dir/initrd"
 [[ ! -e "$chroot_dir/root.squashfs" ]]
 touch "$chroot_dir/root.squashfs"
 mount --bind root.squashfs "$chroot_dir/root.squashfs"
@@ -50,8 +49,7 @@ chroot "$chroot_dir" env dracut \
 
 umount -l "$chroot_dir/proc"
 
-umount "$chroot_dir/initrd"
-rm "$chroot_dir/initrd"
+mv "$chroot_dir/initrd" tmp_initrd
 umount "$chroot_dir/root.squashfs"
 rm "$chroot_dir/root.squashfs"
 

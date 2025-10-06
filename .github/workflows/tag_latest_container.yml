@@ -1,15 +1,15 @@
-name: tag latest and release container
+name: 'Tag latest and release container'
 on:
   workflow_call:
     inputs:
       version:
         required: true
         type: string
-        description: "Release to be tagged (<xxxx>.<x>)"
+        description: Release to be tagged (<xxxx>.<x>)
       is_latest:
         required: true
         type: boolean
-        description: "is tagging as gardenlinux:latest required"
+        description: Is tagging as gardenlinux:latest required
 jobs:
   tag_version:
     name: tag latest and release container
@@ -17,27 +17,31 @@ jobs:
     defaults:
       run:
         shell: bash
+    permissions:
+      packages: write
     steps:
-      - name: tag release and latest
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@02879bd567ed39b5610332afcc6e46197073db0c # pin@0.10.0
+      - name: Tag manifest
+        env:
+          GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GL_CLI_REGISTRY_USERNAME: ${{ github.repository_owner }}
         run: |
           # Setup version tags for latest & release without patch
           version="${{ inputs.version }}"
           is_latest="${{ inputs.is_latest }}"
+
           version_major=$(echo $version | cut -d'.' -f 1)
           version_patch=$(echo $version | cut -d'.' -f 2)
-          container_image=ghcr.io/${{ github.repository }}:${version}
-          container_major=ghcr.io/${{ github.repository }}:${version_major}
 
-          # Prepare skopelo (podman can't do multi arch copy)
-          skopeo login -u token -p ${{ github.token }} ghcr.io
+          container=ghcr.io/${{ github.repository }}
 
           # Tag the major release version
-          echo "Tagging ${container_image} as ${container_major}"
-          skopeo copy -a docker://${container_image} docker://${container_major}
+          echo "Tagging as ${version_major}"
+          gl-oci --container "${container}" --version "${version}" --tag "${version_major}"
 
           # Tag latest only if requested
           if [ "${is_latest}" == "true" ]; then
-            container_latest=ghcr.io/${{ github.repository }}:latest
-            echo "Tagging ${container_image} as docker:${container_latest}"
-            skopeo copy -a docker://${container_image} docker://${container_latest}
+            echo "Tagging as latest"
+            gl-oci --container "${container}" --version "${version}" --tag "latest"
           fi

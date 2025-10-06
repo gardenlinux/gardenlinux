@@ -1,11 +1,13 @@
 # use latest nightly by default
+ARG GL_REGISTRY=ghcr.io/gardenlinux
+ARG GL_IMAGE=nightly
 ARG GL_VERSION=nightly
-ARG GL_BASE=ghcr.io/gardenlinux/gardenlinux:${GL_VERSION}
-
-FROM ${GL_BASE}
+FROM ${GL_REGISTRY}/${GL_IMAGE}:${GL_VERSION}
 
 ENV PYTHON=python3.13
 
+# optionally authenticate to github because of rate limiting
+ARG GITHUB_TOKEN
 ENV DEBIAN_FRONTEND noninteractive
 ENV SHELL /bin/bash
 ENV PYTHONPATH /gardenlinux/bin:/gardenlinux/ci:/gardenlinux/ci/glci:/gardenlinux/tests:/gardenlinux/features
@@ -39,6 +41,10 @@ RUN apt-get update \
        git \
        #### needed to install libvirt-python via pipenv
        pkg-config \
+       #### beeded by cert Makefile
+       efitools \
+       gettext \
+       uuid-runtime \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Prepare virtual environment

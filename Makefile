@@ -5,8 +5,8 @@ SHELL := /usr/bin/env bash
 ROOT_DIR := $(shell git rev-parse --show-toplevel --show-superproject-working-tree | tail -n1)
 
 # Generate FLAVORS variable by running the flavor parser
-FLAVORS := $(shell $(ROOT_DIR)/bin/flavors_parse.py --exclude "bare-*" --build --test)
-FLAVORS_BARE := $(shell $(ROOT_DIR)/bin/flavors_parse.py --include-only "bare-*" --build --test)
+FLAVORS := $(shell $(ROOT_DIR)/bin/gl-flavors-parse --exclude "bare-*" --build --test)
+FLAVORS_BARE := $(shell $(ROOT_DIR)/bin/gl-flavors-parse --include-only "bare-*" --build --test)
 
 # Base commands
 CMD_BUILD := $(ROOT_DIR)/build

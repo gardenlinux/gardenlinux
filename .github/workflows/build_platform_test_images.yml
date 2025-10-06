@@ -37,7 +37,8 @@ on:
     inputs:
       version:
         type: string
-        default: nightly
+        default: 'nightly'
+        description: 'Version'
       build:
         type: boolean
         default: false
@@ -67,6 +68,7 @@ env:
   IMAGE_BASE: platform-test
   IMAGE_REGISTRY: ghcr.io/gardenlinux/gardenlinux
   PLATFORM_TEST_TAG: ${{ github.event_name == 'push' && 'nightly' || inputs.platform_test_tag }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
   generate_matrix:
     name: Build platforms matrix
@@ -104,27 +106,37 @@ jobs:
       run:
         shell: bash
     env:
-      GL_VERSION: ${{ github.event_name == 'push' && 'nightly' || inputs.version }}
       ARCH: ${{ matrix.arch }}
+      GIT_SHA: ${{ github.sha }}
     strategy:
       matrix:
         arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
+    permissions:
+      actions: write
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@02879bd567ed39b5610332afcc6e46197073db0c # pin@0.10.0
       - name: Set build reference
         run: |
           version="$(./bin/garden-version "$version")"
           echo "$version" | tee VERSION
-          echo "GL_VERSION=$version" >> ${GITHUB_ENV}
       - name: Build base image (${{ matrix.arch }})
         run: |
           make --directory=tests/images build-platform-test-base
-          podman tag "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${GL_VERSION}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${ARCH}-${PLATFORM_TEST_TAG}"
+          podman tag "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:latest" "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${ARCH}-${PLATFORM_TEST_TAG}"
       - name: Save base image (${{ matrix.arch }})
-        run: podman save "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${ARCH}-${PLATFORM_TEST_TAG}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${GL_VERSION}" -o "${IMAGE_BASE}-base-${ARCH}.tar"
-      - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        run: |
+          GIT_SHA_SHORT="$(echo $GIT_SHA | cut -c1-7)"
+          podman save \
+            "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${ARCH}-${PLATFORM_TEST_TAG}" \
+            "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:latest" \
+            "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${GIT_SHA}" \
+            "${IMAGE_REGISTRY}/${IMAGE_BASE}-base:${GIT_SHA_SHORT}" \
+            -o "${IMAGE_BASE}-base-${ARCH}.tar"
+      - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # pin@v4.3.0
         with:
           path: ${{ env.IMAGE_BASE }}-base-${{ matrix.arch }}.tar
           key: platform_test_base_${{ matrix.arch }}-${{ github.run_id }}
@@ -137,23 +149,24 @@ jobs:
       run:
         shell: bash
     env:
-      GL_VERSION: ${{ github.event_name == 'push' && 'nightly' || inputs.version }}
       ARCH: ${{ matrix.arch }}
+      GIT_SHA: ${{ github.sha }}
     strategy:
       matrix:
         arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
+    permissions:
+      actions: write      
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
       - name: Set build reference
         run: |
           version="$(./bin/garden-version "$version")"
           echo "$version" | tee VERSION
-          echo "GL_VERSION=$version" >> ${GITHUB_ENV}
       - name: Load base image (${{ matrix.arch }})
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # pin@v4.3.0
         with:
           key: platform_test_base_${{ matrix.arch }}-${{ github.run_id }}
           path: ${{ env.IMAGE_BASE }}-base-${{ matrix.arch }}.tar
@@ -163,12 +176,18 @@ jobs:
       - name: Make build-platform-test-${{ matrix.platform }} (${{ matrix.arch }})
         run: |
           make --directory=tests/images build-platform-test-${{ matrix.platform }}
-          podman tag "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${GL_VERSION}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${ARCH}-${PLATFORM_TEST_TAG}"
+          podman tag "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:latest" "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${ARCH}-${PLATFORM_TEST_TAG}"
       - name: Save image ${{ matrix.platform }} (${{ matrix.arch }})
         run: |
-          podman save "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${ARCH}-${PLATFORM_TEST_TAG}" "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${GL_VERSION}" -o "${IMAGE_BASE}-${{ matrix.platform }}-${ARCH}.tar"
+          GIT_SHA_SHORT="$(echo $GIT_SHA | cut -c1-7)"
+          podman save \
+            "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${ARCH}-${PLATFORM_TEST_TAG}" \
+            "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:latest" \
+            "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${GIT_SHA}" \
+            "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${GIT_SHA_SHORT}" \
+            -o "${IMAGE_BASE}-${{ matrix.platform }}-${ARCH}.tar"
 
-          echo "$GL_VERSION" | tee -a "platform-test.oci-version.txt"
+          echo "$version" | tee -a "platform-test.oci-version.txt"
           echo "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${ARCH}-${PLATFORM_TEST_TAG}" | tee -a "platform-test.oci-tag.txt"
       - name: Upload image artifact for ${{ matrix.platform }} (${{ matrix.arch }})
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
@@ -177,7 +196,7 @@ jobs:
           path: ${{ env.IMAGE_BASE }}-${{ matrix.platform }}-${{ matrix.arch }}.tar
           if-no-files-found: error
       - name: Upload local OCI metadata for ${{ matrix.platform }} (${{ matrix.arch }})
-        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # pin@v4.3.0
         with:
           key: platform_test_container:${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
           path: |
@@ -194,12 +213,14 @@ jobs:
     strategy:
       matrix:
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
+    permissions:
+      packages: write
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
       - name: Load images (${{ matrix.platform }})
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # pin@v4.3.0
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
         with:
           pattern: platform-test-*
           merge-multiple: true
@@ -212,19 +233,23 @@ jobs:
           ARCH_LIST='${{ needs.generate_matrix.outputs.arch_matrix }}'
           ARCHS=$(echo $ARCH_LIST | tr -d '[]"' | tr ',' ' ')
 
-          # Create manifest list
-          echo podman manifest create "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}"
-          podman manifest create "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}"
-
+          # Load all arch images first to avoid overwriting the manifest
           for arch in $ARCHS; do
-            # Load arch arch image
             if [ -f "${IMAGE_BASE}-${{ matrix.platform }}-${arch}.tar" ]; then
               podman load -i "${IMAGE_BASE}-${{ matrix.platform }}-${arch}.tar"
             else
               echo "Error: Image for ${arch} not found"
               exit 1
             fi
+          done
 
+          # Delete (in case image is named same as manifest) and recreate manifest list after loading all images
+          echo podman rmi "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}"
+          podman rmi "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}" || true
+          echo podman manifest create "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}"
+          podman manifest create "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${PLATFORM_TEST_TAG}"
+
+          for arch in $ARCHS; do
             # Push arch images
             echo podman push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-${PLATFORM_TEST_TAG}"
             podman push "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${arch}-${PLATFORM_TEST_TAG}"
@@ -259,7 +284,7 @@ jobs:
       commit_id: ${{ steps.version_reference.outputs.commit_id }}
       version: ${{ steps.version_reference.outputs.version }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
       - name: Prepare reference from GLRD
@@ -284,13 +309,15 @@ jobs:
       run:
         shell: bash
     env:
-      GL_VERSION: ${{ needs.pull_images_version.outputs.version }}
+      version: ${{ needs.pull_images_version.outputs.version }}
     strategy:
       matrix:
         arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
+    permissions:
+      actions: write
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
       - name: Login to ghcr.io
@@ -302,10 +329,10 @@ jobs:
         run: |
           PLATFORM_TEST_IMAGE_TAG="$(podman image ls --filter reference=${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }} --format=json | jq -r '.[0].Names[0]')"
 
-          echo "$GL_VERSION" | tee -a "platform-test.oci-version.txt"
+          echo "$version" | tee -a "platform-test.oci-version.txt"
           echo "${PLATFORM_TEST_IMAGE_TAG}" | tee -a "platform-test.oci-tag.txt"
       - name: Upload local OCI metadata for ${{ matrix.platform }} (${{ matrix.arch }})
-        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # pin@v4.3.0
         with:
           key: platform_test_container:${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
           path: |

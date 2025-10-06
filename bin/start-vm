@@ -16,6 +16,7 @@ main () {
     get_opts "$@"
     set_binaries
     qemu_opt_ignition
+    qemu_opt_fw_cfg
     qemu_opt_pxe
     qemu_opt_disk
     qemu_opt_uefi
@@ -115,6 +116,7 @@ set_defaults () {
     uefi=1
     uefi_code=
     uefi_vars=
+    fw_cfg_script=
     tpm=1
     vnc=
     keypress=1
@@ -157,6 +159,7 @@ source "${CURR_DIR}/.constants.sh" \
     --flags 'ignfile:' \
     --flags 'pidfile:' \
     --flags 'ueficode:,uefivars:' \
+    --flags 'fw-cfg-script:' \
     --flags 'destport:' \
     --usage '[ --daemonize ] [ --cpu:<#> ] [ --mem:<size> ] [ --pxe:<dir> ] [<image file>[,<size>]]*' \
     --sample '.build/rootfs.raw' \
@@ -198,6 +201,7 @@ while true; do
         --mac)          mac="$1";       shift ;;
         --ueficode)     uefi_code="$1"; shift ;;
         --uefivars)     uefi_vars="$1"; shift ;;
+        --fw-cfg-script) fw_cfg_script="$1"; shift ;;
         --bridge)       bridge="$1";    shift ;;
         --pxe )         pxe="$(realpath $1)";      shift ;;
         --ignfile )     ignfile="$(realpath $1)";  shift ;;
@@ -320,6 +324,14 @@ qemu_opt_ignition () {
 	    QEMU_OPTS+=( -fw_cfg name=opt/com.coreos/config,file=${ignfile} )
 	fi
     fi
+}
+
+qemu_opt_fw_cfg () {
+    [ -z "$fw_cfg_script" ] && return 0
+
+    QEMU_OPTS+=(
+        -fw_cfg name=opt/gardenlinux/config_script,file="$fw_cfg_script"
+    )
 }
 
 
@@ -585,6 +597,7 @@ qemu_opt_cpu () {
                 if [ -w "/dev/kvm" ]; then
                     QEMU_OPTS+=("-enable-kvm" "-cpu host" "-machine q35,smm=on")
                 else
+                    QEMU_OPTS+=("-machine q35,smm=on")
                     echo -e "WARNING: Can not use KVM acceleration. Please see:\n https://github.com/gardenlinux/gardenlinux/tree/main/bin#start-vm \n\n"
                 fi
 

@@ -8,10 +8,6 @@ on:
     branches:
     - main
     - rel-*
-
-permissions:
-  contents: read
-
 jobs:
   lint:
     runs-on: ubuntu-24.04
@@ -20,18 +16,14 @@ jobs:
       # required for all workflows
       security-events: write
 
-      # only required for workflows in private repositories
-      actions: read
-      contents: read
-
     steps:
       - name: Repository checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4.1.1
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           fetch-depth: 0
 
       - id: ShellCheck
         name: Differential ShellCheck
-        uses: redhat-plumbers-in-action/differential-shellcheck@929381c602ed76daa9b523e001ee29b82bd6d8e9 # pin@aa647ec4466543e8555c2c3b648124a9813cee44
+        uses: redhat-plumbers-in-action/differential-shellcheck@0d9e5b29625f871e6a4215380486d6f1a7cb6cdd # pin@aa647ec4466543e8555c2c3b648124a9813cee44
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
