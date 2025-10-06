@@ -18,10 +18,18 @@ class KernelModule:
         self._shell = shell
 
     def is_module_loaded(self, module: str) -> bool:
-        result = self._shell(
-            f"lsmod | grep ^{module}", capture_output=True, ignore_exit_code=True
-        )
-        return result.returncode == 0
+        try:
+            with open("/proc/modules", "r") as f:
+                for line in f:
+                    if not line:
+                        continue
+                    # /proc/modules format: name size usecount deps state address
+                    name = line.split()[0]
+                    if name == module:
+                        return True
+        except Exception:
+            pass
+        return False
 
     def load_module(self, module: str) -> bool:
         result = self._shell(
@@ -37,12 +45,15 @@ class KernelModule:
 
     def collect_loaded_modules(self) -> list[str]:
         """Collect all currently loaded kernel modules"""
-        result = self._shell("lsmod", capture_output=True, ignore_exit_code=True)
-        modules = []
-        for line in result.stdout.strip().split('\n')[1:]:  # Skip header
-            if line.strip():
-                module_name = line.split()[0]
-                modules.append(module_name)
+        modules: list[str] = []
+        try:
+            with open("/proc/modules", "r") as f:
+                for line in f:
+                    if not line.strip():
+                        continue
+                    modules.append(line.split()[0])
+        except Exception:
+            return []
         return sorted(modules)
 
 @pytest.fixture
