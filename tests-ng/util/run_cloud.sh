@@ -114,15 +114,17 @@ trap cleanup EXIT
 
 tofuenv_dir="$tf_dir/.tofuenv"
 PATH="$tofuenv_dir/bin:$PATH"
-export TOFUENV_GITHUB_TOKEN="$GITHUB_TOKEN"
+# in case we pass a GITHUB_TOKEN, we can work around rate limiting
+export TOFUENV_GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 command -v tofuenv >/dev/null || {
 	git clone --depth=1 https://github.com/tofuutils/tofuenv.git "$tofuenv_dir"
 	echo 'trust-tofuenv: yes' >"$tofuenv_dir/use-gpgv"
 }
+# go to tofu directory to automatically parse *.tf files
 pushd "$tf_dir"
 tofuenv install latest-allowed
 popd
-tofu_version="$(tofuenv list | head -1 | cut -d' ' -f2)"
+tofu_version=$(find "$tf_dir/.tofuenv/versions" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" | head -1)
 tofuenv use "$tofu_version"
 
 TF_CLI_CONFIG_FILE="$tf_dir/.terraformrc"
