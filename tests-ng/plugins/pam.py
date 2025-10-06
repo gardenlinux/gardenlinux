@@ -24,7 +24,7 @@ class PamEntry:
     :type type_: str
     :param control: raw control token (either a single token like 'required'
                     or bracketed expression like '[success=1 default=ignore]')
-    :type control: str
+    :type control: Optional[str]
     :param module: module name, e.g. 'pam_unix.so'
     :type module: str
     :param options: list of module arguments (tokens after the module name)
@@ -54,8 +54,12 @@ class PamEntry:
         Handles escaped brackets (\]) as literals.
         If control is a simple token (e.g. 'required'), return {}
         """
-        control_line = self.control.strip()
         result: Dict[str, str] = {}
+
+        if not self.control:
+            return result
+
+        control_line = self.control.strip()
 
         # Find all bracketed control expressions like [success=1 default=ignore]
         # PAM allows multiple such expressions, and `]` can be escaped as `\]`.
@@ -212,16 +216,18 @@ class PamConfig:
         type_: Optional[str] = None,
         module_contains: Optional[str] = None,
         arg_contains: Optional[List[str]] = None,
-        success: Optional[str] = None,
-        default: Optional[str] = None,
+        control_contains: Optional[str | Dict[str, str] | List[str]] = None,
+        match_all: Optional[bool] = False,
         include_target: Optional[str] = None,
     ) -> List[PamEntry]:
         """
-        Return entries filtered by the provided criteria.
+            Return entries filtered by the provided criteria.
 
-        If success is provided:
-            * "*"  -> match any bracketed control that contains a 'success' key
-            * "N"  -> match only entries where control_dict.get('success') == 'N'
+        Examples:
+            - control_contains="required" → match entries whose raw control string contains 'required'
+            - control_contains={"success": "1"} → match entries where control_dict['success'] == '1'
+            - control_contains=["required", "sufficient"] → match entries where raw control string contains one/all of them
+              (depending on match_all)
 
         :param type_: exact PAM type (case-insensitive)
         :type type_: Optional[str]
@@ -229,10 +235,10 @@ class PamConfig:
         :type module_contains: Optional[str]
         :param arg_contains: list of option tokens that mus all be present in entry.options
         :type arg_contains: Optional[List[str]]
-        :param success: match any entries where the success key has a given value, or where it exists.
-        :type success: Optional[str]
-        :param default: match control_dict.get('default') provided value
-        :type default: Optional[str]
+        :param control_contains: expected string, list of strings or set of fields that must be present in entry.control
+        :type control_contains: Optional[str | Dict[str, str] | List[str]]
+        :param match_all: requires all parameters in arg_contains and control_contains must match for returned entries
+        :type match_all: bool
         :param include_target: filter by exact match for the @include target.
         :type include_target: Optional[str]
         """
@@ -247,30 +253,59 @@ class PamConfig:
             results = [entry for entry in results if module_contains in entry.module]
 
         if arg_contains:
-            results = [
-                entry
-                for entry in results
-                if all(token in entry.options for token in arg_contains)
-            ]
-
-        if success is not None:
-            if success == "*":
+            if match_all:
                 results = [
-                    entry for entry in results if "success" in entry.control_dict
+                    entry
+                    for entry in results
+                    if all(token in entry.options for token in arg_contains)
                 ]
             else:
                 results = [
                     entry
                     for entry in results
-                    if entry.control_dict.get("success") == success
+                    if any(token in entry.options for token in arg_contains)
                 ]
 
-        if default is not None:
-            results = [
-                entry
-                for entry in results
-                if entry.control_dict.get("default") == default
-            ]
+        if control_contains is not None:
+            if isinstance(control_contains, str):
+                # simple substring matching in raw control statement
+                results = [
+                    entry for entry in results if control_contains in entry.control
+                ]
+
+            elif isinstance(control_contains, list):
+                if match_all:
+                    results = [
+                        entry
+                        for entry in results
+                        if all(token in entry.control for token in control_contains)
+                    ]
+                else:
+                    results = [
+                        entry
+                        for entry in results
+                        if any(tok in entry.control for tok in control_contains)
+                    ]
+
+        if isinstance(control_contains, dict):
+            if match_all:
+                results = [
+                    entry
+                    for entry in results
+                    if all(
+                        value == "*" or entry.control_dict.get(key) == value
+                        for key, value in control_contains.items()
+                    )
+                ]
+            else:
+                results = [
+                    entry
+                    for entry in results
+                    if any(
+                        value == "*" or entry.control_dict.get(key) == value
+                        for key, value in control_contains.items()
+                    )
+                ]
 
         if include_target is not None:
             results = [
@@ -281,9 +316,8 @@ class PamConfig:
 
 
 @pytest.fixture
-def pam_config():
+def pam_config(request: pytest.FixtureRequest):
     """
     Return a PamConfig object for /etc/pam.d/common-password.
     """
-    path = Path("/etc/pam.d/common-password")
-    return PamConfig(path)
+    return PamConfig(Path(request.param))
