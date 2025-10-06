@@ -1,3 +1,4 @@
+import os
 import pytest
 from dataclasses import dataclass
 from .shell import ShellRunner
@@ -13,58 +14,39 @@ class SysctlParam:
         return f"{self.name}={self.value}"
 
 
-class SysctlWrapper:
-    def __getitem__(self, key: str):
-        path = "/proc/sys/" + key.replace(".", "/")
-        with open(path, "r") as f:
-            value = f.read().strip()
-        return int(value) if value.isdigit() else value
-
 class Sysctl:
     """Collects kernel parameters from /proc/sys/"""
 
     def __init__(self, shell: ShellRunner):
         self.shell = shell
 
-    def is_sysctl_available(self) -> bool:
-        """Check if sysctl is available"""
-        try:
-            result = self.shell("command -v sysctl", capture_output=True, ignore_exit_code=True)
-            return result.returncode == 0
-        except Exception:
-            return False
-
     def collect_sysctl_parameters(self) -> dict[str, str]:
-        """Collect all readable sysctl parameters, excluding allow-listed ones"""
-        if not self.is_sysctl_available():
+        """Collect all readable sysctl parameters by parsing /proc/sys recursively."""
+        sysctl_params: dict[str, str] = {}
+
+        base_path = "/proc/sys"
+        if not os.path.isdir(base_path):
             return {}
 
-        sysctl_params = {}
-
-        try:
-            result = self.shell("sysctl -a 2>/dev/null", capture_output=True, ignore_exit_code=True)
-            if result.returncode == 0:
-                for line in result.stdout.strip().split('\n'):
-                    if '=' in line:
-                        key, value = line.split('=', 1)
-                        key = key.strip()
-                        value = value.strip()
+        for root, _dirs, files in os.walk(base_path):
+            for filename in files:
+                file_path = os.path.join(root, filename)
+                # Build sysctl key: strip base_path and replace '/' with '.'
+                rel_path = file_path[len(base_path) + 1:]
+                key = rel_path.replace("/", ".")
+                try:
+                    with open(file_path, "r") as f:
+                        value = f.read().strip()
                         sysctl_params[key] = value
-        except Exception as e:
-            print(f"Warning: Failed to collect sysctl parameters: {e}")
+                except (PermissionError, FileNotFoundError, IsADirectoryError):
+                    # Skip unreadable or transient entries
+                    continue
+                except Exception:
+                    # Be robust: skip any unexpected errors for individual files
+                    continue
 
         return dict(sorted(sysctl_params.items()))
 
 @pytest.fixture
-def sysctl(request: pytest.FixtureRequest):
-    try:
-        result = ShellRunner(None)("command -v sysctl", capture_output=True, ignore_exit_code=True)
-        if result.returncode != 0:
-            pytest.skip("sysctl command not available")
-    except Exception:
-        pytest.skip("sysctl command not available")
-    return SysctlWrapper()
-
-@pytest.fixture
-def sysctl_collector(shell: ShellRunner) -> Sysctl:
+def sysctl(shell: ShellRunner) -> Sysctl:
     return Sysctl(shell)
