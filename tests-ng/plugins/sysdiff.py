@@ -280,8 +280,7 @@ class SnapshotManager:
         sysctl_collector = Sysctl(shell)
         kernel_module = KernelModule(shell)
 
-        packages_dict = dpkg.collect_packages()
-        packages = [Package(name=pkg, version=ver) for pkg, ver in packages_dict.items()]
+        packages = dpkg.collect_installed_packages()
 
         systemd_units = systemd.list_units()
 
