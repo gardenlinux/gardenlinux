@@ -80,7 +80,7 @@ This is going to break future patch releases, if needed. Also, you should disabl
 
 Create an empty branch, a null tag, push everything and then create a release.
 
-```yaml
+```
  - Create a branch called archive-<pkgname> with the last state of the repo.
    - git checkout -b archive-<PACKAGE_NAME>
  - Disable GitHub Actions and other files
