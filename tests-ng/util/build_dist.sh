@@ -31,13 +31,12 @@ if [ -n "$test_dirs" ]; then
 	echo "$test_dirs" | xargs -I {} cp -r {} "$tmpdir/dist/tests/"
 fi
 
-includes=($(sed -E -e "/^#/d" -e "/^[[:space:]]*$/d" -e "s|^\.?/||" includes))
+mapfile -t includes < <( sed -E -e "/^#/d" -e "/^[[:space:]]*$/d" -e "s|^\.?/||" includes )
 
 for include in "${includes[@]}"; do
     # shellcheck disable=2086
-    read -a matches <<< "$(cd .. ; echo $include)"
+    read -r -a matches <<< "$(cd .. ; echo $include)"
     for match in "${matches[@]}"; do
-        echo "$match"
         mkdir -p "$tmpdir/dist/tests/includes/$(dirname "$match")"
         cp "../$match" "$tmpdir/dist/tests/includes/$match"
     done
