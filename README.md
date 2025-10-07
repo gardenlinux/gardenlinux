@@ -78,7 +78,7 @@ If, for whatever reason, we need to switch back to debian mirrored packages, a n
 
 This is going to break future patch releases, if needed. Also, you should disable github actions for that repo, in order to prevent version updates from overwriting the null release.
 
-Create an empty branch, a null tag, push everything and then create a release.
+Create a branch to remove all files / actions, place a README to record the history for later reference and tag the repo with null as in below steps:
 
 ```
  - Create a branch called archive-<pkgname> with the last state of the repo.
