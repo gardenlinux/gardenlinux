@@ -49,7 +49,7 @@ class TimeDateCtl:
 
             line = [line.strip() for line in result.stdout.split("\n") if result.stdout.strip().startswith("Server:")]
             line = line[0] if len(line) > 0 else ""
-            pattern = r'(\d{1,3}(?:\.\d{1,3}){3}) \(([^)]+)\)'
+            pattern = r'Server: (.*) \({1}(.*)\){1}' # allows for String as ip, e.g. n/a with GCP
             match = re.search(pattern, line)
             if match:
                 ip = match.group(1)
