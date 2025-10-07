@@ -56,7 +56,7 @@ class TimeDateCtl:
                 hostname = match.group(2)
                 return NtpServer(ip=match.group(1), hostname=match.group(2))
 
-            raise ValueError(f"no server information available")
+            raise ValueError(f"no server information available. Got: {result.stdout}")
 
         def get_timesync_status(self) -> TimeSyncStatus:
             """
