@@ -94,11 +94,11 @@ def test_clocksource_kvm_aws_aarch64(clocksource_file: str, expected_clock_sourc
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure")
-def test_chrony_azure(chrony_config_file: str):
+def test_chrony_azure(chrony_config_file: str, ptp_hyperv_dev: str):
     """
     Check Chrony configuration for expected content
     """
-    expected_config = "refclock PHC /dev/ptp_hyperv poll 3 dpoll -2 offset 0"
+    expected_config = f"refclock PHC {ptp_hyperv_dev} poll 3 dpoll -2 offset 0"
     with open(chrony_config_file, "r") as f:
         actual_config = f.read()
         assert actual_config.find(expected_config) != -1, f"chrony config for ptp expected but not found"
@@ -106,7 +106,7 @@ def test_chrony_azure(chrony_config_file: str):
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure")
 def test_azure_ptp_symlink(ptp_hyperv_dev: str):
-    assert os.path.islink(ptp_hyperv_dev), f"ptp-dev should always be a symlink."
+    assert os.path.islink(ptp_hyperv_dev), f"{ptp_hyperv_dev} should always be a symlink."
 
 @pytest.mark.parametrize("dir", ["/bin","/etc/ssh"])
 def test_files_not_in_future(dir: str):
