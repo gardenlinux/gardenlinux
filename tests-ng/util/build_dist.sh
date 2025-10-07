@@ -31,15 +31,17 @@ if [ -n "$test_dirs" ]; then
 	echo "$test_dirs" | xargs -I {} cp -r {} "$tmpdir/dist/tests/"
 fi
 
-filtered_includes=$(cat includes | sed -E -e "/^#/d" -e "/^[[:space:]]*$/d" -e "s|^\.?/||")
+includes=($(sed -E -e "/^#/d" -e "/^[[:space:]]*$/d" -e "s|^\.?/||" includes))
 
-while read wildcard; do
-    matches=($(cd .. ; echo $wildcard))
+for include in "${includes[@]}"; do
+    # shellcheck disable=2086
+    read -a matches <<< "$(cd .. ; echo $include)"
     for match in "${matches[@]}"; do
-        mkdir -p "$tmpdir/dist/tests/includes/$(dirname $match)"
+        echo "$match"
+        mkdir -p "$tmpdir/dist/tests/includes/$(dirname "$match")"
         cp "../$match" "$tmpdir/dist/tests/includes/$match"
     done
-done <<< "$filtered_includes"
+done
 
 cat >"$tmpdir/dist/run_tests" <<'EOF'
 #!/bin/sh
