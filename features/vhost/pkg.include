@@ -6,8 +6,8 @@ qemu-utils
 qemu-block-extra
 libvirt-daemon-system
 libvirt-clients
-libgoogle-perftools4
-libtcmalloc-minimal4
+libgoogle-perftools4t64
+libtcmalloc-minimal4t64
 libvirt0
 #virtinst
 $(if [ $arch = amd64 ]; then echo ovmf; fi)
