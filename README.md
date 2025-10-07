@@ -81,10 +81,20 @@ This is going to break future patch releases, if needed. Also, you should disabl
 Create an empty branch, a null tag, push everything and then create a release.
 
 ```
-git checkout --orphan nullbranch
-git reset
-git commit --allow-empty -m "null"
-git push origin nullbranch
-git tag null
-git push origin null
+	1. Create a branch called archive-<pkgname> with the last state of the repo.
+		a. git checkout -b archive-<PACKAGE_NAME>
+	2. Disable GitHub Actions and other files
+		a. git rm -r .github/workflows
+		b. git rm -r <ALL_FILES>
+		c. git reset ==> **VALIDATE if this is required, not performed in this PR**
+	3. Create a README.md to record what this package was and why was it needed
+		a. git add README.md
+	4. Convert the branch to "null" branch
+		a. git commit -a -m "null"
+		b. git push -u origin archive-<PACKAGE_NAME>
+	5. Create the PR for a review, once approved:
+	6. Create a null tag for the repo
+		a. git tag null
+		b. git push origin null
+    7. Archive the repo in GitHub (repo > Settings > Danger Zone : Archive)
 ```
