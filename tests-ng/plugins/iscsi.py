@@ -19,7 +19,7 @@ def iscsi_device(shell: ShellRunner):
             backing-store /tmp/iscsi_disk.img
             initiator-address 127.0.0.1
         </target>"""
-    shell("sudo mkdir -p /etc/tgt/conf.d")
+    
     os.makedirs("/etc/tgt/conf.d", exist_ok=True)
     with open("/etc/tgt/conf.d/iscsi_target.conf", "w") as f:
         f.write(iscsi_config)
