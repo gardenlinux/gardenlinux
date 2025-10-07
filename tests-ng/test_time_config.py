@@ -63,9 +63,19 @@ def test_clocksource_xen(clocksource_file: str, expected_clock_source: str):
     _cmp_clksrc(clocksource_file=clocksource_file, expected=expected_clock_source)
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
-@pytest.mark.feature("x86_64 and (kvm or aws)")
+@pytest.mark.feature("x86_64 and aws")
+@pytest.mark.parametrize("expected_clock_source", ["tsc"])
+def test_clocksource_aws_amd64(clocksource_file: str, expected_clock_source: str):
+    """
+    Check if clocksource matches this archtectures expected value.
+    For AWS this is documented here: https://repost.aws/knowledge-center/manage-ec2-linux-clock-source
+    """
+    _cmp_clksrc(clocksource_file=clocksource_file, expected=expected_clock_source)
+
+@pytest.mark.booted(reason="NTP server configuration is read at runtime")
+@pytest.mark.feature("x86_64 and kvm")
 @pytest.mark.parametrize("expected_clock_source", ["kvm-clock"])
-def test_clocksource_kvm_aws_amd64(clocksource_file: str, expected_clock_source: str):
+def test_clocksource_kvm_amd64(clocksource_file: str, expected_clock_source: str):
     """
     Check if clocksource matches this archtectures expected value.
     For AWS this is documented here: https://repost.aws/knowledge-center/manage-ec2-linux-clock-source
