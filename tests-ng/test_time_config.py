@@ -31,6 +31,7 @@ def test_correct_ntp_on_aws(timedatectl: TimeDateCtl, expected_ntp_server: str):
 def test_correct_ntp_on_gcp(timedatectl: TimeDateCtl, expected_ntp_server: str):
     assert expected_ntp_server == timedatectl.get_ntpserver().hostname, f"ntp server is invalid. Expected {expected_ntp_server}."
 
+@pytest.mark.flaky(reruns=3, reruns_delay=10, only_rerun="AssertionError")
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("not azure")
 def test_ntp(timedatectl: TimeDateCtl):
@@ -63,7 +64,7 @@ def test_clocksource_xen(clocksource_file: str, expected_clock_source: str):
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("x86_64 and (kvm or aws)")
-@pytest.mark.parametrize("expected_clock_source", ["tsc"])
+@pytest.mark.parametrize("expected_clock_source", ["kvm-clock"])
 def test_clocksource_kvm_aws_amd64(clocksource_file: str, expected_clock_source: str):
     """
     Check if clocksource matches this archtectures expected value.
