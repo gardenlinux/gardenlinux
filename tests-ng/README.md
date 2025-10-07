@@ -71,18 +71,37 @@ Before running the test framework, make sure the following dependencies are inst
 - `qemu`
 - `qemu-utils`
 
+If you plan to provision cloud resources, the cloud provider specific CLIs might be useful or even required:
+
+- `azure-cli`
+- `awscli`
+- `gcloud`
+- `aliyun`
+- `openstack-clients`
+
 #### Install on Debian based systems
 
 ```
 apt-get update
 apt-get install podman make curl jq libxml2-utils unzip qemu swtpm socat
-
+# install cloud provider CLIs
+apt-get install azure-cli awscli openstackclient # for GCP and ALI look at tip
 ```
+
+> [!TIP]
+> Checkout this cloud provider documentation on the CLIs:
+>   - [AWS](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+>   - [Azure](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?view=azure-cli-latest&pivots=apt)
+>   - [GCP](https://cloud.google.com/sdk/docs/install#deb)
+>   - [ALI](https://www.alibabacloud.com/help/en/cli/install-cli-on-linux)
+>   - [OpenStack](https://docs.openstack.org/newton/user-guide/common/cli-install-openstack-command-line-clients.html)
 
 #### Install on MacOS
 
 ```
 brew install coreutils bash gnu-sed gnu-getopt podman make curl jq libxml2 unzip swtpm socat
+# install cloud provider CLIs
+brew install azure-cli awscli gcloud-cli aliyun-cli openstackclient
 ```
 
 ### Basic Usage
