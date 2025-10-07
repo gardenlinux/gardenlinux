@@ -3,7 +3,7 @@
 set -eufo pipefail
 
 if [ "$0" != /init ]; then
-	exec podman run --rm -v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro" -v "$PWD:/mnt" -w /mnt debian:stable /init "$@"
+	exec podman run --rm -v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro" -v "$PWD/..:/mnt" -w /mnt/tests-ng debian:stable /init "$@"
 fi
 
 tmpdir=
@@ -30,6 +30,16 @@ cp -r -t "$tmpdir/dist/tests" conftest.py plugins handlers test_*.py
 if [ -n "$test_dirs" ]; then
 	echo "$test_dirs" | xargs -I {} cp -r {} "$tmpdir/dist/tests/"
 fi
+
+filtered_includes=$(cat includes | sed -E -e "/^#/d" -e "/^[[:space:]]*$/d" -e "s|^\.?/||")
+
+while read wildcard; do
+    matches=($(cd .. ; echo $wildcard))
+    for match in "${matches[@]}"; do
+        mkdir -p "$tmpdir/dist/tests/includes/$(dirname $match)"
+        cp "../$match" "$tmpdir/dist/tests/includes/$match"
+    done
+done <<< "$filtered_includes"
 
 cat >"$tmpdir/dist/run_tests" <<'EOF'
 #!/bin/sh

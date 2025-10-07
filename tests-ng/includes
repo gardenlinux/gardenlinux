@@ -1,0 +1,6 @@
+## Add files from the repository which are required in the test tar-ball. Bash pattern matching is enabled. 
+## The files will be available in the includes folder, e.g. features/aws/pkg.include can be found at includes/features/aws/pkg.include
+
+# For the test_package_musthave.py test
+/features/*/pkg.include
+/features/*/pkg.exclude

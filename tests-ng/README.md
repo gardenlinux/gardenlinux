@@ -385,6 +385,7 @@ dist/
 │   └── site-packages/ # Python packages
 ├── tests/            # Test framework and test files
 │   ├── plugins/      # Test plugins
+│   ├── includes/     # Files from the repository
 │   ├── test_*.py     # Individual test modules
 │   └── conftest.py   # Pytest configuration
 └── run_tests         # Test execution script
