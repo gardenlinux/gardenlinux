@@ -2,26 +2,13 @@ import os
 import pwd
 import stat
 import shutil
-from plugins.shell import ShellRunner
-
-users = {
-    # feature: additional_user, sudo access
-    "vhost": { "username": "libvirt-qemu", "sudo_user": False },
-    "ali": { "username": "admin", "sudo_user": True },
-    "aws": { "username": "admin", "sudo_user": True },
-    "azure": { "username": "azureuser", "sudo_user": True },
-    "gcp": { "username": "gardenlinux", "sudo_user": True },
-    "openstackbaremetal": { "username": "admin", "sudo_user": True }
-}
-
-sudo_binary = shutil.which("sudo")
 
 import pytest
 
 
-def test_service_accounts_have_nologin_shell():
+def test_service_accounts_have_nologin_shell(get_uid_range):
     for entry in pwd.getpwall():
-        if entry.pw_uid >= 1000:
+        if get_uid_range.uid_min <= entry.pw_uid <= get_uid_range.uid_max:
             continue
         if entry.pw_name in {"root", "sync"}:
             continue
@@ -48,29 +35,18 @@ def test_no_extra_home_directories(expected_users):
 @pytest.mark.skipif(sudo_binary is None, reason="sudo does not exist")
 @pytest.mark.booted
 @pytest.mark.root
-@pytest.mark.parametrize(
-    "user", [pytest.param(users[feature], marks=pytest.mark.feature(feature)) for feature in users]
-)
-def test_sudo_permission_for_users(user, shell: ShellRunner):
-    output = shell(f"sudo -s sudo -l -U {user['username']}", capture_output=True, ignore_exit_code=True)
-
-    output_lines = []
-    for line in output.stdout.split("\n"):
-        output_lines.append(line)
-
-    sudo_access = False
-    if len(output_lines) > 3:
-        if "may run the following commands on" in output_lines[-2]:
-            sudo_access = True
-    assert sudo_access == user['sudo_user'], f"User: {user['username']} sudo permission doesn't match requirement : {output_lines[-1]}"
+def test_sudo_permission_for_users(expected_users, shell: ShellRunner):
+    for user in expected_users:
+        output = shell(f"sudo -s sudo -l -U {user}", capture_output=True)
+        output_lines = output.stdout.strip().splitlines()
+        assert (len(output_lines) > 2 and 
+            "may run the following commands on" in output_lines[-2], 
+            f"User: {user} sudo permission doesn't match requirement : {output_lines[-1]}")
 
 @pytest.mark.booted
 @pytest.mark.root
-@pytest.mark.parametrize(
-    "user", [pytest.param(users[feature], marks=pytest.mark.feature(feature)) for feature in users]
-)
-def test_available_users(user):
+def test_available_users(expected_users, get_uid_range):
     for entry in pwd.getpwall():
-        if entry.pw_uid >= 1000:
-            assert entry.pw_name in ["dev", "nobody", f"{user['username']}"], \
-                    f"Unexpected user account found in /etc/passwd: {user['username']}"
+        if get_uid_range.uid_min <= entry.pw_uid <= get_uid_range.uid_max:
+            assert entry.pw_name in ["dev", "nobody"] + list(expected_users), \
+                    f"Unexpected user account found in /etc/passwd: {entry.pw_name}"
