@@ -6,6 +6,9 @@ class Dpkg:
         self._shell = shell
 
     def package_is_installed(self, package: str) -> bool:
+        result = self._shell(f'dpkg --status {package}', capture_output=True, ignore_exit_code=True)
+        if result.returncode == 0:
+            return True
         arches = self.own_and_foreign_architectures()
         is_installed = True
         for arch in arches:
