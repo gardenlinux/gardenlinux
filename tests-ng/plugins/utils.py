@@ -1,7 +1,5 @@
 from pathlib import Path
-from typing import Dict, List, Optional
-
-import pytest
+from typing import Dict, List
 
 # Various utility functions to make tests more readable
 # This should not contain test-assertions, but only abstract details that make tests harder to read
@@ -21,7 +19,7 @@ def is_set(obj) -> bool:
 
 
 def parse_etc_file(
-    path: Path, field_names: List[str], min_fields: Optional[int] = None
+    path: Path, field_names: List[str], min_fields: int | None = None
 ) -> List[Dict[str, str | List[str]]]:
     """
     Generic parser for /etc/* files into structured dictionaries.
