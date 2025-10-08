@@ -22,6 +22,8 @@
 
 </website-main>
 
+## !! Important !!
+Starting with the major version 2017 the versioning scheme has been changed to a semver compliant one comprised of a 3 numerical segment identifier (major.minor.patch). The "old" 2017.0 is now 2017.0.0 
 
 ## Features
 - Easy to use build system
