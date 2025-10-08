@@ -96,7 +96,7 @@ def test_clocksource_kvm_aws_aarch64(clocksource_file: str, expected_clock_sourc
 @pytest.mark.feature("azure")
 def test_chrony_azure(chrony_config_file: str, ptp_hyperv_dev: str):
     """
-    Check Chrony configuration for expected content
+    Check Chrony configuration for expected content according to https://learn.microsoft.com/en-us/azure/virtual-machines/linux/time-sync
     """
     expected_config = f"refclock PHC {ptp_hyperv_dev} poll 3 dpoll -2 offset 0"
     with open(chrony_config_file, "r") as f:
