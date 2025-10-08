@@ -17,3 +17,8 @@ def chrony_config_file() -> str:
 @pytest.fixture
 def ptp_hyperv_dev() -> str:
     return DEV_PTP_HYPERV
+
+@pytest.fixture
+def clocksource(clocksource_file: str) -> str:
+    with open(clocksource_file, "r") as f:
+        return f.read().rstrip() 

@@ -5,8 +5,9 @@ from datetime import datetime
 
 from plugins.shell import ShellRunner
 from plugins.timedatectl import TimeDateCtl, TimeSyncStatus
-from plugins.timeconf import clocksource_file, chrony_config_file, ptp_hyperv_dev
+from plugins.timeconf import clocksource, chrony_config_file, ptp_hyperv_dev
 from plugins.systemd import Systemd
+from plugins.systemd_detect_virt import systemd_detect_virt, Hypervisor
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 def test_clock(shell: ShellRunner):
@@ -53,44 +54,29 @@ def test_chrony_on_azure(systemd: Systemd):
     """
     assert systemd.is_active("chrony"), f"Chrony should be active on Azure."
 
-@pytest.mark.skip(reason="xen is no longer activly used")
-@pytest.mark.feature("xen")
-@pytest.mark.parametrize("expected_clock_source", ["tsc"])
-def test_clocksource_xen(clocksource_file: str, expected_clock_source: str):
-    """
-    Check if clocksource matches this archtectures expected value
-    """
-    _cmp_clksrc(clocksource_file=clocksource_file, expected=expected_clock_source)
+@pytest.mark.booted(reason="NTP server configuration is read at runtime")
+@pytest.mark.feature("(not azure and not container) and x86_64")
+def test_clocksource_x86_64(systemd_detect_virt: Hypervisor, clocksource: str):
+    match systemd_detect_virt:
+        case Hypervisor.xen | Hypervisor.qemu:
+            expected_clocksource = "tsc"
+        case Hypervisor.kvm | Hypervisor.amazon:
+            expected_clocksource = "kvm-clock"
+        case _:
+            assert False, f"unknown hypervisor {systemd_detect_virt}"
+
+    assert clocksource, expected_clocksource
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
-@pytest.mark.feature("x86_64 and aws")
-@pytest.mark.parametrize("expected_clock_source", ["tsc"])
-def test_clocksource_aws_amd64(clocksource_file: str, expected_clock_source: str):
-    """
-    Check if clocksource matches this archtectures expected value.
-    For AWS this is documented here: https://repost.aws/knowledge-center/manage-ec2-linux-clock-source
-    """
-    _cmp_clksrc(clocksource_file=clocksource_file, expected=expected_clock_source)
+@pytest.mark.feature("(not azure and not container) and (aarch64 or arm64)")
+def test_clocksource_arm(systemd_detect_virt: Hypervisor, clocksource: str):
+    match systemd_detect_virt:
+        case Hypervisor.kvm | Hypervisor.amazon:
+            expected_clocksource = "arch_sys_counter"
+        case _:
+            assert False, f"unknown hypervisor {systemd_detect_virt}"
 
-@pytest.mark.booted(reason="NTP server configuration is read at runtime")
-@pytest.mark.feature("x86_64 and kvm")
-@pytest.mark.parametrize("expected_clock_source", ["kvm-clock"])
-def test_clocksource_kvm_amd64(clocksource_file: str, expected_clock_source: str):
-    """
-    Check if clocksource matches this archtectures expected value.
-    For AWS this is documented here: https://repost.aws/knowledge-center/manage-ec2-linux-clock-source
-    """
-    _cmp_clksrc(clocksource_file=clocksource_file, expected=expected_clock_source)
-
-@pytest.mark.booted(reason="NTP server configuration is read at runtime")
-@pytest.mark.feature("(kvm or aws) and (aarch64 or arm64)")
-@pytest.mark.parametrize("expected_clock_source", ["arch_sys_counter"])
-def test_clocksource_kvm_aws_aarch64(clocksource_file: str, expected_clock_source: str):
-    """
-    Check if clocksource matches this archtectures expected value.
-    For AWS this is documented here: https://repost.aws/knowledge-center/manage-ec2-linux-clock-source
-    """
-    _cmp_clksrc(clocksource_file=clocksource_file, expected=expected_clock_source)
+    assert clocksource, expected_clocksource    
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure")
@@ -119,12 +105,3 @@ def test_files_not_in_future(dir: str):
             file = os.path.join(root, filename)
             modification = datetime.fromtimestamp(os.path.getmtime(file))
             assert modification <= now, f"timestamp of {file} is in the future {modification} (now={now})"
-
-def _cmp_clksrc(clocksource_file: str, expected: str):
-    """
-    Check clocksource_file for expected content.
-    """
-    with open(clocksource_file, "r") as f:
-        actual = f.read().rstrip()
-        assert expected == actual, f"expected {expected} but got '{actual}'"
-
