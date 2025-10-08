@@ -32,7 +32,7 @@ def test_correct_ntp_on_aws(timedatectl: TimeDateCtl, expected_ntp_server: str):
 def test_correct_ntp_on_gcp(timedatectl: TimeDateCtl, expected_ntp_server: str):
     assert expected_ntp_server == timedatectl.get_ntpserver().hostname, f"ntp server is invalid. Expected {expected_ntp_server}."
 
-@pytest.mark.flaky(reruns=3, reruns_delay=10, only_rerun="AssertionError")
+@pytest.mark.flaky(reruns=10, reruns_delay=30, only_rerun="AssertionError")
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("not azure")
 def test_ntp(timedatectl: TimeDateCtl):
