@@ -71,7 +71,7 @@ def test_clocksource_x86_64(systemd_detect_virt: Hypervisor, clocksource: str):
 @pytest.mark.feature("(not azure and not container) and (aarch64 or arm64)")
 def test_clocksource_arm(systemd_detect_virt: Hypervisor, clocksource: str):
     match systemd_detect_virt:
-        case Hypervisor.kvm | Hypervisor.amazon:
+        case Hypervisor.kvm | Hypervisor.qemu | Hypervisor.amazon:
             expected_clocksource = "arch_sys_counter"
         case _:
             assert False, f"unknown hypervisor {systemd_detect_virt}"
