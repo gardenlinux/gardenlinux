@@ -117,6 +117,8 @@ To get started, follow the [lima install instructions](https://lima-vm.io/docs/i
 limactl start --name gardenlinux https://images.gardenlinux.io/gardenlinux.yaml
 ```
 
+For advanced use cases, read [the documentation page on Lima](./docs/02_operators/lima-vm.md).
+
 # Documentation
 Please refer to [docs/README.md](https://github.com/gardenlinux/gardenlinux/tree/main/docs#readme).
 
