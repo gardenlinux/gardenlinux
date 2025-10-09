@@ -2,6 +2,7 @@ import os
 import pwd
 
 import pytest
+from handlers.services import service_ssh
 from plugins.sshd import Sshd
 from plugins.systemd import Systemd
 from plugins.utils import equals_ignore_case, get_normalized_sets, is_set
@@ -155,8 +156,5 @@ def test_users_have_only_root_authorized_keys_cloud(expected_users):
 @pytest.mark.modify(reason="Starting the unit modifies the system state")
 @pytest.mark.root(reason="Starting the unit requires root")
 @pytest.mark.feature("ssh")
-def test_ssh_unit_running(systemd: Systemd):
-    systemd.start_unit("ssh")
-    assert systemd.is_active(
-        "ssh"
-    ), f"Required systemd unit for ssh.service is not running"
+def test_ssh_service_running(systemd: Systemd, service_ssh):
+    assert systemd.is_active("ssh"), f"Required systemd unit for ssh.service is not running"
