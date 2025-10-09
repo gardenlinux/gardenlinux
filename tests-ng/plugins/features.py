@@ -1,14 +1,28 @@
 import boolean
 import pytest
+import platform
+
 from typing import List
 
 booleanAlgebra = boolean.BooleanAlgebra()
 
-with open("/etc/os-release") as os_release:
-    for line in os_release:
-        (key, value) = line.split("=", 1)
-        if key == "GARDENLINUX_FEATURES":
-            features = set([ feature.strip() for feature in value.split(",") ])
+def setup_gardenlinux_features() -> set[str]:
+    """
+    Collects Garden Linux features and architecture information.
+    """
+    features = set[str]()
+    with open("/etc/os-release") as os_release:
+        for line in os_release:
+            (key, value) = line.split("=", 1)
+            if key == "GARDENLINUX_FEATURES":
+                features = set([ feature.strip() for feature in value.split(",") ])
+
+    # add architecture features
+    features.add(platform.machine())
+
+    return features
+
+features = setup_gardenlinux_features()
 
 def check_feature_condition(condition: str):
     feature_symbols = { booleanAlgebra.Symbol(feature): booleanAlgebra.TRUE for feature in features }
@@ -17,7 +31,6 @@ def check_feature_condition(condition: str):
         if symbol not in feature_symbols:
             feature_symbols[symbol] = booleanAlgebra.FALSE
     return bool(expr.subs(feature_symbols).simplify())
-
 
 def pytest_configure(config: pytest.Config):
     config.addinivalue_line(

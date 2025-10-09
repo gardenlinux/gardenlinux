@@ -67,7 +67,12 @@ class Systemd:
 
     def is_active(self, unit_name: str) -> bool:
         result = self._shell(f"{self._systemctl} is-active {unit_name}", capture_output=True, ignore_exit_code=True)
-        return result.stdout.strip() == "active"
+        active = result.stdout.strip() == "active"
+        if not active:
+            result_status = self._shell(f"{self._systemctl} status {unit_name}", capture_output=True, ignore_exit_code=True)
+            print(result_status.stdout)
+
+        return active
 
     def start_unit(self, unit_name: str):
         if not allow_system_modifications():
