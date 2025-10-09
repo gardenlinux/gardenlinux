@@ -58,7 +58,7 @@ jobs:
       platform_test_tag: ${{ inputs.platform_test_tag }}
       flavors_parse_params_test_bare: ${{ inputs.flavors_parse_params_test_bare }}
     permissions:
-      actions: write  # TODO: 3215 elevated permissions for included workflow
+      actions: write # TODO: 3215 elevated permissions for included workflow
       packages: write # TODO: 3215 elevated permissions for included workflow
       id-token: write # TODO: 3215 elevated permissions for included workflow
   test:
@@ -72,7 +72,8 @@ jobs:
       test_types: ${{ inputs.test_types }}
     permissions:
       id-token: write # TODO: 3215 elevated permissions for included workflow
-      actions: write  # TODO: 3215 elevated permissions for included workflow
+      actions: write # TODO: 3215 elevated permissions for included workflow
+      checks: write # Required for test_report job to write workflow summary
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -126,7 +127,7 @@ jobs:
       platforms: '["tofu"]'
       platform_test_tag: ${{ inputs.platform_test_tag || 'nightly' }}
     permissions:
-      actions: write  # TODO: 3215 elevated permissions for included workflow
+      actions: write # TODO: 3215 elevated permissions for included workflow
       packages: write # TODO: 3215 elevated permissions for included workflow
   test_distribution_build:
     needs: download_build_requirements
@@ -171,7 +172,8 @@ jobs:
       bare_flavors_matrix: '{"include":[]}'
     permissions:
       id-token: write # TODO: 3215 elevated permissions for included workflow
-      actions: write  # TODO: 3215 elevated permissions for included workflow
+      actions: write # TODO: 3215 elevated permissions for included workflow
+      checks: write # Required for test_report job to write workflow summary
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
