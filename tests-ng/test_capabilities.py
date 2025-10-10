@@ -9,7 +9,6 @@ expected_capabilities_by_feature = {
     "vmware": ["/usr/bin/arping cap_net_raw=ep"],
 }
 
-@pytest.mark.root
 def test_only_expected_capabilities_are_defined(shell: ShellRunner, active_features):
     expected_capabilities = []
     for feature in active_features:
