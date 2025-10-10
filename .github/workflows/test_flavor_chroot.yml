@@ -56,9 +56,15 @@ jobs:
           name: test-distribution
           path: tests-ng/.build
       # chroot.test.xml is written in the entrypoint tests/init
+      - name: New Test Framework
+        run: ./test-ng ".build/$CNAME.tar"
       - name: Rename test results
         if: always()
         run: mv tests/chroot.test.xml .build/$CNAME.chroot.test.xml
+      - uses: pmeier/pytest-results-action@20b595761ba9bf89e115e875f8bc863f913bc8ad # pin@v0.7.2
+        if: always()
+        with:
+          path: ".build/${{ env.CNAME }}.chroot.test.xml"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         if: always()
         with:

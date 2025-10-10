@@ -57,10 +57,6 @@ container_mount_opts=(
 	-v "$(realpath "$dir")/.build/$cname.release:/gardenlinux/input.release:ro"
 )
 
-container_env_opts=(
-	-e "CNAME=$cname"
-)
-
 if [ -z "$container_image" ]; then
 	base_image="$("$dir/build" --print-container-image)"
 	image_file="$(mktemp)"
@@ -69,4 +65,4 @@ if [ -z "$container_image" ]; then
 	rm "$image_file"
 fi
 
-"$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "${container_env_opts[@]}" "$container_image" 2>&1 | tee "$dir/.build/$cname.chroot.test.log"
+"$container_engine" run --rm "${container_run_opts[@]}" "${container_mount_opts[@]}" "$container_image" 2>&1 | tee "$dir/.build/$cname.chroot.test.log"

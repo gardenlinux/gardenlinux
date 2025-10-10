@@ -14,7 +14,6 @@ scp = "*"
 dacite = "*"
 cffi = "*"
 pytest-json-report = "*"
-pytest-metadata = "*"
 pytest-rerunfailures = "*"
 python-gardenlinux-lib = {editable = true, ref = "0.6.0", git = "git+https://github.com/gardenlinux/python-gardenlinux-lib.git"}
 

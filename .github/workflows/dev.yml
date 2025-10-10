@@ -48,5 +48,4 @@ jobs:
       test_types: "chroot,qemu,oci"
     permissions:
       id-token: write # TODO: 3215 elevated permissions for included workflow
-      actions: write # TODO: 3215 elevated permissions for included workflow
-      checks: write # Required for test_report job to write workflow summary
+      actions: write  # TODO: 3215 elevated permissions for included workflow
