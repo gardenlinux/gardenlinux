@@ -80,20 +80,31 @@ This is going to break future patch releases, if needed. Also, you should disabl
 
 Create a branch to remove all files / actions, place a README to record the history for later reference and tag the repo with null as in below steps:
 
-```
  - Create a branch called archive-<pkgname> with the last state of the repo.
+```
    - git checkout -b archive-<PACKAGE_NAME>
+```
  - Disable GitHub Actions and other files
+```
    - git rm -r .github/workflows
    - git rm -r <ALL_FILES>
+```
  - Create a README.md to record what this package was and why was it needed
+```
    - git add README.md
+```
  - Convert the branch to "null" branch
+```
    - git commit -a -m "null"
    - git push -u origin archive-<PACKAGE_NAME>
+```
  - Create the PR for a review, once approved:
  - Create a null tag for the repo
+```
    - git tag null
    - git push origin null
- - Archive the repo in GitHub (repo > Settings > Danger Zone : Archive)
+```
+ - Archive the repo in GitHub 
+```
+ Web browser > github.com > repo > Settings > Danger Zone : Archive repo
 ```
