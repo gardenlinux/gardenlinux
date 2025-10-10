@@ -68,18 +68,6 @@ log_file_junit="cloud.test-ng.xml"
 mkdir -p "$log_dir"
 test_args+=("--junit-xml=/run/gardenlinux-tests/tests/log/$log_file_junit")
 
-# Extract test artifact name from image filename
-test_artifact="$(basename "$image" | sed 's/-[0-9].*\.raw$//')"
-test_type="cloud"
-test_namespace="test-ng"
-
-# Add pytest-metadata arguments
-test_args+=("--metadata" "Artifact" "$test_artifact")
-test_args+=("--metadata" "Type" "$test_type")
-test_args+=("--metadata" "Namespace" "$test_namespace")
-
-echo "📊  metadata: Artifact=$test_artifact, Type=$test_type, Namespace=$test_namespace"
-
 # arch, uefi, secureboot, tpm2 are set in $image.requirements
 arch=
 uefi=

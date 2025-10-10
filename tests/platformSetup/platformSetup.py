@@ -255,18 +255,13 @@ class Scripts:
         flavor = self.flavors.flavor
         provisioner = self.args.provisioner
         provisioner_pytest = PROVISIONER_PYTEST_MAP[provisioner]
-        pytest_metadata = {
-            "Artifact": flavor,
-            "Type": provisioner_pytest,
-            "Namespace": "test"
-        }
 
         apply_script = self.paths.tests_dir / f"pytest.{provisioner}.{flavor}.apply.sh"
         with apply_script.open("w") as f:
             f.write("#!/usr/bin/env bash\n")
             f.write(
                 f"cd {self.paths.tests_dir} && "
-                f"pytest -v --provisioner={provisioner_pytest} --configfile config/pytest.{provisioner_pytest}.{flavor}.yaml --create-only --metadata-from-json {pytest_metadata}\n"
+                f"pytest -v --provisioner={provisioner_pytest} --configfile config/pytest.{provisioner_pytest}.{flavor}.yaml --create-only\n"
             )
         apply_script.chmod(0o755)
 
@@ -275,7 +270,7 @@ class Scripts:
             f.write("#!/usr/bin/env bash\n")
             f.write(
                 f"cd {self.paths.tests_dir} && "
-                f"pytest -v --provisioner={provisioner_pytest} --configfile config/pytest.{provisioner_pytest}.{flavor}.yaml --metadata-from-json {pytest_metadata}\n"
+                f"pytest -v --provisioner={provisioner_pytest} --configfile config/pytest.{provisioner_pytest}.{flavor}.yaml\n"
             )
         test_script.chmod(0o755)
 

@@ -40,21 +40,7 @@ log_file_log="chroot.test-ng.log"
 log_file_junit="chroot.test-ng.xml"
 
 mkdir -p "$log_dir"
-
-if [[ "$rootfs_tar" != "/mnt/rootfs.tar" ]]; then
-	# We're not running inside a container, extract artifact name and add metadata
-	test_artifact="$(basename "$rootfs_tar" | sed 's/-[0-9].*\.tar$//')"
-	test_type="chroot"
-	test_namespace="test-ng"
-
-	echo "📊  metadata: Artifact=$test_artifact, Type=$test_type, Namespace=$test_namespace"
-
-	test_args+=("--metadata" "Artifact" "$test_artifact")
-	test_args+=("--metadata" "Type" "$test_type")
-	test_args+=("--metadata" "Namespace" "$test_namespace")
-
-	test_args+=("--junit-xml=$log_dir/$log_file_junit")
-fi
+test_args+=("--junit-xml=$log_dir/$log_file_junit")
 
 if ((containerize)); then
 	log_dir="/mnt/log"
@@ -81,7 +67,7 @@ cleanup() {
 }
 
 get_logs() {
-	cp "$tmpdir/chroot/run/gardenlinux-tests/tests/log/$log_file_junit" "$log_dir" || true
+	cp "$tmpdir/chroot/mnt/log/$log_file_junit" "$log_dir" || true
 }
 
 trap cleanup EXIT
