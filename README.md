@@ -108,6 +108,19 @@ Images are published as:
 # Nvidia Driver Support
 An installer can be found in the [gardenlinux/gardenlinux-nvidia-installer](https://github.com/gardenlinux/gardenlinux-nvidia-installer) repository.
 
+# Run Garden Linux Virtual Machines Locally Using Lima (Linux Machines)
+
+You can run Garden Linux virtual machines on your laptop easily using [Lima (Linux Machines)](https://lima-vm.io).
+This can be useful if you want to evaluate Garden Linux but don't have access to Cloud accounts.
+
+To get started, follow the [lima install instructions](https://lima-vm.io/docs/installation/) for your OS and create a Garden Linux vm using this command:
+
+```bash
+limactl start --name gardenlinux https://images.gardenlinux.io/gardenlinux.yaml
+```
+
+For advanced use cases, read [the documentation page on Lima](./docs/02_operators/lima-vm.md).
+
 # Documentation
 Please refer to [docs/README.md](https://github.com/gardenlinux/gardenlinux/tree/main/docs#readme).
 
