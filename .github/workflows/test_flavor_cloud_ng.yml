@@ -118,7 +118,7 @@ jobs:
             core.exportVariable("GOOGLE_ZONE", "${{ secrets.gcp_zone }}");
       - id: "auth_aws"
         name: "Authenticate to AWS"
-        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # pin@v4
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
           role-session-name: ${{ secrets.aws_session }}
