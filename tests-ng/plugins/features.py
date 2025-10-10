@@ -35,3 +35,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: List[pytest.Item
                 skip_msg += f" (reason: {reason})"
             if not check_feature_condition(condition):
                 item.add_marker(pytest.mark.skip(reason=skip_msg))
+
+@pytest.fixture
+def active_features() -> set[str]:
+    return features
