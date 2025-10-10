@@ -5,7 +5,6 @@ from plugins.shell import ShellRunner
 
 expected_capabilities_by_feature = {
     "kvm": ["/usr/bin/arping cap_net_raw=ep"],
-    "vhost": ["/usr/lib/(aarch64|x86_64)-linux-gnu/gstreamer1.0/gstreamer-1.0/gst-ptp-helper cap_net_bind_service,cap_net_admin=ep"],
     "vmware": ["/usr/bin/arping cap_net_raw=ep"],
 }
 
