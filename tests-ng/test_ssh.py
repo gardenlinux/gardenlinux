@@ -61,13 +61,19 @@ def test_sshd_has_required_config(sshd_config_item: str, sshd: Sshd):
         if actual_value is None:
             actual_value = set()
         elif not is_set(actual_value):
-            actual_value = set(str(actual_value).split(','))
+            actual_value = set(str(actual_value).split(","))
         # Ensure actual_value is a set at this point
-        assert isinstance(actual_value, set), f"actual_value should be a set, got {type(actual_value)}"
+        assert isinstance(
+            actual_value, set
+        ), f"actual_value should be a set, got {type(actual_value)}"
         actual_set, expected_set = get_normalized_sets(actual_value, expected_value)
-        assert expected_set.issubset(actual_set), f"{sshd_config_item}: missing values {expected_set - actual_set}"
+        assert expected_set.issubset(
+            actual_set
+        ), f"{sshd_config_item}: missing values {expected_set - actual_set}"
     else:
-        assert equals_ignore_case(str(actual_value or ""), str(expected_value)), f"{sshd_config_item}: expected {expected_value}, got {actual_value}"
+        assert equals_ignore_case(
+            str(actual_value or ""), str(expected_value)
+        ), f"{sshd_config_item}: expected {expected_value}, got {actual_value}"
 
 
 @pytest.mark.feature(
