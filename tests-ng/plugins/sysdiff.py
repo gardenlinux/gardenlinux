@@ -307,7 +307,11 @@ class SnapshotManager:
         now = datetime.now()
         timestamp = now.isoformat()
 
-        user = os.getlogin()
+        try:
+            user = os.getlogin()
+        except OSError:
+            # Fallback when there's no controlling terminal (e.g., Github Actions)
+            user = os.environ.get('USER')
 
         if name is None:
             snapshot_name = timestamp
