@@ -1,5 +1,6 @@
-import pytest
 from typing import List
+
+import pytest
 
 skip_performance_metrics = False
 

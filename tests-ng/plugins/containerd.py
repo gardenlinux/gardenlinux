@@ -1,5 +1,6 @@
 import pytest
 import validators
+
 from .shell import ShellRunner
 from .systemd import Systemd
 

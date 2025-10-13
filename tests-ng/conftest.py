@@ -1,4 +1,5 @@
 import os
+
 import pytest
 
 plugin_dir = os.path.join(os.path.dirname(__file__), "plugins")

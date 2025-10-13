@@ -1,8 +1,9 @@
 import os
 import pwd
-import pytest
 import subprocess
 from typing import Optional, Tuple
+
+import pytest
 
 default_user: Optional[Tuple[int, int]] = None
 

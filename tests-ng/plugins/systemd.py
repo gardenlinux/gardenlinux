@@ -1,11 +1,13 @@
-import re
-import pytest
-from typing import Tuple
-from .shell import ShellRunner
-from .modify import allow_system_modifications
-from dataclasses import dataclass
-import time
 import json
+import re
+import time
+from dataclasses import dataclass
+from typing import Tuple
+
+import pytest
+
+from .modify import allow_system_modifications
+from .shell import ShellRunner
 
 
 @dataclass

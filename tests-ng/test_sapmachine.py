@@ -1,6 +1,6 @@
 import pytest
-from plugins.dpkg import Dpkg
 from plugins.apt import Apt
+from plugins.dpkg import Dpkg
 from plugins.shell import ShellRunner
 
 

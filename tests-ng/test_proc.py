@@ -1,6 +1,6 @@
-import pytest
 import os
 
+import pytest
 from plugins.booted import is_system_booted
 
 

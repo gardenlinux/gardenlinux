@@ -1,5 +1,6 @@
-import pytest
 from typing import Any, List
+
+import pytest
 
 system_booted = False
 
