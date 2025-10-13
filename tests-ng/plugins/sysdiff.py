@@ -13,6 +13,7 @@ import difflib
 import gzip
 import json
 import os
+import shutil
 import re
 from dataclasses import dataclass, asdict
 from datetime import datetime
@@ -27,7 +28,7 @@ from .systemd import Systemd, SystemdUnit
 from .kernel_module import KernelModule, LoadedKernelModule
 from .sysctl import Sysctl, SysctlParam
 
-STATE_DIR = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "sysdiff"
+STATE_DIR = "/tmp/sysdiff"
 
 DEFAULT_PATHS = [
     "/etc", "/boot", "/usr/local/bin", "/usr/local/sbin",
@@ -293,7 +294,7 @@ class SnapshotManager:
     """Manages snapshot creation, storage, and retrieval"""
 
     def __init__(self, state_dir: Path = None):
-        self.state_dir = state_dir or STATE_DIR
+        self.state_dir = state_dir or Path(STATE_DIR)
         self.state_dir.mkdir(parents=True, exist_ok=True)
 
     def create_snapshot(self, name: str = None, paths: List[str] = None,
@@ -306,10 +307,12 @@ class SnapshotManager:
         now = datetime.now()
         timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
 
+        user = os.getlogin()
+
         if name is None:
             snapshot_name = timestamp
         else:
-            snapshot_name = f"{timestamp}-{name}"
+            snapshot_name = f"{timestamp}-{user}-{name}"
 
         snapshot_file = self.state_dir / f"{snapshot_name}.json.gz"
         if snapshot_file.exists():
@@ -540,6 +543,10 @@ class Sysdiff:
             snapshot_file = self.manager.state_dir / f"{name}.json.gz"
             if snapshot_file.exists():
                 snapshot_file.unlink()
+        # if the state_dir is empty, delete it
+        if not os.listdir(self.manager.state_dir):
+            shutil.rmtree(self.manager.state_dir)
+
 
 
 @pytest.fixture
