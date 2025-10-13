@@ -32,7 +32,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ needs.set_version.outputs.version }}
-      fail_fast: true
+      fail_fast: false
     permissions:
       id-token: write # TODO: 3215 elevated permissions for included workflow
       actions: write  # TODO: 3215 elevated permissions for included workflow
