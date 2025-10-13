@@ -1,6 +1,6 @@
-import pytest
 from typing import List
 
+import pytest
 from debian import deb822
 
 

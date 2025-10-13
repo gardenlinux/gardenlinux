@@ -13,21 +13,21 @@ import difflib
 import gzip
 import json
 import os
-import shutil
 import re
-from dataclasses import dataclass, asdict
+import shutil
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 
 import pytest
-
-from .shell import ShellRunner
-from .dpkg import Dpkg
 from debian import deb822
-from .systemd import Systemd, SystemdUnit
+
+from .dpkg import Dpkg
 from .kernel_module import KernelModule, LoadedKernelModule
+from .shell import ShellRunner
 from .sysctl import Sysctl, SysctlParam
+from .systemd import Systemd, SystemdUnit
 
 STATE_DIR = "/tmp/sysdiff"
 
