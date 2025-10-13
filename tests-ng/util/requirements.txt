@@ -1,3 +1,4 @@
 boolean.py==5.0
 pytest==8.4.2
+pytest-metadata==3.1.1
 validators==0.35.0

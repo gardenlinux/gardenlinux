@@ -190,7 +190,7 @@ jobs:
     needs: [determine_test_settings, test_flavors_qemu]
     name: Test-NG cloud flavors
     uses: ./.github/workflows/test_flavor_cloud_ng.yml
-    if:  |
+    if: |
       ${{
         always()
         && (needs.test_flavors_qemu.result == 'success' || needs.test_flavors_qemu.result == 'skipped')
@@ -266,3 +266,20 @@ jobs:
       flavor: ${{ matrix.flavor }}
     permissions:
       actions: write
+  test_report:
+    needs:
+      - test_flavors_chroot_ng
+      - test_flavors_qemu
+      - test_flavors_cloud_ng
+      - test_flavors_oci_ng
+      - test_flavors_chroot
+      - test_flavors_cloud
+      - test_flavors_oci
+    name: Generate Test Report
+    if: always()
+    uses: ./.github/workflows/test_report.yml
+    permissions:
+      actions: write
+      checks: write
+    with:
+      test_jobs: "test_flavors_chroot_ng,test_flavors_qemu,test_flavors_cloud_ng,test_flavors_oci_ng,test_flavors_chroot,test_flavors_cloud,test_flavors_oci"
