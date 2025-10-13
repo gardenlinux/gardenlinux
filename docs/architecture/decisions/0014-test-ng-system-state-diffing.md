@@ -37,7 +37,8 @@ Scope of collected state (initial set, extensible):
 
 Implementation choices:
 
-- Snapshots are stored in the invoking user's data directory at `~/.local/state/sysdiff/`. This allows (in theory) that it can be run by any user.
+- Snapshots are stored inside `/tmp/sysdiff` and are named `${date}-${user}-${name}.json.gz`. Snapshots are named to easily identify them and are compressed to save space. Sysdiff can be run by any user but might will have different results based on permissions.
+- Sysdiff can be run by any user but might will have different results based on permissions.
 - Each state domain may define static ignore/allow lists for noisy or frequently changing items (e.g., `IGNORED_SYSCTL_PARAMS`, `IGNORED_SYSTEMD_PATTERNS`, `IGNORED_KERNEL_MODULES`). These lists are implemented as constants in the sysdiff plugin itself.
 - The comparison produces a human-readable unified diff per domain. If changes are detected, the end-of-run check fails the test session with a consolidated report.
 - Development of `sysdiff` can easily be tested with python script in `tests-ng/util/sysdiff.py`.
