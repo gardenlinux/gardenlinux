@@ -6,6 +6,7 @@ from plugins.shell import ShellRunner
 expected_capabilities_by_feature = {
     "kvm": ["/usr/bin/arping cap_net_raw=ep"],
     "vmware": ["/usr/bin/arping cap_net_raw=ep"],
+    "capi": ["/usr/bin/arping cap_net_raw=ep"],
 }
 
 def test_only_expected_capabilities_are_defined(shell: ShellRunner, active_features):
