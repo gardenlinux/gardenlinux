@@ -73,9 +73,9 @@ jobs:
           version=$(./bin/garden-version "${{ inputs.version }}")
 
           if [[ "${{ inputs.version }}" == "today" ]]; then
-            glrd_data="$(./bin/glrd --type stable,patch,nightly,dev --output-format=json --latest)"
+            glrd_data="$(./bin/glrd --type major,minor,nightly,dev --output-format=json --latest)"
           else
-            glrd_data="$(./bin/glrd --type stable,patch,nightly,dev --output-format=json --version ${{ inputs.version }})"
+            glrd_data="$(./bin/glrd --type major,minor,nightly,dev --output-format=json --version ${{ inputs.version }})"
           fi
 
           commit_id=$(echo $glrd_data | jq -r '.releases[0].git.commit')
