@@ -291,9 +291,9 @@ jobs:
         id: version_reference
         run: |
           if [[ "${{ env.PLATFORM_TEST_TAG }}" == "latest" ]]; then
-            glrd_data="$(./bin/glrd --type stable,patch,nightly,dev --output-format=json --latest)"
+            glrd_data="$(./bin/glrd --type major,minor,nightly,dev --output-format=json --latest)"
           else
-            glrd_data="$(./bin/glrd --type stable,patch,nightly,dev --output-format=json --version ${{ inputs.platform_test_tag }})"
+            glrd_data="$(./bin/glrd --type major,minor,nightly,dev --output-format=json --version ${{ inputs.platform_test_tag }})"
           fi
 
           COMMIT_ID="$(echo $glrd_data | jq -r '.releases[0].git.commit_short')"
