@@ -4,12 +4,13 @@ from typing import Optional, Set
 
 users: Set[str] = set()
 
+
 def cloudinit_default_user() -> Optional[str]:
     try:
         out = subprocess.check_output(
             ["cloud-init", "query", "system_info.default_user.name"],
             stderr=subprocess.DEVNULL,
-            text=True
+            text=True,
         )
         name = out.strip()
         return name or None
@@ -22,7 +23,7 @@ def pytest_addoption(parser: pytest.Parser):
         "--expected-users",
         action="store",
         default="",
-        help="List of expected users (comma separated)"
+        help="List of expected users (comma separated)",
     )
 
 

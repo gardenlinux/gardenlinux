@@ -2,6 +2,7 @@ import pytest
 
 from plugins.pam import PamConfig
 
+
 @pytest.mark.security_id(166)
 @pytest.mark.root
 @pytest.mark.feature("not container")
@@ -17,7 +18,7 @@ def test_pam_wheel_is_required(pam_config: PamConfig):
     this behavior is enabled.
 
     This line should be defined:
-    
+
         auth       required pam_wheel.so
 
     """

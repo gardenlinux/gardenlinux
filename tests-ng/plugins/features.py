@@ -8,10 +8,13 @@ with open("/etc/os-release") as os_release:
     for line in os_release:
         (key, value) = line.split("=", 1)
         if key == "GARDENLINUX_FEATURES":
-            features = set([ feature.strip() for feature in value.split(",") ])
+            features = set([feature.strip() for feature in value.split(",")])
+
 
 def check_feature_condition(condition: str):
-    feature_symbols = { booleanAlgebra.Symbol(feature): booleanAlgebra.TRUE for feature in features }
+    feature_symbols = {
+        booleanAlgebra.Symbol(feature): booleanAlgebra.TRUE for feature in features
+    }
     expr = booleanAlgebra.parse(condition)
     for symbol in expr.get_symbols():
         if symbol not in feature_symbols:
@@ -22,8 +25,9 @@ def check_feature_condition(condition: str):
 def pytest_configure(config: pytest.Config):
     config.addinivalue_line(
         "markers",
-        "feature(condition, reason=None): mark test to run only if feature set condition is met. Optionally provide a reason."
+        "feature(condition, reason=None): mark test to run only if feature set condition is met. Optionally provide a reason.",
     )
+
 
 def pytest_collection_modifyitems(config: pytest.Config, items: List[pytest.Item]):
     for item in items:

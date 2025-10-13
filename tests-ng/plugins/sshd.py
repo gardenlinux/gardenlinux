@@ -4,7 +4,9 @@ from .shell import ShellRunner
 
 class Sshd:
     def __init__(self, shell: ShellRunner):
-        sshd_config_test_command = shell("/usr/sbin/sshd -T", capture_output=True, ignore_exit_code=True)
+        sshd_config_test_command = shell(
+            "/usr/sbin/sshd -T", capture_output=True, ignore_exit_code=True
+        )
         assert (
             sshd_config_test_command.returncode == 0
         ), f"Expected return code 0, got {sshd_config_test_command.returncode}"
@@ -27,13 +29,12 @@ class Sshd:
                 key = parts[0]
                 self._sshd_config[key] = None
 
-
     def get_config(self) -> dict:
         return self._sshd_config
 
-
-    def get_config_section(self, key: str) -> str|set:
+    def get_config_section(self, key: str) -> str | set:
         return self._sshd_config.get(str.casefold(key))
+
 
 @pytest.fixture
 def sshd(shell: ShellRunner):
