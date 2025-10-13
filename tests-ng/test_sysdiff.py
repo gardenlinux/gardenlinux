@@ -12,7 +12,8 @@ def test_sysdiff_before_tests(sysdiff: Sysdiff):
     name = "before-tests"
     try:
         snapshot = sysdiff.create_snapshot(name)
-        pytest.before_tests_snapshot_name = snapshot.name
+        # Store the snapshot name in a global variable
+        globals()['before_tests_snapshot_name'] = snapshot.name
         assert name in snapshot.name
 
     except Exception as e:
@@ -27,12 +28,13 @@ def test_sysdiff_after_tests(sysdiff: Sysdiff):
     This test runs after all other tests, creates the after-tests snapshot and performs the sysdiff comparison.
     """
     name = "after-tests"
+    after_tests_snapshot_name = None  # Initialize to prevent unbound variable
     try:
         snapshot = sysdiff.create_snapshot(name)
         after_tests_snapshot_name = snapshot.name
         assert name in snapshot.name
 
-        before_tests_snapshot_name = getattr(pytest, 'before_tests_snapshot_name', None)
+        before_tests_snapshot_name = globals().get('before_tests_snapshot_name')
         if not before_tests_snapshot_name:
             pytest.fail("before-tests snapshot not found. Make sure test_sysdiff_before_tests ran first.")
 
@@ -49,8 +51,8 @@ def test_sysdiff_after_tests(sysdiff: Sysdiff):
 
     finally:
         cleanup_names = []
-        if hasattr(pytest, 'before_tests_snapshot_name'):
-            cleanup_names.append(pytest.before_tests_snapshot_name)
+        if 'before_tests_snapshot_name' in globals():
+            cleanup_names.append(globals()['before_tests_snapshot_name'])
         if 'after_tests_snapshot_name' in locals():
             cleanup_names.append(after_tests_snapshot_name)
         if cleanup_names:
