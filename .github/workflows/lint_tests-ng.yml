@@ -1,0 +1,59 @@
+name: Lint tests-ng
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "tests-ng/**"
+      - ".github/workflows/lint_tests-ng.yml"
+  pull_request:
+    paths:
+      - "tests-ng/**"
+      - ".github/workflows/lint_tests-ng.yml"
+
+jobs:
+  black:
+    name: Black (formatting)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+
+      - name: Set up Python
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # pin@v6.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Run black (diff check)
+        run: make -f tests-ng/dev.makefile lint-black
+
+  isort:
+    name: isort (import sorting)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+
+      - name: Set up Python
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # pin@v6.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Run isort
+        run: make -f tests-ng/dev.makefile lint-isort
+
+  pyright:
+    name: Pyright (type checking)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+
+      - name: Set up Python
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # pin@v6.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Run pyright
+        run: make -f tests-ng/dev.makefile lint-pyright
