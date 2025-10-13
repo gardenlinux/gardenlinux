@@ -294,12 +294,12 @@ class FileCollector:
 class SnapshotManager:
     """Manages snapshot creation, storage, and retrieval"""
 
-    def __init__(self, state_dir: Path = None):
+    def __init__(self, state_dir: Path | None = None):
         self.state_dir = state_dir or Path(STATE_DIR)
         self.state_dir.mkdir(parents=True, exist_ok=True)
 
-    def create_snapshot(self, name: str = None, paths: List[str] = None,
-                       ignore_file: Path = None, verbose: bool = False) -> Snapshot:
+    def create_snapshot(self, name: str | None = None, paths: List[str] | None = None,
+                       ignore_file: Path | None = None, verbose: bool = False) -> Snapshot:
         """Create a new system snapshot"""
         if paths is None:
             paths = DEFAULT_PATHS
@@ -329,7 +329,7 @@ class SnapshotManager:
         sysctl_collector = Sysctl(shell)
         kernel_module = KernelModule(shell)
 
-        packages = dpkg.collect_installed_packages()
+        packages = dpkg.collect_installed_packages().packages
 
         systemd_units = systemd.list_units()
 
@@ -526,8 +526,8 @@ class Sysdiff:
         self.manager = SnapshotManager()
         self.diff_engine = DiffEngine()
 
-    def create_snapshot(self, name: str = None, paths: List[str] = None,
-                       ignore_file: Path = None, verbose: bool = False) -> Snapshot:
+    def create_snapshot(self, name: str | None = None, paths: List[str] | None = None,
+                       ignore_file: Path | None = None, verbose: bool = False) -> Snapshot:
         """Create a snapshot using the shell context"""
         return self.manager.create_snapshot(name, paths, ignore_file, verbose)
 
