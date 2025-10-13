@@ -1,10 +1,12 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 import json
 import pytest
 
 from .shell import ShellRunner
 
 from dataclasses import dataclass, field
+
 from debian import deb822
 from typing import Dict, List
 from .shell import ShellRunner
