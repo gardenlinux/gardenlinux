@@ -23,7 +23,8 @@ from typing import Dict, List, Optional, Tuple
 import pytest
 
 from .shell import ShellRunner
-from .dpkg import Dpkg, Package
+from .dpkg import Dpkg
+from debian import deb822
 from .systemd import Systemd, SystemdUnit
 from .kernel_module import KernelModule, LoadedKernelModule
 from .sysctl import Sysctl, SysctlParam
@@ -106,7 +107,7 @@ class Snapshot:
     """Complete system snapshot"""
     name: str
     metadata: SnapshotMetadata
-    packages: List[Package]
+    packages: List[deb822.Deb822]
     systemd_units: List[SystemdUnit]
     files: List[FileEntry]
     sysctl_params: List[SysctlParam]
@@ -158,7 +159,7 @@ class FileCollector:
                     line = line.strip()
                     if line and not line.startswith('#'):
                         patterns.append(line)
-        except Exception:
+        except Exception as e:
             print(f"Error loading ignore patterns from {ignore_file}: {e}")
 
         return patterns
@@ -359,7 +360,7 @@ class SnapshotManager:
         snapshot_data = {
             "name": snapshot.name,
             "metadata": asdict(snapshot.metadata),
-            "packages": [asdict(pkg) for pkg in snapshot.packages],
+            "packages": [dict(pkg) for pkg in snapshot.packages],
             "systemd_units": [asdict(unit) for unit in snapshot.systemd_units],
             "files": [asdict(file_entry) for file_entry in snapshot.files],
             "sysctl_params": [asdict(param) for param in snapshot.sysctl_params],
@@ -379,7 +380,7 @@ class SnapshotManager:
             snapshot_data = json.load(f)
 
         metadata = SnapshotMetadata(**snapshot_data["metadata"])
-        packages = [Package(**pkg_data) for pkg_data in snapshot_data["packages"]]
+        packages = [deb822.Deb822(pkg_data) for pkg_data in snapshot_data["packages"]]
         systemd_units = [SystemdUnit(**unit_data) for unit_data in snapshot_data["systemd_units"]]
         files = [FileEntry(**file_data) for file_data in snapshot_data["files"]]
         sysctl_params = [SysctlParam(**param_data) for param_data in snapshot_data["sysctl_params"]]
@@ -431,10 +432,10 @@ class DiffEngine:
             lineterm=""
         ))
 
-    def _compare_packages(self, packages_a: List[Package], packages_b: List[Package]) -> List[str]:
+    def _compare_packages(self, packages_a: List[deb822.Deb822], packages_b: List[deb822.Deb822]) -> List[str]:
         """Compare package lists and return diff lines"""
-        lines_a = [str(pkg) for pkg in packages_a]
-        lines_b = [str(pkg) for pkg in packages_b]
+        lines_a = [f"{pkg.get('Package', '')}\t{pkg.get('Version', '')}" for pkg in packages_a]
+        lines_b = [f"{pkg.get('Package', '')}\t{pkg.get('Version', '')}" for pkg in packages_b]
 
         return self._generate_diff(
             lines_a, lines_b,
