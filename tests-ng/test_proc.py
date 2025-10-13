@@ -3,11 +3,12 @@ import os
 
 from plugins.booted import is_system_booted
 
+
 @pytest.mark.root
 def test_image_proc_is_empty(remounted_root):
     """
-    Test for an empty /proc within the given rootfs tarball. Since /proc is mounted 
-    we remount / temporarily. This allows to check if the image comes with an empty 
+    Test for an empty /proc within the given rootfs tarball. Since /proc is mounted
+    we remount / temporarily. This allows to check if the image comes with an empty
     proc directory.
     """
     temp_proc = os.path.join(remounted_root, "proc")
@@ -23,6 +24,7 @@ def test_image_proc_is_empty(remounted_root):
     # Within temporary "/proc" no files or directories should be found.
     assert len(proc_files) == 0, f"{temp_proc} is not empty."
 
+
 @pytest.mark.root
 @pytest.mark.booted
 def test_running_proc_is_not_empty():
@@ -32,4 +34,7 @@ def test_running_proc_is_not_empty():
     root_proc = "/proc"
     root_proc_files: list[str] = os.listdir(root_proc)
     assert len(root_proc_files) >= 0, f"{root_proc} should contain files."
-    assert all(expected_procfile in root_proc_files for expected_procfile in ["version", "uptime"]), f"{root_proc} does not contain the usual files."
+    assert all(
+        expected_procfile in root_proc_files
+        for expected_procfile in ["version", "uptime"]
+    ), f"{root_proc} does not contain the usual files."

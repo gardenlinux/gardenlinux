@@ -6,18 +6,18 @@ import os
 import json
 from pathlib import Path
 
-module = [ 
-    "nvme-tcp" 
-    ]
+module = ["nvme-tcp"]
+
 
 @pytest.mark.booted
 @pytest.mark.root
 @pytest.mark.feature("nvme")
 @pytest.mark.parametrize("module_name", module)
 def test_kernel_module_availability(module_name, shell: ShellRunner):
-    assert shell(f"modinfo {module_name}", 
-        capture_output=True, ignore_exit_code=True), (
-        f"Module not found {module_name}")
+    assert shell(
+        f"modinfo {module_name}", capture_output=True, ignore_exit_code=True
+    ), f"Module not found {module_name}"
+
 
 @pytest.mark.booted
 @pytest.mark.root
