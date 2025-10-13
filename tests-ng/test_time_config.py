@@ -42,8 +42,24 @@ def test_correct_ntp_on_gcp(timedatectl: TimeDateCtl, expected_ntp_server: str):
 
 @pytest.mark.flaky(reruns=10, reruns_delay=30, only_rerun="AssertionError")
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
-@pytest.mark.feature("not azure")
-def test_ntp(timedatectl: TimeDateCtl):
+@pytest.mark.feature("not azure and not aws and not gcp and not qemu")
+def test_ntp(timedatectl: TimeDateCtl, systemd_detect_virt: Hypervisor):
+    """
+    Validate that NTP is enabled and synchronized on non-hyperscaler platforms.
+    Skips on AWS and GCP since their metadata-based NTP servers and not reachable from QEMU tests.
+    """
+    ntp_server = timedatectl.get_ntpserver()
+    if (
+        ntp_server.ip == "169.254.169.123"
+        or ntp_server.hostname == "metadata.google.internal"
+    ):
+        pytest.skip(
+            f"Skipping: Hyperscaler NTP server ({ntp_server.hostname or ntp_server.ip}) not reachable in this environment."
+        )
+
+    if systemd_detect_virt in (Hypervisor.amazon, Hypervisor.qemu):
+        pytest.skip("Skipping: NTP sync not possible in AWS/QEMU environment")
+
     timesyncstatus: TimeSyncStatus = timedatectl.get_timesync_status()
     assert timesyncstatus.ntp, f"NTP not activated"
     assert timesyncstatus.ntp_synchronized, f"NTP not synchronized"
