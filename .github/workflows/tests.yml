@@ -100,6 +100,8 @@ jobs:
 
             const testsEnvsEnabled = gitHubLib.getTestEnvironmentsEnabled("${{ inputs.test_types }}");
 
+            const emptyMatrix = '{"include":[]}';
+
             // chroot_test_flavors_matrix
             if (testsEnvsEnabled.includes("chroot")) {
               const matrix = gitHubLib.intersectFlavorsMatrix(
@@ -113,8 +115,11 @@ jobs:
               if (isEnabled) {
                 core.setOutput("chroot_test_flavors_matrix", matrix);
               } else {
-                core.setOutput("chroot_test_flavors_matrix", '{"include":[]}');
+                core.setOutput("chroot_test_flavors_matrix", emptyMatrix);
               }
+            } else {
+              core.setOutput("chroot_tests", false);
+              core.setOutput("chroot_test_flavors_matrix", emptyMatrix);
             }
 
             // qemu_test_flavors_matrix
@@ -130,8 +135,11 @@ jobs:
               if (isEnabled) {
                 core.setOutput("qemu_test_flavors_matrix", matrix);
               } else {
-                core.setOutput("qemu_test_flavors_matrix", '{"include":[]}');
+                core.setOutput("qemu_test_flavors_matrix", emptyMatrix);
               }
+            } else {
+              core.setOutput("qemu_tests", false);
+              core.setOutput("qemu_test_flavors_matrix", emptyMatrix);
             }
 
             // platform_test_flavors_matrix
@@ -147,8 +155,11 @@ jobs:
               if (isEnabled) {
                 core.setOutput("platform_test_flavors_matrix", matrix);
               } else {
-                core.setOutput("platform_test_flavors_matrix", '{"include":[]}');
+                core.setOutput("platform_test_flavors_matrix", emptyMatrix);
               }
+            } else {
+              core.setOutput("platform_tests", false);
+              core.setOutput("platform_test_flavors_matrix", emptyMatrix);
             }
 
             // bare_flavors_matrix
@@ -164,8 +175,11 @@ jobs:
               if (isEnabled) {
                 core.setOutput("bare_flavors_matrix", matrix);
               } else {
-                core.setOutput("bare_flavors_matrix", '{"include":[]}');
+                core.setOutput("bare_flavors_matrix", emptyMatrix);
               }
+            } else {
+              core.setOutput("bare_flavors_tests", false);
+              core.setOutput("bare_flavors_matrix", emptyMatrix);
             }
   ## test-ng start
   test_flavors_chroot_ng:
