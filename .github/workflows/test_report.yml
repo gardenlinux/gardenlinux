@@ -74,7 +74,8 @@ jobs:
         if: always()
         with:
           name: test-report
-          path: test-artifacts
+          path: |
+            test-artifacts/**/*.test.xml
           retention-days: 30
   test_ng_report:
     name: Generate Test-NG Report
@@ -138,5 +139,6 @@ jobs:
         if: always()
         with:
           name: test-ng-report
-          path: test-artifacts
+          path: |
+            test-artifacts/*.test-ng.xml
           retention-days: 30
