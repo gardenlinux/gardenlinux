@@ -58,6 +58,7 @@ jobs:
         if: always()
         run: |
           cp tests-ng/log/chroot.test-ng.log .build/${CNAME}.chroot.test-ng.log || true
+          cp tests-ng/log/chroot.test-ng.xml .build/${CNAME}.chroot.test-ng.xml || true
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         if: always()
         with:
