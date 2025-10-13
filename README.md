@@ -91,7 +91,7 @@ Further documentation about tests is located in [tests/README.md](tests/README.m
 For more information about the release strategy and lifecycle, have a look at the [Release Plan Overview](docs/00_introduction/release.md). List of releases is available in the [Public Roadmap, Theme:"Release Plan"](https://github.com/orgs/gardenlinux/projects/15/views/1?filterQuery=theme%3A%22Release+Plan%22).
 
 
-## Download Stable and Patch Releases
+## Download Garden Linux Releases
 
 Images are published as:
 - GitHub Releses in https://github.com/gardenlinux/gardenlinux/releases
