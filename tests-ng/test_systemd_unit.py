@@ -4,18 +4,24 @@ from handlers.services import service_parametrize
 from plugins.kernel_module import KernelModule
 
 FEATURE_SERVICE_MAPPING = [
-    {
-        "feature": "khost",
-        "service": "kubelet"
-    },
+    # TODO: This service is enabled and starts at boot time. So starting/stopping it does not make sense. Currently it fails with this error message:
+    # Oct 13 06:59:25 localhost (kubelet)[758]: kubelet.service: Referenced but unset environment variable evaluates to an empty string: KUBELET_KUBEADM_ARGS
+    # Oct 13 06:59:30 localhost kubelet[758]: E1013 06:59:30.007483     758 run.go:74] "command failed" err="failed to load kubelet config file, path: /var/lib/kubelet/config.yaml, error: failed to load Kubelet config file /var/lib/kubelet/config.yaml, error failed to read kubelet config file \"/var/lib/kubelet/config.yaml\", error: open /var/lib/kubelet/config.yaml: no such file or directory"
+    # {
+    #     "feature": "khost",
+    #     "service": "kubelet"
+    # },
+    # TODO: This service is enabled and starts at boot time. So starting/stopping it does not make sense.
     {
         "feature": "firewall",
         "service": "nftables"
     },
+    # This service is disabled at boot time and is started/stopped here.
     {
         "feature": "gardener",
         "service": "containerd"
     },
+    # TODO: This service is enabled and starts at boot time. So starting/stopping it does not make sense.
     {
         "feature": "vhost",
         "service": "libvirtd"
