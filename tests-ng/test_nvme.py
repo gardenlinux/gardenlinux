@@ -1,10 +1,11 @@
-import pytest
-import subprocess
-from plugins.shell import ShellRunner
-from handlers.configure_nvme import nvme_device
-import os
 import json
+import os
+import subprocess
 from pathlib import Path
+
+import pytest
+from handlers.configure_nvme import nvme_device
+from plugins.shell import ShellRunner
 
 module = ["nvme-tcp"]
 

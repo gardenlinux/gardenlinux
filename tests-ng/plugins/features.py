@@ -1,6 +1,7 @@
+from typing import List
+
 import boolean
 import pytest
-from typing import List
 
 booleanAlgebra = boolean.BooleanAlgebra()
 

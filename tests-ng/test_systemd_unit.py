@@ -1,7 +1,6 @@
 import pytest
 from plugins.systemd import Systemd
 
-
 # The key is the feature condition of the test which checks if the systemd unit (value) is working
 units = {
     "khost": "kubelet",

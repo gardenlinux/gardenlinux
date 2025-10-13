@@ -1,4 +1,5 @@
 import os
+
 import pytest
 from plugins.shell import ShellRunner
 from plugins.systemd import Systemd

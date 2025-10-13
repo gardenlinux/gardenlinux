@@ -1,9 +1,10 @@
+import os
 import pwd
+
 import pytest
 from plugins.sshd import Sshd
 from plugins.systemd import Systemd
 from plugins.utils import equals_ignore_case, get_normalized_sets, is_set
-import os
 
 required_sshd_config = {
     "HostKey": {

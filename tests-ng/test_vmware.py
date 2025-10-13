@@ -1,5 +1,6 @@
-import pytest
 import os
+
+import pytest
 
 forbidden_config_values = [
     ("/etc/cloud/cloud.cfg", "ntp"),

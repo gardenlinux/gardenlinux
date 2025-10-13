@@ -1,10 +1,11 @@
-import pytest
-from plugins.shell import ShellRunner
-from plugins.dpkg import Dpkg
-from plugins.kernel_module import KernelModule
 import json
 import os
 from pathlib import Path
+
+import pytest
+from plugins.dpkg import Dpkg
+from plugins.kernel_module import KernelModule
+from plugins.shell import ShellRunner
 
 # Define variables for the IP address, NVMe device, and subsystem name
 IP_ADDRESS = "127.0.0.1"

@@ -1,5 +1,6 @@
-import pytest
 from typing import List
+
+import pytest
 
 run_mutating_tests = False
 

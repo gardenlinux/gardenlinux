@@ -1,5 +1,4 @@
 import pytest
-
 from plugins.pam import PamConfig
 
 

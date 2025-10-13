@@ -1,6 +1,7 @@
-import pytest
 import subprocess
 from typing import Optional, Set
+
+import pytest
 
 users: Set[str] = set()
 

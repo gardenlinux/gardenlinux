@@ -1,7 +1,8 @@
 import os
 import pwd
-import pytest
 import stat
+
+import pytest
 
 
 def test_service_accounts_have_nologin_shell():
