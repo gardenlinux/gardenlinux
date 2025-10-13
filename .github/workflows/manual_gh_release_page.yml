@@ -4,10 +4,10 @@ on:
     inputs:
       type:
         type: choice
-        default: patch
+        default: minor
         description: 'Patch'
         options:
-        - patch
+        - minor
         - dev
       version:
         required: true
@@ -25,7 +25,7 @@ jobs:
   # Create new version in GLVD so it has the package list of the new release
   # This is needed for the automatic changelog generation
   glvd:
-    if: ${{ inputs.type }} == 'patch'
+    if: ${{ inputs.type }} == 'minor'
     name: Update GLVD distro list
     runs-on: ubuntu-latest
     permissions:
@@ -173,7 +173,7 @@ jobs:
           done
 
   tag_container_as_latest:
-    if: ${{ inputs.type }} == 'patch'
+    if: ${{ inputs.type }} == 'minor'
     uses: ./.github/workflows/tag_latest_container.yml
     with:
       version: ${{ inputs.version }}
@@ -203,12 +203,12 @@ jobs:
             version=${{ inputs.version }}
             major=$(echo ${version} | cut -d'.' -f1)
             minor=$(echo ${version} | cut -d'.' -f2)
-            if [ ${type} = "patch" ]; then
-              # check for stable version and create if missing
-              if ! glrd --no-header --type stable --version ${major} | grep ${major}; then
-                glrd-manage --s3-update --create stable --version ${major}
+            if [ ${type} = "minor" ]; then
+              # check for major version and create if missing
+              if ! glrd --no-header --type major --version ${major} | grep ${major}; then
+                glrd-manage --s3-update --create major --version ${major}
               fi
-              glrd-manage --s3-update --create patch --version ${version} --commit ${commit}
+              glrd-manage --s3-update --create minor --version ${version} --commit ${commit}
             elif [ ${type} = "dev" ]; then
               glrd-manage --s3-update --create dev --version ${version} --commit ${commit}
             fi
@@ -219,4 +219,4 @@ jobs:
             version=${{ inputs.version }}
             major=$(echo ${version} | cut -d'.' -f1)
             minor=$(echo ${version} | cut -d'.' -f2)
-            glrd --type stable,patch,dev --version ${major}
+            glrd --type major,minor,dev --version ${major}

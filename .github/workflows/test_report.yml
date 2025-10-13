@@ -75,7 +75,7 @@ jobs:
         with:
           name: test-report
           path: |
-            test-artifacts/**/*.test.xml
+            test-artifacts/*.test.xml
           retention-days: 30
   test_ng_report:
     name: Generate Test-NG Report
