@@ -15,5 +15,5 @@ def test_basic_container_functionality(container_image_setup,
                                        uri: str,
                                        ctr: CtrRunner,
                                        container_registry: ContainerRegistry):
-    out = ctr.run("localhost:5000/busybox:latest", "uname", capture_output=True, ignore_exit_code=True)
+    out = ctr.run(uri, "uname", capture_output=True, ignore_exit_code=True)
     assert "Linux" in out.stdout, f"Command failed: {out.stderr}"

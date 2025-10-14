@@ -9,14 +9,6 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse
 import pytest
-import logging
-
-logging.basicConfig(filename="/tmp/debug.log",
-                    filemode='a',
-                    format='%(asctime)s,%(msecs)03d %(name)s %(levelname)s %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',
-                    level=logging.DEBUG)
-logger = logging.getLogger("RegistryHandler")
 
 
 class RegistryHandler(BaseHTTPRequestHandler):
@@ -25,7 +17,6 @@ class RegistryHandler(BaseHTTPRequestHandler):
     server_version = "MockOCIRegistry/1.0"
 
     def do_GET(self):
-        logger.debug(f'YTDEBUG // do_GET {self.path=}')
         parsed = urlparse(self.path)
         path_parts = [p for p in parsed.path.split('/') if p]  # strip empty parts
 
@@ -43,7 +34,6 @@ class RegistryHandler(BaseHTTPRequestHandler):
             self._send_error(HTTPStatus.NOT_FOUND, "Not Found")
 
     def do_HEAD(self):
-        logger.debug(f'YTDEBUG // do_HEAD {self.path=}')
         parsed = urlparse(self.path)
         path_parts = [p for p in parsed.path.split('/') if p]
 
@@ -61,7 +51,6 @@ class RegistryHandler(BaseHTTPRequestHandler):
 
     def _handle_v2_root(self, head=False):
         """Responds to /v2/"""
-        logger.debug('YTDEBUG // In RH._handle_v2_root')
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", "application/json")
         self.send_header("Docker-Distribution-API-Version", "registry/2.0")
@@ -72,7 +61,6 @@ class RegistryHandler(BaseHTTPRequestHandler):
     def _handle_get_manifest(self, repo: str, tag: str):
         """Serve the manifest for any repo/tag."""
         # The manifest we built is the same for any repo/tag
-        logger.debug('YTDEBUG // In RH._handle_get_manifest')
         data, size = self.server.builder.get_manifest()
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type",
@@ -85,7 +73,6 @@ class RegistryHandler(BaseHTTPRequestHandler):
     def _handle_get_blob(self, repo: str, digest: str, head=False):
         """Serve a blob – config or a layer."""
         # The digest is expected to be in the form sha256:<hash>
-        logger.debug('YTDEBUG // In RH._handle_get_blob')
         if not digest.startswith("sha256:"):
             self._send_error(HTTPStatus.BAD_REQUEST, "Invalid digest")
             return
@@ -104,7 +91,6 @@ class RegistryHandler(BaseHTTPRequestHandler):
             self.wfile.write(data)
 
     def _send_error(self, code, message):
-        logger.debug('YTDEBUG // In RH._send_error')
         self.send_response(code)
         self.send_header("Content-Type", "text/plain; charset=utf-8")
         self.end_headers()
@@ -172,34 +158,23 @@ class ContainerRegistry:
             }).encode("utf-8")
             self.manifest_digest = self.sha256_digest(self.manifest_bytes)
             self.blobs[self.manifest_digest] = (self.manifest_bytes, len(self.manifest_bytes))
-            print(f'YTDEBUG // {self.manifest_digest=}')
 
     def create_http_server(self):
         self.server = HTTPServer(("127.0.0.1", 5000), RegistryHandler)
         self.server.builder = self
-        print(f'YTDEBUG // {self.server=}')
-        print(f'YTDEBUG // {self.server.builder=}')
 
     def start(self):
         def serve(server):
-            print('YTDEBUG // In start.serve')
-            print(f'YTDEBUG // {server=}')
             server.serve_forever()
 
-        print(f'YTDEBUG // {self.server=}')
         self.server_thread = threading.Thread(target=serve, args=[self.server], daemon=True)
-        print('YTDEBUG // About to start the thread')
         self.server_thread.start()
-        print('YTDEBUG // Server thread started')
-        print(f'YTDEBUG // {self.server_thread=}')
         time.sleep(0.2)
 
     def shutdown(self):
-        print('YTDEBUG // About to shutdown the server')
         self.server.shutdown()
         self.server_thread.join(timeout=2)
         self.server.server_close()
-        print('YTDEBUG // Server successfully stopped')
 
     def sha256_digest(self, data: bytes) -> str:
         """Return a Docker‑style SHA256 digest string."""
@@ -223,5 +198,4 @@ def container_registry():
     this_file = pathlib.Path(__file__).resolve()
     plugin_dir = this_file.parent
     container_image_tarball = plugin_dir / "busybox.tar"
-    print(f'YTDEBUG {container_image_tarball=}')
     return ContainerRegistry(container_image_tarball)
