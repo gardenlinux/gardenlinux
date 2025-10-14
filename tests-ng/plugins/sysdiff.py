@@ -36,7 +36,13 @@ DEFAULT_PATHS = [
     "/usr/local/lib", "/opt", "/proc/mounts"
 ]
 
-IGNORED_SYSTEMD_PATTERNS = []
+IGNORED_SYSTEMD_PATTERNS = [
+    # sysstat services run periodically
+    'sysstat-collect.service',
+    'sysstat-collect.timer',
+    'sysstat-rotate.timer',
+    'sysstat-summary.timer',
+]
 IGNORED_KERNEL_MODULES = []
 IGNORED_SYSCTL_PARAMS = {
     # File system dynamic parameters
