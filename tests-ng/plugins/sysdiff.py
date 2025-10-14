@@ -451,8 +451,8 @@ class DiffEngine:
             """Format unit for comparison"""
             return f"{unit.unit}\t{unit.load}\t{unit.active}\t{unit.sub}"
 
-        filtered_units_a = [format_unit(u) for u in units_a if not self._ignored_systemd_units]
-        filtered_units_b = [format_unit(u) for u in units_b if not self._ignored_systemd_units]
+        filtered_units_a = [format_unit(u) for u in units_a if u.unit not in self._ignored_systemd_units]
+        filtered_units_b = [format_unit(u) for u in units_b if u.unit not in self._ignored_systemd_units]
 
         return self._generate_diff(
             filtered_units_a, filtered_units_b,
