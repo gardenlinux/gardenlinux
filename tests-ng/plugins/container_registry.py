@@ -16,38 +16,25 @@ class RegistryHandler(BaseHTTPRequestHandler):
 
     server_version = "MockOCIRegistry/1.0"
 
-    def do_GET(self):
+    def _handle_request(self, head: bool = False):
         parsed = urlparse(self.path)
         path_parts = [p for p in parsed.path.split('/') if p]  # strip empty parts
-
         if parsed.path == "/v2/":
-            self._handle_v2_root()
-        elif len(path_parts) == 4 and path_parts[0] == 'v2' \
-                and path_parts[2] == 'manifests':
-            # /v2/<repo>/manifests/<tag>
-            self._handle_get_manifest(path_parts[1], path_parts[3])
-        elif len(path_parts) == 4 and path_parts[0] == 'v2' \
-                and path_parts[2] == 'blobs':
-            # /v2/<repo>/blobs/<digest>
-            self._handle_get_blob(path_parts[1], path_parts[3])
-        else:
-            self._send_error(HTTPStatus.NOT_FOUND, "Not Found")
+            self._handle_v2_root(head=head)
+        elif len(path_parts) == 4 and path_parts[0] == 'v2':
+            if path_parts[2] == 'manifests':
+                self._handle_get_manifest(path_parts[1], path_parts[3], head=head)
+                return
+            elif path_parts[2] == 'blobs':
+                self._handle_get_blob(path_parts[1], path_parts[3], head=head)
+                return
+        self._send_error(HTTPStatus.NOT_FOUND, "Not Found")
+
+    def do_GET(self):
+        self._handle_request(head=False)
 
     def do_HEAD(self):
-        parsed = urlparse(self.path)
-        path_parts = [p for p in parsed.path.split('/') if p]
-
-        if parsed.path == "/v2/":
-            self._handle_v2_root(head=True)
-        elif len(path_parts) == 4 and path_parts[0] == 'v2' \
-                and path_parts[2] == 'manifests':
-            # /v2/<repo>/manifests/<tag>
-            self._handle_get_manifest(path_parts[1], path_parts[3])
-        elif len(path_parts) == 4 and path_parts[0] == 'v2' \
-                and path_parts[2] == 'blobs':
-            self._handle_get_blob(path_parts[1], path_parts[3], head=True)
-        else:
-            self._send_error(HTTPStatus.NOT_FOUND, "Not Found")
+        self._handle_request(head=True)
 
     def _handle_v2_root(self, head=False):
         """Responds to /v2/"""
@@ -58,7 +45,7 @@ class RegistryHandler(BaseHTTPRequestHandler):
         if not head:
             self.wfile.write(b'{}')
 
-    def _handle_get_manifest(self, repo: str, tag: str):
+    def _handle_get_manifest(self, repo: str, tag: str, head: bool = False):
         """Serve the manifest for any repo/tag."""
         # The manifest we built is the same for any repo/tag
         data, size = self.server.builder.get_manifest()
@@ -68,7 +55,8 @@ class RegistryHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(size))
         self.send_header("Docker-Content-Digest", self.server.builder.manifest_digest)
         self.end_headers()
-        self.wfile.write(data)
+        if not head:
+            self.wfile.write(data)
 
     def _handle_get_blob(self, repo: str, digest: str, head=False):
         """Serve a blob – config or a layer."""
