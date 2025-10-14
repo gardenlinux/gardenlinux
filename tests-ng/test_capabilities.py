@@ -3,6 +3,11 @@ import pytest
 
 from plugins.capabilities import Capabilities
 
+# There are two debian packages that provide an 'arping' binary
+# https://packages.debian.org/search?searchon=contents&keywords=arping&mode=path&suite=stable&arch=any
+# /usr/bin/arping is provided by iputils-arping
+# /usr/sbin/arping is provided by arping
+# We only use iputils-arping
 expected_capabilities_by_feature = {
     "kvm": ["/usr/bin/arping cap_net_raw=ep"],
     "vmware": ["/usr/bin/arping cap_net_raw=ep"],
@@ -12,14 +17,14 @@ expected_capabilities_by_feature = {
 
 
 @pytest.mark.root(reason="Need to read files not readably by unprivileged user")
-def test_only_expected_capabilities_are_defined(
+def test_only_expected_capabilities_are_set(
     active_features, capabilities: Capabilities
 ):
     expected_capabilities = set(
         [
-            cap
+            capability
             for feature in active_features
-            for cap in expected_capabilities_by_feature.get(feature, [])
+            for capability in expected_capabilities_by_feature.get(feature, [])
         ]
     )
 
