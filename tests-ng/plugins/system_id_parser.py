@@ -14,14 +14,12 @@ class UIDRange:
         assert self.uid_max is not None, "UID_MAX not found"
         assert self.uid_max > self.uid_min, "UID_MAX must be greater than UID_MIN"
 
-        self.uid_range = range(self.uid_min, self.uid_max + 1)
-
     def __contains__(self, uid: int) -> bool:
-        return uid in self.uid_range
+        return self.uid_min <= uid <= self.uid_max
 
-def parse_config():
+def parse_config(path):
     config = {}
-    login_defs_path=Path("/etc/login.defs")
+    login_defs_path=Path(path)
     assert login_defs_path.exists(), f"{login_defs_path} doesn't exist"
     for line in login_defs_path.read_text().splitlines():
         line = line.strip()
@@ -36,8 +34,9 @@ def parse_config():
 
 @pytest.fixture
 def regular_user_uid_range() -> UIDRange:
-    uid_min = int(parse_config()["UID_MIN"])
-    uid_max = int(parse_config()["UID_MAX"])
+    config_path = "/etc/login.defs"
+    uid_min = int(parse_config(config_path)["UID_MIN"])
+    uid_max = int(parse_config(config_path)["UID_MAX"])
 
     uid_val = UIDRange(uid_min=uid_min, uid_max=uid_max)
 
