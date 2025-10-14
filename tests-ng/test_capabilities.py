@@ -16,7 +16,7 @@ expected_capabilities_by_feature = {
 }
 
 
-@pytest.mark.root(reason="Need to read files not readably by unprivileged user")
+@pytest.mark.root(reason="Need to read files not readable by unprivileged user")
 def test_only_expected_capabilities_are_set(
     active_features, capabilities: Capabilities
 ):
