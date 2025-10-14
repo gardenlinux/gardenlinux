@@ -74,7 +74,7 @@ def test_systemd_timesyncd_disabled(systemd: Systemd):
 
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
-@pytest.mark.feature("azure")
+@pytest.mark.feature("azure and not qemu")
 def test_chrony_on_azure(systemd: Systemd):
     """
     Test for chrony as active time sync service on Azure.
@@ -124,8 +124,13 @@ def test_chrony_azure(chrony_config_file: str, ptp_hyperv_dev: str):
 
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
-@pytest.mark.feature("azure")
+@pytest.mark.feature("azure and not qemu")
 def test_azure_ptp_symlink(ptp_hyperv_dev: str):
+    """
+    Ensure /dev/ptp_hyperv exists and is a symlink on real Azure VMs.
+
+    Skips for QEMU only provides a generic virtualized clock.
+    """
     assert os.path.islink(
         ptp_hyperv_dev
     ), f"{ptp_hyperv_dev} should always be a symlink."
