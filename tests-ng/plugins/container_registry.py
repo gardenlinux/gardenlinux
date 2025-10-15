@@ -45,18 +45,40 @@ class RegistryHandler(BaseHTTPRequestHandler):
         if not head:
             self.wfile.write(b'{}')
 
-    def _handle_get_manifest(self, repo: str, tag: str, head: bool = False):
-        """Serve the manifest for any repo/tag."""
-        # The manifest we built is the same for any repo/tag
-        data, size = self.server.builder.get_manifest()
-        self.send_response(HTTPStatus.OK)
-        self.send_header("Content-Type",
-                         "application/vnd.docker.distribution.manifest.v2+json")
-        self.send_header("Content-Length", str(size))
-        self.send_header("Docker-Content-Digest", self.server.builder.manifest_digest)
-        self.end_headers()
-        if not head:
-            self.wfile.write(data)
+    def _handle_get_manifest(self, repo: str, reference: str, head: bool = False):
+        """
+        Serve a manifest, differentiating between a tag and a digest.
+        A tag returns the main manifest list.
+        A digest returns the specific manifest for that digest (a blob).
+        """
+        # digest (sha256:...)
+        if reference.startswith("sha256:"):
+            digest = reference
+            blob = self.server.builder.get_blob(digest)
+            if blob is None:
+                self._send_error(HTTPStatus.NOT_FOUND, "Manifest not found")
+                return
+
+            data, size = blob
+            self.send_response(HTTPStatus.OK)
+            self.send_header("Content-Type",
+                             "application/vnd.docker.distribution.manifest.v2+json")
+            self.send_header("Content-Length", str(size))
+            self.send_header("Docker-Content-Digest", digest)
+            self.end_headers()
+            if not head:
+                self.wfile.write(data)
+        # tag
+        else:
+            data, size = self.server.builder.get_manifest()
+            self.send_response(HTTPStatus.OK)
+            self.send_header("Content-Type",
+                             "application/vnd.docker.distribution.manifest.list.v2+json")
+            self.send_header("Content-Length", str(size))
+            self.send_header("Docker-Content-Digest", self.server.builder.manifest_digest)
+            self.end_headers()
+            if not head:
+                self.wfile.write(data)
 
     def _handle_get_blob(self, repo: str, digest: str, head=False):
         """Serve a blob – config or a layer."""
@@ -91,16 +113,50 @@ class ContainerRegistry:
     Image to be supplied as a tarball (can be created using "docker save" command).
     """
 
-    def __init__(self, tarball_filepath):
+    def __init__(self, tarball_filepath_x86, tarball_filepath_arm64):
         self.blobs = {}          # digest -> (bytes, size)
-        self.manifest_bytes = None
-        self.manifest_digest = None
         self.repo_name = "mockrepo"
         self.tag = "latest"
 
         self.create_http_server()
         self.server_thread = None
 
+        manifest_bytes_x86 = self.process_tarball(tarball_filepath_x86, arch="amd64")
+        manifest_bytes_arm64 = self.process_tarball(tarball_filepath_arm64, arch="arm64")
+
+        # Construct a multi-arch manifest list
+        manifest_list = {
+            "schemaVersion": 2,
+            "mediaType": "application/vnd.docker.distribution.manifest.list.v2+json",
+            "manifests": []
+        }
+
+        for manifest_bytes, arch in ((manifest_bytes_x86, "amd64"), (manifest_bytes_arm64, "arm64")):
+            digest = self.sha256_digest(manifest_bytes)
+            size = len(manifest_bytes)
+            manifest_list["manifests"].append({
+                "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+                "size": size,
+                "digest": digest,
+                "platform": {
+                    "architecture": arch,
+                    "os": "linux"
+                }
+            })
+
+        self.manifest_bytes = json.dumps(manifest_list).encode("utf-8")
+        self.manifest_digest = self.sha256_digest(self.manifest_bytes)
+        self.blobs[self.manifest_digest] = (self.manifest_bytes, len(self.manifest_bytes))
+
+    def create_http_server(self):
+        self.server = HTTPServer(("127.0.0.1", 5000), RegistryHandler)
+        self.server.builder = self
+
+    def process_tarball(self, tarball_filepath, arch: str) -> bytes:
+        """
+        Process a tarball image (x86 or arm64) and update self.blobs.
+        Returns the image manifest bytes.
+        """
         with tarfile.open(tarball_filepath, mode="r") as tar:
             try:
                 manifest_member = tar.getmember("manifest.json")
@@ -108,10 +164,8 @@ class ContainerRegistry:
                 raise FileNotFoundError("tarball missing manifest.json")
             manifest_bytes = tar.extractfile(manifest_member).read()
             manifest_json = json.loads(manifest_bytes)
-
             if not isinstance(manifest_json, list) or not manifest_json:
                 raise ValueError("manifest.json is not a non‑empty list")
-
             image_desc = manifest_json[0]
             config_file = image_desc["Config"]
             layer_files = image_desc["Layers"]
@@ -122,7 +176,7 @@ class ContainerRegistry:
             self.blobs[config_digest] = (config_bytes, len(config_bytes))
 
             layer_entries = []
-            for idx, layer_file in enumerate(layer_files):
+            for layer_file in layer_files:
                 layer_member = tar.getmember(layer_file)
                 layer_bytes = tar.extractfile(layer_member).read()
                 gz_layer = self.gzip_bytes(layer_bytes)
@@ -134,7 +188,7 @@ class ContainerRegistry:
                     "digest": layer_digest,
                 })
 
-            self.manifest_bytes = json.dumps({
+            image_manifest = {
                 "schemaVersion": 2,
                 "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
                 "config": {
@@ -143,13 +197,12 @@ class ContainerRegistry:
                     "digest": config_digest,
                 },
                 "layers": layer_entries,
-            }).encode("utf-8")
-            self.manifest_digest = self.sha256_digest(self.manifest_bytes)
-            self.blobs[self.manifest_digest] = (self.manifest_bytes, len(self.manifest_bytes))
-
-    def create_http_server(self):
-        self.server = HTTPServer(("127.0.0.1", 5000), RegistryHandler)
-        self.server.builder = self
+            }
+            manifest_bytes_image = json.dumps(image_manifest).encode("utf-8")
+            # Store the image manifest as a blob for retrieval via its digest.
+            digest_image = self.sha256_digest(manifest_bytes_image)
+            self.blobs[digest_image] = (manifest_bytes_image, len(manifest_bytes_image))
+            return manifest_bytes_image
 
     def start(self):
         def serve(server):
@@ -185,5 +238,6 @@ class ContainerRegistry:
 def container_registry():
     this_file = pathlib.Path(__file__).resolve()
     plugin_dir = this_file.parent
-    container_image_tarball = plugin_dir / "busybox.tar"
-    return ContainerRegistry(container_image_tarball)
+    container_image_tarball_x86 = plugin_dir / "busybox_x86.tar"
+    container_image_tarball_arm64 = plugin_dir / "busybox_arm64.tar"
+    return ContainerRegistry(container_image_tarball_x86, container_image_tarball_arm64)
