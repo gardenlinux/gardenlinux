@@ -6,7 +6,10 @@ TEST_IMAGES = [
     "public.ecr.aws/docker/library/busybox:unstable-uclibc",  # AWS ECR, https://gallery.ecr.aws/docker/library/busybox
 ]
 
-@pytest.mark.skip(reason="Skip until https://github.com/gardenlinux/gardenlinux/issues/3567 is resolved to avoid false negative results")
+
+@pytest.mark.skip(
+    reason="Skip until https://github.com/gardenlinux/gardenlinux/issues/3567 is resolved to avoid false negative results"
+)
 @pytest.mark.booted(reason="Container tests require systemd")
 @pytest.mark.root(reason="Needs to start containerd")
 @pytest.mark.feature(
