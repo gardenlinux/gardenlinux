@@ -5,7 +5,7 @@ from plugins.systemd import Systemd
 @pytest.mark.root(reason="To start the systemd service")
 @pytest.mark.modify(reason="Starts systemd service")
 @pytest.mark.performance_metric
-@pytest.mark.feature("Azure instance to test boot time for kernel, initrd and userspace") 
+@pytest.mark.feature("azure", reason="Azure instance to test boot time for kernel, initrd and userspace") 
 def test_startup_time(systemd: Systemd):
     """System startup time must be within tolerated limits."""
     tolerated_kernel = 30.0
