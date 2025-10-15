@@ -8,7 +8,7 @@ from plugins.capabilities import Capabilities
 # /usr/bin/arping is provided by iputils-arping
 # /usr/sbin/arping is provided by arping
 # We only use iputils-arping
-capabilities_allowlist = set(["/usr/bin/arping cap_net_raw=ep"])
+capabilities_allowlist = {"/usr/bin/arping cap_net_raw=ep"}
 
 
 @pytest.mark.root(reason="Need to read files not readable by unprivileged user")
