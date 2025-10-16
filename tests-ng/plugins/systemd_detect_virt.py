@@ -1,12 +1,14 @@
-import pytest
 from enum import Enum
 
+import pytest
 from plugins.shell import ShellRunner
+
 
 class Hypervisor(Enum):
     """
     ids according to https://www.freedesktop.org/software/systemd/man/latest/systemd-detect-virt.html
     """
+
     none = 0
     qemu = 1
     kvm = 2
@@ -26,6 +28,7 @@ class Hypervisor(Enum):
     apple = 16
     sre = 17
     google = 18
+
 
 @pytest.fixture
 def systemd_detect_virt(shell: ShellRunner) -> Hypervisor:

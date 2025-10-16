@@ -111,10 +111,19 @@ def test_clocksource_arm(systemd_detect_virt: Hypervisor, clocksource: str):
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure")
-def test_chrony_azure(chrony_config_file: str, ptp_hyperv_dev: str):
+def test_chrony_azure(
+    chrony_config_file: str, ptp_hyperv_dev: str, systemd_detect_virt: Hypervisor
+):
     """
     Check Chrony configuration for expected content according to https://learn.microsoft.com/en-us/azure/virtual-machines/linux/time-sync
+
+    Gets skipped for QEMU tests as these do not start chrony.
     """
+    if systemd_detect_virt != Hypervisor.microsoft:
+        pytest.skip(
+            f"Skipping test: not running under Hyper-V (found {systemd_detect_virt})"
+        )
+
     expected_config = f"refclock PHC {ptp_hyperv_dev} poll 3 dpoll -2 offset 0"
     with open(chrony_config_file, "r") as f:
         actual_config = f.read()
@@ -124,13 +133,18 @@ def test_chrony_azure(chrony_config_file: str, ptp_hyperv_dev: str):
 
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
-@pytest.mark.feature("azure and not qemu")
-def test_azure_ptp_symlink(ptp_hyperv_dev: str):
+@pytest.mark.feature("azure")
+def test_azure_ptp_symlink(ptp_hyperv_dev: str, systemd_detect_virt: Hypervisor):
     """
     Ensure /dev/ptp_hyperv exists and is a symlink on real Azure VMs.
 
     Skips for QEMU only provides a generic virtualized clock.
     """
+    if systemd_detect_virt != Hypervisor.microsoft:
+        pytest.skip(
+            f"Skipping test: not running under Hyper-V (found {systemd_detect_virt})"
+        )
+
     assert os.path.islink(
         ptp_hyperv_dev
     ), f"{ptp_hyperv_dev} should always be a symlink."
