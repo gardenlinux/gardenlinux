@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1435d0e619b4eed11525d04c230c5e7e05723ec3ce0612f50af364a3152ae68e"
+            "sha256": "a1432e211d2c71ce23e59f38e2f728335e610f044878670a223d56959014f7c1"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -4374,12 +4374,12 @@
         },
         "pytest-rerunfailures": {
             "hashes": [
-                "sha256:0bccc0e3b0e3388275c25a100f7077081318196569a121217688ed05e58984b9",
-                "sha256:ed4b3a6e7badb0a720ddd93f9de1e124ba99a0cb13bc88561b3c168c16062559"
+                "sha256:5d11b12c0ca9a1665b5054052fcc1084f8deadd9328962745ef6b04e26382e86",
+                "sha256:c38b266db8a808953ebd71ac25c381cb1981a78ff9340a14bcb9f1b9bff1899e"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.9'",
-            "version": "==16.0.1"
+            "markers": "python_version >= '3.10'",
+            "version": "==16.1"
         },
         "python-dateutil": {
             "hashes": [
@@ -5461,6 +5461,7 @@
             "version": "==2.5.0"
         }
     },
+    "kvm-packages": {},
     "openstack-packages": {
         "autopage": {
             "hashes": [
