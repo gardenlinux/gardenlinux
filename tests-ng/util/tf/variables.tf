@@ -23,7 +23,8 @@ variable "existing_root_disk" {
 variable "ssh_public_key_path" {
   description = "Path to your ssh public key"
   type        = string
-  default     = "~/.ssh/id_ed25519_gl.pub"
+  # Only supply a default value. Variables is overwritten by run_cloud.sh.
+  default     = "~/.ssh/id_ed25519.pub"
 }
 
 variable "user_data_script_path" {
