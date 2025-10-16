@@ -68,6 +68,18 @@ log_file_junit="cloud.test-ng.xml"
 mkdir -p "$log_dir"
 test_args+=("--junit-xml=/run/gardenlinux-tests/tests/log/$log_file_junit")
 
+# Extract test artifact name from image filename
+test_artifact="$(basename "$image" | sed 's/-[0-9].*\.raw$//')"
+test_type="cloud"
+test_namespace="test-ng"
+
+# Add pytest-metadata arguments
+test_args+=("--metadata" "Artifact" "$test_artifact")
+test_args+=("--metadata" "Type" "$test_type")
+test_args+=("--metadata" "Namespace" "$test_namespace")
+
+echo "📊  metadata: Artifact=$test_artifact, Type=$test_type, Namespace=$test_namespace"
+
 # arch, uefi, secureboot, tpm2 are set in $image.requirements
 arch=
 uefi=
@@ -117,12 +129,12 @@ PATH="$tofuenv_dir/bin:$PATH"
 # in case we pass a GITHUB_TOKEN, we can work around rate limiting
 export TOFUENV_GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 command -v tofuenv >/dev/null || {
-	git clone --depth=1 https://github.com/tofuutils/tofuenv.git "$tofuenv_dir"
+	retry -d "1,2,5,10,30" git clone --depth=1 https://github.com/tofuutils/tofuenv.git "$tofuenv_dir"
 	echo 'trust-tofuenv: yes' >"$tofuenv_dir/use-gpgv"
 }
 # go to tofu directory to automatically parse *.tf files
 pushd "$tf_dir"
-tofuenv install latest-allowed
+retry -d "1,2,5,10,30" tofuenv install latest-allowed
 popd
 tofu_version=$(find "$tf_dir/.tofuenv/versions" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" | head -1)
 tofuenv use "$tofu_version"
@@ -144,7 +156,7 @@ EOF
 if [ ! -f "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" ] || ! sha256sum -c "${TOFU_PROVIDERS_CUSTOM}/checksum.txt" >/dev/null 2>&1; then
 	echo "Downloading terraform-provider-azurerm"
 	mkdir -p "${TOFU_PROVIDERS_CUSTOM}"
-	curl -LO --create-dirs --output-dir "${TOFU_PROVIDERS_CUSTOM}" "${TOFU_PROVIDER_AZURERM_URL}"
+	retry -d "1,2,5,10,30" curl -LO --create-dirs --output-dir "${TOFU_PROVIDERS_CUSTOM}" "${TOFU_PROVIDER_AZURERM_URL}"
 	echo "$TOFU_PROVIDER_AZURERM_CHECKSUM ${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" >"${TOFU_PROVIDERS_CUSTOM}/checksum.txt"
 	sha256sum -c "${TOFU_PROVIDERS_CUSTOM}/checksum.txt"
 	chmod +x "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm"
