@@ -50,11 +50,12 @@ The following principles guide all test development in Garden Linux:
   - Document why a booted system is necessary
   - Prefer chroot testing for filesystem-only tests
 
-- **Use abstractions to hide implementation details**
+- **Use abstractions judiciously to hide implementation details**
 
-  - Leverage plugins to abstract system interactions
+  - Leverage plugins for infrastructure concerns (parsing files, accessing data, establishing connections)
   - Use handlers for setup/teardown operations
-  - Keep utility functions separate from test logic
+  - Keep test logic visible and maintain Arrange-Act-Assert structure
+  - Avoid over-abstraction that requires reading multiple plugins to understand a test
 
 - **Be mindful about external dependencies**
   - Prefer Python standard library over third-party packages
@@ -121,16 +122,41 @@ def test_sshd_config(sshd: Sshd):
             break
 ```
 
-### Use Reusable Plugins
+### Use Plugins for Infrastructure, Not Test Logic
 
-Plugins provide abstractions for system interactions:
+The key is finding the right balance between abstraction and readability. Plugins should handle infrastructure concerns, not hide test logic:
+
+**Good abstractions** (infrastructure concerns):
+
+- File parsing and data access
+- System service management
+- Network connections and sockets
+- Data processing and formatting
+
+**Avoid over-abstraction** (test logic concerns):
+
+- Business logic validation
+- Test-specific assertions
+- Domain-specific checks
+- Complex test workflows
 
 ```python
-# Good: Using plugin abstraction
+# Good: Plugin handles system interaction, test logic is clear
 def test_service_running(systemd: Systemd):
     assert systemd.is_active("ssh"), "SSH service is not running"
 
-# Bad: Direct shell calls
+# Good: Clear test logic with infrastructure abstraction
+def test_sshd_permit_root_login(sshd: Sshd):
+    """Test that SSH root login is disabled."""
+    actual_value = sshd.get_config_section("PermitRootLogin")
+    assert actual_value == "No", f"Root login should be disabled, got '{actual_value}'"
+
+# Bad: Over-abstraction hiding test logic
+def test_ssh_security_compliance(ssh_security: SshSecurity):
+    """Test SSH security compliance."""
+    assert ssh_security.is_secure(), "SSH configuration is not secure"
+
+# Bad: Direct shell calls when plugin abstraction exists (or could be useful)
 def test_service_running(shell: ShellRunner):
     result = shell("systemctl is-active ssh")
     assert result.stdout.strip() == "active", "SSH service is not running"
@@ -190,14 +216,15 @@ def test_service_status(systemd: Systemd):
 
 ### Plugins (`tests-ng/plugins/`)
 
-Plugins provide abstractions for system interactions:
+Plugins handle infrastructure concerns and system interactions:
 
-- **Purpose**: Hide implementation details and provide clean APIs
+- **Purpose**: Provide clean APIs for system access (file parsing, service management, etc.)
 - **Usage**: Imported and used directly in tests
 - **Examples**: `Systemd`, `Sshd`, `ShellRunner`, `KernelModule`
+- **Guideline**: Handle "how to access" not "what to test"
 
 ```python
-# Example plugin usage
+# Example plugin usage - clear test logic with infrastructure abstraction
 def test_systemd_unit(systemd: Systemd):
     assert systemd.is_active("ssh"), "SSH service is not running"
 ```
