@@ -1,13 +1,14 @@
-import pathlib
-import hashlib
 import gzip
-import tarfile
+import hashlib
 import json
+import pathlib
+import tarfile
 import threading
 import time
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse
+
 import pytest
 
 

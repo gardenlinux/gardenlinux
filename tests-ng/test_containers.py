@@ -1,6 +1,7 @@
 import pytest
-from plugins.containerd import CtrRunner
+
 from plugins.container_registry import ContainerRegistry
+from plugins.containerd import CtrRunner
 
 TEST_IMAGES = ["localhost:5000/busybox:latest"]
 

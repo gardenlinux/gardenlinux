@@ -1,9 +1,9 @@
 import pytest
 import validators
 
+from .container_registry import ContainerRegistry
 from .shell import ShellRunner
 from .systemd import Systemd
-from .container_registry import ContainerRegistry
 
 
 class CtrRunner:
