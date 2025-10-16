@@ -19,7 +19,9 @@ class CtrRunner:
     def pull_image(self, uri, capture_output=False, ignore_exit_code=False):
         validators.url(uri)
         command = f"ctr image pull --plain-http {uri}"
-        return self.shell(command, capture_output=capture_output, ignore_exit_code=ignore_exit_code)
+        return self.shell(
+            command, capture_output=capture_output, ignore_exit_code=ignore_exit_code
+        )
 
     def remove_image(self, uri, capture_output=False, ignore_exit_code=False):
         validators.url(uri)
@@ -44,7 +46,9 @@ def ctr(shell: ShellRunner, systemd: Systemd):
 
 
 @pytest.fixture
-def container_image_setup(uri: str, ctr: CtrRunner, container_registry: ContainerRegistry):
+def container_image_setup(
+    uri: str, ctr: CtrRunner, container_registry: ContainerRegistry
+):
     # capture output to avoid it cluttering the test logs
     # ctr is very verbose when pulling an image
     container_registry.start()
