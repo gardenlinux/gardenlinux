@@ -335,12 +335,23 @@ TODO: Explain what this marker is good for.
 
 ## Python Best Practices
 
-### Code Style
+### Code Style and CI Enforcement
+
+The project enforces code quality through CI linting (see `.github/workflows/lint_tests-ng.yml`):
+
+- **[Black](https://black.readthedocs.io/en/stable/)**: Automatic code formatting
+- **[isort](https://pycqa.github.io/isort/)**: Import statement sorting
+- **[Pyright](https://github.com/microsoft/pyright/blob/main/docs/getting-started.md)**: Static type checking
+
+**Guidelines:**
 
 - Follow [PEP 8 – Style Guide for Python Code](https://peps.python.org/pep-0008/)
 - Use type hints for function parameters and return values
 - Prefer descriptive variable names
 - Use docstrings for complex functions
+
+> [!TIP]
+> Run `make -f tests-ng/dev.makefile format` locally before committing
 
 ### Error Handling
 
@@ -410,4 +421,3 @@ When adding new dependencies:
 - [Pytest Documentation](https://docs.pytest.org/)
 - [Python Testing Best Practices](https://docs.python.org/3/library/unittest.html)
 - [Garden Linux Tests-NG README](./README.md) - For usage and running tests
-
