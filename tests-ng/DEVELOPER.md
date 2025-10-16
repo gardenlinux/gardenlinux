@@ -198,7 +198,11 @@ def test_config_value(sshd: Sshd):
 
 ### Shell Calls vs Filesystem Lookups
 
-Prefer filesystem lookups over shell calls when possible:
+Prefer filesystem lookups over shell calls when possible. Use shell calls only when:
+
+1. **Testing shell functionality itself** (command execution, shell features)
+2. **No appropriate plugin abstraction exists** and/or filesystem access is very complex
+3. **Testing system-level behavior** that requires shell execution
 
 ```python
 # Good: Direct filesystem access
@@ -207,9 +211,22 @@ def test_os_release():
         content = f.read()
         assert "ID=gardenlinux" in content
 
-# Acceptable: Shell call when filesystem access is complex
+# Good: Plugin abstraction for system interactions
 def test_service_status(systemd: Systemd):
     assert systemd.is_active("ssh"), "SSH service is not running"
+
+# Acceptable: Shell call when testing shell functionality
+def test_shell_command_execution(shell: ShellRunner):
+    """Test that shell commands execute correctly."""
+    from datetime import datetime
+    result = shell("date +%Y")
+    current_year = str(datetime.now().year)
+    assert result.stdout.strip() == current_year, f"Shell command execution failed, expected {current_year}"
+
+# Bad: Shell call when plugin abstraction exists
+def test_service_status(shell: ShellRunner):
+    result = shell("systemctl is-active ssh")
+    assert result.stdout.strip() == "active", "SSH service is not running"
 ```
 
 ## Framework Structure
