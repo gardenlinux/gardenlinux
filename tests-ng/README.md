@@ -31,6 +31,7 @@ This directory contains the next generation testing framework for Garden Linux i
     - [Chroot Testing](#chroot-testing)
     - [QEMU Testing](#qemu-testing)
     - [Cloud Testing](#cloud-testing)
+    - [OCI Testing](#oci-testing)
   - [Test Distribution Build Process](#test-distribution-build-process)
     - [Build Components](#build-components)
     - [Build Process](#build-process)
@@ -48,6 +49,7 @@ tests-ng/
 │   ├── run_chroot.sh       # Chroot testing environment
 │   ├── run_qemu.sh         # QEMU VM testing environment
 │   ├── run_cloud.sh        # Cloud provider testing
+│   ├── run_oci.sh          # OCI container testing
 │   ├── login_qemu.sh       # SSH login to QEMU VM
 │   ├── login_cloud.sh      # SSH login to cloud VM
 │   └── tf/                 # Terraform configurations for cloud
@@ -164,6 +166,9 @@ The main entry point is `./test-ng` in the gardenlinux root directory (symlink t
 ```bash
 # Run chroot tests on a tar image
 ./test-ng .build/aws-gardener_prod-amd64-today-13371337.tar
+
+# Run OCI container tests on Base Image
+./test-ng .build/container-amd64-today-local.oci
 
 # Run QEMU tests with SSH access and skip cleanup
 ./test-ng --ssh --skip-cleanup .build/aws-gardener_prod-amd64-today-13371337.raw
@@ -339,6 +344,12 @@ cd /run/gardenlinux-tests && sudo ./run_tests --system-booted --allow-system-mod
 - Real-world environment testing
 - Automatic resource cleanup (unless `--skip-cleanup` is used)
 - Supports AWS, GCP, Azure, and Alibaba Cloud
+
+### OCI Testing
+
+- Runs tests in a containers based on a Base Image
+- Very fast execution method
+- Limited to Base Image and an unbooted system
 
 ## Test Distribution Build Process
 
