@@ -9,7 +9,10 @@ TEST_IMAGES = [
 
 @pytest.mark.booted(reason="Container tests require systemd")
 @pytest.mark.root(reason="Needs to start containerd")
-@pytest.mark.feature("(gardener or chost or _debug) and not _pxe", reason="containerd is not installed, pxe has tmpfs for /")
+@pytest.mark.feature(
+    "(gardener or chost or _debug) and not _pxe",
+    reason="containerd is not installed, pxe has tmpfs for /",
+)
 @pytest.mark.parametrize("uri", TEST_IMAGES)
 def test_basic_container_functionality(container_image_setup,
                                        uri: str,

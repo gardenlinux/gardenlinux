@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1435d0e619b4eed11525d04c230c5e7e05723ec3ce0612f50af364a3152ae68e"
+            "sha256": "a1432e211d2c71ce23e59f38e2f728335e610f044878670a223d56959014f7c1"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -3649,20 +3649,20 @@
         },
         "boto3": {
             "hashes": [
-                "sha256:71ea8ca488e8b0d0a16b1b32816f8bab9aa66757c4122caf137ae2dbc95d7001",
-                "sha256:dbd8afc41f0cc759d0115c673e50bd1395b992a5c14627b56163cf35b86673c6"
+                "sha256:6aa81b9acb4eff87b5505ae26c948883a2015cc3308ce5168a9df6e00ab815d2",
+                "sha256:ed1b7750df07b2f2ece0141ff2ed0489db2ec2b5311a956d00a496b05fd4fadb"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.9'",
-            "version": "==1.40.42"
+            "version": "==1.40.51"
         },
         "botocore": {
             "hashes": [
-                "sha256:2682a4120be21234036003a806206b6b3963ba53a495d0a57d40d67fce4497a9",
-                "sha256:41bea751685fb2a51b4fc6be329a0cd0a285dbeb0686a21099e87ef146664bc0"
+                "sha256:a06de20408c3009e59e8f161a1146f1801d279d0923ab950349154900951bb20",
+                "sha256:d5811a834bbdec6dac540565eab9f5ad954ed439b535686fbc3219e1cbfbfc49"
             ],
             "markers": "python_version >= '3.9'",
-            "version": "==1.40.42"
+            "version": "==1.40.51"
         },
         "certifi": {
             "hashes": [
@@ -4374,12 +4374,12 @@
         },
         "pytest-rerunfailures": {
             "hashes": [
-                "sha256:0bccc0e3b0e3388275c25a100f7077081318196569a121217688ed05e58984b9",
-                "sha256:ed4b3a6e7badb0a720ddd93f9de1e124ba99a0cb13bc88561b3c168c16062559"
+                "sha256:5d11b12c0ca9a1665b5054052fcc1084f8deadd9328962745ef6b04e26382e86",
+                "sha256:c38b266db8a808953ebd71ac25c381cb1981a78ff9340a14bcb9f1b9bff1899e"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.9'",
-            "version": "==16.0.1"
+            "markers": "python_version >= '3.10'",
+            "version": "==16.1"
         },
         "python-dateutil": {
             "hashes": [
@@ -5461,6 +5461,7 @@
             "version": "==2.5.0"
         }
     },
+    "kvm-packages": {},
     "openstack-packages": {
         "autopage": {
             "hashes": [

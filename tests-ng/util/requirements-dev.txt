@@ -1,0 +1,4 @@
+black==24.10.0
+isort==5.13.2
+pyright==1.1.395
+colorama==0.4.6

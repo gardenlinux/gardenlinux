@@ -1,5 +1,6 @@
 import pytest
 import validators
+
 from .shell import ShellRunner
 from .systemd import Systemd
 from .container_registry import ContainerRegistry
@@ -23,14 +24,18 @@ class CtrRunner:
     def remove_image(self, uri, capture_output=False, ignore_exit_code=False):
         validators.url(uri)
         command = f"ctr image rm {uri}"
-        return self.shell(command, capture_output=capture_output, ignore_exit_code=ignore_exit_code)
+        return self.shell(
+            command, capture_output=capture_output, ignore_exit_code=ignore_exit_code
+        )
 
     def run(self, uri, cmd, capture_output=False, ignore_exit_code=False):
         validators.url(uri)
 
         container_name = uri.split("/")[0].split(":")[0].replace(".", "-")
         command = f"ctr run --rm {uri} {container_name} {cmd}"
-        return self.shell(command, capture_output=capture_output, ignore_exit_code=ignore_exit_code)
+        return self.shell(
+            command, capture_output=capture_output, ignore_exit_code=ignore_exit_code
+        )
 
 
 @pytest.fixture
