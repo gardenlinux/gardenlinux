@@ -129,12 +129,12 @@ PATH="$tofuenv_dir/bin:$PATH"
 # in case we pass a GITHUB_TOKEN, we can work around rate limiting
 export TOFUENV_GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 command -v tofuenv >/dev/null || {
-	git clone --depth=1 https://github.com/tofuutils/tofuenv.git "$tofuenv_dir"
+	retry -d "1,2,5,10,30" git clone --depth=1 https://github.com/tofuutils/tofuenv.git "$tofuenv_dir"
 	echo 'trust-tofuenv: yes' >"$tofuenv_dir/use-gpgv"
 }
 # go to tofu directory to automatically parse *.tf files
 pushd "$tf_dir"
-tofuenv install latest-allowed
+retry -d "1,2,5,10,30" tofuenv install latest-allowed
 popd
 tofu_version=$(find "$tf_dir/.tofuenv/versions" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" | head -1)
 tofuenv use "$tofu_version"
