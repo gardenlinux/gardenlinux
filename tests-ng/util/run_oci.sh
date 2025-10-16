@@ -2,10 +2,20 @@
 
 set -eufo pipefail
 
+skip_tests=0
+skip_cleanup=0
 test_args=()
 
 while [ $# -gt 0 ]; do
     case "$1" in
+    --skip-tests)
+        skip_tests=1
+        shift
+        ;;
+    --skip-cleanup)
+        skip_cleanup=1
+        shift
+        ;;
     --test-args)
         # Split the second argument on spaces to handle multiple test arguments
         IFS=' ' read -ra args <<<"$2"
@@ -24,44 +34,69 @@ image_name=${image_basename/.*/}
 root_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/../..")"
 log_dir="$root_dir/tests-ng/log"
 log_file_log="oci.test-ng.log"
+log_file_junit="oci.test-ng.xml"
 
 mkdir -p "$log_dir"
+test_args+=("--junit-xml=/run/gardenlinux-tests/log/$log_file_junit")
+
+# Extract test artifact name from image filename
+test_artifact="$(basename "$image" | sed -E 's/(-[0-9].*)?\.oci$//')"
+test_type="oci"
+test_namespace="test-ng"
+
+# Add pytest-metadata arguments
+test_args+=("--metadata" "Artifact" "$test_artifact")
+test_args+=("--metadata" "Type" "$test_type")
+test_args+=("--metadata" "Namespace" "$test_namespace")
+
+echo "📊  metadata: Artifact=$test_artifact, Type=$test_type, Namespace=$test_namespace"
 
 if [ -z "$image" ]; then
-    echo "Usage: $0 <bare-image>" >&2
-    echo "Example: $0 .build/bare_flavors/python-amd64.oci" >&2
-    exit 1
-fi
-
-config=$(echo "$image_name" | sed 's/-amd64//' | sed 's/-arm64//')
-
-if [ ! -f "$image" ]; then
-    echo "Error: OCI file not found: $image" >&2
-    exit 1
-fi
-
-echo "⚙️  loading OCI image $image_name"
-image_sha="$(podman load -qi "$image" 2>/dev/null | awk '{ print $NF }')"
-
-if [ -z "$image_sha" ]; then
-    echo "Error: Failed to extract image sha from podman load output." >&2
+    echo "Usage: $0 <oci-image>" >&2
+    echo "Example: $0 .build/container-amd64-today-local.oci" >&2
     exit 1
 fi
 
 cleanup() {
     echo "⚙️  cleaning up containers and images $image_name"
-    podman rm -f test-run-oci 2>/dev/null || true
-    podman rmi -f test-run-oci 2>/dev/null || true
-    if [ -n "$image_sha" ]; then
-        podman rmi -f "$image_sha" 2>/dev/null || true
-    fi
+    podman rmi -f "$image_sha" 2>/dev/null || true
 }
 
 trap cleanup EXIT
 
-echo "⚙️  building test container $image_name"
-cd "$root_dir/bare_flavors/$config/test"
-podman build -t test-run-oci --build-arg image="$image_sha" .
+echo "⚙️  loading OCI image $image_name"
+image_sha="$(podman load -q --input "$image" 2>/dev/null | awk '{ print $NF }')"
+
+test_args+=(
+    "--allow-system-modifications"
+)
 
 echo "🚀  running test container $image_name"
-podman run --rm test-run-oci "${test_args[@]}" 2>&1 | tee "$log_dir/$log_file_log"
+
+run_args=(
+    "--pull" "never"
+    "--rm"
+    "-v" "$root_dir/tests-ng/.build/dist.tar.gz:/run/gardenlinux-tests/dist.tar.gz:ro"
+    "-v" "$log_dir:/run/gardenlinux-tests/log:rw"
+)
+
+if ((skip_tests)); then
+    cmd_args=("bash")
+else
+    test_cmd="cd /run/gardenlinux-tests && \
+                tar xzf dist.tar.gz && \
+                ./run_tests ${test_args[*]@Q} 2>&1"
+
+    if ((skip_cleanup)); then
+        test_cmd="$test_cmd ; bash"
+    fi
+
+    cmd_args=("bash" "-c" "$test_cmd")
+fi
+
+if ((skip_tests || skip_cleanup)); then
+    run_args+=("-it")
+fi
+
+run_args+=("$image_sha" "${cmd_args[@]}")
+podman run "${run_args[@]}" 2>&1 | tee "$log_dir/$log_file_log"
