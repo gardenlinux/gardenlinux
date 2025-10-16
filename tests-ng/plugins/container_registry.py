@@ -18,14 +18,14 @@ class RegistryHandler(BaseHTTPRequestHandler):
 
     def _handle_request(self, head: bool = False):
         parsed = urlparse(self.path)
-        path_parts = [p for p in parsed.path.split('/') if p]  # strip empty parts
+        path_parts = [p for p in parsed.path.split("/") if p]  # strip empty parts
         if parsed.path == "/v2/":
             self._handle_v2_root(head=head)
-        elif len(path_parts) == 4 and path_parts[0] == 'v2':
-            if path_parts[2] == 'manifests':
+        elif len(path_parts) == 4 and path_parts[0] == "v2":
+            if path_parts[2] == "manifests":
                 self._handle_get_manifest(path_parts[1], path_parts[3], head=head)
                 return
-            elif path_parts[2] == 'blobs':
+            elif path_parts[2] == "blobs":
                 self._handle_get_blob(path_parts[1], path_parts[3], head=head)
                 return
         self._send_error(HTTPStatus.NOT_FOUND, "Not Found")
@@ -43,7 +43,7 @@ class RegistryHandler(BaseHTTPRequestHandler):
         self.send_header("Docker-Distribution-API-Version", "registry/2.0")
         self.end_headers()
         if not head:
-            self.wfile.write(b'{}')
+            self.wfile.write(b"{}")
 
     def _handle_get_manifest(self, repo: str, reference: str, head: bool = False):
         """
@@ -61,8 +61,9 @@ class RegistryHandler(BaseHTTPRequestHandler):
 
             data, size = blob
             self.send_response(HTTPStatus.OK)
-            self.send_header("Content-Type",
-                             "application/vnd.docker.distribution.manifest.v2+json")
+            self.send_header(
+                "Content-Type", "application/vnd.docker.distribution.manifest.v2+json"
+            )
             self.send_header("Content-Length", str(size))
             self.send_header("Docker-Content-Digest", digest)
             self.end_headers()
@@ -72,10 +73,14 @@ class RegistryHandler(BaseHTTPRequestHandler):
         else:
             data, size = self.server.builder.get_manifest()
             self.send_response(HTTPStatus.OK)
-            self.send_header("Content-Type",
-                             "application/vnd.docker.distribution.manifest.list.v2+json")
+            self.send_header(
+                "Content-Type",
+                "application/vnd.docker.distribution.manifest.list.v2+json",
+            )
             self.send_header("Content-Length", str(size))
-            self.send_header("Docker-Content-Digest", self.server.builder.manifest_digest)
+            self.send_header(
+                "Docker-Content-Digest", self.server.builder.manifest_digest
+            )
             self.end_headers()
             if not head:
                 self.wfile.write(data)
@@ -114,7 +119,7 @@ class ContainerRegistry:
     """
 
     def __init__(self, tarball_filepath_x86, tarball_filepath_arm64):
-        self.blobs = {}          # digest -> (bytes, size)
+        self.blobs = {}  # digest -> (bytes, size)
         self.repo_name = "mockrepo"
         self.tag = "latest"
 
@@ -122,31 +127,38 @@ class ContainerRegistry:
         self.server_thread = None
 
         manifest_bytes_x86 = self.process_tarball(tarball_filepath_x86, arch="amd64")
-        manifest_bytes_arm64 = self.process_tarball(tarball_filepath_arm64, arch="arm64")
+        manifest_bytes_arm64 = self.process_tarball(
+            tarball_filepath_arm64, arch="arm64"
+        )
 
         # Construct a multi-arch manifest list
         manifest_list = {
             "schemaVersion": 2,
             "mediaType": "application/vnd.docker.distribution.manifest.list.v2+json",
-            "manifests": []
+            "manifests": [],
         }
 
-        for manifest_bytes, arch in ((manifest_bytes_x86, "amd64"), (manifest_bytes_arm64, "arm64")):
+        for manifest_bytes, arch in (
+            (manifest_bytes_x86, "amd64"),
+            (manifest_bytes_arm64, "arm64"),
+        ):
             digest = self.sha256_digest(manifest_bytes)
             size = len(manifest_bytes)
-            manifest_list["manifests"].append({
-                "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
-                "size": size,
-                "digest": digest,
-                "platform": {
-                    "architecture": arch,
-                    "os": "linux"
+            manifest_list["manifests"].append(
+                {
+                    "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+                    "size": size,
+                    "digest": digest,
+                    "platform": {"architecture": arch, "os": "linux"},
                 }
-            })
+            )
 
         self.manifest_bytes = json.dumps(manifest_list).encode("utf-8")
         self.manifest_digest = self.sha256_digest(self.manifest_bytes)
-        self.blobs[self.manifest_digest] = (self.manifest_bytes, len(self.manifest_bytes))
+        self.blobs[self.manifest_digest] = (
+            self.manifest_bytes,
+            len(self.manifest_bytes),
+        )
 
     def create_http_server(self):
         self.server = HTTPServer(("127.0.0.1", 5000), RegistryHandler)
@@ -182,11 +194,13 @@ class ContainerRegistry:
                 gz_layer = self.gzip_bytes(layer_bytes)
                 layer_digest = self.sha256_digest(gz_layer)
                 self.blobs[layer_digest] = (gz_layer, len(gz_layer))
-                layer_entries.append({
-                    "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
-                    "size": len(gz_layer),
-                    "digest": layer_digest,
-                })
+                layer_entries.append(
+                    {
+                        "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+                        "size": len(gz_layer),
+                        "digest": layer_digest,
+                    }
+                )
 
             image_manifest = {
                 "schemaVersion": 2,
@@ -208,7 +222,9 @@ class ContainerRegistry:
         def serve(server):
             server.serve_forever()
 
-        self.server_thread = threading.Thread(target=serve, args=[self.server], daemon=True)
+        self.server_thread = threading.Thread(
+            target=serve, args=[self.server], daemon=True
+        )
         self.server_thread.start()
         time.sleep(0.2)
 
@@ -238,6 +254,8 @@ class ContainerRegistry:
 def container_registry():
     this_file = pathlib.Path(__file__).resolve()
     plugin_dir = this_file.parent
-    container_image_tarball_x86 = plugin_dir / "busybox_x86.tar"
+    container_image_tarball_amd64 = plugin_dir / "busybox_amd64.tar"
     container_image_tarball_arm64 = plugin_dir / "busybox_arm64.tar"
-    return ContainerRegistry(container_image_tarball_x86, container_image_tarball_arm64)
+    return ContainerRegistry(
+        container_image_tarball_amd64, container_image_tarball_arm64
+    )
