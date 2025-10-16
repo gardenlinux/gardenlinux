@@ -164,19 +164,20 @@ def test_service_running(shell: ShellRunner):
 
 ### Handlers for Setup/Teardown
 
-Use handlers for managing test state and cleanup:
+Use handlers (yield fixtures) for managing test state and cleanup:
 
 ```python
 @pytest.fixture
 def service_ssh(systemd: Systemd):
-    """Fixture for SSH service management."""
+    """Fixture for SSH service management with cleanup."""
     service_active_initially = systemd.is_active("ssh")
 
     if not service_active_initially:
         systemd.start_unit("ssh")
 
-    yield "ssh"
+    yield "ssh"  # Provide service name to test
 
+    # Cleanup: restore original state
     if not service_active_initially:
         systemd.stop_unit("ssh")
 ```
@@ -231,34 +232,83 @@ def test_service_status(shell: ShellRunner):
 
 ## Framework Structure
 
+### How Tests, Plugins, and Handlers Connect
+
+The framework uses pytest's plugin system to automatically register fixtures:
+
+1. **Plugins** (`tests-ng/plugins/`) - Provide fixtures for system access
+2. **Handlers** (`tests-ng/handlers/`) - Provide fixtures for setup/teardown
+3. **Tests** (`tests-ng/test_*.py`) - Use fixtures via dependency injection
+
+**Registration**: All plugins are automatically registered as pytest fixtures via `conftest.py`
+
 ### Plugins (`tests-ng/plugins/`)
 
 Plugins handle infrastructure concerns and system interactions:
 
 - **Purpose**: Provide clean APIs for system access (file parsing, service management, etc.)
-- **Usage**: Imported and used directly in tests
+- **Usage**: Provide pytest fixtures that can be injected into test functions
 - **Examples**: `Systemd`, `Sshd`, `ShellRunner`, `KernelModule`
 - **Guideline**: Handle "how to access" not "what to test"
 
 ```python
-# Example plugin usage - clear test logic with infrastructure abstraction
+# Example plugin usage - fixtures injected into test functions
 def test_systemd_unit(systemd: Systemd):
     assert systemd.is_active("ssh"), "SSH service is not running"
+
+def test_ssh_config(sshd: Sshd):
+    config_value = sshd.get_config_section("PermitRootLogin")
+    assert config_value == "No", f"Expected 'No', got '{config_value}'"
 ```
 
 ### Handlers (`tests-ng/handlers/`)
 
-Handlers manage test setup and teardown:
+Handlers are pytest fixtures that manage test setup and teardown:
 
-- **Purpose**: Setup/teardown of test state
-- **Usage**: Used as pytest fixtures
+- **Purpose**: Setup/teardown of test state (connections, services, environments)
+- **Pattern**: Yield fixtures that prepare resources and explicitly clean up after tests
+- **Usage**: Used as pytest fixtures with `yield` for cleanup
 - **Examples**: `service_ssh`, `service_containerd`
 
+**Key distinction**: Unlike regular fixtures that provide data, handlers manage stateful resources that need explicit cleanup.
+
 ```python
-# Example handler usage
+# Example handler usage - setup/teardown pattern
 @pytest.fixture
 def service_ssh(systemd: Systemd):
-    yield from handle_service(systemd, "ssh")
+    """Fixture for SSH service management with cleanup."""
+    service_active_initially = systemd.is_active("ssh")
+
+    if not service_active_initially:
+        systemd.start_unit("ssh")
+
+    yield "ssh"  # Provide service name to test
+
+    # Cleanup: restore original state
+    if not service_active_initially:
+        systemd.stop_unit("ssh")
+```
+
+### Test Integration Example
+
+Here's how tests use both plugins and handlers together:
+
+```python
+# In test_ssh.py
+import pytest
+from handlers.services import service_ssh  # Handler fixture
+from plugins.sshd import Sshd             # Plugin fixture
+from plugins.systemd import Systemd       # Plugin fixture
+
+@pytest.mark.booted(reason="SSH tests require running system")
+def test_ssh_service_running(service_ssh, systemd: Systemd):
+    """Test that SSH service is running after handler setup."""
+    assert systemd.is_active("ssh"), "SSH service is not running"
+
+def test_ssh_config_values(sshd: Sshd):
+    """Test SSH configuration using plugin fixture."""
+    config_value = sshd.get_config_section("PermitRootLogin")
+    assert config_value == "No", f"Expected 'No', got '{config_value}'"
 ```
 
 ### Utils (`tests-ng/plugins/utils.py`)
