@@ -35,7 +35,7 @@ In contrast, both **merge commits** and **squash merges** create a single commit
 ```
 _The merge commit references the PR and groups related changes._
 
-**Example: Squash Merge**
+**Example Commit History: Squash Merge**
 ```
 * 2b3c4d5 Add new feature and fix typo (#42)
 * 5d4e3f2 Previous commit
@@ -45,11 +45,14 @@ _All changes from the PR are combined into a single commit, referencing the PR._
 Often, the pull request contains useful context such as discussions, or a link to an issue that this change resolves.
 Being able to trace this from a given change is critical for compliance.
 
+Github has an option to allow certain merge types only.
+
 ## Decision
 
 We will only **allow merge commits and squash merges** when integrating PRs into the main branches of Garden Linux. **Rebase merges are disallowed**, as they do not provide sufficient traceability between commits and their originating PRs.
 
 ## Consequences
-By restricting merge types to merge commits and squash merges, every change merged into Garden Linux will be traceable to its PR, facilitating easier audits, reviews, and historical analysis. Contributors must ensure that their PRs are merged using one of the allowed methods to maintain this standard.
 
-While some contributors may prefer rebase merges for aesthetic reasons—such as a linear commit history without merge commits—the need for traceability and accountability takes precedence in this project. The chosen merge strategies ensure that the origin and context of each change are preserved, even if this results in a less linear commit graph.
+By restricting merge types to merge commits and squash merges, every change merged into Garden Linux will be traceable to its PR, facilitating easier audits, reviews, and historical analysis.
+
+While some contributors may prefer rebase merges for aesthetic reasons—such as a linear commit history without merge commits, the need for traceability and accountability takes precedence in this project. The chosen merge strategies ensure that the origin and context of each change are preserved, even if this results in a less linear commit graph.
