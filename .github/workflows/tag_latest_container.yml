@@ -38,10 +38,10 @@ jobs:
 
           # Tag the major release version
           echo "Tagging as ${version_major}"
-          gl-oci --container "${container}" --version "${version}" --tag "${version_major}"
+          gl-oci push-manifest-tags --container "${container}" --version "${version}" --tag "${version_major}"
 
           # Tag latest only if requested
           if [ "${is_latest}" == "true" ]; then
             echo "Tagging as latest"
-            gl-oci --container "${container}" --version "${version}" --tag "latest"
+            gl-oci push-manifest-tags --container "${container}" --version "${version}" --tag "latest"
           fi
