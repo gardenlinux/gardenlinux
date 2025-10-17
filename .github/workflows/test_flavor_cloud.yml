@@ -1,0 +1,219 @@
+name: test_flavor
+on:
+  workflow_call:
+    inputs:
+      arch:
+        type: string
+        default: "amd64"
+      flavor:
+        type: string
+        required: true
+    secrets:
+      gcp_identity_provider:
+        required: true
+      gcp_service_account:
+        required: true
+      gcp_project_id:
+        required: true
+      gcp_region:
+        required: true
+      gcp_zone:
+        required: true
+      aws_role:
+        required: true
+      aws_session:
+        required: true
+      aws_region:
+        required: true
+      aws_s3_bucket:
+        required: true
+      az_client_id:
+        required: true
+      az_tenant_id:
+        required: true
+      az_subscription_id:
+        required: true
+      ccc_credentials:
+        required: true
+      tf_encryption:
+        required: true
+jobs:
+  test:
+    name: Test flavor in Cloud ${{ inputs.flavor }} (${{ inputs.arch }})
+    runs-on: "ubuntu-24.04"
+    environment: oidc_platform_tests
+    defaults:
+      run:
+        shell: bash
+    env:
+      ARCH: ${{ inputs.arch }}
+      CNAME: ""
+      FLAVOR: ${{ inputs.flavor }}
+      PLATFORM_TEST_IMAGE_TAG: ""
+      PLATFORM_TEST_VERSION: ""
+      # tofu
+      ARM_USE_OIDC: true
+      AZURE_CONFIG_DIR: "$RUNNER_TEMP/azure_config_dir"
+      aws_region: ${{ secrets.aws_region }}
+      gcp_project_id: ${{ secrets.gcp_project_id }}
+      gcp_region: ${{ secrets.gcp_region }}
+      gcp_zone: ${{ secrets.gcp_zone }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      id-token: write
+      actions: write
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+        with:
+          submodules: true
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # pin@v4.3.0
+        with:
+          path: |
+            COMMIT
+            VERSION
+          key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
+          fail-on-cache-miss: true
+      - name: Determine CNAME
+        id: cname
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@02879bd567ed39b5610332afcc6e46197073db0c # pin@0.10.0
+        with:
+          flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
+      - name: Set CNAME
+        run: |
+          echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
+      - name: Load flavor build artifact
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        with:
+          name: build-${{ inputs.flavor }}-${{ inputs.arch }}
+      - name: Load certs artifact
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        with:
+          name: certs
+          path: cert/
+      - name: Download platform-test OCI metadata (tofu)
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # pin@v4.3.0
+        with:
+          key: platform_test_container:tofu-${{ inputs.arch }}-${{ github.run_id }}
+          path: |
+            platform-test.oci-version.txt
+            platform-test.oci-tag.txt
+          fail-on-cache-miss: true
+      - name: Prepare platform-test environment
+        run: |
+          mkdir ".build"
+          tar -C ".build/" -xzf "$CNAME.tar.gz"
+          rm "$CNAME.tar.gz"
+
+          echo "PLATFORM_TEST_VERSION=$(cat platform-test.oci-version.txt)" | tee -a "$GITHUB_ENV"
+          rm platform-test.oci-version.txt
+
+          echo "PLATFORM_TEST_IMAGE_TAG=$(cat platform-test.oci-tag.txt)" | tee -a "$GITHUB_ENV"
+          rm platform-test.oci-tag.txt
+      - name: Set platform-test COMMIT
+        run: echo $PLATFORM_TEST_IMAGE_TAG | sed 's#.*:##' > ./COMMIT
+      - name: Set platform-test VERSION
+        run: echo $PLATFORM_TEST_VERSION > ./VERSION
+      - name: "Authenticate to Google Cloud"
+        uses: google-github-actions/auth@fc2174804b84f912b1f6d334e9463f484f1c552d # pin@v1
+        with:
+          workload_identity_provider: ${{ secrets.gcp_identity_provider }}
+          service_account: ${{ secrets.gcp_service_account }}
+          create_credentials_file: true
+          cleanup_credentials: true
+          export_environment_variables: true
+      - name: Set GCP platform-test environment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const path = await import("path");
+
+            const basePath = "/gardenlinux/";
+            const credentialsFileName = path.basename(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+
+            core.exportVariable("GOOGLE_APPLICATION_CREDENTIALS", basePath + credentialsFileName);
+            core.exportVariable("CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE", basePath + credentialsFileName);
+            core.exportVariable("GOOGLE_GHA_CREDS_PATH", basePath + credentialsFileName);
+      - id: "auth_aws"
+        name: "Authenticate to AWS"
+        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.aws_role }}
+          role-session-name: ${{ secrets.aws_session }}
+          aws-region: ${{ secrets.aws_region }}
+          output-credentials: true
+      - name: Set AWS platform-test environment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            core.setSecret("${{ steps.auth_aws.outputs.aws-access-key-id }}");
+            core.exportVariable("AWS_ACCESS_KEY_ID", "${{ steps.auth_aws.outputs.aws-access-key-id }}");
+            core.setSecret("${{ steps.auth_aws.outputs.aws-secret-access-key }}");
+            core.exportVariable("AWS_SECRET_ACCESS_KEY", "${{ steps.auth_aws.outputs.aws-secret-access-key }}");
+            core.setSecret("${{ steps.auth_aws.outputs.aws-session-token }}");
+            core.exportVariable("AWS_SESSION_TOKEN", "${{ steps.auth_aws.outputs.aws-session-token }}");
+      - id: "auth_azure"
+        name: "Authenticate to Azure"
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # pin@v1
+        with:
+          client-id: ${{ secrets.az_client_id }}
+          tenant-id: ${{ secrets.az_tenant_id }}
+          subscription-id: ${{ secrets.az_subscription_id }}
+      - name: Set Azure platform-test environment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            core.exportVariable("ARM_USE_OIDC", "true");
+
+            core.setSecret("${{ secrets.az_client_id }}");
+            core.exportVariable("ARM_CLIENT_ID", "${{ secrets.az_client_id }}");
+            core.setSecret("${{ secrets.az_subscription_id }}");
+            core.exportVariable("ARM_SUBSCRIPTION_ID", "${{ secrets.az_subscription_id }}");
+            core.setSecret("${{ secrets.az_tenant_id }}");
+            core.exportVariable("ARM_TENANT_ID", "${{ secrets.az_tenant_id }}");
+      - name: "Create ali cloud credential file"
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const credentials = JSON.parse(atob("${{ secrets.ccc_credentials }}"));
+            const aliCredentials = credentials.alicloud["gardenlinux-platform-test"];
+
+            core.exportVariable("ALIBABA_CLOUD_REGION", aliCredentials.region);
+
+            core.setSecret(aliCredentials.access_key_id);
+            core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_ID", aliCredentials.access_key_id);
+            core.setSecret(aliCredentials.access_key_secret);
+            core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_SECRET", aliCredentials.access_key_secret);
+      - name: Deploy platform-test resources for ${{ inputs.flavor }} (${{ inputs.arch }})
+        run: |
+          export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
+          export TF_VAR_gcp_project_id=${{ secrets.gcp_project_id }}
+
+          test -f ~/.ssh/id_ed25519 || ssh-keygen -t ed25519 -P "" -f ~/.ssh/id_ed25519
+          # tf variables generation
+          TEST_PREFIX="gh-actions" IMAGE_NAME="$CNAME" make --directory=tests/platformSetup ${FLAVOR}-${ARCH}-tofu-config
+          # enable S3 backend
+          if [ ! -f "tests/platformSetup/tofu/backend.tf" ]; then
+            cp "tests/platformSetup/tofu/backend.tf.github" "tests/platformSetup/tofu/backend.tf"
+          fi
+
+          make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-apply 2>&1 | tee ".build/$CNAME.platform.provisioning.log"
+      - name: Run platform-test for ${{ inputs.flavor }} (${{ inputs.arch }})
+        run: make --directory=tests ${FLAVOR}-${ARCH}-tofu-test-platform 2>&1 | tee ".build/$CNAME.platform.test.log"
+      - name: Copy platform-test junit xml file for ${{ inputs.flavor }} (${{ inputs.arch }})
+        if: always()
+        run: cp "tests/${FLAVOR}-${ARCH}.platform.test.xml" ".build/$CNAME.platform.test.xml" || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+        if: always()
+        with:
+          if-no-files-found: ignore
+          name: platform-test-${{ env.CNAME }}
+          path: |
+            .build/${{ env.CNAME }}.platform.test.log
+            .build/${{ env.CNAME }}.platform.test.xml
+      - name: Cleanup platform-test for ${{ inputs.flavor }} (${{ inputs.arch }})
+        if: always()
+        run: |
+          export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
+          export TF_VAR_gcp_project_id=${{ secrets.gcp_project_id }}
+
+          (make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-destroy 2>&1 || make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-destroy 2>&1 || make --directory="tests/platformSetup" ${FLAVOR}-${ARCH}-tofu-destroy 2>&1) | tee ".build/${{ env.CNAME }}.platform.destroy.log"

@@ -1,7 +1,9 @@
 import os
 import pwd
-import pytest
 import stat
+
+import pytest
+
 
 def test_service_accounts_have_nologin_shell():
     for entry in pwd.getpwall():
@@ -9,15 +11,20 @@ def test_service_accounts_have_nologin_shell():
             continue
         if entry.pw_name in {"root", "sync"}:
             continue
-        assert entry.pw_shell in [ "/usr/sbin/nologin", "/bin/false" ], f"User {entry.pw_name} has unexpected shell: {entry.pw_shell}"
+        assert entry.pw_shell in [
+            "/usr/sbin/nologin",
+            "/bin/false",
+        ], f"User {entry.pw_name} has unexpected shell: {entry.pw_shell}"
+
 
 def test_root_home_permissions():
     mode = os.stat("/root").st_mode
     perm = stat.S_IMODE(mode)
     assert perm == 0o700, f"/root has incorrect permissions: {oct(perm)}"
 
+
 @pytest.mark.feature("not _dev")
-def test_no_extra_home_directories(expected_users=[]):
+def test_no_extra_home_directories(expected_users):
     if os.path.islink("/home"):
         return
     entries = os.listdir("/home")

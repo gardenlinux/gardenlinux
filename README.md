@@ -22,6 +22,8 @@
 
 </website-main>
 
+## !! Important !!
+Starting with the major version 2017 the versioning scheme has been changed to a semver compliant one comprised of a 3 numerical segment identifier (major.minor.patch). The "old" 2017.0 is now 2017.0.0 
 
 ## Features
 - Easy to use build system
@@ -89,7 +91,7 @@ Further documentation about tests is located in [tests/README.md](tests/README.m
 For more information about the release strategy and lifecycle, have a look at the [Release Plan Overview](docs/00_introduction/release.md). List of releases is available in the [Public Roadmap, Theme:"Release Plan"](https://github.com/orgs/gardenlinux/projects/15/views/1?filterQuery=theme%3A%22Release+Plan%22).
 
 
-## Download Stable and Patch Releases
+## Download Garden Linux Releases
 
 Images are published as:
 - GitHub Releses in https://github.com/gardenlinux/gardenlinux/releases
@@ -105,6 +107,19 @@ Images are published as:
 
 # Nvidia Driver Support
 An installer can be found in the [gardenlinux/gardenlinux-nvidia-installer](https://github.com/gardenlinux/gardenlinux-nvidia-installer) repository.
+
+# Run Garden Linux Virtual Machines Locally Using Lima (Linux Machines)
+
+You can run Garden Linux virtual machines on your laptop easily using [Lima (Linux Machines)](https://lima-vm.io).
+This can be useful if you want to evaluate Garden Linux but don't have access to Cloud accounts.
+
+To get started, follow the [lima install instructions](https://lima-vm.io/docs/installation/) for your OS and create a Garden Linux vm using this command:
+
+```bash
+limactl start --name gardenlinux https://images.gardenlinux.io/gardenlinux.yaml
+```
+
+For advanced use cases, read [the documentation page on Lima](./docs/02_operators/lima-vm.md).
 
 # Documentation
 Please refer to [docs/README.md](https://github.com/gardenlinux/gardenlinux/tree/main/docs#readme).

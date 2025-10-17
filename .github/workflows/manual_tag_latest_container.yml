@@ -10,10 +10,11 @@ on:
         description: 'Tag as gardenlinux:latest'
         default: false
         type: boolean
-
 jobs:
   tag_container_as_latest:
     uses: ./.github/workflows/tag_latest_container.yml
     with:
       version: ${{ inputs.version }}
       is_latest:  ${{ inputs.is_latest }}
+    permissions:
+      packages: write

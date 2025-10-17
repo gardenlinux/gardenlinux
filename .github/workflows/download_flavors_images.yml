@@ -30,6 +30,7 @@ jobs:
         shell: bash
     permissions:
       id-token: write
+      actions: write
     # @TODO: We could use a better name for the required environment
     environment: oidc_platform_tests
     env:
@@ -41,7 +42,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@97d6e1c28eb4565446563ed04bcbf3c4cb5d1bde # pin@0.9.0
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@02879bd567ed39b5610332afcc6e46197073db0c # pin@0.10.0
       - name: Set image reference for S3
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -50,7 +51,7 @@ jobs:
         run: |
           echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
       - name: 'Authenticate to AWS'
-        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # pin@v4
+        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
           role-session-name: ${{ secrets.aws_session }}
@@ -66,7 +67,7 @@ jobs:
           name: build-${{ matrix.flavor }}-${{ matrix.arch }}
           path: ${{ env.CNAME }}.tar.gz
           if-no-files-found: error
-      - uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # pin@v4.2.4
+      - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # pin@v4.3.0
         with:
           path: |
             COMMIT

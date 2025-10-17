@@ -1,2 +1,6 @@
-pytest
-boolean.py
+boolean.py==5.0
+pytest==8.4.2
+pytest-metadata==3.1.1
+pytest-order==1.3.0
+python-debian==1.0.1
+validators==0.35.0

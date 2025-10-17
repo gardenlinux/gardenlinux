@@ -20,6 +20,8 @@ jobs:
     name: Publish parent workflow-data artifact
     needs: [ workflow_data ]
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
       - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
         with:
@@ -54,6 +56,10 @@ jobs:
       aws_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
       aws_session: ${{ secrets.AWS_OIDC_SESSION }}
       oci_kms_arn: ${{ secrets.OCI_KMS_ARN }}
+    permissions:
+      packages: write # TODO: 3215 elevated permissions for included workflow
+      id-token: write # TODO: 3215 elevated permissions for included workflow
+      actions: write  # TODO: 3215 elevated permissions for included workflow
   publish_kmodbuild_container:
     needs: [ workflow_data ]
     name: Publish kernel module build dev container
@@ -61,15 +67,19 @@ jobs:
     with:
       run_id: ${{ needs.workflow_data.outputs.run_id }}
       version: ${{ needs.workflow_data.outputs.version }}
+    permissions:
+      packages: write
   publish_retry:
     needs: [ publish_oci_containers, publish_kmodbuild_container ]
     if: ${{ failure() && ( needs.publish_oci_containers.result == 'failure' || needs.publish_kmodbuild_container.result == 'failure' ) }}
     name: 'Retry checkpoint: Publish to GitHub'
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
       - name: Retry failed publishing
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");

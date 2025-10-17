@@ -4,17 +4,19 @@ on:
     inputs:
       type:
         type: choice
-        default: patch
+        default: minor
+        description: 'Patch'
         options:
-          - patch
-          - dev
+        - minor
+        - dev
       version:
         required: true
         type: string
+        description: 'Version'
       is_latest:
         default: false
         type: boolean
-        description: "Tag as gardenlinux:latest"
+        description: "Tag Github Release and OCI image as latest"
       commit:
         required: true
         type: string
@@ -23,11 +25,10 @@ jobs:
   # Create new version in GLVD so it has the package list of the new release
   # This is needed for the automatic changelog generation
   glvd:
-    if: ${{ inputs.type }} == 'patch'
+    if: ${{ inputs.type }} == 'minor'
     name: Update GLVD distro list
     runs-on: ubuntu-latest
     permissions:
-      contents: read
       # This is required for requesting the JWT
       id-token: write
     steps:
@@ -55,8 +56,7 @@ jobs:
         run: |
           echo "Give GLVD some time to ingest the data. It is not clear how long this takes exactly, and there is no single indicator for when it was done."
           sleep 180
-
-  github_release:
+  flavors_matrix:
     needs: glvd
     runs-on: ubuntu-24.04
     defaults:
@@ -64,16 +64,7 @@ jobs:
         shell: bash
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
-    permissions:
-      id-token: write
-      contents: write
-    environment: oidc_aws_s3_upload
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
-        with:
-          submodules: true
-      - name: install dependencies for generate_release_note.py script
-        run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
       - name: Checkout flavors of the release commit
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
@@ -88,18 +79,49 @@ jobs:
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@9e8e834c8e054d626ee02e8fed289f6d5a3d9cfe # pin@0.10.1
         with:
           flags: "--no-arch --json-by-arch --publish"
+  github_release:
+    needs: glvd
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      id-token: write
+      contents: write
+      actions: write
+    environment: oidc_aws_s3_upload
+    steps:
+      - name: Checkout full repository (current branch)
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+        with:
+          submodules: true
+          fetch-depth: 0
+      - name: install dependencies for generate_release_note.py script
+        run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@9e8e834c8e054d626ee02e8fed289f6d5a3d9cfe # pin@0.10.1
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_REGION }}
       - name: create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gl-gh create --tag ${{ inputs.version }} --commit ${{ inputs.commit }}
-      - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+          if [[ "${{ inputs.is_latest }}" == "true" ]]; then
+            gl-gh create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")" --latest
+          else
+            gl-gh create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
+          fi
+      - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # pin@v4.3.0
         with:
           key: release-${{ github.run_id }}
           path: .github_release_id
 
   github_release_artifacts_upload:
-    needs: github_release
+    needs: [github_release, flavors_matrix]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -109,19 +131,19 @@ jobs:
       CNAME: ""
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.github_release.outputs.matrix ) }}
+      matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix ) }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@9e8e834c8e054d626ee02e8fed289f6d5a3d9cfe # pin@0.10.1
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@9e8e834c8e054d626ee02e8fed289f6d5a3d9cfe # pin@0.10.1
       - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_REGION }}
-      - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # pin@v4.3.0
         with:
           key: release-${{ github.run_id }}
           path: .github_release_id
@@ -148,16 +170,18 @@ jobs:
           for suffix in $log_suffixes; do
             log="$CNAME/$CNAME.$suffix"
             if [ -f "$log" ]; then
-              echo "$log" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+              gl-gh upload --release_id "$release" --file_path "$log"
             fi
           done
 
   tag_container_as_latest:
-    if: inputs.type == 'patch'
+    if: ${{ inputs.type }} == 'minor'
     uses: ./.github/workflows/tag_latest_container.yml
     with:
       version: ${{ inputs.version }}
-      is_latest: ${{ inputs.is_latest }}
+      is_latest:  ${{ inputs.is_latest }}
+    permissions:
+      packages: write
   glrd:
     name: create GLRD release
     permissions:
@@ -167,13 +191,13 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # pin@v4
+      - uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_REGION }}
       - name: Create GLRD release
-        uses: gardenlinux/glrd@v3
+        uses: gardenlinux/glrd@v4
         with:
           cmd: |
             type=${{ inputs.type }}
@@ -181,20 +205,20 @@ jobs:
             version=${{ inputs.version }}
             major=$(echo ${version} | cut -d'.' -f1)
             minor=$(echo ${version} | cut -d'.' -f2)
-            if [ ${type} = "patch" ]; then
-              # check for stable version and create if missing
-              if ! glrd --no-header --type stable --version ${major} | grep ${major}; then
-                glrd-manage --s3-update --create stable --version ${major}
+            if [ ${type} = "minor" ]; then
+              # check for major version and create if missing
+              if ! glrd --no-header --type major --version ${major} | grep ${major}; then
+                glrd-manage --s3-update --create major --version ${major}
               fi
-              glrd-manage --s3-update --create patch --version ${version} --commit ${commit}
+              glrd-manage --s3-update --create minor --version ${version} --commit ${commit}
             elif [ ${type} = "dev" ]; then
               glrd-manage --s3-update --create dev --version ${version} --commit ${commit}
             fi
       - name: Get created GLRD release
-        uses: gardenlinux/glrd@v3
+        uses: gardenlinux/glrd@v4
         with:
           cmd: |
             version=${{ inputs.version }}
             major=$(echo ${version} | cut -d'.' -f1)
             minor=$(echo ${version} | cut -d'.' -f2)
-            glrd --type stable,patch,dev --version ${major}
+            glrd --type major,minor,dev --version ${major}

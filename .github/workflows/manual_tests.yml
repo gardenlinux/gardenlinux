@@ -8,11 +8,11 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Garden Linux version'
+        description: "Garden Linux version"
         type: string
         default: now
       target:
-        description: 'Garden Linux release target'
+        description: "Garden Linux release target"
         type: choice
         default: dev
         options:
@@ -20,31 +20,31 @@ on:
           - nightly
           - dev
       build:
-        description: 'Build for version specified in version input parameter instead of downloading it from S3.'
+        description: "Build for version specified in version input parameter instead of downloading it from S3."
         type: boolean
         default: false
       platform_test_tag:
         description: 'Tag to run platform-test containers. "latest" or GL version. Tag must be available in `ghcr.io/gardenlinux/gardenlinux/platform-test-*`'
         type: string
         default: latest
-      flavors_parse_params:
-        description: 'Run bin/flavors_parse.py with these parameters'
-        default: '--no-arch --json-by-arch --publish --test-platform'
+      flavors_parse_params_test:
+        description: "Run bin/flavors_parse.py with these parameters for tests"
+        default: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
         type: string
-      bare_flavors_parse_params:
-        description: 'Run bin/parse_flavors.py with these parameters for bare flavors'
+      flavors_parse_params_test_platform:
+        description: "Run bin/flavors_parse.py with these parameters for platform tests"
+        default: '--exclude "bare-*" --no-arch --json-by-arch --build --test-platform'
+        type: string
+      flavors_parse_params_test_bare:
+        description: "Run bin/parse_flavors.py with these parameters for bare flavors"
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
         type: string
-      chroot_test:
-        description: 'Execute chrooted tests'
-        type: boolean
-        default: true
-      platform_test:
-        description: 'Execute platform tests'
-        type: boolean
-        default: true
+      test_types:
+        description: "Types of tests to execute (comma-separated: chroot,qemu,cloud,oci). Note: oci tests only work when build=true"
+        type: string
+        default: "chroot,qemu,cloud,oci"
       ignore_workflow_concurrency:
-        description: 'Execute workflows concurrently'
+        description: "Execute workflows concurrently"
         type: boolean
         default: false
 jobs:
@@ -54,22 +54,26 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ inputs.version }}
-      flavors_parse_params: ${{ inputs.flavors_parse_params }}
+      flavors_parse_params_test: ${{ inputs.flavors_parse_params_test }}
       platform_test_tag: ${{ inputs.platform_test_tag }}
-      bare_flavors_parse_params: ${{ inputs.bare_flavors_parse_params }}
+      flavors_parse_params_test_bare: ${{ inputs.flavors_parse_params_test_bare }}
+    permissions:
+      actions: write # TODO: 3215 elevated permissions for included workflow
+      packages: write # TODO: 3215 elevated permissions for included workflow
+      id-token: write # TODO: 3215 elevated permissions for included workflow
   test:
     needs: build
     if: ${{ success() || failure() }}
     name: Test flavors built
     uses: ./.github/workflows/tests.yml
     with:
-      version: ${{ needs.build.outputs.version }}
       flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
-      chroot_test: ${{ inputs.chroot_test }}
-      platform_test: ${{ inputs.platform_test }}
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
+      test_types: ${{ inputs.test_types }}
     permissions:
-      id-token: write
+      id-token: write # TODO: 3215 elevated permissions for included workflow
+      actions: write # TODO: 3215 elevated permissions for included workflow
+      checks: write # Required for test_report job to write workflow summary
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -93,6 +97,8 @@ jobs:
       version: ${{ inputs.version }}
       use_glrd: true
       target: ${{ inputs.target }}
+    permissions:
+      actions: write # TODO: 3215 elevated permissions for included workflow
   download_store_flavor_version_data:
     name: Store flavor version data
     needs: download_build_requirements
@@ -100,6 +106,8 @@ jobs:
       run:
         shell: bash
     runs-on: ubuntu-24.04
+    permissions:
+      actions: write
     steps:
       - name: Prepare flavor version reference
         run: |
@@ -109,7 +117,7 @@ jobs:
           name: flavor-version-data
           path: flavor_version_data.json
           if-no-files-found: error
-  download_platform_test:
+  download_platform_test_images:
     needs: download_build_requirements
     name: Download platform-test image
     uses: ./.github/workflows/build_platform_test_images.yml
@@ -118,14 +126,21 @@ jobs:
       build: false
       platforms: '["tofu"]'
       platform_test_tag: ${{ inputs.platform_test_tag || 'nightly' }}
+    permissions:
+      actions: write # TODO: 3215 elevated permissions for included workflow
+      packages: write # TODO: 3215 elevated permissions for included workflow
+  test_distribution_build:
+    needs: download_build_requirements
+    name: Build and Cache Test Distribution
+    uses: ./.github/workflows/build_test_dist.yml
   download_platform_test_flavors_matrix:
     needs: download_build_requirements
     name: Generate flavors matrix to test
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
-      flags: ${{ inputs.flavors_parse_params }}
+      flags: ${{ inputs.flavors_parse_params_test }}
   download_platform_test_flavors:
-    needs: [ download_build_requirements, download_platform_test_flavors_matrix ]
+    needs: [download_build_requirements, download_platform_test_flavors_matrix]
     name: Download flavors to test
     uses: ./.github/workflows/download_flavors_images.yml
     with:
@@ -134,27 +149,31 @@ jobs:
       flavors_matrix: ${{ needs.download_platform_test_flavors_matrix.outputs.matrix }}
     permissions:
       id-token: write
+      actions: write
     secrets:
       aws_role: ${{ secrets.AWS_TESTS_IAM_ROLE }}
       aws_session: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
       aws_region: ${{ secrets.AWS_TESTS_REGION }}
       aws_s3_bucket: ${{ secrets.AWS_S3_BUCKET }}
   test_download_platform_test:
-    needs: [
-      download_build_requirements,
-      download_platform_test,
-      download_platform_test_flavors_matrix,
-      download_platform_test_flavors
-    ]
+    needs:
+      [
+        download_build_requirements,
+        download_platform_test_images,
+        test_distribution_build,
+        download_platform_test_flavors_matrix,
+        download_platform_test_flavors,
+      ]
     name: Test flavors downloaded
     uses: ./.github/workflows/tests.yml
     with:
-      version: ${{ needs.download_build_requirements.outputs.version }}
       flavors_matrix: ${{ needs.download_platform_test_flavors_matrix.outputs.matrix }}
-      chroot_test: ${{ inputs.chroot_test }}
-      platform_test: ${{ inputs.platform_test }}
+      test_types: ${{ inputs.test_types }}
+      bare_flavors_matrix: '{"include":[]}'
     permissions:
-      id-token: write
+      id-token: write # TODO: 3215 elevated permissions for included workflow
+      actions: write # TODO: 3215 elevated permissions for included workflow
+      checks: write # Required for test_report job to write workflow summary
     secrets:
       gcp_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       gcp_service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}

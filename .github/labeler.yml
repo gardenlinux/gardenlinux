@@ -100,12 +100,6 @@ ali-platform:
     - 'features/ali/**'
     - 'tests/platformSetup/ali.py'
 
-firecracker-platform:
-- changed-files:
-  - any-glob-to-any-file:
-    - 'features/firecracker/**'
-    - 'tests/platformSetup/firecracker.py'
-
 kvm-platform:
 - changed-files:
   - any-glob-to-any-file:

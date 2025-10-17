@@ -60,14 +60,14 @@ resource "alicloud_oss_bucket_acl" "images_acl" {
 
   # depends_on = [alicloud_oss_bucket_ownership_controls.images_owner.0]
 
-  bucket = alicloud_oss_bucket.images.0.id
+  bucket = alicloud_oss_bucket.images.0.bucket
   acl    = "private"
 }
 
 # resource "alicloud_oss_bucket_policy" "images_policy" {
 #   count = local.image_source_type == "file" ? 1 : 0
 #
-#   bucket = alicloud_oss_bucket.images.id
+#   bucket = alicloud_oss_bucket.images.bucket
 #   policy    = <<POLICY
 # {
 #   "Version": "1",
@@ -95,7 +95,7 @@ resource "alicloud_oss_bucket_acl" "images_acl" {
 resource "alicloud_oss_bucket_public_access_block" "no_public_access" {
   count = local.image_source_type == "file" ? 1 : 0
 
-  bucket = alicloud_oss_bucket.images.0.id
+  bucket = alicloud_oss_bucket.images.0.bucket
 
   block_public_access = true
 }
@@ -103,7 +103,7 @@ resource "alicloud_oss_bucket_public_access_block" "no_public_access" {
 resource "alicloud_oss_bucket_server_side_encryption" "images_encryption" {
   count = local.image_source_type == "file" ? 1 : 0
 
-  bucket        = alicloud_oss_bucket.images.0.id
+  bucket        = alicloud_oss_bucket.images.0.bucket
   sse_algorithm = "AES256"
 }
 
@@ -141,7 +141,7 @@ resource "alicloud_vswitch" "subnet" {
 }
 
 resource "alicloud_security_group" "sg" {
-  name   = local.fw_name
+  security_group_name = local.fw_name
   vpc_id = alicloud_vpc.net.id
 
   tags = merge(
@@ -165,7 +165,7 @@ resource "alicloud_security_group_rule" "sg-rule" {
 resource "alicloud_oss_bucket_object" "image" {
   count = local.image_source_type == "file" ? 1 : 0
 
-  bucket = alicloud_oss_bucket.images.0.id
+  bucket = alicloud_oss_bucket.images.0.bucket
   key    = local.image_name
   source = local.image
 }

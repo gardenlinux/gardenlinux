@@ -1,0 +1,69 @@
+name: test_flavor
+on:
+  workflow_call:
+    inputs:
+      arch:
+        type: string
+        default: "amd64"
+      flavor:
+        type: string
+        required: true
+jobs:
+  test:
+    name: Test-NG flavor in chroot ${{ inputs.flavor }} (${{ inputs.arch }})
+    runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    env:
+      CNAME: ""
+    permissions:
+      actions: write
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+        with:
+          submodules: true
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # pin@v4.3.0
+        with:
+          path: |
+            COMMIT
+            VERSION
+          key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
+          fail-on-cache-miss: true
+      - name: Download test distribution artifact
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        with:
+          name: test-distribution
+          path: tests-ng/.build
+      - name: Determine CNAME
+        id: cname
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@02879bd567ed39b5610332afcc6e46197073db0c # pin@0.10.0
+        with:
+          flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
+      - name: Set CNAME
+        run: |
+          echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
+      - name: Load flavor build artifact
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        with:
+          name: build-${{ inputs.flavor }}-${{ inputs.arch }}
+      - name: New Test Framework
+        run: |
+          mkdir ".build"
+          tar -C .build -xzf "${CNAME}.tar.gz"
+          rm "${CNAME}.tar.gz"
+          ./test-ng ".build/${CNAME}.tar"
+      - name: Copy test results to build directory
+        if: always()
+        run: |
+          cp tests-ng/log/chroot.test-ng.log .build/${CNAME}.chroot.test-ng.log || true
+          cp tests-ng/log/chroot.test-ng.xml .build/${CNAME}.chroot.test-ng.xml || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+        if: always()
+        with:
+          if-no-files-found: ignore
+          name: chroot-test-ng-${{ env.CNAME }}
+          path: |
+            .build/${{ env.CNAME }}.chroot.test-ng.log
+            .build/${{ env.CNAME }}.chroot.test-ng.xml

@@ -17,6 +17,8 @@ image_name=${image_basename/.*/}
 workspace="$image_name"
 
 tf_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/tf")"
+tofuenv_dir="$tf_dir/.tofuenv"
+PATH="$tofuenv_dir/bin:$PATH"
 
 vm_ip="$(cd "$tf_dir" && tofu workspace select "$workspace" >/dev/null && tofu output --raw vm_ip)"
 ssh_user="$(cd "$tf_dir" && tofu workspace select "$workspace" >/dev/null && tofu output --raw ssh_user)"

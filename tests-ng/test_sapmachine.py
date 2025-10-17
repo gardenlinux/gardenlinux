@@ -1,14 +1,14 @@
 import pytest
-from plugins.dpkg import Dpkg
 from plugins.apt import Apt
+from plugins.dpkg import Dpkg
 from plugins.shell import ShellRunner
 
 
 @pytest.mark.feature("sapmachine")
 def test_sapmachine_is_installed(dpkg: Dpkg):
     assert dpkg.package_is_installed(
-        "sapmachine-21-jre-headless"
-    ), "sapmachine-21-jre-headless package is not installed"
+        "sapmachine-25-jre-headless"
+    ), "sapmachine-25-jre-headless package is not installed"
 
 
 @pytest.mark.feature("sapmachine")
@@ -20,4 +20,6 @@ def test_java_version_command(shell: ShellRunner):
 @pytest.mark.feature("sapmachine")
 def test_sapmachine_apt_repo_is_installed(apt: Apt):
     repos = apt.list_repos()
-    assert any('sapmachine' in repo for repo in repos), "No apt repo containing 'sapmachine' found"
+    assert any(
+        "sapmachine" in repo for repo in repos
+    ), "No apt repo containing 'sapmachine' found"
