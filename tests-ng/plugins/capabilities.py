@@ -12,7 +12,7 @@ class Capabilities:
     def list(self) -> list[str]:
         capabilities = []
 
-        self._find.same_mnt_only = False
+        self._find.same_mnt_only = True
         self._find.root_paths = ["/boot", "/etc", "/usr", "/var"]
         self._find.entry_type = FIND_RESULT_TYPE_FILE
 
