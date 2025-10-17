@@ -159,6 +159,8 @@ jobs:
           gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --cname "$CNAME" --path "$CNAME" download-artifacts-from-bucket
           tar -cJf "$CNAME.tar.xz" -C "$CNAME" .
       - name: Upload to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           release="$(cat .github_release_id)"
 
