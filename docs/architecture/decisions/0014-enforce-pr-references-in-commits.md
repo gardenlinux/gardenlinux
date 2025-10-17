@@ -1,4 +1,4 @@
-# 14. Allowed Merge Types for Garden Linux
+# 14. Enforce Pull Request References in git Commit History
 
 Date: 2025-10-17
 
