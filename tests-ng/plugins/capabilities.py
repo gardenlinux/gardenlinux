@@ -13,15 +13,14 @@ class Capabilities:
         capabilities = []
 
         self._find.same_mnt_only = False
-        self._find.root_path = "/"
+        self._find.root_paths = ["/boot", "/etc", "/usr", "/var"]
         self._find.entry_type = FIND_RESULT_TYPE_FILE
 
-        for f in self._find:
-            print(f)
-            c = self._shell(f"/usr/sbin/getcap {f}", capture_output=True).stdout.strip()
+        for file in self._find:
+            capability = self._shell(f"/usr/sbin/getcap {file}", capture_output=True).stdout.strip()
 
-            if c:
-                capabilities.append(c)
+            if capability:
+                capabilities.append(capability)
 
         return capabilities
 
