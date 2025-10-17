@@ -79,7 +79,7 @@ jobs:
           path: cert/
       - name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@9e8e834c8e054d626ee02e8fed289f6d5a3d9cfe # pin@0.10.1
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@2c47ca58891eefa3587954fadf59153317ad9e0c # pin@0.10.2
         with:
           flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
       - name: Set CNAME
