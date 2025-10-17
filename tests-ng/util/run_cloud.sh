@@ -58,10 +58,11 @@ image="$2"
 image_basename="$(basename -- "$image")"
 image_name=${image_basename/.*/}
 user_data_script=
-tf_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/tf")"
-login_cloud_sh="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/login_cloud.sh")"
+util_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")")"
+tf_dir="$util_dir/tf"
+login_cloud_sh="$util_dir/login_cloud.sh"
 
-log_dir="$test_dist_dir/../log"
+log_dir="$util_dir/../log"
 log_file_log="cloud.test-ng.log"
 log_file_junit="cloud.test-ng.xml"
 
@@ -162,10 +163,10 @@ if [ ! -f "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" ] || ! sha256sum
 	chmod +x "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm"
 fi
 
-ssh_private_key_path="$HOME/.ssh/id_ed25519_gl"
-if [ ! -f "$ssh_private_key_path" ]; then
-	mkdir -p "$(dirname "$ssh_private_key_path")"
-	ssh-keygen -t ed25519 -f "$ssh_private_key_path" -N "" >/dev/null
+ssh_private_key="$util_dir/../.ssh/id_ed25519_gl"
+if [ ! -f "$ssh_private_key" ]; then
+	mkdir -p "$(dirname "$ssh_private_key")"
+	ssh-keygen -t ed25519 -f "$ssh_private_key" -N "" >/dev/null
 fi
 
 user_data_script="$(mktemp)"
@@ -198,6 +199,7 @@ fi
 cat >"${tf_dir}/$image_name.tfvars" <<EOF
 root_disk_path        = "$root_disk_path_var"
 test_disk_path        = "$(realpath -- "$test_dist_dir/dist.ext2.raw")"
+ssh_public_key_path   = "$ssh_private_key.pub"
 user_data_script_path = "$user_data_script"
 existing_root_disk    = "$existing_root_disk_var"
 
