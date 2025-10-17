@@ -18,12 +18,15 @@ class Capabilities:
         self._find.entry_type = FIND_RESULT_TYPE_FILE
 
         for file in self._find:
-            capability = self._shell(
-                f"/usr/sbin/getcap {file}", capture_output=True
-            ).stdout.strip()
+            try:
+                capability = self._shell(
+                    f"/usr/sbin/getcap {file}", capture_output=True
+                ).stdout.strip()
 
-            if capability:
-                capabilities.append(capability)
+                if capability:
+                    capabilities.append(capability)
+            except Exception as e:
+                print(f"WARNING: Could not get capability of {file} with error {e}")
 
         return capabilities
 
