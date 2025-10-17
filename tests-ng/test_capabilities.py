@@ -1,5 +1,4 @@
 import pytest
-
 from plugins.capabilities import Capabilities
 
 # There are two debian packages that provide an 'arping' binary

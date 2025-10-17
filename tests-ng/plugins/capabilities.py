@@ -1,7 +1,8 @@
-from pyprctl import FileCaps
 import pytest
+from pyprctl import FileCaps
+
+from .find import FIND_RESULT_TYPE_FILE, Find
 from .shell import ShellRunner
-from .find import Find, FIND_RESULT_TYPE_FILE
 
 
 class Capabilities:
@@ -17,12 +18,15 @@ class Capabilities:
         self._find.entry_type = FIND_RESULT_TYPE_FILE
 
         for file in self._find:
-            capability = self._shell(f"/usr/sbin/getcap {file}", capture_output=True).stdout.strip()
+            capability = self._shell(
+                f"/usr/sbin/getcap {file}", capture_output=True
+            ).stdout.strip()
 
             if capability:
                 capabilities.append(capability)
 
         return capabilities
+
 
 @pytest.fixture
 def capabilities(find: Find, shell: ShellRunner) -> Capabilities:

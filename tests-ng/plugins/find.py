@@ -1,10 +1,11 @@
-import pytest
 import os
-from typing import Iterator, Optional, Union, TypeVar
+from typing import Iterator, Optional, TypeVar, Union
 
-FIND_RESULT_TYPE_FILE = TypeVar('file')
-FIND_RESULT_TYPE_DIR = TypeVar('dir')
-FIND_RESULT_TYPE_FILE_AND_DIR = TypeVar('all')
+import pytest
+
+FIND_RESULT_TYPE_FILE = TypeVar("file")
+FIND_RESULT_TYPE_DIR = TypeVar("dir")
+FIND_RESULT_TYPE_FILE_AND_DIR = TypeVar("all")
 
 
 class Find:
@@ -21,8 +22,10 @@ class Find:
                 Specifies the type of entries to search for (files, directories, or both).
         """
         self.same_mnt_only: bool = False
-        self.root_paths: Union[str, list[str]] = '/'
-        self.entry_type: Union[FIND_RESULT_TYPE_FILE, FIND_RESULT_TYPE_DIR, FIND_RESULT_TYPE_FILE_AND_DIR] = FIND_RESULT_TYPE_FILE
+        self.root_paths: Union[str, list[str]] = "/"
+        self.entry_type: Union[
+            FIND_RESULT_TYPE_FILE, FIND_RESULT_TYPE_DIR, FIND_RESULT_TYPE_FILE_AND_DIR
+        ] = FIND_RESULT_TYPE_FILE
 
     def __iter__(self) -> Iterator[str]:
         return iter(list(self._find()))
@@ -36,18 +39,25 @@ class Find:
         for root_path in root_paths:
             root_dev = os.stat(root_path).st_dev
             for dirpath, dirnames, filenames in os.walk(root_path):
-                if self.entry_type in (FIND_RESULT_TYPE_DIR, FIND_RESULT_TYPE_FILE_AND_DIR):
+                if self.entry_type in (
+                    FIND_RESULT_TYPE_DIR,
+                    FIND_RESULT_TYPE_FILE_AND_DIR,
+                ):
                     for dirname in dirnames:
                         full_path = os.path.join(dirpath, dirname)
                         if self.same_mnt_only and os.stat(full_path).st_dev != root_dev:
                             continue
                         yield full_path
-            if self.entry_type in (FIND_RESULT_TYPE_FILE, FIND_RESULT_TYPE_FILE_AND_DIR):
+            if self.entry_type in (
+                FIND_RESULT_TYPE_FILE,
+                FIND_RESULT_TYPE_FILE_AND_DIR,
+            ):
                 for filename in filenames:
                     full_path = os.path.join(dirpath, filename)
                     if self.same_mnt_only and os.stat(full_path).st_dev != root_dev:
                         continue
                     yield full_path
+
 
 @pytest.fixture
 def find() -> Find:
