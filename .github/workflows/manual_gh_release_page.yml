@@ -82,17 +82,17 @@ jobs:
             flavors.yaml
           sparse-checkout-cone-mode: false
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@9e8e834c8e054d626ee02e8fed289f6d5a3d9cfe # pin@0.10.1
       - id: matrix
         name: Generate flavors matrix
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@9e8e834c8e054d626ee02e8fed289f6d5a3d9cfe # pin@0.10.1
         with:
           flags: "--no-arch --json-by-arch --publish"
       - name: create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python3 -m gardenlinux.release_note create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
+          gl-gh create --tag ${{ inputs.version }} --commit ${{ inputs.commit }}
       - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # pin@v4.2.3
         with:
           key: release-${{ github.run_id }}
@@ -115,7 +115,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@033901ecf380b9241117778ca6c369567a09494b # pin@0.8.9
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@9e8e834c8e054d626ee02e8fed289f6d5a3d9cfe # pin@0.10.1
       - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
@@ -153,7 +153,7 @@ jobs:
           done
 
   tag_container_as_latest:
-    if: ${{ inputs.type }} == 'patch'
+    if: inputs.type == 'patch'
     uses: ./.github/workflows/tag_latest_container.yml
     with:
       version: ${{ inputs.version }}
