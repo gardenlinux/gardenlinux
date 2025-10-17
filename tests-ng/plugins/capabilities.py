@@ -1,5 +1,4 @@
 import pytest
-from pyprctl import FileCaps
 
 from .find import FIND_RESULT_TYPE_FILE, Find
 from .shell import ShellRunner
