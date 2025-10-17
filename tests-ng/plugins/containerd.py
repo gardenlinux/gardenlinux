@@ -18,7 +18,11 @@ class CtrRunner:
 
     def pull_image(self, uri, capture_output=False, ignore_exit_code=False):
         validators.url(uri)
-        command = f"ctr image pull --plain-http {uri}"
+        command = (
+            f"ctr image pull --plain-http {uri}"
+            if uri.startswith("localhost")
+            else f"ctr image pull {uri}"
+        )
         return self.shell(
             command, capture_output=capture_output, ignore_exit_code=ignore_exit_code
         )
