@@ -31,6 +31,9 @@ if [ -n "$test_dirs" ]; then
 	echo "$test_dirs" | xargs -I {} cp -r {} "$tmpdir/dist/tests/"
 fi
 
+cp .build/busybox_amd64.tar "$tmpdir/dist/tests/plugins/"
+cp .build/busybox_arm64.tar "$tmpdir/dist/tests/plugins/"
+
 cat >"$tmpdir/dist/run_tests" <<'EOF'
 #!/bin/sh
 
