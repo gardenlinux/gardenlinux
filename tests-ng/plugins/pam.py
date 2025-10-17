@@ -51,7 +51,7 @@ class PamEntry:
         Example:
             '[success=1 default=ignore] [user_unknown=ignore]' -> {'success': '1', 'default': 'ignore', 'user_unknown': 'ignore'}
 
-        Handles escaped brackets (\]) as literals.
+        Handles escaped brackets (\\]) as literals.
         If control is a simple token (e.g. 'required'), return {}
         """
         result: Dict[str, str] = {}

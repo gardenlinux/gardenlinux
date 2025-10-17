@@ -70,6 +70,8 @@ Before running the test framework, make sure the following dependencies are inst
 - `unzip`
 - `qemu`
 - `qemu-utils`
+- `socat`
+- `retry`
 
 If you plan to provision cloud resources, the cloud provider specific CLIs might be useful or even required:
 
@@ -83,7 +85,7 @@ If you plan to provision cloud resources, the cloud provider specific CLIs might
 
 ```
 apt-get update
-apt-get install podman make curl jq libxml2-utils unzip qemu swtpm socat
+apt-get install podman make curl jq libxml2-utils unzip qemu swtpm socat retry
 # install cloud provider CLIs
 apt-get install azure-cli awscli openstackclient # for GCP and ALI look at tip
 ```
@@ -99,7 +101,7 @@ apt-get install azure-cli awscli openstackclient # for GCP and ALI look at tip
 #### Install on MacOS
 
 ```
-brew install coreutils bash gnu-sed gnu-getopt podman make curl jq libxml2 unzip swtpm socat
+brew install coreutils bash gnu-sed gnu-getopt podman make curl jq libxml2 unzip swtpm socat retry gnupg
 # install cloud provider CLIs
 brew install azure-cli awscli gcloud-cli aliyun-cli openstackclient
 ```

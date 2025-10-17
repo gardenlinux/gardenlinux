@@ -59,10 +59,6 @@ jobs:
         run: |
           cp tests-ng/log/chroot.test-ng.log .build/${CNAME}.chroot.test-ng.log || true
           cp tests-ng/log/chroot.test-ng.xml .build/${CNAME}.chroot.test-ng.xml || true
-      - uses: pmeier/pytest-results-action@20b595761ba9bf89e115e875f8bc863f913bc8ad # pin@v0.7.2
-        if: always()
-        with:
-          path: ".build/${{ env.CNAME }}.chroot.test-ng.xml"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
         if: always()
         with:

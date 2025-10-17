@@ -1,23 +1,24 @@
-import pytest
-import subprocess
-from plugins.shell import ShellRunner
-from handlers.configure_nvme import nvme_device
-import os
 import json
+import os
+import subprocess
 from pathlib import Path
 
-module = [ 
-    "nvme-tcp" 
-    ]
+import pytest
+from handlers.configure_nvme import nvme_device
+from plugins.shell import ShellRunner
+
+module = ["nvme-tcp"]
+
 
 @pytest.mark.booted
 @pytest.mark.root
 @pytest.mark.feature("nvme")
 @pytest.mark.parametrize("module_name", module)
 def test_kernel_module_availability(module_name, shell: ShellRunner):
-    assert shell(f"modinfo {module_name}", 
-        capture_output=True, ignore_exit_code=True), (
-        f"Module not found {module_name}")
+    assert shell(
+        f"modinfo {module_name}", capture_output=True, ignore_exit_code=True
+    ), f"Module not found {module_name}"
+
 
 @pytest.mark.booted
 @pytest.mark.root

@@ -1,0 +1,41 @@
+name: download_flavor_version_data
+on:
+  workflow_call:
+    inputs:
+      run_id:
+        type: string
+        required: true
+    outputs:
+      run_id:
+        value: ${{ inputs.run_id }}
+      commit_id:
+        value: ${{ jobs.flavor_version_data.outputs.commit_id }}
+      version:
+        value: ${{ jobs.flavor_version_data.outputs.version }}
+jobs:
+  flavor_version_data:
+    name: Download flavor version data from trigger (${{ inputs.run_id }})
+    runs-on: ubuntu-24.04
+    outputs:
+      commit_id: ${{ steps.data.outputs.commit_id }}
+      version: ${{ steps.data.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        with:
+          name: flavor-version-data
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - name: Set flavor version data
+        uses: actions/github-script@v8
+        id: data
+        with:
+          script: |
+            const fs = await import("fs");
+
+            fs.accessSync("flavor_version_data.json", (fs.constants.F_OK | fs.constants.R_OK));
+            flavorVersionData = JSON.parse(fs.readFileSync("flavor_version_data.json"));
+
+            core.setOutput("commit_id", flavorVersionData.commit_id);
+            core.setOutput("version", flavorVersionData.version);
+
+            return true;

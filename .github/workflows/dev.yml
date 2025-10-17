@@ -32,7 +32,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ needs.set_version.outputs.version }}
-      fail_fast: true
+      fail_fast: false
     permissions:
       id-token: write # TODO: 3215 elevated permissions for included workflow
       actions: write  # TODO: 3215 elevated permissions for included workflow
@@ -48,4 +48,5 @@ jobs:
       test_types: "chroot,qemu,oci"
     permissions:
       id-token: write # TODO: 3215 elevated permissions for included workflow
-      actions: write  # TODO: 3215 elevated permissions for included workflow
+      actions: write # TODO: 3215 elevated permissions for included workflow
+      checks: write # Required for test_report job to write workflow summary
