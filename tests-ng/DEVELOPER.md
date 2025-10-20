@@ -5,9 +5,9 @@ This document provides comprehensive guidelines for developing and maintaining t
 ## Table of Contents
 
 - [Test Development Principles](#test-development-principles)
+- [Framework Structure](#framework-structure)
 - [Test Organization and Naming](#test-organization-and-naming)
 - [Test Writing Best Practices](#test-writing-best-practices)
-- [Framework Structure](#framework-structure)
 - [Markers and Test Configuration](#markers-and-test-configuration)
 - [Python Best Practices](#python-best-practices)
 - [External Dependencies](#external-dependencies)
@@ -61,6 +61,46 @@ The following principles guide all test development in Garden Linux:
   - Prefer Python standard library over third-party packages
   - Only add PyPI dependencies when there's clear benefit
   - Document why external dependencies are necessary
+
+## Framework Structure
+
+### How Tests, Plugins, and Handlers Connect
+
+The framework uses pytest's plugin system to automatically register fixtures:
+
+1. **Plugins** (`tests-ng/plugins/`) - Provide fixtures for system access
+2. **Handlers** (`tests-ng/handlers/`) - Provide fixtures for setup/teardown
+3. **Tests** (`tests-ng/test_*.py`) - Use fixtures via dependency injection
+
+**Registration**: All plugins are automatically registered as pytest fixtures via `conftest.py`
+
+### Plugins (`tests-ng/plugins/`)
+
+Plugins are pytest fixtures that handle infrastructure concerns and system interactions:
+
+- **Purpose**: Provide clean APIs for system access (file parsing, service management, etc.)
+- **Usage**: Provide pytest fixtures that can be injected into test functions
+- **Examples**: `Systemd`, `Sshd`, `ShellRunner`, `KernelModule`
+- **Guideline**: Handle "how to access" not "what to test"
+
+### Handlers (`tests-ng/handlers/`)
+
+Handlers are pytest fixtures that manage test setup and teardown:
+
+- **Purpose**: Setup/teardown of test state (connections, services, environments)
+- **Pattern**: Yield fixtures that prepare resources and explicitly clean up after tests
+- **Usage**: Used as pytest fixtures with `yield` for cleanup
+- **Examples**: `service_ssh`, `service_containerd`
+
+**Key distinction**: Unlike regular fixtures that provide data, handlers manage stateful resources that need explicit cleanup.
+
+### Utils (`tests-ng/plugins/utils.py`)
+
+Utility functions provide reusable functionality:
+
+- **Purpose**: Helper functions not used directly in tests
+- **Usage**: Used by plugins and handlers
+- **Examples**: `equals_ignore_case`, `parse_etc_file`
 
 ## Test Organization and Naming
 
@@ -228,102 +268,6 @@ def test_shell_command_execution(shell: ShellRunner):
 def test_service_status(shell: ShellRunner):
     result = shell("systemctl is-active ssh")
     assert result.stdout.strip() == "active", "SSH service is not running"
-```
-
-## Framework Structure
-
-### How Tests, Plugins, and Handlers Connect
-
-The framework uses pytest's plugin system to automatically register fixtures:
-
-1. **Plugins** (`tests-ng/plugins/`) - Provide fixtures for system access
-2. **Handlers** (`tests-ng/handlers/`) - Provide fixtures for setup/teardown
-3. **Tests** (`tests-ng/test_*.py`) - Use fixtures via dependency injection
-
-**Registration**: All plugins are automatically registered as pytest fixtures via `conftest.py`
-
-### Plugins (`tests-ng/plugins/`)
-
-Plugins handle infrastructure concerns and system interactions:
-
-- **Purpose**: Provide clean APIs for system access (file parsing, service management, etc.)
-- **Usage**: Provide pytest fixtures that can be injected into test functions
-- **Examples**: `Systemd`, `Sshd`, `ShellRunner`, `KernelModule`
-- **Guideline**: Handle "how to access" not "what to test"
-
-```python
-# Example plugin usage - fixtures injected into test functions
-def test_systemd_unit(systemd: Systemd):
-    assert systemd.is_active("ssh"), "SSH service is not running"
-
-def test_ssh_config(sshd: Sshd):
-    config_value = sshd.get_config_section("PermitRootLogin")
-    assert config_value == "No", f"Expected 'No', got '{config_value}'"
-```
-
-### Handlers (`tests-ng/handlers/`)
-
-Handlers are pytest fixtures that manage test setup and teardown:
-
-- **Purpose**: Setup/teardown of test state (connections, services, environments)
-- **Pattern**: Yield fixtures that prepare resources and explicitly clean up after tests
-- **Usage**: Used as pytest fixtures with `yield` for cleanup
-- **Examples**: `service_ssh`, `service_containerd`
-
-**Key distinction**: Unlike regular fixtures that provide data, handlers manage stateful resources that need explicit cleanup.
-
-```python
-# Example handler usage - setup/teardown pattern
-@pytest.fixture
-def service_ssh(systemd: Systemd):
-    """Fixture for SSH service management with cleanup."""
-    service_active_initially = systemd.is_active("ssh")
-
-    if not service_active_initially:
-        systemd.start_unit("ssh")
-
-    yield "ssh"  # Provide service name to test
-
-    # Cleanup: restore original state
-    if not service_active_initially:
-        systemd.stop_unit("ssh")
-```
-
-### Test Integration Example
-
-Here's how tests use both plugins and handlers together:
-
-```python
-# In test_ssh.py
-import pytest
-from handlers.services import service_ssh  # Handler fixture
-from plugins.sshd import Sshd             # Plugin fixture
-from plugins.systemd import Systemd       # Plugin fixture
-
-@pytest.mark.booted(reason="SSH tests require running system")
-def test_ssh_service_running(service_ssh, systemd: Systemd):
-    """Test that SSH service is running after handler setup."""
-    assert systemd.is_active("ssh"), "SSH service is not running"
-
-def test_ssh_config_values(sshd: Sshd):
-    """Test SSH configuration using plugin fixture."""
-    config_value = sshd.get_config_section("PermitRootLogin")
-    assert config_value == "No", f"Expected 'No', got '{config_value}'"
-```
-
-### Utils (`tests-ng/plugins/utils.py`)
-
-Utility functions provide reusable functionality:
-
-- **Purpose**: Helper functions not used directly in tests
-- **Usage**: Used by plugins and handlers
-- **Examples**: `equals_ignore_case`, `parse_etc_file`
-
-```python
-# Example utility usage in plugin
-def get_config_section(self, section: str):
-    # Uses utils internally
-    return parse_etc_file(self.config_path, [section])
 ```
 
 ## Markers and Test Configuration
