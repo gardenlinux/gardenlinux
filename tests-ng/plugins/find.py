@@ -44,8 +44,13 @@ class Find:
                 ):
                     for dirname in dirnames:
                         full_path = os.path.join(dirpath, dirname)
-                        if self.same_mnt_only and os.stat(full_path).st_dev != root_dev:
-                            continue
+                        if self.same_mnt_only:
+                            try:
+                                if os.stat(full_path).st_dev != root_dev:
+                                    continue
+                            # Skip dead symlinks
+                            except FileNotFoundError:
+                                continue
                         yield full_path
 
                 if self.entry_type in (
@@ -54,8 +59,13 @@ class Find:
                 ):
                     for filename in filenames:
                         full_path = os.path.join(dirpath, filename)
-                        if self.same_mnt_only and os.stat(full_path).st_dev != root_dev:
-                            continue
+                        if self.same_mnt_only:
+                            try:
+                                if os.stat(full_path).st_dev != root_dev:
+                                    continue
+                            # Skip dead symlinks
+                            except FileNotFoundError:
+                                continue
                         yield full_path
 
 
