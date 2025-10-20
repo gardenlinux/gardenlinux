@@ -384,15 +384,27 @@ def test_startup_time(systemd: Systemd):
 
 ### Parametrization
 
-Use `@pytest.mark.parametrize` for testing multiple scenarios:
+Use `@pytest.mark.parametrize` to avoid repetitive, nearly identical tests where the differences can naturally be expressed via parameters. However, don't overuse parametrization or strive for ultra-generic test functions at the expense of clarity. If extracting a parameter makes the test clearer and avoids straightforward duplication, use it. But a small amount of code duplication is perfectly acceptable in tests if it keeps things readable and concrete.
+
+**Yes – good use of parametrization:**
 
 ```python
-@pytest.mark.parametrize("sshd_config_item", required_sshd_config)
-def test_sshd_has_required_config(sshd_config_item: str, sshd: Sshd):
-    actual_value = sshd.get_config_section(sshd_config_item)
-    expected_value = required_sshd_config[sshd_config_item]
-    # Test implementation
+@pytest.mark.parametrize("username", ["alice", "bob", "peter"])
+def test_home_directory_exists(username):
+    home = Path(f"/home/{username}")
+    assert home.exists(), f"Missing home for {username}"
 ```
+
+**No – avoid excessive abstraction for unclear wins:**
+
+```python
+# This is too abstract—each "case" has different logic, result, or context.
+@pytest.mark.parametrize("input_val,expected", [(1, True), ("foo", False), ([], Exception)])
+def test_weird_cases(input_val, expected):
+    # ...too much unrelated logic for one test
+```
+
+**Guideline:** Prefer clarity and intent over DRY-ness in tests. Parametrize when it makes tests simpler, not just shorter.
 
 ### Missing Markers (TODO)
 
