@@ -175,7 +175,7 @@ def service_ssh(systemd: Systemd):
     if not service_active_initially:
         systemd.start_unit("ssh")
 
-    yield "ssh"  # Provide service name to test
+    yield "ssh"  # This returns "ssh" to the test as the fixture's value. This can be use to parametrize tests.
 
     # Cleanup: restore original state
     if not service_active_initially:
