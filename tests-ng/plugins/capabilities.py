@@ -1,4 +1,5 @@
 import pytest
+from pyprctl import FileCaps
 
 from .find import FIND_RESULT_TYPE_FILE, Find
 from .shell import ShellRunner
@@ -18,14 +19,14 @@ class Capabilities:
 
         for file in self._find:
             try:
-                capability = self._shell(
-                    f"/usr/sbin/getcap {file}", capture_output=True
-                ).stdout.strip()
+                capability = FileCaps.get_for_file(file)
+            except OSError:
+                # Skip files without capability xattr or unreadable entries
+                continue
 
-                if capability:
-                    capabilities.append(capability)
-            except Exception as e:
-                print(f"WARNING: Could not get capability of {file} with error {e}")
+            if capability:
+                # getcap style output
+                capabilities.append(f"{file} {str(capability)}")
 
         return capabilities
 
