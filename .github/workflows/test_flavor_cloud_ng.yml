@@ -41,6 +41,7 @@ jobs:
   test:
     name: Test-NG flavor in Cloud ${{ inputs.flavor }} (${{ inputs.arch }})
     runs-on: "ubuntu-24.04"
+    if: ${{ inputs.flavor != 'skip' }}
     # timeout-minutes: 30
     environment: oidc_platform_tests
     defaults:

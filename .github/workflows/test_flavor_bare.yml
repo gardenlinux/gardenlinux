@@ -12,6 +12,7 @@ jobs:
   test:
     name: Test flavor in OCI Bare ${{ inputs.flavor }} (${{ inputs.arch }})
     runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    if: ${{ inputs.flavor != 'skip' }}
     defaults:
       run:
         shell: bash
