@@ -112,6 +112,8 @@ jobs:
 
               if (isEnabled) {
                 core.setOutput("chroot_test_flavors_matrix", matrix);
+              } else {
+                core.setOutput("chroot_test_flavors_matrix", '{"include":[]}');
               }
             }
 
@@ -127,6 +129,8 @@ jobs:
 
               if (isEnabled) {
                 core.setOutput("qemu_test_flavors_matrix", matrix);
+              } else {
+                core.setOutput("qemu_test_flavors_matrix", '{"include":[]}');
               }
             }
 
@@ -142,6 +146,8 @@ jobs:
 
               if (isEnabled) {
                 core.setOutput("platform_test_flavors_matrix", matrix);
+              } else {
+                core.setOutput("platform_test_flavors_matrix", '{"include":[]}');
               }
             }
 
@@ -157,6 +163,8 @@ jobs:
 
               if (isEnabled) {
                 core.setOutput("bare_flavors_matrix", matrix);
+              } else {
+                core.setOutput("bare_flavors_matrix", '{"include":[]}');
               }
             }
   ## test-ng start
