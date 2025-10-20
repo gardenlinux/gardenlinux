@@ -5,6 +5,8 @@ import pytest
 
 booleanAlgebra = boolean.BooleanAlgebra()
 
+features = set([])
+
 with open("/etc/os-release") as os_release:
     for line in os_release:
         (key, value) = line.split("=", 1)
