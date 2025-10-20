@@ -8,9 +8,9 @@ on:
         type: string
         required: true
       test_types:
-        description: "Types of tests to execute (comma-separated: chroot,qemu,cloud,oci)"
+        description: "Types of tests to execute (comma-separated: chroot,qemu,cloud,oci,bare)"
         type: string
-        default: "chroot,qemu"
+        default: "chroot,qemu,oci"
       bare_flavors_matrix:
         description: "Generated GitHub workflow flavors matrix for bare flavors"
         type: string
@@ -50,6 +50,11 @@ jobs:
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
       flags: "--no-arch --json-by-arch --test"
+  oci_test_flavors_supported_matrix:
+    name: Generate flavors matrix for oci test
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: "--no-arch --json-by-arch --test --include-only 'container-*'"
   qemu_test_flavors_supported_matrix:
     name: Generate flavors matrix for qemu test
     uses: ./.github/workflows/build_flavors_matrix.yml
@@ -69,6 +74,7 @@ jobs:
     needs:
       [
         chroot_test_flavors_supported_matrix,
+        oci_test_flavors_supported_matrix,
         qemu_test_flavors_supported_matrix,
         platform_test_flavors_supported_matrix,
         bare_flavors_supported_matrix,
@@ -83,8 +89,10 @@ jobs:
       bare_flavors_tests: ${{ steps.test_environments.outputs.bare_flavors_tests }}
       chroot_test_flavors_matrix: ${{ steps.test_environments.outputs.chroot_test_flavors_matrix }}
       chroot_tests: ${{ steps.test_environments.outputs.chroot_tests }}
+      oci_flavors_matrix: ${{ steps.test_environments.outputs.oci_flavors_matrix }}
+      oci_flavors_tests: ${{ steps.test_environments.outputs.oci_flavors_tests }}
       platform_test_flavors_matrix: ${{ steps.test_environments.outputs.platform_test_flavors_matrix }}
-      platform_test: ${{ steps.test_environments.outputs.platform_tests }}
+      platform_tests: ${{ steps.test_environments.outputs.platform_tests }}
       qemu_test_flavors_matrix: ${{ steps.test_environments.outputs.qemu_test_flavors_matrix }}
       qemu_tests: ${{ steps.test_environments.outputs.qemu_tests }}
     steps:
@@ -151,8 +159,25 @@ jobs:
               }
             }
 
-            // bare_flavors_matrix
+            // oci_flavors_matrix
             if (testsEnvsEnabled.includes("oci")) {
+              const matrix = gitHubLib.intersectFlavorsMatrix(
+                ${{ inputs.flavors_matrix }},
+                ${{ needs.oci_test_flavors_supported_matrix.outputs.matrix }}
+              );
+
+              const isEnabled = !gitHubLib.isMatrixEmpty(matrix);
+              core.setOutput("oci_flavors_tests", isEnabled);
+
+              if (isEnabled) {
+                core.setOutput("oci_flavors_matrix", matrix);
+              } else {
+                core.setOutput("oci_flavors_matrix", '{"include":[]}');
+              }
+            }
+
+            // bare_flavors_matrix
+            if (testsEnvsEnabled.includes("bare")) {
               const matrix = gitHubLib.intersectFlavorsMatrix(
                 ${{ inputs.bare_flavors_matrix }},
                 ${{ needs.bare_flavors_supported_matrix.outputs.matrix }}
@@ -214,14 +239,14 @@ jobs:
     permissions:
       id-token: write
       actions: write
-  test_flavors_oci_ng:
+  test_flavors_oci:
     needs: determine_test_settings
     name: Test-NG OCI flavors
-    uses: ./.github/workflows/test_flavor_oci_ng.yml
-    if: ${{ needs.determine_test_settings.outputs.bare_flavors_tests == 'true' }}
+    uses: ./.github/workflows/test_flavor_oci.yml
+    if: ${{ needs.determine_test_settings.outputs.oci_flavors_tests == 'true' }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.determine_test_settings.outputs.bare_flavors_matrix) }}
+      matrix: ${{ fromJson(needs.determine_test_settings.outputs.oci_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
@@ -261,10 +286,10 @@ jobs:
     permissions:
       id-token: write
       actions: write
-  test_flavors_oci:
+  test_flavors_bare:
     needs: determine_test_settings
-    name: Test OCI flavors
-    uses: ./.github/workflows/test_flavor_oci.yml
+    name: Test bare flavors
+    uses: ./.github/workflows/test_flavor_bare.yml
     if: ${{ needs.determine_test_settings.outputs.bare_flavors_tests == 'true' }}
     strategy:
       fail-fast: false
@@ -276,13 +301,12 @@ jobs:
       actions: write
   test_report:
     needs:
-      - test_flavors_chroot_ng
-      - test_flavors_qemu
-      - test_flavors_cloud_ng
-      - test_flavors_oci_ng
       - test_flavors_chroot
-      - test_flavors_cloud
+      - test_flavors_chroot_ng
       - test_flavors_oci
+      - test_flavors_qemu
+      - test_flavors_cloud
+      - test_flavors_cloud_ng
     name: Generate Test Report
     if: always()
     uses: ./.github/workflows/test_report.yml
@@ -290,4 +314,4 @@ jobs:
       actions: write
       checks: write
     with:
-      test_jobs: "test_flavors_chroot_ng,test_flavors_qemu,test_flavors_cloud_ng,test_flavors_oci_ng,test_flavors_chroot,test_flavors_cloud,test_flavors_oci"
+      test_jobs: "test_flavors_chroot,test_flavors_chroot_ng,test_flavors_oci,test_flavors_qemu,test_flavors_cloud,test_flavors_cloud_ng"

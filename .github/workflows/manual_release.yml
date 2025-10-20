@@ -33,7 +33,7 @@ on:
       test_types:
         description: "Types of tests to execute (comma-separated: chroot,qemu,cloud,oci). Note: oci tests only work when build=true"
         type: string
-        default: "chroot,qemu,cloud,oci"
+        default: "chroot,qemu,cloud,oci,bare"
       ignore_workflow_concurrency:
         description: "Execute workflows concurrently"
         type: boolean
