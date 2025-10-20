@@ -49,7 +49,14 @@ Github has an option to allow certain merge types only.
 
 ## Decision
 
+(VARIANT A)
+
 We will only **allow merge commits and squash merges** when integrating PRs into the main branches of Garden Linux. **Rebase merges are disallowed**, as they do not provide sufficient traceability between commits and their originating PRs.
+
+(VARIANT B)
+
+We will only **squash merges** when integrating PRs into the main branches of Garden Linux. **Rebase merges and merge commits are disallowed**, as they do not provide sufficient traceability between commits and their originating PRs or create a non-linear history.
+
 
 ## Consequences
 
