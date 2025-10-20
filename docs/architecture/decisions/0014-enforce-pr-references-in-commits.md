@@ -26,17 +26,19 @@ In contrast, both **merge commits** and **squash merges** create a single commit
 
 **Example Commit History: Merge Commit**
 ```
+* 12af822 Next unrelated commit
 * 1a2b3c4 Merge pull request #42 from feature-branch
 |\
 | * 9f8e7c1 Fix typo in docs
 | * 8a7b6d2 Add new feature
 | * 7c6d5e3 Refactor module
-* | 5d4e3f2 Previous commit
+* 5d4e3f2 Previous commit
 ```
-_The merge commit references the PR and groups related changes._
+_The merge commit references the PR and groups related changes, but the git history is not linear._
 
 **Example Commit History: Squash Merge**
 ```
+* 12af822 Next unrelated commit
 * 2b3c4d5 Add new feature and fix typo (#42)
 * 5d4e3f2 Previous commit
 ```
