@@ -51,26 +51,10 @@ Github has an option to allow certain merge types only.
 
 ## Decision
 
-(VARIANT A)
-
 We will only **allow merge commits and squash merges** when integrating PRs into the main branches of Garden Linux. **Rebase merges are disallowed**, as they do not provide sufficient traceability between commits and their originating PRs.
 
-(VARIANT B)
-
-We will only **squash merges** when integrating PRs into the main branches of Garden Linux. **Rebase merges and merge commits are disallowed**, as they do not provide sufficient traceability between commits and their originating PRs or create a non-linear history.
-
-
 ## Consequences
-
-(VARIANT A)
 
 By restricting merge types to merge commits and squash merges, every change merged into Garden Linux will be traceable to its PR, facilitating easier audits, reviews, and historical analysis.
 
 While some contributors may prefer rebase merges for aesthetic reasons—such as a linear commit history without merge commits, the need for traceability and accountability takes precedence in this project. The chosen merge strategies ensure that the origin and context of each change are preserved, even if this results in a less linear commit graph.
-
-(VARIANT B)
-
-By restricting merge types to squash merges, every change merged into Garden Linux will be traceable to its PR, facilitating easier audits, reviews, and historical analysis.
-Also, squash merges are easy to revert if that is ever needed.
-
-In cases where one would prefer rebase merges in order to keep individual commits intact, the suggested alternative method is to open multiple pull requests instead, resulting in multiple squashed commits on the main branch.
