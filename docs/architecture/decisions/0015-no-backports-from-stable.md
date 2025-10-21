@@ -10,8 +10,8 @@ Accepted
 
 Garden Linux is built from snapshots of Debian testing. There is a temptation to use backport packages from Debian stable to address missing features or security updates. However, backports from stable can introduce several issues:
 
-- Backported packages from Debian stable may depend on older or incompatible libraries, which can cause build failures in the Garden Linux testing-based environment.
-- Introducing backports can result in package downgrades. For example, if Garden Linux includes version `1.3.7` and the stable backport is `1.2.12~bpo1`, replacing the newer version would remove features and introduce regressions.
+- Backported packages from Debian stable may depend on older or incompatible libraries, which can cause build failures in the Debian testing-based build environment.
+- Introducing backports can result in package downgrades. For example, if Garden Linux includes version `1.3.7` and the stable backport is `1.2.12~bpo1`, replacing the newer version would remove features and introduce regressions, even if the stable backport as a newer security fix. Instead, the fix should be backported to the version from testing by Garden Linux maintainers.
 - Backported package versions often use a tilde (`~`) in their numbering (e.g., `1.1~bpo`). This affects dpkg's version comparison logic, making the backport appear older than the upstream version (`1.1~bpo` < `1.1`). As a result, the GLVD vulnerability tracker may incorrectly flag packages as vulnerable, even if they contain the necessary fixes.
 - Using other non-tilde characters (such as `+` or `-`) in version numbers does not cause this issue, but backports from Debian stable consistently use the tilde.
 
