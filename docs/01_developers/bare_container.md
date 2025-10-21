@@ -5,7 +5,7 @@ Garden Linux offers a range of specialized bare container images, each tailored 
 
 - **Bare-libc**: Ideal for C/C++ applications requiring only essential C runtime libraries.
 - **Bare-python**: Equipped with Python runtime, perfect for Python-based applications.
-- **Bare-python-dev**: Like Bare-python, but inlcuding pip and bash
+- **Bare-python-dev**: Like Bare-python, but including pip and bash
 - **Bare-sapmachine**: Customized for sapmachine with necessary libraries and binaries.
 - **Bare-nodejs**: Includes Node.js environment, suitable for server-side JavaScript applications.
 
@@ -65,7 +65,7 @@ Their development is streamlined by the [unbase_oci](https://github.com/gardenli
   ENTRYPOINT ["python3", "/main.py"]
   ```
 
-### bare-sapmachine
+### Bare-sapmachine
 - **Description**: Customized for SAP applications, ensuring compatibility and optimized performance.
 - **Features**:
   - Necessary libraries and binaries for SAP included.
