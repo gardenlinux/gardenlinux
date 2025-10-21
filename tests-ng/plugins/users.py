@@ -8,9 +8,11 @@ from .shell import ShellRunner
 
 users: Set[str] = set()
 
+
 class User:
-    def __init__(self, shell:ShellRunner):
+    def __init__(self, shell: ShellRunner):
         self._shell = shell
+
     def is_user_sudo(self, user):
         assert shutil.which("sudo") is not None, "sudo command not found"
         command = f"sudo --list --other-user={user}"
@@ -20,6 +22,7 @@ class User:
             if "may run the following commands on" in line:
                 return True
         return False
+
 
 def cloudinit_default_user() -> Optional[str]:
     try:
@@ -52,9 +55,11 @@ def pytest_configure(config: pytest.Config):
     if cloudinit_user:
         users.add(cloudinit_user)
 
+
 @pytest.fixture
 def expected_users():
     return users
+
 
 @pytest.fixture
 def user(shell: ShellRunner):

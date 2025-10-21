@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 
+
 @dataclass
 class UIDRange:
     uid_min: int = None
@@ -16,20 +17,22 @@ class UIDRange:
     def __contains__(self, uid: int) -> bool:
         return self.uid_min <= uid <= self.uid_max
 
+
 def parse_config(path):
     config = {}
-    login_defs_path=Path(path)
+    login_defs_path = Path(path)
     assert login_defs_path.exists(), f"{login_defs_path} doesn't exist"
     for line in login_defs_path.read_text().splitlines():
         line = line.strip()
         # Skip blank lines and comments
-        if not line or line.startswith('#'):
+        if not line or line.startswith("#"):
             continue
         config_line = line.split(None, 1)
         if len(config_line) == 2:
             key, value = config_line
             config[key] = value
     return config
+
 
 @pytest.fixture
 def regular_user_uid_range() -> UIDRange:

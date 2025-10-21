@@ -3,8 +3,8 @@ import pwd
 import stat
 
 import pytest
-
 from plugins.users import User
+
 
 def test_service_accounts_have_nologin_shell(regular_user_uid_range):
     for entry in pwd.getpwall():
@@ -32,14 +32,20 @@ def test_no_extra_home_directories(expected_users):
     unexpected = [e for e in entries if e not in expected_users]
     assert not unexpected, f"Unexpected entries in /home: {entries}"
 
+
 @pytest.mark.booted
 @pytest.mark.root
 def test_users_sudo_capability(expected_users, user: User):
     for entry in pwd.getpwall():
         if (entry.pw_name == "root") or (entry.pw_name in expected_users):
-            assert user.is_user_sudo(entry.pw_name), f"User: {entry.pw_name} doesn't have sudo permission"
+            assert user.is_user_sudo(
+                entry.pw_name
+            ), f"User: {entry.pw_name} doesn't have sudo permission"
         else:
-            assert user.is_user_sudo(entry.pw_name) == False, f"System User {entry.pw_name} has sudo permission"
+            assert (
+                user.is_user_sudo(entry.pw_name) == False
+            ), f"System User {entry.pw_name} has sudo permission"
+
 
 @pytest.mark.booted
 @pytest.mark.root
@@ -47,5 +53,5 @@ def test_available_users(expected_users, regular_user_uid_range):
     for entry in pwd.getpwall():
         if entry.pw_uid in regular_user_uid_range:
             assert entry.pw_name in ["dev", "nobody"] + list(
-                    expected_users
-                    ), f"Unexpected user account found in /etc/passwd: {entry.pw_name}"
+                expected_users
+            ), f"Unexpected user account found in /etc/passwd: {entry.pw_name}"
