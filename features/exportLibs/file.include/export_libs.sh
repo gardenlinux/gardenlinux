@@ -37,7 +37,7 @@ mkdir required_libs
 
 packages=$(python3 -c 'import site; print(site.getsitepackages()[0])')
 
-find "$packages" | while read file; do
+find "$packages" | while read -r file; do
 		if [ ! -L "$file" ] && [ -f "$file" ]; then
 			if is_elf "$file"; then
 				interpreter=
@@ -60,8 +60,8 @@ find "$packages" | while read file; do
 				fi
 			fi
 		fi
-	done | while read file; do
+	done | while read -r file; do
 		realpath "$file"
-	done | sort -u | while read file; do
-		mkdir -p $(dirname "required_libs$file") && cp "$file" "required_libs$file"
+	done | sort -u | while read -r file; do
+		mkdir -p "$(dirname "required_libs$file")" && cp "$file" "required_libs$file"
 	done
