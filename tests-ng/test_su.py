@@ -2,7 +2,7 @@ import pytest
 from plugins.pam import PamConfig
 
 
-@pytest.mark.security_id(166)
+# @pytest.mark.security_id(166)
 @pytest.mark.root
 @pytest.mark.feature("not container")
 @pytest.mark.parametrize("pam_config", [("/etc/pam.d/su")], indirect=["pam_config"])
