@@ -11,7 +11,7 @@ capabilities_allowlist = {"/usr/bin/arping cap_net_raw=ep"}
 
 @pytest.mark.root(reason="Need to read files not readable by unprivileged user")
 def test_only_expected_capabilities_are_set(capabilities: Capabilities):
-    actual_capabilities = set(capabilities.list())
+    actual_capabilities = capabilities.get()
 
     unexpected = actual_capabilities - capabilities_allowlist
 

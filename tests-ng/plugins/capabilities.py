@@ -10,8 +10,8 @@ class Capabilities:
         self._find = find
         self._shell = shell
 
-    def list(self) -> list[str]:
-        capabilities = []
+    def get(self) -> set[str]:
+        capabilities = set()
 
         self._find.same_mnt_only = True
         self._find.root_paths = ["/boot", "/etc", "/usr", "/var"]
@@ -26,7 +26,7 @@ class Capabilities:
 
             if capability:
                 # getcap style output
-                capabilities.append(f"{file} {str(capability)}")
+                capabilities.add(f"{file} {str(capability)}")
 
         return capabilities
 
