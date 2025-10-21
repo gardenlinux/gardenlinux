@@ -34,9 +34,9 @@ clean:
 	retry -d "1,2,5,10,30" curl -sSLf "https://github.com/gardenlinux/edk2-build/releases/download/edk2-stable202505/edk2-$*" > $@
 
 .build/busybox_amd64.tar:
-	image_id=`podman pull -q --arch=amd64 busybox:1.37.0-uclibc)` \
+	image_id=`podman pull -q --arch=amd64 busybox:1.37.0-uclibc` \
 	&& podman save "$$image_id" > $@
 
 .build/busybox_arm64.tar:
-	image_id=`podman pull -q --arch=arm64 busybox:1.37.0-uclibc)` \
+	image_id=`podman pull -q --arch=arm64 busybox:1.37.0-uclibc` \
 	&& podman save "$$image_id" > $@
