@@ -46,5 +46,6 @@ def test_users_sudo_capability(expected_users, user: User):
 def test_available_users(expected_users, regular_user_uid_range):
     for entry in pwd.getpwall():
         if entry.pw_uid in regular_user_uid_range:
-            assert entry.pw_name in ["dev", "nobody"] + list(expected_users), \
-                    f"Unexpected user account found in /etc/passwd: {entry.pw_name}"
+            assert entry.pw_name in ["dev", "nobody"] + list(
+                    expected_users
+                    ), f"Unexpected user account found in /etc/passwd: {entry.pw_name}"

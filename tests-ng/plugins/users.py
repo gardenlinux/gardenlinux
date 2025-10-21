@@ -1,9 +1,10 @@
+import shutil
 import subprocess
 from typing import Optional, Set
-from .shell import ShellRunner
-import shutil
 
 import pytest
+
+from .shell import ShellRunner
 
 users: Set[str] = set()
 
