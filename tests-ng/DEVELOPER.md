@@ -368,10 +368,11 @@ The project enforces code quality through CI linting (see `.github/workflows/lin
 
 **Guidelines:**
 
-- Follow [PEP 8 – Style Guide for Python Code](https://peps.python.org/pep-0008/)
-- Use type hints for function parameters and return values
-- Prefer descriptive variable names
-- Use docstrings for complex functions
+1. All code contributions must follow the [PEP 8 – Style Guide for Python Code](https://peps.python.org/pep-0008/)
+2. The use of type hints is mandatory for all new additions to avoid typing related bugs and increase readability
+3. Use descriptive variable and function names
+4. Use docstrings to summarize functions and classes. The extent of which depends on the size, scope and complexity of the function or class.
+5. Initialize all variables with a sensible default value instead of using `None` (unless the value and its type hint explicitly make it noneable)
 
 > [!TIP]
 > Run `make -f tests-ng/dev.makefile format` locally before committing
