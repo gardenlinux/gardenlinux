@@ -1,7 +1,7 @@
 import pytest
 
 
-# @pytest.mark.security_id(325)
+@pytest.mark.security_id(325)
 @pytest.mark.parametrize(
     "pam_config", ["/etc/pam.d/common-password"], indirect=["pam_config"]
 )
@@ -20,7 +20,7 @@ def test_password_entry_present(pam_config):
     ), f"Expected exactly one password entry, found {len(candidates)}: {candidates}"
 
 
-# @pytest.mark.security_id(325)
+@pytest.mark.security_id(325)
 @pytest.mark.parametrize(
     "pam_config", ["/etc/pam.d/common-password"], indirect=["pam_config"]
 )

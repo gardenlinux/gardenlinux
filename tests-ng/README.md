@@ -406,3 +406,5 @@ Tests can be decorated with pytest markers to indicate certain limitations or pr
 `@pytest.mark.feature("a and not b", reason="Some reason, this is optional")`: This test is only run if the boolean condition is true. Use this to limit feature-specific tests. Use the optional `reason` argument to document why this is needed, in cases where this is not really obvious.
 
 `@pytest.mark.performance_metric`: This is a performance metric test that can be skipped when running under emulation.
+
+`@pytest.mark.security_id(42)`: Map a test to a security id. Must be an positive integer value.
