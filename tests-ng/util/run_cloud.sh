@@ -291,14 +291,20 @@ fi
 
 (
 	cd "${tf_dir}"
+	echo "⚙️  initializing terraform"
 	tofu init -var-file "$image_name.tfvars"
+	echo "⚙️  selecting workspace: $image_name"
 	tofu workspace select -or-create "$workspace"
+	echo "⚙️  running terraform ${tf_cmd[*]}"
 	tofu "${tf_cmd[@]}" -var-file "$image_name.tfvars"
+	echo "✅  terraform ${tf_cmd[*]} completed successfully"
 )
 
 if ! ((cloud_plan)); then
+	echo "⚙️  getting terraform outputs"
 	vm_ip="$(cd "${tf_dir}" && tofu output --raw vm_ip)"
 	ssh_user="$(cd "${tf_dir}" && tofu output --raw ssh_user)"
+	echo "📋  VM IP: $vm_ip, SSH User: $ssh_user"
 
 	echo -n "⚙️  waiting for VM ($vm_ip) to accept ssh connections"
 	until "$login_cloud_sh" "$image_basename" true 2>/dev/null; do
@@ -313,8 +319,12 @@ if ! ((cloud_plan)); then
 			"--expected-users" "$ssh_user"
 		)
 		(
-			# wait for cloud-init to finish
-			"$login_cloud_sh" "$image_basename" "sudo systemctl is-system-running --wait || true"
+			echo "⚙️  waiting for systemd to finish initialization (timeout: 10 minutes)"
+			"$login_cloud_sh" "$image_basename" "timeout 600 sudo systemctl is-system-running --wait" || {
+				echo "⚠️  systemctl is-system-running timed out or failed, checking system status"
+				"$login_cloud_sh" "$image_basename" "sudo systemctl is-system-running" || true
+				"$login_cloud_sh" "$image_basename" "sudo systemctl --failed --no-legend" || true
+			}
 			"$login_cloud_sh" "$image_basename" "sudo /run/gardenlinux-tests/run_tests ${test_args[*]@Q} 2>&1"
 		) | tee "$log_dir/$log_file_log"
 	fi
