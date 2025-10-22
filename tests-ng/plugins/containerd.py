@@ -1,6 +1,7 @@
 import pytest
 import validators
 
+from .container_registry import ContainerRegistry
 from .shell import ShellRunner
 from .systemd import Systemd
 
@@ -17,7 +18,11 @@ class CtrRunner:
 
     def pull_image(self, uri, capture_output=False, ignore_exit_code=False):
         validators.url(uri)
-        command = f"ctr image pull {uri}"
+        command = (
+            f"ctr image pull --plain-http {uri}"
+            if uri.startswith("localhost")
+            else f"ctr image pull {uri}"
+        )
         return self.shell(
             command, capture_output=capture_output, ignore_exit_code=ignore_exit_code
         )
@@ -32,7 +37,7 @@ class CtrRunner:
     def run(self, uri, cmd, capture_output=False, ignore_exit_code=False):
         validators.url(uri)
 
-        container_name = uri.split("/")[0].replace(".", "-")
+        container_name = uri.split("/")[0].split(":")[0].replace(".", "-")
         command = f"ctr run --rm {uri} {container_name} {cmd}"
         return self.shell(
             command, capture_output=capture_output, ignore_exit_code=ignore_exit_code
@@ -45,9 +50,13 @@ def ctr(shell: ShellRunner, systemd: Systemd):
 
 
 @pytest.fixture
-def container_image_setup(uri: str, ctr: CtrRunner):
+def container_image_setup(
+    uri: str, ctr: CtrRunner, container_registry: ContainerRegistry
+):
     # capture output to avoid it cluttering the test logs
     # ctr is very verbose when pulling an image
+    container_registry.start()
     ctr.pull_image(uri, capture_output=True)
     yield
+    container_registry.shutdown()
     ctr.remove_image(uri, capture_output=True)

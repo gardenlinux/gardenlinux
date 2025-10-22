@@ -17,7 +17,7 @@ clean:
 .build:
 	mkdir .build
 
-.build/dist.tar.gz: util/build_dist.sh .build/runtime.tar.gz conftest.py $(wildcard plugins/*.py) $(wildcard test_*.py) $(wildcard */test_*.py) $(wildcard handlers/*.py) | .build
+.build/dist.tar.gz: util/build_dist.sh .build/runtime.tar.gz .build/busybox_amd64.tar .build/busybox_arm64.tar conftest.py $(wildcard plugins/*.py) $(wildcard test_*.py) $(wildcard */test_*.py) $(wildcard handlers/*.py) | .build
 	echo '🛠️  building test framework distribution'
 	./$< $(word 2,$^) $@
 
@@ -32,3 +32,11 @@ clean:
 .build/edk2-%: | .build
 	echo '⬇️  fetching EDK2 ($*)'
 	retry -d "1,2,5,10,30" curl -sSLf "https://github.com/gardenlinux/edk2-build/releases/download/edk2-stable202505/edk2-$*" > $@
+
+.build/busybox_amd64.tar:
+	image_id=`podman pull -q --arch=amd64 busybox:1.37.0-uclibc` \
+	&& podman save "$$image_id" > $@
+
+.build/busybox_arm64.tar:
+	image_id=`podman pull -q --arch=arm64 busybox:1.37.0-uclibc` \
+	&& podman save "$$image_id" > $@
