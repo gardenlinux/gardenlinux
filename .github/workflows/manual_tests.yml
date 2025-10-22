@@ -31,10 +31,6 @@ on:
         description: "Run bin/flavors_parse.py with these parameters for tests"
         default: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
         type: string
-      flavors_parse_params_test_platform:
-        description: "Run bin/flavors_parse.py with these parameters for platform tests"
-        default: '--exclude "bare-*" --no-arch --json-by-arch --build --test-platform'
-        type: string
       flavors_parse_params_test_bare:
         description: "Run bin/parse_flavors.py with these parameters for bare flavors"
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
