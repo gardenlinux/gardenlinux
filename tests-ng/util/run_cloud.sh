@@ -136,26 +136,26 @@ trap cleanup EXIT
 
 case "$(uname -s)" in
 Linux)
-	os=linux
+	host_os=linux
 	;;
 Darwin)
-	os=darwin
+	host_os=darwin
 	;;
 *)
-	echo "Operating System not supported"
+	echo "Host operating system '$host_os' not supported"
 	exit 1
 	;;
 esac
 
 case "$(uname -m)" in
 x86_64)
-	arch=amd64
+	host_arch=amd64
 	;;
 aarch64 | arm64)
-	arch=arm64
+	host_arch=arm64
 	;;
 *)
-	echo "Arch not supported"
+	echo "Host architecture '$host_arch' not supported"
 	exit 1
 	;;
 esac
@@ -180,7 +180,7 @@ export TF_CLI_CONFIG_FILE
 TOFU_PROVIDERS_CUSTOM="$tf_dir/.terraform/providers/custom"
 TOFU_PROVIDER_AZURERM_VERSION="v4.41.0"
 TOFU_PROVIDER_AZURERM_VERSION_LONG="${TOFU_PROVIDER_AZURERM_VERSION}-post1-secureboot2"
-TOFU_PROVIDER_AZURERM_BIN="terraform-provider-azurerm_${TOFU_PROVIDER_AZURERM_VERSION}_${os}_${arch}"
+TOFU_PROVIDER_AZURERM_BIN="terraform-provider-azurerm_${TOFU_PROVIDER_AZURERM_VERSION}_${host_os}_${host_arch}"
 TOFU_PROVIDER_AZURERM_URL="https://github.com/gardenlinux/terraform-provider-azurerm/releases/download/$TOFU_PROVIDER_AZURERM_VERSION_LONG/$TOFU_PROVIDER_AZURERM_BIN"
 TOFU_PROVIDER_AZURERM_CHECKSUM_linux_amd64="d0724b2b33270dbb0e7946a4c125e78b5dd0f34697b74a08c04a1c455764262e"
 TOFU_PROVIDER_AZURERM_CHECKSUM_linux_arm64="b5a5610bef03fcfd6b02b4da804a69cbca64e2c138c1fe943a09a1ff7b123ff7"
@@ -200,13 +200,13 @@ if [ ! -f "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" ] || ! sha256sum
 	mkdir -p "${TOFU_PROVIDERS_CUSTOM}"
 	retry -d "1,2,5,10,30" curl -LO --create-dirs --output-dir "${TOFU_PROVIDERS_CUSTOM}" "${TOFU_PROVIDER_AZURERM_URL}"
 	mv "${TOFU_PROVIDERS_CUSTOM}/${TOFU_PROVIDER_AZURERM_BIN}" "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm"
-	case "${os}_${arch}" in
+	case "${host_os}_${host_arch}" in
 	linux_amd64) checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_linux_amd64" ;;
 	linux_arm64) checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_linux_arm64" ;;
 	darwin_amd64) checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_darwin_amd64" ;;
 	darwin_arm64) checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_darwin_arm64" ;;
 	*)
-		echo "Unsupported OS/arch combination: ${os}_${arch}" >&2
+		echo "Unsupported OS/arch combination: ${host_os}_${host_arch}" >&2
 		exit 1
 		;;
 	esac
@@ -291,14 +291,20 @@ fi
 
 (
 	cd "${tf_dir}"
+	echo "⚙️  initializing terraform"
 	tofu init -var-file "$image_name.tfvars"
+	echo "⚙️  selecting workspace: $image_name"
 	tofu workspace select -or-create "$workspace"
+	echo "⚙️  running terraform ${tf_cmd[*]}"
 	tofu "${tf_cmd[@]}" -var-file "$image_name.tfvars"
+	echo "✅  terraform ${tf_cmd[*]} completed successfully"
 )
 
 if ! ((cloud_plan)); then
+	echo "⚙️  getting terraform outputs"
 	vm_ip="$(cd "${tf_dir}" && tofu output --raw vm_ip)"
 	ssh_user="$(cd "${tf_dir}" && tofu output --raw ssh_user)"
+	echo "📋  VM IP: $vm_ip, SSH User: $ssh_user"
 
 	echo -n "⚙️  waiting for VM ($vm_ip) to accept ssh connections"
 	until "$login_cloud_sh" "$image_basename" true 2>/dev/null; do
@@ -313,8 +319,12 @@ if ! ((cloud_plan)); then
 			"--expected-users" "$ssh_user"
 		)
 		(
-			# wait for cloud-init to finish
-			"$login_cloud_sh" "$image_basename" "sudo systemctl is-system-running --wait || true"
+			echo "⚙️  waiting for systemd to finish initialization (timeout: 10 minutes)"
+			"$login_cloud_sh" "$image_basename" "timeout 600 sudo systemctl is-system-running --wait" || {
+				echo "⚠️  systemctl is-system-running timed out or failed, checking system status"
+				"$login_cloud_sh" "$image_basename" "sudo systemctl is-system-running" || true
+				"$login_cloud_sh" "$image_basename" "sudo systemctl --failed --no-legend" || true
+			}
 			"$login_cloud_sh" "$image_basename" "sudo /run/gardenlinux-tests/run_tests ${test_args[*]@Q} 2>&1"
 		) | tee "$log_dir/$log_file_log"
 	fi
