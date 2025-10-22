@@ -365,7 +365,13 @@ The project enforces code quality through CI linting (see `.github/workflows/lin
 - **[Black](https://black.readthedocs.io/en/stable/)**: Automatic code formatting
 - **[isort](https://pycqa.github.io/isort/)**: Import statement sorting
 - **[Pyright](https://github.com/microsoft/pyright/blob/main/docs/getting-started.md)**: Static type checking
+These tools are available for most IDEs and a wide range of text editors.
 
+In order to improve your development experience, and to allow us to process your PRs faster, we suggest your enable them with your editor or IDE.
+
+Please refer to your editor's documentation for clues on how to set them up.
+
+We highly suggest you configure your IDE or text editor to automatically apply formatting and type checking on save.
 **Guidelines:**
 
 1. All code contributions must follow the [PEP 8 – Style Guide for Python Code](https://peps.python.org/pep-0008/)
