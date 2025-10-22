@@ -22,10 +22,10 @@ jobs:
     permissions:
       actions: write
     steps:
-      - name: install required packages
+      - name: install qemu
         run: |
           sudo apt-get update
-          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qemu-utils qemu-system-x86 qemu-system-arm swtpm socat libxml2-utils retry
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends qemu-utils qemu-system-x86 qemu-system-arm swtpm socat libxml2-utils
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
