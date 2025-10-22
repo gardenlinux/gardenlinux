@@ -451,7 +451,7 @@ When adding new dependencies:
 1. **Justify the need** - Why can't the standard library solve this?
 2. **Document the benefit** - What does this library provide?
 3. **Consider alternatives** - Are there lighter alternatives?
-4. **Update requirements.txt** - Include version constraints
+4. **Update requirements.txt** - Pin package versions in `tests-ng/util/requirements.txt`
 
 ## Resources
 
