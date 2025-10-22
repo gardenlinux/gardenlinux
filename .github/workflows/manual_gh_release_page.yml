@@ -83,9 +83,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [[ "${{ inputs.is_latest }}" == "true" ]]; then
-            gl-gh create --tag ${{ inputs.version }} --commit "${{ inputs.commit }}" --latest
+            gl-gh create --tag ${{ inputs.version }} --commit "${{ inputs.commit }}" --owner vivus-ignis --repo gardenlinux-dev --latest
           else
-            gl-gh create --tag ${{ inputs.version }} --commit "${{ inputs.commit }}"
+            gl-gh create --tag ${{ inputs.version }} --commit "${{ inputs.commit }} --owner vivus-ignis --repo gardenlinux-dev"
           fi
       - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # pin@v4.3.0
         with:
@@ -139,13 +139,13 @@ jobs:
           release="$(cat .github_release_id)"
 
           echo "$release $CNAME.tar.xz"
-          gl-gh upload --release_id "$release" --file_path "$CNAME.tar.xz"
+          gl-gh upload --release_id "$release" --file_path "$CNAME.tar.xz" --owner vivus-ignis --repo gardenlinux-dev
 
           # upload test logs separately (if they exist)
           log_suffixes="chroot.test.log chroot.test.xml platform.test.log platform.test.xml"
           for suffix in $log_suffixes; do
             log="$CNAME/$CNAME.$suffix"
             if [ -f "$log" ]; then
-              gl-gh upload --release_id "$release" --file_path "$log"
+              gl-gh upload --release_id "$release" --file_path "$log" --owner vivus-ignis --repo gardenlinux-dev   
             fi
           done
