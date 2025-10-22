@@ -58,10 +58,11 @@ image="$2"
 image_basename="$(basename -- "$image")"
 image_name=${image_basename/.*/}
 user_data_script=
-tf_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/tf")"
-login_cloud_sh="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/login_cloud.sh")"
+util_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")")"
+tf_dir="$util_dir/tf"
+login_cloud_sh="$util_dir/login_cloud.sh"
 
-log_dir="$test_dist_dir/../log"
+log_dir="$util_dir/../log"
 log_file_log="cloud.test-ng.log"
 log_file_junit="cloud.test-ng.xml"
 
@@ -124,6 +125,32 @@ get_logs() {
 
 trap cleanup EXIT
 
+case "$(uname -s)" in
+Linux)
+	os=linux
+	;;
+Darwin)
+	os=darwin
+	;;
+*)
+	echo "Operating System not supported"
+	exit 1
+	;;
+esac
+
+case "$(uname -m)" in
+x86_64)
+	arch=amd64
+	;;
+aarch64 | arm64)
+	arch=arm64
+	;;
+*)
+	echo "Arch not supported"
+	exit 1
+	;;
+esac
+
 tofuenv_dir="$tf_dir/.tofuenv"
 PATH="$tofuenv_dir/bin:$PATH"
 # in case we pass a GITHUB_TOKEN, we can work around rate limiting
@@ -142,8 +169,14 @@ tofuenv use "$tofu_version"
 TF_CLI_CONFIG_FILE="$tf_dir/.terraformrc"
 export TF_CLI_CONFIG_FILE
 TOFU_PROVIDERS_CUSTOM="$tf_dir/.terraform/providers/custom"
-TOFU_PROVIDER_AZURERM_URL="https://github.com/gardenlinux/terraform-provider-azurerm/releases/download/v4.41.0-post1-secureboot1/terraform-provider-azurerm"
-TOFU_PROVIDER_AZURERM_CHECKSUM="d0724b2b33270dbb0e7946a4c125e78b5dd0f34697b74a08c04a1c455764262e"
+TOFU_PROVIDER_AZURERM_VERSION="v4.41.0"
+TOFU_PROVIDER_AZURERM_VERSION_LONG="${TOFU_PROVIDER_AZURERM_VERSION}-post1-secureboot2"
+TOFU_PROVIDER_AZURERM_BIN="terraform-provider-azurerm_${TOFU_PROVIDER_AZURERM_VERSION}_${os}_${arch}"
+TOFU_PROVIDER_AZURERM_URL="https://github.com/gardenlinux/terraform-provider-azurerm/releases/download/$TOFU_PROVIDER_AZURERM_VERSION_LONG/$TOFU_PROVIDER_AZURERM_BIN"
+TOFU_PROVIDER_AZURERM_CHECKSUM_linux_amd64="d0724b2b33270dbb0e7946a4c125e78b5dd0f34697b74a08c04a1c455764262e"
+TOFU_PROVIDER_AZURERM_CHECKSUM_linux_arm64="b5a5610bef03fcfd6b02b4da804a69cbca64e2c138c1fe943a09a1ff7b123ff7"
+TOFU_PROVIDER_AZURERM_CHECKSUM_darwin_amd64="0f4676ad2f0d16ec3e24f6ced1414b1f638c20da0a0b2c2b19e5bd279f0f1d32"
+TOFU_PROVIDER_AZURERM_CHECKSUM_darwin_arm64="bdda99a9139363676b1edf2f0371a285e1e1d9e9b9524de4f30b7c2b08224a86"
 
 cat >"$TF_CLI_CONFIG_FILE" <<EOF
 provider_installation {
@@ -157,15 +190,26 @@ if [ ! -f "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" ] || ! sha256sum
 	echo "Downloading terraform-provider-azurerm"
 	mkdir -p "${TOFU_PROVIDERS_CUSTOM}"
 	retry -d "1,2,5,10,30" curl -LO --create-dirs --output-dir "${TOFU_PROVIDERS_CUSTOM}" "${TOFU_PROVIDER_AZURERM_URL}"
-	echo "$TOFU_PROVIDER_AZURERM_CHECKSUM ${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" >"${TOFU_PROVIDERS_CUSTOM}/checksum.txt"
+	mv "${TOFU_PROVIDERS_CUSTOM}/${TOFU_PROVIDER_AZURERM_BIN}" "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm"
+	case "${os}_${arch}" in
+	linux_amd64) checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_linux_amd64" ;;
+	linux_arm64) checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_linux_arm64" ;;
+	darwin_amd64) checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_darwin_amd64" ;;
+	darwin_arm64) checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_darwin_arm64" ;;
+	*)
+		echo "Unsupported OS/arch combination: ${os}_${arch}" >&2
+		exit 1
+		;;
+	esac
+	echo "$checksum ${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm" >"${TOFU_PROVIDERS_CUSTOM}/checksum.txt"
 	sha256sum -c "${TOFU_PROVIDERS_CUSTOM}/checksum.txt"
 	chmod +x "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm"
 fi
 
-ssh_private_key_path="$HOME/.ssh/id_ed25519_gl"
-if [ ! -f "$ssh_private_key_path" ]; then
-	mkdir -p "$(dirname "$ssh_private_key_path")"
-	ssh-keygen -t ed25519 -f "$ssh_private_key_path" -N "" >/dev/null
+ssh_private_key="$util_dir/../.ssh/id_ed25519_gl"
+if [ ! -f "$ssh_private_key" ]; then
+	mkdir -p "$(dirname "$ssh_private_key")"
+	ssh-keygen -t ed25519 -f "$ssh_private_key" -N "" >/dev/null
 fi
 
 user_data_script="$(mktemp)"
@@ -198,6 +242,7 @@ fi
 cat >"${tf_dir}/$image_name.tfvars" <<EOF
 root_disk_path        = "$root_disk_path_var"
 test_disk_path        = "$(realpath -- "$test_dist_dir/dist.ext2.raw")"
+ssh_public_key_path   = "$ssh_private_key.pub"
 user_data_script_path = "$user_data_script"
 existing_root_disk    = "$existing_root_disk_var"
 
