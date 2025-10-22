@@ -1,5 +1,5 @@
-import shutil
 import subprocess
+import pwd
 from typing import Optional, Set
 
 import pytest
@@ -7,6 +7,7 @@ import pytest
 from .shell import ShellRunner
 
 users: Set[str] = set()
+regular_users: Set[str] = set()
 
 
 class User:
@@ -14,7 +15,6 @@ class User:
         self._shell = shell
 
     def is_user_sudo(self, user):
-        assert shutil.which("sudo") is not None, "sudo command not found"
         command = f"sudo --list --other-user={user}"
         output = self._shell(command, capture_output=True)
         output_lines = output.stdout.strip().splitlines()
@@ -56,6 +56,14 @@ def pytest_configure(config: pytest.Config):
         users.add(cloudinit_user)
 
 
+def get_users_in_regular_user_uid_range(expected_users):
+    global regular_users 
+
+    for entry in pwd.getpwall():
+        if entry.pw_uid in regular_user_uid_range:
+            regular_users.add(entry.pw_name)
+
+
 @pytest.fixture
 def expected_users():
     return users
@@ -64,3 +72,8 @@ def expected_users():
 @pytest.fixture
 def user(shell: ShellRunner):
     return User(shell)
+
+
+@pytest.fixture
+def get_regular_users():
+    return regular_users
