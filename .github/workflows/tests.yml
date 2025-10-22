@@ -108,7 +108,7 @@ jobs:
 
             const testsEnvsEnabled = gitHubLib.getTestEnvironmentsEnabled("${{ inputs.test_types }}");
 
-            const TESTS = [
+            const testDefinitions = [
               {
                 key: "chroot",
                 outTests: "chroot_tests",
@@ -147,31 +147,26 @@ jobs:
             ];
             // `matrix:` and it's fromJson() evaluation cannot be skipped by setting the matrix to an empty string or array
             // hence we set a minimal skip flavor matrix and evaluate it in each test_flavor_* workflow.
-            const SKIP_MATRIX = '{"include":[{"arch":"amd64","flavor":"skip"}]}';
+            const skipFlavorMatrix = '{"include":[{"arch":"amd64","flavor":"skip"}]}';
 
             // Process all test types, but only enable requested ones
-            for (const t of TESTS) {
-              console.log(`Processing test type: ${t.key}`);
+            for (const t of testDefinitions) {
               if (!testsEnvsEnabled.includes(t.key)) {
                 core.setOutput(t.outTests, false);
-                core.setOutput(t.outMatrix, SKIP_MATRIX);
-                console.log(`${t.key}: disabled`);
-                console.log(`${t.key}: matrix: ${JSON.stringify(SKIP_MATRIX)}`);
+                core.setOutput(t.outMatrix, skipFlavorMatrix);
+                console.debug(`${t.key}: disabled`);
                 continue;
               }
-              console.log(`Test type ${t.key} is not disabled`);
 
               const matrix = gitHubLib.intersectFlavorsMatrix(t.inputMatrix, t.supported);
               const isEnabled = !gitHubLib.isMatrixEmpty(matrix);
               core.setOutput(t.outTests, isEnabled);
-              console.log(`${t.key}: isEnabled: ${isEnabled}`);
+              console.log(`${t.key}: ${isEnabled ? 'enabled' : 'disabled'} (${isEnabled ? matrix.length : 0} flavors)`);
 
               if (isEnabled) {
                 core.setOutput(t.outMatrix, matrix);
-                console.log(`${t.key}: matrix: ${JSON.stringify(matrix)}`);
               } else {
                 core.setOutput(t.outMatrix, SKIP_MATRIX);
-                console.log(`${t.key}: matrix: ${JSON.stringify(SKIP_MATRIX)}`);
               }
             }
   ## test-ng start
