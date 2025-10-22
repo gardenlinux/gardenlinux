@@ -390,9 +390,17 @@ We highly suggest you configure your IDE or text editor to automatically apply f
 - Use appropriate exception types
 
 ```python
-def test_config_file_exists():
-    config_path = Path("/etc/ssh/sshd_config")
-    assert config_path.exists(), f"SSH config file not found: {config_path}"
+def read_file(path: str) -> str:
+    """Read and return the contents of a file safely."""
+    try:
+        with open(path, "r", encoding="utf-8") as file:
+            return file.read()
+    except FileNotFoundError:
+        print(f"Error: File not found — {path}")
+    except PermissionError:
+        print(f"Error: Permission denied when accessing {path}")
+    except OSError as exc:
+        print(f"Error: Could not read file {path}: {exc}")
 ```
 
 ### Imports
