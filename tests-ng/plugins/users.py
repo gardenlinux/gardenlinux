@@ -1,5 +1,5 @@
-import subprocess
 import pwd
+import subprocess
 from typing import Optional, Set
 
 import pytest
@@ -7,7 +7,6 @@ import pytest
 from .shell import ShellRunner
 
 users: Set[str] = set()
-regular_users: Set[str] = set()
 
 
 class User:
@@ -56,14 +55,6 @@ def pytest_configure(config: pytest.Config):
         users.add(cloudinit_user)
 
 
-def get_users_in_regular_user_uid_range(expected_users):
-    global regular_users 
-
-    for entry in pwd.getpwall():
-        if entry.pw_uid in regular_user_uid_range:
-            regular_users.add(entry.pw_name)
-
-
 @pytest.fixture
 def expected_users():
     return users
@@ -75,5 +66,10 @@ def user(shell: ShellRunner):
 
 
 @pytest.fixture
-def get_regular_users():
+def get_regular_users(regular_user_uid_range):
+    regular_users = set()
+
+    for entry in pwd.getpwall():
+        if entry.pw_uid in regular_user_uid_range:
+            regular_users.add(entry.pw_name)
     return regular_users
