@@ -13,6 +13,11 @@ on:
         required: true
         type: string
         description: 'Version'
+      python_lib_version:
+        required: false
+        type: string
+        default: "0.10.2"
+        description: "Version of the python gardenlinux library to use"
       is_latest:
         default: false
         type: boolean
@@ -22,42 +27,7 @@ on:
         type: string
         description: "Full commitish"
 jobs:
-  # Create new version in GLVD so it has the package list of the new release
-  # This is needed for the automatic changelog generation
-  glvd:
-    if: ${{ inputs.type }} == 'minor'
-    name: Update GLVD distro list
-    runs-on: ubuntu-latest
-    permissions:
-      # This is required for requesting the JWT
-      id-token: write
-    steps:
-      - name: Get OIDC token
-        id: get-token
-        run: |
-          IDTOKEN=$(curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=glvd" | jq -r '.value')
-          echo "idToken=${IDTOKEN}" >> $GITHUB_OUTPUT
-      - uses: azure/k8s-set-context@v4
-        with:
-          method: kubeconfig
-          kubeconfig: "${{ secrets.KUBECONFIG }}"
-      - name: Start a new ingestion job in GLVD to import package list for new version
-        run: |
-          kubectl run ingest-new-gl-version-$RANDOM \
-              --namespace default --token "${{ steps.get-token.outputs.idToken }}" \
-              --image=ghcr.io/gardenlinux/glvd-data-ingestion:latest \
-              --restart=Never \
-              --env=PGDATABASE=glvd \
-              --env=PGUSER="${{ secrets.GLVD_DB_USERNAME }}" \
-              --env=PGHOST=glvd-database-0.glvd-database \
-              --env=PGPORT=5432 \
-              --env=PGPASSWORD="${{ secrets.GLVD_DB_PASSWORD }}" -- /usr/local/src/ingest-single-gl-release.sh ${{ inputs.version }}
-      - name: Wait for GLVD to ingest the package list of the new version
-        run: |
-          echo "Give GLVD some time to ingest the data. It is not clear how long this takes exactly, and there is no single indicator for when it was done."
-          sleep 180
   flavors_matrix:
-    needs: glvd
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -79,8 +49,8 @@ jobs:
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@2c47ca58891eefa3587954fadf59153317ad9e0c # pin@0.10.2
         with:
           flags: "--no-arch --json-by-arch --publish"
+
   github_release:
-    needs: glvd
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -100,6 +70,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
       - name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@2c47ca58891eefa3587954fadf59153317ad9e0c # pin@0.10.2
+        with:
+          version: ${{inputs.python_lib_version}}
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # pin@v4
         with:
@@ -111,9 +83,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [[ "${{ inputs.is_latest }}" == "true" ]]; then
-            gl-gh create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")" --latest
+            gl-gh create --tag ${{ inputs.version }} --commit "${{ inputs.commit }}" --latest
           else
-            gl-gh create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
+            gl-gh create --tag ${{ inputs.version }} --commit "${{ inputs.commit }}"
           fi
       - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # pin@v4.3.0
         with:
@@ -138,6 +110,8 @@ jobs:
           submodules: true
       - name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@2c47ca58891eefa3587954fadf59153317ad9e0c # pin@0.10.2
+        with:
+          version: ${{inputs.python_lib_version}}
       - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
@@ -165,7 +139,7 @@ jobs:
           release="$(cat .github_release_id)"
 
           echo "$release $CNAME.tar.xz"
-          echo "$CNAME.tar.xz" | .github/workflows/release-page.sh ${{ secrets.GITHUB_TOKEN }} ${{ github.repository }} upload "$release"
+          gl-gh upload --release_id "$release" --file_path "$CNAME.tar.xz"
 
           # upload test logs separately (if they exist)
           log_suffixes="chroot.test.log chroot.test.xml platform.test.log platform.test.xml"
@@ -175,52 +149,3 @@ jobs:
               gl-gh upload --release_id "$release" --file_path "$log"
             fi
           done
-
-  tag_container_as_latest:
-    if: ${{ inputs.type }} == 'minor'
-    uses: ./.github/workflows/tag_latest_container.yml
-    with:
-      version: ${{ inputs.version }}
-      is_latest:  ${{ inputs.is_latest }}
-    permissions:
-      packages: write
-  glrd:
-    name: create GLRD release
-    permissions:
-      id-token: write
-    runs-on: ubuntu-24.04
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # pin@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      - name: Create GLRD release
-        uses: gardenlinux/glrd@v4
-        with:
-          cmd: |
-            type=${{ inputs.type }}
-            commit=${{ inputs.commit }}
-            version=${{ inputs.version }}
-            major=$(echo ${version} | cut -d'.' -f1)
-            minor=$(echo ${version} | cut -d'.' -f2)
-            if [ ${type} = "minor" ]; then
-              # check for major version and create if missing
-              if ! glrd --no-header --type major --version ${major} | grep ${major}; then
-                glrd-manage --s3-update --create major --version ${major}
-              fi
-              glrd-manage --s3-update --create minor --version ${version} --commit ${commit}
-            elif [ ${type} = "dev" ]; then
-              glrd-manage --s3-update --create dev --version ${version} --commit ${commit}
-            fi
-      - name: Get created GLRD release
-        uses: gardenlinux/glrd@v4
-        with:
-          cmd: |
-            version=${{ inputs.version }}
-            major=$(echo ${version} | cut -d'.' -f1)
-            minor=$(echo ${version} | cut -d'.' -f2)
-            glrd --type major,minor,dev --version ${major}
