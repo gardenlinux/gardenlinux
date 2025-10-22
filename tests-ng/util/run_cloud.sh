@@ -61,6 +61,15 @@ user_data_script=
 util_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")")"
 tf_dir="$util_dir/tf"
 login_cloud_sh="$util_dir/login_cloud.sh"
+uuid_file="$util_dir/.uuid"
+if [ ! -f "$uuid_file" ]; then
+	uuid=$(uuidgen | tr A-F a-f)
+	echo "$uuid" >"$uuid_file"
+else
+	uuid=$(<"$uuid_file")
+fi
+seed=${uuid%%-*}
+workspace="${image_name}-${seed}"
 
 log_dir="$util_dir/../log"
 log_file_log="cloud.test-ng.log"
@@ -110,11 +119,11 @@ cleanup() {
 		(
 			cd "${tf_dir}"
 			tofu init -var-file "$image_name.tfvars"
-			tofu workspace select "$image_name"
+			tofu workspace select "$workspace"
 			tofu init -var-file "$image_name.tfvars"
 			tofu destroy -var-file "$image_name.tfvars" --auto-approve
 			tofu workspace select default
-			tofu workspace delete "$image_name"
+			tofu workspace delete "$workspace"
 		)
 	fi
 }
@@ -283,7 +292,7 @@ fi
 (
 	cd "${tf_dir}"
 	tofu init -var-file "$image_name.tfvars"
-	tofu workspace select -or-create "$image_name"
+	tofu workspace select -or-create "$workspace"
 	tofu "${tf_cmd[@]}" -var-file "$image_name.tfvars"
 )
 
