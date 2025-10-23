@@ -12,6 +12,7 @@ jobs:
   test:
     name: Test-NG flavor in chroot ${{ inputs.flavor }} (${{ inputs.arch }})
     runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    if: ${{ inputs.flavor != 'skip' }}
     timeout-minutes: 10
     defaults:
       run:

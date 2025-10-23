@@ -31,16 +31,12 @@ on:
         description: "Run bin/flavors_parse.py with these parameters for tests"
         default: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
         type: string
-      flavors_parse_params_test_platform:
-        description: "Run bin/flavors_parse.py with these parameters for platform tests"
-        default: '--exclude "bare-*" --no-arch --json-by-arch --build --test-platform'
-        type: string
       flavors_parse_params_test_bare:
         description: "Run bin/parse_flavors.py with these parameters for bare flavors"
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
         type: string
       test_types:
-        description: "Types of tests to execute (comma-separated: chroot,qemu,cloud,oci). Note: oci tests only work when build=true"
+        description: "Types of tests to execute (comma-separated: chroot,qemu,cloud,oci,bare). Note: bare tests only work when build=true"
         type: string
         default: "chroot,qemu,cloud,oci"
       ignore_workflow_concurrency:

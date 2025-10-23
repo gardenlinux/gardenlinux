@@ -41,6 +41,7 @@ jobs:
   test:
     name: Test flavor in Cloud ${{ inputs.flavor }} (${{ inputs.arch }})
     runs-on: "ubuntu-24.04"
+    if: ${{ inputs.flavor != 'skip' }}
     environment: oidc_platform_tests
     defaults:
       run:

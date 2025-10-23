@@ -10,19 +10,25 @@ on:
         required: true
 jobs:
   test:
-    name: Test flavor in OCI ${{ inputs.flavor }} (${{ inputs.arch }})
+    name: Test-NG flavor in OCI ${{ inputs.flavor }} (${{ inputs.arch }})
     runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    if: ${{ inputs.flavor != 'skip' }}
+    timeout-minutes: 30
     defaults:
       run:
         shell: bash
+    env:
+      CNAME: ""
     permissions:
       actions: write
     steps:
+      - name: install required packages
+        run: |
+          sudo apt-get update
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends libxml2-utils retry
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
-      - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@2c47ca58891eefa3587954fadf59153317ad9e0c # pin@0.10.2
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # pin@v4.3.0
         with:
           path: |
@@ -30,10 +36,47 @@ jobs:
             VERSION
           key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
-      - name: Load bare flavor build artifact
+      - name: Download test distribution artifact
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        with:
+          name: test-distribution
+          path: tests-ng/.build
+      - name: Determine CNAME
+        id: cname
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@02879bd567ed39b5610332afcc6e46197073db0c # pin@0.10.0
+        with:
+          flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
+      - name: Set CNAME
+        run: |
+          echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
+      - name: Load flavor build artifact
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
         with:
           name: build-${{ inputs.flavor }}-${{ inputs.arch }}
-          path: .build/bare_flavors
-      - name: Test
-        run: make --directory=tests ${{ inputs.flavor }}-${{ inputs.arch }}-container-test
+      - name: unpack build artifacts
+        run: |
+          mkdir ".build"
+          tar -C .build -xzf $CNAME.tar.gz
+          rm "$CNAME.tar.gz"
+          tree .build
+        # TODO: handle skipping better
+      - name: New Test Framework
+        run: |
+          if [ -e ".build/$CNAME.oci" ]; then
+            ./test-ng ".build/$CNAME.oci"
+          else
+            echo "skipping non oci file"
+          fi
+      - name: Copy test results to build directory
+        if: always()
+        run: |
+          cp tests-ng/log/oci.test-ng.log .build/${CNAME}.oci.test-ng.log || true
+          cp tests-ng/log/oci.test-ng.xml .build/${CNAME}.oci.test-ng.xml || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+        if: always()
+        with:
+          if-no-files-found: ignore
+          name: oci-test-ng-${{ env.CNAME }}
+          path: |
+            .build/${{ env.CNAME }}.oci.test-ng.log
+            .build/${{ env.CNAME }}.oci.test-ng.xml

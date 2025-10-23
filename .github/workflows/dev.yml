@@ -45,7 +45,7 @@ jobs:
     with:
       flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
-      test_types: "chroot,qemu,oci"
+      test_types: "chroot,qemu,oci,bare"
     permissions:
       id-token: write # TODO: 3215 elevated permissions for included workflow
       actions: write # TODO: 3215 elevated permissions for included workflow
