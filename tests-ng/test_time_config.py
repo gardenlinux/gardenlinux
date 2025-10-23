@@ -84,18 +84,20 @@ def test_chrony_on_azure(systemd: Systemd, systemd_detect_virt: Hypervisor):
         # If real Azure, this will work.
         assert systemd.is_active("chrony"), f"Chrony should be active on Azure."
     else:
-        # Azure image tested in QEMU (no Hyper-V clock available -> chrony is disabled)
-        units = systemd.list_units()
+        # Azure image tested in QEMU (no Hyper-V clock available -> chrony is disabled and not loaded)
+        units = systemd.list_installed_units()
         chrony_unit = next(
-            (unit for unit in units if unit.unit == "chrony.service"), None
+            (unit for unit in units if unit.unit == "chrony.service"),
+            None,
         )
 
         assert (
             chrony_unit is not None
-        ), "chrony.service should be present in Azure image."
-        assert (
-            chrony_unit.load == "loaded"
-        ), "chrony.service should be loaded in Azure iamges."
+        ), "chrony.service should be present in Azure images."
+        assert chrony_unit.load in (
+            "enabled",
+            "disabled",
+        ), f"unexpected chrony.service state: {chrony_unit.load!r}"
 
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
