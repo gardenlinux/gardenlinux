@@ -75,12 +75,27 @@ def test_systemd_timesyncd_disabled(systemd: Systemd):
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure and not qemu")
-def test_chrony_on_azure(systemd: Systemd):
+def test_chrony_on_azure(systemd: Systemd, systemd_detect_virt: Hypervisor):
     """
     Test for chrony as active time sync service on Azure.
     See: https://learn.microsoft.com/en-us/azure/virtual-machines/linux/time-sync#chrony
     """
-    assert systemd.is_active("chrony"), f"Chrony should be active on Azure."
+    if systemd_detect_virt == Hypervisor.microsoft:
+        # If real Azure, this will work.
+        assert systemd.is_active("chrony"), f"Chrony should be active on Azure."
+    else:
+        # Azure image tested in QEMU (no Hyper-V clock available -> chrony is disabled)
+        units = systemd.list_units()
+        chrony_unit = next(
+            (unit for unit in units if unit.unit == "chrony.service"), None
+        )
+
+        assert (
+            chrony_unit is not None
+        ), "chrony.service should be present in Azure image."
+        assert (
+            chrony_unit.load == "loaded"
+        ), "chrony.service should be loaded in Azure iamges."
 
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
