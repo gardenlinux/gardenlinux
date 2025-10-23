@@ -1,0 +1,5 @@
+ARG image
+
+FROM $image
+COPY test.py /
+CMD [ "python3", "/test.py" ]

@@ -1,0 +1,17 @@
+usr/bin/env
+usr/share/zoneinfo/.*
+etc/ssl/certs/ca-certificates.crt
+usr/lib/(x86_64-linux-gnu|aarch64-linux-gnu)/.*
+usr/bin/sh
+usr/bin/bash
+usr/bin/od
+usr/bin/cp
+usr/bin/tr
+usr/bin/mkdir
+usr/bin/find
+usr/bin/sed
+usr/bin/true
+usr/bin/grep
+usr/bin/realpath
+usr/bin/sort
+usr/bin/dirname
