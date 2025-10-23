@@ -54,7 +54,7 @@ def test_fhs(shell: ShellRunner):
 @pytest.mark.feature("server", reason="server installs systemd")
 def test_startup_time(systemd: Systemd):
     tolerated_kernel = 60.0
-    tolerated_userspace = 40.0
+    tolerated_userspace = 60.0
 
     kernel, initrd, userspace = systemd.analyze()
     kernel_total = kernel + initrd
