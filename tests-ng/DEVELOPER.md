@@ -19,48 +19,49 @@ The following principles guide all test development in Garden Linux:
 
 ### Core Principles
 
-- **Be easy to read and understand** without extensive knowledge of Garden Linux internals
+1. **Be easy to read and understand** without extensive knowledge of Garden Linux internals
 
-  - Use native Python APIs over shell scripts where feasible
-  - Write clear, self-documenting test names and assertions
-  - Avoid complex logic in test functions
+- Use native Python APIs over shell scripts where feasible
+- Write clear, self-documenting test names and assertions
+- Avoid complex logic in test functions
 
-- **Be explicit about what quality they ensure**
+2. **Be explicit about what quality they ensure**
 
-  - Test names must clearly communicate what is broken if the test fails
-  - In general, one test should not have multiple assertions (there might be valid exceptions)
-  - Each test should verify a single, specific behavior
+- Test names must clearly communicate what is broken if the test fails
+- In general, one test should not have multiple assertions (there might be valid exceptions)
+- Each test should verify a single, specific behavior
 
-- **Be very strict about declaring if they mutate system state**
+3. **Be very strict about declaring if they mutate system state**
 
-  - Use appropriate markers (`@pytest.mark.modify`, `@pytest.mark.root`) to declare system modifications
-  - Document (`reason=`) why system modifications are necessary
-  - Ensure tests clean up after themselves.
-    - If new functionality is added, check if `tests-ng/plugins/sysdiff.py` collects modifications.
+- Use appropriate markers (`@pytest.mark.modify`, `@pytest.mark.root`) to declare system modifications
+- Document (`reason=`) why system modifications are necessary
+- Ensure tests clean up after themselves.
+  - If new functionality is added, check if `tests-ng/plugins/sysdiff.py` collects modifications.
 
-- **Only run as root when needed**
+4. **Only run as root when needed**
 
-  - Use `@pytest.mark.root` only when root privileges are absolutely necessary
-  - Document (`reason=`) why root access is required
-  - Prefer unprivileged testing when possible
+- Use `@pytest.mark.root` only when root privileges are absolutely necessary
+- Document (`reason=`) why root access is required
+- Prefer unprivileged testing when possible
 
-- **Only require a booted system when needed**
+5. **Only require a booted system when needed**
 
-  - Use `@pytest.mark.booted` only when a running system is required
-  - Document why a booted system is necessary
-  - Prefer chroot testing for filesystem-only tests
+- Use `@pytest.mark.booted` only when a running system is required
+- Document why a booted system is necessary
+- Prefer chroot testing for filesystem-only tests
 
-- **Use abstractions judiciously to hide implementation details**
+6. **Use abstractions judiciously to hide implementation details**
 
-  - Leverage plugins for infrastructure concerns (parsing files, accessing data, establishing connections)
-  - Use handlers for setup/teardown operations
-  - Keep test logic visible and maintain Arrange-Act-Assert structure
-  - Avoid over-abstraction that requires reading multiple plugins to understand a test
+- Leverage plugins for infrastructure concerns (parsing files, accessing data, establishing connections)
+- Use handlers for setup/teardown operations
+- Keep test logic visible and maintain Arrange-Act-Assert structure
+- Avoid over-abstraction that requires reading multiple plugins to understand a test
 
-- **Be mindful about external dependencies**
-  - Prefer Python standard library over third-party packages
-  - Only add PyPI dependencies when there's clear benefit
-  - Document why external dependencies are necessary
+7. **Be mindful about external dependencies**
+
+- Prefer Python standard library over third-party packages
+- Only add PyPI dependencies when there's clear benefit
+- Document why external dependencies are necessary
 
 ## Framework Structure
 
@@ -365,7 +366,7 @@ The project enforces code quality through CI linting (see `.github/workflows/lin
 - **[Black](https://black.readthedocs.io/en/stable/)**: Automatic code formatting
 - **[isort](https://pycqa.github.io/isort/)**: Import statement sorting
 - **[Pyright](https://github.com/microsoft/pyright/blob/main/docs/getting-started.md)**: Static type checking
-These tools are available for most IDEs and a wide range of text editors.
+  These tools are available for most IDEs and a wide range of text editors.
 
 In order to improve your development experience, and to allow us to process your PRs faster, we suggest your enable them with your editor or IDE.
 
@@ -435,10 +436,10 @@ from .systemd import Systemd, SystemdUnit
 
 ### Policy
 
-- **Prefer Python standard library** over third-party packages
-- **Only add PyPI dependencies** when there's clear benefit
-- **Document why** external dependencies are necessary
-- **Consider maintenance cost** of external dependencies
+1. **Prefer Python standard library** over third-party packages
+2. **Only add PyPI dependencies** when there's clear benefit
+3. **Document why** external dependencies are necessary
+4. **Consider maintenance cost** of external dependencies
 
 ### Current Dependencies
 
