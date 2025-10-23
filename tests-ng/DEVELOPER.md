@@ -44,11 +44,14 @@ The following principles guide all test development in Garden Linux:
 - Document (`reason=`) why root access is required
 - Prefer unprivileged testing when possible
 
-5. **Only require a booted system when needed**
+5. **Target appropriate test environments and platforms**
 
-- Use `@pytest.mark.booted` only when a running system is required
-- Document why a booted system is necessary
-- Prefer chroot testing for filesystem-only tests
+- Use `@pytest.mark.booted` to mark tests that require a full booted system (such as QEMU or cloud VMs) to function correctly.
+- Use `@pytest.mark.feature` to restrict tests to only those environments or platforms where they are intended to run, especially if they would fail elsewhere.
+- Whenever possible, design your tests so that they work across _all_ supported environments and platforms. Only exclude an environment or platform if there’s a strong, well-documented reason to do so.
+- If possible, still add a minimal test for excluded platforms
+- Document (`reason=`) why a test must run (or be excluded) in certain environments or platforms
+- For a list of all available test environments (like chroot, QEMU, cloud, and OCI), see [Test Environment Details](../README.md#test-environment-details).
 
 6. **Use abstractions judiciously to hide implementation details**
 
@@ -314,6 +317,44 @@ Limits test execution based on feature conditions:
                      reason="We want no authorized_keys for unmanaged users")
 def test_users_have_no_authorized_keys(expected_users):
     # Test implementation
+```
+
+### Common Filtering Patterns
+
+**Environment-specific filtering:**
+
+```python
+# Only run on booted systems (QEMU, cloud)
+@pytest.mark.booted(reason="Requires running system")
+
+# Skip in container environments (OCI)
+@pytest.mark.feature("not container", reason="Container environment not suitable")
+```
+
+**Platform-specific filtering:**
+
+```python
+# Cloud provider specific tests
+@pytest.mark.feature("aws", reason="AWS-specific functionality")
+@pytest.mark.feature("azure", reason="Azure-specific functionality")
+@pytest.mark.feature("gcp", reason="GCP-specific configuration")
+@pytest.mark.feature("ali", reason="Alibaba Cloud-specific configuration")
+
+# Other platform-specific tests
+@pytest.mark.feature("openstack", reason="OpenStack-specific configuration")
+@pytest.mark.feature("vmware", reason="VMware-specific configuration")
+```
+
+**Complex environment combinations:**
+
+```python
+# Multiple conditions
+@pytest.mark.feature("(gardener or chost) and not _pxe",
+                     reason="containerd needed but not working in PXE environment")
+
+# Feature combinations
+@pytest.mark.feature("ssh and not (ali or aws or azure or openstack)",
+                     reason="We want no authorized_keys for unmanaged users")
 ```
 
 #### `@pytest.mark.performance_metric`
