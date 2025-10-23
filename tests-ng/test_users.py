@@ -49,7 +49,7 @@ def test_users_sudo_capability(expected_users, user: User):
 
 def test_available_regular_users(get_regular_users, expected_users):
     allowed_users = ["dev", "nobody"] + list(expected_users)
-    unexpected_user = [user for user in get_regular_users if user not in expected_users]
+    unexpected_user = [user for user in get_regular_users if user not in allowed_users]
 
     assert (
         not unexpected_user
