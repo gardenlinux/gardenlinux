@@ -51,9 +51,7 @@ def test_fhs(shell: ShellRunner):
     reason="We can only measure startup time if we actually boot the system"
 )
 @pytest.mark.performance_metric
-@pytest.mark.feature(
-    "server and not azure"
-)  # server installs systemd and azure has notoriously bad startup times
+@pytest.mark.feature("server", reason="server installs systemd")
 def test_startup_time(systemd: Systemd):
     tolerated_kernel = 60.0
     tolerated_userspace = 40.0
