@@ -74,6 +74,7 @@ def get_regular_users(regular_user_uid_range):
             regular_users.add(entry.pw_name)
     return regular_users
 
+
 @pytest.fixture
 def get_all_users():
     all_users = set()
