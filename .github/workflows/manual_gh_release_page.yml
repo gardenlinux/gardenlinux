@@ -43,7 +43,7 @@ jobs:
             flavors.yaml
           sparse-checkout-cone-mode: false
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@2c47ca58891eefa3587954fadf59153317ad9e0c # pin@0.10.2
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@227-tilde-should-be-escaped-in-gl-release-notes
       - id: matrix
         name: Generate flavors matrix
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@2c47ca58891eefa3587954fadf59153317ad9e0c # pin@0.10.2
@@ -66,17 +66,13 @@ jobs:
         with:
           submodules: true
           fetch-depth: 0
-      # - name: install dependencies for python-gardenlinux-lib
-      #   run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@2c47ca58891eefa3587954fadf59153317ad9e0c # pin@0.10.2
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@227-tilde-should-be-escaped-in-gl-release-notes
         with:
           version: ${{inputs.python_lib_version}}
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # pin@v4
         with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_REGION }}
       - name: create GitHub release
         env:
@@ -92,60 +88,58 @@ jobs:
           key: release-${{ github.run_id }}
           path: .github_release_id
 
-  github_release_artifacts_upload:
-    needs: [github_release, flavors_matrix]
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: write
-      id-token: write
-    environment: oidc_aws_s3_upload
-    env:
-      CNAME: ""
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix ) }}
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
-        with:
-          submodules: true
-      - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@2c47ca58891eefa3587954fadf59153317ad9e0c # pin@0.10.2
-        with:
-          version: ${{inputs.python_lib_version}}
-      - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
-          role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # pin@v4.3.0
-        with:
-          key: release-${{ github.run_id }}
-          path: .github_release_id
-          fail-on-cache-miss: true
-      - name: Download from S3 bucket ${{ secrets.aws_s3_bucket }} for ${{ matrix.flavor }} (${{ matrix.arch }})
-        run: |
-          commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
-          CNAME="${{ matrix.flavor }}-${{ matrix.arch }}-${{ inputs.version }}-$commit"
-
-          echo "CNAME=$CNAME" | tee -a "$GITHUB_ENV"
-
-          mkdir "$CNAME"
-          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --cname "$CNAME" --path "$CNAME" download-artifacts-from-bucket
-          tar -cJf "$CNAME.tar.xz" -C "$CNAME" .
-      - name: Upload to release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          release="$(cat .github_release_id)"
-
-          echo "$release $CNAME.tar.xz"
-          gl-gh upload --release_id "$release" --file_path "$CNAME.tar.xz" --owner vivus-ignis --repo gardenlinux-dev
-
-          # upload test logs separately (if they exist)
-          log_suffixes="chroot.test.log chroot.test.xml platform.test.log platform.test.xml"
-          for suffix in $log_suffixes; do
-            log="$CNAME/$CNAME.$suffix"
-            if [ -f "$log" ]; then
-              gl-gh upload --release_id "$release" --file_path "$log" --owner vivus-ignis --repo gardenlinux-dev   
-            fi
-          done
+  # github_release_artifacts_upload:
+  #   needs: [github_release, flavors_matrix]
+  #   runs-on: ubuntu-24.04
+  #   permissions:
+  #     contents: write
+  #     id-token: write
+  #   environment: oidc_aws_s3_upload
+  #   env:
+  #     CNAME: ""
+  #   strategy:
+  #     fail-fast: false
+  #     matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix ) }}
+  #   steps:
+  #     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+  #       with:
+  #         submodules: true
+  #     - name: Install python-gardenlinux-lib
+        # uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@227-tilde-should-be-escaped-in-gl-release-notes
+  #       with:
+  #         version: ${{inputs.python_lib_version}}
+  #     - uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # pin@v4
+  #       with:
+  #         aws-region: ${{ secrets.AWS_REGION }}
+  #     - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # pin@v4.3.0
+  #       with:
+  #         key: release-${{ github.run_id }}
+  #         path: .github_release_id
+  #         fail-on-cache-miss: true
+  #     - name: Download from S3 bucket ${{ secrets.aws_s3_bucket }} for ${{ matrix.flavor }} (${{ matrix.arch }})
+  #       run: |
+  #         commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
+  #         CNAME="${{ matrix.flavor }}-${{ matrix.arch }}-${{ inputs.version }}-$commit"
+  #
+  #         echo "CNAME=$CNAME" | tee -a "$GITHUB_ENV"
+  #
+  #         mkdir "$CNAME"
+  #         gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --cname "$CNAME" --path "$CNAME" download-artifacts-from-bucket
+  #         tar -cJf "$CNAME.tar.xz" -C "$CNAME" .
+  #     - name: Upload to release
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       run: |
+  #         release="$(cat .github_release_id)"
+  #
+  #         echo "$release $CNAME.tar.xz"
+  #         gl-gh upload --release_id "$release" --file_path "$CNAME.tar.xz" --owner vivus-ignis --repo gardenlinux-dev
+  #
+  #         # upload test logs separately (if they exist)
+  #         log_suffixes="chroot.test.log chroot.test.xml platform.test.log platform.test.xml"
+  #         for suffix in $log_suffixes; do
+  #           log="$CNAME/$CNAME.$suffix"
+  #           if [ -f "$log" ]; then
+  #             gl-gh upload --release_id "$release" --file_path "$log" --owner vivus-ignis --repo gardenlinux-dev   
+  #           fi
+  #         done
