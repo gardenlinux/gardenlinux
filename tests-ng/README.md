@@ -71,6 +71,7 @@ Before running the test framework, make sure the following dependencies are inst
 - `uuid-runtime`
 - `qemu`
 - `qemu-utils`
+- `socat`
 
 If you plan to provision cloud resources, the cloud provider specific CLIs might be useful or even required:
 
