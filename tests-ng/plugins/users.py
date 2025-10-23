@@ -73,3 +73,10 @@ def get_regular_users(regular_user_uid_range):
         if entry.pw_uid in regular_user_uid_range:
             regular_users.add(entry.pw_name)
     return regular_users
+
+@pytest.fixture
+def get_all_users():
+    all_users = set()
+    for entry in pwd.getpwall():
+        all_users.add(entry.pw_name)
+    return all_users

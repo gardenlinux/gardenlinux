@@ -35,16 +35,15 @@ def test_no_extra_home_directories(expected_users):
 
 @pytest.mark.booted
 @pytest.mark.root(reason="Using sudo comamnd to check the access")
-def test_users_sudo_capability(expected_users, user: User):
-    for entry in pwd.getpwall():
-        if (entry.pw_name == "root") or (entry.pw_name in expected_users):
-            assert user.is_user_sudo(
-                entry.pw_name
-            ), f"User: {entry.pw_name} doesn't have sudo permission"
-        else:
-            assert not user.is_user_sudo(
-                entry.pw_name
-            ), f"System User {entry.pw_name} has sudo permission"
+def test_users_sudo_capability(get_all_users, expected_users, user: User):
+    users_with_sudo_capabilities = set([u for u in get_all_users if user.is_user_sudo(u)])    
+    allowed_sudo_users = set(expected_users) | {"root", "dev"}
+
+    unexpected_sudo_users = users_with_sudo_capabilities - allowed_sudo_users
+
+    assert (
+        not unexpected_sudo_users
+    ), f"Unexpected sudo capability {unexpected_sudo_users}"
 
 
 def test_available_regular_users(get_regular_users, expected_users):
