@@ -42,7 +42,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@02879bd567ed39b5610332afcc6e46197073db0c # pin@0.10.0
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@2c47ca58891eefa3587954fadf59153317ad9e0c # pin@0.10.2
       - name: Set image reference for S3
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -51,7 +51,7 @@ jobs:
         run: |
           echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
       - name: 'Authenticate to AWS'
-        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # pin@v4
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
           role-session-name: ${{ secrets.aws_session }}
