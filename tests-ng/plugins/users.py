@@ -1,9 +1,26 @@
+import pwd
 import subprocess
 from typing import Optional, Set
 
 import pytest
 
+from .shell import ShellRunner
+
 users: Set[str] = set()
+
+
+class User:
+    def __init__(self, shell: ShellRunner):
+        self._shell = shell
+
+    def is_user_sudo(self, user):
+        command = f"sudo --list --other-user={user}"
+        output = self._shell(command, capture_output=True)
+        output_lines = output.stdout.strip().splitlines()
+        for line in output_lines:
+            if "may run the following commands on" in line:
+                return True
+        return False
 
 
 def cloudinit_default_user() -> Optional[str]:
@@ -41,3 +58,26 @@ def pytest_configure(config: pytest.Config):
 @pytest.fixture
 def expected_users():
     return users
+
+
+@pytest.fixture
+def user(shell: ShellRunner):
+    return User(shell)
+
+
+@pytest.fixture
+def get_regular_users(regular_user_uid_range):
+    regular_users = set()
+
+    for entry in pwd.getpwall():
+        if entry.pw_uid in regular_user_uid_range:
+            regular_users.add(entry.pw_name)
+    return regular_users
+
+
+@pytest.fixture
+def get_all_users():
+    all_users = set()
+    for entry in pwd.getpwall():
+        all_users.add(entry.pw_name)
+    return all_users
