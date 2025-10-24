@@ -118,7 +118,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@2c47ca58891eefa3587954fadf59153317ad9e0c # pin@0.10.2
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@7f337e8340fe3f707a139fbd72185eebafe6c97b # pin@0.10.3
       - name: Set build reference
         run: |
           version="$(./bin/garden-version "$version")"
@@ -156,7 +156,7 @@ jobs:
         arch: ${{ fromJSON(needs.generate_matrix.outputs.arch_matrix) }}
         platform: ${{ fromJSON(needs.generate_matrix.outputs.platforms_matrix) }}
     permissions:
-      actions: write      
+      actions: write
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:

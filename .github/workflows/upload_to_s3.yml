@@ -46,7 +46,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@2c47ca58891eefa3587954fadf59153317ad9e0c # pin@0.10.2
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@7f337e8340fe3f707a139fbd72185eebafe6c97b # pin@0.10.3
       - uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
@@ -79,7 +79,7 @@ jobs:
           name: certs
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-          path: ${{ env.CNAME }}/
+          path: cert/
       - name: Prepare S3 upload artifacts
         run: |
           mkdir -p "$CNAME"
@@ -98,9 +98,9 @@ jobs:
       - if: ${{ inputs.with_certs }}
         name: Add certs to build artifacts
         run: |
-          pushd $CNAME
+          pushd cert
           for file in "secureboot."*; do
-            mv "$file" "$CNAME.$file"
+            mv "$file" "../$CNAME/$CNAME.$file"
           done
           popd
       - name: Upload to S3 bucket ${{ secrets.aws_s3_bucket }}
