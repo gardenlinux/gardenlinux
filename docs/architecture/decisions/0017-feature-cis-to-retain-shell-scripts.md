@@ -1,4 +1,4 @@
-# 17. Retain Shell-Based CIS Implementation (No Custom Python Rewrite)
+# 17. Retain Shell-Based CIS Implementation for tests-ng (No Custom Python Rewrite)
 
 Date: 2025-10-24
 
@@ -8,12 +8,15 @@ Accepted
 
 ## Context
 
- - The CIS hardening feature in Garden Linux currently executes upstream shell scripts from ovh/debian-cis. 
- - There is a need to formally document why we intentionally keep this shell-based approach instead of rewriting and owning a custom implementation in Python.
+- This decision affects only the CIS tests in the new tests-ng framework, not CIS behavior in the runtime image itself.
+
+ - Garden Linux’s CIS validation currently integrates upstream shell scripts from ovh/debian-cis. We need to clarify why we intentionally do not rewrite these tests into Python / pytest-based native test-ng modules.
 
 ## Key considerations:
 
- - Rewriting CIS logic into Python would require full long-term ownership of hundreds of evolving rule checks.
+ - Rewriting CIS test logic into native tests-ng Python tests would make Garden Linux fully responsible for maintaining evolving CIS rules.
+
+ - Another consideration is the uniformity of tests in the new test framework. The (acceptable) downside of this decision is that the tests in the CIS feature don't follow our best practices for tests.
 
  - ovh/debian-cis is actively maintained upstream — following industry-standard CIS baseline updates.
 
@@ -25,7 +28,4 @@ Accepted
 
 ## Decision
 
-Garden Linux will retain the upstream shell-based CIS implementation without rewriting or owning the CIS logic internally as an Exception.
-A design decision marker is created to clearly document the intentional choice.
-
-The CIS hardening tests will be hence executed as-is from upstream.
+Garden Linux, for tests-ng framework, will retain the upstream shell-based CIS implementation of tests without rewriting or owning the CIS logic internally as an Exception.
