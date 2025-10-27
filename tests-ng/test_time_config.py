@@ -46,7 +46,7 @@ def test_correct_ntp_on_gcp(timedatectl: TimeDateCtl):
 def test_ntp(timedatectl: TimeDateCtl, systemd_detect_virt: Hypervisor):
     """
     Validate that NTP is enabled and synchronized on non-hyperscaler platforms.
-    Skips on AWS and GCP since their metadata-based NTP servers and not reachable from QEMU tests.
+    Skips on Azure, AWS and GCP since their metadata-based NTP servers and not reachable from QEMU tests.
     """
 
     # Skip untestable virtualization environments
@@ -69,7 +69,7 @@ def test_ntp(timedatectl: TimeDateCtl, systemd_detect_virt: Hypervisor):
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure")
-def test_systemd_timesyncd_disabled(systemd: Systemd):
+def test_systemd_timesyncd_disabled_on_azure(systemd: Systemd):
     assert (
         systemd.is_active("systemd-timesyncd") == False
     ), f"Chrony instead of systemd-timesyncd should be active on Azure."
