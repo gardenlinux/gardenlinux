@@ -93,7 +93,9 @@ class Systemd:
 
     def stop_unit(self, unit_name: str):
         if not allow_system_modifications():
-            pytest.skip("stopping units is only supported when system state modifications are allowed")
+            pytest.skip(
+                "stopping units is only supported when system state modifications are allowed"
+            )
         self._shell(f"{self._systemctl} stop {unit_name}")
 
     def list_units(self) -> list[SystemdUnit]:

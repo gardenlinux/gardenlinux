@@ -26,15 +26,15 @@ podman run -it --rm \
 """
 
 import argparse
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add tests-ng to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from plugins.sysdiff import Sysdiff
 from plugins.shell import ShellRunner
+from plugins.sysdiff import Sysdiff
 
 
 def list_snapshots(sysdiff: Sysdiff, verbose: bool = False):
@@ -64,7 +64,9 @@ def list_snapshots(sysdiff: Sysdiff, verbose: bool = False):
             print(f"  {snapshot_name} (error loading: {e})")
 
 
-def diff_snapshots(sysdiff: Sysdiff, snapshot1_name: str, snapshot2_name: str, verbose: bool = False):
+def diff_snapshots(
+    sysdiff: Sysdiff, snapshot1_name: str, snapshot2_name: str, verbose: bool = False
+):
     """Compare two snapshots and show differences"""
     try:
         print(f"Comparing snapshots:")
@@ -81,7 +83,9 @@ def diff_snapshots(sysdiff: Sysdiff, snapshot1_name: str, snapshot2_name: str, v
         print("✗ Changes detected:")
         print()
 
-        diff_output = sysdiff.diff_engine.generate_diff(diff_result, snapshot1_name, snapshot2_name)
+        diff_output = sysdiff.diff_engine.generate_diff(
+            diff_result, snapshot1_name, snapshot2_name
+        )
         print(diff_output)
 
     except Exception as e:
@@ -95,18 +99,26 @@ def delete_snapshots(sysdiff: Sysdiff, snapshot_names: list, verbose: bool = Fal
         return
 
     available_snapshots = sysdiff.manager.list_snapshots()
-    existing_snapshots = [name for name in snapshot_names if name in available_snapshots]
-    missing_snapshots = [name for name in snapshot_names if name not in available_snapshots]
+    existing_snapshots = [
+        name for name in snapshot_names if name in available_snapshots
+    ]
+    missing_snapshots = [
+        name for name in snapshot_names if name not in available_snapshots
+    ]
 
     if missing_snapshots:
-        print(f"Warning: The following snapshots were not found: {', '.join(missing_snapshots)}")
+        print(
+            f"Warning: The following snapshots were not found: {', '.join(missing_snapshots)}"
+        )
 
     if not existing_snapshots:
         print("No existing snapshots to delete.")
         return
 
     if verbose:
-        print(f"Deleting {len(existing_snapshots)} snapshot(s): {', '.join(existing_snapshots)}")
+        print(
+            f"Deleting {len(existing_snapshots)} snapshot(s): {', '.join(existing_snapshots)}"
+        )
 
     try:
         sysdiff.cleanup_snapshots(existing_snapshots)
@@ -130,54 +142,50 @@ Examples:
   %(prog)s --diff snapshot_a snapshot_b     # Compare two snapshots
   %(prog)s --diff snapshot_a snapshot_b -v  # Compare with detailed output
   %(prog)s --help                 # Show this help message
-        """
+        """,
     )
 
     # Create mutually exclusive group for main actions
     action_group = parser.add_mutually_exclusive_group(required=True)
 
     action_group.add_argument(
-        "--name", "-n",
+        "--name",
+        "-n",
         type=str,
-        help="Name for the snapshot (will be prefixed with timestamp)"
+        help="Name for the snapshot (will be prefixed with timestamp)",
     )
 
     action_group.add_argument(
-        "--list", "-l",
-        action="store_true",
-        help="List all available snapshots"
+        "--list", "-l", action="store_true", help="List all available snapshots"
     )
 
     action_group.add_argument(
-        "--delete", "-d",
+        "--delete",
+        "-d",
         nargs="+",
         metavar="SNAPSHOT_NAME",
-        help="Delete specified snapshot(s)"
+        help="Delete specified snapshot(s)",
     )
 
     action_group.add_argument(
         "--diff",
         nargs=2,
         metavar=("SNAPSHOT_A", "SNAPSHOT_B"),
-        help="Compare two snapshots and show differences"
+        help="Compare two snapshots and show differences",
     )
 
     parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Enable verbose output"
+        "--verbose", "-v", action="store_true", help="Enable verbose output"
     )
 
     parser.add_argument(
         "--paths",
         nargs="+",
-        help="Custom paths to include in snapshot (default: /etc, /boot, /opt, /proc/mounts)"
+        help="Custom paths to include in snapshot (default: /etc, /boot, /opt, /proc/mounts)",
     )
 
     parser.add_argument(
-        "--ignore-file",
-        type=str,
-        help="Path to file containing ignore patterns"
+        "--ignore-file", type=str, help="Path to file containing ignore patterns"
     )
 
     args = parser.parse_args()
@@ -192,7 +200,7 @@ Examples:
                 name=args.name,
                 paths=args.paths,
                 ignore_file=Path(args.ignore_file) if args.ignore_file else None,
-                verbose=args.verbose
+                verbose=args.verbose,
             )
 
             print(f"✓ Snapshot created successfully: {snapshot.name}")
@@ -229,6 +237,7 @@ Examples:
         print(f"✗ Error: {e}")
         if args.verbose:
             import traceback
+
             traceback.print_exc()
         return 1
 

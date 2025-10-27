@@ -1,12 +1,15 @@
 import os
-import pytest
 from dataclasses import dataclass
+
+import pytest
+
 from .shell import ShellRunner
 
 
 @dataclass
 class SysctlParam:
     """Represents a sysctl parameter"""
+
     name: str
     value: str
 
@@ -47,7 +50,7 @@ class Sysctl:
             for filename in files:
                 file_path = os.path.join(root, filename)
                 # Build sysctl key: strip base_path and replace '/' with '.'
-                rel_path = file_path[len(base_path) + 1:]
+                rel_path = file_path[len(base_path) + 1 :]
                 key = rel_path.replace("/", ".")
                 try:
                     value = self._read_sysctl_parameter(key)
@@ -61,6 +64,7 @@ class Sysctl:
     def __getitem__(self, key: str) -> str:
         """Enable dictionary-style access to sysctl parameters"""
         return self._read_sysctl_parameter(key)
+
 
 @pytest.fixture
 def sysctl(shell: ShellRunner) -> Sysctl:

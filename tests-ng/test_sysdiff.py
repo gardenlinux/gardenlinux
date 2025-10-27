@@ -13,7 +13,7 @@ def test_sysdiff_before_tests(sysdiff: Sysdiff):
     try:
         snapshot = sysdiff.create_snapshot(name)
         # Store the snapshot name in a global variable
-        globals()['before_tests_snapshot_name'] = snapshot.name
+        globals()["before_tests_snapshot_name"] = snapshot.name
         assert name in snapshot.name
 
     except Exception as e:
@@ -34,15 +34,23 @@ def test_sysdiff_after_tests(sysdiff: Sysdiff):
         after_tests_snapshot_name = snapshot.name
         assert name in snapshot.name
 
-        before_tests_snapshot_name = globals().get('before_tests_snapshot_name')
+        before_tests_snapshot_name = globals().get("before_tests_snapshot_name")
         if not before_tests_snapshot_name:
-            pytest.fail("before-tests snapshot not found. Make sure test_sysdiff_before_tests ran first.")
+            pytest.fail(
+                "before-tests snapshot not found. Make sure test_sysdiff_before_tests ran first."
+            )
 
-        diff_result = sysdiff.compare_snapshots(before_tests_snapshot_name, after_tests_snapshot_name)
+        diff_result = sysdiff.compare_snapshots(
+            before_tests_snapshot_name, after_tests_snapshot_name
+        )
 
         if diff_result.has_changes:
-            diff_output = sysdiff.diff_engine.generate_diff(diff_result, before_tests_snapshot_name, after_tests_snapshot_name)
-            pytest.fail(f"System changes were detected during the test run:\n{diff_output}")
+            diff_output = sysdiff.diff_engine.generate_diff(
+                diff_result, before_tests_snapshot_name, after_tests_snapshot_name
+            )
+            pytest.fail(
+                f"System changes were detected during the test run:\n{diff_output}"
+            )
         else:
             assert True
 
@@ -51,9 +59,9 @@ def test_sysdiff_after_tests(sysdiff: Sysdiff):
 
     finally:
         cleanup_names = []
-        if 'before_tests_snapshot_name' in globals():
-            cleanup_names.append(globals()['before_tests_snapshot_name'])
-        if 'after_tests_snapshot_name' in locals():
+        if "before_tests_snapshot_name" in globals():
+            cleanup_names.append(globals()["before_tests_snapshot_name"])
+        if "after_tests_snapshot_name" in locals():
             cleanup_names.append(after_tests_snapshot_name)
         if cleanup_names:
             sysdiff.cleanup_snapshots(cleanup_names)

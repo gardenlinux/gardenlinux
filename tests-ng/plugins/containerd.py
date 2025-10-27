@@ -4,7 +4,6 @@ import validators
 from .shell import ShellRunner
 from .systemd import Systemd
 
-from .shell import ShellRunner
 
 class CtrRunner:
     """
@@ -42,7 +41,6 @@ class CtrRunner:
 @pytest.fixture
 def ctr(shell: ShellRunner):
     return CtrRunner(shell)
-
 
 
 @pytest.fixture

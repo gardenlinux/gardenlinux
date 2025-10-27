@@ -157,4 +157,6 @@ def test_users_have_only_root_authorized_keys_cloud(expected_users):
 @pytest.mark.root(reason="Starting the unit requires root")
 @pytest.mark.feature("ssh")
 def test_ssh_service_running(systemd: Systemd, service_ssh):
-    assert systemd.is_active("ssh"), f"Required systemd unit for ssh.service is not running"
+    assert systemd.is_active(
+        "ssh"
+    ), f"Required systemd unit for ssh.service is not running"

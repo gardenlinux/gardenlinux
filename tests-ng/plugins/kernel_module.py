@@ -1,11 +1,14 @@
-import pytest
 from dataclasses import dataclass
+
+import pytest
+
 from .shell import ShellRunner
 
 
 @dataclass
 class LoadedKernelModule:
     """Represents a loaded kernel module"""
+
     name: str
 
     def __str__(self) -> str:
@@ -56,6 +59,7 @@ class KernelModule:
             return []
         return sorted(modules)
 
+
 @pytest.fixture
 def kernel_module(shell: ShellRunner) -> KernelModule:
-        return KernelModule(shell)
+    return KernelModule(shell)

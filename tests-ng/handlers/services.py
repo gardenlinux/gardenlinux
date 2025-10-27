@@ -1,7 +1,8 @@
-import pytest
-from plugins.systemd import Systemd
-from plugins.kernel_module import KernelModule
 import time
+
+import pytest
+from plugins.kernel_module import KernelModule
+from plugins.systemd import Systemd
 
 
 # generic services
