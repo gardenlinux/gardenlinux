@@ -24,20 +24,20 @@ def test_clock(shell: ShellRunner):
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("aws")
-@pytest.mark.parametrize("expected_ntp_server", ["169.254.169.123"])
-def test_correct_ntp_on_aws(timedatectl: TimeDateCtl, expected_ntp_server: str):
+def test_correct_ntp_on_aws(timedatectl: TimeDateCtl):
+    ntp_ip = timedatectl.get_ntpserver().ip
     assert (
-        expected_ntp_server == timedatectl.get_ntpserver().ip
-    ), f"ntp server is invalid. Expected {expected_ntp_server}."
+        ntp_ip == "169.254.169.123"
+    ), f"ntp server is invalid. Expected '169.254.169.123' got '{ntp_ip}'."
 
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("gcp")
-@pytest.mark.parametrize("expected_ntp_server", ["metadata.google.internal"])
-def test_correct_ntp_on_gcp(timedatectl: TimeDateCtl, expected_ntp_server: str):
+def test_correct_ntp_on_gcp(timedatectl: TimeDateCtl):
+    ntp_hostname = timedatectl.get_ntpserver().hostname
     assert (
-        expected_ntp_server == timedatectl.get_ntpserver().hostname
-    ), f"ntp server is invalid. Expected {expected_ntp_server}."
+        ntp_hostname == "metadata.google.internal"
+    ), f"ntp server is invalid. Expected 'metadata.google.internal' got '{ntp_hostname}'."
 
 
 @pytest.mark.flaky(reruns=10, reruns_delay=30, only_rerun="AssertionError")
