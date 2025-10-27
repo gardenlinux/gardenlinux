@@ -1,4 +1,4 @@
-# 18. Revert ADR 3. Update the Builder using Dependabot
+# 18. Revert ADR 3 Update the Builder using Dependabot
 
 Date: 2025-10-27
 
@@ -8,8 +8,11 @@ Accepted
 
 ## Context
 
-In ADR [3 Update the Builder using Dependabot](./0003-builder-updates-dependabot.md), we added an indirection to the Garden Linux builder with the intention to allow keeping it updated using Dependabot.
-For various reasons, this has not worked as intended, but introduced additional complexity, which was a problem when working on release branches of Garden Linux.
+In ADR [3 Update the Builder using Dependabot](./0003-builder-updates-dependabot.md), we added an indirection to the Garden Linux Builder using a `Dockerfile`.
+The intention was to allow keeping the Builder updated using Dependabot.
+
+For various reasons, this workflow was not as useful as anticipated, and the additional complexity turned out to be a problem.
+This was a problem mostly when working on release branches of Garden Linux.
 
 ## Decision
 
