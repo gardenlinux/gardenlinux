@@ -29,7 +29,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@7f337e8340fe3f707a139fbd72185eebafe6c97b # pin@0.10.3
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@9af6c50cf9ff955130dc412238ecd16f1d84d103 # pin@0.10.4
       - name: Set build reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
