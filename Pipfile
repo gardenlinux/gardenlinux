@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 requests = "*"
-gardenlinux = {ref = "0.10.3", git = "https://github.com/gardenlinux/python-gardenlinux-lib.git"}
+gardenlinux = {ref = "0.10.4", git = "https://github.com/gardenlinux/python-gardenlinux-lib.git"}
 
 [dev-packages]
 
