@@ -42,7 +42,7 @@ def test_correct_ntp_on_gcp(timedatectl: TimeDateCtl):
 
 @pytest.mark.flaky(reruns=10, reruns_delay=30, only_rerun="AssertionError")
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
-@pytest.mark.feature("not azure and not aws and not gcp and not qemu")
+@pytest.mark.feature("not (azure or aws or gcp or qemu)")
 def test_ntp(timedatectl: TimeDateCtl, systemd_detect_virt: Hypervisor):
     """
     Validate that NTP is enabled and synchronized on non-hyperscaler platforms.
