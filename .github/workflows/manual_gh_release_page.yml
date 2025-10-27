@@ -73,10 +73,10 @@ jobs:
             flavors.yaml
           sparse-checkout-cone-mode: false
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@7f337e8340fe3f707a139fbd72185eebafe6c97b # pin@0.10.3
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@9af6c50cf9ff955130dc412238ecd16f1d84d103 # pin@0.10.4
       - id: matrix
         name: Generate flavors matrix
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@7f337e8340fe3f707a139fbd72185eebafe6c97b # pin@0.10.3
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@9af6c50cf9ff955130dc412238ecd16f1d84d103 # pin@0.10.4
         with:
           flags: "--no-arch --json-by-arch --publish"
   github_release:
@@ -99,7 +99,7 @@ jobs:
       - name: install dependencies for generate_release_note.py script
         run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@7f337e8340fe3f707a139fbd72185eebafe6c97b # pin@0.10.3
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@9af6c50cf9ff955130dc412238ecd16f1d84d103 # pin@0.10.4
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
         with:
@@ -137,7 +137,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@7f337e8340fe3f707a139fbd72185eebafe6c97b # pin@0.10.3
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@9af6c50cf9ff955130dc412238ecd16f1d84d103 # pin@0.10.4
       - uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
