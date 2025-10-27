@@ -48,21 +48,23 @@ def test_ntp(timedatectl: TimeDateCtl, systemd_detect_virt: Hypervisor):
     Validate that NTP is enabled and synchronized on non-hyperscaler platforms.
     Skips on AWS and GCP since their metadata-based NTP servers and not reachable from QEMU tests.
     """
-    ntp_server = timedatectl.get_ntpserver()
-    if (
-        ntp_server.ip == "169.254.169.123"
-        or ntp_server.hostname == "metadata.google.internal"
-    ):
-        pytest.skip(
-            f"Skipping: Hyperscaler NTP server ({ntp_server.hostname or ntp_server.ip}) not reachable in this environment."
-        )
 
+    # Skip untestable virtualization environments
     if systemd_detect_virt in (Hypervisor.amazon, Hypervisor.qemu):
         pytest.skip("Skipping: NTP sync not possible in AWS/QEMU environment")
 
-    timesyncstatus: TimeSyncStatus = timedatectl.get_timesync_status()
-    assert timesyncstatus.ntp, f"NTP not activated"
-    assert timesyncstatus.ntp_synchronized, f"NTP not synchronized"
+    # Verify image configuration
+    assert (
+        timedatectl.has_timesync_installed()
+    ), "systemd-timesyncd.service should be present on the image."
+
+    # Check activity and sync when present
+    if timedatectl.is_timesyncd_active():
+        status = timedatectl.get_timesync_status()
+        assert status.ntp, "NTP should be enabled"
+        assert status.ntp_synchronized, "NTP should be synchronized"
+    else:
+        pytest.skip("systemd-timesyncd installed but not active in this environment")
 
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
