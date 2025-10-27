@@ -15,7 +15,7 @@ updates:
       interval: "weekly"
     versioning-strategy: "increase-if-necessary"
     assignees:
-      - gardenlinux/garden-linux-maintainers    
+      - gardenlinux/garden-linux-maintainers
     
   - package-ecosystem: "pip"
     directory: "/tests-ng/util"
@@ -23,14 +23,15 @@ updates:
       interval: "weekly"
     versioning-strategy: "increase-if-necessary"
     assignees:
-      - gardenlinux/garden-linux-maintainers    
+      - gardenlinux/garden-linux-maintainers
 
   - package-ecosystem: "terraform"
-    directory: "/tests/platformSetup/tofu"
+    directory: "/tests-ng/util/tf"
     schedule:
       interval: "weekly"
+    versioning-strategy: "increase-if-necessary"
     ignore:
       - dependency-name: "hashicorp/azurerm"
     assignees:
-      - gardenlinux/garden-linux-maintainers      
+      - gardenlinux/garden-linux-maintainers
 
