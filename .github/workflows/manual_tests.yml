@@ -108,7 +108,7 @@ jobs:
       - name: Prepare flavor version reference
         run: |
           jq -r -n '{ "commit_id": "${{ needs.download_build_requirements.outputs.commit_id }}", "version": "${{ needs.download_build_requirements.outputs.version }}" }' '.' > flavor_version_data.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # pin@v5.0.0
         with:
           name: flavor-version-data
           path: flavor_version_data.json
