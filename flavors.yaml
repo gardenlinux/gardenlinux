@@ -33,6 +33,15 @@ targets:
       - features:
           - gardener
           - _prod
+          - _fips
+        arch: amd64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _prod
         arch: arm64
         build: true
         test: true
