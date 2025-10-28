@@ -1,2 +1,5 @@
 description: 'install pip'
 type: element
+features:
+  include:
+    - python

@@ -5,7 +5,6 @@ Garden Linux offers a range of specialized bare container images, each tailored 
 
 - **Bare-libc**: Ideal for C/C++ applications requiring only essential C runtime libraries.
 - **Bare-python**: Equipped with Python runtime, perfect for Python-based applications.
-- **Bare-python-dev**: Like Bare-python, but including pip and bash
 - **Bare-sapmachine**: Customized for sapmachine with necessary libraries and binaries.
 - **Bare-nodejs**: Includes Node.js environment, suitable for server-side JavaScript applications.
 
@@ -43,19 +42,14 @@ Their development is streamlined by the [unbase_oci](https://github.com/gardenli
   CMD ["python3", "/hello.py"]
   ```
 #### Adding dependencies:
-- **Description**: Bare-python does not contain pip and has a limited set of shared libraries. To add dependencies, we recommend using a multi-stage build with the Bare-python-dev container
-- **Features**:
-  - Contains pip, bash and all shared libraries from full gardenlinux
-  - Includes a script to export the shared libraries required by the installed python packages
-  - Allows minimal image size of the bare-python image
-- **Container Link**: [bare-python-dev](https://github.com/orgs/gardenlinux/packages/container/package/gardenlinux%2Fbare-python-dev)
+- **Description**: Bare-python does not contain pip and has a limited set of shared libraries. To add dependencies, we recommend using a multi-stage build with the container-pythonDev flavor
 - **Multi-stage Dockerfile**:
   ```Dockerfile
-  FROM ghcr.io/gardenlinux/gardenlinux/bare-python-dev:1877.5 as packages
+  FROM ghcr.io/gardenlinux/gardenlinux/container-pythondev:1877.5 as packages
 
   COPY requirements.txt /
   RUN pip3 install -r requirements.txt --break-system-packages --no-cache-dir
-  RUN /export_libs.sh
+  RUN exportLibs.py
   
   FROM ghcr.io/gardenlinux/gardenlinux/bare-python:1877.5
   COPY --from=packages /usr/local/lib/python3.13/dist-packages/ /usr/local/lib/python3.13/dist-packages/

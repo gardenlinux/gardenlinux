@@ -215,20 +215,6 @@ targets:
         test-platform: false
         publish: false
       - features:
-          - python-dev
-        arch: amd64
-        build: true
-        test: true
-        test-platform: false
-        publish: false
-      - features:
-          - python-dev
-        arch: arm64
-        build: true
-        test: true
-        test-platform: false
-        publish: false
-      - features:
           - sapmachine
         arch: amd64
         build: true
@@ -252,6 +238,20 @@ targets:
         test-platform: false
         publish: true
       - features: []
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - pythonDev
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - pythonDev
         arch: arm64
         build: true
         test: true
