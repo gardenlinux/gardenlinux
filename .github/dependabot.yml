@@ -26,7 +26,7 @@ updates:
       - gardenlinux/garden-linux-maintainers
 
   - package-ecosystem: "terraform"
-    directory: "/tests/platformSetup/tofu/"
+    directory: "/tests-ng/util/tf/"
     schedule:
       interval: "weekly"
     versioning-strategy: "increase-if-necessary"
