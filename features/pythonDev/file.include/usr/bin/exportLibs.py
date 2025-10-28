@@ -29,8 +29,10 @@ def getInterpreter(path: str) -> str:
             print(f"Error: Unknown endianess value for {path}: expected 1 or 2, but was {head[5]}", file=sys.stderr)
             exit(1)
 
-        if arch == b"\x00\x3e" or arch == b"\x00\xb7": # 003e: x86_64, 00b7: aarch64
+        if arch == b"\x00\xb7":   # 00b7: aarch64
             return "/lib/ld-linux-aarch64.so.1"
+        elif arch == b"\x00\x3e": # 003e: x86_64
+            return "/lib64/ld-linux-x86-64.so.2"
         elif arch == b"\x00\x03": # 0003: i686
             return "/lib/ld-linux.so.2"
         else:
