@@ -80,7 +80,6 @@ def equals_ignore_case(a: str, b: str) -> bool:
     """Return True if both strings are equal ignoring case, else False."""
     return a.lower() == b.lower()
 
-
 def get_normalized_sets(*iterables: Iterable) -> tuple[set[str], ...]:
     """
     Accepts ANY number of iterables and returns a tuple of normalized sets.
@@ -88,10 +87,7 @@ def get_normalized_sets(*iterables: Iterable) -> tuple[set[str], ...]:
         get_normalized_sets(['SSH'], ['ssh ', ' sSh'])
         -> ({'ssh'}, {'ssh'})
     """
-    return tuple(
-        {str(x).strip().lower() for x in iterable}
-        for iterable in iterables
-    )
+    return tuple({str(x).strip().lower() for x in iterable} for iterable in iterables)
 
 
 def is_set(value) -> bool:
