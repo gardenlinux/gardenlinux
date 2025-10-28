@@ -352,6 +352,30 @@ cd /run/gardenlinux-tests && sudo ./run_tests --system-booted --allow-system-mod
 - Very fast execution method
 - Limited to Base Image and an unbooted system
 
+### Gardener / Kubernetes Cluster Live Tests
+
+The test framework can be run directly on a live gardener cluster (or any Kubernetes cluster running gardenlinux nodes for that matter). For that simply deploy the following yml:
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-ng
+spec:
+  hostPID: true
+  restartPolicy: Never
+  containers:
+  - name: test-ng
+    image: ghcr.io/gardenlinux/test-ng:nightly
+    securityContext:
+      privileged: true
+```
+
+After this is deployed and the tests ran you can simply get the pod logs to see the test results. If you want to target a specific node to run the tests on you should also pin this pod to that node.
+
+> [!NOTE]
+> The `ghcr.io/gardenlinux/test-ng:nightly` container gets build and published daily to always provide the most up-to-date variant of the test-ng framework. In future releases there will also be per release variants of this.
+
 ## Test Distribution Build Process
 
 The test framework is automatically built and packaged when running tests. The build process creates a self-contained distribution that includes the Python runtime, test framework, and all dependencies.
