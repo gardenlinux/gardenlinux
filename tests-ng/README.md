@@ -32,6 +32,7 @@ This directory contains the next generation testing framework for Garden Linux i
     - [QEMU Testing](#qemu-testing)
     - [Cloud Testing](#cloud-testing)
     - [OCI Testing](#oci-testing)
+    - [Gardener / Kubernetes Cluster Live Tests](#gardener--kubernetes-cluster-live-tests)
   - [Test Distribution Build Process](#test-distribution-build-process)
     - [Build Components](#build-components)
     - [Build Process](#build-process)
@@ -365,10 +366,10 @@ spec:
   hostPID: true
   restartPolicy: Never
   containers:
-  - name: test-ng
-    image: ghcr.io/gardenlinux/test-ng:nightly
-    securityContext:
-      privileged: true
+    - name: test-ng
+      image: ghcr.io/gardenlinux/test-ng:nightly
+      securityContext:
+        privileged: true
 ```
 
 After this is deployed and the tests ran you can simply get the pod logs to see the test results. If you want to target a specific node to run the tests on you should also pin this pod to that node.
