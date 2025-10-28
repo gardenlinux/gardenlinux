@@ -60,7 +60,7 @@ jobs:
       - name: Rename test results
         if: always()
         run: mv tests/chroot.test.xml .build/$CNAME.chroot.test.xml
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # pin@v5.0.0
         if: always()
         with:
           if-no-files-found: ignore

@@ -23,7 +23,7 @@ jobs:
     - name: Build image with feature:lima for amd64
       run: |
         ./build lima-amd64
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: gardenlinux-lima-${{ github.event.inputs.version || 'today' }}-amd64
         path: .build/lima-amd64-${{ github.event.inputs.version || 'today' }}*.qcow2
@@ -41,7 +41,7 @@ jobs:
     - name: Build image with feature:lima for arm64
       run: |
         ./build lima-arm64
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: gardenlinux-lima-${{ github.event.inputs.version || 'today' }}-arm64
         path: .build/lima-arm64-${{ github.event.inputs.version || 'today' }}*.qcow2

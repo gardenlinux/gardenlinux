@@ -29,7 +29,7 @@ jobs:
           github-token: ${{ github.token }}
           run-id: ${{ needs.workflow_data.outputs.run_id }}
       - name: Upload parent workflow artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: parent-workflow-data
           overwrite: true
