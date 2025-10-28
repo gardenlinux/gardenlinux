@@ -1,13 +1,14 @@
-import pytest
+
 import uuid
 import os
 import re
 import string
 import subprocess
-# tests/plugins/utils.py
-
 from pathlib import Path
 from typing import Iterable, List, Dict, Optional
+
+import pytest
+
 
 def parse_etc_file(
     path: Path,
