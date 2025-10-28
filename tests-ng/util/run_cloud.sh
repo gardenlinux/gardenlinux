@@ -56,7 +56,7 @@ done
 test_dist_dir="$1"
 image="$2"
 image_basename="$(basename -- "$image")"
-image_name=${image_basename/.*/}
+image_name="${image_basename%.*}"
 user_data_script=
 util_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")")"
 tf_dir="$util_dir/tf"
@@ -69,7 +69,12 @@ else
 	uuid=$(<"$uuid_file")
 fi
 seed=${uuid%%-*}
-workspace="${image_name}-${seed}"
+
+if [ -n "${GITHUB_RUN_ID:-}" ] && [ -n "${GITHUB_RUN_NUMBER:-}" ]; then
+	workspace="test-ng-${GITHUB_RUN_ID}-${GITHUB_RUN_NUMBER}-${image_name}-${seed}"
+else
+	workspace="test-ng-${image_name}-${seed}"
+fi
 
 log_dir="$util_dir/../log"
 log_file_log="cloud.test-ng.log"
@@ -216,7 +221,7 @@ fi
 	cd "${tf_dir}"
 	echo "⚙️  initializing terraform"
 	tofu init -var-file "$image_name.tfvars"
-	echo "⚙️  selecting workspace: $image_name"
+	echo "⚙️  selecting workspace: $workspace"
 	tofu workspace select -or-create "$workspace"
 	echo "⚙️  running terraform ${tf_cmd[*]}"
 	tofu "${tf_cmd[@]}" -var-file "$image_name.tfvars"
