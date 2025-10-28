@@ -15,13 +15,16 @@ def test_kernel_config_values(
     """Ensure key kernel config options have expected values."""
 
     # Arrange
+    if not kernel_config_dict:
+        pytest.fail("No kernel config files found under /boot/config-*")
+
     relevant_configs = [
         (path, config)
         for path, config in kernel_config_dict.items()
         if arch == "all" or arch in path or arch == system_architecture
     ]
     if not relevant_configs:
-        pytest.skip(f"No kernel configs found for arch {arch}")
+        pytest.skip(f"No kernel configs found for arch '{arch}'")
 
     # Act / Assert
     for path, config in relevant_configs:

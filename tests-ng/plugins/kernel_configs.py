@@ -8,7 +8,6 @@ import pytest
 def kernel_config_paths():
     """Get all available /boot/config-* files."""
     configs = sorted(glob.glob("/boot/config-*"))
-    assert configs, "No kernel config files found under /boot/config-*"
     return configs
 
 
