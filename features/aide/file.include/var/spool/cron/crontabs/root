@@ -1,0 +1,1 @@
+0 10 * * * root /usr/bin/aide --check --config /etc/aide/aide.conf > /dev/shm/aide_check 2>&1
