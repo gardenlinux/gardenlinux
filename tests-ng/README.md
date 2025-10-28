@@ -31,6 +31,7 @@ This directory contains the next generation testing framework for Garden Linux i
     - [Chroot Testing](#chroot-testing)
     - [QEMU Testing](#qemu-testing)
     - [Cloud Testing](#cloud-testing)
+    - [OCI Testing](#oci-testing)
   - [Test Distribution Build Process](#test-distribution-build-process)
     - [Build Components](#build-components)
     - [Build Process](#build-process)
@@ -48,6 +49,7 @@ tests-ng/
 │   ├── run_chroot.sh       # Chroot testing environment
 │   ├── run_qemu.sh         # QEMU VM testing environment
 │   ├── run_cloud.sh        # Cloud provider testing
+│   ├── run_oci.sh          # OCI container testing
 │   ├── login_qemu.sh       # SSH login to QEMU VM
 │   ├── login_cloud.sh      # SSH login to cloud VM
 │   └── tf/                 # Terraform configurations for cloud
@@ -68,10 +70,10 @@ Before running the test framework, make sure the following dependencies are inst
 - `jq`
 - `libxml2-utils`
 - `unzip`
+- `uuid-runtime`
 - `qemu`
 - `qemu-utils`
 - `socat`
-- `retry`
 
 If you plan to provision cloud resources, the cloud provider specific CLIs might be useful or even required:
 
@@ -85,23 +87,24 @@ If you plan to provision cloud resources, the cloud provider specific CLIs might
 
 ```
 apt-get update
-apt-get install podman make curl jq libxml2-utils unzip qemu swtpm socat retry
+apt-get install podman make curl jq libxml2-utils unzip uuid-runtime qemu swtpm socat
 # install cloud provider CLIs
 apt-get install azure-cli awscli openstackclient # for GCP and ALI look at tip
 ```
 
 > [!TIP]
 > Checkout this cloud provider documentation on the CLIs:
->   - [AWS](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
->   - [Azure](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?view=azure-cli-latest&pivots=apt)
->   - [GCP](https://cloud.google.com/sdk/docs/install#deb)
->   - [ALI](https://www.alibabacloud.com/help/en/cli/install-cli-on-linux)
->   - [OpenStack](https://docs.openstack.org/newton/user-guide/common/cli-install-openstack-command-line-clients.html)
+>
+> - [AWS](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+> - [Azure](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?view=azure-cli-latest&pivots=apt)
+> - [GCP](https://cloud.google.com/sdk/docs/install#deb)
+> - [ALI](https://www.alibabacloud.com/help/en/cli/install-cli-on-linux)
+> - [OpenStack](https://docs.openstack.org/newton/user-guide/common/cli-install-openstack-command-line-clients.html)
 
 #### Install on MacOS
 
 ```
-brew install coreutils bash gnu-sed gnu-getopt podman make curl jq libxml2 unzip swtpm socat retry gnupg
+brew install coreutils bash gnu-sed gnu-getopt podman make curl jq libxml2 ossp-uuid unzip swtpm socat gnupg
 # install cloud provider CLIs
 brew install azure-cli awscli gcloud-cli aliyun-cli openstackclient
 ```
@@ -164,6 +167,9 @@ The main entry point is `./test-ng` in the gardenlinux root directory (symlink t
 ```bash
 # Run chroot tests on a tar image
 ./test-ng .build/aws-gardener_prod-amd64-today-13371337.tar
+
+# Run OCI container tests on Base Image
+./test-ng .build/container-amd64-today-local.oci
 
 # Run QEMU tests with SSH access and skip cleanup
 ./test-ng --ssh --skip-cleanup .build/aws-gardener_prod-amd64-today-13371337.raw
@@ -340,6 +346,12 @@ cd /run/gardenlinux-tests && sudo ./run_tests --system-booted --allow-system-mod
 - Automatic resource cleanup (unless `--skip-cleanup` is used)
 - Supports AWS, GCP, Azure, and Alibaba Cloud
 
+### OCI Testing
+
+- Runs tests in containers based on a Base Image (Bare Flavors are not supported currently)
+- Very fast execution method
+- Limited to Base Image and an unbooted system
+
 ## Test Distribution Build Process
 
 The test framework is automatically built and packaged when running tests. The build process creates a self-contained distribution that includes the Python runtime, test framework, and all dependencies.
@@ -407,3 +419,5 @@ Tests can be decorated with pytest markers to indicate certain limitations or pr
 `@pytest.mark.feature("a and not b", reason="Some reason, this is optional")`: This test is only run if the boolean condition is true. Use this to limit feature-specific tests. Use the optional `reason` argument to document why this is needed, in cases where this is not really obvious.
 
 `@pytest.mark.performance_metric`: This is a performance metric test that can be skipped when running under emulation.
+
+`@pytest.mark.security_id(42)`: Map a test to a security id. Must be an positive integer value.

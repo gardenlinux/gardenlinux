@@ -12,6 +12,7 @@ jobs:
   test:
     name: Test-NG flavor in chroot ${{ inputs.flavor }} (${{ inputs.arch }})
     runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    if: ${{ inputs.flavor != 'skip' }}
     timeout-minutes: 10
     defaults:
       run:
@@ -38,7 +39,7 @@ jobs:
           path: tests-ng/.build
       - name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@2c47ca58891eefa3587954fadf59153317ad9e0c # pin@0.10.2
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@9af6c50cf9ff955130dc412238ecd16f1d84d103 # pin@0.10.4
         with:
           flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
       - name: Set CNAME

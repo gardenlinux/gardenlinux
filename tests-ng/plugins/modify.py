@@ -35,4 +35,4 @@ def pytest_collection_modifyitems(config: pytest.Config, items: List[pytest.Item
             skip_msg = "skipping tests that mutate system state"
             if reason:
                 skip_msg += f" (reason: {reason})"
-            pytest.skip(skip_msg)
+            item.add_marker(pytest.mark.skip(reason=skip_msg))

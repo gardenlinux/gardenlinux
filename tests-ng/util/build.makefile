@@ -31,4 +31,4 @@ clean:
 
 .build/edk2-%: | .build
 	echo '⬇️  fetching EDK2 ($*)'
-	retry -d "1,2,5,10,30" curl -sSLf "https://github.com/gardenlinux/edk2-build/releases/download/edk2-stable202505/edk2-$*" > $@
+	curl -sSLf "https://github.com/gardenlinux/edk2-build/releases/download/edk2-stable202505/edk2-$*" > $@

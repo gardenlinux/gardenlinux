@@ -41,6 +41,7 @@ jobs:
   test:
     name: Test flavor in Cloud ${{ inputs.flavor }} (${{ inputs.arch }})
     runs-on: "ubuntu-24.04"
+    if: ${{ inputs.flavor != 'skip' }}
     environment: oidc_platform_tests
     defaults:
       run:
@@ -75,7 +76,7 @@ jobs:
           fail-on-cache-miss: true
       - name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@2c47ca58891eefa3587954fadf59153317ad9e0c # pin@0.10.2
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@9af6c50cf9ff955130dc412238ecd16f1d84d103 # pin@0.10.4
         with:
           flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
       - name: Set CNAME
@@ -135,7 +136,7 @@ jobs:
             core.exportVariable("GOOGLE_GHA_CREDS_PATH", basePath + credentialsFileName);
       - id: "auth_aws"
         name: "Authenticate to AWS"
-        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # pin@v4
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
           role-session-name: ${{ secrets.aws_session }}

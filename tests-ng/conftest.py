@@ -9,6 +9,9 @@ pytest_plugins = [
     if f.endswith(".py") and not f.startswith("_")
 ]
 
+for plugin in pytest_plugins:
+    pytest.register_assert_rewrite(plugin)
+
 
 @pytest.fixture(scope="session", autouse=True)
 def include_metadata_in_junit_xml_session(include_metadata_in_junit_xml):

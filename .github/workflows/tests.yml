@@ -8,9 +8,9 @@ on:
         type: string
         required: true
       test_types:
-        description: "Types of tests to execute (comma-separated: chroot,qemu,cloud,oci)"
+        description: "Types of tests to execute (comma-separated: chroot,qemu,cloud,oci,bare)"
         type: string
-        default: "chroot,qemu"
+        default: "chroot,qemu,oci"
       bare_flavors_matrix:
         description: "Generated GitHub workflow flavors matrix for bare flavors"
         type: string
@@ -50,13 +50,18 @@ jobs:
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
       flags: "--no-arch --json-by-arch --test"
+  oci_test_flavors_supported_matrix:
+    name: Generate flavors matrix for oci test
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: "--no-arch --json-by-arch --test --include-only 'container-*'"
   qemu_test_flavors_supported_matrix:
     name: Generate flavors matrix for qemu test
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
       flags: "--no-arch --json-by-arch --test --exclude vmware-*"
-  platform_test_flavors_supported_matrix:
-    name: Generate flavors matrix for platform-test
+  cloud_test_flavors_supported_matrix:
+    name: Generate flavors matrix for cloud test
     uses: ./.github/workflows/build_flavors_matrix.yml
     with:
       flags: "--no-arch --json-by-arch --test-platform"
@@ -69,8 +74,9 @@ jobs:
     needs:
       [
         chroot_test_flavors_supported_matrix,
+        oci_test_flavors_supported_matrix,
         qemu_test_flavors_supported_matrix,
-        platform_test_flavors_supported_matrix,
+        cloud_test_flavors_supported_matrix,
         bare_flavors_supported_matrix,
       ]
     name: Determine test settings
@@ -83,8 +89,10 @@ jobs:
       bare_flavors_tests: ${{ steps.test_environments.outputs.bare_flavors_tests }}
       chroot_test_flavors_matrix: ${{ steps.test_environments.outputs.chroot_test_flavors_matrix }}
       chroot_tests: ${{ steps.test_environments.outputs.chroot_tests }}
-      platform_test_flavors_matrix: ${{ steps.test_environments.outputs.platform_test_flavors_matrix }}
-      platform_test: ${{ steps.test_environments.outputs.platform_tests }}
+      oci_flavors_matrix: ${{ steps.test_environments.outputs.oci_flavors_matrix }}
+      oci_flavors_tests: ${{ steps.test_environments.outputs.oci_flavors_tests }}
+      cloud_test_flavors_matrix: ${{ steps.test_environments.outputs.cloud_test_flavors_matrix }}
+      cloud_tests: ${{ steps.test_environments.outputs.cloud_tests }}
       qemu_test_flavors_matrix: ${{ steps.test_environments.outputs.qemu_test_flavors_matrix }}
       qemu_tests: ${{ steps.test_environments.outputs.qemu_tests }}
     steps:
@@ -100,71 +108,65 @@ jobs:
 
             const testsEnvsEnabled = gitHubLib.getTestEnvironmentsEnabled("${{ inputs.test_types }}");
 
-            // chroot_test_flavors_matrix
-            if (testsEnvsEnabled.includes("chroot")) {
-              const matrix = gitHubLib.intersectFlavorsMatrix(
-                ${{ inputs.flavors_matrix }},
-                ${{ needs.chroot_test_flavors_supported_matrix.outputs.matrix }}
-              );
-
-              const isEnabled = !gitHubLib.isMatrixEmpty(matrix);
-              core.setOutput("chroot_tests", isEnabled);
-
-              if (isEnabled) {
-                core.setOutput("chroot_test_flavors_matrix", matrix);
-              } else {
-                core.setOutput("chroot_test_flavors_matrix", '{"include":[]}');
+            const testDefinitions = [
+              {
+                key: "chroot",
+                outTests: "chroot_tests",
+                outMatrix: "chroot_test_flavors_matrix",
+                inputMatrix: ${{ inputs.flavors_matrix }},
+                supported: ${{ needs.chroot_test_flavors_supported_matrix.outputs.matrix }}
+              },
+              {
+                key: "qemu",
+                outTests: "qemu_tests",
+                outMatrix: "qemu_test_flavors_matrix",
+                inputMatrix: ${{ inputs.flavors_matrix }},
+                supported: ${{ needs.qemu_test_flavors_supported_matrix.outputs.matrix }}
+              },
+              {
+                key: "cloud",
+                outTests: "cloud_tests",
+                outMatrix: "cloud_test_flavors_matrix",
+                inputMatrix: ${{ inputs.flavors_matrix }},
+                supported: ${{ needs.cloud_test_flavors_supported_matrix.outputs.matrix }}
+              },
+              {
+                key: "oci",
+                outTests: "oci_flavors_tests",
+                outMatrix: "oci_flavors_matrix",
+                inputMatrix: ${{ inputs.flavors_matrix }},
+                supported: ${{ needs.oci_test_flavors_supported_matrix.outputs.matrix }}
+              },
+              {
+                key: "bare",
+                outTests: "bare_flavors_tests",
+                outMatrix: "bare_flavors_matrix",
+                inputMatrix: ${{ inputs.bare_flavors_matrix }},
+                supported: ${{ needs.bare_flavors_supported_matrix.outputs.matrix }}
               }
-            }
+            ];
+            // `matrix:` and it's fromJson() evaluation cannot be skipped by setting the matrix to an empty string or array
+            // hence we set a minimal skip flavor matrix and evaluate it in each test_flavor_* workflow.
+            const skipFlavorMatrix = '{"include":[{"arch":"amd64","flavor":"skip"}]}';
 
-            // qemu_test_flavors_matrix
-            if (testsEnvsEnabled.includes("qemu")) {
-              const matrix = gitHubLib.intersectFlavorsMatrix(
-                ${{ inputs.flavors_matrix }},
-                ${{ needs.qemu_test_flavors_supported_matrix.outputs.matrix }}
-              );
-
-              const isEnabled = !gitHubLib.isMatrixEmpty(matrix);
-              core.setOutput("qemu_tests", isEnabled);
-
-              if (isEnabled) {
-                core.setOutput("qemu_test_flavors_matrix", matrix);
-              } else {
-                core.setOutput("qemu_test_flavors_matrix", '{"include":[]}');
+            // Process all test types, but only enable requested ones
+            for (const t of testDefinitions) {
+              if (!testsEnvsEnabled.includes(t.key)) {
+                core.setOutput(t.outTests, false);
+                core.setOutput(t.outMatrix, skipFlavorMatrix);
+                console.debug(`${t.key}: disabled`);
+                continue;
               }
-            }
 
-            // platform_test_flavors_matrix
-            if (testsEnvsEnabled.includes("cloud")) {
-              const matrix = gitHubLib.intersectFlavorsMatrix(
-                ${{ inputs.flavors_matrix }},
-                ${{ needs.platform_test_flavors_supported_matrix.outputs.matrix }}
-              );
-
+              const matrix = gitHubLib.intersectFlavorsMatrix(t.inputMatrix, t.supported);
               const isEnabled = !gitHubLib.isMatrixEmpty(matrix);
-              core.setOutput("platform_tests", isEnabled);
+              core.setOutput(t.outTests, isEnabled);
+              console.log(`${t.key}: ${isEnabled ? 'enabled' : 'disabled'} (${isEnabled ? matrix.length : 0} flavors)`);
 
               if (isEnabled) {
-                core.setOutput("platform_test_flavors_matrix", matrix);
+                core.setOutput(t.outMatrix, matrix);
               } else {
-                core.setOutput("platform_test_flavors_matrix", '{"include":[]}');
-              }
-            }
-
-            // bare_flavors_matrix
-            if (testsEnvsEnabled.includes("oci")) {
-              const matrix = gitHubLib.intersectFlavorsMatrix(
-                ${{ inputs.bare_flavors_matrix }},
-                ${{ needs.bare_flavors_supported_matrix.outputs.matrix }}
-              );
-
-              const isEnabled = !gitHubLib.isMatrixEmpty(matrix);
-              core.setOutput("bare_flavors_tests", isEnabled);
-
-              if (isEnabled) {
-                core.setOutput("bare_flavors_matrix", matrix);
-              } else {
-                core.setOutput("bare_flavors_matrix", '{"include":[]}');
+                core.setOutput(t.outMatrix, SKIP_MATRIX);
               }
             }
   ## test-ng start
@@ -200,13 +202,12 @@ jobs:
     uses: ./.github/workflows/test_flavor_cloud_ng.yml
     if: |
       ${{
-        always()
-        && (needs.test_flavors_qemu.result == 'success' || needs.test_flavors_qemu.result == 'skipped')
-        && needs.determine_test_settings.outputs.platform_tests == 'true'
+        needs.determine_test_settings.outputs.cloud_tests == 'true'
+        && (always() && (needs.test_flavors_qemu.result == 'success' || needs.test_flavors_qemu.result == 'skipped'))
       }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.determine_test_settings.outputs.platform_test_flavors_matrix) }}
+      matrix: ${{ fromJson(needs.determine_test_settings.outputs.cloud_test_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
@@ -214,14 +215,14 @@ jobs:
     permissions:
       id-token: write
       actions: write
-  test_flavors_oci_ng:
+  test_flavors_oci:
     needs: determine_test_settings
     name: Test-NG OCI flavors
-    uses: ./.github/workflows/test_flavor_oci_ng.yml
-    if: ${{ needs.determine_test_settings.outputs.bare_flavors_tests == 'true' }}
+    uses: ./.github/workflows/test_flavor_oci.yml
+    if: ${{ needs.determine_test_settings.outputs.oci_flavors_tests == 'true' }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.determine_test_settings.outputs.bare_flavors_matrix) }}
+      matrix: ${{ fromJson(needs.determine_test_settings.outputs.oci_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
@@ -247,13 +248,12 @@ jobs:
     uses: ./.github/workflows/test_flavor_cloud.yml
     if: |
       ${{
-        always()
-        && (needs.test_flavors_qemu.result == 'success' || needs.test_flavors_qemu.result == 'skipped')
-        && needs.determine_test_settings.outputs.platform_tests == 'true'
+        needs.determine_test_settings.outputs.cloud_tests == 'true'
+        && (always() && (needs.test_flavors_qemu.result == 'success' || needs.test_flavors_qemu.result == 'skipped'))
       }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.determine_test_settings.outputs.platform_test_flavors_matrix) }}
+      matrix: ${{ fromJson(needs.determine_test_settings.outputs.cloud_test_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
@@ -261,10 +261,10 @@ jobs:
     permissions:
       id-token: write
       actions: write
-  test_flavors_oci:
+  test_flavors_bare:
     needs: determine_test_settings
-    name: Test OCI flavors
-    uses: ./.github/workflows/test_flavor_oci.yml
+    name: Test bare flavors
+    uses: ./.github/workflows/test_flavor_bare.yml
     if: ${{ needs.determine_test_settings.outputs.bare_flavors_tests == 'true' }}
     strategy:
       fail-fast: false
@@ -276,13 +276,12 @@ jobs:
       actions: write
   test_report:
     needs:
-      - test_flavors_chroot_ng
-      - test_flavors_qemu
-      - test_flavors_cloud_ng
-      - test_flavors_oci_ng
       - test_flavors_chroot
-      - test_flavors_cloud
+      - test_flavors_chroot_ng
       - test_flavors_oci
+      - test_flavors_qemu
+      - test_flavors_cloud
+      - test_flavors_cloud_ng
     name: Generate Test Report
     if: always()
     uses: ./.github/workflows/test_report.yml
@@ -290,4 +289,4 @@ jobs:
       actions: write
       checks: write
     with:
-      test_jobs: "test_flavors_chroot_ng,test_flavors_qemu,test_flavors_cloud_ng,test_flavors_oci_ng,test_flavors_chroot,test_flavors_cloud,test_flavors_oci"
+      test_jobs: "test_flavors_chroot,test_flavors_chroot_ng,test_flavors_oci,test_flavors_qemu,test_flavors_cloud,test_flavors_cloud_ng"
