@@ -7,7 +7,7 @@ echo -e "\n/var/log/faillog Full" >> /etc/aide/aide.conf
 # Initials aide by creating the aide database based on the config under /etc/aide/aide.conf
 # and create a cronjob to check against the database every night. The output of the nightly
 # check will be written to /dev/shm/aide_check.
-
+dbus-uuidgen | tr -d '-' | head -c 32 > /etc/machine-id
 if [ ! -f /var/lib/aide/aide.db ]; then
     mkdir -p /var/lib/aide
     aide --init --config /etc/aide/aide.conf
