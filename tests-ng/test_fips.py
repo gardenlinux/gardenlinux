@@ -1,7 +1,7 @@
 import os
-import pytest
-
 from stat import S_ISREG
+
+import pytest
 
 
 def test_gnutls_fips_file_was_created():
