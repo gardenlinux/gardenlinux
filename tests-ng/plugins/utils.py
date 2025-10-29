@@ -1,12 +1,5 @@
-import os
-import re
-import string
-import subprocess
-import uuid
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
-
-import pytest
 
 
 def parse_etc_file(
