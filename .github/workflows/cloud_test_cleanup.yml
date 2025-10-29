@@ -121,7 +121,7 @@ jobs:
             core.setSecret("${{ secrets.AZURE_TENANT_ID }}");
             core.exportVariable("ARM_TENANT_ID", "${{ secrets.AZURE_TENANT_ID }}");
       - id: "auth_alicloud"
-        if: ${{ startsWith(inputs.flavor, 'ali-') }}
+        if: ${{ startsWith(inputs.cname, 'ali-') }}
         name: "Authenticate to Alicloud"
         uses: aliyun/configure-aliyun-credentials-action@1e5248c8d5d93a8781ac344a68e19a43341e79e6 # v1.1.0
         with:
@@ -129,7 +129,7 @@ jobs:
           oidc-provider-arn: ${{ secrets.alibaba_cloud_oidc_provider_arn }}
           role-session-expiration: 21600
       - name: "Set Alicloud platform-test environment"
-        if: ${{ startsWith(inputs.flavor, 'ali-') }}
+        if: ${{ startsWith(inputs.cname, 'ali-') }}
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |

@@ -22,7 +22,7 @@ on:
         required: true
 jobs:
   images:
-    name: Provide image ${{ matrix.flavor }} (${{ matrix.arch }})
+    name: Provide image ${{ matrix.cname }} (${{ matrix.arch }})
     if: ${{ inputs.flavors_matrix != '{"include":[]}' }}
     runs-on: ubuntu-24.04
     defaults:
@@ -34,7 +34,7 @@ jobs:
     # @TODO: We could use a better name for the required environment
     environment: oidc_platform_tests
     env:
-      CNAME: ""
+      ABN: ""
     strategy:
       matrix: ${{ fromJSON(inputs.flavors_matrix) }}
     steps:
@@ -43,13 +43,15 @@ jobs:
           submodules: true
       - name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@385aaad34c414d49583c0fe3e03243d110640770 # pin@0.10.25
+        with:
+          version: 1.0.0-pre1
       - name: Set image reference for S3
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
-      - name: Set CNAME
+      - name: Set ABN
         run: |
-          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
+          echo "ABN=$(gl-features-parse --cname ${{ matrix.cname }} --arch ${{ matrix.arch }} artifact-base-name)" | tee -a "$GITHUB_ENV"
       - name: "Authenticate to AWS"
         uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # pin@v4
         with:
@@ -58,18 +60,18 @@ jobs:
           aws-region: ${{ secrets.aws_region }}
       - name: Prepare image from S3
         run: |
-          mkdir "$CNAME"
-          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --path "$CNAME" download-artifacts-from-bucket --cname "$CNAME"
+          mkdir "$ABN"
+          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --path "$ABN" download-artifacts-from-bucket --artifact-base-name "$ABN"
 
-          tar -cSzvf "$CNAME.tar.gz" -C "$CNAME/" .
+          tar -cSzvf "$ABN.tar.gz" -C "$ABN/" .
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
         with:
-          name: build-${{ matrix.flavor }}-${{ matrix.arch }}
-          path: ${{ env.CNAME }}.tar.gz
+          name: build-${{ matrix.cname }}-${{ matrix.arch }}
+          path: ${{ env.ABN }}.tar.gz
           if-no-files-found: error
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
         with:
           path: |
             COMMIT
             VERSION
-          key: build-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
+          key: build-${{ matrix.cname }}-${{ matrix.arch }}-${{ github.run_id }}

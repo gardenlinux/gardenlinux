@@ -67,7 +67,7 @@ jobs:
       fail-fast: ${{ inputs.fail_fast }}
     with:
       arch: ${{ matrix.arch }}
-      flavor: ${{ matrix.flavor }}
+      cname: ${{ matrix.cname }}
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
       signing_env: ${{ needs.requirements.outputs.signing_env }}
@@ -99,7 +99,7 @@ jobs:
       fail-fast: ${{ inputs.fail_fast }}
     with:
       arch: ${{ matrix.arch }}
-      bare_flavor: ${{ matrix.flavor }}
+      cname: ${{ matrix.cname }}
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
       prefix: ${{ inputs.prefix }}
@@ -126,7 +126,8 @@ jobs:
           jq -r -n '{
             "commit_id": "${{ needs.requirements.outputs.commit_id }}",
             "version": "${{ needs.requirements.outputs.version }}",
-            "target": "${{ needs.requirements.outputs.target }}"
+            "target": "${{ needs.requirements.outputs.target }}",
+            "prefix": "${{ inputs.prefix }}"
           }' '.' > flavor_version_data.json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
         with:
