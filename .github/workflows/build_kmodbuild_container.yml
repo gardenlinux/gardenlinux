@@ -47,8 +47,6 @@ jobs:
           name: build-container-${{ matrix.arch }}
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Build kernel module build dev container (${{ matrix.arch }})
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           commit="$(./get_commit)"
           commit_short="${commit:0:8}"
@@ -63,17 +61,15 @@ jobs:
           tar -C ".build/" -xzf "$CNAME.tar.gz"
           rm "$CNAME.tar.gz"
 
-          base="ghcr.io/${{ github.repository }}:$version"
-          image="$(podman load -i .build/container-${{ matrix.arch }}-$(cat VERSION)-${commit_short}.oci | awk '{ print $NF }')"
-          podman tag "$image" "$base"
+          podman login -u token -p ${{ github.token }} ghcr.io
 
+          base="ghcr.io/${{ github.repository }}:$version"
+          image="$(gl-oci load-container --oci_archive ".build/container-${{ matrix.arch }}-$(cat VERSION)-${commit_short}.oci" --additional_tag "$base" | awk '{ print $NF }')"
           snapshot="$(gh api "/repos/gardenlinux/repo/contents/.container?ref=$version" | jq -r '.content' | base64 -d)"
 
-          podman login -u token -p "${GH_TOKEN}" ghcr.io
-          podman pull --arch ${{ matrix.arch }} "$snapshot"
-
-          podman build --arch ${{ matrix.arch }} --build-arg base="$base" --build-arg snapshot="$snapshot" -t ghcr.io/${{ github.repository }}/kmodbuild:${{ matrix.arch }}-${version} images/kmodbuild
-          podman save --format oci-archive ghcr.io/${{ github.repository }}/kmodbuild:${{ matrix.arch }}-${version} > kmodbuild_container_${{ matrix.arch }}.oci
+          gl-oci pull-container --container "$snapshot" --platform linux/${{ matrix.arch }}
+          gl-oci build-container --container "ghcr.io/${{ github.repository }}/kmodbuild" --tag "${{ matrix.arch }}-${version}" --platform linux/${{ matrix.arch }} --dir "images/kmodbuild" --build-arg base="$base" --build-arg snapshot="$snapshot"
+          gl-oci save-container --container "ghcr.io/${{ github.repository }}/kmodbuild" --tag "${{ matrix.arch }}-${version}" --oci_archive "kmodbuild_container_${{ matrix.arch }}.oci"
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # pin@v5.0.0
         with:

@@ -24,6 +24,8 @@ jobs:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@d64300c48bf9a0a262642b564c7aeea0b89be21f # pin@0.10.5
       - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # pin@v6.0.0
         with:
           pattern: kmodbuild-container-*
@@ -32,17 +34,12 @@ jobs:
           run-id: ${{ inputs.run_id }}
       - name: Publish kernel module build dev container
         run: |
-          for oci_archive in *.oci; do
-            podman load -i ${oci_archive}
-            rm ${oci_archive}
-          done
+          gh-oci load-containers-from-directory --dir "."
+          rm *.oci
 
           podman login -u token -p ${{ github.token }} ghcr.io
 
-          podman push ghcr.io/${{ github.repository }}/kmodbuild:amd64-$VERSION
-          podman push ghcr.io/${{ github.repository }}/kmodbuild:arm64-$VERSION
-
-          podman manifest create ghcr.io/${{ github.repository }}/kmodbuild:$VERSION
-          podman manifest add ghcr.io/${{ github.repository }}/kmodbuild:$VERSION ghcr.io/${{ github.repository }}/kmodbuild:amd64-$VERSION
-          podman manifest add ghcr.io/${{ github.repository }}/kmodbuild:$VERSION ghcr.io/${{ github.repository }}/kmodbuild:arm64-$VERSION
-          podman manifest push ghcr.io/${{ github.repository }}/kmodbuild:$VERSION
+          gl-oci push-container --container "ghcr.io/${{ github.repository }}/kmodbuild" --tag "amd64-$VERSION"
+          gl-oci add-container-to-index --index "ghcr.io/${{ github.repository }}/kmodbuild:$VERSION" --container "ghcr.io/${{ github.repository }}/kmodbuild" --tag "amd64-$VERSION"
+          gl-oci push-container --container "ghcr.io/${{ github.repository }}/kmodbuild" --tag "arm64-$VERSION"
+          gl-oci add-container-to-index --index "ghcr.io/${{ github.repository }}/kmodbuild:$VERSION" --container "ghcr.io/${{ github.repository }}/kmodbuild" --tag "arm64-$VERSION"
