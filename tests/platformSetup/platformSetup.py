@@ -298,7 +298,14 @@ class Tofu:
             os.chdir(self.tofu_dir)
 
             # Select the correct workspace
-            workspace = f"{flavor}-{self.paths.seed}"
+            github_run_id = os.environ.get("GITHUB_RUN_ID", "")
+            github_run_number = os.environ.get("GITHUB_RUN_NUMBER", "")
+
+            if github_run_id and github_run_number:
+                workspace = f"test-{github_run_id}-{github_run_number}-{flavor}-{self.paths.seed}"
+            else:
+                workspace = f"test-{flavor}-{self.paths.seed}"
+
             logger.info(f"Workspace: {workspace}")
             workspace_cmd = ["tofu", "workspace", "select", workspace]
             subprocess.run(workspace_cmd, check=True, capture_output=True, text=True)

@@ -26,7 +26,7 @@ jobs:
           submodules: true
 
       - name: Download all test artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # pin@v6.0.0
         with:
           pattern: "*-test-*"
           path: test-artifacts
@@ -70,7 +70,7 @@ jobs:
           metadata-field-mapping: '{"Namespace": "Namespace", "Type": "Type", "Artifact": "Artifact"}'
 
       - name: Upload report artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # pin@v5.0.0
         if: always()
         with:
           name: test-report
@@ -91,7 +91,7 @@ jobs:
           submodules: true
 
       - name: Download all test artifacts
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # pin@v6.0.0
         with:
           pattern: "*-test-ng-*"
           path: test-artifacts
@@ -135,7 +135,7 @@ jobs:
           metadata-field-mapping: '{"Namespace": "Namespace", "Type": "Type", "Artifact": "Artifact"}'
 
       - name: Upload report artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # pin@v5.0.0
         if: always()
         with:
           name: test-ng-report
