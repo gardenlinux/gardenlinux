@@ -69,9 +69,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    env:
-      CNAME_AMD64: ""
-      CNAME_ARM64: ""
     permissions:
       packages: write
     steps:
@@ -82,20 +79,8 @@ jobs:
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
-      - name: Determine CNAME (amd64)
-        id: cname_amd64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@hotfix-disabled-python-cache-in-setup-action # pin@0.10.5
-        with:
-          flags: --cname container-amd64 cname
-      - name: Determine CNAME (ard64)
-        id: cname_arm64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@hotfix-disabled-python-cache-in-setup-action # pin@0.10.5
-        with:
-          flags: --cname container-arm64 cname
-      - name: Set CNAMEs
-        run: |
-          echo "CNAME_AMD64=${{ steps.cname_amd64.outputs.result }}" | tee -a "$GITHUB_ENV"
-          echo "CNAME_ARM64=${{ steps.cname_arm64.outputs.result }}" | tee -a "$GITHUB_ENV"
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@hotfix-disabled-python-cache-in-setup-action # pin@0.10.5
       - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # pin@v6.0.0
         with:
           name: build-container-amd64
@@ -108,53 +93,51 @@ jobs:
           run-id: ${{ inputs.run_id }}
       - name: Publish container base image
         run: |
+          CNAME_AMD64="$(gl-features-parse --cname container-amd64 cname)"
+          CNAME_ARM64="$(gl-features-parse --cname container-arm64 cname)"
+          CNAMES="${CNAME_AMD64} ${CNAME_ARM64}"
+
           if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
-            is_nightly=true
+            IS_NIGHTLY=true
           else
-            is_nightly=false
+            IS_NIGHTLY=false
           fi
-          version=$(cat VERSION)
+
+          VERSION=$(cat VERSION)
 
           podman login -u token -p ${{ github.token }} ghcr.io
-          tar xzv < "${CNAME_AMD64}.tar.gz"
-          image="$(podman load < ${CNAME_AMD64}.oci | awk '{ print $NF }')"
-
-          # Tagging for amd64 nightly
-          if [ $is_nightly = true ]; then
-            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}:amd64-nightly
-            podman push ${{ needs.determine_environment.outputs.repository }}:amd64-nightly
-          fi
-
-          # Tagging for amd64 with version
-          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}:amd64-${version}
-          podman push ${{ needs.determine_environment.outputs.repository }}:amd64-${version}
-
-          tar xzv < "${CNAME_ARM64}.tar.gz"
-          image="$(podman load < ${CNAME_ARM64}.oci | awk '{ print $NF }')"
-
-          # Tagging for arm64 nightly
-          if [ $is_nightly = true ]; then
-            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}:arm64-nightly
-            podman push ${{ needs.determine_environment.outputs.repository }}:arm64-nightly
-          fi
-
-          # Tagging for arm64 with version
-          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}:arm64-${version}
-          podman push ${{ needs.determine_environment.outputs.repository }}:arm64-${version}
-
-          # Creating and pushing manifest for nightly
-          if [ $is_nightly = true ]; then
-            podman manifest create ${{ needs.determine_environment.outputs.repository }}:nightly
-            podman manifest add ${{ needs.determine_environment.outputs.repository }}:nightly ${{ needs.determine_environment.outputs.repository }}:amd64-nightly
-            podman manifest add ${{ needs.determine_environment.outputs.repository }}:nightly ${{ needs.determine_environment.outputs.repository }}:arm64-nightly
-            podman manifest push ${{ needs.determine_environment.outputs.repository }}:nightly
-          fi
 
           # Creating and pushing manifest for version tag
-          podman manifest create ${{ needs.determine_environment.outputs.repository }}:${version}
-          podman manifest add ${{ needs.determine_environment.outputs.repository }}:${version} ${{ needs.determine_environment.outputs.repository }}:amd64-${version}
-          podman manifest add ${{ needs.determine_environment.outputs.repository }}:${version} ${{ needs.determine_environment.outputs.repository }}:arm64-${version}
-          podman manifest push ${{ needs.determine_environment.outputs.repository }}:${version}
+          gh-oci new-index --index "${{ needs.determine_environment.outputs.repository }}:${VERSION}"
+
+          # Creating and pushing manifest for nightly
+          if [ $IS_NIGHTLY = true ]; then
+            gh-oci new-index --index "${{ needs.determine_environment.outputs.repository }}:nightly"
+          fi
+
+          for cname in $CNAMES; do
+            tar xzv < "${cname}.tar.gz"
+
+            ARCH="$(gl-features-parse --cname "${cname}" arch)"
+            IMAGE_ID="$(gl-oci load-container --oci_archive "${cname}.oci" | awk '{ print $NF }')"
+
+            # Tagging with version
+            gl-oci tag-container --container "${IMAGE_ID}" --additional_tag "${{ needs.determine_environment.outputs.repository }}:${ARCH}-${VERSION}"
+            gl-oci push-container --container "${{ needs.determine_environment.outputs.repository }}" --tag "${ARCH}-${VERSION}"
+
+            # Tagging for nightly
+            if [ $IS_NIGHTLY = true ]; then
+              gl-oci tag-container --container "${IMAGE_ID}" --additional_tag "${{ needs.determine_environment.outputs.repository }}:${ARCH}-nightly"
+              gl-oci push-container --container "${{ needs.determine_environment.outputs.repository }}" --tag "${ARCH}-nightly"
+            fi
+
+            # Image index handling
+            gl-oci add-container-to-index --index "${{ needs.determine_environment.outputs.repository }}:${VERSION}" --container "${{ needs.determine_environment.outputs.repository }}" --tag "${ARCH}-${VERSION}"
+
+            if [ $IS_NIGHTLY = true ]; then
+              gl-oci add-container-to-index --index "${{ needs.determine_environment.outputs.repository }}:nightly" --container "${{ needs.determine_environment.outputs.repository }}" --tag "${ARCH}-nightly"
+            fi
+          done
   bare_flavors:
     needs: determine_environment
     name: Publish bare flavors
@@ -174,62 +157,56 @@ jobs:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@d64300c48bf9a0a262642b564c7aeea0b89be21f # pin@0.10.5
       - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # pin@v6.0.0
         with:
           pattern: build-bare-${{ matrix.config }}-*
           merge-multiple: true
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - name: Publish bare flavor image ${{ matrix.config }}
+      - name: Publish bare flavor image ${{ matrix.config }} (${{ matrix.arch }})
         run: |
+          ARCHS="amd64 arm64"
+
           if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
-            is_nightly=true
+            IS_NIGHTLY=true
           else
-            is_nightly=false
+            IS_NIGHTLY=false
           fi
-          version=$(bin/garden-version "${{ inputs.version }}")
+
+          VERSION=$(bin/garden-version "${{ inputs.version }}")
 
           podman login -u token -p ${{ github.token }} ghcr.io
 
-          # Handling amd64 image
-          image="$(podman load < ${{ matrix.config }}-amd64.oci | awk '{ print $NF }')"
-
-          # Tagging and pushing amd64 with version
-          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version
-          podman push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version
-
-          # Tagging and pushing amd64 with nightly
-          if [ $is_nightly = true ]; then
-            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
-            podman push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
-          fi
-
-          # Handling arm64 image
-          image="$(podman load < ${{ matrix.config }}-arm64.oci | awk '{ print $NF }')"
-
-          # Tagging and pushing arm64 with version
-          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version
-          podman push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version
-
-          # Tagging and pushing arm64 with nightly
-          if [ $is_nightly = true ]; then
-            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
-            podman push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
-          fi
-
           # Creating and pushing manifest for version tag
-          podman manifest create ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:$version
-          podman manifest add ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:$version ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version
-          podman manifest add ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:$version ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version
-          podman manifest push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:$version
+          gh-oci new-index --index "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:${VERSION}"
 
-          # Creating and pushing manifest for nightly tag
-          if [ $is_nightly = true ]; then
-            podman manifest create ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly
-            podman manifest add ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
-            podman manifest add ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
-            podman manifest push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly
+          # Creating and pushing manifest for nightly
+          if [ $IS_NIGHTLY = true ]; then
+            gh-oci new-index --index "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly"
           fi
+
+          for ARCH in $ARCHS; do
+            IMAGE_ID="$(gl-oci load-container --oci_archive "${{ matrix.config }}-${ARCH}.oci" | awk '{ print $NF }')"
+
+            # Tagging with version
+            gl-oci tag-container --container "${IMAGE_ID}" --additional_tag "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:${ARCH}-${VERSION}"
+            gl-oci push-container --container "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}" --tag "${ARCH}-${VERSION}"
+
+            # Tagging for nightly
+            if [ $IS_NIGHTLY = true ]; then
+              gl-oci tag-container --container "${IMAGE_ID}" --additional_tag "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:${ARCH}-nightly"
+              gl-oci push-container --container "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}" --tag "${ARCH}-nightly"
+            fi
+
+            # Image index handling
+            gl-oci add-container-to-index --index "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:${VERSION}" --container "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}" --tag "${ARCH}-${VERSION}"
+
+            if [ $IS_NIGHTLY = true ]; then
+              gl-oci add-container-to-index --index "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly" --container "${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}" --tag "${ARCH}-nightly"
+            fi
+          done
   push_flavors:
     needs: determine_environment
     name: Publish flavors
