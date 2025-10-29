@@ -36,6 +36,8 @@ jobs:
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@19c1b24c01faab81a7fe24713748dd172d00904a # pin@0.10.16
+        with:
+          version: 33fce174d889a4eef5aede1686a21e76d6de4524
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Set CNAME
         run: |
@@ -48,7 +50,8 @@ jobs:
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Build kernel module build dev container (${{ matrix.arch }})
         env:
-          GH_TOKEN: ${{ github.token }}
+          GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GL_CLI_REGISTRY_USERNAME: ${{ github.repository_owner }}
         run: |
           commit="$(./get_commit)"
           commit_short="${commit:0:8}"
@@ -64,16 +67,12 @@ jobs:
           rm "$CNAME.tar.gz"
 
           base="ghcr.io/${{ github.repository }}:$version"
-          image="$(podman load -i .build/container-${{ matrix.arch }}-$(cat VERSION)-${commit_short}.oci | awk '{ print $NF }')"
-          podman tag "$image" "$base"
-
+          image="$(gl-oci load-container --oci_archive ".build/container-${{ matrix.arch }}-$(cat VERSION)-${commit_short}.oci" --additional_tag "$base" | awk '{ print $NF }')"
           snapshot="$(gh api "/repos/gardenlinux/repo/contents/.container?ref=$version" | jq -r '.content' | base64 -d)"
 
-          podman login -u token -p "${GH_TOKEN}" ghcr.io
-          podman pull --arch ${{ matrix.arch }} "$snapshot"
-
-          podman build --arch ${{ matrix.arch }} --build-arg base="$base" --build-arg snapshot="$snapshot" -t ghcr.io/${{ github.repository }}/kmodbuild:${{ matrix.arch }}-${version} images/kmodbuild
-          podman save --format oci-archive ghcr.io/${{ github.repository }}/kmodbuild:${{ matrix.arch }}-${version} > kmodbuild_container_${{ matrix.arch }}.oci
+          gl-oci pull-container --container "$snapshot" --platform linux/${{ matrix.arch }}
+          gl-oci build-container --container "ghcr.io/${{ github.repository }}/kmodbuild" --tag "${{ matrix.arch }}-${version}" --platform linux/${{ matrix.arch }} --dir "images/kmodbuild" --build-arg base="$base" --build-arg snapshot="$snapshot"
+          gl-oci save-container --container "ghcr.io/${{ github.repository }}/kmodbuild" --tag "${{ matrix.arch }}-${version}" --oci_archive "kmodbuild_container_${{ matrix.arch }}.oci"
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # pin@v7.0.0
         with:
