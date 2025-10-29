@@ -65,3 +65,13 @@ def test_kernel_cmdline_fips_file_content():
     """
     with open("/etc/kernel/cmdline.d/30-fips.cfg") as kernel_cmd_file:
         assert kernel_cmd_file.read() == 'CMDLINE_LINUX="$CMDLINE_LINUX fips=1"\n', "fips=1 wasn't set in the kernel cmdline"
+
+
+@pytest.mark.booted(reason="Kernel test makes sense only on booted system")
+def test_kernel_was_boot_with_fips_mode():
+    """
+    Validate that the kernel was booted with the FIPS mode enabled. 
+    """
+    with open("/proc/sys/crypto/fips_enabled", "r") as f:
+        fips_enabled = f.read().strip()
+    assert fips_enabled == "1", f"Kernel is not in fips mode!"
