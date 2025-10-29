@@ -11,14 +11,18 @@ def test_history_profile_d():
 
     assert Path(config_file).exists()
 
-    assert re.search(r"HISTSIZE=/dev/null", config_contents)
+    assert re.search(r"HISTFILE=/dev/null", config_contents)
     assert re.search(r"readonly HISTFILE", config_contents)
     assert re.search(r"export HISTFILE", config_contents)
 
 
 @pytest.mark.feature("server", reason="needs server feature")
 def test_histfile_env_var_is_readonly(shell):
-    res = shell("HISTFILE=/tmp/owned", capture_output=False, ignore_exit_code=False)
+    res = shell(
+        ". /etc/profile.d/50-nohistory.sh && HISTFILE=/tmp/owned",
+        capture_output=True,
+        ignore_exit_code=True,
+    )
 
-    assert res.returncode == 1
-    assert "HISTFILE: readonly variable" in res.stderr
+    assert res.returncode == 2
+    assert "HISTFILE: is read only" in res.stderr
