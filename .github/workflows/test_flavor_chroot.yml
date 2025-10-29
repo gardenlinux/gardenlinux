@@ -5,20 +5,20 @@ on:
       arch:
         type: string
         default: "amd64"
-      flavor:
+      cname:
         type: string
         required: true
 jobs:
   test:
-    name: Test flavor ${{ inputs.flavor }} (${{ inputs.arch }}) in chroot
+    name: Test flavor ${{ inputs.cname }} (${{ inputs.arch }}) in chroot
     runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
-    if: ${{ inputs.flavor != 'skip' }}
+    if: ${{ inputs.cname != 'skip' }}
     timeout-minutes: 10
     defaults:
       run:
         shell: bash
     env:
-      CNAME: ""
+      ABN: ""
     permissions:
       actions: write
     steps:
@@ -30,7 +30,7 @@ jobs:
           path: |
             COMMIT
             VERSION
-          key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
+          key: build-${{ inputs.cname }}-${{ inputs.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: Download test distribution
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # pin@v6.1.0
@@ -39,30 +39,32 @@ jobs:
           key: test-distribution-${{ github.run_id }}
       - name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@385aaad34c414d49583c0fe3e03243d110640770 # pin@0.10.25
-      - name: Set CNAME
+        with:
+          version: 1.0.0-pre1
+      - name: Set ABN
         run: |
-          echo "CNAME=$(gl-features-parse --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname)" | tee -a "$GITHUB_ENV"
+          echo "ABN=$(gl-features-parse --cname ${{ inputs.cname }} --arch ${{ inputs.arch }} artifact-base-name)" | tee -a "$GITHUB_ENV"
       - name: Load flavor build artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
         with:
-          name: build-${{ inputs.flavor }}-${{ inputs.arch }}
+          name: build-${{ inputs.cname }}-${{ inputs.arch }}
       - name: Execute tests
         run: |
           mkdir ".build"
-          tar -C .build -xzf "${CNAME}.tar.gz"
-          rm "${CNAME}.tar.gz"
-          ./test ".build/${CNAME}.tar"
+          tar -C .build -xzf "${ABN}.tar.gz"
+          rm "${ABN}.tar.gz"
+          ./test ".build/${ABN}.tar"
       - name: Copy test results to build directory
         if: always()
         run: |
-          cp tests/log/chroot.test.log .build/${CNAME}.chroot.test.log || true
-          cp tests/log/chroot.test.xml .build/${CNAME}.chroot.test.xml || true
+          cp tests/log/chroot.test.log .build/${ABN}.chroot.test.log || true
+          cp tests/log/chroot.test.xml .build/${ABN}.chroot.test.xml || true
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
         if: always()
         with:
           if-no-files-found: ignore # in case test fails before writing a log
           overwrite: true # overwrite logs from previous attempt
-          name: chroot-test-${{ env.CNAME }}
+          name: chroot-test-${{ env.ABN }}
           path: |
-            .build/${{ env.CNAME }}.chroot.test.log
-            .build/${{ env.CNAME }}.chroot.test.xml
+            .build/${{ env.ABN }}.chroot.test.log
+            .build/${{ env.ABN }}.chroot.test.xml
