@@ -45,3 +45,23 @@ def test_libgcrypt_fips_file_is_empty():
     gnutls_fips_file = os.stat("/etc/gcrypt/fips_enabled")
 
     assert gnutls_fips_file.st_size == 0, f"The /etc/gcrypt/fips_enabled is not empty."
+
+
+def test_kernel_cmdline_fips_file_was_created():
+    """
+    libgcrypt, gnutls and openssl need to have the /proc/sys/crypto/fips_enabled present
+    as a prerequisite to enable they respected FIPS mode. The kernel can only be booted
+    with the fips=1 paraemter. 
+    """
+    kernel_fips_file = os.stat("/etc/kernel/cmdline.d/30-fips.cfg")
+    kernel_fips_file_state = S_ISREG(kernel_fips_file.st_mode)
+
+    assert kernel_fips_file_state, f"The /etc/kernel/cmdline.d/30-fips.cfg is missing!"
+
+
+def test_kernel_cmdline_fips_file_content():
+    """
+    We have to ensure that the fips=1 was set. 
+    """
+    with open("/etc/kernel/cmdline.d/30-fips.cfg") as kernel_cmd_file:
+        assert kernel_cmd_file.read() == 'CMDLINE_LINUX="$CMDLINE_LINUX fips=1"\n', "fips=1 wasn't set in the kernel cmdline"
