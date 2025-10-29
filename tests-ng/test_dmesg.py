@@ -8,7 +8,9 @@ import pytest
 def test_dmesg_sysctl_config():
     config_file = "/etc/sysctl.d/40-allow-nonroot-dmesg.conf"
     assert Path(config_file).exists()
-    assert re.search(r"kernel\.dmesg_restrict\s*=\s*0", Path(config_file).read_text())
+    assert re.search(
+        r"(?m)^\s*(?!#)kernel\.dmesg_restrict\s*=\s*0", Path(config_file).read_text()
+    )
 
 
 @pytest.mark.feature(
