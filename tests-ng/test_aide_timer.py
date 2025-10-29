@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.mark.feature("aide")
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="systemd timers are expected to be configured at runtime")
@@ -31,13 +32,11 @@ Output:
         ignore_exit_code=True,
     )
 
-    assert (
-        "Active: active" in result.stdout
-        and ("10:" in result.stdout or "OnCalendar=" in result.stdout)
+    assert "Active: active" in result.stdout and (
+        "10:" in result.stdout or "OnCalendar=" in result.stdout
     ), f"""
 AIDE systemd timer is present but seems inactive or misconfigured.
 Expected: active with correct schedule around 10:00 daily.
 Full status:
 {result.stdout}
 """
-
