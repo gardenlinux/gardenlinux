@@ -24,6 +24,7 @@ def test_clock(shell: ShellRunner):
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("aws")
+@pytest.mark.hypervisor("amazon")
 def test_correct_ntp_on_aws(timedatectl: TimeDateCtl):
     ntp_ip = timedatectl.get_ntpserver().ip
     assert (
@@ -33,6 +34,7 @@ def test_correct_ntp_on_aws(timedatectl: TimeDateCtl):
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("gcp")
+@pytest.mark.hypervisor("google")
 def test_correct_ntp_on_gcp(timedatectl: TimeDateCtl):
     ntp_hostname = timedatectl.get_ntpserver().hostname
     assert (
@@ -43,16 +45,11 @@ def test_correct_ntp_on_gcp(timedatectl: TimeDateCtl):
 @pytest.mark.flaky(reruns=10, reruns_delay=30, only_rerun="AssertionError")
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("not azure and not aws and not gcp and not qemu")
-def test_ntp(timedatectl: TimeDateCtl, systemd_detect_virt: Hypervisor):
+def test_ntp(timedatectl: TimeDateCtl):
     """
     Validate that NTP is enabled and synchronized on non-hyperscaler platforms.
     Skips on Azure, AWS and GCP since their metadata-based NTP servers and not reachable from QEMU tests.
     """
-
-    # Skip untestable virtualization environments
-    if systemd_detect_virt in (Hypervisor.amazon, Hypervisor.qemu):
-        pytest.skip("Skipping: NTP sync not possible in AWS/QEMU environment")
-
     # Verify image configuration
     assert (
         timedatectl.has_timesync_installed()
@@ -69,6 +66,7 @@ def test_ntp(timedatectl: TimeDateCtl, systemd_detect_virt: Hypervisor):
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure")
+@pytest.mark.hypervisor("microsoft")
 def test_systemd_timesyncd_disabled_on_azure(systemd: Systemd):
     assert (
         systemd.is_active("systemd-timesyncd") == False
@@ -130,6 +128,7 @@ def test_clocksource_arm(systemd_detect_virt: Hypervisor, clocksource: str):
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure")
+@pytest.mark.hypervisor("microsoft")
 def test_chrony_azure(
     chrony_config_file: str, ptp_hyperv_dev: str, systemd_detect_virt: Hypervisor
 ):
@@ -138,11 +137,6 @@ def test_chrony_azure(
 
     Gets skipped for QEMU tests as these do not start chrony.
     """
-    if systemd_detect_virt != Hypervisor.microsoft:
-        pytest.skip(
-            f"Skipping test: not running under Hyper-V (found {systemd_detect_virt})"
-        )
-
     expected_config = f"refclock PHC {ptp_hyperv_dev} poll 3 dpoll -2 offset 0"
     with open(chrony_config_file, "r") as f:
         actual_config = f.read()
@@ -153,17 +147,13 @@ def test_chrony_azure(
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure")
+@pytest.mark.hypervisor("microsoft")
 def test_azure_ptp_symlink(ptp_hyperv_dev: str, systemd_detect_virt: Hypervisor):
     """
     Ensure /dev/ptp_hyperv exists and is a symlink on real Azure VMs.
 
     Skips for QEMU only provides a generic virtualized clock.
     """
-    if systemd_detect_virt != Hypervisor.microsoft:
-        pytest.skip(
-            f"Skipping test: not running under Hyper-V (found {systemd_detect_virt})"
-        )
-
     assert os.path.islink(
         ptp_hyperv_dev
     ), f"{ptp_hyperv_dev} should always be a symlink."
