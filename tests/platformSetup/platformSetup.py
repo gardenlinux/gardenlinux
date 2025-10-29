@@ -304,7 +304,7 @@ class Tofu:
             if github_run_id and github_run_number:
                 workspace = f"test-{github_run_id}-{github_run_number}-{flavor}-{self.paths.seed}"
             else:
-                workspace = f"{flavor}-{self.paths.seed}"
+                workspace = f"test-{flavor}-{self.paths.seed}"
 
             logger.info(f"Workspace: {workspace}")
             workspace_cmd = ["tofu", "workspace", "select", workspace]
