@@ -17,9 +17,9 @@ on:
   pull_request:
     # No paths-ignore on pull_request — workflow must run on every PR so that
     # build_and_test_gate always produces a check result for branch protection.
-    # detect-changes skips the expensive build/test jobs on docs-only PRs.
+    # detect_changes skips the expensive build/test jobs on docs-only PRs.
 jobs:
-  detect-changes:
+  detect_changes:
     name: Detect code path changes
     runs-on: ubuntu-24.04
     outputs:
@@ -33,7 +33,7 @@ jobs:
           filters: |
             code:
               - '!.gitignore'
-              - '!.github/workflows/docs*.yml'
+              - '!.github/workflows/**'
               - '!docs/**'
               - '!features/*/README.md'
               - '!features/*/info.yaml'
@@ -42,8 +42,8 @@ jobs:
 
   set_version:
     name: Set VERSION
-    needs: [detect-changes]
-    if: needs.detect-changes.outputs.code == 'true'
+    needs: detect_changes
+    if: needs.detect_changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -80,19 +80,24 @@ jobs:
 
   build_and_test_gate:
     name: Build and test gate
-    needs: [detect-changes, build, test]
+    needs:
+    - build
+    - test
     if: always()
     runs-on: ubuntu-24.04
     steps:
       - name: Evaluate build and test result
         run: |
-          CODE_CHANGED="${{ needs.detect-changes.outputs.code }}"
-          BUILD_RESULT="${{ needs.build.result }}"
-          TEST_RESULT="${{ needs.test.result }}"
+          CODE_CHANGED="${{ needs.detect_changes.outputs.code }}"
+
           if [[ "$CODE_CHANGED" != "true" ]]; then
             echo "No code paths changed; skipping build and test — gate passes."
             exit 0
           fi
+
+          BUILD_RESULT="${{ needs.build.result }}"
+          TEST_RESULT="${{ needs.test.result }}"
+
           if [[ "$BUILD_RESULT" != "success" ]]; then
             echo "Build result: $BUILD_RESULT"
             exit 1
@@ -101,4 +106,6 @@ jobs:
             echo "Test result: $TEST_RESULT"
             exit 1
           fi
+
           echo "Build and test passed."
+          exit 0
