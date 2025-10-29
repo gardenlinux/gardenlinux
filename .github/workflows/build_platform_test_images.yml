@@ -190,7 +190,7 @@ jobs:
           echo "$version" | tee -a "platform-test.oci-version.txt"
           echo "${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }}:${ARCH}-${PLATFORM_TEST_TAG}" | tee -a "platform-test.oci-tag.txt"
       - name: Upload image artifact for ${{ matrix.platform }} (${{ matrix.arch }})
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # pin@v5.0.0
         with:
           name: platform-test-${{ matrix.platform }}-${{ matrix.arch }}
           path: ${{ env.IMAGE_BASE }}-${{ matrix.platform }}-${{ matrix.arch }}.tar
@@ -220,7 +220,7 @@ jobs:
         with:
           submodules: true
       - name: Load images (${{ matrix.platform }})
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # pin@v6.0.0
         with:
           pattern: platform-test-*
           merge-multiple: true
