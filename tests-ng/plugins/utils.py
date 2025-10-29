@@ -8,6 +8,7 @@ from typing import Dict, Iterable, List, Optional
 
 import pytest
 
+
 def parse_etc_file(
     path: Path,
     *,
@@ -74,9 +75,11 @@ def parse_etc_file(
 
     return out
 
+
 def equals_ignore_case(a: str, b: str) -> bool:
     """Return True if both strings are equal ignoring case, else False."""
     return a.lower() == b.lower()
+
 
 def get_normalized_sets(*iterables: Iterable) -> tuple[set[str], ...]:
     """
@@ -86,6 +89,7 @@ def get_normalized_sets(*iterables: Iterable) -> tuple[set[str], ...]:
         -> ({'ssh'}, {'ssh'})
     """
     return tuple({str(x).strip().lower() for x in iterable} for iterable in iterables)
+
 
 def is_set(value) -> bool:
     """Return True if the given value is a Python set."""
