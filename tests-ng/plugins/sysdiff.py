@@ -26,6 +26,7 @@ from debian import deb822
 from .dpkg import Dpkg
 from .find import Find
 from .kernel_module import KernelModule, LoadedKernelModule
+from .kernel_versions import KernelVersions
 from .shell import ShellRunner
 from .sysctl import Sysctl, SysctlParam
 from .systemd import Systemd, SystemdUnit
