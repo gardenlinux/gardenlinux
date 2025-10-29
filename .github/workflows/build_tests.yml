@@ -55,13 +55,13 @@ jobs:
         with:
           path: tests/.build
           key: test-distribution-${{ github.run_id }}
-      - name: Build multiarch tests container
+      - name: Build multi-arch tests container
         run: |
           set -euo pipefail
           cd tests
           make -f util/build.makefile oci
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
         with:
-          name: tests-container
+          name: ${{ inputs.prefix }}tests-container
           path: tests/.build/dist.oci
           if-no-files-found: error

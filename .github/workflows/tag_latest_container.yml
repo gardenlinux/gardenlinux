@@ -21,7 +21,7 @@ jobs:
       packages: write
     steps:
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@385aaad34c414d49583c0fe3e03243d110640770 # pin@0.10.25
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@e7e6d8adf3c8a7f096f080441e83b940c7f7139b # pin@1.0.0
       - name: Tag manifest
         env:
           GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -34,20 +34,20 @@ jobs:
           version_major=$(echo $version | cut -d'.' -f 1)
           version_patch=$(echo $version | cut -d'.' -f 3)
 
-          container=ghcr.io/${{ github.repository }}
+          repository=ghcr.io/${{ github.repository }}
 
           # Tag the major release version
           echo "Tagging as ${version_major}"
-          gl-oci push-index-tags --index "${container}" --index-tag "${version}" --tag "${version_major}"
+          gl-oci push-index-tags --index "${repository}" --index-tag "${version}" --tag "${version_major}"
 
           # Tag the patch release version
           if [ -z "${version_patch}" ]; then
             echo "Tagging as ${version}.0"
-            gl-oci push-index-tags --index "${container}" --index-tag "${version}" --tag "${version}.0"
+            gl-oci push-index-tags --index "${repository}" --index-tag "${version}" --tag "${version}.0"
           fi
 
           # Tag latest only if requested
           if [ "${is_latest}" == "true" ]; then
             echo "Tagging as latest"
-            gl-oci push-index-tags --index "${container}" --index-tag "${version}" --tag "latest"
+            gl-oci push-index-tags --index "${repository}" --index-tag "${version}" --tag "latest"
           fi
