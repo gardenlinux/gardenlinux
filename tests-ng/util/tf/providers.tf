@@ -3,11 +3,11 @@ terraform {
   required_providers {
     alicloud = {
       source  = "aliyun/alicloud"
-      version = "1.257.0"
+      version = "1.253.0"
     }
     aws = {
       source  = "hashicorp/aws"
-      version = "6.8.0"
+      version = "6.2.0"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -15,11 +15,11 @@ terraform {
     }
     google = {
       source  = "hashicorp/google"
-      version = "6.48.0"
+      version = "6.42.0"
     }
     openstack = {
       source = "terraform-provider-openstack/openstack"
-      version = "3.3.2"
+      version = "3.2.0"
     }
   }
 }
