@@ -1,5 +1,4 @@
 import pytest
-from handlers.services import service_containerd
 from plugins.containerd import CtrRunner
 
 TEST_IMAGES = [

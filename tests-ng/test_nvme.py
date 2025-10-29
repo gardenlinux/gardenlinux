@@ -4,7 +4,6 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from handlers.configure_nvme import nvme_device
 from plugins.shell import ShellRunner
 
 module = ["nvme-tcp"]

@@ -1,5 +1,4 @@
 import pytest
-from handlers.services import service_parametrize
 from plugins.kernel_module import KernelModule
 from plugins.systemd import Systemd
 
