@@ -12,6 +12,21 @@ else
     UUID := $(shell cat $(UUID_FILE))
 endif
 SEED := $(shell cat $(UUID_FILE) | cut -d'-' -f1)
+ifeq ($(origin GITHUB_RUN_ID), undefined)
+	GITHUB_RUN_ID :=
+endif
+ifeq ($(origin GITHUB_RUN_NUMBER), undefined)
+	GITHUB_RUN_NUMBER :=
+endif
+ifneq ($(GITHUB_RUN_ID),)
+ifneq ($(GITHUB_RUN_NUMBER),)
+	WORKSPACE_PREFIX := test-$(GITHUB_RUN_ID)-$(GITHUB_RUN_NUMBER)-
+else
+	WORKSPACE_PREFIX := test-
+endif
+else
+	WORKSPACE_PREFIX :=
+endif
 ifeq ($(strip $(GL_VERSION)),)
 GL_VERSION := latest
 endif
@@ -58,7 +73,7 @@ CRE_CMD_privileged = --privileged
 # privileged is required for virt-copy-in/guestfish
 CRE_CMD_kvm = $(CRE_CMD_BASE) $(CRE_CMD_privileged) $(KVM_DEVICE)
 CRE_CMD_kvm_image = $(GL_REGISTRY)/gardenlinux/platform-test-kvm:$(GL_VERSION)
-CRE_CMD_tofu = $(CRE_CMD_BASE) -e TF_* -v ~/.aliyun:/root/.aliyun -e ALIBABA_* -v ~/.aws:/root/.aws -e AWS_* -v ~/.azure:/root/.azure -e azure_* -e ARM_* -e ACTIONS_* -v ~/.config/gcloud:/root/.config/gcloud -e GOOGLE_* -e CLOUDSDK_* -e OS_* --rm -v ~/.ssh:/root/.ssh:ro $(GL_REGISTRY)/gardenlinux/platform-test-tofu:$(GL_VERSION)
+CRE_CMD_tofu = $(CRE_CMD_BASE) -e TF_* -v ~/.aliyun:/root/.aliyun -e ALIBABA_* -v ~/.aws:/root/.aws -e AWS_* -v ~/.azure:/root/.azure -e azure_* -e ARM_* -e ACTIONS_* -e GITHUB_* -v ~/.config/gcloud:/root/.config/gcloud -e GOOGLE_* -e CLOUDSDK_* -e OS_* --rm -v ~/.ssh:/root/.ssh:ro $(GL_REGISTRY)/gardenlinux/platform-test-tofu:$(GL_VERSION)
 MKDIRS = ~/.aliyun ~/.aws ~/.azure ~/.config/gcloud
 
 .PHONY: all
@@ -109,7 +124,7 @@ $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
 			tofu init && \
-			tofu workspace select -or-create $(flavor)-$(SEED) && \
+			tofu workspace select -or-create $(WORKSPACE_PREFIX)$(flavor)-$(SEED) && \
 			tofu plan -var-file variables.$(flavor).tfvars && \
 			tofu workspace select default" \
 	) \
@@ -121,7 +136,7 @@ $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 			cd platformSetup/tofu && \
 			test -f cert/secureboot.db.der || CERT_CN=OpenTofu make --directory=cert && \
 			tofu init && \
-			tofu workspace select -or-create $(flavor)-$(SEED) && \
+			tofu workspace select -or-create $(WORKSPACE_PREFIX)$(flavor)-$(SEED) && \
 			tofu apply --auto-approve -var-file variables.$(flavor).tfvars && \
 			../platformSetup.py --provisioner tofu --flavor $(flavor) && \
 			tofu workspace select default" \
@@ -133,7 +148,7 @@ $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
 			tofu init && \
-			tofu workspace select -or-create $(flavor)-$(SEED) && \
+			tofu workspace select -or-create $(WORKSPACE_PREFIX)$(flavor)-$(SEED) && \
 			tofu show && \
 			tofu workspace select default" \
 	) \
@@ -144,7 +159,7 @@ $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
 			tofu init && \
-			tofu workspace select -or-create $(flavor)-$(SEED) && \
+			tofu workspace select -or-create $(WORKSPACE_PREFIX)$(flavor)-$(SEED) && \
 			../platformSetup.py --provisioner tofu --flavor $(flavor) && \
 			tofu workspace select default && \
 			../../login.tofu.$(flavor).sh" \
@@ -156,10 +171,10 @@ $(foreach flavor,$(FLAVORS_PUBLIC_CLOUD), \
 		$(CRE_CMD_tofu) bash -c "\
 			cd platformSetup/tofu && \
 			tofu init && \
-			tofu workspace select $(flavor)-$(SEED) && \
+			tofu workspace select $(WORKSPACE_PREFIX)$(flavor)-$(SEED) && \
 			tofu destroy --auto-approve -var-file variables.$(flavor).tfvars && \
 			tofu workspace select default && \
-			tofu workspace delete $(flavor)-$(SEED)" \
+			tofu workspace delete $(WORKSPACE_PREFIX)$(flavor)-$(SEED)" \
 	) \
 )
 
