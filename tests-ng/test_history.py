@@ -11,9 +11,9 @@ def test_history_profile_d():
 
     assert Path(config_file).exists()
 
-    assert re.search(r"HISTFILE=/dev/null", config_contents)
-    assert re.search(r"readonly HISTFILE", config_contents)
-    assert re.search(r"export HISTFILE", config_contents)
+    assert re.search(r"(?m)^\s*(?!#)HISTFILE=/dev/null", config_contents)
+    assert re.search(r"(?m)^\s*(?!#)readonly HISTFILE", config_contents)
+    assert re.search(r"(?m)^\s*(?!#)export HISTFILE", config_contents)
 
 
 @pytest.mark.feature("server", reason="needs server feature")
