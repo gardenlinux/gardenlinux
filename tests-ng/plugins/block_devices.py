@@ -1,11 +1,13 @@
-import pytest
 import os
+
+import pytest
+
 
 class BlockDevices:
     def list_devices(self) -> list[str]:
         return os.listdir("/dev/disk/by-path")
 
-    def contains(self, device_name: str, substring: bool=False) -> bool:
+    def contains(self, device_name: str, substring: bool = False) -> bool:
         devices = self.list_devices()
         if substring:
             return any([device_name in device for device in devices])
