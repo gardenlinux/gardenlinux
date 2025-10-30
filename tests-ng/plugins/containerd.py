@@ -11,9 +11,8 @@ class CtrRunner:
     Container image uris are validated before use. Expect an exception if a malformed URI is passed.
     """
 
-    def __init__(self, shell: ShellRunner, systemd: Systemd):
+    def __init__(self, shell: ShellRunner):
         self.shell = shell
-        systemd.start_unit("containerd")
 
     def pull_image(self, uri, capture_output=False, ignore_exit_code=False):
         validators.url(uri)
@@ -40,8 +39,8 @@ class CtrRunner:
 
 
 @pytest.fixture
-def ctr(shell: ShellRunner, systemd: Systemd):
-    return CtrRunner(shell, systemd)
+def ctr(shell: ShellRunner):
+    return CtrRunner(shell)
 
 
 @pytest.fixture
