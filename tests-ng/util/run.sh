@@ -53,7 +53,10 @@ ARTIFACT TYPES
 
 EXAMPLES
   # Run chroot tests on a tar image
+
   ./test-ng .build/aws-gardener_prod-amd64-today-13371337.tar
+  # Run OCI container tests on Base Image
+  ./test-ng .build/container-amd64-today-local.oci
 
   # Run QEMU tests with SSH access and skip cleanup
   ./test-ng --ssh --skip-cleanup .build/aws-gardener_prod-amd64-today-13371337.raw
@@ -73,9 +76,6 @@ EXAMPLES
   # Spin up an existing cloud image using image requirements file
   ./test-ng --cloud aws --skip-cleanup --skip-tests --cloud-image --image-requirements-file .build/aws-gardener_prod-amd64-today-local.requirements ami-07f977508ed36098e
 
-  # Run OCI tests
-  ./test-ng .build/bare_flavors/python-amd64.oci
-
   # Run QEMU VM with PXE boot testing
   ./test-ng .build/metal_pxe-amd64-today-local.pxe.tar.gz
 
@@ -84,6 +84,7 @@ ENVIRONMENTS
   QEMU Testing: Boots image in local QEMU virtual machine (full system testing, SSH on localhost:2222)
   Cloud Testing: Deploys image to cloud infrastructure using OpenTofu (real-world environment)
   PXE Testing: Boots PXE archive via QEMU network boot (full system testing)
+  OCI Testing: Runs tests in container from OCI image (very fast, limited to base image and an unbooted system)
 
 For more information, see tests-ng/README.md
 EOF
@@ -111,11 +112,13 @@ while [ $# -gt 0 ]; do
 	--skip-cleanup)
 		cloud_args+=("$1")
 		qemu_args+=("$1")
+		oci_args+=("$1")
 		shift
 		;;
 	--skip-tests)
 		cloud_args+=("$1")
 		qemu_args+=("$1")
+		oci_args+=("$1")
 		shift
 		;;
 	--test-args)
@@ -209,13 +212,11 @@ if [ -z "$cloud" ] && ! ((cloud_image)); then
 	[ -n "$type" ]
 fi
 
-if [ "$type" != oci ]; then
-	if [ ! -f ".build/.gh_artifact" ]; then
-		echo "Building test distribution..."
-		./util/build.makefile
-	else
-		echo "Using cached test distribution from github artifact"
-	fi
+if [ ! -f ".build/.gh_artifact" ]; then
+	echo "Building test distribution..."
+	./util/build.makefile
+else
+	echo "Using cached test distribution from github artifact"
 fi
 
 if [ -n "$cloud" ]; then

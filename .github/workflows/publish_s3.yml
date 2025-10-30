@@ -23,13 +23,13 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # pin@v6.0.0
         with:
           name: workflow-data
           github-token: ${{ github.token }}
           run-id: ${{ needs.workflow_data.outputs.run_id }}
       - name: Upload parent workflow artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: parent-workflow-data
           overwrite: true
@@ -173,24 +173,24 @@ jobs:
     environment: oidc_aws_s3_upload
     runs-on: ubuntu-24.04
     steps:
-      - uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838 # pin@v4
+      - uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_REGION }}
       - if: ${{ github.ref_name == 'main' }}
         name: Create GLRD nightly release
-        uses: gardenlinux/glrd@v3
+        uses: gardenlinux/glrd@v4
         with:
           cmd: glrd-manage --s3-update --create nightly --version "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}"
       - if: ${{ github.ref_name != 'main' }}
-        name: Create GLRD patch release
-        uses: gardenlinux/glrd@v3
+        name: Create GLRD minor release
+        uses: gardenlinux/glrd@v4
         with:
-          cmd: glrd-manage --s3-update --create patch --version "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}"
+          cmd: glrd-manage --s3-update --create minor --version "${{ needs.workflow_data.outputs.version }}" --commit "${{ needs.workflow_data.outputs.commit_id }}"
       - name: Get latest GL nightly
         id: gl_version_nightly
-        uses: gardenlinux/glrd@v3
+        uses: gardenlinux/glrd@v4
         with:
           cmd: glrd --type nightly --latest
   publish_retry:

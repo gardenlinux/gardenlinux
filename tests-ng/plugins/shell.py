@@ -1,40 +1,50 @@
 import os
 import pwd
-import pytest
 import subprocess
 from typing import Optional, Tuple
 
+import pytest
+
 default_user: Optional[Tuple[int, int]] = None
+
 
 class ShellRunner:
     def __init__(self, user: Optional[Tuple[int, int]]):
         self.user = user
 
     def __call__(
-        self,
-        cmd: str,
-        capture_output: bool = False,
-        ignore_exit_code: bool = False
+        self, cmd: str, capture_output: bool = False, ignore_exit_code: bool = False
     ) -> subprocess.CompletedProcess:
         def _setuid():
             if self.user != None:
                 os.setgid(self.user[1])
                 os.setuid(self.user[0])
 
-        result = subprocess.run(['/bin/sh', '-e', '-c', cmd], shell=False, capture_output=capture_output, text=True, check=False, preexec_fn=_setuid)
+        result = subprocess.run(
+            ["/bin/sh", "-e", "-c", cmd],
+            shell=False,
+            capture_output=capture_output,
+            text=True,
+            check=False,
+            preexec_fn=_setuid,
+        )
 
         if result.returncode != 0 and not ignore_exit_code:
-            raise RuntimeError(f"command {cmd} failed with exit code {result.returncode}")
+            raise RuntimeError(
+                f"command {cmd} failed with exit code {result.returncode}"
+            )
 
         return result
+
 
 def pytest_addoption(parser: pytest.Parser):
     parser.addoption(
         "--default-user",
         action="store",
         default="",
-        help="User to switch to before executing shell commands"
+        help="User to switch to before executing shell commands",
     )
+
 
 def pytest_configure(config: pytest.Config):
     global default_user
@@ -48,8 +58,9 @@ def pytest_configure(config: pytest.Config):
 
     config.addinivalue_line(
         "markers",
-        "root(reason=None): mark test to run as root user, with optional reason"
+        "root(reason=None): mark test to run as root user, with optional reason",
     )
+
 
 @pytest.fixture
 def shell(request: pytest.FixtureRequest) -> ShellRunner:

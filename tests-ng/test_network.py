@@ -1,11 +1,10 @@
-import os
 import datetime
+import os
 import socket
 import threading
+
 import pytest
-
 from plugins.network import has_ipv6
-
 
 # Test parameters. IPv6 skipped if not supported.
 LOCAL_TEST_PARAMS = [

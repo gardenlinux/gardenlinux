@@ -16,3 +16,11 @@ updates:
     versioning-strategy: "increase-if-necessary"
     reviewers:
       - "gardenlinux/garden-linux-maintainers"
+
+  - package-ecosystem: "pip"
+    directory: "/tests-ng/util"
+    schedule:
+      interval: "weekly"
+    versioning-strategy: "increase-if-necessary"
+    reviewers:
+      - "gardenlinux/garden-linux-maintainers"

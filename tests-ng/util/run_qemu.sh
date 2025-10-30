@@ -50,7 +50,8 @@ done
 
 test_dist_dir="$1"
 image="$2"
-log_dir="$test_dist_dir/../log"
+util_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")")"
+log_dir="$util_dir/../log"
 log_file_log="qemu.test-ng.log"
 log_file_junit="qemu.test-ng.xml"
 
@@ -66,6 +67,22 @@ fi
 
 mkdir -p "$log_dir"
 test_args+=("--junit-xml=/dev/virtio-ports/test_junit")
+
+# Extract test artifact name from image filename
+if ((is_pxe_archive)); then
+	test_artifact="$(basename "$image" | sed 's/-[0-9].*\.pxe\.tar\.gz$//')"
+else
+	test_artifact="$(basename "$image" | sed 's/-[0-9].*\.raw$//')"
+fi
+test_type="qemu"
+test_namespace="test-ng"
+
+# Add pytest-metadata arguments
+test_args+=("--metadata" "Artifact" "$test_artifact")
+test_args+=("--metadata" "Type" "$test_type")
+test_args+=("--metadata" "Namespace" "$test_namespace")
+
+echo "📊  metadata: Artifact=$test_artifact, Type=$test_type, Namespace=$test_namespace"
 
 # arch, uefi, secureboot, tpm2 are set in $image.requirements
 if ((is_pxe_archive)); then
@@ -157,13 +174,13 @@ exec 2>&1
 EOF
 
 if ((ssh)); then
-	ssh_private_key_path="$HOME/.ssh/id_ed25519_gl"
-	ssh_public_key_path="${ssh_private_key_path}.pub"
-	if [ ! -f "$ssh_private_key_path" ]; then
-		mkdir -p "$(dirname "$ssh_private_key_path")"
-		ssh-keygen -t ed25519 -f "$ssh_private_key_path" -N "" >/dev/null
+	ssh_private_key="$util_dir/../.ssh/id_ed25519_gl"
+	ssh_public_key="$ssh_private_key.pub"
+	if [ ! -f "$ssh_private_key" ]; then
+		mkdir -p "$(dirname "$ssh_private_key")"
+		ssh-keygen -t ed25519 -f "$ssh_private_key" -N "" >/dev/null
 	fi
-	ssh_public_key=$(cat "$ssh_public_key_path")
+	ssh_public_key=$(cat "$ssh_public_key")
 	ssh_user="gardenlinux"
 	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
 systemctl enable --now ssh

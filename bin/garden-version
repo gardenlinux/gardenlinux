@@ -3,6 +3,7 @@
 # Contains sources from https://github.com/debuerreotype/debuerreotype
 
 set -Eeuo pipefail
+# shellcheck disable=2128
 thisDir="$(dirname "$(readlink -f "${BASH_SOURCE}")")"
 versionfile="$(readlink -f "${thisDir}/../VERSION")"
 startdate="Mar 31 00:00:00 UTC 2020"
@@ -17,7 +18,7 @@ function check_command() {
 
 # Use "gdate" & sed (GNU) which must be installed by "Homebrew"
 # on macOS systems to have a normalized date interface
-if [ "Darwin" == $build_os ]; then
+if [ "Darwin" == "$build_os" ]; then
         date_gnu="gdate"
         sed_gnu="gsed"
 else
@@ -27,15 +28,17 @@ fi
 check_command "$date_gnu"
 check_command "$sed_gnu"
 
+# shellcheck disable=1091
 source "${thisDir}/.constants.sh" \
-	--flags 'major,minor,date,datefull,epoch,git' \
-	--usage '[ --major | --minor | --date | --datefull | --epoch | --git ] [<garden-version>|<timestamp>]' \
+	--flags 'major,minor,patch,date,datefull,epoch,git' \
+	--usage '[ --major | --minor | --patch | --date | --datefull | --epoch | --git ] [<garden-version>|<timestamp>]' \
 	--sample '20200427' \
 	--sample '--date 27.1' \
 	--help   "Generates version dependent values according to the file $versionfile or to the parameter handed over. Versions can be converted adequately
 
 --major 	prints only the major version
 --minor		prints only the minor version
+--patch		prints only the patch/patch version
 --date 		prints the date according to the version e.g. 20200427 if garden-version=27
 --datefull	prints a full date deteministically usable by debootstrap
 --epoch		prints the seconds sinc 19700101 till garden-version
@@ -44,13 +47,14 @@ source "${thisDir}/.constants.sh" \
 If no parameter is specified the full version <major>.<minor> e.g. 27.5 is printed. The version is taken from $versionfile. On HEAD this should always evaluate to 'today', on branch versions this always should resolve to the next version that will be build e.g. 27.1. This implies there is no branch with a .0 in the $versionfile file.
 The version calculated expresses the days since $startdate. Calculation is always UTC based."
 
+# shellcheck disable=2154
 eval "${dgetopt}"
 typeout="default"
 while true; do
 	flag="$1"; shift
 	dgetopt-case "${flag}"
 	case "${flag}" in
-		--major|--minor|--date|--datefull|--epoch|--git)		
+		--major|--minor|--patch|--date|--datefull|--epoch|--git)
 			typeout="${flag}"   ;;
 		--)	break ;;
 		*) 	eusage "unknown flag '${flag}'" ;;
@@ -62,11 +66,11 @@ function get_minor_from_repo {
   minor=0   # running index
   limit=100 # hard limit the search in case of unexpected curl results
   major=$1  # major to check the latest minor for
-  repo_url="https://repo.gardenlinux.io/gardenlinux/dists/$major.__MINOR__/Release"
+  repo_url="https://packages.gardenlinux.io/gardenlinux/dists/$major.__MINOR__/InRelease"
   while [ $minor -le $limit ]
   do
     check_url=${repo_url//__MINOR__/$minor}
-    if curl -s $check_url| grep -q "Error"; then
+    if curl -s "$check_url" | grep -q "Error"; then
       ((minor--))
       echo $minor
       return
@@ -75,40 +79,76 @@ function get_minor_from_repo {
   done
 }
 
+function get_patch_from_repo {
+	# TODO: implement if we really expect that we'll ever have a nonzero micro/patch version
+	local major=$1
+	local minor=$2
+	if [ "$minor" -eq -1 ]; then
+		echo -1
+		return
+	fi
+	echo 0
+	return
+}
+
+function trim_when_old_version {
+	if [ "$1" == "today" ]; then
+		echo "today"
+		return
+	fi
+	# shellcheck disable=2046
+	if [ $(echo "$1" | cut -d. -f1) -lt 2015 ]; then
+		echo "$1" | cut -d. -f1-2
+	else
+		echo "$1"
+	fi
+}
+
 input="${1:-$($sed_gnu -e "s/#.*\$//" -e "/^$/d" "${versionfile}")}";  shift || true
-input=$($sed_gnu "s/^[[:space:]]*//;s/[[:space:]]*\$//" <<< ${input})
+input=$($sed_gnu "s/^[[:space:]]*//;s/[[:space:]]*\$//" <<< "${input}")
 
 # no version / timestamp on versionfile
-[ -z ${input} ] && input="today"
+[ -z "${input}" ] && input="today"
 
 minor=0
-if [[ ${input} =~ ^[0-9\.]*$ && $(cut -d. -f1 <<< ${input}) -lt 10000000 ]]; 
-then	[ $(cut -d. -sf3 <<< ${input}) ] && eusage "invalid version format ${input}. should be <major>[.<minor>]"
+patch=0
+# shellcheck disable=2046
+if [[ "${input}" =~ ^[0-9\.]*$ && $(cut -d. -f1 <<< "${input}") -lt 10000000 ]];
+then	[ $(cut -d. -sf4 <<< "${input}") ] && eusage "invalid version format ${input}. should be <major>[.<minor>.<patch>]"
 
-	major="$(cut -d. -f1 <<< ${input})"
-	if [ $(cut -d. -sf2 <<< ${input}) ]; then 
-		minor="$(cut -d. -f2 <<< ${input})"
-	else 
-		minor=$(get_minor_from_repo $major)
+	major="$(cut -d. -f1 <<< "${input}")"
+	# shellcheck disable=2046
+	if [ $(cut -d. -sf2 <<< "${input}") ]; then
+		minor="$(cut -d. -f2 <<< "${input}")"
+	else
+		minor=$(get_minor_from_repo "$major")
 	fi
-	version="${major}.${minor}"
-else 
+	# shellcheck disable=2046
+	if [ $(cut -d. -sf3 <<< "${input}") ]; then
+		patch="$(cut -d. -f3 <<< "${input}")"
+	else
+		patch=$(get_patch_from_repo "$major" "$minor")
+	fi
+	version="${major}.${minor}.${patch}"
+else
   if	[[ ${input} = today ]] || [[ ${input} = experimental ]];
 	then	indate=$($date_gnu --date "today" +%s 2>/dev/null)
-		major="$(( (${indate} - $($date_gnu --date "${startdate}" +%s)) / (60*60*24) ))"
+		major="$(( ("${indate}" - $($date_gnu --date "${startdate}" +%s)) / (60*60*24) ))"
 		version=${input}
 	else	indate=$($date_gnu --date "${input}" +%s 2>/dev/null) || eusage "invalid date ${input}"
-		major="$(( (${indate} - $($date_gnu --date "${startdate}" +%s)) / (60*60*24) ))"
-		version="${major}.${minor}"
+		major="$(( ("${indate}" - $($date_gnu --date "${startdate}" +%s)) / (60*60*24) ))"
+		version="${major}.${minor}.${patch}"
 	fi
 fi
 
+# shellcheck disable=2154
 case "${typeout}" in
-	--major)	echo ${major} ;;
-	--minor)	echo ${minor} ;;
+	--major)	echo "${major}" ;;
+	--minor)	echo "${minor}" ;;
+	--patch)	echo "${patch}" ;;
 	--date)		$date_gnu --date "${startdate} + ${major} days" +%Y%m%d ;;
 	--datefull)	$date_gnu --date "${startdate} + ${major} days" +%Y%m%dT%H%M%SZ ;;
 	--epoch)	$date_gnu --date "${startdate} + ${major} days" +%s ;;
-	--git)		echo "${version}-$(git -C "${scriptsDir}" rev-parse --short 'HEAD^{commit}')" ;;
-        *)		echo "${version}" ;;
+	--git)		echo "$(trim_when_old_version "${version}")-$(git -C "${scriptsDir}" rev-parse --short 'HEAD^{commit}')" ;;
+        *)		trim_when_old_version "${version}" ;;
 esac

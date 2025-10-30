@@ -16,7 +16,6 @@ following volunteers:
 
 * Akendo (**[@Akendo](https://github.com/Akendo)**)
 * Andre Russ, (**[@gehoern](https://github.com/gehoern)**)
-* Vincent Riesop (**[@vincinator](https://github.com/vincinator/)**)
 * Nikolas Kraetzschmar (**[@nkraetzschmar](https://github.com/nkraetzschmar/)**)
 * Stefan Catargiu (**[@5kt](https://github.com/5kt/)**)
 * Florian Wilhelm (**[@fwilhe](https://github.com/fwilhe/)**)

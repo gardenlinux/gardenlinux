@@ -9,4 +9,4 @@ This section provides detailed documentation tailored for operators who are resp
 - **[Gardener Kernel Restart](./gardener-kernel-restart.md)**: Insights into the kernel restart process when using Garden Linux with Gardener.
 - **[SSH Hardening](./ssh-hardening.md)**: Best practices and steps to secure SSH access on Garden Linux.
 - **[Time Configuration](./time-configuration.md)**: Procedures to configure and manage time settings in Garden Linux.
-
+- **[Garden Linux Virtual Machines Using Lima (Linux Machines)](./lima-vm.md)**: Describes how to run virtual machines and build your own images.

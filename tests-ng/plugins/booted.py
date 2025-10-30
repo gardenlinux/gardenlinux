@@ -1,5 +1,6 @@
-import pytest
 from typing import Any, List
+
+import pytest
 
 system_booted = False
 
@@ -12,7 +13,7 @@ def pytest_addoption(parser: pytest.Parser):
     parser.addoption(
         "--system-booted",
         action="store_true",
-        help="Set if the system under test was booted instead of running in a chroot or container. This will enable kernel, systemd, and other system level tests."
+        help="Set if the system under test was booted instead of running in a chroot or container. This will enable kernel, systemd, and other system level tests.",
     )
 
 
@@ -20,7 +21,10 @@ def pytest_configure(config: pytest.Config):
     global system_booted
     system_booted = config.getoption("--system-booted")
 
-    config.addinivalue_line("markers", "booted(reason=None): mark test to run only on a booted target, i.e. not in a container or chroot. Optionally provide a reason why system must be booted.")
+    config.addinivalue_line(
+        "markers",
+        "booted(reason=None): mark test to run only on a booted target, i.e. not in a container or chroot. Optionally provide a reason why system must be booted.",
+    )
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: List[pytest.Item]):
