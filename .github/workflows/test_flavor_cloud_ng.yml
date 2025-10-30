@@ -69,18 +69,18 @@ jobs:
           key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: Download test distribution artifact
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # pin@v6.0.0
         with:
           name: test-distribution
           path: tests-ng/.build
       - name: Load certs artifact
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # pin@v6.0.0
         with:
           name: certs
           path: cert/
       - name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@7f337e8340fe3f707a139fbd72185eebafe6c97b # pin@0.10.3
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@9af6c50cf9ff955130dc412238ecd16f1d84d103 # pin@0.10.4
         with:
           flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
       - name: Set CNAME
@@ -90,7 +90,7 @@ jobs:
         run: |
           echo "CLOUD=${CNAME%%-*}" | tee -a "$GITHUB_ENV"
       - name: Load flavor build artifact
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # pin@v6.0.0
         with:
           name: build-${{ inputs.flavor }}-${{ inputs.arch }}
       - name: unpack build artifacts
@@ -212,7 +212,7 @@ jobs:
         run: |
           cp tests-ng/log/cloud.test-ng.log .build/${CNAME}.cloud.test-ng.log || true
           cp tests-ng/log/cloud.test-ng.xml .build/${CNAME}.cloud.test-ng.xml || true
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # pin@v5.0.0
         if: always()
         with:
           if-no-files-found: ignore

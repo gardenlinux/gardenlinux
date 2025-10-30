@@ -6,4 +6,4 @@
 #
 
 requests
-gardenlinux @ git+https://github.com/gardenlinux/python-gardenlinux-lib.git@0.10.3
+gardenlinux @ git+https://github.com/gardenlinux/python-gardenlinux-lib.git@0.10.4

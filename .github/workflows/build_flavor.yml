@@ -45,7 +45,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@7f337e8340fe3f707a139fbd72185eebafe6c97b # pin@0.10.3
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@9af6c50cf9ff955130dc412238ecd16f1d84d103 # pin@0.10.4
       - name: Set build reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -57,7 +57,7 @@ jobs:
           key: base-${{ inputs.arch }}-${{ github.run_id }}
           fail-on-cache-miss: true
       - name: Load certs artifact
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # pin@v5.0.0
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # pin@v6.0.0
         with:
           name: certs
           path: cert/
@@ -81,7 +81,7 @@ jobs:
         run: make ${{ inputs.flavor }}-${{ inputs.arch }}-build
       - name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@7f337e8340fe3f707a139fbd72185eebafe6c97b # pin@0.10.3
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@9af6c50cf9ff955130dc412238ecd16f1d84d103 # pin@0.10.4
         with:
           flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
       - name: Set CNAME
@@ -89,7 +89,7 @@ jobs:
           echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
       - name: Pack build artifacts for upload
         run: tar -cSzvf "$CNAME.tar.gz" -C .build -T ".build/$CNAME.artifacts"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # pin@v5.0.0
         with:
           name: build-${{ inputs.flavor }}-${{ inputs.arch }}
           path: ${{ env.CNAME }}.tar.gz

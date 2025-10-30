@@ -4,7 +4,7 @@
 
 ## Status
 
-Accepted
+Superseded by [ADR 18](./0018-revert-0003-builder-updates-dependabot.md)
 
 ## Context
 
