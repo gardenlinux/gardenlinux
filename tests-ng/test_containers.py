@@ -17,6 +17,8 @@ TEST_IMAGES = [
     reason="containerd is not installed, pxe has tmpfs for /",
 )
 @pytest.mark.parametrize("uri", TEST_IMAGES)
-def test_basic_container_functionality(container_image_setup, uri: str, ctr: CtrRunner):
+def test_basic_container_functionality(
+    service_containerd, container_image_setup, uri: str, ctr: CtrRunner
+):
     out = ctr.run(uri, "uname", capture_output=True, ignore_exit_code=True)
     assert "Linux" in out.stdout, f"Command failed: {out.stderr}"
