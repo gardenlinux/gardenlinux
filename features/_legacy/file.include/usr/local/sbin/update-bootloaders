@@ -4,6 +4,8 @@ set -e
 
 update-kernel-cmdline
 for kernel in /boot/vmlinuz-*; do
+   ln -sf "/boot/initrd.img-${kernel#*-}" /boot/initrd
    kernel-install add "${kernel#*-}" "${kernel}"
+   rm -f /boot/initrd
 done
 update-syslinux
