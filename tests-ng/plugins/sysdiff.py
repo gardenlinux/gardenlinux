@@ -46,8 +46,15 @@ IGNORED_SYSTEMD_PATTERNS = [
     "sysstat-collect.service",
     "sysstat-collect.timer",
     "sysstat-rotate.timer",
-    "sysstat-summary.timer",
+    "sysstat-summary.timer"
 ]
+
+IGNORED_SYSTEMD_UNIT_STATES = [
+    # Service states that can be ignored
+    ("google-guest-agent.service", "auto-restart-queued"),
+    ("kubelet.service", "auto-restart")
+]
+
 IGNORED_KERNEL_MODULES = []
 IGNORED_SYSCTL_PARAMS = {
     # File system dynamic parameters
@@ -469,6 +476,7 @@ class DiffEngine:
 
     def __init__(self):
         self._ignored_systemd_units = set(IGNORED_SYSTEMD_PATTERNS)
+        self._ignored_systemd_unit_states = set(IGNORED_SYSTEMD_UNIT_STATES)
         self._ignored_kernel_modules = set(IGNORED_KERNEL_MODULES)
         self._ignored_sysctl_params = set(IGNORED_SYSCTL_PARAMS)
 
@@ -526,16 +534,24 @@ class DiffEngine:
             """Format unit for comparison"""
             return f"{unit.unit}\t{unit.load}\t{unit.active}\t{unit.sub}"
 
-        filtered_units_a = [
-            format_unit(u) for u in units_a if u.unit not in self._ignored_systemd_units
-        ]
-        filtered_units_b = [
-            format_unit(u) for u in units_b if u.unit not in self._ignored_systemd_units
-        ]
+        # remove generally ignored systemd units
+        filtered_units_a = [u for u in units_a if u.unit not in self._ignored_systemd_units]
+        filtered_units_b = [u for u in units_b if u.unit not in self._ignored_systemd_units]
+
+        # if a resulting unit (filtered_units_b) is in a ignorable state, we remove them from both lists to avoid a diff
+        units_with_ignorable_states = list[str]()
+        for filtered_unit_b in filtered_units_b:
+            for ignored_systemd_unit_state in self._ignored_systemd_unit_states:
+                if (filtered_unit_b.unit, filtered_unit_b.sub) == ignored_systemd_unit_state:
+                    print(f"Unit {filtered_unit_b.unit} with sub {filtered_unit_b.sub} is marked as ignorable and will be removed from diff")
+                    units_with_ignorable_states.append(filtered_unit_b.unit)
+
+        filtered_units_a = [u for u in filtered_units_a if u.unit not in units_with_ignorable_states]
+        filtered_units_b = [u for u in filtered_units_b if u.unit not in units_with_ignorable_states]
 
         return self._generate_diff(
-            filtered_units_a,
-            filtered_units_b,
+            [format_unit(u) for u in filtered_units_a],
+            [format_unit(u) for u in filtered_units_b],
             "systemd_units@snapshot_a",
             "systemd_units@snapshot_b",
         )
