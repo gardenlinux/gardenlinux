@@ -1,8 +1,7 @@
-import pytest
 import json
-
 from dataclasses import dataclass
 
+import pytest
 from plugins.shell import ShellRunner
 
 

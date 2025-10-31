@@ -1,5 +1,4 @@
 import pytest
-
 from plugins.nft import Nft
 
 
