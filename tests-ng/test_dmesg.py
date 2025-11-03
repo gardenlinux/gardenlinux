@@ -4,13 +4,20 @@ from pathlib import Path
 import pytest
 
 CONFIG = {
-    "gardener": { "file_path": "/etc/sysctl.d/40-allow-nonroot-dmesg.conf", "restricted": False },
-    "server and not gardener": { "file_path": "/etc/sysctl.d/40-restric-dmesg.conf", "restricted": True },
-    "stig": { "file_path": "/etc/sysctl.d/99-stig.conf", "restricted": True }
+    "gardener": {
+        "file_path": "/etc/sysctl.d/40-allow-nonroot-dmesg.conf",
+        "restricted": False,
+    },
+    "server and not gardener": {
+        "file_path": "/etc/sysctl.d/40-restric-dmesg.conf",
+        "restricted": True,
+    },
+    "stig": {"file_path": "/etc/sysctl.d/99-stig.conf", "restricted": True},
 }
 
 # server adds /etc/sysctl.d/40-restric-dmesg.conf, gardener excludes it
 #    and adds /etc/sysctl.d/40-allow-nonroot-dmesg.conf instead
+
 
 @pytest.mark.parametrize(
     "config_file",
@@ -27,7 +34,9 @@ def test_dmesg_sysctl_config_file_exists(config_file):
 @pytest.mark.parametrize(
     ("config_file", "is_restricted"),
     [
-        pytest.param(value["file_path"], value["restricted"], marks=pytest.mark.feature(key))
+        pytest.param(
+            value["file_path"], value["restricted"], marks=pytest.mark.feature(key)
+        )
         for key, value in CONFIG.items()
     ],
     ids=list(CONFIG.keys()),
