@@ -15,12 +15,11 @@ def test_dmesg_sysctl_config_file_exists():
 def test_dmesg_sysctl_no_restrictions_on_accessing_dmesg():
     pattern = re.compile(
         r"""
-            (?m)   # go multiline mode
             ^\s*   # any whitespace in the beginning of the line is allowed
-            (?!#)  # fail the search if a comment character is found
+            (?!\#)  # fail the search if a comment character is found
             kernel\.dmesg_restrict\s*=\s*0
         """,
-        re.VERBOSE,
+        re.VERBOSE | re.MULTILINE,
     )
     assert re.search(pattern, Path(CONFIG_FILE).read_text())
 
@@ -28,4 +27,10 @@ def test_dmesg_sysctl_no_restrictions_on_accessing_dmesg():
 @pytest.mark.booted(reason="sysctl needs a booted system")
 @pytest.mark.feature("server and not metal")
 def test_dmesg_systctl_runtime(sysctl):
-    assert sysctl["kernel.dmesg_restrict"] == 0
+    assert sysctl["kernel.dmesg_restrict"] == "0"
+
+@pytest.mark.feature("server and not metal")
+def test_dmesg_call_by_unprivileged_user_works(shell):
+    assert shell("id -u", capture_output=True).stdout.strip() != "0"
+    res = shell("dmesg", capture_output=False, ignore_exit_code=True)
+    assert res.returncode == 0
