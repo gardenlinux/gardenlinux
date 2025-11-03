@@ -54,15 +54,26 @@ def test_dmesg_sysctl_restrictions_on_accessing_dmesg(config_file, is_restricted
     assert re.search(pattern, Path(config_file).read_text())
 
 
+@pytest.mark.parametrize(
+    ("config_file", "is_restricted"),
+    [
+        pytest.param(
+            value["file_path"], value["restricted"], marks=pytest.mark.feature(key)
+        )
+        for key, value in CONFIG.items()
+    ],
+    ids=list(CONFIG.keys()),
+)
 @pytest.mark.booted(reason="sysctl needs a booted system")
-@pytest.mark.feature("server or gardener or stig")
-def test_dmesg_systctl_runtime(sysctl):
-    assert sysctl["kernel.dmesg_restrict"] == "0"
+def test_dmesg_sysctl_runtime(config_file, is_restricted, sysctl):
+    sysctl_toggle = "1" if is_restricted else "0"
+    assert sysctl["kernel.dmesg_restrict"] == sysctl_toggle
 
 
 @pytest.mark.booted(reason="needs a booted system with dmesg restrictions loaded")
-@pytest.mark.feature("server or gardener or stig")
+@pytest.mark.feature("gardener")
 def test_dmesg_call_by_unprivileged_user_works(shell):
     assert shell("id -u", capture_output=True).stdout.strip() != "0"
+
     res = shell("dmesg", capture_output=False, ignore_exit_code=True)
     assert res.returncode == 0
