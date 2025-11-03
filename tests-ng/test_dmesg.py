@@ -15,7 +15,10 @@ CONFIG_FILES = {
 
 @pytest.mark.parametrize(
     "config_file",
-    [pytest.param(value, marks=pytest.mark.feature(key)) for key, value in CONFIG_FILES.items()],
+    [
+        pytest.param(value, marks=pytest.mark.feature(key))
+        for key, value in CONFIG_FILES.items()
+    ],
     ids=list(CONFIG_FILES.keys()),
 )
 def test_dmesg_sysctl_config_file_exists(config_file):
@@ -24,7 +27,10 @@ def test_dmesg_sysctl_config_file_exists(config_file):
 
 @pytest.mark.parametrize(
     "config_file",
-    [pytest.param(value, marks=pytest.mark.feature(key)) for key, value in CONFIG_FILES.items()],
+    [
+        pytest.param(value, marks=pytest.mark.feature(key))
+        for key, value in CONFIG_FILES.items()
+    ],
     ids=list(CONFIG_FILES.keys()),
 )
 def test_dmesg_sysctl_no_restrictions_on_accessing_dmesg(config_file):
