@@ -72,5 +72,5 @@ def iscsi_device(shell: ShellRunner, systemd: Systemd, kernel_module: KernelModu
     for entry in reversed(REQUIRED_NVME_MODULE):
         mod_name = entry["nvme_module"]
         if entry["status"] == "Loaded":
-            kernel_module.unload_module(mod_name)
+            print(mod_name, kernel_module.unload_module(mod_name))
             entry["status"] = "None"
