@@ -68,6 +68,7 @@ def iscsi_device(shell: ShellRunner, systemd: Systemd, kernel_module: KernelModu
     if remove_conf_d:
         os.rmdir("/etc/tgt/conf.d")
 
+    print(REQUIRED_NVME_MODULE)
     for entry in reversed(REQUIRED_NVME_MODULE):
         mod_name = entry["nvme_module"]
         if entry["status"] == "Loaded":
