@@ -30,7 +30,8 @@ def test_dmesg_systctl_runtime(sysctl):
     assert sysctl["kernel.dmesg_restrict"] == "0"
 
 
-@pytest.mark.feature("server")
+@pytest.mark.booted(reason="needs a booted system with dmesg restrictions loaded")
+@pytest.mark.feature("server or stig")
 def test_dmesg_call_by_unprivileged_user_works(shell):
     assert shell("id -u", capture_output=True).stdout.strip() != "0"
     res = shell("dmesg", capture_output=False, ignore_exit_code=True)
