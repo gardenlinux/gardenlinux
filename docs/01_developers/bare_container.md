@@ -45,7 +45,7 @@ Their development is streamlined by the [unbase_oci](https://github.com/gardenli
 - **Description**: bare-python does not contain pip and has a limited set of shared libraries. To add dependencies, we recommend using a multi-stage build with the container-pythonDev flavor
 - **Multi-stage Dockerfile**:
   ```Dockerfile
-  FROM ghcr.io/gardenlinux/gardenlinux/container-pythondev:1877.5 as packages
+  FROM ghcr.io/gardenlinux/gardenlinux/container-python-dev:1877.5 as packages
 
   COPY requirements.txt /
   RUN pip3 install -r requirements.txt --break-system-packages --no-cache-dir
