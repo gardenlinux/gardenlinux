@@ -3,42 +3,42 @@ from pathlib import Path
 
 import pytest
 
-CONFIG_FILES = {
-    "gardener": "/etc/sysctl.d/40-allow-nonroot-dmesg.conf",
-    "server and not gardener": "/etc/sysctl.d/40-restric-dmesg.conf",
-    "stig": "/etc/sysctl.d/99-stig.conf",
+CONFIG = {
+    "gardener": { "file_path": "/etc/sysctl.d/40-allow-nonroot-dmesg.conf", "restricted": False },
+    "server and not gardener": { "file_path": "/etc/sysctl.d/40-restric-dmesg.conf", "restricted": True },
+    "stig": { "file_path": "/etc/sysctl.d/99-stig.conf", "restricted": True }
 }
 
 # server adds /etc/sysctl.d/40-restric-dmesg.conf, gardener excludes it
-# and adds /etc/sysctl.d/40-allow-nonroot-dmesg.conf
-
+#    and adds /etc/sysctl.d/40-allow-nonroot-dmesg.conf instead
 
 @pytest.mark.parametrize(
     "config_file",
     [
-        pytest.param(value, marks=pytest.mark.feature(key))
-        for key, value in CONFIG_FILES.items()
+        pytest.param(value["file_path"], marks=pytest.mark.feature(key))
+        for key, value in CONFIG.items()
     ],
-    ids=list(CONFIG_FILES.keys()),
+    ids=list(CONFIG.keys()),
 )
 def test_dmesg_sysctl_config_file_exists(config_file):
     assert Path(config_file).exists()
 
 
 @pytest.mark.parametrize(
-    "config_file",
+    ("config_file", "is_restricted"),
     [
-        pytest.param(value, marks=pytest.mark.feature(key))
-        for key, value in CONFIG_FILES.items()
+        pytest.param(value["file_path"], value["restricted"], marks=pytest.mark.feature(key))
+        for key, value in CONFIG.items()
     ],
-    ids=list(CONFIG_FILES.keys()),
+    ids=list(CONFIG.keys()),
 )
-def test_dmesg_sysctl_no_restrictions_on_accessing_dmesg(config_file):
+def test_dmesg_sysctl_restrictions_on_accessing_dmesg(config_file, is_restricted):
+    sysctl_toggle = 1 if is_restricted else 0
     pattern = re.compile(
-        r"""
+        rf"""
             ^\s*    # any whitespace in the beginning of the line is allowed
             (?!\#)  # fail the search if a comment character is found
-            kernel\.dmesg_restrict\s*=\s*0
+            kernel\.dmesg_restrict\s*=\s*{sysctl_toggle}
         """,
         re.VERBOSE | re.MULTILINE,
     )
