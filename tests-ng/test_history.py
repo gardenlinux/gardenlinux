@@ -3,17 +3,46 @@ from pathlib import Path
 
 import pytest
 
+CONFIG_FILE = "/etc/profile.d/50-nohistory.sh"
+
 
 @pytest.mark.feature("server", reason="needs server feature")
-def test_history_profile_d():
-    config_file = "/etc/profile.d/50-nohistory.sh"
-    config_contents = Path(config_file).read_text()
+def test_history_profile_d_file_exists():
+    assert Path(CONFIG_FILE).exists()
 
-    assert Path(config_file).exists()
 
-    assert re.search(r"(?m)^\s*(?!#)HISTFILE=/dev/null", config_contents)
-    assert re.search(r"(?m)^\s*(?!#)readonly HISTFILE", config_contents)
-    assert re.search(r"(?m)^\s*(?!#)export HISTFILE", config_contents)
+def test_history_profile_d_contains_required_configuration():
+    config_contents = Path(CONFIG_FILE).read_text()
+
+    patterns = [
+        re.compile(
+            r"""
+            ^\s*    # any whitespace in the beginning of the line is allowed
+            (?!\#)  # fail the search if a comment character is found
+            HISTFILE=/dev/null
+        """,
+            re.VERBOSE | re.MULTILINE,
+        ),
+        re.compile(
+            r"""
+            ^\s*    # any whitespace in the beginning of the line is allowed
+            (?!\#)  # fail the search if a comment character is found
+            readonly\s*HISTFILE
+        """,
+            re.VERBOSE | re.MULTILINE,
+        ),
+        re.compile(
+            r"""
+            ^\s*    # any whitespace in the beginning of the line is allowed
+            (?!\#)  # fail the search if a comment character is found
+            export\s*HISTFILE
+        """,
+            re.VERBOSE | re.MULTILINE,
+        ),
+    ]
+
+    for pattern in patterns:
+        assert re.search(pattern, config_contents)
 
 
 @pytest.mark.feature("server", reason="needs server feature")

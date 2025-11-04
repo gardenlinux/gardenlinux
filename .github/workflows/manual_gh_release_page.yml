@@ -37,7 +37,7 @@ jobs:
     steps:
       - name: Authenticate to cluster
         id: kube_auth
-        uses: gardener/cc-utils/.github/actions/kubernetes-auth@b158a357b8e947b3e4fc3495aad0a9307ed6d3d7
+        uses: gardener/cc-utils/.github/actions/kubernetes-auth@708f5017da5446f1f18956672f63ccedb1dba45e
         with:
           server: https://api.glvd.gardnlinux.shoot.canary.k8s-hana.ondemand.com
           server-ca-discovery-url: https://discovery.ingress.garden.canary.k8s.ondemand.com/projects/gardnlinux/shoots/8a569063-b0d3-45c4-a653-158e70b1bfd1/cluster-ca
