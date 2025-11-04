@@ -28,23 +28,27 @@ jobs:
     if: ${{ inputs.type }} == 'minor'
     name: Update GLVD distro list
     runs-on: ubuntu-latest
+    env:
+      # Change this if you fork the repo
+      OIDC_AUDIENCE: glvd
     permissions:
       # This is required for requesting the JWT
       id-token: write
     steps:
-      - name: Get OIDC token
-        id: get-token
-        run: |
-          IDTOKEN=$(curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=glvd" | jq -r '.value')
-          echo "idToken=${IDTOKEN}" >> $GITHUB_OUTPUT
-      - uses: azure/k8s-set-context@v4
+      - name: Authenticate to cluster
+        id: kube_auth
+        uses: gardener/cc-utils/.github/actions/kubernetes-auth@b158a357b8e947b3e4fc3495aad0a9307ed6d3d7
         with:
-          method: kubeconfig
-          kubeconfig: "${{ secrets.KUBECONFIG }}"
+          server: https://api.glvd.gardnlinux.shoot.canary.k8s-hana.ondemand.com
+          server-ca-discovery-url: https://discovery.ingress.garden.canary.k8s.ondemand.com/projects/gardnlinux/shoots/8a569063-b0d3-45c4-a653-158e70b1bfd1/cluster-ca
+          audience: ${{ env.OIDC_AUDIENCE }}
+
       - name: Start a new ingestion job in GLVD to import package list for new version
+        env:
+          KUBECONFIG: kubeconfig.yaml
         run: |
           kubectl run ingest-new-gl-version-$RANDOM \
-              --namespace default --token "${{ steps.get-token.outputs.idToken }}" \
+              --namespace default \
               --image=ghcr.io/gardenlinux/glvd-data-ingestion:latest \
               --restart=Never \
               --env=PGDATABASE=glvd \
