@@ -75,6 +75,8 @@ jobs:
     needs: requirements
     name: Build and Cache Test Distribution
     uses: ./.github/workflows/build_test_dist.yml
+    with:
+      prefix: ${{ inputs.prefix }}
   platform_test_image:
     needs: requirements
     name: Build platform-test image
