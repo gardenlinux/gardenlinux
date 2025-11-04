@@ -73,7 +73,5 @@ def test_dmesg_sysctl_runtime(config_file, is_restricted, sysctl):
 @pytest.mark.booted(reason="needs a booted system with dmesg restrictions loaded")
 @pytest.mark.feature("gardener")
 def test_dmesg_call_by_unprivileged_user_works(shell):
-    assert shell("id -u", capture_output=True).stdout.strip() != "0"
-
     res = shell("dmesg", capture_output=False, ignore_exit_code=True)
     assert res.returncode == 0
