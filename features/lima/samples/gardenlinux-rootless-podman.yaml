@@ -1,4 +1,3 @@
-vmType: qemu
 os: Linux
 images:
 - location: "https://images.gardenlinux.io/gardenlinux-amd64-today.qcow2"
@@ -9,6 +8,12 @@ containerd:
   system: false
   user: false
 mountTypesUnsupported: [9p]
+ssh:
+  loadDotSSHPubKeys: true
+  forwardAgent: true
+mounts:
+  - location: "~"
+    writable: false
 
 provision:
 - mode: system

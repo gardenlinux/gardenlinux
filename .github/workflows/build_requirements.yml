@@ -76,9 +76,9 @@ jobs:
           version=$(./bin/garden-version "${{ inputs.version }}")
 
           if [[ "${{ inputs.version }}" == "today" ]]; then
-            glrd_data="$(./bin/glrd --type stable,patch,nightly,dev --output-format=json --latest)"
+            glrd_data="$(./bin/glrd --type major,minor,nightly,dev --output-format=json --latest)"
           else
-            glrd_data="$(./bin/glrd --type stable,patch,nightly,dev --output-format=json --version ${{ inputs.version }})"
+            glrd_data="$(./bin/glrd --type major,minor,nightly,dev --output-format=json --version ${{ inputs.version }})"
           fi
 
           commit_id=$(echo $glrd_data | jq -r '.releases[0].git.commit')
@@ -116,7 +116,7 @@ jobs:
           for f in secureboot.{{pk,null.pk,kek,db}.{crt,der,auth},db.arn,aws-efivars} oci-sign.crt; do
             ln -sr "cert/gardenlinux-${{ inputs.target }}-$f" "cert/$f"
           done
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin@v4.6.2
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # pin@v5.0.0
         with:
           name: ${{ inputs.prefix }}certs
           path: cert/*.*

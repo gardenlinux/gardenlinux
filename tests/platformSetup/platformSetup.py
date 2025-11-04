@@ -255,13 +255,18 @@ class Scripts:
         flavor = self.flavors.flavor
         provisioner = self.args.provisioner
         provisioner_pytest = PROVISIONER_PYTEST_MAP[provisioner]
+        pytest_metadata = {
+            "Artifact": flavor,
+            "Type": provisioner_pytest,
+            "Namespace": "test"
+        }
 
         apply_script = self.paths.tests_dir / f"pytest.{provisioner}.{flavor}.apply.sh"
         with apply_script.open("w") as f:
             f.write("#!/usr/bin/env bash\n")
             f.write(
                 f"cd {self.paths.tests_dir} && "
-                f"pytest -v --provisioner={provisioner_pytest} --configfile config/pytest.{provisioner_pytest}.{flavor}.yaml --create-only\n"
+                f"pytest -v --provisioner={provisioner_pytest} --configfile config/pytest.{provisioner_pytest}.{flavor}.yaml --create-only --metadata-from-json {pytest_metadata}\n"
             )
         apply_script.chmod(0o755)
 
@@ -270,7 +275,7 @@ class Scripts:
             f.write("#!/usr/bin/env bash\n")
             f.write(
                 f"cd {self.paths.tests_dir} && "
-                f"pytest -v --provisioner={provisioner_pytest} --configfile config/pytest.{provisioner_pytest}.{flavor}.yaml\n"
+                f"pytest -v --provisioner={provisioner_pytest} --configfile config/pytest.{provisioner_pytest}.{flavor}.yaml --metadata-from-json {pytest_metadata}\n"
             )
         test_script.chmod(0o755)
 
@@ -293,7 +298,14 @@ class Tofu:
             os.chdir(self.tofu_dir)
 
             # Select the correct workspace
-            workspace = f"{flavor}-{self.paths.seed}"
+            github_run_id = os.environ.get("GITHUB_RUN_ID", "")
+            github_run_number = os.environ.get("GITHUB_RUN_NUMBER", "")
+
+            if github_run_id and github_run_number:
+                workspace = f"test-{github_run_id}-{github_run_number}-{flavor}-{self.paths.seed}"
+            else:
+                workspace = f"test-{flavor}-{self.paths.seed}"
+
             logger.info(f"Workspace: {workspace}")
             workspace_cmd = ["tofu", "workspace", "select", workspace]
             subprocess.run(workspace_cmd, check=True, capture_output=True, text=True)

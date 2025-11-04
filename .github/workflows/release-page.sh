@@ -39,8 +39,7 @@ case "$action" in
 		tag="$1"; shift
 		commit="$1"; shift
 		name="$1"; shift
-		commit_short=${commit:0:8}
-		body="$(.github/workflows/release_note.py generate --version "$name" --commitish "$commit_short" --escaped)"
+		body="$(gl-gh create --tag "$name" --commit "$commit")"
 		# If release does not exist, this get request will return a 404
 		release="$(get "releases/tags/$tag" | jq -r '.id' || true)"
 		[ ! "$release" ] || delete "releases/$release"

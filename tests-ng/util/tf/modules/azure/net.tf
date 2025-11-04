@@ -21,6 +21,10 @@ resource "azurerm_public_ip" "pip" {
   sku                 = "Standard"
   allocation_method = "Static"
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
   tags = local.labels
 }
 

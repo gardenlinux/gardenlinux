@@ -168,8 +168,6 @@ def testconfig(pipeline, iaas, pytestconfig):
             pass
         elif iaas == 'chroot':
             pass
-        elif iaas == 'firecracker':
-            pass
         elif iaas == 'qemu':
             pass
         elif iaas == 'manual':
@@ -348,3 +346,8 @@ pytest_plugins = [
 @pytest.fixture
 def openstack_flavor():
     return OpenStackCCEE.instance().flavor
+
+@pytest.fixture(scope="session", autouse=True)
+def include_metadata_in_junit_xml_session(include_metadata_in_junit_xml):
+    """Session-scoped fixture that uses pytest-metadata's include_metadata_in_junit_xml fixture."""
+    return include_metadata_in_junit_xml

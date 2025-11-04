@@ -23,7 +23,8 @@ variable "existing_root_disk" {
 variable "ssh_public_key_path" {
   description = "Path to your ssh public key"
   type        = string
-  default     = "~/.ssh/id_ed25519_gl.pub"
+  # Only supply a default value. Variables is overwritten by run_cloud.sh.
+  default     = "~/.ssh/id_ed25519.pub"
 }
 
 variable "user_data_script_path" {
@@ -59,4 +60,10 @@ variable "provider_vars" {
   description = "Cloud provider specific settings"
   type        = map(any)
   default     = {}
+}
+
+# state_aws
+variable "deploy_state_aws" {
+  description = "Deploy resources needed to manage remote state in AWS"
+  default     = false
 }

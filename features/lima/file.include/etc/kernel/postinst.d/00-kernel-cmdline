@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+set -euoE pipefail
+
+/usr/local/sbin/update-kernel-cmdline

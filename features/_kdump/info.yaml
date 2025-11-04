@@ -1,0 +1,2 @@
+description: "install and enable kdump-tools and makedumpfile"
+type: flag

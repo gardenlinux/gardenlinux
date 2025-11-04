@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -e
+
+source /etc/os-release
+
+pushd /var/lib/kdump
+if grep -q _usi <<< "$GARDENLINUX_FEATURES_FLAGS"; then
+	uki=$(bootctl list --json=short 2> /dev/null | jq -r '(.[] | select(.isSelected) | .path)')
+	# extract initrd
+	[ -f "initrd.img-$(uname -r)" ] || objcopy --dump-section .initrd="initrd.img-$(uname -r)" "$uki" - > /dev/null
+fi
+
+[ -f "initrd.img-$(uname -r)" ] || ln -fs "/boot/initrd.img-$(uname -r)" "initrd.img-$(uname -r)"
+cp -u /etc/kdump/sysctl.conf "latest_sysctls-$(uname -r)"
+
+popd

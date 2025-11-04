@@ -38,11 +38,6 @@ def container(platform):
         pytest.skip('test only supported on container platform')
 
 @pytest.fixture
-def firecracker(platform):
-    if platform != 'firecracker':
-        pytest.skip('test only supported on firecracker platform')
-
-@pytest.fixture
 def gcp(platform):
     if platform != 'gcp':
         pytest.skip('test only supported on gcp platform')
@@ -91,11 +86,6 @@ def non_container(testconfig):
     features = testconfig.get("features", [])
     if "container" in features:
         pytest.skip('test is not supported on container')
-
-@pytest.fixture
-def non_firecracker(platform):
-    if platform == 'firecracker':
-        pytest.skip('test not supported on firecracker')
 
 @pytest.fixture
 def non_gcp(platform):

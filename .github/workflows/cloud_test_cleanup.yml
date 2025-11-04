@@ -1,0 +1,341 @@
+name: Cloud Test Cleanup
+on:
+  schedule:
+    - cron: "0 4 * * *" # Run daily at 4 AM UTC
+  # manual trigger
+  workflow_dispatch:
+jobs:
+  collect_workspaces:
+    name: Collect Workspaces to Cleanup
+    runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+    environment: oidc_platform_tests
+    outputs:
+      matrix_test: ${{ steps.set-matrix.outputs.matrix_test }}
+      matrix_test_ng: ${{ steps.set-matrix.outputs.matrix_test_ng }}
+    steps:
+      - id: "auth_aws"
+        name: "Authenticate to AWS"
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_TESTS_REGION }}
+
+      - name: Find Old OpenTofu Workspaces
+        id: set-matrix
+        run: |
+          # List objects older than 1 day and extract workspace names
+          ALL_WORKSPACES=$(aws s3api list-objects-v2 \
+            --bucket gardenlinux-dev-gh-actions-tfstate \
+            --query "Contents[?LastModified<='`date -d '1 day ago' --iso-8601=seconds`'].Key" \
+            --output json | jq -r '.[]' | grep "^env:/" | \
+            sed -E 's|env:/([^/]+)/terraform.tfstate|\1|' | grep -v ^tfstate | sort -u)
+
+          # Split workspaces into test- and test-ng- prefixed ones
+          TEST_WORKSPACES=$(echo "$ALL_WORKSPACES" | grep "^test-" | grep -v "^test-ng-" | jq -R -s -c 'split("\n")[:-1]')
+          TEST_NG_WORKSPACES=$(echo "$ALL_WORKSPACES" | grep "^test-ng-" | jq -R -s -c 'split("\n")[:-1]')
+
+          echo "matrix_test=${TEST_WORKSPACES}" >> $GITHUB_OUTPUT
+          echo "matrix_test_ng=${TEST_NG_WORKSPACES}" >> $GITHUB_OUTPUT
+
+  cleanup_test:
+    needs: collect_workspaces
+    if: ${{ needs.collect_workspaces.outputs.matrix_test != '[]' && needs.collect_workspaces.outputs.matrix_test != '' }}
+    name: Cleanup Test Workspaces
+    runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+    environment: oidc_platform_tests
+    env:
+      IMAGE: ghcr.io/gardenlinux/gardenlinux/platform-test-tofu:latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        workspace: ${{ fromJson(needs.collect_workspaces.outputs.matrix_test) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+      - name: "Authenticate to Google Cloud"
+        uses: google-github-actions/auth@fc2174804b84f912b1f6d334e9463f484f1c552d # pin@v1
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+          cleanup_credentials: true
+          export_environment_variables: true
+      - name: Set GCP environment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const path = await import("path");
+
+            const basePath = "/gardenlinux/";
+            const credentialsFileName = path.basename(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+
+            core.exportVariable("GOOGLE_APPLICATION_CREDENTIALS", basePath + credentialsFileName);
+            core.exportVariable("CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE", basePath + credentialsFileName);
+            core.exportVariable("GOOGLE_GHA_CREDS_PATH", basePath + credentialsFileName);
+      - id: "auth_aws"
+        name: "Authenticate to AWS"
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
+          aws-region: ${{ secrets.AWS_TESTS_REGION }}
+          output-credentials: true
+      - name: Set AWS environment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            core.setSecret("${{ steps.auth_aws.outputs.aws-access-key-id }}");
+            core.exportVariable("AWS_ACCESS_KEY_ID", "${{ steps.auth_aws.outputs.aws-access-key-id }}");
+            core.setSecret("${{ steps.auth_aws.outputs.aws-secret-access-key }}");
+            core.exportVariable("AWS_SECRET_ACCESS_KEY", "${{ steps.auth_aws.outputs.aws-secret-access-key }}");
+            core.setSecret("${{ steps.auth_aws.outputs.aws-session-token }}");
+            core.exportVariable("AWS_SESSION_TOKEN", "${{ steps.auth_aws.outputs.aws-session-token }}");
+      - name: "Authenticate to Azure"
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # pin@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Set Azure environment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            core.exportVariable("ARM_USE_OIDC", "true");
+
+            core.setSecret("${{ secrets.AZURE_CLIENT_ID }}");
+            core.exportVariable("ARM_CLIENT_ID", "${{ secrets.AZURE_CLIENT_ID }}");
+            core.setSecret("${{ secrets.AZURE_SUBSCRIPTION_ID }}");
+            core.exportVariable("ARM_SUBSCRIPTION_ID", "${{ secrets.AZURE_SUBSCRIPTION_ID }}");
+            core.setSecret("${{ secrets.AZURE_TENANT_ID }}");
+            core.exportVariable("ARM_TENANT_ID", "${{ secrets.AZURE_TENANT_ID }}");
+      - name: "Create ali cloud credential file"
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const credentials = JSON.parse(atob("${{ secrets.CCC_CREDENTIALS }}"));
+            const aliCredentials = credentials.alicloud["gardenlinux-platform-test"];
+
+            core.exportVariable("ALIBABA_CLOUD_REGION", aliCredentials.region);
+
+            core.setSecret(aliCredentials.access_key_id);
+            core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_ID", aliCredentials.access_key_id);
+            core.setSecret(aliCredentials.access_key_secret);
+            core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_SECRET", aliCredentials.access_key_secret);
+      - name: Set additional OpenTofu variables
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const tfEncryption = Buffer.from("${{ secrets.TF_ENCRYPTION }}", 'base64').toString('utf-8');
+            core.setSecret(tfEncryption);
+            core.exportVariable("TF_ENCRYPTION", tfEncryption);
+
+            core.setSecret("${{ secrets.GCP_PROJECT }}");
+            core.exportVariable("TF_VAR_gcp_project_id", "${{ secrets.GCP_PROJECT }}");
+
+            core.exportVariable("OS_AUTH_URL", "http://localhost:3000");
+
+            core.exportVariable("WORKSPACE", "${{ matrix.workspace }}");
+            // Extract flavor by removing test- and suffix seed (last 8 chars after last hyphen)
+            const workspace = "${{ matrix.workspace }}";
+            let flavor = workspace.replace(/^test-\d+-\d+-/, "").replace(/-........$/, "");
+            core.exportVariable("FLAVOR", flavor);
+      - name: Setup Environment
+        run: |
+          # ssh key generation (if missing)
+          test -f ~/.ssh/id_ed25519 || ssh-keygen -t ed25519 -P "" -f ~/.ssh/id_ed25519
+          # secureboot certificate files
+          mkdir -p cert
+          touch cert/secureboot.db.crt cert/secureboot.pk.der cert/secureboot.db.der cert/secureboot.kek.der cert/secureboot.aws-efivars
+          # create directories for credentials
+          mkdir -p ~/.aws ~/.azure ~/.aliyun ~/.config/gcloud
+      - name: Destroy OpenTofu Resources and delete workspaces
+        run: |
+          echo "Processing workspace: ${WORKSPACE}"
+          echo "Processing flavor: ${FLAVOR}"
+
+          podman run --rm \
+            -v ${PWD}:/gardenlinux \
+            -v ~/.ssh:/root/.ssh:ro \
+            -e "TF_*" \
+            -v ~/.aliyun:/root/.aliyun -e "ALIBABA_*" \
+            -v ~/.aws:/root/.aws -e "AWS_*" \
+            -v ~/.azure:/root/.azure -e "azure_*" -e "ARM_*" -e "ACTIONS_*" \
+            -v ~/.config/gcloud:/root/.config/gcloud -e "GOOGLE_*" -e "CLOUDSDK_*" \
+            -e "OS_*" \
+            ${IMAGE} \
+            bash -c "
+              cd /gardenlinux/tests/platformSetup/tofu && \
+              if [ ! -f backend.tf ]; then cp backend.tf.github backend.tf; tofu init; fi && \
+              ../platformSetup.py --provisioner tofu --test-prefix gh-actions --flavor ${FLAVOR} --create-tfvars && \
+              tofu workspace select ${WORKSPACE} && \
+              tofu destroy -var-file variables.${FLAVOR}.tfvars -auto-approve && \
+              tofu workspace select default && \
+              tofu workspace delete ${WORKSPACE}
+            "
+
+  cleanup_test_ng:
+    needs: collect_workspaces
+    if: ${{ needs.collect_workspaces.outputs.matrix_test_ng != '[]' && needs.collect_workspaces.outputs.matrix_test_ng != '' }}
+    name: Cleanup Test-ng Workspaces
+    runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+    environment: oidc_platform_tests
+
+    strategy:
+      fail-fast: false
+      matrix:
+        workspace: ${{ fromJson(needs.collect_workspaces.outputs.matrix_test_ng) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y retry
+      - name: "Authenticate to Google Cloud"
+        if: ${{ startsWith(matrix.workspace, 'test-ng-gcp-') }}
+        uses: google-github-actions/auth@140bb5113ffb6b65a7e9b937a81fa96cf5064462 # pin@v1
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+          cleanup_credentials: true
+          export_environment_variables: true
+      - name: Set GCP environment
+        if: ${{ startsWith(matrix.workspace, 'test-ng-gcp-') }}
+        uses: actions/github-script@v8
+        with:
+          script: |
+            // tf provider vars
+            core.exportVariable("GOOGLE_PROJECT", "${{ secrets.GCP_PROJECT }}");
+            core.exportVariable("GOOGLE_REGION", "${{ secrets.GCP_REGION }}");
+            core.exportVariable("GOOGLE_ZONE", "${{ secrets.GCP_ZONE }}");
+      - id: "auth_aws"
+        name: "Authenticate to AWS"
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
+          role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
+          aws-region: ${{ secrets.aws_region }}
+          output-credentials: true
+      - name: Set AWS environment
+        if: ${{ startsWith(matrix.workspace, 'test-ng-aws-') }}
+        uses: actions/github-script@v8
+        with:
+          script: |
+            // tf provider auth
+            core.setSecret("${{ steps.auth_aws.outputs.aws-access-key-id }}");
+            core.exportVariable("AWS_ACCESS_KEY_ID", "${{ steps.auth_aws.outputs.aws-access-key-id }}");
+            core.setSecret("${{ steps.auth_aws.outputs.aws-secret-access-key }}");
+            core.exportVariable("AWS_SECRET_ACCESS_KEY", "${{ steps.auth_aws.outputs.aws-secret-access-key }}");
+            core.setSecret("${{ steps.auth_aws.outputs.aws-session-token }}");
+            core.exportVariable("AWS_SESSION_TOKEN", "${{ steps.auth_aws.outputs.aws-session-token }}");
+            // tf provider vars
+            core.exportVariable("AWS_REGION", "${{ secrets.aws_region }}");
+      - id: "auth_azure"
+        if: ${{ startsWith(matrix.workspace, 'test-ng-azure-') }}
+        name: "Authenticate to Azure"
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # pin@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Set Azure environment
+        if: ${{ startsWith(matrix.workspace, 'test-ng-azure-') }}
+        uses: actions/github-script@v8
+        with:
+          script: |
+            // tf provider auth
+            core.exportVariable("ARM_USE_OIDC", "true");
+            core.exportVariable("AZURE_CONFIG_DIR", "$RUNNER_TEMP/azure_config_dir");
+            core.setSecret("${{ secrets.AZURE_CLIENT_ID }}");
+            core.exportVariable("ARM_CLIENT_ID", "${{ secrets.AZURE_CLIENT_ID }}");
+            core.setSecret("${{ secrets.AZURE_SUBSCRIPTION_ID }}");
+            core.exportVariable("ARM_SUBSCRIPTION_ID", "${{ secrets.AZURE_SUBSCRIPTION_ID }}");
+            core.setSecret("${{ secrets.AZURE_TENANT_ID }}");
+            core.exportVariable("ARM_TENANT_ID", "${{ secrets.AZURE_TENANT_ID }}");
+      - name: "Create ali cloud credential file"
+        if: ${{ startsWith(matrix.workspace, 'test-ng-ali-') }}
+        uses: actions/github-script@v8
+        with:
+          script: |
+            // tf provider auth
+            const credentials = JSON.parse(atob("${{ secrets.CCC_CREDENTIALS }}"));
+            const aliCredentials = credentials.alicloud["gardenlinux-platform-test"];
+            core.setSecret(aliCredentials.access_key_id);
+            core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_ID", aliCredentials.access_key_id);
+            core.setSecret(aliCredentials.access_key_secret);
+            core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_SECRET", aliCredentials.access_key_secret);
+            // tf provider vars
+            core.exportVariable("ALIBABA_CLOUD_REGION", aliCredentials.region);
+      - name: Set additional OpenTofu variables
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const tfEncryption = Buffer.from("${{ secrets.TF_ENCRYPTION }}", 'base64').toString('utf-8');
+            core.setSecret(tfEncryption);
+            core.exportVariable("TF_ENCRYPTION", tfEncryption);
+
+            core.exportVariable("WORKSPACE", "${{ matrix.workspace }}");
+            const workspace = "${{ matrix.workspace }}";
+
+            // Extract the image name by removing test-ng- prefix and run info
+            // Workspace format: test-ng-[run_id]-[run_number]-[cloud]-[flavor]...
+            // Remove test-ng- and run ID/number to get: [cloud]-[flavor]-[version]-...-[seed]
+            let imageName = workspace.replace(/^test-ng-\d+-\d+-/, "");
+            core.exportVariable("IMAGE_NAME", imageName);
+
+            // Extract cloud provider from image name (first component)
+            const cloud = imageName.split('-')[0];
+            core.exportVariable("CLOUD", cloud);
+      - name: Destroy OpenTofu Resources and delete workspaces
+        run: |
+          echo "Processing workspace: ${WORKSPACE}"
+          echo "Processing cloud: ${CLOUD}"
+
+          cd tests-ng/util/tf
+          export TOFUENV_GITHUB_TOKEN="${GITHUB_TOKEN:-}"
+          source ../install_tofu.sh
+          install_tofu "$PWD"
+
+          # Create minimal tfvars
+          cat > empty.tfvars <<EOF
+            root_disk_path        = "empty.raw"
+            test_disk_path        = "empty.raw"
+            user_data_script_path = "empty.sh"
+            existing_root_disk    = ""
+            cloud_provider        = "${CLOUD}"
+            image_requirements    = {
+              arch = "amd64"
+              uefi = false
+              secureboot = false
+              tpm2 = false
+            }
+          EOF
+
+          # Enable remote state S3 backend and init
+          if [ ! -f backend.tf ]; then
+            cp backend.tf.github backend.tf
+          fi
+          tofu init -input=false -reconfigure -var-file empty.tfvars
+
+          if ! tofu workspace select "${WORKSPACE}"; then
+            echo "Failed to select workspace ${WORKSPACE}, skipping..."
+            exit 0
+          fi
+
+          tofu destroy -var-file empty.tfvars -auto-approve || true
+          tofu workspace select default
+          tofu workspace delete "${WORKSPACE}" || true

@@ -18,5 +18,7 @@ $(for feature in "${features[@]}"; do echo "    - $feature"; done)
     user: test
 EOF
 
+cname=${CNAME:-unknown}
+artifact_name="${cname%-*-*}"
 cd /gardenlinux/tests
-python3 -m pytest --provisioner=chroot --configfile=/tmp/test_config.yaml --junit-xml=chroot.test.xml
+python3 -m pytest --provisioner=chroot --configfile=/tmp/test_config.yaml --junit-xml=chroot.test.xml --metadata Artifact "$artifact_name" --metadata Type chroot --metadata Namespace test

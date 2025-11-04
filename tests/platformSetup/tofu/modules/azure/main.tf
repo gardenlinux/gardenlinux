@@ -202,6 +202,10 @@ resource "azurerm_public_ip" "pip" {
   # allocation_method   = "Dynamic"
   allocation_method = "Static"
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
   tags = local.labels
 }
 

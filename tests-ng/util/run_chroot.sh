@@ -35,8 +35,29 @@ done
 
 test_dist_dir="$1"
 rootfs_tar="$2"
+log_dir="$test_dist_dir/../log"
+log_file_log="chroot.test-ng.log"
+log_file_junit="chroot.test-ng.xml"
+
+mkdir -p "$log_dir"
+
+if [[ "$rootfs_tar" != "/mnt/rootfs.tar" ]]; then
+	# We're not running inside a container, extract artifact name and add metadata
+	test_artifact="$(basename "$rootfs_tar" | sed 's/-[0-9].*\.tar$//')"
+	test_type="chroot"
+	test_namespace="test-ng"
+
+	echo "📊  metadata: Artifact=$test_artifact, Type=$test_type, Namespace=$test_namespace"
+
+	test_args+=("--metadata" "Artifact" "$test_artifact")
+	test_args+=("--metadata" "Type" "$test_type")
+	test_args+=("--metadata" "Namespace" "$test_namespace")
+
+	test_args+=("--junit-xml=$log_dir/$log_file_junit")
+fi
 
 if ((containerize)); then
+	log_dir="/mnt/log"
 	dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")"/../..)"
 	container_image="$("$dir/build" --print-container-image)"
 
@@ -46,15 +67,21 @@ if ((containerize)); then
 		-v "$(realpath -- "${BASH_SOURCE[0]}"):/init:ro" \
 		-v "$(realpath -- "$test_dist_dir/dist.tar.gz"):/mnt/test_dist/dist.tar.gz:ro" \
 		-v "$(realpath -- "$rootfs_tar"):/mnt/rootfs.tar:ro" \
+		-v "$(realpath -- "$test_dist_dir/../log"):$log_dir:rw" \
 		"$container_image" fake_xattr /init --no-containerize --test-args "$test_args_str" /mnt/test_dist /mnt/rootfs.tar
 fi
 
 tmpdir=
 
 cleanup() {
+	get_logs
 	[ -z "$tmpdir" ] || [ ! -e "$tmpdir/chroot" ] || umount -l "$tmpdir/chroot" || rmdir "$tmpdir/chroot"
 	[ -z "$tmpdir" ] || rm -rf "$tmpdir"
 	tmpdir=
+}
+
+get_logs() {
+	cp "$tmpdir/chroot/run/gardenlinux-tests/tests/log/$log_file_junit" "$log_dir" || true
 }
 
 trap cleanup EXIT
@@ -78,4 +105,5 @@ gzip -d <"$test_dist_dir/dist.tar.gz" | tar --extract --directory "$tmpdir/chroo
 
 test_args+=("--allow-system-modifications")
 
-env -i /sbin/chroot "$tmpdir/chroot" /bin/sh -c "cd /run/gardenlinux-tests && ./run_tests ${test_args[*]@Q}"
+env -i /sbin/chroot "$tmpdir/chroot" /bin/sh -c "cd /run/gardenlinux-tests && ./run_tests ${test_args[*]@Q} 2>&1" |
+	tee "$log_dir/$log_file_log"

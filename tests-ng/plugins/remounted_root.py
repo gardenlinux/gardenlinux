@@ -1,7 +1,9 @@
-import pytest
 import tempfile
 
+import pytest
+
 from .shell import ShellRunner
+
 
 @pytest.fixture
 def remounted_root(shell: ShellRunner):

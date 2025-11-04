@@ -1,6 +1,7 @@
 [Unit]
 DefaultDependencies=no
 After=tpm2.target
+Wants=tpm2.target
 Before=systemd-repart.service
 
 [Service]
