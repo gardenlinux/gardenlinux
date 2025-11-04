@@ -4,6 +4,7 @@ from stat import S_ISREG
 import pytest
 
 
+@pytest.mark.feature("_fips")
 def test_gnutls_fips_file_was_created():
     """
     GnuTLS requires to have the /etc/system-fips to be present as prerequisite
@@ -17,6 +18,7 @@ def test_gnutls_fips_file_was_created():
     assert gnutls_fips_file, f"The /etc/system-fips file does not exist."
 
 
+@pytest.mark.feature("_fips")
 def test_gnutls_fips_file_is_empty():
     """
     The /etc/system-fips should be without any content.
@@ -26,6 +28,7 @@ def test_gnutls_fips_file_is_empty():
     assert gnutls_fips_file.st_size == 0, f"The /etc/system-fips is not empty."
 
 
+@pytest.mark.feature("_fips")
 def test_libgcrypt_fips_file_was_created():
     """
     Libcgrypt requires to have the /etc/gcrypt/fips_enabled to be present as prerequisite
@@ -39,6 +42,7 @@ def test_libgcrypt_fips_file_was_created():
     assert libgcrypt_fips_file_state, f"The /etc/system-fips file does not exist."
 
 
+@pytest.mark.feature("_fips")
 def test_libgcrypt_fips_file_is_empty():
     """
     The /etc/gcrypt/fips_enabled should be without any content.
@@ -48,6 +52,7 @@ def test_libgcrypt_fips_file_is_empty():
     assert gnutls_fips_file.st_size == 0, f"The /etc/gcrypt/fips_enabled is not empty."
 
 
+@pytest.mark.feature("_fips")
 def test_kernel_cmdline_fips_file_was_created():
     """
     libgcrypt, gnutls and openssl need to have the /proc/sys/crypto/fips_enabled present
@@ -60,6 +65,7 @@ def test_kernel_cmdline_fips_file_was_created():
     assert kernel_fips_file_state, f"The /etc/kernel/cmdline.d/30-fips.cfg is missing!"
 
 
+@pytest.mark.feature("_fips")
 def test_kernel_cmdline_fips_file_content():
     """
     We have to ensure that the fips=1 was set.
@@ -70,6 +76,7 @@ def test_kernel_cmdline_fips_file_content():
         ), "fips=1 wasn't set in the kernel cmdline"
 
 
+@pytest.mark.feature("_fips")
 @pytest.mark.booted(reason="Kernel test makes sense only on booted system")
 def test_kernel_was_boot_with_fips_mode():
     """
