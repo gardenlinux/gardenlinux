@@ -77,6 +77,9 @@ class KernelModule:
                     result = self._shell(
                         f"rmmod {module}", capture_output=True, ignore_exit_code=True
                     )
+                    print(f"Unloading {module} exited with status code {result.returncode}")
+                    print(f"stdout: {result.stdout}")
+                    print(f"stderr: {result.stderr}")
                     success = success and result.returncode == 0
                     break
             print(self._unload)
