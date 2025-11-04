@@ -8,13 +8,7 @@ from plugins.kernel_module import KernelModule
 from plugins.shell import ShellRunner
 from plugins.systemd import Systemd
 
-REQUIRED_NVME_MODULE = [
-    {"nvme_module": "libiscsi", "status": None},
-    {"nvme_module": "libiscsi_tcp", "status": None},
-    {"nvme_module": "iscsi_tcp", "status": None},
-    {"nvme_module": "sd_mod", "status": None},
-    {"nvme_module": "sg", "status": None},
-]
+REQUIRED_NVME_MODULE = ["iscsi_tcp", "sd_mod", "sg"]
 
 disk_attributes = re.compile(
     "Login to \\[iface: default, target: ([^,]*), portal: ([.0-9]*),([0-9]*)\\] successful."
@@ -23,11 +17,9 @@ disk_attributes = re.compile(
 
 @pytest.fixture
 def iscsi_device(shell: ShellRunner, systemd: Systemd, kernel_module: KernelModule):
-    for entry in REQUIRED_NVME_MODULE:
-        mod_name = entry["nvme_module"]
+    for mod_name in REQUIRED_NVME_MODULE:
         if not kernel_module.is_module_loaded(mod_name):
-            kernel_module.load_module(mod_name)
-            entry["status"] = "Loaded"
+            kernel_module.safe_load_module(mod_name)
 
     stop_tgt = False
     if not systemd.is_active("tgt"):
@@ -68,9 +60,4 @@ def iscsi_device(shell: ShellRunner, systemd: Systemd, kernel_module: KernelModu
     if remove_conf_d:
         os.rmdir("/etc/tgt/conf.d")
 
-    print(REQUIRED_NVME_MODULE)
-    for entry in reversed(REQUIRED_NVME_MODULE):
-        mod_name = entry["nvme_module"]
-        if entry["status"] == "Loaded":
-            print(mod_name, kernel_module.unload_module(mod_name))
-            entry["status"] = "None"
+    kernel_module.safe_unload_modules()
