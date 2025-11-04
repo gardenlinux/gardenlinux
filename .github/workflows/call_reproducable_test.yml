@@ -4,7 +4,9 @@ name: Call check build reproducibility
 
 # To be able to test actions on a different branch than main
 on:
-  push:
+  pull_request:
+    types:
+      - labeled
     branches:
       - "feat/check-reproducibility"
 
