@@ -59,6 +59,91 @@ Their development is streamlined by the [unbase_oci](https://github.com/gardenli
 - **Container Link**: [bare-nodejs](https://github.com/orgs/gardenlinux/packages/container/package/gardenlinux%2Fbare-nodejs)
 
 
+## Development and Debugging Bare Containers
+
+If a setup works in the normal container, but fails in the corresponding bare container, debugging the problem can get challenging, as the unbase_oci tool removes basic binaries like `sh`.
+By following the steps in this section, you can regain the basic functionalities without rebuilding the image.
+
+### General Setup
+
+As the first step, we want to mount the bare image to a debian installation. As mounting does not automatically pull the image, we pull it manually:
+
+```bash
+podman image pull ghcr.io/gardenlinux/gardenlinux/bare-<flavor>:<version>
+podman run --rm -it --mount type=image,src=ghcr.io/gardenlinux/gardenlinux/bare-<flavor>:<version>,dst=/mnt,rw=true debian
+```
+
+Now, you should be in the debian shell and be able see the image under `/mnt`.
+You can already change things in the image and enter it's programs by executing
+
+```bash
+chroot /mnt <program>
+```
+
+### Installing Basic Utilities
+
+To spawn a shell inside the bare image, we recommend installing [toybox](https://landley.net/toybox/), as it contains a lot of useful command line tools in a single file.
+To install toybox, execute the following in the debian shell:
+
+```bash
+apt update && apt install curl -y
+curl http://landley.net/bin/toybox/latest/toybox-$(uname -m) -o /mnt/bin/toybox
+chmod +x /mnt/bin/toybox
+```
+
+And finally spawn a shell inside the bare image with:
+```bash
+chroot /mnt toybox sh
+```
+
+### Analyzing the Image Size
+
+Bare images may unexpectedly grow. To find the cause of the issue, we can install tools to the debian container and use the on the `/mnt` folder.
+For example, install dust:
+
+```bash
+apt update && apt install du-dust
+```
+
+And print the size of the directories:
+
+```
+$ dust -n 32 -w 64 -r /mnt
+ 52M └─┬ mnt                        │████████████████████ │ 100%
+ 52M   └─┬ usr                      │████████████████████ │ 100%
+ 43M     ├─┬ lib                    │█████████████████░░░ │  82%
+ 28M     │ ├─┬ python3.13           │███████████▒▒▒▒▒▒░░░ │  55%
+5.2M     │ │ ├── lib-dynload        │██▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │  10%
+5.2M     │ │ ├── __pycache__        │██▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │  10%
+2.4M     │ │ ├─┬ encodings          │█▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │   5%
+780K     │ │ │ └── __pycache__      │█▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │   1%
+1.5M     │ │ ├─┬ test               │█▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │   3%
+768K     │ │ │ ├── support          │█▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │   1%
+520K     │ │ │ └── libregrtest      │█▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │   1%
+1.3M     │ │ ├─┬ asyncio            │█▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │   2%
+732K     │ │ │ └── __pycache__      │█▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │   1%
+1.0M     │ │ ├─┬ pydoc_data         │█▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │   2%
+524K     │ │ │ └── __pycache__      │█▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │   1%
+964K     │ │ ├── email              │█▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │   2%
+776K     │ │ ├── multiprocessing    │█▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │   1%
+772K     │ │ ├── xml                │█▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │   1%
+616K     │ │ ├── importlib          │█▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │   1%
+608K     │ │ ├── unittest           │█▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │   1%
+540K     │ │ └── _pyrepl            │█▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░ │   1%
+ 14M     │ └─┬ aarch64-linux-gnu    │██████▒▒▒▒▒▒▒▒▒▒▒░░░ │  27%
+5.8M     │   ├── libcrypto.so.3     │███▓▓▓▒▒▒▒▒▒▒▒▒▒▒░░░ │  11%
+1.7M     │   ├── libc.so.6          │█▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒░░░ │   3%
+1.6M     │   ├── libsqlite3.so.0.8.6│█▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒░░░ │   3%
+1.1M     │   ├── libssl.so.3        │█▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒░░░ │   2%
+708K     │   ├── libzstd.so.1.5.7   │█▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒░░░ │   1%
+580K     │   └── libm.so.6          │█▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒░░░ │   1%
+7.0M     ├─┬ bin                    │███░░░░░░░░░░░░░░░░░ │  13%
+6.9M     │ └── python3.13           │███░░░░░░░░░░░░░░░░░ │  13%
+2.4M     └─┬ share                  │█░░░░░░░░░░░░░░░░░░░ │   5%
+1.9M       └─┬ zoneinfo             │█░░░░░░░░░░░░░░░░░░░ │   4%
+572K         └── America            │█░░░░░░░░░░░░░░░░░░░ │   1%
+```
+
 ## Support and Contributions
 
 If you need support or wish to contribute to the development of the "bare" flavor containers, including the `unbase_oci` tool, please refer to the following resources:
