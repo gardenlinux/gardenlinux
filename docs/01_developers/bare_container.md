@@ -42,7 +42,7 @@ Their development is streamlined by the [unbase_oci](https://github.com/gardenli
   CMD ["python3", "/hello.py"]
   ```
 #### Adding dependencies:
-- **Description**: bare-python does not contain pip and has a limited set of shared libraries. To add dependencies, we recommend using a multi-stage build with the container-pythonDev flavor
+- **Description**: **bare-python** does not contain pip and has a limited set of shared libraries. To add dependencies, we recommend using a multi-stage build with the **container-pythonDev** flavor
 - **Multi-stage Dockerfile**:
   ```Dockerfile
   FROM ghcr.io/gardenlinux/gardenlinux/container-python-dev:1877.5 as packages
