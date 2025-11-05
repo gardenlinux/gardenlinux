@@ -32,6 +32,7 @@ This directory contains the next generation testing framework for Garden Linux i
     - [QEMU Testing](#qemu-testing)
     - [Cloud Testing](#cloud-testing)
     - [OCI Testing](#oci-testing)
+    - [Gardener / Kubernetes Cluster Live Tests](#gardener--kubernetes-cluster-live-tests)
   - [Test Distribution Build Process](#test-distribution-build-process)
     - [Build Components](#build-components)
     - [Build Process](#build-process)
@@ -351,6 +352,30 @@ cd /run/gardenlinux-tests && sudo ./run_tests --system-booted --allow-system-mod
 - Runs tests in containers based on a Base Image (Bare Flavors are not supported currently)
 - Very fast execution method
 - Limited to Base Image and an unbooted system
+
+### Gardener / Kubernetes Cluster Live Tests
+
+The test framework can be run directly on a live gardener cluster (or any Kubernetes cluster running gardenlinux nodes for that matter). For that simply deploy the following yml:
+
+```yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-ng
+spec:
+  hostPID: true
+  restartPolicy: Never
+  containers:
+    - name: test-ng
+      image: ghcr.io/gardenlinux/test-ng:nightly
+      securityContext:
+        privileged: true
+```
+
+After this is deployed and the tests ran you can simply get the pod logs to see the test results. If you want to target a specific node to run the tests on you should also pin this pod to that node.
+
+> [!NOTE]
+> The `ghcr.io/gardenlinux/test-ng:nightly` container gets build and published daily to always provide the most up-to-date variant of the test-ng framework. In future releases there will also be per release variants of this.
 
 ## Test Distribution Build Process
 
