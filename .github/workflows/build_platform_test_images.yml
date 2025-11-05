@@ -118,7 +118,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@9af6c50cf9ff955130dc412238ecd16f1d84d103 # pin@0.10.4
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@d64300c48bf9a0a262642b564c7aeea0b89be21f # pin@0.10.5
       - name: Set build reference
         run: |
           version="$(./bin/garden-version "$version")"
@@ -320,13 +320,14 @@ jobs:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
         with:
           submodules: true
-      - name: Login to ghcr.io
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u $ --password-stdin
       - name: Make pull-platform-test-${{ matrix.platform }}
         run: make --directory=tests/images pull-platform-test-${{ matrix.platform }}
       - name: Prepare local OCI metadata for ${{ matrix.platform }} (${{ matrix.arch }})
         id: platform-test-oci-tag
         run: |
+          # Login to ghcr.io
+          podman login -u token -p ${{ github.token }} ghcr.io
+
           PLATFORM_TEST_IMAGE_TAG="$(podman image ls --filter reference=${IMAGE_REGISTRY}/${IMAGE_BASE}-${{ matrix.platform }} --format=json | jq -r '.[0].Names[0]')"
 
           echo "$version" | tee -a "platform-test.oci-version.txt"
