@@ -319,6 +319,16 @@ def test_users_have_no_authorized_keys(expected_users):
     # Test implementation
 ```
 
+#### `@pytest.mark.arch("condition", reason="...")`
+
+Limits test execution based on processor architecture:
+
+```python
+@pytest.mark.arch("amd64", reason="Kernel Module only available on amd64")
+def test_kernel_module_amd64(expected_module):
+    # Test implementation
+```
+
 ### Common Filtering Patterns
 
 **Environment-specific filtering:**
