@@ -17,8 +17,8 @@ jobs:
       packages: write
     with:
       nightly: "Two nightly builds"
-      run_number1: "#2406"
-      run_number2: "#2405"
+      run_number1: "#2405"
+      run_number2: "#2404"
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_kms_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
