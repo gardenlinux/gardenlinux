@@ -135,7 +135,7 @@ if ((is_pxe_archive)); then
 	# 	required_files=("boot.efi")
 	# else
 	# Traditional case - require vmlinuz, initrd, root.squashfs
-	required_files=("vmlinuz" "initrd" "root.squashfs")
+	required_files=("vmlinuz" "initrd" "cmdline" "root.squashfs")
 	for file in "${required_files[@]}"; do
 		if [ ! -f "$pxe_extract_dir/$file" ]; then
 			echo "Error: Required PXE file '$file' not found in archive" >&2
@@ -283,7 +283,7 @@ if ((is_pxe_archive)); then
 		qemu_opts+=(
 			-kernel "$pxe_extract_dir/vmlinuz"
 			-initrd "$pxe_extract_dir/initrd"
-			-append "gl.ovl=/:tmpfs gl.url=http://10.0.2.2:8080/root.squashfs gl.live=1 ip=dhcp console=ttyS0 console=tty0 earlyprintk=ttyS0 consoleblank=0"
+			-append "$(cat "$pxe_extract_dir/cmdline") gl.url=http://10.0.2.2:8080/root.squashfs"
 		)
 	else
 		qemu_opts+=(
@@ -348,12 +348,12 @@ if ((is_pxe_archive)); then
 	# else
 	echo "✅ Using traditional vmlinuz/initrd boot via iPXE"
 	# Create iPXE script for traditional vmlinuz/initrd boot
-	cat >"$http_dir/boot.ipxe" <<'EOF'
+	cat >"$http_dir/boot.ipxe" <<EOF
 #!ipxe
 dhcp
 set base-url http://10.0.2.2:8080
-kernel ${base-url}/vmlinuz gl.ovl=/:tmpfs gl.url=${base-url}/root.squashfs gl.live=1 ip=dhcp console=ttyS0 console=tty0 earlyprintk=ttyS0 consoleblank=0
-initrd ${base-url}/initrd
+kernel \${base-url}/vmlinuz $(cat "$pxe_extract_dir/cmdline") gl.url=http://10.0.2.2:8080/root.squashfs
+initrd \${base-url}/initrd
 boot
 EOF
 	# fi
