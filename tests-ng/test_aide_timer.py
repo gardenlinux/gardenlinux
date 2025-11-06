@@ -1,34 +1,62 @@
 import pytest
+from pathlib import Path
 from plugins.systemd import Systemd
+
+@pytest.mark.feature("aide")
+@pytest.mark.root(reason="Required to query systemd units")
+@pytest.mark.booted(reason="systemd timers are expected to be configured at runtime")
+def test_aide_timer_exists(systemd: Systemd):
+    """Verify that the AIDE timer unit exists."""
+    timer = "aide-check.timer"
+    units = systemd.list_units()
+    matches = [u for u in units if u.unit == timer]
+    assert matches, f"AIDE timer '{timer}' not found — CIS requirement failed"
 
 
 @pytest.mark.feature("aide")
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="systemd timers are expected to be configured at runtime")
-def test_aide_timer_is_configured(systemd: Systemd):
-    """
-    Ensure that a systemd timer exists to run AIDE integrity checks.
-    This is a CIS requirement: AIDE must run automatically.
-    """
-
+def test_aide_timer_loaded(systemd: Systemd):
+    """Verify that the AIDE timer unit is loaded."""
     timer = "aide-check.timer"
-
-    # To check if the aide timer unit exists and is loaded well
     units = systemd.list_units()
     matches = [u for u in units if u.unit == timer]
+    assert matches[0].load == "loaded", f"AIDE timer must be loaded but is {matches[0].load}"
 
-    assert matches, f"AIDE timer '{timer}' not found — CIS requirement failed"
 
+@pytest.mark.feature("aide")
+@pytest.mark.root(reason="Required to query systemd units")
+@pytest.mark.booted(reason="systemd timers are expected to be configured at runtime")
+def test_aide_timer_active(systemd: Systemd):
+    """Verify that the AIDE timer unit is active."""
+    timer = "aide-check.timer"
+    assert systemd.is_active(timer), f"AIDE timer '{timer}' exists but is not active."
+
+
+@pytest.mark.feature("aide")
+@pytest.mark.root(reason="Required to query systemd units")
+@pytest.mark.booted(reason="systemd timers are expected to be configured at runtime")
+def test_aide_timer_state(systemd: Systemd):
+    """Verify that the AIDE timer is in 'waiting' or 'running' state."""
+    timer = "aide-check.timer"
+    units = systemd.list_units()
+    matches = [u for u in units if u.unit == timer]
     unit = matches[0]
-    assert unit.load == "loaded", f"AIDE timer must be loaded but is {unit.load}"
-
-    # aide timer should be active in systemd
-    assert systemd.is_active(
-        timer
-    ), f"AIDE timer exists but is not active (active={unit.active}, sub={unit.sub})"
-
-    # aide timer in waiting / running
     assert unit.sub in (
         "waiting",
         "running",
     ), f"AIDE timer scheduling state unexpected (sub={unit.sub})"
+
+
+@pytest.mark.feature("aide")
+@pytest.mark.root(reason="Required to read AIDE configuration")
+@pytest.mark.booted(reason="AIDE configuration must exist at runtime")
+def test_aide_conf_contains_faillog_entry():
+    """Ensure that AIDE configuration exists and includes '/var/log/faillog Full'"""
+    conf_path = Path("/etc/aide/aide.conf")
+    assert conf_path.exists(), "AIDE configuration file /etc/aide/aide.conf not found"
+    content = conf_path.read_text()
+    expected_line = "/var/log/faillog Full"
+    assert expected_line in content, (
+        f"Expected '{expected_line}' not found in {conf_path}. "
+    )
