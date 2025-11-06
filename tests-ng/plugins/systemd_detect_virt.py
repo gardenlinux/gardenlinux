@@ -36,7 +36,7 @@ _HYPERVISOR_KEY: StashKey[Hypervisor] = StashKey[Hypervisor]()
 _HYPERVISOR_HINTS: dict[Hypervisor, list[str]] = {
     Hypervisor.microsoft: ["microsoft"],
     Hypervisor.amazon: ["amazon", "aws"],
-    Hypervisor.google: ["google"],
+    Hypervisor.google: ["google", "gdch"],
     Hypervisor.oracle: ["oracle"],
     Hypervisor.vmware: ["vmware"],
 }
