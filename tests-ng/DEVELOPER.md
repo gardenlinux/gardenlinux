@@ -20,32 +20,32 @@ The following principles guide all test development in Garden Linux:
 
 ### Core Principles
 
-1. **Be easy to read and understand** without extensive knowledge of Garden Linux internals
+#### 1. Be easy to read and understand (without extensive knowledge of Garden Linux internals)
 
 - Use native Python APIs over shell scripts where feasible
 - Write clear, self-documenting test names and assertions
 - Avoid complex logic in test functions
 
-2. **Be explicit about what quality they ensure**
+#### 2. Be explicit about what quality they ensure
 
 - Test names must clearly communicate what is broken if the test fails
 - In general, one test should not have multiple assertions (there might be valid exceptions)
 - Each test should verify a single, specific behavior
 
-3. **Be very strict about declaring if they mutate system state**
+#### 3. Be very strict about declaring if they mutate system state
 
 - Use appropriate markers (`@pytest.mark.modify`, `@pytest.mark.root`) to declare system modifications
 - Document (`reason=`) why system modifications are necessary
 - Ensure tests clean up after themselves.
   - If new functionality is added, check if `tests-ng/plugins/sysdiff.py` collects modifications.
 
-4. **Only run as root when needed**
+#### 4. Only run as root when needed
 
 - Use `@pytest.mark.root` only when root privileges are absolutely necessary
 - Document (`reason=`) why root access is required
 - Prefer unprivileged testing when possible
 
-5. **Target appropriate test environments and platforms**
+#### 5. Target appropriate test environments and platforms
 
 - Use `@pytest.mark.booted` to mark tests that require a full booted system (such as QEMU or cloud VMs) to function correctly.
 - Use `@pytest.mark.feature` to restrict tests to only those environments or platforms where they are intended to run, especially if they would fail elsewhere.
@@ -54,14 +54,14 @@ The following principles guide all test development in Garden Linux:
 - Document (`reason=`) why a test must run (or be excluded) in certain environments or platforms
 - For a list of all available test environments (like chroot, QEMU, cloud, and OCI), see [Test Environment Details](../README.md#test-environment-details).
 
-6. **Use abstractions judiciously to hide implementation details**
+#### 6. Use abstractions judiciously to hide implementation details
 
 - Leverage plugins for infrastructure concerns (parsing files, accessing data, establishing connections)
 - Use handlers for setup/teardown operations
 - Keep test logic visible and maintain Arrange-Act-Assert structure
 - Avoid over-abstraction that requires reading multiple plugins to understand a test
 
-7. **Be mindful about external dependencies**
+#### 7. Be mindful about external dependencies
 
 - Prefer Python standard library over third-party packages
 - Only add PyPI dependencies when there's clear benefit
