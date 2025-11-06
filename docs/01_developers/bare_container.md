@@ -98,7 +98,7 @@ chroot /mnt toybox sh
 
 ### Analyzing the Image Size
 
-Bare images may unexpectedly grow. To find the cause of the issue, we can install tools to the debian container and use the on the `/mnt` folder.
+Bare images may unexpectedly grow. To find the cause of the issue, we can install tools to them debian container and use the on the `/mnt` folder.
 For example, install dust:
 
 ```bash
