@@ -15,9 +15,7 @@ def test_iscsi_setup(shell: ShellRunner, block_devices: BlockDevices, iscsi_devi
         "iscsi-iqn", substring=True
     ), "Unexpected iscsi-iqn before rescan"
 
-    session_id = shell(
-        "iscsiadm -m session | awk '{print $2}'", capture_output=True
-    )
+    session_id = shell("iscsiadm -m session | awk '{print $2}'", capture_output=True)
     session_id = session_id.stdout.strip("[]\n")
     assert session_id, "Failed to get session ID"
 
