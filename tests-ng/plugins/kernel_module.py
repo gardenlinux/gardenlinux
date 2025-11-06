@@ -95,6 +95,8 @@ class KernelModule:
                     success = success and result.returncode == 0
                     break
             print(self._unload)
+
+        print("Status of sg: ", self.is_module_loaded("sg"))
         return success
 
     def collect_loaded_modules(self) -> list[str]:
