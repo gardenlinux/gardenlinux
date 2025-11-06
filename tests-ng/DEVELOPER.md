@@ -67,6 +67,15 @@ The following principles guide all test development in Garden Linux:
 - Only add PyPI dependencies when there's clear benefit
 - Document why external dependencies are necessary
 
+#### 8. Handlers must restore system state in teardown phase
+
+- Handlers (yield fixtures) that modify system state must restore the original state after tests complete
+- This cleanup is only required when tests run with `--allow-system-modifications` and are marked with `@pytest.mark.modify`
+- The pattern is: save initial state → yield to test → restore initial state in teardown
+- Handlers must track what they changed and reverse those changes in reverse order
+- Examples of state to restore: service status, kernel modules, installed packages, filesystem changes, network configuration
+- For examples, see [Handlers for Setup/Teardown](#handlers-for-setupteardown)
+
 ## Framework Structure
 
 ### How Tests, Plugins, and Handlers Connect
@@ -209,22 +218,77 @@ def test_service_running(shell: ShellRunner):
 
 ### Handlers for Setup/Teardown
 
+> [!IMPORTANT]
+> Handlers that modify system state must restore the original state in the teardown phase. See [Core Principle 8](#8-handlers-must-restore-system-state-in-teardown-phase) above for detailed requirements and examples.
+
 Use handlers (yield fixtures) for managing test state and cleanup:
+
+- Always check initial state before modifying
+- Only restore what you changed (don't stop services that were already running)
+- Clean up in reverse order of setup (especially important for dependencies like kernel modules)
+- Use `ignore_exit_code=True` for cleanup operations that might fail if already cleaned up
+- If new system modifications are introduced, verify that `tests-ng/plugins/sysdiff.py` can detect them
+
+**Example: service test, including setup and teardown**
 
 ```python
 @pytest.fixture
 def service_ssh(systemd: Systemd):
     """Fixture for SSH service management with cleanup."""
+
+    # Save initial state
     service_active_initially = systemd.is_active("ssh")
 
     if not service_active_initially:
         systemd.start_unit("ssh")
 
+    # Yield to test
     yield "ssh"  # This returns "ssh" to the test as the fixture's value. This can be use to parametrize tests.
 
-    # Cleanup: restore original state
+    # Teardown/Cleanup: restore original state
     if not service_active_initially:
         systemd.stop_unit("ssh")
+```
+
+**Example: installing packages and loading kernel modules, including setup and teardown**
+
+```python
+TEST_NAME_MODULES = [
+    {"name": 'nvme', "status": None},
+    {"name": 'nvme_auth', "status": None},
+]
+TEST_NAME_PACKAGES = [
+    {"name": 'mount', "status": None},
+    {"name": 'wget', "status": None},
+]
+
+@pytest.fixture
+def test_name(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
+    # Setup: whatever is needed as configuration
+    for module in TEST_NAME_MODULES:
+        if not kernel_module.is_module_loaded(module["name"]):
+            kernel_module.load_module(module["name"])
+            # Save Status change for teardown
+            module["status"] = "Loaded"
+    for pkg in TEST_NAME_PACKAGES:
+        if not dpkg.package_is_installed(pkg["name"]):
+            shell(f"DEBIAN_FRONTEND=noninteractive apt-get install -y {pkg["name"]}")
+            # Save Status change for teardown
+            pkg["status"] == "Installed"
+    # ... (additonal setup code) ...
+
+    # Yield to test
+    yield
+
+    # Teardown/Cleanup: reverse all changes in reverse order
+    # ... (additonal teardown code) ...
+    # Unload modules in reverse order of loading
+    for pkg in TEST_NAME_PACKAGES:
+        if pkg["status"] == "Installed":
+            shell(f"DEBIAN_FRONTEND=noninteractive apt-get remove -y {pkg["name"]}")
+    for module in reversed(MY_REQUIRED_MODULES):
+        if module["status"] == "Loaded":
+            kernel_module.unload_module(entry["name"])
 ```
 
 ### Utils for Helper Functions
