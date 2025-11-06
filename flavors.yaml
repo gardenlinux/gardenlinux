@@ -661,13 +661,17 @@ targets:
   - name: lima
     category: hypervisor
     flavors:
-      - features: []
+      - features:
+          - gardener
+          - _prod
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: true
-      - features: []
+      - features: 
+          - gardener
+          - _prod
         arch: arm64
         build: true
         test: true
