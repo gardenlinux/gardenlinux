@@ -44,11 +44,10 @@ def test_correct_ntp_on_gcp(timedatectl: TimeDateCtl):
 
 @pytest.mark.flaky(reruns=10, reruns_delay=30, only_rerun="AssertionError")
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
-@pytest.mark.feature("not azure and not aws and not gcp and not qemu")
+@pytest.mark.feature("not azure and not aws and not gcp and not gdch")
 def test_ntp(timedatectl: TimeDateCtl):
     """
-    Validate that NTP is enabled and synchronized on non-hyperscaler platforms.
-    Skips on Azure, AWS and GCP since their metadata-based NTP servers and not reachable from QEMU tests.
+    Validate that systemd-timesyncd is installed and active.
     """
     # Verify image configuration
     assert (
@@ -74,35 +73,41 @@ def test_systemd_timesyncd_disabled_on_azure(systemd: Systemd):
 
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
-@pytest.mark.feature("azure and not qemu")
-def test_chrony_on_azure(systemd: Systemd, systemd_detect_virt: Hypervisor):
+@pytest.mark.feature("azure")
+@pytest.mark.hypervisor("microsoft")
+def test_chrony_on_azure(systemd: Systemd):
     """
     Test for chrony as active time sync service on Azure.
     See: https://learn.microsoft.com/en-us/azure/virtual-machines/linux/time-sync#chrony
     """
-    if systemd_detect_virt == Hypervisor.microsoft:
-        # If real Azure, this will work.
-        assert systemd.is_active("chrony"), f"Chrony should be active on Azure."
-    else:
-        # Azure image tested in QEMU (no Hyper-V clock available -> chrony is disabled and not loaded)
-        units = systemd.list_installed_units()
-        chrony_unit = next(
-            (unit for unit in units if unit.unit == "chrony.service"),
-            None,
-        )
-
-        assert (
-            chrony_unit is not None
-        ), "chrony.service should be present in Azure images."
-        assert chrony_unit.load in (
-            "enabled",
-            "disabled",
-        ), f"unexpected chrony.service state: {chrony_unit.load!r}"
+    assert systemd.is_active("chrony"), f"Chrony should be active on Azure."
 
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
-@pytest.mark.feature("(not azure and not container) and x86_64")
-def test_clocksource_x86_64(systemd_detect_virt: Hypervisor, clocksource: str):
+@pytest.mark.feature("azure")
+@pytest.mark.hypervisor("qemu")
+def test_chrony_installed_for_azure_image(systemd: Systemd):
+    """
+    Test for chrony service installed on Azure image when running in QEMU.
+    (no Hyper-V clock available -> chrony is disabled and not loaded)
+    """
+    units = systemd.list_installed_units()
+    chrony_unit = next(
+        (unit for unit in units if unit.unit == "chrony.service"),
+        None,
+    )
+
+    assert chrony_unit is not None, "chrony.service should be presenti n Azure images."
+    assert chrony_unit.load in (
+        "enabled",
+        "disabled",
+    ), f"Unexpected chrony.service state: {chrony_unit.load!r}"
+
+
+@pytest.mark.booted(reason="NTP server configuration is read at runtime")
+@pytest.mark.feature("not azure and not container")
+@pytest.mark.arch("amd64")
+def test_clocksource_amd64(systemd_detect_virt: Hypervisor, clocksource: str):
     match systemd_detect_virt:
         case Hypervisor.xen | Hypervisor.qemu:
             expected_clocksource = "tsc"
@@ -115,8 +120,9 @@ def test_clocksource_x86_64(systemd_detect_virt: Hypervisor, clocksource: str):
 
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
-@pytest.mark.feature("(not azure and not container) and (aarch64 or arm64)")
-def test_clocksource_arm(systemd_detect_virt: Hypervisor, clocksource: str):
+@pytest.mark.feature("not azure and not container")
+@pytest.mark.arch("amd64", "aarch64")
+def test_clocksource_arm64_aarch64(systemd_detect_virt: Hypervisor, clocksource: str):
     match systemd_detect_virt:
         case Hypervisor.kvm | Hypervisor.qemu | Hypervisor.amazon:
             expected_clocksource = "arch_sys_counter"
