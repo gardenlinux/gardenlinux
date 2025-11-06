@@ -9,6 +9,7 @@ This document provides comprehensive guidelines for developing and maintaining t
 - [Test Organization and Naming](#test-organization-and-naming)
 - [Test Writing Best Practices](#test-writing-best-practices)
 - [Markers and Test Configuration](#markers-and-test-configuration)
+- [Debugging Tests](#debugging-tests)
 - [Python Best Practices](#python-best-practices)
 - [External Dependencies](#external-dependencies)
 - [Resources](#resources)
@@ -407,6 +408,43 @@ def test_weird_cases(input_val, expected):
 #### `@pytest.mark.security_id`
 
 TODO: Explain what this marker is good for.
+
+## Debugging Tests
+
+When developing or maintaining tests, you'll often need to debug failing tests or understand test framework behavior.
+
+### Adding Debug Logging
+
+Tests, plugins, and handlers can output additional debugging information using Python's logging framework. This is the primary way to provide visibility into what your code is doing:
+
+```python
+import logging
+logger = logging.getLogger(__name__)
+
+def test_example(systemd: Systemd):
+    """Test that demonstrates debug logging."""
+    logger.debug("Checking SSH service status")
+    is_active = systemd.is_active("ssh")
+    logger.debug(f"SSH service active status: {is_active}")
+    assert is_active, "SSH service should be running"
+```
+
+### When to use debug logging
+
+- **Plugin operations**: Log when plugins access system resources, parse files, or interact with services
+- **Complex logic**: Add debug output for non-obvious operations or when troubleshooting logic errors
+- **State transitions**: Log when handlers set up or tear down resources
+- **Error conditions**: Provide context when operations might fail
+
+### Best practices
+
+- Use descriptive messages that explain what's happening, not just variable values
+- Include relevant context (file paths, service names, configuration values)
+- Avoid excessive logging in tight loops or frequently-called functions
+- Use appropriate log levels: `logger.debug()` for detailed info, `logger.info()` for important milestones
+
+> [!NOTE]
+> Have a look at the [user documentation](README.md#debugging-tests) if you want to know how to view those debug logs when running tests.
 
 ## Python Best Practices
 
