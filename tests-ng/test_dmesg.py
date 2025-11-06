@@ -23,44 +23,48 @@ def test_dmesg_sysctl_stig_config_file_exists():
 
 
 @pytest.mark.feature("gardener")
-def test_dmesg_gardener_sysctl_no_restrictions_on_accessing_dmesg():
-    pattern = re.compile(
-        r"""
-            ^\s*    # any whitespace in the beginning of the line is allowed
-            (?!\#)  # fail the search if a comment character is found
-            kernel\.dmesg_restrict\s*=\s*0
-        """,
-        re.VERBOSE | re.MULTILINE,
+def test_dmesg_gardener_sysctl_no_restrictions_on_accessing_dmesg(file_content):
+    file_path = "/etc/sysctl.d/40-allow-nonroot-dmesg.conf"
+    result = file_content.get_mapping(
+        file_path,
+        {"kernel.dmesg_restrict": "0"},
+        format="keyval",
     )
-    assert re.search(
-        pattern, Path("/etc/sysctl.d/40-allow-nonroot-dmesg.conf").read_text()
+    assert result is not None, f"Could not parse file: {file_path}"
+    assert result.all_match, (
+        f"Could not find expected mapping in {file_path}: "
+        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
     )
 
 
 @pytest.mark.feature("server and not gardener")
-def test_dmesg_server_sysctl_restrictions_on_accessing_dmesg():
-    pattern = re.compile(
-        r"""
-            ^\s*    # any whitespace in the beginning of the line is allowed
-            (?!\#)  # fail the search if a comment character is found
-            kernel\.dmesg_restrict\s*=\s*1
-        """,
-        re.VERBOSE | re.MULTILINE,
+def test_dmesg_server_sysctl_restrictions_on_accessing_dmesg(file_content):
+    file_path = "/etc/sysctl.d/40-restric-dmesg.conf"
+    result = file_content.get_mapping(
+        file_path,
+        {"kernel.dmesg_restrict": "1"},
+        format="keyval",
     )
-    assert re.search(pattern, Path("/etc/sysctl.d/40-restric-dmesg.conf").read_text())
+    assert result is not None, f"Could not parse file: {file_path}"
+    assert result.all_match, (
+        f"Could not find expected mapping in {file_path}: "
+        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
+    )
 
 
 @pytest.mark.feature("stig")
-def test_dmesg_stig_sysctl_restrictions_on_accessing_dmesg():
-    pattern = re.compile(
-        r"""
-            ^\s*    # any whitespace in the beginning of the line is allowed
-            (?!\#)  # fail the search if a comment character is found
-            kernel\.dmesg_restrict\s*=\s*1
-        """,
-        re.VERBOSE | re.MULTILINE,
+def test_dmesg_stig_sysctl_restrictions_on_accessing_dmesg(file_content):
+    file_path = "/etc/sysctl.d/99-stig.conf"
+    result = file_content.get_mapping(
+        file_path,
+        {"kernel.dmesg_restrict": "1"},
+        format="keyval",
     )
-    assert re.search(pattern, Path("/etc/sysctl.d/99-stig.conf").read_text())
+    assert result is not None, f"Could not parse file: {file_path}"
+    assert result.all_match, (
+        f"Could not find expected mapping in {file_path}: "
+        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
+    )
 
 
 @pytest.mark.feature("gardener")
