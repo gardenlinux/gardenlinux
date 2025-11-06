@@ -203,8 +203,6 @@ class CHROOT:
         #  environment and still support amd64 and arm64 architectures)
         chroot_ssh_dir = rootfs + "/etc/ssh"
         cmd_ssh_keys = []
-        cmd_ssh_keys.append('ssh-keygen -q -N "" -t dsa -f {ssh_dir}/ssh_host_dsa_key'.format(
-          ssh_dir=chroot_ssh_dir))
         cmd_ssh_keys.append('ssh-keygen -q -N "" -t rsa -b 4096 -f {ssh_dir}/ssh_host_rsa_key'.format(
           ssh_dir=chroot_ssh_dir))
         cmd_ssh_keys.append('ssh-keygen -q -N "" -t ecdsa -f {ssh_dir}/ssh_host_ecdsa_key'.format(
