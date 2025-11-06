@@ -1,6 +1,8 @@
-import pytest
 from pathlib import Path
+
+import pytest
 from plugins.systemd import Systemd
+
 
 @pytest.mark.feature("aide")
 @pytest.mark.root(reason="Required to query systemd units")
@@ -21,7 +23,9 @@ def test_aide_timer_loaded(systemd: Systemd):
     timer = "aide-check.timer"
     units = systemd.list_units()
     matches = [u for u in units if u.unit == timer]
-    assert matches[0].load == "loaded", f"AIDE timer must be loaded but is {matches[0].load}"
+    assert (
+        matches[0].load == "loaded"
+    ), f"AIDE timer must be loaded but is {matches[0].load}"
 
 
 @pytest.mark.feature("aide")
@@ -57,6 +61,6 @@ def test_aide_conf_contains_faillog_entry():
     assert conf_path.exists(), "AIDE configuration file /etc/aide/aide.conf not found"
     content = conf_path.read_text()
     expected_line = "/var/log/faillog Full"
-    assert expected_line in content, (
-        f"Expected '{expected_line}' not found in {conf_path}. "
-    )
+    assert (
+        expected_line in content
+    ), f"Expected '{expected_line}' not found in {conf_path}. "
