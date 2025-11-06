@@ -1,5 +1,6 @@
-import pytest
 from pathlib import Path
+
+import pytest
 
 
 @pytest.mark.booted(reason="sysctl needs a booted system")
