@@ -65,6 +65,16 @@ class Sysctl:
         """Enable dictionary-style access to sysctl parameters"""
         return self._read_sysctl_parameter(key)
 
+    def __contains__(self, key: object) -> bool:
+        """Support `"name" in sysctl` membership test."""
+        if not isinstance(key, str):
+            return False
+        try:
+            self._read_sysctl_parameter(key)
+            return True
+        except KeyError:
+            return False
+
 
 @pytest.fixture
 def sysctl(shell: ShellRunner) -> Sysctl:

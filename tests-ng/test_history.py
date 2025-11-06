@@ -11,6 +11,7 @@ def test_history_profile_d_file_exists():
     assert Path(CONFIG_FILE).exists()
 
 
+@pytest.mark.feature("server", reason="needs server feature")
 def test_history_profile_d_contains_required_configuration():
     config_contents = Path(CONFIG_FILE).read_text()
 
