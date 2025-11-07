@@ -2,5 +2,6 @@ git
 libpam-pwquality
 libpam-modules-bin
 logrotate
-syslog-ng
 tcpd
+apparmor
+cis-hardening
