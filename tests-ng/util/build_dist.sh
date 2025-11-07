@@ -31,6 +31,8 @@ if [ -n "$test_dirs" ]; then
 	echo "$test_dirs" | xargs -I {} cp -r {} "$tmpdir/dist/tests/"
 fi
 
+# We need the OPENSSL_MODULES=/usr/lib/$(arch)-linux-gnu/ossl-modules/ to allow the python-build-standalone
+# to detect the fips.so module. See https://github.com/gardenlinux/gardenlinux/pull/3752
 cat >"$tmpdir/dist/run_tests" <<'EOF'
 #!/bin/sh
 
@@ -43,7 +45,7 @@ script_dir="$(dirname -- "$script_path")"
 export PATH="$script_dir/runtime/$arch/bin:$PATH"
 cd "$script_dir/tests"
 echo "🧪  running tests with args: $0 $@"
-COLUMNS=120 python -m pytest -rA --tb=short --color=yes -p no:cacheprovider "$@"
+COLUMNS=120 OPENSSL_MODULES=/usr/lib/$(arch)-linux-gnu/ossl-modules/ python -m pytest -rA --tb=short --color=yes -p no:cacheprovider "$@"
 EOF
 chmod +x "$tmpdir/dist/run_tests"
 
