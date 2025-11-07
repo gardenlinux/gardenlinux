@@ -49,6 +49,9 @@ IGNORED_SYSTEMD_PATTERNS = [
     "sysstat-collect.timer",
     "sysstat-rotate.timer",
     "sysstat-summary.timer",
+    # https://github.com/gardenlinux/gardenlinux/issues/3769
+    "kubelet.service",
+    "google-guest-agent.service",
 ]
 IGNORED_KERNEL_MODULES = []
 IGNORED_SYSCTL_PARAMS = {
