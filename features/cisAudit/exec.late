@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 # 1.3.3: Define log file for sudo:
-echo "Defaults logfile=/var/log/sudo.log" >> /etc/sudoers
+echo "Defaults logfile=/var/log/sudo.log,loglinelen=0,umask=027" >> /etc/sudoers
 
 # 4.1.3: Record date/time changes
 echo "-a always,exit -F arch=b64 -S adjtimex -S settimeofday -k time-change" >> /etc/audit/rules.d/audit.rules
@@ -40,7 +40,7 @@ echo "-w /var/log/wtmp -p wa -k session" >> /etc/audit/rules.d/audit.rules
 echo "-w /var/log/btmp -p wa -k session" >> /etc/audit/rules.d/audit.rules
 
 # 4.1.9: Record DAC edits
-echo "-a always,exit -F arch=b64 -S chmod -S fchmod -S fchmodat -F auid>=1000 -F auid!=4294967295 -k perm_mod is" >> /etc/audit/rules.d/audit.rules
+echo "-a always,exit -F arch=b64 -S chmod -S fchmod -S fchmodat -F auid>=1000 -F auid!=4294967295 -k perm_mod" >> /etc/audit/rules.d/audit.rules
 echo "-a always,exit -F arch=b32 -S chmod -S fchmod -S fchmodat -F auid>=1000 -F auid!=4294967295 -k perm_mod" >> /etc/audit/rules.d/audit.rules
 echo "-a always,exit -F arch=b64 -S chown -S fchown -S fchownat -S lchown -F auid>=1000 -F auid!=4294967295 -k perm_mod" >> /etc/audit/rules.d/audit.rules
 echo "-a always,exit -F arch=b32 -S chown -S fchown -S fchownat -S lchown -F auid>=1000 -F auid!=4294967295 -k perm_mod" >> /etc/audit/rules.d/audit.rules
@@ -48,10 +48,10 @@ echo "-a always,exit -F arch=b64 -S setxattr -S lsetxattr -S fsetxattr -S remove
 echo "-a always,exit -F arch=b32 -S setxattr -S lsetxattr -S fsetxattr -S removexattr -S lremovexattr -S fremovexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod" >> /etc/audit/rules.d/audit.rules
 
 # 4.1.10: Record failed acces file
-echo "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access" >> /etc/audit/rules.d/audit.rules
-echo "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access" >> /etc/audit/rules.d/audit.rules
-echo "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access" >> /etc/audit/rules.d/audit.rules
-echo "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access" >> /etc/audit/rules.d/audit.rules
+echo "-a always,exit -F arch=b64 -S creat -S open -S creat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access" >> /etc/audit/rules.d/audit.rules
+echo "-a always,exit -F arch=b32 -S creat -S open -S creat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access" >> /etc/audit/rules.d/audit.rules
+echo "-a always,exit -F arch=b64 -S creat -S open -S creat -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access" >> /etc/audit/rules.d/audit.rules
+echo "-a always,exit -F arch=b32 -S creat -S open -S creat -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access" >> /etc/audit/rules.d/audit.rules
 
 # 4.1.11: Record privileged commands
 echo "-a always,exit -F path=/usr/bin/chage -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged" >> /etc/audit/rules.d/audit.rules
@@ -81,6 +81,12 @@ echo "-a always,exit -F arch=b32 -S mount -F auid>=1000 -F auid!=4294967295 -k m
 # 4.1.13: Record file deletions
 echo "-a always,exit -F arch=b64 -S unlink -S unlinkat -S rename -S renameat -F auid>=1000 -F auid!=4294967295 -k delete" >> /etc/audit/rules.d/audit.rules
 echo "-a always,exit -F arch=b32 -S unlink -S unlinkat -S rename -S renameat -F auid>=1000 -F auid!=4294967295 -k delete" >> /etc/audit/rules.d/audit.rules
+#Extra
+echo "-w /etc/apparmor/ -p wa -k MAC-policy" >> /etc/audit/rules.d/audit.rules 
+echo "-w /etc/apparmor.d/ -p wa -k MAC-policy" >> /etc/audit/rules.d/audit.rules 
+echo "-a always,exit -F path=/usr/lib/polkit-1/polkit-agent-helper-1 -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged" >> /etc/audit/rules.d/audit.rules 
+echo "-a always,exit -F path=/usr/bin/pkexec -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged" >> /etc/audit/rules.d/audit.rules 
+echo "-a always,exit -F path=/usr/libexec/systemd-cron/crontab_setgid -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged" >> /etc/audit/rules.d/audit.rules 
 
 # 4.1.14: Record sudo edits
 echo "-w /etc/sudoers -p wa -k sudoers" >> /etc/audit/rules.d/audit.rules
@@ -94,6 +100,12 @@ echo "-w /sbin/insmod -p x -k modules" >> /etc/audit/rules.d/audit.rules
 echo "-w /sbin/rmmod -p x -k modules" >> /etc/audit/rules.d/audit.rules
 echo "-w /sbin/modprobe -p x -k modules" >> /etc/audit/rules.d/audit.rules
 echo "-a always,exit -F arch=b64 -S init_module -S delete_module -k modules" >> /etc/audit/rules.d/audit.rules
+echo "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access" >> /etc/audit/rules.d/audit.rules
+echo "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access" >> /etc/audit/rules.d/audit.rules
+echo "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access" >> /etc/audit/rules.d/audit.rules
+echo "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access" >> /etc/audit/rules.d/audit.rules
+echo "-a always,exit -F path=/usr/bin/dotlockfile -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged" >> /etc/audit/rules.d/audit.rules
+echo "-a always,exit -F path=/usr/sbin/nullmailer-queue -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged" >> /etc/audit/rules.d/audit.rules
 
 # 4.1.17: Freeze audit config
 echo "-e 2" >> /etc/audit/rules.d/audit.rules
@@ -104,3 +116,4 @@ sed -i -e '/admin_space_left_action =/ s/= .*/= halt/' /etc/audit/auditd.conf
 
 # 4.1.2.3: Keep all audit logs
 echo "max_log_file_action = keep_logs" >> /etc/audit/auditd.conf
+
