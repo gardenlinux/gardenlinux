@@ -62,9 +62,9 @@ def test_sshd_has_required_config(sshd_config_item: str, sshd: Sshd):
             actual_value, set
         ), f"actual_value should be a set, got {type(actual_value)}"
         actual_set, expected_set = get_normalized_sets(actual_value, expected_value)
-        assert expected_set.issubset(
-            actual_set
-        ), f"{sshd_config_item}: missing values {expected_set - actual_set}"
+        missing = expected_set - actual_set
+        extra = actual_set - expected_set
+        assert not missing, f"{sshd_config_item}: missing {missing}, extra {extra}"
     else:
         assert equals_ignore_case(
             str(actual_value or ""), str(expected_value)
