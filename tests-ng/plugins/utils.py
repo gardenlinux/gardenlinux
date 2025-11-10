@@ -77,3 +77,18 @@ def parse_etc_file(
         entries.append(entry)
 
     return entries
+
+
+def check_for_duplicates(
+    entries: List[Dict[str, str | List[str]]], field: str
+) -> List[str]:
+    duplicates = list[str]()
+    visited_entries = list[str]()
+    for entry in entries:
+        item = entry[field]
+        if item in visited_entries:
+            duplicates.append(str(item))
+        else:
+            visited_entries.append(str(item))
+
+    return duplicates
