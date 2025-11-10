@@ -32,13 +32,9 @@ jobs:
           git config --local user.email "gardenlinux-bot[bot]@github.com"
           git config --local user.name "gardenlinux-bot[bot]@users.noreply.github.com"
 
-      - name: Authenticate GitHub CLI
-        run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+      - name: Run update script
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Run update script
         run: tests-ng/util/update_runtime.sh
 
       - name: Check for changes
