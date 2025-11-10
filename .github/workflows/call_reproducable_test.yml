@@ -18,7 +18,7 @@ jobs:
     with:
       nightly: "Two nightly builds"
       run_number1: "#2413"
-      run_number1: "#2412"
+      run_number2: "#2412"
     secrets:
       aws_region: ${{ secrets.AWS_REGION }}
       aws_kms_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
