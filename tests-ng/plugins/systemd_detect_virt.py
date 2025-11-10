@@ -116,11 +116,11 @@ def pytest_collection_modifyitems(config, items: list[pytest.Item]):
             continue
 
         allowed = [h.lower() for h in marker.args]
+        reason = marker.kwargs.get("reason")
+
         if hypervisor.name.lower() not in allowed:
-            item.add_marker(
-                pytest.mark.skip(
-                    reason=(
-                        f"Skipped. Test marked to only run on {', '.join(allowed)} (current: {hypervisor.name})"
-                    )
-                )
+            skip_reason = (
+                reason
+                or f"Skipped. Test marked to only run on {', '.join(allowed)} (current: {hypervisor.name})"
             )
+            item.add_marker(pytest.mark.skip(reason=skip_reason))
