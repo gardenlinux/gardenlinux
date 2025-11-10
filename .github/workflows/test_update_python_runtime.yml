@@ -1,0 +1,81 @@
+name: Test - Update Python Runtime
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run at 12:00 noon CEST (10:00 UTC)
+    - cron: "0 10 * * *"
+
+jobs:
+  update:
+    name: Update Python Runtime
+    runs-on: ubuntu-24.04
+    environment: app_bot_pr
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      # Generate a token that is allowed to create pull requests
+      - uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # pin@v2.1.4
+        id: generate-token
+        with:
+          app-id: ${{ secrets.APP_BOT_PR_APP_ID }}
+          private-key: ${{ secrets.APP_BOT_PR_PRIVATE_KEY }}
+
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Run update script
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: tests-ng/util/update_runtime.sh
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+
+            {
+              echo "summary<<EOF"
+              echo "## Changes"
+              echo ""
+              echo '```diff'
+              git diff
+              echo '```'
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
+
+            release_date=$(grep '^export RELEASE_DATE=' tests-ng/util/python.env.sh | sed -n 's/^export RELEASE_DATE="\(.*\)"/\1/p')
+            echo "release_date=$release_date" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # pin@v7.0.8
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          commit-message: "chore: update Tests-NG Python runtime version"
+          title: "chore: Update Tests-NG Python runtime version"
+          body: |
+            This PR was automatically created by the [Test - Update Python Runtime](https://github.com/gardenlinux/gardenlinux/actions/workflows/test_update_python_runtime.yml) workflow.
+
+            ${{ steps.changes.outputs.summary }}
+
+            Please review and merge if the changes look correct.
+          branch: gardenlinux-bot/update-tests-ng-python-runtime-${{ steps.changes.outputs.release_date }}
+          delete-branch: true
+          team-reviewers: |
+            gardenlinux/maintainers
+          labels: |
+            automated
+            dependencies
+            test-ng
+            python
