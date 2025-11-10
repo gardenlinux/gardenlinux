@@ -2,6 +2,7 @@ import functools
 import os
 import re
 from dataclasses import dataclass
+from graphlib import TopologicalSorter
 
 import pytest
 
@@ -30,7 +31,7 @@ class KernelModule:
         self._find = find
         self._shell = shell
         self._kernel_versions = kernel_versions
-        self._unload = {}
+        self._unload = TopologicalSorter()
 
     def is_module_loaded(self, module: str) -> bool:
         """Return True if ``module`` appears in ``/proc/modules``."""
@@ -55,14 +56,8 @@ class KernelModule:
         return result.returncode == 0
 
     def safe_load_module(self, module: str) -> bool:
-        self._unload = (
-            self.module_dependencies(module, check_loaded=True) | self._unload
-        )
-        result = self._shell(
-            f"modprobe {module}", capture_output=True, ignore_exit_code=False
-        )
-        print(self._unload)
-        return result.returncode == 0
+        self._update_module_dependencies(module)
+        return self.load_module(module)
 
     def unload_module(self, module: str) -> bool:
         """Unload ``module`` using ``rmmod``; return True on success."""
@@ -73,30 +68,15 @@ class KernelModule:
 
     def safe_unload_modules(self) -> bool:
         success = True
-        print(self._unload)
-        while len(self._unload) > 0:
-            for module in self._unload:
-                independent = True
-                for dependency in self._unload:
-                    if module != dependency and module in self._unload[dependency]:
-                        independent = False
-                        break
+        for module in self._unload.static_order():
+            success &= self.unload_module(module)
+            print("Unloaded", module, success)
 
-                if independent:
-                    del self._unload[module]
-                    result = self._shell(
-                        f"rmmod {module}", capture_output=True, ignore_exit_code=True
-                    )
-                    print(
-                        f"Unloading {module} exited with status code {result.returncode}"
-                    )
-                    print(f"stdout: {result.stdout}")
-                    print(f"stderr: {result.stderr}")
-                    success = success and result.returncode == 0
-                    break
-            print(self._unload)
-
-        print("Status of sg: ", self.is_module_loaded("sg"))
+        self._unload = TopologicalSorter()
+        print("Status of sg:", self.is_module_loaded("sg"))
+        if self.is_module_loaded("sg"):
+            print("Return of a new unload:", self.unload_module("sg"))
+            print("Status of sg:", self.is_module_loaded("sg"))
         return success
 
     def collect_loaded_modules(self) -> list[str]:
@@ -137,21 +117,15 @@ class KernelModule:
         """Check if a module is available as loadable module"""
         return module in self.collect_available_modules()
 
-    def module_dependencies(
-        self, module: str, check_loaded: bool = False
-    ) -> dict[str, set[str]]:
-        result = self._shell(f"modprobe --show-depends {module}", capture_output=True)
+    def _update_module_dependencies(self, module: str) -> None:
+        self._unload.add(module)
 
-        deps = {module: set()}
+        result = self._shell(f"modprobe --show-depends {module}", capture_output=True)
         for dependency in dependencies.findall(result.stdout):
             if module != dependency:
-                if not check_loaded or not self.is_module_loaded(dependency):
-                    deps[module].add(dependency)
-                    deps |= self.module_dependencies(
-                        dependency, check_loaded=check_loaded
-                    )
-
-        return deps
+                if not self.is_module_loaded(dependency):
+                    self._unload.add(dependency, module)
+                    self._update_module_dependencies(dependency)
 
 
 @pytest.fixture
