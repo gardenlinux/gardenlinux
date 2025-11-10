@@ -24,7 +24,10 @@ def test_clock(shell: ShellRunner):
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("aws")
-@pytest.mark.hypervisor("amazon")
+@pytest.mark.hypervisor(
+    "amazon",
+    reason="Only works on real AWS infrastructure due to NTP server access requirements.",
+)
 def test_correct_ntp_on_aws(timedatectl: TimeDateCtl):
     ntp_ip = timedatectl.get_ntpserver().ip
     assert (
@@ -34,7 +37,9 @@ def test_correct_ntp_on_aws(timedatectl: TimeDateCtl):
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("gcp")
-@pytest.mark.hypervisor("google")
+@pytest.mark.hypervisor(
+    "google", reason="Only works on real google cloud because of metadata access."
+)
 def test_correct_ntp_on_gcp(timedatectl: TimeDateCtl):
     ntp_hostname = timedatectl.get_ntpserver().hostname
     assert (
@@ -74,7 +79,9 @@ def test_systemd_timesyncd_disabled_on_azure(systemd: Systemd):
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure")
-@pytest.mark.hypervisor("microsoft")
+@pytest.mark.hypervisor(
+    "microsoft", "chrony only loaded and running in real Azure environment."
+)
 def test_chrony_on_azure(systemd: Systemd):
     """
     Test for chrony as active time sync service on Azure.
@@ -85,7 +92,10 @@ def test_chrony_on_azure(systemd: Systemd):
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure")
-@pytest.mark.hypervisor("qemu")
+@pytest.mark.hypervisor(
+    "qemu",
+    "Test only asserts presence of chrony unit file in cases the testsuite runs in QEMU.",
+)
 def test_chrony_installed_for_azure_image(systemd: Systemd):
     """
     Test for chrony service installed on Azure image when running in QEMU.
