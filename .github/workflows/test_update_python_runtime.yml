@@ -2,6 +2,11 @@ name: Test - Update Python Runtime
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - "tests-ng/util/python.env.sh"
+      - "tests-ng/util/update_runtime.sh"
+      - ".github/workflows/test_update_python_runtime.yml"
   schedule:
     # Run at 12:00 noon CEST (10:00 UTC)
     - cron: "0 10 * * *"
