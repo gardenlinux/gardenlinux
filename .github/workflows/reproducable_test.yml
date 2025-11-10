@@ -4,23 +4,47 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       nightly:
         description: "Compared builds"
-        type: choice
+        type: string
         required: true
         default: "One new build with latest nightly"
-        options: 
-        - "Two new builds"
-        - "One new build with latest nightly"
-        - "Two nightly builds"
       run_number1:
         description: "First run number (#..., only required if comparing two nightly builds)"
         type: string
       run_number2:
         description: "Second run number (#..., only required if comparing two nightly builds)"
         type: string
+    secrets:
+
+
+      aws_region:
+        required: false
+      aws_kms_role:
+        required: false
+      aws_oidc_session:
+        required: false
+      secureboot_db_kms_arn:
+        required: false
+#  workflow_dispatch:
+#    inputs:
+#      nightly:
+#        description: "Compared builds"
+#        type: choice
+#        required: true
+#        default: "One new build with latest nightly"
+#        options: 
+#        - "Two new builds"
+#        - "One new build with latest nightly"
+#        - "Two nightly builds"
+#      run_number1:
+#        description: "First run number (#..., only required if comparing two nightly builds)"
+#        type: string
+#      run_number2:
+#        description: "Second run number (#..., only required if comparing two nightly builds)"
+#        type: string
 
 jobs:
   build_a:
@@ -37,11 +61,7 @@ jobs:
       platform_test_tag: latest
       fail_fast: true
       prefix: a-
-    secrets:
-      aws_region: ${{ secrets.AWS_REGION }}
-      aws_kms_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
-      aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
-      secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
+    secrets: inherit
 
   run_number_a:
     uses: ./.github/workflows/get_workflow_infos.yml
@@ -66,11 +86,7 @@ jobs:
       platform_test_tag: latest
       fail_fast: true
       prefix: b-
-    secrets:
-      aws_region: ${{ secrets.AWS_REGION }}
-      aws_kms_role: ${{ secrets.KMS_SIGNING_IAM_ROLE }}
-      aws_oidc_session: ${{ secrets.AWS_OIDC_SESSION }}
-      secureboot_db_kms_arn: ${{ secrets.SECUREBOOT_DB_KMS_ARN }}
+    secrets: inherit
 
   run_number_b:
     uses: ./.github/workflows/get_workflow_infos.yml
