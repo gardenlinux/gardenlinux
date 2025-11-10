@@ -1,0 +1,11 @@
+[Unit]
+DefaultDependencies=no
+After=tpm2.target
+Wants=tpm2.target
+Before=initrd-switch-root.target
+OnFailure=emergency.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/measure-pcr7
+RemainAfterExit=yes

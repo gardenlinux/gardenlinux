@@ -61,16 +61,6 @@ jobs:
       prefix: ${{ inputs.prefix }}
     permissions:
       actions: write # TODO: 3215 elevated permissions for included workflow
-  bootstrap:
-    needs: requirements
-    name: Bootstrap build
-    uses: ./.github/workflows/build_bootstrap.yml
-    with:
-      commit_id: ${{ needs.requirements.outputs.commit_id }}
-      version: ${{ needs.requirements.outputs.version }}
-      prefix: ${{ inputs.prefix }}
-    permissions:
-      actions: write
   test_distribution_build:
     needs: requirements
     name: Build and Cache Test Distribution
@@ -97,7 +87,7 @@ jobs:
       flags: ${{ inputs.flavors_parse_params_test }}
       flavors_matrix: ${{ inputs.flavors_matrix }}
   flavors:
-    needs: [bootstrap, flavors_matrix, requirements]
+    needs: [flavors_matrix, requirements]
     name: Build flavors
     strategy:
       matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix ) }}
@@ -129,7 +119,7 @@ jobs:
     with:
       flags: ${{ inputs.flavors_parse_params_test_bare }}
   bare_flavors:
-    needs: [bootstrap, bare_flavors_matrix, requirements]
+    needs: [bare_flavors_matrix, requirements]
     name: Build bare flavors
     strategy:
       matrix: ${{ fromJson(needs.bare_flavors_matrix.outputs.matrix) }}
