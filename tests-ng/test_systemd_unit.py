@@ -1,4 +1,5 @@
 import pytest
+
 from plugins.kernel_module import KernelModule
 from plugins.systemd import Systemd
 
@@ -11,11 +12,12 @@ FEATURE_SERVICE_MAPPING = [
     #     "service": "kubelet"
     # },
     # TODO: This service is enabled and starts at boot time. So starting/stopping it does not make sense.
-    {"feature": "firewall", "service": "nftables"},
+    {"feature": "firewall", "service": ["nftables"]},
     # This service is disabled at boot time and is started/stopped here.
-    {"feature": "gardener", "service": "containerd"},
+    {"feature": "gardener", "service": ["containerd"]},
     # TODO: This service is enabled and starts at boot time. So starting/stopping it does not make sense.
-    {"feature": "vhost", "service": "libvirtd"},
+    {"feature": "vhost", "service": ["libvirtd"]},
+    {"feature": "server", "service": ["systemd-networkd", "auditd"]},
 ]
 
 
@@ -24,10 +26,11 @@ FEATURE_SERVICE_MAPPING = [
     [
         pytest.param(
             mapping["feature"],
-            mapping["service"],
+            service,
             marks=pytest.mark.feature(mapping["feature"]),
         )
         for mapping in FEATURE_SERVICE_MAPPING
+        for service in mapping["service"]
     ],
 )
 @pytest.mark.booted(reason="Test runs systemd")
