@@ -2,7 +2,9 @@
 # shellcheck shell=bash
 # This file is sourced to populate environment variables
 
-export PYTHON_SOURCE="https://github.com/astral-sh/python-build-standalone/releases/download"
+export PYTHON_REPO_OWNER="astral-sh"
+export PYTHON_REPO_NAME="python-build-standalone"
+export PYTHON_SOURCE="https://github.com/${PYTHON_REPO_OWNER}/${PYTHON_REPO_NAME}/releases/download"
 export PYTHON_VERSION_SHORT="3.13"
 export PYTHON_VERSION="$PYTHON_VERSION_SHORT.5"
 export RELEASE_DATE="20250712"
