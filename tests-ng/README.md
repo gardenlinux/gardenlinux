@@ -24,6 +24,7 @@ This directory contains the next generation testing framework for Garden Linux i
       - [GCP](#gcp)
       - [Openstack](#openstack)
   - [Debugging Tests](#debugging-tests)
+    - [Debug Logs](#debug-logs)
     - [Login Scripts](#login-scripts)
       - [QEMU Environment](#qemu-environment)
       - [Cloud Environment](#cloud-environment)
@@ -280,7 +281,39 @@ export OS_CLOUD=gardenlinux-test
 
 ## Debugging Tests
 
+When tests fail or behave unexpectedly, you need tools to investigate the issue. The test framework provides several debugging approaches depending on your needs:
+
+- **Debug logs**: For understanding what the test framework and plugins are doing internally
+- **Login scripts**: For interactive investigation of the test environment (QEMU VMs or cloud instances)
+- **Manual test execution**: For running tests directly inside the test environment to isolate issues
+
+The choice of debugging method depends on whether you need to inspect the test framework's behavior, investigate the system state, or manually verify test conditions.
+
+### Debug Logs
+
+When a test fails or you need to understand what the test framework is doing, you can enable debug-level logging. This shows detailed information about plugin operations, system interactions, and test execution flow.
+
+Tests and plugins can output additional debug logs that can be shown by passing additional arguments to `pytest`:
+
+```bash
+# Enable debug logging for all components
+./test-ng --test-args "--log-cli-level=DEBUG" ...
+
+# Enable debug logging and only run a specific test
+./test-ng --test-args "--log-cli-level=DEBUG test_ssh.py" ...
+```
+
+> [!IMPORTANT]
+> Tests need to implement debug output and results may vary, depending on the test.
+
+> [!NOTE]
+> Have a look at the [developer documentation](DEVELOPER.md#debugging-tests) if you want to know how to add debug output to a test.
+
 ### Login Scripts
+
+When you need to interactively investigate the test environment, you can use login scripts to access running VMs.
+
+Login scripts work with both QEMU VMs (for local testing) and cloud instances (for cloud provider testing). Once connected, you can explore the filesystem, check service status, examine logs, and even run tests manually.
 
 #### QEMU Environment
 
@@ -303,7 +336,14 @@ cd /run/gardenlinux-tests && ./run_tests --system-booted --allow-system-modifica
 cd /run/gardenlinux-tests && sudo ./run_tests --system-booted --allow-system-modifications --expected-users gardenlinux
 ```
 
-**Note**: Login to QEMU VMs (on a second shell) is only possible if `--ssh --skip-cleanup` is passed. SSHD is reachable on `127.0.0.1:2222` with the user `gardenlinux`. The QEMU VM will stay open in the shell that started and can be stopped with `ctrl + c`.
+**Important**: Login to QEMU VMs (on a second shell) is only possible if `--ssh --skip-cleanup` is passed when starting the test. SSHD is reachable on `127.0.0.1:2222` with the user `gardenlinux`. The QEMU VM will stay open in the shell that started the test and can be stopped with `ctrl + c`.
+
+**Common debugging workflow**:
+
+1. Start tests with `--ssh --skip-cleanup` to keep the VM running
+2. In a separate terminal, use `./util/login_qemu.sh` to connect
+3. Investigate the system state, check logs, or run tests manually
+4. Return to the original terminal and stop the VM with `ctrl + c` when done
 
 #### Cloud Environment
 
@@ -323,7 +363,14 @@ cd /run/gardenlinux-tests && ./run_tests --system-booted --allow-system-modifica
 cd /run/gardenlinux-tests && sudo ./run_tests --system-booted --allow-system-modifications --expected-users gardenlinux
 ```
 
-**Note**: Cloud VMs use the SSH user and IP address from the OpenTofu output.
+**Important**: Cloud VMs use the SSH user and IP address from the OpenTofu output. The login script automatically retrieves this information from the Terraform state.
+
+**Common debugging workflow**:
+
+1. Start tests with `--skip-cleanup` to keep the cloud instance running
+2. Use `./util/login_cloud.sh` with the image file to connect
+3. Investigate the system state, check logs, or run tests manually
+4. Re-run tests without `--skip-cleanup` or use `--only-cleanup` to clean up resources when done
 
 ## Test Environment Details
 
