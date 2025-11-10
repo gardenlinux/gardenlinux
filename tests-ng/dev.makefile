@@ -15,6 +15,7 @@ install:
 # install-dev: Install the package and dev dependencies
 install-dev:
 	pip install -r $(ROOT_DIR)/util/requirements-dev.txt
+	pip install -r $(ROOT_DIR)/util/requirements-gh.txt
 
 # lint-black: Check code formatting with black
 lint-black: install-dev
