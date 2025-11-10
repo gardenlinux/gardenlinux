@@ -1,3 +1,4 @@
+from encodings import ptcp154
 import functools
 import os
 import re
@@ -56,8 +57,10 @@ class KernelModule:
         return result.returncode == 0
 
     def safe_load_module(self, module: str) -> bool:
-        self._update_module_dependencies(module)
-        return self.load_module(module)
+        if not self.is_module_loaded(module):
+            self._update_module_dependencies(module)
+            return self.load_module(module)
+        return True
 
     def unload_module(self, module: str) -> bool:
         """Unload ``module`` using ``rmmod``; return True on success."""
@@ -74,9 +77,6 @@ class KernelModule:
 
         self._unload = TopologicalSorter()
         print("Status of sg:", self.is_module_loaded("sg"))
-        if self.is_module_loaded("sg"):
-            print("Return of a new unload:", self.unload_module("sg"))
-            print("Status of sg:", self.is_module_loaded("sg"))
         return success
 
     def collect_loaded_modules(self) -> list[str]:
@@ -119,6 +119,7 @@ class KernelModule:
 
     def _update_module_dependencies(self, module: str) -> None:
         self._unload.add(module)
+        print("Load status of ", module, self.is_module_loaded(module))
 
         result = self._shell(f"modprobe --show-depends {module}", capture_output=True)
         for dependency in dependencies.findall(result.stdout):
