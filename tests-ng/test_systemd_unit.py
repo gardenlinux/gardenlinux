@@ -1,5 +1,4 @@
 import pytest
-
 from plugins.kernel_module import KernelModule
 from plugins.systemd import Systemd
 
