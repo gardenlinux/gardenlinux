@@ -176,15 +176,21 @@ def test_azure_ptp_symlink(ptp_hyperv_dev: str, systemd_detect_virt: Hypervisor)
 
 
 @pytest.mark.parametrize("dir", ["/bin", "/etc/ssh"])
-def test_files_not_in_future(dir: str):
+def test_files_not_in_future(find, dir: str):
     """
     Validate that all files in the image have a timestamp in the past.
     """
     now = datetime.now()
-    for root, dirs, filenames in os.walk(dir):
-        for filename in filenames:
-            file = os.path.join(root, filename)
-            modification = datetime.fromtimestamp(os.path.getmtime(file))
-            assert (
-                modification <= now
-            ), f"timestamp of {file} is in the future {modification} (now={now})"
+
+    find.root_paths = dir
+    find.entry_type = "files"
+
+    for file_path in find:
+        try:
+            mod_time = datetime.fromtimestamp(os.path.getmtime(file_path))
+        except FileNotFoundError:
+            continue
+
+        assert mod_time <= now, (
+            f"Timestamp of {file_path} is in the future " f"{mod_time} (now={now})"
+        )
