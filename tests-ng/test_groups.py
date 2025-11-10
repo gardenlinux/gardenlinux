@@ -5,6 +5,7 @@ from plugins.password_shadow import group_entries
 
 
 @pytest.mark.parametrize("group_name,user_list", [("root", []), ("wheel", [])])
+@pytest.mark.feature("not container")
 def test_groups_with_no_users(
     group_entries: List[Dict[str, str | List[str]]], group_name, user_list
 ):
