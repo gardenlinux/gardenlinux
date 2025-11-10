@@ -1,5 +1,3 @@
-from encodings import ptcp154
-import functools
 import os
 import re
 from dataclasses import dataclass
@@ -73,10 +71,8 @@ class KernelModule:
         success = True
         for module in self._unload.static_order():
             success &= self.unload_module(module)
-            print("Unloaded", module, success)
 
         self._unload = TopologicalSorter()
-        print("Status of sg:", self.is_module_loaded("sg"))
         return success
 
     def collect_loaded_modules(self) -> list[str]:
@@ -119,7 +115,6 @@ class KernelModule:
 
     def _update_module_dependencies(self, module: str) -> None:
         self._unload.add(module)
-        print("Load status of ", module, self.is_module_loaded(module))
 
         result = self._shell(f"modprobe --show-depends {module}", capture_output=True)
         for dependency in dependencies.findall(result.stdout):

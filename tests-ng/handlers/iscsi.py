@@ -18,8 +18,7 @@ disk_attributes = re.compile(
 @pytest.fixture
 def iscsi_device(shell: ShellRunner, systemd: Systemd, kernel_module: KernelModule):
     for mod_name in REQUIRED_NVME_MODULE:
-        if not kernel_module.is_module_loaded(mod_name):
-            kernel_module.safe_load_module(mod_name)
+        kernel_module.safe_load_module(mod_name)
 
     stop_tgt = False
     if not systemd.is_active("tgt"):
