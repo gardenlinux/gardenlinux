@@ -1,3 +1,4 @@
+import re
 import time
 
 import pytest
@@ -16,8 +17,9 @@ def test_iscsi_setup(shell: ShellRunner, block_devices: BlockDevices, iscsi_devi
     ), "Unexpected iscsi-iqn before rescan"
 
     session_id = shell("iscsiadm -m session | awk '{print $2}'", capture_output=True)
-    session_id = session_id.stdout.strip("[]\n")
+    session_id = re.fullmatch("\\[([0-9]+)\\]\n", session_id.stdout)
     assert session_id, "Failed to get session ID"
+    session_id = session_id.group(1)
 
     shell(f"iscsiadm -m session -r {session_id} --rescan", capture_output=True)
 

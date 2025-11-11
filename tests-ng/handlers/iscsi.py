@@ -42,7 +42,10 @@ def iscsi_device(shell: ShellRunner, systemd: Systemd, kernel_module: KernelModu
     shell("/usr/sbin/tgt-admin --update ALL")
     shell("tgtadm --mode target --op show")
     shell("iscsiadm -m discovery -t sendtargets -p 127.0.0.1")
-    out = shell("iscsiadm -m node --login", capture_output=True)
+    out = shell(
+        "iscsiadm -m node -T iqn.2025-04.localhost:storage.disk1 -p 127.0.0.1 --login",
+        capture_output=True,
+    )
     attributes = disk_attributes.findall(out.stdout)
     disk_name = "name_not_found_in_iscsi_handler"
     if len(attributes) == 1:
@@ -51,7 +54,9 @@ def iscsi_device(shell: ShellRunner, systemd: Systemd, kernel_module: KernelModu
 
     yield disk_name
 
-    shell("iscsiadm --mode node --logout")
+    shell(
+        "iscsiadm --mode node -T iqn.2025-04.localhost:storage.disk1 -p 127.0.0.1 --logout"
+    )
     if stop_tgt:
         systemd.stop_unit("tgt")
 

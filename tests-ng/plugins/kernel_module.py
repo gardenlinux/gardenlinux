@@ -55,6 +55,7 @@ class KernelModule:
         return result.returncode == 0
 
     def safe_load_module(self, module: str) -> bool:
+        """Load ``module`` using ``modprobe`` and save all modules that have to be unloaded to revert the change; return True on success or if the module is already loaded."""
         if not self.is_module_loaded(module):
             self._update_module_dependencies(module)
             return self.load_module(module)
@@ -68,6 +69,7 @@ class KernelModule:
         return result.returncode == 0
 
     def safe_unload_modules(self) -> bool:
+        """Unload all modules and dependecies loaded by ``safe_load_module`` in the correct order using ``rmmod``; return True if all succeed"""
         success = True
         for module in self._unload.static_order():
             success &= self.unload_module(module)
@@ -114,6 +116,7 @@ class KernelModule:
         return module in self.collect_available_modules()
 
     def _update_module_dependencies(self, module: str) -> None:
+        """Add module and dependencies to TopologicalSorter for unloading in the correct order"""
         self._unload.add(module)
 
         result = self._shell(f"modprobe --show-depends {module}", capture_output=True)
