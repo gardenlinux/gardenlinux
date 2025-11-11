@@ -9,6 +9,7 @@ This document provides comprehensive guidelines for developing and maintaining t
 - [Test Organization and Naming](#test-organization-and-naming)
 - [Test Writing Best Practices](#test-writing-best-practices)
 - [Markers and Test Configuration](#markers-and-test-configuration)
+- [Debugging Tests](#debugging-tests)
 - [Python Best Practices](#python-best-practices)
 - [External Dependencies](#external-dependencies)
 - [Resources](#resources)
@@ -19,32 +20,32 @@ The following principles guide all test development in Garden Linux:
 
 ### Core Principles
 
-1. **Be easy to read and understand** without extensive knowledge of Garden Linux internals
+#### 1. Be easy to read and understand (without extensive knowledge of Garden Linux internals)
 
 - Use native Python APIs over shell scripts where feasible
 - Write clear, self-documenting test names and assertions
 - Avoid complex logic in test functions
 
-2. **Be explicit about what quality they ensure**
+#### 2. Be explicit about what quality they ensure
 
 - Test names must clearly communicate what is broken if the test fails
 - In general, one test should not have multiple assertions (there might be valid exceptions)
 - Each test should verify a single, specific behavior
 
-3. **Be very strict about declaring if they mutate system state**
+#### 3. Be very strict about declaring if they mutate system state
 
 - Use appropriate markers (`@pytest.mark.modify`, `@pytest.mark.root`) to declare system modifications
 - Document (`reason=`) why system modifications are necessary
 - Ensure tests clean up after themselves.
   - If new functionality is added, check if `tests-ng/plugins/sysdiff.py` collects modifications.
 
-4. **Only run as root when needed**
+#### 4. Only run as root when needed
 
 - Use `@pytest.mark.root` only when root privileges are absolutely necessary
 - Document (`reason=`) why root access is required
 - Prefer unprivileged testing when possible
 
-5. **Target appropriate test environments and platforms**
+#### 5. Target appropriate test environments and platforms
 
 - Use `@pytest.mark.booted` to mark tests that require a full booted system (such as QEMU or cloud VMs) to function correctly.
 - Use `@pytest.mark.feature` to restrict tests to only those environments or platforms where they are intended to run, especially if they would fail elsewhere.
@@ -53,18 +54,27 @@ The following principles guide all test development in Garden Linux:
 - Document (`reason=`) why a test must run (or be excluded) in certain environments or platforms
 - For a list of all available test environments (like chroot, QEMU, cloud, and OCI), see [Test Environment Details](../README.md#test-environment-details).
 
-6. **Use abstractions judiciously to hide implementation details**
+#### 6. Use abstractions judiciously to hide implementation details
 
 - Leverage plugins for infrastructure concerns (parsing files, accessing data, establishing connections)
 - Use handlers for setup/teardown operations
 - Keep test logic visible and maintain Arrange-Act-Assert structure
 - Avoid over-abstraction that requires reading multiple plugins to understand a test
 
-7. **Be mindful about external dependencies**
+#### 7. Be mindful about external dependencies
 
 - Prefer Python standard library over third-party packages
 - Only add PyPI dependencies when there's clear benefit
 - Document why external dependencies are necessary
+
+#### 8. Handlers must restore system state in teardown phase
+
+- Handlers (yield fixtures) that modify system state must restore the original state after tests complete
+- This cleanup is only required when tests run with `--allow-system-modifications` and are marked with `@pytest.mark.modify`
+- The pattern is: save initial state → yield to test → restore initial state in teardown
+- Handlers must track what they changed and reverse those changes in reverse order
+- Examples of state to restore: service status, kernel modules, installed packages, filesystem changes, network configuration
+- For examples, see [Handlers for Setup/Teardown](#handlers-for-setupteardown)
 
 ## Framework Structure
 
@@ -208,22 +218,77 @@ def test_service_running(shell: ShellRunner):
 
 ### Handlers for Setup/Teardown
 
+> [!IMPORTANT]
+> Handlers that modify system state must restore the original state in the teardown phase. See [Core Principle 8](#8-handlers-must-restore-system-state-in-teardown-phase) above for detailed requirements and examples.
+
 Use handlers (yield fixtures) for managing test state and cleanup:
+
+- Always check initial state before modifying
+- Only restore what you changed (don't stop services that were already running)
+- Clean up in reverse order of setup (especially important for dependencies like kernel modules)
+- Use `ignore_exit_code=True` for cleanup operations that might fail if already cleaned up
+- If new system modifications are introduced, verify that `tests-ng/plugins/sysdiff.py` can detect them
+
+**Example: service test, including setup and teardown**
 
 ```python
 @pytest.fixture
 def service_ssh(systemd: Systemd):
     """Fixture for SSH service management with cleanup."""
+
+    # Save initial state
     service_active_initially = systemd.is_active("ssh")
 
     if not service_active_initially:
         systemd.start_unit("ssh")
 
+    # Yield to test
     yield "ssh"  # This returns "ssh" to the test as the fixture's value. This can be use to parametrize tests.
 
-    # Cleanup: restore original state
+    # Teardown/Cleanup: restore original state
     if not service_active_initially:
         systemd.stop_unit("ssh")
+```
+
+**Example: installing packages and loading kernel modules, including setup and teardown**
+
+```python
+TEST_NAME_MODULES = [
+    {"name": 'nvme', "status": None},
+    {"name": 'nvme_auth', "status": None},
+]
+TEST_NAME_PACKAGES = [
+    {"name": 'mount', "status": None},
+    {"name": 'wget', "status": None},
+]
+
+@pytest.fixture
+def test_name(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
+    # Setup: whatever is needed as configuration
+    for module in TEST_NAME_MODULES:
+        if not kernel_module.is_module_loaded(module["name"]):
+            kernel_module.load_module(module["name"])
+            # Save Status change for teardown
+            module["status"] = "Loaded"
+    for pkg in TEST_NAME_PACKAGES:
+        if not dpkg.package_is_installed(pkg["name"]):
+            shell(f"DEBIAN_FRONTEND=noninteractive apt-get install -y {pkg["name"]}")
+            # Save Status change for teardown
+            pkg["status"] == "Installed"
+    # ... (additonal setup code) ...
+
+    # Yield to test
+    yield
+
+    # Teardown/Cleanup: reverse all changes in reverse order
+    # ... (additonal teardown code) ...
+    # Unload modules in reverse order of loading
+    for pkg in TEST_NAME_PACKAGES:
+        if pkg["status"] == "Installed":
+            shell(f"DEBIAN_FRONTEND=noninteractive apt-get remove -y {pkg["name"]}")
+    for module in reversed(MY_REQUIRED_MODULES):
+        if module["status"] == "Loaded":
+            kernel_module.unload_module(entry["name"])
 ```
 
 ### Utils for Helper Functions
@@ -407,6 +472,43 @@ def test_weird_cases(input_val, expected):
 #### `@pytest.mark.security_id`
 
 TODO: Explain what this marker is good for.
+
+## Debugging Tests
+
+When developing or maintaining tests, you'll often need to debug failing tests or understand test framework behavior.
+
+### Adding Debug Logging
+
+Tests, plugins, and handlers can output additional debugging information using Python's logging framework. This is the primary way to provide visibility into what your code is doing:
+
+```python
+import logging
+logger = logging.getLogger(__name__)
+
+def test_example(systemd: Systemd):
+    """Test that demonstrates debug logging."""
+    logger.debug("Checking SSH service status")
+    is_active = systemd.is_active("ssh")
+    logger.debug(f"SSH service active status: {is_active}")
+    assert is_active, "SSH service should be running"
+```
+
+### When to use debug logging
+
+- **Plugin operations**: Log when plugins access system resources, parse files, or interact with services
+- **Complex logic**: Add debug output for non-obvious operations or when troubleshooting logic errors
+- **State transitions**: Log when handlers set up or tear down resources
+- **Error conditions**: Provide context when operations might fail
+
+### Best practices
+
+- Use descriptive messages that explain what's happening, not just variable values
+- Include relevant context (file paths, service names, configuration values)
+- Avoid excessive logging in tight loops or frequently-called functions
+- Use appropriate log levels: `logger.debug()` for detailed info, `logger.info()` for important milestones
+
+> [!NOTE]
+> Have a look at the [user documentation](README.md#debugging-tests) if you want to know how to view those debug logs when running tests.
 
 ## Python Best Practices
 
