@@ -21,10 +21,9 @@ Garden Linux builds are defined by a set of *features*, with `platform` being a 
 ## Consequences
 
 - Multiple features in the `gardenlinux/gardenlinux` repo need to be changed.
-- The builder needs to be changed (for example the `bootstrap` phase relies on the current behavior).
 - Builds with zero or multiple platforms will fail unless the opt-in flag is used.
-- The change will affect the "Common Name" (cname) of many image builds, as features like 'metal' will no longer be considered platforms. This impacts both command line arguments for the builder and output artifact filenames.
+- The builder needs to be changed to require the number of platforms is `1` by default.
+- The change will affect the "Common Name" (`cname`) of many image builds, as features like 'metal' will no longer be considered platforms. This impacts both command line arguments for the builder and output artifact filenames.
 - This is a user-facing change and may cause issues for known and unknown users of the build infrastructure, requiring communication and migration support.
-- Consumers relying on multiple platforms or cnames may be affected and need to update their workflows.
-- The builder will support platform variants, requiring additional branching logic.
+- Consumers relying on multiple platforms or `cnames` may be affected and need to update their workflows.
 - Documentation and tooling must be updated to reflect the new enforcement and flag usage.
