@@ -23,7 +23,7 @@ this means that the test is not being used for at least [8 months](https://githu
 
 ## Decision
 
-The proposal is to NOT to migrate tiger test case to the tests-ng.
+We do not migrate the tiger test case to the tests-ng.
 
 ## Consequences
 
