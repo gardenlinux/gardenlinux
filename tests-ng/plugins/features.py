@@ -1,4 +1,3 @@
-import platform
 from typing import List
 
 import boolean
@@ -14,13 +13,9 @@ def setup_gardenlinux_features() -> set[str]:
     features = set[str]()
     with open("/etc/os-release") as os_release:
         for line in os_release:
-            (key, value) = line.split("=", 1)
-            if key == "GARDENLINUX_FEATURES":
-                features = set([feature.strip() for feature in value.split(",")])
-
-    # add architecture features
-    features.add(platform.machine())
-
+            if line.startswith("GARDENLINUX_FEATURES="):
+                _, value = line.split("=", 1)
+                features = set(feature.strip() for feature in value.split(","))
     return features
 
 
