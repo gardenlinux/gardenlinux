@@ -67,10 +67,10 @@ AUDIT_FILE="/etc/audit/rules.d/audit.rules"
 
 # 2.8: Record failed file access attempts
 #{
-  echo "-a always,exit -F arch=b64 -S creat -S open -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access"
-  echo "-a always,exit -F arch=b32 -S creat -S open -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access"
-  echo "-a always,exit -F arch=b64 -S creat -S open -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access"
-  echo "-a always,exit -F arch=b32 -S creat -S open -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access"
+  echo "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access"
+  echo "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access"
+  echo "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access"
+  echo "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access"
 #} >> "$AUDIT_FILE"
 
 # 2.9: Record privileged command executions

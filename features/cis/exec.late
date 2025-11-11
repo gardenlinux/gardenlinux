@@ -52,7 +52,7 @@ sed -i 's|audit|disabled|' /opt/cis-hardening/etc/conf.d/disable_ip_forwarding.c
 sed -i 's|audit|disabled|' /opt/cis-hardening/etc/conf.d/check_distribution.cfg
 sed -i 's|audit|disabled|' /opt/cis-hardening/etc/conf.d/run_shm_nodev.cfg
 sed -i 's|audit|disabled|' /opt/cis-hardening/etc/conf.d/run_shm_noexec.cfg
-sed -i 's|^\(EXCEPTIONS=\"[^\"]*\)\"|\1 /usr/lib/dbus-1.0/dbus-daemon-launch-helper /usr/lib/polkit-1/polkit-agent-helper-1"|' /opt/cis-hardening/etc/conf.d/find_suid_files.cfg
+sed -i 's|^\(EXCEPTIONS=\"[^\"]*\)\"|\1 /usr/lib/dbus-1.0/dbus-daemon-launch-helper /usr/lib/polkit-1/polkit-agent-helper-1 /usr/bin/mailq /usr/sbin/nullmailer-queue"|' /opt/cis-hardening/etc/conf.d/find_suid_files.cfg
 sed -i 's|^\(EXCEPTIONS=\"[^\"]*\)\"|\1 /usr/libexec/systemd-cron/crontab_setgid"|' /opt/cis-hardening/etc/conf.d/find_sgid_files.cfg
 
 # 3. Logrotate permissions
