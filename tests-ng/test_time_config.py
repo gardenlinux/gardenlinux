@@ -175,6 +175,9 @@ def test_azure_ptp_symlink(ptp_hyperv_dev: str, systemd_detect_virt: Hypervisor)
     ), f"{ptp_hyperv_dev} should always be a symlink."
 
 
+@pytest.mark.feature(
+    "not container", reason="Filesystem not mounted in container tests"
+)
 @pytest.mark.parametrize("dir", ["/bin", "/etc/ssh"])
 def test_files_not_in_future(find, dir: str):
     """
@@ -194,3 +197,17 @@ def test_files_not_in_future(find, dir: str):
         assert mod_time <= now, (
             f"Timestamp of {file_path} is in the future " f"{mod_time} (now={now})"
         )
+
+
+@pytest.mark.feature("container")
+def test_files_not_in_future_container(find):
+    """
+    Validate that all files in container images have timestamps in the past.
+    """
+    find.root_paths = ["/bin"]
+    now = datetime.now()
+    for file_path in find:
+        modification = datetime.fromtimestamp(os.path.getmtime(file_path))
+        assert (
+            modification <= now
+        ), f"timestamp of {file_path} is in the future ({modification} > {now})"
