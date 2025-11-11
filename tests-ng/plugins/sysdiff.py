@@ -24,7 +24,9 @@ import pytest
 from debian import deb822
 
 from .dpkg import Dpkg
+from .find import Find
 from .kernel_module import KernelModule, LoadedKernelModule
+from .kernel_versions import KernelVersions
 from .shell import ShellRunner
 from .sysctl import Sysctl, SysctlParam
 from .systemd import Systemd, SystemdUnit
@@ -47,6 +49,9 @@ IGNORED_SYSTEMD_PATTERNS = [
     "sysstat-collect.timer",
     "sysstat-rotate.timer",
     "sysstat-summary.timer",
+    # https://github.com/gardenlinux/gardenlinux/issues/3769
+    "kubelet.service",
+    "google-guest-agent.service",
 ]
 IGNORED_KERNEL_MODULES = []
 IGNORED_SYSCTL_PARAMS = {
@@ -353,7 +358,8 @@ class SnapshotManager:
         systemd = Systemd(shell)
         file_collector = FileCollector(shell)
         sysctl_collector = Sysctl(shell)
-        kernel_module = KernelModule(shell)
+        kernel_versions = KernelVersions()
+        kernel_module = KernelModule(Find(), shell, kernel_versions)
 
         packages = dpkg.collect_installed_packages().packages
 
