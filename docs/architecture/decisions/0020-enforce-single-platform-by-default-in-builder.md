@@ -27,3 +27,6 @@ Garden Linux builds are defined by a set of *features*, with `platform` being a 
 - This is a user-facing change and may cause issues for known and unknown users of the build infrastructure, requiring communication and migration support.
 - Consumers relying on multiple platforms or `cnames` may be affected and need to update their workflows.
 - Documentation and tooling must be updated to reflect the new enforcement and flag usage.
+- A new `platform-variant` flag will be introduced in the manifests to support platforms that require different deployment behaviors based on their features.
+- OpenStack images will be the first to utilize the `platform-variant` flag.
+- GLCI will need to be updated to support and use the new flag.
