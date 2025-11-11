@@ -9,8 +9,8 @@ Proposed
 ## Context
 
 While migrating server feature tests to the new framework, we need to take another look on certain decisions that were
-made in the past. One such decision was the development of a test case based on the results of running of the tiger
-security scanner. It's usefulness in the new test framework, however, is questionable.
+made in the past. One such decision was the development of a test case based on the results of running of the [tiger
+security scanner](https://www.nongnu.org/tiger/). It's usefulness in the new test framework, however, is questionable.
 
 The reasons are:
 
