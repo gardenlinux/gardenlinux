@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-set -eufo pipefail
-
-rootfs="$1"
-
-rm "$rootfs/etc/hostname"
-echo -n > "$rootfs/etc/hostname"
