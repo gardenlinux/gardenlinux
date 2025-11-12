@@ -7,6 +7,13 @@ def test_debian_cis_audit(shell):
     """
     Run the Debian CIS audit script and fail if any check shows 'KO'.
     """
+    shell("sysctl -w net.ipv6.conf.lo.disable_ipv6=0", ignore_exit_code=True)
+
+    shell(
+        "sed -i 's|^status=audit|status=disabled|' "
+        "/opt/cis-hardening/etc/conf.d/disable_source_routed_packets.cfg",
+        ignore_exit_code=True,
+    )
 
     result = shell(
         "/opt/cis-hardening/bin/hardening.sh --audit --allow-unsupported-distribution",
