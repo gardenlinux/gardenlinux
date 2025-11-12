@@ -73,7 +73,4 @@ def test_common_password_pwhistory_pam_faillock(pam_config):
         module_contains="pam_pwhistory.so",
         arg_contains=["use_authtok", "remember=5", "retry=5"],
     )
-    assert (
-        len(results) == 1
-    ), "Last 5 user passwords should not be reused"
-
+    assert len(results) == 1, "Last 5 user passwords should not be reused"
