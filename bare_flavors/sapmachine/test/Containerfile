@@ -1,6 +1,6 @@
 ARG image
 
-FROM docker.io/library/sapmachine:latest AS compile
+FROM docker.io/library/sapmachine:21 AS compile
 COPY Test.java /
 RUN javac Test.java && jar -c -f test.jar -e Test Test.class
 
