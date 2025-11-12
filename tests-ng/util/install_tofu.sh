@@ -9,9 +9,6 @@ function die {
 }
 
 
-
-
-
 install_tofu() {
 	set -eufo pipefail
 	local tf_dir="${1}"
