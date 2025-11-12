@@ -49,7 +49,8 @@ sed -i 's|audit|disabled|' /opt/cis-hardening/etc/conf.d/remote_syslog-ng_acl.cf
 sed -i 's|audit|disabled|' /opt/cis-hardening/etc/conf.d/enable_cron.cfg
 sed -i 's|audit|disabled|' /opt/cis-hardening/etc/conf.d/disable_ipv6_router_advertisement.cfg
 sed -i 's|audit|disabled|' /opt/cis-hardening/etc/conf.d/disable_ip_forwarding.cfg
-sed -i 's|audit|disabled|' /opt/cis-hardening/etc/conf.d/check_distribution.cfg
+sed -i 's|audit|disabled|' /opt/cis-hardening/etc/conf.d/disable_source_routed_packets.cfg
+#sed -i 's|audit|disabled|' /opt/cis-hardening/etc/conf.d/check_distribution.cfg
 sed -i 's|audit|disabled|' /opt/cis-hardening/etc/conf.d/run_shm_nodev.cfg
 sed -i 's|audit|disabled|' /opt/cis-hardening/etc/conf.d/run_shm_noexec.cfg
 sed -i 's|^\(EXCEPTIONS=\"[^\"]*\)\"|\1 /usr/lib/dbus-1.0/dbus-daemon-launch-helper /usr/lib/polkit-1/polkit-agent-helper-1 /usr/bin/mailq /usr/sbin/nullmailer-queue"|' /opt/cis-hardening/etc/conf.d/find_suid_files.cfg
