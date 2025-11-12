@@ -1,8 +1,36 @@
 #!/usr/bin/env bash
 
+function die {
+    # Perl like die() function.
+    # https://billauer.co.il/blog/2024/08/bash-exit-with-error/
+    # shellcheck disable=SC2086
+    echo $1
+    exit 1
+}
+
+
+
+
+
 install_tofu() {
 	set -eufo pipefail
 	local tf_dir="${1}"
+
+    # Testing that the necesary biniaries are present at set indpendent of the path.
+    case "$(uname -o)" in
+        Darwin)
+            FIND="/opt/homebrew/bin/gfind"
+            RETRY="/opt/homebrew/bin/retry"
+            test -x $FIND || die "Can't find find. Please install it with 'brew install findutils'"
+            test -x $RETRY  || die "Can't find find. Please install it with 'brew install findutils'"
+            ;;
+        GNU/Linux)
+            FIND="/usr/bin/find"
+            RETRY="/usr/bin/retry"
+            test -x $FIND || die "Can't find find. Please install it with 'apt-get install findutils'"
+            test -x $RETRY  || die "Can't find find. Please install it with 'apt-get install findutils'"
+            ;;
+    esac
 
 	case "$(uname -s)" in
 	Linux)
@@ -36,14 +64,14 @@ install_tofu() {
 	# in case we pass a GITHUB_TOKEN, we can work around rate limiting
 	export TOFUENV_GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 	command -v tofuenv >/dev/null || {
-		retry -d "1,2,5,10,30" git clone --depth=1 https://github.com/tofuutils/tofuenv.git "$tofuenv_dir"
+		$RETRY -d "1,2,5,10,30" git clone --depth=1 https://github.com/tofuutils/tofuenv.git "$tofuenv_dir"
 		echo 'trust-tofuenv: yes' >"$tofuenv_dir/use-gpgv"
 	}
 	# go to tofu directory to automatically parse *.tf files
 	pushd "$tf_dir"
-	retry -d "1,2,5,10,30" tofuenv install latest-allowed
+	$RETRY -d "1,2,5,10,30" tofuenv install latest-allowed
 	popd
-	tofu_version=$(find "$tf_dir/.tofuenv/versions" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" | head -1)
+	tofu_version=$($FIND "$tf_dir/.tofuenv/versions" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" | head -1)
 	tofuenv use "$tofu_version"
 
 	TF_CLI_CONFIG_FILE="$tf_dir/.terraformrc"
