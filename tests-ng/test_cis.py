@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.mark.feature("cis")
 @pytest.mark.root(reason="CIS audit requires root privileges")
 @pytest.mark.booted(reason="Must be run on a booted system")
@@ -34,4 +35,3 @@ def test_debian_cis_audit(shell):
         pytest.fail(f"\nCIS audit found {len(failed_lines)} failing checks:\n{summary}")
 
     assert "Check Failed" not in output, "CIS audit run itself failed unexpectedly"
-
