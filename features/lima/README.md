@@ -4,17 +4,30 @@
 This feature flag produces an image suitable for using with [lima](https://lima-vm.io)
 </website-feature>
 
-Garden Linux images for Lima are published at https://images.gardenlinux.io
+Garden Linux images for Lima are published with nightly or release
 
 How to use the pre-built image:
 
-1. Create and start the VM
+1. Prerequisities
+    - We use glrd to get image link, this needs 
+        - sudo access
+        - podman
+        - access to gardenlinux-glrd.s3.eu-central-1.amazonaws.com
 
+2. Create and start the VM
+
+Lima image can be started with start-lima.py inside bin folder
 ```
-# for the latest nightly build, use:
-limactl start --name gardenlinux https://images.gardenlinux.io/gardenlinux.yaml
-# for a released version, use this (see released versions at https://github.com/gardenlinux/gardenlinux/releases):
-limactl start --name gardenlinux https://images.gardenlinux.io/gardenlinux-$VERSION.yaml
+# for the latest nightly image, use:
+python3 bin/start-lima.py --name gardenlinux --version nightly --arch <arch>
+```
+```
+# for the latest release, use:
+python3 bin/start-lima.py --name gardenlinux --version latest --arch <arch>
+```
+```
+# for a particular version, use:
+python3 bin/start-lima.py --name gardenlinux --version <version> --arch <arch>
 ```
 
 2. Open a shell inside the VM: `limactl shell gardenlinux`

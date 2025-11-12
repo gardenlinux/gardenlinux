@@ -51,7 +51,7 @@ def get_image_path(version, arch):
         print(f"Error decoding JSON: {e}")
         raise
 
-def generate_yaml(image_path):
+def generate_yaml(image_path, name):
     yaml_file = "gardenlinux.yaml"
 
     yaml_config_data["images"][0]["location"] = image_path
@@ -60,7 +60,7 @@ def generate_yaml(image_path):
     with open(yaml_file, "w") as f:
         yaml.dump(yaml_config_data, f, default_flow_style=False, sort_keys=False)
     
-    subprocess.run(["limactl", "start", yaml_file, "--name", "GardenlinuxVM"], check=True)
+    subprocess.run(["limactl", "start", yaml_file, "--name", name], check=True)
 
 def main():
     arch = None
@@ -80,7 +80,13 @@ def main():
     parser.add_argument(
         "--arch",
         const=None,
-        help="Provide architecture amd64 or arm64"
+        help="Provide architecture amd64 or arm64. Default:amd64"
+    )
+
+    parser.add_argument(
+        "--name",
+        const=None,
+        help="Provide name of the VM. Default:gardenlinux"
     )
 
     args = parser.parse_args()
@@ -89,6 +95,11 @@ def main():
     else:
         arch = args.arch
 
+    if args.name is None:
+        name = "gardenlinux"
+    else:
+        name = args.name
+    
     if args.version is None:
         print("Error: Provide version value\n")
         parser.print_help()
@@ -97,7 +108,7 @@ def main():
         version = args.version
         print(f"Starting Lima Image {version}")
         image_path = get_image_path(version, arch)
-        generate_yaml(image_path)
+        generate_yaml(image_path, name)
 
 
 if __name__ == "__main__":
