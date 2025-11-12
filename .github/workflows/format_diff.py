@@ -71,16 +71,16 @@ def dependencies(feature, excludes):
 # Returns a hierarchical order and a flat set 
 def buildFeatureTree(flavor):
     sperated = flavor.split("-")
-    if len(sperated) == 2 and sperated[0] == "container":
+    if len(sperated) == 2:
         feature_str = sperated[0]
     elif len(sperated) == 3:
-        feature_str = sperated[1]
+        feature_str = sperated[0] + "_" + sperated[1]
     else:
         return {}, set()
     features = {}
     excludes = set()
     for feature in feature_str.split("_"):
-        if len(features) > 0:
+        if len(features) > 1:
             feature = "_" + feature
         excludes.add(feature)
         deps, ex = dependencies(feature, excludes)
