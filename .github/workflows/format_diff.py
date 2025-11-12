@@ -70,22 +70,22 @@ def dependencies(feature, excludes):
 
 # Returns a hierarchical order and a flat set 
 def buildFeatureTree(flavor):
-    sperated = flavor.split("-")
-    if len(sperated) == 2:
-        feature_str = sperated[0]
-    elif len(sperated) == 3:
-        feature_str = sperated[0] + "_" + sperated[1]
+    separated = flavor.split("-")
+    if len(separated) == 2:
+        parsed_features = [feature if i == 0 else "_" + feature for i, feature in enumerate(separated[0].split("_"))]
+    elif len(separated) == 3:
+        parsed_features = [feature if i == 0 else "_" + feature for i, feature in enumerate(separated[1].split("_"))]
+        parsed_features.insert(0, separated[0])
     else:
         return {}, set()
     features = {}
     excludes = set()
-    for feature in feature_str.split("_"):
-        if len(features) > 1:
-            feature = "_" + feature
-        excludes.add(feature)
-        deps, ex = dependencies(feature, excludes)
-        features[feature] = deps
-        excludes.update(ex)
+    for feature in parsed_features:
+        if feature not in excludes:
+            excludes.add(feature)
+            deps, ex = dependencies(feature, excludes)
+            features[feature] = deps
+            excludes.update(ex)
 
     return features, excludes
 
