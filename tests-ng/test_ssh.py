@@ -54,6 +54,7 @@ required_sshd_config = {
 @pytest.mark.root(reason="Calling sshd -T requires root")
 @pytest.mark.feature("ssh")
 @pytest.mark.parametrize("sshd_config_item", required_sshd_config)
+@pytest.mark.skipif(feature="_fips", reason="FIPS uses different values")
 def test_sshd_has_required_config(sshd_config_item: str, sshd: Sshd):
     actual_value = sshd.get_config_section(sshd_config_item)
     expected_value = required_sshd_config[sshd_config_item]
