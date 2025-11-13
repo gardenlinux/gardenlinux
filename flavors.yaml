@@ -32,6 +32,24 @@ targets:
         publish: true
       - features:
           - gardener
+          - _fips
+          - _prod
+        arch: amd64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _fips
           - _prod
         arch: arm64
         build: true
