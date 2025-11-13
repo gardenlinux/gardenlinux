@@ -1,19 +1,20 @@
 from pathlib import Path
 
 import pytest
+from plugins.parse_file import ParseFile
 
 CONFIG_FILE = "/etc/profile.d/50-nohistory.sh"
 
 
 @pytest.mark.feature("server")
-def test_history_profile_d_file_exists():
-    assert Path(CONFIG_FILE).exists()
-
-
-@pytest.mark.feature("server")
-def test_history_profile_d_contains_required_configuration(file_content):
-    assert file_content.check_lines(
-        CONFIG_FILE, ["HISTFILE=/dev/null", "readonly HISTFILE", "export HISTFILE"]
+def test_history_profile_d_contains_required_configuration(parse_file: ParseFile):
+    assert parse_file.has_lines(
+        CONFIG_FILE,
+        [
+            "HISTFILE=/dev/null",
+            "readonly HISTFILE",
+            "export HISTFILE",
+        ],
     )
 
 

@@ -1,14 +1,9 @@
 from pathlib import Path
 
 import pytest
+from plugins.parse_file import ParseFile
 
 
 @pytest.mark.booted(reason="sysctl needs a booted system")
-def test_machine_id_file_exists():
-    assert Path("/etc/machine-id").exists()
-
-
-@pytest.mark.booted(reason="sysctl needs a booted system")
-def test_machine_id_is_initialized():
-    assert Path("/etc/machine-id").read_text() != ""
-    assert Path("/etc/machine-id").read_text() != "uninitialized"
+def test_machine_id_is_initialized(parse_file: ParseFile):
+    assert parse_file.match_regex("/etc/machine-id", r"^[0-9a-f]{32}$")

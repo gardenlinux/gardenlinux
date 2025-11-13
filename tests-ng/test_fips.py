@@ -2,6 +2,7 @@ import os
 from stat import S_ISREG
 
 import pytest
+from plugins.parse_file import ParseFile
 
 
 @pytest.mark.feature("_fips")
@@ -66,22 +67,23 @@ def test_kernel_cmdline_fips_file_was_created():
 
 
 @pytest.mark.feature("_fips")
-def test_kernel_cmdline_fips_file_content():
+def test_kernel_cmdline_fips_file_content(parse_file: ParseFile):
     """
     We have to ensure that the fips=1 was set.
     """
-    with open("/etc/kernel/cmdline.d/30-fips.cfg") as kernel_cmd_file:
-        assert (
-            kernel_cmd_file.read() == 'CMDLINE_LINUX="$CMDLINE_LINUX fips=1"\n'
-        ), "fips=1 wasn't set in the kernel cmdline"
+
+    assert parse_file.has_line(
+        "/etc/kernel/cmdline.d/30-fips.cfg", 'CMDLINE_LINUX="$CMDLINE_LINUX fips=1"'
+    )
 
 
 @pytest.mark.feature("_fips")
 @pytest.mark.booted(reason="Kernel test makes sense only on booted system")
-def test_kernel_was_boot_with_fips_mode():
+def test_kernel_was_boot_with_fips_mode(parse_file: ParseFile):
     """
     Validate that the kernel was booted with the FIPS mode enabled.
     """
-    with open("/proc/sys/crypto/fips_enabled", "r") as f:
-        fips_enabled = f.read().strip()
-    assert fips_enabled == "1", f"Kernel was not booted in FIPS mode!"
+
+    assert parse_file.has_line(
+        "/proc/sys/crypto/fips_enabled", "1"
+    ), f"Kernel was not booted in FIPS mode!"
