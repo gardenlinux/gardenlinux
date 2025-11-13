@@ -11,9 +11,14 @@ def test_history_profile_d_file_exists():
 
 
 @pytest.mark.feature("server")
-def test_history_profile_d_contains_required_configuration(file_content):
-    assert file_content.check_lines(
-        CONFIG_FILE, ["HISTFILE=/dev/null", "readonly HISTFILE", "export HISTFILE"]
+def test_history_profile_d_contains_required_configuration(parse_file):
+    assert parse_file.has_lines(
+        CONFIG_FILE,
+        [
+            "HISTFILE=/dev/null",
+            "readonly HISTFILE",
+            "export HISTFILE",
+        ],
     )
 
 

@@ -2,19 +2,20 @@ import os
 
 import pytest
 from plugins.kernel_configs import KernelConfigs
-from plugins.parse_file import FileContent
+from plugins.parse_file import ParseFile
 from plugins.sysctl import Sysctl
 
 
 def test_kernel_configs_sysrq_not_set_cloud(
-    file_content: FileContent, kernel_configs: KernelConfigs
+    parse_file: ParseFile, kernel_configs: KernelConfigs
 ):
     """Test that the kernel config does not set magic sysrq."""
     for config in kernel_configs.get_installed():
         line = "# CONFIG_MAGIC_SYSRQ is not set"
-        found = file_content.check_line(
+        found = parse_file.has_line(
             config.path,
             line,
+            comment_char=[],  # Disable comment filtering for kernel config files
         )
         assert found, f"Could not find line {line} in {config.path}."
 
