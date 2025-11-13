@@ -1,8 +1,12 @@
+import logging
 import os
 
 import pytest
+
 from plugins.shell import ShellRunner
 from plugins.systemd import Systemd
+
+logger = logging.getLogger(__name__)
 
 
 def test_gl_is_support_distro():
@@ -83,9 +87,13 @@ def test_kernel_not_tainted():
 @pytest.mark.root(reason="Required for journalctl in case of errors")
 @pytest.mark.booted(reason="Systemctl needs a booted system")
 def test_no_failed_units(systemd: Systemd, shell: ShellRunner):
-    systemd.wait_is_system_running()
+    system_run_state = systemd.wait_is_system_running()
+    logger.debug(
+        f"Waiting for systemd to report the system is running took {system_run_state.elapsed_time:.2f} seconds, with state '{system_run_state.state}' and return code '{system_run_state.returncode}'."
+    )
     failed_systemd_units = systemd.list_failed_units()
     for u in failed_systemd_units:
+        logger.debug(f"FAILED UNIT: {u}")
         shell(f"journalctl --unit {u.unit}")
     assert (
         not failed_systemd_units
