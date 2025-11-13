@@ -11,6 +11,7 @@ from typing import List
 import pytest
 from plugins.file import File
 from plugins.kernel_cmdline import kernel_cmdline
+from plugins.parse_file import ParseFile
 
 
 @pytest.mark.feature("_fips")
@@ -110,14 +111,12 @@ def test_kernel_cmdline_fips_file_was_created(file: File):
 
 
 @pytest.mark.feature("_fips")
-def test_kernel_cmdline_fips_file_content():
+def test_kernel_cmdline_fips_file_content(parse_file: ParseFile):
     """
     We have to ensure that the fips=1 was set.
     """
-    with open("/etc/kernel/cmdline.d/30-fips.cfg") as kernel_cmd_file:
-        assert (
-            kernel_cmd_file.read().strip() == 'CMDLINE_LINUX="$CMDLINE_LINUX fips=1"'
-        ), "fips=1 wasn't set in the kernel cmdline"
+    lines = parse_file.lines("/etc/kernel/cmdline.d/30-fips.cfg")
+    assert 'CMDLINE_LINUX="$CMDLINE_LINUX fips=1"' in lines
 
 
 @pytest.mark.feature("_fips")
@@ -131,11 +130,10 @@ def test_kernel_was_boot_with_fips_mode(kernel_cmdline: List[str]):
 
 @pytest.mark.feature("_fips")
 @pytest.mark.booted(reason="Kernel test makes sense only on booted system")
-def test_kernel_has_fips_entry_in_procfs():
+def test_kernel_has_fips_entry_in_procfs(parse_file: ParseFile):
     """
     Validate that the FIPS flag is exposed in procfs. Without applications can't detect if a system
     has been booted into FIPS mode.
     """
-    with open("/proc/sys/crypto/fips_enabled", "r") as f:
-        fips_enabled = f.read().strip()
-    assert fips_enabled == "1", f"Kernel does not expose FIPS in procfs!"
+    lines = parse_file.lines("/proc/sys/crypto/fips_enabled")
+    assert "1" in lines, f"Kernel was not booted in FIPS mode!"

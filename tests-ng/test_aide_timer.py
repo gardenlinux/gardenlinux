@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from plugins.parse_file import ParseFile
 from plugins.systemd import Systemd
 
 
@@ -55,12 +56,11 @@ def test_aide_timer_state(systemd: Systemd):
 @pytest.mark.feature("aide")
 @pytest.mark.root(reason="Required to read AIDE configuration")
 @pytest.mark.booted(reason="AIDE configuration must exist at runtime")
-def test_aide_conf_contains_faillog_entry():
+def test_aide_conf_contains_faillog_entry(parse_file: ParseFile):
     """Ensure that AIDE configuration exists and includes '/var/log/faillog Full'"""
-    conf_path = Path("/etc/aide/aide.conf")
-    assert conf_path.exists(), "AIDE configuration file /etc/aide/aide.conf not found"
-    content = conf_path.read_text()
+    conf_path = "/etc/aide/aide.conf"
+    lines = parse_file.lines(conf_path)
     expected_line = "/var/log/faillog Full"
     assert (
-        expected_line in content
+        expected_line in lines
     ), f"Expected '{expected_line}' not found in {conf_path}. "
