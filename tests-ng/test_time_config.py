@@ -3,6 +3,7 @@ from datetime import datetime
 from time import time
 
 import pytest
+from plugins.parse_file import ParseFile
 from plugins.shell import ShellRunner
 from plugins.systemd import Systemd
 from plugins.systemd_detect_virt import Hypervisor
@@ -145,7 +146,10 @@ def test_clocksource_arm64_aarch64(systemd_detect_virt: Hypervisor, clocksource:
 @pytest.mark.feature("azure")
 @pytest.mark.hypervisor("microsoft")
 def test_chrony_azure(
-    chrony_config_file: str, ptp_hyperv_dev: str, systemd_detect_virt: Hypervisor
+    chrony_config_file: str,
+    ptp_hyperv_dev: str,
+    systemd_detect_virt: Hypervisor,
+    parse_file: ParseFile,
 ):
     """
     Check Chrony configuration for expected content according to https://learn.microsoft.com/en-us/azure/virtual-machines/linux/time-sync
@@ -153,11 +157,8 @@ def test_chrony_azure(
     Gets skipped for QEMU tests as these do not start chrony.
     """
     expected_config = f"refclock PHC {ptp_hyperv_dev} poll 3 dpoll -2 offset 0"
-    with open(chrony_config_file, "r") as f:
-        actual_config = f.read()
-        assert (
-            actual_config.find(expected_config) != -1
-        ), f"chrony config for ptp expected but not found"
+    lines = parse_file.lines(chrony_config_file)
+    assert expected_config in lines, f"chrony config for ptp expected but not found"
 
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
