@@ -3,5 +3,4 @@ libpam-pwquality
 libpam-modules-bin
 logrotate
 tcpd
-apparmor
 cis-hardening
