@@ -45,10 +45,14 @@ required_sshd_config = {
 }
 
 
+FIPS_REASON = "FIPS uses different values for the KEX and Cipher."
+
+
 @pytest.mark.booted(reason="Calling sshd -T requires a booted system")
 @pytest.mark.root(reason="Calling sshd -T requires root")
 @pytest.mark.feature("ssh")
 @pytest.mark.parametrize("sshd_config_item", required_sshd_config)
+@pytest.mark.feature("not _fips", reason=FIPS_REASON)
 def test_sshd_has_required_config(sshd_config_item: str, sshd: Sshd):
     actual_value = sshd.get_config_section(sshd_config_item)
     expected_value = required_sshd_config[sshd_config_item]
