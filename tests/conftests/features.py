@@ -12,16 +12,23 @@ def non_dev(testconfig):
         pytest.skip('test not supported on dev feature')
 
 @pytest.fixture
-def non_trustedboot(testconfig):
-    features = testconfig.get("features", [])
-    if "_trustedboot" in features:
-        pytest.skip('test not supported on trustedboot feature')
-
-@pytest.fixture
 def non_ephemeral(testconfig):
     features = testconfig.get("features", [])
     if "_ephemeral" in features:
         pytest.skip('test not supported on empemeral feature')
+
+
+@pytest.fixture
+def non_fips(testconfig):
+    features = testconfig.get("features", [])
+    if "_fips" in features:
+        pytest.skip('test not supported on fips feature')
+
+@pytest.fixture
+def non_trustedboot(testconfig):
+    features = testconfig.get("features", [])
+    if "_trustedboot" in features:
+        pytest.skip('test not supported on trustedboot feature')
 
 @pytest.fixture
 def non_usi(testconfig):
