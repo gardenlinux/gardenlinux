@@ -676,3 +676,18 @@ targets:
         test: true
         test-platform: false
         publish: true
+  - name: lima
+    category: hypervisor
+    flavors:
+      - features: []
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features: []
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
