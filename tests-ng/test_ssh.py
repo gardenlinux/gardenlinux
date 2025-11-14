@@ -12,18 +12,18 @@ required_sshd_config = {
         "/etc/ssh/ssh_host_rsa_key",
     },
     "KexAlgorithms": {
-    "sntrup761x25519-sha512",
-    "sntrup761x25519-sha512@openssh.com",
-    "mlkem768x25519-sha256",
-    "curve25519-sha256",
-    "curve25519-sha256@libssh.org",
-    "ecdh-sha2-nistp256",
-    "ecdh-sha2-nistp384",
-    "ecdh-sha2-nistp521",
-    "diffie-hellman-group14-sha256",
-    "diffie-hellman-group16-sha512",
-    "diffie-hellman-group18-sha512",
-    "diffie-hellman-group-exchange-sha256"
+        "sntrup761x25519-sha512",
+        "sntrup761x25519-sha512@openssh.com",
+        "mlkem768x25519-sha256",
+        "curve25519-sha256",
+        "curve25519-sha256@libssh.org",
+        "ecdh-sha2-nistp256",
+        "ecdh-sha2-nistp384",
+        "ecdh-sha2-nistp521",
+        "diffie-hellman-group14-sha256",
+        "diffie-hellman-group16-sha512",
+        "diffie-hellman-group18-sha512",
+        "diffie-hellman-group-exchange-sha256",
     },
     "Ciphers": {
         "chacha20-poly1305@openssh.com",
@@ -160,4 +160,4 @@ def test_users_have_only_root_authorized_keys_cloud(expected_users):
 def test_ssh_service_running(systemd: Systemd, service_ssh):
     assert systemd.is_active(
         "ssh"
-    ), f"Required systemd unit for ssh.service is not running"
+    ), "Required systemd unit for ssh.service is not running"
