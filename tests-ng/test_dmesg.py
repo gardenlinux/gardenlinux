@@ -22,48 +22,30 @@ def test_dmesg_sysctl_stig_config_file_exists():
 
 
 @pytest.mark.feature("gardener")
-def test_dmesg_gardener_sysctl_no_restrictions_on_accessing_dmesg(file_content):
+def test_dmesg_gardener_sysctl_no_restrictions_on_accessing_dmesg(parse_file):
     file_path = "/etc/sysctl.d/40-allow-nonroot-dmesg.conf"
-    result = file_content.get_mapping(
-        file_path,
-        {"kernel.dmesg_restrict": "0"},
-        format="keyval",
-    )
-    assert result is not None, f"Could not parse file: {file_path}"
-    assert result.all_match, (
-        f"Could not find expected mapping in {file_path}: "
-        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
-    )
+    key = "kernel.dmesg_restrict"
+    value = "0"
+    result = parse_file.get_value(file_path, key)
+    assert result == value, f"Expected {key}={value} in {file_path}, but got {result!r}"
 
 
 @pytest.mark.feature("server and not gardener")
-def test_dmesg_server_sysctl_restrictions_on_accessing_dmesg(file_content):
+def test_dmesg_server_sysctl_restrictions_on_accessing_dmesg(parse_file):
     file_path = "/etc/sysctl.d/40-restric-dmesg.conf"
-    result = file_content.get_mapping(
-        file_path,
-        {"kernel.dmesg_restrict": "1"},
-        format="keyval",
-    )
-    assert result is not None, f"Could not parse file: {file_path}"
-    assert result.all_match, (
-        f"Could not find expected mapping in {file_path}: "
-        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
-    )
+    key = "kernel.dmesg_restrict"
+    value = "1"
+    result = parse_file.get_value(file_path, key)
+    assert result == value, f"Expected {key}={value} in {file_path}, but got {result!r}"
 
 
 @pytest.mark.feature("stig")
-def test_dmesg_stig_sysctl_restrictions_on_accessing_dmesg(file_content):
+def test_dmesg_stig_sysctl_restrictions_on_accessing_dmesg(parse_file):
     file_path = "/etc/sysctl.d/99-stig.conf"
-    result = file_content.get_mapping(
-        file_path,
-        {"kernel.dmesg_restrict": "1"},
-        format="keyval",
-    )
-    assert result is not None, f"Could not parse file: {file_path}"
-    assert result.all_match, (
-        f"Could not find expected mapping in {file_path}: "
-        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
-    )
+    key = "kernel.dmesg_restrict"
+    value = "1"
+    result = parse_file.get_value(file_path, key)
+    assert result == value, f"Expected {key}={value} in {file_path}, but got {result!r}"
 
 
 @pytest.mark.feature("gardener")
