@@ -96,4 +96,4 @@ def test_no_failed_units(systemd: Systemd, shell: ShellRunner):
         shell(f"journalctl --unit {u.unit}")
     assert (
         not failed_systemd_units
-    ), f"{len(failed_systemd_units)} systemd units failed to load"
+    ), f"{failed_systemd_units} systemd units failed to load"
