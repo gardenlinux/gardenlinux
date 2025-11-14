@@ -234,18 +234,10 @@ if ! ((cloud_plan)); then
 	ssh_user="$(cd "${tf_dir}" && tofu output --raw ssh_user)"
 	echo "📋  VM IP: $vm_ip, SSH User: $ssh_user"
 
-	echo -n "⚙️  waiting for VM ($vm_ip) to accept ssh connections (timeout: 30 minutes)"
-	start_time=$(date +%s)
-	timeout_seconds=$((30 * 60))
-	while ! "$login_cloud_sh" "$image_basename" true 2>/dev/null; do
+	echo -n "⚙️  waiting for VM ($vm_ip) to accept ssh connections"
+	until "$login_cloud_sh" "$image_basename" true 2>/dev/null; do
 		echo -n .
 		sleep 1
-		now=$(date +%s)
-		if ((now - start_time > timeout_seconds)); then
-			echo
-			echo "❌ Timeout: VM ($vm_ip) did not accept SSH connections after 30 minutes."
-			exit 1
-		fi
 	done
 
 	if ! ((skip_tests)); then

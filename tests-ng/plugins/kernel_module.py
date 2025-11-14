@@ -1,15 +1,12 @@
 import os
 import re
 from dataclasses import dataclass
-from graphlib import TopologicalSorter
 
 import pytest
 
 from .find import FIND_RESULT_TYPE_FILE, Find
 from .kernel_versions import KernelVersions
 from .shell import ShellRunner
-
-dependencies = re.compile("/([^/]*)\\.ko")
 
 
 @dataclass
@@ -30,7 +27,6 @@ class KernelModule:
         self._find = find
         self._shell = shell
         self._kernel_versions = kernel_versions
-        self._unload = TopologicalSorter()
 
     def is_module_loaded(self, module: str) -> bool:
         """Return True if ``module`` appears in ``/proc/modules``."""
@@ -54,28 +50,12 @@ class KernelModule:
         )
         return result.returncode == 0
 
-    def safe_load_module(self, module: str) -> bool:
-        """Load ``module`` using ``modprobe`` and save all modules that have to be unloaded to revert the change; return True on success or if the module is already loaded."""
-        if not self.is_module_loaded(module):
-            self._update_module_dependencies(module)
-            return self.load_module(module)
-        return True
-
     def unload_module(self, module: str) -> bool:
         """Unload ``module`` using ``rmmod``; return True on success."""
         result = self._shell(
             f"rmmod {module}", capture_output=True, ignore_exit_code=True
         )
         return result.returncode == 0
-
-    def safe_unload_modules(self) -> bool:
-        """Unload all modules and dependecies loaded by ``safe_load_module`` in the correct order using ``rmmod``; return True if all succeed"""
-        success = True
-        for module in self._unload.static_order():
-            success &= self.unload_module(module)
-
-        self._unload = TopologicalSorter()
-        return success
 
     def collect_loaded_modules(self) -> list[str]:
         """Collect all currently loaded kernel modules"""
@@ -114,17 +94,6 @@ class KernelModule:
     def is_module_available(self, module: str) -> bool:
         """Check if a module is available as loadable module"""
         return module in self.collect_available_modules()
-
-    def _update_module_dependencies(self, module: str) -> None:
-        """Add module and dependencies to TopologicalSorter for unloading in the correct order"""
-        self._unload.add(module)
-
-        result = self._shell(f"modprobe --show-depends {module}", capture_output=True)
-        for dependency in dependencies.findall(result.stdout):
-            if module != dependency:
-                if not self.is_module_loaded(dependency):
-                    self._unload.add(dependency, module)
-                    self._update_module_dependencies(dependency)
 
 
 @pytest.fixture
