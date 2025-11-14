@@ -52,8 +52,6 @@ IGNORED_SYSTEMD_PATTERNS = [
     # https://github.com/gardenlinux/gardenlinux/issues/3769
     "kubelet.service",
     "google-guest-agent.service",
-    # started periodically upon request, not running otherwise
-    "systemd-timedated.service",
 ]
 IGNORED_KERNEL_MODULES = []
 IGNORED_SYSCTL_PARAMS = {
