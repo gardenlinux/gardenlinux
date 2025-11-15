@@ -20,6 +20,10 @@ required_sshd_config = {
         "ecdh-sha2-nistp256",
         "ecdh-sha2-nistp384",
         "ecdh-sha2-nistp521",
+        "diffie-hellman-group14-sha256",
+        "diffie-hellman-group16-sha512",
+        "diffie-hellman-group18-sha512",
+        "diffie-hellman-group-exchange-sha256",
     },
     "Ciphers": {
         "chacha20-poly1305@openssh.com",
@@ -30,16 +34,10 @@ required_sshd_config = {
         "aes256-gcm@openssh.com",
     },
     "MACs": {
-        "umac-64-etm@openssh.com",
-        "umac-128-etm@openssh.com",
-        "hmac-sha2-256-etm@openssh.com",
         "hmac-sha2-512-etm@openssh.com",
-        "hmac-sha1-etm@openssh.com",
-        "umac-64@openssh.com",
-        "umac-128@openssh.com",
-        "hmac-sha2-256",
+        "hmac-sha2-256-etm@openssh.com",
         "hmac-sha2-512",
-        "hmac-sha1",
+        "hmac-sha2-256",
     },
     "AuthenticationMethods": "publickey",
     "LogLevel": "VERBOSE",
@@ -71,9 +69,9 @@ def test_sshd_has_required_config(sshd_config_item: str, sshd: Sshd):
             actual_value, set
         ), f"actual_value should be a set, got {type(actual_value)}"
         actual_set, expected_set = get_normalized_sets(actual_value, expected_value)
-        assert expected_set.issubset(
-            actual_set
-        ), f"{sshd_config_item}: missing values {expected_set - actual_set}"
+        missing = expected_set - actual_set
+        extra = actual_set - expected_set
+        assert not missing, f"{sshd_config_item}: missing {missing}, extra {extra}"
     else:
         assert equals_ignore_case(
             str(actual_value or ""), str(expected_value)
@@ -162,4 +160,4 @@ def test_users_have_only_root_authorized_keys_cloud(expected_users):
 def test_ssh_service_running(systemd: Systemd, service_ssh):
     assert systemd.is_active(
         "ssh"
-    ), f"Required systemd unit for ssh.service is not running"
+    ), "Required systemd unit for ssh.service is not running"
