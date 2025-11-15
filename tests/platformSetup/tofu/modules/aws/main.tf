@@ -50,8 +50,18 @@ resource "aws_s3_bucket" "images" {
 
   tags = merge(
     local.labels,
-    { Name = local.bucket_name }
+    { Name = local.bucket_name },
+    { sec-by-def-objectversioning-exception = "enabled" }
   )
+}
+
+resource "aws_s3_bucket_versioning" "images_versioning" {
+  count = local.image_source_type == "file" ? 1 : 0
+
+  bucket = aws_s3_bucket.images.0.id
+  versioning_configuration {
+    status = "Disabled"
+  }
 }
 
 resource "aws_s3_bucket_ownership_controls" "images_owner" {
