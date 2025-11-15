@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 # Various utility functions to make tests more readable
 # This should not contain test-assertions, but only abstract details that make tests harder to read
@@ -92,3 +92,19 @@ def check_for_duplicates(
             visited_entries.append(str(item))
 
     return duplicates
+
+
+def get_cname_from_os_release() -> Optional[str]:
+    """Get GARDENLINUX_CNAME from /etc/os-release.
+
+    Returns:
+        CNAME string if found, None otherwise.
+    """
+    try:
+        with open("/etc/os-release", "r") as f:
+            for line in f:
+                if line.startswith("GARDENLINUX_CNAME="):
+                    return line.split("=", 1)[1].strip().strip('"')
+    except (FileNotFoundError, PermissionError):
+        pass
+    return None

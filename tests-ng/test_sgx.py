@@ -21,5 +21,5 @@ def test_kernel_configs_sgx(file_content: FileContent, kernel_configs: KernelCon
         assert result is not None, f"Could not parse file: {config.path}"
         assert result.all_match, (
             f"Could not find expected mapping in {config.path} (format={format}) for {mapping}. "
-            f"missing={result.missing}, wrong={{{', '.join(f'{k}:{v[1]!r}!={v[0]!r}' for k, v in result.wrong.items())}}}"
+            f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
         )
