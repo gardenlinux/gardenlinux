@@ -261,6 +261,20 @@ targets:
         test: true
         test-platform: false
         publish: true
+      - features:
+          - pythonDev
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - pythonDev
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
   - name: gcp
     category: public-cloud
     flavors:

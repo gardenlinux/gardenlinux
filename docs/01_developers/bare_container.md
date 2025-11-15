@@ -3,10 +3,10 @@
 ## Overview
 Garden Linux offers a range of specialized bare container images, each tailored for specific applications and designed for minimalism and security:
 
-- **Bare-libc**: Ideal for C/C++ applications requiring only essential C runtime libraries.
-- **Bare-python**: Equipped with Python runtime, perfect for Python-based applications.
-- **Bare-sapmachine**: Customized for sapmachine with necessary libraries and binaries.
-- **Bare-nodejs**: Includes Node.js environment, suitable for server-side JavaScript applications.
+- **bare-libc**: Ideal for C/C++ applications requiring only essential C runtime libraries.
+- **bare-python**: Equipped with Python runtime, perfect for Python-based applications.
+- **bare-sapmachine**: Customized for sapmachine with necessary libraries and binaries.
+- **bare-nodejs**: Includes Node.js environment, suitable for server-side JavaScript applications.
 
 These containers are optimized as base images for Dockerfiles. 
 Their development is streamlined by the [unbase_oci](https://github.com/gardenlinux/unbase_oci) tool, which efficiently minimizes image size by removing unnecessary components from base container images.
@@ -20,7 +20,7 @@ Their development is streamlined by the [unbase_oci](https://github.com/gardenli
 - **Repository Link**: [unbase_oci](https://github.com/gardenlinux/unbase_oci)
 - **Impact**: This tool is pivotal in creating streamlined, "distroless-like" images, ensuring that the resulting containers are lean and secure.
 
-### Bare-libc
+### bare-libc
 - **Description**: A streamlined container image for applications that need only the basic C library.
 - **Features**:
   - Includes essential C runtime libraries.
@@ -28,7 +28,7 @@ Their development is streamlined by the [unbase_oci](https://github.com/gardenli
   - Enhanced security through a minimal attack surface.
 - **Container Link**: [bare-libc](https://github.com/orgs/gardenlinux/packages/container/package/gardenlinux%2Fbare-libc)
 
-### Bare-python
+### bare-python
 - **Description**: Optimized for Python applications, this image provides the Python runtime.
 - **Features**:
   - Contains the Python interpreter and necessary libraries.
@@ -41,6 +41,23 @@ Their development is streamlined by the [unbase_oci](https://github.com/gardenli
   COPY hello.py /
   CMD ["python3", "/hello.py"]
   ```
+#### Adding dependencies:
+- **Description**: **bare-python** does not contain pip and has a limited set of shared libraries. To add dependencies, we recommend using a multi-stage build with the **container-pythonDev** flavor
+- **Multi-stage Dockerfile**:
+  ```Dockerfile
+  FROM ghcr.io/gardenlinux/gardenlinux/container-python-dev:1877.5 as packages
+
+  COPY requirements.txt /
+  RUN pip3 install -r requirements.txt --break-system-packages --no-cache-dir
+  RUN exportLibs.py
+  
+  FROM ghcr.io/gardenlinux/gardenlinux/bare-python:1877.5
+  COPY --from=packages /usr/local/lib/python3.13/dist-packages/ /usr/local/lib/python3.13/dist-packages/
+  COPY --from=packages /required_libs /
+  
+  COPY main.py /
+  ENTRYPOINT ["python3", "/main.py"]
+  ```
 
 ### bare-sapmachine
 - **Description**: Customized for SAP applications, ensuring compatibility and optimized performance.
@@ -50,7 +67,7 @@ Their development is streamlined by the [unbase_oci](https://github.com/gardenli
   - Security-focused design.
 - **Container Link**: [bare-sapmachine](https://github.com/orgs/gardenlinux/packages/container/package/gardenlinux%2Fbare-sapmachine)
 
-### Bare-nodejs
+### bare-nodejs
 - **Description**: A container tailored for Node.js applications, providing the Node.js runtime.
 - **Features**:
   - Includes Node.js environment.
