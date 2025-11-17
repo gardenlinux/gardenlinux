@@ -67,7 +67,7 @@ def test_gnutls_fips_dot_hmac_file_is_vaild():
     config = configparser.ConfigParser()
     config.read("/usr/lib/aarch64-linux-gnu/.libgnutls.so.30.hmac")
 
-    fipshmac = hmac.new(key=SECRET.encode("UTF-8"), msg=None, digestmod=SHA256)
+    fips_hmac = hmac.new(key=SECRET.encode("UTF-8"), msg=None, digestmod=SHA256)
     # Need to read it 'b' since it's a binary file.
     with open(gnutls_lib_path, mode="rb") as lib:
         fips_hmac.update(lib.read())
