@@ -70,7 +70,7 @@ def test_gnutls_fips_dot_hmac_file_is_vaild():
     fipshmac = hmac.new(key=SECRET.encode("UTF-8"), msg=None, digestmod=SHA256)
     # Need to read it 'b' since it's a binary file.
     with open(gnutls_lib_path, mode="rb") as lib:
-        fipshmac.update(lib.read())
+        fips_hmac.update(lib.read())
 
     assert (
         config["libgnutls.so.30"]["hmac"] == fips_hmac.hexdigest()
