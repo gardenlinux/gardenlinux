@@ -64,7 +64,7 @@ class KernelModule:
     def unload_module(self, module: str) -> bool:
         """Unload ``module`` using ``rmmod``; return True on success."""
         result = self._shell(
-            f"rmmod {module}", capture_output=True, ignore_exit_code=True
+            f"rmmod {module}", capture_output=False, ignore_exit_code=True
         )
         return result.returncode == 0
 
@@ -72,6 +72,7 @@ class KernelModule:
         """Unload all modules and dependecies loaded by ``safe_load_module`` in the correct order using ``rmmod``; return True if all succeed"""
         success = True
         for module in self._unload.static_order():
+            print(f"Unloading {module=}")
             success &= self.unload_module(module)
 
         self._unload = TopologicalSorter()
