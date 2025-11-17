@@ -38,7 +38,7 @@ def get_image_path(version, arch):
     try:
         result = subprocess.run(command, capture_output=True, text=True, check=True)
         output = json.loads(result.stdout)
-        image_name = f"openstack-gardener_prod-{arch}"
+        image_name = f"lima-{arch}"
         image_path = output["releases"][0]["flavors"][image_name]["image"]
         return image_path
     except subprocess.CalledProcessError as e:
