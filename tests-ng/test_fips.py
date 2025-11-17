@@ -54,9 +54,9 @@ def test_gnutls_fips_dot_hmac_file_is_presented():
 @pytest.mark.feature("_fips")
 def test_gnutls_fips_dot_hmac_file_is_vaild():
     """
-    Key problem in shipping GnuTLS packages was that the computed HMAC was not vailded for the ship
+    One problem in shipping GnuTLS packages was that the computed HMAC was not valid for the shipped
     version of the library since the HMAC was computed for an unstripped version. This test ensures
-    that the HMAC on the system fits with the shipped one.
+    that the HMAC on the system fits with the shipped library version.
     """
     ARCH = arch()
     gnutls_fipshmac_path = f"/usr/lib/{ARCH}-linux-gnu/.libgnutls.so.30.hmac"
