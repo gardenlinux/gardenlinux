@@ -4,7 +4,7 @@ function die {
     # Perl like die() function.
     # https://billauer.co.il/blog/2024/08/bash-exit-with-error/
     # shellcheck disable=SC2086
-    echo $1
+    echo "💥 ${1}"
     exit 1
 }
 
@@ -73,8 +73,8 @@ install_tofu() {
 	# go to tofu directory to automatically parse *.tf files
 	pushd "$tf_dir"
 	tofuenv install latest-allowed
-	popd
 
+	popd
     tofu_version=$(find_local_version_of_tofuenv_and_return_version_string)
 	tofuenv use "$tofu_version"
 
