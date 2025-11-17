@@ -85,7 +85,7 @@ def test_gnutls_fips_dot_hmac_file_contains_vaild_hmac():
     Test that the computed HMAC that was shipped is correct. Else the selftest will fail at the
     second
     """
-    gnutls_fipshmac_path = f"/usr/lib/{arch()}-linux-gnu/.libgnutls.so.30.hmac"
+    gnutls_fips_hmac_path = f"/usr/lib/{arch()}-linux-gnu/.libgnutls.so.30.hmac"
 
     config = configparser.ConfigParser()
     config.read("/usr/lib/aarch64-linux-gnu/.libgnutls.so.30.hmac")
