@@ -29,4 +29,11 @@ jobs:
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@hotfix-disabled-python-cache-in-setup-action
         with:
           flags: ${{ inputs.flags }}
-          flavors_matrix: ${{ inputs.flavors_matrix }}
+          flavors_matrix: {"include":[{"arch":"amd64","flavor": "gcp-gardener_prod-amd64"}]}
+# gcp-gardener_prod-arm64
+# gcp-gardener_prod_tpm2_trustedboot-amd64
+# gcp-gardener_prod_tpm2_trustedboot-arm64
+# gcp-gardener_prod_trustedboot-amd64
+# gcp-gardener_prod_trustedboot-arm64
+# gcp-gardener_prod_usi-amd64
+# gcp-gardener_prod_usi-arm64
