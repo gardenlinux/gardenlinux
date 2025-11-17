@@ -118,8 +118,7 @@ EOF
                 checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_darwin_arm64" 
                 ;;
             *)
-                echo "Unsupported OS/arch combination: ${host_os}_${host_arch}" >&2
-                exit 1
+                die "Unsupported OS/arch combination: ${host_os}_${host_arch}" >&2
 			;;
 		esac
 
