@@ -6,6 +6,7 @@ import yaml
 from urllib.request import urlopen
 import subprocess
 import json
+from pathlib import Path
 import os
 
 # Build config as a Python dict
@@ -27,9 +28,9 @@ yaml_config_data = {
 }
 
 def get_image_path(version, arch):
-    script_dir = os.path.dirname(os.path.realpath(__file__))
+    script_dir = Path(__file__).resolve().parent
     # Construct the path to the glrd script
-    glrd_path = os.path.join(script_dir, "glrd")
+    glrd_path = str(script_dir / "glrd")
     if version in ["latest", "nightly"]:
         command = [glrd_path, "--latest", "--type", version, "--output-format", "json"]
     else:
