@@ -31,5 +31,4 @@ fi
 
 find "$rootfs/var/log/" "$rootfs/var/cache/" -type f -delete
 
-rm "$rootfs/etc/hostname"
-echo -n > "$rootfs/etc/hostname"
+echo > "$rootfs/etc/hostname"
