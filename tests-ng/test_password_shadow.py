@@ -5,8 +5,6 @@ from plugins.linux_etc_files import Passwd, Shadow
 
 
 @pytest.mark.feature("not cis", reason="CIS handles shadow_entries by itself")
-def test_shadow_passwords_are_locked(shadow_entries):
-
 def test_shadow_passwords_are_locked(shadow_entries: List[Shadow]):
     """No user in shadow should have a valid password entry and all users are locked."""
     for entry in shadow_entries:
