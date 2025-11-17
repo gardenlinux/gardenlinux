@@ -1,13 +1,16 @@
-import pytest
 from typing import List
 
-from plugins.linux_etc_files import Shadow, Passwd
+import pytest
+from plugins.linux_etc_files import Passwd, Shadow
+
 
 def test_shadow_passwords_are_locked(shadow_entries: List[Shadow]):
     """No user in shadow should have a valid password entry and all users are locked."""
     for entry in shadow_entries:
         # Assert that the password field for the given entry is not empty (not invalid)
-        assert entry.encrypted_password, f"Empty password field in shadow for {entry.login_name}"
+        assert (
+            entry.encrypted_password
+        ), f"Empty password field in shadow for {entry.login_name}"
 
         # Assert whether the first character is a '!' or '*' marking the user as locked.
         assert entry.encrypted_password[0] in [
@@ -19,7 +22,10 @@ def test_shadow_passwords_are_locked(shadow_entries: List[Shadow]):
 def test_passwd_password_field_is_valid(passwd_entries: List[Passwd]):
     """All passwd entries must use 'x' or '*' in the password field."""
     for entry in passwd_entries:
-        assert entry.password in ["*", "x"], f"Malformed passwd entry for {entry.name}: {entry}"
+        assert entry.password in [
+            "*",
+            "x",
+        ], f"Malformed passwd entry for {entry.name}: {entry}"
 
 
 @pytest.mark.root

@@ -16,7 +16,10 @@ def get_normalized_sets(*sets: set) -> tuple[set, ...]:
 def is_set(obj) -> bool:
     return isinstance(obj, set)
 
-T = TypeVar('T')
+
+T = TypeVar("T")
+
+
 def check_for_duplicates(entries: List[T]) -> List[T]:
     """
     checks for duplicates, to change equality comparision, add a compare field to the dataclass.
