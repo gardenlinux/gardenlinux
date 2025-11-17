@@ -23,22 +23,6 @@ function test_for_supported_os(){
 	esac
 }
 
-
-function test_for_supported_binaries_in_os(){
-    # Testing that the necesary binaries are present on the current OS.
-    case "$(uname -o)" in
-        Darwin)
-            FIND="/opt/homebrew/bin/gfind"
-            test -x $FIND || die "Can't find find. Please install it with 'brew install findutils'"
-            ;;
-        Linux)
-            FIND="/usr/bin/find"
-            test -x $FIND || die "Can't find find. Please install it with 'apt-get install findutils'"
-            ;;
-    esac
-}
-
-
 function test_for_supported_cpu_architecture(){
 	case "$(uname -m)" in
         x86_64)
@@ -53,15 +37,30 @@ function test_for_supported_cpu_architecture(){
 	esac
 }
 
+function find_local_version_of_tofuenv_and_return_version_string(){
+    # This find will detect the folder from the local tofuenv with it's installation and 
+    # extract the version field out. The result will be sorted. The highest version should 
+    # be s on top. Then we cut to a single parameter, otherwise the tofuenv use will fail.
+    # shellcheck disable=SC2046
+    basename $(\
+        find "$tf_dir/.tofuenv/versions"\
+            -mindepth 1 \
+            -maxdepth 1 \
+            -type d \
+            -print \
+            | sort -r \
+            | head -1
+        )
+}
+
+
 install_tofu() {
 	set -eufo pipefail
-	local tf_dir="${1}"
 
     test_for_supported_os
-    test_for_supported_binaries_in_os
     test_for_supported_cpu_architecture
 
-
+	local tf_dir="${1}"
 	tofuenv_dir="$tf_dir/.tofuenv"
 	PATH="$tofuenv_dir/bin:$PATH"
 	export PATH
@@ -75,7 +74,8 @@ install_tofu() {
 	pushd "$tf_dir"
 	tofuenv install latest-allowed
 	popd
-	tofu_version=$($FIND "$tf_dir/.tofuenv/versions" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" | head -1)
+
+    tofu_version=$(find_local_version_of_tofuenv_and_return_version_string)
 	tofuenv use "$tofu_version"
 
 	TF_CLI_CONFIG_FILE="$tf_dir/.terraformrc"
@@ -103,16 +103,26 @@ EOF
 		mkdir -p "${TOFU_PROVIDERS_CUSTOM}"
 		curl -LO --create-dirs --output-dir "${TOFU_PROVIDERS_CUSTOM}" "${TOFU_PROVIDER_AZURERM_URL}"
 		mv "${TOFU_PROVIDERS_CUSTOM}/${TOFU_PROVIDER_AZURERM_BIN}" "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm"
+
 		case "${host_os}_${host_arch}" in
-		linux_amd64) checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_linux_amd64" ;;
-		linux_arm64) checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_linux_arm64" ;;
-		darwin_amd64) checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_darwin_amd64" ;;
-		darwin_arm64) checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_darwin_arm64" ;;
-		*)
-			echo "Unsupported OS/arch combination: ${host_os}_${host_arch}" >&2
-			exit 1
+            linux_amd64) 
+                checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_linux_amd64" 
+                ;;
+            linux_arm64) 
+                checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_linux_arm64" 
+                ;;
+            darwin_amd64) 
+                checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_darwin_amd64" 
+                ;;
+            darwin_arm64) 
+                checksum="$TOFU_PROVIDER_AZURERM_CHECKSUM_darwin_arm64" 
+                ;;
+            *)
+                echo "Unsupported OS/arch combination: ${host_os}_${host_arch}" >&2
+                exit 1
 			;;
 		esac
+
 		echo "$checksum  terraform-provider-azurerm" >"${TOFU_PROVIDERS_CUSTOM}/checksum.txt"
 		(cd "${TOFU_PROVIDERS_CUSTOM}" && sha256sum -c checksum.txt)
 		chmod +x "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm"
