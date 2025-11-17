@@ -75,7 +75,7 @@ def test_gnutls_fips_dot_hmac_file_is_vaild():
         fipshmac.update(lib.read())
 
     assert (
-        config["libgnutls.so.30"]["hmac"] == fipshmac.hexdigest()
+        config["libgnutls.so.30"]["hmac"] == fips_hmac.hexdigest()
     ), "Compute HMAC is incorrect!"
 
 
