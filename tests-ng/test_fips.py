@@ -57,6 +57,11 @@ def test_gnutls_fips_dot_hmac_file_is_vaild():
     One problem in shipping GnuTLS packages was that the computed HMAC was not valid for the shipped
     version of the library since the HMAC was computed for an unstripped version. This test ensures
     that the HMAC on the system fits with the shipped library version.
+
+    Without the HMAC the selftest will fail at second part with the follow error message:
+
+    |<1>| FIPS140-2 self testing part 2 failed
+
     """
     ARCH = arch()
     gnutls_fipshmac_path = f"/usr/lib/{ARCH}-linux-gnu/.libgnutls.so.30.hmac"
@@ -76,17 +81,6 @@ def test_gnutls_fips_dot_hmac_file_is_vaild():
         config["libgnutls.so.30"]["hmac"] == fips_hmac.hexdigest()
     ), "Compute HMAC is incorrect!"
 
-
-@pytest.mark.feature("_fips")
-def test_gnutls_fips_dot_hmac_file_contains_vaild_hmac():
-    """
-    Test that the computed HMAC that was shipped is correct. Else the selftest will fail at the
-    second
-    """
-    gnutls_fips_hmac_path = f"/usr/lib/{arch()}-linux-gnu/.libgnutls.so.30.hmac"
-
-    config = configparser.ConfigParser()
-    config.read("/usr/lib/aarch64-linux-gnu/.libgnutls.so.30.hmac")
 
 
 @pytest.mark.feature("_fips")
