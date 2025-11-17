@@ -29,7 +29,7 @@ def test_groups_find_duplicate(group_entries: List[Group]):
 
 
 @pytest.mark.parametrize("group_name,user_list", [("root", []), ("wheel", [])])
-@pytest.mark.feature("not container")
+@pytest.mark.feature("not _dev")
 def test_groups_with_no_users(
     group_entries: List[Group], group_name: str, user_list: List[str]
 ):
