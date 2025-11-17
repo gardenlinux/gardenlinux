@@ -22,6 +22,7 @@ def test_sysdiff_before_tests(sysdiff: Sysdiff):
 
 @pytest.mark.order("last")
 @pytest.mark.root(reason="Sysdiff needs to read all files.")
+@pytest.mark.feature("not cis", reason="CIS handles sysdiff by itself")
 def test_sysdiff_after_tests(sysdiff: Sysdiff):
     """
     Verifies no system changes were detected during the test run.
