@@ -4,7 +4,7 @@ function die {
     # Perl like die() function.
     # https://billauer.co.il/blog/2024/08/bash-exit-with-error/
     # shellcheck disable=SC2086
-    echo "💥 ${1}"
+    echo "💥 ${1}" >&2
     exit 1
 }
 
@@ -53,31 +53,8 @@ function find_local_version_of_tofuenv_and_return_version_string(){
         )
 }
 
-
-install_tofu() {
-	set -eufo pipefail
-
-    test_for_supported_os
-    test_for_supported_cpu_architecture
-
-	local tf_dir="${1}"
-	tofuenv_dir="$tf_dir/.tofuenv"
-	PATH="$tofuenv_dir/bin:$PATH"
-	export PATH
-	# in case we pass a GITHUB_TOKEN, we can work around rate limiting
-	export TOFUENV_GITHUB_TOKEN="${GITHUB_TOKEN:-}"
-	command -v tofuenv >/dev/null || {
-		git clone --depth=1 https://github.com/tofuutils/tofuenv.git "$tofuenv_dir"
-		echo 'trust-tofuenv: yes' >"$tofuenv_dir/use-gpgv"
-	}
-	# go to tofu directory to automatically parse *.tf files
-	pushd "$tf_dir"
-	tofuenv install latest-allowed
-
-	popd
-    tofu_version=$(find_local_version_of_tofuenv_and_return_version_string)
-	tofuenv use "$tofu_version"
-
+function install_custom_azure_resource_manager(){
+    # We have to install the custom Resource Manager to use Secure Boot.
 	TF_CLI_CONFIG_FILE="$tf_dir/.terraformrc"
 	export TF_CLI_CONFIG_FILE
 	TOFU_PROVIDERS_CUSTOM="$tf_dir/.terraform/providers/custom"
@@ -126,6 +103,34 @@ EOF
 		(cd "${TOFU_PROVIDERS_CUSTOM}" && sha256sum -c checksum.txt)
 		chmod +x "${TOFU_PROVIDERS_CUSTOM}/terraform-provider-azurerm"
 	fi
+}
+
+
+install_tofu() {
+	set -eufo pipefail
+
+    test_for_supported_os
+    test_for_supported_cpu_architecture
+
+	local tf_dir="${1}"
+	tofuenv_dir="$tf_dir/.tofuenv"
+	PATH="$tofuenv_dir/bin:$PATH"
+	export PATH
+	# in case we pass a GITHUB_TOKEN, we can work around rate limiting
+	export TOFUENV_GITHUB_TOKEN="${GITHUB_TOKEN:-}"
+	command -v tofuenv >/dev/null || {
+		git clone --depth=1 https://github.com/tofuutils/tofuenv.git "$tofuenv_dir"
+		echo 'trust-tofuenv: yes' >"$tofuenv_dir/use-gpgv"
+	}
+	# go to tofu directory to automatically parse *.tf files
+	pushd "$tf_dir"
+	tofuenv install latest-allowed
+
+	popd
+    tofu_version=$(find_local_version_of_tofuenv_and_return_version_string)
+	tofuenv use "$tofu_version"
+
+    install_custom_azure_resource_manager
 }
 
 # If script is sourced, don't run main function automatically
