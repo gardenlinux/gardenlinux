@@ -121,7 +121,7 @@ def test_clocksource_amd64(systemd_detect_virt: Hypervisor, clocksource: str):
     match systemd_detect_virt:
         case Hypervisor.xen | Hypervisor.qemu:
             expected_clocksource = "tsc"
-        case Hypervisor.kvm | Hypervisor.amazon:
+        case Hypervisor.kvm | Hypervisor.amazon | Hypervisor.google:
             expected_clocksource = "kvm-clock"
         case _:
             assert False, f"unknown hypervisor {systemd_detect_virt}"
@@ -134,7 +134,7 @@ def test_clocksource_amd64(systemd_detect_virt: Hypervisor, clocksource: str):
 @pytest.mark.arch("amd64", "aarch64")
 def test_clocksource_arm64_aarch64(systemd_detect_virt: Hypervisor, clocksource: str):
     match systemd_detect_virt:
-        case Hypervisor.kvm | Hypervisor.qemu | Hypervisor.amazon:
+        case Hypervisor.kvm | Hypervisor.qemu | Hypervisor.amazon | Hypervisor.google:
             expected_clocksource = "arch_sys_counter"
         case _:
             assert False, f"unknown hypervisor {systemd_detect_virt}"
