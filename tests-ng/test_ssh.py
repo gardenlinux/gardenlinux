@@ -53,7 +53,7 @@ required_sshd_config = {
 @pytest.mark.booted(reason="Calling sshd -T requires a booted system")
 @pytest.mark.root(reason="Calling sshd -T requires root")
 @pytest.mark.feature("ssh")
-@pytest.mark.feature("not cis",reason="CIS has own KEX and MAC")
+@pytest.mark.feature("not cis", reason="CIS has own KEX and MAC")
 @pytest.mark.parametrize("sshd_config_item", required_sshd_config)
 def test_sshd_has_required_config(sshd_config_item: str, sshd: Sshd):
     actual_value = sshd.get_config_section(sshd_config_item)
