@@ -17,15 +17,11 @@ install_tofu() {
     case "$(uname -o)" in
         Darwin)
             FIND="/opt/homebrew/bin/gfind"
-            RETRY="/opt/homebrew/bin/retry"
             test -x $FIND || die "Can't find find. Please install it with 'brew install findutils'"
-            test -x $RETRY  || die "Can't find find. Please install it with 'brew install findutils'"
             ;;
         GNU/Linux)
             FIND="/usr/bin/find"
-            RETRY="/usr/bin/retry"
             test -x $FIND || die "Can't find find. Please install it with 'apt-get install findutils'"
-            test -x $RETRY  || die "Can't find find. Please install it with 'apt-get install findutils'"
             ;;
     esac
 
@@ -61,12 +57,12 @@ install_tofu() {
 	# in case we pass a GITHUB_TOKEN, we can work around rate limiting
 	export TOFUENV_GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 	command -v tofuenv >/dev/null || {
-		$RETRY -d "1,2,5,10,30" git clone --depth=1 https://github.com/tofuutils/tofuenv.git "$tofuenv_dir"
+		git clone --depth=1 https://github.com/tofuutils/tofuenv.git "$tofuenv_dir"
 		echo 'trust-tofuenv: yes' >"$tofuenv_dir/use-gpgv"
 	}
 	# go to tofu directory to automatically parse *.tf files
 	pushd "$tf_dir"
-	$RETRY -d "1,2,5,10,30" tofuenv install latest-allowed
+	tofuenv install latest-allowed
 	popd
 	tofu_version=$($FIND "$tf_dir/.tofuenv/versions" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" | head -1)
 	tofuenv use "$tofu_version"
