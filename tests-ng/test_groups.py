@@ -27,9 +27,13 @@ def test_groups_find_duplicate(group_entries: List[Group]):
         len(duplicates) == 1
     ), f"Group #{duplicate_group.groupname} should be found as duplicate, but was not."
 
+@pytest.mark.parametrize("group_name", ["root", "wheel"])
+@pytest.mark.feature("not _dev and not pythonDev")
+def test_groups_are_present(group_entries: List[Group], group_name: str):
+    assert any(group_entry.groupname == group_name for group_entry in group_entries), f"group {group_name} is not present."
 
 @pytest.mark.parametrize("group_name,user_list", [("root", []), ("wheel", [])])
-@pytest.mark.feature("not _dev")
+@pytest.mark.feature("not _dev and not pythonDev")
 def test_groups_with_no_users(
     group_entries: List[Group], group_name: str, user_list: List[str]
 ):
