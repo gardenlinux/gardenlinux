@@ -2,7 +2,6 @@ import json
 import re
 import time
 from dataclasses import dataclass
-from os import system
 from typing import Tuple
 
 import pytest
@@ -52,30 +51,6 @@ def _parse_units(systemctl_stdout: str) -> list[SystemdUnit]:
     return units
 
 
-def _parse_unit_files(systemctl_stdout: str) -> list[SystemdUnit]:
-    """
-    Parse the output of `systemctl list-unit-files` into a list of units.
-    """
-    units = []
-    try:
-        unit_entries = json.loads(systemctl_stdout)
-        for entry in unit_entries:
-            units.append(
-                SystemdUnit(
-                    unit=entry.get("unit_file", ""),
-                    load=entry.get("state", ""),
-                    active="n/A",
-                    sub="n/A",
-                )
-            )
-    except json.JSONDecodeError:
-        for line in systemctl_stdout.splitlines():
-            parts = line.split()
-            if len(parts) >= 2:
-                units.append(SystemdUnit(parts[0], parts[1], "n/A", "n/A"))
-    return units
-
-
 class Systemd:
     def __init__(self, shell: ShellRunner):
         self._shell = shell
@@ -107,16 +82,7 @@ class Systemd:
             capture_output=True,
             ignore_exit_code=True,
         )
-        active = result.stdout.strip() == "active"
-        if not active:
-            result_status = self._shell(
-                f"{self._systemctl} status {unit_name}",
-                capture_output=True,
-                ignore_exit_code=True,
-            )
-            print(result_status.stdout)
-
-        return active
+        return result.stdout.strip() == "active"
 
     def start_unit(self, unit_name: str):
         if not allow_system_modifications():
@@ -143,20 +109,6 @@ class Systemd:
             f"{self._systemctl} --failed", capture_output=True, ignore_exit_code=True
         )
         return _parse_units(result.stdout)
-
-    def list_installed_units(self) -> list[SystemdUnit]:
-        """ "
-        List all installed systemd units, regardless of their status.
-
-        Uses `sytemctl list-unit-files` instead of `list-units` so it includes
-        all files known to systemd.
-        """
-        result = self._shell(
-            f"{self._systemctl} list-unit-files --type=service --no-legend --no-pager",
-            capture_output=True,
-            ignore_exit_code=True,
-        )
-        return _parse_unit_files(result.stdout)
 
     def wait_is_system_running(self) -> SystemRunningState:
         start_time = time.time()
