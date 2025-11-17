@@ -50,6 +50,9 @@ required_sshd_config = {
 }
 
 
+FIPS_REASON = "FIPS uses different values for the KEX and Cipher."
+
+
 @pytest.mark.booted(reason="Calling sshd -T requires a booted system")
 @pytest.mark.root(reason="Calling sshd -T requires root")
 @pytest.mark.feature("ssh")
@@ -157,8 +160,7 @@ def test_users_have_only_root_authorized_keys_cloud(expected_users):
 @pytest.mark.modify(reason="Starting the unit modifies the system state")
 @pytest.mark.root(reason="Starting the unit requires root")
 @pytest.mark.feature("ssh")
-def test_ssh_unit_running(systemd: Systemd):
-    systemd.start_unit("ssh")
+def test_ssh_service_running(systemd: Systemd, service_ssh):
     assert systemd.is_active(
         "ssh"
     ), f"Required systemd unit for ssh.service is not running"
