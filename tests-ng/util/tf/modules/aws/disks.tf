@@ -16,8 +16,16 @@ resource "aws_s3_bucket" "upload" {
 
   tags = merge(
     local.labels,
-    { Name = local.bucket_name }
+    { Name = local.bucket_name },
+    { sec-by-def-objectversioning-exception = "enabled" }
   )
+}
+
+resource "aws_s3_bucket_versioning" "versioning" {
+  bucket = aws_s3_bucket.upload.id
+  versioning_configuration {
+    status = "Disabled"
+  }
 }
 
 resource "aws_s3_bucket_ownership_controls" "owner" {
