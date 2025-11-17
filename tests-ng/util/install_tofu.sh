@@ -9,47 +9,58 @@ function die {
 }
 
 
-install_tofu() {
-	set -eufo pipefail
-	local tf_dir="${1}"
+function test_for_supported_os(){
+	case "$(uname -s)" in
+        Darwin)
+            host_os=darwin
+            ;;
+        Linux)
+            host_os=linux
+            ;;
+        *)
+            die "Host operating system '$host_os' not supported"
+            ;;
+	esac
+}
 
-    # Testing that the necesary biniaries are present at set indpendent of the path.
+
+function test_for_supported_binaries_in_os(){
+    # Testing that the necesary binaries are present on the current OS.
     case "$(uname -o)" in
         Darwin)
             FIND="/opt/homebrew/bin/gfind"
             test -x $FIND || die "Can't find find. Please install it with 'brew install findutils'"
             ;;
-        GNU/Linux)
+        Linux)
             FIND="/usr/bin/find"
             test -x $FIND || die "Can't find find. Please install it with 'apt-get install findutils'"
             ;;
     esac
+}
 
-	case "$(uname -s)" in
-	Linux)
-		host_os=linux
-		;;
-	Darwin)
-		host_os=darwin
-		;;
-	*)
-		echo "Host operating system '$host_os' not supported"
-		exit 1
-		;;
-	esac
 
+function test_for_supported_cpu_architecture(){
 	case "$(uname -m)" in
-	x86_64)
-		host_arch=amd64
-		;;
-	aarch64 | arm64)
-		host_arch=arm64
-		;;
-	*)
-		echo "Host architecture '$host_arch' not supported"
-		exit 1
-		;;
+        x86_64)
+            host_arch=amd64
+            ;;
+        aarch64 | arm64)
+            host_arch=arm64
+            ;;
+        *)
+            die "Host architecture '$host_arch' not supported"
+            ;;
 	esac
+}
+
+install_tofu() {
+	set -eufo pipefail
+	local tf_dir="${1}"
+
+    test_for_supported_os
+    test_for_supported_binaries_in_os
+    test_for_supported_cpu_architecture
+
 
 	tofuenv_dir="$tf_dir/.tofuenv"
 	PATH="$tofuenv_dir/bin:$PATH"
