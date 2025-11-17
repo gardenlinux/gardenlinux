@@ -41,9 +41,9 @@ def non_usi(testconfig):
     if usi in features:
         pytest.skip("test not supported on usi feature")
 
-
 @pytest.fixture
 def non_cis(testconfig):
     features = testconfig.get("features", [])
     if "cis" in features:
-        pytest.skip("test not supported on cis feature")
+        pytest.skip('test not supported on cis feature')
+
