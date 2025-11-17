@@ -20,10 +20,6 @@ required_sshd_config = {
         "ecdh-sha2-nistp256",
         "ecdh-sha2-nistp384",
         "ecdh-sha2-nistp521",
-        "diffie-hellman-group14-sha256",
-        "diffie-hellman-group16-sha512",
-        "diffie-hellman-group18-sha512",
-        "diffie-hellman-group-exchange-sha256",
     },
     "Ciphers": {
         "chacha20-poly1305@openssh.com",
@@ -34,10 +30,16 @@ required_sshd_config = {
         "aes256-gcm@openssh.com",
     },
     "MACs": {
-        "hmac-sha2-512-etm@openssh.com",
+        "umac-64-etm@openssh.com",
+        "umac-128-etm@openssh.com",
         "hmac-sha2-256-etm@openssh.com",
-        "hmac-sha2-512",
+        "hmac-sha2-512-etm@openssh.com",
+        "hmac-sha1-etm@openssh.com",
+        "umac-64@openssh.com",
+        "umac-128@openssh.com",
         "hmac-sha2-256",
+        "hmac-sha2-512",
+        "hmac-sha1",
     },
     "AuthenticationMethods": "publickey",
     "LogLevel": "VERBOSE",
@@ -48,16 +50,11 @@ required_sshd_config = {
 }
 
 
-FIPS_REASON = "FIPS uses different values for the KEX and Cipher."
-CIS_REASON = "CIS uses different values for the KEX and Cipher."
-
-
 @pytest.mark.booted(reason="Calling sshd -T requires a booted system")
 @pytest.mark.root(reason="Calling sshd -T requires root")
 @pytest.mark.feature("ssh")
+@pytest.mark.feature("not cis",reason="CIS has own KEX and MAC")
 @pytest.mark.parametrize("sshd_config_item", required_sshd_config)
-@pytest.mark.feature("not _fips", reason=FIPS_REASON)
-@pytest.mark.feature("not cis", reason=CIS_REASON)
 def test_sshd_has_required_config(sshd_config_item: str, sshd: Sshd):
     actual_value = sshd.get_config_section(sshd_config_item)
     expected_value = required_sshd_config[sshd_config_item]
@@ -71,9 +68,9 @@ def test_sshd_has_required_config(sshd_config_item: str, sshd: Sshd):
             actual_value, set
         ), f"actual_value should be a set, got {type(actual_value)}"
         actual_set, expected_set = get_normalized_sets(actual_value, expected_value)
-        missing = expected_set - actual_set
-        extra = actual_set - expected_set
-        assert not missing, f"{sshd_config_item}: missing {missing}, extra {extra}"
+        assert expected_set.issubset(
+            actual_set
+        ), f"{sshd_config_item}: missing values {expected_set - actual_set}"
     else:
         assert equals_ignore_case(
             str(actual_value or ""), str(expected_value)
@@ -159,7 +156,8 @@ def test_users_have_only_root_authorized_keys_cloud(expected_users):
 @pytest.mark.modify(reason="Starting the unit modifies the system state")
 @pytest.mark.root(reason="Starting the unit requires root")
 @pytest.mark.feature("ssh")
-def test_ssh_service_running(systemd: Systemd, service_ssh):
+def test_ssh_unit_running(systemd: Systemd):
+    systemd.start_unit("ssh")
     assert systemd.is_active(
         "ssh"
-    ), "Required systemd unit for ssh.service is not running"
+    ), f"Required systemd unit for ssh.service is not running"

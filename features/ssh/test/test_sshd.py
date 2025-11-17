@@ -35,9 +35,6 @@ from helper.tests.sshd import sshd
         "UsePAM yes",
     ],
 )
-def test_sshd(client, expected, non_fips):
-    sshd(client, expected)
-
 
 def test_sshd(client, expected, non_fips, non_cis):
     sshd(client, expected)
