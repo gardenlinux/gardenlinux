@@ -3,6 +3,7 @@ from typing import List
 import pytest
 from plugins.linux_etc_files import Passwd, Shadow
 
+
 @pytest.mark.feature("not cis", reason="CIS handles shadow_entries by itself")
 def test_shadow_passwords_are_locked(shadow_entries):
 
