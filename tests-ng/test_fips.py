@@ -148,5 +148,3 @@ def test_kernel_was_boot_with_fips_mode():
     with open("/proc/sys/crypto/fips_enabled", "r") as f:
         fips_enabled = f.read().strip()
     assert fips_enabled == "1", f"Kernel was not booted in FIPS mode!"
-
-# pyright: ignore
