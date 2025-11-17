@@ -46,3 +46,6 @@ import pytest
 
 def test_sshd(client, expected, non_fips):
         sshd(client, expected)
+
+def test_sshd(client, expected, non_cis):
+        sshd(client, expected)
