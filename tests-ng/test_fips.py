@@ -38,9 +38,7 @@ def test_gnutls_fips_file_is_empty():
 @pytest.mark.feature("_fips")
 def test_gnutls_fips_dot_hmac_file_is_presented():
     """
-    GnuTLS will perform based on the FIPS requierment a self check. This requieres to have a
-    file that contains a HMAC presented on the target system. This test ensure that the file
-    was installed.
+    GnuTLS will perform a self check based on the FIPS requirements. A file that contains an HMAC needs to be present on the target system. This test ensures that the file was installed.
 
     https://www.gnutls.org/manual/html_node/FIPS140_002d2-mode.html
     """
