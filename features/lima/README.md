@@ -9,9 +9,8 @@ Garden Linux images for Lima are published with nightly or release
 **How to use the pre-built image:**
 
 1. Prerequisities
-    - We use glrd to get image link, this needs 
-        - podman
-        - access to gardenlinux-glrd.s3.eu-central-1.amazonaws.com
+    - podman
+    - access to gardenlinux-glrd.s3.eu-central-1.amazonaws.com
 
 2. Create and start the VM
 
