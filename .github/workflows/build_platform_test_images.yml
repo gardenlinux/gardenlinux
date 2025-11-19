@@ -114,7 +114,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
@@ -158,7 +158,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
         with:
           submodules: true
       - name: Set build reference
@@ -216,7 +216,7 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
         with:
           submodules: true
       - name: Load images (${{ matrix.platform }})
@@ -284,7 +284,7 @@ jobs:
       commit_id: ${{ steps.version_reference.outputs.commit_id }}
       version: ${{ steps.version_reference.outputs.version }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
         with:
           submodules: true
       - name: Prepare reference from GLRD
@@ -317,7 +317,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
         with:
           submodules: true
       - name: Make pull-platform-test-${{ matrix.platform }}

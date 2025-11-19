@@ -50,7 +50,7 @@ jobs:
     outputs:
       flavors_matrix: ${{ steps.matrix.outputs.flavors_matrix }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
         with:
           submodules: true
       - id: matrix
@@ -77,7 +77,7 @@ jobs:
     outputs:
       flavors_matrix: ${{ steps.matrix.outputs.flavors_matrix }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
         with:
           submodules: true
       - id: matrix
@@ -208,7 +208,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
       - name: Retry failed publishing
         uses: actions/github-script@v8
         with:
