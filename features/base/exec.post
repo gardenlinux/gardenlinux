@@ -30,3 +30,5 @@ rm "$rootfs/etc/.resolv.conf.systemd-resolved.bak"
 fi
 
 find "$rootfs/var/log/" "$rootfs/var/cache/" -type f -delete
+
+echo > "$rootfs/etc/hostname"
