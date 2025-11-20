@@ -8,7 +8,7 @@ Accepted
 
 ## Context
 
-We want to provide Garden Linux images for Lima-VM in a convenient and user-friendly way. Currently, our pipeline publishes images to S3 buckets without simple or clean URLs, requiring a wrapper to retrieve the image URL. The existing `start-lima.py` script introduces additional dependencies on Python packages, Podman, and a local clone of the Garden Linux git repository. Our goal is to make this a proper feature in the pipeline, avoiding special case handling for Lima-VM where possible.
+We want to provide Garden Linux images for Lima-VM in a convenient and user-friendly way. Currently, our pipeline publishes images to S3 buckets without simple or clean URLs, requiring a wrapper to retrieve the image URL. A proposed `start-lima.py` script introduces additional dependencies on Python packages, Podman, and a local clone of the Garden Linux git repository. Our goal is to make this a proper feature in the pipeline, avoiding special case handling for Lima-VM where possible.
 
 ## Decision
 
@@ -25,7 +25,8 @@ podman run ghcr.io/gardenlinux/lima nightly | limactl start --name gardenlinux -
 podman run ghcr.io/gardenlinux/lima 2070.0.0 | limactl start --name gardenlinux -
 ```
 
-The container just writes the yaml to standard output.
+The container writes the yaml to standard output, and nothing else.
+The output **must be** a valid lima manifest file.
 The user can redirect this to a file for inspection/editing or directly pipe to lima.
 
 ## Consequences
