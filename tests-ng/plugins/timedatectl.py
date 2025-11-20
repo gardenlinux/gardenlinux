@@ -1,5 +1,4 @@
 import re
-import shlex
 from dataclasses import dataclass
 
 import pytest
@@ -69,13 +68,13 @@ class TimeDateCtl:
         ]
         line = line[0] if len(line) > 0 else ""
         pattern = (
-            r"Server: (.*) \({1}(.*)\){1}"  # allows for String as ip, e.g. n/a with GCP
+            r"Server: (?P<ip>[^ ]+) \((?P<hostname>[^)]+)\)"
+            # hostname field can contain an ip
+            # example: Server: 169.254.169.123 (169.254.169.123)
         )
         match = re.search(pattern, line)
-        if match:
-            ip = match.group(1)
-            hostname = match.group(2)
-            return NtpServer(ip=match.group(1), hostname=match.group(2))
+        if match and match.group("ip") and match.group("hostname"):
+            return NtpServer(match.group("ip"), match.group("hostname"))
 
         raise ValueError(f"no server information available. Got: {result.stdout}")
 
