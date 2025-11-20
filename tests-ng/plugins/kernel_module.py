@@ -116,13 +116,13 @@ class KernelModule:
 
     def _update_module_dependencies(self, module: str) -> None:
         """Add module and dependencies to TopologicalSorter for unloading in the correct order"""
-        self._unload.add(module)
+        self._unload.append(module)
 
         result = self._shell(f"modprobe --show-depends {module}", capture_output=True)
         for dependency in dependencies.findall(result.stdout):
             if module != dependency:
                 if not self.is_module_loaded(dependency):
-                    self._unload.add(dependency, module)
+                    self._unload.append(dependency)
                     self._update_module_dependencies(dependency)
 
 
