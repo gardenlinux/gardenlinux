@@ -3,12 +3,10 @@
 import argparse
 import sys
 import yaml
-from urllib.request import urlopen
 import subprocess
 import json
 from pathlib import Path
 import platform
-import tempfile
 
 # Build config as a Python dict
 yaml_config_data = {
@@ -71,19 +69,20 @@ def get_image_path(version, arch):
         print(f"Error decoding JSON: {e}")
         raise
 
-def generate_yaml(image_path, name, arch):
+def generate_yaml(image_path, arch):
+    yaml_file = "gardenlinux.yaml"
+
     yaml_config_data["images"][0]["location"] = image_path
     yaml_config_data["images"][0]["arch"] = "x86_64" if arch == "amd64" else "aarch64"
 
-    with tempfile.NamedTemporaryFile(suffix=".yaml", delete=True) as tmp:
-        with open(tmp.name, "w") as f:
-            yaml.dump(yaml_config_data, f, default_flow_style=False, sort_keys=False)
-        yaml_file = tmp.name
-        subprocess.run(["limactl", "start", yaml_file, "--name", name], check=True)
+    with open(yaml_file, "w") as f:
+        yaml.dump(yaml_config_data, f, default_flow_style=False, sort_keys=False)
+
+    print(f"Generated {yaml_file}")
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Start a Garden Linux VM using Lima"
+        description="Generating yaml file for Lima VM with Garden Linux image"
     )
 
     parser.add_argument(
@@ -99,17 +98,11 @@ def main():
         help="Optional: Provide architecture if specific architecture is needed. Default: Platform architecture"
     )
 
-    parser.add_argument(
-        "--name",
-        default='gardenlinux',
-        help="Provide name of the VM. Default:gardenlinux"
-    )
-
     args = parser.parse_args()
     
-    print(f"Starting Garden Linux VM with version {args.version}")
+    print(f"Generating yaml file for Lima VM with Garden Linux image")
     image_path = get_image_path(args.version, args.arch)
-    generate_yaml(image_path, args.name, args.arch)
+    generate_yaml(image_path, args.arch)
 
 
 if __name__ == "__main__":
