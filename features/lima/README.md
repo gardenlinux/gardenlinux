@@ -12,27 +12,29 @@ Garden Linux images for Lima are published with nightly or release
     - podman
     - access to gardenlinux-glrd.s3.eu-central-1.amazonaws.com
 
-2. Create and start the VM
+2. Generate yaml file for Lima-VM
 
-Lima image can be started with start-lima.py inside bin folder
+Generate yaml file required using generate-lima-yaml.py script inside bin folder
 ```
 # for help, use:
-./bin/start-lima.py --help
+./bin/generate-lima-yaml.py  --help
 ```
 ```
 # for the latest nightly image, use:
-./bin/start-lima.py --name gardenlinux --version nightly --arch <arch>
+./bin/generate-lima-yaml.py --version nightly --arch <arch>
 ```
 ```
-# for the latest release, use:
-./bin/start-lima.py --name gardenlinux --version latest --arch <arch>
-```
-```
-# for a particular version, use:
-./bin/start-lima.py --name gardenlinux --version <version> --arch <arch>
+# for a particular nightly version, use:
+./bin/generate-lima-yaml.py --version <version> --arch <arch>
 ```
 
-3. Open a shell inside the VM: `limactl shell gardenlinux`
+3. Start Lima VM with GardenLinux Image
+
+```
+limactl start --name gardenlinux <generate_yaml_file>
+```
+
+4. Open a shell inside the VM: `limactl shell gardenlinux`
 
 **How to build your own image:**
 
