@@ -26,13 +26,3 @@ def include_metadata_in_junit_xml_session(include_metadata_in_junit_xml):
     """Session-scoped fixture that uses pytest-metadata's include_metadata_in_junit_xml fixture."""
     return include_metadata_in_junit_xml
 
-### <test>
-ALLOWED = ["test_iscsi.py"]
-
-def pytest_ignore_collect(collection_path):
-    print(f'{collection_path.name=}')
-    if collection_path.is_file() and collection_path.name in ALLOWED:
-        return False
-
-    return True
-### </test>
