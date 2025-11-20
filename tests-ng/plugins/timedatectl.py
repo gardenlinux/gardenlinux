@@ -74,7 +74,7 @@ class TimeDateCtl:
             # example: Server: 169.254.169.123 (169.254.169.123)
         )
         match = re.search(pattern, line)
-        if match:
+        if match and match.group("ip") and match.group("hostname"):
             return NtpServer(match.group("ip"), match.group("hostname"))
 
         raise ValueError(f"no server information available. Got: {result.stdout}")
