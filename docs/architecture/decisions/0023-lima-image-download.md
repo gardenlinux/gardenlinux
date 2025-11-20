@@ -18,11 +18,11 @@ We will build and publish a container image that, when run, outputs YAML suitabl
 
 ```bash
 # Without extra parameter, use the latest stable release at the time
-podman run -it --rm ghcr.io/gardenlinux/lima | limactl start --name gardenlinux -
+podman run ghcr.io/gardenlinux/lima | limactl start --name gardenlinux -
 # Special parameter to get the current nightly version
-podman run -it --rm ghcr.io/gardenlinux/lima nightly | limactl start --name gardenlinux -
+podman run ghcr.io/gardenlinux/lima nightly | limactl start --name gardenlinux -
 # Use a specific release
-podman run -it --rm ghcr.io/gardenlinux/lima 2070.0.0 | limactl start --name gardenlinux -
+podman run ghcr.io/gardenlinux/lima 2070.0.0 | limactl start --name gardenlinux -
 ```
 
 The container just writes the yaml to standard output.
