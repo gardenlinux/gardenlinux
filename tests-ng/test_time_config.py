@@ -41,10 +41,10 @@ def test_correct_ntp_on_aws(timedatectl: TimeDateCtl):
     "google", reason="Only works on real google cloud because of metadata access."
 )
 def test_correct_ntp_on_gcp(timedatectl: TimeDateCtl):
-    ntp_hostname = timedatectl.get_ntpserver().hostname
+    ntp_ip= timedatectl.get_ntpserver().ip
     assert (
-        ntp_hostname == "metadata.google.internal"
-    ), f"ntp server is invalid. Expected 'metadata.google.internal' got '{ntp_hostname}'."
+        ntp_ip == "169.254.169.254" # gcp metadata service
+    ), f"ntp server is invalid. Expected '169.254.169.254' got '{ntp_ip}'."
 
 
 @pytest.mark.flaky(reruns=10, reruns_delay=30, only_rerun="AssertionError")
