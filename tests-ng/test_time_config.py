@@ -3,6 +3,7 @@ from datetime import datetime
 from time import time
 
 import pytest
+
 from plugins.shell import ShellRunner
 from plugins.systemd import Systemd
 from plugins.systemd_detect_virt import Hypervisor, systemd_detect_virt
@@ -41,9 +42,9 @@ def test_correct_ntp_on_aws(timedatectl: TimeDateCtl):
     "google", reason="Only works on real google cloud because of metadata access."
 )
 def test_correct_ntp_on_gcp(timedatectl: TimeDateCtl):
-    ntp_ip= timedatectl.get_ntpserver().ip
+    ntp_ip = timedatectl.get_ntpserver().ip
     assert (
-        ntp_ip == "169.254.169.254" # gcp metadata service
+        ntp_ip == "169.254.169.254"  # gcp metadata service
     ), f"ntp server is invalid. Expected '169.254.169.254' got '{ntp_ip}'."
 
 
