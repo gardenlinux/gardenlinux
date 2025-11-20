@@ -1,5 +1,3 @@
-import sys
-
 import pytest
 from plugins.sysdiff import Sysdiff
 
