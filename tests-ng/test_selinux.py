@@ -2,6 +2,7 @@ import os
 from typing import List
 
 import pytest
+from plugins.file import File
 
 
 @pytest.mark.feature("_selinux")
@@ -12,5 +13,5 @@ def test_selinux_cmdline(kernel_cmdline: List[str]):
 
 @pytest.mark.feature("_selinux")
 @pytest.mark.booted(reason="requires a running kernel to access sysfs")
-def test_selinux_enabled():
-    assert os.path.exists("/sys/fs/selinux/enforce"), "SELinux not enabled"
+def test_selinux_enabled(file: File):
+    assert file.exists("/sys/fs/selinux/enforce"), "SELinux not enabled"

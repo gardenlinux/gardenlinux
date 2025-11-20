@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from plugins.file import File
 
 forbidden_config_values = [
     ("/etc/cloud/cloud.cfg", "ntp"),
@@ -29,5 +30,5 @@ def test_config_for_forbidden_value(filename: str, content: str):
 
 @pytest.mark.feature("vmware")
 @pytest.mark.parametrize("file_to_check", vmware_required_files)
-def test_required_files_exist(file_to_check: str):
-    assert os.path.exists(file_to_check), f"File {file_to_check} could not be found."
+def test_required_files_exist(file_to_check: str, file: File):
+    assert file.exists(file_to_check), f"File {file_to_check} could not be found."
