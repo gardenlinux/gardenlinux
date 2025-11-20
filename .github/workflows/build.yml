@@ -96,34 +96,34 @@ jobs:
     permissions:
       id-token: write
       actions: write
-  kmodbuild_container:
-    needs: [flavors, requirements]
-    name: Build kernel module build dev container
-    uses: ./.github/workflows/build_kmodbuild_container.yml
-    with:
-      version: ${{ needs.requirements.outputs.version }}
-    permissions:
-      actions: write
-  bare_flavors_matrix:
-    name: Generate bare flavors matrix to build
-    uses: ./.github/workflows/build_flavors_matrix.yml
-    with:
-      flags: ${{ inputs.flavors_parse_params_test_bare }}
-  bare_flavors:
-    needs: [bare_flavors_matrix, requirements]
-    name: Build bare flavors
-    strategy:
-      matrix: ${{ fromJson(needs.bare_flavors_matrix.outputs.matrix) }}
-      fail-fast: ${{ inputs.fail_fast }}
-    with:
-      arch: ${{ matrix.arch }}
-      bare_flavor: ${{ matrix.flavor }}
-      commit_id: ${{ needs.requirements.outputs.commit_id }}
-      version: ${{ needs.requirements.outputs.version }}
-    uses: ./.github/workflows/build_bare_flavor.yml
-    secrets: inherit
-    permissions:
-      actions: write
+  # kmodbuild_container:
+  #   needs: [flavors, requirements]
+  #   name: Build kernel module build dev container
+  #   uses: ./.github/workflows/build_kmodbuild_container.yml
+  #   with:
+  #     version: ${{ needs.requirements.outputs.version }}
+  #   permissions:
+  #     actions: write
+  # bare_flavors_matrix:
+  #   name: Generate bare flavors matrix to build
+  #   uses: ./.github/workflows/build_flavors_matrix.yml
+  #   with:
+  #     flags: ${{ inputs.flavors_parse_params_test_bare }}
+  # bare_flavors:
+  #   needs: [bare_flavors_matrix, requirements]
+  #   name: Build bare flavors
+  #   strategy:
+  #     matrix: ${{ fromJson(needs.bare_flavors_matrix.outputs.matrix) }}
+  #     fail-fast: ${{ inputs.fail_fast }}
+  #   with:
+  #     arch: ${{ matrix.arch }}
+  #     bare_flavor: ${{ matrix.flavor }}
+  #     commit_id: ${{ needs.requirements.outputs.commit_id }}
+  #     version: ${{ needs.requirements.outputs.version }}
+  #   uses: ./.github/workflows/build_bare_flavor.yml
+  #   secrets: inherit
+  #   permissions:
+  #     actions: write
   upload_flavor_version_data:
     needs: [requirements, flavors]
     name: Store flavor version data
