@@ -21,14 +21,6 @@ def test_clock(shell: ShellRunner):
         abs(local_seconds - remote_seconds) < 5
     ), f"clock skew should be less than 5 seconds. Local time is {local_seconds} and remote time is {remote_seconds}"
 
-@pytest.mark.booted(reason="NTP server configuration is read at runtime")
-def test_correct_ntp_on_local(timedatectl: TimeDateCtl):
-    ntp_ip = timedatectl.get_ntpserver().ip
-    assert (
-        ntp_ip == "169.254.169.127"
-    ), f"ntp server is invalid. Expected '169.254.169.123' got '{ntp_ip}'."
-
-
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("aws")
