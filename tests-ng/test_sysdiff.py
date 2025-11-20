@@ -46,6 +46,7 @@ def test_sysdiff_after_tests(sysdiff: Sysdiff):
             diff_output = sysdiff.diff_engine.generate_diff(
                 diff_result, before_snapshot, after_snapshot
             )
+            print(f"{diff_output=}")
             pytest.fail(
                 f"System changes were detected during the test run:\n{diff_output}"
             )
