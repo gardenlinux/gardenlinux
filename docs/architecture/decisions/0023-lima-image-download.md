@@ -36,7 +36,7 @@ The user can redirect this to a file for inspection/editing or directly pipe to 
 - We eliminate the need for special case handling for Lima-VM, simplifying the workflow and reducing maintenance overhead.
 - The process becomes more consistent and easier to use for end users.
 
-# Alternatives considered
+## Alternatives considered
 
 - Special pipeline for building lima images
   - We want to avoid this for the sake of pipeline uniformity and simplicity
