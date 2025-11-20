@@ -5,9 +5,8 @@ from time import time
 import pytest
 from plugins.shell import ShellRunner
 from plugins.systemd import Systemd
-from plugins.systemd_detect_virt import Hypervisor, systemd_detect_virt
-from plugins.timeconf import chrony_config_file, clocksource, ptp_hyperv_dev
-from plugins.timedatectl import TimeDateCtl, TimeSyncStatus
+from plugins.systemd_detect_virt import Hypervisor
+from plugins.timedatectl import TimeDateCtl
 
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
@@ -41,10 +40,10 @@ def test_correct_ntp_on_aws(timedatectl: TimeDateCtl):
     "google", reason="Only works on real google cloud because of metadata access."
 )
 def test_correct_ntp_on_gcp(timedatectl: TimeDateCtl):
-    ntp_hostname = timedatectl.get_ntpserver().hostname
+    ntp_ip = timedatectl.get_ntpserver().ip
     assert (
-        ntp_hostname == "metadata.google.internal"
-    ), f"ntp server is invalid. Expected 'metadata.google.internal' got '{ntp_hostname}'."
+        ntp_ip == "169.254.169.254"  # gcp metadata service
+    ), f"ntp server is invalid. Expected '169.254.169.254' got '{ntp_ip}'."
 
 
 @pytest.mark.flaky(reruns=10, reruns_delay=30, only_rerun="AssertionError")
