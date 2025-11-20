@@ -32,6 +32,24 @@ targets:
         publish: true
       - features:
           - gardener
+          - _fips
+          - _prod
+        arch: amd64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: true
+        publish: true
+      - features:
+          - gardener
+          - _fips
           - _prod
         arch: arm64
         build: true
@@ -238,6 +256,20 @@ targets:
         test-platform: false
         publish: true
       - features: []
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - pythonDev
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - pythonDev
         arch: arm64
         build: true
         test: true
@@ -653,6 +685,21 @@ targets:
       - features:
           - gardener
           - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+  - name: lima
+    category: hypervisor
+    flavors:
+      - features: []
+        arch: amd64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features: []
         arch: arm64
         build: true
         test: true
