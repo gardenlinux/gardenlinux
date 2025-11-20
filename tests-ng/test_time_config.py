@@ -3,12 +3,10 @@ from datetime import datetime
 from time import time
 
 import pytest
-
 from plugins.shell import ShellRunner
 from plugins.systemd import Systemd
-from plugins.systemd_detect_virt import Hypervisor, systemd_detect_virt
-from plugins.timeconf import chrony_config_file, clocksource, ptp_hyperv_dev
-from plugins.timedatectl import TimeDateCtl, TimeSyncStatus
+from plugins.systemd_detect_virt import Hypervisor
+from plugins.timedatectl import TimeDateCtl
 
 
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
