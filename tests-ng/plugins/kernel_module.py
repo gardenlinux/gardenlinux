@@ -1,7 +1,6 @@
 import os
 import re
 from dataclasses import dataclass
-from graphlib import TopologicalSorter
 
 import pytest
 
@@ -30,7 +29,7 @@ class KernelModule:
         self._find = find
         self._shell = shell
         self._kernel_versions = kernel_versions
-        self._unload = TopologicalSorter()
+        self._unload = []
 
     def is_module_loaded(self, module: str) -> bool:
         """Return True if ``module`` appears in ``/proc/modules``."""
@@ -54,6 +53,13 @@ class KernelModule:
         )
         return result.returncode == 0
 
+    def unload_module(self, module: str) -> bool:
+        """Unload ``module`` using ``rmmod``; return True on success."""
+        result = self._shell(
+            f"modprobe -r -w 60000 {module}", capture_output=False, ignore_exit_code=True
+        )
+        return result.returncode == 0
+
     def safe_load_module(self, module: str) -> bool:
         """Load ``module`` using ``modprobe`` and save all modules that have to be unloaded to revert the change; return True on success or if the module is already loaded."""
         if not self.is_module_loaded(module):
@@ -61,21 +67,13 @@ class KernelModule:
             return self.load_module(module)
         return True
 
-    def unload_module(self, module: str) -> bool:
-        """Unload ``module`` using ``rmmod``; return True on success."""
-        result = self._shell(
-            f"rmmod {module}", capture_output=False, ignore_exit_code=True
-        )
-        return result.returncode == 0
-
     def safe_unload_modules(self) -> bool:
         """Unload all modules and dependecies loaded by ``safe_load_module`` in the correct order using ``rmmod``; return True if all succeed"""
         success = True
-        for module in self._unload.static_order():
+        for module in self._unload:
             print(f"Unloading {module=}")
             success &= self.unload_module(module)
 
-        self._unload = TopologicalSorter()
         return success
 
     def collect_loaded_modules(self) -> list[str]:
