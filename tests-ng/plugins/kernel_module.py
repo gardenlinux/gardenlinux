@@ -64,6 +64,15 @@ class KernelModule:
     def unload_module(self, module: str) -> bool:
         """Unload ``module`` using ``rmmod``; return True on success."""
         result = self._shell(
+            f"rmmod {module}",
+            capture_output=False,
+            ignore_exit_code=True,
+        )
+        return result.returncode == 0
+
+    def _safe_unload_module(self, module: str) -> bool:
+        """Unload ``module`` using ``rmmod``; return True on success."""
+        result = self._shell(
             f"modprobe -v -r -w 60000 {module}",
             capture_output=True,
             ignore_exit_code=True,
@@ -76,7 +85,7 @@ class KernelModule:
         """Unload all modules and dependecies loaded by ``safe_load_module`` in the correct order using ``rmmod``; return True if all succeed"""
         success = True
         for module in self._unload.static_order():
-            success &= self.unload_module(module)
+            success &= self._safe_unload_module(module)
 
         self._unload = TopologicalSorter()
         return success
