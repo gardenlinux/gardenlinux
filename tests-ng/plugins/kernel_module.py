@@ -65,7 +65,7 @@ class KernelModule:
     def safe_load_module(self, module: str) -> bool:
         """Load ``module`` using ``modprobe`` and save all modules that have to be unloaded to revert the change; return True on success or if the module is already loaded."""
         if not self.is_module_loaded(module):
-            self._update_module_dependencies(module)
+            self._unload.append(module)
             return self.load_module(module)
         return True
 
@@ -73,7 +73,6 @@ class KernelModule:
         """Unload all modules and dependecies loaded by ``safe_load_module`` in the correct order using ``rmmod``; return True if all succeed"""
         success = True
         for module in self._unload:
-            # print(f"Unloading {module=}")
             success &= self.unload_module(module)
 
         return success
@@ -115,17 +114,6 @@ class KernelModule:
     def is_module_available(self, module: str) -> bool:
         """Check if a module is available as loadable module"""
         return module in self.collect_available_modules()
-
-    def _update_module_dependencies(self, module: str) -> None:
-        """Add module and dependencies to TopologicalSorter for unloading in the correct order"""
-        self._unload.append(module)
-
-        result = self._shell(f"modprobe --show-depends {module}", capture_output=True)
-        for dependency in dependencies.findall(result.stdout):
-            if module != dependency:
-                if not self.is_module_loaded(dependency):
-                    self._unload.append(dependency)
-                    self._update_module_dependencies(dependency)
 
 
 @pytest.fixture
