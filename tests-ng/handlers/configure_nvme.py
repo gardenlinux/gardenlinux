@@ -113,7 +113,7 @@ def nvme_device(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
     for entry in reversed(REQUIRED_NVME_MODULES):
         name = entry["name"]
         if entry["status"] == "Loaded":
-            kernel_module.unload_module(name)
+            kernel_module.safe_unload_modules()
             entry["status"] = None
-    if mount_package_installed == True:
+    if mount_package_installed:
         shell("DEBIAN_FRONTEND=noninteractive apt remove mount")
