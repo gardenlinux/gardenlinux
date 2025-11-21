@@ -5,32 +5,60 @@ import tomllib
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import pytest
+
+# Supported formats for auto-detection
+SUPPORTED_FORMATS = ["json", "yaml", "toml", "ini", "keyval"]
+
+# Default comment characters per format
+# Always a list - empty list means the format does not support comments
+FORMAT_COMMENT_CHARS = {
+    "json": [],  # JSON does not support comments
+    "yaml": ["#"],
+    "toml": ["#"],
+    "ini": [";", "#"],  # INI supports both ; and # for comments
+    "keyval": ["#"],
+}
 
 
 @dataclass
-class MappingResult:
-    """Result of mapping check operation."""
+class MatchResult:
+    """Result of matching operations on structured data.
 
-    matches: Dict[str, Any]
+    Returned by ``match_values()`` (value matching) and ``match_keys()`` (key existence checks).
+    Provides information about which keys are missing and which values don't match expectations.
+
+    Attributes:
+        missing: List of keys that don't exist (value was None).
+        wrong: Dictionary mapping keys to (expected_value, actual_value) tuples for mismatched values.
+              Only populated when matching values (from ``match_values()``), always empty for key existence checks.
+        all_match: True if no missing keys and no wrong values.
+
+    Properties:
+        wrong_list: List of formatted strings for each wrong value, automatically derived from ``wrong``.
+                   Format: ``["key: 'actual'!='expected'", ...]``
+    """
+
     missing: List[str]
-    wrong: Dict[str, Tuple[Any, Any]]  # key -> (expected, actual)
+    wrong: Dict[str, Tuple[Any, Any]]
     all_match: bool
 
-    def __post_init__(self):
-        """Compute all_match after initialization."""
-        self.all_match = len(self.missing) == 0 and len(self.wrong) == 0
-
     @property
-    def wrong_formatted(self) -> str:
-        """Format wrong values as a string for assertion messages.
+    def wrong_list(self) -> List[str]:
+        """List of formatted strings for each wrong value.
 
         Returns:
-            str: Formatted string with wrong key-value pairs.
+            List of formatted strings like ["key: 'actual'!='expected'"].
         """
-        if not self.wrong:
-            return ""
-        return ", ".join(f"{k}:{v[1]!r}!={v[0]!r}" for k, v in self.wrong.items())
+        return [
+            f"{key_path}: {actual_value!r}!={expected_value!r}"
+            for key_path, (expected_value, actual_value) in self.wrong.items()
+        ]
+
+    def __bool__(self) -> bool:
+        return self.all_match
 
 
 @dataclass
@@ -71,11 +99,40 @@ class Parse:
         """
         return cls(content, label)
 
-    def _strip_comments(self, content: str, comment_char: str = "#") -> str:
-        return "\n".join(
-            line.split(comment_char, 1)[0].rstrip() if comment_char in line else line
-            for line in content.splitlines()
-        )
+    def _resolve_comment_chars(
+        self,
+        format: Optional[str],
+        comment_char: Optional[Union[str, List[str], tuple]],
+    ) -> List[str]:
+        if comment_char is None:
+            if format is not None:
+                return FORMAT_COMMENT_CHARS.get(format.lower(), ["#"])
+            else:
+                return ["#"]
+        else:
+            # Normalize to list for consistent handling
+            if isinstance(comment_char, (list, tuple)):
+                return list(comment_char)
+            else:
+                return [comment_char]
+
+    def _strip_comments_from_line(self, line: str, comment_chars: List[str]) -> str:
+        """Strip comments from a single line using the first matching comment character.
+
+        Args:
+            line: Line to process.
+            comment_chars: List of comment characters to check.
+
+        Returns:
+            Line with comments stripped.
+        """
+        if not comment_chars:
+            return line
+        # Find the first matching comment character
+        for char in comment_chars:
+            if char in line:
+                return line.split(char, 1)[0]
+        return line
 
     def _parse_keyval(self, content: str) -> Dict[str, str]:
         cfg = configparser.ConfigParser(allow_no_value=True)
@@ -96,12 +153,20 @@ class Parse:
         import yaml
 
         if ignore_comments:
-            content = self._strip_comments(content)
+            comment_chars = FORMAT_COMMENT_CHARS.get("yaml", ["#"])
+            content = "\n".join(
+                self._strip_comments_from_line(line, comment_chars)
+                for line in content.splitlines()
+            )
         return yaml.safe_load(content)
 
     def _parse_toml(self, content: str, ignore_comments: bool) -> Any:
         if ignore_comments:
-            content = self._strip_comments(content, "#")
+            comment_chars = FORMAT_COMMENT_CHARS.get("toml", ["#"])
+            content = "\n".join(
+                self._strip_comments_from_line(line, comment_chars)
+                for line in content.splitlines()
+            )
         return tomllib.loads(content)
 
     def _get_by_path(self, data: Any, path: str) -> Any:
@@ -113,162 +178,405 @@ class Parse:
                 return None
         return cur
 
-    def check_line(self, line: str, *, invert: bool = False) -> bool:
-        """Check if a normalized line exists (or not) in the content.
-
-        Whitespace is normalized to single spaces before searching.
-
-        Args:
-            line: The substring to search within lines.
-            invert: If True, check that it does not exist.
-
-        Returns:
-            bool: True if the condition is met (line found when invert=False,
-                  or line not found when invert=True), False otherwise.
-        """
-        found = any(
-            re.sub(r"\s+", " ", l).find(line) != -1 for l in self.content.splitlines()
-        )
-        if invert:
-            return not found
-        return found
-
-    def check_lines(self, lines: List[str], *, invert: bool = False) -> bool:
-        """Check if multiple lines appear in order (or not) in the content.
-
-        Each expected line and the content are whitespace-normalized; the
-        check looks for the ordered occurrence allowing arbitrary text
-        between lines.
-
-        Args:
-            lines: Sequence of expected lines in order.
-            invert: If True, check that this ordered sequence does not occur.
-
-        Returns:
-            bool: True if the condition is met (lines found in order when invert=False,
-                  or lines not found in order when invert=True), False otherwise.
-        """
-        norm = "\n".join(re.sub(r"\s+", " ", l) for l in self.content.splitlines())
-        pattern = ".*".join(re.escape(re.sub(r"\s+", " ", l)) for l in lines)
-        found_in_order = bool(re.search(pattern, norm, flags=re.S))
-        if invert:
-            return not found_in_order
-        return found_in_order
-
-    def get_mapping(
-        self,
-        expected: Dict[str, Any],
-        *,
-        format: str,
-        invert: bool = False,
-        ignore_comments: bool = True,
-    ) -> MappingResult:
-        """Get mapping check results for structured content.
-
-        Supports formats: ``keyval``, ``ini``, ``json``, ``yaml``, ``toml``.
-        For hierarchical formats, keys may use dotted paths (e.g. ``a.b.c``).
-
-        Args:
-            expected: Mapping of expected keys to values.
-            format: One of the supported format identifiers.
-            invert: If True, check that none of the expected pairs match.
-            ignore_comments: If True, strip comments where applicable.
-
-        Returns:
-            MappingResult: Result containing matches, missing keys, wrong values,
-                          and all_match flag indicating if all expected mappings match.
-        """
+    def _parse_content(self, format: str, ignore_comments: bool = True) -> Any:
         fmt = format.lower()
         match fmt:
             case "keyval":
-                data: Any = self._parse_keyval(self.content)
-                resolver = lambda k: data.get(k)
+                return self._parse_keyval(self.content)
             case "ini":
-                data = self._parse_ini(self.content)
-                resolver = lambda k: self._get_by_path(data, k)
+                return self._parse_ini(self.content)
             case "json":
-                data = self._parse_json(self.content)
-                resolver = lambda k: self._get_by_path(data, k)
+                return self._parse_json(self.content)
             case "yaml":
-                data = self._parse_yaml(self.content, ignore_comments)
-                resolver = lambda k: self._get_by_path(data, k)
+                return self._parse_yaml(self.content, ignore_comments)
             case "toml":
-                data = self._parse_toml(self.content, ignore_comments)
-                resolver = lambda k: self._get_by_path(data, k)
+                return self._parse_toml(self.content, ignore_comments)
             case _:
-                raise ValueError(f"Unsupported format: {format}")
+                raise ValueError(
+                    f"Unsupported format '{format}' in {self.label}. "
+                    f"Supported formats: {', '.join(SUPPORTED_FORMATS)}."
+                )
 
-        matches: Dict[str, Any] = {}
-        for k, v in expected.items():
-            actual = resolver(k)
-            if actual is None:
-                continue
-            matches[k] = actual
+    def has_line(
+        self,
+        pattern: str,
+        *,
+        format: Optional[str] = None,
+        comment_char: Optional[Union[str, List[str], tuple]] = None,
+    ) -> bool:
+        """Check if a line exists, automatically filtering comments.
 
-        missing = [k for k in expected.keys() if k not in matches]
-        wrong = {
-            k: (expected[k], matches[k])
-            for k, v in expected.items()
-            if k in matches and matches[k] != v
-        }
+        Filters out commented lines (lines starting with comment_char or containing
+        comment_char after whitespace) and matches pattern at line boundaries.
+        Whitespace is normalized to single spaces before searching.
 
-        return MappingResult(
-            matches=matches,
-            missing=missing,
-            wrong=wrong,
-            all_match=False,  # Will be set in __post_init__
-        )
+        Args:
+            pattern: The substring to search within lines.
+            format: (optional) Format identifier. If provided, uses format-specific comment character(s).
+            comment_char: (optional) Character(s) used for comments. Can be a string, list of strings,
+                         or None. If None and format is provided, uses format-specific default
+                         (always a list - empty list means no comments, e.g., JSON).
+                         If None and format is not provided, defaults to ["#"].
+                         For INI format, defaults to [";", "#"].
 
-    def check_list(
+        Returns:
+            bool: True if any non-comment line matches the pattern, False otherwise.
+
+        Example:
+            >>> parser = Parse.from_str("# PermitRootLogin no\\nPermitRootLogin yes")
+            >>> parser.has_line("PermitRootLogin yes")  # True
+            >>> parser.has_line("PermitRootLogin no")   # False (commented out)
+        """
+        comment_chars = self._resolve_comment_chars(format, comment_char)
+
+        for line in self.content.splitlines():
+            line = self._strip_comments_from_line(line, comment_chars)
+            line = line.rstrip()
+            normalized = re.sub(r"\s+", " ", line)
+            if normalized.find(pattern) != -1:
+                return True
+        return False
+
+    def has_lines(
+        self,
+        patterns: List[str],
+        *,
+        order: bool = True,
+        format: Optional[str] = None,
+        comment_char: Optional[Union[str, List[str], tuple]] = None,
+    ) -> bool:
+        """Check if multiple lines exist, with comment filtering and optional ordering.
+
+        Filters comments like `has_line()` method. If order=True, checks if patterns
+        appear in order (allowing text between). If order=False, checks if all
+        patterns exist in any order.
+
+        Args:
+            patterns: List of patterns to search for.
+            order: (optional, default=True) If True, check patterns appear in order. If False, check all exist.
+            format: (optional) Format identifier. If provided, uses format-specific comment character(s).
+            comment_char: (optional) Character(s) used for comments. Can be a string, list of strings,
+                         or None. If None and format is provided, uses format-specific default
+                         (always a list - empty list means no comments, e.g., JSON).
+                         If None and format is not provided, defaults to ["#"].
+                         For INI format, defaults to [";", "#"].
+
+        Returns:
+            bool: True if condition is met, False otherwise.
+
+        Example:
+            >>> parser = Parse.from_str("#line0 \\n# line1\\nline1\\nline2\\nline3")
+            >>> parser.has_lines(["line0", "line1"], order=True)   # False (line0 is commented out)
+            >>> parser.has_lines(["line1", "line2"], order=True)   # True
+            >>> parser.has_lines(["line2", "line1"], order=False)  # True
+            >>> parser.has_lines(["line2", "line1"], order=True)   # False
+        """
+        if not order:
+            # When order=False, we can simply check each pattern using has_line
+            return all(
+                self.has_line(pattern, format=format, comment_char=comment_char)
+                for pattern in patterns
+            )
+
+        # When order=True, we need to check patterns appear in sequence
+        comment_chars = self._resolve_comment_chars(format, comment_char)
+
+        filtered_lines = []
+        for line in self.content.splitlines():
+            line = self._strip_comments_from_line(line, comment_chars)
+            line = line.rstrip()
+            if line:  # Skip empty lines
+                normalized = re.sub(r"\s+", " ", line)
+                filtered_lines.append(normalized)
+
+        norm_patterns = [re.sub(r"\s+", " ", p) for p in patterns]
+        pattern = ".*".join(re.escape(p) for p in norm_patterns)
+        content = "\n".join(filtered_lines)
+        return bool(re.search(pattern, content, flags=re.S))
+
+    def match_regex(self, pattern: str, *, flags: int = 0) -> Optional[re.Match[str]]:
+        """Apply regex pattern to content and return match object.
+
+        Provides full regex power for file parsing. Only available for
+        unstructured content (no format specified).
+
+        Args:
+            pattern: Regular expression pattern to search for.
+            flags: (optional, default=0) Regex flags (e.g., re.IGNORECASE, re.MULTILINE).
+
+        Returns:
+            Match object if found, None otherwise.
+
+        Example:
+            >>> parser = Parse.from_str("Boot completed in 2.345s")
+            >>> match = parser.match_regex(r"Boot completed in ([\\d.]+)s")
+            >>> if match:
+            ...     boot_time = float(match.group(1))  # 2.345
+        """
+        return re.search(pattern, self.content, flags=flags)
+
+    def list_contains_value(
         self,
         list_path: str,
         value: Any,
         *,
         format: str,
-        invert: bool = False,
         ignore_comments: bool = True,
     ) -> bool:
-        """Check that a value is (or is not) present in a list within structured content.
+        """Check that a value is present in a list within structured content.
 
-        Supports formats: ``json``, ``yaml``, ``toml``.
-        For hierarchical formats, the list path may use dotted notation (e.g. ``a.b.c``).
+        Only works with structured formats (json, yaml, toml).
 
         Args:
             list_path: Dot-separated path to the list (e.g. ``datasource_list`` or
                 ``system_info.default_user.groups``).
             value: The value to search for in the list.
             format: One of ``json``, ``yaml``, or ``toml``.
-            invert: If True, check that the value is NOT in the list.
-            ignore_comments: If True, strip comments where applicable.
+            ignore_comments: (optional, default=True) If True, strip comments where applicable.
+
+        Returns:
+            bool: True if value is in the list, False otherwise.
+
+        Example:
+            >>> parser = Parse.from_str('{"application": {"groups": ["admin", "users"]}}', label="test")
+            >>> parser.list_contains_value("application.groups", "admin", format="json")  # True
+            >>> parser.list_contains_value("application.groups", "root", format="json")   # False
         """
         fmt = format.lower()
-        match fmt:
-            case "json":
-                data: Any = self._parse_json(self.content)
-                target = self._get_by_path(data, list_path)
-            case "yaml":
-                data = self._parse_yaml(self.content, ignore_comments)
-                target = self._get_by_path(data, list_path)
-            case "toml":
-                data = self._parse_toml(self.content, ignore_comments)
-                target = self._get_by_path(data, list_path)
-            case _:
-                raise ValueError(
-                    f"Unsupported format for list assertion: {format}. "
-                    f"Supported formats: json, yaml, toml"
-                )
+        if fmt not in ["json", "yaml", "toml"]:
+            raise ValueError(
+                f"Unsupported format '{format}' for list assertion in {self.label}. "
+                f"Supported formats: json, yaml, toml"
+            )
+
+        data: Any = self._parse_content(fmt, ignore_comments)
+        target = self._get_by_path(data, list_path)
 
         if target is None:
             raise ValueError(
-                f"List path '{list_path}' not found or does not exist in {self.label} (format={format})"
+                f"List path '{list_path}' not found or does not exist in {self.label} (format={format}). "
+                f"Check the path and file structure."
             )
 
         if not isinstance(target, list):
             raise ValueError(
-                f"Path '{list_path}' in {self.label} is not a list (format={format}, got {type(target).__name__})"
+                f"Path '{list_path}' in {self.label} is not a list (format={format}, got {type(target).__name__}). "
+                f"Expected a list but found {type(target).__name__}."
             )
 
-        found = value in target
-        if not invert:
-            return found
-        return not found
+        return value in target
+
+    def get_value(
+        self,
+        key_path: str,
+        *,
+        format: str,
+        ignore_comments: bool = True,
+    ) -> Optional[Any]:
+        """Get value at a path in structured formats.
+
+        Uses dotted path notation to access nested values in structured formats.
+        Works with all structured formats: json, yaml, toml, ini, keyval.
+
+        Args:
+            key_path: Dot-separated path to the key (e.g. ``database.host``).
+            format: One of the supported format identifiers.
+            ignore_comments: (optional, default=True) If True, strip comments where applicable.
+
+        Returns:
+            Value at the path if found, None otherwise.
+
+        Example:
+            >>> parser = Parse.from_str('{"database": {"host": "localhost"}}', label="test")
+            >>> parser.get_value("database.host", format="json")  # "localhost"
+            >>> parser.get_value("database.port", format="json")  # None
+        """
+        fmt = format.lower()
+        data: Any = self._parse_content(fmt, ignore_comments)
+
+        # Special handling for keyval format (flat dict)
+        if fmt == "keyval":
+            return data.get(key_path)
+
+        return self._get_by_path(data, key_path)
+
+    def match_values(
+        self,
+        expected: Dict[str, Any],
+        *,
+        format: str,
+        ignore_comments: bool = True,
+    ) -> MatchResult:
+        """Verify that multiple key-value pairs match expected values.
+
+        Uses dotted path notation to access nested values in structured formats.
+        Works with all structured formats: json, yaml, toml, ini, keyval.
+
+        Args:
+            expected: Dictionary mapping key_path to expected_value (e.g. ``{"database.host": "localhost"}``).
+            format: One of the supported format identifiers.
+            ignore_comments: (optional, default=True) If True, strip comments where applicable.
+
+        Returns:
+            MatchResult with missing and wrong values.
+
+        Example:
+            >>> parser = Parse.from_str(
+            ...     '{"database": {"host": "localhost", "port": 5432}}',
+            ...     label="test"
+            ... )
+            >>> result = parser.match_values(
+            ...     {"database.host": "localhost", "database.port": 5432, "database.missing": "value"},
+            ...     format="json"
+            ... )
+            >>> result.missing
+            ['database.missing']
+            >>> result.wrong
+            {}
+            >>> result.all_match
+            False
+        """
+        missing: List[str] = []
+        wrong: Dict[str, Tuple[Any, Any]] = {}
+
+        for key_path, expected_value in expected.items():
+            actual_value = self.get_value(
+                key_path, format=format, ignore_comments=ignore_comments
+            )
+            if actual_value is None:
+                missing.append(key_path)
+            elif actual_value != expected_value:
+                wrong[key_path] = (expected_value, actual_value)
+
+        return MatchResult(
+            missing=missing,
+            wrong=wrong,
+            all_match=len(missing) == 0 and len(wrong) == 0,
+        )
+
+    def has_key(
+        self,
+        key_path: str,
+        *,
+        format: str,
+        ignore_comments: bool = True,
+    ) -> bool:
+        """Check if a key/path exists in structured format.
+
+        Uses dotted path notation to check for key existence in structured formats.
+
+        Args:
+            key_path: Dot-separated path to the key (e.g. ``database.host``).
+            format: One of the supported format identifiers.
+            ignore_comments: (optional, default=True) If True, strip comments where applicable.
+
+        Returns:
+            bool: True if key exists, False otherwise.
+
+        Example:
+            >>> parser = Parse.from_str('{"database": {"host": "localhost"}}', label="test")
+            >>> parser.has_key("database.host", format="json")  # True
+            >>> parser.has_key("database.port", format="json")  # False
+        """
+        return (
+            self.get_value(key_path, format=format, ignore_comments=ignore_comments)
+            is not None
+        )
+
+    def match_keys(
+        self,
+        key_paths: List[str],
+        *,
+        format: str,
+        ignore_comments: bool = True,
+    ) -> MatchResult:
+        """Check if multiple keys/paths exist in structured format.
+
+        Uses dotted path notation to check for key existence in structured formats.
+
+        Args:
+            key_paths: List of dot-separated paths to keys (e.g. ``["database.host", "database.port"]``).
+            format: One of the supported format identifiers.
+            ignore_comments: (optional, default=True) If True, strip comments where applicable.
+
+        Returns:
+            MatchResult with missing keys (keys that don't exist). The wrong dictionary will be empty
+            since this method only checks existence, not values.
+
+        Example:
+            >>> parser = Parse.from_str(
+            ...     '{"database": {"host": "localhost", "port": 5432}}',
+            ...     label="test"
+            ... )
+            >>> result = parser.match_keys(["database.host", "database.port", "database.missing"], format="json")
+            >>> result.missing
+            ['database.missing']
+            >>> result.wrong
+            {}
+            >>> result.all_match
+            False
+        """
+        missing: List[str] = []
+        wrong: Dict[str, Tuple[Any, Any]] = {}
+
+        for key_path in key_paths:
+            if not self.has_key(
+                key_path, format=format, ignore_comments=ignore_comments
+            ):
+                missing.append(key_path)
+
+        return MatchResult(missing=missing, wrong=wrong, all_match=len(missing) == 0)
+
+    def get_paths(
+        self,
+        value: Any,
+        *,
+        format: str,
+        ignore_comments: bool = True,
+    ) -> List[str]:
+        """Get all paths that contain a given value in structured formats.
+
+        Searches recursively through nested structures to find all keys/paths
+        that have the given value.
+
+        Args:
+            value: The value to search for.
+            format: One of the supported format identifiers.
+            ignore_comments: (optional, default=True) If True, strip comments where applicable.
+
+        Returns:
+            List of dotted paths that have the given value. Empty list if not found.
+
+        Example:
+            >>> content = '{"host": "localhost", "database": {"host": "localhost"}}'
+            >>> parser = Parse.from_str(content, label="test")
+            >>> parser.get_paths("localhost", format="json")
+            # Returns: ["host", "database.host"]
+        """
+        data: Any = self._parse_content(format, ignore_comments)
+
+        paths: List[str] = []
+
+        def _find_paths(obj: Any, current_path: str = "") -> None:
+            """Recursively find paths with the given value."""
+            if isinstance(obj, dict):
+                for k, v in obj.items():
+                    new_path = f"{current_path}.{k}" if current_path else k
+                    if v == value:
+                        paths.append(new_path)
+                    _find_paths(v, new_path)
+            elif isinstance(obj, list):
+                for i, item in enumerate(obj):
+                    new_path = f"{current_path}[{i}]" if current_path else f"[{i}]"
+                    if item == value:
+                        paths.append(new_path)
+                    _find_paths(item, new_path)
+
+        _find_paths(data)
+        return paths
+
+
+@pytest.fixture
+def parse() -> type[Parse]:
+    """Fixture providing the ``Parse`` class for parsing string content."""
+    return Parse
