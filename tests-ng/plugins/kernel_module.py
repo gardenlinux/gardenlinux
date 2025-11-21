@@ -71,7 +71,8 @@ class KernelModule:
         return result.returncode == 0
 
     def _safe_unload_module(self, module: str) -> bool:
-        """Unload ``module`` using ``rmmod``; return True on success."""
+        """Unload ``module`` using ``modprobe``; return True on success."""
+        print(f'About to call modprobe -r {module}')
         result = self._shell(
             f"modprobe -v -r -w 60000 {module}",
             capture_output=True,
