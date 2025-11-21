@@ -2,6 +2,7 @@ import os
 import pwd
 
 import pytest
+from plugins.file import File
 from plugins.sshd import Sshd
 from plugins.systemd import Systemd
 from plugins.utils import equals_ignore_case, get_normalized_sets, is_set
@@ -85,7 +86,7 @@ def test_sshd_has_required_config(sshd_config_item: str, sshd: Sshd):
     "ssh and not (ali or aws or azure or openstack)",
     reason="We want no authorized_keys for unmanaged users",
 )
-def test_users_have_no_authorized_keys(expected_users):
+def test_users_have_no_authorized_keys(expected_users, file: File):
     skip_users = {"nologin", "sync"}
     skip_shells = {"/bin/false"}
     files_to_check = ["authorized_keys", "authorized_keys2"]
@@ -103,7 +104,7 @@ def test_users_have_no_authorized_keys(expected_users):
         ssh_dir = os.path.join(entry.pw_dir, ".ssh")
         for filename in files_to_check:
             key_path = os.path.join(ssh_dir, filename)
-            assert not os.path.exists(
+            assert not file.exists(
                 key_path
             ), f"user '{entry.pw_name}' should not have an authorized_keys file: {key_path}"
 
@@ -112,7 +113,7 @@ def test_users_have_no_authorized_keys(expected_users):
     "ssh and (ali or aws or azure or openstack)",
     reason="ALI, AWS, Azure and OpenStack auto generate authorized_keys for root with a hint to use another user",
 )
-def test_users_have_only_root_authorized_keys_cloud(expected_users):
+def test_users_have_only_root_authorized_keys_cloud(expected_users, file: File):
     skip_users = {"nologin", "sync"}
     skip_shells = {"/bin/false"}
     files_to_check = ["authorized_keys", "authorized_keys2"]
@@ -130,7 +131,7 @@ def test_users_have_only_root_authorized_keys_cloud(expected_users):
         ssh_dir = os.path.join(entry.pw_dir, ".ssh")
         for filename in files_to_check:
             key_path = os.path.join(ssh_dir, filename)
-            if os.path.exists(key_path):
+            if file.exists(key_path):
                 if entry.pw_name != "root":
                     assert (
                         False
