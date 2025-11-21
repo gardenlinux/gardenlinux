@@ -37,7 +37,7 @@ def nvme_device(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
     for entry in REQUIRED_NVME_MODULES:
         name = entry["name"]
         if not kernel_module.is_module_loaded(name):
-            kernel_module.load_module(name)
+            kernel_module.safe_load_module(name)
             entry["status"] = "Loaded"
     port = 1
     while os.path.exists(os.path.join("/sys/kernel/config/nvmet/ports", str(port))):
