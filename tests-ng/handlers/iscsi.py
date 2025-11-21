@@ -1,7 +1,5 @@
 import os
 import re
-from doctest import FAIL_FAST
-from math import fabs
 
 import pytest
 from plugins.kernel_module import KernelModule

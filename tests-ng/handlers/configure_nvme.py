@@ -115,5 +115,5 @@ def nvme_device(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
         if entry["status"] == "Loaded":
             kernel_module.unload_module(name)
             entry["status"] = None
-    if mount_package_installed == True:
+    if mount_package_installed:
         shell("DEBIAN_FRONTEND=noninteractive apt remove mount")
