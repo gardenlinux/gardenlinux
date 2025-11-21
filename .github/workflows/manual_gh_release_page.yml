@@ -39,8 +39,8 @@ jobs:
         id: kube_auth
         uses: gardener/cc-utils/.github/actions/kubernetes-auth@ec02d953632836ac3b8e84b4f6af3084e7462caa
         with:
-          server: https://api.glvd.gardnlinux.shoot.canary.k8s-hana.ondemand.com
-          server-ca-discovery-url: https://discovery.ingress.garden.canary.k8s.ondemand.com/projects/gardnlinux/shoots/8a569063-b0d3-45c4-a653-158e70b1bfd1/cluster-ca
+          server: https://api.live.gl-live.shoot.live.k8s-hana.ondemand.com
+          server-ca-discovery-url: https://discovery.ingress.garden.live.k8s.ondemand.com/projects/gl-live/shoots/3f2715e7-dc7c-4bf1-a594-dc0d90cd0f1c/cluster-ca
           audience: ${{ env.OIDC_AUDIENCE }}
 
       - name: Start a new ingestion job in GLVD to import package list for new version
@@ -48,7 +48,7 @@ jobs:
           KUBECONFIG: kubeconfig.yaml
         run: |
           kubectl run ingest-new-gl-version-$RANDOM \
-              --namespace default \
+              --namespace glvd \
               --image=ghcr.io/gardenlinux/glvd-data-ingestion:latest \
               --restart=Never \
               --env=PGDATABASE=glvd \
