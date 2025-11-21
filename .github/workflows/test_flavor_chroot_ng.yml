@@ -39,7 +39,7 @@ jobs:
           path: tests-ng/.build
       - name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@hotfix-disabled-python-cache-in-setup-action # pin@0.10.5
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@0.10.6 # pin@0.10.6
         with:
           flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
       - name: Set CNAME

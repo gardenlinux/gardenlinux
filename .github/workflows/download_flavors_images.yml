@@ -42,7 +42,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@hotfix-disabled-python-cache-in-setup-action # pin@0.10.5
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6 # pin@0.10.6
       - name: Set image reference for S3
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
