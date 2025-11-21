@@ -1,4 +1,11 @@
+import configparser
+import hmac
 import os
+from hashlib import _hashlib  # type: ignore
+from hashlib import md5 as MD5
+from hashlib import sha1 as SHA1
+from hashlib import sha256 as SHA256
+from platform import machine as arch
 from stat import S_ISREG
 
 import pytest
@@ -26,6 +33,54 @@ def test_gnutls_fips_file_is_empty():
     gnutls_fips_file = os.stat("/etc/system-fips")
 
     assert gnutls_fips_file.st_size == 0, f"The /etc/system-fips is not empty."
+
+
+@pytest.mark.feature("_fips")
+def test_gnutls_fips_dot_hmac_file_is_presented():
+    """
+    GnuTLS will perform a self check based on the FIPS requirements. A file that contains an HMAC needs to be present on the target system. This test ensures that the file was installed.
+
+    https://www.gnutls.org/manual/html_node/FIPS140_002d2-mode.html
+    """
+    gnutls_fipshmac_path = f"/usr/lib/{arch()}-linux-gnu/.libgnutls.so.30.hmac"
+    gnutls_fipshmac_file = os.stat(gnutls_fipshmac_path)
+    gnutls_fipshmac_file_state = S_ISREG(gnutls_fipshmac_file.st_mode)
+
+    assert (
+        gnutls_fipshmac_file_state
+    ), f"The f{gnutls_fipshmac_path} file does not exist."
+
+
+@pytest.mark.feature("_fips")
+def test_gnutls_fips_dot_hmac_file_is_vaild():
+    """
+    One problem in shipping GnuTLS packages was that the computed HMAC was not valid for the shipped
+    version of the library since the HMAC was computed for an unstripped version. This test ensures
+    that the HMAC on the system fits with the shipped library version.
+
+    Without the HMAC the selftest will fail at second part with the follow error message:
+
+    |<1>| FIPS140-2 self testing part 2 failed
+
+    """
+    ARCH = arch()
+    gnutls_fipshmac_path = f"/usr/lib/{ARCH}-linux-gnu/.libgnutls.so.30.hmac"
+    gnutls_lib_path = f"/usr/lib/{ARCH}-linux-gnu/libgnutls.so.30"
+    # https://gitlab.com/gnutls/gnutls/-/blob/master/configure.ac?ref_type=heads#L677
+    SECRET = "orboDeJITITejsirpADONivirpUkvarP"
+
+    config = configparser.ConfigParser()
+    config.read("/usr/lib/aarch64-linux-gnu/.libgnutls.so.30.hmac")
+
+    fips_hmac = hmac.new(key=SECRET.encode("UTF-8"), msg=None, digestmod=SHA256)
+    # Need to read it 'b' since it's a binary file.
+    with open(gnutls_lib_path, mode="rb") as lib:
+        fips_hmac.update(lib.read())
+
+    assert (
+        config["libgnutls.so.30"]["hmac"] == fips_hmac.hexdigest()
+    ), "Compute HMAC is incorrect!"
+
 
 
 @pytest.mark.feature("_fips")
