@@ -65,7 +65,7 @@ class KernelModule:
         """Unload ``module`` using ``rmmod``; return True on success."""
         result = self._shell(
             f"modprobe -v -r -w 60000 {module}",
-            capture_output=False,
+            capture_output=True,
             ignore_exit_code=True,
         )
         print(f'{result.stdout=}')
