@@ -19,6 +19,7 @@ REQUIRED_NVME_MODULES = [
     {"name": "nvmet", "status": None},
     {"name": "nvmet_tcp", "status": None},
     {"name": "nvme_tcp", "status": None},
+    {"name": "loop", "status": None},
 ]
 
 
