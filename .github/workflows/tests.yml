@@ -176,7 +176,7 @@ jobs:
     uses: ./.github/workflows/test_flavor_chroot_ng.yml
     if: ${{ needs.determine_test_settings.outputs.chroot_tests == 'true' }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.chroot_test_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
@@ -189,7 +189,7 @@ jobs:
     uses: ./.github/workflows/test_flavor_qemu.yml
     if: ${{ needs.determine_test_settings.outputs.qemu_tests == 'true' }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.qemu_test_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
@@ -206,7 +206,7 @@ jobs:
         && (always() && (needs.test_flavors_qemu.result == 'success' || needs.test_flavors_qemu.result == 'skipped'))
       }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.cloud_test_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
@@ -221,7 +221,7 @@ jobs:
     uses: ./.github/workflows/test_flavor_oci.yml
     if: ${{ needs.determine_test_settings.outputs.oci_flavors_tests == 'true' }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.oci_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
@@ -235,7 +235,7 @@ jobs:
     uses: ./.github/workflows/test_flavor_chroot.yml
     if: ${{ needs.determine_test_settings.outputs.chroot_tests == 'true' }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.chroot_test_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
@@ -252,7 +252,7 @@ jobs:
         && (always() && (needs.test_flavors_qemu.result == 'success' || needs.test_flavors_qemu.result == 'skipped'))
       }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.cloud_test_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
@@ -267,7 +267,7 @@ jobs:
     uses: ./.github/workflows/test_flavor_bare.yml
     if: ${{ needs.determine_test_settings.outputs.bare_flavors_tests == 'true' }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.bare_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
