@@ -73,7 +73,7 @@ class KernelModule:
         print(f"{result.stderr=}")
         return result.returncode == 0
 
-    def _safe_unload_module(self, module: str) -> bool:
+    def safe_unload_module(self, module: str) -> bool:
         """Unload ``module`` using ``modprobe``; return True on success."""
         print(f"About to call modprobe -r {module}")
         result = self._shell(
@@ -89,7 +89,7 @@ class KernelModule:
         """Unload all modules and dependecies loaded by ``safe_load_module`` in the correct order using ``rmmod``; return True if all succeed"""
         success = True
         for module in self._unload.static_order():
-            success &= self._safe_unload_module(module)
+            success &= self.safe_unload_module(module)
 
         self._unload = TopologicalSorter()
         return success

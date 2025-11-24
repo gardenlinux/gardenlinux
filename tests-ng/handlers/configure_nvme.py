@@ -113,8 +113,11 @@ def nvme_device(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
     # reorder the modules to unload in the reverse order of loading
     for entry in reversed(REQUIRED_NVME_MODULES):
         name = entry["name"]
-        if entry["status"] in ["Loaded", "ForceUnload"]:
+        if entry["status"] == "Loaded":
             kernel_module.unload_module(name)
+            entry["status"] = None
+        if entry["status"] == "ForceUnload":
+            kernel_module.safe_unload_module(name)
             entry["status"] = None
     if mount_package_installed:
         shell("DEBIAN_FRONTEND=noninteractive apt remove mount")
