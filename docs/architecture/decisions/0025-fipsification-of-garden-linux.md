@@ -48,9 +48,9 @@ developed originally in Python, but the tool hasn’t been updated since
 [2019](https://tracker.debian.org/news/1063522/accepted-crypto-policies-20190816git-1-source-all-into-unstable-unstable/).
 
 Also, this might work for a system with a legacy configuration, but it would not be suited for the
-usage within a UCI like Trustedboot requires. This implies that we have to configure each system
-with two UCI images, the default one and the version with FIPS enabled. Next would be to have the
-power to  provide different configurations to our system, based on the boot UCI. In theory this
+usage within a UKI like Trustedboot requires. This implies that we have to configure each system
+with two UKI images, the default one and the version with FIPS enabled. Next would be to have the
+power to  provide different configurations to our system, based on the boot UKI. In theory this
 should be possible, considering that it would behave similarly to the in-place update feature.
 
 Since many of the configurations and files necessary to put the system in FIPS mode reside on the
