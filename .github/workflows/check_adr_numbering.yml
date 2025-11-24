@@ -34,6 +34,7 @@ jobs:
 
               for idx, path in enumerate(files, start=1):
                   m = re.match(r"^(\d{4})-", path.name)
+                  print(path.name)
                   if not m:
                       print(f"ERROR: filename does not start with 4 digits: {path.name}", file=sys.stderr)
                       return 1
