@@ -63,10 +63,11 @@ class KernelModule:
 
     def unload_module(self, module: str) -> bool:
         """Unload ``module`` using ``rmmod``; return True on success."""
-        import datetime
+        # import datetime
 
-        now = datetime.datetime.now()
-        print(f"{now} About to call rmmod {module}")
+        # now = datetime.datetime.now()
+        # print(f"{now} About to call rmmod {module}")
+        print(f"About to call rmmod {module}")
         result = self._shell(
             f"rmmod {module}",
             capture_output=True,
@@ -78,10 +79,11 @@ class KernelModule:
 
     def safe_unload_module(self, module: str) -> bool:
         """Unload ``module`` using ``modprobe``; return True on success."""
-        import datetime
+        # import datetime
 
-        now = datetime.datetime.now()
-        print(f"{now} About to call modprobe -r {module}")
+        # now = datetime.datetime.now()
+        # print(f"{now} About to call modprobe -r {module}")
+        print(f"About to call modprobe -r {module}")
         result = self._shell(
             f"modprobe -v -r -w 60000 {module}",
             capture_output=True,
