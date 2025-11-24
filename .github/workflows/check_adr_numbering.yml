@@ -16,7 +16,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
-      - run: |
+      - name: Verify ADRs are numbered in sequence
+        run: |
           #!/usr/bin/env python3
           from __future__ import annotations
 
