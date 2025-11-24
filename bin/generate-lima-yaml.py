@@ -26,59 +26,45 @@ yaml_config_data = {
     "mounts": [{"location": "~", "writable": False}],
 }
 
-def get_image_path(version, arch):
+def construct_command(version):
     script_dir = Path(__file__).resolve().parent
     # Construct the path to the glrd script
     glrd_path = str(script_dir / "glrd")
-    
-    # Get Latest nightly version
-    command = [glrd_path, "--latest", "--type", "nightly", "--output-format", "json"]
-    result = subprocess.run(command, capture_output=True, text=True, check=True)
-    latest_nightly_version = str(json.loads(result.stdout)["releases"][0]["version"]["major"]) + "." + \
-        str(json.loads(result.stdout)["releases"][0]["version"]["minor"]) + "." + \
-        str(json.loads(result.stdout)["releases"][0]["version"]["patch"])
 
     if version == "nightly":
         command = [glrd_path, "--latest", "--type", version, "--output-format", "json"]
-    elif version.split(".")[0] == "1877" or version.split(".")[0] == "1592":
-        print("Error: 1877 or 1592 GL Version does not support lima platform. Please verify")
-        sys.exit(1)
-    elif version <= latest_nightly_version:
-        command = [glrd_path, "--type", "nightly", "--version", version, "--output-format", "json"]
     elif version == "latest": #TODO: Update once major release supports lima platform
         print("Error: 1877 or 1592 GL Version does not support lima platform. Please verify")
         sys.exit(1)
         #command = [glrd_path, "--latest", "--output-format", "json"]
     else:
-        print("Error: Provided version is not correct. Please verify")
-        sys.exit(1)
+        command = [glrd_path, "--type", "nightly", "--version", version, "--output-format", "json"]
+    return command
 
+def get_image_path(command, arch):
     try:
         result = subprocess.run(command, capture_output=True, text=True, check=True)
         output = json.loads(result.stdout)
         image_name = f"lima-{arch}"
-        image_path = output["releases"][0]["flavors"][image_name]["image"]
+        if not output["releases"] == []:
+            check_whether_image_exists = output["releases"][0]["flavors"].get(image_name)
+            if not check_whether_image_exists:
+                print(f"Error: No Lima image found for the specified version.")
+                sys.exit(1)
+        else:
+            print("Error: No releases found for the specified version.")
+            sys.exit(1)
+        image_path = check_whether_image_exists["image"]
         return image_path
     except subprocess.CalledProcessError as e:
         print(f"Command failed with error: {e.stderr}")
         raise
-    except KeyError as e:
-        print(f"Error parsing JSON: Missing key {e}")
-        raise
-    except json.JSONDecodeError as e:
-        print(f"Error decoding JSON: {e}")
-        raise
 
 def generate_yaml(image_path, arch):
-    yaml_file = "gardenlinux.yaml"
-
     yaml_config_data["images"][0]["location"] = image_path
     yaml_config_data["images"][0]["arch"] = "x86_64" if arch == "amd64" else "aarch64"
 
-    with open(yaml_file, "w") as f:
-        yaml.dump(yaml_config_data, f, default_flow_style=False, sort_keys=False)
-
-    print(f"Generated {yaml_file}")
+    print(yaml.dump(yaml_config_data, default_flow_style=False, sort_keys=False))
 
 def main():
     parser = argparse.ArgumentParser(
@@ -105,8 +91,8 @@ def main():
     elif args.arch == "x86_64":
         args.arch = "amd64"
     
-    print(f"Generating yaml file for Lima VM with Garden Linux image")
-    image_path = get_image_path(args.version, args.arch)
+    command = construct_command(args.version)
+    image_path = get_image_path(command, args.arch)
     generate_yaml(image_path, args.arch)
 
 
