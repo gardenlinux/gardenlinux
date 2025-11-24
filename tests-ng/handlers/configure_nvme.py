@@ -19,7 +19,7 @@ REQUIRED_NVME_MODULES = [
     {"name": "nvmet", "status": None},
     {"name": "nvmet_tcp", "status": None},
     {"name": "nvme_tcp", "status": None},
-    {"name": "loop", "status": None},
+    {"name": "loop", "status": "ForceUnload"},
 ]
 
 
@@ -113,7 +113,7 @@ def nvme_device(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
     # reorder the modules to unload in the reverse order of loading
     for entry in reversed(REQUIRED_NVME_MODULES):
         name = entry["name"]
-        if entry["status"] == "Loaded":
+        if entry["status"] in ["Loaded", "ForceUnload"]:
             kernel_module.unload_module(name)
             entry["status"] = None
     if mount_package_installed:
