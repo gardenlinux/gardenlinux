@@ -118,7 +118,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@hotfix-disabled-python-cache-in-setup-action # pin@0.10.5
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6 # pin@0.10.6
       - name: Set build reference
         run: |
           version="$(./bin/garden-version "$version")"
