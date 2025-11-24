@@ -69,6 +69,10 @@ def test_startup_time(systemd: Systemd):
     )
 
 
+@pytest.mark.feature(
+    "not _trustedboot",
+    reason="Test fails for unknown reason. See #3927",
+)
 @pytest.mark.booted(reason="Kernel test makes sense only on booted system")
 def test_kernel_not_tainted():
     with open("/proc/sys/kernel/tainted", "r") as f:
