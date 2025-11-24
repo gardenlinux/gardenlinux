@@ -19,7 +19,6 @@ jobs:
       - name: Verify ADRs are numbered in sequence
         run: |
           #!/usr/bin/env python3
-          from __future__ import annotations
 
           import re
           import sys
