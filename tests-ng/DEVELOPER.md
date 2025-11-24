@@ -394,6 +394,19 @@ def test_kernel_module_amd64(expected_module):
     # Test implementation
 ```
 
+#### `@pytest.mark.hypervisor(["name", "..."], reason="...")`
+
+Only run the following test when running on a real hypervisor environment:
+
+```python
+@pytest.mark.hypervisor(
+    "amazon",
+    reason="Only works on real AWS infrastructure due to NTP server access requirements.",
+)
+def test_correct_ntp_on_aws(timedatectl: TimeDateCtl):
+    # Test implementation
+```
+
 ### Common Filtering Patterns
 
 **Environment-specific filtering:**
@@ -414,6 +427,12 @@ def test_kernel_module_amd64(expected_module):
 @pytest.mark.feature("azure", reason="Azure-specific functionality")
 @pytest.mark.feature("gcp", reason="GCP-specific configuration")
 @pytest.mark.feature("ali", reason="Alibaba Cloud-specific configuration")
+
+# Hypervisor specific tests
+@pytest.mark.hypervisor("amazon", reason="Relies on AWS specific services")
+@pytest.mark.hypervisor("microsoft", reason="Relies on Azure specific services")
+@pytest.mark.hypervisor("google", reason="Relies with Google Cloud specific metadata")
+@pytest.mark.hypervisor("qemu", reason="Test asserts the presence of a service which is usually running on a real hypervisor")
 
 # Other platform-specific tests
 @pytest.mark.feature("openstack", reason="OpenStack-specific configuration")

@@ -30,7 +30,7 @@ jobs:
     outputs:
       environment: ${{ steps.signing_environment.outputs.environment }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
         with:
           submodules: true
       - name: Set signing environment
@@ -53,7 +53,7 @@ jobs:
       commit_id: ${{ steps.version_reference.outputs.commit_id }}
       version: ${{ steps.version_reference.outputs.version }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
         with:
           submodules: true
       - name: Prepare build reference from GitHub
@@ -98,7 +98,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
         with:
           submodules: true
       - name: Set VERSION=${{ needs.calculate_version.outputs.version }}
