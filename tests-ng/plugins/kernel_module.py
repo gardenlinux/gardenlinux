@@ -63,11 +63,14 @@ class KernelModule:
 
     def unload_module(self, module: str) -> bool:
         """Unload ``module`` using ``rmmod``; return True on success."""
+        print(f"About to call rmmod {module}")
         result = self._shell(
             f"rmmod {module}",
-            capture_output=False,
+            capture_output=True,
             ignore_exit_code=True,
         )
+        print(f"{result.stdout=}")
+        print(f"{result.stderr=}")
         return result.returncode == 0
 
     def _safe_unload_module(self, module: str) -> bool:
