@@ -1,4 +1,4 @@
-# 24. FIPSification of Garden Linux
+# 25. FIPSification of Garden Linux
 
 Date: 2025-11-24
 
