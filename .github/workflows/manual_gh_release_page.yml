@@ -37,10 +37,10 @@ jobs:
     steps:
       - name: Authenticate to cluster
         id: kube_auth
-        uses: gardener/cc-utils/.github/actions/kubernetes-auth@708f5017da5446f1f18956672f63ccedb1dba45e
+        uses: gardener/cc-utils/.github/actions/kubernetes-auth@ec02d953632836ac3b8e84b4f6af3084e7462caa
         with:
-          server: https://api.glvd.gardnlinux.shoot.canary.k8s-hana.ondemand.com
-          server-ca-discovery-url: https://discovery.ingress.garden.canary.k8s.ondemand.com/projects/gardnlinux/shoots/8a569063-b0d3-45c4-a653-158e70b1bfd1/cluster-ca
+          server: https://api.live.gl-live.shoot.live.k8s-hana.ondemand.com
+          server-ca-discovery-url: https://discovery.ingress.garden.live.k8s.ondemand.com/projects/gl-live/shoots/3f2715e7-dc7c-4bf1-a594-dc0d90cd0f1c/cluster-ca
           audience: ${{ env.OIDC_AUDIENCE }}
 
       - name: Start a new ingestion job in GLVD to import package list for new version
@@ -48,7 +48,7 @@ jobs:
           KUBECONFIG: kubeconfig.yaml
         run: |
           kubectl run ingest-new-gl-version-$RANDOM \
-              --namespace default \
+              --namespace glvd \
               --image=ghcr.io/gardenlinux/glvd-data-ingestion:latest \
               --restart=Never \
               --env=PGDATABASE=glvd \
@@ -70,17 +70,17 @@ jobs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - name: Checkout flavors of the release commit
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
         with:
           ref: ${{ inputs.commit }}
           sparse-checkout: |
             flavors.yaml
           sparse-checkout-cone-mode: false
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@d64300c48bf9a0a262642b564c7aeea0b89be21f # pin@0.10.5
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6 # pin@0.10.6
       - id: matrix
         name: Generate flavors matrix
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@d64300c48bf9a0a262642b564c7aeea0b89be21f # pin@0.10.5
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@d64300c48bf9a0a262642b564c7aeea0b89be21f # pin@0.10.6
         with:
           flags: "--no-arch --json-by-arch --publish"
   github_release:
@@ -96,14 +96,14 @@ jobs:
     environment: oidc_aws_s3_upload
     steps:
       - name: Checkout full repository (current branch)
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
         with:
           submodules: true
           fetch-depth: 0
       - name: install dependencies for generate_release_note.py script
         run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@d64300c48bf9a0a262642b564c7aeea0b89be21f # pin@0.10.5
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6 # pin@0.10.6
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
         with:
@@ -137,11 +137,11 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix ) }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@d64300c48bf9a0a262642b564c7aeea0b89be21f # pin@0.10.5
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6 # pin@0.10.6
       - uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
