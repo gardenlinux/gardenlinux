@@ -99,6 +99,11 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if args.arch == "aarch64":
+        args.arch = "arm64"
+    elif args.arch == "x86_64":
+        args.arch = "amd64"
     
     print(f"Generating yaml file for Lima VM with Garden Linux image")
     image_path = get_image_path(args.version, args.arch)
