@@ -41,10 +41,11 @@ allow the system to be elevated to its FIPS configuration.
     Please reboot the system for the setting to take effect.
 
 
-In this example from Red Hat, we can see that this will change all configuration files and deem a
-reboot. Canonical has a tool that is OSS:
-[`crypto-policies`](https://manpages.debian.org/unstable/crypto-policies/crypto-policies.7.en.html).
-This tool was developed originally in Python, but the tool hasn’t been updated since 2019.
+In this example from Red Hat[^1], we can see that this will change all configuration files and deem
+a reboot. Canonical has a tool that is OSS:
+[`crypto-policies`](https://code.launchpad.net/ubuntu/+source/crypto-policies). This tool was
+developed originally in Python, but the tool hasn’t been updated since
+[2019](https://tracker.debian.org/news/1063522/accepted-crypto-policies-20190816git-1-source-all-into-unstable-unstable/).
 
 Also, this might work for a system with a legacy configuration, but it would not be suited for the
 usage within a UCI like Trustedboot requires. This implies that we have to configure each system
@@ -53,11 +54,16 @@ power to  provide different configurations to our system, based on the boot UCI.
 should be possible, considering that it would behave similarly to the in-place update feature.
 
 Since many of the configurations and files necessary to put the system in FIPS mode reside on the
-`/usr` partion, the usage of `systemd-sysext` might be suited for this pursuit.
+`/usr` partion, the usage of
+[`systemd-sysext`](https://www.freedesktop.org/software/systemd/man/latest/systemd-sysext.html)
+might be suited for this pursuit.
 
 When the decision is set against the elevation of a Garden Linux installation, it would lead to the
 situation that Garden Linux would be locked into the delivery FIPS as its own product. The issue
 motivating this decision and any context that influences or constrains the decision.
+
+
+[^1]: See in the ['Procedure'](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/8/html/security_hardening/switching-rhel-to-fips-mode_security-hardening#switching-the-system-to-fips-mode_switching-rhel-to-fips-mode) section
 
 
 ## Decision
