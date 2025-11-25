@@ -28,7 +28,7 @@ resource "alicloud_oss_bucket" "images" {
 
 resource "terraform_data" "pause_1_second" {
   triggers_replace = [
-    alicloud_oss_bucket_images.id
+    alicloud_oss_bucket.images.id
   ]
 
   provisioner "local-exec" {
