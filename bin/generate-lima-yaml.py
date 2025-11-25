@@ -27,7 +27,7 @@ yaml_config_data = {
     "mounts": [{"location": "~", "writable": False}],
 }
 
-def construct_command(version):
+def construct_command(version, allow_nightly):
     script_dir = Path(__file__).resolve().parent
     # Construct the path to the glrd script
     glrd_path = str(script_dir / "glrd")
@@ -37,7 +37,8 @@ def construct_command(version):
     elif version == "latest":
         command = [glrd_path, "--latest", "--type", "minor", "--output-format", "json"]
     else:
-        command = [glrd_path, "--latest", "--type", "minor", "--version", version, "--output-format", "json"]
+        image_type = "nightly" if allow_nightly else "minor"
+        command = [glrd_path, "--latest", "--type", image_type, "--version", version, "--output-format", "json"]
 
     return command
 
@@ -95,9 +96,15 @@ def main():
         help="Provide a specific Garden Linux version, or use 'latest' (default) or 'nightly'."
     )
 
+    parser.add_argument(
+        '--allow-nightly',
+        action='store_true',
+        help="Query nightly versions, needed for getting a specific nightly version of Garden Linux."
+        )
+
     args = parser.parse_args()
 
-    command = construct_command(args.version)
+    command = construct_command(args.version, args.allow_nightly)
     image_paths = get_image_path(command, args.version)
     generate_yaml(image_paths)
 
