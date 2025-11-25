@@ -80,7 +80,7 @@ jobs:
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6 # pin@0.10.6
       - id: matrix
         name: Generate flavors matrix
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@d64300c48bf9a0a262642b564c7aeea0b89be21f # pin@0.10.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@8e147dfa4af22349cea3b9bc867d3572ee0859ae # pin@0.10.6
         with:
           flags: "--no-arch --json-by-arch --publish"
   github_release:
