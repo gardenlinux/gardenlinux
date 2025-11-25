@@ -1,4 +1,4 @@
-# 22. Disable Debsums Tests entirely
+# 25. Disable Debsums Tests entirely
 
 Date: 2025-11-24
 
