@@ -21,7 +21,7 @@ jobs:
       packages: write
     steps:
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@hotfix-disabled-python-cache-in-setup-action # pin@0.10.5
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6 # pin@0.10.6
       - name: Tag manifest
         env:
           GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}

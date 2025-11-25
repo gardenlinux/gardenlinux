@@ -41,7 +41,7 @@ jobs:
       environment: ${{ steps.set_values.outputs.environment }}
       repository: ${{ steps.set_values.outputs.repository }}
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
         with:
           submodules: true
       - name: Set environment and repository
@@ -75,7 +75,7 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
         with:
           submodules: true
       - name: Set flavor version reference
@@ -84,12 +84,12 @@ jobs:
           echo "${{ inputs.version }}" | tee VERSION
       - name: Determine CNAME (amd64)
         id: cname_amd64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@hotfix-disabled-python-cache-in-setup-action # pin@0.10.5
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@0.10.6 # pin@0.10.6
         with:
           flags: --cname container-amd64 cname
       - name: Determine CNAME (ard64)
         id: cname_arm64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@hotfix-disabled-python-cache-in-setup-action # pin@0.10.5
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@0.10.6 # pin@0.10.6
         with:
           flags: --cname container-arm64 cname
       - name: Set CNAMEs
@@ -171,7 +171,7 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
         with:
           submodules: true
       - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # pin@v6.0.0
@@ -248,16 +248,16 @@ jobs:
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
       max-parallel: 8
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
         with:
           submodules: true
-      - uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
+      - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
           role-session-name: ${{ secrets.aws_session }}
           aws-region: ${{ secrets.aws_region }}
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@hotfix-disabled-python-cache-in-setup-action # pin@0.10.5
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6 # pin@0.10.6
       - name: Install cosign
         uses: sigstore/cosign-installer@v4.0.0
         with:
@@ -321,11 +321,11 @@ jobs:
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
       max-parallel: 1
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@hotfix-disabled-python-cache-in-setup-action # pin@0.10.5
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6 # pin@0.10.6
       - name: Set flavor version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -360,7 +360,7 @@ jobs:
       matrix:
         arch: [ amd64, arm64 ]
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
         with:
           submodules: true
       - name: Download test distribution artifact
@@ -398,7 +398,7 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
         with:
           submodules: true
       - name: Download built tests-ng archives

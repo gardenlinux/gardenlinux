@@ -42,12 +42,12 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # pin@v5.0.1
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@hotfix-disabled-python-cache-in-setup-action # pin@0.10.5
-      - uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6 # pin@0.10.6
+      - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
           role-session-name: ${{ secrets.aws_session }}
