@@ -35,7 +35,6 @@ jobs:
     permissions:
       id-token: write # TODO: 3215 elevated permissions for included workflow
       actions: write  # TODO: 3215 elevated permissions for included workflow
-      packages: write # TODO: 3215 elevated permissions for included workflow
   test:
     needs: build
     if: ${{ success() || failure() }}
