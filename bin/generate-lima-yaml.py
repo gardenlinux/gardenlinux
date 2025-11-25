@@ -90,10 +90,13 @@ def main():
         description="Generate lima-vm manifests for use with Garden Linux guests"
     )
 
+    # FIXME: Change the default value to 'latest' prior to our next major release
+    # Using nightly as the default value temporarily for easier usage because no released version is built with the lima feature.
+    # 'latest' should be the default value starting with the next major version.
     parser.add_argument(
-        "--version",
+        "--nightly",
         default='latest',
-        help="Provide a specific Garden Linux version, or use 'latest' (default) or 'nightly'."
+        help="Provide a specific Garden Linux version, or use 'latest' or 'nightly'."
     )
 
     parser.add_argument(
