@@ -20,12 +20,12 @@ might come with some handicap, since it might imply that software will not work.
     Err:1 https://packages.gardenlinux.io/gardenlinux today/main arm64 grep arm64 3.12-1
       OpenSSL error: error:0308010C:digital envelope routines::unsupported  Error reading from server - read (5: Input/output error) [IP: X.Y.Z.X 443]
 
-Here is an error message as an example of where the FIPS interface is with software. FIPS might be
+Here is an error message as an example of where the FIPS enablement hinders software. FIPS might be
 hindering the portage of software to Garden Linux when the FIPS is enforced. Users need to test
 their changes on a FIPS-enabled system but might want to disable FIPS to ensure that introduced
-changes are working. Also, check how big the performance penalty is when testing software. This
-should be done, in the best case, on the very same hardware. An 
-option that is not possible with the current design.
+changes are working. USers might be interesting in benchmarking with and without FIPS to learn about
+possible performance penalty. Benchmarks should be done on the very same hardware. An option that is
+not possible with the current design.
 
 Other Linux vendors provide tools like `fips-mode-setup` to set the respective configuration and
 allow the system to be elevated to its FIPS configuration.
@@ -70,6 +70,14 @@ motivating this decision and any context that influences or constrains the decis
 
 The change that we're proposing or have agreed to implement.
 
+The follow key decision needs to be taken:
+
+1. Garden Linux integrates FIPS as a on-deemand feature, allowing it to be shipped with default
+   images
+2. Garden Linux integrates FIPS as a static always-on feature that must be preselected.
+
 ## Consequences
 
-What becomes easier or more difficult to do and any risks introduced by the change that will need to be mitigated.
+Once set in with this decision, we will not abel to change. WHen we offer FIPS to users, this will
+remain for as long as we're FIPS ceriticate.
+
