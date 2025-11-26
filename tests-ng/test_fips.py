@@ -40,13 +40,8 @@ def test_gnutls_fips_dot_hmac_file_is_presented():
 
     https://www.gnutls.org/manual/html_node/FIPS140_002d2-mode.html
     """
-    gnutls_fips_hmac_path = f"/usr/lib/{arch()}-linux-gnu/.libgnutls.so.30.hmac"
-    gnutls_fips_hmac_file = os.stat(gnutls_fips_hmac_path)
-    gnutls_fips_hmac_file_state = S_ISREG(gnutls_fips_hmac_file.st_mode)
-
-    assert (
-        gnutls_fips_hmac_file_state
-    ), f"The f{gnutls_fipshmac_path} file does not exist."
+    gnutls_fips_hmac_file = f"/usr/lib/{arch()}-linux-gnu/.libgnutls.so.30.hmac"
+    assert os.path.isfile(gnutls_fips_hmac_file), f"The f{gnutls_fips_hmac_file} file does not exist!"
 
 
 @pytest.mark.feature("_fips")
