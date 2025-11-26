@@ -19,7 +19,6 @@ REQUIRED_NVME_MODULES = [
     {"name": "nvmet", "status": None},
     {"name": "nvmet_tcp", "status": None},
     {"name": "nvme_tcp", "status": None},
-    # {"name": "loop", "status": "ForceUnload"},
 ]
 
 
@@ -115,9 +114,6 @@ def nvme_device(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
         name = entry["name"]
         if entry["status"] == "Loaded":
             kernel_module.unload_module(name)
-            entry["status"] = None
-        if entry["status"] == "ForceUnload":
-            kernel_module.safe_unload_module(name)
             entry["status"] = None
     if mount_package_installed:
         shell("DEBIAN_FRONTEND=noninteractive apt remove mount")

@@ -1,7 +1,6 @@
 import logging
 
 import pytest
-
 from plugins.sysdiff import Sysdiff
 
 logger = logging.getLogger(__name__)
