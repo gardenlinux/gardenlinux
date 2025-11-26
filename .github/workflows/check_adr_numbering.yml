@@ -1,0 +1,55 @@
+name: Check ADR Numbering
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  check-adr:
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Verify ADRs are numbered in sequence
+        run: |
+          #!/usr/bin/env python3
+
+          import re
+          import sys
+          from pathlib import Path
+
+          ADR_DIR = Path("docs/architecture/decisions")
+
+          def main() -> int:
+              files = sorted(p for p in ADR_DIR.glob("*.md") if p.name.lower() != "readme.md")
+              if not files:
+                  print("No ADR files found.")
+                  return 0
+
+              for idx, path in enumerate(files, start=1):
+                  m = re.match(r"^(\d{4})-", path.name)
+                  print(path.name)
+                  if not m:
+                      print(f"ERROR: filename does not start with 4 digits: {path.name}", file=sys.stderr)
+                      return 1
+                  num = int(m.group(1))
+                  if num != idx:
+                      print(
+                          f"ERROR: numbering mismatch for {path.name}: "
+                          f"expected {idx:04d}, found {num:04d}",
+                          file=sys.stderr,
+                      )
+                      return 1
+
+              print("OK: ADR files numbered as expected.")
+              return 0
+
+          if __name__ == "__main__":
+              sys.exit(main())
+        shell: python

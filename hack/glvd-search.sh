@@ -16,7 +16,7 @@ Options:
     --help    Show this help message and exit.
 
 Environment variables:
-    GLVD_URL  Set the GLVD endpoint (default: https://glvd.ingress.glvd.gardnlinux.shoot.canary.k8s-hana.ondemand.com/)
+    GLVD_URL  Set the GLVD endpoint (default: https://security.gardenlinux.org/)
 EOF
 }
 
@@ -32,7 +32,7 @@ for tool in fzf jq yq; do
     fi
 done
 
-GLVD_URL="${GLVD_URL:-https://glvd.ingress.glvd.gardnlinux.shoot.canary.k8s-hana.ondemand.com/}"
+GLVD_URL="${GLVD_URL:-https://security.gardenlinux.org/}"
 
 # Select Garden Linux version using fzf
 GL_VERSIONS=$(curl -s "${GLVD_URL}v1/gardenlinuxVersions" | jq -r '.[]')
