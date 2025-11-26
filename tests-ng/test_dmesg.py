@@ -87,19 +87,19 @@ def test_dmesg_stig_restrictions_sysctl_runtime(sysctl):
 @pytest.mark.booted(reason="needs a booted system with dmesg restrictions loaded")
 @pytest.mark.feature("gardener")
 def test_dmesg_gardener_call_by_unprivileged_user_allowed(shell):
-    res = shell("dmesg", capture_output=False, ignore_exit_code=True)
+    res = shell("dmesg", capture_output=True, ignore_exit_code=True)
     assert res.returncode == 0
 
 
 @pytest.mark.feature("server and not gardener")
 @pytest.mark.booted(reason="needs a booted system with dmesg restrictions loaded")
 def test_dmesg_server_call_by_unprivileged_user_forbidden(shell):
-    res = shell("dmesg", capture_output=False, ignore_exit_code=True)
+    res = shell("dmesg", capture_output=True, ignore_exit_code=True)
     assert res.returncode == 1
 
 
 @pytest.mark.feature("stig")
 @pytest.mark.booted(reason="needs a booted system with dmesg restrictions loaded")
 def test_dmesg_stig_call_by_unprivileged_user_forbidden(shell):
-    res = shell("dmesg", capture_output=False, ignore_exit_code=True)
+    res = shell("dmesg", capture_output=True, ignore_exit_code=True)
     assert res.returncode == 1
