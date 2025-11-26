@@ -6,7 +6,6 @@ from hashlib import md5 as MD5
 from hashlib import sha1 as SHA1
 from hashlib import sha256 as SHA256
 from platform import machine as arch
-from stat import S_ISREG
 
 import pytest
 
