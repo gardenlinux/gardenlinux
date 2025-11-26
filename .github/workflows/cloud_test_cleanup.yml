@@ -17,7 +17,7 @@ jobs:
     steps:
       - id: "auth_aws"
         name: "Authenticate to AWS"
-        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
@@ -58,7 +58,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5.0.1
+        uses: actions/checkout@v6
         with:
           submodules: true
       - name: "Authenticate to Google Cloud"
@@ -83,7 +83,7 @@ jobs:
             core.exportVariable("GOOGLE_GHA_CREDS_PATH", basePath + credentialsFileName);
       - id: "auth_aws"
         name: "Authenticate to AWS"
-        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
@@ -198,7 +198,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5.0.1
+        uses: actions/checkout@v6
         with:
           submodules: true
       - name: Install dependencies
@@ -224,7 +224,7 @@ jobs:
             core.exportVariable("GOOGLE_ZONE", "${{ secrets.GCP_ZONE }}");
       - id: "auth_aws"
         name: "Authenticate to AWS"
-        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
