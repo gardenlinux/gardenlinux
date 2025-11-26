@@ -19,10 +19,8 @@ def test_gnutls_fips_file_was_created():
 
     https://www.gnutls.org/manual/html_node/FIPS140_002d2-mode.html
     """
-    gnutls_fips_file = os.stat("/etc/system-fips")
-    gnutls_fips_file_state = S_ISREG(gnutls_fips_file.st_mode)
-
-    assert gnutls_fips_file, f"The /etc/system-fips file does not exist."
+    gnutls_fips_file = "/etc/system-fips"
+    assert os.path.isfile(gnutls_fips_file), f"The {gnutls_fips_file} file does not exist."
 
 
 @pytest.mark.feature("_fips")
@@ -32,7 +30,7 @@ def test_gnutls_fips_file_is_empty():
     """
     gnutls_fips_file = os.stat("/etc/system-fips")
 
-    assert gnutls_fips_file.st_size == 0, f"The /etc/system-fips is not empty."
+    assert gnutls_fips_file.st_size == 0, f"The /etc/system-fips is not empty!"
 
 
 @pytest.mark.feature("_fips")
@@ -42,12 +40,12 @@ def test_gnutls_fips_dot_hmac_file_is_presented():
 
     https://www.gnutls.org/manual/html_node/FIPS140_002d2-mode.html
     """
-    gnutls_fipshmac_path = f"/usr/lib/{arch()}-linux-gnu/.libgnutls.so.30.hmac"
-    gnutls_fipshmac_file = os.stat(gnutls_fipshmac_path)
-    gnutls_fipshmac_file_state = S_ISREG(gnutls_fipshmac_file.st_mode)
+    gnutls_fips_hmac_path = f"/usr/lib/{arch()}-linux-gnu/.libgnutls.so.30.hmac"
+    gnutls_fips_hmac_file = os.stat(gnutls_fips_hmac_path)
+    gnutls_fips_hmac_file_state = S_ISREG(gnutls_fips_hmac_file.st_mode)
 
     assert (
-        gnutls_fipshmac_file_state
+        gnutls_fips_hmac_file_state
     ), f"The f{gnutls_fipshmac_path} file does not exist."
 
 
@@ -64,7 +62,6 @@ def test_gnutls_fips_dot_hmac_file_is_vaild():
 
     """
     ARCH = arch()
-    gnutls_fipshmac_path = f"/usr/lib/{ARCH}-linux-gnu/.libgnutls.so.30.hmac"
     gnutls_lib_path = f"/usr/lib/{ARCH}-linux-gnu/libgnutls.so.30"
     # https://gitlab.com/gnutls/gnutls/-/blob/master/configure.ac?ref_type=heads#L677
     SECRET = "orboDeJITITejsirpADONivirpUkvarP"
@@ -91,10 +88,8 @@ def test_libgcrypt_fips_file_was_created():
 
     https://www.gnupg.org/documentation/manuals/gcrypt/Enabling-FIPS-mode.html
     """
-    libgcrypt_fips_file = os.stat("/etc/gcrypt/fips_enabled")
-    libgcrypt_fips_file_state = S_ISREG(libgcrypt_fips_file.st_mode)
-
-    assert libgcrypt_fips_file_state, f"The /etc/system-fips file does not exist."
+    gcrypt_fips_file = "/etc/gcrypt/fips_enabled"
+    assert os.path.isfile(gcrypt_fips_file), f"The {gcrypt_fips_file} file does not exist."
 
 
 @pytest.mark.feature("_fips")
@@ -104,7 +99,7 @@ def test_libgcrypt_fips_file_is_empty():
     """
     gnutls_fips_file = os.stat("/etc/gcrypt/fips_enabled")
 
-    assert gnutls_fips_file.st_size == 0, f"The /etc/gcrypt/fips_enabled is not empty."
+    assert gnutls_fips_file.st_size == 0, f"The /etc/gcrypt/fips_enabled is not empty!"
 
 
 @pytest.mark.feature("_fips")
@@ -114,10 +109,8 @@ def test_kernel_cmdline_fips_file_was_created():
     as a prerequisite to enable they respected FIPS mode. The kernel can only be booted
     with the fips=1 parameter.
     """
-    kernel_fips_file = os.stat("/etc/kernel/cmdline.d/30-fips.cfg")
-    kernel_fips_file_state = S_ISREG(kernel_fips_file.st_mode)
-
-    assert kernel_fips_file_state, f"The /etc/kernel/cmdline.d/30-fips.cfg is missing!"
+    kernel_fips_file = "/etc/kernel/cmdline.d/30-fips.cfg"
+    assert os.path.isfile(kernel_fips_file), f"The /etc/kernel/cmdline.d/30-fips.cfg is missing!"
 
 
 @pytest.mark.feature("_fips")
