@@ -10,6 +10,7 @@ import yaml
 import subprocess
 import json
 from pathlib import Path
+import shutil
 
 # Build config as a Python dict
 yaml_config_data = {
@@ -27,11 +28,16 @@ yaml_config_data = {
     "mounts": [{"location": "~", "writable": False}],
 }
 
-def construct_command(version, allow_nightly):
-    script_dir = Path(__file__).resolve().parent
-    # Construct the path to the glrd script
-    glrd_path = str(script_dir / "glrd")
+def get_glrd_path():
+    system_cmd = shutil.which("glrd")
+    if system_cmd:
+        return system_cmd
+    else:
+        script_dir = Path(__file__).resolve().parent
+        glrd_path = script_dir / "glrd"
+        return str(glrd_path)
 
+def construct_command(version, allow_nightly, glrd_path):
     if version == "nightly":
         command = [glrd_path, "--latest", "--type", "nightly", "--output-format", "json"]
     elif version == "latest":
@@ -94,8 +100,8 @@ def main():
     # Using nightly as the default value temporarily for easier usage because no released version is built with the lima feature.
     # 'latest' should be the default value starting with the next major version.
     parser.add_argument(
-        "--nightly",
-        default='latest',
+        "--version",
+        default='nightly',
         help="Provide a specific Garden Linux version, or use 'latest' or 'nightly'."
     )
 
@@ -107,7 +113,8 @@ def main():
 
     args = parser.parse_args()
 
-    command = construct_command(args.version, args.allow_nightly)
+    glrd_path = get_glrd_path()
+    command = construct_command(args.version, args.allow_nightly, glrd_path)
     image_paths = get_image_path(command, args.version)
     generate_yaml(image_paths)
 

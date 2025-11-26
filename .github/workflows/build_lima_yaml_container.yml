@@ -1,0 +1,39 @@
+name: build_lima_manifest_generation_container
+on:
+  workflow_dispatch:
+jobs:
+  lima_manifest_container:
+    name: Build Container for lima manifest generation
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          apt update
+          apt install -y podman
+                
+      - name: Create Dockerfile
+        run: |
+          cat << 'EOF' > Dockerfile
+          FROM ghcr.io/gardenlinux/glrd:latest
+          WORKDIR /workspace
+          COPY ./bin/generate-lima-yaml.py  /workspace
+          RUN apt update && apt install -y python3-pip
+          RUN pip install pyyaml
+          ENTRYPOINT ["./generate-lima-yaml.py"]
+          EOF
+      - name: Build Container Image
+        run: |
+          podman build -t ghcr.io/${{ github.repository }}/generate_lima_manifest:latest .
+          podman save --format oci-archive ghcr.io/${{ github.repository }}/generate_lima_manifest:latest > generate-lima-manifest-container.oci
+      - name: Upload Container Artifact
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # pin@v5.0.0
+        with:
+          name: generate-lima-manifest-container
+          path: generate-lima-manifest-container.oci
+          if-no-files-found: error
