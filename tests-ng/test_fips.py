@@ -1,68 +1,58 @@
 import os
-from stat import S_ISREG
 
 import pytest
+from plugins.file import File
 
 
 @pytest.mark.feature("_fips")
-def test_gnutls_fips_file_was_created():
+def test_gnutls_fips_file_was_created(file: File):
     """
     GnuTLS requires to have the /etc/system-fips to be present as prerequisite
     to enable the FIPS mode.
 
     https://www.gnutls.org/manual/html_node/FIPS140_002d2-mode.html
     """
-    gnutls_fips_file = os.stat("/etc/system-fips")
-    gnutls_fips_file_state = S_ISREG(gnutls_fips_file.st_mode)
 
-    assert gnutls_fips_file, f"The /etc/system-fips file does not exist."
+    assert file.is_file("/etc/system-fips")
 
 
 @pytest.mark.feature("_fips")
-def test_gnutls_fips_file_is_empty():
+def test_gnutls_fips_file_is_empty(file: File):
     """
     The /etc/system-fips should be without any content.
     """
-    gnutls_fips_file = os.stat("/etc/system-fips")
-
-    assert gnutls_fips_file.st_size == 0, f"The /etc/system-fips is not empty."
+    assert file.get_size("/etc/system-fips") == 0, f"The /etc/system-fips is not empty."
 
 
 @pytest.mark.feature("_fips")
-def test_libgcrypt_fips_file_was_created():
+def test_libgcrypt_fips_file_was_created(file: File):
     """
     Libcgrypt requires to have the /etc/gcrypt/fips_enabled to be present as prerequisite
     to enable the FIPS mode.
 
     https://www.gnupg.org/documentation/manuals/gcrypt/Enabling-FIPS-mode.html
     """
-    libgcrypt_fips_file = os.stat("/etc/gcrypt/fips_enabled")
-    libgcrypt_fips_file_state = S_ISREG(libgcrypt_fips_file.st_mode)
-
-    assert libgcrypt_fips_file_state, f"The /etc/system-fips file does not exist."
+    assert file.is_file("/etc/gcrypt/fips_enabled")
 
 
 @pytest.mark.feature("_fips")
-def test_libgcrypt_fips_file_is_empty():
+def test_libgcrypt_fips_file_is_empty(file: File):
     """
     The /etc/gcrypt/fips_enabled should be without any content.
     """
-    gnutls_fips_file = os.stat("/etc/gcrypt/fips_enabled")
-
-    assert gnutls_fips_file.st_size == 0, f"The /etc/gcrypt/fips_enabled is not empty."
+    assert (
+        file.get_size("/etc/gcrypt/fips_enabled") == 0
+    ), f"The /etc/gcrypt/fips_enabled is not empty."
 
 
 @pytest.mark.feature("_fips")
-def test_kernel_cmdline_fips_file_was_created():
+def test_kernel_cmdline_fips_file_was_created(file: File):
     """
     libgcrypt, gnutls and openssl need to have the /proc/sys/crypto/fips_enabled present
     as a prerequisite to enable they respected FIPS mode. The kernel can only be booted
     with the fips=1 parameter.
     """
-    kernel_fips_file = os.stat("/etc/kernel/cmdline.d/30-fips.cfg")
-    kernel_fips_file_state = S_ISREG(kernel_fips_file.st_mode)
-
-    assert kernel_fips_file_state, f"The /etc/kernel/cmdline.d/30-fips.cfg is missing!"
+    assert file.is_file("/etc/kernel/cmdline.d/30-fips.cfg")
 
 
 @pytest.mark.feature("_fips")

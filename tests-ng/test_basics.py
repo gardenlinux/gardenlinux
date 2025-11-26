@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from plugins.file import File
 from plugins.shell import ShellRunner
 from plugins.systemd import Systemd
 
@@ -19,32 +20,54 @@ def test_no_man(shell: ShellRunner):
     ), "man ls, did not fail with 'not found' as expected"
 
 
-def test_fhs(shell: ShellRunner):
-    expected_dirs = {
-        "bin",
-        "boot",
-        "dev",
-        "etc",
-        "home",
-        "lib",
-        "mnt",
-        "opt",
-        "proc",
-        "root",
-        "run",
-        "sbin",
-        "srv",
-        "sys",
-        "tmp",
-        "usr",
-        "var",
-    }
+@pytest.mark.parametrize(
+    "dir",
+    [
+        "/boot",
+        "/dev",
+        "/etc",
+        "/home",
+        "/mnt",
+        "/opt",
+        "/proc",
+        "/root",
+        "/run",
+        "/srv",
+        "/sys",
+        "/tmp",
+        "/usr",
+        "/var",
+    ],
+)
+def test_fhs_directories(file: File, dir: str):
+    assert file.is_dir(f"{dir}"), f"expected FHS directory {dir} does not exist"
 
-    if os.uname().machine == "x86_64":
-        expected_dirs.add("lib64")
 
-    for dir in sorted(expected_dirs):
-        assert os.path.isdir(f"/{dir}"), f"expected FHS directory /{dir} does not exist"
+@pytest.mark.parametrize(
+    "link,target",
+    [
+        ("/bin", "/usr/bin"),
+        ("/lib", "/usr/lib"),
+        ("/sbin", "/usr/sbin"),
+    ],
+)
+def test_fhs_symlinks(file: File, link: str, target: str):
+    assert file.is_symlink(
+        link, target=target
+    ), f"expected FHS symlink {link} does not exist"
+
+
+@pytest.mark.arch("amd64", reason="links only present on amd64")
+@pytest.mark.parametrize(
+    "link,target",
+    [
+        ("/lib64", "/usr/lib64"),
+    ],
+)
+def test_fhs_symlinks_amd64(file: File, link: str, target: str):
+    assert file.is_symlink(
+        link, target=target
+    ), f"expected FHS symlink {link} does not exist"
 
 
 @pytest.mark.booted(
