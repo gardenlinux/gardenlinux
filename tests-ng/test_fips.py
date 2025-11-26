@@ -6,6 +6,7 @@ from hashlib import md5 as MD5
 from hashlib import sha1 as SHA1
 from hashlib import sha256 as SHA256
 from platform import machine as arch
+from typing import List
 
 import pytest
 from plugins.kernel_cmdline import kernel_cmdline
