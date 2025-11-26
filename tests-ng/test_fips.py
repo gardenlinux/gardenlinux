@@ -61,13 +61,13 @@ def test_gnutls_fips_dot_hmac_file_is_vaild():
     |<1>| FIPS140-2 self testing part 2 failed
 
     """
-    ARCH = arch()
-    gnutls_lib_path = f"/usr/lib/{ARCH}-linux-gnu/libgnutls.so.30"
+    gnutls_lib_path = f"/usr/lib/{arch()}-linux-gnu/libgnutls.so.30"
+    gnutls_fips_hmac_file = f"/usr/lib/{arch()}-linux-gnu/.libgnutls.so.30.hmac"
     # https://gitlab.com/gnutls/gnutls/-/blob/master/configure.ac?ref_type=heads#L677
     SECRET = "orboDeJITITejsirpADONivirpUkvarP"
 
     config = configparser.ConfigParser()
-    config.read(gnutls_lib_path)
+    config.read(gnutls_fips_hmac_file)
 
     fips_hmac = hmac.new(key=SECRET.encode("UTF-8"), msg=None, digestmod=SHA256)
     # Need to read it 'b' since it's a binary file.
