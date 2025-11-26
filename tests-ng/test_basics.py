@@ -1,6 +1,7 @@
 import os
 
 import pytest
+
 from plugins.shell import ShellRunner
 from plugins.systemd import Systemd
 
@@ -70,7 +71,6 @@ def test_startup_time(systemd: Systemd):
 
 
 @pytest.mark.booted(reason="Kernel test makes sense only on booted system")
-@pytest.mark.skip()
 def test_kernel_not_tainted():
     with open("/proc/sys/kernel/tainted", "r") as f:
         tainted = f.read().strip()

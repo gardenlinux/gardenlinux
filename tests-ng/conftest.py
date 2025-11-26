@@ -2,11 +2,6 @@ import os
 
 import pytest
 
-
-def pytest_configure(config):
-    config.option.verbose = 1
-
-
 plugin_dir = os.path.join(os.path.dirname(__file__), "plugins")
 pytest_plugins = [
     f"plugins.{f[:-3]}"
