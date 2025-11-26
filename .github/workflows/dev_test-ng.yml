@@ -1,0 +1,30 @@
+name: dev
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-dev-test-ng
+  cancel-in-progress: true
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "tests-ng/**"
+      - ".github/workflows/dev_test-ng.yml"
+  pull_request:
+    paths:
+      - "tests-ng/**"
+      - ".github/workflows/dev_test-ng.yml"
+jobs:
+  test-plugins:
+    name: Test plugins
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v5.0.0
+
+      - name: Set up Python
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # pin@v6.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Run test-plugins
+        run: make -f tests-ng/dev.makefile test-plugins

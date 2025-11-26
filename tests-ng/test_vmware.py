@@ -1,11 +1,12 @@
 import os
 
 import pytest
+from plugins.parse_file import ParseFile
 
 forbidden_config_values = [
-    ("/etc/cloud/cloud.cfg", "ntp"),
-    ("/etc/cloud/cloud.cfg", "resizefs"),
-    ("/etc/cloud/cloud.cfg", "growpart"),
+    ("/etc/cloud/cloud.cfg", r"^.*\-\sntp$"),
+    ("/etc/cloud/cloud.cfg", r"^.*\-\sresizefs$"),
+    ("/etc/cloud/cloud.cfg", r"^.*\-\sgrowpart$"),
 ]
 
 vmware_required_files = [
@@ -19,12 +20,8 @@ vmware_required_files = [
 
 @pytest.mark.feature("vmware")
 @pytest.mark.parametrize("filename,content", forbidden_config_values)
-def test_config_for_forbidden_value(filename: str, content: str):
-    assert os.path.isfile(filename), "File does not exist"
-    with open(filename, "r") as file:
-        assert (
-            not content in file.read()
-        ), f"Found {content} in {filename} which is not expected."
+def test_config_for_forbidden_value(filename: str, content: str, parse_file: ParseFile):
+    assert not parse_file.match_regex(filename, content)
 
 
 @pytest.mark.feature("vmware")
