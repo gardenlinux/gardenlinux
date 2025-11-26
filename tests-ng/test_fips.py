@@ -21,7 +21,9 @@ def test_gnutls_fips_file_was_created():
     https://www.gnutls.org/manual/html_node/FIPS140_002d2-mode.html
     """
     gnutls_fips_file = "/etc/system-fips"
-    assert os.path.isfile(gnutls_fips_file), f"The {gnutls_fips_file} file does not exist."
+    assert os.path.isfile(
+        gnutls_fips_file
+    ), f"The {gnutls_fips_file} file does not exist."
 
 
 @pytest.mark.feature("_fips")
@@ -42,7 +44,9 @@ def test_gnutls_fips_dot_hmac_file_is_presented():
     https://www.gnutls.org/manual/html_node/FIPS140_002d2-mode.html
     """
     gnutls_fips_hmac_file = f"/usr/lib/{arch()}-linux-gnu/.libgnutls.so.30.hmac"
-    assert os.path.isfile(gnutls_fips_hmac_file), f"The f{gnutls_fips_hmac_file} file does not exist!"
+    assert os.path.isfile(
+        gnutls_fips_hmac_file
+    ), f"The f{gnutls_fips_hmac_file} file does not exist!"
 
 
 @pytest.mark.feature("_fips")
@@ -75,7 +79,6 @@ def test_gnutls_fips_dot_hmac_file_is_vaild():
     ), "Compute HMAC is incorrect!"
 
 
-
 @pytest.mark.feature("_fips")
 def test_libgcrypt_fips_file_was_created():
     """
@@ -85,7 +88,9 @@ def test_libgcrypt_fips_file_was_created():
     https://www.gnupg.org/documentation/manuals/gcrypt/Enabling-FIPS-mode.html
     """
     gcrypt_fips_file = "/etc/gcrypt/fips_enabled"
-    assert os.path.isfile(gcrypt_fips_file), f"The {gcrypt_fips_file} file does not exist."
+    assert os.path.isfile(
+        gcrypt_fips_file
+    ), f"The {gcrypt_fips_file} file does not exist."
 
 
 @pytest.mark.feature("_fips")
@@ -105,7 +110,9 @@ def test_kernel_cmdline_fips_file_was_created():
     with the fips=1 parameter.
     """
     kernel_fips_file = "/etc/kernel/cmdline.d/30-fips.cfg"
-    assert os.path.isfile(kernel_fips_file), f"The /etc/kernel/cmdline.d/30-fips.cfg is missing!"
+    assert os.path.isfile(
+        kernel_fips_file
+    ), f"The /etc/kernel/cmdline.d/30-fips.cfg is missing!"
 
 
 @pytest.mark.feature("_fips")
@@ -125,7 +132,7 @@ def test_kernel_was_boot_with_fips_mode(kernel_cmdline: List[str]):
     """
     Validate that the kernel was booted with the FIPS mode enabled.
     """
-    assert 'fips=1' in kernel_cmdline, f"Kernel was not booted in FIPS mode!"
+    assert "fips=1" in kernel_cmdline, f"Kernel was not booted in FIPS mode!"
 
 
 @pytest.mark.feature("_fips")
