@@ -1,10 +1,15 @@
 name: build_lima_manifest_generation_container
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0'
 jobs:
   lima_manifest_container:
     name: Build Container for lima manifest generation
     runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: gardenlinux/gardenlinux/lima
+      IMAGE_TAG: latest
     defaults:
       run:
         shell: bash
@@ -12,28 +17,28 @@ jobs:
       actions: write
     steps:
       - uses: actions/checkout@v4
-      - name: Install dependencies
+      - name: Install qemu dependency for multi-arch build
         run: |
-          apt update
-          apt install -y podman
-                
-      - name: Create Dockerfile
-        run: |
-          cat << 'EOF' > Dockerfile
-          FROM ghcr.io/gardenlinux/glrd:latest
-          WORKDIR /workspace
-          COPY ./bin/generate-lima-yaml.py  /workspace
-          RUN apt update && apt install -y python3-pip
-          RUN pip install pyyaml
-          ENTRYPOINT ["./generate-lima-yaml.py"]
-          EOF
-      - name: Build Container Image
-        run: |
-          podman build -t ghcr.io/${{ github.repository }}/generate_lima_manifest:latest .
-          podman save --format oci-archive ghcr.io/${{ github.repository }}/generate_lima_manifest:latest > generate-lima-manifest-container.oci
-      - name: Upload Container Artifact
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # pin@v5.0.0
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static podman
+
+      - name: Build and Push Image to ghcr.io
+        id: build_image
+        uses: redhat-actions/buildah-build@v2
         with:
-          name: generate-lima-manifest-container
-          path: generate-lima-manifest-container.oci
-          if-no-files-found: error
+          image: ${{ env.IMAGE_NAME }}
+          tags: ${{ env.IMAGE_TAG }}
+          containerfiles: |
+            ./Containerfile.lima-manifest
+          platforms: linux/amd64,linux/arm64
+      - name: Push image to ghcr.io
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build_image.outputs.image }}
+          tags: ${{ steps.build_image.outputs.tags }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      
+
