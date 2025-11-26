@@ -94,8 +94,8 @@ def main():
     # Using nightly as the default value temporarily for easier usage because no released version is built with the lima feature.
     # 'latest' should be the default value starting with the next major version.
     parser.add_argument(
-        "--nightly",
-        default='latest',
+        "--version",
+        default='nightly',
         help="Provide a specific Garden Linux version, or use 'latest' or 'nightly'."
     )
 
