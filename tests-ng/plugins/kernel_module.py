@@ -84,7 +84,7 @@ class KernelModule:
             f"KernelModule.safe_unload_module: about to call 'modprobe -r {module}'"
         )
         result = self._shell(
-            f"modprobe -v -r -w 60000 {module}",
+            f"modprobe --verbose --remove --wait 60000 {module}",
             capture_output=True,
             ignore_exit_code=True,
         )
