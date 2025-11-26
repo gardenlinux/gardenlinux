@@ -16,6 +16,8 @@ To get started, follow those instructions:
 
 1. Create and start the VM
 
+<!-- FIXME: update this doc once we have the new container as documented in docs/architecture/decisions/0023-lima-image-download.md -->
+
 ```bash
 # for the latest nightly build, use:
 limactl start --name gardenlinux https://images.gardenlinux.io/gardenlinux.yaml
