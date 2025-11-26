@@ -124,7 +124,7 @@ def test_kernel_cmdline_fips_file_content():
     """
     with open("/etc/kernel/cmdline.d/30-fips.cfg") as kernel_cmd_file:
         assert (
-            kernel_cmd_file.read() == 'CMDLINE_LINUX="$CMDLINE_LINUX fips=1"\n'
+            kernel_cmd_file.read().strip() == 'CMDLINE_LINUX="$CMDLINE_LINUX fips=1"'
         ), "fips=1 wasn't set in the kernel cmdline"
 
 
