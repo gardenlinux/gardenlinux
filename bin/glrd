@@ -2,7 +2,7 @@
 cmd=$(basename "${0}")
 args="$*"
 if [ -z "${GARDENLINUX_BUILD_CRE}" ]; then
-    GARDENLINUX_BUILD_CRE="sudo podman"
+    GARDENLINUX_BUILD_CRE="podman"
 fi
 ${GARDENLINUX_BUILD_CRE} run -it --rm \
     --pull always -q \
