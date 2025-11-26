@@ -7,6 +7,8 @@ from hashlib import sha1 as SHA1
 from hashlib import sha256 as SHA256
 from platform import machine as arch
 
+from plugins.kernel_cmdline import kernel_cmdline
+
 import pytest
 
 
@@ -92,7 +94,6 @@ def test_libgcrypt_fips_file_is_empty():
     The /etc/gcrypt/fips_enabled should be without any content.
     """
     gnutls_fips_file = os.stat("/etc/gcrypt/fips_enabled")
-
     assert gnutls_fips_file.st_size == 0, f"The /etc/gcrypt/fips_enabled is not empty!"
 
 
@@ -120,10 +121,20 @@ def test_kernel_cmdline_fips_file_content():
 
 @pytest.mark.feature("_fips")
 @pytest.mark.booted(reason="Kernel test makes sense only on booted system")
-def test_kernel_was_boot_with_fips_mode():
+def test_kernel_was_boot_with_fips_mode(kernel_cmdline: List[str]):
     """
     Validate that the kernel was booted with the FIPS mode enabled.
     """
+    assert 'fips=1' in kernel_cmdline, f"Kernel was not booted in FIPS mode!"
+
+
+@pytest.mark.feature("_fips")
+@pytest.mark.booted(reason="Kernel test makes sense only on booted system")
+def test_kernel_has_fips_entry_in_procfs():
+    """
+    Validate that the FIPS flag is exposed in procfs. Without applications can't detect if a system
+    has been booted into FIPS mode.
+    """
     with open("/proc/sys/crypto/fips_enabled", "r") as f:
         fips_enabled = f.read().strip()
-    assert fips_enabled == "1", f"Kernel was not booted in FIPS mode!"
+    assert fips_enabled == "1", f"Kernel does not expose FIPS in procfs!"
