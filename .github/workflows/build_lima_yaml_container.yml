@@ -14,7 +14,8 @@ jobs:
       run:
         shell: bash
     permissions:
-      actions: write
+      # Push container images
+      packages: write
     steps:
       - uses: actions/checkout@v4
       - name: Install qemu dependency for multi-arch build
