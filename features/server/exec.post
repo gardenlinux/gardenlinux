@@ -4,8 +4,5 @@ set -eufo pipefail
 
 rootfs="$1"
 
-rm "$rootfs/etc/hostname"
-echo -n > "$rootfs/etc/hostname"
-
 rm "$rootfs/etc/resolv.conf"
 ln -s /run/systemd/resolve/resolv.conf "$rootfs/etc/resolv.conf"
