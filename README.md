@@ -116,7 +116,7 @@ This can be useful if you want to evaluate Garden Linux but don't have access to
 To get started, follow the [lima install instructions](https://lima-vm.io/docs/installation/) for your OS and create a Garden Linux vm using this command:
 
 ```bash
-limactl start --name gardenlinux https://images.gardenlinux.io/gardenlinux.yaml
+podman run --rm ghcr.io/gardenlinux/gardenlinux/lima:latest | limactl start --name gardenlinux -
 ```
 
 For advanced use cases, read [the documentation page on Lima](./docs/02_operators/lima-vm.md).
