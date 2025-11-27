@@ -5,6 +5,6 @@ LABEL org.opencontainers.image.description="Garden Linux Lima Manifest Generatio
           
 WORKDIR /workspace
 COPY ./bin/generate-lima-yaml.py  /workspace
-RUN apt update && apt install -y python3-pip
+RUN apt-get update && apt-get install -y python3-pip
 RUN pip install pyyaml
-ENTRYPOINT ["./generate-lima-yaml.py"]
+ENTRYPOINT ["/workspace/generate-lima-yaml.py"]

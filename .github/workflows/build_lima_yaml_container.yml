@@ -1,4 +1,4 @@
-name: build_lima_manifest_generation_container
+name: Build Lima Container
 on:
   workflow_dispatch:
   schedule:
