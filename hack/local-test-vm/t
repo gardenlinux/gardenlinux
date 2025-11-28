@@ -1,93 +1,133 @@
 #!/bin/sh
 
-set -xe
+set -xeu
 
 # NEEDS: awk sed tar realpath qemu-img virt-sysprep vagrant entr
 
 TESTS_DIR="$(realpath -q ../../tests-ng)"
 
+WATCH_MODE="false"
+VM_ENGINE="vagrant"
+VM_IMAGE_FILE=""
 
 usage() {
-    echo "$(basename $0) path/to/gardenlinux-dev-vm-image [--watch]"
-    echo "--watch : rerun tests if any python file in tests-ng changes"
-    echo "Note: VM image should have 'dev' feature enabled be in raw or qcow2 format"
-    exit 127
+	echo "$(basename $0) [--watch] [(--vagrant | --lima)] path/to/gardenlinux-dev-vm-image"
+	echo
+	echo "Options are:"
+	echo "--vagrant  use vagrant to run a vm (default)"
+	echo "--lima     use lima to run a vm"
+	echo "--watch    re-run tests if any python file in tests-ng changes"
+	echo "Note: VM image should have 'dev' feature enabled be in raw or qcow2 format"
+	exit 127
 }
 
 fileext() { # file-path => file-ext
-    echo "$1" | awk -F'.' '{print $NF}'
+	echo "$1" | awk -F'.' '{print $NF}'
 }
 
 newext() { # file-path new-ext => file-path-with-new-ext
-    echo "$1" | sed "s/\.[^.]\+$/.${2}/"
+	echo "$1" | sed "s/\.[^.]\+$/.${2}/"
+}
+
+convert_image_to_qcow_format() { # img-file-path => qcow2-file-path
+	qemu-img convert -f raw -O qcow2 "$1" "$(newext "$1" qcow2)"
+	newext "$1" qcow2
 }
 
 build_vagrant_box() { # file-path
-    case $(fileext "$1") in
-      raw)
-        [ -f "$(newext $1 qcow2)" ] || qemu-img convert -f raw -O qcow2 "$1" "$(newext $1 qcow2)"
-        image_file=$(newext "$1" qcow2)
-      ;;
-      qcow2)
-        image_file="$1"
-      ;;
-      *)
-        usage
-      ;;
-    esac
+	virt-sysprep -a "$1" \
+		--run-command 'systemctl enable ssh' \
+		--ssh-inject "dev:file:${TESTS_DIR}/.ssh/id_ed25519_gl.pub"
 
-    virt-sysprep -a "$image_file" \
-        --run-command 'systemctl enable ssh' \
-        --ssh-inject "dev:file:${TESTS_DIR}/.ssh/id_ed25519_gl.pub"
+	[ -f "$(newext $(basename $1) box)" ] || ./create_box.sh "$1"
 
-    [ -f "$(newext `basename $1` box)" ] || ./create_box.sh "$image_file"
-
-    vagrant box add \
-        --force \
-        "$(newext `basename $1` box)" \
-        --name "$(newext `basename $1` gl-testing)"
-    rm -f "$(newext `basename $1` box)"
+	vagrant box add \
+		--force \
+		"$(newext $(basename $1) box)" \
+		--name "$(newext $(basename $1) gl-testing)"
+	rm -f "$(newext $(basename $1) box)"
 }
 
 build_test_runtime() {
-    [ -f ${TESTS_DIR}/.build/runtime.tar.gz ] || ${TESTS_DIR}/util/build_runtime.sh
-    mkdir -p ${TESTS_DIR}/.build/runtime
-    tar xzf ${TESTS_DIR}/.build/runtime.tar.gz -C ${TESTS_DIR}/.build/runtime
+	[ -f "${TESTS_DIR}/.build/runtime.tar.gz" ] || "${TESTS_DIR}/util/build_runtime.sh"
+	mkdir -p "${TESTS_DIR}/.build/runtime"
+	tar xzf "${TESTS_DIR}/.build/runtime.tar.gz" -C "${TESTS_DIR}/.build/runtime"
 }
 
 generate_vagrantfile() { # box-name
-    case $(uname -s) in
-        Linux)
-          libvirt_driver="kvm"
-          ;;
-        Darwin)
-          libvirt_driver="qemu"
-          ;;
-        *)
-          echo "*** This script only supports linux or macos as a host platform" >&2
-          exit 1
-          ;;
-    esac
-    sed -n "s/^#vagrantfile://p" "$0" \
-    | sed "s/@TESTS_DIR@/${TESTS_DIR}g; s/@VAGRANT_BOX_NAME@/${1}/g; s/@LIBVIRT_DRIVER@/${libvirt_driver}/" > Vagrantfile
+	case $(uname -s) in
+	Linux)
+		libvirt_driver="kvm"
+		;;
+	Darwin)
+		libvirt_driver="qemu"
+		;;
+	*)
+		echo "*** This script only supports linux or macos as a host platform" >&2
+		exit 1
+		;;
+	esac
+	sed -n "s/^#vagrantfile://p" "$0" |
+		sed "s,@TESTS_DIR@,${TESTS_DIR},g; s/@VAGRANT_BOX_NAME@/${1}/g; s/@LIBVIRT_DRIVER@/${libvirt_driver}/" >Vagrantfile
 }
 
-[ "$1" ] || usage
-[ -f "$1" ] || usage
-echo "$1" | grep -q '_dev-' || usage
+parse_args() { # argv => exit-code
+	set +u
+	[ "$1" ] || return 127
 
-vagrant box list | grep -q "$(newext `basename $1` gl-testing)" || build_vagrant_box "$1"
+	while [ "$1" ]; do
+		case "$1" in
+		--watch)
+			WATCH_MODE="true"
+			;;
+		--lima)
+			VM_ENGINE="lima"
+			;;
+		--vagrant)
+			VM_ENGINE="vagrant"
+			;;
+		*)
+			[ -f "$1" ] || return 127
+			VM_IMAGE_FILE=$(realpath -q "$1")
+			;;
+		esac
+		shift
+	done
+
+	[ -n "$VM_IMAGE_FILE" ] || return 127
+	set -u
+}
+
+parse_args "$@" || usage
+
+case $(fileext "$VM_IMAGE_FILE") in
+raw)
+	converted_image=$(convert_image_to_qcow_format "$VM_IMAGE_FILE")
+	VM_IMAGE_FILE="$converted_image"
+	;;
+qcow2) ;;
+*)
+	usage
+	;;
+esac
+
 [ -d "${TESTS_DIR}/.build/runtime" ] || build_test_runtime
-[ -s Vagrantfile ] || generate_vagrantfile "$(newext `basename $1` gl-testing)"
 
-vagrant status | grep -q "$(newext `basename $1` gl-testing) running" || vagrant up
+case "$VM_ENGINE" in
+lima) ;;
+*)
+	vagrant box list | grep -q "$(newext ${VM_IMAGE_FILE} gl-testing)" || build_vagrant_box "$VM_IMAGE_FILE"
+	[ -s Vagrantfile ] || generate_vagrantfile "$(newext $(basename $VM_IMAGE_FILE) gl-testing)"
 
-set +e
-vagrant provision
+	set +e
+	vagrant status | grep -q "$(newext $(basename $VM_IMAGE_FILE) gl-testing) running" || vagrant up
+	vagrant provision
 
-[ "$2" = "--watch" ] && (
-  find "${TESTS_DIR}" -name '*.py' | entr vagrant provision
-)
+	[ "$WATCH_MODE" = "true" ] && (
+		find "${TESTS_DIR}" -name '*.py' | entr vagrant provision
+	)
+	;;
+esac
 
 #vagrantfile:Vagrant.configure("2") do |config|
 #vagrantfile:  config.vm.box = "@VAGRANT_BOX_NAME@"
