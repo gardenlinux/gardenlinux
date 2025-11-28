@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-#set -xu
 
 # downloaded from https://raw.githubusercontent.com/vagrant-libvirt/vagrant-libvirt/refs/heads/main/tools/create_box.sh
 
