@@ -1,4 +1,4 @@
-# ADR 0013: System State Diffing in tests-ng
+# ADR 0022: System State Diffing in tests-ng
 
 **Date:** 2025-10-07
 

@@ -1,0 +1,45 @@
+name: Build Lima Container
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0'
+jobs:
+  lima_manifest_container:
+    name: Build Container for lima manifest generation
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: gardenlinux/gardenlinux/lima
+      IMAGE_TAG: latest
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      # Push container images
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install qemu dependency for multi-arch build
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static podman
+
+      - name: Build and Push Image to ghcr.io
+        id: build_image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          tags: ${{ env.IMAGE_TAG }}
+          containerfiles: |
+            ./Containerfile.lima-manifest
+          platforms: linux/amd64,linux/arm64
+      - name: Push image to ghcr.io
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build_image.outputs.image }}
+          tags: ${{ steps.build_image.outputs.tags }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      
+

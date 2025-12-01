@@ -9,18 +9,27 @@ Garden Linux images for Lima are published at https://images.gardenlinux.io
 
 ## How to use the pre-built image
 
-Our pre-built images are very bare, they don't contain a lot of software that is available in Garden Linux.
+You need to have `podman` and `lima` installed.
+
+> [!NOTE]
+> You need to have `podman` and `lima` installed.
+> Garden Linux offers a lightweight container image that generates a ready-to-use Lima YAML manifest. This approach simplifies usage, as image URLs can be complex and difficult to construct manually. The script within the container automatically creates the correct URL and includes all necessary dependencies, making the process straightforward. The container outputs only the required YAML file for Lima; you may redirect this output to a file for review or modification as needed.
+
+The pre-built images are intentionally minimal and do not include much of the additional software available in Garden Linux.
 You can use `apt` to search and install additional software that is available for Garden Linux.
 
 To get started, follow those instructions:
 
 1. Create and start the VM
 
+
 ```bash
 # for the latest nightly build, use:
-limactl start --name gardenlinux https://images.gardenlinux.io/gardenlinux.yaml
-# for a released version, use this (see released versions at https://github.com/gardenlinux/gardenlinux/releases):
-limactl start --name gardenlinux https://images.gardenlinux.io/gardenlinux-$VERSION.yaml
+podman run --rm ghcr.io/gardenlinux/gardenlinux/lima:latest | limactl start --name gardenlinux -
+# for using a specific nightly build, specify the version numbers
+podman run --rm ghcr.io/gardenlinux/gardenlinux/lima:latest --version 2066.0.0 --allow-nightly | limactl start --name gardenlinux -
+# for using a release version, specify the version (note: as of December 2025, no released version has this feature yet, will work with the next major version of Garden Linux)
+podman run --rm ghcr.io/gardenlinux/gardenlinux/lima:latest --version 21xx.1.0 | limactl start --name gardenlinux -
 ```
 
 2. Open a shell inside the VM: `limactl shell gardenlinux`
