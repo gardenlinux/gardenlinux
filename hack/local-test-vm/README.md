@@ -4,21 +4,43 @@
 
 # Prerequisites
 
-## System packages
+## Packages
 
-### Linux
+### Linux (vagrant vm engine)
 
 ```bash
-sudo apt-get install -y vagrant libvirt-daemon libvirt-daemon-system entr
+sudo apt-get install -y vagrant libvirt-daemon libvirt-daemon-system
 ```
 
-### macOS
+### Linux (lima vm engine)
+
+```bash
+asdf plugin add lima
+asdf install lima 2.0.2
+asdf set lima 2.0.2
+```
+
+### Linux (optional packages)
+
+For `--watch` mode to work you will need `entr`:
+
+```bash
+sudo apt-get install -y entr
+```
+
+### macOS (vagrant vm engine)
 
 ```bash
 brew install vagrant libvirt @@@
 ```
 
-### Vagrant plugin
+### macOS (lima vm engine)
+
+```bash
+brew install lima
+```
+
+### Vagrant plugin (only if using vagrant vm engine)
 
 ```bash
 vagrant plugin install vagrant-libvirt
