@@ -1,6 +1,5 @@
 import os
 import shutil
-from sys import stdout
 
 import pytest
 from handlers.pip import pip_requests
@@ -53,7 +52,7 @@ def test_python_export_libs(shell: ShellRunner, pip_requests):
     shell("/bin/python3 -c 'import requests'")
 
     shell(
-        f"gl-build export-python-libs --package-dir {pip_requests} --output-dir /required_libs_test"
+        f"exportLibs.py --package-dir {pip_requests} --output-dir /required_libs_test"
     )
 
     assert os.path.isdir("/required_libs_test"), "/required_libs_test was not created"

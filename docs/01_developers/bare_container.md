@@ -49,7 +49,7 @@ Their development is streamlined by the [unbase_oci](https://github.com/gardenli
 
   COPY requirements.txt /
   RUN pip3 install -r requirements.txt --break-system-packages --no-cache-dir
-  RUN gl-build export-python-libs
+  RUN exportLibs.py
   
   FROM ghcr.io/gardenlinux/gardenlinux/bare-python:1877.8
   COPY --from=packages /usr/local/lib/python3.13/dist-packages/ /usr/local/lib/python3.13/dist-packages/
