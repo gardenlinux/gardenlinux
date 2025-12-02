@@ -2,7 +2,7 @@
 
 set -xeu
 
-# NEEDS: awk sed tar realpath qemu-img virt-sysprep vagrant entr
+# NEEDS: awk sed tar realpath qemu-img virt-sysprep (vagrant|lima) entr
 
 TESTS_DIR="$(realpath -q ../../tests-ng)"
 
@@ -33,6 +33,14 @@ newext() { # file-path new-ext => file-path-with-new-ext
 convert_image_to_qcow_format() { # img-file-path => qcow2-file-path
 	qemu-img convert -f raw -O qcow2 "$1" "$(newext "$1" qcow2)"
 	newext "$1" qcow2
+}
+
+build_lima_box() { # file-path
+	virt-sysprep -a "$1" \
+		--run-command 'systemctl enable ssh' \
+		--ssh-inject "dev:file:$(realpath -q ~/.lima/_config/user)" \
+		--network \
+		--install cloud-init
 }
 
 build_vagrant_box() { # file-path
@@ -72,8 +80,9 @@ generate_vagrantfile() { # box-name
 		sed "s,@TESTS_DIR@,${TESTS_DIR},g; s/@VAGRANT_BOX_NAME@/${1}/g; s/@LIBVIRT_DRIVER@/${libvirt_driver}/" >Vagrantfile
 }
 
-generate_lima_template() { # box-name
-	:
+generate_lima_template() { # vm-name vm-image-file
+	sed -n "s/^#lima-template://p" "$0" |
+		sed "s,@TESTS_DIR@,${TESTS_DIR},g; s,@VM_IMAGE_FILE@,${2},g" >"$1.yaml"
 }
 
 parse_args() { # argv => exit-code
@@ -123,11 +132,13 @@ esac
 
 case "$VM_ENGINE" in
 lima)
-
-	[ -s "${VM_NAME}.yaml" ] || generate_lima_template "$VM_NAME"
+	# TODO: condition to skip build_lima_box
+	build_lima_box "$VM_IMAGE_FILE"
+	[ -s "${VM_NAME}.yaml" ] || generate_lima_template "$VM_NAME" "$VM_IMAGE_FILE"
 	limactl list | grep -q "$VM_NAME" || limactl create --tty=false --name="$VM_NAME" "./${VM_NAME}.yaml"
 	limactl start --tty=false "$VM_NAME"
 
+	# TODO: watch mode
 	;;
 vagrant)
 	vagrant box list | grep -q "$VM_NAME" || build_vagrant_box "$VM_IMAGE_FILE"
@@ -189,3 +200,29 @@ esac
 #vagrantfile:
 #vagrantfile:  config.vm.provision "shell", inline: $run_tests, upload_path: "/var/tmp/run_tests"
 #vagrantfile:end
+#lima-template:vmType: qemu
+#lima-template:cpus: 2
+#lima-template:memory: 4GiB
+#lima-template:images:
+#lima-template:  - location: @VM_IMAGE_FILE@
+#lima-template:arch: x86_64
+#lima-template:mounts:
+#lima-template:  - location: @TESTS_DIR@/.build/runtime
+#lima-template:    mountPoint: "/run/gardenlinux-tests/runtime"
+#lima-template:  - location: @TESTS_DIR@
+#lima-template:    mountPoint: "/run/gardenlinux-tests/tests"
+#lima-template:mountType: 9p
+#lima-template:containerd:
+#lima-template:  system: false
+#lima-template:  user: false
+#lima-template:user:
+#lima-template:  name: dev
+#lima-template:provision:
+#lima-template:  - mode: user
+#lima-template:    script: |
+#lima-template:      set -x
+#lima-template:      export PATH="/run/gardenlinux-tests/runtime/$(uname -m)/bin:$PATH"
+#lima-template:
+#lima-template:      cd /run/gardenlinux-tests/tests
+#lima-template:      COLUMNS=120 python -m pytest -rA --tb=short --color=yes -p no:cacheprovider -s -vv \
+#lima-template:      	--system-booted --allow-system-modifications
