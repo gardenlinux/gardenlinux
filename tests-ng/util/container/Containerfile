@@ -15,4 +15,4 @@ COPY --from=compile /work/enter_host_ns /enter_host_ns
 COPY --from=extract /work/tests-ng /tests-ng
 WORKDIR /tests-ng
 ENTRYPOINT [ "/enter_host_ns" ]
-CMD [ "./run_tests", "--system-booted" ]
+CMD [ "./run_tests", "--junit-xml", "output/test-ng.xml", "--system-booted" ]
