@@ -60,6 +60,10 @@ resource "azurerm_network_interface" "nic" {
     public_ip_address_id          = azurerm_public_ip.pip.id
   }
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
   tags = local.labels
 }
 

@@ -1,4 +1,5 @@
 import logging
+import sys
 
 import pytest
 from plugins.sysdiff import Sysdiff
@@ -50,7 +51,10 @@ def test_sysdiff_after_tests(sysdiff: Sysdiff):
             diff_output = sysdiff.diff_engine.generate_diff(
                 diff_result, before_snapshot, after_snapshot
             )
-            logger.info(f"System changes detected - detailed diff:\n{diff_output}")
+            print(
+                "System changes detected - detailed diff:\n" + diff_output,
+                file=sys.stderr,
+            )
             pytest.fail(
                 "System changes were detected during the test run. See stderr output for details."
             )

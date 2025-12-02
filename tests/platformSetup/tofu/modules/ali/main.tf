@@ -49,48 +49,25 @@ resource "alicloud_oss_bucket" "images" {
 
   bucket = local.bucket_name
 
+  server_side_encryption_rule {
+    sse_algorithm = "AES256"
+  }
+
   tags = merge(
     local.labels,
     { Name = local.bucket_name }
   )
 }
 
-resource "alicloud_oss_bucket_acl" "images_acl" {
-  count = local.image_source_type == "file" ? 1 : 0
+resource "terraform_data" "pause_1_second" {
+  triggers_replace = [
+    alicloud_oss_bucket.images[0].id
+  ]
 
-  # depends_on = [alicloud_oss_bucket_ownership_controls.images_owner.0]
-
-  bucket = alicloud_oss_bucket.images.0.bucket
-  acl    = "private"
+  provisioner "local-exec" {
+    command = "sleep 1"
+  }
 }
-
-# resource "alicloud_oss_bucket_policy" "images_policy" {
-#   count = local.image_source_type == "file" ? 1 : 0
-#
-#   bucket = alicloud_oss_bucket.images.bucket
-#   policy    = <<POLICY
-# {
-#   "Version": "1",
-#   "Statement": [
-#     {
-#       "Principal": [
-#         "*"
-#       ],
-#       "Effect": "Deny",
-#       "Action": [
-#         "oss:*"
-#       ],
-#       "Resource": [
-#         "acs:oss:*:${data.alicloud_account.current.id}:${alicloud_oss_bucket.images.0.bucket}",
-#         "acs:oss:*:${data.alicloud_account.current.id}:${alicloud_oss_bucket.images.0.bucket}/*"
-#       ]
-#     }
-#   ]
-# }
-# POLICY
-#
-#   depends_on = [alicloud_oss_bucket.images.0]
-# }
 
 resource "alicloud_oss_bucket_public_access_block" "no_public_access" {
   count = local.image_source_type == "file" ? 1 : 0
@@ -98,13 +75,8 @@ resource "alicloud_oss_bucket_public_access_block" "no_public_access" {
   bucket = alicloud_oss_bucket.images.0.bucket
 
   block_public_access = true
-}
 
-resource "alicloud_oss_bucket_server_side_encryption" "images_encryption" {
-  count = local.image_source_type == "file" ? 1 : 0
-
-  bucket        = alicloud_oss_bucket.images.0.bucket
-  sse_algorithm = "AES256"
+  depends_on = [terraform_data.pause_1_second]
 }
 
 data "alicloud_vswitches" "default" {
@@ -142,7 +114,7 @@ resource "alicloud_vswitch" "subnet" {
 
 resource "alicloud_security_group" "sg" {
   security_group_name = local.fw_name
-  vpc_id = alicloud_vpc.net.id
+  vpc_id              = alicloud_vpc.net.id
 
   tags = merge(
     local.labels,
@@ -204,9 +176,9 @@ resource "alicloud_ecs_key_pair_attachment" "ssh_key" {
 }
 
 resource "alicloud_instance" "instance" {
-  availability_zone          = data.alicloud_zones.zones.zones.0.id
-  security_groups            = [alicloud_security_group.sg.id]
-  instance_type              = var.instance_type
+  availability_zone = data.alicloud_zones.zones.zones.0.id
+  security_groups   = [alicloud_security_group.sg.id]
+  instance_type     = var.instance_type
   image_id = (
     local.image_source_type == "file" ? alicloud_image_import.import.0.id :
     local.image_source_type == "cloud" ? var.image_file :
