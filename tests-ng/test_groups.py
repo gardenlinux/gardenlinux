@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Set
 
 import pytest
 from plugins.linux_etc_files import Group
@@ -44,7 +44,9 @@ def test_group_root_has_no_users(group_entries: List[Group]):
 
 
 @pytest.mark.feature("not _dev and not pythonDev and not container")
-def test_group_wheel_has_no_users(group_entries: List[Group]):
+def test_group_wheel_has_no_unexpected_users(
+    group_entries: List[Group], expected_users: Set[str]
+):
     """
     Check if parameterized groups have the expected users.
     """
@@ -53,6 +55,11 @@ def test_group_wheel_has_no_users(group_entries: List[Group]):
 
     assert group, "Group wheel is not present."
 
+    # remove expected users from group as we want to check for unexpected users
+    expected_user_list = [
+        user for user in group.user_list if user not in expected_users
+    ]
+
     assert (
-        len(group.user_list) == 0
-    ), f"user group wheel is not empty as expected. Was: {group.user_list}"
+        len(expected_user_list) == 0
+    ), f"user group wheel is not empty as expected. Was: {expected_user_list}"
