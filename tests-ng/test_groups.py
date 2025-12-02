@@ -43,7 +43,7 @@ def test_group_root_has_no_users(group_entries: List[Group]):
     ), f"user group root is not empty as expected. Was: {group.user_list}"
 
 
-@pytest.mark.feature("not _dev and not pythonDev")
+@pytest.mark.feature("not _dev and not pythonDev and not container")
 def test_group_wheel_has_no_users(group_entries: List[Group]):
     """
     Check if parameterized groups have the expected users.
