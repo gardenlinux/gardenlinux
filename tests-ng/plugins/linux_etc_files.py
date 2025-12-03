@@ -114,7 +114,9 @@ def group_entries() -> List[Group]:
                     groupname=fields[0],
                     password=fields[1],
                     gid=fields[2],
-                    user_list=fields[3].split(","),
+                    user_list=[
+                        user.strip() for user in fields[3].split(",") if user.strip()
+                    ],
                 )
             )
 
