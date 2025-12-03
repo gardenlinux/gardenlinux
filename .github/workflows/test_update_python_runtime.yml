@@ -1,6 +1,7 @@
 name: Test - Update Python Runtime
 
 on:
+  pull_request:
   workflow_dispatch:
   schedule:
     # Run at 12:00 noon CEST (10:00 UTC)
