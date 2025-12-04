@@ -42,3 +42,7 @@ format-isort: install-dev
 
 # format: Format code with black and sort imports with isort
 format: install-dev format-black format-isort
+
+# test-plugins: Run Tests for Plugins
+test-plugins: install
+	pytest -v $(ROOT_DIR)/plugins/tests/test_*.py
