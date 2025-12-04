@@ -5,14 +5,14 @@ on:
       type:
         type: choice
         default: minor
-        description: 'Patch'
+        description: "Patch"
         options:
-        - minor
-        - dev
+          - minor
+          - dev
       version:
         required: true
         type: string
-        description: 'Version'
+        description: "Version"
       is_latest:
         default: false
         type: boolean
@@ -77,10 +77,10 @@ jobs:
             flavors.yaml
           sparse-checkout-cone-mode: false
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6 # pin@0.10.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.7 # pin@0.10.7
       - id: matrix
         name: Generate flavors matrix
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@8e147dfa4af22349cea3b9bc867d3572ee0859ae # pin@0.10.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@d1506f825861ee1b87b13b93498b0047a84e92a2 # pin@0.10.7
         with:
           flags: "--no-arch --json-by-arch --publish"
   github_release:
@@ -103,7 +103,7 @@ jobs:
       - name: install dependencies for generate_release_note.py script
         run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6 # pin@0.10.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.7 # pin@0.10.7
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
@@ -141,7 +141,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6 # pin@0.10.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.7 # pin@0.10.7
       - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
@@ -185,7 +185,7 @@ jobs:
     uses: ./.github/workflows/tag_latest_container.yml
     with:
       version: ${{ inputs.version }}
-      is_latest:  ${{ inputs.is_latest }}
+      is_latest: ${{ inputs.is_latest }}
     permissions:
       packages: write
   glrd:
