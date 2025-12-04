@@ -1,0 +1,228 @@
+#!/bin/sh
+
+set -xeu
+
+# NEEDS: awk sed tar realpath qemu-img virt-sysprep (vagrant|lima) entr
+
+TESTS_DIR="$(realpath -q ../../tests-ng)"
+
+WATCH_MODE="false"
+VM_ENGINE="vagrant"
+VM_IMAGE_FILE=""
+VM_NAME=""
+
+usage() {
+	echo "$(basename $0) [--watch] [(--vagrant | --lima)] path/to/gardenlinux-dev-vm-image"
+	echo
+	echo "Options are:"
+	echo "--vagrant  use vagrant to run a vm (default)"
+	echo "--lima     use lima to run a vm"
+	echo "--watch    re-run tests if any python file in tests-ng changes"
+	echo "Note: VM image should have 'dev' feature enabled be in raw or qcow2 format"
+	exit 127
+}
+
+fileext() { # file-path => file-ext
+	echo "$1" | awk -F'.' '{print $NF}'
+}
+
+newext() { # file-path new-ext => file-path-with-new-ext
+	echo "$1" | sed "s/\.[^.]\+$/.${2}/"
+}
+
+convert_image_to_qcow_format() { # img-file-path => qcow2-file-path
+	qemu-img convert -f raw -O qcow2 "$1" "$(newext "$1" qcow2)"
+	newext "$1" qcow2
+}
+
+build_lima_box() { # file-path
+	virt-sysprep -a "$1" \
+		--run-command 'systemctl enable ssh' \
+		--ssh-inject "dev:file:$(realpath -q ~/.lima/_config/user)" \
+		--network \
+		--install cloud-init
+}
+
+build_vagrant_box() { # file-path
+	virt-sysprep -a "$1" \
+		--run-command 'systemctl enable ssh' \
+		--ssh-inject "dev:file:${TESTS_DIR}/.ssh/id_ed25519_gl.pub"
+
+	[ -f "$(newext $(basename $1) box)" ] || ./create_box.sh "$1"
+
+	vagrant box add \
+		--force \
+		"$(newext $(basename $1) box)" \
+		--name "$(newext $(basename $1) gl-testing)"
+	rm -f "$(newext $(basename $1) box)"
+}
+
+build_test_runtime() {
+	[ -f "${TESTS_DIR}/.build/runtime.tar.gz" ] || "${TESTS_DIR}/util/build_runtime.sh"
+	mkdir -p "${TESTS_DIR}/.build/runtime"
+	tar xzf "${TESTS_DIR}/.build/runtime.tar.gz" -C "${TESTS_DIR}/.build/runtime"
+}
+
+generate_vagrantfile() { # box-name
+	case $(uname -s) in
+	Linux)
+		libvirt_driver="kvm"
+		;;
+	Darwin)
+		libvirt_driver="qemu"
+		;;
+	*)
+		echo "*** This script only supports linux or macos as a host platform" >&2
+		exit 1
+		;;
+	esac
+	sed -n "s/^#vagrantfile://p" "$0" |
+		sed "s,@TESTS_DIR@,${TESTS_DIR},g; s/@VAGRANT_BOX_NAME@/${1}/g; s/@LIBVIRT_DRIVER@/${libvirt_driver}/" >Vagrantfile
+}
+
+generate_lima_template() { # vm-name vm-image-file
+	sed -n "s/^#lima-template://p" "$0" |
+		sed "s,@TESTS_DIR@,${TESTS_DIR},g; s,@VM_IMAGE_FILE@,${2},g" >"$1.yaml"
+}
+
+parse_args() { # argv => exit-code
+	set +u
+	[ "$1" ] || return 127
+
+	while [ "$1" ]; do
+		case "$1" in
+		--watch)
+			WATCH_MODE="true"
+			;;
+		--lima)
+			VM_ENGINE="lima"
+			;;
+		--vagrant)
+			VM_ENGINE="vagrant"
+			;;
+		*)
+			[ -f "$1" ] || return 127
+			VM_IMAGE_FILE=$(realpath -q "$1")
+			;;
+		esac
+		shift
+	done
+
+	[ -n "$VM_IMAGE_FILE" ] || return 127
+
+	VM_NAME=$(newext $(basename "$VM_IMAGE_FILE") gl-testing)
+
+	set -u
+}
+
+parse_args "$@" || usage
+
+case $(fileext "$VM_IMAGE_FILE") in
+raw)
+	converted_image=$(convert_image_to_qcow_format "$VM_IMAGE_FILE")
+	VM_IMAGE_FILE="$converted_image"
+	;;
+qcow2) ;;
+*)
+	usage
+	;;
+esac
+
+[ -d "${TESTS_DIR}/.build/runtime" ] || build_test_runtime
+
+case "$VM_ENGINE" in
+lima)
+	# TODO: condition to skip build_lima_box
+	build_lima_box "$VM_IMAGE_FILE"
+	[ -s "${VM_NAME}.yaml" ] || generate_lima_template "$VM_NAME" "$VM_IMAGE_FILE"
+	limactl list | grep -q "$VM_NAME" || limactl create --tty=false --name="$VM_NAME" "./${VM_NAME}.yaml"
+	limactl start --tty=false "$VM_NAME"
+
+	# TODO: watch mode
+	;;
+vagrant)
+	vagrant box list | grep -q "$VM_NAME" || build_vagrant_box "$VM_IMAGE_FILE"
+	[ -s Vagrantfile ] || generate_vagrantfile "$VM_NAME"
+
+	set +e
+	vagrant status | grep -q "$VM_NAME running" || vagrant up
+	vagrant provision
+
+	[ "$WATCH_MODE" = "true" ] && (
+		find "${TESTS_DIR}" -name '*.py' | entr vagrant provision
+	)
+	;;
+esac
+
+#vagrantfile:Vagrant.configure("2") do |config|
+#vagrantfile:  config.vm.box = "@VAGRANT_BOX_NAME@"
+#vagrantfile:  config.vm.define "@VAGRANT_BOX_NAME@"
+#vagrantfile:
+#vagrantfile:  # https://vagrant-libvirt.github.io/vagrant-libvirt/configuration.html
+#vagrantfile:  config.vm.provider :libvirt do |libvirt|
+#vagrantfile:    libvirt.driver = "@LIBVIRT_DRIVER@"
+#vagrantfile:    libvirt.cpu_mode = "host-passthrough"
+#vagrantfile:    libvirt.default_prefix = "gardenlinux_"
+#vagrantfile:    libvirt.memory   = 4096
+#vagrantfile:    libvirt.cpus     = 2
+#vagrantfile:    libvirt.graphics_ip = "0.0.0.0" # for vnc connection
+#vagrantfile:  end
+#vagrantfile:
+#vagrantfile:  config.ssh.username = "dev"
+#vagrantfile:  config.ssh.private_key_path = File.expand_path("@TESTS_DIR@/.ssh/id_ed25519_gl",
+#vagrantfile:                                                 File.dirname(__FILE__))
+#vagrantfile:
+#vagrantfile:  # this mount is required by vagrant
+#vagrantfile:  config.vm.synced_folder ".", "/vagrant",
+#vagrantfile:    type: "nfs",
+#vagrantfile:    nfs_version: 4,
+#vagrantfile:    nfs_udp: false
+#vagrantfile:
+#vagrantfile:  config.vm.synced_folder File.expand_path("@TESTS_DIR@/.build/runtime",
+#vagrantfile:                                           File.dirname(__FILE__)), "/run/gardenlinux-tests/runtime",
+#vagrantfile:    type: "nfs",
+#vagrantfile:    nfs_version: 4,
+#vagrantfile:    nfs_udp: false
+#vagrantfile:  config.vm.synced_folder File.expand_path("@TESTS_DIR@",
+#vagrantfile:                                           File.dirname(__FILE__)), "/run/gardenlinux-tests/tests",
+#vagrantfile:    type: "nfs",
+#vagrantfile:    nfs_version: 4,
+#vagrantfile:    nfs_udp: false
+#vagrantfile:
+#vagrantfile:  $run_tests = <<-'SCRIPT'
+#vagrantfile:  set -x
+#vagrantfile:  export PATH="/run/gardenlinux-tests/runtime/$(uname -m)/bin:$PATH"
+#vagrantfile:
+#vagrantfile:  cd /run/gardenlinux-tests/tests
+#vagrantfile:  COLUMNS=120 python -m pytest -rA --tb=short --color=yes -p no:cacheprovider -s -vv \
+#vagrantfile:    --system-booted --allow-system-modifications
+#vagrantfile:  SCRIPT
+#vagrantfile:
+#vagrantfile:  config.vm.provision "shell", inline: $run_tests, upload_path: "/var/tmp/run_tests"
+#vagrantfile:end
+#lima-template:vmType: qemu
+#lima-template:cpus: 2
+#lima-template:memory: 4GiB
+#lima-template:images:
+#lima-template:  - location: @VM_IMAGE_FILE@
+#lima-template:arch: x86_64
+#lima-template:mounts:
+#lima-template:  - location: @TESTS_DIR@/.build/runtime
+#lima-template:    mountPoint: "/run/gardenlinux-tests/runtime"
+#lima-template:  - location: @TESTS_DIR@
+#lima-template:    mountPoint: "/run/gardenlinux-tests/tests"
+#lima-template:mountType: 9p
+#lima-template:containerd:
+#lima-template:  system: false
+#lima-template:  user: false
+#lima-template:user:
+#lima-template:  name: dev
+#lima-template:provision:
+#lima-template:  - mode: user
+#lima-template:    script: |
+#lima-template:      set -x
+#lima-template:      export PATH="/run/gardenlinux-tests/runtime/$(uname -m)/bin:$PATH"
+#lima-template:
+#lima-template:      cd /run/gardenlinux-tests/tests
+#lima-template:      COLUMNS=120 python -m pytest -rA --tb=short --color=yes -p no:cacheprovider -s -vv \
+#lima-template:      	--system-booted --allow-system-modifications
