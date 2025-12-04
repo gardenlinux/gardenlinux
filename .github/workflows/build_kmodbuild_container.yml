@@ -13,10 +13,10 @@ jobs:
       run:
         shell: bash
     env:
-      CNAME: ''
+      CNAME: ""
     strategy:
       matrix:
-        arch: [ amd64, arm64 ]
+        arch: [amd64, arm64]
     permissions:
       actions: write
     steps:
@@ -33,7 +33,7 @@ jobs:
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@0.10.6 # pin@0.10.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@0.10.7 # pin@0.10.7
         with:
           flags: --cname container-${{ matrix.arch }} cname
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
