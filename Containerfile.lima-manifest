@@ -1,0 +1,10 @@
+FROM ghcr.io/gardenlinux/glrd:latest
+
+LABEL org.opencontainers.image.source=https://github.com/gardenlinux/gardenlinux
+LABEL org.opencontainers.image.description="Garden Linux Lima Manifest Generation Container"
+          
+WORKDIR /workspace
+COPY ./bin/generate-lima-yaml.py  /workspace
+RUN apt-get update && apt-get install -y python3-pip
+RUN pip install pyyaml
+ENTRYPOINT ["/workspace/generate-lima-yaml.py"]

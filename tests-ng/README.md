@@ -106,7 +106,7 @@ apt-get install azure-cli awscli openstackclient # for GCP and ALI look at tip
 #### Install on MacOS
 
 ```
-brew install coreutils bash gnu-sed gnu-getopt podman make curl jq libxml2 ossp-uuid unzip swtpm socat gnupg
+brew install bash coreutils curl gnu-getopt gnu-sed gnupg jq libxml2 make ossp-uuid podman socat swtpm unzip
 # install cloud provider CLIs
 brew install azure-cli awscli gcloud-cli aliyun-cli openstackclient
 ```
