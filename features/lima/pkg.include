@@ -6,3 +6,4 @@ efitools
 openssh-server
 qemu-guest-agent
 sshfs
+python3-cffi-backend
