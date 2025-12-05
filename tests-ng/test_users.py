@@ -34,7 +34,7 @@ def test_no_extra_home_directories(expected_users):
 
 
 @pytest.mark.booted
-@pytest.mark.root(reason="Using sudo comamnd to check the access")
+@pytest.mark.root(reason="Using sudo command to check the access")
 def test_users_sudo_capability(get_all_users, expected_users, user: User):
     users_with_sudo_capabilities = set(
         [u for u in get_all_users if user.is_user_sudo(u)]
