@@ -18,6 +18,7 @@ class Sshd:
             parts = line.split(maxsplit=1)
             if len(parts) == 2:
                 key, value = parts
+                key = key.lower()
                 # If key already exists, convert to set and append
                 if key in self._sshd_config:
                     if isinstance(self._sshd_config[key], set):
