@@ -27,11 +27,29 @@ class SystemRunningState:
 
 
 def _seconds(token: str) -> float:
-    if token.endswith("ms"):
-        return float(token[:-2]) / 1000
-    if token.endswith("s"):
-        return float(token[:-1])
-    raise ValueError(f"Unknown time unit in '{token}'")
+    """Convert a systemd time token into seconds.
+
+    Accepts single-part values like "3.007s" or "120ms" and multi-part
+    values like "8min 11.844s". Parts are space-separated and summed.
+    """
+    total = 0.0
+    parts = token.split()
+    for part in parts:
+        part = part.strip()
+        if not part:
+            continue
+        m = re.match(r"^([\d.]+)(ms|s|min)$", part)
+        if not m:
+            raise ValueError(f"Unknown time unit in '{part}'")
+        val = float(m.group(1))
+        unit = m.group(2)
+        if unit == "ms":
+            total += val / 1000.0
+        elif unit == "s":
+            total += val
+        elif unit == "min":
+            total += val * 60.0
+    return total
 
 
 def _parse_units(systemctl_stdout: str) -> list[SystemdUnit]:
@@ -91,9 +109,7 @@ class Systemd:
         summary = output.splitlines()[0]
 
         m = re.search(
-            r"([\d.]+[a-z]+)\s+\(kernel\).*?"
-            r"([\d.]+[a-z]+)\s+\(initrd\).*?"
-            r"([\d.]+[a-z]+)\s+\(userspace\)",
+            r"^Startup finished in (.*) \(kernel\) \+ (.*) \(initrd\) \+ (.*) \(userspace\)",
             summary,
         )
         if not m:
