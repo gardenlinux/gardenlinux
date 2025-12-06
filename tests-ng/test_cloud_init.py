@@ -1,7 +1,7 @@
 import os
 
 import pytest
-from plugins.parse_file import FileContent
+from plugins.parse_file import ParseFile
 
 
 # Tests for most platforms
@@ -27,272 +27,140 @@ def test_cloud_init_not_installed():
     "ali or aws or azure or openstackbaremetal or openstack or vmware",
     reason="Cloud-init is installed on most cloud platforms; gdch has minimal config",
 )
-def test_cloud_init_debian_cloud_defaults(file_content: FileContent):
+def test_cloud_init_debian_cloud_defaults(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg"
-    mapping = {
-        "apt_preserve_sources_list": True,
-        "system_info.default_user.shell": "/bin/bash",
-        "system_info.default_user.lock_passwd": True,
-        "system_info.default_user.sudo": ["ALL=(ALL) NOPASSWD:ALL"],
-    }
-    format = "yaml"
-    result = file_content.get_mapping(
-        file,
-        mapping,
-        format=format,
-    )
-    assert result is not None, f"Could not parse file: {file}"
-    assert result.all_match, (
-        f"Could not find expected mapping in {file} (format={format}) for {mapping}. "
-        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
-    )
+    config = parse_file.parse(file, format="yaml")
+    assert config["apt_preserve_sources_list"] is True
+    assert config["system_info"]["default_user"]["shell"] == "/bin/bash"
+    assert config["system_info"]["default_user"]["lock_passwd"] is True
+    assert config["system_info"]["default_user"]["sudo"] == ["ALL=(ALL) NOPASSWD:ALL"]
 
 
 @pytest.mark.feature(
     "ali or aws or openstackbaremetal or openstack or vmware",
     reason="Cloud-init is installed on most cloud platforms; azure uses a different default user; gdch has minimal config",
 )
-def test_cloud_init_debian_cloud_user(file_content: FileContent):
+def test_cloud_init_debian_cloud_user(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg"
-    mapping = {
-        "system_info.default_user.name": "admin",
-    }
-    format = "yaml"
-    result = file_content.get_mapping(
-        file,
-        mapping,
-        format=format,
-    )
-    assert result is not None, f"Could not parse file: {file}"
-    assert result.all_match, (
-        f"Could not find expected mapping in {file} (format={format}) for {mapping}. "
-        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
-    )
+    config = parse_file.parse(file, format="yaml")
+    assert config["system_info"]["default_user"]["name"] == "admin"
 
 
 @pytest.mark.feature(
     "aws or azure or openstackbaremetal or openstack or vmware",
     reason="Cloud-init is installed on most cloud platforms; ali does not manage host file; gdch has minimal config",
 )
-def test_cloud_init_debian_cloud_manage_etc_hosts(file_content: FileContent):
+def test_cloud_init_debian_cloud_manage_etc_hosts(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg"
-    mapping = {
-        "manage_etc_hosts": True,
-    }
-    format = "yaml"
-    result = file_content.get_mapping(
-        file,
-        mapping,
-        format=format,
-    )
-    assert result is not None, f"Could not parse file: {file}"
-    assert result.all_match, (
-        f"Could not find expected mapping in {file} (format={format}) for {mapping}. "
-        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
-    )
+    config = parse_file.parse(file, format="yaml")
+    assert config["manage_etc_hosts"] is True
 
 
 # Tests for some platforms
 @pytest.mark.feature("ali or aws or openstack or openstackbaremetal or vmware")
 @pytest.mark.parametrize("module", ["ntp", "resizefs", "growpart"])
-def test_cloud_cfg_excludes_modules(file_content: FileContent, module: str):
+def test_cloud_cfg_excludes_modules(parse_file: ParseFile, module: str):
+    file = "/etc/cloud/cloud.cfg"
+    config = parse_file.parse(file, format="yaml")
     for list_path in [
         "cloud_init_modules",
         "cloud_config_modules",
         "cloud_final_modules",
     ]:
-        file = "/etc/cloud/cloud.cfg"
-        list_path = list_path
-        value = module
-        format = "yaml"
-        found = file_content.check_list(
-            file, list_path, value, format=format, invert=True
-        )
+        # Navigate to the list using dictionary access
+        parts = list_path.split(".")
+        target_list = config
+        for part in parts:
+            target_list = target_list[part]
         assert (
-            found
-        ), f"Value {value} found in list {list_path} in {file}, but should not be present."
+            module not in target_list
+        ), f"Value {module} found in list {list_path} in {file}, but should not be present."
 
 
 # Alibaba Cloud
 @pytest.mark.feature("ali")
-def test_ali_debian_cloud_ignore_manage_etc_hosts(file_content: FileContent):
+def test_ali_debian_cloud_ignore_manage_etc_hosts(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg"
-    mapping = {
-        "manage_etc_hosts": True,
-    }
-    format = "yaml"
-    result = file_content.get_mapping(file, mapping, format=format)
-    assert result is not None, f"Could not parse file: {file}"
-    assert result.missing == ["manage_etc_hosts"], (
-        f"Expected mapping in {file} (format={format}) for {mapping} to be missing, but it was present."
-        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
-    )
+    config = parse_file.parse(file, format="yaml")
+    assert "manage_etc_hosts" not in config
 
 
 @pytest.mark.feature("ali")
-def test_ali_disable_network_config(file_content: FileContent):
+def test_ali_disable_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg"
-    mapping = {
-        "network.config": "disabled",
-    }
-    format = "yaml"
-    result = file_content.get_mapping(file, mapping, format=format)
-    assert result is not None, f"Could not parse file: {file}"
-    assert result.all_match, (
-        f"Could not find expected mapping in {file} (format={format}) for {mapping}. "
-        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
-    )
+    config = parse_file.parse(file, format="yaml")
+    assert config["network"]["config"] == "disabled"
 
 
 # AWS
 @pytest.mark.feature("aws")
-def test_aws_disable_network_config(file_content: FileContent):
+def test_aws_disable_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg"
-    mapping = {
-        "network.config": "disabled",
-    }
-    format = "yaml"
-    result = file_content.get_mapping(file, mapping, format=format)
-    assert result is not None, f"Could not parse file: {file}"
-    assert result.all_match, (
-        f"Could not find expected mapping in {file} (format={format}) for {mapping}. "
-        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
-    )
+    config = parse_file.parse(file, format="yaml")
+    assert config["network"]["config"] == "disabled"
 
 
 # Azure
 @pytest.mark.feature("azure")
-def test_azure_debian_cloud_user(file_content: FileContent):
+def test_azure_debian_cloud_user(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg"
-    mapping = {
-        "system_info.default_user.name": "azureuser",
-    }
-    format = "yaml"
-    result = file_content.get_mapping(file, mapping, format=format)
-    assert result is not None, f"Could not parse file: {file}"
-    assert result.all_match, (
-        f"Could not find expected mapping in {file} (format={format}) for {mapping}. "
-        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
-    )
+    config = parse_file.parse(file, format="yaml")
+    assert config["system_info"]["default_user"]["name"] == "azureuser"
 
 
 # GDCH - Google Distributed Cloud Hosted
 @pytest.mark.feature("gdch")
-def test_gdch_ntp_settings(file_content: FileContent):
+def test_gdch_ntp_settings(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/91-gdch-system.cfg"
-
-    mapping = {
-        "ntp.enabled": True,
-        "ntp.ntp_client": "chrony",
-    }
-    format = "yaml"
-    result = file_content.get_mapping(file, mapping, format=format)
-    assert result is not None, f"Could not parse file: {file}"
-    assert result.all_match, (
-        f"Could not find expected mapping in {file} (format={format}) for {mapping}. "
-        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
-    )
-
-    list_path = "ntp.servers"
-    value = "ntp1.org.internal"
-    format = "yaml"
-    found = file_content.check_list(file, list_path, value, format=format)
-    assert (
-        found
-    ), f"Value {value} not found in list {list_path} in {file}, but should be present."
+    config = parse_file.parse(file, format="yaml")
+    assert config["ntp"]["enabled"] is True
+    assert config["ntp"]["ntp_client"] == "chrony"
+    assert "ntp1.org.internal" in config["ntp"]["servers"]
 
 
 # OpenStack
 @pytest.mark.feature("openstack or openstackbaremetal")
-def test_openstack_datasource_list(file_content: FileContent):
+def test_openstack_datasource_list(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/50-datasource.cfg"
-    mapping = {
-        "datasource_list": ["ConfigDrive", "OpenStack", "Ec2"],
-    }
-    format = "yaml"
-    result = file_content.get_mapping(file, mapping, format=format)
-    assert result is not None, f"Could not parse file: {file}"
-    assert result.all_match, (
-        f"Could not find expected mapping in {file} (format={format}) for {mapping}. "
-        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
-    )
+    config = parse_file.parse(file, format="yaml")
+    assert config["datasource_list"] == ["ConfigDrive", "OpenStack", "Ec2"]
 
 
 @pytest.mark.feature("openstack")
-def test_openstack_disable_network_config(file_content: FileContent):
+def test_openstack_disable_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg"
-    mapping = {
-        "network.config": "disabled",
-    }
-    format = "yaml"
-    result = file_content.get_mapping(file, mapping, format=format)
-    assert result is not None, f"Could not parse file: {file}"
-    assert result.all_match, (
-        f"Could not find expected mapping in {file} (format={format}) for {mapping}. "
-        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
-    )
+    config = parse_file.parse(file, format="yaml")
+    assert config["network"]["config"] == "disabled"
 
 
 @pytest.mark.feature("openstackbaremetal")
-def test_openstackbaremetal_network_config(file_content: FileContent):
+def test_openstackbaremetal_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/65-network-config.cfg"
-    mapping = {
-        "system_info.network.renderers": ["netplan", "networkd"],
-    }
-    format = "yaml"
-    result = file_content.get_mapping(file, mapping, format=format)
-    assert result is not None, f"Could not parse file: {file}"
-    assert result.all_match, (
-        f"Could not find expected mapping in {file} (format={format}) for {mapping}. "
-        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
-    )
+    config = parse_file.parse(file, format="yaml")
+    assert config["system_info"]["network"]["renderers"] == ["netplan", "networkd"]
 
 
 @pytest.mark.feature("openstack or openstackbaremetal")
-def test_openstack_ds_identify(file_content: FileContent):
+def test_openstack_ds_identify(parse_file: ParseFile):
     file = "/etc/cloud/ds-identify.cfg"
-    mapping = {
-        "datasource": "OpenStack",
-        "policy": "enabled",
-    }
-    format = "yaml"
-    result = file_content.get_mapping(file, mapping, format=format)
-    assert result is not None, f"Could not parse file: {file}"
-    assert result.all_match, (
-        f"Could not find expected mapping in {file} (format={format}) for {mapping}. "
-        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
-    )
+    config = parse_file.parse(file, format="yaml")
+    assert config["datasource"] == "OpenStack"
+    assert config["policy"] == "enabled"
 
 
 # VMware
 @pytest.mark.feature("vmware")
-def test_vmware_disable_network_config(file_content: FileContent):
+def test_vmware_disable_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg"
-    mapping = {
-        "network.config": "disabled",
-    }
-    format = "yaml"
-    result = file_content.get_mapping(file, mapping, format=format)
-    assert result is not None, f"Could not parse file: {file}"
-    assert result.all_match, (
-        f"Could not find expected mapping in {file} (format={format}) for {mapping}. "
-        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
-    )
+    config = parse_file.parse(file, format="yaml")
+    assert config["network"]["config"] == "disabled"
 
 
 @pytest.mark.feature("vmware")
-def test_vmware_enabled_datasources(file_content: FileContent):
+def test_vmware_enabled_datasources(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/99_enabled-datasources.cfg"
-    mapping = {
-        "datasource_list": ["VMwareGuestInfo", "OVF"],
-    }
-    format = "yaml"
-    result = file_content.get_mapping(file, mapping, format=format)
-    assert result is not None, f"Could not parse file: {file}"
-    assert result.all_match, (
-        f"Could not find expected mapping in {file} (format={format}) for {mapping}. "
-        f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
-    )
+    config = parse_file.parse(file, format="yaml")
+    assert config["datasource_list"] == ["VMwareGuestInfo", "OVF"]
 
 
 @pytest.mark.feature("vmware")
