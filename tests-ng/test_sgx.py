@@ -1,25 +1,17 @@
 import pytest
 from plugins.kernel_configs import KernelConfigs
-from plugins.parse_file import FileContent
+from plugins.parse_file import ParseFile
 
 
 @pytest.mark.feature("cloud or metal")
 @pytest.mark.arch("amd64", reason="SGX is an amd64 option")
-def test_kernel_configs_sgx(file_content: FileContent, kernel_configs: KernelConfigs):
+def test_kernel_configs_sgx(parse_file: ParseFile, kernel_configs: KernelConfigs):
     """Test that all kernel configs have SGX enabled for amd64."""
     for config in kernel_configs.get_installed():
-        mapping = {
-            "CONFIG_X86_SGX": "y",
-            "CONFIG_X86_SGX_KVM": "y",
-        }
-        format = "keyval"
-        result = file_content.get_mapping(
-            config.path,
-            mapping,
-            format=format,
-        )
-        assert result is not None, f"Could not parse file: {config.path}"
-        assert result.all_match, (
-            f"Could not find expected mapping in {config.path} (format={format}) for {mapping}. "
-            f"missing={result.missing}, wrong={{{result.wrong_formatted}}}"
-        )
+        parsed_config = parse_file.parse(config.path, format="keyval")
+        assert (
+            parsed_config["CONFIG_X86_SGX"] == "y"
+        ), f"CONFIG_X86_SGX not set to 'y' in {config.path}"
+        assert (
+            parsed_config["CONFIG_X86_SGX_KVM"] == "y"
+        ), f"CONFIG_X86_SGX_KVM not set to 'y' in {config.path}"

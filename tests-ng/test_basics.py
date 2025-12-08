@@ -2,15 +2,16 @@ import os
 
 import pytest
 from plugins.file import File
+from plugins.parse_file import ParseFile
 from plugins.shell import ShellRunner
 from plugins.systemd import Systemd
 
 
-def test_gl_is_support_distro():
-    with open("/etc/os-release", "r") as f:
-        assert "ID=gardenlinux" in [
-            line.strip() for line in f
-        ], "/etc/os-release does not contain gardenlinux vendor field"
+def test_gl_is_support_distro(parse_file: ParseFile):
+    lines = parse_file.lines("/etc/os-release")
+    assert (
+        "ID=gardenlinux" in lines
+    ), "/etc/os-release does not contain gardenlinux vendor field"
 
 
 def test_no_man(shell: ShellRunner):
