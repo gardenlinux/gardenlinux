@@ -1,6 +1,7 @@
 # Docs: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
 version: 2
+enable-beta-ecosystems: true # for opentofu-support
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -19,14 +20,14 @@ updates:
       interval: "weekly"
     versioning-strategy: "increase-if-necessary"
 
-  - package-ecosystem: "terraform"
+  - package-ecosystem: "opentofu"
     directory: "/tests-ng/util/tf/"
     schedule:
       interval: "weekly"
     ignore:
       - dependency-name: "hashicorp/azurerm"
 
-  - package-ecosystem: "terraform"
+  - package-ecosystem: "opentofu"
     directory: "/tests/platformSetup/tofu/"
     schedule:
       interval: "weekly"
