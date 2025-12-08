@@ -33,6 +33,10 @@ def _seconds(token: str) -> float:
     values like "8min 11.844s". Parts are space-separated and summed.
     """
     total = 0.0
+
+    if token is None:
+        return total
+
     parts = token.split()
     for part in parts:
         part = part.strip()
