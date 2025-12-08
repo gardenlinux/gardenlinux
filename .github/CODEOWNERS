@@ -1,8 +1,0 @@
-# terraform/opentofu configuration
-tests/platformSetup/tofu/*.tf @gardenlinux/maintainers
-tests-ng/util/tf/*.tf @gardenlinux/maintainers
-
-# python dependencies
-tests/Pipfile @gardenlinux/maintainers
-tests-ng/util/requirements.txt @gardenlinux/maintainers
-tests-ng/util/requirements-dev.txt @gardenlinux/maintainers
