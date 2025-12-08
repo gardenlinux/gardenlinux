@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from plugins.file import File
 from plugins.kernel_configs import KernelConfigs
 from plugins.parse_file import FileContent
 from plugins.sysctl import Sysctl
@@ -26,6 +27,6 @@ def test_sysctl_sysrq_not_set(sysctl: Sysctl):
 
 
 @pytest.mark.booted(reason="Requires running system")
-def test_magic_sysrq_trigger_not_exists():
+def test_magic_sysrq_trigger_not_exists(file: File):
     """Test that sysrq trigger does not exist."""
-    assert not os.path.exists("/proc/sysrq-trigger")
+    assert not file.exists("/proc/sysrq-trigger")

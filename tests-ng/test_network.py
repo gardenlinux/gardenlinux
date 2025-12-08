@@ -4,6 +4,7 @@ import socket
 import threading
 
 import pytest
+from plugins.file import File
 from plugins.network import has_ipv6
 
 # Test parameters. IPv6 skipped if not supported.
@@ -73,14 +74,14 @@ def test_local_udp_stack(ip_version, loopback, udp_echo_server):
 
 
 @pytest.mark.booted
-def test_resolv_conf_exists():
+def test_resolv_conf_exists(file: File):
     """Test if local DNS config is available."""
     # Arrange
     path = "/etc/resolv.conf"
 
     # Act / Assert
-    assert os.path.isfile(path), f"'{path}' does not exist or is not a file"
-    assert os.path.getsize(path) > 0, f"'{path}' is empty"
+    assert file.exists(path), f"'{path}' does not exist"
+    assert file.get_size(path) > 0, f"'{path}' is empty"
 
 
 @pytest.mark.booted
