@@ -109,7 +109,12 @@ class Systemd:
         summary = output.splitlines()[0]
 
         m = re.search(
-            r"^Startup finished in (.*) \(kernel\) \+ (.*) \(initrd\) \+ (.*) \(userspace\)",
+            r"^Startup finished in "
+            r"(?:([0-9a-z. ]+) \(firmware\) \+ )?"
+            r"(?:([0-9a-z. ]+) \(loader\) \+ )?"
+            r"(?:([0-9a-z. ]+) \(kernel\) \+ )?"
+            r"(?:([0-9a-z. ]+) \(initrd\) \+ )?"
+            r"(?:([0-9a-z. ]+) \(userspace\) )?",
             summary,
         )
         if not m:
