@@ -56,7 +56,7 @@ def test_startup_time(systemd: Systemd):
     tolerated_kernel = 60.0
     tolerated_userspace = 60.0
 
-    kernel, initrd, userspace = systemd.analyze()
+    firmware, loader, kernel, initrd, userspace = systemd.analyze()
     kernel_total = kernel + initrd
 
     assert kernel_total < tolerated_kernel, (
