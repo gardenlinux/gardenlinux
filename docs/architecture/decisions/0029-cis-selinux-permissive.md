@@ -1,8 +1,8 @@
-# 28. Build features/cis with SELINUX=permissive Instead of SELINUX=enforcing
+# 29. Build features/cis with SELINUX=permissive Instead of SELINUX=enforcing
 
 Date: 2025-12-13
 
-## Status: 
+## Status 
 
 Accepted
 
@@ -33,15 +33,6 @@ instead of:
 ```bash
 SELINUX=enforcing
 ```
-
-This ensures that:
-
- - SELinux remains enabled and auditable
-
- - Policy violations are still logged
-
- - System behavior is not blocked at runtime and we proceed for CIS compliance requirements for now
-
 This decision applies specifically to only:
 
 `features/cis`
@@ -58,13 +49,3 @@ It does not change the default SELinux behavior for non-CIS or non-immutable var
 
  - Audit visibility preserved: AVC denials are still logged and observable.
 
-
-## Final Outcome
-
-The team formally agreed to proceed with:
-
-```bash
-SELINUX=permissive
-```
-
-for `features/cis`, as the balance between security, reliability, and maintainability for current Garden Linux CIS images.
