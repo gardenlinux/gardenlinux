@@ -37,7 +37,7 @@ jobs:
     steps:
       - name: Authenticate to cluster
         id: kube_auth
-        uses: gardener/cc-utils/.github/actions/kubernetes-auth@87c06db59216c65586aa3375acbc38b571e02ea0
+        uses: gardener/cc-utils/.github/actions/kubernetes-auth@751f610a42bd91a1143c5b566af98bb9d44a990d # 1.2729.0
         with:
           server: https://api.live.gl-live.shoot.live.k8s-hana.ondemand.com
           server-ca-discovery-url: https://discovery.ingress.garden.live.k8s.ondemand.com/projects/gl-live/shoots/3f2715e7-dc7c-4bf1-a594-dc0d90cd0f1c/cluster-ca
@@ -70,17 +70,17 @@ jobs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - name: Checkout flavors of the release commit
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           ref: ${{ inputs.commit }}
           sparse-checkout: |
             flavors.yaml
           sparse-checkout-cone-mode: false
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.7 # pin@0.10.7
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@f805dacd2a1e0feb41950f5bc311bd174639ad4f # 0.10.7
       - id: matrix
         name: Generate flavors matrix
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@d1506f825861ee1b87b13b93498b0047a84e92a2 # pin@0.10.7
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@f805dacd2a1e0feb41950f5bc311bd174639ad4f # 0.10.7
         with:
           flags: "--no-arch --json-by-arch --publish"
   github_release:
@@ -96,14 +96,14 @@ jobs:
     environment: oidc_aws_s3_upload
     steps:
       - name: Checkout full repository (current branch)
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           submodules: true
           fetch-depth: 0
       - name: install dependencies for generate_release_note.py script
         run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.7 # pin@0.10.7
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@f805dacd2a1e0feb41950f5bc311bd174639ad4f # 0.10.7
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
@@ -137,11 +137,11 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.flavors_matrix.outputs.matrix ) }}
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.7 # pin@0.10.7
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@f805dacd2a1e0feb41950f5bc311bd174639ad4f # 0.10.7
       - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
@@ -203,7 +203,7 @@ jobs:
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_REGION }}
       - name: Create GLRD release
-        uses: gardenlinux/glrd@v4
+        uses: gardenlinux/glrd@30fcac2ec9ad6cee873fcc503f0ca11022a4609e # v4.1.0
         with:
           cmd: |
             type=${{ inputs.type }}
@@ -221,7 +221,7 @@ jobs:
               glrd-manage --s3-update --create dev --version ${version} --commit ${commit}
             fi
       - name: Get created GLRD release
-        uses: gardenlinux/glrd@v4
+        uses: gardenlinux/glrd@30fcac2ec9ad6cee873fcc503f0ca11022a4609e # v4.1.0
         with:
           cmd: |
             version=${{ inputs.version }}
