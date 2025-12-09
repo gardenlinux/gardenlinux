@@ -76,11 +76,17 @@ jobs:
           sparse-checkout: |
             flavors.yaml
           sparse-checkout-cone-mode: false
+      - name: Checkout python-gardenlinux-lib
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          repository: gardenlinux/python-gardenlinux-lib
+          ref: 981679574db9fc15ef56fa431c3711aad50eb28d # python-gardenlinux-lib 0.10.8
+          path: python-gardenlinux-lib
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@981679574db9fc15ef56fa431c3711aad50eb28d # 0.10.8
+        uses: ./python-gardenlinux-lib/.github/actions/setup
       - id: matrix
         name: Generate flavors matrix
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@981679574db9fc15ef56fa431c3711aad50eb28d # 0.10.8
+        uses: ./python-gardenlinux-lib/.github/actions/flavors_parse
         with:
           flags: "--no-arch --json-by-arch --publish"
   github_release:
