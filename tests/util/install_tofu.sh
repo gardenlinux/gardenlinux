@@ -104,11 +104,13 @@ install_tofu() {
         git clone --depth=1 https://github.com/tofuutils/tofuenv.git "$tofuenv_dir"
         echo 'trust-tofuenv: yes' >"$tofuenv_dir/use-gpgv"
     }
-    # go to tofu directory to automatically parse *.tf files
-    pushd "$tf_dir"
-    tofuenv install latest-allowed
-    tofuenv use latest-allowed
-    popd
+    # parse provider file and install fixed opentofu version
+    # tofuenv cannot handle fixed versions in providers.tf while 
+    # using tofuenv install latest-allowed
+    opentofu_ver=$(grep "required_version" "util/tf/providers.tf" | cut -d= -f2 | tr -d [=\"=] | tr -d [:space:])
+
+    tofuenv install $opentofu_ver
+    tofuenv use $opentofu_ver
 
     install_custom_azure_resource_manager
 }
