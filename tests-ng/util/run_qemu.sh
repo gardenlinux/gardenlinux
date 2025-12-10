@@ -2,6 +2,8 @@
 
 set -eufo pipefail
 
+HOST_OS=$(uname -s)
+
 map_arch() {
 	local arg="$1"
 	if [ "$arg" = amd64 ]; then
@@ -10,6 +12,121 @@ map_arch() {
 		arg=aarch64
 	fi
 	echo "$arg"
+}
+
+_help_dev_unfsd_macos_dependencies() {
+	echo "*** We need to install unfsd on your macos system in order to serve files for the dev VM."
+	echo "*** However, we noticed that some of the required dependencies are missing."
+	echo "*** Please install the dependencies. This is how you can do it with homebrew:"
+	echo ""
+	echo "brew install autoconf automake libtool pkgconf libtirpc"
+	echo ""
+	echo "*** Once dependencies are in place, re-run the tests-ng dev suite."
+	exit 1
+}
+
+_help_dev_unsupported_os() {
+	echo "*** You are trying to run tests-ng dev suite on an unsupported OS."
+	echo "*** Currently we only support either linux or macos."
+	exit 1
+}
+
+build_unfsd_podman() {
+	echo "==>		building unfsd: "
+	cat <<EOF >"${util_dir}/Containerfile"
+FROM ubuntu:16.04 AS build
+RUN apt-get update && apt-get install -y wget tar bzip2 gzip make gcc autoconf sed flex byacc pkg-config
+WORKDIR /build
+RUN wget https://downloads.sourceforge.net/libtirpc/libtirpc-1.3.7.tar.bz2 \
+  && tar xjf libtirpc-1.3.7.tar.bz2 \
+  && cd libtirpc-1.3.7 \
+  && ./configure --prefix=/build --disable-gssapi --disable-shared \
+  && make \
+  && make install
+RUN wget https://github.com/unfs3/unfs3/releases/download/unfs3-0.11.0/unfs3-0.11.0.tar.gz \
+  && tar xzf unfs3-0.11.0.tar.gz \
+  && cd unfs3-0.11.0 \
+  && ./bootstrap \
+  && sed -i 's%^LDFLAGS =.*%LDFLAGS = -L/build/lib -Wl,--whole-archive -ltirpc -lpthread -Wl,--no-whole-archive%' Makefile.in \
+  && PKG_CONFIG_PATH=/build/lib/pkgconfig ./configure --prefix=/build \
+  && make \
+  && make install
+
+FROM scratch
+COPY --from=build /build/sbin/unfsd /
+EOF
+	podman build --output="${util_dir}/" "${util_dir}"
+	mv "${util_dir}/unfsd" "${util_dir}/unfsd__${HOST_OS}"
+	rm -f "${util_dir}/Containerfile"
+	echo "Done."
+}
+
+build_unfsd_macos() {
+	(
+		echo "⚙️ 	building unfsd"
+		cd "${util_dir}"
+		rm -f unfs3.tar.gz
+		curl -o unfs3.tar.gz "https://github.com/unfs3/unfs3/releases/download/unfs3-0.11.0/unfs3-0.11.0.tar.gz"
+		tar xzf unfs3.tar.gz
+		cd unfs3-0.11.0
+		./bootstrap
+		./configure --prefix="$PWD/build"
+		make
+		make install
+		cp -v "$PWD/build/bin/unfsd" "${util_dir}/unfsd__${HOST_OS}"
+	)
+}
+
+build_unfsd() {
+	case $(uname -s) in
+	Linux) build_unfsd_podman ;;
+	Darwin)
+		brew_prefix=$(brew config | awk -F': ' '/HOMEBREW_PREFIX/ {print $2}')
+		[ "$(which autoconf)" = 0 ] || _help_dev_unfsd_macos_dependencies
+		[ "$(which automake)" = 0 ] || _help_dev_unfsd_macos_dependencies
+		[ "$(which glibtool)" = 0 ] || _help_dev_unfsd_macos_dependencies
+		[ "$(which pkgconf)" = 0 ] || _help_dev_unfsd_macos_dependencies
+		[ -f "${brew_prefix}/lib/libtirpc.dylib" ] || _help_dev_unfsd_macos_dependencies
+
+		build_unfsd_macos
+		;;
+	*) _help_dev_unsupported_os ;;
+	esac
+}
+
+extract_tests_runtime() {
+	(
+		cd "${util_dir}/../.build"
+		mkdir -p runtime
+		tar xzf runtime.tar.gz -C runtime
+	)
+}
+
+setup_nfs_shares() {
+	echo -n "==>		setting up NFS shares: "
+	runtime_dir=$(realpath "${util_dir}/../.build/runtime")
+	tests_dir=$(realpath "${util_dir}/../../tests-ng")
+	nfsd_pid_file="${util_dir}/.unfsd.pid"
+	cat <<EOF >"${util_dir}/exports"
+"${runtime_dir}" (ro,no_root_squash)
+"${tests_dir}" (ro,no_root_squash)
+EOF
+	if [ -f "${nfsd_pid_file}" ]; then
+		kill $(cat "${nfsd_pid_file}")
+	fi
+	"${util_dir}/unfsd__${HOST_OS}" \
+		-n 4711 -m 4711 \
+		-e "${util_dir}/exports" \
+		-p \
+		-t \
+		-s \
+		-i "${nfsd_pid_file}"
+	echo "Done."
+}
+
+instrument_vm_image() {
+	# to allow CAP_SYS_ADMIN for fw_cfg-script service
+	:
 }
 
 debug=0
@@ -26,6 +143,10 @@ while [ $# -gt 0 ]; do
 		;;
 	--ssh)
 		ssh=1
+		shift
+		;;
+	--dev)
+		dev=1
 		shift
 		;;
 	--skip-cleanup)
@@ -397,6 +518,31 @@ else
 	fi
 fi
 
+if ((dev)); then
+	[ -x "${util_dir}/unfsd__${HOST_OS}" ] || build_unfsd
+	[ -d "${util_dir}/../.build/runtime" ] || extract_tests_runtime
+
+	instrument_vm_image
+
+	setup_nfs_shares
+
+	for i in "${!qemu_opts[@]}"; do
+		if [[ ${qemu_opts[i]} == user,id=net0* ]]; then
+			qemu_opts[i]="${qemu_opts[i]},hostfwd=tcp::4717-:4711"
+			break
+		fi
+	done
+	runtime_dir=$(realpath "${util_dir}/../.build/runtime")
+	tests_dir=$(realpath "${util_dir}/../../tests-ng")
+
+	sed -i '/^set -e/d; /^mount/d' "$tmpdir/fw_cfg-script.sh"
+	# cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
+	# mount -vvvv -o port=4711,mountport=4711,mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${runtime_dir} /mnt
+	# EOF
+
+	skip_cleanup=""
+fi
+
 echo "🚀  starting test VM"
 
 if ((skip_cleanup)); then
@@ -409,7 +555,11 @@ if ((skip_cleanup)); then
 	sleep 5
 	tail -f "$tmpdir/serial.log"
 else
-	"qemu-system-$arch" "${qemu_opts[@]}" | stdbuf -i0 -o0 sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g'
+	if ((dev)); then
+		"qemu-system-$arch" "${qemu_opts[@]}"
+	else
+		"qemu-system-$arch" "${qemu_opts[@]}" | stdbuf -i0 -o0 sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g'
+	fi
 	cat "$tmpdir/serial.log"
 fi
 
