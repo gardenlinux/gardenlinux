@@ -28,19 +28,19 @@ def test_dmesg_stig_sysctl_restrictions_on_accessing_dmesg(parse_file):
 @pytest.mark.feature("gardener")
 @pytest.mark.booted(reason="sysctl needs a booted system")
 def test_dmesg_gardener_no_restrictions_sysctl_runtime(sysctl):
-    assert sysctl["kernel.dmesg_restrict"] == "0"
+    assert sysctl["kernel.dmesg_restrict"] == 0
 
 
 @pytest.mark.feature("server and not gardener")
 @pytest.mark.booted(reason="sysctl needs a booted system")
 def test_dmesg_server_restrictions_sysctl_runtime(sysctl):
-    assert sysctl["kernel.dmesg_restrict"] == "1"
+    assert sysctl["kernel.dmesg_restrict"] == 1
 
 
 @pytest.mark.feature("stig")
 @pytest.mark.booted(reason="sysctl needs a booted system")
 def test_dmesg_stig_restrictions_sysctl_runtime(sysctl):
-    assert sysctl["kernel.dmesg_restrict"] == "1"
+    assert sysctl["kernel.dmesg_restrict"] == 1
 
 
 @pytest.mark.booted(reason="needs a booted system with dmesg restrictions loaded")
