@@ -107,10 +107,10 @@ install_tofu() {
     # parse provider file and install fixed opentofu version
     # tofuenv cannot handle fixed versions in providers.tf while 
     # using tofuenv install latest-allowed
-    opentofu_ver=$(grep "required_version" "util/tf/providers.tf" | cut -d= -f2 | tr -d [=\"=] | tr -d [:space:])
+    opentofu_ver=$(grep "required_version" "util/tf/providers.tf" | cut -d= -f2 | tr -d "[=\"=]" | tr -d "[:space:]")
 
-    tofuenv install $opentofu_ver
-    tofuenv use $opentofu_ver
+    tofuenv install "$opentofu_ver"
+    tofuenv use "$opentofu_ver"
 
     install_custom_azure_resource_manager
 }
