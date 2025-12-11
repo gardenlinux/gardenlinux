@@ -135,6 +135,7 @@ debug=0
 ssh=0
 skip_cleanup=0
 skip_tests=0
+dev=0
 test_args=()
 
 while [ $# -gt 0 ]; do
