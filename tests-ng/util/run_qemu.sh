@@ -2,8 +2,6 @@
 
 set -eufo pipefail
 
-HOST_OS=$(uname -s)
-
 map_arch() {
 	local arg="$1"
 	if [ "$arg" = amd64 ]; then
@@ -32,7 +30,7 @@ _help_dev_unsupported_os() {
 }
 
 build_unfsd_podman() {
-	echo "==>		building unfsd: "
+	printf "==>\t\tbuilding unfsd: "
 	cat <<EOF >"${util_dir}/Containerfile"
 FROM ubuntu:16.04 AS build
 RUN apt-get update && apt-get install -y wget tar bzip2 gzip make gcc autoconf sed flex byacc pkg-config
@@ -58,12 +56,12 @@ EOF
 	podman build --output="${util_dir}/" "${util_dir}"
 	mv "${util_dir}/unfsd" "${util_dir}/unfsd__${HOST_OS}"
 	rm -f "${util_dir}/Containerfile"
-	echo "Done."
+	printf "Done.\n"
 }
 
 build_unfsd_macos() {
 	(
-		echo "⚙️ 	building unfsd"
+		printf "==>\t\tbuilding unfsd: "
 		cd "${util_dir}"
 		rm -f unfs3.tar.gz
 		curl -o unfs3.tar.gz "https://github.com/unfs3/unfs3/releases/download/unfs3-0.11.0/unfs3-0.11.0.tar.gz"
@@ -74,6 +72,7 @@ build_unfsd_macos() {
 		make
 		make install
 		cp -v "$PWD/build/bin/unfsd" "${util_dir}/unfsd__${HOST_OS}"
+		printf "Done.\n"
 	)
 }
 
@@ -110,25 +109,30 @@ extract_tests_runner_script() {
 }
 
 setup_nfs_shares() {
-	echo -n "==>		setting up NFS shares: "
-	runtime_dir=$(realpath "${util_dir}/../.build/runtime")
-	tests_dir=$(realpath "${util_dir}/../../tests-ng")
-	nfsd_pid_file="${util_dir}/.unfsd.pid"
+	printf "==>\t\tsetting up NFS shares: "
 	cat <<EOF >"${util_dir}/exports"
-"${runtime_dir}" (insecure,ro,no_root_squash)
-"${tests_dir}" (insecure,ro,no_root_squash)
+"${RUNTIME_DIR}" (insecure,ro,no_root_squash)
+"${TESTS_DIR}" (insecure,ro,no_root_squash)
 EOF
-	if [ -f "${nfsd_pid_file}" ]; then
-		kill $(cat "${nfsd_pid_file}")
-	fi
+	stop_nfsd
+	# -n, -m : NFS and MOUNT services to use non-default ports
+	# -e     : path to exports file
+	# -p     : do not register with portmap/rpcbind
+	# -t     : TCP-only mode
+	# -i     : path to PID file
 	"${util_dir}/unfsd__${HOST_OS}" \
 		-n 4711 -m 4711 \
 		-e "${util_dir}/exports" \
 		-p \
 		-t \
-		-s \
-		-i "${nfsd_pid_file}"
-	echo "Done."
+		-i "${NFSD_PID_FILE}"
+	printf "Done.\n"
+}
+
+stop_nfsd() {
+	if [ -f "${NFSD_PID_FILE}" ]; then
+		kill "$(cat "${NFSD_PID_FILE}")"
+	fi
 }
 
 debug=0
@@ -178,6 +182,11 @@ util_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")")"
 log_dir="$util_dir/../log"
 log_file_log="qemu.test-ng.log"
 log_file_junit="qemu.test-ng.xml"
+
+HOST_OS=$(uname -s)
+NFSD_PID_FILE="${util_dir}/.unfsd.pid"
+RUNTIME_DIR=$(realpath "${util_dir}/../.build/runtime")
+TESTS_DIR=$(realpath "${util_dir}/../../tests-ng")
 
 is_pxe_archive=0
 if [[ "$image" == *.pxe.tar.gz ]]; then
@@ -364,14 +373,11 @@ if ((dev)); then
 
 	setup_nfs_shares
 
-	runtime_dir=$(realpath "${util_dir}/../.build/runtime")
-	tests_dir=$(realpath "${util_dir}/../../tests-ng")
-
 	sed -i '/set -e/d; /mount/d; /poweroff/d' "$tmpdir/fw_cfg-script.sh"
 	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
 mkdir -p /run/gardenlinux-tests/{runtime,tests}
-mount -vvvv -o port=4711,mountport=4711,mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${runtime_dir} /run/gardenlinux-tests/runtime
-mount -vvvv -o port=4711,mountport=4711,mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${tests_dir} /run/gardenlinux-tests/tests
+mount -vvvv -o port=4711,mountport=4711,mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${RUNTIME_DIR} /run/gardenlinux-tests/runtime
+mount -vvvv -o port=4711,mountport=4711,mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${TESTS_DIR} /run/gardenlinux-tests/tests
 EOF
 
 	skip_cleanup=""
@@ -391,8 +397,8 @@ if ! ((skip_tests)); then
 
 	if ((dev)); then
 		cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
-cp /run/gardenlinux-tests/runtime/run_tests /run/gardenlinux-tests/
-/run/gardenlinux-tests/run_tests ${test_args[*]@Q} 2>&1
+cp -v /run/gardenlinux-tests/runtime/run_tests /run/gardenlinux-tests/
+./run_tests ${test_args[*]@Q} 2>&1
 EOF
 	else
 		cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
@@ -575,3 +581,5 @@ num_failures=$(xmllint --xpath 'string(/testsuites/testsuite/@failures)' "$tmpdi
 if [ "${num_errors}" -gt 0 ] || [ "${num_failures}" -gt 0 ]; then
 	exit 1
 fi
+
+stop_nfsd
