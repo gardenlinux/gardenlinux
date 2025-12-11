@@ -29,9 +29,13 @@ _help_dev_unsupported_os() {
 	exit 1
 }
 
+build_entr() {
+    :
+}
+
 build_unfsd_podman() {
-	printf "==>\t\tbuilding unfsd: "
-	cat <<EOF >"${util_dir}/Containerfile"
+	printf "==>\t\tbuilding unfsd...\n"
+	cat <<EOF >"${BUILD_DIR}/Containerfile.unfsd"
 FROM ubuntu:16.04 AS build
 RUN apt-get update && apt-get install -y wget tar bzip2 gzip make gcc autoconf sed flex byacc pkg-config
 WORKDIR /build
@@ -53,25 +57,25 @@ RUN wget https://github.com/unfs3/unfs3/releases/download/unfs3-0.11.0/unfs3-0.1
 FROM scratch
 COPY --from=build /build/sbin/unfsd /
 EOF
-	podman build --output="${util_dir}/" "${util_dir}"
-	mv "${util_dir}/unfsd" "${util_dir}/unfsd__${HOST_OS}"
-	rm -f "${util_dir}/Containerfile"
+	podman build -f "${BUILD_DIR}/Containerfile.unfsd" --output="${BUILD_DIR}/" "${BUILD_DIR}"
+	mv "${BUILD_DIR}/unfsd" "${NFSD_BIN_FILE}"
+	rm -f "${util_dir}/Containerfile.unfsd"
 	printf "Done.\n"
 }
 
 build_unfsd_macos() {
 	(
-		printf "==>\t\tbuilding unfsd: "
-		cd "${util_dir}"
+		printf "==>\t\tbuilding unfsd...\n"
+		cd "${BUILD_DIR}"
 		rm -f unfs3.tar.gz
 		curl -o unfs3.tar.gz "https://github.com/unfs3/unfs3/releases/download/unfs3-0.11.0/unfs3-0.11.0.tar.gz"
 		tar xzf unfs3.tar.gz
 		cd unfs3-0.11.0
 		./bootstrap
-		./configure --prefix="$PWD/build"
+		./configure --prefix="$PWD/unfsd"
 		make
 		make install
-		cp -v "$PWD/build/bin/unfsd" "${util_dir}/unfsd__${HOST_OS}"
+		cp -v "$PWD/unfsd/bin/unfsd" "${NFSD_BIN_FILE}"
 		printf "Done.\n"
 	)
 }
@@ -95,7 +99,7 @@ build_unfsd() {
 
 extract_tests_runtime() {
 	(
-		cd "${util_dir}/../.build"
+		cd "${BUILD_DIR}"
 		mkdir -p runtime
 		tar xzf runtime.tar.gz -C runtime
 	)
@@ -103,14 +107,14 @@ extract_tests_runtime() {
 
 extract_tests_runner_script() {
 	(
-		cd "${util_dir}/../.build"
+		cd "${BUILD_DIR}"
 		tar xzf dist.tar.gz ./run_tests
 	)
 }
 
 setup_nfs_shares() {
 	printf "==>\t\tsetting up NFS shares: "
-	cat <<EOF >"${util_dir}/exports"
+	cat <<EOF >"${NFSD_EXPORTS}"
 "${RUNTIME_DIR}" (insecure,ro,no_root_squash)
 "${TESTS_DIR}" (insecure,ro,no_root_squash)
 EOF
@@ -120,9 +124,9 @@ EOF
 	# -p     : do not register with portmap/rpcbind
 	# -t     : TCP-only mode
 	# -i     : path to PID file
-	"${util_dir}/unfsd__${HOST_OS}" \
+	"${NFSD_BIN_FILE}" \
 		-n 4711 -m 4711 \
-		-e "${util_dir}/exports" \
+		-e "${NFSD_EXPORTS}" \
 		-p \
 		-t \
 		-i "${NFSD_PID_FILE}"
@@ -184,7 +188,11 @@ log_file_log="qemu.test-ng.log"
 log_file_junit="qemu.test-ng.xml"
 
 HOST_OS=$(uname -s)
-NFSD_PID_FILE="${util_dir}/.unfsd.pid"
+BUILD_DIR="$(realpath "${util_dir}/../.build")"
+NFSD_PID_FILE="${BUILD_DIR}/.unfsd.pid"
+NFSD_BIN_FILE="${BUILD_DIR}/unfsd__${HOST_OS}"
+NFSD_EXPORTS="${BUILD_DIR}/exports"
+ENTR_BIN_FILE=${BUILD_DIR}/entr"
 RUNTIME_DIR=$(realpath "${util_dir}/../.build/runtime")
 TESTS_DIR=$(realpath "${util_dir}/../../tests-ng")
 
@@ -365,15 +373,17 @@ if [ "$arch" = "$native_arch" ]; then
 fi
 
 if ((dev)); then
-	[ -x "${util_dir}/unfsd__${HOST_OS}" ] || build_unfsd
-	[ -d "${util_dir}/../.build/runtime" ] || extract_tests_runtime
-	[ -x "${util_dir}/../.build/run_tests" ] || extract_tests_runner_script
+	[ -x "${NFSD_BIN_FILE}" ] || build_unfsd
+	[ -x "${ENTR_BIN_FILE}" ] || build_entr
+	[ -d "${BUILD_DIR}/runtime" ] || extract_tests_runtime
+	[ -x "${BUILD_DIR}/run_tests" ] || extract_tests_runner_script
 
-	cp -v "${util_dir}/../.build/run_tests" "${util_dir}/../.build/runtime"
+	cp -v "${BUILD_DIR}/run_tests" "${BUILD_DIR}/runtime"
 
 	setup_nfs_shares
 
 	sed -i '/set -e/d; /mount/d; /poweroff/d' "$tmpdir/fw_cfg-script.sh"
+	sed -i 's,exec 1>/dev/virtio-ports/test_output,exec 1>/dev/console,' "$tmpdir/fw_cfg-script.sh"
 	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
 mkdir -p /run/gardenlinux-tests/{runtime,tests}
 mount -vvvv -o port=4711,mountport=4711,mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${RUNTIME_DIR} /run/gardenlinux-tests/runtime
@@ -398,6 +408,7 @@ if ! ((skip_tests)); then
 	if ((dev)); then
 		cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
 cp -v /run/gardenlinux-tests/runtime/run_tests /run/gardenlinux-tests/
+# find ./ -name '*.py' | entr ./run_tests ${test_args[*]@Q} 2>&1
 ./run_tests ${test_args[*]@Q} 2>&1
 EOF
 	else
