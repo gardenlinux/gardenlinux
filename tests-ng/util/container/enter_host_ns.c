@@ -60,7 +60,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	check(cwd_bind_mnt_fd = open_tree(AT_FDCWD, "", AT_EMPTY_PATH | OPEN_TREE_CLONE));
+	check(cwd_bind_mnt_fd = open_tree(AT_FDCWD, "", AT_EMPTY_PATH | OPEN_TREE_CLONE | AT_RECURSIVE));
 
 	host_nsenter();
 
