@@ -13,14 +13,14 @@ jobs:
       run:
         shell: bash
     env:
-      CNAME: ''
+      CNAME: ""
     strategy:
       matrix:
-        arch: [ amd64, arm64 ]
+        arch: [amd64, arm64]
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           submodules: true
       - id: build_container_cache
@@ -33,7 +33,7 @@ jobs:
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@0.10.6 # pin@0.10.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
         with:
           flags: --cname container-${{ matrix.arch }} cname
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}

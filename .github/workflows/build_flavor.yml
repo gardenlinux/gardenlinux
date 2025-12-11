@@ -16,7 +16,7 @@ on:
         required: true
       signing_env:
         type: string
-        default: ''
+        default: ""
     secrets:
       secureboot_db_kms_arn:
         required: false
@@ -37,15 +37,15 @@ jobs:
       id-token: write
       actions: write
     env:
-      CNAME: ''
+      CNAME: ""
       USE_KMS: ${{ inputs.signing_env == '' && 'false' || 'true' }}
     environment: ${{ inputs.signing_env }}
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
       - name: Set build reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -71,7 +71,7 @@ jobs:
         run: make ${{ inputs.flavor }}-${{ inputs.arch }}-build
       - name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@0.10.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
         with:
           flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
       - name: Set CNAME

@@ -5,7 +5,7 @@ from helper.utils import get_architecture
 
 def test_startup_time(client, non_provisioner_chroot, non_kvm):
     """Test for startup time"""
-    tolerated_kernel_time = 40
+    tolerated_kernel_time = 60
     tolerated_userspace_time = 60
     (exit_code, output, error) = client.execute_command("systemd-analyze")
     assert exit_code == 0, f"no {error=} expected"

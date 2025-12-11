@@ -4,11 +4,11 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/build_platform_test_images.yml'
-      - 'tests/Pipfile*'
-      - 'tests/images/Makefile'
-      - 'tests/images/platform-test/**'
-      - 'tests/images/platform-test-base/**'
+      - ".github/workflows/build_platform_test_images.yml"
+      - "tests/Pipfile*"
+      - "tests/images/Makefile"
+      - "tests/images/platform-test/**"
+      - "tests/images/platform-test-base/**"
   # triggered by other workflows
   workflow_call:
     inputs:
@@ -37,26 +37,26 @@ on:
     inputs:
       version:
         type: string
-        default: 'nightly'
-        description: 'Version'
+        default: "nightly"
+        description: "Version"
       build:
         type: boolean
         default: false
-        description: 'Build images'
+        description: "Build images"
       push:
         type: boolean
         default: false
-        description: 'Push images'
+        description: "Push images"
       push_latest:
         type: boolean
         default: false
-        description: 'Push latest tag'
+        description: "Push latest tag"
       platforms:
         type: string
-        description: 'JSON array of platforms to build'
+        description: "JSON array of platforms to build"
       archs:
         type: string
-        description: 'JSON array of architectures to build'
+        description: "JSON array of architectures to build"
       platform_test_tag:
         description: "Tag to run platform-test containers. 'latest' or GL version. Tag must be available in ghcr.io/gardenlinux/gardenlinux/platform-test-*"
         type: string
@@ -72,7 +72,7 @@ env:
 jobs:
   generate_matrix:
     name: Build platforms matrix
-    runs-on: 'ubuntu-24.04'
+    runs-on: "ubuntu-24.04"
     defaults:
       run:
         shell: bash
@@ -114,11 +114,11 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6 # pin@0.10.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
       - name: Set build reference
         run: |
           version="$(./bin/garden-version "$version")"
@@ -143,7 +143,7 @@ jobs:
   build_images:
     if: ${{ inputs.build }}
     name: Build platform-test image
-    needs: [ generate_matrix, build_base_images ]
+    needs: [generate_matrix, build_base_images]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     defaults:
       run:
@@ -158,7 +158,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           submodules: true
       - name: Set build reference
@@ -205,7 +205,7 @@ jobs:
   push_images:
     if: ${{ inputs.build && ( (github.event_name == 'push' && github.ref_name == 'main') || (github.event_name != 'push' && inputs.push == true) ) }}
     name: Push platform-test images
-    needs: [ generate_matrix, build_images ]
+    needs: [generate_matrix, build_images]
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -216,7 +216,7 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           submodules: true
       - name: Load images (${{ matrix.platform }})
@@ -284,7 +284,7 @@ jobs:
       commit_id: ${{ steps.version_reference.outputs.commit_id }}
       version: ${{ steps.version_reference.outputs.version }}
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           submodules: true
       - name: Prepare reference from GLRD
@@ -303,7 +303,7 @@ jobs:
           echo "version=$VERSION" | tee -a "$GITHUB_OUTPUT"
   pull_images:
     name: Provide platform-test image
-    needs: [ generate_matrix, pull_images_version ]
+    needs: [generate_matrix, pull_images_version]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     defaults:
       run:
@@ -317,7 +317,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           submodules: true
       - name: Make pull-platform-test-${{ matrix.platform }}

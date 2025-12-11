@@ -9,31 +9,29 @@ from platform import machine as arch
 from typing import List
 
 import pytest
+from plugins.file import File
 from plugins.kernel_cmdline import kernel_cmdline
+from plugins.parse_file import ParseFile
 
 
 @pytest.mark.feature("_fips")
-def test_gnutls_fips_file_was_created():
+def test_gnutls_fips_file_was_created(file: File):
     """
     GnuTLS requires to have the /etc/system-fips to be present as prerequisite
     to enable the FIPS mode.
 
     https://www.gnutls.org/manual/html_node/FIPS140_002d2-mode.html
     """
-    gnutls_fips_file = "/etc/system-fips"
-    assert os.path.isfile(
-        gnutls_fips_file
-    ), f"The {gnutls_fips_file} file does not exist."
+
+    assert file.is_regular_file("/etc/system-fips")
 
 
 @pytest.mark.feature("_fips")
-def test_gnutls_fips_file_is_empty():
+def test_gnutls_fips_file_is_empty(file: File):
     """
     The /etc/system-fips should be without any content.
     """
-    gnutls_fips_file = os.stat("/etc/system-fips")
-
-    assert gnutls_fips_file.st_size == 0, f"The /etc/system-fips is not empty!"
+    assert file.get_size("/etc/system-fips") == 0, f"The /etc/system-fips is not empty."
 
 
 @pytest.mark.feature("_fips")
@@ -82,50 +80,43 @@ def test_gnutls_fips_dot_hmac_file_is_vaild():
 
 
 @pytest.mark.feature("_fips")
-def test_libgcrypt_fips_file_was_created():
+def test_libgcrypt_fips_file_was_created(file: File):
     """
     Libcgrypt requires to have the /etc/gcrypt/fips_enabled to be present as prerequisite
     to enable the FIPS mode.
 
     https://www.gnupg.org/documentation/manuals/gcrypt/Enabling-FIPS-mode.html
     """
-    gcrypt_fips_file = "/etc/gcrypt/fips_enabled"
-    assert os.path.isfile(
-        gcrypt_fips_file
-    ), f"The {gcrypt_fips_file} file does not exist."
+    assert file.is_regular_file("/etc/gcrypt/fips_enabled")
 
 
 @pytest.mark.feature("_fips")
-def test_libgcrypt_fips_file_is_empty():
+def test_libgcrypt_fips_file_is_empty(file: File):
     """
     The /etc/gcrypt/fips_enabled should be without any content.
     """
-    gnutls_fips_file = os.stat("/etc/gcrypt/fips_enabled")
-    assert gnutls_fips_file.st_size == 0, f"The /etc/gcrypt/fips_enabled is not empty!"
+    assert (
+        file.get_size("/etc/gcrypt/fips_enabled") == 0
+    ), f"The /etc/gcrypt/fips_enabled is not empty."
 
 
 @pytest.mark.feature("_fips")
-def test_kernel_cmdline_fips_file_was_created():
+def test_kernel_cmdline_fips_file_was_created(file: File):
     """
     libgcrypt, gnutls and openssl need to have the /proc/sys/crypto/fips_enabled present
     as a prerequisite to enable they respected FIPS mode. The kernel can only be booted
     with the fips=1 parameter.
     """
-    kernel_fips_file = "/etc/kernel/cmdline.d/30-fips.cfg"
-    assert os.path.isfile(
-        kernel_fips_file
-    ), f"The /etc/kernel/cmdline.d/30-fips.cfg is missing!"
+    assert file.is_regular_file("/etc/kernel/cmdline.d/30-fips.cfg")
 
 
 @pytest.mark.feature("_fips")
-def test_kernel_cmdline_fips_file_content():
+def test_kernel_cmdline_fips_file_content(parse_file: ParseFile):
     """
     We have to ensure that the fips=1 was set.
     """
-    with open("/etc/kernel/cmdline.d/30-fips.cfg") as kernel_cmd_file:
-        assert (
-            kernel_cmd_file.read().strip() == 'CMDLINE_LINUX="$CMDLINE_LINUX fips=1"'
-        ), "fips=1 wasn't set in the kernel cmdline"
+    lines = parse_file.lines("/etc/kernel/cmdline.d/30-fips.cfg")
+    assert 'CMDLINE_LINUX="$CMDLINE_LINUX fips=1"' in lines
 
 
 @pytest.mark.feature("_fips")
@@ -139,11 +130,10 @@ def test_kernel_was_boot_with_fips_mode(kernel_cmdline: List[str]):
 
 @pytest.mark.feature("_fips")
 @pytest.mark.booted(reason="Kernel test makes sense only on booted system")
-def test_kernel_has_fips_entry_in_procfs():
+def test_kernel_has_fips_entry_in_procfs(parse_file: ParseFile):
     """
     Validate that the FIPS flag is exposed in procfs. Without applications can't detect if a system
     has been booted into FIPS mode.
     """
-    with open("/proc/sys/crypto/fips_enabled", "r") as f:
-        fips_enabled = f.read().strip()
-    assert fips_enabled == "1", f"Kernel does not expose FIPS in procfs!"
+    lines = parse_file.lines("/proc/sys/crypto/fips_enabled")
+    assert "1" in lines, f"Kernel was not booted in FIPS mode!"

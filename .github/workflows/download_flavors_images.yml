@@ -34,15 +34,15 @@ jobs:
     # @TODO: We could use a better name for the required environment
     environment: oidc_platform_tests
     env:
-      CNAME: ''
+      CNAME: ""
     strategy:
       matrix: ${{ fromJSON(inputs.flavors_matrix) }}
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@0.10.6 # pin@0.10.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
       - name: Set image reference for S3
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -50,7 +50,7 @@ jobs:
       - name: Set CNAME
         run: |
           echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
-      - name: 'Authenticate to AWS'
+      - name: "Authenticate to AWS"
         uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
