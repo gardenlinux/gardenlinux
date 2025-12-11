@@ -102,14 +102,21 @@ extract_tests_runtime() {
 	)
 }
 
+extract_tests_runner_script() {
+	(
+		cd "${util_dir}/../.build"
+		tar xzf dist.tar.gz ./run_tests
+	)
+}
+
 setup_nfs_shares() {
 	echo -n "==>		setting up NFS shares: "
 	runtime_dir=$(realpath "${util_dir}/../.build/runtime")
 	tests_dir=$(realpath "${util_dir}/../../tests-ng")
 	nfsd_pid_file="${util_dir}/.unfsd.pid"
 	cat <<EOF >"${util_dir}/exports"
-"${runtime_dir}" (ro,no_root_squash)
-"${tests_dir}" (ro,no_root_squash)
+"${runtime_dir}" (insecure,ro,no_root_squash)
+"${tests_dir}" (insecure,ro,no_root_squash)
 EOF
 	if [ -f "${nfsd_pid_file}" ]; then
 		kill $(cat "${nfsd_pid_file}")
@@ -122,11 +129,6 @@ EOF
 		-s \
 		-i "${nfsd_pid_file}"
 	echo "Done."
-}
-
-instrument_vm_image() {
-	# to allow CAP_SYS_ADMIN for fw_cfg-script service
-	:
 }
 
 debug=0
@@ -352,6 +354,28 @@ if [ "$arch" = "$native_arch" ]; then
 	fi
 fi
 
+if ((dev)); then
+	[ -x "${util_dir}/unfsd__${HOST_OS}" ] || build_unfsd
+	[ -d "${util_dir}/../.build/runtime" ] || extract_tests_runtime
+	[ -x "${util_dir}/../.build/run_tests" ] || extract_tests_runner_script
+
+	cp -v "${util_dir}/../.build/run_tests" "${util_dir}/../.build/runtime"
+
+	setup_nfs_shares
+
+	runtime_dir=$(realpath "${util_dir}/../.build/runtime")
+	tests_dir=$(realpath "${util_dir}/../../tests-ng")
+
+	sed -i '/set -e/d; /mount/d; /poweroff/d' "$tmpdir/fw_cfg-script.sh"
+	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
+mkdir -p /run/gardenlinux-tests/{runtime,tests}
+mount -vvvv -o port=4711,mountport=4711,mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${runtime_dir} /run/gardenlinux-tests/runtime
+mount -vvvv -o port=4711,mountport=4711,mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${tests_dir} /run/gardenlinux-tests/tests
+EOF
+
+	skip_cleanup=""
+fi
+
 if ! ((skip_tests)); then
 	test_args+=(
 		"--system-booted"
@@ -364,9 +388,16 @@ if ! ((skip_tests)); then
 		test_args+=("--expected-users" "$ssh_user")
 	fi
 
-	cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
+	if ((dev)); then
+		cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
+cp /run/gardenlinux-tests/runtime/run_tests /run/gardenlinux-tests/
+/run/gardenlinux-tests/run_tests ${test_args[*]@Q} 2>&1
+EOF
+	else
+		cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
 ./run_tests ${test_args[*]@Q} 2>&1
 EOF
+	fi
 fi
 
 qemu_opts=(
@@ -516,31 +547,6 @@ else
 			-netdev "user,id=net0"
 		)
 	fi
-fi
-
-if ((dev)); then
-	[ -x "${util_dir}/unfsd__${HOST_OS}" ] || build_unfsd
-	[ -d "${util_dir}/../.build/runtime" ] || extract_tests_runtime
-
-	instrument_vm_image
-
-	setup_nfs_shares
-
-	for i in "${!qemu_opts[@]}"; do
-		if [[ ${qemu_opts[i]} == user,id=net0* ]]; then
-			qemu_opts[i]="${qemu_opts[i]},hostfwd=tcp::4717-:4711"
-			break
-		fi
-	done
-	runtime_dir=$(realpath "${util_dir}/../.build/runtime")
-	tests_dir=$(realpath "${util_dir}/../../tests-ng")
-
-	sed -i '/^set -e/d; /^mount/d' "$tmpdir/fw_cfg-script.sh"
-	# cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
-	# mount -vvvv -o port=4711,mountport=4711,mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${runtime_dir} /mnt
-	# EOF
-
-	skip_cleanup=""
 fi
 
 echo "🚀  starting test VM"
