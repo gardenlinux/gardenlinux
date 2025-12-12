@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC1091
-
 set -eufo pipefail
 
 map_arch() {
@@ -38,6 +36,7 @@ while [ $# -gt 0 ]; do
 	--dev)
 		dev=1
 		shift
+		# shellcheck disable=SC1091
 		. "$(dirname -- "${BASH_SOURCE[0]}")/dev.sh"
 		;;
 	--skip-cleanup)
@@ -256,8 +255,7 @@ if ! ((skip_tests)); then
 	fi
 
 	if ((dev)); then
-		# shellcheck disable=SC2086
-		dev_configure_runner "$tmpdir/fw_cfg-script.sh" ${test_args[*]@Q}
+		dev_configure_runner "$tmpdir/fw_cfg-script.sh" "${test_args[*]@Q}"
 	else
 		cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
 ./run_tests ${test_args[*]@Q} 2>&1
