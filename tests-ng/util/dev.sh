@@ -1,4 +1,5 @@
 # shellcheck shell=bash
+# shellcheck disable=SC2154,SC2164
 HOST_OS=$(uname -s)
 BUILD_DIR="$(realpath "${util_dir}/../.build")"
 NFSD_PID_FILE="${BUILD_DIR}/.unfsd.pid"
