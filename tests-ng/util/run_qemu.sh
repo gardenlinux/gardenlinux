@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=SC2048
+
 set -eufo pipefail
 
 map_arch() {
@@ -36,7 +38,7 @@ while [ $# -gt 0 ]; do
 	--dev)
 		dev=1
 		shift
-		. "$(dirname "$0")/dev.sh"
+		. "$(dirname -- "${BASH_SOURCE[0]}")/dev.sh"
 		;;
 	--skip-cleanup)
 		skip_cleanup=1
