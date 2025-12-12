@@ -237,7 +237,7 @@ if [ "$arch" = "$native_arch" ]; then
 fi
 
 if ((dev)); then
-	dev_setup
+	dev_setup "$tmpdir/fw_cfg-script.sh"
 	skip_cleanup=""
 fi
 
