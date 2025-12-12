@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 HOST_OS=$(uname -s)
 BUILD_DIR="$(realpath "${util_dir}/../.build")"
 NFSD_PID_FILE="${BUILD_DIR}/.unfsd.pid"
@@ -238,7 +239,7 @@ start_xnotify_client() {
 		--client ":${XNOTIFY_SERVER_PORT}" \
 		--verbose \
 		-i "${TESTS_DIR}" \
-		-e '/cert/'
+		-e '/cert/' -e '/.build/'
 	printf "Done.\n"
 }
 
@@ -249,7 +250,13 @@ stop_xnotify_client() {
 }
 
 add_qemu_xnotify_port_forwarding() {
-	:
+	for idx in "${!qemu_opts[@]}"; do
+		case "${qemu_opts[idx]}" in
+		*hostfwd*)
+			qemu_opts[idx]="${qemu_opts[idx]},hostfwd=tcp::${XNOTIFY_SERVER_PORT}-:${XNOTIFY_SERVER_PORT}"
+			;;
+		esac
+	done
 }
 
 dev_setup() { # path-to-script
@@ -265,8 +272,6 @@ dev_setup() { # path-to-script
 
 	cp -v "${BUILD_DIR}/run_tests" "${BUILD_DIR}/runtime/"
 	cp -v "${XNOTIFY_SERVER_BIN_FILE}" "${BUILD_DIR}/runtime/"
-
-	add_qemu_xnotify_port_forwarding
 
 	setup_nfs_shares
 	start_xnotify_client
@@ -284,10 +289,14 @@ dev_configure_runner() { # path-to-script test-arg1 test-arg2 ... test-argN
 	_runner_script="$1"
 	shift
 	cat >>"$_runner_script" <<EOF
-cp -v /run/gardenlinux-tests/runtime/run_tests /run/gardenlinux-tests/
-cp -v /run/gardenlinux-tests/runtime/${XNOTIFY_SERVER_BIN_FILE} /run/gardenlinux-tests/xnotify
-./xnotify --listen "0.0.0.0:${XNOTIFY_SERVER_PORT}" --base "/run/gardenlinux-tests/runtime/tests" \
-  | xargs -L 1 ./run_tests $@ 2>&1
+cp /run/gardenlinux-tests/runtime/run_tests /run/gardenlinux-tests/
+cp "/run/gardenlinux-tests/runtime/$(basename "${XNOTIFY_SERVER_BIN_FILE}")" /run/gardenlinux-tests/xnotify
+export PYTHONUNBUFFERED=1
+./xnotify \
+  --listen "0.0.0.0:${XNOTIFY_SERVER_PORT}" \
+  --base "/run/gardenlinux-tests/tests" \
+  --trigger -- \
+  /run/gardenlinux-tests/run_tests $@ 2>&1
 EOF
 }
 
@@ -295,3 +304,5 @@ dev_cleanup() {
 	stop_nfsd
 	stop_xnotify_client
 }
+
+trap "dev_cleanup" ERR EXIT INT

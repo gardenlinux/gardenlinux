@@ -424,6 +424,7 @@ if ((skip_cleanup)); then
 	tail -f "$tmpdir/serial.log"
 else
 	if ((dev)); then
+		add_qemu_xnotify_port_forwarding
 		"qemu-system-$arch" "${qemu_opts[@]}"
 	else
 		"qemu-system-$arch" "${qemu_opts[@]}" | stdbuf -i0 -o0 sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g'
@@ -431,10 +432,10 @@ else
 	cat "$tmpdir/serial.log"
 fi
 
-dev_cleanup
-
-num_errors=$(xmllint --xpath 'string(/testsuites/testsuite/@errors)' "$tmpdir/junit.xml")
-num_failures=$(xmllint --xpath 'string(/testsuites/testsuite/@failures)' "$tmpdir/junit.xml")
-if [ "${num_errors}" -gt 0 ] || [ "${num_failures}" -gt 0 ]; then
-	exit 1
+if ! ((dev)); then
+	num_errors=$(xmllint --xpath 'string(/testsuites/testsuite/@errors)' "$tmpdir/junit.xml")
+	num_failures=$(xmllint --xpath 'string(/testsuites/testsuite/@failures)' "$tmpdir/junit.xml")
+	if [ "${num_errors}" -gt 0 ] || [ "${num_failures}" -gt 0 ]; then
+		exit 1
+	fi
 fi
