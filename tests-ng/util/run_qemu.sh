@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2048
+# shellcheck disable=SC1091
 
 set -eufo pipefail
 
@@ -256,6 +256,7 @@ if ! ((skip_tests)); then
 	fi
 
 	if ((dev)); then
+		# shellcheck disable=SC2086
 		dev_configure_runner "$tmpdir/fw_cfg-script.sh" ${test_args[*]@Q}
 	else
 		cat >>"$tmpdir/fw_cfg-script.sh" <<EOF
