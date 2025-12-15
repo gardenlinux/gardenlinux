@@ -1,6 +1,8 @@
 import configparser
 import hmac
 import os
+from ctypes import CDLL, c_int, c_void_p
+from ctypes.util import find_library
 from hashlib import _hashlib  # type: ignore
 from hashlib import md5 as MD5
 from hashlib import sha1 as SHA1
@@ -98,6 +100,43 @@ def test_libgcrypt_fips_file_is_empty(file: File):
     assert (
         file.get_size("/etc/gcrypt/fips_enabled") == 0
     ), f"The /etc/gcrypt/fips_enabled is not empty."
+
+
+@pytest.mark.feature("_fips")
+def test_that_openssl_has_fips_provider_is_presented(file: File):
+    """
+    We have to ensure that the fips.so is presented on the system.
+    """
+    assert file.is_regular_file(f"/usr/lib/{arch()}-linux-gnu/ossl-modules/fips.so")
+
+
+@pytest.mark.feature("_fips")
+def test_libssl_is_in_fips_mode():
+    """
+    We get OSSL_LIB_CTX_get0_global_default from libssl. For this we need
+    to setup the correct return values
+
+    Frist we have to setup a OSSL_LIB_CTX, for this we use OSSL_LIB_CTX_get0_global_default
+    that returns a c pointer.
+
+    Once we have the global context, we can use this to get the default properties of the
+    high level algorithm has enabled. Similar to OSSL_LIB_CTX_get0_global_default, we need
+    to define the expect return value. Since this is a C boolean we have to set it to int,
+    but it we also have to define the arguments type to be a arry with a c pointer, since it
+    expect the pointer to the context  obj.
+    """
+
+    shared_lib_name = find_library("ssl")
+    libssl = CDLL(shared_lib_name)
+
+    libssl.OSSL_LIB_CTX_get0_global_default.restype = c_void_p
+    libssl.OSSL_LIB_CTX_get0_global_default.argtypes = []
+    libssl.EVP_default_properties_is_fips_enabled.restype = c_int
+    libssl.EVP_default_properties_is_fips_enabled.argtypes = [c_void_p]
+
+    ctx = libssl.OSSL_LIB_CTX_get0_global_default()
+    rc = libssl.EVP_default_properties_is_fips_enabled(ctx)
+    assert bool(rc), "Error openssl can't be started in FIPS mode."
 
 
 @pytest.mark.feature("_fips")
