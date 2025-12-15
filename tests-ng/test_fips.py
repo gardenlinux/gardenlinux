@@ -1,7 +1,7 @@
 import configparser
 import hmac
 import os
-from ctypes import CDLL, c_int
+from ctypes import CDLL, c_int, c_void_p
 from ctypes.util import find_library
 from hashlib import _hashlib  # type: ignore
 from hashlib import md5 as MD5
@@ -49,7 +49,9 @@ def test_gnutls_is_in_fips_mode():
     """
     shared_lib_name = find_library("gnutls")
     gnutls = CDLL(shared_lib_name)
-    assert gnutls.gnutls_fips140_mode_enabled(), "Error GnuTLS can't be started in FIPS mode."
+    assert (
+        gnutls.gnutls_fips140_mode_enabled()
+    ), "Error GnuTLS can't be started in FIPS mode."
 
 
 @pytest.mark.feature("_fips")
@@ -119,6 +121,43 @@ def test_libgcrypt_fips_file_is_empty(file: File):
 
 
 @pytest.mark.feature("_fips")
+def test_that_openssl_has_fips_provider_is_presented(file: File):
+    """
+    We have to ensure that the fips.so is presented on the system.
+    """
+    assert file.is_regular_file(f"/usr/lib/{arch()}-linux-gnu/ossl-modules/fips.so")
+
+
+@pytest.mark.feature("_fips")
+def test_libssl_is_in_fips_mode():
+    """
+    We get OSSL_LIB_CTX_get0_global_default from libssl. For this we need to set up the correct
+    return values
+
+    First, we have to set up an OSSL_LIB_CTX; for this, we use OSSL_LIB_CTX_get0_global_default, which
+    returns a C pointer.
+
+    Once we have the global context, we can use this to get the default properties of the high-level
+    algorithm that has been enabled. Similar to OSSL_LIB_CTX_get0_global_default, we need to define
+    the expected return value. Since this is a C boolean, we have to set it to int, but we also have
+    to define the argument type to be an array with a C pointer, since it is the pointer to the
+    context object.
+    """
+
+    shared_lib_name = find_library("ssl")
+    libssl = CDLL(shared_lib_name)
+
+    libssl.OSSL_LIB_CTX_get0_global_default.restype = c_void_p
+    libssl.OSSL_LIB_CTX_get0_global_default.argtypes = []
+    libssl.EVP_default_properties_is_fips_enabled.restype = c_int
+    libssl.EVP_default_properties_is_fips_enabled.argtypes = [c_void_p]
+
+    ctx = libssl.OSSL_LIB_CTX_get0_global_default()
+    assert libssl.EVP_default_properties_is_fips_enabled(
+        ctx
+    ), "Error openssl can't be started in FIPS mode."
+
+
 def test_libgcrypt_is_in_fips_mode():
     """
      This will check if libgcrypt is in FIPS mode. There is no other way to call libgcrypt from
@@ -146,7 +185,9 @@ def test_libgcrypt_is_in_fips_mode():
 
     # See the gcrypt.h
     GCRYCTL_FIPS_MODE_P = 55
-    assert libgcrypt.gcry_control(c_int(GCRYCTL_FIPS_MODE_P), c_int(1)), "Error libgcrypt can't be started in FIPS mode."
+    assert libgcrypt.gcry_control(
+        c_int(GCRYCTL_FIPS_MODE_P), c_int(1)
+    ), "Error libgcrypt can't be started in FIPS mode."
 
 
 @pytest.mark.feature("_fips")
