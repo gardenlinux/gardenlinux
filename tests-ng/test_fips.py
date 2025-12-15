@@ -1,6 +1,8 @@
 import configparser
 import hmac
 import os
+from ctypes import CDLL
+from ctypes.util import find_library
 from hashlib import _hashlib  # type: ignore
 from hashlib import md5 as MD5
 from hashlib import sha1 as SHA1
@@ -32,6 +34,22 @@ def test_gnutls_fips_file_is_empty(file: File):
     The /etc/system-fips should be without any content.
     """
     assert file.get_size("/etc/system-fips") == 0, f"The /etc/system-fips is not empty."
+
+
+@pytest.mark.feature("_fips")
+def test_gnutls_is_in_fips_mode():
+    """
+    This code will call up the GnuTLS library directly with ctypes.
+    It invokes the gnutls_fips140_mode_enabled to return true when the library is in FIPS mode;
+    It will return a C-type true.
+
+    https://www.gnutls.org/manual/html_node/FIPS140_002d2-mode.html
+    https://manpages.debian.org/testing/gnutls-doc/gnutls_fips140_mode_enabled.3.en.html
+
+    """
+    shared_lib_name = find_library("gnutls")
+    gnutls = CDLL(shared_lib_name)
+    assert gnutls.gnutls_fips140_mode_enabled(), "Error GnuTLS can't be started in FIPS mode."
 
 
 @pytest.mark.feature("_fips")
