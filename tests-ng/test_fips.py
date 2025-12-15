@@ -135,8 +135,6 @@ returns a C pointer.
     libssl.EVP_default_properties_is_fips_enabled.argtypes = [c_void_p]
 
     ctx = libssl.OSSL_LIB_CTX_get0_global_default()
-    rc = libssl.EVP_default_properties_is_fips_enabled(ctx)
-    assert bool(rc), "Error openssl can't be started in FIPS mode."
     assert libssl.EVP_default_properties_is_fips_enabled(ctx), "Error openssl can't be started in FIPS mode."
 
 @pytest.mark.feature("_fips")
