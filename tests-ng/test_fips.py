@@ -1,6 +1,8 @@
 import configparser
 import hmac
 import os
+from ctypes import *
+from ctypes.util import find_library
 from hashlib import _hashlib  # type: ignore
 from hashlib import md5 as MD5
 from hashlib import sha1 as SHA1
@@ -12,10 +14,6 @@ import pytest
 from plugins.file import File
 from plugins.kernel_cmdline import kernel_cmdline
 from plugins.parse_file import ParseFile
-
-
-from ctypes import *
-from ctypes.util import find_library
 
 
 @pytest.mark.feature("_fips")
@@ -37,11 +35,12 @@ def test_gnutls_fips_file_is_empty(file: File):
     """
     assert file.get_size("/etc/system-fips") == 0, f"The /etc/system-fips is not empty."
 
+
 @pytest.mark.feature("_fips")
 def test_gnutls_is_in_fips_mode():
     """
     This code will call up the GnuTLS library directly with ctypes.
-    It invokes the gnutls_fips140_mode_enabled to return true when the library is in FIPS mode; 
+    It invokes the gnutls_fips140_mode_enabled to return true when the library is in FIPS mode;
     It will return a C-type true.
 
     https://www.gnutls.org/manual/html_node/FIPS140_002d2-mode.html
@@ -51,7 +50,7 @@ def test_gnutls_is_in_fips_mode():
     shared_lib_name = find_library("gnutls")
     gnutls = CDLL(shared_lib_name)
     rc = gnutls.gnutls_fips140_mode_enabled()
-    assert (bool(rc)), "Error GnuTLS can't be started in FIPS mode."
+    assert bool(rc), "Error GnuTLS can't be started in FIPS mode."
 
 
 @pytest.mark.feature("_fips")
