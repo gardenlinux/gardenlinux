@@ -113,17 +113,17 @@ def test_that_openssl_has_fips_provider_is_presented(file: File):
 @pytest.mark.feature("_fips")
 def test_libssl_is_in_fips_mode():
     """
-    We get OSSL_LIB_CTX_get0_global_default from libssl. For this we need
-    to setup the correct return values
+    We get OSSL_LIB_CTX_get0_global_default from libssl. For this we need to set up the correct
+    return values
 
-    Frist we have to setup a OSSL_LIB_CTX, for this we use OSSL_LIB_CTX_get0_global_default
-    that returns a c pointer.
+First, we have to set up an OSSL_LIB_CTX; for this, we use OSSL_LIB_CTX_get0_global_default, which
+returns a C pointer.
 
-    Once we have the global context, we can use this to get the default properties of the
-    high level algorithm has enabled. Similar to OSSL_LIB_CTX_get0_global_default, we need
-    to define the expect return value. Since this is a C boolean we have to set it to int,
-    but it we also have to define the arguments type to be a arry with a c pointer, since it
-    expect the pointer to the context  obj.
+    Once we have the global context, we can use this to get the default properties of the high-level
+    algorithm that has been enabled. Similar to OSSL_LIB_CTX_get0_global_default, we need to define
+    the expected return value. Since this is a C boolean, we have to set it to int, but we also have
+    to define the argument type to be an array with a C pointer, since it is the pointer to the
+    context object.
     """
 
     shared_lib_name = find_library("ssl")
