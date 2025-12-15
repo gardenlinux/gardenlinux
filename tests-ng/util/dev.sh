@@ -10,7 +10,6 @@ XNOTIFY_CLIENT_PID_FILE="${BUILD_DIR}/.xnotify.pid"
 XNOTIFY_CLIENT_LOG="${BUILD_DIR}/xnotify.log"
 XNOTIFY_SERVER_BIN_FILE="${BUILD_DIR}/xnotify__Linux"
 XNOTIFY_SERVER_PORT="9999"
-RUNTIME_DIR="$(realpath "${util_dir}/../.build/runtime")"
 TESTS_DIR="$(realpath "${util_dir}/../../tests-ng")"
 
 _help_dev_macos_dependencies() { # dep1 dep2 ... depN
@@ -37,7 +36,9 @@ build_daemonize() {
 		;;
 	Darwin)
 		brew_prefix=$(brew config | awk -F': ' '/HOMEBREW_PREFIX/ {print $2}')
-		[ "$(which daemonize)" = 0 ] || _help_dev_macos_dependencies golang daemonize
+		if ! which daemonize >/dev/null 2>&1; then
+			_help_dev_macos_dependencies golang daemonize
+		fi
 		;;
 	*) _help_dev_unsupported_os ;;
 	esac
@@ -49,11 +50,14 @@ build_daemonize_podman() {
 FROM ubuntu:16.04 AS build
 RUN apt-get update && apt-get install -y git make gcc
 WORKDIR /build
-RUN git clone --branch release-1.7.8 --single-branch https://github.com/bmc/daemonize.git && cd daemonize && ./configure --prefix=/build && make && make install
-FROM scratch
-COPY --from=build /build/sbin/daemonize /
+RUN git clone --branch release-1.7.8 --single-branch https://github.com/bmc/daemonize.git \
+  && cd daemonize \
+  && ./configure --prefix=/build \
+  && make \
+  && make install
+RUN cp /build/sbin/daemonize /output/daemonize
 EOF
-	podman build -f "${BUILD_DIR}/Containerfile.daemonize" --output="${BUILD_DIR}/" "${BUILD_DIR}"
+	podman build -f "${BUILD_DIR}/Containerfile.daemonize" --volume "${BUILD_DIR}:/output" "${BUILD_DIR}"
 	rm -f "${BUILD_DIR}/Containerfile.daemonize"
 	printf "Done.\n"
 }
@@ -65,7 +69,9 @@ build_xnotify_client() {
 		;;
 	Darwin)
 		brew_prefix=$(brew config | awk -F': ' '/HOMEBREW_PREFIX/ {print $2}')
-		[ "$(which go)" = 0 ] || _help_dev_macos_dependencies golang
+		if ! which go >/dev/null 2>&1; then
+			_help_dev_macos_dependencies golang
+		fi
 
 		build_xnotify_macos
 		;;
@@ -78,17 +84,16 @@ build_xnotify_server() {
 }
 
 build_xnotify_podman() {
-	printf "==>\t\tbuilding xnotify...\n"
+	printf "==>\t\tbuilding xnotify (linux binary)...\n"
 	cat <<EOF >"${BUILD_DIR}/Containerfile.xnotify"
 FROM ubuntu:16.04 AS build
 RUN apt-get update && apt-get install -y wget
 WORKDIR /build
-RUN wget https://github.com/AgentCosmic/xnotify/releases/download/v0.3.1/xnotify-linux-amd64 && mv xnotify-linux-amd64 xnotify && chmod +x xnotify
-
-FROM scratch
-COPY --from=build /build /
+RUN wget https://github.com/AgentCosmic/xnotify/releases/download/v0.3.1/xnotify-linux-amd64 \
+  && chmod +x xnotify-linux-amd64
+RUN cp xnotify-linux-amd64 /output/xnotify
 EOF
-	podman build -f "${BUILD_DIR}/Containerfile.xnotify" --output="${BUILD_DIR}/" "${BUILD_DIR}"
+	podman build -f "${BUILD_DIR}/Containerfile.xnotify" --volume "${BUILD_DIR}:/output" "${BUILD_DIR}"
 	mv "${BUILD_DIR}/xnotify" "${XNOTIFY_SERVER_BIN_FILE}"
 	rm -f "${BUILD_DIR}/Containerfile.xnotify"
 	printf "Done.\n"
@@ -96,7 +101,7 @@ EOF
 
 build_xnotify_macos() {
 	(
-		printf "==>\t\tbuilding xnotify...\n"
+		printf "==>\t\tbuilding xnotify (macOS binary)...\n"
 		go install github.com/AgentCosmic/xnotify@v0.3.1
 		cp -v "$(go env GOPATH)/bin/xnotify" "${XNOTIFY_CLIENT_BIN_FILE}"
 		printf "Done.\n"
@@ -123,11 +128,9 @@ RUN wget https://github.com/unfs3/unfs3/releases/download/unfs3-0.11.0/unfs3-0.1
   && PKG_CONFIG_PATH=/build/lib/pkgconfig ./configure --prefix=/build \
   && make \
   && make install
-
-FROM scratch
-COPY --from=build /build/sbin/unfsd /
+RUN cp /build/sbin/unfsd /output/unfsd
 EOF
-	podman build -f "${BUILD_DIR}/Containerfile.unfsd" --output="${BUILD_DIR}/" "${BUILD_DIR}"
+	podman build -f "${BUILD_DIR}/Containerfile.unfsd" --volume "${BUILD_DIR}:/output" "${BUILD_DIR}"
 	mv "${BUILD_DIR}/unfsd" "${NFSD_BIN_FILE}"
 	rm -f "${BUILD_DIR}/Containerfile.unfsd"
 	printf "Done.\n"
@@ -138,14 +141,14 @@ build_unfsd_macos() {
 		printf "==>\t\tbuilding unfsd...\n"
 		cd "${BUILD_DIR}"
 		rm -f unfs3.tar.gz
-		curl -o unfs3.tar.gz "https://github.com/unfs3/unfs3/releases/download/unfs3-0.11.0/unfs3-0.11.0.tar.gz"
+		curl -Lo unfs3.tar.gz "https://github.com/unfs3/unfs3/releases/download/unfs3-0.11.0/unfs3-0.11.0.tar.gz"
 		tar xzf unfs3.tar.gz
 		cd unfs3-0.11.0
 		./bootstrap
-		./configure --prefix="$PWD/unfsd"
+		./configure --prefix="$PWD/build"
 		make
 		make install
-		cp -v "$PWD/unfsd/bin/unfsd" "${NFSD_BIN_FILE}"
+		cp -v "$PWD/build/sbin/unfsd" "${NFSD_BIN_FILE}"
 		printf "Done.\n"
 	)
 }
@@ -155,10 +158,18 @@ build_unfsd() {
 	Linux) build_unfsd_podman ;;
 	Darwin)
 		brew_prefix=$(brew config | awk -F': ' '/HOMEBREW_PREFIX/ {print $2}')
-		[ "$(which autoconf)" = 0 ] || _help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
-		[ "$(which automake)" = 0 ] || _help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
-		[ "$(which glibtool)" = 0 ] || _help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
-		[ "$(which pkgconf)" = 0 ] || _help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
+		if ! which autoconf >/dev/null 2>&1; then
+			_help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
+		fi
+		if ! which automake >/dev/null 2>&1; then
+			_help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
+		fi
+		if ! which glibtool >/dev/null 2>&1; then
+			_help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
+		fi
+		if ! which pkgconf >/dev/null 2>&1; then
+			_help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
+		fi
 		[ -f "${brew_prefix}/lib/libtirpc.dylib" ] || _help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
 
 		build_unfsd_macos
@@ -185,12 +196,13 @@ extract_tests_runner_script() {
 }
 
 setup_nfs_shares() {
+	stop_nfsd
+
 	printf "==>\t\tsetting up NFS shares: "
 	cat <<EOF >"${NFSD_EXPORTS}"
-"${RUNTIME_DIR}" (insecure,ro,no_root_squash)
+"${BUILD_DIR}/runtime" (insecure,ro,no_root_squash)
 "${TESTS_DIR}" (insecure,ro,no_root_squash)
 EOF
-	stop_nfsd
 	# -n, -m : NFS and MOUNT services to use non-default ports
 	# -e     : path to exports file
 	# -p     : do not register with portmap/rpcbind
@@ -207,11 +219,17 @@ EOF
 
 stop_nfsd() {
 	if [ -f "${NFSD_PID_FILE}" ]; then
-		kill "$(cat "${NFSD_PID_FILE}")"
+		if ! kill -0 "$(cat "${NFSD_PID_FILE}")"; then
+			rm -f "${NFSD_PID_FILE}"
+		else
+			kill "$(cat "${NFSD_PID_FILE}")" && rm -f "${NFSD_PID_FILE}"
+		fi
 	fi
 }
 
 start_xnotify_client() {
+	stop_xnotify_client
+
 	case $(uname -s) in
 	Linux)
 		_daemonize_bin="${BUILD_DIR}/daemonize"
@@ -236,7 +254,8 @@ start_xnotify_client() {
 		-a \
 		-o "${XNOTIFY_CLIENT_LOG}" \
 		-e "${XNOTIFY_CLIENT_LOG}" \
-		-p "${XNOTIFY_CLIENT_PID_FILE}" "${XNOTIFY_CLIENT_BIN_FILE}" \
+		-p "${XNOTIFY_CLIENT_PID_FILE}" \
+		"${XNOTIFY_CLIENT_BIN_FILE}" \
 		--client ":${XNOTIFY_SERVER_PORT}" \
 		--verbose \
 		-i "${TESTS_DIR}" \
@@ -246,7 +265,11 @@ start_xnotify_client() {
 
 stop_xnotify_client() {
 	if [ -f "${XNOTIFY_CLIENT_PID_FILE}" ]; then
-		kill "$(cat "${XNOTIFY_CLIENT_PID_FILE}")"
+		if ! kill -0 "$(cat "${XNOTIFY_CLIENT_PID_FILE}")"; then
+			rm -f "${XNOTIFY_CLIENT_PID_FILE}"
+		else
+			kill "$(cat "${XNOTIFY_CLIENT_PID_FILE}")" && rm -f "${XNOTIFY_CLIENT_PID_FILE}"
+		fi
 	fi
 }
 
@@ -277,11 +300,13 @@ dev_setup() { # path-to-script
 	setup_nfs_shares
 	start_xnotify_client
 
-	sed -i '/set -e/d; /mount/d; /poweroff/d' "$_runner_script"
-	sed -i 's,exec 1>/dev/virtio-ports/test_output,exec 1>/dev/console,' "$_runner_script"
+	_tmpf=$(mktemp /tmp/runner.XXXXXX)
+	sed '/set -e/d; /mount/d; /poweroff/d; s,exec 1>/dev/virtio-ports/test_output,exec 1>/dev/console,' "$_runner_script" \
+		>"$_tmpf"
+	mv "$_tmpf" "$_runner_script"
 	cat >>"$_runner_script" <<EOF
 mkdir -p /run/gardenlinux-tests/{runtime,tests}
-mount -vvvv -o port=4711,mountport=4711,mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${RUNTIME_DIR} /run/gardenlinux-tests/runtime
+mount -vvvv -o port=4711,mountport=4711,mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${BUILD_DIR}/runtime /run/gardenlinux-tests/runtime
 mount -vvvv -o port=4711,mountport=4711,mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${TESTS_DIR} /run/gardenlinux-tests/tests
 EOF
 }
