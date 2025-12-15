@@ -49,7 +49,9 @@ def test_gnutls_is_in_fips_mode():
     """
     shared_lib_name = find_library("gnutls")
     gnutls = CDLL(shared_lib_name)
-    assert gnutls.gnutls_fips140_mode_enabled(), "Error GnuTLS can't be started in FIPS mode."
+    assert (
+        gnutls.gnutls_fips140_mode_enabled()
+    ), "Error GnuTLS can't be started in FIPS mode."
 
 
 @pytest.mark.feature("_fips")
@@ -119,7 +121,6 @@ def test_libgcrypt_fips_file_is_empty(file: File):
 
 
 @pytest.mark.feature("_fips")
-
 def test_that_openssl_has_fips_provider_is_presented(file: File):
     """
     We have to ensure that the fips.so is presented on the system.
@@ -152,9 +153,11 @@ def test_libssl_is_in_fips_mode():
     libssl.EVP_default_properties_is_fips_enabled.argtypes = [c_void_p]
 
     ctx = libssl.OSSL_LIB_CTX_get0_global_default()
-    assert libssl.EVP_default_properties_is_fips_enabled(ctx), "Error openssl can't be started in FIPS mode."
+    assert libssl.EVP_default_properties_is_fips_enabled(
+        ctx
+    ), "Error openssl can't be started in FIPS mode."
 
-    
+
 def test_libgcrypt_is_in_fips_mode():
     """
      This will check if libgcrypt is in FIPS mode. There is no other way to call libgcrypt from
@@ -182,7 +185,9 @@ def test_libgcrypt_is_in_fips_mode():
 
     # See the gcrypt.h
     GCRYCTL_FIPS_MODE_P = 55
-    assert libgcrypt.gcry_control(c_int(GCRYCTL_FIPS_MODE_P), c_int(1)), "Error libgcrypt can't be started in FIPS mode."
+    assert libgcrypt.gcry_control(
+        c_int(GCRYCTL_FIPS_MODE_P), c_int(1)
+    ), "Error libgcrypt can't be started in FIPS mode."
 
 
 @pytest.mark.feature("_fips")
