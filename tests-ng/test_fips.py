@@ -1,6 +1,8 @@
 import configparser
 import hmac
 import os
+from ctypes import CDLL, c_int
+from ctypes.util import find_library
 from hashlib import _hashlib  # type: ignore
 from hashlib import md5 as MD5
 from hashlib import sha1 as SHA1
@@ -98,6 +100,22 @@ def test_libgcrypt_fips_file_is_empty(file: File):
     assert (
         file.get_size("/etc/gcrypt/fips_enabled") == 0
     ), f"The /etc/gcrypt/fips_enabled is not empty."
+
+
+@pytest.mark.feature("_fips")
+def test_libgcrypt_is_in_fips_mode():
+    """
+    This will check if libgcrypt is in FIPS mode. There are no other way to call libgcrypt from
+    python then using ctypes.
+    """
+
+    shared_lib_name = find_library("gcrypt")
+    libgcrypt = CDLL(shared_lib_name)
+    # header defintions
+    # https://git.gnupg.org/cgi-bin/gitweb.cgi?p=libgcrypt.git;a=blob;f=src/gcrypt.h.in;h=712a8dd7931e76c0a83aee993bf22f34e420bfc2;hb=737cc63600146f196738a6768679eb016cf866e9#l316
+    GCRYCTL_FIPS_MODE_P = 55
+    rc = libgcrypt.gcry_control(c_int(GCRYCTL_FIPS_MODE_P), c_int(1))
+    assert bool(rc), "Error libgcrypt can't be started in FIPS mode."
 
 
 @pytest.mark.feature("_fips")
