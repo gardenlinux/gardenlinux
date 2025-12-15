@@ -49,8 +49,7 @@ def test_gnutls_is_in_fips_mode():
     """
     shared_lib_name = find_library("gnutls")
     gnutls = CDLL(shared_lib_name)
-    rc = gnutls.gnutls_fips140_mode_enabled()
-    assert bool(rc), "Error GnuTLS can't be started in FIPS mode."
+    assert gnutls.gnutls_fips140_mode_enabled(), "Error GnuTLS can't be started in FIPS mode."
 
 
 @pytest.mark.feature("_fips")
