@@ -37,6 +37,22 @@ def test_gnutls_fips_file_is_empty(file: File):
 
 
 @pytest.mark.feature("_fips")
+def test_gnutls_is_in_fips_mode():
+    """
+    This code will call up the GnuTLS library directly with ctypes.
+    It invokes the gnutls_fips140_mode_enabled to return true when the library is in FIPS mode;
+    It will return a C-type true.
+
+    https://www.gnutls.org/manual/html_node/FIPS140_002d2-mode.html
+    https://manpages.debian.org/testing/gnutls-doc/gnutls_fips140_mode_enabled.3.en.html
+
+    """
+    shared_lib_name = find_library("gnutls")
+    gnutls = CDLL(shared_lib_name)
+    assert gnutls.gnutls_fips140_mode_enabled(), "Error GnuTLS can't be started in FIPS mode."
+
+
+@pytest.mark.feature("_fips")
 def test_gnutls_fips_dot_hmac_file_is_presented():
     """
     GnuTLS will perform a self check based on the FIPS requirements. A file that
@@ -103,6 +119,7 @@ def test_libgcrypt_fips_file_is_empty(file: File):
 
 
 @pytest.mark.feature("_fips")
+
 def test_that_openssl_has_fips_provider_is_presented(file: File):
     """
     We have to ensure that the fips.so is presented on the system.
@@ -116,8 +133,8 @@ def test_libssl_is_in_fips_mode():
     We get OSSL_LIB_CTX_get0_global_default from libssl. For this we need to set up the correct
     return values
 
-First, we have to set up an OSSL_LIB_CTX; for this, we use OSSL_LIB_CTX_get0_global_default, which
-returns a C pointer.
+    First, we have to set up an OSSL_LIB_CTX; for this, we use OSSL_LIB_CTX_get0_global_default, which
+    returns a C pointer.
 
     Once we have the global context, we can use this to get the default properties of the high-level
     algorithm that has been enabled. Similar to OSSL_LIB_CTX_get0_global_default, we need to define
@@ -136,6 +153,37 @@ returns a C pointer.
 
     ctx = libssl.OSSL_LIB_CTX_get0_global_default()
     assert libssl.EVP_default_properties_is_fips_enabled(ctx), "Error openssl can't be started in FIPS mode."
+
+    
+def test_libgcrypt_is_in_fips_mode():
+    """
+     This will check if libgcrypt is in FIPS mode. There is no other way to call libgcrypt from
+     Python than using ctypes.
+
+    It might seem more reasonable to call the gcry_fips_mode_active, however, it turns out that this
+    is a C preprocessor macro that can't be invoked by Python ctypes. Instead, we will invoke the
+    following function, gcry_control(GCRYCTL_FIPS_MODE_P, 0) , which the macro will resolve as we.
+
+
+    https://git.gnupg.org/cgi-bin/gitweb.cgi?p=libgcrypt.git;a=blob;f=src/gcrypt.h.in;h=712a8dd7931e76c0a83aee993bf22f34e420bfc2;hb=737cc63600146f196738a6768679eb016cf866e9#l2129
+
+    The GCRYCTL_FIPS_MODE_P is again just a static value. That can be extract from the gcrypt.h
+    headers.
+    # https://git.gnupg.org/cgi-bin/gitweb.cgi?p=libgcrypt.git;a=blob;f=src/gcrypt.h.in;h=712a8dd7931e76c0a83aee993bf22f34e420bfc2;hb=737cc63600146f196738a6768679eb016cf866e9#l316
+    The package libgcrypt20 needs to be presented.
+
+    The gcry_control requires c type integer as inputs.
+
+    https://www.gnupg.org/documentation/manuals/gcrypt/Enabling-FIPS-mode.html#Enabling-FIPS-mode
+    https://www.gnupg.org/documentation/manuals/gcrypt/Controlling-the-library.html#index-gcry_005ffips_005fmode_005factive
+    """
+    shared_lib_name = find_library("gcrypt")
+    libgcrypt = CDLL(shared_lib_name)
+
+    # See the gcrypt.h
+    GCRYCTL_FIPS_MODE_P = 55
+    assert libgcrypt.gcry_control(c_int(GCRYCTL_FIPS_MODE_P), c_int(1)), "Error libgcrypt can't be started in FIPS mode."
+
 
 @pytest.mark.feature("_fips")
 def test_kernel_cmdline_fips_file_was_created(file: File):
