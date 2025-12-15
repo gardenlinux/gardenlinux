@@ -150,22 +150,31 @@ if [ ! -f "$ssh_private_key" ]; then
 fi
 
 user_data_script="$(mktemp)"
-cat >"$user_data_script" <<EOF
+cat >"$user_data_script" <<'EOF'
 #!/usr/bin/env bash
 
 systemctl enable --now ssh
 
 mkdir /run/gardenlinux-tests
+cat > /run/gardenlinux-tests/run_tests << 'RUNTESTSEOF'
+#!/usr/bin/env bash
+
 # disk attachment might take a while
-for i in \$(seq 1 12); do
+for i in $(seq 1 12); do
 	mount /dev/disk/by-label/GL_TESTS /run/gardenlinux-tests && break
 	sleep 10
 done
 
-if ! mountpoint /run/gardenlinux-tests; then
+cd "$PWD"
+
+if ! mountpoint /run/gardenlinux-tests > /dev/null; then
 	exit 1
 fi
 mkdir -p /run/gardenlinux-tests/tests/log
+
+exec "$0" "$@"
+RUNTESTSEOF
+chmod +x /run/gardenlinux-tests/run_tests
 EOF
 
 if ((cloud_image)); then
