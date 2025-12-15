@@ -130,8 +130,7 @@ def test_libgcrypt_is_in_fips_mode():
 
     # See the gcrypt.h
     GCRYCTL_FIPS_MODE_P = 55
-    rc = libgcrypt.gcry_control(c_int(GCRYCTL_FIPS_MODE_P), c_int(1))
-    assert bool(rc), "Error libgcrypt can't be started in FIPS mode."
+    assert libgcrypt.gcry_control(c_int(GCRYCTL_FIPS_MODE_P), c_int(1)), "Error libgcrypt can't be started in FIPS mode."
 
 
 @pytest.mark.feature("_fips")
