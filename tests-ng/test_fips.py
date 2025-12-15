@@ -1,7 +1,7 @@
 import configparser
 import hmac
 import os
-from ctypes import *
+from ctypes import CDLL
 from ctypes.util import find_library
 from hashlib import _hashlib  # type: ignore
 from hashlib import md5 as MD5
