@@ -120,7 +120,7 @@ def test_libgcrypt_is_in_fips_mode():
     # https://git.gnupg.org/cgi-bin/gitweb.cgi?p=libgcrypt.git;a=blob;f=src/gcrypt.h.in;h=712a8dd7931e76c0a83aee993bf22f34e420bfc2;hb=737cc63600146f196738a6768679eb016cf866e9#l316
     The package libgcrypt20 needs to be presented.
 
-    The gcry_control requires c type integer as inputs. 
+    The gcry_control requires c type integer as inputs.
 
     https://www.gnupg.org/documentation/manuals/gcrypt/Enabling-FIPS-mode.html#Enabling-FIPS-mode
     https://www.gnupg.org/documentation/manuals/gcrypt/Controlling-the-library.html#index-gcry_005ffips_005fmode_005factive
