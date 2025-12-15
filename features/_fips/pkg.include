@@ -2,3 +2,4 @@ openssl-provider-fips
 libssl-dev
 libgnutls28-dev
 gnutls-bin
+libgcrypt20
