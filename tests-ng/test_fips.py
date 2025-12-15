@@ -37,6 +37,22 @@ def test_gnutls_fips_file_is_empty(file: File):
 
 
 @pytest.mark.feature("_fips")
+def test_gnutls_is_in_fips_mode():
+    """
+    This code will call up the GnuTLS library directly with ctypes.
+    It invokes the gnutls_fips140_mode_enabled to return true when the library is in FIPS mode;
+    It will return a C-type true.
+
+    https://www.gnutls.org/manual/html_node/FIPS140_002d2-mode.html
+    https://manpages.debian.org/testing/gnutls-doc/gnutls_fips140_mode_enabled.3.en.html
+
+    """
+    shared_lib_name = find_library("gnutls")
+    gnutls = CDLL(shared_lib_name)
+    assert gnutls.gnutls_fips140_mode_enabled(), "Error GnuTLS can't be started in FIPS mode."
+
+
+@pytest.mark.feature("_fips")
 def test_gnutls_fips_dot_hmac_file_is_presented():
     """
     GnuTLS will perform a self check based on the FIPS requirements. A file that
