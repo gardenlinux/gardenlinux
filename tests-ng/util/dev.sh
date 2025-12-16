@@ -9,8 +9,14 @@ XNOTIFY_CLIENT_BIN_FILE="${BUILD_DIR}/xnotify__${HOST_OS}"
 XNOTIFY_CLIENT_PID_FILE="${BUILD_DIR}/.xnotify.pid"
 XNOTIFY_CLIENT_LOG="${BUILD_DIR}/xnotify.log"
 XNOTIFY_SERVER_BIN_FILE="${BUILD_DIR}/xnotify__Linux"
-XNOTIFY_SERVER_PORT="9999"
 TESTS_DIR="$(realpath "${util_dir}/../../tests-ng")"
+
+DAEMONIZE_VERSION="1.7.8"
+XNOTIFY_VERSION="0.3.1"
+UNFS3_VERSION="0.11.0"
+
+XNOTIFY_SERVER_PORT="9999"
+NFSD_SERVER_PORT="4711"
 
 _help_dev_macos_dependencies() { # dep1 dep2 ... depN
 	echo "*** We need to install unfsd on your macos system in order to serve files for the dev VM."
@@ -35,7 +41,6 @@ build_daemonize() {
 		[ -f "${BUILD_DIR}/daemonize" ] || build_daemonize_podman
 		;;
 	Darwin)
-		brew_prefix=$(brew config | awk -F': ' '/HOMEBREW_PREFIX/ {print $2}')
 		if ! which daemonize >/dev/null 2>&1; then
 			_help_dev_macos_dependencies golang daemonize
 		fi
@@ -50,7 +55,7 @@ build_daemonize_podman() {
 FROM ubuntu:16.04 AS build
 RUN apt-get update && apt-get install -y git make gcc
 WORKDIR /build
-RUN git clone --branch release-1.7.8 --single-branch https://github.com/bmc/daemonize.git \
+RUN git clone --branch release-${DAEMONIZE_VERSION} --single-branch https://github.com/bmc/daemonize.git \
   && cd daemonize \
   && ./configure --prefix=/build \
   && make \
@@ -89,7 +94,7 @@ build_xnotify_podman() {
 FROM ubuntu:16.04 AS build
 RUN apt-get update && apt-get install -y wget
 WORKDIR /build
-RUN wget https://github.com/AgentCosmic/xnotify/releases/download/v0.3.1/xnotify-linux-amd64 \
+RUN wget https://github.com/AgentCosmic/xnotify/releases/download/v${XNOTIFY_VERSION}/xnotify-linux-amd64 \
   && chmod +x xnotify-linux-amd64
 RUN cp xnotify-linux-amd64 /output/xnotify
 EOF
@@ -102,7 +107,7 @@ EOF
 build_xnotify_macos() {
 	(
 		printf "==>\t\tbuilding xnotify (macOS binary)...\n"
-		go install github.com/AgentCosmic/xnotify@v0.3.1
+		go install github.com/AgentCosmic/xnotify@v${XNOTIFY_VERSION}
 		cp -v "$(go env GOPATH)/bin/xnotify" "${XNOTIFY_CLIENT_BIN_FILE}"
 		printf "Done.\n"
 	)
@@ -120,9 +125,9 @@ RUN wget https://downloads.sourceforge.net/libtirpc/libtirpc-1.3.7.tar.bz2 \
   && ./configure --prefix=/build --disable-gssapi --disable-shared \
   && make \
   && make install
-RUN wget https://github.com/unfs3/unfs3/releases/download/unfs3-0.11.0/unfs3-0.11.0.tar.gz \
-  && tar xzf unfs3-0.11.0.tar.gz \
-  && cd unfs3-0.11.0 \
+RUN wget https://github.com/unfs3/unfs3/releases/download/unfs3-${UNFS3_VERSION}/unfs3-${UNFS3_VERSION}.tar.gz \
+  && tar xzf unfs3-${UNFS3_VERSION}.tar.gz \
+  && cd unfs3-${UNFS3_VERSION} \
   && ./bootstrap \
   && sed -i 's%^LDFLAGS =.*%LDFLAGS = -L/build/lib -Wl,--whole-archive -ltirpc -lpthread -Wl,--no-whole-archive%' Makefile.in \
   && PKG_CONFIG_PATH=/build/lib/pkgconfig ./configure --prefix=/build \
@@ -141,9 +146,9 @@ build_unfsd_macos() {
 		printf "==>\t\tbuilding unfsd...\n"
 		cd "${BUILD_DIR}"
 		rm -f unfs3.tar.gz
-		curl -Lo unfs3.tar.gz "https://github.com/unfs3/unfs3/releases/download/unfs3-0.11.0/unfs3-0.11.0.tar.gz"
+		curl -Lo unfs3.tar.gz "https://github.com/unfs3/unfs3/releases/download/unfs3-${UNFS3_VERSION}/unfs3-${UNFS3_VERSION}.tar.gz"
 		tar xzf unfs3.tar.gz
-		cd unfs3-0.11.0
+		cd unfs3-${UNFS3_VERSION}
 		./bootstrap
 		./configure --prefix="$PWD/build"
 		make
@@ -157,7 +162,6 @@ build_unfsd() {
 	case $(uname -s) in
 	Linux) build_unfsd_podman ;;
 	Darwin)
-		brew_prefix=$(brew config | awk -F': ' '/HOMEBREW_PREFIX/ {print $2}')
 		if ! which autoconf >/dev/null 2>&1; then
 			_help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
 		fi
@@ -170,6 +174,7 @@ build_unfsd() {
 		if ! which pkgconf >/dev/null 2>&1; then
 			_help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
 		fi
+		brew_prefix=$(brew config | awk -F': ' '/HOMEBREW_PREFIX/ {print $2}')
 		[ -f "${brew_prefix}/lib/libtirpc.dylib" ] || _help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
 
 		build_unfsd_macos
@@ -209,7 +214,7 @@ EOF
 	# -t     : TCP-only mode
 	# -i     : path to PID file
 	"${NFSD_BIN_FILE}" \
-		-n 4711 -m 4711 \
+		-n ${NFSD_SERVER_PORT} -m ${NFSD_SERVER_PORT} \
 		-e "${NFSD_EXPORTS}" \
 		-p \
 		-t \
@@ -306,14 +311,15 @@ dev_setup() { # path-to-script
 	mv "$_tmpf" "$_runner_script"
 	cat >>"$_runner_script" <<EOF
 mkdir -p /run/gardenlinux-tests/{runtime,tests}
-mount -vvvv -o port=4711,mountport=4711,mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${BUILD_DIR}/runtime /run/gardenlinux-tests/runtime
-mount -vvvv -o port=4711,mountport=4711,mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${TESTS_DIR} /run/gardenlinux-tests/tests
+mount -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${BUILD_DIR}/runtime /run/gardenlinux-tests/runtime
+mount -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${TESTS_DIR} /run/gardenlinux-tests/tests
 EOF
 }
 
 dev_configure_runner() { # path-to-script test-arg1 test-arg2 ... test-argN
 	_runner_script="$1"
 	shift
+
 	cat >>"$_runner_script" <<EOF
 cp /run/gardenlinux-tests/runtime/run_tests /run/gardenlinux-tests/
 cp "/run/gardenlinux-tests/runtime/$(basename "${XNOTIFY_SERVER_BIN_FILE}")" /run/gardenlinux-tests/xnotify
