@@ -53,6 +53,7 @@ build_daemonize_podman() {
 	printf "==>\t\tbuilding daemonize...\n"
 	cat <<EOF >"${BUILD_DIR}/Containerfile.daemonize"
 FROM ubuntu:16.04 AS build
+RUN echo "$(date '+%s')" # this is required to invalidate podman cache
 RUN apt-get update && apt-get install -y git make gcc
 WORKDIR /build
 RUN git clone --branch release-${DAEMONIZE_VERSION} --single-branch https://github.com/bmc/daemonize.git \
@@ -92,6 +93,7 @@ build_xnotify_podman() {
 	printf "==>\t\tbuilding xnotify (linux binary)...\n"
 	cat <<EOF >"${BUILD_DIR}/Containerfile.xnotify"
 FROM ubuntu:16.04 AS build
+RUN echo "$(date '+%s')" # this is required to invalidate podman cache
 RUN apt-get update && apt-get install -y wget
 WORKDIR /build
 RUN wget https://github.com/AgentCosmic/xnotify/releases/download/v${XNOTIFY_VERSION}/xnotify-linux-amd64 \
@@ -117,6 +119,7 @@ build_unfsd_podman() {
 	printf "==>\t\tbuilding unfsd...\n"
 	cat <<EOF >"${BUILD_DIR}/Containerfile.unfsd"
 FROM ubuntu:16.04 AS build
+RUN echo "$(date '+%s')" # this is required to invalidate podman cache
 RUN apt-get update && apt-get install -y wget tar bzip2 gzip make gcc autoconf sed flex byacc pkg-config
 WORKDIR /build
 RUN wget https://downloads.sourceforge.net/libtirpc/libtirpc-1.3.7.tar.bz2 \
