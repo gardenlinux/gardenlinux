@@ -27,6 +27,8 @@ cmdline="root=$root_source $cmdline"
 # neccessary binary has been placed into the build container
 
 # add labels https://github.com/gardenlinux/gardenlinux/issues/4057 
+GL_VERSION="1592.8"
+GL_ARCH="arm64"
 LABELS=(
   "org.opencontainers.image.title=Garden Linux"
   "org.opencontainers.image.version=${GL_VERSION}"
