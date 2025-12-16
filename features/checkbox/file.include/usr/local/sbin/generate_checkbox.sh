@@ -109,6 +109,7 @@ setup_checkbox_venv() {
     ./mk-venv "$VENVDIR"
 
     echo "==> Activating virtualenv"
+    # shellcheck disable=SC1091
     . ../../checkbox_venv/bin/activate
 
     echo "==> Installing checkbox-support"
@@ -145,6 +146,7 @@ execute_test() {
     echo "==> Executing HW test: Server Certification Full"
 
     # Activate Checkbox virtualenv
+    # shellcheck disable=SC1091
     source "$VENVDIR/bin/activate"
 
     # Always use venv binary explicitly
