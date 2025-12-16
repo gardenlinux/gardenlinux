@@ -42,7 +42,7 @@ jobs:
           echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Load container build artifact (${{ matrix.arch }})
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # pin@v6.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
           name: build-container-${{ matrix.arch }}
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
