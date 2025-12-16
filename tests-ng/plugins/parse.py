@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Union
 import pytest
 
 # Supported formats for auto-detection
-SUPPORTED_FORMATS = ["json", "yaml", "toml", "ini", "keyval"]
+SUPPORTED_FORMATS = ["json", "yaml", "toml", "ini", "keyval", "spacedelim"]
 
 # Default comment characters per format
 # Always a list - empty list means the format does not support comments
@@ -20,6 +20,7 @@ FORMAT_COMMENT_CHARS = {
     "toml": ["#"],
     "ini": [";", "#"],  # INI supports both ; and # for comments
     "keyval": ["#"],
+    "spacedelim": ["#"],
 }
 
 
@@ -214,6 +215,18 @@ class Parse:
         cfg.read_file(StringIO(wrapped))
         return dict(cfg.items("default")) if "default" in cfg else {}
 
+    def _parse_spacedelim(self, content: str) -> Dict[str, str]:
+        result = {}
+        for line in content.splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split(None, 1)
+            if len(parts) == 2:
+                key, value = parts
+                result[key] = value
+        return result
+
     def _parse_ini(self, content: str) -> Dict[str, Any]:
         cfg = configparser.ConfigParser()
         cfg.read_file(StringIO(content))
@@ -247,6 +260,8 @@ class Parse:
         match fmt:
             case "keyval":
                 return self._parse_keyval(self.content)
+            case "spacedelim":
+                return self._parse_spacedelim(self.content)
             case "ini":
                 return self._parse_ini(self.content)
             case "json":
