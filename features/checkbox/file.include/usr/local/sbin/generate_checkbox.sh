@@ -16,7 +16,6 @@ NOW=$(date +%Y-%m-%dT%H.%M.%S)
 PROVIDER='1877.gardenlinux.certification:ccloud'
 REPORT_DIR='/home/checkbox_reports'
 mkdir -p $REPORT_DIR
-source ~/.profile
 
 ### --- FUNCTIONS ---
 configure_dns() {
@@ -71,7 +70,6 @@ alias vim='vim -u NONE -N'
 export STRESS_NG_DISK_TIME=60
 export STRESS_NG_CPU_TIME=60
 EOF
-    source ~/.profile
 }
 
 configure_logging() {
@@ -111,7 +109,7 @@ setup_checkbox_venv() {
     ./mk-venv "$VENVDIR"
 
     echo "==> Activating virtualenv"
-    source "$VENVDIR/bin/activate"
+    . ../../checkbox_venv/bin/activate
 
     echo "==> Installing checkbox-support"
     cd ../checkbox-support
@@ -136,34 +134,6 @@ setup_checkbox_venv() {
 
 
     echo "==> Checkbox v5.0.0 setup complete"
-}
-
-validate_install() {
-    set -e
-
-    echo "==> Validating Checkbox installation..."
-
-    if [ ! -x "$VENVDIR/bin/checkbox-cli" ]; then
-        echo "❌ checkbox-cli not found in venv"
-        return 1
-    fi
-
-    # Activate venv
-    source "$VENVDIR/bin/activate"
-
-    echo "==> Checkbox version"
-    checkbox-cli version
-
-    echo "==> Checking providers"
-    checkbox-cli list-providers | grep -q resource
-
-    echo "==> Checking jobs"
-    if checkbox-cli list-jobs | grep -q dmesg_output; then
-        echo "✅ Checkbox in Python venv installed successfully"
-    else
-        echo "⚠️  Validation failed: dmesg_output job not found"
-        return 1
-    fi
 }
 
 execute_test() {
@@ -204,7 +174,6 @@ configure_dns
 configure_sources
 install_packages
 configure_profile
-source ~/.profile
 configure_logging
 setup_checkbox_venv
 execute_test
