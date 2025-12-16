@@ -382,7 +382,7 @@ jobs:
           repo="ghcr.io/${{ github.repository_owner }}/test-ng"
           podman build --arch ${arch} --build-context dist_ctx=.build -t ${repo}:${arch}-${VERSION} tests-ng/util/container
           podman save --format oci-archive ${repo}:${arch}-${VERSION} > tests-ng-container_${arch}.oci
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: tests-ng-container-${{ matrix.arch }}
           path: tests-ng-container_${{ matrix.arch }}.oci
