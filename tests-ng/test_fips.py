@@ -159,6 +159,7 @@ def test_libssl_is_in_fips_mode():
     ), "Error openssl can't be started in FIPS mode."
 
 
+@pytest.mark.feature("_fips")
 def test_libgcrypt_is_in_fips_mode():
     """
      This will check if libgcrypt is in FIPS mode. There is no other way to call libgcrypt from
