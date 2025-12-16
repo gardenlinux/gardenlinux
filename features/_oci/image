@@ -16,6 +16,7 @@ read -r _ cmdline < "$rootfs/etc/kernel/cmdline"
 # get the actual root fs
 # if it's the empty default (#) we need to rewrite that
 root_source=$(tail -n 1 "$rootfs/etc/fstab" | cut -d " " -f 1)
+# shellcheck disable=SC2086
 if [ $root_source = "#" ]; then
   root_source="LABEL=ROOT"
 fi
@@ -37,6 +38,7 @@ for l in "${LABELS[@]}"; do
   LABEL_ARGS+=(--label "$l")
 done
 
+# shellcheck disable=SC2034
 imageid=$(onmetal-image build --rootfs-file "$targetBaseDir/rootfs.raw" --kernel-file "$targetBase.vmlinuz" --initramfs-file "$targetBase.initrd" --command-line "$cmdline" --store-path "$targetBaseDir/onmetal" "${LABEL_ARGS[@]}" | tail -n1 | cut -d" " -f3)
 onmetal-image list --store-path "$targetBaseDir/onmetal"
 
