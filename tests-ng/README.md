@@ -417,9 +417,18 @@ spec:
       image: ghcr.io/gardenlinux/test-ng:nightly
       securityContext:
         privileged: true
+      args: [ "./run_tests", "--system-booted", "--expected-users", "gardener" ]
 ```
 
 After this is deployed and the tests ran you can simply get the pod logs to see the test results. If you want to target a specific node to run the tests on you should also pin this pod to that node.
+
+If you want to get a JUnit XML output of the test run you can adjust the `args` as follows:
+
+```yml
+args: [ "./run_tests", "--junit-xml", "output/test-ng.xml", "--system-booted", "--expected-users", "gardener" ]
+```
+
+and bind mount a volume or similar at `/tests-ng/tests/output`. Obviously this will work with arbitrary locations, as long as the volume is mounted below `/tests-ng` and the `--junit-xml` path is given relative to `/tests-ng/tests`.
 
 > [!NOTE]
 > The `ghcr.io/gardenlinux/test-ng:nightly` container gets build and published daily to always provide the most up-to-date variant of the test-ng framework. In future releases there will also be per release variants of this.
