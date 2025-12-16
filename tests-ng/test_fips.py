@@ -37,7 +37,7 @@ def test_gnutls_fips_file_is_empty(file: File):
 
 
 @pytest.mark.feature("_fips")
-@pytest.mark.booted("GnuTLS needs to have a VM booted with boot FIPS mode.")
+@pytest.mark.booted(reason="GnuTLS needs to have a VM booted with boot FIPS mode.")
 def test_gnutls_is_in_fips_mode():
     """
     This code will call up the GnuTLS library directly with ctypes.
