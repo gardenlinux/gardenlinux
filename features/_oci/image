@@ -24,7 +24,20 @@ cmdline="root=$root_source $cmdline"
 
 # onmetal
 # neccessary binary has been placed into the build container
-imageid=$(onmetal-image build --rootfs-file "$targetBaseDir/rootfs.raw" --kernel-file "$targetBase.vmlinuz" --initramfs-file "$targetBase.initrd" --command-line "$cmdline" --store-path "$targetBaseDir/onmetal" | tail -n1 | cut -d" " -f3)
+
+# add labels https://github.com/gardenlinux/gardenlinux/issues/4057 
+LABELS=(
+  "org.opencontainers.image.title=Garden Linux"
+  "org.opencontainers.image.version=${GL_VERSION}"
+  "org.opencontainers.image.architecture=${GL_ARCH}"
+)
+
+LABEL_ARGS=()
+for l in "${LABELS[@]}"; do
+  LABEL_ARGS+=(--label "$l")
+done
+
+imageid=$(onmetal-image build --rootfs-file "$targetBaseDir/rootfs.raw" --kernel-file "$targetBase.vmlinuz" --initramfs-file "$targetBase.initrd" --command-line "$cmdline" --store-path "$targetBaseDir/onmetal" "${LABEL_ARGS[@]}" | tail -n1 | cut -d" " -f3)
 onmetal-image list --store-path "$targetBaseDir/onmetal"
 
 # a little cleanup
