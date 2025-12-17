@@ -22,7 +22,12 @@ cat > config << EOF
   "architecture": "$BUILDER_ARCH",
   "os": "linux",
   "config": {
-    "Cmd": [ "/bin/bash" ]
+    "Cmd": [ "/bin/bash" ],
+    "Labels": {
+      "org.opencontainers.image.architecture": "arm64",
+      "org.opencontainers.image.title": "Garden Linux",
+      "org.opencontainers.image.version": "today"
+    }
   },
   "rootfs": {
     "type": "layers",
