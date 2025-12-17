@@ -24,9 +24,9 @@ cat > config << EOF
   "config": {
     "Cmd": [ "/bin/bash" ],
     "Labels": {
-      "org.opencontainers.image.architecture": "arm64",
       "org.opencontainers.image.title": "Garden Linux",
-      "org.opencontainers.image.version": "today"
+      "org.opencontainers.image.version": "$BUILDER_VERSION",
+      "org.opencontainers.image.architecture": "$BUILDER_ARCH"
     }
   },
   "rootfs": {
