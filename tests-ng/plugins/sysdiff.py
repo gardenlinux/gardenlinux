@@ -388,7 +388,9 @@ class SnapshotManager:
             LoadedKernelModule(name=module) for module in kernel_modules_list
         ]
 
-        ignore_patterns = DEFAULT_IGNORE_PATTERNS + file_collector.load_ignore_patterns(ignore_file)
+        ignore_patterns = DEFAULT_IGNORE_PATTERNS + file_collector.load_ignore_patterns(
+            ignore_file
+        )
         normalized_paths = file_collector.normalize_paths(paths)
 
         files_dict = file_collector.collect_file_hashes(
@@ -545,14 +547,13 @@ class DiffEngine:
             return f"{unit.unit}\t{unit.load}\t{unit.active}\t{unit.sub}"
 
         def is_ignored(unit_name: str) -> bool:
-            return any(fnmatch(unit_name, pattern) for pattern in self._ignored_systemd_patterns)
+            return any(
+                fnmatch(unit_name, pattern)
+                for pattern in self._ignored_systemd_patterns
+            )
 
-        filtered_units_a = [
-            format_unit(u) for u in units_a if not is_ignored(u.unit)
-        ]
-        filtered_units_b = [
-            format_unit(u) for u in units_b if not is_ignored(u.unit)
-        ]
+        filtered_units_a = [format_unit(u) for u in units_a if not is_ignored(u.unit)]
+        filtered_units_b = [format_unit(u) for u in units_b if not is_ignored(u.unit)]
 
         return self._generate_diff(
             filtered_units_a,
