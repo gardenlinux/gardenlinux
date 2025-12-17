@@ -10,6 +10,6 @@ def test_umask_file(parse_file: ParseFile):
 
 @pytest.mark.root
 def test_umask_cmd(shell: ShellRunner):
-    result = shell("su -l -c 'umask'", capture_output=True)
+    result = shell("su --login --command 'umask'", capture_output=True)
     assert result.returncode == 0, f"Could not execute umask cmd: {result.stderr}"
     assert result.stdout == "0027\n", "umask is not set to 0027"
