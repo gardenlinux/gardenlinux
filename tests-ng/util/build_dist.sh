@@ -49,7 +49,12 @@ script_dir="$(dirname -- "$script_path")"
 export PATH="$script_dir/runtime/$arch/bin:$PATH"
 cd "$script_dir/tests"
 echo "🧪  running tests with args: $0 $@"
-COLUMNS=120 OPENSSL_MODULES=/usr/lib/$(arch)-linux-gnu/ossl-modules/ python -m pytest -rA --tb=short --color=yes -p no:cacheprovider "$@"
+error=0
+COLUMNS=120 OPENSSL_MODULES=/usr/lib/$(arch)-linux-gnu/ossl-modules/ python -m pytest -rA --tb=short --color=yes -p no:cacheprovider "$@" || error=$?
+if [ "$TEST_NG_EXIT_0" = 1 ]; then
+	error=0
+fi
+exit "$error"
 EOF
 chmod +x "$tmpdir/dist/run_tests"
 
