@@ -61,9 +61,10 @@ class Sysctl:
 
         return dict(sorted(sysctl_params.items()))
 
-    def __getitem__(self, key: str) -> str:
+    def __getitem__(self, key: str):
         """Enable dictionary-style access to sysctl parameters"""
-        return self._read_sysctl_parameter(key)
+        value = self._read_sysctl_parameter(key)
+        return int(value) if value.isdigit() else value
 
     def __contains__(self, key: object) -> bool:
         """Support `"name" in sysctl` membership test."""
