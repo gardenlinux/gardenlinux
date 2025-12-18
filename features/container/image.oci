@@ -26,7 +26,13 @@ cat > config << EOF
     "Labels": {
       "org.opencontainers.image.title": "Garden Linux",
       "org.opencontainers.image.version": "$BUILDER_VERSION",
-      "org.opencontainers.image.architecture": "$BUILDER_ARCH"
+      "org.opencontainers.image.architecture": "$BUILDER_ARCH",
+      "org.opencontainers.image.source": "https://github.com/gardenlinux/gardenlinux",
+      "org.opencontainers.image.revision": "$BUILDER_COMMIT",
+      "org.opencontainers.image.created": "$BUILDER_TIMESTAMP",
+      "org.opencontainers.image.description": "Garden Linux $BUILDER_VERSION $BUILDER_ARCH",
+      "org.opencontainers.image.ref.name": "$BUILDER_FEATURES",
+      "org.opencontainers.image.base.name": "$BUILDER_CNAME"
     }
   },
   "rootfs": {
