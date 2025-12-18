@@ -17,6 +17,7 @@ layer_sha256="$(sha256sum < layer | head -c 64)"
 layer_size="$(stat -c '%s' layer)"
 mv layer "blobs/sha256/$layer_sha256"
 
+NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 cat > config << EOF
 {
   "architecture": "$BUILDER_ARCH",
@@ -29,7 +30,7 @@ cat > config << EOF
       "org.opencontainers.image.architecture": "$BUILDER_ARCH",
       "org.opencontainers.image.source": "https://github.com/gardenlinux/gardenlinux",
       "org.opencontainers.image.revision": "$BUILDER_COMMIT",
-      "org.opencontainers.image.created": "$BUILDER_TIMESTAMP",
+      "org.opencontainers.image.created": "$NOW",
       "org.opencontainers.image.description": "Garden Linux $BUILDER_VERSION $BUILDER_ARCH",
       "org.opencontainers.image.ref.name": "$BUILDER_FEATURES",
       "org.opencontainers.image.base.name": "$BUILDER_CNAME"
