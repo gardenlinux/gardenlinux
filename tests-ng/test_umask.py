@@ -9,7 +9,7 @@ def test_umask_file(parse_file: ParseFile):
 
 
 @pytest.mark.root
-@pytest.mark.feature("not cis", reason="CIS needs umask 0027")
+@pytest.mark.feature("not cis", reason="CIS has 077")
 def test_umask_cmd(shell: ShellRunner):
     result = shell("su --login --command 'umask'", capture_output=True)
     assert result.returncode == 0, f"Could not execute umask cmd: {result.stderr}"
