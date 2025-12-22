@@ -308,11 +308,24 @@ dev_setup() { # path-to-script
 	setup_nfs_shares
 	start_xnotify_client
 
-	_tmpf=$(mktemp /tmp/runner.XXXXXX)
+	_tmpf=$(mktemp /tmp/_dev_runner.XXXXXX)
 	sed '/set -e/d; /mount/d; /poweroff/d; s,exec 1>/dev/virtio-ports/test_output,exec 1>/dev/console,' "$_runner_script" \
 		>"$_tmpf"
 	mv "$_tmpf" "$_runner_script"
 	cat >>"$_runner_script" <<EOF
+if [ ! -f /etc/default/nfs-common ]; then
+  mv /sbin/update-initramfs{,.bak}
+  apt-get install -y nfs-common
+  chmod u-s /sbin/mount.nfs
+  mv /sbin/update-initramfs{.bak,}
+fi
+
+if ! which strace > /dev/null 2>&1; then
+  apt-get install -y strace
+fi
+
+iptables -A INPUT -p tcp -m tcp --dport ${XNOTIFY_SERVER_PORT} -m state --state NEW -j ACCEPT
+
 mkdir -p /run/gardenlinux-tests/{runtime,tests}
 mount -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${BUILD_DIR}/runtime /run/gardenlinux-tests/runtime
 mount -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${TESTS_DIR} /run/gardenlinux-tests/tests
