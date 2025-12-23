@@ -1,6 +1,7 @@
 import pytest
 from plugins.shell import ShellRunner
 
+
 @pytest.mark.feature("cis")
 @pytest.mark.root(reason="CIS audit requires root privileges")
 @pytest.mark.booted(reason="CIS tests within a booted system")
