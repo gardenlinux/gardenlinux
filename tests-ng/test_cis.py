@@ -1,9 +1,9 @@
 import pytest
-
+from plugins.shell import ShellRunner
 
 @pytest.mark.feature("cis")
 @pytest.mark.root(reason="CIS audit requires root privileges")
-@pytest.mark.booted(reason="Must be run on a booted system")
+@pytest.mark.booted(reason="CIS tests within a booted system")
 @pytest.mark.modify(reason="CIS audit script marked for modifying")
 def test_debian_cis_audit(shell):
     """
@@ -37,9 +37,9 @@ def test_debian_cis_audit(shell):
     # Ensure CIS script itself didn't fail
     assert "Check Failed" not in output, "CIS audit run itself failed unexpectedly"
 
+
 @pytest.mark.root(reason="CIS audit requires root privileges")
-@pytest.mark.booted(reason="Must be run on a booted system")
-@pytest.mark.modify(reason="CIS audit script marked for modifying")
+@pytest.mark.booted(reason="CIS tests within a booted system")
 def test_umask_cmd(shell: ShellRunner):
     result = shell("su --login --command 'umask'", capture_output=True)
     assert result.returncode == 0, f"Could not execute umask cmd: {result.stderr}"
