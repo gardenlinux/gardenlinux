@@ -1,4 +1,3 @@
----
 targets:
   - name: ali
     category: public-cloud
@@ -464,14 +463,14 @@ targets:
         test-platform: false
         publish: true
       - features:
-          - capi 
+          - capi
         arch: amd64
         build: true
         test: true
         test-platform: false
         publish: true
       - features:
-          - capi 
+          - capi
         arch: arm64
         build: true
         test: true
@@ -666,6 +665,15 @@ targets:
       - features:
           - gardener
           - _prod
+        arch: arm64
+        build: true
+        test: true
+        test-platform: false
+        publish: true
+      - features:
+          - gardener
+          - _prod
+          - _usi
         arch: arm64
         build: true
         test: true
