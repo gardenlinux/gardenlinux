@@ -266,6 +266,10 @@ qemu_opts=(
 	-device "virtio-net-pci,netdev=net0"
 )
 
+if [ "$arch" = aarch64 ]; then
+	qemu_opts+=(-smp 4)
+fi
+
 if ((debug)); then
 	qemu_opts+=(
 		-display gtk
