@@ -94,6 +94,10 @@ def test_startup_time(systemd: Systemd):
 
 
 @pytest.mark.booted(reason="Kernel test makes sense only on booted system")
+@pytest.mark.hypervisor(
+    "not qemu",
+    reason="check if the kernel is tainted only on non qemu tests - https://github.com/gardenlinux/gardenlinux/issues/4103",
+)
 def test_kernel_not_tainted():
     with open("/proc/sys/kernel/tainted", "r") as f:
         tainted = f.read().strip()
