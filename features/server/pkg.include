@@ -26,6 +26,7 @@ systemd-boot-efi
 systemd-coredump
 systemd-cron
 systemd-repart
+systemd-resolved
 systemd-timesyncd
 tcpdump
 traceroute
