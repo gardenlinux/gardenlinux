@@ -61,18 +61,6 @@ jobs:
     needs: requirements
     name: Build and Cache Test Distribution
     uses: ./.github/workflows/build_test_dist.yml
-  platform_test_image:
-    needs: requirements
-    name: Build platform-test image
-    uses: ./.github/workflows/build_platform_test_images.yml
-    with:
-      version: ${{ needs.requirements.outputs.version }}
-      platforms: '["tofu"]'
-      platform_test_tag: ${{ inputs.platform_test_tag }}
-      build: ${{ inputs.platform_test_build }}
-    permissions:
-      packages: write # TODO: 3215 elevated permissions for included workflow
-      actions: write  # TODO: 3215 elevated permissions for included workflow
   flavors_matrix:
     name: Generate flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml

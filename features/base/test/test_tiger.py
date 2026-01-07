@@ -1,1 +1,0 @@
-from helper.tests.tiger import tiger as test_tiger
