@@ -50,7 +50,6 @@ jobs:
       platform_test_tag: latest
       fail_fast: true
       prefix: a-
-    secrets: inherit
 
   run_number_a:
     uses: ./.github/workflows/get_workflow_infos.yml
@@ -75,7 +74,6 @@ jobs:
       platform_test_tag: latest
       fail_fast: true
       prefix: b-
-    secrets: inherit
 
   run_number_b:
     uses: ./.github/workflows/get_workflow_infos.yml
