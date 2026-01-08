@@ -16,4 +16,6 @@ jobs:
       id-token: write
       packages: write
     with:
-      nightly: "Two new builds"
+      nightly: "Two nightly builds"
+      run_number1: "#2469"
+      run_number2: "#2470"
