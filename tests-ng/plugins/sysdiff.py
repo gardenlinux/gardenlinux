@@ -17,6 +17,7 @@ import re
 import shutil
 from dataclasses import asdict, dataclass
 from datetime import datetime
+from fnmatch import fnmatch
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -40,7 +41,10 @@ DEFAULT_PATHS = [
     "/usr/local/sbin",
     "/usr/local/lib",
     "/opt",
-    "/proc/mounts",
+]
+
+DEFAULT_IGNORE_PATTERNS = [
+    "/etc/mtab",
 ]
 
 IGNORED_SYSTEMD_PATTERNS = [
@@ -52,6 +56,14 @@ IGNORED_SYSTEMD_PATTERNS = [
     # https://github.com/gardenlinux/gardenlinux/issues/3769
     "kubelet.service",
     "google-guest-agent.service",
+    # started periodically upon request, not running otherwise
+    "systemd-timedated.service",
+    # User-related units that appear dynamically
+    "run-user-*.mount",
+    "session-*.scope",
+    "user-runtime-dir@*.service",
+    "user@*.service",
+    "user-*.slice",
 ]
 IGNORED_KERNEL_MODULES = []
 IGNORED_SYSCTL_PARAMS = {
@@ -376,7 +388,9 @@ class SnapshotManager:
             LoadedKernelModule(name=module) for module in kernel_modules_list
         ]
 
-        ignore_patterns = file_collector.load_ignore_patterns(ignore_file)
+        ignore_patterns = DEFAULT_IGNORE_PATTERNS + file_collector.load_ignore_patterns(
+            ignore_file
+        )
         normalized_paths = file_collector.normalize_paths(paths)
 
         files_dict = file_collector.collect_file_hashes(
@@ -474,7 +488,7 @@ class DiffEngine:
     """Handles comparison between snapshots"""
 
     def __init__(self):
-        self._ignored_systemd_units = set(IGNORED_SYSTEMD_PATTERNS)
+        self._ignored_systemd_patterns = IGNORED_SYSTEMD_PATTERNS
         self._ignored_kernel_modules = set(IGNORED_KERNEL_MODULES)
         self._ignored_sysctl_params = set(IGNORED_SYSCTL_PARAMS)
 
@@ -532,12 +546,14 @@ class DiffEngine:
             """Format unit for comparison"""
             return f"{unit.unit}\t{unit.load}\t{unit.active}\t{unit.sub}"
 
-        filtered_units_a = [
-            format_unit(u) for u in units_a if u.unit not in self._ignored_systemd_units
-        ]
-        filtered_units_b = [
-            format_unit(u) for u in units_b if u.unit not in self._ignored_systemd_units
-        ]
+        def is_ignored(unit_name: str) -> bool:
+            return any(
+                fnmatch(unit_name, pattern)
+                for pattern in self._ignored_systemd_patterns
+            )
+
+        filtered_units_a = [format_unit(u) for u in units_a if not is_ignored(u.unit)]
+        filtered_units_b = [format_unit(u) for u in units_b if not is_ignored(u.unit)]
 
         return self._generate_diff(
             filtered_units_a,

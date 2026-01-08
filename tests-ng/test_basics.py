@@ -1,15 +1,17 @@
 import os
 
 import pytest
+from plugins.file import File
+from plugins.parse_file import ParseFile
 from plugins.shell import ShellRunner
 from plugins.systemd import Systemd
 
 
-def test_gl_is_support_distro():
-    with open("/etc/os-release", "r") as f:
-        assert "ID=gardenlinux" in [
-            line.strip() for line in f
-        ], "/etc/os-release does not contain gardenlinux vendor field"
+def test_gl_is_support_distro(parse_file: ParseFile):
+    lines = parse_file.lines("/etc/os-release")
+    assert (
+        "ID=gardenlinux" in lines
+    ), "/etc/os-release does not contain gardenlinux vendor field"
 
 
 def test_no_man(shell: ShellRunner):
@@ -19,32 +21,54 @@ def test_no_man(shell: ShellRunner):
     ), "man ls, did not fail with 'not found' as expected"
 
 
-def test_fhs(shell: ShellRunner):
-    expected_dirs = {
-        "bin",
-        "boot",
-        "dev",
-        "etc",
-        "home",
-        "lib",
-        "mnt",
-        "opt",
-        "proc",
-        "root",
-        "run",
-        "sbin",
-        "srv",
-        "sys",
-        "tmp",
-        "usr",
-        "var",
-    }
+@pytest.mark.parametrize(
+    "dir",
+    [
+        "/boot",
+        "/dev",
+        "/etc",
+        "/home",
+        "/mnt",
+        "/opt",
+        "/proc",
+        "/root",
+        "/run",
+        "/srv",
+        "/sys",
+        "/tmp",
+        "/usr",
+        "/var",
+    ],
+)
+def test_fhs_directories(file: File, dir: str):
+    assert file.is_dir(f"{dir}"), f"expected FHS directory {dir} does not exist"
 
-    if os.uname().machine == "x86_64":
-        expected_dirs.add("lib64")
 
-    for dir in sorted(expected_dirs):
-        assert os.path.isdir(f"/{dir}"), f"expected FHS directory /{dir} does not exist"
+@pytest.mark.parametrize(
+    "link,target",
+    [
+        ("/bin", "/usr/bin"),
+        ("/lib", "/usr/lib"),
+        ("/sbin", "/usr/sbin"),
+    ],
+)
+def test_fhs_symlinks(file: File, link: str, target: str):
+    assert file.is_symlink(
+        link, target=target
+    ), f"expected FHS symlink {link} does not exist"
+
+
+@pytest.mark.arch("amd64", reason="links only present on amd64")
+@pytest.mark.parametrize(
+    "link,target",
+    [
+        ("/lib64", "/usr/lib64"),
+    ],
+)
+def test_fhs_symlinks_amd64(file: File, link: str, target: str):
+    assert file.is_symlink(
+        link, target=target
+    ), f"expected FHS symlink {link} does not exist"
 
 
 @pytest.mark.booted(
@@ -56,7 +80,7 @@ def test_startup_time(systemd: Systemd):
     tolerated_kernel = 60.0
     tolerated_userspace = 60.0
 
-    kernel, initrd, userspace = systemd.analyze()
+    firmware, loader, kernel, initrd, userspace = systemd.analyze()
     kernel_total = kernel + initrd
 
     assert kernel_total < tolerated_kernel, (
@@ -70,6 +94,10 @@ def test_startup_time(systemd: Systemd):
 
 
 @pytest.mark.booted(reason="Kernel test makes sense only on booted system")
+@pytest.mark.hypervisor(
+    "not qemu",
+    reason="check if the kernel is tainted only on non qemu tests - https://github.com/gardenlinux/gardenlinux/issues/4103",
+)
 def test_kernel_not_tainted():
     with open("/proc/sys/kernel/tainted", "r") as f:
         tainted = f.read().strip()

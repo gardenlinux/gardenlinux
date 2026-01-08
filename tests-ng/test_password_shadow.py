@@ -1,26 +1,32 @@
+from typing import List
+
 import pytest
+from plugins.linux_etc_files import Passwd, Shadow
 
 
-def test_shadow_passwords_are_locked(shadow_entries):
+@pytest.mark.feature("not cis", reason="CIS handles shadow_entries by itself")
+def test_shadow_passwords_are_locked(shadow_entries: List[Shadow]):
     """No user in shadow should have a valid password entry and all users are locked."""
     for entry in shadow_entries:
-        pw = entry["passwd"]
-
         # Assert that the password field for the given entry is not empty (not invalid)
-        assert pw, f"Empty password field in shadow for {entry['user']}"
+        assert (
+            entry.encrypted_password
+        ), f"Empty password field in shadow for {entry.login_name}"
 
         # Assert whether the first character is a '!' or '*' marking the user as locked.
-        assert pw[0] in [
+        assert entry.encrypted_password[0] in [
             "!",
             "*",
-        ], f"Unexpected password hash in shadow for {entry['user']: {pw}}"
+        ], f"Unexpected password hash in shadow for {entry.login_name}: {entry.encrypted_password}"
 
 
-def test_passwd_password_field_is_valid(passwd_entries):
+def test_passwd_password_field_is_valid(passwd_entries: List[Passwd]):
     """All passwd entries must use 'x' or '*' in the password field."""
     for entry in passwd_entries:
-        pw = entry["passwd"]
-        assert pw in ["*", "x"], f"Malformed passwd entry for {entry['user']}: {pw}"
+        assert entry.password in [
+            "*",
+            "x",
+        ], f"Malformed passwd entry for {entry.name}: {entry}"
 
 
 @pytest.mark.root

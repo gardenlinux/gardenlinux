@@ -67,19 +67,6 @@ jobs:
     uses: ./.github/workflows/build_test_dist.yml
     with:
       prefix: ${{ inputs.prefix }}
-  platform_test_image:
-    needs: requirements
-    name: Build platform-test image
-    uses: ./.github/workflows/build_platform_test_images.yml
-    with:
-      version: ${{ needs.requirements.outputs.version }}
-      platforms: '["tofu"]'
-      platform_test_tag: ${{ inputs.platform_test_tag }}
-      build: ${{ inputs.platform_test_build }}
-      prefix: ${{ inputs.prefix }}
-    permissions:
-      packages: write # TODO: 3215 elevated permissions for included workflow
-      actions: write  # TODO: 3215 elevated permissions for included workflow
   flavors_matrix:
     name: Generate flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml
@@ -148,7 +135,7 @@ jobs:
             "version": "${{ needs.requirements.outputs.version }}",
             "target": "${{ needs.requirements.outputs.target }}"
           }' '.' > flavor_version_data.json
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # pin@v5.0.0
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         with:
           name: ${{ inputs.prefix }}flavor-version-data
           path: flavor_version_data.json

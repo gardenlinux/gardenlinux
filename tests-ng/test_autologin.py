@@ -1,7 +1,7 @@
 import re
-from pathlib import Path
 
 import pytest
+from plugins.parse_file import ParseFile
 
 CONFIG_FILES = [
     "/etc/systemd/system/serial-getty@.service.d/autologin.conf",
@@ -11,6 +11,6 @@ CONFIG_FILES = [
 
 @pytest.mark.parametrize("config_file", CONFIG_FILES)
 @pytest.mark.feature("server and (_dev or _iso)", reason="needs systemd")
-def test_autologin(config_file):
-    assert Path(config_file).exists()
-    assert re.search("ExecStart.*autologin", Path(config_file).read_text())
+def test_autologin(config_file, parse_file: ParseFile):
+    lines = parse_file.lines(config_file)
+    assert re.compile(r"ExecStart.*autologin") in lines

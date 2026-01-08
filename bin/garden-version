@@ -92,8 +92,8 @@ function get_patch_from_repo {
 }
 
 function trim_when_old_version {
-	if [ "$1" == "today" ]; then
-		echo "today"
+	if [ "$1" == "today" ] || [ "$1" == "experimental" ]; then
+		echo "$1"
 		return
 	fi
 	# shellcheck disable=2046

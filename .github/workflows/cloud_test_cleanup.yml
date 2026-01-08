@@ -17,7 +17,7 @@ jobs:
     steps:
       - id: "auth_aws"
         name: "Authenticate to AWS"
-        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
@@ -58,11 +58,11 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           submodules: true
       - name: "Authenticate to Google Cloud"
-        uses: google-github-actions/auth@fc2174804b84f912b1f6d334e9463f484f1c552d # pin@v1
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -70,7 +70,7 @@ jobs:
           cleanup_credentials: true
           export_environment_variables: true
       - name: Set GCP environment
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const path = await import("path");
@@ -83,14 +83,14 @@ jobs:
             core.exportVariable("GOOGLE_GHA_CREDS_PATH", basePath + credentialsFileName);
       - id: "auth_aws"
         name: "Authenticate to AWS"
-        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_TESTS_REGION }}
           output-credentials: true
       - name: Set AWS environment
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             core.setSecret("${{ steps.auth_aws.outputs.aws-access-key-id }}");
@@ -106,7 +106,7 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Set Azure environment
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             core.exportVariable("ARM_USE_OIDC", "true");
@@ -118,7 +118,7 @@ jobs:
             core.setSecret("${{ secrets.AZURE_TENANT_ID }}");
             core.exportVariable("ARM_TENANT_ID", "${{ secrets.AZURE_TENANT_ID }}");
       - name: "Create ali cloud credential file"
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const credentials = JSON.parse(atob("${{ secrets.CCC_CREDENTIALS }}"));
@@ -131,7 +131,7 @@ jobs:
             core.setSecret(aliCredentials.access_key_secret);
             core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_SECRET", aliCredentials.access_key_secret);
       - name: Set additional OpenTofu variables
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const tfEncryption = Buffer.from("${{ secrets.TF_ENCRYPTION }}", 'base64').toString('utf-8');
@@ -198,15 +198,15 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           submodules: true
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get install -y retry
       - name: "Authenticate to Google Cloud"
-        if: ${{ startsWith(matrix.workspace, 'test-ng-gcp-') }}
-        uses: google-github-actions/auth@140bb5113ffb6b65a7e9b937a81fa96cf5064462 # pin@v1
+        if: ${{ contains(matrix.workspace, '-gcp-') }}
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
@@ -214,8 +214,8 @@ jobs:
           cleanup_credentials: true
           export_environment_variables: true
       - name: Set GCP environment
-        if: ${{ startsWith(matrix.workspace, 'test-ng-gcp-') }}
-        uses: actions/github-script@v8
+        if: ${{ contains(matrix.workspace, '-gcp-') }}
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             // tf provider vars
@@ -223,16 +223,15 @@ jobs:
             core.exportVariable("GOOGLE_REGION", "${{ secrets.GCP_REGION }}");
             core.exportVariable("GOOGLE_ZONE", "${{ secrets.GCP_ZONE }}");
       - id: "auth_aws"
-        name: "Authenticate to AWS"
-        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # pin@v4
+        name: "Authenticate to AWS (S3 backend)"
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_TESTS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_TESTS_OIDC_SESSION }}
           aws-region: ${{ secrets.aws_region }}
           output-credentials: true
       - name: Set AWS environment
-        if: ${{ startsWith(matrix.workspace, 'test-ng-aws-') }}
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             // tf provider auth
@@ -245,7 +244,7 @@ jobs:
             // tf provider vars
             core.exportVariable("AWS_REGION", "${{ secrets.aws_region }}");
       - id: "auth_azure"
-        if: ${{ startsWith(matrix.workspace, 'test-ng-azure-') }}
+        if: ${{ contains(matrix.workspace, '-azure-') }}
         name: "Authenticate to Azure"
         uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # pin@v1
         with:
@@ -253,8 +252,8 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Set Azure environment
-        if: ${{ startsWith(matrix.workspace, 'test-ng-azure-') }}
-        uses: actions/github-script@v8
+        if: ${{ contains(matrix.workspace, '-azure-') }}
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             // tf provider auth
@@ -267,8 +266,8 @@ jobs:
             core.setSecret("${{ secrets.AZURE_TENANT_ID }}");
             core.exportVariable("ARM_TENANT_ID", "${{ secrets.AZURE_TENANT_ID }}");
       - name: "Create ali cloud credential file"
-        if: ${{ startsWith(matrix.workspace, 'test-ng-ali-') }}
-        uses: actions/github-script@v8
+        if: ${{ contains(matrix.workspace, '-ali-') }}
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             // tf provider auth
@@ -281,7 +280,7 @@ jobs:
             // tf provider vars
             core.exportVariable("ALIBABA_CLOUD_REGION", aliCredentials.region);
       - name: Set additional OpenTofu variables
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const tfEncryption = Buffer.from("${{ secrets.TF_ENCRYPTION }}", 'base64').toString('utf-8');
@@ -310,6 +309,12 @@ jobs:
           source ../install_tofu.sh
           install_tofu "$PWD"
 
+          # ssh key generation (if missing)
+          test -f ~/.ssh/id_ed25519 || ssh-keygen -t ed25519 -P "" -f ~/.ssh/id_ed25519
+          # secureboot certificate files
+          mkdir -p cert
+          touch cert/secureboot.db.crt cert/secureboot.pk.der cert/secureboot.db.der cert/secureboot.kek.der cert/secureboot.aws-efivars
+
           # Create minimal tfvars
           cat > empty.tfvars <<EOF
             root_disk_path        = "empty.raw"
@@ -324,6 +329,10 @@ jobs:
               tpm2 = false
             }
           EOF
+
+          # Create non-empty placeholder artifacts required by tofu destroy
+          cp empty.tfvars empty.raw
+          cp empty.tfvars empty.sh
 
           # Enable remote state S3 backend and init
           if [ ! -f backend.tf ]; then

@@ -1,5 +1,10 @@
+import logging
+import sys
+
 import pytest
 from plugins.sysdiff import Sysdiff
+
+logger = logging.getLogger(__name__)
 
 before_suffix = "before-tests"
 after_suffix = "after-tests"
@@ -22,6 +27,7 @@ def test_sysdiff_before_tests(sysdiff: Sysdiff):
 
 @pytest.mark.order("last")
 @pytest.mark.root(reason="Sysdiff needs to read all files.")
+@pytest.mark.feature("not cis", reason="CIS handles sysdiff by itself")
 def test_sysdiff_after_tests(sysdiff: Sysdiff):
     """
     Verifies no system changes were detected during the test run.
@@ -46,8 +52,12 @@ def test_sysdiff_after_tests(sysdiff: Sysdiff):
             diff_output = sysdiff.diff_engine.generate_diff(
                 diff_result, before_snapshot, after_snapshot
             )
+            print(
+                "System changes detected - detailed diff:\n" + diff_output,
+                file=sys.stderr,
+            )
             pytest.fail(
-                f"System changes were detected during the test run:\n{diff_output}"
+                "System changes were detected during the test run. See stderr output for details."
             )
 
     except Exception as e:

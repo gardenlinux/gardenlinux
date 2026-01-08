@@ -1,0 +1,75 @@
+name: dev - test framework
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-dev-tests
+  cancel-in-progress: true
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "tests-ng/**"
+      - ".github/workflows/dev_tests.yml"
+  pull_request:
+    paths:
+      - "tests-ng/**"
+      - ".github/workflows/dev_tests.yml"
+jobs:
+  black:
+    name: Black (formatting)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # pin@v6.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Run black (diff check)
+        run: make -f tests-ng/dev.makefile lint-black
+
+  isort:
+    name: isort (import sorting)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # pin@v6.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Run isort
+        run: make -f tests-ng/dev.makefile lint-isort
+
+  pyright:
+    name: Pyright (type checking)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # pin@v6.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Run pyright
+        run: make -f tests-ng/dev.makefile lint-pyright
+
+  test-plugins:
+    name: Test plugins
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Run test-plugins
+        run: make -f tests-ng/dev.makefile test-plugins

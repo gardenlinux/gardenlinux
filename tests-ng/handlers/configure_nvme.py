@@ -16,6 +16,7 @@ TRTYPE = "tcp"
 ADRFAM = "ipv4"
 
 REQUIRED_NVME_MODULES = [
+    {"name": "loop", "status": None},
     {"name": "nvmet", "status": None},
     {"name": "nvmet_tcp", "status": None},
     {"name": "nvme_tcp", "status": None},
@@ -27,6 +28,13 @@ REQUIRED_NVME_MODULES = [
 def nvme_device(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
     mount_package_installed = False
     shell(f"truncate -s 512M {NVME_DEVICE}")
+
+    for entry in REQUIRED_NVME_MODULES:
+        name = entry["name"]
+        if not kernel_module.is_module_loaded(name):
+            kernel_module.load_module(name)
+            entry["status"] = "Loaded"
+
     if not dpkg.package_is_installed("mount"):
         mount_package_installed = True
         shell("DEBIAN_FRONTEND=noninteractive apt-get install -y mount")
@@ -34,11 +42,6 @@ def nvme_device(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
         f"losetup -fP --show {NVME_DEVICE}", capture_output=True
     ).stdout.strip()
 
-    for entry in REQUIRED_NVME_MODULES:
-        name = entry["name"]
-        if not kernel_module.is_module_loaded(name):
-            kernel_module.load_module(name)
-            entry["status"] = "Loaded"
     port = 1
     while os.path.exists(os.path.join("/sys/kernel/config/nvmet/ports", str(port))):
         port += 1
@@ -115,5 +118,5 @@ def nvme_device(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
         if entry["status"] == "Loaded":
             kernel_module.unload_module(name)
             entry["status"] = None
-    if mount_package_installed == True:
+    if mount_package_installed:
         shell("DEBIAN_FRONTEND=noninteractive apt remove mount")

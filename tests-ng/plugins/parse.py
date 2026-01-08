@@ -5,32 +5,165 @@ import tomllib
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Union
+
+import pytest
+
+# Supported formats for auto-detection
+SUPPORTED_FORMATS = ["json", "yaml", "toml", "ini", "keyval", "spacedelim"]
+
+# Default comment characters per format
+# Always a list - empty list means the format does not support comments
+FORMAT_COMMENT_CHARS = {
+    "json": [],  # JSON does not support comments
+    "yaml": ["#"],
+    "toml": ["#"],
+    "ini": [";", "#"],  # INI supports both ; and # for comments
+    "keyval": ["#"],
+    "spacedelim": ["#"],
+}
 
 
-@dataclass
-class MappingResult:
-    """Result of mapping check operation."""
+def _resolve_comment_chars(
+    format: Optional[str],
+    comment_char: Optional[Union[str, List[str]]],
+) -> List[str]:
+    """Resolve comment characters from format or explicit parameter.
 
-    matches: Dict[str, Any]
-    missing: List[str]
-    wrong: Dict[str, Tuple[Any, Any]]  # key -> (expected, actual)
-    all_match: bool
+    Args:
+        format: Optional format identifier.
+        comment_char: Optional comment character(s).
 
-    def __post_init__(self):
-        """Compute all_match after initialization."""
-        self.all_match = len(self.missing) == 0 and len(self.wrong) == 0
+    Returns:
+        List of comment characters to use.
+    """
+    if comment_char is None:
+        if format is not None:
+            return FORMAT_COMMENT_CHARS.get(format.lower(), ["#"])
+        else:
+            return ["#"]
+    else:
+        if isinstance(comment_char, list):
+            return comment_char
+        else:
+            return [comment_char]
 
-    @property
-    def wrong_formatted(self) -> str:
-        """Format wrong values as a string for assertion messages.
+
+def _strip_comments_from_line(line: str, comment_chars: List[str]) -> str:
+    """Strip comments from a single line using the first matching comment character.
+
+    Args:
+        line: Line to process.
+        comment_chars: List of comment characters to check.
+
+    Returns:
+        Line with comments stripped.
+    """
+    if not comment_chars:
+        return line
+    for char in comment_chars:
+        if char in line:
+            return line.split(char, 1)[0]
+    return line
+
+
+class Lines:
+    """Supports checking for string literals, regex patterns, and lists of patterns
+    using the `in` operator. Automatically handles comment filtering for string literals.
+    """
+
+    def __init__(
+        self,
+        content: str,
+        label: str = "input",
+        format: Optional[str] = None,
+        comment_char: Optional[Union[str, List[str]]] = None,
+        ordered: bool = False,
+    ):
+        """Initialize Lines container.
+
+        Args:
+            content: Raw content string to search.
+            label: Human-readable label for error messages.
+            format: Optional format identifier for comment filtering.
+            comment_char: Optional comment character(s).
+            ordered: If True, list patterns must appear in order.
+        """
+        self.content = content
+        self.label = label
+        self.format = format
+        self.comment_char = comment_char
+        self.ordered = ordered
+
+    def _check_string_literal(self, pattern: str) -> bool:
+        """Check if a string literal exists in lines (with comment filtering)."""
+        comment_chars = _resolve_comment_chars(self.format, self.comment_char)
+
+        for line in self.content.splitlines():
+            line = _strip_comments_from_line(line, comment_chars)
+            line = line.rstrip()
+            normalized = re.sub(r"\s+", " ", line)
+            if normalized.find(pattern) != -1:
+                return True
+        return False
+
+    def _check_regex_pattern(self, pattern: re.Pattern[str]) -> bool:
+        """Check if a regex pattern matches the content."""
+        return bool(pattern.search(self.content))
+
+    def _check_pattern_list(self, patterns: List[str]) -> bool:
+        """Check if multiple patterns exist (with optional ordering)."""
+        if not self.ordered:
+            # Unordered: check each pattern individually
+            return all(self._check_string_literal(pattern) for pattern in patterns)
+
+        # Ordered: check patterns appear in sequence
+        comment_chars = _resolve_comment_chars(self.format, self.comment_char)
+
+        filtered_lines = []
+        for line in self.content.splitlines():
+            line = _strip_comments_from_line(line, comment_chars)
+            line = line.rstrip()
+            if line:  # Skip empty lines
+                normalized = re.sub(r"\s+", " ", line)
+                filtered_lines.append(normalized)
+
+        norm_patterns = [re.sub(r"\s+", " ", p) for p in patterns]
+        pattern = ".*".join(re.escape(p) for p in norm_patterns)
+        content = "\n".join(filtered_lines)
+        return bool(re.search(pattern, content, flags=re.S))
+
+    def __contains__(self, pattern: Union[str, re.Pattern[str], List[str]]) -> bool:
+        """Check if pattern exists in lines.
+
+        Supports three pattern types:
+        - str: String literal search (with comment filtering)
+        - re.Pattern: Regex pattern matching (full content, multiline)
+        - list: Multiple patterns (ordered or unordered based on container config)
+
+        Args:
+            pattern: Pattern to search for (str, re.Pattern, or list of str).
 
         Returns:
-            str: Formatted string with wrong key-value pairs.
+            bool: True if pattern is found, False otherwise.
+
+        Example:
+            >>> lines = Lines("line1\\nline2\\nline3")
+            >>> "line2" in lines  # True
+            >>> re.compile(r"line\\d+") in lines  # True
+            >>> ["line1", "line2"] in lines  # True
         """
-        if not self.wrong:
-            return ""
-        return ", ".join(f"{k}:{v[1]!r}!={v[0]!r}" for k, v in self.wrong.items())
+        if isinstance(pattern, str):
+            return self._check_string_literal(pattern)
+        elif isinstance(pattern, re.Pattern):
+            return self._check_regex_pattern(pattern)
+        elif isinstance(pattern, list):
+            return self._check_pattern_list(pattern)
+        else:
+            raise TypeError(
+                f"Unsupported pattern type {type(pattern).__name__} in {self.label}. "
+                f"Expected str, re.Pattern, or list of str."
+            )
 
 
 @dataclass
@@ -53,6 +186,10 @@ class Parse:
 
         Returns:
             Parse: A parser with file content and label set to the path.
+
+        Raises:
+            FileNotFoundError: If the file does not exist.
+            PermissionError: If the file cannot be read due to insufficient permissions.
         """
         p = Path(path)
         text = p.read_text(encoding="utf-8", errors="ignore")
@@ -71,18 +208,24 @@ class Parse:
         """
         return cls(content, label)
 
-    def _strip_comments(self, content: str, comment_char: str = "#") -> str:
-        return "\n".join(
-            line.split(comment_char, 1)[0].rstrip() if comment_char in line else line
-            for line in content.splitlines()
-        )
-
     def _parse_keyval(self, content: str) -> Dict[str, str]:
         cfg = configparser.ConfigParser(allow_no_value=True)
         cfg.optionxform = lambda optionstr: optionstr
         wrapped = "[default]\n" + content
         cfg.read_file(StringIO(wrapped))
         return dict(cfg.items("default")) if "default" in cfg else {}
+
+    def _parse_spacedelim(self, content: str) -> Dict[str, str]:
+        result = {}
+        for line in content.splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split(None, 1)
+            if len(parts) == 2:
+                key, value = parts
+                result[key] = value
+        return result
 
     def _parse_ini(self, content: str) -> Dict[str, Any]:
         cfg = configparser.ConfigParser()
@@ -96,179 +239,102 @@ class Parse:
         import yaml
 
         if ignore_comments:
-            content = self._strip_comments(content)
+            comment_chars = FORMAT_COMMENT_CHARS.get("yaml", ["#"])
+            content = "\n".join(
+                _strip_comments_from_line(line, comment_chars)
+                for line in content.splitlines()
+            )
         return yaml.safe_load(content)
 
     def _parse_toml(self, content: str, ignore_comments: bool) -> Any:
         if ignore_comments:
-            content = self._strip_comments(content, "#")
+            comment_chars = FORMAT_COMMENT_CHARS.get("toml", ["#"])
+            content = "\n".join(
+                _strip_comments_from_line(line, comment_chars)
+                for line in content.splitlines()
+            )
         return tomllib.loads(content)
 
-    def _get_by_path(self, data: Any, path: str) -> Any:
-        cur: Any = data
-        for part in path.split("."):
-            if isinstance(cur, dict) and part in cur:
-                cur = cur[part]
-            else:
-                return None
-        return cur
-
-    def check_line(self, line: str, *, invert: bool = False) -> bool:
-        """Check if a normalized line exists (or not) in the content.
-
-        Whitespace is normalized to single spaces before searching.
-
-        Args:
-            line: The substring to search within lines.
-            invert: If True, check that it does not exist.
-
-        Returns:
-            bool: True if the condition is met (line found when invert=False,
-                  or line not found when invert=True), False otherwise.
-        """
-        found = any(
-            re.sub(r"\s+", " ", l).find(line) != -1 for l in self.content.splitlines()
-        )
-        if invert:
-            return not found
-        return found
-
-    def check_lines(self, lines: List[str], *, invert: bool = False) -> bool:
-        """Check if multiple lines appear in order (or not) in the content.
-
-        Each expected line and the content are whitespace-normalized; the
-        check looks for the ordered occurrence allowing arbitrary text
-        between lines.
-
-        Args:
-            lines: Sequence of expected lines in order.
-            invert: If True, check that this ordered sequence does not occur.
-
-        Returns:
-            bool: True if the condition is met (lines found in order when invert=False,
-                  or lines not found in order when invert=True), False otherwise.
-        """
-        norm = "\n".join(re.sub(r"\s+", " ", l) for l in self.content.splitlines())
-        pattern = ".*".join(re.escape(re.sub(r"\s+", " ", l)) for l in lines)
-        found_in_order = bool(re.search(pattern, norm, flags=re.S))
-        if invert:
-            return not found_in_order
-        return found_in_order
-
-    def get_mapping(
-        self,
-        expected: Dict[str, Any],
-        *,
-        format: str,
-        invert: bool = False,
-        ignore_comments: bool = True,
-    ) -> MappingResult:
-        """Get mapping check results for structured content.
-
-        Supports formats: ``keyval``, ``ini``, ``json``, ``yaml``, ``toml``.
-        For hierarchical formats, keys may use dotted paths (e.g. ``a.b.c``).
-
-        Args:
-            expected: Mapping of expected keys to values.
-            format: One of the supported format identifiers.
-            invert: If True, check that none of the expected pairs match.
-            ignore_comments: If True, strip comments where applicable.
-
-        Returns:
-            MappingResult: Result containing matches, missing keys, wrong values,
-                          and all_match flag indicating if all expected mappings match.
-        """
+    def _parse_content(self, format: str, ignore_comments: bool = True) -> Any:
         fmt = format.lower()
         match fmt:
             case "keyval":
-                data: Any = self._parse_keyval(self.content)
-                resolver = lambda k: data.get(k)
+                return self._parse_keyval(self.content)
+            case "spacedelim":
+                return self._parse_spacedelim(self.content)
             case "ini":
-                data = self._parse_ini(self.content)
-                resolver = lambda k: self._get_by_path(data, k)
+                return self._parse_ini(self.content)
             case "json":
-                data = self._parse_json(self.content)
-                resolver = lambda k: self._get_by_path(data, k)
+                return self._parse_json(self.content)
             case "yaml":
-                data = self._parse_yaml(self.content, ignore_comments)
-                resolver = lambda k: self._get_by_path(data, k)
+                return self._parse_yaml(self.content, ignore_comments)
             case "toml":
-                data = self._parse_toml(self.content, ignore_comments)
-                resolver = lambda k: self._get_by_path(data, k)
-            case _:
-                raise ValueError(f"Unsupported format: {format}")
-
-        matches: Dict[str, Any] = {}
-        for k, v in expected.items():
-            actual = resolver(k)
-            if actual is None:
-                continue
-            matches[k] = actual
-
-        missing = [k for k in expected.keys() if k not in matches]
-        wrong = {
-            k: (expected[k], matches[k])
-            for k, v in expected.items()
-            if k in matches and matches[k] != v
-        }
-
-        return MappingResult(
-            matches=matches,
-            missing=missing,
-            wrong=wrong,
-            all_match=False,  # Will be set in __post_init__
-        )
-
-    def check_list(
-        self,
-        list_path: str,
-        value: Any,
-        *,
-        format: str,
-        invert: bool = False,
-        ignore_comments: bool = True,
-    ) -> bool:
-        """Check that a value is (or is not) present in a list within structured content.
-
-        Supports formats: ``json``, ``yaml``, ``toml``.
-        For hierarchical formats, the list path may use dotted notation (e.g. ``a.b.c``).
-
-        Args:
-            list_path: Dot-separated path to the list (e.g. ``datasource_list`` or
-                ``system_info.default_user.groups``).
-            value: The value to search for in the list.
-            format: One of ``json``, ``yaml``, or ``toml``.
-            invert: If True, check that the value is NOT in the list.
-            ignore_comments: If True, strip comments where applicable.
-        """
-        fmt = format.lower()
-        match fmt:
-            case "json":
-                data: Any = self._parse_json(self.content)
-                target = self._get_by_path(data, list_path)
-            case "yaml":
-                data = self._parse_yaml(self.content, ignore_comments)
-                target = self._get_by_path(data, list_path)
-            case "toml":
-                data = self._parse_toml(self.content, ignore_comments)
-                target = self._get_by_path(data, list_path)
+                return self._parse_toml(self.content, ignore_comments)
             case _:
                 raise ValueError(
-                    f"Unsupported format for list assertion: {format}. "
-                    f"Supported formats: json, yaml, toml"
+                    f"Unsupported format '{format}' in {self.label}. "
+                    f"Supported formats: {', '.join(SUPPORTED_FORMATS)}."
                 )
 
-        if target is None:
-            raise ValueError(
-                f"List path '{list_path}' not found or does not exist in {self.label} (format={format})"
-            )
+    def parse(self, format: str, ignore_comments: bool = True) -> Any:
+        """Parse content and return data structure based on format.
 
-        if not isinstance(target, list):
-            raise ValueError(
-                f"Path '{list_path}' in {self.label} is not a list (format={format}, got {type(target).__name__})"
-            )
 
-        found = value in target
-        if not invert:
-            return found
-        return not found
+        Args:
+            format: One of the supported format identifiers (json, yaml, toml, ini, keyval).
+            ignore_comments: (optional, default=True) If True, strip comments where applicable.
+
+        Returns:
+            Parsed data structure (dict, list, etc.) based on format.
+
+        Example:
+            >>> parser = Parse.from_str('{"database": {"host": "localhost", "port": 5432}}')
+            >>> config = parser.parse(format="json")
+            >>> assert config["database"]["host"] == "localhost"
+            >>> assert config["database"]["port"] == 5432
+            >>> assert "missing" not in config["database"]
+        """
+        return self._parse_content(format, ignore_comments)
+
+    def lines(
+        self,
+        *,
+        format: Optional[str] = None,
+        comment_char: Optional[Union[str, List[str]]] = None,
+        ordered: bool = False,
+    ) -> Lines:
+        """Get Lines container for line-based operations.
+
+        Supports checking patterns using the `in` operator:
+        - String literals: `assert "line" in parser.lines()`
+        - Regex patterns: `assert re.compile(r"\\d+") in parser.lines()`
+        - Lists (unordered): `assert ["lineA", "lineB"] in parser.lines()`
+        - Lists (ordered): `assert ["lineA", "lineB"] in parser.lines(ordered=True)`
+
+        Args:
+            format: (optional) Format identifier for comment filtering.
+            comment_char: (optional) Character(s) used for comments.
+            ordered: (optional, default=False) If True, list patterns must appear in order.
+
+        Returns:
+            Lines container instance.
+
+        Example:
+            >>> parser = Parse.from_str("line1\\nline2\\nline3")
+            >>> assert "line2" in parser.lines()
+            >>> assert ["line1", "line3"] in parser.lines()  # Unordered
+            >>> assert ["line1", "line2"] in parser.lines(ordered=True)  # Ordered
+        """
+        return Lines(
+            content=self.content,
+            label=self.label,
+            format=format,
+            comment_char=comment_char,
+            ordered=ordered,
+        )
+
+
+@pytest.fixture
+def parse() -> type[Parse]:
+    """Fixture providing the ``Parse`` class for parsing string content."""
+    return Parse
