@@ -46,8 +46,6 @@ jobs:
       packages: write
     with:
       version: now
-      target: nightly
-      platform_test_tag: latest
       fail_fast: true
       prefix: a-
 
@@ -70,8 +68,6 @@ jobs:
       packages: write
     with:
       version: now
-      target: nightly
-      platform_test_tag: latest
       fail_fast: true
       prefix: b-
 
