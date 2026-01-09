@@ -54,6 +54,7 @@ variable "cloud_provider" {
     condition     = contains(["aws", "gcp", "azure", "ali", "openstack"], var.cloud_provider)
     error_message = "Must be one of aws, gcp, azure, ali, or openstack."
   }
+  default     = "aws"
 }
 
 variable "provider_vars" {
