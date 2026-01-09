@@ -64,6 +64,10 @@ resource "azurerm_network_interface" "nic" {
     create_before_destroy = true
   }
 
+  timeouts {
+    delete = "10m"
+  }
+
   tags = local.labels
 }
 
