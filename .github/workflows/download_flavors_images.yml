@@ -42,7 +42,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
       - name: Set image reference for S3
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
