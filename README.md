@@ -83,7 +83,7 @@ The build script fetches the required builder container and manages all internal
 Garden Linux images can be built with the *trustedboot* feature—an extension to *secureboot*—for enhanced system integrity; see the [trustedboot documentation](features/_trustedboot/README.md) for build instructions.
 # Test
 
-To run unit tests for a specific target, use the command `./test ${target}`.
+To run unit tests for a specific target, use the command `./test-ng ${target}`.
 Further documentation about tests is located in [tests-ng/README.md](tests-ng/README.md).
 
 # Releases
