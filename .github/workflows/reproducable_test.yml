@@ -17,6 +17,15 @@ on:
       run_number2:
         description: "Second run number (#..., only required if comparing two nightly builds)"
         type: string
+    secrets:
+      aws_region:
+        required: false
+      aws_kms_role:
+        required: false
+      aws_oidc_session:
+        required: false
+      secureboot_db_kms_arn:
+        required: false
 #  workflow_dispatch:
 #    inputs:
 #      nightly:
@@ -46,9 +55,11 @@ jobs:
       packages: write
     with:
       version: now
-      target: reproducable
+      target: nightly
+      platform_test_tag: latest
       fail_fast: true
       prefix: a-
+    secrets: inherit
 
   run_number_a:
     uses: ./.github/workflows/get_workflow_infos.yml
@@ -69,9 +80,11 @@ jobs:
       packages: write
     with:
       version: now
-      target: reproducable
+      target: nightly
+      platform_test_tag: latest
       fail_fast: true
       prefix: b-
+    secrets: inherit
 
   run_number_b:
     uses: ./.github/workflows/get_workflow_infos.yml
