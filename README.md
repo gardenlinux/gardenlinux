@@ -84,7 +84,7 @@ Garden Linux images can be built with the *trustedboot* feature—an extension t
 # Test
 
 To run unit tests for a specific target, use the command `./test ${target}`.
-Further documentation about tests is located in [tests/README.md](tests/README.md).
+Further documentation about tests is located in [tests-ng/README.md](tests-ng/README.md).
 
 # Releases
 
