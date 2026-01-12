@@ -46,6 +46,7 @@ jobs:
       packages: write
     with:
       version: now
+      target: reproducable
       fail_fast: true
       prefix: a-
 
@@ -68,6 +69,7 @@ jobs:
       packages: write
     with:
       version: now
+      target: reproducable
       fail_fast: true
       prefix: b-
 
