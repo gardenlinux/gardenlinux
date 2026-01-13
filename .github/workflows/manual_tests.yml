@@ -143,7 +143,6 @@ jobs:
     needs:
       [
         download_build_requirements,
-        download_platform_test_images,
         test_distribution_build,
         download_platform_test_flavors_matrix,
         download_platform_test_flavors,
