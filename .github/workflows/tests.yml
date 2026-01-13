@@ -202,7 +202,7 @@ jobs:
     if: |
       ${{
         needs.determine_test_settings.outputs.cloud_tests == 'true'
-        && (always() && (needs.test_flavors_qemu.result == 'success' || needs.test_flavors_qemu.result == 'skipped'))
+        && (always() && (needs.test_flavors_qemu.result == 'success' || needs.determine_test_settings.outputs.qemu_tests == 'false'))
       }}
     strategy:
       fail-fast: false
