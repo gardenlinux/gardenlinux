@@ -45,12 +45,6 @@ resource "azurerm_linux_virtual_machine" "instance" {
 
   tags = local.labels
 
-  # wait until image version and nic are available
-  depends_on = [
-    azurerm_shared_image_version.shared_image_version.0,
-    azurerm_network_interface.nic
-  ]
-
   # replace if image source changes
   lifecycle {
     replace_triggered_by = [
