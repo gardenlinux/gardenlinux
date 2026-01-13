@@ -169,14 +169,13 @@ jobs:
                 core.setOutput(t.outMatrix, SKIP_MATRIX);
               }
             }
-  ## test-ng start
   test_flavors_chroot:
     needs: determine_test_settings
     name: Test-NG chroot flavors
     uses: ./.github/workflows/test_flavor_chroot_ng.yml
     if: ${{ needs.determine_test_settings.outputs.chroot_tests == 'true' }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.chroot_test_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
@@ -221,14 +220,13 @@ jobs:
     uses: ./.github/workflows/test_flavor_oci.yml
     if: ${{ needs.determine_test_settings.outputs.oci_flavors_tests == 'true' }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.oci_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
     permissions:
       actions: write
-  ## test-ng end
   test_report:
     needs:
       - test_flavors_chroot
