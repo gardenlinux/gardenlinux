@@ -25,4 +25,18 @@ locals {
   default_boot_mode     = var.image_requirements.uefi ? "uefi" : "uefi-preferred"
   boot_mode             = coalesce(var.provider_vars.boot_mode, local.default_boot_mode)
   use_existing_root_disk      = var.existing_root_disk != ""
+
+  # Normalize Community Gallery image ID to lowercase format expected by Azure provider
+  # Expected format: /communityGalleries/{galleryName}/images/{imageName}/versions/{versionName}
+  # Convert: /CommunityGalleries/.../Images/.../Versions/... to /communityGalleries/.../images/.../versions/...
+  # Replace only the keywords, preserving the slash structure
+  normalized_image_id = var.existing_root_disk != "" && startswith(var.existing_root_disk, "/CommunityGalleries") ? (
+    replace(
+      replace(
+        replace(var.existing_root_disk, "CommunityGalleries", "communityGalleries"),
+        "Images", "images"
+      ),
+      "Versions", "versions"
+    )
+  ) : var.existing_root_disk
 }
