@@ -41,6 +41,13 @@ resource "azurerm_linux_virtual_machine" "instance" {
 
   tags = local.labels
 
+  depends_on = [
+    azurerm_ssh_public_key.ssh_public_key,
+    azurerm_storage_account.storage_account,
+    azurerm_network_interface.nic,
+    azurerm_network_interface_security_group_association.nsg_nic,
+  ]
+
   # replace if image source changes
   lifecycle {
     replace_triggered_by = [
