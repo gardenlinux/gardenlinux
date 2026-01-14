@@ -191,6 +191,7 @@ test_disk_path        = "$(realpath -- "$test_dist_dir/dist.ext2.raw")"
 ssh_public_key_path   = "$ssh_private_key.pub"
 user_data_script_path = "$user_data_script"
 existing_root_disk    = "$existing_root_disk_var"
+skip_tests            = "$skip_tests"
 
 image_requirements = {
   arch = "$arch"
