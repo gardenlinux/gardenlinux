@@ -52,7 +52,7 @@ build_daemonize() {
 build_daemonize_podman() {
 	printf "==>\t\tbuilding daemonize...\n"
 	cat <<EOF >"${BUILD_DIR}/Containerfile.daemonize"
-FROM ubuntu:16.04 AS build
+FROM docker.io/library/ubuntu:16.04
 RUN echo "$(date '+%s')" # this is required to invalidate podman cache
 RUN apt-get update && apt-get install -y git make gcc
 WORKDIR /build
@@ -92,13 +92,11 @@ build_xnotify_server() {
 build_xnotify_podman() {
 	printf "==>\t\tbuilding xnotify (linux binary)...\n"
 	cat <<EOF >"${BUILD_DIR}/Containerfile.xnotify"
-FROM ubuntu:16.04 AS build
+FROM docker.io/library/golang:1.20.14
 RUN echo "$(date '+%s')" # this is required to invalidate podman cache
-RUN apt-get update && apt-get install -y wget
-WORKDIR /build
-RUN wget https://github.com/AgentCosmic/xnotify/releases/download/v${XNOTIFY_VERSION}/xnotify-linux-amd64 \
-  && chmod +x xnotify-linux-amd64
-RUN cp xnotify-linux-amd64 /output/xnotify
+RUN go install github.com/AgentCosmic/xnotify@v${XNOTIFY_VERSION}
+RUN mkdir -p /output
+RUN cp -v "/go/bin/xnotify" /output/xnotify
 EOF
 	podman build -f "${BUILD_DIR}/Containerfile.xnotify" --volume "${BUILD_DIR}:/output" "${BUILD_DIR}"
 	mv "${BUILD_DIR}/xnotify" "${XNOTIFY_SERVER_BIN_FILE}"
@@ -118,7 +116,7 @@ build_xnotify_macos() {
 build_unfsd_podman() {
 	printf "==>\t\tbuilding unfsd...\n"
 	cat <<EOF >"${BUILD_DIR}/Containerfile.unfsd"
-FROM ubuntu:16.04 AS build
+FROM docker.io/library/ubuntu:16.04
 RUN echo "$(date '+%s')" # this is required to invalidate podman cache
 RUN apt-get update && apt-get install -y wget tar bzip2 gzip make gcc autoconf sed flex byacc pkg-config
 WORKDIR /build
@@ -314,7 +312,7 @@ dev_setup() { # path-to-script
 	mv "$_tmpf" "$_runner_script"
 	cat >>"$_runner_script" <<EOF
 if [ ! -f /etc/default/nfs-common ]; then
-  mv /sbin/update-initramfs{,.bak}
+  mv /sbin/update-initramfs{,.bak}   # prevent initramfs from updating after nfs-common install
   apt-get install -y nfs-common
   chmod u-s /sbin/mount.nfs
   mv /sbin/update-initramfs{.bak,}
@@ -324,7 +322,7 @@ if ! which strace > /dev/null 2>&1; then
   apt-get install -y strace
 fi
 
-nft flush ruleset # TODO: replace with proper allow rule
+nft flush ruleset # TODO: replace with proper allow rule?
 # iptables -A INPUT -p tcp -m tcp --dport ${XNOTIFY_SERVER_PORT} -m state --state NEW -j ACCEPT
 
 mkdir -p /run/gardenlinux-tests/{runtime,tests}
