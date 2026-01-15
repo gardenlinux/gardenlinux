@@ -83,7 +83,7 @@ jobs:
             const gitHubLib = await import("${{ github.workspace }}/.github/workflows/github.mjs");
 
             const gitHubRef = "${{ github.head_ref == '' && github.ref_name || github.head_ref }}";
-            return await gitHubLib.dispatchRetryWorkflow(core, github.rest.actions, context, gitHubRef, 8);
+            return await gitHubLib.dispatchRetryWorkflow(core, github.rest.actions, context, gitHubRef, 3);
   upload_workflow_data:
     needs: [build, test]
     name: Store workflow data
@@ -100,7 +100,7 @@ jobs:
             "version": "${{ needs.build.outputs.version }}",
             "original_workflow_name": "${{ github.workflow }}"
           }' '.' > workflow_data.json
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # pin@v5.0.0
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         with:
           name: workflow-data
           path: workflow_data.json

@@ -16,9 +16,10 @@ TRTYPE = "tcp"
 ADRFAM = "ipv4"
 
 REQUIRED_NVME_MODULES = [
-    {"name": "nvmet", "status": None},
-    {"name": "nvmet_tcp", "status": None},
-    {"name": "nvme_tcp", "status": None},
+    "loop",
+    "nvmet",
+    "nvmet_tcp",
+    "nvme_tcp",
 ]
 
 
@@ -27,6 +28,10 @@ REQUIRED_NVME_MODULES = [
 def nvme_device(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
     mount_package_installed = False
     shell(f"truncate -s 512M {NVME_DEVICE}")
+
+    for mod_name in REQUIRED_NVME_MODULES:
+        kernel_module.load_module(mod_name)
+
     if not dpkg.package_is_installed("mount"):
         mount_package_installed = True
         shell("DEBIAN_FRONTEND=noninteractive apt-get install -y mount")
@@ -34,11 +39,6 @@ def nvme_device(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
         f"losetup -fP --show {NVME_DEVICE}", capture_output=True
     ).stdout.strip()
 
-    for entry in REQUIRED_NVME_MODULES:
-        name = entry["name"]
-        if not kernel_module.is_module_loaded(name):
-            kernel_module.load_module(name)
-            entry["status"] = "Loaded"
     port = 1
     while os.path.exists(os.path.join("/sys/kernel/config/nvmet/ports", str(port))):
         port += 1
@@ -109,11 +109,6 @@ def nvme_device(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
     os.rmdir(f"/sys/kernel/config/nvmet/ports/{port}")
     os.remove(NVME_DEVICE)
     shell(f"losetup -d {loop_device}")
-    # reorder the modules to unload in the reverse order of loading
-    for entry in reversed(REQUIRED_NVME_MODULES):
-        name = entry["name"]
-        if entry["status"] == "Loaded":
-            kernel_module.unload_module(name)
-            entry["status"] = None
+    kernel_module.unload_modules()
     if mount_package_installed:
         shell("DEBIAN_FRONTEND=noninteractive apt remove mount")

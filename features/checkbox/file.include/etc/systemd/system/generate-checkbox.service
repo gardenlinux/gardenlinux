@@ -1,0 +1,25 @@
+# /etc/systemd/system/generate-checkbox.service
+[Unit]
+Description=Generate and run Checkbox certification at boot
+Wants=network-online.target
+After=network-online.target systemd-resolved.service
+
+# Avoid running too early
+ConditionPathExists=/usr/local/sbin/generate_checkbox.sh
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/generate_checkbox.sh
+TimeoutStartSec=0
+StandardOutput=journal+console
+StandardError=journal+console
+
+# Important: allow apt, systemctl, snapd, etc.
+Environment=DEBIAN_FRONTEND=noninteractive
+Environment=HOME=/root
+Environment=USER=root
+Environment=LOGNAME=root
+
+[Install]
+WantedBy=multi-user.target
+

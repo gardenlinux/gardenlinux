@@ -1,7 +1,6 @@
 resource "terraform_data" "root_disk_hash" {
-  count = var.existing_root_disk != "" ? 0 : 1
   input = {
-    sha256 = filesha256(var.root_disk_path)
+    sha256 = var.existing_root_disk != "" ? "existing" : filesha256(var.root_disk_path)
   }
 }
 

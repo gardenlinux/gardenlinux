@@ -1,7 +1,0 @@
-/.pytest_cache/
-/.vscode/
-/logs/
-__pycache__/
-test.log
-images/platform-test/**/Pipfile
-images/platform-test/**/Pipfile.lock

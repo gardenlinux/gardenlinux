@@ -14,5 +14,6 @@ FROM scratch
 COPY --from=compile /work/enter_host_ns /enter_host_ns
 COPY --from=extract /work/tests-ng /tests-ng
 WORKDIR /tests-ng
+ENV TEST_NG_EXIT_0=1
 ENTRYPOINT [ "/enter_host_ns" ]
-CMD [ "./run_tests", "--system-booted" ]
+CMD [ "./run_tests", "--junit-xml", "output/test-ng.xml", "--system-booted" ]
