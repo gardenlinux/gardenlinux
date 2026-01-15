@@ -1,16 +1,13 @@
 #!/usr/bin/env bash
 
-RED="\033[1;31m"
-GREEN="\033[0;32m"
-RESET="\033[0m"
 DETAILS_FILE=$(mktemp /tmp/virtualization_disabled_XXXX.log)
 virt_enabled=false
 
 append_section_plain() {
   {
     echo "===== /proc/cpuinfo (vmx or svm) ====="
-    if [ -z $(grep -E 'vmx|svm' /proc/cpuinfo) ];then
-	echo "No presence of virtualization"
+    if ! grep -Eq 'vmx|svm' /proc/cpuinfo; then
+        echo "No presence of virtualization"
     fi
     echo
   } >> "$DETAILS_FILE"

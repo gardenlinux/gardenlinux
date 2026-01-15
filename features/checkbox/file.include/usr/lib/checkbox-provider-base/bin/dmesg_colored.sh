@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-RED="\033[1;31m"; YELLOW="\033[1;33m"; GREEN="\033[0;32m"; RESET="\033[0m"
 
 set -u
 

@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-RED="\033[1;31m"
-GREEN="\033[0;32m"
-RESET="\033[0m"
-
 DETAILS_FILE=$(mktemp /tmp/tpm_check_XXXX.txt)
 tpm_present="no"
 
@@ -16,7 +12,7 @@ fi
 
 if [ -d /sys/class/tpm ]; then
     echo "TPM sysfs entries:" >> "$DETAILS_FILE"
-    if ls -1 /sys/class/tpm | grep -q .; then
+    if ls /sys/class/tpm/* >/dev/null 2>&1; then
         ls -1 /sys/class/tpm >> "$DETAILS_FILE"
     else
         echo "(no entries)" >> "$DETAILS_FILE"

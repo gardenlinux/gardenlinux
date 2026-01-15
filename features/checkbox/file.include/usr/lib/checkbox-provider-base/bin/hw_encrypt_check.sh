@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-RED="\033[1;31m"
-GREEN="\033[0;32m"
-RESET="\033[0m"
-
 DETAILS_FILE=$(mktemp /tmp/fips_hw_crypto_XXXX.txt)
 
 cpu_flags=$(grep -m1 -i "flags" /proc/cpuinfo)
