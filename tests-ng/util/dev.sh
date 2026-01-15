@@ -41,7 +41,7 @@ build_daemonize() {
 		[ -f "${BUILD_DIR}/daemonize" ] || build_daemonize_podman
 		;;
 	Darwin)
-		if ! which daemonize >/dev/null 2>&1; then
+		if ! brew list daemonize >/dev/null 2>&1; then
 			_help_dev_macos_dependencies golang daemonize
 		fi
 		;;
@@ -74,8 +74,7 @@ build_xnotify_client() {
 		build_xnotify_podman
 		;;
 	Darwin)
-		brew_prefix=$(brew config | awk -F': ' '/HOMEBREW_PREFIX/ {print $2}')
-		if ! which go >/dev/null 2>&1; then
+		if ! brew list golang >/dev/null 2>&1; then
 			_help_dev_macos_dependencies golang
 		fi
 
@@ -163,16 +162,16 @@ build_unfsd() {
 	case $(uname -s) in
 	Linux) build_unfsd_podman ;;
 	Darwin)
-		if ! which autoconf >/dev/null 2>&1; then
+		if ! brew list autoconf >/dev/null 2>&1; then
 			_help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
 		fi
-		if ! which automake >/dev/null 2>&1; then
+		if ! brew list automake >/dev/null 2>&1; then
 			_help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
 		fi
-		if ! which glibtool >/dev/null 2>&1; then
+		if ! brew list glibtool >/dev/null 2>&1; then
 			_help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
 		fi
-		if ! which pkgconf >/dev/null 2>&1; then
+		if ! brew list pkgconf >/dev/null 2>&1; then
 			_help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
 		fi
 		brew_prefix=$(brew config | awk -F': ' '/HOMEBREW_PREFIX/ {print $2}')
