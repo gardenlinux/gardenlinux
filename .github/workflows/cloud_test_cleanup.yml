@@ -13,7 +13,6 @@ jobs:
     environment: oidc_platform_tests
     outputs:
       matrix_test: ${{ steps.set-matrix.outputs.matrix_test }}
-      matrix_test_ng: ${{ steps.set-matrix.outputs.matrix_test_ng }}
     steps:
       - id: "auth_aws"
         name: "Authenticate to AWS"
@@ -33,16 +32,12 @@ jobs:
             --output json | jq -r '.[]' | grep "^env:/" | \
             sed -E 's|env:/([^/]+)/terraform.tfstate|\1|' | grep -v ^tfstate | sort -u)
 
-          # Split workspaces into test- and test-ng- prefixed ones
-          TEST_WORKSPACES=$(echo "$ALL_WORKSPACES" | grep "^test-" | grep -v "^test-ng-" | jq -R -s -c 'split("\n")[:-1]')
-          TEST_NG_WORKSPACES=$(echo "$ALL_WORKSPACES" | grep "^test-ng-" | jq -R -s -c 'split("\n")[:-1]')
-
+          TEST_WORKSPACES=$(echo "$ALL_WORKSPACES" | grep "^test-" | jq -R -s -c 'split("\n")[:-1]')
           echo "matrix_test=${TEST_WORKSPACES}" >> $GITHUB_OUTPUT
-          echo "matrix_test_ng=${TEST_NG_WORKSPACES}" >> $GITHUB_OUTPUT
 
   cleanup:
     needs: collect_workspaces
-    if: ${{ needs.collect_workspaces.outputs.matrix_test_ng != '[]' && needs.collect_workspaces.outputs.matrix_test_ng != '' }}
+    if: ${{ needs.collect_workspaces.outputs.matrix_test != '[]' && needs.collect_workspaces.outputs.matrix_test != '' }}
     name: Cleanup Test Workspaces
     runs-on: ubuntu-24.04
     permissions:
@@ -52,7 +47,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        workspace: ${{ fromJson(needs.collect_workspaces.outputs.matrix_test_ng) }}
+        workspace: ${{ fromJson(needs.collect_workspaces.outputs.matrix_test) }}
 
     steps:
       - name: Checkout repository
@@ -148,7 +143,7 @@ jobs:
             core.exportVariable("WORKSPACE", "${{ matrix.workspace }}");
             const workspace = "${{ matrix.workspace }}";
 
-            // Extract the image name by removing test-ng- prefix and run info
+            // Extract the image name by removing test prefix and run info
             // Workspace format: test-ng-[run_id]-[run_number]-[cloud]-[flavor]...
             // Remove test-ng- and run ID/number to get: [cloud]-[flavor]-[version]-...-[seed]
             let imageName = workspace.replace(/^test-ng-\d+-\d+-/, "");
