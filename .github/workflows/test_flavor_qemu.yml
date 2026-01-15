@@ -10,7 +10,7 @@ on:
         required: true
 jobs:
   test:
-    name: Test-NG flavor in QEMU ${{ inputs.flavor }} (${{ inputs.arch }})
+    name: Test flavor ${{ inputs.flavor }} (${{ inputs.arch }}) in QEMU
     # runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     runs-on: "ubuntu-24.04"
     if: ${{ inputs.flavor != 'skip' }}
@@ -66,7 +66,7 @@ jobs:
           rm "$CNAME.tar.gz"
           tree .build
         # TODO: handle skipping better
-      - name: New Test Framework
+      - name: Execute tests
         run: |
           if [ ! -e ".build/$CNAME.raw" ]; then
             if [ -e ".build/$CNAME.ova" ]; then
@@ -103,13 +103,13 @@ jobs:
       - name: Copy test results to build directory
         if: always()
         run: |
-          cp tests-ng/log/qemu.test-ng.log .build/${CNAME}.qemu.test-ng.log || true
-          cp tests-ng/log/qemu.test-ng.xml .build/${CNAME}.qemu.test-ng.xml || true
+          cp tests-ng/log/qemu.test-ng.log .build/${CNAME}.qemu.test.log || true
+          cp tests-ng/log/qemu.test-ng.xml .build/${CNAME}.qemu.test.xml || true
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         if: always()
         with:
           if-no-files-found: ignore
-          name: qemu-test-ng-${{ env.CNAME }}
+          name: qemu-test-${{ env.CNAME }}
           path: |
-            .build/${{ env.CNAME }}.qemu.test-ng.log
-            .build/${{ env.CNAME }}.qemu.test-ng.xml
+            .build/${{ env.CNAME }}.qemu.test.log
+            .build/${{ env.CNAME }}.qemu.test.xml

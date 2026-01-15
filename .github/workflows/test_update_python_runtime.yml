@@ -56,8 +56,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SUMMARY: ${{ steps.changes.outputs.summary }}
         run: |
-          BRANCH="update-tests-ng-python-runtime-${{ steps.changes.outputs.release_date }}"
-          TITLE="chore: update Tests-NG Python runtime version"
+          BRANCH="update-tests-python-runtime-${{ steps.changes.outputs.release_date }}"
+          TITLE="chore: Update tests Python runtime version"
 
           # Write body and commit message to files to safely handle multi-line content
           {
@@ -91,7 +91,7 @@ jobs:
             --body-file /tmp/body.txt \
             --label "automated" \
             --label "dependencies" \
-            --label "test-ng" \
+            --label "test" \
             --label "python"
 
             # is somewhat broken, see https://github.com/orgs/community/discussions/113519
