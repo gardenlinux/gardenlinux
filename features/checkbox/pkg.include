@@ -1,3 +1,4 @@
-checkbox-provider-base
 checkbox-ng
-checkbox-provider-resource
+#checkbox-provider-base
+#checkbox-provider-resource
+nginx-light
