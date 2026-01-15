@@ -321,8 +321,8 @@ if ! which strace > /dev/null 2>&1; then
   apt-get install -y strace
 fi
 
-nft flush ruleset # TODO: replace with proper allow rule?
-# iptables -A INPUT -p tcp -m tcp --dport ${XNOTIFY_SERVER_PORT} -m state --state NEW -j ACCEPT
+nft add rule inet filter input tcp dport ${XNOTIFY_SERVER_PORT} ct state new counter accept
+iptables -A INPUT -p tcp -m tcp --dport ${XNOTIFY_SERVER_PORT} -m state --state NEW -j ACCEPT
 
 mkdir -p /run/gardenlinux-tests/{runtime,tests}
 mount -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${BUILD_DIR}/runtime /run/gardenlinux-tests/runtime
