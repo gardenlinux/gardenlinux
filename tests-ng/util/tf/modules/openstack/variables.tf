@@ -72,3 +72,9 @@ variable "provider_vars" {
     # feature_trustedboot = optional(bool, false)
   })
 }
+
+variable "skip_tests" {
+  description = "Skip deploying test disk and running tests"
+  type        = bool
+  default     = false
+}
