@@ -10,7 +10,7 @@ on:
         required: true
 jobs:
   test:
-    name: Test-NG flavor in chroot ${{ inputs.flavor }} (${{ inputs.arch }})
+    name: Test flavor ${{ inputs.flavor }} (${{ inputs.arch }}) in chroot
     runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     if: ${{ inputs.flavor != 'skip' }}
     timeout-minutes: 10
@@ -49,7 +49,7 @@ jobs:
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
           name: build-${{ inputs.flavor }}-${{ inputs.arch }}
-      - name: New Test Framework
+      - name: Execute tests
         run: |
           mkdir ".build"
           tar -C .build -xzf "${CNAME}.tar.gz"
@@ -58,13 +58,13 @@ jobs:
       - name: Copy test results to build directory
         if: always()
         run: |
-          cp tests-ng/log/chroot.test-ng.log .build/${CNAME}.chroot.test-ng.log || true
-          cp tests-ng/log/chroot.test-ng.xml .build/${CNAME}.chroot.test-ng.xml || true
+          cp tests-ng/log/chroot.test-ng.log .build/${CNAME}.chroot.test.log || true
+          cp tests-ng/log/chroot.test-ng.xml .build/${CNAME}.chroot.test.xml || true
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         if: always()
         with:
           if-no-files-found: ignore
-          name: chroot-test-ng-${{ env.CNAME }}
+          name: chroot-test-${{ env.CNAME }}
           path: |
-            .build/${{ env.CNAME }}.chroot.test-ng.log
-            .build/${{ env.CNAME }}.chroot.test-ng.xml
+            .build/${{ env.CNAME }}.chroot.test.log
+            .build/${{ env.CNAME }}.chroot.test.xml
