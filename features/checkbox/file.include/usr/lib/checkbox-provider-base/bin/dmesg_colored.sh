@@ -8,7 +8,7 @@ append_section_plain() {
   local level="$1" tag="$2"
   {
     echo "===== $tag ====="
-    dmesg --color=never --level="$level" -T
+    dmesg -k --color=never --level="$level" -T
     echo
   } >> "$DETAILS_FILE"
 }
@@ -22,8 +22,8 @@ append_section_plain notice "NOTICE"
 append_section_plain info   "INFO"
 append_section_plain debug  "DEBUG"
 
-critical_count="$(dmesg --level=emerg,alert,crit,err | wc -l | awk '{print $1}')"
-warn_count="$(dmesg --level=warn | wc -l | awk '{print $1}')"
+critical_count="$(dmesg -k --level=emerg,alert,crit,err | wc -l | awk '{print $1}')"
+warn_count="$(dmesg -k --level=warn | wc -l | awk '{print $1}')"
 
 echo "ATTACHMENT: $DETAILS_FILE"
 
