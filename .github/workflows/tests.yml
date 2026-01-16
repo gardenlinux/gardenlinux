@@ -171,8 +171,8 @@ jobs:
             }
   test_flavors_chroot:
     needs: determine_test_settings
-    name: Test-NG chroot flavors
-    uses: ./.github/workflows/test_flavor_chroot_ng.yml
+    name: Test chroot flavors
+    uses: ./.github/workflows/test_flavor_chroot.yml
     if: ${{ needs.determine_test_settings.outputs.chroot_tests == 'true' }}
     strategy:
       fail-fast: true
@@ -184,7 +184,7 @@ jobs:
       actions: write
   test_flavors_qemu:
     needs: determine_test_settings
-    name: Test-NG QEMU flavors
+    name: Test QEMU flavors
     uses: ./.github/workflows/test_flavor_qemu.yml
     if: ${{ needs.determine_test_settings.outputs.qemu_tests == 'true' }}
     strategy:
@@ -197,8 +197,8 @@ jobs:
       actions: write
   test_flavors_cloud:
     needs: [determine_test_settings, test_flavors_qemu]
-    name: Test-NG cloud flavors
-    uses: ./.github/workflows/test_flavor_cloud_ng.yml
+    name: Test cloud flavors
+    uses: ./.github/workflows/test_flavor_cloud.yml
     if: |
       ${{
         needs.determine_test_settings.outputs.cloud_tests == 'true'
@@ -216,7 +216,7 @@ jobs:
       actions: write
   test_flavors_oci:
     needs: determine_test_settings
-    name: Test-NG OCI flavors
+    name: Test OCI flavors
     uses: ./.github/workflows/test_flavor_oci.yml
     if: ${{ needs.determine_test_settings.outputs.oci_flavors_tests == 'true' }}
     strategy:
