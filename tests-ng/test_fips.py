@@ -64,7 +64,7 @@ def test_gnutls_fips_dot_hmac_files_are_vaild():
 
     """
     lib_paths = {}
-    gnutls_lib_path = f"/usr/lib/{arch()}-linux-gnu/libgnutls.so.30"
+    lib_paths["gnutls"] = f"/usr/lib/{arch()}-linux-gnu/libgnutls.so.30"
     lib_paths["libhogweed"] = f"/usr/lib/{arch()}-linux-gnu/libhogweed.so.6"
     lib_paths["libnettle"] = f"/usr/lib/{arch()}-linux-gnu/libnettle.so.8"
     lib_paths["libgmp"] = f"/usr/lib/{arch()}-linux-gnu/libgmp.so.10"
@@ -75,14 +75,6 @@ def test_gnutls_fips_dot_hmac_files_are_vaild():
 
     config = configparser.ConfigParser()
     config.read(gnutls_fips_hmac_file)
-
-    fips_hmac = hmac.new(key=SECRET.encode("UTF-8"), msg=None, digestmod=SHA256)
-    with open(gnutls_lib_path, mode="rb") as lib:
-        fips_hmac.update(lib.read())
-
-    assert (
-        config["libgnutls.so.30"]["hmac"] == fips_hmac.hexdigest()
-    ), "Computed HMAC is incorrect for GnuTLS!"
 
     for key in lib_paths.keys():
         fips_hmac = hmac.new(key=SECRET.encode("UTF-8"), msg=None, digestmod=SHA256)
