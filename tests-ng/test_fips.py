@@ -66,8 +66,8 @@ def test_gnutls_fips_dot_hmac_files_are_vaild():
     lib_paths = {}
     gnutls_lib_path = f"/usr/lib/{arch()}-linux-gnu/libgnutls.so.30"
     lib_paths["libhogweed"] = f"/usr/lib/{arch()}-linux-gnu/libhogweed.so.6"
-    lib_paths["libnettle"] =  f"/usr/lib/{arch()}-linux-gnu/libnettle.so.8"
-    lib_paths["libgmp"] =  f"/usr/lib/{arch()}-linux-gnu/libgmp.so.10"
+    lib_paths["libnettle"] = f"/usr/lib/{arch()}-linux-gnu/libnettle.so.8"
+    lib_paths["libgmp"] = f"/usr/lib/{arch()}-linux-gnu/libgmp.so.10"
 
     gnutls_fips_hmac_file = f"/usr/lib/{arch()}-linux-gnu/.libgnutls.so.30.hmac"
     # https://gitlab.com/gnutls/gnutls/-/blob/master/configure.ac?ref_type=heads#L677
@@ -91,8 +91,7 @@ def test_gnutls_fips_dot_hmac_files_are_vaild():
             fips_hmac.update(lib.read())
 
         assert (
-            config[os.path.basename(lib_paths[key])]["hmac"] ==
-            fips_hmac.hexdigest()
+            config[os.path.basename(lib_paths[key])]["hmac"] == fips_hmac.hexdigest()
         ), f"Computed HMAC is incorrect for {lib_paths[key]}!"
 
 
