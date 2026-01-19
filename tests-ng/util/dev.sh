@@ -10,6 +10,7 @@ XNOTIFY_CLIENT_PID_FILE="${BUILD_DIR}/.xnotify.pid"
 XNOTIFY_CLIENT_LOG="${BUILD_DIR}/xnotify.log"
 XNOTIFY_SERVER_BIN_FILE="${BUILD_DIR}/xnotify__Linux"
 TESTS_DIR="$(realpath "${util_dir}/../../tests-ng")"
+DEV_DEBUG=1
 
 DAEMONIZE_VERSION="1.7.8"
 XNOTIFY_VERSION="0.3.1"
@@ -50,7 +51,7 @@ build_daemonize() {
 }
 
 build_daemonize_podman() {
-	printf "==>\t\tbuilding daemonize...\n"
+	printf "==>\t\tbuilding daemonize in podman...\n"
 	cat <<EOF >"${BUILD_DIR}/Containerfile.daemonize"
 FROM docker.io/library/ubuntu:16.04
 RUN echo "$(date '+%s')" # this is required to invalidate podman cache
@@ -89,7 +90,7 @@ build_xnotify_server() {
 }
 
 build_xnotify_podman() {
-	printf "==>\t\tbuilding xnotify (linux binary)...\n"
+	printf "==>\t\tbuilding xnotify in podman...\n"
 	cat <<EOF >"${BUILD_DIR}/Containerfile.xnotify"
 FROM docker.io/library/golang:1.20.14
 RUN echo "$(date '+%s')" # this is required to invalidate podman cache
@@ -113,7 +114,7 @@ build_xnotify_macos() {
 }
 
 build_unfsd_podman() {
-	printf "==>\t\tbuilding unfsd...\n"
+	printf "==>\t\tbuilding unfsd in podman...\n"
 	cat <<EOF >"${BUILD_DIR}/Containerfile.unfsd"
 FROM docker.io/library/ubuntu:16.04
 RUN echo "$(date '+%s')" # this is required to invalidate podman cache
@@ -143,7 +144,7 @@ EOF
 
 build_unfsd_macos() {
 	(
-		printf "==>\t\tbuilding unfsd...\n"
+		printf "==>\t\tbuilding unfsd (macOS binary)...\n"
 		cd "${BUILD_DIR}"
 		rm -f unfs3.tar.gz
 		curl -Lo unfs3.tar.gz "https://github.com/unfs3/unfs3/releases/download/unfs3-${UNFS3_VERSION}/unfs3-${UNFS3_VERSION}.tar.gz"
@@ -194,10 +195,12 @@ extract_tests_runtime() {
 }
 
 extract_tests_runner_script() {
+	printf "==>\t\textracting test runner script...\n"
 	(
 		cd "${BUILD_DIR}"
 		tar xzf dist.tar.gz ./run_tests
 	)
+	printf "Done.\n"
 }
 
 setup_nfs_shares() {
@@ -223,6 +226,7 @@ EOF
 }
 
 stop_nfsd() {
+	printf "==>\t\tstopping unfsd...\n"
 	if [ -f "${NFSD_PID_FILE}" ]; then
 		if ! kill -0 "$(cat "${NFSD_PID_FILE}")"; then
 			rm -f "${NFSD_PID_FILE}"
@@ -230,6 +234,7 @@ stop_nfsd() {
 			kill "$(cat "${NFSD_PID_FILE}")" && rm -f "${NFSD_PID_FILE}"
 		fi
 	fi
+	printf "Done.\n"
 }
 
 start_xnotify_client() {
@@ -269,6 +274,7 @@ start_xnotify_client() {
 }
 
 stop_xnotify_client() {
+	printf "==>\t\tstopping xnotify client...\n"
 	if [ -f "${XNOTIFY_CLIENT_PID_FILE}" ]; then
 		if ! kill -0 "$(cat "${XNOTIFY_CLIENT_PID_FILE}")"; then
 			rm -f "${XNOTIFY_CLIENT_PID_FILE}"
@@ -276,6 +282,7 @@ stop_xnotify_client() {
 			kill "$(cat "${XNOTIFY_CLIENT_PID_FILE}")" && rm -f "${XNOTIFY_CLIENT_PID_FILE}"
 		fi
 	fi
+	printf "Done.\n"
 }
 
 add_qemu_xnotify_port_forwarding() {
@@ -328,6 +335,12 @@ mkdir -p /run/gardenlinux-tests/{runtime,tests}
 mount -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${BUILD_DIR}/runtime /run/gardenlinux-tests/runtime
 mount -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${TESTS_DIR} /run/gardenlinux-tests/tests
 EOF
+
+	if [ $DEV_DEBUG = 1 ]; then
+		printf "==>\t\trunner script contents:\n"
+		cat "$_runner_script"
+		printf "==>\t\tend of runner script contents.\n"
+	fi
 }
 
 dev_configure_runner() { # path-to-script test-arg1 test-arg2 ... test-argN
