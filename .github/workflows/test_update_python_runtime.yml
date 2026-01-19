@@ -59,6 +59,14 @@ jobs:
           BRANCH="update-tests-ng-python-runtime-${{ steps.changes.outputs.release_date }}"
           TITLE="chore: update Tests-NG Python runtime version"
 
+          # Check if a PR already exists for this branch
+          existing_pr=$(gh pr list --base main --head "${BRANCH}" --json number --jq '.[0].number' || echo "")
+
+          if [ -n "${existing_pr}" ]; then
+            echo "PR #${existing_pr} already exists for branch ${BRANCH}, skipping PR creation."
+            exit 0
+          fi
+
           # Write body and commit message to files to safely handle multi-line content
           {
             echo "This PR was automatically created by the [Test - Update Python Runtime](https://github.com/gardenlinux/gardenlinux/actions/workflows/test_update_python_runtime.yml) workflow."
