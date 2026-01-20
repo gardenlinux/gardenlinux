@@ -62,7 +62,7 @@ cd package-build
 ln -s ../package-linux/ ./package-linux
 ```
 
-Now the package builder can be invoked with the parameter slash package-linux, and it will start a
+Now the package builder can be invoked with the parameter ``./package-linux``, and it will start a
 container, fetch the sources, apply our changes, and build the package, and in the end you will have
 a package within the ``.build`` folder of the ``package-linux``.
 
