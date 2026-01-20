@@ -2,7 +2,6 @@ import subprocess
 from enum import Enum
 
 import pytest
-from plugins.shell import ShellRunner
 from pytest import StashKey
 
 
@@ -42,7 +41,13 @@ _HYPERVISOR_HINTS: dict[Hypervisor, list[str]] = {
 }
 
 
-def detect_hypervisor() -> Hypervisor:
+def get_hypervisor_claim() -> Hypervisor:
+    """
+    Uses systemd-detect-virt to detect the hypervisor OS image claims to be running on.
+
+    This claim can deviate from reality when running cloud images in virtualized test
+    environments.
+    """
     try:
         result = subprocess.run(
             ["systemd-detect-virt", "-v"],
@@ -50,46 +55,100 @@ def detect_hypervisor() -> Hypervisor:
             text=True,
             check=False,
         )
-        if result.returncode != 0:
-            return Hypervisor.none
+    except (OSError, subprocess.SubprocessError):
+        print("[systemd-detect-virt] Failed to run `systemd-detect-virt`.")
+        return Hypervisor.none
 
-        name: str = result.stdout.strip()
-        detected: Hypervisor = (
-            Hypervisor[name] if name in Hypervisor.__members__ else Hypervisor.none
-        )
+    if result.returncode != 0:
+        return Hypervisor.none
 
-        # double check the hypervisor by using the system's metadata
-        # in case where q QEMU environment falsely reports as Azure or AWS
-        sys_vendor: str = ""
-        product_name: str = ""
+    name = result.stdout.strip()
+    if not name:
+        return Hypervisor.none
 
-        for path in ("/sys/class/dmi/id/sys_vendor", "/sys/class/dmi/id/product_name"):
-            try:
-                with open(path, "r") as f:
-                    data: str = f.read().strip().lower()
-                    if "sys_vendor" in path:
-                        sys_vendor = data
-                    else:
-                        product_name = data
-            except FileNotFoundError:
-                pass
+    return Hypervisor.__members__.get(name, Hypervisor.none)
 
-        # Hints that we are not on a real hypervisor.
 
-        # if a known hypervisor was detected by systemd, but none of its
-        # expected DMI entries are actually present, it's likely
-        # that this is a virtualized test environment (e.g. Azure image under QEMU).
-        expected_signatures = _HYPERVISOR_HINTS.get(detected)
-        if expected_signatures and not any(
-            any(keyword in field for keyword in expected_signatures)
-            for field in (sys_vendor, product_name)
-        ):
-            # no real hypervisor, fall back to qemu
+def get_hypervisor_hints_from_dmi() -> Hypervisor:
+    """
+    Search for hints within the system's DMI parameters to detect
+    the kind of hypervisor it is running on (if any).
+
+    Usually indicated by brand names or keywords somewhere in sys_vendor, product_name
+    or bios_vendor tables.
+    """
+    dmi_entries: list[str] = []
+
+    for path in (
+        "/sys/class/dmi/id/sys_vendor",
+        "/sys/class/dmi/id/product_name",
+        "/sys/class/dmi/id/bios_vendor",
+    ):
+        try:
+            with open(path, "r") as fb:
+                dmi_entries.append(fb.read().strip().lower())
+        except FileNotFoundError:
+            continue
+        except OSError:
+            continue
+
+    if not dmi_entries:
+        return Hypervisor.none
+
+    # Hints for generic virtualization (QEMU/KVM)
+    for entry in dmi_entries:
+        if any(hint in entry for hint in ("qemu", "kvm", "bochs", "edk ii")):
             return Hypervisor.qemu
 
-        return detected
-    except Exception:
-        return Hypervisor.none
+    # Cloud / vendor-specific branding
+    for hypervisor, hints in _HYPERVISOR_HINTS.items():
+        for entry in dmi_entries:
+            for hint in hints:
+                if hint in entry:
+                    return hypervisor
+
+    return Hypervisor.none
+
+
+def detect_hypervisor() -> Hypervisor:
+    """
+    Determine the effective hypervisor for test expectations
+    by reconciling multiple detection mechanisms.
+
+    We distinguish between the hypervisor the OS image claims it is using
+    (via systemd-detect-virt) and the hypervisor suggested by DMI metadata.
+    DMI-based QEMU or generic virtualization are treated as authoritative.
+
+    If the OS image claims a cloud hypervisor (e.g. AWS, Azure, GCP)
+    but no corresponding DMI branding is present, we assume the image
+    is running in a virtualized test environment which is emulating
+    parts of a hypervisor's behaviour.
+
+    This distinction is necessary because certain tests rely on the presence of
+    real cloud services (e.g. provider-specific NTP or metadata endpoints), which
+    are not available in emulated test environments.
+    """
+    claim = get_hypervisor_claim()
+    dmi = get_hypervisor_hints_from_dmi()
+
+    # 1. If DMI strongly suggests QEMU, trust it over the claims of the image
+    if dmi == Hypervisor.qemu:
+        return Hypervisor.qemu
+
+    # 2. If both mechanisms agree, trust the result
+    if dmi == claim:
+        return claim
+
+    # 3. If systemd claims a cloud hypervisor but DMI is inconclusive,
+    #    assume a virtualized test environment
+    if claim in _HYPERVISOR_HINTS and dmi == Hypervisor.none:
+        return Hypervisor.qemu
+
+    # 4. Otherwise, prefer the image's claim if it is plausible
+    if claim != Hypervisor.none:
+        return claim
+
+    return Hypervisor.none
 
 
 @pytest.fixture
