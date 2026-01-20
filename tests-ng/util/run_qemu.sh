@@ -251,7 +251,7 @@ fi
 qemu_opts=(
 	-machine "$qemu_machine"
 	-cpu "$qemu_cpu"
-	-m 4096
+	-m 6144 
 	-accel "$qemu_accel"
 	-display none
 	-serial stdio
