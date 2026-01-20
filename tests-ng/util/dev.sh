@@ -163,20 +163,15 @@ build_unfsd() {
 	case $(uname -s) in
 	Linux) build_unfsd_podman ;;
 	Darwin)
-		if ! brew list autoconf >/dev/null 2>&1; then
-			_help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
-		fi
-		if ! brew list automake >/dev/null 2>&1; then
-			_help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
-		fi
-		if ! brew list glibtool >/dev/null 2>&1; then
-			_help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
-		fi
-		if ! brew list pkgconf >/dev/null 2>&1; then
-			_help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
-		fi
-		brew_prefix=$(brew config | awk -F': ' '/HOMEBREW_PREFIX/ {print $2}')
-		[ -f "${brew_prefix}/lib/libtirpc.dylib" ] || _help_dev_macos_dependencies autoconf automake libtool pkgconf libtirpc
+		all_deps="autoconf automake libtool pkgconf libtirpc"
+		for dep in $all_deps; do
+			if ! brew list "$dep" >/dev/null 2>&1; then
+				if [ "$DEV_DEBUG" = 1 ]; then
+					printf "==>\t\t%s dependency missing\n" "$dep"
+				fi
+				_help_dev_macos_dependencies "$all_deps"
+			fi
+		done
 
 		build_unfsd_macos
 		;;
@@ -328,8 +323,10 @@ if ! which strace > /dev/null 2>&1; then
   apt-get install -y strace
 fi
 
-nft add rule inet filter input tcp dport ${XNOTIFY_SERVER_PORT} ct state new counter accept
-iptables -A INPUT -p tcp -m tcp --dport ${XNOTIFY_SERVER_PORT} -m state --state NEW -j ACCEPT
+if [ -x /sbin/nft ]; then
+  /sbin/nft add rule inet filter input tcp dport ${XNOTIFY_SERVER_PORT} ct state new counter accept
+fi
+/sbin/iptables -A INPUT -p tcp -m tcp --dport ${XNOTIFY_SERVER_PORT} -m state --state NEW -j ACCEPT
 
 mkdir -p /run/gardenlinux-tests/{runtime,tests}
 mount -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${BUILD_DIR}/runtime /run/gardenlinux-tests/runtime
