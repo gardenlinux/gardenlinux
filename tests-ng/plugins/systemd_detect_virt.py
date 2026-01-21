@@ -1,3 +1,33 @@
+"""
+Hypervisor detection for Gardenlinux cloud image tests.
+
+This module determines the effective virtualization environment an OS image
+is running in, in order to select or skip tests with environment-specific
+expectations.
+
+Detection is based on two independent signals:
+- The hypervisor the guest OS claims to be running on, as reported by
+  `systemd-detect-virt`.
+- Hardware metadata exposed via DMI/SMBIOS tables.
+
+`systemd-detect-virt` reports the innermost virtualization layer visible to
+the guest OS and may reflect cloud-specific branding embedded in the image.
+In some QEMU/KVM setups (i.e. with Hyper-V Enlightenments enabled), this can
+lead to false positives, as this option sets the specific CPUID flags
+`systemd-detect-virt` detects.
+
+To account for this, DMI indicators of generic virtualization are treated as
+authoritative. If a cloud hypervisor is claimed but not corroborated by DMI
+metadata, the environment is assumed to be a virtualized test setup rather
+than real cloud infrastructure.
+
+See:
+- systemd-detect-virt documentation:
+  https://www.freedesktop.org/software/systemd/man/systemd-detect-virt.html
+- qemu documentation
+  https://www.qemu.org/docs/master/system/i386/hyperv.html
+"""
+
 import subprocess
 from enum import Enum
 
