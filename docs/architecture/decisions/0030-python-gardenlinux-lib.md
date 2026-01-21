@@ -18,14 +18,15 @@ To provide a basis for these discussions, this ADR defines the scope of the `pyt
 
 ## Decision
 
-- The `python-gardenlinux-lib` is an internal tool for the development and operations of GardenLinux, **not** a product
+- The `python-gardenlinux-lib` is an internal tool for the development and operations of Garden Linux, **not** a product
 - Python scripts in this scope **should** be included in `python-gardenlinux-lib`, but do **not have to**, if a valid reason is provided
 - Python scripts used for pipelines, usually stored at `gardenlinux/.github/workflows`, **must always** be moved to the `python-gardenlinux-lib`
 - If the target group includes the users of Garden Linux, even if developers are the main target, the python script **must not** be included in `python-gardenlinux-lib`
 
 ## Consequences
 
-- The only group using `python-gardenlinux-lib` are Garden Linux developers
+- The only intended group using `python-gardenlinux-lib` are Garden Linux developers
 - The `python-gardenlinux-lib` does not need to have an official release process or official support
 - Scripts targeted to users may contain duplicated code and have to be tested separately 
 - Pipeline scripts are stored indirectly
+    - Therefore, if no version was specified, it will always use the latest script version and not the script version of the potentially older branch
