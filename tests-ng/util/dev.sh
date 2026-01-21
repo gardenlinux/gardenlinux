@@ -4,6 +4,7 @@ HOST_OS=$(uname -s)
 BUILD_DIR="$(realpath "${util_dir}/../.build")"
 NFSD_PID_FILE="${BUILD_DIR}/.unfsd.pid"
 NFSD_BIN_FILE="${BUILD_DIR}/unfsd__${HOST_OS}"
+NFS_MOUNT_BIN_FILE="${BUILD_DIR}/mount.nfs__Linux"
 NFSD_EXPORTS="${BUILD_DIR}/exports"
 XNOTIFY_CLIENT_BIN_FILE="${BUILD_DIR}/xnotify__${HOST_OS}"
 XNOTIFY_CLIENT_PID_FILE="${BUILD_DIR}/.xnotify.pid"
@@ -179,6 +180,106 @@ build_unfsd() {
 	esac
 }
 
+build_nfs_mount() {
+	build_nfs_mount_podman
+}
+
+build_nfs_mount_podman() {
+	printf "==>\t\tbuilding nfs-utils in podman...\n"
+	cat <<EOF >"${BUILD_DIR}/Containerfile.nfs-utils"
+FROM ubuntu:18.04
+# Note: glibc >= 2.27 required because of getrandom()
+RUN apt-get update \
+  && apt-get install -y \
+    git \
+    build-essential \
+    libtool \
+    autotools-dev \
+    autoconf \
+    pkg-config \
+    bison \
+    flex \
+    gettext \
+    autopoint \
+    libxml2-dev \
+    wget
+RUN mkdir -p /build
+
+### util-linux
+#
+WORKDIR /build
+RUN git clone git://git.kernel.org/pub/scm/utils/util-linux/util-linux.git
+WORKDIR /build/util-linux
+RUN ./autogen.sh
+RUN ./configure \
+  --prefix=/install/util-linux \
+  --disable-nls \
+  --disable-asciidoc \
+  --disable-poman \
+  --disable-widechar \
+  --disable-all-programs \
+  --enable-libblkid \
+  --enable-libuuid \
+  --enable-libuuid-force-uuidd \
+  --enable-libmount
+RUN make && make install
+
+### libevent
+#
+WORKDIR /build
+RUN wget https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz
+RUN tar xzf libevent-2.1.12-stable.tar.gz
+WORKDIR /build/libevent-2.1.12-stable
+RUN ./configure \
+  --prefix=/install/libevent \
+  --disable-openssl \
+  --disable-doxygen-html
+RUN make && make install
+
+### sqlite
+#
+WORKDIR /build
+RUN wget https://sqlite.org/2026/sqlite-autoconf-3510200.tar.gz
+RUN tar xzf sqlite-autoconf-3510200.tar.gz
+WORKDIR /build/sqlite-autoconf-3510200
+RUN ./configure \
+  --prefix=/install/sqlite \
+  --disable-readline
+RUN make && make install
+
+### nfs-utils
+#
+WORKDIR /build
+RUN git clone git://git.linux-nfs.org/projects/steved/nfs-utils.git
+WORKDIR /build/nfs-utils
+RUN autoreconf -ivf
+ENV PKG_CONFIG_PATH=/install/util-linux/lib/pkgconfig
+ENV CFLAGS="-I/install/util-linux/include -I/install/libevent/include -I/install/sqlite/include"
+ENV LDFLAGS="-L/install/libevent/lib -L/install/sqlite/lib"
+ENV LD_LIBRARY_PATH="/install/sqlite/lib:/install/util-linux/lib"
+RUN ./configure \
+  --prefix=/install/nfs-utils \
+  --disable-nfsv4 \
+  --disable-nfsv41 \
+  --disable-gss \
+  --disable-uuid \
+  --disable-sbin-override \
+  --disable-tirpc \
+  --disable-ipv6 \
+  --disable-mountconfig \
+  --disable-nfsdcld \
+  --disable-nfsdctl \
+  --disable-caps \
+  --disable-ldap
+RUN make && make install
+RUN cp /install/nfs-utils/sbin/mount.nfs /output/mount.nfs
+EOF
+	podman build -f "${BUILD_DIR}/Containerfile.nfs-utils" --volume "${BUILD_DIR}:/output" "${BUILD_DIR}"
+	mv "${BUILD_DIR}/mount.nfs" "${NFS_MOUNT_BIN_FILE}"
+	rm -f "${BUILD_DIR}/Containerfile.nfs-utils"
+	printf "Done.\n"
+}
+
 extract_tests_runtime() {
 	printf "==>\t\textracting test runtime...\n"
 	(
@@ -290,6 +391,10 @@ add_qemu_xnotify_port_forwarding() {
 	done
 }
 
+add_qemu_nfs_mount_binary_passing() {
+	qemu_opts+=(-fw_cfg "name=opt/gardenlinux/mount.nfs,file=${NFS_MOUNT_BIN_FILE}")
+}
+
 dev_setup() { # path-to-script
 	_runner_script="$1"
 
@@ -298,6 +403,7 @@ dev_setup() { # path-to-script
 	[ -x "${NFSD_BIN_FILE}" ] || build_unfsd
 	[ -x "${XNOTIFY_CLIENT_BIN_FILE}" ] || build_xnotify_client
 	[ -x "${XNOTIFY_SERVER_BIN_FILE}" ] || build_xnotify_server
+	[ -x "${NFS_MOUNT_BIN_FILE}" ] || build_nfs_mount
 	[ -d "${BUILD_DIR}/runtime" ] || extract_tests_runtime
 	[ -x "${BUILD_DIR}/run_tests" ] || extract_tests_runner_script
 
@@ -312,21 +418,16 @@ dev_setup() { # path-to-script
 		>"$_tmpf"
 	mv "$_tmpf" "$_runner_script"
 	cat >>"$_runner_script" <<EOF
-if [ ! -f /etc/default/nfs-common ]; then
-  mv /sbin/update-initramfs{,.bak}   # prevent initramfs from updating after nfs-common install
-  apt-get install -y nfs-common
-  chmod u-s /sbin/mount.nfs
-  mv /sbin/update-initramfs{.bak,}
+if [ "$DEV_DEBUG" = 1 ]; then
+    set -x
 fi
-
-if ! which strace > /dev/null 2>&1; then
-  apt-get install -y strace
-fi
-
 if [ -x /sbin/nft ]; then
   /sbin/nft add rule inet filter input tcp dport ${XNOTIFY_SERVER_PORT} ct state new counter accept
 fi
 /sbin/iptables -A INPUT -p tcp -m tcp --dport ${XNOTIFY_SERVER_PORT} -m state --state NEW -j ACCEPT
+
+cp -v /sys/firmware/qemu_fw_cfg/by_name/opt/gardenlinux/mount.nfs/raw /sbin/mount.nfs
+chmod 4755 /sbin/mount.nfs
 
 mkdir -p /run/gardenlinux-tests/{runtime,tests}
 mount -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${BUILD_DIR}/runtime /run/gardenlinux-tests/runtime
