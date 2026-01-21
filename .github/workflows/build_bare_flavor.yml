@@ -14,6 +14,9 @@ on:
       version:
         type: string
         required: true
+      prefix:
+        type: string
+        default: ''
 jobs:
   build:
     name: Build bare flavor ${{ inputs.bare_flavor }} (${{ inputs.arch }})
@@ -39,7 +42,7 @@ jobs:
           ./build_bare_flavors "${bare_flavor}"
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         with:
-          name: build-${{ inputs.bare_flavor }}-${{ inputs.arch }}
+          name: ${{ inputs.prefix }}build-${{ inputs.bare_flavor }}-${{ inputs.arch }}
           path: .build/bare_flavors/*.oci
           include-hidden-files: true
           if-no-files-found: error
@@ -48,4 +51,4 @@ jobs:
           path: |
             COMMIT
             VERSION
-          key: build-${{ inputs.bare_flavor }}-${{ inputs.arch }}-${{ github.run_id }}
+          key: ${{ inputs.prefix }}build-${{ inputs.bare_flavor }}-${{ inputs.arch }}-${{ github.run_id }}

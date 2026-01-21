@@ -1,0 +1,237 @@
+#!/usr/bin/env python3
+import os
+import sys
+import yaml
+import json
+
+# This script takes the differ_files results from the reproducibility check and generates a Result.md
+# The differ_files contain paths of files which were different when building the flavor two times 
+
+flavors = os.listdir("diffs")
+
+all = set()
+successful = []
+whitelist = []
+failed = {} # {flavor: [files...]}
+
+flavors_matrix = json.loads(sys.argv[1])
+bare_flavors_matrix = json.loads(sys.argv[2])
+expected_falvors = set([f'{variant["flavor"]}-{variant["arch"]}' for variant in (flavors_matrix["include"] + bare_flavors_matrix["include"])])
+
+for flavor in flavors:
+    if flavor.endswith("-diff"):
+        with open(f"diffs/{flavor}", "r") as f:
+            content = f.read()
+        
+        all.add(flavor[:-5])
+        if content == "\n":
+            successful.append(flavor[:-5])
+        elif content == "whitelist\n":
+            successful.append(flavor[:-5])
+            whitelist.append(flavor[:-5])
+        else:
+            failed[flavor[:-5]] = content.split("\n")[:-1]
+
+missing_flavors = expected_falvors - all
+unexpected_falvors = all - expected_falvors
+
+# Map files to flavors
+affected = {} # {file: {flavors...}}
+for flavor in failed:
+    for file in failed[flavor]:
+        if file not in affected:
+            affected[file] = set()
+        affected[file].add(flavor)
+
+# Merge files affected by the same flavors by mapping flavor sets to files
+bundled = {} # {{flavors...}: {files...}}
+for file in affected:
+    if frozenset(affected[file]) not in bundled:
+        bundled[frozenset(affected[file])] = set()
+    bundled[frozenset(affected[file])].add(file)
+
+## Analyze the origin of the file change by intersecting the features of the affected flavors
+
+# Helper for build_feature_tree() to recursively build the tree
+def dependencies(feature, excludes):
+    if not os.path.isfile(f"features/{feature}/info.yaml"):
+        return {}, excludes
+    with open(f"features/{feature}/info.yaml") as f:
+        data = yaml.safe_load(f)
+    includes = {}
+    if "features" in data and "include" in data["features"]:
+        for include in data["features"]["include"]:
+            if include not in excludes:
+                excludes.add(include)
+                deps, ex = dependencies(include, excludes)
+                includes[include] = deps
+                excludes.update(ex)
+    return includes, excludes
+
+# Returns a hierarchical order and a flat set 
+def buildFeatureTree(flavor):
+    separated = flavor.split("-")
+    if len(separated) == 2:
+        parsed_features = [feature if i == 0 else "_" + feature for i, feature in enumerate(separated[0].split("_"))]
+    elif len(separated) == 3:
+        parsed_features = [feature if i == 0 else "_" + feature for i, feature in enumerate(separated[1].split("_"))]
+        parsed_features.insert(0, separated[0])
+    else:
+        return {}, set()
+    features = {}
+    excludes = set()
+    for feature in parsed_features:
+        if feature not in excludes:
+            excludes.add(feature)
+            deps, ex = dependencies(feature, excludes)
+            features[feature] = deps
+            excludes.update(ex)
+
+    return features, excludes
+
+# Filter a tree to only contain the features from the intersect set
+def intersectionTree(tree, intersect):
+    for feature in tree:
+        subtree = intersectionTree(tree[feature], intersect)
+        if feature not in intersect:
+            del tree[feature]
+            return intersectionTree(tree | subtree, intersect)
+        else:
+            tree[feature] = subtree
+    return tree
+
+# Format a tree for string outputs
+def treeStr(tree):
+    s = ""
+    for feature in tree:
+        if tree[feature] == {}:
+            s += f"{feature}\n"
+        else:
+            s += f"{feature}:\n"
+            s += "  " + treeStr(tree[feature]).replace("\n", "\n  ") + "\n"
+    # Remove last linebreak as the last line can contain spaces
+    return "\n".join(s.split("\n")[:-1])
+
+trees = {} # {{files...}: ({flavors...}, FeatureTree)}
+for flavors in bundled:
+    # Only keep features active in every flavor
+    features = set()
+    first = True
+    for flavor in flavors:
+        tree, flat = buildFeatureTree(flavor)
+        if first:
+            features = flat
+            first = False
+        else:
+            features = features.intersection(flat)
+
+    # Remove features active in unaffected flavors
+    unaffected = all - flavors
+    for flavor in unaffected:
+        _, flat = buildFeatureTree(flavor)
+        features = features - flat
+
+    # As all features must be contained in all trees, they are also in the last tree
+    trees[frozenset(bundled[flavors])] = (flavors, intersectionTree(tree, features))
+
+result = """# Reproducibility Test Results
+
+{emoji} **{successrate}%** of **{total_count}** tested flavors were reproducible.{problem_count}
+
+## Detailed Result{explanation}
+
+<!-- multiline -->
+| Affected Files | Flavors | Features Causing the Problem |
+|----------------|---------|------------------------------|
+{rows}
+"""
+
+successrate = round(100 * (len(successful) / len(expected_falvors)), 1)
+
+emoji = "✅" if len(expected_falvors) == len(successful) else ("⚠️" if successrate >= 50.0 else "❌")
+
+total_count = len(expected_falvors)
+
+problem_count = "" if len(trees) == 0 else ("\n**1** Problem detected." if len(trees) == 1 else f"\n**{len(trees)}** Problems detected.")
+
+
+explanation = ""
+
+if os.path.isfile("nightly_stats"):
+    with open("nightly_stats", "r") as f:
+        nightlys = f.read().replace("\n", "").split(";")
+    nightlys[0] = nightlys[0].split(",")
+    nightlys[1] = nightlys[1].split(",")
+    if nightlys[0][0] != "":
+        explanation += f"\n\nComparison of nightly **[#{nightlys[0][0]}](https://github.com/gardenlinux/gardenlinux/actions/runs/{nightlys[0][1]})** \
+and **[#{nightlys[1][0]}](https://github.com/gardenlinux/gardenlinux/actions/runs/{nightlys[1][1]})**"
+        if nightlys[0][2] != nightlys[1][2]:
+            explanation += f"\n\n⚠️ The nightlys used different commits: `{nightlys[0][2][:7]}` (#{nightlys[0][0]}) != `{nightlys[1][2][:7]}` (#{nightlys[1][0]})"
+        if nightlys[0][0] == nightlys[1][0]:
+            explanation += f"\n\n⚠️ Comparing the nightly **[#{nightlys[0][0]}](https://github.com/gardenlinux/gardenlinux/actions/runs/{nightlys[0][1]})** to itself can not reveal any issues"
+    else:
+        explanation += f"\n\nComparison of the latest nightly **[#{nightlys[1][0]}](https://github.com/gardenlinux/gardenlinux/actions/runs/{nightlys[1][1]})** \
+with a new build"
+        if nightlys[0][2] != nightlys[1][2]:
+            explanation += f"\n\n⚠️ The build used different commits: `{nightlys[1][2][:7]}` (#{nightlys[1][0]}) != `{nightlys[0][2][:7]}` (new build)"
+
+if len(whitelist) > 0:
+    explanation += "\n\n<details><summary>📃 These flavors only passed due to the nightly whitelist</summary><pre>" + "<br>".join(sorted(whitelist)) + "</pre></details>"
+
+if len(unexpected_falvors) > 0:
+    # This should never happen, but print a warning if it somehow does
+    explanation += "\n\n<details><summary>⁉️ These flavors were not expected to appear in the results, please check for errors in the workflow\
+</summary><pre>" + "<br>".join(sorted(unexpected_falvors)) + "</pre></details>"
+
+
+explanation += "" if len(expected_falvors) == len(successful) else "\n\n*The mentioned features are included in every affected flavor and not included in every unaffected flavor.*"
+
+rows = ""
+
+def dropdown(items):
+    if len(items) <= 10:
+        return "<br>".join([f"`{item}`" for item in sorted(items)])
+    else:
+        for first in sorted(items):
+            return f"<details><summary>{first}...</summary>" + "<br>".join([f"`{item}`" for item in sorted(items)]) + "</details>"
+
+if len(missing_flavors) > 0:
+    row = "|❌ Workflow run did not produce any results|"
+    row += f"**{round(100 * (len(missing_flavors) / len(expected_falvors)), 1)}%** affected<br>"
+    row += dropdown(missing_flavors)
+    row += "|No analysis available|\n"
+    rows += row
+
+for files in trees:
+    flavors, tree = trees[files]
+    row = "|"
+    row += dropdown(files)
+    row += "|"
+    row += f"**{round(100 * (len(flavors) / len(expected_falvors)), 1)}%** affected<br>"
+    row += dropdown(flavors)
+    row += "|"
+    if tree == {}:
+        row += "No analysis available"
+    else:
+        row += "<pre>" + treeStr(tree).replace("\n", "<br>") + "</pre>"
+    row += "|\n"
+    rows += row
+
+if len(successful) > 0:
+    # Success row
+    row = "|"
+    row += "✅ No problems found"
+    row += "|"
+    row += f"**{round(100 * (len(successful) / len(expected_falvors)), 1)}%**<br>"
+    row += dropdown(successful)
+    row += "|"
+    row += "-"
+    row += "|\n"
+    rows += row
+
+if len(successful) != len(expected_falvors):
+    rows += "\n*To add affected files to the whitelist, edit the `whitelist` variable in `.github/workflows/generate_diff.sh`*"
+
+with open("Result.md", "w") as f:
+    f.write(result.format(emoji=emoji, successrate=successrate, total_count=total_count, 
+                          problem_count=problem_count, explanation=explanation, rows=rows))

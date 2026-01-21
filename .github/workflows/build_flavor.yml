@@ -17,6 +17,9 @@ on:
       signing_env:
         type: string
         default: ""
+      prefix:
+        type: string
+        default: ''
     secrets:
       secureboot_db_kms_arn:
         required: false
@@ -53,7 +56,7 @@ jobs:
       - name: Load certs artifact
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
-          name: certs
+          name: ${{ inputs.prefix }}certs
           path: cert/
       - name: Configure aws credentials for kms signing
         id: aws_auth
@@ -81,7 +84,7 @@ jobs:
         run: tar -cSzvf "$CNAME.tar.gz" -C .build -T ".build/$CNAME.artifacts"
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         with:
-          name: build-${{ inputs.flavor }}-${{ inputs.arch }}
+          name: ${{ inputs.prefix }}build-${{ inputs.flavor }}-${{ inputs.arch }}
           path: ${{ env.CNAME }}.tar.gz
           if-no-files-found: error
       - uses: actions/cache/save@9255dc7a253b0ccc959486e2bca901246202afeb # pin@v5.0.1
@@ -89,4 +92,4 @@ jobs:
           path: |
             COMMIT
             VERSION
-          key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
+          key: ${{ inputs.prefix }}build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
