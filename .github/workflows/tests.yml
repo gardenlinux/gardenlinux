@@ -10,7 +10,7 @@ on:
       test_types:
         description: "Types of tests to execute (comma-separated: chroot,qemu,cloud,oci,bare)"
         type: string
-        default: "chroot,qemu,oci"
+        default: "chroot,qemu,oci,cloud-plan"
       bare_flavors_matrix:
         description: "Generated GitHub workflow flavors matrix for bare flavors"
         type: string
@@ -93,6 +93,8 @@ jobs:
       oci_flavors_tests: ${{ steps.test_environments.outputs.oci_flavors_tests }}
       cloud_test_flavors_matrix: ${{ steps.test_environments.outputs.cloud_test_flavors_matrix }}
       cloud_tests: ${{ steps.test_environments.outputs.cloud_tests }}
+      cloud_plans_flavors_matrix: ${{ steps.test_environments.outputs.cloud_plans_flavors_matrix }}
+      cloud_plans: ${{ steps.test_environments.outputs.cloud_plans }}
       qemu_test_flavors_matrix: ${{ steps.test_environments.outputs.qemu_test_flavors_matrix }}
       qemu_tests: ${{ steps.test_environments.outputs.qemu_tests }}
     steps:
@@ -127,6 +129,13 @@ jobs:
                 key: "cloud",
                 outTests: "cloud_tests",
                 outMatrix: "cloud_test_flavors_matrix",
+                inputMatrix: ${{ inputs.flavors_matrix }},
+                supported: ${{ needs.cloud_test_flavors_supported_matrix.outputs.matrix }}
+              },
+              {
+                key: "cloud-plan",
+                outTests: "cloud_plans",
+                outMatrix: "cloud_plans_flavors_matrix",
                 inputMatrix: ${{ inputs.flavors_matrix }},
                 supported: ${{ needs.cloud_test_flavors_supported_matrix.outputs.matrix }}
               },
@@ -207,6 +216,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.cloud_test_flavors_matrix) }}
+    with:
+      arch: ${{ matrix.arch }}
+      flavor: ${{ matrix.flavor }}
+    secrets: inherit
+    permissions:
+      id-token: write
+      actions: write
+  test_flavors_cloud_ng_plan:
+    needs: [determine_test_settings, test_flavors_qemu]
+    name: Test-NG cloud flavors plan
+    uses: ./.github/workflows/test_flavor_cloud_ng_plan.yml
+    # if: |
+    #   ${{
+    #     needs.determine_test_settings.outputs.cloud_plans == 'true'
+    #     && (always() && (needs.test_flavors_qemu.result == 'success' || needs.test_flavors_qemu.result == 'skipped'))
+    #   }}
+    if: ${{ needs.determine_test_settings.outputs.cloud_plans == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.determine_test_settings.outputs.cloud_plans_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
