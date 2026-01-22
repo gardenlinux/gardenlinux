@@ -61,6 +61,16 @@ FIPS_REASON = "FIPS uses different values for the KEX and Cipher."
 @pytest.mark.parametrize("sshd_config_item", required_sshd_config)
 @pytest.mark.feature("not _fips", reason=FIPS_REASON)
 @pytest.mark.feature("not cis", reason="CIS has specific KEX and MACs")
+@pytest.mark.test_id(
+    "GL-TEST-ssh-config-001",  # PermitRootLogin
+    "GL-TEST-ssh-config-003",  # X11Forwarding
+    "GL-TEST-ssh-config-007",  # LogLevel
+    "GL-TEST-ssh-config-008",  # UsePAM
+    "GL-TEST-ssh-config-011",  # Subsystem
+    "GL-TEST-ssh-config-014",  # AuthenticationMethods
+    "GL-TEST-ssh-config-015",  # HostKey (ed25519)
+    "GL-TEST-ssh-config-016",  # HostKey (rsa)
+)
 def test_sshd_has_required_config(sshd_config_item: str, sshd: Sshd):
     actual_value = sshd.get_config_section(sshd_config_item)
     expected_value = required_sshd_config[sshd_config_item]
@@ -160,6 +170,7 @@ def test_users_have_only_root_authorized_keys_cloud(
 @pytest.mark.modify(reason="Starting the unit modifies the system state")
 @pytest.mark.root(reason="Starting the unit requires root")
 @pytest.mark.feature("ssh")
+@pytest.mark.test_id("GL-TEST-ssh-service-003")  # WantedBy=multi-user.target (ssh service enabled)
 def test_ssh_service_running(systemd: Systemd, service_ssh):
     assert systemd.is_active(
         "ssh"

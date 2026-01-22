@@ -3,3 +3,34 @@ type: element
 features:
   include:
     - firewall
+
+test_ids:
+  file.include:
+    "/etc/ssh/sshd_config":
+      PermitRootLogin: GL-TEST-ssh-config-001
+      Protocol: GL-TEST-ssh-config-002
+      X11Forwarding: GL-TEST-ssh-config-003
+      StrictModes: GL-TEST-ssh-config-004
+      IgnoreRhosts: GL-TEST-ssh-config-005
+      HostbasedAuthentication: GL-TEST-ssh-config-006
+      LogLevel: GL-TEST-ssh-config-007
+      UsePAM: GL-TEST-ssh-config-008
+      PrintMotd: GL-TEST-ssh-config-009
+      AcceptEnv: GL-TEST-ssh-config-010
+      Subsystem: GL-TEST-ssh-config-011
+      ClientAliveInterval: GL-TEST-ssh-config-012
+      ClientAliveCountMax: GL-TEST-ssh-config-013
+      AuthenticationMethods: GL-TEST-ssh-config-014
+      HostKey:
+        - GL-TEST-ssh-config-015
+        - GL-TEST-ssh-config-016
+    "/etc/systemd/system/ssh-keygen.service":
+      Description: GL-TEST-ssh-service-001
+      ExecStart: GL-TEST-ssh-service-002
+      WantedBy: GL-TEST-ssh-service-003
+    "/etc/systemd/system/ssh-moduli.service":
+      Description: GL-TEST-ssh-service-004
+      ExecStart: GL-TEST-ssh-service-005
+      WantedBy: GL-TEST-ssh-service-006
+    "/etc/systemd/system-preset/00-sshsocket-disable.preset":
+      "disable ssh.socket": GL-TEST-ssh-preset-001
