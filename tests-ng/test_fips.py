@@ -42,12 +42,24 @@ def test_kernel_configs_crypto_benchmark(parse_file: ParseFile, kernel_configs: 
     """
     The tcrypot module is hidden in the CONFIG_CRYPTO_BENCHMARK configuration. This needs
     to be present on our current kernel.
-    ."""
+    """
     for config in kernel_configs.get_installed():
         parsed_config = parse_file.parse(config.path, format="keyval")
         assert (
             parsed_config["CONFIG_CRYPTO_BENCHMARK"] == "m"
         ), f"CONFIG_CRYPTO_BENCHMARK not set to 'm' in {config.path}"
+
+
+@pytest.mark.feature("_fips")
+def test_kernel_configs_fips(parse_file: ParseFile, kernel_configs: KernelConfigs):
+    """
+    Ensuer that we have the fips module is configured.
+    """
+    for config in kernel_configs.get_installed():
+        parsed_config = parse_file.parse(config.path, format="keyval")
+        assert (
+            parsed_config["CONFIG_CRYPTO_FIPS"] == "y"
+        ), f"CONFIG_CRYPTO_FIPS not set to 'y' in {config.path}"
 
 
 def test_gnutls_fips_file_was_created(file: File):
