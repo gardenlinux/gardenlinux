@@ -17,6 +17,23 @@ from plugins.parse_file import ParseFile
 
 
 @pytest.mark.feature("_fips")
+def test_dracut_fips_file_was_created(file: File):
+    """
+    The dracut file that will enable the FIPS module.
+    """
+    assert file.is_regular_file("/etc/dracut.conf.d/10-fips.conf")
+
+
+@pytest.mark.feature("_fips")
+def test_dracut_modules_was_extended_for_fips_module(parse_file: ParseFile):
+    """
+    Ensure that the dracutmodules was extend with the fips module
+    add_dracutmodules+=" fips "
+    """
+
+    lines = parse_file.lines("/etc/dracut.conf.d/10-fips.conf")
+    assert  'add_dracutmodules+=" fips "' in lines
+
 def test_gnutls_fips_file_was_created(file: File):
     """
     GnuTLS requires to have the /etc/system-fips to be present as prerequisite
