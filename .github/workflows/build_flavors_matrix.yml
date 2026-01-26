@@ -2,31 +2,31 @@ on:
   workflow_call:
     inputs:
       flags:
-        description: 'Flags passed to bin/flavors_parse.py'
+        description: "Flags passed to bin/flavors_parse.py"
         type: string
         required: true
       flavors_matrix:
         type: string
     outputs:
       matrix:
-        description: 'Flavors matrix'
+        description: "Flavors matrix"
         value: ${{ jobs.generate_matrix.outputs.matrix }}
 jobs:
   generate_matrix:
     name: Build flavors matrix
-    runs-on: 'ubuntu-24.04'
+    runs-on: "ubuntu-24.04"
     defaults:
       run:
         shell: bash
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           submodules: true
       - id: matrix
         name: Generate flavors matrix
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@hotfix-disabled-python-cache-in-setup-action
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
         with:
           flags: ${{ inputs.flags }}
           flavors_matrix: ${{ inputs.flavors_matrix }}

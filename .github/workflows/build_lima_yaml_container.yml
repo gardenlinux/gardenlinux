@@ -17,7 +17,7 @@ jobs:
       # Push container images
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Install qemu dependency for multi-arch build
         run: |
           sudo apt-get update
@@ -25,7 +25,7 @@ jobs:
 
       - name: Build and Push Image to ghcr.io
         id: build_image
-        uses: redhat-actions/buildah-build@v2
+        uses: redhat-actions/buildah-build@7a95fa7ee0f02d552a32753e7414641a04307056 # v2.13
         with:
           image: ${{ env.IMAGE_NAME }}
           tags: ${{ env.IMAGE_TAG }}
@@ -33,7 +33,7 @@ jobs:
             ./Containerfile.lima-manifest
           platforms: linux/amd64,linux/arm64
       - name: Push image to ghcr.io
-        uses: redhat-actions/push-to-registry@v2
+        uses: redhat-actions/push-to-registry@5ed88d269cf581ea9ef6dd6806d01562096bee9c # v2.8
         with:
           image: ${{ steps.build_image.outputs.image }}
           tags: ${{ steps.build_image.outputs.tags }}

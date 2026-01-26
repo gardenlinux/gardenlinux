@@ -106,7 +106,7 @@ apt-get install azure-cli awscli openstackclient # for GCP and ALI look at tip
 #### Install on MacOS
 
 ```
-brew install coreutils bash gnu-sed gnu-getopt podman make curl jq libxml2 ossp-uuid unzip swtpm socat gnupg
+brew install bash coreutils curl gnu-getopt gnu-sed gnupg jq libxml2 make ossp-uuid podman socat swtpm unzip
 # install cloud provider CLIs
 brew install azure-cli awscli gcloud-cli aliyun-cli openstackclient
 ```
@@ -417,9 +417,18 @@ spec:
       image: ghcr.io/gardenlinux/test-ng:nightly
       securityContext:
         privileged: true
+      args: [ "./run_tests", "--system-booted", "--expected-users", "gardener" ]
 ```
 
 After this is deployed and the tests ran you can simply get the pod logs to see the test results. If you want to target a specific node to run the tests on you should also pin this pod to that node.
+
+If you want to get a JUnit XML output of the test run you can adjust the `args` as follows:
+
+```yml
+args: [ "./run_tests", "--junit-xml", "output/test-ng.xml", "--system-booted", "--expected-users", "gardener" ]
+```
+
+and bind mount a volume or similar at `/tests-ng/tests/output`. Obviously this will work with arbitrary locations, as long as the volume is mounted below `/tests-ng` and the `--junit-xml` path is given relative to `/tests-ng/tests`.
 
 > [!NOTE]
 > The `ghcr.io/gardenlinux/test-ng:nightly` container gets build and published daily to always provide the most up-to-date variant of the test-ng framework. In future releases there will also be per release variants of this.

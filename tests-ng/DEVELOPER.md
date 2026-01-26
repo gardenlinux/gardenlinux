@@ -61,6 +61,13 @@ The following principles guide all test development in Garden Linux:
 - Keep test logic visible and maintain Arrange-Act-Assert structure
 - Avoid over-abstraction that requires reading multiple plugins to understand a test
 
+##### Parser plugins ([ADR-0026](../docs/architecture/decisions/0026-test-ng-when-to-parsers.md))
+
+- Use the default parsing plugins ([`parse`](plugins/parse.py), [`parse_file`](plugins/parse_file.py)) for files and command output to keep comment handling, format support, and errors consistent
+- Skip ad-hoc parsing (`Path.read_text()`, direct `json.loads()`, regex scraping) when a parser plugin covers the case
+- Add a domain-specific parser plugin when parsing repeats, needs special handling beyond the defaults, or clearly improves readability/maintainability
+- For examples, see [Parsing Plugins](#parsing-plugins)
+
 #### 7. Be mindful about external dependencies
 
 - Prefer Python standard library over third-party packages
@@ -216,6 +223,56 @@ def test_service_running(shell: ShellRunner):
     assert result.stdout.strip() == "active", "SSH service is not running"
 ```
 
+### Parsing Plugins
+
+Use the parsing plugins to keep file/command parsing consistent and readable:
+
+```python
+# Command output parsing
+def test_systemd_failed_units(shell, parse):
+    result = shell("systemctl --no-legend --no-pager")
+    lines = [line for line in result.stdout.splitlines() if line.strip()]
+    units = [line.split()[2] for line in lines] # 0: UNIT, 1: LOAD, 2: ACTIVE
+    assert all(state != "active" for state in units)
+
+```
+
+```python
+# Command output parsing with JSON response
+def test_systemd_failed_units(shell, parse):
+    result = shell("systemctl --output=json")
+    data = parse.from_str(result.stdout).parse(format="json")
+    assert isinstance(data, list)
+    assert all(unit["active"] == "active" for unit in data)
+```
+
+```python
+# Structured File parsing with auto-detected keyval format
+def test_dmesg_gardener_sysctl_no_restrictions_on_accessing_dmesg(parse_file):
+    file_path = "/etc/sysctl.d/40-allow-nonroot-dmesg.conf"
+    config = parse_file.parse(file_path)
+    assert config["kernel.dmesg_restrict"] == "0"
+```
+
+```python
+# Structured File parsing with manually selected YAML format
+def test_cloud_cfg_disables_ssh_pw_auth(parse_file):
+    cfg = parse_file.parse("/etc/cloud/cloud.cfg", format="yaml")
+    assert cfg["disable_root"] is True
+    # Check if value is not in a list
+    assert "resizefs" not in cfg["cloud_init_modules"]
+    # Check if multiple values are in a list, in a certain order
+    cfg = parse_file.parse("/etc/cloud/cloud.cfg", format="yaml", ordered=True)
+    assert [ "mounts", "set_hostname" ] in cfg["cloud_init_modules"]
+```
+
+```python
+# Read a file line by line and use a regex to validate
+def test_machine_id_is_initialized(parse_file):
+    lines = parse_file.lines("/etc/machine-id")
+    assert re.compile(r"^[0-9a-f]{32}$") in lines
+```
+
 ### Handlers for Setup/Teardown
 
 > [!IMPORTANT]
@@ -253,10 +310,7 @@ def service_ssh(systemd: Systemd):
 **Example: installing packages and loading kernel modules, including setup and teardown**
 
 ```python
-TEST_NAME_MODULES = [
-    {"name": 'nvme', "status": None},
-    {"name": 'nvme_auth', "status": None},
-]
+TEST_NAME_MODULES = [ "nvme", "nvme_auth" ]
 TEST_NAME_PACKAGES = [
     {"name": 'mount', "status": None},
     {"name": 'wget', "status": None},
@@ -265,11 +319,8 @@ TEST_NAME_PACKAGES = [
 @pytest.fixture
 def test_name(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
     # Setup: whatever is needed as configuration
-    for module in TEST_NAME_MODULES:
-        if not kernel_module.is_module_loaded(module["name"]):
-            kernel_module.load_module(module["name"])
-            # Save Status change for teardown
-            module["status"] = "Loaded"
+    for mod_name in TEST_NAME_MODULES:
+        kernel_module.load_module(mod_name)
     for pkg in TEST_NAME_PACKAGES:
         if not dpkg.package_is_installed(pkg["name"]):
             shell(f"DEBIAN_FRONTEND=noninteractive apt-get install -y {pkg["name"]}")
@@ -282,13 +333,12 @@ def test_name(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
 
     # Teardown/Cleanup: reverse all changes in reverse order
     # ... (additonal teardown code) ...
-    # Unload modules in reverse order of loading
+    # Uninstall needed packages again
     for pkg in TEST_NAME_PACKAGES:
         if pkg["status"] == "Installed":
             shell(f"DEBIAN_FRONTEND=noninteractive apt-get remove -y {pkg["name"]}")
-    for module in reversed(MY_REQUIRED_MODULES):
-        if module["status"] == "Loaded":
-            kernel_module.unload_module(entry["name"])
+    # Unload all modules loaded by load_module (automatically handles dependencies and order)
+    kernel_module.unload_modules()
 ```
 
 ### Utils for Helper Functions

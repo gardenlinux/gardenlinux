@@ -1,0 +1,135 @@
+name: Test - Update Python Runtime
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run at 12:00 noon CEST (10:00 UTC)
+    - cron: "0 10 * * *"
+
+jobs:
+  update:
+    name: Update Python Runtime
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq python3-pip
+          pip install -r tests-ng/util/requirements-gh.txt
+
+      - name: Run update script
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: tests-ng/util/update_runtime.py
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+
+            {
+              echo "summary<<EOF"
+              echo "## Changes"
+              echo ""
+              echo '```diff'
+              git diff
+              echo '```'
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
+
+            release_date=$(grep '^export RELEASE_DATE=' tests-ng/util/python.env.sh | sed -n 's/^export RELEASE_DATE="\(.*\)"/\1/p')
+            echo "release_date=$release_date" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Configure Git
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          git config user.name "Garden Linux Bot"
+          git config user.email gardenlinux[bot]@users.noreply.github.com
+
+      - name: Create Branch and Pull Request
+        if: steps.changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SUMMARY: ${{ steps.changes.outputs.summary }}
+        run: |
+          BRANCH="update-tests-ng-python-runtime-${{ steps.changes.outputs.release_date }}"
+          TITLE="chore: update Tests-NG Python runtime version"
+
+          # Check if a PR already exists for this branch
+          existing_pr=$(gh pr list --base main --head "${BRANCH}" --json number --jq '.[0].number' || echo "")
+
+          if [ -n "${existing_pr}" ]; then
+            echo "PR #${existing_pr} already exists for branch ${BRANCH}, skipping PR creation."
+            exit 0
+          fi
+
+          # Write body and commit message to files to safely handle multi-line content
+          {
+            echo "This PR was automatically created by the [Test - Update Python Runtime](https://github.com/gardenlinux/gardenlinux/actions/workflows/test_update_python_runtime.yml) workflow."
+            echo ""
+            printf '%s\n' "${SUMMARY}"
+            echo ""
+            echo "Please review and merge if the changes look correct."
+          } > /tmp/body.txt
+
+          {
+            echo "${TITLE}"
+            echo ""
+            printf '%s\n' "${SUMMARY}"
+          } > /tmp/commit_message.txt
+
+          git checkout -b ${BRANCH}
+          git add tests-ng/util/python.env.sh
+
+          git commit -F /tmp/commit_message.txt
+          git push origin ${BRANCH} -f
+
+          gh version
+          gh pr create \
+            --base main \
+            --head "${BRANCH}" \
+            --title "${TITLE}" \
+            --body-file /tmp/body.txt \
+            --label "automated" \
+            --label "dependencies" \
+            --label "test-ng" \
+            --label "python"
+
+            # is somewhat broken, see https://github.com/orgs/community/discussions/113519
+            # error fetching organization teams: GraphQL: Resource not accessible by integration (organization.teams)
+            # --reviewer "gardenlinux/maintainers" \
+
+      - name: Close Superseded Pull Requests
+        if: steps.changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITLE="chore: update Tests-NG Python runtime version"
+
+          # Get PRs sorted by date (newest first)
+          prs=$(gh pr list --search "$TITLE" --json number,createdAt --jq 'sort_by(.createdAt) | reverse | .[].number')
+
+          pr_array=($prs)
+
+          if [ ${#pr_array[@]} -lt 2 ]; then
+            echo "Less than 2 PRs found, nothing to close."
+            exit 0
+          fi
+
+          latest=${pr_array[0]}
+          echo "Keeping latest PR: #$latest"
+
+          for pr in "${pr_array[@]:1}"; do
+            echo "Closing PR #$pr as superseded by #$latest"
+            gh pr close "$pr" --comment "Closing as superseded by #$latest"
+          done

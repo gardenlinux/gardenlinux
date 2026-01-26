@@ -15,6 +15,7 @@ install:
 # install-dev: Install the package and dev dependencies
 install-dev:
 	pip install -r $(ROOT_DIR)/util/requirements-dev.txt
+	pip install -r $(ROOT_DIR)/util/requirements-gh.txt
 
 # lint-black: Check code formatting with black
 lint-black: install-dev
@@ -41,3 +42,7 @@ format-isort: install-dev
 
 # format: Format code with black and sort imports with isort
 format: install-dev format-black format-isort
+
+# test-plugins: Run Tests for Plugins
+test-plugins: install
+	pytest -v $(ROOT_DIR)/plugins/tests/test_*.py

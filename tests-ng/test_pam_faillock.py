@@ -5,6 +5,7 @@ import pytest
     "pam_config", ["/etc/pam.d/common-auth"], indirect=["pam_config"]
 )
 @pytest.mark.feature("server")
+@pytest.mark.feature("not cis", reason="CIS handles auth_pam by itself")
 def test_common_auth_pam_faillock(pam_config):
 
     results = pam_config.find_entries(
@@ -32,6 +33,7 @@ def test_common_auth_pam_faillock(pam_config):
     "pam_config", ["/etc/pam.d/common-account"], indirect=["pam_config"]
 )
 @pytest.mark.feature("server")
+@pytest.mark.feature("not cis", reason="CIS handles auth_pam by itself")
 def test_common_account_pam_faillock(pam_config):
     results = pam_config.find_entries(
         type_="account", control_contains="required", module_contains="pam_faillock.so"

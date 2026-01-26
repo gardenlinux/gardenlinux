@@ -61,6 +61,11 @@ resource "azurerm_network_interface" "nic" {
   }
 
   tags = local.labels
+
+  depends_on = [
+    azurerm_subnet.subnet,
+    azurerm_public_ip.pip,
+  ]
 }
 
 resource "azurerm_network_interface_security_group_association" "nsg_nic" {

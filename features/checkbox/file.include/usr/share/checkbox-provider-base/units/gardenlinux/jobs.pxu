@@ -1,0 +1,81 @@
+unit: job
+id: ccloud/dmesg_output
+flags: simple
+_summary: Get the dmesg alerts based on severity
+command:
+    dmesg_colored.sh
+user: root
+plugin: shell
+category_id: ccloud
+estimated_duration: 30s
+
+unit: job
+id: ccloud/dmesg_output_attachment
+plugin: attachment
+estimated_duration: 5.0
+#depends: ccloud/dmesg_output
+category_id: ccloud
+user: root
+command:
+ cat $(dmesg_colored.sh | grep ATTACHMENT | awk '{print $2}')
+_summary: Attach the dmesg output categorised by severity
+
+unit: job
+id: ccloud/hw_encrypt_enabled_check
+plugin: shell
+flags: simple
+category_id: ccloud
+user: root
+command:
+    hw_encrypt_check.sh
+_summary: Check if HW encryption is enabled
+
+unit: job
+id: ccloud/hw_encrypt_enabled_check_output
+plugin: attachment
+estimated_duration: 1.0
+category_id: ccloud
+user: root
+command:
+ cat $(hw_encrypt_check.sh | grep ATTACHMENT | awk '{print $2}')
+_summary: Attach the HW Encryption  enabled check output
+
+unit: job
+id: ccloud/virtualization_disabled_output
+plugin: shell
+flags: simple
+category_id: ccloud
+user: root
+command:
+    virtualization_disabled.sh
+_summary: Validate if virtualization is enabled in CPU
+
+unit: job
+id: ccloud/virtualization_disabled_output_attachment
+plugin: attachment
+estimated_duration: 5.0
+category_id: ccloud
+user: root
+command:
+ cat $(virtualization_disabled.sh | grep ATTACHMENT | awk '{print $2}')
+_summary: Attach the virtualization disabled check output
+
+unit: job
+id: ccloud/tpm_enabled_check
+plugin: shell
+category_id: ccloud
+flags: simple
+user: root
+command:
+    tpm_check.sh
+_summary: Check if TPM is enabled
+
+unit: job
+id: ccloud/tpm_enabled_check_attachment
+plugin: attachment
+estimated_duration: 1.0
+category_id: ccloud
+user: root
+command:
+ cat $(tpm_check.sh | grep ATTACHMENT | awk '{print $2}')
+_summary: Attach the TPM enabled check output

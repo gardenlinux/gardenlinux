@@ -1,0 +1,11 @@
+description: 'checkbox HW Test Kit'
+type: flag
+features:
+  exclude:
+    - sap
+    - firewall
+    - log
+    - _selinux
+    - _ignite
+  include:
+    - _iso

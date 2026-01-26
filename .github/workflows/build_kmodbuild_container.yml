@@ -5,6 +5,9 @@ on:
       version:
         type: string
         required: true
+      prefix:
+        type: string
+        default: ''
 jobs:
   kmodbuild_container:
     name: Build kernel module build dev container (${{ matrix.arch }})
@@ -13,27 +16,27 @@ jobs:
       run:
         shell: bash
     env:
-      CNAME: ''
+      CNAME: ""
     strategy:
       matrix:
-        arch: [ amd64, arm64 ]
+        arch: [amd64, arm64]
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           submodules: true
       - id: build_container_cache
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # pin@v4.3.0
+        uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # pin@v5.0.1
         with:
           path: |
             COMMIT
             VERSION
-          key: build-container-${{ matrix.arch }}-${{ github.run_id }}
+          key: ${{ inputs.prefix }}build-container-${{ matrix.arch }}-${{ github.run_id }}
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Determine CNAME
         id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@0.10.6 # pin@0.10.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
         with:
           flags: --cname container-${{ matrix.arch }} cname
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
@@ -42,9 +45,9 @@ jobs:
           echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Load container build artifact (${{ matrix.arch }})
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # pin@v6.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
-          name: build-container-${{ matrix.arch }}
+          name: ${{ inputs.prefix }}build-container-${{ matrix.arch }}
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Build kernel module build dev container (${{ matrix.arch }})
         env:
@@ -75,8 +78,8 @@ jobs:
           podman build --arch ${{ matrix.arch }} --build-arg base="$base" --build-arg snapshot="$snapshot" -t ghcr.io/${{ github.repository }}/kmodbuild:${{ matrix.arch }}-${version} images/kmodbuild
           podman save --format oci-archive ghcr.io/${{ github.repository }}/kmodbuild:${{ matrix.arch }}-${version} > kmodbuild_container_${{ matrix.arch }}.oci
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # pin@v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         with:
-          name: kmodbuild-container-${{ matrix.arch }}
+          name: ${{ inputs.prefix }}kmodbuild-container-${{ matrix.arch }}
           path: kmodbuild_container_${{ matrix.arch }}.oci
           if-no-files-found: error

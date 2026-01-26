@@ -32,6 +32,9 @@ on:
         description: "Cancel workflow run on first error"
         type: boolean
         default: false
+      prefix:
+        type: string
+        default: ''
     secrets:
       aws_region:
         required: false
@@ -55,24 +58,15 @@ jobs:
     with:
       version: ${{ inputs.version == '' && 'now' || inputs.version }}
       target: ${{ inputs.target }}
+      prefix: ${{ inputs.prefix }}
     permissions:
       actions: write # TODO: 3215 elevated permissions for included workflow
   test_distribution_build:
     needs: requirements
     name: Build and Cache Test Distribution
     uses: ./.github/workflows/build_test_dist.yml
-  platform_test_image:
-    needs: requirements
-    name: Build platform-test image
-    uses: ./.github/workflows/build_platform_test_images.yml
     with:
-      version: ${{ needs.requirements.outputs.version }}
-      platforms: '["tofu"]'
-      platform_test_tag: ${{ inputs.platform_test_tag }}
-      build: ${{ inputs.platform_test_build }}
-    permissions:
-      packages: write # TODO: 3215 elevated permissions for included workflow
-      actions: write  # TODO: 3215 elevated permissions for included workflow
+      prefix: ${{ inputs.prefix }}
   flavors_matrix:
     name: Generate flavors matrix to build
     uses: ./.github/workflows/build_flavors_matrix.yml
@@ -91,6 +85,7 @@ jobs:
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
       signing_env: ${{ needs.requirements.outputs.signing_env }}
+      prefix: ${{ inputs.prefix }}
     uses: ./.github/workflows/build_flavor.yml
     secrets: inherit
     permissions:
@@ -102,6 +97,7 @@ jobs:
     uses: ./.github/workflows/build_kmodbuild_container.yml
     with:
       version: ${{ needs.requirements.outputs.version }}
+      prefix: ${{ inputs.prefix }}
     permissions:
       actions: write
   bare_flavors_matrix:
@@ -120,6 +116,7 @@ jobs:
       bare_flavor: ${{ matrix.flavor }}
       commit_id: ${{ needs.requirements.outputs.commit_id }}
       version: ${{ needs.requirements.outputs.version }}
+      prefix: ${{ inputs.prefix }}
     uses: ./.github/workflows/build_bare_flavor.yml
     secrets: inherit
     permissions:
@@ -138,8 +135,8 @@ jobs:
             "version": "${{ needs.requirements.outputs.version }}",
             "target": "${{ needs.requirements.outputs.target }}"
           }' '.' > flavor_version_data.json
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # pin@v5.0.0
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         with:
-          name: flavor-version-data
+          name: ${{ inputs.prefix }}flavor-version-data
           path: flavor_version_data.json
           if-no-files-found: error

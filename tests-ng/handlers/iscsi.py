@@ -6,7 +6,7 @@ from plugins.kernel_module import KernelModule
 from plugins.shell import ShellRunner
 from plugins.systemd import Systemd
 
-REQUIRED_NVME_MODULE = ["iscsi_tcp", "sd_mod", "sg"]
+REQUIRED_ISCSI_MODULES = ["iscsi_tcp", "sd_mod", "sg"]
 
 disk_attributes = re.compile(
     "Login to \\[iface: default, target: ([^,]*), portal: ([.0-9]*),([0-9]*)\\] successful."
@@ -15,8 +15,8 @@ disk_attributes = re.compile(
 
 @pytest.fixture
 def iscsi_device(shell: ShellRunner, systemd: Systemd, kernel_module: KernelModule):
-    for mod_name in REQUIRED_NVME_MODULE:
-        kernel_module.safe_load_module(mod_name)
+    for mod_name in REQUIRED_ISCSI_MODULES:
+        kernel_module.load_module(mod_name)
 
     stop_tgt = False
     if not systemd.is_active("tgt"):
@@ -62,4 +62,4 @@ def iscsi_device(shell: ShellRunner, systemd: Systemd, kernel_module: KernelModu
     if remove_conf_d:
         os.rmdir("/etc/tgt/conf.d")
 
-    kernel_module.safe_unload_modules()
+    kernel_module.unload_modules()
