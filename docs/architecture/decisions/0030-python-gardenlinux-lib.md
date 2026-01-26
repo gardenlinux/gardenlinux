@@ -26,7 +26,7 @@ To provide a basis for these discussions, this ADR defines the scope of the `pyt
 ## Consequences
 
 - The only intended group using `python-gardenlinux-lib` are Garden Linux developers
-- The `python-gardenlinux-lib` does not need to have an official release process or official support
+- The `python-gardenlinux-lib` is not required to have an official release schedule or official support
 - Scripts targeted to users may contain duplicated code and have to be tested separately 
 - Pipeline scripts are stored indirectly
     - Therefore, if no version was specified, it will always use the latest script version and not the script version of the potentially older branch
