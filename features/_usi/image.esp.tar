@@ -24,9 +24,52 @@ echo "root disk compressed by $(( ( ( size_chroot - size_erofs ) * 100 ) / size_
 echo
 echo "building initrd with embedded root disk"
 
-erofs_cpio="$(mktemp)"
-(cd "$erofs_cpio_dir" && echo root.img | cpio -o -H newc) > "$erofs_cpio"
+mkdir -p "$erofs_cpio_dir/"{proc,sys,dev,run,tmp,etc/systemd/system,sysroot,usr,modules}
+
+touch "$erofs_cpio_dir/etc/initrd-release"
+touch "$erofs_cpio_dir/etc/machine-id"
+ln -s initrd.target "$erofs_cpio_dir/etc/systemd/system/default.target"
+
+IFS=',' read -r -a features <<< "$BUILDER_FEATURES"
+for feature in "${features[@]}"; do
+	if [ -e "/builder/features/$feature/initrd.include/etc" ]; then
+		cp -a "/builder/features/$feature/initrd.include/etc/." "$erofs_cpio_dir/etc/"
+	fi
+done
+
+for i in bin sbin lib lib64; do
+	[ -e "$rootfs/usr/$i" ] || continue
+	ln -s "usr/$i" "$erofs_cpio_dir/$i"
+done
+
+for i in drivers/block/loop.ko lib/libcrc32c.ko fs/erofs/erofs.ko; do
+	set +f
+	basename "$i" >> "$erofs_cpio_dir/modules/list"
+	cp "$rootfs/usr/lib/modules/"*"/kernel/$i" "$erofs_cpio_dir/modules/"
+	set -f
+done
+
+case "$BUILDER_ARCH" in
+	amd64)
+		gnu_arch=x86_64
+		uefi_arch=X64
+		;;
+	arm64)
+		gnu_arch=aarch64
+		uefi_arch=AA64
+		;;
+esac
+
+cp "$rootfs/usr/libexec/zero-copy-initrd/init-$gnu_arch" "$erofs_cpio_dir/init"
+
+initrd="$(mktemp)"
+(cd "$erofs_cpio_dir" && find . | cpio -o -H newc) > "$initrd"
 rm -rf "$erofs_cpio_dir"
+
+kernel="$(find "$rootfs/boot/" -name 'vmlinuz-*' -printf '%P\n' | sort -V | tail -n 1)"
+uki="$(mktemp)"
+
+read -r _ cmdline < "$rootfs/etc/kernel/cmdline"
 
 mount --rbind /proc "$rootfs/proc"
 
@@ -39,49 +82,10 @@ cp --no-dereference /dev/{fd,stdin,stdout,stderr} "$rootfs/dev/"
 
 mount -t tmpfs -o size=1G tmpfs "$rootfs/tmp"
 
-mkdir "$rootfs/tmp/initrd.include"
-IFS=',' read -r -a features <<< "$BUILDER_FEATURES"
-for feature in "${features[@]}"; do
-	if [ -e "/builder/features/$feature/initrd.include" ]; then
-		cp -a "/builder/features/$feature/initrd.include/." "$rootfs/tmp/initrd.include"
-	fi
-done
-
-case "$BUILDER_ARCH" in
-	amd64)
-		uefi_arch=X64
-		;;
-	arm64)
-		uefi_arch=AA64
-		;;
-esac
-
-uki="$(mktemp)"
 touch "$rootfs/initrd"
+mount --bind "$initrd" "$rootfs/initrd"
 touch "$rootfs/uki"
 mount --bind "$uki" "$rootfs/uki"
-
-kernel="$(find "$rootfs/boot/" -name 'vmlinuz-*' -printf '%P\n' | sort -V | tail -n 1)"
-
-chroot "$rootfs" dracut \
-	--no-hostonly \
-	--force \
-	--tmpdir /tmp \
-	--kver "${kernel#*-}" \
-	--modules "bash dash systemd systemd-initrd systemd-repart systemd-cryptsetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown crypt" \
-	--reproducible \
-	--install 'find findmnt grep lsblk tail head realpath basename sfdisk mkfs.ext4 resizefat32 dd cryptsetup /usr/lib/systemd/systemd-pcrextend' \
-	--include '/tmp/initrd.include' / \
-	--add-drivers erofs \
-	/initrd
-
-read -r _ cmdline < "$rootfs/etc/kernel/cmdline"
-
-size_initrd="$(du -h "$rootfs/initrd" | cut -f 1)"
-size_erofs_cpio="$(du -h "$erofs_cpio" | cut -f 1)"
-cat "$erofs_cpio" >> "$rootfs/initrd"
-size_initrd_total="$(du -h "$rootfs/initrd" | cut -f 1)"
-echo "initrd size: $size_initrd (dracut) + $size_erofs_cpio (EROFS) = $size_initrd_total"
 
 chroot "$rootfs" ukify build \
 	--stub "/usr/lib/systemd/boot/efi/linux$(tr '[:upper:]' '[:lower:]' <<< "$uefi_arch").efi.stub" \
@@ -92,12 +96,13 @@ chroot "$rootfs" ukify build \
 	--os-release "@/etc/os-release" \
 	--output /uki
 
-rm "$rootfs/initrd"
-
 umount "$rootfs/uki"
+umount "$rootfs/initrd"
 umount -l "$rootfs/proc"
 umount -R "$rootfs/dev"
 umount "$rootfs/tmp"
+
+rm "$initrd"
 
 esp_dir="$(mktemp -d)"
 
