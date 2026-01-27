@@ -72,48 +72,41 @@ jobs:
     env:
       CNAME_AMD64: ""
       CNAME_ARM64: ""
+      CONTAINER_BASE_NAME: ""
     permissions:
       packages: write
     strategy:
       matrix:
-        include:
-          - flavor: "container"
-            subpath: ""
-          - flavor: "container-pythonDev"
-            subpath: "/container-python-dev"
+        flavor:
+        - bare-libc
+        - bare-nodejs
+        - bare-python
+        - bare-sapmachine
+        - container
+        - container-pythonDev
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           submodules: true
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
       - name: Set flavor version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
-      - name: Determine CNAME (amd64)
-        id: cname_amd64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
-        with:
-          flags: --cname ${{ matrix.flavor }}-amd64 cname
-      - name: Determine CNAME (arm64)
-        id: cname_arm64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
-        with:
-          flags: --cname ${{ matrix.flavor }}-arm64 cname
-      - name: Set CNAMEs
+      - name: Set CNAMEs and container base name
         run: |
-          echo "CNAME_AMD64=${{ steps.cname_amd64.outputs.result }}" | tee -a "$GITHUB_ENV"
-          echo "CNAME_ARM64=${{ steps.cname_arm64.outputs.result }}" | tee -a "$GITHUB_ENV"
-      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+          echo "CNAME_AMD64=$(gl-features-parse --cname ${{ matrix.flavor }}-amd64 cname)" | tee -a "$GITHUB_ENV"
+          echo "CNAME_ARM64=$(gl-features-parse --cname ${{ matrix.flavor }}-arm64 cname)" | tee -a "$GITHUB_ENV"
+          echo "CONTAINER_BASE_NAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch amd64 container_name)" | tee -a "$GITHUB_ENV"
+      - id: build_cache
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
-          name: build-${{ matrix.flavor }}-amd64
+          name: build-${{ matrix.flavor }}-*
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
-        with:
-          name: build-${{ matrix.flavor }}-arm64
-          github-token: ${{ github.token }}
-          run-id: ${{ inputs.run_id }}
-      - name: Publish container images
+      - if: ${{ steps.build_cache.outputs.cache-hit == 'true' }}
+        name: Publish container images
         run: |
           if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
             is_nightly=true
@@ -128,115 +121,40 @@ jobs:
 
           # Tagging for amd64 nightly
           if [ $is_nightly = true ]; then
-            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-nightly
-            podman push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-nightly
+            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:amd64-nightly
+            podman push ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:amd64-nightly
           fi
 
           # Tagging for amd64 with version
-          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-${version}
-          podman push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-${version}
+          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:amd64-${version}
+          podman push ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:amd64-${version}
 
           tar xzv < "${CNAME_ARM64}.tar.gz"
           image="$(podman load < ${CNAME_ARM64}.oci | awk '{ print $NF }')"
 
           # Tagging for arm64 nightly
           if [ $is_nightly = true ]; then
-            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-nightly
-            podman push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-nightly
+            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:arm64-nightly
+            podman push ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:arm64-nightly
           fi
 
           # Tagging for arm64 with version
-          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-${version}
-          podman push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-${version}
+          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:arm64-${version}
+          podman push ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:arm64-${version}
 
           # Creating and pushing manifest for nightly
           if [ $is_nightly = true ]; then
-            podman manifest create ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:nightly
-            podman manifest add ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:nightly ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-nightly
-            podman manifest add ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:nightly ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-nightly
-            podman manifest push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:nightly
+            podman manifest create ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:nightly
+            podman manifest add ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:nightly ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:amd64-nightly
+            podman manifest add ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:nightly ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:arm64-nightly
+            podman manifest push ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:nightly
           fi
 
           # Creating and pushing manifest for version tag
-          podman manifest create ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:${version}
-          podman manifest add ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:${version} ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-${version}
-          podman manifest add ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:${version} ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-${version}
-          podman manifest push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:${version}
-  bare_flavors:
-    needs: determine_environment
-    name: Publish bare flavors
-    if: ${{ inputs.bare_flavors_matrix != '{"include":[]}' }}
-    runs-on: ubuntu-24.04
-    defaults:
-      run:
-        shell: bash
-    strategy:
-      fail-fast: false
-      matrix:
-        # @TODO: Replace with input matrix once OCI manifest tooling is ready to update existing ones
-        config: [libc, python, nodejs, sapmachine]
-    permissions:
-      packages: write
-    steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-        with:
-          submodules: true
-      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
-        with:
-          pattern: build-bare-${{ matrix.config }}-*
-          merge-multiple: true
-          github-token: ${{ github.token }}
-          run-id: ${{ inputs.run_id }}
-      - name: Publish bare flavor image ${{ matrix.config }}
-        run: |
-          if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
-            is_nightly=true
-          else
-            is_nightly=false
-          fi
-          version=$(bin/garden-version "${{ inputs.version }}")
-
-          podman login -u token -p ${{ github.token }} ghcr.io
-
-          # Handling amd64 image
-          image="$(podman load < ${{ matrix.config }}-amd64.oci | awk '{ print $NF }')"
-
-          # Tagging and pushing amd64 with version
-          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version
-          podman push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version
-
-          # Tagging and pushing amd64 with nightly
-          if [ $is_nightly = true ]; then
-            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
-            podman push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
-          fi
-
-          # Handling arm64 image
-          image="$(podman load < ${{ matrix.config }}-arm64.oci | awk '{ print $NF }')"
-
-          # Tagging and pushing arm64 with version
-          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version
-          podman push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version
-
-          # Tagging and pushing arm64 with nightly
-          if [ $is_nightly = true ]; then
-            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
-            podman push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
-          fi
-
-          # Creating and pushing manifest for version tag
-          podman manifest create ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:$version
-          podman manifest add ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:$version ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-$version
-          podman manifest add ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:$version ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-$version
-          podman manifest push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:$version
-
-          # Creating and pushing manifest for nightly tag
-          if [ $is_nightly = true ]; then
-            podman manifest create ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly
-            podman manifest add ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:amd64-nightly
-            podman manifest add ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:arm64-nightly
-            podman manifest push ${{ needs.determine_environment.outputs.repository }}/bare-${{ matrix.config }}:nightly
-          fi
+          podman manifest create ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:${version}
+          podman manifest add ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:${version} ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:amd64-${version}
+          podman manifest add ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:${version} ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:arm64-${version}
+          podman manifest push ${{ needs.determine_environment.outputs.repository }}/${CONTAINER_BASE_NAME}:${version}
   push_flavors:
     needs: determine_environment
     name: Publish flavors
