@@ -39,7 +39,7 @@ on:
         required: true
 jobs:
   test:
-    name: Test-NG flavor in Cloud ${{ inputs.flavor }} (${{ inputs.arch }})
+    name: Test flavor ${{ inputs.flavor }} (${{ inputs.arch }}) in cloud
     runs-on: "ubuntu-24.04"
     if: ${{ inputs.flavor != 'skip' }}
     # timeout-minutes: 30
@@ -177,7 +177,7 @@ jobs:
             // tf provider vars
             core.exportVariable("ALIBABA_CLOUD_REGION", aliCredentials.region);
         # TODO: handle skipping better
-      - name: New Test Framework
+      - name: Execute tests
         run: |
           if [ ! -e ".build/$CNAME.raw" ]; then
             if [ -e ".build/$CNAME.vhd" ]; then
@@ -210,16 +210,16 @@ jobs:
       - name: Copy test results to build directory
         if: always()
         run: |
-          cp tests-ng/log/cloud.test-ng.log .build/${CNAME}.cloud.test-ng.log || true
-          cp tests-ng/log/cloud.test-ng.xml .build/${CNAME}.cloud.test-ng.xml || true
+          cp tests-ng/log/cloud.test-ng.log .build/${CNAME}.cloud.test.log || true
+          cp tests-ng/log/cloud.test-ng.xml .build/${CNAME}.cloud.test.xml || true
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         if: always()
         with:
           if-no-files-found: ignore
-          name: cloud-test-ng-${{ env.CNAME }}
+          name: cloud-test-${{ env.CNAME }}
           path: |
-            .build/${{ env.CNAME }}.cloud.test-ng.log
-            .build/${{ env.CNAME }}.cloud.test-ng.xml
+            .build/${{ env.CNAME }}.cloud.test.log
+            .build/${{ env.CNAME }}.cloud.test.xml
       - name: Cleanup cloud test for ${{ inputs.flavor }} (${{ inputs.arch }})
         if: always()
         run: |

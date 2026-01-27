@@ -10,7 +10,7 @@ on:
         required: true
 jobs:
   test:
-    name: Test-NG flavor in OCI ${{ inputs.flavor }} (${{ inputs.arch }})
+    name: Test OCI flavor ${{ inputs.flavor }} (${{ inputs.arch }})
     runs-on: ${{ inputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     if: ${{ inputs.flavor != 'skip' }}
     timeout-minutes: 30
@@ -60,7 +60,7 @@ jobs:
           rm "$CNAME.tar.gz"
           tree .build
         # TODO: handle skipping better
-      - name: New Test Framework
+      - name: Execute tests
         run: |
           if [ -e ".build/$CNAME.oci" ]; then
             ./test-ng ".build/$CNAME.oci"
@@ -70,13 +70,13 @@ jobs:
       - name: Copy test results to build directory
         if: always()
         run: |
-          cp tests-ng/log/oci.test-ng.log .build/${CNAME}.oci.test-ng.log || true
-          cp tests-ng/log/oci.test-ng.xml .build/${CNAME}.oci.test-ng.xml || true
+          cp tests-ng/log/oci.test-ng.log .build/${CNAME}.oci.test.log || true
+          cp tests-ng/log/oci.test-ng.xml .build/${CNAME}.oci.test.xml || true
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         if: always()
         with:
           if-no-files-found: ignore
-          name: oci-test-ng-${{ env.CNAME }}
+          name: oci-test-${{ env.CNAME }}
           path: |
-            .build/${{ env.CNAME }}.oci.test-ng.log
-            .build/${{ env.CNAME }}.oci.test-ng.xml
+            .build/${{ env.CNAME }}.oci.test.log
+            .build/${{ env.CNAME }}.oci.test.xml

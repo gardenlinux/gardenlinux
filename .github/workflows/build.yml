@@ -16,14 +16,6 @@ on:
       flavors_matrix:
         description: "Already generated GitHub workflow flavors matrix"
         type: string
-      platform_test_tag:
-        description: 'Tag to run platform-test containers. "latest" or GL version. Tag must be available in `ghcr.io/gardenlinux/gardenlinux/platform-test-*`'
-        type: string
-        default: latest
-      platform_test_build:
-        description: "Run platform-test image build."
-        type: boolean
-        default: true
       flavors_parse_params_test_bare:
         description: "Run bin/parse_flavors.py with these parameters for bare flavors"
         default: '--include-only "bare-*" --no-arch --json-by-arch --build --test'
