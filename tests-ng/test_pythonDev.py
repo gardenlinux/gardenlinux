@@ -21,23 +21,25 @@ def test_python_environment_is_installed(shell: ShellRunner):
     ), "python3.13-venv package is not installed"
 
 
-arm64_dependencies = {
-    "/required_libs_test",
-    "/required_libs_test/usr",
-    "/required_libs_test/usr/lib",
-    "/required_libs_test/usr/lib/aarch64-linux-gnu",
-    "/required_libs_test/usr/lib/aarch64-linux-gnu/libpthread.so.0",
-    "/required_libs_test/usr/lib/aarch64-linux-gnu/libc.so.6",
-    "/required_libs_test/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1",
-}
-amd64_dependencies = {
-    "/required_libs_test",
-    "/required_libs_test/usr",
-    "/required_libs_test/usr/lib",
-    "/required_libs_test/usr/lib/x86_64-linux-gnu",
-    "/required_libs_test/usr/lib/x86_64-linux-gnu/libpthread.so.0",
-    "/required_libs_test/usr/lib/x86_64-linux-gnu/libc.so.6",
-    "/required_libs_test/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
+dependencies = {
+    "arm64": {
+        "/required_libs_test",
+        "/required_libs_test/usr",
+        "/required_libs_test/usr/lib",
+        "/required_libs_test/usr/lib/aarch64-linux-gnu",
+        "/required_libs_test/usr/lib/aarch64-linux-gnu/libpthread.so.0",
+        "/required_libs_test/usr/lib/aarch64-linux-gnu/libc.so.6",
+        "/required_libs_test/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1",
+    },
+    "amd64": {
+        "/required_libs_test",
+        "/required_libs_test/usr",
+        "/required_libs_test/usr/lib",
+        "/required_libs_test/usr/lib/x86_64-linux-gnu",
+        "/required_libs_test/usr/lib/x86_64-linux-gnu/libpthread.so.0",
+        "/required_libs_test/usr/lib/x86_64-linux-gnu/libc.so.6",
+        "/required_libs_test/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
+    },
 }
 
 
@@ -57,13 +59,8 @@ def test_python_export_libs(shell: ShellRunner, pip_requests):
 
     assert os.path.isdir("/required_libs_test"), "/required_libs_test was not created"
 
-    if arch == "arm64":
-        dependencies = arm64_dependencies
-    elif arch == "amd64":
-        dependencies = amd64_dependencies
-    else:
-        assert False, f"Architecture {arch} is not arm64 or amd64"
-
-    assert tree("/required_libs_test") == dependencies, "required_libs content differs"
+    assert (
+        tree("/required_libs_test") == dependencies[arch]
+    ), "required_libs content differs"
 
     shutil.rmtree("/required_libs_test")
