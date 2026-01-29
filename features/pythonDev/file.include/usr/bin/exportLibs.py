@@ -1,12 +1,12 @@
 #!/root/venv/bin/python3
 
 import os
-import pathlib
 import re
 import shutil
 import subprocess
 from argparse import ArgumentParser
 from os import PathLike
+from pathlib import Path
 
 from elftools.common.exceptions import ELFError
 from elftools.elf.elffile import ELFFile
@@ -59,7 +59,7 @@ def _isElf(path: str | PathLike[str]) -> bool:
             return False
 
 
-def _getInterpreter(path: str | PathLike[str]) -> pathlib.Path:
+def _getInterpreter(path: str | PathLike[str]) -> Path:
     """
     Returns the interpreter of an ELF. Supported architectures: x86_64, aarch64, i686.
 
@@ -73,22 +73,22 @@ def _getInterpreter(path: str | PathLike[str]) -> pathlib.Path:
         interp = elf.get_section_by_name(".interp")
 
         if interp:
-            return pathlib.Path(interp.data().split(b"\x00")[0].decode())
+            return Path(interp.data().split(b"\x00")[0].decode())
         else:
             match elf.header["e_machine"]:
                 case "EM_AARCH64":
-                    return pathlib.Path("/lib/ld-linux-aarch64.so.1")
+                    return Path("/lib/ld-linux-aarch64.so.1")
                 case "EM_386":
-                    return pathlib.Path("/lib/ld-linux.so.2")
+                    return Path("/lib/ld-linux.so.2")
                 case "EM_X86_64":
-                    return pathlib.Path("/lib64/ld-linux-x86-64.so.2")
+                    return Path("/lib64/ld-linux-x86-64.so.2")
                 case arch:
                     raise RuntimeError(
                         f"Error: Unsupported architecture for {path}: only support x86_64 (003e), aarch64 (00b7) and i686 (0003), but was {arch}"
                     )
 
 
-def _get_default_package_dir() -> pathlib.Path:
+def _get_default_package_dir() -> Path:
     """
     Finds the default site-packages or dist-packages directory of the default python3 environment
 
@@ -107,7 +107,7 @@ def _get_default_package_dir() -> pathlib.Path:
         [interpreter, "-c", "import site; print(site.getsitepackages()[0])"],
         stdout=subprocess.PIPE,
     )
-    return pathlib.Path(out.stdout.decode().strip())
+    return Path(out.stdout.decode().strip())
 
 
 def export(
@@ -124,8 +124,8 @@ def export(
     if not package_dir:
         package_dir = _get_default_package_dir()
     else:
-        package_dir = pathlib.Path(package_dir)
-    output_dir = pathlib.Path(output_dir)
+        package_dir = Path(package_dir)
+    output_dir = Path(output_dir)
 
     # Collect ld dependencies for installed pip packages
     dependencies = set()
@@ -161,6 +161,6 @@ def export(
 if __name__ == "__main__":
     args = parse_args()
     export(
-        output_dir=pathlib.Path(args.output_dir),
-        package_dir=pathlib.Path(args.package_dir),
+        output_dir=Path(args.output_dir),
+        package_dir=Path(args.package_dir),
     )
