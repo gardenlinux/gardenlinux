@@ -1,9 +1,14 @@
+# GL-SET-config-kernel-cmdline-no-ignition
 /etc/kernel/cmdline.d/50-ignition.cfg
+# GL-SET-config-initrd-no-ignition
 /etc/dracut.conf.d/30-ignition.conf
+# GL-SET-service-ignition-not-disabled
 /etc/systemd/system/ignition-disable.service
 #/etc/repart.d/root.conf
 #/usr/lib/tmpfiles.d/home.conf
 #/opt/{,.}*
 #/home/{,.}*
+# GL-SET-config-file-nothing-inside-root-home
 /root/{,.}*
+# GL-SET-config-udev-rules-no-image-dissect
 /usr/lib/udev/rules.d/90-image-dissect.rules

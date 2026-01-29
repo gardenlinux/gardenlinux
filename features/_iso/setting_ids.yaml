@@ -1,0 +1,18 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/systemd/system/getty@tty1.service.d/autologin.conf"
+        ids:
+          - GL-SET-_iso-service-getty-tty1-autologin
+      - file: "/etc/systemd/system/serial-getty@.service.d/autologin.conf"
+        ids:
+          - GL-SET-_iso-service-serial-getty-autologin
+      - file: "/opt/install/install.fstab"
+        ids:
+          - GL-SET-_iso-config-file-install-fstab
+      - file: "/opt/install/install.part"
+        ids:
+          - GL-SET-_iso-config-file-install-part
+      - file: "/opt/install/install.sh"
+        ids:
+          - GL-SET-_iso-script-install-sh

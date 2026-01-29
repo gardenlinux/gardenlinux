@@ -1,0 +1,30 @@
+setting_ids:
+  file:
+    include:
+      - file: "/usr/bin/check-tpm"
+        ids:
+          - GL-SET-_tpm2-script-check-tpm
+      - file: "/usr/bin/measure-pcr7"
+        ids:
+          - GL-SET-_tpm2-script-measure-pcr7
+      - file: "/etc/systemd/system/sysroot-var.mount"
+        ids:
+          - GL-SET-_tpm2-config-mount-var
+      - file: "/etc/repart.d/10-var.conf"
+        ids:
+          - GL-SET-_tpm2-config-repart-var
+      - file: "/etc/systemd/system/check-tpm.service"
+        ids:
+          - GL-SET-_tpm2-service-check-tpm
+      - file: "/etc/systemd/system/systemd-repart.service.requires/check-tpm.service"
+        ids:
+          - GL-SET-_tpm2-service-systemd-repart-check-tpm
+      - file: "/etc/systemd/system/systemd-cryptsetup-var.service"
+        ids:
+          - GL-SET-_tpm2-service-systemd-cryptsetup-var
+      - file: "/etc/systemd/system/initrd-switch-root.target.requires/tpm2-measure.service"
+        ids:
+          - GL-SET-_tpm2-service-initrd-switch-root-tpm2-measure
+      - file: "/etc/systemd/system/tpm2-measure.service"
+        ids:
+          - GL-SET-_tpm2-service-tpm2-measure

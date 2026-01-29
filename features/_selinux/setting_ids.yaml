@@ -1,0 +1,7 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/kernel/cmdline.d/90-lsm.cfg"
+        ids:
+          - GL-SET-_selinux-config-kernel-cmdline-selinux-enforcing
+          - GL-SET-_selinux-config-selinux-enforcing

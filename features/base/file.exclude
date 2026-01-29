@@ -1,11 +1,22 @@
+# GL-SET-config-file-no-backup-group
 /etc/group-
+# GL-SET-config-file-no-backup-gshadow
 /etc/gshadow-
+# GL-SET-config-file-no-backup-passwd
 /etc/passwd-
+# GL-SET-config-file-no-backup-shadow
 /etc/shadow-
+# GL-SET-config-file-no-backup-subgid
 /etc/subgid-
+# GL-SET-config-file-no-backup-subuid
 /etc/subuid-
+# GL-SET-config-file-no-pkgcache.bin
 /var/cache/apt/pkgcache.bin
+# GL-SET-config-file-no-srcpkgcache.bin
 /var/cache/apt/srcpkgcache.bin
-/var/cache/apt/archives/*.deb 
+# GL-SET-config-file-no-archives-deb
+/var/cache/apt/archives/*.deb
+# GL-SET-config-file-no-archives-partial-deb
 /var/cache/apt/archives/partial/*.deb
+# GL-SET-config-file-no-external-installation-planner-logs
 /var/log/apt/eipp.log.xz

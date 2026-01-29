@@ -1,0 +1,15 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/systemd/system/emergency.service.d/sulogin.conf"
+        ids:
+          - GL-SET-_dev-service-emergency-sulogin
+      - file: "/etc/systemd/system/getty@tty1.service.d/autologin.conf"
+        ids:
+          - GL-SET-_dev-service-getty-tty1-autologin
+      - file: "/etc/systemd/system/rescue.service.d/sulogin.conf"
+        ids:
+          - GL-SET-_dev-service-rescue-sulogin
+      - file: "/etc/systemd/system/serial-getty@.service.d/autologin.conf"
+        ids:
+          - GL-SET-_dev-service-serial-getty-autologin

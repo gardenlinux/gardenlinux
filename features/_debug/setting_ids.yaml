@@ -1,0 +1,15 @@
+setting_ids:
+  file:
+    include:
+      # - file: "/etc/debugbox.conf"
+      #   ids:
+      #     - GL-SET-_debug-config-file-001
+      - file: "/usr/sbin/setup-debugbox-ssh"
+        ids:
+          - GL-SET-_debug-script-setup-debugbox-ssh
+      - file: "/etc/systemd/system/setup-debugbox-ssh.service
+        ids:
+          - GL-SET-_debug-service-setup-debugbox-ssh
+      - file: "/etc/systemd/system/ssh-container.service
+        ids:
+          - GL-SET-_debug-service-ssh-container

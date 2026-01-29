@@ -1,0 +1,12 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/kernel/postinst.d/00-kernel-cmdline"
+        ids:
+          - GL-SET-lima-config-kernel-postinst-cmdline
+      - file: "/etc/kernel/cmdline.d/00-default.cfg"
+        ids:
+          - GL-SET-lima-config-kernel-cmdline-default
+      - file: "/etc/kernel/cmdline.d/10-console.cfg"
+        ids:
+          - GL-SET-lima-config-kernel-cmdline-console

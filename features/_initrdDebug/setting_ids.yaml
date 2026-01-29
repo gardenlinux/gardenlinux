@@ -1,0 +1,9 @@
+setting_ids:
+  initrd:
+    include:
+      - file: "/etc/passwd"
+        ids:
+          - GL-SET-_initrdDebug-config-user-root
+      - file: "/etc/kernel/cmdline.d/~~-rd-break.cfg"
+        ids:
+          - GL-SET-_initrdDebug-config-kernel-cmdline-rd-break

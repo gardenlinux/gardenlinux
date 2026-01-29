@@ -1,0 +1,45 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/apt/apt.conf.d/autoclean"
+        ids:
+          - GL-SET-base-config-apt-autoclean
+      - file: "/etc/apt/apt.conf.d/gzip-indexes"
+        ids:
+          - GL-SET-base-config-apt-gzip-indexes
+      - file: "/etc/apt/apt.conf.d/no-caches"
+        ids:
+          - GL-SET-base-config-apt-no-caches
+      - file: "/etc/apt/apt.conf.d/no-languages"
+        ids:
+          - GL-SET-base-config-apt-no-languages
+      - file: "/etc/apt/apt.conf.d/no-recommends"
+        ids:
+          - GL-SET-base-config-apt-no-recommends
+      - file: "/etc/apt/apt.conf.d/no-suggests"
+        ids:
+          - GL-SET-base-config-apt-no-suggests
+      - file: "/etc/apt/preferences.d/gardenlinux"
+        ids:
+          - GL-SET-base-config-apt-preferences-gardenlinux
+      - file: "/etc/dpkg/dpkg.cfg.d/forceold"
+        ids:
+          - GL-SET-base-config-dpkg-forceold
+      - file: "/etc/dpkg/dpkg.cfg.d/speedup"
+        ids:
+          - GL-SET-base-config-dpkg-speedup
+      - file: "/etc/dpkg/origins/gardenlinux"
+        ids:
+          - GL-SET-base-config-dpkg-origins-gardenlinux
+      - file: "/etc/ucf.conf"
+        ids:
+          - GL-SET-base-config-file-ucf-conf
+      - file: "/etc/veritytab"
+        ids:
+          - GL-SET-base-config-file-veritytab
+      - file: "/var/www/.gitignore"
+        ids:
+          - GL-SET-base-config-file-www-gitignore
+      - file: "/etc/sysctl.d/10-disable-sysrq.conf"
+        ids:
+          - GL-SET-base-config-sysctl-disable-sysrq

@@ -1,0 +1,56 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/kernel/cmdline.d/99-no-gpt-auto.cfg"
+        ids:
+          - GL-SET-_usi-config-kernel-cmdline-no-gpt-auto
+      - file: "/etc/update-motd.d/25-secureboot"
+        ids:
+          - GL-SET-_usi-config-update-motd-secureboot
+      - file: "/usr/local/sbin/update-kernel-cmdline"
+        ids:
+          - GL-SET-_usi-config-script-update-kernel-cmdline
+      - file: "/usr/sbin/enroll-gardenlinux-secureboot-keys"
+        ids:
+          - GL-SET-_usi-config-script-enroll-gardenlinux-secureboot-keys
+  initrd:
+    include:
+      - file: "/etc/repart.d/00-efi.conf"
+        ids:
+          - GL-SET-_usi-config-repart-efi
+      - file: "/etc/systemd/system/initrd-root-fs.target.requires/sysroot-etc.mount"
+        ids:
+          - GL-SET-_usi-config-mount-initrd-root-fs-target-requires-sysroot-etc-mount
+      - file: "/etc/systemd/system/initrd-root-fs.target.requires/sysroot-home.mount"
+        ids:
+          - GL-SET-_usi-config-mount-initrd-root-fs-target-requires-sysroot-home-mount
+      - file: "/etc/systemd/system/initrd-root-fs.target.requires/sysroot-opt.mount"
+        ids:
+          - GL-SET-_usi-config-mount-initrd-root-fs-target-requires-sysroot-opt-mount
+      - file: "/etc/systemd/system/initrd-root-fs.target.requires/sysroot-root.mount"
+        ids:
+          - GL-SET-_usi-config-mount-initrd-root-fs-target-requires-sysroot-root-mount
+      - file: "/etc/systemd/system/initrd-root-fs.target.requires/sysroot.mount"
+        ids:
+          - GL-SET-_usi-config-mount-initrd-root-fs-target-requires-sysroot-mount
+      - file: "/etc/systemd/system/sysroot-etc.mount"
+        ids:
+          - GL-SET-_usi-config-mount-sysroot-etc-mount
+      - file: "/etc/systemd/system/sysroot-home.mount"
+        ids:
+          - GL-SET-_usi-config-mount-sysroot-home-mount
+      - file: "/etc/systemd/system/sysroot-opt.mount"
+        ids:
+          - GL-SET-_usi-config-mount-sysroot-opt-mount
+      - file: "/etc/systemd/system/sysroot-root.mount"
+        ids:
+          - GL-SET-_usi-config-mount-sysroot-root-mount
+      - file: "/etc/systemd/system/sysroot.mount"
+        ids:
+          - GL-SET-_usi-config-mount-sysroot-mount
+      - file: "/etc/systemd/system-generators/detect-disk-by-efivars"
+        ids:
+          - GL-SET-_usi-config-systemd-system-generators-detect-disk-by-efivars
+      - file: "/usr/bin/repart-esp-disk"
+        ids:
+          - GL-SET-_usi-config-script-repart-esp-disk

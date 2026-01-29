@@ -1,0 +1,30 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/containerd/config.toml"
+        ids:
+          - GL-SET-chost-config-file-containerd-config-toml
+      - file: "/etc/crictl.yaml"
+        ids:
+          - GL-SET-chost-config-file-crictl-yaml
+      - file: "/etc/modules-load.d/br_netfilter.conf"
+        ids:
+          - GL-SET-chost-config-modprobe-br-netfilter-config
+      - file: "/etc/modules-load.d/ip_tables.conf"
+        ids:
+          - GL-SET-chost-config-modprobe-ip-tables-config
+      - file: "/etc/modules-load.d/overlay.conf"
+        ids:
+          - GL-SET-chost-config-modprobe-overlayfs-config
+      - file: "/etc/systemd/system/containerd.service.d/override.conf"
+        ids:
+          - GL-SET-chost-service-containerd-override
+      - file: "/etc/modprobe.d/overlayfs.conf"
+        ids:
+          - GL-SET-chost-config-modprobe-overlayfs
+      - file: "/etc/sysctl.d/ip-forward.conf"
+        ids:
+          - GL-SET-chost-config-sysctl-ip-forward
+      - file: "/etc/sysctl.d/nf-call-iptables.conf"
+        ids:
+          - GL-SET-chost-config-sysctl-nf-call-iptables

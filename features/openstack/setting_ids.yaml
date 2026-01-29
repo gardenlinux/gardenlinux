@@ -1,0 +1,23 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg"
+        ids:
+          - GL-SET-openstack-config-cloud-apt-sources
+          - GL-SET-openstack-config-cloud-manage-hosts
+          - GL-SET-openstack-config-cloud-user-name
+          - GL-SET-openstack-config-cloud-user-shell
+          - GL-SET-openstack-config-cloud-user-lock-passwd
+          - GL-SET-openstack-config-cloud-user-sudo
+      - file: "/etc/cloud/cloud.cfg.d/50-datasource.cfg"
+        ids:
+          - GL-SET-openstack-config-cloud-datasource
+      - file: "/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg"
+        ids:
+          - GL-SET-openstack-config-cloud-disable-network-config
+      - file: "/etc/cloud/ds-identify.cfg"
+        ids:
+          - GL-SET-openstack-config-cloud-datasource-identify
+      - file: "/etc/kernel/cmdline.d/10-console.cfg"
+        ids:
+          - GL-SET-openstack-config-kernel-cmdline-console

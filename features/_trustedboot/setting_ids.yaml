@@ -1,0 +1,15 @@
+setting_ids:
+  file:
+    include:
+      - file: "/usr/bin/check-secureboot"
+        ids:
+          - GL-SET-_trustedboot-script-check-secureboot
+      - file: "/etc/kernel/cmdline.d/99-no-rd-shell.cfg"
+        ids:
+          - GL-SET-_trustedboot-config-kernel-cmdline-no-rd-shell
+      - file: "/etc/systemd/system/check-secureboot.service"
+        ids:
+          - GL-SET-_trustedboot-service-check-secureboot
+      - file: "/etc/systemd/system/emergency.service"
+        ids:
+          - GL-SET-_trustedboot-service-emergency

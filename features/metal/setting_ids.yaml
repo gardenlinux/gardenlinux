@@ -1,0 +1,33 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/kernel/entry-token"
+        ids:
+          - GL-SET-metal-config-kernel-entry-token
+      - file: "/etc/kernel/postinst.d/00-kernel-cmdline"
+        ids:
+          - GL-SET-metal-config-kernel-postinst-cmdline
+      - file: "/etc/kernel/postinst.d/00-ucode"
+        ids:
+          - GL-SET-metal-config-kernel-postinst-ucode
+      - file: "/etc/kernel/postinst.d/zz-update-syslinux"
+        ids:
+          - GL-SET-metal-config-kernel-postinst-update-syslinux
+      - file: "/etc/kernel/postrm.d/zz-update-syslinux"
+        ids:
+          - GL-SET-metal-config-kernel-postrm-update-syslinux
+      - file: "/usr/sbin/update-usbids"
+        ids:
+          - GL-SET-metal-script-update-usbids
+      - file: "/etc/kernel/cmdline.d/00-default.cfg"
+        ids:
+          - GL-SET-metal-config-kernel-cmdline-default
+      - file: "/etc/kernel/cmdline.d/10-console.cfg"
+        ids:
+          - GL-SET-metal-config-kernel-cmdline-console
+      - file: "/etc/udev/rules.d/69-nostbyrot.rules"
+        ids:
+          - GL-SET-metal-config-udev-rules-nostbyrot
+      - file: "/etc/udev/rules.d/71-intellldp.rules"
+        ids:
+          - GL-SET-metal-config-udev-rules-intellldp

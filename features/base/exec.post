@@ -4,8 +4,9 @@ set -eufo pipefail
 
 rootfs="$1"
 
+# GL-SET-base-config-file-hosts
 if [ -f "$rootfs/etc/hosts" ] && [ ! -L "$rootfs/etc/hosts" ]; then
-cat > "$rootfs/etc/hosts" << EOF
+    cat >"$rootfs/etc/hosts" <<EOF
 127.0.0.1	localhost
 127.0.1.1	garden
 
@@ -16,8 +17,9 @@ ff02::2 ip6-allrouters
 EOF
 fi
 
+# GL-SET-base-config-file-resolv-conf
 if [ -f "$rootfs/etc/resolv.conf" ] && [ ! -L "$rootfs/etc/resolv.conf" ]; then
-cat > "$rootfs/etc/resolv.conf" << EOF
+    cat >"$rootfs/etc/resolv.conf" <<EOF
 nameserver 8.8.8.8
 nameserver 8.8.4.4
 nameserver 2001:4860:4860::8888
@@ -25,11 +27,15 @@ nameserver 2001:4860:4860::8844
 EOF
 fi
 
+# GL-SET-base-config-resolved-no-backup
 if [ -f "$rootfs/etc/.resolv.conf.systemd-resolved.bak" ]; then
-rm "$rootfs/etc/.resolv.conf.systemd-resolved.bak"
+    rm "$rootfs/etc/.resolv.conf.systemd-resolved.bak"
 fi
 
+# GL-SET-base-config-security-no-log
+# GL-SET-base-config-security-no-cache
 find "$rootfs/var/log/" "$rootfs/var/cache/" -type f -delete
 
+# GL-SET-base-config-file-no-hostname
 rm "$rootfs/etc/hostname"
-echo -n > "$rootfs/etc/hostname"
+echo -n >"$rootfs/etc/hostname"

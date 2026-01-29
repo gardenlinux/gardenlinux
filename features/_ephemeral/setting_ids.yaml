@@ -1,0 +1,12 @@
+setting_ids:
+  initrd:
+    include:
+      - file: "/etc/systemd/system/sysroot-var.mount"
+        ids:
+          - GL-SET-_ephemeral-config-mount-var
+      - file: "/etc/repart.d/10-var.conf"
+        ids:
+          - GL-SET-_ephemeral-config-repart-var
+      - file: "/etc/systemd/system/ephemeral-cryptsetup.service"
+        ids:
+          - GL-SET-_ephemeral-service-ephemeral-cryptsetup

@@ -1,0 +1,15 @@
+setting_ids:
+  file:
+    include:
+      - file: "/usr/local/sbin/aide-init-onboot.sh"
+        ids:
+          - GL-SET-aide-script-aide-init-onboot
+      - file: "/etc/systemd/system/aide-check.timer"
+        ids:
+          - GL-SET-aide-timer-aide-check
+      - file: "/etc/systemd/system/aide-check.service"
+        ids:
+          - GL-SET-aide-service-aide-check
+      - file: "/etc/systemd/system/aide-init.service"
+        ids:
+          - GL-SET-aide-service-aide-init
