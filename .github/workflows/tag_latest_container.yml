@@ -21,7 +21,7 @@ jobs:
       packages: write
     steps:
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
       - name: Tag manifest
         env:
           GL_CLI_REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -38,10 +38,10 @@ jobs:
 
           # Tag the major release version
           echo "Tagging as ${version_major}"
-          gl-oci push-manifest-tags --container "${container}" --version "${version}" --tag "${version_major}"
+          gl-oci push-index-tags --index "${container}" --index-tag "${version}" --tag "${version_major}"
 
           # Tag latest only if requested
           if [ "${is_latest}" == "true" ]; then
             echo "Tagging as latest"
-            gl-oci push-manifest-tags --container "${container}" --version "${version}" --tag "latest"
+            gl-oci push-index-tags --index "${container}" --index-tag "${version}" --tag "latest"
           fi
