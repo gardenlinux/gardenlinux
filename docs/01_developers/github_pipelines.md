@@ -10,10 +10,10 @@
 | [publish_s3](../../.github/workflows/publish_s3.yml)    | Use to publish artifacts to S3 after a successful `nightly`, or successful `manual_release`. Can be triggered manually to publish based on a specific `run_id`.           | Publishes artifacts to S3 `gardenlinux-github-releases` bucket. |
 | [cloud_test_cleanup](../../.github/workflows/cloud_test_cleanup.yml) | Use to clean up cloud resources used during platform tests.           | Removes cloud resources used to perform platform tests. |
 
-To *manually trigger a nightly run*, for example when a change was merged to main to fix the nightly:
+To **manually trigger a nightly run**, for example when a change was merged to main to fix the nightly:
   - use the [manual_release](../../.github/workflows/manual_release.yml) workflow
   - select "nightly" as the "Garden Linux release target" and
-  - use the full Garden Linux version, for example 2134.0.0 as "today" will not work with the S3 upload
+  - use the full Garden Linux version, for example **2134.0.0** as "today" will not work with the S3 upload
 
 ## Scheduled Workflows
 
