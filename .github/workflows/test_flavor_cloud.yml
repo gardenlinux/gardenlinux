@@ -33,7 +33,11 @@ on:
         required: true
       az_subscription_id:
         required: true
-      ccc_credentials:
+      alibaba_cloud_role_arn:
+        required: true
+      alibaba_cloud_oidc_provider_arn:
+        required: true
+      alibaba_cloud_region:
         required: true
       tf_encryption:
         required: true
@@ -162,20 +166,21 @@ jobs:
             core.setSecret("${{ secrets.az_tenant_id }}");
             // tf provider vars
             core.exportVariable("ARM_TENANT_ID", "${{ secrets.az_tenant_id }}");
-      - name: "Create ali cloud credential file"
+      - id: "auth_alicloud"
+        if: ${{ startsWith(inputs.flavor, 'ali-') }}
+        name: "Authenticate to Alicloud"
+        uses: aliyun/configure-aliyun-credentials-action@v1b347e60e64028a4d567a8f31ca42e1b0706c3c99 # v1.0.7
+        with:
+          role-to-assume: ${{ secrets.alibaba_cloud_role_arn }}
+          oidc-provider-arn: ${{ secrets.alibaba_cloud_oidc_provider_arn }}
+          role-session-expiration: 21600
+      - name: "Set Alicloud platform-test environment"
         if: ${{ startsWith(inputs.flavor, 'ali-') }}
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
-            // tf provider auth
-            const credentials = JSON.parse(atob("${{ secrets.ccc_credentials }}"));
-            const aliCredentials = credentials.alicloud["gardenlinux-platform-test"];
-            core.setSecret(aliCredentials.access_key_id);
-            core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_ID", aliCredentials.access_key_id);
-            core.setSecret(aliCredentials.access_key_secret);
-            core.exportVariable("ALIBABA_CLOUD_ACCESS_KEY_SECRET", aliCredentials.access_key_secret);
             // tf provider vars
-            core.exportVariable("ALIBABA_CLOUD_REGION", aliCredentials.region);
+            core.exportVariable("ALIBABA_CLOUD_REGION", "${{ secrets.alibaba_cloud_region }}");
         # TODO: handle skipping better
       - name: Execute tests
         run: |
