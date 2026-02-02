@@ -14,5 +14,5 @@
 
 | Name                                                                 | Schedule  | Description                                                                 | Side Effects                                                       |
 |----------------------------------------------------------------------|-----------|-----------------------------------------------------------------------------|--------------------------------------------------------------------|
-| [nightly](.github/workflows/nightly.yml)                             | Daily    | Builds and platform tests the current version from the main branch using the current apt repo of the day. Uploads .0 release candidate of the day to S3. | Uploads .0 release candidate of the day to S3 `gardenlinux-github-releases` bucket. |
-| [cloud_test_cleanup](.github/workflows/cloud_test_cleanup.yml) | Daily    | Cleans up accumulated cloud resources spawned via Open Tofu in platform tests. | Removes cloud resources used to perform platform tests. |
+| [nightly](../../.github/workflows/nightly.yml)                             | Daily    | Builds and platform tests the current version from the main branch using the current apt repo of the day. Uploads .0 release candidate of the day to S3. | Uploads .0 release candidate of the day to S3 `gardenlinux-github-releases` bucket. |
+| [cloud_test_cleanup](../../.github/workflows/cloud_test_cleanup.yml) | Daily    | Cleans up accumulated cloud resources spawned via Open Tofu in platform tests. | Removes cloud resources used to perform platform tests. |
