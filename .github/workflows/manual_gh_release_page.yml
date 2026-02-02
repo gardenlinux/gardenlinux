@@ -121,7 +121,7 @@ jobs:
           else
             gl-gh create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
           fi
-      - uses: actions/cache/save@9255dc7a253b0ccc959486e2bca901246202afeb # pin@v5.0.1
+      - uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
         with:
           key: release-${{ github.run_id }}
           path: .github_release_id
@@ -151,7 +151,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           role-session-name: ${{ secrets.AWS_OIDC_SESSION }}
           aws-region: ${{ secrets.AWS_REGION }}
-      - uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # pin@v5.0.1
+      - uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
         with:
           key: release-${{ github.run_id }}
           path: .github_release_id
