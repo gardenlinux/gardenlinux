@@ -4,5 +4,5 @@ set -eufo pipefail
 
 useradd -s /sbin/nologin -r -G tss keylime
 
-mkdir /var/lib/keylime
-chown keylime /var/lib/keylime
+mkdir -p /var/lib/keylime
+chown keylime:keylime -R /var/lib/keylime
