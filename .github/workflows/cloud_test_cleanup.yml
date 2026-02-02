@@ -121,7 +121,7 @@ jobs:
       - id: "auth_alicloud"
         if: ${{ startsWith(inputs.flavor, 'ali-') }}
         name: "Authenticate to Alicloud"
-        uses: aliyun/configure-aliyun-credentials-action@v1b347e60e64028a4d567a8f31ca42e1b0706c3c99 # v1.0.7
+        uses: aliyun/configure-aliyun-credentials-action@b347e60e64028a4d567a8f31ca42e1b0706c3c99 # v1.0.7
         with:
           role-to-assume: ${{ secrets.alibaba_cloud_role_arn }}
           oidc-provider-arn: ${{ secrets.alibaba_cloud_oidc_provider_arn }}
