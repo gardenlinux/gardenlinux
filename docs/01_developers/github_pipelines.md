@@ -13,7 +13,7 @@
 To **manually trigger a nightly run**, for example when a change was merged to main to fix the nightly:
   - use the [manual_release](../../.github/workflows/manual_release.yml) workflow
   - select "nightly" as the "Garden Linux release target" and
-  - use the full Garden Linux version, for example **2134.0.0** as "today" will not work with the S3 upload
+  - use either the full Garden Linux version, for example **2134.0.0** or **now** but ~~today~~ will not work during the S3 upload step
 
 ## Scheduled Workflows
 
