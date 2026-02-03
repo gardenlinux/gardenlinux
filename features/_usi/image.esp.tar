@@ -70,7 +70,7 @@ chroot "$rootfs" dracut \
 	--kver "${kernel#*-}" \
 	--modules "bash dash systemd systemd-initrd systemd-repart systemd-cryptsetup kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown crypt" \
 	--reproducible \
-	--install 'find findmnt grep lsblk tail head realpath basename sfdisk mkfs.ext4 resizefat32 dd cryptsetup /usr/lib/systemd/systemd-pcrextend' \
+	--install 'find findmnt grep lsblk tail head realpath basename od sfdisk mkfs.ext4 resizefat32 dd cryptsetup /usr/lib/systemd/systemd-pcrextend' \
 	--include '/tmp/initrd.include' / \
 	--add-drivers erofs \
 	/initrd
