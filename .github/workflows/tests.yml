@@ -52,7 +52,11 @@ on:
         required: false
       az_subscription_id:
         required: false
-      ccc_credentials:
+      alibaba_cloud_role_arn:
+        required: false
+      alibaba_cloud_oidc_provider_arn:
+        required: false
+      alibaba_cloud_region:
         required: false
       tf_encryption:
         required: false

@@ -81,7 +81,9 @@ jobs:
       az_client_id: ${{ secrets.AZURE_CLIENT_ID }}
       az_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
       az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      ccc_credentials: ${{ secrets.CCC_CREDENTIALS }}
+      alibaba_cloud_role_arn: ${{ secrets.ALIBABA_CLOUD_ROLE_ARN }}
+      alibaba_cloud_oidc_provider_arn: ${{ secrets.ALIBABA_CLOUD_OIDC_PROVIDER_ARN }}
+      alibaba_cloud_region: ${{ secrets.ALIBABA_CLOUD_REGION }}
       tf_encryption: ${{ secrets.TF_ENCRYPTION }}
   download_build_requirements:
     if: ${{ inputs.build != true }}
@@ -175,5 +177,7 @@ jobs:
       az_client_id: ${{ secrets.AZURE_CLIENT_ID }}
       az_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
       az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      ccc_credentials: ${{ secrets.CCC_CREDENTIALS }}
+      alibaba_cloud_role_arn: ${{ secrets.ALIBABA_CLOUD_ROLE_ARN }}
+      alibaba_cloud_oidc_provider_arn: ${{ secrets.ALIBABA_CLOUD_OIDC_PROVIDER_ARN }}
+      alibaba_cloud_region: ${{ secrets.ALIBABA_CLOUD_REGION }}
       tf_encryption: ${{ secrets.TF_ENCRYPTION }}
