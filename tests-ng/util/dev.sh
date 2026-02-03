@@ -4,6 +4,10 @@ HOST_OS=$(uname -s)
 BUILD_DIR="$(realpath "${util_dir}/../.build")"
 NFSD_PID_FILE="${BUILD_DIR}/.unfsd.pid"
 NFSD_BIN_FILE="${BUILD_DIR}/unfsd__${HOST_OS}"
+VIRTIOFSD_BIN_FILE="${BUILD_DIR}/virtiofsd"
+VIRTIOFSD_LOG="${BUILD_DIR}/virtiofsd.log"
+VIRTIOFSD_PID_FILE="${BUILD_DIR}/.virtiofsd.pid"
+VIRTIOFSD_SOCKET="${BUILD_DIR}/.virtiofsd.sock"
 NFS_MOUNT_BIN_FILE="${BUILD_DIR}/mount.nfs__Linux"
 NFSD_EXPORTS="${BUILD_DIR}/exports"
 XNOTIFY_CLIENT_BIN_FILE="${BUILD_DIR}/xnotify__${HOST_OS}"
@@ -12,10 +16,13 @@ XNOTIFY_CLIENT_LOG="${BUILD_DIR}/xnotify.log"
 XNOTIFY_SERVER_BIN_FILE="${BUILD_DIR}/xnotify__Linux"
 TESTS_DIR="$(realpath "${util_dir}/../../tests-ng")"
 DEV_DEBUG=1
+# FILE_SHARING_BACKEND="virtiofs" # nfs | virtiofs
+FILE_SHARING_BACKEND="nfs" # nfs | virtiofs
 
 DAEMONIZE_VERSION="1.7.8"
 XNOTIFY_VERSION="0.3.1"
 UNFS3_VERSION="0.11.0"
+VIRTIOFSD_VERSION="1.13.3"
 
 XNOTIFY_SERVER_PORT="9999"
 NFSD_SERVER_PORT="4711"
@@ -257,6 +264,10 @@ ENV PKG_CONFIG_PATH=/install/util-linux/lib/pkgconfig
 ENV CFLAGS="-I/install/util-linux/include -I/install/libevent/include -I/install/sqlite/include"
 ENV LDFLAGS="-L/install/libevent/lib -L/install/sqlite/lib"
 ENV LD_LIBRARY_PATH="/install/sqlite/lib:/install/util-linux/lib"
+#
+# unfortunately for some reason some of these --disable options
+# are ignored, so I had to build everything you see above in this dockerfile
+#
 RUN ./configure \
   --prefix=/install/nfs-utils \
   --disable-nfsv4 \
@@ -280,6 +291,32 @@ EOF
 	printf "Done.\n"
 }
 
+build_virtiofsd() {
+	printf "==>\t\tbuilding virtiofsd in podman...\n"
+	cat <<EOF >"${BUILD_DIR}/Containerfile.virtiofsd"
+FROM docker.io/library/ubuntu:18.04
+RUN echo "$(date '+%s')" # this is required to invalidate podman cache
+RUN apt-get update && apt-get install -y libcap-ng-dev libseccomp-dev curl git build-essential
+WORKDIR /build
+RUN curl -sSf -o rustup.sh https://sh.rustup.rs && chmod +x rustup.sh && ./rustup.sh -yq
+RUN git clone --branch v${VIRTIOFSD_VERSION} --single-branch https://gitlab.com/virtio-fs/virtiofsd.git
+WORKDIR /build/virtiofsd
+# ENV RUSTFLAGS='-C target-feature=+crt-static -C link-self-contained=yes' 
+ENV LIBSECCOMP_LINK_TYPE=static 
+ENV LIBCAPNG_LINK_TYPE=static 
+RUN . /root/.cargo/env \
+  && HOST_TRIPLE=\`rustc -Vv | awk '/^host:/ {split(\$0, a, ": "); gsub(/unknown-/, "", a[2]); print a[2]}'\` \
+     LIBSECCOMP_LIB_PATH=/usr/lib/\$HOST_TRIPLE \
+     LIBCAPNG_LIB_PATH=/usr/lib/\$HOST_TRIPLE \
+     cargo build --release
+RUN cp ./target/release/virtiofsd /output/
+EOF
+	podman build -f "${BUILD_DIR}/Containerfile.virtiofsd" \
+		--volume "${BUILD_DIR}:/output" "${BUILD_DIR}"
+	rm -f "${BUILD_DIR}/Containerfile.virtiofsd"
+	printf "Done.\n"
+}
+
 extract_tests_runtime() {
 	printf "==>\t\textracting test runtime...\n"
 	(
@@ -300,42 +337,101 @@ extract_tests_runner_script() {
 }
 
 setup_nfs_shares() {
-	stop_nfsd
-
 	printf "==>\t\tsetting up NFS shares: "
 	cat <<EOF >"${NFSD_EXPORTS}"
 "${BUILD_DIR}/runtime" (insecure,ro,no_root_squash)
 "${TESTS_DIR}" (insecure,ro,no_root_squash)
 EOF
-	# -n, -m : NFS and MOUNT services to use non-default ports
-	# -e     : path to exports file
-	# -p     : do not register with portmap/rpcbind
-	# -t     : TCP-only mode
-	# -i     : path to PID file
-	"${NFSD_BIN_FILE}" \
-		-n ${NFSD_SERVER_PORT} -m ${NFSD_SERVER_PORT} \
-		-e "${NFSD_EXPORTS}" \
-		-p \
-		-t \
-		-i "${NFSD_PID_FILE}"
 	printf "Done.\n"
 }
 
-stop_nfsd() {
+start_nfs_server() {
+	printf "==>\t\tstarting NFS daemon: "
+	case $(uname -s) in
+	Linux)
+		# -n, -m : NFS and MOUNT services to use non-default ports
+		# -e     : path to exports file
+		# -p     : do not register with portmap/rpcbind
+		# -t     : TCP-only mode
+		# -i     : path to PID file
+		"${NFSD_BIN_FILE}" \
+			-n ${NFSD_SERVER_PORT} -m ${NFSD_SERVER_PORT} \
+			-e "${NFSD_EXPORTS}" \
+			-p \
+			-t \
+			-i "${NFSD_PID_FILE}"
+		;;
+	Darwin)
+		:
+		;;
+	esac
+	printf "Done.\n"
+}
+
+stop_nfs_server() {
 	printf "==>\t\tstopping unfsd...\n"
-	if [ -f "${NFSD_PID_FILE}" ]; then
-		if ! kill -0 "$(cat "${NFSD_PID_FILE}")"; then
-			rm -f "${NFSD_PID_FILE}"
+	case $(uname -s) in
+	Linux)
+		if [ -f "${NFSD_PID_FILE}" ]; then
+			if ! kill -0 "$(cat "${NFSD_PID_FILE}")"; then
+				rm -f "${NFSD_PID_FILE}"
+			else
+				kill "$(cat "${NFSD_PID_FILE}")" && rm -f "${NFSD_PID_FILE}"
+			fi
+		fi
+		;;
+	Darwin)
+		:
+		;;
+	esac
+	printf "Done.\n"
+}
+
+start_virtiofs_server() {
+	case $(uname -s) in
+	Linux)
+		_daemonize_bin="${BUILD_DIR}/daemonize"
+		;;
+	Darwin)
+		_daemonize_bin="daemonize"
+		;;
+	esac
+
+	printf "==>\t\tstarting virtiofs daemon: "
+	: >"${VIRTIOFSD_LOG}"
+	# -v : verbose output
+	# -a : append to log
+	# -o : redirect stdout to a file
+	# -e : redirect stderr to a file
+	# -p : save PID to a file
+	"${_daemonize_bin}" \
+		-v \
+		-a \
+		-o "${VIRTIOFSD_LOG}" \
+		-e "${VIRTIOFSD_LOG}" \
+		-p "${VIRTIOFSD_PID_FILE}" \
+		"${VIRTIOFSD_BIN_FILE}" \
+		--shared-dir "${TESTS_DIR}" \
+		--socket-path "${VIRTIOFSD_SOCKET}" \
+		--readonly \
+		--log-level debug
+
+	printf "Done.\n"
+}
+
+stop_virtiofs_server() {
+	printf "==>\t\tstopping virtiofs daemon...\n"
+	if [ -f "${VIRTIOFSD_PID_FILE}" ]; then
+		if ! kill -0 "$(cat "${VIRTIOFSD_PID_FILE}")"; then
+			rm -f "${VIRTIOFSD_PID_FILE}"
 		else
-			kill "$(cat "${NFSD_PID_FILE}")" && rm -f "${NFSD_PID_FILE}"
+			kill "$(cat "${VIRTIOFSD_PID_FILE}")" && rm -f "${VIRTIOFSD_PID_FILE}"
 		fi
 	fi
 	printf "Done.\n"
 }
 
 start_xnotify_client() {
-	stop_xnotify_client
-
 	case $(uname -s) in
 	Linux)
 		_daemonize_bin="${BUILD_DIR}/daemonize"
@@ -395,50 +491,20 @@ add_qemu_nfs_mount_binary_passing() {
 	qemu_opts+=(-fw_cfg "name=opt/gardenlinux/mount.nfs,file=${NFS_MOUNT_BIN_FILE}")
 }
 
-dev_setup() { # path-to-script
-	_runner_script="$1"
+add_qemu_virtiofs_setup() {
+	qemu_opts+=(-chardev "socket,id=char0,path=${VIRTIOFSD_SOCKET}")
+	qemu_opts+=(-device "vhost-user-fs-pci,chardev=char0,tag=tests-ng")
 
-	build_daemonize
+	case $(uname -s) in
+	Linux)
+		qemu_opts+=(-object "memory-backend-memfd,id=mem,size=4G,share=on")
+		;;
+	Darwin)
+		# no support for macOS for now
+		;;
+	esac
 
-	[ -x "${NFSD_BIN_FILE}" ] || build_unfsd
-	[ -x "${XNOTIFY_CLIENT_BIN_FILE}" ] || build_xnotify_client
-	[ -x "${XNOTIFY_SERVER_BIN_FILE}" ] || build_xnotify_server
-	[ -x "${NFS_MOUNT_BIN_FILE}" ] || build_nfs_mount
-	[ -d "${BUILD_DIR}/runtime" ] || extract_tests_runtime
-	[ -x "${BUILD_DIR}/run_tests" ] || extract_tests_runner_script
-
-	cp -v "${BUILD_DIR}/run_tests" "${BUILD_DIR}/runtime/"
-	cp -v "${XNOTIFY_SERVER_BIN_FILE}" "${BUILD_DIR}/runtime/"
-
-	setup_nfs_shares
-	start_xnotify_client
-
-	_tmpf=$(mktemp /tmp/_dev_runner.XXXXXX)
-	sed '/set -e/d; /mount/d; /poweroff/d; s,exec 1>/dev/virtio-ports/test_output,exec 1>/dev/console,' "$_runner_script" \
-		>"$_tmpf"
-	mv "$_tmpf" "$_runner_script"
-	cat >>"$_runner_script" <<EOF
-if [ "$DEV_DEBUG" = 1 ]; then
-    set -x
-fi
-if [ -x /sbin/nft ]; then
-  /sbin/nft add rule inet filter input tcp dport ${XNOTIFY_SERVER_PORT} ct state new counter accept
-fi
-/sbin/iptables -A INPUT -p tcp -m tcp --dport ${XNOTIFY_SERVER_PORT} -m state --state NEW -j ACCEPT
-
-cp -v /sys/firmware/qemu_fw_cfg/by_name/opt/gardenlinux/mount.nfs/raw /sbin/mount.nfs
-chmod 4755 /sbin/mount.nfs
-
-mkdir -p /run/gardenlinux-tests/{runtime,tests}
-mount -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${BUILD_DIR}/runtime /run/gardenlinux-tests/runtime
-mount -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${TESTS_DIR} /run/gardenlinux-tests/tests
-EOF
-
-	if [ $DEV_DEBUG = 1 ]; then
-		printf "==>\t\trunner script contents:\n"
-		cat "$_runner_script"
-		printf "==>\t\tend of runner script contents.\n"
-	fi
+	qemu_opts+=(-numa "node,memdev=mem")
 }
 
 dev_configure_runner() { # path-to-script test-arg1 test-arg2 ... test-argN
@@ -457,9 +523,104 @@ export PYTHONUNBUFFERED=1
 EOF
 }
 
+configure_nfs_vm_runner_script() {
+	_tmpf=$(mktemp /tmp/_dev_runner.XXXXXX)
+	sed '/set -e/d; /mount/d; /poweroff/d; s,exec 1>/dev/virtio-ports/test_output,exec 1>/dev/console,' "$_runner_script" \
+		>"$_tmpf"
+	mv "$_tmpf" "$_runner_script"
+	cat >>"$_runner_script" <<EOF
+if [ "$DEV_DEBUG" = 1 ]; then
+    set -x
+fi
+if [ -x /sbin/nft ]; then
+  /sbin/nft add rule inet filter input tcp dport ${XNOTIFY_SERVER_PORT} ct state new counter accept
+fi
+/sbin/iptables -A INPUT -p tcp -m tcp --dport ${XNOTIFY_SERVER_PORT} -m state --state NEW -j ACCEPT
+
+cp -v /sys/firmware/qemu_fw_cfg/by_name/opt/gardenlinux/mount.nfs/raw /sbin/mount.nfs
+chmod 4755 /sbin/mount.nfs
+
+mkdir -p /run/gardenlinux-tests/{runtime,tests}
+
+mount -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${BUILD_DIR}/runtime /run/gardenlinux-tests/runtime
+mount -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${TESTS_DIR} /run/gardenlinux-tests/tests
+EOF
+}
+
+configure_virtiofs_vm_runner_script() {
+	_tmpf=$(mktemp /tmp/_dev_runner.XXXXXX)
+	sed '/set -e/d; /mount/d; /poweroff/d; s,exec 1>/dev/virtio-ports/test_output,exec 1>/dev/console,' "$_runner_script" \
+		>"$_tmpf"
+	mv "$_tmpf" "$_runner_script"
+	cat >>"$_runner_script" <<EOF
+if [ "$DEV_DEBUG" = 1 ]; then
+    set -x
+fi
+if [ -x /sbin/nft ]; then
+  /sbin/nft add rule inet filter input tcp dport ${XNOTIFY_SERVER_PORT} ct state new counter accept
+fi
+/sbin/iptables -A INPUT -p tcp -m tcp --dport ${XNOTIFY_SERVER_PORT} -m state --state NEW -j ACCEPT
+
+mkdir -p /run/tests-ng
+mount -t virtiofs tests-ng /run/tests-ng
+ln -s /run/tests-ng /run/gardenlinux-tests/tests
+ln -s /run/tests-ng/.build/runtime /run/gardenlinux-tests/runtime
+EOF
+}
+
 dev_cleanup() {
-	stop_nfsd
+	stop_nfs_server
 	stop_xnotify_client
+	stop_virtiofs_server
+}
+
+# main entrypoint
+dev_setup() { # path-to-script
+	_runner_script="$1"
+
+	build_daemonize
+
+	[ -x "${XNOTIFY_CLIENT_BIN_FILE}" ] || build_xnotify_client
+	[ -x "${XNOTIFY_SERVER_BIN_FILE}" ] || build_xnotify_server
+	[ -d "${BUILD_DIR}/runtime" ] || extract_tests_runtime
+	[ -x "${BUILD_DIR}/run_tests" ] || extract_tests_runner_script
+
+	cp -v "${BUILD_DIR}/run_tests" "${BUILD_DIR}/runtime/"
+	cp -v "${XNOTIFY_SERVER_BIN_FILE}" "${BUILD_DIR}/runtime/"
+
+	case $FILE_SHARING_BACKEND in
+	nfs)
+		[ -x "${NFSD_BIN_FILE}" ] || build_unfsd
+		[ -x "${NFS_MOUNT_BIN_FILE}" ] || build_nfs_mount
+
+		setup_nfs_shares
+
+		stop_nfs_server
+		start_nfs_server
+
+		configure_nfs_vm_runner_script
+		;;
+	virtiofs)
+		[ -x "${VIRTIOFSD_BIN_FILE}" ] || build_virtiofsd
+
+		stop_virtiofs_server
+		start_virtiofs_server
+
+		sleep 1 # wait for virtiofsd to create a socket
+
+		configure_virtiofs_vm_runner_script
+		;;
+	esac
+
+	if [ $DEV_DEBUG = 1 ]; then
+		printf "==>\t\trunner script contents:\n"
+		cat "$_runner_script"
+		printf "==>\t\tend of runner script contents.\n"
+	fi
+
+	stop_xnotify_client
+	start_xnotify_client
+
 }
 
 trap "dev_cleanup" ERR EXIT INT
