@@ -178,7 +178,6 @@ jobs:
             core.setSecret("${{ secrets.az_tenant_id }}");
             core.exportVariable("ARM_TENANT_ID", "${{ secrets.az_tenant_id }}");
       - id: "auth_alicloud"
-        if: ${{ startsWith(inputs.flavor, 'ali-') }}
         name: "Authenticate to Alicloud"
         uses: aliyun/configure-aliyun-credentials-action@b347e60e64028a4d567a8f31ca42e1b0706c3c99 # v1.0.7
         with:
@@ -186,8 +185,7 @@ jobs:
           oidc-provider-arn: ${{ secrets.alibaba_cloud_oidc_provider_arn }}
           role-session-expiration: 21600
       - name: "Set Alicloud platform-test environment"
-        if: ${{ startsWith(inputs.flavor, 'ali-') }}
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@v7
         with:
           script: |
             // tf provider vars
