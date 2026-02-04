@@ -36,9 +36,9 @@ def test_profile_autologout_stig(parse_file: ParseFile):
 
 
 @pytest.mark.feature(
-    "openstackbaremetal", reason="enabled in openstackbaremetal feature"
+    "openstack and metal", reason="enabled in openstack on metal feature"
 )
-def test_profile_autologout_openstackbaremetal(parse_file: ParseFile):
+def test_profile_autologout_openstack_metal(parse_file: ParseFile):
     """Test that the autologout profile is set correctly."""
     file = "/etc/profile.d/50-autologout.sh"
     lines_list = [
@@ -104,7 +104,7 @@ def test_shell_tmout_is_exported_stig(parse_file: ParseFile):
 TMOUT_FILE_CLOUD = "/etc/profile.d/50-autologout.sh"
 
 
-@pytest.mark.feature("cloud and openstackbaremetal")
+@pytest.mark.feature("cloud or (openstack and metal)")
 def test_shell_tmout_file_exists_cloud(file: File):
     """
     As per DISA STIG requirement, this test validates that the shell inactivity
@@ -116,7 +116,7 @@ def test_shell_tmout_file_exists_cloud(file: File):
     ), "stigcompliance: shell inactivity timeout configuration file is missing"
 
 
-@pytest.mark.feature("cloud and openstackbaremetal")
+@pytest.mark.feature("cloud or (openstack and metal)")
 def test_shell_tmout_is_configured_cloud(parse_file: ParseFile):
     """
     As per DISA STIG requirement, this test verifies that TMOUT variable is configured.
@@ -127,7 +127,7 @@ def test_shell_tmout_is_configured_cloud(parse_file: ParseFile):
     ), "stigcompliance: TMOUT is not configured"
 
 
-@pytest.mark.feature("cloud and openstackbaremetal")
+@pytest.mark.feature("cloud or (openstack and metal)")
 def test_shell_tmout_is_readonly_cloud(parse_file: ParseFile):
     """
     As per DISA STIG requirement, this test verifies that TMOUT is marked ReadOnly.
@@ -138,7 +138,7 @@ def test_shell_tmout_is_readonly_cloud(parse_file: ParseFile):
     ), "stigcompliance: TMOUT is not marked as readonly"
 
 
-@pytest.mark.feature("cloud and openstackbaremetal")
+@pytest.mark.feature("cloud or (openstack and metal)")
 def test_shell_tmout_is_exported_cloud(parse_file: ParseFile):
     """
     As per DISA STIG requirement, this test verifies that TMOUT is

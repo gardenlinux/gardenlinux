@@ -1,0 +1,3 @@
+markers:
+  "etc/sysctl.d/99-cis.conf":
+  - "GL-TESTCOV-cisSysctl-config-sysctl-cis"
