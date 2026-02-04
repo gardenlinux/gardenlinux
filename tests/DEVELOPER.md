@@ -1,4 +1,4 @@
-# Garden Linux Tests Next Generation - Developer Guide
+# Garden Linux Tests - Developer Guide
 
 This document provides comprehensive guidelines for developing and maintaining tests in the Garden Linux test framework.
 

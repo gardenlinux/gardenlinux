@@ -4,7 +4,7 @@ set -eufo pipefail
 
 help() {
 	cat <<EOF
-Garden Linux Tests Next Generation
+Garden Linux Tests
 
 Usage: ${0} [OPTIONS] ARTIFACT
 

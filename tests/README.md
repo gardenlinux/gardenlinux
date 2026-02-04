@@ -1,10 +1,10 @@
-# Garden Linux Tests Next Generation
+# Garden Linux Tests
 
 This directory contains the next generation testing framework for Garden Linux images. The framework supports testing Garden Linux images in various environments including chroot, QEMU virtual machines, and cloud providers.
 
 ## Table of Contents
 
-- [Garden Linux Tests Next Generation](#garden-linux-tests-next-generation-tests)
+- [Garden Linux Tests](#garden-linux-tests)
   - [Table of Contents](#table-of-contents)
   - [Structure](#structure)
   - [Running Tests](#running-tests)

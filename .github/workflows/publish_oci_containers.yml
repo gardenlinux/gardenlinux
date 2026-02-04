@@ -434,7 +434,7 @@ jobs:
           podman login -u token -p ${GITHUB_TOKEN} ghcr.io
 
           # Push amd64 and arm64 images
-          podman push ghcr.io/${{ github.repository_owner }}/testg:amd64-${version}
+          podman push ghcr.io/${{ github.repository_owner }}/test:amd64-${version}
           podman push ghcr.io/${{ github.repository_owner }}/test:arm64-${version}
 
           if [ "$is_nightly" = true ]; then
