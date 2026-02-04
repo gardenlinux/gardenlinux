@@ -1,5 +1,5 @@
 GIT_DIR := $(shell git rev-parse --show-toplevel --show-superproject-working-tree | tail -n1)
-ROOT_DIR := "$(GIT_DIR)/tests-ng"
+ROOT_DIR := "$(GIT_DIR)/tests"
 
 .PHONY: install install-dev format-black format-isort format lint-black lint-isort lint-pyright lint help
 

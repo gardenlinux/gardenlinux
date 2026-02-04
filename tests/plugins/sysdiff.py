@@ -1,5 +1,5 @@
 """
-System state snapshot and diff functionality for tests-ng.
+System state snapshot and diff functionality for tests.
 
 Provides snapshot and comparison capabilities for:
 - packages (dpkg)
@@ -643,7 +643,7 @@ class DiffEngine:
 
 
 class Sysdiff:
-    """Main sysdiff class for tests-ng integration"""
+    """Main sysdiff class for tests integration"""
 
     def __init__(self, shell: ShellRunner):
         self.shell = shell

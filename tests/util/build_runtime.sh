@@ -35,7 +35,7 @@ requirements="$1"
 python_env="$2"
 output="$3"
 
-# shellcheck source=tests-ng/util/python.env.sh
+# shellcheck source=tests/util/python.env.sh
 source "$python_env"
 
 python_lib_dir="lib/python${PYTHON_VERSION_SHORT}/site-packages"

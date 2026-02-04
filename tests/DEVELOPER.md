@@ -1,6 +1,6 @@
 # Garden Linux Tests Next Generation - Developer Guide
 
-This document provides comprehensive guidelines for developing and maintaining tests in the Garden Linux tests-ng framework.
+This document provides comprehensive guidelines for developing and maintaining tests in the Garden Linux test framework.
 
 ## Table of Contents
 
@@ -37,7 +37,7 @@ The following principles guide all test development in Garden Linux:
 - Use appropriate markers (`@pytest.mark.modify`, `@pytest.mark.root`) to declare system modifications
 - Document (`reason=`) why system modifications are necessary
 - Ensure tests clean up after themselves.
-  - If new functionality is added, check if `tests-ng/plugins/sysdiff.py` collects modifications.
+  - If new functionality is added, check if `tests/plugins/sysdiff.py` collects modifications.
 
 #### 4. Only run as root when needed
 
@@ -89,13 +89,13 @@ The following principles guide all test development in Garden Linux:
 
 The framework uses pytest's plugin system to automatically register fixtures:
 
-1. **Plugins** (`tests-ng/plugins/`) - Provide fixtures for system access
-2. **Handlers** (`tests-ng/handlers/`) - Provide fixtures for setup/teardown
-3. **Tests** (`tests-ng/test_*.py`) - Use fixtures via dependency injection
+1. **Plugins** (`tests/plugins/`) - Provide fixtures for system access
+2. **Handlers** (`tests/handlers/`) - Provide fixtures for setup/teardown
+3. **Tests** (`tests/test_*.py`) - Use fixtures via dependency injection
 
 **Registration**: All plugins are automatically registered as pytest fixtures via `conftest.py`
 
-### Plugins (`tests-ng/plugins/`)
+### Plugins (`tests/plugins/`)
 
 Plugins are pytest fixtures that handle infrastructure concerns and system interactions:
 
@@ -104,7 +104,7 @@ Plugins are pytest fixtures that handle infrastructure concerns and system inter
 - **Examples**: `Systemd`, `Sshd`, `ShellRunner`, `KernelModule`
 - **Guideline**: Handle "how to access" not "what to test"
 
-### Handlers (`tests-ng/handlers/`)
+### Handlers (`tests/handlers/`)
 
 Handlers are pytest fixtures that manage test setup and teardown:
 
@@ -115,7 +115,7 @@ Handlers are pytest fixtures that manage test setup and teardown:
 
 **Key distinction**: Unlike regular fixtures that provide data, handlers manage stateful resources that need explicit cleanup.
 
-### Utils (`tests-ng/plugins/utils.py`)
+### Utils (`tests/plugins/utils.py`)
 
 Utility functions provide reusable functionality:
 
@@ -284,7 +284,7 @@ Use handlers (yield fixtures) for managing test state and cleanup:
 - Only restore what you changed (don't stop services that were already running)
 - Clean up in reverse order of setup (especially important for dependencies like kernel modules)
 - Use `ignore_exit_code=True` for cleanup operations that might fail if already cleaned up
-- If new system modifications are introduced, verify that `tests-ng/plugins/sysdiff.py` can detect them
+- If new system modifications are introduced, verify that `tests/plugins/sysdiff.py` can detect them
 
 **Example: service test, including setup and teardown**
 
@@ -583,7 +583,7 @@ def test_example(systemd: Systemd):
 
 ### Code Style and CI Enforcement
 
-The project enforces code quality through CI linting (see `.github/workflows/lint_tests-ng.yml`):
+The project enforces code quality through CI linting (see `.github/workflows/lint_tests.yml`):
 
 - **[Black](https://black.readthedocs.io/en/stable/)**: Automatic code formatting
 - **[isort](https://pycqa.github.io/isort/)**: Import statement sorting
@@ -604,7 +604,7 @@ We highly suggest you configure your IDE or text editor to automatically apply f
 5. Initialize all variables with a sensible default value instead of using `None` (unless the value and its type hint explicitly make it noneable)
 
 > [!TIP]
-> Run `make -f tests-ng/dev.makefile format` locally before committing
+> Run `make -f tests/dev.makefile format` locally before committing
 
 ### Error Handling
 
@@ -665,7 +665,7 @@ from .systemd import Systemd, SystemdUnit
 
 ### Current Dependencies
 
-See `tests-ng/util/requirements.txt` for current dependencies. Each dependency should be justified.
+See `tests/util/requirements.txt` for current dependencies. Each dependency should be justified.
 
 ### Adding New Dependencies
 
@@ -674,11 +674,11 @@ When adding new dependencies:
 1. **Justify the need** - Why can't the standard library solve this?
 2. **Document the benefit** - What does this library provide?
 3. **Consider alternatives** - Are there lighter alternatives?
-4. **Update requirements.txt** - Pin package versions in `tests-ng/util/requirements.txt`
+4. **Update requirements.txt** - Pin package versions in `tests/util/requirements.txt`
 
 ## Resources
 
 - [PEP 8 – Style Guide for Python Code](https://peps.python.org/pep-0008/)
 - [Pytest Documentation](https://docs.pytest.org/)
 - [Python Testing Best Practices](https://docs.python.org/3/library/unittest.html)
-- [Garden Linux Tests-NG README](./README.md) - For usage and running tests
+- [Garden Linux Tests README](./README.md) - For usage and running tests

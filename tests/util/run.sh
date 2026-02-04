@@ -4,7 +4,7 @@ set -eufo pipefail
 
 help() {
 	cat <<EOF
-Garden Linux Tests Next Generation (tests-ng)
+Garden Linux Tests Next Generation
 
 Usage: ${0} [OPTIONS] ARTIFACT
 
@@ -54,30 +54,30 @@ ARTIFACT TYPES
 EXAMPLES
   # Run chroot tests on a tar image
 
-  ./test-ng .build/aws-gardener_prod-amd64-today-13371337.tar
+  ./test .build/aws-gardener_prod-amd64-today-13371337.tar
   # Run OCI container tests on Base Image
-  ./test-ng .build/container-amd64-today-local.oci
+  ./test .build/container-amd64-today-local.oci
 
   # Run QEMU tests with SSH access and skip cleanup
-  ./test-ng --ssh --skip-cleanup .build/aws-gardener_prod-amd64-today-13371337.raw
+  ./test --ssh --skip-cleanup .build/aws-gardener_prod-amd64-today-13371337.raw
 
   # Run cloud tests on AWS, skipping cleanup
-  ./test-ng --cloud aws --skip-cleanup .build/aws-gardener_prod-amd64-today-13371337.raw
+  ./test --cloud aws --skip-cleanup .build/aws-gardener_prod-amd64-today-13371337.raw
 
   # Run cloud tests but skip test execution and cleanup
-  ./test-ng --cloud aws --skip-tests --skip-cleanup .build/aws-gardener_prod-amd64-today-13371337.raw
+  ./test --cloud aws --skip-tests --skip-cleanup .build/aws-gardener_prod-amd64-today-13371337.raw
 
   # Run QEMU tests and only run test_ssh.py in verbose mode
-  ./test-ng --test-args "test_ssh.py -v" aws-gardener_prod-amd64-today-13371337.raw
+  ./test --test-args "test_ssh.py -v" aws-gardener_prod-amd64-today-13371337.raw
 
   # Run cloud tests skip cleanup and only run specific tests in verbose mode
-  ./test-ng --cloud aws --skip-cleanup --test-args "test_ssh.py test_aws.py -v" .build/aws-gardener_prod-amd64-today-13371337.raw
+  ./test --cloud aws --skip-cleanup --test-args "test_ssh.py test_aws.py -v" .build/aws-gardener_prod-amd64-today-13371337.raw
 
   # Spin up an existing cloud image using image requirements file
-  ./test-ng --cloud aws --skip-cleanup --skip-tests --cloud-image --image-requirements-file .build/aws-gardener_prod-amd64-today-local.requirements ami-07f977508ed36098e
+  ./test --cloud aws --skip-cleanup --skip-tests --cloud-image --image-requirements-file .build/aws-gardener_prod-amd64-today-local.requirements ami-07f977508ed36098e
 
   # Run QEMU VM with PXE boot testing
-  ./test-ng .build/metal_pxe-amd64-today-local.pxe.tar.gz
+  ./test .build/metal_pxe-amd64-today-local.pxe.tar.gz
 
 ENVIRONMENTS
   Chroot Testing: Runs tests directly in extracted image filesystem (fastest, filesystem-level only)
@@ -86,7 +86,7 @@ ENVIRONMENTS
   PXE Testing: Boots PXE archive via QEMU network boot (full system testing)
   OCI Testing: Runs tests in container from OCI image (very fast, limited to base image and an unbooted system)
 
-For more information, see tests-ng/README.md
+For more information, see tests/README.md
 EOF
 }
 
@@ -164,7 +164,7 @@ done
 # Check if artifact argument is provided
 if [ $# -eq 0 ]; then
 	echo "Error: No artifact specified" >&2
-	echo "Use './test-ng --help' for usage information" >&2
+	echo "Use './test --help' for usage information" >&2
 	exit 1
 fi
 

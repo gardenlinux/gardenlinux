@@ -71,14 +71,14 @@ fi
 seed=${uuid%%-*}
 
 if [ -n "${GITHUB_RUN_ID:-}" ] && [ -n "${GITHUB_RUN_NUMBER:-}" ]; then
-	workspace="test-ng-${GITHUB_RUN_ID}-${GITHUB_RUN_NUMBER}-${image_name}-${seed}"
+	workspace="test-${GITHUB_RUN_ID}-${GITHUB_RUN_NUMBER}-${image_name}-${seed}"
 else
-	workspace="test-ng-${image_name}-${seed}"
+	workspace="test-${image_name}-${seed}"
 fi
 
 log_dir="$util_dir/../log"
-log_file_log="cloud.test-ng.log"
-log_file_junit="cloud.test-ng.xml"
+log_file_log="cloud.test.log"
+log_file_junit="cloud.test.xml"
 
 mkdir -p "$log_dir"
 test_args+=("--junit-xml=/run/gardenlinux-tests/tests/log/$log_file_junit")
@@ -86,7 +86,7 @@ test_args+=("--junit-xml=/run/gardenlinux-tests/tests/log/$log_file_junit")
 # Extract test artifact name from image filename
 test_artifact="$(basename "$image" | sed 's/-[0-9].*\.raw$//')"
 test_type="cloud"
-test_namespace="test-ng"
+test_namespace="test"
 
 # Add pytest-metadata arguments
 test_args+=("--metadata" "Artifact" "$test_artifact")

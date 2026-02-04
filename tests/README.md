@@ -1,10 +1,10 @@
-# Garden Linux Tests Next Generation (tests-ng)
+# Garden Linux Tests Next Generation
 
 This directory contains the next generation testing framework for Garden Linux images. The framework supports testing Garden Linux images in various environments including chroot, QEMU virtual machines, and cloud providers.
 
 ## Table of Contents
 
-- [Garden Linux Tests Next Generation (tests-ng)](#garden-linux-tests-next-generation-tests-ng)
+- [Garden Linux Tests Next Generation](#garden-linux-tests-next-generation-tests)
   - [Table of Contents](#table-of-contents)
   - [Structure](#structure)
   - [Running Tests](#running-tests)
@@ -45,7 +45,7 @@ This directory contains the next generation testing framework for Garden Linux i
 ## Structure
 
 ```
-tests-ng/
+tests/
 ├── util/                   # Utility scripts for running tests
 │   ├── run.sh              # Main entry point for running tests
 │   ├── run_chroot.sh       # Chroot testing environment
@@ -113,23 +113,23 @@ brew install azure-cli awscli gcloud-cli aliyun-cli openstackclient
 
 ### Basic Usage
 
-The main entry point is `./test-ng` in the gardenlinux root directory (symlink to )`tests-ng/util/run.sh`). It automatically detects the image type and runs appropriate tests:
+The main entry point is `./test` in the gardenlinux root directory (symlink to )`tests/util/run.sh`). It automatically detects the image type and runs appropriate tests:
 
 > [!TIP]
-> Use `./test-ng --help` to see all available options and examples.
+> Use `./test --help` to see all available options and examples.
 
 ```bash
 # For chroot testing (tar files)
-./test-ng .build/$image.tar
+./test .build/$image.tar
 
 # For QEMU VM testing (raw files)
-./test-ng .build/$image.raw
+./test .build/$image.raw
 
 # For cloud provider testing (raw files only)
-./test-ng --cloud aws .build/$image.raw
-./test-ng --cloud gcp .build/$image.raw
-./test-ng --cloud azure .build/$image.raw
-./test-ng --cloud ali .build/$image.raw
+./test --cloud aws .build/$image.raw
+./test --cloud gcp .build/$image.raw
+./test --cloud azure .build/$image.raw
+./test --cloud ali .build/$image.raw
 ```
 
 ### Command Line Flags
@@ -168,28 +168,28 @@ The main entry point is `./test-ng` in the gardenlinux root directory (symlink t
 
 ```bash
 # Run chroot tests on a tar image
-./test-ng .build/aws-gardener_prod-amd64-today-13371337.tar
+./test .build/aws-gardener_prod-amd64-today-13371337.tar
 
 # Run OCI container tests on Base Image
-./test-ng .build/container-amd64-today-local.oci
+./test .build/container-amd64-today-local.oci
 
 # Run QEMU tests with SSH access and skip cleanup
-./test-ng --ssh --skip-cleanup .build/aws-gardener_prod-amd64-today-13371337.raw
+./test --ssh --skip-cleanup .build/aws-gardener_prod-amd64-today-13371337.raw
 
 # Run cloud tests on AWS, skipping cleanup
-./test-ng --cloud aws --skip-cleanup .build/aws-gardener_prod-amd64-today-13371337.raw
+./test --cloud aws --skip-cleanup .build/aws-gardener_prod-amd64-today-13371337.raw
 
 # Run cloud tests but skip the test execution and cleanup
-./test-ng --cloud aws --skip-tests --skip-cleanup .build/aws-gardener_prod-amd64-today-13371337.raw
+./test --cloud aws --skip-tests --skip-cleanup .build/aws-gardener_prod-amd64-today-13371337.raw
 
 # Run QEMU tests and only run the test test_ssh.py in verbose mode
-./test-ng --test-args "test_ssh.py -v" aws-gardener_prod-amd64-today-13371337.raw
+./test --test-args "test_ssh.py -v" aws-gardener_prod-amd64-today-13371337.raw
 
 # Run cloud tests skip cleanup and only run the tests test_ssh.py and test_aws.py in verbose mode
-./test-ng --cloud aws --skip-cleanup --test-args "test_ssh.py test_aws.py -v" .build/aws-gardener_prod-amd64-today-13371337.raw
+./test --cloud aws --skip-cleanup --test-args "test_ssh.py test_aws.py -v" .build/aws-gardener_prod-amd64-today-13371337.raw
 
 # Spin up an existing cloud image using image requirements file
-./test-ng --cloud aws --skip-cleanup --skip-tests --cloud-image --image-requirements-file .build/aws-gardener_prod-amd64-today-local.requirements ami-07f977508ed36098e
+./test --cloud aws --skip-cleanup --skip-tests --cloud-image --image-requirements-file .build/aws-gardener_prod-amd64-today-local.requirements ami-07f977508ed36098e
 ```
 
 ### Cloud Provider Authentication and Configuration
@@ -198,7 +198,7 @@ Before running tests, you need to authenticate with the cloud providers you want
 
 #### ALI
 
-ALI reuqires you to set up an [AccessKey pair](https://www.alibabacloud.com/help/en/cli/configure-credentials#0da5d08f581wn):
+ALI requires you to set up an [AccessKey pair](https://www.alibabacloud.com/help/en/cli/configure-credentials#0da5d08f581wn):
 
 ```
 # select profile
@@ -297,10 +297,10 @@ Tests and plugins can output additional debug logs that can be shown by passing 
 
 ```bash
 # Enable debug logging for all components
-./test-ng --test-args "--log-cli-level=DEBUG" ...
+./test --test-args "--log-cli-level=DEBUG" ...
 
 # Enable debug logging and only run a specific test
-./test-ng --test-args "--log-cli-level=DEBUG test_ssh.py" ...
+./test --test-args "--log-cli-level=DEBUG test_ssh.py" ...
 ```
 
 > [!IMPORTANT]
@@ -408,13 +408,13 @@ The test framework can be run directly on a live gardener cluster (or any Kubern
 apiVersion: v1
 kind: Pod
 metadata:
-  name: test-ng
+  name: test
 spec:
   hostPID: true
   restartPolicy: Never
   containers:
-    - name: test-ng
-      image: ghcr.io/gardenlinux/test-ng:nightly
+    - name: test
+      image: ghcr.io/gardenlinux/test:nightly
       securityContext:
         privileged: true
       args: [ "./run_tests", "--system-booted", "--expected-users", "gardener" ]
@@ -425,13 +425,13 @@ After this is deployed and the tests ran you can simply get the pod logs to see 
 If you want to get a JUnit XML output of the test run you can adjust the `args` as follows:
 
 ```yml
-args: [ "./run_tests", "--junit-xml", "output/test-ng.xml", "--system-booted", "--expected-users", "gardener" ]
+args: [ "./run_tests", "--junit-xml", "output/test.xml", "--system-booted", "--expected-users", "gardener" ]
 ```
 
-and bind mount a volume or similar at `/tests-ng/tests/output`. Obviously this will work with arbitrary locations, as long as the volume is mounted below `/tests-ng` and the `--junit-xml` path is given relative to `/tests-ng/tests`.
+and bind mount a volume or similar at `/tests/tests/output`. Obviously this will work with arbitrary locations, as long as the volume is mounted below `/tests` and the `--junit-xml` path is given relative to `/tests/tests`.
 
 > [!NOTE]
-> The `ghcr.io/gardenlinux/test-ng:nightly` container gets build and published daily to always provide the most up-to-date variant of the test-ng framework. In future releases there will also be per release variants of this.
+> The `ghcr.io/gardenlinux/test:nightly` container gets build and published daily to always provide the most up-to-date variant of the test framework. In future releases there will also be per release variants of this.
 
 ## Test Distribution Build Process
 
@@ -457,14 +457,14 @@ The build system creates several artifacts:
 
 ### Automatic Building
 
-The build process runs automatically when you execute `./test-ng`:
+The build process runs automatically when you execute `./test`:
 
 ```bash
 # Build artifacts are created automatically
-./test-ng .build/image.raw
+./test .build/image.raw
 
 # Or build manually
-cd tests-ng
+cd tests
 make -f util/build.makefile
 ```
 

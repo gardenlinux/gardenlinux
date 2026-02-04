@@ -32,9 +32,9 @@ image="$2"
 image_basename="$(basename -- "$image")"
 image_name=${image_basename/.*/}
 root_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")/../..")"
-log_dir="$root_dir/tests-ng/log"
-log_file_log="oci.test-ng.log"
-log_file_junit="oci.test-ng.xml"
+log_dir="$root_dir/tests/log"
+log_file_log="oci.test.log"
+log_file_junit="oci.test.xml"
 
 mkdir -p "$log_dir"
 test_args+=("--junit-xml=/run/gardenlinux-tests/log/$log_file_junit")
@@ -42,7 +42,7 @@ test_args+=("--junit-xml=/run/gardenlinux-tests/log/$log_file_junit")
 # Extract test artifact name from image filename
 test_artifact="$(basename "$image" | sed -E 's/(-[0-9].*)?\.oci$//')"
 test_type="oci"
-test_namespace="test-ng"
+test_namespace="test"
 
 # Add pytest-metadata arguments
 test_args+=("--metadata" "Artifact" "$test_artifact")
@@ -76,7 +76,7 @@ echo "🚀  running test container $image_name"
 run_args=(
     "--pull" "never"
     "--rm"
-    "-v" "$root_dir/tests-ng/.build/dist.tar.gz:/run/gardenlinux-tests/dist.tar.gz:ro"
+    "-v" "$root_dir/tests/.build/dist.tar.gz:/run/gardenlinux-tests/dist.tar.gz:ro"
     "-v" "$log_dir:/run/gardenlinux-tests/log:rw"
 )
 

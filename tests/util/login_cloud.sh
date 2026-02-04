@@ -25,9 +25,9 @@ uuid=$(<"$uuid_file")
 seed=${uuid%%-*}
 
 if [ -n "${GITHUB_RUN_ID:-}" ] && [ -n "${GITHUB_RUN_NUMBER:-}" ]; then
-    workspace="test-ng-${GITHUB_RUN_ID}-${GITHUB_RUN_NUMBER}-${image_name}-${seed}"
+    workspace="test-${GITHUB_RUN_ID}-${GITHUB_RUN_NUMBER}-${image_name}-${seed}"
 else
-    workspace="test-ng-${image_name}-${seed}"
+    workspace="test-${image_name}-${seed}"
 fi
 
 vm_ip="$(cd "$tf_dir" && tofu workspace select "$workspace" >/dev/null && tofu output --raw vm_ip)"

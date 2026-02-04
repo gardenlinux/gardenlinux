@@ -76,7 +76,7 @@ jobs:
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
           name: test-distribution
-          path: tests-ng/.build
+          path: tests/.build
       - name: Load certs artifact
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
@@ -199,14 +199,14 @@ jobs:
           fi
           if [ -e ".build/$CNAME.raw" ]; then
             # enable remote state S3 backend
-            cp "tests-ng/util/tf/backend.tf.github" "tests-ng/util/tf/backend.tf"
+            cp "tests/util/tf/backend.tf.github" "tests/util/tf/backend.tf"
 
             # enable state encryption
             export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
 
             # run test
             export TF_VAR_prefix="gh-${{ github.run_id }}"
-            ./test-ng --cloud $CLOUD ".build/$CNAME.raw"
+            ./test --cloud $CLOUD ".build/$CNAME.raw"
 
           else
             echo "no raw file, cloud test failed"
@@ -215,8 +215,8 @@ jobs:
       - name: Copy test results to build directory
         if: always()
         run: |
-          cp tests-ng/log/cloud.test-ng.log .build/${CNAME}.cloud.test.log || true
-          cp tests-ng/log/cloud.test-ng.xml .build/${CNAME}.cloud.test.xml || true
+          cp tests/log/cloud.test.log .build/${CNAME}.cloud.test.log || true
+          cp tests/log/cloud.test.xml .build/${CNAME}.cloud.test.xml || true
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         if: always()
         with:
@@ -229,11 +229,11 @@ jobs:
         if: always()
         run: |
           # enable remote state S3 backend
-          cp "tests-ng/util/tf/backend.tf.github" "tests-ng/util/tf/backend.tf"
+          cp "tests/util/tf/backend.tf.github" "tests/util/tf/backend.tf"
 
           # enable state encryption
           export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
 
           # run cleanup
           export TF_VAR_prefix="gh-${{ github.run_id }}"
-          ./test-ng --cloud $CLOUD --only-cleanup ".build/$CNAME.raw" || true
+          ./test --cloud $CLOUD --only-cleanup ".build/$CNAME.raw" || true

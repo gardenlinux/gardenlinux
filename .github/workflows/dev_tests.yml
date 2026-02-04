@@ -7,11 +7,11 @@ on:
     branches:
       - main
     paths:
-      - "tests-ng/**"
+      - "tests/**"
       - ".github/workflows/dev_tests.yml"
   pull_request:
     paths:
-      - "tests-ng/**"
+      - "tests/**"
       - ".github/workflows/dev_tests.yml"
 jobs:
   black:
@@ -27,7 +27,7 @@ jobs:
           python-version: "3.13"
 
       - name: Run black (diff check)
-        run: make -f tests-ng/dev.makefile lint-black
+        run: make -f tests/dev.makefile lint-black
 
   isort:
     name: isort (import sorting)
@@ -42,7 +42,7 @@ jobs:
           python-version: "3.13"
 
       - name: Run isort
-        run: make -f tests-ng/dev.makefile lint-isort
+        run: make -f tests/dev.makefile lint-isort
 
   pyright:
     name: Pyright (type checking)
@@ -57,7 +57,7 @@ jobs:
           python-version: "3.13"
 
       - name: Run pyright
-        run: make -f tests-ng/dev.makefile lint-pyright
+        run: make -f tests/dev.makefile lint-pyright
 
   test-plugins:
     name: Test plugins
@@ -72,4 +72,4 @@ jobs:
           python-version: "3.13"
 
       - name: Run test-plugins
-        run: make -f tests-ng/dev.makefile test-plugins
+        run: make -f tests/dev.makefile test-plugins
