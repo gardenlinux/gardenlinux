@@ -1,0 +1,29 @@
+markers:
+  "etc/apt/apt.conf.d/autoclean":
+  - "GL-TESTCOV-base-config-apt-autoclean"
+  "etc/apt/apt.conf.d/gzip-indexes":
+  - "GL-TESTCOV-base-config-apt-gzip-indexes"
+  "etc/apt/apt.conf.d/no-caches":
+  - "GL-TESTCOV-base-config-apt-no-caches"
+  "etc/apt/apt.conf.d/no-languages":
+  - "GL-TESTCOV-base-config-apt-no-languages"
+  "etc/apt/apt.conf.d/no-recommends":
+  - "GL-TESTCOV-base-config-apt-no-recommends"
+  "etc/apt/apt.conf.d/no-suggests":
+  - "GL-TESTCOV-base-config-apt-no-suggests"
+  "etc/apt/preferences.d/gardenlinux":
+  - "GL-TESTCOV-base-config-apt-preferences-gardenlinux"
+  "etc/dpkg/dpkg.cfg.d/forceold":
+  - "GL-TESTCOV-base-config-dpkg-forceold"
+  "etc/dpkg/dpkg.cfg.d/speedup":
+  - "GL-TESTCOV-base-config-dpkg-speedup"
+  "etc/dpkg/origins/gardenlinux":
+  - "GL-TESTCOV-base-config-dpkg-origins-gardenlinux"
+  "etc/sysctl.d/10-disable-sysrq.conf":
+  - "GL-TESTCOV-base-config-sysctl-sysrq-disable"
+  "etc/ucf.conf":
+  - "GL-TESTCOV-base-config-ucf"
+  "etc/veritytab":
+  - "GL-TESTCOV-base-config-veritytab"
+  "var/www/.gitignore":
+  - "GL-TESTCOV-base-config-www-gitignore"

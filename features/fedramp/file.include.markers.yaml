@@ -1,0 +1,25 @@
+markers:
+  "etc/chrony/chrony.conf":
+  - "GL-TESTCOV-fedramp-config-chrony"
+  "etc/firewall/ipv4_flush.sh":
+  - "GL-TESTCOV-fedramp-script-firewall-ipv4-flush"
+  "etc/firewall/ipv4_gl_default.conf":
+  - "GL-TESTCOV-fedramp-config-firewall-ipv4-gl-default"
+  "etc/firewall/ipv6_flush.sh":
+  - "GL-TESTCOV-fedramp-script-firewall-ipv6-flush"
+  "etc/firewall/ipv6_gl_default.conf":
+  - "GL-TESTCOV-fedramp-config-firewall-ipv6-gl-default"
+  "etc/issue.net":
+  - "GL-TESTCOV-fedramp-config-issue-net"
+  "etc/kernel/cmdline.d/30-fips.cfg":
+  - "GL-TESTCOV-fedramp-config-kernel-cmdline-fips"
+  "etc/kernel/cmdline.d/90-lsm.cfg":
+  - "GL-TESTCOV-fedramp-config-kernel-cmdline-lsm"
+  "etc/security/limits.conf":
+  - "GL-TESTCOV-fedramp-config-security-limits"
+  "etc/ssh/sshd_config":
+  - "GL-TESTCOV-fedramp-config-ssh-sshd-config"
+  "etc/systemd/system/gardenlinux-fw-ipv4.service":
+  - "GL-TESTCOV-fedramp-service-gardenlinux-fw-ipv4-unit"
+  "etc/systemd/system/gardenlinux-fw-ipv6.service":
+  - "GL-TESTCOV-fedramp-service-gardenlinux-fw-ipv6-unit"

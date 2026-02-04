@@ -1,0 +1,15 @@
+markers:
+  "etc/cloud/cloud.cfg.d/65-network-config.cfg":
+  - "GL-TESTCOV-openstackMetal-config-cloud-network-config"
+  "etc/dracut.conf.d/49-include-bnxt-drivers.conf":
+  - "GL-TESTCOV-openstackMetal-config-initrd-bnxt"
+  "etc/kernel/cmdline.d/40-enable-swap-cgroup-accounting.cfg":
+  - "GL-TESTCOV-openstackMetal-config-kernel-cmdline-enable-swap-cgroup-accounting"
+  "etc/modprobe.d/10-disallow-nouveau.conf":
+  - "GL-TESTCOV-openstackMetal-config-modprobe-disallow-nouveau"
+  "etc/profile.d/50-autologout.sh":
+  - "GL-TESTCOV-openstackMetal-script-profile-autologout"
+  "etc/repart.d/root.conf":
+  - "GL-TESTCOV-openstackMetal-config-repart-root"
+  "etc/sysctl.d/20-cloud.conf":
+  - "GL-TESTCOV-openstackMetal-config-sysctl-cloud"

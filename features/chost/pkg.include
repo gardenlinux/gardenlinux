@@ -1,4 +1,7 @@
+# GL-TESTCOV-chost-service-apparmor-enable
 apparmor
+# GL-TESTCOV-chost-service-containerd-enable
 containerd
 ethtool
+# GL-TESTCOV-chost-service-dbus-user-session-enable
 dbus-user-session

@@ -1,0 +1,28 @@
+markers:
+  "etc/chrony/chrony.conf":
+  - "GL-TESTCOV-azure-config-chrony"
+  "etc/cloud/cloud.cfg.d/01_debian-cloud.cfg":
+  - "GL-TESTCOV-azure-config-cloud-apt-sources"
+  - "GL-TESTCOV-azure-config-cloud-manage-hosts"
+  - "GL-TESTCOV-azure-config-cloud-user-name"
+  - "GL-TESTCOV-azure-config-cloud-user-shell"
+  - "GL-TESTCOV-azure-config-cloud-user-lock-passwd"
+  - "GL-TESTCOV-azure-config-cloud-user-sudo"
+  "etc/dracut.conf.d/67-azure-nvme-modules.conf":
+  - "GL-TESTCOV-azure-config-initrd-nvme"
+  "etc/kernel/cmdline.d/10-console.cfg":
+  - "GL-TESTCOV-azure-config-kernel-cmdline-console"
+  "etc/kernel/cmdline.d/45-nvme-timeout.cfg":
+  - "GL-TESTCOV-azure-config-kernel-cmdline-nvme"
+  "etc/systemd/99-azure-unmanaged-devices.network":
+  - "GL-TESTCOV-azure-config-network-unmanaged-devices"
+  "etc/systemd/system-preset/00-chrony-disable.preset":
+  - "GL-TESTCOV-azure-service-chrony-preset-disable"
+  "etc/systemd/system/chronyd.service.d/10-after_dev-ptp_hyperv.device.conf":
+  - "GL-TESTCOV-azure-service-chrony-device"
+  "etc/udev/rules.d/60-hyperv-ptp.rules":
+  - "GL-TESTCOV-azure-config-udev-rules-hyperv-ptp"
+  "etc/udev/rules.d/66-azure-storage.rules":
+  - "GL-TESTCOV-azure-config-udev-rules-azure-storage"
+  "etc/udev/rules.d/99-azure-product-uuid.rules":
+  - "GL-TESTCOV-azure-config-udev-rules-azure-product-uuid"
