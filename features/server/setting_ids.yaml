@@ -1,0 +1,111 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/dracut.conf.d/25-uefi-stub.conf"
+        ids:
+          - GL-SET-server-config-initrd-uefi-stub
+      - file: "/etc/dracut.conf.d/general.conf"
+        ids:
+          - GL-SET-server-config-initrd-general
+      - file: "/etc/kernel-img.conf"
+        ids:
+          - GL-SET-server-config-kernel-img-conf
+      - file: "/etc/locale.conf"
+        ids:
+          - GL-SET-server-config-locale-conf
+      - file: "/etc/machine-id"
+        ids:
+          - GL-SET-server-config-machine-id
+      - file: "/etc/profile.d/50-nohistory.sh"
+        ids:
+          - GL-SET-server-script-profile-nohistory
+      - file: "/etc/sudoers.d/keepssh"
+        ids:
+          - GL-SET-server-config-sudoers-keepssh
+      - file: "/etc/sudoers.d/wheel"
+        ids:
+          - GL-SET-server-config-sudoers-wheel
+      - file: "/etc/sysctl.d/40-enable-unprivileged-user-namespaces.conf"
+        ids:
+          - GL-SET-server-config-sysctl-enable-unprivileged-user-namespaces
+      - file: "/etc/sysctl.d/40-restrict-dmesg.conf"
+        ids:
+          - GL-SET-server-config-sysctl-restrict-dmesg
+      - file: "/etc/sysctl.d/90-allow-ping-for-non-root-user.conf"
+        ids:
+          - GL-SET-server-config-sysctl-allow-ping-for-non-root-user
+      - file: "/etc/systemd/network/99-default.network"
+        ids:
+          - GL-SET-server-config-network-default
+      - file: "/etc/systemd/networkd.conf.d/00-gardenlinux-server.conf"
+        ids:
+          - GL-SET-server-config-network-server
+      - file: "/etc/systemd/resolved.conf.d/00-disable-llmnr.conf"
+        ids:
+          - GL-SET-server-config-resolved-llmnr-disable
+      - file: "/etc/systemd/resolved.conf.d/01-disable-mdns.conf"
+        ids:
+          - GL-SET-server-config-resolved-mdns-disable
+      - file: "/etc/systemd/system.conf.d/00-gardenlinux-server.conf"
+        ids:
+          - GL-SET-server-config-systemd-system-conf-server
+      - file: "/etc/systemd/system/kexec-load@.service"
+        ids:
+          - GL-SET-server-service-kexec-load
+      - file: "/etc/systemd/system/systemd-coredump@.service.d/override.conf"
+        ids:
+          - GL-SET-server-config-service-systemd-coredump-override
+      - file: "/etc/systemd/system/systemd-growfs@.service.d/override.conf"
+        ids:
+          - GL-SET-server-config-service-systemd-growfs-override
+      - file: "/etc/systemd/system/systemd-networkd-wait-online.service.d/any.conf"
+        ids:
+          - GL-SET-server-config-service-systemd-networkd-wait-online-any
+      - file: "/etc/systemd/system/systemd-resolved.service.d/wait-for-networkd.conf"
+        ids:
+          - GL-SET-server-config-service-systemd-resolved-wait-for-networkd
+      - file: "/etc/systemd/system/systemd-timesyncd.service.d/override.conf"
+        ids:
+          - GL-SET-server-config-service-systemd-timesyncd-override
+      - file: "/etc/systemd/system/tmp.mount"
+        ids:
+          - GL-SET-server-config-mount-tmp
+      - file: "/etc/update-motd.d/05-logo"
+        ids:
+          - GL-SET-server-config-update-motd-logo
+      - file: "/etc/update-motd.d/10-hostname"
+        ids:
+          - GL-SET-server-config-update-motd-hostname
+      - file: "/etc/update-motd.d/20-uname"
+        ids:
+          - GL-SET-server-config-update-motd-uname
+      - file: "/etc/update-motd.d/30-load"
+        ids:
+          - GL-SET-server-config-update-motd-load
+      - file: "/etc/update-motd.d/40-free"
+        ids:
+          - GL-SET-server-config-update-motd-free
+      - file: "/etc/update-motd.d/45-line"
+        ids:
+          - GL-SET-server-config-update-motd-line-001
+      - file: "/etc/update-motd.d/50-network"
+        ids:
+          - GL-SET-server-config-update-motd-network
+      - file: "/etc/update-motd.d/55-line"
+        ids:
+          - GL-SET-server-config-update-motd-line-002
+      - file: "/etc/update-motd.d/92-unattended-upgrades"
+        ids:
+          - GL-SET-server-config-update-motd-unattended-upgrades
+      - file: "/etc/update-motd.d/95-needrestart"
+        ids:
+          - GL-SET-server-config-update-motd-needrestart
+      - file: "/usr/lib/systemd/system/dbus.socket"
+        ids:
+          - GL-SET-server-config-systemd-system-dbus-socket
+      - file: "/usr/share/pam-configs/garden"
+        ids:
+          - GL-SET-server-config-pam-garden
+      - file: "/usr/share/pam-configs/garden-extra"
+        ids:
+          - GL-SET-server-config-pam-garden-extra

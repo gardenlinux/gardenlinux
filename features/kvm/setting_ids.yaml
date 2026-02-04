@@ -1,0 +1,15 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/kernel/cmdline.d/10-console.cfg"
+        ids:
+          - GL-SET-kvm-config-kernel-cmdline-console
+      - file: "/etc/kernel/cmdline.d/50-ignition.cfg"
+        ids:
+          - GL-SET-kvm-config-kernel-cmdline-ignition
+      - file: "/etc/systemd/system/ignition-disable.service"
+        ids:
+          - GL-SET-kvm-service-ignition-disable
+      - file: "/etc/udev/rules.d/60-onmetal.rules"
+        ids:
+          - GL-SET-kvm-config-udev-rules-onmetal

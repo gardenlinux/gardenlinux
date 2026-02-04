@@ -1,0 +1,15 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/modules-load.d/br-nf.conf"
+        ids:
+          - GL-SET-khost-config-modprobe-br-nf
+      - file: "/etc/sysctl.d/20-br-nf.conf"
+        ids:
+          - GL-SET-khost-config-sysctl-br-nf
+      - file: "/etc/sysctl.d/20-inotify.conf"
+        ids:
+          - GL-SET-khost-config-sysctl-inotify
+      - file: "/etc/sysctl.d/20-ip-forward.conf"
+        ids:
+          - GL-SET-khost-config-sysctl-ip-forward

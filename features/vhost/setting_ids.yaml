@@ -1,0 +1,6 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/systemd/system-preset/00-disable-libvirtd-tls-socket.preset"
+        ids:
+          - GL-SET-vhost-service-libvirtd-tls-socket-preset-disable

@@ -1,0 +1,6 @@
+setting_ids:
+  file:
+    include:
+      - file: "/usr/bin/exportLibs.py"
+        ids:
+          - GL-SET-pythonDev-script-exportLibs

@@ -1,0 +1,9 @@
+setting_ids:
+  initrd:
+    include:
+      - file: "/etc/repart.d/10-var.conf"
+        ids:
+          - GL-SET-_nocrypt-config-initrd-repart-var
+      - file: "/etc/systemd/system/sysroot-var.mount"
+        ids:
+          - GL-SET-_nocrypt-config-initrd-mount-var

@@ -1,0 +1,48 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/kernel/cmdline.d/10-audit-proc.cfg"
+        ids:
+          - GL-SET-cisOS-config-kernel-cmdline-audit-proc
+      - file: "/etc/kernel/cmdline.d/20-audit-backlog.cfg"
+        ids:
+          - GL-SET-cisOS-config-kernel-cmdline-audit-backlog
+      - file: "/etc/kernel/postinst.d/zz-kernel-cmdline"
+        ids:
+          - GL-SET-cisOS-config-kernel-postinst-kernel-cmdline
+      - file: "/etc/kernel/postinst.d/zz-kernel-install"
+        ids:
+          - GL-SET-cisOS-config-kernel-postinst-kernel-install
+      - file: "/etc/kernel/postinst.d/zz-update-syslinux"
+        ids:
+          - GL-SET-cisOS-config-kernel-postinst-update-syslinux
+      - file: "/etc/kernel/postrm.d/zz-kernel-remove"
+        ids:
+          - GL-SET-cisOS-config-kernel-postrm-kernel-remove
+      - file: "/etc/kernel/postrm.d/zz-update-syslinux"
+        ids:
+          - GL-SET-cisOS-config-kernel-postrm-update-syslinux
+      - file: "/etc/logrotate.d/btmp"
+        ids:
+          - GL-SET-cisOS-config-logrotate-btmp
+      - file: "/etc/logrotate.d/wtmp"
+        ids:
+          - GL-SET-cisOS-config-logrotate-wtmp
+      - file: "/etc/pam.d/common-account"
+        ids:
+          - GL-SET-cisOS-config-pam-common-account
+      - file: "/etc/pam.d/common-auth"
+        ids:
+          - GL-SET-cisOS-config-pam-common-auth
+      - file: "/etc/security/limits.conf"
+        ids:
+          - GL-SET-cisOS-config-security-limits-conf
+      - file: "/etc/selinux/config"
+        ids:
+          - GL-SET-cisOS-config-selinux-config
+      - file: "/etc/sysstat/sysstat"
+        ids:
+          - GL-SET-cisOS-config-sysstat-sysstat
+      - file: "/usr/lib/tmpfiles.d/var.conf"
+        ids:
+          - GL-SET-cisOS-config-tmpfiles-var

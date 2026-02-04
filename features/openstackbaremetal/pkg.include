@@ -1,5 +1,7 @@
 python3-cffi-backend
+# GL-SET-openstackbaremetal-service-cloud-init-local-enable
 cloud-init
 dmidecode
 rng-tools5
+# GL-SET-openstackbaremetal-service-netplan-enable
 netplan.io

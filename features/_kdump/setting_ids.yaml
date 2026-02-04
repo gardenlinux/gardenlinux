@@ -1,0 +1,12 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/kernel/cmdline.d/90-crashkernel.cfg"
+        ids:
+          - GL-SET-_kdump-config-kernel-cmdline-crashkernel
+      - file: "/etc/systemd/system/kdump-tools.service.d/override.conf"
+        ids:
+          - GL-SET-_kdump-config-service-kdump-tools-override
+      - file: "/usr/local/sbin/prepare-initrd-kdump"
+        ids:
+          - GL-SET-_kdump-script-prepare-initrd-kdump

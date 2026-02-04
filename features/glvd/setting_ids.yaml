@@ -1,0 +1,6 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/update-motd.d/99-glvd"
+        ids:
+          - GL-SET-glvd-script-update-motd-glvd

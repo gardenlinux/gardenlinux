@@ -1,0 +1,15 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/kernel/cmdline.d/90-lsm.cfg"
+        ids:
+          - GL-SET-gardener-config-kernel-cmdline-lsm
+      - file: "/etc/modules-load.d/ipvs.conf"
+        ids:
+          - GL-SET-gardener-config-modprobe-ipvs
+      - file: "/etc/sysctl.d/40-allow-nonroot-dmesg.conf"
+        ids:
+          - GL-SET-gardener-config-sysctl-allow-nonroot-dmesg
+      - file: "/etc/systemd/system/containerd.service.d/override.conf"
+        ids:
+          - GL-SET-gardener-config-containerd-override

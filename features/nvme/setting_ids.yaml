@@ -1,0 +1,6 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/systemd/system/nvme-hostid.service"
+        ids:
+          - GL-SET-nvme-service-nvme-hostid

@@ -1,0 +1,18 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/ssh/ssh_config"
+        ids:
+          - GL-SET-ssh-config-ssh-ssh-config
+      - file: "/etc/ssh/sshd_config"
+        ids:
+          - GL-SET-ssh-config-ssh-sshd-config
+      - file: "/etc/systemd/system-preset/00-sshsocket-disable.preset"
+        ids:
+          - GL-SET-ssh-service-sshsocket-preset-disable
+      - file: "/etc/systemd/system/ssh-keygen.service"
+        ids:
+          - GL-SET-ssh-service-ssh-keygen
+      - file: "/etc/systemd/system/ssh-moduli.service"
+        ids:
+          - GL-SET-ssh-service-ssh-moduli

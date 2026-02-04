@@ -1,0 +1,6 @@
+setting_ids:
+  file:
+    include:
+      - file: "/var/spool/cron/crontabs/root"
+        ids:
+          - GL-SET-clamav-config-cron-root

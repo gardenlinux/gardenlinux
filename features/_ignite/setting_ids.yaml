@@ -1,0 +1,18 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/dracut.conf.d/30-ignition.conf"
+        ids:
+          - GL-SET-_ignite-config-initrd-ignition
+      - file: "/usr/lib/dracut/modules.d/30ignition-extra/after-net-online.conf"
+        ids:
+          - GL-SET-_ignite-config-initrd-module-ignition-after-net-online
+      - file: "/usr/lib/dracut/modules.d/30ignition-extra/ignition-env-generator.sh"
+        ids:
+          - GL-SET-_ignite-config-initrd-module-ignition-env-generator
+      - file: "/usr/lib/dracut/modules.d/30ignition-extra/ignition-files.env"
+        ids:
+          - GL-SET-_ignite-config-initrd-module-ignition-files
+      - file: "/usr/lib/dracut/modules.d/30ignition-extra/module-setup.sh"
+        ids:
+          - GL-SET-_ignite-config-initrd-module-ignition-module-setup

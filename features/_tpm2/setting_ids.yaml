@@ -1,0 +1,30 @@
+setting_ids:
+  initrd:
+    include:
+      - file: "/etc/repart.d/10-var.conf"
+        ids:
+          - GL-SET-_tpm2-config-initrd-repart-var
+      - file: "/etc/systemd/system/check-tpm.service"
+        ids:
+          - GL-SET-_tpm2-service-initrd-check-tpm
+      - file: "/etc/systemd/system/initrd-switch-root.target.requires/tpm2-measure.service"
+        ids:
+          - GL-SET-_tpm2-service-initrd-switch-root-tpm2-measure
+      - file: "/etc/systemd/system/sysroot-var.mount"
+        ids:
+          - GL-SET-_tpm2-config-initrd-mount-var
+      - file: "/etc/systemd/system/systemd-cryptsetup-var.service"
+        ids:
+          - GL-SET-_tpm2-service-initrd-systemd-cryptsetup-var
+      - file: "/etc/systemd/system/systemd-repart.service.requires/check-tpm.service"
+        ids:
+          - GL-SET-_tpm2-service-initrd-systemd-repart-check-tpm
+      - file: "/etc/systemd/system/tpm2-measure.service"
+        ids:
+          - GL-SET-_tpm2-service-initrd-tpm2-measure
+      - file: "/usr/bin/check-tpm"
+        ids:
+          - GL-SET-_tpm2-script-initrd-check-tpm
+      - file: "/usr/bin/measure-pcr7"
+        ids:
+          - GL-SET-_tpm2-script-initrd-measure-pcr7

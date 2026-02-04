@@ -1,0 +1,6 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/multipath.conf"
+        ids:
+          - GL-SET-multipath-config-multipath-conf

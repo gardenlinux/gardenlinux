@@ -19,14 +19,19 @@ procps
 quota
 sosreport
 sudo
+# GL-SET-server-service-sysstat-enable
 sysstat
 systemd
 systemd-boot
 systemd-boot-efi
 systemd-coredump
+# GL-SET-server-service-cron-update-enable
 systemd-cron
+# GL-SET-server-service-systemd-repart-enable
 systemd-repart
+## GL-SET-server-service-systemd-resolved-enable
 systemd-resolved
+# GL-SET-server-service-systemd-timesyncd-enable
 systemd-timesyncd
 tcpdump
 traceroute

@@ -1,2 +1,4 @@
+# GL-SET-config-no-initd-apparmor
 /etc/init.d/apparmor
+# GL-SET-config-no-var-lib-containerd-opt
 /var/lib/containerd/opt

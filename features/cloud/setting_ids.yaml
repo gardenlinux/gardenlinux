@@ -1,0 +1,57 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/kernel/cmdline.d/00-default.cfg"
+        ids:
+          - GL-SET-cloud-config-kernel-cmdline-default
+      - file: "/etc/kernel/cmdline.d/40-enable-swap-cgroup-accounting.cfg"
+        ids:
+          - GL-SET-cloud-config-kernel-cmdline-enable-swap-cgroup-accounting
+      - file: "/etc/kernel/cmdline.d/60-timeout.cfg"
+        ids:
+          - GL-SET-cloud-config-kernel-cmdline-timeout
+      - file: "/etc/kernel/entry-token"
+        ids:
+          - GL-SET-cloud-config-kernel-entry-token
+      - file: "/etc/kernel/postinst.d/00-kernel-cmdline"
+        ids:
+          - GL-SET-cloud-config-kernel-postinst-cmdline
+      - file: "/etc/kernel/postinst.d/zz-update-syslinux"
+        ids:
+          - GL-SET-cloud-config-kernel-postinst-update-syslinux
+      - file: "/etc/kernel/postrm.d/zz-update-syslinux"
+        ids:
+          - GL-SET-cloud-config-kernel-postrm-update-syslinux
+      - file: "/etc/modprobe.d/disabled_firewire.conf"
+        ids:
+          - GL-SET-cloud-config-modprobe-firewire-disable
+      - file: "/etc/modprobe.d/disabled_fs.conf"
+        ids:
+          - GL-SET-cloud-config-modprobe-fs-disable
+      - file: "/etc/modprobe.d/disabled_net.conf"
+        ids:
+          - GL-SET-cloud-config-modprobe-net-disable
+      - file: "/etc/modprobe.d/disabled_udf.conf"
+        ids:
+          - GL-SET-cloud-config-modprobe-udf-disable
+      - file: "/etc/modprobe.d/disabled_usb.conf"
+        ids:
+          - GL-SET-cloud-config-modprobe-usb-disable
+      - file: "/etc/profile.d/50-autologout.sh"
+        ids:
+          - GL-SET-cloud-script-profile-autologout
+      - file: "/etc/repart.d/root.conf"
+        ids:
+          - GL-SET-cloud-config-repart-root
+      - file: "/etc/sysctl.d/20-cloud.conf"
+        ids:
+          - GL-SET-cloud-config-sysctl-cloud
+      - file: "/etc/sysctl.d/21-ipv4-settings.conf"
+        ids:
+          - GL-SET-cloud-config-sysctl-ipv4
+      - file: "/etc/sysctl.d/22-ipv6-settings.conf"
+        ids:
+          - GL-SET-cloud-config-sysctl-ipv6
+      - file: "/etc/systemd/system/rngd.service.d/architecture.conf"
+        ids:
+          - GL-SET-cloud-config-systemd-rngd-architecture

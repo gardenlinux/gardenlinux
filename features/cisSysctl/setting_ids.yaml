@@ -1,0 +1,6 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/sysctl.d/99-cis.conf"
+        ids:
+          - GL-SET-cisSysctl-config-sysctl-cis

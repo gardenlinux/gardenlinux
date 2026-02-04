@@ -1,0 +1,39 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/dracut.conf.d/20-gl-live.conf"
+        ids:
+          - GL-SET-_pxe-config-initrd-gl-live
+      - file: "/etc/dracut.conf.d/30-omit-cdc-ether.conf"
+        ids:
+          - GL-SET-_pxe-config-initrd-omit-cdc-ether
+      - file: "/etc/kernel/cmdline.d/80-pxe.cfg"
+        ids:
+          - GL-SET-_pxe-config-kernel-cmdline-pxe
+      - file: "/usr/lib/dracut/modules.d/98gardenlinux-live/99-any.conf"
+        ids:
+          - GL-SET-_pxe-config-initrd-module-gardenlinux-live-any
+      - file: "/usr/lib/dracut/modules.d/98gardenlinux-live/cleanup.sh"
+        ids:
+          - GL-SET-_pxe-config-initrd-module-gardenlinux-live-cleanup
+      - file: "/usr/lib/dracut/modules.d/98gardenlinux-live/gl-end.service"
+        ids:
+          - GL-SET-_pxe-config-initrd-module-gardenlinux-live-gl-end
+      - file: "/usr/lib/dracut/modules.d/98gardenlinux-live/is-live-image.sh"
+        ids:
+          - GL-SET-_pxe-config-initrd-module-gardenlinux-live-is-live-image
+      - file: "/usr/lib/dracut/modules.d/98gardenlinux-live/live-get-squashfs.sh"
+        ids:
+          - GL-SET-_pxe-config-initrd-module-gardenlinux-live-live-get-squashfs
+      - file: "/usr/lib/dracut/modules.d/98gardenlinux-live/live-overlay-setup.sh"
+        ids:
+          - GL-SET-_pxe-config-initrd-module-gardenlinux-live-live-overlay-setup
+      - file: "/usr/lib/dracut/modules.d/98gardenlinux-live/live-sysroot-generator.sh"
+        ids:
+          - GL-SET-_pxe-config-initrd-module-gardenlinux-live-live-sysroot-generator
+      - file: "/usr/lib/dracut/modules.d/98gardenlinux-live/module-setup.sh"
+        ids:
+          - GL-SET-_pxe-config-initrd-module-gardenlinux-live-module-setup
+      - file: "/usr/lib/dracut/modules.d/98gardenlinux-live/squash-mount-generator.sh"
+        ids:
+          - GL-SET-_pxe-config-initrd-module-gardenlinux-live-squash-mount-generator

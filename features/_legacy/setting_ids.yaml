@@ -1,0 +1,12 @@
+setting_ids:
+  file:
+    include:
+      - file: "/usr/local/sbin/update-bootloaders"
+        ids:
+          - GL-SET-_legacy-script-update-bootloaders
+      - file: "/usr/local/sbin/update-kernel-cmdline"
+        ids:
+          - GL-SET-_legacy-script-update-kernel-cmdline
+      - file: "/usr/local/sbin/update-syslinux"
+        ids:
+          - GL-SET-_legacy-script-update-syslinux

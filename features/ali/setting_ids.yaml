@@ -1,0 +1,22 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg"
+        ids:
+          - GL-SET-ali-config-cloud-apt-sources
+          - GL-SET-ali-config-cloud-user-name
+          - GL-SET-ali-config-cloud-user-shell
+          - GL-SET-ali-config-cloud-user-lock-passwd
+          - GL-SET-ali-config-cloud-user-sudo
+      - file: "/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg"
+        ids:
+          - GL-SET-ali-config-cloud-network-config-disable
+      - file: "/etc/kernel/cmdline.d/10-console.cfg"
+        ids:
+          - GL-SET-ali-config-kernel-cmdline-console
+      - file: "/etc/systemd/resolved.conf.d/00-gardenlinux-ali.conf"
+        ids:
+          - GL-SET-ali-config-resolved
+      - file: "/etc/systemd/timesyncd.conf.d/00-gardenlinux-ali.conf"
+        ids:
+          - GL-SET-ali-config-timesyncd

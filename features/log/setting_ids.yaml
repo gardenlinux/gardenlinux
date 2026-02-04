@@ -1,0 +1,42 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/audit/rules.d/10-base-config.rules"
+        ids:
+          - GL-SET-log-config-audit-rules-base-config
+      - file: "/etc/audit/rules.d/12-cont-fail.rules"
+        ids:
+          - GL-SET-log-config-audit-rules-cont-fail
+      - file: "/etc/audit/rules.d/12-ignore-error.rules"
+        ids:
+          - GL-SET-log-config-audit-rules-ignore-error
+      - file: "/etc/audit/rules.d/README"
+        ids:
+          - GL-SET-log-config-audit-rules-README
+      - file: "/etc/rsyslog.conf"
+        ids:
+          - GL-SET-log-config-rsyslog-conf
+      - file: "/etc/rsyslog.d/10-local.conf.disabled"
+        ids:
+          - GL-SET-log-config-rsyslog-local-conf-disable
+      - file: "/etc/rsyslog.d/20-input.conf"
+        ids:
+          - GL-SET-log-config-rsyslog-input-conf
+      - file: "/etc/rsyslog.d/21-input-klog.conf.disabled"
+        ids:
+          - GL-SET-log-config-rsyslog-input-klog-conf-disable
+      - file: "/etc/rsyslog.d/29-input-mark.conf.disabled"
+        ids:
+          - GL-SET-log-config-rsyslog-input-mark-conf-disable
+      - file: "/etc/rsyslog.d/30-server.conf.disabled"
+        ids:
+          - GL-SET-log-config-rsyslog-server-conf-disable
+      - file: "/etc/rsyslog.d/60-audit-log-service.conf.disabled"
+        ids:
+          - GL-SET-log-config-rsyslog-audit-log-service-conf-disable
+      - file: "/etc/systemd/journald.conf.d/10-minimum.conf"
+        ids:
+          - GL-SET-log-config-journald-minimum
+      - file: "/etc/systemd/journald.conf.d/20-rsyslog.conf"
+        ids:
+          - GL-SET-log-config-journald-rsyslog

@@ -1,0 +1,12 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/security/limits.conf"
+        ids:
+          - GL-SET-_prod-config-security-limits-disable-core-dumps
+      - file: "/etc/sysctl.d/99-disable-core-dump.conf"
+        ids:
+          - GL-SET-_prod-config-sysctl-coredump-disable
+      - file: "/etc/systemd/coredump.conf.d/disable_coredump.conf"
+        ids:
+          - GL-SET-_prod-config-systemd-coredump-disable

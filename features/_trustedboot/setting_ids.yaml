@@ -1,0 +1,17 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/kernel/cmdline.d/99-no-rd-shell.cfg"
+        ids:
+          - GL-SET-_trustedboot-config-kernel-cmdline-no-rd-shell
+  initrd:
+    include:
+      - file: "/etc/systemd/system/local-fs.target.requires/check-secureboot.service"
+        ids:
+          - GL-SET-_trustedboot-service-initrd-local-fs-target-requires-check-secureboot
+      - file: "/etc/systemd/system/emergency.service"
+        ids:
+          - GL-SET-_trustedboot-service-initrd-emergency
+      - file: "/usr/bin/check-secureboot"
+        ids:
+          - GL-SET-_trustedboot-script-initrd-check-secureboot

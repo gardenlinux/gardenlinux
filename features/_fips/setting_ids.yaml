@@ -1,0 +1,12 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/gcrypt/fips_enabled"
+        ids:
+          - GL-SET-_fips-config-gcrypt-fips
+      - file: "/etc/kernel/cmdline.d/30-fips.cfg"
+        ids:
+          - GL-SET-_fips-config-kernel-cmdline-fips
+      - file: "/etc/system-fips"
+        ids:
+          - GL-SET-_fips-config-system-fips

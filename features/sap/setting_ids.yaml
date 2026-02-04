@@ -1,0 +1,30 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/audit/rules.d/70-privilege-escalation.rules"
+        ids:
+          - GL-SET-config-audit-rules-privilege-escalaction
+      - file: "/etc/audit/rules.d/70-privileged-special.rules"
+        ids:
+          - GL-SET-config-audit-rules-privilege-escalaction-special-amd64
+      - file: "/etc/audit/rules.d/70-privileged-special.rules.arm64"
+        ids:
+          - GL-SET-config-audit-rules-privilege-escalaction-special-arm64
+      - file: "/etc/audit/rules.d/70-system-integrity.rules"
+        ids:
+          - GL-SET-config-audit-rules-privilege-system-integrity
+      - file: "/etc/issue"
+        ids:
+          - GL-SET-config-issue
+      - file: "/etc/issue.net"
+        ids:
+          - GL-SET-config-issue-net
+      - file: "/etc/motd"
+        ids:
+          - GL-SET-config-motd
+      - file: "/etc/tmpfiles.d/legacy.conf"
+        ids:
+          - GL-SET-config-tmpfiles-legacy
+      - file: "/usr/local/share/ca-certificates/SAP_Global_Root_CA.crt"
+        ids:
+          - GL-SET-config-security-sap-global-root-ca

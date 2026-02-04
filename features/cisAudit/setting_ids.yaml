@@ -1,0 +1,9 @@
+setting_ids:
+  file:
+    include:
+      - file: "/etc/audit/rules.d/99-cis.rules"
+        ids:
+          - GL-SET-cisAudit-config-audit-cis
+      - file: "/etc/systemd/system/audit-rules.service.d/override.conf"
+        ids:
+          - GL-SET-cisAudit-config-service-audit-rules-override

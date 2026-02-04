@@ -1,2 +1,4 @@
+# GL-SET-azure-service-no-systemd-timesyncd-override
 /etc/systemd/system/systemd-timesyncd.service.d/override.conf
+# GL-SET-azure-config-modprobe-udf-disable
 /etc/modprobe.d/disabled_udf.conf
