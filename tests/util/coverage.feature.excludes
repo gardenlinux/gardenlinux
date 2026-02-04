@@ -1,0 +1,6 @@
+# Feature exclusion list for coverage reporting
+#
+# Add one feature name per line to exclude it from coverage analysis.
+# Lines starting with # are treated as comments and ignored.
+# Empty lines are ignored.
+#
