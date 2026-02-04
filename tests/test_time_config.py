@@ -22,6 +22,7 @@ def test_clock(shell: ShellRunner):
     ), f"clock skew should be less than 5 seconds. Local time is {local_seconds} and remote time is {remote_seconds}"
 
 
+@pytest.mark.setting_ids(["GL-SET-aws-config-timesyncd"])
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("aws")
 @pytest.mark.hypervisor(
@@ -35,6 +36,7 @@ def test_correct_ntp_on_aws(timedatectl: TimeDateCtl):
     ), f"ntp server is invalid. Expected '169.254.169.123' got '{ntp_ip}'."
 
 
+@pytest.mark.setting_ids(["GL-SET-gcp-config-timesyncd"])
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("gcp")
 @pytest.mark.hypervisor(
@@ -47,6 +49,7 @@ def test_correct_ntp_on_gcp(timedatectl: TimeDateCtl):
     ), f"ntp server is invalid. Expected '169.254.169.254' got '{ntp_ip}'."
 
 
+@pytest.mark.setting_ids(["GL-SET-server-service-systemd-timesyncd-enable"])
 @pytest.mark.flaky(reruns=10, reruns_delay=30, only_rerun="AssertionError")
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("not azure and not aws and not gcp and not gdch")
@@ -68,6 +71,7 @@ def test_ntp(timedatectl: TimeDateCtl):
         pytest.skip("systemd-timesyncd installed but not active in this environment")
 
 
+@pytest.mark.setting_ids(["GL-SET-azure-service-systemd-timesyncd-disable"])
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure")
 @pytest.mark.hypervisor("microsoft")
@@ -77,6 +81,7 @@ def test_systemd_timesyncd_disabled_on_azure(systemd: Systemd):
     ), f"Chrony instead of systemd-timesyncd should be active on Azure."
 
 
+@pytest.mark.setting_ids(["GL-SET-azure-service-chrony-enable"])
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure")
 @pytest.mark.hypervisor(
@@ -90,6 +95,7 @@ def test_chrony_on_azure(systemd: Systemd):
     assert systemd.is_active("chrony"), f"Chrony should be active on Azure."
 
 
+@pytest.mark.setting_ids(["GL-SET-azure-service-chrony-enable"])
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure")
 @pytest.mark.hypervisor(
@@ -107,13 +113,14 @@ def test_chrony_installed_for_azure_image(systemd: Systemd):
         None,
     )
 
-    assert chrony_unit is not None, "chrony.service should be presenti n Azure images."
+    assert chrony_unit is not None, "chrony.service should be present in Azure images."
     assert chrony_unit.load in (
         "enabled",
         "disabled",
     ), f"Unexpected chrony.service state: {chrony_unit.load!r}"
 
 
+@pytest.mark.setting_ids(["GL-SET-aws-script-clocksource-setup"])
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("not azure and not container")
 @pytest.mark.arch("amd64")
@@ -142,6 +149,7 @@ def test_clocksource_arm64_aarch64(systemd_detect_virt: Hypervisor, clocksource:
     assert clocksource, expected_clocksource
 
 
+@pytest.mark.setting_ids(["GL-SET-azure-config-chrony"])
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure")
 @pytest.mark.hypervisor("microsoft")
@@ -161,6 +169,7 @@ def test_chrony_azure(
     assert expected_config in lines, f"chrony config for ptp expected but not found"
 
 
+@pytest.mark.setting_ids(["GL-SET-azure-config-udev-rules-hyperv-ptp"])
 @pytest.mark.booted(reason="NTP server configuration is read at runtime")
 @pytest.mark.feature("azure")
 @pytest.mark.hypervisor("microsoft")

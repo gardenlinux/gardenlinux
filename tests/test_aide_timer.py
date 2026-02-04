@@ -5,6 +5,7 @@ from plugins.parse_file import ParseFile
 from plugins.systemd import Systemd
 
 
+@pytest.mark.setting_ids(["GL-SET-aide-service-timer-aide-check"])
 @pytest.mark.feature("aide")
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="systemd timers are expected to be configured at runtime")
@@ -16,6 +17,7 @@ def test_aide_timer_exists(systemd: Systemd):
     assert matches, f"AIDE timer '{timer}' not found — CIS requirement failed"
 
 
+@pytest.mark.setting_ids(["GL-SET-aide-service-timer-aide-check"])
 @pytest.mark.feature("aide")
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="systemd timers are expected to be configured at runtime")
@@ -29,6 +31,7 @@ def test_aide_timer_loaded(systemd: Systemd):
     ), f"AIDE timer must be loaded but is {matches[0].load}"
 
 
+@pytest.mark.setting_ids(["GL-SET-aide-service-timer-aide-check"])
 @pytest.mark.feature("aide")
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="systemd timers are expected to be configured at runtime")
@@ -38,6 +41,7 @@ def test_aide_timer_active(systemd: Systemd):
     assert systemd.is_active(timer), f"AIDE timer '{timer}' exists but is not active."
 
 
+@pytest.mark.setting_ids(["GL-SET-aide-service-timer-aide-check"])
 @pytest.mark.feature("aide")
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="systemd timers are expected to be configured at runtime")
@@ -53,6 +57,7 @@ def test_aide_timer_state(systemd: Systemd):
     ), f"AIDE timer scheduling state unexpected (sub={unit.sub})"
 
 
+@pytest.mark.setting_ids(["GL-SET-aide-service-aide-init"])
 @pytest.mark.feature("aide")
 @pytest.mark.root(reason="Required to read AIDE configuration")
 @pytest.mark.booted(reason="AIDE configuration must exist at runtime")

@@ -1,6 +1,11 @@
 import pytest
 
 
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-cis-config-cis-hardening",
+    ]
+)
 @pytest.mark.feature("cis")
 @pytest.mark.root(reason="CIS audit requires root privileges")
 @pytest.mark.booted(reason="Must be run on a booted system")
