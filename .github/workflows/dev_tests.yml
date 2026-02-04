@@ -59,6 +59,42 @@ jobs:
       - name: Run pyright
         run: make -f tests/dev.makefile lint-pyright
 
+  coverage:
+    name: Coverage (feature/test coverage reporting)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # pin@v6.2.0
+        with:
+          python-version: "3.13"
+
+      - name: Run coverage
+        run: make -f tests/dev.makefile coverage || true
+
+      - name: Generate Coverage Report
+        uses: gardenlinux/pytest-multi-results-action@8fc9cd734e3bfac0057ca43d70cd561b5f4d52bb
+        if: always()
+        with:
+          files: |
+            tests/coverage_report.xml
+          title: "Garden Linux Feature/Test Coverage Report"
+          summary: false
+          result-types: "passed,failed"
+          fail-on-empty: true
+
+      - name: Upload report artifacts
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
+        if: always()
+        with:
+          name: coverage-report
+          path: |
+            tests/coverage_report.xml
+            tests/coverage_report.json
+          retention-days: 30
+
   test-plugins:
     name: Test plugins
     runs-on: ubuntu-24.04
@@ -73,3 +109,18 @@ jobs:
 
       - name: Run test-plugins
         run: make -f tests/dev.makefile test-plugins
+
+  test-utils:
+    name: Test utils
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.13"
+
+      - name: Run test-utils
+        run: make -f tests/dev.makefile test-utils
