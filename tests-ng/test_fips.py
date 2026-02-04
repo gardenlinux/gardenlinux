@@ -12,9 +12,9 @@ from typing import List
 
 import pytest
 from plugins.file import File
-from plugins.kernel_module import KernelModule
 from plugins.kernel_cmdline import kernel_cmdline
 from plugins.kernel_configs import KernelConfigs
+from plugins.kernel_module import KernelModule
 from plugins.parse_file import ParseFile
 
 
@@ -34,11 +34,13 @@ def test_dracut_modules_was_extended_for_fips_module(parse_file: ParseFile):
     """
 
     lines = parse_file.lines("/etc/dracut.conf.d/10-fips.conf")
-    assert  'add_dracutmodules+=" fips "' in lines
+    assert 'add_dracutmodules+=" fips "' in lines
 
 
 @pytest.mark.feature("_fips")
-def test_kernel_configs_crypto_benchmark(parse_file: ParseFile, kernel_configs: KernelConfigs):
+def test_kernel_configs_crypto_benchmark(
+    parse_file: ParseFile, kernel_configs: KernelConfigs
+):
     """
     The tcrypot module is hidden in the CONFIG_CRYPTO_BENCHMARK configuration. This needs
     to be present on our current kernel.
