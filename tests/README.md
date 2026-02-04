@@ -1,6 +1,6 @@
 # Garden Linux Tests
 
-This directory contains the next generation testing framework for Garden Linux images. The framework supports testing Garden Linux images in various environments including chroot, QEMU virtual machines, and cloud providers.
+This directory contains the testing framework for Garden Linux images. The framework supports testing Garden Linux images in various environments including chroot, QEMU virtual machines, and cloud providers.
 
 ## Table of Contents
 
