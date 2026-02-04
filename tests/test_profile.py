@@ -4,6 +4,7 @@ import pytest
 from plugins.parse_file import ParseFile
 
 
+@pytest.mark.testcov(["GL-TESTCOV-cloud-script-profile-autologout"])
 @pytest.mark.feature("cloud", reason="enabled in cloud feature")
 def test_profile_autologout_cloud(parse_file: ParseFile):
     """Test that the autologout profile is set correctly."""
@@ -19,6 +20,7 @@ def test_profile_autologout_cloud(parse_file: ParseFile):
     ), f"Could not find expected lines in order in {file}: {lines_list}"
 
 
+# TODO: decide if "stig" feature shall get more setting/test
 @pytest.mark.feature("stig", reason="enabled in stig feature")
 def test_profile_autologout_stig(parse_file: ParseFile):
     """Test that the autologout profile is set correctly."""
@@ -34,6 +36,7 @@ def test_profile_autologout_stig(parse_file: ParseFile):
     ), f"Could not find expected lines in order in {file}: {lines_list}"
 
 
+@pytest.mark.testcov(["GL-TESTCOV-openstackMetal-script-profile-autologout"])
 @pytest.mark.feature(
     "openstack and metal", reason="enabled in openstack on metal feature"
 )

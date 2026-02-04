@@ -31,6 +31,7 @@ def test_no_extra_home_directories(expected_users, file: File):
     assert not unexpected, f"Unexpected entries in /home: {entries}"
 
 
+@pytest.mark.testcov(["GL-TESTCOV-aws-config-cloud-user-sudo"])
 @pytest.mark.booted
 @pytest.mark.root(reason="Using sudo command to check the access")
 def test_users_sudo_capability(get_all_users, expected_users, user: User):

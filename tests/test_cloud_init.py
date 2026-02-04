@@ -23,6 +23,30 @@ def test_cloud_init_not_installed():
     ), "Cloud-init should not be installed."
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-ali-config-cloud-user-shell",
+        "GL-TESTCOV-ali-config-cloud-user-lock-passwd",
+        "GL-TESTCOV-ali-config-cloud-user-sudo",
+        "GL-TESTCOV-ali-config-cloud-apt-sources",
+        "GL-TESTCOV-aws-config-cloud-user-shell",
+        "GL-TESTCOV-aws-config-cloud-user-lock-passwd",
+        "GL-TESTCOV-aws-config-cloud-user-sudo",
+        "GL-TESTCOV-aws-config-cloud-apt-sources",
+        "GL-TESTCOV-azure-config-cloud-user-shell",
+        "GL-TESTCOV-azure-config-cloud-user-lock-passwd",
+        "GL-TESTCOV-azure-config-cloud-user-sudo",
+        "GL-TESTCOV-azure-config-cloud-apt-sources",
+        "GL-TESTCOV-openstack-config-cloud-user-shell",
+        "GL-TESTCOV-openstack-config-cloud-user-lock-passwd",
+        "GL-TESTCOV-openstack-config-cloud-user-sudo",
+        "GL-TESTCOV-openstack-config-cloud-apt-sources",
+        "GL-TESTCOV-vmware-config-cloud-user-shell",
+        "GL-TESTCOV-vmware-config-cloud-user-lock-passwd",
+        "GL-TESTCOV-vmware-config-cloud-user-sudo",
+        "GL-TESTCOV-vmware-config-cloud-apt-sources",
+    ]
+)
 @pytest.mark.feature(
     "ali or aws or azure or openstack or vmware",
     reason="Cloud-init is installed on most cloud platforms; gdch has minimal config",
@@ -36,6 +60,13 @@ def test_cloud_init_debian_cloud_defaults(parse_file: ParseFile):
     assert config["system_info"]["default_user"]["sudo"] == ["ALL=(ALL) NOPASSWD:ALL"]
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-ali-config-cloud-user-name",
+        "GL-TESTCOV-aws-config-cloud-user-name" "GL-TESTCOV-openstack-config-cloud-user-name",
+        "GL-TESTCOV-vmware-config-cloud-user-name",
+    ]
+)
 @pytest.mark.feature(
     "ali or aws or openstack or vmware",
     reason="Cloud-init is installed on most cloud platforms; azure uses a different default user; gdch has minimal config",
@@ -46,6 +77,14 @@ def test_cloud_init_debian_cloud_user(parse_file: ParseFile):
     assert config["system_info"]["default_user"]["name"] == "admin"
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-aws-config-cloud-manage-hosts",
+        "GL-TESTCOV-azure-config-cloud-manage-hosts",
+        "GL-TESTCOV-openstack-config-cloud-manage-hosts",
+        "GL-TESTCOV-vmware-config-cloud-manage-hosts",
+    ]
+)
 @pytest.mark.feature(
     "aws or azure or openstack or vmware",
     reason="Cloud-init is installed on most cloud platforms; ali does not manage host file; gdch has minimal config",
@@ -57,6 +96,22 @@ def test_cloud_init_debian_cloud_manage_etc_hosts(parse_file: ParseFile):
 
 
 # Tests for some platforms
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-ali-config-cloud-no-ntp",
+        "GL-TESTCOV-ali-config-cloud-no-resizefs",
+        "GL-TESTCOV-ali-config-cloud-no-growpart",
+        "GL-TESTCOV-aws-config-cloud-no-ntp",
+        "GL-TESTCOV-aws-config-cloud-no-resizefs",
+        "GL-TESTCOV-aws-config-cloud-no-growpart",
+        "GL-TESTCOV-openstack-config-cloud-no-ntp",
+        "GL-TESTCOV-openstack-config-cloud-no-resizefs",
+        "GL-TESTCOV-openstack-config-cloud-no-growpart",
+        "GL-TESTCOV-vmware-config-cloud-no-ntp",
+        "GL-TESTCOV-vmware-config-cloud-no-resizefs",
+        "GL-TESTCOV-vmware-config-cloud-no-growpart",
+    ]
+)
 @pytest.mark.feature("ali or aws or openstack or vmware")
 @pytest.mark.parametrize("module", ["ntp", "resizefs", "growpart"])
 def test_cloud_cfg_excludes_modules(parse_file: ParseFile, module: str):
@@ -78,6 +133,15 @@ def test_cloud_cfg_excludes_modules(parse_file: ParseFile, module: str):
 
 
 # Alibaba Cloud
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-ali-config-cloud-apt-sources",
+        "GL-TESTCOV-ali-config-cloud-user-name",
+        "GL-TESTCOV-ali-config-cloud-user-shell",
+        "GL-TESTCOV-ali-config-cloud-user-lock-passwd",
+        "GL-TESTCOV-ali-config-cloud-user-sudo",
+    ]
+)
 @pytest.mark.feature("ali")
 def test_ali_debian_cloud_ignore_manage_etc_hosts(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg"
@@ -85,6 +149,11 @@ def test_ali_debian_cloud_ignore_manage_etc_hosts(parse_file: ParseFile):
     assert "manage_etc_hosts" not in config
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-ali-config-cloud-network-config-disable",
+    ]
+)
 @pytest.mark.feature("ali")
 def test_ali_disable_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg"
@@ -93,6 +162,7 @@ def test_ali_disable_network_config(parse_file: ParseFile):
 
 
 # AWS
+@pytest.mark.testcov(["GL-TESTCOV-aws-config-cloud-network-config-disable"])
 @pytest.mark.feature("aws")
 def test_aws_disable_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg"
@@ -101,6 +171,11 @@ def test_aws_disable_network_config(parse_file: ParseFile):
 
 
 # Azure
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-azure-config-cloud-user-name",
+    ]
+)
 @pytest.mark.feature("azure")
 def test_azure_debian_cloud_user(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg"
@@ -109,6 +184,11 @@ def test_azure_debian_cloud_user(parse_file: ParseFile):
 
 
 # GDCH - Google Distributed Cloud Hosted
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-gdch-config-cloud-ntp",
+    ]
+)
 @pytest.mark.feature("gdch")
 def test_gdch_ntp_settings(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/91-gdch-system.cfg"
@@ -119,6 +199,11 @@ def test_gdch_ntp_settings(parse_file: ParseFile):
 
 
 # OpenStack
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-openstack-config-cloud-datasource",
+    ]
+)
 @pytest.mark.feature("openstack")
 def test_openstack_datasource_list(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/50-datasource.cfg"
@@ -126,6 +211,11 @@ def test_openstack_datasource_list(parse_file: ParseFile):
     assert config["datasource_list"] == ["ConfigDrive", "OpenStack", "Ec2"]
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-openstack-config-cloud-network-config-disable",
+    ]
+)
 @pytest.mark.feature("openstack and cloud")
 def test_openstack_disable_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg"
@@ -133,13 +223,23 @@ def test_openstack_disable_network_config(parse_file: ParseFile):
     assert config["network"]["config"] == "disabled"
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-openstackMetal-config-cloud-network-config",
+    ]
+)
 @pytest.mark.feature("openstack and metal")
-def test_openstackbaremetal_network_config(parse_file: ParseFile):
+def test_openstack_metal_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/65-network-config.cfg"
     config = parse_file.parse(file, format="yaml")
     assert config["system_info"]["network"]["renderers"] == ["netplan", "networkd"]
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-openstack-config-cloud-datasource-identify",
+    ]
+)
 @pytest.mark.feature("openstack")
 def test_openstack_ds_identify(parse_file: ParseFile):
     file = "/etc/cloud/ds-identify.cfg"
@@ -149,6 +249,11 @@ def test_openstack_ds_identify(parse_file: ParseFile):
 
 
 # VMware
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-vmware-config-cloud-network-config-disable",
+    ]
+)
 @pytest.mark.feature("vmware")
 def test_vmware_disable_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg"
@@ -156,6 +261,11 @@ def test_vmware_disable_network_config(parse_file: ParseFile):
     assert config["network"]["config"] == "disabled"
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-vmware-config-cloud-datasources",
+    ]
+)
 @pytest.mark.feature("vmware")
 def test_vmware_enabled_datasources(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/99_enabled-datasources.cfg"
@@ -163,6 +273,12 @@ def test_vmware_enabled_datasources(parse_file: ParseFile):
     assert config["datasource_list"] == ["VMwareGuestInfo", "OVF"]
 
 
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-vmware-config-cloud-datasource-vmwareguestinfo",
+        "GL-TESTCOV-vmware-config-cloud-datasource-identify",
+    ]
+)
 @pytest.mark.feature("vmware")
 @pytest.mark.parametrize(
     "file_path",
