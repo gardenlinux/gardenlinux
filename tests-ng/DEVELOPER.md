@@ -310,10 +310,7 @@ def service_ssh(systemd: Systemd):
 **Example: installing packages and loading kernel modules, including setup and teardown**
 
 ```python
-TEST_NAME_MODULES = [
-    {"name": 'nvme', "status": None},
-    {"name": 'nvme_auth', "status": None},
-]
+TEST_NAME_MODULES = [ "nvme", "nvme_auth" ]
 TEST_NAME_PACKAGES = [
     {"name": 'mount', "status": None},
     {"name": 'wget', "status": None},
@@ -322,11 +319,8 @@ TEST_NAME_PACKAGES = [
 @pytest.fixture
 def test_name(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
     # Setup: whatever is needed as configuration
-    for module in TEST_NAME_MODULES:
-        if not kernel_module.is_module_loaded(module["name"]):
-            kernel_module.load_module(module["name"])
-            # Save Status change for teardown
-            module["status"] = "Loaded"
+    for mod_name in TEST_NAME_MODULES:
+        kernel_module.load_module(mod_name)
     for pkg in TEST_NAME_PACKAGES:
         if not dpkg.package_is_installed(pkg["name"]):
             shell(f"DEBIAN_FRONTEND=noninteractive apt-get install -y {pkg["name"]}")
@@ -339,13 +333,12 @@ def test_name(shell: ShellRunner, dpkg: Dpkg, kernel_module: KernelModule):
 
     # Teardown/Cleanup: reverse all changes in reverse order
     # ... (additonal teardown code) ...
-    # Unload modules in reverse order of loading
+    # Uninstall needed packages again
     for pkg in TEST_NAME_PACKAGES:
         if pkg["status"] == "Installed":
             shell(f"DEBIAN_FRONTEND=noninteractive apt-get remove -y {pkg["name"]}")
-    for module in reversed(MY_REQUIRED_MODULES):
-        if module["status"] == "Loaded":
-            kernel_module.unload_module(entry["name"])
+    # Unload all modules loaded by load_module (automatically handles dependencies and order)
+    kernel_module.unload_modules()
 ```
 
 ### Utils for Helper Functions

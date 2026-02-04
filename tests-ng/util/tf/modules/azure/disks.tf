@@ -1,13 +1,12 @@
 resource "terraform_data" "root_disk_hash" {
-  count = var.existing_root_disk != "" ? 0 : 1
   input = {
-    sha256 = filesha256(var.root_disk_path)
+    sha256 = var.existing_root_disk != "" ? "existing" : filesha256(var.root_disk_path)
   }
 }
 
 resource "terraform_data" "test_disk_hash" {
   input = {
-    sha256 = filesha256(var.test_disk_path)
+    sha256 = var.skip_tests ? "skipped" : filesha256(var.test_disk_path)
   }
 }
 
@@ -42,8 +41,6 @@ resource "azurerm_storage_account" "storage_account" {
 }
 
 resource "azurerm_storage_container" "blob" {
-  count = var.existing_root_disk != "" ? 0 : 1
-
   name                  = local.image_name
   storage_account_id    = azurerm_storage_account.storage_account.id
   container_access_type = "private"
@@ -54,7 +51,7 @@ resource "azurerm_storage_blob" "image" {
 
   name                   = local.image_name
   storage_account_name   = azurerm_storage_account.storage_account.name
-  storage_container_name = azurerm_storage_container.blob.0.name
+  storage_container_name = azurerm_storage_container.blob.name
   type                   = "Page"
   source = replace(var.root_disk_path, ".raw", ".vhd")
 
@@ -143,9 +140,11 @@ resource "azurerm_shared_image_version" "shared_image_version" {
   }
 }
 resource "azurerm_storage_blob" "image_test" {
+  count = var.skip_tests ? 0 : 1
+
   name = "${local.image_name}-test"
   storage_account_name   = azurerm_storage_account.storage_account.name
-  storage_container_name = azurerm_storage_container.blob.0.name
+  storage_container_name = azurerm_storage_container.blob.name
   type                   = "Page"
   source = replace(var.test_disk_path, ".raw", ".vhd")
 
@@ -162,20 +161,24 @@ resource "azurerm_storage_blob" "image_test" {
 }
 
 resource "azurerm_managed_disk" "test_disk" {
+  count = var.skip_tests ? 0 : 1
+
   name = "${local.image_name}-test"
   location             = azurerm_resource_group.rg.location
   resource_group_name  = azurerm_resource_group.rg.name
   storage_account_type = "StandardSSD_LRS"
   create_option        = "Import"
   disk_size_gb         = 1
-  source_uri           = azurerm_storage_blob.image_test.url
+  source_uri           = azurerm_storage_blob.image_test[0].url
   storage_account_id   = azurerm_storage_account.storage_account.id
 
   tags = local.labels
 }
 
 resource "azurerm_virtual_machine_data_disk_attachment" "test_disk_attachment" {
-  managed_disk_id    = azurerm_managed_disk.test_disk.id
+  count = var.skip_tests ? 0 : 1
+
+  managed_disk_id    = azurerm_managed_disk.test_disk[0].id
   virtual_machine_id = azurerm_linux_virtual_machine.instance.id
   lun                = "10"
   caching            = "ReadWrite"

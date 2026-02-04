@@ -1,1 +1,0 @@
-from helper.tests.capabilities import capabilities as test_capabilities

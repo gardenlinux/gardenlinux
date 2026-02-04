@@ -20,6 +20,7 @@ module "cloud" {
   my_ip                 = chomp(data.http.my_ip.response_body)
   provider_vars         = try(var.provider_vars[var.cloud_provider], {})
   existing_root_disk    = var.existing_root_disk
+  skip_tests            = var.skip_tests
 }
 
 resource "random_id" "suffix" {

@@ -10,9 +10,16 @@
 | [publish_s3](../../.github/workflows/publish_s3.yml)    | Use to publish artifacts to S3 after a successful `nightly`, or successful `manual_release`. Can be triggered manually to publish based on a specific `run_id`.           | Publishes artifacts to S3 `gardenlinux-github-releases` bucket. |
 | [cloud_test_cleanup](../../.github/workflows/cloud_test_cleanup.yml) | Use to clean up cloud resources used during platform tests.           | Removes cloud resources used to perform platform tests. |
 
+To **manually trigger a nightly run**, for example when a change was merged to main to fix the nightly:
+  - use the [manual_release](../../.github/workflows/manual_release.yml) workflow
+  - select "nightly" as the "Garden Linux release target" and
+  - use either the full Garden Linux version, for example **2134.0.0** or **now** but ~~today~~ will not work during the S3 upload step
+
 ## Scheduled Workflows
 
 | Name                                                                 | Schedule  | Description                                                                 | Side Effects                                                       |
 |----------------------------------------------------------------------|-----------|-----------------------------------------------------------------------------|--------------------------------------------------------------------|
-| [nightly](.github/workflows/nightly.yml)                             | Daily    | Builds and platform tests the current version from the main branch using the current apt repo of the day. Uploads .0 release candidate of the day to S3. | Uploads .0 release candidate of the day to S3 `gardenlinux-github-releases` bucket. |
-| [cloud_test_cleanup](.github/workflows/cloud_test_cleanup.yml) | Daily    | Cleans up accumulated cloud resources spawned via Open Tofu in platform tests. | Removes cloud resources used to perform platform tests. |
+| [nightly](../../.github/workflows/nightly.yml)                             | Daily    | Builds and platform tests the current version from the main branch using the current apt repo of the day. Uploads .0 release candidate of the day to S3. | Uploads .0 release candidate of the day to S3 `gardenlinux-github-releases` bucket. |
+| [cloud_test_cleanup](../../.github/workflows/cloud_test_cleanup.yml) | Daily    | Cleans up accumulated cloud resources spawned via Open Tofu in platform tests. | Removes cloud resources used to perform platform tests. |
+
+

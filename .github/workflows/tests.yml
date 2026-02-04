@@ -40,7 +40,11 @@ on:
         required: false
       az_subscription_id:
         required: false
-      ccc_credentials:
+      alibaba_cloud_role_arn:
+        required: false
+      alibaba_cloud_oidc_provider_arn:
+        required: false
+      alibaba_cloud_region:
         required: false
       tf_encryption:
         required: false
@@ -96,7 +100,7 @@ jobs:
       qemu_test_flavors_matrix: ${{ steps.test_environments.outputs.qemu_test_flavors_matrix }}
       qemu_tests: ${{ steps.test_environments.outputs.qemu_tests }}
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - id: test_environments
@@ -169,14 +173,13 @@ jobs:
                 core.setOutput(t.outMatrix, SKIP_MATRIX);
               }
             }
-  ## test-ng start
-  test_flavors_chroot_ng:
+  test_flavors_chroot:
     needs: determine_test_settings
-    name: Test-NG chroot flavors
-    uses: ./.github/workflows/test_flavor_chroot_ng.yml
+    name: Test chroot flavors
+    uses: ./.github/workflows/test_flavor_chroot.yml
     if: ${{ needs.determine_test_settings.outputs.chroot_tests == 'true' }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.chroot_test_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
@@ -185,7 +188,7 @@ jobs:
       actions: write
   test_flavors_qemu:
     needs: determine_test_settings
-    name: Test-NG QEMU flavors
+    name: Test QEMU flavors
     uses: ./.github/workflows/test_flavor_qemu.yml
     if: ${{ needs.determine_test_settings.outputs.qemu_tests == 'true' }}
     strategy:
@@ -196,14 +199,14 @@ jobs:
       flavor: ${{ matrix.flavor }}
     permissions:
       actions: write
-  test_flavors_cloud_ng:
+  test_flavors_cloud:
     needs: [determine_test_settings, test_flavors_qemu]
-    name: Test-NG cloud flavors
-    uses: ./.github/workflows/test_flavor_cloud_ng.yml
+    name: Test cloud flavors
+    uses: ./.github/workflows/test_flavor_cloud.yml
     if: |
       ${{
         needs.determine_test_settings.outputs.cloud_tests == 'true'
-        && (always() && (needs.test_flavors_qemu.result == 'success' || needs.test_flavors_qemu.result == 'skipped'))
+        && (always() && (needs.test_flavors_qemu.result == 'success' || needs.determine_test_settings.outputs.qemu_tests != 'true'))
       }}
     strategy:
       fail-fast: false
@@ -217,58 +220,12 @@ jobs:
       actions: write
   test_flavors_oci:
     needs: determine_test_settings
-    name: Test-NG OCI flavors
+    name: Test OCI flavors
     uses: ./.github/workflows/test_flavor_oci.yml
     if: ${{ needs.determine_test_settings.outputs.oci_flavors_tests == 'true' }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix: ${{ fromJson(needs.determine_test_settings.outputs.oci_flavors_matrix) }}
-    with:
-      arch: ${{ matrix.arch }}
-      flavor: ${{ matrix.flavor }}
-    permissions:
-      actions: write
-  ## test-ng end
-  test_flavors_chroot:
-    needs: determine_test_settings
-    name: Test-NG chroot flavors
-    uses: ./.github/workflows/test_flavor_chroot.yml
-    if: ${{ needs.determine_test_settings.outputs.chroot_tests == 'true' }}
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.determine_test_settings.outputs.chroot_test_flavors_matrix) }}
-    with:
-      arch: ${{ matrix.arch }}
-      flavor: ${{ matrix.flavor }}
-    permissions:
-      actions: write
-  test_flavors_cloud:
-    needs: [determine_test_settings, test_flavors_qemu]
-    name: Test cloud flavors
-    uses: ./.github/workflows/test_flavor_cloud.yml
-    if: |
-      ${{
-        needs.determine_test_settings.outputs.cloud_tests == 'true'
-        && (always() && (needs.test_flavors_qemu.result == 'success' || needs.test_flavors_qemu.result == 'skipped'))
-      }}
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.determine_test_settings.outputs.cloud_test_flavors_matrix) }}
-    with:
-      arch: ${{ matrix.arch }}
-      flavor: ${{ matrix.flavor }}
-    secrets: inherit
-    permissions:
-      id-token: write
-      actions: write
-  test_flavors_bare:
-    needs: determine_test_settings
-    name: Test bare flavors
-    uses: ./.github/workflows/test_flavor_bare.yml
-    if: ${{ needs.determine_test_settings.outputs.bare_flavors_tests == 'true' }}
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.determine_test_settings.outputs.bare_flavors_matrix) }}
     with:
       arch: ${{ matrix.arch }}
       flavor: ${{ matrix.flavor }}
@@ -277,11 +234,9 @@ jobs:
   test_report:
     needs:
       - test_flavors_chroot
-      - test_flavors_chroot_ng
       - test_flavors_oci
       - test_flavors_qemu
       - test_flavors_cloud
-      - test_flavors_cloud_ng
     name: Generate Test Report
     if: always()
     uses: ./.github/workflows/test_report.yml
@@ -289,4 +244,4 @@ jobs:
       actions: write
       checks: write
     with:
-      test_jobs: "test_flavors_chroot,test_flavors_chroot_ng,test_flavors_oci,test_flavors_qemu,test_flavors_cloud,test_flavors_cloud_ng"
+      test_jobs: "test_flavors_chroot,test_flavors_oci,test_flavors_qemu,test_flavors_cloud"

@@ -18,10 +18,6 @@ on:
         options:
           - release
           - nightly
-      platform_test_tag:
-        description: 'Tag to run platform-test containers. "latest" or GL version. Tag must be available in `ghcr.io/gardenlinux/gardenlinux/platform-test-*`'
-        type: string
-        default: latest
       flavors_parse_params_test:
         description: "Run bin/flavors_parse.py with these parameters"
         default: '--exclude "bare-*" --no-arch --json-by-arch --build --test'
@@ -50,7 +46,6 @@ jobs:
       version: ${{ inputs.version }}
       target: ${{ inputs.target }}
       flavors_parse_params_test: ${{ inputs.flavors_parse_params_test }}
-      platform_test_tag: ${{ inputs.platform_test_tag }}
       flavors_parse_params_test_bare: ${{ inputs.flavors_parse_params_test_bare }}
       fail_fast: true
     secrets:
@@ -66,7 +61,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Retry failed build
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
@@ -100,7 +95,9 @@ jobs:
       az_client_id: ${{ secrets.AZURE_CLIENT_ID }}
       az_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
       az_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      ccc_credentials: ${{ secrets.CCC_CREDENTIALS }}
+      alibaba_cloud_role_arn: ${{ secrets.ALIBABA_CLOUD_ROLE_ARN }}
+      alibaba_cloud_oidc_provider_arn: ${{ secrets.ALIBABA_CLOUD_OIDC_PROVIDER_ARN }}
+      alibaba_cloud_region: ${{ secrets.ALIBABA_CLOUD_REGION }}
       tf_encryption: ${{ secrets.TF_ENCRYPTION }}
   test_retry:
     needs: test
@@ -110,7 +107,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Retry failed test
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:

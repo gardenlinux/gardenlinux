@@ -41,7 +41,7 @@ jobs:
       environment: ${{ steps.set_values.outputs.environment }}
       repository: ${{ steps.set_values.outputs.repository }}
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - name: Set environment and repository
@@ -64,7 +64,7 @@ jobs:
             return true;
   container:
     needs: determine_environment
-    name: Publish container base image
+    name: Publish container images
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -74,8 +74,15 @@ jobs:
       CNAME_ARM64: ""
     permissions:
       packages: write
+    strategy:
+      matrix:
+        include:
+          - flavor: "container"
+            subpath: ""
+          - flavor: "container-pythonDev"
+            subpath: "/container-python-dev"
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - name: Set flavor version reference
@@ -84,29 +91,29 @@ jobs:
           echo "${{ inputs.version }}" | tee VERSION
       - name: Determine CNAME (amd64)
         id: cname_amd64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
         with:
-          flags: --cname container-amd64 cname
-      - name: Determine CNAME (ard64)
+          flags: --cname ${{ matrix.flavor }}-amd64 cname
+      - name: Determine CNAME (arm64)
         id: cname_arm64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
         with:
-          flags: --cname container-arm64 cname
+          flags: --cname ${{ matrix.flavor }}-arm64 cname
       - name: Set CNAMEs
         run: |
           echo "CNAME_AMD64=${{ steps.cname_amd64.outputs.result }}" | tee -a "$GITHUB_ENV"
           echo "CNAME_ARM64=${{ steps.cname_arm64.outputs.result }}" | tee -a "$GITHUB_ENV"
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
-          name: build-container-amd64
+          name: build-${{ matrix.flavor }}-amd64
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
-          name: build-container-arm64
+          name: build-${{ matrix.flavor }}-arm64
           github-token: ${{ github.token }}
           run-id: ${{ inputs.run_id }}
-      - name: Publish container base image
+      - name: Publish container images
         run: |
           if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
             is_nightly=true
@@ -121,40 +128,40 @@ jobs:
 
           # Tagging for amd64 nightly
           if [ $is_nightly = true ]; then
-            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}:amd64-nightly
-            podman push ${{ needs.determine_environment.outputs.repository }}:amd64-nightly
+            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-nightly
+            podman push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-nightly
           fi
 
           # Tagging for amd64 with version
-          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}:amd64-${version}
-          podman push ${{ needs.determine_environment.outputs.repository }}:amd64-${version}
+          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-${version}
+          podman push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-${version}
 
           tar xzv < "${CNAME_ARM64}.tar.gz"
           image="$(podman load < ${CNAME_ARM64}.oci | awk '{ print $NF }')"
 
           # Tagging for arm64 nightly
           if [ $is_nightly = true ]; then
-            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}:arm64-nightly
-            podman push ${{ needs.determine_environment.outputs.repository }}:arm64-nightly
+            podman tag "$image" ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-nightly
+            podman push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-nightly
           fi
 
           # Tagging for arm64 with version
-          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}:arm64-${version}
-          podman push ${{ needs.determine_environment.outputs.repository }}:arm64-${version}
+          podman tag "$image" ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-${version}
+          podman push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-${version}
 
           # Creating and pushing manifest for nightly
           if [ $is_nightly = true ]; then
-            podman manifest create ${{ needs.determine_environment.outputs.repository }}:nightly
-            podman manifest add ${{ needs.determine_environment.outputs.repository }}:nightly ${{ needs.determine_environment.outputs.repository }}:amd64-nightly
-            podman manifest add ${{ needs.determine_environment.outputs.repository }}:nightly ${{ needs.determine_environment.outputs.repository }}:arm64-nightly
-            podman manifest push ${{ needs.determine_environment.outputs.repository }}:nightly
+            podman manifest create ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:nightly
+            podman manifest add ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:nightly ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-nightly
+            podman manifest add ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:nightly ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-nightly
+            podman manifest push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:nightly
           fi
 
           # Creating and pushing manifest for version tag
-          podman manifest create ${{ needs.determine_environment.outputs.repository }}:${version}
-          podman manifest add ${{ needs.determine_environment.outputs.repository }}:${version} ${{ needs.determine_environment.outputs.repository }}:amd64-${version}
-          podman manifest add ${{ needs.determine_environment.outputs.repository }}:${version} ${{ needs.determine_environment.outputs.repository }}:arm64-${version}
-          podman manifest push ${{ needs.determine_environment.outputs.repository }}:${version}
+          podman manifest create ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:${version}
+          podman manifest add ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:${version} ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:amd64-${version}
+          podman manifest add ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:${version} ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:arm64-${version}
+          podman manifest push ${{ needs.determine_environment.outputs.repository }}${{ matrix.subpath }}:${version}
   bare_flavors:
     needs: determine_environment
     name: Publish bare flavors
@@ -171,7 +178,7 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
@@ -248,7 +255,7 @@ jobs:
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
       max-parallel: 8
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
@@ -257,7 +264,7 @@ jobs:
           role-session-name: ${{ secrets.aws_session }}
           aws-region: ${{ secrets.aws_region }}
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
       - name: Install cosign
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
         with:
@@ -299,7 +306,7 @@ jobs:
       - name: Verify signature
         run: |
           cosign verify --insecure-ignore-tlog=true --key "awskms://kms.${{ secrets.aws_region }}.amazonaws.com/${{ secrets.oci_kms_arn }}" "${{ needs.determine_environment.outputs.repository }}@$(cat digest.txt)"
-      - uses: actions/cache/save@9255dc7a253b0ccc959486e2bca901246202afeb # pin@v5.0.1
+      - uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
         with:
           path: oci_manifest_entry_${{ env.CNAME }}.json
           key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
@@ -321,11 +328,11 @@ jobs:
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
       max-parallel: 1
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
       - name: Set flavor version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -333,7 +340,7 @@ jobs:
       - name: Set CNAME
         run: |
           echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }}-${{ matrix.arch }} cname)" | tee -a "$GITHUB_ENV"
-      - uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # pin@v5.0.1
+      - uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
         with:
           path: oci_manifest_entry_${{ env.CNAME }}.json
           key: oci-manifest-${{ matrix.flavor }}-${{ matrix.arch }}-${{ github.run_id }}
@@ -345,13 +352,13 @@ jobs:
           mkdir manifests
           mv oci_manifest_entry_${CNAME}.json manifests/
 
-          gl-oci update-index \
-            --container ${{ needs.determine_environment.outputs.repository }} \
-            --version ${{ inputs.version }} \
+          gl-oci push-index-from-directory \
+            --index ${{ needs.determine_environment.outputs.repository }} \
+            --index-tag ${{ inputs.version }} \
             --manifest_folder manifests
 
-  build_tests_ng_container:
-    name: Build tests-ng container (${{ matrix.arch }})
+  build_tests_container:
+    name: Build tests container (${{ matrix.arch }})
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     defaults:
       run:
@@ -360,7 +367,7 @@ jobs:
       matrix:
         arch: [amd64, arm64]
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - name: Download test distribution artifact
@@ -374,23 +381,23 @@ jobs:
         run: |
           version=$(bin/garden-version "${{ inputs.version }}")
           echo "VERSION=${version}" | tee -a "$GITHUB_ENV"
-      - name: Build tests-ng container (${{ matrix.arch }})
+      - name: Build tests container (${{ matrix.arch }})
         run: |
           set -euo pipefail
           arch=${{ matrix.arch }}
-          echo "Building tests-ng for arch=$arch"
+          echo "Building tests for arch=$arch"
           repo="ghcr.io/${{ github.repository_owner }}/test-ng"
           podman build --arch ${arch} --build-context dist_ctx=.build -t ${repo}:${arch}-${VERSION} tests-ng/util/container
-          podman save --format oci-archive ${repo}:${arch}-${VERSION} > tests-ng-container_${arch}.oci
+          podman save --format oci-archive ${repo}:${arch}-${VERSION} > tests_container_${arch}.oci
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
-          name: tests-ng-container-${{ matrix.arch }}
-          path: tests-ng-container_${{ matrix.arch }}.oci
+          name: tests-container-${{ matrix.arch }}
+          path: tests_container_${{ matrix.arch }}.oci
           if-no-files-found: error
 
-  publish_tests_ng:
-    name: Publish tests-ng container
-    needs: build_tests_ng_container
+  publish_tests:
+    name: Publish tests container
+    needs: build_tests_container
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -398,13 +405,13 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
-      - name: Download built tests-ng archives
+      - name: Download built tests archives
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
-          pattern: tests-ng-container-*
+          pattern: tests-container-*
           merge-multiple: true
       - name: Load OCI archives
         run: |
@@ -412,7 +419,7 @@ jobs:
             podman load -i "${oci}"
             rm -f "${oci}"
           done
-      - name: Publish tests-ng images and manifest
+      - name: Publish tests images and manifest
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |

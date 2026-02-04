@@ -14,6 +14,9 @@ on:
       version:
         type: string
         required: true
+      prefix:
+        type: string
+        default: ''
 jobs:
   build:
     name: Build bare flavor ${{ inputs.bare_flavor }} (${{ inputs.arch }})
@@ -24,7 +27,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - name: Set build reference
@@ -39,13 +42,13 @@ jobs:
           ./build_bare_flavors "${bare_flavor}"
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         with:
-          name: build-${{ inputs.bare_flavor }}-${{ inputs.arch }}
+          name: ${{ inputs.prefix }}build-${{ inputs.bare_flavor }}-${{ inputs.arch }}
           path: .build/bare_flavors/*.oci
           include-hidden-files: true
           if-no-files-found: error
-      - uses: actions/cache/save@9255dc7a253b0ccc959486e2bca901246202afeb # pin@v5.0.1
+      - uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
         with:
           path: |
             COMMIT
             VERSION
-          key: build-${{ inputs.bare_flavor }}-${{ inputs.arch }}-${{ github.run_id }}
+          key: ${{ inputs.prefix }}build-${{ inputs.bare_flavor }}-${{ inputs.arch }}-${{ github.run_id }}

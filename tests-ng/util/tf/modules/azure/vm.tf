@@ -14,11 +14,7 @@ resource "azurerm_linux_virtual_machine" "instance" {
   network_interface_ids = [azurerm_network_interface.nic.id]
   size                  = local.instance_type
 
-  source_image_id = (
-    var.existing_root_disk != "" ? basename(var.root_disk_path) :
-    var.existing_root_disk == "" ? azurerm_shared_image_version.shared_image_version.0.id :
-    null
-  )
+  source_image_id = var.existing_root_disk != "" ? local.normalized_image_id : azurerm_shared_image_version.shared_image_version.0.id
 
   os_disk {
     caching              = "ReadWrite"
@@ -45,10 +41,11 @@ resource "azurerm_linux_virtual_machine" "instance" {
 
   tags = local.labels
 
-  # wait until image version and nic are available
   depends_on = [
-    azurerm_shared_image_version.shared_image_version.0,
-    azurerm_network_interface.nic
+    azurerm_ssh_public_key.ssh_public_key,
+    azurerm_storage_account.storage_account,
+    azurerm_network_interface.nic,
+    azurerm_network_interface_security_group_association.nsg_nic,
   ]
 
   # replace if image source changes
