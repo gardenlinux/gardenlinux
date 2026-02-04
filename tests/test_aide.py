@@ -5,6 +5,53 @@ from plugins.parse_file import ParseFile
 from plugins.systemd import Systemd
 
 
+@pytest.mark.setting_ids(["GL-SET-aide-service-aide-check-unit"])
+@pytest.mark.feature("aide")
+def test_aide_check_unit_exists(file):
+    """Test that aide-check.service unit file exists"""
+    assert file.is_regular_file("/etc/systemd/system/aide-check.service")
+
+
+@pytest.mark.setting_ids(["GL-SET-aide-service-aide-init-unit"])
+@pytest.mark.feature("aide")
+def test_aide_init_unit_exists(file):
+    """Test that aide-init.service unit file exists"""
+    assert file.is_regular_file("/etc/systemd/system/aide-init.service")
+
+
+@pytest.mark.setting_ids(["GL-SET-aide-service-aide-init-enable"])
+@pytest.mark.feature("aide")
+@pytest.mark.booted(reason="Requires systemd")
+def test_aide_aide_init_service_enabled(systemd: Systemd):
+    """Test that aide-init.service is enabled"""
+    assert systemd.is_enabled("aide-init.service")
+
+
+@pytest.mark.setting_ids(["GL-SET-aide-service-aide-init-enable"])
+@pytest.mark.feature("aide")
+@pytest.mark.booted(reason="Requires systemd")
+def test_aide_aide_init_service_active(systemd: Systemd):
+    """Test that aide-init.service is active"""
+    assert systemd.is_active("aide-init.service")
+
+
+@pytest.mark.setting_ids(["GL-SET-aide-service-aide-check-timer-enable"])
+@pytest.mark.feature("aide")
+@pytest.mark.booted(reason="Requires systemd")
+def test_aide_timer_aide_check_service_enabled(systemd: Systemd):
+    """Test that aide-check.timer is enabled"""
+    assert systemd.is_enabled("aide-check.timer")
+
+
+@pytest.mark.setting_ids(["GL-SET-aide-service-aide-check-timer-enable"])
+@pytest.mark.feature("aide")
+@pytest.mark.booted(reason="Requires systemd")
+def test_aide_timer_aide_check_service_active(systemd: Systemd):
+    """Test that aide-check.timer is active"""
+    assert systemd.is_active("aide-check.timer")
+
+
+@pytest.mark.setting_ids(["GL-SET-aide-service-aide-check-timer"])
 @pytest.mark.feature("aide")
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="systemd timers are expected to be configured at runtime")
@@ -16,6 +63,7 @@ def test_aide_timer_exists(systemd: Systemd):
     assert matches, f"AIDE timer '{timer}' not found — CIS requirement failed"
 
 
+@pytest.mark.setting_ids(["GL-SET-aide-service-aide-check-timer"])
 @pytest.mark.feature("aide")
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="systemd timers are expected to be configured at runtime")
@@ -29,6 +77,7 @@ def test_aide_timer_loaded(systemd: Systemd):
     ), f"AIDE timer must be loaded but is {matches[0].load}"
 
 
+@pytest.mark.setting_ids(["GL-SET-aide-service-aide-check-timer"])
 @pytest.mark.feature("aide")
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="systemd timers are expected to be configured at runtime")
@@ -38,6 +87,7 @@ def test_aide_timer_active(systemd: Systemd):
     assert systemd.is_active(timer), f"AIDE timer '{timer}' exists but is not active."
 
 
+@pytest.mark.setting_ids(["GL-SET-aide-service-aide-check-timer"])
 @pytest.mark.feature("aide")
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="systemd timers are expected to be configured at runtime")

@@ -3,6 +3,7 @@ from plugins.initrd import Initrd
 from plugins.parse_file import ParseFile
 
 
+@pytest.mark.setting_ids(["GL-SET-aws-config-initrd-xen-blkfront"])
 @pytest.mark.feature("aws")
 def test_aws_dracut_contains_xen_modules(parse_file: ParseFile):
     file = "/etc/dracut.conf.d/90-xen-blkfront-driver.conf"
@@ -11,6 +12,7 @@ def test_aws_dracut_contains_xen_modules(parse_file: ParseFile):
     assert line in lines, f"Could not find line {line} in {file}."
 
 
+@pytest.mark.setting_ids(["GL-SET-aws-config-initrd-xen-blkfront"])
 @pytest.mark.feature("aws")
 @pytest.mark.root(reason="Reading the initrd contents requires root access")
 @pytest.mark.booted(reason="Chroot environments have no initrd")
@@ -20,6 +22,7 @@ def test_aws_initrd_contains_xen_modules(initrd: Initrd):
         assert initrd.contains_module(module), f"{module} module not found in initrd"
 
 
+@pytest.mark.setting_ids(["GL-SET-azure-config-initrd-nvme"])
 @pytest.mark.feature("azure")
 def test_azure_dracut_contains_nvme_modules(parse_file: ParseFile):
     file = "/etc/dracut.conf.d/67-azure-nvme-modules.conf"
@@ -28,6 +31,7 @@ def test_azure_dracut_contains_nvme_modules(parse_file: ParseFile):
     assert line in lines, f"Could not find line {line} in {file}."
 
 
+@pytest.mark.setting_ids(["GL-SET-azure-config-initrd-nvme"])
 @pytest.mark.feature("azure")
 @pytest.mark.root(reason="Reading the initrd contents requires root access")
 @pytest.mark.booted(reason="Chroot environments have no initrd")
@@ -37,6 +41,7 @@ def test_azure_initrd_contains_nvme_modules(initrd: Initrd):
         assert initrd.contains_module(module), f"{module} module not found in initrd"
 
 
+@pytest.mark.setting_ids(["GL-SET-openstackbaremetal-config-initrd-bnxt"])
 @pytest.mark.feature("openstackbaremetal")
 def test_openstackbaremetal_dracut_contains_broadcom_modules(parse_file: ParseFile):
     file = "/etc/dracut.conf.d/49-include-bnxt-drivers.conf"
@@ -45,6 +50,7 @@ def test_openstackbaremetal_dracut_contains_broadcom_modules(parse_file: ParseFi
     assert line in lines, f"Could not find line {line} in {file}."
 
 
+@pytest.mark.setting_ids(["GL-SET-openstackbaremetal-config-initrd-bnxt"])
 @pytest.mark.feature("openstackbaremetal")
 @pytest.mark.root(reason="Reading the initrd contents requires root access")
 @pytest.mark.booted(reason="Chroot environments have no initrd")
