@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
 Command-line interface for sysdiff functionality.
-This is not bundled in the test-ng distribution but intended to be used for development purposes.
+This is not bundled in the test distribution but intended to be used for development purposes.
 If the python dependencies are installed, it can be run from a developer's workstation.
 
 Example Usage:
-    tests-ng/util/sysdiff.py --name snapshot-name-1
+    tests/util/sysdiff.py --name snapshot-name-1
     # change something
-    tests-ng/util/sysdiff.py --name snapshot-name-2
-    tests-ng/util/sysdiff.py --list
-    tests-ng/util/sysdiff.py --diff snapshot-name-1 snapshot-name-2
-    tests-ng/util/sysdiff.py --delete snapshot-name-1 snapshot-name-2
+    tests/util/sysdiff.py --name snapshot-name-2
+    tests/util/sysdiff.py --list
+    tests/util/sysdiff.py --diff snapshot-name-1 snapshot-name-2
+    tests/util/sysdiff.py --delete snapshot-name-1 snapshot-name-2
 
 It can also be run containerized using the following command:
 
@@ -20,9 +20,9 @@ podman run -it --rm \
     bash -c "
         apt update;
         apt install -y python3-pip;
-        pip install --break-system-packages -r /mnt/tests-ng/util/requirements.txt;
+        pip install --break-system-packages -r /mnt/tests/util/requirements.txt;
         bash"
-/mnt/tests-ng/util/sysdiff.py
+/mnt/tests/util/sysdiff.py
 """
 
 import argparse
@@ -30,7 +30,7 @@ import os
 import sys
 from pathlib import Path
 
-# Add tests-ng to Python path
+# Add tests to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from plugins.shell import ShellRunner

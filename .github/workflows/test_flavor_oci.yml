@@ -40,7 +40,7 @@ jobs:
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
           name: test-distribution
-          path: tests-ng/.build
+          path: tests/.build
       - name: Determine CNAME
         id: cname
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
@@ -63,15 +63,15 @@ jobs:
       - name: Execute tests
         run: |
           if [ -e ".build/$CNAME.oci" ]; then
-            ./test-ng ".build/$CNAME.oci"
+            ./test ".build/$CNAME.oci"
           else
             echo "skipping non oci file"
           fi
       - name: Copy test results to build directory
         if: always()
         run: |
-          cp tests-ng/log/oci.test-ng.log .build/${CNAME}.oci.test.log || true
-          cp tests-ng/log/oci.test-ng.xml .build/${CNAME}.oci.test.xml || true
+          cp tests/log/oci.test.log .build/${CNAME}.oci.test.log || true
+          cp tests/log/oci.test.xml .build/${CNAME}.oci.test.xml || true
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         if: always()
         with:

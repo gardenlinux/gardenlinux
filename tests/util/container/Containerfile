@@ -8,12 +8,12 @@ FROM debian:stable AS extract
 ARG DIST_FILE=dist.tar.gz
 WORKDIR /work
 COPY --from=dist_ctx $DIST_FILE ./
-RUN mkdir tests-ng && tar -xz -C tests-ng < "$DIST_FILE"
+RUN mkdir tests && tar -xz -C tests < "$DIST_FILE"
 
 FROM scratch
 COPY --from=compile /work/enter_host_ns /enter_host_ns
-COPY --from=extract /work/tests-ng /tests-ng
-WORKDIR /tests-ng
+COPY --from=extract /work/tests /tests
+WORKDIR /tests
 ENV TEST_NG_EXIT_0=1
 ENTRYPOINT [ "/enter_host_ns" ]
-CMD [ "./run_tests", "--junit-xml", "output/test-ng.xml", "--system-booted" ]
+CMD [ "./run_tests", "--junit-xml", "output/test.xml", "--system-booted" ]

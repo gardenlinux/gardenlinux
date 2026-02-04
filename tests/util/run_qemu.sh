@@ -52,8 +52,8 @@ test_dist_dir="$1"
 image="$2"
 util_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")")"
 log_dir="$util_dir/../log"
-log_file_log="qemu.test-ng.log"
-log_file_junit="qemu.test-ng.xml"
+log_file_log="qemu.test.log"
+log_file_junit="qemu.test.xml"
 
 is_pxe_archive=0
 if [[ "$image" == *.pxe.tar.gz ]]; then
@@ -75,7 +75,7 @@ else
 	test_artifact="$(basename "$image" | sed 's/-[0-9].*\.raw$//')"
 fi
 test_type="qemu"
-test_namespace="test-ng"
+test_namespace="test"
 
 # Add pytest-metadata arguments
 test_args+=("--metadata" "Artifact" "$test_artifact")

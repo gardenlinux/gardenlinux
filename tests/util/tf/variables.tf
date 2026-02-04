@@ -1,7 +1,7 @@
 variable "prefix" {
   description = "Prefix to use for resource names"
   type        = string
-  default     = "gl-tests-ng"
+  default     = "gl-tests"
 }
 
 variable "root_disk_path" {

@@ -36,8 +36,8 @@ done
 test_dist_dir="$1"
 rootfs_tar="$2"
 log_dir="$test_dist_dir/../log"
-log_file_log="chroot.test-ng.log"
-log_file_junit="chroot.test-ng.xml"
+log_file_log="chroot.test.log"
+log_file_junit="chroot.test.xml"
 
 mkdir -p "$log_dir"
 
@@ -45,7 +45,7 @@ if [[ "$rootfs_tar" != "/mnt/rootfs.tar" ]]; then
 	# We're not running inside a container, extract artifact name and add metadata
 	test_artifact="$(basename "$rootfs_tar" | sed 's/-[0-9].*\.tar$//')"
 	test_type="chroot"
-	test_namespace="test-ng"
+	test_namespace="test"
 
 	echo "📊  metadata: Artifact=$test_artifact, Type=$test_type, Namespace=$test_namespace"
 

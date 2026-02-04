@@ -386,8 +386,8 @@ jobs:
           set -euo pipefail
           arch=${{ matrix.arch }}
           echo "Building tests for arch=$arch"
-          repo="ghcr.io/${{ github.repository_owner }}/test-ng"
-          podman build --arch ${arch} --build-context dist_ctx=.build -t ${repo}:${arch}-${VERSION} tests-ng/util/container
+          repo="ghcr.io/${{ github.repository_owner }}/test"
+          podman build --arch ${arch} --build-context dist_ctx=.build -t ${repo}:${arch}-${VERSION} tests/util/container
           podman save --format oci-archive ${repo}:${arch}-${VERSION} > tests_container_${arch}.oci
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
@@ -434,25 +434,25 @@ jobs:
           podman login -u token -p ${GITHUB_TOKEN} ghcr.io
 
           # Push amd64 and arm64 images
-          podman push ghcr.io/${{ github.repository_owner }}/test-ng:amd64-${version}
-          podman push ghcr.io/${{ github.repository_owner }}/test-ng:arm64-${version}
+          podman push ghcr.io/${{ github.repository_owner }}/test:amd64-${version}
+          podman push ghcr.io/${{ github.repository_owner }}/test:arm64-${version}
 
           if [ "$is_nightly" = true ]; then
-            podman tag ghcr.io/${{ github.repository_owner }}/test-ng:amd64-${version} ghcr.io/${{ github.repository_owner }}/test-ng:amd64-nightly
-            podman tag ghcr.io/${{ github.repository_owner }}/test-ng:arm64-${version} ghcr.io/${{ github.repository_owner }}/test-ng:arm64-nightly
-            podman push ghcr.io/${{ github.repository_owner }}/test-ng:amd64-nightly
-            podman push ghcr.io/${{ github.repository_owner }}/test-ng:arm64-nightly
+            podman tag ghcr.io/${{ github.repository_owner }}/test:amd64-${version} ghcr.io/${{ github.repository_owner }}/test:amd64-nightly
+            podman tag ghcr.io/${{ github.repository_owner }}/test:arm64-${version} ghcr.io/${{ github.repository_owner }}/test:arm64-nightly
+            podman push ghcr.io/${{ github.repository_owner }}/test:amd64-nightly
+            podman push ghcr.io/${{ github.repository_owner }}/test:arm64-nightly
           fi
 
           # Create and push manifests
           if [ "$is_nightly" = true ]; then
-            podman manifest create ghcr.io/${{ github.repository_owner }}/test-ng:nightly
-            podman manifest add ghcr.io/${{ github.repository_owner }}/test-ng:nightly ghcr.io/${{ github.repository_owner }}/test-ng:amd64-nightly
-            podman manifest add ghcr.io/${{ github.repository_owner }}/test-ng:nightly ghcr.io/${{ github.repository_owner }}/test-ng:arm64-nightly
-            podman manifest push ghcr.io/${{ github.repository_owner }}/test-ng:nightly
+            podman manifest create ghcr.io/${{ github.repository_owner }}/test:nightly
+            podman manifest add ghcr.io/${{ github.repository_owner }}/test:nightly ghcr.io/${{ github.repository_owner }}/test:amd64-nightly
+            podman manifest add ghcr.io/${{ github.repository_owner }}/test:nightly ghcr.io/${{ github.repository_owner }}/test:arm64-nightly
+            podman manifest push ghcr.io/${{ github.repository_owner }}/test:nightly
           fi
 
-          podman manifest create ghcr.io/${{ github.repository_owner }}/test-ng:${version}
-          podman manifest add ghcr.io/${{ github.repository_owner }}/test-ng:${version} ghcr.io/${{ github.repository_owner }}/test-ng:amd64-${version}
-          podman manifest add ghcr.io/${{ github.repository_owner }}/test-ng:${version} ghcr.io/${{ github.repository_owner }}/test-ng:arm64-${version}
-          podman manifest push ghcr.io/${{ github.repository_owner }}/test-ng:${version}
+          podman manifest create ghcr.io/${{ github.repository_owner }}/test:${version}
+          podman manifest add ghcr.io/${{ github.repository_owner }}/test:${version} ghcr.io/${{ github.repository_owner }}/test:amd64-${version}
+          podman manifest add ghcr.io/${{ github.repository_owner }}/test:${version} ghcr.io/${{ github.repository_owner }}/test:arm64-${version}
+          podman manifest push ghcr.io/${{ github.repository_owner }}/test:${version}

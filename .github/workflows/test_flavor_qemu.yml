@@ -41,7 +41,7 @@ jobs:
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
           name: test-distribution
-          path: tests-ng/.build
+          path: tests/.build
       - name: Load certs artifact
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
@@ -90,9 +90,9 @@ jobs:
             fi
           fi
           if [ -e ".build/$CNAME.raw" ]; then
-            ./test-ng ".build/$CNAME.raw"
+            ./test ".build/$CNAME.raw"
           elif [ -e ".build/$CNAME.pxe.tar.gz" ]; then
-            ./test-ng ".build/$CNAME.pxe.tar.gz"
+            ./test ".build/$CNAME.pxe.tar.gz"
           elif [ -e ".build/$CNAME.oci" ]; then
             echo "skipping oci test"
             exit 0
@@ -103,8 +103,8 @@ jobs:
       - name: Copy test results to build directory
         if: always()
         run: |
-          cp tests-ng/log/qemu.test-ng.log .build/${CNAME}.qemu.test.log || true
-          cp tests-ng/log/qemu.test-ng.xml .build/${CNAME}.qemu.test.xml || true
+          cp tests/log/qemu.test.log .build/${CNAME}.qemu.test.log || true
+          cp tests/log/qemu.test.xml .build/${CNAME}.qemu.test.xml || true
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         if: always()
         with:
