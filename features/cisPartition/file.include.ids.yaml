@@ -1,0 +1,3 @@
+"setting_ids":
+  "etc/systemd/system/tmp.mount":
+  - "GL-SET-cisPartition-config-mount-tmp"

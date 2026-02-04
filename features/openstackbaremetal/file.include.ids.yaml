@@ -1,0 +1,26 @@
+"setting_ids":
+  "etc/cloud/cloud.cfg.d/01_debian-cloud.cfg":
+  - "GL-SET-openstackbaremetal-config-cloud-apt-sources"
+  - "GL-SET-openstackbaremetal-config-cloud-manage-hosts"
+  - "GL-SET-openstackbaremetal-config-cloud-user-name"
+  - "GL-SET-openstackbaremetal-config-cloud-user-shell"
+  - "GL-SET-openstackbaremetal-config-cloud-user-lock-passwd"
+  - "GL-SET-openstackbaremetal-config-cloud-user-sudo"
+  "etc/cloud/cloud.cfg.d/50-datasource.cfg":
+  - "GL-SET-openstackbaremetal-config-cloud-datasource"
+  "etc/cloud/cloud.cfg.d/65-network-config.cfg":
+  - "GL-SET-openstackbaremetal-config-cloud-network-config"
+  "etc/cloud/ds-identify.cfg":
+  - "GL-SET-openstackbaremetal-config-cloud-datasource-identify"
+  "etc/dracut.conf.d/49-include-bnxt-drivers.conf":
+  - "GL-SET-openstackbaremetal-config-initrd-bnxt"
+  "etc/kernel/cmdline.d/40-enable-swap-cgroup-accounting.cfg":
+  - "GL-SET-openstackbaremetal-config-kernel-cmdline-enable-swap-cgroup-accounting"
+  "etc/modprobe.d/10-disallow-nouveau.conf":
+  - "GL-SET-openstackbaremetal-config-modprobe-disallow-nouveau"
+  "etc/profile.d/50-autologout.sh":
+  - "GL-SET-openstackbaremetal-script-profile-autologout"
+  "etc/repart.d/root.conf":
+  - "GL-SET-openstackbaremetal-config-repart-root"
+  "etc/sysctl.d/20-cloud.conf":
+  - "GL-SET-openstackbaremetal-config-sysctl-cloud"

@@ -1,0 +1,3 @@
+"setting_ids":
+  "etc/systemd/system/nvme-hostid.service":
+  - "GL-SET-nvme-service-nvme-hostid-unit"

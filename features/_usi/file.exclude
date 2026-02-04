@@ -1,9 +1,14 @@
+# GL-SET-_usi-config-no-kernel-cmdline-ignition
 /etc/kernel/cmdline.d/50-ignition.cfg
+# GL-SET-_usi-config-no-initrd-ignition
 /etc/dracut.conf.d/30-ignition.conf
+# GL-SET-_usi-service-no-ignition-disable
 /etc/systemd/system/ignition-disable.service
 #/etc/repart.d/root.conf
 #/usr/lib/tmpfiles.d/home.conf
 #/opt/{,.}*
 #/home/{,.}*
+# GL-SET-_usi-config-no-root-home
 /root/{,.}*
+# GL-SET-_usi-config-no-udev-rules-image-dissect
 /usr/lib/udev/rules.d/90-image-dissect.rules

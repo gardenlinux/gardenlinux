@@ -4,5 +4,6 @@ set -eufo pipefail
 
 rootfs="$1"
 
+# GL-SET-server-config-resolv-conf-link
 rm "$rootfs/etc/resolv.conf"
 ln -s /run/systemd/resolve/resolv.conf "$rootfs/etc/resolv.conf"

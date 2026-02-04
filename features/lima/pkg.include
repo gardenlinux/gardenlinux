@@ -1,8 +1,10 @@
+# GL-SET-lima-service-cloud-init-local-enable
 cloud-init
 dosfstools
 dmidecode
 efibootmgr
 efitools
+# GL-SET-lima-service-sshd-enable
 openssh-server
 qemu-guest-agent
 sshfs

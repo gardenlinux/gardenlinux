@@ -1,0 +1,3 @@
+"setting_ids":
+  "etc/nft.d/default.conf":
+  - "GL-SET-firewall-config-nft-default"

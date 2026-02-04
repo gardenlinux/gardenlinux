@@ -1,0 +1,3 @@
+"setting_ids":
+  "etc/sysctl.d/99-cis.conf":
+  - "GL-SET-cisSysctl-config-sysctl-cis"
