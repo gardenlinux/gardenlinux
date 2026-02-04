@@ -1,0 +1,17 @@
+"setting_ids":
+  "etc/firewall/ipv4_flush.sh":
+  - "GL-SET-cisSshd-config-firewall-ipv4-flush"
+  "etc/firewall/ipv4_gl_default.conf":
+  - "GL-SET-cisSshd-config-firewall-ipv4-gl-default"
+  "etc/firewall/ipv6_flush.sh":
+  - "GL-SET-cisSshd-config-firewall-ipv6-flush"
+  "etc/firewall/ipv6_gl_default.conf":
+  - "GL-SET-cisSshd-config-firewall-ipv6-gl-default"
+  "etc/ssh/sshd-banner":
+  - "GL-SET-cisSshd-config-ssh-sshd-banner"
+  "etc/ssh/sshd_config":
+  - "GL-SET-cisSshd-config-ssh-sshd-config-001"
+  "etc/systemd/system/gardenlinux-fw-ipv4.service":
+  - "GL-SET-cisSshd-service-gardenlinux-fw-ipv4-unit"
+  "etc/systemd/system/gardenlinux-fw-ipv6.service":
+  - "GL-SET-cisSshd-service-gardenlinux-fw-ipv6-unit"

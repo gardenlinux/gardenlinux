@@ -1,0 +1,26 @@
+"setting_ids":
+  "etc/cloud/cloud.cfg.d/01_debian-cloud.cfg":
+  - "GL-SET-aws-config-cloud-apt-sources"
+  - "GL-SET-aws-config-cloud-manage-hosts"
+  - "GL-SET-aws-config-cloud-user-name"
+  - "GL-SET-aws-config-cloud-user-shell"
+  - "GL-SET-aws-config-cloud-user-lock-passwd"
+  - "GL-SET-aws-config-cloud-user-sudo"
+  "etc/cloud/cloud.cfg.d/99_disable-network-config.cfg":
+  - "GL-SET-aws-config-cloud-network-config-disable"
+  "etc/dracut.conf.d/90-xen-blkfront-driver.conf":
+  - "GL-SET-aws-config-initrd-xen-blkfront"
+  "etc/kernel/cmdline.d/10-console.cfg":
+  - "GL-SET-aws-config-kernel-cmdline-console"
+  "etc/kernel/cmdline.d/70-nvme.cfg":
+  - "GL-SET-aws-config-kernel-cmdline-nvme"
+  "etc/systemd/resolved.conf.d/00-gardenlinux-aws.conf":
+  - "GL-SET-aws-config-resolved"
+  "etc/systemd/system/aws-clocksource.service":
+  - "GL-SET-aws-service-aws-clocksource-unit"
+  "etc/systemd/system/cloud-init-local.service.d/override.conf":
+  - "GL-SET-aws-service-cloud-init-local-override"
+  "etc/systemd/timesyncd.conf.d/00-gardenlinux-aws.conf":
+  - "GL-SET-aws-config-timesyncd"
+  "usr/local/sbin/clocksource-setup.sh":
+  - "GL-SET-aws-script-clocksource-setup"

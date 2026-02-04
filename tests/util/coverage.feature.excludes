@@ -4,3 +4,22 @@
 # Lines starting with # are treated as comments and ignored.
 # Empty lines are ignored.
 #
+_bfpxe
+_build
+_curl
+_debug
+_dev
+_initrdDebug
+_nopkg
+_oci
+_readonly
+_secureboot
+bluefield
+capi
+cisPackages
+container
+firecracker
+nodejs
+python
+sssd
+stigDev

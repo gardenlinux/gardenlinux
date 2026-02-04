@@ -1,0 +1,19 @@
+"setting_ids":
+  "etc/modprobe.d/cramfs.conf":
+  - "GL-SET-cisModprobe-config-modprobe-cramfs"
+  "etc/modprobe.d/dccp.conf":
+  - "GL-SET-cisModprobe-config-modprobe-dccp"
+  "etc/modprobe.d/freevxfs.conf":
+  - "GL-SET-cisModprobe-config-modprobe-freevxfs"
+  "etc/modprobe.d/jffs2.conf":
+  - "GL-SET-cisModprobe-config-modprobe-jffs2"
+  "etc/modprobe.d/rds.conf":
+  - "GL-SET-cisModprobe-config-modprobe-rds"
+  "etc/modprobe.d/sctp.conf":
+  - "GL-SET-cisModprobe-config-modprobe-sctp"
+  "etc/modprobe.d/squashfs.conf":
+  - "GL-SET-cisModprobe-config-modprobe-squashfs"
+  "etc/modprobe.d/tipc.conf":
+  - "GL-SET-cisModprobe-config-modprobe-tipc"
+  "etc/modprobe.d/udf.conf":
+  - "GL-SET-cisModprobe-config-modprobe-udf"

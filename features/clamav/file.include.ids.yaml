@@ -1,0 +1,3 @@
+"setting_ids":
+  "var/spool/cron/crontabs/root":
+  - "GL-SET-clamav-config-cron-root"

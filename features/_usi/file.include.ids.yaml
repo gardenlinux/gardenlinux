@@ -1,0 +1,9 @@
+"setting_ids":
+  "etc/kernel/cmdline.d/99-no-gpt-auto.cfg":
+  - "GL-SET-_usi-config-kernel-cmdline-no-gpt-auto"
+  "etc/update-motd.d/25-secureboot":
+  - "GL-SET-_usi-config-update-motd-secureboot"
+  "usr/local/sbin/update-kernel-cmdline":
+  - "GL-SET-_usi-config-script-update-kernel-cmdline"
+  "usr/sbin/enroll-gardenlinux-secureboot-keys":
+  - "GL-SET-_usi-config-script-enroll-gardenlinux-secureboot-keys"

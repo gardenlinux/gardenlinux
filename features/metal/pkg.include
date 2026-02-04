@@ -8,8 +8,10 @@ ipmitool
 pciutils
 usbutils
 numactl
+# GL-SET-metal-service-mdadm-enable
 mdadm
 hdparm
+# GL-SET-metal-service-smartmontools-enable
 smartmontools
 frr
 linux-image-$arch

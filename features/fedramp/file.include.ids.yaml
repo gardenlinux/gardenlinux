@@ -1,0 +1,25 @@
+"setting_ids":
+  "etc/chrony/chrony.conf":
+  - "GL-SET-fedramp-config-chrony"
+  "etc/firewall/ipv4_flush.sh":
+  - "GL-SET-fedramp-script-firewall-ipv4-flush"
+  "etc/firewall/ipv4_gl_default.conf":
+  - "GL-SET-fedramp-config-firewall-ipv4-gl-default"
+  "etc/firewall/ipv6_flush.sh":
+  - "GL-SET-fedramp-script-firewall-ipv6-flush"
+  "etc/firewall/ipv6_gl_default.conf":
+  - "GL-SET-fedramp-config-firewall-ipv6-gl-default"
+  "etc/issue.net":
+  - "GL-SET-fedramp-config-issue-net"
+  "etc/kernel/cmdline.d/30-fips.cfg":
+  - "GL-SET-fedramp-config-kernel-cmdline-fips"
+  "etc/kernel/cmdline.d/90-lsm.cfg":
+  - "GL-SET-fedramp-config-kernel-cmdline-lsm"
+  "etc/security/limits.conf":
+  - "GL-SET-fedramp-config-security-limits"
+  "etc/ssh/sshd_config":
+  - "GL-SET-fedramp-config-ssh-sshd-config"
+  "etc/systemd/system/gardenlinux-fw-ipv4.service":
+  - "GL-SET-fedramp-service-gardenlinux-fw-ipv4-unit"
+  "etc/systemd/system/gardenlinux-fw-ipv6.service":
+  - "GL-SET-fedramp-service-gardenlinux-fw-ipv6-unit"
