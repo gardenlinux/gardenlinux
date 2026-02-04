@@ -3,3 +3,7 @@ libssl-dev
 libgnutls28-dev
 gnutls-bin
 libgcrypt20
+hmaccalc
+kcapi-tools
+libkcapi1
+libkcapi1-hmac
