@@ -64,6 +64,7 @@ def test_kernel_configs_fips(parse_file: ParseFile, kernel_configs: KernelConfig
         ), f"CONFIG_CRYPTO_FIPS not set to 'y' in {config.path}"
 
 
+@pytest.mark.feature("_fips")
 def test_gnutls_fips_file_was_created(file: File):
     """
     GnuTLS requires to have the /etc/system-fips to be present as prerequisite
