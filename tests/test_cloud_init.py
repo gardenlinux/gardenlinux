@@ -23,6 +23,34 @@ def test_cloud_init_not_installed():
     ), "Cloud-init should not be installed."
 
 
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-ali-config-cloud-user-shell",
+        "GL-SET-ali-config-cloud-user-lock-passwd",
+        "GL-SET-ali-config-cloud-user-sudo",
+        "GL-SET-ali-config-cloud-apt-sources",
+        "GL-SET-aws-config-cloud-user-shell",
+        "GL-SET-aws-config-cloud-user-lock-passwd",
+        "GL-SET-aws-config-cloud-user-sudo",
+        "GL-SET-aws-config-cloud-apt-sources",
+        "GL-SET-azure-config-cloud-user-shell",
+        "GL-SET-azure-config-cloud-user-lock-passwd",
+        "GL-SET-azure-config-cloud-user-sudo",
+        "GL-SET-azure-config-cloud-apt-sources",
+        "GL-SET-openstack-config-cloud-user-shell",
+        "GL-SET-openstack-config-cloud-user-lock-passwd",
+        "GL-SET-openstack-config-cloud-user-sudo",
+        "GL-SET-openstack-config-cloud-apt-sources",
+        "GL-SET-openstackbaremetal-config-cloud-user-shell",
+        "GL-SET-openstackbaremetal-config-cloud-user-lock-passwd",
+        "GL-SET-openstackbaremetal-config-cloud-user-sudo",
+        "GL-SET-openstackbaremetal-config-cloud-apt-sources",
+        "GL-SET-vmware-config-cloud-user-shell",
+        "GL-SET-vmware-config-cloud-user-lock-passwd",
+        "GL-SET-vmware-config-cloud-user-sudo",
+        "GL-SET-vmware-config-cloud-apt-sources",
+    ]
+)
 @pytest.mark.feature(
     "ali or aws or azure or openstackbaremetal or openstack or vmware",
     reason="Cloud-init is installed on most cloud platforms; gdch has minimal config",
@@ -36,6 +64,14 @@ def test_cloud_init_debian_cloud_defaults(parse_file: ParseFile):
     assert config["system_info"]["default_user"]["sudo"] == ["ALL=(ALL) NOPASSWD:ALL"]
 
 
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-ali-config-cloud-user-name",
+        "GL-SET-aws-config-cloud-user-name" "GL-SET-openstack-config-cloud-user-name",
+        "GL-SET-openstackbaremetal-config-cloud-user-name",
+        "GL-SET-vmware-config-cloud-user-name",
+    ]
+)
 @pytest.mark.feature(
     "ali or aws or openstackbaremetal or openstack or vmware",
     reason="Cloud-init is installed on most cloud platforms; azure uses a different default user; gdch has minimal config",
@@ -46,6 +82,15 @@ def test_cloud_init_debian_cloud_user(parse_file: ParseFile):
     assert config["system_info"]["default_user"]["name"] == "admin"
 
 
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-aws-config-cloud-manage-hosts",
+        "GL-SET-azure-config-cloud-manage-hosts",
+        "GL-SET-openstack-config-cloud-manage-hosts",
+        "GL-SET-openstackbaremetal-config-cloud-manage-hosts",
+        "GL-SET-vmware-config-cloud-manage-hosts",
+    ]
+)
 @pytest.mark.feature(
     "aws or azure or openstackbaremetal or openstack or vmware",
     reason="Cloud-init is installed on most cloud platforms; ali does not manage host file; gdch has minimal config",
@@ -57,6 +102,25 @@ def test_cloud_init_debian_cloud_manage_etc_hosts(parse_file: ParseFile):
 
 
 # Tests for some platforms
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-ali-config-cloud-no-ntp",
+        "GL-SET-ali-config-cloud-no-resizefs",
+        "GL-SET-ali-config-cloud-no-growpart",
+        "GL-SET-aws-config-cloud-no-ntp",
+        "GL-SET-aws-config-cloud-no-resizefs",
+        "GL-SET-aws-config-cloud-no-growpart",
+        "GL-SET-openstack-config-cloud-no-ntp",
+        "GL-SET-openstack-config-cloud-no-resizefs",
+        "GL-SET-openstack-config-cloud-no-growpart",
+        "GL-SET-openstackbaremetal-config-cloud-no-ntp",
+        "GL-SET-openstackbaremetal-config-cloud-no-resizefs",
+        "GL-SET-openstackbaremetal-config-cloud-no-growpart",
+        "GL-SET-vmware-config-cloud-no-ntp",
+        "GL-SET-vmware-config-cloud-no-resizefs",
+        "GL-SET-vmware-config-cloud-no-growpart",
+    ]
+)
 @pytest.mark.feature("ali or aws or openstack or openstackbaremetal or vmware")
 @pytest.mark.parametrize("module", ["ntp", "resizefs", "growpart"])
 def test_cloud_cfg_excludes_modules(parse_file: ParseFile, module: str):
@@ -78,6 +142,15 @@ def test_cloud_cfg_excludes_modules(parse_file: ParseFile, module: str):
 
 
 # Alibaba Cloud
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-ali-config-cloud-apt-sources",
+        "GL-SET-ali-config-cloud-user-name",
+        "GL-SET-ali-config-cloud-user-shell",
+        "GL-SET-ali-config-cloud-user-lock-passwd",
+        "GL-SET-ali-config-cloud-user-sudo",
+    ]
+)
 @pytest.mark.feature("ali")
 def test_ali_debian_cloud_ignore_manage_etc_hosts(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg"
@@ -85,6 +158,11 @@ def test_ali_debian_cloud_ignore_manage_etc_hosts(parse_file: ParseFile):
     assert "manage_etc_hosts" not in config
 
 
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-ali-config-cloud-network-config-disable",
+    ]
+)
 @pytest.mark.feature("ali")
 def test_ali_disable_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg"
@@ -93,6 +171,7 @@ def test_ali_disable_network_config(parse_file: ParseFile):
 
 
 # AWS
+@pytest.mark.setting_ids(["GL-SET-aws-config-cloud-network-config-disable"])
 @pytest.mark.feature("aws")
 def test_aws_disable_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg"
@@ -101,6 +180,11 @@ def test_aws_disable_network_config(parse_file: ParseFile):
 
 
 # Azure
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-azure-config-cloud-user-name",
+    ]
+)
 @pytest.mark.feature("azure")
 def test_azure_debian_cloud_user(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/01_debian-cloud.cfg"
@@ -109,6 +193,11 @@ def test_azure_debian_cloud_user(parse_file: ParseFile):
 
 
 # GDCH - Google Distributed Cloud Hosted
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-gdch-config-cloud-ntp",
+    ]
+)
 @pytest.mark.feature("gdch")
 def test_gdch_ntp_settings(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/91-gdch-system.cfg"
@@ -119,6 +208,12 @@ def test_gdch_ntp_settings(parse_file: ParseFile):
 
 
 # OpenStack
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-openstack-config-cloud-datasource",
+        "GL-SET-openstackbaremetal-config-cloud-datasource",
+    ]
+)
 @pytest.mark.feature("openstack or openstackbaremetal")
 def test_openstack_datasource_list(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/50-datasource.cfg"
@@ -126,6 +221,11 @@ def test_openstack_datasource_list(parse_file: ParseFile):
     assert config["datasource_list"] == ["ConfigDrive", "OpenStack", "Ec2"]
 
 
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-openstack-config-cloud-network-config-disable",
+    ]
+)
 @pytest.mark.feature("openstack")
 def test_openstack_disable_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg"
@@ -133,6 +233,11 @@ def test_openstack_disable_network_config(parse_file: ParseFile):
     assert config["network"]["config"] == "disabled"
 
 
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-openstackbaremetal-config-cloud-network-config",
+    ]
+)
 @pytest.mark.feature("openstackbaremetal")
 def test_openstackbaremetal_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/65-network-config.cfg"
@@ -140,6 +245,12 @@ def test_openstackbaremetal_network_config(parse_file: ParseFile):
     assert config["system_info"]["network"]["renderers"] == ["netplan", "networkd"]
 
 
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-openstack-config-cloud-datasource-identify",
+        "GL-SET-openstackbaremetal-config-cloud-datasource-identify",
+    ]
+)
 @pytest.mark.feature("openstack or openstackbaremetal")
 def test_openstack_ds_identify(parse_file: ParseFile):
     file = "/etc/cloud/ds-identify.cfg"
@@ -149,6 +260,11 @@ def test_openstack_ds_identify(parse_file: ParseFile):
 
 
 # VMware
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-vmware-config-cloud-network-config-disable",
+    ]
+)
 @pytest.mark.feature("vmware")
 def test_vmware_disable_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg"
@@ -156,6 +272,11 @@ def test_vmware_disable_network_config(parse_file: ParseFile):
     assert config["network"]["config"] == "disabled"
 
 
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-vmware-config-cloud-datasources",
+    ]
+)
 @pytest.mark.feature("vmware")
 def test_vmware_enabled_datasources(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/99_enabled-datasources.cfg"
@@ -163,6 +284,12 @@ def test_vmware_enabled_datasources(parse_file: ParseFile):
     assert config["datasource_list"] == ["VMwareGuestInfo", "OVF"]
 
 
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-vmware-config-cloud-datasource-vmwareguestinfo",
+        "GL-SET-vmware-config-cloud-datasource-identify",
+    ]
+)
 @pytest.mark.feature("vmware")
 @pytest.mark.parametrize(
     "file_path",
