@@ -132,6 +132,6 @@ def test_firewall_service_running(shell):
             if status.stdout.strip() == "active":
                 active_services.append(svc)
 
-    assert active_services, (
-        "firewall service must be active for compliance, either nftables OR iptables"
-    )
+    assert (
+        active_services
+    ), "firewall service must be active for compliance, either nftables OR iptables"
