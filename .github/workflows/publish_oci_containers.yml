@@ -91,12 +91,12 @@ jobs:
           echo "${{ inputs.version }}" | tee VERSION
       - name: Determine CNAME (amd64)
         id: cname_amd64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@7535722f9819a2987ec830d80208f0d116bd3950 # pin@0.10.10
         with:
           flags: --cname ${{ matrix.flavor }}-amd64 cname
       - name: Determine CNAME (arm64)
         id: cname_arm64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@7535722f9819a2987ec830d80208f0d116bd3950 # pin@0.10.10
         with:
           flags: --cname ${{ matrix.flavor }}-arm64 cname
       - name: Set CNAMEs
@@ -264,7 +264,7 @@ jobs:
           role-session-name: ${{ secrets.aws_session }}
           aws-region: ${{ secrets.aws_region }}
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@7535722f9819a2987ec830d80208f0d116bd3950 # pin@0.10.10
       - name: Install cosign
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
         with:
@@ -332,7 +332,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@7535722f9819a2987ec830d80208f0d116bd3950 # pin@0.10.10
       - name: Set flavor version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
