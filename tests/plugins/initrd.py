@@ -1,7 +1,9 @@
 import logging
 import os
 import re
+import subprocess
 import tempfile
+from functools import lru_cache
 from typing import List, Optional
 
 import pefile
@@ -17,16 +19,83 @@ logger = logging.getLogger(__name__)
 class Initrd:
     """Inspect initrd contents using lsinitrd (dracut)."""
 
+    @staticmethod
+    @lru_cache(maxsize=1)
+    def _execute_lsinitrd_cached(initrd_path: str) -> tuple[list[str], list[str]]:
+        """Execute lsinitrd once and cache the result.
+
+        This static method is cached with lru_cache to ensure lsinitrd is only
+        called once per unique initrd_path during the entire test session.
+
+        Args:
+            initrd_path: Path to the initrd file
+
+        Returns:
+            Tuple of (contents_list, dracut_modules_list)
+        """
+        logger.info(f"Executing lsinitrd {initrd_path} (will be cached via lru_cache)")
+
+        result = subprocess.run(
+            ["lsinitrd", initrd_path],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        if result.returncode != 0:
+            logger.error(f"lsinitrd failed with exit code {result.returncode}")
+            if result.stderr:
+                logger.error(f"lsinitrd stderr: {result.stderr}")
+            raise RuntimeError(
+                f"lsinitrd failed for {initrd_path} with exit code {result.returncode}"
+            )
+
+        # Parse the output to extract both file contents and dracut modules
+        lines = result.stdout.split("\n")
+        contents = []
+        dracut_modules = []
+        in_dracut_modules_section = False
+
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            # Check if we're entering the dracut modules section
+            if line == "dracut modules:":
+                in_dracut_modules_section = True
+                continue
+
+            # Check if we're leaving the dracut modules section
+            if in_dracut_modules_section and (
+                line.startswith("====") or (line and line[0].isupper() and ":" in line)
+            ):
+                in_dracut_modules_section = False
+
+            if in_dracut_modules_section:
+                dracut_modules.append(line)
+            else:
+                contents.append(line)
+
+        logger.info(
+            f"Cached lsinitrd output: {len(contents)} files and {len(dracut_modules)} dracut modules"
+        )
+
+        return (contents, dracut_modules)
+
     def __init__(self, shell: ShellRunner, kernel_versions: KernelVersions):
         self._shell = shell
         installed = kernel_versions.get_installed()
         if not installed:
             self._kernel_version = None
             self._contents: List[str] = []
+            self._dracut_modules: List[str] = []
             return
 
         self._kernel_version = installed[0].version
-        self._contents = self._load_initrd_contents(self._kernel_version)
+        self._contents, self._dracut_modules = self._load_initrd_contents(
+            self._kernel_version
+        )
 
     def _get_efi_path(self) -> Optional[str]:
         """Get the path to the EFI file based on CNAME from os-release.
@@ -145,7 +214,7 @@ class Initrd:
             )
             return None
 
-    def _load_initrd_contents(self, kernel_version: str) -> List[str]:
+    def _load_initrd_contents(self, kernel_version: str) -> tuple[List[str], List[str]]:
         """Load initrd contents for the given kernel version.
 
         Tries EFI file first (for trustedboot/USI flavors), then falls back to
@@ -155,7 +224,7 @@ class Initrd:
             kernel_version: Kernel version string.
 
         Returns:
-            List of file paths found in the initrd.
+            Tuple of (file contents list, dracut modules list).
 
         Raises:
             RuntimeError: If neither EFI initrd nor legacy initrd can be found.
@@ -184,29 +253,8 @@ class Initrd:
             )
 
         try:
-            logger.debug(f"Executing: lsinitrd {initrd_path}")
-            result = self._shell(
-                f"lsinitrd {initrd_path}",
-                capture_output=True,
-                ignore_exit_code=True,
-            )
-
-            if result.returncode == 0:
-                contents = [
-                    line.strip() for line in result.stdout.split("\n") if line.strip()
-                ]
-                logger.debug(f"lsinitrd output for {initrd_path}:\n{result.stdout}")
-                logger.info(f"Found {len(contents)} files in initrd {initrd_path}")
-                return contents
-
-            logger.warning(
-                f"lsinitrd failed for {initrd_path} with exit code {result.returncode}"
-            )
-            if result.stderr:
-                logger.warning(f"lsinitrd stderr: {result.stderr}")
-            raise RuntimeError(
-                f"lsinitrd failed for {initrd_path} with exit code {result.returncode}"
-            )
+            # Use cached lsinitrd execution - this will only run once per unique initrd_path
+            return Initrd._execute_lsinitrd_cached(initrd_path)
         finally:
             # Clean up extracted temporary file
             if extracted_path and os.path.exists(extracted_path):
@@ -231,7 +279,24 @@ class Initrd:
             return self._contents
         else:
             # Load contents for a different kernel version
-            return self._load_initrd_contents(kernel_version)
+            contents, _ = self._load_initrd_contents(kernel_version)
+            return contents
+
+    def _get_dracut_modules(self, kernel_version: Optional[str] = None) -> List[str]:
+        """Get all dracut modules in the initrd.
+
+        Args:
+            kernel_version: Kernel version string. If None, uses the first installed kernel.
+
+        Returns:
+            List of dracut module names found in the initrd.
+        """
+        if kernel_version is None:
+            return self._dracut_modules
+        else:
+            # Load contents for a different kernel version
+            _, dracut_modules = self._load_initrd_contents(kernel_version)
+            return dracut_modules
 
     def contains_module(
         self, module_name: str, kernel_version: Optional[str] = None
@@ -262,6 +327,21 @@ class Initrd:
             rf"(usr/)?lib/modules/{kernel_version}/kernel/(?:[^/]+/)*{re.escape(module_name)}\.ko(\.(xz|zst))?$"
         )
         return any(pattern.search(entry) for entry in contents)
+
+    def contains_dracut_module(
+        self, module_name: str, kernel_version: Optional[str] = None
+    ) -> bool:
+        """Check if a dracut module is present in the initrd.
+
+        Args:
+            module_name: Name of the dracut module to check (e.g., "ignition", "gardenlinux-live").
+            kernel_version: Kernel version string. If None, uses the first installed kernel.
+
+        Returns:
+            True if the dracut module is found in the initrd.
+        """
+        dracut_modules = self._get_dracut_modules(kernel_version)
+        return module_name in dracut_modules
 
     def contains_file(
         self, file_path: str, kernel_version: Optional[str] = None
@@ -339,5 +419,8 @@ class Initrd:
 
 @pytest.fixture
 def initrd(shell: ShellRunner, kernel_versions: KernelVersions) -> Initrd:
-    """Fixture providing access to initrd inspection functionality."""
+    """Fixture providing access to initrd inspection functionality.
+
+    Uses lru_cache internally to ensure lsinitrd is only called once per test session.
+    """
     return Initrd(shell, kernel_versions)

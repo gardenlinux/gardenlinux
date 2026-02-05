@@ -1,4 +1,12 @@
+"""
+Test initrd contents, dracut modules, and configurations across all Garden Linux features.
+"""
+
+from pathlib import Path
+from typing import List
+
 import pytest
+from plugins.file import File
 from plugins.initrd import Initrd
 from plugins.parse_file import ParseFile
 
@@ -319,7 +327,8 @@ def test__usi_initrd_files(initrd: Initrd):
 
 @pytest.mark.setting_ids(["GL-SET-aws-config-initrd-xen-blkfront"])
 @pytest.mark.feature("aws")
-def test_aws_dracut_contains_xen_modules(parse_file: ParseFile):
+def test_aws_dracut_xen_modules_config(parse_file: ParseFile):
+    """Test that dracut config includes xen-blkfront driver"""
     file = "/etc/dracut.conf.d/90-xen-blkfront-driver.conf"
     line = 'add_drivers+=" xen-blkfront "'
     lines = parse_file.lines(file)
@@ -330,15 +339,22 @@ def test_aws_dracut_contains_xen_modules(parse_file: ParseFile):
 @pytest.mark.feature("aws")
 @pytest.mark.root(reason="Reading the initrd contents requires root access")
 @pytest.mark.booted(reason="Chroot environments have no initrd")
-def test_aws_initrd_contains_xen_modules(initrd: Initrd):
+def test_aws_initrd_xen_modules(initrd: Initrd):
+    """Test that xen-blkfront module is present in initrd"""
     modules = ["xen-blkfront"]
     for module in modules:
         assert initrd.contains_module(module), f"{module} module not found in initrd"
 
 
+# =============================================================================
+# azure Feature Initrd
+# =============================================================================
+
+
 @pytest.mark.setting_ids(["GL-SET-azure-config-initrd-nvme"])
 @pytest.mark.feature("azure")
-def test_azure_dracut_contains_nvme_modules(parse_file: ParseFile):
+def test_azure_dracut_nvme_modules_config(parse_file: ParseFile):
+    """Test that dracut config includes nvme drivers"""
     file = "/etc/dracut.conf.d/67-azure-nvme-modules.conf"
     line = 'add_drivers+=" nvme nvme-core nvme-fabrics nvme-fc nvme-rdma nvme-loop nvmet nvmet-fc nvme-tcp "'
     lines = parse_file.lines(file)
@@ -349,15 +365,45 @@ def test_azure_dracut_contains_nvme_modules(parse_file: ParseFile):
 @pytest.mark.feature("azure")
 @pytest.mark.root(reason="Reading the initrd contents requires root access")
 @pytest.mark.booted(reason="Chroot environments have no initrd")
-def test_azure_initrd_contains_nvme_modules(initrd: Initrd):
+def test_azure_initrd_nvme_modules(initrd: Initrd):
+    """Test that nvme modules are present in initrd"""
     modules = ["nvme-fabrics", "nvme-fc", "nvme-rdma"]
     for module in modules:
         assert initrd.contains_module(module), f"{module} module not found in initrd"
 
 
+# =============================================================================
+# kvm Feature Initrd
+# =============================================================================
+
+
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-kvm-config-no-initrd-img",
+        "GL-SET-kvm-config-no-initrd-img-old",
+    ]
+)
+@pytest.mark.feature("kvm")
+def test_kvm_no_initrd_images():
+    """Test that initrd.img symlinks are not present for kvm"""
+    forbidden = [
+        "/boot/initrd.img",
+        "/boot/initrd.img.old",
+    ]
+
+    missing = [path for path in forbidden if Path(path).exists()]
+    assert not missing, f"The following paths should not exist: {', '.join(missing)}"
+
+
+# =============================================================================
+# openstackbaremetal Feature Initrd
+# =============================================================================
+
+
 @pytest.mark.setting_ids(["GL-SET-openstackbaremetal-config-initrd-bnxt"])
 @pytest.mark.feature("openstackbaremetal")
-def test_openstackbaremetal_dracut_contains_broadcom_modules(parse_file: ParseFile):
+def test_openstackbaremetal_dracut_broadcom_modules_config(parse_file: ParseFile):
+    """Test that dracut config includes Broadcom bnxt_en driver"""
     file = "/etc/dracut.conf.d/49-include-bnxt-drivers.conf"
     line = 'add_drivers+=" bnxt_en "'
     lines = parse_file.lines(file)
@@ -368,7 +414,35 @@ def test_openstackbaremetal_dracut_contains_broadcom_modules(parse_file: ParseFi
 @pytest.mark.feature("openstackbaremetal")
 @pytest.mark.root(reason="Reading the initrd contents requires root access")
 @pytest.mark.booted(reason="Chroot environments have no initrd")
-def test_openstackbaremetal_initrd_contains_broadcom_modules(initrd: Initrd):
+def test_openstackbaremetal_initrd_broadcom_modules(initrd: Initrd):
+    """Test that bnxt_en module is present in initrd"""
     modules = ["bnxt_en"]
-    for module in modules:
-        assert initrd.contains_module(module), f"{module} module not found in initrd"
+    missing = [module for module in modules if not initrd.contains_module(module)]
+    assert (
+        not missing
+    ), f"The following modules were not found in initrd: {', '.join(missing)}"
+
+
+# =============================================================================
+# server Feature Initrd
+# =============================================================================
+
+
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-server-config-no-initrd-img",
+        "GL-SET-server-config-no-initrd-img-old",
+        "GL-SET-server-config-initrd-general",
+        "GL-SET-server-config-initrd-uefi-stub",
+    ]
+)
+@pytest.mark.feature("server")
+def test_server_no_initrd_images():
+    """Test that initrd.img symlinks are not present for server"""
+    forbidden = [
+        "/boot/initrd.img",
+        "/boot/initrd.img.old",
+    ]
+
+    missing = [path for path in forbidden if Path(path).exists()]
+    assert not missing, f"The following paths should not exist: {', '.join(missing)}"
