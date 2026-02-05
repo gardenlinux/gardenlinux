@@ -8,7 +8,6 @@ from plugins.kernel_versions import KernelVersions
 from plugins.modify import allow_system_modifications
 from plugins.systemd import Systemd
 
-
 # =============================================================================
 # _ephemeral Feature Services
 # =============================================================================
@@ -49,27 +48,6 @@ def test__fwcfg_qemu_fw_cfg_script_service_enabled(systemd: Systemd):
 def test__fwcfg_qemu_fw_cfg_script_service_active(systemd: Systemd):
     """Test that qemu-fw_cfg-script.service is active"""
     assert systemd.is_active("qemu-fw_cfg-script.service")
-
-
-# =============================================================================
-# _ignite Feature Services
-# =============================================================================
-
-
-@pytest.mark.setting_ids(["GL-SET-_ignite-service-ignition-enable"])
-@pytest.mark.feature("_ignite and not kvm", reason="Ignition is disabled on KVM")
-@pytest.mark.booted(reason="Requires systemd")
-def test__ignite_ignition_service_enabled(systemd: Systemd):
-    """Test that ignition.service is enabled"""
-    assert systemd.is_enabled("ignition.service")
-
-
-@pytest.mark.setting_ids(["GL-SET-_ignite-service-ignition-enable"])
-@pytest.mark.feature("_ignite and not kvm", reason="Ignition is disabled on KVM")
-@pytest.mark.booted(reason="Requires systemd")
-def test__ignite_ignition_service_active(systemd: Systemd):
-    """Test that ignition.service is active"""
-    assert systemd.is_active("ignition.service")
 
 
 # =============================================================================

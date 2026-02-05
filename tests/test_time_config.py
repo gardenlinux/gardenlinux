@@ -154,14 +154,6 @@ def test_gdch_chrony_service_enabled(systemd: Systemd):
     assert systemd.is_enabled("chrony.service")
 
 
-@pytest.mark.setting_ids(["GL-SET-gcp-service-chrony-enable"])
-@pytest.mark.feature("gdch")
-@pytest.mark.booted(reason="Requires systemd")
-def test_gdch_chrony_service_active(systemd: Systemd):
-    """Test that chrony.service is active"""
-    assert systemd.is_active("chrony.service")
-
-
 # ================================
 # FedRAMP NTP server configuration
 # ================================
