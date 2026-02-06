@@ -1,10 +1,7 @@
 import datetime
-import os
 import socket
-import threading
 
 import pytest
-
 from plugins.file import File
 from plugins.network import has_ipv6
 from plugins.systemd import Systemd
@@ -115,9 +112,18 @@ def test_hostname_azure(shell):
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="firewall service check requires booted system")
 @pytest.mark.feature(
-    "not gardener and not azure and not aws and not gcp and not gdch and not ali"
+    "not gardener and not lima and not metal and not azure and not aws and not gcp and not gdch and not ali"
 )
 def test_firewall_nftables(systemd: Systemd):
     assert systemd.is_active(
         "nftables"
-    ), f"nftables should be active for firewall compliance"
+    ), "nftables should be active for firewall compliance"
+
+
+@pytest.mark.root(reason="Required to query systemd units")
+@pytest.mark.booted(reason="firewall service check requires booted system")
+@pytest.mark.feature("lima and gardener and server and ssh and fedramp ")
+def test_firewall_nftables(systemd: Systemd):
+    assert systemd.is_active(
+        "iptables"
+    ), "iptables should be active for firewall compliance"
