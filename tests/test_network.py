@@ -109,29 +109,8 @@ def test_hostname_azure(shell):
         execution_time <= 10
     ), f"nslookup should not run into timeout: {result.stderr}"
 
-
-@pytest.mark.security_id(232)
+@pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="firewall service check requires booted system")
-def test_firewall_service_running(shell):
-    services = ["nftables", "iptables"]
-    active_services = []
-    for svc in services:
-        exists = shell(
-            f"systemctl list-unit-files | grep -w {svc}.service",
-            capture_output=True,
-            ignore_exit_code=True,
-        )
-
-        if exists.returncode == 0:
-            status = shell(
-                f"systemctl is-active {svc}.service",
-                capture_output=True,
-                ignore_exit_code=True,
-            )
-
-            if status.stdout.strip() == "active":
-                active_services.append(svc)
-
-    assert (
-        active_services
-    ), "firewall service must be active for compliance, either nftables OR iptables"
+@pytest.mark.feature("not gardener and not azure and not aws and not gcp and not gdch and not ali")
+def test_firewall_nftables(systemd: Systemd):
+    assert systemd.is_active("nftables"), f"nftables should be active for firewall compliance"
