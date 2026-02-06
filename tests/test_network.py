@@ -4,6 +4,7 @@ import socket
 import threading
 
 import pytest
+
 from plugins.file import File
 from plugins.network import has_ipv6
 
@@ -109,8 +110,13 @@ def test_hostname_azure(shell):
         execution_time <= 10
     ), f"nslookup should not run into timeout: {result.stderr}"
 
+
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="firewall service check requires booted system")
-@pytest.mark.feature("not gardener and not azure and not aws and not gcp and not gdch and not ali")
+@pytest.mark.feature(
+    "not gardener and not azure and not aws and not gcp and not gdch and not ali"
+)
 def test_firewall_nftables(systemd: Systemd):
-    assert systemd.is_active("nftables"), f"nftables should be active for firewall compliance"
+    assert systemd.is_active(
+        "nftables"
+    ), f"nftables should be active for firewall compliance"
