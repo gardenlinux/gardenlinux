@@ -38,7 +38,7 @@ It must **not**:
 
 - enforce additional assumptions about structure,
 - reinterpret semantics,
-- or impose constraints beyond what is explicitly defined here.
+- or impose constraints beyond what is explicitly defined in this and subsequent ADRs.
 
 ---
 
@@ -131,7 +131,7 @@ The artifact descriptors in `paths` are of the form:
   s3_bucket_name: <s3_bucket>
 ```
 
-No additional interpretation, normalization, or validation of these values is performed beyond format translation.
+No additional interpretation or normalization of these values is performed beyond format translation.
 
 ## 3. S3 Layout
 
@@ -161,10 +161,6 @@ No additional interpretation, normalization, or validation of these values is pe
 - Enforcing assumptions about naming conventions beyond documented extraction rules.
 - Inferring architecture from the canonical name or any other source than the requirements file.
 - Inferring platform semantics from feature graphs.
-- Validating builder output beyond presence of required fields.
-- Correcting, normalizing, or rejecting values based on internal heuristics.
-
-The upload logic is a **translator**, not a validator or policy engine.
 
 ## Consequences
 
