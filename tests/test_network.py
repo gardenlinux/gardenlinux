@@ -123,7 +123,7 @@ def test_firewall_nftables(systemd: Systemd):
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="firewall service check requires booted system")
 @pytest.mark.feature("lima and gardener and server and ssh and fedramp ")
-def test_firewall_nftables(systemd: Systemd):
+def test_firewall_iptables(systemd: Systemd):
     assert systemd.is_active(
         "iptables"
     ), "iptables should be active for firewall compliance"
