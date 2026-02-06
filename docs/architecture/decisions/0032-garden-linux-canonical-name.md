@@ -8,7 +8,7 @@ Draft
 
 ## Context
 
-While Garden Linux canonical names (short `cname`) as a representation of flavors for specific architectures, versions and commits are commonly referred to an ADR is missing defining the parts of it. Historically the `cname` contains the platform, zero or more features, the architecture and version information. The platform and features part is referred to as "flavor".
+While Garden Linux canonical names (short `cname`) as a representation of flavors for specific architectures, versions and commits are commonly referred to an ADR is missing defining the parts of it. Historically the `cname` contains the platform, zero or more features, the architecture and version information. The platform and features part is referred to as "flavor". It forms the shortest possible representation of selected features of a `cname`.
 
 ## Decision
 
@@ -16,13 +16,13 @@ While Garden Linux canonical names (short `cname`) as a representation of flavor
 - The platform should but do not have to be at the first position of the flavor string.
 - Features are divided with `-`. `_` is used alternately as stated below.
 - Feature flags are prefixed with `_`. The `-` is omitted in this case.
-- Features are typically sorted by alphabet or a dependency and feature type based algorithm.
+- Features are typically sorted by alphabet or a feature type based algorithm.
 - All features combined form a "flavor".
 - Appended to a "flavor" are in exact the following order, divided by a `-`:
-  - Architecture
-  - Semantic version string or `today` for local builds
-  - Commit ID (currently configured as first eight characters of an Git commit hash) or `local` for local build
-- Version information can be read from `COMMIT` and `VERSION` files of the `gardenlinux` Git repository to form the `cname` as described above.
+  - Architecture, allowed characters are `a-z` and `0-9`
+  - Semantic version string or `today` for local builds, allowed characters are `a-z`, `0-9` and `.`
+  - Commit ID (currently configured as first eight characters of an Git commit hash) or `local` for local build, allowed characters are `a-z` and `0-9`
+- Version information can be received from `./get_commit` and `./get_version` scripts of a `gardenlinux` derived Git repository to form the `cname` as described above.
 
 ## Consequences
 
