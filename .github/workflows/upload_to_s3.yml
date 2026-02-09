@@ -35,6 +35,7 @@ jobs:
         shell: bash
     env:
       CNAME: ""
+      GL_ALLOW_FRANKENSTEIN: "1"
     permissions:
       id-token: write
     environment: oidc_aws_s3_upload
@@ -46,7 +47,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ab55b23431865c1c74d64b39a1f610ac583349ed # pin@0.10.11
       - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
@@ -115,4 +116,4 @@ jobs:
           popd
       - name: Upload to S3 bucket ${{ secrets.aws_s3_bucket }}
         run: |
-          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --cname "$CNAME" --path "$CNAME" upload-artifacts-to-bucket
+          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --path "$CNAME" upload-artifacts-to-bucket --artifact-name "$CNAME"

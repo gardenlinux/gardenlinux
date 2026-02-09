@@ -24,9 +24,23 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ab55b23431865c1c74d64b39a1f610ac583349ed # pin@0.10.11
       - id: matrix
         name: Generate flavors matrix
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
-        with:
-          flags: ${{ inputs.flags }}
-          flavors_matrix: ${{ inputs.flavors_matrix }}
+        run: |
+          MATRIX='${{ inputs.flavors_matrix }}'
+
+          if [[ $(echo "${MATRIX}" | jq -r 'type') != 'object' ]]; then
+            FLAVORS=$(gl-flavors-parse ${{ inputs.flags }})
+            MATRIX=$(jq -nc \
+              --argjson flavors "$(echo $FLAVORS)" \
+              '{
+                include: (
+                  $flavors | reduce (to_entries[]) as $item ([]; . + ($item.value | map({"arch": $item.key, "flavor": .})))
+                )
+              }'
+            )
+          fi
+
+          echo "matrix=$MATRIX" | tee -a $GITHUB_OUTPUT

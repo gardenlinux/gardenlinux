@@ -77,12 +77,11 @@ jobs:
             flavors.yaml
           sparse-checkout-cone-mode: false
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ab55b23431865c1c74d64b39a1f610ac583349ed # pin@0.10.11
       - id: matrix
         name: Generate flavors matrix
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/flavors_parse@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
-        with:
-          flags: "--no-arch --json-by-arch --publish"
+        run: |
+          echo "matrix=$(gl-flavors-parse --no-arch --json-by-arch --publish)" | tee -a "$GITHUB_OUTPUT"
   github_release:
     needs: glvd
     runs-on: ubuntu-24.04
@@ -103,9 +102,7 @@ jobs:
       - name: install dependencies for generate_release_note.py script
         run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
-        with:
-          version: 0.10.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ab55b23431865c1c74d64b39a1f610ac583349ed # pin@0.10.11
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
@@ -117,9 +114,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [[ "${{ inputs.is_latest }}" == "true" ]]; then
-            gl-gh create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")" --latest
+            gl-gh-release create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")" --latest
           else
-            gl-gh create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
+            gl-gh-release create --tag ${{ inputs.version }} --commit "$(echo "${{ inputs.commit }}")"
           fi
       - uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
         with:
@@ -143,9 +140,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
-        with:
-          version: 0.10.6
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ab55b23431865c1c74d64b39a1f610ac583349ed # pin@0.10.11
       - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
@@ -164,7 +159,7 @@ jobs:
           echo "CNAME=$CNAME" | tee -a "$GITHUB_ENV"
 
           mkdir "$CNAME"
-          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --cname "$CNAME" --path "$CNAME" download-artifacts-from-bucket
+          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --path "$CNAME" download-artifacts-from-bucket --cname "$CNAME"
           tar -cJf "$CNAME.tar.xz" -C "$CNAME" .
       - name: Upload to release
         env:
@@ -180,7 +175,7 @@ jobs:
           for suffix in $log_suffixes; do
             log="$CNAME/$CNAME.$suffix"
             if [ -f "$log" ]; then
-              gl-gh upload --release_id "$release" --file_path "$log"
+              gl-gh-release upload --release_id "$release" --file_path "$log"
             fi
           done
 

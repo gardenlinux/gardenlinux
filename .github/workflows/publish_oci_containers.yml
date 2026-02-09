@@ -89,20 +89,12 @@ jobs:
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
           echo "${{ inputs.version }}" | tee VERSION
-      - name: Determine CNAME (amd64)
-        id: cname_amd64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
-        with:
-          flags: --cname ${{ matrix.flavor }}-amd64 cname
-      - name: Determine CNAME (arm64)
-        id: cname_arm64
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
-        with:
-          flags: --cname ${{ matrix.flavor }}-arm64 cname
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ab55b23431865c1c74d64b39a1f610ac583349ed # pin@0.10.11
       - name: Set CNAMEs
         run: |
-          echo "CNAME_AMD64=${{ steps.cname_amd64.outputs.result }}" | tee -a "$GITHUB_ENV"
-          echo "CNAME_ARM64=${{ steps.cname_arm64.outputs.result }}" | tee -a "$GITHUB_ENV"
+          echo "CNAME_AMD64=$(gl-features-parse --cname ${{ matrix.flavor }}-amd64 cname)" | tee -a "$GITHUB_ENV"
+          echo "CNAME_ARM64=$(gl-features-parse --cname ${{ matrix.flavor }}-arm64 cname)" | tee -a "$GITHUB_ENV"
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:
           name: build-${{ matrix.flavor }}-amd64
@@ -246,6 +238,7 @@ jobs:
         shell: bash
     env:
       CNAME: ""
+      GL_ALLOW_FRANKENSTEIN: "1"
     permissions:
       id-token: write
       packages: write
@@ -264,7 +257,7 @@ jobs:
           role-session-name: ${{ secrets.aws_session }}
           aws-region: ${{ secrets.aws_region }}
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ab55b23431865c1c74d64b39a1f610ac583349ed # pin@0.10.11
       - name: Install cosign
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
         with:
@@ -319,6 +312,7 @@ jobs:
         shell: bash
     env:
       CNAME: ""
+      GL_ALLOW_FRANKENSTEIN: "1"
     permissions:
       id-token: write
       packages: write
@@ -332,7 +326,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ca8aaa920a8f883e2794f19fdbc9d1c6cebf8663 # 0.10.9
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ab55b23431865c1c74d64b39a1f610ac583349ed # pin@0.10.11
       - name: Set flavor version reference
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
