@@ -35,6 +35,7 @@ jobs:
         shell: bash
     env:
       CNAME: ""
+      GL_ALLOW_FRANKENSTEIN: "1"
     permissions:
       id-token: write
     environment: oidc_aws_s3_upload

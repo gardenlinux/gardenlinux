@@ -238,6 +238,7 @@ jobs:
         shell: bash
     env:
       CNAME: ""
+      GL_ALLOW_FRANKENSTEIN: "1"
     permissions:
       id-token: write
       packages: write
@@ -311,6 +312,7 @@ jobs:
         shell: bash
     env:
       CNAME: ""
+      GL_ALLOW_FRANKENSTEIN: "1"
     permissions:
       id-token: write
       packages: write
