@@ -95,7 +95,7 @@ The framework uses pytest's plugin system to automatically register fixtures:
 
 1. **Plugins** (`tests/plugins/`) - Provide fixtures for system access
 2. **Handlers** (`tests/handlers/`) - Provide fixtures for setup/teardown
-3. **Tests** (`tests/test_*.py`) - Use fixtures via dependency injection
+3. **Tests** (`tests/integration/test_*.py`) - Use fixtures via dependency injection
 
 **Registration**: All plugins are automatically registered as pytest fixtures via `conftest.py`
 
@@ -129,13 +129,39 @@ Utility functions provide reusable functionality:
 
 ## Test Organization and Naming
 
+### Directory Structure
+
+All test files are placed into `tests/integration/{category}`. The following tree structure shows how tests are organized by functional area:
+
+```
+tests/integration/
+├── boot/                    # Boot-related tests (ignition, cloud-init, initrd, secureboot, etc.)
+├── core/                    # Core system functionality (services, network, users, logging, etc.)
+├── infrastructure/          # Infrastructure and platform tests (cloud platforms, iscsi, nvme, kvm, metal)
+├── kernel/                  # Kernel-related tests (cmdline, modules, parameters, etc.)
+├── runtime/                 # Runtime environment tests (containers, SAP, gardener, nodejs, etc.)
+└── security/                # Security tests (SSH, firewall, PAM, capabilities, etc.)
+    └── compliance/          # Compliance tests (CIS, FIPS, STIG, FedRAMP)
+```
+
+The purpose of categorizing tests is to improve maintainability and discoverability. By grouping related tests together, developers can more easily:
+
+- Locate existing tests for a specific functional area
+- Understand the scope and coverage of the test suite
+- Organize test execution by category when needed
+- Maintain consistency when adding new tests
+
+These categories are subject to change as new tests are added and the test suite evolves.
+
 ### File Naming Convention
 
 Test files follow the pattern `test_*.py` and should be named based on the functionality they test:
 
-- `test_ssh.py` - SSH configuration and functionality
-- `test_packages.py` - Package installation and configuration
-- `test_network.py` - Network configuration and connectivity
+- `test_ignition.py` (in `boot/`) - Ignition configuration and functionality
+- `test_services.py` (in `core/`) - Enabled/disabled and started/stopped services
+- `test_network.py` (in `core/`) - Network configuration and connectivity
+- `test_ssh.py` (in `security/`) - SSH configuration and security
+- `test_fips.py` (in `security/compliance/`) - FIPS compliance tests
 
 > [!NOTE]
 > Tests are not strictly tied to features in the `features` folder anymore. Have a look at `@pytest.mark.feature()` if you need a test condition related to a feature.
