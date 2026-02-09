@@ -3,5 +3,5 @@ apparmor
 # GL-SET-chost-service-containerd-enable
 containerd
 ethtool
-# GL-SET-chost-service-dbus-user-session-enable
+# GL-SET-chost-service-user-dbus-socket-enable
 dbus-user-session

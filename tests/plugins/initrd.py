@@ -278,9 +278,35 @@ class Initrd:
         if kernel_version is None:
             kernel_version = self._kernel_version
         contents = self._get_contents(kernel_version)
-        return file_path in contents or any(
-            entry.endswith(file_path) for entry in contents
-        )
+
+        # lsinitrd outputs in ls -l format, so entries may include metadata before the path
+        # For example: "lrwxrwxrwx   1 root     root           20 Feb  9 00:00 path/to/file -> target"
+        # We need to extract the actual path from each entry
+        for entry in contents:
+            # Split on whitespace and look for the file path
+            # The path typically appears after date/time info
+            parts = entry.split()
+            if not parts:
+                continue
+
+            # Check if this is an exact match or if the file_path is in the entry
+            if file_path in entry:
+                # For symlinks, the format is: ... path -> target
+                # For regular files, the format is: ... path
+                # Extract the path portion (before any '->')
+                if "->" in entry:
+                    # Extract path before the symlink arrow
+                    path_part = entry.split("->")[0].strip()
+                    # The actual path is the last token before '->'
+                    actual_path = path_part.split()[-1]
+                else:
+                    # For regular files, the path is the last token
+                    actual_path = parts[-1]
+
+                if actual_path == file_path or actual_path.endswith("/" + file_path):
+                    return True
+
+        return False
 
     def list_modules(self, kernel_version: Optional[str] = None) -> List[str]:
         """List all kernel modules present in the initrd.

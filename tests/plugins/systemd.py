@@ -161,12 +161,18 @@ class Systemd:
         return inactive
 
     def is_enabled(self, unit_name: str) -> bool:
+        """Check if a system-level systemd unit is enabled.
+
+        Note: This also returns True for 'static' units (units without [Install] section
+        that are enabled by default or pulled in by other units).
+        """
         result = self._shell(
             f"{self._systemctl} is-enabled {unit_name}",
             capture_output=True,
             ignore_exit_code=True,
         )
-        enabled = result.stdout.strip() == "enabled"
+        state = result.stdout.strip()
+        enabled = state in ("enabled", "static")
         if not enabled:
             result_status = self._shell(
                 f"{self._systemctl} status {unit_name}",
