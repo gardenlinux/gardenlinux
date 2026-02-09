@@ -27,7 +27,7 @@ systemd-boot-efi
 systemd-coredump
 # GL-SET-server-service-cron-update-enable
 systemd-cron
-# GL-SET-server-service-systemd-repart-enable
+# GL-SET-server-service-systemd-repart-socket-enable
 systemd-repart
 ## GL-SET-server-service-systemd-resolved-enable
 systemd-resolved

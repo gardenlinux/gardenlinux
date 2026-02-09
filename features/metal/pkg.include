@@ -8,7 +8,7 @@ ipmitool
 pciutils
 usbutils
 numactl
-# GL-SET-metal-service-mdadm-enable
+# GL-SET-metal-service-mdmonitor-oneshot-timer-enable
 mdadm
 hdparm
 # GL-SET-metal-service-smartmontools-enable
