@@ -42,7 +42,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@7535722f9819a2987ec830d80208f0d116bd3950 # pin@0.10.10
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ab55b23431865c1c74d64b39a1f610ac583349ed # pin@0.10.11
       - name: Set image reference for S3
         run: |
           echo "${{ inputs.commit_id }}" | tee COMMIT
@@ -59,7 +59,7 @@ jobs:
       - name: Prepare image from S3
         run: |
           mkdir "$CNAME"
-          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --cname "$CNAME" --path "$CNAME" download-artifacts-from-bucket
+          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --path "$CNAME" download-artifacts-from-bucket --cname "$CNAME"
 
           tar -cSzvf "$CNAME.tar.gz" -C "$CNAME/" .
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0

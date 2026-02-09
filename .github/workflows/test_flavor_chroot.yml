@@ -37,14 +37,11 @@ jobs:
         with:
           name: test-distribution
           path: tests/.build
-      - name: Determine CNAME
-        id: cname
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/features_parse@7535722f9819a2987ec830d80208f0d116bd3950 # pin@0.10.10
-        with:
-          flags: --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ab55b23431865c1c74d64b39a1f610ac583349ed # pin@0.10.11
       - name: Set CNAME
         run: |
-          echo "CNAME=${{ steps.cname.outputs.result }}" | tee -a "$GITHUB_ENV"
+          echo "CNAME=$(gl-features-parse --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname)" | tee -a "$GITHUB_ENV"
       - name: Load flavor build artifact
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
         with:

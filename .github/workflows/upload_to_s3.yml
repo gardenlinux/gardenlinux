@@ -46,7 +46,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@7535722f9819a2987ec830d80208f0d116bd3950 # pin@0.10.10
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ab55b23431865c1c74d64b39a1f610ac583349ed # pin@0.10.11
       - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
@@ -115,4 +115,4 @@ jobs:
           popd
       - name: Upload to S3 bucket ${{ secrets.aws_s3_bucket }}
         run: |
-          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --cname "$CNAME" --path "$CNAME" upload-artifacts-to-bucket
+          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --path "$CNAME" upload-artifacts-to-bucket --artifact-name "$CNAME"
