@@ -1,0 +1,289 @@
+import pytest
+from plugins.file import File
+from plugins.sysctl import Sysctl
+
+# =============================================================================
+# cloud Feature
+# =============================================================================
+
+
+@pytest.mark.testcov(["GL-TESTCOV-cloud-config-sysctl-cloud"])
+@pytest.mark.feature("cloud")
+def test_cloud_sysctl_cloud_config_exists(file: File):
+    """Test that cloud sysctl cloud configuration exists"""
+    assert file.exists("/etc/sysctl.d/20-cloud.conf")
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-cloud-config-sysctl-cloud",
+        "GL-TESTCOV-openstackMetal-config-sysctl-cloud",
+    ]
+)
+@pytest.mark.feature("cloud or (openstack and metal)")
+@pytest.mark.booted(reason="sysctl needs a booted system")
+def test_kernel_parameters_cannot_hardlink_what_you_do_not_own(sysctl):
+    assert sysctl["fs.protected_hardlinks"] == 1
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-cloud-config-sysctl-cloud",
+        "GL-TESTCOV-openstackMetal-config-sysctl-cloud",
+    ]
+)
+@pytest.mark.feature("cloud or (openstack and metal)")
+@pytest.mark.booted(reason="sysctl needs a booted system")
+def test_kernel_parameters_cannot_symlink_what_you_do_not_own(sysctl):
+    assert sysctl["fs.protected_symlinks"] == 1
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-cloud-config-sysctl-cloud",
+        "GL-TESTCOV-openstackMetal-config-sysctl-cloud",
+    ]
+)
+@pytest.mark.feature("cloud or (openstack and metal)")
+@pytest.mark.booted(reason="sysctl needs a booted system")
+def test_kernel_parameters_randomize_memory_allocation(sysctl):
+    assert sysctl["kernel.randomize_va_space"] == 2
+
+
+@pytest.mark.testcov(
+    "GL-TESTCOV-gardener-config-sysctl-gce-network-security",
+)
+@pytest.mark.feature("gardener")
+@pytest.mark.booted(reason="sysctl needs a booted system")
+def test_sysctl_rp_filter(sysctl):
+    assert sysctl["net.ipv4.conf.all.rp_filter"] != 1
+    assert sysctl["net.ipv4.conf.default.rp_filter"] != 1
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-cloud-config-sysctl-ipv4",
+        "GL-TESTCOV-cloud-config-sysctl-ipv6",
+    ]
+)
+@pytest.mark.feature("cloud")
+def test_cloud_sysctl_network_configs_exist(file: File):
+    """Test that cloud sysctl network configurations exist"""
+    configs = [
+        "/etc/sysctl.d/21-ipv4-settings.conf",
+        "/etc/sysctl.d/22-ipv6-settings.conf",
+    ]
+    missing = [cfg for cfg in configs if not file.is_regular_file(cfg)]
+    assert not missing, f"Missing cloud sysctl configs: {', '.join(missing)}"
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-cloud-config-sysctl-ipv4",
+    ]
+)
+@pytest.mark.feature("cloud")
+@pytest.mark.booted(reason="sysctl needs a booted system")
+def test_cloud_sysctl_network_config_ipv4(sysctl):
+    """Test that cloud sysctl network config ipv4 is set correctly"""
+
+    settings = {
+        "net.ipv4.tcp_syncookies": 1,
+        "net.ipv4.conf.all.accept_source_route": 0,
+        # "net.ipv4.conf.all.accept_redirects": 0, # TODO: Disabled until https://github.com/gardenlinux/gardenlinux/issues/4336 is fixed.
+        "net.ipv4.conf.all.secure_redirects": 1,
+        "net.ipv4.conf.default.secure_redirects": 1,
+        "net.ipv4.icmp_echo_ignore_broadcasts": 1,
+        "net.ipv4.icmp_ignore_bogus_error_responses": 1,
+        # "net.ipv4.conf.default.accept_source_route": 1, # TODO: Disabled until https://github.com/gardenlinux/gardenlinux/issues/4336 is fixed.
+        # "net.ipv4.conf.default.accept_redirects": 1, # TODO: Disabled until https://github.com/gardenlinux/gardenlinux/issues/4336 is fixed.
+        # "net.ipv4.conf.all.log_martians": 0, # TODO: Disabled until https://github.com/gardenlinux/gardenlinux/issues/4336 is fixed.
+        # "net.ipv4.conf.all.forwarding": 1, # TODO: Disabled until https://github.com/gardenlinux/gardenlinux/issues/4336 is fixed.
+        # "net.ipv4.conf.default.forwarding": 1, # TODO: Disabled until https://github.com/gardenlinux/gardenlinux/issues/4336 is fixed.
+        # "net.ipv4.conf.default.send_redirects": 1,
+        # "net.ipv4.conf.all.send_redirects": 1, # TODO: Disabled until https://github.com/gardenlinux/gardenlinux/issues/4336 is fixed.
+        "net.ipv4.conf.all.promote_secondaries": 1,
+    }
+    missing = [key for key, value in settings.items() if sysctl[key] != value]
+    assert (
+        not missing
+    ), f"Missing or incorrect cloud sysctl network config ipv4 settings: {', '.join(missing)}"
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-cloud-config-sysctl-ipv6",
+    ]
+)
+@pytest.mark.feature("cloud")
+@pytest.mark.booted(reason="sysctl needs a booted system")
+def test_cloud_sysctl_network_config_ipv6(sysctl):
+    """Test that cloud sysctl network config ipv6 is set correctly"""
+    settings = {
+        "net.ipv6.conf.all.forwarding": 1,
+        "net.ipv6.conf.default.forwarding": 1,
+    }
+    missing = [key for key, value in settings.items() if sysctl[key] != value]
+    assert (
+        not missing
+    ), f"Missing or incorrect cloud sysctl network config ipv6 settings: {', '.join(missing)}"
+
+
+# =============================================================================
+# chost Feature - Container Networking Sysctl Configuration
+# =============================================================================
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-chost-config-sysctl-ip-forward",
+        "GL-TESTCOV-chost-config-sysctl-nf-call-iptables",
+    ]
+)
+@pytest.mark.feature("chost")
+def test_chost_sysctl_configs_exist(file: File):
+    """Test that container networking sysctl configs exist"""
+    sysctl_configs = [
+        "/etc/sysctl.d/ip-forward.conf",
+        "/etc/sysctl.d/nf-call-iptables.conf",
+    ]
+    missing = [cfg for cfg in sysctl_configs if not file.exists(cfg)]
+    assert not missing, f"Missing sysctl configs: {', '.join(missing)}"
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-chost-config-sysctl-ip-forward",
+        "GL-TESTCOV-chost-config-sysctl-nf-call-iptables",
+    ]
+)
+@pytest.mark.feature("chost")
+@pytest.mark.booted(reason="sysctl needs a booted system")
+def test_chost_sysctl_config_content(sysctl: Sysctl):
+    """Test that container networking sysctl config contains the correct content"""
+    settings = {
+        "net.ipv4.ip_forward": 1,
+        "net.ipv6.conf.all.forwarding": 1,
+        "net.bridge.bridge-nf-call-iptables": 1,
+        "net.bridge.bridge-nf-call-ip6tables": 1,
+    }
+    missing = [key for key, value in settings.items() if sysctl[key] != value]
+    assert (
+        not missing
+    ), f"Missing or incorrect chost sysctl settings: {', '.join(missing)}"
+
+
+# =============================================================================
+# khost Feature - Kubernetes Host Configuration
+# =============================================================================
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-khost-config-sysctl-br-nf",
+        "GL-TESTCOV-khost-config-sysctl-inotify",
+        "GL-TESTCOV-khost-config-sysctl-ip-forward",
+    ]
+)
+@pytest.mark.feature("khost")
+def test_khost_sysctl_configs_exist(file: File):
+    """Test that Kubernetes host sysctl configs exist"""
+    sysctl_configs = [
+        "/etc/sysctl.d/20-br-nf.conf",
+        "/etc/sysctl.d/20-inotify.conf",
+        "/etc/sysctl.d/20-ip-forward.conf",
+    ]
+    missing = [cfg for cfg in sysctl_configs if not file.exists(cfg)]
+    assert not missing, f"Missing khost sysctl configs: {', '.join(missing)}"
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-khost-config-sysctl-br-nf",
+        "GL-TESTCOV-khost-config-sysctl-inotify",
+        "GL-TESTCOV-khost-config-sysctl-ip-forward",
+    ]
+)
+@pytest.mark.feature("khost")
+@pytest.mark.booted(reason="sysctl needs a booted system")
+def test_khost_sysctl_configs_content(sysctl: Sysctl):
+    """Test that Kubernetes host sysctl configs contain the correct content"""
+    settings = {
+        "net.bridge.bridge-nf-call-iptables": 1,
+        "net.bridge.bridge-nf-call-ip6tables": 1,
+        "fs.inotify.max_user_instances": 8192,
+        "fs.inotify.max_user_watches": 65536,
+        "net.ipv4.ip_forward": 1,
+        "net.ipv6.conf.all.forwarding": 1,
+    }
+    missing = [key for key, value in settings.items() if sysctl[key] != value]
+    assert (
+        not missing
+    ), f"Missing or incorrect khost sysctl settings: {', '.join(missing)}"
+
+
+# =============================================================================
+# server Feature
+# =============================================================================
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-server-config-sysctl-allow-ping-for-non-root-user",
+    ]
+)
+@pytest.mark.feature("server")
+def test_server_sysctl_allow_ping_nonroot(file: File):
+    """Test that server allows ping for non-root users"""
+    assert file.exists(
+        "/etc/sysctl.d/90-allow-ping-for-non-root-user.conf"
+    ), "Sysctl config for non-root ping should exist"
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-server-config-sysctl-allow-ping-for-non-root-user",
+    ]
+)
+@pytest.mark.feature("server")
+@pytest.mark.booted(reason="sysctl needs a booted system")
+def test_server_sysctl_allow_ping_nonroot_check(sysctl: Sysctl):
+    """Test that server sysctl allows ping for non-root users"""
+    settings = {
+        "net.ipv4.ping_group_range": "0 2147483647",
+    }
+    missing = [key for key, value in settings.items() if sysctl[key] != value]
+    assert (
+        not missing
+    ), f"Missing or incorrect server sysctl settings: {', '.join(missing)}"
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-server-config-sysctl-enable-unprivileged-user-namespaces",
+    ]
+)
+@pytest.mark.feature("server")
+def test_server_sysctl_unprivileged_namespaces(file: File):
+    """Test that server enables unprivileged user namespaces"""
+    assert file.exists(
+        "/etc/sysctl.d/40-enable-unprivileged-user-namespaces.conf"
+    ), "Sysctl config for unprivileged namespaces should exist"
+
+
+@pytest.mark.testcov(
+    [
+        "GL-TESTCOV-server-config-sysctl-enable-unprivileged-user-namespaces",
+    ]
+)
+@pytest.mark.feature("server")
+@pytest.mark.booted(reason="sysctl needs a booted system")
+def test_server_sysctl_unprivileged_namespaces_check(sysctl: Sysctl):
+    """Test that server sysctl allows ping for non-root users"""
+    settings = {
+        "kernel.unprivileged_userns_clone": 1,
+    }
+    missing = [key for key, value in settings.items() if sysctl[key] != value]
+    assert (
+        not missing
+    ), f"Missing or incorrect server sysctl settings: {', '.join(missing)}"

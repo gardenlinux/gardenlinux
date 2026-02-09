@@ -375,13 +375,13 @@ EOF
 	fi
 
 elif ((ssh)); then
-	qemu_opts+=(
-		-netdev "user,id=net0,net=169.254.169.0/24,dhcpstart=169.254.169.9,hostfwd=tcp::2222-:22,guestfwd=tcp:169.254.169.254:80-cmd:socat - TCP:127.0.0.1:8181"
-	)
+		qemu_opts+=(
+			-netdev "user,id=net0,net=169.254.169.0/24,dhcpstart=169.254.169.9,hostfwd=tcp::2222-:22,guestfwd=tcp:169.254.169.254:80-cmd:socat - TCP:127.0.0.1:8181"
+		)
 else
-	qemu_opts+=(
-		-netdev "user,id=net0,net=169.254.169.0/24,dhcpstart=169.254.169.9,guestfwd=tcp:169.254.169.254:80-cmd:socat - TCP:127.0.0.1:8181"
-	)
+		qemu_opts+=(
+			-netdev "user,id=net0,net=169.254.169.0/24,dhcpstart=169.254.169.9,guestfwd=tcp:169.254.169.254:80-cmd:socat - TCP:127.0.0.1:8181"
+		)
 fi
 
 echo "🚀  starting test VM"

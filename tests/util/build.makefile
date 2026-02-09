@@ -17,7 +17,7 @@ clean:
 .build:
 	mkdir .build
 
-.build/dist.tar.gz: util/build_dist.sh .build/runtime.tar.gz conftest.py $(wildcard plugins/*.py) $(wildcard test_*.py) $(wildcard */test_*.py) $(wildcard handlers/*.py) | .build
+.build/dist.tar.gz: util/build_dist.sh .build/runtime.tar.gz conftest.py $(wildcard handlers/*.py) $(shell find integration -name 'test_*.py' 2>/dev/null) $(wildcard plugins/*.py) | .build
 	echo '🛠️  building test framework distribution'
 	./$< $(word 2,$^) $@
 

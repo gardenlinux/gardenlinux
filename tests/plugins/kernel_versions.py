@@ -49,7 +49,7 @@ class KernelVersions:
         )
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def kernel_versions() -> KernelVersions:
     """Fixture providing access to installed and running kernel versions."""
     return KernelVersions()
