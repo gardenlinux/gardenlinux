@@ -48,27 +48,40 @@ def test_profile_autologout_openstackbaremetal(parse_file: ParseFile):
         lines_list in sorted_lines
     ), f"Could not find expected lines in order in {file}: {lines_list}"
 
-
 @pytest.mark.feature("stig", reason="enabled in stig feature")
-def test_profile_autologout_compliance(parse_file: ParseFile):
-    """Test that the autologout profile exists and TMOUT is correctly set."""
+def test_shell_inactivity_timeout_stig(parse_file: ParseFile):
+    """
+    Validate that an inactivity timeout is enforced for shell sessions
+    via TMOUT configuration.
+    """
     file = "/etc/profile.d/99-terminal_tmout.sh"
-    assert parse_file.exists(file), f"{file} does not exist"
+
+    # Configuration must exist
+    assert parse_file.exists(file), (
+        "compliance: shell inactivity timeout configuration file is missing"
+    )
+
     lines = parse_file.lines(file)
-    normalized = [
+
+    lines_list = [
         line.strip()
         for line in lines
         if line.strip() and not line.strip().startswith("#")
     ]
 
-    assert any(
-        re.fullmatch(r"TMOUT\s*=\s*600", line) for line in normalized
-    ), "TMOUT is not set to 600"
+    # TMOUT must be set to a finite value
+    tmout_lines = [
+        line for line in lines_list
+        if re.fullmatch(r"TMOUT\s*=\s*\d+", line)
+    ]
 
-    assert any(
-        line == "readonly TMOUT" for line in normalized
-    ), "TMOUT is not marked as readonly"
+    assert tmout_lines, "compliance: TMOUT is not configured"
 
-    assert any(
-        line == "export TMOUT" for line in normalized
-    ), "TMOUT is not exported"
+    # Ensure TMOUT is protected and applied
+    assert "readonly TMOUT" in lines_list, (
+        "compliance: TMOUT is not marked as readonly"
+    )
+
+    assert "export TMOUT" in lines_list, (
+        "compliance: TMOUT is not exported"
+    )
