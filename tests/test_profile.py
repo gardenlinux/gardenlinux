@@ -1,6 +1,6 @@
 import re
-import pytest
 
+import pytest
 from plugins.parse_file import ParseFile
 
 
@@ -52,16 +52,19 @@ def test_profile_autologout_openstackbaremetal(parse_file: ParseFile):
 
 
 TMOUT_FILE_STIG = "/etc/profile.d/99-terminal_tmout.sh"
+
+
 @pytest.mark.feature("stig")
 def test_shell_tmout_file_exists_stig(parse_file: ParseFile):
     """
-    As per DISA STIG requirement, this test validates that the shell inactivity 
+    As per DISA STIG requirement, this test validates that the shell inactivity
     timeout configuration file exists.
     Ref: SRG-OS-000755-GPOS-00220
     """
     assert parse_file.exists(
         TMOUT_FILE_STIG
     ), "stigcompliance: shell inactivity timeout configuration file is missing"
+
 
 @pytest.mark.feature("stig")
 def test_shell_tmout_is_configured_stig(parse_file: ParseFile):
@@ -76,10 +79,10 @@ def test_shell_tmout_is_configured_stig(parse_file: ParseFile):
         if line.strip() and not line.strip().startswith("#")
     ]
     tmout_lines = [
-        line for line in lines_list
-        if re.fullmatch(r"TMOUT\s*=\s*\d+", line)
+        line for line in lines_list if re.fullmatch(r"TMOUT\s*=\s*\d+", line)
     ]
     assert tmout_lines, "stigcompliance: TMOUT is not configured"
+
 
 @pytest.mark.feature("stig")
 def test_shell_tmout_is_readonly_stig(parse_file: ParseFile):
@@ -97,10 +100,11 @@ def test_shell_tmout_is_readonly_stig(parse_file: ParseFile):
         "readonly TMOUT" in lines_list
     ), "stigcompliance: TMOUT is not marked as readonly"
 
+
 @pytest.mark.feature("stig")
 def test_shell_tmout_is_exported_stig(parse_file: ParseFile):
     """
-    As per DISA STIG requirement, this test verifies that TMOUT is 
+    As per DISA STIG requirement, this test verifies that TMOUT is
     exported to subshells.
     Ref: SRG-OS-000755-GPOS-00220
     """
@@ -110,21 +114,23 @@ def test_shell_tmout_is_exported_stig(parse_file: ParseFile):
         for line in lines
         if line.strip() and not line.strip().startswith("#")
     ]
-    assert (
-        "export TMOUT" in lines_list
-    ), "stigcompliance: TMOUT is not exported"
+    assert "export TMOUT" in lines_list, "stigcompliance: TMOUT is not exported"
+
 
 TMOUT_FILE_CLOUD = "/etc/profile.d/50-autologout.sh"
+
+
 @pytest.mark.feature("cloud and openstackbaremetal")
 def test_shell_tmout_file_exists_cloud(parse_file: ParseFile):
     """
-    As per DISA STIG requirement, this test validates that the shell inactivity 
+    As per DISA STIG requirement, this test validates that the shell inactivity
     timeout configuration file exists.
     Ref: SRG-OS-000755-GPOS-00220
     """
     assert parse_file.exists(
         TMOUT_FILE_CLOUD
     ), "stigcompliance: shell inactivity timeout configuration file is missing"
+
 
 @pytest.mark.feature("cloud and openstackbaremetal")
 def test_shell_tmout_is_configured_cloud(parse_file: ParseFile):
@@ -139,10 +145,10 @@ def test_shell_tmout_is_configured_cloud(parse_file: ParseFile):
         if line.strip() and not line.strip().startswith("#")
     ]
     tmout_lines = [
-        line for line in lines_list
-        if re.fullmatch(r"TMOUT\s*=\s*\d+", line)
+        line for line in lines_list if re.fullmatch(r"TMOUT\s*=\s*\d+", line)
     ]
     assert tmout_lines, "stigcompliance: TMOUT is not configured"
+
 
 @pytest.mark.feature("cloud and openstackbaremetal")
 def test_shell_tmout_is_readonly_cloud(parse_file: ParseFile):
@@ -160,10 +166,11 @@ def test_shell_tmout_is_readonly_cloud(parse_file: ParseFile):
         "readonly TMOUT" in lines_list
     ), "stigcompliance: TMOUT is not marked as readonly"
 
+
 @pytest.mark.feature("cloud and openstackbaremetal")
 def test_shell_tmout_is_exported_cloud(parse_file: ParseFile):
     """
-    As per DISA STIG requirement, this test verifies that TMOUT is 
+    As per DISA STIG requirement, this test verifies that TMOUT is
     exported to subshells.
     Ref: SRG-OS-000755-GPOS-00220
     """
@@ -173,6 +180,4 @@ def test_shell_tmout_is_exported_cloud(parse_file: ParseFile):
         for line in lines
         if line.strip() and not line.strip().startswith("#")
     ]
-    assert (
-        "export TMOUT" in lines_list
-    ), "stigcompliance: TMOUT is not exported"
+    assert "export TMOUT" in lines_list, "stigcompliance: TMOUT is not exported"
