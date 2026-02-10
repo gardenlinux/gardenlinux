@@ -127,7 +127,7 @@ def test_that_nftables_firewall_service_is_running(systemd: Systemd):
 
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="firewall service check requires booted system")
-@pytest.mark.feature("lima and gardener and server and ssh and fedramp ")
+@pytest.mark.feature("lima and gardener and server and ssh")
 def test_that_iptables_firewall_service_is_running(systemd: Systemd):
     """
     As per DISA STIG requirement, either iptables or nftables firewall service should be active
