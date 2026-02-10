@@ -1,11 +1,10 @@
 import datetime
-import os
 import socket
-import threading
 
 import pytest
 from plugins.file import File
 from plugins.network import has_ipv6
+from plugins.systemd import Systemd
 
 # Test parameters. IPv6 skipped if not supported.
 LOCAL_TEST_PARAMS = [
@@ -108,3 +107,33 @@ def test_hostname_azure(shell):
     assert (
         execution_time <= 10
     ), f"nslookup should not run into timeout: {result.stderr}"
+
+
+@pytest.mark.root(reason="Required to query systemd units")
+@pytest.mark.booted(reason="firewall service check requires booted system")
+@pytest.mark.feature(
+    "not gardener and not lima and not metal and not azure and not aws and not gcp and not gdch and not ali"
+)
+def test_that_nftables_firewall_service_is_running(systemd: Systemd):
+    """
+    As per DISA STIG requirement, either nftables or iptables firewall service should be active
+    for firewall compliance. This test checks that nftables is active for marked image types.
+    Ref: SRG-OS-000480-GPOS-00232
+    """
+    assert systemd.is_active(
+        "nftables"
+    ), "nftables should be active for firewall compliance"
+
+
+@pytest.mark.root(reason="Required to query systemd units")
+@pytest.mark.booted(reason="firewall service check requires booted system")
+@pytest.mark.feature("lima and gardener and server and ssh")
+def test_that_iptables_firewall_service_is_running(systemd: Systemd):
+    """
+    As per DISA STIG requirement, either iptables or nftables firewall service should be active
+    for firewall compliance. This test checks that iptables is active for marked image types.
+    Ref: SRG-OS-000480-GPOS-00232
+    """
+    assert systemd.is_active(
+        "iptables"
+    ), "iptables should be active for firewall compliance"
