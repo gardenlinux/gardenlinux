@@ -35,7 +35,7 @@ jobs:
           key: ${{ inputs.prefix }}build-container-${{ matrix.arch }}-${{ github.run_id }}
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@1294c05ad57645267184d62d82bde611234c65ad # pin@0.10.12
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@2d52501ef10ba3b10d04fff5c24ffcd882f3ea07 # pin@0.10.13
       - if: ${{ steps.build_container_cache.outputs.cache-hit == 'true' }}
         name: Set CNAME
         run: |
