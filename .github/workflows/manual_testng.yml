@@ -1,5 +1,5 @@
 # Tests artifacts
-name: Execute tests
+name: Execute tests (testng)
 concurrency:
   group: ${{ inputs.ignore_workflow_concurrency && github.run_id || format('{0}-{1}-manual-tests', github.workflow, github.ref) }}
   cancel-in-progress: true
@@ -56,7 +56,7 @@ jobs:
     needs: build
     if: ${{ success() || failure() }}
     name: Test flavors built
-    uses: ./.github/workflows/tests.yml
+    uses: ./.github/workflows/tests_ng.yml
     with:
       flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
       bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
