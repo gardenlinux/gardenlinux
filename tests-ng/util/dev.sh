@@ -195,6 +195,7 @@ build_nfs_mount_podman() {
 	printf "==>\t\tbuilding nfs-utils in podman...\n"
 	cat <<EOF >"${BUILD_DIR}/Containerfile.nfs-utils"
 FROM ubuntu:18.04
+RUN echo "$(date '+%s')" # this is required to invalidate podman cache
 # Note: glibc >= 2.27 required because of getrandom()
 RUN apt-get update \
   && apt-get install -y \
