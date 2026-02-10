@@ -133,6 +133,10 @@ The artifact descriptors in `paths` are of the form:
 
 No additional interpretation or normalization of these values is performed beyond format translation.
 
+### 2.2 Metadata Types
+
+- The `modifiers` in the metadata should be of Type: [List]
+
 ## 3. S3 Layout
 
 ### 3.1 Artifact Files
