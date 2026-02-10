@@ -216,3 +216,84 @@ def test_unsigned_efi_binary_exists_amd64(file):
 def test_unsigned_efi_binary_exists_arm64(file):
     """Test that unsigned EFI binary exists for arm64"""
     assert file.is_regular_file("/boot/efi/EFI/BOOT/BOOTAA64.EFI")
+
+
+# =============================================================================
+# _fwcfg Feature
+# =============================================================================
+
+
+@pytest.mark.setting_ids(["GL-SET-_fwcfg-script-run-qemu-fw_cfg-script"])
+@pytest.mark.feature("_fwcfg")
+def test_fwcfg_run_script_exists(file: File):
+    """Test that qemu-fw_cfg run script exists"""
+    assert file.is_regular_file("/usr/local/sbin/run-qemu-fw_cfg-script")
+
+
+# =============================================================================
+# _slim Feature
+# =============================================================================
+
+
+@pytest.mark.setting_ids(["GL-SET-_slim-config-no-docs-001"])
+@pytest.mark.feature("_slim")
+def test_slim_no_docs_dpkg_config_exists(file: File):
+    """Test that dpkg no-docs configuration exists"""
+    assert file.is_regular_file("/etc/dpkg/dpkg.cfg.d/01_nodoc")
+
+
+# =============================================================================
+# _selinux Feature
+# =============================================================================
+
+
+@pytest.mark.setting_ids(["GL-SET-_selinux-config-seclinux-contexts"])
+@pytest.mark.feature("_selinux")
+def test_selinux_contexts_config_exists(file: File):
+    """Test that SELinux contexts configuration exists"""
+    assert file.is_regular_file("/etc/selinux/config")
+
+
+# =============================================================================
+# aide Feature
+# =============================================================================
+
+
+@pytest.mark.setting_ids(["GL-SET-aide-script-aide-init-onboot"])
+@pytest.mark.feature("aide")
+def test_aide_init_onboot_script_exists(file: File):
+    """Test that AIDE initialization script exists"""
+    assert file.is_regular_file("/usr/local/sbin/aide-init-onboot")
+
+
+# =============================================================================
+# _pxe Feature
+# =============================================================================
+
+
+@pytest.mark.setting_ids(["GL-SET-_pxe-config-repart-no-root"])
+@pytest.mark.feature("_pxe")
+def test_pxe_repart_no_root_config_exists(file: File):
+    """Test that repart configuration for no root partition exists"""
+    assert file.is_regular_file("/usr/lib/repart.d/50-root.conf")
+
+
+# =============================================================================
+# _trustedboot Feature
+# =============================================================================
+
+
+@pytest.mark.setting_ids(["GL-SET-_trustedboot-config-efi-binary-exists"])
+@pytest.mark.feature("_trustedboot")
+@pytest.mark.arch("amd64")
+def test_trustedboot_efi_binary_exists_amd64(file: File):
+    """Test that signed EFI binary exists for amd64"""
+    assert file.is_regular_file("/boot/efi/EFI/BOOT/BOOTX64.EFI")
+
+
+@pytest.mark.setting_ids(["GL-SET-_trustedboot-config-efi-binary-exists"])
+@pytest.mark.feature("_trustedboot")
+@pytest.mark.arch("arm64")
+def test_trustedboot_efi_binary_exists_arm64(file: File):
+    """Test that signed EFI binary exists for arm64"""
+    assert file.is_regular_file("/boot/efi/EFI/BOOT/BOOTAA64.EFI")
