@@ -1,4 +1,4 @@
-name: dev - test framework
+name: dev - testng framework
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-dev-tests
   cancel-in-progress: true
@@ -8,11 +8,11 @@ on:
       - main
     paths:
       - "tests-ng/**"
-      - ".github/workflows/dev_tests.yml"
+      - ".github/workflows/dev_tests_ng.yml"
   pull_request:
     paths:
       - "tests-ng/**"
-      - ".github/workflows/dev_tests.yml"
+      - ".github/workflows/dev_tests_ng.yml"
 jobs:
   black:
     name: Black (formatting)
