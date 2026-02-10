@@ -2,9 +2,11 @@
 
 set -eufo pipefail
 
+# GL-SET-_dev-config-user-dev-create
 useradd --user-group --groups wheel --create-home dev
 id dev
 
+# GL-SET-_dev-config-user-dev-home
 mkdir /home/dev/.ssh
 chmod -R 700 /home/dev/.ssh
 chown -R dev:dev /home/dev/.ssh

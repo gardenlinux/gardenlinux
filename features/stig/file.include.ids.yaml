@@ -1,0 +1,23 @@
+"setting_ids":
+  "etc/apt/apt.conf.d/01-vendor-Ubuntu":
+  - "GL-SET-stig-config-apt-vendor-ubuntu"
+  "etc/audit/auditd.conf":
+  - "GL-SET-stig-config-audit-auditd-conf"
+  "etc/audit/rules.d/stig.rules":
+  - "GL-SET-stig-config-audit-rules-d-stig-rules"
+  "etc/kernel/cmdline.d/90-audit.cfg":
+  - "GL-SET-stig-config-kernel-cmdline-audit"
+  "etc/modprobe.d/disabled_usb.conf":
+  - "GL-SET-stig-config-modprobe-usb-disable"
+  "etc/rsyslog.d/50-default.conf":
+  - "GL-SET-stig-config-rsyslog-default"
+  "etc/security/faillock.conf":
+  - "GL-SET-stig-config-security-faillock"
+  "etc/security/limits.conf":
+  - "GL-SET-stig-config-security-limits"
+  "etc/security/pwquality.conf":
+  - "GL-SET-stig-config-security-pwquality"
+  "etc/sysctl.d/99-stig.conf":
+  - "GL-SET-stig-config-sysctl-stig"
+  "usr/share/pam-configs/garden-stig":
+  - "GL-SET-stig-config-pam-garden-stig"

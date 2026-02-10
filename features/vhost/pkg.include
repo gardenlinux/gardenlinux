@@ -4,6 +4,7 @@ $(if [ $arch = amd64 ]; then echo qemu-system-x86; fi)
 $(if [ $arch = arm64 ]; then echo qemu-system-arm; fi)
 qemu-utils
 qemu-block-extra
+# GL-SET-vhost-service-libvirtd-socket-enable
 libvirt-daemon-system
 libvirt-clients
 libgoogle-perftools4t64

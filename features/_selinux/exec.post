@@ -12,6 +12,7 @@ rootfs="$1"
 mkdir "$rootfs/loop"
 mount --bind "$rootfs" "$rootfs/loop"
 
+# GL-SET-_selinux-config-seclinux-contexts
 PATH="/native_bin:$PATH" chroot "$rootfs" setfiles -r /loop /etc/selinux/default/contexts/files/file_contexts /loop
 
 umount "$rootfs/loop"

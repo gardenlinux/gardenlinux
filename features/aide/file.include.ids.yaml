@@ -1,0 +1,9 @@
+"setting_ids":
+  "etc/systemd/system/aide-check.service":
+  - "GL-SET-aide-service-aide-check-unit"
+  "etc/systemd/system/aide-check.timer":
+  - "GL-SET-aide-service-aide-check-timer"
+  "etc/systemd/system/aide-init.service":
+  - "GL-SET-aide-service-aide-init-unit"
+  "usr/local/sbin/aide-init-onboot.sh":
+  - "GL-SET-aide-script-aide-init-onboot"

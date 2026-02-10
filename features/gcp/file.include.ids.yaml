@@ -1,0 +1,9 @@
+"setting_ids":
+  "etc/kernel/cmdline.d/00-cmdline.cfg":
+  - "GL-SET-gcp-config-kernel-cmdline-default"
+  "etc/kernel/cmdline.d/10-console.cfg":
+  - "GL-SET-gcp-config-kernel-cmdline-console"
+  "etc/systemd/timesyncd.conf.d/00-gardenlinux-gcp.conf":
+  - "GL-SET-gcp-config-timesyncd"
+  "usr/lib/udev/rules.d/64-gce-disk-removal.rules":
+  - "GL-SET-gcp-config-udev-rules-gce-disk-removal"

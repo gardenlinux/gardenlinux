@@ -1,0 +1,7 @@
+"setting_ids":
+  "etc/systemd/system/emergency.service":
+  - "GL-SET-_trustedboot-service-initrd-emergency-unit"
+  "etc/systemd/system/local-fs.target.requires/check-secureboot.service":
+  - "GL-SET-_trustedboot-service-initrd-local-fs-target-requires-check-secureboot-unit"
+  "usr/bin/check-secureboot":
+  - "GL-SET-_trustedboot-script-initrd-check-secureboot"

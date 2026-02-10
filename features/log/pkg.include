@@ -1,3 +1,4 @@
+# GL-SET-log-service-auditd-enable
 auditd
 systemd-journal-remote
 rsyslog-relp

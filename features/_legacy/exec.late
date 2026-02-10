@@ -7,7 +7,7 @@ update-kernel-cmdline
 mkdir -p /efi/Default
 
 initrd_include="$(mktemp -d)"
-IFS=',' read -r -a features <<< "$BUILDER_FEATURES"
+IFS=',' read -r -a features <<<"$BUILDER_FEATURES"
 for feature in "${features[@]}"; do
 	if [ -e "/builder/features/$feature/initrd.include" ]; then
 		cp -a "/builder/features/$feature/initrd.include/." "$initrd_include"
@@ -16,14 +16,14 @@ done
 
 for kernel in /boot/vmlinuz-*; do
 	unshare --mount bash -c 'mount -t tmpfs none /sys && mount --bind /usr/bin/false /usr/bin/systemd-detect-virt && "$@"' \
-	DRACUT_COMPRESS_XZ="$(command -v xz)" dracut \
-	--no-hostonly \
-	--force \
-	--kver "${kernel#*-}" \
-	--modules "bash dash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown" \
-	--reproducible \
-	--include "$initrd_include" / \
-	"/boot/initrd.img-${kernel#*-}"
+		DRACUT_COMPRESS_XZ="$(command -v xz)" dracut \
+		--no-hostonly \
+		--force \
+		--kver "${kernel#*-}" \
+		--modules "bash dash systemd systemd-initrd kernel-modules kernel-modules-extra terminfo udev-rules dracut-systemd base fs-lib shutdown" \
+		--reproducible \
+		--include "$initrd_include" / \
+		"/boot/initrd.img-${kernel#*-}"
 
 	ln -s "initrd.img-${kernel#*-}" /boot/initrd
 	SYSTEMD_ESP_PATH=/efi kernel-install add "${kernel#*-}" "${kernel}"
@@ -32,10 +32,13 @@ done
 
 rm -rf "$initrd_include"
 
+# GL-SET-_legacy-config-syslinux-bootloader-entries
 sed 's/efi\///' -i /efi/loader/entries/*.conf
 
 SYSTEMD_ESP_PATH=/efi bootctl --no-variables install
 
+# GL-SET-_legacy-config-syslinux-menu-exists
+# GL-SET-_legacy-config-syslinux-libutil-exists
 # syslinux
 if [ -f "/usr/bin/syslinux" ]; then
 	mkdir -p /efi/syslinux

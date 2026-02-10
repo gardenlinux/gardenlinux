@@ -1,8 +1,15 @@
+# GL-SET-metal-config-no-network
 /etc/network
 # prefer systemd unit files
+# GL-SET-metal-config-no-init-irqbalance
 /etc/init.d/irqbalance
+# GL-SET-metal-config-no-init-ipmievd
 /etc/init.d/ipmievd
+# GL-SET-metal-config-no-runit-001
 /etc/runit
+# GL-SET-metal-config-no-sv
 /etc/sv
+# GL-SET-metal-config-no-runit-002
 /usr/share/runit
+# GL-SET-metal-config-no-mdadm
 /etc/mdadm/mdadm.conf
