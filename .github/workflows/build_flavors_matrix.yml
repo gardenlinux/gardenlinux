@@ -25,7 +25,7 @@ jobs:
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@ab55b23431865c1c74d64b39a1f610ac583349ed # pin@0.10.11
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@1294c05ad57645267184d62d82bde611234c65ad # pin@0.10.12
       - id: matrix
         name: Generate flavors matrix
         run: |
