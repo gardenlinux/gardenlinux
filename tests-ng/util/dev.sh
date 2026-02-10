@@ -337,7 +337,7 @@ extract_tests_runner_script() {
 }
 
 setup_nfs_shares() {
-	printf "==>\t\tsetting up NFS shares: "
+	printf "==>\t\tsetting up NFS shares..."
 	cat <<EOF >"${NFSD_EXPORTS}"
 "${BUILD_DIR}/runtime" (insecure,ro,no_root_squash)
 "${TESTS_DIR}" (insecure,ro,no_root_squash)
@@ -346,44 +346,30 @@ EOF
 }
 
 start_nfs_server() {
-	printf "==>\t\tstarting NFS daemon: "
-	case $(uname -s) in
-	Linux)
-		# -n, -m : NFS and MOUNT services to use non-default ports
-		# -e     : path to exports file
-		# -p     : do not register with portmap/rpcbind
-		# -t     : TCP-only mode
-		# -i     : path to PID file
-		"${NFSD_BIN_FILE}" \
-			-n ${NFSD_SERVER_PORT} -m ${NFSD_SERVER_PORT} \
-			-e "${NFSD_EXPORTS}" \
-			-p \
-			-t \
-			-i "${NFSD_PID_FILE}"
-		;;
-	Darwin)
-		:
-		;;
-	esac
+	printf "==>\t\tstarting NFS daemon..."
+	# -n, -m : NFS and MOUNT services to use non-default ports
+	# -e     : path to exports file
+	# -p     : do not register with portmap/rpcbind
+	# -t     : TCP-only mode
+	# -i     : path to PID file
+	"${NFSD_BIN_FILE}" \
+		-n ${NFSD_SERVER_PORT} -m ${NFSD_SERVER_PORT} \
+		-e "${NFSD_EXPORTS}" \
+		-p \
+		-t \
+		-i "${NFSD_PID_FILE}"
 	printf "Done.\n"
 }
 
 stop_nfs_server() {
-	printf "==>\t\tstopping unfsd...\n"
-	case $(uname -s) in
-	Linux)
-		if [ -f "${NFSD_PID_FILE}" ]; then
-			if ! kill -0 "$(cat "${NFSD_PID_FILE}")"; then
-				rm -f "${NFSD_PID_FILE}"
-			else
-				kill "$(cat "${NFSD_PID_FILE}")" && rm -f "${NFSD_PID_FILE}"
-			fi
+	printf "==>\t\tstopping unfsd..."
+	if [ -f "${NFSD_PID_FILE}" ]; then
+		if ! kill -0 "$(cat "${NFSD_PID_FILE}")"; then
+			rm -f "${NFSD_PID_FILE}"
+		else
+			kill "$(cat "${NFSD_PID_FILE}")" && rm -f "${NFSD_PID_FILE}"
 		fi
-		;;
-	Darwin)
-		:
-		;;
-	esac
+	fi
 	printf "Done.\n"
 }
 
@@ -397,7 +383,7 @@ start_virtiofs_server() {
 		;;
 	esac
 
-	printf "==>\t\tstarting virtiofs daemon: "
+	printf "==>\t\tstarting virtiofs daemon..."
 	: >"${VIRTIOFSD_LOG}"
 	# -v : verbose output
 	# -a : append to log
@@ -420,7 +406,7 @@ start_virtiofs_server() {
 }
 
 stop_virtiofs_server() {
-	printf "==>\t\tstopping virtiofs daemon...\n"
+	printf "==>\t\tstopping virtiofs daemon..."
 	if [ -f "${VIRTIOFSD_PID_FILE}" ]; then
 		if ! kill -0 "$(cat "${VIRTIOFSD_PID_FILE}")"; then
 			rm -f "${VIRTIOFSD_PID_FILE}"
@@ -441,7 +427,7 @@ start_xnotify_client() {
 		;;
 	esac
 
-	printf "==>\t\tstarting xnotify client: "
+	printf "==>\t\tstarting xnotify client..."
 	: >"${XNOTIFY_CLIENT_LOG}"
 	# -v : verbose output
 	# -a : append to log
@@ -466,7 +452,7 @@ start_xnotify_client() {
 }
 
 stop_xnotify_client() {
-	printf "==>\t\tstopping xnotify client...\n"
+	printf "==>\t\tstopping xnotify client..."
 	if [ -f "${XNOTIFY_CLIENT_PID_FILE}" ]; then
 		if ! kill -0 "$(cat "${XNOTIFY_CLIENT_PID_FILE}")"; then
 			rm -f "${XNOTIFY_CLIENT_PID_FILE}"
@@ -501,6 +487,7 @@ add_qemu_virtiofs_setup() {
 		;;
 	Darwin)
 		# no support for macOS for now
+		# https://gitlab.com/virtio-fs/virtiofsd/-/issues/169
 		;;
 	esac
 
@@ -537,13 +524,13 @@ if [ -x /sbin/nft ]; then
 fi
 /sbin/iptables -A INPUT -p tcp -m tcp --dport ${XNOTIFY_SERVER_PORT} -m state --state NEW -j ACCEPT
 
-cp -v /sys/firmware/qemu_fw_cfg/by_name/opt/gardenlinux/mount.nfs/raw /sbin/mount.nfs
-chmod 4755 /sbin/mount.nfs
+cp -v /sys/firmware/qemu_fw_cfg/by_name/opt/gardenlinux/mount.nfs/raw /run/mount.nfs
+chmod 4755 /run/mount.nfs
 
 mkdir -p /run/gardenlinux-tests/{runtime,tests}
 
-mount -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${BUILD_DIR}/runtime /run/gardenlinux-tests/runtime
-mount -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${TESTS_DIR} /run/gardenlinux-tests/tests
+/run/mount.nfs -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${BUILD_DIR}/runtime /run/gardenlinux-tests/runtime
+/run/mount.nfs -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${TESTS_DIR} /run/gardenlinux-tests/tests
 EOF
 }
 
@@ -568,10 +555,37 @@ ln -s /run/tests-ng/.build/runtime /run/gardenlinux-tests/runtime
 EOF
 }
 
+configure_qemu_networking() {
+	case $(uname -s) in
+	Linux)
+		# using the default -netdev user
+		;;
+	Darwin)
+		for idx in "${!qemu_opts[@]}"; do
+			case "${qemu_opts[idx]}" in
+			user,id=net0*)
+				# -- host bridge --
+				# qemu_opts[idx]="vmnet-bridged,id=net0,ifname=en0"
+				# -- socket_vmnet --
+				qemu_opts[idx]="socket,id=net0,fd=3"
+				;;
+			esac
+		done
+		;;
+	esac
+}
+
 dev_cleanup() {
-	stop_nfs_server
 	stop_xnotify_client
-	stop_virtiofs_server
+
+	case $FILE_SHARING_BACKEND in
+	nfs)
+		stop_nfs_server
+		;;
+	virtiofs)
+		stop_virtiofs_server
+		;;
+	esac
 }
 
 # main entrypoint
@@ -620,7 +634,6 @@ dev_setup() { # path-to-script
 
 	stop_xnotify_client
 	start_xnotify_client
-
 }
 
 trap "dev_cleanup" ERR EXIT INT
