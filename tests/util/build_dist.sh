@@ -25,15 +25,7 @@ gzip -d <"$runtime" | tar -x -C "$tmpdir/dist/runtime"
 set +f
 
 mkdir -p "$tmpdir/dist/tests"
-test_dirs=$(find . -mindepth 2 -maxdepth 2 -name "test_*.py" -print0 | xargs -0 -r -I {} dirname {} | sort -u)
-cp -r -t "$tmpdir/dist/tests" conftest.py handlers test_*.py
-
-mkdir -p "$tmpdir/dist/tests/plugins"
-cp plugins/*.py "$tmpdir/dist/tests/plugins/"
-
-if [ -n "$test_dirs" ]; then
-	echo "$test_dirs" | xargs -I {} cp -r {} "$tmpdir/dist/tests/"
-fi
+cp -r -t "$tmpdir/dist/tests" conftest.py handlers integration plugins
 
 # We need the OPENSSL_MODULES=/usr/lib/$(arch)-linux-gnu/ossl-modules/ to allow the python-build-standalone
 # to detect the fips.so module. See https://github.com/gardenlinux/gardenlinux/pull/3752

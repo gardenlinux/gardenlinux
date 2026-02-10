@@ -3,8 +3,6 @@
   - "GL-SET-checkbox-config-kernel-cmdline-iso"
   "etc/systemd/journald.conf.d/10-logs.conf":
   - "GL-SET-checkbox-config-journald-10-logs"
-  "etc/systemd/system.conf.d/10-dmesg.conf":
-  - "GL-SET-checkbox-config-systemd-system-conf-dmesg"
   "etc/systemd/system/generate-report.service":
   - "GL-SET-checkbox-service-generate-report-unit"
   "usr/lib/checkbox-provider-base/bin/dmesg_colored.sh":

@@ -423,6 +423,19 @@ def test_openstackbaremetal_initrd_broadcom_modules(initrd: Initrd):
     ), f"The following modules were not found in initrd: {', '.join(missing)}"
 
 
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-openstackbaremetal-config-repart-root",
+    ]
+)
+@pytest.mark.feature("openstackbaremetal")
+def test_openstackbaremetal_repart_root_config(file: File):
+    """Test that OpenStack bare metal has repart root configuration"""
+    assert file.exists(
+        "/etc/repart.d/root.conf"
+    ), "OpenStack bare metal repart root configuration should exist"
+
+
 # =============================================================================
 # server Feature Initrd
 # =============================================================================

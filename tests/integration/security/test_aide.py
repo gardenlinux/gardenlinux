@@ -1,8 +1,16 @@
 from pathlib import Path
 
 import pytest
+from plugins.file import File
 from plugins.parse_file import ParseFile
 from plugins.systemd import Systemd
+
+
+@pytest.mark.setting_ids(["GL-SET-aide-script-aide-init-onboot"])
+@pytest.mark.feature("aide")
+def test_aide_init_onboot_script_exists(file: File):
+    """Test that AIDE initialization script exists"""
+    assert file.is_regular_file("/usr/local/sbin/aide-init-onboot.sh")
 
 
 @pytest.mark.setting_ids(["GL-SET-aide-service-aide-check-unit"])
