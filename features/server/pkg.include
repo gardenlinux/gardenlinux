@@ -24,6 +24,7 @@ sysstat
 systemd
 systemd-boot
 systemd-boot-efi
+# GL-SET-server-service-systemd-coredump-enable
 systemd-coredump
 # GL-SET-server-service-cron-update-enable
 systemd-cron

@@ -1,4 +1,7 @@
 import pytest
+from plugins.file import File
+from plugins.parse_file import ParseFile
+from plugins.sysctl import Sysctl
 
 # server adds /etc/sysctl.d/40-restrict-dmesg.conf, gardener excludes it
 #    and adds /etc/sysctl.d/40-allow-nonroot-dmesg.conf instead
@@ -30,6 +33,21 @@ def test_dmesg_stig_sysctl_restrictions_on_accessing_dmesg(parse_file):
     file_path = "/etc/sysctl.d/99-stig.conf"
     config = parse_file.parse(file_path, format="keyval")
     assert config["kernel.dmesg_restrict"] == "1"
+
+
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-gardener-config-sysctl-no-restrict-dmesg",
+    ]
+)
+@pytest.mark.feature("gardener")
+def test_gardener_sysctl_no_restrict_dmesg(file: File):
+    """Test that gardener does not restrict dmesg (allows non-root access)"""
+    # Check that allow-nonroot-dmesg config exists (covered elsewhere)
+    # or that restrict-dmesg config doesn't exist
+    assert not file.exists(
+        "/etc/sysctl.d/40-restrict-dmesg.conf"
+    ), "Gardener should not restrict dmesg access"
 
 
 @pytest.mark.setting_ids(

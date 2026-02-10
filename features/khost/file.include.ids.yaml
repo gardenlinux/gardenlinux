@@ -1,6 +1,6 @@
 "setting_ids":
   "etc/modules-load.d/br-nf.conf":
-  - "GL-SET-khost-config-modprobe-br-nf"
+  - "GL-SET-khost-config-modules-load-br-nf"
   "etc/sysctl.d/20-br-nf.conf":
   - "GL-SET-khost-config-sysctl-br-nf"
   "etc/sysctl.d/20-inotify.conf":

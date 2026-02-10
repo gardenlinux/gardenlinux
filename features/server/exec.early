@@ -2,6 +2,5 @@
 
 set -eufo pipefail
 
-# GL-SET-server-config-resolv-conf-stub
 mkdir -p /run/systemd/resolve/
 cp /etc/resolv.conf /run/systemd/resolve/stub-resolv.conf

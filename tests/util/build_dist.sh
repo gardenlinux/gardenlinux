@@ -26,7 +26,11 @@ set +f
 
 mkdir -p "$tmpdir/dist/tests"
 test_dirs=$(find . -mindepth 2 -maxdepth 2 -name "test_*.py" -print0 | xargs -0 -r -I {} dirname {} | sort -u)
-cp -r -t "$tmpdir/dist/tests" conftest.py handlers test_*.py
+cp -r -t "$tmpdir/dist/tests" conftest.py handlers
+# Copy top-level test files if they exist
+if compgen -G "test_*.py" > /dev/null 2>&1; then
+	cp -r -t "$tmpdir/dist/tests" test_*.py
+fi
 
 mkdir -p "$tmpdir/dist/tests/plugins"
 cp plugins/*.py "$tmpdir/dist/tests/plugins/"

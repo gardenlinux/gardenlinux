@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from plugins.file import File
 from plugins.parse_file import ParseFile
 from plugins.systemd import Systemd
 
@@ -203,6 +204,13 @@ def test_ali_cloud_init_local_service_inactive(systemd: Systemd):
 # =============================================================================
 
 
+@pytest.mark.setting_ids(["GL-SET-aws-service-cloud-init-local-override"])
+@pytest.mark.feature("aws")
+def test_aws_cloud_init_local_override_exists(file: File):
+    """Test that AWS cloud-init-local service override exists"""
+    assert file.exists("/etc/systemd/system/cloud-init-local.service.d/override.conf")
+
+
 @pytest.mark.setting_ids(["GL-SET-aws-config-cloud-network-config-disable"])
 @pytest.mark.feature("aws")
 def test_aws_disable_network_config(parse_file: ParseFile):
@@ -231,6 +239,13 @@ def test_aws_cloud_init_local_service_inactive(systemd: Systemd):
 # =============================================================================
 # azure Feature Cloud-init
 # =============================================================================
+
+
+@pytest.mark.setting_ids(["GL-SET-azure-config-cloud-network-config-disable"])
+@pytest.mark.feature("azure")
+def test_azure_cloud_init_network_config_disabled(file: File):
+    """Test that Azure cloud-init network config is disabled"""
+    assert file.exists("/etc/cloud/cloud.cfg.d/99-disable-network-config.cfg")
 
 
 @pytest.mark.setting_ids(

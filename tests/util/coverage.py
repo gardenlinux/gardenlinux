@@ -393,15 +393,29 @@ def detect_duplicate_setting_ids(
 
 def find_setting_ids_in_test_files(repo_root: Path) -> Set[str]:
     """
-    Search for setting IDs in test files (tests/test_*.py).
+    Search for setting IDs in test files (tests/**/test_*.py).
+
+    Excludes tests/util/tests and tests/plugins/tests which are unit tests
+    for the test infrastructure itself.
 
     Returns a set of setting IDs that are referenced in test files.
     """
     found_setting_ids = set()
     tests_dir = repo_root / "tests"
 
-    # Search all test files
-    for test_file in tests_dir.glob("test_*.py"):
+    # Directories to exclude (unit tests for test infrastructure)
+    exclude_dirs = {"util/tests", "plugins/tests"}
+
+    # Search all test files recursively (including subdirectories)
+    for test_file in tests_dir.rglob("test_*.py"):
+        # Skip files in excluded directories
+        try:
+            rel_path = test_file.relative_to(tests_dir)
+            if any(str(rel_path).startswith(excl) for excl in exclude_dirs):
+                continue
+        except ValueError:
+            continue
+
         try:
             content = test_file.read_text()
             # Find all GL-SET-* strings in the file

@@ -3,6 +3,7 @@ from datetime import datetime
 from time import time
 
 import pytest
+from plugins.file import File
 from plugins.parse_file import ParseFile
 from plugins.shell import ShellRunner
 from plugins.systemd import Systemd
@@ -20,6 +21,18 @@ def test_clock(shell: ShellRunner):
     assert (
         abs(local_seconds - remote_seconds) < 5
     ), f"clock skew should be less than 5 seconds. Local time is {local_seconds} and remote time is {remote_seconds}"
+
+
+# =============================================================================
+# ALI NTP server configuration
+# =============================================================================
+
+
+@pytest.mark.setting_ids(["GL-SET-ali-config-timesyncd"])
+@pytest.mark.feature("ali")
+def test_ali_timesyncd_config_exists(file: File):
+    """Test that Alibaba Cloud systemd-timesyncd configuration exists"""
+    assert file.is_regular_file("/etc/systemd/timesyncd.conf.d/00-gardenlinux-ali.conf")
 
 
 # ================================
@@ -44,6 +57,27 @@ def test_correct_ntp_on_aws(timedatectl: TimeDateCtl):
 # ================================
 # Azure NTP server configuration
 # ================================
+
+
+@pytest.mark.setting_ids(["GL-SET-azure-service-chrony-device"])
+@pytest.mark.feature("azure")
+def test_azure_chrony_device_service_exists(file: File):
+    """Test that Azure chrony device service configuration exists"""
+    paths = [
+        "/etc/systemd/system/chrony.service.d/device.conf",
+        "/etc/systemd/system/chrony.service.d/override.conf",
+    ]
+    exists = any(file.exists(path) for path in paths)
+    assert exists, "Azure chrony device service config should exist"
+
+
+@pytest.mark.setting_ids(["GL-SET-azure-service-no-systemd-timesyncd-override"])
+@pytest.mark.feature("azure")
+def test_azure_no_timesyncd_override(file: File):
+    """Test that Azure does not have systemd-timesyncd override"""
+    assert not file.exists(
+        "/etc/systemd/system/systemd-timesyncd.service.d/override.conf"
+    ), "Azure should not have timesyncd override (uses chrony instead)"
 
 
 @pytest.mark.setting_ids(["GL-SET-azure-config-chrony"])
@@ -188,6 +222,17 @@ def test_fedramp_chrony_service_active(systemd: Systemd):
 # ================================
 # Timesyncd service configuration
 # ================================
+
+
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-server-config-service-systemd-timesyncd-override",
+    ]
+)
+@pytest.mark.feature("server")
+def test_server_systemd_timesyncd_override_exists(file: File):
+    """Test that systemd-timesyncd service override exists"""
+    assert file.exists("/etc/systemd/system/systemd-timesyncd.service.d/override.conf")
 
 
 @pytest.mark.setting_ids(["GL-SET-server-service-systemd-timesyncd-enable"])

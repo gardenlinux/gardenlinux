@@ -22,7 +22,7 @@
 /etc/runit
 # GL-SET-server-config-no-runit-log
 /var/log/runit
-# GL-SET-server-config-no-private-log
+## GL-SET-server-config-no-private-log - no test needed
 /var/log/private
 # GL-SET-server-config-update-motd-no-uname
 /etc/update-motd.d/10-uname
@@ -42,7 +42,7 @@
 /vmlinuz.old
 # GL-SET-server-config-no-pycache
 /usr/lib/**/__pycache__
-# GL-SET-server-config-nvme-no-hostid
+## GL-SET-server-config-nvme-no-hostid - test not needed as this file will be auto-generated again
 /etc/nvme/hostid
-# GL-SET-server-config-nvme-no-hostnqn
+## GL-SET-server-config-nvme-no-hostnqn - test not needed as this file will be auto-generated again
 /etc/nvme/hostnqn

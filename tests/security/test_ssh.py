@@ -165,3 +165,134 @@ def test_ssh_service_running(systemd: Systemd, service_ssh):
     assert systemd.is_active(
         "ssh"
     ), f"Required systemd unit for ssh.service is not running"
+
+
+# =============================================================================
+# ssh Feature - SSH Extended Configuration
+# =============================================================================
+
+
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-ssh-config-no-init-ssh",
+    ]
+)
+@pytest.mark.feature("ssh")
+def test_ssh_no_init_script(file: File):
+    """Test that SSH does not have init script"""
+    assert not file.exists(
+        "/etc/init.d/ssh"
+    ), "SSH should not have init.d script (using systemd)"
+
+
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-ssh-config-ssh-ssh-config",
+    ]
+)
+@pytest.mark.feature("ssh")
+def test_ssh_client_config_exists(file: File):
+    """Test that SSH client configuration exists"""
+    assert file.exists("/etc/ssh/ssh_config"), "SSH client configuration should exist"
+
+
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-ssh-config-ssh-ssh-config",
+    ]
+)
+@pytest.mark.feature("ssh")
+def test_ssh_client_config_content(parse_file: ParseFile):
+    """Test that SSH client configuration exists"""
+    lines = parse_file.lines("/etc/ssh/ssh_config")
+    lines_expected = [
+        "Host *",
+        "Protocol 2",
+        "ForwardAgent no",
+        "ForwardX11 no",
+        "HostbasedAuthentication no",
+        "StrictHostKeyChecking no",
+        "Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr",
+        "MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com",
+        "KexAlgorithms curve25519-sha256@libssh.org,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256,diffie-hellman-group-exchange-sha256",
+        "Tunnel no",
+        "ServerAliveInterval 420",
+    ]
+    assert (
+        lines == lines_expected
+    ), "SSH client configuration should contain the expected content"
+
+
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-ssh-config-sudoers-wheel-permissions",
+    ]
+)
+@pytest.mark.feature("ssh")
+def test_ssh_sudoers_wheel_permissions(file: File):
+    """Test that sudoers wheel file has correct permissions"""
+    assert file.has_mode(
+        "/etc/sudoers.d/wheel", "0440"
+    ), "Sudoers wheel file should have 0440 permissions"
+
+
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-ssh-service-sshguard-nftables-configure",
+    ]
+)
+@pytest.mark.feature(
+    "ssh and firewall", reason="nftables package is installed on firewall"
+)
+def test_ssh_sshguard_nftables_configured(parse_file: ParseFile):
+    """Test that sshguard nftables is configured"""
+
+    content = parse_file.lines("/etc/systemd/system/sshguard.service.d/override.conf")
+    assert (
+        "Requires=nftables.service" in content
+    ), "SSHGuard systemd service override configuration should require nftables.service"
+    assert (
+        "PartOf=nftables.service" in content
+    ), "SSHGuard systemd service override configuration should part of nftables.service"
+    assert (
+        "WantedBy=multi-user.target nftables.service" in content
+    ), "SSHGuard systemd service override configuration should want to be started by multi-user.target and nftables.service"
+
+
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-ssh-service-sshguard-iptables-configure",
+    ]
+)
+@pytest.mark.feature("ssh and server", reason="iptables package is installed on server")
+def test_ssh_sshguard_iptables_configured(parse_file: ParseFile):
+    """Test that sshguard iptables is configured"""
+
+    content = parse_file.lines("/etc/systemd/system/sshguard.service.d/override.conf")
+    assert (
+        "ExecStartPre=-/sbin/iptables -N sshguard" in content
+    ), "SSHGuard systemd service override configuration should have ExecStartPre=-/sbin/iptables -N sshguard"
+    assert (
+        "ExecStartPre=-/sbin/ip6tables -N sshguard" in content
+    ), "SSHGuard systemd service override configuration should have ExecStartPre=-/sbin/ip6tables -N sshguard"
+    assert (
+        "ExecStopPost=-/sbin/iptables -X sshguard" in content
+    ), "SSHGuard systemd service override configuration should have ExecStopPost=-/sbin/iptables -X sshguard"
+    assert (
+        "ExecStopPost=-/sbin/ip6tables -X sshguard" in content
+    ), "SSHGuard systemd service override configuration should have ExecStopPost=-/sbin/ip6tables -X sshguard"
+
+
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-ssh-service-sshguard-iptables-configure",
+    ]
+)
+@pytest.mark.feature("ssh and server", reason="iptables package is installed on server")
+def test_ssh_sshguard_iptables_backend_configured(parse_file: ParseFile):
+    """Test that sshguard iptables backend is configured"""
+
+    content = parse_file.parse("/etc/sshguard/sshguard.conf", format="keyval")
+    assert (
+        content["BACKEND"] == "/usr/libexec/sshguard/sshg-fw-iptables"
+    ), "SSHGuard configuration should reference iptables backend"

@@ -46,6 +46,64 @@ def test_gnutls_fips_file_is_empty(file: File):
     assert file.get_size("/etc/system-fips") == 0, f"The /etc/system-fips is not empty."
 
 
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-_fips-config-openssh-sshd-Ciphers",
+        "GL-SET-_fips-config-openssh-sshd-KexAlgorithms",
+    ]
+)
+@pytest.mark.feature("_fips")
+def test_fips_openssh_sshd_config(parse_file: ParseFile):
+    """Test that FIPS has OpenSSH sshd configuration"""
+    lines = parse_file.lines("/etc/ssh/sshd_config")
+    assert (
+        "KexAlgorithms ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256"
+        in lines
+    ), "OpenSSH KEX algorithms should be configured"
+    assert (
+        "Ciphers aes256-gcm@openssh.com,aes256-ctr,aes128-gcm@openssh.com,aes128-ctr"
+        in lines
+    ), "OpenSSH ciphers should be configured"
+
+
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-_fips-config-openssl",
+    ]
+)
+@pytest.mark.feature("_fips")
+def test_fips_openssl_config(parse_file: ParseFile):
+    """Test that FIPS has OpenSSL FIPS configuration"""
+    lines = parse_file.lines("/etc/ssl/openssl.cnf")
+    assert (
+        ".include /etc/ssl/fipsmodule.cnf" in lines
+    ), "FIPS OpenSSL configuration should exist"
+    assert (
+        "providers = provider_sect" in lines
+    ), "FIPS OpenSSL providers should be configured"
+    assert (
+        "alg_section = algorithm_sect" in lines
+    ), "FIPS OpenSSL alg_section should be configured"
+    assert (
+        "default = default_sect" in lines
+    ), "FIPS OpenSSL default should be configured"
+    assert "fips = fips_sect" in lines, "FIPS OpenSSL fips should be configured"
+
+
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-_fips-config-openssl-fipsinstall",
+    ]
+)
+@pytest.mark.feature("_fips")
+def test_fips_openssl_fipsinstall_config(file: File):
+    """Test that FIPS has OpenSSL FIPS module installation config"""
+
+    assert file.exists(
+        "/etc/ssl/fipsmodule.cnf"
+    ), "FIPS OpenSSL fipsinstall config should exist"
+
+
 @pytest.mark.feature("_fips")
 @pytest.mark.booted(reason="GnuTLS needs to have a VM booted with boot FIPS mode.")
 def test_gnutls_is_in_fips_mode():

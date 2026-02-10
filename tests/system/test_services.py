@@ -3,9 +3,11 @@ Test systemd services for enabled/disabled, active/inactive states across all Ga
 """
 
 import pytest
+from plugins.file import File
 from plugins.initrd import Initrd
 from plugins.kernel_versions import KernelVersions
 from plugins.modify import allow_system_modifications
+from plugins.parse_file import ParseFile
 from plugins.systemd import Systemd
 
 # =============================================================================
@@ -544,6 +546,38 @@ def test_gardener_ssh_service_inactive(systemd: Systemd):
         assert systemd.is_inactive("ssh.service")
 
 
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-gardener-config-containerd-override",
+    ]
+)
+@pytest.mark.feature("gardener")
+def test_gardener_containerd_override_exists(file: File):
+    """Test that gardener containerd service override exists"""
+    assert file.exists(
+        "/etc/systemd/system/containerd.service.d/override.conf"
+    ), "Gardener containerd service override should exist"
+
+
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-gardener-config-containerd-override",
+    ]
+)
+@pytest.mark.feature("gardener")
+def test_gardener_containerd_override_content(parse_file: ParseFile):
+    """Test that gardener containerd service override contains the correct content"""
+    config = parse_file.parse(
+        "/etc/systemd/system/containerd.service.d/override.conf", format="ini"
+    )
+    assert (
+        config["Service"]["LimitMEMLOCK"] == "67108864"
+    ), "Gardener containerd service override should include correct LimitMEMLOCK value"
+    assert (
+        config["Service"]["LimitNOFILE"] == "1048576"
+    ), "Gardener containerd service override should include correct LimitNOFILE value"
+
+
 # =============================================================================
 # gcp Feature Services
 # =============================================================================
@@ -596,6 +630,19 @@ def test_gdch_no_irqbalance_service(systemd: Systemd):
 # =============================================================================
 # iscsi Feature Services
 # =============================================================================
+
+
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-iscsi-service-iscsi-initiatorname-unit",
+    ]
+)
+@pytest.mark.feature("iscsi")
+def test_iscsi_initiatorname_template_exists(file: File):
+    """Test that iSCSI initiator name template exists"""
+    assert file.exists(
+        "/etc/systemd/system/iscsi-initiatorname.service"
+    ), "iSCSI initiator name service template should exist"
 
 
 @pytest.mark.setting_ids(["GL-SET-iscsi-service-iscsi-initiatorname-unit"])
@@ -874,6 +921,32 @@ def test_sap_auditd_service_active(systemd: Systemd):
 # =============================================================================
 # server Feature Services
 # =============================================================================
+
+
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-server-config-service-systemd-coredump-override",
+    ]
+)
+@pytest.mark.feature("server and not _prod")
+def test_server_systemd_coredump_override_exists(file: File):
+    """Test that systemd-coredump service override exists"""
+    assert file.exists("/etc/systemd/system/systemd-coredump@.service.d/override.conf")
+
+
+@pytest.mark.setting_ids(["GL-SET-server-service-systemd-coredump-enable"])
+@pytest.mark.feature("server and not _prod")
+def test_server_systemd_coredump_socket_active(systemd: Systemd):
+    """Test that systemd-coredump.socket is enabled"""
+    assert systemd.is_active("systemd-coredump.socket")
+
+
+@pytest.mark.setting_ids(["GL-SET-server-service-systemd-coredump-enable"])
+@pytest.mark.feature("server and not _prod")
+@pytest.mark.booted(reason="Requires systemd")
+def test_server_systemd_coredump_service_active(systemd: Systemd):
+    """Test that systemd-coredump.service is active"""
+    assert systemd.is_active("systemd-coredump.service")
 
 
 @pytest.mark.setting_ids(["GL-SET-server-service-kexec-load-unit"])

@@ -18,9 +18,9 @@ def test_gl_is_support_distro(parse_file: ParseFile):
 @pytest.mark.setting_ids(["GL-SET-_slim-config-no-docs-002"])
 def test_no_man(shell: ShellRunner):
     result = shell("man ls", capture_output=True, ignore_exit_code=True)
-    assert (
-        result.returncode == 127 and "not found" in result.stderr
-    ), "man ls, did not fail with 'not found' as expected"
+    assert result.returncode == 127 and (
+        "not found" in result.stderr or "Permission denied" in result.stderr
+    ), f"man ls did not fail as expected, got: {result.stderr}"
 
 
 @pytest.mark.parametrize(

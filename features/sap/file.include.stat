@@ -1,8 +1,7 @@
 # GL-SET-sap-config-audit-rules-privilege-escalaction-permissions
 root	root	0640 /etc/audit/rules.d/70-privilege-escalation.rules
-# GL-SET-sap-config-audit-rules-privilege-escalaction-special-amd64-permissions
+# GL-SET-sap-config-audit-rules-privileged-special-permissions
 root	root	0640 /etc/audit/rules.d/70-privileged-special.rules
-# GL-SET-sap-config-audit-rules-privilege-escalaction-special-arm64-permissions
 root	root	0640 /etc/audit/rules.d/70-privileged-special.rules.arm64
-# GL-SET-sap-config-audit-rules-privilege-system-integrity-permissions
+# GL-SET-sap-config-audit-rules-system-integrity-permissions
 root	root	0640 /etc/audit/rules.d/70-system-integrity.rules

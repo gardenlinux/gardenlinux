@@ -25,7 +25,11 @@
   - "GL-SET-cisOS-config-security-limits-conf"
   "etc/selinux/config":
   - "GL-SET-cisOS-config-selinux-config"
+  - "GL-SET-cisOS-config-selinux-config-permissive"
+  - "GL-SET-cisOS-config-selinux-config-type"
+  - "GL-SET-cisOS-config-selinux-config-setlocaldefs"
   "etc/sysstat/sysstat":
   - "GL-SET-cisOS-config-sysstat-sysstat"
+  - "GL-SET-cisOS-config-sysstat-sysstat-umask"
   "usr/lib/tmpfiles.d/var.conf":
   - "GL-SET-cisOS-config-tmpfiles-var"

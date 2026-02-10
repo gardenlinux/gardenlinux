@@ -200,6 +200,24 @@ class Systemd:
 
         return disabled
 
+    def is_masked(self, unit_name: str) -> bool:
+        result = self._shell(
+            f"{self._systemctl} is-enabled {unit_name}",
+            capture_output=True,
+            ignore_exit_code=True,
+        )
+        state = result.stdout.strip()
+        masked = state in ("masked")
+        if not masked:
+            result_status = self._shell(
+                f"{self._systemctl} status {unit_name}",
+                capture_output=True,
+                ignore_exit_code=True,
+            )
+            print(result_status.stdout)
+
+        return masked
+
     def start_unit(self, unit_name: str):
         if not allow_system_modifications():
             pytest.skip(

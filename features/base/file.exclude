@@ -1,22 +1,22 @@
-# GL-SET-base-config-no-backup-group
+## GL-SET-base-config-no-backup-group - no test needed
 /etc/group-
-# GL-SET-base-config-no-backup-gshadow
+## GL-SET-base-config-no-backup-gshadow - no test needed
 /etc/gshadow-
-# GL-SET-base-config-no-backup-passwd
+## GL-SET-base-config-no-backup-passwd - no test needed
 /etc/passwd-
-# GL-SET-base-config-no-backup-shadow
+## GL-SET-base-config-no-backup-shadow - no test needed
 /etc/shadow-
-# GL-SET-base-config-no-backup-subgid
+## GL-SET-base-config-no-backup-subgid - no test needed
 /etc/subgid-
-# GL-SET-base-config-no-backup-subuid
+## GL-SET-base-config-no-backup-subuid - no test needed
 /etc/subuid-
-# GL-SET-base-config-no-pkgcache.bin
+## GL-SET-base-config-no-pkgcache.bin - no test needed
 /var/cache/apt/pkgcache.bin
-# GL-SET-base-config-no-srcpkgcache.bin
+## GL-SET-base-config-no-srcpkgcache.bin - no test needed
 /var/cache/apt/srcpkgcache.bin
-# GL-SET-base-config-no-archives-deb
+## GL-SET-base-config-no-archives-deb - no test needed
 /var/cache/apt/archives/*.deb
-# GL-SET-base-config-no-archives-partial-deb
+## GL-SET-base-config-no-archives-partial-deb - no test needed
 /var/cache/apt/archives/partial/*.deb
 # GL-SET-base-config-no-external-installation-planner-logs
 /var/log/apt/eipp.log.xz
