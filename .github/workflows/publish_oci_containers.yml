@@ -374,3 +374,103 @@ jobs:
       - name: Update index using glcli tool
         run: |
           GLOCI_REGISTRY_TOKEN=${{ secrets.GITHUB_TOKEN }} GLOCI_REGISTRY_USERNAME=${{ github.repository_owner }} python /opt/glcli/src/glcli.py update-index --container ${{ needs.determine_repository.outputs.repository }} --version ${{ inputs.version }} --manifest_folder manifests
+
+  build_testsng_container:
+    name: Build testsng container (${{ matrix.arch }})
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: true
+      - name: Download test distribution artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: test-distribution
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+          path: .build
+      - name: Determine version
+        run: |
+          version=$(bin/garden-version "${{ inputs.version }}")
+          echo "VERSION=${version}" | tee -a "$GITHUB_ENV"
+      - name: Build tests container (${{ matrix.arch }})
+        run: |
+          set -euo pipefail
+          arch=${{ matrix.arch }}
+          echo "Building tests for arch=$arch"
+          repo="ghcr.io/${{ github.repository_owner }}/test-ng"
+          podman build --arch ${arch} --build-context dist_ctx=.build -t ${repo}:${arch}-${VERSION} tests-ng/util/container
+          podman save --format oci-archive ${repo}:${arch}-${VERSION} > tests_container_${arch}.oci
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: tests-container-${{ matrix.arch }}
+          path: tests_container_${{ matrix.arch }}.oci
+          if-no-files-found: error
+
+  publish_testsng:
+    name: Publish testsng container
+    needs: build_testsng_container
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      packages: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: true
+      - name: Download built tests archives
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          pattern: tests-container-*
+          merge-multiple: true
+      - name: Load OCI archives
+        run: |
+          for oci in *.oci; do
+            podman load -i "${oci}"
+            rm -f "${oci}"
+          done
+      - name: Publish tests images and manifest
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ inputs.original_workflow_name }}" = "nightly" ]; then
+            is_nightly=true
+          else
+            is_nightly=false
+          fi
+
+          version=$(bin/garden-version "${{ inputs.version }}")
+
+          podman login -u token -p ${GITHUB_TOKEN} ghcr.io
+
+          # Push amd64 and arm64 images
+          podman push ghcr.io/${{ github.repository_owner }}/test-ng:amd64-${version}
+          podman push ghcr.io/${{ github.repository_owner }}/test-ng:arm64-${version}
+
+          if [ "$is_nightly" = true ]; then
+            podman tag ghcr.io/${{ github.repository_owner }}/test-ng:amd64-${version} ghcr.io/${{ github.repository_owner }}/test-ng:amd64-nightly
+            podman tag ghcr.io/${{ github.repository_owner }}/test-ng:arm64-${version} ghcr.io/${{ github.repository_owner }}/test-ng:arm64-nightly
+            podman push ghcr.io/${{ github.repository_owner }}/test-ng:amd64-nightly
+            podman push ghcr.io/${{ github.repository_owner }}/test-ng:arm64-nightly
+          fi
+
+          # Create and push manifests
+          if [ "$is_nightly" = true ]; then
+            podman manifest create ghcr.io/${{ github.repository_owner }}/test-ng:nightly
+            podman manifest add ghcr.io/${{ github.repository_owner }}/test-ng:nightly ghcr.io/${{ github.repository_owner }}/test-ng:amd64-nightly
+            podman manifest add ghcr.io/${{ github.repository_owner }}/test-ng:nightly ghcr.io/${{ github.repository_owner }}/test-ng:arm64-nightly
+            podman manifest push ghcr.io/${{ github.repository_owner }}/test-ng:nightly
+          fi
+
+          podman manifest create ghcr.io/${{ github.repository_owner }}/test-ng:${version}
+          podman manifest add ghcr.io/${{ github.repository_owner }}/test-ng:${version} ghcr.io/${{ github.repository_owner }}/test-ng:amd64-${version}
+          podman manifest add ghcr.io/${{ github.repository_owner }}/test-ng:${version} ghcr.io/${{ github.repository_owner }}/test-ng:arm64-${version}
+          podman manifest push ghcr.io/${{ github.repository_owner }}/test-ng:${version}
