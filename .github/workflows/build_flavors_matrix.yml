@@ -7,6 +7,9 @@ on:
         required: true
       flavors_matrix:
         type: string
+      ref:
+        type: string
+        default: ${{ github.ref }}
     outputs:
       matrix:
         description: "Flavors matrix"
@@ -23,7 +26,10 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          submodules: true
+          ref: ${{ inputs.ref }}
+          sparse-checkout: |
+            flavors.yaml
+          sparse-checkout-cone-mode: false
       - name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@2d52501ef10ba3b10d04fff5c24ffcd882f3ea07 # pin@0.10.13
       - id: matrix
