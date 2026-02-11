@@ -1,0 +1,5 @@
+"setting_ids":
+  "etc/systemd/system/qemu-fw_cfg-script.service":
+  - "GL-SET-_fwcfg-service-qemu-fw_cfg-script-unit"
+  "usr/bin/run-qemu-fw_cfg-script":
+  - "GL-SET-_fwcfg-script-run-qemu-fw_cfg-script"

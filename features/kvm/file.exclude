@@ -1,4 +1,8 @@
+# GL-SET-kvm-config-no-initrd-img-old
 /initrd.img.old
+# GL-SET-kvm-config-no-initrd-img
 /initrd.img
+# GL-SET-kvm-config-no-vmlinuz-old
 /vmlinuz.old
+# GL-SET-kvm-config-no-vmlinuz
 /vmlinuz

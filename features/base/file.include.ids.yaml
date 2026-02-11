@@ -1,0 +1,29 @@
+"setting_ids":
+  "etc/apt/apt.conf.d/autoclean":
+  - "GL-SET-base-config-apt-autoclean"
+  "etc/apt/apt.conf.d/gzip-indexes":
+  - "GL-SET-base-config-apt-gzip-indexes"
+  "etc/apt/apt.conf.d/no-caches":
+  - "GL-SET-base-config-apt-no-caches"
+  "etc/apt/apt.conf.d/no-languages":
+  - "GL-SET-base-config-apt-no-languages"
+  "etc/apt/apt.conf.d/no-recommends":
+  - "GL-SET-base-config-apt-no-recommends"
+  "etc/apt/apt.conf.d/no-suggests":
+  - "GL-SET-base-config-apt-no-suggests"
+  "etc/apt/preferences.d/gardenlinux":
+  - "GL-SET-base-config-apt-preferences-gardenlinux"
+  "etc/dpkg/dpkg.cfg.d/forceold":
+  - "GL-SET-base-config-dpkg-forceold"
+  "etc/dpkg/dpkg.cfg.d/speedup":
+  - "GL-SET-base-config-dpkg-speedup"
+  "etc/dpkg/origins/gardenlinux":
+  - "GL-SET-base-config-dpkg-origins-gardenlinux"
+  "etc/sysctl.d/10-disable-sysrq.conf":
+  - "GL-SET-base-config-sysctl-sysrq-disable"
+  "etc/ucf.conf":
+  - "GL-SET-base-config-ucf"
+  "etc/veritytab":
+  - "GL-SET-base-config-veritytab"
+  "var/www/.gitignore":
+  - "GL-SET-base-config-www-gitignore"

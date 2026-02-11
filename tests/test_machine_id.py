@@ -5,6 +5,7 @@ import pytest
 from plugins.parse_file import ParseFile
 
 
+@pytest.mark.setting_ids(["GL-SET-server-config-machine-id"])
 @pytest.mark.booted(reason="sysctl needs a booted system")
 def test_machine_id_is_initialized(parse_file: ParseFile):
     lines = parse_file.lines("/etc/machine-id")

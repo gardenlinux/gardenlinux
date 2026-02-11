@@ -1,0 +1,27 @@
+"setting_ids":
+  "etc/kernel/cmdline.iso":
+  - "GL-SET-checkbox-config-kernel-cmdline-iso"
+  "etc/systemd/journald.conf.d/10-logs.conf":
+  - "GL-SET-checkbox-config-journald-10-logs"
+  "etc/systemd/system.conf.d/10-dmesg.conf":
+  - "GL-SET-checkbox-config-systemd-system-conf-dmesg"
+  "etc/systemd/system/generate-report.service":
+  - "GL-SET-checkbox-service-generate-report-unit"
+  "usr/lib/checkbox-provider-base/bin/dmesg_colored.sh":
+  - "GL-SET-checkbox-script-dmesg_colored"
+  "usr/lib/checkbox-provider-base/bin/hw_encrypt_check.sh":
+  - "GL-SET-checkbox-script-hw_encrypt_check"
+  "usr/lib/checkbox-provider-base/bin/tpm_check.sh":
+  - "GL-SET-checkbox-script-tpm_check"
+  "usr/lib/checkbox-provider-base/bin/virtualization_disabled.sh":
+  - "GL-SET-checkbox-script-virtualization_disabled"
+  "usr/local/bin/generate-report.sh":
+  - "GL-SET-checkbox-script-generate-report"
+  "usr/share/checkbox-provider-base/units/gardenlinux/category.pxu":
+  - "GL-SET-checkbox-config-checkbox-units-category"
+  "usr/share/checkbox-provider-base/units/gardenlinux/jobs.pxu":
+  - "GL-SET-checkbox-config-checkbox-units-jobs"
+  "usr/share/checkbox-provider-base/units/gardenlinux/manifest.pxu":
+  - "GL-SET-checkbox-config-checkbox-units-manifest"
+  "usr/share/checkbox-provider-base/units/gardenlinux/test-plan.pxu":
+  - "GL-SET-checkbox-config-checkbox-test-plan"

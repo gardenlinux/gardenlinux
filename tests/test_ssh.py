@@ -55,6 +55,7 @@ required_sshd_config = {
 FIPS_REASON = "FIPS uses different values for the KEX and Cipher."
 
 
+@pytest.mark.setting_ids(["GL-SET-ssh-config-ssh-sshd-config"])
 @pytest.mark.booted(reason="Calling sshd -T requires a booted system")
 @pytest.mark.root(reason="Calling sshd -T requires root")
 @pytest.mark.feature("ssh")

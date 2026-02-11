@@ -1,4 +1,6 @@
+# GL-SET-azure-service-chrony-enable
 chrony
+# GL-SET-azure-service-cloud-init-local-enable
 cloud-init
 python3-cffi-backend
 python3-passlib

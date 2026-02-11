@@ -1,5 +1,6 @@
 set -e
 
+# GL-SET-_slim-config-no-docs-001
 # remove everything from /usr/share/doc except the copyrights
 find /usr/share/doc/ -type f -mindepth 1 ! -wholename '/usr/share/doc/*/copyright' -delete
 find /usr/share/doc/ -type d -mindepth 1 -empty -delete

@@ -1,0 +1,5 @@
+"setting_ids":
+  "etc/iscsi/initiatorname.iscsi.template":
+  - "GL-SET-iscsi-config-iscsi-initiatorname-template"
+  "etc/systemd/system/iscsi-initiatorname.service":
+  - "GL-SET-iscsi-service-iscsi-initiatorname-unit"

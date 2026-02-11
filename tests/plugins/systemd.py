@@ -143,6 +143,57 @@ class Systemd:
 
         return active
 
+    def is_inactive(self, unit_name: str) -> bool:
+        result = self._shell(
+            f"{self._systemctl} is-active {unit_name}",
+            capture_output=True,
+            ignore_exit_code=True,
+        )
+        inactive = result.stdout.strip() == "inactive"
+        if not inactive:
+            result_status = self._shell(
+                f"{self._systemctl} status {unit_name}",
+                capture_output=True,
+                ignore_exit_code=True,
+            )
+            print(result_status.stdout)
+
+        return inactive
+
+    def is_enabled(self, unit_name: str) -> bool:
+        result = self._shell(
+            f"{self._systemctl} is-enabled {unit_name}",
+            capture_output=True,
+            ignore_exit_code=True,
+        )
+        enabled = result.stdout.strip() == "enabled"
+        if not enabled:
+            result_status = self._shell(
+                f"{self._systemctl} status {unit_name}",
+                capture_output=True,
+                ignore_exit_code=True,
+            )
+            print(result_status.stdout)
+
+        return enabled
+
+    def is_disabled(self, unit_name: str) -> bool:
+        result = self._shell(
+            f"{self._systemctl} is-enabled {unit_name}",
+            capture_output=True,
+            ignore_exit_code=True,
+        )
+        disabled = result.stdout.strip() == "disabled"
+        if not disabled:
+            result_status = self._shell(
+                f"{self._systemctl} status {unit_name}",
+                capture_output=True,
+                ignore_exit_code=True,
+            )
+            print(result_status.stdout)
+
+        return disabled
+
     def start_unit(self, unit_name: str):
         if not allow_system_modifications():
             pytest.skip(

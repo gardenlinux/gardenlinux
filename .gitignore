@@ -50,6 +50,7 @@ __pycache__
 tests/config
 tests/log
 tests/.ssh
+tests/coverage_report.json
 make_targets.cache
 /bin/*.vars
 /bin/*.ipxe

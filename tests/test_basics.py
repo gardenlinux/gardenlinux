@@ -7,6 +7,7 @@ from plugins.shell import ShellRunner
 from plugins.systemd import Systemd
 
 
+@pytest.mark.setting_ids(["GL-SET-base-config-os-release"])
 def test_gl_is_support_distro(parse_file: ParseFile):
     lines = parse_file.lines("/etc/os-release")
     assert (
@@ -14,6 +15,7 @@ def test_gl_is_support_distro(parse_file: ParseFile):
     ), "/etc/os-release does not contain gardenlinux vendor field"
 
 
+@pytest.mark.setting_ids(["GL-SET-_slim-config-no-docs-002"])
 def test_no_man(shell: ShellRunner):
     result = shell("man ls", capture_output=True, ignore_exit_code=True)
     assert (
@@ -75,7 +77,6 @@ def test_fhs_symlinks_amd64(file: File, link: str, target: str):
     reason="We can only measure startup time if we actually boot the system"
 )
 @pytest.mark.performance_metric
-@pytest.mark.feature("server", reason="server installs systemd")
 def test_startup_time(systemd: Systemd):
     tolerated_kernel = 60.0
     tolerated_userspace = 60.0

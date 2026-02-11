@@ -20,12 +20,14 @@ def test_kernel_configs_sysrq_not_set_cloud(
         assert line in lines, f"Could not find line {line} in {config.path}."
 
 
+@pytest.mark.setting_ids(["GL-SET-base-config-sysctl-sysrq-disable"])
 @pytest.mark.booted(reason="Requires running system")
 def test_sysctl_sysrq_not_set(sysctl: Sysctl):
     """Test that sysctl sysrq parameter is not available."""
     assert "kernel.sysrq" not in sysctl
 
 
+@pytest.mark.setting_ids(["GL-SET-base-config-sysctl-sysrq-disable"])
 @pytest.mark.booted(reason="Requires running system")
 def test_magic_sysrq_trigger_not_exists(file: File):
     """Test that sysrq trigger does not exist."""

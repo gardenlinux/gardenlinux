@@ -1,9 +1,12 @@
+# GL-SET-gardener-service-apparmor-enable
 apparmor
+# GL-SET-gardener-service-containerd-enable
 containerd
 ethtool
 ipvsadm
 socat
 curl
+# GL-SET-gardener-service-logrotate-enable
 logrotate
 xfsprogs
 btrfs-progs

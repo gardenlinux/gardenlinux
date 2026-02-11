@@ -2,6 +2,11 @@ import pytest
 from plugins.nft import Nft
 
 
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-firewall-config-nft-default",  # exact: tests nftables firewall configuration
+    ]
+)
 @pytest.mark.root(reason="nft is only accessible by root")
 @pytest.mark.booted(reason="Firewall needs booted system")
 @pytest.mark.feature("firewall")

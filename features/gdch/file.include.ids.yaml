@@ -1,0 +1,7 @@
+"setting_ids":
+  "etc/cloud/cloud.cfg.d/91-gdch-system.cfg":
+  - "GL-SET-gdch-config-cloud-ntp"
+  "etc/kernel/cmdline.d/00-cmdline.cfg":
+  - "GL-SET-gdch-config-kernel-cmdline-default"
+  "etc/kernel/cmdline.d/10-console.cfg":
+  - "GL-SET-gdch-config-kernel-cmdline-console"

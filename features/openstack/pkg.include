@@ -1,4 +1,5 @@
 python3-cffi-backend
+# GL-SET-openstack-service-cloud-init-local-enable
 cloud-init
 dmidecode
 open-vm-tools
