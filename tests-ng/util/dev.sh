@@ -124,8 +124,11 @@ build_websitino() {
 		build_websitino_podman
 		;;
 	Darwin)
-		if ! brew list ldc dub >/dev/null 2>&1; then
-			_help_dev_macos_dependencies dmd
+		if ! brew list ldc >/dev/null 2>&1; then
+			_help_dev_macos_dependencies ldc dub
+		fi
+		if ! brew list dub >/dev/null 2>&1; then
+			_help_dev_macos_dependencies ldc dub
 		fi
 
 		build_websitino_macos
