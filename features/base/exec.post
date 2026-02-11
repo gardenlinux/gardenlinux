@@ -32,10 +32,10 @@ if [ -f "$rootfs/etc/.resolv.conf.systemd-resolved.bak" ]; then
     rm "$rootfs/etc/.resolv.conf.systemd-resolved.bak"
 fi
 
-# GL-SET-base-config-security-no-log
-# GL-SET-base-config-security-no-cache
+## GL-SET-base-config-security-no-log - no test needed
+## GL-SET-base-config-security-no-cache - no test needed
 find "$rootfs/var/log/" "$rootfs/var/cache/" -type f -delete
 
-# GL-SET-base-config-no-hostname
+## GL-SET-base-config-no-hostname - no test needed
 rm "$rootfs/etc/hostname"
 echo -n >"$rootfs/etc/hostname"

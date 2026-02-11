@@ -1,4 +1,5 @@
 import pytest
+from plugins.file import File
 from plugins.initrd import Initrd
 from plugins.systemd import Systemd
 
@@ -89,6 +90,13 @@ def test__usi_initrd_ignition_modules(initrd: Initrd):
     assert (
         missing
     ), f"The following dracut modules were found in initrd: {', '.join(missing)}"
+
+
+@pytest.mark.setting_ids(["GL-SET-_usi-config-no-kernel-cmdline-ignition"])
+@pytest.mark.feature("_usi")
+def test_usi_no_ignition_cmdline_config(file: File):
+    """Test that ignition kernel cmdline config does not exist"""
+    assert not file.exists("/etc/kernel/cmdline.d/50-ignition.cfg")
 
 
 @pytest.mark.setting_ids(["GL-SET-_usi-service-no-ignition-disable"])

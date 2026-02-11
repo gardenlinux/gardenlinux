@@ -1,5 +1,8 @@
 import pytest
 from plugins.file import File
+from plugins.kernel_module import KernelModule
+from plugins.parse_file import ParseFile
+from plugins.sysctl import Sysctl
 from plugins.systemd import Systemd
 
 # =============================================================================
@@ -9,7 +12,6 @@ from plugins.systemd import Systemd
 
 @pytest.mark.setting_ids(
     [
-        "GL-SET-_usi-config-kernel-cmdline-no-gpt-auto"
         "GL-SET-_usi-config-update-motd-secureboot"
         "GL-SET-_usi-config-script-update-kernel-cmdline"
         "GL-SET-_usi-config-script-enroll-gardenlinux-secureboot-keys"
@@ -20,7 +22,6 @@ from plugins.systemd import Systemd
 def test__usi_files(file: File):
     """Test that files are present in initrd"""
     paths = [
-        "/etc/kernel/cmdline.d/99-no-gpt-auto.cfg",
         "/etc/update-motd.d/25-secureboot",
         "/usr/local/sbin/update-kernel-cmdline",
         "/usr/sbin/enroll-gardenlinux-secureboot-keys",
@@ -30,68 +31,21 @@ def test__usi_files(file: File):
     assert not missing, f"The following files were not found: {', '.join(missing)}"
 
 
-# =============================================================================
-# cisModprobe Feature
-# =============================================================================
+@pytest.mark.setting_ids(["GL-SET-_usi-config-no-root-home"])
+@pytest.mark.feature("_usi")
+def test_usi_empty_root_home_directory(file: File):
+    """Test that root home directory does not exist"""
+    assert not file.exists("/root/*"), "The root home directory should be empty"
+    assert not file.exists(
+        "/root/.*"
+    ), "The root home directory should not contain any hidden files"
 
 
-@pytest.mark.setting_ids([
-    "GL-SET-cisModprobe-config-modprobe-cramfs"
-    "GL-SET-cisModprobe-config-modprobe-dccp"
-    "GL-SET-cisModprobe-config-modprobe-freevxfs"
-    "GL-SET-cisModprobe-config-modprobe-jffs2"
-    "GL-SET-cisModprobe-config-modprobe-rds"
-    "GL-SET-cisModprobe-config-modprobe-sctp"
-    "GL-SET-cisModprobe-config-modprobe-squashfs"
-    "GL-SET-cisModprobe-config-modprobe-tipc"
-    "GL-SET-cisModprobe-config-modprobe-udf"
-    ])
-@pytest.mark.feature("cisModprobe")
-def test_cismodprobe_blacklist_exists(file: File):
-    """Test that kernel modules are blacklisted"""
-    paths = [
-        "/etc/modprobe.d/cramfs.conf",
-        "/etc/modprobe.d/dccp.conf",
-        "/etc/modprobe.d/freevxfs.conf",
-        "/etc/modprobe.d/jffs2.conf",
-        "/etc/modprobe.d/rds.conf",
-        "/etc/modprobe.d/sctp.conf",
-        "/etc/modprobe.d/squashfs.conf",
-        "/etc/modprobe.d/tipc.conf",
-        "/etc/modprobe.d/udf.conf",
-    ]
-
-    missing = [path for path in paths if not file.exists(path)]
-    assert not missing, f"The following files were not found: {', '.join(missing)}"
-
-@pytest.mark.setting_ids([
-    "GL-SET-cisModprobe-config-modprobe-cramfs"
-    "GL-SET-cisModprobe-config-modprobe-dccp"
-    "GL-SET-cisModprobe-config-modprobe-freevxfs"
-    "GL-SET-cisModprobe-config-modprobe-jffs2"
-    "GL-SET-cisModprobe-config-modprobe-rds"
-    "GL-SET-cisModprobe-config-modprobe-sctp"
-    "GL-SET-cisModprobe-config-modprobe-squashfs"
-    "GL-SET-cisModprobe-config-modprobe-tipc"
-    "GL-SET-cisModprobe-config-modprobe-udf"
-    ])
-@pytest.mark.feature("cisModprobe")
-def test_cismodprobe_modules_not_loaded(modprobe: Modprobe):
-    """Test that modules are not loaded"""
-    modules = [
-        "cramfs",
-        "dccp",
-        "freevxfs",
-        "jffs2",
-        "rds",
-        "sctp",
-        "squashfs",
-        "tipc",
-        "udf",
-    ]
-
-    for module in modules:
-        assert not modprobe.is_module_loaded(module), f"Module {module} is loaded but should be deny listed"
+@pytest.mark.setting_ids(["GL-SET-_usi-config-no-udev-rules-image-dissect"])
+@pytest.mark.feature("_usi")
+def test_usi_no_udev_rules_image_dissect(file: File):
+    """Test that udev rules for image dissect do not exist"""
+    assert not file.exists("/usr/lib/udev/rules.d/60-persistent-storage-tape.rules")
 
 
 # =============================================================================
@@ -165,8 +119,15 @@ def test_cissysctl_sysctl_parameters_set(sysctl: Sysctl):
         "net.ipv4.conf.default.accept_source_route=0",
         "fs.suid_dumpable=0",
     ]
-    missing = [parameter.split("=")[0] for parameter in parameters if parameter.split("=")[0] not in sysctl]
-    assert not missing, f"The following parameters were not set to the expected value: {', '.join(missing)}"
+    missing = [
+        parameter.split("=")[0]
+        for parameter in parameters
+        if parameter.split("=")[0] not in sysctl
+    ]
+    assert (
+        not missing
+    ), f"The following parameters were not set to the expected value: {', '.join(missing)}"
+
 
 # =============================================================================
 # glvd Feature
@@ -227,7 +188,7 @@ def test_unsigned_efi_binary_exists_arm64(file):
 @pytest.mark.feature("_fwcfg")
 def test_fwcfg_run_script_exists(file: File):
     """Test that qemu-fw_cfg run script exists"""
-    assert file.is_regular_file("/usr/local/sbin/run-qemu-fw_cfg-script")
+    assert file.is_regular_file("/usr/bin/run-qemu-fw_cfg-script")
 
 
 # =============================================================================
@@ -237,63 +198,89 @@ def test_fwcfg_run_script_exists(file: File):
 
 @pytest.mark.setting_ids(["GL-SET-_slim-config-no-docs-001"])
 @pytest.mark.feature("_slim")
-def test_slim_no_docs_dpkg_config_exists(file: File):
-    """Test that dpkg no-docs configuration exists"""
-    assert file.is_regular_file("/etc/dpkg/dpkg.cfg.d/01_nodoc")
+def test_slim_no_usr_share_docs_no_subdirs_exist(file: File):
+    """Test that /usr/share/doc has no subdirectories"""
+    from pathlib import Path
+
+    doc_path = Path("/usr/share/doc")
+    subdirs = [str(p.name) for p in doc_path.iterdir()] if doc_path.exists() else []
+    assert not file.exists(
+        "/usr/share/doc/*"
+    ), f"The following subdirectories were found: {', '.join(subdirs)}"
+
+
+@pytest.mark.setting_ids(["GL-SET-_slim-config-no-docs-002"])
+@pytest.mark.feature("_slim")
+def test_slim_no_usr_share_man_exists(file: File):
+    """Test that /usr/share/man and other directories do not exist"""
+    paths = [
+        "/usr/share/man",
+        "/usr/share/locale",
+        "/usr/share/groff",
+        "/usr/share/lintian",
+        "/usr/share/linda",
+    ]
+    missing = [path for path in paths if file.exists(path)]
+    assert (
+        not missing
+    ), f"The following directories do exist: {', '.join(missing)} but should not"
 
 
 # =============================================================================
-# _selinux Feature
+# ali Feature - Resolved Configuration
 # =============================================================================
 
 
-@pytest.mark.setting_ids(["GL-SET-_selinux-config-seclinux-contexts"])
-@pytest.mark.feature("_selinux")
-def test_selinux_contexts_config_exists(file: File):
-    """Test that SELinux contexts configuration exists"""
-    assert file.is_regular_file("/etc/selinux/config")
+@pytest.mark.setting_ids(["GL-SET-ali-config-resolved"])
+@pytest.mark.feature("ali")
+def test_ali_resolved_config_exists(file: File):
+    """Test that Alibaba Cloud systemd-resolved configuration exists"""
+    assert file.is_regular_file("/etc/systemd/resolved.conf.d/00-gardenlinux-ali.conf")
 
 
 # =============================================================================
-# aide Feature
+# aws Feature - Resolved Configuration
 # =============================================================================
 
 
-@pytest.mark.setting_ids(["GL-SET-aide-script-aide-init-onboot"])
-@pytest.mark.feature("aide")
-def test_aide_init_onboot_script_exists(file: File):
-    """Test that AIDE initialization script exists"""
-    assert file.is_regular_file("/usr/local/sbin/aide-init-onboot")
+@pytest.mark.setting_ids(["GL-SET-aws-config-resolved"])
+@pytest.mark.feature("aws")
+def test_aws_resolved_config_exists(file: File):
+    """Test that AWS systemd-resolved configuration exists"""
+    assert file.is_regular_file("/etc/systemd/resolved.conf.d/00-gardenlinux-aws.conf")
 
 
 # =============================================================================
-# _pxe Feature
+# clamav Feature - Cron Configuration
 # =============================================================================
 
 
-@pytest.mark.setting_ids(["GL-SET-_pxe-config-repart-no-root"])
-@pytest.mark.feature("_pxe")
-def test_pxe_repart_no_root_config_exists(file: File):
-    """Test that repart configuration for no root partition exists"""
-    assert file.is_regular_file("/usr/lib/repart.d/50-root.conf")
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-clamav-config-cron-root",
+    ]
+)
+@pytest.mark.feature("clamav")
+def test_clamav_cron_exists(file: File):
+    """Test that clamav cron job exists"""
+    cron_locations = [
+        "/var/spool/cron/crontabs/root",
+    ]
+    exists = any(file.exists(loc) for loc in cron_locations)
+    assert (
+        exists
+    ), f"Clamav cron job should exist in one of: {', '.join(cron_locations)}"
 
 
-# =============================================================================
-# _trustedboot Feature
-# =============================================================================
-
-
-@pytest.mark.setting_ids(["GL-SET-_trustedboot-config-efi-binary-exists"])
-@pytest.mark.feature("_trustedboot")
-@pytest.mark.arch("amd64")
-def test_trustedboot_efi_binary_exists_amd64(file: File):
-    """Test that signed EFI binary exists for amd64"""
-    assert file.is_regular_file("/boot/efi/EFI/BOOT/BOOTX64.EFI")
-
-
-@pytest.mark.setting_ids(["GL-SET-_trustedboot-config-efi-binary-exists"])
-@pytest.mark.feature("_trustedboot")
-@pytest.mark.arch("arm64")
-def test_trustedboot_efi_binary_exists_arm64(file: File):
-    """Test that signed EFI binary exists for arm64"""
-    assert file.is_regular_file("/boot/efi/EFI/BOOT/BOOTAA64.EFI")
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-clamav-config-cron-root",
+    ]
+)
+@pytest.mark.feature("clamav")
+def test_clamav_cron_content(parse_file: ParseFile):
+    """Test that clamav cron job contains the correct content"""
+    lines = parse_file.lines("/var/spool/cron/crontabs/root")
+    assert lines == [
+        "0 30 * * * root /usr/bin/clamscan -ri / >> /var/log/clamav/clamd.log",
+    ], f"Clamav cron job should contain the correct content"

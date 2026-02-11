@@ -3,6 +3,7 @@ Test systemd services for enabled/disabled, active/inactive states across all Ga
 """
 
 import pytest
+from plugins.file import File
 from plugins.initrd import Initrd
 from plugins.kernel_versions import KernelVersions
 from plugins.modify import allow_system_modifications
@@ -874,6 +875,32 @@ def test_sap_auditd_service_active(systemd: Systemd):
 # =============================================================================
 # server Feature Services
 # =============================================================================
+
+
+@pytest.mark.setting_ids(
+    [
+        "GL-SET-server-config-service-systemd-coredump-override",
+    ]
+)
+@pytest.mark.feature("server and not _prod")
+def test_server_systemd_coredump_override_exists(file: File):
+    """Test that systemd-coredump service override exists"""
+    assert file.exists("/etc/systemd/system/systemd-coredump@.service.d/override.conf")
+
+
+@pytest.mark.setting_ids(["GL-SET-server-service-systemd-coredump-enable"])
+@pytest.mark.feature("server and not _prod")
+def test_server_systemd_coredump_socket_active(systemd: Systemd):
+    """Test that systemd-coredump.socket is enabled"""
+    assert systemd.is_active("systemd-coredump.socket")
+
+
+@pytest.mark.setting_ids(["GL-SET-server-service-systemd-coredump-enable"])
+@pytest.mark.feature("server and not _prod")
+@pytest.mark.booted(reason="Requires systemd")
+def test_server_systemd_coredump_service_active(systemd: Systemd):
+    """Test that systemd-coredump.service is active"""
+    assert systemd.is_active("systemd-coredump.service")
 
 
 @pytest.mark.setting_ids(["GL-SET-server-service-kexec-load-unit"])

@@ -6,11 +6,11 @@
   "etc/modprobe.d/overlayfs.conf":
   - "GL-SET-chost-config-modprobe-overlayfs"
   "etc/modules-load.d/br_netfilter.conf":
-  - "GL-SET-chost-config-modprobe-br-netfilter-config"
+  - "GL-SET-chost-config-modules-load-br-netfilter"
   "etc/modules-load.d/ip_tables.conf":
-  - "GL-SET-chost-config-modprobe-ip-tables-config"
+  - "GL-SET-chost-config-modules-load-ip-tables"
   "etc/modules-load.d/overlay.conf":
-  - "GL-SET-chost-config-modprobe-overlayfs-config"
+  - "GL-SET-chost-config-modules-load-overlayfs"
   "etc/sysctl.d/ip-forward.conf":
   - "GL-SET-chost-config-sysctl-ip-forward"
   "etc/sysctl.d/nf-call-iptables.conf":
