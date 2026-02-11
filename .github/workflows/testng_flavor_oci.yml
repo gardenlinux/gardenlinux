@@ -1,4 +1,4 @@
-name: test_flavor
+name: testng_flavor
 on:
   workflow_call:
     inputs:
