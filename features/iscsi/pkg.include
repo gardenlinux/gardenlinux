@@ -1,3 +1,5 @@
 lsscsi
+# GL-SET-iscsi-service-iscsid-enable
 open-iscsi
+# GL-SET-iscsi-service-tgt-enable
 tgt

@@ -1,2 +1,3 @@
+# GL-SET-service-systemd-coredump-no-override
 /etc/systemd/system/systemd-coredump@.service.d/override.conf
 /etc/systemd/system/systemd-coredump@.service.d

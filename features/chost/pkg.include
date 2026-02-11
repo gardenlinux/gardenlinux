@@ -1,4 +1,7 @@
+# GL-SET-chost-service-apparmor-enable
 apparmor
+# GL-SET-chost-service-containerd-enable
 containerd
 ethtool
+# GL-SET-chost-service-user-dbus-socket-enable
 dbus-user-session

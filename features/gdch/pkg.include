@@ -1,6 +1,8 @@
-#google-compute-engine-oslogin
-#google-guest-agent
+# google-compute-engine-oslogin
+# google-guest-agent
 python3-cffi-backend
 nvme-cli
+# GL-SET-gdch-service-chrony-enable
 chrony
+# GL-SET-gdch-service-cloud-init-local-enable
 cloud-init

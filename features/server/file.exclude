@@ -1,25 +1,48 @@
-/etc/init.d/sysstat
+# GL-SET-server-config-no-ufw
 /etc/ufw
+# GL-SET-server-config-no-init-auditd
 /etc/init.d/auditd
+# GL-SET-server-config-no-init-dbus
 /etc/init.d/dbus
+# GL-SET-server-config-no-monit
 /etc/monit
+# GL-SET-server-config-no-init-sudo
 /etc/init.d/sudo
+# GL-SET-server-config-no-init-sysstat
 /etc/init.d/sysstat
+# GL-SET-server-config-no-init-udev
 /etc/init.d/udev
+# GL-SET-server-config-no-init-kexec
 /etc/init.d/kexec
+# GL-SET-server-config-no-init-kexec-load
 /etc/init.d/kexec-load
+# GL-SET-server-config-no-sv
 /etc/sv
+# GL-SET-server-config-no-runit
 /etc/runit
+# GL-SET-server-config-no-runit-log
 /var/log/runit
+# GL-SET-server-config-no-private-log
 /var/log/private
+# GL-SET-server-config-update-motd-no-uname
 /etc/update-motd.d/10-uname
+# GL-SET-server-config-cron-no-e2scrub_all
 /etc/cron.d/e2scrub_all
+# GL-SET-server-config-no-dbus-machine-id
 /var/lib/dbus/machine-id
+# GL-SET-server-config-no-games
 /usr/games
+# GL-SET-server-config-no-initrd-img
 /initrd.img
+# GL-SET-server-config-no-initrd-img-old
 /initrd.img.old
+# GL-SET-server-config-no-vmlinuz
 /vmlinuz
+# GL-SET-server-config-no-vmlinuz-old
 /vmlinuz.old
+# GL-SET-server-config-no-pycache
 /usr/lib/**/__pycache__
+# GL-SET-server-config-nvme-no-hostid
 /etc/nvme/hostid
+# GL-SET-server-config-nvme-no-hostnqn
 /etc/nvme/hostnqn

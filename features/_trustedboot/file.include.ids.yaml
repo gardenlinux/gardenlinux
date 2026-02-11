@@ -1,0 +1,3 @@
+"setting_ids":
+  "etc/kernel/cmdline.d/99-no-rd-shell.cfg":
+  - "GL-SET-_trustedboot-config-kernel-cmdline-no-rd-shell"

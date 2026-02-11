@@ -3,6 +3,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-dev
   cancel-in-progress: true
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
