@@ -17,6 +17,7 @@ SYNCER_SCRIPT_FILE="${BUILD_DIR}/syncer"
 
 DEV_DEBUG=1
 
+WEBSITINO_VERSION="0.2.8"
 DAEMONIZE_VERSION="1.7.8"
 XNOTIFY_VERSION="0.3.1"
 
@@ -99,7 +100,6 @@ build_xnotify_podman() {
 FROM docker.io/library/golang:1.20.14
 RUN echo "$(date '+%s')" # this is required to invalidate podman cache
 RUN go install github.com/AgentCosmic/xnotify@v${XNOTIFY_VERSION}
-RUN mkdir -p /output
 RUN cp -v "/go/bin/xnotify" /output/xnotify
 EOF
 	podman build -f "${BUILD_DIR}/Containerfile.xnotify" --volume "${BUILD_DIR}:/output" "${BUILD_DIR}"
@@ -117,24 +117,45 @@ build_xnotify_macos() {
 	)
 }
 
-install_websitino() {
+build_websitino() {
 	case $(uname -s) in
 	Linux)
-		WEBSITINO_DOWNLOAD_URL="https://trikko.github.io/websitino/linux/websitino"
+		build_websitino_podman
 		;;
 	Darwin)
-		case $(uname -m) in
-		x86_64)
-			WEBSITINO_DOWNLOAD_URL="https://trikko.github.io/websitino/macos-13/websitino"
-			;;
-		arm64)
-			WEBSITINO_DOWNLOAD_URL="https://trikko.github.io/websitino/macos-14/websitino"
-			;;
-		esac
+		if ! brew list dmd >/dev/null 2>&1; then
+			_help_dev_macos_dependencies dmd
+		fi
+
+		build_websitino_macos
 		;;
+	*) _help_dev_unsupported_os ;;
 	esac
-	curl -o "${WEBSITINO_BIN_FILE}" "${WEBSITINO_DOWNLOAD_URL}"
-	chmod +x "${WEBSITINO_BIN_FILE}"
+}
+
+build_websitino_podman() {
+	printf "==>\t\tbuilding websitino in podman...\n"
+	cat <<EOF >"${BUILD_DIR}/Containerfile.websitino"
+FROM docker.io/library/debian:trixie
+RUN echo "$(date '+%s')" # this is required to invalidate podman cache
+RUN apt-get update && apt-get install -y wget
+RUN wget https://master.dl.sourceforge.net/project/d-apt/files/d-apt.list -O /etc/apt/sources.list.d/d-apt.list
+RUN apt-get update --allow-insecure-repositories
+RUN apt-get -y --allow-unauthenticated install --reinstall d-apt-keyring
+RUN apt-get update && apt-get install -y dmd-compiler dub
+RUN dub build -y --verbose websitino@${WEBSITINO_VERSION}
+RUN cp -v /root/.dub/packages/websitino/${WEBSITINO_VERSION}/websitino/websitino /output/websitino
+EOF
+	podman build -f "${BUILD_DIR}/Containerfile.websitino" --volume "${BUILD_DIR}:/output" "${BUILD_DIR}"
+	rm -f "${BUILD_DIR}/Containerfile.websitino"
+	printf "Done.\n"
+}
+
+build_websitino_macos() {
+	printf "==>\t\tbuilding websitino...\n"
+	dmd build -y --verbose websitino@${WEBSITINO_VERSION}
+	cp -v "$HOME/.dub/packages/websitino/${WEBSITINO_VERSION}/websitino/websitino" "${WEBSITINO_BIN_FILE}"
+	printf "Done.\n"
 }
 
 extract_tests_runner_script() {
@@ -154,6 +175,7 @@ start_xnotify_client() {
 	Darwin)
 		_daemonize_bin="daemonize"
 		;;
+	*) _help_dev_unsupported_os ;;
 	esac
 
 	printf "==>\t\tstarting xnotify client..."
@@ -200,6 +222,7 @@ start_websitino() {
 	Darwin)
 		_daemonize_bin="daemonize"
 		;;
+	*) _help_dev_unsupported_os ;;
 	esac
 
 	printf "==>\t\tstarting websitino..."
@@ -255,6 +278,7 @@ dev_configure_runner() { # path-to-script test-arg1 test-arg2 ... test-argN
 	shift
 
 	cat >>"$_runner_script" <<EOF
+set -e
 curl "http://10.0.2.2:${WEBSITINO_PORT}/.build/$(basename "${XNOTIFY_SERVER_BIN_FILE}")" -o /run/xnotify
 chmod +x /run/xnotify
 
@@ -321,10 +345,8 @@ dev_setup() { # path-to-script
 
 	[ -x "${XNOTIFY_CLIENT_BIN_FILE}" ] || build_xnotify_client
 	[ -x "${XNOTIFY_SERVER_BIN_FILE}" ] || build_xnotify_server
-	[ -x "${WEBSITINO_BIN_FILE}" ] || install_websitino
+	[ -x "${WEBSITINO_BIN_FILE}" ] || build_websitino
 	[ -x "${BUILD_DIR}/syncer" ] || configure_syncer_script
-
-	cp -v "${XNOTIFY_SERVER_BIN_FILE}" "${BUILD_DIR}/runtime/"
 
 	configure_vm_runner_script
 
