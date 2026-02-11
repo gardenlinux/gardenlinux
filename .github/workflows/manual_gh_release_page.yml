@@ -62,26 +62,11 @@ jobs:
           sleep 180
   flavors_matrix:
     needs: glvd
-    runs-on: ubuntu-24.04
-    defaults:
-      run:
-        shell: bash
-    outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
-    steps:
-      - name: Checkout flavors of the release commit
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          ref: ${{ inputs.commit }}
-          sparse-checkout: |
-            flavors.yaml
-          sparse-checkout-cone-mode: false
-      - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@2d52501ef10ba3b10d04fff5c24ffcd882f3ea07 # pin@0.10.13
-      - id: matrix
-        name: Generate flavors matrix
-        run: |
-          echo "matrix=$(gl-flavors-parse --no-arch --json-by-arch --publish)" | tee -a "$GITHUB_OUTPUT"
+    name: Generate flavors matrix of the release commit
+    uses: ./.github/workflows/build_flavors_matrix.yml
+    with:
+      flags: "--no-arch --json-by-arch --publish"
+      ref: ${{ inputs.commit }}
   github_release:
     needs: glvd
     runs-on: ubuntu-24.04
