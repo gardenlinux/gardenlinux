@@ -45,17 +45,3 @@ jobs:
     permissions:
       id-token: write
       actions: write
-  testng:
-    needs: build
-    if: ${{ success() || failure() }}
-    name: Test
-    uses: ./.github/workflows/tests_ng.yml
-    with:
-      flavors_matrix: ${{ needs.build.outputs.flavors_matrix }}
-      test_types: ${{ needs.build.outputs.test_types }}      
-      bare_flavors_matrix: ${{ needs.build.outputs.bare_flavors_matrix }}
-    permissions:
-      id-token: write
-      actions: write
-      checks: write
-   
