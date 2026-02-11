@@ -1,6 +1,7 @@
 # shellcheck shell=bash
 # shellcheck disable=SC2154,SC2164
 HOST_OS=$(uname -s)
+
 BUILD_DIR="$(realpath "${util_dir}/../.build")"
 TESTS_DIR="$(realpath "${util_dir}/../../tests-ng")"
 
@@ -15,14 +16,14 @@ WEBSITINO_LOG="${BUILD_DIR}/websitino.log"
 
 SYNCER_SCRIPT_FILE="${BUILD_DIR}/syncer"
 
-DEV_DEBUG=1
-
 WEBSITINO_VERSION="0.2.8"
 DAEMONIZE_VERSION="1.7.8"
 XNOTIFY_VERSION="0.3.1"
 
 WEBSITINO_PORT="8123"
 XNOTIFY_SERVER_PORT="9999"
+
+DEV_DEBUG=1
 
 _help_dev_macos_dependencies() { # dep1 dep2 ... depN
 	echo "*** We need to install unfsd on your macos system in order to serve files for the dev VM."
@@ -123,7 +124,7 @@ build_websitino() {
 		build_websitino_podman
 		;;
 	Darwin)
-		if ! brew list dmd >/dev/null 2>&1; then
+		if ! brew list ldc dub >/dev/null 2>&1; then
 			_help_dev_macos_dependencies dmd
 		fi
 
@@ -152,14 +153,14 @@ EOF
 }
 
 build_websitino_macos() {
-	printf "==>\t\tbuilding websitino...\n"
-	dmd build -y --verbose websitino@${WEBSITINO_VERSION}
+	printf "==>\t\tbuilding websitino..."
+	dub build -y --verbose --compiler ldc websitino@${WEBSITINO_VERSION}
 	cp -v "$HOME/.dub/packages/websitino/${WEBSITINO_VERSION}/websitino/websitino" "${WEBSITINO_BIN_FILE}"
 	printf "Done.\n"
 }
 
 extract_tests_runner_script() {
-	printf "==>\t\textracting test runner script...\n"
+	printf "==>\t\textracting test runner script..."
 	(
 		cd "${BUILD_DIR}"
 		tar xzf dist.tar.gz ./run_tests
@@ -328,6 +329,7 @@ while IFS= read -r src_filename; do
   dst_filename="\${TESTS_BASEDIR}/\${download_filename}"
   curl -o "\$dst_filename" "\${BASEURL}\${download_filename}"
 done
+
 /run/gardenlinux-tests/run_tests \$TEST_RUNNER_ARGS
 EOF
 }
