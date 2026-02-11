@@ -45,3 +45,4 @@ jobs:
     permissions:
       id-token: write
       actions: write
+      checks: write # for testng
