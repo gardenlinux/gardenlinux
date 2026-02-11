@@ -32,9 +32,7 @@ def test_profile_autologout_stig(parse_file: ParseFile):
     ), f"Could not find expected lines in order in {file}: {lines_list}"
 
 
-@pytest.mark.feature(
-    "openstackbaremetal", reason="enabled in openstackbaremetal feature"
-)
+@pytest.mark.feature("openstack and metal", reason="enabled in openstack-metal feature")
 def test_profile_autologout_openstackbaremetal(parse_file: ParseFile):
     """Test that the autologout profile is set correctly."""
     file = "/etc/profile.d/50-autologout.sh"

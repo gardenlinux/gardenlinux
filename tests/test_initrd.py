@@ -37,7 +37,7 @@ def test_azure_initrd_contains_nvme_modules(initrd: Initrd):
         assert initrd.contains_module(module), f"{module} module not found in initrd"
 
 
-@pytest.mark.feature("openstackbaremetal")
+@pytest.mark.feature("openstack and metal")
 def test_openstackbaremetal_dracut_contains_broadcom_modules(parse_file: ParseFile):
     file = "/etc/dracut.conf.d/49-include-bnxt-drivers.conf"
     line = 'add_drivers+=" bnxt_en "'
@@ -45,7 +45,7 @@ def test_openstackbaremetal_dracut_contains_broadcom_modules(parse_file: ParseFi
     assert line in lines, f"Could not find line {line} in {file}."
 
 
-@pytest.mark.feature("openstackbaremetal")
+@pytest.mark.feature("openstack and metal")
 @pytest.mark.root(reason="Reading the initrd contents requires root access")
 @pytest.mark.booted(reason="Chroot environments have no initrd")
 def test_openstackbaremetal_initrd_contains_broadcom_modules(initrd: Initrd):

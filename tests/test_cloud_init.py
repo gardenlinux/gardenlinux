@@ -6,7 +6,7 @@ from plugins.parse_file import ParseFile
 
 # Tests for most platforms
 @pytest.mark.feature(
-    "ali or aws or azure or gdch or openstackbaremetal or openstack or vmware",
+    "ali or aws or azure or gdch or openstack or vmware",
     reason="Cloud-init is installed on most cloud platforms.",
 )
 def test_cloud_init_installed():
@@ -14,8 +14,8 @@ def test_cloud_init_installed():
 
 
 @pytest.mark.feature(
-    "(gcp or kvm or metal or metal_pxe) and not openstackbaremetal",
-    reason="Cloud-init is not installed on these platforms; openstackbaremetal also includes the metal feature.",
+    "(gcp or kvm or metal or metal_pxe) and not (openstack and metal)",
+    reason="Cloud-init is not installed on these platforms; openstack-metal also includes the metal feature.",
 )
 def test_cloud_init_not_installed():
     assert not os.path.exists(
@@ -24,7 +24,7 @@ def test_cloud_init_not_installed():
 
 
 @pytest.mark.feature(
-    "ali or aws or azure or openstackbaremetal or openstack or vmware",
+    "ali or aws or azure or openstack or vmware",
     reason="Cloud-init is installed on most cloud platforms; gdch has minimal config",
 )
 def test_cloud_init_debian_cloud_defaults(parse_file: ParseFile):
@@ -37,7 +37,7 @@ def test_cloud_init_debian_cloud_defaults(parse_file: ParseFile):
 
 
 @pytest.mark.feature(
-    "ali or aws or openstackbaremetal or openstack or vmware",
+    "ali or aws or openstack or vmware",
     reason="Cloud-init is installed on most cloud platforms; azure uses a different default user; gdch has minimal config",
 )
 def test_cloud_init_debian_cloud_user(parse_file: ParseFile):
@@ -47,7 +47,7 @@ def test_cloud_init_debian_cloud_user(parse_file: ParseFile):
 
 
 @pytest.mark.feature(
-    "aws or azure or openstackbaremetal or openstack or vmware",
+    "aws or azure or openstack or vmware",
     reason="Cloud-init is installed on most cloud platforms; ali does not manage host file; gdch has minimal config",
 )
 def test_cloud_init_debian_cloud_manage_etc_hosts(parse_file: ParseFile):
@@ -57,7 +57,7 @@ def test_cloud_init_debian_cloud_manage_etc_hosts(parse_file: ParseFile):
 
 
 # Tests for some platforms
-@pytest.mark.feature("ali or aws or openstack or openstackbaremetal or vmware")
+@pytest.mark.feature("ali or aws or openstack or vmware")
 @pytest.mark.parametrize("module", ["ntp", "resizefs", "growpart"])
 def test_cloud_cfg_excludes_modules(parse_file: ParseFile, module: str):
     file = "/etc/cloud/cloud.cfg"
@@ -119,28 +119,28 @@ def test_gdch_ntp_settings(parse_file: ParseFile):
 
 
 # OpenStack
-@pytest.mark.feature("openstack or openstackbaremetal")
+@pytest.mark.feature("openstack")
 def test_openstack_datasource_list(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/50-datasource.cfg"
     config = parse_file.parse(file, format="yaml")
     assert config["datasource_list"] == ["ConfigDrive", "OpenStack", "Ec2"]
 
 
-@pytest.mark.feature("openstack")
+@pytest.mark.feature("openstack and cloud")
 def test_openstack_disable_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/99_disable-network-config.cfg"
     config = parse_file.parse(file, format="yaml")
     assert config["network"]["config"] == "disabled"
 
 
-@pytest.mark.feature("openstackbaremetal")
+@pytest.mark.feature("openstack and metal")
 def test_openstackbaremetal_network_config(parse_file: ParseFile):
     file = "/etc/cloud/cloud.cfg.d/65-network-config.cfg"
     config = parse_file.parse(file, format="yaml")
     assert config["system_info"]["network"]["renderers"] == ["netplan", "networkd"]
 
 
-@pytest.mark.feature("openstack or openstackbaremetal")
+@pytest.mark.feature("openstack")
 def test_openstack_ds_identify(parse_file: ParseFile):
     file = "/etc/cloud/ds-identify.cfg"
     config = parse_file.parse(file, format="yaml")
