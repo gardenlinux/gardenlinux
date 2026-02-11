@@ -426,20 +426,8 @@ if ((skip_cleanup)); then
 else
 	if ((dev)); then
 		add_qemu_xnotify_port_forwarding
+		add_qemu_syncer_script_passing
 
-		# configure_qemu_networking
-
-		case $FILE_SHARING_BACKEND in
-		nfs)
-			add_qemu_nfs_mount_binary_passing
-			;;
-		virtiofs)
-			add_qemu_virtiofs_setup
-			;;
-		esac
-
-		# "${HOMEBREW_PREFIX}/opt/socket_vmnet/bin/socket_vmnet_client" \
-		# 	"${HOMEBREW_PREFIX}/var/run/socket_vmnet" "qemu-system-$arch" "${qemu_opts[@]}"
 		"qemu-system-$arch" "${qemu_opts[@]}"
 	else
 		"qemu-system-$arch" "${qemu_opts[@]}" | stdbuf -i0 -o0 sed 's/\x1b\][0-9]*\x07//g;s/\x1b[\[0-9;!?=]*[a-zA-Z]//g;s/\t/    /g;s/[^[:print:]]//g'

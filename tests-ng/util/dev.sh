@@ -2,30 +2,26 @@
 # shellcheck disable=SC2154,SC2164
 HOST_OS=$(uname -s)
 BUILD_DIR="$(realpath "${util_dir}/../.build")"
-NFSD_PID_FILE="${BUILD_DIR}/.unfsd.pid"
-NFSD_BIN_FILE="${BUILD_DIR}/unfsd__${HOST_OS}"
-VIRTIOFSD_BIN_FILE="${BUILD_DIR}/virtiofsd"
-VIRTIOFSD_LOG="${BUILD_DIR}/virtiofsd.log"
-VIRTIOFSD_PID_FILE="${BUILD_DIR}/.virtiofsd.pid"
-VIRTIOFSD_SOCKET="${BUILD_DIR}/.virtiofsd.sock"
-NFS_MOUNT_BIN_FILE="${BUILD_DIR}/mount.nfs__Linux"
-NFSD_EXPORTS="${BUILD_DIR}/exports"
+TESTS_DIR="$(realpath "${util_dir}/../../tests-ng")"
+
 XNOTIFY_CLIENT_BIN_FILE="${BUILD_DIR}/xnotify__${HOST_OS}"
 XNOTIFY_CLIENT_PID_FILE="${BUILD_DIR}/.xnotify.pid"
 XNOTIFY_CLIENT_LOG="${BUILD_DIR}/xnotify.log"
 XNOTIFY_SERVER_BIN_FILE="${BUILD_DIR}/xnotify__Linux"
-TESTS_DIR="$(realpath "${util_dir}/../../tests-ng")"
+
+WEBSITINO_BIN_FILE="${BUILD_DIR}/websitino"
+WEBSITINO_PID_FILE="${BUILD_DIR}/.websitino.pid"
+WEBSITINO_LOG="${BUILD_DIR}/websitino.log"
+
+SYNCER_SCRIPT_FILE="${BUILD_DIR}/syncer"
+
 DEV_DEBUG=1
-# FILE_SHARING_BACKEND="virtiofs" # nfs | virtiofs
-FILE_SHARING_BACKEND="nfs" # nfs | virtiofs
 
 DAEMONIZE_VERSION="1.7.8"
 XNOTIFY_VERSION="0.3.1"
-UNFS3_VERSION="0.11.0"
-VIRTIOFSD_VERSION="1.13.3"
 
+WEBSITINO_PORT="8123"
 XNOTIFY_SERVER_PORT="9999"
-NFSD_SERVER_PORT="4711"
 
 _help_dev_macos_dependencies() { # dep1 dep2 ... depN
 	echo "*** We need to install unfsd on your macos system in order to serve files for the dev VM."
@@ -121,211 +117,24 @@ build_xnotify_macos() {
 	)
 }
 
-build_unfsd_podman() {
-	printf "==>\t\tbuilding unfsd in podman...\n"
-	cat <<EOF >"${BUILD_DIR}/Containerfile.unfsd"
-FROM docker.io/library/ubuntu:16.04
-RUN echo "$(date '+%s')" # this is required to invalidate podman cache
-RUN apt-get update && apt-get install -y wget tar bzip2 gzip make gcc autoconf sed flex byacc pkg-config
-WORKDIR /build
-RUN wget https://downloads.sourceforge.net/libtirpc/libtirpc-1.3.7.tar.bz2 \
-  && tar xjf libtirpc-1.3.7.tar.bz2 \
-  && cd libtirpc-1.3.7 \
-  && ./configure --prefix=/build --disable-gssapi --disable-shared \
-  && make \
-  && make install
-RUN wget https://github.com/unfs3/unfs3/releases/download/unfs3-${UNFS3_VERSION}/unfs3-${UNFS3_VERSION}.tar.gz \
-  && tar xzf unfs3-${UNFS3_VERSION}.tar.gz \
-  && cd unfs3-${UNFS3_VERSION} \
-  && ./bootstrap \
-  && sed -i 's%^LDFLAGS =.*%LDFLAGS = -L/build/lib -Wl,--whole-archive -ltirpc -lpthread -Wl,--no-whole-archive%' Makefile.in \
-  && PKG_CONFIG_PATH=/build/lib/pkgconfig ./configure --prefix=/build \
-  && make \
-  && make install
-RUN cp /build/sbin/unfsd /output/unfsd
-EOF
-	podman build -f "${BUILD_DIR}/Containerfile.unfsd" --volume "${BUILD_DIR}:/output" "${BUILD_DIR}"
-	mv "${BUILD_DIR}/unfsd" "${NFSD_BIN_FILE}"
-	rm -f "${BUILD_DIR}/Containerfile.unfsd"
-	printf "Done.\n"
-}
-
-build_unfsd_macos() {
-	(
-		printf "==>\t\tbuilding unfsd (macOS binary)...\n"
-		cd "${BUILD_DIR}"
-		rm -f unfs3.tar.gz
-		curl -Lo unfs3.tar.gz "https://github.com/unfs3/unfs3/releases/download/unfs3-${UNFS3_VERSION}/unfs3-${UNFS3_VERSION}.tar.gz"
-		tar xzf unfs3.tar.gz
-		cd unfs3-${UNFS3_VERSION}
-		./bootstrap
-		./configure --prefix="$PWD/build"
-		make
-		make install
-		cp -v "$PWD/build/sbin/unfsd" "${NFSD_BIN_FILE}"
-		printf "Done.\n"
-	)
-}
-
-build_unfsd() {
+install_websitino() {
 	case $(uname -s) in
-	Linux) build_unfsd_podman ;;
-	Darwin)
-		all_deps="autoconf automake libtool pkgconf libtirpc"
-		for dep in $all_deps; do
-			if ! brew list "$dep" >/dev/null 2>&1; then
-				if [ "$DEV_DEBUG" = 1 ]; then
-					printf "==>\t\t%s dependency missing\n" "$dep"
-				fi
-				_help_dev_macos_dependencies "$all_deps"
-			fi
-		done
-
-		build_unfsd_macos
+	Linux)
+		WEBSITINO_DOWNLOAD_URL="https://trikko.github.io/websitino/linux/websitino"
 		;;
-	*) _help_dev_unsupported_os ;;
+	Darwin)
+		case $(uname -m) in
+		x86_64)
+			WEBSITINO_DOWNLOAD_URL="https://trikko.github.io/websitino/macos-13/websitino"
+			;;
+		arm64)
+			WEBSITINO_DOWNLOAD_URL="https://trikko.github.io/websitino/macos-14/websitino"
+			;;
+		esac
+		;;
 	esac
-}
-
-build_nfs_mount() {
-	build_nfs_mount_podman
-}
-
-build_nfs_mount_podman() {
-	printf "==>\t\tbuilding nfs-utils in podman...\n"
-	cat <<EOF >"${BUILD_DIR}/Containerfile.nfs-utils"
-FROM ubuntu:18.04
-RUN echo "$(date '+%s')" # this is required to invalidate podman cache
-# Note: glibc >= 2.27 required because of getrandom()
-RUN apt-get update \
-  && apt-get install -y \
-    git \
-    build-essential \
-    libtool \
-    autotools-dev \
-    autoconf \
-    pkg-config \
-    bison \
-    flex \
-    gettext \
-    autopoint \
-    libxml2-dev \
-    wget
-RUN mkdir -p /build
-
-### util-linux
-#
-WORKDIR /build
-RUN git clone git://git.kernel.org/pub/scm/utils/util-linux/util-linux.git
-WORKDIR /build/util-linux
-RUN ./autogen.sh
-RUN ./configure \
-  --prefix=/install/util-linux \
-  --disable-nls \
-  --disable-asciidoc \
-  --disable-poman \
-  --disable-widechar \
-  --disable-all-programs \
-  --enable-libblkid \
-  --enable-libuuid \
-  --enable-libuuid-force-uuidd \
-  --enable-libmount
-RUN make && make install
-
-### libevent
-#
-WORKDIR /build
-RUN wget https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz
-RUN tar xzf libevent-2.1.12-stable.tar.gz
-WORKDIR /build/libevent-2.1.12-stable
-RUN ./configure \
-  --prefix=/install/libevent \
-  --disable-openssl \
-  --disable-doxygen-html
-RUN make && make install
-
-### sqlite
-#
-WORKDIR /build
-RUN wget https://sqlite.org/2026/sqlite-autoconf-3510200.tar.gz
-RUN tar xzf sqlite-autoconf-3510200.tar.gz
-WORKDIR /build/sqlite-autoconf-3510200
-RUN ./configure \
-  --prefix=/install/sqlite \
-  --disable-readline
-RUN make && make install
-
-### nfs-utils
-#
-WORKDIR /build
-RUN git clone git://git.linux-nfs.org/projects/steved/nfs-utils.git
-WORKDIR /build/nfs-utils
-RUN autoreconf -ivf
-ENV PKG_CONFIG_PATH=/install/util-linux/lib/pkgconfig
-ENV CFLAGS="-I/install/util-linux/include -I/install/libevent/include -I/install/sqlite/include"
-ENV LDFLAGS="-L/install/libevent/lib -L/install/sqlite/lib"
-ENV LD_LIBRARY_PATH="/install/sqlite/lib:/install/util-linux/lib"
-#
-# unfortunately for some reason some of these --disable options
-# are ignored, so I had to build everything you see above in this dockerfile
-#
-RUN ./configure \
-  --prefix=/install/nfs-utils \
-  --disable-nfsv4 \
-  --disable-nfsv41 \
-  --disable-gss \
-  --disable-uuid \
-  --disable-sbin-override \
-  --disable-tirpc \
-  --disable-ipv6 \
-  --disable-mountconfig \
-  --disable-nfsdcld \
-  --disable-nfsdctl \
-  --disable-caps \
-  --disable-ldap
-RUN make && make install
-RUN cp /install/nfs-utils/sbin/mount.nfs /output/mount.nfs
-EOF
-	podman build -f "${BUILD_DIR}/Containerfile.nfs-utils" --volume "${BUILD_DIR}:/output" "${BUILD_DIR}"
-	mv "${BUILD_DIR}/mount.nfs" "${NFS_MOUNT_BIN_FILE}"
-	rm -f "${BUILD_DIR}/Containerfile.nfs-utils"
-	printf "Done.\n"
-}
-
-build_virtiofsd() {
-	printf "==>\t\tbuilding virtiofsd in podman...\n"
-	cat <<EOF >"${BUILD_DIR}/Containerfile.virtiofsd"
-FROM docker.io/library/ubuntu:18.04
-RUN echo "$(date '+%s')" # this is required to invalidate podman cache
-RUN apt-get update && apt-get install -y libcap-ng-dev libseccomp-dev curl git build-essential
-WORKDIR /build
-RUN curl -sSf -o rustup.sh https://sh.rustup.rs && chmod +x rustup.sh && ./rustup.sh -yq
-RUN git clone --branch v${VIRTIOFSD_VERSION} --single-branch https://gitlab.com/virtio-fs/virtiofsd.git
-WORKDIR /build/virtiofsd
-# ENV RUSTFLAGS='-C target-feature=+crt-static -C link-self-contained=yes' 
-ENV LIBSECCOMP_LINK_TYPE=static 
-ENV LIBCAPNG_LINK_TYPE=static 
-RUN . /root/.cargo/env \
-  && HOST_TRIPLE=\`rustc -Vv | awk '/^host:/ {split(\$0, a, ": "); gsub(/unknown-/, "", a[2]); print a[2]}'\` \
-     LIBSECCOMP_LIB_PATH=/usr/lib/\$HOST_TRIPLE \
-     LIBCAPNG_LIB_PATH=/usr/lib/\$HOST_TRIPLE \
-     cargo build --release
-RUN cp ./target/release/virtiofsd /output/
-EOF
-	podman build -f "${BUILD_DIR}/Containerfile.virtiofsd" \
-		--volume "${BUILD_DIR}:/output" "${BUILD_DIR}"
-	rm -f "${BUILD_DIR}/Containerfile.virtiofsd"
-	printf "Done.\n"
-}
-
-extract_tests_runtime() {
-	printf "==>\t\textracting test runtime...\n"
-	(
-		cd "${BUILD_DIR}"
-		mkdir -p runtime
-		tar xzf runtime.tar.gz -C runtime
-	)
-	printf "Done.\n"
+	curl -o "${WEBSITINO_BIN_FILE}" "${WEBSITINO_DOWNLOAD_URL}"
+	chmod +x "${WEBSITINO_BIN_FILE}"
 }
 
 extract_tests_runner_script() {
@@ -334,87 +143,6 @@ extract_tests_runner_script() {
 		cd "${BUILD_DIR}"
 		tar xzf dist.tar.gz ./run_tests
 	)
-	printf "Done.\n"
-}
-
-setup_nfs_shares() {
-	printf "==>\t\tsetting up NFS shares..."
-	cat <<EOF >"${NFSD_EXPORTS}"
-"${BUILD_DIR}/runtime" (insecure,ro,no_root_squash)
-"${TESTS_DIR}" (insecure,ro,no_root_squash)
-EOF
-	printf "Done.\n"
-}
-
-start_nfs_server() {
-	printf "==>\t\tstarting NFS daemon..."
-	# -n, -m : NFS and MOUNT services to use non-default ports
-	# -e     : path to exports file
-	# -p     : do not register with portmap/rpcbind
-	# -t     : TCP-only mode
-	# -i     : path to PID file
-	"${NFSD_BIN_FILE}" \
-		-n ${NFSD_SERVER_PORT} -m ${NFSD_SERVER_PORT} \
-		-e "${NFSD_EXPORTS}" \
-		-p \
-		-t \
-		-i "${NFSD_PID_FILE}"
-	printf "Done.\n"
-}
-
-stop_nfs_server() {
-	printf "==>\t\tstopping unfsd..."
-	if [ -f "${NFSD_PID_FILE}" ]; then
-		if ! kill -0 "$(cat "${NFSD_PID_FILE}")"; then
-			rm -f "${NFSD_PID_FILE}"
-		else
-			kill "$(cat "${NFSD_PID_FILE}")" && rm -f "${NFSD_PID_FILE}"
-		fi
-	fi
-	printf "Done.\n"
-}
-
-start_virtiofs_server() {
-	case $(uname -s) in
-	Linux)
-		_daemonize_bin="${BUILD_DIR}/daemonize"
-		;;
-	Darwin)
-		_daemonize_bin="daemonize"
-		;;
-	esac
-
-	printf "==>\t\tstarting virtiofs daemon..."
-	: >"${VIRTIOFSD_LOG}"
-	# -v : verbose output
-	# -a : append to log
-	# -o : redirect stdout to a file
-	# -e : redirect stderr to a file
-	# -p : save PID to a file
-	"${_daemonize_bin}" \
-		-v \
-		-a \
-		-o "${VIRTIOFSD_LOG}" \
-		-e "${VIRTIOFSD_LOG}" \
-		-p "${VIRTIOFSD_PID_FILE}" \
-		"${VIRTIOFSD_BIN_FILE}" \
-		--shared-dir "${TESTS_DIR}" \
-		--socket-path "${VIRTIOFSD_SOCKET}" \
-		--readonly \
-		--log-level debug
-
-	printf "Done.\n"
-}
-
-stop_virtiofs_server() {
-	printf "==>\t\tstopping virtiofs daemon..."
-	if [ -f "${VIRTIOFSD_PID_FILE}" ]; then
-		if ! kill -0 "$(cat "${VIRTIOFSD_PID_FILE}")"; then
-			rm -f "${VIRTIOFSD_PID_FILE}"
-		else
-			kill "$(cat "${VIRTIOFSD_PID_FILE}")" && rm -f "${VIRTIOFSD_PID_FILE}"
-		fi
-	fi
 	printf "Done.\n"
 }
 
@@ -464,6 +192,50 @@ stop_xnotify_client() {
 	printf "Done.\n"
 }
 
+start_websitino() {
+	case $(uname -s) in
+	Linux)
+		_daemonize_bin="${BUILD_DIR}/daemonize"
+		;;
+	Darwin)
+		_daemonize_bin="daemonize"
+		;;
+	esac
+
+	printf "==>\t\tstarting websitino..."
+	: >"${WEBSITINO_LOG}"
+	# -v : verbose output
+	# -a : append to log
+	# -o : redirect stdout to a file
+	# -e : redirect stderr to a file
+	# -p : save PID to a file
+	# -c : chdir
+	#    --client ":NNNN" : send changes to localhost:NNNN
+	#    -i : include path to watch
+	#    -e : exclude from watching
+	"${_daemonize_bin}" \
+		-v \
+		-a \
+		-o "${WEBSITINO_LOG}" \
+		-e "${WEBSITINO_LOG}" \
+		-p "${WEBSITINO_PID_FILE}" \
+		-c "${TESTS_DIR}" \
+		"${WEBSITINO_BIN_FILE}" --verbose --bind 127.0.0.1 --port ${WEBSITINO_PORT} --show-hidden
+	printf "Done.\n"
+}
+
+stop_websitino() {
+	printf "==>\t\tstopping websitino..."
+	if [ -f "${WEBSITINO_PID_FILE}" ]; then
+		if ! kill -0 "$(cat "${WEBSITINO_PID_FILE}")"; then
+			rm -f "${WEBSITINO_PID_FILE}"
+		else
+			kill "$(cat "${WEBSITINO_PID_FILE}")" && rm -f "${WEBSITINO_PID_FILE}"
+		fi
+	fi
+	printf "Done.\n"
+}
+
 add_qemu_xnotify_port_forwarding() {
 	for idx in "${!qemu_opts[@]}"; do
 		case "${qemu_opts[idx]}" in
@@ -474,25 +246,8 @@ add_qemu_xnotify_port_forwarding() {
 	done
 }
 
-add_qemu_nfs_mount_binary_passing() {
-	qemu_opts+=(-fw_cfg "name=opt/gardenlinux/mount.nfs,file=${NFS_MOUNT_BIN_FILE}")
-}
-
-add_qemu_virtiofs_setup() {
-	qemu_opts+=(-chardev "socket,id=char0,path=${VIRTIOFSD_SOCKET}")
-	qemu_opts+=(-device "vhost-user-fs-pci,chardev=char0,tag=tests-ng")
-
-	case $(uname -s) in
-	Linux)
-		qemu_opts+=(-object "memory-backend-memfd,id=mem,size=4G,share=on")
-		;;
-	Darwin)
-		# no support for macOS for now
-		# https://gitlab.com/virtio-fs/virtiofsd/-/issues/169
-		;;
-	esac
-
-	qemu_opts+=(-numa "node,memdev=mem")
+add_qemu_syncer_script_passing() {
+	qemu_opts+=(-fw_cfg "name=opt/gardenlinux/syncer,file=${SYNCER_SCRIPT_FILE}")
 }
 
 dev_configure_runner() { # path-to-script test-arg1 test-arg2 ... test-argN
@@ -500,20 +255,21 @@ dev_configure_runner() { # path-to-script test-arg1 test-arg2 ... test-argN
 	shift
 
 	cat >>"$_runner_script" <<EOF
-cp /run/gardenlinux-tests/runtime/run_tests /run/gardenlinux-tests/
-cp "/run/gardenlinux-tests/runtime/$(basename "${XNOTIFY_SERVER_BIN_FILE}")" /run/gardenlinux-tests/xnotify
+curl "http://10.0.2.2:${WEBSITINO_PORT}/.build/$(basename "${XNOTIFY_SERVER_BIN_FILE}")" -o /run/xnotify
+chmod +x /run/xnotify
+
 export PYTHONUNBUFFERED=1
-./xnotify \
+/run/xnotify \
   --listen "0.0.0.0:${XNOTIFY_SERVER_PORT}" \
   --base "/run/gardenlinux-tests/tests" \
   --trigger -- \
-  /run/gardenlinux-tests/run_tests $@ 2>&1
+  /run/syncer $@ 2>&1
 EOF
 }
 
-configure_nfs_vm_runner_script() {
+configure_vm_runner_script() {
 	_tmpf=$(mktemp /tmp/_dev_runner.XXXXXX)
-	sed '/set -e/d; /mount/d; /poweroff/d; s,exec 1>/dev/virtio-ports/test_output,exec 1>/dev/console,' "$_runner_script" \
+	sed '/set -e/d; /poweroff/d; s,exec 1>/dev/virtio-ports/test_output,exec 1>/dev/console,' "$_runner_script" \
 		>"$_tmpf"
 	mv "$_tmpf" "$_runner_script"
 	cat >>"$_runner_script" <<EOF
@@ -525,68 +281,36 @@ if [ -x /sbin/nft ]; then
 fi
 /sbin/iptables -A INPUT -p tcp -m tcp --dport ${XNOTIFY_SERVER_PORT} -m state --state NEW -j ACCEPT
 
-cp -v /sys/firmware/qemu_fw_cfg/by_name/opt/gardenlinux/mount.nfs/raw /run/mount.nfs
-chmod 4755 /run/mount.nfs
+mkdir -p /run/gardenlinux-tests.{overlay,work}
+mount -t overlay overlay \
+  -o lowerdir=/run/gardenlinux-tests,upperdir=/run/gardenlinux-tests.overlay,workdir=/run/gardenlinux-tests.work \
+  /run/gardenlinux-tests
 
-mkdir -p /run/gardenlinux-tests/{runtime,tests}
-
-/run/mount.nfs -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${BUILD_DIR}/runtime /run/gardenlinux-tests/runtime
-/run/mount.nfs -vvvv -o port=${NFSD_SERVER_PORT},mountport=${NFSD_SERVER_PORT},mountvers=3,nfsvers=3,nolock,tcp 10.0.2.2:${TESTS_DIR} /run/gardenlinux-tests/tests
+cp -v /sys/firmware/qemu_fw_cfg/by_name/opt/gardenlinux/syncer/raw /run/syncer
+chmod 0755 /run/syncer
 EOF
 }
 
-configure_virtiofs_vm_runner_script() {
-	_tmpf=$(mktemp /tmp/_dev_runner.XXXXXX)
-	sed '/set -e/d; /mount/d; /poweroff/d; s,exec 1>/dev/virtio-ports/test_output,exec 1>/dev/console,' "$_runner_script" \
-		>"$_tmpf"
-	mv "$_tmpf" "$_runner_script"
-	cat >>"$_runner_script" <<EOF
-if [ "$DEV_DEBUG" = 1 ]; then
-    set -x
-fi
-if [ -x /sbin/nft ]; then
-  /sbin/nft add rule inet filter input tcp dport ${XNOTIFY_SERVER_PORT} ct state new counter accept
-fi
-/sbin/iptables -A INPUT -p tcp -m tcp --dport ${XNOTIFY_SERVER_PORT} -m state --state NEW -j ACCEPT
+configure_syncer_script() {
+	cat >"$SYNCER_SCRIPT_FILE" <<EOF
+#!/bin/bash
+TEST_RUNNER_ARGS="\$@"
+BASEURL="http://10.0.2.2:${WEBSITINO_PORT}/"
+TESTS_BASEDIR="/run/gardenlinux-tests/tests"
 
-mkdir -p /run/tests-ng
-mount -t virtiofs tests-ng /run/tests-ng
-ln -s /run/tests-ng /run/gardenlinux-tests/tests
-ln -s /run/tests-ng/.build/runtime /run/gardenlinux-tests/runtime
+while IFS= read -r src_filename; do
+  abs_src_filename="/\${src_filename}"
+  download_filename=\${abs_src_filename#${TESTS_DIR}}
+  dst_filename="\${TESTS_BASEDIR}/\${download_filename}"
+  curl -o "\$dst_filename" "\${BASEURL}\${download_filename}"
+done
+/run/gardenlinux-tests/run_tests \$TEST_RUNNER_ARGS
 EOF
-}
-
-configure_qemu_networking() {
-	case $(uname -s) in
-	Linux)
-		# using the default -netdev user
-		;;
-	Darwin)
-		for idx in "${!qemu_opts[@]}"; do
-			case "${qemu_opts[idx]}" in
-			user,id=net0*)
-				# -- host bridge --
-				# qemu_opts[idx]="vmnet-bridged,id=net0,ifname=en0"
-				# -- socket_vmnet --
-				qemu_opts[idx]="socket,id=net0,fd=3"
-				;;
-			esac
-		done
-		;;
-	esac
 }
 
 dev_cleanup() {
 	stop_xnotify_client
-
-	case $FILE_SHARING_BACKEND in
-	nfs)
-		stop_nfs_server
-		;;
-	virtiofs)
-		stop_virtiofs_server
-		;;
-	esac
+	stop_websitino
 }
 
 # main entrypoint
@@ -597,41 +321,21 @@ dev_setup() { # path-to-script
 
 	[ -x "${XNOTIFY_CLIENT_BIN_FILE}" ] || build_xnotify_client
 	[ -x "${XNOTIFY_SERVER_BIN_FILE}" ] || build_xnotify_server
-	[ -d "${BUILD_DIR}/runtime" ] || extract_tests_runtime
-	[ -x "${BUILD_DIR}/run_tests" ] || extract_tests_runner_script
+	[ -x "${WEBSITINO_BIN_FILE}" ] || install_websitino
+	[ -x "${BUILD_DIR}/syncer" ] || configure_syncer_script
 
-	cp -v "${BUILD_DIR}/run_tests" "${BUILD_DIR}/runtime/"
 	cp -v "${XNOTIFY_SERVER_BIN_FILE}" "${BUILD_DIR}/runtime/"
 
-	case $FILE_SHARING_BACKEND in
-	nfs)
-		[ -x "${NFSD_BIN_FILE}" ] || build_unfsd
-		[ -x "${NFS_MOUNT_BIN_FILE}" ] || build_nfs_mount
-
-		setup_nfs_shares
-
-		stop_nfs_server
-		start_nfs_server
-
-		configure_nfs_vm_runner_script
-		;;
-	virtiofs)
-		[ -x "${VIRTIOFSD_BIN_FILE}" ] || build_virtiofsd
-
-		stop_virtiofs_server
-		start_virtiofs_server
-
-		sleep 1 # wait for virtiofsd to create a socket
-
-		configure_virtiofs_vm_runner_script
-		;;
-	esac
+	configure_vm_runner_script
 
 	if [ $DEV_DEBUG = 1 ]; then
 		printf "==>\t\trunner script contents:\n"
 		cat "$_runner_script"
 		printf "==>\t\tend of runner script contents.\n"
 	fi
+
+	stop_websitino
+	start_websitino
 
 	stop_xnotify_client
 	start_xnotify_client
