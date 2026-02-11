@@ -157,7 +157,7 @@ EOF
 
 build_websitino_macos() {
 	printf "==>\t\tbuilding websitino..."
-	dub build -y --verbose --compiler ldc websitino@${WEBSITINO_VERSION}
+	dub build -y --verbose --compiler ldmd2 websitino@${WEBSITINO_VERSION}
 	cp -v "$HOME/.dub/packages/websitino/${WEBSITINO_VERSION}/websitino/websitino" "${WEBSITINO_BIN_FILE}"
 	printf "Done.\n"
 }
