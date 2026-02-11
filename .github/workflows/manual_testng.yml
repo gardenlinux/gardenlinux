@@ -1,7 +1,7 @@
 # Tests artifacts
 name: Execute tests (testng)
 concurrency:
-  group: ${{ inputs.ignore_workflow_concurrency && github.run_id || format('{0}-{1}-manual-tests', github.workflow, github.ref) }}
+  group: ${{ inputs.ignore_workflow_concurrency && github.run_id || format('{0}-{1}-manual-testng', github.workflow, github.ref) }}
   cancel-in-progress: true
 on:
   # triggered manually
