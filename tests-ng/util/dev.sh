@@ -128,7 +128,7 @@ build_websitino() {
 			_help_dev_macos_dependencies ldc dub
 		fi
 		if ! brew list dub >/dev/null 2>&1; then
-			_help_dev_macos_dependencies ldc dub
+			_help_dev_macos_dependencies dub
 		fi
 
 		build_websitino_macos
@@ -159,15 +159,6 @@ build_websitino_macos() {
 	printf "==>\t\tbuilding websitino..."
 	dub build -y --verbose --compiler ldmd2 websitino@${WEBSITINO_VERSION}
 	cp -v "$HOME/.dub/packages/websitino/${WEBSITINO_VERSION}/websitino/websitino" "${WEBSITINO_BIN_FILE}"
-	printf "Done.\n"
-}
-
-extract_tests_runner_script() {
-	printf "==>\t\textracting test runner script..."
-	(
-		cd "${BUILD_DIR}"
-		tar xzf dist.tar.gz ./run_tests
-	)
 	printf "Done.\n"
 }
 
