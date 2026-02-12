@@ -1,0 +1,5 @@
+description: "metal platform"
+type: platform
+features:
+  include:
+    - metal

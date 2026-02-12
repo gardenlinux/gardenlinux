@@ -7,11 +7,11 @@ on:
     branches:
       - main
     paths:
-      - "tests-ng/**"
+      - "tests/**"
       - ".github/workflows/dev_tests.yml"
   pull_request:
     paths:
-      - "tests-ng/**"
+      - "tests/**"
       - ".github/workflows/dev_tests.yml"
 jobs:
   black:
@@ -19,57 +19,57 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # pin@v6.1.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # pin@v6.2.0
         with:
           python-version: "3.13"
 
       - name: Run black (diff check)
-        run: make -f tests-ng/dev.makefile lint-black
+        run: make -f tests/dev.makefile lint-black
 
   isort:
     name: isort (import sorting)
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # pin@v6.1.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # pin@v6.2.0
         with:
           python-version: "3.13"
 
       - name: Run isort
-        run: make -f tests-ng/dev.makefile lint-isort
+        run: make -f tests/dev.makefile lint-isort
 
   pyright:
     name: Pyright (type checking)
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # pin@v6.1.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # pin@v6.2.0
         with:
           python-version: "3.13"
 
       - name: Run pyright
-        run: make -f tests-ng/dev.makefile lint-pyright
+        run: make -f tests/dev.makefile lint-pyright
 
   test-plugins:
     name: Test plugins
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.13"
 
       - name: Run test-plugins
-        run: make -f tests-ng/dev.makefile test-plugins
+        run: make -f tests/dev.makefile test-plugins

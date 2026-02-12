@@ -1,0 +1,236 @@
+name: test_flavor
+on:
+  workflow_call:
+    inputs:
+      arch:
+        type: string
+        default: "amd64"
+      flavor:
+        type: string
+        required: true
+    secrets:
+      gcp_identity_provider:
+        required: true
+      gcp_service_account:
+        required: true
+      gcp_project_id:
+        required: true
+      gcp_region:
+        required: true
+      gcp_zone:
+        required: true
+      aws_role:
+        required: true
+      aws_session:
+        required: true
+      aws_region:
+        required: true
+      aws_s3_bucket:
+        required: true
+      az_client_id:
+        required: true
+      az_tenant_id:
+        required: true
+      az_subscription_id:
+        required: true
+      alibaba_cloud_role_arn:
+        required: true
+      alibaba_cloud_oidc_provider_arn:
+        required: true
+      alibaba_cloud_region:
+        required: true
+      tf_encryption:
+        required: true
+jobs:
+  test:
+    name: Test flavor ${{ inputs.flavor }} (${{ inputs.arch }}) in cloud
+    runs-on: "ubuntu-24.04"
+    if: ${{ inputs.flavor != 'skip' }}
+    # timeout-minutes: 30
+    environment: oidc_platform_tests
+    defaults:
+      run:
+        shell: bash
+    env:
+      CNAME: ""
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      id-token: write
+      actions: write
+    steps:
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends podman make curl jq unzip qemu-utils retry
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: true
+      - uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # pin@v5.0.3
+        with:
+          path: |
+            COMMIT
+            VERSION
+          key: build-${{ inputs.flavor }}-${{ inputs.arch }}-${{ github.run_id }}
+          fail-on-cache-miss: true
+      - name: Download test distribution artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+        with:
+          name: test-distribution
+          path: tests/.build
+      - name: Load certs artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+        with:
+          name: certs
+          path: cert/
+      - name: Install python-gardenlinux-lib
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@2d52501ef10ba3b10d04fff5c24ffcd882f3ea07 # pin@0.10.13
+      - name: Set CNAME
+        run: |
+          echo "CNAME=$(gl-features-parse --cname ${{ inputs.flavor }}-${{ inputs.arch }} cname)" | tee -a "$GITHUB_ENV"
+      - name: Set CLOUD
+        run: |
+          echo "CLOUD=${CNAME%%-*}" | tee -a "$GITHUB_ENV"
+      - name: Load flavor build artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # pin@v7.0.0
+        with:
+          name: build-${{ inputs.flavor }}-${{ inputs.arch }}
+      - name: unpack build artifacts
+        run: |
+          mkdir ".build"
+          tar -C .build -xzf $CNAME.tar.gz
+          rm "$CNAME.tar.gz"
+          tree .build
+      - name: "Authenticate to Google Cloud"
+        if: ${{ startsWith(inputs.flavor, 'gcp-') }}
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ secrets.gcp_identity_provider }}
+          service_account: ${{ secrets.gcp_service_account }}
+          create_credentials_file: true
+          cleanup_credentials: true
+          export_environment_variables: true
+      - name: Set GCP platform-test environment
+        if: ${{ startsWith(inputs.flavor, 'gcp-') }}
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            // tf provider vars
+            core.exportVariable("GOOGLE_PROJECT", "${{ secrets.gcp_project_id }}");
+            core.exportVariable("GOOGLE_REGION", "${{ secrets.gcp_region }}");
+            core.exportVariable("GOOGLE_ZONE", "${{ secrets.gcp_zone }}");
+      - id: "auth_aws"
+        name: "Authenticate to AWS"
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
+        with:
+          role-to-assume: ${{ secrets.aws_role }}
+          role-session-name: ${{ secrets.aws_session }}
+          aws-region: ${{ secrets.aws_region }}
+          output-credentials: true
+      - name: Set AWS platform-test environment
+        if: ${{ startsWith(inputs.flavor, 'aws-') }}
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            // tf provider auth
+            core.setSecret("${{ steps.auth_aws.outputs.aws-access-key-id }}");
+            core.exportVariable("AWS_ACCESS_KEY_ID", "${{ steps.auth_aws.outputs.aws-access-key-id }}");
+            core.setSecret("${{ steps.auth_aws.outputs.aws-secret-access-key }}");
+            core.exportVariable("AWS_SECRET_ACCESS_KEY", "${{ steps.auth_aws.outputs.aws-secret-access-key }}");
+            core.setSecret("${{ steps.auth_aws.outputs.aws-session-token }}");
+            core.exportVariable("AWS_SESSION_TOKEN", "${{ steps.auth_aws.outputs.aws-session-token }}");
+            // tf provider vars
+            core.exportVariable("AWS_REGION", "${{ secrets.aws_region }}");
+      - id: "auth_azure"
+        if: ${{ startsWith(inputs.flavor, 'azure-') }}
+        name: "Authenticate to Azure"
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # pin@v1
+        with:
+          client-id: ${{ secrets.az_client_id }}
+          tenant-id: ${{ secrets.az_tenant_id }}
+          subscription-id: ${{ secrets.az_subscription_id }}
+      - name: Set Azure platform-test environment
+        if: ${{ startsWith(inputs.flavor, 'azure-') }}
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            // tf provider auth
+            core.exportVariable("ARM_USE_OIDC", "true");
+            core.exportVariable("AZURE_CONFIG_DIR", "$RUNNER_TEMP/azure_config_dir");
+            core.setSecret("${{ secrets.az_client_id }}");
+            core.exportVariable("ARM_CLIENT_ID", "${{ secrets.az_client_id }}");
+            core.setSecret("${{ secrets.az_subscription_id }}");
+            core.exportVariable("ARM_SUBSCRIPTION_ID", "${{ secrets.az_subscription_id }}");
+            core.setSecret("${{ secrets.az_tenant_id }}");
+            // tf provider vars
+            core.exportVariable("ARM_TENANT_ID", "${{ secrets.az_tenant_id }}");
+      - id: "auth_alicloud"
+        if: ${{ startsWith(inputs.flavor, 'ali-') }}
+        name: "Authenticate to Alicloud"
+        uses: aliyun/configure-aliyun-credentials-action@b347e60e64028a4d567a8f31ca42e1b0706c3c99 # v1.0.7
+        with:
+          role-to-assume: ${{ secrets.alibaba_cloud_role_arn }}
+          oidc-provider-arn: ${{ secrets.alibaba_cloud_oidc_provider_arn }}
+          role-session-expiration: 21600
+      - name: "Set Alicloud platform-test environment"
+        if: ${{ startsWith(inputs.flavor, 'ali-') }}
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            // tf provider vars
+            core.exportVariable("ALIBABA_CLOUD_REGION", "${{ secrets.alibaba_cloud_region }}");
+        # TODO: handle skipping better
+      - name: Execute tests
+        run: |
+          if [ ! -e ".build/$CNAME.raw" ]; then
+            if [ -e ".build/$CNAME.vhd" ]; then
+              echo "converting vhd to raw"
+              qemu-img convert -f vpc -O raw ".build/$CNAME.vhd" ".build/$CNAME.raw"
+            elif [ -e ".build/$CNAME.qcow2" ]; then
+              echo "converting qcow2 to raw"
+              qemu-img convert -f qcow2 -O raw ".build/$CNAME.qcow2" ".build/$CNAME.raw"
+            elif [ -e ".build/$CNAME.gcpimage.tar.gz" ]; then
+              echo "converting gcpimage to raw"
+              tar -C .build -xzf ".build/$CNAME.gcpimage.tar.gz"
+              mv ".build/disk.raw" ".build/$CNAME.raw"
+            fi
+          fi
+          if [ -e ".build/$CNAME.raw" ]; then
+            # enable remote state S3 backend
+            cp "tests/util/tf/backend.tf.github" "tests/util/tf/backend.tf"
+
+            # enable state encryption
+            export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
+
+            # run test
+            export TF_VAR_prefix="gh-${{ github.run_id }}"
+            ./test --cloud $CLOUD ".build/$CNAME.raw"
+
+          else
+            echo "no raw file, cloud test failed"
+            exit 1
+          fi
+      - name: Copy test results to build directory
+        if: always()
+        run: |
+          cp tests/log/cloud.test.log .build/${CNAME}.cloud.test.log || true
+          cp tests/log/cloud.test.xml .build/${CNAME}.cloud.test.xml || true
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
+        if: always()
+        with:
+          if-no-files-found: ignore
+          name: cloud-test-${{ env.CNAME }}
+          path: |
+            .build/${{ env.CNAME }}.cloud.test.log
+            .build/${{ env.CNAME }}.cloud.test.xml
+      - name: Cleanup cloud test for ${{ inputs.flavor }} (${{ inputs.arch }})
+        if: always()
+        run: |
+          # enable remote state S3 backend
+          cp "tests/util/tf/backend.tf.github" "tests/util/tf/backend.tf"
+
+          # enable state encryption
+          export TF_ENCRYPTION="$(base64 -d <<< ${{ secrets.tf_encryption }})"
+
+          # run cleanup
+          export TF_VAR_prefix="gh-${{ github.run_id }}"
+          ./test --cloud $CLOUD --only-cleanup ".build/$CNAME.raw" || true

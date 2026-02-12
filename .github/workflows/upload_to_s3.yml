@@ -35,6 +35,7 @@ jobs:
         shell: bash
     env:
       CNAME: ""
+      GL_ALLOW_FRANKENSTEIN: "1"
     permissions:
       id-token: write
     environment: oidc_aws_s3_upload
@@ -42,11 +43,11 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(inputs.flavors_matrix) }}
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - name: Install python-gardenlinux-lib
-        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@051a88b91cd1e13eeff171f3351a57bd2accbf6f # 0.10.8
+        uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@2d52501ef10ba3b10d04fff5c24ffcd882f3ea07 # pin@0.10.13
       - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
         with:
           role-to-assume: ${{ secrets.aws_role }}
@@ -91,9 +92,19 @@ jobs:
             mv $CNAME.chroot.test.xml "$CNAME"
           fi
 
-          if [ -f "$CNAME.platform.test.log" ]; then
-            mv $CNAME.platform.test.log "$CNAME"
-            mv $CNAME.platform.test.xml "$CNAME"
+          if [ -f "$CNAME.cloud.test.log" ]; then
+            mv $CNAME.cloud.test.log "$CNAME"
+            mv $CNAME.cloud.test.xml "$CNAME"
+          fi
+
+          if [ -f "$CNAME.oci.test.log" ]; then
+            mv $CNAME.oci.test.log "$CNAME"
+            mv $CNAME.oci.test.xml "$CNAME"
+          fi
+
+          if [ -f "$CNAME.qemu.test.log" ]; then
+            mv $CNAME.qemu.test.log "$CNAME"
+            mv $CNAME.qemu.test.xml "$CNAME"
           fi
       - if: ${{ inputs.with_certs }}
         name: Add certs to build artifacts
@@ -105,4 +116,4 @@ jobs:
           popd
       - name: Upload to S3 bucket ${{ secrets.aws_s3_bucket }}
         run: |
-          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --cname "$CNAME" --path "$CNAME" upload-artifacts-to-bucket
+          gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --path "$CNAME" upload-artifacts-to-bucket --artifact-name "$CNAME"

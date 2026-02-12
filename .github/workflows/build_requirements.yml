@@ -11,6 +11,9 @@ on:
       target:
         type: string
         required: true
+      prefix:
+        type: string
+        default: ''
     outputs:
       commit_id:
         value: ${{ jobs.calculate_version.outputs.commit_id }}
@@ -30,7 +33,7 @@ jobs:
     outputs:
       environment: ${{ steps.signing_environment.outputs.environment }}
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - name: Set signing environment
@@ -53,7 +56,7 @@ jobs:
       commit_id: ${{ steps.version_reference.outputs.commit_id }}
       version: ${{ steps.version_reference.outputs.version }}
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - name: Prepare build reference from GitHub
@@ -98,7 +101,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
       - name: Set VERSION=${{ needs.calculate_version.outputs.version }}
@@ -115,6 +118,6 @@ jobs:
           done
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         with:
-          name: certs
+          name: ${{ inputs.prefix }}certs
           path: cert/*.*
           if-no-files-found: error
