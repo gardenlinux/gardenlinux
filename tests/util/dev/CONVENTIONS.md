@@ -1,5 +1,0 @@
-- do not use type annotations
-- prefer standard library to 3rd party packages
-- use functional style whenever possible
-- prefer dataclasses and data oriented programming to OOP
-- always add docstrings to functions
