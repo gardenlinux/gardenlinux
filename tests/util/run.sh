@@ -79,8 +79,8 @@ EXAMPLES
   # Run QEMU VM with PXE boot testing
   ./test .build/metal_pxe-amd64-today-local.pxe.tar.gz
 
-  # Run QEMU VM in local testing mode, watching for changes in tests-ng files and re-running tests
-  ./test-ng --dev .build/aws-gardener_prod-amd64-today-13371337.raw
+  # Run QEMU VM in local testing mode, watching for changes in tests files and re-running tests
+  ./test --dev .build/aws-gardener_prod-amd64-today-13371337.raw
 
 ENVIRONMENTS
   Chroot Testing: Runs tests directly in extracted image filesystem (fastest, filesystem-level only)

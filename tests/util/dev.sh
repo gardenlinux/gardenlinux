@@ -1,29 +1,24 @@
 # shellcheck shell=bash
 # shellcheck disable=SC2154,SC2164
-HOST_OS=$(uname -s)
-
 BUILD_DIR="$(realpath "${util_dir}/../.build")"
-TESTS_DIR="$(realpath "${util_dir}/../../tests-ng")"
-
-XNOTIFY_CLIENT_BIN_FILE="${BUILD_DIR}/xnotify__${HOST_OS}"
-XNOTIFY_CLIENT_PID_FILE="${BUILD_DIR}/.xnotify.pid"
-XNOTIFY_CLIENT_LOG="${BUILD_DIR}/xnotify.log"
-XNOTIFY_SERVER_BIN_FILE="${BUILD_DIR}/xnotify__Linux"
+TESTS_DIR="$(realpath "${util_dir}/../../tests")"
 
 WEBSITINO_BIN_FILE="${BUILD_DIR}/websitino"
 WEBSITINO_PID_FILE="${BUILD_DIR}/.websitino.pid"
 WEBSITINO_LOG="${BUILD_DIR}/websitino.log"
 
-SYNCER_SCRIPT_FILE="${BUILD_DIR}/syncer"
+NOTIFY_CLIENT="${util_dir}/dev/notify_client.py"
+NOTIFY_CLIENT_PID_FILE="${BUILD_DIR}/.notify_client.pid"
+NOTIFY_CLIENT_LOG="${BUILD_DIR}/notify_client.log"
+NOTIFY_CLIENT_VENV="${BUILD_DIR}/.notify_client_venv"
 
 WEBSITINO_VERSION="0.2.8"
 DAEMONIZE_VERSION="1.7.8"
-XNOTIFY_VERSION="0.3.1"
 
 WEBSITINO_PORT="8123"
-XNOTIFY_SERVER_PORT="9999"
+NOTIFY_SERVER_PORT="9999"
 
-DEV_DEBUG=1
+DEV_DEBUG=0
 
 _help_dev_macos_dependencies() { # dep1 dep2 ... depN
 	echo "*** We need to install unfsd on your macos system in order to serve files for the dev VM."
@@ -49,7 +44,7 @@ build_daemonize() {
 		;;
 	Darwin)
 		if ! brew list daemonize >/dev/null 2>&1; then
-			_help_dev_macos_dependencies golang daemonize
+			_help_dev_macos_dependencies daemonize
 		fi
 		;;
 	*) _help_dev_unsupported_os ;;
@@ -77,50 +72,6 @@ EOF
 	podman build -f "${BUILD_DIR}/Containerfile.daemonize" --volume "${BUILD_DIR}:/output" "${BUILD_DIR}"
 	rm -f "${BUILD_DIR}/Containerfile.daemonize"
 	printf "Done.\n"
-}
-
-build_xnotify_client() {
-	case $(uname -s) in
-	Linux)
-		build_xnotify_podman
-		;;
-	Darwin)
-		if ! brew list golang >/dev/null 2>&1; then
-			_help_dev_macos_dependencies golang
-		fi
-
-		build_xnotify_macos
-		;;
-	*) _help_dev_unsupported_os ;;
-	esac
-}
-
-build_xnotify_server() {
-	build_xnotify_podman
-}
-
-build_xnotify_podman() {
-	printf "==>\t\tbuilding xnotify in podman...\n"
-	cat <<EOF >"${BUILD_DIR}/Containerfile.xnotify"
-FROM docker.io/library/golang:1.20.14
-RUN echo "$(date '+%s')" # this is required to invalidate podman cache
-ENV CGO_ENABLED=0
-RUN go install github.com/AgentCosmic/xnotify@v${XNOTIFY_VERSION}
-RUN cp -v "/go/bin/xnotify" /output/xnotify
-EOF
-	podman build -f "${BUILD_DIR}/Containerfile.xnotify" --volume "${BUILD_DIR}:/output" "${BUILD_DIR}"
-	mv "${BUILD_DIR}/xnotify" "${XNOTIFY_SERVER_BIN_FILE}"
-	rm -f "${BUILD_DIR}/Containerfile.xnotify"
-	printf "Done.\n"
-}
-
-build_xnotify_macos() {
-	(
-		printf "==>\t\tbuilding xnotify (macOS binary)...\n"
-		go install github.com/AgentCosmic/xnotify@v${XNOTIFY_VERSION}
-		cp -v "$(go env GOPATH)/bin/xnotify" "${XNOTIFY_CLIENT_BIN_FILE}"
-		printf "Done.\n"
-	)
 }
 
 build_websitino() {
@@ -163,7 +114,7 @@ build_websitino_macos() {
 	printf "Done.\n"
 }
 
-start_xnotify_client() {
+start_notify_client() {
 	case $(uname -s) in
 	Linux)
 		_daemonize_bin="${BUILD_DIR}/daemonize"
@@ -174,8 +125,8 @@ start_xnotify_client() {
 	*) _help_dev_unsupported_os ;;
 	esac
 
-	printf "==>\t\tstarting xnotify client..."
-	: >"${XNOTIFY_CLIENT_LOG}"
+	printf "==>\t\tstarting notify client..."
+	: >"${NOTIFY_CLIENT_LOG}"
 	# -v : verbose output
 	# -a : append to log
 	# -o : redirect stdout to a file
@@ -187,24 +138,24 @@ start_xnotify_client() {
 	"${_daemonize_bin}" \
 		-v \
 		-a \
-		-o "${XNOTIFY_CLIENT_LOG}" \
-		-e "${XNOTIFY_CLIENT_LOG}" \
-		-p "${XNOTIFY_CLIENT_PID_FILE}" \
-		"${XNOTIFY_CLIENT_BIN_FILE}" \
-		--client ":${XNOTIFY_SERVER_PORT}" \
-		--verbose \
+		-o "${NOTIFY_CLIENT_LOG}" \
+		-e "${NOTIFY_CLIENT_LOG}" \
+		-p "${NOTIFY_CLIENT_PID_FILE}" \
+		"${NOTIFY_CLIENT_VENV}/bin/python" \
+		"${NOTIFY_CLIENT}" \
+		--server "localhost:${NOTIFY_SERVER_PORT}" \
 		-i "${TESTS_DIR}" \
-		-e '/cert/' -e '/.build/'
+		-e "${TESTS_DIR}/cert/" -e "${TESTS_DIR}/.build/" -e "${TESTS_DIR}/util/"
 	printf "Done.\n"
 }
 
-stop_xnotify_client() {
-	printf "==>\t\tstopping xnotify client..."
-	if [ -f "${XNOTIFY_CLIENT_PID_FILE}" ]; then
-		if ! kill -0 "$(cat "${XNOTIFY_CLIENT_PID_FILE}")"; then
-			rm -f "${XNOTIFY_CLIENT_PID_FILE}"
+stop_notify_client() {
+	printf "==>\t\tstopping notify client..."
+	if [ -f "${NOTIFY_CLIENT_PID_FILE}" ]; then
+		if ! kill -0 "$(cat "${NOTIFY_CLIENT_PID_FILE}")"; then
+			rm -f "${NOTIFY_CLIENT_PID_FILE}"
 		else
-			kill "$(cat "${XNOTIFY_CLIENT_PID_FILE}")" && rm -f "${XNOTIFY_CLIENT_PID_FILE}"
+			kill "$(cat "${NOTIFY_CLIENT_PID_FILE}")" && rm -f "${NOTIFY_CLIENT_PID_FILE}"
 		fi
 	fi
 	printf "Done.\n"
@@ -255,18 +206,14 @@ stop_websitino() {
 	printf "Done.\n"
 }
 
-add_qemu_xnotify_port_forwarding() {
+add_qemu_notify_port_forwarding() {
 	for idx in "${!qemu_opts[@]}"; do
 		case "${qemu_opts[idx]}" in
 		*hostfwd*)
-			qemu_opts[idx]="${qemu_opts[idx]},hostfwd=tcp::${XNOTIFY_SERVER_PORT}-:${XNOTIFY_SERVER_PORT}"
+			qemu_opts[idx]="${qemu_opts[idx]},hostfwd=tcp::${NOTIFY_SERVER_PORT}-:${NOTIFY_SERVER_PORT}"
 			;;
 		esac
 	done
-}
-
-add_qemu_syncer_script_passing() {
-	qemu_opts+=(-fw_cfg "name=opt/gardenlinux/syncer,file=${SYNCER_SCRIPT_FILE}")
 }
 
 dev_configure_runner() { # path-to-script test-arg1 test-arg2 ... test-argN
@@ -275,15 +222,11 @@ dev_configure_runner() { # path-to-script test-arg1 test-arg2 ... test-argN
 
 	cat >>"$_runner_script" <<EOF
 set -e
-curl "http://10.0.2.2:${WEBSITINO_PORT}/.build/$(basename "${XNOTIFY_SERVER_BIN_FILE}")" -o /run/xnotify
-chmod +x /run/xnotify
-
 export PYTHONUNBUFFERED=1
-/run/xnotify \
-  --listen "0.0.0.0:${XNOTIFY_SERVER_PORT}" \
-  --base "/run/gardenlinux-tests/tests" \
-  --trigger -- \
-  /run/syncer $@ 2>&1
+
+curl "http://10.0.2.2:${WEBSITINO_PORT}/util/dev/notify_server.py" -o /run/notify_server.py
+
+/run/gardenlinux-tests/runtime/x86_64/bin/python3 /run/notify_server.py $@
 EOF
 }
 
@@ -297,40 +240,27 @@ if [ "$DEV_DEBUG" = 1 ]; then
     set -x
 fi
 if [ -x /sbin/nft ]; then
-  /sbin/nft add rule inet filter input tcp dport ${XNOTIFY_SERVER_PORT} ct state new counter accept
+  /sbin/nft add rule inet filter input tcp dport ${NOTIFY_SERVER_PORT} ct state new counter accept
 fi
-/sbin/iptables -A INPUT -p tcp -m tcp --dport ${XNOTIFY_SERVER_PORT} -m state --state NEW -j ACCEPT
+/sbin/iptables -A INPUT -p tcp -m tcp --dport ${NOTIFY_SERVER_PORT} -m state --state NEW -j ACCEPT
 
 mkdir -p /run/gardenlinux-tests.{overlay,work}
 mount -t overlay overlay \
   -o lowerdir=/run/gardenlinux-tests,upperdir=/run/gardenlinux-tests.overlay,workdir=/run/gardenlinux-tests.work \
   /run/gardenlinux-tests
-
-cp -v /sys/firmware/qemu_fw_cfg/by_name/opt/gardenlinux/syncer/raw /run/syncer
-chmod 0755 /run/syncer
 EOF
 }
 
-configure_syncer_script() {
-	cat >"$SYNCER_SCRIPT_FILE" <<EOF
-#!/bin/bash
-TEST_RUNNER_ARGS="\$@"
-BASEURL="http://10.0.2.2:${WEBSITINO_PORT}/"
-TESTS_BASEDIR="/run/gardenlinux-tests/tests"
-
-while IFS= read -r src_filename; do
-  abs_src_filename="/\${src_filename}"
-  download_filename=\${abs_src_filename#${TESTS_DIR}}
-  dst_filename="\${TESTS_BASEDIR}/\${download_filename}"
-  curl -o "\$dst_filename" "\${BASEURL}\${download_filename}"
-done
-
-/run/gardenlinux-tests/run_tests \$TEST_RUNNER_ARGS
-EOF
+setup_notify_client() {
+	(
+		python -mvenv "${NOTIFY_CLIENT_VENV}"
+		. "${NOTIFY_CLIENT_VENV}/bin/activate"
+		pip install watchdog==6.0.0
+	)
 }
 
 dev_cleanup() {
-	stop_xnotify_client
+	stop_notify_client
 	stop_websitino
 }
 
@@ -340,10 +270,8 @@ dev_setup() { # path-to-script
 
 	build_daemonize
 
-	[ -x "${XNOTIFY_CLIENT_BIN_FILE}" ] || build_xnotify_client
-	[ -x "${XNOTIFY_SERVER_BIN_FILE}" ] || build_xnotify_server
+	[ -d "${NOTIFY_CLIENT_VENV}" ] || setup_notify_client
 	[ -x "${WEBSITINO_BIN_FILE}" ] || build_websitino
-	[ -x "${BUILD_DIR}/syncer" ] || configure_syncer_script
 
 	configure_vm_runner_script
 
@@ -356,8 +284,8 @@ dev_setup() { # path-to-script
 	stop_websitino
 	start_websitino
 
-	stop_xnotify_client
-	start_xnotify_client
+	stop_notify_client
+	start_notify_client
 }
 
 trap "dev_cleanup" ERR EXIT INT

@@ -20,8 +20,8 @@ dev=0
 test_args=()
 util_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")")"
 log_dir="$util_dir/../log"
-log_file_log="qemu.test-ng.log"
-log_file_junit="qemu.test-ng.xml"
+log_file_log="qemu.test.log"
+log_file_junit="qemu.test.xml"
 
 while [ $# -gt 0 ]; do
 	case "$1" in
@@ -430,8 +430,7 @@ if ((skip_cleanup)); then
 	tail -f "$tmpdir/serial.log"
 else
 	if ((dev)); then
-		add_qemu_xnotify_port_forwarding
-		add_qemu_syncer_script_passing
+		add_qemu_notify_port_forwarding
 
 		"qemu-system-$arch" "${qemu_opts[@]}"
 	else
