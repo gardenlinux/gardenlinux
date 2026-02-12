@@ -60,6 +60,10 @@ build_daemonize_podman() {
 	printf "==>\t\tbuilding daemonize in podman...\n"
 	cat <<EOF >"${BUILD_DIR}/Containerfile.daemonize"
 FROM docker.io/library/ubuntu:16.04
+# ^^^ there is no way to have a static build of daemonize
+#     (or at least I don't know about it),
+#     so we need as old glibc as we can get 
+#     to ensure the binary from the container will work on the target system
 RUN echo "$(date '+%s')" # this is required to invalidate podman cache
 RUN apt-get update && apt-get install -y git make gcc
 WORKDIR /build
@@ -100,6 +104,7 @@ build_xnotify_podman() {
 	cat <<EOF >"${BUILD_DIR}/Containerfile.xnotify"
 FROM docker.io/library/golang:1.20.14
 RUN echo "$(date '+%s')" # this is required to invalidate podman cache
+ENV CGO_ENABLED=0
 RUN go install github.com/AgentCosmic/xnotify@v${XNOTIFY_VERSION}
 RUN cp -v "/go/bin/xnotify" /output/xnotify
 EOF
@@ -140,14 +145,10 @@ build_websitino() {
 build_websitino_podman() {
 	printf "==>\t\tbuilding websitino in podman...\n"
 	cat <<EOF >"${BUILD_DIR}/Containerfile.websitino"
-FROM docker.io/library/debian:trixie
+FROM alpine:3.23.3
 RUN echo "$(date '+%s')" # this is required to invalidate podman cache
-RUN apt-get update && apt-get install -y wget
-RUN wget https://master.dl.sourceforge.net/project/d-apt/files/d-apt.list -O /etc/apt/sources.list.d/d-apt.list
-RUN apt-get update --allow-insecure-repositories
-RUN apt-get -y --allow-unauthenticated install --reinstall d-apt-keyring
-RUN apt-get update && apt-get install -y dmd-compiler dub
-RUN dub build -y --verbose websitino@${WEBSITINO_VERSION}
+RUN apk add gcc musl-dev ldc dub llvm-libunwind-static
+RUN dub build -y --verbose --config linux-static websitino@${WEBSITINO_VERSION}
 RUN cp -v /root/.dub/packages/websitino/${WEBSITINO_VERSION}/websitino/websitino /output/websitino
 EOF
 	podman build -f "${BUILD_DIR}/Containerfile.websitino" --volume "${BUILD_DIR}:/output" "${BUILD_DIR}"
