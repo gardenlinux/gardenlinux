@@ -223,8 +223,11 @@ dev_configure_runner() { # path-to-script test-arg1 test-arg2 ... test-argN
 	cat >>"$_runner_script" <<EOF
 set -e
 export PYTHONUNBUFFERED=1
+export OPENSSL_MODULES=/usr/lib/\$(uname -m)-linux-gnu/ossl-modules/ 
+# ^^^ https://github.com/gardenlinux/gardenlinux/pull/3797
 
-curl "http://10.0.2.2:${WEBSITINO_PORT}/util/dev/notify_server.py" -o /run/notify_server.py
+/run/gardenlinux-tests/runtime/\$(uname -m)/bin/python3 -c \
+"import os, urllib.request; urllib.request.urlretrieve('http://10.0.2.2:${WEBSITINO_PORT}/util/dev/notify_server.py', '/run/notify_server.py')"
 
 /run/gardenlinux-tests/runtime/\$(uname -m)/bin/python3 \
   /run/notify_server.py \
