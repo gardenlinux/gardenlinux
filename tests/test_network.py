@@ -109,6 +109,7 @@ def test_hostname_azure(shell):
     ), f"nslookup should not run into timeout: {result.stderr}"
 
 
+@pytest.mark.security_id(1127)
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="firewall service check requires booted system")
 @pytest.mark.feature(
@@ -124,7 +125,7 @@ def test_that_nftables_firewall_service_is_running(systemd: Systemd):
         "nftables"
     ), "nftables should be active for firewall compliance"
 
-
+@pytest.mark.security_id(1127)
 @pytest.mark.root(reason="Required to query systemd units")
 @pytest.mark.booted(reason="firewall service check requires booted system")
 @pytest.mark.feature("lima and gardener and server and ssh")
