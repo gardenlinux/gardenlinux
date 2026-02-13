@@ -226,12 +226,7 @@ export PYTHONUNBUFFERED=1
 
 curl "http://10.0.2.2:${WEBSITINO_PORT}/util/dev/notify_server.py" -o /run/notify_server.py
 
-case \$(uname -m) in
-  x86_64) arch="x86_64" ;;
-  arm64) arch="aarch64" ;;
-esac
-
-/run/gardenlinux-tests/runtime/\${arch}/bin/python3 \
+/run/gardenlinux-tests/runtime/\$(uname -m)/bin/python3 \
   /run/notify_server.py \
   http://10.0.2.2:${WEBSITINO_PORT} \
   "${TESTS_DIR}" -- $@
