@@ -138,4 +138,7 @@ if __name__ == "__main__":
     worker_thread = threading.Thread(target=_download_worker, daemon=True)
     worker_thread.start()
 
+    test_thread = threading.Thread(target=test_runner, daemon=True)
+    test_thread.start()
+
     run_server()
