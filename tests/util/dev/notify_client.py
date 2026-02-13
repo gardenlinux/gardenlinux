@@ -96,6 +96,8 @@ def main():
                 event_type = "created"
             elif change == Change.modified:
                 event_type = "modified"
+            else:
+                event_type = "unknown"
 
             if server_url:
                 send_notification(server_url, path, event_type)
