@@ -14,6 +14,7 @@ NOTIFY_CLIENT_VENV="${BUILD_DIR}/.notify_client_venv"
 
 WEBSITINO_VERSION="0.2.8"
 DAEMONIZE_VERSION="1.7.8"
+WATCHFILES_VERSION="1.1.1"
 
 WEBSITINO_PORT="8123"
 NOTIFY_SERVER_PORT="9999"
@@ -258,11 +259,15 @@ EOF
 }
 
 setup_notify_client() {
+	printf "==>\t\tbuilding python venv for notify client..."
+
 	(
 		python3 -mvenv "${NOTIFY_CLIENT_VENV}"
 		. "${NOTIFY_CLIENT_VENV}/bin/activate"
-		pip install watchfiles==1.1.1
+		pip install watchfiles==${WATCHFILES_VERSION}
 	)
+
+	printf "Done.\n"
 }
 
 dev_cleanup() {
@@ -276,7 +281,7 @@ dev_setup() { # path-to-script
 
 	build_daemonize
 
-	[ -d "${NOTIFY_CLIENT_VENV}" ] || setup_notify_client
+	[ -d "${NOTIFY_CLIENT_VENV}/lib/python*/site-packages/watchfiles-${WATCHFILES_VERSION}.dist-info" ] || setup_notify_client
 	[ -x "${WEBSITINO_BIN_FILE}" ] || build_websitino
 
 	configure_vm_runner_script
