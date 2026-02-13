@@ -12,7 +12,6 @@ import urllib.request
 DEST_DIR = "/run/gardenlinux-tests/tests"
 TESTS_RUNNER = "/run/gardenlinux-tests/run_tests"
 
-
 args = sys.argv[1:]
 if len(args) < 2:
     print("Usage: python notify_server.py BASE_URL SRC_DIR [-- TESTS_RUNNER_ARGS...]")
@@ -112,17 +111,13 @@ def test_runner():
         proc = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
         )
         for line in iter(proc.stdout.readline, ""):
             if line:
                 print(line, end="")
-        for line in iter(proc.stderr.readline, ""):
-            if line:
-                print(line, end="")
         proc.stdout.close()
-        proc.stderr.close()
         proc.wait()
     except Exception as e:
         print(f"Error running test_runner: {e}")
