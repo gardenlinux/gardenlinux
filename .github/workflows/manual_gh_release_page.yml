@@ -79,13 +79,6 @@ jobs:
       actions: write
     environment: oidc_aws_s3_upload
     steps:
-      - name: Checkout full repository (current branch)
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          submodules: true
-          fetch-depth: 0
-      - name: install dependencies for generate_release_note.py script
-        run: sudo apt-get update && sudo apt-get install -qy --no-install-recommends python3-boto3
       - name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@19c1b24c01faab81a7fe24713748dd172d00904a # pin@0.10.16
       - name: Configure AWS credentials
@@ -123,8 +116,9 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          ref: '${{ inputs.commit }}'
-          submodules: true
+          sparse-checkout: |
+            .github/**
+          sparse-checkout-cone-mode: false
       - name: Install python-gardenlinux-lib
         uses: gardenlinux/python-gardenlinux-lib/.github/actions/setup@19c1b24c01faab81a7fe24713748dd172d00904a # pin@0.10.16
       - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # pin@v4
@@ -137,14 +131,11 @@ jobs:
           key: release-${{ github.run_id }}
           path: .github_release_id
           fail-on-cache-miss: true
+      - name: Set CNAME
+        run: |
+          echo "CNAME=$(gl-features-parse --cname ${{ matrix.flavor }} --arch ${{ matrix.arch }} --version "${{ inputs.version }}" --commit "${{ inputs.commit }}" cname)" | tee -a "$GITHUB_ENV"
       - name: Download from S3 bucket ${{ secrets.aws_s3_bucket }} for ${{ matrix.flavor }} (${{ matrix.arch }})
         run: |
-          commit="$(echo "${{ inputs.commit }}" | cut -c -8)"
-          resolved_cname="$(./build --resolve-cname '${{ matrix.flavor }}-${{ matrix.arch }}-${{ inputs.version }}')"
-          CNAME="${resolved_cname%-*}-$commit"
-
-          echo "CNAME=$CNAME" | tee -a "$GITHUB_ENV"
-
           mkdir "$CNAME"
           gl-s3 --bucket ${{ secrets.aws_s3_bucket }} --path "$CNAME" download-artifacts-from-bucket --cname "$CNAME"
           tar -cJf "$CNAME.tar.xz" -C "$CNAME" .
