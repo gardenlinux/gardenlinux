@@ -1,19 +1,41 @@
 import http.server
 import json
+import os
 import queue
 import socketserver
 import subprocess
+import sys
 import threading
 import time
 import urllib.request
 
-# TODO: make constants configurable with cmdline args
-BASE_URL = "http://10.0.2.2:8123"
-SRC_DIR = "/home/ignis/src/KUBERMATIC/gardenlinux/tests"
 DEST_DIR = "/run/gardenlinux-tests/tests"
 TESTS_RUNNER = "/run/gardenlinux-tests/run_tests"
 
+
+args = sys.argv[1:]
+if len(args) < 2:
+    print("Usage: python notify_server.py BASE_URL SRC_DIR [-- TESTS_RUNNER_ARGS...]")
+    sys.exit(1)
+
+if "--" in args:
+    sep_index = args.index("--")
+    base_url = args[0]
+    src_dir = args[1]
+    tests_runner_args = args[sep_index + 1 :]
+else:
+    base_url = args[0]
+    src_dir = args[1]
+    tests_runner_args = args[2:]
+
+BASE_URL = base_url
+SRC_DIR = src_dir
+
 sync_queue = queue.Queue()
+
+# Store all commandline args used to call this script in a TESTS_RUNNER_ARGS
+# and pass it as arguments to cmd in test_runner function
+TESTS_RUNNER_ARGS = tests_runner_args
 
 
 class NotifyHandler(http.server.BaseHTTPRequestHandler):
@@ -67,6 +89,8 @@ def _download_worker():
             download_filename = path.replace(SRC_DIR, "")
             dst_filename = f"{DEST_DIR}{download_filename}"
             full_url = f"{BASE_URL}{download_filename}"
+
+            os.makedirs(os.path.dirname(dst_filename), exist_ok=True)
             urllib.request.urlretrieve(full_url, dst_filename)
             print(f"Synced {full_url} to {dst_filename}")
 
@@ -82,26 +106,31 @@ def _download_worker():
 
 def test_runner():
     """Run the gardenlinux tests and print stdout and stderr."""
-    print("Calling test runner")
-    # cmd = [TESTS_RUNNER]  # TODO: add cmdline args here
-    # try:
-    #     result = subprocess.run(
-    #         cmd,
-    #         capture_output=True,
-    #         text=True,
-    #         check=False,
-    #     )
-    #     if result.stdout:
-    #         print(result.stdout, end="")
-    #     if result.stderr:
-    #         print(result.stderr, end="")
-    # except Exception as e:
-    #     print(f"Error running test_runner: {e}")
+    cmd = [TESTS_RUNNER] + TESTS_RUNNER_ARGS
+    print(f"About to call {cmd}")
+    try:
+        proc = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        for line in iter(proc.stdout.readline, ""):
+            if line:
+                print(line, end="")
+        for line in iter(proc.stderr.readline, ""):
+            if line:
+                print(line, end="")
+        proc.stdout.close()
+        proc.stderr.close()
+        proc.wait()
+    except Exception as e:
+        print(f"Error running test_runner: {e}")
 
 
 def run_server(host="0.0.0.0", port=9999):
     with socketserver.TCPServer((host, port), NotifyHandler) as httpd:
-        print(f"Serving on {host}:{port}")
+        print(f"Notify server listens on {host}:{port}")
         httpd.serve_forever()
 
 

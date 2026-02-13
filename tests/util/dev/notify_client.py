@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-A simple filesystem monitor using watchdog.
+A simple filesystem monitor using watchfiles.
 
 Usage:
     python notify_client.py -i /path/to/monitor -e /path/to/exclude --server HOST:PORT
@@ -12,61 +12,7 @@ import os
 import sys
 import urllib.request
 
-from watchdog.events import FileSystemEventHandler
-from watchdog.observers import Observer
-
-
-class MonitorHandler(FileSystemEventHandler):
-    """
-    Handles filesystem events and prints them unless the path is excluded.
-    """
-
-    def __init__(self, excludes, server_url=None):
-        """
-        :param excludes: List of absolute paths to exclude from monitoring.
-        :param server_url: Optional URL to send HTTP POST notifications to.
-        """
-        super().__init__()
-        self.excludes = [os.path.abspath(ex) for ex in excludes]
-        self.server_url = server_url
-
-    def _is_excluded(self, path):
-        """
-        Determine if the given path should be excluded.
-        """
-        abs_path = os.path.abspath(path)
-        for ex in self.excludes:
-            # Exclude if the path is the same as or inside the excluded path.
-            if abs_path == ex or abs_path.startswith(ex + os.sep):
-                return True
-        return False
-
-    def on_any_event(self, event):
-        """
-        Called on any filesystem event.
-        """
-        if event.event_type not in ["created", "deleted", "modified", "moved"]:
-            return
-        if event.is_directory:
-            return
-        if self._is_excluded(event.src_path):
-            return
-        print(f"[{event.event_type}] {event.src_path}")
-
-        if self.server_url:
-            payload = json.dumps(
-                {"path": event.src_path, "event": event.event_type}
-            ).encode("utf-8")
-            req = urllib.request.Request(
-                self.server_url,
-                data=payload,
-                headers={"Content-Type": "application/json"},
-            )
-            try:
-                urllib.request.urlopen(req)
-            except Exception as e:
-                # Log the error but continue monitoring
-                print(f"Error sending notification: {e}", file=sys.stderr)
+from watchfiles import Change, watch
 
 
 def parse_args():
@@ -74,7 +20,7 @@ def parse_args():
     Parse command line arguments.
     """
     parser = argparse.ArgumentParser(
-        description="Monitor filesystem changes with watchdog."
+        description="Monitor filesystem changes with watchfiles."
     )
     parser.add_argument(
         "-i",
@@ -97,6 +43,22 @@ def parse_args():
     return parser.parse_args()
 
 
+def send_notification(server_url, path, event_type):
+    """
+    Send a JSON payload to the server via HTTP POST.
+    """
+    payload = json.dumps({"path": path, "event": event_type}).encode("utf-8")
+    req = urllib.request.Request(
+        server_url,
+        data=payload,
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        urllib.request.urlopen(req)
+    except Exception as e:
+        print(f"Error sending notification: {e}", file=sys.stderr)
+
+
 def main():
     args = parse_args()
 
@@ -106,6 +68,16 @@ def main():
 
     includes = [os.path.abspath(p) for p in args.include]
     excludes = [os.path.abspath(p) for p in args.exclude]
+
+    def changes_filter(change, path):
+        if change == Change.deleted:
+            return False
+        if os.path.isdir(path):
+            return False
+        for ex in excludes:
+            if path == ex or path.startswith(ex + os.sep):
+                return False
+        return True
 
     for path in includes:
         if not os.path.isdir(path):
@@ -118,14 +90,15 @@ def main():
     if args.server:
         server_url = f"http://{args.server}/"
 
-    event_handler = MonitorHandler(excludes, server_url)
-    observer = Observer()
+    for changes in watch(*includes, watch_filter=changes_filter):
+        for change, path in changes:
+            if change == Change.added:
+                event_type = "created"
+            elif change == Change.modified:
+                event_type = "modified"
 
-    for path in includes:
-        observer.schedule(event_handler, path, recursive=True)
-
-    observer.start()
-    observer.join()
+            if server_url:
+                send_notification(server_url, path, event_type)
 
 
 if __name__ == "__main__":

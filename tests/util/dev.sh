@@ -226,7 +226,10 @@ export PYTHONUNBUFFERED=1
 
 curl "http://10.0.2.2:${WEBSITINO_PORT}/util/dev/notify_server.py" -o /run/notify_server.py
 
-/run/gardenlinux-tests/runtime/x86_64/bin/python3 /run/notify_server.py $@
+/run/gardenlinux-tests/runtime/x86_64/bin/python3 \
+  /run/notify_server.py \
+  http://10.0.2.2:${WEBSITINO_PORT} \
+  "${TESTS_DIR}" -- $@
 EOF
 }
 
@@ -253,9 +256,9 @@ EOF
 
 setup_notify_client() {
 	(
-		python -mvenv "${NOTIFY_CLIENT_VENV}"
+		python3 -mvenv "${NOTIFY_CLIENT_VENV}"
 		. "${NOTIFY_CLIENT_VENV}/bin/activate"
-		pip install watchdog==6.0.0
+		pip install watchfiles==1.1.1
 	)
 }
 
