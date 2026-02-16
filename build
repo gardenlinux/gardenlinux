@@ -6,7 +6,7 @@ shopt -s nullglob
 exec 3>&1
 exec 1>&2
 
-container_image=ghcr.io/gardenlinux/builder:d6d24ba1aec66889a2acab83aedcb00e869abfcd
+container_image=ghcr.io/gardenlinux/builder:98ee0d480844b2d041524841bfdbbb4007d32248
 container_engine=podman
 target_dir=.build
 
@@ -22,10 +22,15 @@ container_cmd=()
 
 use_kms=0
 resolve_cname=0
+allow_frankenstein=0
 apparmor_profile=
 
 while [ $# -gt 0 ]; do
 	case "$1" in
+		--allow-frankenstein) # https://xkcd.com/1589/
+			allow_frankenstein=1
+			shift
+			;;
 		--container-image)
 			container_image="$2"
 			shift 2
@@ -108,6 +113,10 @@ make_opts=(
 	DEFAULT_VERSION="$default_version"
 	LOG_WITH_TIMESTAMP="${LOG_WITH_TIMESTAMP:-true}"
 )
+
+if [ "$allow_frankenstein" = 1 ]; then
+	make_opts+=("ALLOW_FRANKENSTEIN=1")
+fi
 
 if [ "$use_kms" = 1 ]; then
 	for e in AWS_DEFAULT_REGION AWS_REGION AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN; do
