@@ -226,7 +226,7 @@ def test_base_mount_no_sbit_security(file: File):
         "GL-SET-base-config-update-motd-logo",
     ]
 )
-@pytest.mark.feature("base")
+@pytest.mark.feature("server")
 def test_base_update_motd_logo(file: File):
     """Test that base has update-motd logo script"""
     assert file.has_mode(
