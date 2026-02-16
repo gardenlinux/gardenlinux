@@ -50,7 +50,10 @@ def test_profile_autologout_openstackbaremetal(parse_file: ParseFile):
         lines_list in sorted_lines
     ), f"Could not find expected lines in order in {file}: {lines_list}"
 
+
 TMOUT_FILE_STIG = "/etc/profile.d/99-terminal_tmout.sh"
+
+
 @pytest.mark.feature("stig")
 def test_shell_tmout_file_exists_stig(parse_file: ParseFile):
     """
@@ -98,6 +101,8 @@ def test_shell_tmout_is_exported_stig(parse_file: ParseFile):
 
 
 TMOUT_FILE_CLOUD = "/etc/profile.d/50-autologout.sh"
+
+
 @pytest.mark.feature("cloud and openstackbaremetal")
 def test_shell_tmout_file_exists_cloud(parse_file: ParseFile):
     """
