@@ -46,7 +46,7 @@ def test_usi_empty_root_home_directory(file: File):
 @pytest.mark.feature("_usi")
 def test_usi_no_udev_rules_image_dissect(file: File):
     """Test that udev rules for image dissect do not exist"""
-    assert not file.exists("/usr/lib/udev/rules.d/60-persistent-storage-tape.rules")
+    assert not file.exists("/usr/lib/udev/rules.d/90-image-dissect.rules")
 
 
 # =============================================================================
