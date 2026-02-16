@@ -58,13 +58,13 @@ jobs:
       - name: Copy test results to build directory
         if: always()
         run: |
-          cp tests-ng/log/chroot.test-ng.log .build/${CNAME}.chroot.test.log || true
-          cp tests-ng/log/chroot.test-ng.xml .build/${CNAME}.chroot.test.xml || true
+          cp tests-ng/log/chroot.test-ng.log .build/${CNAME}.chroot.testng.log || true
+          cp tests-ng/log/chroot.test-ng.xml .build/${CNAME}.chroot.testng.xml || true
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # pin@v6.0.0
         if: always()
         with:
           if-no-files-found: ignore
           name: chroot-test-${{ env.CNAME }}
           path: |
-            .build/${{ env.CNAME }}.chroot.test.log
-            .build/${{ env.CNAME }}.chroot.test.xml
+            .build/${{ env.CNAME }}.chroot.testng.log
+            .build/${{ env.CNAME }}.chroot.testng.xml
