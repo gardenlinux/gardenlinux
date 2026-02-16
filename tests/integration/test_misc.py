@@ -169,7 +169,7 @@ def test_sapmachine_apt_keyring_exists(file):
 @pytest.mark.arch("amd64")
 def test_unsigned_efi_binary_exists_amd64(file):
     """Test that unsigned EFI binary exists for amd64"""
-    assert file.is_regular_file("/boot/efi/EFI/BOOT/BOOTX64.EFI")
+    assert file.is_regular_file("/efi/EFI/BOOT/BOOTX64.EFI")
 
 
 @pytest.mark.setting_ids(["GL-SET-_unsigned-config-efi-binary-exists"])
@@ -177,7 +177,7 @@ def test_unsigned_efi_binary_exists_amd64(file):
 @pytest.mark.arch("arm64")
 def test_unsigned_efi_binary_exists_arm64(file):
     """Test that unsigned EFI binary exists for arm64"""
-    assert file.is_regular_file("/boot/efi/EFI/BOOT/BOOTAA64.EFI")
+    assert file.is_regular_file("/efi/EFI/BOOT/BOOTAA64.EFI")
 
 
 # =============================================================================
